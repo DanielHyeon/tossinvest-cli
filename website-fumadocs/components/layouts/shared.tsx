@@ -8,12 +8,32 @@ import {
 } from 'fumadocs-ui/layouts/home/navbar';
 import Link from 'fumadocs-core/link';
 import { TossctlIcon } from '@/app/layout.client';
+import { defineI18nUI } from 'fumadocs-ui/i18n';
+import { i18n } from '@/lib/i18n';
 
 export const gitConfig = {
   user: 'JungHoonGhae',
   repo: 'tossinvest-cli',
   branch: 'main',
 };
+
+// i18n UI translations (ko default + en). `provider(locale)` feeds RootProvider.
+export const { provider } = defineI18nUI(i18n, {
+  translations: {
+    ko: {
+      displayName: '한국어',
+      search: '검색',
+      searchNoResult: '검색 결과가 없습니다',
+      toc: '목차',
+      lastUpdate: '마지막 업데이트',
+      previousPage: '이전',
+      nextPage: '다음',
+      chooseTheme: '테마',
+      chooseLanguage: '언어',
+    },
+    en: { displayName: 'English' },
+  },
+});
 
 export const linkItems: LinkItemType[] = [
   {
@@ -109,6 +129,7 @@ export const logo = (
 
 export function baseOptions(): BaseLayoutProps {
   return {
+    i18n: true,
     nav: {
       title: logo,
     },

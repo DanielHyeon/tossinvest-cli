@@ -1,0 +1,60 @@
+---
+title: AI Agent Guide
+description: Rules for agents to use it safely
+---
+
+`tossctl` is designed for AI agents (Claude Code · Codex · Cursor · OpenClaw, etc.) to
+drive Toss Securities. This page lists the rules for using it safely and correctly.
+
+> LLM-ready formats: [`/llms.txt`](https://junghoonghae.github.io/tossinvest-cli/en/llms.txt)
+> (curated index) · [`/llms-full.txt`](https://junghoonghae.github.io/tossinvest-cli/en/llms-full.txt)
+> (all docs in one file).
+
+## Core rules
+
+1. **Always call with `--output json`.** Table output is for humans — do not parse it.
+2. **Read first.** `account`, `portfolio`, `quote`, `market`, `transactions` are side-effect free.
+3. **Trading is disabled by default.** It fails unless allowed in `config.json`. Do not
+   enable it on your own — ask the user.
+4. **Always run `order preview` before placing** to confirm quantity, price, and amount
+   (no order is sent).
+5. **Live trades are two-step**: `--execute` + `--confirm <token>`. The token comes from
+   the preview/confirm flow — never guess or bypass it.
+6. **Mind PII.** Responses include account numbers, balances, and holdings. Do not forward
+   or log them externally.
+
+## Recommended workflow
+
+```text
+1. tossctl doctor --output json        # check env & session
+2. (if no session) ask the user to run `tossctl auth login`
+3. tossctl account summary --output json
+4. tossctl portfolio positions --output json
+5. (on a trade request) tossctl order preview ... --output json  → user confirmation
+6. only after approval: tossctl order place ... --execute --confirm <token>
+```
+
+## Session & auth
+
+- A session is created once by a human via `tossctl auth login` (QR + phone approval).
+  Agents cannot log in — if there's no session, ask the user to.
+- Near expiry, a stderr warning appears. Extend via phone push with `tossctl auth extend`.
+- Use `tossctl auth status --output json` to check validity/expiry programmatically.
+
+## Output contract
+
+- On success, JSON on stdout; on failure, a non-zero exit code + stderr message.
+- Quote/summary types have stable keys. Server-side changes are caught early by
+  `tossctl monitor api`.
+
+## Don't
+
+- Leave real account data in public output, commits, or logs.
+- Place orders without preview, guess `--confirm` tokens, or bypass the trade gate.
+- Parse table output (human-formatted, fragile) — always JSON.
+
+## See also
+
+- [Command Reference](commands.en.md)
+- [Safety Model](safety.en.md)
+- [Support Scope](support-scope.en.md)

@@ -1,0 +1,43 @@
+---
+title: Introduction
+description: An unofficial CLI (tossctl) for driving Toss Securities from AI agents and the terminal
+---
+
+**An unofficial CLI for driving Toss Securities from AI agents and the terminal.** The binary is `tossctl`.
+
+It reuses your Toss Securities web session to read accounts, quotes, and transaction history, and to
+place limited trades. Claude Code · Codex · Cursor · OpenClaw · bash · HTTP — any tool or agent drives
+it through one command surface (`tossctl`), and humans can use it directly too.
+
+<Callout type="warn" title="Unofficial project">
+  This is not an official Toss Securities product. It uses the internal web API unofficially, which may
+  violate the Terms of Service. The API can change without notice, and the author takes no responsibility
+  for account restrictions, losses, or other consequences. Use at your own risk.
+</Callout>
+
+<Callout type="error" title="Trading is off by default">
+  All trading is disabled after install. It runs only after you enable it in `config.json`, and live
+  orders require a two-step `--execute` + `--confirm <token>`. See [Safety Model](/en/docs/guide/safety).
+</Callout>
+
+## At a glance
+
+- **Covers 100% of the official Open API's (upcoming) read & trade scope** — and goes beyond.
+- Features the official API lacks: investor flows, indices, detailed index quotes, AI signals, news
+  briefing, screener, dividends, sector moves, community rankings, watchlist management, ledger,
+  real-time push, fractional orders, dry-run preview.
+- Output: table · JSON · CSV · SSE — ready for automation and agent pipelines.
+
+See [Support Scope](/en/docs/reference/support-scope) for the full comparison.
+
+## 30-second start
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.sh | sh
+
+tossctl doctor
+tossctl auth login
+tossctl account summary --output json
+```
+
+More in [Install](/en/docs/getting-started/installation) and [Quick Start](/en/docs/getting-started/quickstart).

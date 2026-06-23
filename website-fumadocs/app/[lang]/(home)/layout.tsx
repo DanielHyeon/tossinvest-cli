@@ -1,7 +1,7 @@
 import { HomeLayout } from 'fumadocs-ui/layouts/home';
 import { baseOptions, linkItems } from '@/components/layouts/shared';
 
-export default function Layout({ children }: LayoutProps<'/'>) {
+export default function Layout({ children }: LayoutProps<'/[lang]'>) {
   return (
     <HomeLayout
       {...baseOptions()}

@@ -1,0 +1,43 @@
+---
+title: Configuration
+description: Config file reference
+---
+
+The config file lives in your OS user config directory. Check the path and current state
+with `tossctl config status`.
+
+```bash
+tossctl config status
+```
+
+## Key fields
+
+```json
+{
+  "trading": {
+    "grant": ["place", "sell"]
+  },
+  "update_check": {
+    "enabled": true
+  }
+}
+```
+
+| Key | Description |
+|----|------|
+| `trading.grant` | Allowed trade actions (`place`, `sell`). Empty = no trading |
+| `update_check.enabled` | New-version notice on/off (never pollutes automation output) |
+
+- The schema version is managed automatically; outdated/unused keys trigger a one-line
+  notice at runtime and show up in `config status` / `doctor`.
+- The config JSON Schema lives at
+  [`schemas/config.schema.json`](https://github.com/JungHoonGhae/tossinvest-cli/blob/main/schemas/config.schema.json).
+
+## Diagnostics
+
+```bash
+tossctl doctor            # human check
+tossctl doctor --report   # JSON diagnostic (home paths masked, for issues)
+```
+
+Trade guardrails are detailed in the [Safety Model](safety.en.md).

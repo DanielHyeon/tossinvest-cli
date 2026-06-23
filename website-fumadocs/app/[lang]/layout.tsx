@@ -6,7 +6,8 @@ import { Body } from '@/app/layout.client';
 import { source } from '@/lib/source';
 import { NextProvider } from 'fumadocs-core/framework/next';
 import { TreeContextProvider } from 'fumadocs-ui/contexts/tree';
-import './global.css';
+import { provider } from '@/components/layouts/shared';
+import '../global.css';
 
 const geist = Space_Grotesk({
   variable: '--font-sans',
@@ -44,13 +45,14 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function Layout({ children }: LayoutProps<'/'>) {
+export default async function Layout({ params, children }: LayoutProps<'/[lang]'>) {
+  const { lang } = await params;
   return (
-    <html lang="en" className={`${geist.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang={lang} className={`${geist.variable} ${mono.variable}`} suppressHydrationWarning>
       <Body>
         <NextProvider>
-          <TreeContextProvider tree={source.getPageTree()}>
-            <Provider>{children}</Provider>
+          <TreeContextProvider tree={source.getPageTree(lang)}>
+            <Provider i18n={provider(lang)}>{children}</Provider>
           </TreeContextProvider>
         </NextProvider>
       </Body>

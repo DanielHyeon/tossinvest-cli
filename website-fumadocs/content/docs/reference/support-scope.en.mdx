@@ -1,0 +1,61 @@
+---
+title: Support Scope
+description: Coverage vs the official Open API
+---
+
+**tossctl covers 100% of the official Toss Open API's (upcoming) read & trade scope — and
+goes beyond.** The official Open API is currently rolling out in stages to pre-applicants
+and is a narrow, REST-only surface; tossctl operates on the much wider surface the Toss web
+app (WTS) actually uses.
+
+- ✅ supported · ❌ not supported · 🔸 partial
+- `Official API (planned)` column = expected coverage per public docs (subject to rollout)
+- Rows where official is ❌ = tossctl-only
+
+## Read-only
+
+| Feature | Command | Official API (planned) | tossctl |
+|------|------|:--:|:--:|
+| Accounts / summary | `account list`, `account summary` | ✅ | ✅ |
+| Portfolio | `portfolio positions`, `portfolio allocation` | ✅ | ✅ |
+| Trade ticks / orderbook | `quote trades`, `quote orderbook` | ✅ | ✅ |
+| Price limits / buy cautions | `quote limits`, `quote warnings` | ✅ | ✅ |
+| Sellable qty / commission | `quote sellable`, `quote commission` | ✅ | ✅ |
+| Quote / candles | `quote get`, `quote chart` | 🔸 | ✅ |
+| Multi-quote / live refresh | `quote batch --live` | ❌ | ✅ |
+| Investor flows | `quote flows` | ❌ | ✅ |
+| Market indices / index detail | `market index [<code\|name>]` | ❌ | ✅ |
+| Live popularity ranking | `market ranking` | ❌ | ✅ |
+| Net-buy by investor | `market investors` | ❌ | ✅ |
+| Sector movements | `market sectors` | ❌ | ✅ |
+| Earnings calendar | `market earnings [--major]` | ❌ | ✅ |
+| Personalized news briefing | `market briefing` | ❌ | ✅ |
+| Toss AI signals | `market signals` | ❌ | ✅ |
+| Screener | `market screener` | ❌ | ✅ |
+| Dividend report | `portfolio dividends` | ❌ | ✅ |
+| Community rankings | `community rankings` | ❌ | ✅ |
+| Watchlist read & management | `watchlist ...` | ❌ | ✅ |
+| Transaction ledger / cash overview | `transactions list/overview` | ❌ | ✅ |
+| CSV export | `export ...` | ❌ | ✅ |
+
+## Trading
+
+| Feature | Command | Official API (planned) | tossctl |
+|------|------|:--:|:--:|
+| Buy/sell orders | `order place` | ✅ | ✅ |
+| Cancel / amend | `order cancel`, `order amend` | ✅ | ✅ |
+| dry-run preview | `order preview` | ❌ | ✅ |
+| Fractional (amount) orders | `order place --fractional` | 🔸 | ✅ |
+| Real-time push (SSE) | `push listen` | ❌ | ✅ |
+
+## Verification basis
+
+The `Official API` column is verified against a specific version of the
+[official Open API docs](https://developers.tossinvest.com/docs). The verified version and
+last-checked date are recorded in
+[`.openapi-snapshot.json`](https://github.com/JungHoonGhae/tossinvest-cli/blob/main/docs/migration/.openapi-snapshot.json);
+the full spec is mirrored daily and changes are auto-detected.
+
+The full WTS web API catalog (implemented / next candidate / intentionally excluded) is
+continuously tracked in
+[`wts-endpoints.json`](https://github.com/JungHoonGhae/tossinvest-cli/blob/main/docs/reverse-engineering/wts-endpoints.json).

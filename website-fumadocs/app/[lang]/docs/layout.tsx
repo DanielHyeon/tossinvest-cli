@@ -3,13 +3,14 @@ import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { baseOptions, linkItems, logoIcon } from '@/components/layouts/shared';
 import { getSection } from '@/lib/source/navigation';
 
-export default function Layout({ children }: LayoutProps<'/docs'>) {
+export default async function Layout({ params, children }: LayoutProps<'/[lang]/docs'>) {
+  const { lang } = await params;
   const base = baseOptions();
 
   return (
     <DocsLayout
       {...base}
-      tree={source.getPageTree()}
+      tree={source.getPageTree(lang)}
       links={linkItems.filter((item) => item.type === 'icon')}
       nav={{
         ...base.nav,
