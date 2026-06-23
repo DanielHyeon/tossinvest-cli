@@ -7,6 +7,7 @@ import { source } from '@/lib/source';
 import { NextProvider } from 'fumadocs-core/framework/next';
 import { TreeContextProvider } from 'fumadocs-ui/contexts/tree';
 import { provider } from '@/components/layouts/shared';
+import { siteUrl } from '@/lib/site';
 import '../global.css';
 
 const geist = Space_Grotesk({
@@ -19,12 +20,6 @@ const mono = JetBrains_Mono({
   subsets: ['latin'],
 });
 
-const defaultSiteUrl = 'https://tossinvest-cli.vercel.app';
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-  ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : defaultSiteUrl);
-
 export const metadata: Metadata = {
   title: {
     default: 'tossinvest-cli',
@@ -35,6 +30,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   icons: {
     icon: '/favicon.svg',
+  },
+  // Machine-discoverable pointer to the LLM-friendly markdown index.
+  alternates: {
+    types: {
+      'text/markdown': '/llms.txt',
+    },
   },
 };
 
