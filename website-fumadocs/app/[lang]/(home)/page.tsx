@@ -169,12 +169,6 @@ const content = {
   },
 } as const;
 
-function Ring({ size, opacity }: { size: number; opacity: number }) {
-  return (
-    <span className="absolute rounded-full border border-white" style={{ width: size, height: size, opacity }} />
-  );
-}
-
 // MZ8Ua-style connector trails: three rows of fading dots run from the node
 // edge outward toward the three agent / integration cards on each side.
 // Rows are aligned to the card centers (node box is HUB_H tall, cards ~70px apart).
@@ -326,9 +320,9 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
           style={{
             backgroundImage:
               'linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(75% 60% at 50% 35%, black, transparent)',
-            WebkitMaskImage: 'radial-gradient(75% 60% at 50% 35%, black, transparent)',
+            backgroundSize: '112px 112px',
+            maskImage: 'radial-gradient(90% 72% at 50% 40%, black, transparent)',
+            WebkitMaskImage: 'radial-gradient(90% 72% at 50% 40%, black, transparent)',
           }}
         />
         <div
@@ -378,11 +372,17 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               className="relative z-1 grid place-items-center justify-self-center"
               style={{ width: 240, height: HUB_H }}
             >
+              {/* soft circle glow behind the node (replaces the concentric strokes) */}
+              <span
+                className="pointer-events-none absolute rounded-full"
+                style={{
+                  width: 360,
+                  height: 360,
+                  background:
+                    'radial-gradient(circle, rgba(255,255,255,0.10), rgba(255,255,255,0.03) 42%, transparent 70%)',
+                }}
+              />
               <DotTrails />
-              <Ring size={240} opacity={0.04} />
-              <Ring size={180} opacity={0.07} />
-              <Ring size={124} opacity={0.12} />
-              <Ring size={80} opacity={0.18} />
               <TossctlIcon className="relative size-[80px] drop-shadow-[0_0_40px_rgba(255,255,255,0.08)]" />
             </div>
 
