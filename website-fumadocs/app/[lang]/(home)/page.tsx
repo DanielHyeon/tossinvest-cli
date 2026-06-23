@@ -38,7 +38,7 @@ const content = {
     proof: {
       label: 'STARRED BY',
       companies: ['Kakao', 'Naver', '당근', '두나무', 'SK텔레콤', 'TeamSparta'],
-      tail: ' 등의 엔지니어를 포함해 400+ 개발자가 GitHub에서 tossctl을 star 했습니다.',
+      tail: '등의 엔지니어를 포함해 400+ 개발자가 GitHub에서 tossctl을 star 했습니다.',
     },
     thesis: {
       label: '왜 지금',
@@ -114,7 +114,7 @@ const content = {
     proof: {
       label: 'STARRED BY',
       companies: ['Kakao', 'Naver', 'Daangn', 'Dunamu', 'SK Telecom', 'TeamSparta'],
-      tail: ' — engineers among 400+ developers who have starred tossctl on GitHub.',
+      tail: '— engineers among 400+ developers who have starred tossctl on GitHub.',
     },
     thesis: {
       label: 'WHY NOW',
@@ -330,10 +330,11 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              'linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)',
-            backgroundSize: '112px 112px',
-            maskImage: 'radial-gradient(90% 72% at 50% 40%, black, transparent)',
-            WebkitMaskImage: 'radial-gradient(90% 72% at 50% 40%, black, transparent)',
+              'linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px)',
+            backgroundSize: '208px 148px',
+            backgroundPosition: 'center',
+            maskImage: 'radial-gradient(95% 75% at 50% 42%, black, transparent)',
+            WebkitMaskImage: 'radial-gradient(95% 75% at 50% 42%, black, transparent)',
           }}
         />
         <div
@@ -352,7 +353,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
           <div className="mx-auto mb-16 max-w-2xl text-center">
             <h1 className="font-sans text-4xl font-bold tracking-tight md:text-5xl">tossinvest-cli</h1>
             <p className="mt-3 font-mono text-xs text-white/45">{t.sub}</p>
-            <p className="mx-auto mt-5 max-w-md text-sm text-white/65">{t.desc}</p>
+            <p className="mx-auto mt-5 max-w-md break-keep text-sm text-white/65">{t.desc}</p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href={`${p}/docs`}
@@ -433,14 +434,14 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
             <Star className="size-3.5 text-brand-200" />
             {t.proof.label}
           </div>
-          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/55">
+          <p className="mx-auto max-w-2xl break-keep text-sm leading-relaxed">
             <a
               href="https://github.com/JungHoonGhae/tossinvest-cli/stargazers"
               className="font-medium text-white/85 underline-offset-4 hover:underline"
             >
               {t.proof.companies.join(' · ')}
             </a>
-            {t.proof.tail}
+            <span className="mt-1.5 block text-white/55">{t.proof.tail}</span>
           </p>
         </div>
       </section>
@@ -454,7 +455,7 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
           <h2 className="max-w-3xl font-sans text-2xl font-bold leading-snug md:text-[2rem]">
             {t.thesis.headline}
           </h2>
-          <p className="mt-4 max-w-2xl text-white/60">{t.thesis.body}</p>
+          <p className="mt-4 max-w-2xl break-keep text-white/60">{t.thesis.body}</p>
           <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {t.thesis.points.map((pt, i) => (
               <div key={pt.k} className="rounded-xl border border-white/10 bg-[#0f0f0f] p-5">
