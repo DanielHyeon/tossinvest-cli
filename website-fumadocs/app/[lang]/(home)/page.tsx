@@ -188,17 +188,15 @@ function DotTrails() {
       {rows.map((dy) =>
         Array.from({ length: n }).map((_, i) => {
           const dist = 78 + i * 19; // 78 → ~211px from center (reaches into the gap)
-          const lead = i === 0;
-          const op = lead ? 0.7 : 0.4 * (1 - i / n); // bright near node, fades outward
-          const cls = lead ? 'bg-emerald-300' : 'bg-white';
+          const op = 0.5 * (1 - i / (n + 1)); // brightest near node, fades outward — neutral
           return (
             <span key={`${dy}-${i}`}>
               <span
-                className={`absolute rounded-full ${cls}`}
+                className="absolute rounded-full bg-white"
                 style={{ width: 3, height: 3, left: 120 - dist, top: cy + dy, opacity: op }}
               />
               <span
-                className={`absolute rounded-full ${cls}`}
+                className="absolute rounded-full bg-white"
                 style={{ width: 3, height: 3, left: 120 + dist, top: cy + dy, opacity: op }}
               />
             </span>
@@ -369,14 +367,6 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
 
           {/* hub & spoke — node vertically aligned with the cards on each side */}
           <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_auto_1fr]">
-            <div
-              className="pointer-events-none absolute inset-x-0 top-1/2 hidden h-px -translate-y-1/2 lg:block"
-              style={{
-                background:
-                  'linear-gradient(90deg, transparent, rgba(52,211,153,0.2) 18%, rgba(52,211,153,0.4) 50%, rgba(52,211,153,0.2) 82%, transparent)',
-              }}
-            />
-
             <div className="relative z-2 hidden flex-col gap-3 lg:flex">
               <div className="absolute -top-7 left-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AI AGENTS</div>
               {AGENTS.map((a) => (
@@ -393,7 +383,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               <Ring size={180} opacity={0.07} />
               <Ring size={124} opacity={0.12} />
               <Ring size={80} opacity={0.18} />
-              <TossctlIcon className="relative size-[80px] drop-shadow-[0_0_44px_rgba(52,211,153,0.3)]" />
+              <TossctlIcon className="relative size-[80px] drop-shadow-[0_0_40px_rgba(255,255,255,0.08)]" />
             </div>
 
             <div className="relative z-2 hidden flex-col gap-3 lg:flex">
