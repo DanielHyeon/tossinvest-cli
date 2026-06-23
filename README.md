@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/commands-47%20across%2015%20groups-blue" alt="47 commands" />
   <img src="https://img.shields.io/badge/beyond%20official%20API-12%2B%20features-success" alt="12+ features beyond official API" />
   <img src="https://img.shields.io/badge/output-table%20%7C%20JSON%20%7C%20CSV%20%7C%20SSE-informational" alt="output formats" />
+  <a href="https://junghoonghae.github.io/tossinvest-cli/"><img src="https://img.shields.io/badge/docs-site-3182F6?logo=readthedocs&logoColor=white" alt="docs site" /></a>
 </p>
 
 <p align="center">
