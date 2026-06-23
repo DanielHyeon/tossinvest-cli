@@ -37,7 +37,7 @@ const content = {
     cta: '5분 만에 시작',
     proof: {
       label: 'Trusted by builders from',
-      note: 'GitHub ★ 400+ · 회사는 stargazer 공개 프로필 기준',
+      note: '세계적 회사의 개발자들과 함께합니다',
     },
     thesis: {
       label: '왜 지금',
@@ -112,7 +112,7 @@ const content = {
     cta: 'Start in 5 minutes',
     proof: {
       label: 'Trusted by builders from',
-      note: '400+ GitHub stars · companies from stargazers’ public profiles',
+      note: 'developers from global companies',
     },
     thesis: {
       label: 'WHY NOW',
@@ -257,17 +257,18 @@ function Marquee() {
 
 // "Trusted by builders from" grid. Companies are derived from stargazers'
 // public GitHub `company` field — framed as *builders from*, never an
-// endorsement. Logos where simple-icons has them (white), wordmark text
-// otherwise. Toss is intentionally excluded (this is an unofficial tool).
-const COMPANIES: { name: string; logo?: string }[] = [
-  { name: 'Naver', logo: '/logos/companies/naver.svg' },
-  { name: 'Kakao', logo: '/logos/companies/kakao.svg' },
-  { name: 'Daangn', logo: '/logos/companies/daangn.svg' },
-  { name: 'Upbit', logo: '/logos/companies/upbit.svg' },
-  { name: 'TMAP', logo: '/logos/companies/tmap.png' },
-  { name: 'SK telecom', logo: '/logos/companies/sktelecom.svg' },
-  { name: 'TeamSparta', logo: '/logos/companies/teamsparta.png' },
-  { name: 'TwelveLabs' },
+// endorsement. Toss is intentionally excluded (this is an unofficial tool).
+// Each logo is bounded by a per-logo max height `h` AND a max width `w`
+// (whichever binds first) so sizes are locked and visually balanced.
+const COMPANIES: { name: string; logo?: string; h?: number; w?: number }[] = [
+  { name: 'TwelveLabs', logo: '/logos/companies/twelvelabs.svg', h: 28 },
+  { name: 'Sendbird', logo: '/logos/companies/sendbird.png', h: 18 },
+  { name: 'Samsung', logo: '/logos/companies/samsung.png', h: 15, w: 120 },
+  { name: 'Kakao', logo: '/logos/companies/kakao.png', h: 17 },
+  { name: 'Naver', logo: '/logos/companies/naver.svg', h: 14 },
+  { name: 'Dunamu', logo: '/logos/companies/dunamu.png', h: 15 },
+  { name: 'TMAP', logo: '/logos/companies/tmap.svg', h: 22, w: 150 },
+  { name: 'Daangn', logo: '/logos/companies/daangn.svg', h: 43 },
 ];
 
 // Coverage dot-map: the official API is a sliver of the Toss web-app surface.
@@ -330,10 +331,28 @@ function SpokeCard({
   );
 }
 
+// Live GitHub star count (revalidated daily). Falls back to 400 on error.
+async function getGitHubStars(): Promise<number> {
+  try {
+    const res = await fetch('https://api.github.com/repos/JungHoonGhae/tossinvest-cli', {
+      next: { revalidate: 86400 },
+      headers: { Accept: 'application/vnd.github+json' },
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { stargazers_count?: number };
+      if (typeof data.stargazers_count === 'number') return data.stargazers_count;
+    }
+  } catch {
+    // ignore — fall back below
+  }
+  return 400;
+}
+
 export default async function HomePage(props: PageProps<'/[lang]'>) {
   const { lang } = await props.params;
   const t = content[lang === 'en' ? 'en' : 'ko'];
   const p = lang === 'en' ? '/en' : '';
+  const stars = await getGitHubStars();
 
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] text-white">
@@ -454,14 +473,15 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
               >
                 {c.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  // 브랜드 로고는 원래 색 유지 + 높이 고정(아이콘/워드마크 혼재).
+                  // 로고별 max높이+max폭 중 먼저 걸리는 쪽으로 고정(크기 잠금).
                   <img
                     src={c.logo}
                     alt={c.name}
-                    className="h-7 w-auto max-w-[130px] object-contain"
+                    style={{ maxHeight: c.h ?? 24, maxWidth: c.w ?? 130 }}
+                    className="object-contain"
                   />
                 ) : (
-                  <span className="font-sans text-base font-semibold tracking-tight text-white/70">
+                  <span className="font-sans text-[17px] font-semibold tracking-tight text-white/70">
                     {c.name}
                   </span>
                 )}
@@ -473,7 +493,7 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
             className="mt-6 inline-flex items-center gap-1.5 font-mono text-[11px] text-white/35 transition-colors hover:text-white/55"
           >
             <Star className="size-3" />
-            {t.proof.note}
+            {stars.toLocaleString()} · {t.proof.note}
           </a>
         </div>
       </section>
