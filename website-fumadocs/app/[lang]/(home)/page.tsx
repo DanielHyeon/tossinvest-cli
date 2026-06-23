@@ -2,15 +2,29 @@ import Link from 'fumadocs-core/link';
 import { TossctlIcon } from '@/app/layout.client';
 import {
   Bot,
+  Boxes,
   ChartCandlestick,
   Github,
+  Globe,
+  MousePointer2,
   Radio,
   ShieldCheck,
   Sparkles,
   TerminalSquare,
 } from 'lucide-react';
 
-const ICONS = [ChartCandlestick, ShieldCheck, Bot, Sparkles, Radio, TerminalSquare];
+const FEATURE_ICONS = [ChartCandlestick, ShieldCheck, Bot, Sparkles, Radio, TerminalSquare];
+
+const AGENTS = [
+  { name: 'Claude Code', icon: Bot, sub: 'agent' },
+  { name: 'Codex', icon: Sparkles, sub: 'agent' },
+  { name: 'Cursor', icon: MousePointer2, sub: 'editor' },
+];
+const INTEGRATIONS = [
+  { name: 'bash', icon: TerminalSquare, sub: 'shell' },
+  { name: 'HTTP', icon: Globe, sub: 'api' },
+  { name: 'OpenClaw', icon: Boxes, sub: 'runtime' },
+];
 
 const content = {
   ko: {
@@ -18,11 +32,20 @@ const content = {
     desc: (
       <>
         <code className="font-mono text-white/90">tossctl</code> 하나로 계좌·시세·거래내역 조회와
-        제한된 거래까지. 공식 Open API(예정)보다 넓은 범위를, 사람도 에이전트도 동일한 명령으로.
+        제한된 거래까지. 사람도 에이전트도 동일한 명령으로.
       </>
     ),
     cta: '시작하기',
+    leftLabel: 'AI AGENTS',
+    rightLabel: 'INTEGRATIONS',
     sectionLabel: '왜 tossctl 인가',
+    statsLabel: '한눈에',
+    stats: [
+      { n: '47', l: '명령' },
+      { n: '15', l: '명령 그룹' },
+      { n: '~430', l: '의미있는 WTS API' },
+      { n: '100%', l: '공식 API 커버리지' },
+    ],
     llmTitle: 'LLM이 바로 읽는 문서',
     llmDesc: (
       <>
@@ -46,12 +69,20 @@ const content = {
     desc: (
       <>
         One <code className="font-mono text-white/90">tossctl</code> for accounts, quotes,
-        transactions, and limited trading — a broader scope than the (upcoming) official Open API,
-        for humans and agents alike.
+        transactions, and limited trading — for humans and agents alike.
       </>
     ),
     cta: 'Get started',
+    leftLabel: 'AI AGENTS',
+    rightLabel: 'INTEGRATIONS',
     sectionLabel: 'WHY TOSSCTL',
+    statsLabel: 'AT A GLANCE',
+    stats: [
+      { n: '47', l: 'commands' },
+      { n: '15', l: 'command groups' },
+      { n: '~430', l: 'meaningful WTS APIs' },
+      { n: '100%', l: 'official API coverage' },
+    ],
     llmTitle: 'Docs LLMs can read directly',
     llmDesc: (
       <>
@@ -78,6 +109,20 @@ function Ring({ size, opacity }: { size: number; opacity: number }) {
   );
 }
 
+function SpokeCard({ icon: Icon, name, sub }: { icon: typeof Bot; name: string; sub: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#111111] p-3 transition-colors hover:border-white/20">
+      <span className="grid size-8 shrink-0 place-items-center rounded-md border border-white/10 bg-white/5">
+        <Icon className="size-4 text-white/70" />
+      </span>
+      <div className="leading-tight">
+        <div className="text-sm font-medium">{name}</div>
+        <div className="font-mono text-[10px] uppercase tracking-widest text-white/30">{sub}</div>
+      </div>
+    </div>
+  );
+}
+
 export default async function HomePage(props: PageProps<'/[lang]'>) {
   const { lang } = await props.params;
   const t = content[lang === 'en' ? 'en' : 'ko'];
@@ -85,6 +130,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
 
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] text-white">
+      {/* ── Hero (hub & spoke) ──────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-white/10">
         <div
           className="pointer-events-none absolute inset-0"
@@ -92,51 +138,81 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
             backgroundImage:
               'linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)',
             backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(70% 60% at 50% 35%, black, transparent)',
-            WebkitMaskImage: 'radial-gradient(70% 60% at 50% 35%, black, transparent)',
+            maskImage: 'radial-gradient(75% 60% at 50% 35%, black, transparent)',
+            WebkitMaskImage: 'radial-gradient(75% 60% at 50% 35%, black, transparent)',
           }}
         />
         <div
-          className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[680px] -translate-x-1/2"
-          style={{ background: 'radial-gradient(50% 50% at 50% 0%, rgba(52,211,153,0.14), transparent)' }}
+          className="pointer-events-none absolute left-1/2 top-0 h-[460px] w-[760px] -translate-x-1/2"
+          style={{ background: 'radial-gradient(50% 50% at 50% 0%, rgba(52,211,153,0.16), transparent)' }}
         />
 
-        <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 pb-20 pt-16 text-center">
-          <div className="mb-12 flex items-center gap-3 font-mono text-xs text-white/45">
+        <div className="relative mx-auto w-full max-w-6xl px-4 pb-16 pt-14">
+          <div className="mb-10 flex items-center justify-center gap-3 font-mono text-xs text-white/45">
             <span className="font-sans text-base font-bold tracking-tight text-white">tossctl</span>
             <span className="text-white/25">×</span>
             <span className="font-sans text-sm font-bold tracking-tight text-white/40">AI Agents</span>
           </div>
 
-          <div className="relative grid place-items-center" style={{ width: 280, height: 200 }}>
-            <Ring size={280} opacity={0.04} />
-            <Ring size={210} opacity={0.06} />
-            <Ring size={150} opacity={0.1} />
-            <Ring size={96} opacity={0.16} />
-            <TossctlIcon className="relative size-[84px] drop-shadow-[0_0_40px_rgba(52,211,153,0.25)]" />
+          {/* hub row */}
+          <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_minmax(280px,auto)_1fr]">
+            {/* connecting bus line (lg) */}
+            <div
+              className="pointer-events-none absolute inset-x-0 top-1/2 hidden h-px -translate-y-1/2 lg:block"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent, rgba(52,211,153,0.25) 20%, rgba(52,211,153,0.45) 50%, rgba(52,211,153,0.25) 80%, transparent)',
+              }}
+            />
+
+            {/* left: agents */}
+            <div className="hidden flex-col gap-3 lg:flex">
+              <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">{t.leftLabel}</div>
+              {AGENTS.map((a) => (
+                <SpokeCard key={a.name} {...a} />
+              ))}
+            </div>
+
+            {/* center: mark + title */}
+            <div className="relative z-1 flex flex-col items-center text-center">
+              <div className="relative grid place-items-center" style={{ width: 240, height: 170 }}>
+                <Ring size={240} opacity={0.04} />
+                <Ring size={180} opacity={0.07} />
+                <Ring size={124} opacity={0.12} />
+                <Ring size={80} opacity={0.18} />
+                <TossctlIcon className="relative size-[80px] drop-shadow-[0_0_44px_rgba(52,211,153,0.3)]" />
+              </div>
+              <h1 className="mt-2 font-sans text-4xl font-bold tracking-tight md:text-5xl">tossinvest-cli</h1>
+              <p className="mt-3 font-mono text-xs text-white/45">{t.sub}</p>
+              <p className="mt-5 max-w-md text-sm text-white/65">{t.desc}</p>
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href={`${p}/docs`}
+                  className="rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-opacity hover:opacity-90"
+                >
+                  {t.cta}
+                </Link>
+                <Link
+                  href="https://github.com/JungHoonGhae/tossinvest-cli"
+                  className="inline-flex items-center gap-2 rounded-md border border-white/15 px-5 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/5"
+                >
+                  <Github className="size-4" />
+                  GitHub
+                </Link>
+              </div>
+            </div>
+
+            {/* right: integrations */}
+            <div className="hidden flex-col gap-3 lg:flex">
+              <div className="mb-1 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">{t.rightLabel}</div>
+              {INTEGRATIONS.map((a) => (
+                <SpokeCard key={a.name} {...a} />
+              ))}
+            </div>
           </div>
 
-          <h1 className="mt-2 font-sans text-5xl font-bold tracking-tight md:text-6xl">tossinvest-cli</h1>
-          <p className="mt-4 font-mono text-sm text-white/45">{t.sub}</p>
-          <p className="mt-6 max-w-xl text-base text-white/65">{t.desc}</p>
-
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href={`${p}/docs`}
-              className="rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-opacity hover:opacity-90"
-            >
-              {t.cta}
-            </Link>
-            <Link
-              href="https://github.com/JungHoonGhae/tossinvest-cli"
-              className="inline-flex items-center gap-2 rounded-md border border-white/15 px-5 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/5"
-            >
-              <Github className="size-4" />
-              GitHub
-            </Link>
-          </div>
-
-          <div className="mt-14 w-full overflow-hidden rounded-xl border border-white/10 bg-black/40 text-left shadow-2xl backdrop-blur">
+          {/* terminal */}
+          <div className="mx-auto mt-14 w-full max-w-3xl overflow-hidden rounded-xl border border-white/10 bg-black/40 text-left shadow-2xl backdrop-blur">
             <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-3">
               <span className="size-3 rounded-full bg-[#ff5f56]" />
               <span className="size-3 rounded-full bg-[#ffbd2e]" />
@@ -154,11 +230,24 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
         </div>
       </section>
 
+      {/* ── Stats band ─────────────────────────────────────── */}
+      <section className="border-b border-white/10 bg-[#0c0c0c]">
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-px overflow-hidden px-4 py-0 md:grid-cols-4">
+          {t.stats.map((s) => (
+            <div key={s.l} className="px-4 py-8 text-center">
+              <div className="font-sans text-3xl font-bold tracking-tight text-white md:text-4xl">{s.n}</div>
+              <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-white/40">{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Features ───────────────────────────────────────── */}
       <section className="mx-auto w-full max-w-5xl px-4 py-20">
         <div className="mb-8 font-mono text-[11px] uppercase tracking-[0.2em] text-white/35">{t.sectionLabel}</div>
         <div className="grid gap-px overflow-hidden rounded-xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
           {t.features.map((f, i) => {
-            const Icon = ICONS[i];
+            const Icon = FEATURE_ICONS[i];
             return (
               <div key={f.title} className="bg-[#0f0f0f] p-6 transition-colors hover:bg-[#141414]">
                 <div className="mb-4 grid size-9 place-items-center rounded-lg border border-white/10 bg-white/5">
@@ -186,6 +275,7 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
         </div>
       </section>
 
+      {/* ── Footer ─────────────────────────────────────────── */}
       <footer className="border-t border-white/10">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-7 font-mono text-xs sm:flex-row">
           <span className="inline-flex items-center gap-2 text-white/45">
