@@ -6,7 +6,9 @@ export default function Layout({ children }: LayoutProps<'/[lang]'>) {
     <HomeLayout
       {...baseOptions()}
       links={linkItems}
-      // 랜딩은 디자인 소스(MZ8Ua)에 맞춰 항상 다크.
+      // 랜딩은 디자인 소스(MZ8Ua)에 맞춰 항상 다크 — 토글은 동작하지 않으므로 숨긴다.
+      // (테마 토글은 docs 레이아웃에서는 그대로 동작)
+      themeSwitch={{ enabled: false }}
       className="dark bg-[#0a0a0a] [--color-fd-background:#0a0a0a] [--color-fd-primary:var(--color-brand)]"
     >
       {children}
