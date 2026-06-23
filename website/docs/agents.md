@@ -1,0 +1,55 @@
+# AI 에이전트 가이드
+
+`tossctl` 은 AI 에이전트(Claude Code · Codex · Cursor · OpenClaw 등)가 토스증권을 다루도록
+설계됐습니다. 이 페이지는 에이전트가 안전하고 정확하게 쓰기 위한 규칙을 정리합니다.
+
+> LLM이 바로 먹기 좋은 형식: [`/llms.txt`](https://junghoonghae.github.io/tossinvest-cli/llms.txt) (큐레이션 색인) ·
+> [`/llms-full.txt`](https://junghoonghae.github.io/tossinvest-cli/llms-full.txt) (전체 문서 단일 파일).
+
+## 핵심 규칙
+
+1. **항상 `--output json` 으로 호출**하라. 표(table) 출력은 사람용이며, 파싱하지 말 것.
+2. **읽기 먼저.** `account`, `portfolio`, `quote`, `market`, `transactions` 는 부작용이 없다.
+3. **거래는 기본 비활성.** `config.json` 에서 허용되지 않으면 실패한다. 임의로 켜지 말고
+   사용자에게 확인받아라.
+4. **주문 전 반드시 `order preview`** 를 실행해 수량·가격·금액을 확인하라(주문 안 나감).
+5. **실거래는 2단계**: `--execute` + `--confirm <token>`. token 은 preview/확인 흐름에서
+   나온 값이며, 추측하거나 우회하지 마라.
+6. **개인정보 주의.** 응답에는 계좌번호·잔고·보유 종목이 들어있다. 외부로 전송·로깅하지 마라.
+
+## 권장 워크플로
+
+```text
+1. tossctl doctor --output json        # 환경·세션 상태 확인
+2. (세션 없으면) 사용자에게 `tossctl auth login` 안내
+3. tossctl account summary --output json
+4. tossctl portfolio positions --output json
+5. (거래 요청 시) tossctl order preview ... --output json  → 사용자 확인
+6. 승인 후에만 tossctl order place ... --execute --confirm <token>
+```
+
+## 세션·인증
+
+- 세션은 `tossctl auth login` 으로 사람이 1회 생성한다(QR + 폰 승인). 에이전트는 로그인을
+  대신할 수 없다 — 세션이 없으면 사용자에게 로그인을 요청하라.
+- 만료가 가까우면 stderr 에 경고가 나온다. `tossctl auth extend` 로 폰 푸시 승인을 통해
+  연장할 수 있다.
+- `tossctl auth status --output json` 으로 세션 유효성·만료를 프로그램적으로 확인한다.
+
+## 출력 계약
+
+- 성공 시 stdout 에 JSON, 실패 시 비정상 종료 코드 + stderr 메시지.
+- 시세·요약 등 자료형은 안정적인 키를 가진다. 서버측 변경은 `tossctl monitor api` 가
+  조기에 감지하도록 돼 있다.
+
+## 하지 말 것
+
+- 실제 계좌 데이터를 공개 출력/커밋/로그에 남기기.
+- preview 없이 주문 실행, `--confirm` 토큰 추측, 거래 게이트 우회.
+- table 출력 파싱(형식이 사람용이라 깨지기 쉬움) — 항상 JSON.
+
+## 같이 보기
+
+- [명령 레퍼런스](commands.md) — 전체 명령 목록
+- [안전 모델](safety.md) — 거래 보호 장치 상세
+- [지원 범위](support-scope.md) — 공식 API 대비 커버리지

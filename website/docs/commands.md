@@ -1,0 +1,96 @@
+# 명령 레퍼런스
+
+모든 조회 명령은 `--output table|json|csv` 를 지원합니다(기본 table). 자동화/에이전트는
+`--output json` 을 쓰세요.
+
+## 인증 (auth)
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl auth login [--headless] [--qr-output <path>]` | QR + 폰 승인 로그인 |
+| `tossctl auth status` | 세션 유효성·만료 확인 |
+| `tossctl auth extend [--timeout 120s]` | 폰 푸시 승인으로 세션 연장(~7일) |
+
+## 계좌 · 포트폴리오
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl account list` | 계좌 목록 |
+| `tossctl account summary` | 총자산·평가손익·시장별 |
+| `tossctl portfolio positions` | 보유 종목 (미국은 USD 병기) |
+| `tossctl portfolio allocation` | 자산 배분 |
+| `tossctl portfolio dividends [--year N] [--by-payment-date]` | 연간 배당 내역(총액·지역·월별·세금) |
+
+## 시세 (quote)
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl quote get <symbol>` | 시세(OHLC·52주·시총·거래대금·체결강도) |
+| `tossctl quote batch <s1,s2,...> [--chart] [--live]` | 멀티 시세 / 실시간 갱신 |
+| `tossctl quote chart <symbol> --interval 1m\|...\|60m` | ASCII 캔들 차트 |
+| `tossctl quote orderbook <symbol>` | 10단계 호가 |
+| `tossctl quote trades <symbol> --count N` | 체결 틱 |
+| `tossctl quote limits <symbol>` | 상/하한가 (국내) |
+| `tossctl quote warnings <symbol>` | 매수 유의사항 |
+| `tossctl quote sellable <symbol>` | 매도가능수량 |
+| `tossctl quote commission <symbol>` | 수수료율·거래세율 |
+
+## 시장 (market)
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl market index [<코드\|이름>]` | 주요 지수 목록 / 인자 주면 상세(OHLC·52주) |
+| `tossctl market ranking --size N` | 실시간 인기 종목 |
+| `tossctl market investors` | 투자자별(외국인·기관·개인) 순매수 상위 |
+| `tossctl market sectors [<id>]` | 업종별 등락(대분류/하위, 1일·1개월·1년) |
+| `tossctl market earnings [--major]` | 어닝콜 일정 / 주요 기업 |
+| `tossctl market briefing` | 개인화 AI 뉴스 브리핑(테마별) |
+| `tossctl market signals` | 토스 AI 시그널 |
+| `tossctl market fx` | 환율·달러 인덱스 |
+| `tossctl market hours` | 장 운영 시간 |
+| `tossctl market screener [<preset-id>] [--filter '<json>'] [--nation kr\|us]` | 조건검색 |
+
+## 커뮤니티 (community)
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl community rankings --type influencer\|profit\|followers` | 커뮤니티 랭킹 |
+
+## 주문 · 거래 (order)
+
+거래는 기본 비활성. [안전 모델](safety.md) 참고.
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl order preview --symbol <s> --side <buy\|sell> --qty <n> --price <p>` | dry-run 미리보기(주문 안 나감) |
+| `tossctl order place ... --execute --confirm <token>` | 실제 주문(2단계 게이트) |
+| `tossctl order cancel --order-id <id> --symbol <s>` | 주문 취소 |
+| `tossctl order amend --order-id <id> ...` | 주문 정정 |
+| `tossctl orders list` · `orders completed` · `order show <id>` | 미체결/체결/단건 조회 |
+
+소수점(금액 기반) 주문: `order place --fractional --amount <krw> --qty 0` (미국 시장가).
+
+## 거래내역 · 내보내기
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl transactions list --market us\|kr` | 매매·입출금·배당·입출고 ledger |
+| `tossctl transactions overview --market us\|kr` | 주문가능·출금가능·예정입금 |
+| `tossctl export positions\|orders --market us\|kr\|all` | CSV 내보내기 |
+
+## 관심종목 (watchlist)
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl watchlist list` · `watchlist groups` | 관심종목 / 폴더 조회 |
+| `tossctl watchlist group create\|rename\|delete` | 폴더 관리 |
+| `tossctl watchlist add\|remove --group <id>` | 종목 추가/제거 |
+
+## 운영 (push · monitor · doctor)
+
+| 명령 | 설명 |
+|------|------|
+| `tossctl push listen` | 실시간 푸시(주문/체결/보유 변경) 스트림(SSE) |
+| `tossctl monitor api` | 핵심 조회 API 헬스 점검(서버측 변경 조기 감지) |
+| `tossctl doctor [--report]` | 환경·세션 진단(JSON, 홈 경로 마스킹) |
+| `tossctl version` | 버전·업데이트 가능 여부 |

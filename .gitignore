@@ -28,3 +28,7 @@
 CLAUDE.md
 /.design/
 /eval_results/
+
+# docs site build artifacts
+website/site/
+website/.venv/

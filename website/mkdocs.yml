@@ -1,0 +1,104 @@
+site_name: tossinvest-cli
+site_description: >-
+  토스증권을 AI 에이전트·터미널에서 다루는 비공식 CLI (tossctl) — 공식 Open API(예정)보다
+  넓은 조회·거래 범위. An unofficial Toss Securities CLI for AI agents.
+site_url: https://junghoonghae.github.io/tossinvest-cli/
+repo_url: https://github.com/JungHoonGhae/tossinvest-cli
+repo_name: JungHoonGhae/tossinvest-cli
+edit_uri: edit/main/website/docs/
+copyright: MIT License · 비공식 프로젝트 (토스증권과 무관)
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: ko
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/weather-night
+        name: 다크 모드
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/weather-sunny
+        name: 라이트 모드
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      lang:
+        - ko
+        - en
+  # Generates /llms.txt (curated index for LLMs) and /llms-full.txt (full dump).
+  # LLM 우선: 요즘 문서는 사람보다 에이전트가 더 많이 읽는다.
+  - llmstxt:
+      full_output: llms-full.txt
+      markdown_description: >-
+        tossinvest-cli (binary: tossctl) — 토스증권 웹 세션을 재사용해 조회·제한된 거래를
+        터미널/AI 에이전트에서 다루는 비공식 CLI. 공식 Open API 의 조회·거래 범위를 100%
+        커버하고 그 너머(수급·시장지수·AI 시그널·배당·업종 등락·커뮤니티 랭킹·실시간 푸시·
+        소수점 주문 등)까지 제공한다. 거래는 기본 비활성이며 config.json 에서 명시적 허용 필요.
+      sections:
+        시작하기:
+          - index.md
+          - install.md
+          - quickstart.md
+        에이전트:
+          - agents.md
+        레퍼런스:
+          - commands.md
+          - support-scope.md
+          - safety.md
+          - configuration.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - 홈: index.md
+  - 설치: install.md
+  - 빠른 시작: quickstart.md
+  - AI 에이전트 가이드: agents.md
+  - 명령 레퍼런스: commands.md
+  - 지원 범위: support-scope.md
+  - 안전 모델: safety.md
+  - 설정: configuration.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/JungHoonGhae/tossinvest-cli
