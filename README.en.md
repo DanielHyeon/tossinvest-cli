@@ -485,14 +485,6 @@ Override paths with `--config-dir` and `--session-file`.
 
 Bug reports and PRs welcome.
 
-## Support
-
-If this helped, consider supporting maintenance.
-
-<a href="https://www.buymeacoffee.com/lucas.ghae">
-  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50">
-</a>
-
 ## License
 
 MIT

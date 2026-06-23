@@ -545,14 +545,6 @@ US/KR 지정가 매수/매도, US 소수점 매수, 당일 미체결 취소가 l
 
 버그 제보와 PR은 환영합니다.
 
-## Support
-
-도움이 되었다면 유지보수에 힘을 보태 주세요.
-
-<a href="https://www.buymeacoffee.com/lucas.ghae">
-  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50">
-</a>
-
 ## License
 
 MIT
