@@ -88,12 +88,12 @@ const content = {
     llmCta: 'AI 에이전트 가이드 →',
     disclaimer: '비공식 CLI · 토스증권과 무관 · 투자 손익의 책임은 본인에게 있습니다',
     features: [
-      { label: 'DATA', title: '넓은 조회', desc: '계좌·시세·호가·체결·수급·지수·업종·배당·거래내역까지 하나의 CLI로 조회합니다.' },
-      { label: 'SAFETY', title: '안전한 거래', desc: '기본 비활성에 dry-run preview, --execute·--confirm 2단계까지. 실수로 주문이 나가지 않습니다.' },
-      { label: 'AGENTS', title: '에이전트 친화', desc: '모든 명령이 --output json 으로 출력돼 AI 에이전트와 바로 연동됩니다.' },
+      { label: 'DATA', title: '넓은 조회', desc: '계좌·시세·호가·체결·수급·지수·업종·배당·거래내역을 명령 한 줄로 조회합니다.' },
+      { label: 'SAFETY', title: '안전한 거래', desc: '거래는 기본으로 꺼져 있고, 주문 전 미리보기와 두 번의 확인을 거칩니다. 실수로 주문이 나가지 않습니다.' },
+      { label: 'AGENTS', title: '에이전트 친화', desc: '모든 결과를 AI가 그대로 읽는 형식으로 내보내 에이전트와 바로 연동됩니다.' },
       { label: 'INTELLIGENCE', title: '토스 AI 기능', desc: '공식 API에는 없는 AI 시그널·뉴스 브리핑·조건검색·커뮤니티 랭킹을 제공합니다.' },
-      { label: 'REALTIME', title: '실시간 푸시', desc: '주문·체결·보유 변동을 SSE로 실시간 스트리밍합니다.' },
-      { label: 'AUTOMATION', title: '자동화 우선', desc: 'table·JSON·CSV·SSE로 출력해 스크립트·파이프라인에 바로 연결합니다.' },
+      { label: 'REALTIME', title: '실시간 푸시', desc: '주문·체결·보유 변동을 실시간으로 받아봅니다.' },
+      { label: 'AUTOMATION', title: '자동화 우선', desc: '표·파일·실시간 등 원하는 형식으로 내보내 스크립트와 자동화에 바로 연결합니다.' },
     ],
   },
   en: {
@@ -159,12 +159,12 @@ const content = {
     llmCta: 'AI Agent Guide →',
     disclaimer: 'Unofficial CLI · not affiliated with Toss Securities · use at your own risk',
     features: [
-      { label: 'DATA', title: 'Broad reads', desc: 'Accounts, quotes, orderbook, ticks, flows, indices, sectors, dividends, ledger — one CLI.' },
-      { label: 'SAFETY', title: 'Safe trading', desc: 'Never fire an order by accident — off by default, dry-run preview, two-step --execute/--confirm.' },
-      { label: 'AGENTS', title: 'Agent-friendly', desc: 'Every command speaks --output json. Claude, Codex, Cursor, OpenClaw parse it straight away.' },
+      { label: 'DATA', title: 'Broad reads', desc: 'Accounts, quotes, orderbook, ticks, flows, indices, sectors, dividends, ledger — in one command.' },
+      { label: 'SAFETY', title: 'Safe trading', desc: 'Trading is off by default, with an order preview and two confirmations before anything runs. No accidental orders.' },
+      { label: 'AGENTS', title: 'Agent-friendly', desc: 'Every result comes back in a format AI reads directly, so agents like Claude, Codex, and Cursor connect right away.' },
       { label: 'INTELLIGENCE', title: 'Toss AI features', desc: 'AI signals, news briefing, screener, community rankings — none of which the official API has.' },
-      { label: 'REALTIME', title: 'Real-time push', desc: 'Stream orders, fills, and holdings changes live over SSE.' },
-      { label: 'AUTOMATION', title: 'Automation-first', desc: 'table · JSON · CSV · SSE output — drop it straight into scripts and pipelines.' },
+      { label: 'REALTIME', title: 'Real-time push', desc: 'See order, fill, and holdings changes the moment they happen.' },
+      { label: 'AUTOMATION', title: 'Automation-first', desc: 'Export as a table, file, or live feed — drop it straight into scripts and automation.' },
     ],
   },
 } as const;
@@ -362,7 +362,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               }}
             />
 
-            <div className="relative hidden flex-col gap-3 lg:flex">
+            <div className="relative z-2 hidden flex-col gap-3 lg:flex">
               <div className="absolute -top-7 left-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AI AGENTS</div>
               {AGENTS.map((a) => (
                 <SpokeCard key={a.name} {...a} />
@@ -381,7 +381,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               <TossctlIcon className="relative size-[80px] drop-shadow-[0_0_44px_rgba(52,211,153,0.3)]" />
             </div>
 
-            <div className="relative hidden flex-col gap-3 lg:flex">
+            <div className="relative z-2 hidden flex-col gap-3 lg:flex">
               <div className="absolute -top-7 right-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AGENTS · SHELL</div>
               {INTEGRATIONS.map((a) => (
                 <SpokeCard key={a.name} {...a} />
