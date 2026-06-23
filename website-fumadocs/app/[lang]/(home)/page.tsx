@@ -29,19 +29,19 @@ const content = {
     sub: 'connect your AI agents to Toss Securities',
     desc: (
       <>
-        <code className="font-mono text-white/90">tossctl</code> 명령 하나로 토스증권 계좌·시세·
-        거래내역을 읽고, 주문까지 보냅니다. 사람이 치든 AI 에이전트가 호출하든 같은 명령으로.
+        토스증권 계좌·시세·거래내역을 조회하고, 주문을 넣습니다. 공식 Open API가 다루지 못하는
+        범위까지 <code className="font-mono text-white/90">tossctl</code> 로 지금 바로.
       </>
     ),
     cta: '5분 만에 시작',
     thesis: {
       label: '왜 지금',
       headline: '공식 API, 기다릴 필요 없습니다',
-      body: '토스증권 공식 Open API는 사전 신청자에게만, 그것도 조회·주문 같은 기본 기능부터 천천히 열리고 있습니다. tossctl은 그 기능을 전부 포함하고, 공식엔 아직 없는 것까지 지금 바로 씁니다. 신청도 승인도 필요 없습니다.',
+      body: '토스증권 공식 Open API는 사전 신청자에게만, 그것도 조회·주문 같은 기본 기능부터 천천히 열리고 있습니다. tossctl은 이 기능을 모두 지원하고, 공식에 아직 없는 기능까지 제공합니다. 신청이나 승인은 필요 없습니다.',
       points: [
-        { k: '단계적·승인제', v: '공식은 신청한 사람에게, 좁은 기능부터 조금씩 엽니다.' },
-        { k: '기다리지 않아도', v: 'tossctl은 롤아웃을 기다릴 필요 없이 전 기능을 지금 씁니다.' },
-        { k: '에이전트가 직접', v: '명령마다 JSON으로 답해서, 사람도 AI 에이전트도 그대로 씁니다.' },
+        { k: '단계적·승인제', v: '공식 API는 신청한 사람에게, 좁은 기능부터 조금씩 열립니다.' },
+        { k: '기다릴 필요 없이', v: 'tossctl은 공식 출시를 기다릴 필요 없이 전 기능을 지원합니다.' },
+        { k: '에이전트 연동', v: '모든 명령이 JSON으로 출력되어 AI 에이전트와 바로 연동됩니다.' },
       ],
     },
     sectionLabel: '왜 tossctl 인가',
@@ -49,9 +49,19 @@ const content = {
     compareLead: (
       <>
         공식 Open API(예정)의 조회·거래를 <span className="text-brand-200">100% 커버</span>하고,
-        공식엔 없는 기능 <span className="text-brand-200">12개 이상</span>을 더합니다.
+        공식엔 없는 기능 <span className="text-brand-200">18개 이상</span>을 더합니다.
       </>
     ),
+    stats: [
+      { n: '약 4%', l: '공식 API가 다루는 토스 웹앱 비중' },
+      { n: '18+', l: '공식에 없는 tossctl 고유 기능' },
+      { n: '100%', l: '공식 조회·거래 커버리지' },
+    ],
+    coverage: {
+      bright: '공식 API (~20개 · 약 4%)',
+      dim: '토스 웹앱 의미있는 API ~430개',
+      note: 'tossctl은 공식 전부와 고유 기능을 포함하고, 이 범위를 계속 넓혀갑니다.',
+    },
     official: {
       name: '공식 Open API (예정)',
       note: 'REST 조회·주문 기본 · 사전 신청 단계 롤아웃',
@@ -77,21 +87,20 @@ const content = {
     llmCta: 'AI 에이전트 가이드 →',
     disclaimer: '비공식 CLI · 토스증권과 무관 · 투자 손익의 책임은 본인에게 있습니다',
     features: [
-      { label: 'DATA', title: '넓은 조회', desc: '계좌·시세·호가·체결·수급·지수·업종·배당·거래내역까지 한 CLI로.' },
-      { label: 'SAFETY', title: '안전한 거래', desc: '실수로 주문이 나갈 일 없음 — 기본 비활성, dry-run preview, --execute·--confirm 2단계.' },
-      { label: 'AGENTS', title: '에이전트 친화', desc: '모든 명령이 --output json. Claude·Codex·Cursor·OpenClaw 가 바로 파싱한다.' },
-      { label: 'INTELLIGENCE', title: '토스 AI 기능', desc: '공식 API엔 없는 AI 시그널·뉴스 브리핑·조건검색·커뮤니티 랭킹.' },
-      { label: 'REALTIME', title: '실시간 푸시', desc: '주문·체결·보유 변동을 SSE 로 실시간 스트림.' },
-      { label: 'AUTOMATION', title: '자동화 우선', desc: 'table·JSON·CSV·SSE 출력 — 스크립트·파이프라인에 바로 꽂는다.' },
+      { label: 'DATA', title: '넓은 조회', desc: '계좌·시세·호가·체결·수급·지수·업종·배당·거래내역까지 하나의 CLI로 조회합니다.' },
+      { label: 'SAFETY', title: '안전한 거래', desc: '기본 비활성에 dry-run preview, --execute·--confirm 2단계까지. 실수로 주문이 나가지 않습니다.' },
+      { label: 'AGENTS', title: '에이전트 친화', desc: '모든 명령이 --output json 으로 출력돼 AI 에이전트와 바로 연동됩니다.' },
+      { label: 'INTELLIGENCE', title: '토스 AI 기능', desc: '공식 API에는 없는 AI 시그널·뉴스 브리핑·조건검색·커뮤니티 랭킹을 제공합니다.' },
+      { label: 'REALTIME', title: '실시간 푸시', desc: '주문·체결·보유 변동을 SSE로 실시간 스트리밍합니다.' },
+      { label: 'AUTOMATION', title: '자동화 우선', desc: 'table·JSON·CSV·SSE로 출력해 스크립트·파이프라인에 바로 연결합니다.' },
     ],
   },
   en: {
     sub: 'connect your AI agents to Toss Securities',
     desc: (
       <>
-        Read accounts, quotes, and transactions — and place orders — from one{' '}
-        <code className="font-mono text-white/90">tossctl</code> command. The same command whether a
-        human types it or an agent calls it.
+        Read accounts, quotes, and transactions, and place orders. A wider surface than the official
+        Open API — with <code className="font-mono text-white/90">tossctl</code>, right now.
       </>
     ),
     cta: 'Start in 5 minutes',
@@ -110,9 +119,19 @@ const content = {
     compareLead: (
       <>
         Covers <span className="text-brand-200">100%</span> of the official Open API's (upcoming)
-        read &amp; trade scope, and adds <span className="text-brand-200">12+</span> features it lacks.
+        read &amp; trade scope, and adds <span className="text-brand-200">18+</span> features it lacks.
       </>
     ),
+    stats: [
+      { n: '~4%', l: 'of the Toss web app the official API covers' },
+      { n: '18+', l: 'unique features the official API lacks' },
+      { n: '100%', l: 'of official reads & trades covered' },
+    ],
+    coverage: {
+      bright: 'Official API (~20 · ~4%)',
+      dim: '~430 meaningful Toss web-app APIs',
+      note: 'tossctl covers all of the official plus unique features, and keeps expanding.',
+    },
     official: {
       name: 'Official Open API (planned)',
       note: 'REST read/order basics · staged rollout',
@@ -178,6 +197,59 @@ function DotTrails() {
           );
         }),
       )}
+    </div>
+  );
+}
+
+// Scrolling "works with" strip.
+const MARQUEE = [...AGENTS, ...INTEGRATIONS, { name: 'HTTP', logo: '/logos/http.svg', sub: 'api' }];
+function Marquee() {
+  const group = (key: string) => (
+    <div key={key} className="flex shrink-0 items-center gap-12 pe-12" aria-hidden={key === 'b'}>
+      {MARQUEE.map((m) => (
+        <span key={m.name} className="inline-flex shrink-0 items-center gap-2 text-white/45">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={m.logo} alt="" className="size-5 object-contain" />
+          <span className="font-mono text-xs">{m.name}</span>
+        </span>
+      ))}
+    </div>
+  );
+  return (
+    <div className="overflow-hidden border-b border-white/10 py-6 [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
+      <div className="flex w-max" style={{ animation: 'tossMarquee 28s linear infinite' }}>
+        {group('a')}
+        {group('b')}
+      </div>
+    </div>
+  );
+}
+
+// Coverage dot-map: the official API is a sliver of the Toss web-app surface.
+function CoverageGrid({ bright, dim, note }: { bright: string; dim: string; note: string }) {
+  const total = 160;
+  const official = 6; // ~4%
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#0f0f0f] p-6">
+      <div className="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-1.5">
+        {Array.from({ length: total }).map((_, i) => (
+          <span
+            key={i}
+            className={
+              'aspect-square rounded-[2px] ' + (i < official ? 'bg-brand-200' : 'bg-white/[0.06]')
+            }
+          />
+        ))}
+      </div>
+      <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[11px] text-white/45">
+        <span className="inline-flex items-center gap-2">
+          <span className="size-2.5 rounded-[2px] bg-brand-200" /> {bright}
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="size-2.5 rounded-[2px] bg-white/[0.12]" /> {dim}
+        </span>
+      </div>
+      <p className="mt-3 text-[12px] leading-relaxed text-white/45">{note}</p>
     </div>
   );
 }
@@ -300,6 +372,9 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
         </div>
       </section>
 
+      {/* ── Works-with marquee ─────────────────────────────── */}
+      <Marquee />
+
       {/* ── Thesis / problem ───────────────────────────────── */}
       <section className="border-b border-white/10">
         <div className="mx-auto w-full max-w-5xl px-4 py-20">
@@ -327,6 +402,18 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
         <div className="mx-auto w-full max-w-5xl px-4 py-16">
           <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-white/35">{t.compareLabel}</div>
           <p className="mb-8 max-w-2xl text-lg text-white/80">{t.compareLead}</p>
+
+          <div className="mb-8 grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-stretch">
+            <CoverageGrid bright={t.coverage.bright} dim={t.coverage.dim} note={t.coverage.note} />
+            <div className="grid grid-cols-3 divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#0f0f0f] lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
+              {t.stats.map((s) => (
+                <div key={s.l} className="px-4 py-6 text-center lg:py-5">
+                  <div className="font-sans text-3xl font-bold tracking-tight text-brand-200">{s.n}</div>
+                  <div className="mx-auto mt-1.5 max-w-[18ch] text-[12px] leading-snug text-white/45">{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="grid items-stretch gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-white/10 bg-[#0f0f0f] p-6 opacity-80">
