@@ -150,10 +150,27 @@ function Install-Tossctl {
             }
         }
         if ($pyCmd) {
+            # pip prints notices/progress to stderr even on success. With
+            # $ErrorActionPreference='Stop', merging stderr via 2>&1 surfaces
+            # those lines as a fatal NativeCommandError *before* we can check the
+            # exit code (see issue #35). Relax error handling around the native
+            # call and rely on $LASTEXITCODE instead.
+            $prevEAP = $ErrorActionPreference
+            $prevNative = $null
+            if (Test-Path Variable:\PSNativeCommandUseErrorActionPreference) {
+                $prevNative = $PSNativeCommandUseErrorActionPreference
+                $PSNativeCommandUseErrorActionPreference = $false
+            }
+            $ErrorActionPreference = 'Continue'
             $pipOut = & $pyCmd -m pip install --quiet playwright 2>&1
-            if ($LASTEXITCODE -ne 0) {
+            $pipExit = $LASTEXITCODE
+            $ErrorActionPreference = $prevEAP
+            if ($null -ne $prevNative) {
+                $PSNativeCommandUseErrorActionPreference = $prevNative
+            }
+            if ($pipExit -ne 0) {
                 Write-Warn "Failed to install playwright. Run '$pyCmd -m pip install playwright' manually."
-                Write-Host $pipOut -ForegroundColor DarkGray
+                Write-Host ($pipOut | Out-String) -ForegroundColor DarkGray
             } else {
                 Write-Ok "playwright installed via $pyCmd."
             }
