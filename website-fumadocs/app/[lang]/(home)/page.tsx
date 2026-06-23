@@ -16,12 +16,12 @@ const FEATURE_ICONS = [ChartCandlestick, ShieldCheck, Bot, Sparkles, Radio, Term
 const AGENTS = [
   { name: 'Claude Code', logo: '/logos/claude.svg', sub: 'agent' },
   { name: 'Codex', logo: '/logos/codex.svg', sub: 'agent' },
-  { name: 'Cursor', logo: '/logos/cursor.svg', sub: 'editor' },
+  { name: 'Cursor', logo: '/logos/cursor.svg', sub: 'agent' },
 ];
 const INTEGRATIONS = [
-  { name: 'OpenClaw', logo: '/logos/openclaw.svg', sub: 'runtime' },
+  { name: 'OpenClaw', logo: '/logos/openclaw.svg', sub: 'agent' },
+  { name: 'opencode', logo: '/logos/opencode.svg', sub: 'agent' },
   { name: 'bash', logo: '/logos/bash.svg', sub: 'shell' },
-  { name: 'HTTP', logo: '/logos/http.svg', sub: 'api' },
 ];
 
 const content = {
@@ -34,10 +34,18 @@ const content = {
       </>
     ),
     cta: '시작하기',
-    leftLabel: 'AI AGENTS',
-    rightLabel: 'INTEGRATIONS',
+    thesis: {
+      label: '왜 지금',
+      headline: '공식 API는 천천히 열린다. tossctl은 지금 전부 다룬다.',
+      body: '토스증권도 공식 Open API를 사전 신청자에게 단계적으로 열고 있습니다. 다만 조회·주문 기본에 머물고, 신청과 승인을 거쳐야 합니다. tossctl은 그 범위를 100% 포함하고, 공식에 아직 없는 기능까지 — 승인 없이, 지금 — 다룹니다.',
+      points: [
+        { k: '단계적 · 승인제', v: '공식은 사전 신청자에게 좁은 범위부터 천천히 연다.' },
+        { k: '기다리지 않는다', v: 'tossctl은 롤아웃을 기다리지 않고 지금 전 범위를 다룬다.' },
+        { k: '에이전트가 다룬다', v: '모든 명령이 JSON. 사람도 AI 에이전트도 같은 인터페이스.' },
+      ],
+    },
     sectionLabel: '왜 tossctl 인가',
-    compareLabel: '공식 Open API 의 상위집합',
+    compareLabel: '공식 OPEN API 의 상위집합',
     compareLead: (
       <>
         공식 Open API(예정)의 조회·거래를 <span className="text-brand-200">100% 커버</span>하고,
@@ -86,8 +94,16 @@ const content = {
       </>
     ),
     cta: 'Get started',
-    leftLabel: 'AI AGENTS',
-    rightLabel: 'INTEGRATIONS',
+    thesis: {
+      label: 'WHY NOW',
+      headline: 'The official API opens slowly. tossctl drives all of it today.',
+      body: "Toss Securities is opening an official Open API too — in stages, to pre-approved applicants. But it stays at read/order basics and needs an application. tossctl covers 100% of that scope, plus what the official API still lacks — no approval, today.",
+      points: [
+        { k: 'Staged · gated', v: 'The official API opens a narrow scope slowly, to pre-applicants.' },
+        { k: 'No waiting', v: 'tossctl drives the full surface now, without waiting for the rollout.' },
+        { k: 'Agent-operable', v: 'Every command is JSON — humans and AI agents, one interface.' },
+      ],
+    },
     sectionLabel: 'WHY TOSSCTL',
     compareLabel: 'A SUPERSET OF THE OFFICIAL OPEN API',
     compareLead: (
@@ -137,12 +153,44 @@ function Ring({ size, opacity }: { size: number; opacity: number }) {
   );
 }
 
+// MZ8Ua-style fading data dots radiating left/right from the central mark.
+function DotTrails() {
+  const rows = [-13, 0, 13];
+  const cols = [0, 1, 2, 3, 4, 5];
+  return (
+    <div className="pointer-events-none absolute inset-0 hidden lg:block">
+      {rows.map((dy) =>
+        cols.map((i) => {
+          const op = 0.5 * (1 - i / 6);
+          const dist = 56 + i * 15;
+          return (
+            <span key={`l${dy}-${i}`}>
+              <span
+                className="absolute rounded-full bg-emerald-300"
+                style={{ width: 3, height: 3, left: 120 - dist, top: 85 + dy, opacity: op }}
+              />
+              <span
+                className="absolute rounded-full bg-emerald-300"
+                style={{ width: 3, height: 3, left: 120 + dist, top: 85 + dy, opacity: op }}
+              />
+            </span>
+          );
+        }),
+      )}
+    </div>
+  );
+}
+
 function SpokeCard({ logo, name, sub }: { logo: string; name: string; sub: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#111111] p-3 transition-colors hover:border-white/20">
-      <span className="grid size-8 shrink-0 place-items-center rounded-md bg-white p-1.5">
+    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#111111] p-3 transition-colors hover:border-white/25">
+      <span className="grid size-8 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.06]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logo} alt={name} className="size-full object-contain" />
+        <img
+          src={logo}
+          alt={name}
+          className="size-4 object-contain [filter:brightness(0)_invert(1)]"
+        />
       </span>
       <div className="leading-tight">
         <div className="text-sm font-medium">{name}</div>
@@ -188,12 +236,12 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               className="pointer-events-none absolute inset-x-0 top-1/2 hidden h-px -translate-y-1/2 lg:block"
               style={{
                 background:
-                  'linear-gradient(90deg, transparent, rgba(52,211,153,0.25) 20%, rgba(52,211,153,0.45) 50%, rgba(52,211,153,0.25) 80%, transparent)',
+                  'linear-gradient(90deg, transparent, rgba(52,211,153,0.2) 18%, rgba(52,211,153,0.4) 50%, rgba(52,211,153,0.2) 82%, transparent)',
               }}
             />
 
             <div className="hidden flex-col gap-3 lg:flex">
-              <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">{t.leftLabel}</div>
+              <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AI AGENTS</div>
               {AGENTS.map((a) => (
                 <SpokeCard key={a.name} {...a} />
               ))}
@@ -201,6 +249,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
 
             <div className="relative z-1 flex flex-col items-center text-center">
               <div className="relative grid place-items-center" style={{ width: 240, height: 170 }}>
+                <DotTrails />
                 <Ring size={240} opacity={0.04} />
                 <Ring size={180} opacity={0.07} />
                 <Ring size={124} opacity={0.12} />
@@ -228,7 +277,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
             </div>
 
             <div className="hidden flex-col gap-3 lg:flex">
-              <div className="mb-1 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">{t.rightLabel}</div>
+              <div className="mb-1 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AGENTS · SHELL</div>
               {INTEGRATIONS.map((a) => (
                 <SpokeCard key={a.name} {...a} />
               ))}
@@ -253,6 +302,28 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
         </div>
       </section>
 
+      {/* ── Thesis / problem ───────────────────────────────── */}
+      <section className="border-b border-white/10">
+        <div className="mx-auto w-full max-w-5xl px-4 py-20">
+          <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-brand-200">
+            {t.thesis.label}
+          </div>
+          <h2 className="max-w-3xl font-sans text-2xl font-bold leading-snug md:text-[2rem]">
+            {t.thesis.headline}
+          </h2>
+          <p className="mt-4 max-w-2xl text-white/60">{t.thesis.body}</p>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {t.thesis.points.map((pt, i) => (
+              <div key={pt.k} className="rounded-xl border border-white/10 bg-[#0f0f0f] p-5">
+                <div className="mb-2 font-mono text-[11px] text-white/30">0{i + 1}</div>
+                <div className="font-mono text-xs font-medium text-brand-200">{pt.k}</div>
+                <p className="mt-2 text-sm leading-relaxed text-white/55">{pt.v}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Superset comparison ────────────────────────────── */}
       <section className="border-b border-white/10 bg-[#0c0c0c]">
         <div className="mx-auto w-full max-w-5xl px-4 py-16">
@@ -260,7 +331,6 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
           <p className="mb-8 max-w-2xl text-lg text-white/80">{t.compareLead}</p>
 
           <div className="grid items-stretch gap-4 md:grid-cols-2">
-            {/* official */}
             <div className="rounded-xl border border-white/10 bg-[#0f0f0f] p-6 opacity-80">
               <div className="mb-1 text-sm font-medium text-white/70">{t.official.name}</div>
               <div className="mb-4 font-mono text-[11px] text-white/35">{t.official.note}</div>
@@ -274,7 +344,6 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
               </ul>
             </div>
 
-            {/* tossctl */}
             <div className="relative rounded-xl border border-brand/40 bg-[#0f1512] p-6 shadow-[0_0_40px_-12px_rgba(52,211,153,0.35)]">
               <div className="mb-1 flex items-center gap-2 text-sm font-semibold">
                 <TossctlIcon className="size-4 rounded-[4px]" />
