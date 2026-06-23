@@ -283,9 +283,24 @@ function CoverageGrid({ bright, dim, note }: { bright: string; dim: string; note
   );
 }
 
-function SpokeCard({ logo, name, sub }: { logo: string; name: string; sub: string }) {
+function SpokeCard({
+  logo,
+  name,
+  sub,
+  mirror = false,
+}: {
+  logo: string;
+  name: string;
+  sub: string;
+  mirror?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#111111] p-3 transition-colors hover:border-white/25">
+    <div
+      className={
+        'flex items-center gap-3 rounded-lg border border-white/10 bg-[#111111] p-3 transition-colors hover:border-white/25 ' +
+        (mirror ? 'flex-row-reverse text-right' : '')
+      }
+    >
       <span className="grid size-8 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.06]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {/* 로고는 본연의 색 유지 (codex.svg 만 흰색으로 제작됨) */}
@@ -384,7 +399,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
             <div className="relative z-2 hidden flex-col gap-3 lg:flex">
               <div className="absolute -top-7 right-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AGENTS · SHELL</div>
               {INTEGRATIONS.map((a) => (
-                <SpokeCard key={a.name} {...a} />
+                <SpokeCard key={a.name} {...a} mirror />
               ))}
             </div>
           </div>
