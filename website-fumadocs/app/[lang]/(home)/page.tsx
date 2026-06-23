@@ -37,7 +37,7 @@ const content = {
     cta: '5분 만에 시작',
     proof: {
       label: 'Trusted by builders from',
-      note: '세계적 회사의 개발자들과 함께합니다',
+      note: '세계적 회사의 개발자들도 함께합니다',
     },
     thesis: {
       label: '왜 지금',
@@ -112,7 +112,7 @@ const content = {
     cta: 'Start in 5 minutes',
     proof: {
       label: 'Trusted by builders from',
-      note: 'developers from global companies',
+      note: 'incl. builders from world-class companies',
     },
     thesis: {
       label: 'WHY NOW',
@@ -353,6 +353,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
   const t = content[lang === 'en' ? 'en' : 'ko'];
   const p = lang === 'en' ? '/en' : '';
   const stars = await getGitHubStars();
+  const starsLabel = `${Math.floor(stars / 50) * 50}+`; // 409 → "400+"
 
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] text-white">
@@ -493,7 +494,7 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
             className="mt-6 inline-flex items-center gap-1.5 font-mono text-[11px] text-white/35 transition-colors hover:text-white/55"
           >
             <Star className="size-3" />
-            {stars.toLocaleString()} · {t.proof.note}
+            {starsLabel} · {t.proof.note}
           </a>
         </div>
       </section>
