@@ -5,7 +5,7 @@
 > exposes no historical dailies, so the download column is recorded forward from
 > the day tracking started (earlier rows show `—`).
 
-**⭐ 409 stars · ⬇️ 2,512 release downloads · since 2026-03-13**
+**⭐ 409 stars · ⬇️ 2,521 release downloads · since 2026-03-13**
 
 _Last updated: 2026-06-23 (UTC)_
 
@@ -113,4 +113,4 @@ _Last updated: 2026-06-23 (UTC)_
 | 2026-06-20 | 398 (+4) | — |
 | 2026-06-21 | 398 (+0) | — |
 | 2026-06-22 | 404 (+6) | — |
-| 2026-06-23 | 409 (+5) | 2,512 |
+| 2026-06-23 | 409 (+5) | 2,521 |
