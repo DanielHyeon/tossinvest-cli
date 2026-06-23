@@ -36,9 +36,8 @@ const content = {
     ),
     cta: '5분 만에 시작',
     proof: {
-      label: 'STARRED BY',
-      companies: ['Kakao', 'Naver', '당근', '두나무', 'SK텔레콤', 'TeamSparta'],
-      tail: '등의 엔지니어를 포함해 400+ 개발자가 GitHub에서 tossctl을 star 했습니다.',
+      label: '이런 회사의 빌더들이 함께합니다',
+      note: 'GitHub ★ 400+ · 회사는 stargazer 공개 프로필 기준',
     },
     thesis: {
       label: '왜 지금',
@@ -112,9 +111,8 @@ const content = {
     ),
     cta: 'Start in 5 minutes',
     proof: {
-      label: 'STARRED BY',
-      companies: ['Kakao', 'Naver', 'Daangn', 'Dunamu', 'SK Telecom', 'TeamSparta'],
-      tail: '— engineers among 400+ developers who have starred tossctl on GitHub.',
+      label: 'Trusted by builders from',
+      note: '400+ GitHub stars · companies from stargazers’ public profiles',
     },
     thesis: {
       label: 'WHY NOW',
@@ -256,6 +254,21 @@ function Marquee() {
     </div>
   );
 }
+
+// "Trusted by builders from" grid. Companies are derived from stargazers'
+// public GitHub `company` field — framed as *builders from*, never an
+// endorsement. Logos where simple-icons has them (white), wordmark text
+// otherwise. Toss is intentionally excluded (this is an unofficial tool).
+const COMPANIES: { name: string; logo?: string }[] = [
+  { name: 'Naver', logo: '/logos/companies/naver.svg' },
+  { name: 'Kakao', logo: '/logos/companies/kakao.svg' },
+  { name: 'Daangn' },
+  { name: 'Dunamu' },
+  { name: 'TMAP' },
+  { name: 'SK telecom' },
+  { name: 'TeamSparta' },
+  { name: 'TwelveLabs' },
+];
 
 // Coverage dot-map: the official API is a sliver of the Toss web-app surface.
 function CoverageGrid({ bright, dim, note }: { bright: string; dim: string; note: string }) {
@@ -427,22 +440,36 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
       {/* ── Works-with marquee ─────────────────────────────── */}
       <Marquee />
 
-      {/* ── Social proof (GitHub stars, public company field — no logos/endorsement) ── */}
+      {/* ── Social proof: "Trusted by builders from" (stargazers' employers) ── */}
       <section className="border-b border-white/10">
-        <div className="mx-auto max-w-4xl px-4 py-10 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/30">
-            <Star className="size-3.5 text-brand-200" />
+        <div className="mx-auto max-w-5xl px-4 py-14 text-center">
+          <div className="mb-8 font-sans text-sm font-semibold tracking-wide text-white/80">
             {t.proof.label}
           </div>
-          <p className="mx-auto max-w-2xl break-keep text-sm leading-relaxed">
-            <a
-              href="https://github.com/JungHoonGhae/tossinvest-cli/stargazers"
-              className="font-medium text-white/85 underline-offset-4 hover:underline"
-            >
-              {t.proof.companies.join(' · ')}
-            </a>
-            <span className="mt-1.5 block text-white/55">{t.proof.tail}</span>
-          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {COMPANIES.map((c) => (
+              <div
+                key={c.name}
+                className="flex h-20 items-center justify-center rounded-xl border border-white/10 bg-[#0f0f0f]"
+              >
+                {c.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.logo} alt={c.name} className="h-6 w-auto object-contain opacity-70" />
+                ) : (
+                  <span className="font-sans text-base font-semibold tracking-tight text-white/70">
+                    {c.name}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <a
+            href="https://github.com/JungHoonGhae/tossinvest-cli/stargazers"
+            className="mt-6 inline-flex items-center gap-1.5 font-mono text-[11px] text-white/35 transition-colors hover:text-white/55"
+          >
+            <Star className="size-3" />
+            {t.proof.note}
+          </a>
         </div>
       </section>
 
