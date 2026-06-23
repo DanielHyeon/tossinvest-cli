@@ -19,17 +19,16 @@ export function Body({ children }: { children: ReactNode }) {
 }
 
 // tossctl mark: a terminal-style rounded square with a ">_" glyph.
+// tossctl mark — terminal prompt: a ">" chevron of pixels + a green caret dash,
+// on a dark rounded tile. Mirrors the design source (Pencil node z3Ufn1).
 export function TossctlIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 180 180" fill="none" aria-hidden="true" {...props}>
-      <rect x="6" y="6" width="168" height="168" rx="36" fill="var(--color-brand)" />
-      <path
-        d="M52 66 L82 90 L52 114 M96 118 H128"
-        stroke="var(--color-brand-foreground)"
-        strokeWidth="13"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 56 56" fill="none" aria-hidden="true" {...props}>
+      <rect width="56" height="56" rx="12" fill="#111111" />
+      <rect x="12" y="17" width="5" height="5" fill="#ffffff" />
+      <rect x="20" y="25" width="5" height="5" fill="#ffffff" />
+      <rect x="12" y="33" width="5" height="5" fill="#ffffff" />
+      <rect x="28" y="33" width="16" height="5" rx="1" fill="#34D399" />
     </svg>
   );
 }

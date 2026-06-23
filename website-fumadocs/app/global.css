@@ -5,31 +5,31 @@
 
 @theme {
   --spacing-page: 1436px;
-  /* Toss blue */
-  --color-brand: #3182f6;
+  /* tossctl green (design source: prompt caret #34D399) */
+  --color-brand: #10a572;
   --color-brand-foreground: white;
-  --color-brand-secondary: #1b64da;
+  --color-brand-secondary: #0e8d62;
   --color-brand-secondary-foreground: #ffffff;
-  --color-brand-200: #5a9bff;
-  --overview-color: #3182f6;
-  --getting-started-color: hsl(153, 48%, 40%);
-  --guide-color: hsl(218, 80%, 56%);
+  --color-brand-200: #34d399;
+  --overview-color: #10a572;
+  --getting-started-color: #10a572;
+  --guide-color: hsl(218, 60%, 52%);
   --reference-color: hsl(273, 50%, 52%);
 
-  --color-landing-foreground: #1b3a66;
-  --color-landing-foreground-200: #5a82b8;
+  --color-landing-foreground: #1c3b30;
+  --color-landing-foreground-200: #5b8a78;
 }
 
 .dark {
-  --color-landing-foreground: #d6e4ff;
-  --color-landing-foreground-200: #8fb4ee;
-  --color-brand: #4f97ff;
-  --color-brand-secondary: #79b1ff;
-  --color-brand-secondary-foreground: #06234d;
-  --color-brand-foreground: #04122b;
-  --color-brand-200: #a8ccff;
-  --overview-color: #4f97ff;
-  --getting-started-color: #8fe0bd;
+  --color-landing-foreground: #d4f5e8;
+  --color-landing-foreground-200: #7fcaae;
+  --color-brand: #34d399;
+  --color-brand-secondary: #6ee7b7;
+  --color-brand-secondary-foreground: #03261a;
+  --color-brand-foreground: #03261a;
+  --color-brand-200: #a7f3d0;
+  --overview-color: #34d399;
+  --getting-started-color: #6ee7b7;
   --guide-color: #96b8ff;
   --reference-color: #cfb2ff;
   --protocol-color: #cfb2ff;

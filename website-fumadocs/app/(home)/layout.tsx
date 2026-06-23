@@ -6,7 +6,8 @@ export default function Layout({ children }: LayoutProps<'/'>) {
     <HomeLayout
       {...baseOptions()}
       links={linkItems}
-      className="dark:bg-neutral-950 dark:[--color-fd-background:var(--color-neutral-950)] [--color-fd-primary:var(--color-brand)]"
+      // 랜딩은 디자인 소스(MZ8Ua)에 맞춰 항상 다크.
+      className="dark bg-[#0a0a0a] [--color-fd-background:#0a0a0a] [--color-fd-primary:var(--color-brand)]"
     >
       {children}
     </HomeLayout>

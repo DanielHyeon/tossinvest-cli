@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import { Provider } from '@/components/provider';
 import { Body } from '@/app/layout.client';
 import { source } from '@/lib/source';
@@ -8,12 +8,12 @@ import { NextProvider } from 'fumadocs-core/framework/next';
 import { TreeContextProvider } from 'fumadocs-ui/contexts/tree';
 import './global.css';
 
-const geist = Geist({
+const geist = Space_Grotesk({
   variable: '--font-sans',
   subsets: ['latin'],
 });
 
-const mono = Geist_Mono({
+const mono = JetBrains_Mono({
   variable: '--font-mono',
   subsets: ['latin'],
 });

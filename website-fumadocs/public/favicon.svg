@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#FEE500"/>
-  <text x="16" y="23" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#3C1E1E">OK</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56">
+  <rect width="56" height="56" rx="12" fill="#111111"/>
+  <rect x="12" y="17" width="5" height="5" fill="#ffffff"/>
+  <rect x="20" y="25" width="5" height="5" fill="#ffffff"/>
+  <rect x="12" y="33" width="5" height="5" fill="#ffffff"/>
+  <rect x="28" y="33" width="16" height="5" rx="1" fill="#34D399"/>
 </svg>
