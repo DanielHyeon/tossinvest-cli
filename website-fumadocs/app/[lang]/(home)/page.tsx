@@ -201,15 +201,29 @@ function DotTrails() {
   );
 }
 
-// Scrolling "works with" strip.
-const MARQUEE = [...AGENTS, ...INTEGRATIONS, { name: 'HTTP', logo: '/logos/http.svg', sub: 'api' }];
+// Scrolling "works with" strip — any tool that can run a CLI drives tossctl.
+// Logos rendered as uniform white marks (official brand SVGs, mono on dark).
+const MARQUEE = [
+  { name: 'Claude Code', logo: '/logos/mq/claude.svg' },
+  { name: 'Codex CLI', logo: '/logos/codex.svg' },
+  { name: 'OpenCode', logo: '/logos/opencode.svg' },
+  { name: 'Gemini CLI', logo: '/logos/mq/googlegemini.svg' },
+  { name: 'GitHub Copilot', logo: '/logos/mq/githubcopilot.svg' },
+  { name: 'Cursor', logo: '/logos/mq/cursor.svg' },
+  { name: 'Qwen Code', logo: '/logos/mq/qwen.svg' },
+  { name: 'DeepSeek', logo: '/logos/mq/deepseek.svg' },
+  { name: 'Mistral', logo: '/logos/mq/mistralai.svg' },
+  { name: 'OpenClaw', logo: '/logos/openclaw.svg' },
+  { name: 'bash', logo: '/logos/bash.svg' },
+  { name: 'HTTP', logo: '/logos/http.svg' },
+];
 function Marquee() {
   const group = (key: string) => (
-    <div key={key} className="flex shrink-0 items-center gap-12 pe-12" aria-hidden={key === 'b'}>
+    <div key={key} className="flex shrink-0 items-center gap-10 pe-10" aria-hidden={key === 'b'}>
       {MARQUEE.map((m) => (
-        <span key={m.name} className="inline-flex shrink-0 items-center gap-2 text-white/45">
+        <span key={m.name} className="inline-flex shrink-0 items-center gap-2 text-white/50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={m.logo} alt="" className="size-5 object-contain" />
+          <img src={m.logo} alt="" className="size-5 object-contain opacity-80 [filter:brightness(0)_invert(1)]" />
           <span className="font-mono text-xs">{m.name}</span>
         </span>
       ))}
