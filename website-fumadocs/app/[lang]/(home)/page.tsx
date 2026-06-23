@@ -262,7 +262,7 @@ function Marquee() {
 const COMPANIES: { name: string; logo?: string }[] = [
   { name: 'Naver', logo: '/logos/companies/naver.svg' },
   { name: 'Kakao', logo: '/logos/companies/kakao.svg' },
-  { name: 'Daangn', logo: '/logos/companies/daangn.png' },
+  { name: 'Daangn', logo: '/logos/companies/daangn.svg' },
   { name: 'Upbit', logo: '/logos/companies/upbit.svg' },
   { name: 'TMAP', logo: '/logos/companies/tmap.png' },
   { name: 'SK telecom', logo: '/logos/companies/sktelecom.svg' },
