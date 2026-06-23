@@ -1,0 +1,41 @@
+# 설정
+
+설정 파일 위치는 OS별 사용자 설정 디렉터리이며, `tossctl config status` 로 경로와 현재
+상태를 확인할 수 있습니다.
+
+```bash
+tossctl config status
+```
+
+## 주요 항목
+
+```json
+{
+  "trading": {
+    "grant": ["place", "sell"]
+  },
+  "update_check": {
+    "enabled": true
+  }
+}
+```
+
+| 키 | 설명 |
+|----|------|
+| `trading.grant` | 허용할 거래 동작 배열 (`place`, `sell`). 비어 있으면 거래 불가 |
+| `update_check.enabled` | 새 버전 알림 on/off (자동화 출력은 오염시키지 않음) |
+
+- 스키마 버전은 자동 관리되며, 오래된/사용되지 않는 항목이 있으면 실행 시 한 줄 안내가
+  나오고 `config status`·`doctor` 가 표시합니다.
+- 설정 스키마(JSON Schema)는 저장소의
+  [`schemas/config.schema.json`](https://github.com/JungHoonGhae/tossinvest-cli/blob/main/schemas/config.schema.json)
+  에 있습니다.
+
+## 진단
+
+```bash
+tossctl doctor            # 사람용 점검
+tossctl doctor --report   # JSON 진단 (홈 경로 마스킹, 이슈 첨부용)
+```
+
+거래 보호 장치는 [안전 모델](safety.md)에서 자세히 다룹니다.

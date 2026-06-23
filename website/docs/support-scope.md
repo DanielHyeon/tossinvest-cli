@@ -1,0 +1,56 @@
+# 지원 범위
+
+**tossctl 은 토스 공식 Open API(예정)의 조회·거래 범위를 100% 커버하고, 그 너머까지
+다룹니다.** 공식 Open API 는 현재 사전 신청자 대상 단계적 롤아웃 중인 REST-only의 좁은
+범위이고, tossctl 은 토스 웹앱(WTS)이 실제로 쓰는 넓은 범위 위에서 동작합니다.
+
+- ✅ 지원 · ❌ 미지원 · 🔸 부분 지원
+- `공식 API (예정)` 칼럼 = 공개 문서 기준 예상 커버리지(롤아웃에 따라 변동 가능)
+- 공식이 ❌ 인 행 = tossctl 고유 기능
+
+## 조회 (읽기 전용)
+
+| 기능 | 명령 | 공식 API (예정) | tossctl |
+|------|------|:--:|:--:|
+| 계좌 목록 / 요약 | `account list`, `account summary` | ✅ | ✅ |
+| 포트폴리오 | `portfolio positions`, `portfolio allocation` | ✅ | ✅ |
+| 체결 틱 / 호가 | `quote trades`, `quote orderbook` | ✅ | ✅ |
+| 상·하한가 / 매수 유의 | `quote limits`, `quote warnings` | ✅ | ✅ |
+| 매도가능수량 / 수수료 | `quote sellable`, `quote commission` | ✅ | ✅ |
+| 시세 / 캔들 | `quote get`, `quote chart` | 🔸 | ✅ |
+| 멀티 시세 / 실시간 갱신 | `quote batch --live` | ❌ | ✅ |
+| 수급(투자자별 순매수) | `quote flows` | ❌ | ✅ |
+| 시장 지수 / 지수 상세 | `market index [<코드\|이름>]` | ❌ | ✅ |
+| 실시간 인기 순위 | `market ranking` | ❌ | ✅ |
+| 투자자별 순매수 상위 | `market investors` | ❌ | ✅ |
+| 업종별 등락 | `market sectors` | ❌ | ✅ |
+| 실적(어닝콜) 일정 | `market earnings [--major]` | ❌ | ✅ |
+| 개인화 뉴스 브리핑 | `market briefing` | ❌ | ✅ |
+| 토스 AI 시그널 | `market signals` | ❌ | ✅ |
+| 조건검색(스크리너) | `market screener` | ❌ | ✅ |
+| 배당 내역 | `portfolio dividends` | ❌ | ✅ |
+| 커뮤니티 랭킹 | `community rankings` | ❌ | ✅ |
+| 관심종목 조회·관리 | `watchlist ...` | ❌ | ✅ |
+| 거래내역 ledger / 현금 overview | `transactions list/overview` | ❌ | ✅ |
+| CSV 내보내기 | `export ...` | ❌ | ✅ |
+
+## 거래
+
+| 기능 | 명령 | 공식 API (예정) | tossctl |
+|------|------|:--:|:--:|
+| 매수·매도 주문 | `order place` | ✅ | ✅ |
+| 주문 취소·정정 | `order cancel`, `order amend` | ✅ | ✅ |
+| dry-run preview | `order preview` | ❌ | ✅ |
+| 소수점(금액) 주문 | `order place --fractional` | 🔸 | ✅ |
+| 실시간 푸시(SSE) | `push listen` | ❌ | ✅ |
+
+## 검증 기준
+
+`공식 API` 칼럼은 [공식 Open API 문서](https://developers.tossinvest.com/docs)의 특정
+버전 기준으로 검증됩니다. 검증된 버전·마지막 점검일은 저장소의
+[`.openapi-snapshot.json`](https://github.com/JungHoonGhae/tossinvest-cli/blob/main/docs/migration/.openapi-snapshot.json)
+에 기록되며, 전체 spec 사본을 매일 미러링하고 변경 시 자동 감지·갱신합니다.
+
+WTS 웹 API 전체 카탈로그(구현/다음 추가 후보/의도적 제외)는
+[`wts-endpoints.json`](https://github.com/JungHoonGhae/tossinvest-cli/blob/main/docs/reverse-engineering/wts-endpoints.json)
+에서 지속 추적합니다.
