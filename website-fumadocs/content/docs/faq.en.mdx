@@ -1,0 +1,65 @@
+---
+title: FAQ
+description: tossctl FAQ — legality, auth, sessions, trading, agents
+---
+
+Common questions. If yours isn't here, open an issue on [GitHub](https://github.com/JungHoonGhae/tossinvest-cli/issues).
+
+## General
+
+### Is this legal? Is it official?
+No. tossctl reuses Toss Securities' internal web API unofficially, which may violate their Terms of Service. The API can change without notice, and you bear the risk of account restrictions, losses, or other consequences.
+
+### How does it relate to the official Open API?
+Toss's official Open API is rolling out in stages to pre-approved applicants and currently covers only ~4% (~20) of the full Toss WTS feature set. tossctl covers 100% of that and adds features the official API still lacks. See [Support Scope](/en/docs/reference/support-scope).
+
+### What happens as the official API grows?
+Optional hybrid: tossctl works fully without the official API, and you can plug it in so officially-supported features route through it for extra stability.
+
+## Install
+
+### What do I need?
+Read-only commands work from the binary alone. `auth login` (browser login) needs Google Chrome and Python — the install script checks for and sets these up automatically.
+
+### Does it work on Windows?
+Yes. Install via PowerShell (`irm https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.ps1 | iex`) or a GitHub Releases binary.
+
+## Auth & sessions
+
+### Login succeeds but `auth status` is `invalid` / rejected (400·401·403)
+A known bug before v0.10.1: tossctl sent a hardcoded macOS User-Agent, which didn't match sessions created on other OSes (Windows·Linux), so Toss's server rejected the requests. **Update to v0.10.1 or later** to fix it.
+
+```bash
+tossctl auth logout
+tossctl auth login
+tossctl auth status   # expect 'Live Check: valid'
+```
+
+### My session drops after ~1 hour
+After scanning the QR, you must tap the **"keep this device signed in"** confirmation on your phone to get a persistent session. Verify `tossctl auth status` shows `Persistence: persistent cookie (expires ...)`.
+
+### My session expires every ~7 days
+Toss enforces a ~7-day server-side activity expiry separate from the SESSION cookie. From 24h before expiry a warning appears; run `tossctl auth extend` to renew via a push approval in the Toss app — no re-login needed.
+
+### Headless environments (SSH servers, CI)?
+`tossctl auth login --headless [--qr-output /tmp/toss-qr.png]`. The QR URL and answer letter print to stderr; forward the URL to your phone to authenticate without a camera.
+
+## Trading
+
+### Can an order fire by accident?
+No. Trading is fully off out of the box and must be enabled per-action in `config.json`. Live orders require a two-step `--execute` + `--confirm <token>`, and `tossctl order preview` lets you check first. See [Safety Model](/en/docs/guide/safety).
+
+### Which orders are supported?
+KR/US stock limit buy/sell, US fractional (notional) market orders, and same-day pending cancel (beta). Amend is still under verification.
+
+## Agents & output
+
+### How do agents integrate?
+Every command emits structured results via `--output json`, and the rules for safe, correct agent use are in the [AI Agent Guide](/en/docs/guide/agents). For direct LLM ingestion there's also [`/llms.txt`](/llms.txt) and [`/llms-full.txt`](/llms-full.txt).
+
+### Output formats?
+table · JSON · CSV · SSE — drop straight into scripts and pipelines.
+
+## Getting help
+
+Open an issue on [GitHub](https://github.com/JungHoonGhae/tossinvest-cli/issues). Including `tossctl doctor --report` output speeds up diagnosis (sensitive data is redacted automatically).

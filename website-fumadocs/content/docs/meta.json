@@ -1,5 +1,5 @@
 {
   "title": "문서",
   "root": true,
-  "pages": ["index", "getting-started", "guide", "reference"]
+  "pages": ["index", "getting-started", "guide", "reference", "faq", "changelog"]
 }
