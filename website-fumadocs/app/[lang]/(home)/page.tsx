@@ -29,11 +29,11 @@ const content = {
     sub: 'connect your AI agents to Toss Securities',
     desc: (
       <>
-        <code className="font-mono text-white/90">tossctl</code> 하나로 계좌·시세·거래내역 조회와
-        제한된 거래까지. 사람도 에이전트도 동일한 명령으로.
+        <code className="font-mono text-white/90">tossctl</code> 명령 하나로 토스증권 계좌·시세·
+        거래내역을 읽고, 주문까지 보냅니다. 사람이 치든 AI 에이전트가 호출하든 같은 명령으로.
       </>
     ),
-    cta: '시작하기',
+    cta: '5분 만에 시작',
     thesis: {
       label: '왜 지금',
       headline: '공식 API는 천천히 열린다. tossctl은 지금 전부 다룬다.',
@@ -77,23 +77,24 @@ const content = {
     llmCta: 'AI 에이전트 가이드 →',
     disclaimer: '비공식 CLI · 토스증권과 무관 · 투자 손익의 책임은 본인에게 있습니다',
     features: [
-      { label: 'DATA', title: '넓은 조회', desc: '계좌·시세·호가·체결·수급·시장지수·지수 상세·업종 등락·배당·거래내역까지.' },
-      { label: 'SAFETY', title: '안전한 거래', desc: '기본 비활성 + dry-run preview + --execute/--confirm 2단계 게이트.' },
-      { label: 'AGENTS', title: 'AI 에이전트 친화', desc: '모든 명령 --output json. Claude·Codex·Cursor·OpenClaw 어디든 연결.' },
-      { label: 'INTELLIGENCE', title: '토스 AI 기능', desc: 'AI 시그널·개인화 뉴스 브리핑·조건검색·커뮤니티 랭킹 등 공식 API 미지원.' },
-      { label: 'REALTIME', title: '실시간 푸시', desc: 'push listen(SSE)로 주문·체결·보유 변경을 실시간 스트림.' },
-      { label: 'AUTOMATION', title: '자동화 우선', desc: 'table · JSON · CSV · SSE 출력. 파이프라인·스크립트에 바로 연결.' },
+      { label: 'DATA', title: '넓은 조회', desc: '계좌·시세·호가·체결·수급·지수·업종·배당·거래내역까지 한 CLI로.' },
+      { label: 'SAFETY', title: '안전한 거래', desc: '실수로 주문이 나갈 일 없음 — 기본 비활성, dry-run preview, --execute·--confirm 2단계.' },
+      { label: 'AGENTS', title: '에이전트 친화', desc: '모든 명령이 --output json. Claude·Codex·Cursor·OpenClaw 가 바로 파싱한다.' },
+      { label: 'INTELLIGENCE', title: '토스 AI 기능', desc: '공식 API엔 없는 AI 시그널·뉴스 브리핑·조건검색·커뮤니티 랭킹.' },
+      { label: 'REALTIME', title: '실시간 푸시', desc: '주문·체결·보유 변동을 SSE 로 실시간 스트림.' },
+      { label: 'AUTOMATION', title: '자동화 우선', desc: 'table·JSON·CSV·SSE 출력 — 스크립트·파이프라인에 바로 꽂는다.' },
     ],
   },
   en: {
     sub: 'connect your AI agents to Toss Securities',
     desc: (
       <>
-        One <code className="font-mono text-white/90">tossctl</code> for accounts, quotes,
-        transactions, and limited trading — for humans and agents alike.
+        Read accounts, quotes, and transactions — and place orders — from one{' '}
+        <code className="font-mono text-white/90">tossctl</code> command. The same command whether a
+        human types it or an agent calls it.
       </>
     ),
-    cta: 'Get started',
+    cta: 'Start in 5 minutes',
     thesis: {
       label: 'WHY NOW',
       headline: 'The official API opens slowly. tossctl drives all of it today.',
@@ -137,12 +138,12 @@ const content = {
     llmCta: 'AI Agent Guide →',
     disclaimer: 'Unofficial CLI · not affiliated with Toss Securities · use at your own risk',
     features: [
-      { label: 'DATA', title: 'Broad reads', desc: 'Accounts, quotes, orderbook, ticks, flows, indices, index detail, sectors, dividends, ledger.' },
-      { label: 'SAFETY', title: 'Safe trading', desc: 'Off by default + dry-run preview + two-step --execute/--confirm gate.' },
-      { label: 'AGENTS', title: 'Agent-friendly', desc: 'Every command --output json. Works with Claude, Codex, Cursor, OpenClaw.' },
-      { label: 'INTELLIGENCE', title: 'Toss AI features', desc: 'AI signals, news briefing, screener, community rankings — not in the official API.' },
-      { label: 'REALTIME', title: 'Real-time push', desc: 'push listen (SSE) streams orders, fills, and holdings changes live.' },
-      { label: 'AUTOMATION', title: 'Automation-first', desc: 'table · JSON · CSV · SSE output. Plug straight into pipelines.' },
+      { label: 'DATA', title: 'Broad reads', desc: 'Accounts, quotes, orderbook, ticks, flows, indices, sectors, dividends, ledger — one CLI.' },
+      { label: 'SAFETY', title: 'Safe trading', desc: 'Never fire an order by accident — off by default, dry-run preview, two-step --execute/--confirm.' },
+      { label: 'AGENTS', title: 'Agent-friendly', desc: 'Every command speaks --output json. Claude, Codex, Cursor, OpenClaw parse it straight away.' },
+      { label: 'INTELLIGENCE', title: 'Toss AI features', desc: 'AI signals, news briefing, screener, community rankings — none of which the official API has.' },
+      { label: 'REALTIME', title: 'Real-time push', desc: 'Stream orders, fills, and holdings changes live over SSE.' },
+      { label: 'AUTOMATION', title: 'Automation-first', desc: 'table · JSON · CSV · SSE output — drop it straight into scripts and pipelines.' },
     ],
   },
 } as const;
@@ -186,11 +187,8 @@ function SpokeCard({ logo, name, sub }: { logo: string; name: string; sub: strin
     <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#111111] p-3 transition-colors hover:border-white/25">
       <span className="grid size-8 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.06]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={logo}
-          alt={name}
-          className="size-4 object-contain [filter:brightness(0)_invert(1)]"
-        />
+        {/* 로고는 본연의 색 유지 (codex.svg 만 흰색으로 제작됨) */}
+        <img src={logo} alt={name} className="size-4 object-contain" />
       </span>
       <div className="leading-tight">
         <div className="text-sm font-medium">{name}</div>
