@@ -8,6 +8,7 @@ import {
   Radio,
   ShieldCheck,
   Sparkles,
+  Star,
   TerminalSquare,
 } from 'lucide-react';
 
@@ -34,6 +35,11 @@ const content = {
       </>
     ),
     cta: '5분 만에 시작',
+    proof: {
+      label: 'STARRED BY',
+      companies: ['Kakao', 'Naver', '당근', '두나무', 'SK텔레콤', 'TeamSparta'],
+      tail: ' 등의 엔지니어를 포함해 400+ 개발자가 GitHub에서 tossctl을 star 했습니다.',
+    },
     thesis: {
       label: '왜 지금',
       headline: '공식 API, 기다릴 필요 없습니다',
@@ -105,6 +111,11 @@ const content = {
       </>
     ),
     cta: 'Start in 5 minutes',
+    proof: {
+      label: 'STARRED BY',
+      companies: ['Kakao', 'Naver', 'Daangn', 'Dunamu', 'SK Telecom', 'TeamSparta'],
+      tail: ' — engineers among 400+ developers who have starred tossctl on GitHub.',
+    },
     thesis: {
       label: 'WHY NOW',
       headline: "You don't have to wait for the official API",
@@ -414,6 +425,25 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
 
       {/* ── Works-with marquee ─────────────────────────────── */}
       <Marquee />
+
+      {/* ── Social proof (GitHub stars, public company field — no logos/endorsement) ── */}
+      <section className="border-b border-white/10">
+        <div className="mx-auto max-w-4xl px-4 py-10 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/30">
+            <Star className="size-3.5 text-brand-200" />
+            {t.proof.label}
+          </div>
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/55">
+            <a
+              href="https://github.com/JungHoonGhae/tossinvest-cli/stargazers"
+              className="font-medium text-white/85 underline-offset-4 hover:underline"
+            >
+              {t.proof.companies.join(' · ')}
+            </a>
+            {t.proof.tail}
+          </p>
+        </div>
+      </section>
 
       {/* ── Thesis / problem ───────────────────────────────── */}
       <section className="border-b border-white/10">
