@@ -36,7 +36,7 @@ const content = {
     ),
     cta: '5분 만에 시작',
     proof: {
-      label: '이런 회사의 빌더들이 함께합니다',
+      label: 'Trusted by builders from',
       note: 'GitHub ★ 400+ · 회사는 stargazer 공개 프로필 기준',
     },
     thesis: {
@@ -262,11 +262,11 @@ function Marquee() {
 const COMPANIES: { name: string; logo?: string }[] = [
   { name: 'Naver', logo: '/logos/companies/naver.svg' },
   { name: 'Kakao', logo: '/logos/companies/kakao.svg' },
-  { name: 'Daangn' },
-  { name: 'Dunamu' },
-  { name: 'TMAP' },
-  { name: 'SK telecom' },
-  { name: 'TeamSparta' },
+  { name: 'Daangn', logo: '/logos/companies/daangn.png' },
+  { name: 'Upbit', logo: '/logos/companies/upbit.svg' },
+  { name: 'TMAP', logo: '/logos/companies/tmap.png' },
+  { name: 'SK telecom', logo: '/logos/companies/sktelecom.svg' },
+  { name: 'TeamSparta', logo: '/logos/companies/teamsparta.png' },
   { name: 'TwelveLabs' },
 ];
 
@@ -454,7 +454,12 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
               >
                 {c.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.logo} alt={c.name} className="h-6 w-auto object-contain opacity-70" />
+                  // 브랜드 로고는 원래 색 유지 + 높이 고정(아이콘/워드마크 혼재).
+                  <img
+                    src={c.logo}
+                    alt={c.name}
+                    className="h-7 w-auto max-w-[130px] object-contain"
+                  />
                 ) : (
                   <span className="font-sans text-base font-semibold tracking-tight text-white/70">
                     {c.name}
