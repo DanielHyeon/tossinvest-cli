@@ -10,6 +10,6 @@
   "docs_status": "200",
   "llms_txt_status": "200",
   "updated_at": "2026-06-11",
-  "last_checked_at": "2026-06-22",
+  "last_checked_at": "2026-06-23",
   "note": "updated_at = spec 가 마지막으로 바뀐 날, last_checked_at = 마지막 점검일. spec_full_sha256 = 전체 spec 해시(경로 외 내부 변경도 감지). 전체 spec 은 spec_file 에 저장. 1.1.1: GET /api/v1/orders 가 status=CLOSED(종료 주문 조회 + 페이징) 지원 시작 — tossctl 은 orders completed 로 이미 커버. 경로 목록(20)·경로해시는 1.0.3 과 동일."
 }
