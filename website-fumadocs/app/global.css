@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@plugin 'tailwindcss-animate';
+
+@theme {
+  --spacing-page: 1436px;
+  /* Toss blue */
+  --color-brand: #3182f6;
+  --color-brand-foreground: white;
+  --color-brand-secondary: #1b64da;
+  --color-brand-secondary-foreground: #ffffff;
+  --color-brand-200: #5a9bff;
+  --overview-color: #3182f6;
+  --getting-started-color: hsl(153, 48%, 40%);
+  --guide-color: hsl(218, 80%, 56%);
+  --reference-color: hsl(273, 50%, 52%);
+
+  --color-landing-foreground: #1b3a66;
+  --color-landing-foreground-200: #5a82b8;
+}
+
+.dark {
+  --color-landing-foreground: #d6e4ff;
+  --color-landing-foreground-200: #8fb4ee;
+  --color-brand: #4f97ff;
+  --color-brand-secondary: #79b1ff;
+  --color-brand-secondary-foreground: #06234d;
+  --color-brand-foreground: #04122b;
+  --color-brand-200: #a8ccff;
+  --overview-color: #4f97ff;
+  --getting-started-color: #8fe0bd;
+  --guide-color: #96b8ff;
+  --reference-color: #cfb2ff;
+  --protocol-color: #cfb2ff;
+}
+
+@theme inline {
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+}
+
+body {
+  background-color: var(--color-fd-background);
+}

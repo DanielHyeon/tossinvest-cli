@@ -1,0 +1,68 @@
+---
+title: 빠른 시작
+description: 로그인부터 조회·거래까지
+---
+
+## 1. 로그인
+
+```bash
+tossctl auth login
+```
+
+QR이 표시되면 폰 토스 앱으로 스캔하고, **"이 기기 로그인 유지" 확인까지 꼭 누르세요.**
+이 2차 확인을 건너뛰면 세션이 약 1시간 idle 후 만료됩니다.
+
+확인:
+
+```bash
+tossctl auth status
+# Persistence: persistent cookie (expires ...) 이면 정상
+```
+
+### GUI 없는 환경 (SSH 서버·CI)
+
+```bash
+tossctl auth login --headless --qr-output /tmp/toss-qr.png
+```
+
+QR URL과 확인 문자가 stderr로 출력됩니다. URL을 폰으로 전달해 탭하면 카메라 없이 인증됩니다.
+
+### 세션 연장
+
+토스 서버는 약 7일짜리 활성 만료 시계를 운영합니다. 만료 24시간 전부터 경고가 뜨며,
+재로그인 없이 폰 푸시 승인으로 연장할 수 있습니다.
+
+```bash
+tossctl auth extend
+```
+
+## 2. 조회
+
+```bash
+tossctl account summary             # 계좌 요약
+tossctl portfolio positions         # 보유 종목
+tossctl quote get 005930            # 종목 시세 (국내 6자리 코드 자동 인식)
+tossctl quote get TSLA              # 미국 종목
+tossctl market index                # 주요 시장 지수
+tossctl market index nasdaq         # 지수 상세 (OHLC·52주)
+```
+
+모든 조회는 `--output json|csv|table` 을 지원합니다.
+
+```bash
+tossctl account summary --output json
+```
+
+## 3. 거래 (선택, 기본 비활성)
+
+거래는 `config.json`에서 명시적으로 허용해야 하고, 항상 미리보기를 먼저 실행하세요.
+
+```bash
+# 1) dry-run preview (주문 안 나감)
+tossctl order preview --symbol TSLA --side buy --qty 1 --price 250
+
+# 2) 실제 실행 — 2단계 게이트
+tossctl order place --symbol TSLA --side buy --qty 1 --price 250 --execute --confirm <token>
+```
+
+자세한 보호 장치는 [안전 모델](/docs/guide/safety)을 참고하세요.
