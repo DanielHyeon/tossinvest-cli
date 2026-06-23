@@ -37,10 +37,11 @@ const content = {
     thesis: {
       label: '왜 지금',
       headline: '공식 API, 기다릴 필요 없습니다',
-      body: '토스증권 공식 Open API는 사전 신청자에게만, 그것도 조회·주문 같은 기본 기능부터 천천히 열리고 있습니다. tossctl은 이 기능을 모두 지원하고, 공식에 아직 없는 기능까지 제공합니다. 신청이나 승인은 필요 없습니다.',
+      body: '토스증권 공식 Open API가 지금 지원하는 범위는 토스 WTS 전체 기능의 약 4%(~20개)뿐입니다. 그마저도 사전 신청자에게, 조회·주문 같은 기본 기능부터 천천히 열리고 있습니다. tossctl은 이 4%를 100% 포함하고, 공식에 아직 없는 나머지 WTS 기능까지 제공합니다. 신청이나 승인은 필요 없습니다.',
       points: [
-        { k: '단계적·승인제', v: '공식 API는 신청한 사람에게, 좁은 기능부터 조금씩 열립니다.' },
-        { k: '기다릴 필요 없이', v: 'tossctl은 공식 출시를 기다릴 필요 없이 전 기능을 지원합니다.' },
+        { k: '공식은 약 4%', v: '공식 Open API는 토스 WTS 기능 ~430개 중 약 20개(4%)만 지원합니다.' },
+        { k: '기다릴 필요 없이', v: '공식 출시를 기다릴 필요 없이, 공식 범위 100%와 그 너머 기능까지 지금 지원합니다.' },
+        { k: '선택적 하이브리드', v: '공식 API 없이도 전부 동작합니다. 원하면 공식 API를 연결해 지원 기능은 공식 경로로 — 안정성을 선택적으로 더합니다.' },
         { k: '에이전트 연동', v: '모든 명령이 JSON으로 출력되어 AI 에이전트와 바로 연동됩니다.' },
       ],
     },
@@ -53,14 +54,14 @@ const content = {
       </>
     ),
     stats: [
-      { n: '약 4%', l: '공식 API가 다루는 토스 웹앱 비중' },
+      { n: '약 4%', l: '공식 Open API가 지원하는 WTS 기능 비중 (~20/430)' },
       { n: '18+', l: '공식에 없는 tossctl 고유 기능' },
-      { n: '100%', l: '공식 조회·거래 커버리지' },
+      { n: '100%', l: '공식 지원 기능 커버리지' },
     ],
     coverage: {
-      bright: '공식 API (~20개 · 약 4%)',
-      dim: '토스 웹앱 의미있는 API ~430개',
-      note: 'tossctl은 공식 전부와 고유 기능을 포함하고, 이 범위를 계속 넓혀갑니다.',
+      bright: '공식 Open API — WTS 기능의 약 4% (~20개)',
+      dim: '토스 WTS 전체 기능 ~430개',
+      note: 'tossctl은 공식이 다루는 약 4%를 100% 포함하고, 공식에 없는 나머지 WTS 기능까지 넓혀갑니다.',
     },
     official: {
       name: '공식 Open API (예정)',
@@ -107,10 +108,11 @@ const content = {
     thesis: {
       label: 'WHY NOW',
       headline: "You don't have to wait for the official API",
-      body: "Toss Securities' official Open API opens only to pre-approved applicants, and so far only for basics like reads and orders. tossctl already does all of that, plus what the official API still doesn't have. No application, no approval.",
+      body: "Toss Securities' official Open API covers only about 4% (~20) of the full Toss WTS feature set today — and even that opens slowly, to pre-approved applicants, starting with basics like reads and orders. tossctl covers 100% of that 4% and adds the rest of the WTS features the official API still lacks. No application, no approval.",
       points: [
-        { k: 'Staged · gated', v: 'The official API opens slowly, to approved applicants, starting narrow.' },
-        { k: 'No waiting', v: 'tossctl uses the full surface today, without waiting for the rollout.' },
+        { k: 'Official ≈ 4%', v: 'The official Open API supports ~20 of ~430 Toss WTS features — about 4%.' },
+        { k: 'No waiting', v: 'No waiting for the rollout — 100% of the official scope and beyond, today.' },
+        { k: 'Hybrid, optional', v: 'Works fully without the official API. Plug it in if you want — supported features route through it for extra stability.' },
         { k: 'Agents included', v: 'Every command answers in JSON, so people and agents use it the same way.' },
       ],
     },
@@ -123,14 +125,14 @@ const content = {
       </>
     ),
     stats: [
-      { n: '~4%', l: 'of the Toss web app the official API covers' },
+      { n: '~4%', l: 'of Toss WTS features the official API supports (~20/430)' },
       { n: '18+', l: 'unique features the official API lacks' },
-      { n: '100%', l: 'of official reads & trades covered' },
+      { n: '100%', l: 'of officially-supported features covered' },
     ],
     coverage: {
-      bright: 'Official API (~20 · ~4%)',
-      dim: '~430 meaningful Toss web-app APIs',
-      note: 'tossctl covers all of the official plus unique features, and keeps expanding.',
+      bright: 'Official Open API — ~4% of WTS (~20)',
+      dim: '~430 total Toss WTS features',
+      note: 'tossctl covers 100% of the official ~4% and keeps expanding into the rest of WTS.',
     },
     official: {
       name: 'Official Open API (planned)',
@@ -173,25 +175,31 @@ function Ring({ size, opacity }: { size: number; opacity: number }) {
   );
 }
 
-// MZ8Ua-style fading data dots radiating left/right from the central mark.
+// MZ8Ua-style connector trails: three rows of fading dots run from the node
+// edge outward toward the three agent / integration cards on each side.
+// Rows are aligned to the card centers (node box is HUB_H tall, cards ~70px apart).
+const HUB_H = 198;
 function DotTrails() {
-  const rows = [-13, 0, 13];
-  const cols = [0, 1, 2, 3, 4, 5];
+  const cy = HUB_H / 2; // 99 — vertical center of the node box
+  const rows = [-70, 0, 70]; // aligns with the 3 cards in each side column
+  const n = 8;
   return (
     <div className="pointer-events-none absolute inset-0 hidden lg:block">
       {rows.map((dy) =>
-        cols.map((i) => {
-          const op = 0.5 * (1 - i / 6);
-          const dist = 56 + i * 15;
+        Array.from({ length: n }).map((_, i) => {
+          const dist = 78 + i * 19; // 78 → ~211px from center (reaches into the gap)
+          const lead = i === 0;
+          const op = lead ? 0.7 : 0.4 * (1 - i / n); // bright near node, fades outward
+          const cls = lead ? 'bg-emerald-300' : 'bg-white';
           return (
-            <span key={`l${dy}-${i}`}>
+            <span key={`${dy}-${i}`}>
               <span
-                className="absolute rounded-full bg-emerald-300"
-                style={{ width: 3, height: 3, left: 120 - dist, top: 85 + dy, opacity: op }}
+                className={`absolute rounded-full ${cls}`}
+                style={{ width: 3, height: 3, left: 120 - dist, top: cy + dy, opacity: op }}
               />
               <span
-                className="absolute rounded-full bg-emerald-300"
-                style={{ width: 3, height: 3, left: 120 + dist, top: 85 + dy, opacity: op }}
+                className={`absolute rounded-full ${cls}`}
+                style={{ width: 3, height: 3, left: 120 + dist, top: cy + dy, opacity: op }}
               />
             </span>
           );
@@ -201,39 +209,46 @@ function DotTrails() {
   );
 }
 
-// Scrolling "works with" strip — any tool that can run a CLI drives tossctl.
-// Logos rendered as uniform white marks (official brand SVGs, mono on dark).
+// Scrolling "works with" strip — AI coding agents that drive tossctl.
+// Logos keep their brand colors; only naturally-black marks ship as white SVGs.
 const MARQUEE = [
   { name: 'Claude Code', logo: '/logos/mq/claude.svg' },
   { name: 'Codex CLI', logo: '/logos/codex.svg' },
-  { name: 'OpenCode', logo: '/logos/opencode.svg' },
   { name: 'Gemini CLI', logo: '/logos/mq/googlegemini.svg' },
-  { name: 'GitHub Copilot', logo: '/logos/mq/githubcopilot.svg' },
   { name: 'Cursor', logo: '/logos/mq/cursor.svg' },
+  { name: 'GitHub Copilot', logo: '/logos/mq/githubcopilot.svg' },
+  { name: 'OpenCode', logo: '/logos/opencode.svg' },
   { name: 'Qwen Code', logo: '/logos/mq/qwen.svg' },
   { name: 'DeepSeek', logo: '/logos/mq/deepseek.svg' },
   { name: 'Mistral', logo: '/logos/mq/mistralai.svg' },
+  { name: 'Kimi CLI', logo: '/logos/mq/moonshotai.svg' },
   { name: 'OpenClaw', logo: '/logos/openclaw.svg' },
-  { name: 'bash', logo: '/logos/bash.svg' },
-  { name: 'HTTP', logo: '/logos/http.svg' },
 ];
 function Marquee() {
+  // Two identical groups translated by exactly -50% → seamless infinite loop.
+  // The trailing gap (gap-12) equals the inner gap so the seam is invisible.
   const group = (key: string) => (
-    <div key={key} className="flex shrink-0 items-center gap-10 pe-10" aria-hidden={key === 'b'}>
+    <div key={key} className="flex shrink-0 items-center gap-12 pe-12" aria-hidden={key === 'b'}>
       {MARQUEE.map((m) => (
-        <span key={m.name} className="inline-flex shrink-0 items-center gap-2 text-white/50">
+        <span key={m.name} className="inline-flex shrink-0 items-center gap-2.5 text-white/60">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={m.logo} alt="" className="size-5 object-contain opacity-80 [filter:brightness(0)_invert(1)]" />
-          <span className="font-mono text-xs">{m.name}</span>
+          <img src={m.logo} alt="" className="size-6 object-contain md:size-8" />
+          <span className="font-mono text-xs md:text-sm">{m.name}</span>
         </span>
       ))}
     </div>
   );
   return (
-    <div className="overflow-hidden border-b border-white/10 py-6 [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
-      <div className="flex w-max" style={{ animation: 'tossMarquee 28s linear infinite' }}>
-        {group('a')}
-        {group('b')}
+    <div className="relative border-y border-white/10 py-12">
+      {/* "Works with" sits ON the top border, legend-style */}
+      <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-[#0a0a0a] px-4 font-mono text-[11px] uppercase tracking-[0.3em] text-white/40">
+        Works with
+      </span>
+      <div className="overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_6%,#000_94%,transparent)]">
+        <div className="flex w-max animate-[tossMarquee_36s_linear_infinite]">
+          {group('a')}
+          {group('b')}
+        </div>
       </div>
     </div>
   );
@@ -309,13 +324,36 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
         />
 
         <div className="relative mx-auto w-full max-w-6xl px-4 pb-16 pt-14">
-          <div className="mb-10 flex items-center justify-center gap-3 font-mono text-xs text-white/45">
+          <div className="mb-12 flex items-center justify-center gap-3 font-mono text-xs text-white/45">
             <span className="font-sans text-base font-bold tracking-tight text-white">tossctl</span>
             <span className="text-white/25">×</span>
             <span className="font-sans text-sm font-bold tracking-tight text-white/40">AI Agents</span>
           </div>
 
-          <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_minmax(280px,auto)_1fr]">
+          {/* heading block (above the hub, MZ8Ua-style) */}
+          <div className="mx-auto mb-16 max-w-2xl text-center">
+            <h1 className="font-sans text-4xl font-bold tracking-tight md:text-5xl">tossinvest-cli</h1>
+            <p className="mt-3 font-mono text-xs text-white/45">{t.sub}</p>
+            <p className="mx-auto mt-5 max-w-md text-sm text-white/65">{t.desc}</p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href={`${p}/docs`}
+                className="rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-opacity hover:opacity-90"
+              >
+                {t.cta}
+              </Link>
+              <Link
+                href="https://github.com/JungHoonGhae/tossinvest-cli"
+                className="inline-flex items-center gap-2 rounded-md border border-white/15 px-5 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/5"
+              >
+                <Github className="size-4" />
+                GitHub
+              </Link>
+            </div>
+          </div>
+
+          {/* hub & spoke — node vertically aligned with the cards on each side */}
+          <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_auto_1fr]">
             <div
               className="pointer-events-none absolute inset-x-0 top-1/2 hidden h-px -translate-y-1/2 lg:block"
               style={{
@@ -324,44 +362,27 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               }}
             />
 
-            <div className="hidden flex-col gap-3 lg:flex">
-              <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AI AGENTS</div>
+            <div className="relative hidden flex-col gap-3 lg:flex">
+              <div className="absolute -top-7 left-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AI AGENTS</div>
               {AGENTS.map((a) => (
                 <SpokeCard key={a.name} {...a} />
               ))}
             </div>
 
-            <div className="relative z-1 flex flex-col items-center text-center">
-              <div className="relative grid place-items-center" style={{ width: 240, height: 170 }}>
-                <DotTrails />
-                <Ring size={240} opacity={0.04} />
-                <Ring size={180} opacity={0.07} />
-                <Ring size={124} opacity={0.12} />
-                <Ring size={80} opacity={0.18} />
-                <TossctlIcon className="relative size-[80px] drop-shadow-[0_0_44px_rgba(52,211,153,0.3)]" />
-              </div>
-              <h1 className="mt-2 font-sans text-4xl font-bold tracking-tight md:text-5xl">tossinvest-cli</h1>
-              <p className="mt-3 font-mono text-xs text-white/45">{t.sub}</p>
-              <p className="mt-5 max-w-md text-sm text-white/65">{t.desc}</p>
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-                <Link
-                  href={`${p}/docs`}
-                  className="rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-opacity hover:opacity-90"
-                >
-                  {t.cta}
-                </Link>
-                <Link
-                  href="https://github.com/JungHoonGhae/tossinvest-cli"
-                  className="inline-flex items-center gap-2 rounded-md border border-white/15 px-5 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/5"
-                >
-                  <Github className="size-4" />
-                  GitHub
-                </Link>
-              </div>
+            <div
+              className="relative z-1 grid place-items-center justify-self-center"
+              style={{ width: 240, height: HUB_H }}
+            >
+              <DotTrails />
+              <Ring size={240} opacity={0.04} />
+              <Ring size={180} opacity={0.07} />
+              <Ring size={124} opacity={0.12} />
+              <Ring size={80} opacity={0.18} />
+              <TossctlIcon className="relative size-[80px] drop-shadow-[0_0_44px_rgba(52,211,153,0.3)]" />
             </div>
 
-            <div className="hidden flex-col gap-3 lg:flex">
-              <div className="mb-1 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AGENTS · SHELL</div>
+            <div className="relative hidden flex-col gap-3 lg:flex">
+              <div className="absolute -top-7 right-0 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">AGENTS · SHELL</div>
               {INTEGRATIONS.map((a) => (
                 <SpokeCard key={a.name} {...a} />
               ))}
@@ -399,7 +420,7 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
             {t.thesis.headline}
           </h2>
           <p className="mt-4 max-w-2xl text-white/60">{t.thesis.body}</p>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {t.thesis.points.map((pt, i) => (
               <div key={pt.k} className="rounded-xl border border-white/10 bg-[#0f0f0f] p-5">
                 <div className="mb-2 font-mono text-[11px] text-white/30">0{i + 1}</div>
