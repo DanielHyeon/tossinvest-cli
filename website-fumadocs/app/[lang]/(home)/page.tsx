@@ -2,11 +2,9 @@ import Link from 'fumadocs-core/link';
 import { TossctlIcon } from '@/app/layout.client';
 import {
   Bot,
-  Boxes,
   ChartCandlestick,
+  Check,
   Github,
-  Globe,
-  MousePointer2,
   Radio,
   ShieldCheck,
   Sparkles,
@@ -16,14 +14,14 @@ import {
 const FEATURE_ICONS = [ChartCandlestick, ShieldCheck, Bot, Sparkles, Radio, TerminalSquare];
 
 const AGENTS = [
-  { name: 'Claude Code', icon: Bot, sub: 'agent' },
-  { name: 'Codex', icon: Sparkles, sub: 'agent' },
-  { name: 'Cursor', icon: MousePointer2, sub: 'editor' },
+  { name: 'Claude Code', logo: '/logos/claude.svg', sub: 'agent' },
+  { name: 'Codex', logo: '/logos/codex.svg', sub: 'agent' },
+  { name: 'Cursor', logo: '/logos/cursor.svg', sub: 'editor' },
 ];
 const INTEGRATIONS = [
-  { name: 'bash', icon: TerminalSquare, sub: 'shell' },
-  { name: 'HTTP', icon: Globe, sub: 'api' },
-  { name: 'OpenClaw', icon: Boxes, sub: 'runtime' },
+  { name: 'OpenClaw', logo: '/logos/openclaw.svg', sub: 'runtime' },
+  { name: 'bash', logo: '/logos/bash.svg', sub: 'shell' },
+  { name: 'HTTP', logo: '/logos/http.svg', sub: 'api' },
 ];
 
 const content = {
@@ -39,13 +37,28 @@ const content = {
     leftLabel: 'AI AGENTS',
     rightLabel: 'INTEGRATIONS',
     sectionLabel: '왜 tossctl 인가',
-    statsLabel: '한눈에',
-    stats: [
-      { n: '47', l: '명령' },
-      { n: '15', l: '명령 그룹' },
-      { n: '~430', l: '의미있는 WTS API' },
-      { n: '100%', l: '공식 API 커버리지' },
-    ],
+    compareLabel: '공식 Open API 의 상위집합',
+    compareLead: (
+      <>
+        공식 Open API(예정)의 조회·거래를 <span className="text-brand-200">100% 커버</span>하고,
+        공식엔 없는 기능 <span className="text-brand-200">12개 이상</span>을 더합니다.
+      </>
+    ),
+    official: {
+      name: '공식 Open API (예정)',
+      note: 'REST 조회·주문 기본 · 사전 신청 단계 롤아웃',
+      items: ['계좌·잔고', '시세·호가·체결', '주문·취소·정정'],
+    },
+    toss: {
+      name: 'tossctl',
+      note: '공식 전부 100% 커버 + 그 너머',
+      items: [
+        '수급·시장지수·지수 상세·업종 등락',
+        'AI 시그널·뉴스 브리핑·조건검색',
+        '배당·커뮤니티 랭킹·관심종목 관리',
+        '실시간 푸시·소수점 주문·dry-run preview',
+      ],
+    },
     llmTitle: 'LLM이 바로 읽는 문서',
     llmDesc: (
       <>
@@ -76,13 +89,28 @@ const content = {
     leftLabel: 'AI AGENTS',
     rightLabel: 'INTEGRATIONS',
     sectionLabel: 'WHY TOSSCTL',
-    statsLabel: 'AT A GLANCE',
-    stats: [
-      { n: '47', l: 'commands' },
-      { n: '15', l: 'command groups' },
-      { n: '~430', l: 'meaningful WTS APIs' },
-      { n: '100%', l: 'official API coverage' },
-    ],
+    compareLabel: 'A SUPERSET OF THE OFFICIAL OPEN API',
+    compareLead: (
+      <>
+        Covers <span className="text-brand-200">100%</span> of the official Open API's (upcoming)
+        read &amp; trade scope, and adds <span className="text-brand-200">12+</span> features it lacks.
+      </>
+    ),
+    official: {
+      name: 'Official Open API (planned)',
+      note: 'REST read/order basics · staged rollout',
+      items: ['Accounts · balances', 'Quotes · orderbook · ticks', 'Place · cancel · amend'],
+    },
+    toss: {
+      name: 'tossctl',
+      note: 'Covers 100% of the official — and beyond',
+      items: [
+        'Flows · indices · index detail · sectors',
+        'AI signals · news briefing · screener',
+        'Dividends · community rankings · watchlist',
+        'Real-time push · fractional orders · dry-run',
+      ],
+    },
     llmTitle: 'Docs LLMs can read directly',
     llmDesc: (
       <>
@@ -109,11 +137,12 @@ function Ring({ size, opacity }: { size: number; opacity: number }) {
   );
 }
 
-function SpokeCard({ icon: Icon, name, sub }: { icon: typeof Bot; name: string; sub: string }) {
+function SpokeCard({ logo, name, sub }: { logo: string; name: string; sub: string }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#111111] p-3 transition-colors hover:border-white/20">
-      <span className="grid size-8 shrink-0 place-items-center rounded-md border border-white/10 bg-white/5">
-        <Icon className="size-4 text-white/70" />
+      <span className="grid size-8 shrink-0 place-items-center rounded-md bg-white p-1.5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logo} alt={name} className="size-full object-contain" />
       </span>
       <div className="leading-tight">
         <div className="text-sm font-medium">{name}</div>
@@ -154,9 +183,7 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
             <span className="font-sans text-sm font-bold tracking-tight text-white/40">AI Agents</span>
           </div>
 
-          {/* hub row */}
           <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_minmax(280px,auto)_1fr]">
-            {/* connecting bus line (lg) */}
             <div
               className="pointer-events-none absolute inset-x-0 top-1/2 hidden h-px -translate-y-1/2 lg:block"
               style={{
@@ -165,7 +192,6 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               }}
             />
 
-            {/* left: agents */}
             <div className="hidden flex-col gap-3 lg:flex">
               <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">{t.leftLabel}</div>
               {AGENTS.map((a) => (
@@ -173,7 +199,6 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               ))}
             </div>
 
-            {/* center: mark + title */}
             <div className="relative z-1 flex flex-col items-center text-center">
               <div className="relative grid place-items-center" style={{ width: 240, height: 170 }}>
                 <Ring size={240} opacity={0.04} />
@@ -202,7 +227,6 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
               </div>
             </div>
 
-            {/* right: integrations */}
             <div className="hidden flex-col gap-3 lg:flex">
               <div className="mb-1 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">{t.rightLabel}</div>
               {INTEGRATIONS.map((a) => (
@@ -211,7 +235,6 @@ export default async function HomePage(props: PageProps<'/[lang]'>) {
             </div>
           </div>
 
-          {/* terminal */}
           <div className="mx-auto mt-14 w-full max-w-3xl overflow-hidden rounded-xl border border-white/10 bg-black/40 text-left shadow-2xl backdrop-blur">
             <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-3">
               <span className="size-3 rounded-full bg-[#ff5f56]" />
@@ -230,15 +253,44 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
         </div>
       </section>
 
-      {/* ── Stats band ─────────────────────────────────────── */}
+      {/* ── Superset comparison ────────────────────────────── */}
       <section className="border-b border-white/10 bg-[#0c0c0c]">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-px overflow-hidden px-4 py-0 md:grid-cols-4">
-          {t.stats.map((s) => (
-            <div key={s.l} className="px-4 py-8 text-center">
-              <div className="font-sans text-3xl font-bold tracking-tight text-white md:text-4xl">{s.n}</div>
-              <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-white/40">{s.l}</div>
+        <div className="mx-auto w-full max-w-5xl px-4 py-16">
+          <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-white/35">{t.compareLabel}</div>
+          <p className="mb-8 max-w-2xl text-lg text-white/80">{t.compareLead}</p>
+
+          <div className="grid items-stretch gap-4 md:grid-cols-2">
+            {/* official */}
+            <div className="rounded-xl border border-white/10 bg-[#0f0f0f] p-6 opacity-80">
+              <div className="mb-1 text-sm font-medium text-white/70">{t.official.name}</div>
+              <div className="mb-4 font-mono text-[11px] text-white/35">{t.official.note}</div>
+              <ul className="space-y-2 text-sm text-white/55">
+                {t.official.items.map((it) => (
+                  <li key={it} className="flex items-start gap-2">
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-white/25" />
+                    {it}
+                  </li>
+                ))}
+              </ul>
             </div>
-          ))}
+
+            {/* tossctl */}
+            <div className="relative rounded-xl border border-brand/40 bg-[#0f1512] p-6 shadow-[0_0_40px_-12px_rgba(52,211,153,0.35)]">
+              <div className="mb-1 flex items-center gap-2 text-sm font-semibold">
+                <TossctlIcon className="size-4 rounded-[4px]" />
+                {t.toss.name}
+              </div>
+              <div className="mb-4 font-mono text-[11px] text-brand-200">{t.toss.note}</div>
+              <ul className="space-y-2 text-sm text-white/80">
+                {t.toss.items.map((it) => (
+                  <li key={it} className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-brand-200" />
+                    {it}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
