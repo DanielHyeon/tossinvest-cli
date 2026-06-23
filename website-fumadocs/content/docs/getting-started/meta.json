@@ -1,1 +1,1 @@
-{ "title": "시작하기", "icon": "Rocket", "pages": ["installation", "quickstart"] }
+{ "title": "시작하기", "description": "설치하고 첫 조회까지", "icon": "Rocket", "pages": ["installation", "quickstart"] }

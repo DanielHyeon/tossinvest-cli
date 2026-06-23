@@ -1,1 +1,1 @@
-{ "title": "레퍼런스", "icon": "Terminal", "pages": ["commands", "support-scope"] }
+{ "title": "레퍼런스", "description": "명령과 지원 범위", "icon": "Terminal", "pages": ["commands", "support-scope"] }
