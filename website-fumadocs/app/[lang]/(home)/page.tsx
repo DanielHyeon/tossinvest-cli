@@ -470,15 +470,16 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
             {COMPANIES.map((c) => (
               <div
                 key={c.name}
-                className="flex h-20 items-center justify-center rounded-xl border border-white/10 bg-[#0f0f0f]"
+                className="flex h-20 items-center justify-center rounded-xl border border-white/10 bg-[#0f0f0f] px-4"
               >
                 {c.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  // 로고별 max높이+max폭 중 먼저 걸리는 쪽으로 고정(크기 잠금).
+                  // 로고별 max높이+max폭 중 먼저 걸리는 쪽으로 고정. 좁은 셀에서는
+                  // min(px, 100%)로 셀 폭을 넘지 않게(가장자리 넘침 방지).
                   <img
                     src={c.logo}
                     alt={c.name}
-                    style={{ maxHeight: c.h ?? 24, maxWidth: c.w ?? 130 }}
+                    style={{ maxHeight: c.h ?? 24, maxWidth: `min(${c.w ?? 130}px, 100%)` }}
                     className="object-contain"
                   />
                 ) : (
@@ -529,7 +530,7 @@ $ tossctl order preview --symbol TSLA --side buy --qty 1 --price 250`}</code>
 
           <div className="mb-8 grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-stretch">
             <CoverageGrid bright={t.coverage.bright} dim={t.coverage.dim} note={t.coverage.note} />
-            <div className="grid grid-cols-3 divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#0f0f0f] lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
+            <div className="grid grid-cols-1 divide-y divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#0f0f0f] sm:grid-cols-3 sm:divide-x sm:divide-y-0 lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
               {t.stats.map((s) => (
                 <div key={s.l} className="px-4 py-6 text-center lg:py-5">
                   <div className="font-sans text-3xl font-bold tracking-tight text-brand-200">{s.n}</div>
