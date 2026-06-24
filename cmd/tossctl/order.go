@@ -342,9 +342,9 @@ func bindPlaceFlags(cmd *cobra.Command, flags *placeFlags) {
 	if err := cmd.MarkFlagRequired("side"); err != nil {
 		panic(err)
 	}
-	if err := cmd.MarkFlagRequired("qty"); err != nil {
-		panic(err)
-	}
+	// `--qty` is not statically required: fractional BUY is amount-based
+	// (`--amount`, no qty), fractional SELL and all other orders use `--qty`.
+	// Per-case validation lives in orderintent.NormalizePlace.
 }
 
 func bindExecuteFlags(cmd *cobra.Command, flags *executeFlags) {

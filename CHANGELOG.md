@@ -4,6 +4,11 @@ tossctl 사용자 관점의 변경 이력입니다. 각 버전에서 "무엇을 
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-06-25
+
+### 버그 수정
+- 소수점 매수(`order place --fractional --amount <값>`, `--qty` 미사용)가 `required flag(s) "qty" not set` 로 거부되던 문제 수정. `--qty` 를 정적 필수에서 제외하고, 수량/금액 검증을 케이스별로 `order preview`·`place` 에서 일원화했습니다. (소수점 매도는 `--qty`, 소수점 매수는 `--amount` 사용.)
+
 ## [0.11.0] - 2026-06-25
 
 ### 새 기능
