@@ -2,14 +2,13 @@
   "phase": "spec-public",
   "spec_url": "https://openapi.tossinvest.com/openapi-docs/latest/openapi.json",
   "spec_file": "docs/migration/openapi.latest.json",
-  "spec_version": "1.1.1",
+  "spec_version": "1.1.5",
   "spec_path_count": 20,
   "spec_paths_sha256": "aa3227e9050b2bd624cbe6ff686c78bb15dd7df0e2aec543cf94a88e8f5c2dd8",
-  "spec_full_sha256": "197a86f4835fb770ebe7a1c88bc16be39783427aa5223cb7ede26c2975911aa7",
+  "spec_full_sha256": "057c0e0b55b8fb5f0f5b1bfb6e9d5b91a244692daae3a0b5fec5e8b9b1edecf7",
   "docs_url": "https://developers.tossinvest.com/docs",
   "docs_status": "200",
   "llms_txt_status": "200",
-  "updated_at": "2026-06-11",
-  "last_checked_at": "2026-06-23",
-  "note": "updated_at = spec 가 마지막으로 바뀐 날, last_checked_at = 마지막 점검일. spec_full_sha256 = 전체 spec 해시(경로 외 내부 변경도 감지). 전체 spec 은 spec_file 에 저장. 1.1.1: GET /api/v1/orders 가 status=CLOSED(종료 주문 조회 + 페이징) 지원 시작 — tossctl 은 orders completed 로 이미 커버. 경로 목록(20)·경로해시는 1.0.3 과 동일."
+  "updated_at": "2026-06-24",
+  "last_checked_at": "2026-06-24"
 }
