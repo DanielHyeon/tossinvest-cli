@@ -45,8 +45,13 @@ app (WTS) actually uses.
 | Buy/sell orders | `order place` | ✅ | ✅ |
 | Cancel / amend | `order cancel`, `order amend` | ✅ | ✅ |
 | dry-run preview | `order preview` | ❌ | ✅ |
-| Fractional (amount) orders | `order place --fractional` | ❌ | ✅ |
+| Fractional orders (US, amount/qty) | `order place --fractional` | ✅ | ✅ |
+| Fractional orders — KRW settlement | `order place --fractional --currency-mode KRW` | ❌ | ✅ |
 | Real-time push (SSE) | `push listen` | ❌ | ✅ |
+
+<Callout type="info" title="Fractional sell (beta)">
+  Implements the **US market fractional-quantity SELL** added in official Open API 1.1.5 (`order place --fractional --side sell --qty 0.5`, up to 6 decimals). Contract-tested, but **not yet live-verified** — run `order preview` before any live trade. Fractional buy remains amount-based (`--amount`).
+</Callout>
 
 ## Verification basis
 

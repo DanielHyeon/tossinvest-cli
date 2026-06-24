@@ -97,12 +97,25 @@ func NormalizePlace(input PlaceInput) (PlaceIntent, error) {
 		return PlaceIntent{}, fmt.Errorf("unsupported order type %q; expected limit or market", input.OrderType)
 	}
 	if intent.Fractional {
-		// Fractional: amount-based, no quantity/price required
-		if intent.Amount <= 0 {
-			return PlaceIntent{}, fmt.Errorf("amount must be greater than zero for fractional orders")
-		}
-		intent.Quantity = 0
+		// Fractional orders are US market orders. BUY is amount-based
+		// (`orderAmount`); SELL is quantity-based (a decimal share count) —
+		// matching the official Open API (≥1.1.5): a decimal `quantity` is
+		// accepted only for US MARKET SELL, up to 6 decimal places.
 		intent.Price = 0
+		if intent.Side == "sell" {
+			if intent.Quantity <= 0 {
+				return PlaceIntent{}, fmt.Errorf("quantity must be greater than zero for fractional sell orders")
+			}
+			if decimalPlaces(intent.Quantity) > 6 {
+				return PlaceIntent{}, fmt.Errorf("fractional quantity supports up to 6 decimal places")
+			}
+			intent.Amount = 0
+		} else {
+			if intent.Amount <= 0 {
+				return PlaceIntent{}, fmt.Errorf("amount must be greater than zero for fractional buy orders")
+			}
+			intent.Quantity = 0
+		}
 	} else {
 		if intent.Quantity <= 0 {
 			return PlaceIntent{}, fmt.Errorf("quantity must be greater than zero")
@@ -226,6 +239,16 @@ func canonicalString(kind string, fields map[string]string) string {
 
 func formatFloat(value float64) string {
 	return strconv.FormatFloat(value, 'f', -1, 64)
+}
+
+// decimalPlaces returns the number of fractional digits in value's shortest
+// decimal representation (e.g. 0.5 → 1, 1.000001 → 6, 2 → 0).
+func decimalPlaces(value float64) int {
+	s := formatFloat(value)
+	if i := strings.IndexByte(s, '.'); i >= 0 {
+		return len(s) - i - 1
+	}
+	return 0
 }
 
 var krSymbolPattern = regexp.MustCompile(`^\d{6}$`)

@@ -4,7 +4,7 @@
   <h1>tossinvest-cli</h1>
   <p><strong>AI 에이전트를 토스증권에 연결하는 비공식 CLI — 공식 Open API(예정)보다 넓은 조회·거래 범위.</strong></p>
   <p>Claude Code · Codex · Cursor · OpenClaw · bash · HTTP — 어떤 도구든 동일한 명령 체계(<code>tossctl</code>)로 토스증권 계좌·시세·거래를 다룰 수 있습니다. 사람이 직접 터미널에서 쓸 수도 있습니다.</p>
-  <p><sub>수급 · 시장지수 · 토스 AI 시그널 · 조건검색(스크리너) · 관심종목 관리 · 거래내역 ledger · 실시간 푸시 · 소수점 주문 · dry-run preview — <strong>공식 Open API(예정) 로드맵에 없는 영역까지</strong> 커버합니다. <a href="#지원-범위">전체 비교표 ↓</a></sub></p>
+  <p><sub>수급 · 시장지수 · 토스 AI 시그널 · 조건검색(스크리너) · 관심종목 관리 · 거래내역 ledger · 실시간 푸시 · 원화 소수점 주문 · dry-run preview — <strong>공식 Open API(예정) 로드맵에 없는 영역까지</strong> 커버합니다. <a href="#지원-범위">전체 비교표 ↓</a></sub></p>
   <p><sub><em>An unofficial Toss Securities CLI for AI agents — broader read &amp; trade coverage than the (upcoming) official Open API.</em></sub></p>
 </div>
 
@@ -139,7 +139,7 @@ Waiting for approval in the Toss app on your phone...
 ## 지원 범위
 
 > **tossctl 은 토스 공식 Open API 의 조회·거래 범위를 100% 커버하고, 그 너머까지 다룹니다.**
-> 공식 [Open API 문서](https://developers.tossinvest.com/docs)의 모든 엔드포인트(계좌·잔고·시세·호가·체결·캔들·상하한가·매도가능수량·수수료·주문 등)에 대응하며, 추가로 수급·시장지수·AI 시그널·조건검색·관심종목 관리·거래내역 ledger·실시간 푸시·소수점 주문·dry-run preview 등 **12개 이상이 공식에 없는 tossctl 고유 범위**입니다.
+> 공식 [Open API 문서](https://developers.tossinvest.com/docs)의 모든 엔드포인트(계좌·잔고·시세·호가·체결·캔들·상하한가·매도가능수량·수수료·주문 등)에 대응하며, 추가로 수급·시장지수·AI 시그널·조건검색·관심종목 관리·거래내역 ledger·실시간 푸시·원화 소수점 주문·dry-run preview 등 **12개 이상이 공식에 없는 tossctl 고유 범위**입니다.
 
 <p align="center">
   <img src="docs/assets/api-comparison.svg" alt="tossctl vs 공식 Open API(예정) 커버리지 비교 — tossctl 이 상위집합" width="840" />
@@ -192,8 +192,7 @@ Waiting for approval in the Toss app on your phone...
 
 ### 거래
 
-공식 API 도 주문 생성·정정·취소를 제공하지만, **소수점 주문·통화 모드·dry-run
-preview·config 기반 안전 게이트** 등 tossctl 의 거래 UX/안전장치는 우리 고유입니다.
+공식 API 도 주문 생성·정정·취소·소수점 주문(`orderAmount` 금액 기반 매수, 1.1.5부터 US 시장가 소수점 매도)을 제공합니다. 다만 **원화(KRW) 결제 모드의 소수점 주문·dry-run preview·config 기반 안전 게이트** 등 tossctl 의 거래 UX/안전장치는 우리 고유입니다.
 
 | 기능 | 커맨드 | 필요 config | 공식 API (예정) | tossctl |
 |------|--------|-------------|:--:|:--:|
@@ -202,7 +201,8 @@ preview·config 기반 안전 게이트** 등 tossctl 의 거래 UX/안전장치
 | 국내주식 거래 | `order place --market kr` (6자리 코드는 자동 인식) | `place` | ✅ | ✅ |
 | 주문 취소 | `order cancel --order-id <id>` | `cancel` | ✅ | ✅ |
 | 주문 정정 | `order amend --order-id <id>` | `amend` | ✅ | ✅ |
-| **소수점 매수 (US, 금액 기반)** | `order place --fractional --amount <value>` (기본 KRW; `--currency-mode USD`) | `place` + `fractional` | ❌ | ✅ |
+| 소수점 매수 (US, 금액 기반) | `order place --fractional --amount <value>` (`--currency-mode USD`) | `place` + `fractional` | ✅ | ✅ |
+| **소수점 매수 — 원화(KRW) 결제** | `order place --fractional --amount <value>` (기본 KRW) | `place` + `fractional` | ❌ | ✅ |
 | **주문 dry-run / preview** | `order preview` (실제 전송 없이 검증) | — | ❌ | ✅ |
 
 모든 거래는 `allow_live_order_actions=true`도 필요합니다. 소수점 주문은 시장가(market order)로 자동 전환되며, 금액 기반입니다 (`--currency-mode KRW` 기본 또는 `USD`).
@@ -217,7 +217,7 @@ US 지정가는 `--currency-mode`로 가격 해석을 선택합니다: `KRW` (�
 
 > **공식 Open API 는 그중 약 4%만 커버합니다.** tossctl 은 나머지 범위 위에서 동작하며,
 > 공식에 없는 기능(수급·시장지수·AI 시그널·스크리너·투자자별 순매수·어닝콜·배당 내역·
-> 커뮤니티 랭킹·업종별 등락·뉴스 브리핑·실시간 푸시·소수점 주문·dry-run preview 등)을 이미 제공하고,
+> 커뮤니티 랭킹·업종별 등락·뉴스 브리핑·실시간 푸시·원화 소수점 주문·dry-run preview 등)을 이미 제공하고,
 > **남은 의미있는 범위를 계속 구현해 나갑니다.**
 
 장기적으로 tossctl 이 더 나은 이유:

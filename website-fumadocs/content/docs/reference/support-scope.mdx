@@ -44,8 +44,13 @@ description: 공식 Open API 대비 커버리지
 | 매수·매도 주문 | `order place` | ✅ | ✅ |
 | 주문 취소·정정 | `order cancel`, `order amend` | ✅ | ✅ |
 | dry-run preview | `order preview` | ❌ | ✅ |
-| 소수점(금액) 주문 | `order place --fractional` | ❌ | ✅ |
+| 소수점 주문 (US, 금액/수량) | `order place --fractional` | ✅ | ✅ |
+| 소수점 주문 — 원화(KRW) 결제 | `order place --fractional --currency-mode KRW` | ❌ | ✅ |
 | 실시간 푸시(SSE) | `push listen` | ❌ | ✅ |
+
+<Callout type="info" title="소수점 매도 (beta)">
+  공식 Open API 1.1.5에 추가된 **미국 시장가 소수점 수량 매도**(`order place --fractional --side sell --qty 0.5`, 소수점 6자리)를 구현했습니다. 계약 테스트는 통과했으나 **라이브 검증은 아직**입니다 — 실거래 전 `order preview`로 확인하세요. 소수점 매수는 기존대로 금액 기반(`--amount`)입니다.
+</Callout>
 
 ## 검증 기준
 

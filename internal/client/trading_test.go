@@ -397,6 +397,33 @@ func TestBuildPlaceBodyMatchesCapturedShape(t *testing.T) {
 	}
 }
 
+func TestBuildPlaceBodyFractionalSellSendsDecimalQuantity(t *testing.T) {
+	// Official Open API (≥1.1.5): US MARKET SELL accepts a decimal `quantity`.
+	// tossctl sends it through the `quantity` field with orderAmount=0 and the
+	// fractional/market flags, unlike fractional BUY which is amount-based.
+	intent, err := orderintent.NormalizePlace(orderintent.PlaceInput{
+		Symbol:     "TSLL",
+		Market:     "us",
+		Side:       "sell",
+		Quantity:   0.5,
+		Fractional: true,
+	})
+	if err != nil {
+		t.Fatalf("NormalizePlace returned error: %v", err)
+	}
+
+	meta := stockPriceMetadata{Close: 14.4, CloseKRW: 21208, ExchangeRate: 1472.8}
+
+	body, err := buildPlaceBody("US20220809012", "NSQ", intent, meta, true)
+	if err != nil {
+		t.Fatalf("buildPlaceBody returned error: %v", err)
+	}
+	expected := `{"agreedOver100Million":false,"allowAutoExchange":true,"currencyMode":"KRW","isFractionalOrder":true,"isReservationOrder":false,"marginTrading":false,"market":"NSQ","max":false,"openPriceSinglePriceYn":false,"orderAmount":0,"orderPriceType":"01","price":0,"quantity":0.5,"stockCode":"US20220809012","tradeType":"sell","withOrderKey":true}`
+	if string(body) != expected {
+		t.Fatalf("unexpected fractional-sell body:\nwant: %s\ngot:  %s", expected, string(body))
+	}
+}
+
 func TestBuildPlaceBodySellTradeType(t *testing.T) {
 	intent, err := orderintent.NormalizePlace(orderintent.PlaceInput{
 		Symbol:       "TSLL",

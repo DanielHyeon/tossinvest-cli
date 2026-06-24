@@ -127,6 +127,36 @@ func TestNormalizePlaceFractionalRequiresAmount(t *testing.T) {
 	}
 }
 
+func TestNormalizePlaceFractionalSellAcceptsDecimalQuantity(t *testing.T) {
+	// Official Open API (≥1.1.5): US MARKET SELL takes a decimal quantity.
+	intent, err := NormalizePlace(PlaceInput{Symbol: "TSLL", Side: "sell", Quantity: 0.5, Fractional: true})
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if intent.OrderType != "market" {
+		t.Fatalf("expected market, got %q", intent.OrderType)
+	}
+	if intent.Quantity != 0.5 {
+		t.Fatalf("expected quantity 0.5, got %v", intent.Quantity)
+	}
+	if intent.Amount != 0 {
+		t.Fatalf("expected amount 0, got %v", intent.Amount)
+	}
+}
+
+func TestNormalizePlaceFractionalSellRequiresQuantity(t *testing.T) {
+	if _, err := NormalizePlace(PlaceInput{Symbol: "TSLL", Side: "sell", Fractional: true}); err == nil {
+		t.Fatal("expected error when fractional sell quantity is zero")
+	}
+}
+
+func TestNormalizePlaceFractionalSellRejectsExcessScale(t *testing.T) {
+	// More than 6 decimal places must be rejected (official limit).
+	if _, err := NormalizePlace(PlaceInput{Symbol: "TSLL", Side: "sell", Quantity: 0.1234567, Fractional: true}); err == nil {
+		t.Fatal("expected error for quantity with >6 decimal places")
+	}
+}
+
 func TestInferMarketFromStockCode(t *testing.T) {
 	cases := []struct {
 		code   string
