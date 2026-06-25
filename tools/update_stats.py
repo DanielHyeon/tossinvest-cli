@@ -175,7 +175,8 @@ _Last updated: {today.isoformat()} (UTC)_
 | Date | Stars | Forks | Release Downloads | Total |
 | ---------- | -------------------- | -------------------- | -------------------- | -------------------- |
 """
-    STATS_FILE.write_text(header + "\n".join(rows) + "\n")
+    # Latest day first (rows are built oldest→newest; deltas stay vs. prior day).
+    STATS_FILE.write_text(header + "\n".join(reversed(rows)) + "\n")
     print(
         f"wrote {STATS_FILE.relative_to(ROOT)}: {total_stars} stars, {total_forks} forks, "
         f"{total_dl} downloads, Σ {grand_total}, {(today - launch).days + 1} daily rows since {launch}"
