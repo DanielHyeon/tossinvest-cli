@@ -142,11 +142,16 @@ def main() -> None:
         cum_forks += forks_per.get(iso, 0)
         sample = dl_log.get(iso)
         if sample is not None:
+            # fresh measurement this day → show value + delta
             dl_str = cell(sample, prev_dl_sample)
             prev_dl_sample = sample
             running_dl = sample
+        elif running_dl is not None:
+            # no fresh sample, but downloads are cumulative → carry last value forward
+            dl_str = fmt(running_dl)
         else:
-            dl_str = "—"  # not re-measured this day (Total carries the last value)
+            # before download tracking began (GitHub exposes no historical dailies)
+            dl_str = "n/a"
         total = cum_stars + cum_forks + (running_dl or 0)
         rows.append(
             f"| {iso} | {cell(cum_stars, prev_stars)} | {cell(cum_forks, prev_forks)} | {dl_str} | {cell(total, prev_total)} |"
@@ -159,9 +164,9 @@ def main() -> None:
 > Auto-updated daily. **Stars** and **forks** are backfilled from launch via each
 > stargazer's `starredAt` / each fork's `createdAt`. **Release downloads** are
 > GitHub's cumulative asset totals — GitHub exposes no historical dailies, so the
-> download column is recorded forward from the day tracking started (earlier rows
-> show `—`). **Total** = stars + forks + downloads (the last known download count
-> is carried forward on days it wasn't re-measured).
+> download count is tracked forward from the day measurement started; rows before
+> that show `n/a`, and days without a fresh sample carry the last known value
+> forward. **Total** = stars + forks + downloads.
 
 **⭐ {fmt(total_stars)} stars · 🍴 {fmt(total_forks)} forks · ⬇️ {fmt(total_dl)} downloads · Σ {fmt(grand_total)} total · since {launch.isoformat()}**
 
