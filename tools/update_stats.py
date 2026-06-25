@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Generate STATS.md — daily stars (backfilled from launch) + release downloads.
+"""Generate STATS.md — daily stars + forks (backfilled from launch),
+release downloads, and an integrated Total.
 
-Stars are recomputed every run from each stargazer's `starredAt`, so the series
-is always accurate back to launch. GitHub only exposes *cumulative* release
-download totals (no historical dailies), so downloads are logged forward from
-the day this script first runs, persisted in docs/.stats-downloads.json.
+Stars and forks are recomputed every run from each stargazer's `starredAt`
+and each fork's `createdAt`, so those series are always accurate back to
+launch. GitHub only exposes *cumulative* release download totals (no historical
+dailies), so downloads are logged forward from the day this script first runs,
+persisted in docs/.stats-downloads.json. Total = stars + forks + downloads.
 
 Usage: python3 tools/update_stats.py   (needs `gh` authenticated)
 Run daily via CI to append a fresh row.
@@ -32,27 +34,46 @@ query($endCursor: String) {
 }
 """
 
+FORK_QUERY = """
+query($endCursor: String) {
+  repository(owner: "JungHoonGhae", name: "tossinvest-cli") {
+    forks(first: 100, after: $endCursor) {
+      pageInfo { hasNextPage endCursor }
+      nodes { createdAt }
+    }
+  }
+}
+"""
+
 
 def _gh_json(args: list[str]) -> dict:
     out = subprocess.run(["gh", *args], capture_output=True, text=True, check=True).stdout
     return json.loads(out)
 
 
-def fetch_star_dates() -> list[str]:
-    """All stargazer star dates (UTC, YYYY-MM-DD), oldest first."""
+def _paginate_dates(query: str, conn_key: str, items_key: str, date_field: str) -> list[str]:
+    """Page through a connection and collect each item's date (UTC YYYY-MM-DD)."""
     dates: list[str] = []
     cursor: str | None = None
     while True:
-        args = ["api", "graphql", "-f", f"query={STAR_QUERY}"]
+        args = ["api", "graphql", "-f", f"query={query}"]
         if cursor:
             args += ["-F", f"endCursor={cursor}"]
-        conn = _gh_json(args)["data"]["repository"]["stargazers"]
-        dates += [e["starredAt"][:10] for e in conn["edges"]]
+        conn = _gh_json(args)["data"]["repository"][conn_key]
+        dates += [item[date_field][:10] for item in conn[items_key]]
         if conn["pageInfo"]["hasNextPage"]:
             cursor = conn["pageInfo"]["endCursor"]
         else:
             break
     return sorted(dates)
+
+
+def fetch_star_dates() -> list[str]:
+    return _paginate_dates(STAR_QUERY, "stargazers", "edges", "starredAt")
+
+
+def fetch_fork_dates() -> list[str]:
+    return _paginate_dates(FORK_QUERY, "forks", "nodes", "createdAt")
 
 
 def fetch_download_total() -> int:
@@ -70,18 +91,34 @@ def fmt(n: int) -> str:
     return f"{n:,}"
 
 
+def cell(cur: int, prev: int | None) -> str:
+    if prev is None:
+        return fmt(cur)
+    delta = cur - prev
+    sign = "+" if delta >= 0 else "−"
+    return f"{fmt(cur)} ({sign}{fmt(abs(delta))})"
+
+
+def counts_per_day(dates: list[str]) -> dict[str, int]:
+    per: dict[str, int] = {}
+    for d in dates:
+        per[d] = per.get(d, 0) + 1
+    return per
+
+
 def main() -> None:
     today = datetime.now(timezone.utc).date()
     star_dates = fetch_star_dates()
+    fork_dates = fetch_fork_dates()
     if not star_dates:
         raise SystemExit("no stargazers found")
 
-    launch = date.fromisoformat(star_dates[0])
+    stars_per = counts_per_day(star_dates)
+    forks_per = counts_per_day(fork_dates)
 
-    # cumulative stars per calendar day
-    per_day: dict[str, int] = {}
-    for d in star_dates:
-        per_day[d] = per_day.get(d, 0) + 1
+    # launch = earliest signal across stars/forks
+    first = min([star_dates[0]] + ([fork_dates[0]] if fork_dates else []))
+    launch = date.fromisoformat(first)
 
     # download log: record today's cumulative total, keep history
     dl_log = load_dl_log()
@@ -90,42 +127,54 @@ def main() -> None:
     DL_LOG.write_text(json.dumps(dict(sorted(dl_log.items())), indent=2) + "\n")
 
     total_stars = len(star_dates)
+    total_forks = len(fork_dates)
     total_dl = dl_log[today.isoformat()]
+    grand_total = total_stars + total_forks + total_dl
 
     rows: list[str] = []
-    cum = 0
-    prev_dl: int | None = None
+    cum_stars = cum_forks = 0
+    running_dl: int | None = None  # last known cumulative downloads, carried forward
+    prev_stars = prev_forks = prev_total = prev_dl_sample = None
     d = launch
     while d <= today:
         iso = d.isoformat()
-        cum += per_day.get(iso, 0)
-        delta = per_day.get(iso, 0)
-        if iso in dl_log:
-            cur = dl_log[iso]
-            dl_cell = f"{fmt(cur)} (+{fmt(cur - prev_dl)})" if prev_dl is not None else f"{fmt(cur)}"
-            prev_dl = cur
+        cum_stars += stars_per.get(iso, 0)
+        cum_forks += forks_per.get(iso, 0)
+        sample = dl_log.get(iso)
+        if sample is not None:
+            dl_str = cell(sample, prev_dl_sample)
+            prev_dl_sample = sample
+            running_dl = sample
         else:
-            dl_cell = "—"
-        rows.append(f"| {iso} | {fmt(cum)} (+{fmt(delta)}) | {dl_cell} |")
+            dl_str = "—"  # not re-measured this day (Total carries the last value)
+        total = cum_stars + cum_forks + (running_dl or 0)
+        rows.append(
+            f"| {iso} | {cell(cum_stars, prev_stars)} | {cell(cum_forks, prev_forks)} | {dl_str} | {cell(total, prev_total)} |"
+        )
+        prev_stars, prev_forks, prev_total = cum_stars, cum_forks, total
         d += timedelta(days=1)
 
     header = f"""# Stats
 
-> Auto-updated daily. **Stars** are backfilled from launch via each stargazer's
-> `starredAt`. **Release downloads** are GitHub's cumulative asset totals — GitHub
-> exposes no historical dailies, so the download column is recorded forward from
-> the day tracking started (earlier rows show `—`).
+> Auto-updated daily. **Stars** and **forks** are backfilled from launch via each
+> stargazer's `starredAt` / each fork's `createdAt`. **Release downloads** are
+> GitHub's cumulative asset totals — GitHub exposes no historical dailies, so the
+> download column is recorded forward from the day tracking started (earlier rows
+> show `—`). **Total** = stars + forks + downloads (the last known download count
+> is carried forward on days it wasn't re-measured).
 
-**⭐ {fmt(total_stars)} stars · ⬇️ {fmt(total_dl)} release downloads · since {launch.isoformat()}**
+**⭐ {fmt(total_stars)} stars · 🍴 {fmt(total_forks)} forks · ⬇️ {fmt(total_dl)} downloads · Σ {fmt(grand_total)} total · since {launch.isoformat()}**
 
 _Last updated: {today.isoformat()} (UTC)_
 
-| Date | Stars | Release Downloads |
-| ---------- | -------------------- | -------------------- |
+| Date | Stars | Forks | Release Downloads | Total |
+| ---------- | -------------------- | -------------------- | -------------------- | -------------------- |
 """
     STATS_FILE.write_text(header + "\n".join(rows) + "\n")
-    print(f"wrote {STATS_FILE.relative_to(ROOT)}: {total_stars} stars, {total_dl} downloads, "
-          f"{(today - launch).days + 1} daily rows since {launch}")
+    print(
+        f"wrote {STATS_FILE.relative_to(ROOT)}: {total_stars} stars, {total_forks} forks, "
+        f"{total_dl} downloads, Σ {grand_total}, {(today - launch).days + 1} daily rows since {launch}"
+    )
 
 
 if __name__ == "__main__":
