@@ -70,6 +70,24 @@
   </a>
 </p>
 
+## 하이브리드 공식 Open API <!--since:2026-06-27-->
+
+tossctl은 웹 세션(WTS)만으로도 전부 동작합니다. 토스 공식 Open API 키를 선택적으로
+연결하면 공식이 지원하는 기능은 OAuth 경로로, 나머지는 WTS로 각각 처리하는 하이브리드
+모드가 켜집니다. 키 없이도 모든 기능을 쓸 수 있고, 원하는 시점에 추가할 수 있습니다.
+
+```bash
+# 공식 키 발급: https://corp.tossinvest.com/ko/open-api
+tossctl init                          # 온보딩 위저드 (처음 설정 시)
+tossctl openapi login                 # 공식 키 등록 (환경변수도 지원)
+tossctl openapi status                # 키·토큰·허용 IP·라우팅 진단
+tossctl openapi test                  # 연결 검증
+tossctl account summary --backend official  # 공식 경로 강제 (선택)
+```
+
+키를 연결하면 CI·서버·에이전트에서 사람 개입 없이 토큰이 자동 갱신됩니다.
+자세한 내용은 [하이브리드 가이드](https://tossinvest-cli.vercel.app/docs/guide/hybrid-openapi)를 참고하세요.
+
 ## Quick Start
 
 ### For Agent
@@ -458,6 +476,8 @@ tossctl order cancel --order-id <id> --symbol <sym> ...
 tossctl order amend --order-id <id> ...
 ```
 
+`order cancel`·`order amend`·`order show`를 `--order-id` 없이 실행하면 대기/최근 주문 목록에서 직접 골라 진행할 수 있습니다. `watchlist group delete`·`rename`도 폴더 이름 없이 실행하면 목록에서 선택합니다. 파이프·비TTY에서는 프롬프트 없이 오류를 반환해 스크립트·에이전트와 안전하게 연동됩니다. 포트폴리오·시세 등 핵심 출력에는 한국식 손익 색(상승/이익=빨강, 하락/손실=파랑)이 적용되며, 파이프·비TTY·`NO_COLOR`·`--output json|csv`에서는 색 없이 동작합니다.
+
 ### 실시간 푸시
 
 ```bash
@@ -480,6 +500,16 @@ tossctl auth status         # 세션 + Server Expiry (KST) 표시
 tossctl auth extend         # 폰 푸시 승인으로 서버 측 ~7일 만료 연장
 tossctl auth doctor
 tossctl auth logout
+```
+
+### 공식 Open API
+
+```bash
+tossctl init                # 온보딩 위저드 (처음 설정 시)
+tossctl openapi login       # 공식 키 등록 (env: TOSSCTL_OPENAPI_KEY / TOSSCTL_OPENAPI_SECRET)
+tossctl openapi status      # 키·토큰·허용 IP 진단
+tossctl openapi test        # 연결 검증
+tossctl openapi logout      # 자격증명 파일 삭제
 ```
 
 ### API 회귀 감시

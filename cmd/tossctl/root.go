@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -12,10 +13,14 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/auth"
 	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/hybrid"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/onboarding"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderlineage"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/session"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/tui"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/updatecheck"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/version"
 	"github.com/spf13/cobra"
@@ -25,6 +30,7 @@ type rootOptions struct {
 	outputFormat string
 	configDir    string
 	sessionFile  string
+	backend      string // --backend flag: overrides cfg.OpenAPI.Prefer for this run
 }
 
 type appContext struct {
@@ -34,7 +40,7 @@ type appContext struct {
 	configService     *config.Service
 	loginConfig       auth.LoginConfig
 	authService       *auth.Service
-	client            *tossclient.Client
+	client            *hybrid.Client
 	session           *session.Session
 	lineageService    *orderlineage.Service
 	tradingService    *trading.Service
@@ -71,6 +77,25 @@ func newRootCmd() *cobra.Command {
 			if status, err := loadConfigStatus(opts); err == nil {
 				writeConfigLegacyWarningIfNeeded(cmd.ErrOrStderr(), status, cmd.Name(), format, configGate, configMark)
 			}
+
+			// First-run hint: nudge users with no auth at all toward `tossctl init`.
+			// Never blocks; suppressed in non-interactive and JSON/CSV modes.
+			if format == output.FormatTable {
+				hasOfficialCreds := false
+				if credFile, _, err := resolveOpenAPIPaths(opts); err == nil {
+					if creds, err := official.LoadCredentials(os.Getenv, credFile); err == nil && creds != nil {
+						hasOfficialCreds = true
+					}
+				}
+				state := onboarding.State{
+					HasSession:       sess != nil,
+					HasOfficialCreds: hasOfficialCreds,
+				}
+				if shouldHintOnboarding(state, tui.IsInteractive(os.Stdin, os.Stdout), cmd.Name()) {
+					fmt.Fprintln(cmd.ErrOrStderr(), "처음이신가요? `tossctl init` 으로 인증을 설정하세요.")
+				}
+			}
+
 			return nil
 		},
 		PersistentPostRun: func(cmd *cobra.Command, _ []string) {
@@ -96,12 +121,20 @@ func newRootCmd() *cobra.Command {
 		"",
 		"Override the session file path",
 	)
+	cmd.PersistentFlags().StringVar(
+		&opts.backend,
+		"backend",
+		"",
+		"Override routing backend for this run: auto|wts|official",
+	)
 
 	cmd.AddCommand(
+		newInitCmd(opts),
 		newVersionCmd(opts),
 		newDoctorCmd(opts),
 		newConfigCmd(opts),
 		newAuthCmd(opts),
+		newOpenAPICmd(opts),
 		newAccountCmd(opts),
 		newPortfolioCmd(opts),
 		newOrdersCmd(opts),
@@ -144,6 +177,29 @@ var expiryWarningSkipCommands = map[string]struct{}{
 	"import-playwright-state": {},
 	"version":                 {},
 	"help":                    {},
+}
+
+// hintOnboardingSkipCommands lists commands where the first-run onboarding
+// hint is noise or would be recursive (init itself, meta commands).
+var hintOnboardingSkipCommands = map[string]struct{}{
+	"init":       {},
+	"help":       {},
+	"completion": {},
+	"version":    {},
+}
+
+// shouldHintOnboarding is a pure helper that returns true when all three
+// conditions hold: the user needs onboarding, the terminal is interactive,
+// and the command is not in the exclusion set. It never performs I/O.
+func shouldHintOnboarding(state onboarding.State, interactive bool, cmdName string) bool {
+	if !onboarding.NeedsOnboarding(state) {
+		return false
+	}
+	if !interactive {
+		return false
+	}
+	_, skip := hintOnboardingSkipCommands[cmdName]
+	return !skip
 }
 
 // writeExpiryWarningIfNeeded prints a session-expiry hint to stderr when the
@@ -318,6 +374,21 @@ func configFilePath(opts *rootOptions) (string, error) {
 	return paths.ConfigFile, nil
 }
 
+// resolveBackend returns the effective routing backend preference.
+// The --backend flag takes precedence over cfg.Prefer.
+// An empty flag means "use config". Invalid flag values are rejected.
+func resolveBackend(cfg config.OpenAPI, flag string) (string, error) {
+	if flag == "" {
+		return cfg.Prefer, nil
+	}
+	switch flag {
+	case "auto", "wts", "official":
+		return flag, nil
+	default:
+		return "", fmt.Errorf("invalid --backend value %q: must be one of auto, wts, official", flag)
+	}
+}
+
 func humanizeDuration(d time.Duration) string {
 	if d <= 0 {
 		return "0s"
@@ -371,10 +442,32 @@ func newAppContext(opts *rootOptions) (*appContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := tossclient.New(tossclient.Config{
+
+	wtsClient := tossclient.New(tossclient.Config{
 		Session:       sess,
 		TradingPolicy: cfg.Trading,
 	})
+
+	prefer, err := resolveBackend(cfg.OpenAPI, opts.backend)
+	if err != nil {
+		return nil, err
+	}
+
+	credFile, tokenFile, err := resolveOpenAPIPaths(opts)
+	if err != nil {
+		return nil, err
+	}
+	creds, err := official.LoadCredentials(os.Getenv, credFile)
+	if err != nil {
+		return nil, fmt.Errorf("loading official credentials: %w", err)
+	}
+
+	var off *official.Client
+	if creds != nil && cfg.OpenAPI.Enabled && prefer != "wts" {
+		off = official.New(*creds, tokenFile)
+	}
+
+	h := hybrid.New(wtsClient, off, hybrid.Policy{Prefer: prefer, Fallback: cfg.OpenAPI.Fallback}, os.Stderr)
 
 	return &appContext{
 		format:        format,
@@ -384,12 +477,12 @@ func newAppContext(opts *rootOptions) (*appContext, error) {
 		loginConfig:   loginConfig,
 		authService: auth.NewService(store, paths.SessionFile, auth.Options{
 			LoginConfig:     loginConfig,
-			Validator:       client,
-			ExtensionRunner: client,
+			Validator:       wtsClient,
+			ExtensionRunner: wtsClient,
 		}),
-		client:            client,
+		client:            h,
 		session:           sess,
 		lineageService:    orderlineage.NewService(paths.LineageFile),
-		tradingService:    trading.NewService(cfg.Trading, client),
+		tradingService:    trading.NewService(cfg.Trading, h.Broker()),
 	}, nil
 }
