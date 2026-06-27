@@ -21,11 +21,6 @@
 </p>
 
 <p align="center">
-  <a href="docs/migration/.openapi-snapshot.json"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FJungHoonGhae%2Ftossinvest-cli%2Fmain%2Fdocs%2Fmigration%2F.openapi-snapshot.json&query=%24.spec_version&label=verified%20vs%20official%20Open%20API&prefix=v&color=3182F6" alt="verified official API version" /></a>
-  <a href="docs/migration/.openapi-snapshot.json"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FJungHoonGhae%2Ftossinvest-cli%2Fmain%2Fdocs%2Fmigration%2F.openapi-snapshot.json&query=%24.last_checked_at&label=spec%20checked&color=informational" alt="spec last checked" /></a>
-</p>
-
-<p align="center">
   <a href="#quick-start"><strong>Quick Start</strong></a> ·
   <a href="#지원-범위"><strong>지원 범위</strong></a> ·
   <a href="#명령-목록"><strong>명령 목록</strong></a> ·
@@ -44,10 +39,6 @@
 
 > [!IMPORTANT]
 > 거래 기능은 설치 직후 모두 꺼져 있습니다. `config.json`에서 기능별로 직접 허용해야만 실행됩니다.
-
-<p align="center">
-  <img src="docs/assets/hero.png" alt="tossctl overview" width="720" />
-</p>
 
 <div align="center">
 <sub><strong>WORKS WITH</strong></sub>
