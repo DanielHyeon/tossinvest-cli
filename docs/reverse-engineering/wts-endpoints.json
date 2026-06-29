@@ -1,14 +1,14 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "a6KWhWRFGyw8qrX8aimmN",
+  "build_id": "I0ItQosS6zVIarSP7t9ao",
   "chunk_count": 26,
-  "total": 927,
+  "total": 934,
   "counts": {
-    "implemented": 70,
-    "candidate": 360,
-    "excluded": 497,
+    "implemented": 69,
+    "candidate": 366,
+    "excluded": 499,
     "candidate_next": 11,
-    "meaningful": 430
+    "meaningful": 435
   },
   "overrides": {},
   "endpoints": {
@@ -52,11 +52,6 @@
       "first_seen": "2026-06-19"
     },
     "/api/v1/account-open/wts-bridge/id-card/token/new": {
-      "status": "excluded",
-      "note": "account opening flow",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/account/additional-account-open/clear": {
       "status": "excluded",
       "note": "account opening flow",
       "first_seen": "2026-06-19"
@@ -479,10 +474,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/account/unlock/password": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/accounts": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -764,6 +755,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/common/auth/id-card/mip/vp": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
     "/api/v1/common/auth/id-card/validation": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -860,6 +855,10 @@
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/dashboard/common/ongoing-events/all": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
     "/api/v1/dashboard/common/stocks/mini-chart": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -921,6 +920,10 @@
     "/api/v1/dashboard/wts/overview/signals": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/dashboard/wts/overview/tics": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
     },
     "/api/v1/dashboard/wts/overview/trading-info": {
       "status": "candidate",
@@ -1115,6 +1118,11 @@
       "status": "excluded",
       "note": "KYC",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/lending/agreement/count-active": {
+      "status": "excluded",
+      "note": "stock lending product",
+      "first_seen": "2026-06-29"
     },
     "/api/v1/lending/agreement/exist": {
       "status": "excluded",
@@ -1403,22 +1411,6 @@
       "first_seen": "2026-06-19"
     },
     "/api/v1/misc/shorten-url": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/mock": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/mock-broker/account-no-status": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/mock-broker/auto-execution": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/mock/properties": {
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
@@ -1766,11 +1758,11 @@
       "first_seen": "2026-06-19"
     },
     "/api/v1/openapi/client": {
-      "status": "implemented",
+      "status": "candidate",
       "first_seen": "2026-06-19"
     },
     "/api/v1/openapi/client/allowed-ips": {
-      "status": "implemented",
+      "status": "candidate",
       "first_seen": "2026-06-19"
     },
     "/api/v1/option-both-chain/get-all": {
@@ -1846,6 +1838,30 @@
     "/api/v1/pin/exist": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/prime/benefits/interest/simulate": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
+    "/api/v1/prime/exchange/transactions": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
+    "/api/v1/prime/test/users": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
+    "/api/v1/prime/users/benefits": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
+    "/api/v1/prime/users/benefits/cumulative": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
+    "/api/v1/prime/users/info": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
     },
     "/api/v1/product-eligibility/domestic-leverage-etp/trading": {
       "status": "excluded",
@@ -2678,6 +2694,10 @@
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/tics/rankings": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
     "/api/v1/time": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2759,10 +2779,6 @@
       "first_seen": "2026-06-19"
     },
     "/api/v1/trading/order": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/trading/orderable-amount/buy": {
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
@@ -3289,6 +3305,14 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/dashboard/wts/overview/tics": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
+    "/api/v2/dashboard/wts/overview/tics/ranking": {
+      "status": "candidate",
+      "first_seen": "2026-06-29"
+    },
     "/api/v2/feed/subscription/followings": {
       "status": "excluded",
       "note": "community/UGC",
@@ -3331,6 +3355,16 @@
       "status": "excluded",
       "note": "stock lending product",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/lending/revenue/account/payment": {
+      "status": "excluded",
+      "note": "stock lending product",
+      "first_seen": "2026-06-29"
+    },
+    "/api/v2/lending/revenue/account/summary": {
+      "status": "excluded",
+      "note": "stock lending product",
+      "first_seen": "2026-06-29"
     },
     "/api/v2/lens/issues": {
       "status": "candidate",
@@ -3636,10 +3670,6 @@
     },
     "/api/v2/replies": {
       "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v2/screener/screen/search/modal": {
-      "status": "implemented",
       "first_seen": "2026-06-19"
     },
     "/api/v2/settings/password/reset": {
@@ -4240,5 +4270,5 @@
       "first_seen": "2026-06-19"
     }
   },
-  "updated_at": "2026-06-22"
+  "updated_at": "2026-06-29"
 }
