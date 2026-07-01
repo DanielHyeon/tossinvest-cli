@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/doctor"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -12,13 +13,10 @@ func newDoctorCmd(opts *rootOptions) *cobra.Command {
 	var reportMode bool
 
 	cmd := &cobra.Command{
-		Use:   "doctor",
-		Short: "Check whether tossctl is ready on this machine",
-		Long: `Check whether tossctl is ready on this machine.
-
-Use --report to emit a JSON diagnostic bundle (endpoint-family probes, file
-permissions, orphan cache files). Paths are redacted to '~' so the output
-can be pasted into bug reports without leaking the local username.`,
+		Use:         "doctor",
+		Short:       i18n.T("doctor.short"),
+		Annotations: map[string]string{"source": "local"},
+		Long:        i18n.T("doctor.long"),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := newAppContext(opts)
 			if err != nil {

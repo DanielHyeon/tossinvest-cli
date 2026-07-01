@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -8,13 +9,14 @@ import (
 func newPortfolioCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "portfolio",
-		Short: "Read portfolio and holdings data",
+		Short: i18n.T("portfolio.short"),
 	}
 
 	cmd.AddCommand(
 		&cobra.Command{
-			Use:   "positions",
-			Short: "List current positions",
+			Use:         "positions",
+			Short:       i18n.T("portfolio.positions.short"),
+			Annotations: map[string]string{"source": "both"},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {
@@ -30,8 +32,9 @@ func newPortfolioCmd(opts *rootOptions) *cobra.Command {
 			},
 		},
 		&cobra.Command{
-			Use:   "allocation",
-			Short: "Show portfolio allocation",
+			Use:         "allocation",
+			Short:       i18n.T("portfolio.allocation.short"),
+			Annotations: map[string]string{"source": "wts"},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {
@@ -58,8 +61,10 @@ func newDividendsCmd(opts *rootOptions) *cobra.Command {
 		byPaymentDate bool
 	)
 	cmd := &cobra.Command{
-		Use:   "dividends",
-		Short: "Annual dividend report (연간 배당 내역 — 총액·지역·월별). 공식 API 에 없음",
+		Use:         "dividends",
+		Short:       i18n.T("portfolio.dividends.short"),
+		Long:        i18n.T("portfolio.dividends.long"),
+		Annotations: map[string]string{"source": "wts"},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := newAppContext(opts)
 			if err != nil {
@@ -72,7 +77,7 @@ func newDividendsCmd(opts *rootOptions) *cobra.Command {
 			return output.WriteDividends(cmd.OutOrStdout(), app.format, d)
 		},
 	}
-	cmd.Flags().IntVar(&year, "year", 0, "조회 연도 (기본: 올해)")
-	cmd.Flags().BoolVar(&byPaymentDate, "by-payment-date", false, "지급일 기준 (세금·수수료 포함)")
+	cmd.Flags().IntVar(&year, "year", 0, "query year (default: this year)")
+	cmd.Flags().BoolVar(&byPaymentDate, "by-payment-date", false, "by payment date (includes tax and fees)")
 	return cmd
 }

@@ -14,6 +14,7 @@ import (
 	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/hybrid"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/onboarding"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderlineage"
@@ -34,26 +35,25 @@ type rootOptions struct {
 }
 
 type appContext struct {
-	format            output.Format
-	paths             config.Paths
-	config            config.File
-	configService     *config.Service
-	loginConfig       auth.LoginConfig
-	authService       *auth.Service
-	client            *hybrid.Client
-	session           *session.Session
-	lineageService    *orderlineage.Service
-	tradingService    *trading.Service
+	format         output.Format
+	paths          config.Paths
+	config         config.File
+	configService  *config.Service
+	loginConfig    auth.LoginConfig
+	authService    *auth.Service
+	client         *hybrid.Client
+	session        *session.Session
+	lineageService *orderlineage.Service
+	tradingService *trading.Service
 }
 
 func newRootCmd() *cobra.Command {
 	opts := &rootOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "tossctl",
-		Short: "CLI for Toss Securities web data and trading experiments",
-		Long: "tossctl is the CLI binary for tossinvest-cli, an unofficial Toss Securities " +
-			"web client with browser-assisted login and a narrow trading beta surface.",
+		Use:          "tossctl",
+		Short:        i18n.T("root.short"),
+		Long:         i18n.T("root.long"),
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			format, err := output.ParseFormat(opts.outputFormat)
@@ -92,7 +92,7 @@ func newRootCmd() *cobra.Command {
 					HasOfficialCreds: hasOfficialCreds,
 				}
 				if shouldHintOnboarding(state, tui.IsInteractive(os.Stdin, os.Stdout), cmd.Name()) {
-					fmt.Fprintln(cmd.ErrOrStderr(), "처음이신가요? `tossctl init` 으로 인증을 설정하세요.")
+					fmt.Fprintln(cmd.ErrOrStderr(), "First time here? Run `tossctl init` to set up authentication.")
 				}
 			}
 
@@ -127,6 +127,7 @@ func newRootCmd() *cobra.Command {
 		"",
 		"Override routing backend for this run: auto|wts|openapi",
 	)
+	cmd.PersistentFlags().String("lang", "", "UI language for help, prompts, and table output: en|ko (also TOSSCTL_LANG / LANG)")
 
 	cmd.AddCommand(
 		newInitCmd(opts),
@@ -478,9 +479,9 @@ func newAppContext(opts *rootOptions) (*appContext, error) {
 			Validator:       wtsClient,
 			ExtensionRunner: wtsClient,
 		}),
-		client:            h,
-		session:           sess,
-		lineageService:    orderlineage.NewService(paths.LineageFile),
-		tradingService:    trading.NewService(cfg.Trading, h.Broker()),
+		client:         h,
+		session:        sess,
+		lineageService: orderlineage.NewService(paths.LineageFile),
+		tradingService: trading.NewService(cfg.Trading, h.Broker()),
 	}, nil
 }

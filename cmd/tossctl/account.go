@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -8,13 +9,14 @@ import (
 func newAccountCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account",
-		Short: "Read account-level data",
+		Short: i18n.T("account.short"),
 	}
 
 	cmd.AddCommand(
 		&cobra.Command{
-			Use:   "list",
-			Short: "List available accounts",
+			Use:         "list",
+			Short:       i18n.T("account.list.short"),
+			Annotations: map[string]string{"source": "both"},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {
@@ -30,8 +32,9 @@ func newAccountCmd(opts *rootOptions) *cobra.Command {
 			},
 		},
 		&cobra.Command{
-			Use:   "summary",
-			Short: "Show a summary for the selected account",
+			Use:         "summary",
+			Short:       i18n.T("account.summary.short"),
+			Annotations: map[string]string{"source": "wts"},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {

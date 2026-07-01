@@ -7,6 +7,7 @@ import (
 
 	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -14,10 +15,8 @@ import (
 func newTransactionsCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "transactions",
-		Short: "Read transaction ledger (trades, cash flow, stock in/out)",
-		Long: "Read-only access to Toss Securities' 거래내역 ledger. " +
-			"Covers trades, deposits/withdrawals, dividends, and stock in/out per market. " +
-			"Toss caps a single query at 200 days and paginates.",
+		Short: i18n.T("transactions.short"),
+		Long:  i18n.T("transactions.long"),
 	}
 
 	cmd.AddCommand(newTransactionsListCmd(opts))
@@ -39,8 +38,9 @@ type transactionsListFlags struct {
 func newTransactionsListCmd(opts *rootOptions) *cobra.Command {
 	flags := &transactionsListFlags{}
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List transactions (trades + cash flow) for a market",
+		Use:         "list",
+		Short:       i18n.T("transactions.list.short"),
+		Annotations: map[string]string{"source": "wts"},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := newAppContext(opts)
 			if err != nil {
@@ -95,8 +95,9 @@ func newTransactionsListCmd(opts *rootOptions) *cobra.Command {
 func newTransactionsOverviewCmd(opts *rootOptions) *cobra.Command {
 	var market string
 	cmd := &cobra.Command{
-		Use:   "overview",
-		Short: "Show cash overview for a market (orderable, withdrawable, upcoming deposits)",
+		Use:         "overview",
+		Short:       i18n.T("transactions.overview.short"),
+		Annotations: map[string]string{"source": "wts"},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := newAppContext(opts)
 			if err != nil {

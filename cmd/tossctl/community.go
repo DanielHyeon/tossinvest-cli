@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -8,13 +9,15 @@ import (
 func newCommunityCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community",
-		Short: "Toss community data (커뮤니티). 공식 API 에 없음",
+		Short: i18n.T("community.short"),
 	}
 
 	var rankType string
 	rankingsCmd := &cobra.Command{
-		Use:   "rankings",
-		Short: "Community leaderboards (인플루언서·수익률·팔로워 급증)",
+		Use:         "rankings",
+		Short:       i18n.T("community.rankings.short"),
+		Long:        i18n.T("community.rankings.long"),
+		Annotations: map[string]string{"source": "wts"},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := newAppContext(opts)
 			if err != nil {

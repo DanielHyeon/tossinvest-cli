@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -8,14 +9,15 @@ import (
 func newOrdersCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "orders",
-		Short: "Read order history data",
+		Short: i18n.T("orders.short"),
 	}
 
 	var completedMarket string
 	cmd.AddCommand(
 		&cobra.Command{
-			Use:   "list",
-			Short: "List read-only order history",
+			Use:         "list",
+			Short:       i18n.T("orders.list.short"),
+			Annotations: map[string]string{"source": "wts"},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {
@@ -33,8 +35,9 @@ func newOrdersCmd(opts *rootOptions) *cobra.Command {
 	)
 
 	completedCmd := &cobra.Command{
-		Use:   "completed",
-		Short: "List completed-history orders for the current month",
+		Use:         "completed",
+		Short:       i18n.T("orders.completed.short"),
+		Annotations: map[string]string{"source": "wts"},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := newAppContext(opts)
 			if err != nil {

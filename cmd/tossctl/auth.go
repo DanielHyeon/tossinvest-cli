@@ -11,6 +11,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/auth"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/doctor"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/session"
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ import (
 func newAuthCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "auth",
-		Short: "Manage Toss Securities session state",
+		Short: i18n.T("auth.short"),
 	}
 
 	var (
@@ -28,8 +29,9 @@ func newAuthCmd(opts *rootOptions) *cobra.Command {
 	)
 
 	loginCmd := &cobra.Command{
-		Use:   "login",
-		Short: "Start browser-assisted login",
+		Use:         "login",
+		Short:       i18n.T("auth.login.short"),
+		Annotations: map[string]string{"source": "wts"},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := newAppContext(opts)
 			if err != nil {
@@ -55,8 +57,9 @@ func newAuthCmd(opts *rootOptions) *cobra.Command {
 
 	var extendTimeout time.Duration
 	extendCmd := &cobra.Command{
-		Use:   "extend",
-		Short: "Extend session via Toss app push approval",
+		Use:         "extend",
+		Short:       i18n.T("auth.extend.short"),
+		Annotations: map[string]string{"source": "wts"},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := newAppContext(opts)
 			if err != nil {
@@ -84,9 +87,10 @@ func newAuthCmd(opts *rootOptions) *cobra.Command {
 		loginCmd,
 		extendCmd,
 		&cobra.Command{
-			Use:   "import-playwright-state <path>",
-			Short: "Import Playwright storage state into tossctl session storage",
-			Args:  cobra.ExactArgs(1),
+			Use:         "import-playwright-state <path>",
+			Short:       i18n.T("auth.import-playwright-state.short"),
+			Args:        cobra.ExactArgs(1),
+			Annotations: map[string]string{"source": "local"},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {
@@ -102,8 +106,9 @@ func newAuthCmd(opts *rootOptions) *cobra.Command {
 			},
 		},
 		&cobra.Command{
-			Use:   "status",
-			Short: "Inspect the stored session state",
+			Use:         "status",
+			Short:       i18n.T("auth.status.short"),
+			Annotations: map[string]string{"source": "local"},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {
@@ -119,8 +124,9 @@ func newAuthCmd(opts *rootOptions) *cobra.Command {
 			},
 		},
 		&cobra.Command{
-			Use:   "logout",
-			Short: "Clear the stored session state",
+			Use:         "logout",
+			Short:       i18n.T("auth.logout.short"),
+			Annotations: map[string]string{"source": "local"},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {
@@ -136,8 +142,9 @@ func newAuthCmd(opts *rootOptions) *cobra.Command {
 			},
 		},
 		&cobra.Command{
-			Use:   "doctor",
-			Short: "Check whether auth login prerequisites are ready",
+			Use:         "doctor",
+			Short:       i18n.T("auth.doctor.short"),
+			Annotations: map[string]string{"source": "local"},
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				app, err := newAppContext(opts)
 				if err != nil {
@@ -193,7 +200,7 @@ func writeAuthStatus(w io.Writer, format output.Format, status auth.Status) erro
 			}
 		}
 
-		persistence := "session-scoped cookie (≈1h idle timeout — re-login and confirm '이 기기 로그인 유지' for long-lived session)"
+		persistence := "session-scoped cookie (≈1h idle timeout — re-login and confirm 'keep me signed in on this device' for long-lived session)"
 		if status.ExpiresAt != nil {
 			persistence = fmt.Sprintf("persistent cookie (expires %s)", status.ExpiresAt.Format("2006-01-02 15:04:05Z07:00"))
 		}
