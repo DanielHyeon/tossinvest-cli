@@ -1,5 +1,5 @@
 import type { BaseLayoutProps, LinkItemType } from 'fumadocs-ui/layouts/shared';
-import { Bot, Github, Rocket, ShieldCheck, TerminalSquare } from 'lucide-react';
+import { Bot, Github, History, Rocket, ShieldCheck, TerminalSquare } from 'lucide-react';
 import {
   NavbarMenu,
   NavbarMenuContent,
@@ -10,6 +10,7 @@ import Link from 'fumadocs-core/link';
 import { TossctlIcon } from '@/app/layout.client';
 import { defineI18nUI } from 'fumadocs-ui/i18n';
 import { i18n } from '@/lib/i18n';
+import { GithubInfo } from 'fumadocs-ui/components/github-info';
 
 export const gitConfig = {
   user: 'JungHoonGhae',
@@ -109,6 +110,12 @@ export const linkItems: LinkItemType[] = [
     active: 'nested-url',
   },
   {
+    text: '변경 이력',
+    url: '/docs/changelog',
+    icon: <History />,
+    active: 'nested-url',
+  },
+  {
     type: 'icon',
     url: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
     label: 'github',
@@ -132,6 +139,13 @@ export function baseOptions(): BaseLayoutProps {
     i18n: true,
     nav: {
       title: logo,
+      children: (
+        <GithubInfo
+          owner={gitConfig.user}
+          repo={gitConfig.repo}
+          className="max-lg:hidden"
+        />
+      ),
     },
   };
 }
