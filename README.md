@@ -203,12 +203,12 @@ Waiting for approval in the Toss app on your phone...
 |------|--------|:--:|:--:|
 | 계좌 목록 / 요약 | `account list`, `account summary` | ✅ | ✅ |
 | 포트폴리오 | `portfolio positions`, `portfolio allocation` (US: USD 병기) | ✅ | ✅ |
-| 🆕 체결 내역 (틱) | `quote trades <symbol> --count N` | ✅ | ✅ |
+| 체결 내역 (틱) | `quote trades <symbol> --count N` | ✅ | ✅ |
 | 🆕 호가 (bid/ask 10단계) | `quote orderbook <symbol>` (매도·매수 잔량) | ✅ | ✅ |
-| 🆕 상/하한가 | `quote limits <symbol>` (KR) | ✅ | ✅ |
-| 🆕 매수 유의사항 | `quote warnings <symbol>` (정리매매·투자경고·VI 등) | ✅ | ✅ |
-| 🆕 장 운영 시간 | `market hours` (오늘 + 휴장 시 다음 영업일) | ✅ | ✅ |
-| 🆕 환율 | `market fx` (달러 환율·달러 인덱스) | ✅ | ✅ |
+| 상/하한가 | `quote limits <symbol>` (KR) | ✅ | ✅ |
+| 매수 유의사항 | `quote warnings <symbol>` (정리매매·투자경고·VI 등) | ✅ | ✅ |
+| 장 운영 시간 | `market hours` (오늘 + 휴장 시 다음 영업일) | ✅ | ✅ |
+| 환율 | `market fx` (달러 환율·달러 인덱스) | ✅ | ✅ |
 | 🆕 매도가능수량 | `quote sellable <symbol>` (보유 종목 매도가능 주수) | ✅ | ✅ |
 | 🆕 수수료 / 거래세율 | `quote commission <symbol>` (수수료율·거래세율) | ✅ | ✅ |
 | 미체결 / 체결 / 단건 주문 | `orders list`, `orders completed`, `order show <id>` | ✅ | ✅ |

@@ -144,12 +144,12 @@ The Toss Securities official Open API is currently **rolling out in stages to pr
 |------|--------|:--:|:--:|
 | Accounts / summary | `account list`, `account summary` | ✅ | ✅ |
 | Portfolio | `portfolio positions`, `portfolio allocation` (USD for US) | ✅ | ✅ |
-| 🆕 Trade ticks | `quote trades <symbol> --count N` | ✅ | ✅ |
+| Trade ticks | `quote trades <symbol> --count N` | ✅ | ✅ |
 | 🆕 Orderbook (10-level bid/ask) | `quote orderbook <symbol>` | ✅ | ✅ |
-| 🆕 Price limits | `quote limits <symbol>` (KR) | ✅ | ✅ |
-| 🆕 Trade warnings | `quote warnings <symbol>` (liquidation · alert · VI …) | ✅ | ✅ |
-| 🆕 Trading hours | `market hours` (today + next session when closed) | ✅ | ✅ |
-| 🆕 FX | `market fx` (USD rate · dollar index) | ✅ | ✅ |
+| Price limits | `quote limits <symbol>` (KR) | ✅ | ✅ |
+| Trade warnings | `quote warnings <symbol>` (liquidation · alert · VI …) | ✅ | ✅ |
+| Trading hours | `market hours` (today + next session when closed) | ✅ | ✅ |
+| FX | `market fx` (USD rate · dollar index) | ✅ | ✅ |
 | 🆕 Sellable quantity | `quote sellable <symbol>` (sellable shares for a held symbol) | ✅ | ✅ |
 | 🆕 Commission / tax rate | `quote commission <symbol>` | ✅ | ✅ |
 | Orders (pending / completed / single) | `orders list`, `orders completed`, `order show <id>` | ✅ | ✅ |
