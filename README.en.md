@@ -145,20 +145,20 @@ The Toss Securities official Open API is currently **rolling out in stages to pr
 | Accounts / summary | `account list`, `account summary` | ✅ | ✅ |
 | Portfolio | `portfolio positions`, `portfolio allocation` (USD for US) | ✅ | ✅ |
 | Trade ticks | `quote trades <symbol> --count N` | ✅ | ✅ |
-| 🆕 Orderbook (10-level bid/ask) | `quote orderbook <symbol>` | ✅ | ✅ |
+| Orderbook (10-level bid/ask) | `quote orderbook <symbol>` | ✅ | ✅ |
 | Price limits | `quote limits <symbol>` (KR) | ✅ | ✅ |
 | Trade warnings | `quote warnings <symbol>` (liquidation · alert · VI …) | ✅ | ✅ |
 | Trading hours | `market hours` (today + next session when closed) | ✅ | ✅ |
 | FX | `market fx` (USD rate · dollar index) | ✅ | ✅ |
-| 🆕 Sellable quantity | `quote sellable <symbol>` (sellable shares for a held symbol) | ✅ | ✅ |
-| 🆕 Commission / tax rate | `quote commission <symbol>` | ✅ | ✅ |
+| Sellable quantity | `quote sellable <symbol>` (sellable shares for a held symbol) | ✅ | ✅ |
+| Commission / tax rate | `quote commission <symbol>` | ✅ | ✅ |
 | Orders (pending / completed / single) | `orders list`, `orders completed`, `order show <id>` | ✅ | ✅ |
 | Quote | `quote get <symbol>` (OHLC · 52w · market cap · trading value · strength) | 🔸 *(no strength/52w etc.)* | ✅ |
 | Candle chart | `quote chart --interval 1m\|3m\|5m\|10m\|15m\|30m\|60m` | 🔸 *(1m / daily only)* | ✅ |
 | **Multi-quote / live refresh** | `quote batch <sym>[,sym,...]` (`--chart` · `--live`) | ❌ | ✅ |
-| **🆕 Investor flows** | `quote flows <symbol>` (retail · foreign · inst., KR) | ❌ | ✅ |
-| **🆕 Market indices** | `market index` (KOSPI · KOSDAQ · Nasdaq · S&P500 · VIX), `market index <code\|name>` detail (OHLC · 52w) | ❌ | ✅ |
-| **🆕 Live popularity ranking** | `market ranking --size N` | ❌ | ✅ |
+| **Investor flows** | `quote flows <symbol>` (retail · foreign · inst., KR) | ❌ | ✅ |
+| **Market indices** | `market index` (KOSPI · KOSDAQ · Nasdaq · S&P500 · VIX), `market index <code\|name>` detail (OHLC · 52w) | ❌ | ✅ |
+| **Live popularity ranking** | `market ranking --size N` | ❌ | ✅ |
 | **🆕 Net-buy ranking by investor** | `market investors` (foreign · institution · retail top net-buy) | ❌ | ✅ |
 | **🆕 Earnings calendar** | `market earnings` (`--major` for curated majors) | ❌ | ✅ |
 | **🆕 Dividend report** | `portfolio dividends` (annual total · region · monthly, `--by-payment-date` tax) | ❌ | ✅ |
@@ -166,9 +166,9 @@ The Toss Securities official Open API is currently **rolling out in stages to pr
 | **🆕 Sector movements** | `market sectors [id]` (industry tree, 1d·1m·1y returns) | ❌ | ✅ |
 | **🆕 Theme fluctuation ranking** | `market themes` (today's top-moving themes, rising-stock counts) | ❌ | ✅ |
 | **🆕 Personalized news briefing** | `market briefing` (headlines grouped by theme) | ❌ | ✅ |
-| **🆕 Toss AI signals** | `market signals` (per-symbol AI signal · keywords · move) | ❌ | ✅ |
-| **🆕 Stock screener** | `market screener [id]` (preset) · `--filter '<json>'` (custom) `--nation kr\|us` | ❌ | ✅ |
-| **🆕 Watchlist read & management** | `watchlist list`·`groups`, `watchlist group create\|rename\|delete`, `watchlist add\|remove --group <id>` | ❌ | ✅ |
+| **Toss AI signals** | `market signals` (per-symbol AI signal · keywords · move) | ❌ | ✅ |
+| **Stock screener** | `market screener [id]` (preset) · `--filter '<json>'` (custom) `--nation kr\|us` | ❌ | ✅ |
+| **Watchlist read & management** | `watchlist list`·`groups`, `watchlist group create\|rename\|delete`, `watchlist add\|remove --group <id>` | ❌ | ✅ |
 | **Transaction ledger** | `transactions list --market us\|kr` (trades · transfers · dividends) | ❌ | ✅ |
 | **Cash overview** | `transactions overview --market us\|kr` (orderable · withdrawable · incoming) | ❌ | ✅ |
 | **CSV export** | `export positions\|orders --market`, `transactions list --output csv` | ❌ | ✅ |
