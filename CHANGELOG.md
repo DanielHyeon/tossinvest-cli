@@ -4,6 +4,8 @@ tossctl 사용자 관점의 변경 이력입니다. 각 버전에서 "무엇을 
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-07-08
+
 ### 새 기능
 - **`order conditional list` / `order conditional get`** — 공식 Open API 로 조건주문(감시 조건부 주문)의 목록·상세를 조회합니다. 공식 키 연결이 필요합니다.
 - **`order conditional place` / `cancel` / `modify`** — 공식 Open API 로 조건주문(트리거/STOP)을 생성·취소·수정합니다. 기존 주문과 동일한 안전 게이트(config.json `trading.conditional=true` 허용 + `--execute` + `--confirm <token>`)를 거치며, 기본은 비활성입니다. 공식 키 연결이 필요합니다.
