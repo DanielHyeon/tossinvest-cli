@@ -718,7 +718,7 @@
             ]
           },
           "status": {
-            "description": "조건(leg) 단위 상태. 최상위 조건주문 `status` 와 달리 `HOLDING`(OTO 선행 조건 체결 전 대기)을 포함합니다.\n- `HOLDING`: 선행 조건(OTO first) 체결 전 대기 (leg 전용)\n",
+            "description": "조건(leg) 단위 상태. 최상위 조건주문 `status` 와 달리 leg 전용인 `HOLDING`·`CANCELED` 를 포함합니다.\n- `HOLDING`: 선행 조건(OTO first) 체결 전 대기 (leg 전용)\n- `CANCELED`: 취소됨 (완료된 OCO 에서 자동취소된 반대편 조건)\n",
             "enum": [
               "WATCHING",
               "HOLDING",
@@ -938,15 +938,14 @@
             "nullable": true
           },
           "status": {
-            "description": "조건주문(그룹) 상태 — 살아있는 조건(leg)의 상태를 대표로 따릅니다.\nleg 전용 상태인 `HOLDING` 은 최상위 status 로는 내려오지 않습니다 (조건별 상태 `first.status`/`second.status` 에서만 노출).\n- `WATCHING`: 조건 감시 중\n- `PAUSED`: 일시중지\n- `ORDERING`: 조건 충족 — 주문 생성 진행 중\n- `ORDERED`: 주문 생성됨\n- `COMPLETED`: 완료\n- `EXPIRED`: 만료\n- `CANCELED`: 취소됨\n",
+            "description": "조건주문(그룹) 상태 — 살아있는 조건(leg)의 상태를 대표로 따릅니다.\nleg 전용 상태인 `HOLDING`·`CANCELED` 는 최상위 status 로는 내려오지 않습니다 (조건별 상태 `first.status`/`second.status` 에서만 노출).\n- `WATCHING`: 조건 감시 중\n- `PAUSED`: 일시중지\n- `ORDERING`: 조건 충족 — 주문 생성 진행 중\n- `ORDERED`: 주문 생성됨\n- `COMPLETED`: 완료\n- `EXPIRED`: 만료\n",
             "enum": [
               "WATCHING",
               "PAUSED",
               "ORDERING",
               "ORDERED",
               "COMPLETED",
-              "EXPIRED",
-              "CANCELED"
+              "EXPIRED"
             ],
             "example": "WATCHING",
             "type": "string"
@@ -3199,7 +3198,7 @@
   },
   "info": {
     "title": "토스증권 Open API",
-    "version": "1.2.1"
+    "version": "1.2.2"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -3762,14 +3761,14 @@
     },
     "/api/v1/conditional-orders": {
       "get": {
-        "description": "조건주문 목록을 조회합니다.\n\n**모든 타입 반환**: 이 API 로 등록한 조건주문뿐 아니라\n다른 채널(토스증권 앱 등)에서 등록한 조건주문도 함께 반환됩니다.\n타입별 필터는 제공하지 않으며, 응답의 `type` 필드로 구분합니다.\n\n**지원하는 status 값:**\n- `OPEN`: 진행 중(감시 중·일시중지·주문 진행 중 포함) 조건주문\n- `CLOSED`: 종료된(완료·만료·취소) 조건주문\n\n`symbol` 을 지정하면 해당 종목의 조건주문만 반환합니다. `OPEN`/`CLOSED` 모두에서 사용할 수 있습니다.\n\n**페이징**: 커서 기반. 응답의 `nextCursor` 를 다음 요청의 `cursor` 로 전달합니다.\n`limit` 기본 20, 최대 100.\n\n**Rate Limits Group**: `CONDITIONAL_ORDER_HISTORY`\n",
+        "description": "조건주문 목록을 조회합니다.\n\n**모든 타입 반환**: 이 API 로 등록한 조건주문뿐 아니라\n다른 채널(토스증권 앱 등)에서 등록한 조건주문도 함께 반환됩니다.\n타입별 필터는 제공하지 않으며, 응답의 `type` 필드로 구분합니다.\n\n**지원하는 status 값:**\n- `OPEN`: 진행 중(감시 중·일시중지·주문 진행 중 포함) 조건주문\n- `CLOSED`: 종료된(완료·만료) 조건주문\n\n`symbol` 을 지정하면 해당 종목의 조건주문만 반환합니다. `OPEN`/`CLOSED` 모두에서 사용할 수 있습니다.\n\n**페이징**: 커서 기반. 응답의 `nextCursor` 를 다음 요청의 `cursor` 로 전달합니다.\n`limit` 기본 20, 최대 100.\n\n**Rate Limits Group**: `CONDITIONAL_ORDER_HISTORY`\n",
         "operationId": "getConditionalOrders",
         "parameters": [
           {
             "$ref": "#/components/parameters/AccountSeq"
           },
           {
-            "description": "조건주문 라이프사이클 그룹 필터.\n- `OPEN`: 진행 중 — 응답의 `status` ∈ `{WATCHING, PAUSED, ORDERING, ORDERED}`\n- `CLOSED`: 종료 — 응답의 `status` ∈ `{COMPLETED, EXPIRED, CANCELED}`\n",
+            "description": "조건주문 라이프사이클 그룹 필터.\n- `OPEN`: 진행 중 — 응답의 `status` ∈ `{WATCHING, PAUSED, ORDERING, ORDERED}`\n- `CLOSED`: 종료 — 응답의 `status` ∈ `{COMPLETED, EXPIRED}`\n",
             "example": "OPEN",
             "in": "query",
             "name": "status",
@@ -4144,32 +4143,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "example": {
-                  "result": {
-                    "conditionalOrderId": "gaZIG-dYMWil8AAXyPmlRg"
-                  }
-                },
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponse"
-                    },
-                    {
-                      "properties": {
-                        "result": {
-                          "$ref": "#/components/schemas/ConditionalOrderResponse"
-                        }
-                      },
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            },
-            "description": "성공"
+          "204": {
+            "description": "취소 성공 (No Content)"
           },
           "400": {
             "content": {
