@@ -660,3 +660,87 @@ type PrimeStatus struct {
 	MonthlyTotalKRW float64           `json:"monthly_total_krw"`
 	FetchedAt       time.Time         `json:"fetched_at"`
 }
+
+// RankingItem is one row of the official /rankings response.
+type RankingItem struct {
+	Rank          int     `json:"rank"`
+	Symbol        string  `json:"symbol"`
+	Currency      string  `json:"currency"`
+	LastPrice     float64 `json:"last_price"`
+	BasePrice     float64 `json:"base_price"`
+	ChangeRate    float64 `json:"change_rate"`
+	TradingVolume float64 `json:"trading_volume"`
+	TradingAmount float64 `json:"trading_amount"`
+}
+
+// Ranking is the official stock ranking (거래대금/거래량/등락률 상위).
+// Source: GET /api/v1/rankings (official Open API, key required).
+type Ranking struct {
+	Type          string        `json:"type"`
+	MarketCountry string        `json:"market_country"`
+	Duration      string        `json:"duration"`
+	RankedAt      string        `json:"ranked_at,omitempty"`
+	Items         []RankingItem `json:"items"`
+	FetchedAt     time.Time     `json:"fetched_at"`
+}
+
+// MarketIndicatorPrice is one indicator's current price.
+// Source: GET /api/v1/market-indicators/prices (official Open API, key required).
+type MarketIndicatorPrice struct {
+	Symbol    string  `json:"symbol"`
+	LastPrice float64 `json:"last_price"`
+	Timestamp string  `json:"timestamp,omitempty"`
+}
+
+// MarketIndicatorPrices is a batch of indicator current prices.
+type MarketIndicatorPrices struct {
+	Indicators []MarketIndicatorPrice `json:"indicators"`
+	FetchedAt  time.Time              `json:"fetched_at"`
+}
+
+// MarketIndicatorCandle is one OHLCV candle for a market indicator.
+type MarketIndicatorCandle struct {
+	Timestamp string  `json:"timestamp"`
+	Open      float64 `json:"open"`
+	High      float64 `json:"high"`
+	Low       float64 `json:"low"`
+	Close     float64 `json:"close"`
+	Volume    float64 `json:"volume"`
+}
+
+// MarketIndicatorCandles is a page of candles for one indicator symbol.
+// Source: GET /api/v1/market-indicators/{symbol}/candles (official Open API, key required).
+type MarketIndicatorCandles struct {
+	Symbol     string                  `json:"symbol"`
+	Interval   string                  `json:"interval"`
+	Candles    []MarketIndicatorCandle `json:"candles"`
+	NextBefore string                  `json:"next_before,omitempty"`
+	FetchedAt  time.Time               `json:"fetched_at"`
+}
+
+// InvestorTradingParty is one investor group's buy/sell/net amounts (KRW).
+type InvestorTradingParty struct {
+	BuyAmount  float64 `json:"buy_amount"`
+	SellAmount float64 `json:"sell_amount"`
+	NetAmount  float64 `json:"net_amount"`
+}
+
+// InvestorTradingRecord is one period's market-wide investor trading.
+type InvestorTradingRecord struct {
+	Date             string               `json:"date"`
+	UpdatedAt        string               `json:"updated_at"`
+	Individual       InvestorTradingParty `json:"individual"`
+	Foreigner        InvestorTradingParty `json:"foreigner"`
+	Institution      InvestorTradingParty `json:"institution"`
+	OtherCorporation InvestorTradingParty `json:"other_corporation"`
+}
+
+// InvestorTrading is market-wide (KOSPI/KOSDAQ) investor trading over time.
+// Source: GET /api/v1/market-indicators/{symbol}/investor-trading (official Open API, key required).
+type InvestorTrading struct {
+	Symbol    string                  `json:"symbol"`
+	Interval  string                  `json:"interval"`
+	Records   []InvestorTradingRecord `json:"records"`
+	NextUntil string                  `json:"next_until,omitempty"`
+	FetchedAt time.Time               `json:"fetched_at"`
+}

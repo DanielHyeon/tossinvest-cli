@@ -313,3 +313,253 @@ func TestTradesIntegration(t *testing.T) {
 		t.Fatalf("Trades: %+v", got.Trades)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Rankings
+// ---------------------------------------------------------------------------
+
+func TestAdaptRankingUnit(t *testing.T) {
+	raw := apiRankingResult{
+		RankedAt: "2026-06-10T14:30:00+09:00",
+		Rankings: []apiRankingItem{
+			{
+				Rank: 1, Symbol: "005930", Currency: "KRW",
+				Price:         apiRankingPrice{LastPrice: "71900", BasePrice: "71000", ChangeRate: "0.0127"},
+				TradingVolume: "12345678", TradingAmount: "888000000000",
+			},
+			{
+				Rank: 2, Symbol: "000660", Currency: "KRW",
+				Price:         apiRankingPrice{LastPrice: "175000", BasePrice: "176000", ChangeRate: ""},
+				TradingVolume: "2222", TradingAmount: "3333",
+			},
+		},
+	}
+	got := adaptRanking("MARKET_TRADING_AMOUNT", "KR", "1d", raw)
+	if got.Type != "MARKET_TRADING_AMOUNT" || got.MarketCountry != "KR" || got.Duration != "1d" {
+		t.Fatalf("meta not carried: %+v", got)
+	}
+	if got.RankedAt != "2026-06-10T14:30:00+09:00" {
+		t.Fatalf("RankedAt: got %q", got.RankedAt)
+	}
+	if len(got.Items) != 2 {
+		t.Fatalf("Items len: want 2, got %d", len(got.Items))
+	}
+	if got.Items[0].LastPrice != 71900 || got.Items[0].ChangeRate != 0.0127 || got.Items[0].TradingAmount != 888000000000 {
+		t.Fatalf("item0 decimals: %+v", got.Items[0])
+	}
+	if got.Items[1].ChangeRate != 0 { // "" → 0 (nullable)
+		t.Fatalf("item1 ChangeRate: want 0 for empty, got %v", got.Items[1].ChangeRate)
+	}
+}
+
+func TestRankingsIntegration(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/rankings":
+			if r.URL.Query().Get("type") != "MARKET_TRADING_AMOUNT" {
+				t.Errorf("type: got %q", r.URL.Query().Get("type"))
+			}
+			if r.URL.Query().Get("marketCountry") != "KR" {
+				t.Errorf("marketCountry: got %q", r.URL.Query().Get("marketCountry"))
+			}
+			if r.URL.Query().Get("duration") != "1d" {
+				t.Errorf("duration: got %q", r.URL.Query().Get("duration"))
+			}
+			_, _ = w.Write([]byte(`{"result":{"rankedAt":"2026-06-10T14:30:00+09:00","rankings":[{"rank":1,"symbol":"005930","currency":"KRW","price":{"lastPrice":"71900","basePrice":"71000","changeRate":"0.0127"},"tradingVolume":"12345678","tradingAmount":"888000000000"}]}}`))
+		default:
+			t.Errorf("unexpected path %q", r.URL.Path)
+		}
+	}))
+	defer srv.Close()
+
+	c := New(
+		Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL),
+		WithHTTPClient(srv.Client()),
+	)
+	got, err := c.Rankings(context.Background(), "MARKET_TRADING_AMOUNT", "KR", "1d", false, 0)
+	if err != nil {
+		t.Fatalf("Rankings: %v", err)
+	}
+	if len(got.Items) != 1 || got.Items[0].Symbol != "005930" || got.Items[0].LastPrice != 71900 {
+		t.Fatalf("unexpected result: %+v", got)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Market indicator prices
+// ---------------------------------------------------------------------------
+
+func TestAdaptMarketIndicatorPricesUnit(t *testing.T) {
+	raw := []apiMarketIndicatorPrice{
+		{Symbol: "KOSPI", Timestamp: "2026-06-11T15:30:00+09:00", LastPrice: "2812.45"},
+		{Symbol: "KOSDAQ", Timestamp: "", LastPrice: "845.1"},
+	}
+	got := adaptMarketIndicatorPrices(raw)
+	if len(got.Indicators) != 2 {
+		t.Fatalf("len: %d", len(got.Indicators))
+	}
+	if got.Indicators[0].Symbol != "KOSPI" || got.Indicators[0].LastPrice != 2812.45 {
+		t.Fatalf("item0: %+v", got.Indicators[0])
+	}
+	if got.Indicators[1].Timestamp != "" || got.Indicators[1].LastPrice != 845.1 {
+		t.Fatalf("item1 (null timestamp): %+v", got.Indicators[1])
+	}
+}
+
+func TestMarketIndicatorPricesIntegration(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/market-indicators/prices":
+			if r.URL.Query().Get("symbols") != "KOSPI,KOSDAQ" {
+				t.Errorf("symbols: got %q", r.URL.Query().Get("symbols"))
+			}
+			_, _ = w.Write([]byte(`{"result":[{"symbol":"KOSPI","timestamp":"2026-06-11T15:30:00+09:00","lastPrice":"2812.45"},{"symbol":"KOSDAQ","timestamp":null,"lastPrice":"845.1"}]}`))
+		default:
+			t.Errorf("unexpected path %q", r.URL.Path)
+		}
+	}))
+	defer srv.Close()
+
+	c := New(
+		Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL),
+		WithHTTPClient(srv.Client()),
+	)
+	got, err := c.MarketIndicatorPrices(context.Background(), []string{"KOSPI", "KOSDAQ"})
+	if err != nil {
+		t.Fatalf("MarketIndicatorPrices: %v", err)
+	}
+	if len(got.Indicators) != 2 || got.Indicators[1].Symbol != "KOSDAQ" || got.Indicators[1].Timestamp != "" {
+		t.Fatalf("unexpected: %+v", got)
+	}
+}
+
+func TestAdaptMarketIndicatorCandlesUnit(t *testing.T) {
+	raw := apiMarketIndicatorCandlePage{
+		Candles: []apiMarketIndicatorCandle{
+			{Timestamp: "2026-06-11T09:00:00+09:00", OpenPrice: "2798.32", HighPrice: "2820.15", LowPrice: "2790.1", ClosePrice: "2812.45", Volume: "123456"},
+		},
+		NextBefore: "2026-06-10T09:00:00+09:00",
+	}
+	got := adaptMarketIndicatorCandles("KOSPI", "1d", raw)
+	if got.Symbol != "KOSPI" || got.Interval != "1d" {
+		t.Fatalf("meta: %+v", got)
+	}
+	if got.NextBefore != "2026-06-10T09:00:00+09:00" {
+		t.Fatalf("NextBefore: %q", got.NextBefore)
+	}
+	if len(got.Candles) != 1 {
+		t.Fatalf("len: %d", len(got.Candles))
+	}
+	c0 := got.Candles[0]
+	if c0.Open != 2798.32 || c0.High != 2820.15 || c0.Low != 2790.1 || c0.Close != 2812.45 || c0.Volume != 123456 {
+		t.Fatalf("candle0: %+v", c0)
+	}
+}
+
+func TestMarketIndicatorCandlesIntegration(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/market-indicators/KOSPI/candles":
+			if r.URL.Query().Get("interval") != "1d" {
+				t.Errorf("interval: got %q", r.URL.Query().Get("interval"))
+			}
+			if r.URL.Query().Get("count") != "5" {
+				t.Errorf("count: got %q", r.URL.Query().Get("count"))
+			}
+			_, _ = w.Write([]byte(`{"result":{"candles":[{"timestamp":"2026-06-11T09:00:00+09:00","openPrice":"2798.32","highPrice":"2820.15","lowPrice":"2790.1","closePrice":"2812.45","volume":"123456"}],"nextBefore":null}}`))
+		default:
+			t.Errorf("unexpected path %q", r.URL.Path)
+		}
+	}))
+	defer srv.Close()
+
+	c := New(
+		Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL),
+		WithHTTPClient(srv.Client()),
+	)
+	got, err := c.MarketIndicatorCandles(context.Background(), "KOSPI", "1d", 5, "")
+	if err != nil {
+		t.Fatalf("MarketIndicatorCandles: %v", err)
+	}
+	if got.Symbol != "KOSPI" || len(got.Candles) != 1 || got.Candles[0].Close != 2812.45 || got.NextBefore != "" {
+		t.Fatalf("unexpected: %+v", got)
+	}
+}
+
+func TestAdaptInvestorTradingUnit(t *testing.T) {
+	raw := apiInvestorTradingResult{
+		NextUntil: "2026-06-09",
+		Records: []apiInvestorTradingRecord{
+			{
+				Date: "2026-06-11", UpdatedAt: "2026-06-11T18:10:00+09:00",
+				Individual:       apiInvestorTradingAmount{BuyAmount: "5200000000000", SellAmount: "5350000000000"},
+				Foreigner:        apiInvestorTradingAmount{BuyAmount: "3800000000000", SellAmount: "3600000000000"},
+				Institution:      apiInvestorTradingAmount{BuyAmount: "2100000000000", SellAmount: "2180000000000"},
+				OtherCorporation: apiInvestorTradingAmount{BuyAmount: "50000000000", SellAmount: "40000000000"},
+			},
+		},
+	}
+	got := adaptInvestorTrading("KOSPI", "1d", raw)
+	if got.Symbol != "KOSPI" || got.Interval != "1d" || got.NextUntil != "2026-06-09" {
+		t.Fatalf("meta: %+v", got)
+	}
+	if len(got.Records) != 1 {
+		t.Fatalf("records len: %d", len(got.Records))
+	}
+	r := got.Records[0]
+	if r.Individual.BuyAmount != 5200000000000 || r.Individual.SellAmount != 5350000000000 {
+		t.Fatalf("individual: %+v", r.Individual)
+	}
+	if r.Individual.NetAmount != -150000000000 { // buy - sell
+		t.Fatalf("individual net: want -150000000000, got %v", r.Individual.NetAmount)
+	}
+	if r.Foreigner.NetAmount != 200000000000 {
+		t.Fatalf("foreigner net: %v", r.Foreigner.NetAmount)
+	}
+}
+
+func TestMarketInvestorTradingIntegration(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/market-indicators/KOSPI/investor-trading":
+			if r.URL.Query().Get("interval") != "1d" {
+				t.Errorf("interval: got %q", r.URL.Query().Get("interval"))
+			}
+			_, _ = w.Write([]byte(`{"result":{"nextUntil":null,"records":[{"date":"2026-06-11","updatedAt":"2026-06-11T18:10:00+09:00","individual":{"buyAmount":"5200000000000","sellAmount":"5350000000000"},"foreigner":{"buyAmount":"3800000000000","sellAmount":"3600000000000"},"institution":{"buyAmount":"2100000000000","sellAmount":"2180000000000"},"otherCorporation":{"buyAmount":"50000000000","sellAmount":"40000000000"}}]}}`))
+		default:
+			t.Errorf("unexpected path %q", r.URL.Path)
+		}
+	}))
+	defer srv.Close()
+
+	c := New(
+		Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL),
+		WithHTTPClient(srv.Client()),
+	)
+	got, err := c.MarketInvestorTrading(context.Background(), "KOSPI", "1d", 0, "")
+	if err != nil {
+		t.Fatalf("MarketInvestorTrading: %v", err)
+	}
+	if got.Symbol != "KOSPI" || len(got.Records) != 1 || got.NextUntil != "" {
+		t.Fatalf("unexpected: %+v", got)
+	}
+	if got.Records[0].Foreigner.NetAmount != 200000000000 {
+		t.Fatalf("foreigner net: %v", got.Records[0].Foreigner.NetAmount)
+	}
+}

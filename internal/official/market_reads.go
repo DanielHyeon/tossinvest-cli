@@ -294,3 +294,262 @@ func adaptTrades(symbol string, raw []apiTrade) domain.TradeList {
 		// ProductCode, Name — not in /trades response
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Rankings
+// ---------------------------------------------------------------------------
+
+// apiRankingPrice mirrors RankingPrice: {lastPrice, basePrice, changeRate?}.
+type apiRankingPrice struct {
+	LastPrice  string `json:"lastPrice"`
+	BasePrice  string `json:"basePrice"`
+	ChangeRate string `json:"changeRate"` // nullable → "" when null
+}
+
+// apiRankingItem mirrors RankingItem in the official /rankings response.
+type apiRankingItem struct {
+	Rank          int             `json:"rank"`
+	Symbol        string          `json:"symbol"`
+	Currency      string          `json:"currency"`
+	Price         apiRankingPrice `json:"price"`
+	TradingVolume string          `json:"tradingVolume"`
+	TradingAmount string          `json:"tradingAmount"`
+}
+
+// apiRankingResult mirrors RankingResponse (the unwrapped `result`).
+type apiRankingResult struct {
+	RankedAt string           `json:"rankedAt"` // nullable → "" when null
+	Rankings []apiRankingItem `json:"rankings"`
+}
+
+// Rankings fetches the official stock ranking.
+// typ: MARKET_TRADING_AMOUNT | MARKET_TRADING_VOLUME | TOP_GAINERS | TOP_LOSERS |
+//
+//	TOSS_SECURITIES_TRADING_AMOUNT | TOSS_SECURITIES_TRADING_VOLUME
+//
+// marketCountry: KR | US. duration: realtime|1d|1w|1mo|3mo|6mo|1y.
+// count is optional (0 = API default); max 100 per spec.
+func (c *Client) Rankings(ctx context.Context, typ, marketCountry, duration string, excludeCaution bool, count int) (domain.Ranking, error) {
+	q := url.Values{}
+	q.Set("type", typ)
+	q.Set("marketCountry", marketCountry)
+	q.Set("duration", duration)
+	if excludeCaution {
+		q.Set("excludeInvestmentCaution", "true")
+	}
+	if count > 0 {
+		q.Set("count", strconv.Itoa(count))
+	}
+	var raw apiRankingResult
+	if err := c.get(ctx, "/api/v1/rankings", q, &raw); err != nil {
+		return domain.Ranking{}, err
+	}
+	return adaptRanking(typ, marketCountry, duration, raw), nil
+}
+
+// adaptRanking converts the official RankingResponse to domain.Ranking.
+// The type/market/duration are echoed from the request (the response body does
+// not repeat them). Decimal strings → float64 via parseDecimal; a null
+// changeRate/rankedAt arrives as "" and maps to 0 / "".
+func adaptRanking(typ, marketCountry, duration string, raw apiRankingResult) domain.Ranking {
+	items := make([]domain.RankingItem, 0, len(raw.Rankings))
+	for _, r := range raw.Rankings {
+		items = append(items, domain.RankingItem{
+			Rank:          r.Rank,
+			Symbol:        r.Symbol,
+			Currency:      r.Currency,
+			LastPrice:     parseDecimal(r.Price.LastPrice),
+			BasePrice:     parseDecimal(r.Price.BasePrice),
+			ChangeRate:    parseDecimal(r.Price.ChangeRate),
+			TradingVolume: parseDecimal(r.TradingVolume),
+			TradingAmount: parseDecimal(r.TradingAmount),
+		})
+	}
+	return domain.Ranking{
+		Type:          typ,
+		MarketCountry: marketCountry,
+		Duration:      duration,
+		RankedAt:      raw.RankedAt,
+		Items:         items,
+		FetchedAt:     time.Now().UTC(),
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Market indicator prices
+// ---------------------------------------------------------------------------
+
+// apiMarketIndicatorPrice mirrors MarketIndicatorPriceResponse.
+type apiMarketIndicatorPrice struct {
+	Symbol    string `json:"symbol"`
+	Timestamp string `json:"timestamp"` // nullable → "" when null
+	LastPrice string `json:"lastPrice"`
+}
+
+// MarketIndicatorPrices fetches current prices for market indicators (지수 등).
+// symbols is comma-joined; max 200 per spec. Only catalog symbols (e.g. KOSPI,
+// KOSDAQ) are supported by the API.
+func (c *Client) MarketIndicatorPrices(ctx context.Context, symbols []string) (domain.MarketIndicatorPrices, error) {
+	q := url.Values{}
+	q.Set("symbols", strings.Join(symbols, ","))
+	var raw []apiMarketIndicatorPrice
+	if err := c.get(ctx, "/api/v1/market-indicators/prices", q, &raw); err != nil {
+		return domain.MarketIndicatorPrices{}, err
+	}
+	return adaptMarketIndicatorPrices(raw), nil
+}
+
+// adaptMarketIndicatorPrices converts the official response array to domain.
+func adaptMarketIndicatorPrices(raw []apiMarketIndicatorPrice) domain.MarketIndicatorPrices {
+	out := make([]domain.MarketIndicatorPrice, 0, len(raw))
+	for _, p := range raw {
+		out = append(out, domain.MarketIndicatorPrice{
+			Symbol:    p.Symbol,
+			LastPrice: parseDecimal(p.LastPrice),
+			Timestamp: p.Timestamp,
+		})
+	}
+	return domain.MarketIndicatorPrices{Indicators: out, FetchedAt: time.Now().UTC()}
+}
+
+// ---------------------------------------------------------------------------
+// Market indicator candles
+// ---------------------------------------------------------------------------
+
+// apiMarketIndicatorCandle mirrors MarketIndicatorCandle.
+type apiMarketIndicatorCandle struct {
+	Timestamp  string `json:"timestamp"`
+	OpenPrice  string `json:"openPrice"`
+	HighPrice  string `json:"highPrice"`
+	LowPrice   string `json:"lowPrice"`
+	ClosePrice string `json:"closePrice"`
+	Volume     string `json:"volume"`
+}
+
+// apiMarketIndicatorCandlePage mirrors MarketIndicatorCandlePageResponse.
+type apiMarketIndicatorCandlePage struct {
+	Candles    []apiMarketIndicatorCandle `json:"candles"`
+	NextBefore string                     `json:"nextBefore"` // nullable → "" when null
+}
+
+// MarketIndicatorCandles fetches OHLCV candles for one indicator symbol.
+// interval: 1m | 1d. count optional (0 = API default, max 200). before is an
+// optional ISO 8601 pagination upper bound (inclusive); pass the previous
+// page's NextBefore to page. url.Values.Encode escapes "+" as "%2B" as the
+// spec requires.
+func (c *Client) MarketIndicatorCandles(ctx context.Context, symbol, interval string, count int, before string) (domain.MarketIndicatorCandles, error) {
+	q := url.Values{}
+	q.Set("interval", interval)
+	if count > 0 {
+		q.Set("count", strconv.Itoa(count))
+	}
+	if before != "" {
+		q.Set("before", before)
+	}
+	var raw apiMarketIndicatorCandlePage
+	path := "/api/v1/market-indicators/" + url.PathEscape(symbol) + "/candles"
+	if err := c.get(ctx, path, q, &raw); err != nil {
+		return domain.MarketIndicatorCandles{}, err
+	}
+	return adaptMarketIndicatorCandles(symbol, interval, raw), nil
+}
+
+// adaptMarketIndicatorCandles converts the official candle page to domain.
+func adaptMarketIndicatorCandles(symbol, interval string, raw apiMarketIndicatorCandlePage) domain.MarketIndicatorCandles {
+	candles := make([]domain.MarketIndicatorCandle, 0, len(raw.Candles))
+	for _, cd := range raw.Candles {
+		candles = append(candles, domain.MarketIndicatorCandle{
+			Timestamp: cd.Timestamp,
+			Open:      parseDecimal(cd.OpenPrice),
+			High:      parseDecimal(cd.HighPrice),
+			Low:       parseDecimal(cd.LowPrice),
+			Close:     parseDecimal(cd.ClosePrice),
+			Volume:    parseDecimal(cd.Volume),
+		})
+	}
+	return domain.MarketIndicatorCandles{
+		Symbol:     symbol,
+		Interval:   interval,
+		Candles:    candles,
+		NextBefore: raw.NextBefore,
+		FetchedAt:  time.Now().UTC(),
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Investor trading (market-wide)
+// ---------------------------------------------------------------------------
+
+// apiInvestorTradingAmount mirrors InvestorTradingAmount: {buyAmount, sellAmount}.
+type apiInvestorTradingAmount struct {
+	BuyAmount  string `json:"buyAmount"`
+	SellAmount string `json:"sellAmount"`
+}
+
+// apiInvestorTradingRecord mirrors InvestorTradingRecord. institution.breakdown
+// (7 sub-parties) is intentionally not modeled — YAGNI; the 4 top-level parties
+// carry the buy/sell totals we render.
+type apiInvestorTradingRecord struct {
+	Date             string                   `json:"date"`
+	UpdatedAt        string                   `json:"updatedAt"`
+	Individual       apiInvestorTradingAmount `json:"individual"`
+	Foreigner        apiInvestorTradingAmount `json:"foreigner"`
+	Institution      apiInvestorTradingAmount `json:"institution"`
+	OtherCorporation apiInvestorTradingAmount `json:"otherCorporation"`
+}
+
+// apiInvestorTradingResult mirrors InvestorTradingResponse (unwrapped result).
+type apiInvestorTradingResult struct {
+	NextUntil string                     `json:"nextUntil"` // nullable → "" when null
+	Records   []apiInvestorTradingRecord `json:"records"`
+}
+
+// MarketInvestorTrading fetches market-wide (KOSPI/KOSDAQ) investor trading.
+// interval: 1d|1w|1mo|1y. count optional (0 = API default, max 100). until is an
+// optional inclusive YYYY-MM-DD upper bound; pass previous NextUntil to page.
+func (c *Client) MarketInvestorTrading(ctx context.Context, symbol, interval string, count int, until string) (domain.InvestorTrading, error) {
+	q := url.Values{}
+	q.Set("interval", interval)
+	if count > 0 {
+		q.Set("count", strconv.Itoa(count))
+	}
+	if until != "" {
+		q.Set("until", until)
+	}
+	var raw apiInvestorTradingResult
+	path := "/api/v1/market-indicators/" + url.PathEscape(symbol) + "/investor-trading"
+	if err := c.get(ctx, path, q, &raw); err != nil {
+		return domain.InvestorTrading{}, err
+	}
+	return adaptInvestorTrading(symbol, interval, raw), nil
+}
+
+// party converts one raw buy/sell pair to domain, computing net = buy - sell.
+func party(a apiInvestorTradingAmount) domain.InvestorTradingParty {
+	buy := parseDecimal(a.BuyAmount)
+	sell := parseDecimal(a.SellAmount)
+	return domain.InvestorTradingParty{BuyAmount: buy, SellAmount: sell, NetAmount: buy - sell}
+}
+
+// adaptInvestorTrading converts the official response to domain. symbol/interval
+// are echoed from args.
+func adaptInvestorTrading(symbol, interval string, raw apiInvestorTradingResult) domain.InvestorTrading {
+	records := make([]domain.InvestorTradingRecord, 0, len(raw.Records))
+	for _, r := range raw.Records {
+		records = append(records, domain.InvestorTradingRecord{
+			Date:             r.Date,
+			UpdatedAt:        r.UpdatedAt,
+			Individual:       party(r.Individual),
+			Foreigner:        party(r.Foreigner),
+			Institution:      party(r.Institution),
+			OtherCorporation: party(r.OtherCorporation),
+		})
+	}
+	return domain.InvestorTrading{
+		Symbol:    symbol,
+		Interval:  interval,
+		Records:   records,
+		NextUntil: raw.NextUntil,
+		FetchedAt: time.Now().UTC(),
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -991,6 +992,192 @@ func WriteNewsBriefing(w io.Writer, format Format, b domain.NewsBriefing) error 
 			}
 		}
 		return nil
+	default:
+		return fmt.Errorf("unsupported output format: %s", format)
+	}
+}
+
+// WriteRanking renders the official stock ranking (거래대금/등락률 상위 등).
+func WriteRanking(w io.Writer, format Format, r domain.Ranking) error {
+	switch format {
+	case FormatJSON:
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(r)
+	case FormatCSV:
+		cw := csv.NewWriter(w)
+		if err := cw.Write([]string{"rank", "symbol", "currency", "last_price", "base_price", "change_rate", "trading_volume", "trading_amount"}); err != nil {
+			return err
+		}
+		for _, x := range r.Items {
+			if err := cw.Write([]string{
+				fmt.Sprintf("%d", x.Rank), x.Symbol, x.Currency,
+				strconv.FormatFloat(x.LastPrice, 'f', -1, 64),
+				strconv.FormatFloat(x.BasePrice, 'f', -1, 64),
+				strconv.FormatFloat(x.ChangeRate, 'f', -1, 64),
+				strconv.FormatFloat(x.TradingVolume, 'f', -1, 64),
+				strconv.FormatFloat(x.TradingAmount, 'f', -1, 64),
+			}); err != nil {
+				return err
+			}
+		}
+		cw.Flush()
+		return cw.Error()
+	case FormatTable:
+		headers := []string{
+			i18n.T("output.officialRanking.header.rank"),
+			i18n.T("output.officialRanking.header.symbol"),
+			i18n.T("output.officialRanking.header.price"),
+			i18n.T("output.officialRanking.header.changeRate"),
+			i18n.T("output.officialRanking.header.amount"),
+		}
+		rows := make([][]string, 0, len(r.Items))
+		for _, x := range r.Items {
+			rows = append(rows, []string{
+				fmt.Sprintf("%d", x.Rank),
+				x.Symbol,
+				strconv.FormatFloat(x.LastPrice, 'f', -1, 64),
+				fmt.Sprintf("%.2f%%", x.ChangeRate*100),
+				strconv.FormatFloat(x.TradingAmount, 'f', -1, 64),
+			})
+		}
+		return renderTable(w, headers, rows)
+	default:
+		return fmt.Errorf("unsupported output format: %s", format)
+	}
+}
+
+// WriteMarketIndicatorPrices renders official market-indicator current prices.
+func WriteMarketIndicatorPrices(w io.Writer, format Format, p domain.MarketIndicatorPrices) error {
+	switch format {
+	case FormatJSON:
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(p)
+	case FormatCSV:
+		cw := csv.NewWriter(w)
+		if err := cw.Write([]string{"symbol", "last_price", "timestamp"}); err != nil {
+			return err
+		}
+		for _, x := range p.Indicators {
+			if err := cw.Write([]string{x.Symbol, strconv.FormatFloat(x.LastPrice, 'f', -1, 64), x.Timestamp}); err != nil {
+				return err
+			}
+		}
+		cw.Flush()
+		return cw.Error()
+	case FormatTable:
+		headers := []string{
+			i18n.T("output.marketIndicator.header.symbol"),
+			i18n.T("output.marketIndicator.header.price"),
+			i18n.T("output.marketIndicator.header.time"),
+		}
+		rows := make([][]string, 0, len(p.Indicators))
+		for _, x := range p.Indicators {
+			rows = append(rows, []string{x.Symbol, strconv.FormatFloat(x.LastPrice, 'f', -1, 64), x.Timestamp})
+		}
+		return renderTable(w, headers, rows)
+	default:
+		return fmt.Errorf("unsupported output format: %s", format)
+	}
+}
+
+// WriteMarketIndicatorCandles renders official market-indicator OHLCV candles.
+func WriteMarketIndicatorCandles(w io.Writer, format Format, c domain.MarketIndicatorCandles) error {
+	switch format {
+	case FormatJSON:
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(c)
+	case FormatCSV:
+		cw := csv.NewWriter(w)
+		if err := cw.Write([]string{"timestamp", "open", "high", "low", "close", "volume"}); err != nil {
+			return err
+		}
+		for _, x := range c.Candles {
+			if err := cw.Write([]string{
+				x.Timestamp,
+				strconv.FormatFloat(x.Open, 'f', -1, 64),
+				strconv.FormatFloat(x.High, 'f', -1, 64),
+				strconv.FormatFloat(x.Low, 'f', -1, 64),
+				strconv.FormatFloat(x.Close, 'f', -1, 64),
+				strconv.FormatFloat(x.Volume, 'f', -1, 64),
+			}); err != nil {
+				return err
+			}
+		}
+		cw.Flush()
+		return cw.Error()
+	case FormatTable:
+		headers := []string{
+			i18n.T("output.indicatorCandle.header.time"),
+			i18n.T("output.indicatorCandle.header.open"),
+			i18n.T("output.indicatorCandle.header.high"),
+			i18n.T("output.indicatorCandle.header.low"),
+			i18n.T("output.indicatorCandle.header.close"),
+			i18n.T("output.indicatorCandle.header.volume"),
+		}
+		rows := make([][]string, 0, len(c.Candles))
+		for _, x := range c.Candles {
+			rows = append(rows, []string{
+				x.Timestamp,
+				strconv.FormatFloat(x.Open, 'f', -1, 64),
+				strconv.FormatFloat(x.High, 'f', -1, 64),
+				strconv.FormatFloat(x.Low, 'f', -1, 64),
+				strconv.FormatFloat(x.Close, 'f', -1, 64),
+				strconv.FormatFloat(x.Volume, 'f', -1, 64),
+			})
+		}
+		return renderTable(w, headers, rows)
+	default:
+		return fmt.Errorf("unsupported output format: %s", format)
+	}
+}
+
+// WriteInvestorTrading renders market-wide investor trading (net amounts).
+func WriteInvestorTrading(w io.Writer, format Format, it domain.InvestorTrading) error {
+	switch format {
+	case FormatJSON:
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(it)
+	case FormatCSV:
+		cw := csv.NewWriter(w)
+		if err := cw.Write([]string{"date", "individual_net", "foreigner_net", "institution_net", "other_net"}); err != nil {
+			return err
+		}
+		for _, r := range it.Records {
+			if err := cw.Write([]string{
+				r.Date,
+				strconv.FormatFloat(r.Individual.NetAmount, 'f', -1, 64),
+				strconv.FormatFloat(r.Foreigner.NetAmount, 'f', -1, 64),
+				strconv.FormatFloat(r.Institution.NetAmount, 'f', -1, 64),
+				strconv.FormatFloat(r.OtherCorporation.NetAmount, 'f', -1, 64),
+			}); err != nil {
+				return err
+			}
+		}
+		cw.Flush()
+		return cw.Error()
+	case FormatTable:
+		headers := []string{
+			i18n.T("output.investorTrading.header.date"),
+			i18n.T("output.investorTrading.header.individual"),
+			i18n.T("output.investorTrading.header.foreigner"),
+			i18n.T("output.investorTrading.header.institution"),
+			i18n.T("output.investorTrading.header.other"),
+		}
+		rows := make([][]string, 0, len(it.Records))
+		for _, r := range it.Records {
+			rows = append(rows, []string{
+				r.Date,
+				strconv.FormatFloat(r.Individual.NetAmount, 'f', -1, 64),
+				strconv.FormatFloat(r.Foreigner.NetAmount, 'f', -1, 64),
+				strconv.FormatFloat(r.Institution.NetAmount, 'f', -1, 64),
+				strconv.FormatFloat(r.OtherCorporation.NetAmount, 'f', -1, 64),
+			})
+		}
+		return renderTable(w, headers, rows)
 	default:
 		return fmt.Errorf("unsupported output format: %s", format)
 	}
