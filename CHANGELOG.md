@@ -4,6 +4,11 @@ tossctl 사용자 관점의 변경 이력입니다. 각 버전에서 "무엇을 
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-07-08
+
+### 버그 수정
+- MCP `list_operations`/`call_operation` 툴 설명이 "Toss official API operations" 로만 되어 있어, WTS 전용 조회가 추가된 뒤에도 에이전트가 "공식 기능만 된다"고 오해할 수 있던 문제를 수정했습니다. 설명에 WTS 전용 조회(`backend: "wts"`)와 백엔드별 인증(웹 세션/공식 키)을 명시합니다.
+
 ## [0.20.0] - 2026-07-08
 
 ### 새 기능
