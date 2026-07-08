@@ -198,7 +198,7 @@ func (s *Server) handleToolsList() any {
 	tools := []toolDef{
 		{
 			Name:        "list_operations",
-			Description: "List available Toss official API operations (id, method, path, summary). Optionally filter with a case-insensitive query. Call this first to discover operation ids.",
+			Description: "List available Toss Securities operations — the official Open API plus WTS-only reads (rankings, flows, AI signals, screener, sectors, earnings, briefing, dividends, etc.). Each item shows id, method, path, summary, and backend (\"wts\" = web-session read; empty = official). Optionally filter with a case-insensitive query. Call this first to discover operation ids.",
 			InputSchema: obj(map[string]any{
 				"query": map[string]any{"type": "string", "description": "case-insensitive substring filter over id/path/category/summary"},
 				"limit": map[string]any{"type": "integer", "description": "max results (default 200)"},
@@ -213,7 +213,7 @@ func (s *Server) handleToolsList() any {
 		},
 		{
 			Name:        "call_operation",
-			Description: "Call a Toss official API operation by id with its parameters. Reads return the JSON payload. Write operations (place/cancel/modify order) are gated: without execute=true they return a dry-run preview with a confirm_token; pass execute=true plus confirm=<token> to submit (also requires config to enable trading).",
+			Description: "Call a Toss Securities operation by id with its parameters (official Open API or WTS-only read). Reads return the JSON payload. WTS operations (backend \"wts\") need a web session (`tossctl auth login`); official ops/orders need official credentials (`tossctl openapi login`). Write operations (place/cancel/modify order) use the official path and are gated: without execute=true they return a dry-run preview with a confirm_token; pass execute=true plus confirm=<token> to submit (also requires config to enable trading).",
 			InputSchema: obj(map[string]any{
 				"operation": map[string]any{"type": "string", "description": "operation id"},
 				"params":    map[string]any{"type": "object", "description": "operation parameters (see describe_operation)"},
