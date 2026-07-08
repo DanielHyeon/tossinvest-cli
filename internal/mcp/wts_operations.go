@@ -1,6 +1,10 @@
 package mcp
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"time"
+)
 
 // wtsOperations returns the catalog of WTS-only read operations — features the
 // official Open API does not expose (rankings, flows, indices, AI signals,
@@ -164,6 +168,67 @@ func wtsOperations() []Operation {
 			Category: "account", Summary: "Account summary (balance, holdings valuation, P&L). WTS-only.",
 			handler: func(ctx context.Context, d *Deps, _ map[string]any) (any, error) {
 				return d.WTS.GetAccountSummary(ctx)
+			},
+		},
+		{
+			ID: "completed_orders", Method: "GET", Path: "wts:trading/my-orders/completed", Backend: "wts",
+			Category: "order", Summary: "Completed (filled) orders with average execution price + executed quantity — the data needed for realized P&L. Supports a date range and paging. WTS-only.",
+			Params: []Param{
+				{Name: "market", Type: "string", Desc: `"kr", "us", or "all" (default all)`},
+				{Name: "from", Type: "string", Desc: "start date YYYY-MM-DD (default: current month start)"},
+				{Name: "to", Type: "string", Desc: "end date YYYY-MM-DD (default: today)"},
+				{Name: "size", Type: "integer", Desc: "page size (default 50)"},
+				{Name: "page", Type: "integer", Desc: "page number, 1-based (default 1)"},
+			},
+			handler: func(ctx context.Context, d *Deps, args map[string]any) (any, error) {
+				market, err := argString(args, "market")
+				if err != nil {
+					return nil, err
+				}
+				if market == "" {
+					market = "all"
+				}
+				fromStr, err := argString(args, "from")
+				if err != nil {
+					return nil, err
+				}
+				toStr, err := argString(args, "to")
+				if err != nil {
+					return nil, err
+				}
+				// No range given → default helper (current month).
+				if fromStr == "" && toStr == "" {
+					return d.WTS.ListCompletedOrders(ctx, market)
+				}
+				size, err := argInt(args, "size")
+				if err != nil {
+					return nil, err
+				}
+				if size <= 0 {
+					size = 50
+				}
+				page, err := argInt(args, "page")
+				if err != nil {
+					return nil, err
+				}
+				if page <= 0 {
+					page = 1
+				}
+				now := time.Now()
+				from, to := now, now
+				if fromStr != "" {
+					if from, err = time.ParseInLocation("2006-01-02", fromStr, now.Location()); err != nil {
+						return nil, fmt.Errorf("invalid `from` date (want YYYY-MM-DD): %v", err)
+					}
+				} else {
+					from = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+				}
+				if toStr != "" {
+					if to, err = time.ParseInLocation("2006-01-02", toStr, now.Location()); err != nil {
+						return nil, fmt.Errorf("invalid `to` date (want YYYY-MM-DD): %v", err)
+					}
+				}
+				return d.WTS.ListCompletedOrdersRange(ctx, market, from, to, size, page)
 			},
 		},
 		{

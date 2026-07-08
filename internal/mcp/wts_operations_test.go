@@ -97,6 +97,26 @@ func TestWTSOperationWithoutSessionErrors(t *testing.T) {
 	}
 }
 
+// TestCompletedOrdersRejectsBadDate verifies the date-parse branch returns a
+// clear error (before any network call). A dummy WTS client is enough because
+// parsing fails first.
+func TestCompletedOrdersRejectsBadDate(t *testing.T) {
+	wts := tossclient.New(tossclient.Config{Session: &session.Session{Cookies: map[string]string{"SESSION": "s"}}})
+	resps := driveWTS(t, wts,
+		initLine,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"call_operation","arguments":{"operation":"completed_orders","params":{"from":"2024/01/01"}}}}`,
+	)
+	res, _ := resps[1]["result"].(map[string]any)
+	if isErr, _ := res["isError"].(bool); !isErr {
+		t.Fatalf("want tool error for bad date, got %v", res)
+	}
+	content, _ := res["content"].([]any)
+	text, _ := content[0].(map[string]any)["text"].(string)
+	if !strings.Contains(text, "YYYY-MM-DD") {
+		t.Errorf("error should mention date format, got %q", text)
+	}
+}
+
 // TestListOperationsIncludesWTS verifies the WTS reads are discoverable via
 // list_operations (they carry backend "wts").
 func TestListOperationsIncludesWTS(t *testing.T) {
