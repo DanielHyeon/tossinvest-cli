@@ -61,14 +61,14 @@
 
 ## Quick Start
 
-**The CLI is the broadest** — reads, orders, **real-time streaming, watchlist and other WTS writes**, all of it; starts **without an official key**; deterministic, scriptable, human-usable. **MCP now exposes reads from both official + WTS** too (orders on the official path); its edge is that the agent **auto-discovers** it once registered (cost: real-time and WTS writes not exposed, needs an MCP-native host). So: **wire it into an agent hands-off → MCP; almost everything else → CLI.**
+**Pick by how you'll use it.**
 
-| Mode | Strengths | Cost | Start |
-|---|---|---|---|
-| **CLI** (`tossctl …`) | **Full feature set** (official + WTS) · **start without an official key** · deterministic, scriptable, pipeable · human-usable | The agent must be told it exists (prompt, or a skill / `AGENTS.md`) | Right below ↓ |
-| **MCP** (`tossctl mcp`) | Agent **auto-discovers** it once registered · reads: official + WTS · catalog keeps context tiny | Real-time & WTS writes not exposed · needs an MCP-native host | [MCP quick start →](#mcp-quick-start--3-steps) |
+- **Through an AI assistant (Claude, Codex, Cursor…)** → **MCP is simplest.** Register once
+  (`claude mcp add tossctl tossctl mcp`) and the agent handles it in natural language. → [MCP quick start](#mcp-quick-start--3-steps)
+- **Terminal, scripts, automation, or the full toolset (incl. WTS writes & real-time)** → **CLI.**
+  Start right below. ↓
 
-Full comparison: [CLI vs MCP — when to use which](#cli-vs-mcp--when-to-use-which-complementary).
+Both take one login and share the same `tossctl`. Details: [CLI vs MCP — when to use which](#cli-vs-mcp--when-to-use-which-complementary).
 
 ### For Agents
 
