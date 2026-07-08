@@ -61,14 +61,14 @@
 
 ## Quick Start
 
-**Two ways to use tossctl — pick by what you're doing.**
+**Two ways to connect tossctl — pick by your host.**
 
-| Mode | When | Start |
+| Mode | What | Start |
 |---|---|---|
-| **CLI** (`tossctl …`) | Terminal, scripts, automation — everything, incl. WTS-only features | Right below ↓ |
-| **MCP** (`tossctl mcp`) | Natural language from an **AI agent** (Claude, Codex, …) — official-API scope | [MCP quick start →](#mcp-quick-start--3-steps) |
+| **CLI** (`tossctl …`) | Run as shell commands. Terminal, scripts, cron — and **AI agents that shell out** (Claude Code, Codex, Cursor…). **Everything** (official + WTS) | Right below ↓ |
+| **MCP** (`tossctl mcp`) | Expose as structured MCP tools. For **MCP-native hosts** where the agent calls operations as tools — catalog keeps context tiny. **Official-API scope** | [MCP quick start →](#mcp-quick-start--3-steps) |
 
-Both share the one `tossctl` — full comparison: [CLI vs MCP — when to use which](#cli-vs-mcp--when-to-use-which-complementary).
+**AI agents use both well** — CLI via shell commands, MCP via structured tools. Natural language works either way; the difference is the **connection mechanism and coverage**. Full comparison: [CLI vs MCP — when to use which](#cli-vs-mcp--when-to-use-which-complementary).
 
 ### For Agents
 
@@ -370,18 +370,18 @@ be on PATH):
 
 ### CLI vs MCP — when to use which (complementary)
 
-Both are entry points to the **same official API and the same safety gate** — not competitors, different roles.
+Two entry points to the same `tossctl` binary, and **both work well with AI agents** — not competitors, just different connection mechanisms.
 
 | | **CLI** (`tossctl ...`) | **MCP** (`tossctl mcp`) |
 |---|---|---|
-| Nature | Deterministic, scriptable | Conversational, agent-driven |
-| Good for | Shell scripts, cron, `jq` pipes, precise one-off commands with a human in the loop | Natural-language, multi-lookup exploration ("compare Samsung vs Hynix"), when you're already inside Claude/Codex |
-| Coverage | **Everything** — official API + WTS-only features (popularity ranking, briefing, screener, investor flows) | **Subset of the official API** (reads + official orders). WTS-only features are not exposed |
-| Reproducibility | High (same command = same result) | Varies with the agent's judgment |
+| Mechanism | Shell commands (`tossctl …`) | Structured MCP tools (JSON-RPC, no shell) |
+| Where | Anywhere a shell exists — terminal, scripts, cron, **and AI agents that shell out** (Claude Code, Codex, Cursor…) | **MCP-native hosts** — the agent calls operations as tools (catalog keeps 3 tools resident) |
+| Coverage | **Everything** — official API + WTS-only features (popularity ranking, briefing, screener, investor flows) | **Official-API scope** (reads + official orders). WTS-only features not exposed |
+| Natural language | Agent turns NL → `tossctl` commands | Agent turns NL → MCP tool calls |
 
-- **Structured/automation flows** (batch, alerts, report pipelines) → CLI.
-- **Exploration/analysis/multi-step questions** → let an agent drive via MCP.
-- Either way the **order safety gate is identical**: config opt-in + dry-run preview + `execute`/`confirm` token.
+- **AI agents use both well.** MCP is not required for agent use — agents that handle a shell (Claude Code, Codex, Cursor) already run the CLI fine (install and you get the **full feature set**). MCP is the **no-shell, tools** path: it trims resident context via the catalog and exposes the **official-API scope**.
+- **Scripts, cron, pipes, reproducible automation** → CLI (same command = same result).
+- Either way the **read data and order safety gate are identical**: config opt-in + dry-run preview + `execute`/`confirm` token.
 
 > **Prefer read-only when wiring an autonomous agent.** With `trading.*` off (the default), MCP can only read; order operations are blocked at the gate even if called. Enabling trading requires an explicit human config change, and every real submission still needs `execute:true` plus a valid `confirm` token.
 
