@@ -83,6 +83,30 @@ Writes use the official API only (no WTS). Save credentials first with `tossctl 
 }
 ```
 
+Claude Code registers it in one line:
+
+```bash
+claude mcp add tossctl tossctl mcp
+# claude mcp list → "tossctl: tossctl mcp - ✔ Connected"
+```
+
+#### CLI vs MCP — when to use which (complementary)
+
+Both are entry points to the **same official API and the same safety gate** — not competitors, different roles.
+
+| | **CLI** (`tossctl ...`) | **MCP** (`tossctl mcp`) |
+|---|---|---|
+| Nature | Deterministic, scriptable | Conversational, agent-driven |
+| Good for | Shell scripts, cron, `jq` pipes, precise one-off commands with a human in the loop | Natural-language, multi-lookup exploration ("compare Samsung vs Hynix"), when you're already inside Claude/Codex |
+| Coverage | **Everything** — official API + WTS-only features (popularity ranking, briefing, screener, investor flows) | **Subset of the official API** (reads + official orders). WTS-only features are not exposed |
+| Reproducibility | High (same command = same result) | Varies with the agent's judgment |
+
+- **Structured/automation flows** (batch, alerts, report pipelines) → CLI.
+- **Exploration/analysis/multi-step questions** → let an agent drive via MCP.
+- Either way the **order safety gate is identical**: config opt-in + dry-run preview + `execute`/`confirm` token.
+
+> **Prefer read-only when wiring an autonomous agent.** With `trading.*` off (the default), MCP can only read; order operations are blocked at the gate even if called. Enabling trading requires an explicit human config change, and every real submission still needs `execute:true` plus a valid `confirm` token.
+
 ## Quick Start
 
 ### For Agents
