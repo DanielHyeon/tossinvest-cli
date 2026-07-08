@@ -128,6 +128,27 @@ Desktop·Codex 등 MCP 호스트에 등록하면 에이전트가 자연어로 �
 조회·거래 엔드포인트를 100% 커버합니다. stdin/stdout(JSON-RPC 2.0) 으로 동작하며 별도 서버·
 포트가 필요 없습니다.
 
+#### 빠른 시작 — 3단계
+
+MCP 는 `tossctl` 바이너리의 한 모드(`tossctl mcp`)라 **CLI 를 먼저 설치**한 뒤 공식 키를
+연결하고 호스트에 등록하면 끝입니다:
+
+```bash
+# 1) tossctl 설치 (macOS/Linux — Windows·Homebrew·소스 빌드는 아래 "설치" 섹션 참고)
+curl -fsSL https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.sh | sh
+
+# 2) 공식 Open API 키 연결 (MCP 는 공식 API 만 사용 — 발급: https://corp.tossinvest.com/ko/open-api)
+tossctl openapi login
+
+# 3) MCP 호스트에 등록 + 연결 확인 (Claude Code 예시)
+claude mcp add tossctl tossctl mcp
+claude mcp list   # → "tossctl: tossctl mcp - ✔ Connected"
+```
+
+Claude Desktop·Codex 등 **JSON 설정 방식** 호스트는 아래 [설정 예시](#mcp-호스트-json-설정)를 쓰세요.
+터미널에서 **사람이 CLI 로 직접** 쓰려면 MCP 등록 없이 `tossctl auth login`(웹 세션)만으로 전체
+기능을 씁니다 — [Quick Start](#quick-start) 참고. 두 경로는 같은 `tossctl` 하나를 공유합니다.
+
 #### 왜 catalog 방식인가 — 상시 컨텍스트를 3개로 고정
 
 MCP 의 고질적 비용은 **툴 스키마가 모델 컨텍스트에 상시 상주**한다는 점입니다. API 하나당 툴
@@ -169,8 +190,13 @@ tossctl 의 CLI 는 공식 Open API 와 WTS(웹 세션) 두 경로를 모두 씁
 **주문 실행은 CLI(`tossctl order`)와 동일하게 게이트**됩니다: config 의 `trading.*` +
 `allow_live_order_actions` 토글로 켜야 하고, 기본 호출은 **dry-run preview**(confirm_token·경고
 반환)를 돌려줍니다. 실제 제출은 `execute: true` + `confirm: <token>` 을 함께 넘겨야 합니다. 주문은
-**공식 API 경로만 사용(WTS 미경유)** 합니다. `tossctl openapi login` 으로 자격증명을 먼저
-저장하세요. MCP 호스트 설정 예시:
+**공식 API 경로만 사용(WTS 미경유)** 합니다.
+
+#### MCP 호스트 JSON 설정
+
+Claude Code 는 위 [빠른 시작](#빠른-시작--3단계)의 `claude mcp add` 한 줄로 끝납니다. Claude
+Desktop·Codex 등 JSON 설정 방식 호스트는 다음을 설정 파일에 넣으세요(`tossctl` 이 PATH 에 있어야
+합니다):
 
 ```json
 {
@@ -178,13 +204,6 @@ tossctl 의 CLI 는 공식 Open API 와 WTS(웹 세션) 두 경로를 모두 씁
     "tossinvest": { "command": "tossctl", "args": ["mcp"] }
   }
 }
-```
-
-Claude Code 는 한 줄로 등록됩니다:
-
-```bash
-claude mcp add tossctl tossctl mcp
-# claude mcp list → "tossctl: tossctl mcp - ✔ Connected" 확인
 ```
 
 #### CLI 와 MCP — 언제 무엇을 (상호 보완)

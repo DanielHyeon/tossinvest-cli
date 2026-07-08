@@ -68,6 +68,28 @@ cancel, or modify orders** — in natural language, covering 100% of the officia
 read and trade endpoints. It speaks JSON-RPC 2.0 over stdin/stdout — no separate server or
 port.
 
+#### Quick start — 3 steps
+
+MCP is a mode of the `tossctl` binary (`tossctl mcp`), so **install the CLI first**, connect an
+official key, then register it with your host:
+
+```bash
+# 1) Install tossctl (macOS/Linux — see the "Install" section for Windows/Homebrew/source)
+curl -fsSL https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.sh | sh
+
+# 2) Connect an official Open API key (MCP uses the official API only — get one at https://corp.tossinvest.com/ko/open-api)
+tossctl openapi login
+
+# 3) Register with your MCP host + verify (Claude Code example)
+claude mcp add tossctl tossctl mcp
+claude mcp list   # → "tossctl: tossctl mcp - ✔ Connected"
+```
+
+For JSON-config hosts (Claude Desktop, Codex, …) use the [config example](#mcp-host-json-config)
+below. To use the CLI **by hand** in a terminal, skip MCP and just run `tossctl auth login` (web
+session) for the full feature set — see [Quick Start](#quick-start). Both paths share the one
+`tossctl`.
+
 #### Why a catalog — a fixed 3-tool always-on cost
 
 MCP's inherent cost is that **tool schemas stay resident in the model's context**. Register one
@@ -112,7 +134,13 @@ everything.
 Order mutations are **gated exactly like the `tossctl order` CLI**: enable them in config
 (`trading.*` + `allow_live_order_actions`); a plain call returns a dry-run preview with a
 `confirm_token`, and submitting requires `execute: true` plus `confirm: <token>`. Writes use the
-official API only (no WTS). Save credentials first with `tossctl openapi login`.
+official API only (no WTS).
+
+#### MCP host JSON config
+
+Claude Code is done with the one-line `claude mcp add` from the [quick start](#quick-start--3-steps)
+above. JSON-config hosts (Claude Desktop, Codex, …) take this in their config file (`tossctl` must
+be on PATH):
 
 ```json
 {
@@ -120,13 +148,6 @@ official API only (no WTS). Save credentials first with `tossctl openapi login`.
     "tossinvest": { "command": "tossctl", "args": ["mcp"] }
   }
 }
-```
-
-Claude Code registers it in one line:
-
-```bash
-claude mcp add tossctl tossctl mcp
-# claude mcp list → "tossctl: tossctl mcp - ✔ Connected"
 ```
 
 #### CLI vs MCP — when to use which (complementary)
