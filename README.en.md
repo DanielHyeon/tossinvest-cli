@@ -61,14 +61,14 @@
 
 ## Quick Start
 
-**Two ways to connect tossctl — pick by your host.**
+**Want an agent to use it on its own? MCP. Need the full feature set or scripting? CLI.** The key difference is **how the agent knows the tool exists** — MCP shows up in the tool list once registered and gets called automatically, while the CLI must be mentioned in the prompt or registered via a skill / `AGENTS.md` / `CLAUDE.md` (otherwise the agent won't know it's installed).
 
-| Mode | What | Start |
-|---|---|---|
-| **CLI** (`tossctl …`) | Run as shell commands. Terminal, scripts, cron — and **AI agents that shell out** (Claude Code, Codex, Cursor…). **Everything** (official + WTS) | Right below ↓ |
-| **MCP** (`tossctl mcp`) | Expose as structured MCP tools. For **MCP-native hosts** where the agent calls operations as tools — catalog keeps context tiny. **Official-API scope** | [MCP quick start →](#mcp-quick-start--3-steps) |
+| Mode | When | How the agent finds it | Start |
+|---|---|---|---|
+| **CLI** (`tossctl …`) | Terminal, scripts, automation. **Everything** (official + WTS), deterministic, pipeable | Mention in the prompt, or register via a **skill / `AGENTS.md`** | Right below ↓ |
+| **MCP** (`tossctl mcp`) | Wire it into an agent for natural-language use. **Official-API scope** | **Auto-discovered once registered** (no extra prompting) | [MCP quick start →](#mcp-quick-start--3-steps) |
 
-**AI agents use both well** — CLI via shell commands, MCP via structured tools. Natural language works either way; the difference is the **connection mechanism and coverage**. Full comparison: [CLI vs MCP — when to use which](#cli-vs-mcp--when-to-use-which-complementary).
+Full comparison: [CLI vs MCP — when to use which](#cli-vs-mcp--when-to-use-which-complementary).
 
 ### For Agents
 
@@ -376,10 +376,11 @@ Two entry points to the same `tossctl` binary, and **both work well with AI agen
 |---|---|---|
 | Mechanism | Shell commands (`tossctl …`) | Structured MCP tools (JSON-RPC, no shell) |
 | Where | Anywhere a shell exists — terminal, scripts, cron, **and AI agents that shell out** (Claude Code, Codex, Cursor…) | **MCP-native hosts** — the agent calls operations as tools (catalog keeps 3 tools resident) |
+| How the agent finds it | Must be mentioned in the prompt, or registered via a skill / `AGENTS.md` / `CLAUDE.md` | **Auto-listed as tools once registered** → called without extra prompting |
 | Coverage | **Everything** — official API + WTS-only features (popularity ranking, briefing, screener, investor flows) | **Official-API scope** (reads + official orders). WTS-only features not exposed |
 | Natural language | Agent turns NL → `tossctl` commands | Agent turns NL → MCP tool calls |
 
-- **AI agents use both well.** MCP is not required for agent use — agents that handle a shell (Claude Code, Codex, Cursor) already run the CLI fine (install and you get the **full feature set**). MCP is the **no-shell, tools** path: it trims resident context via the catalog and exposes the **official-API scope**.
+- **AI agents use both — the difference is discovery.** MCP is auto-listed as tools once registered, so it's called with no extra prompting (official-API scope). The CLI runs fine from a shell-capable agent (Claude Code, Codex, Cursor), but the agent only knows it exists if you **mention it in the prompt or register it via a skill / `AGENTS.md` / `CLAUDE.md`** — in return you get the **full feature set** (official + WTS), deterministic and pipeable.
 - **Scripts, cron, pipes, reproducible automation** → CLI (same command = same result).
 - Either way the **read data and order safety gate are identical**: config opt-in + dry-run preview + `execute`/`confirm` token.
 
