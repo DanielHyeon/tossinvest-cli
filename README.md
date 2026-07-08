@@ -98,132 +98,16 @@
 
 <!-- sponsors:end -->
 
-## 공식 Open API 자동 라우팅 <!--since:2026-06-27-->
-
-tossctl은 웹 세션(WTS)만으로도 전부 동작합니다. 토스 공식 Open API 키를 선택적으로
-연결하면 공식 Open API가 지원하는 기능은 공식 API OAuth 경로로, 나머지는 WTS로 각각 처리하는 **자동
-라우팅**이 켜집니다. 키 없이도 모든 기능을 쓸 수 있고, 원하는 시점에 추가할 수 있습니다.
-
-> 공식 Open API 와 WTS 웹 세션의 차이(인증·갱신·커버리지·안정성), IP 자동 등록, 라우팅
-> 동작(다이어그램)은 [자동 라우팅 가이드](https://tossinvest-cli.vercel.app/docs/guide/hybrid-openapi)에 정리되어 있습니다.
-
-```bash
-# 공식 키 발급: https://corp.tossinvest.com/ko/open-api
-tossctl init                          # 온보딩 위저드 (처음 설정 시)
-tossctl openapi login                 # 공식 키 등록 (환경변수도 지원)
-tossctl openapi status                # 키·토큰·허용 IP·라우팅 진단
-tossctl openapi test                  # 연결 검증
-tossctl account summary --backend openapi  # 공식 API 경로 강제 (선택)
-```
-
-키를 연결하면 CI·서버·에이전트에서 사람 개입 없이 토큰이 자동 갱신됩니다.
-
-> 공식 한도는 빡빡합니다 — 공식 문서 기준 계좌 조회는 **초당 1회**로 가장 낮고, 빠르게 반복하면 10번 중 8번이 거절됩니다 ([공식 한도 표 + 실측](docs/migration/open-api.md#rate-limit-실측), 토스 정책에 따라 변동 가능). tossctl 은 막히면 자동으로 웹 세션(WTS)으로 우회하므로 반복 조회·모니터링에서도 끊김이 없습니다.
-
-### MCP 서버 (`tossctl mcp`) <!--since:2026-07-08-->
-
-공식 Open API 를 **MCP(Model Context Protocol) 서버**로도 노출합니다. Claude Code·Claude
-Desktop·Codex 등 MCP 호스트에 등록하면 에이전트가 자연어로 계좌·잔고·시세·호가·체결·캔들·
-장운영시간을 조회하고 **주문(매수/매도·취소·정정)** 까지 실행할 수 있습니다 — 공식 Open API의
-조회·거래 엔드포인트를 100% 커버합니다. stdin/stdout(JSON-RPC 2.0) 으로 동작하며 별도 서버·
-포트가 필요 없습니다.
-
-#### MCP 빠른 시작 — 3단계
-
-MCP 는 `tossctl` 바이너리의 한 모드(`tossctl mcp`)라 **CLI 를 먼저 설치**한 뒤 공식 키를
-연결하고 호스트에 등록하면 끝입니다:
-
-```bash
-# 1) tossctl 설치 (macOS/Linux — Windows·Homebrew·소스 빌드는 아래 "설치" 섹션 참고)
-curl -fsSL https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.sh | sh
-
-# 2) 공식 Open API 키 연결 (MCP 는 공식 API 만 사용 — 발급: https://corp.tossinvest.com/ko/open-api)
-tossctl openapi login
-
-# 3) MCP 호스트에 등록 + 연결 확인 (Claude Code 예시)
-claude mcp add tossctl tossctl mcp
-claude mcp list   # → "tossctl: tossctl mcp - ✔ Connected"
-```
-
-Claude Desktop·Codex 등 **JSON 설정 방식** 호스트는 아래 [설정 예시](#mcp-호스트-json-설정)를 쓰세요.
-터미널에서 **사람이 CLI 로 직접** 쓰려면 MCP 등록 없이 `tossctl auth login`(웹 세션)만으로 전체
-기능을 씁니다 — [Quick Start](#빠른-시작) 참고. 두 경로는 같은 `tossctl` 하나를 공유합니다.
-
-#### 왜 catalog 방식인가 — 상시 컨텍스트를 3개로 고정
-
-MCP 의 고질적 비용은 **툴 스키마가 모델 컨텍스트에 상시 상주**한다는 점입니다. API 하나당 툴
-하나로 등록하면, 그 툴의 이름·설명·파라미터 스키마 전부가 대화 내내 컨텍스트를 차지합니다.
-tossctl 의 공식 API 표면은 **19개 오퍼레이션**(조회 16 + 주문 3) — 이걸 개별 툴로 노출하면
-**19개 스키마가 항상 떠 있게** 되어 토큰을 먹고, 툴 선택 노이즈(비슷한 툴 사이 오판)도 커집니다.
-
-tossctl 은 KIS_MCP_Server 의 catalog 모드를 참조해, 앞단에 **고정 3개 툴만** 노출하고 나머지
-19개 오퍼레이션은 **필요할 때만 스키마를 꺼내오는** 구조로 뒤에 둡니다:
-
-- `list_operations` — 사용 가능한 오퍼레이션 목록(id·요약·write 여부) 조회, `query` 로 필터
-- `describe_operation` — 특정 오퍼레이션의 파라미터 스키마를 **그 순간에만** 조회
-- `call_operation` — id + 파라미터로 실제 호출
-
-결과: 상시 컨텍스트 = **딱 3개 툴 스키마**. 오퍼레이션이 20개든 100개든 상주 비용은 3으로
-고정됩니다. 에이전트는 필요한 오퍼레이션을 `list_operations` 로 찾고 → `describe_operation` 으로
-그때 스키마를 읽고 → `call_operation` 으로 호출하므로, 안 쓰는 오퍼레이션의 스키마가 컨텍스트를
-차지하지 않습니다. (이 README 를 읽는 Claude Code 세션에서도 `tossctl` MCP 는 딱 이 3개 툴로
-잡힙니다.)
-
-#### 왜 MCP 는 공식 Open API 만 노출하나
-
-tossctl 의 CLI 는 공식 Open API 와 WTS(웹 세션) 두 경로를 모두 씁니다. 하지만 **MCP 로 노출하는
-표면은 공식 Open API 로 한정**했습니다 — 의도된 선택입니다.
-
-- **계약의 안정성.** 공식 Open API 는 버전이 붙고(스펙 추적) OAuth 로 인증되는 **문서화된 계약**
-  입니다. 반면 WTS 경로는 토스 웹 내부 API 를 재사용하는 비공식 표면이라 **예고 없이 바뀔 수**
-  있습니다. 사람이 CLI 로 직접 쓸 땐 깨져도 바로 알아채지만, **자율 에이전트가 물고 있으면**
-  조용히 잘못된 동작으로 이어지기 쉽습니다.
-- **주문(write)의 신뢰 경계.** 에이전트에 주문 실행까지 맡기는 이상, 제출 경로는 **토스가 공식
-  승인한 API** 여야 안전하고 정직합니다. MCP 의 주문은 항상 공식 경로만 사용합니다(WTS 미경유).
-- **인증 모델 정합성.** MCP 는 프로그램/에이전트용이고, 공식 API 의 OAuth 키는 그런 용도에 깔끔
-  하게 맞습니다. WTS 는 브라우저 세션(쿠키)에 묶여 있어 세션 만료·환경 의존이 더 큽니다.
-
-그래서 WTS 전용 기능(실시간 인기 순위·AI 브리핑·스크리너·수급 등 [토스 고유 기능](#왜-tossctl-인가--공식-api-는-토스-기능의-일부일-뿐))은
-**의도적으로 CLI 전용**으로 남겨둡니다. "에이전트에는 안정적인 공식 계약만, 사람에게는 전부" 라는
-역할 분담입니다.
-
-**주문 실행은 CLI(`tossctl order`)와 동일하게 게이트**됩니다: config 의 `trading.*` +
-`allow_live_order_actions` 토글로 켜야 하고, 기본 호출은 **dry-run preview**(confirm_token·경고
-반환)를 돌려줍니다. 실제 제출은 `execute: true` + `confirm: <token>` 을 함께 넘겨야 합니다. 주문은
-**공식 API 경로만 사용(WTS 미경유)** 합니다.
-
-#### MCP 호스트 JSON 설정
-
-Claude Code 는 위 [MCP 빠른 시작](#mcp-빠른-시작--3단계)의 `claude mcp add` 한 줄로 끝납니다. Claude
-Desktop·Codex 등 JSON 설정 방식 호스트는 다음을 설정 파일에 넣으세요(`tossctl` 이 PATH 에 있어야
-합니다):
-
-```json
-{
-  "mcpServers": {
-    "tossinvest": { "command": "tossctl", "args": ["mcp"] }
-  }
-}
-```
-
-#### CLI 와 MCP — 언제 무엇을 (상호 보완)
-
-둘은 **같은 공식 API·같은 안전 게이트**를 공유하는 두 개의 입구입니다. 경쟁이 아니라 역할이 다릅니다.
-
-| | **CLI** (`tossctl ...`) | **MCP** (`tossctl mcp`) |
-|---|---|---|
-| 성격 | 결정적·스크립트 가능 | 대화형·에이전트 주도 |
-| 잘 맞는 일 | 셸 스크립트·cron·`jq` 파이프·정확한 단발 명령, 사람이 직접 확인 | "삼성이랑 하이닉스 비교해줘" 같은 자연어·여러 조회를 엮는 탐색·이미 Claude/Codex 안에서 작업 중일 때 |
-| 커버 범위 | **전부** — 공식 API + WTS 전용 기능(인기 순위·브리핑·스크리너·수급 등) | **공식 API 부분집합**(조회 + 공식 주문). WTS 전용 기능은 미포함 |
-| 재현성 | 높음(같은 명령 = 같은 결과) | 에이전트 판단에 따라 다름 |
-
-- **정형·자동화 플로우**(배치, 알림, 리포트 파이프)는 CLI 가 맞습니다.
-- **탐색·분석·멀티스텝 질문**은 MCP 로 에이전트에 맡기는 게 편합니다.
-- 무엇을 쓰든 **주문 안전 게이트는 동일**합니다: config opt-in + dry-run preview + `execute`/`confirm` 토큰.
-
-> **자율 에이전트에 붙일 땐 조회 전용을 권장.** config 에서 `trading.*` 를 끈 상태(기본값)면 MCP 는 조회만 가능하고, 주문 오퍼레이션은 호출돼도 게이트에서 막힙니다. 거래까지 열려면 사람이 명시적으로 config 를 켜야 하며, 실제 제출은 매번 `execute:true` + 유효한 `confirm` 토큰이 필요합니다.
-
 ## 빠른 시작
+
+**tossctl 은 두 가지로 씁니다 — 목적에 맞게 고르세요.**
+
+| 방식 | 이럴 때 | 시작 |
+|---|---|---|
+| **CLI** (`tossctl …`) | 터미널·스크립트·자동화 — WTS 전용 기능까지 전부 | 바로 아래 ↓ |
+| **MCP** (`tossctl mcp`) | Claude·Codex 등 **AI 에이전트**에 붙여 자연어로 (공식 API 범위) | [MCP 빠른 시작 →](#mcp-빠른-시작--3단계) |
+
+둘은 같은 `tossctl` 하나를 공유합니다 — 자세한 비교는 [CLI 와 MCP — 언제 무엇을](#cli-와-mcp--언제-무엇을-상호-보완).
 
 ### 에이전트용
 
@@ -442,6 +326,131 @@ flowchart TD
 - 진짜 안전장치는 주문별 `--confirm <token>` — preview 를 봐야만 얻을 수 있어, 의도하지 않은 주문은 토큰이 어긋나 차단됩니다.
 
 > **v0.5.x 간소화 히스토리:** 중복이던 TTL grant 레이어(`internal/permissions`)를 제거하고(`allow_live_order_actions` 가 같은 보호 제공), 거짓 이름이던 `--dangerously-skip-permissions`(이제 가리킬 permissions 가 없음 + 의미도 역방향)를 은퇴시켰습니다. 기존 플래그는 한 릴리즈 동안 deprecated no-op alias 로 받아들여 스크립트/agent 호환을 유지합니다.
+
+## 공식 Open API 자동 라우팅 <!--since:2026-06-27-->
+
+tossctl은 웹 세션(WTS)만으로도 전부 동작합니다. 토스 공식 Open API 키를 선택적으로
+연결하면 공식 Open API가 지원하는 기능은 공식 API OAuth 경로로, 나머지는 WTS로 각각 처리하는 **자동
+라우팅**이 켜집니다. 키 없이도 모든 기능을 쓸 수 있고, 원하는 시점에 추가할 수 있습니다.
+
+> 공식 Open API 와 WTS 웹 세션의 차이(인증·갱신·커버리지·안정성), IP 자동 등록, 라우팅
+> 동작(다이어그램)은 [자동 라우팅 가이드](https://tossinvest-cli.vercel.app/docs/guide/hybrid-openapi)에 정리되어 있습니다.
+
+```bash
+# 공식 키 발급: https://corp.tossinvest.com/ko/open-api
+tossctl init                          # 온보딩 위저드 (처음 설정 시)
+tossctl openapi login                 # 공식 키 등록 (환경변수도 지원)
+tossctl openapi status                # 키·토큰·허용 IP·라우팅 진단
+tossctl openapi test                  # 연결 검증
+tossctl account summary --backend openapi  # 공식 API 경로 강제 (선택)
+```
+
+키를 연결하면 CI·서버·에이전트에서 사람 개입 없이 토큰이 자동 갱신됩니다.
+
+> 공식 한도는 빡빡합니다 — 공식 문서 기준 계좌 조회는 **초당 1회**로 가장 낮고, 빠르게 반복하면 10번 중 8번이 거절됩니다 ([공식 한도 표 + 실측](docs/migration/open-api.md#rate-limit-실측), 토스 정책에 따라 변동 가능). tossctl 은 막히면 자동으로 웹 세션(WTS)으로 우회하므로 반복 조회·모니터링에서도 끊김이 없습니다.
+
+### MCP 서버 (`tossctl mcp`) <!--since:2026-07-08-->
+
+공식 Open API 를 **MCP(Model Context Protocol) 서버**로도 노출합니다. Claude Code·Claude
+Desktop·Codex 등 MCP 호스트에 등록하면 에이전트가 자연어로 계좌·잔고·시세·호가·체결·캔들·
+장운영시간을 조회하고 **주문(매수/매도·취소·정정)** 까지 실행할 수 있습니다 — 공식 Open API의
+조회·거래 엔드포인트를 100% 커버합니다. stdin/stdout(JSON-RPC 2.0) 으로 동작하며 별도 서버·
+포트가 필요 없습니다.
+
+#### MCP 빠른 시작 — 3단계
+
+MCP 는 `tossctl` 바이너리의 한 모드(`tossctl mcp`)라 **CLI 를 먼저 설치**한 뒤 공식 키를
+연결하고 호스트에 등록하면 끝입니다:
+
+```bash
+# 1) tossctl 설치 (macOS/Linux — Windows·Homebrew·소스 빌드는 아래 "설치" 섹션 참고)
+curl -fsSL https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.sh | sh
+
+# 2) 공식 Open API 키 연결 (MCP 는 공식 API 만 사용 — 발급: https://corp.tossinvest.com/ko/open-api)
+tossctl openapi login
+
+# 3) MCP 호스트에 등록 + 연결 확인 (Claude Code 예시)
+claude mcp add tossctl tossctl mcp
+claude mcp list   # → "tossctl: tossctl mcp - ✔ Connected"
+```
+
+Claude Desktop·Codex 등 **JSON 설정 방식** 호스트는 아래 [설정 예시](#mcp-호스트-json-설정)를 쓰세요.
+터미널에서 **사람이 CLI 로 직접** 쓰려면 MCP 등록 없이 `tossctl auth login`(웹 세션)만으로 전체
+기능을 씁니다 — [Quick Start](#빠른-시작) 참고. 두 경로는 같은 `tossctl` 하나를 공유합니다.
+
+#### 왜 catalog 방식인가 — 상시 컨텍스트를 3개로 고정
+
+MCP 의 고질적 비용은 **툴 스키마가 모델 컨텍스트에 상시 상주**한다는 점입니다. API 하나당 툴
+하나로 등록하면, 그 툴의 이름·설명·파라미터 스키마 전부가 대화 내내 컨텍스트를 차지합니다.
+tossctl 의 공식 API 표면은 **19개 오퍼레이션**(조회 16 + 주문 3) — 이걸 개별 툴로 노출하면
+**19개 스키마가 항상 떠 있게** 되어 토큰을 먹고, 툴 선택 노이즈(비슷한 툴 사이 오판)도 커집니다.
+
+tossctl 은 KIS_MCP_Server 의 catalog 모드를 참조해, 앞단에 **고정 3개 툴만** 노출하고 나머지
+19개 오퍼레이션은 **필요할 때만 스키마를 꺼내오는** 구조로 뒤에 둡니다:
+
+- `list_operations` — 사용 가능한 오퍼레이션 목록(id·요약·write 여부) 조회, `query` 로 필터
+- `describe_operation` — 특정 오퍼레이션의 파라미터 스키마를 **그 순간에만** 조회
+- `call_operation` — id + 파라미터로 실제 호출
+
+결과: 상시 컨텍스트 = **딱 3개 툴 스키마**. 오퍼레이션이 20개든 100개든 상주 비용은 3으로
+고정됩니다. 에이전트는 필요한 오퍼레이션을 `list_operations` 로 찾고 → `describe_operation` 으로
+그때 스키마를 읽고 → `call_operation` 으로 호출하므로, 안 쓰는 오퍼레이션의 스키마가 컨텍스트를
+차지하지 않습니다. (이 README 를 읽는 Claude Code 세션에서도 `tossctl` MCP 는 딱 이 3개 툴로
+잡힙니다.)
+
+#### 왜 MCP 는 공식 Open API 만 노출하나
+
+tossctl 의 CLI 는 공식 Open API 와 WTS(웹 세션) 두 경로를 모두 씁니다. 하지만 **MCP 로 노출하는
+표면은 공식 Open API 로 한정**했습니다 — 의도된 선택입니다.
+
+- **계약의 안정성.** 공식 Open API 는 버전이 붙고(스펙 추적) OAuth 로 인증되는 **문서화된 계약**
+  입니다. 반면 WTS 경로는 토스 웹 내부 API 를 재사용하는 비공식 표면이라 **예고 없이 바뀔 수**
+  있습니다. 사람이 CLI 로 직접 쓸 땐 깨져도 바로 알아채지만, **자율 에이전트가 물고 있으면**
+  조용히 잘못된 동작으로 이어지기 쉽습니다.
+- **주문(write)의 신뢰 경계.** 에이전트에 주문 실행까지 맡기는 이상, 제출 경로는 **토스가 공식
+  승인한 API** 여야 안전하고 정직합니다. MCP 의 주문은 항상 공식 경로만 사용합니다(WTS 미경유).
+- **인증 모델 정합성.** MCP 는 프로그램/에이전트용이고, 공식 API 의 OAuth 키는 그런 용도에 깔끔
+  하게 맞습니다. WTS 는 브라우저 세션(쿠키)에 묶여 있어 세션 만료·환경 의존이 더 큽니다.
+
+그래서 WTS 전용 기능(실시간 인기 순위·AI 브리핑·스크리너·수급 등 [토스 고유 기능](#왜-tossctl-인가--공식-api-는-토스-기능의-일부일-뿐))은
+**의도적으로 CLI 전용**으로 남겨둡니다. "에이전트에는 안정적인 공식 계약만, 사람에게는 전부" 라는
+역할 분담입니다.
+
+**주문 실행은 CLI(`tossctl order`)와 동일하게 게이트**됩니다: config 의 `trading.*` +
+`allow_live_order_actions` 토글로 켜야 하고, 기본 호출은 **dry-run preview**(confirm_token·경고
+반환)를 돌려줍니다. 실제 제출은 `execute: true` + `confirm: <token>` 을 함께 넘겨야 합니다. 주문은
+**공식 API 경로만 사용(WTS 미경유)** 합니다.
+
+#### MCP 호스트 JSON 설정
+
+Claude Code 는 위 [MCP 빠른 시작](#mcp-빠른-시작--3단계)의 `claude mcp add` 한 줄로 끝납니다. Claude
+Desktop·Codex 등 JSON 설정 방식 호스트는 다음을 설정 파일에 넣으세요(`tossctl` 이 PATH 에 있어야
+합니다):
+
+```json
+{
+  "mcpServers": {
+    "tossinvest": { "command": "tossctl", "args": ["mcp"] }
+  }
+}
+```
+
+#### CLI 와 MCP — 언제 무엇을 (상호 보완)
+
+둘은 **같은 공식 API·같은 안전 게이트**를 공유하는 두 개의 입구입니다. 경쟁이 아니라 역할이 다릅니다.
+
+| | **CLI** (`tossctl ...`) | **MCP** (`tossctl mcp`) |
+|---|---|---|
+| 성격 | 결정적·스크립트 가능 | 대화형·에이전트 주도 |
+| 잘 맞는 일 | 셸 스크립트·cron·`jq` 파이프·정확한 단발 명령, 사람이 직접 확인 | "삼성이랑 하이닉스 비교해줘" 같은 자연어·여러 조회를 엮는 탐색·이미 Claude/Codex 안에서 작업 중일 때 |
+| 커버 범위 | **전부** — 공식 API + WTS 전용 기능(인기 순위·브리핑·스크리너·수급 등) | **공식 API 부분집합**(조회 + 공식 주문). WTS 전용 기능은 미포함 |
+| 재현성 | 높음(같은 명령 = 같은 결과) | 에이전트 판단에 따라 다름 |
+
+- **정형·자동화 플로우**(배치, 알림, 리포트 파이프)는 CLI 가 맞습니다.
+- **탐색·분석·멀티스텝 질문**은 MCP 로 에이전트에 맡기는 게 편합니다.
+- 무엇을 쓰든 **주문 안전 게이트는 동일**합니다: config opt-in + dry-run preview + `execute`/`confirm` 토큰.
+
+> **자율 에이전트에 붙일 땐 조회 전용을 권장.** config 에서 `trading.*` 를 끈 상태(기본값)면 MCP 는 조회만 가능하고, 주문 오퍼레이션은 호출돼도 게이트에서 막힙니다. 거래까지 열려면 사람이 명시적으로 config 를 켜야 하며, 실제 제출은 매번 `execute:true` + 유효한 `confirm` 토큰이 필요합니다.
 
 ## 설정
 
