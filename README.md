@@ -120,6 +120,35 @@ tossctl account summary --backend openapi  # 공식 API 경로 강제 (선택)
 
 > 공식 한도는 빡빡합니다 — 공식 문서 기준 계좌 조회는 **초당 1회**로 가장 낮고, 빠르게 반복하면 10번 중 8번이 거절됩니다 ([공식 한도 표 + 실측](docs/migration/open-api.md#rate-limit-실측), 토스 정책에 따라 변동 가능). tossctl 은 막히면 자동으로 웹 세션(WTS)으로 우회하므로 반복 조회·모니터링에서도 끊김이 없습니다.
 
+### MCP 서버 (`tossctl mcp`) <!--since:2026-07-08-->
+
+공식 Open API 를 **MCP(Model Context Protocol) 서버**로도 노출합니다. Claude Code·Claude
+Desktop·Codex 등 MCP 호스트에 등록하면 에이전트가 자연어로 계좌·잔고·시세·호가·체결·캔들·
+장운영시간을 조회하고 **주문(매수/매도·취소·정정)** 까지 실행할 수 있습니다 — 공식 Open API의
+조회·거래 엔드포인트를 100% 커버합니다. stdin/stdout(JSON-RPC 2.0) 으로 동작하며 별도 서버·
+포트가 필요 없습니다.
+
+20여 개의 API 를 개별 툴로 등록하면 상시 컨텍스트가 커지므로, **catalog 방식**으로 딱 3개
+툴만 상시 노출합니다:
+
+- `list_operations` — 사용 가능한 오퍼레이션 목록(id·요약·write 여부) 조회, `query` 로 필터
+- `describe_operation` — 특정 오퍼레이션의 파라미터 스키마 조회
+- `call_operation` — id + 파라미터로 실제 호출
+
+**주문 실행은 CLI(`tossctl order`)와 동일하게 게이트**됩니다: config 의 `trading.*` +
+`allow_live_order_actions` 토글로 켜야 하고, 기본 호출은 **dry-run preview**(confirm_token·경고
+반환)를 돌려줍니다. 실제 제출은 `execute: true` + `confirm: <token>` 을 함께 넘겨야 합니다. 주문은
+**공식 API 경로만 사용(WTS 미경유)** 합니다. `tossctl openapi login` 으로 자격증명을 먼저
+저장하세요. MCP 호스트 설정 예시:
+
+```json
+{
+  "mcpServers": {
+    "tossinvest": { "command": "tossctl", "args": ["mcp"] }
+  }
+}
+```
+
 ## Quick Start
 
 ### For Agent
