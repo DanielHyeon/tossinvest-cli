@@ -233,7 +233,7 @@ func wtsOperations() []Operation {
 		},
 		{
 			ID: "transactions_overview", Method: "GET", Path: "wts:transactions/overview", Backend: "wts",
-			Category: "account", Summary: "Transaction history overview (deposits/withdrawals/trades). WTS-only.",
+			Category: "account", Summary: "Transaction history overview (deposits/withdrawals/trades summary). WTS-only.",
 			Params:   []Param{{Name: "market", Type: "string", Desc: `"kr" or "us" (optional)`}},
 			handler: func(ctx context.Context, d *Deps, args map[string]any) (any, error) {
 				market, err := argString(args, "market")
@@ -241,6 +241,101 @@ func wtsOperations() []Operation {
 					return nil, err
 				}
 				return d.WTS.GetTransactionsOverview(ctx, market)
+			},
+		},
+		{
+			ID: "positions", Method: "GET", Path: "wts:portfolio/positions", Backend: "wts",
+			Category: "account", Summary: "Current holdings with valuation and unrealized P&L (works without an official key). WTS-only.",
+			handler: func(ctx context.Context, d *Deps, _ map[string]any) (any, error) {
+				return d.WTS.ListPositions(ctx)
+			},
+		},
+		{
+			ID: "pending_orders", Method: "GET", Path: "wts:trading/orders/pending", Backend: "wts",
+			Category: "order", Summary: "Open (unfilled) pending orders (works without an official key). WTS-only.",
+			handler: func(ctx context.Context, d *Deps, _ map[string]any) (any, error) {
+				return d.WTS.ListPendingOrders(ctx)
+			},
+		},
+		{
+			ID: "transactions", Method: "GET", Path: "wts:transactions/list", Backend: "wts",
+			Category: "account", Summary: "Detailed transaction list (deposits/withdrawals/trades) aggregated across pages over a date range. WTS-only.",
+			Params: []Param{
+				{Name: "market", Type: "string", Desc: `"kr", "us", or "all" (default all)`},
+				{Name: "from", Type: "string", Desc: "start date YYYY-MM-DD (default: 1 year ago)"},
+				{Name: "to", Type: "string", Desc: "end date YYYY-MM-DD (default: today)"},
+				{Name: "filter", Type: "string", Desc: "transaction type filter (optional)"},
+				{Name: "size", Type: "integer", Desc: "page size (default 50)"},
+				{Name: "page_limit", Type: "integer", Desc: "max pages to aggregate (default 20)"},
+			},
+			handler: func(ctx context.Context, d *Deps, args map[string]any) (any, error) {
+				market, err := argString(args, "market")
+				if err != nil {
+					return nil, err
+				}
+				if market == "" {
+					market = "all"
+				}
+				filter, err := argString(args, "filter")
+				if err != nil {
+					return nil, err
+				}
+				size, err := argInt(args, "size")
+				if err != nil {
+					return nil, err
+				}
+				if size <= 0 {
+					size = 50
+				}
+				pageLimit, err := argInt(args, "page_limit")
+				if err != nil {
+					return nil, err
+				}
+				if pageLimit <= 0 {
+					pageLimit = 20
+				}
+				now := time.Now()
+				from, to := now.AddDate(-1, 0, 0), now
+				fromStr, err := argString(args, "from")
+				if err != nil {
+					return nil, err
+				}
+				if fromStr != "" {
+					if from, err = time.ParseInLocation("2006-01-02", fromStr, now.Location()); err != nil {
+						return nil, fmt.Errorf("invalid `from` date (want YYYY-MM-DD): %v", err)
+					}
+				}
+				toStr, err := argString(args, "to")
+				if err != nil {
+					return nil, err
+				}
+				if toStr != "" {
+					if to, err = time.ParseInLocation("2006-01-02", toStr, now.Location()); err != nil {
+						return nil, fmt.Errorf("invalid `to` date (want YYYY-MM-DD): %v", err)
+					}
+				}
+				return d.WTS.ListAllTransactions(ctx, market, from, to, filter, size, pageLimit)
+			},
+		},
+		{
+			ID: "watchlist", Method: "GET", Path: "wts:watchlist", Backend: "wts",
+			Category: "watchlist", Summary: "Watchlist items (with change/change-rate). WTS-only.",
+			handler: func(ctx context.Context, d *Deps, _ map[string]any) (any, error) {
+				return d.WTS.ListWatchlist(ctx)
+			},
+		},
+		{
+			ID: "watchlist_groups", Method: "GET", Path: "wts:watchlist/groups", Backend: "wts",
+			Category: "watchlist", Summary: "Watchlist folders/groups. WTS-only.",
+			handler: func(ctx context.Context, d *Deps, _ map[string]any) (any, error) {
+				return d.WTS.ListWatchlistGroups(ctx)
+			},
+		},
+		{
+			ID: "earnings_major", Method: "GET", Path: "wts:market/earnings/major", Backend: "wts",
+			Category: "market", Summary: "Curated major-company earnings calls. WTS-only.",
+			handler: func(ctx context.Context, d *Deps, _ map[string]any) (any, error) {
+				return d.WTS.GetEarningCallHome(ctx)
 			},
 		},
 	}
