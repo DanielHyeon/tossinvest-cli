@@ -68,12 +68,51 @@ cancel, or modify orders** — in natural language, covering 100% of the officia
 read and trade endpoints. It speaks JSON-RPC 2.0 over stdin/stdout — no separate server or
 port.
 
-Registering ~20 APIs as individual tools would bloat the always-on context, so it uses a
-**catalog** surface of just three tools: `list_operations`, `describe_operation`, and
-`call_operation`. Order mutations are **gated exactly like the `tossctl order` CLI**: enable
-them in config (`trading.*` + `allow_live_order_actions`); a plain call returns a dry-run
-preview with a `confirm_token`, and submitting requires `execute: true` plus `confirm: <token>`.
-Writes use the official API only (no WTS). Save credentials first with `tossctl openapi login`.
+#### Why a catalog — a fixed 3-tool always-on cost
+
+MCP's inherent cost is that **tool schemas stay resident in the model's context**. Register one
+tool per API and every tool's name, description, and parameter schema occupies context for the
+whole conversation. tossctl's official-API surface is **19 operations** (16 reads + 3 orders) —
+exposing them as individual tools would keep **19 schemas always loaded**, burning tokens and
+adding tool-choice noise (mis-picks between similar tools).
+
+Following KIS_MCP_Server's catalog mode, tossctl fronts everything with **just three fixed
+tools** and keeps the 19 operations behind an **on-demand schema fetch**:
+
+- `list_operations` — list available operations (id, summary, write flag), filter with `query`
+- `describe_operation` — fetch one operation's parameter schema **only at that moment**
+- `call_operation` — call by id with parameters
+
+Result: the always-on context is **exactly three tool schemas**. Whether there are 20 operations
+or 100, the resident cost stays at three. The agent finds an operation via `list_operations` →
+reads its schema via `describe_operation` → calls it via `call_operation`, so unused operations
+never sit in context. (The very Claude Code session reading this README sees `tossctl` as just
+those three tools.)
+
+#### Why MCP exposes the official Open API only
+
+tossctl's CLI uses both paths — the official Open API and WTS (web session). But the **MCP
+surface is deliberately limited to the official Open API**.
+
+- **Contract stability.** The official Open API is a **documented, versioned contract** (spec-
+  tracked, OAuth-authenticated). The WTS path reuses Toss's internal web APIs — an unofficial
+  surface that **can change without notice**. A human running the CLI notices a break immediately;
+  an **autonomous agent holding that surface** can silently drift into wrong behavior.
+- **Trust boundary for writes.** If an agent can place orders, the submission path should be an
+  API **Toss officially sanctions** — safer and more honest. MCP orders always use the official
+  path (never WTS).
+- **Auth model fit.** MCP targets programs/agents, and the official API's OAuth key fits that
+  cleanly. WTS is bound to a browser session (cookies) — more fragile, more environment-dependent.
+
+So the WTS-only features (realtime popularity ranking, AI briefing, screener, investor flows —
+the [Toss-unique features](#why-tossctl--the-official-api-is-a-fraction-of-toss)) stay
+**intentionally CLI-only**. The split: agents get the stable official contract; humans get
+everything.
+
+Order mutations are **gated exactly like the `tossctl order` CLI**: enable them in config
+(`trading.*` + `allow_live_order_actions`); a plain call returns a dry-run preview with a
+`confirm_token`, and submitting requires `execute: true` plus `confirm: <token>`. Writes use the
+official API only (no WTS). Save credentials first with `tossctl openapi login`.
 
 ```json
 {
