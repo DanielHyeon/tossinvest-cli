@@ -61,12 +61,12 @@
 
 ## Quick Start
 
-**Want an agent to use it on its own? MCP. Need the full feature set or scripting? CLI.** The key difference is **how the agent knows the tool exists** — MCP shows up in the tool list once registered and gets called automatically, while the CLI must be mentioned in the prompt or registered via a skill / `AGENTS.md` / `CLAUDE.md` (otherwise the agent won't know it's installed).
+**The CLI does more** — the **full feature set** (official API + 21 WTS-only features), works **without an official key**, deterministic, scriptable, pipeable, and human-usable. **MCP's edge is one thing** — the agent **auto-discovers** it once registered (at the cost of official-API scope, an official key, and an MCP-native host). So: **wire it into an agent hands-off → MCP; almost everything else → CLI.**
 
-| Mode | When | How the agent finds it | Start |
+| Mode | Strengths | Cost | Start |
 |---|---|---|---|
-| **CLI** (`tossctl …`) | Terminal, scripts, automation. **Everything** (official + WTS), deterministic, pipeable | Mention in the prompt, or register via a **skill / `AGENTS.md`** | Right below ↓ |
-| **MCP** (`tossctl mcp`) | Wire it into an agent for natural-language use. **Official-API scope** | **Auto-discovered once registered** (no extra prompting) | [MCP quick start →](#mcp-quick-start--3-steps) |
+| **CLI** (`tossctl …`) | **Full feature set** (official + WTS) · **start without an official key** · deterministic, scriptable, pipeable · human-usable | The agent must be told it exists (prompt, or a skill / `AGENTS.md`) | Right below ↓ |
+| **MCP** (`tossctl mcp`) | Agent **auto-discovers** it once registered · catalog keeps context tiny | Official-API scope · needs an official key · needs an MCP-native host | [MCP quick start →](#mcp-quick-start--3-steps) |
 
 Full comparison: [CLI vs MCP — when to use which](#cli-vs-mcp--when-to-use-which-complementary).
 
@@ -377,6 +377,7 @@ Two entry points to the same `tossctl` binary, and **both work well with AI agen
 | Mechanism | Shell commands (`tossctl …`) | Structured MCP tools (JSON-RPC, no shell) |
 | Where | Anywhere a shell exists — terminal, scripts, cron, **and AI agents that shell out** (Claude Code, Codex, Cursor…) | **MCP-native hosts** — the agent calls operations as tools (catalog keeps 3 tools resident) |
 | How the agent finds it | Must be mentioned in the prompt, or registered via a skill / `AGENTS.md` / `CLAUDE.md` | **Auto-listed as tools once registered** → called without extra prompting |
+| Official key | **Not required** — runs on the web session alone (auto-routes when connected) | **Required** — official-API only, so `openapi login` is needed |
 | Coverage | **Everything** — official API + WTS-only features (popularity ranking, briefing, screener, investor flows) | **Official-API scope** (reads + official orders). WTS-only features not exposed |
 | Natural language | Agent turns NL → `tossctl` commands | Agent turns NL → MCP tool calls |
 
