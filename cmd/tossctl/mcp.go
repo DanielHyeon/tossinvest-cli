@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"time"
 
+	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/mcp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/session"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/updatecheck"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -20,17 +26,27 @@ import (
 func newMCPCmd(opts *rootOptions) *cobra.Command {
 	return &cobra.Command{
 		Use:   "mcp",
-		Short: "Run a stdio MCP server over the official Toss Open API (catalog surface)",
-		Long: "Run a Model Context Protocol server on stdin/stdout that exposes the " +
-			"official Toss Open API as a catalog of operations (reads plus gated order " +
-			"place/cancel/modify). Configure it in an MCP host as the command " +
-			"`tossctl mcp`. Order mutations follow the same config gate and " +
-			"execute/confirm flow as `tossctl order` and use the official API only " +
-			"(no WTS). Requires saved Open API credentials (`tossctl openapi login`).",
-		Annotations:  map[string]string{"source": "official"},
+		Short: "Run a stdio MCP server over the Toss official Open API + WTS (catalog surface)",
+		Long: "Run a Model Context Protocol server on stdin/stdout that exposes Toss " +
+			"Securities as a catalog of operations. Configure it in an MCP host as the " +
+			"command `tossctl mcp`. It covers the official Open API (reads plus gated " +
+			"order place/cancel/modify) and, when a web session is present, the WTS-only " +
+			"reads (rankings, flows, AI signals, screener, sectors, earnings, briefing, " +
+			"community, dividends, Prime, transactions). Order mutations follow the same " +
+			"config gate and execute/confirm flow as `tossctl order` and use the official " +
+			"API only (no WTS). Needs at least one credential: `tossctl openapi login` " +
+			"(official) and/or `tossctl auth login` (WTS web session).",
+		Annotations:  map[string]string{"source": "both"},
 		Args:         cobra.NoArgs,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			cfg, err := loadConfig(opts)
+			if err != nil {
+				return err
+			}
+
+			// Official Open API client (optional): serves official reads + order
+			// writes when credentials are present.
 			credFile, tokenFile, err := resolveOpenAPIPaths(opts)
 			if err != nil {
 				return err
@@ -39,21 +55,48 @@ func newMCPCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if creds == nil {
-				return fmt.Errorf("no Open API credentials found; run `tossctl openapi login --key K --secret S` first")
+			var officialClient *official.Client
+			var tradingSvc *trading.Service
+			if creds != nil {
+				officialClient = official.New(*creds, tokenFile)
+				// Order place/cancel/modify: gated by config exactly as the CLI's
+				// `tossctl order` is, routed through an official-only broker so
+				// writes never touch a WTS session.
+				tradingSvc = trading.NewService(cfg.Trading, mcp.OfficialBroker{Client: officialClient})
 			}
-			client := official.New(*creds, tokenFile)
 
-			// Trading (order place/cancel/modify) is gated by config exactly as
-			// the CLI's `tossctl order` is, and routed through an official-only
-			// broker so writes never touch a WTS session.
-			cfg, err := loadConfig(opts)
-			if err != nil {
+			// WTS web-session client (optional): serves the WTS-only reads.
+			store := session.NewFileStore(resolveSessionFile(opts))
+			sess, err := store.Load(context.Background())
+			if err != nil && !errors.Is(err, session.ErrNoSession) {
 				return err
 			}
-			tradingSvc := trading.NewService(cfg.Trading, mcp.OfficialBroker{Client: client})
+			var wtsClient *tossclient.Client
+			if sess != nil {
+				wtsClient = tossclient.New(tossclient.Config{Session: sess, TradingPolicy: cfg.Trading})
+			}
 
-			server := mcp.NewServer(client, tradingSvc, "tossinvest-cli", version.Current().Version)
+			if officialClient == nil && wtsClient == nil {
+				return fmt.Errorf("no credentials found; run `tossctl openapi login` (official API) and/or `tossctl auth login` (WTS web session) first")
+			}
+
+			server := mcp.NewServer(officialClient, wtsClient, tradingSvc, "tossinvest-cli", version.Current().Version)
+
+			// MCP-only users never see the CLI's stderr update notices, so surface
+			// "update available" through the initialize `instructions` (the agent can
+			// relay it). Bounded + cached; a network failure is silent.
+			if cachePath, perr := resolveUpdateCachePath(opts); perr == nil {
+				checkCtx, cancel := context.WithTimeout(cmd.Context(), 2*time.Second)
+				latest := updatecheck.New(cachePath).LatestStable(checkCtx)
+				cancel()
+				cur := version.Current().Version
+				if updatecheck.IsNewer(latest, cur) {
+					server.AppendInstructions(fmt.Sprintf(
+						"Update available: tossctl v%s (this server runs v%s). Tell the user they can update with `brew upgrade tossctl-cli` or `tossctl update`, then restart this MCP server to pick it up.",
+						latest, cur))
+				}
+			}
+
 			// Serve blocks until stdin reaches EOF (host closed the pipe).
 			return server.Serve(cmd.Context(), cmd.InOrStdin(), cmd.OutOrStdout())
 		},
