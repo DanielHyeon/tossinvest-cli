@@ -4,6 +4,11 @@ tossctl 사용자 관점의 변경 이력입니다. 각 버전에서 "무엇을 
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-07-08
+
+### 새 기능
+- **MCP WTS 조회 커버리지 완성** — 전수 감사로 누락돼 있던 계좌·포지션·주문·거래내역·관심종목 계열을 일괄 추가했습니다: `positions`(보유·평가손익, 공식 키 없이도), `pending_orders`(미체결), `transactions`(거래내역 상세, 전 기간 aggregate), `watchlist`/`watchlist_groups`(관심종목), `earnings_major`(주요 어닝콜). MCP WTS 조회가 16→23 종으로 늘었고, catalog 방식은 그대로(상시 3툴)입니다.
+
 ## [0.21.0] - 2026-07-08
 
 ### 새 기능
