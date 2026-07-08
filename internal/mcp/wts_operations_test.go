@@ -140,3 +140,26 @@ func TestListOperationsIncludesWTS(t *testing.T) {
 		t.Fatalf("want ai_signals (backend wts), got %+v", payload.Operations)
 	}
 }
+
+// TestAuthStatusNoAuthRequired verifies auth_status is callable with no
+// backends connected (Backend "none" bypasses the auth gate) and reports
+// disconnected.
+func TestAuthStatusNoAuthRequired(t *testing.T) {
+	resps := driveWTS(t, nil,
+		initLine,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"call_operation","arguments":{"operation":"auth_status","params":{}}}}`,
+	)
+	res, _ := resps[1]["result"].(map[string]any)
+	if isErr, _ := res["isError"].(bool); isErr {
+		t.Fatalf("auth_status should not error without auth, got %v", res)
+	}
+	content, _ := res["content"].([]any)
+	text, _ := content[0].(map[string]any)["text"].(string)
+	var got AuthStatus
+	if err := json.Unmarshal([]byte(text), &got); err != nil {
+		t.Fatalf("unmarshal auth_status: %v", err)
+	}
+	if got.WTS.Connected || got.Official.Connected {
+		t.Errorf("want both disconnected with no auth, got %+v", got)
+	}
+}

@@ -82,6 +82,23 @@ func newMCPCmd(opts *rootOptions) *cobra.Command {
 
 			server := mcp.NewServer(officialClient, wtsClient, tradingSvc, "tossinvest-cli", version.Current().Version)
 
+			// Read-only auth snapshot for the auth_status operation (no secrets —
+			// only connected flags + expiry timestamps).
+			var auth mcp.AuthStatus
+			if wtsClient != nil {
+				auth.WTS.Connected = true
+				if sess.ServerExpiresAt != nil {
+					auth.WTS.ExpiresAt = sess.ServerExpiresAt
+				} else {
+					auth.WTS.ExpiresAt = sess.ExpiresAt
+				}
+			}
+			if officialClient != nil {
+				auth.Official.Connected = true
+				auth.Official.ExpiresAt = readTokenExpiry(tokenFile)
+			}
+			server.SetAuthStatus(auth)
+
 			// MCP-only users never see the CLI's stderr update notices, so surface
 			// "update available" through the initialize `instructions` (the agent can
 			// relay it). Bounded + cached; a network failure is silent.

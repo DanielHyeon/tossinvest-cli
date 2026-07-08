@@ -57,6 +57,12 @@ func NewServer(official *official.Client, wts *tossclient.Client, tradingSvc *tr
 	}
 }
 
+// SetAuthStatus records the read-only auth snapshot returned by the auth_status
+// operation (connected + expiry per backend; no secrets).
+func (s *Server) SetAuthStatus(a AuthStatus) {
+	s.deps.Auth = a
+}
+
 // AppendInstructions adds a line to the initialize `instructions` text (e.g. an
 // "update available" notice). No-op for empty text.
 func (s *Server) AppendInstructions(text string) {

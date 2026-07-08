@@ -26,6 +26,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
@@ -44,6 +45,23 @@ type Deps struct {
 	Client  *official.Client
 	WTS     *tossclient.Client
 	Trading *trading.Service
+	Auth    AuthStatus
+}
+
+// BackendStatus reports whether a backend is connected and, if known, when its
+// credential/session expires. It carries no secrets — only a boolean and a
+// timestamp — so it is safe to return to an agent.
+type BackendStatus struct {
+	Connected bool       `json:"connected"`
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+}
+
+// AuthStatus is the read-only auth snapshot returned by the auth_status
+// operation: which backends are usable and when they expire. No key/secret or
+// cookie value is ever included.
+type AuthStatus struct {
+	WTS      BackendStatus `json:"wts"`
+	Official BackendStatus `json:"official"`
 }
 
 // Param describes a single input parameter of an operation.
@@ -155,12 +173,17 @@ func (c *Catalog) Call(ctx context.Context, deps *Deps, id string, args map[stri
 		return nil, fmt.Errorf("operation %q is missing required parameter(s): %s", id, strings.Join(missing, ", "))
 	}
 	// Verify the operation's backend is authenticated before dispatching.
-	if op.Backend == "wts" {
+	switch op.Backend {
+	case "none":
+		// No auth required (e.g. auth_status) — always callable.
+	case "wts":
 		if deps.WTS == nil {
 			return nil, fmt.Errorf("operation %q needs a Toss web session; run `tossctl auth login`", id)
 		}
-	} else if deps.Client == nil {
-		return nil, fmt.Errorf("operation %q needs official Open API credentials; run `tossctl openapi login`", id)
+	default: // official
+		if deps.Client == nil {
+			return nil, fmt.Errorf("operation %q needs official Open API credentials; run `tossctl openapi login`", id)
+		}
 	}
 	return op.handler(ctx, deps, args)
 }
