@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start"><strong>Quick Start</strong></a> ·
+  <a href="#빠른-시작"><strong>빠른 시작</strong></a> ·
   <a href="#지원-범위"><strong>지원 범위</strong></a> ·
   <a href="#명령-목록"><strong>명령 목록</strong></a> ·
   <a href="#faq"><strong>FAQ</strong></a> ·
@@ -128,7 +128,7 @@ Desktop·Codex 등 MCP 호스트에 등록하면 에이전트가 자연어로 �
 조회·거래 엔드포인트를 100% 커버합니다. stdin/stdout(JSON-RPC 2.0) 으로 동작하며 별도 서버·
 포트가 필요 없습니다.
 
-#### 빠른 시작 — 3단계
+#### MCP 빠른 시작 — 3단계
 
 MCP 는 `tossctl` 바이너리의 한 모드(`tossctl mcp`)라 **CLI 를 먼저 설치**한 뒤 공식 키를
 연결하고 호스트에 등록하면 끝입니다:
@@ -147,7 +147,7 @@ claude mcp list   # → "tossctl: tossctl mcp - ✔ Connected"
 
 Claude Desktop·Codex 등 **JSON 설정 방식** 호스트는 아래 [설정 예시](#mcp-호스트-json-설정)를 쓰세요.
 터미널에서 **사람이 CLI 로 직접** 쓰려면 MCP 등록 없이 `tossctl auth login`(웹 세션)만으로 전체
-기능을 씁니다 — [Quick Start](#quick-start) 참고. 두 경로는 같은 `tossctl` 하나를 공유합니다.
+기능을 씁니다 — [Quick Start](#빠른-시작) 참고. 두 경로는 같은 `tossctl` 하나를 공유합니다.
 
 #### 왜 catalog 방식인가 — 상시 컨텍스트를 3개로 고정
 
@@ -194,7 +194,7 @@ tossctl 의 CLI 는 공식 Open API 와 WTS(웹 세션) 두 경로를 모두 씁
 
 #### MCP 호스트 JSON 설정
 
-Claude Code 는 위 [빠른 시작](#빠른-시작--3단계)의 `claude mcp add` 한 줄로 끝납니다. Claude
+Claude Code 는 위 [MCP 빠른 시작](#mcp-빠른-시작--3단계)의 `claude mcp add` 한 줄로 끝납니다. Claude
 Desktop·Codex 등 JSON 설정 방식 호스트는 다음을 설정 파일에 넣으세요(`tossctl` 이 PATH 에 있어야
 합니다):
 
@@ -223,9 +223,9 @@ Desktop·Codex 등 JSON 설정 방식 호스트는 다음을 설정 파일에 �
 
 > **자율 에이전트에 붙일 땐 조회 전용을 권장.** config 에서 `trading.*` 를 끈 상태(기본값)면 MCP 는 조회만 가능하고, 주문 오퍼레이션은 호출돼도 게이트에서 막힙니다. 거래까지 열려면 사람이 명시적으로 config 를 켜야 하며, 실제 제출은 매번 `execute:true` + 유효한 `confirm` 토큰이 필요합니다.
 
-## Quick Start
+## 빠른 시작
 
-### For Agent
+### 에이전트용
 
 ```text
 Install tossinvest-cli:
@@ -238,7 +238,7 @@ Trading actions stay disabled until config.json explicitly allows them.
 Always run `tossctl order preview` before any trading mutation.
 ```
 
-### For Human
+### 사람용
 
 macOS / Linux:
 
@@ -408,7 +408,7 @@ US 지정가는 `--currency-mode`로 가격 해석을 선택합니다: `KRW` (�
   - `excluded` — 의도적 제외 (계좌개설·KYC·약관·프로모션·텔레메트리 등 범위 밖, 사유 기록)
 - **지속 추적**: 매주 웹 번들을 다시 추출해 신규/삭제/변경 엔드포인트를 감지하고 (`first_seen` 으로 수명주기 기록), 변동 시 알림 + 카탈로그 자동 갱신. 새 후보는 여기서 골라 구현해 나갑니다.
 
-### Safety Model
+### 안전 모델
 
 거래 기능은 기본 전부 꺼져 있습니다. 한 건의 live 주문이 broker 에 닿으려면 **영속(config) 게이트**와 **런타임(flag) 게이트**를 모두 통과해야 합니다.
 
@@ -443,7 +443,7 @@ flowchart TD
 
 > **v0.5.x 간소화 히스토리:** 중복이던 TTL grant 레이어(`internal/permissions`)를 제거하고(`allow_live_order_actions` 가 같은 보호 제공), 거짓 이름이던 `--dangerously-skip-permissions`(이제 가리킬 permissions 가 없음 + 의미도 역방향)를 은퇴시켰습니다. 기존 플래그는 한 릴리즈 동안 deprecated no-op alias 로 받아들여 스크립트/agent 호환을 유지합니다.
 
-## Config
+## 설정
 
 ```bash
 tossctl config init
@@ -560,14 +560,14 @@ tossctl quote batch TSLL 005930 GOOG VOO --output table
 <details>
 <summary>Homebrew, Windows, 소스 빌드 등 다른 설치 방법</summary>
 
-#### Homebrew (macOS)
+### Homebrew (macOS)
 
 ```bash
 brew tap JungHoonGhae/tossinvest-cli
 brew install tossctl
 ```
 
-#### Windows (PowerShell)
+### Windows (PowerShell)
 
 ```powershell
 irm https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.ps1 | iex
@@ -578,7 +578,7 @@ irm https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.p
 
 수동 설치가 필요한 경우 [Releases](https://github.com/JungHoonGhae/tossinvest-cli/releases/latest)에서 `tossctl-windows-amd64.zip`을 직접 다운로드하세요.
 
-#### From source
+### 소스 빌드
 
 ```bash
 git clone https://github.com/JungHoonGhae/tossinvest-cli.git

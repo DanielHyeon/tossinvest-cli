@@ -68,7 +68,7 @@ cancel, or modify orders** — in natural language, covering 100% of the officia
 read and trade endpoints. It speaks JSON-RPC 2.0 over stdin/stdout — no separate server or
 port.
 
-#### Quick start — 3 steps
+### MCP quick start — 3 steps
 
 MCP is a mode of the `tossctl` binary (`tossctl mcp`), so **install the CLI first**, connect an
 official key, then register it with your host:
@@ -90,7 +90,7 @@ below. To use the CLI **by hand** in a terminal, skip MCP and just run `tossctl 
 session) for the full feature set — see [Quick Start](#quick-start). Both paths share the one
 `tossctl`.
 
-#### Why a catalog — a fixed 3-tool always-on cost
+### Why a catalog — a fixed 3-tool always-on cost
 
 MCP's inherent cost is that **tool schemas stay resident in the model's context**. Register one
 tool per API and every tool's name, description, and parameter schema occupies context for the
@@ -111,7 +111,7 @@ reads its schema via `describe_operation` → calls it via `call_operation`, so 
 never sit in context. (The very Claude Code session reading this README sees `tossctl` as just
 those three tools.)
 
-#### Why MCP exposes the official Open API only
+### Why MCP exposes the official Open API only
 
 tossctl's CLI uses both paths — the official Open API and WTS (web session). But the **MCP
 surface is deliberately limited to the official Open API**.
@@ -136,9 +136,9 @@ Order mutations are **gated exactly like the `tossctl order` CLI**: enable them 
 `confirm_token`, and submitting requires `execute: true` plus `confirm: <token>`. Writes use the
 official API only (no WTS).
 
-#### MCP host JSON config
+### MCP host JSON config
 
-Claude Code is done with the one-line `claude mcp add` from the [quick start](#quick-start--3-steps)
+Claude Code is done with the one-line `claude mcp add` from the [MCP quick start](#mcp-quick-start--3-steps)
 above. JSON-config hosts (Claude Desktop, Codex, …) take this in their config file (`tossctl` must
 be on PATH):
 
@@ -150,7 +150,7 @@ be on PATH):
 }
 ```
 
-#### CLI vs MCP — when to use which (complementary)
+### CLI vs MCP — when to use which (complementary)
 
 Both are entry points to the **same official API and the same safety gate** — not competitors, different roles.
 
@@ -479,14 +479,14 @@ tossctl quote batch TSLL 005930 GOOG VOO --output table
 <details>
 <summary>Homebrew, Windows, from source</summary>
 
-#### Homebrew (macOS / Linux)
+### Homebrew (macOS / Linux)
 
 ```bash
 brew tap JungHoonGhae/tossinvest-cli
 brew install tossctl
 ```
 
-#### Windows (PowerShell)
+### Windows (PowerShell)
 
 ```powershell
 irm https://raw.githubusercontent.com/JungHoonGhae/tossinvest-cli/main/install.ps1 | iex
@@ -497,7 +497,7 @@ Open a new terminal window and `tossctl` is ready to use.
 
 For a manual install, download `tossctl-windows-amd64.zip` from [Releases](https://github.com/JungHoonGhae/tossinvest-cli/releases/latest).
 
-#### From source
+### From source
 
 ```bash
 git clone https://github.com/JungHoonGhae/tossinvest-cli.git
