@@ -6,10 +6,10 @@
 
 <div align="center">
   <h1>tossinvest-cli</h1>
-  <p><strong>토스증권을 위한 AI 에이전트 CLI + MCP 서버. 공식 API는 물론, 웹앱에만 있던 기능까지 하나로.</strong></p>
-  <p>Claude Code · Codex · Gemini · Cursor · GitHub Copilot — 어떤 AI 에이전트든 하나의 명령 체계(<code>tossctl</code>)로 토스증권 계좌·시세·거래를 다룹니다. <strong>MCP 서버(<code>tossctl mcp</code>)로 붙이거나</strong> 터미널에서 직접 써도 됩니다.</p>
+  <p><strong>토스증권에 연결하는 가장 유연한 방법. CLI 로, MCP 서버로, 어떤 AI 에이전트로든 — 공식 API는 물론 웹앱에만 있던 기능까지 하나로.</strong></p>
+  <p>Claude Code · Codex · Gemini · Cursor · GitHub Copilot — 어떤 AI 에이전트로든 <code>tossctl</code> 하나로 토스증권 계좌·시세·거래를 다룹니다. <strong>MCP 서버(<code>tossctl mcp</code>)로 붙이거나 터미널에서 직접</strong>, <strong>공식 키 없이 바로 또는 연결 시 자동 라우팅.</strong></p>
   <p><sub>수급 · 시장지수 · AI 시그널 · 조건검색 · 관심종목 관리 · 거래내역 ledger · 실시간 푸시 · 원화 소수점 주문 · dry-run preview 등 WTS 전용 기능 21가지 — <strong>공식 Open API 지원 범위도 물론 100% 포함합니다.</strong> <a href="#지원-범위">전체 비교표 ↓</a></sub></p>
-  <p><sub><em>An AI agent CLI for Toss Securities — 100% of the official Open API, plus 21 features only the web app had.</em></sub></p>
+  <p><sub><em>The most flexible way to connect Toss Securities — via CLI, via MCP, from any AI agent. 100% of the official Open API, plus 21 features only the web app had.</em></sub></p>
 </div>
 
 <p align="center">
@@ -385,6 +385,7 @@ US 지정가는 `--currency-mode`로 가격 해석을 선택합니다: `KRW` (�
 
 장기적으로 tossctl 이 더 나은 이유:
 
+- **유연성 — 토스증권에 연결하는 방법이 가장 열려 있습니다.** 터미널 CLI 로, [MCP 서버](#mcp-서버-tossctl-mcp)로 어떤 AI 에이전트(Claude Code·Codex·Gemini·Cursor·Copilot)에든, 스크립트로 — 전부 **하나의 `tossctl`** 이 처리합니다. **공식 키 없이 바로 시작**하고, 연결하면 공식 경로로 **자동 라우팅**. 특정 앱·SDK·언어·에이전트에 묶이지 않습니다.
 - **범위** — 공식 Open API는 좁은 영역을 단계적으로 천천히 엽니다. tossctl 은 웹 전체(아래 카탈로그)를 추적해 골라 구현하므로 항상 더 넓습니다.
 - **속도** — 새 기능은 어느 플랫폼이든 자사 앱에서 가장 빠르게 통합되므로 늘 웹앱(WTS)에 먼저 실리고, 외부 공개용 API 는 안정적인 범위만 뒤따라 엽니다(누구의 잘못이 아니라 구조적으로 자연스러운 일). tossctl 은 주간 모니터로 신규 엔드포인트를 잡아 **공식 Open API 출시를 기다리지 않고 먼저 구현**합니다. [왜 공식 API가 늦는지 ↗](https://tossinvest-cli.vercel.app/docs/guide/hybrid-openapi)
 - **상위호환** — 공식 Open API가 커버하는 범위는 [이미 100% 지원](#지원-범위)합니다 (공식 Open API가 따라와도 우리가 앞섭니다).

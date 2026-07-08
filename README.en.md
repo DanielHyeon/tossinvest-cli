@@ -6,8 +6,8 @@
 
 <div align="center">
   <h1>tossinvest-cli</h1>
-  <p><strong>An AI agent CLI + MCP server for Toss Securities. 100% of the official API, plus the features only the web app had.</strong></p>
-  <p>Claude Code · Codex · Gemini · Cursor · GitHub Copilot — any AI agent drives Toss Securities accounts, quotes, and trades through one command interface (<code>tossctl</code>). <strong>Register it as an MCP server (<code>tossctl mcp</code>)</strong> or run it by hand in a terminal.</p>
+  <p><strong>The most flexible way to connect Toss Securities. Via CLI, via MCP server, from any AI agent — 100% of the official API, plus the features only the web app had.</strong></p>
+  <p>Claude Code · Codex · Gemini · Cursor · GitHub Copilot — any AI agent drives Toss Securities accounts, quotes, and trades through one <code>tossctl</code>. <strong>Attach it as an MCP server (<code>tossctl mcp</code>) or run it by hand</strong>, <strong>with no key at all — or auto-routed through the official path when you connect one.</strong></p>
   <p><sub>Investor flows · market indices · AI signals · screener · watchlist management · transaction ledger · real-time push · fractional orders · dry-run preview — 21 WTS-only features, and <strong>100% of the official Open API's coverage, included too.</strong> <a href="#support-scope">Full comparison ↓</a></sub></p>
   <p><sub><em>An unofficial Toss Securities CLI for AI agents. Auto-routes through the official OAuth path when you connect an official key.</em></sub></p>
 </div>
@@ -320,6 +320,7 @@ after excluding noise like onboarding, KYC, terms, promotions, and telemetry.
 
 Why tossctl wins long-term:
 
+- **Flexibility — the most open way to connect Toss Securities.** Via a terminal CLI, via an [MCP server](#mcp-server-tossctl-mcp) to any AI agent (Claude Code · Codex · Gemini · Cursor · Copilot), or from a script — all handled by **one `tossctl`**. **Start with no key at all**, and get **auto-routing** through the official path once you connect one. Not locked to any app, SDK, language, or agent.
 - **Breadth** — the official API opens a narrow API slowly; tossctl tracks the whole web API (catalog below) and is always wider.
 - **Speed** — on any platform new features integrate fastest inside the first-party app, so they always land in the web app (WTS) first, and a public API opens only a stable subset later (not anyone's fault, just the shape of the platform). The weekly monitor flags each new endpoint, so tossctl implements it **without waiting for an official release**. [Why the official API lags ↗](https://tossinvest-cli.vercel.app/docs/guide/hybrid-openapi)
 - **Superset** — whatever the official API covers, tossctl [already covers 100%](#support-scope).
