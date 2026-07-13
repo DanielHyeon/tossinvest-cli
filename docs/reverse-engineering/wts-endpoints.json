@@ -1,14 +1,14 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "VP0XMu3mDMekXn3CYJIS2",
-  "chunk_count": 31,
-  "total": 934,
+  "build_id": "diiAjoZvjUMsVVf70_CUk",
+  "chunk_count": 25,
+  "total": 935,
   "counts": {
-    "implemented": 72,
-    "candidate": 370,
-    "excluded": 492,
-    "candidate_next": 22,
-    "meaningful": 442
+    "implemented": 69,
+    "candidate": 369,
+    "excluded": 497,
+    "candidate_next": 21,
+    "meaningful": 438
   },
   "overrides": {},
   "endpoints": {
@@ -514,14 +514,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/accounts/interest/monthly": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/accounts/interest/payments/monthly": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/accounts/investment-propensity": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -561,6 +553,18 @@
     "/api/v1/ai-issue/sns-release/alimy": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/asset-snapshot/chart": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
+    },
+    "/api/v1/asset-snapshot/detail-by-date": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
+    },
+    "/api/v1/asset-snapshot/page": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
     },
     "/api/v1/auth/sms/simple/verify": {
       "status": "candidate",
@@ -703,6 +707,11 @@
       "note": "community/UGC",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/comments/writable": {
+      "status": "excluded",
+      "note": "community/UGC",
+      "first_seen": "2026-07-13"
+    },
     "/api/v1/common/auth/account/deposit": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -815,6 +824,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/community/profile/top-ranking": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
+    },
     "/api/v1/community/terms-agreement": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -829,12 +842,6 @@
     },
     "/api/v1/community/top-rankings/TOP_10_PROFIT_ROSS_AMOUNT": {
       "status": "implemented",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/companies/tics/rankings": {
-      "status": "candidate",
-      "priority": "next",
-      "note": "업종(TICS) 랭킹",
       "first_seen": "2026-06-19"
     },
     "/api/v1/company-events": {
@@ -913,10 +920,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/dashboard/wts/overview/rankings/by-investors": {
-      "status": "implemented",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/dashboard/wts/overview/signals": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -942,10 +945,6 @@
       "first_seen": "2026-06-19"
     },
     "/api/v1/dividends/accounts/annual/history": {
-      "status": "implemented",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/dividends/accounts/annual/history/by-payment-date": {
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
@@ -1131,6 +1130,11 @@
       "note": "stock lending product",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/lending/agreement/is-agreed": {
+      "status": "excluded",
+      "note": "stock lending product",
+      "first_seen": "2026-07-13"
+    },
     "/api/v1/lending/assign": {
       "status": "excluded",
       "note": "stock lending product",
@@ -1205,6 +1209,11 @@
       "status": "excluded",
       "note": "stock lending product",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/lending/stock-balance/lendable": {
+      "status": "excluded",
+      "note": "stock lending product",
+      "first_seen": "2026-07-13"
     },
     "/api/v1/lens/agreements": {
       "status": "candidate",
@@ -1813,6 +1822,11 @@
       "note": "pension account flow",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/pension/frontend/withdraw/foreign-tax-credit": {
+      "status": "excluded",
+      "note": "pension account flow",
+      "first_seen": "2026-07-13"
+    },
     "/api/v1/pension/frontend/withdraw/tax-free-amount": {
       "status": "excluded",
       "note": "pension account flow",
@@ -2375,14 +2389,6 @@
       "note": "실시간 차트",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/rankings/contents": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/rankings/contents/tics_margin_depth1/tags": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/rankings/realtime/stock": {
       "status": "implemented",
       "first_seen": "2026-06-19"
@@ -2628,10 +2634,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/stock-prices": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/stock-prices/after": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2678,11 +2680,6 @@
       "note": "legal terms",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/terms/withdraw/list": {
-      "status": "excluded",
-      "note": "legal terms",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/test/multi-account-open/clear": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2693,14 +2690,6 @@
     },
     "/api/v1/test/product-eligibility/reviews/delete": {
       "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/tics": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/tics/all": {
-      "status": "implemented",
       "first_seen": "2026-06-19"
     },
     "/api/v1/tics/rankings": {
@@ -3310,10 +3299,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v2/dashboard/wts/overview/signals": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v2/dashboard/wts/overview/tics": {
       "status": "candidate",
       "priority": "next",
@@ -3354,6 +3339,11 @@
       "note": "KYC",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/lending/assign": {
+      "status": "excluded",
+      "note": "stock lending product",
+      "first_seen": "2026-07-13"
+    },
     "/api/v2/lending/event/revenue/amount": {
       "status": "excluded",
       "note": "stock lending product",
@@ -3380,6 +3370,11 @@
       "priority": "next",
       "note": "대주(주식대여) 수익",
       "first_seen": "2026-06-29"
+    },
+    "/api/v2/lending/setting/flag": {
+      "status": "excluded",
+      "note": "stock lending product",
+      "first_seen": "2026-07-13"
     },
     "/api/v2/lens/issues": {
       "status": "candidate",
@@ -3563,10 +3558,6 @@
       "first_seen": "2026-06-19"
     },
     "/api/v2/news": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v2/news/tics": {
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
@@ -3771,6 +3762,26 @@
       "status": "excluded",
       "note": "UI personalization/prefs",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/share-holdings/folders": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
+    },
+    "/api/v2/share-holdings/folders/items": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
+    },
+    "/api/v2/share-holdings/folders/move": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
+    },
+    "/api/v2/share-holdings/folders/name": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
+    },
+    "/api/v2/share-holdings/folders/validate-name": {
+      "status": "candidate",
+      "first_seen": "2026-07-13"
     },
     "/api/v2/sms-auth/request": {
       "status": "candidate",
@@ -4164,10 +4175,6 @@
       "note": "legal terms",
       "first_seen": "2026-06-19"
     },
-    "/api/v3/tics": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v3/trading/auto-trading": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -4285,5 +4292,5 @@
       "first_seen": "2026-06-19"
     }
   },
-  "updated_at": "2026-07-06"
+  "updated_at": "2026-07-13"
 }
