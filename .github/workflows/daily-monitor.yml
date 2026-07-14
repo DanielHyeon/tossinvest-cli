@@ -189,9 +189,11 @@ jobs:
             echo "::error::DISCORD_WEBHOOK secret 미설정"
             exit 1
           fi
+          # Components V2 는 웹훅이 with_components=true 일 때만 존중한다 (없으면 드롭 → 50006)
+          SEP='?'; case "$WEBHOOK" in *\?*) SEP='&';; esac
           HTTP=$(curl -sS -o /tmp/resp -w '%{http_code}' -X POST \
             -H 'Content-Type: application/json' \
-            --data @/tmp/payload.json "$WEBHOOK")
+            --data @/tmp/payload.json "${WEBHOOK}${SEP}with_components=true")
           echo "Discord status: $HTTP"
           cat /tmp/resp || true
           [ "$HTTP" = "204" ] || exit 1

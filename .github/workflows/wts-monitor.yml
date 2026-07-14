@@ -75,7 +75,8 @@ jobs:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           if [ -z "$WEBHOOK" ]; then echo "::warning::DISCORD_WEBHOOK 미설정 — 알림 skip"; exit 0; fi
-          HTTP=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data @/tmp/wts_payload.json "$WEBHOOK")
+          SEP='?'; case "$WEBHOOK" in *\?*) SEP='&';; esac
+          HTTP=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data @/tmp/wts_payload.json "${WEBHOOK}${SEP}with_components=true")
           echo "Discord status: $HTTP"
 
       - name: Commit catalog if changed
