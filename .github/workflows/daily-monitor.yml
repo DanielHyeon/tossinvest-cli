@@ -142,8 +142,7 @@ jobs:
           if [ "$TOSS_CHANGED" = "false" ]; then
             TOSS_BLOCK="⚪️ 변화 없음 · [issue #31](${REPO_URL}/issues/31)"
           else
-            TOSS_BLOCK="$(printf '%s\n' "$TOSS_REASONS" | sed 's/^/• /')
-[issue #31 에서 이력 보기](${REPO_URL}/issues/31)"
+            TOSS_BLOCK="$(printf '%s\n' "$TOSS_REASONS" | sed 's/^/• /')"$'\n'"[issue #31 에서 이력 보기](${REPO_URL}/issues/31)"
           fi
 
           # 상태별 색상: 정상=초록 / 변경 감지=주황 / API 장애=빨강
