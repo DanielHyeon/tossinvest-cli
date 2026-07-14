@@ -23,7 +23,7 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Guard — SPONSORS_TOKEN 존재 확인
         id: guard

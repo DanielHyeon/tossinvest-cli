@@ -69,7 +69,6 @@ jobs:
           BASE_PATHS_SHA=$(jq -r '.spec_paths_sha256 // ""' "$SNAP" 2>/dev/null || echo "")
           BASE_PATH_COUNT=$(jq -r '.spec_path_count // 0' "$SNAP" 2>/dev/null || echo 0)
           BASE_FULL_SHA=$(jq -r '.spec_full_sha256 // ""' "$SNAP" 2>/dev/null || echo "")
-          BASE_LAST_CHECKED=$(jq -r '.last_checked_at // ""' "$SNAP" 2>/dev/null || echo "")
           TODAY=$(date -u +%Y-%m-%d)
 
           REASONS=()
@@ -95,8 +94,9 @@ jobs:
             REASONS+=("⚠️ spec fetch 실패 (일시 장애 가능)")
           fi
 
-          # snapshot 을 다시 커밋해야 하는지 플래그. 변경 시 전체 갱신,
-          # 변화 없으면 heartbeat 로 last_checked_at 만 하루 1번 갱신.
+          # snapshot 은 실제 내용 변경 시에만 커밋한다. (과거의 last_checked
+          # heartbeat 커밋은 월 ~27개 노이즈만 만들어 제거 — 살아있음 증명은
+          # Actions 실행 히스토리와 매일 Discord 알림으로 충분.)
           SNAP_DIRTY=false
           if $CHANGED && [ -n "$VERSION" ]; then
             cp /tmp/spec_norm.json "$SPEC_FILE"
@@ -108,11 +108,7 @@ jobs:
             printf '%s\n' "${REASONS[@]}" > /tmp/toss_reasons.txt
             SNAP_DIRTY=true
           else
-            # 변화 없음(또는 일시 fetch 실패) — heartbeat: 날짜가 바뀐 첫 실행에만 last_checked_at 갱신
-            if [ -n "$VERSION" ] && [ -f "$SNAP" ] && [ "$BASE_LAST_CHECKED" != "$TODAY" ]; then
-              jq --arg t "$TODAY" '.last_checked_at=$t' "$SNAP" > "${SNAP}.tmp" && mv "${SNAP}.tmp" "$SNAP"
-              SNAP_DIRTY=true
-            fi
+            # 변화 없음(또는 일시 fetch 실패) — 커밋 없음. 확인 사실은 Discord 알림에만 남긴다.
             if [ ${#REASONS[@]} -gt 0 ]; then
               printf '%s\n' "${REASONS[@]}" > /tmp/toss_reasons.txt
             else
@@ -191,24 +187,18 @@ jobs:
           cat /tmp/resp || true
           [ "$HTTP" = "204" ] || exit 1
 
-      - name: Commit snapshot (change or daily heartbeat)
+      - name: Commit snapshot (실제 spec 변경 시에만)
         if: hashFiles('docs/migration/.openapi-snapshot.json') != ''
         run: |
           if [ "$(cat /tmp/snap_dirty 2>/dev/null)" != "true" ]; then
             echo "갱신할 내용 없음 — commit skip"
             exit 0
           fi
-          # 변경이면 spec 갱신 메시지, 아니면 heartbeat (CI 미트리거)
-          if [ "$(cat /tmp/toss_changed 2>/dev/null)" = "true" ]; then
-            MSG="docs(migration): openapi-snapshot 자동 갱신"
-          else
-            MSG="chore(monitor): openapi-snapshot last_checked 갱신 [skip ci]"
-          fi
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add docs/migration/.openapi-snapshot.json docs/migration/openapi.latest.json
           git diff --cached --quiet && { echo "이미 최신"; exit 0; }
-          git commit -m "$MSG"
+          git commit -m "docs(migration): openapi-snapshot 자동 갱신"
           git push origin HEAD:main
 
       - name: README 🆕 마커 자동 갱신 (롤링 30일 윈도우)
