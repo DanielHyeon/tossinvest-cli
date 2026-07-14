@@ -42,23 +42,30 @@ jobs:
           REMOVED=$(jq -r '.removed[]? | "• `\(.)`"' /tmp/wts_diff.json | head -20)
           [ -n "$ADDED" ] || ADDED="—"
           [ -n "$REMOVED" ] || REMOVED="—"
-          trunc() { head -c 1000; }
+          trunc() { head -c 1400; }
+          CATALOG_URL="https://github.com/${GITHUB_REPOSITORY}/blob/main/docs/reverse-engineering/wts-endpoints.json"
 
-          # 필드는 값이 있어야만 embed 에 넣는다 (빈 값이면 Discord 가 거부)
-          FIELDS=$(jq -n \
-            --arg added   "$(printf '%s' "$ADDED"   | trunc)" \
-            --arg removed "$(printf '%s' "$REMOVED" | trunc)" \
-            '[ {name:"신규",       value:$added},
-               {name:"삭제/변경", value:$removed} ]')
+          # Components V2 (flags 32768): 표면 변동 주황 Container. daily-monitor 와 같은 톤.
           jq -n \
-            --argjson fields "$FIELDS" \
-            --arg desc "$SUMMARY" \
-            --arg ts "$(date -u +%FT%TZ)" \
-            '{embeds:[{
-              title:"WTS API 표면 변동 감지",
-              description:$desc, color:15105570, timestamp:$ts,
-              fields:$fields,
-              footer:{text:"신규 candidate = 개발 후보 · docs/reverse-engineering/wts-endpoints.json"}
+            --arg title "## WTS API 표면 변동 감지" \
+            --arg desc  "$SUMMARY" \
+            --arg added   "**신규**"$'\n'"$(printf '%s' "$ADDED"   | trunc)" \
+            --arg removed "**삭제/변경**"$'\n'"$(printf '%s' "$REMOVED" | trunc)" \
+            --arg foot  "-# 신규 candidate = 개발 후보 · docs/reverse-engineering/wts-endpoints.json" \
+            --arg catalog "$CATALOG_URL" \
+            '{flags:32768, components:[{
+              type:17, accent_color:15105570, components:[
+                {type:10, content:$title},
+                {type:10, content:$desc},
+                {type:14},
+                {type:10, content:$added},
+                {type:10, content:$removed},
+                {type:14},
+                {type:10, content:$foot},
+                {type:1, components:[
+                  {type:2, style:5, label:"카탈로그 보기", url:$catalog}
+                ]}
+              ]
             }]}' > /tmp/wts_payload.json
           cat /tmp/wts_payload.json
 
