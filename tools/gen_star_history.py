@@ -12,6 +12,7 @@ Usage:
 주간 워크플로(.github/workflows/star-history.yml)에서 자동 갱신된다.
 """
 import os
+import time
 import subprocess
 from datetime import datetime, timezone
 
@@ -29,12 +30,23 @@ def fetch_timestamps() -> list[datetime]:
         raw = []
         page = 1
         while True:
-            out = subprocess.run(
-                ["gh", "api", "-H", "Accept: application/vnd.github.star+json",
-                 f"repos/{REPO}/stargazers?per_page=100&page={page}",
-                 "--jq", ".[].starred_at"],
-                capture_output=True, text=True,
-            )
+            # Retry transient failures (secondary rate limits, hiccups). gh prints
+            # the API error body to stdout on non-2xx, so we must check returncode
+            # before treating stdout as data — otherwise `{"message":"..."}` gets
+            # parsed as a timestamp and crashes.
+            for attempt in range(3):
+                out = subprocess.run(
+                    ["gh", "api", "-H", "Accept: application/vnd.github.star+json",
+                     f"repos/{REPO}/stargazers?per_page=100&page={page}",
+                     "--jq", ".[].starred_at"],
+                    capture_output=True, text=True,
+                )
+                if out.returncode == 0:
+                    break
+                time.sleep(2 * (attempt + 1))
+            else:
+                print(f"::warning::stargazer fetch failed: {out.stderr.strip()[:200]}", flush=True)
+                return []  # signal: couldn't fetch — caller keeps existing charts
             lines = [l for l in out.stdout.split() if l.strip()]
             if not lines:
                 break
@@ -42,7 +54,8 @@ def fetch_timestamps() -> list[datetime]:
             if len(lines) < 100:
                 break
             page += 1
-    ts = [datetime.fromisoformat(x.strip().replace("Z", "+00:00")) for x in raw]
+    # Defensive: only parse ISO-like lines (a stray non-timestamp never crashes).
+    ts = [datetime.fromisoformat(x.strip().replace("Z", "+00:00")) for x in raw if x[:2].isdigit()]
     ts.sort()
     return ts
 
@@ -105,7 +118,10 @@ def build(ts: list[datetime], theme: str) -> str:
 def main():
     ts = fetch_timestamps()
     if not ts:
-        raise SystemExit("no stargazer data")
+        # Transient fetch failure (rate limit, API hiccup) — keep the committed
+        # charts and exit clean so the cron doesn't red-fail on a hiccup.
+        print("no stargazer data (fetch failed or rate-limited); keeping existing charts")
+        return
     os.makedirs(OUT_DIR, exist_ok=True)
     for theme in ("dark", "light"):
         with open(f"{OUT_DIR}/star-history-{theme}.svg", "w") as f:
