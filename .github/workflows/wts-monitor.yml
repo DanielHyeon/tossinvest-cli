@@ -35,7 +35,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Compose embed
-        if: steps.scan.outputs.added != '0' || steps.scan.outputs.removed != '0'
+        if: steps.scan.outputs.added != '0' || steps.scan.outputs.removed != '0' || github.event_name == 'workflow_dispatch'
         run: |
           SUMMARY=$(head -1 /tmp/wts_summary.txt)
           ADDED=$(jq -r '.added[]? | "• `\(.)`"' /tmp/wts_diff.json | head -20)
@@ -70,7 +70,7 @@ jobs:
           cat /tmp/wts_payload.json
 
       - name: Send Discord
-        if: steps.scan.outputs.added != '0' || steps.scan.outputs.removed != '0'
+        if: steps.scan.outputs.added != '0' || steps.scan.outputs.removed != '0' || github.event_name == 'workflow_dispatch'
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
