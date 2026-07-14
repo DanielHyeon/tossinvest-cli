@@ -34,21 +34,33 @@ jobs:
             echo "new_candidates=$(jq '.new_candidates | length' /tmp/wts_diff.json)"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Compose Discord message
+      - name: Compose embed
         if: steps.scan.outputs.added != '0' || steps.scan.outputs.removed != '0'
         run: |
-          {
-            echo "🛰️ **WTS API 표면 변동 감지**"
-            echo ""
-            head -1 /tmp/wts_summary.txt
-            ADDED=$(jq -r '.added[]?' /tmp/wts_diff.json | head -20)
-            REMOVED=$(jq -r '.removed[]?' /tmp/wts_diff.json | head -20)
-            if [ -n "$ADDED" ]; then echo ""; echo "➕ 신규:"; echo "$ADDED" | sed 's/^/• /'; fi
-            if [ -n "$REMOVED" ]; then echo ""; echo "➖ 삭제/변경:"; echo "$REMOVED" | sed 's/^/• /'; fi
-            echo ""
-            echo "카탈로그: docs/reverse-engineering/wts-endpoints.json"
-          } > /tmp/wts_msg.txt
-          cat /tmp/wts_msg.txt
+          SUMMARY=$(head -1 /tmp/wts_summary.txt)
+          ADDED=$(jq -r '.added[]? | "• `\(.)`"' /tmp/wts_diff.json | head -20)
+          REMOVED=$(jq -r '.removed[]? | "• `\(.)`"' /tmp/wts_diff.json | head -20)
+          [ -n "$ADDED" ] || ADDED="—"
+          [ -n "$REMOVED" ] || REMOVED="—"
+          trunc() { head -c 1000; }
+
+          # 필드는 값이 있어야만 embed 에 넣는다 (빈 값이면 Discord 가 거부)
+          FIELDS=$(jq -n \
+            --arg added   "$(printf '%s' "$ADDED"   | trunc)" \
+            --arg removed "$(printf '%s' "$REMOVED" | trunc)" \
+            '[ {name:"➕ 신규",       value:$added},
+               {name:"➖ 삭제/변경", value:$removed} ]')
+          jq -n \
+            --argjson fields "$FIELDS" \
+            --arg desc "$SUMMARY" \
+            --arg ts "$(date -u +%FT%TZ)" \
+            '{embeds:[{
+              title:"🛰️ WTS API 표면 변동 감지",
+              description:$desc, color:15105570, timestamp:$ts,
+              fields:$fields,
+              footer:{text:"신규 candidate = 개발 후보 · docs/reverse-engineering/wts-endpoints.json"}
+            }]}' > /tmp/wts_payload.json
+          cat /tmp/wts_payload.json
 
       - name: Send Discord
         if: steps.scan.outputs.added != '0' || steps.scan.outputs.removed != '0'
@@ -56,9 +68,7 @@ jobs:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           if [ -z "$WEBHOOK" ]; then echo "::warning::DISCORD_WEBHOOK 미설정 — 알림 skip"; exit 0; fi
-          MSG=$(head -c 1900 /tmp/wts_msg.txt)
-          PAYLOAD=$(printf '%s' "$MSG" | jq -Rs '{content: .}')
-          HTTP=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data "$PAYLOAD" "$WEBHOOK")
+          HTTP=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data @/tmp/wts_payload.json "$WEBHOOK")
           echo "Discord status: $HTTP"
 
       - name: Commit catalog if changed

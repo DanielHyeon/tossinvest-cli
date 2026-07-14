@@ -118,56 +118,62 @@ jobs:
           echo "$CHANGED" > /tmp/toss_changed
           echo "$SNAP_DIRTY" > /tmp/snap_dirty
 
-      - name: Compose message
+      - name: Compose embed
         run: |
           NOW_KST=$(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M')
           API_CODE=$(cat /tmp/api_status)
           TOSS_CHANGED=$(cat /tmp/toss_changed)
           TOSS_REASONS=$(cat /tmp/toss_reasons.txt)
           PR_COUNT=$(jq 'length' /tmp/prs.json)
-
           REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
 
           if [ "$PR_COUNT" = "0" ]; then
-            PR_BLOCK="신규 PR 없음"
+            PR_BLOCK="✅ 신규 PR 없음"
           else
-            PR_BLOCK=$(jq -r --arg url "$REPO_URL" '.[] | "• [#\(.number)](\($url)/pull/\(.number)) \(.title) · **@\(.author.login)** · `+\(.additions)/-\(.deletions)`"' /tmp/prs.json)
+            PR_BLOCK=$(jq -r --arg url "$REPO_URL" '.[] | "• [#\(.number)](\($url)/pull/\(.number)) \(.title) — **@\(.author.login)** `+\(.additions)/-\(.deletions)`"' /tmp/prs.json)
           fi
 
           if [ "$API_CODE" = "200" ]; then
             API_LINE='`stock-infos/A005930` → **200 OK**'
           else
-            API_LINE="🔴 status=\`$API_CODE\` — GitHub Actions IP 차단 vs 실제 회귀, 본인 머신 \`tossctl monitor api\` 로 확인"
+            API_LINE="🔴 status \`$API_CODE\` — Actions IP 차단 vs 실제 회귀, \`tossctl monitor api\` 로 확인"
           fi
 
           if [ "$TOSS_CHANGED" = "false" ]; then
-            TOSS_BLOCK="⚪️ 변화 없음"
+            TOSS_BLOCK="⚪️ 변화 없음 · [issue #31](${REPO_URL}/issues/31)"
           else
-            TOSS_BLOCK=$(printf '%s\n' "$TOSS_REASONS" | sed 's/^/• /')
+            TOSS_BLOCK="$(printf '%s\n' "$TOSS_REASONS" | sed 's/^/• /')
+[issue #31 에서 이력 보기](${REPO_URL}/issues/31)"
           fi
 
-          if [ "$PR_COUNT" = "0" ] && [ "$API_CODE" = "200" ] && [ "$TOSS_CHANGED" = "false" ]; then
-            printf '## ✅ tossctl daily — `%s KST`\n신규 PR 없음 · 핵심 API OK · 토스 Open API ⚪️\n' "$NOW_KST" > /tmp/msg.txt
+          # 상태별 색상: 정상=초록 / 변경 감지=주황 / API 장애=빨강
+          if [ "$API_CODE" != "200" ]; then
+            COLOR=15548997; TITLE="🔴 tossctl daily — 핵심 API 이상"
+          elif [ "$PR_COUNT" != "0" ] || [ "$TOSS_CHANGED" = "true" ]; then
+            COLOR=15105570; TITLE="📊 tossctl daily — 확인할 변동 있음"
           else
-            {
-              printf '## 📊 tossctl daily — `%s KST`\n' "$NOW_KST"
-              echo ""
-              echo "### 🔀 PR (24h)"
-              echo "$PR_BLOCK"
-              echo ""
-              echo "### ❤️ 핵심 API"
-              echo "$API_LINE"
-              echo ""
-              echo "### 🔭 토스 Open API · [issue #31](${REPO_URL}/issues/31)"
-              echo "$TOSS_BLOCK"
-              echo ""
-              echo "-# 인증 필요 endpoint 는 본인 머신 \`tossctl monitor api\` 로 확인"
-            } > /tmp/msg.txt
+            COLOR=3901789;  TITLE="✅ tossctl daily — 모두 정상"
           fi
 
-          echo "--- payload ---"
-          cat /tmp/msg.txt
-          echo "--- end ---"
+          # Discord embed field value 한계 1024자 → 안전하게 절단
+          trunc() { head -c 1000; }
+          jq -n \
+            --arg title "$TITLE" --argjson color "$COLOR" \
+            --arg ts "$(date -u +%FT%TZ)" \
+            --arg pr   "$(printf '%s' "$PR_BLOCK"   | trunc)" \
+            --arg api  "$(printf '%s' "$API_LINE"   | trunc)" \
+            --arg toss "$(printf '%s' "$TOSS_BLOCK" | trunc)" \
+            --arg foot "tossctl daily monitor · $NOW_KST KST · 인증 필요 endpoint 는 tossctl monitor api" \
+            '{embeds:[{
+              title:$title, color:$color, timestamp:$ts,
+              fields:[
+                {name:"🔀 PR (24h)",        value:$pr},
+                {name:"❤️ 핵심 API",         value:$api},
+                {name:"🔭 토스 Open API",    value:$toss}
+              ],
+              footer:{text:$foot}
+            }]}' > /tmp/payload.json
+          echo "--- payload ---"; cat /tmp/payload.json
 
       - name: Send Discord
         env:
@@ -177,12 +183,9 @@ jobs:
             echo "::error::DISCORD_WEBHOOK secret 미설정"
             exit 1
           fi
-          # 1900자 잘라내기 (Discord 2000 한계)
-          MSG=$(head -c 1900 /tmp/msg.txt)
-          PAYLOAD=$(printf '%s' "$MSG" | jq -Rs '{content: .}')
           HTTP=$(curl -sS -o /tmp/resp -w '%{http_code}' -X POST \
             -H 'Content-Type: application/json' \
-            --data "$PAYLOAD" "$WEBHOOK")
+            --data @/tmp/payload.json "$WEBHOOK")
           echo "Discord status: $HTTP"
           cat /tmp/resp || true
           [ "$HTTP" = "204" ] || exit 1
