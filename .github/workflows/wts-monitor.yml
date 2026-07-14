@@ -48,14 +48,14 @@ jobs:
           FIELDS=$(jq -n \
             --arg added   "$(printf '%s' "$ADDED"   | trunc)" \
             --arg removed "$(printf '%s' "$REMOVED" | trunc)" \
-            '[ {name:"➕ 신규",       value:$added},
-               {name:"➖ 삭제/변경", value:$removed} ]')
+            '[ {name:"신규",       value:$added},
+               {name:"삭제/변경", value:$removed} ]')
           jq -n \
             --argjson fields "$FIELDS" \
             --arg desc "$SUMMARY" \
             --arg ts "$(date -u +%FT%TZ)" \
             '{embeds:[{
-              title:"🛰️ WTS API 표면 변동 감지",
+              title:"WTS API 표면 변동 감지",
               description:$desc, color:15105570, timestamp:$ts,
               fields:$fields,
               footer:{text:"신규 candidate = 개발 후보 · docs/reverse-engineering/wts-endpoints.json"}
