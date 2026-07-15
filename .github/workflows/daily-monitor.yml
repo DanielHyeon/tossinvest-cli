@@ -227,7 +227,7 @@ jobs:
       # spec 변경이 감지되면(같은 실행 안에서) 구독 토큰으로 Claude 를 돌려
       # 변경을 분석하고 PR 을 연다 — 폴링 없이 감지 즉시(이벤트 기반).
       - name: 공식 spec 변경 분석·PR (Claude, 구독 토큰)
-        if: steps.toss.outputs.changed == 'true'
+        if: steps.toss.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
