@@ -118,6 +118,8 @@ jobs:
           echo "$CHANGED" > /tmp/toss_changed
           echo "$SNAP_DIRTY" > /tmp/snap_dirty
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "$VERSION" > /tmp/toss_version
+          echo "$PATH_COUNT" > /tmp/toss_pathcount
 
       - name: Compose embed
         run: |
@@ -128,22 +130,28 @@ jobs:
           PR_COUNT=$(jq 'length' /tmp/prs.json)
           REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
 
+          VER=$(cat /tmp/toss_version 2>/dev/null); PCOUNT=$(cat /tmp/toss_pathcount 2>/dev/null)
+          SPEC_META="\`v${VER:-?}\` · ${PCOUNT:-?} endpoints"
+
+          # PR: 최근 24h 열린·업데이트된 PR
           if [ "$PR_COUNT" = "0" ]; then
-            PR_BLOCK="신규 PR 없음"
+            PR_BLOCK="없음"
           else
             PR_BLOCK=$(jq -r --arg url "$REPO_URL" '.[] | "• [#\(.number)](\($url)/pull/\(.number)) \(.title) — **@\(.author.login)** `+\(.additions)/-\(.deletions)`"' /tmp/prs.json)
           fi
 
+          # 핵심 API: 무인증 카나리 1개로 WTS 조회 API 살아있는지 확인
           if [ "$API_CODE" = "200" ]; then
-            API_LINE='`stock-infos/A005930` → **200 OK**'
+            API_LINE="정상 · 카나리 \`stock-infos/A005930\` → 200"
           else
-            API_LINE="status \`$API_CODE\` — Actions IP 차단 vs 실제 회귀, \`tossctl monitor api\` 로 확인"
+            API_LINE="이상 · status \`$API_CODE\` — 실제 회귀 또는 GitHub Actions IP 차단 (본인 머신 \`tossctl monitor api\` 로 확인)"
           fi
 
+          # 공식 Open API spec: 버전·엔드포인트 수·전체 내용 해시 변동 추적
           if [ "$TOSS_CHANGED" = "false" ]; then
-            TOSS_BLOCK="변화 없음"
+            TOSS_BLOCK="변동 없음 · ${SPEC_META}"
           else
-            TOSS_BLOCK="$(printf '%s\n' "$TOSS_REASONS" | sed 's/^/• /')"
+            TOSS_BLOCK="변동 감지 · ${SPEC_META}"$'\n'"$(printf '%s\n' "$TOSS_REASONS" | sed 's/^/• /')"
           fi
 
           # 상태는 Container accent_color 로만 구분: 정상=초록 / 변경=주황 / API 장애=빨강
@@ -156,19 +164,21 @@ jobs:
           fi
 
           # Discord Components V2 (flags 32768): Container(accent_color=상태색) 안에
-          # Text Display 섹션들 + Separator + issue #31 링크 버튼. content/embeds 미사용.
+          # 소개 1줄 + 각 점검 항목(뭘 보는지 + 현재 값) + issue 링크 버튼.
           trunc() { head -c 1400; }
           jq -n \
             --argjson color "$COLOR" \
             --arg title "## $TITLE" \
-            --arg pr   "**PR (24h)**"$'\n'"$(printf '%s' "$PR_BLOCK"   | trunc)" \
-            --arg api  "**핵심 API**"$'\n'"$(printf '%s' "$API_LINE"   | trunc)" \
-            --arg toss "**토스 Open API**"$'\n'"$(printf '%s' "$TOSS_BLOCK" | trunc)" \
-            --arg foot "-# tossctl daily monitor · $NOW_KST KST · 인증 필요 endpoint 는 \`tossctl monitor api\`" \
+            --arg intro "-# 매일 2회 자동 점검 — 열린 PR · WTS 조회 API 헬스 · 공식 Open API spec 변동" \
+            --arg pr   "**PR (24h)** — 최근 24h 열린·업데이트"$'\n'"$(printf '%s' "$PR_BLOCK"   | trunc)" \
+            --arg api  "**핵심 API 헬스** — WTS 조회 API 생존 카나리"$'\n'"$(printf '%s' "$API_LINE"   | trunc)" \
+            --arg toss "**공식 Open API spec** — 버전·엔드포인트·내용 추적"$'\n'"$(printf '%s' "$TOSS_BLOCK" | trunc)" \
+            --arg foot "-# tossctl daily monitor · $NOW_KST KST · 전체 조회 API 헬스는 \`tossctl monitor api\`" \
             --arg issue "${REPO_URL}/issues/31" \
             '{flags:32768, components:[{
               type:17, accent_color:$color, components:[
                 {type:10, content:$title},
+                {type:10, content:$intro},
                 {type:14},
                 {type:10, content:$pr},
                 {type:10, content:$api},
@@ -228,7 +238,7 @@ jobs:
       # Claude 는 분석 파일 1개만 작성하고, PR 생성은 다음 스텝(결정적 bash)이 한다 —
       # 액션의 자체 브랜치 관리와 충돌하지 않게 역할을 분리.
       - name: 공식 spec 변경 분석 (Claude, 구독 토큰)
-        if: steps.toss.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.toss.outputs.changed == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -251,12 +261,13 @@ jobs:
                첫 줄은 `# API 변경 분석 — <YYYY-MM-DD>`. 내용(한국어): 변경 요약, 커버리지 대조, 분류, 권장 후속 조치.
                breaking 위험(c)이면 문서 최상단에 `> breaking-risk` 한 줄을 넣는다.
             실계좌 데이터 금지. 라이브 API 호출 금지(레포 내 파일 분석만).
-            변경이 사소하면(문서 diff 없음 등) 파일을 만들지 말고 종료.
+            이 스텝은 실제 spec 내용 변경이 감지됐을 때만 실행되므로, no-op 이어도 **반드시 파일을 작성**한다
+            (사람이 검토할 기록). 분류에 (a) no-op / (b) 신규 후보 / (c) breaking 을 명시하면 된다.
 
       # 결정적 PR 생성: Claude 가 남긴 분석 파일이 있으면 github-actions 봇으로 커밋하고
       # (Claude 가 분석했으므로 Co-Authored-By: Claude), gh 로 PR 을 연다.
       - name: 분석 결과 PR 생성
-        if: steps.toss.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.toss.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
