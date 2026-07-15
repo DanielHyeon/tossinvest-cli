@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  pull-requests: read
+  pull-requests: write
 
 concurrency:
   group: daily-monitor
@@ -117,6 +117,7 @@ jobs:
           fi
           echo "$CHANGED" > /tmp/toss_changed
           echo "$SNAP_DIRTY" > /tmp/snap_dirty
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
 
       - name: Compose embed
         run: |
@@ -222,3 +223,38 @@ jobs:
           git commit -m "docs(readme): 🆕 마커 자동 갱신 (최근 한 달 윈도우) [skip ci]"
           git pull --rebase origin main || true
           git push origin HEAD:main
+
+      # spec 변경이 감지되면(같은 실행 안에서) 구독 토큰으로 Claude 를 돌려
+      # 변경을 분석하고 PR 을 연다 — 폴링 없이 감지 즉시(이벤트 기반).
+      - name: 공식 spec 변경 분석·PR (Claude, 구독 토큰)
+        if: steps.toss.outputs.changed == 'true'
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: '--allowedTools Bash,Read,Grep,Glob,Write,Edit'
+          prompt: |
+            방금 이 워크플로 실행에서 공식 Toss Open API spec(`docs/migration/openapi.latest.json`)의
+            변경이 감지·커밋되었다. 이 변경을 분석하고 PR 을 생성해라.
+
+            절차:
+            1. 최신 spec 커밋을 찾아 diff 를 확인한다:
+               `git log -1 --format=%H -- docs/migration/openapi.latest.json` → `git show <sha> -- docs/migration/openapi.latest.json`.
+               무엇이 바뀌었는지 파악한다(신규/삭제 엔드포인트, 스키마·에러 문서, 버전 범프).
+            2. tossctl 커버리지 대조: 신규 엔드포인트가 있으면 `internal/official/`·`internal/mcp/operations.go` 에
+               이미 구현됐는지 grep. 삭제·변경이면 우리 구현이 영향받는지 확인.
+            3. 결론을 (a) no-op / (b) 신규 기능 후보 / (c) breaking 위험 으로 분류.
+            4. `docs/reverse-engineering/change-analysis/<오늘 UTC 날짜 YYYY-MM-DD>.md` 하나만 새로 작성한다
+               (기존 코드 수정 금지). 내용: 변경 요약, 커버리지 대조, 분류, 권장 후속 조치.
+            5. `analysis/api-change-<YYYYMMDD>` 브랜치를 만들어 커밋하고 `gh pr create` 로 PR 을 연다.
+               breaking 위험(c)이면 PR 제목 앞에 `[breaking-risk]` 를 붙인다. PR 제목/본문/커밋은 한국어,
+               conventional commits(`docs(analysis): ...`).
+
+            규칙(반드시 준수):
+            - 이미 오늘자 `analysis/api-change-<YYYYMMDD>` 브랜치나 열린 PR 이 있으면 새로 만들지 말고 종료.
+            - Claude/AI attribution 문구 절대 금지: `Generated with Claude Code`, `Co-Authored-By: Claude`,
+              🤖 이모지 등을 PR 본문·커밋·코멘트 어디에도 넣지 않는다.
+            - 실계좌 데이터 금지. 라이브 API 호출 금지(레포 내 파일 분석만).
+            - 변경이 사소하면(문서 diff 없음 등) 조용히 종료.
