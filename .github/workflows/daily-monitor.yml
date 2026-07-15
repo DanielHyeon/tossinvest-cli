@@ -227,7 +227,7 @@ jobs:
       # spec 변경이 감지되면(같은 실행 안에서) 구독 토큰으로 Claude 를 돌려
       # 변경을 분석하고 PR 을 연다 — 폴링 없이 감지 즉시(이벤트 기반).
       - name: 공식 spec 변경 분석·PR (Claude, 구독 토큰)
-        if: steps.toss.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.toss.outputs.changed == 'true'
         uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -254,7 +254,9 @@ jobs:
 
             규칙(반드시 준수):
             - 이미 오늘자 `analysis/api-change-<YYYYMMDD>` 브랜치나 열린 PR 이 있으면 새로 만들지 말고 종료.
-            - Claude/AI attribution 문구 절대 금지: `Generated with Claude Code`, `Co-Authored-By: Claude`,
-              🤖 이모지 등을 PR 본문·커밋·코멘트 어디에도 넣지 않는다.
+            - 귀속(중요): 이 분석은 Claude 가 직접 수행한 것이므로 커밋 메시지에
+              `Co-Authored-By: Claude <noreply@anthropic.com>` 트레일러를 넣고, PR 본문 하단에
+              "Claude 자동 분석 (daily-monitor)" 임을 명시한다. 사람(개인) 이름으로 위장하지 않는다.
+              (반대로 기계적 커밋인 spec 스냅샷·마커 갱신 등에는 Claude 귀속을 넣지 않는다 — 그건 github-actions 봇 몫이다.)
             - 실계좌 데이터 금지. 라이브 API 호출 금지(레포 내 파일 분석만).
             - 변경이 사소하면(문서 diff 없음 등) 조용히 종료.
