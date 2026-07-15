@@ -138,6 +138,13 @@ func wtsOperations() []Operation {
 			},
 		},
 		{
+			ID: "lending_expected", Method: "GET", Path: "wts:lending/revenue/expected", Backend: "wts",
+			Category: "account", Summary: "Projected share-lending (대주) income for the account — monthly/yearly USD totals plus per-stock breakdown. Works even without an active lending agreement (zeros). WTS-only.",
+			handler: func(ctx context.Context, d *Deps, _ map[string]any) (any, error) {
+				return d.WTS.GetLendingExpected(ctx)
+			},
+		},
+		{
 			ID: "dividends", Method: "GET", Path: "wts:portfolio/dividends", Backend: "wts",
 			Category: "portfolio", Summary: "Annual dividend history (received/scheduled, by region, monthly). WTS-only.",
 			Params: []Param{

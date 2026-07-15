@@ -177,6 +177,7 @@ The Toss Securities official Open API is currently **rolling out in stages to pr
 | **🆕 Net-buy ranking by investor** | `market investors` (foreign · institution · retail top net-buy) | ❌ | ✅ |
 | **🆕 Earnings calendar** | `market earnings` (`--major` for curated majors) | ❌ | ✅ |
 | **🆕 Dividend report** | `portfolio dividends` (annual total · region · monthly, `--by-payment-date` tax) | ❌ | ✅ |
+| **Expected lending income** | `lending expected` (projected share-lending income: monthly/yearly USD + per-stock) | ❌ | ✅ |
 | **🆕 Community rankings** | `community rankings --type influencer\|profit\|followers` | ❌ | ✅ |
 | **🆕 Sector movements** | `market sectors [id]` (industry tree, 1d·1m·1y returns) | ❌ | ✅ |
 | **🆕 Theme fluctuation ranking** | `market themes` (today's top-moving themes, rising-stock counts) | ❌ | ✅ |

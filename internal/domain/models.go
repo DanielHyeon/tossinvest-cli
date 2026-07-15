@@ -535,6 +535,23 @@ type Dividends struct {
 	FetchedAt     time.Time        `json:"fetched_at"`
 }
 
+// LendingExpectedStock is one holding's projected share-lending income.
+type LendingExpectedStock struct {
+	ProductCode string  `json:"product_code"`
+	Name        string  `json:"name"`
+	AmountUSD   float64 `json:"amount_usd"`
+}
+
+// LendingExpected is the projected share-lending (대주) income for an account:
+// monthly/yearly totals in USD plus a per-stock breakdown. Works even for
+// accounts without an active lending agreement (returns zeros).
+type LendingExpected struct {
+	OneMonthUSD float64                `json:"one_month_usd"`
+	OneYearUSD  float64                `json:"one_year_usd"`
+	Stocks      []LendingExpectedStock `json:"stocks"`
+	FetchedAt   time.Time              `json:"fetched_at"`
+}
+
 // CommunityUser is one ranked community profile. Fields vary by ranking type:
 // Description for influencers, Profit* for return rankings, Following* for
 // fastest-growing rankings.

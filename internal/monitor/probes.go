@@ -319,6 +319,14 @@ func Probes() []Probe {
 			},
 		},
 		{
+			Name:   "lending-expected",
+			Method: "GET",
+			URL:    cert + "/api/v1/lending/revenue/account/expected",
+			Check: func(status int, body []byte) error {
+				return expectStatus(status, 200)
+			},
+		},
+		{
 			Name:   "news-briefing",
 			Method: "GET",
 			URL:    info + "/api/v1/dashboard/wts/overview/ai-signals/personalized",

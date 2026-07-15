@@ -4,11 +4,9 @@
   "chunk_count": 25,
   "total": 935,
   "counts": {
-    "implemented": 69,
-    "candidate": 369,
+    "candidate": 368,
     "excluded": 497,
-    "candidate_next": 21,
-    "meaningful": 438
+    "implemented": 70
   },
   "overrides": {},
   "endpoints": {
@@ -1167,10 +1165,8 @@
       "first_seen": "2026-06-19"
     },
     "/api/v1/lending/revenue/account/expected": {
-      "status": "candidate",
-      "priority": "next",
-      "note": "대주(주식대여) 수익",
-      "first_seen": "2026-06-19"
+      "status": "implemented",
+      "note": "대주(주식대여) 예상수익 — lending expected / lending_expected"
     },
     "/api/v1/lending/revenue/account/payment": {
       "status": "candidate",

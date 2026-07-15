@@ -412,5 +412,8 @@
   "watchlist.groups.short": "List watchlist folders",
   "watchlist.list.short": "List watchlist entries",
   "watchlist.remove.short": "Remove a symbol from the watchlist",
-  "watchlist.short": "Read and manage the watchlist"
+  "watchlist.short": "Read and manage the watchlist",
+  "lending.short": "Securities lending queries",
+  "lending.expected.short": "Projected share-lending income (per stock, monthly/yearly USD)",
+  "lending.expected.long": "Show projected income from lending out your holdings (대주): monthly and yearly estimates in USD plus a per-stock breakdown. Works even for accounts without an active lending agreement (shows zeros). WTS-only."
 }

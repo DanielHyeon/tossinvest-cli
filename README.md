@@ -224,6 +224,7 @@ Waiting for approval in the Toss app on your phone...
 | **🆕 투자자별 순매수 상위** | `market investors` (외국인·기관·개인 순매수 상위) | ❌ | ✅ |
 | **🆕 실적(어닝콜) 일정** | `market earnings` (`--major` 주요 기업 큐레이션) | ❌ | ✅ |
 | **🆕 배당 내역** | `portfolio dividends` (연간 총액·지역·월별, `--by-payment-date` 세금) | ❌ | ✅ |
+| **예상 대여수익** | `lending expected` (주식대여 예상 수익: 월/연 USD + 종목별) | ❌ | ✅ |
 | **Prime 구독 상태·혜택** | `account prime` (수수료·이자 3단 비교: 일반/Prime/내 적용) | ❌ | ✅ |
 | **🆕 커뮤니티 랭킹** | `community rankings --type influencer\|profit\|followers` | ❌ | ✅ |
 | **🆕 업종별 등락** | `market sectors [id]` (대분류·하위 업종, 1일·1개월·1년) | ❌ | ✅ |

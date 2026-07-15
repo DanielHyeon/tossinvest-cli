@@ -48,6 +48,7 @@ IMPLEMENTED = [
     r"^/api/v2/screener/",
     r"^/api/v1/dashboard/wts/overview/(exchange-rates|indicator/index)",
     r"^/api/v1/dashboard/common/cached-orderable-amount",
+    r"^/api/v1/lending/revenue/account/expected$",
     r"^/api/v2/dashboard/asset/sections",
     r"^/api/v1/exchange/(current-quote|usd/base-exchange-rate)",
     r"^/api/v\d+/trading/my-orders/",
