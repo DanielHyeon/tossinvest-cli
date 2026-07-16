@@ -150,13 +150,31 @@ func uvToolDirs() []string {
 	return dirs
 }
 
+// exeDirs 는 헬퍼를 찾을 기준 디렉터리들. os.Executable 은 심링크를 풀지 않으므로
+// (brew 링크 → 실제 설치 경로) 해석본도 함께 본다.
+func exeDirs() []string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return nil
+	}
+
+	dirs := []string{filepath.Dir(exePath)}
+	if real, err := filepath.EvalSymlinks(exePath); err == nil {
+		if realDir := filepath.Dir(real); realDir != dirs[0] {
+			dirs = append(dirs, realDir)
+		}
+	}
+	return dirs
+}
+
 func resolveDefaultHelperDir() string {
 	candidates := []string{"auth-helper"}
 
-	if exePath, err := os.Executable(); err == nil {
-		exeDir := filepath.Dir(exePath)
+	for _, exeDir := range exeDirs() {
 		candidates = append(candidates,
 			filepath.Join(exeDir, "auth-helper"),
+			// 개발 레이아웃: repo/bin/tossctl 과 repo/auth-helper 가 형제
+			filepath.Join(exeDir, "..", "auth-helper"),
 			filepath.Join(exeDir, "..", "libexec", "auth-helper"),
 			filepath.Join(exeDir, "..", "share", "tossctl", "auth-helper"),
 		)
