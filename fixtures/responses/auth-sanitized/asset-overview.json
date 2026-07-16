@@ -1,9 +1,9 @@
 {
   "result": {
     "accountNo": "<REDACTED>",
-    "totalAssetAmount": 14117875,
-    "evaluatedProfitAmount": -44401157,
-    "profitRate": -0.7588,
+    "totalAssetAmount": 12450000,
+    "evaluatedProfitAmount": 1450000,
+    "profitRate": 0.1318,
     "overviewByMarket": {
       "kr": {
         "market": "kr",
@@ -13,25 +13,25 @@
           "usd": null
         },
         "pendingBuyOrderAmount": 0,
-        "evaluatedAmount": 8105,
-        "principalAmount": 9420,
-        "evaluatedProfitAmount": -1315,
-        "profitRate": -0.1395,
-        "totalAssetAmount": 8105
+        "evaluatedAmount": 12450000,
+        "principalAmount": 11000000,
+        "evaluatedProfitAmount": 1450000,
+        "profitRate": 0.1318,
+        "totalAssetAmount": 12450000
       },
       "us": {
         "market": "us",
         "accountNo": "<REDACTED>",
         "orderableAmount": {
-          "krw": 14,
-          "usd": 0.01
+          "krw": 2430440,
+          "usd": 75050.97
         },
         "pendingBuyOrderAmount": 0,
-        "evaluatedAmount": 14109756,
-        "principalAmount": 58509599,
-        "evaluatedProfitAmount": -44399842,
-        "profitRate": -0.7588,
-        "totalAssetAmount": 14109770
+        "evaluatedAmount": 12450000,
+        "principalAmount": 11000000,
+        "evaluatedProfitAmount": 1450000,
+        "profitRate": 0.1318,
+        "totalAssetAmount": 12450000
       },
       "us-bnd": {
         "market": "us-bnd",
