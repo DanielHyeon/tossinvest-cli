@@ -1,12 +1,14 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "diiAjoZvjUMsVVf70_CUk",
+  "build_id": "3_fXC776dOZp_ZZKhp6qR",
   "chunk_count": 25,
   "total": 935,
   "counts": {
+    "implemented": 70,
     "candidate": 368,
     "excluded": 497,
-    "implemented": 70
+    "candidate_next": 20,
+    "meaningful": 438
   },
   "overrides": {},
   "endpoints": {
@@ -1166,7 +1168,7 @@
     },
     "/api/v1/lending/revenue/account/expected": {
       "status": "implemented",
-      "note": "대주(주식대여) 예상수익 — lending expected / lending_expected"
+      "first_seen": "2026-07-20"
     },
     "/api/v1/lending/revenue/account/payment": {
       "status": "candidate",
@@ -4288,5 +4290,5 @@
       "first_seen": "2026-06-19"
     }
   },
-  "updated_at": "2026-07-14"
+  "updated_at": "2026-07-20"
 }
