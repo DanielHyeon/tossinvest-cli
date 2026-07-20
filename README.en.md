@@ -174,14 +174,14 @@ The Toss Securities official Open API is currently **rolling out in stages to pr
 | **Market investor trading** | `market investor-trading KOSPI --interval 1d` | ✅ | ✅ |
 | **Conditional order reads** | `order conditional list`, `order conditional get <id>` | ✅ | ✅ |
 | **Conditional order trading** | `order conditional place\|cancel\|modify` (safety gate: config opt-in + --execute + --confirm) | ✅ | ✅ |
-| **🆕 Net-buy ranking by investor** | `market investors` (foreign · institution · retail top net-buy) | ❌ | ✅ |
-| **🆕 Earnings calendar** | `market earnings` (`--major` for curated majors) | ❌ | ✅ |
-| **🆕 Dividend report** | `portfolio dividends` (annual total · region · monthly, `--by-payment-date` tax) | ❌ | ✅ |
+| **Net-buy ranking by investor** | `market investors` (foreign · institution · retail top net-buy) | ❌ | ✅ |
+| **Earnings calendar** | `market earnings` (`--major` for curated majors) | ❌ | ✅ |
+| **Dividend report** | `portfolio dividends` (annual total · region · monthly, `--by-payment-date` tax) | ❌ | ✅ |
 | **Expected lending income** | `lending expected` (projected share-lending income: monthly/yearly USD + per-stock) | ❌ | ✅ |
-| **🆕 Community rankings** | `community rankings --type influencer\|profit\|followers` | ❌ | ✅ |
-| **🆕 Sector movements** | `market sectors [id]` (industry tree, 1d·1m·1y returns) | ❌ | ✅ |
+| **Community rankings** | `community rankings --type influencer\|profit\|followers` | ❌ | ✅ |
+| **Sector movements** | `market sectors [id]` (industry tree, 1d·1m·1y returns) | ❌ | ✅ |
 | **🆕 Theme fluctuation ranking** | `market themes` (today's top-moving themes, rising-stock counts) | ❌ | ✅ |
-| **🆕 Personalized news briefing** | `market briefing` (headlines grouped by theme) | ❌ | ✅ |
+| **Personalized news briefing** | `market briefing` (headlines grouped by theme) | ❌ | ✅ |
 | **Toss AI signals** | `market signals` (per-symbol AI signal · keywords · move) | ❌ | ✅ |
 | **Stock screener** | `market screener [id]` (preset) · `--filter '<json>'` (custom) `--nation kr\|us` | ❌ | ✅ |
 | **Watchlist read & management** | `watchlist list`·`groups`, `watchlist group create\|rename\|delete`, `watchlist add\|remove --group <id>` | ❌ | ✅ |

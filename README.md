@@ -221,15 +221,15 @@ Waiting for approval in the Toss app on your phone...
 | **시장 투자자별 매매동향** | `market investor-trading KOSPI --interval 1d` | ✅ | ✅ |
 | **조건주문 조회** | `order conditional list`, `order conditional get <id>` | ✅ | ✅ |
 | **조건주문 거래** | `order conditional place\|cancel\|modify` (안전 게이트: config 허용 + --execute + --confirm) | ✅ | ✅ |
-| **🆕 투자자별 순매수 상위** | `market investors` (외국인·기관·개인 순매수 상위) | ❌ | ✅ |
-| **🆕 실적(어닝콜) 일정** | `market earnings` (`--major` 주요 기업 큐레이션) | ❌ | ✅ |
-| **🆕 배당 내역** | `portfolio dividends` (연간 총액·지역·월별, `--by-payment-date` 세금) | ❌ | ✅ |
+| **투자자별 순매수 상위** | `market investors` (외국인·기관·개인 순매수 상위) | ❌ | ✅ |
+| **실적(어닝콜) 일정** | `market earnings` (`--major` 주요 기업 큐레이션) | ❌ | ✅ |
+| **배당 내역** | `portfolio dividends` (연간 총액·지역·월별, `--by-payment-date` 세금) | ❌ | ✅ |
 | **예상 대여수익** | `lending expected` (주식대여 예상 수익: 월/연 USD + 종목별) | ❌ | ✅ |
 | **Prime 구독 상태·혜택** | `account prime` (수수료·이자 3단 비교: 일반/Prime/내 적용) | ❌ | ✅ |
-| **🆕 커뮤니티 랭킹** | `community rankings --type influencer\|profit\|followers` | ❌ | ✅ |
-| **🆕 업종별 등락** | `market sectors [id]` (대분류·하위 업종, 1일·1개월·1년) | ❌ | ✅ |
+| **커뮤니티 랭킹** | `community rankings --type influencer\|profit\|followers` | ❌ | ✅ |
+| **업종별 등락** | `market sectors [id]` (대분류·하위 업종, 1일·1개월·1년) | ❌ | ✅ |
 | **🆕 테마 등락 랭킹** | `market themes` (오늘 가장 많이 오른 테마, 상승종목 수) | ❌ | ✅ |
-| **🆕 개인화 뉴스 브리핑** | `market briefing` (테마별 뉴스 묶음) | ❌ | ✅ |
+| **개인화 뉴스 브리핑** | `market briefing` (테마별 뉴스 묶음) | ❌ | ✅ |
 | **토스 AI 시그널** | `market signals` (종목별 AI 시그널·키워드·등락) | ❌ | ✅ |
 | **조건 검색 (스크리너)** | `market screener [id]` (프리셋) · `--filter '<json>'` (커스텀 조건) `--nation kr\|us` | ❌ | ✅ |
 | **관심 종목 조회·관리** | `watchlist list`·`groups`, `watchlist group create\|rename\|delete`, `watchlist add\|remove --group <id>` (폴더 CRUD + 종목 추가/제거) | ❌ | ✅ |
