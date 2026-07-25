@@ -160,6 +160,10 @@ func newRootCmd() *cobra.Command {
 		newMonitorCmd(opts),
 		newMCPCmd(opts),
 		newOpsCmd(opts),
+		// soak is the read-only capability survey the automation gate's
+		// attestation is built from (task 1.1). New file, new command; nothing
+		// existing changes.
+		newSoakCmd(opts),
 	)
 
 	return cmd

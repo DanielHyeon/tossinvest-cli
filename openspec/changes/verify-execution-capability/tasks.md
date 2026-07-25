@@ -4,7 +4,7 @@
 
 ## 1. Soak·실측 [T]
 
-- [ ] 1.1 조회 전용 soak 도구 작성 (mutation transport 컴파일 제외, 실 hostname POST 불가 가드 상속)
+- [x] 1.1 조회 전용 soak 도구 작성 (mutation transport 컴파일 제외, 실 hostname POST 불가 가드 상속)
 - [ ] 1.2 자격증명 무인 갱신 soak 연속 3일+ 실행·기록 (사용자 환경)
 - [ ] 1.3 rate limit 실측 → retry matrix·폴링 SLO 수치 확정 반영
 - [ ] 1.4 attestation 파일 생성 (만료·계좌 식별·성공 endpoint 집합) + 엔진 기동 인터록 연동 확인
