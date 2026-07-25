@@ -64,6 +64,10 @@ type Options struct {
 	Source string
 	// Nonces spends one-shot Guardian nonces. Defaults to NewMemoryNonceStore().
 	Nonces NonceStore
+	// Entry gates new exposure on required-query freshness and on latched
+	// failures (retry matrix, task 2.6). Optional: nil means no gate, which is
+	// what the pure gateway tests use. Engine wiring always supplies one.
+	Entry *EntryGate
 	// NewID generates intent and attempt ids. Defaults to a 128-bit random hex
 	// string; tests inject a deterministic sequence.
 	NewID func() string
@@ -80,6 +84,7 @@ type Gateway struct {
 	accountRef string
 	source     string
 	nonces     NonceStore
+	entry      *EntryGate
 	newID      func() string
 }
 
@@ -100,6 +105,7 @@ func New(opts Options) (*Gateway, error) {
 		accountRef: strings.TrimSpace(opts.AccountRef),
 		source:     strings.TrimSpace(opts.Source),
 		nonces:     opts.Nonces,
+		entry:      opts.Entry,
 		newID:      opts.NewID,
 	}
 	if g.clk == nil {
@@ -307,17 +313,20 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 
 	out := Outcome{IntentID: prep.Intent.ID, AttemptID: attempt.ID()}
 
-	// 2. Guardian check before the dispatch is even recorded, so an unauthorised
-	//    mutation never reaches DISPATCH_STARTED and never blocks the symbol.
+	// 2. Refusals, in order of cost. Both are recorded against the attempt rather
+	//    than raised before it, so "why did the engine not trade" is answerable
+	//    from the journal alone.
+	//
+	//    2a. The entry gate, for mutations that add exposure. Exits are never
+	//        gated (§0.3).
+	if rejected := g.checkEntry(plan); rejected != nil {
+		return g.refuse(ctx, attempt, out, rejected)
+	}
+	//    2b. The Guardian decision, before the dispatch is even recorded, so an
+	//        unauthorised mutation never reaches DISPATCH_STARTED and never
+	//        blocks the symbol.
 	if rejected := verifyDecision(decision, plan, g.clk.Now()); rejected != nil {
-		out.Reason = rejected.Reason
-		out.Detail = rejected.Detail
-		out.State = journal.StateNotDispatched
-		if err := attempt.Settle(ctx, journal.StateNotDispatched,
-			string(rejected.Reason), rejected.Detail); err != nil {
-			return out, fmt.Errorf("execgw: closing a refused attempt: %w", err)
-		}
-		return out, rejected
+		return g.refuse(ctx, attempt, out, rejected)
 	}
 
 	// 3-5. Dispatch exactly once and settle from the classification.
@@ -360,6 +369,28 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 		return out, res.Err
 	}
 	return out, &RejectedError{Reason: out.Reason, Detail: out.Detail}
+}
+
+// checkEntry asks the gate whether new exposure is allowed. Mutations that do not
+// raise exposure — cancels, and amends that only lower quantity or price — are
+// never gated: the whole point of blocking entries is to keep the exits open.
+func (g *Gateway) checkEntry(plan mutationPlan) *RejectedError {
+	if g.entry == nil || !plan.raisesExposure {
+		return nil
+	}
+	return g.entry.CheckEntry()
+}
+
+// refuse closes a journalled attempt that never reached the broker.
+func (g *Gateway) refuse(ctx context.Context, attempt *journal.Attempt, out Outcome, rejected *RejectedError) (Outcome, error) {
+	out.Reason = rejected.Reason
+	out.Detail = rejected.Detail
+	out.State = journal.StateNotDispatched
+	if err := attempt.Settle(ctx, journal.StateNotDispatched,
+		string(rejected.Reason), rejected.Detail); err != nil {
+		return out, fmt.Errorf("execgw: closing a refused attempt: %w", err)
+	}
+	return out, rejected
 }
 
 // notSent turns a gateway refusal into a dispatch outcome that settles the attempt

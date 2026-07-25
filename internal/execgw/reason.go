@@ -47,6 +47,23 @@ const (
 	// ReasonBrokerOutcomeUnknown: the transport or the status does not prove
 	// whether the mutation executed.
 	ReasonBrokerOutcomeUnknown ReasonCode = "broker_outcome_unknown"
+
+	// --- entry gate (retry matrix, task 2.6) --------------------------------
+
+	// ReasonBrokerAuthRejected: the broker refused the credential (401/403).
+	// Latching, not auto-clearing: a credential that came back is not evidence
+	// the operator knows what happened.
+	ReasonBrokerAuthRejected ReasonCode = "broker_auth_rejected"
+	// ReasonQueryStale: a required read is older than its staleness threshold.
+	// Auto-clears when the read succeeds again.
+	ReasonQueryStale ReasonCode = "required_query_stale"
+	// ReasonUnresolvedInDoubt: an attempt ended UNRESOLVED_IN_DOUBT. Operator
+	// resolution only.
+	ReasonUnresolvedInDoubt ReasonCode = "unresolved_in_doubt"
+	// ReasonAlertUndelivered: reserved for task 4.3 — a critical alert that could
+	// not be delivered blocks new entries. Declared here so the enum is stable
+	// before the alerting path exists.
+	ReasonAlertUndelivered ReasonCode = "critical_alert_undelivered"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was
