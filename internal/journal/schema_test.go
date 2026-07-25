@@ -80,6 +80,7 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 	ctx := context.Background()
 
 	wantTables := []string{
+		"alert_outbox",
 		"attempt_transitions",
 		"fill_events",
 		"fill_snapshots",
@@ -137,6 +138,12 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"fill_events": {
 			"average_price", "broker_visible_at", "committed_at", "cumulative_quantity",
 			"delta_quantity", "id", "market", "order_id", "symbol",
+		},
+		// Schema v3 (task 4.3): the durable alert outbox.
+		"alert_outbox": {
+			"acknowledged_at", "acknowledged_by", "attempts", "body", "created_at",
+			"delivered_at", "event_key", "event_type", "id", "last_attempt_at",
+			"last_error", "payload", "severity", "state", "title",
 		},
 	}
 	for table, want := range wantColumns {

@@ -38,7 +38,7 @@
 
 - [x] 4.1 [T][High-risk] cancel/amend 사전 확인 대체: OrderByID 파생 기반, WTS 세션 nil/만료 상태 cancel/amend 성공 테스트
 - [x] 4.2 [T] 기동 인터록: 게이트 기본 OFF, ON 시 Guardian(초안 인터페이스, Phase 2 확정 예정) + attestation(존재·미만료·계좌 일치) 검증 실패 시 기동 거부, config 스키마 추가(별도 커밋) + audit 로그
-- [ ] 4.3 [T] `internal/obs`: 구조화 로그(전이·reconcile·오류, 셀 수 있는 이벤트 규약), ntfy 알림(등급화: critical은 journal DB outbox 경유 재전송·지속 실패 시 진입 차단, heartbeat publish)
+- [x] 4.3 [T] `internal/obs`: 구조화 로그(전이·reconcile·오류, 셀 수 있는 이벤트 규약), ntfy 알림(등급화: critical은 journal DB outbox 경유 재전송·지속 실패 시 진입 차단, heartbeat publish)
 - [ ] 4.4 [T][High-risk] flatten-all 1/2 — cancel-all saga: 진입 차단→미체결 각각 취소·확정(IN_DOUBT 규칙), journal 기록, crash 재개 테스트
 - [ ] 4.5 [T][High-risk] flatten-all 2/2 — reduce-only 청산: 계좌 재조회 안정화→매도가능수량 기준 공격적 limit 청산→반복 reconcile, `--dry-run`(mutation 0), 확인 문자열(마스킹 계좌·포지션 수·예상 수량·nonce·TTY 전용), oversell 방지 테스트
 - [ ] 4.6 [T] 테스트 격리 가드: 격리 config 디렉터리 헬퍼(t.Setenv), 실 Toss hostname POST hard-fail transport 가드 테스트 — 완료 게이트 포함
