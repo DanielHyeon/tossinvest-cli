@@ -259,6 +259,15 @@ func orZero(s string) string {
 	return s
 }
 
+// rawOrders indexes orders by id for the single-order reader.
+func rawOrders(orders ...rawOrder) map[string]json.RawMessage {
+	out := make(map[string]json.RawMessage, len(orders))
+	for _, o := range orders {
+		out[o.id] = o.json()
+	}
+	return out
+}
+
 func page(next string, orders ...rawOrder) execgw.OrderPage {
 	p := execgw.OrderPage{NextCursor: next, HasNext: next != ""}
 	for _, o := range orders {

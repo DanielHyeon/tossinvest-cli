@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -80,6 +81,8 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 
 	wantTables := []string{
 		"attempt_transitions",
+		"fill_events",
+		"fill_snapshots",
 		"intents",
 		"lineage_edges",
 		"mutation_attempts",
@@ -124,6 +127,16 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"attempt_id", "child_order_id", "created_at", "id", "intent_id",
 			"parent_filled_quantity", "parent_order_id", "relation",
 			"requested_quantity",
+		},
+		// Schema v2 (task 3.2): the cumulative-snapshot fill ledger.
+		"fill_snapshots": {
+			"average_price", "broker_visible_at", "committed_at", "detail",
+			"fail_closed", "filled_quantity", "market", "observed_at", "order_id",
+			"quantity", "reason_code", "state", "symbol", "terminal",
+		},
+		"fill_events": {
+			"average_price", "broker_visible_at", "committed_at", "cumulative_quantity",
+			"delta_quantity", "id", "market", "order_id", "symbol",
 		},
 	}
 	for table, want := range wantColumns {
@@ -178,8 +191,8 @@ func TestSchemaVersionRecorded(t *testing.T) {
 		"SELECT value FROM schema_meta WHERE key = 'schema_version'").Scan(&mirrored); err != nil {
 		t.Fatalf("schema_meta mirror row: %v", err)
 	}
-	if mirrored != "1" {
-		t.Fatalf("schema_meta.schema_version = %q, want 1", mirrored)
+	if want := strconv.Itoa(SchemaVersion); mirrored != want {
+		t.Fatalf("schema_meta.schema_version = %q, want %q", mirrored, want)
 	}
 
 	var createdAt string
@@ -408,6 +421,10 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_transitions_attempt",
 		"idx_lineage_child",
 		"idx_lineage_parent",
+		"idx_fill_snapshots_symbol",
+		"idx_fill_snapshots_terminal",
+		"idx_fill_events_order",
+		"idx_fill_events_symbol",
 	} {
 		if !got[want] {
 			t.Errorf("missing index %s (have %v)", want, keysOf(got))

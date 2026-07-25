@@ -61,3 +61,38 @@ Pre-Edit(대상·근거·테스트) 보고는 유지. task 2.9에서 구현.
   (json.RawMessage, error)`를 함께 추가했다. 결정(c)의 근거(기존 send/token 경로 재사용,
   기존 메서드·domain.Order·직렬화 계약 무변경)를 그대로 만족하며 기존 함수 수정 0건.
 - 테스트: httptest로 path escaping·계좌 헤더·envelope 언랩·canceledAt 보존 검증.
+
+## 2026-07-26 [safe local] journal 스키마 v2 — 체결 스냅샷 테이블 (task 3.2)
+
+- 사실: 3.2의 "누적 스냅샷 멱등 반영"은 **직전 관측이 durable**해야 성립한다. 잃어버리면
+  재시작 후 첫 폴이 누적 filledQuantity 전체를 신규 체결로 보고해 포지션을 두 배로 센다.
+  journal v1에는 체결 스냅샷을 담을 테이블이 없다.
+- 처리: 신규 파일 `internal/journal/fills.go`에 `schemaV2`(`fill_snapshots`,
+  `fill_events` + 인덱스)와 읽기·쓰기 API를 추가했다. `schema.go`는 2줄만 바뀐다 —
+  `SchemaVersion = 1 → 2`, `migrations`에 `{Version: 2, SQL: schemaV2}` append.
+  schema.go가 스스로 규정한 additive migration 절차(“Never edit a released step.
+  Append a new one.”)와 §0.6(additive-nullable 선호)을 그대로 따른 것이고, 기존 컬럼·
+  기존 함수는 무변경이다.
+- 테스트 영향: `schema_test.go`의 `wantTables`·`wantColumns`·인덱스 목록과 schema_meta
+  미러 비교(하드코딩 `"1"` → `strconv.Itoa(SchemaVersion)`)를 새 스키마에 맞게 확장했다.
+  기존 단언을 약화한 것이 아니라 신규 테이블을 계약에 추가한 것이다.
+- rollback: 구버전 바이너리는 `user_version=2`를 보고 `ErrSchemaTooNew`로 **기동 거부**한다
+  (오독이 아니라 정지 — 라이브 계좌에서 안전한 방향). 데이터 손실 없음.
+- 안전 영향: 없음. 새 테이블은 기존 주문 경로가 읽지 않는다.
+
+## 2026-07-26 [observation] EntryGate에 심볼 차원이 없다 (task 3.2/3.6)
+
+- 사실: fill-detection 스펙은 UNKNOWN_BROKER_STATE 시 "해당 **심볼**이 차단"을,
+  reconciliation 스펙은 "차단 범위(계좌/시장/심볼)"를 요구한다. 그러나
+  `execgw.EntryGate`의 latch는 reason 단위 계좌 전역이고, Gateway의 심볼 단위 검사
+  (`checkSymbolFree`)는 journal의 pending/unresolved attempt만 본다 — 외부에서 심볼
+  차단을 주입할 훅이 없다.
+- 이번 처리: (a) `filldetect`는 스냅샷이 fail-closed면 `ReasonBrokerStateUnknown`으로
+  **계좌 전역** latch를 건다 — 스펙보다 넓은 차단이지만 §0.9(불명확하면 보수적)의
+  방향이고, 청산 경로는 §0.3대로 열려 있다. (b) `reconcile.Blocks`(3.6)가 계좌/시장/
+  심볼 범위와 해제 조건을 상태표로 보유하고, 계좌 범위 항목만 EntryGate에 동기화한다.
+  심볼 범위 항목은 조회 API로 노출한다.
+- 후속 task 입력: **4.2(기동 인터록)**에서 게이트웨이 배선이 확정될 때
+  `EntryGate.CheckEntry()`에 심볼 인자를 더하는 대신 `reconcile.Blocks`를 게이트웨이가
+  참조하도록 배선하면 심볼 단위로 좁힐 수 있다. Gateway 기존 함수 수정이 필요하므로
+  Pre-Edit 대상이다.

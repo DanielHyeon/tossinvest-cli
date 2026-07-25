@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 1
+const SchemaVersion = 2
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -23,6 +23,8 @@ type migration struct {
 // authoritative.
 var migrations = []migration{
 	{Version: 1, SQL: schemaV1},
+	// schemaV2 lives in fills.go, next to the code that reads it (task 3.2).
+	{Version: 2, SQL: schemaV2},
 }
 
 // schemaV1 is the initial schema.

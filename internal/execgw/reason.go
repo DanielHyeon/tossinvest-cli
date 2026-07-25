@@ -89,10 +89,15 @@ const (
 	// --- fill detection & reconciliation (tasks 3.1-3.6) ---------------------
 	//
 	// Appended, never reordered: the codes above are already written into
-	// journal rows on disk. Unlike the auth latch, every code in this block
-	// describes a condition that a later successful observation disproves, so
-	// they auto-clear — except the permanent-mismatch one, which by definition
-	// means observation has stopped helping.
+	// journal rows on disk.
+	//
+	// Two of these clear themselves and three do not, and the split is the same
+	// one the gate already makes. A condition a later observation disproves
+	// (recovery finished; detection caught up) is released automatically. A
+	// condition that means our model of the account was wrong
+	// (UNKNOWN_BROKER_STATE, a mismatch that survived its retries) stays latched
+	// until a human has looked, because "it stopped reporting the contradiction"
+	// is not evidence that the contradiction was resolved.
 
 	// ReasonRecoveryIncomplete: the restart recovery sequence has not finished.
 	// Until it has, the engine does not know what it already has on the account,
@@ -103,7 +108,8 @@ const (
 	ReasonFillDetectionSLO ReasonCode = "fill_detection_slo_violated"
 	// ReasonBrokerStateUnknown: a broker snapshot could not be reconciled with
 	// what was already observed (a shrinking cumulative fill, an out-of-order
-	// snapshot, a status this build does not understand). Fail-closed.
+	// snapshot, a status this build does not understand). Fail-closed, and
+	// operator-cleared: the specific rule that fired travels in the detail.
 	ReasonBrokerStateUnknown ReasonCode = "unknown_broker_state"
 	// ReasonReconcileMismatch: local state and the account disagree beyond the
 	// documented tolerance. Clears on a successful reconciliation.
