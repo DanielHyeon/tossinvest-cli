@@ -12,8 +12,8 @@ TossOS는 실계좌 자동매매를 실전 직행으로 운영한다(사용자 �
 - 체결 감지: 공식 API 주기 폴링 권위 + 신선도 SLO, SSE는 coalescing 힌트
 - retry matrix(주문 mutation 자동 재시도 금지), 재시작 reconciliation 계약, FX·interactive auth fail-closed
 - 자동화 게이트 설계(기본 OFF, Guardian 미주입 시 기동 거부 인터록 — 활성화는 Phase 2)
-- 관측성(구조화 로깅·메트릭)과 push 알림 채널, `tossctl` flatten-all 비상 명령
-- 공식 API capability 실증(무인 자격증명 soak, rate limit), 실계좌 주문 경로 1회성 검증 절차(사용자 실행)
+- 관측성(구조화 로깅·셀 수 있는 이벤트)과 등급화 알림(critical outbox + heartbeat), `tossctl` flatten-all 비상 saga(--dry-run 포함)
+- (분리) 공식 API capability soak·실계좌 검증·약관 검토는 wall-clock·사용자 의존이므로 별도 change `verify-execution-capability`로 분리 — 본 change의 gate를 막지 않는다. 단, 자동화 게이트 ON은 그 change의 attestation 없이는 불가(기동 인터록)
 
 ## Capabilities
 
@@ -33,3 +33,4 @@ TossOS는 실계좌 자동매매를 실전 직행으로 운영한다(사용자 �
 - Affected code: `internal/app`(신규), `internal/domain`, `internal/trading`, `cmd/tossctl`(shim·flatten-all), `internal/push`(소비자 신규), 신규 패키지 `internal/journal`·`internal/filldetect`·`internal/reconcile`·`internal/obs`
 - upstream 테스트 650개 회귀 금지(shim·type alias 전략), 신규 코드는 httptest 계약 테스트 동반
 - 후속 의존: Phase 2 위험 엔진(T2.4)이 이 change의 인터록에 연결되어야 자동 주문이 활성화됨
+- 알려진 잔존 리스크(리뷰 기록): 계좌 단일 writer lease와 CLI/MCP 주문 중재는 Phase 4 데몬과 함께 구현 — 그 전까지 MCP 표면은 Gateway를 우회할 수 있으며 사용자 수동 영역으로 취급, reconciliation이 external provenance로 격리
