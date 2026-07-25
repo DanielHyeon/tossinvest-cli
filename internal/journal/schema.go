@@ -1,0 +1,126 @@
+package journal
+
+// SchemaVersion is the schema version this build writes and understands. It is
+// stored in the database's PRAGMA user_version and mirrored, as text, in
+// schema_meta for human inspection.
+const SchemaVersion = 1
+
+// migration is one forward step. The additive rules are not negotiable, because a
+// live account's order history is the thing being migrated:
+//
+//  1. Never edit a released step. Append a new one.
+//  2. New columns are nullable or carry a DEFAULT, so an older row stays valid.
+//  3. Never drop or rename a column another version might still read; deprecate
+//     it in a comment instead.
+//  4. Never rewrite historical rows in a migration. The attempt history and the
+//     intent fields are the audit trail Phase 2's ledger imports.
+type migration struct {
+	Version int
+	SQL     string
+}
+
+// migrations is the ordered list of forward steps. Index is irrelevant; Version is
+// authoritative.
+var migrations = []migration{
+	{Version: 1, SQL: schemaV1},
+}
+
+// schemaV1 is the initial schema.
+//
+// Design notes that the tests pin:
+//
+//   - Quantities and prices are stored as decimal *strings* because binary floats
+//     cannot represent a broker's decimal quantities exactly. The write API is
+//     what keeps them strings; STRICT tables add that no column is typeless and
+//     that an unconvertible value (text in an INTEGER counter) is refused rather
+//     than stored.
+//   - Text timestamps in RFC3339 UTC ("2026-03-30T00:30:00Z"), always from the
+//     injected clock. They sort lexicographically, which keeps range scans on
+//     recorded_at usable.
+//   - intents rows are immutable once written. Everything mutable about an
+//     attempt lives in mutation_attempts, and every state change is additionally
+//     appended to attempt_transitions so the history is never overwritten.
+//   - Primary keys are caller-supplied stable ids (intent id, attempt id), which
+//     is what the Phase 2 ledger import keys on.
+const schemaV1 = `
+CREATE TABLE schema_meta (
+	key   TEXT PRIMARY KEY,
+	value TEXT NOT NULL
+) STRICT;
+
+-- Immutable record of what the engine decided to do. Never updated.
+CREATE TABLE intents (
+	id            TEXT PRIMARY KEY,          -- stable PK; Phase 2 ledger import key
+	created_at    TEXT NOT NULL,             -- RFC3339 UTC, injected clock
+	market        TEXT NOT NULL,             -- 'kr' | 'us' (internal/clock.Market)
+	trading_day   TEXT NOT NULL,             -- market-local trading day, YYYY-MM-DD
+	account_ref   TEXT NOT NULL,             -- account reference the intent targets
+	symbol        TEXT NOT NULL,
+	side          TEXT NOT NULL,             -- 'BUY' | 'SELL'
+	order_type    TEXT NOT NULL,             -- 'LIMIT' | 'MARKET' | …
+	time_in_force TEXT NOT NULL DEFAULT '',
+	quantity      TEXT NOT NULL,             -- decimal string
+	price         TEXT,                      -- decimal string; NULL for market orders
+	currency      TEXT NOT NULL,
+	source        TEXT NOT NULL,             -- what produced the intent (strategy id, operator)
+	fingerprint   TEXT NOT NULL,             -- IN_DOUBT matching key
+	notes         TEXT NOT NULL DEFAULT ''
+) STRICT;
+
+CREATE INDEX idx_intents_symbol_day   ON intents(symbol, trading_day);
+CREATE INDEX idx_intents_fingerprint  ON intents(fingerprint);
+
+-- One PLACE/CANCEL/AMEND attempt against the broker, with its own lifecycle.
+CREATE TABLE mutation_attempts (
+	id                  TEXT PRIMARY KEY,
+	intent_id           TEXT NOT NULL REFERENCES intents(id),
+	kind                TEXT NOT NULL,              -- 'PLACE' | 'CANCEL' | 'AMEND'
+	state               TEXT NOT NULL,              -- see lifecycle states
+	attempt_no          INTEGER NOT NULL,           -- 1-based, per intent
+	target_order_id     TEXT NOT NULL DEFAULT '',   -- CANCEL/AMEND target order
+	broker_order_id     TEXT NOT NULL DEFAULT '',   -- assigned once the broker acks
+	fingerprint         TEXT NOT NULL,
+	recorded_at         TEXT NOT NULL,
+	dispatch_started_at TEXT,
+	settled_at          TEXT,
+	reason_code         TEXT NOT NULL DEFAULT '',
+	detail              TEXT NOT NULL DEFAULT ''
+) STRICT;
+
+CREATE INDEX idx_attempts_state        ON mutation_attempts(state);
+CREATE INDEX idx_attempts_intent       ON mutation_attempts(intent_id);
+CREATE INDEX idx_attempts_broker_order ON mutation_attempts(broker_order_id);
+
+-- Append-only transition log. Rows are never updated or deleted.
+CREATE TABLE attempt_transitions (
+	id          INTEGER PRIMARY KEY AUTOINCREMENT,
+	attempt_id  TEXT NOT NULL REFERENCES mutation_attempts(id),
+	from_state  TEXT NOT NULL,
+	to_state    TEXT NOT NULL,
+	at          TEXT NOT NULL,
+	reason_code TEXT NOT NULL DEFAULT '',
+	detail      TEXT NOT NULL DEFAULT ''
+) STRICT;
+
+CREATE INDEX idx_transitions_attempt ON attempt_transitions(attempt_id, id);
+
+-- Broker order lineage. The official API's cancel/modify issues a NEW order
+-- number, so a replace is recorded as an edge rather than as a mutation of the
+-- original order row: parent keeps its filled quantity, child carries the
+-- requested remainder.
+CREATE TABLE lineage_edges (
+	id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+	parent_order_id        TEXT NOT NULL,
+	child_order_id         TEXT NOT NULL,
+	relation               TEXT NOT NULL,   -- 'replaces'
+	parent_filled_quantity TEXT NOT NULL,   -- decimal string at replace time
+	requested_quantity     TEXT NOT NULL,   -- decimal string requested on the child
+	intent_id              TEXT NOT NULL REFERENCES intents(id),
+	attempt_id             TEXT NOT NULL REFERENCES mutation_attempts(id),
+	created_at             TEXT NOT NULL,
+	UNIQUE(parent_order_id, child_order_id, relation)
+) STRICT;
+
+CREATE INDEX idx_lineage_child  ON lineage_edges(child_order_id);
+CREATE INDEX idx_lineage_parent ON lineage_edges(parent_order_id);
+`
