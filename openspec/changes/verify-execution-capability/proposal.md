@@ -15,7 +15,7 @@ harden-execution-base의 자동화 게이트는 capability attestation 없이 �
 
 ### New Capabilities
 
-(없음 — attestation 검증 요구사항은 harden-execution-base의 engine-safety에 이미 정의됨. 본 change는 그 attestation을 생성하는 프로세스 change)
+- `execution-verification`: capability attestation 생성(soak·실측)과 실계좌 주문 경로 검증 기록 — engine-safety의 기동 인터록이 소비하는 산출물의 생성 계약
 
 ### Modified Capabilities
 
