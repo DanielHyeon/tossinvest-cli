@@ -415,8 +415,10 @@ func TestTransitionFromWrongStateIsRejected(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := a.MarkAcked(ctx, "order-42"); !errors.Is(err, ErrUnexpectedState) {
-		t.Fatalf("MarkAcked from RECORDED: want ErrUnexpectedState, got %v", err)
+	// RECORDED → ACKED is outside the lifecycle table (nothing was dispatched),
+	// so the stricter of the two guards reports it.
+	if err := a.MarkAcked(ctx, "order-42"); !errors.Is(err, ErrIllegalTransition) {
+		t.Fatalf("MarkAcked from RECORDED: want ErrIllegalTransition, got %v", err)
 	}
 
 	rec, err := j.LookupAttempt(ctx, "attempt-1")

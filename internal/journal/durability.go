@@ -461,6 +461,9 @@ func (a *Attempt) transition(ctx context.Context, to AttemptState, o transitionO
 // checkTransitionAllowed validates a move against the caller-declared from-set.
 // lifecycle.go layers the spec's full legality table on top of this.
 func checkTransitionAllowed(attemptID string, from, to AttemptState, allowed []AttemptState) error {
+	if err := ValidateTransition(from, to); err != nil {
+		return fmt.Errorf("%w (attempt %s)", err, attemptID)
+	}
 	if len(allowed) == 0 {
 		return nil
 	}
