@@ -51,3 +51,13 @@ Pre-Edit(대상·근거·테스트) 보고는 유지. task 2.9에서 구현.
   읽기 전용 인터페이스로 좁혀야 하는데, 2.7/2.9/3.x가 이 클라이언트로 조회를 하고
   게이트웨이 배선이 확정되는 시점은 **task 4.2(기동 인터록)**이므로 그때 함께 좁히는
   것이 최소 변경이다. 현재 노출은 엔진 내부 wiring 한정(CLI/MCP 무관).
+
+## 2026-07-26 [safe local] Manager 결정(c) 구현 시 단건 raw 조회도 필요 (task 2.9)
+
+- 결정문은 `OrdersPageRaw`만 명시했으나, 2.8의 CANCEL/AMEND 해소가 **원주문 단건**을
+  `(status, canceledAt, filledQuantity, quantity, lineage)`로 파생해야 한다.
+  `OrderByID`는 `domain.Order`를 돌려주므로 canceledAt이 없다 — 같은 벽이다.
+- 처리: 동일 신규 파일 `internal/official/orders_raw.go`에 `OrderRawByID(ctx, orderID)
+  (json.RawMessage, error)`를 함께 추가했다. 결정(c)의 근거(기존 send/token 경로 재사용,
+  기존 메서드·domain.Order·직렬화 계약 무변경)를 그대로 만족하며 기존 함수 수정 0건.
+- 테스트: httptest로 path escaping·계좌 헤더·envelope 언랩·canceledAt 보존 검증.
