@@ -10,16 +10,12 @@ TossOS는 `tossinvest-cli`(MIT, 커밋 `57348a7` 고정) 전체 소스·히스�
 - 보존: CLI(tossctl)·MCP·공식 Open API·WTS·인증·주문·조건주문·진단 기능 전부 (CLI = 관리자 콘솔)
 - 추가: 자동매매 엔진, 위험관리, 포지션/원장, 웹 API(SSE), 운영 콘솔 UI
 - StockOS에서는 React UI 자산(디자인 시스템·안전 UX)과 검증된 거래 불변조건·순수 로직만 선별 이식
-- 제외: KIS 연동, StockOS의 shadow/observe/canary **구현체**와 runtime flag 176필드 체계, A-넘버 shim
-  (단, 아래 "go-live 승격 사다리"는 별개다 — 롤아웃 구현체를 안 가져오는 것이지 단계적 승격 원칙을 버리는 것이 아니다)
+- 제외: KIS 연동, StockOS의 shadow/observe/canary 구현체와 runtime flag 176필드 체계, A-넘버 shim, **승격 단계(paper/capped-live) 일체 — 사용자 결정(2026-07-26): 단독 사용자 제품이므로 실전 직행**
 
-## 제품 가설·중단 기준 (사용자 확정 필요)
-
-리뷰 지적: 공급 계획만 있고 성공 가설이 없다. 아래 값은 **사용자가 확정**해야 하며, Phase 2 완료 전까지 채운다.
+## 운영 파라미터 (선택 — 사용자 확정 시 기록)
 
 - 운용 시장(KR/US), 허용 자본 상한, 일일 최대 손실(절대액·%), 레인당 위험 예산
-- go 판정: replay/paper 단계에서 비용 후 기대값 > 0을 N세션 이상 유지
-- no-go 판정: capped-live 단계에서 연속 M일 일일 한도 도달 또는 시스템 결함으로 인한 손실 1회
+- 위 수치는 Guardian(T2.4) 설정값이 된다. 미확정 시 StockOS small_live 보수 기본값(주문 100만/노출 1,000만/일손실 10만 KRW 또는 1%)으로 시작
 
 ## 권위(Authority) 원칙
 
@@ -29,7 +25,7 @@ TossOS는 `tossinvest-cli`(MIT, 커밋 `57348a7` 고정) 전체 소스·히스�
 4. 불일치 시 신규 진입 금지, 청산 지속
 5. **무인 운영**: 핵심 매매 루프(체결 감지 포함)는 공식 API만으로 동작. **체결 감지의 권위는 공식 API 주기 폴링**(최대 신선도 SLO 명시)이고 SSE는 지연 단축용 힌트일 뿐이다. WTS 만료 시 후보 소스는 공식 API 기반(랭킹·watchlist·정적 유니버스)으로 강등되어 매매 루프가 유지된다
 6. kill switch는 신규 진입 차단 전용(BLOCK-ONLY)이되, **운영 모드 체계는 별도로 존재**: NORMAL / ENTRY_BLOCKED(=kill switch) / EXIT_ONLY / HALT_ALL(제출 전면 중단). 수동 비상 청산(flatten-all)은 typed-confirmation 수동 명령으로 제공
-7. **go-live 승격 사다리**: replay/backtest → paper(주문 없이 신호·판정 기록) → capped-live(소액·제한 종목·limit-only) → normal-live. 각 단계는 go-live-protocol.md의 진입·강등 기준을 따르며, 이전 단계 통과 없이 다음 단계 불가. 자동 강등 조건 포함
+7. **실전 직행(사용자 결정 2026-07-26)**: 승격 단계(paper/capped) 없이 실전 매매로 바로 진행한다. 안전은 단계가 아니라 **위험 한도**로 담보한다 — Guardian(일일 손실·총 노출·수량 한도)과 kill switch가 활성화되지 않으면 엔진이 기동하지 않는다(T1.9 인터록)
 8. 주문 mutation은 **자동 재시도 금지**. 타임아웃·5xx 등 결과 불명(unknown outcome)은 IN_DOUBT로 표기하고 체결/거래내역 조회로 확정될 때까지 해당 레인 차단
 9. 계좌당 주문 writer는 데몬 하나. CLI/MCP의 수동 주문은 데몬 경유 또는 명시적 maintenance mode에서만, reconciliation은 외부 주문을 별도 provenance로 격리
 
@@ -64,7 +60,7 @@ TossOS는 `tossinvest-cli`(MIT, 커밋 `57348a7` 고정) 전체 소스·히스�
 | T1.11 | `tossctl` flatten-all 명령(수동 전용, typed-confirmation): 미체결 전체 취소 + 전량 청산 | 비상 프리미티브 |
 | T1.12 | 공식 API capability 검증: 자격증명 무인 갱신 N일 soak, rate limit 실측, 주문·체결 데이터 완전성 확인. FX(USD 매수 시 통화 잔고) 경로 정의 — 부족 시 fail-closed | 전제 실증 |
 | T1.13 | 시간 규율: 주입 가능한 clock, 시장별 TZ, 거래일 경계(일일 한도 리셋 기준), DST 테스트 | 위험관리 선행 조건 |
-| T1.14 | 실계좌 검증 프로토콜 v1(go-live-protocol.md): 최소 수량·limit-only·최대 손실·사전/사후 스냅샷·즉시 취소 규칙. **매도 경계(부분/전량/보유초과)와 KR cancel/amend live 검증을 Phase 3 활성화 전 차단 게이트로 지정** | upstream 갭 + 승격 사다리 |
+| T1.14 | 실계좌 주문 경로 검증(사용자 실행, 1회성): 최소 수량·limit-only·즉시 취소 규칙으로 매도 경계(부분/전량/보유초과)·KR cancel/amend 확인. 승격 단계가 아니라 **실행 기반을 닫는 검증** — 엔진이 쓸 주문 경로의 미검증 갭 해소 | upstream 갭 |
 | T1.15 | 토스 Open API 약관·자동화 허용 범위 검토 기록(사용자 협조 필요), 계정 정지 시 포지션 처리 방침 | 브로커 단일 의존 리스크 |
 
 ## Phase 2 — Core Domain + Tracer Slice  (change: `add-core-domain`, `add-tracer-slice`)
@@ -81,12 +77,11 @@ StockOS 순수 로직 이식 순위: costs → structural_rr → tradeplan/contr
 | T2.5 | 거래 비용 모델 (StockOS costs·cost_model 이식) | |
 | T2.6 | provenance: 후보→판단→주문→체결→청산 lineage | |
 | T2.7 | 성과 원시 지표: R 배수, PF, MDD, 승률 + MFE/MAE 신규 설계 | |
-| T2.8 | **replay/paper 하네스**: 시세·신호 기록 → 레인 재생 → 비용 후 기대값 측정 (internal/replay 스텁 활용). 승격 사다리 1단계의 실행 수단 | 전략 검증 도구 |
-| T2.9 | **tracer slice(수직 슬라이스)**: 하드코딩 레인 1개·종목 1개·limit 주문만, paper 모드로 신호→위험판정→preview→(모의)체결→원장→reconcile→상태 조회 end-to-end 관통 | 통합 피드백 조기화 |
+| T2.8 | **tracer slice(수직 슬라이스, 실전 소액)**: 하드코딩 레인 1개·종목 1개·limit 주문·최소 수량으로 신호→위험판정→preview→실체결→원장→reconcile→상태 조회 end-to-end 관통. Guardian 한도 활성 상태에서 실행 | 통합 피드백 조기화 (paper 단계 없음 — 사용자 결정) |
 
 ## Phase 3 — Strategy & Scheduling  (change: `add-strategy-engine`)
 
-**착수 차단 게이트**: T1.14의 매도 경계·KR cancel/amend live 검증 완료 + T2.9 tracer slice paper 검증 통과.
+**착수 조건**: T1.14 주문 경로 검증 + T2.8 tracer slice end-to-end 검증 완료 (실행 기반 신뢰 확보 — 승격 단계 아님).
 
 | ID | 작업 | 비고 |
 |----|------|------|
@@ -94,7 +89,7 @@ StockOS 순수 로직 이식 순위: costs → structural_rr → tradeplan/contr
 | T3.2 | internal/strategy: 독립 매수 레인 인터페이스, 레인별 ON/OFF, OFF 후 청산 지속 | |
 | T3.3 | internal/scheduler: 장 시간 인지 루프 (T1.13 clock/calendar 기반) | |
 | T3.4 | internal/performance: 레인별 성과(결정적 링크 없으면 표시 금지), markout 윈도우(기본 5/15/30분), 비용 후 기대값 기반 슬롯 배분 | |
-| T3.5 | capped-live 승격: go-live-protocol.md 기준 충족 시 소액 실주문 개시, 자동 강등 조건 상시 감시 | 승격 사다리 |
+| T3.5 | 실전 운영 개시: Guardian 한도·kill switch·알림 활성 확인 후 레인 ON (승격 단계 없음 — 사용자 결정) | 원칙 7 |
 
 ## Phase 4 — Service Layer  (change: `add-httpapi-daemon`)
 
@@ -110,7 +105,7 @@ StockOS 순수 로직 이식 순위: costs → structural_rr → tradeplan/contr
 
 **5a — 운영 콘솔 (`add-ops-console`)**: 상태·포지션·미체결·차단 사유·reconciliation 상태·운영 모드/kill switch(typed-confirmation)·실현손익 요약. style.css 디자인 시스템 + 안전 UX(사유 입력·차단 칩) + useDashboardStream 이식. 차트 없음.
 
-**5b — 풀 UI (`add-web-ui`, capped-live 성과 확인 후)**: 후보 랭킹·레인 성과·분석 화면·차트(경량 라이브러리 채택 우선 평가, 그린필드는 최후). API client는 TossOS 계약 신규 작성(TanStack Query 도입 여부 이 change에서 결정).
+**5b — 풀 UI (`add-web-ui`, 실전 운영 안정화 후)**: 후보 랭킹·레인 성과·분석 화면·차트(경량 라이브러리 채택 우선 평가, 그린필드는 최후). API client는 TossOS 계약 신규 작성(TanStack Query 도입 여부 이 change에서 결정).
 
 폐기 유지: canary/shadow 섹션, A-넘버 컴포넌트, 레거시 탭 shim, KIS 카드류.
 

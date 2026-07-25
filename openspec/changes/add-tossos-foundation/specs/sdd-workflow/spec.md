@@ -42,7 +42,7 @@ change 완료 선언은 `make gate CHANGE=<change-id>`(tasks.md 미완료 항목
 - **THEN** 게이트가 실패하고 미완료 항목이 출력된다
 
 ### Requirement: 실계좌 보호의 기계적 강제
-자동 테스트는 실계좌 주문을 발생시켜서는 안 되며(SHALL NOT), 이는 규칙이 아니라 테스트 인프라로 강제되어야 한다(SHALL): 테스트는 격리된 임시 config 디렉터리에서 실행되고, 실 endpoint 호출은 httptest 대체 없이는 구성될 수 없어야 한다. 실계좌 검증은 go-live-protocol.md의 수동 프로토콜로만 수행한다.
+자동 테스트는 실계좌 주문을 발생시켜서는 안 되며(SHALL NOT), 이는 규칙이 아니라 테스트 인프라로 강제되어야 한다(SHALL): 테스트는 격리된 임시 config 디렉터리에서 실행되고, 실 endpoint 호출은 httptest 대체 없이는 구성될 수 없어야 한다. 실계좌 검증은 사용자 승인 하의 수동 절차로만 수행한다.
 
 #### Scenario: 주문 로직 테스트 실행
 - **WHEN** 주문 관련 테스트가 실행되면
