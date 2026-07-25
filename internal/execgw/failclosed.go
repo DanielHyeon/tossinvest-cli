@@ -279,6 +279,19 @@ func AllReasonCodes() []ReasonCode {
 		ReasonInteractiveAuthRequired,
 		ReasonFXConsentRequired,
 		ReasonFundingRequired,
+
+		// Fill detection and reconciliation (tasks 3.1-3.6). They were declared
+		// with the rest of the enum but never registered here, which meant the
+		// golden fixture — the thing that makes a rename a visible diff — did not
+		// cover them.
+		ReasonRecoveryIncomplete,
+		ReasonFillDetectionSLO,
+		ReasonBrokerStateUnknown,
+		ReasonReconcileMismatch,
+		ReasonReconcilePermanent,
+
+		// Flatten (task 4.4).
+		ReasonFlattenInProgress,
 	}
 	sort.Slice(codes, func(i, j int) bool { return codes[i] < codes[j] })
 	return codes

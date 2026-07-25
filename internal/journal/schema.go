@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 3
+const SchemaVersion = 4
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -27,6 +27,8 @@ var migrations = []migration{
 	{Version: 2, SQL: schemaV2},
 	// schemaV3 lives in outbox.go, next to the code that reads it (task 4.3).
 	{Version: 3, SQL: schemaV3},
+	// schemaV4 lives in flatten.go, next to the code that reads it (task 4.4).
+	{Version: 4, SQL: schemaV4},
 }
 
 // schemaV1 is the initial schema.

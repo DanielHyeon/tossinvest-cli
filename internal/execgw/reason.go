@@ -118,6 +118,17 @@ const (
 	// times in a row. Operator resolution only — the automatic retry has already
 	// been shown not to work.
 	ReasonReconcilePermanent ReasonCode = "reconciliation_mismatch_permanent"
+
+	// --- flatten (task 4.4) --------------------------------------------------
+
+	// ReasonFlattenInProgress: a flatten-all saga is running or has run. New
+	// exposure is refused for the duration and afterwards.
+	//
+	// It does not auto-clear, and that is the point rather than an oversight:
+	// somebody decided to exit every position on the account, and deciding to
+	// start again is a separate human decision (§0.7). Exits are untouched —
+	// nothing about this code path can refuse a cancel or a liquidation (§0.3).
+	ReasonFlattenInProgress ReasonCode = "flatten_in_progress"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was

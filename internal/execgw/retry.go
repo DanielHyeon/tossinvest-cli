@@ -486,6 +486,9 @@ func (g *EntryGate) Blocks() map[ReasonCode]string {
 // New reasons are appended, never inserted: the relative precedence of the
 // original three is itself a contract with the operator runbooks.
 var latchOrder = []ReasonCode{
+	// Flatten first: while the account is being emptied, "why can I not enter"
+	// has exactly one useful answer, and it is not a stale quote.
+	ReasonFlattenInProgress,
 	ReasonBrokerAuthRejected,
 	ReasonUnresolvedInDoubt,
 	ReasonAlertUndelivered,

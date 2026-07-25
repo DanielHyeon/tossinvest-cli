@@ -5,6 +5,8 @@ broker_rejected
 critical_alert_undelivered
 currency_balance_insufficient
 currency_balance_unavailable
+fill_detection_slo_violated
+flatten_in_progress
 funding_required
 fx_consent_required
 guardian_decision_expired
@@ -15,8 +17,12 @@ guardian_limits_unset
 guardian_nonce_reused
 interactive_auth_required
 invalid_mutation_request
+reconciliation_mismatch
+reconciliation_mismatch_permanent
+recovery_incomplete
 required_query_stale
 symbol_mutation_in_flight
 trading_policy_disabled
+unknown_broker_state
 unresolved_in_doubt
 unsupported_order_type

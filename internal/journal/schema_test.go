@@ -84,6 +84,8 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"attempt_transitions",
 		"fill_events",
 		"fill_snapshots",
+		"flatten_sagas",
+		"flatten_steps",
 		"intents",
 		"lineage_edges",
 		"mutation_attempts",
@@ -138,6 +140,16 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"fill_events": {
 			"average_price", "broker_visible_at", "committed_at", "cumulative_quantity",
 			"delta_quantity", "id", "market", "order_id", "symbol",
+		},
+		// Schema v4 (task 4.4): the flatten saga's durable plan.
+		"flatten_sagas": {
+			"account_ref", "detail", "dry_run", "finished_at", "id", "operator",
+			"phase", "reason", "started_at", "updated_at",
+		},
+		"flatten_steps": {
+			"attempt_id", "created_at", "currency", "detail", "id", "intent_id",
+			"kind", "market", "price", "quantity", "reason_code", "saga_id", "side",
+			"state", "symbol", "target_order_id", "updated_at",
 		},
 		// Schema v3 (task 4.3): the durable alert outbox.
 		"alert_outbox": {

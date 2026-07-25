@@ -163,9 +163,9 @@ func TestMarkingANonPendingAlertIsRefused(t *testing.T) {
 	}
 }
 
-// TestOutboxSurvivesTheV2ToV3Migration is the §0.6 test: a journal written by the
-// previous build migrates forward, keeps its rows, and gains the new table.
-func TestOutboxSurvivesTheV2ToV3Migration(t *testing.T) {
+// TestOutboxSurvivesTheV2Migration is the §0.6 test: a journal written by an
+// older build migrates forward and gains every table the current one adds.
+func TestOutboxSurvivesTheV2Migration(t *testing.T) {
 	clk := clock.NewFake(time.Date(2026, 7, 26, 8, 0, 0, 0, time.UTC))
 	path := filepath.Join(t.TempDir(), "journal.db")
 	ctx := context.Background()
@@ -179,10 +179,13 @@ func TestOutboxSurvivesTheV2ToV3Migration(t *testing.T) {
 		return j
 	}
 
-	// Simulate a v2 database by rolling the schema version back after creation.
+	// Simulate a v2 database by dropping everything later versions added and
+	// rolling the recorded version back.
 	first := open()
-	if _, err := first.db.ExecContext(ctx, "DROP TABLE alert_outbox"); err != nil {
-		t.Fatalf("dropping the v3 table: %v", err)
+	for _, table := range []string{"flatten_steps", "flatten_sagas", "alert_outbox"} {
+		if _, err := first.db.ExecContext(ctx, "DROP TABLE "+table); err != nil {
+			t.Fatalf("dropping %s: %v", table, err)
+		}
 	}
 	if _, err := first.db.ExecContext(ctx, "PRAGMA user_version = 2"); err != nil {
 		t.Fatalf("rolling back the schema version: %v", err)
@@ -203,5 +206,8 @@ func TestOutboxSurvivesTheV2ToV3Migration(t *testing.T) {
 	}
 	if _, err := second.EnqueueAlert(ctx, Alert{EventKey: "k", Type: "order.in_doubt"}); err != nil {
 		t.Fatalf("the migrated database must accept alerts: %v", err)
+	}
+	if _, err := second.StartFlatten(ctx, FlattenSaga{ID: "s-1", AccountRef: "acct-7"}); err != nil {
+		t.Fatalf("the migrated database must accept flatten sagas: %v", err)
 	}
 }
