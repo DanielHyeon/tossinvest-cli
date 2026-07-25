@@ -22,3 +22,12 @@
 - 안전 영향: 없음. canceledAt 부재는 파생에서 "취소 증거 없음"으로 처리되어
   CLOSED+미체결/부분체결이 `UNKNOWN_BROKER_STATE`(fail-closed)로 떨어진다 — 오판이 아니라
   차단 방향.
+
+### Manager 결정 (2026-07-26)
+
+**(c) 안 채택**: `internal/official`에 **신규 파일**(orders_raw.go)로 additive 메서드를 추가한다 —
+`OrdersPageRaw(ctx, filter, cursor)` 형태로 주문 목록의 raw JSON 항목들과 nextCursor/hasNext를
+반환하고 기존 send/token 경로를 재사용한다. 기존 메서드·`domain.Order`·직렬화 계약은 무변경.
+brokerstate.ParseOfficialOrder가 raw 항목을 소비한다. (a)는 인증 재구현 중복, (b)는 CLI/MCP
+계약 영향으로 기각. 신규 파일 추가라 기존 함수 수정은 없으나 High-risk 패키지이므로 축약
+Pre-Edit(대상·근거·테스트) 보고는 유지. task 2.9에서 구현.
