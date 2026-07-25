@@ -29,7 +29,7 @@
 
 - [x] 3.1 [T][High-risk] `internal/filldetect` 폴링 권위 루프: 미체결(pagination)+OrderByID+잔고, SLO 측정점(broker-visible→local-commit) fake clock 테스트, outage 분류, 위반 시 진입 차단
 - [x] 3.2 [T][High-risk] 누적 스냅샷 멱등 반영: 양의 delta만, 감소·역순 fail-closed, 중복 수신 무변화 테스트
-- [ ] 3.3 [T][High-risk] SSE 힌트 소비자: push.Listener(internal/push/listen.go) 연결, 토픽 coalescing·최소 간격, 폴링 파이프 합류 [Pre-Edit 불요 — 신규 소비자]
+- [x] 3.3 [T][High-risk] SSE 힌트 소비자: push.Listener(internal/push/listen.go) 연결, 토픽 coalescing·최소 간격, 폴링 파이프 합류 [Pre-Edit 불요 — 신규 소비자]
 - [ ] 3.4 [T][High-risk] `internal/reconcile` 스냅샷 계약: 고정 순서(미체결→보유→잔고)·as-of·부분 실패 폐기, decimal 문자열 비교+epsilon, 안정화 간격, external provenance 분류
 - [ ] 3.5 [T][High-risk] 재시작 복구 시퀀스: journal 해소→계좌 조회→상태 재구성→완료 전 주문 거부, crash/restart 테스트
 - [ ] 3.6 [T] 불일치 처리: 진입 차단·청산 유지, 재대사 간격·카운터 리셋, 영구 불일치 + 차단 범위 상태표
