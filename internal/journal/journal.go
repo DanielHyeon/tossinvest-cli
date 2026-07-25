@@ -116,6 +116,14 @@ func Open(ctx context.Context, opts Options) (*Journal, error) {
 	}
 
 	j := &Journal{db: db, path: path, clk: clk, fs: fs}
+	// Corruption is checked before the schema is touched: a migration against a
+	// damaged file would write on top of the damage. A corrupt journal means we
+	// cannot say what the engine did last, so startup is refused rather than
+	// continued from a record we know is wrong.
+	if err := j.checkIntegrity(ctx); err != nil {
+		db.Close()
+		return nil, err
+	}
 	if err := j.migrate(ctx); err != nil {
 		db.Close()
 		return nil, err
