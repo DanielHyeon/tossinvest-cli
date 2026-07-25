@@ -85,6 +85,33 @@ const (
 	ReasonFXConsentRequired ReasonCode = "fx_consent_required"
 	// ReasonFundingRequired: the account needs a deposit first.
 	ReasonFundingRequired ReasonCode = "funding_required"
+
+	// --- fill detection & reconciliation (tasks 3.1-3.6) ---------------------
+	//
+	// Appended, never reordered: the codes above are already written into
+	// journal rows on disk. Unlike the auth latch, every code in this block
+	// describes a condition that a later successful observation disproves, so
+	// they auto-clear — except the permanent-mismatch one, which by definition
+	// means observation has stopped helping.
+
+	// ReasonRecoveryIncomplete: the restart recovery sequence has not finished.
+	// Until it has, the engine does not know what it already has on the account,
+	// so new exposure is refused. Clears when recovery completes.
+	ReasonRecoveryIncomplete ReasonCode = "recovery_incomplete"
+	// ReasonFillDetectionSLO: fill detection has been slower than its objective
+	// for longer than the grace period. Clears when the measurement recovers.
+	ReasonFillDetectionSLO ReasonCode = "fill_detection_slo_violated"
+	// ReasonBrokerStateUnknown: a broker snapshot could not be reconciled with
+	// what was already observed (a shrinking cumulative fill, an out-of-order
+	// snapshot, a status this build does not understand). Fail-closed.
+	ReasonBrokerStateUnknown ReasonCode = "unknown_broker_state"
+	// ReasonReconcileMismatch: local state and the account disagree beyond the
+	// documented tolerance. Clears on a successful reconciliation.
+	ReasonReconcileMismatch ReasonCode = "reconciliation_mismatch"
+	// ReasonReconcilePermanent: reconciliation failed the configured number of
+	// times in a row. Operator resolution only — the automatic retry has already
+	// been shown not to work.
+	ReasonReconcilePermanent ReasonCode = "reconciliation_mismatch_permanent"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was

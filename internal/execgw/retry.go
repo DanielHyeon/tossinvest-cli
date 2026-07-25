@@ -468,10 +468,17 @@ func (g *EntryGate) Blocks() map[ReasonCode]string {
 // latchOrder and staleOrder make CheckEntry deterministic: map iteration order
 // would otherwise make the reported reason arbitrary when several apply, and an
 // operator chasing a flapping reason code is an operator who stops trusting it.
+// New reasons are appended, never inserted: the relative precedence of the
+// original three is itself a contract with the operator runbooks.
 var latchOrder = []ReasonCode{
 	ReasonBrokerAuthRejected,
 	ReasonUnresolvedInDoubt,
 	ReasonAlertUndelivered,
+	ReasonRecoveryIncomplete,
+	ReasonReconcilePermanent,
+	ReasonReconcileMismatch,
+	ReasonBrokerStateUnknown,
+	ReasonFillDetectionSLO,
 }
 
 var staleOrder = []RequiredQuery{
