@@ -263,6 +263,16 @@ func (r *Resolver) Resolve(ctx context.Context, attemptID string) (Resolution, e
 		return res, err
 	}
 
+	// A cancel and an amend cannot be resolved by looking for an order that
+	// matches the request — neither creates one. They have their own procedures
+	// in amend_indoubt.go.
+	switch rec.Kind {
+	case journal.KindCancel:
+		return r.resolveCancel(ctx, attempt, rec, intent, res, cfg, clk)
+	case journal.KindAmend:
+		return r.resolveAmend(ctx, attempt, rec, intent, res, cfg, clk)
+	}
+
 	matcher, err := newMatcher(intent, rec, cfg)
 	if err != nil {
 		return res, err
