@@ -152,6 +152,9 @@ func newRootCmd() *cobra.Command {
 		newMarketCmd(opts),
 		newCommunityCmd(opts),
 		newOrderCmd(opts),
+		// flatten-all is the emergency exit (task 4.5). Registered here and
+		// implemented entirely in flatten.go: no existing command changes.
+		newFlattenCmd(opts),
 		newExportCmd(opts),
 		newPushCmd(opts),
 		newMonitorCmd(opts),

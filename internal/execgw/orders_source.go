@@ -15,12 +15,32 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
-// OfficialOrders adapts *official.Client to OrderPager and OrderReader.
+// RawOrderClient is the read surface OfficialOrders needs.
+//
+// It is an interface rather than *official.Client so that engine wiring can pass
+// its read-only view of the client (engine.OfficialReads, task 4.2) without
+// re-widening it back to the concrete type — which would hand a mutator to code
+// that is only supposed to be reading. Every existing caller passes
+// *official.Client and still compiles.
+type RawOrderClient interface {
+	OrdersPageRaw(ctx context.Context, filter official.OrdersFilter, cursor string) (official.RawOrderPage, error)
+	OrderRawByID(ctx context.Context, orderID string) (json.RawMessage, error)
+}
+
+// AccountClient is the read surface OfficialAccount needs. Same reasoning as
+// RawOrderClient.
+type AccountClient interface {
+	BuyingPower(ctx context.Context, currency string) (domain.BuyingPower, error)
+	Holdings(ctx context.Context, symbol string) ([]domain.Position, error)
+}
+
+// OfficialOrders adapts the official client to OrderPager and OrderReader.
 type OfficialOrders struct {
-	Client *official.Client
+	Client RawOrderClient
 }
 
 // OrdersPageRaw fetches one page of orders.
@@ -47,10 +67,10 @@ func (o OfficialOrders) OrderRaw(ctx context.Context, orderID string) (json.RawM
 	return o.Client.OrderRawByID(ctx, orderID)
 }
 
-// OfficialAccount adapts *official.Client to AccountReader, the absence
+// OfficialAccount adapts the official client to AccountReader, the absence
 // cross-check's input.
 type OfficialAccount struct {
-	Client *official.Client
+	Client AccountClient
 }
 
 // BuyingPower returns the cash buying power in the given currency.
@@ -85,9 +105,11 @@ func (a OfficialAccount) HoldingQuantity(ctx context.Context, symbol string) (fl
 // Compile-time proof that the adapters satisfy what the resolver asks for. A
 // signature drift on either side fails the build here rather than at wiring time.
 var (
-	_ OrderPager    = OfficialOrders{}
-	_ OrderReader   = OfficialOrders{}
-	_ AccountReader = OfficialAccount{}
+	_ OrderPager     = OfficialOrders{}
+	_ OrderReader    = OfficialOrders{}
+	_ AccountReader  = OfficialAccount{}
+	_ RawOrderClient = (*official.Client)(nil)
+	_ AccountClient  = (*official.Client)(nil)
 )
 
 // equalFoldTrimmed compares symbols the way the broker writes them: trimmed and

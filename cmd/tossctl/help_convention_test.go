@@ -98,7 +98,11 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// `ops call` reaches the same write operations `order` does — it dispatches
 		// through the same trading.Service gate — so it must declare itself too.
 		// Everything else here is a typed trade action.
-		"tossctl ops call":                 true,
+		"tossctl ops call": true,
+		// flatten-all cancels every order and sells every position (task 4.5).
+		// It is the most consequential trade action here, so it declares itself
+		// like the rest.
+		"tossctl flatten-all":              true,
 		"tossctl order place":              true,
 		"tossctl order cancel":             true,
 		"tossctl order amend":              true,

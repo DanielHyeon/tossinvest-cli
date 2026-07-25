@@ -50,6 +50,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
 
 // DefaultMaxPages bounds the open-order walk (cursor-loop defence).
@@ -93,6 +94,31 @@ type Saga struct {
 	DryRun bool
 	// NewID generates the saga id. Defaults to random hex.
 	NewID func() string
+
+	// --- liquidation phase (task 4.5, liquidate.go) -------------------------
+
+	// Positions sweeps the account's holdings. Required by Liquidate.
+	Positions PositionReader
+	// Balance reads buying power, for the account snapshot. Required by Liquidate.
+	Balance reconcile.BuyingPowerReader
+	// Sellable reports how much of a symbol can be sold now. Required by
+	// Liquidate: sizing a sell from the holding alone can oversell.
+	Sellable SellableReader
+	// Prices supplies the aggressive limit price. Required by Liquidate.
+	Prices PriceReader
+	// Currencies are the balances the snapshot reads. Empty uses KRW and USD.
+	Currencies []string
+	// Rounds is how many sell-and-recheck cycles to run. Zero uses
+	// DefaultLiquidationRounds.
+	Rounds int
+	// StabiliseInterval is the minimum gap between corroborating snapshots. Zero
+	// uses reconcile.DefaultStabilisationInterval.
+	StabiliseInterval time.Duration
+	// StabiliseAttempts bounds the wait for a still account. Zero uses 4.
+	StabiliseAttempts int
+	// AggressiveDiscount is how far below the last trade a liquidation limit sits
+	// when the broker reports no price band. Zero uses DefaultAggressiveDiscount.
+	AggressiveDiscount float64
 }
 
 // CancelOutcome is what happened to one cancel target.
