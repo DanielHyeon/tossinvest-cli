@@ -93,3 +93,43 @@ P1 확정 스펙 `order-execution` "IN_DOUBT 해소" 1항: *"자동 재제출 �
 - 재작성 후 **다시 proposal-freeze 리뷰**를 받는다. 이번 리뷰는 폐기된 설계에 대한 것이다.
 - 멱등키 실측은 `verify-execution-capability`의 필수 항목이다 — 재생 응답이 원본 결과를 돌려주는지, 유효 창이 실제 10분인지, 계좌 스코프인지.
 - P1 아카이브 스펙 `order-execution`의 "멱등성 키가 없으므로" 문장은 사실 오류이므로 이 change에서 MODIFIED로 정정한다.
+
+---
+
+# Review 2라운드 (재작성본)
+
+보이스 2개 — codex(8건, critical 4), Eng 적대(20건, critical 8). Manager가 핵심 사실 주장을 코드·openapi에서 재검증.
+
+## 판정
+
+**여전히 착수 불가.** 다만 성격이 1라운드와 다르다 — Eng 평결 그대로: *"round-1은 설계 방향이 틀렸고, 이번은 방향은 옳은데 접합부가 미지정이다. 재작성이 아니라 접합부 사양화로 수렴 가능하다."*
+
+## 1라운드 발견 중 닫히지 않은 것
+
+| # | 내용 | 판정 |
+|---|---|---|
+| R1 | **발동 주문의 포지션 귀속이 여전히 불가능** — `TrackedFillOrders`(fills.go:504)와 `NetPositions`(fills.go:466)는 `JOIN intents`로 부호를 얻는데, 재작성본 스펙은 발동 주문의 intent 소급 생성을 SHALL NOT으로 금지하면서 시나리오로는 "포지션에 반영된다"를 요구한다. **스펙이 자기모순이다.** 대체 조인(세 번째 UNION arm, `expected_orders`의 leg 방향에서 부호 도출)이 어디에도 없다 | **확인 · 미해소** |
+| R2 | **lineage edge를 삽입할 수 없다** — `lineage_edges.intent_id`·`attempt_id`가 둘 다 NOT NULL FK(schema.go:117-128)이고 발동 주문은 둘 다 없다. `relation != "replaces"`도 거부된다(lineage.go:81). v5 태스크가 이 테이블을 건드리지 않는다. 또한 D1의 불변식이 `broker_order_id`에만 걸려 있어 `parent_order_id` 오염을 막지 못한다 | **확인 · 미해소** |
+| R3 | **거짓 CONFIRMED가 남는다** — 클래스별 latch는 엔진이 제출하는 mutation만 제한할 뿐 **브로커가 자율 발동시키는 주문을 제한하지 못한다.** 갭 하락에서 reduce-only MARKET SELL 응답 유실 + 같은 수초 내 stop 발동 → 심볼·SELL·수량 일치, 가격은 양쪽 0이라 판별 불가, 시간 창은 **두 사건이 같은 가격 움직임에서 나왔기에** 일치. 해법은 matcher가 예상/발동 주문 id를 배제하는 것인데, 레지스트리는 폴러가 돈 뒤에야 그 id를 알므로 정작 필요한 창에서 경합한다 | **확인 · 미해소** |
+| R4 | **일반 주문 경로에 `clientOrderId`가 없다** — `PlaceIntent`·`CanonicalPlace`·`orderCreateV0/V1`·`apiOrderCreateResponse` 전부 필드 없음(조건주문 경로에만 존재). 태스크 1.1이 "이미 필드 존재"라고 **사실과 반대로** 적었다. 귀결: `internal/orderintent/intent.go`·`internal/official/orders_write.go` Pre-Edit 필요(목록에 없음), 그리고 **canonical 딜레마** — 키를 `CanonicalPlace`에 넣으면 모든 CLI confirm token이 바뀌고(§0.2 위반), 빼면 `IntentHash`가 멱등키를 결속하지 않아 재생을 안전하게 만드는 유일한 필드가 인가되지 않은 채 남는다 | **확인 · 미해소** |
+
+## 새로 생긴 구멍
+
+| # | 내용 | 판정 |
+|---|---|---|
+| N1 | **조건주문 정정 설계가 API를 정반대로 읽었다** — openapi는 정정이 "기존 조건주문을 취소하고 새 조건주문을 생성하며 **새 ID가 발급되고 기존 ID는 무효화**"된다고 명시한다. 1라운드 Eng의 "같은 id 반환" 주장이 틀렸고 내가 그것을 설계에 넣었다. 정정은 일반 amend와 같은 의미이므로 lineage 기계가 이전되며, 응답 유실 시 구·신 ID 양쪽을 다뤄야 한다 | **확인 · 설계 정정** |
+| N2 | **청산 예약 + PROTECTION_WEAKENING = 청산 불능**, 그리고 스펙이 그것을 시나리오로 승인한다("청산이 거부되거나"). 전량 보호가 걸린 포지션은 매도 수량이 0이고, 수량을 풀 취소는 허용 기준이 미정이거나 HALT_ALL에서 금지 → **WORKFLOW §0.3 직접 위반** | **확인 · 최중대** |
+| N3 | **예약이 일상적으로 누수한다** — 해제 목록이 닫힌 집합인데 "체결되지 않고 장 마감에 브로커에서 만료되는 당일 주문"이 어느 항목에도 없다. 정상 운영 며칠이면 한도가 0까지 조용히 래칫되고, 징후는 "진입이 그냥 멈춤"이다. 필요한 트리거는 **브로커 종결 상태 도달** | **확인 · 최중대** |
+| N4 | **재생 유효창 경계에서 중복 주문이 생긴다** — 경과 근거가 `DispatchStartedAt`(전송 *시작*의 로컬 시계)이라 왕복 지연과 시계 오차가 실제 만료를 앞으로 민다. 안전 마진도 시계 권위 규칙도 없다. design.md의 "같은 키의 재요청은 새 주문을 만들 수 없으므로"가 창 밖에서 무조건 거짓 | **확인 · 수용** |
+| N5 | **OTO는 하나의 mutation에 두 class가 공존한다**(first BUY, second SELL). 스펙은 mutation당 단일 class만 허용 → RISK_REDUCING이면 flat 계좌의 OTO BUY가 진입 한도와 예약을 우회하고, EXPOSURE_RAISING이면 §0.3 면제를 표현 못 한다 | **확인 · 수용** |
+| N6 | **형제 테이블이 latch·재시작 복구에서 빠진다** — `checkSymbolFree`→`PendingAttempts`(recovery.go:30), `UnresolvedAttempts`(resolution.go:85), `RecoverPending`(recovery.go:86)이 전부 `mutation_attempts` 전용. RISK_REDUCING은 두 저장소에 걸쳐 있는데 UNION 요구가 없고, DISPATCH_STARTED에서 멈춘 조건주문 attempt는 복구되지도 않는다 | **확인 · 수용** |
+| N7 | **멱등 재생이 Resolver의 구조적 불변식을 뒤집는다** — `indoubt.go:9-12`가 "the Resolver has no trading service, no broker writer, no submit path"를 파일 전체의 근거로 명시한다. 재생은 정확히 그 writer를 요구하고, 봉인 논증의 두 번째 문이 된다. 또 attempt 상태기계에 "재생 진행 중" 상태가 없다(IN_DOUBT는 재진입 불가) | **확인 · 수용** |
+| N8 | **재생이 "동일 본문"을 요구하면서 정확한 wire body를 영속하지 않는다** — 구조화 intent에서 재구성하면 바이너리 버전·기본값·직렬화 규칙 변화로 본문이 달라질 수 있다. RECORDED에 canonical wire body 또는 digest+serializer version을 불변 저장해야 한다 | **확인 · 수용** |
+| N9 | OCO 이중 예약(수량은 조건주문 단위인데 `expected_orders`는 leg 단위), 발동 leg 이중 계상(예상 주문 소비가 폴러 관측 시점이라 그 창에서 두 번 차감), 미체결 매도의 잔량/원수량 규정 부재 — 셋 다 방향이 같다: **청산 거부** | **확인 · 수용** |
+| N10 | `sellableQuantity`가 공식에서 빠졌다 — 같은 change가 그 endpoint를 기동 필수로 요구하면서 계산에서 버린다. `flatten/liquidate.go:329-343`은 담보·미결제로 매도가능이 보유보다 작을 수 있어 `min(sellable, held)`를 쓴다고 이미 명시 | **확인 · 수용** |
+| N11 | PROTECTION_WEAKENING 분류 권위가 불완전 — 일반 Gateway가 낸 미체결 청산 주문은 `expected_orders`에 없고, 발동→관측 창의 보호 주문도 없고, 이 change 이전 등록분과 운영자가 앱에서 만든 것도 없다. **불완전한 레지스트리를 권위로 선언한 것 자체가 fail-open.** 필요한 규칙: "보호가 아님을 증명할 수 없는 취소는 PROTECTION_WEAKENING" | **확인 · 수용** |
+| N12 | 폴러에 pagination 완주·status 커버리지 요구가 없는데 이제 포지션 종결의 임계 경로에 있다. 2페이지 이후 발동 주문이나 조회하지 않는 status는 영영 관측되지 않아 포지션이 닫히지 않는다 | **확인 · 수용** |
+| N13 | 태스크 0.1이 테이블 **이름 5개**만 주면서 3.x·5.x·6.x의 입력인 컬럼 사양을 전부 숨긴다. immutable migration이라 잘못 만들면 못 고친다 — **스키마는 design.md에 있어야 하고 0.1은 전사여야 한다** | **확인 · 수용** |
+| N14 | 태스크 8.2가 결정 영속 배선 전체를 숨기고, 명시된 해법이 순환을 제거하지 않고 **이동**시킨다(제출자는 여전히 결정 시점에 위험 데이터를 공급한다 — 영속은 TOCTOU만 닫는다). "위험 입력은 제출자가 통제하지 않는 권위에서 온다"는 요구가 없다 | **확인 · 수용** |
+| N15 | 예약 재수집 루프에 상한·데드라인·종단 fail-closed 없음. 예약 산술이 float64인데 안전 속성이 "합이 보유를 넘지 않는다"라 오차가 누적된다(소수점 US 주문에서 실재) | **확인 · 수용** |
+| N16 | `verify-execution-capability/tasks.md`의 교차 참조가 어긋남(6.1 → 실제 9.3). 그리고 태스크 2.7의 "유효 창 10분 확인"은 **의도적으로 라이브 중복 주문을 만드는 절차**인데 그 사실도 범위도 거부 시 결과도 적혀 있지 않다 | **확인 · 수용** |
