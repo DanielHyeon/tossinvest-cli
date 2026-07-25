@@ -24,8 +24,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 
+	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/auth"
 	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
@@ -159,42 +159,18 @@ func New(opts Options) (*Context, error) {
 // ResolvePaths applies the --config-dir and --session-file overrides to the
 // default path set. Exported because the CLI resolves individual paths before it
 // has a Context (cobra's PersistentPreRunE runs before subcommands build one).
+//
+// The resolution itself lives in internal/app/paths so the engine profile can
+// share it without importing this package (and with it the hybrid router).
 func ResolvePaths(configDir, sessionFile string) (config.Paths, error) {
-	paths, err := config.DefaultPaths()
-	if err != nil {
-		return config.Paths{}, err
-	}
-
-	if configDir != "" {
-		paths.ConfigDir = configDir
-		paths.ConfigFile = filepath.Join(configDir, "config.json")
-		paths.SessionFile = filepath.Join(configDir, "session.json")
-		paths.LineageFile = filepath.Join(configDir, "trading-lineage.json")
-	}
-
-	if sessionFile != "" {
-		paths.SessionFile = sessionFile
-	}
-
-	return paths, nil
+	return apppaths.Resolve(configDir, sessionFile)
 }
 
 // ResolveOpenAPIPaths returns the official credentials file and token cache
 // path, honouring a --config-dir override. When configDir is set, both files
 // are placed inside it so a test can control them via a single temp directory.
 func ResolveOpenAPIPaths(configDir string) (credFile, tokenFile string, err error) {
-	// Honour the override first so a DefaultPaths() failure never blocks callers
-	// that already pin a config directory.
-	if configDir != "" {
-		return filepath.Join(configDir, "openapi-credentials.json"),
-			filepath.Join(configDir, "openapi-token.json"),
-			nil
-	}
-	paths, err := config.DefaultPaths()
-	if err != nil {
-		return "", "", err
-	}
-	return paths.CredentialsFile, paths.TokenFile, nil
+	return apppaths.OpenAPI(configDir)
 }
 
 // ResolveBackend returns the effective routing backend preference.
