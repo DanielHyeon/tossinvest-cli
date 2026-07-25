@@ -1,5 +1,8 @@
 # Agents
 
+> **[TossOS 스코프 주의]** 이 문서는 tossctl을 **런타임에 운용**하는 에이전트용 규칙이다. TossOS를 **개발**하는 에이전트는 docs/WORKFLOW.md를 따른다 (개발 작업에서는 WORKFLOW.md가 우선).
+> 아래 "Never auto-invoke `mutating: true` commands" 규칙은 대화형 에이전트에 계속 유효하다. 단, TossOS 자동매매 엔진의 프로그램 주문 게이트는 openspec change `harden-execution-base`에 별도로 명세되며, Phase 2 위험 한도(Guardian) 활성화와 세트로만 이 규칙을 대체한다.
+
 `tossctl` 자동화를 셋업하려는 AI 에이전트 (OpenClaw / Claude Code / Codex / Cursor / 기타) 가 참고할 짧은 recipe.
 
 ## 전제
