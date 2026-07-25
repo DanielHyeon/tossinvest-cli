@@ -372,6 +372,9 @@ type EntryGate struct {
 	thresholds map[RequiredQuery]time.Duration
 	lastOK     map[RequiredQuery]time.Time
 	latches    map[ReasonCode]string
+	// symbolLatches are the narrower, per-symbol blocks (symbolgate.go, task
+	// 4.2). Lazily created, so NewEntryGate is unchanged.
+	symbolLatches map[string]SymbolBlock
 }
 
 // NewEntryGate builds a gate. A nil threshold map uses DefaultStaleness(); an
@@ -420,8 +423,20 @@ func (g *EntryGate) Clear(reason ReasonCode) {
 	delete(g.latches, reason)
 }
 
-// CheckEntry reports why new exposure is refused, or nil when it is allowed.
+// CheckEntry reports why new exposure is refused anywhere on the account, or nil
+// when it is allowed.
+//
+// It answers the account-wide question only. Per-symbol blocks are deliberately
+// not consulted: a symbol that is blocked is not a reason to stop trading the
+// rest of the account, and conflating the two is what made this gate wider than
+// the reconciliation state table said it should be (issues.md, 2026-07-26).
+// CheckEntryFor is the symbol-aware question, and it is what the gateway asks.
 func (g *EntryGate) CheckEntry() *RejectedError {
+	return g.CheckEntryFor("", "")
+}
+
+// checkAccountEntry holds the account-wide half. Callers must not hold g.mu.
+func (g *EntryGate) checkAccountEntry() *RejectedError {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 

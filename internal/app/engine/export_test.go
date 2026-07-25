@@ -1,6 +1,9 @@
 package engine
 
-import "github.com/JungHoonGhae/tossinvest-cli/internal/trading"
+import (
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
+)
 
 // Test-only accessors for the sealed mutators (task 2.5).
 //
@@ -15,3 +18,8 @@ func (c *Context) BrokerForTest() trading.Broker { return c.broker }
 
 // ConditionalForTest returns the engine's conditional-order mutator. TESTS ONLY.
 func (c *Context) ConditionalForTest() ConditionalMutator { return c.conditional }
+
+// OfficialClientForTest returns the concrete official client behind the
+// read-only Official field (task 4.2). TESTS ONLY — production code that needs a
+// broker write goes through internal/execgw.Gateway.
+func (c *Context) OfficialClientForTest() *official.Client { return c.official }

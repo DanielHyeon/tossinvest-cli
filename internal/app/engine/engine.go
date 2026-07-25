@@ -27,7 +27,10 @@ import (
 	"os"
 
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
@@ -50,6 +53,25 @@ type Options struct {
 	// OfficialOptions are passed to official.New. Tests use them to point the
 	// client at an httptest server; production leaves this empty.
 	OfficialOptions []official.Option
+
+	// --- automation gate interlock (task 4.2) -------------------------------
+	//
+	// All of these are inert while the gate is off, which is the default and is
+	// what every existing config produces.
+
+	// Guardian is the risk authority that authorises mutations. Required when
+	// the automation gate is on; ignored when it is off.
+	Guardian execgw.Guardian
+	// Clock drives the attestation's expiry check. Defaults to clock.System();
+	// tests inject a fake so "expired" is a decision and not a race.
+	Clock clock.Clock
+	// AuditFile overrides where operational-setting changes are recorded. Empty
+	// resolves <data dir>/audit.log — outside the config directory, because the
+	// audit trail must survive a config directory being replaced.
+	AuditFile string
+	// Operator names who is starting the engine, for the audit trail. Empty
+	// resolves the OS user.
+	Operator string
 }
 
 // Context is the engine's assembled wiring.
@@ -58,8 +80,28 @@ type Context struct {
 	Config    config.File
 	TokenFile string
 
-	// Official is the one broker connection the engine has.
-	Official *official.Client
+	// Official is the engine's read-only view of its one broker connection.
+	//
+	// It is an interface, not *official.Client, and that is the seal: the
+	// concrete client can place, cancel and modify orders, so a caller holding
+	// the wiring could bypass the journal and the Guardian entirely. OfficialReads
+	// (reads.go) declares no mutating method, so that call is not one the engine's
+	// API can express.
+	Official OfficialReads
+
+	// Automation reports what the startup interlock decided about the automation
+	// gate. Zero value = gate off.
+	Automation AutomationStatus
+	// Guardian is the injected risk authority, non-nil only when the gate is on
+	// and verified.
+	Guardian execgw.Guardian
+	// Audit is the operational-settings audit log.
+	Audit *audit.Log
+
+	// official is the concrete client behind Official. It stays unexported: the
+	// engine's own wiring occasionally needs the concrete type, and handing it
+	// out would undo the seal the Official field exists to be.
+	official *official.Client
 
 	// broker and conditional are the official-only mutators. They are unexported
 	// because internal/execgw's ExecutionGateway is now the engine's only order
@@ -94,7 +136,19 @@ type ConditionalMutator = trading.ConditionalBroker
 //
 // cfg.OpenAPI is loaded but never consulted: it is an interactive routing
 // preference, and the engine's broker is not negotiable.
+//
+// With config's automation gate on, four more refusals apply — no Guardian, zero
+// limits, no/expired/mismatched capability attestation — all in interlock.go. With
+// the gate off (the default, and every config written before schema v5) New makes
+// no network call and behaves exactly as it did before the interlock existed.
 func New(opts Options) (*Context, error) {
+	return NewContext(context.Background(), opts)
+}
+
+// NewContext is New with a caller-supplied context. The context is used only by
+// the automation-gate interlock's account read; with the gate off nothing in this
+// function performs I/O over the network.
+func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	getenv := opts.Getenv
 	if getenv == nil {
 		getenv = os.Getenv
@@ -128,11 +182,36 @@ func New(opts Options) (*Context, error) {
 	off := official.New(*creds, tokenFile, opts.OfficialOptions...)
 	broker := &officialBroker{off: off}
 
+	auditLog, err := openAuditLog(opts)
+	if err != nil {
+		return nil, err
+	}
+	clk := opts.Clock
+	if clk == nil {
+		clk = clock.System()
+	}
+
+	// The interlock runs before the context is returned, so a refused gate
+	// produces no engine at all rather than an engine somebody could still
+	// place orders with.
+	automation, err := runInterlock(ctx, cfg.Engine.AutomationGate, paths, off, auditLog, clk.Now(), opts.Guardian)
+	if err != nil {
+		return nil, err
+	}
+	var guardian execgw.Guardian
+	if automation.Verified {
+		guardian = opts.Guardian
+	}
+
 	return &Context{
 		Paths:       paths,
 		Config:      cfg,
 		TokenFile:   tokenFile,
 		Official:    off,
+		Automation:  automation,
+		Guardian:    guardian,
+		Audit:       auditLog,
+		official:    off,
 		broker:      broker,
 		conditional: broker,
 		// No lineage recorder: the engine records order lineage in the journal

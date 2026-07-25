@@ -513,11 +513,16 @@ func (g *Gateway) attemptTargets(ctx context.Context, rec journal.AttemptRecord,
 // checkEntry asks the gate whether new exposure is allowed. Mutations that do not
 // raise exposure — cancels, and amends that only lower quantity or price — are
 // never gated: the whole point of blocking entries is to keep the exits open.
+//
+// The question is asked *for this market and symbol* (task 4.2). Account-wide
+// blocks still apply to everything; a block scoped to one symbol now stops only
+// that symbol, which is what the reconciliation state table always said and what
+// the gate could not express until it had a symbol dimension.
 func (g *Gateway) checkEntry(plan mutationPlan) *RejectedError {
 	if g.entry == nil || !plan.raisesExposure {
 		return nil
 	}
-	return g.entry.CheckEntry()
+	return g.entry.CheckEntryFor(plan.market, plan.symbol)
 }
 
 // refuse closes a journalled attempt that never reached the broker.

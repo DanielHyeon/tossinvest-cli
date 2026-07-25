@@ -55,9 +55,20 @@ func TestQuantityMismatchBlocksEntries(t *testing.T) {
 	if out.Added[0].Symbol != "AAPL" {
 		t.Fatalf("block symbol = %q, want AAPL", out.Added[0].Symbol)
 	}
-	rejected := gate.CheckEntry()
+	// The block is symbol-scoped, and since task 4.2 the gate can say so: AAPL
+	// is shut, everything else on the account keeps trading. Before the gate had
+	// a symbol dimension this had to latch the whole account (issues.md,
+	// 2026-07-26) — safe, but it meant one disagreement stopped the engine
+	// entirely.
+	rejected := gate.CheckEntryFor("us", "AAPL")
 	if rejected == nil || rejected.Reason != execgw.ReasonReconcileMismatch {
-		t.Fatalf("the entry gate must be latched, got %v", rejected)
+		t.Fatalf("AAPL entries must be blocked, got %v", rejected)
+	}
+	if rejected := gate.CheckEntryFor("us", "MSFT"); rejected != nil {
+		t.Fatalf("an unrelated symbol must stay tradable, got %v", rejected)
+	}
+	if rejected := gate.CheckEntry(); rejected != nil {
+		t.Fatalf("the account-wide question must stay open for a symbol-scoped block, got %v", rejected)
 	}
 	if !tracker.ExitAllowed("us", "AAPL") {
 		t.Fatal("exits must stay open (§0.3)")

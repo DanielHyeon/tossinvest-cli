@@ -27,6 +27,12 @@ func isolate(t *testing.T) string {
 	root := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "xdg-config"))
 	t.Setenv("XDG_CACHE_HOME", filepath.Join(root, "xdg-cache"))
+	// The data directory has to be isolated too, or the audit log the startup
+	// interlock writes (task 4.2) lands in the developer's real
+	// ~/.local/share/tossos. A test that writes outside its temp directory is a
+	// test that can corrupt live state.
+	t.Setenv("XDG_DATA_HOME", filepath.Join(root, "xdg-data"))
+	t.Setenv("TOSSOS_DATA_DIR", filepath.Join(root, "tossos-data"))
 	t.Setenv("TOSSCTL_OPENAPI_KEY", "")
 	t.Setenv("TOSSCTL_OPENAPI_SECRET", "")
 	dir := filepath.Join(root, "cfg")

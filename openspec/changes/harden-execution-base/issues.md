@@ -108,3 +108,51 @@ Pre-Edit(대상·근거·테스트) 보고는 유지. task 2.9에서 구현.
   `EntryGate.CheckEntry()`에 심볼 인자를 더하는 대신 `reconcile.Blocks`를 게이트웨이가
   참조하도록 배선하면 심볼 단위로 좁힐 수 있다. Gateway 기존 함수 수정이 필요하므로
   Pre-Edit 대상이다.
+
+### 해소 (2026-07-26, task 4.2)
+
+`reconcile.Blocks` 참조 대신 **EntryGate에 심볼 차원을 추가**하는 쪽을 택했다. 이유:
+`filldetect`도 같은 벽을 만나는데(3.2) reconcile을 참조하게 하면 filldetect →
+reconcile 의존이 생기고, 두 생산자가 같은 게이트에 서로 다른 경로로 접근하게 된다.
+차단 상태의 단일 소유자는 게이트다.
+
+- 신규 파일 `internal/execgw/symbolgate.go`: `BlockSymbol`/`ClearSymbol`/
+  `ClearSymbolReason`/`SymbolBlocks`/`CheckEntryFor(market, symbol)` — 전부 additive.
+  `retry.go`는 필드 1줄(`symbolLatches`) 추가와 `CheckEntry`를 `CheckEntryFor("","")`
+  위임으로 바꾼 것뿐이다. **`CheckEntry()`의 의미는 불변**(계좌 전역 질문)이라 기존
+  호출자의 답이 바뀌지 않는다 — 좁아진 것은 게이트웨이가 던지는 질문이다.
+- `execgw.Gateway.checkEntry`(unexported) 1줄: `CheckEntry()` → `CheckEntryFor(market, symbol)`.
+- `reconcile.Tracker.syncGate`: symbol 범위 행은 `BlockSymbol`, account 범위 행은
+  기존대로 `Block`. 이 함수는 3.6에서 신규 작성한 것이고 상태표(BlockRules)가 이미
+  규정한 scope를 그대로 따르게 만든 것이다. 기존 테스트
+  `TestQuantityMismatchBlocksEntries`가 "계좌 전역 latch"를 단언하고 있어 스펙 상태표
+  기준(심볼 차단 + 다른 심볼은 거래 가능)으로 갱신했다 — 단언 약화가 아니라 3.6이
+  기록한 "스펙보다 넓은 차단"의 해소다.
+- §0.3: 심볼 차단은 진입 전용이다. `symbolgate.go`에 청산을 막을 수 있는 메서드는
+  없고, `TestGatewayNeverGatesAnExitOnASymbolBlock`이 차단된 심볼의 cancel 성공을
+  고정한다.
+
+## 2026-07-26 [safe local] Context.Official 봉인 완료 (task 4.2)
+
+- 위 2.5 항목의 잔존 리스크를 해소했다. `Context.Official`의 타입을
+  `*official.Client` → 신규 read-only 인터페이스 `engine.OfficialReads`(신규 파일
+  `internal/app/engine/reads.go`)로 좁혔다. 이 인터페이스는 `PlaceOrder`,
+  `CancelOrder`, `ModifyOrder`, `Create/Cancel/ModifyConditionalOrder`를 선언하지
+  않으므로 엔진 wiring을 쥔 코드가 그 호출을 **표기할 수 없다**.
+- 구체 클라이언트는 `Context.official`(unexported)로 남는다. 테스트 접근은
+  `export_test.go`의 `OfficialClientForTest()` — 빌드 산출물에 없다.
+- `seal_test.go`에 구조 테스트 2건 추가: 필드가 인터페이스일 것 + mutator 메서드
+  부재, 그리고 그 mutator 이름들이 실제로 `*official.Client`에 존재할 것(오타로
+  테스트가 공허해지는 것 방지).
+- 사용처 영향 0건: `Context.Official`을 읽던 production 코드는 없었다(engine_test 2곳뿐).
+
+## 2026-07-26 [safe local] 엔진 테스트가 실 데이터 디렉터리에 쓸 수 있었다 (task 4.2)
+
+- 사실: `internal/app/engine`의 `isolate(t)`는 `XDG_CONFIG_HOME`·`XDG_CACHE_HOME`만
+  격리했다. 4.2가 audit 로그를 `journal.DataDir()`(= `$TOSSOS_DATA_DIR` >
+  `$XDG_DATA_HOME/tossos` > `~/.local/share/tossos`) 아래에 두면서, 격리되지 않은
+  데이터 디렉터리에 테스트가 파일을 쓰게 될 뻔했다.
+- 처리: `isolate`가 `XDG_DATA_HOME`과 `TOSSOS_DATA_DIR`도 `t.Setenv`로 임시 경로에
+  고정한다. task **4.6**의 격리 헬퍼가 이 패턴을 공용화한다.
+- 안전 영향: 없음(발견 시점에 커밋된 적 없음). 다만 "문구가 아니라 테스트 인프라가
+  막는다"는 불변 규칙의 실례이므로 기록한다.

@@ -419,34 +419,73 @@ func blocksFor(diff Diff, accountRef string, now time.Time) []Block {
 	return out
 }
 
-// syncGate mirrors the block set onto the account-wide entry gate.
+// syncGate mirrors the block set onto the entry gate, each block at the scope the
+// state table gives it (task 4.2).
 //
-// Precedence matters: a permanent mismatch and an ordinary one are cleared by
-// different things, so latching the ordinary reason over a permanent one would
-// make a clean reconciliation appear to release a block that an operator has to
-// clear.
+// Until the gate had a symbol dimension, every block here was mirrored
+// account-wide — safe, but it meant one symbol's disagreement stopped the engine
+// trading anything at all (issues.md, 2026-07-26). Now an account-scoped row
+// latches the account and a symbol-scoped row latches that symbol, which is what
+// BlockRules() has said all along.
+//
+// Precedence still matters for the account latches: a permanent mismatch and an
+// ordinary one are cleared by different things, so latching the ordinary reason
+// over a permanent one would make a clean reconciliation appear to release a
+// block that an operator has to clear.
 func (t *Tracker) syncGate(active []Block) {
 	if t.Gate == nil {
 		return
 	}
-	var permanent, ordinary *Block
+	var permanent, accountWide *Block
 	for i := range active {
+		block := &active[i]
 		switch {
-		case active[i].Permanent && permanent == nil:
-			permanent = &active[i]
-		case !active[i].Permanent && ordinary == nil:
-			ordinary = &active[i]
+		case block.Permanent && permanent == nil:
+			permanent = block
+		case !block.Permanent && block.Scope == ScopeAccount && accountWide == nil:
+			accountWide = block
 		}
 	}
 
 	if permanent != nil {
 		t.Gate.Block(execgw.ReasonReconcilePermanent, permanent.Detail)
 	}
-	if ordinary != nil {
-		t.Gate.Block(execgw.ReasonReconcileMismatch, ordinary.Detail)
+
+	// Symbol-scoped rows: block what is still disagreeing, release what is not.
+	// Clearing first and re-blocking is wrong — it would drop the "since" of a
+	// block that never went away — so the surviving set is computed and the
+	// difference removed.
+	surviving := make(map[string]bool, len(active))
+	for _, block := range active {
+		if block.Permanent || block.Scope != ScopeSymbol {
+			continue
+		}
+		surviving[strings.ToUpper(block.Symbol)+"|"+string(block.Reason)] = true
+		t.Gate.BlockSymbol(block.Market, block.Symbol, block.Reason, block.Detail)
+	}
+	for _, existing := range t.Gate.SymbolBlocks() {
+		if !isReconcileReason(existing.Reason) {
+			// Somebody else's block (fill detection, the flatten saga). Releasing
+			// it because *this* reconciliation is happy would be answering a
+			// question nobody asked us.
+			continue
+		}
+		if !surviving[strings.ToUpper(existing.Symbol)+"|"+string(existing.Reason)] {
+			t.Gate.ClearSymbol(existing.Market, existing.Symbol, existing.Reason)
+		}
+	}
+
+	if accountWide != nil {
+		t.Gate.Block(execgw.ReasonReconcileMismatch, accountWide.Detail)
 	} else {
 		t.Gate.Clear(execgw.ReasonReconcileMismatch)
 	}
+}
+
+// isReconcileReason reports whether a reason code is one this package raises.
+// syncGate only releases its own blocks.
+func isReconcileReason(reason execgw.ReasonCode) bool {
+	return reason == execgw.ReasonReconcileMismatch || reason == execgw.ReasonReconcilePermanent
 }
 
 // snapshotBlocks copies the block set. Callers must hold t.mu.
