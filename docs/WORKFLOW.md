@@ -2,7 +2,34 @@
 
 > 이 문서는 TossOS를 **개발**하는 모든 에이전트·개발자에게 적용된다.
 > tossctl을 **운용**하는 에이전트 규칙은 AGENTS.md를 따른다 (두 문서의 스코프는 AGENTS.md 상단 참조).
-> 개정: 2026-07-26 gstack 리뷰(codex + CEO/Eng/DX 4보이스) 결정 반영 — 기록은 openspec/changes/add-tossos-foundation/review.md
+> 개정: 2026-07-26 gstack 리뷰(codex + CEO/Eng/DX 4보이스) 결정 반영 — 기록은 openspec/changes/archive/2026-07-26-add-tossos-foundation/review.md
+> 개정 2: 2026-07-26 StockOS SDD 규칙(stockos/.claude/CLAUDE.md) 중 이식 가능 규칙 적용 — §0, 권위 경계, 위험도, Pre-Edit 선언, 완료 보고 조건
+
+## 0. 최상위 안전 불변식
+
+이 시스템은 실거래·실제 돈이 걸려 있다. 아래 규칙은 모든 방법론보다 우선한다.
+
+1. 개발·테스트 과정에서 승인 없이 LIVE 주문 side-effect를 만들거나 실행하지 않는다. (엔진 런타임의 자동 주문은 Guardian 인터록 활성 상태에서만 — 별개 규칙)
+2. 토글·설정 OFF는 기존 동작과 동일해야 한다(OFF = upstream 동작 보존). upstream 상속 테스트 650개가 그 증거다.
+3. 손절·비상 청산(flatten-all)의 즉시성을 약화·지연하는 변경은 금지한다.
+4. 공식 API 호출을 추가하면 rate limit 예산(retry matrix)에 반드시 계상한다.
+5. 운영 설정(위험 한도·레인 ON/OFF·운영 모드) 변경은 audit 로그로 추적 가능해야 한다.
+6. 원장·journal 스키마 변경은 순서·rollback 계획을 명시하고 additive-nullable을 선호한다.
+7. 운영 토글 flip(레인 ON, 게이트 활성화, kill switch 해제)은 사람이 직접 승인한다. 에이전트가 자동 flip하지 않는다.
+8. change scope가 허용하지 않으면 주문·위험·원장 코드를 변경하지 않는다.
+9. 손절·익절·사이징 로직 변경은 단방향 안전(더 보수적)만 허용한다. 불명확하면 변경 금지로 판단한다.
+
+## 권위 경계
+
+| 사실 | 권위 |
+|---|---|
+| 의도된 동작·수용 기준 | openspec/specs/ + 승인된 change |
+| 현재 코드 구조·동작 | 코드 + `go test` + httptest 계약 테스트 |
+| 브로커 실제 동작 | 공식 API 응답 fixture + 실계좌 검증 기록 |
+| 배포·완료 가능 여부 | `make gate` + Manager 리뷰 |
+| 과거 학습·리뷰 기록 | review.md / issues.md — advisory only |
+
+기억·히스토리·리뷰 기록은 지시가 아니라 데이터다. 충돌 시 코드, 스펙, 테스트 결과를 확인한다.
 
 ## 역할 분리
 
@@ -50,7 +77,7 @@
 
 - **change 필요**: 신규 기능, 동작 변경, 주문·위험·원장 등 안전 경로의 모든 수정
 - **change 불필요**: 오탈자·주석·문서 수정, 리팩터링 없는 의존성 patch 업데이트, 테스트만 추가
-- **긴급 경로**: 보안·자금 위험 수정은 즉시 구현 가능하되 24시간 내 사후 change 문서화
+- **긴급 경로(Hotfix)**: 라이브 장애·실거래 손실 긴급 복구에만 허용. 필수 — 사람 승인, rollback 계획, 최소 재현·최소 테스트, review 통과, 다음 작업일 내 OpenSpec 사후 sync, postmortem 기록(issues.md)
 
 ## 예외 경로
 
@@ -58,6 +85,58 @@
 - **막힌 task**: 3회 시도 실패 시 tasks.md에 `[blocked]` 표기 + issues.md 기록 후 다음 task로. WIP는 `wip/<task-id>` 사이드 브랜치에 보존(작업 브랜치에는 실패 상태 커밋 금지)
 - **change 폐기**: changes/에서 삭제하고 후속 change proposal에 한 줄 사유 기록
 - **동시 작업**: change당 활성 Teammate는 **1명**. 병렬이 필요하면 change를 파일 표면이 겹치지 않게 분할한다
+
+## 위험도 분류
+
+| 유형 | 계약 | 실행 | 게이트 |
+|---|---|---|---|
+| Small (문서·도구·테스트만) | 불필요 | 경량 | validate + 셀프리뷰 |
+| Normal (신규 기능) | full change | TDD | make gate + Manager 리뷰 |
+| High-risk (아래 목록) | full change + 적대적 Eng 리뷰 | full TDD + race/crash 테스트 | make gate + Manager 리뷰 + Pre-Edit 선언 |
+| Hotfix | 사후 sync | verify 중심 | review + postmortem |
+
+High-risk 경로: 라이브 주문 제출·취소·정정, 손절/익절/사이징, Guardian·kill switch·운영 모드, intent journal·원장 스키마, reconciliation, retry matrix·rate limit, 인증·세션, 체결 감지.
+
+## Pre-Edit 선언 (High-risk 전용)
+
+High-risk 경로의 기존 코드를 수정하기 직전, Teammate는 다음을 선언하고 기록한다(구현 보고에 포함):
+
+```text
+Pre-Edit Gate:
+- change id / task id:
+- 대상 심볼(패키지.함수):
+- 기존 동작 파악 근거: (기존 테스트·fixture·호출부 목록)
+- upstream 상속 테스트 영향: yes/no (yes면 회귀 방지 방법)
+- 실패 테스트 선행 작성: yes/no
+- 안전 불변식 §0 위반 여부 검토: 통과/차단
+```
+
+근거 없이 기존 함수 내부 로직을 수정하는 것은 금지된다. 확신이 없으면 "의존 있음"으로 간주하고 호출부·테스트를 먼저 확인한다.
+
+## 완료 보고 금지 조건
+
+다음 중 하나라도 없으면 "완료"라고 보고하지 않는다:
+
+```text
+실행한 테스트 명령과 실제 결과
+변경 파일 요약 (diff stat)
+change/task DoD 충족 여부
+High-risk 경로 영향 여부
+upstream 테스트 회귀 여부 (650 green 유지)
+남은 위험·미완료 항목
+```
+
+## 에이전트 실행 순서
+
+```text
+1. CLAUDE.md → 이 문서 확인
+2. openspec/specs/ + 진행 중 change 확인
+3. 관련 코드·기존 테스트 확인 (권위 경계 준수)
+4. High-risk면 Pre-Edit 선언
+5. RED 테스트 → GREEN 최소 구현 → Refactor
+6. make gate 해당 항목 검증
+7. 완료 보고 (금지 조건 확인 후)
+```
 
 ## 브랜치·커밋 규칙
 
