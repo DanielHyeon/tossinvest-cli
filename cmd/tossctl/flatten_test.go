@@ -8,12 +8,11 @@ package main
 
 import (
 	"bytes"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
 	"github.com/spf13/cobra"
 )
 
@@ -92,18 +91,7 @@ func TestFlattenIsAnnotatedAsAnOfficialMutation(t *testing.T) {
 // of what it did, so the engine profile refuses to start without official
 // credentials and this command inherits that.
 func TestFlattenRefusesWithoutOfficialCredentials(t *testing.T) {
-	root := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "config"))
-	t.Setenv("XDG_CACHE_HOME", filepath.Join(root, "cache"))
-	t.Setenv("XDG_DATA_HOME", filepath.Join(root, "data"))
-	t.Setenv("TOSSOS_DATA_DIR", filepath.Join(root, "tossos"))
-	t.Setenv("TOSSCTL_OPENAPI_KEY", "")
-	t.Setenv("TOSSCTL_OPENAPI_SECRET", "")
-
-	configDir := filepath.Join(root, "cfg")
-	if err := os.MkdirAll(configDir, 0o700); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
+	configDir := testenv.Isolate(t)
 
 	cmd := newRootCmd()
 	var out, errOut bytes.Buffer

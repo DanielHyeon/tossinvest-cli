@@ -146,6 +146,74 @@ reconcile 의존이 생기고, 두 생산자가 같은 게이트에 서로 다�
   테스트가 공허해지는 것 방지).
 - 사용처 영향 0건: `Context.Official`을 읽던 production 코드는 없었다(engine_test 2곳뿐).
 
+## 2026-07-26 [safe local] journal 스키마 v3·v4 — 알림 outbox와 flatten saga (task 4.3/4.4)
+
+- v3 `alert_outbox`(4.3): critical 알림은 전송 **전에** durable해야 한다. 알림이 필요한
+  순간은 이미 무언가 잘못된 순간이고, 그때는 네트워크도 이상할 확률이 높다. 전송 실패가
+  행을 지우지 않고 PENDING으로 남는 것이 스펙("미전달 상태로 보존")이고, 그래야 엔진이
+  "내가 알려야 한다고 판단했는데 전달 못한 것이 있나"에 답할 수 있다.
+- v4 `flatten_sagas`/`flatten_steps`(4.4): intent/attempt 기록은 "어떤 mutation이
+  있었나"에 답하지 "청산이 얼마나 남았나"에 답하지 못한다. 7건 중 4건 취소 후 죽은
+  프로세스가 정확히 그 차이를 남긴다.
+- 둘 다 3.2가 세운 절차 그대로다: 신규 파일에 스키마 상수, `schema.go`는 버전 상수와
+  migrations append 2줄만 변경, 기존 테이블·컬럼·함수 무변경. 구버전 바이너리는
+  `ErrSchemaTooNew`로 기동 거부(오독이 아니라 정지).
+- `schema_test.go`의 wantTables/wantColumns를 신규 테이블로 확장했고, v2 → 현재
+  마이그레이션 테스트를 추가했다.
+
+## 2026-07-26 [safe local] AllReasonCodes()가 3.x 코드 5개를 등록하지 않고 있었다 (task 4.4)
+
+- 사실: `recovery_incomplete`, `fill_detection_slo_violated`, `unknown_broker_state`,
+  `reconciliation_mismatch`, `reconciliation_mismatch_permanent`는 reason.go에 선언만
+  되고 `AllReasonCodes()`에는 없었다. golden fixture가 그 5개를 덮지 못했으므로 rename이
+  **눈에 보이는 diff가 되지 않는** 상태였다 — 그 fixture의 존재 이유가 정확히 그것이다.
+- 처리: 5개를 등록하고 `ReasonFlattenInProgress`(4.4 신규)와 함께 golden 재생성.
+  문자열 자체는 하나도 바뀌지 않았으므로 디스크의 기존 journal 행에 영향 없음.
+
+## 2026-07-26 [safe local] execgw.OfficialOrders/OfficialAccount의 Client 필드 확장 (task 4.5)
+
+- 4.2가 `Context.Official`을 `engine.OfficialReads` 인터페이스로 봉인했는데, CLI의
+  flatten 배선이 그 값을 `execgw.OfficialOrders{Client: *official.Client}`에 넣어야 했다.
+  구체 타입으로 되돌리면 봉인이 무의미해진다.
+- 처리: 필드 타입을 신규 인터페이스 `RawOrderClient`/`AccountClient`로 넓혔다. 기존
+  호출자(테스트 4곳)는 `*official.Client`를 그대로 전달하며 무수정 컴파일된다. 타입
+  확장이지 함수 수정이 아니다.
+
+## 2026-07-26 [observation] 소수점 전용 포지션은 limit으로 청산할 수 없다 (task 4.5)
+
+- 사실: 공식 경로의 fractional 주문은 **US 시장가 + 금액 기반**만 지원한다
+  (`orderintent.placeIntentSupported`). 따라서 0.4주 같은 소수점 잔량은 공격적 limit
+  주문으로 표현할 수 없다.
+- 이번 처리: 매도가능수량의 정수부만 limit으로 청산하고, 소수점 잔량은 `HELD` +
+  `unsupported_order_type`으로 **보고**한다(조용히 남기지 않는다). saga는 STALLED로
+  끝나 운영자에게 넘어간다.
+- 후속 입력: `verify-execution-capability`의 실계좌 검증에서 "fractional 매도가 금액
+  기반 시장가로 가능한가"를 확인하면 이 경로를 자동화할 수 있다. 확인 전까지는
+  fail-closed가 맞다(§0.9).
+
+## 2026-07-26 [observation] IN_DOUBT 취소는 재제출되지 않으며 게이트웨이도 그것을 막는다 (task 4.4)
+
+- 사실: 취소 결과가 불명인 심볼은 (a) flatten saga가 재제출하지 않고(멱등성 키 부재 +
+  취소마다 새 주문번호 발급 → 2번째 취소가 다른 주문에 닿을 수 있음), (b) 별개로
+  `Gateway.checkSymbolFree`도 미정착 attempt가 있는 심볼의 **모든** mutation을 막는다.
+- 결과: 그 심볼은 `execgw.Resolver`의 관찰로 확정되거나 운영자가 해소하기 전까지
+  취소도 청산도 되지 않는다. 이는 §0.3의 예외가 아니라 oversell 방지의 필연이다 —
+  살아있을 수도 있는 매도 주문 위에 전량 매도를 얹는 것이 청산을 공매도로 바꾼다.
+- 운영 함의: flatten이 STALLED로 끝나면 운영자는 (1) 해당 심볼의 주문 상태를 직접 확인,
+  (2) `journal.OperatorResolve`로 attempt 확정, (3) flatten 재실행 순으로 처리한다.
+  이 절차는 P4 운영 문서에 들어가야 한다.
+
+## 2026-07-26 [safe local] internal/testenv는 _test.go가 아닌 일반 패키지다 (task 4.6)
+
+- 사실: 격리 헬퍼와 transport 가드는 **다른 패키지의 테스트**에서 import되어야 하는데,
+  Go는 test-only 코드를 패키지 경계 너머로 내보내지 않는다.
+- 처리: `internal/testenv`를 일반 패키지로 두되, 정적 테스트 3건이 그 대가를 통제한다 —
+  production 코드가 `internal/testenv`를 import하지 않을 것, `net/http/httptest`를
+  import하지 않을 것, `journal.FixedFSProber`를 **정의 파일 외에서 사용하지 않을 것**.
+  마지막 항목이 4.6이 요구한 정적 테스트다.
+- 대안(각 패키지에 가드 복제)을 기각한 이유: 사본 하나가 빠지는 방식으로 실패하는데,
+  그 실패가 정확히 이 장치가 막으려던 사고다.
+
 ## 2026-07-26 [safe local] 엔진 테스트가 실 데이터 디렉터리에 쓸 수 있었다 (task 4.2)
 
 - 사실: `internal/app/engine`의 `isolate(t)`는 `XDG_CONFIG_HOME`·`XDG_CACHE_HOME`만

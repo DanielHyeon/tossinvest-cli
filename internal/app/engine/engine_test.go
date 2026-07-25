@@ -10,6 +10,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
 )
 
 // Engine-profile wiring tests (harden-execution-base task 1.3).
@@ -24,22 +25,11 @@ import (
 // config dir for the engine's --config-dir equivalent.
 func isolate(t *testing.T) string {
 	t.Helper()
-	root := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "xdg-config"))
-	t.Setenv("XDG_CACHE_HOME", filepath.Join(root, "xdg-cache"))
-	// The data directory has to be isolated too, or the audit log the startup
-	// interlock writes (task 4.2) lands in the developer's real
-	// ~/.local/share/tossos. A test that writes outside its temp directory is a
-	// test that can corrupt live state.
-	t.Setenv("XDG_DATA_HOME", filepath.Join(root, "xdg-data"))
-	t.Setenv("TOSSOS_DATA_DIR", filepath.Join(root, "tossos-data"))
-	t.Setenv("TOSSCTL_OPENAPI_KEY", "")
-	t.Setenv("TOSSCTL_OPENAPI_SECRET", "")
-	dir := filepath.Join(root, "cfg")
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	return dir
+	// One definition of "isolated", in internal/testenv (task 4.6). The data
+	// directory matters as much as the config one: the audit log the startup
+	// interlock writes (task 4.2) resolves from $TOSSOS_DATA_DIR, and a test that
+	// misses it writes into the developer's real ~/.local/share/tossos.
+	return testenv.Isolate(t)
 }
 
 // writeEngineConfig writes a config whose OpenAPI section is hostile to the
