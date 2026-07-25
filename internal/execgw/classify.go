@@ -38,6 +38,27 @@ func classifyMutation(send journal.SendState, result domain.MutationResult, err 
 		}
 	}
 
+	// A broker answer that asks for a human — an auth challenge, an FX consent, a
+	// deposit — is a well-formed refusal: the request was understood and declined,
+	// so it definitively did not execute. It is classified here, before the
+	// transport tracker gets a say, because the meaning comes from the answer and
+	// not from how far the bytes got.
+	if reason, refused := ClassifyBrokerRefusal(err); refused {
+		class := journal.DispatchRejected
+		var branch *trading.BranchRequiredError
+		if errors.As(err, &branch) && branch.Source == trading.BranchSourcePostPrepareConfirmation {
+			// The broker asked for confirmation *after* accepting a prepare. What
+			// that leaves behind is not something we can assert, so it is doubt.
+			class = journal.DispatchAmbiguous
+		}
+		return journal.DispatchOutcome{
+			Class:      class,
+			ReasonCode: string(reason),
+			Detail:     err.Error(),
+			Err:        err,
+		}
+	}
+
 	// A status the broker actually returned classifies the outcome; the transport
 	// tracker only decides the cases where there is no status at all.
 	if status, known := statusOf(err); known {

@@ -68,6 +68,23 @@ const (
 	// not be delivered blocks new entries. Declared here so the enum is stable
 	// before the alerting path exists.
 	ReasonAlertUndelivered ReasonCode = "critical_alert_undelivered"
+
+	// --- fail-closed branches (task 2.10) -----------------------------------
+
+	// ReasonBalanceInsufficient: the currency balance does not cover the buy.
+	// The engine never converts currency to close the gap.
+	ReasonBalanceInsufficient ReasonCode = "currency_balance_insufficient"
+	// ReasonBalanceUnavailable: the balance could not be read. Not knowing what
+	// is in the account is not permission to spend it.
+	ReasonBalanceUnavailable ReasonCode = "currency_balance_unavailable"
+	// ReasonInteractiveAuthRequired: the broker wants a human to authenticate.
+	// There is no automatic answer to this by design.
+	ReasonInteractiveAuthRequired ReasonCode = "interactive_auth_required"
+	// ReasonFXConsentRequired: settling would need a currency conversion the
+	// operator has to consent to.
+	ReasonFXConsentRequired ReasonCode = "fx_consent_required"
+	// ReasonFundingRequired: the account needs a deposit first.
+	ReasonFundingRequired ReasonCode = "funding_required"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was

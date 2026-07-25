@@ -69,6 +69,10 @@ type Options struct {
 	// failures (retry matrix, task 2.6). Optional: nil means no gate, which is
 	// what the pure gateway tests use. Engine wiring always supplies one.
 	Entry *EntryGate
+	// Preflight runs the fail-closed checks a place can be refused by before it
+	// is sent (task 2.10). Optional; nil skips them, which only the narrower
+	// gateway tests do.
+	Preflight *Preflight
 	// NewID generates intent and attempt ids. Defaults to a 128-bit random hex
 	// string; tests inject a deterministic sequence.
 	NewID func() string
@@ -86,6 +90,7 @@ type Gateway struct {
 	source     string
 	nonces     NonceStore
 	entry      *EntryGate
+	preflight  *Preflight
 	newID      func() string
 
 	// inflight holds the in-process claim on a symbol for the duration of a
@@ -112,6 +117,7 @@ func New(opts Options) (*Gateway, error) {
 		source:     strings.TrimSpace(opts.Source),
 		nonces:     opts.Nonces,
 		entry:      opts.Entry,
+		preflight:  opts.Preflight,
 		newID:      opts.NewID,
 	}
 	if g.clk == nil {
@@ -217,6 +223,9 @@ type mutationPlan struct {
 	// baseline is the pre-dispatch account snapshot, recorded on the intent for
 	// IN_DOUBT resolution.
 	baseline *Baseline
+	// preflight runs the fail-closed checks that apply to this mutation kind.
+	// Only a place has any today; nil means there is nothing to check.
+	preflight func(ctx context.Context) *RejectedError
 	// call performs the broker mutation exactly once.
 	call func(ctx context.Context) (domain.MutationResult, error)
 }
@@ -237,6 +246,11 @@ func (g *Gateway) Place(ctx context.Context, req PlaceRequest) (Outcome, error) 
 		currency:       strings.ToUpper(strings.TrimSpace(intent.CurrencyMode)),
 		raisesExposure: strings.EqualFold(intent.Side, "buy"),
 		baseline:       req.Baseline,
+	}
+	if g.preflight != nil {
+		plan.preflight = func(ctx context.Context) *RejectedError {
+			return g.preflight.CheckPlace(ctx, intent)
+		}
 	}
 	plan.call = func(ctx context.Context) (domain.MutationResult, error) {
 		return g.trading.Place(ctx, intent, g.executeOpts(g.trading.PreviewPlace(intent).ConfirmToken))
@@ -357,7 +371,15 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 	if rejected := g.checkEntry(plan); rejected != nil {
 		return g.refuse(ctx, attempt, out, rejected)
 	}
-	//    2b. The Guardian decision, before the dispatch is even recorded, so an
+	//    2b. The fail-closed branches: an order shape the path cannot express, a
+	//        balance that cannot cover the buy, a conversion the engine must not
+	//        trigger. None of these become true by being sent.
+	if plan.preflight != nil {
+		if rejected := plan.preflight(ctx); rejected != nil {
+			return g.refuse(ctx, attempt, out, rejected)
+		}
+	}
+	//    2c. The Guardian decision, before the dispatch is even recorded, so an
 	//        unauthorised mutation never reaches DISPATCH_STARTED and never
 	//        blocks the symbol.
 	if rejected := verifyDecision(decision, plan, g.clk.Now()); rejected != nil {

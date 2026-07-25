@@ -1,0 +1,8 @@
+{
+  "code": "FX_CONSENT_REQUIRED",
+  "message": "환전 동의가 필요합니다.",
+  "exchange": {
+    "needExchangeUsd": "180.00",
+    "estimatedExchangeKrw": "252000"
+  }
+}
