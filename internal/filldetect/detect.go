@@ -14,9 +14,9 @@
 //
 // # The three reads, every cycle
 //
-//	1. the open-order list, walked to its last page
-//	2. every order we still track that is *not* in that list, read by id
-//	3. the account's holdings
+//  1. the open-order list, walked to its last page
+//  2. every order we still track that is *not* in that list, read by id
+//  3. the account's holdings
 //
 // (2) is the one that is easy to leave out and expensive to miss: a fully filled
 // order leaves the open list, so a poller that only reads the open list watches

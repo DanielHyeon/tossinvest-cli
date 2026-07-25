@@ -286,7 +286,6 @@ func (c Comparer) Compare(snap Snapshot, local LocalState) Diff {
 
 	}
 
-
 	// --- open orders --------------------------------------------------------
 	brokerOrders := make(map[string]BrokerOrder, len(snap.OpenOrders))
 	for _, o := range snap.OpenOrders {
