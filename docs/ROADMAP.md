@@ -63,10 +63,17 @@ TossOS는 `tossinvest-cli`(MIT, 커밋 `57348a7` 고정) 전체 소스·히스�
 | T1.14 | 실계좌 주문 경로 검증(사용자 실행, 1회성): 최소 수량·limit-only·즉시 취소 규칙으로 매도 경계(부분/전량/보유초과)·KR cancel/amend 확인. 승격 단계가 아니라 **실행 기반을 닫는 검증** — 엔진이 쓸 주문 경로의 미검증 갭 해소 | upstream 갭 |
 | T1.15 | 토스 Open API 약관·자동화 허용 범위 검토 기록(사용자 협조 필요), 계정 정지 시 포지션 처리 방침 | 브로커 단일 의존 리스크 |
 
-## Phase 2 — Core Domain + Tracer Slice  (change: `add-core-domain`, `add-tracer-slice`)
+## Phase 2 — 실행 계약 확장 + Core Domain  (change: `extend-execution-contract` → `add-core-domain`)
 
-StockOS 순수 로직 이식 순위: costs → structural_rr → tradeplan/contract → common_admission → slot_budget·capital_stage → guardian 판정 순서 → in_flight_lifecycle·synthetic_oco → backtest/metrics.
-**이식 상수 규칙**: 모든 정책 수치는 출처·적용 시장·검증 상태를 주석으로 기록하고, Toss 데이터로 검증 전까지 보수적 기본값으로 표시한다.
+**2026-07-26 분할**: add-core-domain의 proposal-freeze 리뷰(45건, `openspec/changes/add-core-domain/review.md`)가 조건주문 경로 전체가 P1 안전 아키텍처 밖에 있음을 드러내 change를 둘로 나눴다.
+
+- **2a `extend-execution-contract`** (선행, 강제 장치): 조건주문의 Gateway 편입(journal·attempt·IN_DOUBT), 브로커 발동 주문의 체결 귀속, mutation safety class와 클래스별 직렬화, RiskIntent 해시 결합, 한도 fail-closed·총계 한도, 원자적 위험 예약, journal 기반 nonce, 게이트 전제조건 강화(거래 정책·단일 한도 출처·조건주문 attestation). 메인 스펙 order-execution·engine-safety를 MODIFIED.
+- **2b `add-core-domain`** (후행, 판단 정책): 비용 모델, 사이징·손절·RR, Guardian 판정 체인, 운영 모드·kill switch, 포지션 원장, 보호 saga, provenance, 성과, tracer.
+
+경계 원칙: **2a는 실패해도 안전한 레일, 2b는 그 레일 위의 판단.** MFE/MAE는 데이터 소스(보유 심볼 시장가 시계열) 부재로 P3 이관.
+
+StockOS 순수 로직 이식 순위: costs → structural_rr → tradeplan/contract → common_admission → guardian 판정 순서 → in_flight_lifecycle → backtest/metrics. (slot_budget·capital_stage·LLM 게이트는 미채택)
+**이식 상수 규칙**: 모든 정책 수치는 출처·적용 시장·검증 상태를 주석으로 기록하고, Toss 데이터로 검증 전까지 보수적 기본값(비용은 과대 추정)으로 표시한다.
 
 | ID | 작업 | 비고 |
 |----|------|------|
