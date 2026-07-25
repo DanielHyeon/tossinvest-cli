@@ -184,17 +184,17 @@ func TestEngineMutationMatrixNeverReachesWTS(t *testing.T) {
 		Symbol: "005930", Type: "SINGLE", OrderType: "LIMIT", ExpireDate: "2026-12-31", Quantity: 1,
 		First: orderintent.ConditionLeg{OrderSide: "SELL", TriggerPrice: 71000, OrderPrice: 70900},
 	}
-	if _, err := eng.Conditional.CreateConditionalOrder(ctx, condPlace); err != nil {
+	if _, err := eng.ConditionalForTest().CreateConditionalOrder(ctx, condPlace); err != nil {
 		t.Errorf("conditional place through engine: %v", err)
 	}
 	condModify := orderintent.ConditionalModifyIntent{
 		ID: "CO-1", Type: "SINGLE", OrderType: "LIMIT", ExpireDate: "2026-12-31", Quantity: 1,
 		First: orderintent.ConditionLeg{OrderSide: "SELL", TriggerPrice: 71500, OrderPrice: 71400},
 	}
-	if err := eng.Conditional.ModifyConditionalOrder(ctx, condModify); err != nil {
+	if err := eng.ConditionalForTest().ModifyConditionalOrder(ctx, condModify); err != nil {
 		t.Errorf("conditional modify through engine: %v", err)
 	}
-	if err := eng.Conditional.CancelConditionalOrder(ctx, orderintent.ConditionalCancelIntent{ID: "CO-1"}); err != nil {
+	if err := eng.ConditionalForTest().CancelConditionalOrder(ctx, orderintent.ConditionalCancelIntent{ID: "CO-1"}); err != nil {
 		t.Errorf("conditional cancel through engine: %v", err)
 	}
 
@@ -246,7 +246,7 @@ func TestEngineCancelWorksWithoutWTSSession(t *testing.T) {
 		t.Fatalf("engine.New: %v", err)
 	}
 
-	actions, err := eng.Broker.GetOrderAvailableActions(context.Background(), "O-1")
+	actions, err := eng.BrokerForTest().GetOrderAvailableActions(context.Background(), "O-1")
 	if err != nil {
 		t.Fatalf("pre-check must not fail without a WTS session: %v", err)
 	}

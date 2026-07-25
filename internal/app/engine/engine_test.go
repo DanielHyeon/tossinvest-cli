@@ -120,7 +120,7 @@ func TestNewIgnoresOpenAPIConfigToggles(t *testing.T) {
 	if ctx.Official == nil {
 		t.Fatal("engine must construct an official client regardless of openapi.enabled/prefer")
 	}
-	if ctx.Broker == nil || ctx.TradingService == nil {
+	if ctx.BrokerForTest() == nil || ctx.TradingService == nil {
 		t.Fatal("engine must wire a broker and trading service")
 	}
 	if ctx.Config.OpenAPI.Enabled || ctx.Config.OpenAPI.Prefer != "wts" {

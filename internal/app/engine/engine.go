@@ -60,13 +60,21 @@ type Context struct {
 
 	// Official is the one broker connection the engine has.
 	Official *official.Client
-	// Broker is the official-only trading.Broker the trading service mutates
-	// through.
-	Broker trading.Broker
-	// Conditional is the official-only conditional-order surface.
-	Conditional ConditionalMutator
+
+	// broker and conditional are the official-only mutators. They are unexported
+	// because internal/execgw's ExecutionGateway is now the engine's only order
+	// path (engine-safety: "Guardian 결정 없는 제출 경로는 컴파일·API 수준에서
+	// 존재하지 않아야 한다"). Handing either of them back as a field would be
+	// exactly such a path: a caller holding a trading.Broker can place an order
+	// with no GuardianDecision, no journal record and no IN_DOUBT handling.
+	//
+	// They stay reachable where they must be — TradingService wraps both, and the
+	// gateway wraps TradingService.
+	broker      trading.Broker
+	conditional ConditionalMutator
+
 	// TradingService applies the user's config policy and the confirm-token gate
-	// on top of Broker.
+	// on top of the broker. It is what internal/execgw wraps.
 	TradingService *trading.Service
 }
 
@@ -125,8 +133,8 @@ func New(opts Options) (*Context, error) {
 		Config:      cfg,
 		TokenFile:   tokenFile,
 		Official:    off,
-		Broker:      broker,
-		Conditional: broker,
+		broker:      broker,
+		conditional: broker,
 		// No lineage recorder: the engine records order lineage in the journal
 		// transaction (design D2), not in the CLI's JSON cache. Until the journal
 		// lands, trading.Service without a recorder behaves exactly as upstream's

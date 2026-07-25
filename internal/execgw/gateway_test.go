@@ -1,0 +1,627 @@
+package execgw_test
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
+)
+
+// Gateway tests (harden-execution-base task 2.5).
+//
+// The properties under test are the ones the engine-safety spec calls
+// "ExecutionGateway 봉인":
+//
+//   - nothing reaches the broker before the journal commit (journal 선기록),
+//   - nothing reaches the broker without a valid, unexpired, unused
+//     GuardianDecision bound to the exact intent,
+//   - a mutation is dispatched exactly once, whatever the transport does.
+
+var fixedNow = time.Date(2026, 3, 30, 1, 30, 0, 0, time.UTC) // 10:30 KST, in session
+
+// --- fakes ------------------------------------------------------------------
+
+// fakeBroker is a trading.Broker that records what it was asked to do. Its call
+// counters are the evidence for "exactly once" and "never called".
+type fakeBroker struct {
+	mu      sync.Mutex
+	places  int
+	cancels int
+	amends  int
+	result  domain.MutationResult
+	err     error
+}
+
+func (b *fakeBroker) PlacePendingOrder(context.Context, orderintent.PlaceIntent) (domain.MutationResult, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.places++
+	return b.result, b.err
+}
+
+func (b *fakeBroker) CancelPendingOrder(context.Context, orderintent.CancelIntent) (domain.MutationResult, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.cancels++
+	return b.result, b.err
+}
+
+func (b *fakeBroker) AmendPendingOrder(context.Context, orderintent.AmendIntent) (domain.MutationResult, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.amends++
+	return b.result, b.err
+}
+
+func (b *fakeBroker) GetOrderAvailableActions(context.Context, string) (map[string]any, error) {
+	return map[string]any{}, nil
+}
+
+func (b *fakeBroker) totals() (int, int, int) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.places, b.cancels, b.amends
+}
+
+// --- helpers ----------------------------------------------------------------
+
+func openJournal(t *testing.T, clk clock.Clock) *journal.Journal {
+	t.Helper()
+	j, err := journal.Open(context.Background(), journal.Options{
+		Path:  filepath.Join(t.TempDir(), "journal.db"),
+		Clock: clk,
+		// TMPDIR is not necessarily on the allowlist (this repo lives on ntfs),
+		// so the guard is satisfied with a fixed probe. The guard itself is
+		// covered by internal/journal's own tests.
+		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+	})
+	if err != nil {
+		t.Fatalf("journal.Open: %v", err)
+	}
+	t.Cleanup(func() { _ = j.Close() })
+	return j
+}
+
+func openPolicy() config.Trading {
+	return config.Trading{
+		Place: true, Sell: true, Fractional: true, Cancel: true, Amend: true,
+		Conditional: true, AllowLiveOrderActions: true,
+	}
+}
+
+func placeIntent() orderintent.PlaceIntent {
+	return orderintent.PlaceIntent{
+		Symbol: "005930", Market: "kr", Side: "buy", OrderType: "limit",
+		Quantity: 2, Price: 70000, CurrencyMode: "KRW",
+	}
+}
+
+// newGateway wires a gateway over a fake broker.
+func newGateway(t *testing.T, broker trading.Broker) (*execgw.Gateway, *journal.Journal, *clock.Fake) {
+	t.Helper()
+	clk := clock.NewFake(fixedNow)
+	j := openJournal(t, clk)
+	gw, err := execgw.New(execgw.Options{
+		Journal:    j,
+		Trading:    trading.NewService(openPolicy(), broker),
+		Clock:      clk,
+		AccountRef: "acct-7",
+		Source:     "test",
+	})
+	if err != nil {
+		t.Fatalf("execgw.New: %v", err)
+	}
+	return gw, j, clk
+}
+
+func goodDecision(t *testing.T, hash string, clk clock.Clock) execgw.GuardianDecision {
+	t.Helper()
+	now := clk.Now()
+	return execgw.GuardianDecision{
+		Nonce:      "nonce-" + hash[:8],
+		IntentHash: hash,
+		Limits:     execgw.Limits{MaxQuantity: 10, MaxNotional: 1_000_000, Currency: "KRW"},
+		IssuedAt:   now,
+		ExpiresAt:  now.Add(30 * time.Second),
+		Authority:  "test-guardian",
+	}
+}
+
+func placeRequest(t *testing.T, clk clock.Clock) execgw.PlaceRequest {
+	t.Helper()
+	intent := placeIntent()
+	return execgw.PlaceRequest{
+		Intent:   intent,
+		Decision: goodDecision(t, execgw.PlaceHash(intent), clk),
+	}
+}
+
+// --- tests ------------------------------------------------------------------
+
+// TestPlaceHappyPathConfirms is the baseline: a valid decision produces exactly
+// one broker call and a CONFIRMED attempt carrying the broker's order id.
+func TestPlaceHappyPathConfirms(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-1"}}
+	gw, j, clk := newGateway(t, broker)
+
+	out, err := gw.Place(context.Background(), placeRequest(t, clk))
+	if err != nil {
+		t.Fatalf("Place: %v", err)
+	}
+	if out.State != journal.StateConfirmed {
+		t.Errorf("state: got %s, want CONFIRMED (%s)", out.State, out.Detail)
+	}
+	if out.BrokerOrderID != "O-1" {
+		t.Errorf("broker order id: got %q, want O-1", out.BrokerOrderID)
+	}
+	if places, _, _ := broker.totals(); places != 1 {
+		t.Errorf("broker place calls: got %d, want exactly 1", places)
+	}
+
+	rec, err := j.LookupAttempt(context.Background(), out.AttemptID)
+	if err != nil {
+		t.Fatalf("LookupAttempt: %v", err)
+	}
+	if rec.State != journal.StateConfirmed || rec.BrokerOrderID != "O-1" {
+		t.Errorf("journal attempt: got state=%s brokerOrderID=%q", rec.State, rec.BrokerOrderID)
+	}
+	intent, err := j.LookupIntent(context.Background(), out.IntentID)
+	if err != nil {
+		t.Fatalf("LookupIntent: %v", err)
+	}
+	if intent.Symbol != "005930" || intent.Side != "BUY" || intent.Quantity != "2" {
+		t.Errorf("journalled intent is not the submitted one: %+v", intent)
+	}
+	if intent.Fingerprint == "" {
+		t.Error("intent must carry a fingerprint for IN_DOUBT matching")
+	}
+}
+
+// TestGuardianRefusalsNeverReachBroker is the table of decision defects. Every
+// one of them must be refused with the mutation journalled as NOT_DISPATCHED and
+// the broker untouched — the journal-first ordering is what makes a refusal
+// auditable rather than invisible.
+func TestGuardianRefusalsNeverReachBroker(t *testing.T) {
+	intent := placeIntent()
+	otherIntent := intent
+	otherIntent.Quantity = 99
+
+	cases := []struct {
+		name    string
+		mutate  func(d *execgw.GuardianDecision)
+		advance time.Duration
+		want    execgw.ReasonCode
+	}{
+		{
+			name:   "no decision at all",
+			mutate: func(d *execgw.GuardianDecision) { *d = execgw.GuardianDecision{} },
+			want:   execgw.ReasonGuardianMissing,
+		},
+		{
+			name:   "no nonce",
+			mutate: func(d *execgw.GuardianDecision) { d.Nonce = "" },
+			want:   execgw.ReasonGuardianMissing,
+		},
+		{
+			name:   "hash of a different intent",
+			mutate: func(d *execgw.GuardianDecision) { d.IntentHash = execgw.PlaceHash(otherIntent) },
+			want:   execgw.ReasonGuardianIntentMismatch,
+		},
+		{
+			name:    "expired before submission",
+			mutate:  func(d *execgw.GuardianDecision) {},
+			advance: 31 * time.Second,
+			want:    execgw.ReasonGuardianExpired,
+		},
+		{
+			name:   "limits never set",
+			mutate: func(d *execgw.GuardianDecision) { d.Limits = execgw.Limits{} },
+			want:   execgw.ReasonGuardianLimitsUnset,
+		},
+		{
+			name:   "quantity over the snapshot limit",
+			mutate: func(d *execgw.GuardianDecision) { d.Limits.MaxQuantity = 1 },
+			want:   execgw.ReasonGuardianLimitExceeded,
+		},
+		{
+			name:   "notional over the snapshot limit",
+			mutate: func(d *execgw.GuardianDecision) { d.Limits.MaxNotional = 1000 },
+			want:   execgw.ReasonGuardianLimitExceeded,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			broker := &fakeBroker{}
+			gw, j, clk := newGateway(t, broker)
+
+			decision := goodDecision(t, execgw.PlaceHash(intent), clk)
+			tc.mutate(&decision)
+			clk.Advance(tc.advance)
+
+			out, err := gw.Place(context.Background(), execgw.PlaceRequest{Intent: intent, Decision: decision})
+			var rejected *execgw.RejectedError
+			if !errors.As(err, &rejected) {
+				t.Fatalf("want a RejectedError, got %v", err)
+			}
+			if rejected.Reason != tc.want {
+				t.Errorf("reason: got %q, want %q", rejected.Reason, tc.want)
+			}
+			if places, _, _ := broker.totals(); places != 0 {
+				t.Errorf("broker was called %d time(s) for a refused mutation", places)
+			}
+			if out.AttemptID == "" {
+				t.Fatal("a refusal must still be journalled")
+			}
+			rec, err := j.LookupAttempt(context.Background(), out.AttemptID)
+			if err != nil {
+				t.Fatalf("LookupAttempt: %v", err)
+			}
+			if rec.State != journal.StateNotDispatched {
+				t.Errorf("journal state: got %s, want NOT_DISPATCHED", rec.State)
+			}
+			if rec.ReasonCode != string(tc.want) {
+				t.Errorf("journal reason code: got %q, want %q", rec.ReasonCode, tc.want)
+			}
+		})
+	}
+}
+
+// TestNonceIsOneShot covers the spec's "nonce 재사용" scenario: the same decision
+// cannot authorise a second submission, even for the identical intent.
+func TestNonceIsOneShot(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-1"}}
+	gw, _, clk := newGateway(t, broker)
+
+	req := placeRequest(t, clk)
+	if _, err := gw.Place(context.Background(), req); err != nil {
+		t.Fatalf("first Place: %v", err)
+	}
+
+	_, err := gw.Place(context.Background(), req)
+	var rejected *execgw.RejectedError
+	if !errors.As(err, &rejected) {
+		t.Fatalf("want a RejectedError on reuse, got %v", err)
+	}
+	if rejected.Reason != execgw.ReasonGuardianNonceReused {
+		t.Errorf("reason: got %q, want %q", rejected.Reason, execgw.ReasonGuardianNonceReused)
+	}
+	if places, _, _ := broker.totals(); places != 1 {
+		t.Errorf("broker place calls: got %d, want 1 (the reuse must not reach it)", places)
+	}
+}
+
+// TestNonceIsOneShotUnderRace runs the same decision from many goroutines. Exactly
+// one may win; a lost race that let two through would be a duplicated live order.
+func TestNonceIsOneShotUnderRace(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-1"}}
+	gw, _, clk := newGateway(t, broker)
+	req := placeRequest(t, clk)
+
+	const workers = 8
+	var (
+		wg       sync.WaitGroup
+		mu       sync.Mutex
+		accepted int
+	)
+	wg.Add(workers)
+	for i := 0; i < workers; i++ {
+		go func() {
+			defer wg.Done()
+			if _, err := gw.Place(context.Background(), req); err == nil {
+				mu.Lock()
+				accepted++
+				mu.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
+
+	if accepted != 1 {
+		t.Errorf("accepted submissions: got %d, want exactly 1", accepted)
+	}
+	if places, _, _ := broker.totals(); places != 1 {
+		t.Errorf("broker place calls: got %d, want exactly 1", places)
+	}
+}
+
+// TestJournalFailureBlocksSubmission is the spec's "커밋 실패 시 제출 차단": a
+// journal that cannot record the intent must stop the mutation before the broker
+// is touched.
+func TestJournalFailureBlocksSubmission(t *testing.T) {
+	broker := &fakeBroker{}
+	gw, j, clk := newGateway(t, broker)
+	if err := j.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	if _, err := gw.Place(context.Background(), placeRequest(t, clk)); err == nil {
+		t.Fatal("a closed journal must refuse the mutation")
+	}
+	if places, _, _ := broker.totals(); places != 0 {
+		t.Errorf("broker was called %d time(s) although the journal never committed", places)
+	}
+}
+
+// TestPolicyRefusalIsNotDispatched: the user's config still governs. A disabled
+// action is refused by trading.Service, and the gateway must record that as
+// "never left the process" rather than as an unknown outcome.
+func TestPolicyRefusalIsNotDispatched(t *testing.T) {
+	broker := &fakeBroker{}
+	clk := clock.NewFake(fixedNow)
+	j := openJournal(t, clk)
+	closed := config.Trading{} // every toggle off
+	gw, err := execgw.New(execgw.Options{
+		Journal: j, Trading: trading.NewService(closed, broker), Clock: clk,
+		AccountRef: "acct-7", Source: "test",
+	})
+	if err != nil {
+		t.Fatalf("execgw.New: %v", err)
+	}
+
+	out, err := gw.Place(context.Background(), placeRequest(t, clk))
+	if err == nil {
+		t.Fatal("a disabled trading policy must refuse the mutation")
+	}
+	if out.State != journal.StateNotDispatched {
+		t.Errorf("state: got %s, want NOT_DISPATCHED", out.State)
+	}
+	if places, _, _ := broker.totals(); places != 0 {
+		t.Errorf("broker calls: got %d, want 0", places)
+	}
+}
+
+// TestCancelAndAmendGoThroughTheSameGate keeps the two other mutation verbs on
+// the identical path — a cancel that skipped the journal would be exactly the
+// hole the gateway exists to close.
+func TestCancelAndAmendGoThroughTheSameGate(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-9", CurrentOrderID: "O-9"}}
+	gw, j, clk := newGateway(t, broker)
+	ctx := context.Background()
+
+	cancelIntent := orderintent.CancelIntent{OrderID: "O-1", Symbol: "005930"}
+	cancelReq := execgw.CancelRequest{
+		Intent:   cancelIntent,
+		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: goodDecision(t, execgw.CancelHash(cancelIntent), clk),
+	}
+	out, err := gw.Cancel(ctx, cancelReq)
+	if err != nil {
+		t.Fatalf("Cancel: %v", err)
+	}
+	if out.State != journal.StateConfirmed {
+		t.Errorf("cancel state: got %s (%s)", out.State, out.Detail)
+	}
+	rec, err := j.LookupAttempt(ctx, out.AttemptID)
+	if err != nil {
+		t.Fatalf("LookupAttempt: %v", err)
+	}
+	if rec.Kind != journal.KindCancel || rec.TargetOrderID != "O-1" {
+		t.Errorf("cancel attempt: kind=%s target=%q", rec.Kind, rec.TargetOrderID)
+	}
+
+	newPrice := 70500.0
+	amendIntent := orderintent.AmendIntent{OrderID: "O-1", Price: &newPrice}
+	amendReq := execgw.AmendRequest{
+		Intent:   amendIntent,
+		Symbol:   "005930",
+		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: goodDecision(t, execgw.AmendHash(amendIntent), clk),
+	}
+	amendOut, err := gw.Amend(ctx, amendReq)
+	if err != nil {
+		t.Fatalf("Amend: %v", err)
+	}
+	if amendOut.State != journal.StateConfirmed {
+		t.Errorf("amend state: got %s (%s)", amendOut.State, amendOut.Detail)
+	}
+	if _, cancels, amends := broker.totals(); cancels != 1 || amends != 1 {
+		t.Errorf("broker calls: cancels=%d amends=%d, want 1/1", cancels, amends)
+	}
+}
+
+// TestAmendRaisingQuantityIsLimitChecked: an amend that increases exposure is a
+// risk-increasing mutation and must be measured against the limit snapshot, the
+// same as a place.
+func TestAmendRaisingQuantityIsLimitChecked(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{CurrentOrderID: "O-9"}}
+	gw, _, clk := newGateway(t, broker)
+
+	qty := 50.0
+	amendIntent := orderintent.AmendIntent{OrderID: "O-1", Quantity: &qty}
+	_, err := gw.Amend(context.Background(), execgw.AmendRequest{
+		Intent:   amendIntent,
+		Symbol:   "005930",
+		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: goodDecision(t, execgw.AmendHash(amendIntent), clk),
+	})
+	var rejected *execgw.RejectedError
+	if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonGuardianLimitExceeded {
+		t.Fatalf("want guardian_limit_exceeded, got %v", err)
+	}
+	if _, _, amends := broker.totals(); amends != 0 {
+		t.Errorf("broker amend calls: got %d, want 0", amends)
+	}
+}
+
+// --- transport classification over a real HTTP round trip -------------------
+
+// officialGateway wires the gateway over the official client pointed at an
+// httptest server, so the transport-fault classification is exercised end to end
+// rather than against a hand-made error.
+func officialGateway(t *testing.T, h http.HandlerFunc) (*execgw.Gateway, *clock.Fake, *int) {
+	t.Helper()
+	var posts int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/v1/orders") {
+			posts++
+		}
+		if r.URL.Path == "/oauth2/token" {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+			return
+		}
+		h(w, r)
+	}))
+	t.Cleanup(srv.Close)
+
+	off := official.New(official.Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "token.json"),
+		official.WithBaseURL(srv.URL), official.WithHTTPClient(srv.Client()),
+		official.WithAccountSeq(7))
+
+	clk := clock.NewFake(fixedNow)
+	j := openJournal(t, clk)
+	gw, err := execgw.New(execgw.Options{
+		Journal:    j,
+		Trading:    trading.NewService(openPolicy(), &officialTestBroker{off: off}),
+		Clock:      clk,
+		AccountRef: "acct-7",
+		Source:     "test",
+	})
+	if err != nil {
+		t.Fatalf("execgw.New: %v", err)
+	}
+	return gw, clk, &posts
+}
+
+// officialTestBroker mirrors internal/app/engine's officialBroker: it is what the
+// engine profile passes to trading.Service.
+type officialTestBroker struct{ off *official.Client }
+
+func (b *officialTestBroker) PlacePendingOrder(ctx context.Context, i orderintent.PlaceIntent) (domain.MutationResult, error) {
+	return b.off.PlaceOrder(ctx, i)
+}
+
+func (b *officialTestBroker) CancelPendingOrder(ctx context.Context, i orderintent.CancelIntent) (domain.MutationResult, error) {
+	return b.off.CancelOrder(ctx, i.OrderID)
+}
+
+func (b *officialTestBroker) AmendPendingOrder(ctx context.Context, i orderintent.AmendIntent) (domain.MutationResult, error) {
+	return b.off.ModifyOrder(ctx, i)
+}
+
+func (b *officialTestBroker) GetOrderAvailableActions(context.Context, string) (map[string]any, error) {
+	return map[string]any{}, nil
+}
+
+// TestTransportOutcomeTable pins how a broker response becomes an attempt state.
+// The pessimistic entries are the important ones: 429 and 5xx are IN_DOUBT, never
+// "failed", because a rate limiter can answer after the order reached the book.
+func TestTransportOutcomeTable(t *testing.T) {
+	cases := []struct {
+		name   string
+		status int
+		body   string
+		want   journal.AttemptState
+	}{
+		{"accepted", http.StatusOK, `{"result":{"orderId":"O-1"}}`, journal.StateConfirmed},
+		{"bad request", http.StatusBadRequest, `{"message":"bad symbol"}`, journal.StateFailedConfirmed},
+		{"unauthorized", http.StatusUnauthorized, `{"message":"nope"}`, journal.StateFailedConfirmed},
+		{"rate limited", http.StatusTooManyRequests, `{"message":"slow down"}`, journal.StateInDoubt},
+		{"server error", http.StatusInternalServerError, `{"message":"boom"}`, journal.StateInDoubt},
+		{"gateway timeout", http.StatusGatewayTimeout, `{"message":"timeout"}`, journal.StateInDoubt},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			gw, clk, posts := officialGateway(t, func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(tc.status)
+				_, _ = w.Write([]byte(tc.body))
+			})
+
+			out, _ := gw.Place(context.Background(), placeRequest(t, clk))
+			if out.State != tc.want {
+				t.Errorf("state: got %s, want %s (%s)", out.State, tc.want, out.Detail)
+			}
+			// 401 is retried once by the official client with a refreshed token;
+			// every other status must produce exactly one mutation request. Either
+			// way the gateway itself must never retry.
+			if tc.status != http.StatusUnauthorized && *posts != 1 {
+				t.Errorf("mutation POSTs: got %d, want exactly 1 (mutations are never retried)", *posts)
+			}
+		})
+	}
+}
+
+// TestUnreachableBrokerIsNotDispatched: a connection that never carried a byte is
+// the one case we can safely close without a resolution procedure.
+func TestUnreachableBrokerIsNotDispatched(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+	}))
+	base := srv.URL
+	client := srv.Client()
+	srv.Close() // nothing is listening any more: connect fails before any write
+
+	off := official.New(official.Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "token.json"),
+		official.WithBaseURL(base), official.WithHTTPClient(client), official.WithAccountSeq(7))
+
+	clk := clock.NewFake(fixedNow)
+	j := openJournal(t, clk)
+	gw, err := execgw.New(execgw.Options{
+		Journal: j, Trading: trading.NewService(openPolicy(), &officialTestBroker{off: off}),
+		Clock: clk, AccountRef: "acct-7", Source: "test",
+	})
+	if err != nil {
+		t.Fatalf("execgw.New: %v", err)
+	}
+
+	out, _ := gw.Place(context.Background(), placeRequest(t, clk))
+	if out.State != journal.StateNotDispatched {
+		t.Errorf("state: got %s, want NOT_DISPATCHED (%s)", out.State, out.Detail)
+	}
+}
+
+// --- structural seal --------------------------------------------------------
+
+// TestGatewayExposesNoRawMutator is the compile-surface half of "raw mutator
+// 미노출": no exported field or method of the gateway hands back something that
+// can mutate orders on its own. If this test has to change, the seal is being
+// opened.
+func TestGatewayExposesNoRawMutator(t *testing.T) {
+	brokerIface := reflect.TypeOf((*trading.Broker)(nil)).Elem()
+	condIface := reflect.TypeOf((*trading.ConditionalBroker)(nil)).Elem()
+	serviceType := reflect.TypeOf((*trading.Service)(nil))
+
+	gwType := reflect.TypeOf((*execgw.Gateway)(nil))
+	for i := 0; i < gwType.NumMethod(); i++ {
+		m := gwType.Method(i)
+		for out := 0; out < m.Type.NumOut(); out++ {
+			ret := m.Type.Out(out)
+			switch {
+			case ret == serviceType:
+				t.Errorf("method %s returns *trading.Service: the wrapped mutator must stay private", m.Name)
+			case ret.Kind() == reflect.Interface && (ret.Implements(brokerIface) || ret.Implements(condIface)):
+				t.Errorf("method %s returns a mutator interface", m.Name)
+			case ret.Kind() != reflect.Interface && (ret.Implements(brokerIface) || ret.Implements(condIface)):
+				t.Errorf("method %s returns a mutator implementation", m.Name)
+			}
+		}
+	}
+
+	gwStruct := reflect.TypeOf(execgw.Gateway{})
+	for i := 0; i < gwStruct.NumField(); i++ {
+		if f := gwStruct.Field(i); f.IsExported() {
+			t.Errorf("Gateway.%s is exported: gateway state must not be reachable from outside", f.Name)
+		}
+	}
+}

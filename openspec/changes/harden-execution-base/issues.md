@@ -31,3 +31,23 @@
 brokerstate.ParseOfficialOrder가 raw 항목을 소비한다. (a)는 인증 재구현 중복, (b)는 CLI/MCP
 계약 영향으로 기각. 신규 파일 추가라 기존 함수 수정은 없으나 High-risk 패키지이므로 축약
 Pre-Edit(대상·근거·테스트) 보고는 유지. task 2.9에서 구현.
+
+## 2026-07-26 [safe local] engine.Context의 raw mutator 필드 봉인 (task 2.5)
+
+- 사실: `internal/app/engine.Context`가 `Broker trading.Broker`·`Conditional
+  ConditionalMutator`를 **exported 필드**로 노출했다. 이 두 필드를 잡은 호출자는
+  GuardianDecision·journal 기록·IN_DOUBT 처리를 모두 건너뛰고 주문을 낼 수 있다 —
+  engine-safety "Guardian 결정 없는 제출 경로는 컴파일·API 수준에서 존재하지
+  않아야 한다(raw mutator 미노출)"와 정면 충돌.
+- 처리: task 2.5가 execgw.Gateway를 도입하면서 두 필드를 unexported(`broker`,
+  `conditional`)로 바꾸고, WTS-isolation 테스트가 요구하는 접근은
+  `export_test.go`(빌드 산출물에 없음)의 `BrokerForTest()/ConditionalForTest()`로
+  옮겼다. 구조 테스트 `seal_test.go`가 exported mutator 필드의 재등장을 막는다.
+  `TradingService`는 config 정책·confirm token 게이트를 지닌 래핑 대상이고 두 mutator
+  인터페이스를 만족하지 않으므로 노출 유지.
+- 잔존 리스크(후속 task 입력): `Context.Official *official.Client`는 조회용으로
+  노출되어 있으나 `PlaceOrder/CancelOrder/ModifyOrder` 메서드도 가진다. 즉 엔진
+  wiring을 쥔 코드가 이론적으로 공식 클라이언트로 직접 주문할 수 있다. 봉인하려면
+  읽기 전용 인터페이스로 좁혀야 하는데, 2.7/2.9/3.x가 이 클라이언트로 조회를 하고
+  게이트웨이 배선이 확정되는 시점은 **task 4.2(기동 인터록)**이므로 그때 함께 좁히는
+  것이 최소 변경이다. 현재 노출은 엔진 내부 wiring 한정(CLI/MCP 무관).

@@ -18,7 +18,7 @@
 - [x] 2.2 [T][High-risk] journal 내구성: BEGIN IMMEDIATE + synchronous=FULL, 커밋 성공 후에만 제출 진행, 손상 감지 기동 거부, disk-full·crash-during-write 테스트
 - [x] 2.3 [T] 브로커 상태 파생 함수: (status, canceledAt, filledQuantity, quantity, lineage) 우선순위 표 구현, upstream fixture 기반 표 테스트, 미지 status → UNKNOWN_BROKER_STATE fail-closed
 - [x] 2.4 [T] MutationAttempt 수명주기: RECORDED→DISPATCH_STARTED→ACKED/IN_DOUBT 전이, 재시작 시 RECORDED→NOT_DISPATCHED 안전 종결, transport fault-injection(전송 전/중/후) 테스트
-- [ ] 2.5 [T][High-risk] `internal/execgw` Gateway 뼈대: journal 선기록→GuardianDecision 검증(one-shot nonce, 초안 인터페이스)→`trading.Service` 위임→결과 확정. raw mutator 미노출 [High-risk]
+- [x] 2.5 [T][High-risk] `internal/execgw` Gateway 뼈대: journal 선기록→GuardianDecision 검증(one-shot nonce, 초안 인터페이스)→`trading.Service` 위임→결과 확정. raw mutator 미노출 [High-risk]
 - [ ] 2.6 [T][High-risk] retry matrix 표 작성(스펙 산출물, 보수 기본값) + 구현: mutation 무재시도, 조회 예산·jitter, 429 Retry-After, 401/403 즉시 차단, staleness 진입 차단
 - [ ] 2.7 [T][High-risk] IN_DOUBT 해소 엔진: fingerprint(OPEN+CLOSED pagination 완주) 안정화 N회 + 잔고/보유 delta 교차 확인, UNRESOLVED_IN_DOUBT 운영자 해소, 심볼당 in-flight 1건 제한, 2페이지 주문 발견 테스트
 - [ ] 2.8 [T][High-risk] AMEND/CANCEL IN_DOUBT 해소: OrderByID(원주문) + 심볼 범위 후계 주문 스캔, lineage 트랜잭션 기록
