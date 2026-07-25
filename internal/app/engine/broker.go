@@ -34,19 +34,11 @@ func (b *officialBroker) AmendPendingOrder(ctx context.Context, intent orderinte
 
 // GetOrderAvailableActions is the pre-cancel/pre-amend check trading.Service
 // performs before it mutates. The official Open API has no equivalent endpoint,
-// and the hybrid broker answers it from the web session — which would make every
-// engine cancel depend on a live WTS session (engine-safety: "WTS 세션이 없거나
-// 만료된 상태에서도 엔진의 cancel/amend는 동작해야 한다").
-//
-// So the engine treats the pre-check as broker-optional, which the spec allows,
-// and returns no actions without spending an API call. Nothing is weakened by
-// this: an order that cannot be cancelled is rejected by the cancel call itself,
-// which is the authoritative answer anyway. Deriving real pre-check state from
-// OrderByID is task 4.1 — deferred because it adds a mandatory API call per
-// mutation and §0.4 requires that to be accounted for in the retry-matrix
-// budget (task 2.6) first.
-func (b *officialBroker) GetOrderAvailableActions(context.Context, string) (map[string]any, error) {
-	return map[string]any{}, nil
+// so the engine derives the answer from OrderRawByID + the brokerstate priority
+// table (task 4.1). The whole implementation, and the reason it cannot return an
+// error, is in precheck.go.
+func (b *officialBroker) GetOrderAvailableActions(ctx context.Context, orderID string) (map[string]any, error) {
+	return b.availableActions(ctx, orderID), nil
 }
 
 // --- conditional orders -----------------------------------------------------

@@ -91,6 +91,9 @@ func officialStub(t *testing.T) (*httptest.Server, func() map[string]int) {
 			_, _ = w.Write([]byte(`{"result":{}}`))
 		case strings.HasPrefix(path, "/api/v1/conditional-orders/") && r.Method == http.MethodDelete:
 			_, _ = w.Write([]byte(`{"result":{}}`))
+		// The derived cancel/amend pre-check (task 4.1) reads the single order.
+		case strings.HasPrefix(path, "/api/v1/orders/") && r.Method == http.MethodGet:
+			_, _ = w.Write([]byte(`{"result":{"orderId":"O-1","status":"OPEN","quantity":"1","execution":{"filledQuantity":"0"}}}`))
 		default:
 			http.NotFound(w, r)
 		}
@@ -222,11 +225,9 @@ func TestEngineMutationMatrixNeverReachesWTS(t *testing.T) {
 // the broker for available actions first, and the hybrid broker always answers
 // that from WTS. The engine's broker must answer without one.
 //
-// The pre-check itself is deliberately a no-op here — the official API has no
-// available-actions endpoint, and deriving it from OrderByID is task 4.1, which
-// also has to budget the extra call in the retry matrix (§0.4). Fail-closed
-// behaviour is unchanged in the meantime: an order that cannot be cancelled is
-// rejected by the broker on the cancel call itself.
+// Since task 4.1 the answer is derived from the official single-order read
+// (precheck.go), so this test asserts both halves of that: the pre-check produces
+// a real derived state, and it does so without touching any non-official host.
 func TestEngineCancelWorksWithoutWTSSession(t *testing.T) {
 	dir := isolate(t)
 	writeEngineConfig(t, dir)
@@ -250,11 +251,14 @@ func TestEngineCancelWorksWithoutWTSSession(t *testing.T) {
 	if err != nil {
 		t.Fatalf("pre-check must not fail without a WTS session: %v", err)
 	}
-	if len(actions) != 0 {
-		t.Errorf("pre-check is not implemented yet (task 4.1); want empty map, got %v", actions)
+	if got := actions[engine.ActionKeyChecked]; got != true {
+		t.Errorf("%s = %v, want true", engine.ActionKeyChecked, got)
 	}
-	if calls := officialCalls(); len(calls) != 0 {
-		t.Errorf("pre-check must not spend API budget yet; got %v", calls)
+	if got := actions[engine.ActionKeyState]; got != "OPEN_UNFILLED" {
+		t.Errorf("%s = %v, want OPEN_UNFILLED", engine.ActionKeyState, got)
+	}
+	if calls := officialCalls(); calls["GET /api/v1/orders/O-1"] != 1 {
+		t.Errorf("want one official single-order read, got %v", calls)
 	}
 	if foreign := spy.calls(); len(foreign) != 0 {
 		t.Errorf("pre-check reached %v", foreign)
