@@ -39,6 +39,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
@@ -86,6 +87,11 @@ type Gateway struct {
 	nonces     NonceStore
 	entry      *EntryGate
 	newID      func() string
+
+	// inflight holds the in-process claim on a symbol for the duration of a
+	// mutation, so two goroutines cannot both pass the journal's in-flight check.
+	inflightMu sync.Mutex
+	inflight   map[string]bool
 }
 
 // New validates the wiring and returns a gateway.
@@ -149,6 +155,10 @@ type OrderRef struct {
 type PlaceRequest struct {
 	Intent   orderintent.PlaceIntent
 	Decision GuardianDecision
+	// Baseline is the account snapshot taken before this order was decided. It
+	// is recorded on the intent and is what lets IN_DOUBT resolution prove
+	// absence later. Optional — see Baseline for what omitting it costs.
+	Baseline *Baseline
 }
 
 // CancelRequest cancels an existing order.
@@ -204,6 +214,9 @@ type mutationPlan struct {
 	// raisesExposure marks a mutation that can increase risk, which is what makes
 	// a limit snapshot mandatory rather than merely checked.
 	raisesExposure bool
+	// baseline is the pre-dispatch account snapshot, recorded on the intent for
+	// IN_DOUBT resolution.
+	baseline *Baseline
 	// call performs the broker mutation exactly once.
 	call func(ctx context.Context) (domain.MutationResult, error)
 }
@@ -223,6 +236,7 @@ func (g *Gateway) Place(ctx context.Context, req PlaceRequest) (Outcome, error) 
 		amount:         intent.Amount,
 		currency:       strings.ToUpper(strings.TrimSpace(intent.CurrencyMode)),
 		raisesExposure: strings.EqualFold(intent.Side, "buy"),
+		baseline:       req.Baseline,
 	}
 	plan.call = func(ctx context.Context) (domain.MutationResult, error) {
 		return g.trading.Place(ctx, intent, g.executeOpts(g.trading.PreviewPlace(intent).ConfirmToken))
@@ -302,6 +316,27 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 		return Outcome{Reason: ReasonInvalidRequest, Detail: err.Error()}, err
 	}
 
+	// 0. One in-flight mutation per symbol. This is not throttling: it is what
+	//    makes an IN_DOUBT fingerprint match unique, because two identical
+	//    outstanding orders on one symbol would be indistinguishable in the
+	//    broker's list. The in-process claim closes the check-then-act race; the
+	//    journal query catches whatever an earlier process left behind.
+	//
+	//    Refusals here are not journalled: the blocking attempt is already in the
+	//    journal and is itself the record of why.
+	symbolKey := plan.market + "|" + plan.symbol
+	if !g.claimSymbol(symbolKey) {
+		return Outcome{Reason: ReasonSymbolInFlight, Detail: "another mutation on " + plan.symbol + " is in flight"},
+			reject(ReasonSymbolInFlight, "another mutation on %s is already in flight", plan.symbol)
+	}
+	defer g.releaseSymbol(symbolKey)
+
+	if rejected, err := g.checkSymbolFree(ctx, plan); err != nil {
+		return Outcome{Reason: ReasonInvalidRequest, Detail: err.Error()}, err
+	} else if rejected != nil {
+		return Outcome{Reason: rejected.Reason, Detail: rejected.Detail}, rejected
+	}
+
 	// 1. Durable record first. Prepare only returns a handle after its
 	//    BEGIN IMMEDIATE transaction committed on a synchronous=FULL connection,
 	//    so there is nothing to dispatch with until the intent is on disk.
@@ -369,6 +404,88 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 		return out, res.Err
 	}
 	return out, &RejectedError{Reason: out.Reason, Detail: out.Detail}
+}
+
+// claimSymbol takes the in-process slot for a symbol, reporting false when
+// another goroutine already holds it.
+func (g *Gateway) claimSymbol(key string) bool {
+	g.inflightMu.Lock()
+	defer g.inflightMu.Unlock()
+	if g.inflight == nil {
+		g.inflight = make(map[string]bool)
+	}
+	if g.inflight[key] {
+		return false
+	}
+	g.inflight[key] = true
+	return true
+}
+
+func (g *Gateway) releaseSymbol(key string) {
+	g.inflightMu.Lock()
+	defer g.inflightMu.Unlock()
+	delete(g.inflight, key)
+}
+
+// checkSymbolFree asks the journal whether this symbol already has an outstanding
+// mutation, or an attempt parked as UNRESOLVED_IN_DOUBT.
+//
+// The two cases differ in scope on purpose:
+//
+//   - An unsettled attempt blocks *every* mutation on the symbol, including a
+//     cancel: with two outstanding mutations we could not tell which broker order
+//     belongs to which attempt, and a cancel aimed at the wrong one is worse than
+//     a delayed cancel.
+//   - An UNRESOLVED_IN_DOUBT attempt blocks only new exposure. The symbol's
+//     history contains an order we could not account for, so adding more is out
+//     of the question — but the operator must still be able to cancel and
+//     liquidate through the engine (§0.3).
+func (g *Gateway) checkSymbolFree(ctx context.Context, plan mutationPlan) (*RejectedError, error) {
+	pending, err := g.journal.PendingAttempts(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("execgw: checking for in-flight mutations on %s: %w", plan.symbol, err)
+	}
+	for _, rec := range pending {
+		same, err := g.attemptTargets(ctx, rec, plan)
+		if err != nil {
+			return nil, err
+		}
+		if same {
+			return reject(ReasonSymbolInFlight,
+				"attempt %s (%s, %s) on %s has not settled yet",
+				rec.ID, rec.Kind, rec.State, plan.symbol), nil
+		}
+	}
+	if !plan.raisesExposure {
+		return nil, nil
+	}
+	unresolved, err := g.journal.UnresolvedAttempts(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("execgw: checking unresolved attempts on %s: %w", plan.symbol, err)
+	}
+	for _, rec := range unresolved {
+		same, err := g.attemptTargets(ctx, rec, plan)
+		if err != nil {
+			return nil, err
+		}
+		if same {
+			return reject(ReasonUnresolvedInDoubt,
+				"attempt %s on %s is unresolved; an operator has to close it before new exposure is added",
+				rec.ID, plan.symbol), nil
+		}
+	}
+	return nil, nil
+}
+
+// attemptTargets reports whether a recorded attempt concerns the same market and
+// symbol as the plan.
+func (g *Gateway) attemptTargets(ctx context.Context, rec journal.AttemptRecord, plan mutationPlan) (bool, error) {
+	intent, err := g.journal.LookupIntent(ctx, rec.IntentID)
+	if err != nil {
+		return false, fmt.Errorf("execgw: reading the intent of attempt %s: %w", rec.ID, err)
+	}
+	return strings.EqualFold(intent.Symbol, plan.symbol) &&
+		strings.EqualFold(intent.Market, plan.market), nil
 }
 
 // checkEntry asks the gate whether new exposure is allowed. Mutations that do not
@@ -448,6 +565,7 @@ func (g *Gateway) prepareRequest(plan mutationPlan) (journal.PrepareRequest, err
 		Currency:    plan.currency,
 		Source:      g.source,
 		Fingerprint: fingerprint,
+		Notes:       EncodeBaseline(plan.baseline),
 	}
 	if intent.OrderType == "" {
 		intent.OrderType = "LIMIT"

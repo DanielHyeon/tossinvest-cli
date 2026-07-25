@@ -37,6 +37,10 @@ const (
 	// ReasonUnsupportedOrderType: the order shape is outside what the official
 	// path supports.
 	ReasonUnsupportedOrderType ReasonCode = "unsupported_order_type"
+	// ReasonSymbolInFlight: another mutation on this symbol has not settled.
+	// The engine holds at most one in-flight mutation per symbol, which is what
+	// makes IN_DOUBT fingerprint matching unique by construction.
+	ReasonSymbolInFlight ReasonCode = "symbol_mutation_in_flight"
 
 	// --- broker outcomes ----------------------------------------------------
 

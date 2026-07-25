@@ -20,7 +20,7 @@
 - [x] 2.4 [T] MutationAttempt 수명주기: RECORDED→DISPATCH_STARTED→ACKED/IN_DOUBT 전이, 재시작 시 RECORDED→NOT_DISPATCHED 안전 종결, transport fault-injection(전송 전/중/후) 테스트
 - [x] 2.5 [T][High-risk] `internal/execgw` Gateway 뼈대: journal 선기록→GuardianDecision 검증(one-shot nonce, 초안 인터페이스)→`trading.Service` 위임→결과 확정. raw mutator 미노출 [High-risk]
 - [x] 2.6 [T][High-risk] retry matrix 표 작성(스펙 산출물, 보수 기본값) + 구현: mutation 무재시도, 조회 예산·jitter, 429 Retry-After, 401/403 즉시 차단, staleness 진입 차단
-- [ ] 2.7 [T][High-risk] IN_DOUBT 해소 엔진: fingerprint(OPEN+CLOSED pagination 완주) 안정화 N회 + 잔고/보유 delta 교차 확인, UNRESOLVED_IN_DOUBT 운영자 해소, 심볼당 in-flight 1건 제한, 2페이지 주문 발견 테스트
+- [x] 2.7 [T][High-risk] IN_DOUBT 해소 엔진: fingerprint(OPEN+CLOSED pagination 완주) 안정화 N회 + 잔고/보유 delta 교차 확인, UNRESOLVED_IN_DOUBT 운영자 해소, 심볼당 in-flight 1건 제한, 2페이지 주문 발견 테스트
 - [ ] 2.8 [T][High-risk] AMEND/CANCEL IN_DOUBT 해소: OrderByID(원주문) + 심볼 범위 후계 주문 스캔, lineage 트랜잭션 기록
 - [ ] 2.9 [T] pagination 완주: `internal/official`에 신규 파일 orders_raw.go로 additive 메서드 `OrdersPageRaw`(raw 항목 + nextCursor, 기존 send/token 재사용) 추가 + execgw 측 완주 루프(cursor loop·max-pages 방어). 기존 메서드·domain.Order 무변경 — issues.md Manager 결정(c) 참조, 축약 Pre-Edit 보고
 - [ ] 2.10 [T] fail-closed 분기: interactive auth·USD 잔고 부족·미지원 유형 거부 + reason-code enum 정의 (fixture 테스트)
