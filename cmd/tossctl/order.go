@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -513,19 +514,17 @@ func newOrderConditionalCmd(opts *rootOptions) *cobra.Command {
 				return err
 			}
 			intent := orderintent.ConditionalCancelIntent{ID: args[0]}
-			canonical := orderintent.CanonicalConditionalCancel(intent)
-			gateErr := conditionalGate(app.config, canonical, cancelExec, cancelConfirm)
-			if gateErr == errConditionalPreviewOnly {
+			preview := app.tradingService.PreviewConditionalCancel(intent)
+			err = app.tradingService.ConditionalCancel(cmd.Context(), intent,
+				trading.ExecuteOptions{Execute: cancelExec, Confirm: cancelConfirm})
+			if errors.Is(err, trading.ErrConditionalPreviewOnly) {
 				fmt.Fprintf(cmd.OutOrStdout(), "%s\n%s: %s\n",
 					i18n.T("order.conditional.cancel.previewLine"),
 					i18n.T("order.conditional.confirmToken"),
-					orderintent.ConfirmToken(canonical))
+					preview.ConfirmToken)
 				return nil
 			}
-			if gateErr != nil {
-				return gateErr
-			}
-			if err := app.client.CancelConditionalOrder(cmd.Context(), intent); err != nil {
+			if err != nil {
 				return userFacingCommandError(err)
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), i18n.T("order.conditional.cancel.done"))
@@ -551,26 +550,21 @@ func newOrderConditionalCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			intent := orderintent.ConditionalPlaceIntent{
+			intent, err := trading.NewConditionalPlaceIntent(trading.ConditionalPlaceInput{
 				Symbol: plSymbol, Type: plType, OrderType: plOrderType, ExpireDate: plExpire,
 				Quantity: plQty, ClientOrderID: plClientID, ConfirmHighValue: plConfirmHigh,
-				First: orderintent.ConditionLeg{OrderSide: plFirstSide, TriggerPrice: plFirstTrigger, OrderPrice: plFirstOrder},
+				FirstSide: plFirstSide, FirstTrigger: plFirstTrigger, FirstOrderPrice: plFirstOrder,
+				SecondSide: plSecondSide, SecondTrigger: plSecondTrigger, SecondOrderPrice: plSecondOrder,
+			})
+			if err != nil {
+				return err
 			}
-			if plType == "OCO" || plType == "OTO" {
-				if plSecondSide == "" {
-					return fmt.Errorf("--second-side/--second-trigger required for %s", plType)
-				}
-				intent.Second = &orderintent.ConditionLeg{OrderSide: plSecondSide, TriggerPrice: plSecondTrigger, OrderPrice: plSecondOrder}
+			preview := app.tradingService.PreviewConditionalPlace(intent)
+			ref, err := app.tradingService.ConditionalPlace(cmd.Context(), intent,
+				trading.ExecuteOptions{Execute: plExec, Confirm: plConfirm})
+			if errors.Is(err, trading.ErrConditionalPreviewOnly) {
+				return output.WriteConditionalPlacePreview(cmd.OutOrStdout(), intent, preview.ConfirmToken)
 			}
-			canonical := orderintent.CanonicalConditionalPlace(intent)
-			gateErr := conditionalGate(app.config, canonical, plExec, plConfirm)
-			if gateErr == errConditionalPreviewOnly {
-				return output.WriteConditionalPlacePreview(cmd.OutOrStdout(), intent, orderintent.ConfirmToken(canonical))
-			}
-			if gateErr != nil {
-				return gateErr
-			}
-			ref, err := app.client.CreateConditionalOrder(cmd.Context(), intent)
 			if err != nil {
 				return userFacingCommandError(err)
 			}
@@ -609,29 +603,25 @@ func newOrderConditionalCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			intent := orderintent.ConditionalModifyIntent{
+			intent, err := trading.NewConditionalModifyIntent(trading.ConditionalModifyInput{
 				ID: args[0], Type: mdType, OrderType: mdOrderType, ExpireDate: mdExpire,
 				Quantity: mdQty, ConfirmHighValue: mdConfirmHigh,
-				First: orderintent.ConditionLeg{OrderSide: mdFirstSide, TriggerPrice: mdFirstTrigger, OrderPrice: mdFirstOrder},
+				FirstSide: mdFirstSide, FirstTrigger: mdFirstTrigger, FirstOrderPrice: mdFirstOrder,
+				SecondSide: mdSecondSide, SecondTrigger: mdSecondTrigger, SecondOrderPrice: mdSecondOrder,
+			})
+			if err != nil {
+				return err
 			}
-			if mdType == "OCO" || mdType == "OTO" {
-				if mdSecondSide == "" {
-					return fmt.Errorf("--second-side/--second-trigger required for %s", mdType)
-				}
-				intent.Second = &orderintent.ConditionLeg{OrderSide: mdSecondSide, TriggerPrice: mdSecondTrigger, OrderPrice: mdSecondOrder}
-			}
-			canonical := orderintent.CanonicalConditionalModify(intent)
-			gateErr := conditionalGate(app.config, canonical, mdExec, mdConfirm)
-			if gateErr == errConditionalPreviewOnly {
+			preview := app.tradingService.PreviewConditionalModify(intent)
+			err = app.tradingService.ConditionalModify(cmd.Context(), intent,
+				trading.ExecuteOptions{Execute: mdExec, Confirm: mdConfirm})
+			if errors.Is(err, trading.ErrConditionalPreviewOnly) {
 				fmt.Fprintf(cmd.OutOrStdout(), "%s %s x%s\n%s: %s\n",
 					intent.ID, intent.Type, strconv.FormatFloat(intent.Quantity, 'f', -1, 64),
-					i18n.T("order.conditional.confirmToken"), orderintent.ConfirmToken(canonical))
+					i18n.T("order.conditional.confirmToken"), preview.ConfirmToken)
 				return nil
 			}
-			if gateErr != nil {
-				return gateErr
-			}
-			if err := app.client.ModifyConditionalOrder(cmd.Context(), intent); err != nil {
+			if err != nil {
 				return userFacingCommandError(err)
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), i18n.T("order.conditional.modify.done"))

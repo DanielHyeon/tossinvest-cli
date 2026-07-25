@@ -28,9 +28,7 @@ import (
 
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
@@ -72,14 +70,11 @@ type Context struct {
 	TradingService *trading.Service
 }
 
-// ConditionalMutator is the conditional-order write surface. Its shape matches
-// the methods *hybrid.Client exposes to the CLI, so both profiles speak the same
-// intent types.
-type ConditionalMutator interface {
-	CreateConditionalOrder(ctx context.Context, intent orderintent.ConditionalPlaceIntent) (domain.ConditionalOrderRef, error)
-	CancelConditionalOrder(ctx context.Context, intent orderintent.ConditionalCancelIntent) error
-	ModifyConditionalOrder(ctx context.Context, intent orderintent.ConditionalModifyIntent) error
-}
+// ConditionalMutator is the conditional-order write surface. It is an alias of
+// trading.ConditionalBroker (the gate and intent assembly live there, task 1.4),
+// so the engine's adapter and the CLI's hybrid client are interchangeable at
+// this seam.
+type ConditionalMutator = trading.ConditionalBroker
 
 // New assembles the engine profile, or refuses to start.
 //
@@ -136,6 +131,6 @@ func New(opts Options) (*Context, error) {
 		// transaction (design D2), not in the CLI's JSON cache. Until the journal
 		// lands, trading.Service without a recorder behaves exactly as upstream's
 		// does when lineage is unset.
-		TradingService: trading.NewService(cfg.Trading, broker),
+		TradingService: trading.NewService(cfg.Trading, broker).WithConditional(broker),
 	}, nil
 }

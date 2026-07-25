@@ -46,9 +46,14 @@ type LineageRecorder interface {
 }
 
 type Service struct {
-	policy  config.Trading
-	broker  Broker
-	lineage LineageRecorder // optional; nil disables recording
+	policy config.Trading
+	broker Broker
+	// optional; nil disables recording
+	lineage LineageRecorder
+	// optional; nil makes conditional mutations return ErrLiveMutationPending.
+	// Conditional orders (stop/OCO/OTO) live on a different broker surface than
+	// place/cancel/amend, so they get their own field — see conditional.go.
+	conditional ConditionalBroker
 }
 
 func NewService(policy config.Trading, broker Broker) *Service {

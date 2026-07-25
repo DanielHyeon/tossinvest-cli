@@ -152,7 +152,12 @@ func New(opts Options) (*Context, error) {
 		LineageService: lineage,
 		// The trading service records lineage itself, so every surface that
 		// mutates through it (cobra, MCP, `ops call`) leaves the same trail.
-		TradingService: trading.NewService(cfg.Trading, h.Broker()).WithLineage(lineage),
+		// The hybrid client doubles as the conditional-order broker: those
+		// endpoints are official-only, and it answers with a "connect a key"
+		// error when none is configured.
+		TradingService: trading.NewService(cfg.Trading, h.Broker()).
+			WithLineage(lineage).
+			WithConditional(h),
 	}, nil
 }
 

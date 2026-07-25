@@ -1,30 +1,21 @@
 package main
 
 import (
-	"crypto/subtle"
-	"fmt"
-
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
-// conditionalGate enforces the same safety model as order place/cancel/amend:
-// config must enable conditional live actions, --execute must be set, and
-// --confirm must match the canonical confirm token. Returns nil when the
-// mutation may proceed; a user-facing error otherwise. When execute is false it
-// returns errConditionalPreviewOnly so the caller renders a preview + token.
-var errConditionalPreviewOnly = fmt.Errorf("preview only")
-
+// conditionalGate is a shim over trading.ConditionalGate, which is where the
+// conditional-order write policy now lives (internal/trading/conditional.go) so
+// every surface — cobra, MCP, the trading engine — enforces one copy of it.
+//
+// Kept as a function with this signature because the CLI has a config.File in
+// hand, not just its trading section, and because its test pins the four
+// outcomes at this seam.
 func conditionalGate(cfg config.File, canonical string, execute bool, confirm string) error {
-	if !cfg.Trading.Conditional || !cfg.Trading.AllowLiveOrderActions {
-		return fmt.Errorf("conditional live actions are disabled; set `trading.conditional=true` and `trading.allow_live_order_actions=true` in config.json")
-	}
-	if !execute {
-		return errConditionalPreviewOnly
-	}
-	token := orderintent.ConfirmToken(canonical)
-	if subtle.ConstantTimeCompare([]byte(confirm), []byte(token)) != 1 {
-		return fmt.Errorf("confirmation token mismatch; rerun without --execute to get the current --confirm token")
-	}
-	return nil
+	return trading.ConditionalGate(cfg.Trading, canonical, execute, confirm)
 }
+
+// errConditionalPreviewOnly is the same sentinel value the trading package
+// returns, so `errors.Is` comparisons on either side agree.
+var errConditionalPreviewOnly = trading.ErrConditionalPreviewOnly
