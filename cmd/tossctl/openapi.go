@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
+	tossapp "github.com/JungHoonGhae/tossinvest-cli/internal/app"
 	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
@@ -90,19 +89,12 @@ func validateOpenAPICredentials(ctx context.Context, creds official.Credentials,
 // resolveOpenAPIPaths returns the credentials file and token file paths,
 // honouring --config-dir override. When configDir is set, both files are placed
 // inside it so tests can control them via a single temp directory.
+//
+// Delegates to app.ResolveOpenAPIPaths: the engine profile reads credentials
+// from the same two paths, and a second copy of this resolution would be a way
+// for the two to drift onto different credential files.
 func resolveOpenAPIPaths(opts *rootOptions) (credFile, tokenFile string, err error) {
-	// Honour the override first so a DefaultPaths() failure never blocks tests
-	// (or any caller) that already pin a config directory.
-	if opts.configDir != "" {
-		return filepath.Join(opts.configDir, "openapi-credentials.json"),
-			filepath.Join(opts.configDir, "openapi-token.json"),
-			nil
-	}
-	paths, err := config.DefaultPaths()
-	if err != nil {
-		return "", "", err
-	}
-	return paths.CredentialsFile, paths.TokenFile, nil
+	return tossapp.ResolveOpenAPIPaths(opts.configDir)
 }
 
 // officialEligibleOpsCount is the number of CLI operations the official Toss

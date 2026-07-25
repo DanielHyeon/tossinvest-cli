@@ -7,7 +7,7 @@
 ## 1. Shim 리팩터 (upstream 회귀 0)
 
 - [x] 1.1 [T][High-risk] `trading.MutationResult`(internal/trading/result.go) → `internal/domain` 이동 + 기존 위치 type alias. 전체 upstream 테스트 무수정 통과 [Pre-Edit]
-- [ ] 1.2 [T][High-risk] `newAppContext`(cmd/tossctl/root.go:480) characterization 테스트 선행 작성: configDir 경로 override 4종, official 클라이언트 구성 truth table(creds×Enabled×Prefer), lineage 배선, 세션 부재 허용 — 이후 `internal/app.New(Options)`로 승격 + cmd 쪽 위임 래퍼. DoD = 기존 테스트 + characterization 통과 [Pre-Edit]
+- [x] 1.2 [T][High-risk] `newAppContext`(cmd/tossctl/root.go:480) characterization 테스트 선행 작성: configDir 경로 override 4종, official 클라이언트 구성 truth table(creds×Enabled×Prefer), lineage 배선, 세션 부재 허용 — 이후 `internal/app.New(Options)`로 승격 + cmd 쪽 위임 래퍼. DoD = 기존 테스트 + characterization 통과 [Pre-Edit]
 - [ ] 1.3 [T] `internal/app` 엔진 프로필: official 직접 구성(자격증명 없으면 기동 거부, config Prefer/Enabled 무시), hybrid·WTS mutator 정적 import 부재 테스트, 전 mutation matrix WTS-spy 0회 테스트
 - [ ] 1.4 [T][High-risk] 조건주문 게이트(cmd/tossctl/conditional_gate.go)·intent 조립 → `internal/trading` 이동 + `Service`에 Conditional Preview/Execute 메서드, cmd 쪽 shim [Pre-Edit]
 
