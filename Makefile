@@ -6,7 +6,7 @@ LDFLAGS := -X github.com/JungHoonGhae/tossinvest-cli/internal/version.Version=$(
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Commit=$(COMMIT) \
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Date=$(DATE)
 
-.PHONY: build run test lint fmt tidy clean
+.PHONY: build run test vet cover validate gate lint fmt tidy clean
 
 build:
 	mkdir -p bin
@@ -17,6 +17,26 @@ run:
 
 test:
 	go test ./...
+
+# vet only — `make lint` 은 gofmt 검사까지 함께 돌린다. 포맷 검사 없이 정적 분석만
+# 빠르게 돌리고 싶을 때 이 타겟을 쓴다.
+vet:
+	go vet ./...
+
+# 커버리지 프로파일 생성 + 합산(total) 한 줄 출력. coverage.out 은 .gitignore 대상.
+cover:
+	go test ./... -count=1 -coverprofile=coverage.out
+	go tool cover -func=coverage.out | tail -1
+
+# openspec 스펙/변경 검증 (SDD 게이트). openspec CLI 가 필요하다.
+validate:
+	openspec validate --all --strict --no-interactive
+
+# change 완료 게이트: `make gate CHANGE=<change-id>`.
+# CHANGE 미지정 시 gate.sh 가 usage 를 출력하고 exit 2 한다.
+# NTFS 마운트라 실행 비트가 없으므로 bash 로 명시 호출한다(docs/baseline.md 참고).
+gate:
+	bash tools/gate.sh $(CHANGE)
 
 # lint is gofmt + vet only — no extra tooling to install. `gofmt -l` lists
 # unformatted files without changing them, so the check fails loudly instead of
