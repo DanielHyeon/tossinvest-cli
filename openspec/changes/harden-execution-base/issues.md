@@ -80,6 +80,18 @@ Pre-Edit(대상·근거·테스트) 보고는 유지. task 2.9에서 구현.
   (오독이 아니라 정지 — 라이브 계좌에서 안전한 방향). 데이터 손실 없음.
 - 안전 영향: 없음. 새 테이블은 기존 주문 경로가 읽지 않는다.
 
+## 2026-07-26 [observation] task 3.4는 upstream 파일을 수정하지 않았다 — Pre-Edit 불요
+
+- 사실: tasks.md 머리말이 Pre-Edit 전문 대상으로 **3.4**를 지목한다. 계획 시점에는
+  reconcile 스냅샷이 `internal/official`·`domain.Order`를 건드려야 할 것으로 봤기 때문이다.
+- 실제: 2.9가 이미 `OrdersPageRaw`/`OrderRawByID`를 추가해 두었고 execgw가 완주 루프를
+  갖고 있어, 3.4는 **신규 패키지 `internal/reconcile`만으로** 구현됐다. upstream 파일
+  수정 0건이므로 Pre-Edit 전문 작성 조건("upstream 파일을 실제 수정할 때")에 해당하지 않는다.
+- 유일한 기존 패키지 변경은 `internal/journal/fills.go`(3.2에서 신규 생성한 파일)에
+  `NetPositions` **함수 추가** — additive, 기존 함수 무수정.
+  gross 합계(`FilledQuantities`)는 거래량 질문에 답하지 실물 포지션 질문에 답하지 못한다
+  (SELL 체결이 노출을 줄이므로). 왕복매매마다 허위 불일치가 나므로 부호 있는 집계가 필요했다.
+
 ## 2026-07-26 [observation] EntryGate에 심볼 차원이 없다 (task 3.2/3.6)
 
 - 사실: fill-detection 스펙은 UNKNOWN_BROKER_STATE 시 "해당 **심볼**이 차단"을,

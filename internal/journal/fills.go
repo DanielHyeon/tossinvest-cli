@@ -443,6 +443,55 @@ func (j *Journal) FilledQuantities(ctx context.Context) (map[string]string, erro
 	return out, nil
 }
 
+// NetPositions returns the engine's net quantity per symbol, as decimal strings.
+//
+// Net, not gross. FilledQuantities above answers "how much did we trade", which
+// is a volume question; a position question needs the side, because a sell fill
+// reduces exposure. Comparing gross fills against an account's holdings would
+// report a mismatch on every completed round trip.
+//
+// The side comes from the intent, through the confirmed attempt that named the
+// broker order. An order with no local intent contributes nothing: that is the
+// definition of an external order, and the reconciliation classifies it as such
+// rather than folding it into the engine's own belief.
+func (j *Journal) NetPositions(ctx context.Context) (map[string]string, error) {
+	rows, err := j.db.QueryContext(ctx, `
+		SELECT f.symbol, i.side, f.filled_quantity
+		  FROM fill_snapshots f
+		  JOIN mutation_attempts a ON a.broker_order_id = f.order_id AND a.state = ?
+		  JOIN intents i ON i.id = a.intent_id
+		 WHERE f.fail_closed = 0`, string(StateConfirmed))
+	if err != nil {
+		return nil, fmt.Errorf("journal: reading net positions: %w", err)
+	}
+	defer rows.Close()
+
+	totals := map[string]float64{}
+	for rows.Next() {
+		var symbol, side, filled string
+		if err := rows.Scan(&symbol, &side, &filled); err != nil {
+			return nil, fmt.Errorf("journal: reading net positions: %w", err)
+		}
+		v, perr := strconv.ParseFloat(strings.TrimSpace(orZero(filled)), 64)
+		if perr != nil {
+			continue
+		}
+		if strings.EqualFold(strings.TrimSpace(side), "SELL") {
+			v = -v
+		}
+		totals[strings.ToUpper(strings.TrimSpace(symbol))] += v
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: reading net positions: %w", err)
+	}
+
+	out := make(map[string]string, len(totals))
+	for symbol, v := range totals {
+		out[symbol] = decimalString(v)
+	}
+	return out, nil
+}
+
 // TrackedFillOrders returns every order the detector must keep reading: the
 // snapshots that have not reached a terminal state, plus the orders confirmed
 // attempts named that have not been observed yet.
