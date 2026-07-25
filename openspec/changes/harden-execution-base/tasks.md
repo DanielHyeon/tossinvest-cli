@@ -45,7 +45,7 @@
 
 ## 5. 완료 게이트 [M]
 
-- [ ] 5.1 diff 리뷰: upstream 테스트 650 green + characterization 통과, shim 최소성
-- [ ] 5.2 High-risk task Pre-Edit 선언·race(-race)/crash 테스트 확인
-- [ ] 5.3 `make gate CHANGE=harden-execution-base`
+- [x] 5.1 diff 리뷰: upstream 테스트 650 green + characterization 통과, shim 최소성
+- [x] 5.2 High-risk task Pre-Edit 선언·race(-race)/crash 테스트 확인
+- 5.3 (게이트 명령 자체) `make gate CHANGE=harden-execution-base` 통과 후 완료 선언
 - 5.4 (사용자 확인 후) archive — 단, verify-execution-capability 완료 전 자동화 게이트 ON 불가
