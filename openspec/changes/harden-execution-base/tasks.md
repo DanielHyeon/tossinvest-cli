@@ -13,7 +13,7 @@
 
 ## 2. 시간·Journal·상태 모델
 
-- [ ] 2.0 [T] `internal/clock`: 주입 가능 Clock, 시장별 TZ(KST/ET), 거래일 경계, DST 전환 테스트
+- [x] 2.0 [T] `internal/clock`: 주입 가능 Clock, 시장별 TZ(KST/ET), 거래일 경계, DST 전환 테스트
 - [ ] 2.1 [T][High-risk] `internal/journal` 스키마: intent·MutationAttempt·lineage edge 테이블, 스키마 버전, XDG data 경로 해석·FS allowlist 가드(fuseblk 픽스처 테스트 — 본 저장소가 fuseblk라 실검증 가능)
 - [ ] 2.2 [T][High-risk] journal 내구성: BEGIN IMMEDIATE + synchronous=FULL, 커밋 성공 후에만 제출 진행, 손상 감지 기동 거부, disk-full·crash-during-write 테스트
 - [ ] 2.3 [T] 브로커 상태 파생 함수: (status, canceledAt, filledQuantity, quantity, lineage) 우선순위 표 구현, upstream fixture 기반 표 테스트, 미지 status → UNKNOWN_BROKER_STATE fail-closed
