@@ -59,6 +59,30 @@ tossctl config init
 
 즉, 각 액션은 config에서 먼저 열려 있어야 하고, 그 다음에도 런타임 게이트(`--execute` → `--confirm <token>`)를 통과해야 합니다.
 
+**엔진 자동화 게이트 (`engine.automation_gate`, schema v5+)**
+
+`tossctl` CLI는 이 블록을 읽지 않습니다. 무인 트레이딩 엔진 프로필 전용이며, **기본값은 OFF**입니다. 블록이 아예 없는 기존 설정 파일은 전부 OFF로 로드됩니다.
+
+```json
+{
+  "engine": {
+    "automation_gate": {
+      "enabled": false,
+      "attestation_file": "",
+      "max_order_quantity": 0,
+      "max_order_notional": 0,
+      "limit_currency": "KRW"
+    }
+  }
+}
+```
+
+- `enabled` — 무인 주문 제출 허용. 켜는 것은 사람의 결정이며(WORKFLOW §0.7) 변경 사실이 audit 로그에 기록됩니다. 에이전트가 자동으로 켜지 않습니다
+- `max_order_quantity` / `max_order_notional` / `limit_currency` — Guardian 한도 스냅샷. 둘 다 0이면 "한도 없음"이 아니라 **기동 거부**입니다
+- `attestation_file` — capability attestation 파일 경로 override. 비우면 `<config dir>/capability-attestation.json`
+
+`enabled: true`로 두더라도 엔진은 (1) 0이 아닌 한도, (2) 미만료·계좌 일치 attestation이 모두 확인되지 않으면 기동을 거부합니다. attestation은 별도 change(`verify-execution-capability`)의 실측 검증이 만들어냅니다.
+
 ## 실행 순서
 
 거래 mutation이 실제로 실행되려면 아래 순서를 모두 만족해야 합니다.
