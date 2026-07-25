@@ -30,7 +30,7 @@ P0 정찰 + proposal-freeze 리뷰(3보이스 49건, review.md)로 확인된 실
 `internal/clock`: 주입 가능 Clock, 시장 TZ(KST/ET), 거래일 경계, DST 테이블 테스트. journal 타임스탬프·staleness·안정화 간격·SLO 측정이 모두 이 패키지를 쓴다.
 
 ### D7. StockOS SDD 규칙 이식 범위
-(기존 D5 유지) 도구 독립 규칙만 — WORKFLOW 개정 2 + sdd-workflow 델타. CodeGraph류 도구는 미도입, 대체는 Pre-Edit 선언. Pre-Edit 전문 작성은 upstream 파일 수정 task(1.1, 1.2, 1.4, 3.2)에만 적용하고 신규 패키지 task는 §0 검토 + race/crash 테스트로 갈음.
+(기존 D5 유지) 도구 독립 규칙만 — WORKFLOW 개정 2 + sdd-workflow 델타. CodeGraph류 도구는 미도입, 대체는 Pre-Edit 선언. Pre-Edit 전문 작성은 upstream 파일 수정 task(1.1, 1.2, 1.4, 3.4)에만 적용하고 신규 패키지 task는 §0 검토 + race/crash 테스트로 갈음.
 
 ## Risks / Trade-offs
 
