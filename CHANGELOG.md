@@ -4,6 +4,8 @@ tossctl 사용자 관점의 변경 이력입니다. 각 버전에서 "무엇을 
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-07-25
+
 ### 새 기능
 - **`profit summary`, `profit daily`** — 실현손익을 **기간별·종목별로** 볼 수 있습니다. 기존 `profit` 은 누적 총액만 보여줬습니다.
   - `profit summary --type sales|dividend|lending|account-interest [--from --to]` — 카테고리 하나의 수익금·수익률·매입금액 (KRW/USD). 날짜를 생략하면 전체 기간입니다.
