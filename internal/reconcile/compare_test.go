@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
@@ -203,18 +202,16 @@ func TestZeroOnBothSidesIsNotAFinding(t *testing.T) {
 
 // --- journal-backed local state ---------------------------------------------
 
+// openJournal opens a journal with the position projection bound.
+//
+// Binding the hook is not test scaffolding since task 6.3: the local half of the
+// comparison *is* the projection (position-ledger: reconciliation의 로컬 상태는
+// 이 투영을 소비한다 SHALL), so a journal recording fills without projecting them
+// is a journal whose local belief is empty. Every test below that used to reach
+// the fill ledger directly now reaches it through the row a fill wrote here.
 func openJournal(t *testing.T) *journal.Journal {
 	t.Helper()
-	j, err := journal.Open(context.Background(), journal.Options{
-		Path:  filepath.Join(t.TempDir(), "journal.db"),
-		Clock: clock.NewFake(asOf),
-		// This repository lives on ntfs; the guard has its own tests in
-		// internal/journal.
-		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
-	})
-	if err != nil {
-		t.Fatalf("journal.Open: %v", err)
-	}
+	j := openJournalAt(t, filepath.Join(t.TempDir(), "journal.db"))
 	t.Cleanup(func() { _ = j.Close() })
 	return j
 }
@@ -247,6 +244,10 @@ func confirmedOrder(t *testing.T, j *journal.Journal, intentID, attemptID, order
 
 // TestLocalStateNetsBuysAgainstSells: comparing gross fills against a holding
 // would report a mismatch on every completed round trip.
+//
+// Since task 6.3 the netting is the projection's, not a second sum computed
+// here (position-ledger: fills-only 파생과 별도의 두 번째 포지션 계산을 두지
+// 않는다 SHALL NOT). The number is the same; where it comes from is the point.
 func TestLocalStateNetsBuysAgainstSells(t *testing.T) {
 	j := openJournal(t)
 	ctx := context.Background()
@@ -338,6 +339,10 @@ func TestLocalStateResolvesLineageBeforeComparing(t *testing.T) {
 
 // TestFailClosedSnapshotsAreExcludedFromLocalBelief: a quantity the ledger
 // refused is not a quantity the engine may claim to know.
+//
+// Since task 6.3 the exclusion is structural rather than a filter in the query:
+// the apply hooks are not called for a refused snapshot (apply_hook.go rule 3),
+// so the projection never sees it and there is no row to exclude.
 func TestFailClosedSnapshotsAreExcludedFromLocalBelief(t *testing.T) {
 	j := openJournal(t)
 	ctx := context.Background()
@@ -357,5 +362,161 @@ func TestFailClosedSnapshotsAreExcludedFromLocalBelief(t *testing.T) {
 	}
 	if qty, ok := local.Positions["AAPL"]; ok && qty != "0" {
 		t.Fatalf("local position = %q, want nothing claimed from a refused snapshot", qty)
+	}
+}
+
+// --- the projection is the source (task 6.3) ---------------------------------
+
+// TestLocalStateReadsTheProjectionNotTheFills is the rewiring itself: an
+// adjustment moves the projection without touching a single fill, and the
+// comparison has to follow the projection (position-ledger: 로컬 포지션 상태의
+// 출처는 Position 투영이며 SHALL).
+//
+// The fill ledger still says 10 after this, so a local state derived from fills
+// would keep reporting a disagreement the adjustment already settled — and the
+// engine would stay blocked on a difference that no longer exists.
+func TestLocalStateReadsTheProjectionNotTheFills(t *testing.T) {
+	j := openJournal(t)
+	ctx := context.Background()
+
+	confirmedOrder(t, j, "intent-1", "attempt-1", "o-1", "AAPL", "BUY")
+	if _, err := j.RecordFill(ctx, journal.FillObservation{
+		OrderID: "o-1", Symbol: "AAPL", Market: "us", State: "FILLED", Terminal: true,
+		Quantity: "10", FilledQuantity: "10", ObservedAt: "2026-03-30T01:30:00Z",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	watermark, err := j.FillWatermark(ctx, "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.ApplyPositionAdjustment(ctx, journal.AdjustmentRequest{
+		AccountRef: "acct-7", Market: "us", Symbol: "AAPL", Kind: journal.AdjustmentUnknown,
+		ExpectedPrevQuantity: "10", ExpectedFillWatermark: watermark, NewQuantity: "4",
+		BrokerAsOf: "2026-03-30T01:31:00Z", Evidence: "the account says 4",
+	}); err != nil {
+		t.Fatalf("ApplyPositionAdjustment: %v", err)
+	}
+
+	// The fills are untouched — that is what makes this a real test of the source.
+	net, err := j.NetPositions(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if net["AAPL"] != "10" {
+		t.Fatalf("precondition: the fill ledger still says %q, want the untouched 10", net["AAPL"])
+	}
+
+	local, err := reconcile.LocalStateFromJournal(ctx, j, "acct-7")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if local.Positions["AAPL"] != "4" {
+		t.Fatalf("local position = %q, want the projection's adjusted 4", local.Positions["AAPL"])
+	}
+	// And the comparison it feeds now agrees with the account.
+	diff := reconcile.Comparer{}.Compare(
+		snapshotWith([]reconcile.Holding{{Symbol: "AAPL", Quantity: "4", Market: "us"}}, nil), local)
+	if diff.BlocksEntry() {
+		t.Fatalf("the adjustment converged the projection; the comparison must agree: %s", diff.Summary())
+	}
+}
+
+// TestClosedInstancesAreNotHeld: CLOSED is final, so a closed instance
+// contributes nothing to what the engine believes it holds. Counting it would
+// report exposure on every symbol the engine has ever traded.
+func TestClosedInstancesAreNotHeld(t *testing.T) {
+	j := openJournal(t)
+	ctx := context.Background()
+
+	confirmedOrder(t, j, "intent-buy", "attempt-buy", "o-buy", "AAPL", "BUY")
+	confirmedOrder(t, j, "intent-sell", "attempt-sell", "o-sell", "AAPL", "SELL")
+	for _, obs := range []journal.FillObservation{
+		{OrderID: "o-buy", Symbol: "AAPL", Market: "us", State: "FILLED", Terminal: true,
+			Quantity: "10", FilledQuantity: "10", ObservedAt: "2026-03-30T01:30:00Z"},
+		{OrderID: "o-sell", Symbol: "AAPL", Market: "us", State: "FILLED", Terminal: true,
+			Quantity: "10", FilledQuantity: "10", ObservedAt: "2026-03-30T01:31:00Z"},
+	} {
+		if _, err := j.RecordFill(ctx, obs); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	current, err := j.CurrentPosition(ctx, "acct-7", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current.State != journal.PositionClosed {
+		t.Fatalf("precondition: state = %s, want CLOSED", current.State)
+	}
+
+	local, err := reconcile.LocalStateFromJournal(ctx, j, "acct-7")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if qty, ok := local.Positions["AAPL"]; ok && qty != "0" {
+		t.Fatalf("local position = %q, want a closed instance to hold nothing", qty)
+	}
+}
+
+// TestTheProjectionIsSummedAtSymbolLevel is the delta's reduction rule
+// (SHALL — 비교는 심볼 수준에서 수행하고 투영은 비-CLOSED 인스턴스의 합으로
+// 축약한다). The holdings snapshot's market dimension is [미측정], so two
+// instances of one symbol are one comparison unit until it is measured.
+func TestTheProjectionIsSummedAtSymbolLevel(t *testing.T) {
+	j := openJournal(t)
+	ctx := context.Background()
+
+	// One instance from a fill, a second from an adjustment on another market.
+	confirmedOrder(t, j, "intent-1", "attempt-1", "o-1", "AAPL", "BUY")
+	if _, err := j.RecordFill(ctx, journal.FillObservation{
+		OrderID: "o-1", Symbol: "AAPL", Market: "us", State: "FILLED", Terminal: true,
+		Quantity: "10", FilledQuantity: "10", ObservedAt: "2026-03-30T01:30:00Z",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	watermark, err := j.FillWatermark(ctx, "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.ApplyPositionAdjustment(ctx, journal.AdjustmentRequest{
+		AccountRef: "acct-7", Market: "kr", Symbol: "AAPL", Kind: journal.AdjustmentExternal,
+		ExpectedPrevQuantity: "0", ExpectedFillWatermark: watermark, NewQuantity: "2.5",
+		BrokerAsOf: "2026-03-30T01:31:00Z", Evidence: "held on another venue",
+	}); err != nil {
+		t.Fatalf("ApplyPositionAdjustment: %v", err)
+	}
+
+	local, err := reconcile.LocalStateFromJournal(ctx, j, "acct-7")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if local.Positions["AAPL"] != "12.5" {
+		t.Fatalf("symbol total = %q, want the 12.5 both instances add up to", local.Positions["AAPL"])
+	}
+}
+
+// TestAnotherAccountsProjectionIsNotThisAccountsBelief: the projection is keyed
+// by account, and reading somebody else's rows would compare one account's
+// snapshot against another's positions.
+func TestAnotherAccountsProjectionIsNotThisAccountsBelief(t *testing.T) {
+	j := openJournal(t)
+	ctx := context.Background()
+
+	confirmedOrder(t, j, "intent-1", "attempt-1", "o-1", "AAPL", "BUY")
+	if _, err := j.RecordFill(ctx, journal.FillObservation{
+		OrderID: "o-1", Symbol: "AAPL", Market: "us", State: "FILLED", Terminal: true,
+		Quantity: "10", FilledQuantity: "10", ObservedAt: "2026-03-30T01:30:00Z",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	local, err := reconcile.LocalStateFromJournal(ctx, j, "acct-other")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if qty, ok := local.Positions["AAPL"]; ok && qty != "0" {
+		t.Fatalf("acct-other believes it holds %q of a position acct-7 opened", qty)
 	}
 }

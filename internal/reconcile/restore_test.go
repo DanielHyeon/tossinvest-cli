@@ -233,7 +233,24 @@ func TestWriteThroughRecordsTheStateWithItsEvidence(t *testing.T) {
 		t.Fatal("the persisted state must carry the evidence an operator acts on")
 	}
 
-	// A clean pass closes it, and the journal says why.
+	// A clean pass on its own leaves it standing. Task 6.3: 조정 없이 우연히
+	// 일치한 단발 관측(SHALL NOT) — the release needs something to have converged
+	// the projection, not just a reading that happened to agree.
+	clk.Advance(31 * time.Second)
+	if _, err := tracker.Observe(ctx, reconcile.Diff{AccountRef: "acct-7", Matched: 1}); err != nil {
+		t.Fatalf("Observe: %v", err)
+	}
+	if active, err = j.ActiveReconcileStates(ctx); err != nil {
+		t.Fatalf("ActiveReconcileStates: %v", err)
+	}
+	if len(active) != 1 {
+		t.Fatalf("a coincidental match must not close the state, got %+v", active)
+	}
+
+	// An adjustment and the re-read after it do close it, and the journal says
+	// which of the two was the cause. This assertion used to be on the clean pass
+	// above, with cause RECHECK_MATCHED.
+	tracker.AdjustmentApplied("AAPL")
 	clk.Advance(31 * time.Second)
 	if _, err := tracker.Observe(ctx, reconcile.Diff{AccountRef: "acct-7", Matched: 1}); err != nil {
 		t.Fatalf("Observe: %v", err)
@@ -242,13 +259,13 @@ func TestWriteThroughRecordsTheStateWithItsEvidence(t *testing.T) {
 		t.Fatalf("ActiveReconcileStates: %v", err)
 	}
 	if len(active) != 0 {
-		t.Fatalf("a clean reconciliation must close the state, got %+v", active)
+		t.Fatalf("an adjustment and a matching re-read must close the state, got %+v", active)
 	}
 	history, err := j.ReconcileStateHistory(ctx, "acct-7")
 	if err != nil {
 		t.Fatalf("ReconcileStateHistory: %v", err)
 	}
-	if len(history) != 1 || history[0].ReleaseCause != journal.ReconcileReleaseRecheckMatched {
-		t.Fatalf("want one released state with a recorded cause, got %+v", history)
+	if len(history) != 1 || history[0].ReleaseCause != journal.ReconcileReleaseAdjustmentApplied {
+		t.Fatalf("want one state released by ADJUSTMENT_APPLIED, got %+v", history)
 	}
 }

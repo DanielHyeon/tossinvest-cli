@@ -39,6 +39,7 @@ import (
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
 // quantityRoundTripEpsilon is the float64 round-trip width, not a business
@@ -65,20 +66,87 @@ type LocalOrder struct {
 // LocalState is what the engine believes.
 type LocalState struct {
 	AccountRef string
-	// Positions is the net quantity per symbol as a decimal string. Net, not
-	// gross: a sell fill reduces exposure, and comparing gross fills against a
-	// holding would report a mismatch on every round trip.
+	// Positions is the held quantity per symbol as a decimal string, taken from
+	// the position projection: the sum of the account's non-CLOSED instances of
+	// that symbol.
 	Positions map[string]string
 	// OpenOrders is keyed by the lineage-resolved current order id.
 	OpenOrders map[string]LocalOrder
 }
 
+// PositionProjection is the projection half of the journal, as this package
+// needs it.
+//
+// It is an interface so the coupling is one method wide and so a caller can be
+// tested against a fixed projection. *journal.Journal satisfies it.
+type PositionProjection interface {
+	Positions(ctx context.Context, accountRef string) ([]journal.Position, error)
+}
+
+// HeldBySymbol reduces the position projection to one quantity per symbol.
+//
+// Non-CLOSED instances only, summed at symbol level — the two halves of the
+// delta's reduction rule (SHALL — 비교는 심볼 수준에서 수행하고 투영은 비-CLOSED
+// 인스턴스의 합으로 축약한다). CLOSED is final, so a closed instance holds
+// nothing and counting it would report exposure on every symbol the engine has
+// ever traded; the symbol-level sum is what the holdings snapshot can be
+// compared against at all, because whether it carries a market dimension is
+// `[미측정]` and until it does two instances of one symbol are one unit.
+//
+// The arithmetic is riskcalc's exact decimal, not a float sum. A projection is
+// the thing a quantity mismatch is judged against with tolerance zero, and a
+// binary round trip in the middle of that judgement is a disagreement nobody can
+// explain.
+func HeldBySymbol(ctx context.Context, p PositionProjection, accountRef string) (map[string]string, error) {
+	instances, err := p.Positions(ctx, accountRef)
+	if err != nil {
+		return nil, err
+	}
+	held := make(map[string]string, len(instances))
+	for _, instance := range instances {
+		if instance.State == journal.PositionClosed {
+			continue
+		}
+		symbol := strings.ToUpper(strings.TrimSpace(instance.Symbol))
+		running, ok := held[symbol]
+		if !ok {
+			running = "0"
+		}
+		quantity := strings.TrimSpace(instance.Quantity)
+		if quantity == "" {
+			quantity = "0"
+		}
+		sum, err := riskcalc.AddDecimal(running, quantity)
+		if err != nil {
+			// A quantity the projection cannot add is not a quantity to guess at:
+			// the comparison it feeds decides whether the engine may open a
+			// position, and a symbol silently dropped from it reads as flat.
+			return nil, fmt.Errorf(
+				"reconcile: summing the projected quantity of %s (instance %s holds %q): %w",
+				symbol, instance.ID, instance.Quantity, err)
+		}
+		held[symbol] = sum
+	}
+	return held, nil
+}
+
 // LocalStateFromJournal reads the engine's belief out of the journal.
+//
+// The position half is the projection (position-ledger: reconciliation의 로컬
+// 상태는 이 투영을 소비한다 SHALL). It used to be a second sum over the fill
+// ledger, and two derivations of one quantity is exactly what the spec forbids
+// (SHALL NOT — fills-only 파생과 별도의 두 번째 포지션 계산을 두지 않는다): an
+// adjustment converges the projection and leaves the fills alone, so the
+// fills-only sum would keep reporting a disagreement the account already settled
+// and the engine would stay blocked on a difference that no longer exists.
+//
+// The open-order half is unchanged: lineage-resolved current order ids, because
+// the official API answers a modify with a new order number.
 func LocalStateFromJournal(ctx context.Context, j *journal.Journal, accountRef string) (LocalState, error) {
 	if j == nil {
 		return LocalState{}, fmt.Errorf("reconcile: a journal is required to read local state")
 	}
-	positions, err := j.NetPositions(ctx)
+	positions, err := HeldBySymbol(ctx, j, accountRef)
 	if err != nil {
 		return LocalState{}, err
 	}

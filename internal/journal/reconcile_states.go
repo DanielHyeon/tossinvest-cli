@@ -55,11 +55,29 @@ import (
 // Release causes. A release names why the state is over, and the spec requires
 // that naming: 해제는 재조회 일치와 원인 기록을 요구한다(SHALL).
 const (
-	// ReconcileReleaseRecheckMatched — a fresh comparison agreed. This is the
-	// only automatic exit, and it exists because the condition it closes was a
-	// disagreement that a later read can disprove.
+	// ReconcileReleaseRecheckMatched — a fresh comparison agreed.
+	//
+	// Since task 6.3 this is no longer what closes a quantity disagreement on
+	// its own: reconciliation's own automatic exit is ADJUSTMENT_APPLIED below,
+	// and a match nothing converged is a coincidence rather than a resolution.
+	// The constant stays because a producer that *did* nothing but re-read — the
+	// resolution path's own states — still names its evidence honestly.
 	ReconcileReleaseRecheckMatched = "RECHECK_MATCHED"
-	// ReconcileReleaseOperator — a human closed it, with evidence.
+	// ReconcileReleaseAdjustmentApplied — an adjustment event converged the
+	// projection to the account's value, and the re-read after it agreed
+	// (add-core-domain task 6.3; reconciliation delta: 비영구 차단의 자동 해제는
+	// 조정 이벤트가 반영된 뒤의 재조회 일치에만 근거하며 신규 release
+	// cause(ADJUSTMENT_APPLIED 계열)와 원인 기록을 남긴다 SHALL).
+	//
+	// Two facts, not one. "The account and the engine now agree" is a reading;
+	// "something was written that made them agree" is a cause. Releasing on the
+	// reading alone would clear a block whenever a disagreement happened to be
+	// invisible on one pass, which is the failure the delta names: 조정 없이
+	// 우연히 일치한 단발 관측(SHALL NOT).
+	ReconcileReleaseAdjustmentApplied = "ADJUSTMENT_APPLIED"
+	// ReconcileReleaseOperator — a human closed it, with evidence. It is the
+	// only exit from a permanent mismatch (SHALL — 영구 불일치의 해제는 운영자
+	// 확인뿐이다).
 	ReconcileReleaseOperator = "OPERATOR"
 )
 
@@ -83,9 +101,17 @@ func ValidReconcileCause(cause string) bool {
 
 // ValidReconcileReleaseCause reports whether a release cause is one this build
 // writes.
+//
+// It is the same write-time constraint ValidReconcileCause is, for the same
+// reason: `release_cause` carries no CHECK either, and a release nobody
+// enumerated is a block that disappeared for a reason no procedure describes.
+// Task 6.3 added ADJUSTMENT_APPLIED under the Manager's condition on task 0.1 —
+// the constant set is the constraint, so extending it is a deliberate act here
+// rather than a string a caller invents at runtime.
 func ValidReconcileReleaseCause(cause string) bool {
 	switch cause {
-	case ReconcileReleaseRecheckMatched, ReconcileReleaseOperator:
+	case ReconcileReleaseRecheckMatched, ReconcileReleaseAdjustmentApplied,
+		ReconcileReleaseOperator:
 		return true
 	default:
 		return false

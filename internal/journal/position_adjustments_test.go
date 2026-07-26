@@ -393,15 +393,41 @@ func TestAnAdjustmentConvergesAFrozenProjection(t *testing.T) {
 		t.Errorf("converged = (%s, %s), want the account's (CLOSED, 0)",
 			res.Position.State, res.Position.Quantity)
 	}
-	// The RECONCILE state stays until something releases it. Releasing on the
-	// adjustment alone would clear a block from the same evidence that raised
-	// it; the release rule is task 6.3's (ADJUSTMENT_APPLIED).
+	// The adjustment alone does not release. Releasing on it would clear a block
+	// from the same evidence that raised it, and the account has not been read
+	// again since.
 	states, err := j.ActiveReconcileStates(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(states) != 1 {
-		t.Errorf("active RECONCILE states = %d, want the block still standing", len(states))
+		t.Fatalf("active RECONCILE states = %d, want the block still standing after the adjustment", len(states))
+	}
+
+	// Task 6.3 closes the loop: the re-read *after* the adjustment is what
+	// releases it, and the cause names the adjustment rather than the reading
+	// (reconciliation delta: 조정 이벤트가 반영된 뒤의 재조회 일치). The tracker's
+	// half of this rule is internal/reconcile's — a journal test cannot import
+	// it without a cycle — so what is pinned here is the storage contract the
+	// tracker writes through.
+	released, ok, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{
+		AccountRef:  states[0].AccountRef,
+		Symbol:      states[0].Symbol,
+		Cause:       ReconcileReleaseAdjustmentApplied,
+		Evidence:    "the adjustment converged the projection to 0 and the re-read agreed",
+		ExpectCause: ReconcileCauseQuantityMismatch,
+	})
+	if err != nil || !ok {
+		t.Fatalf("ReleaseReconcile: released=%v err=%v", ok, err)
+	}
+	if released.ReleaseCause != ReconcileReleaseAdjustmentApplied {
+		t.Errorf("release cause = %q, want %s", released.ReleaseCause, ReconcileReleaseAdjustmentApplied)
+	}
+	if states, err = j.ActiveReconcileStates(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if len(states) != 0 {
+		t.Errorf("active RECONCILE states = %d, want the block released by the adjustment", len(states))
 	}
 }
 

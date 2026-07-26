@@ -111,17 +111,137 @@ func TestSuccessResetsTheFailureCounter(t *testing.T) {
 	if out.Failures != 0 {
 		t.Fatalf("failures after a clean reconcile = %d, want 0", out.Failures)
 	}
-	if len(out.Cleared) != 1 {
-		t.Fatalf("cleared = %+v, want the mismatch block released", out.Cleared)
+	// The counter and the block are two different things, and task 6.3 separated
+	// them: the counter measures consecutive failure and resets on any agreeing
+	// pass, but the *block* needs an adjustment to have converged the projection
+	// before an agreeing pass may release it (reconciliation delta: 비영구 차단의
+	// 자동 해제는 조정 이벤트가 반영된 뒤의 재조회 일치에만 근거한다). This
+	// assertion used to read "cleared = 1"; the release itself is covered by
+	// TestAnAdjustmentAndAMatchingRecheckRelease below.
+	if len(out.Cleared) != 0 {
+		t.Fatalf("cleared = %+v, want nothing released without an adjustment", out.Cleared)
+	}
+	if len(out.AwaitingAdjustment) != 1 {
+		t.Fatalf("awaiting = %+v, want the block held until something converges it", out.AwaitingAdjustment)
 	}
 	if rejected := gate.CheckEntry(); rejected != nil {
-		t.Fatalf("a clean reconcile must release the gate, got %v", rejected)
+		t.Fatalf("a symbol-scoped block must not latch the account, got %v", rejected)
 	}
 
 	// And a fresh failure starts counting from one again, not from three.
 	clk.Advance(30 * time.Second)
 	if out := observe(t, tracker, mismatchDiff("AAPL", "10", "4")); out.Failures != 1 {
 		t.Fatalf("failures after the reset = %d, want 1", out.Failures)
+	}
+}
+
+// --- the release rule (task 6.3) ---------------------------------------------
+//
+// The delta narrows what "auto release" means: 비영구 차단의 자동 해제는 조정
+// 이벤트가 반영된 뒤의 재조회 일치에만 근거하며 신규 release
+// cause(ADJUSTMENT_APPLIED)와 원인 기록을 남긴다. "The account and the engine
+// now agree" is a reading; "something was written that made them agree" is a
+// cause, and only the second one releases.
+
+// TestAnAdjustmentAndAMatchingRecheckRelease is the spec's "조정 반영 후 자동
+// 해제" scenario.
+func TestAnAdjustmentAndAMatchingRecheckRelease(t *testing.T) {
+	clk := clock.NewFake(asOf)
+	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
+	tracker := newTracker(clk, gate)
+
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
+	if gate.CheckEntryFor("us", "AAPL") == nil {
+		t.Fatal("precondition: the disagreement must block AAPL")
+	}
+
+	tracker.AdjustmentApplied("AAPL")
+	clk.Advance(30 * time.Second)
+	out := observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+
+	if len(out.Cleared) != 1 || out.Cleared[0].Symbol != "AAPL" {
+		t.Fatalf("cleared = %+v, want the adjusted symbol released", out.Cleared)
+	}
+	if len(out.AwaitingAdjustment) != 0 {
+		t.Fatalf("awaiting = %+v, want nothing held back", out.AwaitingAdjustment)
+	}
+	if rejected := gate.CheckEntryFor("us", "AAPL"); rejected != nil {
+		t.Fatalf("the released symbol must be tradable again, got %v", rejected)
+	}
+}
+
+// TestAnAdjustmentIsSpentByTheRecheckItAnswers: the rule is "the re-read *after*
+// the adjustment", not "any re-read from now on". A recheck that still disagrees
+// means the adjustment did not settle it, and leaving the credit standing would
+// let some later coincidence spend it.
+func TestAnAdjustmentIsSpentByTheRecheckItAnswers(t *testing.T) {
+	clk := clock.NewFake(asOf)
+	tracker := newTracker(clk, nil)
+
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
+	tracker.AdjustmentApplied("AAPL")
+
+	// The re-read after the adjustment still disagrees: the adjustment is spent
+	// and it did not answer the question.
+	clk.Advance(30 * time.Second)
+	observe(t, tracker, mismatchDiff("AAPL", "9", "4"))
+
+	clk.Advance(30 * time.Second)
+	out := observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+	if len(out.Cleared) != 0 {
+		t.Fatalf("cleared = %+v, want the spent adjustment not to release a later coincidence", out.Cleared)
+	}
+	if tracker.EntryAllowed("us", "AAPL") == nil {
+		t.Fatal("the block must still stand")
+	}
+}
+
+// TestAnAdjustmentOnAnotherSymbolDoesNotRelease: the credit is per symbol,
+// because an adjustment on TSLA says nothing about what the engine believes
+// about AAPL.
+func TestAnAdjustmentOnAnotherSymbolDoesNotRelease(t *testing.T) {
+	clk := clock.NewFake(asOf)
+	tracker := newTracker(clk, nil)
+
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
+	tracker.AdjustmentApplied("TSLA")
+	clk.Advance(30 * time.Second)
+
+	out := observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+	if len(out.Cleared) != 0 {
+		t.Fatalf("cleared = %+v, want an unrelated symbol's adjustment to release nothing", out.Cleared)
+	}
+	if tracker.EntryAllowed("us", "AAPL") == nil {
+		t.Fatal("AAPL must still be blocked")
+	}
+}
+
+// TestAnAdjustmentDoesNotReleaseAPermanentMismatch: 영구 불일치의 해제는 운영자
+// 확인뿐이다(SHALL). Converging the projection is exactly the kind of evidence a
+// permanent block is permanent *despite* — three failures already showed that
+// looking again is not what settles this.
+func TestAnAdjustmentDoesNotReleaseAPermanentMismatch(t *testing.T) {
+	clk := clock.NewFake(asOf)
+	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
+	tracker := newTracker(clk, gate)
+
+	for i := 0; i < 3; i++ {
+		observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
+		clk.Advance(30 * time.Second)
+	}
+	if !tracker.Permanent() {
+		t.Fatal("precondition: three consecutive failures make the mismatch permanent")
+	}
+
+	tracker.AdjustmentApplied("AAPL")
+	observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+
+	if !tracker.Permanent() {
+		t.Fatal("an adjustment must not un-mark a permanent mismatch")
+	}
+	rejected := gate.CheckEntry()
+	if rejected == nil || rejected.Reason != execgw.ReasonReconcilePermanent {
+		t.Fatalf("gate = %v, want the permanent block still held for the operator", rejected)
 	}
 }
 

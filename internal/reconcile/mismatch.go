@@ -33,13 +33,43 @@ package reconcile
 // rather than as a comment, and a test asserts every reason this package can
 // produce has a row in it.
 //
-//	condition                          reason code                        scope    auto release        manual release
-//	---------------------------------  ---------------------------------  -------  ------------------  ---------------
-//	restart recovery unfinished        recovery_incomplete                account  recovery completes  —
-//	quantity disagreement              reconciliation_mismatch            symbol   clean reconcile     operator
-//	order the account does not show    reconciliation_mismatch            symbol   clean reconcile     operator
-//	3 consecutive failed reconciles    reconciliation_mismatch_permanent  account  never               operator
-//	broker snapshot contradiction      unknown_broker_state               symbol   never               operator
+//	condition                          reason code                        scope    auto release          manual release
+//	---------------------------------  ---------------------------------  -------  --------------------  ---------------
+//	restart recovery unfinished        recovery_incomplete                account  recovery completes    —
+//	quantity disagreement              reconciliation_mismatch            symbol   adjusted reconcile    operator
+//	order the account does not show    reconciliation_mismatch            symbol   adjusted reconcile    operator
+//	3 consecutive failed reconciles    reconciliation_mismatch_permanent  account  never                 operator
+//	broker snapshot contradiction      unknown_broker_state               symbol   never                 operator
+//
+// # "Adjusted reconcile", and why an agreeing read is not enough
+//
+// The two symbol rows used to say "clean reconcile": the next comparison that
+// agreed released the block. Task 6.3 narrowed that to what the reconciliation
+// delta requires — 비영구 차단의 자동 해제는 조정 이벤트가 반영된 뒤의 재조회
+// 일치에만 근거하며(SHALL) … 조정 없이 우연히 일치한 단발 관측은 [해제하지
+// 못한다](SHALL NOT).
+//
+// The distinction is between a reading and a cause. "The account and the engine
+// now agree" can be true because the disagreement was settled, and it can be
+// true because one poll happened to catch a moment when the difference was
+// invisible — a fill in flight, a settlement mid-propagation, a snapshot taken
+// between two halves of a round trip. Releasing on the reading treats those two
+// identically, and the second one re-opens entries onto an exposure the engine
+// still cannot account for.
+//
+// So a release needs two things: something wrote an adjustment that converged
+// the projection to the account's value (AdjustmentApplied below, called by
+// whatever applied it), and the *next* comparison agreed. The credit is per
+// symbol and is spent by the observation that follows it, because the rule is
+// "the re-read after the adjustment" and not "any re-read from now on". The
+// release is recorded with cause ADJUSTMENT_APPLIED, so the history says which
+// of the two facts closed the block.
+//
+// What this costs: a disagreement that resolves itself with nothing written
+// stays blocked until an operator clears it. That is deliberate and it is the
+// conservative direction (§0.9) — the loop's own answer to a quantity
+// disagreement is to converge the projection to the account, so the ordinary
+// path always writes something.
 //
 // # The scope caveat
 //
@@ -93,8 +123,13 @@ const (
 type Release string
 
 const (
-	// ReleaseOnCleanReconcile — the next agreeing reconciliation clears it.
-	ReleaseOnCleanReconcile Release = "clean_reconcile"
+	// ReleaseOnAdjustedReconcile — an adjustment converged the projection and the
+	// re-read after it agreed (add-core-domain task 6.3).
+	//
+	// It replaced a plain "the next agreeing reconciliation clears it", and the
+	// difference is the whole of the delta's release rule: an agreeing read is a
+	// reading, and a block is released by a cause. See the state table below.
+	ReleaseOnAdjustedReconcile Release = "adjusted_reconcile"
 	// ReleaseOnRecoveryComplete — finishing the restart sequence clears it.
 	ReleaseOnRecoveryComplete Release = "recovery_complete"
 	// ReleaseOperatorOnly — no automatic path out.
@@ -130,7 +165,7 @@ func BlockRules() []BlockRule {
 			Condition: "the account and the engine disagree about a quantity",
 			Reason:    execgw.ReasonReconcileMismatch,
 			Scope:     ScopeSymbol,
-			Auto:      ReleaseOnCleanReconcile,
+			Auto:      ReleaseOnAdjustedReconcile,
 			Manual:    true,
 		},
 		{
@@ -238,6 +273,39 @@ type Tracker struct {
 	observed  bool
 	blocks    map[string]Block
 	permanent bool
+	// adjusted is the set of symbols an adjustment converged since the last
+	// observation. It is what turns the next agreeing comparison from a reading
+	// into a release, and it is spent by that observation.
+	adjusted map[string]bool
+}
+
+// AdjustmentApplied records that an adjustment converged the projection of a
+// symbol to the account's value.
+//
+// It is the first half of the delta's release rule; the second half is the
+// comparison that follows. The caller is whatever applied the adjustment — the
+// external-position ingest in this package, or the loop that converges a
+// quantity disagreement — because the tracker cannot tell from a diff whether
+// anything was written.
+//
+// Deliberately in-memory and deliberately not restored. A restart comes back
+// with the blocks (they are journal rows) and without the credits, so the first
+// comparison after a restart cannot release anything: the process that applied
+// the adjustment is gone, and the conservative direction is to make the next
+// convergence say so again.
+func (t *Tracker) AdjustmentApplied(symbols ...string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if t.adjusted == nil {
+		t.adjusted = map[string]bool{}
+	}
+	for _, symbol := range symbols {
+		key := strings.ToUpper(strings.TrimSpace(symbol))
+		if key == "" {
+			continue
+		}
+		t.adjusted[key] = true
+	}
 }
 
 // Outcome is what one observation did.
@@ -250,8 +318,16 @@ type Outcome struct {
 	Blocked bool
 	// Added are blocks this observation raised.
 	Added []Block
-	// Cleared are blocks this observation released.
+	// Cleared are blocks this observation released, with cause
+	// ADJUSTMENT_APPLIED.
 	Cleared []Block
+	// AwaitingAdjustment are blocks a comparison agreed about and that stayed
+	// anyway, because nothing has converged their symbol's projection.
+	//
+	// They are reported rather than silent because "the account agrees and the
+	// engine is still blocked" is the state an operator will ask about, and the
+	// answer is that agreement is not what releases.
+	AwaitingAdjustment []Block
 	// NextDueAt is the earliest instant a re-reconciliation may run.
 	NextDueAt time.Time
 }
@@ -278,10 +354,22 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	var out Outcome
 	if !diff.BlocksEntry() {
 		// A success resets the counter — the counter measures *consecutive*
-		// failure, which is what separates a stuck account from a busy one.
+		// failure, which is what separates a stuck account from a busy one. The
+		// counter and the block are separate decisions: the counter is about how
+		// the reconciliation *process* is doing, the block is about whether the
+		// engine knows its exposure, and only the second one needs a cause.
 		t.failures = 0
 		for key, block := range t.blocks {
 			if block.Permanent {
+				// 영구 불일치의 해제는 운영자 확인뿐이다(SHALL). An adjustment does
+				// not change that: three failures already established that looking
+				// again is not what settles this one.
+				continue
+			}
+			if !t.adjusted[strings.ToUpper(strings.TrimSpace(block.Symbol))] {
+				// Agreement with nothing behind it. See the release rule at the top
+				// of the file.
+				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
 				continue
 			}
 			delete(t.blocks, key)
@@ -313,6 +401,12 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 		}
 	}
 
+	// The adjustment credits are spent by this observation, whichever way it
+	// went. "The re-read after the adjustment" is one re-read: if it still
+	// disagreed, the adjustment did not settle it, and leaving the credit
+	// standing would let a later coincidence spend it.
+	t.adjusted = nil
+
 	out.Failures = t.failures
 	out.Permanent = t.permanent
 	out.Blocked = len(t.blocks) > 0
@@ -322,6 +416,7 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 
 	sortBlocks(out.Added)
 	sortBlocks(out.Cleared)
+	sortBlocks(out.AwaitingAdjustment)
 	t.syncGate(active)
 	return out, t.persist(ctx, out)
 }
@@ -332,6 +427,14 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 // Entering is idempotent (the journal keeps the first observation for a scope
 // that is already active) and releasing names ExpectCause, so a clean pass
 // closes only the rows this tracker opened.
+//
+// The release cause is ADJUSTMENT_APPLIED rather than RECHECK_MATCHED because
+// out.Cleared only ever carries blocks whose symbol an adjustment converged —
+// which is exactly the distinction the delta asks the record to keep (신규
+// release cause와 원인 기록을 남긴다 SHALL). It is also what the states this
+// tracker did not enter need: the frozen projections task 6.1 records
+// (position_projection.go) are QUANTITY_MISMATCH rows, and the adjustment that
+// unfreezes one is what earns their release too.
 func (t *Tracker) persist(ctx context.Context, out Outcome) error {
 	if t.Journal == nil {
 		return nil
@@ -351,8 +454,8 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) error {
 		if _, _, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
 			AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
 			Symbol:      block.Symbol,
-			Cause:       journal.ReconcileReleaseRecheckMatched,
-			Evidence:    "a later reconciliation agreed",
+			Cause:       journal.ReconcileReleaseAdjustmentApplied,
+			Evidence:    "an adjustment converged the projection and the reconciliation after it agreed",
 			ExpectCause: journal.ReconcileCauseQuantityMismatch,
 		}); err != nil {
 			return fmt.Errorf("reconcile: releasing the %s block on %s: %w",
@@ -397,7 +500,7 @@ func (t *Tracker) Restore(ctx context.Context) error {
 			Reason:  execgw.ReasonReconcileMismatch,
 			Detail:  state.Evidence,
 			Since:   state.EnteredAt,
-			Release: ReleaseOnCleanReconcile,
+			Release: ReleaseOnAdjustedReconcile,
 		}
 		if state.AccountWide() {
 			block.Scope = ScopeAccount
@@ -413,6 +516,10 @@ func (t *Tracker) Restore(ctx context.Context) error {
 	t.mu.Lock()
 	t.blocks = blocks
 	t.permanent = permanent
+	// A restart comes back with the blocks and without the credits: whatever
+	// applied an adjustment before the crash is gone, and the first comparison
+	// after a restart must not release on its word.
+	t.adjusted = nil
 	if permanent && t.failures < t.maxFailures() {
 		t.failures = t.maxFailures()
 	}
@@ -547,6 +654,7 @@ func (t *Tracker) Resolve(ctx context.Context, operator, note string) error {
 	t.permanent = false
 	t.failures = 0
 	t.blocks = map[string]Block{}
+	t.adjusted = nil
 	t.mu.Unlock()
 
 	if t.Gate != nil {
@@ -569,7 +677,7 @@ func blocksFor(diff Diff, accountRef string, now time.Time) []Block {
 			Symbol:  mismatch.Symbol,
 			Reason:  execgw.ReasonReconcileMismatch,
 			Since:   now,
-			Release: ReleaseOnCleanReconcile,
+			Release: ReleaseOnAdjustedReconcile,
 			Detail: fmt.Sprintf(
 				"the engine believes %s of %s, the account says %s; the account wins",
 				mismatch.Local, mismatch.Symbol, mismatch.Broker),
@@ -583,7 +691,7 @@ func blocksFor(diff Diff, accountRef string, now time.Time) []Block {
 			Symbol:  missing.Symbol,
 			Reason:  execgw.ReasonReconcileMismatch,
 			Since:   now,
-			Release: ReleaseOnCleanReconcile,
+			Release: ReleaseOnAdjustedReconcile,
 			Detail: fmt.Sprintf("order %s on %s is not in the account's open list",
 				missing.OrderID, missing.Symbol),
 		})

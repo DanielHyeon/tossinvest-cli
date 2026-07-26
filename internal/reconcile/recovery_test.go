@@ -66,6 +66,12 @@ func (a resolverAccount) HoldingQuantity(context.Context, string) (float64, erro
 
 // --- helpers ----------------------------------------------------------------
 
+// openJournalAt opens a journal with the position projection bound (task 6.3).
+//
+// The FSProber is fixed because this repository lives on ntfs; the guard has its
+// own tests in internal/journal. The apply hook is bound because since task 6.3
+// the reconciliation's local belief is the projection, so a journal that records
+// fills without projecting them believes it holds nothing.
 func openJournalAt(t *testing.T, path string) *journal.Journal {
 	t.Helper()
 	j, err := journal.Open(context.Background(), journal.Options{
@@ -75,6 +81,9 @@ func openJournalAt(t *testing.T, path string) *journal.Journal {
 	})
 	if err != nil {
 		t.Fatalf("journal.Open: %v", err)
+	}
+	if err := j.SetApplyHooks(journal.ApplyHooks{Project: journal.ProjectPosition}); err != nil {
+		t.Fatalf("SetApplyHooks: %v", err)
 	}
 	return j
 }

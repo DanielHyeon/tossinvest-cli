@@ -208,6 +208,74 @@ func TestExpectCauseReleasesOnlyYourOwnState(t *testing.T) {
 	}
 }
 
+// TestUnknownReleaseCauseIsRefused is the other half of the Manager's condition
+// on task 0.1: `release_cause` carries no CHECK either, so the storage layer is
+// what refuses one nobody enumerated. Task 6.3 extends the set with
+// ADJUSTMENT_APPLIED, and this test is the enumeration.
+func TestUnknownReleaseCauseIsRefused(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+
+	for _, cause := range []string{"", "ADJUSTED", "adjustment_applied", " ", "CLEAN"} {
+		if ValidReconcileReleaseCause(cause) {
+			t.Errorf("release cause %q must not be one this build writes", cause)
+		}
+		if _, _, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{
+			AccountRef: "acct-1", Symbol: "005930", Cause: cause, Evidence: "matched",
+		}); !errors.Is(err, ErrInvalidRequest) {
+			t.Errorf("release cause %q must be refused at write time, got %v", cause, err)
+		}
+	}
+
+	for _, cause := range []string{
+		ReconcileReleaseRecheckMatched, ReconcileReleaseAdjustmentApplied,
+		ReconcileReleaseOperator,
+	} {
+		if !ValidReconcileReleaseCause(cause) {
+			t.Errorf("%s must be a valid release cause", cause)
+		}
+	}
+}
+
+// TestAnAdjustmentAppliedReleaseIsRecorded walks the release cause task 6.3
+// added all the way to disk: the row closes, and the history says an adjustment
+// is what closed it rather than a coincidence.
+func TestAnAdjustmentAppliedReleaseIsRecorded(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+
+	if _, _, err := j.EnterReconcile(ctx, EnterReconcileRequest{
+		AccountRef: "acct-1", Symbol: "005930",
+		Cause: ReconcileCauseQuantityMismatch, Evidence: "engine 10, account 4",
+	}); err != nil {
+		t.Fatalf("EnterReconcile: %v", err)
+	}
+
+	state, released, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{
+		AccountRef: "acct-1", Symbol: "005930",
+		Cause:       ReconcileReleaseAdjustmentApplied,
+		Evidence:    "adjustment converged the projection to 4 and the re-read agreed",
+		ExpectCause: ReconcileCauseQuantityMismatch,
+	})
+	if err != nil || !released {
+		t.Fatalf("ReleaseReconcile: released=%v err=%v", released, err)
+	}
+	if state.ReleaseCause != ReconcileReleaseAdjustmentApplied {
+		t.Fatalf("release cause = %q, want %s", state.ReleaseCause, ReconcileReleaseAdjustmentApplied)
+	}
+
+	history, err := j.ReconcileStateHistory(ctx, "acct-1")
+	if err != nil {
+		t.Fatalf("ReconcileStateHistory: %v", err)
+	}
+	if len(history) != 1 || history[0].ReleaseCause != ReconcileReleaseAdjustmentApplied {
+		t.Fatalf("history = %+v, want the adjustment recorded as the cause", history)
+	}
+	if !strings.Contains(history[0].Evidence, "converged the projection") {
+		t.Fatalf("the release evidence must survive: %+v", history[0])
+	}
+}
+
 func TestReleasingNothingIsNotAnError(t *testing.T) {
 	j, _ := openReservationJournal(t)
 	_, released, err := j.ReleaseReconcile(context.Background(), ReleaseReconcileRequest{

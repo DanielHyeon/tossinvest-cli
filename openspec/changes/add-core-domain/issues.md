@@ -522,3 +522,78 @@
 
 - 독립 재실행 0 FAIL(2084). C·E 판정 16건 전부 승인 — 특히: 집계 입력 부호 fail-open 봉합(magnitudeIn), commit-then-project 순서(완화 방향 기준 선택·강화 창은 Restore로 폐쇄), 보수 우선 no-op(알림 실패 피드백 루프 차단), latch 전체 통과(부분 뷰였다면 Guardian 허용→Gateway 즉시 거부의 왕복 낭비), E31 ENTRY_WHILE_CLOSING 거부(§0.9), 거부 시 detector 비정지.
 - 승계 확정: ProjectPosition SetApplyHooks 바인딩 → 3차 F(엔진 배선 영역), Exit applier 바인딩 → 4차 7.x. 자동 강화 트리거 생산자 배선(일손실·401/403·critical outbox) → 3차 F, exit 관측 두절 → 4차 7.4. 6.3의 사전 열거 단언 1건(조정 후 차단 유지 → ADJUSTMENT_APPLIED 해제 반전) → 3차 G. 주문→인스턴스 링크 → G의 6.4 검토. 7.x 입력: 전량 청산 발의 전 working 진입 취소 선행(E31 회피).
+
+## 2026-07-26 [safe local] 로컬 포지션 출처를 투영으로 교체 — 계좌 스코프가 함께 좁아졌다 (task 6.3)
+
+- 사실: `LocalStateFromJournal`은 `j.NetPositions`(체결 스냅샷의 side별 합)를 읽었다. 스펙은
+  "로컬 포지션 상태의 출처는 Position 투영"이며 "fills-only 파생과 별도의 두 번째 포지션 계산을
+  두지 않는다(SHALL NOT)"이다.
+- 이번 처리: `reconcile.HeldBySymbol`(비-CLOSED 인스턴스의 심볼별 riskcalc 정확 합)로 교체.
+  미체결 주문 절반(lineage 해소 현재 주문번호)은 무변경. `NetPositions`는 **삭제하지 않았다** —
+  journal의 공개 계약이고 다른 소비자가 있을 수 있다. 대신 그것이 더 이상 대사의 출처가 아님을
+  테스트로 고정했다(`TestLocalStateReadsTheProjectionNotTheFills`: 조정 후 체결 원장은 10,
+  투영은 4, 로컬 상태는 4).
+- **부수 효과(의도적)**: `NetPositions`는 accountRef를 무시하고 전 계좌 체결을 합산했다. 투영은
+  `positions.account_ref`로 필터되므로 이제 다계좌 journal에서 남의 포지션을 자기 믿음으로 읽지
+  않는다(`TestAnotherAccountsProjectionIsNotThisAccountsBelief`).
+- **market 차원**: 심볼 합산이다(`[미측정]` — 보유 스냅샷의 market 제공 여부 미확인). 한 심볼의
+  두 시장 인스턴스는 한 비교 단위로 합쳐진다(`TestTheProjectionIsSummedAtSymbolLevel`).
+- 후속 task 입력(**fail-open 방향**): `SetApplyHooks(Project: ProjectPosition)`가 배선되지 않은
+  프로세스는 `positions`가 비어 로컬 믿음이 전부 0이 되고, 브로커 보유는 전부 external로 분류되어
+  **진입이 차단되지 않는다**. 배선은 3차 F(엔진 배선)의 몫이며, 그쪽에 "hook 미바인딩이면 기동
+  거부 또는 대사 거부" 테스트가 필요하다. 여기서 교차 검사를 넣지 않은 이유: v6 이전부터 체결
+  이력이 있는 계좌는 정당하게 "체결 있음 + 투영 없음"이라 휴리스틱이 오탐한다.
+
+## 2026-07-26 [safe local] 해제는 관측이 아니라 원인을 요구한다 — 사전 열거 단언 4건 (task 6.3)
+
+- 스펙: 비영구 차단의 자동 해제는 "조정 이벤트가 반영된 뒤의 재조회 일치"에만 근거하며(SHALL),
+  조정 없는 우연한 일치는 해제하지 못한다(SHALL NOT).
+- 이번 처리: `Tracker.AdjustmentApplied(symbols...)`(조정을 적용한 쪽이 호출) + 다음 관측 1회에서만
+  유효한 심볼별 credit. 관측이 끝나면 무조건 소진한다 — "조정 뒤의 재조회"는 재조회 **1회**이고,
+  그 재조회가 여전히 불일치면 조정이 해결하지 못한 것이므로 credit을 남기면 나중의 우연이 쓴다.
+  release cause는 `ADJUSTMENT_APPLIED`(journal 상수 집합 확장 — 0.1의 Manager 조건대로 쓰기 시점
+  검증 `ValidReconcileReleaseCause`에 추가). 상태표 `Auto`는 `clean_reconcile` →
+  `adjusted_reconcile`. Restore는 credit을 복원하지 않는다(크래시 전 조정을 적용한 프로세스는 없다).
+- **사전 열거 — 이 task가 바꾼 기존 단언 4건**:
+  1. `journal/position_adjustments_test.go: TestAnAdjustmentConvergesAFrozenProjection` —
+     "조정 후에도 블록은 그대로"가 종단 단언이었다. 이제 그것은 **중간** 단언이고, 뒤이은
+     ADJUSTMENT_APPLIED 해제로 닫히는 것까지가 종단이다(승계 지정 1건).
+  2. `reconcile/mismatch_test.go: TestSuccessResetsTheFailureCounter` — `len(out.Cleared) != 1`
+     → `!= 0` + `AwaitingAdjustment == 1`. 카운터 리셋(보존 SHALL)은 그대로다. 게이트 단언의
+     문구도 바꿨다: 심볼 스코프 블록은 원래 계좌 latch를 걸지 않았으므로 "clean reconcile이
+     게이트를 연다"는 사실 진술이 아니었다.
+  3. `reconcile/restore_test.go: TestWriteThroughRecordsTheStateWithItsEvidence` — "clean pass가
+     행을 닫고 cause는 RECHECK_MATCHED"가 "우연한 일치는 닫지 못하고, 조정+재조회가
+     ADJUSTMENT_APPLIED로 닫는다"로 바뀌었다.
+  4. `reconcile/compare_test.go: openJournal` / `recovery_test.go: openJournalAt`(픽스처) —
+     `SetApplyHooks(Project: ProjectPosition)`를 바인딩한다. 값 단언은 그대로지만
+     (`TestLocalStateNetsBuysAgainstSells`의 6, `TestRecoveryThatEndsInDisagreement…`의 10 vs 4)
+     그 수가 나오는 경로가 체결 원장에서 투영으로 바뀌었다.
+- **운영상 대가(명시)**: 아무것도 쓰지 않고 저절로 사라진 불일치는 운영자가 풀 때까지 남는다.
+  §0.9 보수 방향이며, 루프의 정상 경로는 수량 불일치를 조정으로 수렴시키므로(계좌가 권위) 항상
+  무언가를 쓴다. 4차 대사 루프가 수량 불일치에 대해서도 조정을 발행하지 않으면 이 대가가
+  일상화된다 — **4차 입력**.
+
+## 2026-07-26 [safe local] 외부 보유의 market 미상은 추측하지 않고 거부한다 (task 6.3)
+
+- 사실: `positions`는 (account, market, symbol, instance_seq)로 키가 잡히고 조정 요청은 market을
+  요구한다. 그런데 보유 스냅샷이 market을 담는지는 `[미측정]`이고, `Collector`는 브로커의
+  `MarketType`을 그대로 옮기므로 빈 문자열일 수 있다.
+- 이번 처리: 보유가 market을 말하면 그것을, 아니면 `Ingestor.DefaultMarket`(호출자가 선언한
+  계좌의 거래소)을, 둘 다 없으면 **거부**한다. 임의 placeholder를 쓰면 운영자가 없는 거래소에서
+  포지션을 찾게 된다. 심볼 합산 비교에는 영향이 없지만 감사 기록에는 있다.
+- 함께: 조정이 **entry_decision_id를 가진 인스턴스**에 떨어지면 오류다(외부 포지션이 결정을
+  물려받아 exit 정책 대상이 되는 것 — 남의 주식에 만든 손절을 거는 경로). 비교와 투영이
+  "엔진이 연 포지션인가"에서 갈렸다는 뜻이므로, 그 상태로 exit 관리 범위를 넓히지 않는다.
+
+## 2026-07-26 [observation] 외부 포지션 알림은 obs가 아니라 reconcile의 인터페이스다 (task 6.3)
+
+- `internal/obs`에 external-position 이벤트 타입이 없고, 이 task의 파일 범위 밖이다(동시 작업 경합).
+- 이번 처리: `reconcile.Alerter`(단일 메서드) 인터페이스로 주입한다. 알림은 조정이 **실제로
+  적용된** 경우에만 발화한다 — 루프는 30초마다 도는데 매 폴 알림은 아무도 읽지 않는다. 조정 id가
+  내용 파생이라 재수집이 같은 차이를 다시 계산해도 `Applied=false`로 인식된다.
+- 후속 task 입력: 엔진 배선(3차 F 또는 4차)이 `obs.Notifier`를 이 인터페이스에 어댑트하고
+  `obs/event.go`에 이벤트 타입을 더해야 한다. 등급은 critical이 아니라 normal이 맞다 — 사람이
+  자기 계좌를 손으로 만진 것은 오작동이 아니고, critical outbox 미배달은 진입을 막는다.
+- 함께(문서 표류): `internal/execgw/symbolgate.go`의 주석이 아직 "auto-released by a clean
+  reconcile"이라고 적는다. execgw는 동시 작업 영역이라 건드리지 않았다 — 배선 wave에서 정정.
