@@ -164,6 +164,10 @@ func newRootCmd() *cobra.Command {
 		// attestation is built from (task 1.1). New file, new command; nothing
 		// existing changes.
 		newSoakCmd(opts),
+		// verify is the supervised live half of the same measurement (task 1.5):
+		// the endpoints a read-only survey structurally cannot prove. Also a new
+		// file and a new command.
+		newVerifyCmd(opts),
 	)
 
 	return cmd

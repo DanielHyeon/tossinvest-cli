@@ -102,7 +102,12 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// flatten-all cancels every order and sells every position (task 4.5).
 		// It is the most consequential trade action here, so it declares itself
 		// like the rest.
-		"tossctl flatten-all":              true,
+		"tossctl flatten-all": true,
+		// verify run places live orders — one minimum-quantity limit order at a
+		// time, each confirmed at a terminal and cancelled in the same step
+		// (verify-execution-capability task 1.5). `verify status` and `verify
+		// report` read the local record only and are not listed here.
+		"tossctl verify run":               true,
 		"tossctl order place":              true,
 		"tossctl order cancel":             true,
 		"tossctl order amend":              true,
