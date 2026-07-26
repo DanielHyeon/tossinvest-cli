@@ -453,6 +453,13 @@ func (j *Journal) Prepare(ctx context.Context, req PrepareRequest) (*Attempt, er
 		req.AttemptID, string(StateRecorded), now); err != nil {
 		return nil, fmt.Errorf("journal: recording the RECORDED transition for %s: %w", req.AttemptID, err)
 	}
+	// The decision's reservations were taken before this attempt existed, so
+	// this is where they learn which attempt they are waiting on (design D9,
+	// task 3.1). Without the backfill the terminal record has no join to
+	// release them through, and a hold would outlive the order it was taken for.
+	if err := bindReservationsToAttempt(ctx, tx, req.DecisionID, req.AttemptID); err != nil {
+		return nil, err
+	}
 
 	// Everything below this line depends on the commit having returned without
 	// error: that is the fsync the spec requires before dispatch.

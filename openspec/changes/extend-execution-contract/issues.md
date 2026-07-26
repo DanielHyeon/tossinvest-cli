@@ -259,6 +259,49 @@
   선택지는 `ReductionIntent`에 상한 가격을 추가하거나(스펙 개정), 청산 가격 결정을 발급자
   소관으로 못 박는 것이다.
 
+## 2026-07-26 [safe local] 예약 산술을 `riskcalc`의 새 exact decimal 층으로 냈다 — journal이 riskcalc을 import한다 (task 3.1)
+
+- 사실: 스펙은 "예약 산술은 decimal 문자열 연산이며 float 누적을 사용하지 않는다(SHALL NOT)"를
+  요구한다. 그런데 6.1이 낸 `riskcalc`의 총계 계산은 **의도적으로** float64 누적 + 1e-9 허용오차다
+  (그 패키지 doc에 근거가 적혀 있다). 두 규칙이 한 패키지 안에서 공존해야 한다.
+- 이번 처리: `internal/riskcalc/decimal.go` — 자릿수 문자열 위에서 동작하는 정확 산술
+  (`AddDecimal`/`SubDecimal`/`CompareDecimal`/`Min`/`Max`/`Canonical`). 기존 `aggregate.go`의
+  float64 평가는 **한 줄도 바꾸지 않았다**: 그쪽은 가격×수량·환율 평가이고 자체 허용오차 규칙이
+  스펙과 정합한다. 예약 원장은 평가가 아니라 합산이므로 규칙이 다르다는 것을 양쪽 doc에 적었다.
+- 결과로 **`internal/journal` → `internal/riskcalc` 의존이 새로 생겼다.** 근거: (1) 태스크 문언이
+  "use riskcalc staleness constants"를 지시하므로 의존 방향은 이미 정해져 있었고, (2) riskcalc은
+  stdlib만 쓰는 leaf라 순환이 불가능하며, (3) "decimal 두 개를 어떻게 더하는가"는 저장 세부가
+  아니라 계산 계약이다. 회귀 테스트: `TestReservationArithmeticIsExact`(0.1 × 10 = 정확히 1,
+  float64 누적이면 0.9999999999999999로 한도를 통과해 11번째를 허용한다).
+- 후속 task 입력: **4.2**의 확정 하한도 같은 층을 쓴다. 7.x가 execgw에서 총계를 계산할 때
+  평가(riskcalc float64)와 예약 합산(exact)의 경계를 섞지 않아야 한다.
+
+## 2026-07-26 [safe local] as-of 재검증을 "예약 원장 버전"으로 구현했다 — 스키마 무변경 (task 3.1)
+
+- 사실: 스펙은 "안에서 as-of·staleness를 검증한 뒤 예약을 삽입하며, 불충족이면 롤백·재수집한다"를
+  요구하고, 3.3은 "as-of 조건이 실제 재검증을 유발"함을 증명하라고 한다. staleness만으로는 부족하다 —
+  단일 커넥션(`SetMaxOpenConns(1)`)에서 두 트랜잭션은 겹칠 수 없으므로, 스냅샷이 **이미 반영된
+  다른 결정의 예약을 모른다**는 사실은 시간만으로 드러나지 않는다.
+- 이번 처리: `ReservationVersion(account)` = `1 + 행 수 + RELEASED 행 수`. 삽입도 해제도 값을
+  전진시키고 감소는 불가능하다(행 삭제 없음 — 고아 회수도 삭제가 아니라 해제다). 호출자는 스냅샷
+  수집 **전에** 읽고, `Reserve`가 트랜잭션 안에서 다시 읽어 다르면 `ErrSnapshotSuperseded`로
+  롤백한다. **스키마 변경 0** — v5 표에 컬럼을 더하지 않았다.
+- 0을 "미조회"로 남기려고 버전을 1부터 시작시켰다. 버전을 안 읽은 호출자는 통과가 아니라 거부된다.
+- 후속 task 입력: **7.3**이 Gateway에 예약 저장소를 배선할 때 "버전 읽기 → 스냅샷 수집 →
+  Reserve" 순서가 계약이다. `ReserveWithRecollection`이 그 순서를 강제하는 형태(수집 콜백이
+  요청 전체를 만든다)로 제공된다.
+
+## 2026-07-26 [safe local] 재수집 루프를 execgw가 아니라 journal에 두었다 (task 3.1)
+
+- 사실: 태스크는 "재수집 루프는 CALLER-side helper (execgw 또는 journal — 선택하고 이유를 문서화)".
+- 이번 처리: `journal.ReserveWithRecollection`. 이유 셋: (1) 상한·데드라인·fail-closed는
+  트랜잭션이 **거부하기 때문에** 존재하는 것이라 같은 계약의 반쪽이다, (2) 재시도 대상 오류
+  (`ErrSnapshotStale`·`ErrSnapshotSuperseded`)와 재시도 금지 대상(`ErrReservationLimitExceeded`)의
+  구분이 여기 정의돼 있어 두 패키지가 그 목록에 합의할 필요가 없다, (3) journal은 여전히 I/O를
+  하지 않는다 — 수집은 호출자의 콜백이고 journal이 보는 것은 데이터뿐이다.
+- 기본값: 상한 3회(스펙 명시), 예산 10초 = `riskcalc.AccountSnapshotStaleness`. 데이터가 신선하게
+  유지되는 시간보다 오래 도는 루프는 성공할 수 없고 진입 결정만 붙잡는다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
