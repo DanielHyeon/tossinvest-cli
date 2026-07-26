@@ -21,7 +21,7 @@
 - [x] 2.1 [T][High-risk] 체인 골격·reason enum(STOP_MISSING·STOP_NOT_BELOW_ENTRY·TARGET_NOT_ABOVE_ENTRY·INVALID_TARGET_STOP·TARGET_BELOW_BREAK_EVEN·INVALID_ORDER_SIZE·MAX_ORDER_EXCEEDED·INSUFFICIENT_CASH·SYMBOL_NOT_ALLOWED·MIN_RR_NOT_MET·재진입·총계·중복)·`docs/guardian-chain.md`(이식/신규/제외/구조대체 분류표) — test_guardian(20) 범위 내 이식
 - [x] 2.2 [T][High-risk] 손절 계약·수량(배수 1.0)·최소 RR 2.0(신규·순수 산술·provenance §22 lock)·long-only — test_target_stop_contract(29)·test_a090(36) 범위 내
 - [x] 2.3 [T][High-risk] 크기·현금(비용 포함·본전 미달 target 거부)·allowlist·재진입(쿨다운 30분·당일 2회 `[미검증]`)·총 노출·일손실(riskcalc 소비·경계 ≥·자본 0 즉시)·중복 — 각 검사 분리 커밋 가능
-- [ ] 2.4 [T] 진입 latch 통합(401/403·SLO·RECONCILE·recovery) — 기존 EntryGate 사유 매핑, 중복 판정 없음
+- [x] 2.4 [T] 진입 latch 통합(401/403·SLO·RECONCILE·recovery) — 기존 EntryGate 사유 매핑, 중복 판정 없음
 
 ## 3. 운영 모드
 

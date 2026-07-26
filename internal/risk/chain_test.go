@@ -210,16 +210,58 @@ func TestUnknownOperatingModeFailsClosed(t *testing.T) {
 }
 
 func TestEntryGateLatchBlocksAnEntry(t *testing.T) {
-	// The latch itself (401/403 · SLO · RECONCILE · recovery) lands in task 2.4;
-	// what is fixed here is that the chain consults it, in this position, and
-	// carries the latch's own reason into the detail so 2.4's mapping is visible.
-	in := entryInput()
-	in.Account.EntryBlockedLatch = true
-	in.Account.EntryBlockedReason = "broker_auth_rejected"
-	got := requireRefused(t, in, ReasonEntryGateBlocked)
-	if !strings.Contains(got.Detail, "broker_auth_rejected") {
-		t.Fatalf("detail %q drops the latch's own reason", got.Detail)
+	// The chain consults the latch, in this position, and carries the latch's own
+	// reason into the detail. The reasons below are execgw's codes verbatim
+	// (task 2.4: execgw.EntryLatch is the producer) — the chain refuses with one
+	// code, ENTRY_GATE_BLOCKED, and the gateway vocabulary that produced it
+	// travels in the detail so the two records join.
+	//
+	// It is a fixed list rather than a loop over execgw's enum on purpose: this
+	// package must not import execgw. The chain is a pure function of plain
+	// values, and a dependency on the gateway package to name a string would put
+	// the journal (and the broker client) behind an import of internal/risk.
+	for _, reason := range []string{
+		"broker_auth_rejected",        // 401/403
+		"fill_detection_slo_violated", // SLO 위반
+		"reconciliation_mismatch",     // RECONCILE
+		"recovery_incomplete",         // recovery 미완료
+		"operating_mode_blocked",      // 모드 투영 (task 3.1)
+	} {
+		in := entryInput()
+		in.Account.EntryBlockedLatch = true
+		in.Account.EntryBlockedReason = reason
+		got := requireRefused(t, in, ReasonEntryGateBlocked)
+		if !strings.Contains(got.Detail, reason) {
+			t.Fatalf("detail %q drops the latch's own reason %s", got.Detail, reason)
+		}
 	}
+}
+
+func TestTheChainNeverRederivesTheLatch(t *testing.T) {
+	// 중복 판정 없음 (task 2.4). The chain has exactly two inputs for this rung
+	// and no others: a latched gate refuses whatever the reason says, and an
+	// unlatched gate passes even when every field the four conditions are *about*
+	// looks alarming. Anything else would be a second implementation of the
+	// gate's rules, and the two would drift.
+	blocked := entryInput()
+	blocked.Account.EntryBlockedLatch = true
+	blocked.Account.EntryBlockedReason = "a reason this build has never heard of"
+	requireRefused(t, blocked, ReasonEntryGateBlocked)
+
+	// A latch with no reason recorded still blocks: the flag is the verdict.
+	bare := entryInput()
+	bare.Account.EntryBlockedLatch = true
+	got := requireRefused(t, bare, ReasonEntryGateBlocked)
+	if !strings.Contains(got.Detail, "no reason recorded") {
+		t.Fatalf("detail %q hides that the reason was missing", got.Detail)
+	}
+
+	// And the converse: a stale-looking account with the latch clear passes this
+	// rung. Freshness, credentials and recovery are the gate's questions, asked
+	// once, over there.
+	clear := entryInput()
+	clear.Account.EntryBlockedReason = "recovery_incomplete" // set but not latched
+	requireAllowed(t, clear)
 }
 
 func TestSymbolOutsideTheAllowlistIsRefused(t *testing.T) {

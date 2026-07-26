@@ -13,7 +13,7 @@
 | 0 | preflight (입력 가용성) | `INPUT_UNAVAILABLE` | a090 `inputs_unavailable` |
 | 1 | kill switch | `KILL_SWITCH_ACTIVE` | guardian.py:378-379 |
 | 2 | 운영 모드 | `OPERATING_MODE_BLOCKED` | guardian.py:420-433 (BUY_PAUSED·SELL_ONLY_MODE) — **구조 대체** |
-| 3 | 진입 latch | `ENTRY_GATE_BLOCKED` | 없음 — TossOS 실장(execgw EntryGate). 배선은 task 2.4 |
+| 3 | 진입 latch | `ENTRY_GATE_BLOCKED` | 없음 — TossOS 실장(execgw EntryGate). 매핑은 §5 |
 | 4 | 심볼 allowlist | `SYMBOL_NOT_ALLOWED` | guardian.py:399-412 (레버리지·인버스 클래스 차단) — **구조 대체** |
 | 5 | 손절 계약 | `STOP_MISSING` · `STOP_NOT_BELOW_ENTRY` · `TARGET_NOT_ABOVE_ENTRY` · `INVALID_TARGET_STOP` · `TARGET_BELOW_BREAK_EVEN` | guardian.py:659-714 `_verify_target_stop_contract` |
 | 6 | 주문 크기 | `INVALID_ORDER_SIZE` · `MAX_ORDER_EXCEEDED` | guardian.py:448-449, :460-461 + a090 `size_zero` |
@@ -119,7 +119,30 @@ risk-management의 열거를 코드 위치와 함께 옮긴다.
 
 남는 것은 하나다: 보유보다 많이 파는 것 = short. `SELL_EXCEEDS_HOLDINGS`.
 
-## 5. 후속 task가 채울 자리
+## 5. 진입 latch 매핑 (task 2.4)
+
+체인 3단계의 입력은 `AccountState.EntryBlockedLatch`·`EntryBlockedReason` 두 값이고, 그 값의 유일한 생산자는 `execgw.(*EntryGate).EntryLatchFor(market, symbol)`다(`internal/execgw/entrylatch.go`). 체인은 조건을 **재유도하지 않는다** — 게이트가 이미 답한 질문(`CheckEntryFor`, 봉인된 제출 시퀀스가 부르는 그 호출)을 같은 값으로 옮겨 받는다.
+
+| risk-management이 부르는 조건 | 게이트 사유 코드 | 해제 방법 |
+|---|---|---|
+| 자격증명 실패(401/403) | `broker_auth_rejected` | 운영자 `Clear` — 조회 성공은 해제하지 않는다 |
+| 체결 감지 SLO 위반 | `fill_detection_slo_violated` | 측정 회복 |
+| RECONCILE | `reconciliation_mismatch` / `reconciliation_mismatch_permanent` | 재대조 일치(전자) / 운영자(후자) — journal `reconcile_states` 투영 |
+| recovery 미완료 | `recovery_incomplete` | 복구 완료 |
+| (열거 밖) 조회 신선도 | `required_query_stale` | 다음 성공 폴에서 자동 |
+| (열거 밖) flatten 진행·미해소 IN_DOUBT·알림 미전달·UNKNOWN_BROKER_STATE | `flatten_in_progress` · `unresolved_in_doubt` · `critical_alert_undelivered` · `unknown_broker_state` | 각 사유의 규칙 |
+| 운영 모드 투영 (task 3.1) | `operating_mode_blocked` | 모드 완화(사람 승인) |
+
+열거 밖 사유도 그대로 통과시키는 이유: 체인이 게이트 사유의 **부분집합**만 본다면, Guardian이 허용한 의도를 Gateway가 곧바로 거부하게 된다 — 결정과 예약을 쓰고 되돌리는 왕복이 그 사이에 낀다. 체인의 latch 단계는 게이트 판정의 사본이 아니라 같은 판정의 **이른 소비**다.
+
+**중복 차단이 아니다.** 한 조건은 물어본 지점마다 한 번씩만 거부를 낸다:
+
+- 체인이 먼저 거부하면 결정 행이 없다 → Gateway에 도달하는 것이 없으므로 Gateway는 아무것도 거부하지 않는다.
+- Guardian ALLOW 이후 제출 전에 latch가 서면 Gateway가 자기 코드로 거부한다(예약 롤백은 4.1의 원자 발급이 담당). 같은 사실을 **두 시점**에 관측한 것이지 한 시점을 두 번 판정한 것이 아니다.
+
+모드는 체인 2단계(`OPERATING_MODE_BLOCKED`)와 3단계(`operating_mode_blocked` latch) 양쪽에 나타난다. 둘은 같은 journal 행을 읽으므로 답이 갈릴 수 없고, 순서가 정하는 것은 **운영자가 보는 이름**뿐이다 — 구체적이고 조치 가능한 쪽(모드)이 먼저다.
+
+## 6. 후속 task가 채울 자리
 
 | task | 채울 것 |
 |---|---|
