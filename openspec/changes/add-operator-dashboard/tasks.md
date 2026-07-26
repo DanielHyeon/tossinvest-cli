@@ -4,8 +4,8 @@
 
 ## 1. 데이터 접근 [T]
 
-- [ ] 1.1 `journal.OpenReadOnly`(additive 신설): DB 파일·디렉터리 생성 없음, 마이그레이션 없음, DB 쓰기 없음, `mode=ro` DSN, busy timeout — WAL 공유 인덱스(`-shm`/`-wal`) 접근은 명시된 예외(스펙 문언). 파일 부재는 typed 오류 → 빈 상태 렌더; **스키마 불일치 양방향 구분**: ErrSchemaTooNew(더 새로움 → "콘솔 업데이트 필요")와 필요 테이블 부재(더 오래됨 → "엔진 기동 필요") 각각 typed 전달. 쓰기 연결 부재 가드 테스트
-- [ ] 1.2 계좌 단위 질의(additive — `internal/journal`, 스키마 무변경): positions ⟕ exit_states(자격 포함 전체 — 기존 OpenExitStates는 미완결만 반환하므로 신규), 계좌 단위 exit_events 시간순(기존은 position_id 단위뿐), trade_outcomes + positions(심볼) + exit_states(진입가) 조인
+- [x] 1.1 `journal.OpenReadOnly`(additive 신설): DB 파일·디렉터리 생성 없음, 마이그레이션 없음, DB 쓰기 없음, `mode=ro` DSN, busy timeout — WAL 공유 인덱스(`-shm`/`-wal`) 접근은 명시된 예외(스펙 문언). 파일 부재는 typed 오류 → 빈 상태 렌더; **스키마 불일치 양방향 구분**: ErrSchemaTooNew(더 새로움 → "콘솔 업데이트 필요")와 필요 테이블 부재(더 오래됨 → "엔진 기동 필요") 각각 typed 전달. 쓰기 연결 부재 가드 테스트
+- [x] 1.2 계좌 단위 질의(additive — `internal/journal`, 스키마 무변경): positions ⟕ exit_states(자격 포함 전체 — 기존 OpenExitStates는 미완결만 반환하므로 신규), 계좌 단위 exit_events 시간순(기존은 position_id 단위뿐), trade_outcomes + positions(심볼) + exit_states(진입가) 조인
 - [ ] 1.3 **조회 전용 브로커 인터페이스**(holdings 계열만 선언 — verifylive.Broker 주입 금지) + mutation 메서드 0 정적 테스트. 스냅샷 캐시: lazy·백그라운드 폴러 없음·갱신당 holdings 1콜(lastPrice 사용, 시세 fan-out 금지)·TTL ≥ 15s·캐시 시각 노출. 검증 중 보류: in-process run 신호 + 타 프로세스는 runlock mtime 신선도(5분 상한)
 
 ## 2. 화면 [T]
