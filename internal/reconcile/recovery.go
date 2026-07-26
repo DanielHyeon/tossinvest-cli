@@ -29,6 +29,24 @@ package reconcile
 //
 // Exits stay open throughout. The latch is an *entry* gate (§0.3): an operator
 // who starts the engine into a mess must still be able to liquidate through it.
+//
+// # Who owns the order of the resolution procedure
+//
+// This file does (order-execution: "재시작 복구가 호출 순서를 소유한다"). For every
+// unsettled attempt it walks:
+//
+//	IN_DOUBT and replay-eligible → the gateway's replay entry point
+//	ineligible, or replay settled nothing → the resolver's query fallback
+//
+// The order is not an implementation detail. Replay recovers an *identity* from
+// the broker's own idempotent answer, which is both faster and stronger evidence
+// than inferring existence from list scans and balance deltas — so it goes
+// first, and the observation procedure is what it falls back to. The two live in
+// different packages for a reason that survives this ordering: the replay door
+// is on the Gateway, because the Resolver has no writer of any kind and adding
+// one to it would dissolve the invariant that makes the resolver safe to run
+// anywhere. Recovery is allowed to know about both; neither knows about the
+// other.
 
 import (
 	"context"
@@ -67,6 +85,16 @@ func (s Stabilisation) withDefaults() Stabilisation {
 	return s
 }
 
+// Replayer is the gateway's idempotent replay entry point, as recovery needs it.
+//
+// The interface is one method taking an attempt id, which is the whole point:
+// there is no parameter here that could carry a request body, so recovery cannot
+// ask for anything except "recover the identity of the thing you already
+// recorded". *execgw.Gateway is the only implementation.
+type Replayer interface {
+	ReplayInDoubt(ctx context.Context, attemptID string) (execgw.ReplayOutcome, error)
+}
+
 // Options are the recovery's dependencies.
 type Options struct {
 	// Journal is the record of what the previous process was doing. Required.
@@ -75,6 +103,17 @@ type Options struct {
 	// Required: without it an IN_DOUBT attempt would stay unexamined, and
 	// recovery would "complete" over an unknown live order.
 	Resolver *execgw.Resolver
+	// Replayer recovers an attempt's identity by resending the request body it
+	// stored, under the idempotency key it already used (openapi: the same key
+	// re-returns the original order for ten minutes). *execgw.Gateway satisfies
+	// it.
+	//
+	// Optional, and nil in every build until the capability is attested: without
+	// it recovery runs the observation procedure alone, which is exactly what it
+	// did before replay existed. That is why it is a nil-able interface rather
+	// than a required dependency — the fallback is not a degraded mode, it is
+	// the procedure.
+	Replayer Replayer
 	// Collector reads the account. Required.
 	Collector *Collector
 	// Gate is latched shut until recovery completes. Required — a recovery that
@@ -126,6 +165,10 @@ type Report struct {
 	NotDispatched []string
 	// MovedToInDoubt are attempts the crash caught mid-dispatch.
 	MovedToInDoubt []string
+	// Replays is the outcome of every replay the sequence attempted, including
+	// the ones that were declined before a request was sent. An entry with
+	// QueryFallback set is one the resolver then took over.
+	Replays []execgw.ReplayOutcome
 	// Resolutions is the outcome of every resolution attempted.
 	Resolutions []execgw.Resolution
 	// Unresolved are attempts that could not be settled by observation. Their
@@ -175,8 +218,11 @@ func (r *Recovery) Run(ctx context.Context) (Report, error) {
 	report.NotDispatched = recovered.NotDispatched
 	report.MovedToInDoubt = recovered.InDoubt
 
-	// 2. Resolve every attempt whose outcome is unknown. Observation only — the
-	//    resolver has no mutator, so this cannot re-submit anything.
+	// 2. Settle every attempt whose outcome is unknown: replay first where it is
+	//    eligible, observation for everything else. Neither step re-submits a
+	//    mutation — a replay is the same bytes under the same key, which the
+	//    broker answers with the original order rather than a second one, and
+	//    the resolver has no mutator at all.
 	pending, err := r.opts.Journal.PendingAttempts(ctx)
 	if err != nil {
 		return report, fmt.Errorf("%w: listing attempts to resolve: %v", ErrRecoveryIncomplete, err)
@@ -194,6 +240,16 @@ func (r *Recovery) Run(ctx context.Context) (Report, error) {
 			report.StillPending = append(report.StillPending, blocked)
 			continue
 		}
+
+		settled, rerr := r.replay(ctx, &report, rec.ID)
+		if rerr != nil {
+			return report, fmt.Errorf("%w: replaying attempt %s: %v",
+				ErrRecoveryIncomplete, rec.ID, rerr)
+		}
+		if settled {
+			continue
+		}
+
 		res, rerr := r.opts.Resolver.Resolve(ctx, rec.ID)
 		if rerr != nil {
 			return report, fmt.Errorf("%w: resolving attempt %s: %v",
@@ -241,6 +297,37 @@ func (r *Recovery) Run(ctx context.Context) (Report, error) {
 
 // Complete reports whether the sequence has finished.
 func (r *Recovery) Complete() bool { return r.complete }
+
+// replay runs the gateway's replay entry point over one IN_DOUBT attempt and
+// reports whether it settled it.
+//
+// A false return is the ordinary case, not a failure: no replayer wired, the
+// capability unattested, the key's window spent, the cap used up, or a broker
+// that is still processing the original request. Every one of those means "the
+// query fallback answers this one", which is why they are reported rather than
+// raised.
+//
+// The entry point checks its own preconditions — state, attestation, window,
+// cap, interval — so this function deliberately does not pre-screen. A caller
+// that decided for itself which attempts were eligible would be a second,
+// divergent copy of rules that must hold exactly once.
+func (r *Recovery) replay(ctx context.Context, report *Report, attemptID string) (bool, error) {
+	if r.opts.Replayer == nil {
+		return false, nil
+	}
+	out, err := r.opts.Replayer.ReplayInDoubt(ctx, attemptID)
+	if err != nil {
+		return false, err
+	}
+	report.Replays = append(report.Replays, out)
+	if out.State == journal.StateUnresolvedInDoubt {
+		report.Unresolved = append(report.Unresolved, out.AttemptID)
+	}
+	// Terminal means the replay answered the question — CONFIRMED with the
+	// recovered identity, or parked because the key conflicts. Anything else
+	// leaves the attempt where it was, for observation to settle.
+	return out.State.IsTerminal(), nil
+}
 
 // stableSnapshot collects until the account stops changing.
 func (r *Recovery) stableSnapshot(ctx context.Context) (Snapshot, int, error) {
