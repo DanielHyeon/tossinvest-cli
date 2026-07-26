@@ -751,7 +751,7 @@ func TestTheURLCarriesTheSessionTokenOnce(t *testing.T) {
 		t.Errorf("URL = %q, want a loopback address", url)
 	}
 	if !strings.Contains(url, "?session="+h.SessionToken()) {
-		t.Errorf("URL = %q, want it to carry the one-time token", url)
+		t.Errorf("URL = %q, want it to carry this process's session token", url)
 	}
 	cancel()
 	<-done

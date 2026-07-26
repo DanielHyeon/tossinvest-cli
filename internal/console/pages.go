@@ -39,7 +39,12 @@ var pageFuncs = template.FuncMap{
 	"verdict":   verifylive.VerdictLabel,
 }
 
-var pages = template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates))
+// pages is the whole template set. The dashboard screens live in their own const
+// (templates_portfolio.go) and are parsed into it here, so they share "head",
+// "foot" and the one stylesheet rather than growing a second look.
+var pages = template.Must(
+	template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates)).
+		Parse(portfolioTemplates))
 
 // --- dashboard --------------------------------------------------------------
 
@@ -60,7 +65,7 @@ type dashboardPage struct {
 func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		c.refuse(w, http.StatusNotFound, "그런 경로는 없다",
-			"이 콘솔의 화면은 대시보드·검증·리포트 셋뿐이다.")
+			"이 콘솔의 화면은 대시보드·포지션·거래 이력·검증·리포트 다섯뿐이다.")
 		return
 	}
 	page := dashboardPage{

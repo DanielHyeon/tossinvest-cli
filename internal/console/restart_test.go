@@ -366,7 +366,7 @@ func TestAWrongOrExpiredHandoffIsRefusedAndGrantsNothing(t *testing.T) {
 		if resp := h.get(t, "/?handoff=WRONG"); resp.StatusCode != http.StatusForbidden {
 			t.Fatalf("a wrong guess gave %d, want 403", resp.StatusCode)
 		}
-		if resp := h.get(t, "/?handoff=" + token); resp.StatusCode != http.StatusForbidden {
+		if resp := h.get(t, "/?handoff="+token); resp.StatusCode != http.StatusForbidden {
 			t.Fatalf("the real token survived a wrong guess (%d); the guess must spend it", resp.StatusCode)
 		}
 	})
@@ -565,7 +565,7 @@ func TestARestartResetsTheProcessCapAndNothingElse(t *testing.T) {
 
 	// The successor: a genuinely new process, reached by the handoff.
 	next := newHarness(t, func(o *Options) { o.Handoff = store })
-	if got := next.get(t, "/?handoff=" + token); got.StatusCode != http.StatusOK {
+	if got := next.get(t, "/?handoff="+token); got.StatusCode != http.StatusOK {
 		t.Fatalf("the handoff was refused: %d", got.StatusCode)
 	}
 

@@ -19,9 +19,11 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
@@ -222,6 +224,102 @@ func TestOnlyConsoleGoReachesTheConsolePackage(t *testing.T) {
 	}
 	if importers != 1 {
 		t.Errorf("%d file(s) import internal/console, want exactly console.go", importers)
+	}
+}
+
+// --- the dashboard's broker (change add-operator-dashboard) ------------------------
+
+// TestTheConsoleIsHandedOneCapabilityAndNotABroker.
+//
+// internal/console declares a one-method interface and a static test there keeps
+// it that way. This is the other end of the same claim: the value this file hands
+// across the boundary has exactly one method too, so the Open API client's
+// PlaceOrder / CancelOrder / ModifyOrder are not reachable from the console even
+// by type assertion.
+func TestTheConsoleIsHandedOneCapabilityAndNotABroker(t *testing.T) {
+	var reader console.HoldingsReader = newConsoleHoldings(&rootOptions{})
+
+	typ := reflect.TypeOf(reader)
+	if typ.NumMethod() != 1 || typ.Method(0).Name != "Holdings" {
+		names := make([]string, 0, typ.NumMethod())
+		for i := 0; i < typ.NumMethod(); i++ {
+			names = append(names, typ.Method(i).Name)
+		}
+		t.Fatalf("the console's holdings reader declares %v, want exactly [Holdings]", names)
+	}
+
+	// And the console.Options literal never receives a broker of any kind. The
+	// field list is read out of the source because the failure this guards against
+	// is somebody adding one, which no runtime test would ever execute.
+	fields := consoleOptionFields(t)
+	if len(fields) == 0 {
+		t.Fatal("no console.Options literal was found; the guard is not reading the wiring")
+	}
+	if !fields["Holdings"] {
+		t.Error("console.Options is built without Holdings; the positions screen has no broker")
+	}
+	for name := range fields {
+		lowered := strings.ToLower(name)
+		for _, banned := range []string{"broker", "client", "order", "place", "cancel"} {
+			if strings.Contains(lowered, banned) {
+				t.Errorf("console.Options is given a %s field; the dashboard's whole broker is "+
+					"console.HoldingsReader", name)
+			}
+		}
+	}
+}
+
+// consoleOptionFields reads the keys of the console.Options literal in console.go.
+func consoleOptionFields(t *testing.T) map[string]bool {
+	t.Helper()
+	file, err := parser.ParseFile(token.NewFileSet(), "console.go", readSource(t, "console.go"), 0)
+	if err != nil {
+		t.Fatalf("parsing console.go: %v", err)
+	}
+	out := map[string]bool{}
+	ast.Inspect(file, func(n ast.Node) bool {
+		lit, ok := n.(*ast.CompositeLit)
+		if !ok {
+			return true
+		}
+		sel, ok := lit.Type.(*ast.SelectorExpr)
+		if !ok || sel.Sel.Name != "Options" {
+			return true
+		}
+		pkg, ok := sel.X.(*ast.Ident)
+		if !ok || pkg.Name != "console" {
+			return true
+		}
+		for _, elt := range lit.Elts {
+			kv, ok := elt.(*ast.KeyValueExpr)
+			if !ok {
+				continue
+			}
+			if key, ok := kv.Key.(*ast.Ident); ok {
+				out[key.Name] = true
+			}
+		}
+		return false
+	})
+	return out
+}
+
+// TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingElseDoes.
+//
+// The dashboard has no paths of its own: the journal is journal.DefaultPath()
+// (the engine's), and the run marker is the one `verify run` and the soak already
+// agree on. A second answer to "where is the journal" would be a console
+// reporting on a database nobody else is using.
+func TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingElseDoes(t *testing.T) {
+	src := readSource(t, "console.go")
+	for _, want := range []string{"journal.DefaultPath()", "verifyRunLockPath(verifyRecord)"} {
+		if !strings.Contains(src, want) {
+			t.Errorf("console.go no longer resolves the dashboard's paths with %s", want)
+		}
+	}
+	if strings.Contains(src, "journal.Open(") {
+		t.Error("console.go opens the journal writable for the console; the dashboard opens it read-only " +
+			"itself, and this path would create and migrate it")
 	}
 }
 

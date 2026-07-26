@@ -4,7 +4,9 @@
 // # The problem it exists for, stated narrowly
 //
 // `tossctl console` authenticates by possession of the terminal that started it:
-// a one-time session token is printed in a URL and exchanged for a cookie. The
+// a per-process session token is printed in a URL and exchanged for a cookie —
+// valid for that process's lifetime, and not the single-use thing this package
+// mints. The
 // restart button re-executes the binary, so the new process mints a new session
 // token — and the browser, which is where the operator actually is, holds a cookie
 // that is now worthless and has no way to learn the new one without going back to

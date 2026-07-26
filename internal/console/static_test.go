@@ -131,7 +131,10 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 			t.Errorf("%s is registered without session0; it is reachable without the session token", r.Path)
 		}
 	}
-	if len(routes) < 9 {
+	// Seven verification-console routes plus the two dashboard screens
+	// (add-operator-dashboard). The floor is asserted so that a guard which stops
+	// parsing the table cannot pass by reading nothing.
+	if len(routes) < 11 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -235,6 +238,14 @@ func TestTheRedoSetIsReadFromTheRecordAndNeverFromTheRequest(t *testing.T) {
 func TestTheMarketHoursAdvisoryCannotBlockAnything(t *testing.T) {
 	// data.go reads the clock into the snapshot; templates.go is the markup that
 	// renders it. Everywhere else, a mention would be a branch.
+	//
+	// The dashboard files (holdings.go, portfolio.go, portfolio_pages.go,
+	// templates_portfolio.go) are deliberately NOT on this list. The positions
+	// screen has an honest freshness signal of its own — the broker cache's
+	// timestamp — and adding the market-hours advisory to it would be one more
+	// place the "advisory only" rule has to keep being true. If a later change
+	// renders it there, that file joins this map and the reviewer is the one who
+	// decides it is a render and not a branch.
 	rendering := map[string]bool{"data.go": true, "templates.go": true}
 	for name, src := range packageFiles(t) {
 		if rendering[name] {
@@ -370,6 +381,292 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 		for _, banned := range []string{"os.WriteFile", "os.Create", "os.OpenFile", "os.Remove", "os.MkdirAll", "OpenRecorder("} {
 			if strings.Contains(code, banned) {
 				t.Errorf("%s contains %q; the console renders local files, it does not write them", name, banned)
+			}
+		}
+	}
+}
+
+// --- the dashboard (change add-operator-dashboard, task 2.3) -----------------------
+
+// consoleStateChanging is the complete list of routes that are allowed to change
+// anything, transcribed from the operator-console spec: 콘솔의 상태변경 행위는
+// 검증 실행 제어(시작·승인·중단)와 자기 프로세스·soak 프로세스의 재기동뿐이며
+// (SHALL — 계좌 무접촉).
+//
+// It is the same set TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate uses,
+// named separately here because the two tests ask different questions of it: one
+// asks whether these routes are gated, the other whether anything outside them
+// even looks like an act.
+var consoleStateChanging = []string{
+	"/verify/start", "/verify/approve", "/verify/abort", "/restart", "/soak/restart",
+}
+
+// TestNoRouteNamesAnAccountMutation.
+//
+// Two claims in one walk of the route table:
+//
+//	no account verbs   nothing anywhere in the table is spelled like placing,
+//	                   cancelling or amending an order, opening a gate, or
+//	                   reaching a credential — including the five routes that ARE
+//	                   allowed to change something, because none of them touches
+//	                   the account.
+//	nothing else acts  every other route is a reading. A path outside the list
+//	                   above that reads like an act is either a mistake or a
+//	                   requirement change, and both should stop here.
+func TestNoRouteNamesAnAccountMutation(t *testing.T) {
+	allowed := map[string]bool{}
+	for _, path := range consoleStateChanging {
+		allowed[path] = true
+	}
+	// Verbs that would name a request against the account, or a way to open one.
+	accountVerbs := []string{
+		"order", "sell", "buy", "cancel", "modify", "amend", "flatten",
+		"gate", "credential", "secret", "token", "adopt", "enroll",
+	}
+	// Verbs that name an act rather than a reading. The five allowed routes are
+	// exempt: they are the verification control surface and the two restarts.
+	actVerbs := append([]string{"start", "stop", "approve", "abort", "restart", "reset", "delete"},
+		accountVerbs...)
+
+	seen := map[string]bool{}
+	for _, r := range registeredRoutes(t) {
+		seen[r.Path] = true
+		lowered := strings.ToLower(r.Path)
+		for _, verb := range accountVerbs {
+			if strings.Contains(lowered, verb) {
+				t.Errorf("route %s names %q; this console has no route that touches the account, "+
+					"its gate or its credentials", r.Path, verb)
+			}
+		}
+		if allowed[r.Path] {
+			continue
+		}
+		for _, verb := range actVerbs {
+			if strings.Contains(lowered, verb) {
+				t.Errorf("route %s names %q but is not in consoleStateChanging; a route that acts has to "+
+					"be argued for and CSRF-gated", r.Path, verb)
+			}
+		}
+	}
+	for _, path := range consoleStateChanging {
+		if !seen[path] {
+			t.Errorf("%s is in the state-changing list but is not registered", path)
+		}
+	}
+}
+
+// TestTheDashboardScreensAreReads.
+//
+// The positions and history routes exist, go through the session gate like
+// everything else, and are NOT behind the CSRF gate — a read route that demanded
+// a POST would be a page nobody can open, which is the failure this catches from
+// the other side.
+func TestTheDashboardScreensAreReads(t *testing.T) {
+	want := map[string]bool{"/positions": false, "/history": false}
+	found := map[string]bool{}
+	for _, r := range registeredRoutes(t) {
+		gated, ok := want[r.Path]
+		if !ok {
+			continue
+		}
+		found[r.Path] = true
+		if r.CSRFGated != gated {
+			t.Errorf("%s: CSRF-gated = %v, want %v", r.Path, r.CSRFGated, gated)
+		}
+		if !r.Session {
+			t.Errorf("%s is registered without session0", r.Path)
+		}
+	}
+	for path := range want {
+		if !found[path] {
+			t.Errorf("%s is not registered; the dashboard screen has no route", path)
+		}
+	}
+}
+
+// TestTheConsoleBrokerInterfaceDeclaresNothingButReads.
+//
+// The spec's "광폭 브로커 인터페이스 주입 차단" scenario. verifylive.Broker has
+// PlaceOrder, CancelOrder, ModifyOrder and three conditional-order mutations on
+// it; handing that to a read-only screen would make "the console places no order"
+// a fact about what the handlers happen to call rather than about what they can.
+//
+// The interface is read out of the source rather than through reflection because
+// the claim is about the declaration: a method that exists but is never called at
+// runtime is exactly what this has to catch.
+func TestTheConsoleBrokerInterfaceDeclaresNothingButReads(t *testing.T) {
+	src := packageFiles(t)["holdings.go"]
+	if src == "" {
+		t.Fatal("holdings.go is missing; the broker interface cannot be checked")
+	}
+	file := parseFile(t, "holdings.go", src)
+
+	allowed := map[string]bool{"Holdings": true}
+	banned := []string{
+		"place", "order", "cancel", "modify", "amend", "sell", "buy", "create",
+		"delete", "update", "submit", "transfer", "withdraw", "conditional",
+	}
+
+	var declared []string
+	ast.Inspect(file, func(n ast.Node) bool {
+		spec, ok := n.(*ast.TypeSpec)
+		if !ok || spec.Name.Name != "HoldingsReader" {
+			return true
+		}
+		iface, ok := spec.Type.(*ast.InterfaceType)
+		if !ok {
+			t.Fatal("HoldingsReader is not an interface; the console's broker seam must stay a narrow one")
+			return false
+		}
+		for _, method := range iface.Methods.List {
+			for _, name := range method.Names {
+				declared = append(declared, name.Name)
+			}
+			if len(method.Names) == 0 {
+				t.Error("HoldingsReader embeds another interface; whatever that interface gains, " +
+					"this one gains silently")
+			}
+		}
+		return false
+	})
+
+	if len(declared) == 0 {
+		t.Fatal("no HoldingsReader methods were read; the guard is not looking at the interface")
+	}
+	for _, name := range declared {
+		if !allowed[name] {
+			t.Errorf("HoldingsReader declares %q; the console is handed reads and nothing else", name)
+		}
+		lowered := strings.ToLower(name)
+		for _, verb := range banned {
+			if strings.Contains(lowered, verb) {
+				t.Errorf("HoldingsReader declares %q, which names the mutation verb %q", name, verb)
+			}
+		}
+	}
+
+	// And nothing in the package names verifylive's wide broker as its own seam.
+	for name, fileSrc := range packageFiles(t) {
+		code := strings.Join(nonCommentLines(fileSrc), "\n")
+		if strings.Contains(code, "verifylive.Broker") {
+			t.Errorf("%s takes a verifylive.Broker; that interface can place, amend and cancel orders, "+
+				"and the dashboard is handed HoldingsReader instead", name)
+		}
+	}
+}
+
+// TestTheConsoleOpensTheJournalReadOnly.
+//
+// The spec's "journal 쓰기 시도 차단" scenario. journal.Open creates the data
+// directory and migrates the schema; journal.OpenReadOnly does neither and hands
+// back a type with no write method on it. This is the guard that fails when
+// somebody reaches for the writable constructor because it was the one they
+// remembered.
+func TestTheConsoleOpensTheJournalReadOnly(t *testing.T) {
+	opener := false
+	for name, src := range packageFiles(t) {
+		code := strings.Join(nonCommentLines(src), "\n")
+		for _, banned := range []string{
+			"journal.Open(",        // the writable constructor
+			"journal.Journal",      // the writable handle
+			"journal.Options{",     // its options, which carry the migration override
+			"OpenExitState(",       // a write
+			"RecordExitJudgement(", // a write
+			"BackfillTradeOutcome(",
+			"PruneTradeOutcomes(",
+		} {
+			if strings.Contains(code, banned) {
+				t.Errorf("%s contains %q; the console opens the journal with OpenReadOnly and holds "+
+					"a *journal.ReadOnly, which has no method that writes", name, banned)
+			}
+		}
+		if strings.Contains(code, "journal.OpenReadOnly(") {
+			opener = true
+		}
+	}
+	if !opener {
+		t.Error("nothing in the package calls journal.OpenReadOnly; the guard is checking a claim " +
+			"nobody makes any more")
+	}
+}
+
+// TestTheConsoleReadsTheRunLockAndNeverWritesIt.
+//
+// The console yields the broker refresh to a live verification, and it learns
+// about another process's run from internal/runlock's marker. Reading it is the
+// whole interaction: a console that acquired the lock would pause the soak for as
+// long as somebody left a browser tab open.
+func TestTheConsoleReadsTheRunLockAndNeverWritesIt(t *testing.T) {
+	reader := false
+	for name, src := range packageFiles(t) {
+		code := strings.Join(nonCommentLines(src), "\n")
+		for _, banned := range []string{"runlock.Acquire(", "runlock.Hold(", ".Refresh(", ".Release()"} {
+			if strings.Contains(code, banned) {
+				t.Errorf("%s contains %q; the console reads the run marker and never writes or "+
+					"removes it", name, banned)
+			}
+		}
+		if strings.Contains(code, "runlock.Fresh(") {
+			reader = true
+		}
+	}
+	if !reader {
+		t.Error("nothing reads runlock.Fresh; the broker refresh no longer yields to a live verification")
+	}
+}
+
+// TestTheUnmanagedLabelIsSpelledOnce.
+//
+// Round-1 P3 fixed one label for a holding the exit policy does not manage. Two
+// spellings on two screens would be two things as far as an operator is
+// concerned, so the string lives in exactly one place in the Go source and the
+// template refers to that.
+func TestTheUnmanagedLabelIsSpelledOnce(t *testing.T) {
+	const label = "관리 외(미편입)"
+	// portfolio.go's positionRow.Label produces it; templates_portfolio.go
+	// explains to the reader what it means. Anything else would be a second
+	// definition, and a second definition drifts.
+	allowed := map[string]bool{"portfolio.go": true, "templates_portfolio.go": true}
+
+	definitions := 0
+	for name, src := range packageFiles(t) {
+		n := strings.Count(strings.Join(nonCommentLines(src), "\n"), label)
+		if n == 0 {
+			continue
+		}
+		if !allowed[name] {
+			t.Errorf("%s spells the unmanaged label; positionRow.Label is the one definition", name)
+			continue
+		}
+		if name == "portfolio.go" {
+			definitions = n
+		}
+	}
+	switch definitions {
+	case 1:
+	case 0:
+		t.Error("portfolio.go no longer produces the unmanaged label; the positions screen has lost " +
+			"its 관리 외 distinction")
+	default:
+		t.Errorf("portfolio.go produces the label %d times; it is one label with one definition",
+			definitions)
+	}
+}
+
+// TestTheDashboardNamesNoAdoptionConcept.
+//
+// Round-2 P1: exit eligibility at this landing is the entry decision and nothing
+// else. adoption_id does not exist in the schema, in the journal package or in
+// any spec that has landed — a screen that referred to it would be describing a
+// capability the engine does not have, and the operator would reasonably conclude
+// their manual holdings were protected.
+func TestTheDashboardNamesNoAdoptionConcept(t *testing.T) {
+	for name, src := range packageFiles(t) {
+		code := strings.Join(nonCommentLines(src), "\n")
+		for _, banned := range []string{"adoption_id", "AdoptionID", "adoption"} {
+			if strings.Contains(code, banned) {
+				t.Errorf("%s names %q; 편입 does not exist yet and this change's eligibility rule is "+
+					"entry_decision_id alone", name, banned)
 			}
 		}
 	}

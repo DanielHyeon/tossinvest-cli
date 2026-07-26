@@ -66,6 +66,8 @@ form { display: inline; }
   <strong>tossctl console</strong>
   <nav>
     <a href="/" {{if eq .Nav "dashboard"}}class="on"{{end}}>대시보드</a>
+    <a href="/positions" {{if eq .Nav "positions"}}class="on"{{end}}>포지션</a>
+    <a href="/history" {{if eq .Nav "history"}}class="on"{{end}}>거래 이력</a>
     <a href="/verify" {{if eq .Nav "verify"}}class="on"{{end}}>검증</a>
     <a href="/report" {{if eq .Nav "report"}}class="on"{{end}}>리포트</a>
   </nav>
@@ -149,7 +151,8 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 {{define "dashboard"}}
 {{template "head" .}}
 <h1>대시보드</h1>
-<p class="muted">이 화면은 로컬 파일만 읽는다. 네트워크 호출도, 설정 변경도 하지 않는다.</p>
+<p class="muted">이 화면은 로컬 파일만 읽는다. 네트워크 호출도, 설정 변경도 하지 않는다.
+계좌 보유·exit 라인은 <a href="/positions">포지션</a>, 완결 거래는 <a href="/history">거래 이력</a>에 있다.</p>
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
 {{template "stalebinary" .Snap.Binary}}
 

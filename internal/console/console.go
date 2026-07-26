@@ -17,10 +17,13 @@
 // that condition:
 //
 //	session      possession of the terminal that started the console is the
-//	             authentication. A crypto-random one-time token is printed in the
-//	             URL and exchanged for a cookie on first visit; every route
+//	             authentication. A crypto-random token is printed in the URL and
+//	             exchanged for a cookie on first visit; it is valid for as long as
+//	             this process lives, and the URL exchange happens once because the
+//	             cookie replaces it, not because the token is spent. Every route
 //	             requires it, and a request without it is refused before it can
-//	             reach anything.
+//	             reach anything. (The single-use credential is the restart handoff
+//	             token — restart.go — which is a different thing.)
 //	CSRF         every state-changing POST carries a second token, minted with the
 //	             session and never printed anywhere a page can be tricked into
 //	             replaying.
@@ -157,6 +160,29 @@ type Options struct {
 	// a reinstall says so instead of quietly being the old build. Nil uses
 	// binstamp.Self.
 	Binary func() (binstamp.Stamp, error)
+
+	// --- the dashboard (change add-operator-dashboard) ---
+	//
+	// All three are optional and all three fail to a state the page describes
+	// rather than to an error: an operator opens this console precisely when they
+	// do not know what is running.
+
+	// Holdings is the read-only broker the positions screen reads (holdings.go).
+	// It declares one method and cmd/tossctl supplies it; nil leaves the broker
+	// half of the screen unwired and the journal half working.
+	Holdings HoldingsReader
+
+	// JournalPath is the engine's journal database, opened read-only per request
+	// with journal.OpenReadOnly. Empty means the journal half is unwired — it is
+	// never resolved from the environment here, so a test cannot reach the
+	// developer's real data directory by forgetting to set it.
+	JournalPath string
+
+	// RunLockPath is internal/runlock's advisory marker. A fresh one means
+	// another process is spending this account's rate budget on a live
+	// verification, and the broker refresh yields to it. Empty disables that
+	// half of the check; the in-process half always applies.
+	RunLockPath string
 }
 
 // Console is the server.
@@ -182,6 +208,11 @@ type Console struct {
 	// listener and is therefore the only thing that may release the port the new
 	// process has to bind.
 	relaunch chan int
+
+	// holdings is the lazy, TTL'd cache in front of Options.Holdings. It is the
+	// only thing in this process that can make a broker request of its own, and
+	// holdings.go is where its rate-budget contract is written down.
+	holdings *holdingsCache
 
 	mu   sync.Mutex
 	addr string
@@ -219,11 +250,13 @@ func New(o Options) (*Console, error) {
 	// binstamp.Stamp.Same then answers "unchanged": an unanswerable question must
 	// never turn into a warning the operator cannot act on.
 	c.startedWith, _ = c.opts.Binary()
+	c.holdings = newHoldingsCache(o.Holdings, holdingsTTL)
 	c.handler = c.routes()
 	return c, nil
 }
 
-// SessionToken returns the one-time token the URL carries.
+// SessionToken returns the token the URL carries. It is minted once per process
+// and stays valid for that process's lifetime; it is not single-use.
 func (c *Console) SessionToken() string { return c.session }
 
 // Handler is the console's whole HTTP surface.
@@ -336,8 +369,9 @@ func loopbackOnly(ln net.Listener) error {
 
 func (c *Console) writeBanner() {
 	fmt.Fprintf(c.out, "tossctl console — %s\n", c.URL())
-	fmt.Fprintf(c.out, "  loopback only. The link above carries a one-time session token: opening it in this\n"+
-		"  machine's browser is what authenticates you, so do not paste it anywhere else.\n")
+	fmt.Fprintf(c.out, "  loopback only. The link above carries this process's session token — valid until the\n"+
+		"  console stops. Opening it in this machine's browser is what authenticates you, so do\n"+
+		"  not paste it anywhere else.\n")
 	fmt.Fprintf(c.out, "  read-only everywhere except the verification approval, which still needs the typed\n"+
 		"  confirmation string the page shows you. Ctrl-C stops the console.\n\n")
 }
@@ -394,6 +428,12 @@ func (c *Console) writeOutstanding(run *runState) {
 func (c *Console) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", c.session0(c.handleDashboard))
+	// The two dashboard screens (change add-operator-dashboard). Both are GET
+	// readings and neither is behind `mutating`: there is nothing on them to
+	// submit, which is what static_test.go's two route tests assert from opposite
+	// directions.
+	mux.HandleFunc("/positions", c.session0(c.handlePositions))
+	mux.HandleFunc("/history", c.session0(c.handleHistory))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.handleStart)))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))
@@ -429,8 +469,10 @@ func (c *Console) session0(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		c.refuse(w, http.StatusForbidden, "세션 토큰이 없거나 일치하지 않는다",
-			"이 콘솔은 기동할 때 출력한 1회용 링크로만 열 수 있다. 터미널에 인쇄된 "+
-				"http://127.0.0.1:PORT/?session=... 주소를 그대로 사용하라. 아무것도 전송되지 않았다.")
+			"이 콘솔은 기동할 때 출력한 세션 링크로만 열 수 있다. 그 토큰은 1회용이 아니라 "+
+				"이 콘솔 프로세스가 살아 있는 동안 유효하다(1회용인 것은 재시작 핸드오프 토큰 쪽이다). "+
+				"터미널에 인쇄된 http://127.0.0.1:PORT/?session=... 주소를 그대로 사용하라. "+
+				"아무것도 전송되지 않았다.")
 	}
 }
 

@@ -47,11 +47,14 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/spf13/cobra"
@@ -79,11 +82,15 @@ Serve a small web console on 127.0.0.1 for driving the one-off live-account
 verification from a browser instead of a terminal.
 
 It binds the loopback interface and nothing else. There is no flag to change
-that. On start it prints a URL carrying a one-time session token: opening that
-URL in this machine's browser is what authenticates you, so possession of this
-terminal is the credential. Do not paste the link anywhere else.
+that. On start it prints a URL carrying this process's session token — it stays
+valid until the console stops, and it is not single-use (the single-use one is
+the restart handoff token). Opening that URL in this machine's browser is what
+authenticates you, so possession of this terminal is the credential. Do not
+paste the link anywhere else.
 
   dashboard   soak progress, attestation state, verification progress
+  positions   what the account holds, joined to the engine's exit lines
+  history     completed round trips and the exit judgement stream
   verify      the step list, the batch summary, the typed approval, live progress
   report      the measured attributes and the ones still unverified, plus JSON
 
@@ -148,6 +155,14 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		return err
 	}
 
+	journalPath, err := journal.DefaultPath()
+	if err != nil {
+		// Not fatal. The dashboard's journal half reports "배선되지 않았다" and the
+		// verification console — which is what this command is for — is unaffected.
+		fmt.Fprintf(cmd.ErrOrStderr(), "원장 경로를 해석할 수 없다 (%v). 포지션·이력 화면은 원장 없이 뜬다.\n", err)
+		journalPath = ""
+	}
+
 	out := cmd.OutOrStdout()
 	return console.ListenAndServe(ctx, console.Options{
 		Port:              opts.port,
@@ -159,6 +174,13 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		RequiredEndpoints: engine.RequiredEndpoints(),
 		Out:               out,
 
+		// The dashboard's three seams (change add-operator-dashboard). The console
+		// reads the journal itself — read-only, per request — and is handed a
+		// broker that can do exactly one thing.
+		Holdings:    newConsoleHoldings(root),
+		JournalPath: journalPath,
+		RunLockPath: verifyRunLockPath(verifyRecord),
+
 		// The three seams task 1.8 puts behind the console's two restart buttons.
 		// internal/console executes nothing: it decides whether the person asking
 		// has cleared the session and CSRF gates, and then calls one of these.
@@ -166,6 +188,59 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Handoff:     handoff.New(consoleHandoffPath(verifyRecord)),
 		RestartSoak: func() (string, error) { return restartSoak(soakRecord) },
 	})
+}
+
+// --- the dashboard's broker (change add-operator-dashboard, task 1.3) ------------
+//
+// The console declares a one-method interface (console.HoldingsReader) and this
+// is the only place in the binary that satisfies it. What crosses the boundary is
+// a *bound method value*, not a broker: the Open API client that owns
+// PlaceOrder, CancelOrder and the conditional-order mutations never becomes
+// reachable from internal/console, so "the dashboard cannot send an order" is a
+// fact about the wiring rather than about the handlers.
+
+// newConsoleHoldings builds the console's holdings reader, lazily.
+//
+// Lazily because constructing the client resolves the account against the Open
+// API, and doing that at `tossctl console` startup would make a screen the
+// operator may never open into a precondition for the console coming up at all.
+// The first render pays for it; a failure is a sentence on the page.
+func newConsoleHoldings(root *rootOptions) console.HoldingsReader {
+	return &lazyHoldings{root: root}
+}
+
+// holdingsFunc is the single capability the console is handed.
+type holdingsFunc func(ctx context.Context, symbol string) ([]domain.Position, error)
+
+type lazyHoldings struct {
+	root *rootOptions
+
+	mu   sync.Mutex
+	read holdingsFunc
+}
+
+// Holdings satisfies console.HoldingsReader.
+//
+// A build failure is returned rather than remembered: credentials that were not
+// there when the console started may be there after `tossctl openapi login`, and
+// the console's own cache is what stops a failing build from being retried on
+// every render (holdings.go bounds attempts by the TTL, not successes).
+func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Position, error) {
+	l.mu.Lock()
+	read := l.read
+	if read == nil {
+		broker, _, err := verifyBrokerFactory(l.root)
+		if err != nil {
+			l.mu.Unlock()
+			return nil, err
+		}
+		// Only the method value is kept. Nothing here or afterwards holds the
+		// wide broker interface.
+		read = broker.Holdings
+		l.read = read
+	}
+	l.mu.Unlock()
+	return read(ctx, symbol)
 }
 
 // consoleHandoffPath is where the single-use restart token lives: beside the
