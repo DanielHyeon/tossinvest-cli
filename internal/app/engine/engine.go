@@ -25,12 +25,15 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"time"
 
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
@@ -85,6 +88,14 @@ type Options struct {
 	// Operator names who is starting the engine, for the audit trail. Empty
 	// resolves the OS user.
 	Operator string
+
+	// journalFSProber overrides the filesystem probe the journal's durability
+	// guard uses. Unexported, therefore test-only — the same arrangement
+	// journal.Options.migrationOverride uses, and for the same reason: the guard
+	// exists because fsync does not mean fsync on every mount, and a production
+	// path that could stub it out has turned the durability contract into a
+	// comment. Tests reach it through export_test.go, which is not in the binary.
+	journalFSProber journal.FSProber
 }
 
 // Context is the engine's assembled wiring.
@@ -106,6 +117,14 @@ type Context struct {
 	// and independent of the automation gate (task 7.1). It is the reference
 	// every durable record is scoped by.
 	AccountRef string
+
+	// Journal is the engine's durable record of every intent, attempt, fill,
+	// reservation and RECONCILE state (task 7.2).
+	//
+	// It is exported because it is a record, not a mutator: nothing on it can
+	// reach the broker. Close closes it, and the engine owns it — a caller that
+	// closes this handle behind the engine's back breaks the gateway.
+	Journal *journal.Journal
 
 	// Automation reports what the startup interlock decided about the automation
 	// gate. Zero value = gate off.
@@ -242,12 +261,19 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	}
 	status.AccountRef = accountRef
 
+	// --- 2. the journal -----------------------------------------------------
+	jrn, err := openEngineJournal(ctx, opts, clk)
+	if err != nil {
+		return nil, refuseStartup(auditLog, gate, err)
+	}
+
 	// --- 4. the interlock ---------------------------------------------------
 	//
 	// It runs before the context is returned, so a refused gate produces no
 	// engine at all rather than an engine somebody could still place orders with.
 	automation, err := runInterlock(status, gate, auditLog, clk.Now(), opts.Guardian)
 	if err != nil {
+		_ = jrn.Close()
 		return nil, err
 	}
 	var guardian execgw.Guardian
@@ -261,6 +287,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		TokenFile:   tokenFile,
 		Official:    off,
 		AccountRef:  accountRef,
+		Journal:     jrn,
 		Automation:  automation,
 		Guardian:    guardian,
 		Audit:       auditLog,
@@ -273,4 +300,78 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		// does when lineage is unset.
 		TradingService: trading.NewService(cfg.Trading, broker).WithConditional(broker),
 	}, nil
+}
+
+// Close releases what the engine profile owns. It is safe on a nil context and
+// safe to call twice.
+func (c *Context) Close() error {
+	if c == nil || c.Journal == nil {
+		return nil
+	}
+	j := c.Journal
+	c.Journal = nil
+	return j.Close()
+}
+
+// spentNonceRetention is how long a nonce consumption record is kept.
+//
+// The invariant is "retention ≥ the longest decision TTL" (engine-safety: "소비
+// 기록의 보존 기간은 최대 결정 유효 시간 이상이어야 한다"), and thirty days clears
+// every decision this build can issue by three orders of magnitude. The number
+// is not a tuning knob: it is a floor with a wide margin, and a shorter one would
+// let a decision outlive the record of its own consumption.
+const spentNonceRetention = 30 * 24 * time.Hour
+
+// openEngineJournal opens the journal the engine records against and sweeps the
+// consumption records once (task 7.2, design D8 step 2).
+//
+// # What this makes a startup condition
+//
+// The journal's filesystem allowlist (ext4/xfs/btrfs) and its integrity check
+// now gate engine startup. That is the intended inheritance of the P1 journal
+// contract rather than a side effect: an engine whose durability guarantees are
+// unverifiable is an engine whose record of what it did is unverifiable, and the
+// whole execution contract is built on that record. An operator on tmpfs, NFS or
+// a fuse mount gets a refusal that names the filesystem, not a silent downgrade.
+//
+// # Why the path follows --config-dir
+//
+// This is flatten's convention, kept: an explicit config directory means an
+// isolated run, and the journal follows it so a test or a second profile cannot
+// touch the real one. With no override the journal resolves its own default
+// ($TOSSOS_DATA_DIR > $XDG_DATA_HOME/tossos > ~/.local/share), which is where the
+// journal lives for a normally installed engine.
+func openEngineJournal(ctx context.Context, opts Options, clk clock.Clock) (*journal.Journal, error) {
+	path := ""
+	if opts.ConfigDir != "" {
+		path = filepath.Join(opts.ConfigDir, journal.DBFileName)
+	}
+	j, err := journal.Open(ctx, journal.Options{
+		Path:     path,
+		Clock:    clk,
+		FSProber: opts.journalFSProber,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("engine: opening the journal: %w", err)
+	}
+
+	// The retention sweep. A restart is the one moment the engine is provably not
+	// in the middle of a dispatch, and the sweep is once per start rather than on
+	// a timer: a background goroutine deleting rows is a second writer with no
+	// transaction discipline, and it keeps running after the engine has stopped
+	// trading.
+	//
+	// The retention is widened to cover the longest TTL actually on disk so the
+	// invariant can never be *violated by this call* — the alternative, refusing
+	// to start because some old decision was issued with a long TTL, would turn a
+	// housekeeping detail into an outage while deleting nothing either way.
+	retention := spentNonceRetention
+	if longest, err := j.MaxDecisionTTL(ctx); err == nil && longest > retention {
+		retention = longest
+	}
+	if _, err := j.PruneSpentNonces(ctx, clk.Now(), retention); err != nil {
+		_ = j.Close()
+		return nil, fmt.Errorf("engine: sweeping spent decision nonces: %w", err)
+	}
+	return j, nil
 }

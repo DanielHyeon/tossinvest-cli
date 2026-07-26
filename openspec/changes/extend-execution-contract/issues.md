@@ -532,6 +532,33 @@
   §0.4 예산에서 기동 1회는 라인이 아니다(재시작 빈도 ≪ 폴링 빈도).
 
 
+## 2026-07-26 [safe local] 보존 스윕을 "거부"가 아니라 "보존 기간 확장"으로 냈다 (task 7.2)
+
+- 사실: `PruneSpentNonces(ctx, now, retention)`은 `retention < 최대 결정 TTL`이면
+  `ErrRetentionTooShort`로 **아무것도 지우지 않고** 거부한다. 기동 스윕이 이 오류를 그대로
+  기동 거부로 올리면, 과거에 긴 TTL로 발급된 결정 행 하나가 영구적으로 엔진 기동을 막는다 —
+  아무것도 삭제되지 않는(=안전한) 상황을 장애로 바꾸는 셈이다.
+- 이번 처리: 기동 시 `retention = max(30일, MaxDecisionTTL())`로 넓혀서 호출한다. 불변식
+  (보존 ≥ 최대 결정 TTL)은 **정의상** 위반될 수 없고, 스윕은 항상 수행된다. DB 오류는 그대로
+  기동 거부(journal이 답하지 못하는 상태에서 거래를 시작하지 않는다).
+- 30일은 튜닝 값이 아니라 여유 큰 하한이다(현 빌드의 결정 TTL은 분 단위).
+
+## 2026-07-26 [safe local] journal 편입으로 엔진 기동 조건이 넓어졌다 — 의도된 상속 (task 7.2)
+
+- 결과 명시(D8 2단계): 파일시스템 allowlist(ext4/xfs/btrfs)와 무결성 검사가 이제 **엔진**
+  기동 조건이다. tmpfs·NFS·fuse에서 기동하면 파일시스템 이름을 말하는 거부가 나온다.
+  `openEngineJournal`의 doc comment에 근거를 적었다.
+- 경로는 flatten 관례 보존: `--config-dir`가 있으면 `<config-dir>/journal.db`, 없으면
+  journal 자체 기본값(`$TOSSOS_DATA_DIR` > `$XDG_DATA_HOME/tossos` > `~/.local/share`).
+- 테스트 seam: `engine.Options`에 **비공개** 필드 `journalFSProber` + `export_test.go`의
+  setter. `journal.Options.migrationOverride`와 같은 형태이며 빌드 산출물에는 없다.
+  `testenv`의 `TestFixedFSProberIsTestOnly`는 생산 파일의 `FixedFSProber` 사용만 금지하므로
+  타입 이름(`journal.FSProber`)을 받는 필드는 대상이 아니다.
+- 기동 비용 변화: 기동당 journal open(마이그레이션 확인 포함) 1회 + `PruneSpentNonces` 1회.
+- 과도기 1건: 7.4 전까지 `tossctl flatten-all`은 engine Context(journal 1개)와 flatten 자체
+  journal(같은 경로)을 **둘 다** 연다. 단일 프로세스·순차 오픈이라 동작하지만 의도된 상태는
+  아니며 7.4의 자체 배선 전환이 없앤다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

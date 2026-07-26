@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
@@ -23,3 +24,13 @@ func (c *Context) ConditionalForTest() ConditionalMutator { return c.conditional
 // read-only Official field (task 4.2). TESTS ONLY — production code that needs a
 // broker write goes through internal/execgw.Gateway.
 func (c *Context) OfficialClientForTest() *official.Client { return c.official }
+
+// SetJournalProberForTest overrides the filesystem probe the journal's
+// durability guard uses (task 7.2). TESTS ONLY.
+//
+// The engine profile opens the journal, so the ext4/xfs/btrfs allowlist is a
+// startup condition — and TMPDIR is not necessarily on an allowlisted
+// filesystem. internal/journal's own tests solve this the same way; the
+// difference is only that the seam is reached through a method, because the
+// field itself must not exist in the built binary's API.
+func (o *Options) SetJournalProberForTest(p journal.FSProber) { o.journalFSProber = p }

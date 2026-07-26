@@ -1,6 +1,7 @@
 package engine_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -9,9 +10,12 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
@@ -93,7 +97,14 @@ func engineStub(t *testing.T, accountNo string) (*httptest.Server, func() int) {
 }
 
 // engineOptions is the standard startup input for a test engine: an isolated
-// config directory and an official client pointed at the stub.
+// config directory, an official client pointed at the stub, and a filesystem
+// probe that answers "ext4".
+//
+// The probe is stubbed for the same reason internal/journal's own tests stub it
+// (task 7.2): since the engine profile opens the journal, the allowlist is a
+// startup condition, and TMPDIR is not necessarily on an allowlisted filesystem.
+// The seam is an unexported Options field with a test-only setter, so it does not
+// exist in the built binary.
 func engineOptions(dir string, srv *httptest.Server) engine.Options {
 	opts := engine.Options{ConfigDir: dir}
 	if srv != nil {
@@ -102,7 +113,21 @@ func engineOptions(dir string, srv *httptest.Server) engine.Options {
 			official.WithHTTPClient(srv.Client()),
 		}
 	}
+	opts.SetJournalProberForTest(journal.FixedFSProber(journal.FSInfo{
+		Name: "ext4", Magic: journal.MagicExt,
+	}))
 	return opts
+}
+
+// startEngine builds an engine and closes it when the test ends. The journal is
+// a file handle now, so a test that leaks one leaks it for the whole package run.
+func startEngine(t *testing.T, dir string, srv *httptest.Server) (*engine.Context, error) {
+	t.Helper()
+	eng, err := engine.New(engineOptions(dir, srv))
+	if eng != nil {
+		t.Cleanup(func() { _ = eng.Close() })
+	}
+	return eng, err
 }
 
 func writeCredentials(t *testing.T, dir, key, secret string) {
@@ -163,7 +188,7 @@ func TestNewIgnoresOpenAPIConfigToggles(t *testing.T) {
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 	srv, _ := engineStub(t, "123-45")
 
-	ctx, err := engine.New(engineOptions(dir, srv))
+	ctx, err := startEngine(t, dir, srv)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -187,7 +212,7 @@ func TestNewResolvesPathsFromConfigDir(t *testing.T) {
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 	srv, _ := engineStub(t, "123-45")
 
-	ctx, err := engine.New(engineOptions(dir, srv))
+	ctx, err := startEngine(t, dir, srv)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -214,7 +239,7 @@ func TestNewCarriesTradingPolicy(t *testing.T) {
 		writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 		srv, _ := engineStub(t, "123-45")
 
-		ctx, err := engine.New(engineOptions(dir, srv))
+		ctx, err := startEngine(t, dir, srv)
 		if err != nil {
 			t.Fatalf("New: %v", err)
 		}
@@ -229,7 +254,7 @@ func TestNewCarriesTradingPolicy(t *testing.T) {
 		writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 		srv, _ := engineStub(t, "123-45")
 
-		ctx, err := engine.New(engineOptions(dir, srv))
+		ctx, err := startEngine(t, dir, srv)
 		if err != nil {
 			t.Fatalf("New: %v", err)
 		}
@@ -262,7 +287,7 @@ func TestNewAcceptsEnvCredentials(t *testing.T) {
 	t.Setenv("TOSSCTL_OPENAPI_SECRET", "env-secret")
 	srv, _ := engineStub(t, "123-45")
 
-	ctx, err := engine.New(engineOptions(dir, srv))
+	ctx, err := startEngine(t, dir, srv)
 	if err != nil {
 		t.Fatalf("New with env credentials: %v", err)
 	}
@@ -288,7 +313,7 @@ func TestStartupResolvesTheAccountWithTheGateOff(t *testing.T) {
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 	srv, accountCalls := engineStub(t, "123-45")
 
-	ctx, err := engine.New(engineOptions(dir, srv))
+	ctx, err := startEngine(t, dir, srv)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -336,7 +361,7 @@ func TestStartupRefusesWhenTheAccountCannotBeResolved(t *testing.T) {
 			}))
 			t.Cleanup(srv.Close)
 
-			ctx, err := engine.New(engineOptions(dir, srv))
+			ctx, err := startEngine(t, dir, srv)
 			if !errors.Is(err, engine.ErrAccountUnresolved) {
 				t.Fatalf("want ErrAccountUnresolved, got %v", err)
 			}
@@ -345,4 +370,148 @@ func TestStartupRefusesWhenTheAccountCannotBeResolved(t *testing.T) {
 			}
 		})
 	}
+}
+
+// --- task 7.2: the journal is part of the engine profile --------------------
+
+// TestStartupOpensTheJournalInTheConfigDir pins where the journal lands.
+//
+// The path convention is flatten's, kept deliberately: an explicit --config-dir
+// means an isolated run, and the journal follows it so a test or a second
+// profile cannot touch the real one.
+func TestStartupOpensTheJournalInTheConfigDir(t *testing.T) {
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
+
+	eng, err := startEngine(t, dir, srv)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if eng.Journal == nil {
+		t.Fatal("the engine profile must open a journal")
+	}
+	wantPath := filepath.Join(dir, journal.DBFileName)
+	if eng.Journal.Path() != wantPath {
+		t.Errorf("journal path = %q, want %q", eng.Journal.Path(), wantPath)
+	}
+	if _, err := os.Stat(wantPath); err != nil {
+		t.Errorf("the journal file was not created: %v", err)
+	}
+}
+
+// TestStartupRefusesOnADisallowedFilesystem states the inherited condition.
+//
+// The journal's filesystem allowlist (ext4/xfs/btrfs) and its integrity check
+// were startup conditions for `tossctl flatten-all` only. Now that the engine
+// profile opens the journal, they are startup conditions for the engine — the
+// intended inheritance of the P1 journal contract (design D8 step 2), and the
+// reason it is stated in a test rather than left to be discovered on a tmpfs.
+func TestStartupRefusesOnADisallowedFilesystem(t *testing.T) {
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
+
+	opts := engineOptions(dir, srv)
+	opts.SetJournalProberForTest(journal.FixedFSProber(journal.FSInfo{
+		Name: "tmpfs", Magic: journal.MagicTmpfs,
+	}))
+
+	eng, err := engine.New(opts)
+	if !errors.Is(err, journal.ErrFilesystemNotAllowed) {
+		t.Fatalf("want ErrFilesystemNotAllowed, got %v", err)
+	}
+	if eng != nil {
+		t.Error("a refused startup must return no engine at all")
+	}
+}
+
+// TestStartupPrunesSpentNoncesOnce is the retention sweep (task 7.2).
+//
+// Nobody called PruneSpentNonces before this: the invariant (retention ≥ the
+// longest decision TTL) was enforced by the function and fixed by its own tests,
+// but the sweep itself had no caller. Startup is that caller — a restart is the
+// one moment the engine is not in the middle of anything — and the sweep runs
+// once, not on a timer.
+func TestStartupPrunesSpentNoncesOnce(t *testing.T) {
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
+
+	now := time.Now()
+	stale := seedSpentNonce(t, dir, "stale", now.Add(-400*24*time.Hour))
+	recent := seedSpentNonce(t, dir, "recent", now.Add(-time.Hour))
+
+	eng, err := startEngine(t, dir, srv)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	ctx := context.Background()
+	if spent, err := eng.Journal.NonceSpent(ctx, stale); err != nil || spent {
+		t.Errorf("a consumption record older than the retention survived startup (spent=%v, err=%v)",
+			spent, err)
+	}
+	if spent, err := eng.Journal.NonceSpent(ctx, recent); err != nil || !spent {
+		t.Errorf("a record inside the retention was pruned (spent=%v, err=%v) — "+
+			"a decision must never outlive the record of its own consumption", spent, err)
+	}
+}
+
+// seedSpentNonce writes one consumed decision into the journal the engine will
+// later open, stamped at the given instant.
+//
+// The consumption timestamp is the journal clock's, so the seed opens the file
+// with a fake clock rather than trying to backdate a row: the same write path
+// the engine uses is what produces the record.
+func seedSpentNonce(t *testing.T, dir, id string, at time.Time) string {
+	t.Helper()
+	ctx := context.Background()
+
+	j, err := journal.Open(ctx, journal.Options{
+		Path:     filepath.Join(dir, journal.DBFileName),
+		Clock:    clock.NewFake(at),
+		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+	})
+	if err != nil {
+		t.Fatalf("seed %s: open journal: %v", id, err)
+	}
+	defer func() { _ = j.Close() }()
+
+	dec, err := j.RecordDecision(ctx, journal.DecisionRequest{
+		ID:          "dec-" + id,
+		AccountRef:  "123-45",
+		SafetyClass: journal.SafetyClassRiskReducing,
+		Kind:        journal.KindCancel,
+		Preimage: journal.ReductionIntent{
+			AccountRef: "123-45", Market: "kr", Symbol: "005930", Side: "SELL",
+			MaxQuantity: "1", Reason: "seed",
+		},
+		Nonce: "nonce-" + id, IssuedAt: at, ExpiresAt: at.Add(time.Minute),
+	})
+	if err != nil {
+		t.Fatalf("seed %s: RecordDecision: %v", id, err)
+	}
+
+	attempt, err := j.Prepare(ctx, journal.PrepareRequest{
+		Intent: journal.Intent{
+			ID: "intent-" + id, Market: "kr", TradingDay: "2026-07-24", AccountRef: "123-45",
+			Symbol: "005930", Side: "SELL", OrderType: "LIMIT", Quantity: "1", Price: "70000",
+			Currency: "KRW", Source: "seed", Fingerprint: "fp-" + id,
+		},
+		Kind: journal.KindCancel, AttemptID: "attempt-" + id, TargetOrderID: "O-" + id,
+		DecisionID: dec.ID, SafetyClass: dec.SafetyClass,
+	})
+	if err != nil {
+		t.Fatalf("seed %s: Prepare: %v", id, err)
+	}
+	// The consumption record is written inside this transition, which is the
+	// whole point of the invariant being about consumption records.
+	if err := attempt.MarkDispatchStarted(ctx); err != nil {
+		t.Fatalf("seed %s: MarkDispatchStarted: %v", id, err)
+	}
+	return dec.Nonce
 }
