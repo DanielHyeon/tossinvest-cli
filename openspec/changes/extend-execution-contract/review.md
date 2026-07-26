@@ -139,3 +139,31 @@ P1 확정 스펙 `order-execution` "IN_DOUBT 해소" 1항: *"자동 재제출 �
 # 3판 재범위 결정 (2026-07-26)
 
 2라운드 평결("방향은 옳으나 접합부 미지정")과 사용자 검토를 반영해 경계를 **측정 의존성**으로 재설정했다. 이 change(2a)에서 조건주문·보호주문·발동 주문 귀속·청산 수량 예약을 전부 제거 — 2b 측정(멱등키 실동작·조건주문 속성·CANCEL_REJECTED 형태·매도가능수량 의미) 후 2c `add-protection-orders`로 작성한다. 2라운드 발견 중 R1~R3·N1~N2·N5·N9~N12(조건주문 관련)는 2c 소관으로 이관, N3(예약 누수)·N4(TTL 마진)·N6~N8·N13~N16과 R4(clientOrderId 배선 부재)는 3판에 반영했다. 추가 채택: opaque 식별자 규칙, OrderStatus 10개 파생(CANCEL_REJECTED 별도 레코드 fail-closed), EXECUTION_CORRECTION 이벤트, RECONCILE 행동 제한 상태(확정 하한 위험 축소 허용), 브로커 종결 상태 기반 예약 해제.
+
+---
+
+# Review 3라운드 (3판)
+
+보이스 2 — codex(12건), Eng 적대(24건 + 최소 수정 11항목). Manager 표본 검증: 만료≠OrderStatus(derive.go 17행이 이미 "Expiry would look like this → UNKNOWN"), TrimSpace 저장(resolution.go:47), filledAmount 미저장(payload.go), **PARTIAL_FILLED가 OPEN·CLOSED 양쪽 그룹에 명시**(openapi status param — 가장 흔한 IN_DOUBT 사례가 dedup 없이는 2중 매칭→영구 주차), **422 opposite-pending-order-exists**(동시 RISK_REDUCING 조항을 브로커가 거부), **409 request-in-progress**(재생의 최빈 응답, 규칙 부재) — 전부 사실.
+
+## 판정
+
+**경계는 지켜졌다**(조건주문 의무 0건 — Eng C-boundary 확인). 그러나 접합부 결함으로 착수 불가 유지. Eng 평결: "round 1과 달리 고칠 수 있는 판". 4판은 재설계가 아니라 접합부 사양화다.
+
+## 4판 반영 결정 (36건 통합)
+
+**스키마(D9 확장)**: decisions에서 intents FK 제거(발급 시점에 intent 미존재 — codex#1·Eng A1/A3), decision_id는 발급자 발행, 멱등키는 `f(decision_id, generation)`로 재유도(발급자가 계산 가능한 값만 사용); mutation_attempts에 decision_id·safety_class·generation 컬럼(attempt→결정 결속 — codex#2); risk_reservations에 attempt_id(예약↔종결 관측 조인 — codex#3); fill_snapshots에 filled_amount(정정 감지의 prev — Eng B6); reconcile_states 테이블(영속 — codex#5); execution_corrections 완전 사양(PK·FK·dedup·동일 트랜잭션); decisions.account_ref; spent_nonces 보존 불변식(보존 ≥ 최대 결정 TTL); generation은 2a에서 0 고정(전진 주체는 2c/2d).
+
+**동시 carve-out 폐기**: "미해소 EXPOSURE_RAISING이 RISK_REDUCING을 차단하지 않는다"를 2a에서 제거. 근거: (1) 422 opposite-pending — 브로커가 동시 반대 주문을 거부하고 P1 분류기는 422를 확정 거부로 종결해 §0.3 의도가 반전됨(Eng B2), (2) 부재 증명 오염 — 동시 청산이 잔고 delta 교차확인을 무효화(codex#8), (3) AttemptRecord에 class가 없어 데이터 경로 부재(Eng A4). 2a의 §0.3 = flatten의 순서화된 saga(P1 보존) + 해소 우선·유계(재생이 이를 빠르게 함). 보호주문의 동시성 요구는 2c에서 브로커 계약 위에 재설계.
+
+**caller-forgeable class 차단**: Gateway가 mutation 형태에서 raisesExposure를 독립 계산해 class와 일치 검증(EXPOSURE_RAISING ⇔ 노출 증가) — 발급자 부재 상태에서 class 선언만으로 한도 면제 불가(Eng B3).
+
+**flatten의 1급 답**: RISK_REDUCING preimage는 축소 의도(계좌·심볼·방향·상한 수량·사유)로 클래스별 스키마를 갖는다 — 퇴화 carve-out 없이 preimage NOT NULL 유지. flatten이 자기 결정 행을 journal에 기록 후 제출(Eng A2).
+
+**해소 절차**: 조회 폴백에 orderId dedup 의무(PARTIAL_FILLED 양쪽 그룹 인용 — Eng B1); 재생 진입점의 자기 방어 의무(state==IN_DOUBT·회당 시간 재검사·상한·attestation — Eng B4); 재생 경로에 ClassifyHTTPMutation 금지, 409=대기·상한 미소비, 422 키충돌=FAILED 아님·UNRESOLVED+알림(Eng B5); 동일 심볼 mutation이 관측 창에 개입하면 잔고 교차확인 무효→자동 FAILED 금지(codex#8); 복구 호출 그래프 명시(recovery→Gateway 재생→Resolver 폴백 — codex#6).
+
+**예약**: 해제는 파생된 종결 상태만 — "미체결 만료 포함" 문구 삭제(만료의 status 표현은 [미측정 — 2b 2.1]; CLOSED+fill0+무취소는 UNKNOWN 유지); UNKNOWN이 잡은 예약의 운영자 해제 경로 신설(Eng B-high); nonce 소비를 MarkDispatchStarted 트랜잭션에 병합(핫패스 직렬 쓰기 1회 — Eng B-medium); 종결 관측의 생산자는 journal 트랜잭션 결합으로 정의, filldetect 상시 배선은 엔진 루프 소유 change로(Eng A-high).
+
+**RECONCILE**: journal이 권위, EntryGate는 기동 시 재구성되는 in-memory 투영으로 관계 명시(Eng B-medium); 확정 하한 = `max(0, min(신선한 브로커 보유, 매도가능) − 로컬 미체결 SELL)`, 스냅샷 부재 시 0(자동 경로; 수동 flatten은 자체 신선 조회로 무변경). 매도가능 의미는 [미측정]이나 min()에서 하한을 낮추는 방향으로만 사용 — 보수적(Eng B-high·C-high).
+
+**기타**: opaque 규칙 재서술(trim은 공백 검사만, 저장은 원문 — 위반 3개소 명시 수정), round-trip 실패 상태 = IN_DOUBT, brokerstate 6.2는 확장이 아니라 재작성(2값 raw status 전제 — 4.2의 선행 의존), Retry Matrix 요구를 MODIFIED에 추가("재생은 정체 회수" 단일 서술 + retry.go 앵커), 총계 계약에 2a 구조 결정 명시(자동 진입 LIMIT 전용·gross long·실현 손실 기준·보수 기본 staleness — 2d가 보수 방향으로만 대체), 8.1 분할(계좌 해석·journal 편입·Gateway 구성·인터록 순서·flatten 자체 배선), 2c 선행 의무 문구를 인터록 SHALL 밖으로.
