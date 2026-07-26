@@ -120,3 +120,12 @@
 - §0.4 예산: place당 `GET /api/v1/orders/{orderId}` 1회 추가(취소·정정은 미적용 — 청산 경로에
   왕복을 얹지 않는다, §0.3). retry matrix의 단건 조회 라인(`in-flight 주문당 3s마다 1회`)
   대비 place 빈도가 훨씬 낮아 새 라인을 만들지 않는다.
+
+---
+
+## Manager 판정 (1차 물결 검증, 2026-07-26)
+
+- **0.1 D9 편차 5건 전부 승인.** (1) attempts.account_ref additive — 1.3이 채우고 intents 값과 불일치 시 거부할 의무 승계. (2) reconcile_states 이중 부분 unique — D9 문장의 의도를 SQLite NULL 의미론에서 실제로 강제하는 유일한 형태. (3) cause CHECK 제외 — 승인하되 **4.1의 저장 계층이 Go 상수 집합을 쓰기 시점에 검증(미지 cause는 거부)하는 조건부**. (4) dedup 컬럼 NOT NULL DEFAULT '' — 승인, **5.3은 NULL이 아니라 ''를 쓴다**. (5) spent_nonces FK 제외 — 보존 불변식 우선, 승인.
+- **5.2 잔여 원문 저장 위반의 배정**: `journal/lineage.go:118`(ResolveConfirmedWithLineage의 trim — cancel 해소는 원문·amend 해소는 trim으로 갈라진 상태), `journal/fills.go:173/385/393`, `filldetect/payload.go:84` → **5.3 담당자에게 배정**(fills·payload는 원래 범위, lineage는 동일 해소 쓰기 경로의 정합 회복).
+- **round-trip이 Options.Orders 배선 전 무효** → 7.5 인터록 "Gateway 구성 확인"에 Orders 배선 검증 항목 추가로 승계.
+- 5.1의 보수 판정(REPLACED without successor → UNKNOWN, CANCELED+successor → UNKNOWN, PENDING_* 무증거) 승인 — 전부 fail-closed 방향.
