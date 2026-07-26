@@ -47,7 +47,7 @@
 
 ## 6. 총계 계산 계약
 
-- [ ] 6.1 [T][High-risk] 계약 산출물(문서+타입): design·스펙의 구조 결정 전사(자동 진입 LIMIT 전용·gross long·실현 손실 기준·환율 staleness fail-closed·외부 거래는 브로커 스냅샷 경유) + **D6a 보수 기본값 전사**(계좌 스냅샷 10초·환율 60초 — 2d는 보수 방향 또는 사람 승인·audit로만 대체). stale·미지 fail-closed 테스트
+- [x] 6.1 [T][High-risk] 계약 산출물(문서+타입) — `internal/riskcalc`(leaf, stdlib만, 순수 함수·주입 입력): design·스펙의 구조 결정 전사(자동 진입 LIMIT 전용·gross long·실현 손실 기준·환율 staleness fail-closed·외부 거래는 브로커 스냅샷 경유) + **D6a 보수 기본값 전사**(계좌 스냅샷 10초·환율 60초 — 2d는 보수 방향 또는 사람 승인·audit로만 대체). stale·미지 fail-closed 테스트
 
 ## 7. 엔진 배선·인터록 (순서 고정: 7.1→7.2→7.3→7.4→7.5)
 

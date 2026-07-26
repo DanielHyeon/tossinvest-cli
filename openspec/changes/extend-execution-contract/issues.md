@@ -163,6 +163,35 @@
 - 후속 task 입력: filldetect 상시 루프를 배선하는 change가 계좌를 알고 있다면 `AccountRef`를
   채우는 쪽이 정확하다(유도는 fallback이다).
 
+## 2026-07-26 [observation] D6a가 design.md에 절(節)로 존재하지 않는다 — 수치는 tasks.md에만 있다 (task 6.1)
+
+- 사실: design.md는 Risks 절에서 "아래 D6a 보수 기본값을 6.1이 전사"라고 쓰지만(153행),
+  **D6a라는 절이 design.md에 없다**. 수치(계좌 스냅샷 10초·환율 60초)는 tasks.md 6.1 본문에만
+  적혀 있다. review.md에도 없다.
+- 이번 처리: tasks.md 6.1의 수치를 정본으로 삼아 `riskcalc.AccountSnapshotStaleness = 10s`,
+  `FXRateStaleness = 60s`로 전사했다. 근거는 코드 주석에 적었다 — filldetect 폴링 3초
+  (`DefaultConfig.PollInterval`, retry matrix의 단건 조회 주기)×3 + 여유가 10초이고 이는
+  fill-detection SLO 목표 10초와 같은 수, 환율은 포지션보다 느리게 움직이므로 60초.
+- 보수 방향 강제를 코드로 굳혔다: 호출자가 `Staleness`로 창을 **좁히는** 것만 유효하고
+  넓히면 기본값이 이긴다(`Staleness.resolve`). §0.9의 단방향 안전이 주석이 아니라 동작이다.
+  넓히려면 상수 자체를 바꿔야 하고 그건 사람 승인·audit 대상이다(§0.5·§0.7).
+- 후속 task 입력: **2d**가 수치를 확정할 때 design.md에 D6a 절을 실제로 추가하는 편이 낫다.
+  지금은 tasks.md 한 줄이 유일한 출처다.
+
+## 2026-07-26 [safe local] 6.1을 `execgw.Limits`가 아니라 새 leaf 패키지로 냈다 (task 6.1)
+
+- 사실: 6.1은 "문서+타입" 산출물이고, 한도 소비자는 `execgw/guardian.go`의 `Limits`
+  (MaxQuantity·MaxNotional·Currency)다. 그런데 execgw는 이 change의 다른 태스크(1.5·1.7·7.x)가
+  동시에 편집 중이고, 계산 계약은 journal·execgw 어느 쪽에도 의존할 이유가 없다.
+- 이번 처리: `internal/riskcalc` — stdlib만 쓰는 leaf. 시계·네트워크·설정 조회가 없고 모든
+  입력이 명시적이다(`Now`, 스냅샷 as-of, 환율 as-of). 숨은 `time.Now()`가 stale 스냅샷을
+  신선하게 만들 수 있는 자리를 아예 없앴다. 소수는 journal 관례대로 decimal string 입출력 +
+  float64 산술 + `FormatFloat(v,'f',-1,64)` 출력이며, 한도 비교는 journal의 1e-9 상대 허용오차를
+  재사용해 동률을 초과로 판정한다(`WithinLimit`).
+- 후속 task 입력: **1.7**(Limits fail-closed)과 **7.5**(인터록)가 이 패키지를 소비한다.
+  `riskcalc`는 아직 어디서도 import되지 않는다 — 배선은 그 태스크들의 몫이며, 6.1은 계약만
+  낸다는 태스크 문언대로다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
