@@ -55,6 +55,32 @@ type PositionsReader interface {
 	Positions(ctx context.Context) ([]domain.Position, error)
 }
 
+// RawHolding is one holding with the broker's own decimal strings preserved.
+type RawHolding struct {
+	Symbol   string
+	Market   string
+	Quantity string
+	// AveragePrice is the broker's cost basis exactly as it arrived. Empty means
+	// the payload carried none, which is a different fact from zero.
+	AveragePrice string
+}
+
+// RawPositionsReader is the optional half of PositionsReader: the *same single
+// read*, with the decimals unadapted.
+//
+// It is optional because only the official client can satisfy it, and this
+// package is testable — and useful — without one. When the injected reader does
+// satisfy it the collector takes this path instead of the float one, so the §0.4
+// budget is unchanged: one holdings request either way.
+//
+// The value it adds is evidence. `position_adoptions.cost_basis` stores the
+// broker's `averagePurchasePrice` verbatim (position-ledger: 원문 decimal 문자열
+// 보존 SHALL), and a number that has been through float64 is no longer the
+// broker's answer to the fee question 2b has to measure.
+type RawPositionsReader interface {
+	PositionsRaw(ctx context.Context) ([]RawHolding, error)
+}
+
 // BuyingPowerReader reads the cash buying power of one currency.
 type BuyingPowerReader interface {
 	BuyingPower(ctx context.Context, currency string) (float64, error)
@@ -81,6 +107,15 @@ type Holding struct {
 	Quantity     string
 	AveragePrice string
 	Market       string
+	// CostBasisRaw is the broker's cost basis exactly as it arrived, when the
+	// holdings reader could supply one (RawPositionsReader). It is empty
+	// otherwise, and empty is honest: "no raw string was preserved" rather than
+	// a re-rendering of the float beside it.
+	//
+	// Only the adoption record consumes it, and only to store it. Nothing
+	// compares or computes with it — AveragePrice is what the comparison uses,
+	// and the R formula uses neither (design A7).
+	CostBasisRaw string
 }
 
 // Balance is one currency's cash buying power.
@@ -197,19 +232,14 @@ func (c *Collector) Collect(ctx context.Context) (Snapshot, error) {
 		snap.OpenOrders = append(snap.OpenOrders, order)
 	}
 
-	// 2. Holdings.
-	positions, err := c.Positions.Positions(ctx)
+	// 2. Holdings. One request either way: the raw path is the same endpoint with
+	//    the decimals unadapted, so preferring it costs nothing in the §0.4
+	//    budget and preserves the evidence the adoption record stores.
+	holdings, err := c.holdings(ctx)
 	if err != nil {
 		return Snapshot{}, fmt.Errorf("%w: sweeping the holdings: %v", ErrPartialSnapshot, err)
 	}
-	for _, p := range positions {
-		snap.Holdings = append(snap.Holdings, Holding{
-			Symbol:       strings.ToUpper(strings.TrimSpace(p.Symbol)),
-			Quantity:     decimalString(p.Quantity),
-			AveragePrice: decimalString(p.AveragePrice),
-			Market:       strings.ToLower(strings.TrimSpace(p.MarketType)),
-		})
-	}
+	snap.Holdings = holdings
 
 	// 3. Balances.
 	for _, currency := range c.Currencies {
@@ -226,6 +256,47 @@ func (c *Collector) Collect(ctx context.Context) (Snapshot, error) {
 
 	snap.CompletedAt = clk.Now()
 	return snap, nil
+}
+
+// holdings performs the one holdings read, preferring the raw path.
+//
+// The two paths produce the same Holding fields; the raw one additionally fills
+// CostBasisRaw. Nothing downstream branches on which path ran — a snapshot with
+// an empty CostBasisRaw simply cannot supply an adoption's cost basis, and the
+// adoption record says ABSENT for it, which is the honest answer.
+func (c *Collector) holdings(ctx context.Context) ([]Holding, error) {
+	if raw, ok := c.Positions.(RawPositionsReader); ok {
+		items, err := raw.PositionsRaw(ctx)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]Holding, 0, len(items))
+		for _, h := range items {
+			out = append(out, Holding{
+				Symbol:       strings.ToUpper(strings.TrimSpace(h.Symbol)),
+				Quantity:     canonicalDecimal(h.Quantity),
+				AveragePrice: canonicalDecimal(h.AveragePrice),
+				Market:       strings.ToLower(strings.TrimSpace(h.Market)),
+				CostBasisRaw: strings.TrimSpace(h.AveragePrice),
+			})
+		}
+		return out, nil
+	}
+
+	positions, err := c.Positions.Positions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Holding, 0, len(positions))
+	for _, p := range positions {
+		out = append(out, Holding{
+			Symbol:       strings.ToUpper(strings.TrimSpace(p.Symbol)),
+			Quantity:     decimalString(p.Quantity),
+			AveragePrice: decimalString(p.AveragePrice),
+			Market:       strings.ToLower(strings.TrimSpace(p.MarketType)),
+		})
+	}
+	return out, nil
 }
 
 func (c *Collector) validate() error {

@@ -40,6 +40,7 @@ package exitpolicy
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 )
 
 // MinStopPct and MaxStopPct bound `adoption.default_stop_pct`: 0.02 ≤ pct < 1.
@@ -91,9 +92,15 @@ func SyntheticStop(observed string, pct float64) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fraction := new(big.Rat).SetFloat64(pct)
-	if fraction == nil {
-		return "", refusal("adoption stop fraction", fmt.Sprintf("%v is not a finite fraction", pct))
+	// The fraction is read as the *decimal* the operator wrote, not as the binary
+	// double the JSON decoder produced. `SetFloat64(0.05)` is exactly
+	// 0.05000000000000000277…, and multiplying a price by one minus that gives a
+	// synthetic stop of 66499.99999999999980… where the operator asked for 66500.
+	// Round-tripping through the shortest decimal that reproduces the float is
+	// what turns it back into the number in the config file.
+	fraction, err := parseRat("adoption stop fraction", strconv.FormatFloat(pct, 'f', -1, 64))
+	if err != nil {
+		return "", refusal("adoption stop fraction", err.Error())
 	}
 	stop := new(big.Rat).Mul(price, new(big.Rat).Sub(one, fraction))
 	rendered := formatPrice(stop)

@@ -53,6 +53,8 @@ var eligibilitySpellers = map[string]string{
 	"internal/app/engine/exitloop.go": "the engine-entered arm of the opening path, which looks the " +
 		"entry decision up. It is reached only after the predicate said yes and the position " +
 		"reported which record justifies it — it is not a second eligibility test",
+	"internal/app/engine/adoption.go": "the adoption alert's field list, which names the id of the " +
+		"record it just wrote. The judgement above it calls the predicate",
 }
 
 // eligibilityTokens are the spellings a drifted copy would use.
