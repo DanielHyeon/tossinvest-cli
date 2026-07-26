@@ -166,3 +166,37 @@ A·B 클러스터(14건)는 전부 **"P1의 실행 계약 자체를 확장해야
 | D3 | D3의 보류 3항목에 소유자·앵커·기본값이 없어 구현자가 멈추거나 추측한다. 그중 레버리지/인버스는 StockOS 체인의 **두 번째** 게이트(kill switch 다음)라 보류가 곧 최우선 검사 하나를 조용히 제거하는 것 | **확인 · 수용** |
 | D4 | 이식 범위 열거가 불완전 — `CASH_ONLY_REQUIRED`·`SELL_COST_BUFFER_EXCEEDED`·`DAILY_TURNOVER_EXCEEDED`·`MAX_POSITIONS_EXCEEDED`·`CANCEL_RATE_EXCEEDED`·`TARGET_BELOW_BREAK_EVEN`이 in-scope·제외·보류 어디에도 없다 | **확인 · 수용** |
 | D5 | 테스트 수 인용은 전부 정확(guardian 20·target_stop 29·a090 36·structural_rr 14, guardian.py 714줄). 단 `test_costs.py`는 4케이스뿐이고 검증 동작은 `test_costs_env_override.py`(16)에 있어 이식 범위가 과소 | **확인 · 수용** |
+
+---
+
+# Review 3라운드 (2판)
+
+보이스 2 — codex(11건), Eng 적대(27건 + 차단 수정 10항목). Manager 표본 검증: 예약 FK가 영속된 결정을 요구(reservations.go — "must already be persisted"), StockOS `probe_price = high_since_entry or current_price`, `LadderState.pending_order_id/pending_rung_index` 실재 — 전부 사실.
+
+## 판정
+
+**착수 불가 — 3판 필요.** 방향(판단/레일 분리·이식 대상)은 유지, 접합부·이식 충실도 결함.
+
+## 3판 반영 결정 (38건 통합)
+
+**발급·권위**: 순서를 실장 가능한 형태로 — `RecordDecision`+예약 삽입을 **하나의 journal 트랜잭션**으로 묶는 신규 원자 API(결정과 예약 사이 크래시 창 제거), Gateway가 EXPOSURE_RAISING 결정의 **HELD 예약 존재를 제출 조건으로 검증**(engine-safety MODIFIED — 예약이 권위라는 주장의 유일한 강제 지점). TTL 5s 폐기 → 실장 60s(`DefaultDecisionTTL`, 제출 경로의 buying-power 왕복 생존). 예약 실패 reason 분화(LIMIT_REACHED/SNAPSHOT_RECOLLECTION_EXHAUSTED/VERSION_CONFLICT/DECISION_EXPIRED). 신선도 논증 재서술: 모드·latch는 제출 시 EntryGate 재검사(landed `checkEntry`)가 커버, 모드는 EntryGate 투영으로 강제(봉인 시퀀스 무변경). 총계 경계값 ≥(도달=차단, 실장 일치), 주문 단위는 > 유지(issues.md 판정).
+
+**exit 정책 — 최중대**: (1) **t0 기준선 = 진입 손절가** — `exit_states.baseline_price`는 포지션 개시 시 RiskIntent.stop으로 초기화(NOT NULL, 기본값 없음), 하회 발의 규칙이 t0부터 유효("No Stop=No Trade"에 드디어 독자가 생김). (2) `high_water` 워터마크 저장 — R 프로브는 관측 최고가(원본 `high_since_entry` 의미론 복원), 레벨이 단조가 됨. 관측 표본 사이 트리거 누락 가능성은 명시(관측-최고가이지 참-최고가 아님). (3) **pending 수명주기 복원** — pending_action·pending_level/rung·pending_intent_id, "레벨/rung당 최대 1회 발의 + 미해소 중 억제". (4) **포지션당 정책 하나** — policy_kind CHECK(RATCHET|LADDER), 두 권위가 한 기준선을 다투는 문제를 원본의 실제 구조(대안 경로)대로 해소. (5) 후보 합성 이식 — 기준선 = max(이전, 후보들), strict > 상승 조건, 입력 검증 규칙. (6) ladder rung 기본값 세트(1.5/2.5/4.0/6.0% 등)를 [미검증] provenance로 명시, 분모 규칙(누적=초기수량 기준, rung별=잔여 기준) 원본 문서화 이식. (7) STOP_FIRST SHALL 폐기(입력 부재 — P3 백테스트 도입 시). (8) 비용 상한 MAX_RATE 이식 + 검증 게이트(비수치·NaN·음수·상한 초과 거부), placeholder ≤ 상한. (9) 가격 R(주당·gross)과 실현 R(총액·net)을 별개 명명.
+
+**RECONCILE·in-flight 상호작용**: 하한 캡 시 잔여는 pending 유지·해제 후 동일 레벨 identity로 재발의·캡 발생 알림. 진입 attempt 미해소가 로컬 손절 발의를 막는 창은 해소 우선·유계로 한정하고 초과 시 critical 알림 — 2c 전 잔존 리스크로 명시.
+
+**게이트 ON 금지의 기계화**: 산문 → 인터록 조항. 브로커측 보호 실행이 배선되지 않은 프로필의 게이트 ON 거부(ProtectionReady 표지, 2c가 배선) — engine-safety MODIFIED.
+
+**reconciliation**: 삭제했던 SHALL 전부 원문 복원(스냅샷 순서·부분 실패 폐기·lineage 해소 키·허용 오차 0·안정화·상태표·30초 간격·카운터 리셋) + 델타만 추가(투영 출처·조정 후 일치 자동 해제의 신규 release cause·영구는 운영자). 조정 이벤트에 compare-and-append 가드(기대 이전 값·투영 버전·fill watermark 동일 트랜잭션 재검증, 불일치 시 폐기·재수집). ExternalPosition 분기: 조정으로 투영 편입하되 **entry 결정 없는 포지션은 exit 정책 대상 아님 + 알림**. 시장 차원 축약 규칙 명시(비교는 심볼 수준 합산, 보유 스냅샷의 market 차원 [미측정]).
+
+**스키마(D7 확장)**: exit_states += entry_price·initial_stop·initial_risk·high_water·policy_kind·pending 3컬럼, baseline NOT NULL; positions += entry_decision_id FK(외부는 NULL); `exit_events` append-only 테이블(판정 이력 — provenance 단일 질의의 실제 조인 경로); trade_outcomes는 CLOSED 트랜잭션에서 스냅샷 동결(비동기 경쟁 제거).
+
+**원자성 접합**: journal의 tx-scoped apply hook(원자 apply API — 투영·exit 적용 함수 주입), taken_ratio는 이 hook(체결 시점)에서만 이동 — 5.4/6.3/6.4 정합.
+
+**모드**: EXIT_ONLY **삭제**(ENTRY_BLOCKED와 행동 동일 — 구별 근거 없음; 2c가 실제 행동 차이를 갖게 되면 재도입). 자동 강화 목적 상태 명시(전부 → ENTRY_BLOCKED — 메인 스펙 "신규 진입 차단"과 정합).
+
+**체인**: "상대 순서 보존" SHALL 폐기 — TossOS 순서가 정본, 매핑 표는 참고 산출물. min RR은 **신규 검사**로 분류(원본 체인에 없음), TARGET_BELOW_BREAK_EVEN은 손절 계약 단계에, 재진입 쿨다운은 총노출 앞·중복은 일손실 뒤(원본 위치), 미분류 reason 코드 배치. 쿨다운 기본값 명시(30분, [미검증]) + 당일 최대 진입 수. small_live 5필드 완성(수량 100주·KRW). test_costs_env_override는 **검증 게이트 구조**에 이식(KIS_* 명명 제거).
+
+**관측 경로**: `GET /api/v1/prices`를 RequiredEndpoints+drift guard+retry matrix에 추가하는 태스크 신설, 주기 정량화(기본 5초·보유 심볼 fan-out·체결 감지 SLO 우선·§0.4 내). E1 이관 결정과의 관계 재서술: 판정용 최신가·워터마크 1값이며 시계열 저장 아님 — 예산·SLO 우선순위를 요구로 명시.
+
+**중복 소유 제거**: engine-safety 재서술 시나리오 2건 삭제, journal 내구성 재서술 삭제(참조로).

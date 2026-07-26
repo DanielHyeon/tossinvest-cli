@@ -1,85 +1,79 @@
 # Design: add-core-domain
 
-> 2026-07-26 2판(동결 해제). 1판의 2라운드 리뷰 25건(`review.md` 후반부)과 사용자 추가 요구(손익 극대화 exit 정책)를 반영. 선행: 2a `extend-execution-contract` GATE PASS·archive — 이 change는 그 메인 스펙(결정 계약·예약·RECONCILE·계산 계약) **위에서** 판단 정책을 구현하며, 그 요구를 재정의하지 않는다.
+> 2026-07-26 3판. 판 이력·발견 108건(1판 70 + 2판 38)은 `review.md`. 선행 2a는 GATE PASS·archive — 이 change는 그 메인 스펙 위의 **판단 정책**이며, 재정의·재서술 금지(참조만). 브로커·StockOS 주장에 인용 또는 `[미측정]`/`[미검증]` 태그 필수.
 
 ## Context
 
-2a가 만든 것: 결정은 journal 참조(클래스별 preimage 재검증), `f(decision_id, generation)` 멱등키, 진입 측 위험 예약(원자 트랜잭션·brokerterminal 해제), RECONCILE 영속 상태·확정 하한, 총계 계산 계약(LIMIT 전용·gross long·실현 손실·staleness 10s/60s), `internal/riskcalc`, 엔진 Gateway 배선·인터록 5조항, `ExposureLimiter` 요구. **발급자(Guardian)는 아직 없다** — 자동 진입은 구조적으로 불가능한 상태다. 이 change가 발급자·포지션·exit 정책·성과를 채운다.
+2a가 만든 것: 결정=journal 참조(클래스별 preimage), `f(decision_id, generation)` 멱등키, 위험 예약(**결정 FK 필수** — 예약은 영속된 결정을 요구한다), RECONCILE 영속·확정 하한, 총계 계산 계약, `internal/riskcalc`, 엔진 Gateway 배선·인터록, `ExposureLimiter`, `DefaultDecisionTTL=60s`. 발급자가 없어 자동 진입은 구조적으로 불가능한 상태다.
 
-2c(보호주문)는 2b 측정 후 작성된다. 따라서 이 change의 범위에서 **브로커측 보호주문은 존재하지 않는다** — 손절·기준선은 로컬 판정이고, 발동은 청산 발의(RISK_REDUCING)다. 브로커 상주 보호는 2c가 얹는다.
+2c(브로커측 보호)는 2b 측정 후다. **이 change의 손절은 로컬 판정이다** — 그래서 t0부터 기준선이 존재해야 하고(진입 손절가), 관측 두절은 보호 부재와 같으므로 자동 강화로 탈출하며, 게이트 ON은 인터록 조항(ProtectionReady)으로 기계적으로 막는다.
 
 ## Goals / Non-Goals
 
-**Goals**: Guardian 판정 체인·발급자, 운영 모드(모드×클래스 표), 비용 모델(구조 이식·수치 2b), 포지션 투영·조정 이벤트·reconciliation 재배선, exit 정책(baseline ratchet·profit ladder — 사용자 요구), 성과 원시 지표, tracer slice 코드.
+**Goals**: Guardian 체인·발급자(원자 발급), 운영 모드(모드×클래스·EntryGate 투영), 비용 모델(구조+검증 게이트), 포지션 투영·조정·reconciliation 재배선(SHALL 보존), exit 정책(t0 기준선·워터마크 래칫·ladder·pending 수명주기), 성과(동결 기록), tracer 코드.
 
-**Non-Goals**: 보호주문·조건주문 일체(2c), 구조적 RR 계산·등급배수·신호 트레일·시간 종료(P3 — 입력 생산자 부재), MFE/MAE(P3), 전략·후보·스케줄러(P3), 웹(P4+), tracer 실전 실행(attestation+승인 후 verify 트랙).
+**Non-Goals**: 보호주문·조건주문(2c), 구조적 RR 계산·등급배수·신호 트레일·시간 종료·백테스트(P3), MFE/MAE(P3), 전략(P3), 웹(P4+), tracer 실전 실행(verify 트랙).
 
 ## Decisions
 
-### D1. 체인은 사전 검사, 예약이 총계의 권위
+### D1. 원자 발급 — 결정과 예약은 한 트랜잭션
 
-Guardian 체인은 스냅샷 위 순수 함수로 reason-code를 산출한다. 총계 한도의 최종 권위는 2a 예약 트랜잭션이며, 발급 절차는 체인 ALLOW → 예약(as-of 재검증) → 결정 영속·발급. 예약 거부 = RESERVATION_CONFLICT. 재수집 시 체인 재실행 없음 — 결정 만료 5초가 입력 신선도를 담보한다. (1판 리뷰 B1 해소.)
+실장 제약: 예약의 `decision_id`는 NOT NULL FK이고 `checkDecisionReservable`이 영속된 결정을 읽는다 — "예약 후 결정"은 불가능하고, "결정 후 예약"은 크래시 창을 만든다. 해소: **신규 journal 원자 API** `RecordDecisionAndReserve`(결정 삽입+예약 검증·삽입을 하나의 `BEGIN IMMEDIATE`로). 예약 거부 시 결정도 롤백 — 제출 가능한 고아 결정이 없다. Gateway는 EXPOSURE_RAISING 결정 제출 시 HELD 예약을 검증한다(engine-safety delta — 권위 주장의 강제 지점). 실패 reason 분화: LIMIT_REACHED / SNAPSHOT_RECOLLECTION_EXHAUSTED / VERSION_CONFLICT / DECISION_EXPIRED.
 
-체인 순서는 TossOS 정의가 권위이고 이식 검사에 한해 StockOS 상대 순서를 보존한다 — 매핑 표를 `docs/guardian-chain.md` 산출물로 남긴다(B3 해소: 원 체인에는 미이식 단계가 섞여 있어 "원 순서 보존" 전체 주장은 성립 불가).
+TTL은 실장 60초(`execgw.DefaultDecisionTTL` — 제출 경로의 buying-power 왕복 생존을 위해 선택된 값). 신선도 논증: 재수집(예산 10초)은 체인을 재실행하지 않으며, 모드·latch 변화는 Gateway 제출 시 EntryGate 재검사가 잡고, 나머지 체인 입력의 신선도 상한은 TTL이다.
 
-### D2. 신호 계층 입력이 필요한 검사는 없다
+### D2. 체인 — 신호 입력 0, 경계값 ≥
 
-구조적 RR 계산(세션 고가·VWAP)과 등급배수는 P3 신호 계층이 생산한다 — 이 change의 체인은 의도 필드·브로커 스냅샷·journal 상태만 소비한다(B2 해소: 명세대로 ALLOW 불가였던 문제). 최소 RR은 의도의 순수 산술, 기본 2.0(StockOS §22 lock — 1.5는 최저 티어 값이라 기각, C6). 수량 배수는 1.0 고정(보수 하한). 레버리지/인버스·ETF/ETN 차단은 분류 소스 부재로 **심볼 allowlist**가 구조 대체(D3 보류 3항목 해소; 재진입 쿨다운은 이식 — 순수 로직).
+입력은 의도 필드·브로커 스냅샷·journal 상태만. 최소 RR은 **신규 검사**(원본 체인에 없음 — 전략 계층 소관이던 것을 의도 산술로 승격), 순서 권위는 TossOS 표(원본 상대 순서 보존 SHALL 폐기 — 매핑은 `docs/guardian-chain.md` 참고 산출물). 재진입 쿨다운 30분·당일 최대 2회 `[미검증]`. allowlist가 상품 클래스 차단의 구조 대체. 총계 경계값은 ≥(도달=차단 — 예약 실장과 일치), 주문 단위는 포함 상한(issues.md 판정 유지).
 
-### D3. 운영 모드 = 모드×클래스 표
+### D3. 모드 — 3모드, EntryGate 투영으로 강제
 
-risk-management 델타의 표가 정본. HALT_ALL은 "전면 중단"이 아니라 EXPOSURE_RAISING·PROTECTION_WEAKENING 거부 + RISK_REDUCING 허용(A1·C1·C3 해소 — 2-클래스 어휘 폐기). 자동 강화 트리거는 열거형(일손실·401/403·critical outbox — 분석 outbox 제외, C5). journal 영속·방향 비대칭 승인.
+NORMAL / ENTRY_BLOCKED / HALT_ALL. EXIT_ONLY 삭제 — ENTRY_BLOCKED와 행동이 동일해 §0.7 사다리의 무의미 단계였다(2c가 실제 차이를 만들면 재도입). 강제 지점: 모드 전환 = journal 영속 + EntryGate 계좌 latch 투영(landed `checkEntry`가 제출 시 재검사 — 봉인 시퀀스 무변경). HALT_ALL의 추가 규칙(PROTECTION_WEAKENING 거부)은 landed `RecordDecision`이 이미 강제. 자동 강화 목적 상태는 전부 ENTRY_BLOCKED(메인 스펙 "신규 진입 차단" 정합 — HALT_ALL 자동 진입 없음).
 
-### D4. Position은 투영, reconciliation은 재배선
+### D4. Position 투영·reconciliation 재배선 — SHALL 보존
 
-`internal/position`은 journal 체결 이벤트+조정 이벤트의 투영(심볼·시장·인스턴스·평균단가, decimal). `reconcile.LocalStateFromJournal`을 이 투영 소비로 재배선한다 — "같은 질의 위의 얇은 투영" 주장(1판)은 `NetPositions`의 형태(심볼→순수량, float, 시장 무차원)로는 성립하지 않았다(B4). 따라서 **reconciliation capability를 MODIFIED로 선언**한다(A9 해소 — 조정 이벤트가 해제 의미를 바꾸는 것도 명시: 자동 해제는 조정 반영 후 재조회 일치, 영구 승격은 운영자만).
+투영 = 체결+조정 이벤트(인스턴스·시장·decimal·`entry_decision_id`). reconciliation MODIFIED는 메인 스펙 SHALL **전문 보존** 위에 델타만 추가(2판이 삭제한 스냅샷 순서·폐기·lineage 키·오차 0·안정화·상태표·30초·카운터 리셋 복원). 조정은 compare-and-append(기대 이전 값·watermark 재검증·불일치 폐기). 자동 해제는 조정 반영 후 일치 + 신규 release cause(ADJUSTMENT_APPLIED — 2a 저장소의 cause 상수 집합 확장). 외부 포지션은 조정으로 편입하되 exit 대상 아님(+알림). 비교는 심볼 수준 합산(보유 스냅샷 market 차원 `[미측정]`).
 
-방향 재도출은 intent side — 이 범위의 모든 체결은 로컬 intent가 있다(조건주문 없음). 발동 주문 방향은 2c가 expected_orders에서 정의(A8 스코프 정리).
+### D5. Exit 정책 — t0 기준선, 워터마크, pending, 정책 단일
 
-### D5. Exit 정책 — 이식 대상과 경계 (사용자 요구)
+핵심 수정 4: (1) **t0 기준선 = 진입 손절가**(NOT NULL — "+0.4R 전 무손절" 구멍 봉합), (2) **`high_water` 워터마크**가 R 프로브(원본 `high_since_entry` 복원 — 레벨 단조화, 관측-최고가의 한계 명시), (3) **pending 수명주기**(레벨/rung당 1회·미해소 억제·크래시 복원 — 원본 `pending_order_id` 복원), (4) **포지션당 정책 하나**(RATCHET|LADDER — 원본의 대안 경로 구조 복원, 기준선 이중 권위 제거). 후보 합성(`compute_protected_stop` max, strict >)·입력 검증·분모 규칙(누적=초기, rung=잔여)·rung 기본 세트(`[미검증]` KOSPI 튜닝) 이식. STOP_FIRST SHALL 폐기(OHLC 입력 부재 — P3). MAX_RATE 비용 상한 이식(본전 기준선 폭주 방지). 관측: 최신가 1점·기본 5초·§0.4 내·체결 감지 SLO 양보, **두절 60초 → ENTRY_BLOCKED 자동 강화**(무기한 무손절 금지). 확정 하한 캡 시 잔여 pending 유지·알림. 가격 R vs 실현 R 명명 분리.
 
-`internal/exitpolicy` 순수 판정 모듈:
+### D6. 비용 — 구조+검증 게이트 이식, KIS 수치 금지
 
-- **baseline ratchet**(StockOS `exit/baseline_ratchet.py` — Decimal·주문 무접촉 이식): R 트리거 0.4/0.8/1.0/1.2/2.0 → 스톱 −0.5R/실질 본전/부분 40%/+0.3R/+0.8R. **단조 상승 불변식**(§0.9 정합).
-- **profit ladder**(`profit_ladder.py`): multi-rung, 판정 시점 필드(활성 rung·승격 보호선)와 체결 시점 필드(누적 익절 비율·완결) 분리 보존, STOP_FIRST 보수 모델.
-- 본전 = `break_even_sell_price`(costs 결합). 발의는 ReductionIntent 계열 의도로만 — 제출·수량 정합은 실행 계층(2a Gateway·2c).
-- 가격 관측 입력: 보유 심볼의 시세 조회(quote — 엔진 read 경로에 이미 존재)를 exit 판정 주기로 사용하며, §0.4 rate budget 안에서 주기를 명시하고 관측 실패는 판정 보류(기준선 유지 — fail-safe)다. 이것은 MFE/MAE용 시계열 저장이 아니라 판정용 최신가 1점이다(P3 이관 결정과 충돌하지 않음).
-- 제외: EMA9/VWAP/CVD/추세선 트레일·TIME_EXIT/EOD·limit-up hold(P3), SELL_COST_BUFFER(§0.3 위반 — 미이식, C4).
+override는 설정 주입으로 재구현(KIS_* 명명 제거), test_costs_env_override는 검증 게이트 구조에 이식. placeholder ≤ MAX_RATE.
 
-### D6. 비용 모델 — 구조 이식, 수치는 2b
+### D7. journal v6 — 단일 원자 (태스크는 전사)
 
-`internal/costs`: StockOS `costs.py`의 구조(시장별 수수료 bps·거래세 bps·실질 본전 산식)만 이식, KIS 수치·`KIS_*` override 미이식(C7). 실측 전 과대 추정 placeholder + "미검증" provenance. 청산 게이트 적용 금지(C4). 테스트: test_costs(4)+test_costs_env_override(16) 구조 이식, 수치 단언은 Toss 값 재작성(D5-리뷰).
+전 decimal TEXT. 직전 백업, ErrSchemaTooNew.
 
-### D7. journal v6 — 단일 원자 마이그레이션 (태스크는 전사)
-
-전 decimal TEXT. 직전 백업·복원, 구버전 ErrSchemaTooNew.
-
-| 테이블 | 컬럼(요지) |
+| 테이블 | 컬럼 |
 |---|---|
-| `positions` | id PK, account_ref·market·symbol NOT NULL, instance_seq INTEGER NOT NULL, state CHECK(FLAT\|OPENING\|OPEN\|SCALING\|CLOSING\|CLOSED), quantity·avg_price TEXT, opened_at/closed_at. UNIQUE(account_ref, market, symbol, instance_seq) |
-| `position_adjustments` | id PK, position_id FK, kind CHECK(EXTERNAL\|MANUAL\|UNKNOWN), prev/new quantity·avg_price, broker_as_of, evidence, created_at — append-only |
-| `operating_modes` | id PK, account_ref, mode CHECK(NORMAL\|ENTRY_BLOCKED\|EXIT_ONLY\|HALT_ALL), cause, actor CHECK(AUTO\|OPERATOR), created_at — append-only 이력, 현재 = 최신 행 |
-| `exit_states` | position_id PK FK, ratchet_level CHECK(NONE\|HALF_RISK\|BREAKEVEN\|PARTIAL_LOCK\|PROFIT_LOCK), baseline_price TEXT NOT NULL DEFAULT '', active_rung INTEGER, taken_ratio_total TEXT NOT NULL DEFAULT '0', completed INTEGER DEFAULT 0, updated_at |
-| `trade_outcomes` | position_id PK FK, realized_pnl_after_costs·r_multiple·initial_risk TEXT, held_seconds INTEGER, exit_ratchet_level·exit_rung, closed_at — 보존 180일 |
+| `positions` | id TEXT PK, account_ref·market·symbol NOT NULL, instance_seq INTEGER NOT NULL, entry_decision_id TEXT REFERENCES decisions(id) (외부 편입은 NULL), state CHECK(FLAT\|OPENING\|OPEN\|SCALING\|CLOSING\|CLOSED), quantity·avg_price TEXT NOT NULL, opened_at, closed_at. UNIQUE(account_ref, market, symbol, instance_seq) |
+| `position_adjustments` | id PK, position_id NOT NULL FK, kind CHECK(EXTERNAL\|MANUAL\|UNKNOWN), expected_prev_quantity TEXT NOT NULL, prev/new quantity·avg_price, broker_as_of NOT NULL, evidence, created_at — append-only |
+| `operating_modes` | id PK, account_ref NOT NULL, mode CHECK(NORMAL\|ENTRY_BLOCKED\|HALT_ALL), cause·actor CHECK(AUTO\|OPERATOR), created_at — append-only, 현재=최신 행 |
+| `exit_states` | position_id TEXT PK FK, policy_kind CHECK(RATCHET\|LADDER), entry_price·initial_stop·initial_risk TEXT NOT NULL, baseline_price TEXT NOT NULL, high_water TEXT NOT NULL, ratchet_level CHECK(NONE\|HALF_RISK\|BREAKEVEN\|PARTIAL_LOCK\|PROFIT_LOCK), active_rung INTEGER, taken_ratio_total TEXT NOT NULL DEFAULT '0', pending_action TEXT, pending_level TEXT, pending_intent_id TEXT, completed INTEGER DEFAULT 0, updated_at |
+| `exit_events` | id PK, position_id NOT NULL FK, observed_price·high_water·baseline_after TEXT, level_after·action·proposed_intent_id, created_at — append-only 판정 이력(provenance 조인 경로) |
+| `trade_outcomes` | position_id PK FK, realized_pnl_after_costs·realized_r·initial_risk·initial_quantity TEXT, held_seconds INTEGER, exit_ratchet_level·exit_rung, closed_at — CLOSED 트랜잭션에서 동결, 보존 180일 |
 
-Guardian 설정(allowlist·쿨다운·한도)은 config — journal이 아니다(운영 설정 audit는 기존 계약).
+ladder rung 정책·allowlist·쿨다운·한도는 config(audit 계약 적용). **원자 apply hook**: 체결 반영 트랜잭션이 주입된 투영·exit 적용 함수를 tx-scope에서 호출(taken_ratio·pending 해소는 여기서만).
 
-### D8. tracer slice
+### D8. tracer
 
-하드코딩 심볼 1개(=allowlist)·LIMIT·최소 수량의 진입→ratchet 판정→청산 end-to-end 실행기. 계좌·시장·최대 notional·가격 신선도·중단 기준을 파라미터로 명시. httptest 통합 검증이 완료 조건이고 실전 실행은 attestation+게이트 ON+사용자 승인 후 verify 트랙(변경 없음).
+allowlist 심볼 1개·LIMIT·최소 수량 진입→ratchet 판정→청산 end-to-end, httptest 검증. 실전 실행은 verify 트랙 — 그리고 인터록 조항 6(ProtectionReady)이 게이트 ON을 기계적으로 막는다.
 
 ## Risks / Trade-offs
 
-- [ratchet·ladder 수치가 Toss 시장 미검증] → 보수 기본값+provenance, §0.9 잠금. tracer·2b가 실측 피드백
-- [exit 판정의 시세 관측이 rate budget 경쟁] → 주기 명시·§0.4 내, 실패는 기준선 유지(보류)
-- [reconciliation 재배선의 회귀] → 바뀌어야 할 단언 사전 열거(무조건 green 금지)
-- [브로커측 보호 부재 구간(2c 전)의 크래시] → 로컬 기준선은 프로세스 사망 시 무력 — **이 구간에서 자동 진입을 켜지 않는다**(게이트 OFF 유지가 전제이며, 게이트 ON은 2c 이후 + attestation. proposal에 명시)
+- [ratchet·ladder·쿨다운 수치 미검증] → 보수 기본값+provenance+§0.9 잠금, tracer·2b 피드백
+- [관측 표본 사이 트리거 누락] → 워터마크로 레벨 단조화, 한계 명시(관측-최고가), 주기·예산 명시
+- [2c 전 로컬 손절의 크래시 무력] → 인터록 조항 6 + 관측 두절 자동 강화 + verify 트랙 한정 tracer
+- [reconciliation 재배선 회귀] → 바뀌어야 할 단언 사전 열거
+- [과대 추정 비용의 조기 본전 청산] → MAX_RATE 상한 + 2b 실측 교체(수익 최적화는 실측 후)
 
 ## Migration Plan
 
-journal v6 단일 원자(D7 표). 직전 백업 → 실패 시 복원.
+v6 단일 원자(D7 표). 직전 백업 → 실패 시 복원.
 
 ## Open Questions
 
-- 운영 파라미터 수치(사용자 확정 대기 — 미확정 시 small_live)
-- ratchet 트리거·잠금 수치의 Toss 적합성 — tracer 결과로 재검토(보수 방향만)
+- 운영 파라미터 수치(사용자 확정 대기 — 미확정 시 small_live 5필드 전체 집합)
+- ratchet·rung 수치의 Toss 적합성 — tracer 결과로 재검토(보수 방향만)
