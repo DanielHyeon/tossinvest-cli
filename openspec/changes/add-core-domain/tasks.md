@@ -13,8 +13,8 @@
 
 ## 1. 비용 모델
 
-- [ ] 1.1 [T] `internal/costs`: 구조(시장별 수수료·거래세 bps·실질 본전) + 검증 게이트(비수치·NaN·음수·MAX_RATE=0.05 초과 거부) 이식, KIS 수치·명명 미이식, 설정 주입 override, placeholder ≤ 상한·"미검증" provenance. test_costs+env_override(16)를 게이트·주입 구조에 이식
-- [ ] 1.2 [T] 청산 게이트 미적용·본전 폭주 방지 테스트(§0.3, 상한 초과 설정 거부)
+- [x] 1.1 [T] `internal/costs`: 구조(시장별 수수료·거래세 bps·실질 본전) + 검증 게이트(비수치·NaN·음수·MAX_RATE=0.05 초과 거부) 이식, KIS 수치·명명 미이식, 설정 주입 override, placeholder ≤ 상한·"미검증" provenance. test_costs+env_override(16)를 게이트·주입 구조에 이식
+- [x] 1.2 [T] 청산 게이트 미적용·본전 폭주 방지 테스트(§0.3, 상한 초과 설정 거부)
 
 ## 2. Guardian 판정 체인
 

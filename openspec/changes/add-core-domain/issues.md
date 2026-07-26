@@ -75,6 +75,40 @@
   코드 불변식으로 강제하면 된다(스키마 재작업 불필요 — 나중에 CHECK를 추가하려면 테이블 재작성이
   필요하므로 코드 쪽이 맞다).
 
+## 2026-07-26 [safe local] 비용 override의 미지 키는 무시가 아니라 거부 (task 1.1)
+
+- 사실: StockOS `costs.py:170-176` `_resolve_rate`는 env에 없는 키를 기본값으로 통과시키고,
+  `tests/test_costs_env_override.py:57-63`은 "무관한 키가 모델을 흔들지 않는다"를 단언한다.
+  env에는 수백 개의 무관한 키가 정상적으로 존재하므로 원본에서는 그것이 옳다.
+- 문제: TossOS의 override는 전용 설정 블록이다. 인식되지 않는 키는 무관한 키가 아니라 **오타**이고,
+  오타를 조용히 기본값으로 통과시키면 운영자가 설정했다고 믿는 값이 설정되지 않은 채 동작한다.
+  §0.5(설정 변경 추적 가능)와 어긋난다.
+- 이번 처리: 미지 키는 `ErrInvalidRate`로 거부(원본보다 엄격한 방향). 원본 케이스 2를
+  `TestUnknownOverrideKeyIsRefused`로 **반전 이식**했고, 원본이 실제로 지키던 성질(모델이 모르는
+  override가 모델을 흔들지 않는다)은 `TestNoOverridesReturnsDefaults` + 거부로 보존된다.
+- 후속 task 입력: **4.x**가 설정 스키마를 배선할 때 미지 키 거부는 기동 실패로 이어진다
+  (costs.py 모듈 docstring의 "Failure mode"와 같은 계약).
+
+## 2026-07-26 [safe local] 실질 본전의 최소이익 하한은 native 통화 (task 1.1)
+
+- 사실: `costs.py:269-284` `_native_profit_floor`는 KRW 최소이익 하한을 `usd_krw_rate`로 나눠
+  USD로 환산하고, `tests/test_costs_env_override.py:263-283`이 그 환산을 단언한다.
+- 문제: 통화 정규화는 `internal/riskcalc`의 소관이고 거기에는 환율 신선도 상한
+  (`FXRateStaleness=60s`)과 "환율 없으면 암묵적 1:1 금지"가 이미 있다(riskcalc.convert).
+  비용 모델 안에 상한 없는 두 번째 환산을 두면 stale 환율로 계산된 본전가가 조용히 통과한다.
+- 이번 처리: `BreakEvenSellPriceWithFloor`의 하한은 **거래 자체 통화**로 받는다. 케이스 16은
+  `TestUSBreakEvenAppliesNativeProfitFloorAndFXFee`로 이식 — 검증 대상 산술(하한 가산 + 매도측
+  비율 그로스업)은 동일하고 환산 단계만 호출자 책임으로 옮겼다.
+
+## 2026-07-26 [safe local] KRX 보드 차원(KOSPI/KOSDAQ/KONEX) 미이식 (task 1.1)
+
+- 사실: `costs.py:76-78`은 보드별 거래세율을 따로 갖는다.
+- 문제: TossOS의 시장 어휘는 `internal/clock.Market`("kr"/"us")이고 journal·intent·브로커
+  클라이언트 어디에도 보드 차원이 없다. 보드를 구별할 수 없는 프로그램에 보드별 요율을 두면
+  어느 요율이 쓰였는지 아무도 모른다.
+- 이번 처리: KR 단일 요율을 보드 최대치 방향(과대 추정)으로 둔다. 요율은 전부 `[미검증]`이므로
+  **2b 실측**이 이 결정을 함께 재검토한다. 보드를 구별할 입력이 생기면 그때 차원을 추가한다.
+
 ## 2026-07-26 [safe local] `migration_v5_test.go`가 head 버전을 따라다니고 있었다 (task 0.1)
 
 - 사실: v5 전이 테스트 4건이 `openTestJournalAt`(= head까지 마이그레이션)을 썼다. SchemaVersion이
