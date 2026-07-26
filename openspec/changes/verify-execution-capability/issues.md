@@ -158,3 +158,8 @@ TTY 계약은 "Type the confirmation string to approve, anything else to abort" 
 | 게이트 ON | 콘솔 범위 밖(태스크 명시). 라우트도 없고 대시보드가 그렇게 적는다 |
 | 진행 스트리밍 | SSE 아님 — 2초 meta refresh. 단, nonce 폼이 떠 있는 동안에는 새로고침하지 않는다(입력 유실 방지) |
 | `cmd/tossctl` 의 TestMain에는 testenv 가드가 없다 | 기존 상태 유지. 신규 `internal/console` 테스트에는 설치했다 |
+
+## Manager 판정 (콘솔 1.6, 2026-07-26)
+
+- 편차 5건 전부 승인: seam 변경 0(기존 exported Options.Confirm 활용 — "콘솔만 배선 가능" 보증을 AST 가드로 이전한 판단 타당), 틀린 nonce=전체 중단(TTY 계약 그대로 — 5분 창을 추측 5분으로 만들지 않음), 콘솔=항상 resume 모델(플래그가 없으니 잊을 플래그도 없음, 프로세스당 1회 실행 상한이 존속 경계 보존), help_convention 화이트리스트 additive 1건(mutating=true 정직 표기), probe 심볼 중복은 drift 테스트로 고정.
+- Pre-Edit 게이트 검토 통과 확인(§0.7 — 게이트 토글 라우트 부재 포함).
