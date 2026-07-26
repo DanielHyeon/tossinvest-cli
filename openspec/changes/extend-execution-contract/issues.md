@@ -448,6 +448,47 @@
 - 동시 goroutine 테스트는 3.1의 `TestConcurrentDecisionsCannotBothTakeTheLastSlot`에 별도로 있다
   (스펙 시나리오 "동시 다심볼 결정"). 두 테스트는 다른 것을 증명한다.
 
+## 2026-07-26 [safe local] `Tracker.Observe`·`Resolve` 시그니처를 바꿨다 — 비-테스트 호출자 0곳 (task 4.1)
+
+- 사실: 4.1은 "Tracker 상태를 journal 투영으로 이전"을 요구한다. 그러려면 `Observe`가 durable
+  write를 해야 하고, durable write는 실패할 수 있다. 기존 시그니처 `Observe(Diff) Outcome`에는
+  실패를 알릴 자리가 없다.
+- 이번 처리: `Observe(ctx, Diff) (Outcome, error)`, `Resolve(ctx, operator, note) error`.
+  **비-테스트 호출자는 0곳**이다(grep 확인 — Tracker는 아직 어디에도 배선되지 않았다). 테스트
+  호출부 16+3곳은 헬퍼 `observe(t, tracker, diff)` 도입으로 기계적 적응했고 **단언은 한 줄도
+  바꾸지 않았다**. `ObserveContext` 같은 병행 메서드를 두지 않은 이유: 영속하지 않는 쪽을
+  실수로 계속 쓸 수 있는 문을 남기게 된다.
+- 8.2 참고: 이 파일은 "기존 단언 변경 사전 열거" 목록에 없다. 변경된 것은 호출 형태이며 단언은
+  동일하다(0.2의 outbox 픽스처 항목과 같은 종류).
+
+## 2026-07-26 [safe local] RECONCILE cause → EntryGate reason 매핑을 "자동 해제 가능한가"로 갈랐다 (task 4.1)
+
+- 사실: `reconcile_states.cause`는 5값인데 EntryGate의 reconcile 계열 reason은 2개
+  (`reconciliation_mismatch` = clean reconcile로 자동 해제, `reconciliation_mismatch_permanent`
+  = 운영자만). 새 reason 코드를 추가하면 `latchOrder`(운영자 runbook과의 계약)를 건드린다.
+- 이번 처리: `execgw.ReconcileReasonFor` — SNAPSHOT_UNAVAILABLE·SNAPSHOT_STALE·QUANTITY_MISMATCH
+  → mismatch(재조회가 반증 가능), IDENTIFIER_CONFLICT·ATTRIBUTION_FAILED → permanent(반증
+  불가 — CANCEL_REJECTED 별도 레코드의 형태가 `[미측정 — 2b 2.1]`이므로 "또 봐도 안 맞더라"는
+  해소의 증거가 아니다). **미지 cause도 permanent** — 구버전 행이 넓게 막는 방향.
+- 부수 변경 1건: `reconcile.isReconcileReason`을 `ReasonReconcileMismatch` 하나로 좁혔다.
+  좁히지 않으면 clean reconcile이 투영된 permanent 심볼 블록(식별자 충돌)을 지운다. Tracker가
+  심볼 스코프에서 내는 reason은 원래 mismatch 하나뿐이라 의미 변화는 없다.
+- `reconcile_states`에 market 컬럼이 없다(D9). 심볼 스코프 상태는 `BlockSymbol("", symbol, …)`로
+  **모든 시장**을 막는다 — 스키마가 기록하지 않는 스코프의 보수적 해석.
+
+## 2026-07-26 [observation] Tracker는 자기가 넣은 행만 해제한다 — permanent 승격은 계좌 전역 행이다 (task 4.1)
+
+- 사실: Tracker의 3연속 실패 승격은 "원인"이 아니라 정책이다. 5개 cause 중 여기 해당하는 값이
+  없다. cause 목록을 늘리면 0.1이 굳힌 집합이 흔들리고 4.1의 재량을 넘는다.
+- 이번 처리: 승격은 **계좌 전역(symbol NULL) + QUANTITY_MISMATCH** 행으로 영속한다. `Restore`는
+  계좌 전역 행을 permanent 블록으로 복원하고 `failures`를 임계치로 되돌린다 — 0으로 두면 재시작
+  직후 clean 한 번이 사람이 안 푼 블록을 "해제"한다(`TestARestartKeepsAPermanentMismatchPermanent`).
+- 해제는 전부 `ExpectCause: QUANTITY_MISMATCH`를 건다. 다른 생산자(식별자 충돌·귀속 실패)의 행은
+  Tracker의 clean pass가 건드리지 못한다(`TestRestoreProjectsStatesThisTrackerDidNotEnter`).
+- 후속 task 입력: **7.3**이 Gateway 구성 시 `Tracker.Journal`을 채우고 기동 시 `Restore(ctx)`를
+  1회 호출해야 한다. 호출하지 않으면 재시작이 차단을 잃는다(스펙 SHALL 미충족). 인터록의
+  "Gateway 구성 확인"(7.5) 항목 후보다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

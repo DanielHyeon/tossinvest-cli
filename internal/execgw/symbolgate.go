@@ -34,6 +34,8 @@ package execgw
 import (
 	"strings"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 )
 
 // SymbolBlock is one active per-symbol entry block.
@@ -115,6 +117,85 @@ func (g *EntryGate) SymbolBlocks() []SymbolBlock {
 		out = append(out, block)
 	}
 	return out
+}
+
+// --- the journal's RECONCILE states, projected onto the gate (task 4.1) ------
+
+// ReconcileReasonFor maps a persisted RECONCILE cause onto the gate's reason
+// code.
+//
+// The split is "can a later read disprove this":
+//
+//   - a snapshot that could not be read, was stale, or disagreed about a
+//     quantity is a condition a fresh, agreeing comparison closes, so it lands
+//     on ReasonReconcileMismatch (auto-released by a clean reconcile);
+//   - an identifier in conflicting contexts, or a broker record nothing local
+//     can be attributed to, is not. openapi documents CANCEL_REJECTED and
+//     REPLACE_REJECTED as separate order records whose concrete shape is
+//     [형태 미측정 — 2b 2.1], so "we saw it again and it still does not fit"
+//     is not evidence that it has been resolved. Those land on
+//     ReasonReconcilePermanent, which nothing automatic clears.
+//
+// An unknown cause maps to the operator-only reason. The journal refuses to
+// write one, so reaching this branch means the row predates this build — and
+// blocking wider than necessary is the safe direction.
+func ReconcileReasonFor(cause string) ReasonCode {
+	switch cause {
+	case journal.ReconcileCauseSnapshotUnavailable,
+		journal.ReconcileCauseSnapshotStale,
+		journal.ReconcileCauseQuantityMismatch:
+		return ReasonReconcileMismatch
+	default:
+		return ReasonReconcilePermanent
+	}
+}
+
+// RebuildReconcileProjection replaces every reconcile-family block with the
+// journal's active RECONCILE states.
+//
+// This is the gate's half of "journal이 권위, in-memory 차단 기계는 기동 시
+// 재구성되는 투영이다"(SHALL). A restart calls it once, after opening the
+// journal and before the first entry decision: without it a process that
+// stopped mid-disagreement comes back with an empty latch map and trades.
+//
+// It replaces rather than merges, on purpose. A latch this process raised in a
+// previous life but that the journal does not carry is a latch nothing can
+// release — the row an operator would close does not exist.
+//
+// A state carries no market (reconcile_states has no market column — D9), so a
+// symbol-scoped state blocks that symbol in every market it trades. That is the
+// conservative reading of a scope the schema does not record.
+func (g *EntryGate) RebuildReconcileProjection(states []journal.ReconcileState) {
+	family := []ReasonCode{ReasonReconcileMismatch, ReasonReconcilePermanent}
+
+	g.mu.Lock()
+	for _, reason := range family {
+		delete(g.latches, reason)
+	}
+	for key, block := range g.symbolLatches {
+		for _, reason := range family {
+			if block.Reason == reason {
+				delete(g.symbolLatches, key)
+			}
+		}
+	}
+	g.mu.Unlock()
+
+	for _, state := range states {
+		if !state.Active() {
+			continue
+		}
+		reason := ReconcileReasonFor(state.Cause)
+		detail := state.Cause
+		if state.Evidence != "" {
+			detail += ": " + state.Evidence
+		}
+		if state.AccountWide() {
+			g.Block(reason, detail)
+			continue
+		}
+		g.BlockSymbol("", state.Symbol, reason, detail)
+	}
 }
 
 // CheckEntryFor reports why a new entry in this market and symbol is refused, or

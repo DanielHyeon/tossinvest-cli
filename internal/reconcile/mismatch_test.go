@@ -30,6 +30,22 @@ func mismatchDiff(symbol, local, broker string) reconcile.Diff {
 	}
 }
 
+// observe runs one reconciliation and fails the test if the durable write
+// behind it did not land.
+//
+// Observe gained a context and an error in extend-execution-contract task 4.1:
+// the block set is written through to the journal before it is reported, and a
+// promotion that only exists in memory is one a restart loses. Every call site
+// below is that mechanical adaptation — no assertion in this file changed.
+func observe(t *testing.T, tracker *reconcile.Tracker, diff reconcile.Diff) reconcile.Outcome {
+	t.Helper()
+	out, err := tracker.Observe(context.Background(), diff)
+	if err != nil {
+		t.Fatalf("Observe: %v", err)
+	}
+	return out
+}
+
 func newTracker(clk clock.Clock, gate *execgw.EntryGate) *reconcile.Tracker {
 	return &reconcile.Tracker{
 		Clock:       clk,
@@ -46,7 +62,7 @@ func TestQuantityMismatchBlocksEntries(t *testing.T) {
 	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
 	tracker := newTracker(clk, gate)
 
-	out := tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+	out := observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 	if !out.Blocked || out.Failures != 1 {
 		t.Fatalf("outcome = %+v, want a block on the first failure", out)
 	}
@@ -83,15 +99,15 @@ func TestSuccessResetsTheFailureCounter(t *testing.T) {
 	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
 	tracker := newTracker(clk, gate)
 
-	tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 	clk.Advance(30 * time.Second)
-	tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 	if tracker.Failures() != 2 {
 		t.Fatalf("failures = %d, want 2", tracker.Failures())
 	}
 
 	clk.Advance(30 * time.Second)
-	out := tracker.Observe(reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+	out := observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
 	if out.Failures != 0 {
 		t.Fatalf("failures after a clean reconcile = %d, want 0", out.Failures)
 	}
@@ -104,7 +120,7 @@ func TestSuccessResetsTheFailureCounter(t *testing.T) {
 
 	// And a fresh failure starts counting from one again, not from three.
 	clk.Advance(30 * time.Second)
-	if out := tracker.Observe(mismatchDiff("AAPL", "10", "4")); out.Failures != 1 {
+	if out := observe(t, tracker, mismatchDiff("AAPL", "10", "4")); out.Failures != 1 {
 		t.Fatalf("failures after the reset = %d, want 1", out.Failures)
 	}
 }
@@ -118,7 +134,7 @@ func TestThreeConsecutiveFailuresBecomePermanent(t *testing.T) {
 
 	var out reconcile.Outcome
 	for i := 0; i < 3; i++ {
-		out = tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+		out = observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 		clk.Advance(30 * time.Second)
 	}
 	if !out.Permanent || out.Failures != 3 {
@@ -157,10 +173,10 @@ func TestACleanReconcileDoesNotReleaseAPermanentMismatch(t *testing.T) {
 	tracker := newTracker(clk, gate)
 
 	for i := 0; i < 3; i++ {
-		tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+		observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 		clk.Advance(30 * time.Second)
 	}
-	tracker.Observe(reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+	observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
 
 	if !tracker.Permanent() {
 		t.Fatal("a clean reconcile must not un-mark a permanent mismatch")
@@ -179,17 +195,17 @@ func TestOperatorResolutionClearsAPermanentMismatch(t *testing.T) {
 	tracker := newTracker(clk, gate)
 
 	for i := 0; i < 3; i++ {
-		tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+		observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 		clk.Advance(30 * time.Second)
 	}
 
-	if err := tracker.Resolve("", "checked"); err == nil {
+	if err := tracker.Resolve(context.Background(), "", "checked"); err == nil {
 		t.Fatal("resolving without an identity must be refused")
 	}
-	if err := tracker.Resolve("daniel", ""); err == nil {
+	if err := tracker.Resolve(context.Background(), "daniel", ""); err == nil {
 		t.Fatal("resolving without a note must be refused")
 	}
-	if err := tracker.Resolve("daniel", "compared the app to the journal by hand"); err != nil {
+	if err := tracker.Resolve(context.Background(), "daniel", "compared the app to the journal by hand"); err != nil {
 		t.Fatalf("Resolve: %v", err)
 	}
 	if tracker.Permanent() || len(tracker.Blocks()) != 0 {
@@ -212,7 +228,7 @@ func TestReReconciliationWaitsOutTheMinimumInterval(t *testing.T) {
 	if !tracker.Due(clk.Now()) {
 		t.Fatal("a tracker that has never reconciled must be due immediately")
 	}
-	tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 
 	if tracker.Due(clk.Now()) {
 		t.Fatal("a reconciliation must not be due immediately after one ran")
@@ -251,7 +267,7 @@ func TestDefaultIntervalMatchesTheSpec(t *testing.T) {
 func TestBlockScopes(t *testing.T) {
 	clk := clock.NewFake(asOf)
 	tracker := newTracker(clk, nil)
-	tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 
 	if rejected := tracker.EntryAllowed("us", "AAPL"); rejected == nil {
 		t.Fatal("the mismatched symbol must be blocked")
@@ -262,9 +278,9 @@ func TestBlockScopes(t *testing.T) {
 
 	// Escalation to account scope stops everything.
 	clk.Advance(30 * time.Second)
-	tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 	clk.Advance(30 * time.Second)
-	tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 
 	if rejected := tracker.EntryAllowed("us", "MSFT"); rejected == nil {
 		t.Fatal("a permanent, account-scoped mismatch must block every symbol")
@@ -313,7 +329,7 @@ func TestStateTableRowsAreDistinct(t *testing.T) {
 func TestMissingOrderRaisesASymbolBlock(t *testing.T) {
 	clk := clock.NewFake(asOf)
 	tracker := newTracker(clk, nil)
-	out := tracker.Observe(reconcile.Diff{
+	out := observe(t, tracker, reconcile.Diff{
 		AccountRef: "acct-7",
 		MissingOrders: []reconcile.LocalOrder{
 			{OrderID: "o-1", Symbol: "AAPL", Market: "us"},
@@ -335,7 +351,7 @@ func TestExternalFindingsDoNotBlock(t *testing.T) {
 	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
 	tracker := newTracker(clk, gate)
 
-	out := tracker.Observe(reconcile.Diff{
+	out := observe(t, tracker, reconcile.Diff{
 		AccountRef: "acct-7",
 		ExternalOrd: []reconcile.ExternalOrder{
 			{BrokerOrder: reconcile.BrokerOrder{OrderID: "manual-1", Symbol: "TSLA"},
@@ -374,7 +390,7 @@ func TestGatewayKeepsExitsOpenUnderAMismatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tracker.Observe(mismatchDiff("AAPL", "10", "4"))
+	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 
 	buy := orderintent.PlaceIntent{
 		Symbol: "AAPL", Market: "us", Side: "buy", OrderType: "limit",

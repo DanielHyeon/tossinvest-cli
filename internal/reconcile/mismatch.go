@@ -49,8 +49,23 @@ package reconcile
 // direction — it stops more trading, not less — and narrowing it is wiring work
 // for task 4.2. EntryAllowed below is the symbol-aware check that wiring will
 // call.
+//
+// # The journal is the authority (extend-execution-contract task 4.1)
+//
+// Everything above describes what this tracker *decides*. What it decides is no
+// longer where the truth lives: an active disagreement is a row in the
+// journal's reconcile_states, and the block set below is a projection of those
+// rows. Observe writes through to the journal, Restore rebuilds the projection
+// from it, and a restart therefore comes back still blocked — which is the
+// spec's "재시작이 차단을 잃어서는 안 된다"(SHALL).
+//
+// The tracker only ever releases states it entered itself (cause
+// QUANTITY_MISMATCH, via ExpectCause). A clean quantity comparison is not
+// evidence about an identifier conflict somebody else recorded, and releasing
+// one with the other is how a block silently disappears.
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -59,6 +74,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 )
 
 // Scope is how wide a block reaches.
@@ -185,6 +201,17 @@ const DefaultReconcileInterval = 30 * time.Second
 // DefaultMaxFailures is how many consecutive failures make a mismatch permanent.
 const DefaultMaxFailures = 3
 
+// ReconcileStore is the durable half of the RECONCILE state.
+//
+// It is an interface rather than *journal.Journal so a test can drive the
+// tracker without a database, and so the coupling is visibly three methods
+// wide. *journal.Journal satisfies it.
+type ReconcileStore interface {
+	EnterReconcile(ctx context.Context, req journal.EnterReconcileRequest) (journal.ReconcileState, bool, error)
+	ReleaseReconcile(ctx context.Context, req journal.ReleaseReconcileRequest) (journal.ReconcileState, bool, error)
+	ActiveReconcileStates(ctx context.Context) ([]journal.ReconcileState, error)
+}
+
 // Tracker holds the mismatch state across reconciliations.
 type Tracker struct {
 	// Clock drives the interval. Defaults to clock.System().
@@ -192,6 +219,11 @@ type Tracker struct {
 	// Gate is latched while any block is active. Optional but expected: without
 	// it the tracker reports blocks nobody enforces.
 	Gate *execgw.EntryGate
+	// Journal is where the blocks actually live. Optional only so unit tests of
+	// the promotion arithmetic can run without a database — a production
+	// tracker without one forgets every disagreement on restart, which is the
+	// failure task 4.1 exists to remove.
+	Journal ReconcileStore
 	// MinInterval is the minimum wait between reconciliations. Zero takes
 	// DefaultReconcileInterval.
 	MinInterval time.Duration
@@ -225,7 +257,13 @@ type Outcome struct {
 }
 
 // Observe records the result of one reconciliation.
-func (t *Tracker) Observe(diff Diff) Outcome {
+//
+// It takes a context and returns an error because the block set it computes is
+// written through to the journal before it is reported: a promotion that only
+// exists in memory is one a restart loses. A write failure is returned with the
+// outcome, and the caller must treat it as "the block may not be durable" —
+// which for an entry gate means staying blocked, not proceeding.
+func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	now := t.clock().Now()
 	interval := t.interval()
 	maxFailures := t.maxFailures()
@@ -285,7 +323,121 @@ func (t *Tracker) Observe(diff Diff) Outcome {
 	sortBlocks(out.Added)
 	sortBlocks(out.Cleared)
 	t.syncGate(active)
-	return out
+	return out, t.persist(ctx, out)
+}
+
+// persist writes this observation's promotions and releases through to the
+// journal, which is where the block actually lives.
+//
+// Entering is idempotent (the journal keeps the first observation for a scope
+// that is already active) and releasing names ExpectCause, so a clean pass
+// closes only the rows this tracker opened.
+func (t *Tracker) persist(ctx context.Context, out Outcome) error {
+	if t.Journal == nil {
+		return nil
+	}
+	for _, block := range out.Added {
+		if _, _, err := t.Journal.EnterReconcile(ctx, journal.EnterReconcileRequest{
+			AccountRef: firstNonEmpty(block.Account, t.AccountRef),
+			Symbol:     block.Symbol,
+			Cause:      journal.ReconcileCauseQuantityMismatch,
+			Evidence:   block.Detail,
+		}); err != nil {
+			return fmt.Errorf("reconcile: persisting the %s block on %s: %w",
+				block.Reason, scopeLabel(block), err)
+		}
+	}
+	for _, block := range out.Cleared {
+		if _, _, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
+			AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
+			Symbol:      block.Symbol,
+			Cause:       journal.ReconcileReleaseRecheckMatched,
+			Evidence:    "a later reconciliation agreed",
+			ExpectCause: journal.ReconcileCauseQuantityMismatch,
+		}); err != nil {
+			return fmt.Errorf("reconcile: releasing the %s block on %s: %w",
+				block.Reason, scopeLabel(block), err)
+		}
+	}
+	return nil
+}
+
+// Restore rebuilds the tracker and the entry gate from the journal.
+//
+// This is the restart path. The tracker's own rows (cause QUANTITY_MISMATCH)
+// become its block set again — an account-wide one is the permanent promotion,
+// which is why the counter is restored to the threshold rather than to zero:
+// coming back with failures=0 would let the next clean pass "release" a
+// permanent block a human never cleared.
+//
+// The gate is then rebuilt from *every* active state, not only this tracker's,
+// because the gate is the projection of the whole table.
+func (t *Tracker) Restore(ctx context.Context) error {
+	if t.Journal == nil {
+		return nil
+	}
+	states, err := t.Journal.ActiveReconcileStates(ctx)
+	if err != nil {
+		return fmt.Errorf("reconcile: reading the active RECONCILE states: %w", err)
+	}
+
+	blocks := map[string]Block{}
+	permanent := false
+	for _, state := range states {
+		if state.Cause != journal.ReconcileCauseQuantityMismatch {
+			continue
+		}
+		if t.AccountRef != "" && state.AccountRef != t.AccountRef {
+			continue
+		}
+		block := Block{
+			Scope:   ScopeSymbol,
+			Account: state.AccountRef,
+			Symbol:  state.Symbol,
+			Reason:  execgw.ReasonReconcileMismatch,
+			Detail:  state.Evidence,
+			Since:   state.EnteredAt,
+			Release: ReleaseOnCleanReconcile,
+		}
+		if state.AccountWide() {
+			block.Scope = ScopeAccount
+			block.Symbol = ""
+			block.Reason = execgw.ReasonReconcilePermanent
+			block.Release = ReleaseOperatorOnly
+			block.Permanent = true
+			permanent = true
+		}
+		blocks[block.Key()] = block
+	}
+
+	t.mu.Lock()
+	t.blocks = blocks
+	t.permanent = permanent
+	if permanent && t.failures < t.maxFailures() {
+		t.failures = t.maxFailures()
+	}
+	t.mu.Unlock()
+
+	if t.Gate != nil {
+		t.Gate.RebuildReconcileProjection(states)
+	}
+	return nil
+}
+
+func scopeLabel(b Block) string {
+	if b.Symbol == "" {
+		return "(account-wide)"
+	}
+	return b.Symbol
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if strings.TrimSpace(v) != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 // Due reports whether enough time has passed to reconcile again.
@@ -364,12 +516,31 @@ func (t *Tracker) ExitAllowed(string, string) bool { return true }
 // It requires an identity and a note for the same reason the journal's operator
 // resolution does: this is a human overriding the machine's judgement about a
 // live account, and the audit trail is the point.
-func (t *Tracker) Resolve(operator, note string) error {
+//
+// The journal rows are closed first. Clearing memory and leaving the rows open
+// would resurrect every block on the next Restore, which looks to an operator
+// like their resolution was ignored.
+func (t *Tracker) Resolve(ctx context.Context, operator, note string) error {
 	if strings.TrimSpace(operator) == "" {
 		return fmt.Errorf("reconcile: clearing a mismatch requires the operator's identity")
 	}
 	if strings.TrimSpace(note) == "" {
 		return fmt.Errorf("reconcile: clearing a mismatch requires a note explaining what was verified")
+	}
+
+	if t.Journal != nil {
+		for _, block := range t.Blocks() {
+			if _, _, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
+				AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
+				Symbol:      block.Symbol,
+				Cause:       journal.ReconcileReleaseOperator,
+				Evidence:    "operator " + strings.TrimSpace(operator) + ": " + strings.TrimSpace(note),
+				ExpectCause: journal.ReconcileCauseQuantityMismatch,
+			}); err != nil {
+				return fmt.Errorf("reconcile: recording the operator release of %s: %w",
+					scopeLabel(block), err)
+			}
+		}
 	}
 
 	t.mu.Lock()
@@ -381,6 +552,7 @@ func (t *Tracker) Resolve(operator, note string) error {
 	if t.Gate != nil {
 		t.Gate.Clear(execgw.ReasonReconcilePermanent)
 		t.Gate.Clear(execgw.ReasonReconcileMismatch)
+		t.Gate.ClearSymbolReason(execgw.ReasonReconcileMismatch)
 	}
 	return nil
 }
@@ -482,10 +654,17 @@ func (t *Tracker) syncGate(active []Block) {
 	}
 }
 
-// isReconcileReason reports whether a reason code is one this package raises.
-// syncGate only releases its own blocks.
+// isReconcileReason reports whether a symbol block is one syncGate may release.
+//
+// Only ReasonReconcileMismatch. blocksFor raises nothing else at symbol scope,
+// and since task 4.1 the gate can also carry a symbol block projected from a
+// journal RECONCILE state an operator has to clear (an identifier conflict, an
+// unattributable record — projected as ReasonReconcilePermanent). Releasing one
+// of those because *this* reconciliation was happy would answer a question
+// nobody asked us, which is the same reasoning that already excludes fill
+// detection's and the flatten saga's blocks.
 func isReconcileReason(reason execgw.ReasonCode) bool {
-	return reason == execgw.ReasonReconcileMismatch || reason == execgw.ReasonReconcilePermanent
+	return reason == execgw.ReasonReconcileMismatch
 }
 
 // snapshotBlocks copies the block set. Callers must hold t.mu.
