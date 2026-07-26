@@ -396,6 +396,79 @@ func TestConditionalPersistenceCannotPassInTheRegisteringProcess(t *testing.T) {
 	}
 }
 
+// TestTheProcessBoundaryIsTheInstanceIDAndNotThePID pins the judgement the
+// console's restart button depends on (tasks.md 1.8 ①).
+//
+// A re-exec replaces the process image and keeps the PID. That is a genuinely new
+// process — the client state that registered the conditional is gone, which is the
+// whole content of the measurement — so the persistence step has to accept it. If
+// the judgement read the PID it would refuse, and the restart button would be a
+// button that cannot finish the verification it exists to finish.
+//
+// The second half is the converse and it is the one that matters for safety: the
+// same instance identifier must be refused even when the PID differs, because a
+// process claiming its own conditional outlived its own exit is evidence of
+// nothing at all.
+func TestTheProcessBoundaryIsTheInstanceIDAndNotThePID(t *testing.T) {
+	t.Run("a re-exec keeps the PID and is still a new process", func(t *testing.T) {
+		broker := newFakeBroker().withHolding("005930", 3)
+		h := newHarness(t, broker, alwaysConfirm())
+		h.fixedPID = 4242 // every invocation is "the same" process to the OS
+
+		if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+			t.Fatalf("first run: %v", err)
+		}
+		if h.verdict(StepConditionalPersist) != VerdictAwaitingRestart {
+			t.Fatalf("persist verdict = %q, want awaiting-restart", h.verdict(StepConditionalPersist))
+		}
+
+		broker.restart()
+		if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+			t.Fatalf("re-executed run: %v", err)
+		}
+		if got := h.verdict(StepConditionalPersist); got != VerdictPass {
+			t.Fatalf("persist verdict after a re-exec = %q, want pass — the boundary must be the instance "+
+				"identifier, not the PID that a re-exec preserves", got)
+		}
+		if v, _ := h.observation(StepConditionalPersist, "conditional.survives_process_exit"); v != "true" {
+			t.Errorf("conditional.survives_process_exit = %q, want true", v)
+		}
+
+		// And the record proves the two runs really did share the PID, so the test
+		// would not pass by accident if the harness stopped pinning it.
+		pids := map[int]bool{}
+		instances := map[string]bool{}
+		for _, e := range h.entries() {
+			pids[e.Process.PID] = true
+			instances[e.Process.InstanceID] = true
+		}
+		if len(pids) != 1 {
+			t.Fatalf("the record holds %d distinct PIDs; the re-exec was not simulated", len(pids))
+		}
+		if len(instances) < 2 {
+			t.Fatalf("the record holds %d distinct instance ids; there was no second process", len(instances))
+		}
+	})
+
+	t.Run("the same instance is refused however the PID moves", func(t *testing.T) {
+		broker := newFakeBroker().withHolding("005930", 3)
+		h := newHarness(t, broker, alwaysConfirm())
+		h.fixedInstanceID = "proc-same"
+
+		if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+			t.Fatalf("first run: %v", err)
+		}
+		broker.restart()
+		if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+			t.Fatalf("second run: %v", err)
+		}
+		if got := h.verdict(StepConditionalPersist); got != VerdictAwaitingRestart {
+			t.Fatalf("persist verdict = %q, want awaiting-restart — the registering instance must never be "+
+				"able to certify its own conditional's survival, whatever the PID says", got)
+		}
+	})
+}
+
 // TestConditionalPersistenceFailsWhenTheBrokerForgets is the other outcome, and
 // the one that would sink the whole unattended design.
 func TestConditionalPersistenceFailsWhenTheBrokerForgets(t *testing.T) {

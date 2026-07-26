@@ -581,6 +581,14 @@ type harness struct {
 	now      time.Time
 	slept    time.Duration
 	instance int
+	// fixedPID pins every invocation's PID, which is what a re-exec looks like:
+	// the process image is replaced and the identifier is kept. Zero gives each
+	// invocation its own PID, as a fresh `tossctl` would have.
+	fixedPID int
+	// fixedInstanceID pins the instance identifier across invocations, which is
+	// what nothing real can do — it is here so a test can prove that the
+	// identifier, and not the PID, is what the persistence judgement reads.
+	fixedInstanceID string
 }
 
 func newHarness(t *testing.T, broker *fakeBroker, op *operator) *harness {
@@ -654,9 +662,17 @@ func (h *harness) build(opts Options) (*Runner, func(), error) {
 		}
 		return nil
 	}
+	pid := 1000 + h.instance
+	if h.fixedPID != 0 {
+		pid = h.fixedPID
+	}
+	instanceID := fmt.Sprintf("proc-%d", h.instance)
+	if h.fixedInstanceID != "" {
+		instanceID = h.fixedInstanceID
+	}
 	opts.Process = Process{
-		PID:        1000 + h.instance,
-		InstanceID: fmt.Sprintf("proc-%d", h.instance),
+		PID:        pid,
+		InstanceID: instanceID,
 		StartedAt:  h.now,
 	}
 

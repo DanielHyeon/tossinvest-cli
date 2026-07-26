@@ -328,6 +328,48 @@ func TestPackageDoesNotImportTheEngineOrTheWebSession(t *testing.T) {
 	}
 }
 
+// TestTheProcessBoundaryIsNeverJudgedByPID is the structural half of
+// TestTheProcessBoundaryIsTheInstanceIDAndNotThePID (tasks.md 1.8 ①).
+//
+// Process.PID exists for the audit trail and for the banner. It must not be what
+// any judgement reads: a PID is reused by the operating system, and a re-exec —
+// which is exactly what the console's restart button does — keeps it. Both
+// directions are wrong, in opposite ways: a reused PID would let a new process be
+// mistaken for the registering one, and a preserved PID would stop a genuinely new
+// process from finishing the measurement.
+func TestTheProcessBoundaryIsNeverJudgedByPID(t *testing.T) {
+	// The banner prints it and NewProcess fills it in. Everywhere else, reading it
+	// is a comparison waiting to happen.
+	allowed := map[string]bool{"record.go": true, "runner.go": true}
+	for name, src := range packageFiles(t, false) {
+		if allowed[name] {
+			continue
+		}
+		for _, line := range nonCommentLines(src) {
+			if strings.Contains(line, "process.PID") || strings.Contains(line, "Process.PID") {
+				t.Errorf("%s reads the PID (%q). The process boundary is Process.InstanceID: a PID is reused, "+
+					"and a re-exec keeps it", name, strings.TrimSpace(line))
+			}
+		}
+	}
+	// runner.go may print it; it may not compare it.
+	for _, line := range nonCommentLines(packageFiles(t, false)["runner.go"]) {
+		if !strings.Contains(line, "process.PID") {
+			continue
+		}
+		if !strings.Contains(line, "Fprint") {
+			t.Errorf("runner.go uses the PID outside an output line (%q); it is audit trail, not a judgement",
+				strings.TrimSpace(line))
+		}
+	}
+	// And the judgement itself is still spelled against the instance identifier.
+	if !strings.Contains(strings.Join(nonCommentLines(packageFiles(t, false)["steps.go"]), "\n"),
+		"registrar == r.process.InstanceID") {
+		t.Error("steps.go no longer compares the registering instance identifier; " +
+			"conditional-persist has lost its process boundary")
+	}
+}
+
 // nonCommentLines drops whole-line comments. It does not parse Go: a line that is
 // wrongly kept makes the guard stricter, which is the safe direction here.
 func nonCommentLines(src string) []string {
