@@ -153,12 +153,12 @@ func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID s
 	}
 
 	var (
-		account, market, symbol, decisionID string
-		openedAt, closedAt                  string
+		account, market, symbol, decisionID, adoptionID string
+		openedAt, closedAt                              string
 	)
 	rows, err := r.Query(ctx, `
 		SELECT account_ref, market, symbol, coalesce(entry_decision_id,''),
-		       coalesce(opened_at,''), coalesce(closed_at,'')
+		       coalesce(adoption_id,''), coalesce(opened_at,''), coalesce(closed_at,'')
 		  FROM positions WHERE id = ?`, positionID)
 	if err != nil {
 		return TradeOutcome{}, false
@@ -167,14 +167,16 @@ func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID s
 		_ = rows.Close()
 		return TradeOutcome{}, false
 	}
-	if err := rows.Scan(&account, &market, &symbol, &decisionID, &openedAt, &closedAt); err != nil {
+	if err := rows.Scan(&account, &market, &symbol, &decisionID, &adoptionID,
+		&openedAt, &closedAt); err != nil {
 		_ = rows.Close()
 		return TradeOutcome{}, false
 	}
 	_ = rows.Close()
-	if decisionID == "" {
-		// No entry decision: no stop, no initial risk, no R to express anything
-		// in. An external position's round trip is not this engine's trade.
+	if decisionID == "" && adoptionID == "" {
+		// Neither record justifies the position: no stop, no initial risk, no R to
+		// express anything in. An unmanaged position's round trip is not this
+		// engine's trade.
 		return TradeOutcome{}, false
 	}
 
@@ -183,7 +185,12 @@ func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID s
 		return TradeOutcome{}, false
 	}
 
-	buy, sell, ok := roundTripLegs(ctx, r, account, market, symbol, decisionID)
+	var buy, sell tradeLeg
+	if adoptionID != "" {
+		buy, sell, ok = adoptedRoundTripLegs(ctx, r, positionID, account, market, symbol)
+	} else {
+		buy, sell, ok = roundTripLegs(ctx, r, account, market, symbol, decisionID)
+	}
 	if !ok || buy.quantity.Sign() <= 0 {
 		return TradeOutcome{}, false
 	}
@@ -362,6 +369,251 @@ func roundTripLegs(ctx context.Context, r tradeOutcomeReader,
 		return buy, sell, false
 	}
 	return buy, sell, true
+}
+
+// --- the adopted round trip (change adopt-external-positions, design A7) ---------
+//
+// An adopted position has no entry fill, so `roundTripLegs`' whole method — find
+// the smallest fill id belonging to the entry decision's orders, take everything
+// after it — has no floor to stand on. Both legs are therefore built differently,
+// and each difference is a decision worth stating.
+//
+// # The buy leg is synthesised, from the observation and not from the cost basis
+//
+// quantity = `position_adoptions.quantity`, basis = `observed_price`, and
+// `cost_basis` appears in neither (SHALL NOT — design A7, round 3). The reason is
+// epoch consistency: the denominator of realised R is the *synthetic* initial
+// risk, which is `observed_price − synthetic_stop`. A numerator measured from the
+// original purchase price would be dividing a whole holding period's P&L by the
+// risk of one day, and the resulting number would be an R multiple of nothing.
+// `cost_basis` stays on the record for display and for the 2b fee measurement,
+// and is excluded from the arithmetic here.
+//
+// Both legs' costs are still deducted, exactly as an engine-entered round trip's
+// are. That is not double-counting a purchase the engine did not make: it is the
+// same round-trip cost the exit policy's BREAKEVEN level is composed from
+// (internal/exitpolicy composes break-even as entry plus the round trip), so a
+// position liquidated at its break-even baseline reports realised R of about
+// zero rather than of the entry cost.
+//
+// # The sell leg is attributed by explicit reference, per proposer
+//
+// Two chains, both declared columns, no time-window matching (position-ledger's
+// prohibition):
+//
+//	exit loop  exit_events.position_id → proposed_intent_id → mutation_attempts
+//	           → broker_order_id → fill_events. Instance-exact by construction.
+//	flatten    flatten_sagas.account_ref → flatten_steps(LIQUIDATE, symbol,
+//	           market) → intent_id → mutation_attempts → broker_order_id →
+//	           fill_events.
+//
+// The flatten chain is included because excluding it was the round-4 finding: a
+// position that flatten closed would otherwise freeze with an *empty* sell leg,
+// and an empty sell leg priced against a full buy leg records a fabricated total
+// loss. Flatten's liquidation is a real fill and belongs in the number.
+//
+// # What makes the attribution safe rather than merely plausible
+//
+// The flatten chain names a symbol and not an instance, so in principle a
+// previous instance's flatten sells could be swept in. That is caught rather than
+// ignored: the freeze requires the attributed sell quantity to *equal* the
+// adopted quantity, so over-attribution overshoots and under-attribution
+// undershoots, and either one produces no row at all.
+//
+// The same rule implements the round-5 decision about the crossed case. If the
+// engine sold part of the position and a person disposed of the rest outside it,
+// the engine-attributed quantity is short of the adopted quantity and no outcome
+// is frozen — matching a partial sell leg against a whole synthetic buy leg would
+// report a loss the trade did not make. No row is the honest answer; the
+// ADJUSTMENT_CLOSED event is where that story is recorded instead.
+
+// adoptedRoundTripLegs builds the synthetic buy leg and the attributed sell leg.
+func adoptedRoundTripLegs(ctx context.Context, r tradeOutcomeReader,
+	positionID, account, market, symbol string) (tradeLeg, tradeLeg, bool) {
+	buy := tradeLeg{quantity: new(big.Rat), notional: new(big.Rat), priced: true}
+	sell := tradeLeg{quantity: new(big.Rat), notional: new(big.Rat), priced: true}
+
+	adopted, observed, ok := adoptedBasis(ctx, r, positionID)
+	if !ok {
+		return buy, sell, false
+	}
+	buy.quantity = adopted
+	buy.notional = new(big.Rat).Mul(adopted, observed)
+
+	orders, ok := engineSellOrders(ctx, r, positionID, account, market, symbol)
+	if !ok {
+		return buy, sell, false
+	}
+	if len(orders) == 0 {
+		// No engine sell fill is attributable to this instance at all. Freezing
+		// here would price the whole position as sold for nothing.
+		return buy, sell, false
+	}
+	if !sumSellFills(ctx, r, orders, account, market, symbol, &sell) {
+		return buy, sell, false
+	}
+	if !sell.priced || sell.quantity.Cmp(adopted) != 0 {
+		// Under-attributed (a person finished the disposal) or over-attributed (a
+		// previous instance's flatten swept in). Either way the round trip this
+		// row would describe is not the one that happened.
+		return buy, sell, false
+	}
+	return buy, sell, true
+}
+
+// adoptedBasis reads the synthetic t0: the adopted quantity and the observation
+// the baseline was built from.
+func adoptedBasis(ctx context.Context, r tradeOutcomeReader, positionID string) (
+	quantity, observed *big.Rat, ok bool) {
+	rows, err := r.Query(ctx, `
+		SELECT a.quantity, a.observed_price
+		  FROM position_adoptions a
+		  JOIN positions p ON p.adoption_id = a.id
+		 WHERE p.id = ?`, positionID)
+	if err != nil {
+		return nil, nil, false
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil, nil, false
+	}
+	var quantityText, priceText string
+	if err := rows.Scan(&quantityText, &priceText); err != nil {
+		return nil, nil, false
+	}
+	q, qok := new(big.Rat).SetString(strings.TrimSpace(quantityText))
+	p, pok := new(big.Rat).SetString(strings.TrimSpace(priceText))
+	if !qok || !pok || q.Sign() <= 0 || p.Sign() <= 0 {
+		return nil, nil, false
+	}
+	return q, p, true
+}
+
+// engineSellOrders collects the broker orders this instance's sells were placed
+// under, per proposer, through declared reference columns only.
+func engineSellOrders(ctx context.Context, r tradeOutcomeReader,
+	positionID, account, market, symbol string) ([]string, bool) {
+	rows, err := r.Query(ctx, `
+		SELECT DISTINCT a.broker_order_id
+		  FROM exit_events e
+		  JOIN mutation_attempts a ON a.intent_id = e.proposed_intent_id
+		 WHERE e.position_id = ?
+		   AND coalesce(e.proposed_intent_id, '') <> ''
+		   AND coalesce(a.broker_order_id, '') <> ''
+		UNION
+		SELECT DISTINCT a.broker_order_id
+		  FROM flatten_steps s
+		  JOIN flatten_sagas g ON g.id = s.saga_id
+		  JOIN mutation_attempts a ON a.intent_id = s.intent_id
+		 WHERE g.account_ref = ?
+		   AND s.kind = ?
+		   AND upper(trim(s.symbol)) = ?
+		   AND (lower(trim(s.market)) = ? OR trim(s.market) = '')
+		   AND coalesce(s.intent_id, '') <> ''
+		   AND coalesce(a.broker_order_id, '') <> ''`,
+		positionID, account, FlattenStepLiquidate, normaliseSymbol(symbol), normaliseMarket(market))
+	if err != nil {
+		return nil, false
+	}
+	defer rows.Close()
+
+	var out []string
+	for rows.Next() {
+		var orderID string
+		if err := rows.Scan(&orderID); err != nil {
+			return nil, false
+		}
+		out = append(out, orderID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, false
+	}
+	return out, true
+}
+
+// sumSellFills adds the marginal notional of every sell fill of the named
+// orders.
+//
+// The per-order marginal arithmetic is roundTripLegs': `fill_events` carries
+// cumulative quantities, so an order's contribution is the change in
+// `cumulative × average`, and adding the cumulative values directly would count
+// every earlier observation again.
+func sumSellFills(ctx context.Context, r tradeOutcomeReader, orders []string,
+	account, market, symbol string, sell *tradeLeg) bool {
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(orders)), ",")
+	args := make([]any, 0, len(orders)+3)
+	args = append(args, account)
+	for _, id := range orders {
+		args = append(args, id)
+	}
+	args = append(args, normaliseSymbol(symbol), normaliseMarket(market))
+
+	rows, err := r.Query(ctx, `
+		SELECT f.order_id, f.cumulative_quantity, f.average_price,
+		       (SELECT i.side FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+		         WHERE a.broker_order_id = f.order_id AND i.account_ref = ?
+		         ORDER BY a.recorded_at DESC, a.rowid DESC LIMIT 1)
+		  FROM fill_events f
+		 WHERE f.order_id IN (`+placeholders+`)
+		   AND f.symbol = ? AND (f.market = ? OR f.market = '')
+		 ORDER BY f.order_id, f.id`, args...)
+	if err != nil {
+		return false
+	}
+	defer rows.Close()
+
+	var (
+		currentOrder string
+		prev         = new(big.Rat)
+		// perOrder holds each order's latest cumulative quantity. The rows are
+		// ordered by (order, fill id), so the last one seen for an order is its
+		// total — and summing the totals is the disposal's quantity, whereas
+		// summing every observation would count each partial fill again.
+		perOrder = map[string]*big.Rat{}
+	)
+	for rows.Next() {
+		var (
+			orderID, cumulative, average string
+			side                         sql.NullString
+		)
+		if err := rows.Scan(&orderID, &cumulative, &average, &side); err != nil {
+			return false
+		}
+		if !side.Valid || !strings.EqualFold(strings.TrimSpace(side.String), "SELL") {
+			// A buy through one of these chains would be a scale-in the exit policy
+			// never proposes; it is not part of the disposal either way.
+			continue
+		}
+		if orderID != currentOrder {
+			currentOrder, prev = orderID, new(big.Rat)
+		}
+		filled, ok := new(big.Rat).SetString(orZero(cumulative))
+		if !ok {
+			return false
+		}
+		perOrder[orderID] = filled
+		if strings.TrimSpace(average) == "" {
+			// An unpriced sell makes the disposal's proceeds unknown. Calling it
+			// zero would overstate the loss, which is the fail-open direction the
+			// engine-entered path refuses too.
+			sell.priced = false
+			continue
+		}
+		price, ok := new(big.Rat).SetString(strings.TrimSpace(average))
+		if !ok {
+			return false
+		}
+		contribution := new(big.Rat).Mul(filled, price)
+		sell.notional.Add(sell.notional, new(big.Rat).Sub(contribution, prev))
+		prev = contribution
+	}
+	if err := rows.Err(); err != nil {
+		return false
+	}
+	for _, filled := range perOrder {
+		sell.quantity.Add(sell.quantity, filled)
+	}
+	return true
 }
 
 func heldSeconds(openedAt, closedAt string) int64 {
