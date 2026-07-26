@@ -43,7 +43,7 @@
 ## 6. 포지션 투영·reconciliation
 
 - [x] 6.1 [T][High-risk] `internal/position` 투영(인스턴스·시장·decimal·entry_decision_id)·상태기계 전이표(design 산출물로 표 명문화 후 전 행 테스트)
-- [ ] 6.2 [T][High-risk] 조정 이벤트 compare-and-append(기대 이전 값·watermark 재검증·불일치 폐기·재수집 테스트)
+- [x] 6.2 [T][High-risk] 조정 이벤트 compare-and-append(기대 이전 값·watermark 재검증·불일치 폐기·재수집 테스트)
 - [ ] 6.3 [T][High-risk] `LocalStateFromJournal` 재배선(투영 소비·심볼 합산)·외부 포지션 편입+exit 제외+알림·release cause ADJUSTMENT_APPLIED 추가(2a cause 상수 확장)·해제 규칙(조정 후 일치=자동, 영구=운영자) — **바뀌어야 할 단언 사전 열거**
 - [ ] 6.4 [T] provenance 단일 질의(명시 참조 조인: 결정→intent→attempt→fill→position→exit_events→청산) + `docs/aggregates.md` 신설
 

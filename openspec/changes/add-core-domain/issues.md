@@ -332,6 +332,39 @@
 - 후속 task 입력: **6.4**의 provenance 질의가 주문→인스턴스 조인을 필요로 하면 그때
   `fill_events`에 인스턴스 참조를 더하는 것이 자연스럽다(추가 컬럼 = 새 스키마 버전).
 
+## 2026-07-26 [safe local] 체결 watermark는 심볼 단위이고 정정은 제외한다 (task 6.2)
+
+- 사실: 스펙은 "체결 watermark의 불변을 재검증"이라고만 적고 범위를 정하지 않는다.
+- 이번 처리: `fill_events`의 심볼별 `MAX(id)`. 계좌 전역으로 잡으면 아무 심볼에서 체결이 날
+  때마다 무관한 심볼의 조정이 폐기되고, 조정 루프가 바쁜 계좌에서 영원히 수렴하지 못한다.
+  `execution_corrections`는 **제외** — 정정은 취득단가만 움직이고 수량을 움직이지 않으므로
+  수량에 관한 조정을 무효화할 수 없다.
+- 기대 이전 값만으로 부족한 이유(= watermark가 존재하는 이유)를 테스트로 고정했다:
+  수집과 커밋 사이에 같은 수량의 매수·매도가 들어오면 수량은 같고 세계는 다르다
+  (`TestAMovedFillWatermarkIsDiscardedEvenWhenTheQuantityMatches`).
+
+## 2026-07-26 [safe local] 조정 id는 파생값이라 재적용이 stale이 아니라 멱등이다 (task 6.2)
+
+- 문제: 커밋 직후 크래시로 호출자가 결과를 못 받고 재시도하면, 수량은 **정당하게** 이동한 뒤라
+  기대 이전 값 검사가 그 재시도를 stale로 판정한다 — 복구를 폐기로 오인한다.
+- 이번 처리: id를 조정의 내용(스코프·kind·기대 이전 값·새 수량·새 단가·broker_as_of)에서
+  파생하고, 트랜잭션 안에서 **비교보다 먼저** id 조회를 한다. 이미 있으면 저장된 행과 수렴된
+  포지션을 `Applied=false`로 돌려준다. 조정 행과 포지션 수렴은 한 트랜잭션이므로 크래시는
+  둘 다이거나 둘 다 아니다.
+- 검증: `TestReapplyingTheSameAdjustmentIsANoOp`(행 1개 유지), `TestAnAdjustmentSurvivesARestart`.
+
+## 2026-07-26 [safe local] MANUAL은 운영자 선언에서만 나오고, 조정은 CLOSED를 되살리지 않는다 (task 6.2)
+
+- 분류(`position.Classify`): 운영자 선언 → MANUAL, 지역 인스턴스 없음 → EXTERNAL, 그 외 →
+  UNKNOWN. "사람이 했을 것 같다"는 추측이고 `kind` 컬럼은 증거이므로 MANUAL은 선언에서만 나온다.
+  UNKNOWN은 "안 봤다"가 아니라 "귀속에 실패했다"는 판정이다(core_domain.go 주석과 동일).
+- 수렴 상태 규칙: 새 수량 0 → CLOSED(+`closed_at`), 양수인데 현재 상태가 살아 있으면
+  **상태 유지**(계좌 스냅샷은 작업 중인 주문의 존재를 모른다), 없거나 CLOSED면 OPEN.
+- CLOSED 인스턴스에 계좌가 수량을 보고하면 되살리지 않고 **다음 인스턴스**를 연다
+  (`entry_decision_id` NULL — exit 대상 아님). CLOSED 종결성과 외부 편입이 같은 규칙으로 만난다.
+- 검증: `TestAnExternalHoldingOnAClosedSymbolOpensTheNextInstance`,
+  `TestClassifyNamesTheProvenance`, `TestAnAdjustmentToZeroClosesTheInstance`.
+
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
 
 - **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).
