@@ -1,17 +1,18 @@
 # Tasks: add-operator-dashboard
 
-> 선행: 2b task 1.8(콘솔 운영 자동화·한글화) 완료 후 착수 — 같은 `internal/console` 패키지의 충돌 방지. 2b 측정·2c와는 독립(측정을 막지도, 요구하지도 않는다).
+> 선행: 2b task 1.8 **커밋 완료** 후 착수 — 같은 `internal/console` 패키지의 충돌 방지(라우트 표·static_test 골든 목록·templates nav·cmd/tossctl/console.go를 1.8이 수정 중). 2b 측정·2c와는 독립. **이 change가 `internal/journal` 추가분(RO open·계좌 질의)을 소유**하며, adopt-external-positions 구현은 그 조각 landed 후 시작한다.
 
 ## 1. 데이터 접근 [T]
 
-- [ ] 1.1 journal **읽기 전용 리더**: 콘솔용 조회 함수 — positions(+exit_states 조인), trade_outcomes, exit_events 시간순. SQLite RO open(쓰기 연결 부재를 가드 테스트로 고정), journal 파일 부재·빈 테이블은 오류가 아니라 빈 결과. busy timeout 설정(엔진 가동 후 동시 접근 대비)
-- [ ] 1.2 **브로커 스냅샷 캐시**: 보유·매도가능·시세를 서버측 캐시(TTL ≥ 15s)로 제공, TTL 내 재요청·다중 탭은 브로커 호출 0건, 캐시 시각 노출. **runlock 활성(검증 실행) 중에는 갱신 보류**하고 캐시 값 사용 — 검증의 rate budget을 대시보드가 뺏지 않는다
+- [ ] 1.1 `journal.OpenReadOnly`(additive 신설): 디렉터리·파일 생성 없음, 마이그레이션 없음, `mode=ro` DSN, busy timeout. 파일 부재는 typed 오류 → 콘솔이 빈 상태로 렌더, `ErrSchemaTooNew`는 구분 전달(화면 안내용). 쓰기 연결 부재 가드 테스트
+- [ ] 1.2 계좌 단위 질의(additive — `internal/journal`, 스키마 무변경): positions ⟕ exit_states(자격 포함 전체 — 기존 OpenExitStates는 미완결만 반환하므로 신규), 계좌 단위 exit_events 시간순(기존은 position_id 단위뿐), trade_outcomes + positions(심볼) + exit_states(진입가) 조인
+- [ ] 1.3 **조회 전용 브로커 인터페이스**(holdings 계열만 선언 — verifylive.Broker 주입 금지) + mutation 메서드 0 정적 테스트. 스냅샷 캐시: lazy·백그라운드 폴러 없음·갱신당 holdings 1콜(lastPrice 사용, 시세 fan-out 금지)·TTL ≥ 15s·캐시 시각 노출. 검증 중 보류: in-process run 신호 + 타 프로세스는 runlock mtime 신선도(5분 상한)
 
 ## 2. 화면 [T]
 
-- [ ] 2.1 **포지션 화면**: 심볼 조인 렌더 — 엔진 관리 포지션은 exit 라인(진입가·최초 손절·기준선·워터마크·래칫 단계·ladder rung·부분익절 여부·pending exit) 표시, `EntryDecisionID` 빈 보유는 "편입 전" 구분(사유 안내 — 편입은 adopt-external-positions), 어느 소스가 비어도 다른 쪽만으로 렌더(조인 실패 ≠ 화면 실패), 엔진 미가동 빈 상태 정직 표시. 평가손익은 캐시 시세 기준·캐시 시각 병기
-- [ ] 2.2 **거래 이력 화면**: trade_outcomes(동결 값 그대로, 재계산 금지)·exit_events 시간순, 비어 있으면 "완결 거래 없음"
-- [ ] 2.3 라우트·내비 추가 — 게이트·주문·설정 라우트 부재 가드는 새 라우트 표에서도 통과해야 한다(기존 정적 가드 확장)
+- [ ] 2.1 **포지션 화면**: 심볼 조인 렌더 — exit 자격 포지션은 exit 라인(진입가·최초 손절·기준선·워터마크·래칫 단계·ladder rung·부분익절·pending exit), 자격 없는 보유는 "관리 외(미편입)"(라벨 단일화·사유 안내), 어느 소스가 비어도 렌더(조인 실패 ≠ 화면 실패), 엔진 미가동·콜드 캐시·ErrSchemaTooNew 각각의 정직한 안내, 평가손익은 캐시 시세·캐시 시각 병기
+- [ ] 2.2 **거래 이력 화면**: trade_outcomes 동결 값 + 명시 조인 필드만(심볼·실현손익·실현 R·초기 수량·보유 시간·exit 단계·청산 시각·진입가) — 청산가 등 스키마에 없는 값 표시 금지, 재계산 금지, 비면 "완결 거래 없음"
+- [ ] 2.3 라우트·내비: 신규 라우트 전부 GET·stateChanging 무추가, mutation 동사(sell/cancel/modify/gate/approve) 경로 부재 정적 스캔, 기존 404 가드 유지, static_test 파일명 화이트리스트·os.OpenFile 금지 목록을 새 파일과 정합
 
 ## 3. 완료 게이트 [M]
 
