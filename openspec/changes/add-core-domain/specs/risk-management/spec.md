@@ -27,7 +27,7 @@
 - **THEN** DAILY_LOSS_LIMIT_REACHED로 거부된다 (계좌자본 0 이하이면 즉시 차단)
 
 ### Requirement: No Stop = No Trade와 위험 기반 수량
-손절가가 없거나 보호적이지 않은 진입 의도는 수량 계산 이전 단계에서 거부되어야 한다(SHALL). TossOS는 long-only이므로 진입은 매수이고 보호적 손절은 `stop < entry`이며, 매도는 보유수량 이하 reduce-only, short 노출은 구조적으로 금지된다(SHALL NOT). 위험 기반 수량은 `floor(위험예산 / (entry − stop))`이고(등급배수는 P3까지 1.0 고정 — 보수 하한), stop 폭 0 이하는 수량 0(fail-closed)이다(SHALL). 최소 RR은 의도 필드의 순수 산술 `(target − entry) / (entry − stop)`로 검사하며(신규 검사 — 세션 구조 기반 산출은 P3), 기본값 2.0 미달·계산 불가는 거부한다(SHALL — 0 대체 금지. provenance: StockOS parker_vwap §22 lock 2.0; 1.5는 최저 티어 값이라 기각). 진입 손절가는 사전 검사로 끝나지 않고 포지션 개시 시 exit 정책의 t0 기준선이 된다(SHALL — exit-policy).
+손절가가 없거나 보호적이지 않은 진입 의도는 수량 계산 이전 단계에서 거부되어야 한다(SHALL). TossOS는 long-only이므로 진입은 매수이고 보호적 손절은 `stop < entry`이며, 매도는 보유수량 이하 reduce-only, short 노출은 구조적으로 금지된다(SHALL NOT). 위험 기반 수량은 `floor(위험예산 / (entry − stop))`이고(등급배수는 P3까지 1.0 고정 — 보수 하한), stop 폭 0 이하는 수량 0(fail-closed)이다(SHALL). 최소 RR은 의도 필드의 순수 산술 `(target − entry) / (entry − stop)`로 검사하며(신규 검사 — 세션 구조 기반 산출은 P3), 기본값 2.0 미달·계산 불가는 거부한다(SHALL — 0 대체 금지. provenance: StockOS 라이브 게이트 `live_entry_contract.py:53`의 2.0; default_lock은 Plan 044에서 1.3으로 완화됐으나 §0.9상 완화를 따르지 않는다. 1.5는 최저 티어 값이라 기각). 진입 손절가는 사전 검사로 끝나지 않고 포지션 개시 시 exit 정책의 t0 기준선이 된다(SHALL — exit-policy).
 
 #### Scenario: 손절 없는 진입
 - **WHEN** stop이 없는 진입 의도가 평가되면

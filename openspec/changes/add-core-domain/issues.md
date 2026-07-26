@@ -249,3 +249,11 @@
   (`"0"`)이 구별된다. 부재 = `STOP_MISSING`, 비가격 = `INVALID_TARGET_STOP`. 구별의 실익은
   운영자에게 "신호가 아무것도 내지 않았다"와 "말이 안 되는 값을 냈다"를 알려주는 것이다.
   두 경우 다 거부이므로 안전 방향의 차이는 없다.
+
+## Manager 판정 (1차 물결 검증, 2026-07-26)
+
+- **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).
+- **0.x 편차 10건 승인**: nonce 재사용 가능성으로 고아 없음 증명(더 강함), 재수집 발급 변형(EXHAUSTED 도달 가능성 확보), apply hook 3중 강제(런타임·AST 도달성·파일 배치 — 7.3 arming을 apply_hook.go로 강제하는 배치 규칙 포함), ErrDecisionExpired가 ErrInvalidRequest를 wrap(기존 계약 비약화), operating_modes 최신 행 정렬 (created_at, rowid) → 3.1 입력, hooks가 delta-0 정정·terminal 전이에도 발화 → 6.1 입력.
+- **1.x·2.x 판정 8건 승인**: unknown override key **거부**(원본은 무시 — 오타가 조용히 기본값이 되는 것보다 낫다, 의도적 역전 승인), zero-value 비용 모델의 무료 취급 차단(configured 비트 — 진입 거부·감소 경로 비대상, 스스로 찾은 fail-open), math/big 유리수(수량 floor·RR 경계 — 이진 전개가 아니라 규칙의 경계), INSUFFICIENT_CASH 병합, size-before-RR 순서(스펙 순서 준수 — a090 재작성 명시), stop="0"→INVALID_TARGET_STOP.
+- **min-RR provenance 정정**: 스펙 인용을 live_entry_contract.py:53으로 교체(default_lock은 Plan 044에서 1.3 완화 — §0.9상 추종 안 함, 2.0 유지). 값 무변경.
+- 이식 대조: costs 20/20, guardian 8+4대체/8제외, target_stop 13/16제외(P3 신호층), a090 15/21제외 — 제외 사유 전수 파일 헤더 기록 확인.
