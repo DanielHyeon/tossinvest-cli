@@ -85,3 +85,9 @@ triggerPrice 를 시장가보다 훨씬 **위**로(발동 안 됨), orderPrice �
 `costs.collected = false` 와 "no verification order filled" 사유를 기록한다 — 0원이라고 쓰지
 않는다. 2.9 를 채우려면 실제로 체결되는 주문이 필요하고, 그것은 이 도구의 안전 전제(체결 불가
 가격) 밖이다. Manager 결정 필요: 사용자의 평소 거래 체결 내역에서 수집할지, 별도 절차를 둘지.
+
+## Manager 판정 (1.5 검증 도구, 2026-07-26)
+
+- 안전 기제 승인: mutate.go 단일 mutation 파일(AST 증명), --yes/--force/env 우회 부재(테스트+소스 가드), 미체결가 산정 불가 시 추측 대신 거부, 잔여물 명명 오류. ModifyConditionalOrderRef additive 확인.
+- **보유 없는 계좌의 2.5(--conditional-buy-fallback)**: 보류 — 사용자가 KR 1주 보유 시 불필요한 작업. 사용자가 skip을 실제로 만나면 그때 옵트인 플래그로 구현(이중 차단 설계는 승인됨을 기록). 단 BUY 폴백으로도 매도가능수량 예약 의미(2.8 후반)는 미측정으로 남음을 report에 명시할 것.
+- **2.9 비용 실측**: 이 도구로 불가(미체결가 설계상 commission 없음) — 정직한 경로는 실제 체결뿐. 판정: tracer 실전 1주 왕복(사용자 승인 트랙)의 체결에서 수집하거나 사용자의 임의 실거래 1건에서 수집. 그때까지 비용 모델은 보수 placeholder 유지(§0.9 정합).
