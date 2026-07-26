@@ -116,6 +116,41 @@ const (
 	// CRITICAL, and the one that blocks entries by itself.
 	EventAlertUndelivered EventType = "engine.alert_undelivered"
 
+	// --- exit policy ----------------------------------------------------------
+	//
+	// The grading rule across this group is one question: does the condition mean
+	// a position is *not being protected*? Where the answer is yes the event is
+	// critical, because until 2c puts a stop on the broker the only protection an
+	// open position has is this loop's judgement.
+
+	// EventExitObservationOutage is price observation failing past the staleness
+	// threshold (exit-policy: 관측 두절 60초 → critical 알림 + ENTRY_BLOCKED).
+	// CRITICAL: with no broker-resident stop, an unobserved position is an
+	// unprotected one.
+	EventExitObservationOutage EventType = "exit.observation_outage"
+	// EventExitJudgementRefused is an evaluation that could not run at all — an
+	// invariant violation in the stored state, or a price the policy cannot use
+	// (exitpolicy.ErrRefused). CRITICAL, and distinct from "nothing to do": the
+	// position went unjudged.
+	EventExitJudgementRefused EventType = "exit.judgement_refused"
+	// EventExitProposalRefused is a liquidation or take-profit the Guardian or the
+	// gateway declined to submit. CRITICAL — the protection the policy asked for
+	// did not happen.
+	EventExitProposalRefused EventType = "exit.proposal_refused"
+	// EventExitProposalCapped is a liquidation bounded by the RECONCILE confirmed
+	// floor, with the remainder left pending (exit-policy: 캡 발생은 알림된다).
+	// Normal: part of the exit did go, and the remainder re-proposes itself.
+	EventExitProposalCapped EventType = "exit.proposal_capped"
+	// EventExitLiquidationDelayed is a breach liquidation held back past the
+	// resolution bound by an unsettled attempt on the same symbol (exit-policy:
+	// 지연이 유계를 넘으면 critical 알림). CRITICAL.
+	EventExitLiquidationDelayed EventType = "exit.liquidation_delayed"
+	// EventExitPositionUnmanaged is a held position the exit policy will not
+	// manage: no entry decision, so no stop to build a baseline from
+	// (exit-policy: entry 결정이 없는 포지션 … 발견 시 알림). Normal — somebody
+	// trading their own account by hand is not a malfunction.
+	EventExitPositionUnmanaged EventType = "exit.position_unmanaged"
+
 	// --- operating mode -------------------------------------------------------
 
 	// EventOperatingMode is a committed operating-mode transition
@@ -158,6 +193,11 @@ var criticalEvents = map[EventType]bool{
 	EventFlattenStalled:     true,
 	EventAlertUndelivered:   true,
 	EventOperatingMode:      true,
+
+	EventExitObservationOutage:  true,
+	EventExitJudgementRefused:   true,
+	EventExitProposalRefused:    true,
+	EventExitLiquidationDelayed: true,
 }
 
 // SeverityOf grades an event.

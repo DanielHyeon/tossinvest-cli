@@ -817,6 +817,79 @@ func (j *Journal) TrackedFillOrders(ctx context.Context) ([]TrackedFillOrder, er
 	return out, nil
 }
 
+// LiveOrder is one order the engine believes is still working at the broker,
+// carrying the terms a cancel has to name.
+//
+// The terms come from the intent rather than from the broker: a cancel names an
+// order id, and everything else on the request is what the journal records about
+// what was cancelled. After an amendment the id is the successor's and the terms
+// are the original's — the engine has no amend path today, and the mismatch is
+// recorded here rather than papered over.
+type LiveOrder struct {
+	// OrderID is the lineage-resolved current order number.
+	OrderID  string
+	IntentID string
+	Market   string
+	Symbol   string
+	Side     string
+	Quantity string
+	Price    string
+	Currency string
+}
+
+// LiveOrdersForSymbol lists the working orders of one symbol on one account.
+//
+// It exists for the exit observation loop's `CancelPendingFirst` (task 7.4): a
+// baseline breach liquidates the whole position, and submitting that sell while
+// a buy is still working on the same symbol is how the projection ends up
+// refusing an ENTRY_WHILE_CLOSING transition into RECONCILE (issues.md, task
+// 6.1). The entry has to be cancelled first, and this is how the loop finds it.
+//
+// "Working" is the same definition TrackedFillOrders uses — a confirmed attempt
+// whose order has not reached a terminal fill snapshot — narrowed to one venue
+// and symbol. The lineage resolution is the same too: the official API answers a
+// modify with a new order number, and cancelling the superseded one cancels
+// nothing.
+func (j *Journal) LiveOrdersForSymbol(ctx context.Context, accountRef, market, symbol string) ([]LiveOrder, error) {
+	rows, err := j.db.QueryContext(ctx, `
+		SELECT a.broker_order_id, i.id, i.market, i.symbol, i.side,
+		       i.quantity, coalesce(i.price, ''), i.currency
+		  FROM mutation_attempts a
+		  JOIN intents i ON i.id = a.intent_id
+		 WHERE a.state = ? AND a.broker_order_id <> ''
+		   AND i.account_ref = ? AND i.market = ? AND i.symbol = ?
+		   AND a.broker_order_id NOT IN (SELECT order_id FROM fill_snapshots WHERE terminal = 1)
+		 ORDER BY a.recorded_at, a.rowid`,
+		string(StateConfirmed), strings.TrimSpace(accountRef),
+		normaliseMarket(market), normaliseSymbol(symbol))
+	if err != nil {
+		return nil, fmt.Errorf("journal: listing the working orders of %s: %w", symbol, err)
+	}
+	defer rows.Close()
+
+	var out []LiveOrder
+	for rows.Next() {
+		var o LiveOrder
+		if err := rows.Scan(&o.OrderID, &o.IntentID, &o.Market, &o.Symbol, &o.Side,
+			&o.Quantity, &o.Price, &o.Currency); err != nil {
+			return nil, fmt.Errorf("journal: listing the working orders of %s: %w", symbol, err)
+		}
+		out = append(out, o)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: listing the working orders of %s: %w", symbol, err)
+	}
+
+	for i := range out {
+		current, err := j.ResolveCurrentOrderID(ctx, out[i].OrderID)
+		if err != nil {
+			return nil, err
+		}
+		out[i].OrderID = current
+	}
+	return out, nil
+}
+
 // nearlyZero reports whether a delta is zero within a scale-relative tolerance.
 // Quantities arrive as decimal strings and are compared as float64, so an exact
 // == would make a 0.1+0.2 fractional-share fill look like a discrepancy.
