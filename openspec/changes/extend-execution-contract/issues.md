@@ -532,3 +532,15 @@
 - **d30eaa8의 광역 git add**: 섹션 1 담당자가 5.3 체크박스를 자기 커밋에 포함시킴 — "체크박스=산출물 동일 커밋" 규칙 위반(내용은 정확, 되돌리지 않음). 8.1 diff 리뷰 기록 대상. 이후 물결 지시문에 경로 지정 스테이징 재강조.
 - **ReductionIntent의 가격·유형 미결속**: 2a에서 비악용(발급자=호출자). 2c/2d가 발급자를 분리할 때 결속 확장 필수 — 2c 선행 조건 목록에 승계.
 - **design.md "D6a" 미존재 참조**: Manager 편집 실수 — 스펙 요구명 참조로 정정.
+
+## Manager 판정 (3차 물결 검증, 2026-07-26)
+
+- **journal → riskcalc 의존 신설**: 승인(태스크가 staleness 상수 사용을 지시). riskcalc는 stdlib-only leaf라 순환 위험 없음.
+- **정밀 decimal 계층**: 승인 — 예약 원장의 "합이 한도를 넘지 않는다" 속성에 float 누적 불가(0.1×10 판별 테스트 확인). aggregate 평가의 문서화된 float64는 별개 유지.
+- **transition() 해제 훅 + CONFIRMED·UNRESOLVED는 해제하지 않음**: 스펙 그대로 — 승인.
+- **audit 실패 시 해제 중단**: 보수 방향 — 승인.
+- **영구 불일치 승격을 계좌 전역 QUANTITY_MISMATCH 행으로 영속(신규 cause 미추가)**: 승인 — 0.1 cause 집합 불변 유지가 우선, Restore가 임계값 복원으로 클린 패스 해제를 차단함을 확인.
+- **durability.go 비계약 편집 2건(예약 backfill·해제 훅) Pre-Edit 공개**: 승인 — 공개 계약 무변경, 무예약 시 no-op.
+- **2.5 [M] 수행**: indoubt.go·retry.go의 "no idempotency key" 서술을 정정(재생=정체 회수, replay.go 참조). P1 아카이브 스펙 정정은 델타(MODIFIED IN_DOUBT 해소·Retry Matrix)가 담당 — archive 시 반영 확인 예정.
+- **7.x 승계 확정 목록**: interlock의 누락 한도 3종+Limits.Validate() 전환(7.5), Orders 배선 확인(7.5), Tracker.Restore 기동 호출(7.3), reconcile_states 투영 재구성(7.3), PruneSpentNonces 기동 1회(7.2), HTTPReplay 헤더 배선(7.3 — attestation OFF라 dark), MaxWaits 수치는 [미측정 — 2b].
+- 확정 하한의 소비자 부재: 의도됨 — 자동 청산 경로는 엔진 루프 소유 change(2d)의 몫.

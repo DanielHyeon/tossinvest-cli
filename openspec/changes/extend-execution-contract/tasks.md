@@ -26,7 +26,7 @@
 - [x] 2.2 [T][High-risk] 응답 규칙(dispatch 분류기 사용 금지): 2xx+식별자→CONFIRMED / `409 request-in-progress`→대기·상한 미소비(openapi) / `422 idempotency-key-conflict`→FAILED 금지·UNRESOLVED+critical(openapi) / 유실→기록 후 조회 폴백. 각 분기 테스트
 - [x] 2.3 [T][High-risk] 복구 호출 그래프: 재시작 복구가 순서 소유 — 미종결 순회 → IN_DOUBT·적격 시 Gateway 재생 → 부적격·실패 시 조회 폴백. Resolver 무-writer 불변식 유지 확인
 - [x] 2.4 [T][High-risk] 조회 폴백 정정: **orderId dedup 후 유일성 판정**(PARTIAL_FILLED가 OPEN·CLOSED 양쪽 그룹 — openapi status param 인용), 관측 창 중 동일 심볼 mutation 개입 시 delta 교차확인 무효→자동 FAILED 금지·UNRESOLVED. 부분 체결+응답 유실 시나리오 테스트
-- [ ] 2.5 [M] 정정 확인: P1 아카이브 스펙 "멱등키 없음" 서술, `indoubt.go:9-12`·`retry.go:8-10,77`의 동일 근거 문구, Retry Matrix MODIFIED 반영
+- [x] 2.5 [M] 정정 확인: P1 아카이브 스펙 "멱등키 없음" 서술, `indoubt.go:9-12`·`retry.go:8-10,77`의 동일 근거 문구, Retry Matrix MODIFIED 반영
 
 ## 3. 진입 측 위험 예약
 

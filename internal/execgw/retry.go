@@ -5,9 +5,13 @@ package execgw
 // changed together — TestDefaultsMatchThePublishedMatrix fails if they drift.
 //
 // The single most important thing in this file is what it does NOT contain:
-// there is no entry point that retries a mutation. The official API has no
-// idempotency key, so a retried order is a duplicated order. Ambiguity about a
-// mutation is resolved by the IN_DOUBT procedure, never by trying again.
+// there is no entry point that retries a mutation. A blind retry — a new
+// request body, or a request outside the idempotency-key window — is a
+// duplicated order. The official API's clientOrderId key (openapi) makes a
+// same-key, same-body re-request an *identity recovery*, not a retry; that
+// lives in replay.go behind the IN_DOUBT procedure's guards, never here.
+// Ambiguity about a mutation is resolved by that procedure, not by trying
+// again.
 
 import (
 	"context"
@@ -75,7 +79,8 @@ func ClassifyQueryError(err error) ErrorClass {
 }
 
 // RetryPolicy is the query half of the matrix. Mutations have no policy because
-// they have no retries.
+// they have no retries (idempotent replay is identity recovery, not a retry —
+// see replay.go).
 type RetryPolicy struct {
 	// MaxAttempts counts the first call: 3 means one call and two retries.
 	MaxAttempts int

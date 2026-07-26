@@ -5,11 +5,16 @@ package execgw
 //
 // # The one rule everything else follows from
 //
-// Automatic re-submission is forbidden. Unconditionally. The official API has no
-// idempotency key, so "try again" and "place a second live order" are the same
-// action. This file therefore contains no mutator of any kind — the Resolver has
-// no trading service, no broker writer, no submit path — and the only outcomes it
-// can produce are: found it, proved it is not there, or could not tell.
+// Submitting again without knowing the identity of the first attempt is
+// forbidden. Unconditionally. The official API does document an idempotency key
+// (clientOrderId — same key + same body replays the original result, valid ~10
+// minutes; openapi OrderCreateRequest), and replay.go uses it for *identity
+// recovery* under strict, self-guarded conditions. But identity recovery is the
+// Gateway's job, not this file's: the Resolver still contains no mutator of any
+// kind — no trading service, no broker writer, no submit path — and the only
+// outcomes it can produce are: found it, proved it is not there, or could not
+// tell. (extend-execution-contract corrected the earlier "no idempotency key"
+// premise recorded here; see that change's review.md.)
 //
 // # Why absence is expensive to prove
 //
