@@ -1036,3 +1036,11 @@
   루프는 8.1/7.x"라고 적었다. 8.1이 공급한 것은 `trade_outcomes`와
   `AggregateTradeOutcomes(...).NetPnL`이다. 그것을 읽어 `AccountState`에 넣는 **호출자**는 여전히
   없다 — 발급자를 부르는 진입 루프(신호 계층, P3)의 몫이다.
+
+## Manager 판정 (4차 물결·완료 게이트, 2026-07-26)
+
+- H·I 판정 24건 전부 승인. 특히: 하회 판정을 새 기준선 기준으로(≥원본 발동), pending 억제의 하회 청산 비적용(§0.3)+CancelPendingFirst, 하회 청산 가격을 기준선→관측가로 정정(기준선 지정가는 시장가 위라 영구 미체결 — 실작동 버그), cancel→resolve→arm 재순서, ladder 첫 rung 전 보호, ErrExitApplierUnbound 가드(ProjectionBound 패턴 준수).
+- 의도적 미구현 5건 승인: SLO nil(detector 루프 부재 — "측정 아닌 주장" 거부 논리 타당), ExitObserver의 미검증 게이트 거부(D8·조항 6 정합 — 테스트로 고정), ladder policy_id 컬럼(v6 단일 규칙 — 탐지 가능 범위는 처리·2c/2d-후속 입력), 알림 config 블록(§0.5 audit 배관 범위 밖 — nil publisher 결과 기록), DailyRealizedLoss 공급자(진입 루프=P3 소관 — 자동 진입이 없는 동안 차단할 대상도 없음).
+- 9.1 diff 리뷰: upstream 무수정(2d 대상 파일 전부 TossOS 생성 확인), 조건주문·보호 발급 0줄(비테스트 grep 무적중), 신호 입력 0, [미검증]/[미측정] 태그 전수, 6.3 사전 열거 4건 준수. 체크박스 귀속 위반 2건(8cd2a98의 6.3, 이전 d30eaa8의 5.3 — 2a) 기록: 내용 정확·귀속 부정확, 프로세스 개선은 지시문 반영 완료.
+- 9.2 독립 재실행: `go test ./... -race -count=1` 0 FAIL (2358 tests, 45 pkgs), vet clean.
+- 9.3 property(3중 단조·96행 전이표 4중 증명)·crash(마이그레이션·apply·pending 양방향·e2e 중단)·race(발급·예약·모드)·pending 테스트 전수 확인. issues.md 전 항목 판정 완료.

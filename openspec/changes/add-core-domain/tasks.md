@@ -63,8 +63,8 @@
 
 ## 9. 완료 게이트 [M]
 
-- [ ] 9.1 diff 리뷰: upstream 무수정·조건주문/보호 0줄·신호 입력 0·태그 전수·6.3 사전 열거 준수
-- [ ] 9.2 `go test ./... -race -count=1` 독립 재실행 green (1785+ 회귀 없음)
-- [ ] 9.3 property·crash·race·pending 양방향 테스트 확인, `issues.md` 검토
+- [x] 9.1 diff 리뷰: upstream 무수정·조건주문/보호 0줄·신호 입력 0·태그 전수·6.3 사전 열거 준수
+- [x] 9.2 `go test ./... -race -count=1` 독립 재실행 green (1785+ 회귀 없음)
+- [x] 9.3 property·crash·race·pending 양방향 테스트 확인, `issues.md` 검토
 - 9.4 (게이트 명령 자체) `make gate CHANGE=add-core-domain` 통과 후 완료 선언
 - 9.5 (사용자 확인 후) archive — 게이트 ON은 2b attestation + 2c(ProtectionReady) 후에만
