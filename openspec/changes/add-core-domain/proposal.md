@@ -1,44 +1,40 @@
 # Change: add-core-domain
 
-> **[사용자 추가 요구 2026-07-26 — 재작성 시 반영]** StockOS 손익 극대화 exit 정책 이식: `internal/exitpolicy` 순수 판정 모듈 — (a) **baseline ratchet**(`exit/baseline_ratchet.py`: R 트리거 기준선 단계 상승 0.4R→스톱 −0.5R / 0.8R→본전 / 1.0R→부분익절 40% / 1.2R→+0.3R 잠금 / 2.0R→+0.8R 잠금, provenance 주석·보수 기본값), (b) **profit ladder**(`profit_ladder.py` multi-rung ratchet: 목표 도달→부분익절→보호선 승격→다음 rung, 판정 시점/체결 시점 필드 분리 보존, FillModel STOP_FIRST 보수 기본), (c) 본전은 비용 차감 실질 본전(`break_even_sell_price` — costs 모델 결합). 이식 테스트: test_baseline_ratchet·test_profit_ladder·test_exit_strategy(범위 내 액션만). **불변식: 기준선은 단조 상승만**(§0.9 정합). 제외: 신호 기반 트레일(EMA9/VWAP/CVD/trendline — P3 신호 계층), TIME_EXIT/EOD(P3 스케줄러), limit-up hold(P3). **액추에이션은 2c 소관**: 기준선 상승 = 브로커측 stop 교체(조건주문 modify=신규 ID — 2c 원자 교체 기계), 부분익절 = RISK_REDUCING 청산(Guardian 경유), 부분익절 후 잔량 보호 수량 조정 = 2c 수량 정합.
-
-> **[동결 — 재작성 대기]** 2026-07-26 2라운드 리뷰(25건, `review.md` 후반부)에서 착수 불가 판정. 이 스펙은 선행 계약(extend-execution-contract) 재작성 **이전** 기준으로 쓰여 있어 사실과 다르다: 2-클래스 어휘, 기각된 `min(로컬,계좌)` 상한, 빈 스냅샷 표지 등. 재작성은 2a 구현 완료 후 수행하며, 그때 반영할 확정 사항 — 구조적 RR·등급배수는 입력 생산자 부재로 P3 이관, HALT_ALL 어휘를 모드×클래스 표로, 비용 모델은 KIS 수치 이식 금지(2b 2.9 실측값), 최소 RR provenance 정정(1.5는 StockOS 최저값), journal 버전 단일화, 판정 체인과 예약 트랜잭션의 권위 관계 명시, flatten·발동 주문 방향 소유권은 2c와 협의.
+> 2026-07-26 2판(동결 해제). 1판 리뷰 2라운드(70건)의 판정과 사용자 추가 요구(손익 극대화 exit 정책)를 반영해 재작성. 판 이력은 `review.md`, 설계 정본은 `design.md` D1~D8. 선행 2a `extend-execution-contract`는 GATE PASS·archive 완료 — 이 change는 그 메인 스펙 위의 **판단 정책**이다.
 
 ## Why
 
-P1이 만든 주문 실행 계층(Gateway·journal·체결 감지·reconcile)은 GuardianDecision 없이는 주문을 낼 수 없다 — 그런데 Guardian은 아직 초안 인터페이스뿐이다. 실전 직행(U2) 체제에서 자동매매를 켜는 마지막 조각은 위험 엔진(한도·손절·사이징)과 포지션·보호주문 체계다. StockOS에서 검증된 거래 불변조건(Guardian 판정 순서, No Stop = No Trade, 위험 기반 수량, kill switch BLOCK-ONLY)을 Toss 코드베이스에 이식한다.
+2a까지의 상태: 결정 없이는 mutation이 불가능한 봉인된 엔진, 예약·RECONCILE·계산 계약, 멱등 재생 골격 — 그러나 **결정을 발급하는 Guardian이 없어 자동매매는 여전히 구조적으로 불가능하다.** 이 change가 판단 계층을 채운다: Guardian 판정 체인과 발급자, 운영 모드, 포지션 투영, 성과, 그리고 사용자가 요구한 **손익 극대화 exit 정책**(수익 진행에 따라 보호 기준선을 단조 상승시키는 baseline ratchet + profit ladder — StockOS 검증 로직 이식).
 
-이 change는 **판단 정책**을 다룬다. 그 판단을 강제하는 레일(조건주문의 Gateway 편입, 발동 주문 귀속, safety class, 한도 fail-closed, 위험 예약)은 선행 change `extend-execution-contract`가 만든다 — proposal-freeze 리뷰 45건(`review.md`)이 그 분리를 요구했다.
+1판이 착수 불가였던 이유를 2판이 해소한다: 신호 계층 입력을 요구해 ALLOW가 불가능했던 체인(구조적 RR·등급배수 → P3, 체인은 의도·스냅샷·journal 입력만), 2-클래스 어휘의 HALT_ALL(→ 모드×클래스 표), 달성 불가한 "같은 질의 투영" 주장(→ reconciliation 재배선을 MODIFIED로 정직하게 선언), KIS 수치가 실려 있던 비용 모델(→ 구조만 이식, 수치는 2b 실측), 기각된 단건 상한의 잔존(→ 2a 확정 하한 참조), StockOS 최저 티어 값이던 최소 RR 1.5(→ 잠금값 2.0).
 
 ## What Changes
 
-- `internal/costs`: KRW/USD 수수료·거래세 비용 모델 (StockOS 이식, provenance 주석, 보수 방향은 과대 추정)
-- `internal/risk`: Guardian 판정 체인(StockOS 순서 보존, 이식 범위 명시), 구조적 손절·위험 기반 수량·최소 RR, 일일 손실·총 개방 노출의 **계산 계약**(권위 데이터·통화 정규화·거래일 경계·stale 시 fail-closed)
-- GuardianDecision 발급자: 선행 change의 계약(주문 해시·RiskIntent 해시·한도 스냅샷·만료·nonce·예약)을 채우는 쪽. 위험 감소 의도는 빈 한도 스냅샷
-- kill switch(BLOCK-ONLY) + 운영 모드 축(NORMAL/ENTRY_BLOCKED/EXIT_ONLY/HALT_ALL) — journal 영속·audit·알림. **보수 방향 전환은 자동·즉시, 완화·해제만 사람 승인**
-- 자동화 게이트 활성화 배선: 선행 change가 강화한 인터록 전제조건을 실제로 충족시키는 엔진 측 Gateway 구성
-- `internal/position` + journal v6: 포지션 상태기계(완전한 전이표), 단일 권위, reconcile 조정 이벤트, aggregate 경계 문서, provenance lineage
-- 보호주문: 공식 조건주문(SINGLE/OCO) 네이티브 우선. 진입-보호 saga의 **완전한 상태 전이표**, 수량 정합(원자적 정정 우선), 재시작 복구, 폴백 조건
-- 성과 원시 지표: 비용 차감 실현손익·R 배수·보유 시간 (MFE/MAE는 데이터 소스 부재로 P3 이관 — `review.md` E1)
-- tracer slice: 종목 1개·limit·최소 수량 end-to-end 실행기 (httptest 검증, 실전 실행은 verify change 트랙)
+- `internal/costs`: 비용 모델 **구조** 이식(KIS 수치 미이식 — 2b 실측 전 과대 추정 placeholder), 실질 본전, 청산 게이트 적용 금지(§0.3)
+- `internal/risk`: Guardian 판정 체인(이식/제외/구조대체 열거·StockOS 매핑 표 산출물), No Stop=No Trade, 위험 기반 수량(배수 1.0 고정), 최소 RR 2.0(순수 산술), 심볼 allowlist(상품 분류 소스 부재의 구조 대체), 재진입 쿨다운. **체인은 사전 검사, 총계 권위는 2a 예약 트랜잭션**(RESERVATION_CONFLICT)
+- Guardian 발급자: 2a 결정 계약 구현(RiskIntent/ReductionIntent preimage·멱등키·만료 5s), `ExposureLimiter`로 인터록 단일 출처 충족
+- 운영 모드: **모드×클래스 표**(HALT_ALL=위험 감소 허용), 방향 비대칭 승인(보수 자동·완화 승인), 트리거 열거(분석 실패 비트리거), journal 영속
+- `internal/position`: 체결+조정 이벤트의 투영(인스턴스·시장 차원·decimal), 상태기계 전이표, reconciliation의 로컬 상태를 이 투영으로 **재배선**
+- `internal/exitpolicy` **(사용자 요구)**: baseline ratchet(R 트리거 0.4/0.8/1.0/1.2/2.0 — 기준선 단조 상승 불변식) + profit ladder(multi-rung, 판정/체결 필드 분리) + 실질 본전 결합. 발의는 ReductionIntent, 액추에이션·브로커측 보호는 2c
+- 성과 원시 지표(`trade_outcomes` — 실현손익·R·보유시간·도달 exit 단계) + 분석 격리(모드 비강화)
+- journal v6 단일 원자 마이그레이션(design D7 표), tracer slice 코드(실전 실행은 verify 트랙)
 
 ## Capabilities
 
 ### New Capabilities
 
-- `risk-management`: Guardian 판정 체인·한도 계산 계약·kill switch·운영 모드·게이트 활성화 배선
-- `position-ledger`: 포지션 상태기계·aggregate 경계·조정 이벤트·provenance·원장 스키마
-- `protection-execution`: 보호주문과 진입-보호 saga
-- `trade-analytics`: 비용 모델과 성과 원시 지표
+- `risk-management`: 판정 체인·발급자·모드×클래스 표·provenance 수치 규칙
+- `position-ledger`: 투영·상태기계·조정 이벤트·원자성·lineage·스키마 규칙
+- `exit-policy`: baseline ratchet·profit ladder·판정/액추에이션 경계
+- `trade-analytics`: 비용 모델(구조)·성과 원시 지표·분석 격리
 
 ### Modified Capabilities
 
-(없음 — 게이트 인터록과 실행 계약의 수정은 선행 change `extend-execution-contract`가 담당하고, 이 change는 그 계약을 구현한다)
+- `reconciliation`: 로컬 상태 출처를 Position 투영으로 재배선, 불일치 해제 규칙(조정 반영 후 재조회 일치=자동, 영구 승격=운영자)
 
 ## Impact
 
-- Affected code: 신규 `internal/{risk,position,protection,costs}`, journal 스키마 v6(additive), engine 프로필의 Gateway·Guardian 배선. upstream 무수정 목표
-- **선행 필수**: `extend-execution-contract` 완료. 이 change의 보호주문·게이트 태스크는 그 계약 없이는 안전하게 구현할 수 없다
-- 병행: `verify-execution-capability`가 조건주문 능력 attestation을 생성. tracer 실전 실행과 자동 진입은 그 attestation + 사용자 승인 이후
-- StockOS 이식 상수 규칙: 모든 수치에 출처·검증 상태 주석, Toss 검증 전 보수 기본값(운영 파라미터 미확정 시 small_live: 주문 100만 / 노출 1,000만 / 일손실 10만 KRW 또는 1%)
-- **TossOS는 long-only**: SELL은 보유수량 이하 reduce-only이며 short 노출은 구조적으로 금지한다
+- Affected code: 신규 `internal/{costs,risk,position,exitpolicy}`, journal v6(additive·단일 원자), `internal/reconcile/compare.go` 재배선, 엔진 Guardian 주입. **upstream 무수정 예정**(대상 파일 전부 TossOS 생성)
+- 선행 완료: 2a(결정 계약·예약·RECONCILE·인터록). 병행: 2b 측정. 후행: 2c(브로커측 보호·PROTECTION_WEAKENING 발급·발동 주문 방향)
+- **게이트 ON 금지 구간 명시**: 이 change 완료 후에도 브로커측 보호가 없으므로(2c 전) 로컬 기준선은 프로세스 사망 시 무력하다 — 자동 진입 게이트 ON은 2b attestation + 2c 완료 후에만. tracer 실전 실행도 동일 조건
+- StockOS 이식 상수 규칙: 출처·검증 상태 주석, 미확정 시 small_live 보수 기본값. TossOS는 long-only
