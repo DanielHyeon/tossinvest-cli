@@ -73,9 +73,26 @@ type verifyView struct {
 	// Resume reports that a verification is already on the record, so a run
 	// started now continues it rather than beginning one.
 	Resume bool
+	// Redo are the steps whose newest verdict is fail or skipped: the ones a
+	// re-measurement could still change. It is verifylive.RedoSet's answer, read
+	// from the record on every request rather than remembered, because the record
+	// is what the runner will act on.
+	Redo []verifylive.StepID
 	// AwaitingRestart names the step that is waiting for a new process.
 	AwaitingRestart verifylive.StepID
 	Outstanding     []verifylive.Artifact
+}
+
+// RedoCount is what the start screen prints before anything is sent.
+func (v verifyView) RedoCount() int { return len(v.Redo) }
+
+// RedoList is the set as one readable line.
+func (v verifyView) RedoList() string {
+	parts := make([]string, 0, len(v.Redo))
+	for _, id := range v.Redo {
+		parts = append(parts, string(id))
+	}
+	return strings.Join(parts, ", ")
 }
 
 // snapshot is the whole dashboard.
@@ -84,6 +101,9 @@ type snapshot struct {
 	Soak        soakView
 	Attestation attestView
 	Verify      verifyView
+	// Session is the KR market-hours reading. It is advisory: nothing on this
+	// console consults it before starting anything.
+	Session verifylive.SessionAdvisory
 }
 
 func (c *Console) snapshot() snapshot {
@@ -93,6 +113,7 @@ func (c *Console) snapshot() snapshot {
 		Soak:        c.readSoak(now),
 		Attestation: c.readAttestation(now),
 		Verify:      c.readVerify(),
+		Session:     verifylive.KRSessionAdvisory(now),
 	}
 }
 
@@ -177,6 +198,7 @@ func (c *Console) readVerify() verifyView {
 	progress := verifylive.BuildProgress(v.Record, entries)
 	v.Present = verifylive.StepCount(entries) > 0
 	v.Resume = v.Present
+	v.Redo = verifylive.RedoSet(entries)
 	v.AccountRef = progress.AccountRef
 	v.Steps = progress.Steps
 	v.Pending = progress.Pending
@@ -188,6 +210,21 @@ func (c *Console) readVerify() verifyView {
 		}
 	}
 	return v
+}
+
+// redoSet re-reads the record and returns the steps a re-measurement may touch.
+//
+// It is read here, from the file, and never taken from the request. A step list
+// that arrived in a form field would let anything that can reach this socket name
+// a step to re-run — including one that already passed, which is the single thing
+// the redo path must not do. The form says "redo" and nothing else; what that
+// means is decided by verifylive.RedoSet against the evidence on disk.
+func (c *Console) redoSet() ([]verifylive.StepID, error) {
+	entries, err := verifylive.LoadEntries(c.opts.VerifyRecord)
+	if err != nil {
+		return nil, err
+	}
+	return verifylive.RedoSet(entries), nil
 }
 
 // report renders the verify report the report page and its JSON download share.

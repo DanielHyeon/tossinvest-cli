@@ -25,7 +25,15 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
-var pages = template.Must(template.New("console").Parse(pageTemplates))
+// pageFuncs are the only two things the templates can compute that Go does not
+// hand them ready-made. redoable is verifylive's own answer, not a second
+// definition of it: the table that marks a row "재측정 대상" has to agree with the
+// set the button actually starts.
+var pageFuncs = template.FuncMap{
+	"redoable": verifylive.RedoableVerdict,
+}
+
+var pages = template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates))
 
 // --- dashboard --------------------------------------------------------------
 
@@ -100,10 +108,36 @@ func (c *Console) renderVerify(w http.ResponseWriter, notice string) {
 	c.render(w, "verify", page)
 }
 
+// startModeRedo is the form value that asks for a re-measurement.
+//
+// It is a mode on the existing start route rather than a route of its own,
+// because "start a verification" is one act and one CSRF-gated door; a second
+// door would be a second place the gates have to be got right.
+const startModeRedo = "redo"
+
 // handleStart begins a verification. It sends nothing: the runner's first act is
 // to ask for the approval this console cannot supply on anybody's behalf.
+//
+// The redo mode changes exactly one thing — which steps the runner is willing to
+// walk again — and the set comes from the record, not from the form. The plan is
+// rebuilt from scratch and a new nonce has to be typed either way, so there is no
+// path here that re-measures anything without a person approving that list.
 func (c *Console) handleStart(w http.ResponseWriter, r *http.Request) {
-	if _, err := c.startRun(); err != nil {
+	var redo []verifylive.StepID
+	if r.PostFormValue("mode") == startModeRedo {
+		set, err := c.redoSet()
+		if err != nil {
+			c.redirectVerify(w, r, "기록을 읽을 수 없다: "+err.Error()+" 아무것도 전송되지 않았다.")
+			return
+		}
+		if len(set) == 0 {
+			c.redirectVerify(w, r, "재측정할 단계가 없다 — fail·skipped 판정이 남아 있지 않다. "+
+				"아무것도 전송되지 않았다.")
+			return
+		}
+		redo = set
+	}
+	if _, err := c.startRun(redo); err != nil {
 		c.redirectVerify(w, r, err.Error())
 		return
 	}

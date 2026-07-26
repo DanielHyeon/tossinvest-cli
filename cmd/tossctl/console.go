@@ -154,11 +154,17 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 // to forget, and the runner already refuses to re-measure a settled step (it skips
 // it, and the plan excludes it with the reason on the page), so continuing the
 // record is both the safe default and the only sensible one.
+//
+// redo is `verify run --redo`'s field reached from a button instead of a flag
+// (task 1.7). The console computes the set from the evidence record — never from
+// the request — and it changes only which steps the runner will walk: the plan is
+// rebuilt and a new expiring string still has to be typed before anything is sent.
 func consoleVerifyStarter(root *rootOptions, recordPath string) console.StartVerify {
 	return func(
 		ctx context.Context,
 		confirm verifylive.BatchConfirmer,
 		out io.Writer,
+		redo []verifylive.StepID,
 	) (verifylive.Summary, []verifylive.Entry, error) {
 		var empty verifylive.Summary
 
@@ -189,6 +195,7 @@ func consoleVerifyStarter(root *rootOptions, recordPath string) console.StartVer
 			Offset:          verifylive.DefaultOffset,
 			MaxSellQuantity: verifylive.DefaultMaxSellQuantity,
 			TTLWait:         verifylive.DefaultTTLWait,
+			Redo:            redo,
 			Prior:           prior,
 		})
 		if err != nil {
@@ -196,6 +203,9 @@ func consoleVerifyStarter(root *rootOptions, recordPath string) console.StartVer
 		}
 
 		fmt.Fprintf(out, "evidence record  %s\n", recordPath)
+		releaseLock := holdVerifyRunLock(ctx, out, recordPath)
+		defer releaseLock()
+
 		summary, runErr := runner.Run(ctx)
 		if runErr != nil && (errors.Is(runErr, context.Canceled) || errors.Is(runErr, context.DeadlineExceeded)) {
 			// Ctrl-C on the console. Everything recorded stands, and the summary

@@ -78,6 +78,24 @@ form { display: inline; }
 </main></body></html>
 {{end}}
 
+{{/*
+  "hours" is the market-hours advisory (task 1.7 ②). It warns and it never
+  blocks: the only thing measured is that a live order sent on a closed day comes
+  back 422 order-hours-closed, and the window in which the broker DOES accept one
+  is unmeasured. A tool that refused to start outside a hard-wired calendar would
+  be asserting the half nobody has observed.
+*/}}
+{{define "hours"}}
+{{if .Outside}}
+<p class="notice"><strong>지금은 KR 정규장({{"09:00"}}–{{"15:30"}} KST, 평일) 밖이다 — {{.Label}}.</strong>
+{{.Detail}} 시작을 막지는 않는다: 주문 접수 창의 실제 경계는 미측정이고, 휴장 달력을 도구에
+박아 넣지 않는다.</p>
+{{else}}
+<p class="muted">지금은 KR 정규장 시간이다({{.At.Format "2006-01-02 15:04"}} KST). 거래소 휴장일은
+확인하지 않는다 — 그 달력은 미측정이다.</p>
+{{end}}
+{{end}}
+
 {{define "refuse"}}<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><title>거부됨 — tossctl console</title>
 <style>{{template "style"}}</style></head><body><main>
@@ -183,6 +201,10 @@ form { display: inline; }
 {{if .Run}}{{with .Run}}
 <section>
   <h2>실행 {{.ID}} <span class="muted">시작 {{.StartedAt.Format "15:04:05Z"}}</span></h2>
+  {{if .Remeasuring}}
+  <p class="notice"><strong>재측정 {{len .Redo}}단계</strong> — {{.RedoList}}. 판정이 pass인 단계는
+  건드리지 않는다. 아래 목록을 승인해야만 요청이 나간다.</p>
+  {{end}}
 
   {{if .Awaiting}}
   <p class="danger"><strong>여기서부터 실제 계좌에 요청이 나간다.</strong> 아래 목록이 이 실행이 보낼 수 있는
@@ -237,6 +259,8 @@ form { display: inline; }
 </section>
 {{end}}{{else}}
 
+{{template "hours" .Snap.Session}}
+
 <section>
   {{if .Resuming}}
   <p class="notice">이 기록에는 이미 검증이 있다. 시작하면 <strong>이어서</strong> 진행한다 —
@@ -249,9 +273,35 @@ form { display: inline; }
   그 문자열을 직접 입력하기 전에는 아무것도 전송되지 않는다.</p>
   <form method="post" action="/verify/start">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <input type="hidden" name="mode" value="resume">
     <button type="submit" {{if .Spent}}disabled{{end}}>{{if .Resuming}}이어하기{{else}}검증 시작{{end}}</button>
   </form>
 </section>
+
+{{with .Snap.Verify}}
+{{if .Redo}}
+<section>
+  <h2>재측정</h2>
+  <p>마지막 판정이 <code>fail</code> 또는 <code>skipped</code>인 단계는 <strong>{{.RedoCount}}개</strong>다.
+  이어하기는 이 단계들을 건너뛴다(판정이 이미 terminal이므로). 재측정은 이 단계들만 다시 시도한다.</p>
+  <table>
+    <tr><th>단계</th><th>마지막 판정</th><th>사유</th></tr>
+    {{$redo := .Redo}}
+    {{range .Steps}}{{if redoable .Verdict}}<tr><td>{{.Step}}</td><td>{{.Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
+  </table>
+  <p class="muted">대상: {{.RedoList}}</p>
+  <p class="notice"><code>pass</code>·<code>deferred</code> 단계는 대상이 아니다 — 이미 측정된 속성을 위해
+  실주문을 다시 내지 않는다. 대상 목록은 폼이 아니라 <strong>증거 기록</strong>에서 계산한다.
+  재측정도 계획을 처음부터 다시 만들고 <strong>새 확인 문자열</strong>을 타이핑해야 요청이 나간다.
+  설계상 생략되는 단계(보유 0, <code>--include-ttl-edge</code> 옵트인)는 preflight가 다시 걸러 무해하다.</p>
+  <form method="post" action="/verify/start">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <input type="hidden" name="mode" value="redo">
+    <button type="submit" {{if $.Spent}}disabled{{end}}>재측정 {{.RedoCount}}단계</button>
+  </form>
+</section>
+{{end}}
+{{end}}
 
 <section>
   <h2>단계 목록</h2>

@@ -60,6 +60,10 @@ type runState struct {
 	cancelFn  context.CancelFunc
 	done      chan struct{}
 	now       func() time.Time
+	// redo is the re-measurement set this run was started with, empty for an
+	// ordinary run. It is kept so the progress page can say which mode it is in
+	// after the start screen is gone.
+	redo []verifylive.StepID
 
 	mu sync.Mutex
 	// pending is the plan waiting for an answer, nil when nothing is.
@@ -99,6 +103,20 @@ type runView struct {
 	Err        string
 	Done       bool
 	Steps      int
+	// Redo names the steps this run was started to re-measure, empty otherwise.
+	Redo []verifylive.StepID
+}
+
+// Remeasuring reports the re-measurement mode, for the page.
+func (v runView) Remeasuring() bool { return len(v.Redo) > 0 }
+
+// RedoList is the set as one readable line.
+func (v runView) RedoList() string {
+	parts := make([]string, 0, len(v.Redo))
+	for _, id := range v.Redo {
+		parts = append(parts, string(id))
+	}
+	return strings.Join(parts, ", ")
 }
 
 // Active reports a run that is neither finished nor waiting for a person.
@@ -130,6 +148,7 @@ func (r *runState) snapshot() runView {
 		Summary:    r.summary,
 		Done:       r.finishedFlag,
 		Steps:      r.steps,
+		Redo:       append([]verifylive.StepID(nil), r.redo...),
 	}
 	if r.partial != "" {
 		v.Lines = append(v.Lines, r.partial)
@@ -269,7 +288,12 @@ func (c *Console) currentRun() *runState {
 }
 
 // startRun begins one verification.
-func (c *Console) startRun() (*runState, error) {
+//
+// redo is empty for an ordinary run and otherwise carries the re-measurement set
+// the caller read off the record. It reaches the runner as verifylive's Redo and
+// nothing more: the approval, the plan and every rail behind them are the same
+// ones an ordinary run goes through.
+func (c *Console) startRun(redo []verifylive.StepID) (*runState, error) {
 	c.mu.Lock()
 	if c.spent {
 		c.mu.Unlock()
@@ -288,6 +312,7 @@ func (c *Console) startRun() (*runState, error) {
 		cancelFn:  cancel,
 		done:      make(chan struct{}),
 		now:       c.now,
+		redo:      append([]verifylive.StepID(nil), redo...),
 	}
 	c.run = run
 	c.mu.Unlock()
@@ -301,7 +326,7 @@ func (c *Console) drive(ctx context.Context, run *runState) {
 	defer close(run.done)
 	defer run.cancel()
 
-	summary, entries, err := c.opts.StartVerify(ctx, run.confirmer(ctx), run)
+	summary, entries, err := c.opts.StartVerify(ctx, run.confirmer(ctx), run, run.redo)
 	steps := verifylive.StepCount(entries)
 	run.finish(summary, err, steps)
 

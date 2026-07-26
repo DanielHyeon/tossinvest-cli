@@ -193,6 +193,58 @@ func TestTheNonceIsJudgedByVerifylive(t *testing.T) {
 	}
 }
 
+// TestTheRedoSetIsReadFromTheRecordAndNeverFromTheRequest.
+//
+// The re-measurement is the one place this console decides which live requests a
+// run may make (task 1.7). That decision is verifylive.RedoSet's, taken against
+// the evidence file; a step id that could arrive in a form field would be a way to
+// aim a second live order at a step that already passed.
+//
+// The runtime half is TestTheRedoSetComesFromTheRecordAndNotFromTheForm. This is
+// the half that survives somebody adding a "convenient" parameter later.
+func TestTheRedoSetIsReadFromTheRecordAndNeverFromTheRequest(t *testing.T) {
+	code := strings.Join(nonCommentLines(packageFiles(t)["pages.go"]), "\n")
+	if !strings.Contains(code, "c.redoSet()") {
+		t.Error("handleStart no longer asks the record which steps may be re-measured")
+	}
+	for _, banned := range []string{
+		"verifylive.StepID(", // a string from anywhere becoming a step id
+		"r.PostForm[", "r.Form[", "r.URL.Query().Get(\"step",
+	} {
+		if strings.Contains(code, banned) {
+			t.Errorf("pages.go contains %q; the redo set comes from the evidence record, not the request", banned)
+		}
+	}
+
+	data := strings.Join(nonCommentLines(packageFiles(t)["data.go"]), "\n")
+	if !strings.Contains(data, "verifylive.RedoSet(") {
+		t.Error("data.go no longer uses verifylive.RedoSet; the console must not define its own redo rule")
+	}
+}
+
+// TestTheMarketHoursAdvisoryCannotBlockAnything.
+//
+// tasks.md 1.7 ②: "advisory만, 하드 차단 금지 — 주문 접수 창은 [미측정]". The
+// advisory is rendered and never consulted, so no handler may branch on it.
+func TestTheMarketHoursAdvisoryCannotBlockAnything(t *testing.T) {
+	// data.go reads the clock into the snapshot; templates.go is the markup that
+	// renders it. Everywhere else, a mention would be a branch.
+	rendering := map[string]bool{"data.go": true, "templates.go": true}
+	for name, src := range packageFiles(t) {
+		if rendering[name] {
+			continue
+		}
+		code := strings.Join(nonCommentLines(src), "\n")
+		for _, banned := range []string{"KRSessionAdvisory(", ".Outside"} {
+			if strings.Contains(code, banned) {
+				t.Errorf("%s reads the market-hours advisory in Go (%q). It is rendered by the template and "+
+					"consulted by nothing: the window in which the broker accepts an order is unmeasured, so a "+
+					"refusal here would assert something nobody has observed", name, banned)
+			}
+		}
+	}
+}
+
 // TestTheAddressIsSpelledOnceAndItIsLoopback.
 func TestTheAddressIsSpelledOnceAndItIsLoopback(t *testing.T) {
 	for name, src := range packageFiles(t) {

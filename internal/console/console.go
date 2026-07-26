@@ -96,12 +96,19 @@ var (
 // default. confirm is the console's web batch confirmer, which is what makes the
 // approval a person's; out receives the runner's operator progress verbatim.
 //
+// redo is the re-measurement set (task 1.7): the steps whose terminal verdict the
+// operator asked to attempt again. It is empty for an ordinary run. It changes
+// which steps the runner walks and nothing else — the plan is still rebuilt from
+// scratch and the batch approval is still asked for with a new nonce, so a redo
+// cannot send anything a fresh run could not.
+//
 // The console never sees credentials, a broker or a record path through it: the
 // three things it would need to send a request of its own.
 type StartVerify func(
 	ctx context.Context,
 	confirm verifylive.BatchConfirmer,
 	out io.Writer,
+	redo []verifylive.StepID,
 ) (verifylive.Summary, []verifylive.Entry, error)
 
 // Options configures a console.

@@ -235,6 +235,17 @@ func runSoakRun(cmd *cobra.Command, root *rootOptions, opts *soakOptions) error 
 	}
 	defer recorder.Close()
 
+	// The soak and the live verification share one account, one credential and one
+	// rate limit; on 2026-07-26 they overlapped and the verification lost three
+	// steps to a 429 (measurements.md M4). The survey yields — see
+	// internal/runlock. Resolved from the verify record's location so an isolated
+	// --config-dir profile gets its own marker.
+	verifyRecord, err := resolveVerifyRecord(root, "")
+	if err != nil {
+		return err
+	}
+	lockPath := verifyRunLockPath(verifyRecord)
+
 	out := cmd.OutOrStdout()
 	runner, err := soak.New(soak.Options{
 		Reads:         wiring.reads,
@@ -246,6 +257,7 @@ func runSoakRun(cmd *cobra.Command, root *rootOptions, opts *soakOptions) error 
 		MaxOrderPages: opts.maxOrderPages,
 		Classify:      classifySoakError,
 		TokenExpiry:   wiring.tokenExpiry,
+		PauseWhile:    verifyRunLockPause(lockPath),
 		Progress:      out,
 	})
 	if err != nil {
@@ -255,7 +267,8 @@ func runSoakRun(cmd *cobra.Command, root *rootOptions, opts *soakOptions) error 
 	fmt.Fprintf(out, "capability soak — record %s\n", recordPath)
 	fmt.Fprintf(out, "  interval %s, %s, symbols %s\n",
 		opts.interval, cycleBudget(opts.cycles), strings.Join(opts.symbols, ","))
-	fmt.Fprintf(out, "  read-only: no order is placed, amended or cancelled by this command\n\n")
+	fmt.Fprintf(out, "  read-only: no order is placed, amended or cancelled by this command\n")
+	fmt.Fprintf(out, "  pauses while a live verification holds %s\n\n", lockPath)
 
 	if err := runner.Run(ctx); err != nil {
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {

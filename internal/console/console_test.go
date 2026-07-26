@@ -49,6 +49,7 @@ func realStarter(broker *fakeBroker, recordPath string) StartVerify {
 		ctx context.Context,
 		confirm verifylive.BatchConfirmer,
 		out io.Writer,
+		redo []verifylive.StepID,
 	) (verifylive.Summary, []verifylive.Entry, error) {
 		var empty verifylive.Summary
 		prior, err := verifylive.LoadEntries(recordPath)
@@ -71,6 +72,7 @@ func realStarter(broker *fakeBroker, recordPath string) StartVerify {
 			Symbol:          "005930",
 			Offset:          verifylive.DefaultOffset,
 			MaxSellQuantity: verifylive.DefaultMaxSellQuantity,
+			Redo:            redo,
 			Prior:           prior,
 		})
 		if err != nil {

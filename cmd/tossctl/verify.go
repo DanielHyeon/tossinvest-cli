@@ -51,6 +51,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -61,6 +62,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/tui"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/spf13/cobra"
@@ -319,6 +321,9 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	}
 
 	fmt.Fprintf(out, "evidence record  %s\n", recordPath)
+	releaseLock := holdVerifyRunLock(ctx, out, recordPath)
+	defer releaseLock()
+
 	summary, runErr := runner.Run(ctx)
 	writeVerifySummary(out, recordPath, summary)
 
@@ -485,6 +490,53 @@ func resolveVerifyRecord(root *rootOptions, override string) (string, error) {
 		return "", fmt.Errorf("verify: resolving the record location: %w", err)
 	}
 	return filepath.Join(dir, verifylive.FileName), nil
+}
+
+// --- the soak/verify rate-budget marker -------------------------------------------
+
+// verifyRunLockPath is where the advisory marker lives: beside the evidence
+// record, so an isolated --config-dir profile gets its own and the default one
+// sits in the data directory with everything else this change writes.
+func verifyRunLockPath(recordPath string) string {
+	return filepath.Join(filepath.Dir(recordPath), runlock.FileName)
+}
+
+// holdVerifyRunLock marks the account as busy for the duration of a verification.
+//
+// It is advisory in both directions and the return type says so: the release is
+// always callable, and a failure to take the marker is a line of output rather
+// than a reason to refuse. A verification that a person is standing over must not
+// be stopped by a lock file — see internal/runlock's package comment.
+func holdVerifyRunLock(ctx context.Context, out io.Writer, recordPath string) func() {
+	path := verifyRunLockPath(recordPath)
+	release, err := runlock.Hold(ctx, path)
+	if err != nil {
+		fmt.Fprintf(out, "note: the soak pause marker could not be written (%v). "+
+			"A soak running against this account will keep going and may spend the rate budget "+
+			"this run needs.\n", err)
+		return release
+	}
+	fmt.Fprintf(out, "soak pause       %s (advisory; `tossctl soak run` delays its cycle while this run "+
+		"is live)\n", path)
+	return release
+}
+
+// verifyRunLockPause is the reader half, handed to the soak.
+//
+// It answers a question and never blocks: whether a live verification touched the
+// marker inside runlock.StaleAfter. A crashed verification therefore costs one
+// paused cycle rather than a wedged survey.
+func verifyRunLockPause(lockPath string) func() (bool, string) {
+	return func() (bool, string) {
+		fresh, at := runlock.Fresh(lockPath, time.Now(), runlock.StaleAfter)
+		if !fresh {
+			return false, ""
+		}
+		return true, fmt.Sprintf(
+			"a live verification is running (%s, touched %s). Yielding the rate budget: a step lost to a "+
+				"429 costs a real order and a person's attention, and this cycle does not",
+			lockPath, at.UTC().Format(time.RFC3339))
+	}
 }
 
 // --- the broker adapter ---------------------------------------------------------

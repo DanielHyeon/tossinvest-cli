@@ -196,6 +196,21 @@ type Options struct {
 	// treats as "unproven" rather than "fine".
 	TokenExpiry func() (time.Time, bool)
 
+	// PauseWhile reports that something else needs this account's rate budget,
+	// and why. It is consulted before every cycle; while it says yes the cycle is
+	// delayed rather than run.
+	//
+	// The one caller that sets it is cmd/tossctl, and the one thing it reports on
+	// is a live verification in progress (internal/runlock). The survey yields
+	// because the two are not worth the same: a soak cycle missed is a cycle, and
+	// a verification step lost to a 429 is a live order that has to be placed
+	// again with a person watching (measurements.md M4).
+	//
+	// It is a function rather than a path so this package keeps reaching for
+	// nothing but its own record, and so a test can drive the pause without a
+	// filesystem. Nil never pauses.
+	PauseWhile func() (paused bool, reason string)
+
 	// Progress receives a human-readable line per cycle. Nil is silent.
 	Progress io.Writer
 }
@@ -240,6 +255,9 @@ func New(opts Options) (*Runner, error) {
 // normal way to end it.
 func (r *Runner) Run(ctx context.Context) error {
 	for i := 0; r.opts.Cycles == 0 || i < r.opts.Cycles; i++ {
+		if err := r.awaitBudget(ctx); err != nil {
+			return err
+		}
 		cycle, err := r.RunCycle(ctx)
 		if err != nil {
 			return err
@@ -267,6 +285,56 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// PausePoll is how often a paused survey asks again.
+//
+// Half a minute: short enough that the soak resumes promptly once the
+// verification finishes, long enough that a paused survey is not a spin loop with
+// a timer on it.
+const PausePoll = 30 * time.Second
+
+// awaitBudget delays a cycle while something else needs the rate budget.
+//
+// It logs the pause and the resumption once each rather than per poll, because a
+// soak runs for days into a file somebody reads later and a wall of identical
+// lines is the same as no line at all.
+func (r *Runner) awaitBudget(ctx context.Context) error {
+	if r.opts.PauseWhile == nil {
+		return ctx.Err()
+	}
+	announced := false
+	for {
+		paused, reason := r.opts.PauseWhile()
+		if !paused {
+			if announced {
+				r.writeLine("resuming — %s", orUnstated(reason, "the pause has cleared"))
+			}
+			return ctx.Err()
+		}
+		if !announced {
+			r.writeLine("paused — %s", orUnstated(reason, "something else needs this account's rate budget"))
+			announced = true
+		}
+		if err := r.opts.Clock.Sleep(ctx, PausePoll); err != nil {
+			return err
+		}
+	}
+}
+
+func (r *Runner) writeLine(format string, a ...any) {
+	if r.opts.Progress == nil {
+		return
+	}
+	fmt.Fprintf(r.opts.Progress, "%s  %s\n",
+		r.opts.Clock.Now().UTC().Format(time.RFC3339), fmt.Sprintf(format, a...))
+}
+
+func orUnstated(s, fallback string) string {
+	if strings.TrimSpace(s) == "" {
+		return fallback
+	}
+	return s
 }
 
 // RunCycle performs one pass over every surveyed endpoint.
