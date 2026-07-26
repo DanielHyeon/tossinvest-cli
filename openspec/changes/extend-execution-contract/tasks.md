@@ -32,7 +32,7 @@
 
 - [x] 3.1 [T][High-risk] 예약 트랜잭션: 스냅샷 밖 수집→안 as-of·staleness 검증→삽입, journal 메서드 재진입 금지·락 순서 문서화, 재수집 상한 3회·데드라인·초과 fail-closed. decimal 산술(소수점 케이스)
 - [x] 3.2 [T][High-risk] 해제: 파생된 종결 상태(5.1 재작성이 **선행 의존**)와 같은 트랜잭션 원자 해제 / nonce 미소비 만료 / 운영자 해제 경로(UNKNOWN·UNRESOLVED의 유일 출구 — 근거·audit) / 거래일 소멸. "만료 추정 해제 금지" 테스트(CLOSED+fill0+무취소=UNKNOWN 유지 시 예약 보존+운영자 알림)
-- [ ] 3.3 [T] 재시작 고아 예약 회수 + as-of 조건이 실제 재검증을 유발하는 동시성 테스트(`SetMaxOpenConns(1)` 하에서 `-race`만으로는 불충분 — 스냅샷 버전 어긋남 주입)
+- [x] 3.3 [T] 재시작 고아 예약 회수 + as-of 조건이 실제 재검증을 유발하는 동시성 테스트(`SetMaxOpenConns(1)` 하에서 `-race`만으로는 불충분 — 스냅샷 버전 어긋남 주입)
 
 ## 4. RECONCILE 상태
 

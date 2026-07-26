@@ -441,6 +441,107 @@ func tradingDayForPreimage(kind, preimage string, now time.Time) (string, error)
 	return parsedMarket.TradingDay(now)
 }
 
+// --- the startup sweep (task 3.3) -------------------------------------------
+
+// SweepReservations recovers orphaned holds and applies the time-driven exits,
+// across every account. It is what a restart runs once, before the engine takes
+// any decision.
+//
+// Three things happen, and the split between them is the whole point:
+//
+//   - a hold whose attempt or order already reached a releasing terminal state
+//     is released. Going forward that cannot happen — the release rides in the
+//     same transaction as the record — but a row written by an older build, or
+//     a database restored from the pre-migration backup, can be in that state,
+//     and a hold nothing will ever release shrinks the account's limits forever.
+//   - an expired decision whose nonce was never spent is released, and a
+//     daily-loss hold from a previous trading day lapses.
+//   - everything else is *preserved* and reported. An UNRESOLVED_IN_DOUBT
+//     attempt, an order whose last observation failed closed, an expiry whose
+//     nonce was spent: in each of those the order may exist, so the hold is
+//     correct and only an operator may remove it.
+//
+// It is idempotent: running it twice releases nothing the second time.
+func (j *Journal) SweepReservations(ctx context.Context) (ReservationSweep, error) {
+	now := j.clk.Now().UTC()
+
+	tx, err := j.db.BeginTx(ctx, nil)
+	if err != nil {
+		return ReservationSweep{}, fmt.Errorf("journal: starting the reservation sweep: %w", err)
+	}
+	defer tx.Rollback()
+
+	sweep, err := sweepLapsedReservations(ctx, tx, "", now)
+	if err != nil {
+		return ReservationSweep{}, err
+	}
+	orphans, err := sweepOrphanedTerminals(ctx, tx, formatJournalTime(now))
+	if err != nil {
+		return ReservationSweep{}, err
+	}
+	sweep.Released = append(sweep.Released, orphans...)
+
+	if err := tx.Commit(); err != nil {
+		return ReservationSweep{}, fmt.Errorf("journal: committing the reservation sweep: %w", err)
+	}
+
+	// The operator-facing half is read after the commit, so it reports what is
+	// still held *after* the sweep rather than what was held before it.
+	awaiting, err := j.ReservationsAwaitingOperator(ctx)
+	if err != nil {
+		return ReservationSweep{}, err
+	}
+	sweep.Preserved = mergeAlerts(sweep.Preserved, awaiting)
+	return sweep, nil
+}
+
+// sweepOrphanedTerminals releases holds whose attempt or order is already over.
+//
+// "Already over" is read from the same two sources the live path uses and from
+// nothing else: an attempt state that releases (NOT_DISPATCHED,
+// FAILED_CONFIRMED), or a fill snapshot the caller derived as terminal without
+// failing closed. A snapshot that failed closed is not terminal, which is what
+// keeps the assumed-expiry case out of this sweep as well.
+func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]ReservationRelease, error) {
+	byAttemptState, err := releaseWhere(ctx, tx, ReleaseReasonBrokerTerminal,
+		"recovered at startup: the attempt was already in a terminal state that releases", nowText,
+		`state = ? AND attempt_id IN (SELECT id FROM mutation_attempts WHERE state IN (?,?))`,
+		ReservationHeld, string(StateNotDispatched), string(StateFailedConfirmed))
+	if err != nil {
+		return nil, err
+	}
+
+	byOrderState, err := releaseWhere(ctx, tx, ReleaseReasonBrokerTerminal,
+		"recovered at startup: the order was already observed in a derived terminal state", nowText,
+		`state = ? AND attempt_id IN (
+		   SELECT a.id FROM mutation_attempts a
+		   JOIN fill_snapshots f ON f.order_id = a.broker_order_id
+		   WHERE f.terminal = 1 AND f.fail_closed = 0)`,
+		ReservationHeld)
+	if err != nil {
+		return nil, err
+	}
+	return append(byAttemptState, byOrderState...), nil
+}
+
+// mergeAlerts appends the alerts that are not already reported, keyed by
+// reservation id. A hold can qualify twice (an expiry whose nonce was spent on
+// an attempt that is also unresolved) and an operator should see it once.
+func mergeAlerts(existing, extra []ReservationAlert) []ReservationAlert {
+	seen := make(map[string]bool, len(existing))
+	for _, a := range existing {
+		seen[a.Reservation.ID] = true
+	}
+	for _, a := range extra {
+		if seen[a.Reservation.ID] {
+			continue
+		}
+		seen[a.Reservation.ID] = true
+		existing = append(existing, a)
+	}
+	return existing
+}
+
 // --- (c) the operator's exit -------------------------------------------------
 
 // OperatorReleaseRequest is a human releasing a hold by hand.

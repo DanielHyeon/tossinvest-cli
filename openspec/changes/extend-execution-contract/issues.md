@@ -423,6 +423,31 @@
 - 참고: 같은 헤더의 "the Resolver has no trading service, no broker writer, no submit path"는
   **여전히 참이다**(재생 문은 Gateway에 있다). 무효가 된 것은 멱등키 문장 하나다.
 
+## 2026-07-26 [observation] 기동 스윕의 "고아"는 앞으로 생길 수 없는 상태다 — 그래도 남겼다 (task 3.3)
+
+- 사실: 3.2가 해제를 종결 기록과 같은 트랜잭션에 넣었으므로, "attempt는 종결인데 홀드는 HELD"는
+  **이 빌드가 만들 수 없는 상태**다. 그런데도 `SweepReservations`가 그 케이스를 회수한다.
+- 근거: (1) v5 이전 빌드가 남긴 행, (2) 마이그레이션 실패 후 백업 복원본, (3) 사람이 SQL로 손댄
+  DB. 셋 다 실재 가능하고, 회수되지 않는 홀드는 계좌 한도를 **영구히** 좁힌다(만료도 거래일도
+  걸리지 않는다 — OPEN_EXPOSURE는 날짜 속성이 없다).
+- 테스트는 그 상태를 SQL로 직접 만든다(`TestStartupSweepRecoversAnOrphanedTerminalHold`) —
+  `Settle`을 통과시키면 live 경로가 해제해 버려 스윕을 검증할 수 없다.
+- fail-closed 관측은 스윕에서도 제외된다(`f.fail_closed = 0` 조건): 만료 추정 해제 금지가 기동
+  경로에도 적용된다는 뜻이다(`TestOrphanSweepDoesNotReleaseAFailClosedObservation`).
+
+## 2026-07-26 [observation] as-of 동시성 테스트는 goroutine이 아니라 버전 주입으로 썼다 (task 3.3)
+
+- 사실: 태스크 문언대로 `SetMaxOpenConns(1)` 아래에서 두 예약 트랜잭션은 겹칠 수 없다. goroutine
+  두 개를 `-race`로 돌리면 뮤텍스가 동작한다는 것만 증명되고, **as-of 조건이 재수집을 유발한다**는
+  것은 증명되지 않는다.
+- 이번 처리: `TestASnapshotThatPredatesACommittedReservationIsRecollected` — 수집 콜백이
+  (1) 버전을 먼저 읽고, (2) "브로커 왕복 중"에 다른 결정이 예약을 커밋하고, (3) 낡은 버전으로
+  `Reserve`를 부른다. 1회차 `ErrSnapshotSuperseded` → 재수집 → 2회차 성공, 그리고 **두 홀드가
+  모두 합산에 잡힌다**(세 번째 400이 1000 한도에 도달)까지 단언한다. 음성 대조군
+  (`TestAnUnchangedLedgerNeedsNoRecollection`)이 "항상 실패하는 버전 검사"로는 통과 못 하게 막는다.
+- 동시 goroutine 테스트는 3.1의 `TestConcurrentDecisionsCannotBothTakeTheLastSlot`에 별도로 있다
+  (스펙 시나리오 "동시 다심볼 결정"). 두 테스트는 다른 것을 증명한다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
