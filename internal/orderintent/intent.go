@@ -20,6 +20,20 @@ type PlaceIntent struct {
 	Amount       float64 `json:"amount,omitempty"`
 	CurrencyMode string  `json:"currency_mode"`
 	Fractional   bool    `json:"fractional"`
+	// ClientOrderID is the broker's idempotency key: "동일 값으로 재요청 시 이전
+	// 주문 결과를 그대로 재반환합니다 … 멱등성 키는 10분간 유효"
+	// (OrderCreateRequest.clientOrderId, docs/migration/openapi.latest.json).
+	//
+	// It is deliberately absent from CanonicalPlace: the confirm token a human
+	// retypes must not change because the engine attached a key (WORKFLOW §0.2),
+	// and the key is not part of *what* the order is — two submissions with
+	// different keys and identical fields are the same intent, which is exactly
+	// what makes a replay recognisable.
+	//
+	// Empty means "no idempotency" (the broker never generates one:
+	// "서버는 자동 생성하지 않습니다"). Only the engine's gateway sets it, from a
+	// persisted decision; the CLI paths leave it empty.
+	ClientOrderID string `json:"client_order_id,omitempty"`
 }
 
 type CancelIntent struct {
