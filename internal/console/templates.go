@@ -87,12 +87,12 @@ form { display: inline; }
 */}}
 {{define "hours"}}
 {{if .Outside}}
-<p class="notice"><strong>지금은 KR 정규장({{"09:00"}}–{{"15:30"}} KST, 평일) 밖이다 — {{.Label}}.</strong>
-{{.Detail}} 시작을 막지는 않는다: 주문 접수 창의 실제 경계는 미측정이고, 휴장 달력을 도구에
-박아 넣지 않는다.</p>
+<p class="notice"><strong>지금은 KR 정규장(평일 09:00–15:30 KST) 밖이다.</strong>
+{{.Detail}}
+<br>그래도 <strong>시작은 막지 않는다</strong> — 주문 접수 창의 실제 경계는 미측정이고, 휴장 달력을
+도구에 박아 넣으면 관측하지 않은 것을 단언하게 된다.</p>
 {{else}}
-<p class="muted">지금은 KR 정규장 시간이다({{.At.Format "2006-01-02 15:04"}} KST). 거래소 휴장일은
-확인하지 않는다 — 그 달력은 미측정이다.</p>
+<p class="muted">{{.Detail}}</p>
 {{end}}
 {{end}}
 

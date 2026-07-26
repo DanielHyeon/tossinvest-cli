@@ -50,8 +50,9 @@ type SessionAdvisory struct {
 	// Label is the short session name: "weekend", "KR regular hours", or
 	// "outside KR regular hours".
 	Label string
-	// Detail is the sentence an operator reads. It names the measured error code
-	// so the warning can be checked against the evidence rather than believed.
+	// Detail is the sentence an operator reads, in the language the only surface
+	// that shows it is written in. It names the measured error code verbatim, so
+	// the warning can be checked against the evidence rather than believed.
 	Detail string
 }
 
@@ -65,32 +66,27 @@ func KRSessionAdvisory(now time.Time) SessionAdvisory {
 	hhmm := at.Hour()*60 + at.Minute()
 	weekend := at.Weekday() == time.Saturday || at.Weekday() == time.Sunday
 
+	const closedWarning = "2026-07-26(일) 실측: 휴장 중 POST /api/v1/orders는 HTTP 422 " +
+		"order-hours-closed(\"주문가능일이 아닙니다.\")로 거절됐다. mutation 단계는 같은 이유로 실패해 " +
+		"측정이 아니라 fail 판정만 남길 가능성이 높다. 읽기 전용 단계는 영향이 없다."
+
+	stamp := at.Format("2006-01-02 15:04")
 	switch {
 	case weekend:
 		return SessionAdvisory{
 			At: at, Outside: true, Label: "weekend",
-			Detail: fmt.Sprintf(
-				"%s KST is a weekend. On Sunday 2026-07-26 every live order this tool sent came back "+
-					"HTTP 422 order-hours-closed (\"주문가능일이 아닙니다.\"), so the mutating steps will very "+
-					"likely fail the same way and record a fail rather than a measurement. The read-only "+
-					"steps are unaffected.",
-				at.Format("2006-01-02 15:04")),
+			Detail: fmt.Sprintf("%s KST는 주말이다. %s", stamp, closedWarning),
 		}
 	case hhmm >= krRegularOpen && hhmm < krRegularClose:
 		return SessionAdvisory{
 			At: at, Outside: false, Label: "KR regular hours",
-			Detail: fmt.Sprintf("%s KST is inside the KR continuous session (09:00–15:30). Exchange holidays "+
-				"are not checked — that calendar is unmeasured.", at.Format("2006-01-02 15:04")),
+			Detail: fmt.Sprintf("%s KST는 KR 연속매매 시간(09:00–15:30) 안이다. 거래소 휴장일은 "+
+				"확인하지 않는다 — 그 달력은 미측정이다.", stamp),
 		}
 	default:
 		return SessionAdvisory{
 			At: at, Outside: true, Label: "outside KR regular hours",
-			Detail: fmt.Sprintf(
-				"%s KST is outside the KR continuous session (09:00–15:30). The measured behaviour of a "+
-					"live order sent while the market is closed is HTTP 422 order-hours-closed "+
-					"(\"주문가능일이 아닙니다.\"), so the mutating steps will very likely fail and record a fail "+
-					"rather than a measurement. The read-only steps are unaffected.",
-				at.Format("2006-01-02 15:04")),
+			Detail: fmt.Sprintf("%s KST는 KR 연속매매 시간(09:00–15:30) 밖이다. %s", stamp, closedWarning),
 		}
 	}
 }

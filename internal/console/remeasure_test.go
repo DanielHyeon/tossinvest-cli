@@ -300,7 +300,7 @@ func TestTheStartScreenWarnsOutsideMarketHours(t *testing.T) {
 				want, truncateForLog(page))
 		}
 	}
-	if !strings.Contains(page, "막지는 않는다") {
+	if !strings.Contains(page, "시작은 막지 않는다") {
 		t.Errorf("the advisory does not say it is advisory:\n%s", truncateForLog(page))
 	}
 }
@@ -315,7 +315,7 @@ func TestTheAdvisoryIsQuietInsideMarketHours(t *testing.T) {
 	if strings.Contains(page, "order-hours-closed") {
 		t.Errorf("the closed-market warning is shown during the session:\n%s", truncateForLog(page))
 	}
-	if !strings.Contains(page, "KR 정규장 시간이다") {
+	if !strings.Contains(page, "KR 연속매매 시간(09:00–15:30) 안이다") {
 		t.Errorf("the page does not report the session reading at all:\n%s", truncateForLog(page))
 	}
 }
