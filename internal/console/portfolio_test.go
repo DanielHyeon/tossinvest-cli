@@ -323,8 +323,11 @@ func TestAnUnmanagedHoldingIsLabelledExactlyOnce(t *testing.T) {
 			"and the page must say what it means", n)
 	}
 	for _, want := range []string{
-		"엔진 원장에 이 종목의 포지션이 없다",            // 000660: broker only
-		"진입 결정(entry decision)이 없는 포지션이다", // 035420: journal, no decision
+		"엔진 원장에 이 종목의 포지션이 없다", // 000660: broker only
+		// 035420: a journal position with neither justifying record. Since
+		// adopt-external-positions there are two, and the reason names both —
+		// "no entry decision" alone would now be an incomplete answer.
+		"편입 기록(adoption)도 없는 포지션이다",
 	} {
 		if !strings.Contains(page, want) {
 			t.Errorf("the screen does not explain why a holding is unmanaged: %q missing", want)
@@ -832,4 +835,75 @@ func holdRunLock(t *testing.T, path string, at time.Time) {
 		t.Fatalf("runlock.Acquire: %v", err)
 	}
 	t.Cleanup(lock.Release)
+}
+
+// adoptedFixture adds a holding the engine adopted: no entry decision, an
+// adoption record, and an exit state seeded from the adoption's observation.
+const adoptedFixture = `
+INSERT INTO position_adoptions (id, symbol, market, quantity, cost_basis, cost_basis_src,
+                                observed_price, synthetic_stop, observed_at, preimage_digest)
+VALUES ('adopt-1','000660','kr','3','120000.0000','BROKER_AVG','131500','124925',
+        '2026-07-27T00:40:00Z','digest-1');
+INSERT INTO positions (id, account_ref, market, symbol, instance_seq, entry_decision_id,
+                       adoption_id, state, quantity, avg_price, opened_at)
+VALUES ('pos-adopted','123-45-678901','kr','000660',1,NULL,'adopt-1','OPEN','3','120000',
+        '2026-07-27T00:40:00Z');
+INSERT INTO exit_states (position_id, policy_kind, entry_price, initial_stop, initial_risk,
+                         baseline_price, high_water, ratchet_level, active_rung, taken_ratio_total,
+                         completed, updated_at)
+VALUES ('pos-adopted','RATCHET','131500','124925','6575','124925','131500','NONE',NULL,'0',0,
+        '2026-07-27T00:40:00Z');
+`
+
+// TestAnAdoptedHoldingRendersAsManagedWithItsBasis is task 2.7: the dashboard's
+// eligibility display covers adoption.
+//
+// Two things are being checked and they are different findings. The *verdict* —
+// managed, not 관리 외 — is the single eligibility predicate reaching the screen;
+// a row still labelled 관리 외 would be telling an operator that a position the
+// engine is actively stopping out is unprotected. The *basis* is the operator's
+// next question: an engine that has started selling shares somebody bought by
+// hand has to be able to say that it adopted them.
+func TestAnAdoptedHoldingRendersAsManagedWithItsBasis(t *testing.T) {
+	h := newDashboardHarness(t)
+	seedEngineJournal(t, h.journal, journalFixture+adoptedFixture)
+	h.authenticate(t)
+
+	page := h.page(t, "/positions")
+	if !strings.Contains(page, "편입 기록") {
+		t.Error("the screen does not say an adopted position's protection came from an adoption record")
+	}
+	if !strings.Contains(page, "진입 결정") {
+		t.Error("the screen no longer distinguishes an engine-entered position's basis")
+	}
+	// 000660 is the adopted symbol. Its row must not carry the unmanaged label.
+	row := rowFor(t, page, "000660")
+	if strings.Contains(row, "관리 외(미편입)") {
+		t.Errorf("the adopted holding is labelled unmanaged:\n%s", row)
+	}
+	if !strings.Contains(row, "엔진 관리") {
+		t.Errorf("the adopted holding is not labelled as managed:\n%s", row)
+	}
+	// The exit line is the adoption's synthetic t0, not an entry decision's.
+	if !strings.Contains(page, "124925") {
+		t.Error("the adopted position's synthetic stop does not appear on the exit line")
+	}
+}
+
+// rowFor returns the fragment of the page between one symbol and the next table
+// row boundary, so a per-row assertion cannot be satisfied by another row.
+func rowFor(t *testing.T, page, symbol string) string {
+	t.Helper()
+	at := strings.Index(page, symbol)
+	if at < 0 {
+		t.Fatalf("the page does not mention %s", symbol)
+	}
+	rest := page[at:]
+	if end := strings.Index(rest, "<tr>"); end > 0 {
+		// The row plus its exit-line row, which is the second <tr> of the pair.
+		if second := strings.Index(rest[end+4:], "<tr>"); second > 0 {
+			return rest[:end+4+second]
+		}
+	}
+	return rest
 }

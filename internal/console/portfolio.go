@@ -19,15 +19,27 @@ package console
 // A join failure is not a screen failure (spec: 조인 실패가 화면 실패가 되어서는
 // 안 된다). Every row therefore carries what it has and says what it does not.
 //
-// # Eligibility, at this landing
+// # Eligibility
 //
-// A position is an exit-policy target when it names an entry decision, and that
-// is the whole rule today: journal.Position.ExitEligible is position.ExitEligible,
-// which asks whether entry_decision_id is set. A holding with no journal position
-// at all, and a journal position with no entry decision, are both 관리 외(미편입)
-// — one label, as the spec fixes it — and each carries its own reason. Folding an
-// external holding *into* management is a different change's job, and this screen
-// deliberately cannot do it.
+// A position is an exit-policy target when a record justifies its baseline, and
+// there are two such records: the entry decision the engine opened it under, or
+// the adoption record the engine took it into management with
+// (adopt-external-positions). The screen asks journal.Position.ExitEligible,
+// which is position.ExitEligible, and never spells the columns itself — a second
+// copy of "which columns count" is how a screen comes to report a protected
+// position as bare.
+//
+// The two are distinguished in the *display* rather than in the verdict, because
+// they answer different operator questions. "Is this protected" is the label;
+// "why is it protected" is 자격 근거, and an operator who finds the engine
+// managing a holding they bought by hand needs to be able to see that it was
+// adopted rather than entered.
+//
+// A holding with no journal position at all, and a journal position with neither
+// record, are both 관리 외(미편입) — one label, as the spec fixes it — and each
+// carries its own reason. Folding an external holding *into* management is the
+// engine's reconciliation loop's job and this screen deliberately cannot do it:
+// every route is a GET.
 //
 // There is a third answer and it is not that label: when the journal could not be
 // read, a holding is 관리 여부 불명. "Unmanaged" is a finding, and a console that
@@ -209,8 +221,24 @@ type positionRow struct {
 	JournalQuantity string
 	JournalAvgPrice string
 	Eligible        bool
-	HasExit         bool
-	Exit            journal.ExitState
+	// Adopted reports which record makes the row eligible. It is display only:
+	// the verdict is Eligible, and this says why.
+	Adopted bool
+	HasExit bool
+	Exit    journal.ExitState
+}
+
+// Basis names the record that justifies the exit baseline, for the operator who
+// wants to know why the engine is managing a holding they bought themselves.
+func (r positionRow) Basis() string {
+	switch {
+	case !r.Managed():
+		return "—"
+	case r.Adopted:
+		return "편입 기록"
+	default:
+		return "진입 결정"
+	}
 }
 
 // Managed reports that the engine's exit policy owns this position.
@@ -251,11 +279,11 @@ func (r positionRow) Reason() string {
 		return "엔진 원장에 이 종목의 포지션이 없다 — 엔진이 진입한 포지션이 아니므로 손절·익절 라인도 없다. " +
 			"수동 보유를 엔진 관리로 편입하는 것은 이 화면의 기능이 아니다."
 	case !r.Eligible:
-		return "진입 결정(entry decision)이 없는 포지션이다. exit 정책은 진입 시점의 손절가를 기준선으로 삼는데 " +
-			"그 근거가 없으므로 대상이 아니다."
+		return "진입 결정(entry decision)도 편입 기록(adoption)도 없는 포지션이다. exit 정책은 그중 하나의 " +
+			"손절가를 기준선으로 삼는데 둘 다 없으므로 대상이 아니다."
 	case !r.HasExit:
-		return "진입 결정은 있으나 exit 상태가 아직 열리지 않았다 — 진입 체결 반영 직후이거나, 엔진이 아직 " +
-			"관측을 시작하지 않았다."
+		return "자격 근거(" + r.Basis() + ")는 있으나 exit 상태가 아직 열리지 않았다 — 반영 직후이거나, 엔진이 " +
+			"아직 관측을 시작하지 않았다."
 	default:
 		return ""
 	}
@@ -414,6 +442,7 @@ func joinPositions(broker []domain.Position, managed []journal.PositionExit,
 		row.JournalQuantity = m.Position.Quantity
 		row.JournalAvgPrice = m.Position.AvgPrice
 		row.Eligible = m.Position.ExitEligible()
+		row.Adopted = m.Position.Adopted()
 		row.HasExit = m.HasExit
 		row.Exit = m.Exit
 	}

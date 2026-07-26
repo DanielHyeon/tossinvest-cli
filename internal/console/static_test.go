@@ -653,22 +653,48 @@ func TestTheUnmanagedLabelIsSpelledOnce(t *testing.T) {
 	}
 }
 
-// TestTheDashboardNamesNoAdoptionConcept.
+// TestTheDashboardDescribesAdoptionButCannotPerformIt.
 //
-// Round-2 P1: exit eligibility at this landing is the entry decision and nothing
-// else. adoption_id does not exist in the schema, in the journal package or in
-// any spec that has landed — a screen that referred to it would be describing a
-// capability the engine does not have, and the operator would reasonably conclude
-// their manual holdings were protected.
-func TestTheDashboardNamesNoAdoptionConcept(t *testing.T) {
+// This replaces add-operator-dashboard's round-2 P1 guard, which banned the word
+// "adoption" from this package outright. That was right at the dashboard's
+// landing — `adoption_id` did not exist in the schema, so a screen naming it
+// would have been describing a capability the engine did not have, and an
+// operator would reasonably have concluded their manual holdings were protected.
+//
+// adopt-external-positions landed the capability, and its task 2.7 extends the
+// eligibility display to cover it. So the ban is replaced by the rule that
+// actually matters and always did: the console may *report* that a position was
+// adopted, and it may not adopt one. The distinction is a screen that describes
+// the engine versus a screen that drives it.
+func TestTheDashboardDescribesAdoptionButCannotPerformIt(t *testing.T) {
 	for name, src := range packageFiles(t) {
 		code := strings.Join(nonCommentLines(src), "\n")
-		for _, banned := range []string{"adoption_id", "AdoptionID", "adoption"} {
+		// Writing the ledger, in any spelling. The console holds a *ReadOnly and
+		// has no write method at all (readonly_test.go enumerates the method set),
+		// so these would not compile — which is exactly why naming them is worth
+		// failing on: an attempt to add one starts by adding the word.
+		for _, banned := range []string{
+			"AdoptPosition", "OpenAdoptedExitState", "AdoptionRequest",
+			"UPDATE positions", "INSERT INTO position_adoptions",
+		} {
 			if strings.Contains(code, banned) {
-				t.Errorf("%s names %q; 편입 does not exist yet and this change's eligibility rule is "+
-					"entry_decision_id alone", name, banned)
+				t.Errorf("%s names %q; adopting a holding is the engine's reconciliation loop's job "+
+					"and this package is a read-only view of what it did", name, banned)
 			}
 		}
+	}
+
+	// Positive control: the display half exists. A guard that only forbids is a
+	// guard that would still pass if task 2.7 had never been implemented.
+	describes := false
+	for name, src := range packageFiles(t) {
+		if name == "portfolio.go" && strings.Contains(src, "편입 기록") {
+			describes = true
+		}
+	}
+	if !describes {
+		t.Error("portfolio.go no longer distinguishes an adopted position from an entered one; the " +
+			"operator cannot tell why the engine is managing a holding they bought by hand")
 	}
 }
 

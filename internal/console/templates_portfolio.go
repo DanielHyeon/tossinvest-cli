@@ -101,6 +101,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td colspan="{{if $.Snap.Multi}}9{{else}}8{{end}}">
         {{if .HasExit}}
         <span class="muted">exit 라인 —</span>
+        자격 근거 <strong>{{.Basis}}</strong> ·
         진입가 <strong>{{.Exit.EntryPrice}}</strong> ·
         최초 손절 <strong>{{.Exit.InitialStop}}</strong> ·
         기준선(래칫) <strong>{{.Exit.Baseline}}</strong> ·
@@ -127,7 +128,9 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
     {{end}}
   </table>
   <p class="muted"><strong>관리 외(미편입)</strong>은 엔진의 exit 정책 대상이 아니라는 뜻이다 — 손절·익절이
-  자동으로 걸려 있지 않다. 편입(수동 보유에 exit 라인을 만드는 것)은 이 화면의 기능이 아니다.</p>
+  자동으로 걸려 있지 않다. 관리 중인 행의 <strong>자격 근거</strong>는 그 보호가 어디서 왔는지를 말한다:
+  <em>진입 결정</em>은 엔진이 직접 진입한 포지션, <em>편입 기록</em>은 사용자가 수동 매수한 보유를 엔진이
+  편입한 것이다. 편입 자체는 엔진의 대사 루프가 수행하며 이 화면의 기능이 아니다 — 이 화면은 읽기 전용이다.</p>
 </section>
 {{else}}
 <section>

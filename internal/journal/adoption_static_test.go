@@ -41,6 +41,7 @@ var adoptionIDReaders = map[string]bool{
 	"exit_state.go":          true, // the eligibility read inside the opening tx
 	"trade_outcomes.go":      true, // the adopted-position freeze branch
 	"provenance.go":          true, // the ADOPTION lineage arm
+	"trade_analytics.go":     true, // the split-by-source join
 }
 
 // productionSources returns every non-test .go file in this package, with its

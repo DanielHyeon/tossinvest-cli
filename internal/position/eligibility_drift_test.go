@@ -42,9 +42,10 @@ var eligibilitySpellers = map[string]string{
 	"internal/journal/exit_state.go": "the opening transaction's re-read, which calls the predicate",
 	"internal/journal/position_adjustments.go": "the INSERT that folds an external holding in with " +
 		"entry_decision_id NULL",
-	"internal/journal/core_domain.go":    "the DDL",
-	"internal/journal/provenance.go":     "the lineage query's join path",
-	"internal/journal/trade_outcomes.go": "the freeze's read of which record justifies the position",
+	"internal/journal/core_domain.go":     "the DDL",
+	"internal/journal/provenance.go":      "the lineage query's join path",
+	"internal/journal/trade_outcomes.go":  "the freeze's read of which record justifies the position",
+	"internal/journal/trade_analytics.go": "the analytics join that splits measured R from synthetic R",
 	"internal/reconcile/external.go": "the fold guard, deliberately narrowed to an explicit " +
 		"entry_decision_id comparison (adopt-external-positions design A1): a fold landing on an " +
 		"adopted position is the ordinary re-reconciliation path and must not be refused",

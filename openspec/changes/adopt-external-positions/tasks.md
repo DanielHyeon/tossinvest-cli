@@ -18,8 +18,8 @@
 - [x] 2.3 **manage-forward 테스트 2종**(design A2): ① 편입 트랜잭션은 매도 발의 0건 ② 편입 관측가와 다른 첫 exit 관측(P1≠P0, 원가 대비 ±50% 포함)에서 래칫 규칙이 정상 적용됨(발의 발생이 정상임을 고정)
 - [x] 2.4 config: `adoption.enabled`(기본 false — zero-value 안전 테스트), `default_stop_pct`(**0.02 ≤ pct < 1** 검증·거부·하한 근거 provenance), `exclude_symbols`. enabled flip audit(§0.5)
 - [x] 2.5 알림·이벤트(design A4): **무관리 보유 알림은 enabled 무관 존치**(기존 동작 — §0.2), 편입 성공 이벤트가 대체, 제외·실패 알림, 전이 상태만 무알림, 외부 수량 증가 감지 알림
-- [ ] 2.6 trade-analytics 구분 집계(adoption_id 조인, 표본 수 병기)
-- [ ] 2.7 대시보드 자격 표시를 편입 포함으로 확장(design A9 — 대시보드 landed 후, `internal/console` 소폭 수정의 유일 예외)
+- [x] 2.6 trade-analytics 구분 집계(adoption_id 조인, 표본 수 병기)
+- [x] 2.7 대시보드 자격 표시를 편입 포함으로 확장(design A9 — 대시보드 landed 후, `internal/console` 소폭 수정의 유일 예외)
 
 ## 3. 완료 게이트 [M]
 
