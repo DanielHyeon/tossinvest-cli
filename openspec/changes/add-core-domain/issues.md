@@ -189,3 +189,63 @@
   안 움직였지만 취득단가와 주문 종결성은 움직였고, 둘 다 포지션의 상태다.
 - 후속 task 입력: **6.1**의 투영 함수는 `AppliedFill.Delta == "0"`인 호출을 정상 입력으로
   다뤄야 한다(정정·terminal).
+
+## 2026-07-26 [safe local] 현금 부족 사유 코드를 하나로 합쳤다 (task 2.1)
+
+- 사실: guardian.py:462-466은 `INSUFFICIENT_CASH`(원금 기준)와 `INSUFFICIENT_CASH_AFTER_COSTS`
+  (비용 포함)를 분리한다. risk-management 이식 분류표는 "현금(INSUFFICIENT_CASH·비용 포함)"
+  하나만 열거한다.
+- 이번 처리: 스펙대로 단일 코드. 비용 포함 검사가 항상 더 엄격하므로 두 코드의 거부 집합은
+  포함 관계이고, 코드를 둘로 두면 같은 사건이 원장에 두 이름으로 남는다. 어느 항목이
+  모자랐는지는 Detail이 숫자로 싣는다("the entry needs 90090 KRW including estimated cost
+  but 90000 KRW is available").
+- 이식된 테스트: `test_guardian_requires_cash_for_order_plus_costs` →
+  `TestCashIsMeasuredWithCostsIncluded`(같은 입력, 코드만 단일화).
+
+## 2026-07-26 [safe local] 최소 RR provenance는 원본 lock의 **초기값**이다 (task 2.2)
+
+- 사실: 스펙은 "provenance: StockOS parker_vwap §22 lock 2.0"이라고 적는데, 실제
+  `strategies/parker_vwap/default_lock.py:35-38`의 **현재 값은 1.3**이다 — Plan 044가
+  2.0→1.3으로 완화했고 그 이력이 같은 파일 :83에 남아 있다. 2.0은 그 lock의 초기값이고,
+  현행으로 살아 있는 2.0은 `live_entry_contract.py:53`
+  (`_DEFAULT_US_MIN_RR = Decimal("2.0")`)다.
+- 이번 처리: 스펙의 2.0을 유지하되 코드 주석의 provenance를 정확히 적었다(초기 lock 값 +
+  live 게이트 현행 기본값, 그리고 Plan 044의 완화를 따르지 않는 이유가 §0.9라는 것).
+  원본의 현재 값을 따라가는 것은 손절·사이징 인접 파라미터의 완화 방향이라 금지다.
+
+## 2026-07-26 [safe local] 크기 검사가 최소 RR보다 앞이라 a090 케이스 하나를 재작성했다 (task 2.2)
+
+- 사실: TossOS 체인 순서는 "손절 계약 → 주문 크기 → 최소 RR → 현금"(risk-management 표)인데
+  a090의 순서는 "stop → rr → grade → size"다. 그래서 a090
+  `test_us_market_stop_rr_rungs_still_enforced`가 의존하는 성질("사이징이 막혀도 RR이 먼저
+  보인다")은 TossOS에서 그대로 성립하지 않는다 — 통화 불일치로 사이징이 먼저 닫힌다.
+- 이번 처리: 순서는 스펙 표가 권위이므로 바꾸지 않고, 케이스를 **의도 통화와 같은 통화의
+  정책**으로 재작성해 이식했다(`TestForeignCurrencyIntentIsNotSizedAgainstADomesticBudget`
+  후반부). 원본이 지키던 성질(stop·RR rung은 시장을 건너 동일)은 그대로 검증된다.
+- 부수 기록: 크기 단계 **안**의 순서는 수량 → 위험예산 상한 → 설정 주문당 상한이다. 위험예산
+  상한이 앞인 이유는 그것이 방금 검증한 손절에서 파생된 사이징 규칙이고, 설정 상한은 그
+  바깥의 봉투이기 때문이다(docs/guardian-chain.md §1).
+
+## 2026-07-26 [safe local] 스펙에 없는 두 기본값 — 위험예산과 비용 모델 부재 (task 2.1/2.2)
+
+- 사실: 체인을 평가하려면 risk-management의 보수 기본값 6개(주문당 notional·수량·총 노출·
+  일손실·자본비·통화) 외에 **per-trade 위험예산**이 필요하다. 스펙에 값이 없다.
+- 이번 처리: `RiskBudget = MaxDailyLoss`로 **유도**했다. 측정값이 아니라, 일일 손실 한도가
+  이미 함의하는 최대 per-trade 위험이다 — 즉 이 상한은 없던 허가를 만들지 않는다. 더 작게
+  사이징하는 발급자는 자유롭고(§0.9 보수 방향), 더 크게 요구하는 의도는 거부된다.
+  코드 주석에 "측정값 아님·유도값"으로 명시했다.
+- 함께 처리: `costs.Model`의 zero value는 모든 요율이 0이라 **거래가 공짜로 보인다**(현금
+  과소 계상 + 실질 본전이 진입가로 내려앉음). 요율 0은 합법적인 설정값이라 값으로는 구별할
+  수 없으므로 `configured` 비트를 추가하고(`Model.Configured()`), 진입 경로 preflight가
+  모델 부재를 `INPUT_UNAVAILABLE`로 거부한다. **위험 감소 경로는 이 질문을 하지 않는다** —
+  "청산 비용을 계산할 수 없다"가 "그러니 들고 있어라"가 되면 §0.3 위반이다.
+
+## 2026-07-26 [observation] `stop = "0"`은 STOP_MISSING이 아니라 INVALID_TARGET_STOP (task 2.2)
+
+- 사실: a090 `test_stop_missing_rejected`는 `stop=0.0`을 `stop_missing`으로 판정한다.
+  test_target_stop_contract의 `test_candidate_rejects_zero_stop`은 같은 값을 생성자
+  ValueError로 막는다. 두 원본이 같은 입력에 다른 이름을 붙인다.
+- 이번 처리: TossOS 입력은 decimal **문자열**이라 "부재"(`""`)와 "값은 있으나 가격이 아님"
+  (`"0"`)이 구별된다. 부재 = `STOP_MISSING`, 비가격 = `INVALID_TARGET_STOP`. 구별의 실익은
+  운영자에게 "신호가 아무것도 내지 않았다"와 "말이 안 되는 값을 냈다"를 알려주는 것이다.
+  두 경우 다 거부이므로 안전 방향의 차이는 없다.

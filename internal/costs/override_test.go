@@ -74,6 +74,31 @@ func TestNoOverridesReturnsDefaults(t *testing.T) {
 	}
 }
 
+func TestTheZeroModelIsAbsentRatherThanFree(t *testing.T) {
+	// All-zero rates and "nobody configured a model" are numerically the same
+	// and operationally opposite. Only the constructors produce a configured
+	// model, so a caller that would judge a trade on cost can tell.
+	if (Model{}).Configured() {
+		t.Fatal("the zero Model reports itself as configured")
+	}
+	if !DefaultModel().Configured() {
+		t.Fatal("DefaultModel is not configured")
+	}
+	m := modelWith(t, map[string]string{KeyKRBuyCommissionRate: "0"})
+	if !m.Configured() {
+		t.Fatal("a model built from overrides is not configured")
+	}
+	// A model whose every rate really is zero is still configured — the point of
+	// the bit is that it is not inferred from the values.
+	free := DefaultModel()
+	for _, key := range OverrideKeys() {
+		free = modelWith(t, map[string]string{key: "0"})
+	}
+	if !free.Configured() {
+		t.Fatal("an all-zero configured model reports itself as absent")
+	}
+}
+
 func TestUnknownOverrideKeyIsRefused(t *testing.T) {
 	// See the header: inverted from StockOS on purpose.
 	_, err := NewModel(map[string]string{"kr.buy_comission_rate": "0.001"})

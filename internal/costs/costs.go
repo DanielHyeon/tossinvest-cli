@@ -154,6 +154,14 @@ const (
 // cannot exist inside one, and two models can be compared for equality in a
 // test without reflection.
 type Model struct {
+	// configured distinguishes "every rate is zero because that is what the
+	// operator configured" from "this is the zero value and nobody configured
+	// anything". The two are numerically identical and operationally opposite:
+	// an unconfigured model prices every trade as free, which understates the
+	// cash a trade needs and drops the break-even price onto the entry. Callers
+	// that judge anything on cost check Configured first.
+	configured bool
+
 	krBuyCommission  float64
 	krSellCommission float64
 	krSellTax        float64
@@ -180,6 +188,7 @@ type Model struct {
 // carried (costs.py:74-90) are not reproduced.
 func DefaultModel() Model {
 	return Model{
+		configured: true,
 		// KR commission: over-estimate of a domestic retail online rate.
 		// `[미검증 — 2b 실측 대체 대상]`
 		krBuyCommission:  0.0010,
@@ -308,6 +317,14 @@ func (m *Model) set(key string, rate float64) error {
 	}
 	return nil
 }
+
+// Configured reports whether this model came from DefaultModel or NewModel.
+//
+// The zero Model is not a free-trade model, it is an absent one, and a caller
+// that would refuse a trade on cost grounds must refuse an absent model instead
+// of pricing everything at zero. (Callers that must never refuse on cost —
+// liquidations, §0.3 — do not ask this question at all.)
+func (m Model) Configured() bool { return m.configured }
 
 // Rate returns the configured rate for an override key.
 //

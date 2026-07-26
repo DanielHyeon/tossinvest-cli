@@ -122,6 +122,12 @@ func TestCostModelAnswersAmountsNeverVerdicts(t *testing.T) {
 	}
 
 	verdictish := []string{"decision", "verdict", "gate", "allowed", "blocked", "refus"}
+	// Configured answers "does this model exist", not "may this trade happen".
+	// It is the one boolean the package may expose, and the exemption is named
+	// here rather than widened into the rule: the rule is about verdicts on
+	// trades, and a second boolean would need its own argument for why it is not
+	// one.
+	exempt := map[string]bool{"Configured": true}
 	exported := 0
 	for _, pkg := range pkgs {
 		for _, file := range pkg.Files {
@@ -131,6 +137,9 @@ func TestCostModelAnswersAmountsNeverVerdicts(t *testing.T) {
 					continue
 				}
 				exported++
+				if exempt[fn.Name.Name] {
+					continue
+				}
 				for _, result := range fn.Type.Results.List {
 					name := typeName(result.Type)
 					if name == "bool" {
