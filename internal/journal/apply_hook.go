@@ -87,6 +87,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
@@ -165,6 +166,16 @@ type ApplyHooks struct {
 	// answered, moving taken_ratio_total when a partial take-profit fills. It
 	// runs second, so it sees the projection this fill produced.
 	Exit ApplyFunc
+	// Costs is the shared cost model the frozen trade outcome is priced with
+	// (task 8.1). It is here rather than on the journal because it is the same
+	// injection the other two are: the journal owns the atomic point and refuses
+	// to own the domain's numbers.
+	//
+	// An unconfigured model does not fail anything. It means no outcome row is
+	// written at the close, which is recoverable through BackfillTradeOutcome —
+	// whereas pricing a round trip as free would report every trade as better
+	// than it was, permanently, in a row nothing rewrites.
+	Costs costs.Model
 }
 
 // SetApplyHooks binds the domain's apply functions. It is called once, at
@@ -238,7 +249,7 @@ func (j *Journal) runApplyHooks(ctx context.Context, tx *sql.Tx, fill AppliedFil
 		return nil
 	}
 
-	handle := &ApplyTx{tx: tx, now: fill.CommittedAt}
+	handle := &ApplyTx{tx: tx, now: fill.CommittedAt, costs: hooks.Costs}
 	defer handle.invalidate()
 
 	if hooks.Project != nil {
@@ -268,6 +279,7 @@ func (j *Journal) runApplyHooks(ctx context.Context, tx *sql.Tx, fill AppliedFil
 type ApplyTx struct {
 	tx     *sql.Tx
 	now    string
+	costs  costs.Model
 	closed atomic.Bool
 }
 
@@ -857,7 +869,16 @@ func ApplyExitFill(ctx context.Context, tx *ApplyTx, fill AppliedFill) error {
 	}
 
 	if where.PositionState == PositionClosed && !state.Completed {
-		return markExitCompletedTx(ctx, tx, where.PositionID)
+		if err := markExitCompletedTx(ctx, tx, where.PositionID); err != nil {
+			return err
+		}
+		// 4. **The outcome freezes** (task 8.1). Last, and deliberately unable to
+		//    fail: trade-analytics isolates the analytics path from the order path
+		//    (SHALL NOT — 분석 작업의 실패·지연이 체결 반영·청산 처리를 …), so a
+		//    trade this cannot price leaves no row rather than rolling back a fill
+		//    the broker has already reported. BackfillTradeOutcome recovers it from
+		//    data that, the position being CLOSED, cannot move any more.
+		freezeTradeOutcomeTx(ctx, tx, where.PositionID, tx.costs)
 	}
 	return nil
 }

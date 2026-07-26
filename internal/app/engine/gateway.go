@@ -43,6 +43,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
@@ -141,6 +142,12 @@ func bindApplyHooks(j *journal.Journal) error {
 	if err := j.SetApplyHooks(journal.ApplyHooks{
 		Project: journal.ProjectPosition,
 		Exit:    journal.ApplyExitFill,
+		// Task 8.1 extended the same literal again, for the same reason: the
+		// frozen trade outcome is priced with the shared cost model, and the
+		// journal must not own the operator's numbers. The default set is the
+		// conservative `[미검증]` placeholder task 1.1 shipped for exactly this —
+		// an unconfigured model would leave every close without an outcome row.
+		Costs: costs.DefaultModel(),
 	}); err != nil {
 		return fmt.Errorf("engine: binding the fill apply hooks: %w", err)
 	}

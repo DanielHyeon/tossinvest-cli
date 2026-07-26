@@ -203,6 +203,9 @@ type Context struct {
 	Guardian execgw.Guardian
 	// Audit is the operational-settings audit log.
 	Audit *audit.Log
+	// Log is the structured log the engine's own loops emit to. Nil discards —
+	// obs.Logger's methods are nil-safe.
+	Log *obs.Logger
 
 	// exitFloor is the RECONCILE cap the exit observation loop consults. It stays
 	// unexported: it is a seam of one loop, not an operator surface, and handing
@@ -491,6 +494,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		Automation:     automation,
 		Guardian:       guardian,
 		Audit:          auditLog,
+		Log:            opts.Logger,
 		official:       off,
 		broker:         path.broker,
 		conditional:    path.conditional,

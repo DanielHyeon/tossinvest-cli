@@ -550,3 +550,69 @@ func TestACrashBetweenArmingAndFillingResumesWithoutASecondOrder(t *testing.T) {
 		t.Errorf("taken ratio = %s, want 0.4", settled.TakenRatioTotal)
 	}
 }
+
+// --- analytics retention (task 8.1) -------------------------------------------
+
+// TestRetentionIsAsynchronousAndCannotTightenTheMode is the isolation
+// requirement in one test: the sweep runs on its own goroutine, its failures do
+// not propagate, and it raises no operating-mode transition.
+func TestRetentionIsAsynchronousAndCannotTightenTheMode(t *testing.T) {
+	s := newE2EStack(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	done := make(chan error, 1)
+	go func() { done <- s.engine.RunAnalyticsRetention(ctx, s.clk, time.Hour) }()
+
+	if !s.clk.WaitForSleepers(1, 2*time.Second) {
+		t.Fatal("the retention loop never reached its interval sleep")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Error("the loop returns its context's error, not a pruning verdict")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("RunAnalyticsRetention did not return after its context was cancelled")
+	}
+
+	mode, err := s.engine.Journal.CurrentOperatingMode(context.Background(), s.engine.AccountRef)
+	if err != nil {
+		t.Fatalf("CurrentOperatingMode: %v", err)
+	}
+	if mode.Mode != journal.ModeNormal {
+		t.Errorf("mode = %s; an analytics job may never tighten the operating mode", mode.Mode)
+	}
+}
+
+// TestAFailedSweepDoesNotPropagate: the journal is closed underneath it, which
+// is the harshest failure the sweep can meet, and the loop keeps going.
+//
+// The handle is put back after Close so the sweep meets a *closed* journal
+// rather than an absent one — an absent one is a no-op and would prove nothing
+// about the error branch.
+func TestAFailedSweepDoesNotPropagate(t *testing.T) {
+	s := newE2EStack(t)
+	handle := s.engine.Journal
+	if err := s.engine.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	s.engine.Journal = handle
+	if _, err := handle.PruneTradeOutcomes(context.Background(), e2eNow); err == nil {
+		t.Fatal("the fixture must present a failing prune, or the loop is not being tested")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- s.engine.RunAnalyticsRetention(ctx, s.clk, time.Hour) }()
+	if !s.clk.WaitForSleepers(1, 2*time.Second) {
+		t.Fatal("a failed sweep must still reach the next interval rather than returning")
+	}
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("RunAnalyticsRetention did not return")
+	}
+}

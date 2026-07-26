@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
@@ -295,4 +296,75 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 		opts.Floor = c.exitFloor
 	}
 	return NewExitObserver(opts)
+}
+
+// --- analytics retention (task 8.1) -----------------------------------------------
+
+// DefaultRetentionSweepInterval is how often the retention sweep runs.
+//
+// Daily. The horizon is 180 days, so the interval only decides how long a row
+// outlives it, and a sweep that ran more often would be spending broker-free
+// I/O to make a boundary that nobody measures slightly sharper.
+const DefaultRetentionSweepInterval = 24 * time.Hour
+
+// RunAnalyticsRetention prunes trade outcomes past their horizon until the
+// context ends.
+//
+// # Everything about this function is the isolation requirement
+//
+// trade-analytics: 성과 집계와 보존 기간 정리는 주문 실행 경로에서 격리되어야
+// 한다 (SHALL), and 분석 작업의 실패·지연이 … 운영 모드 강화를 유발해서는 안 된다
+// (SHALL NOT). So:
+//
+//   - it is its own goroutine, and the order path never waits on it;
+//   - a failed sweep is logged and the loop continues — it returns only the
+//     context's error, so a caller cannot accidentally treat a pruning failure
+//     as an engine failure;
+//   - it raises no alert and touches no operating mode. The escalation triggers
+//     are a closed enumeration (journal.AutomaticTriggers) and this is not one
+//     of them; a retention failure that blocked entries would be an analytics
+//     job deciding whether the engine may trade.
+func (c *Context) RunAnalyticsRetention(ctx context.Context, clk clock.Clock,
+	interval time.Duration) error {
+	if interval <= 0 {
+		interval = DefaultRetentionSweepInterval
+	}
+	if clk == nil {
+		clk = clock.System()
+	}
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		c.sweepAnalyticsRetention(ctx, clk)
+		if err := clk.Sleep(ctx, interval); err != nil {
+			return err
+		}
+	}
+}
+
+// sweepAnalyticsRetention performs one prune. It reports nothing: the count is
+// a log line and the failure is a log line, and neither is a value the order
+// path may branch on.
+func (c *Context) sweepAnalyticsRetention(ctx context.Context, clk clock.Clock) {
+	if c == nil || c.Journal == nil {
+		return
+	}
+	pruned, err := c.Journal.PruneTradeOutcomes(ctx, clk.Now().Add(-journal.TradeOutcomeRetention))
+	switch {
+	case err != nil:
+		// Logged, never escalated. The rows stay, the next sweep tries again, and
+		// the account's ability to trade is not a function of whether a delete
+		// statement succeeded.
+		if c.Log != nil {
+			c.Log.Error(obs.EventEngineHeartbeat, err,
+				obs.FieldAccount, c.AccountRef,
+				obs.FieldDetail, "the trade-outcome retention sweep failed; it will be retried")
+		}
+	case pruned > 0 && c.Log != nil:
+		c.Log.Event(obs.EventEngineHeartbeat,
+			obs.FieldAccount, c.AccountRef,
+			"pruned_trade_outcomes", pruned,
+			obs.FieldDetail, "trade outcomes past the 180-day horizon were removed")
+	}
 }

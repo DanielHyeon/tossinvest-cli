@@ -58,7 +58,7 @@
 
 ## 8. 성과·tracer
 
-- [ ] 8.1 [T] `trade_outcomes` CLOSED 트랜잭션 동결 기록(실현 R 명명 분리)·집계 파생·180일 비동기 정리(실패 비전파·모드 비강화)
+- [x] 8.1 [T] `trade_outcomes` CLOSED 트랜잭션 동결 기록(실현 R 명명 분리)·집계 파생·180일 비동기 정리(실패 비전파·모드 비강화)
 - [ ] 8.2 [T] tracer slice(allowlist 1심볼·LIMIT·최소 수량·파라미터 명시) httptest 검증 — 실전은 verify 트랙 + 인터록 조항 6이 게이트 차단
 
 ## 9. 완료 게이트 [M]
