@@ -36,7 +36,7 @@ NORMAL / ENTRY_BLOCKED / HALT_ALL. EXIT_ONLY 삭제 — ENTRY_BLOCKED와 행동�
 
 ### D5. Exit 정책 — t0 기준선, 워터마크, pending, 정책 단일
 
-핵심 수정 4: (1) **t0 기준선 = 진입 손절가**(NOT NULL — "+0.4R 전 무손절" 구멍 봉합), (2) **`high_water` 워터마크**가 R 프로브(원본 `high_since_entry` 복원 — 레벨 단조화, 관측-최고가의 한계 명시), (3) **pending 수명주기**(레벨/rung당 1회·미해소 억제·크래시 복원 — 원본 `pending_order_id` 복원), (4) **포지션당 정책 하나**(RATCHET|LADDER — 원본의 대안 경로 구조 복원, 기준선 이중 권위 제거). 후보 합성(`compute_protected_stop` max, strict >)·입력 검증·분모 규칙(누적=초기, rung=잔여)·rung 기본 세트(`[미검증]` KOSPI 튜닝) 이식. STOP_FIRST SHALL 폐기(OHLC 입력 부재 — P3). MAX_RATE 비용 상한 이식(본전 기준선 폭주 방지). 관측: 최신가 1점·기본 5초·§0.4 내·체결 감지 SLO 양보, **두절 60초 → ENTRY_BLOCKED 자동 강화**(무기한 무손절 금지). 확정 하한 캡 시 잔여 pending 유지·알림. 가격 R vs 실현 R 명명 분리.
+핵심 수정 4: (1) **t0 기준선 = 진입 손절가**(NOT NULL — "+0.4R 전 무손절" 구멍 봉합), (2) **`high_water` 워터마크**가 R 프로브(원본 `high_since_entry` 복원 — 레벨 단조화, 관측-최고가의 한계 명시), (3) **pending 수명주기**(레벨/rung당 1회·미해소 억제·크래시 복원 — 원본 `pending_order_id` 복원), (4) **포지션당 정책 하나**(RATCHET|LADDER — 원본 `exit/policy_assignment.py` DEFAULT_ASSIGNMENT 구조 복원; 기본값 RATCHET, LADDER는 설정 지정). 후보 합성(`compute_protected_stop` max, strict >)·입력 검증·분모 규칙(누적=초기, rung=잔여)·rung 기본 세트(`[미검증]` KOSPI 튜닝) 이식. STOP_FIRST SHALL 폐기(OHLC 입력 부재 — P3). MAX_RATE 비용 상한 이식(본전 기준선 폭주 방지). 관측: 최신가 1점·기본 5초·§0.4 내·체결 감지 SLO 양보, **두절 60초 → ENTRY_BLOCKED 자동 강화**(무기한 무손절 금지). 확정 하한 캡 시 잔여 pending 유지·알림. 가격 R vs 실현 R 명명 분리.
 
 ### D6. 비용 — 구조+검증 게이트 이식, KIS 수치 금지
 
@@ -51,7 +51,7 @@ override는 설정 주입으로 재구현(KIS_* 명명 제거), test_costs_env_o
 | `positions` | id TEXT PK, account_ref·market·symbol NOT NULL, instance_seq INTEGER NOT NULL, entry_decision_id TEXT REFERENCES decisions(id) (외부 편입은 NULL), state CHECK(FLAT\|OPENING\|OPEN\|SCALING\|CLOSING\|CLOSED), quantity·avg_price TEXT NOT NULL, opened_at, closed_at. UNIQUE(account_ref, market, symbol, instance_seq) |
 | `position_adjustments` | id PK, position_id NOT NULL FK, kind CHECK(EXTERNAL\|MANUAL\|UNKNOWN), expected_prev_quantity TEXT NOT NULL, prev/new quantity·avg_price, broker_as_of NOT NULL, evidence, created_at — append-only |
 | `operating_modes` | id PK, account_ref NOT NULL, mode CHECK(NORMAL\|ENTRY_BLOCKED\|HALT_ALL), cause·actor CHECK(AUTO\|OPERATOR), created_at — append-only, 현재=최신 행 |
-| `exit_states` | position_id TEXT PK FK, policy_kind CHECK(RATCHET\|LADDER), entry_price·initial_stop·initial_risk TEXT NOT NULL, baseline_price TEXT NOT NULL, high_water TEXT NOT NULL, ratchet_level CHECK(NONE\|HALF_RISK\|BREAKEVEN\|PARTIAL_LOCK\|PROFIT_LOCK), active_rung INTEGER, taken_ratio_total TEXT NOT NULL DEFAULT '0', pending_action TEXT, pending_level TEXT, pending_intent_id TEXT, completed INTEGER DEFAULT 0, updated_at |
+| `exit_states` | position_id TEXT PK FK, policy_kind CHECK(RATCHET\|LADDER), entry_price·initial_stop·initial_risk TEXT NOT NULL, baseline_price TEXT NOT NULL, high_water TEXT NOT NULL, ratchet_level CHECK(NONE\|HALF_RISK\|BREAKEVEN\|PARTIAL_LOCK\|PROFIT_LOCK), active_rung INTEGER, taken_ratio_total TEXT NOT NULL DEFAULT '0', pending_action TEXT, pending_level TEXT (RATCHET 레벨 또는 LADDER rung 인덱스), pending_intent_id TEXT, completed INTEGER DEFAULT 0, updated_at |
 | `exit_events` | id PK, position_id NOT NULL FK, observed_price·high_water·baseline_after TEXT, level_after·action·proposed_intent_id, created_at — append-only 판정 이력(provenance 조인 경로) |
 | `trade_outcomes` | position_id PK FK, realized_pnl_after_costs·realized_r·initial_risk·initial_quantity TEXT, held_seconds INTEGER, exit_ratchet_level·exit_rung, closed_at — CLOSED 트랜잭션에서 동결, 보존 180일 |
 
@@ -64,7 +64,7 @@ allowlist 심볼 1개·LIMIT·최소 수량 진입→ratchet 판정→청산 end
 ## Risks / Trade-offs
 
 - [ratchet·ladder·쿨다운 수치 미검증] → 보수 기본값+provenance+§0.9 잠금, tracer·2b 피드백
-- [관측 표본 사이 트리거 누락] → 워터마크로 레벨 단조화, 한계 명시(관측-최고가), 주기·예산 명시
+- [관측 표본 사이 트리거 누락] → 상방은 워터마크가 복구(레벨 단조화). **하방 표본 누락**(표본 사이 기준선 하회 후 반등)은 다음 관측에서만 잡힌다 — 브로커측 보호 부재 구간의 잔존 리스크로 명명하며 2c의 브로커 상주 stop이 이 창을 닫는다
 - [2c 전 로컬 손절의 크래시 무력] → 인터록 조항 6 + 관측 두절 자동 강화 + verify 트랙 한정 tracer
 - [reconciliation 재배선 회귀] → 바뀌어야 할 단언 사전 열거
 - [과대 추정 비용의 조기 본전 청산] → MAX_RATE 상한 + 2b 실측 교체(수익 최적화는 실측 후)

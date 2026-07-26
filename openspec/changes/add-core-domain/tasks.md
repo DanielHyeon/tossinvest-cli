@@ -8,7 +8,7 @@
 ## 0. journal v6 스키마 [T]
 
 - [ ] 0.1 design D7 표의 전사(단일 원자 마이그레이션): `positions`(entry_decision_id FK)·`position_adjustments`(expected_prev)·`operating_modes`·`exit_states`(entry/initial_stop/initial_risk/high_water/policy_kind/pending 3컬럼, baseline NOT NULL)·`exit_events`·`trade_outcomes` + 제약 자구 일치. 백업·복원·전이·구버전 거부 계약 테스트(2a 패턴)
-- [ ] 0.2 [T][High-risk] 원자 발급 API `RecordDecisionAndReserve`: 결정 삽입+예약 검증·삽입 한 트랜잭션, 거부 시 전체 롤백(고아 결정 없음 테스트), 실패 reason 분화(LIMIT_REACHED/SNAPSHOT_RECOLLECTION_EXHAUSTED/VERSION_CONFLICT/DECISION_EXPIRED)
+- [ ] 0.2 [T][High-risk] 원자 발급 API `RecordDecisionAndReserve`: 결정 삽입+예약 검증·삽입 한 트랜잭션, 거부 시 전체 롤백(고아 결정 없음 테스트), 실패 reason 매핑 명시 — LIMIT_REACHED←ErrReservationLimitExceeded / SNAPSHOT_RECOLLECTION_EXHAUSTED←ErrRecollectionExhausted(내부 재시도로 stale·superseded는 종단에서 여기 수렴) / VERSION_CONFLICT←단발 Reserve의 stale·superseded / DECISION_EXPIRED←만료(신규 sentinel 필요 — 현재 ErrInvalidRequest)
 - [ ] 0.3 [T][High-risk] tx-scoped apply hook: 체결 반영 트랜잭션이 주입된 투영·exit 적용 함수를 tx-scope에서 호출 — journal 공개 API 설계 문서화, hook 밖에서 taken_ratio·pending을 쓸 수 없음을 테스트
 
 ## 1. 비용 모델
@@ -32,13 +32,13 @@
 ## 4. Guardian 발급자
 
 - [ ] 4.1 [T][High-risk] 발급자: 체인 ALLOW → `RecordDecisionAndReserve` → Gateway 참조 전달. RiskIntent/ReductionIntent 구성, TTL 60s(실장 상수), 예약 거부 시 고아 결정 없음·reason 기록 테스트
-- [ ] 4.2 [T][High-risk] `ExposureLimiter` 구현(감사 한도 단일 출처·Set 비트 일치)·엔진 Guardian 주입·인터록 전 조합 green — small_live 5필드 기본 집합으로 기동 통과 테스트
+- [ ] 4.2 [T][High-risk] `ExposureLimiter` 구현(감사 한도 단일 출처·Set 비트 일치)·엔진 Guardian 주입·인터록 조합 테스트 — small_live 5필드로 **조항 1–5 통과 + 조항 6(ProtectionReady)이 유일한 거부 사유**임을 검증(게이트 ON 완전 통과는 2c 후)
 - [ ] 4.3 [T] 발급 race(동시 다심볼 합산 한도)·발급-제출 사이 모드 강화 시 EntryGate 거부 테스트
 
 ## 5. Gateway·인터록 확장 (engine-safety delta 전사)
 
 - [ ] 5.1 [T][High-risk] Gateway의 EXPOSURE_RAISING HELD 예약 검증(예약 없는 진입 결정 거부) — RISK_REDUCING 비요구·flatten 무영향 회귀
-- [ ] 5.2 [T][High-risk] 인터록 조항 6(ProtectionReady — 미충족 상수, 게이트 ON 거부)·가격 조회 endpoint를 `RequiredEndpoints()`+drift guard(soak_test)+retry matrix에 추가
+- [ ] 5.2 [T][High-risk] 인터록 조항 6(ProtectionReady — 미충족 상수, 게이트 ON 거부)·가격 조회를 `engine.RequiredEndpoints()`에 추가(soak 목록·retry matrix의 QueryPrice@15s는 **이미 landed** — 실제 델타는 engine 목록+drift guard 통과 확인뿐)
 
 ## 6. 포지션 투영·reconciliation
 
@@ -52,7 +52,7 @@
 - [ ] 7.1 [T][High-risk] `internal/exitpolicy` ratchet 이식: t0 기준선=진입 손절, high_water 프로브, 후보 합성(max·strict >)·입력 검증, 트리거 표 — test_baseline_ratchet 이식(+high_since_entry 케이스) + **3중 단조 property**(기준선·레벨·워터마크)
 - [ ] 7.2 [T][High-risk] ladder 이식: rung 기본 세트(`[미검증]` provenance)·정책 검증(목표 단조·잠금 비감소)·분모 규칙(누적=초기, rung=잔여) — test_profit_ladder 이식(float→decimal 재작성 명시)
 - [ ] 7.3 [T][High-risk] pending 수명주기: 레벨/rung당 1회·미해소 억제·거부 시 재무장·크래시 복원(중복발의·미재발의 양방향 테스트), policy_kind 단일
-- [ ] 7.4 [T][High-risk] 판정 루프: 최신가 관측(기본 5초·§0.4 예산 명시·SLO 양보)·두절 60초→ENTRY_BLOCKED 강화·발의(t0 하회 전량·40% 부분·rung)·`exit_events` 기록 — Guardian 위험 감소 경로 경유
+- [ ] 7.4 [T][High-risk] 판정 루프: 최신가 관측(기본 5초·§0.4 예산·SLO 양보·**`RecordSuccess(QueryPrice)` 배선** — 미배선 시 게이트 ON에서 전 진입이 QUERY_STALE 차단됨)·두절 에스컬레이션(15초=landed 쿼리 staleness 진입 차단 → 60초=ENTRY_BLOCKED 모드 강화)·발의(t0 하회 전량·40% 부분·rung)·`exit_events` 기록 — Guardian 위험 감소 경로 경유
 - [ ] 7.5 [T][High-risk] 확정 하한 캡 상호작용(잔여 pending·해제 후 재발의·알림)·진입 attempt 지연 창 알림 — §0.3 회귀
 - [ ] 7.6 [T] 발의→체결 반영(apply hook에서 taken_ratio·pending 해소) httptest end-to-end
 

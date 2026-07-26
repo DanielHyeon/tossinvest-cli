@@ -24,7 +24,7 @@ TossOS는 `tossinvest-cli`(MIT, 커밋 `57348a7` 고정) 전체 소스·히스�
 3. 포지션 최종 권위: 토스 계좌. 로컬 원장은 파생 상태
 4. 불일치 시 신규 진입 금지, 청산 지속
 5. **무인 운영**: 핵심 매매 루프(체결 감지 포함)는 공식 API만으로 동작. **체결 감지의 권위는 공식 API 주기 폴링**(최대 신선도 SLO 명시)이고 SSE는 지연 단축용 힌트일 뿐이다. WTS 만료 시 후보 소스는 공식 API 기반(랭킹·watchlist·정적 유니버스)으로 강등되어 매매 루프가 유지된다
-6. kill switch는 신규 진입 차단 전용(BLOCK-ONLY)이되, **운영 모드 체계는 별도로 존재**: NORMAL / ENTRY_BLOCKED(=kill switch) / EXIT_ONLY / HALT_ALL(제출 전면 중단). 수동 비상 청산(flatten-all)은 typed-confirmation 수동 명령으로 제공
+6. kill switch는 신규 진입 차단 전용(BLOCK-ONLY)이되, **운영 모드 체계는 별도로 존재**: NORMAL / ENTRY_BLOCKED(=kill switch) / HALT_ALL(노출 증가 중단 — EXIT_ONLY는 2d 리뷰에서 ENTRY_BLOCKED와 행동 동일로 삭제, 2c가 실제 차이 생기면 재도입). 수동 비상 청산(flatten-all)은 typed-confirmation 수동 명령으로 제공
 7. **실전 직행(사용자 결정 2026-07-26)**: 승격 단계(paper/capped) 없이 실전 매매로 바로 진행한다. 안전은 단계가 아니라 **위험 한도**로 담보한다 — Guardian(일일 손실·총 노출·수량 한도)과 kill switch가 활성화되지 않으면 엔진이 기동하지 않는다(T1.9 인터록)
 8. 주문 mutation은 **자동 재시도 금지**. 타임아웃·5xx 등 결과 불명(unknown outcome)은 IN_DOUBT로 표기하고 체결/거래내역 조회로 확정될 때까지 해당 레인 차단
 9. 계좌당 주문 writer는 데몬 하나. CLI/MCP의 수동 주문은 데몬 경유 또는 명시적 maintenance mode에서만, reconciliation은 외부 주문을 별도 provenance로 격리

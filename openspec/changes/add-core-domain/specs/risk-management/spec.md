@@ -7,9 +7,9 @@
 
 **순서의 권위는 이 표다**(SHALL — StockOS `evaluate_guardian`과의 대응은 `docs/guardian-chain.md` 참고 산출물로 남기되 순서 보존을 규범으로 주장하지 않는다: 원 체인에는 미이식 단계가 섞여 있고 최소 RR은 원 체인에 없는 신규 검사다). 이식 분류의 열거(SHALL):
 
-- **이식**: kill switch·모드, 진입 latch, 손절 계약(reason: STOP_MISSING·STOP_NOT_BELOW_ENTRY·TARGET_NOT_ABOVE_ENTRY·INVALID_TARGET_STOP·TARGET_BELOW_BREAK_EVEN), 주문 크기(INVALID_ORDER_SIZE·MAX_ORDER_EXCEEDED), 현금(INSUFFICIENT_CASH·비용 포함), 당일 재진입(쿨다운 기본 30분 `[미검증]`·당일 심볼당 최대 진입 수 기본 2회 `[미검증]`), 총 노출, 일손실, 중복 주문
-- **신규**: 최소 RR, 심볼 allowlist
-- **제외**: KIS 고유(CASH_ONLY 등), LLM 게이트, capital stage, ARM/DASHBOARD 확인(운영 UI 소관 — 게이트 flip 승인이 대체), LIVE_DISABLED(인터록이 대체), 미국장 진입 시간창, DAILY_TURNOVER·MAX_POSITIONS·CANCEL_RATE(P3), SELL_COST_BUFFER(§0.3)
+- **이식**: kill switch·모드, 진입 latch, 손절 계약(reason: STOP_MISSING·STOP_NOT_BELOW_ENTRY·TARGET_NOT_ABOVE_ENTRY·INVALID_TARGET_STOP·TARGET_BELOW_BREAK_EVEN), 주문 크기(INVALID_ORDER_SIZE·MAX_ORDER_EXCEEDED), 현금(INSUFFICIENT_CASH·비용 포함), 당일 재진입(쿨다운 기본 30분 `[미검증]`·당일 심볼당 최대 진입 수 기본 2회 `[미검증]`·**미체결 매수 존재 시 진입 차단 PENDING_BUY_ORDER_BLOCKED**), 총 노출, 일손실, 중복 주문
+- **신규**: 최소 RR, 심볼 allowlist, STOP_MISSING(원본은 생성자 강제라 카운터파트 없음)
+- **제외**: KIS 고유(CASH_ONLY 등), LLM 게이트, capital stage, ARM/DASHBOARD 확인(운영 UI 소관 — 게이트 flip 승인이 대체), LIVE_DISABLED(인터록이 대체), BUY_PAUSED/SELL_ONLY(운영 모드가 대체), 미국장 진입 시간창, DAILY_TURNOVER·MAX_POSITIONS·CANCEL_RATE(P3), SELL_COST_BUFFER(§0.3)
 - **구조 대체**: 레버리지/인버스·ETF/ETN 클래스 차단 → 심볼 allowlist(분류 소스 `[미측정]`, P3 재설계)
 
 체인의 모든 입력은 의도 필드·브로커 스냅샷·journal 상태에서 온다(SHALL — 신호 계층 산물 없음: 구조적 RR 계산·등급배수는 P3). 총계 한도의 경계값은 도달 시 차단(≥)이며(SHALL — 예약 트랜잭션의 실장과 일치), 주문 단위 한도는 포함 상한(초과 시 차단)을 유지한다.
@@ -79,7 +79,7 @@ kill switch는 신규 진입 차단 전용(BLOCK-ONLY)이며 어떤 소비자도
 | ENTRY_BLOCKED | 거부 | 허용 | 허용(audit) |
 | HALT_ALL | 거부 | 허용 | **거부** |
 
-*PROTECTION_WEAKENING의 발급·소비는 보호주문 도입 change가 정의하며 이 표는 열을 예약한다(landed `RecordDecision`은 이 class를 현재 거부한다 — 표와 정합). EXIT_ONLY는 두지 않는다 — ENTRY_BLOCKED와 행동이 동일해지므로(구별 근거 없는 모드는 §0.7 승인 사다리의 무의미 단계다), 실제 행동 차이가 생기는 change가 재도입한다. 수동 flatten-all은 모든 모드에서 통과한다(§0.3).
+*PROTECTION_WEAKENING의 발급·소비는 보호주문 도입 change가 정의하며 이 표는 열을 예약한다 — **현재는 landed `RecordDecision`이 전 모드에서 이 class를 거부하므로 허용(audit) 셀은 2c 발급 도입 후에 효력을 갖는다**. HALT_ALL은 이 change 안에서는 ENTRY_BLOCKED와 행동이 같지만, 운영자 전용 진입(자동 강화 없음)이라는 승인 의미와 2c의 PROTECTION_WEAKENING 거부로 구별되므로 유지한다. EXIT_ONLY는 두지 않는다 — ENTRY_BLOCKED와 행동이 동일해지므로(구별 근거 없는 모드는 §0.7 승인 사다리의 무의미 단계다), 실제 행동 차이가 생기는 change가 재도입한다. 수동 flatten-all은 모든 모드에서 통과한다(§0.3).
 
 모드의 강제 지점은 EntryGate 투영이다(SHALL — 모드 전환은 journal 영속과 동시에 EntryGate 계좌 latch로 투영되고, Gateway의 기존 제출 시 재검사가 이를 소비한다; 봉인된 제출 시퀀스는 변경되지 않는다). 전환 승인은 방향 비대칭이다(SHALL): 보수 방향(NORMAL→ENTRY_BLOCKED→HALT_ALL)은 자동·즉시·durable, 완화는 사람 승인(§0.7)+audit. 자동 강화 트리거와 목적 상태의 열거(SHALL): 일일 손실 한도 도달 → ENTRY_BLOCKED, 자격증명 실패(401/403) → ENTRY_BLOCKED, critical 알림 outbox 전달 실패 지속 → ENTRY_BLOCKED, exit 관측 두절 임계 초과 → ENTRY_BLOCKED — 전부 메인 스펙의 "신규 진입 차단"과 정합하며 HALT_ALL 자동 진입은 없다(SHALL NOT — HALT_ALL은 운영자 결정). 분석·성과 작업 실패는 트리거가 아니다(SHALL NOT). 모드·kill switch·이력은 journal 영속·재시작 유지(SHALL), 동시 적용 시 보수 우선(SHALL).
 

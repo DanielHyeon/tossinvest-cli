@@ -35,7 +35,7 @@ R의 프로브는 **관측 최고가 워터마크**다(SHALL — `exit_states.hi
 - **THEN** 기준선·레벨·워터마크 모두 비감소이다 (property 테스트 — 셋 다 검증)
 
 ### Requirement: 발의 수명주기 — 레벨당 1회, 미해소 중 억제
-부분익절·청산 발의는 pending 수명주기를 가져야 한다(SHALL — `exit_states.pending_action`·`pending_level`(ratchet) 또는 `pending_rung`(ladder)·`pending_intent_id`): 같은 레벨/rung의 발의는 최대 1회이며(SHALL), 발의가 미해소(미체결·IN_DOUBT)인 동안 새 발의는 억제된다(SHALL NOT 중복 발의). 발의의 체결·거부·취소가 pending을 해소하고, 거부·취소 시 해당 레벨은 재발의 가능해진다(SHALL — 크래시 후 재시작은 pending을 복원해 미재발의·중복발의 둘 다 방지한다). 부분익절 체결 시 `taken_ratio_total`이 이동하며(체결 시점 필드 — 체결 반영 트랜잭션의 원자 apply hook에서만), 누적 비율은 초기 수량 기준, 각 발의 비율은 잔여 수량 기준이다(SHALL — 원본 분모 규칙).
+부분익절·청산 발의는 pending 수명주기를 가져야 한다(SHALL — `exit_states.pending_action`·`pending_level`(ratchet) 또는 `pending_level`(ladder에서는 rung 인덱스)·`pending_intent_id`): 같은 레벨/rung의 발의는 최대 1회이며(SHALL — ratchet의 40% 부분익절은 레벨 승격과 무관하게 **포지션당 1회**: 원본은 매 평가 재제안을 호출자 dedup에 맡기지만 TossOS는 `taken_ratio_total > 0`이면 ratchet 부분익절을 재발의하지 않는다), 발의가 미해소(미체결·IN_DOUBT)인 동안 새 발의는 억제된다(SHALL NOT 중복 발의). 발의의 체결·거부·취소가 pending을 해소하고, 거부·취소 시 해당 레벨은 재발의 가능해진다(SHALL — 크래시 후 재시작은 pending을 복원해 미재발의·중복발의 둘 다 방지한다). 부분익절 체결 시 `taken_ratio_total`이 이동하며(체결 시점 필드 — 체결 반영 트랜잭션의 원자 apply hook에서만), 누적 비율은 초기 수량 기준, 각 발의 비율은 잔여 수량 기준이다(SHALL — 원본 분모 규칙).
 
 #### Scenario: 미체결 중 재관측
 - **WHEN** 40% 부분익절 발의가 미체결인 상태에서 다음 관측이 +1.0R 이상이면
@@ -46,7 +46,7 @@ R의 프로브는 **관측 최고가 워터마크**다(SHALL — `exit_states.hi
 - **THEN** pending이 복원되어 같은 레벨이 중복 발의 없이 재개된다
 
 ### Requirement: 포지션당 정책 하나
-포지션의 exit 정책은 RATCHET 또는 LADDER 중 하나다(SHALL — `exit_states.policy_kind`; 원본에서 두 모듈은 대안 실행 경로이며 한 포지션의 기준선을 동시에 다투지 않는다). profit ladder는 rung 표(목표%·잠금%·부분비율 — 기본 세트 1.5/2.5/4.0/6.0% 목표, 0/1.0/2.0/3.5% 잠금, 0/0.25/0.25/1.0 부분, `[미검증 — StockOS KOSPI 튜닝값]` provenance)로 정의되고, rung 목표는 단조 증가·잠금은 비감소여야 한다(SHALL — 정책 검증). rung 도달 판정도 워터마크 기반이며 pending 수명주기를 공유한다(SHALL). 원본의 STOP_FIRST 동시 관측 모델은 OHLC 입력이 있는 백테스트 전용이므로 이 change의 SHALL이 아니다(P3 백테스트 도입 시 함께).
+포지션의 exit 정책은 RATCHET 또는 LADDER 중 하나다(SHALL — `exit_states.policy_kind`, 기본값 RATCHET·LADDER는 설정 지정(원본 policy_assignment DEFAULT_ASSIGNMENT 구조); 원본에서 두 모듈은 대안 실행 경로이며 한 포지션의 기준선을 동시에 다투지 않는다). profit ladder는 rung 표(목표%·잠금%·부분비율 — 기본 세트 1.5/2.5/4.0/6.0% 목표, 0/1.0/2.0/3.5% 잠금, 0/0.25/0.25/1.0 부분, `[미검증 — StockOS KOSPI 튜닝값]` provenance)로 정의되고, rung 목표는 단조 증가·잠금은 비감소여야 한다(SHALL — 정책 검증). rung 도달 판정도 워터마크 기반이며 pending 수명주기를 공유한다(SHALL). 원본의 STOP_FIRST 동시 관측 모델은 OHLC 입력이 있는 백테스트 전용이므로 이 change의 SHALL이 아니다(P3 백테스트 도입 시 함께).
 
 #### Scenario: ladder 포지션의 rung 진행
 - **WHEN** LADDER 정책 포지션이 rung 1 목표에 도달하면
