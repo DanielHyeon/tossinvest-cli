@@ -1,69 +1,75 @@
 # Design: adopt-external-positions
 
-> 리뷰 라운드 1(2026-07-27, P1 8건)의 결정 사항. High-risk 경로(원장 스키마·exit 자격 게이트)이므로 이 문서가 테이블 정의·의미론의 정본이다.
+> 리뷰 라운드 1(P1 8)·라운드 2(P1 7) 반영. High-risk 경로(원장 스키마·exit 자격 게이트)이므로 이 문서가 테이블 정의·의미론의 정본이다. 항목 참조는 반드시 change-id를 붙인다("adopt-external-positions design A1" — add-core-domain design D7과의 혼동 방지).
 
-## D1. 편입의 저장 형태 — 별도 테이블, 결정 테이블 무접촉
+## A1. 편입의 저장 형태 — 별도 테이블, 결정 테이블 무접촉
 
-`decisions.safety_class`·`preimage_kind`는 SQL CHECK enum이고 additive 규칙이 테이블 재작성을 금지한다(execution_contract.go:144-147, schema.go 규칙). **편입은 mutation이 아니므로 class 축에 놓지 않는다** — engine-safety·risk-management의 3-class 계약은 무변경(delta 불필요).
+`decisions.safety_class`·`preimage_kind`는 SQL CHECK enum이고 additive 규칙이 테이블 재작성을 금지한다. **편입은 mutation이 아니므로 class 축에 놓지 않는다** — engine-safety·risk-management의 3-class 계약은 무변경.
 
 **v7 마이그레이션(additive만)**:
 
 ```sql
 CREATE TABLE position_adoptions (
-    id              TEXT PRIMARY KEY,          -- adoption id
-    position_id     TEXT NOT NULL REFERENCES positions(id),
-    symbol          TEXT NOT NULL,
-    market          TEXT NOT NULL,
-    quantity        TEXT NOT NULL,             -- decimal string, 편입 시점 관측 수량
-    cost_basis      TEXT,                      -- 브로커 averagePurchasePrice 원문(있으면), 분석용 — R 분모 아님
+    id              TEXT PRIMARY KEY,
+    symbol          TEXT NOT NULL,             -- 편입 시점 스냅샷(권위는 positions)
+    market          TEXT NOT NULL,             -- 〃
+    quantity        TEXT NOT NULL,             -- 〃 decimal string
+    cost_basis      TEXT,                      -- 브로커 averagePurchasePrice 원문 보존(있으면)
     cost_basis_src  TEXT NOT NULL,             -- 'BROKER_AVG' | 'ABSENT'
-    observed_price  TEXT NOT NULL,             -- 편입 시점 관측가 = t0 EntryPrice
+    observed_price  TEXT NOT NULL,             -- t0 EntryPrice — 출처·제약은 A2
     synthetic_stop  TEXT NOT NULL,             -- observed_price × (1 − default_stop_pct)
     observed_at     TEXT NOT NULL,
-    preimage_digest TEXT NOT NULL              -- 위 필드 정본의 digest (재검증용)
+    preimage_digest TEXT NOT NULL
 ) STRICT;
 ALTER TABLE positions ADD COLUMN adoption_id TEXT REFERENCES position_adoptions(id);
 ```
 
-- `positions.adoption_id`는 **set-once**: 전용 tx API로만 기입하고, 그 외 UPDATE 문이 이 컬럼을 언급하면 실패하는 정적 스캔 가드(guarded-column 스캔과 같은 방식, 소유 파일 화이트리스트)를 둔다. `entry_decision_id`는 이 change에서 **읽기만** 한다(첫 변이자 도입 금지 — 리뷰 P1-5).
-- exit 자격 게이트 확장: 대상 = `entry_decision_id IS NOT NULL OR adoption_id IS NOT NULL`. 게이트를 읽는 전 지점(position/provenance.go, exitloop.go 열거, exit_state open)을 하나의 술어 함수로 모아 drift를 막는다.
-- rollback(§0.6): v7은 additive라 구버전 바이너리는 `ErrSchemaTooNew`로 거부된다(기존 계약 그대로).
+- 참조는 `positions.adoption_id` **단방향**이다(라운드 2: 상호 FK 순환 제거 — position_adoptions에 position_id를 두지 않는다). 같은 tx에서 adoption 행 삽입 → adoption_id 기입 순서. symbol·quantity 등은 편입 시점 스냅샷이며 이후 권위는 positions 투영이다.
+- `adoption_id`는 **set-once**: 전용 tx API로만 기입, 그 외 UPDATE의 언급은 정적 스캔이 거부(guarded-column 스캔 방식). `entry_decision_id`는 이 change에서 **읽기만**.
+- exit 자격 = `entry_decision_id IS NOT NULL OR adoption_id IS NOT NULL` — 단일 술어 함수로 통합. 단, reconcile fold 가드(external.go:225-234 "entry 결정 상속 금지")는 **자격 술어가 아니라 `EntryDecisionID != ""` 명시 비교로 좁혀** 유지한다(편입 포지션에 fold가 착지하는 것은 정상 — 재대사 수량 비교 경로). `ExternalPositionAlert.ExitEligible` 하드코딩 false도 자격 술어로 교체.
+- 골든 목록 갱신 필수: schema_test의 wantTables, v6 테이블 목록 2곳.
+- "원장 스키마 확장 규칙" 메인 요구사항은 v6 고정 서술이므로 position-ledger delta에 MODIFIED로 v7을 포함시킨다.
+- rollback(§0.6): additive라 구버전 바이너리는 ErrSchemaTooNew 거부(기존 계약).
 
-## D2. t0 의미론 — manage-forward (편입은 즉시 매도를 유발하지 않는다)
+## A2. t0 의미론 — manage-forward (정직한 서술)
 
-원가 기반 t0(EntryPrice=평단)는 첫 관측 틱에서 원가 대비 ±pct 밴드 밖의 모든 수동 보유를 즉시 매도시킨다(전량 손절 또는 40% 부분익절 — 리뷰 P1-1, ratchet.go:364-478 항등식). 이는 §0.9 보수 방향이 아니다. 따라서:
+원가 기반 t0는 첫 관측 틱에서 원가 대비 ±pct 밴드 밖의 모든 수동 보유를 즉시 매도시킨다(라운드 1 P1). 따라서:
 
-- **EntryPrice = 편입 시점 관측가**(신선 조건 D5 충족), **InitialStop = EntryPrice × (1 − pct)**, **HighWater seed = EntryPrice**. 편입 직후 R=0 — 래칫·부분익절은 편입 이후의 상승분에 대해서만 작동한다.
-- 원가(`cost_basis`)는 기록·분석용이다. R 분모로 쓰지 않는다.
-- 귀결: 오래 보유한 종목의 기존 이익·손실은 편입 시점에 실현되지 않고, 이후 움직임부터 보호·극대화가 시작된다. 사용자가 당일 매수한 종목은 관측가≈매수가이므로 사실상 원가 기준과 같다.
-- `0 < adoption.default_stop_pct < 1` 범위 검증 실패는 설정 거부다(pct=0 → risk=0 나눗셈 경로, pct≥1 → stop≤0 거부 — ratchet.go:581-598).
+- **EntryPrice = 편입 판정에 쓴 관측가**, **InitialStop = EntryPrice × (1 − pct)**, HighWater는 OpenRatchetState가 entry로 자동 seed(별도 인자 없음 — 라운드 2 정정). 편입 직후 R=0.
+- **편입 행위 자체는 매도 발의를 생성하지 않는다(SHALL NOT)** — 편입 트랜잭션에 exit 판정이 포함되지 않는다. 다만 **편입 관측과 첫 exit 관측은 다른 시각·다른 소스의 값이므로, 그 사이 가격 이동이 첫 틱 발의를 만드는 것은 정상 exit 동작이다**(라운드 2: 절대 무발의 주장은 성립 불가 — 정직하게 명시). 회귀 테스트는 두 케이스를 나눈다: 편입 tx 무발의 + 첫 틱 발의는 래칫 규칙 그대로.
+- `observed_price`의 소스는 **exit 관측과 동일한 시세 경로(Prices)**로 지정한다. 이 경로는 float64를 경유한다 — `[기존 제약 — 엔진 가격 경로 전체가 float64(Quote.Last)]` 태그. 원문 decimal 보존 SHALL은 **cost_basis에 한정**하며, 이를 위해 official 어댑터에 holdings 원문 문자열 접근을 additive로 추가한다(태스크).
+- **pct 범위: `0.02 ≤ pct < 1`**(설정 거부). 하한 근거: 관측 노이즈·왕복 비용 규모(비용 상한 MAX_RATE=0.05)보다 작은 보호폭은 즉발 청산 장치가 된다 — provenance로 기록. 극소 pct의 formatPrice 반올림으로 stop==entry가 되는 경계는 riskOf가 fail-closed 거부(이중 방어).
+- **귀결의 명시**(라운드 2 P2): +0.8R 도달 시 기준선은 **편입가 기준 실질 본전**으로 승격된다 — 편입은 "편입일 가격 + 비용"을 사실상의 보호 바닥으로 만든다. 원가 대비 큰 이익 중인 장기 보유가 편입 후 정상 되돌림으로 청산될 수 있다(원가 이익은 보존된 채로). 사용자 대면 설명에 포함.
 
-## D3. 활성화 — 기본 OFF, flip은 사람 승인
+## A3. 활성화 — 기본 OFF, flip은 사람 승인
 
-`adoption.enabled` 기본 false(§0.2 — zero-value가 안전값, config/engine.go 선례). true 전환은 §0.5 audit + §0.7 사람 승인 대상(게이트 ON과 별도 항목으로 명시). `exclude_symbols`는 enabled=true 안에서의 세밀 제어다.
+`adoption.enabled` 기본 false(§0.2 zero-value 안전). true 전환은 §0.5 audit + §0.7 사람 승인(게이트 ON과 별도 항목). `exclude_symbols`는 enabled 안의 세밀 제어.
 
-## D4. 긴급 중지의 정직한 서술
+## A4. 알림 — 무관리 보유 알림은 무조건 존치 (라운드 2 P1 회귀 수정)
 
-kill switch는 BLOCK-ONLY이고 모든 모드가 RISK_REDUCING을 허용한다(operating_mode.go:217-231) — **편입 포지션의 자동 매도를 멈추는 스위치는 의도적으로 없다**(§0.3: 손절 즉시성은 약화 금지 — "exit 일시중지"는 그 자체가 §0.3 위반이다). 편입 해제(보호 제거)는 PROTECTION_WEAKENING 성격이므로 이 change 범위 밖(잔존: flatten, 프로세스 종료, 사전 exclude). proposal의 "kill switch가 덮는다" 문구는 이 서술로 교체.
+**exit 관리 자격 없는 보유의 발견 알림은 `adoption.enabled` 값과 무관하게 유지된다(SHALL)** — landed 동작("엔진이 보호하지 않을 포지션 옆에서 거래 중임을 운영자가 알아야 한다")이 §0.2의 기존 동작이다. enabled=true에서 그 알림은 편입 성공 이벤트로 **대체**되고, 제외 목록·편입 실패 시에는 알림이 남는다. 무알림은 **전이 상태**(RECONCILE 대기·인터록 미검증·Stabiliser 미수렴)뿐 — 같은 보유가 전이 상태를 벗어나 무관리로 확정되면 알림된다.
 
-## D5. 관측 소스·신선도·실행 위치
+## A5. 긴급 중지의 정직한 서술
 
-reconcile fold(IngestExternalPositions/ConvergeQuantities)에는 프로덕션 구동 루프가 없다(리뷰 P1-4 — 비테스트 호출자 0). 이 change가 **엔진 reconcile 구동 루프**(브로커 스냅샷 수집→Stabiliser→fold→편입 후보 판정)를 신설한다. §0.4 계상: 스냅샷은 holdings 1콜/주기(주기는 exit 관측보다 느리게, 기본 60초), Stabiliser(최소 2초 간격 연속 2회 동일 — snapshot.go:255-338) 통과 + 관측 시각 staleness ≤ 10초(riskcalc.AccountSnapshotStaleness)일 때만 "신선한 보유 확인"으로 인정. 실행 조건 술어는 `AutomationStatus.Verified`(기동 인터록 통과 엔진 — 런타임 별도 래치 없음)다.
+kill switch는 BLOCK-ONLY이고 모든 모드가 RISK_REDUCING을 허용한다 — **편입 포지션의 자동 매도를 멈추는 스위치는 의도적으로 없다**(§0.3: "exit 일시중지"는 그 자체가 위반). 가용 수단: 사전 exclude, enabled=false(신규 편입 중지), flatten, 프로세스 종료. 편입 해제는 PROTECTION_WEAKENING 성격 — 범위 밖.
 
-## D6. 편입 이후의 외부 개입
+## A6. 관측 소스·비용 계상·실행 위치 (라운드 2 재작성)
 
-- **외부 수량 증가**(사용자 추가 매수): exit_states의 t0·initial_risk·initial_quantity는 동결 유지(메인 스펙 계약), 증가분 감지 시 알림 발송 — 재편입·재산정은 하지 않는다(후속 change 후보로 기록).
-- **외부 부분 매도**: 조정 경로는 `taken_ratio_total`을 이동시키지 않는다(landed — apply_hook.go:368 유일 writer). 편입·엔진 포지션 공통의 기존 갭이므로 이 change에서 다음만 닫는다: 조정으로 수량이 0이 되면 exit_state를 completed 처리하고 trade_outcome을 ADJUSTMENT_CLOSED provenance로 동결(고아 행 방지). 비율 회계의 완전한 정합은 후속 change로 기록.
-- **재편입 루프**: CLOSED 후 재매수 → 새 instance → 재편입은 **의도된 동작**이다(명시).
+reconcile 구동 루프를 신설한다(프로덕션 호출자 0인 Ingest/Converge/Tracker에 구동자). **1회 수집 = 전체 스냅샷**(메인 스펙 SHALL — 고정 순서·부분 실패 폐기): 미체결 페이지네이션(≤ MaxPages 50) + holdings 1 + 통화별 잔고 N. **Stabiliser 판정에는 수집 2회**(최소 2초 간격). 주기 60초(재대사 최소 간격 30초 요구사항 충족 — 이 루프가 곧 주기적 재대사 절차다). §0.4 계상: 정상 상태(미체결 0~1페이지·통화 1)에서 주기당 ~4콜×2회 수집, 상한은 MaxPages가 계상 한계 — 수치를 스펙에 고정. 루프는 `Tracker.Observe`까지 구동한다(확정 하한 캡은 Tracker block 위에서만 동작 — exitwiring.go:151-155). 실행 술어는 `AutomationStatus.Verified`. Stabiliser 미수렴(사용자가 계속 수동 매매) 시 편입은 무기한 연기되며 이는 fail-closed 의도 동작이다(명시).
 
-## D7. 분석 구분 — 합성 R
+## A7. 편입 포지션의 성과 동결 (라운드 2 P1 재설계)
 
-편입 포지션의 realized_r은 합성 분모에서 나온다. trade_outcomes 스키마는 무변경 — 구분은 `positions.adoption_id IS NOT NULL` 조인으로 한다(명시 조인, 휴리스틱 아님 — position-ledger 계약 준수). trade-analytics delta: 집계는 measured/synthetic을 분리 표기해야 한다(SHALL).
+landed 동결 경로는 `entry_decision_id == ""`에서 조기 반환한다(trade_outcomes.go:175-179) — 확장 없이는 편입 포지션이 성과 행을 절대 만들지 않는다. 결정:
 
-## D8. 알림 규칙 통일
+- **엔진이 청산을 실행한 편입 포지션은 성과 행을 만든다(SHALL)**: computeTradeOutcome에 편입 분기 신설 — 매수 leg은 fill이 아니라 `position_adoptions`에서 합성(수량 = adoption.quantity, 기준가 = cost_basis 있으면 cost_basis·없으면 observed_price — 어느 쪽인지는 cost_basis_src로 판별 가능), 매도 leg은 엔진 fill 그대로, realized_r 분모는 exit_state의 합성 initial_risk. 스키마 무변경 — 합성 구분은 `positions.adoption_id` 조인(trade-analytics delta 그대로).
+- **외부 매도(조정)로 수량 0이 된 경우는 성과 행을 만들지 않는다(SHALL NOT)** — 돈이 엔진 밖에서 움직였고 매도 leg이 없다. 대신 exit_state completed 처리 + ADJUSTMENT_CLOSED exit_event 기록 + 알림(라운드 2 P1-3의 provenance 컬럼 충돌은 이 결정으로 소멸 — trade_outcomes에 provenance가 필요 없다). 이 규칙은 엔진·편입 포지션 공통이다(고아 exit_state 방지).
 
-알림은 **제외 목록 심볼의 무결정 보유 발견**과 **편입 실패**에만. 정상 지연 상태(RECONCILE 대기·인터록 미검증·enabled=false)는 무알림 — enabled=false는 대시보드 표시로만 드러난다.
+## A8. 편입 이후의 외부 개입
 
-## D9. 순서 제약
+- 외부 수량 증가: exit_states t0·initial_risk·initial_quantity 동결 유지, 감지 시 알림(재산정 없음 — 후속 change 후보).
+- 외부 부분 매도: taken_ratio_total 비율 회계의 완전 정합은 후속 change(기존 공통 갭). 수량 0 도달만 A7 규칙으로 닫는다.
+- 재편입: CLOSED 후 재매수 → 새 인스턴스 → 재편입은 의도된 동작.
 
-`internal/journal` 파일 표면이 add-operator-dashboard(RO open·계좌 단위 질의)와 겹친다. **대시보드의 journal 조각이 먼저 landed된 뒤** 이 change의 구현을 시작한다(동시 작업 금지 — WORKFLOW 병렬 규칙).
+## A9. 순서 — 대시보드와의 조율 (라운드 2 순환 의존 해소)
+
+대시보드는 **entry_decision_id 자격만으로 먼저 landed**된다(adoption_id를 알지 못한다). 이 change가 v7 착지 후 **task 2.7로 대시보드 자격 표시를 편입 포함으로 확장**한다(`internal/console` 소폭 수정 — 대시보드 landed 후이므로 충돌 없음; "콘솔 무접촉" 원칙의 유일한 예외로 명시). `internal/journal` 작업은 여전히 대시보드 조각(RO open·계좌 질의) landed 후 시작한다.

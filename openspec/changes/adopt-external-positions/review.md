@@ -28,4 +28,23 @@ Manager 재검증: 하중이 실리는 5건을 코드로 직접 확인 — 전�
 
 대시보드와의 `internal/journal` 소유권 충돌(대시보드 리뷰 P1-1)은 D9로 순차화: 대시보드 journal 조각 선행.
 
-## 라운드 2 (대기)
+
+## 라운드 2 (2026-07-27 — 판정 REVISE, 신규 P1 7·P2 4·P3 4)
+
+Manager 재검증(4건 코드 확인 — 전부 사실): trade_outcomes.go:175-179 조기 반환, reconcile Holding에 가격 필드 부재+전체 스냅샷 수집, breakEven이 exit_state.EntryPrice 사용, 1.8 핸드오프 landed(b6a0879).
+
+### Manager 처분 (3판에 반영)
+
+- **P1 알림 회귀(§0.2)**: 채택 — 무관리 보유 알림을 enabled 무관 존치(A4), 무알림은 전이 상태만. exit-policy·reconciliation delta 양쪽 복원
+- **P1 편입 성과 행 부재**: 채택 — A7 신설: 엔진 청산 편입 포지션은 동결 경로 확장(매수 leg 합성)으로 성과 행 생성, **외부 매도 종결은 성과 행 없이 completed+ADJUSTMENT_CLOSED 이벤트+알림**(매도 leg 부재의 정직한 처리 — 이 결정이 P1 provenance 컬럼 충돌도 소멸시킴)
+- **P1 절대 무발의 주장**: 채택 — "편입 트랜잭션은 발의를 생성하지 않음(SHALL NOT)" + "이후 가격 이동 발의는 정상"으로 정직화, **pct 하한 0.02**(하한 근거 provenance), 테스트 2종 분리(A2)
+- **P1 observed_price float**: 채택 — 원문 보존 SHALL은 cost_basis 한정(원문 접근 additive 추가 태스크), observed_price는 exit 관측과 동일 경로 + `[기존 제약 float64]` 태그
+- **P1 §0.4 계상 불일치**: 채택 — A6 재작성: 전체 스냅샷×2회/주기 60초, Tracker.Observe 포함, MaxPages 상한, reconciliation delta에 수치 고정
+- **P1 순환 의존**: 채택 — A9: 대시보드는 entry 자격만으로 선착지, 편입 change task 2.7이 확장(콘솔 예외 명시)
+- **P2 fold 가드 재정의**: 채택 — 가드는 entry_decision_id 명시 비교로 좁혀 유지(자격 술어와 분리), ExitEligible 하드코딩 교체(task 1.3)
+- **P2 FK 순환·중복 컬럼**: 채택 — 단방향 참조(position_adoptions.position_id 제거), 스냅샷·권위 명시(A1)
+- **P2 원장 확장 규칙 v6 고정**: 채택 — position-ledger delta에 MODIFIED 추가(v7 포함·design 참조 change-id 한정, A1~A9로 개칭)
+- **P2 manage-forward 귀결**: 채택 — "편입일 가격+비용이 보호 바닥" 명시(A2·proposal·사용자 보고)
+- **P3 골든 목록·task 1.4 문구·HighWater seed·Stabiliser 미수렴**: 전건 채택
+
+## 라운드 3 (대기)
