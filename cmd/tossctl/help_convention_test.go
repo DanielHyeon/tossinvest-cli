@@ -107,7 +107,12 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// time, each confirmed at a terminal and cancelled in the same step
 		// (verify-execution-capability task 1.5). `verify status` and `verify
 		// report` read the local record only and are not listed here.
-		"tossctl verify run":               true,
+		"tossctl verify run": true,
+		// console drives the same verify runner from a loopback page
+		// (verify-execution-capability task 1.6). It places live orders only
+		// through that runner and only after the typed approval, but it *can*
+		// place them, so it declares itself like `verify run` does.
+		"tossctl console":                  true,
 		"tossctl order place":              true,
 		"tossctl order cancel":             true,
 		"tossctl order amend":              true,

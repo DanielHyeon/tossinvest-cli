@@ -168,6 +168,10 @@ func newRootCmd() *cobra.Command {
 		// the endpoints a read-only survey structurally cannot prove. Also a new
 		// file and a new command.
 		newVerifyCmd(opts),
+		// console is the loopback operator surface for that same verification
+		// (task 1.6): the same runner, the same rails, approved on a page instead
+		// of at a terminal. New file, new command; `verify` is unchanged.
+		newConsoleCmd(opts),
 	)
 
 	return cmd
