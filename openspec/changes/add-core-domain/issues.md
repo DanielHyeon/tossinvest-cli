@@ -477,3 +477,8 @@
 - **1.x·2.x 판정 8건 승인**: unknown override key **거부**(원본은 무시 — 오타가 조용히 기본값이 되는 것보다 낫다, 의도적 역전 승인), zero-value 비용 모델의 무료 취급 차단(configured 비트 — 진입 거부·감소 경로 비대상, 스스로 찾은 fail-open), math/big 유리수(수량 floor·RR 경계 — 이진 전개가 아니라 규칙의 경계), INSUFFICIENT_CASH 병합, size-before-RR 순서(스펙 순서 준수 — a090 재작성 명시), stop="0"→INVALID_TARGET_STOP.
 - **min-RR provenance 정정**: 스펙 인용을 live_entry_contract.py:53으로 교체(default_lock은 Plan 044에서 1.3 완화 — §0.9상 추종 안 함, 2.0 유지). 값 무변경.
 - 이식 대조: costs 20/20, guardian 8+4대체/8제외, target_stop 13/16제외(P3 신호층), a090 15/21제외 — 제외 사유 전수 파일 헤더 기록 확인.
+
+## Manager 판정 (2차 물결 검증, 2026-07-26)
+
+- 독립 재실행 0 FAIL(2084). C·E 판정 16건 전부 승인 — 특히: 집계 입력 부호 fail-open 봉합(magnitudeIn), commit-then-project 순서(완화 방향 기준 선택·강화 창은 Restore로 폐쇄), 보수 우선 no-op(알림 실패 피드백 루프 차단), latch 전체 통과(부분 뷰였다면 Guardian 허용→Gateway 즉시 거부의 왕복 낭비), E31 ENTRY_WHILE_CLOSING 거부(§0.9), 거부 시 detector 비정지.
+- 승계 확정: ProjectPosition SetApplyHooks 바인딩 → 3차 F(엔진 배선 영역), Exit applier 바인딩 → 4차 7.x. 자동 강화 트리거 생산자 배선(일손실·401/403·critical outbox) → 3차 F, exit 관측 두절 → 4차 7.4. 6.3의 사전 열거 단언 1건(조정 후 차단 유지 → ADJUSTMENT_APPLIED 해제 반전) → 3차 G. 주문→인스턴스 링크 → G의 6.4 검토. 7.x 입력: 전량 청산 발의 전 working 진입 취소 선행(E31 회피).
