@@ -9,6 +9,8 @@
 - [ ] 1.3 rate limit 실측 → retry matrix·폴링 SLO 수치 확정 반영
 - [ ] 1.4 attestation 파일 생성 (만료·계좌 식별·성공 endpoint 집합·속성 결과) + 엔진 기동 인터록 연동 확인 — endpoint 집합은 `engine.RequiredEndpoints()`와 drift 가드 테스트로 동기화한다(2a가 목록을 확장하면 자동 강제; 조건주문 endpoint는 2c가 추가)
 
+- [ ] 1.5 [T] **안내형 실계좌 검증 도구** `tossctl verify run`: 2.1·2.2·2.5·2.7·2.8의 측정을 단계 목록으로 구동 — 각 mutation은 flatten-all 패턴의 TTY typed-confirmation(자동화 플래그 금지), 최소 수량·즉시 취소, 단계별 증거 JSONL 기록(→ attestation 속성 입력), 중단·재개 가능(조건주문 존속 확인은 재실행 2회 구조), 비용은 검증 주문 자체의 execution.commission에서 수집. 자동 테스트가 아니라 운영자 도구다(테스트는 httptest 전용, testenv 가드 상속). 유효 창 경계(2.7)는 의도적 이중 주문 절차임을 단계 안내문에 명시하고 기본 생략(--include-ttl-edge 옵트인)
+
 ## 2. 실계좌 검증 [M+사용자]
 
 - [ ] 2.1 주문 status enum 실측 fixture 수집 → 상태 파생 표 보강. **CANCEL_REJECTED/REPLACE_REJECTED "별도 주문 레코드"의 실제 형태**(목록 조회 노출 여부·원주문 링크 유무) 관측 포함 — 2a 브로커 상태 파생과 2c 귀속 규칙의 입력
