@@ -464,6 +464,38 @@ func TestGatewayRefusesNewOrdersUntilRecoveryCompletes(t *testing.T) {
 		if err != nil {
 			t.Fatalf("issuing the entry decision: %v", err)
 		}
+		// The entry's open-exposure hold. An EXPOSURE_RAISING decision that holds
+		// none is refused at submission since add-core-domain task 5.1 — the
+		// aggregate limits are enforced by the reservation ledger, so an entry
+		// that never took its headroom is not an authorised one. The production
+		// path takes both rows in one transaction (journal.RecordDecisionAndReserve);
+		// here the decision already exists and this only makes the ledger agree.
+		version, err := j.ReservationVersion(context.Background(), "acct-7")
+		if err != nil {
+			t.Fatalf("ReservationVersion: %v", err)
+		}
+		if _, err := j.Reserve(context.Background(), journal.ReserveRequest{
+			DecisionID:      d.ID,
+			AccountRef:      "acct-7",
+			SnapshotAsOf:    clk.Now(),
+			ObservedVersion: version,
+			SnapshotUsage: []journal.AggregateAmount{
+				{Kind: journal.ReservationKindOpenExposure, Amount: "0", Currency: "USD"},
+			},
+			Limits: []journal.AggregateAmount{
+				{Kind: journal.ReservationKindOpenExposure, Amount: "500000", Currency: "USD"},
+			},
+			Reservations: []journal.ReservationRequest{
+				{
+					ID:       "hold-" + d.ID,
+					Kind:     journal.ReservationKindOpenExposure,
+					Amount:   "200",
+					Currency: "USD",
+				},
+			},
+		}); err != nil {
+			t.Fatalf("holding the entry's exposure: %v", err)
+		}
 		return d
 	}
 

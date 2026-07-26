@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -174,7 +175,61 @@ func raisingDecision(t *testing.T, j *journal.Journal, clk clock.Clock,
 	if err != nil {
 		t.Fatalf("issuing the entry decision: %v", err)
 	}
+	holdExposure(t, j, clk, d, quantity*price, limits)
 	return d
+}
+
+// holdExposure puts the journal in the state a real issuance leaves it in: the
+// entry decision, and the open-exposure headroom it consumes, both recorded
+// (task 5.1 — the gateway refuses an EXPOSURE_RAISING decision that holds none).
+//
+// It is a fixture and not an issuer. The production path takes both rows in one
+// transaction (journal.RecordDecisionAndReserve, design D1) and internal/execgw's
+// RiskGuardian is what tests that; here the decision already exists and all this
+// has to do is make the ledger agree with it. The plain execgw.Issuer stays as it
+// was — it is the flatten saga's issuer, and flatten issues no entries.
+func holdExposure(t *testing.T, j *journal.Journal, clk clock.Clock,
+	decision execgw.GuardianDecision, notional float64, limits execgw.Limits,
+) {
+	t.Helper()
+	currency := limits.Currency
+	if currency == "" {
+		currency = "KRW"
+	}
+	ceiling := limits.MaxTotalExposure.Value
+	if ceiling <= 0 {
+		ceiling = 1e12
+	}
+	version, err := j.ReservationVersion(context.Background(), "acct-7")
+	if err != nil {
+		t.Fatalf("ReservationVersion: %v", err)
+	}
+	if _, err := j.Reserve(context.Background(), journal.ReserveRequest{
+		DecisionID:      decision.ID,
+		AccountRef:      "acct-7",
+		SnapshotAsOf:    clk.Now(),
+		ObservedVersion: version,
+		SnapshotUsage: []journal.AggregateAmount{
+			{Kind: journal.ReservationKindOpenExposure, Amount: "0", Currency: currency},
+		},
+		Limits: []journal.AggregateAmount{
+			{
+				Kind:     journal.ReservationKindOpenExposure,
+				Amount:   strconv.FormatFloat(ceiling, 'f', -1, 64),
+				Currency: currency,
+			},
+		},
+		Reservations: []journal.ReservationRequest{
+			{
+				ID:       "hold-" + decision.ID,
+				Kind:     journal.ReservationKindOpenExposure,
+				Amount:   strconv.FormatFloat(notional, 'f', -1, 64),
+				Currency: currency,
+			},
+		},
+	}); err != nil {
+		t.Fatalf("holding the exposure for decision %s: %v", decision.ID, err)
+	}
 }
 
 // exitDecision persists a RISK_REDUCING decision for a cancel, an amend or a

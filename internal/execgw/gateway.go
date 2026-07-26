@@ -484,6 +484,13 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	if rejected := g.checkDecision(decision, ref, plan, g.clk.Now()); rejected != nil {
 		return g.refuse(ctx, attempt, out, rejected)
 	}
+	//    2d. The reservation, for the entries that need one. It comes after the
+	//        decision check because the *verified* class is what decides whether
+	//        one is required — a class the caller merely asserted could exempt
+	//        itself from the aggregate limits by claiming to be an exit.
+	if rejected := g.checkReservation(ctx, decision); rejected != nil {
+		return g.refuse(ctx, attempt, out, rejected)
+	}
 
 	// 3-5. Dispatch exactly once, confirm a created order id exists, and settle
 	//      from the classification. The round trip runs inside the journal's
@@ -639,6 +646,57 @@ func (g *Gateway) checkEntry(plan mutationPlan) *RejectedError {
 		return nil
 	}
 	return g.entry.CheckEntryFor(plan.market, plan.symbol)
+}
+
+// checkReservation is the gateway's half of "예약이 총계 한도의 권위" (task 5.1,
+// engine-safety: "Gateway는 EXPOSURE_RAISING 결정의 제출 시 HELD 상태의 예약
+// 존재를 검증한다 — 예약 없는 진입 결정은 거부된다").
+//
+// # Why this exists when the issuance is already atomic
+//
+// The atomic API makes "a submittable decision with no reservation" unreachable
+// *from the issuer* — a refused reservation rolls the decision back with it. But
+// unreachable-by-construction only covers the issuers this build has. A decision
+// row can also arrive from an older build, from a hand-edited journal, or from a
+// future issuer that takes the reservation in a second transaction, and in every
+// one of those cases the row looks exactly like a valid authorisation. The two
+// checks together are what make the statement true rather than intended: one
+// removes the state, the other refuses it.
+//
+// # Why it is not repeated immediately before the broker call
+//
+// The last-moment re-verification exists for the things that can change under a
+// held decision: the row (tamper) and the clock (expiry). A HELD reservation is
+// released by the attempt settling — this attempt, which has not dispatched — or
+// by the lapse sweep, which releases holds whose decision has expired; and an
+// expired decision is refused by the re-read `checkDecision` in that same
+// window. So there is no interleaving that turns a HELD reservation into a
+// released one while the decision it belongs to is still submittable.
+//
+// # Failing closed on a read error
+//
+// A reservation that cannot be read is treated as one that is not there. "The
+// database did not answer" is not evidence that the headroom was taken, and this
+// is the entry path — the direction where the conservative answer is to refuse.
+func (g *Gateway) checkReservation(ctx context.Context, dec journal.Decision) *RejectedError {
+	if dec.SafetyClass != journal.SafetyClassExposureRaising {
+		return nil
+	}
+	reservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)
+	if err != nil {
+		return reject(ReasonGuardianReservationMissing,
+			"the reservations of decision %s could not be read, so the headroom it consumes "+
+				"cannot be shown to have been taken: %v", short(dec.ID), err)
+	}
+	for _, reservation := range reservations {
+		if reservation.Held() {
+			return nil
+		}
+	}
+	return reject(ReasonGuardianReservationMissing,
+		"decision %s holds no risk reservation (%d recorded, none HELD); the aggregate limits "+
+			"are enforced by the reservation ledger, so an entry that never took its headroom "+
+			"is not an authorised one", short(dec.ID), len(reservations))
 }
 
 // refuse closes a journalled attempt that never reached the broker.

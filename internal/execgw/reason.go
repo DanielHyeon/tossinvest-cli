@@ -199,6 +199,23 @@ const (
 	// start again is a separate human decision (§0.7). Exits are untouched —
 	// nothing about this code path can refuse a cancel or a liquidation (§0.3).
 	ReasonFlattenInProgress ReasonCode = "flatten_in_progress"
+
+	// --- the reservation as authority (add-core-domain task 5.1) -------------
+
+	// ReasonGuardianReservationMissing: an EXPOSURE_RAISING decision reached
+	// submission without a HELD risk reservation.
+	//
+	// The aggregate limits are enforced by the reservation ledger, not by the
+	// decision (engine-safety: "총계 한도의 최종 권위는 예약 트랜잭션"), so an entry
+	// decision that never took the headroom it needs was never paid for. The
+	// atomic issuance API makes that state unreachable from the issuer's side;
+	// this code is the other side of the same statement, and the two together are
+	// what make "예약 없는 진입 결정은 거부된다" true rather than merely intended.
+	//
+	// RISK_REDUCING decisions never carry one: an exit lowers the aggregate it
+	// would otherwise be reserving against, and a limit that could refuse a
+	// liquidation is a trap (§0.3).
+	ReasonGuardianReservationMissing ReasonCode = "guardian_reservation_missing"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was

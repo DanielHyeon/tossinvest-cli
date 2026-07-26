@@ -510,6 +510,24 @@
   `IssueRefusalReason` 테스트가 매핑을 고정). 테스트 주석에 도달 불가의 이유를 적었다 —
   "테스트가 없다"와 "구조적으로 일어날 수 없다"는 다른 사실이다.
 
+## 2026-07-26 [safe local] HELD 예약 검증이 바꾼 테스트 **셋업** 2곳 — 단언은 무변경 (task 5.1)
+
+- 사실: Gateway가 EXPOSURE_RAISING 제출에 HELD 예약을 요구하면, 예약 없이 진입 결정을 만들던
+  기존 테스트 픽스처가 전부 거부된다. 실제로 성공 경로까지 가는 곳은 둘뿐이었다 —
+  `internal/execgw/gateway_test.go`의 `raisingDecision`(execgw의 모든 진입 테스트가 경유)과
+  `internal/reconcile/recovery_test.go`의 `entry()`("복구 후에는 통과한다").
+- 이번 처리: 두 곳 다 **셋업에 예약 1행을 추가**했다(`j.Reserve` — 결정은 이미 있으므로 원장을
+  거기에 맞추는 것뿐). 단언은 하나도 바뀌지 않았고 약해지지도 않았다. 픽스처가 두 트랜잭션을
+  쓰는 것은 D1 위반이 아니다 — D1은 **발급 경로**의 계약이고, 그 경로는 `RiskGuardian`이
+  원자 API로 만들고 4.1 테스트가 고정한다.
+- 검사 위치: `checkDecision` **뒤**(2d). 이유는 클래스다 — 검증된 클래스만이 "예약이 필요한가"에
+  답할 수 있고, 호출자가 주장한 클래스로 판단하면 매수가 RISK_REDUCING 배지를 달고 총계 한도를
+  건너뛴다. 부수 효과로 게이트·preflight·결정 검증 거부가 먼저 나므로 `mismatch_test`처럼
+  앞 단계에서 거부되던 테스트는 무영향이다.
+- 제출 직전 재검증에 넣지 않은 이유: HELD 해제 경로는 (a) attempt 종결 — 이 attempt는 아직
+  발송 전이고, (b) 만료 결정의 lapse sweep — 그 창은 재읽기 `checkDecision`의 만료 검사가
+  이미 닫는다. 파일 주석에 적었다.
+
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
 
 - **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).

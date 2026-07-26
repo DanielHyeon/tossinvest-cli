@@ -37,7 +37,7 @@
 
 ## 5. Gateway·인터록 확장 (engine-safety delta 전사)
 
-- [ ] 5.1 [T][High-risk] Gateway의 EXPOSURE_RAISING HELD 예약 검증(예약 없는 진입 결정 거부) — RISK_REDUCING 비요구·flatten 무영향 회귀
+- [x] 5.1 [T][High-risk] Gateway의 EXPOSURE_RAISING HELD 예약 검증(예약 없는 진입 결정 거부) — RISK_REDUCING 비요구·flatten 무영향 회귀
 - [ ] 5.2 [T][High-risk] 인터록 조항 6(ProtectionReady — 미충족 상수, 게이트 ON 거부)·가격 조회를 `engine.RequiredEndpoints()`에 추가(soak 목록·retry matrix의 QueryPrice@15s는 **이미 landed** — 실제 델타는 engine 목록+drift guard 통과 확인뿐)
 
 ## 6. 포지션 투영·reconciliation
