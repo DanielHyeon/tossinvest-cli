@@ -59,7 +59,7 @@
 
 ## 8. 완료 게이트 [M]
 
-- [ ] 8.1 diff 리뷰: Pre-Edit 승인 범위, CLI confirm token 무변경, 조건주문 코드 0줄, 브로커 가정 태그 전수 확인
-- [ ] 8.2 `go test ./... -race` 독립 재실행 green — 기존 단언 변경은 1.1(clientOrderId 배선)·1.3(PrepareRequest·durability_test)·5.1(파생 재작성)·5.2(원문 저장)·7.4(봉인 — seal_test.go:21 "TradingService is deliberately not caught" 주석 **반전** 포함, engine_test·precheck_test·wts_isolation_test)의 **사전 열거 목록만** 허용, 그 외 회귀 없음
-- [ ] 8.3 crash 주입·동시성·예약 누수·재생 경계 테스트 결과 확인, `issues.md` 검토
+- [x] 8.1 diff 리뷰: Pre-Edit 승인 범위, CLI confirm token 무변경, 조건주문 코드 0줄, 브로커 가정 태그 전수 확인
+- [x] 8.2 `go test ./... -race` 독립 재실행 green — 기존 단언 변경은 1.1(clientOrderId 배선)·1.3(PrepareRequest·durability_test)·5.1(파생 재작성)·5.2(원문 저장)·7.4(봉인 — seal_test.go:21 "TradingService is deliberately not caught" 주석 **반전** 포함, engine_test·precheck_test·wts_isolation_test)의 **사전 열거 목록만** 허용, 그 외 회귀 없음
+- [x] 8.3 crash 주입·동시성·예약 누수·재생 경계 테스트 결과 확인, `issues.md` 검토
 - 8.4 (게이트 명령 자체) `make gate CHANGE=extend-execution-contract` 통과 후 완료 선언

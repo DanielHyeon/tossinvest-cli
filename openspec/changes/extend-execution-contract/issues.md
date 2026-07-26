@@ -757,3 +757,17 @@
 - **2.5 [M] 수행**: indoubt.go·retry.go의 "no idempotency key" 서술을 정정(재생=정체 회수, replay.go 참조). P1 아카이브 스펙 정정은 델타(MODIFIED IN_DOUBT 해소·Retry Matrix)가 담당 — archive 시 반영 확인 예정.
 - **7.x 승계 확정 목록**: interlock의 누락 한도 3종+Limits.Validate() 전환(7.5), Orders 배선 확인(7.5), Tracker.Restore 기동 호출(7.3), reconcile_states 투영 재구성(7.3), PruneSpentNonces 기동 1회(7.2), HTTPReplay 헤더 배선(7.3 — attestation OFF라 dark), MaxWaits 수치는 [미측정 — 2b].
 - 확정 하한의 소비자 부재: 의도됨 — 자동 청산 경로는 엔진 루프 소유 change(2d)의 몫.
+
+## Manager 판정 (4차 물결·완료 게이트, 2026-07-26)
+
+- **범위 이탈 5건 전부 승인**: (1) `official/auth_headers.go` — additive 1메서드, 기존 줄·호출자 무변경, HTTPReplay 헤더에 필수. (2) `Gateway.Wiring()` 읽기 전용 접근자 — 인터록이 "무엇이" 배선됐는지 물을 수 있어야 함. (3) Preflight 배선 — nil은 "검사 생략"이지 "통과"가 아니므로 정당. (4) 허가 패키지 내 신규 파일 2건. (5) `broker.go` CarriesIdempotencyKey + 컴파일 타임 단언.
+- **8.2 허용 목록 확장 승인**: `TestGateOffStartsAndTouchesNothing`→`TestGateOffStartsAndDoesNoGateWork`(기동 계좌 1회 읽기는 7.1의 명시 결과), 나머지는 헬퍼·접근자 개명. seal 테스트의 성질 기반 재작성(모든 mutation 동사가 GuardianDecision을 요구하는지 + 양성 대조군)은 원 의도의 강화.
+- **engine.go의 Conditional 2줄**: 신규 로직 아님 — P1 기존 CLI 경로 배선의 봉인 재배치(구 Context 생성부 동일 호출 삭제 확인). 경계(신규 조건주문 계약 0줄) 유지.
+- **Guardian 단일 출처를 ExposureLimiter 능력 인터페이스로**: 승인 — Authorize 호출로 한도를 조회하면 그것이 곧 첫 주문 발급이라는 관찰이 정확. 한도를 말할 수 없는 Guardian 거부는 fail-closed.
+- **기동 비용 변화 문서화 확인**: gate-off 엔진의 계좌 1읽기·journal open·nonce 스윕, ext4 allowlist가 엔진 기동 조건화 — 전부 의도된 상속.
+
+## 완료 게이트 기록
+
+- 8.1 diff 리뷰: Pre-Edit 실측 파일 = 허가 4 + 승인 이탈(auth_headers) + 비계약 편집(durability 훅). CLI confirm token golden 무변경. 조건주문 신규 코드 0줄. [미측정] 태그 18파일.
+- 8.2 독립 재실행: `go test ./... -race -count=1` 0 FAIL (1785 tests, 41 pkgs), vet clean.
+- 8.3 crash 주입(마이그레이션 실패 무손상·커밋 전후 중단)·예약 누수(만료 추정 금지·UNKNOWN 보존)·재생 경계(TTL−margin 회당·409 무소비·422 비FAILED)·as-of 동시성 테스트 전부 존재·green 확인. issues.md 전 항목 판정 완료.
