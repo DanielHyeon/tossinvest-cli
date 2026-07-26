@@ -264,13 +264,23 @@ func (j *Journal) Reserve(ctx context.Context, req ReserveRequest) (ReserveResul
 			ErrSnapshotSuperseded, req.ObservedVersion, current)
 	}
 
-	// 3. The decision, read inside the transaction. A decision that expired
+	// 3. Lapsed holds, computed here rather than on a timer (task 3.2): an
+	//    expiry whose nonce was never spent, and a daily-loss hold whose market
+	//    has moved to another trading day. It runs *after* the version check so
+	//    that this transaction's own housekeeping does not invalidate the
+	//    caller's snapshot — a release only frees headroom, and the caller's
+	//    snapshot never counted our holds in the first place.
+	if _, err := sweepLapsedReservations(ctx, tx, plan.accountRef, now); err != nil {
+		return ReserveResult{}, err
+	}
+
+	// 4. The decision, read inside the transaction. A decision that expired
 	//    between issue and reservation authorises nothing.
 	if err := checkDecisionReservable(ctx, tx, plan, now); err != nil {
 		return ReserveResult{}, err
 	}
 
-	// 4. The aggregate, summed exactly.
+	// 5. The aggregate, summed exactly.
 	held, err := heldTotals(ctx, tx, plan.accountRef)
 	if err != nil {
 		return ReserveResult{}, err
@@ -279,7 +289,7 @@ func (j *Journal) Reserve(ctx context.Context, req ReserveRequest) (ReserveResul
 		return ReserveResult{}, err
 	}
 
-	// 5. Insert.
+	// 6. Insert.
 	out := ReserveResult{Reservations: make([]Reservation, 0, len(plan.rows))}
 	for _, row := range plan.rows {
 		if _, err := tx.ExecContext(ctx,

@@ -302,6 +302,48 @@
 - 기본값: 상한 3회(스펙 명시), 예산 10초 = `riskcalc.AccountSnapshotStaleness`. 데이터가 신선하게
   유지되는 시간보다 오래 도는 루프는 성공할 수 없고 진입 결정만 붙잡는다.
 
+## 2026-07-26 [safe local] 종결 해제 훅을 `transition()` 한 곳에 걸었다 — CONFIRMED는 해제하지 않는다 (task 3.2)
+
+- 사실: D5의 해제 트리거 중 "파생된 브로커 종결 상태 도달"은 attempt 종결(NOT_DISPATCHED·
+  FAILED_CONFIRMED)과 주문 종결(FILLED/CANCELLED/REJECTED 계열) 둘 다를 포함한다. 전자는
+  `Settle`·`ResolveFailed`·재시작 복구가 각각 부르고, 후자는 `RecordFill`이 부른다.
+- 이번 처리: attempt 쪽은 메서드마다가 아니라 **`transition()` 안에서 목적 상태로 판정**한다
+  (`releasesReservations`). 그래서 gateway의 refuse, 재시작 복구의 NOT_DISPATCHED, 해소의
+  FAILED_CONFIRMED가 전부 자동으로 같은 트랜잭션 안에서 해제된다 — 생산자가 기억할 것이 없다.
+  주문 쪽은 `RecordFill`의 같은 `BEGIN IMMEDIATE` 안에서 `broker_order_id` 조인으로 해제한다.
+- **CONFIRMED는 해제하지 않는다.** 주문이 실재한다는 뜻이므로 노출은 살아 있고, 해제하면 살아 있는
+  노출에 대해 한도 여유를 열어준다. UNRESOLVED_IN_DOUBT도 해제하지 않는다(운영자 유일 출구).
+  둘 다 테스트로 고정(`TestFailedConfirmedReleasesAndConfirmedDoesNot`).
+- 8.2 참고: `transition()`은 1.3·1.7이 이미 손댄 함수다. 이번 추가는 **예약이 없는 attempt에는
+  no-op**이므로 기존 단언 변경 0건이다(전체 스위트 재실행 green).
+
+## 2026-07-26 [safe local] 운영자 해제의 audit을 인터페이스로 뺐다 — `audit.Log.RecordAction` 추가 (task 3.2)
+
+- 사실: 스펙은 운영자 해제에 "근거 기록·audit 필수"를 건다. 그런데 `internal/journal`은
+  `internal/audit`을 import하지 않으며, `audit.Log`에는 `RecordChange`(값이 바뀔 때만 기록)뿐이라
+  **같은 해제를 두 번 하면 두 번째가 삼켜진다** — 사건 로그에는 틀린 의미론이다.
+- 이번 처리: (1) `internal/audit`에 `RecordAction(action, setting, value, detail)` 추가 —
+  무조건 append. `RecordChange`는 한 줄도 바꾸지 않았다. (2) journal은 그 시그니처만 요구하는
+  1-메서드 인터페이스 `ReservationAuditor`를 정의한다. 의존 방향이 생기지 않고, 배선은
+  `Auditor: auditLog` 한 줄이다. (3) action 문자열은 journal이 소유
+  (`AuditActionReservationRelease = "risk_reservation.release"`) — 사건의 주인이 journal이므로.
+- **audit 기록이 실패하면 해제도 실패한다**(commit 전에 기록). 근거 없이 풀린 홀드가 남는 것보다
+  풀리지 않는 편이 낫다. 테스트: `TestAFailedAuditWriteAbortsTheRelease`.
+- 후속 task 입력: **7.3/7.5**가 운영자 해제 CLI/배선을 만들 때 `audit.Open(...)`의 `*Log`를
+  그대로 넘기면 된다.
+
+## 2026-07-26 [observation] 거래일 소멸의 시장을 결정 preimage에서 유도했다 (task 3.2)
+
+- 사실: `risk_reservations`에는 market 컬럼이 없다(D9 표). `trading_day`는 시장-로컬 날짜인데
+  어느 시장의 날짜인지가 행에 없다. attempt→intent 조인은 예약 시점에 attempt가 없어서 못 쓴다.
+- 이번 처리: `decisions.risk_preimage`(RiskIntent/ReductionIntent 둘 다 market 필드를 가진다)를
+  파싱해 `clock.Market.TradingDay(now)`와 비교한다. 파싱·시장 해석 실패는 **소멸시키지 않고
+  보존**하며 `ReservationsAwaitingOperator`에 `UNKNOWN_MARKET`으로 뜬다 — 한도를 필요보다 좁게
+  두는 방향이 보수적이다.
+- 소멸은 **lazy**다: 원장을 다음에 쓸 때(`Reserve` 트랜잭션 안)와 기동 시(3.3)만 계산하며 타이머는
+  없다. 위험 홀드를 푸는 백그라운드 goroutine은 트랜잭션 규율 없는 두 번째 writer이고, 엔진이
+  거래를 멈춘 뒤에도 계속 돈다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

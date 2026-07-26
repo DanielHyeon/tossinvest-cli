@@ -619,6 +619,19 @@ func (a *Attempt) transition(ctx context.Context, to AttemptState, o transitionO
 		a.id, string(current), string(to), now, o.reasonCode, o.detail); err != nil {
 		return fmt.Errorf("journal: recording the %s->%s transition for %s: %w", current, to, a.id, err)
 	}
+	// A terminal state that ends the exposure frees the decision's holds in
+	// this same transaction (design D5, task 3.2). NOT_DISPATCHED means nothing
+	// was ever sent and FAILED_CONFIRMED means the broker definitively refused;
+	// CONFIRMED and UNRESOLVED_IN_DOUBT deliberately release nothing, because
+	// in both of those the exposure may well exist. An attempt with no
+	// reservations releases nothing, which is every attempt recorded before
+	// this contract.
+	if releasesReservations(to) {
+		if _, err := releaseReservationsForAttempt(ctx, tx, a.id, ReleaseReasonBrokerTerminal,
+			fmt.Sprintf("attempt %s reached %s", a.id, to), now); err != nil {
+			return err
+		}
+	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("journal: committing the %s->%s transition for %s: %w", current, to, a.id, err)
 	}

@@ -183,6 +183,26 @@ func (l *Log) RecordChange(action, setting, newValue, detail string) (bool, erro
 	})
 }
 
+// RecordAction appends an entry unconditionally.
+//
+// It is the counterpart to RecordChange for events rather than settings. A
+// setting has a previous value worth deduplicating against; an action — an
+// operator releasing a risk reservation, say — happened, and a second identical
+// one is a second event, not a repeat of the first. Collapsing those would hide
+// exactly the pattern (the same override, twice, minutes apart) that a reviewer
+// is looking for.
+func (l *Log) RecordAction(action, setting, value, detail string) error {
+	if l == nil {
+		return nil
+	}
+	return l.Record(Entry{
+		Action:  action,
+		Setting: setting,
+		New:     value,
+		Detail:  detail,
+	})
+}
+
 // Latest returns the most recent entry for a setting.
 func (l *Log) Latest(setting string) (Entry, bool, error) {
 	entries, err := l.Entries()

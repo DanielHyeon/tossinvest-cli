@@ -151,6 +151,15 @@ type FillResult struct {
 	// CommittedAt is when the transaction committed, RFC3339 UTC. It is the far
 	// end of the fill-detection SLO measurement.
 	CommittedAt string
+
+	// ReleasedReservations are the risk reservations this observation freed,
+	// because it derived the order as terminal (design D5, task 3.2). The
+	// release happened inside the same transaction as the snapshot.
+	ReleasedReservations []ReservationRelease
+	// ReservationAlerts are holds this observation could *not* free and that
+	// only an operator can. A fail-closed snapshot produces them: the hold is
+	// correct, and somebody has to be told it exists.
+	ReservationAlerts []ReservationAlert
 }
 
 // FillSnapshotRecord is a stored snapshot.
@@ -273,6 +282,16 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		if err := markFillRefused(ctx, tx, orderID, obs, refusal, now, hadPrev); err != nil {
 			return res, err
 		}
+		// Nothing is released on a refusal — that is the point. A snapshot the
+		// derivation could not explain (CLOSED, nothing filled, no cancellation:
+		// what an expiry would look like, [미측정 — 2b 2.1]) leaves the hold
+		// standing, and the operator is told which holds it is standing on
+		// (design D5: 만료 추정으로 해제하지 않는다).
+		alerts, err := alertsForOrder(ctx, tx, orderID, ReasonFillStateUnknown, refusal.detail)
+		if err != nil {
+			return res, err
+		}
+		res.ReservationAlerts = alerts
 		if err := tx.Commit(); err != nil {
 			return res, fmt.Errorf("journal: committing the refused snapshot of %s: %w", orderID, err)
 		}
@@ -352,6 +371,19 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		}
 		res.Delta = decimalString(delta)
 		res.DeltaQuantity = delta
+	}
+
+	// 5. A *derived* terminal state frees the decision's holds, in this same
+	//    transaction (design D5). The verdict is the caller's derivation
+	//    (internal/brokerstate), never a guess made here: this branch is
+	//    unreachable for a fail-closed observation, which returned above.
+	if obs.Terminal {
+		released, err := releaseReservationsForOrder(ctx, tx, orderID, ReleaseReasonBrokerTerminal,
+			fmt.Sprintf("order %s derived terminal as %s", orderID, obs.State), now)
+		if err != nil {
+			return res, err
+		}
+		res.ReleasedReservations = released
 	}
 
 	if err := tx.Commit(); err != nil {
