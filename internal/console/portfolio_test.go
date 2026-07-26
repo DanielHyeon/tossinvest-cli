@@ -390,6 +390,82 @@ func TestThePositionsScreenRendersWithEitherSourceMissing(t *testing.T) {
 	})
 }
 
+// TestAnEmptyJournalSaysSoRatherThanLookingLikeAMissingOne.
+//
+// Spec scenario "엔진 미가동 상태의 대시보드" pairs two states — journal 파일이
+// 없거나 포지션 테이블이 비어 있으면 — and they are different facts. A read ledger
+// with nothing in it is the engine managing nothing; a missing one is the engine
+// never having started.
+func TestAnEmptyJournalSaysSoRatherThanLookingLikeAMissingOne(t *testing.T) {
+	h := newDashboardHarness(t)
+	seedEmptyJournal(t, h.journal)
+	h.authenticate(t)
+
+	page := h.page(t, "/positions")
+	if !strings.Contains(page, "관리 포지션 없음") {
+		t.Error("an empty but readable journal does not say 관리 포지션 없음")
+	}
+	if strings.Contains(page, "엔진 미가동") {
+		t.Error("a readable journal is reported as 엔진 미가동")
+	}
+	if !strings.Contains(page, "005930") {
+		t.Error("the broker holdings did not render")
+	}
+	if !strings.Contains(page, "관리 외(미편입)") {
+		t.Error("holdings with no journal position are not marked unmanaged")
+	}
+
+	// And the seeded one does not claim it.
+	full := newDashboardHarness(t)
+	seedJournal(t, full.journal)
+	full.authenticate(t)
+	if strings.Contains(full.page(t, "/positions"), "관리 포지션 없음") {
+		t.Error("a journal with live positions claims to have none")
+	}
+}
+
+// TestAHoldingIsNotCalledUnmanagedWhenTheJournalCouldNotBeRead.
+//
+// "관리 외(미편입)" is a finding: the ledger was read and this holding is not an
+// exit-policy target. When the ledger could not be read there is no finding, and
+// saying it anyway is how an operator ends up believing a protected position is
+// bare — or, worse, believing a bare one is fine because the screen looked the
+// same as always.
+func TestAHoldingIsNotCalledUnmanagedWhenTheJournalCouldNotBeRead(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		setup func(t *testing.T, path string)
+		want  string
+	}{
+		{"no journal file", func(*testing.T, string) {}, "엔진 미가동"},
+		{"schema too old", seedOldJournal, "엔진 기동 필요"},
+		{"schema too new", func(t *testing.T, path string) {
+			seedJournal(t, path)
+			bumpSchemaVersion(t, path, 9999)
+		}, "콘솔 업데이트 필요"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newDashboardHarness(t)
+			tc.setup(t, h.journal)
+			h.authenticate(t)
+
+			page := h.page(t, "/positions")
+			if !strings.Contains(page, tc.want) {
+				t.Errorf("the journal state is not reported as %q", tc.want)
+			}
+			if strings.Contains(page, "관리 외(미편입)</td>") {
+				t.Error("a holding is labelled unmanaged although the journal was never read")
+			}
+			if !strings.Contains(page, "관리 여부 불명") {
+				t.Error("the rows do not say the management state is unknown")
+			}
+			if !strings.Contains(page, "관리 중이 아니라고 단정하지 않는다") {
+				t.Error("the row gives no reason for the unknown state")
+			}
+		})
+	}
+}
+
 // TestThePositionsScreenNamesBothSchemaDirections.
 //
 // Spec scenario "스키마 불일치 — 양방향". Neither direction may be disguised as an

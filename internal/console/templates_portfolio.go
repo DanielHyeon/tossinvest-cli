@@ -73,6 +73,10 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 
 {{with .Snap}}
 {{template "journalstate" .Journal}}
+{{if .NoManaged}}
+<p class="notice"><strong>관리 포지션 없음.</strong> 원장은 정상적으로 읽혔고, 엔진이 관리 중인 미청산
+포지션이 하나도 없다. 아래 보유가 있다면 전부 엔진 밖에서 생긴 것이다.</p>
+{{end}}
 {{template "brokerstate" .Holdings}}
 
 {{if .Rows}}

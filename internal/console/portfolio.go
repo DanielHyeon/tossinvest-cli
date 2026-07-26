@@ -29,6 +29,11 @@ package console
 // external holding *into* management is a different change's job, and this screen
 // deliberately cannot do it.
 //
+// There is a third answer and it is not that label: when the journal could not be
+// read, a holding is 관리 여부 불명. "Unmanaged" is a finding, and a console that
+// has not opened the ledger has not found it — reporting one as the other is how
+// an operator would come to believe a protected position was bare.
+//
 // # Nothing is recomputed
 //
 // The history screen prints columns. trade_outcomes froze realised P&L, realised
@@ -152,6 +157,24 @@ type positionsView struct {
 // Multi reports that the journal holds more than one account.
 func (v positionsView) Multi() bool { return len(v.Accounts) > 1 }
 
+// NoManaged reports a journal that was read and holds no live position at all.
+//
+// It is a separate sentence from "엔진 미가동" because it is a different fact: the
+// ledger answered, and the answer is that the engine is managing nothing. The
+// spec pairs the two ("엔진 미가동/관리 포지션 없음") and an operator needs to know
+// which of them they are looking at.
+func (v positionsView) NoManaged() bool {
+	if !v.Journal.Readable() {
+		return false
+	}
+	for _, r := range v.Rows {
+		if r.InJournal {
+			return false
+		}
+	}
+	return true
+}
+
 // positionRow is one symbol, from whichever side knows about it.
 //
 // The two halves are separate on purpose. A symbol the broker reports and the
@@ -172,6 +195,12 @@ type positionRow struct {
 	UnrealizedPnL float64
 	ProfitRate    float64
 
+	// JournalReadable reports that the journal answered at all. It is what keeps
+	// "관리 외(미편입)" an observation rather than a guess: when the journal could
+	// not be opened, a holding is not known to be unmanaged — it is unknown, and
+	// the row says so.
+	JournalReadable bool
+
 	// The journal half.
 	InJournal       bool
 	AccountRef      string
@@ -187,11 +216,20 @@ type positionRow struct {
 // Managed reports that the engine's exit policy owns this position.
 func (r positionRow) Managed() bool { return r.InJournal && r.Eligible }
 
-// Label is the one-word verdict in the status column. The unmanaged label is
-// fixed by the spec to this exact string; there is not a second spelling of it
-// anywhere in this package.
+// Unknown reports a holding whose management could not be determined, because
+// the journal did not answer. It is deliberately not folded into "unmanaged": a
+// console that could not read the ledger has not established that a position is
+// unprotected, and saying so would be the screen asserting something it did not
+// observe.
+func (r positionRow) Unknown() bool { return !r.JournalReadable && !r.InJournal }
+
+// Label is the verdict in the status column. The unmanaged label is fixed by the
+// spec to this exact string; there is not a second spelling of it anywhere in
+// this package.
 func (r positionRow) Label() string {
 	switch {
+	case r.Unknown():
+		return "관리 여부 불명"
 	case !r.Managed():
 		return "관리 외(미편입)"
 	case r.HasExit && r.Exit.Completed:
@@ -206,6 +244,9 @@ func (r positionRow) Label() string {
 // Reason explains an absent exit line. It is empty when there is one to show.
 func (r positionRow) Reason() string {
 	switch {
+	case r.Unknown():
+		return "엔진 원장을 읽지 못했으므로 이 보유가 엔진 관리 대상인지 알 수 없다 — 위의 원장 안내를 보라. " +
+			"관리 중이 아니라고 단정하지 않는다."
 	case !r.InJournal:
 		return "엔진 원장에 이 종목의 포지션이 없다 — 엔진이 진입한 포지션이 아니므로 손절·익절 라인도 없다. " +
 			"수동 보유를 엔진 관리로 편입하는 것은 이 화면의 기능이 아니다."
@@ -308,7 +349,7 @@ func (c *Console) positions(ctx context.Context) positionsView {
 		}
 	}
 
-	v.Rows = joinPositions(v.Holdings.Rows, journalRows)
+	v.Rows = joinPositions(v.Holdings.Rows, journalRows, v.Journal.Readable())
 	return v
 }
 
@@ -322,7 +363,8 @@ func (c *Console) positions(ctx context.Context) positionsView {
 // A second journal position claiming a key the first already took becomes its own
 // row instead of overwriting: two live instances of one symbol is a state worth
 // showing, not one worth silently resolving.
-func joinPositions(broker []domain.Position, managed []journal.PositionExit) []positionRow {
+func joinPositions(broker []domain.Position, managed []journal.PositionExit,
+	journalReadable bool) []positionRow {
 	index := map[string]int{}
 	rows := make([]positionRow, 0, len(broker)+len(managed))
 
@@ -330,16 +372,17 @@ func joinPositions(broker []domain.Position, managed []journal.PositionExit) []p
 		key := symbolKey(h.MarketType, h.Symbol)
 		index[key] = len(rows)
 		rows = append(rows, positionRow{
-			Symbol:        strings.ToUpper(strings.TrimSpace(h.Symbol)),
-			Market:        strings.ToLower(strings.TrimSpace(h.MarketType)),
-			Name:          h.Name,
-			InBroker:      true,
-			Quantity:      h.Quantity,
-			AvgPrice:      h.AveragePrice,
-			LastPrice:     h.CurrentPrice,
-			MarketValue:   h.MarketValue,
-			UnrealizedPnL: h.UnrealizedPnL,
-			ProfitRate:    h.ProfitRate,
+			Symbol:          strings.ToUpper(strings.TrimSpace(h.Symbol)),
+			Market:          strings.ToLower(strings.TrimSpace(h.MarketType)),
+			Name:            h.Name,
+			JournalReadable: journalReadable,
+			InBroker:        true,
+			Quantity:        h.Quantity,
+			AvgPrice:        h.AveragePrice,
+			LastPrice:       h.CurrentPrice,
+			MarketValue:     h.MarketValue,
+			UnrealizedPnL:   h.UnrealizedPnL,
+			ProfitRate:      h.ProfitRate,
 		})
 	}
 
@@ -350,15 +393,17 @@ func joinPositions(broker []domain.Position, managed []journal.PositionExit) []p
 			at = len(rows)
 			index[key] = at
 			rows = append(rows, positionRow{
-				Symbol: strings.ToUpper(strings.TrimSpace(m.Position.Symbol)),
-				Market: strings.ToLower(strings.TrimSpace(m.Position.Market)),
+				Symbol:          strings.ToUpper(strings.TrimSpace(m.Position.Symbol)),
+				Market:          strings.ToLower(strings.TrimSpace(m.Position.Market)),
+				JournalReadable: journalReadable,
 			})
 		} else if rows[at].InJournal {
 			// Already claimed by another instance: give this one its own row.
 			at = len(rows)
 			rows = append(rows, positionRow{
-				Symbol: strings.ToUpper(strings.TrimSpace(m.Position.Symbol)),
-				Market: strings.ToLower(strings.TrimSpace(m.Position.Market)),
+				Symbol:          strings.ToUpper(strings.TrimSpace(m.Position.Symbol)),
+				Market:          strings.ToLower(strings.TrimSpace(m.Position.Market)),
+				JournalReadable: journalReadable,
 			})
 		}
 		row := &rows[at]
