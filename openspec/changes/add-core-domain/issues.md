@@ -528,6 +528,23 @@
   발송 전이고, (b) 만료 결정의 lapse sweep — 그 창은 재읽기 `checkDecision`의 만료 검사가
   이미 닫는다. 파일 주석에 적었다.
 
+## 2026-07-26 [safe local] 조항 6은 상수이고, 수락 경로는 테스트 전용 seam으로 유지했다 (task 5.2)
+
+- 사실: 경계 규칙은 "ProtectionReady 표지는 **미충족 상수**로만 존재"다. 그대로 구현하면
+  게이트 ON 완전 통과가 이 저장소에서 구조적으로 불가능해지고, 수락 경로를 다루던 기존 테스트 4건
+  (`TestGateOnWithEverythingInPlaceStarts`·`TestGateToggleIsAudited`의 두 번째 기동·
+  `TestAcceptedStartAuditsEveryLimit`·`TestGateDecisionIsLoggedStructurally/verified`)이
+  전부 "거부" 테스트로 바뀐다 — 감사 수락 줄·검증된 구조적 로그가 2c까지 무검증으로 남는다.
+- 이번 처리: 상수는 상수로 두고(`profileProtection = ProtectionUnwired`, config 키도 Options
+  필드도 없음), 네 테스트는 `export_test.go`의 `SetProtectionReadyForTest()`(비공개 필드
+  `protectionOverride`)로 조항 6만 충족시킨다. `journalFSProber`와 같은 패턴이고 빌드 바이너리에는
+  없다. **단언은 4건 모두 무변경** — 바뀐 것은 헬퍼 이름뿐(`openProtectedGateEngine`).
+- 조항 순서는 마지막이다. 그래야 "조항 6 도달"이 곧 "1~5 통과"의 증명이 되고(4.2 조합 테스트가
+  그 성질을 쓴다), 운영자에게는 자기가 고칠 수 있는 결함이 먼저 보인다.
+- 가격 조회: `engine.RequiredEndpoints()`에 `GET /api/v1/prices` 1행 추가가 실제 델타 전부였다
+  (soak 목록·retry matrix는 landed). drift guard(`cmd/tossctl/soak_test.go`) 무수정 통과 확인 +
+  "5.2 이전 attestation"(prices만 빠진 목록) 거부 케이스를 refusal 표에 추가했다.
+
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
 
 - **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).

@@ -35,6 +35,20 @@ func (c *Context) OfficialClientForTest() *official.Client { return c.official }
 // field itself must not exist in the built binary's API.
 func (o *Options) SetJournalProberForTest(p journal.FSProber) { o.journalFSProber = p }
 
+// SetProtectionReadyForTest satisfies interlock clause 6 (task 5.2). TESTS ONLY.
+//
+// The clause is unmeetable in the built binary — profileProtection is a constant
+// that says this build has no broker-resident protective execution, and the
+// change that wires it flips that constant. Without a seam, every test about an
+// *accepted* gate (the audit acceptance line, the verified structured log, the
+// toggle trail) would become a test about a refusal, and the acceptance path
+// would go untested until 2c. The seam lives here, in a _test.go file, so no
+// production caller can claim a capability the build does not have.
+func (o *Options) SetProtectionReadyForTest() {
+	ready := ProtectionWired
+	o.protectionOverride = &ready
+}
+
 // TradingServiceForTest returns the policy-enforcing order service the gateway
 // wraps (task 7.4). TESTS ONLY.
 //

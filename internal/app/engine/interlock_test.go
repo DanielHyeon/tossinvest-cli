@@ -168,6 +168,37 @@ func openGateEngineLogging(t *testing.T, dir string, srv *httptest.Server,
 	guardian execgw.Guardian, logs io.Writer,
 ) (*engine.Context, error) {
 	t.Helper()
+	return openGate(t, dir, srv, guardian, logs, false)
+}
+
+// openProtectedGateEngine is openGateEngine with interlock clause 6 satisfied.
+//
+// Clause 6 (broker-resident protective execution) is an unmet constant in this
+// build by design, so nothing this repository can configure produces a verified
+// gate. The tests that are about the *other* clauses — the acceptance audit
+// record, the verified log line, the toggle trail — would otherwise stop
+// exercising an accepted start at all, which would leave that path untested
+// until the protective-order change lands. They say so out loud by calling this
+// helper, which reaches the test-only seam in export_test.go.
+func openProtectedGateEngine(t *testing.T, dir string, srv *httptest.Server,
+	guardian execgw.Guardian,
+) (*engine.Context, error) {
+	t.Helper()
+	return openGate(t, dir, srv, guardian, nil, true)
+}
+
+// openProtectedGateEngineLogging is openProtectedGateEngine with the log captured.
+func openProtectedGateEngineLogging(t *testing.T, dir string, srv *httptest.Server,
+	guardian execgw.Guardian, logs io.Writer,
+) (*engine.Context, error) {
+	t.Helper()
+	return openGate(t, dir, srv, guardian, logs, true)
+}
+
+func openGate(t *testing.T, dir string, srv *httptest.Server,
+	guardian execgw.Guardian, logs io.Writer, protectionReady bool,
+) (*engine.Context, error) {
+	t.Helper()
 	opts := engine.Options{
 		ConfigDir: dir,
 		Clock:     clock.NewFake(interlockNow),
@@ -187,6 +218,9 @@ func openGateEngineLogging(t *testing.T, dir string, srv *httptest.Server,
 	opts.SetJournalProberForTest(journal.FixedFSProber(journal.FSInfo{
 		Name: "ext4", Magic: journal.MagicExt,
 	}))
+	if protectionReady {
+		opts.SetProtectionReadyForTest()
+	}
 	eng, err := engine.New(opts)
 	if eng != nil {
 		t.Cleanup(func() { _ = eng.Close() })
@@ -258,7 +292,7 @@ func TestGateOnWithEverythingInPlaceStarts(t *testing.T) {
 	writeAttestation(t, dir, nil)
 	srv, accountCalls := interlockServer(t, "123-45")
 
-	eng, err := openGateEngine(t, dir, srv, matchedGuardian())
+	eng, err := openProtectedGateEngine(t, dir, srv, matchedGuardian())
 	if err != nil {
 		t.Fatalf("a fully attested gate must start: %v", err)
 	}
@@ -457,6 +491,21 @@ func TestGateOnRefusals(t *testing.T) {
 			accountNo:   "123-45",
 			wantErr:     attest.ErrEndpointNotAttested,
 		},
+		{
+			// The list grew in task 5.2 (the exit policy observes the latest
+			// price), and an attestation written before that covers everything
+			// *except* the new call. That is the shape the drift guard exists for,
+			// so it gets its own case rather than being covered by the
+			// one-endpoint attestation above.
+			name:        "attestation predates the price read",
+			gate:        fullGate(),
+			writeAtt:    true,
+			attestation: func(a *attest.Attestation) { a.Endpoints = withoutEndpoint("GET /api/v1/prices") },
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     attest.ErrEndpointNotAttested,
+			wantMessage: "prices",
+		},
 	}
 
 	for _, tc := range cases {
@@ -510,7 +559,7 @@ func TestGateToggleIsAudited(t *testing.T) {
 
 	// Operator turns the gate on and raises a limit.
 	writeGateConfig(t, dir, fullGate())
-	if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err != nil {
+	if _, err := openProtectedGateEngine(t, dir, srv, matchedGuardian()); err != nil {
 		t.Fatalf("second start: %v", err)
 	}
 
@@ -625,7 +674,7 @@ func TestAcceptedStartAuditsEveryLimit(t *testing.T) {
 	writeAttestation(t, dir, nil)
 	srv, _ := interlockServer(t, "123-45")
 
-	if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err != nil {
+	if _, err := openProtectedGateEngine(t, dir, srv, matchedGuardian()); err != nil {
 		t.Fatalf("a fully attested gate must start: %v", err)
 	}
 
@@ -675,7 +724,7 @@ func TestGateDecisionIsLoggedStructurally(t *testing.T) {
 		srv, _ := interlockServer(t, "123-45")
 
 		var logs bytes.Buffer
-		if _, err := openGateEngineLogging(t, dir, srv, matchedGuardian(), &logs); err != nil {
+		if _, err := openProtectedGateEngineLogging(t, dir, srv, matchedGuardian(), &logs); err != nil {
 			t.Fatalf("start: %v", err)
 		}
 		line := decodeLastLog(t, logs.String())
@@ -750,4 +799,119 @@ func decodeLastLog(t *testing.T, out string) map[string]any {
 		t.Fatalf("decoding %q: %v", lines[len(lines)-1], err)
 	}
 	return line
+}
+
+// --- task 5.2: clause 6, broker-resident protection --------------------------
+
+// withoutEndpoint is the engine's endpoint list with one call removed: the shape
+// of an attestation written before the list grew.
+func withoutEndpoint(drop string) []string {
+	var out []string
+	for _, e := range engine.RequiredEndpoints() {
+		if e != drop {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+// TestTheGateRefusesWithoutBrokerSideProtection is engine-safety's own scenario
+// ("보호 실행 미배선 기동 → 기동이 거부되고 보호주문 실행 선행이 안내된다").
+//
+// The assertion that carries the most is where the refusal comes from. Clause 6
+// is evaluated last, so *reaching* it means every earlier clause passed on this
+// configuration: the limits are complete, the policy can exit, the attestation
+// is valid and covers every endpoint, the Guardian is the audited source and the
+// gateway is wired. The gate still does not come up, and it cannot be made to by
+// anything an operator can configure — that is the mechanical block the local
+// stop needs until a protective order lives at the broker.
+func TestTheGateRefusesWithoutBrokerSideProtection(t *testing.T) {
+	dir := isolate(t)
+	writeGateConfig(t, dir, fullGate())
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	writeAttestation(t, dir, nil)
+	srv, _ := interlockServer(t, "123-45")
+
+	eng, err := openGateEngine(t, dir, srv, matchedGuardian())
+	if err == nil {
+		t.Fatal("a gate with everything else in place must still be refused")
+	}
+	if eng != nil {
+		t.Error("a refused startup must return no engine at all")
+	}
+	if !errors.Is(err, engine.ErrAutomationGateRefused) {
+		t.Errorf("err = %v, want it to wrap ErrAutomationGateRefused", err)
+	}
+	if !errors.Is(err, engine.ErrProtectionNotWired) {
+		t.Fatalf("err = %v, want the protection clause to be the sole refusal — "+
+			"any other cause means an earlier clause failed on the same configuration", err)
+	}
+	// Every earlier clause's own error is absent, which is the "sole refusal"
+	// half stated directly rather than inferred from the ordering.
+	for _, other := range []error{
+		engine.ErrGuardianRequired,
+		engine.ErrLimitsRequired,
+		engine.ErrTradingPolicyRefused,
+		engine.ErrGuardianLimitsMismatch,
+		engine.ErrGatewayRequired,
+		engine.ErrKeylessTransport,
+		attest.ErrExpired,
+		attest.ErrAccountMismatch,
+		attest.ErrEndpointNotAttested,
+	} {
+		if errors.Is(err, other) {
+			t.Errorf("err also wraps %v; clause 6 must be the only thing standing", other)
+		}
+	}
+	for _, want := range []string{"protective", "local judgement"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("message %q does not tell the operator about %q", err, want)
+		}
+	}
+
+	// The refusal is on the record: a refused start produces no engine, so the
+	// audit line is the only trace that somebody tried (§0.5).
+	entries := readAudit(t, filepath.Join(dir, "audit.log"))
+	refused := lastEntryFor(entries, "engine.automation_gate.enabled", audit.ActionGateRefused)
+	if refused == nil {
+		t.Fatalf("the refusal was not recorded; entries = %+v", entries)
+	}
+	if !strings.Contains(refused.Detail, "protective") {
+		t.Errorf("refusal detail = %q, want the cause in it", refused.Detail)
+	}
+}
+
+// TestTheProfileReportsItsProtectionReadiness: an operator asking "why will the
+// gate not come up" can see the answer without turning it on.
+func TestTheProfileReportsItsProtectionReadiness(t *testing.T) {
+	dir := isolate(t)
+	writeGateConfig(t, dir, config.AutomationGate{})
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := interlockServer(t, "123-45")
+
+	eng, err := openGateEngine(t, dir, srv, nil)
+	if err != nil {
+		t.Fatalf("an engine with the gate off must start: %v", err)
+	}
+	if eng.Automation.Protection != engine.ProtectionUnwired {
+		t.Errorf("Protection = %q, want %q — this build wires no protective execution",
+			eng.Automation.Protection, engine.ProtectionUnwired)
+	}
+}
+
+// TestTheEngineRequiresThePriceRead. The exit policy's observation loop calls it
+// on a timer, so an attestation that does not cover it does not describe the
+// engine (engine-safety clause 2's drift rule). The soak proves the call and the
+// retry matrix bounds it; this list is what makes the attestation demand it.
+func TestTheEngineRequiresThePriceRead(t *testing.T) {
+	var found bool
+	for _, e := range engine.RequiredEndpoints() {
+		if e == "GET /api/v1/prices" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("RequiredEndpoints() = %v, want the price read the exit policy observes",
+			engine.RequiredEndpoints())
+	}
 }

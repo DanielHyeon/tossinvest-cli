@@ -26,6 +26,8 @@ package engine
 //	    its order reader wired                     — see execgw.Gateway.Wiring
 //	 7. the order transport can carry an
 //	    idempotency key                            — the replay procedure assumes it did
+//	 8. broker-resident protective execution is
+//	    wired                                      — ProtectionReadiness, below
 //
 // Any failure is a startup refusal with a message that says what to do about it,
 // not a warning. There is no degraded mode: an engine that trades with an
@@ -131,6 +133,45 @@ var ErrKeylessTransport = errors.New(
 	"engine: the automation gate is enabled but the order transport cannot carry an idempotency " +
 		"key — a place that cannot be replayed is not submittable")
 
+// ErrProtectionNotWired is the clause-6 refusal: the profile has no
+// broker-resident protective execution (engine-safety "브로커측 보호 실행이
+// 배선됨", add-core-domain task 5.2).
+//
+// It is the one interlock clause no configuration can satisfy, and that is the
+// requirement rather than a gap. This change's stop is a *local* judgement — a
+// price observation loop deciding to exit — and a local judgement is worth
+// nothing while the process is dead. A position opened by an engine that then
+// crashes has no protection at all until somebody notices. So automatic entry
+// stays mechanically off until the change that puts a protective order on the
+// broker flips the marker below.
+var ErrProtectionNotWired = errors.New(
+	"engine: the automation gate is enabled but this build has no broker-resident protective order " +
+		"execution — the stop is a local judgement and a local judgement does not survive the process, " +
+		"so automatic entry cannot be turned on until the protective-order change wires it")
+
+// ProtectionReadiness is whether broker-resident protective execution is wired
+// into this profile.
+type ProtectionReadiness string
+
+const (
+	// ProtectionUnwired: nothing places or maintains a protective order at the
+	// broker. Positions are protected only by a local observation loop.
+	ProtectionUnwired ProtectionReadiness = "UNWIRED"
+	// ProtectionWired: protective execution is wired, so a position survives the
+	// engine dying. Nothing in this build produces this value.
+	ProtectionWired ProtectionReadiness = "WIRED"
+)
+
+// profileProtection is this build's readiness, and it is a constant on purpose.
+//
+// The task boundary is "보호주문·조건주문 코드 0줄 — ProtectionReady 표지는
+// 미충족 상수로만 존재": the marker exists so the interlock clause can be written
+// and tested now, and the change that actually wires protective execution flips
+// this one identifier as the last step of its own work. A field, a config key or
+// an Options knob would each be a way to claim readiness without having built
+// it, which is the claim this clause exists to refuse.
+const profileProtection = ProtectionUnwired
+
 // ExposureLimiter is the capability an injected Guardian has to implement so the
 // interlock can prove clause 5.
 //
@@ -171,6 +212,13 @@ type idempotencyKeyCarrier interface {
 // verify-execution-capability is what proves them. The soak tool itself contains
 // no mutation transport (that is its own spec requirement); the endpoints get
 // into the attestation from the supervised live check.
+// The price read joined the list in add-core-domain task 5.2, and the reason is
+// the drift guard's own rule ("목록을 확장하는 change는 가드를 함께 갱신한다"):
+// the exit policy observes the latest price on a timer, so the engine's
+// automatic path now calls it and an attestation that does not cover it does not
+// describe the engine. The soak already proves it (soak.EndpointPrices) and the
+// retry matrix already bounds it (execgw.QueryPrice), so the only thing that was
+// missing was this line — and cmd/tossctl's coverage test is what says so.
 func RequiredEndpoints() []string {
 	return []string{
 		"GET /api/v1/accounts",
@@ -178,6 +226,7 @@ func RequiredEndpoints() []string {
 		"GET /api/v1/orders/{id}",
 		"GET /api/v1/buying-power",
 		"GET /api/v1/holdings",
+		"GET /api/v1/prices",
 		"POST /api/v1/orders",
 		"POST /api/v1/orders/{id}/cancel",
 	}
@@ -204,10 +253,23 @@ type AutomationStatus struct {
 	AttestationExpiresAt time.Time
 	// Limits is the snapshot the Guardian was injected with.
 	Limits execgw.Limits
+	// Protection is the profile's broker-side protective execution readiness
+	// (clause 6). Reported on every start, gate or no gate, so an operator asking
+	// "why will the gate not come up" can see the answer without turning it on.
+	Protection ProtectionReadiness
 }
 
 // MaskedAccount renders the account for logs and operator output.
 func (s AutomationStatus) MaskedAccount() string { return attest.Mask(s.AccountRef) }
+
+// protectionReadiness reports this profile's broker-side protective execution
+// state: the build's constant, unless a test has said otherwise.
+func (o Options) protectionReadiness() ProtectionReadiness {
+	if o.protectionOverride != nil {
+		return *o.protectionOverride
+	}
+	return profileProtection
+}
 
 // attestationPath resolves where the attestation lives.
 func attestationPath(gate config.AutomationGate, paths config.Paths) string {
@@ -246,12 +308,15 @@ func boundIfPositive(v float64) execgw.Limit {
 }
 
 // newAutomationStatus is the status before anything has been verified: the
-// config's own account of itself.
-func newAutomationStatus(gate config.AutomationGate, paths config.Paths) AutomationStatus {
+// config's own account of itself, plus the one fact no config can change.
+func newAutomationStatus(gate config.AutomationGate, paths config.Paths,
+	protection ProtectionReadiness,
+) AutomationStatus {
 	return AutomationStatus{
 		Enabled:         gate.Enabled,
 		AttestationFile: attestationPath(gate, paths),
 		Limits:          gateLimits(gate),
+		Protection:      protection,
 	}
 }
 
@@ -364,6 +429,7 @@ func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error)
 		"gate_enabled", status.Enabled,
 		"gate_verified", status.Verified,
 		"limit_currency", l.Currency,
+		"protection", string(status.Protection),
 		"max_order_quantity", limitString(l.MaxQuantity.Value),
 		"max_order_notional", limitString(l.MaxNotional.Value),
 		"max_total_exposure", limitString(l.MaxTotalExposure.Value),
@@ -438,6 +504,14 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
 	}
 	if err := checkKeyCapableTransport(facts.transport); err != nil {
 		return fmt.Errorf("%w: %w: %w", ErrAutomationGateRefused, ErrKeylessTransport, err)
+	}
+
+	// 9. Broker-resident protection. Last, and the order is load-bearing: every
+	//    clause above is something an operator can fix today, and reaching this
+	//    one is therefore the proof that they already have. A refusal here says
+	//    "your configuration is complete and the missing piece is not yours".
+	if status.Protection != ProtectionWired {
+		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, ErrProtectionNotWired)
 	}
 	return nil
 }

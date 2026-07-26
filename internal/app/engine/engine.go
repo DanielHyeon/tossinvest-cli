@@ -95,6 +95,18 @@ type Options struct {
 	// the tests that only assert on the audit trail want.
 	Logger *obs.Logger
 
+	// protectionOverride satisfies interlock clause 6. Unexported, therefore
+	// test-only, and reached through export_test.go.
+	//
+	// Clause 6 is an unmet constant in this build by design (interlock.go
+	// profileProtection), so with no seam the tests that are about the *other*
+	// clauses — the acceptance audit line, the structured log of a verified
+	// start — could not reach an accepted start at all and would quietly stop
+	// testing anything. The seam is here rather than on the exported API for the
+	// same reason journalFSProber is: a production caller must not be able to
+	// claim a capability the build does not have.
+	protectionOverride *ProtectionReadiness
+
 	// journalFSProber overrides the filesystem probe the journal's durability
 	// guard uses. Unexported, therefore test-only — the same arrangement
 	// journal.Options.migrationOverride uses, and for the same reason: the guard
@@ -346,7 +358,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	}
 
 	gate := cfg.Engine.AutomationGate
-	status := newAutomationStatus(gate, paths)
+	status := newAutomationStatus(gate, paths, opts.protectionReadiness())
 
 	// The audit trail is written before anything can refuse: an operator's
 	// settings change is worth recording whether or not the engine then agrees to
