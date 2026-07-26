@@ -16,5 +16,5 @@
 
 ## 3. 완료 게이트 [M]
 
-- [ ] 3.1 §0 검토 기록(새 mutation 경로 0·인터록 소비·부분 생존 금지 방향) + 테스트 전수(-race) + `openspec validate add-engine-runtime --strict`
+- [x] 3.1 §0 검토 기록(새 mutation 경로 0·인터록 소비·부분 생존 금지 방향) + 테스트 전수(-race) + `openspec validate add-engine-runtime --strict`
 - [ ] 3.2 `make gate CHANGE=add-engine-runtime`
