@@ -97,9 +97,11 @@ func (r *Runner) stepReadFixtures(ctx context.Context, sr *stepRun) error {
 		orders int
 	)
 	for pages < maxFixturePages {
-		started := r.now()
-		page, err := r.broker.OrdersPageRaw(ctx, official.OrdersFilter{}, cursor)
-		sr.logCall(EndpointReadOrders, map[string]string{"cursor": cursor}, started, r.now(), len(page.Orders), err)
+		page, err := readRetry(ctx, r, sr, EndpointReadOrders, map[string]string{"cursor": cursor},
+			func(ctx context.Context) (official.RawOrderPage, error) {
+				return r.broker.OrdersPageRaw(ctx, official.OrdersFilter{}, cursor)
+			},
+			func(p official.RawOrderPage) any { return len(p.Orders) })
 		if err != nil {
 			return err
 		}
@@ -168,9 +170,9 @@ func (r *Runner) stepReadFixtures(ctx context.Context, sr *stepRun) error {
 // stepSellableBaseline snapshots the resting relationship between a holding and
 // what the broker says can be sold from it (task 2.8, the "before" half).
 func (r *Runner) stepSellableBaseline(ctx context.Context, sr *stepRun) error {
-	started := r.now()
-	positions, err := r.broker.Holdings(ctx, "")
-	sr.logCall(EndpointReadHoldings, nil, started, r.now(), len(positions), err)
+	positions, err := readRetry(ctx, r, sr, EndpointReadHoldings, nil,
+		func(ctx context.Context) ([]domain.Position, error) { return r.broker.Holdings(ctx, "") },
+		func(p []domain.Position) any { return len(p) })
 	if err != nil {
 		return err
 	}
@@ -181,9 +183,11 @@ func (r *Runner) stepSellableBaseline(ctx context.Context, sr *stepRun) error {
 		return nil
 	}
 	for _, p := range positions {
-		started := r.now()
-		sq, err := r.broker.SellableQuantity(ctx, p.Symbol)
-		sr.logCall(EndpointReadSellable, map[string]string{"symbol": p.Symbol}, started, r.now(), sq.Quantity, err)
+		sq, err := readRetry(ctx, r, sr, EndpointReadSellable, map[string]string{"symbol": p.Symbol},
+			func(ctx context.Context) (domain.SellableQuantity, error) {
+				return r.broker.SellableQuantity(ctx, p.Symbol)
+			},
+			func(s domain.SellableQuantity) any { return s.Quantity })
 		if err != nil {
 			return err
 		}
@@ -575,10 +579,12 @@ func (r *Runner) stepConditionalRegister(ctx context.Context, sr *stepRun) error
 		sr.observe("conditional.read_by_id.ok", "false", truncateError(err))
 	}
 
-	started := r.now()
-	list, err := r.broker.ConditionalOrders(ctx, "WATCHING", symbol, "", 50)
-	sr.logCall(EndpointReadConditionals, map[string]string{"status": "WATCHING", "symbol": symbol},
-		started, r.now(), len(list.Orders), err)
+	list, err := readRetry(ctx, r, sr, EndpointReadConditionals,
+		map[string]string{"status": "WATCHING", "symbol": symbol},
+		func(ctx context.Context) (domain.ConditionalOrderList, error) {
+			return r.broker.ConditionalOrders(ctx, "WATCHING", symbol, "", 50)
+		},
+		func(l domain.ConditionalOrderList) any { return len(l.Orders) })
 	if err != nil {
 		sr.observe("conditional.list_by_status.ok", "false", truncateError(err))
 	} else {
@@ -812,9 +818,9 @@ func (r *Runner) farSellPrice(ctx context.Context, sr *stepRun, symbol string) (
 
 // marketFrame reads the last trade and the day's band.
 func (r *Runner) marketFrame(ctx context.Context, sr *stepRun, symbol string) (last, lower, upper float64, err error) {
-	started := r.now()
-	quotes, err := r.broker.Prices(ctx, []string{symbol})
-	sr.logCall(EndpointReadPrices, map[string]string{"symbol": symbol}, started, r.now(), len(quotes), err)
+	quotes, err := readRetry(ctx, r, sr, EndpointReadPrices, map[string]string{"symbol": symbol},
+		func(ctx context.Context) ([]domain.Quote, error) { return r.broker.Prices(ctx, []string{symbol}) },
+		func(q []domain.Quote) any { return len(q) })
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -831,9 +837,9 @@ func (r *Runner) marketFrame(ctx context.Context, sr *stepRun, symbol string) (l
 		return 0, 0, 0, fmt.Errorf("verify: no last price for %s, so no order can be priced safely", symbol)
 	}
 
-	started = r.now()
-	limits, err := r.broker.PriceLimits(ctx, symbol)
-	sr.logCall(EndpointReadPriceLimits, map[string]string{"symbol": symbol}, started, r.now(), limits, err)
+	limits, err := readRetry(ctx, r, sr, EndpointReadPriceLimits, map[string]string{"symbol": symbol},
+		func(ctx context.Context) (domain.PriceLimits, error) { return r.broker.PriceLimits(ctx, symbol) },
+		func(l domain.PriceLimits) any { return l })
 	if err != nil {
 		// A missing band is not fatal — US has none — but it does mean the clamp
 		// cannot run, so it is recorded rather than swallowed.
@@ -844,9 +850,11 @@ func (r *Runner) marketFrame(ctx context.Context, sr *stepRun, symbol string) (l
 }
 
 func (r *Runner) readSellable(ctx context.Context, sr *stepRun, symbol string) (float64, error) {
-	started := r.now()
-	sq, err := r.broker.SellableQuantity(ctx, symbol)
-	sr.logCall(EndpointReadSellable, map[string]string{"symbol": symbol}, started, r.now(), sq.Quantity, err)
+	sq, err := readRetry(ctx, r, sr, EndpointReadSellable, map[string]string{"symbol": symbol},
+		func(ctx context.Context) (domain.SellableQuantity, error) {
+			return r.broker.SellableQuantity(ctx, symbol)
+		},
+		func(s domain.SellableQuantity) any { return s.Quantity })
 	if err != nil {
 		return 0, err
 	}
@@ -854,9 +862,9 @@ func (r *Runner) readSellable(ctx context.Context, sr *stepRun, symbol string) (
 }
 
 func (r *Runner) readOrder(ctx context.Context, sr *stepRun, id string) (rawOrderView, error) {
-	started := r.now()
-	raw, err := r.broker.OrderRawByID(ctx, id)
-	sr.logCall(EndpointReadOrderByID, map[string]string{"orderId": id}, started, r.now(), DigestBytes(raw), err)
+	raw, err := readRetry(ctx, r, sr, EndpointReadOrderByID, map[string]string{"orderId": id},
+		func(ctx context.Context) (json.RawMessage, error) { return r.broker.OrderRawByID(ctx, id) },
+		func(b json.RawMessage) any { return DigestBytes(b) })
 	if err != nil {
 		return rawOrderView{}, err
 	}
@@ -868,9 +876,10 @@ func (r *Runner) readOrder(ctx context.Context, sr *stepRun, id string) (rawOrde
 }
 
 func (r *Runner) readConditional(ctx context.Context, sr *stepRun, id string) (conditionalView, error) {
-	started := r.now()
-	co, err := r.broker.ConditionalOrder(ctx, id)
-	sr.logCall(EndpointReadConditionalByID, map[string]string{"conditionalOrderId": id}, started, r.now(), co.Status, err)
+	co, err := readRetry(ctx, r, sr, EndpointReadConditionalByID,
+		map[string]string{"conditionalOrderId": id},
+		func(ctx context.Context) (domain.ConditionalOrder, error) { return r.broker.ConditionalOrder(ctx, id) },
+		func(c domain.ConditionalOrder) any { return c.Status })
 	if err != nil {
 		return conditionalView{}, err
 	}
@@ -889,10 +898,12 @@ func (r *Runner) openOrderIDs(ctx context.Context, sr *stepRun) (map[string]bool
 	ids := map[string]bool{}
 	cursor := ""
 	for page := 0; page < maxFixturePages; page++ {
-		started := r.now()
-		p, err := r.broker.OrdersPageRaw(ctx, official.OrdersFilter{Status: "OPEN"}, cursor)
-		sr.logCall(EndpointReadOrders, map[string]string{"status": "OPEN", "cursor": cursor},
-			started, r.now(), len(p.Orders), err)
+		p, err := readRetry(ctx, r, sr, EndpointReadOrders,
+			map[string]string{"status": "OPEN", "cursor": cursor},
+			func(ctx context.Context) (official.RawOrderPage, error) {
+				return r.broker.OrdersPageRaw(ctx, official.OrdersFilter{Status: "OPEN"}, cursor)
+			},
+			func(page official.RawOrderPage) any { return len(page.Orders) })
 		if err != nil {
 			return nil, err
 		}

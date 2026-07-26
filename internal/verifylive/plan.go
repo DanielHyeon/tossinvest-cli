@@ -40,6 +40,8 @@ import (
 	"io"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 )
 
 // MutationKind names one class of live request this tool can send.
@@ -551,11 +553,19 @@ func (r *Runner) omissionNote(step Step, sm StepMutation, symbol string, sellabl
 //
 // A failure is not fatal and is not guessed around either — the sell-side step
 // simply does not go on the list, and the plan says why.
+//
+// It goes through readRetry with no step to log against: this read runs while the
+// plan is still being built, and a 429 here silently costs the operator the whole
+// sell-side batch (measurements.md M4 is what that looks like). Retrying a read
+// before anything has been approved cannot send anything.
 func (r *Runner) planSellable(ctx context.Context) (float64, bool) {
 	if r.holdingSymbol == "" {
 		return 0, false
 	}
-	sq, err := r.broker.SellableQuantity(ctx, r.holdingSymbol)
+	sq, err := readRetry(ctx, r, nil, EndpointReadSellable, nil,
+		func(ctx context.Context) (domain.SellableQuantity, error) {
+			return r.broker.SellableQuantity(ctx, r.holdingSymbol)
+		}, nil)
 	if err != nil {
 		return 0, false
 	}

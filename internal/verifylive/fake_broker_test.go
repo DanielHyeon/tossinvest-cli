@@ -84,6 +84,13 @@ type fakeBroker struct {
 	expireKeysOnSleep bool
 	// placeErr, if set, fails every placement.
 	placeErr error
+	// throttle429 counts, per request key, how many more calls answer 429. It is
+	// what measurements.md M4 looked like from this side: the broker refusing a
+	// burst and then relenting.
+	throttle429 map[string]int
+	// throttleErr overrides what a scripted refusal answers with. Empty means the
+	// 429 classification; a test sets it to prove that nothing else is retried.
+	throttleErr error
 
 	// --- what happened ---
 	requests []string
@@ -105,6 +112,7 @@ func newFakeBroker() *fakeBroker {
 		orders:                  map[string]json.RawMessage{},
 		conds:                   map[string]domain.ConditionalOrder{},
 		keys:                    map[string]keyedOrder{},
+		throttle429:             map[string]int{},
 		honourIdempotency:       true,
 		conflictOnDifferentBody: true,
 		modifyIssuesNewID:       true,
@@ -123,6 +131,28 @@ func (f *fakeBroker) withHolding(symbol string, qty float64) *fakeBroker {
 	if _, ok := f.limits[symbol]; !ok {
 		f.limits[symbol] = domain.PriceLimits{UpperLimit: 91000, LowerLimit: 49000}
 	}
+	return f
+}
+
+// throttled answers 429 while this request key still has refusals scripted, and
+// consumes one. The error is official's own 429 classification, so what the retry
+// matches on here is exactly what the live client produces.
+func (f *fakeBroker) throttled(key string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.throttle429[key] <= 0 {
+		return nil
+	}
+	f.throttle429[key]--
+	if f.throttleErr != nil {
+		return f.throttleErr
+	}
+	return fmt.Errorf("lazy account-seq resolution: %w", official.ErrRateLimited)
+}
+
+// withThrottle scripts n consecutive 429s on a request key.
+func (f *fakeBroker) withThrottle(key string, n int) *fakeBroker {
+	f.throttle429[key] = n
 	return f
 }
 
@@ -164,6 +194,9 @@ func (f *fakeBroker) Accounts(context.Context) ([]domain.Account, error) {
 
 func (f *fakeBroker) Holdings(_ context.Context, _ string) ([]domain.Position, error) {
 	f.log("GET /holdings")
+	if err := f.throttled("holdings"); err != nil {
+		return nil, err
+	}
 	return f.holdings, nil
 }
 
@@ -264,6 +297,9 @@ func (f *fakeBroker) ConditionalOrder(_ context.Context, id string) (domain.Cond
 func (f *fakeBroker) PlaceOrder(_ context.Context, intent orderintent.PlaceIntent) (trading.MutationResult, error) {
 	f.log(fmt.Sprintf("POST /orders %s %s x%v @%v key=%s",
 		intent.Side, intent.Symbol, intent.Quantity, intent.Price, intent.ClientOrderID))
+	if err := f.throttled("place"); err != nil {
+		return trading.MutationResult{}, err
+	}
 	if f.placeErr != nil {
 		return trading.MutationResult{}, f.placeErr
 	}
