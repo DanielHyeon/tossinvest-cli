@@ -27,6 +27,27 @@ const (
 	// ReasonGuardianLimitExceeded: the mutation is bigger than the snapshot allows.
 	ReasonGuardianLimitExceeded ReasonCode = "guardian_limit_exceeded"
 
+	// --- the persisted decision contract (extend-execution-contract 1.4/1.5) --
+	//
+	// Appended, never reordered: the codes above are already on disk.
+
+	// ReasonGuardianDecisionTampered: the persisted decision row is not
+	// internally consistent — the hash does not cover the preimage, the preimage
+	// is not canonical, the class and the preimage schema disagree, or the row
+	// carries something no writer in this build produces. It is a distinct code
+	// from a plain mismatch because it means the *record* is wrong, not the
+	// order, and no operator should try to fix that by re-submitting.
+	ReasonGuardianDecisionTampered ReasonCode = "guardian_decision_tampered"
+	// ReasonGuardianKeyMismatch: the idempotency key the decision carries is not
+	// the one derived from it, is missing on a place, or is present on a
+	// mutation that cannot send one.
+	ReasonGuardianKeyMismatch ReasonCode = "guardian_idempotency_key_mismatch"
+	// ReasonGuardianClassMismatch: the decision's safety class and the shape of
+	// the mutation disagree — an EXPOSURE_RAISING decision for something that
+	// reduces exposure, or a RISK_REDUCING decision for a buy. A class that only
+	// the caller asserts is a limit bypass waiting to be used.
+	ReasonGuardianClassMismatch ReasonCode = "guardian_safety_class_mismatch"
+
 	// --- request / policy ---------------------------------------------------
 
 	// ReasonInvalidRequest: the mutation request itself is not recordable

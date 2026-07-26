@@ -129,25 +129,69 @@ func newGateway(t *testing.T, broker trading.Broker) (*execgw.Gateway, *journal.
 	return gw, j, clk
 }
 
-func goodDecision(t *testing.T, hash string, clk clock.Clock) execgw.GuardianDecision {
-	t.Helper()
-	now := clk.Now()
-	return execgw.GuardianDecision{
-		Nonce:      "nonce-" + hash[:8],
-		IntentHash: hash,
-		Limits:     execgw.Limits{MaxQuantity: 10, MaxNotional: 1_000_000, Currency: "KRW"},
-		IssuedAt:   now,
-		ExpiresAt:  now.Add(30 * time.Second),
-		Authority:  "test-guardian",
-	}
+// The tests act as the decision issuer. That is not a shortcut around the
+// gateway: a decision is only an authorisation once it is *in the journal the
+// gateway reads*, so every helper below writes one and hands back the reference,
+// exactly as a Guardian would.
+
+func testLimits() execgw.Limits {
+	return execgw.Limits{MaxQuantity: 10, MaxNotional: 1_000_000, Currency: "KRW"}
 }
 
-func placeRequest(t *testing.T, clk clock.Clock) execgw.PlaceRequest {
+func issuerFor(j *journal.Journal, clk clock.Clock) *execgw.Issuer {
+	return &execgw.Issuer{Journal: j, Clock: clk, AccountRef: "acct-7", TTL: 30 * time.Second}
+}
+
+// entryDecision persists an EXPOSURE_RAISING decision that authorises exactly
+// this place.
+func entryDecision(t *testing.T, j *journal.Journal, clk clock.Clock,
+	intent orderintent.PlaceIntent, limits execgw.Limits,
+) execgw.GuardianDecision {
+	t.Helper()
+	return raisingDecision(t, j, clk, journal.KindPlace, intent.Market, intent.Symbol,
+		intent.Side, intent.Quantity, intent.Price, limits)
+}
+
+// raisingDecision persists an EXPOSURE_RAISING decision for any mutation that
+// adds exposure — a place, or an amend that raises quantity or price.
+func raisingDecision(t *testing.T, j *journal.Journal, clk clock.Clock,
+	kind journal.MutationKind, market, symbol, side string,
+	quantity, price float64, limits execgw.Limits,
+) execgw.GuardianDecision {
+	t.Helper()
+	d, err := issuerFor(j, clk).IssueEntry(context.Background(), execgw.EntryRequest{
+		Kind: kind, Market: market, Symbol: symbol, Side: side,
+		Quantity: quantity, EntryPrice: price, StopPrice: price * 0.9,
+		PolicyVersion: "test/v1", Limits: limits,
+	})
+	if err != nil {
+		t.Fatalf("issuing the entry decision: %v", err)
+	}
+	return d
+}
+
+// exitDecision persists a RISK_REDUCING decision for a cancel, an amend or a
+// reduce-only sell.
+func exitDecision(t *testing.T, j *journal.Journal, clk clock.Clock,
+	kind journal.MutationKind, market, symbol, side string, maxQuantity float64,
+) execgw.GuardianDecision {
+	t.Helper()
+	d, err := issuerFor(j, clk).IssueReduction(context.Background(), execgw.ReductionRequest{
+		Kind: kind, Market: market, Symbol: symbol, Side: side,
+		MaxQuantity: maxQuantity, Reason: "test exit",
+	})
+	if err != nil {
+		t.Fatalf("issuing the exit decision: %v", err)
+	}
+	return d
+}
+
+func placeRequest(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.PlaceRequest {
 	t.Helper()
 	intent := placeIntent()
 	return execgw.PlaceRequest{
 		Intent:   intent,
-		Decision: goodDecision(t, execgw.PlaceHash(intent), clk),
+		Decision: entryDecision(t, j, clk, intent, testLimits()),
 	}
 }
 
@@ -159,7 +203,7 @@ func TestPlaceHappyPathConfirms(t *testing.T) {
 	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-1"}}
 	gw, j, clk := newGateway(t, broker)
 
-	out, err := gw.Place(context.Background(), placeRequest(t, clk))
+	out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if err != nil {
 		t.Fatalf("Place: %v", err)
 	}
@@ -196,52 +240,85 @@ func TestPlaceHappyPathConfirms(t *testing.T) {
 // one of them must be refused with the mutation journalled as NOT_DISPATCHED and
 // the broker untouched — the journal-first ordering is what makes a refusal
 // auditable rather than invisible.
+//
+// The defects are now expressed where they live: in the *persisted row*. A
+// decision that does not authorise this order is one whose preimage says
+// something else, and the only way to build one is to write it — which is
+// precisely the guarantee under test (engine-safety "결정 영속과 신뢰 경계").
 func TestGuardianRefusalsNeverReachBroker(t *testing.T) {
 	intent := placeIntent()
-	otherIntent := intent
-	otherIntent.Quantity = 99
 
 	cases := []struct {
 		name    string
-		mutate  func(d *execgw.GuardianDecision)
+		decide  func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision
 		advance time.Duration
 		want    execgw.ReasonCode
 	}{
 		{
-			name:   "no decision at all",
-			mutate: func(d *execgw.GuardianDecision) { *d = execgw.GuardianDecision{} },
-			want:   execgw.ReasonGuardianMissing,
+			name: "no decision at all",
+			decide: func(*testing.T, *journal.Journal, clock.Clock) execgw.GuardianDecision {
+				return execgw.GuardianDecision{}
+			},
+			want: execgw.ReasonGuardianMissing,
 		},
 		{
-			name:   "no nonce",
-			mutate: func(d *execgw.GuardianDecision) { d.Nonce = "" },
-			want:   execgw.ReasonGuardianMissing,
+			name: "a decision nobody persisted",
+			decide: func(*testing.T, *journal.Journal, clock.Clock) execgw.GuardianDecision {
+				return execgw.GuardianDecision{ID: "dec-that-was-never-written"}
+			},
+			want: execgw.ReasonGuardianMissing,
 		},
 		{
-			name:   "hash of a different intent",
-			mutate: func(d *execgw.GuardianDecision) { d.IntentHash = execgw.PlaceHash(otherIntent) },
-			want:   execgw.ReasonGuardianIntentMismatch,
+			name: "preimage of a different order",
+			decide: func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision {
+				other := intent
+				other.Quantity = 9
+				return entryDecision(t, j, clk, other, testLimits())
+			},
+			want: execgw.ReasonGuardianIntentMismatch,
 		},
 		{
-			name:    "expired before submission",
-			mutate:  func(d *execgw.GuardianDecision) {},
+			name: "preimage with a different entry price",
+			decide: func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision {
+				other := intent
+				other.Price = 69000
+				return entryDecision(t, j, clk, other, testLimits())
+			},
+			want: execgw.ReasonGuardianIntentMismatch,
+		},
+		{
+			name: "a buy wearing a RISK_REDUCING class",
+			decide: func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision {
+				return exitDecision(t, j, clk, journal.KindPlace,
+					intent.Market, intent.Symbol, intent.Side, intent.Quantity)
+			},
+			want: execgw.ReasonGuardianClassMismatch,
+		},
+		{
+			name: "expired before submission",
+			decide: func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision {
+				return entryDecision(t, j, clk, intent, testLimits())
+			},
 			advance: 31 * time.Second,
 			want:    execgw.ReasonGuardianExpired,
 		},
 		{
-			name:   "limits never set",
-			mutate: func(d *execgw.GuardianDecision) { d.Limits = execgw.Limits{} },
-			want:   execgw.ReasonGuardianLimitsUnset,
+			name: "quantity over the snapshot limit",
+			decide: func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision {
+				limits := testLimits()
+				limits.MaxQuantity = 1
+				return entryDecision(t, j, clk, intent, limits)
+			},
+			want: execgw.ReasonGuardianLimitExceeded,
 		},
 		{
-			name:   "quantity over the snapshot limit",
-			mutate: func(d *execgw.GuardianDecision) { d.Limits.MaxQuantity = 1 },
-			want:   execgw.ReasonGuardianLimitExceeded,
-		},
-		{
-			name:   "notional over the snapshot limit",
-			mutate: func(d *execgw.GuardianDecision) { d.Limits.MaxNotional = 1000 },
-			want:   execgw.ReasonGuardianLimitExceeded,
+			name: "notional over the snapshot limit",
+			decide: func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision {
+				limits := testLimits()
+				limits.MaxNotional = 1000
+				return entryDecision(t, j, clk, intent, limits)
+			},
+			want: execgw.ReasonGuardianLimitExceeded,
 		},
 	}
 
@@ -250,8 +327,7 @@ func TestGuardianRefusalsNeverReachBroker(t *testing.T) {
 			broker := &fakeBroker{}
 			gw, j, clk := newGateway(t, broker)
 
-			decision := goodDecision(t, execgw.PlaceHash(intent), clk)
-			tc.mutate(&decision)
+			decision := tc.decide(t, j, clk)
 			clk.Advance(tc.advance)
 
 			out, err := gw.Place(context.Background(), execgw.PlaceRequest{Intent: intent, Decision: decision})
@@ -286,9 +362,9 @@ func TestGuardianRefusalsNeverReachBroker(t *testing.T) {
 // cannot authorise a second submission, even for the identical intent.
 func TestNonceIsOneShot(t *testing.T) {
 	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-1"}}
-	gw, _, clk := newGateway(t, broker)
+	gw, j, clk := newGateway(t, broker)
 
-	req := placeRequest(t, clk)
+	req := placeRequest(t, j, clk)
 	if _, err := gw.Place(context.Background(), req); err != nil {
 		t.Fatalf("first Place: %v", err)
 	}
@@ -310,8 +386,8 @@ func TestNonceIsOneShot(t *testing.T) {
 // one may win; a lost race that let two through would be a duplicated live order.
 func TestNonceIsOneShotUnderRace(t *testing.T) {
 	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-1"}}
-	gw, _, clk := newGateway(t, broker)
-	req := placeRequest(t, clk)
+	gw, j, clk := newGateway(t, broker)
+	req := placeRequest(t, j, clk)
 
 	const workers = 8
 	var (
@@ -346,11 +422,14 @@ func TestNonceIsOneShotUnderRace(t *testing.T) {
 func TestJournalFailureBlocksSubmission(t *testing.T) {
 	broker := &fakeBroker{}
 	gw, j, clk := newGateway(t, broker)
+	// The decision is issued while the journal still works: what is under test is
+	// the intent write failing, not the issuer's.
+	req := placeRequest(t, j, clk)
 	if err := j.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
 
-	if _, err := gw.Place(context.Background(), placeRequest(t, clk)); err == nil {
+	if _, err := gw.Place(context.Background(), req); err == nil {
 		t.Fatal("a closed journal must refuse the mutation")
 	}
 	if places, _, _ := broker.totals(); places != 0 {
@@ -374,7 +453,7 @@ func TestPolicyRefusalIsNotDispatched(t *testing.T) {
 		t.Fatalf("execgw.New: %v", err)
 	}
 
-	out, err := gw.Place(context.Background(), placeRequest(t, clk))
+	out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if err == nil {
 		t.Fatal("a disabled trading policy must refuse the mutation")
 	}
@@ -398,7 +477,7 @@ func TestCancelAndAmendGoThroughTheSameGate(t *testing.T) {
 	cancelReq := execgw.CancelRequest{
 		Intent:   cancelIntent,
 		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
-		Decision: goodDecision(t, execgw.CancelHash(cancelIntent), clk),
+		Decision: exitDecision(t, j, clk, journal.KindCancel, "kr", "005930", "BUY", 2),
 	}
 	out, err := gw.Cancel(ctx, cancelReq)
 	if err != nil {
@@ -418,10 +497,14 @@ func TestCancelAndAmendGoThroughTheSameGate(t *testing.T) {
 	newPrice := 70500.0
 	amendIntent := orderintent.AmendIntent{OrderID: "O-1", Price: &newPrice}
 	amendReq := execgw.AmendRequest{
-		Intent:   amendIntent,
-		Symbol:   "005930",
-		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
-		Decision: goodDecision(t, execgw.AmendHash(amendIntent), clk),
+		Intent: amendIntent,
+		Symbol: "005930",
+		Order:  execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		// The amend lowers nothing and raises nothing (only the price moves up by
+		// 500 on a resting BUY, which does raise exposure), so it is authorised as
+		// an exposure-raising amend.
+		Decision: raisingDecision(t, j, clk, journal.KindAmend, "kr", "005930", "BUY",
+			2, newPrice, testLimits()),
 	}
 	amendOut, err := gw.Amend(ctx, amendReq)
 	if err != nil {
@@ -440,15 +523,16 @@ func TestCancelAndAmendGoThroughTheSameGate(t *testing.T) {
 // same as a place.
 func TestAmendRaisingQuantityIsLimitChecked(t *testing.T) {
 	broker := &fakeBroker{result: domain.MutationResult{CurrentOrderID: "O-9"}}
-	gw, _, clk := newGateway(t, broker)
+	gw, j, clk := newGateway(t, broker)
 
 	qty := 50.0
 	amendIntent := orderintent.AmendIntent{OrderID: "O-1", Quantity: &qty}
 	_, err := gw.Amend(context.Background(), execgw.AmendRequest{
-		Intent:   amendIntent,
-		Symbol:   "005930",
-		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
-		Decision: goodDecision(t, execgw.AmendHash(amendIntent), clk),
+		Intent: amendIntent,
+		Symbol: "005930",
+		Order:  execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: raisingDecision(t, j, clk, journal.KindAmend, "kr", "005930", "BUY",
+			qty, 70000, testLimits()),
 	})
 	var rejected *execgw.RejectedError
 	if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonGuardianLimitExceeded {
@@ -464,7 +548,7 @@ func TestAmendRaisingQuantityIsLimitChecked(t *testing.T) {
 // officialGateway wires the gateway over the official client pointed at an
 // httptest server, so the transport-fault classification is exercised end to end
 // rather than against a hand-made error.
-func officialGateway(t *testing.T, h http.HandlerFunc) (*execgw.Gateway, *clock.Fake, *int) {
+func officialGateway(t *testing.T, h http.HandlerFunc) (*execgw.Gateway, *journal.Journal, *clock.Fake, *int) {
 	t.Helper()
 	var posts int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -497,7 +581,7 @@ func officialGateway(t *testing.T, h http.HandlerFunc) (*execgw.Gateway, *clock.
 	if err != nil {
 		t.Fatalf("execgw.New: %v", err)
 	}
-	return gw, clk, &posts
+	return gw, j, clk, &posts
 }
 
 // officialTestBroker mirrors internal/app/engine's officialBroker: it is what the
@@ -540,13 +624,13 @@ func TestTransportOutcomeTable(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			gw, clk, posts := officialGateway(t, func(w http.ResponseWriter, r *http.Request) {
+			gw, j, clk, posts := officialGateway(t, func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tc.status)
 				_, _ = w.Write([]byte(tc.body))
 			})
 
-			out, _ := gw.Place(context.Background(), placeRequest(t, clk))
+			out, _ := gw.Place(context.Background(), placeRequest(t, j, clk))
 			if out.State != tc.want {
 				t.Errorf("state: got %s, want %s (%s)", out.State, tc.want, out.Detail)
 			}
@@ -585,7 +669,7 @@ func TestUnreachableBrokerIsNotDispatched(t *testing.T) {
 		t.Fatalf("execgw.New: %v", err)
 	}
 
-	out, _ := gw.Place(context.Background(), placeRequest(t, clk))
+	out, _ := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if out.State != journal.StateNotDispatched {
 		t.Errorf("state: got %s, want NOT_DISPATCHED (%s)", out.State, out.Detail)
 	}

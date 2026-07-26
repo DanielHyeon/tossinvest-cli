@@ -55,7 +55,7 @@ func TestPlaceRoundTripConfirmsTheCreatedOrder(t *testing.T) {
 	reader.set(orderID, orderDetailJSON(orderID, "005930"))
 	gw, j, clk := newGatewayWithOrders(t, broker, reader)
 
-	out, err := gw.Place(context.Background(), placeRequest(t, clk))
+	out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if err != nil {
 		t.Fatalf("Place: %v", err)
 	}
@@ -112,7 +112,7 @@ func TestPlaceRoundTripFailuresLeaveInDoubt(t *testing.T) {
 			}
 			gw, j, clk := newGatewayWithOrders(t, broker, reader)
 
-			out, err := gw.Place(context.Background(), placeRequest(t, clk))
+			out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
 			if err == nil {
 				t.Fatal("an unconfirmed creation must be reported as an error, not as success")
 			}
@@ -152,13 +152,13 @@ func TestPlaceRoundTripFailuresLeaveInDoubt(t *testing.T) {
 func TestCancelIsNotRoundTripped(t *testing.T) {
 	broker := &fakeBroker{result: domain.MutationResult{Kind: "cancel", Status: "accepted", OrderID: "O-1"}}
 	// The reader knows nothing, so a round trip on this path would fail.
-	gw, _, clk := newGatewayWithOrders(t, broker, newOrderReader())
+	gw, j, clk := newGatewayWithOrders(t, broker, newOrderReader())
 
 	intent := cancelIntentFixture()
 	out, err := gw.Cancel(context.Background(), execgw.CancelRequest{
 		Intent:   intent,
 		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
-		Decision: goodDecision(t, execgw.CancelHash(intent), clk),
+		Decision: exitDecision(t, j, clk, journal.KindCancel, "kr", "005930", "BUY", 2),
 	})
 	if err != nil {
 		t.Fatalf("Cancel: %v", err)
@@ -176,7 +176,7 @@ func TestBrokerOrderIDIsStoredVerbatim(t *testing.T) {
 	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: padded}}
 	gw, j, clk := newGateway(t, broker) // no reader: no round trip
 
-	out, err := gw.Place(context.Background(), placeRequest(t, clk))
+	out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if err != nil {
 		t.Fatalf("Place: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestBlankBrokerOrderIDIsNotAnAck(t *testing.T) {
 	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "   "}}
 	gw, j, clk := newGateway(t, broker)
 
-	out, err := gw.Place(context.Background(), placeRequest(t, clk))
+	out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if err == nil {
 		t.Fatal("an unaddressable ack must not be reported as success")
 	}
@@ -231,9 +231,9 @@ func TestNoIdentifierShapeValidation(t *testing.T) {
 		broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: id}}
 		reader := newOrderReader()
 		reader.set(id, orderDetailJSON(id, "005930"))
-		gw, _, clk := newGatewayWithOrders(t, broker, reader)
+		gw, j, clk := newGatewayWithOrders(t, broker, reader)
 
-		out, err := gw.Place(context.Background(), placeRequest(t, clk))
+		out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
 		if err != nil {
 			t.Errorf("Place with order id %q: %v", id, err)
 			continue

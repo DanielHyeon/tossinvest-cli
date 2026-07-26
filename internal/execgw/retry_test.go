@@ -368,7 +368,7 @@ func TestGatewayBlocksNewEntryButNotExits(t *testing.T) {
 	ctx := context.Background()
 
 	// buying power was never observed → new entries are blocked.
-	out, err := gw.Place(ctx, placeRequest(t, clk))
+	out, err := gw.Place(ctx, placeRequest(t, j, clk))
 	var rejected *execgw.RejectedError
 	if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonQueryStale {
 		t.Fatalf("want a stale-query refusal, got %v", err)
@@ -385,13 +385,13 @@ func TestGatewayBlocksNewEntryButNotExits(t *testing.T) {
 	if _, err := gw.Cancel(ctx, execgw.CancelRequest{
 		Intent:   cancelIntent,
 		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
-		Decision: goodDecision(t, execgw.CancelHash(cancelIntent), clk),
+		Decision: exitDecision(t, j, clk, journal.KindCancel, "kr", "005930", "BUY", 2),
 	}); err != nil {
 		t.Errorf("a blocked entry gate must not block a cancel: %v", err)
 	}
 
 	gate.RecordSuccess(execgw.QueryBuyingPower)
-	if _, err := gw.Place(ctx, placeRequest(t, clk)); err != nil {
+	if _, err := gw.Place(ctx, placeRequest(t, j, clk)); err != nil {
 		t.Errorf("entry must resume once the required query is fresh: %v", err)
 	}
 }
@@ -430,7 +430,7 @@ func TestMutationsAreNeverRetried(t *testing.T) {
 		t.Fatalf("execgw.New: %v", err)
 	}
 
-	out, _ := gw.Place(context.Background(), placeRequest(t, clk))
+	out, _ := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if out.State != journal.StateInDoubt {
 		t.Errorf("state: got %s, want IN_DOUBT", out.State)
 	}

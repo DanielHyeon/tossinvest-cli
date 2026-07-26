@@ -479,9 +479,33 @@ func (s *Saga) sell(ctx context.Context, sagaID string, round int, target *Liqui
 		Price:        target.Price,
 		CurrencyMode: target.Currency,
 	}
+	// A liquidation sell is an order creation, so its decision carries an
+	// idempotency key — and it is still RISK_REDUCING, so no limit snapshot
+	// travels with it and none is applied (§0.3).
+	decision, err := s.decisionFor(ctx, execgw.ReductionRequest{
+		Kind:        journal.KindPlace,
+		Market:      target.Market,
+		Symbol:      target.Symbol,
+		Side:        "SELL",
+		MaxQuantity: target.Quantity,
+		Reason:      s.reductionReason(fmt.Sprintf("liquidation round %d", round)),
+	})
+	if err != nil {
+		// Nothing was submitted. The step stays failed rather than in doubt: no
+		// decision was recorded, so no order could have been sent under one.
+		target.State = journal.FlattenStepFailed
+		target.Reason = string(execgw.ReasonGuardianMissing)
+		target.Detail = "the liquidation decision could not be recorded: " + err.Error()
+		if step.ID != 0 {
+			_ = s.Journal.UpdateFlattenStep(ctx, step.ID, target.State, "", "",
+				target.Reason, target.Detail)
+		}
+		return
+	}
+
 	out, err := s.Gateway.Place(ctx, execgw.PlaceRequest{
 		Intent:   intent,
-		Decision: s.decisionFor(execgw.PlaceHash(intent)),
+		Decision: decision,
 	})
 
 	switch out.State {

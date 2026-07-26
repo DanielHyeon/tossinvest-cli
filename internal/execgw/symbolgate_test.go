@@ -227,7 +227,7 @@ func TestGatewayAsksTheSymbolQuestion(t *testing.T) {
 	blocked := placeIntent() // 005930, kr
 	_, err = gw.Place(context.Background(), execgw.PlaceRequest{
 		Intent:   blocked,
-		Decision: goodDecision(t, execgw.PlaceHash(blocked), clk),
+		Decision: entryDecision(t, j, clk, blocked, testLimits()),
 	})
 	var rejected *execgw.RejectedError
 	if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonBrokerStateUnknown {
@@ -238,7 +238,7 @@ func TestGatewayAsksTheSymbolQuestion(t *testing.T) {
 	other.Symbol = "000660"
 	out, err := gw.Place(context.Background(), execgw.PlaceRequest{
 		Intent:   other,
-		Decision: goodDecision(t, execgw.PlaceHash(other), clk),
+		Decision: entryDecision(t, j, clk, other, testLimits()),
 	})
 	if err != nil {
 		t.Fatalf("an unrelated symbol must still trade: %v", err)
@@ -271,15 +271,9 @@ func TestGatewayNeverGatesAnExitOnASymbolBlock(t *testing.T) {
 
 	intent := orderintent.CancelIntent{OrderID: "O-1", Symbol: "005930"}
 	out, err := gw.Cancel(context.Background(), execgw.CancelRequest{
-		Intent: intent,
-		Order:  execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
-		Decision: execgw.GuardianDecision{
-			Nonce:      "cancel-nonce",
-			IntentHash: execgw.CancelHash(intent),
-			IssuedAt:   clk.Now(),
-			ExpiresAt:  clk.Now().Add(30 * time.Second),
-			Authority:  "test-guardian",
-		},
+		Intent:   intent,
+		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: exitDecision(t, j, clk, journal.KindCancel, "kr", "005930", "BUY", 2),
 	})
 	if err != nil {
 		t.Fatalf("a blocked symbol must still be exitable (§0.3): %v", err)

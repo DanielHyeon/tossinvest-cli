@@ -163,7 +163,7 @@ func (f *doubtFixture) resolver() *execgw.Resolver {
 // placeInDoubt drives one place into IN_DOUBT and returns its attempt id.
 func (f *doubtFixture) placeInDoubt(t *testing.T, baseline *execgw.Baseline) string {
 	t.Helper()
-	req := placeRequest(t, f.clk)
+	req := placeRequest(t, f.journal, f.clk)
 	req.Baseline = baseline
 	out, err := f.gw.Place(context.Background(), req)
 	if err == nil {
@@ -476,17 +476,18 @@ func TestResolveIsIdempotent(t *testing.T) {
 // construction rather than by luck.
 func TestOneInFlightMutationPerSymbol(t *testing.T) {
 	f := newDoubtFixture(t)
-	if _, err := f.gw.Place(context.Background(), placeRequest(t, f.clk)); err == nil {
+	if _, err := f.gw.Place(context.Background(), placeRequest(t, f.journal, f.clk)); err == nil {
 		t.Fatal("the fixture broker must fail")
 	}
 	// The first attempt is now IN_DOUBT and unresolved, so the symbol is busy.
 
+	// A second, independently issued decision for the same order: the refusal
+	// under test is the symbol latch, not the one-shot nonce.
 	intent := placeIntent()
 	second := execgw.PlaceRequest{
 		Intent:   intent,
-		Decision: goodDecision(t, execgw.PlaceHash(intent), f.clk),
+		Decision: entryDecision(t, f.journal, f.clk, intent, testLimits()),
 	}
-	second.Decision.Nonce = "nonce-second"
 	_, err := f.gw.Place(context.Background(), second)
 	var rejected *execgw.RejectedError
 	if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonSymbolInFlight {
@@ -496,8 +497,8 @@ func TestOneInFlightMutationPerSymbol(t *testing.T) {
 	// A different symbol is unaffected.
 	other := placeIntent()
 	other.Symbol = "000660"
-	otherReq := execgw.PlaceRequest{Intent: other, Decision: goodDecision(t, execgw.PlaceHash(other), f.clk)}
-	otherReq.Decision.Nonce = "nonce-other"
+	otherReq := execgw.PlaceRequest{Intent: other,
+		Decision: entryDecision(t, f.journal, f.clk, other, testLimits())}
 	if _, err := f.gw.Place(context.Background(), otherReq); err == nil {
 		t.Fatal("expected the fixture broker failure")
 	} else if errors.As(err, &rejected) && rejected.Reason == execgw.ReasonSymbolInFlight {
@@ -524,7 +525,7 @@ func TestConcurrentMutationsOnOneSymbolSerialise(t *testing.T) {
 		t.Fatalf("execgw.New: %v", err)
 	}
 
-	first := placeRequest(t, clk)
+	first := placeRequest(t, j, clk)
 	go func() { _, _ = gw.Place(context.Background(), first) }()
 	select {
 	case <-entered:
@@ -533,8 +534,8 @@ func TestConcurrentMutationsOnOneSymbolSerialise(t *testing.T) {
 	}
 
 	intent := placeIntent()
-	second := execgw.PlaceRequest{Intent: intent, Decision: goodDecision(t, execgw.PlaceHash(intent), clk)}
-	second.Decision.Nonce = "nonce-concurrent"
+	second := execgw.PlaceRequest{Intent: intent,
+		Decision: entryDecision(t, j, clk, intent, testLimits())}
 	_, err = gw.Place(context.Background(), second)
 	close(release)
 

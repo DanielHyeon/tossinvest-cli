@@ -437,16 +437,22 @@ func TestGatewayRefusesNewOrdersUntilRecoveryCompletes(t *testing.T) {
 		Symbol: "AAPL", Market: "us", Side: "buy", OrderType: "limit",
 		Quantity: 1, Price: 200, CurrencyMode: "USD",
 	}
-	decision := execgw.GuardianDecision{
-		Nonce:      "nonce-1",
-		IntentHash: execgw.PlaceHash(intent),
-		Limits:     execgw.Limits{MaxQuantity: 10, MaxNotional: 100000, Currency: "USD"},
-		IssuedAt:   clk.Now(),
-		ExpiresAt:  clk.Now().Add(time.Minute),
+	issuer := &execgw.Issuer{Journal: j, Clock: clk, AccountRef: "acct-7", TTL: time.Minute}
+	entry := func() execgw.GuardianDecision {
+		t.Helper()
+		d, err := issuer.IssueEntry(context.Background(), execgw.EntryRequest{
+			Market: "us", Symbol: "AAPL", Side: "buy", Quantity: 1, EntryPrice: 200,
+			StopPrice: 180, PolicyVersion: "test/v1",
+			Limits: execgw.Limits{MaxQuantity: 10, MaxNotional: 100000, Currency: "USD"},
+		})
+		if err != nil {
+			t.Fatalf("issuing the entry decision: %v", err)
+		}
+		return d
 	}
 
 	out, err := gw.Place(context.Background(), execgw.PlaceRequest{
-		Intent: intent, Decision: decision,
+		Intent: intent, Decision: entry(),
 	})
 	if err == nil {
 		t.Fatal("a place before recovery completes must be refused")
@@ -468,9 +474,10 @@ func TestGatewayRefusesNewOrdersUntilRecoveryCompletes(t *testing.T) {
 	if _, err := r.Run(context.Background()); err != nil {
 		t.Fatalf("Run: %v", err)
 	}
-	decision.Nonce = "nonce-2"
+	// A fresh decision: the first one is spent, and a spent decision authorises
+	// nothing however the recovery went.
 	if _, err := gw.Place(context.Background(), execgw.PlaceRequest{
-		Intent: intent, Decision: decision,
+		Intent: intent, Decision: entry(),
 	}); err != nil {
 		t.Fatalf("after recovery the place should succeed: %v", err)
 	}
@@ -505,11 +512,13 @@ func TestExitsStayOpenWhileRecoveryIsIncomplete(t *testing.T) {
 	}
 
 	cancelIntent := orderintent.CancelIntent{OrderID: "broker-1", Symbol: "AAPL"}
-	decision := execgw.GuardianDecision{
-		Nonce:      "nonce-cancel",
-		IntentHash: execgw.CancelHash(cancelIntent),
-		IssuedAt:   clk.Now(),
-		ExpiresAt:  clk.Now().Add(time.Minute),
+	issuer := &execgw.Issuer{Journal: j, Clock: clk, AccountRef: "acct-7", TTL: time.Minute}
+	decision, err := issuer.IssueReduction(context.Background(), execgw.ReductionRequest{
+		Kind: journal.KindCancel, Market: "us", Symbol: "AAPL", Side: "BUY",
+		MaxQuantity: 1, Reason: "exit during recovery",
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 	if _, err := gw.Cancel(context.Background(), execgw.CancelRequest{
 		Intent:   cancelIntent,

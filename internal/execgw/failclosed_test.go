@@ -326,8 +326,10 @@ func TestGatewayRefusesFailClosedBranchesBeforeDispatch(t *testing.T) {
 		Quantity: 1, Price: 150, CurrencyMode: "USD",
 	}
 	out, err := gw.Place(context.Background(), execgw.PlaceRequest{
-		Intent:   intent,
-		Decision: goodDecision(t, execgw.PlaceHash(intent), clk),
+		Intent: intent,
+		Decision: entryDecision(t, j, clk, intent, execgw.Limits{
+			MaxQuantity: 10, MaxNotional: 100_000, Currency: "USD",
+		}),
 	})
 
 	var rejected *execgw.RejectedError
@@ -366,7 +368,7 @@ func TestGatewayNeverAutoApprovesABranch(t *testing.T) {
 		t.Fatalf("execgw.New: %v", err)
 	}
 
-	out, _ := gw.Place(context.Background(), placeRequest(t, clk))
+	out, _ := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if out.Reason != execgw.ReasonInteractiveAuthRequired {
 		t.Errorf("reason: got %q, want %q (%s)", out.Reason, execgw.ReasonInteractiveAuthRequired, out.Detail)
 	}

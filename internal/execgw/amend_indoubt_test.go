@@ -70,7 +70,7 @@ func (f *doubtFixture) cancelInDoubt(t *testing.T) string {
 	out, err := f.gw.Cancel(context.Background(), execgw.CancelRequest{
 		Intent:   intent,
 		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
-		Decision: goodDecision(t, execgw.CancelHash(intent), f.clk),
+		Decision: exitDecision(t, f.journal, f.clk, journal.KindCancel, "kr", "005930", "BUY", 2),
 	})
 	if err == nil {
 		t.Fatal("the fixture broker must fail so the cancel lands IN_DOUBT")
@@ -87,10 +87,11 @@ func (f *doubtFixture) amendInDoubt(t *testing.T) string {
 	newPrice := 70500.0
 	intent := orderintent.AmendIntent{OrderID: "O-1", Price: &newPrice}
 	out, err := f.gw.Amend(context.Background(), execgw.AmendRequest{
-		Intent:   intent,
-		Symbol:   "005930",
-		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
-		Decision: goodDecision(t, execgw.AmendHash(intent), f.clk),
+		Intent: intent,
+		Symbol: "005930",
+		Order:  execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: raisingDecision(t, f.journal, f.clk, journal.KindAmend, "kr", "005930", "BUY",
+			2, newPrice, testLimits()),
 	})
 	if err == nil {
 		t.Fatal("the fixture broker must fail so the amend lands IN_DOUBT")

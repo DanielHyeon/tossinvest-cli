@@ -216,16 +216,15 @@ func (o Outcome) Blocking() bool { return o.State != "" && !o.State.IsTerminal()
 // mutationPlan is the gateway's internal description of one mutation: everything
 // the journal, the Guardian check and the broker call each need, resolved once.
 type mutationPlan struct {
-	kind       journal.MutationKind
-	intentHash string
-	market     string
-	symbol     string
-	side       string // "BUY" | "SELL"
-	orderType  string // "LIMIT" | "MARKET"
-	quantity   float64
-	price      float64
-	amount     float64 // amount-based (fractional buy) orders
-	currency   string
+	kind      journal.MutationKind
+	market    string
+	symbol    string
+	side      string // "BUY" | "SELL"
+	orderType string // "LIMIT" | "MARKET"
+	quantity  float64
+	price     float64
+	amount    float64 // amount-based (fractional buy) orders
+	currency  string
 	// targetOrderID is the broker order a cancel or an amend acts on. It is an
 	// opaque token (openapi contracts no shape for `orderId`), so it is carried
 	// and stored exactly as received — trimming is only ever an emptiness test.
@@ -239,24 +238,33 @@ type mutationPlan struct {
 	// preflight runs the fail-closed checks that apply to this mutation kind.
 	// Only a place has any today; nil means there is nothing to check.
 	preflight func(ctx context.Context) *RejectedError
-	// call performs the broker mutation exactly once.
-	call func(ctx context.Context) (domain.MutationResult, error)
+	// call performs the broker mutation exactly once. key is the idempotency key
+	// the verified decision authorised, empty for mutations that carry none —
+	// it is threaded through the call rather than captured, because it is only
+	// known after the persisted decision has been read.
+	call func(ctx context.Context, key string) (domain.MutationResult, error)
+	// wireBody renders the exact request body the call will send under key, so
+	// the replay procedure can resend those bytes instead of rebuilding them
+	// (design D2). nil for mutations with no key and therefore no replay.
+	wireBody func(key string) (string, error)
 }
 
 // Place submits a new order through the full gateway sequence.
 func (g *Gateway) Place(ctx context.Context, req PlaceRequest) (Outcome, error) {
 	intent := req.Intent
 	plan := mutationPlan{
-		kind:           journal.KindPlace,
-		intentHash:     PlaceHash(intent),
-		market:         strings.ToLower(strings.TrimSpace(intent.Market)),
-		symbol:         strings.ToUpper(strings.TrimSpace(intent.Symbol)),
-		side:           strings.ToUpper(strings.TrimSpace(intent.Side)),
-		orderType:      strings.ToUpper(strings.TrimSpace(intent.OrderType)),
-		quantity:       intent.Quantity,
-		price:          intent.Price,
-		amount:         intent.Amount,
-		currency:       strings.ToUpper(strings.TrimSpace(intent.CurrencyMode)),
+		kind:      journal.KindPlace,
+		market:    strings.ToLower(strings.TrimSpace(intent.Market)),
+		symbol:    strings.ToUpper(strings.TrimSpace(intent.Symbol)),
+		side:      strings.ToUpper(strings.TrimSpace(intent.Side)),
+		orderType: strings.ToUpper(strings.TrimSpace(intent.OrderType)),
+		quantity:  intent.Quantity,
+		price:     intent.Price,
+		amount:    intent.Amount,
+		currency:  strings.ToUpper(strings.TrimSpace(intent.CurrencyMode)),
+		// Computed here, from the mutation itself, and never taken from the
+		// decision: a class the caller declares is a label, and this is the fact
+		// it has to agree with (engine-safety "결정의 Safety Class와 형태 일치").
 		raisesExposure: strings.EqualFold(intent.Side, "buy"),
 		baseline:       req.Baseline,
 	}
@@ -265,9 +273,18 @@ func (g *Gateway) Place(ctx context.Context, req PlaceRequest) (Outcome, error) 
 			return g.preflight.CheckPlace(ctx, intent)
 		}
 	}
-	plan.call = func(ctx context.Context) (domain.MutationResult, error) {
-		return g.trading.Place(ctx, intent, g.executeOpts(g.trading.PreviewPlace(intent).ConfirmToken))
+	// The key is never taken from the caller's intent: it is derived from the
+	// persisted decision and written over whatever the caller supplied.
+	keyed := func(key string) orderintent.PlaceIntent {
+		i := intent
+		i.ClientOrderID = key
+		return i
 	}
+	plan.call = func(ctx context.Context, key string) (domain.MutationResult, error) {
+		i := keyed(key)
+		return g.trading.Place(ctx, i, g.executeOpts(g.trading.PreviewPlace(i).ConfirmToken))
+	}
+	plan.wireBody = func(key string) (string, error) { return PlaceWireBody(keyed(key)) }
 	return g.submit(ctx, plan, req.Decision)
 }
 
@@ -276,7 +293,6 @@ func (g *Gateway) Cancel(ctx context.Context, req CancelRequest) (Outcome, error
 	intent := req.Intent
 	plan := mutationPlan{
 		kind:          journal.KindCancel,
-		intentHash:    CancelHash(intent),
 		market:        strings.ToLower(strings.TrimSpace(req.Order.Market)),
 		symbol:        strings.ToUpper(strings.TrimSpace(intent.Symbol)),
 		side:          strings.ToUpper(strings.TrimSpace(req.Order.Side)),
@@ -288,7 +304,7 @@ func (g *Gateway) Cancel(ctx context.Context, req CancelRequest) (Outcome, error
 		// A cancel can only remove exposure.
 		raisesExposure: false,
 	}
-	plan.call = func(ctx context.Context) (domain.MutationResult, error) {
+	plan.call = func(ctx context.Context, _ string) (domain.MutationResult, error) {
 		return g.trading.Cancel(ctx, intent, g.executeOpts(g.trading.PreviewCancel(intent).ConfirmToken))
 	}
 	return g.submit(ctx, plan, req.Decision)
@@ -307,7 +323,6 @@ func (g *Gateway) Amend(ctx context.Context, req AmendRequest) (Outcome, error) 
 	}
 	plan := mutationPlan{
 		kind:          journal.KindAmend,
-		intentHash:    AmendHash(intent),
 		market:        strings.ToLower(strings.TrimSpace(req.Order.Market)),
 		symbol:        strings.ToUpper(strings.TrimSpace(req.Symbol)),
 		side:          strings.ToUpper(strings.TrimSpace(req.Order.Side)),
@@ -320,7 +335,7 @@ func (g *Gateway) Amend(ctx context.Context, req AmendRequest) (Outcome, error) 
 		// so it is measured against the snapshot exactly like a place.
 		raisesExposure: quantity > req.Order.Quantity || price > req.Order.Price,
 	}
-	plan.call = func(ctx context.Context) (domain.MutationResult, error) {
+	plan.call = func(ctx context.Context, _ string) (domain.MutationResult, error) {
 		return g.trading.Amend(ctx, intent, g.executeOpts(g.trading.PreviewAmend(intent).ConfirmToken))
 	}
 	return g.submit(ctx, plan, req.Decision)
@@ -337,8 +352,14 @@ func (g *Gateway) executeOpts(token string) trading.ExecuteOptions {
 }
 
 // submit runs the ordering documented at the top of this file.
-func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision GuardianDecision) (Outcome, error) {
-	prep, err := g.prepareRequest(plan)
+func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDecision) (Outcome, error) {
+	// The decision is *read* before the attempt is recorded, because the record
+	// has to carry the binding (which decision, which class, which key, which
+	// bytes) at RECORDED. It is *verified* after, so a refusal is journalled
+	// rather than invisible — the two are separate steps on purpose.
+	decision, loadRejected := g.loadDecision(ctx, ref)
+
+	prep, err := g.prepareRequest(plan, decision)
 	if err != nil {
 		return Outcome{Reason: ReasonInvalidRequest, Detail: err.Error()}, err
 	}
@@ -359,6 +380,17 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 	defer g.releaseSymbol(symbolKey)
 
 	if rejected, err := g.checkSymbolFree(ctx, plan); err != nil {
+		return Outcome{Reason: ReasonInvalidRequest, Detail: err.Error()}, err
+	} else if rejected != nil {
+		return Outcome{Reason: rejected.Reason, Detail: rejected.Detail}, rejected
+	}
+
+	//    0b. The idempotency key is claimed by one attempt per account, durably.
+	//        Re-submitting a spent decision is caught here rather than by the
+	//        UNIQUE index, so it reports "already spent" instead of a write
+	//        error — and, like the check above, it is not journalled: the attempt
+	//        that claimed the key is the record.
+	if rejected, err := g.checkKeyUnclaimed(ctx, prep); err != nil {
 		return Outcome{Reason: ReasonInvalidRequest, Detail: err.Error()}, err
 	} else if rejected != nil {
 		return Outcome{Reason: rejected.Reason, Detail: rejected.Detail}, rejected
@@ -394,8 +426,13 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 	}
 	//    2c. The Guardian decision, before the dispatch is even recorded, so an
 	//        unauthorised mutation never reaches DISPATCH_STARTED and never
-	//        blocks the symbol.
-	if rejected := verifyDecision(decision, plan, g.clk.Now()); rejected != nil {
+	//        blocks the symbol. A decision that could not be read at all is
+	//        refused here for the same reason: the refusal belongs in the
+	//        journal next to the attempt it refused.
+	if loadRejected != nil {
+		return g.refuse(ctx, attempt, out, loadRejected)
+	}
+	if rejected := g.checkDecision(decision, ref, plan, g.clk.Now()); rejected != nil {
 		return g.refuse(ctx, attempt, out, rejected)
 	}
 
@@ -406,13 +443,24 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 	//      CONFIRMED.
 	var result domain.MutationResult
 	res, err := attempt.DispatchVerified(ctx, func(dctx context.Context, _ *journal.Attempt) journal.DispatchOutcome {
-		// Re-verified immediately before the call: the expiry only means
-		// something if it is checked at the last possible moment.
+		// Re-read and re-verified immediately before the call. Re-*read*,
+		// not merely re-checked: "제출 직전 journal에서 읽은 preimage로 재검증"
+		// means the row itself is the thing consulted at the last moment, so a
+		// decision revoked or rewritten since Prepare cannot be submitted from a
+		// copy this goroutine happens to still hold.
 		now := g.clk.Now()
-		if rejected := verifyDecision(decision, plan, now); rejected != nil {
+		fresh, rejected := g.loadDecision(dctx, ref)
+		if rejected != nil {
 			return notSent(rejected)
 		}
-		if err := g.nonces.Consume(decision.Nonce, now); err != nil {
+		if rejected := g.checkDecision(fresh, ref, plan, now); rejected != nil {
+			return notSent(rejected)
+		}
+		if fresh.ClientOrderID != prep.ClientOrderID {
+			return notSent(reject(ReasonGuardianKeyMismatch,
+				"the idempotency key recorded for this attempt is not the one the decision now carries"))
+		}
+		if err := g.nonces.Consume(fresh.Nonce, now); err != nil {
 			return notSent(reject(ReasonGuardianNonceReused,
 				"the decision for %s was already spent", plan.symbol))
 		}
@@ -422,7 +470,7 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 		// ambiguous every time.
 		tctx, tracker := journal.WithSendTracker(dctx)
 		var callErr error
-		result, callErr = plan.call(tctx)
+		result, callErr = plan.call(tctx, fresh.ClientOrderID)
 		return classifyMutation(tracker.State(), result, callErr)
 	}, g.roundTripFor(plan))
 	if err != nil {
@@ -565,8 +613,35 @@ func notSent(rejected *RejectedError) journal.DispatchOutcome {
 	}
 }
 
-// prepareRequest turns a plan into the journal's record of it.
-func (g *Gateway) prepareRequest(plan mutationPlan) (journal.PrepareRequest, error) {
+// checkKeyUnclaimed reports whether the decision's idempotency key already
+// belongs to an attempt on this account.
+//
+// It is a durable check, not an in-memory one: the attempt that claimed the key
+// may have been recorded by an earlier process, and the whole reason the key
+// exists is that a second submission under it would collect the first order's
+// result rather than place a new one.
+func (g *Gateway) checkKeyUnclaimed(ctx context.Context, prep journal.PrepareRequest) (*RejectedError, error) {
+	if prep.ClientOrderID == "" {
+		return nil, nil
+	}
+	rec, err := g.journal.AttemptForClientOrderID(ctx, prep.Intent.AccountRef, prep.ClientOrderID)
+	if errors.Is(err, journal.ErrAttemptNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("execgw: checking whether the idempotency key is claimed: %w", err)
+	}
+	return reject(ReasonGuardianNonceReused,
+		"attempt %s already submitted this decision", rec.ID), nil
+}
+
+// prepareRequest turns a plan and its persisted decision into the journal's
+// record of both.
+//
+// A zero decision produces a request with no binding, which Prepare accepts and
+// the verification then refuses: the refusal is worth recording, and it can only
+// be recorded against an attempt that exists.
+func (g *Gateway) prepareRequest(plan mutationPlan, decision journal.Decision) (journal.PrepareRequest, error) {
 	if plan.symbol == "" {
 		return journal.PrepareRequest{}, reject(ReasonInvalidRequest, "the mutation has no symbol")
 	}
@@ -618,12 +693,34 @@ func (g *Gateway) prepareRequest(plan mutationPlan) (journal.PrepareRequest, err
 		return journal.PrepareRequest{}, reject(ReasonInvalidRequest, "the mutation has no currency")
 	}
 
-	return journal.PrepareRequest{
+	req := journal.PrepareRequest{
 		Intent:        intent,
 		Kind:          plan.kind,
 		AttemptID:     g.newID(),
 		TargetOrderID: plan.targetOrderID,
-	}, nil
+	}
+	if decision.ID == "" {
+		return req, nil
+	}
+
+	req.AccountRef = decision.AccountRef
+	req.DecisionID = decision.ID
+	req.SafetyClass = decision.SafetyClass
+	req.Generation = decision.Generation
+	req.ClientOrderID = decision.ClientOrderID
+	// The bytes are rendered under the key the decision authorises and stored
+	// before anything is sent, because that is the only moment at which "what
+	// will be sent" and "what may be re-sent" are the same thing (design D2).
+	if plan.wireBody != nil && decision.ClientOrderID != "" {
+		body, err := plan.wireBody(decision.ClientOrderID)
+		if err != nil {
+			return journal.PrepareRequest{}, reject(ReasonUnsupportedOrderType,
+				"the mutation cannot be rendered as a request body: %v", err)
+		}
+		req.WireBody = body
+		req.SerializerVersion = WireSerializerVersion
+	}
+	return req, nil
 }
 
 func orderTypeFor(price float64) string {

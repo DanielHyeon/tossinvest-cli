@@ -352,10 +352,37 @@ func (s *Saga) settleStep(ctx context.Context, sagaID string, step journal.Flatt
 		}
 	}
 
+	// The decision is recorded before the cancel is submitted, with a preimage
+	// that says exactly what this exit is allowed to remove. A flatten is not
+	// exempt from the new verification — being the emergency path is a reason to
+	// be recorded, not a reason to be unverified (engine-safety: "비상 경로가 새
+	// 검증에 거부되어서는 안 되고, 검증을 면제받아서도 안 된다").
+	decision, err := s.decisionFor(ctx, execgw.ReductionRequest{
+		Kind:        journal.KindCancel,
+		Market:      ref.Market,
+		Symbol:      step.Symbol,
+		Side:        ref.Side,
+		MaxQuantity: ref.Quantity,
+		Reason:      s.reductionReason("cancel"),
+	})
+	if err != nil {
+		// Nothing was submitted: the decision never reached disk, so there is no
+		// authorisation to submit under. The step is recorded as failed and the
+		// loop continues — one unrecordable cancel must not stop the others.
+		outcome.State = journal.FlattenStepFailed
+		outcome.Reason = string(execgw.ReasonGuardianMissing)
+		outcome.Detail = "the cancel decision could not be recorded: " + err.Error()
+		if err := s.Journal.UpdateFlattenStep(ctx, step.ID, outcome.State,
+			step.IntentID, step.AttemptID, outcome.Reason, outcome.Detail); err != nil {
+			outcome.Detail += "; the outcome could not be recorded either: " + err.Error()
+		}
+		return outcome
+	}
+
 	out, err := s.Gateway.Cancel(ctx, execgw.CancelRequest{
 		Intent:   intent,
 		Order:    ref,
-		Decision: s.decisionFor(execgw.CancelHash(intent)),
+		Decision: decision,
 	})
 
 	state, detail := classifyCancel(out, err)
@@ -616,21 +643,39 @@ func (s *Saga) blockEntries() {
 	s.Gate.Block(execgw.ReasonFlattenInProgress, detail)
 }
 
-// decisionFor issues the Guardian decision for one cancel.
+// decisionFor persists the decision for one exit and returns the reference the
+// gateway will verify it by.
 //
-// A cancel carries no limit snapshot, and that is enforced rather than assumed:
-// execgw.verifyLimits exempts KindCancel entirely, because a limit is not a
-// reason to refuse an exit (§0.3). What the decision still provides is the
-// binding — this nonce authorises this exact intent, once.
-func (s *Saga) decisionFor(hash string) execgw.GuardianDecision {
-	now := s.clock().Now()
-	return execgw.GuardianDecision{
-		Nonce:      "flatten-" + randomID(),
-		IntentHash: hash,
-		IssuedAt:   now,
-		ExpiresAt:  now.Add(DecisionTTL),
-		Authority:  "flatten-saga",
+// Every mutation this package makes is RISK_REDUCING, so every decision it
+// issues carries a ReductionIntent: an account, a market, a symbol, a side, a
+// ceiling and a reason. No limit snapshot travels with it — a limit is not a
+// reason to refuse an exit (§0.3), and the gateway now enforces that by the
+// verified class rather than by the mutation verb, which is what makes a
+// reduce-only *sell* exempt as well as a cancel.
+//
+// The write happens before the submission, in the issuer's own transaction. A
+// crash in between leaves a decision on disk that nothing was submitted under —
+// the recoverable direction.
+func (s *Saga) decisionFor(ctx context.Context, req execgw.ReductionRequest) (execgw.GuardianDecision, error) {
+	issuer := &execgw.Issuer{
+		Journal:    s.Journal,
+		Clock:      s.clock(),
+		AccountRef: s.AccountRef,
+		TTL:        DecisionTTL,
+		NewID:      func() string { return "flatten-" + randomID() },
 	}
+	return issuer.IssueReduction(ctx, req)
+}
+
+// reductionReason is what an operator reads on the decision later. The saga's
+// own reason travels with it, because "why was this order cancelled" is
+// answered by why the flatten happened.
+func (s *Saga) reductionReason(step string) string {
+	reason := strings.TrimSpace(s.Reason)
+	if reason == "" {
+		reason = "flatten-all"
+	}
+	return "flatten " + step + ": " + reason
 }
 
 func (s *Saga) clock() clock.Clock {

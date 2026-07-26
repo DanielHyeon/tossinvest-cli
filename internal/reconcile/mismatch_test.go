@@ -8,6 +8,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
@@ -379,13 +380,20 @@ func TestGatewayKeepsExitsOpenUnderAMismatch(t *testing.T) {
 		Symbol: "AAPL", Market: "us", Side: "buy", OrderType: "limit",
 		Quantity: 1, Price: 200, CurrencyMode: "USD",
 	}
+	// The issuer records each decision before the gateway is called; the gateway
+	// verifies against the row, never against these values.
+	issuer := &execgw.Issuer{Journal: j, Clock: clk, AccountRef: "acct-7", TTL: time.Minute}
+	buyDecision, err := issuer.IssueEntry(context.Background(), execgw.EntryRequest{
+		Market: "us", Symbol: "AAPL", Side: "buy", Quantity: 1, EntryPrice: 200,
+		StopPrice: 180, PolicyVersion: "test/v1",
+		Limits: execgw.Limits{MaxQuantity: 10, MaxNotional: 100000, Currency: "USD"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	out, err := gw.Place(context.Background(), execgw.PlaceRequest{
-		Intent: buy,
-		Decision: execgw.GuardianDecision{
-			Nonce: "n-1", IntentHash: execgw.PlaceHash(buy),
-			Limits:   execgw.Limits{MaxQuantity: 10, MaxNotional: 100000, Currency: "USD"},
-			IssuedAt: clk.Now(), ExpiresAt: clk.Now().Add(time.Minute),
-		},
+		Intent:   buy,
+		Decision: buyDecision,
 	})
 	if err == nil {
 		t.Fatal("a buy under a mismatch must be refused")
@@ -399,13 +407,17 @@ func TestGatewayKeepsExitsOpenUnderAMismatch(t *testing.T) {
 
 	// The exit is not gated: liquidation is how the disagreement gets smaller.
 	cancelIntent := orderintent.CancelIntent{OrderID: "broker-1", Symbol: "AAPL"}
+	cancelDecision, err := issuer.IssueReduction(context.Background(), execgw.ReductionRequest{
+		Kind: journal.KindCancel, Market: "us", Symbol: "AAPL", Side: "BUY",
+		MaxQuantity: 1, Reason: "exit under a mismatch",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err := gw.Cancel(context.Background(), execgw.CancelRequest{
-		Intent: cancelIntent,
-		Order:  execgw.OrderRef{Market: "us", Side: "BUY", Quantity: 1, Price: 200, Currency: "USD"},
-		Decision: execgw.GuardianDecision{
-			Nonce: "n-2", IntentHash: execgw.CancelHash(cancelIntent),
-			IssuedAt: clk.Now(), ExpiresAt: clk.Now().Add(time.Minute),
-		},
+		Intent:   cancelIntent,
+		Order:    execgw.OrderRef{Market: "us", Side: "BUY", Quantity: 1, Price: 200, Currency: "USD"},
+		Decision: cancelDecision,
 	}); err != nil {
 		t.Fatalf("a cancel under a mismatch must go through: %v", err)
 	}
@@ -418,12 +430,16 @@ func TestGatewayKeepsExitsOpenUnderAMismatch(t *testing.T) {
 		Symbol: "MSFT", Market: "us", Side: "sell", OrderType: "limit",
 		Quantity: 1, Price: 400, CurrencyMode: "USD",
 	}
+	sellDecision, err := issuer.IssueReduction(context.Background(), execgw.ReductionRequest{
+		Kind: journal.KindPlace, Market: "us", Symbol: "MSFT", Side: "SELL",
+		MaxQuantity: 1, Reason: "exit under a mismatch",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err := gw.Place(context.Background(), execgw.PlaceRequest{
-		Intent: sell,
-		Decision: execgw.GuardianDecision{
-			Nonce: "n-3", IntentHash: execgw.PlaceHash(sell),
-			IssuedAt: clk.Now(), ExpiresAt: clk.Now().Add(time.Minute),
-		},
+		Intent:   sell,
+		Decision: sellDecision,
 	}); err != nil {
 		t.Fatalf("a sell reduces exposure and must not be gated: %v", err)
 	}
