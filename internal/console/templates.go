@@ -1,0 +1,273 @@
+package console
+
+// templates.go is the markup. It is one string on purpose: the console has three
+// pages and a refusal, and a template directory with four files in it would be
+// four more things to keep in step with an embed directive.
+//
+// The style sheet is inline and deliberately tiny. Anything that had to be
+// fetched — a font, a framework, an icon set — would be a request this page
+// cannot make (there is nothing to make it to) and a dependency on somebody
+// else's server for a screen that authorises live orders.
+
+const pageTemplates = `
+{{define "style"}}
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0 1rem 4rem;
+  font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+  background: #fbfbfa; color: #1c1c1a;
+}
+main, header > div { max-width: 62rem; margin: 0 auto; }
+header { border-bottom: 1px solid #dcdcd6; margin-bottom: 1.5rem; }
+header > div { display: flex; gap: 1rem; align-items: baseline; padding: 0.9rem 0; }
+header strong { font-size: 0.95rem; letter-spacing: 0.02em; }
+nav a { margin-right: 0.9rem; color: #3a3a35; text-decoration: none; }
+nav a.on { font-weight: 600; text-decoration: underline; }
+h1 { font-size: 1.35rem; margin: 1.4rem 0 0.4rem; }
+h2 { font-size: 1.05rem; margin: 1.6rem 0 0.4rem; }
+section { border: 1px solid #dcdcd6; border-radius: 6px; padding: 0.9rem 1.1rem; margin: 1rem 0; background: #fff; }
+pre { overflow-x: auto; padding: 0.8rem; background: #f4f4f0; border-radius: 4px;
+      font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid #ececE6; vertical-align: top; }
+dl { display: grid; grid-template-columns: 12rem 1fr; gap: 0.25rem 1rem; margin: 0.4rem 0; }
+dt { color: #6a6a62; } dd { margin: 0; }
+.notice { border-left: 3px solid #b07000; background: #fff6e5; padding: 0.7rem 0.9rem; border-radius: 4px; }
+.danger { border-left: 3px solid #a01818; background: #fdeeee; padding: 0.7rem 0.9rem; border-radius: 4px; }
+.ok { color: #1a6b2a; } .bad { color: #a01818; } .muted { color: #6a6a62; }
+input[type=text] { font: 15px/1.4 ui-monospace, Menlo, Consolas, monospace; padding: 0.45rem 0.6rem;
+                   width: 22rem; max-width: 100%; border: 1px solid #9a9a92; border-radius: 4px; }
+button { font: inherit; padding: 0.45rem 1rem; border-radius: 4px; border: 1px solid #6a6a62;
+         background: #1c1c1a; color: #fbfbfa; cursor: pointer; }
+button.secondary { background: transparent; color: #1c1c1a; }
+form { display: inline; }
+@media (prefers-color-scheme: dark) {
+  body { background: #16161a; color: #e6e6e0; }
+  header { border-color: #33333a; } nav a { color: #c8c8c0; }
+  section { background: #1d1d22; border-color: #33333a; }
+  pre { background: #111116; } th, td { border-color: #2a2a30; }
+  .notice { background: #2e2510; } .danger { background: #2e1414; }
+  button.secondary { color: #e6e6e0; }
+  input[type=text] { background: #111116; color: #e6e6e0; border-color: #44444c; }
+}
+{{end}}
+
+{{define "head"}}<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+{{if .Refresh}}<meta http-equiv="refresh" content="2">{{end}}
+<title>tossctl console</title>
+<style>{{template "style"}}</style>
+</head><body>
+<header><div>
+  <strong>tossctl console</strong>
+  <nav>
+    <a href="/" {{if eq .Nav "dashboard"}}class="on"{{end}}>대시보드</a>
+    <a href="/verify" {{if eq .Nav "verify"}}class="on"{{end}}>검증</a>
+    <a href="/report" {{if eq .Nav "report"}}class="on"{{end}}>리포트</a>
+  </nav>
+  <span class="muted" style="margin-left:auto">127.0.0.1 전용 · 승인 외 읽기 전용</span>
+</div></header>
+<main>
+{{end}}
+
+{{define "foot"}}
+</main></body></html>
+{{end}}
+
+{{define "refuse"}}<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>거부됨 — tossctl console</title>
+<style>{{template "style"}}</style></head><body><main>
+<h1>{{.Title}}</h1>
+<p class="danger">{{.Detail}}</p>
+</main></body></html>
+{{end}}
+
+{{define "dashboard"}}
+{{template "head" .}}
+<h1>대시보드</h1>
+<p class="muted">이 화면은 로컬 파일만 읽는다. 네트워크 호출도, 설정 변경도 하지 않는다.</p>
+
+<section>
+  <h2>soak (조회 전용 서베이)</h2>
+  {{with .Snap.Soak}}
+  {{if .Error}}<p class="danger">{{.Error}}</p>{{end}}
+  {{if .Present}}
+  <dl>
+    <dt>계좌</dt><dd>{{.AccountRef}}</dd>
+    <dt>사이클</dt><dd>{{.Cycles}}</dd>
+    <dt>연속일</dt><dd>{{.StreakDays}} / {{.MinDays}}일</dd>
+    <dt>기간</dt><dd>{{.FirstAt.Format "2006-01-02 15:04Z"}} → {{.LastAt.Format "2006-01-02 15:04Z"}}</dd>
+    <dt>attest 가능</dt><dd>{{if .Ready}}<span class="ok">예</span>{{else}}<span class="bad">아니오</span>{{end}}</dd>
+  </dl>
+  {{if .Reasons}}<ul>{{range .Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
+  <table>
+    <tr><th>날짜</th><th>사이클</th><th>인증 성공</th><th>인증 실패</th><th>판정</th></tr>
+    {{range .Days}}
+    <tr><td>{{.Date}}</td><td>{{.Cycles}}</td><td>{{.CredentialOK}}</td><td>{{.AuthFailures}}</td>
+        <td>{{if .Pass}}<span class="ok">pass</span>{{else}}<span class="bad">fail</span>{{end}}</td></tr>
+    {{end}}
+  </table>
+  {{else}}
+  <p class="muted">아직 기록이 없다. <code>tossctl soak run</code>으로 시작하라. ({{.Record}})</p>
+  {{end}}
+  {{end}}
+</section>
+
+<section>
+  <h2>capability attestation</h2>
+  {{with .Snap.Attestation}}
+  {{if .Present}}
+  <dl>
+    <dt>계좌</dt><dd>{{.AccountRef}}</dd>
+    <dt>soak 일수</dt><dd>{{.SoakDays}}</dd>
+    <dt>발급 / 만료</dt><dd>{{.IssuedAt.Format "2006-01-02"}} → {{.ExpiresAt.Format "2006-01-02"}}</dd>
+    <dt>상태</dt><dd>{{if .Usable}}<span class="ok">유효</span>{{else}}<span class="bad">사용 불가</span>{{end}}</dd>
+    <dt>검증된 endpoint</dt><dd>{{range .Endpoints}}{{.}}<br>{{end}}</dd>
+  </dl>
+  {{else}}
+  <p class="muted">attestation 파일이 없다 ({{.Path}}). <code>tossctl soak attest</code>가 조건을 만족할 때 쓴다.</p>
+  {{end}}
+  {{if .Reasons}}
+  <p class="notice">게이트가 열리지 않는 이유:</p>
+  <ul>{{range .Reasons}}<li>{{.}}</li>{{end}}</ul>
+  {{end}}
+  <p class="muted">이 콘솔은 게이트를 켜지 않는다. 자동매매 토글은 사람이 직접 승인한다.</p>
+  {{end}}
+</section>
+
+<section>
+  <h2>실계좌 검증 진행</h2>
+  {{with .Snap.Verify}}
+  {{if .Error}}<p class="danger">{{.Error}}</p>{{end}}
+  <dl>
+    <dt>기록</dt><dd>{{.Record}}</dd>
+    <dt>계좌</dt><dd>{{if .AccountRef}}{{.AccountRef}}{{else}}(없음){{end}}</dd>
+    <dt>완료 / 전체</dt><dd>{{.Done}} / {{.Total}} 단계</dd>
+  </dl>
+  {{if .Steps}}
+  <table>
+    <tr><th>단계</th><th>판정</th><th>사유</th></tr>
+    {{range .Steps}}<tr><td>{{.Step}}</td><td>{{.Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}
+  </table>
+  {{end}}
+  {{if .AwaitingRestart}}
+  <p class="notice">{{.AwaitingRestart}} 단계는 <strong>새 프로세스</strong>를 기다린다 — 콘솔을 종료하고 다시 시작한 뒤 이어하기.</p>
+  {{end}}
+  {{if .Outstanding}}
+  <p class="danger">계좌에 아직 살아 있는 객체:</p>
+  <ul>{{range .Outstanding}}<li>{{.Kind}} {{.ID}} ({{.Symbol}}){{if .Deliberate}} — 존속 측정을 위해 의도적으로 남긴 것{{end}}</li>{{end}}</ul>
+  {{end}}
+  {{end}}
+  <p><a href="/verify">검증 화면으로</a></p>
+</section>
+{{template "foot" .}}
+{{end}}
+
+{{define "verify"}}
+{{template "head" .}}
+<h1>실계좌 검증</h1>
+{{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
+
+{{if .Spent}}
+<section>
+  <p class="notice"><strong>이 프로세스는 이미 검증을 수행했다.</strong> 콘솔을 종료(Ctrl-C)하고
+  다시 시작한 뒤 이어하기를 눌러라. 조건주문 존속은 등록한 프로세스가 죽은 뒤에만 관측할 수 있으므로
+  이 경계는 우회하지 않는다.</p>
+</section>
+{{end}}
+
+{{if .Run}}{{with .Run}}
+<section>
+  <h2>실행 {{.ID}} <span class="muted">시작 {{.StartedAt.Format "15:04:05Z"}}</span></h2>
+
+  {{if .Awaiting}}
+  <p class="danger"><strong>여기서부터 실제 계좌에 요청이 나간다.</strong> 아래 목록이 이 실행이 보낼 수 있는
+  전부다. 목록에 없는 요청은 전송되지 않으며, 보내야 하는 상황이 되면 실행이 멈춘다.</p>
+  <pre>{{.Batch.Prompt}}</pre>
+  <form method="post" action="/verify/approve">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="nonce">위에 표시된 확인 문자열을 그대로 입력하라:</label><br>
+    <input id="nonce" name="nonce" type="text" autocomplete="off" autocapitalize="off"
+           autocorrect="off" spellcheck="false" required>
+    <button type="submit">승인</button>
+  </form>
+  <form method="post" action="/verify/abort">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <button type="submit" class="secondary">거부</button>
+  </form>
+  <p class="muted">승인은 세션 토큰 · CSRF 토큰 · 직접 타이핑한 확인 문자열 3중이 모두 맞을 때만 성립한다.
+  틀리거나 만료되면 아무것도 전송되지 않고 이 실행은 중단된다. 단계별 확인(--confirm-each)은 웹에서는
+  제공하지 않는다 — 콘솔은 배치 승인 전용이다.</p>
+  {{end}}
+
+  {{if .Approved}}<p class="ok">승인됨 {{.ApprovedAt.Format "15:04:05Z"}} — 목록에 있는 요청만 나간다.</p>{{end}}
+  {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
+
+  {{if .Lines}}
+  <h2>진행</h2>
+  <pre>{{range .Lines}}{{.}}
+{{end}}</pre>
+  {{end}}
+
+  {{if .Done}}
+  <h2>결과</h2>
+  {{if .Err}}<p class="danger">{{.Err}}</p>{{end}}
+  {{if .Summary.Outcomes}}
+  <table>
+    <tr><th>단계</th><th>판정</th><th>사유</th></tr>
+    {{range .Summary.Outcomes}}<tr><td>{{.Step}}</td><td>{{.Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}
+  </table>
+  {{end}}
+  {{if .Summary.Halt}}<p class="notice">중단: {{.Summary.Halt}}</p>{{end}}
+  {{if .Summary.Outstanding}}
+  <p class="danger">계좌에 아직 살아 있는 객체:</p>
+  <ul>{{range .Summary.Outstanding}}<li>{{.Kind}} {{.ID}} ({{.Symbol}}){{if .Deliberate}} — 의도적으로 남긴 것, 이어하기가 취소한다{{else}} — <strong>취소되지 않았다. 직접 처리하라.</strong>{{end}}</li>{{end}}</ul>
+  {{end}}
+  {{if .AwaitingRestart}}
+  <p class="notice"><strong>여기서 프로세스 경계다.</strong> 콘솔을 종료(Ctrl-C)하고 다시 시작한 뒤
+  이어하기를 눌러라. 조건주문이 이 프로세스보다 오래 사는지가 다음 측정이므로, 같은 프로세스에서
+  이어갈 수는 없다.</p>
+  {{end}}
+  <p><a href="/report">리포트 보기</a></p>
+  {{end}}
+</section>
+{{end}}{{else}}
+
+<section>
+  {{if .Resuming}}
+  <p class="notice">이 기록에는 이미 검증이 있다. 시작하면 <strong>이어서</strong> 진행한다 —
+  판정이 끝난 단계는 다시 주문을 내지 않는다.</p>
+  {{end}}
+  {{if .Snap.Verify.AwaitingRestart}}
+  <p class="notice">{{.Snap.Verify.AwaitingRestart}} 단계가 새 프로세스를 기다리고 있었다. 이 콘솔이 그 새 프로세스다.</p>
+  {{end}}
+  <p>시작하면 이 실행이 보낼 수 있는 <strong>모든 라이브 요청의 목록</strong>과 확인 문자열이 표시된다.
+  그 문자열을 직접 입력하기 전에는 아무것도 전송되지 않는다.</p>
+  <form method="post" action="/verify/start">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <button type="submit" {{if .Spent}}disabled{{end}}>{{if .Resuming}}이어하기{{else}}검증 시작{{end}}</button>
+  </form>
+</section>
+
+<section>
+  <h2>단계 목록</h2>
+  <p class="muted"><code>tossctl verify run --list</code>와 같은 내용이다. 계좌를 건드리지 않는다.</p>
+  <pre>{{.Steps}}</pre>
+</section>
+{{end}}
+{{template "foot" .}}
+{{end}}
+
+{{define "report"}}
+{{template "head" .}}
+<h1>리포트</h1>
+{{if .Error}}<p class="danger">{{.Error}}</p>{{end}}
+<p><a href="/report.json">JSON 내려받기</a> — 측정된 속성과 미검증 목록 전체.</p>
+<section><pre>{{.Text}}</pre></section>
+{{template "foot" .}}
+{{end}}
+`
