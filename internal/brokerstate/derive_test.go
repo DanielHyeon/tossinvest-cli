@@ -477,6 +477,10 @@ func TestStateAndReasonStringsAreStable(t *testing.T) {
 		brokerstate.StateCancelled:                "CANCELLED",
 		brokerstate.StateCancelledPartiallyFilled: "CANCELLED_PARTIALLY_FILLED",
 		brokerstate.StateReplaced:                 "REPLACED",
+		brokerstate.StateRejected:                 "REJECTED",
+		brokerstate.StateRejectedPartiallyFilled:  "REJECTED_PARTIALLY_FILLED",
+		brokerstate.StateCancelPending:            "CANCEL_PENDING",
+		brokerstate.StateReplacePending:           "REPLACE_PENDING",
 		brokerstate.StateUnknown:                  "UNKNOWN_BROKER_STATE",
 	}
 	for state, want := range states {
@@ -499,6 +503,17 @@ func TestStateAndReasonStringsAreStable(t *testing.T) {
 		brokerstate.ReasonClosedWithoutFillOrCancel,
 		brokerstate.ReasonClosedWithUnexplainedRemainder,
 		brokerstate.ReasonMalformedPayload,
+		brokerstate.ReasonPendingWithFill,
+		brokerstate.ReasonPartialFilledWithoutFill,
+		brokerstate.ReasonPartialFilledWithFullFill,
+		brokerstate.ReasonPendingMutationWithFullFill,
+		brokerstate.ReasonFilledWithRemainder,
+		brokerstate.ReasonCancelledWithSuccessor,
+		brokerstate.ReasonRejectedWithFullFill,
+		brokerstate.ReasonRejectedWithSuccessor,
+		brokerstate.ReasonReplacedWithoutSuccessor,
+		brokerstate.ReasonCancelRejectedRecord,
+		brokerstate.ReasonReplaceRejectedRecord,
 	}
 	seen := map[brokerstate.ReasonCode]bool{}
 	for _, r := range reasons {
@@ -520,6 +535,7 @@ func TestTerminalHelpers(t *testing.T) {
 	terminal := []brokerstate.State{
 		brokerstate.StateFilled, brokerstate.StateCancelled,
 		brokerstate.StateCancelledPartiallyFilled, brokerstate.StateReplaced,
+		brokerstate.StateRejected, brokerstate.StateRejectedPartiallyFilled,
 	}
 	for _, s := range terminal {
 		if !s.IsTerminal() {
@@ -528,6 +544,7 @@ func TestTerminalHelpers(t *testing.T) {
 	}
 	for _, s := range []brokerstate.State{
 		brokerstate.StateOpenUnfilled, brokerstate.StateOpenPartiallyFilled,
+		brokerstate.StateCancelPending, brokerstate.StateReplacePending,
 		brokerstate.StateUnknown,
 	} {
 		if s.IsTerminal() {

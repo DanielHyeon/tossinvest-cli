@@ -12,9 +12,18 @@ package execgw
 //     fill and a successor carries the remainder, so the question is answered by
 //     the original's state plus a symbol-scoped search for that successor.
 //
-// Both use brokerstate's priority table rather than the raw status field: CLOSED
-// covers filled, cancelled, cancelled-after-partial and replaced, and the
-// difference between those is the difference between flat and exposed.
+// Both use brokerstate's priority table rather than the raw status field: the
+// documented OrderStatus enum has ten values, several of which carry a partial
+// fill and one of which (REPLACED) means the exposure moved rather than went
+// away, and the difference between those is the difference between flat and
+// exposed.
+//
+// Two of the ten are transient by construction — PENDING_CANCEL and
+// PENDING_REPLACE are "취소·정정 요청이 접수되어 브로커 응답을 대기 중"(openapi).
+// Observing one is not an answer, so both procedures keep observing rather than
+// counting it as evidence in either direction: concluding "the cancel never
+// landed" while the broker is still processing that very cancel would be a
+// definitive answer built on a transient reading.
 
 import (
 	"context"
@@ -88,6 +97,30 @@ func (r *Resolver) resolveCancel(
 			}
 			return res, nil
 
+		case brokerstate.StateRejected, brokerstate.StateRejectedPartiallyFilled:
+			// The broker refused the order itself. It is terminal, so there is no
+			// exposure left in doubt — but the cancel is not what ended it.
+			res.State = journal.StateFailedConfirmed
+			res.Reason = ReasonCode(journal.ReasonResolvedAbsent)
+			res.Detail = fmt.Sprintf(
+				"order %s was rejected by the broker (%s filled), so the cancel did not take effect",
+				target, decimalString(derived.FilledQuantity))
+			if err := attempt.ResolveFailed(ctx, journal.ReasonResolvedAbsent, res.Detail); err != nil {
+				return res, err
+			}
+			return res, nil
+
+		case brokerstate.StateCancelPending, brokerstate.StateReplacePending:
+			// A mutation is in flight at the broker. That is neither "the cancel
+			// landed" nor "it did not" — it is the broker still deciding, so it
+			// must not count towards the stable-open evidence that would settle
+			// the attempt as FAILED_CONFIRMED.
+			if !r.waitOrExpire(ctx, clk, cfg, deadline) {
+				return r.park(ctx, attempt, res, fmt.Sprintf(
+					"order %s was still %s when the %s resolution budget ran out",
+					target, derived.State, cfg.MaxDuration))
+			}
+
 		case brokerstate.StateOpenUnfilled, brokerstate.StateOpenPartiallyFilled:
 			stableOpen++
 			if stableOpen >= cfg.StableObservations && clk.Now().Sub(started) >= cfg.MinObservation {
@@ -158,6 +191,21 @@ func (r *Resolver) resolveAmend(
 			continue
 		}
 
+		// The original is closed and something has to account for the remainder.
+		// Two derivations mean that: REPLACED with a successor the journal already
+		// knows, and the fail-closed reading of a REPLACED row whose successor
+		// nothing names yet — which is the normal shape here, because the lineage
+		// edge is written by *this* procedure when it succeeds.
+		if isClosedOriginal(derived) {
+			out, done, err := r.settleAmendFromClosedOriginal(
+				ctx, attempt, res, derived, successorMatcher, target, cfg, clk, deadline)
+			if done {
+				return out, err
+			}
+			res = out
+			continue
+		}
+
 		switch derived.State {
 		case brokerstate.StateOpenUnfilled, brokerstate.StateOpenPartiallyFilled:
 			// The original is still live. If it stays that way it was never
@@ -188,61 +236,132 @@ func (r *Resolver) resolveAmend(
 			}
 			return res, nil
 
-		case brokerstate.StateCancelled, brokerstate.StateCancelledPartiallyFilled, brokerstate.StateReplaced:
-			// The original is closed. An amend that landed produced a successor;
-			// find it, or admit we cannot account for the exposure.
-			successors, scanErr := r.findSuccessors(ctx, successorMatcher, target, cfg)
-			if scanErr != nil {
-				if !r.waitOrExpire(ctx, clk, cfg, deadline) {
-					return r.park(ctx, attempt, res,
-						fmt.Sprintf("the successor scan failed: %v", scanErr))
-				}
-				continue
+		case brokerstate.StateRejected, brokerstate.StateRejectedPartiallyFilled:
+			// The broker refused the original. There was nothing to amend, and
+			// the order is terminal, so no exposure is left in doubt.
+			res.State = journal.StateFailedConfirmed
+			res.Reason = ReasonCode(journal.ReasonResolvedAbsent)
+			res.Detail = fmt.Sprintf(
+				"order %s was rejected by the broker (%s filled), so the amend never landed",
+				target, decimalString(derived.FilledQuantity))
+			if err := attempt.ResolveFailed(ctx, journal.ReasonResolvedAbsent, res.Detail); err != nil {
+				return res, err
 			}
-			switch len(successors) {
-			case 1:
-				child := successors[0]
-				res.State = journal.StateConfirmed
-				res.BrokerOrderID = child.OrderID
-				res.Reason = ReasonCode(journal.ReasonResolvedFound)
-				res.Detail = fmt.Sprintf(
-					"order %s closed with %s filled and order %s carries the remainder",
-					target, decimalString(derived.FilledQuantity), child.OrderID)
-				edge := journal.LineageEdge{
-					ParentOrderID:        target,
-					ChildOrderID:         child.OrderID,
-					Relation:             journal.RelationReplaces,
-					ParentFilledQuantity: decimalString(derived.FilledQuantity),
-					RequestedQuantity:    decimalString(child.Quantity),
-				}
-				if err := attempt.ResolveConfirmedWithLineage(ctx, edge,
-					journal.ReasonResolvedFound, res.Detail); err != nil {
-					return res, err
-				}
-				return res, nil
+			return res, nil
 
-			case 0:
-				// Closed with no successor: either the amend was rejected and
-				// something else cancelled the order, or the successor is not
-				// visible to us. Those have opposite exposure implications.
+		case brokerstate.StateCancelPending, brokerstate.StateReplacePending:
+			// PENDING_REPLACE is very likely this amend being processed, and
+			// PENDING_CANCEL is a mutation the broker has not answered either.
+			// Neither is evidence, so keep observing instead of counting it as an
+			// unreplaced original.
+			if !r.waitOrExpire(ctx, clk, cfg, deadline) {
 				return r.park(ctx, attempt, res, fmt.Sprintf(
-					"order %s is %s but no successor carrying the amended order was found",
-					target, derived.State))
-
-			default:
-				ids := make([]string, 0, len(successors))
-				for _, s := range successors {
-					ids = append(ids, s.OrderID)
-				}
-				return r.park(ctx, attempt, res, fmt.Sprintf(
-					"order %s is %s and more than one order could be its successor (%s)",
-					target, derived.State, strings.Join(ids, ", ")))
+					"order %s was still %s when the %s resolution budget ran out",
+					target, derived.State, cfg.MaxDuration))
 			}
 
 		default: // UNKNOWN_BROKER_STATE
 			return r.park(ctx, attempt, res, fmt.Sprintf(
 				"order %s derives as %s (%s): %s", target, derived.State, derived.Reason, derived.Detail))
 		}
+	}
+}
+
+// isClosedOriginal reports whether an amend's target order has stopped being live
+// in a way that means "an amend may have replaced it".
+//
+// CANCELLED and REPLACED are the derived states for that. The third case is the
+// fail-closed one: a REPLACED row whose successor nothing names derives as
+// UNKNOWN_BROKER_STATE/replaced_without_successor, which is exactly the state the
+// original is in *before* this procedure writes the lineage edge. Reading that as
+// "unresolvable" would park every real amend resolution; reading it as "go find
+// the successor" is what the procedure is for, and it still cannot confirm
+// anything unless it finds exactly one.
+func isClosedOriginal(d brokerstate.Derived) bool {
+	switch d.State {
+	case brokerstate.StateCancelled, brokerstate.StateCancelledPartiallyFilled, brokerstate.StateReplaced:
+		return true
+	case brokerstate.StateUnknown:
+		return d.Reason == brokerstate.ReasonReplacedWithoutSuccessor
+	default:
+		return false
+	}
+}
+
+// originalStateLabel describes the target order for an operator-facing message.
+func originalStateLabel(d brokerstate.Derived) string {
+	if d.State == brokerstate.StateUnknown && d.Reason == brokerstate.ReasonReplacedWithoutSuccessor {
+		return "REPLACED with no successor recorded"
+	}
+	return string(d.State)
+}
+
+// settleAmendFromClosedOriginal is the branch where the original is no longer
+// live: find the one order that carries the amended remainder, or admit we cannot
+// account for the exposure.
+//
+// done=false means "observe again" — the caller's loop owns the budget.
+func (r *Resolver) settleAmendFromClosedOriginal(
+	ctx context.Context,
+	attempt *journal.Attempt,
+	res Resolution,
+	derived brokerstate.Derived,
+	successorMatcher *matcher,
+	target string,
+	cfg ResolveConfig,
+	clk clock.Clock,
+	deadline time.Time,
+) (Resolution, bool, error) {
+	successors, scanErr := r.findSuccessors(ctx, successorMatcher, target, cfg)
+	if scanErr != nil {
+		if !r.waitOrExpire(ctx, clk, cfg, deadline) {
+			out, err := r.park(ctx, attempt, res,
+				fmt.Sprintf("the successor scan failed: %v", scanErr))
+			return out, true, err
+		}
+		return res, false, nil
+	}
+
+	switch len(successors) {
+	case 1:
+		child := successors[0]
+		res.State = journal.StateConfirmed
+		res.BrokerOrderID = child.OrderID
+		res.Reason = ReasonCode(journal.ReasonResolvedFound)
+		res.Detail = fmt.Sprintf(
+			"order %s closed with %s filled and order %s carries the remainder",
+			target, decimalString(derived.FilledQuantity), child.OrderID)
+		edge := journal.LineageEdge{
+			ParentOrderID:        target,
+			ChildOrderID:         child.OrderID,
+			Relation:             journal.RelationReplaces,
+			ParentFilledQuantity: decimalString(derived.FilledQuantity),
+			RequestedQuantity:    decimalString(child.Quantity),
+		}
+		if err := attempt.ResolveConfirmedWithLineage(ctx, edge,
+			journal.ReasonResolvedFound, res.Detail); err != nil {
+			return res, true, err
+		}
+		return res, true, nil
+
+	case 0:
+		// Closed with no successor: either the amend was rejected and something
+		// else cancelled the order, or the successor is not visible to us. Those
+		// have opposite exposure implications.
+		out, err := r.park(ctx, attempt, res, fmt.Sprintf(
+			"order %s is %s but no successor carrying the amended order was found",
+			target, originalStateLabel(derived)))
+		return out, true, err
+
+	default:
+		ids := make([]string, 0, len(successors))
+		for _, s := range successors {
+			ids = append(ids, s.OrderID)
+		}
+		out, err := r.park(ctx, attempt, res, fmt.Sprintf(
+			"order %s is %s and more than one order could be its successor (%s)",
+			target, originalStateLabel(derived), strings.Join(ids, ", ")))
+		return out, true, err
 	}
 }
 

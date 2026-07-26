@@ -41,7 +41,7 @@
 
 ## 5. 브로커 취급 정정
 
-- [ ] 5.1 [T][High-risk] `brokerstate` 파생 **재작성**(확장 아님): 문서화된 10값 OrderStatus 우선순위 표(openapi 인용 주석), canceledAt·수량·lineage 모순·미지 값 UNKNOWN fail-closed 유지. 기존 테스트 중 바뀌어야 할 단언 사전 열거(무조건 green 금지). CANCEL_REJECTED/REPLACE_REJECTED 별도 레코드 인지 — 귀속 실패는 RECONCILE `[형태 미측정 — 2b 2.1]`
+- [x] 5.1 [T][High-risk] `brokerstate` 파생 **재작성**(확장 아님): 문서화된 10값 OrderStatus 우선순위 표(openapi 인용 주석), canceledAt·수량·lineage 모순·미지 값 UNKNOWN fail-closed 유지. 기존 테스트 중 바뀌어야 할 단언 사전 열거(무조건 green 금지). CANCEL_REJECTED/REPLACE_REJECTED 별도 레코드 인지 — 귀속 실패는 RECONCILE `[형태 미측정 — 2b 2.1]`
 - [ ] 5.2 [T] opaque 식별자: 공백 검사 후 원문 저장(위반 3개소 수정 — classify.go:149·resolution.go:42,47,126·indoubt.go:512,516), 바이트 동일 비교, round-trip 실패→IN_DOUBT(MarkAcked 후·Settle 전 배치), 상충→RECONCILE. 정규식·prefix 검증 미추가(리뷰 항목)
 - [ ] 5.3 [T] EXECUTION_CORRECTION: filldetect payload에 `filledAmount` 추가, RecordFill 동일 `BEGIN IMMEDIATE` 내 정정 이벤트+스냅샷 갱신, 반복 poll 멱등 테스트
 
