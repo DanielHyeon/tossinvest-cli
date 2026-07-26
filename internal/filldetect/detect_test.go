@@ -214,8 +214,12 @@ type rawOrder struct {
 	quantity string
 	filled   string
 	avgPrice string
-	filledAt string
-	canceled string
+	// amount is execution.filledAmount. rawAmount carries a JSON literal
+	// (`null`, or a non-string) for the payloads that test the reader itself.
+	amount    string
+	rawAmount string
+	filledAt  string
+	canceled  string
 }
 
 func (o rawOrder) json() json.RawMessage {
@@ -242,6 +246,12 @@ func (o rawOrder) json() json.RawMessage {
 	exec := []string{`"filledQuantity":` + quote(orZero(o.filled))}
 	if o.avgPrice != "" {
 		exec = append(exec, `"averageFilledPrice":`+quote(o.avgPrice))
+	}
+	switch {
+	case o.rawAmount != "":
+		exec = append(exec, `"filledAmount":`+o.rawAmount)
+	case o.amount != "":
+		exec = append(exec, `"filledAmount":`+quote(o.amount))
 	}
 	if o.filledAt != "" {
 		exec = append(exec, `"filledAt":`+quote(o.filledAt))

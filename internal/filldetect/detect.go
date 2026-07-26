@@ -39,6 +39,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -201,6 +202,10 @@ type Snapshot struct {
 	// AveragePrice is the broker's average fill price, kept as the decimal
 	// string it arrived as. Averages are replaced wholesale, never accumulated.
 	AveragePrice string
+	// FilledAmount is `execution.filledAmount`, kept as the decimal string it
+	// arrived as. It exists so an amount-only restatement at an unchanged
+	// cumulative quantity is detectable at all (design D7).
+	FilledAmount string
 	// BrokerVisibleAt is when the broker made this fill state observable. It is
 	// execution.filledAt when the payload carries one; the caller substitutes the
 	// previous poll's instant when it does not.
@@ -218,6 +223,9 @@ type Applied struct {
 	Delta float64
 	// Changed reports whether the snapshot moved local state at all.
 	Changed bool
+	// Corrected marks an EXECUTION_CORRECTION: the broker restated an execution
+	// it had already reported, with no change in cumulative quantity.
+	Corrected bool
 	// FailClosed marks a snapshot that contradicts what was already observed.
 	FailClosed bool
 	Reason     execgw.ReasonCode
@@ -392,7 +400,10 @@ func (d *Detector) collect(ctx context.Context, cfg Config, started time.Time, c
 		if err != nil {
 			return nil, fmt.Errorf("filldetect: reading order %s: %w", t.OrderID, err)
 		}
-		if snap.OrderID == "" {
+		// Trimmed only to judge emptiness: the payload's identifier is kept
+		// verbatim when there is one, and the tracked id fills in when there is
+		// not (order-execution "브로커 식별자의 opaque 취급").
+		if strings.TrimSpace(snap.OrderID) == "" {
 			snap.OrderID = t.OrderID
 		}
 		if snap.Symbol == "" {

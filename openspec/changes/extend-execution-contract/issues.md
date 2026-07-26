@@ -121,6 +121,48 @@
   왕복을 얹지 않는다, §0.3). retry matrix의 단건 조회 라인(`in-flight 주문당 3s마다 1회`)
   대비 place 빈도가 훨씬 낮아 새 라인을 만들지 않는다.
 
+## 2026-07-26 [safe local] 배정된 원문 저장 위반 3곳 수정 완료 — lineage_edges의 나머지 2행은 남겼다 (task 5.3)
+
+- 처리: Manager 배정대로 `journal/lineage.go:118`(`ResolveConfirmedWithLineage`의
+  broker_order_id), `journal/fills.go:173`(스냅샷 쓰기 키)·`385`(LookupFill)·`393`(FillEvents),
+  `filldetect/payload.go:84`(Snapshot.OrderID)에서 trim을 제거했다. trim은 공백 검사에만 남았고
+  (RecordFill의 빈 id 거부, detect.go의 "payload에 id가 없으면 tracked id로 채움"), 저장·조회는
+  수신 원문이다. 테스트: `journal/corrections_test.go`의 verbatim 3건 + `filldetect/payload_test.go`
+  2건.
+- **남긴 것**: 같은 함수의 `lineage.go:144-145`(lineage_edges의 parent/child 식별자 trim). 배정은
+  "118의 비대칭 회복"이었고, 이 두 행을 고치면 읽기 쪽 `LineageChildren`·`ResolveCurrentOrderID`가
+  **파라미터를** trim하는 것까지 함께 바꿔야 한다(저장만 원문으로 바꾸면 공백 있는 id가 조회에서
+  누락된다). 현재는 쓰기·조회가 같은 규칙이라 자기모순이 없다 — 5.2가 fills.go에 대해 기록했던 것과
+  같은 상태다.
+- 후속 task 입력: lineage_edges 계열은 한 묶음(쓰기 2행 + 조회 2곳)으로 처리해야 한다. 실 식별자에
+  공백이 없다는 전제 위에서만 현재 동작이 맞으므로, 우선순위는 낮지만 규칙 위반인 것은 맞다.
+
+## 2026-07-26 [observation] D9의 정정 dedup 키가 왕복 정정의 3번째 관측을 흡수한다 (task 5.3)
+
+- 사실: `UNIQUE(order_id, cumulative_qty, new_avg_price, new_filled_amount)`는 값 자체가 키다.
+  브로커가 같은 수량에서 평균가를 A→B→A→B로 재서술하면 마지막 B는 첫 B와 키가 같아
+  `ON CONFLICT DO NOTHING`이 삼킨다. 감사 행이 3개가 아니라 2개가 된다.
+- 판단: D9가 이 키를 "crash 재관측의 이중 삽입 방지" 목적으로 명시했고, 스키마는 이미 v5로
+  커밋됐다. 잃는 것은 감사 행 하나이며 수량·스냅샷에는 영향이 없다(스냅샷은 항상 최신 관측을
+  따른다 — 테스트 `TestReObservedCorrectionIsDedupedByTheUniqueKey`가 고정). 키에 observed_at을
+  넣으면 crash 재관측이 그대로 이중 삽입되므로 반대 방향이 더 나쁘다.
+- 참고: 스펙의 "평균 체결가는 … 중복 판정 키에 포함해서는 안 된다(SHALL NOT)"는 **체결(fill)의**
+  중복 판정 키에 대한 문장으로 읽었다 — 평균가 변경이 신규 체결로 계상되면 안 된다는 뜻. 정정
+  테이블의 dedup 키는 D9가 별도로 정의한 것이고 둘은 다른 키다. 자구가 겹치므로 기록해 둔다.
+- 후속 task 입력: 정정 이력의 완전성이 필요해지면(2b 측정 이후) 키에 관측 순번을 넣는 v6가
+  필요하다. 지금은 불필요하다고 판단했다.
+
+## 2026-07-26 [safe local] `execution_corrections.account_ref`를 관측이 아니라 journal에서 유도했다 (task 5.3)
+
+- 사실: D9는 `account_ref NOT NULL`인데 `filldetect.Snapshot`에는 계좌 차원이 없다(감지기는
+  주문 id로만 폴링한다). 관측이 계좌를 모른다.
+- 이번 처리: `FillObservation.AccountRef`를 선택 필드로 추가하고, 비어 있으면 RecordFill이
+  트랜잭션 안에서 `mutation_attempts.broker_order_id → intents.account_ref` 조인으로 유도한다.
+  로컬 intent가 없는 주문(외부 주문)은 ""로 남는다 — NOT NULL은 만족하되 "귀속 불가"를 그대로
+  기록한다. 계좌를 지어내는 것보다 낫다는 판단.
+- 후속 task 입력: filldetect 상시 루프를 배선하는 change가 계좌를 알고 있다면 `AccountRef`를
+  채우는 쪽이 정확하다(유도는 fallback이다).
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

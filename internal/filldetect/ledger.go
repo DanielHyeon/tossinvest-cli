@@ -44,6 +44,7 @@ func (l JournalLedger) Apply(ctx context.Context, snap Snapshot) (Applied, error
 		Quantity:       decimalString(snap.Quantity),
 		FilledQuantity: decimalString(snap.FilledQuantity),
 		AveragePrice:   snap.AveragePrice,
+		FilledAmount:   snap.FilledAmount,
 		ObservedAt:     journal.RFC3339(snap.ObservedAt),
 	}
 	// Only a timestamp the *broker* supplied is passed through. The detector's
@@ -63,6 +64,7 @@ func (l JournalLedger) Apply(ctx context.Context, snap Snapshot) (Applied, error
 		OrderID:    res.OrderID,
 		Delta:      res.DeltaQuantity,
 		Changed:    res.Changed,
+		Corrected:  res.Corrected,
 		FailClosed: res.FailClosed,
 	}
 	if res.FailClosed {

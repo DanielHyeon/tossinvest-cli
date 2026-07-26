@@ -37,7 +37,14 @@ type officialOrder struct {
 	Execution  *struct {
 		FilledQuantity     *string `json:"filledQuantity"`
 		AverageFilledPrice *string `json:"averageFilledPrice"`
-		FilledAt           *string `json:"filledAt"`
+		// FilledAmount is `execution.filledAmount` — "총 체결 금액 (native
+		// currency)", a nullable decimal string
+		// (docs/migration/openapi.latest.json). It is read for
+		// EXECUTION_CORRECTION: with a cumulative model and no per-fill id, an
+		// amount-only restatement is invisible without it
+		// (extend-execution-contract design D7).
+		FilledAmount *string `json:"filledAmount"`
+		FilledAt     *string `json:"filledAt"`
 	} `json:"execution"`
 }
 
@@ -70,6 +77,7 @@ func parseSnapshot(raw []byte, observedAt, fallbackVisible time.Time) (Snapshot,
 	var (
 		filled   float64
 		avgPrice string
+		amount   string
 		filledAt *time.Time
 	)
 	if payload.Execution != nil {
@@ -77,16 +85,26 @@ func parseSnapshot(raw []byte, observedAt, fallbackVisible time.Time) (Snapshot,
 			return Snapshot{}, fmt.Errorf("%w: execution.filledQuantity: %v", ErrMalformedOrder, err)
 		}
 		avgPrice = trimPtr(payload.Execution.AverageFilledPrice)
+		// The amount is validated as a decimal but carried as the string it
+		// arrived as: it is compared byte-for-byte against the stored previous
+		// value, and a float round trip would manufacture corrections.
+		if _, err := parseDecimal(payload.Execution.FilledAmount); err != nil {
+			return Snapshot{}, fmt.Errorf("%w: execution.filledAmount: %v", ErrMalformedOrder, err)
+		}
+		amount = trimPtr(payload.Execution.FilledAmount)
 		filledAt = parseTime(payload.Execution.FilledAt)
 	}
 
 	snap := Snapshot{
-		OrderID:         strings.TrimSpace(payload.OrderID),
+		// The identifier is opaque (openapi contracts no shape for `orderId`),
+		// so it is carried as received; the caller judges emptiness itself.
+		OrderID:         payload.OrderID,
 		Symbol:          strings.ToUpper(strings.TrimSpace(payload.Symbol)),
 		RawStatus:       payload.Status,
 		Quantity:        quantity,
 		FilledQuantity:  filled,
 		AveragePrice:    avgPrice,
+		FilledAmount:    amount,
 		ObservedAt:      observedAt,
 		BrokerVisibleAt: fallbackVisible,
 	}

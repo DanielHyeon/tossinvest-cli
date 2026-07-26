@@ -111,11 +111,17 @@ func (a *Attempt) resolveWithLineage(ctx context.Context, edge LineageEdge, reas
 		return err
 	}
 
+	// The child's identifier is stored exactly as the broker sent it, the same
+	// rule ResolveConfirmed follows (order-execution "브로커 식별자의 opaque
+	// 취급": 저장 SHALL 원문, 비교 SHALL 바이트 동일). edge.validate above already
+	// did the only job trimming has here — judging whether there is a name at
+	// all. Storing a trimmed copy would put an identifier the broker never issued
+	// in the attempt row, and the later byte comparison would silently miss it.
 	res, err := tx.ExecContext(ctx,
 		`UPDATE mutation_attempts
 		    SET state = ?, settled_at = ?, broker_order_id = ?, reason_code = ?, detail = ?
 		  WHERE id = ? AND state = ?`,
-		string(StateConfirmed), now, strings.TrimSpace(edge.ChildOrderID), reasonCode, detail,
+		string(StateConfirmed), now, edge.ChildOrderID, reasonCode, detail,
 		a.id, string(current))
 	if err != nil {
 		return fmt.Errorf("journal: confirming attempt %s: %w", a.id, err)

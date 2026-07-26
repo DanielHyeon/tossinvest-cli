@@ -31,10 +31,37 @@ package journal
 // safe correction. Either the broker is reporting a different order than we think,
 // or our record is wrong; both mean the engine's model of a live account is
 // broken, and trading through that is worse than stopping.
+//
+// # Corrections (extend-execution-contract task 5.3, design D7)
+//
+// A fifth case sits between "nothing happened" and "a new fill":
+//
+//	delta == 0 and a different average price or filled amount → EXECUTION_CORRECTION
+//
+// The broker's execution model is cumulative and carries no per-fill identifier,
+// and `OrderExecution.averageFilledPrice` is documented as "부분 체결 시 체결된
+// 건의 평균" — it moves with every partial fill — while `filledAmount` is the
+// total executed amount (docs/migration/openapi.latest.json, both nullable
+// decimal strings). So a restatement at an unchanged quantity is a real event
+// with no quantity delta: it belongs in its own table, not in fill_events.
+//
+// It is detected and written here, in the same BEGIN IMMEDIATE, because this is
+// the only place the previous snapshot still exists. Comparing outside the
+// transaction would let two cycles each decide "the average changed" from the
+// same prior and write the correction twice.
+//
+// # Opaque identifiers
+//
+// `orderId` is an opaque token — openapi contracts no shape for it — so it is
+// stored and looked up exactly as received. Trimming survives only in the
+// emptiness check, where it asks "is there a name here at all"
+// (order-execution: 저장 SHALL 원문, 비교 SHALL 바이트 동일).
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -82,6 +109,16 @@ type FillObservation struct {
 	Quantity       string // ordered quantity, decimal string
 	FilledQuantity string // cumulative filled quantity, decimal string
 	AveragePrice   string // decimal string, "" when the broker gave none
+	// FilledAmount is `execution.filledAmount` — the total executed amount in the
+	// order's native currency (openapi: nullable decimal string). "" when the
+	// broker gave none, the same convention AveragePrice uses. Without it an
+	// amount-only restatement is invisible.
+	FilledAmount string
+
+	// AccountRef is the account the order belongs to. Optional: when it is empty
+	// the journal derives it from the confirmed attempt that named the order,
+	// which is the only account dimension a detector Snapshot has.
+	AccountRef string
 
 	// BrokerVisibleAt is when the broker made this state observable, RFC3339
 	// UTC. Empty means the payload carried no usable timestamp.
@@ -104,6 +141,13 @@ type FillResult struct {
 	FailClosed bool
 	Reason     string
 	Detail     string
+	// Corrected reports an EXECUTION_CORRECTION: the cumulative quantity did not
+	// move but the average price or the filled amount did. Delta stays "0".
+	//
+	// A replay the UNIQUE key absorbs still reports true. The observation *is* a
+	// correction; whether its audit row was already on disk is the table's
+	// business, and reporting false would make a crash look like a no-op.
+	Corrected bool
 	// CommittedAt is when the transaction committed, RFC3339 UTC. It is the far
 	// end of the fill-detection SLO measurement.
 	CommittedAt string
@@ -120,11 +164,33 @@ type FillSnapshotRecord struct {
 	Quantity        string
 	FilledQuantity  string
 	AveragePrice    string
+	FilledAmount    string
 	BrokerVisibleAt string
 	ObservedAt      string
 	CommittedAt     string
 	ReasonCode      string
 	Detail          string
+}
+
+// ExecutionCorrection is one recorded restatement of an already-observed
+// execution: same cumulative quantity, a different average price or amount.
+//
+// It is not a fill and carries no delta. The previous values travel with it
+// because the point of the record is what changed, and the snapshot only keeps
+// the latest.
+type ExecutionCorrection struct {
+	ID         string
+	AccountRef string
+	OrderID    string
+	// Prev* and New* are decimal strings; "" means the broker reported none.
+	PrevAveragePrice string
+	NewAveragePrice  string
+	PrevFilledAmount string
+	NewFilledAmount  string
+	// CumulativeQuantity is unchanged by definition — it is what makes this a
+	// correction rather than a fill.
+	CumulativeQuantity string
+	ObservedAt         string
 }
 
 // FillEvent is one appended positive delta.
@@ -170,7 +236,9 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	}
 
 	now := j.nowString()
-	orderID := strings.TrimSpace(obs.OrderID)
+	// Verbatim: the identifier is opaque, so the row is keyed by what the broker
+	// sent. TrimSpace above judged emptiness and nothing else.
+	orderID := obs.OrderID
 	res := FillResult{OrderID: orderID, Delta: "0", CommittedAt: now}
 
 	tx, err := j.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE
@@ -228,24 +296,48 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		return res, nil
 	}
 
-	// 3. Advance. The average price is *replaced*, never accumulated: it is a
+	// 3. A correction: the cumulative quantity did not move, but the average price
+	//    or the filled amount did. It is decided *before* the upsert below, which
+	//    is the last moment the previous values exist.
+	correction := hadPrev && delta == 0 &&
+		(obs.AveragePrice != prev.AveragePrice || obs.FilledAmount != prev.FilledAmount)
+
+	// 4. Advance. The average price is *replaced*, never accumulated: it is a
 	//    property of the whole filled quantity, so adding one in would double
-	//    count the fills that produced it.
+	//    count the fills that produced it. The amount follows the same rule.
 	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO fill_snapshots
 		   (order_id, symbol, market, state, terminal, fail_closed, quantity, filled_quantity,
-		    average_price, broker_visible_at, observed_at, committed_at, reason_code, detail)
-		 VALUES (?,?,?,?,?,0,?,?,?,?,?,?,'','')
+		    average_price, filled_amount, broker_visible_at, observed_at, committed_at,
+		    reason_code, detail)
+		 VALUES (?,?,?,?,?,0,?,?,?,?,?,?,?,'','')
 		 ON CONFLICT(order_id) DO UPDATE SET
 		    symbol = excluded.symbol, market = excluded.market, state = excluded.state,
 		    terminal = excluded.terminal, fail_closed = 0, quantity = excluded.quantity,
 		    filled_quantity = excluded.filled_quantity, average_price = excluded.average_price,
+		    filled_amount = excluded.filled_amount,
 		    broker_visible_at = excluded.broker_visible_at, observed_at = excluded.observed_at,
 		    committed_at = excluded.committed_at, reason_code = '', detail = ''`,
 		orderID, obs.Symbol, obs.Market, obs.State, boolToInt(obs.Terminal),
-		orZero(obs.Quantity), orZero(obs.FilledQuantity), obs.AveragePrice,
+		orZero(obs.Quantity), orZero(obs.FilledQuantity), obs.AveragePrice, obs.FilledAmount,
 		obs.BrokerVisibleAt, obs.ObservedAt, now); err != nil {
 		return res, fmt.Errorf("journal: recording the fill snapshot of %s: %w", orderID, err)
+	}
+
+	if correction {
+		if err := recordExecutionCorrection(ctx, tx, ExecutionCorrection{
+			AccountRef:         obs.AccountRef,
+			OrderID:            orderID,
+			PrevAveragePrice:   prev.AveragePrice,
+			NewAveragePrice:    obs.AveragePrice,
+			PrevFilledAmount:   prev.FilledAmount,
+			NewFilledAmount:    obs.FilledAmount,
+			CumulativeQuantity: orZero(obs.FilledQuantity),
+			ObservedAt:         firstNonEmpty(obs.ObservedAt, now),
+		}); err != nil {
+			return res, err
+		}
+		res.Corrected = true
 	}
 
 	if delta > 0 {
@@ -350,6 +442,10 @@ func markFillRefused(ctx context.Context, tx *sql.Tx, orderID string, obs FillOb
 func sameSnapshot(obs FillObservation, prev FillSnapshotRecord) bool {
 	return orZero(obs.FilledQuantity) == orZero(prev.FilledQuantity) &&
 		obs.AveragePrice == prev.AveragePrice &&
+		// The amount is part of "what the broker says" for the same reason the
+		// average is: leave it out and an amount-only correction takes the
+		// no-op path and is never recorded at all.
+		obs.FilledAmount == prev.FilledAmount &&
 		obs.State == prev.State &&
 		obs.Terminal == prev.Terminal &&
 		orZero(obs.Quantity) == orZero(prev.Quantity) &&
@@ -357,7 +453,7 @@ func sameSnapshot(obs FillObservation, prev FillSnapshotRecord) bool {
 }
 
 const fillSelect = `SELECT order_id, symbol, market, state, terminal, fail_closed, quantity,
-	filled_quantity, average_price, broker_visible_at, observed_at, committed_at,
+	filled_quantity, average_price, filled_amount, broker_visible_at, observed_at, committed_at,
 	reason_code, detail FROM fill_snapshots`
 
 func scanFillSnapshot(row rowScanner) (FillSnapshotRecord, error) {
@@ -366,8 +462,8 @@ func scanFillSnapshot(row rowScanner) (FillSnapshotRecord, error) {
 		terminal, failClosed int
 	)
 	err := row.Scan(&rec.OrderID, &rec.Symbol, &rec.Market, &rec.State, &terminal, &failClosed,
-		&rec.Quantity, &rec.FilledQuantity, &rec.AveragePrice, &rec.BrokerVisibleAt,
-		&rec.ObservedAt, &rec.CommittedAt, &rec.ReasonCode, &rec.Detail)
+		&rec.Quantity, &rec.FilledQuantity, &rec.AveragePrice, &rec.FilledAmount,
+		&rec.BrokerVisibleAt, &rec.ObservedAt, &rec.CommittedAt, &rec.ReasonCode, &rec.Detail)
 	if errors.Is(err, sql.ErrNoRows) {
 		return FillSnapshotRecord{}, ErrFillNotFound
 	}
@@ -380,9 +476,11 @@ func scanFillSnapshot(row rowScanner) (FillSnapshotRecord, error) {
 }
 
 // LookupFill returns the stored snapshot of one order.
+//
+// The identifier is used as given: the rows are keyed by what the broker sent,
+// so normalising the lookup would miss them.
 func (j *Journal) LookupFill(ctx context.Context, orderID string) (FillSnapshotRecord, error) {
-	return scanFillSnapshot(j.db.QueryRowContext(ctx, fillSelect+" WHERE order_id = ?",
-		strings.TrimSpace(orderID)))
+	return scanFillSnapshot(j.db.QueryRowContext(ctx, fillSelect+" WHERE order_id = ?", orderID))
 }
 
 // FillEvents returns the appended fills of one order, oldest first.
@@ -390,7 +488,7 @@ func (j *Journal) FillEvents(ctx context.Context, orderID string) ([]FillEvent, 
 	rows, err := j.db.QueryContext(ctx,
 		`SELECT id, order_id, symbol, market, delta_quantity, cumulative_quantity,
 		        average_price, broker_visible_at, committed_at
-		   FROM fill_events WHERE order_id = ? ORDER BY id`, strings.TrimSpace(orderID))
+		   FROM fill_events WHERE order_id = ? ORDER BY id`, orderID)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading the fills of %s: %w", orderID, err)
 	}
@@ -407,6 +505,109 @@ func (j *Journal) FillEvents(ctx context.Context, orderID string) ([]FillEvent, 
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("journal: reading the fills of %s: %w", orderID, err)
+	}
+	return out, nil
+}
+
+// recordExecutionCorrection writes one correction inside the caller's fill
+// transaction.
+//
+// The id is derived from the dedup key rather than minted, so a re-observation
+// of the same restatement collides on the primary key and the UNIQUE alike, and
+// `ON CONFLICT DO NOTHING` absorbs it. That is what makes a crash between
+// observing and committing safe: the replay inserts nothing new instead of
+// duplicating an audit record (D9 — "crash 재관측의 이중 삽입 방지").
+//
+// Unobserved values are written as the empty string and never as NULL. SQLite
+// treats NULLs in an index as distinct, so a NULL here would disable the
+// double-insert protection exactly when the broker reported no average price
+// (issues.md, Manager 판정 (4)).
+func recordExecutionCorrection(ctx context.Context, tx *sql.Tx, c ExecutionCorrection) error {
+	accountRef := c.AccountRef
+	if accountRef == "" {
+		derived, err := accountRefForOrder(ctx, tx, c.OrderID)
+		if err != nil {
+			return err
+		}
+		// Still possibly "": an order no local intent claims is an external one,
+		// and inventing an account for it would be worse than recording that we
+		// could not attribute it. The column is NOT NULL, not non-empty.
+		accountRef = derived
+	}
+	if _, err := tx.ExecContext(ctx,
+		`INSERT INTO execution_corrections
+		   (id, account_ref, order_id, prev_avg_price, new_avg_price,
+		    prev_filled_amount, new_filled_amount, cumulative_qty, observed_at)
+		 VALUES (?,?,?,?,?,?,?,?,?)
+		 ON CONFLICT DO NOTHING`,
+		correctionID(c), accountRef, c.OrderID, c.PrevAveragePrice, c.NewAveragePrice,
+		c.PrevFilledAmount, c.NewFilledAmount, c.CumulativeQuantity, c.ObservedAt); err != nil {
+		return fmt.Errorf("journal: recording the execution correction of %s: %w", c.OrderID, err)
+	}
+	return nil
+}
+
+// correctionID hashes exactly D9's UNIQUE key. Nothing else may enter it: adding
+// a timestamp or the previous values would mint a fresh id for a replay and
+// leave the UNIQUE as the only defence.
+func correctionID(c ExecutionCorrection) string {
+	h := sha256.New()
+	for _, part := range []string{c.OrderID, c.CumulativeQuantity, c.NewAveragePrice, c.NewFilledAmount} {
+		// The length prefix keeps ("ab","c") and ("a","bc") different keys.
+		fmt.Fprintf(h, "%d:%s|", len(part), part)
+	}
+	return "corr-" + hex.EncodeToString(h.Sum(nil))[:32]
+}
+
+// accountRefForOrder finds the account an order belongs to through the attempt
+// that named it. A detector Snapshot has no account dimension, and the journal
+// does: the intent behind the confirmed attempt is the authority.
+func accountRefForOrder(ctx context.Context, tx *sql.Tx, orderID string) (string, error) {
+	var ref string
+	err := tx.QueryRowContext(ctx, `
+		SELECT i.account_ref
+		  FROM mutation_attempts a
+		  JOIN intents i ON i.id = a.intent_id
+		 WHERE a.broker_order_id = ?
+		 ORDER BY a.recorded_at DESC, a.rowid DESC
+		 LIMIT 1`, orderID).Scan(&ref)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("journal: resolving the account of order %s: %w", orderID, err)
+	}
+	return ref, nil
+}
+
+// ExecutionCorrections returns the recorded restatements of one order, oldest
+// first.
+func (j *Journal) ExecutionCorrections(ctx context.Context, orderID string) ([]ExecutionCorrection, error) {
+	rows, err := j.db.QueryContext(ctx, `
+		SELECT id, account_ref, order_id, prev_avg_price, new_avg_price,
+		       prev_filled_amount, new_filled_amount, cumulative_qty, observed_at
+		  FROM execution_corrections WHERE order_id = ? ORDER BY observed_at, id`, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("journal: reading the corrections of %s: %w", orderID, err)
+	}
+	defer rows.Close()
+
+	var out []ExecutionCorrection
+	for rows.Next() {
+		var (
+			c                   ExecutionCorrection
+			prevAvg, prevAmount sql.NullString
+		)
+		if err := rows.Scan(&c.ID, &c.AccountRef, &c.OrderID, &prevAvg, &c.NewAveragePrice,
+			&prevAmount, &c.NewFilledAmount, &c.CumulativeQuantity, &c.ObservedAt); err != nil {
+			return nil, fmt.Errorf("journal: reading the corrections of %s: %w", orderID, err)
+		}
+		c.PrevAveragePrice = prevAvg.String
+		c.PrevFilledAmount = prevAmount.String
+		out = append(out, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: reading the corrections of %s: %w", orderID, err)
 	}
 	return out, nil
 }
