@@ -344,6 +344,85 @@
   없다. 위험 홀드를 푸는 백그라운드 goroutine은 트랜잭션 규율 없는 두 번째 writer이고, 엔진이
   거래를 멈춘 뒤에도 계속 돈다.
 
+## 2026-07-26 [safe local] 재생 횟수를 전송 *전에* 세고 409만 환불한다 (task 2.1/2.2)
+
+- 사실: D3은 "회수 상한(기본 2회)"과 "`409 request-in-progress` → 상한 미소비"를 함께 요구한다.
+  둘을 동시에 만족시키는 순서는 하나뿐이다. 응답을 보고 세면 "전송 후 · 계수 전" 크래시가
+  재생 1회를 공짜로 돌려주고, 크래시 루프에서는 무한히 돌려준다.
+- 이번 처리: `journal.MarkReplayStarted`가 전송 **전에** BEGIN IMMEDIATE 안에서 상한 검사와
+  증가를 함께 하고, 409에서만 `RefundReplay`가 카운트를 되돌린다. 환불은 `last_replay_at`을
+  건드리지 않는다 — "처리 중"에 대한 답은 대기이므로 최소 간격은 유지돼야 한다.
+- 부작용: 크래시로 쓰지 못한 재생 1회를 잃을 수 있다. 조회 폴백이 그대로 돌므로 비용은 0이고,
+  반대 방향은 키 유효창을 무한 루프에 쓰는 것이라 비대칭이 크다.
+
+## 2026-07-26 [observation] 409가 상한을 소비하지 않으므로 대기 횟수 상한을 새로 만들었다 (task 2.2)
+
+- 사실: 409는 재생의 최빈 응답이고(D3) 상한을 소비하지 않는다. 따라서 상한만으로는 "영원히
+  409를 답하는 브로커"에 대해 루프가 유계가 아니다. TTL−margin이 상한이긴 하지만 기본값으로
+  (10분−60초)/5초 ≈ 108회 왕복이다.
+- 이번 처리: `ReplayConfig.MaxWaits`(기본 3)를 추가했다. 스펙·design에 없는 값이며,
+  "원 요청이 얼마나 오래 처리 중일 수 있는가"는 `[미측정 — 2b]`다. 소진 시 조회 폴백으로
+  전환하므로 방향은 보수적이다.
+- 후속 task 입력: **2b**가 왕복 p99와 함께 이 값을 측정해야 한다(margin 60초와 같은 묶음).
+
+## 2026-07-26 [safe local] 재생의 critical 알림을 journal outbox에 직접 넣었다 — obs를 import할 수 없다 (task 2.2)
+
+- 사실: `internal/obs`가 `internal/execgw`를 import한다(Notifier가 EntryGate를 래치한다).
+  따라서 execgw는 obs를 import할 수 없고, `obs.EventOrderUnresolved`·`obs.SeverityCritical`을
+  참조할 수 없다. 현재 코드에서 UNRESOLVED 알림을 실제로 내는 곳은 flatten뿐이며(양쪽을 다
+  import한다), Resolver의 `park()`는 게이트 래치만 한다.
+- 이번 처리: 422 key-conflict 주차 시 `journal.EnqueueAlert`로 outbox에 직접 기록한다 —
+  obs의 critical 경로의 durable 절반이며 Notifier의 `Flush`가 그대로 배달한다. 이벤트 타입
+  문자열은 execgw에 비공개 상수로 복제하고, `execgw_test`(외부 테스트 패키지 → obs import
+  가능)에서 실제 outbox 행의 `Type`을 `obs.EventOrderUnresolved`와 대조해 고정했다.
+- 대안 기각: execgw에 별도 Alerter 인터페이스를 새로 만드는 것 — obs와 평행한 두 번째 알림
+  표면이 생기고 배선처가 늘어난다. outbox는 이미 "durable 우선, 배달 나중"이 계약이다.
+
+## 2026-07-26 [observation] 생산 재생 transport가 어디에도 배선되지 않았다 (task 2.1/2.2)
+
+- 사실: `execgw.HTTPReplay`(저장 바이트를 `POST /api/v1/orders`로 그대로 보내는 transport)를
+  execgw 안에 두었다. `internal/official`에 만들지 않은 이유는 (a) official의 모든 메서드가
+  구조화 필드에서 본문을 **구성**하는데 재생은 정확히 그것을 하면 안 되고, (b) official은
+  이 태스크의 파일 범위 밖(Pre-Edit 대상)이기 때문이다.
+- 결과: `Options.Replay`·`Options.Attested`를 채우는 생산 코드가 **0곳**이다. attestation
+  기본값이 OFF이므로 지금은 의도된 상태(2b 전 비활성)이고, 진입점은 `replay_not_attested`로
+  즉시 폴백한다.
+- 후속 task 입력: **7.3**(Gateway 구성)이 배선할 때 `HTTPReplay.Headers`가 official의
+  토큰 매니저·계좌 헤더를 재사용할 수 있어야 한다. official의 토큰 접근이 비공개이므로
+  Pre-Edit이 필요할 수 있다 — 또는 배선을 2b가 attestation과 함께 가져가는 편이 자연스럽다.
+  현재 `HTTPReplay`는 401 재시도를 하지 않는다(계수된 재생을 transport가 몰래 두 번 보내면
+  상한이 무의미해진다).
+
+## 2026-07-26 [safe local] dedup을 `findSuccessors`(amend 해소)에도 적용했다 (task 2.4)
+
+- 사실: 2.4 문언은 "조회 폴백"의 유일성 판정을 지목하고 place 경로의 `scanBoth`를 겨냥한다.
+  그런데 amend 해소의 `findSuccessors`(amend_indoubt.go)도 OPEN·CLOSED를 걷고 호출부가
+  `switch len(successors) { case 1: ... }`로 **유일성을 판정**한다. `PARTIAL_FILLED`가 양쪽
+  그룹에 속하므로(openapi) 부분 체결 승계 주문은 두 번 잡히고 주차된다 — place와 동일한 결함이다.
+- 이번 처리: 같은 규칙(orderId 바이트 동일 dedup)을 적용했다. 파일 범위 안이고, 스펙 문장
+  ("유일성 판정 전에 orderId 기준 dedup을 수행해야 한다(SHALL)")은 경로를 한정하지 않는다.
+
+## 2026-07-26 [observation] 관측 창의 시작점을 `dispatch_started_at`으로 잡았다 (task 2.4)
+
+- 사실: 스펙은 "관측 창 동안 같은 심볼에 다른 mutation이 전송되었다면"이라고만 쓰고 창의
+  시작을 정의하지 않는다. 후보는 (a) 해소 절차 시작 시각, (b) 이 attempt의 전송 시작 시각.
+- 판단: delta 교차확인이 비교하는 baseline은 **전송 직전** 스냅샷이므로, 오염을 판정해야 하는
+  구간은 baseline이 유효하지 않게 된 시점부터다 → (b). (a)를 쓰면 크래시 후 재시작까지의
+  구간(가장 오염되기 쉬운 구간)이 창 밖으로 빠진다.
+- 부수 결정: `MutationsDispatchedSince`는 `NOT_DISPATCHED`를 제외한다. `MarkDispatchStarted`가
+  브로커 호출 **전에** 커밋되므로 그 사이 거부는 전송 시각을 가진 채 아무것도 보내지 않았다.
+
+## 2026-07-26 [observation] `indoubt.go` 헤더의 "멱등키 없음" 서술을 고치지 않았다 (task 2.1~2.4)
+
+- 사실: `indoubt.go:9-12`는 "The official API has no idempotency key, so 'try again' and 'place
+  a second live order' are the same action"이라고 쓴다. 이 change가 뒤집은 전제이며, 같은 파일에
+  내가 2.4 수정을 넣었으므로 헤더와 본문이 어긋난 상태다.
+- 이번 처리: **손대지 않았다.** 이 문구의 정정은 tasks.md **2.5 [M]** — Manager 태스크로 명시
+  배정돼 있다(`retry.go:8-10,77`·아카이브 스펙과 한 묶음). 팀메이트가 먼저 고치면 2.5의
+  일관성 검토가 부분적으로 이미 적용된 상태에서 시작된다.
+- 참고: 같은 헤더의 "the Resolver has no trading service, no broker writer, no submit path"는
+  **여전히 참이다**(재생 문은 Gateway에 있다). 무효가 된 것은 멱등키 문장 하나다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
