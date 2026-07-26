@@ -771,3 +771,104 @@ func TestGatewayExposesNoRawMutator(t *testing.T) {
 		}
 	}
 }
+
+// --- pre-minted intent ids (task 7.4) ---------------------------------------
+
+// TestAPreMintedIntentIDIsTheOneRecorded is the seam the exit observation loop's
+// crash contract needs: it arms `exit_states.pending_intent_id` before anything
+// is sent, so the id it armed has to be the id the intent is recorded under.
+func TestAPreMintedIntentIDIsTheOneRecorded(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-9"}}
+	gw, j, clk := newGateway(t, broker)
+
+	intent := orderintent.PlaceIntent{
+		Symbol: "005930", Market: "kr", Side: "sell", OrderType: "limit",
+		Quantity: 4, Price: 71000, CurrencyMode: "KRW",
+	}
+	out, err := gw.Place(context.Background(), execgw.PlaceRequest{
+		Intent:   intent,
+		Decision: exitDecision(t, j, clk, journal.KindPlace, "kr", "005930", "SELL", 4),
+		IntentID: "exit-intent-1",
+	})
+	if err != nil {
+		t.Fatalf("Place: %v", err)
+	}
+	if out.IntentID != "exit-intent-1" {
+		t.Errorf("outcome intent id = %q, want the pre-minted one", out.IntentID)
+	}
+	if out.State != journal.StateConfirmed {
+		t.Fatalf("state = %s, want CONFIRMED", out.State)
+	}
+	rec, err := j.LookupIntent(context.Background(), "exit-intent-1")
+	if err != nil {
+		t.Fatalf("LookupIntent: %v", err)
+	}
+	if rec.Symbol != "005930" || rec.Side != "SELL" {
+		t.Errorf("recorded intent = %+v, want the submitted sell", rec)
+	}
+}
+
+// TestAnOmittedIntentIDStillMintsOne keeps the default path a default: every
+// other caller passes nothing and must be unaffected.
+func TestAnOmittedIntentIDStillMintsOne(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-10"}}
+	gw, j, clk := newGateway(t, broker)
+
+	out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
+	if err != nil {
+		t.Fatalf("Place: %v", err)
+	}
+	if out.IntentID == "" {
+		t.Fatal("the gateway must mint an intent id when the caller names none")
+	}
+}
+
+// TestAReusedIntentIDIsARecoveryAndNotASecondIntent states the property the
+// crash contract rests on, and the one it does *not* provide.
+//
+// Reusing the id records no second intent — Prepare recognises it — so a
+// re-submission after a crash that never sent anything is an identity recovery
+// under the id the proposal already armed. What Prepare does not do is refuse a
+// second *attempt*, so "has this proposal already been submitted" is a question
+// the observation loop has to ask before it re-submits, and IntentAttempted is
+// what it asks with.
+func TestAReusedIntentIDIsARecoveryAndNotASecondIntent(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-11"}}
+	gw, j, clk := newGateway(t, broker)
+	ctx := context.Background()
+
+	intent := orderintent.PlaceIntent{
+		Symbol: "005930", Market: "kr", Side: "sell", OrderType: "limit",
+		Quantity: 1, Price: 71000, CurrencyMode: "KRW",
+	}
+	attempted, err := j.IntentAttempted(ctx, "exit-intent-dup")
+	if err != nil || attempted {
+		t.Fatalf("IntentAttempted before any place = %v, %v; want false", attempted, err)
+	}
+
+	first := execgw.PlaceRequest{
+		Intent:   intent,
+		Decision: exitDecision(t, j, clk, journal.KindPlace, "kr", "005930", "SELL", 1),
+		IntentID: "exit-intent-dup",
+	}
+	if _, err := gw.Place(ctx, first); err != nil {
+		t.Fatalf("first Place: %v", err)
+	}
+	if attempted, err := j.IntentAttempted(ctx, "exit-intent-dup"); err != nil || !attempted {
+		t.Fatalf("IntentAttempted after the place = %v, %v; want true", attempted, err)
+	}
+
+	// A second place under the same id with *different* terms is refused: the id
+	// names one order, and letting its quantity move would make the armed
+	// proposal describe something other than what was sent.
+	mutated := first
+	mutated.Intent.Quantity = 2
+	mutated.Decision = exitDecision(t, j, clk, journal.KindPlace, "kr", "005930", "SELL", 2)
+	if _, err := gw.Place(ctx, mutated); !errors.Is(err, journal.ErrIntentMutated) {
+		t.Fatalf("re-placing a mutated intent: %v, want ErrIntentMutated", err)
+	}
+	places, _, _ := broker.totals()
+	if places != 1 {
+		t.Errorf("broker places = %d, want 1 — the mutated re-place must not reach the broker", places)
+	}
+}

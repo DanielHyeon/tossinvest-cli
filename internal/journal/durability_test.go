@@ -914,3 +914,31 @@ func openTestJournalWithBusy(t *testing.T, path string, busy time.Duration) *Jou
 	t.Cleanup(func() { _ = j.Close() })
 	return j
 }
+
+// TestIntentAttemptedProvesAbsenceBeforeADispatch is the crash-recovery read the
+// exit observation loop restarts on: an intent nobody prepared has no attempt,
+// and one that reached Prepare has one before anything could have been sent.
+func TestIntentAttemptedProvesAbsenceBeforeADispatch(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+
+	attempted, err := j.IntentAttempted(ctx, "i-never")
+	if err != nil {
+		t.Fatalf("IntentAttempted: %v", err)
+	}
+	if attempted {
+		t.Error("an intent nothing prepared must report no attempt")
+	}
+
+	req := testRequest()
+	if _, err := j.Prepare(ctx, req); err != nil {
+		t.Fatalf("Prepare: %v", err)
+	}
+	attempted, err = j.IntentAttempted(ctx, req.Intent.ID)
+	if err != nil {
+		t.Fatalf("IntentAttempted: %v", err)
+	}
+	if !attempted {
+		t.Error("a prepared intent must report its attempt: Prepare commits before anything is sent")
+	}
+}

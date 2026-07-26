@@ -225,6 +225,23 @@ type PlaceRequest struct {
 	// is recorded on the intent and is what lets IN_DOUBT resolution prove
 	// absence later. Optional — see Baseline for what omitting it costs.
 	Baseline *Baseline
+	// IntentID pre-names the intent this place will record. Empty is the normal
+	// case and the gateway mints one.
+	//
+	// It exists for exactly one caller: the exit observation loop, whose crash
+	// contract is "arm the proposal, mint the intent, attach it, *then* submit"
+	// (apply_hook.go). A proposal armed with no intent id is answered by no fill,
+	// because the exit applier resolves on the intent the proposal named — so a
+	// crash between a submit and a later attach would leave a live sell order
+	// above a proposal nothing can clear, and every later proposal on that
+	// position suppressed by it. Naming the intent before the order exists closes
+	// that window: the id is on disk in `exit_states.pending_intent_id` before
+	// anything is sent, and the fill that arrives carries the same one.
+	//
+	// It authorises nothing. The authority is the GuardianDecision, which is
+	// re-read from the ledger; this is a primary key, and a collision is refused
+	// by Prepare rather than silently reusing a record.
+	IntentID string
 }
 
 // CancelRequest cancels an existing order.
@@ -285,6 +302,9 @@ type mutationPlan struct {
 	// baseline is the pre-dispatch account snapshot, recorded on the intent for
 	// IN_DOUBT resolution.
 	baseline *Baseline
+	// intentID is the caller's pre-minted intent id, empty for the usual case
+	// where the gateway mints one (see PlaceRequest.IntentID).
+	intentID string
 	// preflight runs the fail-closed checks that apply to this mutation kind.
 	// Only a place has any today; nil means there is nothing to check.
 	preflight func(ctx context.Context) *RejectedError
@@ -317,6 +337,7 @@ func (g *Gateway) Place(ctx context.Context, req PlaceRequest) (Outcome, error) 
 		// it has to agree with (engine-safety "결정의 Safety Class와 형태 일치").
 		raisesExposure: strings.EqualFold(intent.Side, "buy"),
 		baseline:       req.Baseline,
+		intentID:       strings.TrimSpace(req.IntentID),
 	}
 	if g.preflight != nil {
 		plan.preflight = func(ctx context.Context) *RejectedError {
@@ -795,8 +816,12 @@ func (g *Gateway) prepareRequest(plan mutationPlan, decision journal.Decision) (
 		TradingDay: day,
 	})
 
+	intentID := plan.intentID
+	if intentID == "" {
+		intentID = g.newID()
+	}
 	intent := journal.Intent{
-		ID:          g.newID(),
+		ID:          intentID,
 		Market:      string(market),
 		TradingDay:  day,
 		AccountRef:  g.accountRef,

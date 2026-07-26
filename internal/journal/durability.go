@@ -683,6 +683,34 @@ func scanIntent(row *sql.Row) (Intent, error) {
 	return in, nil
 }
 
+// IntentAttempted reports whether any mutation attempt has been recorded
+// against an intent.
+//
+// It answers one question, for one caller: the exit observation loop arms a
+// proposal's intent id (apply_hook.go) before it submits, so on restart it
+// holds that id and has to know whether the order under it was ever sent. "No
+// attempt" is a proof of absence — Prepare writes the attempt before anything
+// leaves the process — and it is what makes a re-submission under the same id an
+// identity recovery rather than a second order.
+//
+// It deliberately does not report the attempt's *state*. An attempt that exists
+// is enough to stop a re-submission; what became of it is the resolver's
+// question, and answering both here would invite a caller to re-submit over an
+// IN_DOUBT one.
+func (j *Journal) IntentAttempted(ctx context.Context, intentID string) (bool, error) {
+	var one int
+	err := j.db.QueryRowContext(ctx,
+		`SELECT 1 FROM mutation_attempts WHERE intent_id = ? LIMIT 1`,
+		strings.TrimSpace(intentID)).Scan(&one)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("journal: reading the attempts of intent %s: %w", intentID, err)
+	}
+	return true, nil
+}
+
 // LookupAttempt returns a recorded mutation attempt.
 func (j *Journal) LookupAttempt(ctx context.Context, id string) (AttemptRecord, error) {
 	return scanAttempt(j.db.QueryRowContext(ctx, attemptSelect+" WHERE id = ?", id))
