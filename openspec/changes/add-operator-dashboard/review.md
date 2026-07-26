@@ -36,3 +36,17 @@ Manager 재검증: journal.Open의 무조건 mkdir+migrate·mode=ro 부재, trad
 - P3(콘솔 문구 "1회용 링크" vs 핸드오프 용어): 구현 노트로 대시보드 태스크 수행 시 함께 정리
 
 **freeze 확정 — 구현 착수 승인(1.8 커밋 완료 선행 충족).**
+
+## Manager 판정 (구현 완료, 2026-07-27)
+
+독립 검증: `make gate` 재실행 GATE PASS(validate 13/13), 전체 스위트 -race 재실행(2709 예정 — 완료 시 기록), RO DSN(`mode=ro`+`query_only`)·HoldingsReader 단일 메서드·가드 테스트 존재 직접 확인. 편차 9건 전건 승인:
+
+- **계좌 참조를 원장에서 도출**(설정 아님): 승인 — 콘솔 기동의 네트워크 선행조건화가 더 나쁘다. 단 첫 /positions 렌더의 계좌 해석 1콜(프로세스당 1회)은 §0.4 항목으로 기록, holdingsTimeout 밖인 점은 후속 소폭 개선 후보.
+- **LEFT JOIN 대신 2문 + Go 병합**: 승인 — guarded-column 전문 스캔을 약화하지 않은 판단이 옳다.
+- **TTL 30s(하한 15s 고정 테스트)·시도 기준 TTL**: 승인 — 429 순간 재호출 방지는 예산 보호의 올바른 방향.
+- **4번째 라벨 "관리 여부 불명"**: 승인 — 원장을 못 읽었을 때 "관리 외"로 단정하면 화면이 관측하지 않은 것을 주장한다. 비자격 보유의 단일 라벨 규칙은 테스트로 유지.
+- **approve 동사의 문맥 스캔**(계좌 동사 전면 금지 + 행위 동사는 5항목 허용 목록 밖 금지): 승인 — 스펙의 상태변경 행위 열거를 그대로 전사한 구조.
+- 기타(RO 전용 메서드·advisory 미적용·DefaultPath 비치명): 전건 승인.
+- found-not-fixed의 HeldSeconds 구식 coalesce: 범위 밖 유지 승인(신규 TradeTrip은 Known 플래그 보유).
+
+**GATE PASS 확정.** adopt-external-positions 구현의 선행 조건(journal 조각 landed) 충족.
