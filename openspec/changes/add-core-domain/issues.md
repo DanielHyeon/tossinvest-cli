@@ -717,3 +717,123 @@
 - VERSION_CONFLICT의 Guardian 경유 도달 불가(수렴 특성) — 스펙 위반 아님(단발 Reserve 경로에서 도달), 기록 유지.
 - 체크박스 삼킴 재발 1건(8cd2a98의 6.3): 내용 정확·귀속 부정확 — 9.1 기록 대상, 이후 지시문 유지.
 - 4차 승계 확정: exit 관측 두절 트리거(EXIT_OBSERVATION_OUTAGE)·Retrier/Notifier 생산 배선·escalation 필드 population → 7.4. Exit applier 바인딩 → 7.x. 수량 불일치 수렴 조정 발행 → 7.4 reconcile 루프 항목. 전량 청산 전 working 진입 취소 선행(E31) → 7.4. 2c 인계: profileProtection flip + 테스트 seam 삭제.
+
+## 2026-07-26 [safe local] 워터마크의 t0 시드는 진입가다 (task 7.1)
+
+- 사실: 스펙은 `exit_states.high_water` NOT NULL·관측마다 단조 갱신만 정하고 t0 값을 적지 않는다.
+  원본은 `high_since_entry`가 optional이라 t0 개념이 없다.
+- 이번 처리: `OpenRatchetState`/`OpenLadderState`가 **진입가**를 시드로 쓴다. 포지션은 그 가격에
+  취득됐으므로 "존재한 이래 관측된 최고가"의 정직한 하한이고, 더 낮게 시드하면 첫 관측이 전부
+  신고가로 보인다. 더 높게 시드할 근거는 없다(관측되지 않은 가격).
+- 부수 효과: t0 직후 R은 정확히 0이고 어떤 트리거도 만족하지 않는다 — 원본이 `current_price`로
+  프로브할 때와 첫 관측 이후로는 동일하다.
+
+## 2026-07-26 [safe local] 기준선 하회 발의를 ratchet 평가기 안에 넣었다 (task 7.1)
+
+- 사실: 원본 `baseline_ratchet.py`는 stop **상승** 전용 모듈이고, 하회 판정은 이식 대상이 아닌
+  `exit_strategy.py`(신호층 파이프라인)에 있다. 반면 스펙의 t0 요구사항은 "관측 가격이 진입
+  손절가를 하회하면 전량 청산이 발의된다"를 시나리오로 갖는다.
+- 이번 처리: 평가기의 출력에 포함. 대신 순서를 명시했다 — 워터마크 → 레벨·기준선 합성 →
+  **새 기준선**으로 하회 판정. 합성된 기준선은 이전 것보다 낮을 수 없으므로 이 순서는 항상
+  같거나 더 자주 발동한다(§0.9 허용 방향). ladder의 `_check_protected_stop`도 같은 순서로 통일.
+- **§0-3 관련 판정**: 미해소 발의 억제를 하회 청산에 적용하지 **않는다**. 미체결 부분익절이
+  손절을 지연시키는 것은 "손절 즉시성 약화"다. 대신 `CancelPendingFirst`를 켜서 7.4가
+  working 주문 선취소 후 제출하도록 알린다(2차 물결의 E31 승계 항목과 같은 규칙).
+  같은 하회 청산이 이미 pending이면 그건 중복이므로 억제한다.
+
+## 2026-07-26 [safe local] ladder는 protected_stop_pct를 저장하지 않는다 (task 7.2)
+
+- 사실: 원본 `LadderState`는 `activated_rung_index`와 `protected_stop_pct`를 함께 들고 다닌다.
+  D7의 `exit_states`에는 `active_rung`과 `baseline_price`만 있고 percent 컬럼이 없다.
+- 이번 처리: percent는 rung 표에서 파생한다. 저장된 percent가 저장된 rung과 어긋난 행은 아무도
+  설명할 수 없고, 권위가 둘이면 어느 쪽이 보호인지 정해지지 않는다. 보호는 가격
+  (`baseline_price`)이고, rung 잠금은 ratchet과 **같은** `ComputeProtectedStop`에 들어간다 —
+  원본이 그 모듈을 따로 뽑은 이유가 정확히 두 경로의 R4 단일화다.
+- 부수 효과(의도적): ladder 포지션도 첫 rung 전에 보호된다. 원본은 `activated_rung_index >= 0`
+  일 때만 검사하므로 그 구간이 무보호다 — D5 첫 수정과 같은 구멍이라 같은 방식으로 막았다.
+
+## 2026-07-26 [observation] ladder policy_id를 영속할 컬럼이 없다 (task 7.2)
+
+- 사실: 원본은 `LadderState.policy_id`를 들고 평가 때 정책과 대조한다(불일치 시 ValueError).
+  이식은 그 검사를 그대로 옮겼지만, D7 `exit_states`에는 policy_id 컬럼이 없다(rung 정책은 config).
+- 결과: TossOS에서 그 검사는 호출자가 config의 정책을 그대로 넘기는 한 항상 통과한다. 즉
+  **활성 포지션이 있는 동안 rung 표를 교체하면 감지되지 않고**, 그 포지션의 `active_rung`이
+  새 표의 인덱스로 재해석된다.
+- 후속 task 입력: **7.4/config** — 활성 ladder 포지션이 있는 동안의 정책 교체를 금지하거나,
+  교체 시 해당 포지션을 운영자 확인 대상으로 올려야 한다. 스키마 변경(v7)은 이 change 범위 밖.
+
+## 2026-07-26 [safe local] 누적 비율은 초기 수량을 저장하지 않고 수량에서 복원한다 (task 7.3)
+
+- 사실: `taken_ratio_total`은 초기 수량 기준인데 `exit_states`에는 initial_quantity 컬럼이 없다
+  (D7은 그 컬럼을 `trade_outcomes`에만 둔다).
+- 이번 처리: 항등식으로 복원한다 — `remaining_before = remaining_after + sold`,
+  `after = taken_before + sold × (1 − taken_before) ÷ remaining_before`. 유리수 연산이라 정확하고
+  컬럼이 필요 없다(`exitpolicy.TakenAfterFill`, 100→40→30→30 왕복 테스트). 컬럼을 추가했다면
+  같은 수에 대한 두 번째 권위가 됐을 것이다.
+- **모든 SELL 체결이 계상된다** — 발의된 주문뿐 아니라 수동·flatten 매도도. 실제로 포지션의
+  일부가 사라졌고, 그것을 무시한 누적 비율은 남지 않은 수량에 대고 익절을 재발의한다.
+- **BUY(스케일인)는 비율을 움직이지 않는다.** 분모인 "초기 수량"이 바뀌는 사건이고 이 change에는
+  그 규칙이 없다. 조용히 재해석하지 않고 그대로 둔다 — 8.x 입력.
+
+## 2026-07-26 [safe local] LADDER 거부·취소는 rung을 되감고 기준선은 되감지 않는다 (task 7.3)
+
+- 사실: 스펙은 "거부·취소 시 해당 레벨은 재발의 가능해진다(SHALL)"이다. ratchet의 40% 부분익절은
+  `taken_ratio_total`이 안 움직였으므로 자동으로 재발의 가능해진다. ladder는 rung 인덱스로
+  dedup하므로(`idx > activated_rung`) 승격된 채로 두면 그 rung은 영원히 재발의 불가다.
+- 이번 처리: `ResolveExitProposal`이 LADDER에서 `active_rung`을 `pending_level − 1`로 되감는다.
+  `baseline_price`는 되감지 **않는다** — 이미 부여된 보호이고 §0.9는 반대 방향을 허용하지 않는다.
+  다음 평가는 이미 그 잠금을 반영한 기준선 위에서 rung을 재발의한다(보수적 조합).
+- 한계(명시): 미해소 중에도 rung 승격은 일어나므로(원본의 decision-time 필드), 발의된 rung보다
+  높은 rung이 그 사이 도달했다면 되감기가 그 승격을 잃는다. 기준선은 남으므로 다음 관측이
+  최고 rung으로 다시 승격하고 그 rung의 부분익절만 발의한다 — 원본의
+  `_highest_reached_rung_index`가 원래 하는 동작과 같다.
+
+## 2026-07-26 [safe local] 무장 writer를 apply_hook.go에 넣었다 — 0.3의 강제 검토 지점 준수 (task 7.3)
+
+- 0.3의 후속 입력("7.3이 무장 writer를 추가할 때는 그 함수도 apply_hook.go에 두어야 한다")을
+  그대로 따랐다. guarded 4컬럼을 이름으로라도 언급하는 코드는 전부 `apply_hook.go`에 있다:
+  `armExitProposalTx`·`AttachExitIntent`·`ResolveExitProposal`·`ExitState`/`OpenExitStates` 리더·
+  `ApplyExitFill`. 나머지 행(기준선·워터마크·레벨·rung·completed·`exit_events`)은 신설
+  `exit_state.go`가 갖고, 그 파일은 네 이름을 한 번도 쓰지 않는다
+  (`TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook` 무변경 통과).
+- 이 이음매는 어색하다(한 트랜잭션이 두 파일에 걸친다). 어색함이 곧 강제 검토 지점이므로
+  allowed 목록은 건드리지 않았다.
+- 판정 트랜잭션은 하나다: 상태 전진 + 무장 + `exit_events` 한 커밋. 셋을 나누면 무장과 기록
+  사이의 크래시가 "설명할 수 없는 발의"나 "다음 관측의 중복 발의"를 만든다.
+
+## 2026-07-26 [safe local] pending 해소는 terminal 체결에서만 (task 7.3)
+
+- 부분 체결로 아직 working인 주문은 발의에 답한 것이 아니다. 거기서 해소하면 살아 있는 주문
+  위에 같은 레벨이 재무장되고 두 개의 매도가 동시에 뜬다. `taken_ratio_total`은 실제로 움직인
+  수량이므로 부분 체결에서도 움직인다 — 둘의 시점이 다른 것이 정상이다.
+- 해소 키는 **발의의 intent id**다. "매도가 났다"가 아니라 "그 발의의 주문이 종결됐다"가 조건이다.
+
+## 2026-07-26 [observation] exit_events에 사유 텍스트 컬럼이 없다 (task 7.3)
+
+- `ResolveExitProposal`은 REFUSED/CANCELLED만 기록하고 사유는 기록하지 못한다(D7에 자유 텍스트
+  컬럼 없음). 거부한 주체(Guardian·Gateway)가 자기 기록을 갖고 있고, 조인은 이벤트가 싣는
+  `proposed_intent_id`다. 7.4가 알림에 사유를 실을 때 이 조인을 쓰면 된다.
+
+## 2026-07-26 [safe local] 엔진 배선에 exit applier 가드를 추가했다 (task 7.3 / 2차 승계 이행)
+
+- `bindApplyHooks`가 `SetApplyHooks{Project, Exit}` 하나로 둘 다 묶고(재바인딩 거부가 강제한 대로
+  gateway.go의 그 리터럴을 확장), `checkProjectionWired`가 `ExitApplierBound()`도 묻는다
+  (`ErrExitApplierUnbound`).
+- 미바인딩의 성격은 투영과 다르다: 게이트를 여는 fail-open이 아니라 **조용한 fail-closed**다
+  (해소되지 않는 pending이 이후 모든 발의를 억제 → 포지션마다 한 번 발의하고 침묵). 그래도
+  가드를 넣은 이유는 "제안이 없는 시스템"과 구별이 안 되기 때문이다.
+- `TestBindingWiresBothApplyHooks`·`TestTheGuardNoticesAHalfBoundJournal`. 기존
+  interlock 테스트(두 번째 바인딩 거부)는 무변경 통과.
+
+## 2026-07-26 [observation] 7.4로 넘기는 seam 목록 (task 7.1~7.3)
+
+- 관측 루프·가격 폴링·`RecordSuccess(QueryPrice)`·두절 에스컬레이션: 미구현(7.4).
+- 발의 제출: `RecordExitJudgement`(무장) → intent 발급 → `AttachExitIntent` → 제출 순서를
+  지켜야 크래시 복원이 성립한다. 반대 순서(발급 먼저)는 발급 후 무장 전 크래시에서 중복 발의.
+- `CancelPendingFirst == true`인 발의는 working 주문 취소가 선행되어야 한다(오버셀 방지).
+- `ErrRefused`(입력 검증 실패)는 알림 대상이다 — 판정을 수행하지 않았다는 사실이지 "변화 없음"이
+  아니다. `RefusalError.Field`가 어느 불변식인지 싣는다.
+- 외부 편입 포지션의 알림: `OpenExitState`가 `ErrPositionNotExitEligible`로 거부한다. 알림은 7.4.
+- 확정 하한 캡(7.5): 캡된 잔여를 pending으로 유지하는 규칙은 미구현. 현재는 발의 1건 = pending 1건.
+- `LadderTransition.Changed`/`RatchetDecision.Changed`가 "`exit_events`에 기록할 판정"의 조건을
+  이미 계산해 준다(0.1의 후속 입력 — 중복 회피는 판정 루프 쪽 조건으로).

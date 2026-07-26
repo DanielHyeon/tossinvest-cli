@@ -97,6 +97,12 @@ var ErrProjectionUnbound = errors.New(
 		"reconciliation would believe the account holds nothing — every broker holding would read " +
 		"as an external position instead of a disagreement")
 
+// ErrExitApplierUnbound is the exit half of the same guard.
+var ErrExitApplierUnbound = errors.New(
+	"engine: the exit apply hook is not bound, so no fill would ever resolve a pending exit proposal — " +
+		"the first take-profit a position proposes would stay outstanding forever and suppress every " +
+		"proposal after it")
+
 // bindApplyHooks connects the position projection to the fill transaction.
 //
 // Both writes have to be one commit (design D7's 원자 apply hook): a fill the
@@ -104,13 +110,21 @@ var ErrProjectionUnbound = errors.New(
 // entry gate all disagree about. The journal owns the atomic point and refuses
 // to own the domain rule, so the rule is injected here — once, at wiring time.
 //
-// Exit stays nil, and that is this change's boundary rather than an omission:
-// the exit-state applier arrives with the exit policy (task 7.x), and there is
-// nothing for it to resolve yet because nothing arms a pending proposal. When
-// 7.x binds it, it extends this literal — SetApplyHooks refuses a second call,
-// which is what makes "one wiring point" a property and not a habit.
+// Task 7.3 filled in the Exit half, by extending this literal exactly as the
+// note that used to stand here predicted: SetApplyHooks refuses a second call,
+// so there was no other place to put it, which is what makes "one wiring point"
+// a property and not a habit.
+//
+// What the exit applier adds to the same transaction: the cumulative taken
+// fraction a sale moved, the resolution of the proposal that sale answered, and
+// the completion of a state whose position has closed. It decides nothing about
+// protection — a fill is not an observation — and the handle it is given cannot
+// write a baseline, a watermark or a level at all.
 func bindApplyHooks(j *journal.Journal) error {
-	if err := j.SetApplyHooks(journal.ApplyHooks{Project: journal.ProjectPosition}); err != nil {
+	if err := j.SetApplyHooks(journal.ApplyHooks{
+		Project: journal.ProjectPosition,
+		Exit:    journal.ApplyExitFill,
+	}); err != nil {
 		return fmt.Errorf("engine: binding the fill apply hooks: %w", err)
 	}
 	return nil
@@ -124,12 +138,23 @@ func bindApplyHooks(j *journal.Journal) error {
 // instead of trusting gateway.go to have been written correctly: a future
 // reordering that drops the binding would otherwise produce an engine that
 // starts, trades, and is wrong about what it holds.
+//
+// It asks about the exit applier too (task 7.3). An unbound one is quieter than
+// an unbound projection and not gate-opening — no proposal is ever submitted
+// that was not judged — but it is not harmless either: nothing would resolve a
+// pending proposal, so the first take-profit a position proposes would be the
+// last thing its policy ever did. The two hooks are bound by one call, so a
+// journal with one and not the other is a wiring bug rather than a
+// configuration, and it is named as one.
 func checkProjectionWired(j *journal.Journal) error {
 	if j == nil {
 		return errors.New("engine: no journal")
 	}
 	if !j.ProjectionBound() {
 		return ErrProjectionUnbound
+	}
+	if !j.ExitApplierBound() {
+		return ErrExitApplierUnbound
 	}
 	return nil
 }

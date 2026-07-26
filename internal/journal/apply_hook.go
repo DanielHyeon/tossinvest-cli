@@ -66,6 +66,14 @@ package journal
 // event, in a different transaction — its writer belongs in this file too, so
 // that the one test keeps naming every writer of these columns.
 //
+// Task 7.3 took that instruction literally. The second half of this file is the
+// proposal lifecycle: arming, attaching the intent, resolving a refusal or a
+// cancellation, reading the state back, and the Exit apply function itself. All
+// of it is here and none of it is in exit_state.go, which owns the rest of the
+// row and is forbidden from spelling these four column names at all. The seam
+// between the two files is deliberately awkward, because the awkwardness is what
+// makes a second writer impossible to add without reading this paragraph.
+//
 // # Broker-behaviour claims
 //
 // None. AppliedFill carries what RecordFill already derived from the broker's
@@ -79,6 +87,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
@@ -198,6 +207,22 @@ func (j *Journal) ProjectionBound() bool {
 	j.applyMu.RLock()
 	defer j.applyMu.RUnlock()
 	return j.applyHooks.Project != nil
+}
+
+// ExitApplierBound reports whether an Exit hook is bound.
+//
+// The same question about the other half, asked for a smaller but real reason
+// (task 7.3): the exit applier is what resolves a pending proposal, and a
+// process that records fills without it leaves every proposal outstanding, which
+// suppresses every proposal after the first. That is a fail-*closed* silence
+// rather than a fail-open one, so it does not carry the projection's argument for
+// refusing to start — but it is still a wiring bug that nothing else would
+// notice, because a system that stops proposing looks exactly like a system with
+// nothing to propose.
+func (j *Journal) ExitApplierBound() bool {
+	j.applyMu.RLock()
+	defer j.applyMu.RUnlock()
+	return j.applyHooks.Exit != nil
 }
 
 // runApplyHooks calls the injected functions inside the caller's transaction.
@@ -446,4 +471,393 @@ func guardedColumn(query string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// --- the proposal lifecycle (task 7.3) ----------------------------------------
+//
+// Everything below writes or reads one of the guarded four, which is why it is
+// in this file. The lifecycle it implements is exit-policy's:
+//
+//	arm      — one proposal per level or rung, recorded before it is submitted
+//	attach   — the intent id, once the issuance path has minted one
+//	resolve  — a fill (in the apply hook), or a refusal or cancellation (not)
+//	restore  — after a crash, the armed proposal is still armed
+//
+// The three of those that are not fills happen in their own transactions, so
+// they are *Journal methods rather than *ApplyTx ones. That is the shape
+// issues.md predicted for this task and it is the right one: arming is a
+// judgement's write, not a fill's.
+
+// ErrProposalPending means a proposal is already outstanding for the position.
+// Arming a second one is the duplicate the pending lifecycle exists to prevent.
+var ErrProposalPending = errors.New("journal: a proposal is already outstanding for that position")
+
+// ExitState is one position's whole protection state.
+type ExitState struct {
+	PositionID string
+	PolicyKind string
+	// EntryPrice, InitialStop and InitialRisk are frozen at t0. InitialRisk is
+	// the denominator of every R the position is judged by and it does not move
+	// for a partial take-profit or an adjustment.
+	EntryPrice  string
+	InitialStop string
+	InitialRisk string
+	// Baseline and HighWater are decimal strings, both monotone non-decreasing.
+	Baseline  string
+	HighWater string
+	// RatchetLevel is the ratchet's step; ActiveRung is the ladder's, and is
+	// exitpolicy.NoRung when none has been reached.
+	RatchetLevel string
+	ActiveRung   int
+	// TakenRatioTotal is the cumulative taken fraction of the initial quantity.
+	TakenRatioTotal string
+	// The outstanding proposal, all empty when there is none. Level carries a
+	// ratchet level under RATCHET and a rung index under LADDER.
+	PendingAction   string
+	PendingLevel    string
+	PendingIntentID string
+	Completed       bool
+	UpdatedAt       string
+}
+
+// Pending reports whether a proposal is outstanding.
+func (s ExitState) Pending() bool { return s.PendingAction != "" }
+
+const exitStateSelect = `SELECT position_id, policy_kind, entry_price, initial_stop, initial_risk,
+	baseline_price, high_water, ratchet_level, active_rung, taken_ratio_total,
+	coalesce(pending_action,''), coalesce(pending_level,''), coalesce(pending_intent_id,''),
+	completed, updated_at FROM exit_states`
+
+func scanExitState(row rowScanner) (ExitState, error) {
+	var (
+		s    ExitState
+		rung sql.NullInt64
+		done int
+	)
+	err := row.Scan(&s.PositionID, &s.PolicyKind, &s.EntryPrice, &s.InitialStop, &s.InitialRisk,
+		&s.Baseline, &s.HighWater, &s.RatchetLevel, &rung, &s.TakenRatioTotal,
+		&s.PendingAction, &s.PendingLevel, &s.PendingIntentID, &done, &s.UpdatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ExitState{}, ErrExitStateNotFound
+	}
+	if err != nil {
+		return ExitState{}, fmt.Errorf("journal: reading an exit state: %w", err)
+	}
+	s.ActiveRung = -1
+	if rung.Valid {
+		s.ActiveRung = int(rung.Int64)
+	}
+	s.Completed = done != 0
+	return s, nil
+}
+
+// ExitState returns one position's protection state.
+func (j *Journal) ExitState(ctx context.Context, positionID string) (ExitState, error) {
+	return scanExitState(j.db.QueryRowContext(ctx,
+		exitStateSelect+" WHERE position_id = ?", strings.TrimSpace(positionID)))
+}
+
+// OpenExitStates returns the positions whose exit policy is still running, on
+// one account.
+//
+// It is two things at once, and deliberately not two functions. It is the
+// observation loop's working set (task 7.4), and it is the crash restore: a
+// process that starts with an armed proposal in this list re-reads it before it
+// evaluates, which is what makes "발의 기록 후 제출 전에 크래시" resume without
+// proposing the same level twice. A separate "restore" query would be a second
+// definition of what is outstanding, and the two could disagree.
+func (j *Journal) OpenExitStates(ctx context.Context, accountRef string) ([]ExitState, error) {
+	account := strings.TrimSpace(accountRef)
+	rows, err := j.db.QueryContext(ctx, `
+		SELECT e.position_id, e.policy_kind, e.entry_price, e.initial_stop, e.initial_risk,
+		       e.baseline_price, e.high_water, e.ratchet_level, e.active_rung, e.taken_ratio_total,
+		       coalesce(e.pending_action,''), coalesce(e.pending_level,''),
+		       coalesce(e.pending_intent_id,''), e.completed, e.updated_at
+		  FROM exit_states e
+		  JOIN positions p ON p.id = e.position_id
+		 WHERE p.account_ref = ? AND e.completed = 0
+		 ORDER BY p.market, p.symbol, p.instance_seq`, account)
+	if err != nil {
+		return nil, fmt.Errorf("journal: listing the exit states of %s: %w", account, err)
+	}
+	defer rows.Close()
+
+	var out []ExitState
+	for rows.Next() {
+		state, err := scanExitState(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, state)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: listing the exit states of %s: %w", account, err)
+	}
+	return out, nil
+}
+
+// armExitProposalTx records a proposal inside the judgement's own transaction.
+//
+// It is the arming half of the crash contract: the row is written before the
+// order is submitted, so a process that dies in between restarts holding the
+// proposal rather than a clean state that would make it again.
+//
+// A second proposal while one is outstanding is refused rather than overwritten.
+// Overwriting would lose the identity of the order that is still working, and
+// the fill that eventually arrives would then resolve nothing.
+func armExitProposalTx(ctx context.Context, tx *sql.Tx, positionID string,
+	proposal ExitProposal, now string) error {
+	var action sql.NullString
+	err := tx.QueryRowContext(ctx,
+		`SELECT pending_action FROM exit_states WHERE position_id = ?`, positionID).Scan(&action)
+	if errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("%w: position %s", ErrExitStateNotFound, positionID)
+	}
+	if err != nil {
+		return fmt.Errorf("journal: reading the proposal of %s: %w", positionID, err)
+	}
+	if strings.TrimSpace(action.String) != "" {
+		return fmt.Errorf("%w: %s holds %s", ErrProposalPending, positionID, action.String)
+	}
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE exit_states
+		   SET pending_action = ?, pending_level = ?, pending_intent_id = ?, updated_at = ?
+		 WHERE position_id = ?`,
+		proposal.Action, proposal.Level, nullableString(proposal.IntentID), now, positionID); err != nil {
+		return fmt.Errorf("journal: arming the proposal of %s: %w", positionID, err)
+	}
+	return nil
+}
+
+// AttachExitIntent records which intent carries an already-armed proposal.
+//
+// The two steps are separate because the order they happen in is the crash
+// contract: arm, mint the intent, attach, submit. An armed proposal with no
+// intent id is a recoverable state — the restart re-proposes nothing and the
+// operator sees an outstanding proposal with no order — whereas an intent
+// submitted before anything was armed is the duplicate this whole lifecycle is
+// about.
+func (j *Journal) AttachExitIntent(ctx context.Context, positionID, intentID string) error {
+	id := strings.TrimSpace(positionID)
+	intent := strings.TrimSpace(intentID)
+	if intent == "" {
+		return fmt.Errorf("%w: an intent id is required to attach one", ErrInvalidRequest)
+	}
+	now := j.nowString()
+
+	tx, err := j.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE
+	if err != nil {
+		return fmt.Errorf("journal: attaching the intent of %s: %w", id, err)
+	}
+	defer tx.Rollback()
+
+	var action, existing sql.NullString
+	err = tx.QueryRowContext(ctx,
+		`SELECT pending_action, pending_intent_id FROM exit_states WHERE position_id = ?`, id).
+		Scan(&action, &existing)
+	if errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("%w: position %s", ErrExitStateNotFound, id)
+	}
+	if err != nil {
+		return fmt.Errorf("journal: reading the proposal of %s: %w", id, err)
+	}
+	if strings.TrimSpace(action.String) == "" {
+		return fmt.Errorf("%w: %s has no outstanding proposal to attach an intent to",
+			ErrInvalidRequest, id)
+	}
+	if current := strings.TrimSpace(existing.String); current != "" && current != intent {
+		return fmt.Errorf(
+			"%w: the proposal of %s already carries intent %s; a second intent for one proposal is two orders",
+			ErrInvalidRequest, id, current)
+	}
+
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE exit_states SET pending_intent_id = ?, updated_at = ? WHERE position_id = ?`,
+		intent, now, id); err != nil {
+		return fmt.Errorf("journal: attaching the intent of %s: %w", id, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("journal: attaching the intent of %s: %w", id, err)
+	}
+	return nil
+}
+
+// ProposalResolution is how a proposal ended without filling.
+type ProposalResolution string
+
+const (
+	// ProposalRefused is a proposal Guardian or the gateway declined to submit.
+	ProposalRefused ProposalResolution = "REFUSED"
+	// ProposalCancelled is a submitted order that was cancelled or expired.
+	ProposalCancelled ProposalResolution = "CANCELLED"
+)
+
+// ResolveExitProposal clears a proposal that ended without filling, which re-arms
+// its level (exit-policy: 거부·취소 시 해당 레벨은 재발의 가능해진다).
+//
+// Under LADDER it also rolls the rung back, because the rung index is what that
+// policy de-duplicates on and a rung left promoted could never be proposed again.
+// The baseline is not rolled back with it: a lock once granted is protection, and
+// §0.9 permits no movement in the other direction.
+//
+// Clearing when nothing is pending is not an error, for the same reason
+// ApplyTx.ResolvePending's is not: a retry of the resolution must converge rather
+// than fail, and checking first would only move the race one statement earlier.
+//
+// The reason for the refusal is not recorded here. `exit_events` has no free-text
+// column (D7), and the subsystem that refused has its own record; the join
+// between them is the intent id this event carries.
+func (j *Journal) ResolveExitProposal(ctx context.Context, positionID string,
+	resolution ProposalResolution) error {
+	id := strings.TrimSpace(positionID)
+	action := ExitEventProposalRefused
+	switch resolution {
+	case ProposalRefused:
+	case ProposalCancelled:
+		action = ExitEventProposalCancelled
+	default:
+		return fmt.Errorf("%w: %q is neither %s nor %s", ErrInvalidRequest,
+			string(resolution), ProposalRefused, ProposalCancelled)
+	}
+	now := j.nowString()
+
+	tx, err := j.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE
+	if err != nil {
+		return fmt.Errorf("journal: resolving the proposal of %s: %w", id, err)
+	}
+	defer tx.Rollback()
+
+	var kind string
+	var pendingAction, pendingLevel, pendingIntent sql.NullString
+	err = tx.QueryRowContext(ctx, `
+		SELECT policy_kind, pending_action, pending_level, pending_intent_id
+		  FROM exit_states WHERE position_id = ?`, id).
+		Scan(&kind, &pendingAction, &pendingLevel, &pendingIntent)
+	if errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("%w: position %s", ErrExitStateNotFound, id)
+	}
+	if err != nil {
+		return fmt.Errorf("journal: reading the proposal of %s: %w", id, err)
+	}
+	if strings.TrimSpace(pendingAction.String) == "" {
+		return nil
+	}
+
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE exit_states
+		   SET pending_action = NULL, pending_level = NULL, pending_intent_id = NULL, updated_at = ?
+		 WHERE position_id = ?`, now, id); err != nil {
+		return fmt.Errorf("journal: resolving the proposal of %s: %w", id, err)
+	}
+	if kind == ExitPolicyLadder {
+		if rung, err := exitpolicy.RungIndex(strings.TrimSpace(pendingLevel.String)); err == nil {
+			if err := rollBackRungTx(ctx, tx, id, rung-1, now); err != nil {
+				return err
+			}
+		}
+	}
+	if err := appendExitEventTx(ctx, tx, exitEventRow{
+		PositionID: id, LevelAfter: strings.TrimSpace(pendingLevel.String),
+		Action: action, ProposedIntentID: strings.TrimSpace(pendingIntent.String), CreatedAt: now,
+	}); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("journal: resolving the proposal of %s: %w", id, err)
+	}
+	return nil
+}
+
+// ApplyExitFill is the Exit apply hook: it moves the exit state that a fill has
+// answered, inside the fill's own transaction.
+//
+// Wiring is the second half of one line at startup:
+//
+//	j.SetApplyHooks(journal.ApplyHooks{Project: …, Exit: journal.ApplyExitFill})
+//
+// It runs after Project, which is what lets it read the quantity this fill
+// produced rather than re-deriving it. Three things happen, in order:
+//
+//  1. **The taken fraction moves**, for a SELL. It is reconstructed from the
+//     quantities rather than from a stored initial quantity
+//     (exitpolicy.TakenAfterFill), because `exit_states` has no such column and
+//     adding one would have been a second authority on the same number. Every
+//     SELL counts, not only a proposal's own: a manual or flatten sale really did
+//     take part of the position, and a cumulative fraction that ignored it would
+//     under-report what is gone and re-propose a take-profit against quantity
+//     that is not there.
+//
+//     A BUY moves nothing. A scale-in changes the initial quantity the fraction
+//     is against, and this change has no rule for that; the fraction is left
+//     alone rather than silently reinterpreted (see issues.md).
+//
+//  2. **The proposal resolves**, when this fill's intent is the one the proposal
+//     was armed with and the order is terminal. Terminal, because a partially
+//     filled order that is still working has not answered the proposal — clearing
+//     it there would re-arm the level while the order is live and let a second one
+//     be proposed on top of it.
+//
+//  3. **The state completes**, when the position reached CLOSED. A completed
+//     state leaves the observation loop's working set, which is what stops a
+//     closed position being judged forever.
+//
+// Nothing here decides anything about protection. A fill is not an observation
+// and must not move a baseline, a watermark or a level — those reach the row only
+// through RecordExitJudgement, and *ApplyTx cannot write them at all.
+func ApplyExitFill(ctx context.Context, tx *ApplyTx, fill AppliedFill) error {
+	where, found, err := exitContextForFill(ctx, tx, fill)
+	if err != nil {
+		return err
+	}
+	if !found {
+		// An external order, or a symbol the projection holds no instance of.
+		// Neither is an error and neither has an exit state to move.
+		return nil
+	}
+
+	state, err := tx.PendingState(ctx, where.PositionID)
+	if errors.Is(err, ErrExitStateNotFound) {
+		// A position the exit policy does not manage — an external position, or
+		// one whose state has not been opened yet.
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	if strings.EqualFold(strings.TrimSpace(where.Side), "SELL") {
+		next, err := exitpolicy.TakenAfterFill(
+			state.TakenRatioTotal, orZero(fill.Delta), orZero(where.QuantityAfter))
+		if err != nil {
+			return fmt.Errorf("%w: the taken fraction of position %s: %v",
+				ErrInvalidRequest, where.PositionID, err)
+		}
+		if cmp, err := riskcalc.CompareDecimal(next, state.TakenRatioTotal); err != nil {
+			return fmt.Errorf("%w: the taken fraction of position %s: %v",
+				ErrInvalidRequest, where.PositionID, err)
+		} else if cmp > 0 {
+			if err := tx.MoveTakenRatioTotal(ctx, where.PositionID, next); err != nil {
+				return err
+			}
+		}
+	}
+
+	if fill.Terminal && state.Pending() && state.PendingIntentID != "" &&
+		state.PendingIntentID == where.IntentID {
+		if err := tx.ResolvePending(ctx, where.PositionID); err != nil {
+			return err
+		}
+		if err := appendExitEventFromHook(ctx, tx, exitEventRow{
+			PositionID: where.PositionID, LevelAfter: state.PendingLevel,
+			Action: ExitEventProposalFilled, ProposedIntentID: state.PendingIntentID,
+			CreatedAt: tx.Now(),
+		}); err != nil {
+			return err
+		}
+	}
+
+	if where.PositionState == PositionClosed && !state.Completed {
+		return markExitCompletedTx(ctx, tx, where.PositionID)
+	}
+	return nil
 }
