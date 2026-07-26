@@ -82,6 +82,17 @@ const (
 	// ModeTriggerExitObservationOutage — exit 관측 두절 임계 초과 (exit-policy:
 	// 관측 두절은 보호 부재와 같다).
 	ModeTriggerExitObservationOutage = "EXIT_OBSERVATION_OUTAGE"
+	// ModeTriggerReconcileCycleFailure — 대사 사이클 지속 실패 (risk-management,
+	// add-engine-runtime: 대사에 눈이 먼 엔진은 새 진입을 받으면 안 된다).
+	//
+	// The loop keeps retrying; what this trigger changes is whether the account
+	// accepts new exposure while the comparison against the broker is failing.
+	ModeTriggerReconcileCycleFailure = "RECONCILE_CYCLE_FAILURE"
+	// ModeTriggerFillDetectionFailure — 체결 감지 사이클 지속 실패
+	// (add-engine-runtime). An engine that cannot see its own fills believes it
+	// holds less than it does, which is the belief every sizing decision is made
+	// against.
+	ModeTriggerFillDetectionFailure = "FILL_DETECTION_CYCLE_FAILURE"
 )
 
 // Errors this file returns. All wrap ErrInvalidRequest, so a caller that already
@@ -477,9 +488,9 @@ func (j *Journal) TransitionOperatingMode(ctx context.Context, req TransitionMod
 //
 // It takes a trigger rather than a target because the mapping is the spec's, not
 // the caller's: 자동 강화 트리거와 목적 상태의 열거(SHALL) — 일일 손실 한도 도달 /
-// 자격증명 실패 / critical 알림 전달 실패 지속 / exit 관측 두절, **전부**
-// ENTRY_BLOCKED. A caller cannot ask for HALT_ALL by naming a trigger, because no
-// trigger maps to it.
+// 자격증명 실패 / critical 알림 전달 실패 지속 / exit 관측 두절 / 대사 사이클 지속
+// 실패 / 체결 감지 사이클 지속 실패, **전부** ENTRY_BLOCKED. A caller cannot ask for
+// HALT_ALL by naming a trigger, because no trigger maps to it.
 //
 // It needs no approval and no operator: 보수 방향은 자동·즉시·durable.
 func (j *Journal) EscalateOperatingMode(ctx context.Context, accountRef, trigger string,
@@ -506,6 +517,8 @@ func AutomaticTriggers() []string {
 		ModeTriggerCredentialRejected,
 		ModeTriggerCriticalAlertUndelivered,
 		ModeTriggerExitObservationOutage,
+		ModeTriggerReconcileCycleFailure,
+		ModeTriggerFillDetectionFailure,
 	}
 }
 
@@ -526,7 +539,9 @@ func TargetModeForTrigger(trigger string) (string, bool) {
 	case ModeTriggerDailyLossLimit,
 		ModeTriggerCredentialRejected,
 		ModeTriggerCriticalAlertUndelivered,
-		ModeTriggerExitObservationOutage:
+		ModeTriggerExitObservationOutage,
+		ModeTriggerReconcileCycleFailure,
+		ModeTriggerFillDetectionFailure:
 		return ModeEntryBlocked, true
 	default:
 		return "", false

@@ -20,21 +20,28 @@ import (
 
 // TestEveryEnumeratedTriggerTargetsEntryBlocked is the enumeration itself
 // (risk-management: 일일 손실 한도 도달 / 자격증명 실패(401/403) / critical 알림
-// outbox 전달 실패 지속 / exit 관측 두절 임계 초과 — 전부 ENTRY_BLOCKED).
+// outbox 전달 실패 지속 / exit 관측 두절 임계 초과 / 대사 사이클 지속 실패 / 체결
+// 감지 사이클 지속 실패 — 전부 ENTRY_BLOCKED).
 //
 // It runs over the whole trigger set rather than a list repeated here, so adding
 // a trigger without deciding its target is a compile-time-visible omission
 // (TargetModeForTrigger) and adding one that reaches HALT_ALL fails this test.
+//
+// The last two joined the table in add-engine-runtime: a runtime whose
+// reconciliation or fill detection has failed five cycles running is blind to
+// what the account holds, and an engine in that state must not take new exposure.
 func TestEveryEnumeratedTriggerTargetsEntryBlocked(t *testing.T) {
 	triggers := AutomaticTriggers()
-	if len(triggers) != 4 {
-		t.Fatalf("the spec enumerates four triggers, this build has %d: %v", len(triggers), triggers)
+	if len(triggers) != 6 {
+		t.Fatalf("the spec enumerates six triggers, this build has %d: %v", len(triggers), triggers)
 	}
 	for _, want := range []string{
 		ModeTriggerDailyLossLimit,
 		ModeTriggerCredentialRejected,
 		ModeTriggerCriticalAlertUndelivered,
 		ModeTriggerExitObservationOutage,
+		ModeTriggerReconcileCycleFailure,
+		ModeTriggerFillDetectionFailure,
 	} {
 		if !AutomaticTrigger(want) {
 			t.Errorf("%s is named by risk-management but is not a trigger here", want)
@@ -131,6 +138,10 @@ func TestHaltAllIsNeverAutomatic(t *testing.T) {
 // A performance aggregation that keeps failing is a reason to retry the
 // aggregation. Letting it tighten the account would mean a reporting bug can
 // stop the engine trading, which inverts what the mode is for.
+//
+// The distinction the enumeration draws is execution vs analysis, not "a loop
+// failed": reconciliation and fill detection ARE triggers (they are how the
+// engine learns what the account holds) and an aggregation job is not.
 func TestAnalyticsFailureIsNotATrigger(t *testing.T) {
 	j, projector := modeJournal(t)
 	ctx := context.Background()

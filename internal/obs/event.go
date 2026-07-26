@@ -115,6 +115,17 @@ const (
 	// EventAlertUndelivered is a critical alert that could not be delivered.
 	// CRITICAL, and the one that blocks entries by itself.
 	EventAlertUndelivered EventType = "engine.alert_undelivered"
+	// EventEngineLoopFailed is a supervised loop that returned for a reason other
+	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
+	// CRITICAL: the landed loops do not return, so one that did has hit a state
+	// nobody wrote a recovery for — and the runtime stops the rest rather than
+	// leaving a partially alive engine trading on half its senses.
+	EventEngineLoopFailed EventType = "engine.loop_failed"
+	// EventEngineLoopDegraded is a supervised loop that is alive but whose cycles
+	// have failed consecutively past the threshold (add-engine-runtime: 지속 열화
+	// 임계). CRITICAL, and it is what carries the automatic ENTRY_BLOCKED: the
+	// loop keeps retrying, and the account stops taking new exposure meanwhile.
+	EventEngineLoopDegraded EventType = "engine.loop_degraded"
 
 	// --- exit policy ----------------------------------------------------------
 	//
@@ -217,6 +228,8 @@ var criticalEvents = map[EventType]bool{
 	EventFlattenStalled:     true,
 	EventAlertUndelivered:   true,
 	EventOperatingMode:      true,
+	EventEngineLoopFailed:   true,
+	EventEngineLoopDegraded: true,
 
 	EventExitObservationOutage:  true,
 	EventExitJudgementRefused:   true,

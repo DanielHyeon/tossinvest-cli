@@ -67,6 +67,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
@@ -205,6 +206,68 @@ type ReconcileDriver struct {
 	unmanaged map[string]bool
 	// grown latches the external-increase alert per position.
 	grown map[string]bool
+
+	// health is the consecutive-failure count the runtime's degradation
+	// supervisor reads (add-engine-runtime, engine-safety 지속 열화 임계).
+	//
+	// It is a counter and not a decision: this loop's own contract is unchanged —
+	// "실패한 사이클은 다음 주기에 재시도" — and nothing here stops, escalates or
+	// alerts. What the number buys is that a loop which is *alive and getting
+	// nowhere* is distinguishable from a healthy one, which the return value of
+	// Run cannot express. filldetect.Detector already publishes the same fact
+	// (Health().Outage.Consecutive); this is the reconciliation half, so the
+	// supervisor asks both the same question.
+	healthMu sync.Mutex
+	health   LoopStatus
+}
+
+// LoopStatus is a supervised loop's cycle health.
+//
+// It is deliberately the smallest thing the degradation threshold needs plus
+// enough context for the alert to be readable: how many cycles have failed in a
+// row, when the run started, and what the last failure was.
+type LoopStatus struct {
+	// Consecutive is the number of consecutive failed cycles. Zero means the last
+	// cycle succeeded (or none has run).
+	Consecutive int
+	// Since is when the current failure run began. Zero when there is none.
+	Since time.Time
+	// LastError is the most recent cycle failure.
+	LastError error
+	// Cycles counts every cycle this loop has completed, failed or not.
+	Cycles int
+}
+
+// ConsecutiveFailures satisfies LoopHealth.
+func (s LoopStatus) ConsecutiveFailures() int { return s.Consecutive }
+
+// Health reports the driver's cycle health without running one.
+func (d *ReconcileDriver) Health() LoopStatus {
+	d.healthMu.Lock()
+	defer d.healthMu.Unlock()
+	return d.health
+}
+
+// ConsecutiveFailures satisfies LoopHealth, so the runtime can supervise this
+// loop and the fill detector through one interface.
+func (d *ReconcileDriver) ConsecutiveFailures() int { return d.Health().Consecutive }
+
+// note folds one finished cycle into the health counter.
+func (d *ReconcileDriver) note(cycle ReconcileCycle) {
+	d.healthMu.Lock()
+	defer d.healthMu.Unlock()
+	d.health.Cycles++
+	if cycle.Err == nil {
+		d.health.Consecutive = 0
+		d.health.Since = time.Time{}
+		d.health.LastError = nil
+		return
+	}
+	if d.health.Consecutive == 0 {
+		d.health.Since = d.clk.Now()
+	}
+	d.health.Consecutive++
+	d.health.LastError = cycle.Err
 }
 
 // NewReconcileDriver validates the wiring.
@@ -301,8 +364,12 @@ func (d *ReconcileDriver) Run(ctx context.Context) error {
 }
 
 // RunOnce performs one cycle.
-func (d *ReconcileDriver) RunOnce(ctx context.Context) ReconcileCycle {
-	var cycle ReconcileCycle
+//
+// The named return exists for the deferred health accounting: the counter has to
+// see every cycle, including the ones that return early, and a caller driving
+// RunOnce directly (a test, a tracer) must produce the same health a Run would.
+func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+	defer func() { d.note(cycle) }()
 
 	snapshot, ok := d.stabilise(ctx, &cycle)
 	if !ok {

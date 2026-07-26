@@ -615,6 +615,48 @@ func TestAPartialSnapshotEndsTheCycle(t *testing.T) {
 	}
 }
 
+// TestTheDriverCountsConsecutiveCycleFailures is the supervision seam
+// (add-engine-runtime task 1.3): the loop still retries every period — that
+// decision is untouched — but a loop that is alive and getting nowhere is now
+// distinguishable from a healthy one, which is what the runtime's degradation
+// threshold reads.
+func TestTheDriverCountsConsecutiveCycleFailures(t *testing.T) {
+	h := newDriverHarness(t, nil)
+	h.holds("005930", "10", "55000", 70000)
+
+	if got := h.driver.Health(); got.Consecutive != 0 || got.Cycles != 0 {
+		t.Fatalf("a fresh driver reports %+v", got)
+	}
+
+	h.balance.err = errors.New("balance unavailable")
+	for i := 1; i <= 3; i++ {
+		_ = h.driver.RunOnce(context.Background())
+		health := h.driver.Health()
+		if health.Consecutive != i {
+			t.Fatalf("after %d failed cycle(s) the count is %d", i, health.Consecutive)
+		}
+		if health.LastError == nil || health.Since.IsZero() {
+			t.Fatalf("a failing run reports %+v with no error or start", health)
+		}
+		if health.Cycles != i {
+			t.Fatalf("cycles = %d, want %d — every cycle is counted, failed or not", health.Cycles, i)
+		}
+	}
+	if got := h.driver.ConsecutiveFailures(); got != 3 {
+		t.Fatalf("ConsecutiveFailures = %d, want 3 — the runtime reads this one", got)
+	}
+
+	// One good cycle clears the run: the threshold is about a *continuous*
+	// outage, and a loop that recovered is not one.
+	h.balance.err = nil
+	if cycle := h.cycle(); cycle.Err != nil {
+		t.Fatalf("the recovering cycle failed: %v", cycle.Err)
+	}
+	if got := h.driver.Health(); got.Consecutive != 0 || got.LastError != nil || !got.Since.IsZero() {
+		t.Fatalf("a recovered driver reports %+v", got)
+	}
+}
+
 // TestTheDriverRefusesAnUnverifiedGate is the execution predicate. The loop
 // writes to the ledger and starts protecting positions with real orders; an
 // engine whose master switch is off must do neither unattended.
