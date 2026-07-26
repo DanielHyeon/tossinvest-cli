@@ -17,4 +17,4 @@
 ## 3. 완료 게이트 [M]
 
 - [x] 3.1 테스트 전수(-race)·`openspec validate add-operator-dashboard --strict`
-- [ ] 3.2 `make gate CHANGE=add-operator-dashboard`
+- [x] 3.2 `make gate CHANGE=add-operator-dashboard`
