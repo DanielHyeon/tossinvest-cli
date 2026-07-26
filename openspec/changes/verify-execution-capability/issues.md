@@ -253,3 +253,19 @@ verify는 한 줄 안내만 하고 그대로 진행한다 — 양방향 advisory
 | `cmd/tossctl` TestMain에 testenv 가드 없음 | 1.6에서 기록한 기존 상태 유지. 신규 테스트는 httptest·순수 stub만 쓴다 |
 | 주문 접수 창 | 여전히 [미측정]. advisory는 평일 09:00–15:30 KST라는 가장 거친 선만 긋는다 |
 | `docs/WORKFLOW.md` 미커밋 수정 | 작업 시작 시점에 이미 워킹트리에 있던 사용자 편집. 손대지 않았고 스테이징도 하지 않았다 |
+
+## Manager 판정 (1.7 재측정·강건성, 2026-07-26)
+
+독립 검증: 전체 스위트 -race 2589/48pkg 0 FAIL 재실행, RedoSet·retry·runlock·account-seq 코드 직접 판독. 편차 전건 승인:
+
+- **mode=redo(신규 라우트 없음)**: 승인 — CSRF 게이트 문 1개 유지가 옳다.
+- **redo 집합은 폼이 아닌 record에서만**(`TestTheRedoSetComesFromTheRecordAndNotFromTheForm`): 설계 핵심 그대로 — pass 단계 재실행 경로가 구조적으로 부재함을 확인.
+- **`refused` 제외**: 승인 — 사람의 "아니오"를 자동 재시도하지 않는 방향이 맞다. `--confirm-each`가 웹에 오지 않는 한 도달 불가(레일 유지 확인).
+- **plan 읽기·계정 조회까지 재시도 확대**: 승인 — M4에서 실제로 죽은 호출이고, 정책 상수 1곳(`ReadRetryExtraAttempts`/`ReadRetryBackoff`) 공유로 이중 정의 없음.
+- **account-seq lazy 해석 제거(WithAccountSeq 선구성) + 표기·헤더 계좌 동일 엔트리 고정**: 승인 — "run당 1회 캐시" 지시보다 나은 해법이고, 다계좌 잠재 불일치("A라 적고 B를 측정")를 닫았다. seq=0 폴백으로 기존 경로 보존.
+- **soak은 PauseWhile seam만**: 승인 — soak의 "자기 기록 외 무접촉" 성질 보존. lock 보유가 검증 run 동안만임을 확인(콘솔 대시보드 대기 중 soak 정상 동작).
+- **run 전역 재시도 예산 없음(호출당 2회·최대 45s)**: 승인 — 운영자 참관 절차이고 진행 로그가 대기를 알린다. 실측 창이 나오면 1.3 retry matrix에서 수치로 대체.
+- **시도 전건 Call 기록**: 승인 — 1.3의 입력이 시도 로그 그 자체라는 논거 타당.
+- advisory 하드 차단 부재 + "미측정 달력을 레일화하지 않는" 정적 가드: 지시 취지 그대로.
+
+docs/WORKFLOW.md 미커밋 수정은 사용자 편집으로 확인 — 스테이징하지 않음(사용자 소관).
