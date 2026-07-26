@@ -160,21 +160,88 @@ func TestNoAutomationBypassExists(t *testing.T) {
 
 // TestConfirmIsTheOnlyPathToATrueVerification. Verify's comparison is the gate;
 // a second function that returned nil for some other input would be a back door.
+//
+// Both gates are checked, because the batch approval is now the default one: a
+// batch that accepted anything but its own nonce, or that printed its list to
+// something that is not a terminal, would be the back door with extra steps.
 func TestConfirmIsTheOnlyPathToATrueVerification(t *testing.T) {
 	src, err := os.ReadFile("confirm.go")
 	if err != nil {
 		t.Fatalf("reading confirm.go: %v", err)
 	}
 	code := strings.Join(nonCommentLines(string(src)), "\n")
-	if !strings.Contains(code, "if !interactive {") {
-		t.Error("Confirm no longer refuses a non-terminal")
+	if n := strings.Count(code, "if !interactive {"); n != 2 {
+		t.Errorf("%d of the two confirmations refuse a non-terminal; both must", n)
 	}
 	if !strings.Contains(code, "strings.TrimSpace(input) != m.Nonce") {
-		t.Error("Verify no longer compares the typed input against the nonce")
+		t.Error("Mutation.Verify no longer compares the typed input against the nonce")
+	}
+	if !strings.Contains(code, "strings.TrimSpace(input) != b.Nonce") {
+		t.Error("Batch.Verify no longer compares the typed input against the nonce")
 	}
 	for _, banned := range []string{"yes", "\"y\"", "force", "true ==", "Assume"} {
 		if strings.Contains(strings.ToLower(code), strings.ToLower(banned)) {
 			t.Errorf("confirm.go mentions %q outside a comment; there is no shortcut answer", banned)
+		}
+	}
+}
+
+// TestTheApprovedPlanIsTheOnlyThingMutateGoActsOn.
+//
+// The batch model's whole safety claim is that a request the operator's list does
+// not carry cannot be sent. That is one function — Runner.authorise — and every
+// mutation wrapper has to go through it, either directly (the two replays) or
+// through gate. A wrapper added later that called the broker without it would be a
+// mutation nobody approved, and no runtime test would notice because the test suite
+// would simply never execute that line.
+func TestTheApprovedPlanIsTheOnlyThingMutateGoActsOn(t *testing.T) {
+	src, err := os.ReadFile("mutate.go")
+	if err != nil {
+		t.Fatalf("reading mutate.go: %v", err)
+	}
+	code := strings.Join(nonCommentLines(string(src)), "\n")
+	if !strings.Contains(code, "if r.plan == nil {") {
+		t.Error("authorise no longer fails closed when there is no approved plan")
+	}
+	if !strings.Contains(code, "r.plan.Authorises(") {
+		t.Error("authorise no longer consults the approved plan")
+	}
+
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "mutate.go", src, 0)
+	if err != nil {
+		t.Fatalf("parsing mutate.go: %v", err)
+	}
+	mutating := map[string]bool{}
+	for _, m := range MutationMethods() {
+		mutating[m] = true
+	}
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Body == nil {
+			continue
+		}
+		var sends, gated bool
+		ast.Inspect(fn.Body, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			sel, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			switch {
+			case mutating[sel.Sel.Name]:
+				sends = true
+			case sel.Sel.Name == "gate", sel.Sel.Name == "authorise":
+				gated = true
+			}
+			return true
+		})
+		if sends && !gated {
+			t.Errorf("%s calls a mutating broker method without going through gate or authorise; it could "+
+				"send a request the operator never approved", fn.Name.Name)
 		}
 	}
 }

@@ -9,27 +9,42 @@ package verifylive
 // into steps.go. Everything a step learns comes back on a stepRun, which becomes
 // exactly one line of the record whatever the outcome.
 //
-// # Abort, refuse, resume
+// # The approval comes first
 //
-// Three different things, kept apart:
+// Nothing is dispatched until the run-wide batch has been approved (approveBatch).
+// That is the whole of the default model: the plan is built from read-only calls,
+// shown in full, and answered once. A run that is not approved does not walk the
+// catalogue at all — not even its read-only steps — because "anything else aborts
+// the run" is what the operator was told when they were shown the list.
 //
-//	refuse    a person declined one confirmation. The step records
-//	          VerdictRefused and the run continues with the steps that do not
-//	          depend on it. Refusing the idempotency check should not cost you the
-//	          conditional-order measurements.
-//	abort     the context was cancelled (Ctrl-C), or a confirmation was asked for
-//	          with no terminal to type it at. Everything recorded so far stands,
-//	          and Run returns.
-//	resume    the conditional-persistence step cannot pass inside the process that
-//	          registered the conditional, so the run halts there and the operator
-//	          starts a new one. The record is how the new process knows what the
-//	          old one did.
+// # Abort, refuse, unapproved, resume
+//
+// Four different things, kept apart:
+//
+//	refuse       a person declined one confirmation under --confirm-each. The step
+//	             records VerdictRefused and the run continues with the steps that
+//	             do not depend on it. Refusing the idempotency check should not
+//	             cost you the conditional-order measurements.
+//	abort        the context was cancelled (Ctrl-C), or a confirmation was asked
+//	             for with no terminal to type it at. Everything recorded so far
+//	             stands, and Run returns.
+//	unapproved   a step was about to send something the approved list does not
+//	             carry. Nothing was sent, and the whole run stops: the alternative
+//	             is adapting to conditions the operator never agreed to. A step
+//	             with no approved lines at all is skipped instead, before it
+//	             starts.
+//	resume       the conditional-persistence step cannot pass inside the process
+//	             that registered the conditional, so the run halts there and the
+//	             operator starts a new one — which approves its own remaining
+//	             batch. The record is how the new process knows what the old one
+//	             did.
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -40,9 +55,16 @@ type Options struct {
 	Broker Broker
 	// Recorder receives one entry per step. Required.
 	Recorder *Recorder
-	// Confirm gates every mutation. Required — a nil one is refused at
-	// construction rather than defaulted to something permissive.
+	// Confirm gates one mutation at a time. It is used when ConfirmEach is set,
+	// and it is required either way — a nil one is refused at construction rather
+	// than defaulted to something permissive.
 	Confirm Confirmer
+	// ConfirmBatch asks for the run-wide approval, once, before anything is sent.
+	// Required, for the same reason.
+	ConfirmBatch BatchConfirmer
+	// ConfirmEach opts out of the batch approval and back into a typed
+	// confirmation immediately before every single mutation.
+	ConfirmEach bool
 	// Out receives operator progress.
 	Out io.Writer
 	// Now is the clock, injectable for the tests.
@@ -91,12 +113,19 @@ const DefaultMaxSellQuantity = 1.0
 
 // Runner executes the procedure.
 type Runner struct {
-	broker   Broker
-	recorder *Recorder
-	confirm  Confirmer
-	out      io.Writer
-	now      func() time.Time
-	sleep    func(ctx context.Context, d time.Duration) error
+	broker       Broker
+	recorder     *Recorder
+	confirm      Confirmer
+	confirmBatch BatchConfirmer
+	confirmEach  bool
+	out          io.Writer
+	now          func() time.Time
+	sleep        func(ctx context.Context, d time.Duration) error
+
+	// plan is the batch the operator approved. Nil means nothing is approved, and
+	// mutate.go's authorise treats that as "send nothing" rather than as
+	// "unrestricted" — the failure direction has to be the safe one.
+	plan *Plan
 
 	accountRef      string
 	symbol          string
@@ -124,6 +153,10 @@ func New(o Options) (*Runner, error) {
 	if o.Confirm == nil {
 		return nil, errors.New("verifylive: a confirmer is required; there is no unconfirmed mode")
 	}
+	if o.ConfirmBatch == nil {
+		return nil, errors.New("verifylive: a batch confirmer is required; the run-wide approval is the default " +
+			"gate and there is no mode that skips it")
+	}
 	if strings.TrimSpace(o.AccountRef) == "" {
 		return nil, errors.New("verifylive: the account could not be identified, so nothing can be attested about it")
 	}
@@ -135,6 +168,8 @@ func New(o Options) (*Runner, error) {
 		broker:          o.Broker,
 		recorder:        o.Recorder,
 		confirm:         o.Confirm,
+		confirmBatch:    o.ConfirmBatch,
+		confirmEach:     o.ConfirmEach,
 		out:             o.Out,
 		now:             o.Now,
 		sleep:           o.Sleep,
@@ -211,10 +246,14 @@ func (r *Runner) Entries() []Entry { return append([]Entry(nil), r.written...) }
 // program error, and it comes back in the summary.
 func (r *Runner) Run(ctx context.Context) (Summary, error) {
 	summary := Summary{RunID: r.runID}
-	fmt.Fprintf(r.out, "live verification — run %s, process %d\n", r.runID, r.process.PID)
-	fmt.Fprintf(r.out, "  account %s, buy-side symbol %s, holding symbol %s\n",
-		maskedAccount(r.accountRef), orNone(r.symbol), orNone(r.holdingSymbol))
-	fmt.Fprintf(r.out, "  every live mutation is confirmed by typing an expiring string; nothing here has a --yes\n\n")
+	r.writeBanner()
+
+	if halt, err := r.approveBatch(ctx); err != nil || halt != "" {
+		summary.Halted = true
+		summary.Halt = halt
+		summary.Outstanding = r.outstanding()
+		return summary, err
+	}
 
 	for _, step := range Steps() {
 		if err := ctx.Err(); err != nil {
@@ -263,6 +302,15 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 			summary.Outstanding = r.outstanding()
 			return summary, ErrNotATerminal
 		}
+		if errors.Is(sr.abort, ErrOutsidePlan) {
+			// The run would have had to send something the approved list does not
+			// cover. Nothing was sent, and carrying on would mean the remaining
+			// steps run against conditions the approval did not describe.
+			summary.Halted = true
+			summary.Halt = sr.reason
+			summary.Outstanding = r.outstanding()
+			return summary, sr.abort
+		}
 		if sr.abort != nil && errors.Is(sr.abort, context.Canceled) {
 			summary.Halted = true
 			summary.Halt = "interrupted; everything recorded so far stands"
@@ -278,6 +326,103 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 				"cancel them before doing anything else", len(leftovers), describeArtifacts(leftovers))
 	}
 	return summary, nil
+}
+
+// writeBanner says which approval model this run is using before it uses it.
+func (r *Runner) writeBanner() {
+	fmt.Fprintf(r.out, "live verification — run %s, process %d\n", r.runID, r.process.PID)
+	fmt.Fprintf(r.out, "  account %s, buy-side symbol %s, holding symbol %s\n",
+		maskedAccount(r.accountRef), orNone(r.symbol), orNone(r.holdingSymbol))
+	if r.confirmEach {
+		fmt.Fprintf(r.out, "  --confirm-each: every live mutation waits for its own expiring typed string, "+
+			"shown immediately\n  before it is sent. Nothing here has a --yes.\n\n")
+		return
+	}
+	fmt.Fprintf(r.out, "  approval: ONE expiring typed string for the whole run. Every live request this run "+
+		"can make is\n  listed first; anything not on that list is never sent, and a step that would need to "+
+		"send one\n  stops the run instead. Nothing here has a --yes. `--confirm-each` asks per mutation "+
+		"instead.\n\n")
+}
+
+// approveBatch is the run-wide gate.
+//
+// It returns the halt reason when the run must not continue. An empty reason and a
+// nil error mean the run may proceed — either because a person approved the list,
+// or because there is no list to approve and therefore nothing to send.
+func (r *Runner) approveBatch(ctx context.Context) (string, error) {
+	if r.confirmEach {
+		return "", nil
+	}
+
+	startedAt := r.now()
+	if r.plan == nil {
+		// Computed once. The package's own tests preset it, which is how "the run
+		// and the approved list disagree" is exercised without waiting for a broker
+		// to change its mind mid-procedure; nothing outside this package can, since
+		// New never sets it and there is no option that does.
+		p := r.Plan(ctx)
+		r.plan = &p
+	}
+	plan := *r.plan
+
+	if len(plan.Mutations) == 0 {
+		fmt.Fprintf(r.out, "this run plans no live mutation, so there is nothing to approve.\n")
+		plan.WriteLines(r.out)
+		fmt.Fprintln(r.out)
+		return "", nil
+	}
+
+	batch := NewBatch(plan, StepCount(r.prior) > 0, r.now())
+	err := r.confirmBatch(batch)
+
+	verdict, reason := VerdictPass, ""
+	if err != nil {
+		verdict, reason = VerdictRefused, err.Error()
+		r.plan = nil
+	}
+	if recErr := r.recordApproval(plan, batch, verdict, reason, startedAt); recErr != nil {
+		return "the approval could not be recorded, so nothing was sent", recErr
+	}
+
+	switch {
+	case err == nil:
+		fmt.Fprintf(r.out, "\napproved: %d live request(s), and nothing else.\n\n", len(plan.Mutations))
+		return "", nil
+	case errors.Is(err, ErrNotATerminal):
+		return ErrNotATerminal.Error(), ErrNotATerminal
+	default:
+		fmt.Fprintf(r.out, "\n%s Nothing was sent and no step ran.\n", err.Error())
+		fmt.Fprintf(r.out, "`tossctl verify run --list` prints the same procedure without touching the account.\n")
+		return "the batch was not approved; nothing was sent and no step ran", nil
+	}
+}
+
+// recordApproval puts the approval — granted or declined — on the evidence record.
+//
+// The plan is stored as a digest and a count rather than as a copy: the record is
+// read by people and pasted into threads, and the list itself is reproducible from
+// the catalogue plus the flags. What has to be provable later is that a person was
+// shown a list of exactly this shape and answered.
+func (r *Runner) recordApproval(plan Plan, batch Batch, verdict Verdict, reason string, startedAt time.Time) error {
+	return r.recorder.Append(Entry{
+		FormatVersion: RecordFormatVersion,
+		Kind:          KindApproval,
+		RunID:         r.runID,
+		Process:       r.process,
+		Title:         "batch approval",
+		StartedAt:     startedAt.UTC(),
+		FinishedAt:    r.now().UTC(),
+		AccountRef:    maskedAccount(r.accountRef),
+		Verdict:       verdict,
+		Reason:        reason,
+		Observations: []Observation{
+			{Key: "approval.model", Value: "batch", Detail: "one typed expiring string for the whole run"},
+			{Key: "approval.requests_listed", Value: strconv.Itoa(len(plan.Mutations))},
+			{Key: "approval.steps_listed", Value: joinSteps(plan.MutatingSteps())},
+			{Key: "approval.plan_digest", Value: plan.Digest()},
+			{Key: "approval.resumed", Value: strconv.FormatBool(batch.Resumed)},
+		},
+	})
 }
 
 // settled reports whether the record already has a terminal verdict for a step.
@@ -296,9 +441,49 @@ func (r *Runner) settled(id StepID) (bool, Verdict) {
 	return true, e.Verdict
 }
 
-// preflight applies the catalogue's own gates: opt-in, deferral, dependencies and
-// the account's holdings. It returns the reason a step is skipped.
+// preflight decides whether a step runs at all.
+//
+// It is the catalogue's own gates plus one more: a mutating step that is not on the
+// approved list is skipped here, before it can reach a mutation call. That is the
+// difference between the two ways a plan can say no — a step with no approved lines
+// never starts, while a step that starts and then tries to send something outside
+// its lines stops the whole run (mutate.go's authorise).
 func (r *Runner) preflight(step Step) (string, bool) {
+	if reason, skip := r.preflightStatic(step, r.passed); skip {
+		return reason, true
+	}
+	if step.Mutates && !r.approvedStep(step.ID) {
+		return "not part of the batch approved for this run — " + r.unapprovedReason(step.ID), true
+	}
+	return "", false
+}
+
+// approvedStep reports whether this step may mutate at all.
+func (r *Runner) approvedStep(id StepID) bool {
+	if r.confirmEach {
+		return true
+	}
+	if r.plan == nil {
+		return false
+	}
+	return r.plan.Covers(id)
+}
+
+func (r *Runner) unapprovedReason(id StepID) string {
+	if r.plan == nil {
+		return "this run has no approved batch"
+	}
+	return r.plan.ExclusionReason(id)
+}
+
+// preflightStatic applies the catalogue's own gates: opt-in, deferral, dependencies
+// and the account's holdings. It returns the reason a step is skipped.
+//
+// passed is how it decides a dependency held. At run time that is the record; while
+// the plan is still being built it also counts the steps this run is about to run,
+// because a plan that left out conditional-modify on the grounds that
+// conditional-register has not passed *yet* would exclude half the procedure.
+func (r *Runner) preflightStatic(step Step, passed func(StepID) bool) (string, bool) {
 	if step.Deferred != "" {
 		// Never skipped. A deferred step still runs, and its body records the
 		// deferral as an explicit "unverified" — which is the whole reason task
@@ -309,7 +494,7 @@ func (r *Runner) preflight(step Step) (string, bool) {
 		return fmt.Sprintf("not requested — pass %s to run it. %s", step.OptIn, step.Procedure[0]), true
 	}
 	for _, dep := range step.DependsOn {
-		if !r.passed(dep) {
+		if !passed(dep) {
 			return fmt.Sprintf("%s did not pass, so there is nothing for this step to observe", dep), true
 		}
 	}
@@ -413,6 +598,14 @@ func (sr *stepRun) fail(format string, a ...any) {
 	sr.verdict, sr.reason = VerdictFail, fmt.Sprintf(format, a...)
 }
 
+// outsidePlan records the one condition that stops the whole run without anything
+// having been sent: the step would have had to make a request the operator's
+// approval does not cover.
+func (sr *stepRun) outsidePlan(err error) {
+	sr.verdict, sr.reason = VerdictFail, truncateError(err)
+	sr.abort = err
+}
+
 // resolve turns an error from a step body into a verdict.
 //
 // A refusal is its own verdict and never a failure: the operator made a decision
@@ -424,6 +617,8 @@ func (sr *stepRun) resolve(err error) {
 		if sr.verdict == "" {
 			sr.pass()
 		}
+	case errors.Is(err, ErrOutsidePlan):
+		sr.outsidePlan(err)
 	case errors.Is(err, ErrRefused), errors.Is(err, ErrConfirmationExpired):
 		sr.refuse(err.Error())
 	case errors.Is(err, ErrNotATerminal):

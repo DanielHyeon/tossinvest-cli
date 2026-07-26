@@ -206,6 +206,26 @@ func TestWriteStepsIsAReadableProcedure(t *testing.T) {
 			t.Errorf("the listing does not mention %q", want)
 		}
 	}
+	// The approval model is the first thing an operator has to understand, and the
+	// listing is where they read it before running anything.
+	for _, want := range []string{
+		"ONE typed, expiring confirmation for the whole run",
+		"--confirm-each",
+		"stops and asks for a fresh approval",
+	} {
+		if !strings.Contains(text, want) {
+			t.Errorf("the listing does not explain the batch model (%q missing):\n%s", want, text)
+		}
+	}
+	// Every declared mutation appears under its step, so the listing and the
+	// approval summary describe the same procedure.
+	for _, s := range Steps() {
+		for _, m := range s.Mutations {
+			if !strings.Contains(text, string(m.Kind)) {
+				t.Errorf("the listing omits %s's %s mutation", s.ID, m.Kind)
+			}
+		}
+	}
 }
 
 func TestChecklistGroupsHaveNoDuplicateKeys(t *testing.T) {

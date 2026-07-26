@@ -15,17 +15,19 @@
 // from that one sentence:
 //
 //	operator tool     it is driven by a person at a terminal, never by CI, never
-//	                  by an agent, never by a cron job. Every mutation is gated on
-//	                  a typed, expiring confirmation (confirm.go), exactly as
-//	                  flatten-all's liquidation is, and there is no flag anywhere
-//	                  that answers one.
+//	                  by an agent, never by a cron job. Before anything is sent the
+//	                  run lists every live request it plans to make and waits for
+//	                  one typed, expiring confirmation covering exactly that list
+//	                  (plan.go, confirm.go); --confirm-each asks per mutation
+//	                  instead. There is no flag anywhere that answers either.
 //	minimum exposure  one share, limit-only, priced far enough from the market
 //	                  that it cannot fill (pricing.go), cancelled inside the same
 //	                  step, and never more than one live order from this tool at a
 //	                  time (Runner.ledger).
 //	evidence first    every step appends a durable JSONL line carrying request and
-//	                  response digests, latencies and a verdict (record.go). The
-//	                  point of the exercise is the record, not the orders.
+//	                  response digests, latencies and a verdict (record.go), and
+//	                  the approval itself is one more line. The point of the
+//	                  exercise is the record, not the orders.
 //
 // WORKFLOW §0 forbids unattended LIVE order side effects and the 불변 규칙 forbid
 // automated tests that place real orders. Both hold here: this package's own
@@ -35,10 +37,12 @@
 // # The step list is the contract
 //
 // Steps() is the whole procedure, in order, as data. Each step says what it
-// proves, which measurement task it feeds, whether it mutates, and what it needs
-// from the account. An operator can read it before running anything (`tossctl
-// verify run --list`), and the runner walks exactly that list — there is no
-// hidden step and no step that runs without appearing in it.
+// proves, which measurement task it feeds, whether it mutates, what it needs from
+// the account, and — in Step.Mutations — every class of live request it will send.
+// An operator can read it before running anything (`tossctl verify run --list`),
+// and the runner walks exactly that list: there is no hidden step, no step that
+// runs without appearing in it, and no request that can be sent without a
+// Step.Mutations line to authorise it (plan.go).
 package verifylive
 
 import (
@@ -114,6 +118,13 @@ type Step struct {
 	Tasks []string `json:"tasks"`
 	// Mutates reports that the step places, amends or cancels something live.
 	Mutates bool `json:"mutates"`
+	// Mutations declares every class of live request the step will send, as data.
+	//
+	// It is what the batch approval enumerates and what the plan authorises
+	// (plan.go), so it is not a description of the step — it is the step's
+	// permission slip. A mutating step with an empty list can send nothing, and
+	// verifylive_test.go asserts the two flags agree.
+	Mutations []StepMutation `json:"mutations,omitempty"`
 	// NeedsHolding reports that the step cannot run on an account with nothing in
 	// it. Such a step is skipped with a reason; the tool never buys to create the
 	// holding it needs.
@@ -167,11 +178,36 @@ func Steps() []Step {
 			Tasks:   []string{"2.7"},
 			Mutates: true,
 			Procedure: []string{
-				"place ONE minimum-quantity LIMIT buy far from the market under key K (confirmation required)",
-				"re-send the identical body under the same key K — no second confirmation: the identity recovery is the claim under test",
+				"place ONE minimum-quantity LIMIT buy far from the market under key K",
+				"re-send the identical body under the same key K — the identity recovery is the claim under test",
 				"assert the same orderId came back and the open-order list did not grow",
 				"re-send a DIFFERENT body under the same key K and record the error code",
-				"cancel the order (confirmation required)",
+				"cancel every order this step has resting",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutatePlaceOrder, Side: "buy", Quantity: QuantityOne, Pricing: PriceFarBuy,
+					Ends: "cancelled inside this step",
+				},
+				{
+					Kind: MutateReplayOrder, Side: "buy", Quantity: QuantityOne, Pricing: PriceIdenticalBody,
+					Ends: "the documented answer is the first order coming back and nothing new existing; " +
+						"anything it does create is cancelled inside this step",
+					Note: "this replay is the claim under test, so it is sent as part of the line above rather " +
+						"than as a separate decision",
+				},
+				{
+					Kind: MutateConflictProbe, Side: "buy", Quantity: QuantityOne, Pricing: PriceOneTickFurther,
+					Ends: "expected to be refused with idempotency-key-conflict; if the broker accepts it " +
+						"instead, the order it creates is cancelled inside this step",
+					Note: "deliberately re-uses the key above with a DIFFERENT price — that refusal is the " +
+						"measurement",
+				},
+				{
+					Kind: MutateCancelOrder,
+					Ends: "the account returns to how this step found it — every order the step has resting " +
+						"is cancelled before it returns",
+				},
 			},
 		},
 		{
@@ -183,10 +219,27 @@ func Steps() []Step {
 			OptIn:   FlagIncludeTTLEdge,
 			Procedure: []string{
 				"WARNING: this step deliberately creates a SECOND live order. It is the only way to observe the window closing.",
-				"place a minimum-quantity LIMIT buy under key K (confirmation required)",
+				"place a minimum-quantity LIMIT buy under key K",
 				"wait past the documented window, then re-send the identical body under K",
 				"a new orderId means the window has closed; the same one means it is still open",
-				"cancel BOTH orders (one confirmation each)",
+				"cancel BOTH orders",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutatePlaceOrder, Side: "buy", Quantity: QuantityOne, Pricing: PriceFarBuy,
+					Ends: "cancelled inside this step, together with the second order",
+				},
+				{
+					Kind: MutateReplayOrder, Side: "buy", Quantity: QuantityOne, Pricing: PriceIdenticalBody,
+					Ends: "if the window has closed this creates a SECOND live order — the observation this " +
+						"opt-in step exists for — and both are cancelled inside this step",
+					Note: "this is the only place the tool plans two live orders at once, and it is the only " +
+						"step that does not run by default",
+				},
+				{
+					Kind: MutateCancelOrder,
+					Ends: "both orders are cancelled before the step returns",
+				},
 			},
 		},
 		{
@@ -196,10 +249,20 @@ func Steps() []Step {
 			Tasks:   []string{"2.2", "2.1"},
 			Mutates: true,
 			Procedure: []string{
-				"place ONE minimum-quantity LIMIT buy far from the market (confirmation required)",
+				"place ONE minimum-quantity LIMIT buy far from the market",
 				"read the order back and record its status",
-				"cancel it (confirmation required)",
+				"cancel it",
 				"read it back again and record the post-cancel status and canceledAt",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutatePlaceOrder, Side: "buy", Quantity: QuantityOne, Pricing: PriceFarBuy,
+					Ends: "cancelled inside this step",
+				},
+				{
+					Kind: MutateCancelOrder,
+					Ends: "the account returns to how this step found it — the cancel is what this step measures",
+				},
 			},
 		},
 		{
@@ -209,10 +272,25 @@ func Steps() []Step {
 			Tasks:   []string{"2.2", "2.1"},
 			Mutates: true,
 			Procedure: []string{
-				"place ONE minimum-quantity LIMIT buy far from the market (confirmation required)",
-				"amend its price (and quantity, which KR requires) one tick further from the market (confirmation required)",
+				"place ONE minimum-quantity LIMIT buy far from the market",
+				"amend its price (and quantity, which KR requires) one tick further from the market",
 				"record whether the response carries a new orderId and what the original id now reads as",
-				"cancel whichever id is live (confirmation required)",
+				"cancel whichever id is live",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutatePlaceOrder, Side: "buy", Quantity: QuantityOne, Pricing: PriceFarBuy,
+					Ends: "amended once, then cancelled inside this step",
+				},
+				{
+					Kind: MutateAmendOrder, Quantity: QuantityOne, Pricing: PriceOneTickFurther,
+					Ends: "whichever identifier is live after the amend is cancelled inside this step",
+					Note: "KR requires a quantity on a modify, so the amend re-states the same single share",
+				},
+				{
+					Kind: MutateCancelOrder,
+					Ends: "the account returns to how this step found it",
+				},
 			},
 		},
 		{
@@ -223,10 +301,34 @@ func Steps() []Step {
 			Mutates:      true,
 			NeedsHolding: true,
 			Procedure: []string{
-				"place ONE minimum-quantity LIMIT sell far ABOVE the market against a held symbol (confirmation required)",
+				"place ONE minimum-quantity LIMIT sell far ABOVE the market against a held symbol",
 				"read sellableQuantity while it rests and record the reservation",
-				"submit a sell for MORE than the holding and record the refusal — nothing is placed if the broker accepts it, the step fails loudly",
-				"cancel the resting sell (confirmation required)",
+				"place a sell for the WHOLE sellable holding when that is within --max-sell-quantity",
+				"submit a sell for MORE than the holding and record the refusal — if the broker accepts it, it is cancelled at once and the step fails loudly",
+				"cancel every resting sell this step placed",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutatePlaceOrder, Side: "sell", Quantity: QuantityPartial, Pricing: PriceFarSell,
+					Ends: "cancelled before the next boundary is probed",
+					Note: "the partial-sell boundary: one share out of a larger holding",
+				},
+				{
+					Kind: MutatePlaceOrder, Side: "sell", Quantity: QuantityWholeHolding, Pricing: PriceFarSell,
+					Ends: "cancelled before the next boundary is probed",
+					Note: "the whole-holding boundary. It is a resting order for the entire position, so it is " +
+						"planned only while that position is within --max-sell-quantity",
+				},
+				{
+					Kind: MutatePlaceOrder, Side: "sell", Quantity: QuantityOverHolding, Pricing: PriceFarSell,
+					Ends: "expected to be refused; if the broker accepts it, it is cancelled immediately and " +
+						"the step fails",
+					Note: "the smallest possible oversell — exactly one share more than the holding",
+				},
+				{
+					Kind: MutateCancelOrder,
+					Ends: "every sell this step placed is cancelled before it returns",
+				},
 			},
 		},
 		{
@@ -237,13 +339,33 @@ func Steps() []Step {
 			Mutates:      true,
 			NeedsHolding: true,
 			Procedure: []string{
-				"register a SINGLE MARKET SELL stop, minimum quantity, trigger far BELOW the market (confirmation required)",
+				"register a SINGLE MARKET SELL stop, minimum quantity, trigger far BELOW the market",
 				"re-send the identical body under the same clientOrderId once, to measure conditional idempotency (task 2.7)",
 				"GET /api/v1/conditional-orders/{id} and record the status and leg shape",
 				"GET /api/v1/conditional-orders?status=WATCHING and record whether the new one is listed",
 				"this conditional is left registered ON PURPOSE — the persistence step needs it to outlive this " +
 					"process. The conditional-cancel step below cancels it; if you stop before then, " +
 					"`tossctl verify status` prints its id",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutateRegisterConditional, Side: "sell", Quantity: QuantityOne, Pricing: PriceFarStop,
+					Ends: "LEFT REGISTERED ON PURPOSE. This is the one exposure that outlives the step and the " +
+						"process: the persistence measurement is whether the broker still holds it after this " +
+						"process exits, so the conditional-cancel step of the resumed run is what removes it. " +
+						"Until then `tossctl verify status` prints its id",
+					Note: "a SINGLE MARKET SELL stop for one share, trigger far below the market so it cannot fire",
+				},
+				{
+					Kind: MutateReplayConditional, Side: "sell", Quantity: QuantityOne, Pricing: PriceIdenticalBody,
+					Ends: "the documented answer is the same conditional coming back; a duplicate is cancelled " +
+						"immediately inside this step",
+				},
+				{
+					Kind: MutateCancelConditional,
+					Ends: "used only if the replay above produced a duplicate; a duplicate is cancelled at once " +
+						"rather than kept",
+				},
 			},
 		},
 		{
@@ -288,11 +410,19 @@ func Steps() []Step {
 			Mutates:   true,
 			DependsOn: []StepID{StepConditionalRegister},
 			Procedure: []string{
-				"modify the conditional's trigger price by one tick (confirmation required)",
+				"modify the conditional's trigger price by one tick",
 				"record the identifier the response returns",
 				"read the OLD id back and record whether it is gone",
 				"read the NEW id back and record its status",
 				"whichever id is live afterwards is cancelled by the conditional-cancel step below",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutateModifyConditional, Side: "sell", Quantity: QuantityOne,
+					Pricing: PriceOneTickFurther,
+					Ends: "whichever identifier is live after the modify is cancelled by the conditional-cancel " +
+						"step below; the protection is not added to, it is moved",
+				},
 			},
 		},
 		{
@@ -303,8 +433,15 @@ func Steps() []Step {
 			Mutates:   true,
 			DependsOn: []StepID{StepConditionalRegister},
 			Procedure: []string{
-				"cancel the live conditional (confirmation required)",
+				"cancel the live conditional",
 				"read it back and record that it is gone",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutateCancelConditional,
+					Ends: "the account is left exactly as this verification found it — this is the step that " +
+						"removes the conditional the register step deliberately left alive",
+				},
 			},
 		},
 		{

@@ -464,25 +464,44 @@ func mustOrderJSON(id, symbol, side, status string, qty, price float64, canceled
 
 // --- a scripted operator ------------------------------------------------------
 
-// operator answers confirmations from a script, so a test can refuse exactly one
-// of them and assert what happened to the rest.
+// operator answers both gates from a script: the run-wide batch approval and, when
+// the test asks for --confirm-each, each mutation's own prompt.
 type operator struct {
-	// answer decides each prompt. Returning nil is a yes.
+	// answer decides each per-mutation prompt. Returning nil is an approval.
 	answer func(m Mutation) error
-	seen   []Mutation
+	// answerBatch decides the run-wide approval.
+	answerBatch func(b Batch) error
+
+	seen    []Mutation
+	batches []Batch
 }
 
 func alwaysConfirm() *operator {
-	return &operator{answer: func(Mutation) error { return nil }}
+	return &operator{
+		answer:      func(Mutation) error { return nil },
+		answerBatch: func(Batch) error { return nil },
+	}
 }
 
+// refuseWhere refuses selected per-mutation prompts. It approves the batch, since
+// the property it exists to test is what one refused *step* costs — which is only
+// observable under --confirm-each.
 func refuseWhere(pred func(m Mutation) bool) *operator {
-	return &operator{answer: func(m Mutation) error {
+	op := alwaysConfirm()
+	op.answer = func(m Mutation) error {
 		if pred(m) {
 			return ErrRefused
 		}
 		return nil
-	}}
+	}
+	return op
+}
+
+// refuseBatch declines the run-wide approval.
+func refuseBatch(err error) *operator {
+	op := alwaysConfirm()
+	op.answerBatch = func(Batch) error { return err }
+	return op
 }
 
 func (o *operator) confirmer() Confirmer {
@@ -490,6 +509,22 @@ func (o *operator) confirmer() Confirmer {
 		o.seen = append(o.seen, m)
 		return o.answer(m)
 	}
+}
+
+func (o *operator) batchConfirmer() BatchConfirmer {
+	return func(b Batch) error {
+		o.batches = append(o.batches, b)
+		return o.answerBatch(b)
+	}
+}
+
+// lastBatch is the plan the operator was most recently shown.
+func (o *operator) lastBatch(t *testing.T) Batch {
+	t.Helper()
+	if len(o.batches) == 0 {
+		t.Fatal("the operator was never shown a batch to approve")
+	}
+	return o.batches[len(o.batches)-1]
 }
 
 func (o *operator) actions() []string {
@@ -527,6 +562,28 @@ func newHarness(t *testing.T, broker *fakeBroker, op *operator) *harness {
 // re-read from disk, the runner built and walked.
 func (h *harness) run(opts Options) (Summary, error) {
 	h.t.Helper()
+	runner, closeRecord, err := h.build(opts)
+	if err != nil {
+		return Summary{}, err
+	}
+	defer closeRecord()
+	return runner.Run(context.Background())
+}
+
+// runner builds one invocation without walking it, for the tests that inspect or
+// adjust the plan before the run starts.
+func (h *harness) runner(t *testing.T, opts Options) *Runner {
+	t.Helper()
+	runner, closeRecord, err := h.build(opts)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	t.Cleanup(closeRecord)
+	return runner
+}
+
+func (h *harness) build(opts Options) (*Runner, func(), error) {
+	h.t.Helper()
 	prior, err := LoadEntries(h.record)
 	if err != nil {
 		h.t.Fatalf("LoadEntries: %v", err)
@@ -535,12 +592,13 @@ func (h *harness) run(opts Options) (Summary, error) {
 	if err != nil {
 		h.t.Fatalf("OpenRecorder: %v", err)
 	}
-	defer rec.Close()
+	closeRecord := func() { _ = rec.Close() }
 
 	h.instance++
 	opts.Broker = h.broker
 	opts.Recorder = rec
 	opts.Confirm = h.op.confirmer()
+	opts.ConfirmBatch = h.op.batchConfirmer()
 	opts.Prior = prior
 	if opts.AccountRef == "" {
 		opts.AccountRef = "123-45-678901"
@@ -568,9 +626,10 @@ func (h *harness) run(opts Options) (Summary, error) {
 
 	runner, err := New(opts)
 	if err != nil {
-		return Summary{}, err
+		closeRecord()
+		return nil, func() {}, err
 	}
-	return runner.Run(context.Background())
+	return runner, closeRecord, nil
 }
 
 func (h *harness) entries() []Entry {

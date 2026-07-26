@@ -354,29 +354,57 @@ func TestProcedureOverHTTPUsesTheDocumentedEndpoints(t *testing.T) {
 	}
 }
 
-// TestRefusingEveryConfirmationIssuesNoMutatingRequest is the runtime half of the
-// safety claim, watched at the HTTP layer: with every confirmation declined, the
-// server must see nothing but GETs and the OAuth exchange.
-func TestRefusingEveryConfirmationIssuesNoMutatingRequest(t *testing.T) {
+// TestRefusingTheBatchIssuesNoMutatingRequest is the runtime half of the safety
+// claim, watched at the HTTP layer: with the run-wide approval declined, the server
+// must see nothing but GETs and the OAuth exchange.
+func TestRefusingTheBatchIssuesNoMutatingRequest(t *testing.T) {
+	srv := newAPIServer(t)
+	client := srv.client(t)
+	op := refuseBatch(ErrRefused)
+
+	record := filepath.Join(t.TempDir(), FileName)
+	runOverHTTP(t, client, op, record, 1)
+
+	assertOnlyReads(t, srv.seen())
+	if len(op.batches) != 1 {
+		t.Errorf("the operator was asked %d times for the batch approval, want exactly once", len(op.batches))
+	}
+	if len(op.seen) != 0 {
+		t.Errorf("a per-mutation prompt was shown although the batch was declined: %v", op.actions())
+	}
+}
+
+// TestRefusingEveryPerMutationConfirmationIssuesNoMutatingRequest is the same claim
+// for --confirm-each, whose machinery is kept for the operator who wants the finer
+// gate.
+func TestRefusingEveryPerMutationConfirmationIssuesNoMutatingRequest(t *testing.T) {
 	srv := newAPIServer(t)
 	client := srv.client(t)
 	op := refuseWhere(func(Mutation) bool { return true })
 
 	record := filepath.Join(t.TempDir(), FileName)
-	runOverHTTP(t, client, op, record, 1)
+	runOverHTTP(t, client, op, record, 1, func(o *Options) { o.ConfirmEach = true })
 
-	for _, req := range srv.seen() {
+	assertOnlyReads(t, srv.seen())
+	if len(op.seen) == 0 {
+		t.Error("no confirmation was ever asked for")
+	}
+	if len(op.batches) != 0 {
+		t.Error("--confirm-each still asked for a batch approval")
+	}
+}
+
+func assertOnlyReads(t *testing.T, requests []string) {
+	t.Helper()
+	for _, req := range requests {
 		method, path, _ := strings.Cut(req, " ")
 		if method == http.MethodPost && path == "/oauth2/token" {
 			continue
 		}
 		if method != http.MethodGet {
-			t.Errorf("a refused verification issued %s — nothing may reach the account without a typed "+
+			t.Errorf("a declined verification issued %s — nothing may reach the account without a typed "+
 				"confirmation", req)
 		}
-	}
-	if len(op.seen) == 0 {
-		t.Error("no confirmation was ever asked for")
 	}
 }
 
@@ -411,7 +439,8 @@ func TestIdempotencyKeyIsSentOnTheWire(t *testing.T) {
 	}
 }
 
-func runOverHTTP(t *testing.T, client *official.Client, op *operator, record string, instance int) Summary {
+func runOverHTTP(t *testing.T, client *official.Client, op *operator, record string, instance int,
+	tweak ...func(*Options)) Summary {
 	t.Helper()
 	prior, err := LoadEntries(record)
 	if err != nil {
@@ -423,16 +452,21 @@ func runOverHTTP(t *testing.T, client *official.Client, op *operator, record str
 	}
 	defer rec.Close()
 
-	runner, err := New(Options{
+	opts := Options{
 		Broker:        client,
 		Recorder:      rec,
 		Confirm:       op.confirmer(),
+		ConfirmBatch:  op.batchConfirmer(),
 		AccountRef:    "123-45-678901",
 		Symbol:        "005930",
 		HoldingSymbol: "005930",
 		Prior:         prior,
 		Process:       Process{PID: 4000 + instance, InstanceID: fmt.Sprintf("http-%d", instance)},
-	})
+	}
+	for _, fn := range tweak {
+		fn(&opts)
+	}
+	runner, err := New(opts)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}

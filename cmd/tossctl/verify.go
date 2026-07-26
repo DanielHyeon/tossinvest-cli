@@ -11,14 +11,24 @@ package main
 // broker's idempotency key does what the document says — cannot be established by
 // anything that does not place a real order. WORKFLOW's 불변 규칙 forbid an
 // automated test from doing that, so it is an operator tool: it runs at a
-// terminal, and every mutation waits for a typed, expiring string before it is
-// sent.
+// terminal, and nothing is sent until a person has typed an expiring string.
 //
 //	tossctl verify run --list      print the whole procedure, touch nothing
 //	tossctl verify run             walk it
 //	tossctl verify run --resume    continue an interrupted or halted run
 //	tossctl verify status          how far it got, and what is still live
 //	tossctl verify report          the attributes tasks 2.6 and 1.4 consume
+//
+// # One approval for the run, or one per mutation
+//
+// The default is one typed confirmation for the whole run: it prints every live
+// request it plans to make — action, symbol, side, quantity, how the price is
+// derived, how the exposure ends — and waits for a single expiring string that
+// approves exactly that list (tasks.md 1.5, 사용자 결정 2026-07-26). A request the
+// list does not carry a line for is never sent, and a step that would have to send
+// one stops the run rather than adapting to it. --confirm-each is the finer gate —
+// one prompt immediately before each mutation — and it is kept for the operator who
+// wants to be able to stop halfway through a boundary probe.
 //
 // # No --yes, and no --base-url
 //
@@ -64,6 +74,7 @@ type verifyOptions struct {
 	offsetPct       float64
 	maxSellQuantity float64
 	includeTTLEdge  bool
+	confirmEach     bool
 	ttlWait         time.Duration
 	resume          bool
 	redo            []string
@@ -83,9 +94,10 @@ this process exiting; what the broker's idempotency key actually does; what a
 resting sell does to the sellable quantity.
 
 It places real orders. Each one is a single share, limit-only, priced far enough
-from the market that it cannot fill, cancelled inside the step that placed it,
-and confirmed by typing an expiring string at a terminal first. There is no flag
-that answers those prompts.
+from the market that it cannot fill, and cancelled inside the step that placed it.
+Before any of them is sent, the run lists every request it plans to make and waits
+for one expiring string, typed at a terminal. There is no flag that answers that
+prompt.
 
   tossctl verify run --list    print the whole procedure and touch nothing
   tossctl verify run           walk it
@@ -106,15 +118,28 @@ Read ` + "`tossctl verify run --list`" + ` before the first real run.`),
 func newVerifyRunCmd(root *rootOptions, opts *verifyOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run",
-		Short: "Walk the live verification procedure, one confirmed mutation at a time",
+		Short: "Walk the live verification procedure under one typed batch approval",
 		Long: strings.TrimSpace(`
 Walk the verification steps in order, appending the evidence for each one to a
 durable local record.
 
-Every step that touches the account prints exactly what it is about to send —
-symbol, side, quantity, limit price, notional, and how the exposure ends — and
-then waits for an expiring confirmation string to be typed. Anything else refuses
-that step and the run continues with the steps that do not depend on it.
+Before anything is sent, the run prints a numbered list of every live request it
+plans to make — action, symbol, side, quantity, how the limit price is derived and
+how each exposure ends — and waits for ONE expiring confirmation string to be typed
+at a terminal. Typing it approves that list. Anything else aborts the run before a
+single request goes out.
+
+The list is the boundary, not a preview. A request it does not carry a line for is
+never sent: if conditions change what a step would have to send — a different
+symbol, a different side, more than the approved quantity — the run stops and asks
+you to start again with the new list in front of you. Prices are the exception that
+proves it, and the list says so: each order is re-quoted by the stated rule (so
+many percent from the last trade, snapped to the tick grid, clamped inside the day's
+band) at the moment its step runs.
+
+--confirm-each opts out of the batch and back into a separate typed confirmation
+immediately before every single mutation. Refusing one of those refuses that step
+only, and the run continues with the steps that do not depend on it.
 
 Safety rules the command enforces for you:
 
@@ -127,9 +152,10 @@ Safety rules the command enforces for you:
 
 Two steps are special. The conditional-order persistence check cannot pass inside
 the process that registered the conditional, so the run stops there and asks you
-to start a new one with --resume. The idempotency validity-window check
-deliberately creates a second live order and is therefore skipped unless you pass
---include-ttl-edge.
+to start a new one with --resume — and that resumed run approves its remaining
+batch from scratch, because the earlier approval covered earlier requests. The
+idempotency validity-window check deliberately creates a second live order and is
+therefore skipped unless you pass --include-ttl-edge.
 
 Steps that need an existing holding are skipped with a reason when the account
 has none. The tool never buys anything to create one.`),
@@ -156,6 +182,8 @@ has none. The tool never buys anything to create one.`),
 		"Largest whole-holding sell the boundary step may place; above this the boundary is left unverified")
 	cmd.Flags().BoolVar(&opts.includeTTLEdge, "include-ttl-edge", false,
 		"Also probe the idempotency validity window — this deliberately creates a SECOND live order")
+	cmd.Flags().BoolVar(&opts.confirmEach, "confirm-each", false,
+		"Ask for a separate typed confirmation immediately before every mutation, instead of one for the run")
 	cmd.Flags().DurationVar(&opts.ttlWait, "ttl-wait", verifylive.DefaultTTLWait,
 		"How long the validity-window probe waits before replaying the key")
 	cmd.Flags().StringSliceVar(&opts.redo, "redo", nil,
@@ -242,12 +270,15 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	if err != nil {
 		return err
 	}
-	if len(prior) > 0 && !opts.resume && len(opts.redo) == 0 {
+	// Steps, not lines: a run whose batch approval was declined leaves the refusal
+	// on the record and nothing else, and that must not stand between the operator
+	// and a second attempt.
+	if steps := verifylive.StepCount(prior); steps > 0 && !opts.resume && len(opts.redo) == 0 {
 		return fmt.Errorf(
 			"verify: %s already holds %d step(s) of a verification. Continue it with `tossctl verify run "+
 				"--resume`, inspect it with `tossctl verify status`, or start a separate one with --record. "+
 				"Starting over silently would place live orders for measurements already made",
-			recordPath, len(prior))
+			recordPath, steps)
 	}
 
 	broker, accountRef, err := verifyBrokerFactory(root)
@@ -270,6 +301,8 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 		Broker:          broker,
 		Recorder:        recorder,
 		Confirm:         terminalConfirmer(cmd),
+		ConfirmBatch:    terminalBatchConfirmer(cmd),
+		ConfirmEach:     opts.confirmEach,
 		Out:             out,
 		AccountRef:      accountRef,
 		Symbol:          strings.TrimSpace(opts.symbol),
@@ -333,6 +366,17 @@ func terminalConfirmer(cmd *cobra.Command) verifylive.Confirmer {
 	return func(m verifylive.Mutation) error {
 		return verifylive.Confirm(
 			cmd.InOrStdin(), cmd.OutOrStdout(), m,
+			tui.IsInteractive(os.Stdin, os.Stdout), time.Now(),
+		)
+	}
+}
+
+// terminalBatchConfirmer binds the run-wide approval to the same real terminal,
+// under the same rule: a redirected stdin does not satisfy it.
+func terminalBatchConfirmer(cmd *cobra.Command) verifylive.BatchConfirmer {
+	return func(b verifylive.Batch) error {
+		return verifylive.ConfirmBatch(
+			cmd.InOrStdin(), cmd.OutOrStdout(), b,
 			tui.IsInteractive(os.Stdin, os.Stdout), time.Now(),
 		)
 	}

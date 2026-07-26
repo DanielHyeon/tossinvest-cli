@@ -140,7 +140,7 @@ func TestVerifyRunOffersTheKnobsTheProcedureNeeds(t *testing.T) {
 	}
 	for _, name := range []string{
 		"list", "resume", "symbol", "holding-symbol", "offset-pct",
-		"max-sell-quantity", "include-ttl-edge", "ttl-wait", "redo", "record",
+		"max-sell-quantity", "include-ttl-edge", "confirm-each", "ttl-wait", "redo", "record",
 	} {
 		if cmd.Flags().Lookup(name) == nil {
 			t.Errorf("verify run has no --%s", name)
@@ -148,6 +148,12 @@ func TestVerifyRunOffersTheKnobsTheProcedureNeeds(t *testing.T) {
 	}
 	if f := cmd.Flags().Lookup("include-ttl-edge"); f != nil && f.DefValue != "false" {
 		t.Errorf("--include-ttl-edge defaults to %q; the step it unlocks creates a second live order",
+			f.DefValue)
+	}
+	// --confirm-each opts INTO more prompting, never out of it, so the default has
+	// to be the batch approval rather than the finer gate.
+	if f := cmd.Flags().Lookup("confirm-each"); f != nil && f.DefValue != "false" {
+		t.Errorf("--confirm-each defaults to %q, want false — it is an opt-in to per-mutation prompts",
 			f.DefValue)
 	}
 	if f := cmd.Flags().Lookup("offset-pct"); f != nil && f.DefValue != "20" {
@@ -289,6 +295,99 @@ func TestVerifyRunListNeedsNoCredentialsAndSendsNothing(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Errorf("--list does not mention %q:\n%s", want, out)
 		}
+	}
+	// The approval model, which is what an operator decides on before running
+	// anything: one string for the whole run, and a list that is a limit.
+	for _, want := range []string{
+		"ONE typed, expiring confirmation for the whole run",
+		"--confirm-each",
+		"stops and asks for a fresh approval",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("--list does not describe the batch approval (%q missing):\n%s", want, out)
+		}
+	}
+}
+
+// TestVerifyRunAsksForTheBatchApprovalBeforeAnythingIsSent.
+//
+// The test binary has no terminal, so the approval cannot be typed — and the
+// account must therefore see no mutating request at all, not even from the steps
+// that would have run before the first one. Checked at the HTTP layer, which is
+// the only place the claim is worth anything.
+func TestVerifyRunAsksForTheBatchApprovalBeforeAnythingIsSent(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	srv := newVerifyServer(t)
+	pointVerifyAt(t, srv, filepath.Join(configDir, "token.json"))
+
+	out, _, _ := runCLI(t, "--config-dir", configDir, "verify", "run")
+
+	for _, req := range srv.seen() {
+		method, path, _ := strings.Cut(req, " ")
+		if method == http.MethodPost && path == "/oauth2/token" {
+			continue
+		}
+		if method != http.MethodGet {
+			t.Errorf("the run issued %s although the batch was never approved", req)
+		}
+	}
+	if !strings.Contains(out, "ONE expiring typed string for the whole run") {
+		t.Errorf("the run banner does not describe the batch model:\n%s", out)
+	}
+	if !strings.Contains(out, "--confirm-each") {
+		t.Errorf("the run banner does not offer the per-mutation alternative:\n%s", out)
+	}
+}
+
+// TestAnUnapprovedRunDoesNotBlockTheNextAttempt.
+//
+// The declined approval is on the record — it is an audit fact — but it is not a
+// step, so the guard that stops somebody silently re-running measurements already
+// made must not mistake it for one.
+func TestAnUnapprovedRunDoesNotBlockTheNextAttempt(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	srv := newVerifyServer(t)
+	pointVerifyAt(t, srv, filepath.Join(configDir, "token.json"))
+
+	runCLI(t, "--config-dir", configDir, "verify", "run")
+
+	entries, err := verifylive.LoadEntries(filepath.Join(configDir, verifylive.FileName))
+	if err != nil {
+		t.Fatalf("LoadEntries: %v", err)
+	}
+	if len(entries) == 0 {
+		t.Fatal("the declined approval was not recorded at all")
+	}
+	if n := verifylive.StepCount(entries); n != 0 {
+		t.Fatalf("a run that was never approved recorded %d step(s)", n)
+	}
+
+	_, _, err = runCLI(t, "--config-dir", configDir, "verify", "run")
+	if err != nil && strings.Contains(err.Error(), "already holds") {
+		t.Errorf("the second attempt was refused as a restart: %v", err)
+	}
+}
+
+// TestVerifyRunUnderConfirmEachStillSendsNothingWithoutATerminal — the finer gate
+// is kept, and it is kept with the same rail.
+func TestVerifyRunUnderConfirmEachStillSendsNothingWithoutATerminal(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	srv := newVerifyServer(t)
+	pointVerifyAt(t, srv, filepath.Join(configDir, "token.json"))
+
+	out, _, _ := runCLI(t, "--config-dir", configDir, "verify", "run", "--confirm-each")
+
+	for _, req := range srv.seen() {
+		method, path, _ := strings.Cut(req, " ")
+		if method == http.MethodPost && path == "/oauth2/token" {
+			continue
+		}
+		if method != http.MethodGet {
+			t.Errorf("--confirm-each issued %s with no terminal to confirm it", req)
+		}
+	}
+	if !strings.Contains(out, "--confirm-each:") {
+		t.Errorf("the banner does not say which approval model is in force:\n%s", out)
 	}
 }
 

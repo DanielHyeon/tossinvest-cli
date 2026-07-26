@@ -219,6 +219,8 @@ func (r *Runner) stepIdempotency(ctx context.Context, sr *stepRun) error {
 	replayID, replayErr := r.replayPlaceOrder(ctx, sr, spec,
 		"the documented claim is that this returns the first order rather than creating a second")
 	switch {
+	case isGateError(replayErr):
+		return replayErr
 	case replayErr != nil:
 		sr.observe("idempotency.replay_returns_same_order_id", "false",
 			"the replay failed outright: "+truncateError(replayErr))
@@ -256,6 +258,8 @@ func (r *Runner) stepIdempotency(ctx context.Context, sr *stepRun) error {
 	conflictSpec.Basis = spec.Basis + " (one tick further, to make the body differ)"
 	conflictID, conflictErr := r.conflictProbe(ctx, sr, conflictSpec)
 	switch {
+	case errors.Is(conflictErr, ErrOutsidePlan):
+		return conflictErr
 	case conflictErr != nil && isRefusal(conflictErr):
 		sr.observe("idempotency.conflict_probe", "refused-by-operator", conflictErr.Error())
 	case conflictErr != nil:
@@ -321,6 +325,9 @@ func (r *Runner) stepIdempotencyTTLEdge(ctx context.Context, sr *stepRun) error 
 
 	second, replayErr := r.replayPlaceOrder(ctx, sr, spec, "the window should have closed by now")
 	switch {
+	case isGateError(replayErr):
+		_ = r.cancelLiveOrders(ctx, sr, spec.Symbol, "the validity-window replay was not authorised")
+		return replayErr
 	case replayErr != nil:
 		sr.observe("idempotency.ttl_window_closed", "unknown", "the replay failed: "+truncateError(replayErr))
 	case second == first:
@@ -468,7 +475,7 @@ func (r *Runner) stepSellBoundary(ctx context.Context, sr *stepRun) error {
 	over.Quantity = sellable + 1
 	overID, overErr := r.placeOrder(ctx, sr, over, "if the broker accepts it, it is cancelled immediately")
 	switch {
-	case overErr != nil && isRefusal(overErr):
+	case isGateError(overErr):
 		return overErr
 	case overErr != nil:
 		code := brokerErrorCode(overErr)
@@ -536,6 +543,8 @@ func (r *Runner) stepConditionalRegister(ctx context.Context, sr *stepRun) error
 	// The conditional half of task 2.7: the same key, the same body, once.
 	replayID, replayErr := r.replayCreateConditional(ctx, sr, body)
 	switch {
+	case isGateError(replayErr):
+		return replayErr
 	case replayErr != nil:
 		sr.observe("idempotency.conditional_replay_returns_same_id", "false",
 			"the replay failed outright: "+truncateError(replayErr))
@@ -1090,6 +1099,18 @@ func isRefusal(err error) bool {
 	return errors.Is(err, ErrRefused) ||
 		errors.Is(err, ErrConfirmationExpired) ||
 		errors.Is(err, ErrNotATerminal)
+}
+
+// isGateError reports an error that came from the human gate rather than from the
+// broker: a declined confirmation, an expired one, no terminal to type at, or a
+// request the approved batch does not cover.
+//
+// Every step that interprets a mutation's error has to check this first. Nothing
+// was sent in any of these cases, so recording one as "the broker refused" would
+// put an observation into the evidence that no broker ever produced — and the
+// evidence is the entire point of the exercise.
+func isGateError(err error) bool {
+	return isRefusal(err) || errors.Is(err, ErrOutsidePlan)
 }
 
 func sortedKeys(m map[string]int) []string {

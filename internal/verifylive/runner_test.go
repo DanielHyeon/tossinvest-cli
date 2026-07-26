@@ -101,13 +101,16 @@ func TestEveryPlacementIsMatchedByACancel(t *testing.T) {
 //
 // A cancel that fails must not be shrugged off. The run comes back with an error
 // naming the identifier, because that identifier is what the operator needs.
+//
+// Refusing a cancel is only reachable under --confirm-each, which is the point of
+// keeping that mode: it is the one gate fine enough to leave an order resting.
 func TestRunReportsAnErrorWhenSomethingIsLeftLive(t *testing.T) {
 	broker := newFakeBroker()
 	// Refuse only the cancels, so orders are placed and never removed.
 	op := refuseWhere(func(m Mutation) bool { return strings.Contains(m.Action, "cancel") })
 	h := newHarness(t, broker, op)
 
-	summary, err := h.run(Options{})
+	summary, err := h.run(Options{ConfirmEach: true})
 	if err == nil {
 		t.Fatal("the run finished cleanly although an order was left resting")
 	}
@@ -121,13 +124,13 @@ func TestRunReportsAnErrorWhenSomethingIsLeftLive(t *testing.T) {
 
 // --- nothing goes without a yes -----------------------------------------------
 
-// TestARefusedConfirmationPlacesNothing.
-func TestARefusedConfirmationPlacesNothing(t *testing.T) {
+// TestARefusedPerMutationConfirmationPlacesNothing, under --confirm-each.
+func TestARefusedPerMutationConfirmationPlacesNothing(t *testing.T) {
 	broker := newFakeBroker()
 	op := refuseWhere(func(Mutation) bool { return true })
 	h := newHarness(t, broker, op)
 
-	summary, err := h.run(Options{})
+	summary, err := h.run(Options{ConfirmEach: true})
 	if err != nil {
 		t.Fatalf("refusing every confirmation must not be an error: %v", err)
 	}
@@ -148,13 +151,14 @@ func TestARefusedConfirmationPlacesNothing(t *testing.T) {
 }
 
 // TestARefusalDoesNotCostTheIndependentSteps: refusing the idempotency check must
-// still leave the order-path and conditional measurements available.
+// still leave the order-path and conditional measurements available. It is a
+// --confirm-each property: the batch model has one answer, not one per step.
 func TestARefusalDoesNotCostTheIndependentSteps(t *testing.T) {
 	broker := newFakeBroker().withHolding("005930", 3)
 	op := refuseWhere(func(m Mutation) bool { return m.Step == StepIdempotency })
 	h := newHarness(t, broker, op)
 
-	first, err := h.run(Options{HoldingSymbol: "005930"})
+	first, err := h.run(Options{HoldingSymbol: "005930", ConfirmEach: true})
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -172,13 +176,11 @@ func TestARefusalDoesNotCostTheIndependentSteps(t *testing.T) {
 	}
 }
 
-// TestNoTerminalAbortsTheWholeRun. Every remaining mutating step would ask the
-// same impossible question, so the tool stops rather than recording a wall of
-// refusals.
+// TestNoTerminalAbortsTheWholeRun. The batch approval cannot be typed at all
+// without a terminal, so the run stops before its first step.
 func TestNoTerminalAbortsTheWholeRun(t *testing.T) {
 	broker := newFakeBroker()
-	op := &operator{answer: func(Mutation) error { return ErrNotATerminal }}
-	h := newHarness(t, broker, op)
+	h := newHarness(t, broker, refuseBatch(ErrNotATerminal))
 
 	summary, err := h.run(Options{})
 	if !errors.Is(err, ErrNotATerminal) {
@@ -192,18 +194,47 @@ func TestNoTerminalAbortsTheWholeRun(t *testing.T) {
 	}
 }
 
-// TestNewRefusesWithoutAConfirmer. There is no unconfirmed mode, and the absence
-// of one is asserted rather than assumed.
+// TestNoTerminalAbortsTheWholeRunUnderConfirmEach. Every remaining mutating step
+// would ask the same impossible question, so the tool stops rather than recording a
+// wall of refusals.
+func TestNoTerminalAbortsTheWholeRunUnderConfirmEach(t *testing.T) {
+	broker := newFakeBroker()
+	op := alwaysConfirm()
+	op.answer = func(Mutation) error { return ErrNotATerminal }
+	h := newHarness(t, broker, op)
+
+	summary, err := h.run(Options{ConfirmEach: true})
+	if !errors.Is(err, ErrNotATerminal) {
+		t.Fatalf("err = %v, want ErrNotATerminal", err)
+	}
+	if !summary.Halted {
+		t.Error("the run did not report itself halted")
+	}
+	if h.verdict(StepOrderCancel) != "" {
+		t.Errorf("order-cancel ran after the abort with verdict %q", h.verdict(StepOrderCancel))
+	}
+}
+
+// TestNewRefusesWithoutAConfirmer. There is no unconfirmed mode and no unapproved
+// mode, and the absence of both is asserted rather than assumed.
 func TestNewRefusesWithoutAConfirmer(t *testing.T) {
 	rec, err := OpenRecorder(tempRecord(t))
 	if err != nil {
 		t.Fatalf("OpenRecorder: %v", err)
 	}
 	defer rec.Close()
+	op := alwaysConfirm()
 	if _, err := New(Options{Broker: newFakeBroker(), Recorder: rec, AccountRef: "1"}); err == nil {
 		t.Fatal("a runner was built with no confirmer")
 	}
-	if _, err := New(Options{Broker: newFakeBroker(), Recorder: rec, Confirm: alwaysConfirm().confirmer()}); err == nil {
+	if _, err := New(Options{
+		Broker: newFakeBroker(), Recorder: rec, Confirm: op.confirmer(), AccountRef: "1",
+	}); err == nil {
+		t.Fatal("a runner was built with no batch confirmer")
+	}
+	if _, err := New(Options{
+		Broker: newFakeBroker(), Recorder: rec, Confirm: op.confirmer(), ConfirmBatch: op.batchConfirmer(),
+	}); err == nil {
 		t.Fatal("a runner was built with no account to attest about")
 	}
 }
@@ -303,8 +334,9 @@ func TestExposureCapRefusesASecondPlacement(t *testing.T) {
 		t.Fatalf("OpenRecorder: %v", err)
 	}
 	defer rec.Close()
+	op := alwaysConfirm()
 	r, err := New(Options{
-		Broker: newFakeBroker(), Recorder: rec, Confirm: alwaysConfirm().confirmer(),
+		Broker: newFakeBroker(), Recorder: rec, Confirm: op.confirmer(), ConfirmBatch: op.batchConfirmer(),
 		AccountRef: "123-45-678901", Symbol: "005930",
 		Prior: []Entry{{StepID: StepOrderCancel, Artifacts: []Artifact{
 			{Kind: "order", ID: "ord-live", Symbol: "005930", CreatedAt: time.Now()},

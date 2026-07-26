@@ -14,12 +14,16 @@ package verifylive
 // Each function below does the same four things in the same order:
 //
 //	1. check the exposure cap    at most one live order from this tool at a time
-//	2. ask the human             a typed, expiring nonce (confirm.go)
+//	2. clear the human gate      the approved batch must carry a line for exactly
+//	                             this request (gate → authorise), or, under
+//	                             --confirm-each, a typed expiring nonce for it
 //	3. send, and time it         the latency feeds the idempotency safety margin
 //	4. record                    a Call with digests, and an Artifact if something
 //	                             live now exists
 //
-// The one exception is replayPlaceOrder, and it is commented where it is.
+// The two exceptions are replayPlaceOrder and replayCreateConditional, which are
+// commented where they are. They still pass step 2's authorisation — a replay the
+// approved list does not carry is a request nobody agreed to, whatever its body.
 
 import (
 	"context"
@@ -71,6 +75,15 @@ const MaxLiveConditionals = 1
 // ErrExposureCap means a step asked for more live exposure than the tool allows.
 var ErrExposureCap = errors.New("verify: the live-exposure cap would be exceeded")
 
+// ErrOutsidePlan means a step tried to send something the approved batch does not
+// carry a line for.
+//
+// It is not a refusal and it is not a measurement: it means the run would have had
+// to do something other than what a person read and approved. Nothing is sent and
+// the whole run stops, because the alternative — adapting to the new conditions and
+// carrying on — is precisely the behaviour a batch approval must not permit.
+var ErrOutsidePlan = errors.New("verify: this request is not on the approved list, so the run stops")
+
 // orderSpec is one order this tool wants to place.
 type orderSpec struct {
 	Symbol   string
@@ -113,13 +126,68 @@ func (s orderSpec) detail() []string {
 	return lines
 }
 
-// placeOrder is the confirmed order placement.
+// --- the human gate -------------------------------------------------------------
+
+// request is one live request on its way through the gate.
+type request struct {
+	Kind     MutationKind
+	Symbol   string
+	Side     string
+	Quantity float64
+	// Detail and Reversal are what a per-mutation prompt shows. The batch model
+	// showed the same facts before the run started, so they are only rendered
+	// under --confirm-each.
+	Detail   []string
+	Reversal string
+}
+
+// gate is what stands between a step and the network.
+//
+// Under the default batch model it checks the approved plan and nothing else: the
+// operator already read this request, in this run, on the list they typed a string
+// for. Under --confirm-each it asks for that request's own expiring nonce. There is
+// no third branch, and neither branch has an override.
+func (r *Runner) gate(sr *stepRun, req request) error {
+	if err := r.authorise(sr, req); err != nil {
+		return err
+	}
+	if !r.confirmEach {
+		fmt.Fprintf(r.out, "    [approved batch] %s\n", req.Kind.Verb())
+		return nil
+	}
+	m := NewMutation(sr.step.ID, req.Kind.Verb(), r.accountRef, req.Detail, req.Reversal, r.now())
+	return r.confirm(m)
+}
+
+// authorise refuses anything the approved batch does not carry a line for.
+//
+// It fails closed in the strongest sense available: with no plan at all — a runner
+// that never reached its approval — nothing is authorised.
+func (r *Runner) authorise(sr *stepRun, req request) error {
+	if r.confirmEach {
+		return nil
+	}
+	if r.plan == nil {
+		return fmt.Errorf("%w: this run has no approved batch, so %s may send nothing", ErrOutsidePlan, sr.step.ID)
+	}
+	if r.plan.Authorises(sr.step.ID, req.Kind, req.Symbol, req.Side, req.Quantity) {
+		return nil
+	}
+	return fmt.Errorf("%w: %s is about to %s for %s %s %s, which is not on the list approved at the start of "+
+		"this run. Nothing was sent. Start a new run so the change is listed and approved on its own terms",
+		ErrOutsidePlan, sr.step.ID, req.Kind, strings.ToUpper(orNone(req.Side)), trim(req.Quantity),
+		orNone(req.Symbol))
+}
+
+// placeOrder is the gated order placement.
 func (r *Runner) placeOrder(ctx context.Context, sr *stepRun, spec orderSpec, reversal string) (string, error) {
 	if err := r.checkOrderCap(sr); err != nil {
 		return "", err
 	}
-	m := NewMutation(sr.step.ID, "place a live LIMIT order", r.accountRef, spec.detail(), reversal, r.now())
-	if err := r.confirm(m); err != nil {
+	if err := r.gate(sr, request{
+		Kind: MutatePlaceOrder, Symbol: spec.Symbol, Side: spec.Side, Quantity: spec.Quantity,
+		Detail: spec.detail(), Reversal: reversal,
+	}); err != nil {
 		return "", err
 	}
 
@@ -151,13 +219,19 @@ func (r *Runner) placeOrder(ctx context.Context, sr *stepRun, spec orderSpec, re
 // documentation as wrong. A second prompt would be asking permission for the
 // same order twice.
 //
-// Three things keep it honest. The body must be identical to the one that was
-// confirmed — the caller passes the same orderSpec, and a mismatch is the
-// conflict probe, which does not come through here. It is printed before it is
-// sent, so nothing is hidden. And whatever comes back is registered as an
-// artifact, so if the broker does create a second order it is cancelled like any
-// other.
+// Four things keep it honest. The approved batch carries its own line for it, so a
+// person read that a replay would be sent before the run started. The body must be
+// identical to the one that was confirmed — the caller passes the same orderSpec,
+// and a mismatch is the conflict probe, which does not come through here. It is
+// printed before it is sent, so nothing is hidden. And whatever comes back is
+// registered as an artifact, so if the broker does create a second order it is
+// cancelled like any other.
 func (r *Runner) replayPlaceOrder(ctx context.Context, sr *stepRun, spec orderSpec, why string) (string, error) {
+	if err := r.authorise(sr, request{
+		Kind: MutateReplayOrder, Symbol: spec.Symbol, Side: spec.Side, Quantity: spec.Quantity,
+	}); err != nil {
+		return "", err
+	}
 	fmt.Fprintf(r.out, "    replaying the identical body under key %s — %s\n", spec.Key, why)
 	intent := spec.intent()
 	started := r.now()
@@ -171,8 +245,9 @@ func (r *Runner) replayPlaceOrder(ctx context.Context, sr *stepRun, spec orderSp
 
 // conflictProbe sends a *different* body under a key that has already been used.
 //
-// It is confirmed, because it is a different order: if the broker does not
-// enforce the key it will create one.
+// It has its own line on the approved list (and its own prompt under
+// --confirm-each), because it is a different order: if the broker does not honour
+// the key it will create one.
 func (r *Runner) conflictProbe(ctx context.Context, sr *stepRun, spec orderSpec) (string, error) {
 	if err := r.checkOrderCap(sr); err != nil {
 		return "", err
@@ -180,9 +255,11 @@ func (r *Runner) conflictProbe(ctx context.Context, sr *stepRun, spec orderSpec)
 	detail := append(spec.detail(),
 		"NOTE             this deliberately re-uses the key above with a DIFFERENT price",
 		"expected         the broker refuses with idempotency-key-conflict and creates nothing")
-	m := NewMutation(sr.step.ID, "probe the idempotency key with a conflicting body", r.accountRef, detail,
-		"if the broker creates an order instead of refusing, it is cancelled immediately", r.now())
-	if err := r.confirm(m); err != nil {
+	if err := r.gate(sr, request{
+		Kind: MutateConflictProbe, Symbol: spec.Symbol, Side: spec.Side, Quantity: spec.Quantity,
+		Detail:   detail,
+		Reversal: "if the broker creates an order instead of refusing, it is cancelled immediately",
+	}); err != nil {
 		return "", err
 	}
 
@@ -199,7 +276,7 @@ func (r *Runner) conflictProbe(ctx context.Context, sr *stepRun, spec orderSpec)
 	return res.OrderID, nil
 }
 
-// cancelOrder is the confirmed cancel.
+// cancelOrder is the gated cancel.
 func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, why string) error {
 	detail := []string{
 		fmt.Sprintf("order            %s", orderID),
@@ -207,9 +284,10 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 		fmt.Sprintf("why              %s", why),
 		"direction        this REDUCES exposure — it removes a resting order",
 	}
-	m := NewMutation(sr.step.ID, "cancel a live order", r.accountRef, detail,
-		"the account returns to how this step found it", r.now())
-	if err := r.confirm(m); err != nil {
+	if err := r.gate(sr, request{
+		Kind: MutateCancelOrder, Symbol: symbol, Detail: detail,
+		Reversal: "the account returns to how this step found it",
+	}); err != nil {
 		return err
 	}
 
@@ -228,7 +306,7 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 	return nil
 }
 
-// amendOrder is the confirmed amend.
+// amendOrder is the gated amend.
 func (r *Runner) amendOrder(ctx context.Context, sr *stepRun, orderID, symbol string, price, quantity float64) (string, error) {
 	detail := []string{
 		fmt.Sprintf("order            %s", orderID),
@@ -236,9 +314,10 @@ func (r *Runner) amendOrder(ctx context.Context, sr *stepRun, orderID, symbol st
 		fmt.Sprintf("new limit price  %s (further from the market, still un-fillable)", trim(price)),
 		fmt.Sprintf("new quantity     %s share(s) — KR requires quantity on a modify", trim(quantity)),
 	}
-	m := NewMutation(sr.step.ID, "amend a live order", r.accountRef, detail,
-		"whichever identifier is live afterwards is cancelled in this same step", r.now())
-	if err := r.confirm(m); err != nil {
+	if err := r.gate(sr, request{
+		Kind: MutateAmendOrder, Symbol: symbol, Quantity: quantity, Detail: detail,
+		Reversal: "whichever identifier is live afterwards is cancelled in this same step",
+	}); err != nil {
 		return "", err
 	}
 
@@ -265,15 +344,17 @@ func (r *Runner) amendOrder(ctx context.Context, sr *stepRun, orderID, symbol st
 	return current, nil
 }
 
-// createConditional is the confirmed conditional registration.
+// createConditional is the gated conditional registration.
 func (r *Runner) createConditional(ctx context.Context, sr *stepRun, body official.ConditionalCreateBody, basis string) (string, error) {
 	if err := r.checkConditionalCap(sr); err != nil {
 		return "", err
 	}
 	detail := conditionalDetail(body, basis)
-	m := NewMutation(sr.step.ID, "register a live conditional order", r.accountRef, detail,
-		"cancelled by the conditional-cancel step; it deliberately outlives this process first", r.now())
-	if err := r.confirm(m); err != nil {
+	if err := r.gate(sr, request{
+		Kind: MutateRegisterConditional, Symbol: body.Symbol, Side: body.First.OrderSide,
+		Quantity: parseDecimal(body.Quantity), Detail: detail,
+		Reversal: "cancelled by the conditional-cancel step; it deliberately outlives this process first",
+	}); err != nil {
 		return "", err
 	}
 
@@ -292,10 +373,17 @@ func (r *Runner) createConditional(ctx context.Context, sr *stepRun, body offici
 	return ref.ID, nil
 }
 
-// replayCreateConditional is createConditional's unconfirmed replay, for the same
-// reason and under the same three protections as replayPlaceOrder: identical
-// body, printed before it is sent, and anything it creates is an artifact.
+// replayCreateConditional is createConditional's unprompted replay, for the same
+// reason and under the same four protections as replayPlaceOrder: its own line on
+// the approved list, an identical body, printed before it is sent, and anything it
+// creates is an artifact.
 func (r *Runner) replayCreateConditional(ctx context.Context, sr *stepRun, body official.ConditionalCreateBody) (string, error) {
+	if err := r.authorise(sr, request{
+		Kind: MutateReplayConditional, Symbol: body.Symbol, Side: body.First.OrderSide,
+		Quantity: parseDecimal(body.Quantity),
+	}); err != nil {
+		return "", err
+	}
 	fmt.Fprintf(r.out, "    replaying the identical conditional body under key %s\n", body.ClientOrderID)
 	started := r.now()
 	ref, err := r.broker.CreateConditionalOrder(ctx, body)
@@ -306,7 +394,7 @@ func (r *Runner) replayCreateConditional(ctx context.Context, sr *stepRun, body 
 	return ref.ID, nil
 }
 
-// modifyConditional is the confirmed conditional modify.
+// modifyConditional is the gated conditional modify.
 func (r *Runner) modifyConditional(ctx context.Context, sr *stepRun, id, symbol string, body official.ConditionalModifyBody, basis string) (string, error) {
 	detail := []string{
 		fmt.Sprintf("conditional      %s", id),
@@ -316,9 +404,11 @@ func (r *Runner) modifyConditional(ctx context.Context, sr *stepRun, id, symbol 
 		fmt.Sprintf("quantity         %s share(s)", body.Quantity),
 		"NOTE             openapi says a modify cancels and recreates: a NEW id is issued and the old one is invalidated",
 	}
-	m := NewMutation(sr.step.ID, "modify a live conditional order", r.accountRef, detail,
-		"whichever identifier is live afterwards is cancelled by the conditional-cancel step", r.now())
-	if err := r.confirm(m); err != nil {
+	if err := r.gate(sr, request{
+		Kind: MutateModifyConditional, Symbol: symbol, Side: body.First.OrderSide,
+		Quantity: parseDecimal(body.Quantity), Detail: detail,
+		Reversal: "whichever identifier is live afterwards is cancelled by the conditional-cancel step",
+	}); err != nil {
 		return "", err
 	}
 
@@ -341,7 +431,7 @@ func (r *Runner) modifyConditional(ctx context.Context, sr *stepRun, id, symbol 
 	return current, nil
 }
 
-// cancelConditional is the confirmed conditional cancel.
+// cancelConditional is the gated conditional cancel.
 func (r *Runner) cancelConditional(ctx context.Context, sr *stepRun, id, symbol, why string) error {
 	detail := []string{
 		fmt.Sprintf("conditional      %s", id),
@@ -349,9 +439,10 @@ func (r *Runner) cancelConditional(ctx context.Context, sr *stepRun, id, symbol,
 		fmt.Sprintf("why              %s", why),
 		"direction        this REMOVES a protective order from the account",
 	}
-	m := NewMutation(sr.step.ID, "cancel a live conditional order", r.accountRef, detail,
-		"the account returns to how this verification found it", r.now())
-	if err := r.confirm(m); err != nil {
+	if err := r.gate(sr, request{
+		Kind: MutateCancelConditional, Symbol: symbol, Detail: detail,
+		Reversal: "the account returns to how this verification found it",
+	}); err != nil {
 		return err
 	}
 

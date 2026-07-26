@@ -47,6 +47,14 @@ const RecordFormatVersion = 1
 // different kind of line without every old reader mistaking it for a step.
 const KindStep = "step"
 
+// KindApproval marks the run-wide batch approval, granted or declined.
+//
+// It is a line of its own rather than a field on the first step because it is not
+// about a step: it records that a person was shown a list of N live requests and
+// answered, which is the fact the whole approval model turns on. Readers that walk
+// steps skip it on the Kind, which is what the field was put there for.
+const KindApproval = "approval"
+
 // Verdict is a step's outcome.
 type Verdict string
 
@@ -344,6 +352,30 @@ func decodeEntry(line []byte) (Entry, error) {
 }
 
 // --- derived state ------------------------------------------------------------
+
+// isStepEntry reports a line that describes a step's outcome.
+//
+// An empty Kind counts: the field was added with the format and every line written
+// before it existed was a step. Readers that walk steps use this rather than
+// testing the field directly, so a third kind added later is skipped by all of them
+// at once.
+func isStepEntry(e Entry) bool { return e.Kind == "" || e.Kind == KindStep }
+
+// StepCount reports how much of the procedure a record actually holds.
+//
+// It is not len(entries): a run whose batch approval was declined writes one line
+// and touches nothing, and "the record already holds a verification" has to stay
+// false afterwards — otherwise declining once would lock the operator out of
+// starting, and the next run would introduce itself as a resumption of nothing.
+func StepCount(entries []Entry) int {
+	n := 0
+	for _, e := range entries {
+		if isStepEntry(e) {
+			n++
+		}
+	}
+	return n
+}
 
 // LastEntry returns the newest entry for a step.
 func LastEntry(entries []Entry, id StepID) (Entry, bool) {

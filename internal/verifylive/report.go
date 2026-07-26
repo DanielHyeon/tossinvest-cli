@@ -175,6 +175,12 @@ func BuildReport(recordPath string, entries []Entry, now time.Time) Report {
 		if strings.TrimSpace(rep.AccountRef) == "" {
 			rep.AccountRef = e.AccountRef
 		}
+		if !isStepEntry(e) {
+			// The batch-approval line is evidence about the run, not about a
+			// measured property. It has no step to report and no observation the
+			// checklist asks for.
+			continue
+		}
 		rep.Steps = append(rep.Steps, Outcome{
 			Step: e.StepID, Title: e.Title, Verdict: e.Verdict, Reason: e.Reason,
 		})
@@ -359,8 +365,20 @@ func (p Progress) WriteText(w io.Writer) {
 // walks — an operator should be able to read exactly what will happen.
 func WriteSteps(w io.Writer, includeTTLEdge bool) {
 	fmt.Fprintln(w, "live verification procedure")
-	fmt.Fprintln(w, "  every step marked [mutating] asks for a typed confirmation immediately before it sends")
-	fmt.Fprintln(w, "  every order is one share, LIMIT only, priced far from the market, and cancelled in its own step")
+	writeWrapped(w, "  approval      ", "ONE typed, expiring confirmation for the whole run. Before anything is "+
+		"sent, the run prints every live request it plans to make — action, symbol, side, quantity, how the "+
+		"price is derived and how the exposure ends — and waits for that single string. Anything else aborts "+
+		"the run before the first request. `--confirm-each` asks for a separate typed confirmation immediately "+
+		"before every single mutation instead.")
+	writeWrapped(w, "  nothing else  ", "a step can only send what the approved list carries a line for. If the "+
+		"run would have to send something outside it — a different symbol, a different side, more than the "+
+		"approved quantity — it stops and asks for a fresh approval rather than adapting. There is no flag "+
+		"that answers either prompt.")
+	writeWrapped(w, "  exposure      ", "every order is one share, LIMIT only, priced far from the market, and "+
+		"cancelled inside the step that placed it. The one conditional order is left registered on purpose so "+
+		"the persistence check can read it back from a new process, and the resumed run cancels it.")
+	fmt.Fprintf(w, "\n  the mutations listed under each step below are exactly the lines that appear in the\n"+
+		"  approval summary, resolved against your account's symbols and quantities.\n")
 	for _, s := range Steps() {
 		tags := []string{}
 		if s.Mutates {
@@ -389,7 +407,45 @@ func WriteSteps(w io.Writer, includeTTLEdge bool) {
 		for _, line := range s.Procedure {
 			fmt.Fprintf(w, "    - %s\n", line)
 		}
+		if len(s.Mutations) == 0 {
+			continue
+		}
+		fmt.Fprintf(w, "  sends   %d live request(s), each of which appears on the approval list:\n", len(s.Mutations))
+		for _, m := range s.Mutations {
+			fmt.Fprintf(w, "    · %-22s %s\n", m.Kind, mutationSideAndQuantity(m))
+			writeWrapped(w, "        ends  ", m.Ends)
+		}
 	}
+}
+
+// mutationSideAndQuantity renders a declared mutation's shape without an account to
+// resolve it against, which is what --list has to do.
+func mutationSideAndQuantity(m StepMutation) string {
+	parts := []string{}
+	if m.Side != "" {
+		parts = append(parts, strings.ToUpper(m.Side))
+	}
+	switch m.Quantity {
+	case QuantityOne:
+		parts = append(parts, "1 share")
+	case QuantityPartial:
+		parts = append(parts, "1 share out of a larger holding")
+	case QuantityWholeHolding:
+		parts = append(parts, "the whole sellable holding, within --max-sell-quantity")
+	case QuantityOverHolding:
+		parts = append(parts, "one share MORE than the holding — expected to be refused")
+	}
+	if len(parts) == 0 {
+		switch m.Kind {
+		case MutateCancelOrder:
+			return "whatever this step has resting"
+		case MutateCancelConditional:
+			return "the live conditional order"
+		default:
+			return "no side or quantity of its own"
+		}
+	}
+	return strings.Join(parts, ", ")
 }
 
 func joinSteps(ids []StepID) string {

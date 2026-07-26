@@ -104,3 +104,106 @@ func TestPromptStatesTheReversal(t *testing.T) {
 		t.Errorf("the prompt does not say how the exposure ends:\n%s", m.Prompt())
 	}
 }
+
+// --- the batch approval ----------------------------------------------------------
+//
+// The same four properties, for the gate that is now the default.
+
+func testBatch(now time.Time) Batch {
+	return NewBatch(Plan{
+		RunID:   "run-TEST",
+		Account: "********8901",
+		Mutations: []PlannedMutation{{
+			Ordinal: 1, Step: StepOrderCancel, Kind: MutatePlaceOrder,
+			Symbol: "005930", Side: "buy", Quantity: "1 share", MaxQuantity: 1,
+			Pricing: PriceFarBuy.Describe(DefaultOffset, MarketKR),
+			Ends:    "cancelled inside this step",
+		}},
+	}, false, now)
+}
+
+func TestConfirmBatchRefusesWithoutATerminal(t *testing.T) {
+	now := time.Now()
+	b := testBatch(now)
+	var out bytes.Buffer
+	err := ConfirmBatch(strings.NewReader(b.Nonce+"\n"), &out, b, false, now)
+	if !errors.Is(err, ErrNotATerminal) {
+		t.Fatalf("err = %v, want ErrNotATerminal — piping the right answer in must not work", err)
+	}
+	if out.Len() != 0 {
+		t.Error("the plan was printed to a non-terminal; nothing should have been offered")
+	}
+}
+
+func TestConfirmBatchAcceptsTheTypedNonce(t *testing.T) {
+	now := time.Now()
+	b := testBatch(now)
+	var out bytes.Buffer
+	if err := ConfirmBatch(strings.NewReader(b.Nonce+"\n"), &out, b, true, now); err != nil {
+		t.Fatalf("ConfirmBatch: %v", err)
+	}
+	prompt := out.String()
+	for _, want := range []string{
+		"LIVE MUTATION BATCH", "1 request(s)", "order-cancel", "005930", "BUY", "cancelled inside this step",
+		b.Nonce, "expires", "abort",
+	} {
+		if !strings.Contains(prompt, want) {
+			t.Errorf("the batch prompt does not contain %q:\n%s", want, prompt)
+		}
+	}
+}
+
+func TestConfirmBatchRejectsAnythingButTheNonce(t *testing.T) {
+	now := time.Now()
+	b := testBatch(now)
+	for _, answer := range []string{"y", "approve", "ok", "", "\n", strings.ToLower(b.Nonce), b.Nonce + "x"} {
+		var out bytes.Buffer
+		err := ConfirmBatch(strings.NewReader(answer), &out, b, true, now)
+		if !errors.Is(err, ErrRefused) {
+			t.Errorf("answer %q produced %v, want ErrRefused", answer, err)
+		}
+	}
+}
+
+func TestConfirmBatchExpires(t *testing.T) {
+	now := time.Now()
+	b := testBatch(now)
+	var out bytes.Buffer
+	err := ConfirmBatch(strings.NewReader(b.Nonce+"\n"), &out, b, true, now.Add(BatchApprovalTTL+time.Second))
+	if !errors.Is(err, ErrConfirmationExpired) {
+		t.Fatalf("err = %v, want ErrConfirmationExpired", err)
+	}
+}
+
+// TestBatchNoncesDoNotRepeatAndDoNotLookLikeMutationNonces. Two different gates
+// mean two answers an operator could confuse; the prefixes keep them apart.
+func TestBatchNoncesDoNotRepeatAndDoNotLookLikeMutationNonces(t *testing.T) {
+	seen := map[string]bool{}
+	for i := 0; i < 200; i++ {
+		b := testBatch(time.Now())
+		if seen[b.Nonce] {
+			t.Fatalf("batch nonce %q repeated", b.Nonce)
+		}
+		seen[b.Nonce] = true
+		if !strings.HasPrefix(b.Nonce, "APPROVE-") {
+			t.Fatalf("batch nonce %q does not identify what it approves", b.Nonce)
+		}
+		if strings.HasPrefix(b.Nonce, "VERIFY-") {
+			t.Fatalf("batch nonce %q is indistinguishable from a per-mutation one", b.Nonce)
+		}
+	}
+}
+
+// TestTheBatchApprovalOutlastsAReadOfTheList, but not by much: it has to survive
+// somebody reading a dozen orders and it has to expire while the quotes it was
+// derived from are still recognisable.
+func TestTheBatchApprovalOutlastsAReadOfTheList(t *testing.T) {
+	if BatchApprovalTTL <= ConfirmationTTL {
+		t.Errorf("the batch window (%s) is no longer than a single mutation's (%s), although there is a whole "+
+			"list to read", BatchApprovalTTL, ConfirmationTTL)
+	}
+	if BatchApprovalTTL > 15*time.Minute {
+		t.Errorf("the batch window is %s; an approval typed that long after the list was priced is an "+
+			"approval of different numbers", BatchApprovalTTL)
+	}
+}

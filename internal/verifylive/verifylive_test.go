@@ -74,6 +74,91 @@ func TestEveryMutatingStepSaysHowTheExposureEnds(t *testing.T) {
 	}
 }
 
+// TestEveryMutatingStepDeclaresWhatItSends.
+//
+// Step.Mutations is the step's permission slip: it is what the batch approval
+// enumerates and what mutate.go's guard authorises. A step that mutates without
+// declaring anything could send nothing at all under the default model, and a step
+// that declares something without being marked as mutating would be a mutation the
+// catalogue's own [mutating] tag hides.
+func TestEveryMutatingStepDeclaresWhatItSends(t *testing.T) {
+	for _, s := range Steps() {
+		if s.Mutates != (len(s.Mutations) > 0) {
+			t.Errorf("%s: Mutates=%v but declares %d mutation(s); the two must agree",
+				s.ID, s.Mutates, len(s.Mutations))
+		}
+		for i, m := range s.Mutations {
+			if strings.TrimSpace(string(m.Kind)) == "" {
+				t.Errorf("%s mutation %d has no kind", s.ID, i)
+			}
+			if strings.TrimSpace(m.Ends) == "" {
+				t.Errorf("%s mutation %d (%s) does not say how the exposure ends, so it cannot be approved",
+					s.ID, i, m.Kind)
+			}
+			if m.Kind.Verb() == string(m.Kind) {
+				t.Errorf("%s mutation %d (%s) has no readable verb, so the summary would print a constant",
+					s.ID, i, m.Kind)
+			}
+			// Anything that creates or moves an order has to say how it is priced;
+			// a cancel has nothing to price.
+			needsPrice := m.Kind != MutateCancelOrder && m.Kind != MutateCancelConditional
+			if needsPrice && m.Pricing == PriceNone {
+				t.Errorf("%s mutation %d (%s) states no pricing basis", s.ID, i, m.Kind)
+			}
+			if !needsPrice && m.Quantity != QuantityNone {
+				t.Errorf("%s mutation %d (%s) carries a quantity rule although a cancel has no quantity",
+					s.ID, i, m.Kind)
+			}
+		}
+	}
+}
+
+// TestOnlyTheConditionalRegistrationOutlivesItsStep. Everything else this tool
+// sends is cleaned up where it was created, and the catalogue is where that claim
+// has to be true before the runtime can honour it.
+func TestOnlyTheConditionalRegistrationOutlivesItsStep(t *testing.T) {
+	for _, s := range Steps() {
+		for _, m := range s.Mutations {
+			outlives := strings.Contains(strings.ToLower(m.Ends), "outlive")
+			if outlives && m.Kind != MutateRegisterConditional {
+				t.Errorf("%s: a %s mutation claims to outlive its step: %s", s.ID, m.Kind, m.Ends)
+			}
+			if m.Kind == MutateRegisterConditional && !outlives {
+				t.Errorf("%s: the conditional registration does not warn that it is left alive: %s", s.ID, m.Ends)
+			}
+		}
+	}
+}
+
+// TestMutationKindsAreDistinctAndReadable — the kinds are the join between the
+// catalogue, the summary and the guard, so a duplicate verb would make two
+// different requests look like one on the list a person approves.
+func TestMutationKindsAreDistinctAndReadable(t *testing.T) {
+	kinds := []MutationKind{
+		MutatePlaceOrder, MutateReplayOrder, MutateConflictProbe, MutateCancelOrder, MutateAmendOrder,
+		MutateRegisterConditional, MutateReplayConditional, MutateModifyConditional, MutateCancelConditional,
+	}
+	seen := map[string]MutationKind{}
+	for _, k := range kinds {
+		verb := k.Verb()
+		if verb == string(k) {
+			t.Errorf("%s has no verb of its own", k)
+		}
+		if prior, dup := seen[verb]; dup {
+			t.Errorf("%s and %s render as the same line: %q", prior, k, verb)
+		}
+		seen[verb] = k
+	}
+	// Every kind the catalogue uses is one of the above.
+	for _, s := range Steps() {
+		for _, m := range s.Mutations {
+			if _, ok := seen[m.Kind.Verb()]; !ok {
+				t.Errorf("%s declares %s, which is not a known mutation kind", s.ID, m.Kind)
+			}
+		}
+	}
+}
+
 // TestTTLEdgeStepIsOptInAndWarnsFirst is the tasks.md requirement in a test:
 // "유효 창 경계(2.7)는 의도적 이중 주문 절차임을 단계 안내문에 명시하고 기본 생략".
 func TestTTLEdgeStepIsOptInAndWarnsFirst(t *testing.T) {
