@@ -183,6 +183,27 @@ type Options struct {
 	// verification, and the broker refresh yields to it. Empty disables that
 	// half of the check; the in-process half always applies.
 	RunLockPath string
+
+	// --- the engine (change add-engine-runtime, task 2.1) ---
+	//
+	// The console shows whether the engine is running and can start and stop the
+	// process. It cannot make the engine *able* to trade: that is decided by the
+	// §0.7-approved gate configuration and the startup interlock, both of which
+	// live in the engine process. A refused start comes back as the engine's own
+	// reason and is displayed verbatim, which is what makes "the console cannot
+	// bypass the interlock" observable rather than merely true.
+
+	// EngineMarker is internal/enginelock's advisory marker. It is the only thing
+	// this package reads to decide whether an engine is running — the exclusion
+	// itself is a flock the engine holds, and a dashboard cannot ask about a lock
+	// without fighting the engine for it. Empty leaves the status section unwired.
+	EngineMarker string
+	// StartEngine spawns the engine process and reports what happened. Nil hides
+	// the button.
+	StartEngine StartEngine
+	// StopEngine signals the running engine and waits for it. Nil hides the
+	// button.
+	StopEngine StopEngine
 }
 
 // Console is the server.
@@ -217,6 +238,12 @@ type Console struct {
 	mu   sync.Mutex
 	addr string
 	run  *runState
+	// engineNote is the last thing the engine's start or stop said. It is kept
+	// rather than passed through a redirect's query string because the answer that
+	// matters most — the enumerated interlock clauses a refused start printed — is
+	// several lines long and has to survive the dashboard's own refresh.
+	engineNote   string
+	engineNoteAt time.Time
 	// spent records that a verification has walked at least one step in this
 	// process. The conditional-persistence measurement is "it survived the
 	// process exiting", so the next attempt needs a new process and this is what
@@ -440,6 +467,13 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/verify/abort", c.session0(c.mutating(c.handleAbort)))
 	mux.HandleFunc("/restart", c.session0(c.mutating(c.handleRestart)))
 	mux.HandleFunc("/soak/restart", c.session0(c.mutating(c.handleSoakRestart)))
+	// The engine's process control (add-engine-runtime task 2.1). Two acts, both
+	// behind the same two gates as everything else that acts, and neither of them
+	// touches the account: they start and stop a process whose *ability* to trade
+	// was decided by a §0.7 gate approval and is re-checked by its own startup
+	// interlock every time it comes up.
+	mux.HandleFunc("/engine/start", c.session0(c.mutating(c.handleEngineStart)))
+	mux.HandleFunc("/engine/stop", c.session0(c.mutating(c.handleEngineStop)))
 	mux.HandleFunc("/report", c.session0(c.handleReport))
 	mux.HandleFunc("/report.json", c.session0(c.handleReportJSON))
 	return mux

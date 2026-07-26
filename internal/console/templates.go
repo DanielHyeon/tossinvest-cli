@@ -182,6 +182,56 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 </section>
 
 <section>
+  <h2>엔진 런타임</h2>
+  {{with .Snap.Engine}}
+  {{if .Wired}}
+  <dl>
+    <dt>상태</dt>
+    <dd>{{if .Running}}<span class="ok">실행 중</span>{{if .PID}} (pid {{.PID}}){{end}}{{else}}<span class="muted">정지</span>{{end}}</dd>
+    <dt>기동 시각</dt><dd>{{.StartedAtText}}</dd>
+    <dt>마지막 갱신</dt><dd>{{.RefreshedAtText}}</dd>
+    <dt>실행 중 빌드</dt><dd>{{.BuildAt}}</dd>
+    <dt>활성 마커</dt><dd><code>{{.Marker}}</code></dd>
+  </dl>
+  {{if .Stale}}
+  <p class="notice"><strong>실행 중인 엔진은 설치된 바이너리보다 오래되었다.</strong>
+  엔진이 보고한 빌드 {{.BuildAt}} — 새 바이너리로 올리려면 [엔진 정지] 뒤 [엔진 시작].</p>
+  {{end}}
+  {{else}}
+  <p class="muted">엔진 상태 배선이 없다 (활성 마커 경로 미지정).</p>
+  {{end}}
+
+  {{if .CanStart}}
+  <form method="post" action="/engine/start">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <button type="submit" class="secondary">엔진 시작</button>
+  </form>
+  {{end}}
+  {{if .CanStop}}
+  <form method="post" action="/engine/stop">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <button type="submit" class="secondary">엔진 정지</button>
+  </form>
+  {{end}}
+  {{if not (or .CanStart .CanStop)}}
+  <p class="muted">엔진 기동/정지 배선이 없다 — 터미널에서 <code>tossctl engine run</code>으로 직접 띄워라.</p>
+  {{end}}
+
+  {{if .Note}}
+  <p class="notice">마지막 응답 ({{.NoteAtText}}):</p>
+  <pre>{{.Note}}</pre>
+  {{end}}
+
+  <p class="muted">이 두 버튼은 <strong>프로세스를 켜고 끄는 것</strong>이다. 엔진이 주문 능력을 갖는지는
+  §0.7로 승인된 게이트 설정과 엔진 자신의 기동 인터록이 결정한다 — 콘솔은 게이트를 켜지 않고,
+  인터록을 우회하지도 못한다. 인터록이 미충족이면 엔진 프로세스가 거부하고, 그 사유가 위에 그대로 뜬다.
+  정지는 SIGTERM(루프 완주·journal 정합 close)이고, 활성 마커는 자문 신호다 —
+  배타는 엔진이 쥔 journal 디렉터리 flock이 담당하며 크래시한 엔진은 최대 {{.StaleAfter}} 동안
+  실행 중으로 보인다.</p>
+  {{end}}
+</section>
+
+<section>
   <h2>soak (조회 전용 서베이)</h2>
   {{with .Snap.Soak}}
   {{if .Error}}<p class="danger">{{.Error}}</p>{{end}}

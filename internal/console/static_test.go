@@ -131,10 +131,11 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 			t.Errorf("%s is registered without session0; it is reachable without the session token", r.Path)
 		}
 	}
-	// Seven verification-console routes plus the two dashboard screens
-	// (add-operator-dashboard). The floor is asserted so that a guard which stops
+	// Seven verification-console routes, the two dashboard screens
+	// (add-operator-dashboard) and the engine's two process-control routes
+	// (add-engine-runtime). The floor is asserted so that a guard which stops
 	// parsing the table cannot pass by reading nothing.
-	if len(routes) < 11 {
+	if len(routes) < 13 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -156,6 +157,13 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		// interface.
 		"/restart":      true,
 		"/soak/restart": true,
+		// The engine's process control (add-engine-runtime task 2.1). Same
+		// reasoning one step up: neither touches an account — the engine's own
+		// startup interlock decides whether the process it starts may trade — but
+		// both are acts, and starting a trading engine from an embedded image is
+		// not a thing a page should be able to do.
+		"/engine/start": true,
+		"/engine/stop":  true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -390,8 +398,8 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 
 // consoleStateChanging is the complete list of routes that are allowed to change
 // anything, transcribed from the operator-console spec: 콘솔의 상태변경 행위는
-// 검증 실행 제어(시작·승인·중단)와 자기 프로세스·soak 프로세스의 재기동뿐이며
-// (SHALL — 계좌 무접촉).
+// 검증 실행 제어(시작·승인·중단)와 프로세스 기동·정지(자기 재시작·soak 재시작·
+// 엔진 시작/정지)뿐이다(SHALL — 계좌 무접촉).
 //
 // It is the same set TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate uses,
 // named separately here because the two tests ask different questions of it: one
@@ -399,6 +407,7 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 // even looks like an act.
 var consoleStateChanging = []string{
 	"/verify/start", "/verify/approve", "/verify/abort", "/restart", "/soak/restart",
+	"/engine/start", "/engine/stop",
 }
 
 // TestNoRouteNamesAnAccountMutation.

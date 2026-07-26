@@ -53,6 +53,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
@@ -163,6 +164,17 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		journalPath = ""
 	}
 
+	// The engine's advisory marker lives beside its journal. A resolution failure
+	// is not fatal for the same reason the journal path's is not: the dashboard
+	// reports the engine section as unwired and the verification console — which
+	// is what this command is for — is unaffected.
+	engineMarkerPath := ""
+	if dir, derr := engineJournalDir(root); derr == nil {
+		engineMarkerPath = enginelock.MarkerPath(dir)
+	} else {
+		fmt.Fprintf(cmd.ErrOrStderr(), "엔진 마커 경로를 해석할 수 없다 (%v). 엔진 상태 표시는 비어 있다.\n", derr)
+	}
+
 	out := cmd.OutOrStdout()
 	return console.ListenAndServe(ctx, console.Options{
 		Port:              opts.port,
@@ -187,6 +199,18 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Relaunch:    consoleRelaunch(out),
 		Handoff:     handoff.New(consoleHandoffPath(verifyRecord)),
 		RestartSoak: func() (string, error) { return restartSoak(soakRecord) },
+
+		// The engine's status and its two buttons (change add-engine-runtime,
+		// task 2.1). Same arrangement as the two restarts above: internal/console
+		// decides whether the person asking cleared both gates, and these do the
+		// work. The marker is read-only for the console — the exclusion is the
+		// flock the engine holds — and neither button can make the engine able to
+		// trade: `engine run` re-checks the §0.7-approved gate and the whole
+		// startup interlock every time it comes up, and a refusal comes back here
+		// as the engine's own words.
+		EngineMarker: engineMarkerPath,
+		StartEngine:  func() (string, error) { return startEngine(root) },
+		StopEngine:   func() (string, error) { return stopEngine(root) },
 	})
 }
 

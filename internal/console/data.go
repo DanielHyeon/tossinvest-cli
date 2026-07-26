@@ -165,6 +165,9 @@ type snapshot struct {
 	Attestation attestView
 	Verify      verifyView
 	Binary      binaryView
+	// Engine is the engine runtime's state, read from its advisory marker
+	// (change add-engine-runtime).
+	Engine engineView
 	// Session is the KR market-hours reading. It is advisory: nothing on this
 	// console consults it before starting anything.
 	Session verifylive.SessionAdvisory
@@ -173,12 +176,14 @@ type snapshot struct {
 func (c *Console) snapshot() snapshot {
 	now := c.now()
 	soakView := c.readSoak(now)
+	binary := c.readBinary(soakView)
 	return snapshot{
 		Now:         now,
 		Soak:        soakView,
 		Attestation: c.readAttestation(now),
 		Verify:      c.readVerify(),
-		Binary:      c.readBinary(soakView),
+		Binary:      binary,
+		Engine:      c.readEngine(now, binary.Installed),
 		Session:     verifylive.KRSessionAdvisory(now),
 	}
 }
