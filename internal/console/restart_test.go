@@ -534,3 +534,73 @@ func handoffTokenFrom(t *testing.T, page string) string {
 	}
 	return token
 }
+
+// TestARestartResetsTheProcessCapAndNothingElse is the rail the whole feature
+// rests on, stated as a test.
+//
+// A restart exists to give the conditional-persistence measurement a new process
+// instance. What it must NOT do is carry anything about consent across: the
+// successor mints its own session token, its own CSRF token, and asks for its own
+// expiring nonce, typed by a person, before a single request can go out.
+func TestARestartResetsTheProcessCapAndNothingElse(t *testing.T) {
+	dir := t.TempDir()
+	store := handoff.New(filepath.Join(dir, handoff.FileName))
+
+	old := newHarness(t, func(o *Options) {
+		o.Relaunch = (&relaunchSpy{}).fn()
+		o.Handoff = store
+	})
+	old.pretendListening("127.0.0.1:45678")
+
+	// The predecessor has already spent its one verification.
+	old.mu.Lock()
+	old.spent = true
+	old.mu.Unlock()
+	if page := body(t, old.get(t, "/?session="+old.SessionToken())); page == "" {
+		t.Fatal("the predecessor would not open")
+	}
+	resp := old.post(t, "/restart", url.Values{"csrf": {old.csrf}})
+	token := handoffTokenFrom(t, body(t, resp))
+	old.awaitRelaunch(t)
+
+	// The successor: a genuinely new process, reached by the handoff.
+	next := newHarness(t, func(o *Options) { o.Handoff = store })
+	if got := next.get(t, "/?handoff=" + token); got.StatusCode != http.StatusOK {
+		t.Fatalf("the handoff was refused: %d", got.StatusCode)
+	}
+
+	// The cap is reset — that is the entire product of the restart.
+	next.mu.Lock()
+	spent := next.spent
+	next.mu.Unlock()
+	if spent {
+		t.Fatal("the successor started already spent; the restart bought nothing")
+	}
+
+	// The CSRF token did not cross: the predecessor's is worthless here.
+	if refused := next.post(t, "/verify/start", url.Values{"csrf": {old.csrf}}); refused.StatusCode != http.StatusForbidden {
+		t.Errorf("the predecessor's CSRF token was accepted (%d); each process mints its own",
+			refused.StatusCode)
+	}
+	if next.broker.mutationCount() != 0 {
+		t.Fatalf("%d mutating call(s) after a restart and before any approval", next.broker.mutationCount())
+	}
+
+	// And a verification started here still stops dead at a nonce nobody has typed.
+	next.post(t, "/verify/start", url.Values{"csrf": {next.csrf}})
+	view := next.waitForBatch(t)
+	if !view.Awaiting || view.Batch == nil {
+		t.Fatal("the successor's run did not park on an approval")
+	}
+	if view.Approved {
+		t.Fatal("the successor's run is already approved; consent crossed the restart")
+	}
+	if next.broker.mutationCount() != 0 {
+		t.Errorf("%d mutating call(s) while the approval form is still on screen",
+			next.broker.mutationCount())
+	}
+	// The nonce is this process's own, freshly minted.
+	if view.Batch.Nonce == "" {
+		t.Error("the successor offered an empty confirmation string")
+	}
+}
