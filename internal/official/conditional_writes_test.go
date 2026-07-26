@@ -114,3 +114,79 @@ func TestModifyConditionalOrderIntegration(t *testing.T) {
 		t.Fatalf("ModifyConditionalOrder: %v", err)
 	}
 }
+
+// TestModifyConditionalOrderRefReturnsTheNewIdentifier.
+//
+// "수정은 기존 조건주문을 취소하고 새 조건주문을 생성하는 방식으로 동작합니다.
+// 따라서 수정 후에는 새로운 conditionalOrderId 가 발급되고 기존 ID 는 무효화됩니다"
+// (POST /api/v1/conditional-orders/{id}/modify, docs/migration/openapi.latest.json).
+//
+// ModifyConditionalOrder discards the response body, which was fine while the
+// only caller wanted to know whether the call succeeded. A caller that has to
+// keep tracking the conditional afterwards — the live capability verification,
+// which then has to cancel it — needs the identifier the broker issued, and
+// re-deriving it by listing the account's conditional orders would be a guess
+// whenever more than one is live.
+func TestModifyConditionalOrderRefReturnsTheNewIdentifier(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/api/v1/conditional-orders/co-1/modify":
+			_, _ = w.Write([]byte(`{"result":{"conditionalOrderId":"co-2","clientOrderId":"k-1"}}`))
+		default:
+			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer srv.Close()
+
+	c := New(
+		Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL),
+		WithHTTPClient(srv.Client()),
+		WithAccountSeq(1),
+	)
+	ref, err := c.ModifyConditionalOrderRef(context.Background(), "co-1", ConditionalModifyBody{
+		Type: "SINGLE", Quantity: "1", OrderType: "MARKET", ExpireDate: "2026-12-31",
+		First: ConditionLegBody{OrderSide: "SELL", TriggerPrice: "68000"},
+	})
+	if err != nil {
+		t.Fatalf("ModifyConditionalOrderRef: %v", err)
+	}
+	if ref.ID != "co-2" {
+		t.Errorf("ID = %q, want the NEW identifier co-2 — the old one is invalidated by the modify", ref.ID)
+	}
+	if ref.ClientOrderID != "k-1" {
+		t.Errorf("ClientOrderID = %q, want the key echoed back", ref.ClientOrderID)
+	}
+}
+
+// TestModifyConditionalOrderStillToleratesANullResult keeps the original method's
+// behaviour intact: it decodes nothing, so a broker that answers with a null
+// result is still a success for callers that only asked whether it worked.
+func TestModifyConditionalOrderStillToleratesANullResult(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		default:
+			_, _ = w.Write([]byte(`{"result":null}`))
+		}
+	}))
+	defer srv.Close()
+
+	c := New(
+		Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL),
+		WithHTTPClient(srv.Client()),
+		WithAccountSeq(1),
+	)
+	if err := c.ModifyConditionalOrder(context.Background(), "co-1", ConditionalModifyBody{
+		Type: "SINGLE", Quantity: "1", OrderType: "MARKET", ExpireDate: "2026-12-31",
+		First: ConditionLegBody{OrderSide: "SELL", TriggerPrice: "68000"},
+	}); err != nil {
+		t.Fatalf("ModifyConditionalOrder must stay tolerant of a null result: %v", err)
+	}
+}

@@ -59,6 +59,10 @@ var officialMutators = []string{
 	"CreateConditionalOrder",
 	"CancelConditionalOrder",
 	"ModifyConditionalOrder",
+	// Added by verify-execution-capability task 1.5: same call, returns the new
+	// identifier the broker issues. The engine's read-only view must not reach it
+	// either.
+	"ModifyConditionalOrderRef",
 }
 
 // TestContextOfficialIsReadOnly is the other half of the seal (task 4.2).
