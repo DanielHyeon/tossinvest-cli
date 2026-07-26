@@ -44,10 +44,14 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/spf13/cobra"
@@ -144,6 +148,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		return err
 	}
 
+	out := cmd.OutOrStdout()
 	return console.ListenAndServe(ctx, console.Options{
 		Port:              opts.port,
 		StartVerify:       consoleVerifyStarter(root, verifyRecord),
@@ -152,8 +157,75 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Attestation:       attestation,
 		MinSoakDays:       soak.DefaultCriteria().MinConsecutiveDays,
 		RequiredEndpoints: engine.RequiredEndpoints(),
-		Out:               cmd.OutOrStdout(),
+		Out:               out,
+
+		// The three seams task 1.8 puts behind the console's two restart buttons.
+		// internal/console executes nothing: it decides whether the person asking
+		// has cleared the session and CSRF gates, and then calls one of these.
+		Relaunch:    consoleRelaunch(out),
+		Handoff:     handoff.New(consoleHandoffPath(verifyRecord)),
+		RestartSoak: func() (string, error) { return restartSoak(soakRecord) },
 	})
+}
+
+// consoleHandoffPath is where the single-use restart token lives: beside the
+// evidence record and the soak pause marker, so an isolated --config-dir profile
+// gets its own and the default sits in the data directory with the rest of this
+// change's state.
+func consoleHandoffPath(recordPath string) string {
+	return filepath.Join(filepath.Dir(recordPath), handoff.FileName)
+}
+
+// consoleRelaunch re-executes this binary so a NEW process instance starts.
+//
+// That is the whole product: internal/verifylive's conditional-persistence step
+// refuses to certify a conditional from the process that registered it, and it
+// judges that on process.instance_id — minted fresh at every startup — rather than
+// on the PID, which an exec preserves. The restart is therefore a real process
+// boundary for the measurement, and the record proves it.
+//
+// The port is pinned so the browser comes back to the address it is already on.
+// Everything else about the command line is kept: the same subcommand, the same
+// --config-dir, the same flags the operator typed.
+func consoleRelaunch(out io.Writer) console.Relaunch {
+	return func(port int) error {
+		path, err := binstamp.SelfPath()
+		if err != nil {
+			return err
+		}
+		argv := argvWithPort(os.Args, port)
+		fmt.Fprintf(out, "  %s\n\n", strings.Join(argv, " "))
+		return reexecSelf(path, argv)
+	}
+}
+
+// consolePortFlag is the flag argvWithPort rewrites. It is named once.
+const consolePortFlag = "--port"
+
+// argvWithPort preserves the command line and pins the loopback port.
+//
+// A console started without --port took whatever the OS offered, and the browser is
+// sitting on it. Re-executing with the original argument list would take another
+// free port and strand the tab, so the port this process ended up on is written in
+// explicitly — which is the one thing about the restart the operator did not choose
+// and should not have to.
+func argvWithPort(args []string, port int) []string {
+	out := make([]string, 0, len(args)+2)
+	skipNext := false
+	for i, a := range args {
+		switch {
+		case skipNext:
+			skipNext = false
+		case i == 0:
+			out = append(out, a)
+		case a == consolePortFlag:
+			skipNext = true // and its value
+		case strings.HasPrefix(a, consolePortFlag+"="):
+		default:
+			out = append(out, a)
+		}
+	}
+	return append(out, consolePortFlag, strconv.Itoa(port))
 }
 
 // consoleVerifyStarter builds the runner the console drives.

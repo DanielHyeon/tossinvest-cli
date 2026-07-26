@@ -45,6 +45,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
@@ -265,7 +266,14 @@ func runSoakRun(cmd *cobra.Command, root *rootOptions, opts *soakOptions) error 
 		Classify:      classifySoakError,
 		TokenExpiry:   wiring.tokenExpiry,
 		PauseWhile:    verifyRunLockPause(lockPath),
-		Progress:      out,
+		// The survey runs for days across reinstalls. At each cycle boundary it
+		// compares the executable at its own path against the one it was loaded
+		// from and hands over when they differ (task 1.8 ②). The record is
+		// append-only and synced per cycle, so the successor continues the same
+		// file and the same streak.
+		Binary:   binstamp.Self,
+		ReExec:   soakReExec,
+		Progress: out,
 	})
 	if err != nil {
 		return err
@@ -282,6 +290,13 @@ func runSoakRun(cmd *cobra.Command, root *rootOptions, opts *soakOptions) error 
 			// Stopping is how the soak normally ends.
 			fmt.Fprintf(out, "\nstopped — everything recorded so far is in %s\n", recordPath)
 			fmt.Fprintln(out, "Run `tossctl soak status` to see how far it got.")
+			return nil
+		}
+		if errors.Is(err, soak.ErrUpgraded) {
+			// A real re-exec never reaches this: the process is gone. It is here
+			// so a future seam that hands over some other way is not reported as
+			// a crash.
+			fmt.Fprintf(out, "\nhanded over to the newly installed binary — %s continues\n", recordPath)
 			return nil
 		}
 		return err
