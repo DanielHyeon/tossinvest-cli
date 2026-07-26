@@ -23,6 +23,6 @@
 
 ## 3. 완료 게이트 [M]
 
-- [ ] 3.1 §0 검토 기록: 편입 tx 무발의(A2)·기본 OFF(§0.2)·flip 승인(§0.7)·알림 존치(A4)·긴급 중지 서술(A5), flatten이 편입 포지션을 덮는지 테스트
-- [ ] 3.2 테스트 전수(-race)·`openspec validate adopt-external-positions --strict`
+- [x] 3.1 §0 검토 기록: 편입 tx 무발의(A2)·기본 OFF(§0.2)·flip 승인(§0.7)·알림 존치(A4)·긴급 중지 서술(A5), flatten이 편입 포지션을 덮는지 테스트
+- [x] 3.2 테스트 전수(-race)·`openspec validate adopt-external-positions --strict`
 - [ ] 3.3 `make gate CHANGE=adopt-external-positions`
