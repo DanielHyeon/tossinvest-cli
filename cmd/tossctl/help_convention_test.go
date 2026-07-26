@@ -112,7 +112,14 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// (verify-execution-capability task 1.6). It places live orders only
 		// through that runner and only after the typed approval, but it *can*
 		// place them, so it declares itself like `verify run` does.
-		"tossctl console":                  true,
+		"tossctl console": true,
+		// engine run drives the reconciliation, exit-observation and fill-detection
+		// loops (add-engine-runtime task 1.2). The exit observer places real
+		// reduce-only orders once the automation gate is verified, so it declares
+		// itself even though interlock clause 6 makes a verified gate unreachable
+		// in this build: the annotation describes what the command is, not what
+		// this build happens to permit.
+		"tossctl engine run":               true,
 		"tossctl order place":              true,
 		"tossctl order cancel":             true,
 		"tossctl order amend":              true,

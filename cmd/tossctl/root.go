@@ -172,6 +172,12 @@ func newRootCmd() *cobra.Command {
 		// (task 1.6): the same runner, the same rails, approved on a page instead
 		// of at a terminal. New file, new command; `verify` is unchanged.
 		newConsoleCmd(opts),
+		// engine is the automated trading runtime (change add-engine-runtime):
+		// the production caller the reconciliation, exit-observation and
+		// fill-detection loops never had. It refuses to start in this build —
+		// interlock clause 6 is an unmet constant until protective orders land —
+		// and nothing existing changes.
+		newEngineCmd(opts),
 	)
 
 	return cmd

@@ -142,12 +142,32 @@ func (h *Hints) Observe(ev push.Event) {
 	}
 }
 
+// ErrNoRefreshWired means a hint consumer has nothing to route its hints to.
+//
+// It is exported because the engine runtime checks it at *assembly* time rather
+// than discovering it when Run returns (engine-safety, add-engine-runtime: 힌트
+// 라우팅을 포함하는 경우 Refresh 미배선은 감독이 아니라 조립 시점 검증으로
+// 거부한다 — SHALL). The reason for the earlier check is the supervision
+// contract's own premise: a loop that returns immediately would be read as a
+// defensive-termination incident, when what actually happened is that nobody
+// wired it.
+var ErrNoRefreshWired = errors.New("filldetect: a hint consumer needs a refresh function — " +
+	"an unrouted hint is a silently dropped one")
+
+// Validate reports whether this consumer can do anything at all. It is Run's own
+// precondition, exposed so a caller can ask before starting a goroutine.
+func (h *Hints) Validate() error {
+	if h == nil || h.Refresh == nil {
+		return ErrNoRefreshWired
+	}
+	return nil
+}
+
 // Run works the topic queues until ctx is done. One worker per topic, so a slow
 // re-fetch of one family never delays another.
 func (h *Hints) Run(ctx context.Context) error {
-	if h.Refresh == nil {
-		return errors.New("filldetect: a hint consumer needs a refresh function — " +
-			"an unrouted hint is a silently dropped one")
+	if err := h.Validate(); err != nil {
+		return err
 	}
 	h.ensure()
 

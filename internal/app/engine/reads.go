@@ -46,6 +46,13 @@ type OfficialReads interface {
 	Accounts(ctx context.Context) ([]domain.Account, error)
 	BuyingPower(ctx context.Context, currency string) (domain.BuyingPower, error)
 	Holdings(ctx context.Context, symbol string) ([]domain.Position, error)
+	// HoldingsRaw is the same single read as Holdings with the broker's decimals
+	// unadapted. It joined the interface with the runtime (add-engine-runtime):
+	// the reconciliation snapshot prefers the raw path so an adoption's
+	// `cost_basis` is the broker's own string rather than a re-rendered float
+	// (position-ledger: 원문 decimal 문자열 보존 SHALL), and the engine had no
+	// production caller for either path before there was a loop to drive one.
+	HoldingsRaw(ctx context.Context, symbol string) ([]official.RawHolding, error)
 	SellableQuantity(ctx context.Context, symbol string) (domain.SellableQuantity, error)
 
 	// --- orders ------------------------------------------------------------

@@ -207,6 +207,12 @@ type Context struct {
 	// obs.Logger's methods are nil-safe.
 	Log *obs.Logger
 
+	// clk is the clock every part of this engine was built against, kept so the
+	// runtime's own assembly (the snapshot collector, the restart recovery) uses
+	// the same one rather than reaching for the system clock and making a test's
+	// injected time apply to half the engine.
+	clk clock.Clock
+
 	// exitFloor is the RECONCILE cap the exit observation loop consults. It stays
 	// unexported: it is a seam of one loop, not an operator surface, and handing
 	// it out would invite a second caller to bound a liquidation by it (§0.3 —
@@ -495,6 +501,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		Guardian:       guardian,
 		Audit:          auditLog,
 		Log:            opts.Logger,
+		clk:            clk,
 		official:       off,
 		broker:         path.broker,
 		conditional:    path.conditional,
