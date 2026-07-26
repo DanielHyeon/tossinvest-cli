@@ -113,12 +113,12 @@ func (s orderSpec) intent() orderintent.PlaceIntent {
 
 func (s orderSpec) detail() []string {
 	lines := []string{
-		fmt.Sprintf("symbol           %s (%s)", s.Symbol, s.Market),
-		fmt.Sprintf("side             %s, LIMIT", strings.ToUpper(s.Side)),
-		fmt.Sprintf("quantity         %s share(s)", trim(s.Quantity)),
-		fmt.Sprintf("limit price      %s", trim(s.Price)),
-		fmt.Sprintf("notional         %s", trim(s.Quantity*s.Price)),
-		fmt.Sprintf("pricing          %s", s.Basis),
+		fmt.Sprintf("종목             %s (%s)", s.Symbol, s.Market),
+		fmt.Sprintf("방향             %s, LIMIT", strings.ToUpper(s.Side)),
+		fmt.Sprintf("수량             %s주", trim(s.Quantity)),
+		fmt.Sprintf("지정가           %s", trim(s.Price)),
+		fmt.Sprintf("명목금액         %s", trim(s.Quantity*s.Price)),
+		fmt.Sprintf("가격 규칙        %s", s.Basis),
 	}
 	if s.Key != "" {
 		lines = append(lines, fmt.Sprintf("clientOrderId    %s", s.Key))
@@ -152,10 +152,10 @@ func (r *Runner) gate(sr *stepRun, req request) error {
 		return err
 	}
 	if !r.confirmEach {
-		fmt.Fprintf(r.out, "    [approved batch] %s\n", req.Kind.Verb())
+		fmt.Fprintf(r.out, "    [승인된 배치] %s\n", req.Kind.VerbKO())
 		return nil
 	}
-	m := NewMutation(sr.step.ID, req.Kind.Verb(), r.accountRef, req.Detail, req.Reversal, r.now())
+	m := NewMutation(sr.step.ID, req.Kind.VerbKO(), r.accountRef, req.Detail, req.Reversal, r.now())
 	return r.confirm(m)
 }
 
@@ -199,10 +199,10 @@ func (r *Runner) placeOrder(ctx context.Context, sr *stepRun, spec orderSpec, re
 		return "", err
 	}
 	if strings.TrimSpace(res.OrderID) == "" {
-		return "", fmt.Errorf("verify: the broker accepted the order but returned no orderId")
+		return "", fmt.Errorf("verify: 브로커가 주문을 받아들였지만 orderId를 돌려주지 않았다")
 	}
 	sr.created("order", res.OrderID, spec.Symbol, r.now(), "")
-	fmt.Fprintf(r.out, "    placed order %s (%s %s x%s @ %s)\n",
+	fmt.Fprintf(r.out, "    주문 접수 %s (%s %s x%s @ %s)\n",
 		res.OrderID, strings.ToUpper(spec.Side), spec.Symbol, trim(spec.Quantity), trim(spec.Price))
 	return res.OrderID, nil
 }
@@ -232,7 +232,7 @@ func (r *Runner) replayPlaceOrder(ctx context.Context, sr *stepRun, spec orderSp
 	}); err != nil {
 		return "", err
 	}
-	fmt.Fprintf(r.out, "    replaying the identical body under key %s — %s\n", spec.Key, why)
+	fmt.Fprintf(r.out, "    동일 본문을 키 %s로 재전송 — %s\n", spec.Key, why)
 	intent := spec.intent()
 	started := r.now()
 	res, err := r.broker.PlaceOrder(ctx, intent)
@@ -253,12 +253,12 @@ func (r *Runner) conflictProbe(ctx context.Context, sr *stepRun, spec orderSpec)
 		return "", err
 	}
 	detail := append(spec.detail(),
-		"NOTE             this deliberately re-uses the key above with a DIFFERENT price",
+		"주의             위 키를 의도적으로 재사용하되 가격을 다르게 한다",
 		"expected         the broker refuses with idempotency-key-conflict and creates nothing")
 	if err := r.gate(sr, request{
 		Kind: MutateConflictProbe, Symbol: spec.Symbol, Side: spec.Side, Quantity: spec.Quantity,
 		Detail:   detail,
-		Reversal: "if the broker creates an order instead of refusing, it is cancelled immediately",
+		Reversal: "브로커가 거부하지 않고 주문을 만들면 즉시 취소한다",
 	}); err != nil {
 		return "", err
 	}
@@ -279,14 +279,14 @@ func (r *Runner) conflictProbe(ctx context.Context, sr *stepRun, spec orderSpec)
 // cancelOrder is the gated cancel.
 func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, why string) error {
 	detail := []string{
-		fmt.Sprintf("order            %s", orderID),
-		fmt.Sprintf("symbol           %s", symbol),
-		fmt.Sprintf("why              %s", why),
-		"direction        this REDUCES exposure — it removes a resting order",
+		fmt.Sprintf("주문             %s", orderID),
+		fmt.Sprintf("종목             %s", symbol),
+		fmt.Sprintf("사유             %s", why),
+		"방향             노출을 줄인다 — 미체결 주문을 제거한다",
 	}
 	if err := r.gate(sr, request{
 		Kind: MutateCancelOrder, Symbol: symbol, Detail: detail,
-		Reversal: "the account returns to how this step found it",
+		Reversal: "계좌는 이 단계가 발견한 상태로 되돌아간다",
 	}); err != nil {
 		return err
 	}
@@ -298,10 +298,10 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 		return err
 	}
 	sr.cancelled("order", orderID, symbol, r.now(), "")
-	fmt.Fprintf(r.out, "    cancelled order %s\n", orderID)
+	fmt.Fprintf(r.out, "    주문 취소 %s\n", orderID)
 	if id := strings.TrimSpace(res.CurrentOrderID); id != "" && id != orderID {
 		sr.observe("order.cancel.response_order_id_differs", "true",
-			"the cancel returned "+id+" for original "+orderID)
+			"취소가 원주문 "+orderID+"에 대해 "+id+"를 돌려주었다")
 	}
 	return nil
 }
@@ -309,14 +309,14 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 // amendOrder is the gated amend.
 func (r *Runner) amendOrder(ctx context.Context, sr *stepRun, orderID, symbol string, price, quantity float64) (string, error) {
 	detail := []string{
-		fmt.Sprintf("order            %s", orderID),
-		fmt.Sprintf("symbol           %s", symbol),
-		fmt.Sprintf("new limit price  %s (further from the market, still un-fillable)", trim(price)),
-		fmt.Sprintf("new quantity     %s share(s) — KR requires quantity on a modify", trim(quantity)),
+		fmt.Sprintf("주문             %s", orderID),
+		fmt.Sprintf("종목             %s", symbol),
+		fmt.Sprintf("새 지정가        %s (시장에서 더 멀고 여전히 체결 불가)", trim(price)),
+		fmt.Sprintf("새 수량          %s주 — KR은 정정에 수량을 요구한다", trim(quantity)),
 	}
 	if err := r.gate(sr, request{
 		Kind: MutateAmendOrder, Symbol: symbol, Quantity: quantity, Detail: detail,
-		Reversal: "whichever identifier is live afterwards is cancelled in this same step",
+		Reversal: "이후 살아 있는 쪽 식별자를 같은 단계에서 취소한다",
 	}); err != nil {
 		return "", err
 	}
@@ -340,7 +340,7 @@ func (r *Runner) amendOrder(ctx context.Context, sr *stepRun, orderID, symbol st
 		sr.cancelled("order", orderID, symbol, r.now(), "replaced by the amend; superseded by "+current)
 		sr.created("order", current, symbol, r.now(), "issued by the amend, replacing "+orderID)
 	}
-	fmt.Fprintf(r.out, "    amended order %s -> %s\n", orderID, current)
+	fmt.Fprintf(r.out, "    주문 정정 %s -> %s\n", orderID, current)
 	return current, nil
 }
 
@@ -353,7 +353,7 @@ func (r *Runner) createConditional(ctx context.Context, sr *stepRun, body offici
 	if err := r.gate(sr, request{
 		Kind: MutateRegisterConditional, Symbol: body.Symbol, Side: body.First.OrderSide,
 		Quantity: parseDecimal(body.Quantity), Detail: detail,
-		Reversal: "cancelled by the conditional-cancel step; it deliberately outlives this process first",
+		Reversal: "conditional-cancel 단계가 취소한다. 그 전에 의도적으로 이 프로세스보다 오래 산다",
 	}); err != nil {
 		return "", err
 	}
@@ -365,10 +365,10 @@ func (r *Runner) createConditional(ctx context.Context, sr *stepRun, body offici
 		return "", err
 	}
 	if strings.TrimSpace(ref.ID) == "" {
-		return "", fmt.Errorf("verify: the broker accepted the conditional order but returned no conditionalOrderId")
+		return "", fmt.Errorf("verify: 브로커가 조건주문을 받아들였지만 conditionalOrderId를 돌려주지 않았다")
 	}
 	sr.created("conditional-order", ref.ID, body.Symbol, r.now(), "")
-	fmt.Fprintf(r.out, "    registered conditional %s (%s %s trigger %s)\n",
+	fmt.Fprintf(r.out, "    조건주문 등록 %s (%s %s 발동가 %s)\n",
 		ref.ID, body.Type, body.Symbol, body.First.TriggerPrice)
 	return ref.ID, nil
 }
@@ -384,7 +384,7 @@ func (r *Runner) replayCreateConditional(ctx context.Context, sr *stepRun, body 
 	}); err != nil {
 		return "", err
 	}
-	fmt.Fprintf(r.out, "    replaying the identical conditional body under key %s\n", body.ClientOrderID)
+	fmt.Fprintf(r.out, "    동일 조건주문 본문을 키 %s로 재전송\n", body.ClientOrderID)
 	started := r.now()
 	ref, err := r.broker.CreateConditionalOrder(ctx, body)
 	sr.logCall(EndpointCreateConditional, body, started, r.now(), ref, err)
@@ -397,17 +397,17 @@ func (r *Runner) replayCreateConditional(ctx context.Context, sr *stepRun, body 
 // modifyConditional is the gated conditional modify.
 func (r *Runner) modifyConditional(ctx context.Context, sr *stepRun, id, symbol string, body official.ConditionalModifyBody, basis string) (string, error) {
 	detail := []string{
-		fmt.Sprintf("conditional      %s", id),
-		fmt.Sprintf("symbol           %s", symbol),
-		fmt.Sprintf("type             %s / %s", body.Type, body.OrderType),
-		fmt.Sprintf("new trigger      %s (%s)", body.First.TriggerPrice, basis),
-		fmt.Sprintf("quantity         %s share(s)", body.Quantity),
-		"NOTE             openapi says a modify cancels and recreates: a NEW id is issued and the old one is invalidated",
+		fmt.Sprintf("조건주문         %s", id),
+		fmt.Sprintf("종목             %s", symbol),
+		fmt.Sprintf("유형             %s / %s", body.Type, body.OrderType),
+		fmt.Sprintf("새 발동가        %s (%s)", body.First.TriggerPrice, basis),
+		fmt.Sprintf("수량             %s주", body.Quantity),
+		"주의             openapi에 따르면 정정은 취소 후 재생성이다 — 새 id가 발급되고 기존 id는 무효화된다",
 	}
 	if err := r.gate(sr, request{
 		Kind: MutateModifyConditional, Symbol: symbol, Side: body.First.OrderSide,
 		Quantity: parseDecimal(body.Quantity), Detail: detail,
-		Reversal: "whichever identifier is live afterwards is cancelled by the conditional-cancel step",
+		Reversal: "이후 살아 있는 쪽 식별자는 conditional-cancel 단계가 취소한다",
 	}); err != nil {
 		return "", err
 	}
@@ -427,21 +427,21 @@ func (r *Runner) modifyConditional(ctx context.Context, sr *stepRun, id, symbol 
 	// Superseded first, then created — see the note in amendOrder.
 	sr.cancelled("conditional-order", id, symbol, r.now(), "invalidated by the modify; superseded by "+current)
 	sr.created("conditional-order", current, symbol, r.now(), "issued by the modify, replacing "+id)
-	fmt.Fprintf(r.out, "    modified conditional %s -> %s\n", id, current)
+	fmt.Fprintf(r.out, "    조건주문 정정 %s -> %s\n", id, current)
 	return current, nil
 }
 
 // cancelConditional is the gated conditional cancel.
 func (r *Runner) cancelConditional(ctx context.Context, sr *stepRun, id, symbol, why string) error {
 	detail := []string{
-		fmt.Sprintf("conditional      %s", id),
-		fmt.Sprintf("symbol           %s", symbol),
-		fmt.Sprintf("why              %s", why),
-		"direction        this REMOVES a protective order from the account",
+		fmt.Sprintf("조건주문         %s", id),
+		fmt.Sprintf("종목             %s", symbol),
+		fmt.Sprintf("사유             %s", why),
+		"방향             계좌에서 보호 주문을 제거한다",
 	}
 	if err := r.gate(sr, request{
 		Kind: MutateCancelConditional, Symbol: symbol, Detail: detail,
-		Reversal: "the account returns to how this verification found it",
+		Reversal: "계좌는 이 검증이 발견한 상태로 되돌아간다",
 	}); err != nil {
 		return err
 	}
@@ -453,7 +453,7 @@ func (r *Runner) cancelConditional(ctx context.Context, sr *stepRun, id, symbol,
 		return err
 	}
 	sr.cancelled("conditional-order", id, symbol, r.now(), "")
-	fmt.Fprintf(r.out, "    cancelled conditional %s\n", id)
+	fmt.Fprintf(r.out, "    조건주문 취소 %s\n", id)
 	return nil
 }
 
@@ -525,12 +525,12 @@ func brokerErrorCode(err error) string {
 
 func conditionalDetail(body official.ConditionalCreateBody, basis string) []string {
 	lines := []string{
-		fmt.Sprintf("symbol           %s", body.Symbol),
-		fmt.Sprintf("type             %s / %s", body.Type, body.OrderType),
-		fmt.Sprintf("watch            %s when the price reaches %s", body.First.OrderSide, body.First.TriggerPrice),
-		fmt.Sprintf("quantity         %s share(s)", body.Quantity),
-		fmt.Sprintf("expires          %s", body.ExpireDate),
-		fmt.Sprintf("pricing          %s", basis),
+		fmt.Sprintf("종목             %s", body.Symbol),
+		fmt.Sprintf("유형             %s / %s", body.Type, body.OrderType),
+		fmt.Sprintf("감시             가격이 %s에 닿으면 %s", body.First.TriggerPrice, body.First.OrderSide),
+		fmt.Sprintf("수량             %s주", body.Quantity),
+		fmt.Sprintf("만료             %s", body.ExpireDate),
+		fmt.Sprintf("가격 규칙        %s", basis),
 	}
 	if body.ClientOrderID != "" {
 		lines = append(lines, fmt.Sprintf("clientOrderId    %s", body.ClientOrderID))

@@ -15,9 +15,9 @@ import (
 )
 
 func testMutation(now time.Time) Mutation {
-	return NewMutation(StepIdempotency, "place a live LIMIT order", "123-45-678901",
-		[]string{"symbol           005930 (KR)", "quantity         1 share(s)"},
-		"cancelled at the end of this step", now)
+	return NewMutation(StepIdempotency, MutatePlaceOrder.VerbKO(), "123-45-678901",
+		[]string{"종목             005930 (KR)", "수량             1주"},
+		"이 단계 끝에서 취소된다", now)
 }
 
 func TestConfirmRefusesWithoutATerminal(t *testing.T) {
@@ -41,7 +41,7 @@ func TestConfirmAcceptsTheTypedNonce(t *testing.T) {
 		t.Fatalf("Confirm: %v", err)
 	}
 	prompt := out.String()
-	for _, want := range []string{"LIVE MUTATION", "place a live LIMIT order", "005930", m.Nonce, "expires"} {
+	for _, want := range []string{"라이브 MUTATION", "실제 LIMIT 주문 접수", "005930", m.Nonce, "만료"} {
 		if !strings.Contains(prompt, want) {
 			t.Errorf("the prompt does not contain %q:\n%s", want, prompt)
 		}
@@ -100,7 +100,7 @@ func TestNoncesDoNotRepeat(t *testing.T) {
 // before they type anything, not afterwards.
 func TestPromptStatesTheReversal(t *testing.T) {
 	m := testMutation(time.Now())
-	if !strings.Contains(m.Prompt(), "reversal") {
+	if !strings.Contains(m.Prompt(), "되돌리기") {
 		t.Errorf("the prompt does not say how the exposure ends:\n%s", m.Prompt())
 	}
 }
@@ -116,8 +116,10 @@ func testBatch(now time.Time) Batch {
 		Mutations: []PlannedMutation{{
 			Ordinal: 1, Step: StepOrderCancel, Kind: MutatePlaceOrder,
 			Symbol: "005930", Side: "buy", Quantity: "1 share", MaxQuantity: 1,
-			Pricing: PriceFarBuy.Describe(DefaultOffset, MarketKR),
-			Ends:    "cancelled inside this step",
+			Pricing:   PriceFarBuy.Describe(DefaultOffset, MarketKR),
+			PricingKO: PriceFarBuy.DescribeKO(DefaultOffset, MarketKR),
+			Ends:      "cancelled inside this step",
+			EndsKO:    "이 단계 안에서 취소된다",
 		}},
 	}, false, now)
 }
@@ -144,8 +146,8 @@ func TestConfirmBatchAcceptsTheTypedNonce(t *testing.T) {
 	}
 	prompt := out.String()
 	for _, want := range []string{
-		"LIVE MUTATION BATCH", "1 request(s)", "order-cancel", "005930", "BUY", "cancelled inside this step",
-		b.Nonce, "expires", "abort",
+		"라이브 MUTATION 배치", "요청 1건", "order-cancel", "005930", "BUY", "이 단계 안에서 취소된다",
+		b.Nonce, "만료", "중단",
 	} {
 		if !strings.Contains(prompt, want) {
 			t.Errorf("the batch prompt does not contain %q:\n%s", want, prompt)

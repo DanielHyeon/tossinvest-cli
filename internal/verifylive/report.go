@@ -235,19 +235,20 @@ func replayEnabled(sameID, noSecond Observation) bool {
 
 // WriteText renders the report for a terminal.
 func (rep Report) WriteText(w io.Writer) {
-	fmt.Fprintf(w, "live verification report\n")
-	fmt.Fprintf(w, "  record           %s\n", rep.Record)
-	fmt.Fprintf(w, "  account          %s\n", orNone(rep.AccountRef))
-	fmt.Fprintf(w, "  generated        %s\n", rep.GeneratedAt.Format(time.RFC3339))
+	fmt.Fprintf(w, "실계좌 검증 리포트\n")
+	fmt.Fprintf(w, "  기록             %s\n", rep.Record)
+	fmt.Fprintf(w, "  계좌             %s\n", orNone(rep.AccountRef))
+	fmt.Fprintf(w, "  생성 시각        %s\n", rep.GeneratedAt.Format(time.RFC3339))
 
 	if len(rep.Steps) == 0 {
-		fmt.Fprintln(w, "\nNo verification has been recorded yet. Start one with `tossctl verify run`.")
+		fmt.Fprintln(w, "\n아직 기록된 검증이 없다. `tossctl verify run`으로 시작하라.")
 		return
 	}
 
-	fmt.Fprintln(w, "\nsteps")
+	fmt.Fprintln(w, "\n단계")
 	for _, s := range rep.Steps {
-		fmt.Fprintf(w, "  %-22s %-16s %s\n", s.Step, s.Verdict, truncate(s.Reason, 90))
+		fmt.Fprintf(w, "  %-22s %-24s %s\n", s.Step, VerdictLabel(s.Verdict), truncate(s.Reason, 90))
+		fmt.Fprintf(w, "  %-22s %s\n", "", StepLabel(s.Step))
 	}
 
 	for _, g := range rep.Groups {
@@ -268,19 +269,19 @@ func (rep Report) WriteText(w io.Writer) {
 		}
 	}
 
-	fmt.Fprintf(w, "\nidempotent replay  %s\n", replayVerdict(rep.ReplayEnabled))
-	fmt.Fprintf(w, "unverified         %d propert(ies) — these are task 2.6's no-automatic-entry list\n",
+	fmt.Fprintf(w, "\n멱등 재생          %s\n", replayVerdict(rep.ReplayEnabled))
+	fmt.Fprintf(w, "미검증             속성 %d건 — task 2.6의 자동 진입 금지 목록이다\n",
 		len(rep.Unverified))
 	for _, key := range rep.Unverified {
 		fmt.Fprintf(w, "  - %s\n", key)
 	}
 
 	if len(rep.Outstanding) > 0 {
-		fmt.Fprintf(w, "\n⚠ %d live object(s) this tool created are still on the account:\n", len(rep.Outstanding))
+		fmt.Fprintf(w, "\n⚠ 이 도구가 만든 객체 %d건이 아직 계좌에 살아 있다:\n", len(rep.Outstanding))
 		for _, a := range rep.Outstanding {
 			note := a.Note
 			if a.Deliberate {
-				note = "left on purpose for the persistence check — " + note
+				note = "존속 측정을 위해 의도적으로 남긴 것 — " + note
 			}
 			fmt.Fprintf(w, "  %s %s (%s) %s\n", a.Kind, a.ID, a.Symbol, truncate(note, 90))
 		}
@@ -289,9 +290,9 @@ func (rep Report) WriteText(w io.Writer) {
 
 func replayVerdict(enabled bool) string {
 	if enabled {
-		return "PERMITTED — the record shows a repeated key returning the first order and creating nothing"
+		return "허용 — 같은 키 재요청이 첫 주문을 돌려주고 아무것도 새로 만들지 않았음이 기록에 있다"
 	}
-	return "DISABLED — response-loss resolution must use the query-based path only until the record proves otherwise"
+	return "비활성 — 기록이 달리 증명하기 전까지 응답 유실 해소는 조회 기반 경로만 쓴다"
 }
 
 // Progress summarises how far the verification has got, for `verify status`.
@@ -333,30 +334,31 @@ func BuildProgress(recordPath string, entries []Entry) Progress {
 
 // WriteText renders the progress view.
 func (p Progress) WriteText(w io.Writer) {
-	fmt.Fprintf(w, "record             %s\n", p.Record)
+	fmt.Fprintf(w, "기록               %s\n", p.Record)
 	if len(p.Steps) == 0 {
-		fmt.Fprintln(w, "\nNo verification has been recorded yet. Start one with `tossctl verify run`.")
-		fmt.Fprintln(w, "`tossctl verify run --list` prints the whole procedure without touching the account.")
+		fmt.Fprintln(w, "\n아직 기록된 검증이 없다. `tossctl verify run`으로 시작하라.")
+		fmt.Fprintln(w, "`tossctl verify run --list`는 계좌를 건드리지 않고 전체 절차를 출력한다.")
 		return
 	}
-	fmt.Fprintf(w, "account            %s\n", orNone(p.AccountRef))
+	fmt.Fprintf(w, "계좌               %s\n", orNone(p.AccountRef))
 
-	fmt.Fprintln(w, "\nsteps")
+	fmt.Fprintln(w, "\n단계")
 	for _, s := range p.Steps {
-		fmt.Fprintf(w, "  %-22s %-16s %s\n", s.Step, s.Verdict, truncate(s.Reason, 90))
+		fmt.Fprintf(w, "  %-22s %-24s %s\n", s.Step, VerdictLabel(s.Verdict), truncate(s.Reason, 90))
 	}
 	if len(p.Pending) > 0 {
-		fmt.Fprintf(w, "\npending            %s\n", joinSteps(p.Pending))
+		fmt.Fprintf(w, "\n남은 단계          %s\n", joinSteps(p.Pending))
 	}
 	if p.AwaitingRestart != "" {
-		fmt.Fprintf(w, "\n%s is waiting for a NEW process: run `tossctl verify run --resume`.\n", p.AwaitingRestart)
+		fmt.Fprintf(w, "\n%s 단계는 새 프로세스를 기다린다: `tossctl verify run --resume` (콘솔에서는 [콘솔 재시작]).\n",
+			p.AwaitingRestart)
 	}
 	if len(p.Outstanding) > 0 {
-		fmt.Fprintf(w, "\n⚠ %d live object(s) this tool created are still on the account:\n", len(p.Outstanding))
+		fmt.Fprintf(w, "\n⚠ 이 도구가 만든 객체 %d건이 아직 계좌에 살아 있다:\n", len(p.Outstanding))
 		for _, a := range p.Outstanding {
 			fmt.Fprintf(w, "  %s %s (%s)\n", a.Kind, a.ID, a.Symbol)
 		}
-		fmt.Fprintln(w, "  `tossctl verify run --resume` finishes the procedure and cancels them.")
+		fmt.Fprintln(w, "  `tossctl verify run --resume`가 절차를 마치고 이들을 취소한다.")
 	}
 }
 
@@ -364,33 +366,31 @@ func (p Progress) WriteText(w io.Writer) {
 // `verify run --list` shows, and it is deliberately the same data the runner
 // walks — an operator should be able to read exactly what will happen.
 func WriteSteps(w io.Writer, includeTTLEdge bool) {
-	fmt.Fprintln(w, "live verification procedure")
-	writeWrapped(w, "  approval      ", "ONE typed, expiring confirmation for the whole run. Before anything is "+
-		"sent, the run prints every live request it plans to make — action, symbol, side, quantity, how the "+
-		"price is derived and how the exposure ends — and waits for that single string. Anything else aborts "+
-		"the run before the first request. `--confirm-each` asks for a separate typed confirmation immediately "+
-		"before every single mutation instead.")
-	writeWrapped(w, "  nothing else  ", "a step can only send what the approved list carries a line for. If the "+
-		"run would have to send something outside it — a different symbol, a different side, more than the "+
-		"approved quantity — it stops and asks for a fresh approval rather than adapting. There is no flag "+
-		"that answers either prompt.")
-	writeWrapped(w, "  exposure      ", "every order is one share, LIMIT only, priced far from the market, and "+
-		"cancelled inside the step that placed it. The one conditional order is left registered on purpose so "+
-		"the persistence check can read it back from a new process, and the resumed run cancels it.")
-	fmt.Fprintf(w, "\n  the mutations listed under each step below are exactly the lines that appear in the\n"+
-		"  approval summary, resolved against your account's symbols and quantities.\n")
+	fmt.Fprintln(w, "실계좌 검증 절차")
+	writeWrapped(w, "  승인          ", "실행 전체에 대해 타이핑하는 만료 확인 문자열 1개. 무엇이든 전송되기 "+
+		"전에 이 실행이 계획한 모든 라이브 요청 — 동작·종목·방향·수량·가격 도출 방식·노출이 끝나는 방식 — 을 "+
+		"출력하고 그 한 문자열을 기다린다. 그 외의 입력은 첫 요청 이전에 실행을 중단시킨다. "+
+		"`--confirm-each`는 대신 mutation 하나하나 직전에 별도 확인을 받는다.")
+	writeWrapped(w, "  그 외 없음    ", "단계는 승인된 목록에 줄이 있는 것만 보낼 수 있다. 목록 밖의 것 — 다른 "+
+		"종목, 다른 방향, 승인된 수량 초과 — 을 보내야 하면 적응하는 대신 멈추고 새 승인을 요구한다. "+
+		"어느 프롬프트도 대신 답해 주는 플래그는 없다.")
+	writeWrapped(w, "  노출          ", "모든 주문은 1주, LIMIT 전용, 시장에서 먼 가격이고, 접수한 단계 안에서 "+
+		"취소된다. 조건주문 1건만은 의도적으로 등록된 채 남는다 — 존속 확인이 새 프로세스에서 그것을 다시 "+
+		"읽어야 하기 때문이고, 이어하기 실행이 취소한다.")
+	fmt.Fprintf(w, "\n  아래 각 단계에 나열된 mutation은 승인 요약에 나타나는 줄 그 자체이며,\n"+
+		"  당신 계좌의 종목·수량으로 해석된 것이다.\n")
 	for _, s := range Steps() {
 		tags := []string{}
 		if s.Mutates {
 			tags = append(tags, "mutating")
 		}
 		if s.NeedsHolding {
-			tags = append(tags, "needs a holding")
+			tags = append(tags, "보유 필요")
 		}
 		if s.OptIn != "" {
-			state := "opt-in " + s.OptIn
+			state := "옵트인 " + s.OptIn
 			if includeTTLEdge && s.ID == StepIdempotencyTTLEdge {
-				state += " (requested)"
+				state += " (요청됨)"
 			}
 			tags = append(tags, state)
 		}
@@ -401,19 +401,19 @@ func WriteSteps(w io.Writer, includeTTLEdge bool) {
 		if len(tags) > 0 {
 			suffix = "  [" + strings.Join(tags, ", ") + "]"
 		}
-		fmt.Fprintf(w, "\n%-22s %s%s\n", s.ID, s.Title, suffix)
-		fmt.Fprintf(w, "  tasks   %s\n", strings.Join(s.Tasks, ", "))
-		fmt.Fprintf(w, "  proves  %s\n", s.Proves)
+		fmt.Fprintf(w, "\n%-22s %s%s\n", s.ID, StepLabel(s.ID), suffix)
+		fmt.Fprintf(w, "  task    %s\n", strings.Join(s.Tasks, ", "))
+		fmt.Fprintf(w, "  증명    %s\n", s.Proves)
 		for _, line := range s.Procedure {
 			fmt.Fprintf(w, "    - %s\n", line)
 		}
 		if len(s.Mutations) == 0 {
 			continue
 		}
-		fmt.Fprintf(w, "  sends   %d live request(s), each of which appears on the approval list:\n", len(s.Mutations))
+		fmt.Fprintf(w, "  전송    라이브 요청 %d건, 모두 승인 목록에 나타난다:\n", len(s.Mutations))
 		for _, m := range s.Mutations {
 			fmt.Fprintf(w, "    · %-22s %s\n", m.Kind, mutationSideAndQuantity(m))
-			writeWrapped(w, "        ends  ", m.Ends)
+			writeWrapped(w, "        종료  ", orFallback(m.EndsKO, m.Ends))
 		}
 	}
 }
@@ -427,22 +427,22 @@ func mutationSideAndQuantity(m StepMutation) string {
 	}
 	switch m.Quantity {
 	case QuantityOne:
-		parts = append(parts, "1 share")
+		parts = append(parts, "1주")
 	case QuantityPartial:
-		parts = append(parts, "1 share out of a larger holding")
+		parts = append(parts, "더 큰 보유 중 1주")
 	case QuantityWholeHolding:
-		parts = append(parts, "the whole sellable holding, within --max-sell-quantity")
+		parts = append(parts, "매도가능 전량 (--max-sell-quantity 이내)")
 	case QuantityOverHolding:
-		parts = append(parts, "one share MORE than the holding — expected to be refused")
+		parts = append(parts, "보유보다 1주 많음 — 거부될 것으로 예상")
 	}
 	if len(parts) == 0 {
 		switch m.Kind {
 		case MutateCancelOrder:
-			return "whatever this step has resting"
+			return "이 단계가 남긴 것 전부"
 		case MutateCancelConditional:
-			return "the live conditional order"
+			return "살아 있는 조건주문"
 		default:
-			return "no side or quantity of its own"
+			return "자기 방향·수량이 없다"
 		}
 	}
 	return strings.Join(parts, ", ")

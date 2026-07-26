@@ -107,7 +107,7 @@ func TestEveryPlacementIsMatchedByACancel(t *testing.T) {
 func TestRunReportsAnErrorWhenSomethingIsLeftLive(t *testing.T) {
 	broker := newFakeBroker()
 	// Refuse only the cancels, so orders are placed and never removed.
-	op := refuseWhere(func(m Mutation) bool { return strings.Contains(m.Action, "cancel") })
+	op := refuseWhere(func(m Mutation) bool { return strings.Contains(m.Action, "취소") })
 	h := newHarness(t, broker, op)
 
 	summary, err := h.run(Options{ConfirmEach: true})
@@ -617,7 +617,7 @@ func TestTTLEdgeStepOnlyRunsWhenAskedFor(t *testing.T) {
 	if !strings.Contains(e.Reason, FlagIncludeTTLEdge) {
 		t.Errorf("the skip reason does not name the opt-in flag: %q", e.Reason)
 	}
-	if !strings.Contains(strings.ToUpper(e.Reason), "SECOND LIVE ORDER") {
+	if !strings.Contains(e.Reason, "두 번째 라이브 주문") {
 		t.Errorf("the skip reason does not warn what the step would do: %q", e.Reason)
 	}
 }
@@ -661,7 +661,7 @@ func TestStepsNeedingAHoldingAreSkippedWithAnActionableReason(t *testing.T) {
 			t.Errorf("%s verdict = %q, want skipped", id, h.verdict(id))
 		}
 		e, _ := LastEntry(h.entries(), id)
-		if !strings.Contains(e.Reason, "never buys") {
+		if !strings.Contains(e.Reason, "매수하지 않는다") {
 			t.Errorf("%s skip reason must say the tool will not buy a holding: %q", id, e.Reason)
 		}
 	}

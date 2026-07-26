@@ -237,12 +237,12 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   </dl>
   {{if .Steps}}
   <table>
-    <tr><th>단계</th><th>판정</th><th>사유</th></tr>
-    {{range .Steps}}<tr><td>{{.Step}}</td><td>{{.Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}
+    <tr><th>단계</th><th>이름</th><th>판정</th><th>사유</th></tr>
+    {{range .Steps}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}
   </table>
   {{end}}
   {{if .AwaitingRestart}}
-  <p class="notice">{{.AwaitingRestart}} 단계는 <strong>새 프로세스</strong>를 기다린다 — 위의 [콘솔 재시작] 뒤 이어하기.</p>
+  <p class="notice"><code>{{.AwaitingRestart}}</code> ({{stepLabel .AwaitingRestart}}) 단계는 <strong>새 프로세스</strong>를 기다린다 — 위의 [콘솔 재시작] 뒤 이어하기.</p>
   {{end}}
   {{if .Outstanding}}
   <p class="danger">계좌에 아직 살아 있는 객체:</p>
@@ -317,8 +317,8 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   {{if .Err}}<p class="danger">{{.Err}}</p>{{end}}
   {{if .Summary.Outcomes}}
   <table>
-    <tr><th>단계</th><th>판정</th><th>사유</th></tr>
-    {{range .Summary.Outcomes}}<tr><td>{{.Step}}</td><td>{{.Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}
+    <tr><th>단계</th><th>이름</th><th>판정</th><th>사유</th></tr>
+    {{range .Summary.Outcomes}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}
   </table>
   {{end}}
   {{if .Summary.Halt}}<p class="notice">중단: {{.Summary.Halt}}</p>{{end}}
@@ -351,7 +351,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   판정이 끝난 단계는 다시 주문을 내지 않는다.</p>
   {{end}}
   {{if .Snap.Verify.AwaitingRestart}}
-  <p class="notice">{{.Snap.Verify.AwaitingRestart}} 단계가 새 프로세스를 기다리고 있었다. 이 콘솔이 그 새 프로세스다.</p>
+  <p class="notice"><code>{{.Snap.Verify.AwaitingRestart}}</code> ({{stepLabel .Snap.Verify.AwaitingRestart}}) 단계가 새 프로세스를 기다리고 있었다. 이 콘솔이 그 새 프로세스다.</p>
   {{end}}
   <p>시작하면 이 실행이 보낼 수 있는 <strong>모든 라이브 요청의 목록</strong>과 확인 문자열이 표시된다.
   그 문자열을 직접 입력하기 전에는 아무것도 전송되지 않는다.</p>
@@ -369,9 +369,9 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   <p>마지막 판정이 <code>fail</code> 또는 <code>skipped</code>인 단계는 <strong>{{.RedoCount}}개</strong>다.
   이어하기는 이 단계들을 건너뛴다(판정이 이미 terminal이므로). 재측정은 이 단계들만 다시 시도한다.</p>
   <table>
-    <tr><th>단계</th><th>마지막 판정</th><th>사유</th></tr>
+    <tr><th>단계</th><th>이름</th><th>마지막 판정</th><th>사유</th></tr>
     {{$redo := .Redo}}
-    {{range .Steps}}{{if redoable .Verdict}}<tr><td>{{.Step}}</td><td>{{.Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
+    {{range .Steps}}{{if redoable .Verdict}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
   </table>
   <p class="muted">대상: {{.RedoList}}</p>
   <p class="notice"><code>pass</code>·<code>deferred</code> 단계는 대상이 아니다 — 이미 측정된 속성을 위해

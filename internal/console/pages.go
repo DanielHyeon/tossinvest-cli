@@ -31,6 +31,12 @@ import (
 // set the button actually starts.
 var pageFuncs = template.FuncMap{
 	"redoable": verifylive.RedoableVerdict,
+	// stepLabel and verdict are the render-layer mapping task 1.8 ③ asks for: the
+	// record keeps its English `title` and its verdict values, and the screen puts
+	// Korean next to them. verifylive owns both maps and a drift test there fails
+	// if a catalogue step ever loses its label.
+	"stepLabel": verifylive.StepLabel,
+	"verdict":   verifylive.VerdictLabel,
 }
 
 var pages = template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates))

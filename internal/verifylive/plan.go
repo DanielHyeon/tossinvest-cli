@@ -134,6 +134,34 @@ func (b PricingBasis) Describe(offset float64, market string) string {
 	}
 }
 
+// DescribeKO is Describe in Korean: what the approval summary shows.
+//
+// The English above is what goes into the plan digest and must not move; this is
+// the same rule, said in the language the person reading it uses. The two are kept
+// in step by TestTheKoreanSummaryDescribesTheSamePlan.
+func (b PricingBasis) DescribeKO(offset float64, market string) string {
+	switch b {
+	case PriceFarBuy:
+		return fmt.Sprintf("LIMIT. 단계가 실행되는 시점의 최종체결가보다 %.0f%% 아래, %s 호가 단위에 스냅하고 "+
+			"당일 가격제한폭 안으로 clamp — 같은 규칙으로 재호가하며 규칙이 허용하는 것보다 시장에 가까워지지 않는다",
+			offset*100, market)
+	case PriceFarSell:
+		return fmt.Sprintf("LIMIT. 단계가 실행되는 시점의 최종체결가보다 %.0f%% 위, %s 호가 단위에 스냅하고 "+
+			"당일 가격제한폭 안으로 clamp — 같은 규칙으로 재호가하며 규칙이 허용하는 것보다 시장에 가까워지지 않는다",
+			offset*100, market)
+	case PriceFarStop:
+		return fmt.Sprintf("MARKET 손절. 발동가가 실행 시점 최종체결가보다 %.0f%% 아래이고 %s 호가 단위에 스냅, "+
+			"당일 가격제한폭 안으로 clamp — 발동할 수 없는 위치다", offset*100, market)
+	case PriceOneTickFurther:
+		return "위 가격보다 시장에서 한 호가 더 먼 값(같은 호가 단위) — 브로커가 '변경'으로 받아주는 최소 변화"
+	case PriceIdenticalBody:
+		return "위 요청과 바이트 단위로 동일한 본문, 동일한 clientOrderId — 본문이 다르면 다른 주문이고 " +
+			"그것은 이 단계가 측정하는 대상이 아니다"
+	default:
+		return ""
+	}
+}
+
 // QuantityRule says how many shares a request carries.
 //
 // Every rule but one resolves to a single share. The exceptions belong to the
@@ -175,6 +203,18 @@ type StepMutation struct {
 	Ends string `json:"ends"`
 	// Note is anything else the operator has to know before typing.
 	Note string `json:"note,omitempty"`
+
+	// EndsKO and NoteKO are what the operator actually reads (task 1.8 ③).
+	//
+	// They are carried alongside the English rather than instead of it, and they
+	// are json:"-" so they never reach a serialiser. That is not tidiness: the
+	// English text above is hashed into approval.plan_digest, the record's proof
+	// that a person was shown a list of exactly this shape. Translating the hashed
+	// field would give every future run a different digest from the ones already
+	// on the operator's disk, and "the same plan was re-approved across a restart"
+	// — measured on 2026-07-26 (measurements.md M3) — would stop being checkable.
+	EndsKO string `json:"-"`
+	NoteKO string `json:"-"`
 }
 
 // PlannedMutation is one line of the summary: a StepMutation resolved against this
@@ -198,16 +238,58 @@ type PlannedMutation struct {
 	// Ends and Note come from the catalogue.
 	Ends string `json:"ends"`
 	Note string `json:"note,omitempty"`
+
+	// The Korean the summary is rendered from. json:"-" for the reason given on
+	// StepMutation: everything above this line is hashed into the plan digest, and
+	// the digest has to keep meaning the same thing across builds.
+	EndsKO    string `json:"-"`
+	NoteKO    string `json:"-"`
+	PricingKO string `json:"-"`
 }
 
-// Headline is the one-line identity of the request.
+// Headline is the one-line identity of the request, in the original language. It
+// is what the per-mutation prompt and the package's own tests read.
 func (m PlannedMutation) Headline() string {
+	what := m.shape(m.Quantity)
+	if len(what) == 0 {
+		return m.Kind.Verb()
+	}
+	return m.Kind.Verb() + " — " + strings.Join(what, " ")
+}
+
+// HeadlineKO is Headline in the display language.
+func (m PlannedMutation) HeadlineKO() string {
+	what := m.shape(m.quantityKO())
+	if len(what) == 0 {
+		return m.Kind.VerbKO()
+	}
+	return m.Kind.VerbKO() + " — " + strings.Join(what, " ")
+}
+
+// quantityKO renders the share count in the display language.
+//
+// It is derived from MaxQuantity — the number the plan actually authorises — rather
+// than from the English text, so the two headlines cannot come to describe
+// different quantities.
+func (m PlannedMutation) quantityKO() string {
+	if m.Quantity == "" {
+		return ""
+	}
+	if m.MaxQuantity > 0 {
+		return trim(m.MaxQuantity) + "주"
+	}
+	return m.Quantity
+}
+
+// shape is the side/quantity/symbol trio both headlines are built from, so the two
+// languages can never describe different requests.
+func (m PlannedMutation) shape(quantity string) []string {
 	var what []string
 	if m.Side != "" {
 		what = append(what, strings.ToUpper(m.Side))
 	}
-	if m.Quantity != "" {
-		what = append(what, m.Quantity)
+	if quantity != "" {
+		what = append(what, quantity)
 	}
 	if m.Symbol != "" {
 		on := m.Symbol + " (" + MarketOf(m.Symbol) + ")"
@@ -216,10 +298,7 @@ func (m PlannedMutation) Headline() string {
 		}
 		what = append(what, on)
 	}
-	if len(what) == 0 {
-		return m.Kind.Verb()
-	}
-	return m.Kind.Verb() + " — " + strings.Join(what, " ")
+	return what
 }
 
 // PlanExclusion is a mutating step this run will NOT touch, and why.
@@ -321,15 +400,20 @@ func (p Plan) Authorises(step StepID, kind MutationKind, symbol, side string, qu
 const quantityTolerance = 1e-9
 
 // WriteLines renders the plan as the numbered list the operator reads.
+//
+// It renders the Korean (task 1.8 ③). The English the KO fields shadow is still
+// on every line — it is what approval.plan_digest is computed over — but it is not
+// what anybody reads, and orFallback keeps a line that has not been translated yet
+// visible rather than blank.
 func (p Plan) WriteLines(w io.Writer) {
 	for _, m := range p.Mutations {
-		writeWrapped(w, fmt.Sprintf("  %2d. %-22s ", m.Ordinal, m.Step), m.Headline())
+		writeWrapped(w, fmt.Sprintf("  %2d. %-22s ", m.Ordinal, m.Step), m.HeadlineKO())
 		if m.Pricing != "" {
-			writeWrapped(w, "        price   ", m.Pricing)
+			writeWrapped(w, "        가격    ", orFallback(m.PricingKO, m.Pricing))
 		}
-		writeWrapped(w, "        ends    ", m.Ends)
+		writeWrapped(w, "        종료    ", orFallback(m.EndsKO, m.Ends))
 		if m.Note != "" {
-			writeWrapped(w, "        note    ", m.Note)
+			writeWrapped(w, "        비고    ", orFallback(m.NoteKO, m.Note))
 		}
 	}
 	if len(p.Notes) > 0 {
@@ -339,11 +423,22 @@ func (p Plan) WriteLines(w io.Writer) {
 		}
 	}
 	if len(p.Excluded) > 0 {
-		fmt.Fprintf(w, "\n  mutating steps this run will NOT touch:\n")
+		fmt.Fprintf(w, "\n  이 실행이 건드리지 않는 mutating 단계:\n")
 		for _, e := range p.Excluded {
 			writeWrapped(w, fmt.Sprintf("    %-22s ", e.Step), e.Reason)
 		}
 	}
+}
+
+// orFallback prefers the translation and falls back to the original.
+//
+// A missing Korean line is a gap in the display, not a reason to show an operator
+// nothing where a live request's reversal should be.
+func orFallback(translated, original string) string {
+	if strings.TrimSpace(translated) != "" {
+		return translated
+	}
+	return original
 }
 
 // writeWrapped prints a label and its text wrapped under a hanging indent, because
@@ -421,7 +516,8 @@ func (r *Runner) Plan(ctx context.Context) Plan {
 			if step.Mutates {
 				plan.Excluded = append(plan.Excluded, PlanExclusion{
 					Step:   step.ID,
-					Reason: fmt.Sprintf("already %s on the record; re-running it would place a second live order for a measurement already made (--redo overrides)", verdict),
+					Reason: fmt.Sprintf("기록에 이미 %s로 판정되어 있다. 다시 실행하면 이미 끝난 측정을 위해 "+
+						"두 번째 실주문을 내게 된다 (--redo가 이를 무시한다)", verdict),
 				})
 			}
 			continue
@@ -443,8 +539,8 @@ func (r *Runner) Plan(ctx context.Context) Plan {
 			willRun[step.ID] = false
 			plan.Excluded = append(plan.Excluded, PlanExclusion{
 				Step: step.ID,
-				Reason: fmt.Sprintf("the account could not be read well enough to say what this step would send "+
-					"against %s, so it is left out of the batch rather than approved blind", symbol),
+				Reason: fmt.Sprintf("이 단계가 %s에 대해 무엇을 보낼지 말할 수 있을 만큼 계좌를 읽지 못했다. "+
+					"모르는 채로 승인받는 대신 배치에서 뺀다", symbol),
 			})
 			continue
 		}
@@ -483,6 +579,10 @@ func (r *Runner) planStep(step Step, symbol string, sellable float64, sellableKn
 			Pricing:     sm.Pricing.Describe(r.offset, MarketOf(symbol)),
 			Ends:        sm.Ends,
 			Note:        sm.Note,
+			// Display only. None of these three reaches the digest.
+			PricingKO: sm.Pricing.DescribeKO(r.offset, MarketOf(symbol)),
+			EndsKO:    sm.EndsKO,
+			NoteKO:    sm.NoteKO,
 		})
 	}
 	if len(lines) == 0 {

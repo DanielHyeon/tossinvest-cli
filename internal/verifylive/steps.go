@@ -79,7 +79,7 @@ func (r *Runner) dispatch(ctx context.Context, id StepID, sr *stepRun) {
 	case StepCosts:
 		err = r.stepCosts(ctx, sr)
 	default:
-		sr.skip("this build has no implementation for the step")
+		sr.skip("이 빌드에는 해당 단계의 구현이 없다")
 		return
 	}
 	sr.resolve(err)
@@ -129,8 +129,8 @@ func (r *Runner) stepReadFixtures(ctx context.Context, sr *stepRun) error {
 
 	sr.observe("order.history.orders_read", strconv.Itoa(orders), fmt.Sprintf("%d page(s)", pages))
 	if orders == 0 {
-		sr.skip("the account has no order history, so there is nothing to derive the status table from yet. " +
-			"The order steps below create orders; re-run this step afterwards with `--redo read-fixtures`")
+		sr.skip("계좌에 주문 이력이 없어 상태 표를 도출할 대상이 아직 없다. " +
+			"아래 주문 단계들이 주문을 만드니, 그 뒤에 `--redo read-fixtures`로 이 단계를 다시 실행하라")
 		return nil
 	}
 
@@ -296,9 +296,8 @@ func (r *Runner) stepIdempotency(ctx context.Context, sr *stepRun) error {
 	}
 
 	if delta > 1 || (replayErr == nil && replayID != orderID) {
-		sr.fail("the replay did not return the first order, so idempotent replay must stay disabled and " +
-			"response-loss resolution must use the query-based path only (execution-verification: " +
-			"\"재생이 새 주문을 만드는 경우\")")
+		sr.fail("재전송이 첫 주문을 돌려주지 않았다. 멱등 재생은 비활성으로 두고 응답 유실 해소는 " +
+			"조회 기반 경로만 써야 한다 (execution-verification: \"재생이 새 주문을 만드는 경우\")")
 	}
 	return nil
 }
@@ -310,7 +309,7 @@ func (r *Runner) stepIdempotencyTTLEdge(ctx context.Context, sr *stepRun) error 
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(r.out, "    NOTE: this step deliberately creates a SECOND live order. Both are cancelled below.\n")
+	fmt.Fprintf(r.out, "    주의: 이 단계는 의도적으로 두 번째 라이브 주문을 만든다. 둘 다 아래에서 취소된다.\n")
 
 	first, err := r.placeOrder(ctx, sr, spec, "cancelled at the end of this step, together with the second order")
 	if err != nil {
@@ -319,7 +318,7 @@ func (r *Runner) stepIdempotencyTTLEdge(ctx context.Context, sr *stepRun) error 
 	sr.observe("idempotency.ttl_wait_seconds", strconv.FormatInt(int64(r.ttlWait/time.Second), 10),
 		"the document says the key is valid for ten minutes")
 
-	fmt.Fprintf(r.out, "    waiting %s for the key's documented window to close…\n", r.ttlWait)
+	fmt.Fprintf(r.out, "    문서상 키 유효 창이 닫히기를 %s 기다린다…\n", r.ttlWait)
 	if err := r.sleep(ctx, r.ttlWait); err != nil {
 		// Cancel what exists before returning: an interrupted wait must not leave
 		// the order behind silently.
@@ -421,7 +420,7 @@ func (r *Runner) stepSellBoundary(ctx context.Context, sr *stepRun) error {
 	}
 	sr.observe("sell.boundary.sellable_at_start", trim(sellable), "")
 	if sellable < MinQuantity {
-		sr.skip(fmt.Sprintf("%s reports %s sellable share(s); the sell boundaries need at least one",
+		sr.skip(fmt.Sprintf("%s의 매도가능수량이 %s주다. 매도 경계 측정에는 최소 1주가 필요하다",
 			symbol, trim(sellable)))
 		return nil
 	}
@@ -493,8 +492,8 @@ func (r *Runner) stepSellBoundary(ctx context.Context, sr *stepRun) error {
 		if err := r.cancelOrder(ctx, sr, overID, symbol, "an accepted oversell must not be left resting"); err != nil {
 			return err
 		}
-		sr.fail("the broker accepted a sell for more than the holding — the liquidation reservation formula " +
-			"cannot rely on the broker to bound it")
+		sr.fail("브로커가 보유보다 많은 수량의 매도를 받아들였다 — 청산 예약 공식은 브로커가 " +
+			"한도를 걸어 준다고 믿을 수 없다")
 	}
 	return nil
 }
@@ -508,7 +507,7 @@ func (r *Runner) stepConditionalRegister(ctx context.Context, sr *stepRun) error
 		return err
 	}
 	if sellable < MinQuantity {
-		sr.skip(fmt.Sprintf("%s reports %s sellable share(s); a protective stop needs at least one",
+		sr.skip(fmt.Sprintf("%s의 매도가능수량이 %s주다. 보호 손절에는 최소 1주가 필요하다",
 			symbol, trim(sellable)))
 		return nil
 	}
@@ -600,7 +599,7 @@ func (r *Runner) stepConditionalRegister(ctx context.Context, sr *stepRun) error
 func (r *Runner) stepSellableReserved(ctx context.Context, sr *stepRun) error {
 	id, symbol, ok := r.liveConditional()
 	if !ok {
-		sr.skip("no conditional order from this verification is live")
+		sr.skip("이 검증이 만든 살아 있는 조건주문이 없다")
 		return nil
 	}
 	sellable, err := r.readSellable(ctx, sr, symbol)
@@ -624,26 +623,26 @@ func (r *Runner) stepSellableReserved(ctx context.Context, sr *stepRun) error {
 func (r *Runner) stepConditionalPersist(ctx context.Context, sr *stepRun) error {
 	id, symbol, ok := r.liveConditional()
 	if !ok {
-		sr.skip("no conditional order from this verification is live")
+		sr.skip("이 검증이 만든 살아 있는 조건주문이 없다")
 		return nil
 	}
 	registrar, found := r.registeringProcess(id)
 	if found && registrar == r.process.InstanceID {
 		sr.awaitRestart(fmt.Sprintf(
-			"conditional %s on %s is registered and this is the process that registered it. "+
-				"Persistence across a process exit cannot be observed from inside that process: stop here, "+
-				"then run `tossctl verify run --resume` in a NEW process to read it back and finish "+
-				"(the remaining steps cancel it)", id, symbol))
-		fmt.Fprintf(r.out, "\n  A live conditional order remains on the account: %s (%s).\n", id, symbol)
-		fmt.Fprintf(r.out, "  Run `tossctl verify run --resume` to continue — that run cancels it.\n")
-		fmt.Fprintf(r.out, "  To stop now instead, cancel it with `tossctl order conditional cancel %s`.\n", id)
+			"%s에 걸린 조건주문 %s가 등록되어 있고, 등록한 프로세스가 바로 이 프로세스다. "+
+				"프로세스 종료를 넘긴 존속은 그 프로세스 안에서는 관측할 수 없다: 여기서 멈추고 "+
+				"새 프로세스에서 `tossctl verify run --resume`을 실행해 다시 읽어 마무리하라 "+
+				"(콘솔에서는 [콘솔 재시작] 버튼. 남은 단계들이 이 조건주문을 취소한다)", symbol, id))
+		fmt.Fprintf(r.out, "\n  계좌에 살아 있는 조건주문이 남아 있다: %s (%s).\n", id, symbol)
+		fmt.Fprintf(r.out, "  이어가려면 `tossctl verify run --resume` — 그 실행이 이것을 취소한다.\n")
+		fmt.Fprintf(r.out, "  지금 멈추려면 `tossctl order conditional cancel %s`로 직접 취소하라.\n", id)
 		return nil
 	}
 
 	co, err := r.readConditional(ctx, sr, id)
 	if err != nil {
 		sr.observe("conditional.survives_process_exit", "false", truncateError(err))
-		sr.fail("conditional %s could not be read back from a new process: %s", id, truncateError(err))
+		sr.fail("새 프로세스에서 조건주문 %s를 다시 읽을 수 없었다: %s", id, truncateError(err))
 		return nil
 	}
 	sr.observe("conditional.survives_process_exit", "true",
@@ -659,14 +658,16 @@ func (r *Runner) stepConditionalTrigger(sr *stepRun) error {
 	sr.observe("conditional.triggered_order_id_exposed", "unverified",
 		"triggeredOrderId links a conditional to the order it generated; it can only be read after a trigger")
 	sr.observe("conditional.triggered_order_latency", "unverified", "")
-	sr.deferStep("[별도 세션 — 시장 조건 필요] " + sr.step.Deferred)
+	// The catalogue's own Deferred text already opens with the reason, so the
+	// prefix that used to be added here would say it twice.
+	sr.deferStep(sr.step.Deferred)
 	return nil
 }
 
 func (r *Runner) stepConditionalModify(ctx context.Context, sr *stepRun) error {
 	id, symbol, ok := r.liveConditional()
 	if !ok {
-		sr.skip("no conditional order from this verification is live")
+		sr.skip("이 검증이 만든 살아 있는 조건주문이 없다")
 		return nil
 	}
 	before, err := r.readConditional(ctx, sr, id)
@@ -675,7 +676,7 @@ func (r *Runner) stepConditionalModify(ctx context.Context, sr *stepRun) error {
 	}
 	newTrigger := OneTickFurther(before.First.TriggerPrice, "buy", MarketOf(symbol))
 	if newTrigger <= 0 {
-		sr.skip("the live conditional reports no trigger price to move")
+		sr.skip("살아 있는 조건주문에 옮길 발동가가 없다")
 		return nil
 	}
 
@@ -700,8 +701,8 @@ func (r *Runner) stepConditionalModify(ctx context.Context, sr *stepRun) error {
 		} else {
 			sr.observe("conditional.modify_invalidates_old_id", "false",
 				"the old identifier still reads back after the modify — two live claims on the same shares")
-			sr.fail("the modify left the old conditional %s readable alongside the new %s; protective "+
-				"quantity changes must use cancel-then-register until this is understood", id, newID)
+			sr.fail("정정이 기존 조건주문 %s를 새 %s와 나란히 읽히는 상태로 남겼다. 이 동작이 이해되기 "+
+				"전까지 보호 수량 변경은 취소 후 재등록으로만 해야 한다", id, newID)
 		}
 	} else {
 		sr.observe("conditional.modify_invalidates_old_id", "not-applicable", "the identifier did not change")
@@ -718,7 +719,7 @@ func (r *Runner) stepConditionalModify(ctx context.Context, sr *stepRun) error {
 func (r *Runner) stepConditionalCancel(ctx context.Context, sr *stepRun) error {
 	id, symbol, ok := r.liveConditional()
 	if !ok {
-		sr.skip("no conditional order from this verification is live")
+		sr.skip("이 검증이 만든 살아 있는 조건주문이 없다")
 		return nil
 	}
 	if err := r.cancelConditional(ctx, sr, id, symbol, "the verification is finished with it"); err != nil {

@@ -291,7 +291,7 @@ func TestVerifyRunListNeedsNoCredentialsAndSendsNothing(t *testing.T) {
 			t.Errorf("--list omits %s", s.ID)
 		}
 	}
-	for _, want := range []string{"one share", "typed confirmation", "--include-ttl-edge"} {
+	for _, want := range []string{"1주", "확인 문자열", "--include-ttl-edge"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("--list does not mention %q:\n%s", want, out)
 		}
@@ -299,9 +299,9 @@ func TestVerifyRunListNeedsNoCredentialsAndSendsNothing(t *testing.T) {
 	// The approval model, which is what an operator decides on before running
 	// anything: one string for the whole run, and a list that is a limit.
 	for _, want := range []string{
-		"ONE typed, expiring confirmation for the whole run",
+		"실행 전체에 대해 타이핑하는 만료 확인 문자열 1개",
 		"--confirm-each",
-		"stops and asks for a fresh approval",
+		"멈추고 새 승인을 요구한다",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("--list does not describe the batch approval (%q missing):\n%s", want, out)
@@ -331,7 +331,7 @@ func TestVerifyRunAsksForTheBatchApprovalBeforeAnythingIsSent(t *testing.T) {
 			t.Errorf("the run issued %s although the batch was never approved", req)
 		}
 	}
-	if !strings.Contains(out, "ONE expiring typed string for the whole run") {
+	if !strings.Contains(out, "실행 전체에 대해 만료되는 확인 문자열 1개") {
 		t.Errorf("the run banner does not describe the batch model:\n%s", out)
 	}
 	if !strings.Contains(out, "--confirm-each") {
@@ -437,10 +437,10 @@ func TestVerifyReportKeepsReplayDisabledWithoutEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("verify report: %v", err)
 	}
-	if !strings.Contains(out, "DISABLED") {
+	if !strings.Contains(out, "멱등 재생          비활성") {
 		t.Errorf("the report does not report idempotent replay as disabled:\n%s", out)
 	}
-	if !strings.Contains(out, "no-automatic-entry list") {
+	if !strings.Contains(out, "자동 진입 금지 목록") {
 		t.Errorf("the report does not produce task 2.6's list:\n%s", out)
 	}
 }

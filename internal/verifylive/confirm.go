@@ -68,12 +68,12 @@ var (
 	// ErrNotATerminal means stdin is not a terminal. There is no override, and
 	// there is no step that proceeds without one.
 	ErrNotATerminal = errors.New(
-		"verify: every live mutation must be confirmed at a terminal — this command has no automation flag by design")
+		"verify: 모든 라이브 mutation은 터미널에서 확인받아야 한다 — 이 명령에는 설계상 자동화 플래그가 없다")
 	// ErrConfirmationExpired means the nonce timed out. It is a refusal, not a
 	// failure: nothing was sent.
-	ErrConfirmationExpired = errors.New("verify: the confirmation expired; nothing was sent")
+	ErrConfirmationExpired = errors.New("verify: 확인 문자열이 만료되었다. 아무것도 전송되지 않았다")
 	// ErrRefused means the typed text did not match, or the operator sent EOF.
-	ErrRefused = errors.New("verify: the confirmation did not match; nothing was sent")
+	ErrRefused = errors.New("verify: 확인 문자열이 일치하지 않는다. 아무것도 전송되지 않았다")
 )
 
 // Mutation is what the operator is shown and has to type back.
@@ -116,18 +116,18 @@ func NewMutation(step StepID, action, accountRef string, detail []string, revers
 // Prompt renders what the operator sees.
 func (m Mutation) Prompt() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "\nLIVE MUTATION — step %s\n\n", m.Step)
-	fmt.Fprintf(&b, "  action           %s\n", m.Action)
-	fmt.Fprintf(&b, "  account          %s\n", m.Account)
+	fmt.Fprintf(&b, "\n라이브 MUTATION — 단계 %s (%s)\n\n", m.Step, StepLabel(m.Step))
+	fmt.Fprintf(&b, "  동작             %s\n", m.Action)
+	fmt.Fprintf(&b, "  계좌             %s\n", m.Account)
 	for _, d := range m.Detail {
 		fmt.Fprintf(&b, "  %s\n", d)
 	}
 	if strings.TrimSpace(m.Reversal) != "" {
-		fmt.Fprintf(&b, "  reversal         %s\n", m.Reversal)
+		fmt.Fprintf(&b, "  되돌리기         %s\n", m.Reversal)
 	}
-	fmt.Fprintf(&b, "  confirmation     %s (expires %s)\n", m.Nonce, m.ExpiresAt.UTC().Format("15:04:05Z"))
-	b.WriteString("\nThis sends a real request to the real account.\n")
-	b.WriteString("Type the confirmation string to proceed, anything else to refuse this step: ")
+	fmt.Fprintf(&b, "  확인 문자열      %s (만료 %s)\n", m.Nonce, m.ExpiresAt.UTC().Format("15:04:05Z"))
+	b.WriteString("\n이것은 실제 계좌에 실제 요청을 보낸다.\n")
+	b.WriteString("진행하려면 확인 문자열을 입력하라. 그 외의 입력은 이 단계를 거부한다: ")
 	return b.String()
 }
 
@@ -158,7 +158,7 @@ func Confirm(in io.Reader, out io.Writer, m Mutation, interactive bool, now time
 	reader := bufio.NewReader(in)
 	line, err := reader.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
-		return fmt.Errorf("verify: reading the confirmation: %w", err)
+		return fmt.Errorf("verify: 확인 입력을 읽는 중: %w", err)
 	}
 	return m.Verify(line, now)
 }
@@ -197,24 +197,24 @@ func NewBatch(plan Plan, resumed bool, now time.Time) Batch {
 // Prompt renders the whole list and the one string that approves it.
 func (b Batch) Prompt() string {
 	var s strings.Builder
-	scope := "this run"
+	scope := "이 실행"
 	if b.Resumed {
-		scope = "the REMAINING part of this verification"
+		scope = "이 검증의 남은 부분"
 	}
-	fmt.Fprintf(&s, "\nLIVE MUTATION BATCH — %d request(s) planned for %s\n\n", len(b.Plan.Mutations), scope)
-	fmt.Fprintf(&s, "  account          %s\n", b.Plan.Account)
+	fmt.Fprintf(&s, "\n라이브 MUTATION 배치 — %s에 계획된 요청 %d건\n\n", scope, len(b.Plan.Mutations))
+	fmt.Fprintf(&s, "  계좌             %s\n", b.Plan.Account)
 	fmt.Fprintf(&s, "  run              %s\n\n", b.Plan.RunID)
-	s.WriteString("  Everything this run can send is listed below. Each order is a LIMIT order for the " +
-		"quantity\n  shown, priced so it cannot fill, and each line says how its exposure ends.\n\n")
+	s.WriteString("  이 실행이 보낼 수 있는 전부가 아래에 있다. 각 주문은 표시된 수량의 LIMIT 주문이고,\n" +
+		"  체결될 수 없는 가격이며, 각 줄은 그 노출이 어떻게 끝나는지 밝힌다.\n\n")
 
 	b.Plan.WriteLines(&s)
 
-	fmt.Fprintf(&s, "\n  confirmation     %s (expires %s)\n\n",
+	fmt.Fprintf(&s, "\n  확인 문자열      %s (만료 %s)\n\n",
 		b.Nonce, b.ExpiresAt.UTC().Format("15:04:05Z"))
-	s.WriteString("These are real requests against the real account. Typing the confirmation approves the " +
-		"list\nabove and nothing else: a step that would have to send something not on it stops the run and\n" +
-		"asks again rather than adapting. Prices are re-quoted by the stated rule when each step runs.\n")
-	s.WriteString("Type the confirmation string to approve the batch, anything else to abort: ")
+	s.WriteString("이것들은 실제 계좌에 나가는 실제 요청이다. 확인 문자열을 입력하면 위 목록만 승인되고 " +
+		"그 외에는\n아무것도 승인되지 않는다 — 목록에 없는 것을 보내야 하는 단계는 적응하는 대신 실행을 " +
+		"멈추고 다시 묻는다.\n가격은 각 단계가 실행될 때 명시된 규칙으로 재호가된다.\n")
+	s.WriteString("배치를 승인하려면 확인 문자열을 입력하라. 그 외의 입력은 중단이다: ")
 	return s.String()
 }
 
@@ -244,7 +244,7 @@ func ConfirmBatch(in io.Reader, out io.Writer, b Batch, interactive bool, now ti
 	reader := bufio.NewReader(in)
 	line, err := reader.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
-		return fmt.Errorf("verify: reading the batch approval: %w", err)
+		return fmt.Errorf("verify: 배치 승인 입력을 읽는 중: %w", err)
 	}
 	return b.Verify(line, now)
 }

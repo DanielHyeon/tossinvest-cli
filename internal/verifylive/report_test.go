@@ -145,7 +145,7 @@ func TestReportTextNamesTheUnverifiedProperties(t *testing.T) {
 
 	for _, want := range []string{
 		"ProtectiveCapability", "Idempotency key", "unverified",
-		"no-automatic-entry list", "conditional.survives_process_exit",
+		"자동 진입 금지 목록", "conditional.survives_process_exit",
 	} {
 		if !strings.Contains(text, want) {
 			t.Errorf("the report does not mention %q:\n%s", want, text)
@@ -201,7 +201,7 @@ func TestWriteStepsIsAReadableProcedure(t *testing.T) {
 			t.Errorf("the listing omits %s", s.ID)
 		}
 	}
-	for _, want := range []string{"mutating", "needs a holding", FlagIncludeTTLEdge, "deferred", "one share"} {
+	for _, want := range []string{"mutating", "보유 필요", FlagIncludeTTLEdge, "deferred", "1주"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("the listing does not mention %q", want)
 		}
@@ -209,9 +209,9 @@ func TestWriteStepsIsAReadableProcedure(t *testing.T) {
 	// The approval model is the first thing an operator has to understand, and the
 	// listing is where they read it before running anything.
 	for _, want := range []string{
-		"ONE typed, expiring confirmation for the whole run",
+		"실행 전체에 대해 타이핑하는 만료 확인 문자열 1개",
 		"--confirm-each",
-		"stops and asks for a fresh approval",
+		"멈추고 새 승인을 요구한다",
 	} {
 		if !strings.Contains(text, want) {
 			t.Errorf("the listing does not explain the batch model (%q missing):\n%s", want, text)

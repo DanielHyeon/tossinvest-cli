@@ -490,11 +490,14 @@ func TestTheApprovedFlowRunsExactlyTheApprovedBatch(t *testing.T) {
 	if !strings.Contains(shown, flatten(view.Batch.Prompt())) {
 		t.Errorf("the page does not show the same batch summary the CLI prints:\n%s", truncateForLog(page))
 	}
+	// The summary is rendered in the display language (task 1.8 ③). The English
+	// the KO fields shadow is still on every planned line — it is what
+	// approval.plan_digest is hashed over — but it is not what the operator reads.
 	for _, m := range view.Batch.Plan.Mutations {
-		if !strings.Contains(shown, flatten(m.Headline())) {
-			t.Errorf("the batch summary on the page omits %q", m.Headline())
+		if !strings.Contains(shown, flatten(m.HeadlineKO())) {
+			t.Errorf("the batch summary on the page omits %q", m.HeadlineKO())
 		}
-		if !strings.Contains(shown, flatten(m.Ends)) {
+		if !strings.Contains(shown, flatten(m.EndsKO)) {
 			t.Errorf("the batch summary on the page does not say how %s ends", m.Kind)
 		}
 	}
@@ -634,7 +637,7 @@ func TestTheReportPageAndItsJSONDownload(t *testing.T) {
 	h.authenticate(t)
 
 	page := body(t, h.get(t, "/report"))
-	if !strings.Contains(page, "DISABLED") {
+	if !strings.Contains(page, "비활성") {
 		t.Errorf("the report page does not carry the replay verdict:\n%s", truncateForLog(page))
 	}
 

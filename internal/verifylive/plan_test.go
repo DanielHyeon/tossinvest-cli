@@ -143,17 +143,20 @@ func TestThePromptPrintsEveryPlannedLine(t *testing.T) {
 	// a hanging indent and a line break inside a headline is not a missing headline.
 	flat := squashSpace(prompt)
 	for _, m := range plan.Mutations {
-		if !strings.Contains(flat, squashSpace(m.Headline())) {
-			t.Errorf("line %d (%s) is missing from the prompt:\n%s", m.Ordinal, m.Headline(), prompt)
+		// The prompt is rendered in the display language (task 1.8 ③); the English
+		// the KO fields shadow is what the plan digest is computed over and is not
+		// what a person reads.
+		if !strings.Contains(flat, squashSpace(m.HeadlineKO())) {
+			t.Errorf("line %d (%s) is missing from the prompt:\n%s", m.Ordinal, m.HeadlineKO(), prompt)
 		}
-		if !strings.Contains(flat, squashSpace(m.Ends)) {
-			t.Errorf("line %d does not say how its exposure ends in the prompt: %s", m.Ordinal, m.Ends)
+		if !strings.Contains(flat, squashSpace(m.EndsKO)) {
+			t.Errorf("line %d does not say how its exposure ends in the prompt: %s", m.Ordinal, m.EndsKO)
 		}
 		if !strings.Contains(prompt, string(m.Step)) {
 			t.Errorf("the prompt never names the step %s", m.Step)
 		}
 	}
-	for _, want := range []string{batch.Nonce, "expires", "abort", plan.Account} {
+	for _, want := range []string{batch.Nonce, "만료", "중단", plan.Account} {
 		if !strings.Contains(prompt, want) {
 			t.Errorf("the prompt does not contain %q:\n%s", want, prompt)
 		}
@@ -463,7 +466,7 @@ func TestAStepWithNoApprovedLinesIsSkippedNotAborted(t *testing.T) {
 		t.Fatalf("sell-boundary verdict = %q, want skipped", h.verdict(StepSellBoundary))
 	}
 	e, _ := LastEntry(h.entries(), StepSellBoundary)
-	if !strings.Contains(e.Reason, "batch approved for this run") {
+	if !strings.Contains(e.Reason, "승인된 배치에 없다") {
 		t.Errorf("the skip reason does not say the step was not approved: %q", e.Reason)
 	}
 	if h.verdict(StepConditionalRegister) != VerdictPass {
@@ -619,7 +622,7 @@ func TestAResumedRunApprovesItsRemainingBatch(t *testing.T) {
 	if !second.Resumed {
 		t.Error("the resumed batch does not tell the operator it is the remaining part")
 	}
-	if !strings.Contains(second.Prompt(), "REMAINING") {
+	if !strings.Contains(second.Prompt(), "남은 부분") {
 		t.Errorf("the resumed prompt does not say it covers what is left:\n%s", second.Prompt())
 	}
 	if !first.Plan.Covers(StepOrderCancel) || !first.Plan.Covers(StepConditionalRegister) {

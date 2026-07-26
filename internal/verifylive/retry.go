@@ -102,7 +102,7 @@ func readRetry[T any](
 			return out, err
 		}
 		wait := ReadRetryBackoff(extra)
-		fmt.Fprintf(r.out, "  %s was rate limited; waiting %s and reading it again (%d of %d)\n",
+		fmt.Fprintf(r.out, "  %s가 429(rate limited)로 거부되었다. %s 기다린 뒤 다시 읽는다 (%d/%d)\n",
 			endpoint, wait, extra+1, ReadRetryExtraAttempts)
 		if sleepErr := r.sleep(ctx, wait); sleepErr != nil {
 			// The operator interrupted, or the deadline passed. The rate limit is

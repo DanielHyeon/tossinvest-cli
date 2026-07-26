@@ -258,7 +258,7 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 	for _, step := range Steps() {
 		if err := ctx.Err(); err != nil {
 			summary.Halted = true
-			summary.Halt = "interrupted; everything recorded so far stands"
+			summary.Halt = "중단됨. 여기까지 기록된 것은 모두 유효하다"
 			summary.Outstanding = r.outstanding()
 			return summary, err
 		}
@@ -267,12 +267,12 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 			summary.Outcomes = append(summary.Outcomes, Outcome{
 				Step: step.ID, Title: step.Title, Verdict: verdict, AlreadySettled: true,
 			})
-			fmt.Fprintf(r.out, "· %-22s already %s on the record\n", step.ID, verdict)
+			fmt.Fprintf(r.out, "· %-22s %s — 기록에 이미 판정이 있어 건너뛴다\n", step.ID, verdict)
 			continue
 		}
 
 		sr := &stepRun{step: step, startedAt: r.now()}
-		fmt.Fprintf(r.out, "▸ %-22s %s\n", step.ID, step.Title)
+		fmt.Fprintf(r.out, "▸ %-22s %s\n", step.ID, StepLabel(step.ID))
 
 		if reason, skip := r.preflight(step); skip {
 			sr.skip(reason)
@@ -313,7 +313,7 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 		}
 		if sr.abort != nil && errors.Is(sr.abort, context.Canceled) {
 			summary.Halted = true
-			summary.Halt = "interrupted; everything recorded so far stands"
+			summary.Halt = "중단됨. 여기까지 기록된 것은 모두 유효하다"
 			summary.Outstanding = r.outstanding()
 			return summary, sr.abort
 		}
@@ -322,26 +322,25 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 	summary.Outstanding = r.outstanding()
 	if leftovers := undeliberate(summary.Outstanding); len(leftovers) > 0 {
 		return summary, fmt.Errorf(
-			"verify: the run finished but %d live object(s) this tool created are still on the account: %s — "+
-				"cancel them before doing anything else", len(leftovers), describeArtifacts(leftovers))
+			"verify: 실행은 끝났지만 이 도구가 만든 객체 %d건이 아직 계좌에 살아 있다: %s — "+
+				"다른 일을 하기 전에 먼저 취소하라", len(leftovers), describeArtifacts(leftovers))
 	}
 	return summary, nil
 }
 
 // writeBanner says which approval model this run is using before it uses it.
 func (r *Runner) writeBanner() {
-	fmt.Fprintf(r.out, "live verification — run %s, process %d\n", r.runID, r.process.PID)
-	fmt.Fprintf(r.out, "  account %s, buy-side symbol %s, holding symbol %s\n",
+	fmt.Fprintf(r.out, "실계좌 검증 — run %s, process %d\n", r.runID, r.process.PID)
+	fmt.Fprintf(r.out, "  계좌 %s, 매수측 종목 %s, 보유 종목 %s\n",
 		maskedAccount(r.accountRef), orNone(r.symbol), orNone(r.holdingSymbol))
 	if r.confirmEach {
-		fmt.Fprintf(r.out, "  --confirm-each: every live mutation waits for its own expiring typed string, "+
-			"shown immediately\n  before it is sent. Nothing here has a --yes.\n\n")
+		fmt.Fprintf(r.out, "  --confirm-each: 모든 라이브 mutation이 전송 직전에 표시되는 자기 몫의 "+
+			"만료 확인 문자열을\n  기다린다. 여기에 --yes는 없다.\n\n")
 		return
 	}
-	fmt.Fprintf(r.out, "  approval: ONE expiring typed string for the whole run. Every live request this run "+
-		"can make is\n  listed first; anything not on that list is never sent, and a step that would need to "+
-		"send one\n  stops the run instead. Nothing here has a --yes. `--confirm-each` asks per mutation "+
-		"instead.\n\n")
+	fmt.Fprintf(r.out, "  승인: 실행 전체에 대해 만료되는 확인 문자열 1개. 이 실행이 보낼 수 있는 모든 "+
+		"라이브 요청을\n  먼저 나열하고, 목록에 없는 것은 절대 전송되지 않으며, 보내야 하는 상황이 되면 "+
+		"실행이 멈춘다.\n  여기에 --yes는 없다. 단계별 확인은 `--confirm-each`다.\n\n")
 }
 
 // approveBatch is the run-wide gate.
@@ -366,7 +365,7 @@ func (r *Runner) approveBatch(ctx context.Context) (string, error) {
 	plan := *r.plan
 
 	if len(plan.Mutations) == 0 {
-		fmt.Fprintf(r.out, "this run plans no live mutation, so there is nothing to approve.\n")
+		fmt.Fprintf(r.out, "이 실행은 라이브 mutation을 계획하지 않는다 — 승인할 것이 없다.\n")
 		plan.WriteLines(r.out)
 		fmt.Fprintln(r.out)
 		return "", nil
@@ -381,19 +380,19 @@ func (r *Runner) approveBatch(ctx context.Context) (string, error) {
 		r.plan = nil
 	}
 	if recErr := r.recordApproval(plan, batch, verdict, reason, startedAt); recErr != nil {
-		return "the approval could not be recorded, so nothing was sent", recErr
+		return "승인을 기록할 수 없어 아무것도 전송되지 않았다", recErr
 	}
 
 	switch {
 	case err == nil:
-		fmt.Fprintf(r.out, "\napproved: %d live request(s), and nothing else.\n\n", len(plan.Mutations))
+		fmt.Fprintf(r.out, "\n승인됨: 라이브 요청 %d건, 그 외에는 아무것도 나가지 않는다.\n\n", len(plan.Mutations))
 		return "", nil
 	case errors.Is(err, ErrNotATerminal):
 		return ErrNotATerminal.Error(), ErrNotATerminal
 	default:
-		fmt.Fprintf(r.out, "\n%s Nothing was sent and no step ran.\n", err.Error())
-		fmt.Fprintf(r.out, "`tossctl verify run --list` prints the same procedure without touching the account.\n")
-		return "the batch was not approved; nothing was sent and no step ran", nil
+		fmt.Fprintf(r.out, "\n%s 아무것도 전송되지 않았고 어떤 단계도 실행되지 않았다.\n", err.Error())
+		fmt.Fprintf(r.out, "`tossctl verify run --list`는 계좌를 건드리지 않고 같은 절차를 출력한다.\n")
+		return "배치가 승인되지 않았다. 아무것도 전송되지 않았고 어떤 단계도 실행되지 않았다", nil
 	}
 }
 
@@ -453,7 +452,7 @@ func (r *Runner) preflight(step Step) (string, bool) {
 		return reason, true
 	}
 	if step.Mutates && !r.approvedStep(step.ID) {
-		return "not part of the batch approved for this run — " + r.unapprovedReason(step.ID), true
+		return "이 실행에서 승인된 배치에 없다 — " + r.unapprovedReason(step.ID), true
 	}
 	return "", false
 }
@@ -471,7 +470,7 @@ func (r *Runner) approvedStep(id StepID) bool {
 
 func (r *Runner) unapprovedReason(id StepID) string {
 	if r.plan == nil {
-		return "this run has no approved batch"
+		return "이 실행에는 승인된 배치가 없다"
 	}
 	return r.plan.ExclusionReason(id)
 }
@@ -491,21 +490,21 @@ func (r *Runner) preflightStatic(step Step, passed func(StepID) bool) (string, b
 		return "", false
 	}
 	if step.OptIn != "" && !r.optedIn(step) {
-		return fmt.Sprintf("not requested — pass %s to run it. %s", step.OptIn, step.Procedure[0]), true
+		return fmt.Sprintf("요청하지 않았다 — 실행하려면 %s를 붙여라. %s", step.OptIn, step.Procedure[0]), true
 	}
 	for _, dep := range step.DependsOn {
 		if !passed(dep) {
-			return fmt.Sprintf("%s did not pass, so there is nothing for this step to observe", dep), true
+			return fmt.Sprintf("%s가 통과하지 않아 이 단계가 관측할 대상이 없다", dep), true
 		}
 	}
 	if step.NeedsHolding && r.holdingSymbol == "" {
-		return "the account holds nothing this tool can use. This step needs an existing position — the tool " +
-			"never buys one to create it. Hold at least one share of a KR symbol and re-run with --resume " +
-			"(or --holding-symbol to name it)", true
+		return "이 도구가 쓸 수 있는 보유 종목이 계좌에 없다. 이 단계는 기존 포지션이 필요하고, 도구는 " +
+			"그것을 만들려고 매수하지 않는다. KR 종목을 최소 1주 보유한 뒤 --resume으로 다시 실행하라 " +
+			"(--holding-symbol로 종목을 지정할 수도 있다)", true
 	}
 	if step.Mutates && MarketOf(r.mutationSymbol(step)) != MarketKR {
-		return fmt.Sprintf("%s is not a KR symbol; the amend and price-band rules this step relies on are KR's, "+
-			"so the US path is left unverified rather than probed with the wrong rules", r.mutationSymbol(step)), true
+		return fmt.Sprintf("%s는 KR 종목이 아니다. 이 단계가 의존하는 정정·가격제한폭 규칙은 KR의 것이므로, "+
+			"틀린 규칙으로 시험하는 대신 US 경로는 미검증으로 남긴다", r.mutationSymbol(step)), true
 	}
 	return "", false
 }

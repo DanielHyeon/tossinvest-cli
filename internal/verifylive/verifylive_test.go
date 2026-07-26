@@ -66,8 +66,10 @@ func TestEveryMutatingStepSaysHowTheExposureEnds(t *testing.T) {
 		if !s.Mutates {
 			continue
 		}
+		// The procedure is in the display language (task 1.8 ③); "취소" is what
+		// "cancel" now reads as, and the property being asserted is unchanged.
 		text := strings.ToLower(strings.Join(s.Procedure, " "))
-		if !strings.Contains(text, "cancel") {
+		if !strings.Contains(text, "취소") && !strings.Contains(text, "cancel") {
 			t.Errorf("%s mutates but its procedure never mentions cancelling what it creates:\n  %s",
 				s.ID, strings.Join(s.Procedure, "\n  "))
 		}
@@ -169,8 +171,7 @@ func TestTTLEdgeStepIsOptInAndWarnsFirst(t *testing.T) {
 	if s.OptIn != FlagIncludeTTLEdge {
 		t.Errorf("OptIn = %q, want %q — it must not run by default", s.OptIn, FlagIncludeTTLEdge)
 	}
-	first := strings.ToUpper(s.Procedure[0])
-	if !strings.Contains(first, "SECOND LIVE ORDER") {
+	if !strings.Contains(s.Procedure[0], "두 번째 라이브 주문") {
 		t.Errorf("the step's first procedure line must say it creates a second live order, got %q", s.Procedure[0])
 	}
 }
