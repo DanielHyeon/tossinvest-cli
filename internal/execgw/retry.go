@@ -21,10 +21,12 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
@@ -257,6 +259,19 @@ func ParseRetryAfter(header string, now time.Time) (time.Duration, bool) {
 	return 0, false
 }
 
+// ModeEscalation is the journal's automatic conservative tightening, narrowed to
+// the one method a trigger producer needs. *journal.Journal implements it.
+//
+// It is an interface for the reason journal.ModeProjector is one: the dependency
+// stays one method wide and a test can watch the escalation without a journal.
+// The trigger string is the journal's closed enumeration — a producer cannot
+// invent one, and a cause outside the enumeration cannot escalate at all
+// (risk-management: 분석·성과 작업 실패는 트리거가 아니다 SHALL NOT).
+type ModeEscalation interface {
+	EscalateOperatingMode(ctx context.Context, accountRef, trigger string,
+		announcer journal.ModeAnnouncer) (journal.OperatingModeRecord, bool, error)
+}
+
 // Retrier runs required queries under the matrix and reports their outcome to the
 // entry gate.
 type Retrier struct {
@@ -267,6 +282,21 @@ type Retrier struct {
 	Gate *EntryGate
 	// RetryAfter supplies the broker's 429 hint. Optional.
 	RetryAfter RetryAfterSource
+
+	// Escalate persists the operating-mode tightening a rejected credential
+	// triggers (risk-management: 자격증명 실패(401/403) → ENTRY_BLOCKED).
+	// Optional; nil leaves the in-memory gate latch as the only consequence.
+	//
+	// The latch and the transition are not the same thing and neither replaces
+	// the other. The latch stops this process from opening a position, now; the
+	// transition is the durable half, and it is the half that survives the
+	// restart an operator performs when they see a credential error.
+	Escalate ModeEscalation
+	// AccountRef scopes that escalation. An escalation is per account and this
+	// one has no other way to learn which; empty disables it.
+	AccountRef string
+	// Announcer is told about a transition that changed something. Optional.
+	Announcer journal.ModeAnnouncer
 }
 
 // Query performs a read under the retry budget.
@@ -304,7 +334,7 @@ func (r *Retrier) Query(ctx context.Context, kind RequiredQuery, fn func(context
 				r.Gate.Block(ReasonBrokerAuthRejected,
 					fmt.Sprintf("%s was refused by the broker: %v", kind, err))
 			}
-			return err
+			return errors.Join(err, r.escalateCredentialFailure(ctx))
 
 		case ClassPermanent, ClassCanceled:
 			return err
@@ -328,6 +358,36 @@ func (r *Retrier) Query(ctx context.Context, kind RequiredQuery, fn func(context
 		}
 	}
 	return lastErr
+}
+
+// escalateCredentialFailure persists the automatic tightening a 401/403 causes.
+//
+// # Why the error is joined onto the query's
+//
+// A tightening that did not persist is a block that a restart lifts, which is
+// precisely the restart an operator performs when they see a credential error.
+// So the failure has to reach somebody. It cannot replace the query error — the
+// caller classifies that one — and this package has no logger to put it in
+// (internal/obs imports execgw, not the other way round), so it is joined:
+// errors.Is still answers every question about the original, and the second one
+// stops being invisible.
+//
+// # Why it runs outside every lock
+//
+// It is called from Query, which holds nothing, and never from EntryGate.Block.
+// The gate's own mutex is taken by journal.TransitionOperatingMode's projection
+// step, so escalating from inside Block would take the two locks in the opposite
+// order from the transition that is already doing it.
+func (r *Retrier) escalateCredentialFailure(ctx context.Context) error {
+	if r.Escalate == nil || strings.TrimSpace(r.AccountRef) == "" {
+		return nil
+	}
+	if _, _, err := r.Escalate.EscalateOperatingMode(ctx, r.AccountRef,
+		journal.ModeTriggerCredentialRejected, r.Announcer); err != nil {
+		return fmt.Errorf("execgw: the credential failure did not reach the operating mode, "+
+			"so a restart would lift the block: %w", err)
+	}
+	return nil
 }
 
 // rateLimitWait honours the broker's hint when there is one, capped; otherwise it

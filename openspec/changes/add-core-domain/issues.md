@@ -565,6 +565,31 @@
   `SetApplyHooks`가 재바인딩을 거부하므로 7.x는 gateway.go의 그 리터럴을 확장해야 한다
   (테스트가 "두 번째 바인딩은 실패한다"로 고정).
 
+## 2026-07-26 [safe local] 자동 강화 트리거 생산자 3/4 배선 — 게이트가 아니라 생산자에서 (승계 F)
+
+- 3.2의 생산자 표 중 셋을 배선했다: `BROKER_AUTH_REJECTED`←`execgw.Retrier`(401/403),
+  `CRITICAL_ALERT_UNDELIVERED`←`obs.Notifier.deliver` 실패, `DAILY_LOSS_LIMIT_REACHED`←
+  `execgw.RiskGuardian`(체인의 일손실 rung 거부). 넷째(`EXIT_OBSERVATION_OUTAGE`)는 7.4.
+- **`EntryGate.Block` 안에서 강화하지 않았다.** 한 지점에 모으는 쪽이 깔끔해 보이지만
+  락 순서가 반대가 된다: `TransitionOperatingMode`는 커밋 후 `ProjectOperatingMode`로
+  게이트 뮤텍스를 잡는다. Block(게이트 뮤텍스 보유) → journal 쓰기와 정면으로 교차한다.
+  또 Block에는 ctx가 없다. 그래서 각 생산자에서, 어떤 락도 잡지 않은 지점에서 부른다.
+- `obs`는 `deliver`가 `n.mu`를 놓은 **뒤** 부르고 **announcer는 nil**이다. 방금 예산을 전부
+  소진한 그 transport로 전환을 알리면 배달 불가 알림이 하나 더 쌓이고 예산을 한 번 더 태운다.
+  전환은 저널과 구조적 로그에 남고, 운영자의 원래 알림은 outbox에 PENDING으로 남는다.
+  부수 효과로 `deliver` 재진입 경로가 사라진다(뮤텍스는 재진입 불가라 그게 데드락이었다).
+- 실패한 강화는 **삼키지 않는다**: 지속되지 않은 강화는 재시작이 푸는 차단이고, 자격증명 오류를
+  본 운영자가 하는 첫 행동이 재시작이다. execgw에는 로거가 없으므로(obs → execgw 방향)
+  `errors.Join`으로 원 오류에 붙인다 — `ClassifyQueryError`·`errors.Is`는 그대로 동작한다.
+  obs는 로거가 있으므로 error 레벨 로그.
+- 일손실 생산자가 발급자인 이유: "한도 도달"을 판정하는 곳이 체인의 그 rung이다. 발급자는 P&L을
+  계산하지 않는다 — `AccountState.DailyRealizedLoss`는 `riskcalc.DailyLoss`의 출력이고, 그것을
+  최신으로 유지하는 루프는 **8.1/7.x**다. 이 승계가 공급한 것은 전환이고, 그 태스크들이 공급할
+  것은 0이 아닌 실현 손실을 넘기는 호출자다. 자본 ≤ 0 분기도 같은 사유·같은 목적 상태다.
+- 엔진 프로필에는 아직 `Retrier`도 `Notifier`도 **구성하는 곳이 없다**(프로덕션 생성자 전수
+  확인 — 폴링 루프가 7.4의 산출물이다). 그래서 이 승계의 배선은 생산자 쪽 필드와 발화이고,
+  엔진이 그 둘을 만들 때 `Escalate`·`AccountRef`를 채우는 것이 7.4의 몫이다.
+
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
 
 - **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).

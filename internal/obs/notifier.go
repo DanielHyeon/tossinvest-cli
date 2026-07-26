@@ -72,9 +72,21 @@ type Notifier struct {
 	Publisher Publisher
 	// Journal backs the critical outbox. Optional; without it critical events
 	// degrade to best-effort and the Notifier says so on every one.
+	//
+	// It is also what makes the escalation below durable: the same handle owns
+	// the operating-mode history.
 	Journal *journal.Journal
 	// Gate is latched when a critical alert cannot be delivered. Optional.
 	Gate *execgw.EntryGate
+	// AccountRef scopes the operating-mode tightening that sustained delivery
+	// failure triggers (risk-management: critical 알림 outbox 전달 실패 지속 →
+	// ENTRY_BLOCKED). Empty leaves the gate latch as the only consequence.
+	//
+	// The latch and the transition answer different questions. The latch stops
+	// this process from opening a position; the transition is what a restart
+	// still knows about, and an operator who sees "alerts are not arriving" is
+	// exactly the person about to restart something.
+	AccountRef string
 	// Clock drives the retry waits. Defaults to clock.System().
 	Clock clock.Clock
 	// Attempts is how many publishes one critical alert gets. Zero uses
@@ -167,13 +179,63 @@ func (n *Notifier) notifyCritical(ctx context.Context, e Event) error {
 		return fmt.Errorf("obs: recording a critical alert: %w", err)
 	}
 
-	n.deliver(ctx, id, e)
+	if !n.deliver(ctx, id, e) {
+		// Outside deliver, and that is not tidiness: deliver holds n.mu, the
+		// escalation announces through a ModeAnnouncer, and an announcer wired to
+		// this Notifier would re-enter Notify and deadlock on a mutex Go does not
+		// make reentrant.
+		n.escalate(ctx, e)
+	}
 	return nil
 }
 
+// escalate persists the automatic tightening that sustained critical-alert
+// delivery failure triggers.
+//
+// # No announcer
+//
+// The transition is announced to nobody on purpose. The transport that would
+// carry the announcement is the one that just failed its whole retry budget, so
+// announcing would enqueue a second undeliverable alert and spend a second
+// budget on it. The transition is durable in the journal and in the structured
+// log, the operator's original alert is still PENDING in the outbox waiting for
+// the transport to come back, and the account is blocked either way. It also
+// removes the only path by which this could re-enter deliver.
+//
+// # No error return
+//
+// Notify's contract is that a failed *send* is not the caller's problem — it has
+// already been handled, by latching the gate — and only a failed outbox *write*
+// is. A failed escalation is the same shape as a failed send: the in-process
+// block stands, and what was lost is the part that survives a restart. It is
+// logged at error level rather than bubbled, because every call site would
+// otherwise have to re-implement this same judgement.
+func (n *Notifier) escalate(ctx context.Context, e Event) {
+	if n.Journal == nil || strings.TrimSpace(n.AccountRef) == "" {
+		return
+	}
+	_, changed, err := n.Journal.EscalateOperatingMode(ctx, n.AccountRef,
+		journal.ModeTriggerCriticalAlertUndelivered, nil)
+	switch {
+	case err != nil && n.Log != nil:
+		n.Log.Error(EventOperatingMode, err,
+			FieldAccount, n.AccountRef,
+			FieldEvent, string(e.Type),
+			FieldDetail, "the undelivered critical alert did not reach the operating mode, "+
+				"so a restart would lift the block")
+	case changed && n.Log != nil:
+		// Not a Notify: see above. The line is the record.
+		n.Log.Warn(EventOperatingMode,
+			FieldAccount, n.AccountRef,
+			FieldToState, journal.ModeEntryBlocked,
+			FieldReason, journal.ModeTriggerCriticalAlertUndelivered,
+			FieldDetail, "new entries are blocked until an operator acknowledges the alert backlog")
+	}
+}
+
 // deliver publishes one outbox row under the retry budget, latching the gate if
-// it cannot.
-func (n *Notifier) deliver(ctx context.Context, id int64, e Event) {
+// it cannot. It reports whether the alert went out.
+func (n *Notifier) deliver(ctx context.Context, id int64, e Event) bool {
 	// One delivery loop at a time: two goroutines publishing the same backlog
 	// would double-send and race on the attempt counter.
 	n.mu.Lock()
@@ -196,7 +258,7 @@ func (n *Notifier) deliver(ctx context.Context, id int64, e Event) {
 			if markErr := n.Journal.MarkAlertDelivered(ctx, id); markErr != nil && n.Log != nil {
 				n.Log.Error(EventAlertUndelivered, markErr)
 			}
-			return
+			return true
 		}
 		lastErr = err
 		if markErr := n.Journal.MarkAlertAttemptFailed(ctx, id, err.Error()); markErr != nil && n.Log != nil {
@@ -221,6 +283,7 @@ func (n *Notifier) deliver(ctx context.Context, id int64, e Event) {
 	if n.Gate != nil {
 		n.Gate.Block(execgw.ReasonAlertUndelivered, detail)
 	}
+	return false
 }
 
 // wait sleeps between attempts, reporting false when the context ended.

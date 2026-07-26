@@ -200,6 +200,9 @@ type RiskGuardianOptions struct {
 	// Recollect bounds the snapshot re-collection loop. Zero uses the journal's
 	// defaults (3 attempts, 10s), which are under the TTL by design.
 	Recollect journal.RecollectPolicy
+	// Announcer is told about an operating-mode transition this Guardian's
+	// escalation caused. Optional.
+	Announcer journal.ModeAnnouncer
 	// NewID mints decision ids and nonces. Defaults to 128 bits of randomness.
 	NewID func() string
 }
@@ -219,6 +222,7 @@ type RiskGuardian struct {
 	policyVersion string
 	ttl           time.Duration
 	recollect     journal.RecollectPolicy
+	announcer     journal.ModeAnnouncer
 	newID         func() string
 }
 
@@ -277,6 +281,7 @@ func NewRiskGuardian(opts RiskGuardianOptions) (*RiskGuardian, error) {
 		policyVersion: strings.TrimSpace(opts.PolicyVersion),
 		ttl:           ttl,
 		recollect:     opts.Recollect,
+		announcer:     opts.Announcer,
 		newID:         newID,
 	}, nil
 }
@@ -333,7 +338,7 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 	// The chain, once. Everything after this point is the ledger's answer, not a
 	// second judgement of the intent.
 	if verdict := evaluateChain(in); !verdict.Allowed {
-		return Issued{}, chainRefusal(verdict)
+		return Issued{}, errors.Join(chainRefusal(verdict), g.escalateFor(ctx, verdict))
 	}
 	exposure, verdict := risk.EntryExposureValue(in)
 	if !verdict.Allowed {
@@ -469,6 +474,45 @@ func (g *RiskGuardian) IssueReduction(ctx context.Context, req ReductionIssuance
 		Decision:  GuardianDecision{ID: dec.ID, Generation: dec.Generation},
 		ExpiresAt: dec.ExpiresAt,
 	}, nil
+}
+
+// escalateFor persists the automatic operating-mode tightening a chain refusal
+// triggers, when it is one of the enumerated ones.
+//
+// # Why the issuer is the daily-loss producer
+//
+// The trigger is "일일 손실 한도 도달", and the place that judges whether the
+// limit is reached is the chain's daily-loss rung — which runs here, with the
+// account's realised loss as an input. The issuer does not compute a P&L and
+// must not: the value arrives on AccountState.DailyRealizedLoss from
+// riskcalc.DailyLoss, and the loop that keeps it current is task 8.1/7.x's. What
+// this seam supplies is the transition; what those tasks supply is a caller that
+// passes a realised loss derived from `trade_outcomes` rather than a zero.
+//
+// Until then this fires exactly when a caller hands over a loss at or past the
+// limit — which is the correct behaviour on the day the input exists, and no
+// behaviour at all before it. The equity-at-or-below-zero branch reports the
+// same reason and escalates for the same purpose: both mean the account has no
+// loss budget left to measure against.
+//
+// The enumeration is the journal's, and it is closed: a refusal that is not a
+// trigger returns before reaching it, which is how "분석·성과 작업 실패는
+// 트리거가 아니다" stays true without anybody remembering it here.
+//
+// The error is joined onto the refusal rather than replacing it. The entry is
+// refused either way — that part is fail-closed and already decided — but a
+// tightening that did not persist is a block a restart lifts, and it must not
+// disappear because the thing it accompanies was already an error.
+func (g *RiskGuardian) escalateFor(ctx context.Context, verdict risk.Decision) error {
+	if verdict.Reason != risk.ReasonDailyLossLimitReached {
+		return nil
+	}
+	if _, _, err := g.journal.EscalateOperatingMode(ctx, g.accountRef,
+		journal.ModeTriggerDailyLossLimit, g.announcer); err != nil {
+		return fmt.Errorf("execgw: the daily-loss limit did not reach the operating mode, "+
+			"so a restart would lift the block: %w", err)
+	}
+	return nil
 }
 
 // scopedIntent binds the intent to this Guardian's account.
