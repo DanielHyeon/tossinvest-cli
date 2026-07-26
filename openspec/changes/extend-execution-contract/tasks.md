@@ -13,7 +13,7 @@
 ## 1. 결정 영속·멱등키
 
 - [x] 1.1 [T][High-risk] **Pre-Edit 후** `orderintent.PlaceIntent`·`official.orderCreateV0/V1`·응답 파서에 `clientOrderId` 배선(현재 일반 주문 경로에 필드 없음). `CanonicalPlace` 미포함 — CLI confirm token 무변경 characterization
-- [ ] 1.2 [T] 키 유도 `f(decision_id, generation)` (≤36자, `[a-zA-Z0-9\-_]` — openapi 패턴), 결정론성 테스트. generation은 2a에서 0 고정
+- [x] 1.2 [T] 키 유도 `f(decision_id, generation)` (≤36자, `[a-zA-Z0-9\-_]` — openapi 패턴), 결정론성 테스트. generation은 2a에서 0 고정
 - [ ] 1.3 [T][High-risk] **Pre-Edit 후** `PrepareRequest` 확장(공개 계약 — durability_test 갱신 목록 사전 열거): RECORDED에 decision_id·safety_class·generation·멱등키·canonical wire body·serializer_version 불변 영속
 - [ ] 1.4 [T][High-risk] 결정 영속·검증: 발급자가 Gateway 호출 전 `decisions` 기록(클래스별 preimage: RiskIntent/ReductionIntent), Gateway는 journal에서 읽은 preimage·키로 재검증(호출자 공급 값 금지). 바꿔치기·키 불일치 거부 테스트
 - [ ] 1.5 [T][High-risk] class↔형태 일치 검증: Gateway가 노출 증가 여부를 독립 계산, EXPOSURE_RAISING ⇔ raisesExposure 불일치 거부(BUY+RISK_REDUCING 거부 테스트). 한도 면제를 `KindCancel` 리터럴 → 검증된 class 기준으로 재작성(guardian.go:181-183)
