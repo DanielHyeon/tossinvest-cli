@@ -9,7 +9,7 @@
 - [ ] 1.3 rate limit 실측 → retry matrix·폴링 SLO 수치 확정 반영
 - [ ] 1.4 attestation 파일 생성 (만료·계좌 식별·성공 endpoint 집합·속성 결과) + 엔진 기동 인터록 연동 확인 — endpoint 집합은 `engine.RequiredEndpoints()`와 drift 가드 테스트로 동기화한다(2a가 목록을 확장하면 자동 강제; 조건주문 endpoint는 2c가 추가)
 
-- [x] 1.5 [T] **안내형 실계좌 검증 도구** `tossctl verify run`: 2.1·2.2·2.5·2.7·2.8의 측정을 단계 목록으로 구동 — 각 mutation은 flatten-all 패턴의 TTY typed-confirmation(자동화 플래그 금지), 최소 수량·즉시 취소, 단계별 증거 JSONL 기록(→ attestation 속성 입력), 중단·재개 가능(조건주문 존속 확인은 재실행 2회 구조), 비용은 검증 주문 자체의 execution.commission에서 수집. 자동 테스트가 아니라 운영자 도구다(테스트는 httptest 전용, testenv 가드 상속). 유효 창 경계(2.7)는 의도적 이중 주문 절차임을 단계 안내문에 명시하고 기본 생략(--include-ttl-edge 옵트인)
+- [x] 1.5 [T] **안내형 실계좌 검증 도구** `tossctl verify run`: 2.1·2.2·2.5·2.7·2.8의 측정을 단계 목록으로 구동 — 승인은 **run당 1회 배치 typed-confirmation**(시작 시 계획된 전 mutation의 전체 요약 목록 + 만료 nonce — 사용자 결정 2026-07-26; 1회성 측정이므로 §0.1 취지 내 완화)이 기본이고 `--confirm-each`로 단계별 확인 옵트인, 자동화 플래그 금지·TTY 전용은 유지, 최소 수량·즉시 취소, 단계별 증거 JSONL 기록(→ attestation 속성 입력), 중단·재개 가능(조건주문 존속 확인은 재실행 2회 구조), 비용은 검증 주문 자체의 execution.commission에서 수집. 자동 테스트가 아니라 운영자 도구다(테스트는 httptest 전용, testenv 가드 상속). 유효 창 경계(2.7)는 의도적 이중 주문 절차임을 단계 안내문에 명시하고 기본 생략(--include-ttl-edge 옵트인)
 
 ## 2. 실계좌 검증 [M+사용자]
 
