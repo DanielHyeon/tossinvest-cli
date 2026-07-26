@@ -31,7 +31,7 @@
 
 ## 4. Guardian 발급자
 
-- [ ] 4.1 [T][High-risk] 발급자: 체인 ALLOW → `RecordDecisionAndReserve` → Gateway 참조 전달. RiskIntent/ReductionIntent 구성, TTL 60s(실장 상수), 예약 거부 시 고아 결정 없음·reason 기록 테스트
+- [x] 4.1 [T][High-risk] 발급자: 체인 ALLOW → `RecordDecisionAndReserve` → Gateway 참조 전달. RiskIntent/ReductionIntent 구성, TTL 60s(실장 상수), 예약 거부 시 고아 결정 없음·reason 기록 테스트
 - [ ] 4.2 [T][High-risk] `ExposureLimiter` 구현(감사 한도 단일 출처·Set 비트 일치)·엔진 Guardian 주입·인터록 조합 테스트 — small_live 5필드로 **조항 1–5 통과 + 조항 6(ProtectionReady)이 유일한 거부 사유**임을 검증(게이트 ON 완전 통과는 2c 후)
 - [ ] 4.3 [T] 발급 race(동시 다심볼 합산 한도)·발급-제출 사이 모드 강화 시 EntryGate 거부 테스트
 

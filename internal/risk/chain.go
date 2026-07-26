@@ -564,6 +564,29 @@ func entryNotional(in Input, costOverestimate string) (riskcalc.Money, Decision)
 	return value, allow()
 }
 
+// EntryExposureValue is what one entry adds to the account's open exposure:
+// 지정가 × 수량 + 과대 추정 비용, valued through riskcalc's calculation contract.
+//
+// It is exported for one caller: the issuer (task 4.1), which has to hold that
+// amount back in the reservation ledger. 총계 한도의 최종 권위는 예약 트랜잭션 —
+// so the reservation must consume exactly the number the chain just found room
+// for. A second arithmetic at the call site would be a second answer, and two
+// answers for one aggregate differ at the boundary, which is the only place the
+// aggregate decides anything.
+//
+// The refusal it can return is the chain's own INPUT_UNAVAILABLE: an input the
+// chain could not evaluate is not an amount anybody may reserve against.
+func EntryExposureValue(in Input) (riskcalc.Money, Decision) {
+	if d := preflight(in); !d.Allowed {
+		return riskcalc.Money{}, d
+	}
+	if in.Intent.Side != SideBuy {
+		return riskcalc.Money{}, refuse(ReasonInputUnavailable,
+			"only an entry adds open exposure; a reduction lowers it")
+	}
+	return entryNotionalWithCosts(in)
+}
+
 // entryNotionalWithCosts values the intent including the cost model's estimate
 // of what placing it costs. Both the cash check and the exposure check use it,
 // so an entry is measured the same way against both.

@@ -470,6 +470,46 @@
 - critical이므로 outbox에 먼저 durable하게 쓰인다 — 전환을 알리고 죽은 프로세스의 알림도
   남는다. 되먹임 고리는 위 항목의 no-op 규칙이 닫는다.
 
+## 2026-07-26 [safe local] 발급자를 `internal/execgw`에 두었다 (task 4.1)
+
+- 사실: 태스크는 "`internal/risk` issuer type or new file"이라 적는다. 그런데 발급자는 셋을 동시에
+  필요로 한다 — 체인(`internal/risk`), 원자 발급 API(`internal/journal`), 결정 참조·TTL·한도
+  스냅샷(`internal/execgw`).
+- 문제: `internal/risk`에 두면 그 패키지가 journal을 import한다. 2.4 판정이 세운 성질
+  ("`internal/risk`는 execgw를 import하지 않는다 — 그러면 journal이 체인 뒤로 딸려 들어온다")이
+  깨지고, 체인의 순수성(값만 받는 함수)이 패키지 의존성 수준에서 사라진다.
+- 이번 처리: `internal/execgw/riskguardian.go`. 의존 방향은 이미 execgw → journal이고
+  execgw → risk를 더해도 순환이 없다(risk는 costs·riskcalc·clock만 import). 결정 계약을 소유한
+  패키지가 그 발급자도 소유하는 배치이고, 2.4의 파일 배치 편차와 같은 성격이다.
+- 검증: `internal/risk`의 import 목록 무변경(chain.go에 `EntryExposureValue` 1개 추가만).
+
+## 2026-07-26 [safe local] 진입 예약은 OPEN_EXPOSURE 하나다 (task 4.1)
+
+- 사실: 예약 kind는 셋이다(`OPEN_EXPOSURE`·`DAILY_LOSS`·`CASH`, execution_contract.go:67-69).
+  스펙은 "총계 한도의 최종 권위는 예약 트랜잭션"이라고만 적고 어느 kind를 거는지는 적지 않는다.
+- 이번 처리: 진입은 `OPEN_EXPOSURE` 하나만 건다. 근거는 kind별로 다르다:
+  - `DAILY_LOSS`는 **실현** 손실이다. 진입은 그것을 움직이지 않으므로 예약할 것이 없고,
+    "이 거래가 질 것"을 전제로 손실 한도를 미리 깎는 것은 스펙에 없는 신규 정책이다.
+  - `CASH`는 설정 한도가 아니라 브로커 사실이다. 예약의 한도 비교는 도달=차단(≥)인데 체인의 현금
+    검사는 포함 상한(정확히 커버하면 통과)이라, 가용현금을 "한도"로 넘기면 두 규칙이 경계에서
+    어긋난다. 현금은 체인이 비용 포함으로 이미 검사한다.
+- 예약 금액은 `risk.EntryExposureValue`(지정가 × 수량 + 과대 추정 비용) — 체인의
+  `checkOpenExposure`가 방금 여유를 확인한 바로 그 수이고, 그래서 새 export가 필요했다.
+  같은 수를 호출자가 다시 계산하면 경계에서 갈라진다.
+- 후속 task 입력: **8.1**이 실현 손실을 기록하면 `DAILY_LOSS` 예약의 생산자는 그쪽이다.
+
+## 2026-07-26 [observation] VERSION_CONFLICT는 발급자 경로에서 도달 불가 (task 4.1)
+
+- 사실: 태스크는 네 reason이 전부 표면화되는 테스트를 요구한다. 그런데 발급자는 항상 재수집 루프
+  (`RecordDecisionAndReserveWithRecollection`)를 쓰고, `recollectLoop`는 stale·superseded를
+  마지막에 `ErrRecollectionExhausted`로 감싼다(0.2 판정: "내부 재시도로 stale·superseded는
+  종단에서 여기 수렴"). 그래서 발급자에서 나오는 버전 경합은 전부
+  `SNAPSHOT_RECOLLECTION_EXHAUSTED`다.
+- 이번 처리: 도달 가능한 셋(LIMIT_REACHED·SNAPSHOT_RECOLLECTION_EXHAUSTED·DECISION_EXPIRED)을
+  end-to-end로 고정하고, VERSION_CONFLICT는 단발 `Reserve`의 공개 계약으로 남긴다(journal의
+  `IssueRefusalReason` 테스트가 매핑을 고정). 테스트 주석에 도달 불가의 이유를 적었다 —
+  "테스트가 없다"와 "구조적으로 일어날 수 없다"는 다른 사실이다.
+
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
 
 - **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).
