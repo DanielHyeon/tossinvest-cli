@@ -97,3 +97,7 @@ triggerPrice 를 시장가보다 훨씬 **위**로(발동 안 됨), orderPrice �
 - 사용자 결정에 따라 승인 모델을 run당 1회 배치로 전환(커밋 1df778a). 이 파일 상단의 "재실행해도 mutation은 매번 typed confirmation" · "취소도 typed confirmation" 서술은 구모델 기준 — 현행은 배치 승인이 기본, `--confirm-each` 옵트인. 계획 밖 mutation은 ErrOutsidePlan으로 전체 중단(전송 0건), mutate.go의 gate 경유는 AST 정적 가드로 증명.
 - 배치 거부 시 읽기 전용 단계도 중단: 계약 문언대로 승인 — 읽기 증거는 --confirm-each로 도달 가능.
 - sell-boundary 수량을 계획 시점 SellableQuantity 실측으로 표기(실패 시 blind 승인 대신 단계 제외): 승인.
+
+## Manager 판정 (웹 콘솔, 2026-07-26)
+
+- 사용자 결정: 검증을 웹 화면에서 수행. 승인 채널을 TTY→localhost 웹 폼으로 확장하되 등가성 조건을 태스크 1.6에 명시(토큰+CSRF+nonce 타이핑, runner 레일 무변경, CLI 비대화 승인 경로 신설 금지). TTY의 실질은 "사람의 의도적 타이핑"이며 웹 폼 타이핑은 같은 강도 — 자동화 차단의 실체는 양쪽 모두 결의된 사용자를 막지 못하고, 지키는 것은 사고·에이전트의 무의도 mutation이다. P4 웹 데몬 아키텍처와는 별개의 임시 운영자 표면임을 명시(단일 사용자·루프백 한정).
