@@ -37,7 +37,7 @@ ALTER TABLE positions ADD COLUMN adoption_id TEXT REFERENCES position_adoptions(
 
 - **EntryPrice = 편입 판정에 쓴 관측가**, **InitialStop = EntryPrice × (1 − pct)**, HighWater는 OpenRatchetState가 entry로 자동 seed(별도 인자 없음 — 라운드 2 정정). 편입 직후 R=0.
 - **편입 행위 자체는 매도 발의를 생성하지 않는다(SHALL NOT)** — 편입 트랜잭션에 exit 판정이 포함되지 않는다. 다만 **편입 관측과 첫 exit 관측은 다른 시각·다른 소스의 값이므로, 그 사이 가격 이동이 첫 틱 발의를 만드는 것은 정상 exit 동작이다**(라운드 2: 절대 무발의 주장은 성립 불가 — 정직하게 명시). 회귀 테스트는 두 케이스를 나눈다: 편입 tx 무발의 + 첫 틱 발의는 래칫 규칙 그대로.
-- `observed_price`의 소스는 **exit 관측과 동일한 시세 경로(Prices)**로 지정한다. 이 경로는 float64를 경유한다 — `[기존 제약 — 엔진 가격 경로 전체가 float64(Quote.Last)]` 태그. 원문 decimal 보존 SHALL은 **cost_basis에 한정**하며, 이를 위해 official 어댑터에 holdings 원문 문자열 접근을 additive로 추가한다(태스크).
+- `observed_price`의 소스는 **exit 관측과 동일한 시세 경로(Prices)**로 지정한다. **관측은 편입 tx 직전이어야 하고 staleness 15초(execgw QueryPrice 신선도 표와 동일) 초과 시 편입을 연기한다** — 묵은 가격으로 동결된 합성 손절은 즉발 청산 경로다(라운드 3 P1). 이 경로는 float64를 경유한다 — `[기존 제약 — 엔진 가격 경로 전체가 float64(Quote.Last)]` 태그. 원문 decimal 보존 SHALL은 **cost_basis에 한정**하며, 이를 위해 official 어댑터에 holdings 원문 문자열 접근을 additive로 추가한다(태스크).
 - **pct 범위: `0.02 ≤ pct < 1`**(설정 거부). 하한 근거: 관측 노이즈·왕복 비용 규모(비용 상한 MAX_RATE=0.05)보다 작은 보호폭은 즉발 청산 장치가 된다 — provenance로 기록. 극소 pct의 formatPrice 반올림으로 stop==entry가 되는 경계는 riskOf가 fail-closed 거부(이중 방어).
 - **귀결의 명시**(라운드 2 P2): +0.8R 도달 시 기준선은 **편입가 기준 실질 본전**으로 승격된다 — 편입은 "편입일 가격 + 비용"을 사실상의 보호 바닥으로 만든다. 원가 대비 큰 이익 중인 장기 보유가 편입 후 정상 되돌림으로 청산될 수 있다(원가 이익은 보존된 채로). 사용자 대면 설명에 포함.
 
@@ -55,13 +55,13 @@ kill switch는 BLOCK-ONLY이고 모든 모드가 RISK_REDUCING을 허용한다 �
 
 ## A6. 관측 소스·비용 계상·실행 위치 (라운드 2 재작성)
 
-reconcile 구동 루프를 신설한다(프로덕션 호출자 0인 Ingest/Converge/Tracker에 구동자). **1회 수집 = 전체 스냅샷**(메인 스펙 SHALL — 고정 순서·부분 실패 폐기): 미체결 페이지네이션(≤ MaxPages 50) + holdings 1 + 통화별 잔고 N. **Stabiliser 판정에는 수집 2회**(최소 2초 간격). 주기 60초(재대사 최소 간격 30초 요구사항 충족 — 이 루프가 곧 주기적 재대사 절차다). §0.4 계상: 정상 상태(미체결 0~1페이지·통화 1)에서 수집당 3콜×2회 수집 + 편입 후보 발생 시 심볼당 시세 1콜, 상한은 MaxPages가 계상 한계 — 수치를 스펙에 고정. 루프는 `Tracker.Observe`까지 구동한다(확정 하한 캡은 Tracker block 위에서만 동작 — exitwiring.go:151-155). 실행 술어는 `AutomationStatus.Verified`. Stabiliser 미수렴(사용자가 계속 수동 매매) 시 편입은 무기한 연기되며 이는 fail-closed 의도 동작이다(명시).
+reconcile 구동 루프를 신설한다(프로덕션 호출자 0인 Ingest/Converge/Tracker에 구동자). **1회 수집 = 전체 스냅샷**(메인 스펙 SHALL — 고정 순서·부분 실패 폐기): 미체결 페이지네이션(≤ MaxPages 50) + holdings 1 + 통화별 잔고 N. **Stabiliser 판정에는 수집 2회**(최소 2초 간격). 주기 60초(재대사 최소 간격 30초 요구사항 충족 — 이 루프가 곧 주기적 재대사 절차다). §0.4 계상: 정상 상태(미체결 0~1페이지·통화 1)에서 수집당 3콜×2회 수집 + 편입 후보 발생 시 시세 1콜(후보 전체를 한 번의 배치 호출로 — Prices는 배치 API), 상한은 MaxPages가 계상 한계 — 수치를 스펙에 고정. 루프는 `Tracker.Observe`까지 구동한다(확정 하한 캡은 Tracker block 위에서만 동작 — exitwiring.go:151-155). 실행 술어는 `AutomationStatus.Verified`. Stabiliser 미수렴(사용자가 계속 수동 매매) 시 편입은 무기한 연기되며 이는 fail-closed 의도 동작이다(명시).
 
 ## A7. 편입 포지션의 성과 동결 (라운드 2 P1 재설계)
 
 landed 동결 경로는 `entry_decision_id == ""`에서 조기 반환한다(trade_outcomes.go:175-179) — 확장 없이는 편입 포지션이 성과 행을 절대 만들지 않는다. 결정:
 
-- **엔진이 청산을 실행한 편입 포지션은 성과 행을 만든다(SHALL)**: computeTradeOutcome에 편입 분기 신설 — 매수 leg은 fill이 아니라 `position_adoptions`에서 합성하되 **기준가는 `observed_price`로 단일화한다**(라운드 3: 분자·분모의 t0 epoch 일치 — cost_basis를 분자에 쓰면 "원가→매도 생애 손익 ÷ 편입일 위험"이라는 귀속 오류가 된다; cost_basis는 기록·표시용으로만 남고 성과 산식에서 제외, cost_basis_src 분기 삭제). 매도 leg은 **명시 조인**(`exit_events.proposed_intent_id → mutation_attempts → broker_order_id → fill_events` — 시간창 휴리스틱 금지, provenance CTE 체인 재사용)으로 모은다(SHALL). realized_r 분모는 exit_state의 합성 initial_risk. 스키마 무변경 — 합성 구분은 `positions.adoption_id` 조인.
+- **엔진이 청산을 실행한 편입 포지션은 성과 행을 만든다(SHALL)**: computeTradeOutcome에 편입 분기 신설 — 매수 leg은 fill이 아니라 `position_adoptions`에서 합성하되 **기준가는 `observed_price`로 단일화한다**(라운드 3: 분자·분모의 t0 epoch 일치 — cost_basis를 분자에 쓰면 "원가→매도 생애 손익 ÷ 편입일 위험"이라는 귀속 오류가 된다; cost_basis는 기록·표시용으로만 남고 성과 산식에서 제외, cost_basis_src 분기 삭제). 매도 leg은 이 인스턴스에 귀속된 **모든 엔진 매도 fill**을 발의자별 명시 참조 조인으로 모은다(SHALL — exit 루프 발의분은 `exit_events → mutation_attempts → broker_order_id → fill_events` 체인, flatten 등 다른 발의자의 매도는 그 발의자의 결정·saga 참조 경로; 시간창 휴리스틱 금지. flatten 청산도 실체결이므로 성과에 포함한다 — 라운드 4: 좁은 체인만 쓰면 flatten 종결이 빈 매도 leg으로 동결되어 허구의 전액 손실이 기록된다. 귀속의 명시 참조가 부족하면 additive 보강 후 편차 기록). realized_r 분모는 exit_state의 합성 initial_risk. 스키마 무변경 — 합성 구분은 `positions.adoption_id` 조인.
 - **외부 매도(조정)로 수량 0이 된 경우는 성과 행을 만들지 않는다(SHALL NOT)** — 돈이 엔진 밖에서 움직였고 매도 leg이 없다. 대신 exit_state completed 처리 + ADJUSTMENT_CLOSED exit_event 기록 + 알림(라운드 2 P1-3의 provenance 컬럼 충돌은 이 결정으로 소멸 — trade_outcomes에 provenance가 필요 없다). 이 규칙은 엔진·편입 포지션 공통이다(고아 exit_state 방지).
 
 ## A8. 편입 이후의 외부 개입
