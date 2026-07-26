@@ -224,3 +224,74 @@ func TestNoMismatchesIsANoOp(t *testing.T) {
 		t.Errorf("a clean diff wrote %+v and credited %v", report.Converged, credit.credited)
 	}
 }
+
+// TestConvergingAManagedPositionToZeroAlerts is design A7's operator half: when
+// the account says a position the engine was protecting is gone, the exit state
+// is completed and a person is told.
+//
+// The alert matters more than it looks. The screen stops listing the position
+// and no trade outcome is frozen for it, so without this the only evidence that
+// the engine was ever protecting those shares is a completed row nobody reads.
+func TestConvergingAManagedPositionToZeroAlerts(t *testing.T) {
+	ctx := context.Background()
+	j := openJournal(t)
+	heldPosition(t, j, "AAPL", "10")
+
+	held, err := j.CurrentPosition(ctx, "acct-7", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.AdoptPosition(ctx, journal.AdoptionRequest{
+		PositionID: held.ID, Symbol: "AAPL", Market: "us", Quantity: "10",
+		CostBasis: "200", ObservedPrice: "210", SyntheticStop: "199.5",
+		ObservedAt: "2026-03-30T02:00:00Z",
+	}); err != nil {
+		t.Fatalf("AdoptPosition: %v", err)
+	}
+	if _, err := j.OpenAdoptedExitState(ctx, held.ID); err != nil {
+		t.Fatalf("OpenAdoptedExitState: %v", err)
+	}
+
+	alerter := &recordingAlerter{}
+	c := &reconcile.Converger{Journal: j, Alert: alerter, AccountRef: "acct-7"}
+	report, err := c.ConvergeQuantities(ctx, stampedMismatch("AAPL", "10", "0"))
+	if err != nil {
+		t.Fatalf("ConvergeQuantities: %v", err)
+	}
+	if report.Closed != 1 {
+		t.Fatalf("report.Closed = %d, want 1", report.Closed)
+	}
+	if len(report.Converged) != 1 || !report.Converged[0].ClosedExitState {
+		t.Fatalf("converged = %+v, want one entry reporting the closed exit state", report.Converged)
+	}
+	if len(alerter.closed) != 1 {
+		t.Fatalf("managed-close alerts = %d, want 1", len(alerter.closed))
+	}
+	got := alerter.closed[0]
+	if got.Symbol != "AAPL" || got.PositionID != held.ID || got.PrevQuantity != "10" {
+		t.Errorf("alert = %+v, want AAPL/%s/10", got, held.ID)
+	}
+	if !got.Adopted {
+		t.Error("the alert must say the position was one the engine adopted; the operator's next " +
+			"question is whether the engine or a person put the protection there")
+	}
+}
+
+// TestConvergingAnUnmanagedPositionToZeroDoesNotAlert keeps the alert about
+// protection ending rather than about a quantity changing.
+func TestConvergingAnUnmanagedPositionToZeroDoesNotAlert(t *testing.T) {
+	ctx := context.Background()
+	j := openJournal(t)
+	heldPosition(t, j, "AAPL", "10")
+
+	alerter := &recordingAlerter{}
+	c := &reconcile.Converger{Journal: j, Alert: alerter, AccountRef: "acct-7"}
+	report, err := c.ConvergeQuantities(ctx, stampedMismatch("AAPL", "10", "0"))
+	if err != nil {
+		t.Fatalf("ConvergeQuantities: %v", err)
+	}
+	if report.Closed != 0 || len(alerter.closed) != 0 {
+		t.Errorf("closed = %d, alerts = %d; nothing was protecting this position",
+			report.Closed, len(alerter.closed))
+	}
+}

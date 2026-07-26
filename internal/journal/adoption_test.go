@@ -269,6 +269,47 @@ func TestOpenAdoptedExitStateSeedsFromTheAdoptionRecord(t *testing.T) {
 	}
 }
 
+// TestAdoptedPositionProvenanceIsAdoptionPositionExitEvent pins the lineage
+// shape position-ledger fixes for an adopted position: `ADOPTION → POSITION →
+// EXIT_EVENT …`, with the entry-side arms empty because nobody decided to buy
+// the shares and no local order filled into them.
+func TestAdoptedPositionProvenanceIsAdoptionPositionExitEvent(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	adoptable(t, j, "p-ext")
+
+	if _, err := j.AdoptPosition(ctx, sampleAdoption("p-ext")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.OpenAdoptedExitState(ctx, "p-ext"); err != nil {
+		t.Fatal(err)
+	}
+
+	chain, err := j.PositionProvenance(ctx, "p-ext")
+	if err != nil {
+		t.Fatalf("PositionProvenance: %v", err)
+	}
+	var kinds []string
+	for _, step := range chain.Steps {
+		kinds = append(kinds, step.Kind)
+	}
+	got := strings.Join(kinds, " → ")
+	if want := "ADOPTION → POSITION → EXIT_EVENT"; got != want {
+		t.Errorf("adopted lineage = %q, want %q", got, want)
+	}
+	for _, step := range chain.Steps {
+		switch step.Kind {
+		case ProvenanceDecision, ProvenanceIntent, ProvenanceAttempt, ProvenanceFill:
+			t.Errorf("an adopted position must carry no entry-side arm, found %s", step.Kind)
+		case ProvenanceAdoption:
+			if !strings.Contains(step.Detail, "66500") {
+				t.Errorf("the ADOPTION step must name the synthetic stop the baseline came from: %q",
+					step.Detail)
+			}
+		}
+	}
+}
+
 // TestOpenExitStateRefusesAPositionWithNeitherRecord keeps the negative half of
 // the single predicate: widening eligibility must not have widened it to
 // everything.

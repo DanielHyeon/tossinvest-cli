@@ -18,14 +18,21 @@ import (
 // manages (because nobody set a stop on somebody else's shares), and a person
 // has to be told (because the engine just discovered trading it did not do).
 
-// recordingAlerter captures the alerts the ingest raised.
+// recordingAlerter captures the alerts the ingest and the convergence raised.
 type recordingAlerter struct {
 	alerts []reconcile.ExternalPositionAlert
+	closed []reconcile.ManagedCloseAlert
 	err    error
 }
 
 func (a *recordingAlerter) ExternalPositionFound(_ context.Context, alert reconcile.ExternalPositionAlert) error {
 	a.alerts = append(a.alerts, alert)
+	return a.err
+}
+
+func (a *recordingAlerter) ManagedPositionClosedExternally(_ context.Context,
+	alert reconcile.ManagedCloseAlert) error {
+	a.closed = append(a.closed, alert)
 	return a.err
 }
 

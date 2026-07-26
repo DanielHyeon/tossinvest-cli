@@ -485,13 +485,31 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 // openState creates the protection state of a position that has just started
 // being held.
 //
-// The frozen pair is the *entry decision's* limit and stop, not the fill's
-// average. Both are known at t0, both are what the Guardian chain sized and
-// judged against, and their difference is therefore the initial risk the whole R
-// scale is expressed in. The average fill price moves while the entry is still
-// filling; freezing a denominator that moves would make the same price mean two
-// different R values over the life of one position.
+// # Two sources, branched on the record and not on a fallback
+//
+// exit-policy requires the opening path to accept both (SHALL): an engine-entered
+// position's t0 comes from its entry decision, an adopted one's from its adoption
+// record. The branch is on which record the projection says justifies the
+// position, because for an adopted position the decision lookup is not a lookup
+// that fails — there is nothing to look up, and a path that tried and fell back
+// would turn "the ledger is broken" and "this position was adopted" into the same
+// code path.
+//
+// For the engine-entered arm the frozen pair is the *entry decision's* limit and
+// stop, not the fill's average. Both are known at t0, both are what the Guardian
+// chain sized and judged against, and their difference is therefore the initial
+// risk the whole R scale is expressed in. The average fill price moves while the
+// entry is still filling; freezing a denominator that moves would make the same
+// price mean two different R values over the life of one position.
+//
+// For the adopted arm the pair is the observation the adoption was judged on and
+// the synthetic stop derived from it (design A2's manage-forward t0). The cost
+// basis is in neither: anchoring on it would put every long-held winner outside
+// its own band on the first observation.
 func (o *ExitObserver) openState(ctx context.Context, p journal.Position) (journal.ExitState, error) {
+	if p.Adopted() {
+		return o.openAdoptedState(ctx, p)
+	}
 	decision, err := o.opts.Journal.LookupDecision(ctx, p.EntryDecisionID)
 	if err != nil {
 		return journal.ExitState{}, fmt.Errorf(
@@ -528,6 +546,35 @@ func (o *ExitObserver) openState(ctx context.Context, p journal.Position) (journ
 		"baseline", state.Baseline,
 		"initial_risk", state.InitialRisk,
 		obs.FieldDetail, "the exit policy is now managing this position")
+	return state, nil
+}
+
+// openAdoptedState is the adopted arm. It reads no decision, because there is
+// none: the adoption record is the whole justification and the journal seeds the
+// row from it in one transaction.
+//
+// A crash between the adoption commit and this call leaves a position with an
+// adoption and no exit state. That is precisely the state this arm recovers
+// from — the next cycle finds the position eligible, finds no open state, and
+// completes the opening from the record already on disk (exit-policy: 편입 기록
+// 영속 후 크래시). Nothing is re-observed and nothing is re-adopted.
+func (o *ExitObserver) openAdoptedState(ctx context.Context, p journal.Position) (journal.ExitState, error) {
+	state, err := o.opts.Journal.OpenAdoptedExitState(ctx, p.ID)
+	switch {
+	case errors.Is(err, journal.ErrExitStateExists):
+		// It exists but was not in the open set, so it is completed.
+		return journal.ExitState{}, nil
+	case err != nil:
+		return journal.ExitState{}, fmt.Errorf(
+			"engine: opening the exit state of adopted position %s: %w", p.ID, err)
+	}
+	o.log(obs.EventEngineStarted, false,
+		obs.FieldSymbol, p.Symbol,
+		"position_id", p.ID,
+		"adoption_id", p.AdoptionID,
+		"baseline", state.Baseline,
+		"initial_risk", state.InitialRisk,
+		obs.FieldDetail, "the exit policy is now managing this adopted position")
 	return state, nil
 }
 

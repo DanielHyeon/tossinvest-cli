@@ -87,6 +87,10 @@ type ConvergedPosition struct {
 	// Applied is false when this exact adjustment was already on disk — a retry
 	// after a crash, or a later pass recomputing the same difference.
 	Applied bool
+	// ClosedExitState reports that converging to the account's number took a
+	// position the engine was protecting to zero, so its exit state was completed
+	// with an ADJUSTMENT_CLOSED event and no outcome was frozen (design A7).
+	ClosedExitState bool
 }
 
 // ConvergeReport is what one pass did.
@@ -99,6 +103,9 @@ type ConvergeReport struct {
 	Refused map[string]string
 	// Credited is the symbols handed to the crediter, sorted.
 	Credited []string
+	// Closed counts the managed positions this pass found had gone to zero
+	// outside the engine.
+	Closed int
 }
 
 // Converger folds quantity mismatches onto the account's numbers.
@@ -110,6 +117,11 @@ type Converger struct {
 	// convergence can be unit-tested; an engine without one converges the
 	// projection and leaves the block up until an operator clears it.
 	Credit AdjustmentCrediter
+	// Alert receives the notification that a managed position was closed outside
+	// the engine. Optional only so the convergence can be unit-tested; an engine
+	// without one completes the exit state silently, which leaves an operator to
+	// discover from an empty screen that the engine stopped protecting something.
+	Alert Alerter
 	// AccountRef scopes the adjustment. Falls back to the diff's when empty.
 	AccountRef string
 }
@@ -146,7 +158,10 @@ func (c *Converger) ConvergeQuantities(ctx context.Context, diff Diff) (Converge
 		return report, err
 	}
 
-	var credited []string
+	var (
+		credited  []string
+		alertErrs []error
+	)
 	for _, mismatch := range diff.Quantities {
 		symbol := strings.ToUpper(strings.TrimSpace(mismatch.Symbol))
 		market, reason := soleLiveMarket(instances, symbol)
@@ -190,9 +205,32 @@ func (c *Converger) ConvergeQuantities(ctx context.Context, diff Diff) (Converge
 		report.Converged = append(report.Converged, ConvergedPosition{
 			Market: market, Symbol: symbol, Local: mismatch.Local,
 			Quantity: result.Position.Quantity, PositionID: result.Position.ID,
-			Applied: result.Applied,
+			Applied: result.Applied, ClosedExitState: result.ClosedExitState,
 		})
 		credited = append(credited, symbol)
+
+		if result.ClosedExitState {
+			report.Closed++
+			// A position the engine was protecting went to zero somewhere the
+			// engine cannot see. The exit state is completed and no outcome was
+			// frozen (design A7), and both of those are facts an operator has to be
+			// told rather than left to infer from a screen that quietly stops
+			// listing the position.
+			if c.Alert == nil {
+				continue
+			}
+			if err := c.Alert.ManagedPositionClosedExternally(ctx, ManagedCloseAlert{
+				AccountRef: account, Market: market, Symbol: symbol,
+				PositionID:   result.Position.ID,
+				PrevQuantity: mismatch.Local,
+				BrokerAsOf:   asOf,
+				Adopted:      result.Position.Adopted(),
+			}); err != nil {
+				alertErrs = append(alertErrs, fmt.Errorf(
+					"reconcile: alerting that the managed position in %s was closed outside the engine: %w",
+					symbol, err))
+			}
+		}
 	}
 
 	if len(credited) > 0 {
@@ -208,7 +246,11 @@ func (c *Converger) ConvergeQuantities(ctx context.Context, diff Diff) (Converge
 			c.Credit.AdjustmentApplied(credited...)
 		}
 	}
-	return report, nil
+	// The adjustments committed either way, so the report stands. An undelivered
+	// alert is still a failure — the operator does not know the engine stopped
+	// protecting a position — so it is returned once everything that could be
+	// converged has been, the same rule the ingest follows.
+	return report, errors.Join(alertErrs...)
 }
 
 // soleLiveMarket returns the one venue a symbol's live quantity sits on, or the

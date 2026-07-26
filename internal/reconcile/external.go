@@ -92,6 +92,28 @@ type ExternalPositionAlert struct {
 	ExitEligible bool
 }
 
+// ManagedCloseAlert is what a managed position going to zero outside the engine
+// tells the operator (change adopt-external-positions, design A7).
+//
+// It is a separate event from a fold: the engine was protecting this position,
+// the shares are gone, and no trade outcome was frozen because there is no sell
+// leg the engine can price. All three of those are facts an operator would
+// otherwise have to infer from a screen that quietly stopped listing a symbol.
+type ManagedCloseAlert struct {
+	AccountRef string
+	Market     string
+	Symbol     string
+	// PositionID is the instance whose exit state was completed.
+	PositionID string
+	// PrevQuantity is what the projection held before the convergence.
+	PrevQuantity string
+	// BrokerAsOf is when the snapshot that showed the zero was current.
+	BrokerAsOf string
+	// Adopted reports that the closed position was one the engine had adopted
+	// rather than one it opened.
+	Adopted bool
+}
+
 // Alerter receives the operator alerts this package raises.
 //
 // It is an interface here rather than a direct dependency on internal/obs so
@@ -100,6 +122,7 @@ type ExternalPositionAlert struct {
 // it.
 type Alerter interface {
 	ExternalPositionFound(ctx context.Context, alert ExternalPositionAlert) error
+	ManagedPositionClosedExternally(ctx context.Context, alert ManagedCloseAlert) error
 }
 
 // IngestedPosition is one holding the ingest folded in.

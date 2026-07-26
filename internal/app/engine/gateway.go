@@ -262,7 +262,7 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		Journal: in.journal, Alert: alerter, AccountRef: in.accountRef,
 	}
 	converge := &reconcile.Converger{
-		Journal: in.journal, Credit: tracker, AccountRef: in.accountRef,
+		Journal: in.journal, Credit: tracker, Alert: alerter, AccountRef: in.accountRef,
 	}
 
 	return engineWiring{

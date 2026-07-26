@@ -113,6 +113,46 @@ func (a notifierAlerter) ExternalPositionFound(ctx context.Context,
 	})
 }
 
+// ManagedPositionClosedExternally is the second alert the reconciliation loop
+// raises (change adopt-external-positions, design A7).
+//
+// Critical, unlike the fold above, and the difference is what the operator has
+// to do about it. A holding the engine will not manage is a fact about the
+// account; a position the engine *was* managing and no longer holds is the
+// engine's own protection ending in a way it did not choose — and the outcome
+// row it would normally freeze does not exist, so the trade is missing from
+// every aggregate until somebody accounts for it by hand.
+func (a notifierAlerter) ManagedPositionClosedExternally(ctx context.Context,
+	alert reconcile.ManagedCloseAlert) error {
+	if a.notifier == nil {
+		return nil
+	}
+	how := "the engine opened it"
+	if alert.Adopted {
+		how = "the engine had adopted it"
+	}
+	return a.notifier.Notify(ctx, obs.Event{
+		Type: obs.EventExitPositionClosedExternally,
+		Key: string(obs.EventExitPositionClosedExternally) + "|" +
+			strings.TrimSpace(alert.PositionID),
+		Title: alert.Symbol + " was closed outside the engine while the exit policy was managing it",
+		Body: "the account no longer holds it and no local fill explains that, so the exit state was " +
+			"completed with an ADJUSTMENT_CLOSED event. No trade outcome was frozen: the sell happened " +
+			"where the engine cannot see it, so there is no sell leg to price and recording one would " +
+			"report the position as a total loss",
+		Fields: map[string]any{
+			obs.FieldAccount:  alert.AccountRef,
+			obs.FieldSymbol:   alert.Symbol,
+			obs.FieldQuantity: alert.PrevQuantity,
+			"market":          alert.Market,
+			"position_id":     alert.PositionID,
+			"broker_as_of":    alert.BrokerAsOf,
+			"adopted":         alert.Adopted,
+			obs.FieldDetail:   how,
+		},
+	})
+}
+
 // reconcileFloor computes the RECONCILE confirmed floor for one symbol.
 //
 // # When it applies

@@ -372,6 +372,18 @@ const (
 	ExitEventProposalCancelled = "PROPOSAL_CANCELLED"
 	ExitEventProposalFilled    = "PROPOSAL_FILLED"
 	ExitEventCompleted         = "COMPLETED"
+	// ExitEventAdjustmentClosed is a position that reached zero through an
+	// adjustment rather than through a fill: somebody sold it outside the engine
+	// (change adopt-external-positions, design A7).
+	//
+	// It is a different action from COMPLETED on purpose. COMPLETED is the exit
+	// policy finishing its own work — the engine sold the position and the closing
+	// fill resolved the state inside its transaction. This one records that the
+	// position went to zero somewhere the engine cannot see, which is why the same
+	// event is also the marker for "no trade outcome was frozen and none should
+	// be": there is no sell leg to price, and inventing one from the adjustment
+	// would report the whole position as a loss.
+	ExitEventAdjustmentClosed = "ADJUSTMENT_CLOSED"
 )
 
 type exitEventRow struct {

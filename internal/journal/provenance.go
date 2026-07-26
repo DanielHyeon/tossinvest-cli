@@ -18,6 +18,7 @@ package journal
 // file does not draw:
 //
 //	positions.entry_decision_id      → decisions.id
+//	positions.adoption_id            → position_adoptions.id
 //	mutation_attempts.decision_id    → decisions.id
 //	mutation_attempts.intent_id      → intents.id
 //	mutation_attempts.broker_order_id → fill_events.order_id
@@ -28,6 +29,17 @@ package journal
 // An externally acquired position has `entry_decision_id` NULL, and the chain
 // then carries no decision at all rather than the nearest one — which is the
 // same fact NULL already records, said out loud.
+//
+// # The adopted shape
+//
+// Since adopt-external-positions there is a second shape, and position-ledger
+// fixes it: `ADOPTION → POSITION → EXIT_EVENT …`. The entry-side arms — DECISION,
+// INTENT, ATTEMPT, FILL — are empty and that is not a gap: nobody decided to buy
+// the shares, no intent was recorded, and no local order filled into them. What
+// replaces the decision is the adoption record, which carries the observation and
+// the synthetic stop the baseline was built from. The exit-side arms fill in
+// normally from the moment the engine liquidates any of it, because those *are*
+// the engine's own orders.
 //
 // # Why the exit half joins through the intent
 //
@@ -67,6 +79,10 @@ import (
 const (
 	// ProvenanceDecision is the entry decision the position was opened under.
 	ProvenanceDecision = "DECISION"
+	// ProvenanceAdoption is the adoption record an externally acquired position
+	// was taken into exit management under. It is the alternative to DECISION and
+	// never appears beside one.
+	ProvenanceAdoption = "ADOPTION"
 	// ProvenanceIntent is an intent an attempt under that decision belongs to.
 	ProvenanceIntent = "INTENT"
 	// ProvenanceAttempt is one PLACE/CANCEL/AMEND against the broker.
@@ -155,6 +171,8 @@ func provenanceDetail(kind, one, two, three string) string {
 	switch kind {
 	case ProvenanceDecision:
 		return fmt.Sprintf("%s decision, preimage %s (hash %s)", one, two, three)
+	case ProvenanceAdoption:
+		return fmt.Sprintf("adopted at %s with a synthetic stop of %s (cost basis %s)", one, two, three)
 	case ProvenanceIntent, ProvenanceExitIntent:
 		return fmt.Sprintf("%s %s of %s", one, two, three)
 	case ProvenanceAttempt, ProvenanceExitAttempt:
@@ -188,7 +206,7 @@ func orNone(s string) string {
 // lists the same order three times is a chain that reads like three orders.
 const provenanceQuery = `
 WITH pos AS (
-	SELECT id, entry_decision_id, state, quantity, avg_price,
+	SELECT id, entry_decision_id, adoption_id, state, quantity, avg_price,
 	       coalesce(opened_at, '') AS opened_at, coalesce(closed_at, '') AS closed_at
 	  FROM positions WHERE id = ?
 ),
@@ -210,6 +228,10 @@ exit_attempt AS (
 ),
 exit_order AS (SELECT DISTINCT broker_order_id FROM exit_attempt WHERE broker_order_id <> '')
 
+SELECT 0, 'ADOPTION', ad.observed_at, ad.id, ad.observed_price, ad.synthetic_stop,
+       coalesce(ad.cost_basis, '')
+  FROM pos JOIN position_adoptions ad ON ad.id = pos.adoption_id
+UNION ALL
 SELECT 1, 'DECISION', d.issued_at, d.id, d.safety_class, d.preimage_kind, d.risk_hash
   FROM pos JOIN decisions d ON d.id = pos.entry_decision_id
 UNION ALL

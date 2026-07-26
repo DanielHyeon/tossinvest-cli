@@ -167,6 +167,12 @@ type AdjustmentResult struct {
 	// projection did not have: an external or manual holding, with no entry
 	// decision and therefore no exit policy.
 	OpenedInstance bool
+	// ClosedExitState reports that this adjustment took a *managed* position to
+	// zero and therefore completed its exit state (change
+	// adopt-external-positions, design A7). It is the caller's cue to alert: the
+	// engine was protecting something and it is gone, sold somewhere the engine
+	// cannot see, and no trade outcome was frozen for it.
+	ClosedExitState bool
 }
 
 // FillWatermark returns the fill-event high-water for one symbol.
@@ -347,6 +353,12 @@ func (j *Journal) ApplyPositionAdjustment(ctx context.Context, req AdjustmentReq
 		}
 	}
 
+	closedExit, err := closeExitStateOnAdjustmentTx(ctx, tx, target.ID, req.NewQuantity, now)
+	if err != nil {
+		return AdjustmentResult{}, err
+	}
+	result.ClosedExitState = closedExit
+
 	converged, err := scanPosition(tx.QueryRowContext(ctx, positionSelect+" WHERE id = ?", target.ID))
 	if err != nil {
 		return AdjustmentResult{}, err
@@ -357,6 +369,67 @@ func (j *Journal) ApplyPositionAdjustment(ctx context.Context, req AdjustmentReq
 	}
 	result.Adjustment, result.Position = adjustment, converged
 	return result, nil
+}
+
+// closeExitStateOnAdjustmentTx completes the exit state of a position an
+// adjustment has just taken to zero, and records why.
+//
+// # The orphan this prevents
+//
+// The exit state's completion normally happens inside the fill transaction that
+// closes the position (apply_hook.go). An adjustment is not a fill: the shares
+// left the account somewhere the engine cannot see, no fill event exists, and
+// without this the exit state would stay open forever over a position that no
+// longer exists — the observation loop would keep it in its working set, keep
+// asking for its price, and keep judging a quantity of zero.
+//
+// # And the outcome row this deliberately does not write
+//
+// design A7 (SHALL NOT): no `trade_outcomes` row. The money moved outside the
+// engine, so there is no sell leg to price. The alternative — pricing the round
+// trip with an empty sell leg — records the whole position as a total loss,
+// which is not a conservative approximation but a fabricated fact that would
+// then flow into every aggregate the operator reads.
+//
+// The rule is common to engine-entered and adopted positions. An orphan is an
+// orphan whichever record justified the position, and a rule that applied to one
+// of them would leave the other's exit states accumulating.
+func closeExitStateOnAdjustmentTx(ctx context.Context, tx *sql.Tx,
+	positionID, newQuantity, now string) (bool, error) {
+	if !isZeroDecimal(newQuantity) {
+		return false, nil
+	}
+	// Only a state that is open. A completed one has already had its say, and
+	// appending a second closing event to it would make the history claim the
+	// position closed twice.
+	var done int
+	err := tx.QueryRowContext(ctx,
+		`SELECT completed FROM exit_states WHERE position_id = ?`, positionID).Scan(&done)
+	if errors.Is(err, sql.ErrNoRows) {
+		// Nothing was protecting it. That is the ordinary case for an external
+		// holding nobody adopted, and it is not an event.
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("journal: reading the exit state of %s: %w", positionID, err)
+	}
+	if done != 0 {
+		return false, nil
+	}
+
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE exit_states SET completed = 1, updated_at = ? WHERE position_id = ?`,
+		now, positionID); err != nil {
+		return false, fmt.Errorf("journal: completing the exit state of %s: %w", positionID, err)
+	}
+	if err := appendExitEventTx(ctx, tx, exitEventRow{
+		PositionID: positionID,
+		Action:     ExitEventAdjustmentClosed,
+		CreatedAt:  now,
+	}); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // convergedState is the state a position is in once it holds the account's

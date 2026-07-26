@@ -7,8 +7,8 @@
 - [x] 1.1 `position_adoptions` 테이블 + `positions.adoption_id` 컬럼(design A1 DDL이 정본 — 단방향 참조, DEFAULT 없는 nullable ADD COLUMN) — decisions 테이블·CHECK enum 무접촉, ErrSchemaTooNew(§0.6), **스키마 골든 목록 갱신**(schema_test wantTables·v6 테이블 목록 2곳)
 - [x] 1.2 `adoption_id` **set-once 전용 tx API** + 정적 스캔 가드(소유 파일 외 UPDATE 언급 거부; `entry_decision_id`에는 어떤 쓰기도 추가하지 않음). 편입 코드의 `internal/journal` 파일 배치를 기존 guarded-column 전문 스캔과 정합시킬 것
 - [x] 1.3 exit 자격 **단일 술어 함수**(`entry_decision_id OR adoption_id`) — 소비 지점 4곳(exitloop 열거·position_projection·position/provenance·reconcile external) 중 fold 가드는 **`entry_decision_id` 명시 비교로 좁혀 유지**(자격 술어와 분리 — design A1), `ExternalPositionAlert.ExitEligible` 하드코딩 false를 자격 술어로 교체, drift 테스트
-- [ ] 1.4 exit_state open의 **자격 출처별 분기 신설**(편입 포지션은 결정 조회가 성립하지 않으므로 LookupDecision 경로를 타지 않는다): position_adoptions에서 EntryPrice=observed_price·InitialStop=synthetic_stop(HighWater는 개설 규칙이 entry로 자동 seed). lineage `ADOPTION → POSITION → EXIT_EVENT` 질의 arm 추가
-- [ ] 1.5 조정으로 수량 0 → exit_state completed + **ADJUSTMENT_CLOSED exit_event + 알림, trade_outcome 행 없음**(design A7 — 편입·엔진 포지션 공통, 고아 방지)
+- [x] 1.4 exit_state open의 **자격 출처별 분기 신설**(편입 포지션은 결정 조회가 성립하지 않으므로 LookupDecision 경로를 타지 않는다): position_adoptions에서 EntryPrice=observed_price·InitialStop=synthetic_stop(HighWater는 개설 규칙이 entry로 자동 seed). lineage `ADOPTION → POSITION → EXIT_EVENT` 질의 arm 추가
+- [x] 1.5 조정으로 수량 0 → exit_state completed + **ADJUSTMENT_CLOSED exit_event + 알림, trade_outcome 행 없음**(design A7 — 편입·엔진 포지션 공통, 고아 방지)
 - [ ] 1.6 **성과 동결의 편입 분기**(design A7): computeTradeOutcome의 `decisionID==""` 조기 반환을 adoption_id 분기로 확장 — 매수 leg은 position_adoptions에서 합성(수량 = adoption.quantity, **기준가 = observed_price 단일** — cost_basis는 산식 제외·기록용), 매도 leg은 이 인스턴스 귀속 **전 발의자 매도 fill**(exit 루프: exit_events 체인 / flatten: 발의자 결정·saga 참조 — 심볼 시간창 매칭 금지, flatten 종결 포함·빈 매도 leg 동결 금지), realized_r 분모는 합성 initial_risk. trade_outcomes 스키마 무변경
 
 ## 2. 편입 파이프라인 [T]

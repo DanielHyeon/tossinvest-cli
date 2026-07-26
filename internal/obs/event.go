@@ -146,10 +146,34 @@ const (
 	// 지연이 유계를 넘으면 critical 알림). CRITICAL.
 	EventExitLiquidationDelayed EventType = "exit.liquidation_delayed"
 	// EventExitPositionUnmanaged is a held position the exit policy will not
-	// manage: no entry decision, so no stop to build a baseline from
-	// (exit-policy: entry 결정이 없는 포지션 … 발견 시 알림). Normal — somebody
-	// trading their own account by hand is not a malfunction.
+	// manage: neither an entry decision nor an adoption record, so no stop to
+	// build a baseline from (exit-policy: entry 결정도 편입 기록도 없는 포지션 …
+	// 발견 시 알림). Normal — somebody trading their own account by hand is not a
+	// malfunction.
+	//
+	// It is raised regardless of `adoption.enabled` (design A4): the landed
+	// behaviour is that an operator is told when the engine is trading beside a
+	// position it will not protect, and a feature toggle must not silence it.
+	// What the toggle changes is how often it has anything to say.
 	EventExitPositionUnmanaged EventType = "exit.position_unmanaged"
+	// EventExitPositionAdopted is an externally acquired holding taken into exit
+	// management (change adopt-external-positions). It carries the observation the
+	// synthetic t0 was built from and the stop derived from it, because those two
+	// numbers are the whole of what the engine will now protect the position to.
+	//
+	// Normal, and it *replaces* the unmanaged alert for that position rather than
+	// arriving beside it: the operator's question is "is this protected", and two
+	// events answering it differently within one cycle is worse than either.
+	EventExitPositionAdopted EventType = "exit.position_adopted"
+	// EventExitPositionClosedExternally is a position the exit policy was managing
+	// that went to zero outside the engine (design A7). The exit state is
+	// completed with an ADJUSTMENT_CLOSED event and no trade outcome is frozen.
+	//
+	// Normal, for the same reason the fold is: a person selling their own shares
+	// is not a malfunction, and grading it critical would mean an engine with no
+	// alert transport configured stops opening positions every time its owner
+	// takes a profit by hand.
+	EventExitPositionClosedExternally EventType = "exit.position_closed_externally"
 
 	// --- operating mode -------------------------------------------------------
 
