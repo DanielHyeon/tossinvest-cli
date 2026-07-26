@@ -27,6 +27,7 @@
 
 - `engine-safety`: 엔진 런타임 수명주기 요구사항 추가(기동 인터록 요구사항은 무변경 — 이 change는 그 소비자)
 - `operator-console`: 상태변경 행위 집합에 엔진 프로세스 시작/정지 추가(게이트 flip은 여전히 부재)
+- `risk-management`: 자동 강화 트리거 열거에 대사·체결 감지 지속 실패 2종 추가(전부 ENTRY_BLOCKED — HALT_ALL 자동 진입 없음 유지)
 
 ## Impact
 
