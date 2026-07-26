@@ -14,7 +14,7 @@
 
 - [x] 1.1 [T][High-risk] **Pre-Edit 후** `orderintent.PlaceIntent`·`official.orderCreateV0/V1`·응답 파서에 `clientOrderId` 배선(현재 일반 주문 경로에 필드 없음). `CanonicalPlace` 미포함 — CLI confirm token 무변경 characterization
 - [x] 1.2 [T] 키 유도 `f(decision_id, generation)` (≤36자, `[a-zA-Z0-9\-_]` — openapi 패턴), 결정론성 테스트. generation은 2a에서 0 고정
-- [ ] 1.3 [T][High-risk] **Pre-Edit 후** `PrepareRequest` 확장(공개 계약 — durability_test 갱신 목록 사전 열거): RECORDED에 decision_id·safety_class·generation·멱등키·canonical wire body·serializer_version 불변 영속
+- [x] 1.3 [T][High-risk] **Pre-Edit 후** `PrepareRequest` 확장(공개 계약 — durability_test 갱신 목록 사전 열거): RECORDED에 decision_id·safety_class·generation·멱등키·canonical wire body·serializer_version 불변 영속
 - [ ] 1.4 [T][High-risk] 결정 영속·검증: 발급자가 Gateway 호출 전 `decisions` 기록(클래스별 preimage: RiskIntent/ReductionIntent), Gateway는 journal에서 읽은 preimage·키로 재검증(호출자 공급 값 금지). 바꿔치기·키 불일치 거부 테스트
 - [ ] 1.5 [T][High-risk] class↔형태 일치 검증: Gateway가 노출 증가 여부를 독립 계산, EXPOSURE_RAISING ⇔ raisesExposure 불일치 거부(BUY+RISK_REDUCING 거부 테스트). 한도 면제를 `KindCancel` 리터럴 → 검증된 class 기준으로 재작성(guardian.go:181-183)
 - [ ] 1.6 [T][High-risk] flatten 결정의 1급화: `decisionFor`가 ReductionIntent preimage를 journal에 기록 후 제출 — flatten 동작(취소→매도 saga·한도 미적용) 무변경 회귀 고정
@@ -43,7 +43,7 @@
 
 - [x] 5.1 [T][High-risk] `brokerstate` 파생 **재작성**(확장 아님): 문서화된 10값 OrderStatus 우선순위 표(openapi 인용 주석), canceledAt·수량·lineage 모순·미지 값 UNKNOWN fail-closed 유지. 기존 테스트 중 바뀌어야 할 단언 사전 열거(무조건 green 금지). CANCEL_REJECTED/REPLACE_REJECTED 별도 레코드 인지 — 귀속 실패는 RECONCILE `[형태 미측정 — 2b 2.1]`
 - [x] 5.2 [T] opaque 식별자: 공백 검사 후 원문 저장(위반 3개소 수정 — classify.go:149·resolution.go:42,47,126·indoubt.go:512,516), 바이트 동일 비교, round-trip 실패→IN_DOUBT(MarkAcked 후·Settle 전 배치), 상충→RECONCILE. 정규식·prefix 검증 미추가(리뷰 항목)
-- [ ] 5.3 [T] EXECUTION_CORRECTION: filldetect payload에 `filledAmount` 추가, RecordFill 동일 `BEGIN IMMEDIATE` 내 정정 이벤트+스냅샷 갱신, 반복 poll 멱등 테스트
+- [x] 5.3 [T] EXECUTION_CORRECTION: filldetect payload에 `filledAmount` 추가, RecordFill 동일 `BEGIN IMMEDIATE` 내 정정 이벤트+스냅샷 갱신, 반복 poll 멱등 테스트. 5.2 잔여 원문 저장 위반 3곳(`lineage.go:118`·`fills.go:173/385/393`·`filldetect/payload.go:84`) 동반 수정 — issues.md Manager 배정
 
 ## 6. 총계 계산 계약
 

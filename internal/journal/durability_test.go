@@ -241,6 +241,284 @@ func TestPrepareValidation(t *testing.T) {
 	}
 }
 
+// --- the decision binding (task 1.3) ----------------------------------------
+
+// insertTestDecision writes the decisions row an attempt can point at. Task 1.3
+// records the binding; the API issuers use to create these rows is task 1.4, so
+// the row is written directly here.
+func insertTestDecision(t *testing.T, j *Journal, id, accountRef, class string, generation int) {
+	t.Helper()
+	key := ""
+	if class != SafetyClassRiskReducing {
+		key = DeriveClientOrderID(id, generation)
+	}
+	_, err := j.db.ExecContext(context.Background(),
+		`INSERT INTO decisions (id, account_ref, generation, safety_class, preimage_kind,
+		   risk_preimage, risk_hash, client_order_id, nonce, issued_at, expires_at)
+		 VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+		id, accountRef, generation, class, PreimageKindReductionIntent,
+		`{"kind":"REDUCTION_INTENT"}`, "hash-"+id, nullableString(key), "nonce-"+id,
+		testNow, testNow)
+	if err != nil {
+		t.Fatalf("inserting decision %s: %v", id, err)
+	}
+}
+
+// TestPrepareRecordsTheDecisionBinding is the RECORDED half of the extended
+// contract: which decision entitled this attempt, which key it may use and which
+// bytes it may send are on disk *before* anything is dispatched (design D1/D2).
+func TestPrepareRecordsTheDecisionBinding(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	insertTestDecision(t, j, "dec-1", "acct-1", SafetyClassExposureRaising, 0)
+
+	req := testRequest()
+	req.AccountRef = "acct-1"
+	req.DecisionID = "dec-1"
+	req.SafetyClass = SafetyClassExposureRaising
+	req.Generation = 0
+	req.ClientOrderID = DeriveClientOrderID("dec-1", 0)
+	req.WireBody = `{"symbol":"AAPL","side":"BUY"}`
+	req.SerializerVersion = "execgw/place/v1"
+
+	if _, err := j.Prepare(ctx, req); err != nil {
+		t.Fatalf("Prepare: %v", err)
+	}
+
+	rec, err := j.LookupAttempt(ctx, "attempt-1")
+	if err != nil {
+		t.Fatalf("LookupAttempt: %v", err)
+	}
+	if rec.DecisionID != "dec-1" {
+		t.Errorf("decision_id = %q, want dec-1", rec.DecisionID)
+	}
+	if rec.SafetyClass != SafetyClassExposureRaising {
+		t.Errorf("safety_class = %q", rec.SafetyClass)
+	}
+	if rec.Generation != 0 {
+		t.Errorf("generation = %d, want 0", rec.Generation)
+	}
+	if rec.AccountRef != "acct-1" {
+		t.Errorf("account_ref = %q, want acct-1", rec.AccountRef)
+	}
+	if rec.ClientOrderID != DeriveClientOrderID("dec-1", 0) {
+		t.Errorf("client_order_id = %q", rec.ClientOrderID)
+	}
+	if rec.WireBody != req.WireBody {
+		t.Errorf("wire_body = %q, want the bytes as supplied", rec.WireBody)
+	}
+	if rec.SerializerVersion != "execgw/place/v1" {
+		t.Errorf("serializer_version = %q", rec.SerializerVersion)
+	}
+	if rec.ReplayCount != 0 || rec.LastReplayAt != "" {
+		t.Errorf("replay bookkeeping starts empty, got (%d, %q)", rec.ReplayCount, rec.LastReplayAt)
+	}
+}
+
+// TestPrepareRecordsAccountRefWithoutADecision keeps every attempt indexable by
+// the partial UNIQUE on the idempotency key: the column is populated from the
+// intent even when nothing supplies it (issues.md 0.1 → 1.3).
+func TestPrepareRecordsAccountRefWithoutADecision(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+
+	if _, err := j.Prepare(ctx, testRequest()); err != nil {
+		t.Fatalf("Prepare: %v", err)
+	}
+	rec, err := j.LookupAttempt(ctx, "attempt-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.AccountRef != "acct-1" {
+		t.Fatalf("account_ref = %q, want the intent's acct-1", rec.AccountRef)
+	}
+	if rec.DecisionID != "" || rec.SafetyClass != "" || rec.ClientOrderID != "" {
+		t.Fatalf("an undecided attempt must carry no binding: %+v", rec)
+	}
+}
+
+// TestPrepareRejectsAccountRefMismatch is the Manager's ruling on issues.md
+// 0.1: the value must equal the intent's, and a disagreement is refused rather
+// than reconciled. A decision issued for one account must not be able to
+// authorise an attempt on another.
+func TestPrepareRejectsAccountRefMismatch(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	insertTestDecision(t, j, "dec-1", "acct-OTHER", SafetyClassRiskReducing, 0)
+
+	req := testRequest()
+	req.AccountRef = "acct-OTHER"
+	req.DecisionID = "dec-1"
+	req.SafetyClass = SafetyClassRiskReducing
+
+	a, err := j.Prepare(ctx, req)
+	if !errors.Is(err, ErrInvalidRequest) {
+		t.Fatalf("want ErrInvalidRequest, got (%v, %v)", a, err)
+	}
+	if a != nil {
+		t.Fatal("no handle may be returned for a refused binding")
+	}
+	var attempts int
+	if err := j.db.QueryRowContext(ctx, "SELECT count(*) FROM mutation_attempts").Scan(&attempts); err != nil {
+		t.Fatal(err)
+	}
+	if attempts != 0 {
+		t.Fatalf("refused binding wrote %d attempt rows, want 0", attempts)
+	}
+}
+
+// TestPrepareValidatesTheDecisionBinding refuses shapes that could only mean a
+// caller is claiming something the record does not support.
+func TestPrepareValidatesTheDecisionBinding(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	insertTestDecision(t, j, "dec-1", "acct-1", SafetyClassRiskReducing, 0)
+
+	cases := []struct {
+		name   string
+		mutate func(*PrepareRequest)
+	}{
+		{"safety class without a decision", func(r *PrepareRequest) {
+			r.SafetyClass = SafetyClassExposureRaising
+		}},
+		{"idempotency key without a decision", func(r *PrepareRequest) {
+			r.ClientOrderID = DeriveClientOrderID("dec-1", 0)
+		}},
+		{"generation without a decision", func(r *PrepareRequest) { r.Generation = 1 }},
+		{"unknown safety class", func(r *PrepareRequest) {
+			r.DecisionID = "dec-1"
+			r.SafetyClass = "PROBABLY_FINE"
+		}},
+		{"negative generation", func(r *PrepareRequest) {
+			r.DecisionID = "dec-1"
+			r.SafetyClass = SafetyClassRiskReducing
+			r.Generation = -1
+		}},
+		{"malformed idempotency key", func(r *PrepareRequest) {
+			r.DecisionID = "dec-1"
+			r.SafetyClass = SafetyClassRiskReducing
+			r.ClientOrderID = "not a valid key"
+		}},
+		{"idempotency key on a cancel", func(r *PrepareRequest) {
+			r.Kind = KindCancel
+			r.TargetOrderID = "order-1"
+			r.DecisionID = "dec-1"
+			r.SafetyClass = SafetyClassRiskReducing
+			r.ClientOrderID = DeriveClientOrderID("dec-1", 0)
+		}},
+		{"wire body without a serializer version", func(r *PrepareRequest) {
+			r.WireBody = `{"symbol":"AAPL"}`
+		}},
+		{"serializer version without a wire body", func(r *PrepareRequest) {
+			r.SerializerVersion = "execgw/place/v1"
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := testRequest()
+			tc.mutate(&req)
+			a, err := j.Prepare(ctx, req)
+			if !errors.Is(err, ErrInvalidRequest) {
+				t.Fatalf("want ErrInvalidRequest, got (%v, %v)", a, err)
+			}
+			if a != nil {
+				t.Fatal("no handle on a refused request")
+			}
+		})
+	}
+}
+
+// TestPrepareRefusesAnUnpersistedDecision: the foreign key is the structural
+// half of "발급자가 Gateway 호출 전에 결정을 영속한다" — an attempt cannot name a
+// decision that was never written.
+func TestPrepareRefusesAnUnpersistedDecision(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+
+	req := testRequest()
+	req.DecisionID = "never-written"
+	req.SafetyClass = SafetyClassRiskReducing
+
+	if _, err := j.Prepare(ctx, req); err == nil {
+		t.Fatal("an attempt naming a decision that does not exist must be refused")
+	}
+	var attempts int
+	if err := j.db.QueryRowContext(ctx, "SELECT count(*) FROM mutation_attempts").Scan(&attempts); err != nil {
+		t.Fatal(err)
+	}
+	if attempts != 0 {
+		t.Fatalf("attempt rows = %d, want 0", attempts)
+	}
+}
+
+// TestIdempotencyKeyIsClaimedOnce: one key, one attempt per account. Two
+// attempts under the same key would each believe they own the broker order that
+// key names.
+func TestIdempotencyKeyIsClaimedOnce(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	insertTestDecision(t, j, "dec-1", "acct-1", SafetyClassExposureRaising, 0)
+	key := DeriveClientOrderID("dec-1", 0)
+
+	req := testRequest()
+	req.DecisionID = "dec-1"
+	req.SafetyClass = SafetyClassExposureRaising
+	req.ClientOrderID = key
+	if _, err := j.Prepare(ctx, req); err != nil {
+		t.Fatalf("first Prepare: %v", err)
+	}
+
+	second := req
+	second.AttemptID = "attempt-2"
+	if _, err := j.Prepare(ctx, second); err == nil {
+		t.Fatal("a second attempt must not claim the same idempotency key")
+	}
+}
+
+// TestDecisionBindingIsImmutableAcrossTransitions: the binding is written at
+// RECORDED and no lifecycle transition may touch it. A replay reads these bytes
+// long after the attempt moved on.
+func TestDecisionBindingIsImmutableAcrossTransitions(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	insertTestDecision(t, j, "dec-1", "acct-1", SafetyClassExposureRaising, 0)
+
+	req := testRequest()
+	req.DecisionID = "dec-1"
+	req.SafetyClass = SafetyClassExposureRaising
+	req.ClientOrderID = DeriveClientOrderID("dec-1", 0)
+	req.WireBody = `{"symbol":"AAPL","side":"BUY","quantity":"10"}`
+	req.SerializerVersion = "execgw/place/v1"
+
+	a, err := j.Prepare(ctx, req)
+	if err != nil {
+		t.Fatalf("Prepare: %v", err)
+	}
+	before, err := j.LookupAttempt(ctx, "attempt-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := a.MarkDispatchStarted(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.MarkAcked(ctx, "order-42"); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Settle(ctx, StateConfirmed, "ok", "confirmed"); err != nil {
+		t.Fatal(err)
+	}
+	after, err := j.LookupAttempt(ctx, "attempt-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if after.DecisionID != before.DecisionID || after.SafetyClass != before.SafetyClass ||
+		after.Generation != before.Generation || after.ClientOrderID != before.ClientOrderID ||
+		after.WireBody != before.WireBody || after.SerializerVersion != before.SerializerVersion ||
+		after.AccountRef != before.AccountRef {
+		t.Fatalf("the decision binding changed across transitions:\nbefore %+v\n after %+v", before, after)
+	}
+}
+
 // TestPrepareFailureBlocksSubmission is the ordering guarantee in the spec:
 // "WHEN the journal transaction fails to commit THEN no broker submission
 // happens". The handle returned by Prepare is the only capability that reaches

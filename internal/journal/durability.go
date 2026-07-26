@@ -135,6 +135,13 @@ type Intent struct {
 
 // PrepareRequest asks the journal to durably record an intent and one attempt
 // against it.
+//
+// The second block of fields is the decision binding (design D1/D2, task 1.3).
+// They are the public-contract extension this change makes: an attempt records
+// *which decision entitled it*, and the exact bytes and key that decision
+// authorised, at RECORDED — before anything is sent. Written once and never
+// updated: transition() only ever touches state, timestamps, reason and the
+// broker order id, so these columns are immutable by construction.
 type PrepareRequest struct {
 	// Intent is the immutable intent. When the id already exists, every field
 	// must match what was recorded or Prepare fails with ErrIntentMutated.
@@ -150,6 +157,38 @@ type PrepareRequest struct {
 	// Fingerprint overrides the intent's fingerprint for this attempt. Empty
 	// inherits Intent.Fingerprint.
 	Fingerprint string
+
+	// AccountRef is the account the *decision* was issued for. It is recorded on
+	// the attempt (the partial UNIQUE on the idempotency key needs the column on
+	// this table — see issues.md) and must equal Intent.AccountRef: a decision
+	// for one account may not authorise an attempt on another. Empty inherits
+	// the intent's account.
+	AccountRef string
+	// DecisionID references the decisions row the issuer wrote before calling
+	// the gateway. The row must already exist — the schema's foreign key is what
+	// makes "a decision that was never persisted cannot be executed" structural
+	// rather than a convention.
+	DecisionID string
+	// SafetyClass is the class that decision carries (EXPOSURE_RAISING,
+	// RISK_REDUCING, PROTECTION_WEAKENING). Meaningless without a decision, so
+	// it is refused without one: a class nothing backs is a caller's claim.
+	SafetyClass string
+	// Generation is the decision's reissue counter, always 0 in this change.
+	Generation int
+	// ClientOrderID is the broker idempotency key f(decision_id, generation).
+	// PLACE only: the cancel and modify endpoints take no key (openapi —
+	// clientOrderId exists on OrderCreateRequest and on the conditional-order
+	// request, nowhere else).
+	ClientOrderID string
+	// WireBody is the canonical request body as it will be sent, stored verbatim.
+	// A replay resends these bytes; it never rebuilds a body from structured
+	// fields, because a change in the serialisation rules would then send
+	// different bytes under the same idempotency key (design D2/D3).
+	WireBody string
+	// SerializerVersion names the rules WireBody was produced under, so a later
+	// build can tell whether it still understands the stored bytes. Required
+	// with a body and meaningless without one.
+	SerializerVersion string
 }
 
 func (r PrepareRequest) validate() error {
@@ -186,7 +225,74 @@ func (r PrepareRequest) validate() error {
 	case r.Kind != KindPlace && strings.TrimSpace(r.TargetOrderID) == "":
 		return fmt.Errorf("%w: %s requires a target order id", ErrInvalidRequest, r.Kind)
 	}
+	return r.validateDecisionBinding()
+}
+
+// validateDecisionBinding checks the decision half of the request.
+//
+// Every branch here refuses a *shape*, never a risk judgement: whether the
+// decision itself authorises the mutation is the gateway's re-verification
+// against the persisted row, and the journal has no business duplicating it.
+// What the journal owns is that the row it writes cannot lie about which
+// decision, which account and which key the attempt belongs to.
+func (r PrepareRequest) validateDecisionBinding() error {
+	decision := strings.TrimSpace(r.DecisionID)
+	class := strings.TrimSpace(r.SafetyClass)
+	key := strings.TrimSpace(r.ClientOrderID)
+
+	if acct := strings.TrimSpace(r.AccountRef); acct != "" && acct != strings.TrimSpace(r.Intent.AccountRef) {
+		return fmt.Errorf("%w: the decision was issued for account %q but the intent is on %q",
+			ErrInvalidRequest, acct, r.Intent.AccountRef)
+	}
+	if decision == "" {
+		switch {
+		case class != "":
+			return fmt.Errorf("%w: a safety class without a decision is not an authorisation",
+				ErrInvalidRequest)
+		case key != "":
+			return fmt.Errorf("%w: an idempotency key without a decision is not derivable",
+				ErrInvalidRequest)
+		case r.Generation != 0:
+			return fmt.Errorf("%w: a generation without a decision names nothing", ErrInvalidRequest)
+		}
+	} else {
+		switch {
+		case !validSafetyClass(class):
+			return fmt.Errorf("%w: safety class %q is not one this build issues", ErrInvalidRequest, class)
+		case r.Generation < 0:
+			return fmt.Errorf("%w: generation %d is negative", ErrInvalidRequest, r.Generation)
+		case key != "" && !ValidClientOrderID(key):
+			return fmt.Errorf("%w: idempotency key %q is outside the broker's ^[a-zA-Z0-9\\-_]+$ (max 36)",
+				ErrInvalidRequest, key)
+		case key != "" && r.Kind != KindPlace:
+			return fmt.Errorf("%w: %s carries no idempotency key — only order creation does",
+				ErrInvalidRequest, r.Kind)
+		}
+	}
+
+	body := strings.TrimSpace(r.WireBody)
+	version := strings.TrimSpace(r.SerializerVersion)
+	switch {
+	case body != "" && version == "":
+		return fmt.Errorf("%w: a stored wire body without a serializer version cannot be replayed safely",
+			ErrInvalidRequest)
+	case version != "" && body == "":
+		return fmt.Errorf("%w: a serializer version without a wire body describes nothing",
+			ErrInvalidRequest)
+	}
 	return nil
+}
+
+// validSafetyClass reports whether the class is one the schema's CHECK accepts.
+// PROTECTION_WEAKENING is included because the column accepts it; no writer in
+// this change produces one (design D4).
+func validSafetyClass(class string) bool {
+	switch class {
+	case SafetyClassExposureRaising, SafetyClassRiskReducing, SafetyClassProtectionWeakening:
+		return true
+	default:
+		return false
+	}
 }
 
 // AttemptRecord is the stored form of a mutation attempt.
@@ -204,6 +310,21 @@ type AttemptRecord struct {
 	SettledAt         string
 	ReasonCode        string
 	Detail            string
+
+	// The decision binding (task 1.3). Empty on every attempt recorded before
+	// this schema, and on any path that submits without a decision.
+	AccountRef        string
+	DecisionID        string
+	SafetyClass       string
+	Generation        int
+	ClientOrderID     string
+	WireBody          string
+	SerializerVersion string
+	// ReplayCount and LastReplayAt belong to the idempotent replay procedure
+	// (section 2). They are read here so the record is complete; nothing in this
+	// change writes them.
+	ReplayCount  int
+	LastReplayAt string
 }
 
 // Attempt is a handle on a durably recorded attempt.
@@ -294,13 +415,28 @@ func (j *Journal) Prepare(ctx context.Context, req PrepareRequest) (*Attempt, er
 		return nil, fmt.Errorf("journal: numbering the attempt for intent %s: %w", req.Intent.ID, err)
 	}
 
+	// account_ref is always written, even for an attempt with no decision: it is
+	// what the partial UNIQUE on the idempotency key is scoped by, and an attempt
+	// whose account is only reachable through the intent's foreign key cannot be
+	// covered by an index (issues.md, task 0.1 → 1.3).
+	accountRef := strings.TrimSpace(req.AccountRef)
+	if accountRef == "" {
+		accountRef = strings.TrimSpace(req.Intent.AccountRef)
+	}
 	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO mutation_attempts
 		   (id, intent_id, kind, state, attempt_no, target_order_id, broker_order_id,
-		    fingerprint, recorded_at)
-		 VALUES (?,?,?,?,?,?,'',?,?)`,
+		    fingerprint, recorded_at, account_ref, decision_id, safety_class, generation,
+		    client_order_id, wire_body, serializer_version)
+		 VALUES (?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?)`,
 		req.AttemptID, req.Intent.ID, string(req.Kind), string(StateRecorded), attemptNo,
-		req.TargetOrderID, fingerprint, now); err != nil {
+		req.TargetOrderID, fingerprint, now, accountRef,
+		nullableString(strings.TrimSpace(req.DecisionID)),
+		nullableString(strings.TrimSpace(req.SafetyClass)),
+		nullableGeneration(req.DecisionID, req.Generation),
+		nullableString(strings.TrimSpace(req.ClientOrderID)),
+		nullableString(req.WireBody),
+		nullableString(strings.TrimSpace(req.SerializerVersion))); err != nil {
 		return nil, fmt.Errorf("journal: recording attempt %s: %w", req.AttemptID, err)
 	}
 	if _, err := tx.ExecContext(ctx,
@@ -508,7 +644,9 @@ func (j *Journal) LookupAttempt(ctx context.Context, id string) (AttemptRecord, 
 
 const attemptSelect = `SELECT id, intent_id, kind, state, attempt_no, target_order_id,
 	broker_order_id, fingerprint, recorded_at, dispatch_started_at, settled_at,
-	reason_code, detail FROM mutation_attempts`
+	reason_code, detail, account_ref, decision_id, safety_class, generation,
+	client_order_id, wire_body, serializer_version, replay_count, last_replay_at
+	FROM mutation_attempts`
 
 type rowScanner interface {
 	Scan(dest ...any) error
@@ -518,10 +656,17 @@ func scanAttempt(row rowScanner) (AttemptRecord, error) {
 	var (
 		rec                        AttemptRecord
 		dispatchStarted, settledAt sql.NullString
+		accountRef, decisionID     sql.NullString
+		safetyClass, clientOrderID sql.NullString
+		wireBody, serializer       sql.NullString
+		lastReplayAt               sql.NullString
+		generation, replayCount    sql.NullInt64
 	)
 	err := row.Scan(&rec.ID, &rec.IntentID, &rec.Kind, &rec.State, &rec.AttemptNo,
 		&rec.TargetOrderID, &rec.BrokerOrderID, &rec.Fingerprint, &rec.RecordedAt,
-		&dispatchStarted, &settledAt, &rec.ReasonCode, &rec.Detail)
+		&dispatchStarted, &settledAt, &rec.ReasonCode, &rec.Detail,
+		&accountRef, &decisionID, &safetyClass, &generation,
+		&clientOrderID, &wireBody, &serializer, &replayCount, &lastReplayAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return AttemptRecord{}, ErrAttemptNotFound
 	}
@@ -530,6 +675,15 @@ func scanAttempt(row rowScanner) (AttemptRecord, error) {
 	}
 	rec.DispatchStartedAt = dispatchStarted.String
 	rec.SettledAt = settledAt.String
+	rec.AccountRef = accountRef.String
+	rec.DecisionID = decisionID.String
+	rec.SafetyClass = safetyClass.String
+	rec.Generation = int(generation.Int64)
+	rec.ClientOrderID = clientOrderID.String
+	rec.WireBody = wireBody.String
+	rec.SerializerVersion = serializer.String
+	rec.ReplayCount = int(replayCount.Int64)
+	rec.LastReplayAt = lastReplayAt.String
 	return rec, nil
 }
 
@@ -543,4 +697,14 @@ func nullableString(s string) any {
 		return nil
 	}
 	return s
+}
+
+// nullableGeneration stores the generation only for an attempt that has a
+// decision. Zero is a meaningful generation (it is the only one this change
+// issues), so "0 or absent" cannot be expressed by the value alone.
+func nullableGeneration(decisionID string, generation int) any {
+	if strings.TrimSpace(decisionID) == "" {
+		return nil
+	}
+	return generation
 }
