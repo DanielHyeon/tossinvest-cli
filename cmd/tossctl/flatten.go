@@ -111,7 +111,7 @@ no flag that answers it for you.`),
 
 // flattenWiring is everything the saga needs, assembled once.
 type flattenWiring struct {
-	engine  *engine.Context
+	orders  *engine.OrderPath
 	journal *journal.Journal
 	saga    *flatten.Saga
 	account string
@@ -183,14 +183,26 @@ func runFlatten(cmd *cobra.Command, root *rootOptions, opts *flattenOptions) err
 	return nil
 }
 
-// buildFlattenWiring assembles the engine profile, the journal and the saga.
+// buildFlattenWiring assembles the order path, the journal and the saga.
+//
+// It builds its own order path rather than an engine.Context (task 7.4). The
+// difference matters in both directions: this command is its own decision issuer
+// and owns its journal, its entry gate and its gateway, so taking a
+// trading.Service out of an engine it did not assemble was the exposure the seal
+// removes (engine-safety: "기존 소비자인 flatten은 엔진 컨텍스트가 아니라 자체
+// 배선으로 구성한다") — and an engine.Context now opens a journal of its own,
+// which this command would then be holding a second handle to.
+//
+// Nothing about what the saga does changes. Same official client, same trading
+// policy, same journal path, same gateway options, same refusal without
+// credentials.
 func buildFlattenWiring(ctx context.Context, root *rootOptions, opts *flattenOptions) (*flattenWiring, error) {
-	eng, err := engine.NewContext(ctx, engine.Options{ConfigDir: root.configDir})
+	orderPath, err := engine.NewOrderPath(engine.Options{ConfigDir: root.configDir})
 	if err != nil {
 		return nil, err
 	}
 
-	accounts, err := eng.Official.Accounts(ctx)
+	accounts, err := orderPath.Official.Accounts(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("flatten-all: the account could not be identified: %w", err)
 	}
@@ -220,7 +232,7 @@ func buildFlattenWiring(ctx context.Context, root *rootOptions, opts *flattenOpt
 	gate := execgw.NewEntryGate(clk, nil)
 	gateway, err := execgw.New(execgw.Options{
 		Journal:    j,
-		Trading:    eng.TradingService,
+		Trading:    orderPath.Trading,
 		Clock:      clk,
 		AccountRef: accountRef,
 		Source:     "flatten-all",
@@ -231,7 +243,7 @@ func buildFlattenWiring(ctx context.Context, root *rootOptions, opts *flattenOpt
 		return nil, err
 	}
 
-	orders := execgw.OfficialOrders{Client: eng.Official}
+	orders := execgw.OfficialOrders{Client: orderPath.Official}
 	saga := &flatten.Saga{
 		Journal:    j,
 		Gateway:    gateway,
@@ -244,14 +256,14 @@ func buildFlattenWiring(ctx context.Context, root *rootOptions, opts *flattenOpt
 		Operator:   os.Getenv("USER"),
 		Reason:     opts.reason,
 		DryRun:     opts.dryRun,
-		Positions:  flattenPositions{client: eng.Official},
-		Balance:    flattenBalance{client: eng.Official},
-		Sellable:   eng.Official,
-		Prices:     eng.Official,
+		Positions:  flattenPositions{client: orderPath.Official},
+		Balance:    flattenBalance{client: orderPath.Official},
+		Sellable:   orderPath.Official,
+		Prices:     orderPath.Official,
 	}
 
 	return &flattenWiring{
-		engine:  eng,
+		orders:  orderPath,
 		journal: j,
 		saga:    saga,
 		account: accountRef,

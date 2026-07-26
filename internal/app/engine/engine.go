@@ -174,9 +174,21 @@ type Context struct {
 	broker      trading.Broker
 	conditional ConditionalMutator
 
-	// TradingService applies the user's config policy and the confirm-token gate
-	// on top of the broker. It is what internal/execgw wraps.
-	TradingService *trading.Service
+	// tradingService applies the user's config policy and the confirm-token gate
+	// on top of the broker. It is what the gateway wraps.
+	//
+	// It is unexported since task 7.4, and that is the seal engine-safety asks
+	// for: "엔진 컨텍스트는 mutation 메서드를 가진 서비스 값을 외부에 노출해서는
+	// 안 되며". The confirm token it demands is no protection at all against a
+	// caller holding the service — PreviewPlace hands the token back, so the gate
+	// is one line of local arithmetic away from being satisfied. Anything that
+	// needs to mutate goes through Context.Gateway, which cannot be satisfied
+	// without a GuardianDecision that was persisted before the call.
+	//
+	// A caller that legitimately owns its own decision issuance and its own
+	// journal — `tossctl flatten-all` — builds its order path with NewOrderPath
+	// instead of taking one out of an engine it did not assemble.
+	tradingService *trading.Service
 }
 
 // ConditionalMutator is the conditional-order write surface. It is an alias of
@@ -185,36 +197,55 @@ type Context struct {
 // this seam.
 type ConditionalMutator = trading.ConditionalBroker
 
-// New assembles the engine profile, or refuses to start.
+// OrderPath is the engine profile's order stack without the engine: the config,
+// the official client and the policy-enforcing trading service, and nothing else.
 //
-// Refusals (all fail-closed, no partial engine is returned):
-//   - no credentials, or credentials missing either half → ErrOfficialCredentialsRequired
-//   - unreadable/malformed credentials file → the underlying error
-//   - malformed config file → the underlying error, rather than running on
-//     zero-value trading policy the user never wrote
+// # Who this is for
 //
-// cfg.OpenAPI is loaded but never consulted: it is an interactive routing
-// preference, and the engine's broker is not negotiable.
+// Exactly one caller: `tossctl flatten-all`, which is its own decision issuer and
+// owns its own journal, entry gate and gateway (engine-safety: "기존 소비자인
+// flatten은 엔진 컨텍스트가 아니라 자체 배선으로 구성한다"). It used to reach into
+// engine.Context for a trading.Service, which is precisely the exposure task 7.4
+// removes.
 //
-// With config's automation gate on, four more refusals apply — no Guardian, zero
-// limits, no/expired/mismatched capability attestation — all in interlock.go.
+// # Why this is not the same hole with a new name
 //
-// Since task 7.1 one broker read happens on every start, gate or no gate: the
-// account resolution below. It is the only network call a gate-off engine makes,
-// and it is a read the engine needs regardless of what the gate says.
-func New(opts Options) (*Context, error) {
-	return NewContext(context.Background(), opts)
+// A Context is what an operator, a loop or a future strategy holds; handing a
+// mutator out of it means every one of them can bypass the journal and the
+// Guardian by accident. An OrderPath is what a caller has to *ask for* by name,
+// in a constructor whose doc says who may call it and what they take on: the
+// obligation to journal the intent, to persist a decision, and to settle the
+// attempt. That is a deliberate act one reviewer can see in one line of diff, not
+// a field that happens to be within reach.
+//
+// It performs no network call and opens no journal. The caller supplies both.
+type OrderPath struct {
+	Paths     config.Paths
+	Config    config.File
+	TokenFile string
+
+	// Official is the read-only view of the broker connection, the same
+	// interface Context.Official carries.
+	Official OfficialReads
+	// Trading is the mutation-capable service. Wrapping it in an
+	// execgw.Gateway before use is the caller's obligation.
+	Trading *trading.Service
+
+	// official, broker and conditional are what NewContext needs to finish
+	// assembling an engine; they stay unexported for the reason the Context's
+	// equivalents do.
+	official    *official.Client
+	broker      trading.Broker
+	conditional ConditionalMutator
 }
 
-// NewContext is New with a caller-supplied context. The context bounds the
-// startup account read and, with the gate on, the interlock's checks.
+// NewOrderPath resolves the config and credentials and builds the order stack.
 //
-// The construction order is fixed by engine-safety ("엔진 프로필은 다음 순서로
-// 구성한다"): account resolution → journal → gateway → interlock. Each step is a
-// precondition for the next, and the interlock runs last precisely so that it can
-// verify what the earlier steps produced instead of taking their success on
-// trust.
-func NewContext(ctx context.Context, opts Options) (*Context, error) {
+// The refusals are the engine profile's, unchanged: no credentials means no order
+// path, because the alternative is a caller quietly trading through the scraped
+// web session. Only the gate-related fields of Options are ignored — there is no
+// gate here to interlock.
+func NewOrderPath(opts Options) (*OrderPath, error) {
 	getenv := opts.Getenv
 	if getenv == nil {
 		getenv = os.Getenv
@@ -247,6 +278,58 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 
 	off := official.New(*creds, tokenFile, opts.OfficialOptions...)
 	broker := &officialBroker{off: off}
+
+	// No lineage recorder: order lineage is recorded in the journal transaction
+	// (design D2), not in the CLI's JSON cache. trading.Service without a
+	// recorder behaves exactly as upstream's does when lineage is unset.
+	return &OrderPath{
+		Paths:       paths,
+		Config:      cfg,
+		TokenFile:   tokenFile,
+		Official:    off,
+		Trading:     trading.NewService(cfg.Trading, broker).WithConditional(broker),
+		official:    off,
+		broker:      broker,
+		conditional: broker,
+	}, nil
+}
+
+// New assembles the engine profile, or refuses to start.
+//
+// Refusals (all fail-closed, no partial engine is returned):
+//   - no credentials, or credentials missing either half → ErrOfficialCredentialsRequired
+//   - unreadable/malformed credentials file → the underlying error
+//   - malformed config file → the underlying error, rather than running on
+//     zero-value trading policy the user never wrote
+//
+// cfg.OpenAPI is loaded but never consulted: it is an interactive routing
+// preference, and the engine's broker is not negotiable.
+//
+// With config's automation gate on, four more refusals apply — no Guardian, zero
+// limits, no/expired/mismatched capability attestation — all in interlock.go.
+//
+// Since task 7.1 one broker read happens on every start, gate or no gate: the
+// account resolution below. It is the only network call a gate-off engine makes,
+// and it is a read the engine needs regardless of what the gate says.
+func New(opts Options) (*Context, error) {
+	return NewContext(context.Background(), opts)
+}
+
+// NewContext is New with a caller-supplied context. The context bounds the
+// startup account read and, with the gate on, the interlock's checks.
+//
+// The construction order is fixed by engine-safety ("엔진 프로필은 다음 순서로
+// 구성한다"): account resolution → journal → gateway → interlock. Each step is a
+// precondition for the next, and the interlock runs last precisely so that it can
+// verify what the earlier steps produced instead of taking their success on
+// trust.
+func NewContext(ctx context.Context, opts Options) (*Context, error) {
+	path, err := NewOrderPath(opts)
+	if err != nil {
+		return nil, err
+	}
+	paths, cfg, tokenFile := path.Paths, path.Config, path.TokenFile
+	off := path.official
 
 	auditLog, err := openAuditLog(opts)
 	if err != nil {
@@ -290,15 +373,9 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	}
 
 	// --- 3. the gateway -----------------------------------------------------
-	//
-	// No lineage recorder on the trading service: the engine records order
-	// lineage in the journal transaction (design D2), not in the CLI's JSON
-	// cache. trading.Service without a recorder behaves exactly as upstream's
-	// does when lineage is unset.
-	tradingService := trading.NewService(cfg.Trading, broker).WithConditional(broker)
 	wiring, err := buildGateway(ctx, gatewayInputs{
 		journal:    jrn,
-		trading:    tradingService,
+		trading:    path.Trading,
 		official:   off,
 		accountRef: accountRef,
 		clock:      clk,
@@ -339,9 +416,9 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		Guardian:       guardian,
 		Audit:          auditLog,
 		official:       off,
-		broker:         broker,
-		conditional:    broker,
-		TradingService: tradingService,
+		broker:         path.broker,
+		conditional:    path.conditional,
+		tradingService: path.Trading,
 	}, nil
 }
 

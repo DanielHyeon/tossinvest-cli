@@ -165,7 +165,7 @@ func TestEngineMutationMatrixNeverReachesWTS(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	svc := eng.TradingService
+	svc := eng.TradingServiceForTest()
 
 	place := placeIntentFixture()
 	if _, err := svc.Place(ctx, place, executeOpts(svc.PreviewPlace(place).ConfirmToken)); err != nil {

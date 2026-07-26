@@ -197,7 +197,7 @@ func TestNewIgnoresOpenAPIConfigToggles(t *testing.T) {
 	if ctx.Official == nil {
 		t.Fatal("engine must construct an official client regardless of openapi.enabled/prefer")
 	}
-	if ctx.BrokerForTest() == nil || ctx.TradingService == nil {
+	if ctx.BrokerForTest() == nil || ctx.TradingServiceForTest() == nil {
 		t.Fatal("engine must wire a broker and trading service")
 	}
 	if ctx.Config.OpenAPI.Enabled || ctx.Config.OpenAPI.Prefer != "wts" {
@@ -245,7 +245,7 @@ func TestNewCarriesTradingPolicy(t *testing.T) {
 		if err != nil {
 			t.Fatalf("New: %v", err)
 		}
-		if !ctx.TradingService.PreviewPlace(intent).MutationReady {
+		if !ctx.TradingServiceForTest().PreviewPlace(intent).MutationReady {
 			t.Error("engine trading service must report MutationReady for an open config")
 		}
 	})
@@ -260,7 +260,7 @@ func TestNewCarriesTradingPolicy(t *testing.T) {
 		if err != nil {
 			t.Fatalf("New: %v", err)
 		}
-		if ctx.TradingService.PreviewPlace(intent).MutationReady {
+		if ctx.TradingServiceForTest().PreviewPlace(intent).MutationReady {
 			t.Error("engine must inherit the config's closed trading toggles")
 		}
 	})

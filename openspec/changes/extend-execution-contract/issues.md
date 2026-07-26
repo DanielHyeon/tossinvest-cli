@@ -626,6 +626,45 @@
   Entry·Resolver·Tracker는 브로커 mutation 경로를 갖지 않는다. 봉인 테스트(7.4)가 이를
   `trading.Broker`/`ConditionalBroker` 구현 여부로 확인한다.
 
+## 2026-07-26 [safe local] flatten 자체 배선을 `engine.NewOrderPath`로 냈다 (task 7.4)
+
+- 문제: 스펙은 "flatten은 엔진 컨텍스트가 아니라 자체 배선으로 구성한다(SHALL)"를 요구한다.
+  그런데 flatten이 `trading.Service`를 완전히 스스로 만들려면 broker adapter가 필요하고,
+  그 adapter는 `internal/app/engine`의 `officialBroker` + `precheck.go`(공식 API에 없는
+  `GetOrderAvailableActions`를 brokerstate 파생으로 만드는 152줄)다. cmd/에 복제하는 것은
+  불가하고, `NewOfficialBroker`를 공개하면 **엔진 패키지가 raw mutator 생성자를 공개**하게 된다.
+- 이번 처리: `engine.NewOrderPath(Options) (*OrderPath, error)` — config·자격증명·official
+  client·broker·trading.Service까지만 조립하고 **journal도 열지 않고 네트워크도 치지 않는**
+  생성자. `Context`는 이제 `tradingService`를 비공개로 들고, 유일한 소비자 flatten은
+  `OrderPath.Trading`을 쓴다.
+- "구멍을 옮긴 것 아닌가"에 대한 답: Context는 운영자·루프·전략이 **들고 다니는** 값이라 거기
+  붙은 mutator는 사고로 닿는다. OrderPath는 이름을 대고 **요청해야** 얻는 값이고, 생성자
+  doc이 호출 자격(자기 결정 발급·자기 journal·attempt 정산 의무)을 적는다. 리뷰어가 diff
+  한 줄에서 볼 수 있는 의도적 행위다.
+- 부수 효과(의도됨): flatten이 더 이상 engine.Context를 만들지 않으므로 7.2가 만든 과도기
+  이중 journal open이 사라졌고, flatten은 게이트 인터록·기동 계좌 읽기도 수행하지 않는다
+  (비상 경로에 게이트 상태는 무관하다 — §0.3).
+- 회귀 고정: `cmd/tossctl/flatten_test.go`의 `TestFlattenWiresItsOwnOrderPath`(소스 수준
+  — `engine.Context`/`engine.New*`/`TradingService` 미언급), 그리고 saga 동작
+  characterization은 `internal/flatten`에 그대로 있고 무변경 green이다.
+
+## 2026-07-26 [safe local] 봉인 테스트를 "이름 목록"이 아니라 "결정을 요구하는가"로 썼다 (task 7.4)
+
+- 사실: 8.2가 예고한 `seal_test.go:21` 주석 반전을 수행했다. 그런데 `TradingService`를
+  비공개로 바꾸는 것만으로는 기존 테스트가 강해지지 않는다 — `*trading.Service`는
+  `trading.Broker`를 구현하지 않으므로 그 스캔에 애초에 걸리지 않았다.
+- 이번 처리: `TestContextExposesNoUnauthorisedMutation` 추가 — Context의 **공개 필드**에서
+  도달 가능한 mutation 동사(Place/Cancel/Amend/Conditional*/…*PendingOrder)가 하나라도
+  `execgw.GuardianDecision`을 인자로 받지 않으면 실패한다. 금지 타입 목록이 아니라 성질을
+  검사하므로 누가 `trading.Service`를 감싸도 걸린다. `Context.Gateway`는 통과한다
+  (PlaceRequest·CancelRequest·AmendRequest가 Decision을 싣는다).
+- 공허해지지 않도록 positive control을 붙였다(`TestTheSealTestWouldCatchTheTradingService`):
+  술어가 `*trading.Service.Place`를 **거부**하고 `*execgw.Gateway.Place`를 **허용**함을 함께
+  단언한다.
+- 8.2 사전 열거 확장: `wts_isolation_test`·`precheck_test`·`engine_test`의
+  `eng.TradingService` → `eng.TradingServiceForTest()`(export_test.go 신설 접근자). 값·동작
+  단언은 한 줄도 바뀌지 않았다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

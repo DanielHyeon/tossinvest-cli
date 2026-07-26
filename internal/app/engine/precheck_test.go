@@ -313,7 +313,7 @@ func TestEngineCancelAndAmendWithExpiredWTSSession(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	svc := eng.TradingService
+	svc := eng.TradingServiceForTest()
 
 	cancel := orderintent.CancelIntent{OrderID: "O-1", Symbol: "005930"}
 	if _, err := svc.Cancel(ctx, cancel, executeOpts(svc.PreviewCancel(cancel).ConfirmToken)); err != nil {

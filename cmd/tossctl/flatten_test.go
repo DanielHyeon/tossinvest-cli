@@ -8,6 +8,7 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 
@@ -109,4 +110,48 @@ func TestFlattenRefusesWithoutOfficialCredentials(t *testing.T) {
 	if err.Error() != engine.ErrOfficialCredentialsRequired.Error() {
 		t.Logf("note: the error is %v", err)
 	}
+}
+
+// TestFlattenWiresItsOwnOrderPath is the source-level half of task 7.4.
+//
+// The command used to build an engine.Context and take its trading.Service. Two
+// things made that wrong once the engine profile grew: the service is a mutator
+// nobody should be able to pick up out of assembled wiring (engine-safety's seal),
+// and an engine.Context now opens a journal of its own — so this command would be
+// holding a second handle to the same file it is already using.
+//
+// It builds an engine.OrderPath instead: same config, same credentials refusal,
+// same official client, and no engine. Asserted against the source because the
+// mistake it guards against is a single identifier, and a runtime test would only
+// notice the day the two journals actually contend.
+func TestFlattenWiresItsOwnOrderPath(t *testing.T) {
+	body, err := os.ReadFile("flatten.go")
+	if err != nil {
+		t.Fatalf("reading flatten.go: %v", err)
+	}
+	src := string(body)
+	code := strings.Join(nonCommentLines(src), "\n")
+
+	for _, banned := range []string{"engine.NewContext(", "engine.New(", "engine.Context", "TradingService"} {
+		if strings.Contains(code, banned) {
+			t.Errorf("flatten.go mentions %s outside a comment: the command wires its own order path "+
+				"and must not depend on the engine context (task 7.4)", banned)
+		}
+	}
+	if !strings.Contains(code, "engine.NewOrderPath(") {
+		t.Error("flatten.go must build its order path with engine.NewOrderPath")
+	}
+}
+
+// nonCommentLines drops whole-line comments. It does not parse Go: a line that
+// is wrongly kept makes the guard stricter, which is the safe direction here.
+func nonCommentLines(src string) []string {
+	var out []string
+	for _, line := range strings.Split(src, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "//") {
+			continue
+		}
+		out = append(out, line)
+	}
+	return out
 }

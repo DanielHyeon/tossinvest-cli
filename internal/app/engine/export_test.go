@@ -34,3 +34,14 @@ func (c *Context) OfficialClientForTest() *official.Client { return c.official }
 // difference is only that the seam is reached through a method, because the
 // field itself must not exist in the built binary's API.
 func (o *Options) SetJournalProberForTest(p journal.FSProber) { o.journalFSProber = p }
+
+// TradingServiceForTest returns the policy-enforcing order service the gateway
+// wraps (task 7.4). TESTS ONLY.
+//
+// The field is unexported now, because a caller holding it can mutate with no
+// GuardianDecision and no journal record. The WTS-isolation and pre-check suites
+// have to drive the service directly — proving the engine's order verbs never
+// reach the web session is the point of one and the pre-check is what the other
+// is about — so the seam lives here, in a _test.go file, and therefore not in the
+// built binary.
+func (c *Context) TradingServiceForTest() *trading.Service { return c.tradingService }
