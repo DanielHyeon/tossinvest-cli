@@ -489,6 +489,33 @@
   1회 호출해야 한다. 호출하지 않으면 재시작이 차단을 잃는다(스펙 SHALL 미충족). 인터록의
   "Gateway 구성 확인"(7.5) 항목 후보다.
 
+## 2026-07-26 [safe local] 확정 하한을 `riskcalc`에 두었다 — 소비자는 아직 0곳 (task 4.2)
+
+- 배치 근거: 계산 계약이지 게이트웨이 배선이 아니다. 순수·stdlib·모든 입력 명시(시계 없음)이므로
+  숨은 `time.Now()`가 stale 스냅샷을 신선하게 만드는 자리가 없고, 3.1이 도입한 exact decimal 층을
+  그대로 쓴다(분수 주식 하한이 부동소수로 새지 않는다). execgw에 두면 네트워크 타입이 따라 들어온다.
+- 스냅샷 부재·stale은 **에러가 아니라 하한 0**이다. 에러로 만들면 호출자가 "계산 불가" 별도 경로를
+  갖게 되고, 그 경로가 결국 다른 일을 한다. 0은 이 공식이 정의한 답이다. 대신 `Bound` 필드로
+  "미조회"와 "낡음"을 구분한다 — 운영자의 다음 행동이 다르다.
+- `LocalOpenSellQuantity`의 빈 문자열은 **거부**한다(0이 아니다). 미체결 SELL을 모르는 채 0으로
+  간주하면 이미 걸린 주문이 잡아둔 수량까지 매도를 허가한다. 음수도 거부 — 뺄셈의 피감수가
+  음수면 하한이 올라간다(SHALL NOT의 유일한 구멍).
+- 매도가능은 `min()`에서만 쓰이고 주석에 `[미측정 — 2b 2.8]` 태그를 달았다.
+- **소비자는 아직 없다.** 4.2 문언이 "공식 구현"이고, RECONCILE 중 청산 경로에 이 하한을 적용하는
+  배선은 엔진 루프/Gateway를 소유하는 change의 몫이다. 후속: **7.3/7.5**가 자동 청산 경로에
+  이 함수를 걸 때 flatten은 제외해야 한다(아래).
+
+## 2026-07-26 [observation] flatten 면제를 정적 import 검사로 고정했다 — 전이 의존은 검사하지 않는다 (task 4.2)
+
+- 사실: §0.3은 수동 flatten이 확정 하한의 대상이 아니라고 못 박는다(자체 신선 조회). 그런데
+  `internal/flatten`은 `internal/journal`을 거쳐 `internal/riskcalc`에 **전이적으로** 닿는다
+  (3.1이 예약 산술을 거기 두었기 때문). 전이 그래프를 금지하면 journal 자체를 금지하게 된다.
+- 이번 처리: `internal/flatten`의 **비-테스트 파일 직접 import**만 검사한다
+  (`TestFlattenCannotReachTheConfirmedFloorRule`). 호출이 생기려면 누군가 리뷰에서 정당화해야 하는
+  import 한 줄이 추가돼야 한다. 행동 회귀는 `TestFlattenSizesFromItsOwnFreshReadNotAConfirmedFloor`
+  — 스냅샷을 하나도 주지 않은 상태에서 자체 조회한 sellable 전량으로 주문이 나간다(확정 하한이라면
+  0이라 주문이 없다). 기존 `TestLiquidationSizesFromTheSellableQuantity`가 더 넓은 characterization이다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
