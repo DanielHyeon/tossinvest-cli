@@ -7,9 +7,11 @@ package engine_test
 // makes it a hard requirement rather than a nice-to-have.
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -25,17 +27,57 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
 var interlockNow = time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC)
 
-// stubGuardian is the injected risk authority. Phase 1 only needs it to exist —
-// the interlock checks that somebody is authorising orders, not what they decide.
-type stubGuardian struct{}
+// stubGuardian is the injected risk authority.
+//
+// It declares the limits it would stamp on an EXPOSURE_RAISING decision, because
+// since task 7.5 that is what the interlock's single-source clause asks of a
+// Guardian: a risk authority that cannot say what it authorises against cannot be
+// shown to be the same source the audit trail records.
+type stubGuardian struct{ limits execgw.Limits }
 
 func (stubGuardian) Authorize(context.Context, execgw.AuthorizationRequest) (execgw.GuardianDecision, error) {
 	return execgw.GuardianDecision{}, errors.New("stub guardian authorises nothing")
+}
+
+func (g stubGuardian) ExposureLimits() execgw.Limits { return g.limits }
+
+// silentGuardian authorises nothing and says nothing about its limits. It is the
+// shape of a Guardian written before the single-source clause existed.
+type silentGuardian struct{}
+
+func (silentGuardian) Authorize(context.Context, execgw.AuthorizationRequest) (execgw.GuardianDecision, error) {
+	return execgw.GuardianDecision{}, errors.New("silent guardian authorises nothing")
+}
+
+// fullGateLimits is the snapshot fullGate() produces. A Guardian carrying it is
+// configured from the same source the interlock audits.
+func fullGateLimits() execgw.Limits {
+	return execgw.Limits{
+		MaxQuantity:        execgw.Bound(10),
+		MaxNotional:        execgw.Bound(1_000_000),
+		MaxTotalExposure:   execgw.Bound(5_000_000),
+		MaxDailyLossAmount: execgw.Bound(200_000),
+		MaxDailyLossRatio:  execgw.Bound(0.02),
+		Currency:           "KRW",
+	}
+}
+
+// matchedGuardian is a Guardian configured from the audited limits.
+func matchedGuardian() stubGuardian { return stubGuardian{limits: fullGateLimits()} }
+
+// gateLimitsWith is fullGateLimits with one bound changed, for the cases that
+// need the Guardian to agree with a config that is itself wrong.
+func gateLimitsWith(mutate func(*execgw.Limits)) execgw.Limits {
+	l := fullGateLimits()
+	mutate(&l)
+	return l
 }
 
 // interlockServer answers the account read and counts it, so a test can prove the
@@ -68,11 +110,23 @@ func interlockServer(t *testing.T, accountNo string) (*httptest.Server, func() i
 	}
 }
 
+// openTradingPolicy is a policy that satisfies the interlock: it can enter, and
+// — the part clause 3 is about — it can exit.
+func openTradingPolicy() config.Trading {
+	return config.Trading{Place: true, Sell: true, Cancel: true, Amend: true, AllowLiveOrderActions: true}
+}
+
 // writeGateConfig writes a config with the automation gate in the requested state.
 func writeGateConfig(t *testing.T, dir string, gate config.AutomationGate) {
 	t.Helper()
+	writeGateConfigWith(t, dir, gate, openTradingPolicy())
+}
+
+// writeGateConfigWith is writeGateConfig with the trading policy under test.
+func writeGateConfigWith(t *testing.T, dir string, gate config.AutomationGate, policy config.Trading) {
+	t.Helper()
 	cfg := config.DefaultFile()
-	cfg.Trading = config.Trading{Place: true, Cancel: true, Amend: true, AllowLiveOrderActions: true}
+	cfg.Trading = policy
 	cfg.Engine.AutomationGate = gate
 	data, err := json.Marshal(cfg)
 	if err != nil {
@@ -106,7 +160,15 @@ func writeAttestation(t *testing.T, dir string, mutate func(*attest.Attestation)
 
 func openGateEngine(t *testing.T, dir string, srv *httptest.Server, guardian execgw.Guardian) (*engine.Context, error) {
 	t.Helper()
-	return engine.New(engine.Options{
+	return openGateEngineLogging(t, dir, srv, guardian, nil)
+}
+
+// openGateEngineLogging is openGateEngine with the structured log captured.
+func openGateEngineLogging(t *testing.T, dir string, srv *httptest.Server,
+	guardian execgw.Guardian, logs io.Writer,
+) (*engine.Context, error) {
+	t.Helper()
+	opts := engine.Options{
 		ConfigDir: dir,
 		Clock:     clock.NewFake(interlockNow),
 		Guardian:  guardian,
@@ -116,15 +178,34 @@ func openGateEngine(t *testing.T, dir string, srv *httptest.Server, guardian exe
 			official.WithBaseURL(srv.URL),
 			official.WithHTTPClient(srv.Client()),
 		},
-	})
+	}
+	if logs != nil {
+		opts.Logger = obs.NewLogger(obs.LogOptions{
+			Writer: logs, JSON: true, Clock: clock.NewFake(interlockNow),
+		})
+	}
+	opts.SetJournalProberForTest(journal.FixedFSProber(journal.FSInfo{
+		Name: "ext4", Magic: journal.MagicExt,
+	}))
+	eng, err := engine.New(opts)
+	if eng != nil {
+		t.Cleanup(func() { _ = eng.Close() })
+	}
+	return eng, err
 }
 
+// fullGate is a gate with every limit the interlock requires (task 7.5). Before
+// 7.5 only the two per-order ceilings existed and a gate carrying them was
+// complete; a gate that stops there is now refused, which is the point.
 func fullGate() config.AutomationGate {
 	return config.AutomationGate{
-		Enabled:          true,
-		MaxOrderQuantity: 10,
-		MaxOrderNotional: 1_000_000,
-		LimitCurrency:    "KRW",
+		Enabled:            true,
+		MaxOrderQuantity:   10,
+		MaxOrderNotional:   1_000_000,
+		MaxTotalExposure:   5_000_000,
+		MaxDailyLossAmount: 200_000,
+		MaxDailyLossRatio:  0.02,
+		LimitCurrency:      "KRW",
 	}
 }
 
@@ -177,7 +258,7 @@ func TestGateOnWithEverythingInPlaceStarts(t *testing.T) {
 	writeAttestation(t, dir, nil)
 	srv, accountCalls := interlockServer(t, "123-45")
 
-	eng, err := openGateEngine(t, dir, srv, stubGuardian{})
+	eng, err := openGateEngine(t, dir, srv, matchedGuardian())
 	if err != nil {
 		t.Fatalf("a fully attested gate must start: %v", err)
 	}
@@ -204,9 +285,19 @@ func TestGateOnWithEverythingInPlaceStarts(t *testing.T) {
 // TestGateOnRefusals walks every precondition. Each one must refuse startup and
 // return no engine — a partially interlocked engine is one that can still trade.
 func TestGateOnRefusals(t *testing.T) {
+	// partialGate returns fullGate with one limit removed, which is the
+	// combination clause 1 is written against: "부분적으로 무제한인 게이트는
+	// 허가된 게이트가 아니다".
+	partialGate := func(drop func(*config.AutomationGate)) config.AutomationGate {
+		gate := fullGate()
+		drop(&gate)
+		return gate
+	}
+
 	cases := []struct {
 		name        string
 		gate        config.AutomationGate
+		trading     *config.Trading
 		attestation func(*attest.Attestation)
 		writeAtt    bool
 		guardian    execgw.Guardian
@@ -228,15 +319,113 @@ func TestGateOnRefusals(t *testing.T) {
 			// The attestation is fine; the limits are not, and "no limit" is not
 			// an authorisation.
 			writeAtt:  true,
-			guardian:  stubGuardian{},
+			guardian:  matchedGuardian(),
 			accountNo: "123-45",
 			wantErr:   engine.ErrLimitsRequired,
+		},
+		{
+			name: "only the per-order ceilings are set",
+			gate: partialGate(func(g *config.AutomationGate) {
+				g.MaxTotalExposure, g.MaxDailyLossAmount, g.MaxDailyLossRatio = 0, 0, 0
+			}),
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrLimitsRequired,
+			wantMessage: "total open exposure",
+		},
+		{
+			name:        "the total exposure limit is missing",
+			gate:        partialGate(func(g *config.AutomationGate) { g.MaxTotalExposure = 0 }),
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrLimitsRequired,
+			wantMessage: "total open exposure",
+		},
+		{
+			name:        "the daily loss amount is missing",
+			gate:        partialGate(func(g *config.AutomationGate) { g.MaxDailyLossAmount = 0 }),
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrLimitsRequired,
+			wantMessage: "daily loss amount",
+		},
+		{
+			name:        "the daily loss ratio is missing",
+			gate:        partialGate(func(g *config.AutomationGate) { g.MaxDailyLossRatio = 0 }),
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrLimitsRequired,
+			wantMessage: "daily loss ratio",
+		},
+		{
+			name:        "a limit is set but not a usable number",
+			gate:        partialGate(func(g *config.AutomationGate) { g.MaxDailyLossRatio = 1.5 }),
+			writeAtt:    true,
+			guardian:    stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) { l.MaxDailyLossRatio = execgw.Bound(1.5) })},
+			accountNo:   "123-45",
+			wantErr:     engine.ErrLimitsRequired,
+			wantMessage: "bounds nothing",
+		},
+		{
+			name:        "no currency on the money bounds",
+			gate:        partialGate(func(g *config.AutomationGate) { g.LimitCurrency = "" }),
+			writeAtt:    true,
+			guardian:    stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) { l.Currency = "" })},
+			accountNo:   "123-45",
+			wantErr:     engine.ErrLimitsRequired,
+			wantMessage: "currency",
+		},
+		{
+			name:      "selling is disabled",
+			gate:      fullGate(),
+			trading:   &config.Trading{Place: true, Cancel: true, Amend: true, AllowLiveOrderActions: true},
+			writeAtt:  true,
+			guardian:  matchedGuardian(),
+			accountNo: "123-45",
+			// engine-safety: "매수는 가능한데 청산이 불가능한 조합으로는 기동할
+			// 수 없다".
+			wantErr:     engine.ErrTradingPolicyRefused,
+			wantMessage: "trading.sell",
+		},
+		{
+			name:        "live order actions are disabled",
+			gate:        fullGate(),
+			trading:     &config.Trading{Place: true, Sell: true, Cancel: true, Amend: true},
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrTradingPolicyRefused,
+			wantMessage: "allow_live_order_actions",
+		},
+		{
+			name:     "the Guardian carries different limits",
+			gate:     fullGate(),
+			writeAtt: true,
+			guardian: stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) {
+				l.MaxTotalExposure = execgw.Bound(50_000_000)
+			})},
+			accountNo:   "123-45",
+			wantErr:     engine.ErrGuardianLimitsMismatch,
+			wantMessage: "do not match the configured limits",
+		},
+		{
+			name:        "the Guardian cannot state its limits",
+			gate:        fullGate(),
+			writeAtt:    true,
+			guardian:    silentGuardian{},
+			accountNo:   "123-45",
+			wantErr:     engine.ErrGuardianLimitsMismatch,
+			wantMessage: "does not report its exposure limits",
 		},
 		{
 			name:      "no attestation at all",
 			gate:      fullGate(),
 			writeAtt:  false,
-			guardian:  stubGuardian{},
+			guardian:  matchedGuardian(),
 			accountNo: "123-45",
 			wantErr:   attest.ErrMissing,
 		},
@@ -245,7 +434,7 @@ func TestGateOnRefusals(t *testing.T) {
 			gate:        fullGate(),
 			writeAtt:    true,
 			attestation: func(a *attest.Attestation) { a.ExpiresAt = interlockNow.Add(-time.Hour) },
-			guardian:    stubGuardian{},
+			guardian:    matchedGuardian(),
 			accountNo:   "123-45",
 			wantErr:     attest.ErrExpired,
 			// engine-safety's scenario: "기동이 거부되고 재검증 안내가 출력된다".
@@ -255,7 +444,7 @@ func TestGateOnRefusals(t *testing.T) {
 			name:      "attestation is for another account",
 			gate:      fullGate(),
 			writeAtt:  true,
-			guardian:  stubGuardian{},
+			guardian:  matchedGuardian(),
 			accountNo: "999-99",
 			wantErr:   attest.ErrAccountMismatch,
 		},
@@ -264,7 +453,7 @@ func TestGateOnRefusals(t *testing.T) {
 			gate:        fullGate(),
 			writeAtt:    true,
 			attestation: func(a *attest.Attestation) { a.Endpoints = []string{"GET /api/v1/accounts"} },
-			guardian:    stubGuardian{},
+			guardian:    matchedGuardian(),
 			accountNo:   "123-45",
 			wantErr:     attest.ErrEndpointNotAttested,
 		},
@@ -273,7 +462,11 @@ func TestGateOnRefusals(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := isolate(t)
-			writeGateConfig(t, dir, tc.gate)
+			policy := openTradingPolicy()
+			if tc.trading != nil {
+				policy = *tc.trading
+			}
+			writeGateConfigWith(t, dir, tc.gate, policy)
 			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 			if tc.writeAtt {
 				writeAttestation(t, dir, tc.attestation)
@@ -311,13 +504,13 @@ func TestGateToggleIsAudited(t *testing.T) {
 	// First start: gate off. This establishes the baseline the later change is
 	// measured against.
 	writeGateConfig(t, dir, config.AutomationGate{})
-	if _, err := openGateEngine(t, dir, srv, stubGuardian{}); err != nil {
+	if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err != nil {
 		t.Fatalf("first start: %v", err)
 	}
 
 	// Operator turns the gate on and raises a limit.
 	writeGateConfig(t, dir, fullGate())
-	if _, err := openGateEngine(t, dir, srv, stubGuardian{}); err != nil {
+	if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err != nil {
 		t.Fatalf("second start: %v", err)
 	}
 
@@ -358,7 +551,7 @@ func TestRefusedStartIsAudited(t *testing.T) {
 	writeAttestation(t, dir, func(a *attest.Attestation) { a.ExpiresAt = interlockNow.Add(-time.Hour) })
 	srv, _ := interlockServer(t, "123-45")
 
-	if _, err := openGateEngine(t, dir, srv, stubGuardian{}); err == nil {
+	if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err == nil {
 		t.Fatal("startup must be refused")
 	}
 
@@ -415,4 +608,146 @@ func lastEntryFor(entries []audit.Entry, setting, action string) *audit.Entry {
 		}
 	}
 	return nil
+}
+
+// --- task 7.5: what the accepted start leaves behind ------------------------
+
+// TestAcceptedStartAuditsEveryLimit.
+//
+// The acceptance record used to name two of the five limits, which was fine when
+// two was all there were. An operator reading the trail a month later is asking
+// "what was this engine authorised to do that day", and a record that answers
+// two-fifths of that question answers none of it.
+func TestAcceptedStartAuditsEveryLimit(t *testing.T) {
+	dir := isolate(t)
+	writeGateConfig(t, dir, fullGate())
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	writeAttestation(t, dir, nil)
+	srv, _ := interlockServer(t, "123-45")
+
+	if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err != nil {
+		t.Fatalf("a fully attested gate must start: %v", err)
+	}
+
+	entries := readAudit(t, filepath.Join(dir, "audit.log"))
+	accepted := lastEntryFor(entries, "engine.automation_gate.enabled", audit.ActionGateAccepted)
+	if accepted == nil {
+		t.Fatalf("no acceptance recorded; entries = %+v", entries)
+	}
+	for _, want := range []string{
+		"max_order_quantity=10",
+		"max_order_notional=1000000",
+		"max_total_exposure=5000000",
+		"max_daily_loss_amount=200000",
+		"max_daily_loss_ratio=0.02",
+		"currency=KRW",
+	} {
+		if !strings.Contains(accepted.Detail, want) {
+			t.Errorf("acceptance detail %q is missing %q", accepted.Detail, want)
+		}
+	}
+	if strings.Contains(accepted.Detail, "123-45") {
+		t.Errorf("the account must be masked in the audit detail: %q", accepted.Detail)
+	}
+
+	// The three limits added in 7.5 are settings, so a change to one of them is
+	// auditable in its own right (§0.5).
+	for _, setting := range []string{
+		"engine.automation_gate.max_total_exposure",
+		"engine.automation_gate.max_daily_loss_amount",
+		"engine.automation_gate.max_daily_loss_ratio",
+	} {
+		if lastEntryFor(entries, setting, audit.ActionLimitChange) == nil {
+			t.Errorf("no audit entry for %s; a limit nobody can diff is a limit nobody controls", setting)
+		}
+	}
+}
+
+// TestGateDecisionIsLoggedStructurally is the other half of §0.5's requirement:
+// the audit trail is for the operator's history, the structured log is what a
+// running system counts.
+func TestGateDecisionIsLoggedStructurally(t *testing.T) {
+	t.Run("verified", func(t *testing.T) {
+		dir := isolate(t)
+		writeGateConfig(t, dir, fullGate())
+		writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+		writeAttestation(t, dir, nil)
+		srv, _ := interlockServer(t, "123-45")
+
+		var logs bytes.Buffer
+		if _, err := openGateEngineLogging(t, dir, srv, matchedGuardian(), &logs); err != nil {
+			t.Fatalf("start: %v", err)
+		}
+		line := decodeLastLog(t, logs.String())
+
+		if line["event"] != string(obs.EventOperatingMode) {
+			t.Errorf("event = %v, want %s", line["event"], obs.EventOperatingMode)
+		}
+		if line["gate_enabled"] != true || line["gate_verified"] != true {
+			t.Errorf("gate fields = %v/%v, want true/true", line["gate_enabled"], line["gate_verified"])
+		}
+		if line["max_total_exposure"] != "5000000" {
+			t.Errorf("max_total_exposure = %v", line["max_total_exposure"])
+		}
+		if _, present := line["reason"]; present {
+			t.Errorf("a verified start must carry no refusal reason: %v", line["reason"])
+		}
+	})
+
+	t.Run("refused", func(t *testing.T) {
+		dir := isolate(t)
+		writeGateConfig(t, dir, fullGate())
+		writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+		writeAttestation(t, dir, func(a *attest.Attestation) {
+			a.ExpiresAt = interlockNow.Add(-time.Hour)
+		})
+		srv, _ := interlockServer(t, "123-45")
+
+		var logs bytes.Buffer
+		if _, err := openGateEngineLogging(t, dir, srv, matchedGuardian(), &logs); err == nil {
+			t.Fatal("startup must be refused")
+		}
+		line := decodeLastLog(t, logs.String())
+
+		if line["level"] != "WARN" {
+			t.Errorf("level = %v, want WARN — a refused gate is not routine", line["level"])
+		}
+		if line["gate_verified"] != false {
+			t.Errorf("gate_verified = %v, want false", line["gate_verified"])
+		}
+		reason, _ := line["reason"].(string)
+		if !strings.Contains(reason, "expired") {
+			t.Errorf("reason = %q, want the cause in it", reason)
+		}
+	})
+
+	t.Run("gate off", func(t *testing.T) {
+		dir := isolate(t)
+		writeGateConfig(t, dir, config.AutomationGate{})
+		writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+		srv, _ := interlockServer(t, "123-45")
+
+		var logs bytes.Buffer
+		if _, err := openGateEngineLogging(t, dir, srv, nil, &logs); err != nil {
+			t.Fatalf("start: %v", err)
+		}
+		line := decodeLastLog(t, logs.String())
+		if line["gate_enabled"] != false || line["gate_verified"] != false {
+			t.Errorf("gate fields = %v/%v, want false/false", line["gate_enabled"], line["gate_verified"])
+		}
+	})
+}
+
+// decodeLastLog parses the last JSON line written to the log.
+func decodeLastLog(t *testing.T, out string) map[string]any {
+	t.Helper()
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) == 0 || lines[0] == "" {
+		t.Fatal("the interlock wrote no structured log line")
+	}
+	var line map[string]any
+	if err := json.Unmarshal([]byte(lines[len(lines)-1]), &line); err != nil {
+		t.Fatalf("decoding %q: %v", lines[len(lines)-1], err)
+	}
+	return line
 }

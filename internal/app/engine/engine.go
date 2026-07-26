@@ -34,6 +34,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
@@ -89,6 +90,10 @@ type Options struct {
 	// Operator names who is starting the engine, for the audit trail. Empty
 	// resolves the OS user.
 	Operator string
+	// Logger receives the structured line the startup interlock emits (task
+	// 7.5). Nil discards it — obs.Logger's methods are nil-safe — which is what
+	// the tests that only assert on the audit trail want.
+	Logger *obs.Logger
 
 	// journalFSProber overrides the filesystem probe the journal's durability
 	// guard uses. Unexported, therefore test-only — the same arrangement
@@ -391,7 +396,13 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	// engine at all rather than an engine somebody could still place orders with,
 	// and it runs *after* construction so that "a gateway exists" is something it
 	// verifies rather than assumes.
-	automation, err := runInterlock(status, gate, auditLog, clk.Now(), opts.Guardian)
+	automation, err := runInterlock(status, gate, auditLog, opts.Logger, gateFacts{
+		guardian:  opts.Guardian,
+		trading:   cfg.Trading,
+		gateway:   wiring.gateway,
+		transport: path.broker,
+		now:       clk.Now(),
+	})
 	if err != nil {
 		_ = jrn.Close()
 		return nil, err

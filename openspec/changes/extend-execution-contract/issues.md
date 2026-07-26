@@ -665,6 +665,70 @@
   `eng.TradingService` → `eng.TradingServiceForTest()`(export_test.go 신설 접근자). 값·동작
   단언은 한 줄도 바뀌지 않았다.
 
+## 2026-07-26 [safe local] 인터록 5조항 완성 — 승계 3종 한도와 `Limits.Validate()` 전환 (task 7.5)
+
+- 승계 항목 처리: (1) `config.AutomationGate`에 `max_total_exposure`·
+  `max_daily_loss_amount`·`max_daily_loss_ratio` 3개 additive 추가(전부 omitempty, 0=미설정,
+  구버전 config는 그대로 게이트 OFF), (2) 인터록의 `!MaxQuantity.Set && !MaxNotional.Set`
+  검사를 `status.Limits.Validate()`로 교체 — 항목별 fail-closed는 1.7이 이미 그 함수에 넣어
+  두었다. (3) `gateLimits`가 5개 bound를 전부 세운다. (4) 3개 한도 각각이
+  `recordGateSettings`의 감사 대상이 됐다.
+- `LimitsSet()`은 5개 중 하나라도 양수면 true로 넓혔다(약한 질문 그대로 유지). 인터록은 이
+  헬퍼를 쓰지 않는다 — 강한 질문은 `Validate()`다. doc에 그 구분을 적었다.
+
+## 2026-07-26 [safe local] 단일 출처 검증을 `ExposureLimiter` 능력 인터페이스로 냈다 (task 7.5)
+
+- 문제: 스펙 4항("Guardian이 인터록이 감사한 설정 한도와 같은 출처에서 구성됨")을 기동 시점에
+  확인하려면 Guardian이 자기 한도를 말할 수 있어야 한다. `Guardian.Authorize`를 불러 확인하는
+  것은 **결정을 하나 발급하는 것**이므로 검사가 아니라 첫 주문이다.
+- 이번 처리: `engine.ExposureLimiter{ ExposureLimits() execgw.Limits }`. 구현하지 않는
+  Guardian은 **거부**된다(fail-closed). 2a에 생산 Guardian이 없으므로 현재 비용 0이고,
+  2d의 발급자에게 "같은 출처"를 주장이 아니라 성질로 만들 의무를 넘긴다.
+- 비교는 EXPOSURE_RAISING 한도에만 적용된다(메서드 이름이 그것을 못박는다) — RISK_REDUCING은
+  한도를 싣지 않는다.
+- `limitsEqual`은 구조체 등치 대신 필드별로 쓴다: `execgw.Limits`에 bound가 추가되면 여기서
+  컴파일이 깨지도록.
+
+## 2026-07-26 [safe local] "키 미지원 transport 거부"를 정적 marker로 냈다 (task 7.5)
+
+- D2는 "엔진은 official 직결이므로 정적으로 성립, 테스트로 고정"이라고 쓴다. 런타임 프로브는
+  주문을 보내야 알 수 있으므로 불가능하다.
+- 이번 처리: `idempotencyKeyCarrier{ CarriesIdempotencyKey() bool }`를 인터록이 요구하고
+  `officialBroker`가 구현한다(+ 컴파일 타임 `var _` 증명). 미구현·false 둘 다 거부.
+- 이 조항과 "Gateway 미구성" 조항은 `engine.New` 경로로는 도달할 수 없다(구성이 항상 올바른
+  값을 만든다). 그래서 이 둘만 내부 테스트(`interlock_internal_test.go`)로 검사 함수에 직접
+  미충족 값을 넣어 확인하고, 나머지 조항(한도 5종·거래 정책 2종·attestation 4종·단일 출처
+  2종)은 `TestGateOnRefusals` 통합 매트릭스가 engine.New를 통해 전수 확인한다.
+
+## 2026-07-26 [safe local] 구조적 로그는 기동당 한 줄이다 (task 7.5)
+
+- `Options.Logger *obs.Logger`(nil 허용, obs 메서드가 nil-safe) 추가. 인터록이
+  `obs.EventOperatingMode`를 **정확히 한 줄** 낸다: 게이트 OFF·검증 성공은 info, 거부는
+  warn + `reason` 필드. 필드는 masked account, gate_enabled/gate_verified, 5개 한도, 통화.
+- 이벤트를 새로 만들지 않은 이유: 운영자가 로그에 던지는 질문은 "이 프로세스는 어떤 모드로
+  떴는가" 하나이고, 그것은 필드를 단 하나의 사건이다. accept/refuse를 다른 이벤트로 쪼개면
+  거부율을 세는 데 상관관계가 필요해진다.
+- audit acceptance detail도 5개 한도 전부를 `key=value`로 적는다(이전엔 2개).
+
+## 2026-07-26 [observation] 8.2 사전 열거 목록 확장 요청 (task 7.1~7.5 종합)
+
+7.x가 바꾼 **기존** 단언·헬퍼 전부. 8.2의 허용 목록은 1.1·1.3·5.1·5.2·7.4만 열거하므로
+아래 항목의 승인이 필요하다.
+
+- `interlock_test.go`
+  - `TestGateOffStartsAndTouchesNothing` → `TestGateOffStartsAndDoesNoGateWork`,
+    "브로커 호출 0회" → "계좌 읽기 1회 + 게이트 산출물 전무" (7.1)
+  - `fullGate()`에 3개 한도 추가, `writeGateConfig`의 거래 정책에 `Sell: true` 추가,
+    `stubGuardian{}` → `matchedGuardian()`(ExposureLimiter 구현) (7.5)
+  - `openGateEngine`이 journal 프로버 주입 + `Close()` 정리 (7.2)
+- `engine_test.go`: 성공 경로 전부가 httptest 서버를 요구(계좌 해석) + `startEngine` 헬퍼
+  (7.1·7.2), `ctx.TradingService` → `ctx.TradingServiceForTest()` (7.4)
+- `precheck_test.go`·`wts_isolation_test.go`: `eng.TradingService` →
+  `eng.TradingServiceForTest()` (7.4). 값 단언 무변경
+- `seal_test.go`: :21 주석 반전(8.2에 이미 열거됨) + 신규 테스트 2개
+- 값·동작 단언이 **바뀐** 것은 `TestGateOffStartsAndDoesNoGateWork` 하나뿐이다. 나머지는
+  헬퍼·접근자 이름 변경이다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

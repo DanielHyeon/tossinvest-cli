@@ -24,6 +24,23 @@ func (b *officialBroker) PlacePendingOrder(ctx context.Context, intent orderinte
 	return b.off.PlaceOrder(ctx, intent)
 }
 
+// CarriesIdempotencyKey reports that a place through this broker sends the
+// decision's clientOrderId (task 7.5, design D2).
+//
+// It is a static fact, declared rather than probed: orderintent.PlaceIntent
+// carries ClientOrderID and official.PlaceOrder puts it in the request body
+// (openapi — clientOrderId is a field of OrderCreateRequest). The startup
+// interlock asks for this so that "the key was sent" is a property something
+// checks, instead of an assumption the whole idempotent-replay procedure quietly
+// rests on. A transport that dropped the key would turn a replay into a second
+// order.
+func (b *officialBroker) CarriesIdempotencyKey() bool { return true }
+
+// Compile-time proof that the engine's broker satisfies the interlock's
+// key-carrying requirement. Without this, a rename would turn the interlock's
+// type assertion into a startup refusal discovered at run time.
+var _ idempotencyKeyCarrier = (*officialBroker)(nil)
+
 func (b *officialBroker) CancelPendingOrder(ctx context.Context, intent orderintent.CancelIntent) (trading.MutationResult, error) {
 	return b.off.CancelOrder(ctx, intent.OrderID)
 }

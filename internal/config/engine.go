@@ -60,28 +60,50 @@ type AutomationGate struct {
 	// expressed in LimitCurrency.
 	MaxOrderNotional float64 `json:"max_order_notional,omitempty"`
 
-	// LimitCurrency is the currency MaxOrderNotional is expressed in ("KRW"/"USD").
+	// MaxTotalExposure is the account-wide ceiling on open exposure, expressed
+	// in LimitCurrency. Zero means "not set", which with the gate on is a
+	// startup refusal.
+	MaxTotalExposure float64 `json:"max_total_exposure,omitempty"`
+
+	// MaxDailyLossAmount is the absolute daily realised-loss ceiling, in
+	// LimitCurrency.
+	MaxDailyLossAmount float64 `json:"max_daily_loss_amount,omitempty"`
+
+	// MaxDailyLossRatio is the daily loss ceiling as a fraction of capital, in
+	// (0, 1]. 0.02 is two percent.
+	MaxDailyLossRatio float64 `json:"max_daily_loss_ratio,omitempty"`
+
+	// LimitCurrency is the currency the money ceilings are expressed in
+	// ("KRW"/"USD").
 	LimitCurrency string `json:"limit_currency,omitempty"`
 }
 
-// LimitsSet reports whether the gate carries a usable limit.
+// LimitsSet reports whether the gate carries any usable limit at all.
 //
-// "Usable" means at least one of the two ceilings is positive. A gate authorised
-// by no limit at all is not authorised: see engine-safety's requirement that the
-// Guardian be injected "0 아닌 한도로".
+// It is the weak question — "is anything set" — and it is deliberately not what
+// the startup interlock asks. The interlock requires *every* limit to be present,
+// positive and finite (execgw.Limits.Validate; engine-safety: "하나라도 누락·0·
+// NaN·Inf이면 거부"), because a gate that is unlimited in one dimension is not a
+// partially authorised gate, it is an unauthorised one. This helper stays as it
+// was for the config surfaces that only need to say whether the block was filled
+// in at all.
 func (g AutomationGate) LimitsSet() bool {
-	return g.MaxOrderQuantity > 0 || g.MaxOrderNotional > 0
+	return g.MaxOrderQuantity > 0 || g.MaxOrderNotional > 0 ||
+		g.MaxTotalExposure > 0 || g.MaxDailyLossAmount > 0 || g.MaxDailyLossRatio > 0
 }
 
 // rawAutomationGate is the parse shape. Enabled is a pointer only so that an
 // explicit `"enabled": false` and an absent key are distinguishable in tests;
 // both produce false, because there is no other safe answer.
 type rawAutomationGate struct {
-	Enabled          *bool   `json:"enabled"`
-	AttestationFile  string  `json:"attestation_file"`
-	MaxOrderQuantity float64 `json:"max_order_quantity"`
-	MaxOrderNotional float64 `json:"max_order_notional"`
-	LimitCurrency    string  `json:"limit_currency"`
+	Enabled            *bool   `json:"enabled"`
+	AttestationFile    string  `json:"attestation_file"`
+	MaxOrderQuantity   float64 `json:"max_order_quantity"`
+	MaxOrderNotional   float64 `json:"max_order_notional"`
+	MaxTotalExposure   float64 `json:"max_total_exposure"`
+	MaxDailyLossAmount float64 `json:"max_daily_loss_amount"`
+	MaxDailyLossRatio  float64 `json:"max_daily_loss_ratio"`
+	LimitCurrency      string  `json:"limit_currency"`
 }
 
 type rawEngine struct {
@@ -103,5 +125,8 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 	cfg.AutomationGate.AttestationFile = gate.AttestationFile
 	cfg.AutomationGate.MaxOrderQuantity = gate.MaxOrderQuantity
 	cfg.AutomationGate.MaxOrderNotional = gate.MaxOrderNotional
+	cfg.AutomationGate.MaxTotalExposure = gate.MaxTotalExposure
+	cfg.AutomationGate.MaxDailyLossAmount = gate.MaxDailyLossAmount
+	cfg.AutomationGate.MaxDailyLossRatio = gate.MaxDailyLossRatio
 	cfg.AutomationGate.LimitCurrency = gate.LimitCurrency
 }

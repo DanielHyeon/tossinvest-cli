@@ -7,14 +7,25 @@ package engine
 //
 // The gate is off by default (internal/config/engine.go), and turning it on is
 // not sufficient to make it work. With the gate on, the engine starts only if all
-// of the following hold:
+// of the following hold (engine-safety "자동화 게이트 기동 인터록", five clauses;
+// task 7.5 brought the last three into existence):
 //
-//	1. a Guardian is injected                      — nobody authorises orders otherwise
-//	2. the limit snapshot is non-zero              — "no limit" is not an authorisation
-//	3. a capability attestation exists             — see internal/attest
-//	4. it has not expired
-//	5. it is about the account the credentials resolve to
-//	6. it covers every endpoint the engine will call
+//	 1. a Guardian is injected                     — nobody authorises orders otherwise
+//	 2. every limit is set, positive, finite and
+//	    carries a currency                         — a gate unlimited in one dimension is
+//	                                                 not a partially authorised gate
+//	 3. the trading policy permits selling and
+//	    live order actions                         — "can buy, cannot exit" is not a
+//	                                                 configuration the engine may run in
+//	 4. a capability attestation exists, has not
+//	    expired, names this account and covers
+//	    every endpoint the engine calls            — see internal/attest
+//	 5. the Guardian's EXPOSURE_RAISING limits are
+//	    the limits the interlock just audited      — one source, or the audit is fiction
+//	 6. an ExecutionGateway is constructed, with
+//	    its order reader wired                     — see execgw.Gateway.Wiring
+//	 7. the order transport can carry an
+//	    idempotency key                            — the replay procedure assumes it did
 //
 // Any failure is a startup refusal with a message that says what to do about it,
 // not a warning. There is no degraded mode: an engine that trades with an
@@ -57,6 +68,8 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
 // ErrAutomationGateRefused is the startup refusal the interlock produces. The
@@ -69,10 +82,86 @@ var ErrGuardianRequired = errors.New(
 	"engine: the automation gate is enabled but no Guardian was injected — " +
 		"there is nothing to authorise orders, so the engine will not start")
 
-// ErrLimitsRequired means the gate is on with a zero limit snapshot.
+// ErrLimitsRequired means the gate is on with a limit snapshot that is missing
+// an item, or carries one that is not a usable number.
+//
+// It is per-field since task 7.5: the old check accepted a snapshot in which one
+// of two ceilings was positive, which is exactly the "부분적으로 무제한인 게이트"
+// the spec refuses. The specific field is named in the wrapped message.
 var ErrLimitsRequired = errors.New(
-	"engine: the automation gate is enabled but engine.automation_gate carries no limit " +
-		"(max_order_quantity and max_order_notional are both 0) — an unlimited gate is not an authorised one")
+	"engine: the automation gate is enabled but engine.automation_gate does not carry a complete " +
+		"set of limits — an unlimited gate is not an authorised one")
+
+// ErrTradingPolicyRefused means the gate is on with a trading policy that cannot
+// exit a position.
+//
+// Buying with no way to sell is the one combination that makes the engine
+// strictly more dangerous than not running it: it can open exposure it has no
+// configured way to close (§0.3).
+var ErrTradingPolicyRefused = errors.New(
+	"engine: the automation gate is enabled but the trading policy does not permit both selling " +
+		"and live order actions — an engine that can enter but not exit must not start")
+
+// ErrGuardianLimitsMismatch means the injected Guardian would stamp
+// EXPOSURE_RAISING decisions with limits other than the ones the interlock
+// audited.
+//
+// The audit trail records what the config says. If the Guardian is authorising
+// against something else, the audit describes a gate that does not exist. The
+// equivalence is asked of EXPOSURE_RAISING only: RISK_REDUCING decisions carry no
+// limit snapshot at all.
+var ErrGuardianLimitsMismatch = errors.New(
+	"engine: the injected Guardian's exposure limits are not the audited configuration limits — " +
+		"the gate would be authorising against a source nobody audited")
+
+// ErrGatewayRequired means the gate is on and no usable ExecutionGateway was
+// constructed.
+var ErrGatewayRequired = errors.New(
+	"engine: the automation gate is enabled but the engine profile has no fully wired " +
+		"ExecutionGateway — every mutation has to go through one")
+
+// ErrKeylessTransport means the engine's order transport cannot carry the
+// broker's idempotency key.
+//
+// The whole idempotent-replay procedure rests on the key having been sent
+// (design D2): recovering a lost response by resending the stored body is only
+// safe because the same key cannot create a second order inside its validity
+// window. A transport that drops the key turns a replay into a duplicate order.
+var ErrKeylessTransport = errors.New(
+	"engine: the automation gate is enabled but the order transport cannot carry an idempotency " +
+		"key — a place that cannot be replayed is not submittable")
+
+// ExposureLimiter is the capability an injected Guardian has to implement so the
+// interlock can prove clause 5.
+//
+// It is asked at startup rather than inferred from a decision, because inferring
+// would mean issuing one: Guardian.Authorize has side effects (it persists a
+// decision), and a startup check that writes a decision to inspect it is not a
+// check, it is a first order.
+//
+// A Guardian that cannot state its limits fails the interlock. That is the
+// fail-closed direction and it costs nothing today — no production Guardian
+// exists before the issuer change — while making "same source" a property the
+// next one has to satisfy rather than claim.
+type ExposureLimiter interface {
+	// ExposureLimits reports the snapshot this Guardian stamps on
+	// EXPOSURE_RAISING decisions.
+	ExposureLimits() execgw.Limits
+}
+
+// idempotencyKeyCarrier is implemented by an order transport whose place path
+// sends the broker's clientOrderId.
+//
+// It is a marker rather than a runtime probe because the property is static: the
+// engine's broker is the official client, whose place body carries the field
+// (openapi: clientOrderId on OrderCreateRequest), and the web-session mutators
+// this package cannot even import do not. Asking the type is how the interlock
+// states a fact the build already guarantees.
+type idempotencyKeyCarrier interface {
+	// CarriesIdempotencyKey reports that a place sent through this transport
+	// includes the decision's clientOrderId.
+	CarriesIdempotencyKey() bool
+}
 
 // RequiredEndpoints are the broker calls the engine makes and therefore the ones
 // a capability attestation has to cover.
@@ -130,17 +219,19 @@ func attestationPath(gate config.AutomationGate, paths config.Paths) string {
 
 // gateLimits turns the config's ceilings into the Guardian's limit snapshot.
 //
-// Only the two per-order ceilings exist in the config today, so only those two
-// bits are set. execgw.Limits now requires five, and an EXPOSURE_RAISING
-// decision carrying this snapshot would be refused by the gateway — which is the
-// fail-closed direction ("부분적으로 무제한인 게이트는 허가된 게이트가 아니다")
-// and is why the interlock keeps checking exactly what it checked before until
-// the remaining three are added to the config (task 7.5; see issues.md).
+// All five bounds execgw.Limits declares are config fields since task 7.5, so
+// this is a straight transcription. It is also the single source clause 5 exists
+// to protect: the snapshot the interlock audits, the snapshot the Guardian
+// authorises against and the snapshot the gateway re-checks are the same value,
+// derived here once.
 func gateLimits(gate config.AutomationGate) execgw.Limits {
 	return execgw.Limits{
-		MaxQuantity: boundIfPositive(gate.MaxOrderQuantity),
-		MaxNotional: boundIfPositive(gate.MaxOrderNotional),
-		Currency:    strings.ToUpper(strings.TrimSpace(gate.LimitCurrency)),
+		MaxQuantity:        boundIfPositive(gate.MaxOrderQuantity),
+		MaxNotional:        boundIfPositive(gate.MaxOrderNotional),
+		MaxTotalExposure:   boundIfPositive(gate.MaxTotalExposure),
+		MaxDailyLossAmount: boundIfPositive(gate.MaxDailyLossAmount),
+		MaxDailyLossRatio:  boundIfPositive(gate.MaxDailyLossRatio),
+		Currency:           strings.ToUpper(strings.TrimSpace(gate.LimitCurrency)),
 	}
 }
 
@@ -184,21 +275,42 @@ func refuseStartup(log *audit.Log, gate config.AutomationGate, err error) error 
 	return err
 }
 
+// gateFacts are what construction produced, for the interlock to verify.
+//
+// They are passed in rather than reached for, so that the checks are a function
+// of values a test can supply — the structural clauses (a gateway that was not
+// built, a transport that cannot carry a key) cannot be produced by running
+// NewContext, because NewContext always builds them correctly.
+type gateFacts struct {
+	// guardian is the injected risk authority.
+	guardian execgw.Guardian
+	// trading is the user's configured order policy.
+	trading config.Trading
+	// gateway is what step 3 of construction produced.
+	gateway *execgw.Gateway
+	// transport is the order mutator underneath the trading service.
+	transport trading.Broker
+	// now is the instant the attestation's expiry is judged against.
+	now time.Time
+}
+
 // runInterlock verifies the gate against what construction produced.
 //
 // The audit of the settings themselves happens earlier, in NewContext: it must
 // precede the account read, which can itself refuse the start (task 7.1).
 func runInterlock(status AutomationStatus, gate config.AutomationGate,
-	log *audit.Log, now time.Time, guardian execgw.Guardian,
+	log *audit.Log, logger *obs.Logger, facts gateFacts,
 ) (AutomationStatus, error) {
 	if !gate.Enabled {
 		// Off is the default and the whole of the behaviour: no attestation is
 		// read, nothing is verified because nothing is permitted.
+		logGateDecision(logger, status, nil)
 		return status, nil
 	}
 
-	if err := verifyGate(&status, guardian, now); err != nil {
+	if err := verifyGate(&status, facts); err != nil {
 		_ = refuseStartup(log, gate, err)
+		logGateDecision(logger, status, err)
 		return status, err
 	}
 
@@ -208,30 +320,90 @@ func runInterlock(status AutomationStatus, gate config.AutomationGate,
 		Setting: "engine.automation_gate.enabled",
 		Old:     "true",
 		New:     "true",
-		Detail: fmt.Sprintf("account=%s attestation expires %s limits qty=%s notional=%s %s",
-			status.MaskedAccount(),
-			status.AttestationExpiresAt.UTC().Format(time.RFC3339),
-			limitString(status.Limits.MaxQuantity.Value),
-			limitString(status.Limits.MaxNotional.Value),
-			status.Limits.Currency),
+		Detail:  acceptanceDetail(&status),
 	}); err != nil {
 		return status, fmt.Errorf("engine: recording the automation-gate acceptance: %w", err)
 	}
+	logGateDecision(logger, status, nil)
 	return status, nil
 }
 
-// verifyGate is the six-step check. It stops at the first failure.
-func verifyGate(status *AutomationStatus, guardian execgw.Guardian, now time.Time) error {
-	// 1-2. The authority and its limits, before any I/O: these are configuration
-	//      mistakes and there is no reason to spend a broker call discovering one.
-	if guardian == nil {
+// acceptanceDetail is what the audit records about a gate that was allowed to
+// start.
+//
+// Every limit appears, not a summary: an operator reading the trail a month later
+// is trying to answer "what was this engine authorised to do that day", and a
+// detail line that names two of five ceilings cannot answer it.
+func acceptanceDetail(status *AutomationStatus) string {
+	l := status.Limits
+	return fmt.Sprintf(
+		"account=%s attestation_expires=%s currency=%s max_order_quantity=%s max_order_notional=%s "+
+			"max_total_exposure=%s max_daily_loss_amount=%s max_daily_loss_ratio=%s",
+		status.MaskedAccount(),
+		status.AttestationExpiresAt.UTC().Format(time.RFC3339),
+		l.Currency,
+		limitString(l.MaxQuantity.Value),
+		limitString(l.MaxNotional.Value),
+		limitString(l.MaxTotalExposure.Value),
+		limitString(l.MaxDailyLossAmount.Value),
+		limitString(l.MaxDailyLossRatio.Value),
+	)
+}
+
+// logGateDecision emits the one structured line the gate produces per start.
+//
+// It is one line and not three because the question an operator asks of a log is
+// "what mode did this process come up in", and that is a single fact with fields
+// hanging off it (obs: "셀 수 있는 이벤트 규약"). A refusal is the same event at
+// warn level with a reason, so counting refusals is counting one event with one
+// field, not correlating two.
+func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error) {
+	l := status.Limits
+	fields := []any{
+		obs.FieldAccount, status.MaskedAccount(),
+		"gate_enabled", status.Enabled,
+		"gate_verified", status.Verified,
+		"limit_currency", l.Currency,
+		"max_order_quantity", limitString(l.MaxQuantity.Value),
+		"max_order_notional", limitString(l.MaxNotional.Value),
+		"max_total_exposure", limitString(l.MaxTotalExposure.Value),
+		"max_daily_loss_amount", limitString(l.MaxDailyLossAmount.Value),
+		"max_daily_loss_ratio", limitString(l.MaxDailyLossRatio.Value),
+	}
+	if refusal != nil {
+		logger.Warn(obs.EventOperatingMode, append(fields, obs.FieldReason, refusal.Error())...)
+		return
+	}
+	logger.Event(obs.EventOperatingMode, fields...)
+}
+
+// verifyGate is the whole check. It stops at the first failure.
+//
+// The order is cheapest-and-most-local first: a configuration mistake should not
+// cost a file read, and a file read should not cost a comparison against a
+// Guardian nobody injected.
+func verifyGate(status *AutomationStatus, facts gateFacts) error {
+	// 1. The authority.
+	if facts.guardian == nil {
 		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, ErrGuardianRequired)
 	}
-	if !status.Limits.MaxQuantity.Set && !status.Limits.MaxNotional.Set {
-		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, ErrLimitsRequired)
+
+	// 2. Every limit, per field. "Set, positive, finite, with a currency" is
+	//    execgw.Limits.Validate, which is the same predicate the gateway applies
+	//    to an EXPOSURE_RAISING decision — the interlock refuses at startup what
+	//    the gateway would otherwise refuse one order at a time.
+	if err := status.Limits.Validate(); err != nil {
+		return fmt.Errorf("%w: %w: %w", ErrAutomationGateRefused, ErrLimitsRequired, err)
 	}
 
-	// 3-4. The attestation itself.
+	// 3. The trading policy. Selling and live order actions are both required:
+	//    the failure being excluded is an engine that can open a position and has
+	//    no configured way to close it (§0.3).
+	if err := checkTradingPolicy(facts.trading); err != nil {
+		return fmt.Errorf("%w: %w: %w", ErrAutomationGateRefused, ErrTradingPolicyRefused, err)
+	}
+
+	// 4. The attestation itself.
 	att, err := attest.Load(status.AttestationFile)
 	if err != nil {
 		return fmt.Errorf("%w: %w — run the capability verification "+
@@ -250,10 +422,116 @@ func verifyGate(status *AutomationStatus, guardian execgw.Guardian, now time.Tim
 	}
 
 	// 6. Expiry, account match and endpoint coverage, in one verification.
-	if err := att.Verify(now, accountRef, RequiredEndpoints()); err != nil {
+	if err := att.Verify(facts.now, accountRef, RequiredEndpoints()); err != nil {
 		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, err)
 	}
+
+	// 7. Single source: the Guardian authorises against the limits that were
+	//    just audited, or the audit trail describes a gate that does not exist.
+	if err := checkGuardianLimits(facts.guardian, status.Limits); err != nil {
+		return fmt.Errorf("%w: %w: %w", ErrAutomationGateRefused, ErrGuardianLimitsMismatch, err)
+	}
+
+	// 8. The gateway, and the transport underneath it.
+	if err := checkGateway(facts.gateway); err != nil {
+		return fmt.Errorf("%w: %w: %w", ErrAutomationGateRefused, ErrGatewayRequired, err)
+	}
+	if err := checkKeyCapableTransport(facts.transport); err != nil {
+		return fmt.Errorf("%w: %w: %w", ErrAutomationGateRefused, ErrKeylessTransport, err)
+	}
 	return nil
+}
+
+// checkTradingPolicy is clause 3.
+func checkTradingPolicy(policy config.Trading) error {
+	var missing []string
+	if !policy.Sell {
+		missing = append(missing, "trading.sell")
+	}
+	if !policy.AllowLiveOrderActions {
+		missing = append(missing, "trading.allow_live_order_actions")
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s is off", strings.Join(missing, " and "))
+}
+
+// checkGuardianLimits is clause 4 of the spec's list: the injected Guardian and
+// the audited configuration are one source.
+func checkGuardianLimits(guardian execgw.Guardian, audited execgw.Limits) error {
+	source, ok := guardian.(ExposureLimiter)
+	if !ok {
+		return fmt.Errorf("the injected Guardian (%T) does not report its exposure limits, so "+
+			"equivalence with the audited configuration cannot be established", guardian)
+	}
+	declared := source.ExposureLimits()
+	if !limitsEqual(declared, audited) {
+		return fmt.Errorf("Guardian limits %s do not match the configured limits %s",
+			limitsString(declared), limitsString(audited))
+	}
+	return nil
+}
+
+// checkGateway is clause 5: a gateway exists and is wired for what it promises.
+//
+// A non-nil pointer is not the question. Options.Orders is nil-able, and a
+// gateway without it confirms a created order on the broker's acknowledgement
+// alone — the identifier round trip never runs, and the spec's "생성 응답의
+// 식별자는 상세조회 round-trip으로 실재를 확인한다" is unmet at runtime while
+// looking satisfied in the code (issues.md 2026-07-26).
+func checkGateway(gateway *execgw.Gateway) error {
+	if gateway == nil {
+		return errors.New("no gateway was constructed")
+	}
+	wiring := gateway.Wiring()
+	var missing []string
+	if !wiring.Orders {
+		missing = append(missing, "the order reader (identifier round trip)")
+	}
+	if !wiring.Entry {
+		missing = append(missing, "the entry gate")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("the gateway is missing %s", strings.Join(missing, " and "))
+	}
+	return nil
+}
+
+// checkKeyCapableTransport is the "키 미지원 transport" refusal.
+func checkKeyCapableTransport(transport trading.Broker) error {
+	if transport == nil {
+		return errors.New("no order transport")
+	}
+	carrier, ok := transport.(idempotencyKeyCarrier)
+	if !ok || !carrier.CarriesIdempotencyKey() {
+		return fmt.Errorf("the order transport (%T) does not send the decision's clientOrderId",
+			transport)
+	}
+	return nil
+}
+
+// limitsEqual compares two snapshots field by field, Set bits included.
+//
+// Plain equality on the struct would do the same thing today; it is written out
+// so that adding a bound to execgw.Limits fails to compile here rather than
+// silently going unchecked.
+func limitsEqual(a, b execgw.Limits) bool {
+	same := func(x, y execgw.Limit) bool { return x.Set == y.Set && x.Value == y.Value }
+	return same(a.MaxQuantity, b.MaxQuantity) &&
+		same(a.MaxNotional, b.MaxNotional) &&
+		same(a.MaxTotalExposure, b.MaxTotalExposure) &&
+		same(a.MaxDailyLossAmount, b.MaxDailyLossAmount) &&
+		same(a.MaxDailyLossRatio, b.MaxDailyLossRatio) &&
+		strings.EqualFold(strings.TrimSpace(a.Currency), strings.TrimSpace(b.Currency))
+}
+
+// limitsString renders a snapshot for a refusal message.
+func limitsString(l execgw.Limits) string {
+	return fmt.Sprintf("(qty=%s notional=%s exposure=%s daily_loss=%s daily_loss_ratio=%s %s)",
+		limitString(l.MaxQuantity.Value), limitString(l.MaxNotional.Value),
+		limitString(l.MaxTotalExposure.Value), limitString(l.MaxDailyLossAmount.Value),
+		limitString(l.MaxDailyLossRatio.Value), l.Currency)
 }
 
 // resolveAccountRef reads the account the credentials belong to.
@@ -289,6 +567,9 @@ func recordGateSettings(log *audit.Log, gate config.AutomationGate, attestationF
 			"attestation file: " + attestationFile},
 		{audit.ActionLimitChange, "engine.automation_gate.max_order_quantity", limitString(gate.MaxOrderQuantity), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.max_order_notional", limitString(gate.MaxOrderNotional), ""},
+		{audit.ActionLimitChange, "engine.automation_gate.max_total_exposure", limitString(gate.MaxTotalExposure), ""},
+		{audit.ActionLimitChange, "engine.automation_gate.max_daily_loss_amount", limitString(gate.MaxDailyLossAmount), ""},
+		{audit.ActionLimitChange, "engine.automation_gate.max_daily_loss_ratio", limitString(gate.MaxDailyLossRatio), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.limit_currency",
 			strings.ToUpper(strings.TrimSpace(gate.LimitCurrency)), ""},
 	}
