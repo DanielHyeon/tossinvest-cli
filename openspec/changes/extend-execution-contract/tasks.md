@@ -2,8 +2,8 @@
 
 > [M]=Manager, [T]=Teammate(Opus). TDD, 체크박스는 산출물 커밋과 동일 커밋. 4판(접합부 사양화 — design.md D1~D9가 정본, 태스크는 전사).
 > **경계**: 조건주문·보호주문·발동 주문·청산 예약 관련 코드 0줄(2c). 브로커 동작 가정에 openapi 인용 또는 `[미측정]` 태그가 없으면 리뷰 반려.
-> **Pre-Edit 전문 선언 필수(upstream)**: `internal/orderintent/intent.go`, `internal/official/orders_write.go`, `internal/trading/`(엔진 진입점), `internal/app/engine/engine.go`(봉인·배선), `internal/journal/durability.go`(PrepareRequest 공개 계약 확장). 착수 전 범위·이유·무영향 근거 보고 → Manager 승인.
-> 파일 앵커: `internal/execgw/{gateway,guardian,indoubt,classify,fingerprint,retry,symbolgate}.go`, `internal/journal/{schema,durability,dispatch,fills,recovery,resolution}.go`, `internal/brokerstate/derive.go`, `internal/reconcile/{mismatch,recovery}.go`, `internal/app/engine/{interlock,engine}.go`, `internal/flatten/{flatten,liquidate}.go`
+> **Pre-Edit 전문 선언 필수(upstream)**: `internal/orderintent/intent.go`, `internal/official/orders_write.go`, `internal/trading/`(엔진 진입점), `internal/app/engine/engine.go`(봉인·배선), `internal/journal/durability.go`(PrepareRequest 공개 계약 확장), `cmd/tossctl/flatten.go`(자체 배선 전환). 착수 전 범위·이유·무영향 근거 보고 → Manager 승인.
+> 파일 앵커: `internal/execgw/{gateway,guardian,indoubt,classify,fingerprint,retry,symbolgate}.go`, `internal/journal/{schema,durability,dispatch,fills,recovery,resolution}.go`, `internal/brokerstate/derive.go`, `internal/reconcile/{mismatch,recovery}.go`, `internal/app/engine/{interlock,engine}.go`, `internal/flatten/{flatten,liquidate}.go`, `cmd/tossctl/flatten.go:223`(TradingService 소비자 — 7.4 자체 배선 전환 대상)
 
 ## 0. journal v5 스키마 [T]
 
@@ -31,7 +31,7 @@
 ## 3. 진입 측 위험 예약
 
 - [ ] 3.1 [T][High-risk] 예약 트랜잭션: 스냅샷 밖 수집→안 as-of·staleness 검증→삽입, journal 메서드 재진입 금지·락 순서 문서화, 재수집 상한 3회·데드라인·초과 fail-closed. decimal 산술(소수점 케이스)
-- [ ] 3.2 [T][High-risk] 해제: 파생된 종결 상태(6.2 재작성이 **선행 의존**)와 같은 트랜잭션 원자 해제 / nonce 미소비 만료 / 운영자 해제 경로(UNKNOWN·UNRESOLVED의 유일 출구 — 근거·audit) / 거래일 소멸. "만료 추정 해제 금지" 테스트(CLOSED+fill0+무취소=UNKNOWN 유지 시 예약 보존+운영자 알림)
+- [ ] 3.2 [T][High-risk] 해제: 파생된 종결 상태(5.1 재작성이 **선행 의존**)와 같은 트랜잭션 원자 해제 / nonce 미소비 만료 / 운영자 해제 경로(UNKNOWN·UNRESOLVED의 유일 출구 — 근거·audit) / 거래일 소멸. "만료 추정 해제 금지" 테스트(CLOSED+fill0+무취소=UNKNOWN 유지 시 예약 보존+운영자 알림)
 - [ ] 3.3 [T] 재시작 고아 예약 회수 + as-of 조건이 실제 재검증을 유발하는 동시성 테스트(`SetMaxOpenConns(1)` 하에서 `-race`만으로는 불충분 — 스냅샷 버전 어긋남 주입)
 
 ## 4. RECONCILE 상태
@@ -47,7 +47,7 @@
 
 ## 6. 총계 계산 계약
 
-- [ ] 6.1 [T][High-risk] 계약 산출물(문서+타입): design·스펙의 구조 결정 전사(자동 진입 LIMIT 전용·gross long·실현 손실 기준·환율 staleness fail-closed·외부 거래는 브로커 스냅샷 경유) + **보수 기본 staleness 수치 명시 정의**(2d는 보수 방향으로만 대체). stale·미지 fail-closed 테스트
+- [ ] 6.1 [T][High-risk] 계약 산출물(문서+타입): design·스펙의 구조 결정 전사(자동 진입 LIMIT 전용·gross long·실현 손실 기준·환율 staleness fail-closed·외부 거래는 브로커 스냅샷 경유) + **D6a 보수 기본값 전사**(계좌 스냅샷 10초·환율 60초 — 2d는 보수 방향 또는 사람 승인·audit로만 대체). stale·미지 fail-closed 테스트
 
 ## 7. 엔진 배선·인터록 (순서 고정: 7.1→7.2→7.3→7.4→7.5)
 
@@ -60,6 +60,6 @@
 ## 8. 완료 게이트 [M]
 
 - [ ] 8.1 diff 리뷰: Pre-Edit 승인 범위, CLI confirm token 무변경, 조건주문 코드 0줄, 브로커 가정 태그 전수 확인
-- [ ] 8.2 `go test ./... -race` 독립 재실행 green (1370+ 회귀 없음, 5.1의 사전 열거 단언 변경만 허용)
+- [ ] 8.2 `go test ./... -race` 독립 재실행 green — 기존 단언 변경은 1.1(clientOrderId 배선)·1.3(PrepareRequest·durability_test)·5.1(파생 재작성)·5.2(원문 저장)·7.4(봉인 — seal_test.go:21 "TradingService is deliberately not caught" 주석 **반전** 포함, engine_test·precheck_test·wts_isolation_test)의 **사전 열거 목록만** 허용, 그 외 회귀 없음
 - [ ] 8.3 crash 주입·동시성·예약 누수·재생 경계 테스트 결과 확인, `issues.md` 검토
 - 8.4 (게이트 명령 자체) `make gate CHANGE=extend-execution-contract` 통과 후 완료 선언

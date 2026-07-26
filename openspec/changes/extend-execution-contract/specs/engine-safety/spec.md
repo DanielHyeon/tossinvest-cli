@@ -26,6 +26,8 @@ attempt 기록은 결정 참조(decision_id·safety_class·generation)를 함께
 
 수동 flatten은 청산·취소 결정을 ReductionIntent preimage와 함께 journal에 기록한 뒤 제출한다(SHALL — 비상 경로가 새 검증에 거부되어서는 안 되고(§0.3), 검증을 면제받아서도 안 된다).
 
+Gateway는 브로커 호출 직전 결정의 만료 시각을 재검증하며 만료된 결정의 제출은 거부한다(SHALL — P1 계약 유지: 이 요구는 preimage·멱등키 검증의 추가이지 대체가 아니다).
+
 #### Scenario: 손절 데이터 바꿔치기
 - **WHEN** 결정 발급 시점과 다른 손절가로 주문이 제출되면
 - **THEN** journal의 preimage와 불일치하여 Gateway가 거부한다
@@ -37,6 +39,10 @@ attempt 기록은 결정 참조(decision_id·safety_class·generation)를 함께
 #### Scenario: flatten의 청산 결정
 - **WHEN** flatten saga가 청산 결정을 발급·기록하고 제출하면
 - **THEN** ReductionIntent preimage 검증을 통과하며 한도 적용 없이 수행된다
+
+#### Scenario: 만료된 결정으로 제출
+- **WHEN** 발급 후 만료 시각이 지난 결정으로 제출하면
+- **THEN** Gateway가 브로커 호출 전에 거부하고 재발급을 요구한다
 
 ### Requirement: 결정 nonce의 durable 저장
 one-shot nonce 저장소는 journal 기반이어야 한다(SHALL). 프로세스 재시작이 소비 기록을 잃어서는 안 되며(SHALL NOT), 영속된 결정 스냅샷을 새 제출에 사용하려는 시도는 nonce 재사용으로 거부된다(SHALL). 소비 기록은 전송 시작 기록과 같은 트랜잭션에서 남긴다(SHALL). 소비 기록의 보존 기간은 최대 결정 유효 시간 이상이어야 한다(SHALL — 어떤 결정도 자기 소비 기록보다 오래 살 수 없다). 멱등 재생(해소 절차)은 nonce 소비가 아니며 재사용 거부의 대상이 아니다(SHALL NOT).

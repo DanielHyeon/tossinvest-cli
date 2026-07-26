@@ -78,7 +78,7 @@ nonce 소비는 `MarkDispatchStarted` 트랜잭션에 병합한다 — 단일 �
 
 ### D6. RECONCILE — journal이 권위, 확정 하한은 공식이다
 
-`reconcile_states` 테이블로 영속한다(scope·원인·진입 시각·증거·해제 시각·해제 원인). **기존 3개 in-memory 차단 기계(EntryGate 래치, checkSymbolFree의 UNRESOLVED 차단, reconcile.Tracker)와의 관계**: journal의 RECONCILE 상태가 권위이고, EntryGate의 reconcile 계열 래치는 기동 시 journal에서 재구성되는 투영이다. Tracker의 메모리 상태는 이 테이블로 이전한다.
+`reconcile_states` 테이블로 영속한다(scope·원인·진입 시각·증거·해제 시각·해제 원인). **기존 차단 기계와의 관계**: journal의 RECONCILE 상태가 권위다. in-memory인 EntryGate reconcile 계열 래치와 reconcile.Tracker 상태는 기동 시 journal에서 재구성되는 투영으로 이전한다. checkSymbolFree의 UNRESOLVED 차단은 이미 journal(PendingAttempts) 기반이므로 그대로 두되, RECONCILE과 중복 판정하지 않도록 진입 거부 사유를 구분한다.
 
 진입 조건: 브로커 보유·매도가능 조회 불가 또는 stale 초과(소비자가 그 값을 필요로 하는 시점 기준), 로컬 파생과 브로커 스냅샷의 수량 불일치, 같은 식별자의 상충 컨텍스트 출현.
 
@@ -140,7 +140,7 @@ nonce 소비는 `MarkDispatchStarted` 트랜잭션에 병합한다 — 단일 �
 
 **`reconcile_states`**: id PK, account_ref NOT NULL, symbol (NULL=계좌 전역), cause enum NOT NULL, evidence TEXT, entered_at NOT NULL, released_at, release_cause. 활성 상태 부분 unique(account_ref, symbol) WHERE released_at IS NULL.
 
-**`execution_corrections`**: id PK, account_ref NOT NULL, order_id NOT NULL, prev_avg_price/new_avg_price, prev_filled_amount/new_filled_amount, cumulative_qty NOT NULL, observed_at NOT NULL. RecordFill 트랜잭션 내 삽입.
+**`execution_corrections`**: id PK, account_ref NOT NULL, order_id NOT NULL REFERENCES fill_snapshots(order_id), prev_avg_price/new_avg_price, prev_filled_amount/new_filled_amount, cumulative_qty NOT NULL, observed_at NOT NULL, UNIQUE(order_id, cumulative_qty, new_avg_price, new_filled_amount) — crash 재관측의 이중 삽입 방지. RecordFill 트랜잭션 내 삽입.
 
 **`fill_snapshots` additive 컬럼**: filled_amount TEXT (정정 감지의 prev).
 
@@ -150,7 +150,7 @@ nonce 소비는 `MarkDispatchStarted` 트랜잭션에 병합한다 — 단일 �
 - [upstream 수정 4+2파일] → Pre-Edit 전문, CLI confirm token 무변경 characterization
 - [brokerstate 재작성이 P1 파생 소비자에 파급] → 기존 테스트 중 바뀌어야 할 단언 사전 열거(무조건 green 금지)
 - [journal-in-engine의 파일시스템 조건] → 의도된 상속임을 명시, tmpfs 테스트는 격리 경로 사용
-- [staleness 수치가 2a에 필요] → 7.1이 보수 기본값을 명시 정의(2d는 보수 방향으로만 대체)
+- [staleness 수치가 2a에 필요] → 아래 D6a 보수 기본값을 6.1이 전사(2d는 보수 방향으로만 대체)
 
 ## Migration Plan
 
