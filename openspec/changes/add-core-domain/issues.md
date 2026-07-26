@@ -155,3 +155,37 @@
   있다(예: 만료된 결정 + 소진된 한도). 위 순서가 곧 우선순위이며, `IssueRefusalReason`의
   분기 순서(한도 → 만료 → 소진 → 버전)는 **오류 래핑** 우선순위라 서로 다르다 —
   `ErrRecollectionExhausted`가 마지막 stale/superseded를 감싸므로 버전보다 먼저 검사해야 한다.
+
+## 2026-07-26 [safe local] apply hook의 범위는 "해소"이고 "무장"은 7.3의 몫이다 (task 0.3)
+
+- 사실: D7의 괄호는 "taken_ratio·pending **해소**는 여기서만"이고, exit-policy 스펙의 발의
+  무장(pending_action/level/intent_id 세팅)은 관측 판정 경로(별도 트랜잭션)에서 일어난다.
+  태스크 0.3 문장("hook 밖에서 taken_ratio·pending을 쓸 수 없음")은 그보다 넓게 읽힌다.
+- 이번 처리: `ApplyTx`는 `MoveTakenRatioTotal`·`ResolvePending`만 갖는다(무장 API 없음).
+  결과적으로 **지금은 네 컬럼의 writer가 apply_hook.go 하나뿐**이고,
+  `TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook`이 다른 production 파일에서 컬럼 이름이
+  등장하기만 해도 실패한다.
+- 후속 task 입력: **7.3**이 무장 writer를 추가할 때는 그 함수도 `apply_hook.go`에 두어야 한다
+  (다른 파일에 두면 layout 테스트가 실패한다 — 그게 의도된 강제 검토 지점이다). 무장은 fill
+  트랜잭션이 아니라 발의 트랜잭션에서 일어나므로 `*Journal` 메서드 형태가 맞다.
+
+## 2026-07-26 [safe local] `ApplyTx.Exec`은 투영 테이블용이고 guarded 컬럼은 거부한다 (task 0.3)
+
+- 사실: 투영(6.1)은 `positions`·`position_adjustments`의 모양을 소유하고, journal이 그 상태기계를
+  소유해서는 안 된다(position-ledger: journal이 도메인 상태기계를 직접 소유하는 것도 아니다).
+  그래서 hook에는 일반 `Exec`가 필요하다. 그런데 일반 Exec가 있으면 hook이 그것으로
+  `taken_ratio_total`을 쓸 수 있고, 그러면 layout 테스트가 볼 수 없는 writer가 생긴다.
+- 이번 처리: `ApplyTx.Exec`는 쿼리 문자열에 guarded 컬럼 이름이 있으면 `ErrInvalidRequest`로
+  거부한다(런타임). 같은 목록이 layout 테스트에도 있고, 둘은 한쪽이 바뀌면 사람이 대조하도록
+  일부러 이중화했다. 문자열 검사라는 한계는 명시한다 — 우회하려면 SQL을 동적으로 조립해야 하고,
+  그건 리뷰에서 보인다.
+
+## 2026-07-26 [observation] hook은 거부·no-op 스냅샷에서 호출되지 않는다 (task 0.3)
+
+- 계약: fail-closed 스냅샷(호출자 판정, 수량 감소, 역순 관측)과 바이트 동일 재관측에서는 hook이
+  돌지 않는다. 반영된 것이 없으므로 적용할 것도 없고, 거부된 체결을 투영하는 hook은 원장이
+  방금 믿지 않기로 한 값을 포지션에 쓰는 것이 된다.
+- 반대로 delta 0이어도 **정정(EXECUTION_CORRECTION)과 terminal 전이**에서는 호출된다 — 수량은
+  안 움직였지만 취득단가와 주문 종결성은 움직였고, 둘 다 포지션의 상태다.
+- 후속 task 입력: **6.1**의 투영 함수는 `AppliedFill.Delta == "0"`인 호출을 정상 입력으로
+  다뤄야 한다(정정·terminal).

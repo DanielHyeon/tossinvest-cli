@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	// modernc.org/sqlite is the pure-Go SQLite driver: no cgo, so the engine
@@ -62,6 +63,13 @@ type Journal struct {
 	path string
 	clk  clock.Clock
 	fs   FSInfo
+
+	// applyHooks are the domain's injected apply functions, called inside the
+	// fill transaction (apply_hook.go). Bound once at wiring time; the mutex is
+	// there because binding happens on the wiring goroutine and the calls happen
+	// on the detector's.
+	applyMu    sync.RWMutex
+	applyHooks ApplyHooks
 }
 
 // Open resolves the path, verifies the filesystem, creates the data directory if

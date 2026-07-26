@@ -50,6 +50,15 @@ package journal
 // transaction would let two cycles each decide "the average changed" from the
 // same prior and write the correction twice.
 //
+// # The atomic apply point (add-core-domain task 0.3, design D7)
+//
+// The transaction below is also where the position projection and the exit
+// state move. RecordFill calls the injected apply functions inside its own
+// BEGIN IMMEDIATE, after the snapshot has advanced and before the commit, so a
+// fill and everything it implies land together. The injection, the handle those
+// functions get and the rules they run under are in apply_hook.go; what this
+// file contributes is the transaction and the point inside it.
+//
 // # Opaque identifiers
 //
 // `orderId` is an opaque token — openapi contracts no shape for it — so it is
@@ -384,6 +393,30 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 			return res, err
 		}
 		res.ReleasedReservations = released
+	}
+
+	// 6. The atomic apply point (apply_hook.go, design D7). The injected
+	//    projection and exit functions run here, inside this transaction, so the
+	//    snapshot, the position and the exit state commit together or not at all.
+	//    A hook error aborts everything above: the deferred rollback leaves the
+	//    snapshot un-advanced, and the next observation measures its delta from
+	//    the last quantity the projection actually saw.
+	if err := j.runApplyHooks(ctx, tx, AppliedFill{
+		OrderID:            orderID,
+		AccountRef:         obs.AccountRef,
+		Symbol:             obs.Symbol,
+		Market:             obs.Market,
+		State:              obs.State,
+		Terminal:           obs.Terminal,
+		Delta:              res.Delta,
+		CumulativeQuantity: orZero(obs.FilledQuantity),
+		AveragePrice:       obs.AveragePrice,
+		FilledAmount:       obs.FilledAmount,
+		Corrected:          res.Corrected,
+		BrokerVisibleAt:    obs.BrokerVisibleAt,
+		CommittedAt:        now,
+	}); err != nil {
+		return res, err
 	}
 
 	if err := tx.Commit(); err != nil {
