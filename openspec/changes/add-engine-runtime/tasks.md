@@ -4,7 +4,7 @@
 
 ## 1. 런타임 [T]
 
-- [ ] 1.1 `engine.Context` 프로덕션 조립(cmd 측): config → journal Open(RW) → 브로커(구조적 official-only 가드 유지) → obs publisher → `AutomationStatus` 인터록 검증 — 기존 `verifyGate` 경로 소비, 새 검증 로직 금지
+- [ ] 1.1 `engine.Context` 프로덕션 조립(cmd 측): **flock 획득(첫 동작 — 실패 시 즉시 거부)** → config → journal Open(RW) → 브로커(구조적 official-only 가드 유지) → obs publisher → `AutomationStatus` 인터록 검증 — 기존 `verifyGate` 경로 소비, 새 검증 로직 금지. 비-Unix는 정직한 거부(soakproc_unix/other 선례)
 - [ ] 1.2 `tossctl engine run`: 게이트 OFF → "기동할 루프 집합 없음" 거부(이 change의 규칙), 게이트 ON+미충족 → 인터록 미충족 항목 열거 거부, verify runlock 신선 → 거부, **실행 중 인스턴스 → 거부**(journal 디렉터리 flock이 배타 — 경합 포함; 활성 마커(갱신 1분·stale 5분)는 콘솔 표시·autostart 사전 확인용 자문 신호로 별도 유지, 상수는 Go 측 seam + drift 테스트), 통과 시 reconcile driver + exit observer + **체결 감지 루프(`filldetect.Detector`)** 기동 — Hints 라우팅 포함 시 Refresh 미배선은 조립 시점 거부, SLO 양보는 엔진 배선의 어댑터(Detector 상태→SLOPressure — exitloop.go:144-148의 landed 의도)로 연결. help convention `mutating=true` — **골든 맵 wantMutating에도 추가**(양방향)
 - [ ] 1.3 감독 2층: ① 비정상 반환(ctx 취소 외) → 전체 취소+critical+실패 종료, 정상 종료(SIGTERM graceful)는 critical 없음 ② reconcile driver·체결 감지 연속 5주기 실패 → critical+ENTRY_BLOCKED 강화·재시도 지속(exit 관측은 landed 60s 계약 유지). SIGINT/SIGTERM graceful(취소·완주 대기·journal close), 2번째 시그널 즉시 종료. 엔진 활성 마커 수명(기동 시 생성·1분 갱신·종료 시 제거·5분 stale 무시). **ENTRY_BLOCKED 강화의 트리거 상수 신설**: ModeTrigger 상수 2종 + AutomaticTriggers()/TargetModeForTrigger 표 갱신(operating_mode.go:517-521의 "one visible table edit" 의도대로) + HALT_ALL 비도달 단언 테스트 갱신. verify 측 검사는 2b change 후속(이 change 소유 아님)
 - [ ] 1.4 재기동 복구 소비 테스트: pending 복원·편입 완결이 run 경로에서 실제 호출되는지(landed 계약 재사용 — 새 복구 코드 금지)
