@@ -86,25 +86,35 @@ type Completeness struct {
 	// OK reports that every completeness check passed.
 	OK bool `json:"ok"`
 
-	// OrderPages is how many pages the full order walk read.
+	// OrderPages is how many pages the CLOSED and OPEN walks read between them.
 	OrderPages int `json:"order_pages"`
-	// OrderIDs is how many orders the full walk returned.
+	// OrderIDs is how many order identifiers those walks returned between them.
+	//
+	// The two groups overlap — the spec puts PARTIAL_FILLED in both — so an order
+	// the broker reports in each of them is counted once per walk rather than
+	// silently folded into one. OrdersInBothStatuses is how many those are, and
+	// OrderIDs minus it is the number of distinct orders seen.
 	OrderIDs int `json:"order_ids"`
-	// DuplicateOrderIDs is how many identifiers appeared more than once.
+	// OrdersInBothStatuses is how many identifiers came back from both the CLOSED
+	// and the OPEN walk. It is an observation, not a fault.
+	OrdersInBothStatuses int `json:"orders_in_both_statuses,omitempty"`
+	// DuplicateOrderIDs is how many identifiers appeared more than once inside a
+	// single walk — a list that cannot be paged through exactly once.
 	DuplicateOrderIDs int `json:"duplicate_order_ids,omitempty"`
+	// BlankOrderIDs is how many entries the broker returned with no identifier on
+	// them. Nothing can reconcile against an order it cannot name.
+	BlankOrderIDs int `json:"blank_order_ids,omitempty"`
 	// CursorLoop reports a cursor that pointed back at a page already read.
 	CursorLoop bool `json:"cursor_loop,omitempty"`
 	// TruncatedPagination reports hasNext with no cursor to follow.
 	TruncatedPagination bool `json:"truncated_pagination,omitempty"`
-	// PageLimitReached reports that the walk stopped at its own page cap. It
-	// suppresses the open-order coverage check rather than failing it.
+	// PageLimitReached reports that a walk stopped at its own page cap. It is
+	// noted rather than failed: the pagination contract still held over every page
+	// that was read, and what is beyond the cap is unread, not wrong.
 	PageLimitReached bool `json:"page_limit_reached,omitempty"`
 
 	// OpenOrders is how many orders the broker reported as working.
 	OpenOrders int `json:"open_orders"`
-	// OpenOrdersMissing is how many of those the full list did not contain — the
-	// failure that would leave an engine blind to its own exposure.
-	OpenOrdersMissing int `json:"open_orders_missing,omitempty"`
 
 	// Positions is how many holdings the account reported.
 	Positions int `json:"positions"`

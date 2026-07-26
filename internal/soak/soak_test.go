@@ -40,10 +40,26 @@ type stubReads struct {
 	// errs maps a soak endpoint constant to the error that probe returns.
 	errs map[string]error
 
-	ordersRead   []string
-	symbolsAsked []string
-	pageRequests int
+	// requireStatus makes the order list behave like the real broker: `status` is
+	// a required query parameter, and a request without one is refused rather
+	// than answered with "everything".
+	requireStatus bool
+
+	// failStatus refuses the walk of one status group and answers the other, so a
+	// test can ask what half a list is worth.
+	failStatus string
+
+	ordersRead    []string
+	statusesAsked []string
+	symbolsAsked  []string
+	pageRequests  int
 }
+
+// errStatusRequired is what GET /api/v1/orders answers when `status` is absent:
+// HTTP 400, code invalid-request, field "status" (46 of 46 live soak cycles,
+// requestId rkqNEGbfWwUq0jPx among them). openapi.latest.json marks the parameter
+// required with enum {OPEN, CLOSED} and no "everything" member.
+var errStatusRequired = errors.New(`official: 400 invalid-request {"field":"status"}`)
 
 func newStubReads() *stubReads {
 	return &stubReads{
@@ -51,8 +67,8 @@ func newStubReads() *stubReads {
 		holdings: 2,
 		prices:   1,
 		pages: map[string]map[string]soak.OrderPage{
-			"":     {"": {IDs: []string{"o1", "o2"}}},
-			"OPEN": {"": {IDs: []string{"o1"}}},
+			"CLOSED": {"": {IDs: []string{"o2"}}},
+			"OPEN":   {"": {IDs: []string{"o1"}}},
 		},
 		errs: map[string]error{},
 	}
@@ -84,7 +100,14 @@ func (s *stubReads) Holdings(context.Context) (int, error) {
 func (s *stubReads) OrdersPage(_ context.Context, status, cursor string) (soak.OrderPage, error) {
 	s.mu.Lock()
 	s.pageRequests++
+	s.statusesAsked = append(s.statusesAsked, status)
 	s.mu.Unlock()
+	if s.requireStatus && strings.TrimSpace(status) == "" {
+		return soak.OrderPage{}, errStatusRequired
+	}
+	if s.failStatus != "" && s.failStatus == status {
+		return soak.OrderPage{}, errors.New("official: the connection was reset")
+	}
 	if err := s.errs[soak.EndpointOrders]; err != nil {
 		return soak.OrderPage{}, err
 	}
@@ -189,7 +212,7 @@ func TestRunCycleSurveysEveryRequiredEndpoint(t *testing.T) {
 // unverified endpoint into an attestation.
 func TestRunCycleSkipsOrderByIDWhenThereIsNoOrderToRead(t *testing.T) {
 	stub := newStubReads()
-	stub.pages = map[string]map[string]soak.OrderPage{"": {"": {}}, "OPEN": {"": {}}}
+	stub.pages = map[string]map[string]soak.OrderPage{"CLOSED": {"": {}}, "OPEN": {"": {}}}
 
 	r, _ := newRunner(t, stub, nil)
 	c, err := r.RunCycle(context.Background())
@@ -212,11 +235,65 @@ func TestRunCycleSkipsOrderByIDWhenThereIsNoOrderToRead(t *testing.T) {
 	}
 }
 
+// TestRunCycleAsksTheOrderListForAStatusItActuallyAccepts is the regression for
+// the defect that made 46 consecutive live cycles unattestable.
+//
+// The survey used to open with an unfiltered walk — OrdersPage(ctx, "", "") — on
+// the assumption that "no status" meant "every order". It does not: `status` is
+// a required parameter with enum {OPEN, CLOSED}, and the real broker answers a
+// request without one with 400 invalid-request. Every cycle therefore recorded
+// GET /api/v1/orders as a failure, so the endpoint could never reach the success
+// rate an attestation requires, so no attestation could ever be issued.
+func TestRunCycleAsksTheOrderListForAStatusItActuallyAccepts(t *testing.T) {
+	stub := newStubReads()
+	stub.requireStatus = true
+	stub.pages = map[string]map[string]soak.OrderPage{
+		"CLOSED": {"": {IDs: []string{"o2"}}},
+		"OPEN":   {"": {IDs: []string{"o1"}}},
+	}
+
+	r, _ := newRunner(t, stub, nil)
+	c, err := r.RunCycle(context.Background())
+	if err != nil {
+		t.Fatalf("RunCycle: %v", err)
+	}
+
+	got := endpointResult(t, c, soak.EndpointOrders)
+	if !got.OK {
+		t.Fatalf("%s failed against a broker that requires status: %s / %s",
+			soak.EndpointOrders, got.Class, got.Error)
+	}
+	for _, status := range stub.statusesAsked {
+		if status != "CLOSED" && status != "OPEN" {
+			t.Errorf("the walk asked for status %q; the broker's enum is {OPEN, CLOSED} and has no member for \"everything\"",
+				status)
+		}
+	}
+	if !asked(stub.statusesAsked, "CLOSED") || !asked(stub.statusesAsked, "OPEN") {
+		t.Errorf("statuses asked = %v, want both groups walked — their union is the whole list", stub.statusesAsked)
+	}
+	if c.Completeness.OrderIDs != 2 {
+		t.Errorf("OrderIDs = %d, want the 2 orders the two groups hold between them", c.Completeness.OrderIDs)
+	}
+	if !c.Completeness.Evaluated || !c.Completeness.OK {
+		t.Errorf("Completeness = %+v, want an evaluated pass", c.Completeness)
+	}
+}
+
+func asked(statuses []string, want string) bool {
+	for _, s := range statuses {
+		if s == want {
+			return true
+		}
+	}
+	return false
+}
+
 // TestRunCycleWalksEveryOrderPage: the completeness claim is about pagination,
 // so the walk has to actually follow the cursor.
 func TestRunCycleWalksEveryOrderPage(t *testing.T) {
 	stub := newStubReads()
-	stub.pages[""] = map[string]soak.OrderPage{
+	stub.pages["CLOSED"] = map[string]soak.OrderPage{
 		"":   {IDs: []string{"o1", "o2"}, NextCursor: "c1", HasNext: true},
 		"c1": {IDs: []string{"o3"}, NextCursor: "c2", HasNext: true},
 		"c2": {IDs: []string{"o4"}},
@@ -228,25 +305,77 @@ func TestRunCycleWalksEveryOrderPage(t *testing.T) {
 		t.Fatalf("RunCycle: %v", err)
 	}
 
-	if c.Completeness.OrderPages != 3 {
-		t.Errorf("OrderPages = %d, want 3", c.Completeness.OrderPages)
+	if c.Completeness.OrderPages != 4 {
+		t.Errorf("OrderPages = %d, want 4 (3 closed pages + the single open one)", c.Completeness.OrderPages)
 	}
-	if c.Completeness.OrderIDs != 4 {
-		t.Errorf("OrderIDs = %d, want 4", c.Completeness.OrderIDs)
+	if c.Completeness.OrderIDs != 5 {
+		t.Errorf("OrderIDs = %d, want 5 (4 closed + 1 open)", c.Completeness.OrderIDs)
 	}
 	if !c.Completeness.OK {
 		t.Errorf("a clean three-page walk failed the completeness check: %s", c.Completeness.Detail)
 	}
 	if got := endpointResult(t, c, soak.EndpointOrders); got.Requests < 4 {
-		t.Errorf("Requests = %d, want at least 4 (3 list pages + the open-order page)", got.Requests)
+		t.Errorf("Requests = %d, want at least 4 (3 closed pages + the open-order page)", got.Requests)
 	}
+}
+
+// TestRunCycleWalksTheOpenGroupInOneRequestAndPagesTheClosedOne is the
+// pagination contract of GET /api/v1/orders as the spec states it: OPEN ignores
+// cursor and limit and returns every working order at once, CLOSED is the only
+// group a cursor walks. The survey exists to observe that contract, so it has to
+// be able to tell the two behaviours apart in what it records.
+func TestRunCycleWalksTheOpenGroupInOneRequestAndPagesTheClosedOne(t *testing.T) {
+	stub := newStubReads()
+	stub.pages["CLOSED"] = map[string]soak.OrderPage{
+		"":   {IDs: []string{"c-1", "c-2"}, NextCursor: "p2", HasNext: true},
+		"p2": {IDs: []string{"c-3"}},
+	}
+	// The open group answers the same page whatever cursor it is handed, because
+	// it does not read the cursor at all — and it never claims a next page, which
+	// is what stops the walk after one request.
+	stub.pages["OPEN"] = map[string]soak.OrderPage{"": {IDs: []string{"o-1", "o-2"}}}
+
+	r, _ := newRunner(t, stub, nil)
+	c, err := r.RunCycle(context.Background())
+	if err != nil {
+		t.Fatalf("RunCycle: %v", err)
+	}
+
+	if got := countAsked(stub.statusesAsked, "OPEN"); got != 1 {
+		t.Errorf("the open group was requested %d time(s), want exactly 1 — it is not paginated", got)
+	}
+	if got := countAsked(stub.statusesAsked, "CLOSED"); got != 2 {
+		t.Errorf("the closed group was requested %d time(s), want 2 — its cursor has to be followed", got)
+	}
+	if c.Completeness.OrderIDs != 5 {
+		t.Errorf("OrderIDs = %d, want 5 (3 closed + 2 open)", c.Completeness.OrderIDs)
+	}
+	if c.Completeness.OpenOrders != 2 {
+		t.Errorf("OpenOrders = %d, want 2", c.Completeness.OpenOrders)
+	}
+	if c.Completeness.OrdersInBothStatuses != 0 {
+		t.Errorf("OrdersInBothStatuses = %d, want 0 — no order was in both groups", c.Completeness.OrdersInBothStatuses)
+	}
+	if !c.Completeness.OK {
+		t.Errorf("a clean two-group walk failed the completeness check: %s", c.Completeness.Detail)
+	}
+}
+
+func countAsked(statuses []string, want string) int {
+	n := 0
+	for _, s := range statuses {
+		if s == want {
+			n++
+		}
+	}
+	return n
 }
 
 // TestRunCycleDetectsACursorLoop. A cursor that points at itself is an infinite
 // walk; a soak that hung on it would report nothing at all.
 func TestRunCycleDetectsACursorLoop(t *testing.T) {
 	stub := newStubReads()
-	stub.pages[""] = map[string]soak.OrderPage{
+	stub.pages["CLOSED"] = map[string]soak.OrderPage{
 		"":   {IDs: []string{"o1"}, NextCursor: "c1", HasNext: true},
 		"c1": {IDs: []string{"o2"}, NextCursor: "c1", HasNext: true},
 	}
@@ -269,7 +398,7 @@ func TestRunCycleDetectsACursorLoop(t *testing.T) {
 // of the list is unreachable.
 func TestRunCycleDetectsTruncatedPagination(t *testing.T) {
 	stub := newStubReads()
-	stub.pages[""] = map[string]soak.OrderPage{
+	stub.pages["CLOSED"] = map[string]soak.OrderPage{
 		"": {IDs: []string{"o1"}, HasNext: true, NextCursor: ""},
 	}
 
@@ -284,11 +413,12 @@ func TestRunCycleDetectsTruncatedPagination(t *testing.T) {
 	}
 }
 
-// TestRunCycleDetectsDuplicateOrderIDs. The same order on two pages means the
-// walk cannot be trusted to have seen every order exactly once.
+// TestRunCycleDetectsDuplicateOrderIDs. The same order on two pages of one
+// status group means the walk cannot be trusted to have seen every order exactly
+// once.
 func TestRunCycleDetectsDuplicateOrderIDs(t *testing.T) {
 	stub := newStubReads()
-	stub.pages[""] = map[string]soak.OrderPage{
+	stub.pages["CLOSED"] = map[string]soak.OrderPage{
 		"":   {IDs: []string{"o1", "o2"}, NextCursor: "c1", HasNext: true},
 		"c1": {IDs: []string{"o2", "o3"}},
 	}
@@ -299,30 +429,176 @@ func TestRunCycleDetectsDuplicateOrderIDs(t *testing.T) {
 	if c.Completeness.DuplicateOrderIDs != 1 {
 		t.Errorf("DuplicateOrderIDs = %d, want 1", c.Completeness.DuplicateOrderIDs)
 	}
+	if !strings.Contains(c.Completeness.Detail, "o2") {
+		t.Errorf("Detail = %q, want it to name the repeated order", c.Completeness.Detail)
+	}
 	if c.Completeness.OK {
 		t.Error("a duplicated order id passed the completeness check")
 	}
 }
 
-// TestRunCycleFlagsAnOpenOrderMissingFromTheFullList is the completeness check
-// that matters most for the engine: an open order the list read cannot see is a
-// live exposure the engine would never reconcile.
-func TestRunCycleFlagsAnOpenOrderMissingFromTheFullList(t *testing.T) {
+// TestRunCycleDetectsADuplicateInsideTheOpenGroupToo. The open group is the one
+// the engine reconciles its exposure against; a repeat inside it is at least as
+// serious as a repeat in the history, and the old single-list check never looked.
+func TestRunCycleDetectsADuplicateInsideTheOpenGroup(t *testing.T) {
 	stub := newStubReads()
-	stub.pages[""] = map[string]soak.OrderPage{"": {IDs: []string{"o1"}}}
-	stub.pages["OPEN"] = map[string]soak.OrderPage{"": {IDs: []string{"o1", "ghost"}}}
+	stub.pages["OPEN"] = map[string]soak.OrderPage{
+		"":   {IDs: []string{"o1"}, NextCursor: "c1", HasNext: true},
+		"c1": {IDs: []string{"o1"}},
+	}
 
 	r, _ := newRunner(t, stub, nil)
 	c, _ := r.RunCycle(context.Background())
 
-	if c.Completeness.OpenOrdersMissing != 1 {
-		t.Errorf("OpenOrdersMissing = %d, want 1", c.Completeness.OpenOrdersMissing)
+	if c.Completeness.DuplicateOrderIDs != 1 {
+		t.Errorf("DuplicateOrderIDs = %d, want 1", c.Completeness.DuplicateOrderIDs)
 	}
 	if c.Completeness.OK {
-		t.Error("an unlisted open order passed the completeness check")
+		t.Error("an order repeated inside the open group passed the completeness check")
 	}
-	if !strings.Contains(c.Completeness.Detail, "ghost") {
-		t.Errorf("Detail = %q, want it to name the missing order", c.Completeness.Detail)
+}
+
+// TestRunCycleTreatsAnOrderInBothGroupsAsOneOrderNotADuplicate.
+//
+// The two groups are labels over the per-order status and they overlap: the spec
+// puts PARTIAL_FILLED in both OPEN and CLOSED. If the union were merged before
+// duplicates were counted, every partially filled order on the account would read
+// as a corrupt list and would block the attestation for as long as it stayed
+// partially filled — the same shape of permanent block this walk was fixed for.
+func TestRunCycleTreatsAnOrderInBothGroupsAsOneOrderNotADuplicate(t *testing.T) {
+	stub := newStubReads()
+	stub.requireStatus = true
+	stub.pages["CLOSED"] = map[string]soak.OrderPage{"": {IDs: []string{"filled-1", "partial-1"}}}
+	stub.pages["OPEN"] = map[string]soak.OrderPage{"": {IDs: []string{"partial-1", "pending-1"}}}
+
+	r, _ := newRunner(t, stub, nil)
+	c, _ := r.RunCycle(context.Background())
+
+	if c.Completeness.DuplicateOrderIDs != 0 {
+		t.Errorf("DuplicateOrderIDs = %d, want 0 — the OPEN/CLOSED overlap is the broker's contract, not a fault (%s)",
+			c.Completeness.DuplicateOrderIDs, c.Completeness.Detail)
+	}
+	if c.Completeness.OrdersInBothStatuses != 1 {
+		t.Errorf("OrdersInBothStatuses = %d, want 1", c.Completeness.OrdersInBothStatuses)
+	}
+	if c.Completeness.OrderIDs != 4 {
+		t.Errorf("OrderIDs = %d, want 4 identifiers over the two walks (3 distinct orders)", c.Completeness.OrderIDs)
+	}
+	if !c.Completeness.OK {
+		t.Errorf("an account with a partial fill failed the completeness check: %s", c.Completeness.Detail)
+	}
+}
+
+// TestRunCycleFlagsAnOrderReturnedWithNoIdentifier is what became of the
+// open-order coverage check.
+//
+// Coverage asked whether every open order was in the unfiltered list; with the
+// list defined as CLOSED ∪ OPEN that question cannot fail any more. What it could
+// really catch is an entry nothing can name — cmd/tossctl's adapter surfaces one
+// as an empty id rather than dropping the page — and an order the engine cannot
+// name is an order it can never reconcile.
+func TestRunCycleFlagsAnOrderReturnedWithNoIdentifier(t *testing.T) {
+	stub := newStubReads()
+	stub.pages["CLOSED"] = map[string]soak.OrderPage{"": {IDs: []string{"c1", ""}}}
+	stub.pages["OPEN"] = map[string]soak.OrderPage{"": {IDs: []string{"o1", ""}}}
+
+	r, _ := newRunner(t, stub, nil)
+	c, _ := r.RunCycle(context.Background())
+
+	if c.Completeness.BlankOrderIDs != 2 {
+		t.Errorf("BlankOrderIDs = %d, want 2 (one in each group)", c.Completeness.BlankOrderIDs)
+	}
+	if c.Completeness.OK {
+		t.Error("an order with no identifier on it passed the completeness check")
+	}
+	if !strings.Contains(c.Completeness.Detail, "no identifier") {
+		t.Errorf("Detail = %q, want it to say what was wrong", c.Completeness.Detail)
+	}
+	// Two nameless orders are two problems of one kind, not one order that turned
+	// up twice and not an order the broker put in both groups.
+	if c.Completeness.DuplicateOrderIDs != 0 {
+		t.Errorf("DuplicateOrderIDs = %d, want 0 — a blank id is not a repeated order",
+			c.Completeness.DuplicateOrderIDs)
+	}
+	if c.Completeness.OrdersInBothStatuses != 0 {
+		t.Errorf("OrdersInBothStatuses = %d, want 0 — a blank id is not an order in both groups",
+			c.Completeness.OrdersInBothStatuses)
+	}
+}
+
+// TestRunCycleTakesTheOrderByIDProbeFromEitherGroup. The by-id read has to be
+// exercised on any account that has an order at all, whichever group holds it —
+// a skipped probe is an endpoint Evaluate will not attest.
+func TestRunCycleTakesTheOrderByIDProbeFromEitherGroup(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		closed  []string
+		open    []string
+		wantID  string
+		wantRun bool
+	}{
+		{name: "closed only", closed: []string{"c-1"}, wantID: "c-1", wantRun: true},
+		{name: "open only", open: []string{"o-1"}, wantID: "o-1", wantRun: true},
+		{name: "both", closed: []string{"c-1"}, open: []string{"o-1"}, wantID: "c-1", wantRun: true},
+		{name: "neither"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			stub := newStubReads()
+			stub.requireStatus = true
+			stub.pages = map[string]map[string]soak.OrderPage{
+				"CLOSED": {"": {IDs: tc.closed}},
+				"OPEN":   {"": {IDs: tc.open}},
+			}
+
+			r, _ := newRunner(t, stub, nil)
+			c, _ := r.RunCycle(context.Background())
+
+			got := endpointResult(t, c, soak.EndpointOrderByID)
+			if !tc.wantRun {
+				if !got.Skipped {
+					t.Fatalf("%s ran against an account with no orders", soak.EndpointOrderByID)
+				}
+				return
+			}
+			if got.Skipped {
+				t.Fatalf("%s was skipped although the union held %v / %v: %s",
+					soak.EndpointOrderByID, tc.closed, tc.open, got.SkipReason)
+			}
+			if len(stub.ordersRead) != 1 || stub.ordersRead[0] != tc.wantID {
+				t.Errorf("read orders %v, want [%s]", stub.ordersRead, tc.wantID)
+			}
+		})
+	}
+}
+
+// TestRunCycleLeavesCompletenessUnevaluatedWhenAWalkFails, for either group. A
+// half-read list cannot support a claim about the whole list, and inventing a
+// pass from the group that did answer is exactly the failure mode that would let
+// a broken read endpoint into an attestation.
+func TestRunCycleLeavesCompletenessUnevaluatedWhenAWalkFails(t *testing.T) {
+	for _, status := range []string{"CLOSED", "OPEN"} {
+		t.Run(status, func(t *testing.T) {
+			stub := newStubReads()
+			stub.failStatus = status
+			stub.pages["CLOSED"] = map[string]soak.OrderPage{"": {IDs: []string{"c-1"}}}
+			stub.pages["OPEN"] = map[string]soak.OrderPage{"": {IDs: []string{"o-1"}}}
+
+			r, _ := newRunner(t, stub, nil)
+			c, _ := r.RunCycle(context.Background())
+
+			if got := endpointResult(t, c, soak.EndpointOrders); got.OK {
+				t.Errorf("%s was recorded OK although the %s walk failed", soak.EndpointOrders, status)
+			}
+			if c.Completeness.Evaluated {
+				t.Error("Completeness.Evaluated = true although a walk did not finish")
+			}
+			if c.Completeness.OK {
+				t.Error("Completeness.OK = true although a walk did not finish")
+			}
+			if !strings.Contains(c.Completeness.Detail, "not evaluated") {
+				t.Errorf("Detail = %q, want it to say the list could not be read", c.Completeness.Detail)
+			}
+		})
 	}
 }
 

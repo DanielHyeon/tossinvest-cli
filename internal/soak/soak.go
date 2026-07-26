@@ -14,8 +14,8 @@
 //	              day, for N consecutive days
 //	endpoints     what fraction of calls to each endpoint succeeded, how long
 //	              they took, and how often the broker throttled us
-//	completeness  does the order list paginate correctly, does it contain every
-//	              order the broker reports as open, does a quote request return a
+//	completeness  does the order list paginate correctly, does every order it
+//	              returns carry an identifier, does a quote request return a
 //	              quote for every symbol asked for
 //
 // When all of that passes, BuildAttestation turns the record into an
@@ -120,9 +120,9 @@ type Reads interface {
 	// Holdings reads every position on the account and returns how many there
 	// are.
 	Holdings(ctx context.Context) (int, error)
-	// OrdersPage reads one page of the order list. status is the broker's filter
-	// ("" for every order, "OPEN" for the working ones); cursor is empty for the
-	// first page.
+	// OrdersPage reads one page of the order list. status is the broker's
+	// lifecycle group and is required — "OPEN" or "CLOSED", never empty; cursor
+	// is empty for the first page and is only honoured for "CLOSED".
 	OrdersPage(ctx context.Context, status, cursor string) (OrderPage, error)
 	// Order reads a single order by identifier.
 	Order(ctx context.Context, id string) error
@@ -150,17 +150,34 @@ const (
 	ClassOther Class = "other"
 )
 
-// statusOpen is the broker's filter value for orders that are still working.
-const statusOpen = "OPEN"
+// The broker's two order lifecycle groups, and the only two values GET
+// /api/v1/orders accepts for its `status` parameter.
+//
+// openapi.latest.json marks the parameter required, with enum {OPEN, CLOSED} and
+// no member meaning "everything": a request that omits it is answered with 400
+// invalid-request naming the field. Walking the whole list therefore means
+// walking both groups and taking the union — the same shape
+// execgw.Resolver.scanBoth already uses for IN_DOUBT resolution.
+//
+// The groups are labels over the per-order status, and they are not disjoint:
+// the spec puts PARTIAL_FILLED in both. An order in both lists is one order, and
+// nothing here may read that overlap as a broken list.
+const (
+	statusOpen   = "OPEN"
+	statusClosed = "CLOSED"
+)
 
 // defaultMaxOrderPages bounds the order walk.
 //
-// A cap is needed because the list has no date filter here and an account with
-// years of history would spend the whole cycle paging through it. Reaching the
-// cap does not fail the completeness check — the pagination contract was still
-// observed to hold across every page walked — but it does suppress the
-// open-order coverage check, because an open order could be sitting on a page
-// beyond the cap and calling that "missing" would be a false alarm.
+// A cap is needed because the CLOSED group is the account's whole history — the
+// walk sets no from/to bound — and an account with years behind it would spend
+// the entire cycle paging through it. (The OPEN group is not paginated at all:
+// the spec has it ignore cursor and limit and return every working order in one
+// response, so the cap is effectively a bound on the CLOSED walk.)
+//
+// Reaching the cap does not fail the completeness check. The pagination contract
+// was still observed to hold across every page that was walked; what is beyond
+// the cap is unread, not wrong.
 const defaultMaxOrderPages = 25
 
 // Options configures a Runner.
@@ -455,16 +472,17 @@ func (r *Runner) RunCycle(ctx context.Context) (Cycle, error) {
 	positions, holdingsResult := r.probeHoldings(ctx)
 	cycle.Endpoints = append(cycle.Endpoints, holdingsResult)
 
-	// 3. orders: the full walk, then the open subset, then one order by id.
-	walk, openWalk, ordersResult := r.probeOrders(ctx)
+	// 3. orders: the closed group, then the open one, then one order by id out of
+	//    the two together.
+	closedWalk, openWalk, ordersResult := r.probeOrders(ctx)
 	cycle.Endpoints = append(cycle.Endpoints, ordersResult)
-	cycle.Endpoints = append(cycle.Endpoints, r.probeOrderByID(ctx, walk))
+	cycle.Endpoints = append(cycle.Endpoints, r.probeOrderByID(ctx, closedWalk, openWalk))
 
 	// 4. quotes.
 	quotes, pricesResult := r.probePrices(ctx)
 	cycle.Endpoints = append(cycle.Endpoints, pricesResult)
 
-	cycle.Completeness = completenessOf(walk, openWalk, ordersResult.OK, positions, len(r.opts.Symbols), quotes)
+	cycle.Completeness = completenessOf(closedWalk, openWalk, ordersResult.OK, positions, len(r.opts.Symbols), quotes)
 	cycle.FinishedAt = r.opts.Clock.Now()
 	return cycle, nil
 }
@@ -532,24 +550,28 @@ type orderWalk struct {
 	err        error
 }
 
-// probeOrders walks the whole list and then the open subset. Both walks are
-// recorded against GET /api/v1/orders, because that is the endpoint an
-// attestation would name.
-func (r *Runner) probeOrders(ctx context.Context) (full, open orderWalk, result EndpointResult) {
+// probeOrders walks the closed group and then the open one. Between them they
+// are the whole order list; there is no third call that would return it in one
+// go (see the status constants above).
+//
+// Both walks are recorded against GET /api/v1/orders, because that is the
+// endpoint an attestation would name, and one failed walk fails the endpoint:
+// half the list is not a read of the list.
+func (r *Runner) probeOrders(ctx context.Context) (closed, open orderWalk, result EndpointResult) {
 	started := r.opts.Clock.Now()
 
-	full = r.walkOrders(ctx, "")
+	closed = r.walkOrders(ctx, statusClosed)
 	open = r.walkOrders(ctx, statusOpen)
 
 	result = EndpointResult{
 		Endpoint:  EndpointOrders,
-		Requests:  full.requests + open.requests,
+		Requests:  closed.requests + open.requests,
 		LatencyMS: r.opts.Clock.Since(started).Milliseconds(),
 	}
 	switch {
-	case full.err != nil:
-		result.Class = r.classify(full.err)
-		result.Error = full.err.Error()
+	case closed.err != nil:
+		result.Class = r.classify(closed.err)
+		result.Error = closed.err.Error()
 	case open.err != nil:
 		result.Class = r.classify(open.err)
 		result.Error = open.err.Error()
@@ -557,11 +579,17 @@ func (r *Runner) probeOrders(ctx context.Context) (full, open orderWalk, result 
 		result.OK = true
 		result.Class = ClassOK
 	}
-	return full, open, result
+	return closed, open, result
 }
 
-// walkOrders follows the cursor to the end of the list, or to the first sign
-// that the cursor cannot be followed.
+// walkOrders follows the cursor to the end of one status group, or to the first
+// sign that the cursor cannot be followed.
+//
+// It is written the same way for both groups on purpose. The spec says CLOSED
+// paginates and OPEN does not, and the way to find out whether that is true is
+// to follow whatever the broker hands back rather than to assume it: an OPEN
+// response that claims a next page gets walked, and if the cursor is ignored the
+// repeat lands in the loop and duplicate detection below.
 func (r *Runner) walkOrders(ctx context.Context, status string) orderWalk {
 	walk := orderWalk{seen: map[string]int{}}
 	cursor := ""
@@ -601,21 +629,27 @@ func (r *Runner) walkOrders(ctx context.Context, status string) orderWalk {
 	}
 }
 
-// probeOrderByID reads the first order the walk found.
+// probeOrderByID reads the first order the two walks found between them.
 //
-// With no orders on the account there is nothing to read, and the result is a
-// recorded skip rather than a success — Evaluate then refuses to complete the
-// soak until the endpoint has actually been exercised, which is the honest
-// answer: the engine calls it, and nobody has seen it work.
-func (r *Runner) probeOrderByID(ctx context.Context, walk orderWalk) EndpointResult {
-	if len(walk.ids) == 0 {
+// Closed orders come first only because a live account is far likelier to have
+// history than to have something working right now; either group is an equally
+// good id to prove the endpoint with, and an account with nothing in the closed
+// group falls through to the open one.
+//
+// With no orders at all there is nothing to read, and the result is a recorded
+// skip rather than a success — Evaluate then refuses to complete the soak until
+// the endpoint has actually been exercised, which is the honest answer: the
+// engine calls it, and nobody has seen it work.
+func (r *Runner) probeOrderByID(ctx context.Context, closed, open orderWalk) EndpointResult {
+	ids := append(append([]string(nil), closed.ids...), open.ids...)
+	if len(ids) == 0 {
 		reason := "the account has no orders, so there is no id to read"
-		if walk.err != nil {
+		if closed.err != nil || open.err != nil {
 			reason = "the order list could not be read, so no id was available"
 		}
 		return EndpointResult{Endpoint: EndpointOrderByID, Skipped: true, SkipReason: reason}
 	}
-	id := walk.ids[0]
+	id := ids[0]
 	return r.probe(ctx, EndpointOrderByID, func(ctx context.Context) error {
 		return r.opts.Reads.Order(ctx, id)
 	})
@@ -661,20 +695,28 @@ func (r *Runner) classify(err error) Class {
 
 // completenessOf answers the question the engine actually needs answered: if it
 // reads this API, does it see everything that exists?
-func completenessOf(full, open orderWalk, ordersOK bool, positions, symbolsAsked, quotes int) Completeness {
+//
+// It takes the two walks apart rather than one merged list because the groups
+// overlap by design: the spec puts PARTIAL_FILLED in both OPEN and CLOSED, so one
+// order can honestly come back from both walks. Merging first and then counting
+// repeats would turn that documented overlap into a duplicate-id failure and
+// block the attestation for something the broker is entitled to do — the same
+// artefact execgw.Resolver.scanBoth removes when it asks the same question.
+func completenessOf(closed, open orderWalk, ordersOK bool, positions, symbolsAsked, quotes int) Completeness {
+	walks := []orderWalk{closed, open}
 	c := Completeness{
-		OrderPages:          full.pages,
-		OrderIDs:            len(full.ids),
+		OrderPages:          closed.pages + open.pages,
+		OrderIDs:            len(closed.ids) + len(open.ids),
 		Positions:           positions,
 		OpenOrders:          len(open.ids),
 		QuotesRequested:     symbolsAsked,
 		QuotesReturned:      quotes,
-		CursorLoop:          full.cursorLoop || open.cursorLoop,
-		TruncatedPagination: full.truncated || open.truncated,
-		PageLimitReached:    full.pageLimit || open.pageLimit,
+		CursorLoop:          closed.cursorLoop || open.cursorLoop,
+		TruncatedPagination: closed.truncated || open.truncated,
+		PageLimitReached:    closed.pageLimit || open.pageLimit,
 	}
 	if !ordersOK {
-		// The walk did not finish, so there is nothing to conclude. The failure is
+		// A walk did not finish, so there is nothing to conclude. The failure is
 		// already recorded against the endpoint; recording it a second time as a
 		// completeness failure would let one dropped connection block the
 		// attestation for the rest of the window.
@@ -684,23 +726,49 @@ func completenessOf(full, open orderWalk, ordersOK bool, positions, symbolsAsked
 	c.Evaluated = true
 
 	var problems []string
-	for id, n := range full.seen {
-		if n > 1 {
-			c.DuplicateOrderIDs++
-			if len(problems) < 4 {
-				problems = append(problems, fmt.Sprintf("order %s appeared %d times in the list", id, n))
-			}
-		}
-	}
-	if !c.PageLimitReached {
-		for _, id := range open.ids {
-			if full.seen[id] == 0 {
-				c.OpenOrdersMissing++
-				if len(problems) < 8 {
-					problems = append(problems, fmt.Sprintf("order %s was open but absent from the list", id))
+	// Duplicates are counted inside each walk, never across the two. A repeat
+	// within one walk means the cursor handed the same order out twice and the
+	// walk cannot be trusted to have seen every order exactly once; a repeat
+	// across the walks is the OPEN/CLOSED overlap, which is counted separately
+	// and reported rather than failed.
+	//
+	// The empty id is excluded from both counts. Two entries with no identifier
+	// are two orders nobody can name, not one order seen twice, and calling them
+	// a duplicate would describe the wrong fault; the identifier check below is
+	// where they land.
+	for _, w := range walks {
+		for id, n := range w.seen {
+			if id != "" && n > 1 {
+				c.DuplicateOrderIDs++
+				if len(problems) < 4 {
+					problems = append(problems, fmt.Sprintf("order %s appeared %d times in one status group", id, n))
 				}
 			}
 		}
+	}
+	for id := range open.seen {
+		if id != "" && closed.seen[id] > 0 {
+			c.OrdersInBothStatuses++
+		}
+	}
+
+	// This is what is left of the open-order coverage check.
+	//
+	// That check asked whether every open order was also present in the unfiltered
+	// list. There is no unfiltered list to ask about any more, and the list is now
+	// *defined* as CLOSED ∪ OPEN, so the question can only ever answer yes: keeping
+	// it would be reporting a check that cannot fail. What it could genuinely
+	// catch is an entry the broker returned with no identifier on it — the case
+	// cmd/tossctl's adapter deliberately surfaces as an empty id rather than
+	// dropping the page — because an order nothing can name is an order no
+	// reconciliation can ever match against local state. That is checked here, over
+	// both groups, and it does fail.
+	for _, w := range walks {
+		c.BlankOrderIDs += w.seen[""]
+	}
+	if c.BlankOrderIDs > 0 {
+		problems = append(problems, fmt.Sprintf(
+			"%d order(s) came back with no identifier on them", c.BlankOrderIDs))
 	}
 	if c.CursorLoop {
 		problems = append(problems, "the pagination cursor pointed back at a page already read")
@@ -711,12 +779,17 @@ func completenessOf(full, open orderWalk, ordersOK bool, positions, symbolsAsked
 	if quotes != symbolsAsked {
 		problems = append(problems, fmt.Sprintf("%d quote(s) returned for %d symbol(s)", quotes, symbolsAsked))
 	}
-	if c.PageLimitReached {
+	if closed.pageLimit {
 		problems = append(problems, fmt.Sprintf(
-			"the order walk stopped at the %d-page limit, so open-order coverage was not checked", full.pages))
+			"the CLOSED walk stopped at the %d-page limit, so the history behind it was not read", closed.pages))
+	}
+	if open.pageLimit {
+		problems = append(problems, fmt.Sprintf(
+			"the OPEN walk stopped at the %d-page limit, although the spec has that group return every "+
+				"working order in one response", open.pages))
 	}
 
-	c.OK = c.DuplicateOrderIDs == 0 && c.OpenOrdersMissing == 0 &&
+	c.OK = c.DuplicateOrderIDs == 0 && c.BlankOrderIDs == 0 &&
 		!c.CursorLoop && !c.TruncatedPagination && quotes == symbolsAsked
 	c.Detail = strings.Join(problems, "; ")
 	return c
