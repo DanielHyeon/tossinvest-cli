@@ -73,6 +73,14 @@ type Options struct {
 	// is sent (task 2.10). Optional; nil skips them, which only the narrower
 	// gateway tests do.
 	Preflight *Preflight
+	// Orders reads one order back by id, which is how a created order's
+	// identifier is confirmed to name something real before the attempt settles
+	// (task 5.2, roundtrip.go). execgw.OfficialOrders satisfies it.
+	//
+	// Optional only in the sense that the type allows nil: without it a place is
+	// confirmed on the broker's ack alone, which is what this build did before
+	// the round trip existed. Engine wiring supplies it.
+	Orders OrderReader
 	// NewID generates intent and attempt ids. Defaults to a 128-bit random hex
 	// string; tests inject a deterministic sequence.
 	NewID func() string
@@ -91,6 +99,7 @@ type Gateway struct {
 	nonces     NonceStore
 	entry      *EntryGate
 	preflight  *Preflight
+	orders     OrderReader
 	newID      func() string
 
 	// inflight holds the in-process claim on a symbol for the duration of a
@@ -118,6 +127,7 @@ func New(opts Options) (*Gateway, error) {
 		nonces:     opts.Nonces,
 		entry:      opts.Entry,
 		preflight:  opts.Preflight,
+		orders:     opts.Orders,
 		newID:      opts.NewID,
 	}
 	if g.clk == nil {
@@ -206,16 +216,19 @@ func (o Outcome) Blocking() bool { return o.State != "" && !o.State.IsTerminal()
 // mutationPlan is the gateway's internal description of one mutation: everything
 // the journal, the Guardian check and the broker call each need, resolved once.
 type mutationPlan struct {
-	kind          journal.MutationKind
-	intentHash    string
-	market        string
-	symbol        string
-	side          string // "BUY" | "SELL"
-	orderType     string // "LIMIT" | "MARKET"
-	quantity      float64
-	price         float64
-	amount        float64 // amount-based (fractional buy) orders
-	currency      string
+	kind       journal.MutationKind
+	intentHash string
+	market     string
+	symbol     string
+	side       string // "BUY" | "SELL"
+	orderType  string // "LIMIT" | "MARKET"
+	quantity   float64
+	price      float64
+	amount     float64 // amount-based (fractional buy) orders
+	currency   string
+	// targetOrderID is the broker order a cancel or an amend acts on. It is an
+	// opaque token (openapi contracts no shape for `orderId`), so it is carried
+	// and stored exactly as received — trimming is only ever an emptiness test.
 	targetOrderID string
 	// raisesExposure marks a mutation that can increase risk, which is what makes
 	// a limit snapshot mandatory rather than merely checked.
@@ -271,7 +284,7 @@ func (g *Gateway) Cancel(ctx context.Context, req CancelRequest) (Outcome, error
 		quantity:      req.Order.Quantity,
 		price:         req.Order.Price,
 		currency:      strings.ToUpper(strings.TrimSpace(req.Order.Currency)),
-		targetOrderID: strings.TrimSpace(intent.OrderID),
+		targetOrderID: intent.OrderID,
 		// A cancel can only remove exposure.
 		raisesExposure: false,
 	}
@@ -302,7 +315,7 @@ func (g *Gateway) Amend(ctx context.Context, req AmendRequest) (Outcome, error) 
 		quantity:      quantity,
 		price:         price,
 		currency:      strings.ToUpper(strings.TrimSpace(req.Order.Currency)),
-		targetOrderID: strings.TrimSpace(intent.OrderID),
+		targetOrderID: intent.OrderID,
 		// An amend that raises quantity or price adds exposure to a live order,
 		// so it is measured against the snapshot exactly like a place.
 		raisesExposure: quantity > req.Order.Quantity || price > req.Order.Price,
@@ -386,9 +399,13 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 		return g.refuse(ctx, attempt, out, rejected)
 	}
 
-	// 3-5. Dispatch exactly once and settle from the classification.
+	// 3-5. Dispatch exactly once, confirm a created order id exists, and settle
+	//      from the classification. The round trip runs inside the journal's
+	//      dispatch (after MarkAcked, before Settle) because that is the only
+	//      window where an unconfirmable id can still become IN_DOUBT instead of
+	//      CONFIRMED.
 	var result domain.MutationResult
-	res, err := attempt.Dispatch(ctx, func(dctx context.Context, _ *journal.Attempt) journal.DispatchOutcome {
+	res, err := attempt.DispatchVerified(ctx, func(dctx context.Context, _ *journal.Attempt) journal.DispatchOutcome {
 		// Re-verified immediately before the call: the expiry only means
 		// something if it is checked at the last possible moment.
 		now := g.clk.Now()
@@ -407,7 +424,7 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, decision Guardi
 		var callErr error
 		result, callErr = plan.call(tctx)
 		return classifyMutation(tracker.State(), result, callErr)
-	})
+	}, g.roundTripFor(plan))
 	if err != nil {
 		return out, fmt.Errorf("execgw: settling the %s of %s: %w", plan.kind, plan.symbol, err)
 	}

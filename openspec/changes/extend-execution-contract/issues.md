@@ -83,3 +83,40 @@
   강한 픽스처다. **단언은 한 줄도 바꾸지 않았다**(버전 전이 + 알림·flatten 쓰기 가능).
 - 8.2 참고: 이 파일은 "기존 단언 변경 사전 열거" 목록에 없지만, 변경된 것은 픽스처 구성이며
   단언은 동일하다.
+
+## 2026-07-26 [observation] opaque 원문 저장 위반이 D7이 열거한 3개소 밖에 3곳 더 있다 (task 5.2)
+
+- 사실: D7은 "위반 3개소"로 `execgw/classify.go:149`·`journal/resolution.go:42·47·126`·
+  `execgw/indoubt.go:512·516`을 지목했고 5.2는 그 셋을 고쳤다. 같은 규칙("저장은 수신 원문
+  그대로, 비교는 바이트 동일")을 어기는 곳이 세 군데 더 있다:
+  - `journal/lineage.go:118` — `ResolveConfirmedWithLineage`가 attempt의 broker_order_id를
+    `TrimSpace`해서 쓴다. **방금 원문 저장으로 고친 `resolution.go`의 `ResolveConfirmed`와
+    같은 해소 쓰기 경로인데 파일이 달라 D7의 열거에서 빠졌다.** 그 결과 취소 해소는 원문,
+    정정 해소는 trim으로 저장하는 비대칭이 남아 있다. 같은 함수의 144-145행은 lineage edge의
+    parent/child 식별자도 trim한다.
+  - `journal/fills.go:173·385·393` — 체결 스냅샷·이벤트의 order_id를 trim해서 쓰고 trim해서
+    조회한다(쓰기·조회가 같은 규칙이라 현재 자기모순은 없지만, 원문 저장 경로에서 들어온
+    식별자와는 매칭되지 않는다).
+  - `filldetect/payload.go:84` — 관측 payload의 orderId를 trim해서 Snapshot에 담는다.
+- 이번 처리: **고치지 않았다.** 세 파일 모두 5.2의 파일 범위 밖이고, `fills.go`·`payload.go`는
+  5.3(EXECUTION_CORRECTION)이 동시에 편집하는 파일이다. 범위를 넘어 고치면 5.3과 충돌한다.
+- 후속 task 입력: **Manager 배정 필요**. `lineage.go:118`은 5.2가 만든 비대칭이므로 우선순위가
+  높다(정정 해소만 식별자를 변형해 저장한다). `fills.go`·`payload.go`는 5.3에 붙이는 것이
+  자연스럽다. 스펙 근거는 order-execution "브로커 식별자의 opaque 취급" — 저장 SHALL 원문,
+  비교 SHALL 바이트 동일.
+
+## 2026-07-26 [observation] round-trip 확인은 Gateway에 orders 리더가 배선돼야 동작한다 (task 5.2)
+
+- 사실: 스펙은 "생성 응답의 식별자는 상세조회 round-trip으로 실재를 확인하며(SHALL)"라고
+  쓴다. 확인 자체는 `execgw/roundtrip.go` + `journal.Attempt.DispatchVerified`(MarkAcked 후·
+  Settle 전)로 구현했으나, 읽기 주체가 `Options.Orders`(nil 허용)이므로 **배선되지 않은
+  Gateway는 P1과 동일하게 ack만으로 CONFIRMED**가 된다.
+- 판단: `Orders`를 필수로 만들면 P1부터 있던 Gateway 생성자 계약이 깨지고 5.2 범위 밖의
+  호출자(테스트 포함)가 전부 바뀐다. 기본값을 "확인 없음"으로 두는 대신 SHALL은 배선 쪽에
+  걸었다.
+- 후속 task 입력: **7.3**(Gateway 구성)이 `Orders: execgw.OfficialOrders{Client: …}`를 반드시
+  채워야 한다. 채우지 않으면 스펙 요구가 런타임에서 미충족이며, 7.5 인터록의 "Gateway 구성
+  확인" 항목에 이 필드를 포함하는 것이 자연스럽다.
+- §0.4 예산: place당 `GET /api/v1/orders/{orderId}` 1회 추가(취소·정정은 미적용 — 청산 경로에
+  왕복을 얹지 않는다, §0.3). retry matrix의 단건 조회 라인(`in-flight 주문당 3s마다 1회`)
+  대비 place 빈도가 훨씬 낮아 새 라인을 만들지 않는다.

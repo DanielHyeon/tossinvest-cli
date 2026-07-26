@@ -145,10 +145,16 @@ func policyRefusal(err error) (ReasonCode, bool) {
 // brokerOrderID picks the order number a mutation result is addressable by. An
 // amend reports the *new* order number in CurrentOrderID (the official API issues
 // a fresh id), a place reports OrderID.
+//
+// The chosen candidate is returned exactly as the broker sent it. `orderId` is an
+// opaque token — openapi contracts no shape, no prefix and no length for it — so
+// the only transformation allowed here is none. Trimming is used to decide
+// whether a candidate is a name at all, never to produce the value that gets
+// stored and later compared byte-for-byte.
 func brokerOrderID(res domain.MutationResult) string {
 	for _, candidate := range []string{res.CurrentOrderID, res.OrderID} {
-		if id := strings.TrimSpace(candidate); id != "" {
-			return id
+		if strings.TrimSpace(candidate) != "" {
+			return candidate
 		}
 	}
 	return ""

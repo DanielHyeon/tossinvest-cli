@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http/httptrace"
+	"strings"
 	"sync/atomic"
 )
 
@@ -48,6 +49,28 @@ type DispatchOutcome struct {
 // records exactly one dispatch per attempt.
 type DispatchFunc func(ctx context.Context, a *Attempt) DispatchOutcome
 
+// ExistenceCheck confirms that the order id a broker ack named exists at the
+// broker and belongs to this mutation's context.
+//
+// It runs between MarkAcked and Settle, which is the only window where "the ack
+// arrived but the order is not real" can still be turned into IN_DOUBT instead of
+// CONFIRMED. A non-nil error therefore does not mean "the order does not exist":
+// it means the creation was not confirmed, and the resolution procedure — not the
+// dispatch path — decides what happened (order-execution: "round-trip 실패·부재
+// 시 CONFIRMED로 종결하지 않고 IN_DOUBT로 남겨 해소 절차가 확정한다").
+//
+// The journal declares the shape and never implements it: reading the broker is
+// the gateway's business, and the journal holds no client.
+type ExistenceCheck func(ctx context.Context, brokerOrderID string) error
+
+// Reason codes the dispatch path writes on top of the lifecycle's own.
+const (
+	// ReasonAckRoundTripUnconfirmed: the broker acked with an order id that the
+	// detail read could not confirm — unreadable, absent, a different id, or an
+	// id that turned up in a conflicting account/symbol context.
+	ReasonAckRoundTripUnconfirmed = "ack_round_trip_unconfirmed"
+)
+
 // Result is the outcome of a journalled mutation.
 type Result struct {
 	AttemptID     string
@@ -89,7 +112,24 @@ func (j *Journal) Run(ctx context.Context, req PrepareRequest, dispatch Dispatch
 // Dispatch runs the second half of Run against an already-recorded attempt. It is
 // separate so a restart or an operator flow can resume an attempt that was
 // prepared by an earlier process.
+//
+// It performs no round-trip confirmation of the acked order id. Callers that can
+// read the broker back use DispatchVerified.
 func (a *Attempt) Dispatch(ctx context.Context, dispatch DispatchFunc) (Result, error) {
+	return a.DispatchVerified(ctx, dispatch, nil)
+}
+
+// DispatchVerified is Dispatch with a round-trip confirmation of the order id the
+// broker named.
+//
+// verify runs after MarkAcked and before Settle. That placement is the whole
+// point: MarkAcked is what makes the id durable (an ack we lose the id of is
+// unresolvable), and Settle is what would close the attempt as CONFIRMED. An
+// unconfirmed id therefore leaves a durably recorded IN_DOUBT attempt rather than
+// a CONFIRMED one that names an order nobody can find.
+//
+// A nil verify skips the round trip and behaves exactly like Dispatch.
+func (a *Attempt) DispatchVerified(ctx context.Context, dispatch DispatchFunc, verify ExistenceCheck) (Result, error) {
 	if dispatch == nil {
 		return Result{}, fmt.Errorf("%w: dispatch function is nil", ErrInvalidRequest)
 	}
@@ -123,7 +163,11 @@ func (a *Attempt) Dispatch(ctx context.Context, dispatch DispatchFunc) (Result, 
 		res.Final = StateFailedConfirmed
 
 	case DispatchAcked:
-		if outcome.BrokerOrderID == "" {
+		// Emptiness is judged after trimming; the value is stored untouched. The
+		// broker order id is an opaque token (openapi contracts no shape for
+		// `orderId`), so whitespace is not a name — but neither is it ours to
+		// strip off an id that does carry it.
+		if strings.TrimSpace(outcome.BrokerOrderID) == "" {
 			// An ack with no order number cannot be tracked or cancelled, so it
 			// is treated as doubt rather than success.
 			res.ReasonCode = ReasonAckWithoutOrderID
@@ -136,6 +180,20 @@ func (a *Attempt) Dispatch(ctx context.Context, dispatch DispatchFunc) (Result, 
 		}
 		if err := a.MarkAcked(ctx, outcome.BrokerOrderID); err != nil {
 			return res, err
+		}
+		if verify != nil {
+			if verifyErr := verify(ctx, outcome.BrokerOrderID); verifyErr != nil {
+				res.ReasonCode = ReasonAckRoundTripUnconfirmed
+				res.Detail = fmt.Sprintf(
+					"the broker acknowledged order %q but reading it back did not confirm it: %v",
+					outcome.BrokerOrderID, verifyErr)
+				res.Err = verifyErr
+				if err := a.MarkInDoubt(ctx, res.ReasonCode, res.Detail); err != nil {
+					return res, err
+				}
+				res.Final = StateInDoubt
+				break
+			}
 		}
 		res.ReasonCode = firstNonEmpty(outcome.ReasonCode, ReasonBrokerAcknowledged)
 		if err := a.Settle(ctx, StateConfirmed, res.ReasonCode, outcome.Detail); err != nil {

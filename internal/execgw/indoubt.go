@@ -513,7 +513,11 @@ func parseOrderFacts(raw json.RawMessage) (orderFacts, error) {
 		return orderFacts{}, fmt.Errorf("%w: no orderId", ErrMalformedOrder)
 	}
 	facts := orderFacts{
-		OrderID: strings.TrimSpace(payload.OrderID),
+		// Verbatim: `orderId` is opaque (openapi contracts no shape), so it is
+		// stored and compared exactly as received. Symbol, side and status are
+		// not identifiers — they are enum-ish fields the matcher compares
+		// case-insensitively — so normalising those is safe and stays.
+		OrderID: payload.OrderID,
 		Symbol:  strings.ToUpper(strings.TrimSpace(payload.Symbol)),
 		Side:    strings.ToUpper(strings.TrimSpace(payload.Side)),
 		Status:  strings.ToUpper(strings.TrimSpace(payload.Status)),
@@ -573,7 +577,7 @@ func newMatcher(intent journal.Intent, rec journal.AttemptRecord, cfg ResolveCon
 		side:          strings.ToUpper(strings.TrimSpace(intent.Side)),
 		quantity:      quantity,
 		price:         price,
-		targetOrderID: strings.TrimSpace(rec.TargetOrderID),
+		targetOrderID: rec.TargetOrderID,
 	}
 	// The submission window comes from the attempt's own dispatch timestamp,
 	// which is why the fingerprint hash does not carry it: it is knowable at

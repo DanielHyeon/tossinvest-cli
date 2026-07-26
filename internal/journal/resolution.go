@@ -38,13 +38,20 @@ const (
 //
 // The order id is mandatory: "it exists but we do not know its number" is not a
 // resolution, because nothing can later cancel or reconcile it.
+//
+// It is stored exactly as the broker sent it. `orderId` is an opaque token —
+// openapi contracts no shape for it — so trimming, case-folding or any other
+// normalisation on the way in would store an identifier the broker never issued,
+// and a later byte comparison against the real one would silently fail to match.
+// Trimming survives only in the emptiness check, where it asks "is there a name
+// here at all".
 func (a *Attempt) ResolveConfirmed(ctx context.Context, brokerOrderID, reasonCode, detail string) error {
 	if strings.TrimSpace(brokerOrderID) == "" {
 		return fmt.Errorf("%w: confirming an attempt requires the broker order id", ErrInvalidRequest)
 	}
 	return a.transition(ctx, StateConfirmed, transitionOpts{
 		from:          []AttemptState{StateInDoubt, StateAcked},
-		brokerOrderID: strings.TrimSpace(brokerOrderID),
+		brokerOrderID: brokerOrderID,
 		reasonCode:    firstNonEmpty(reasonCode, ReasonResolvedFound),
 		detail:        detail,
 		setSettled:    true,
@@ -131,9 +138,11 @@ func (j *Journal) OperatorResolve(ctx context.Context, attemptID string, to Atte
 	if err != nil {
 		return err
 	}
+	// Verbatim again: the operator typed or pasted what the broker shows, and it
+	// has to compare byte-for-byte with what the broker returns later.
 	return attempt.transition(ctx, to, transitionOpts{
 		from:          []AttemptState{StateUnresolvedInDoubt},
-		brokerOrderID: strings.TrimSpace(brokerOrderID),
+		brokerOrderID: brokerOrderID,
 		reasonCode:    ReasonOperatorResolved,
 		detail:        fmt.Sprintf("operator %s: %s", strings.TrimSpace(operator), strings.TrimSpace(note)),
 		setSettled:    true,

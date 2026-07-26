@@ -53,8 +53,11 @@ func (r *Resolver) resolveCancel(
 	if r.Order == nil {
 		return r.park(ctx, attempt, res, "no single-order reader is configured, so the original order cannot be inspected")
 	}
-	target := strings.TrimSpace(rec.TargetOrderID)
-	if target == "" {
+	// Verbatim: the target is an opaque broker identifier, so it is passed to the
+	// broker and compared byte-for-byte exactly as it was recorded. Trimming only
+	// answers "is there an id at all".
+	target := rec.TargetOrderID
+	if strings.TrimSpace(target) == "" {
 		return r.park(ctx, attempt, res, "the cancel attempt records no target order id")
 	}
 
@@ -167,8 +170,8 @@ func (r *Resolver) resolveAmend(
 	if r.Order == nil {
 		return r.park(ctx, attempt, res, "no single-order reader is configured, so the original order cannot be inspected")
 	}
-	target := strings.TrimSpace(rec.TargetOrderID)
-	if target == "" {
+	target := rec.TargetOrderID
+	if strings.TrimSpace(target) == "" {
 		return r.park(ctx, attempt, res, "the amend attempt records no target order id")
 	}
 	successorMatcher, err := newMatcher(intent, rec, cfg)
