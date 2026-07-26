@@ -113,3 +113,17 @@
   고정하는 방식과 동일하다. v6→v7은 새 파일 `migration_v7_test.go`가 맡는다.
 - 골든 목록: `schema_test.go`의 wantTables·wantColumns에 `position_adoptions`와
   `positions.adoption_id` 추가, `core_domain_test.go`의 STRICT 목록에 `position_adoptions` 추가.
+
+## Manager 판정 (구현 완료, 2026-07-27)
+
+독립 검증: `make gate` 재실행 GATE PASS(6/6), 전체 스위트 -race **2789**/50pkg 0 FAIL 재실행, set-once SQL(`adoption_id IS NULL` 술어)·자격 진리표·완전성 규칙(귀속 매도 수량 == 편입 수량, 미달·초과 모두 행 없음)·Verified 술어(reconcileloop.go:258)·pct 정밀도 처리 직접 확인. 편차 9건 전건 승인:
+
+- **SetFloat64 정밀도 버그 발견·수정**: 승인 — 운영자가 쓴 십진수를 이진 double 그대로 쓰면 합성 손절이 66499.999…가 되는 실결함. FormatFloat 왕복은 옳은 처리.
+- **관측 시각을 요청 시점으로 스탬프**: 승인 — 재시도된 읽기가 묵은 가격을 "0초 전"으로 보고하는 것을 막는 보수 방향.
+- **config→exitpolicy import**(pct 근거 단일 출처): 승인 — 정책 근거를 가진 수치의 복제 금지, 순환 없음 확인.
+- **완전성 규칙으로 flatten 심볼 범위 갭 해소**: 승인 — 스키마 보강 없이 over/under-attribution 양쪽을 "행 없음"으로 수렴시키고 라운드 5 교차 케이스까지 한 술어로 처리. 빈 매도 leg 동결 금지 유지.
+- **Normal 등급 이벤트**(편입·외부 종결): 승인 — 소유자의 수동 매매는 오동작이 아니다.
+- migration v6 테스트 고정·Alerter 메서드 추가·ClosedExitState 반환·콘솔 가드 후속 교체·HoldingsRaw 동일 요청: 전건 승인.
+- found-not-fixed: 구동 루프 프로덕션 호출자 부재(2c가 엔진 런타임 배선 시 함께 — 기존 상태와 일관), alertUnmanaged 전이 상태 구분의 잔여 over-alert 가능성(exit 루프는 이 빌드에서 기동 불가·2c 후속 질문으로 기록) — 승인.
+
+**GATE PASS 확정 · archive 진행.** 실효는 여전히 게이트 ON(2c 후) + adoption.enabled 사람 승인(§0.7) 이후 — 코드는 전부 dark.
