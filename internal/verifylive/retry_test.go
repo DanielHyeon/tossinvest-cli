@@ -67,8 +67,8 @@ func TestARateLimitedReadGivesUpInsideTheBudget(t *testing.T) {
 	if _, err := h.run(Options{}); err != nil {
 		t.Fatalf("run: %v", err)
 	}
-	if got := broker.countRequests("GET /holdings"); got != 1+readRetryExtraAttempts {
-		t.Errorf("GET /holdings was sent %d time(s), want %d", got, 1+readRetryExtraAttempts)
+	if got := broker.countRequests("GET /holdings"); got != 1+ReadRetryExtraAttempts {
+		t.Errorf("GET /holdings was sent %d time(s), want %d", got, 1+ReadRetryExtraAttempts)
 	}
 	if got := h.verdict(StepSellableBaseline); got != VerdictFail {
 		t.Errorf("verdict = %s, want fail — the rate limit is a measurement result, not a crash", got)

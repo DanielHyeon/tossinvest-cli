@@ -55,6 +55,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -562,27 +563,83 @@ func buildVerifyBroker(root *rootOptions) (verifylive.Broker, string, error) {
 	}
 	client := official.New(*creds, tokenFile)
 
-	accountRef, err := resolveVerifyAccount(context.Background(), client)
+	ref, seq, err := resolveVerifyAccount(context.Background(), client, sleepFor)
 	if err != nil {
 		return nil, "", err
 	}
-	return client, accountRef, nil
+	if seq == 0 {
+		// The reference is usable and the sequence is not. The client falls back to
+		// its own lazy resolution, which is what every other command does.
+		return client, ref, nil
+	}
+	// Rebuilt with the sequence already known, so no step triggers the lazy
+	// /api/v1/accounts resolution on its first account-scoped GET. That resolution
+	// is the call that came back 429 three times on 2026-07-26 and cost the run
+	// three steps (measurements.md M4); it was also redundant, because the read
+	// above already had the answer. The token is cached on disk, so the second
+	// client re-uses it rather than exchanging again.
+	return official.New(*creds, tokenFile, official.WithAccountSeq(seq)), ref, nil
 }
 
 // resolveVerifyAccount names the account every prompt and every record line will
-// carry (masked). Without it there is nothing to attest about, so it is a hard
-// failure rather than a blank field.
+// carry (masked), and returns the sequence number the same entry is keyed by.
+//
+// Both come from one entry on purpose. The reference is what the evidence says
+// was measured and the sequence is what the X-Tossinvest-Account header selects;
+// taking them from different accounts would produce a record that names one
+// account and measured another. seq is 0 when the entry's identifier is not a
+// number the header can carry, which is not fatal — the client resolves it
+// lazily, exactly as it did before.
+//
+// Without a reference there is nothing to attest about, so that half is a hard
+// failure rather than a blank field. A 429 is retried under verifylive's read
+// policy: this is the read that was rate limited, and failing here costs the whole
+// run before a person has been asked anything.
 func resolveVerifyAccount(ctx context.Context, client interface {
 	Accounts(context.Context) ([]domain.Account, error)
-}) (string, error) {
-	accounts, err := client.Accounts(ctx)
-	if err != nil {
-		return "", fmt.Errorf("verify: the account could not be identified: %w", err)
-	}
-	for _, a := range accounts {
-		if ref := strings.TrimSpace(a.DisplayName); ref != "" {
-			return ref, nil
+}, sleep func(context.Context, time.Duration) error) (string, int, error) {
+	var (
+		accounts []domain.Account
+		err      error
+	)
+	for extra := 0; ; extra++ {
+		accounts, err = client.Accounts(ctx)
+		if err == nil || !errors.Is(err, official.ErrRateLimited) || extra >= verifylive.ReadRetryExtraAttempts {
+			break
+		}
+		if sleepErr := sleep(ctx, verifylive.ReadRetryBackoff(extra)); sleepErr != nil {
+			break
 		}
 	}
-	return "", errors.New("verify: the broker returned no account number")
+	if err != nil {
+		return "", 0, fmt.Errorf("verify: the account could not be identified: %w", err)
+	}
+	for _, a := range accounts {
+		ref := strings.TrimSpace(a.DisplayName)
+		if ref == "" {
+			continue
+		}
+		seq, convErr := strconv.Atoi(strings.TrimSpace(a.ID))
+		if convErr != nil || seq <= 0 {
+			seq = 0
+		}
+		return ref, seq, nil
+	}
+	return "", 0, errors.New("verify: the broker returned no account number")
+}
+
+// sleepFor is the retry wait, cancellable. It is a variable so a test can drive
+// the backoff without spending it.
+var sleepFor = func(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return ctx.Err()
+	}
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }

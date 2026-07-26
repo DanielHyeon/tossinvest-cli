@@ -38,22 +38,27 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
-// readRetryExtraAttempts is how many more times a read-only call is sent after a
+// ReadRetryExtraAttempts is how many more times a read-only call is sent after a
 // 429. Three attempts in total.
 //
 // Two, because the ceiling has to be a number somebody can multiply by the number
 // of reads in a run and still recognise as a bounded delay. Until 1.3 measures the
 // broker's actual window, more attempts would be guessing with the operator's rate
 // budget.
-const readRetryExtraAttempts = 2
+//
+// Exported with ReadRetryBackoff so the one read that happens before a Runner
+// exists — the command's account identity lookup, which is the call that was
+// actually rate limited on 2026-07-26 — obeys the same policy instead of a second
+// copy of it.
+const ReadRetryExtraAttempts = 2
 
-// readRetryBackoff is the wait before extra attempt n, counted from zero.
+// ReadRetryBackoff is the wait before extra attempt n, counted from zero.
 //
 // Fifteen and thirty seconds. The observed burst was three failures inside 300ms,
 // so anything on a sub-second scale would simply reproduce it; these are chosen to
 // step over a window measured in tens of seconds without turning a stalled read
 // into a stalled afternoon.
-func readRetryBackoff(extra int) time.Duration {
+func ReadRetryBackoff(extra int) time.Duration {
 	if extra <= 0 {
 		return 15 * time.Second
 	}
@@ -93,12 +98,12 @@ func readRetry[T any](
 			sr.logCall(endpoint, req, started, r.now(), resp, err)
 		}
 
-		if !errors.Is(err, official.ErrRateLimited) || extra >= readRetryExtraAttempts {
+		if !errors.Is(err, official.ErrRateLimited) || extra >= ReadRetryExtraAttempts {
 			return out, err
 		}
-		wait := readRetryBackoff(extra)
+		wait := ReadRetryBackoff(extra)
 		fmt.Fprintf(r.out, "  %s was rate limited; waiting %s and reading it again (%d of %d)\n",
-			endpoint, wait, extra+1, readRetryExtraAttempts)
+			endpoint, wait, extra+1, ReadRetryExtraAttempts)
 		if sleepErr := r.sleep(ctx, wait); sleepErr != nil {
 			// The operator interrupted, or the deadline passed. The rate limit is
 			// still the reason the read has no answer, so that is what is returned.
