@@ -45,6 +45,7 @@
 | 최소 RR | **미달만 거부** — 정확히 2.0은 통과 | "미달"의 문언. 유리수 정확 비교라 경계가 부동소수점 산물이 아니다 |
 | 재진입 쿨다운 | 경과 시각 도달이면 통과 | 초 해상도 시계에서 쿨다운이 무한정 늘어나지 않게 |
 | 계좌자본 | 0 이하면 즉시 차단 | risk-management 명문 |
+| 집계 입력(총 노출·일손실) | **음수는 비교하지 않고 거부**(`INPUT_UNAVAILABLE`) | 둘 다 생산자 계약상 크기다(`riskcalc.DailyLoss`는 `max(0, −net)`). 부호 있는 손익을 넘기면 손실 난 날이 "한도 여유"로 읽힌다 — 이 파일에서 유일하게 게이트를 여는 방향의 입력 오류라 이름으로 막는다 |
 
 ## 3. 이식 분류표
 
@@ -122,8 +123,5 @@ risk-management의 열거를 코드 위치와 함께 옮긴다.
 
 | task | 채울 것 |
 |---|---|
-| 2.3 | `AccountState`의 총계·현금·allowlist·재진입 값을 실제 출처(riskcalc 집계, journal 당일 이력, 설정 allowlist)에 배선 |
-| 2.4 | `EntryBlockedLatch`/`EntryBlockedReason`을 execgw EntryGate 사유에 매핑(중복 판정 없음) |
-| 3.1 | `AccountState.Mode`를 journal `operating_modes` 최신 행에 배선(`ORDER BY created_at DESC, rowid DESC`) |
-| 4.1 | 체인 ALLOW → `RecordDecisionAndReserve` → Gateway. `Policy`를 감사된 설정 한도에 배선 |
+| 4.1 | 체인 ALLOW → `RecordDecisionAndReserve` → Gateway. `Policy`를 감사된 설정 한도에, `AccountState`의 총계·현금·재진입·allowlist 값을 실제 출처(riskcalc 집계, journal 당일 이력, 설정 allowlist)에 배선 |
 | 4.2 | `Policy`를 `execgw.Limits`(Set 비트)로 진술하는 `ExposureLimiter` |

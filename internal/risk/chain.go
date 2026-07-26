@@ -448,7 +448,7 @@ func checkOpenExposure(in Input) Decision {
 	if !d.Allowed {
 		return d
 	}
-	existing, err := moneyIn("open exposure", in.Account.OpenExposure, entry.Currency)
+	existing, err := magnitudeIn("open exposure", in.Account.OpenExposure, entry.Currency)
 	if err != nil {
 		return refuse(ReasonInputUnavailable, err.Error())
 	}
@@ -496,7 +496,7 @@ func checkDailyLoss(in Input) Decision {
 			equityAmount, currency))
 	}
 
-	lossAmount, err := moneyIn("daily realised loss", in.Account.DailyRealizedLoss, currency)
+	lossAmount, err := magnitudeIn("daily realised loss", in.Account.DailyRealizedLoss, currency)
 	if err != nil {
 		return refuse(ReasonInputUnavailable, err.Error())
 	}
@@ -595,6 +595,35 @@ func exceedsInclusiveLimit(value riskcalc.Money, limit riskcalc.Money) (bool, De
 		return false, refuse(ReasonInputUnavailable, err.Error())
 	}
 	return cmp > 0, allow()
+}
+
+// magnitudeIn returns an aggregate valuation, having checked what moneyIn checks
+// and one thing more: that it is not negative.
+//
+// The extra rule closes a fail-open at the package boundary. Both aggregates the
+// chain measures against are **magnitudes** by their producer's contract —
+// riskcalc.GrossLongExposure sums non-negative terms, and riskcalc.DailyLoss
+// returns `max(0, −net)` (aggregate.go: `loss := 0.0; if net < 0 { loss = -net }`).
+// A caller that instead passed the signed P&L would hand a day that lost 100,000
+// over as "−100,000", and every comparison in this file would read that as a day
+// well inside its limit. That is the one input error here that opens the gate
+// instead of closing it, so it is refused by name rather than compared.
+func magnitudeIn(label string, m riskcalc.Money, want string) (string, error) {
+	amount, err := moneyIn(label, m, want)
+	if err != nil {
+		return "", err
+	}
+	value, err := parseDecimal(label, amount)
+	if err != nil {
+		return "", err
+	}
+	if value.Sign() < 0 {
+		return "", fmt.Errorf(
+			"%s is %s %s; this aggregate is a magnitude, and a negative one means signed P&L was passed where a loss was expected — "+
+				"comparing it would read a losing day as an unused limit",
+			label, amount, want)
+	}
+	return amount, nil
 }
 
 // moneyIn returns an amount, having checked that it exists and is expressed in

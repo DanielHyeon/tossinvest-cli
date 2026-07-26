@@ -372,6 +372,33 @@ func TestZeroOrNegativeEquityBlocksImmediately(t *testing.T) {
 	}
 }
 
+func TestNegativeAggregatesAreRefusedRatherThanCompared(t *testing.T) {
+	// The aggregates are magnitudes by their producer's contract
+	// (riskcalc.DailyLoss returns max(0, −net); GrossLongExposure sums
+	// non-negative terms). A caller that passed signed P&L instead would hand a
+	// day that lost 100,000 over as "−100,000" — and every comparison in the
+	// chain would read that as a limit with room left. It is the one input error
+	// in this file that opens the gate, so it fails closed by name.
+	loss := entryInput()
+	loss.Account.AccountEquity = krw("100000000")
+	loss.Account.DailyRealizedLoss = krw("-100000")
+	got := requireRefused(t, loss, ReasonInputUnavailable)
+	if !strings.Contains(got.Detail, "-100000") {
+		t.Fatalf("detail %q does not show the value it refused", got.Detail)
+	}
+
+	exposure := entryInput()
+	exposure.Account.OpenExposure = krw("-5000000")
+	requireRefused(t, exposure, ReasonInputUnavailable)
+
+	// Zero is not negative: an account with nothing open and a day with no loss
+	// are the ordinary case, and they still pass.
+	clean := entryInput()
+	clean.Account.OpenExposure = krw("0")
+	clean.Account.DailyRealizedLoss = krw("0")
+	requireAllowed(t, clean)
+}
+
 func TestDuplicateOrderIsRefused(t *testing.T) {
 	in := entryInput()
 	in.Account.DuplicateOrder = true

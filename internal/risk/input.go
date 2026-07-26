@@ -128,10 +128,12 @@ type AccountState struct {
 	// CashAvailable is the account's spendable cash.
 	CashAvailable riskcalc.Money
 	// OpenExposure is riskcalc.GrossLongExposure's result for the account,
-	// excluding this intent.
+	// excluding this intent. A magnitude: negative is refused, not compared.
 	OpenExposure riskcalc.Money
 	// DailyRealizedLoss is riskcalc.DailyLoss's result: a non-negative
-	// magnitude, after costs.
+	// magnitude, after costs. Signed P&L here would read a losing day as an
+	// unused limit, so the chain refuses a negative value rather than comparing
+	// it (chain.go magnitudeIn).
 	DailyRealizedLoss riskcalc.Money
 	// AccountEquity is the capital the daily-loss ratio is measured against.
 	AccountEquity riskcalc.Money
