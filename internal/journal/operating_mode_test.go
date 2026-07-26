@@ -389,6 +389,87 @@ func TestRestoringANormalAccountProjectsTheReleaseToo(t *testing.T) {
 	}
 }
 
+// --- announcement (task 3.3) ------------------------------------------------------
+
+// failingAnnouncer stands in for an alert path that cannot even make the alert
+// durable — a full disk under the outbox, say. (A merely *undelivered* alert is
+// not an error here: obs.Notifier handles that by latching the gate, and
+// internal/obs/mode_test.go covers it.)
+type failingAnnouncer struct {
+	calls int
+	err   error
+}
+
+func (a *failingAnnouncer) AnnounceOperatingMode(_ context.Context, _ string, _ OperatingModeRecord) error {
+	a.calls++
+	return a.err
+}
+
+// TestAFailedAnnouncementDoesNotUndoTheTransition.
+//
+// The tightening is durable and projected before anything is announced, and it
+// stays that way: rolling a mode change back because nobody could be told about
+// it would make the safety mechanism depend on the notification transport, which
+// is the one dependency it must not have. The caller learns through a distinct
+// sentinel so it does not retry a transition that already happened.
+func TestAFailedAnnouncementDoesNotUndoTheTransition(t *testing.T) {
+	j, projector := modeJournal(t)
+	ctx := context.Background()
+	announcer := &failingAnnouncer{err: errors.New("the outbox disk is full")}
+
+	rec, changed, err := j.EscalateOperatingMode(ctx, "acct-1", ModeTriggerDailyLossLimit, announcer)
+	if !errors.Is(err, ErrModeAnnouncementFailed) {
+		t.Fatalf("err = %v, want ErrModeAnnouncementFailed", err)
+	}
+	if !changed || rec.Mode != ModeEntryBlocked {
+		t.Fatalf("rec=%+v changed=%v — the transition happened and must be reported as such", rec, changed)
+	}
+	if got := currentMode(t, j, "acct-1"); got.Mode != ModeEntryBlocked {
+		t.Fatalf("mode = %s, want the tightening to stand", got.Mode)
+	}
+	if seen := projector.records(); len(seen) != 1 || !seen[0].BlocksEntry() {
+		t.Fatalf("projected %+v, want the gate latched despite the announcement", seen)
+	}
+}
+
+func TestANoOpTransitionIsNotAnnounced(t *testing.T) {
+	j, _ := modeJournal(t)
+	ctx := context.Background()
+	announcer := &failingAnnouncer{}
+
+	if _, changed, err := j.EscalateOperatingMode(ctx, "acct-1",
+		ModeTriggerDailyLossLimit, announcer); err != nil || !changed {
+		t.Fatalf("first escalation: changed=%v err=%v", changed, err)
+	}
+	if announcer.calls != 1 {
+		t.Fatalf("announcements = %d, want 1", announcer.calls)
+	}
+	if _, changed, err := j.EscalateOperatingMode(ctx, "acct-1",
+		ModeTriggerCredentialRejected, announcer); err != nil || changed {
+		t.Fatalf("second escalation: changed=%v err=%v", changed, err)
+	}
+	if announcer.calls != 1 {
+		t.Fatalf("announcements = %d; a transition that did not happen was announced", announcer.calls)
+	}
+}
+
+// TestARefusedTransitionIsNotAnnounced: the announcement is downstream of the
+// commit, so a request the rules refused never reaches it.
+func TestARefusedTransitionIsNotAnnounced(t *testing.T) {
+	j, _ := modeJournal(t)
+	announcer := &failingAnnouncer{}
+
+	if _, _, err := j.TransitionOperatingMode(context.Background(), TransitionModeRequest{
+		AccountRef: "acct-1", Mode: ModeHaltAll, Actor: ModeActorAuto,
+		Cause: ModeTriggerDailyLossLimit, Announcer: announcer,
+	}); !errors.Is(err, ErrHaltAllIsNeverAutomatic) {
+		t.Fatalf("err = %v", err)
+	}
+	if announcer.calls != 0 {
+		t.Fatalf("announcements = %d, want none for a refused transition", announcer.calls)
+	}
+}
+
 func TestModeProjectorIsBoundOnce(t *testing.T) {
 	j := openTestJournal(t)
 	if err := j.SetModeProjector(nil); !errors.Is(err, ErrInvalidRequest) {
@@ -399,6 +480,80 @@ func TestModeProjectorIsBoundOnce(t *testing.T) {
 	}
 	if err := j.SetModeProjector(&recordingProjector{}); !errors.Is(err, ErrInvalidRequest) {
 		t.Fatalf("rebinding = %v, want a refusal", err)
+	}
+}
+
+// --- the shared read surface (task 3.3) --------------------------------------------
+
+// TestTheSnapshotIsWhatThreeConsumersRead: 모드 스냅샷 배선(Gateway·Guardian·
+// flatten 동일 뷰).
+//
+// Each of the three asks a different question of the same value, and the point
+// of one surface is that they cannot end up with three answers about one account.
+func TestTheSnapshotIsWhatThreeConsumersRead(t *testing.T) {
+	j, _ := modeJournal(t)
+	ctx := context.Background()
+	const account = "acct-1"
+
+	if _, _, err := j.TransitionOperatingMode(ctx, TransitionModeRequest{
+		AccountRef: account, Mode: ModeHaltAll, Actor: ModeActorOperator,
+		Cause: "operator halted after an incident", Auditor: &recordingAuditor{},
+	}); err != nil {
+		t.Fatalf("entering HALT_ALL: %v", err)
+	}
+	snapshot := currentMode(t, j, account)
+
+	// Gateway: may this submission raise exposure?
+	if snapshot.Allows(SafetyClassExposureRaising) || !snapshot.BlocksEntry() {
+		t.Fatal("HALT_ALL must refuse EXPOSURE_RAISING")
+	}
+	// Guardian: the chain's mode rung reads the same string, and it is one the
+	// chain recognises (internal/risk's three constants are these three).
+	if _, known := ModeRank(snapshot.Mode); !known {
+		t.Fatalf("mode %q is not one the chain can read", snapshot.Mode)
+	}
+	// flatten: 수동 flatten-all은 모든 모드에서 통과한다(§0.3).
+	if !snapshot.Allows(SafetyClassRiskReducing) {
+		t.Fatal("HALT_ALL refused a risk-reducing mutation")
+	}
+	// …and the surface carries the provenance an operator needs, so none of the
+	// three has to go and join the history itself.
+	if snapshot.Actor != ModeActorOperator || snapshot.Cause == "" || snapshot.Since.IsZero() {
+		t.Fatalf("snapshot %+v does not say who, why and when", snapshot)
+	}
+}
+
+// TestFlattenIsNeverGatedByTheMode is §0.3 at the saga's own layer: the flatten
+// record does not consult the mode, in any mode, and a flatten started before a
+// HALT_ALL keeps running through it.
+func TestFlattenIsNeverGatedByTheMode(t *testing.T) {
+	ctx := context.Background()
+	for _, mode := range []string{ModeNormal, ModeEntryBlocked, ModeHaltAll} {
+		t.Run(mode, func(t *testing.T) {
+			j, _ := modeJournal(t)
+			if mode != ModeNormal {
+				if _, _, err := j.TransitionOperatingMode(ctx, TransitionModeRequest{
+					AccountRef: "acct-1", Mode: mode, Actor: ModeActorOperator,
+					Cause: "test fixture", Auditor: &recordingAuditor{},
+				}); err != nil {
+					t.Fatalf("reaching %s: %v", mode, err)
+				}
+			}
+			saga, err := j.StartFlatten(ctx, FlattenSaga{ID: "fl-1", AccountRef: "acct-1",
+				Reason: "operator flatten", Operator: "sre-1"})
+			if err != nil {
+				t.Fatalf("in %s: StartFlatten: %v", mode, err)
+			}
+			if !saga.Active() {
+				t.Fatalf("in %s: the saga did not start", mode)
+			}
+			if _, err := j.AddFlattenStep(ctx, FlattenStep{
+				SagaID: saga.ID, Kind: FlattenStepLiquidate, Market: "kr", Symbol: "005930",
+				Side: "SELL", Quantity: "9", State: FlattenStepPending,
+			}); err != nil {
+				t.Fatalf("in %s: AddFlattenStep: %v", mode, err)
+			}
+		})
 	}
 }
 

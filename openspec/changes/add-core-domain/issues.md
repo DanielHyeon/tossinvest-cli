@@ -365,6 +365,111 @@
 - 검증: `TestAnExternalHoldingOnAClosedSymbolOpensTheNextInstance`,
   `TestClassifyNamesTheProvenance`, `TestAnAdjustmentToZeroClosesTheInstance`.
 
+## 2026-07-26 [safe local] 집계 입력의 음수는 비교하지 않고 거부 (task 2.3)
+
+- 사실: 2.1/2.2 커밋이 2.3의 검사(크기·현금·allowlist·재진입·총계·중복)까지 함께 실장했고,
+  스펙 표와 대조한 결과 순서·경계·사유 코드는 전부 일치했다. 2.3에서 새로 필요한 코드는
+  하나뿐이었다.
+- 문제: `AccountState.OpenExposure`·`DailyRealizedLoss`는 생산자 계약상 **크기**다
+  (`riskcalc.DailyLoss`는 `loss := 0.0; if net < 0 { loss = -net }`, aggregate.go:252-256).
+  그런데 체인은 그것을 검사하지 않고 `WithinLimit`에 넘긴다. 호출자가 부호 있는 손익을
+  넘기면 10만원 잃은 날이 `-100000`으로 도착하고, 절대·비율 두 비교가 모두 "한도 여유"로
+  읽는다 — 이 체인에서 유일하게 게이트를 여는 방향의 입력 오류다.
+- 이번 처리: `magnitudeIn`(moneyIn + 음수 거부)을 두 집계 입력에 적용, `INPUT_UNAVAILABLE`.
+  0은 통과한다(개방 없음·손실 없음이 정상 케이스). 경계 규칙표(docs/guardian-chain.md §2)에
+  행 추가.
+- 검증: `TestNegativeAggregatesAreRefusedRatherThanCompared`.
+
+## 2026-07-26 [safe local] 진입 latch는 execgw가 생산하고 체인은 소비만 한다 (task 2.4)
+
+- 사실: 태스크는 "기존 EntryGate 사유 매핑, 중복 판정 없음"을 요구한다. 스펙이 부르는 네 조건
+  (401/403·SLO·RECONCILE·recovery)을 `internal/risk`가 다시 유도하면 게이트 규칙의 사본이
+  생기고, 사본은 해제 규칙이 사유마다 다르기 때문에(자동 해제/운영자 전용/심볼 범위) 정확히
+  중요한 날에 갈라진다.
+- 이번 처리: `execgw.(*EntryGate).EntryLatchFor(market, symbol)`가 `CheckEntryFor` — 봉인된
+  제출 시퀀스가 부르는 그 호출 — 의 답을 체인의 두 평문 값으로 옮긴다. `internal/risk`는
+  execgw를 import하지 않는다(그러면 journal이 체인 뒤로 딸려 들어온다).
+- 파일 배치 편차: 태스크는 `internal/execgw/retry.go`를 지목했으나 신규
+  `internal/execgw/entrylatch.go`에 두었다 — retry.go는 재시도 매트릭스 파일이고, 2.4의
+  비중복 논거를 그 파일 헤더에 섞으면 둘 다 읽기 어려워진다. 3.1의 투영도 같은 이유로
+  `modegate.go`.
+- **열거 밖 사유도 전달한다**: 체인이 게이트 사유의 부분집합만 보면 Guardian이 허용한 의도를
+  Gateway가 곧바로 거부하고, 그 사이에 결정·예약 왕복이 낀다. 신선도·flatten·IN_DOUBT·
+  알림 미전달도 같은 값으로 도착한다.
+- 검증: `TestEveryEntryBlockingConditionReachesTheChain`(네 조건을 production 경로로 발생),
+  `TestTheLatchSurfaceNeverDisagreesWithTheGate`(2^5 조합 — 사유·detail이 게이트와 동일),
+  `TestTheChainNeverRederivesTheLatch`.
+
+## 2026-07-26 [safe local] 모드 전환은 journal이 소유하고 게이트가 구현한다 (task 3.1)
+
+- 사실: 스펙은 "모드 전환 = journal 영속 + EntryGate 계좌 latch 투영"을 SHALL로 적는다.
+  두 패키지에 걸친 요구라 소유자를 정해야 했고, 방향은 이미 정해져 있다(execgw → journal).
+- 이번 처리: journal이 `ModeProjector` 인터페이스(1메서드)를 들고 `TransitionOperatingMode`가
+  커밋 후 호출한다. `*execgw.EntryGate`가 구현체다. 공개 API에 "투영 없이 append"도
+  "append 없이 투영"도 없다 — 전자는 게이트가 모르는 강화를, 후자는 재시작이 복원할 수 없는
+  차단을 남긴다. 2a의 `ReservationAuditor` 인터페이스와 같은 모양이다.
+- **순서는 커밋 → 투영**이고 근거는 완화 방향이다: 투영이 먼저면 근거 행이 durable해지기 전에
+  latch가 풀리고, 그 사이 크래시는 "게이트는 열렸는데 journal은 ENTRY_BLOCKED"로 복귀한다.
+  반대 방향(강화 후 미투영)은 한 프로세스 안 마이크로초 창이고 `RestoreOperatingModeProjection`이
+  기동 때 닫는다.
+- `latchOrder` 말미에 추가(관례: append). 앞의 사유들은 운영자가 고칠 구체적 결함이고 모드는
+  대개 그 결과이므로, 원인을 먼저 보여주는 것이 조치 가능한 순서이기도 하다. 체인은 어차피
+  모드 단계(2)가 latch 단계(3)보다 앞이라 `OPERATING_MODE_BLOCKED`로 보고한다.
+- 검증: `TestAnAutomaticTighteningRefusesTheNextPlace`(게이트웨이 경유),
+  `TestTheRestartRebuildsTheModeLatch`, `TestModeClassTableIsComplete`(9셀 + fail-closed 4).
+
+## 2026-07-26 [safe local] 트리거 목표가 현재 모드보다 느슨하면 오류가 아니라 no-op (task 3.1/3.2)
+
+- 사실: "동시 적용 시 보수 우선(SHALL)"과 "자동 강화는 즉시(SHALL)"가 한 요청에서 만나는
+  경우가 있다 — 운영자가 HALT_ALL을 건 계좌에서 일손실 트리거(목표 ENTRY_BLOCKED)가 발화.
+- 이번 처리: 오류가 아니라 **no-op**(행 없음·투영 없음·알림 없음·`changed=false`). 오류로 하면
+  5초 주기 트리거가 매 주기 오류를 내고 호출자마다 특례가 생긴다. 반대로 AUTO의 `NORMAL` 지정과
+  `HALT_ALL` 지정은 요청 자체가 틀린 것이라 오류다(`ErrModeRelaxationRequiresOperator`,
+  `ErrHaltAllIsNeverAutomatic`).
+- **부수 효과가 본질적이다**: 이 no-op이 알림 되먹임 고리를 닫는다. 강화 → critical 알림 →
+  전달 실패 → (트리거) critical outbox 실패 → 강화? 이미 ENTRY_BLOCKED라 no-op이고, 전환이
+  없으므로 알림도 없다. `TestTheAlertEscalationLoopTerminates`가 이것을 고정한다.
+
+## 2026-07-26 [safe local] 완화의 승인은 `cause`에 실어 durable하게 남긴다 (task 3.2)
+
+- 사실: 스펙은 완화에 "사람 승인(§0.7) + audit"을 요구한다. D7의 `operating_modes` 표에는
+  승인 컬럼이 없고, 0.1 스키마는 이 change에서 재작업 대상이 아니다.
+- 이번 처리: 요청에 `Approval` 필드를 두고 완화 시 필수로 만든 뒤, 저장은
+  `cause + " | approved-by: " + approval`로 한다 — `reconcile_states`의 해제 evidence가 쓰는
+  것과 같은 관용구(`evidence + " | released: " + evidence`). audit 줄은 커밋 **전에** 쓰고,
+  실패하면 전환 전체가 롤백된다(2a `OperatorReleaseReservation`과 같은 순서·같은 이유).
+- 결과: journal 단독으로 "누가 승인했나"에 답할 수 있고, audit 파일은 전/후 값·주체·시각을
+  따로 갖는다.
+- 검증: `TestTheApprovedRelaxationIsAuditedWithBothValues`,
+  `TestAFailedAuditWriteAbortsTheRelaxation`, `TestRelaxationRequiresAnApproval`.
+
+## 2026-07-26 [observation] 자동 강화 트리거의 **생산자** 배선은 이 태스크 밖 (task 3.2 → 4.x·7.4)
+
+- 3.2가 실장한 것은 트리거→목적 상태의 닫힌 열거와 전환 API(`EscalateOperatingMode`)다.
+  실제로 그것을 부르는 쪽은 아직 없다:
+
+  | 트리거 | 생산자 | 어느 task |
+  |---|---|---|
+  | `DAILY_LOSS_LIMIT_REACHED` | 발급자(체인이 DAILY_LOSS_LIMIT_REACHED로 거부한 뒤) | 4.x |
+  | `BROKER_AUTH_REJECTED` | `execgw.Retrier`(현재는 게이트 latch만) | 4.x |
+  | `CRITICAL_ALERT_UNDELIVERED` | `obs.Notifier.deliver`(현재는 게이트 latch만) | 4.x |
+  | `EXIT_OBSERVATION_OUTAGE` | 판정 루프 60초 두절 | 7.4 |
+
+- 지금 넷 중 둘만 배선하면 절반만 동작하는 상태로 남고, 두 생산자가 journal 핸들을 새로
+  가져야 한다(엔진 배선 문제). **네 개를 한 번에 배선하는 것이 맞고 그 자리는 엔진 배선
+  태스크다.** 현재도 안전한 이유: 401/403과 알림 미전달은 이미 EntryGate latch로 진입을
+  막는다 — 모드 강화는 그 위에 "재시작을 건너 살아남는 영속" 층을 더한다.
+
+## 2026-07-26 [safe local] `EventOperatingMode`를 critical로 승급 (task 3.3)
+
+- 사실: `obs/event.go`는 이 이벤트를 "Phase 2 예약"으로 선언만 해뒀고 등급표에 없었다
+  (미지 이벤트 = normal).
+- 이번 처리: `criticalEvents`에 추가. 양방향 모두 사람을 깨울 사건이다 — 강화는 엔진이 스스로
+  진입을 멈췄다는 뜻이고(네 트리거 전부 사람이 조치해야 풀린다), 완화는 라이브 계좌에서
+  누군가 진입을 다시 켰다는 뜻이다(§0.7이 두 번째 눈을 원하는 바로 그 변경).
+- critical이므로 outbox에 먼저 durable하게 쓰인다 — 전환을 알리고 죽은 프로세스의 알림도
+  남는다. 되먹임 고리는 위 항목의 no-op 규칙이 닫는다.
+
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
 
 - **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).

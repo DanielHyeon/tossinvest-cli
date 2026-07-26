@@ -47,6 +47,12 @@ const (
 	FieldDurationMS = "duration_ms"
 	FieldCount      = "count"
 	FieldScope      = "scope"
+	// FieldActor names who caused a change: AUTO or OPERATOR. Appended for the
+	// operating-mode transition (add-core-domain task 3.3), where the whole
+	// approval asymmetry hangs on which of the two it was — an automatic
+	// tightening and an operator's relaxation are different events and must be
+	// countable apart.
+	FieldActor = "actor"
 )
 
 // Logger writes the engine's structured log.

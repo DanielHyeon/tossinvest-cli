@@ -142,7 +142,44 @@ risk-management의 열거를 코드 위치와 함께 옮긴다.
 
 모드는 체인 2단계(`OPERATING_MODE_BLOCKED`)와 3단계(`operating_mode_blocked` latch) 양쪽에 나타난다. 둘은 같은 journal 행을 읽으므로 답이 갈릴 수 없고, 순서가 정하는 것은 **운영자가 보는 이름**뿐이다 — 구체적이고 조치 가능한 쪽(모드)이 먼저다.
 
-## 6. 후속 task가 채울 자리
+## 6. 운영 모드 (task 3.1–3.3)
+
+권위는 journal `operating_modes`이고, 현재 모드는 **최신 행**이다 — `ORDER BY created_at DESC, rowid DESC LIMIT 1`. journal 타임스탬프가 초 해상도라 한 초 안의 두 전환은 `created_at`만으로 순서가 없고, 그 모호성이 걸리는 유일한 방향이 "보수 강화 직후의 완화가 먼저 읽힌다"이기 때문이다(issues.md 0.1 → 3.1).
+
+### 모드×클래스 표 — `journal.ModeAllows`
+
+| 모드 | EXPOSURE_RAISING | RISK_REDUCING | PROTECTION_WEAKENING\* |
+|---|---|---|---|
+| NORMAL | 허용 | 허용 | 허용(audit) |
+| ENTRY_BLOCKED | 거부 | 허용 | 허용(audit) |
+| HALT_ALL | 거부 | 허용 | **거부** |
+
+\* 열 예약. 이 빌드는 PROTECTION_WEAKENING을 **발급하지 않는다** — landed `RecordDecision`이 전 모드에서 거부하므로 허용(audit) 셀은 2c 발급 도입 후에 효력을 갖는다. 즉 지금은 journal의 거부가 이 표보다 엄격하고, 그게 안전한 방향이다. 미지 모드·미지 클래스는 아무것도 허용하지 않는다.
+
+### 강제 지점 — 전환은 하나의 흐름
+
+`journal.TransitionOperatingMode`가 **영속 → 커밋 → EntryGate 투영 → 알림** 순으로 한 번에 한다. "투영 없이 append"도 "append 없이 투영"도 공개 API에 없다. 커밋 후 투영인 이유는 완화 방향이다(투영이 먼저면 근거 행이 durable해지기 전에 latch가 풀린다). 강화 쪽 창(커밋됐지만 아직 투영 안 됨)은 기동 시 `RestoreOperatingModeProjection`이 닫는다.
+
+봉인된 제출 시퀀스는 변경되지 않는다 — 모드는 `operating_mode_blocked` latch로 도착하고, Gateway가 늘 부르던 `CheckEntryFor`가 그것을 소비한다.
+
+### 자동 강화 트리거 (전부 → ENTRY_BLOCKED)
+
+| 트리거 상수 | 조건 | 생산자 |
+|---|---|---|
+| `DAILY_LOSS_LIMIT_REACHED` | 일일 손실 한도 도달 | 발급자 (task 4.x) |
+| `BROKER_AUTH_REJECTED` | 자격증명 실패(401/403) | execgw Retrier 배선 (task 4.x) |
+| `CRITICAL_ALERT_UNDELIVERED` | critical 알림 outbox 전달 실패 지속 | obs Notifier 배선 (task 4.x) |
+| `EXIT_OBSERVATION_OUTAGE` | exit 관측 두절 임계 초과 | 판정 루프 (task 7.4) |
+
+**HALT_ALL로 가는 트리거는 없다**(SHALL NOT — 운영자 결정). 분석·성과 작업 실패는 열거 밖이므로 구조적으로 강화할 수 없다(SHALL NOT). 트리거 목표가 현재 모드보다 느슨하면 no-op이다(보수 우선) — 이것이 반복 트리거의 멱등성이자, 알림 실패 → 강화 → 알림 실패 되먹임 고리가 한 바퀴에 닫히는 이유다.
+
+완화는 `actor=OPERATOR` + 승인 참조 + audit 줄을 요구하고, audit 쓰기가 실패하면 전환 자체가 롤백된다(2a의 운영자 예약 해제와 같은 순서).
+
+### 스냅샷 읽기 표면
+
+`journal.ModeSnapshot`(`CurrentOperatingMode`) 하나를 세 소비자가 읽는다: Gateway는 `Allows(EXPOSURE_RAISING)`, Guardian 체인은 `Mode`(발급자가 `risk.AccountState.Mode`로 매핑), flatten은 `Allows(RISK_REDUCING)` — 세 모드 전부 참이다(§0.3). 행이 없는 계좌는 NORMAL(`Recorded=false`)이다.
+
+## 7. 후속 task가 채울 자리
 
 | task | 채울 것 |
 |---|---|

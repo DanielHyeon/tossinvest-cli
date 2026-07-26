@@ -116,6 +116,14 @@ const (
 	// CRITICAL, and the one that blocks entries by itself.
 	EventAlertUndelivered EventType = "engine.alert_undelivered"
 
+	// --- operating mode -------------------------------------------------------
+
+	// EventOperatingMode is a committed operating-mode transition
+	// (add-core-domain task 3.3). CRITICAL in both directions: a tightening
+	// means the engine stopped opening positions on its own, and a relaxation
+	// means somebody re-enabled entries on a live account.
+	EventOperatingMode EventType = "engine.operating_mode"
+
 	// --- Phase 2, reserved --------------------------------------------------
 	//
 	// Declared now so the enum is stable before the features exist: a consumer
@@ -123,8 +131,6 @@ const (
 
 	// EventKillSwitch is reserved for the Phase 2 kill switch.
 	EventKillSwitch EventType = "engine.kill_switch"
-	// EventOperatingMode is reserved for Phase 2 operating-mode changes.
-	EventOperatingMode EventType = "engine.operating_mode"
 )
 
 // Severity is the alert grade.
@@ -151,6 +157,7 @@ var criticalEvents = map[EventType]bool{
 	EventFlattenStarted:     true,
 	EventFlattenStalled:     true,
 	EventAlertUndelivered:   true,
+	EventOperatingMode:      true,
 }
 
 // SeverityOf grades an event.
