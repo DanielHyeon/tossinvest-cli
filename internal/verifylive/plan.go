@@ -515,7 +515,7 @@ func (r *Runner) Plan(ctx context.Context) Plan {
 		if settled, verdict := r.settled(step.ID); settled {
 			if step.Mutates {
 				plan.Excluded = append(plan.Excluded, PlanExclusion{
-					Step:   step.ID,
+					Step: step.ID,
 					Reason: fmt.Sprintf("기록에 이미 %s로 판정되어 있다. 다시 실행하면 이미 끝난 측정을 위해 "+
 						"두 번째 실주문을 내게 된다 (--redo가 이를 무시한다)", verdict),
 				})
