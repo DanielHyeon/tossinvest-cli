@@ -67,10 +67,10 @@ TossOS는 `tossinvest-cli`(MIT, 커밋 `57348a7` 고정) 전체 소스·히스�
 
 **2026-07-26 재분할(3차)**: 리뷰 3라운드 108건(`openspec/changes/*/review.md`)의 결론 — 실패의 축은 "레일 vs 판단"이 아니라 **측정 의존성**이었다. 측정되지 않은 브로커 동작 위에 쓴 스펙이 라운드마다 무너졌으므로, 경계를 측정 의존성에 맞춘다.
 
-- **2a `extend-execution-contract`** (측정 무관 — 즉시 구현): 결정 계약(safety class·RiskIntent preimage·generation), 멱등키 기계(브로커 `clientOrderId` — P1 "멱등키 없음" 전제는 사실 오류였다), 진입 측 위험 예약, RECONCILE 상태, 한도 fail-closed·총계 계산 계약, opaque 식별자·OrderStatus 10개 정정, 엔진 Gateway 배선·봉인. **조건주문 코드 0줄.**
-- **2b `verify-execution-capability`** (사용자 측정): 멱등키 실동작·TTL 마진, 조건주문 속성(SINGLE+MARKET 손절, OCO/OTO는 LIMIT 전용), CANCEL_REJECTED 레코드 형태, 매도가능수량 의미, 실측 비용표.
-- **2c `add-protection-orders`** (2b 결과 위에서 작성 — 아직 미작성): 조건주문 형제 수명주기, 발동 주문 다리(`triggeredOrderId`), 미귀속 관측 격리 원장, 청산 수량 예약, PROTECTION_WEAKENING, flatten의 조건주문 취소. 기본 가설: 보호 = SINGLE+MARKET 손절 단독, 익절은 로컬 청산("한 심볼에 브로커측 매도 청구권 1개").
-- **2d `add-core-domain`** (동결 해제 가능 — 2a 완료): 비용 모델(KIS 수치 이식 금지, 2b 실측), Guardian 판정 체인(구조적 RR·등급배수는 P3 이관), 운영 모드(모드×클래스 표), 포지션 원장, provenance, 성과, tracer, **exit 정책(StockOS baseline ratchet·profit ladder 이식 — 기준선 단조 상승 손익 극대화, 순수 판정만; 액추에이션은 2c)**.
+- **2a `extend-execution-contract`** ✅ GATE PASS·archive (2026-07-26): 결정 계약(safety class·RiskIntent preimage·generation), 멱등키 기계(브로커 `clientOrderId` — P1 "멱등키 없음" 전제는 사실 오류였다), 진입 측 위험 예약, RECONCILE 상태, 한도 fail-closed·총계 계산 계약, opaque 식별자·OrderStatus 10개 정정, 엔진 Gateway 배선·봉인. **조건주문 코드 0줄.**
+- **2b `verify-execution-capability`** ⏳ (사용자 측정 — 유일한 임계 경로): 멱등키 실동작·TTL 마진, 조건주문 속성(SINGLE+MARKET 손절, OCO/OTO는 LIMIT 전용), CANCEL_REJECTED 레코드 형태, 매도가능수량 의미, 실측 비용표.
+- **2c `add-protection-orders`** (2b 결과 위에서 작성 — 미작성; 완료 시 ProtectionReady flip→실전 가능): 조건주문 형제 수명주기, 발동 주문 다리(`triggeredOrderId`), 미귀속 관측 격리 원장, 청산 수량 예약, PROTECTION_WEAKENING, flatten의 조건주문 취소. 기본 가설: 보호 = SINGLE+MARKET 손절 단독, 익절은 로컬 청산("한 심볼에 브로커측 매도 청구권 1개").
+- **2d `add-core-domain`** ✅ GATE PASS·archive (2026-07-26, 2358 테스트): 비용 모델(KIS 수치 이식 금지, 2b 실측), Guardian 판정 체인(구조적 RR·등급배수는 P3 이관), 운영 모드(모드×클래스 표), 포지션 원장, provenance, 성과, tracer, **exit 정책(StockOS baseline ratchet·profit ladder 이식 — 기준선 단조 상승 손익 극대화, 순수 판정만; 액추에이션은 2c)**.
 
 채택 원칙(StockOS 실행 무결성 분석 → 토스 계약으로 재구현): 불확실성은 상태로 격리, 불일치는 RECONCILE로 중단, 결정은 영속 후 실행, 브로커가 보증하지 않는 것은 타입으로 표시. MFE/MAE는 데이터 소스 부재로 P3 이관.
 
