@@ -1043,22 +1043,7 @@ func (r *Runner) expireDate() string {
 	return r.now().In(kst).AddDate(0, 0, 7).Format("2006-01-02")
 }
 
-// sessionLabel records which session a mutation was accepted in. It is a KST
-// clock reading, not a market-calendar lookup: the record should say what time it
-// was and let the reader judge, rather than bake a holiday table into evidence.
-func (r *Runner) sessionLabel() string {
-	kst := time.FixedZone("KST", 9*60*60)
-	now := r.now().In(kst)
-	hhmm := now.Hour()*100 + now.Minute()
-	switch {
-	case now.Weekday() == time.Saturday || now.Weekday() == time.Sunday:
-		return "weekend " + now.Format("2006-01-02 15:04 KST")
-	case hhmm >= 900 && hhmm < 1530:
-		return "KR regular hours " + now.Format("15:04 KST")
-	default:
-		return "outside KR regular hours " + now.Format("15:04 KST")
-	}
-}
+// sessionLabel lives in hours.go, next to the advisory that shares its window.
 
 func keySet(raw json.RawMessage) []string {
 	var m map[string]json.RawMessage
