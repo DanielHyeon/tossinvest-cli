@@ -292,6 +292,9 @@ func AllReasonCodes() []ReasonCode {
 
 		// Flatten (task 4.4).
 		ReasonFlattenInProgress,
+
+		// Operating mode (add-core-domain task 3.1).
+		ReasonOperatingModeBlocked,
 	}
 	sort.Slice(codes, func(i, j int) bool { return codes[i] < codes[j] })
 	return codes

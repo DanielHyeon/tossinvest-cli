@@ -70,6 +70,13 @@ type Journal struct {
 	// on the detector's.
 	applyMu    sync.RWMutex
 	applyHooks ApplyHooks
+
+	// modeProjector receives every committed operating-mode transition
+	// (operating_mode.go). Bound once at wiring time, for the same reason the
+	// apply hooks are: the projection is the enforcement point, and a second one
+	// would be a second answer.
+	modeMu        sync.RWMutex
+	modeProjector ModeProjector
 }
 
 // Open resolves the path, verifies the filesystem, creates the data directory if

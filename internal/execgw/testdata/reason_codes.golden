@@ -17,6 +17,7 @@ guardian_limits_unset
 guardian_nonce_reused
 interactive_auth_required
 invalid_mutation_request
+operating_mode_blocked
 reconciliation_mismatch
 reconciliation_mismatch_permanent
 recovery_incomplete

@@ -176,6 +176,19 @@ const (
 	// been shown not to work.
 	ReasonReconcilePermanent ReasonCode = "reconciliation_mismatch_permanent"
 
+	// --- operating mode (add-core-domain task 3.1) ---------------------------
+
+	// ReasonOperatingModeBlocked: the account's operating mode refuses new
+	// exposure (ENTRY_BLOCKED or HALT_ALL). It is a projection of the journal's
+	// latest `operating_modes` row, not a judgement made here — the journal is
+	// the authority and this latch is how the sealed submission sequence
+	// consumes it without changing.
+	//
+	// It never auto-clears: relaxing the mode is a human decision with an audit
+	// line (§0.7), and the release path is a mode transition, not anything the
+	// gate can do on its own.
+	ReasonOperatingModeBlocked ReasonCode = "operating_mode_blocked"
+
 	// --- flatten (task 4.4) --------------------------------------------------
 
 	// ReasonFlattenInProgress: a flatten-all saga is running or has run. New

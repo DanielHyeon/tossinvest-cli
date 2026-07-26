@@ -502,6 +502,14 @@ var latchOrder = []ReasonCode{
 	ReasonReconcileMismatch,
 	ReasonBrokerStateUnknown,
 	ReasonFillDetectionSLO,
+	// Appended, per the rule above. The operating mode reads last on purpose as
+	// well as by convention: every condition before it is a specific fault an
+	// operator can go and fix, while "the account is in ENTRY_BLOCKED" is often
+	// the *consequence* of one of them (a daily-loss trigger, a rejected
+	// credential). Showing the cause before the consequence is what makes the
+	// reason code actionable. The Guardian chain reports the mode under its own
+	// name anyway, because its mode rung runs before its latch rung.
+	ReasonOperatingModeBlocked,
 }
 
 var staleOrder = []RequiredQuery{

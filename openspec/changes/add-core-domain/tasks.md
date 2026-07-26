@@ -25,7 +25,7 @@
 
 ## 3. 운영 모드
 
-- [ ] 3.1 [T][High-risk] 3모드×클래스 표 구현(`operating_modes` 영속·재시작 복원·보수 우선), **EntryGate 투영 강제**(전환=영속+latch 투영, landed checkEntry 소비 — 봉인 시퀀스 무변경 확인)
+- [x] 3.1 [T][High-risk] 3모드×클래스 표 구현(`operating_modes` 영속·재시작 복원·보수 우선), **EntryGate 투영 강제**(전환=영속+latch 투영, landed checkEntry 소비 — 봉인 시퀀스 무변경 확인)
 - [ ] 3.2 [T][High-risk] 방향 비대칭: 보수 자동·즉시(트리거→목적 상태 전부 ENTRY_BLOCKED: 일손실·401/403·critical outbox·exit 관측 두절; 분석 실패 비트리거·HALT_ALL 비자동 테스트), 완화는 승인+audit
 - [ ] 3.3 [T] 전환 알림·구조적 로그·모드 스냅샷 배선(Gateway·Guardian·flatten 동일 뷰)
 
