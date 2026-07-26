@@ -13,6 +13,8 @@
 
 - [x] 1.6 [T] **로컬 운영 콘솔** `tossctl console` (사용자 결정 2026-07-26 — 웹 화면으로 검증 수행): 127.0.0.1 전용 바인딩(비루프백 거부), 기동 시 1회성 세션 토큰 URL 출력. 화면 — 대시보드(soak 진행·attestation 상태·verify 진행·evidence 요약, read-only), verify 실행(단계 목록 → 배치 요약 표시 → **nonce 타이핑 폼**으로 승인 → 진행 로그 → resume 안내), report 뷰. 승인 등가성: 세션 토큰+CSRF+화면 표시 nonce 타이핑 3중 — TTY 타이핑과 동일한 "사람의 의도적 승인"이며 runner의 모든 레일(계획 인가·상한·취소·ErrOutsidePlan)은 무변경. CLI 단독으로 비대화 승인이 가능해지는 플래그·경로를 만들지 않는다(콘솔 내부 배선만). 조건주문 존속 측정은 콘솔 재시작 안내로 프로세스 경계 유지. 게이트 ON은 이 콘솔의 범위가 아니다(2c 후). 테스트: httptest·testenv 가드·루프백 전용·오승인(틀린/만료 nonce·토큰 부재) 전수
 
+- [ ] 1.7 [T] **재측정 경로·실행 강건성** (1차 실행 2026-07-26의 실측 갭 — measurements.md): ① 콘솔에 **재측정** 시작 모드 — 마지막 verdict가 `fail`·`skipped`인 단계를 `Runner.Redo`로 재실행(`deferred`·`pass` 제외, 대상 단계 수를 시작 화면에 표기), 반드시 새 배치 승인(신규 nonce) 경유 — 비대화 승인 경로·게이트 접근 신설 금지, ttl-edge 등 설계상 skip은 preflight가 다시 걸러 무해. ② 시작 화면에 **장시간 advisory**: KST 평일 09:00–15:30 밖이면 "mutation 단계는 order-hours-closed(422 실측)로 실패할 수 있음" 경고 — advisory만, 하드 차단 금지(주문 접수 창은 [미측정]). ③ **429 강건성**: account-seq 해석을 run당 1회로 캐시, 읽기 전용 단계는 ErrRateLimited에 한해 한도 내 백오프 재시도(mutation 자동 재시도 금지), verify 실행 중 soak cycle 일시정지(XDG lockfile advisory — stale lock은 mtime으로 무시). 테스트: httptest·testenv 가드, 재측정이 pass 단계를 건드리지 않음·승인 없이 redo 불가 전수
+
 ## 2. 실계좌 검증 [M+사용자]
 
 - [ ] 2.1 주문 status enum 실측 fixture 수집 → 상태 파생 표 보강. **CANCEL_REJECTED/REPLACE_REJECTED "별도 주문 레코드"의 실제 형태**(목록 조회 노출 여부·원주문 링크 유무) 관측 포함 — 2a 브로커 상태 파생과 2c 귀속 규칙의 입력

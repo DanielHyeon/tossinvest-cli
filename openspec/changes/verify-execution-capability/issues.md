@@ -163,3 +163,12 @@ TTY 계약은 "Type the confirmation string to approve, anything else to abort" 
 
 - 편차 5건 전부 승인: seam 변경 0(기존 exported Options.Confirm 활용 — "콘솔만 배선 가능" 보증을 AST 가드로 이전한 판단 타당), 틀린 nonce=전체 중단(TTY 계약 그대로 — 5분 창을 추측 5분으로 만들지 않음), 콘솔=항상 resume 모델(플래그가 없으니 잊을 플래그도 없음, 프로세스당 1회 실행 상한이 존속 경계 보존), help_convention 화이트리스트 additive 1건(mutating=true 정직 표기), probe 심볼 중복은 drift 테스트로 고정.
 - Pre-Edit 게이트 검토 통과 확인(§0.7 — 게이트 토글 라우트 부재 포함).
+
+## Manager 판정 (검증 1차 실행, 2026-07-26 일요일)
+
+실측 기록은 [measurements.md](measurements.md). 판정:
+
+- **레일 실전 검증 성립**: 오승인 거부(전송 0건)·재시작 간 resume·plan digest 고정 — 계약대로 동작함을 실계좌 증거로 확인(M2·M3). 도구 결함 아님.
+- **측정 0건의 원인 3가지 전부 환경**: 일요일 휴장(M1), account-seq 429(M4), 보유 0(M5). 그런데 `fail`/`skipped`가 terminal이라 **콘솔(always-resume, redo 부재)에서는 재측정이 불가** — 콘솔 단독 운용이라는 사용자 결정과 충돌하는 갭. task 1.7 발주.
+- **`--conditional-buy-fallback` 최종 기각** (앞선 보류 판정의 발동 조건 "사용자가 skip을 실제로 만나면"이 성립했으나): BUY 폴백으로 측정 가능한 것은 조건주문 등록·조회·존속·정정·취소 endpoint뿐이고, **2c의 임계 입력인 SELL측**(SINGLE+MARKET 손절 실동작·sell-boundary·sellable 예약 의미, 2.5 후반·2.6·2.8)은 보유 없이는 어떤 폴백으로도 측정 불가. long-only 제품은 모든 포지션에 SELL 보호가 필요하므로 SELL측 미측정 = 게이트 영구 폐쇄. 따라서 **KR 종목 1주 보유는 폴백으로 우회할 수 없는 선행 조건**이고, 1주를 보유하면 폴백은 불필요해진다(보류 판정의 자체 논리). 사용자 협조 절차에 "1회, 임의 KR 종목 1주 수동 매수"를 선행 조건으로 확정한다 — 도구는 계속 매수하지 않는다(레일 유지).
+- **1.7 범위 통제**: 재측정은 fail·skipped 단계에 한정하고 반드시 **새 배치 승인(신규 nonce)** 경유 — 비대화 승인 경로 신설 금지 유지. 장시간 경고는 advisory(정규장 달력을 하드 레일로 박지 않음 — 주문 접수 창은 [미측정]). 429 대응은 읽기 전용 단계만 재시도, mutation 자동 재시도 금지.
