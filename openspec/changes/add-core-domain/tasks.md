@@ -33,7 +33,7 @@
 
 - [x] 4.1 [T][High-risk] 발급자: 체인 ALLOW → `RecordDecisionAndReserve` → Gateway 참조 전달. RiskIntent/ReductionIntent 구성, TTL 60s(실장 상수), 예약 거부 시 고아 결정 없음·reason 기록 테스트
 - [ ] 4.2 [T][High-risk] `ExposureLimiter` 구현(감사 한도 단일 출처·Set 비트 일치)·엔진 Guardian 주입·인터록 조합 테스트 — small_live 5필드로 **조항 1–5 통과 + 조항 6(ProtectionReady)이 유일한 거부 사유**임을 검증(게이트 ON 완전 통과는 2c 후)
-- [ ] 4.3 [T] 발급 race(동시 다심볼 합산 한도)·발급-제출 사이 모드 강화 시 EntryGate 거부 테스트
+- [x] 4.3 [T] 발급 race(동시 다심볼 합산 한도)·발급-제출 사이 모드 강화 시 EntryGate 거부 테스트
 
 ## 5. Gateway·인터록 확장 (engine-safety delta 전사)
 
@@ -44,7 +44,7 @@
 
 - [x] 6.1 [T][High-risk] `internal/position` 투영(인스턴스·시장·decimal·entry_decision_id)·상태기계 전이표(design 산출물로 표 명문화 후 전 행 테스트)
 - [x] 6.2 [T][High-risk] 조정 이벤트 compare-and-append(기대 이전 값·watermark 재검증·불일치 폐기·재수집 테스트)
-- [ ] 6.3 [T][High-risk] `LocalStateFromJournal` 재배선(투영 소비·심볼 합산)·외부 포지션 편입+exit 제외+알림·release cause ADJUSTMENT_APPLIED 추가(2a cause 상수 확장)·해제 규칙(조정 후 일치=자동, 영구=운영자) — **바뀌어야 할 단언 사전 열거**
+- [x] 6.3 [T][High-risk] `LocalStateFromJournal` 재배선(투영 소비·심볼 합산)·외부 포지션 편입+exit 제외+알림·release cause ADJUSTMENT_APPLIED 추가(2a cause 상수 확장)·해제 규칙(조정 후 일치=자동, 영구=운영자) — **바뀌어야 할 단언 사전 열거**
 - [ ] 6.4 [T] provenance 단일 질의(명시 참조 조인: 결정→intent→attempt→fill→position→exit_events→청산) + `docs/aggregates.md` 신설
 
 ## 7. Exit 정책 (사용자 요구 — 손익 극대화)
