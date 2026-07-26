@@ -630,3 +630,35 @@ func seedAccountWideReconcile(t *testing.T, dir, accountRef, evidence string) {
 		t.Fatalf("seed reconcile: %v", err)
 	}
 }
+
+// TestStartupBindsThePositionProjection is the succession of tasks 6.1 and 6.3:
+// the projection exists, reconciliation consumes it, and something has to
+// connect the two inside the fill transaction.
+//
+// The consequence of the omission is what makes this a startup property rather
+// than a nicety. Reconciliation's local state *is* the projection; with nothing
+// bound it stays empty however many fills arrive, the engine's belief becomes
+// "we hold nothing", and a broker holding then reads as an external position —
+// a notice — instead of the disagreement that blocks new exposure.
+func TestStartupBindsThePositionProjection(t *testing.T) {
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
+
+	eng, err := startEngine(t, dir, srv)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if !eng.Journal.ProjectionBound() {
+		t.Fatal("the engine profile must bind the position projection into the fill transaction")
+	}
+	// The slot is taken, which is the other half: nothing downstream can bind a
+	// second projection of the same fill stream, and task 7.x's exit applier has
+	// to extend the engine's own literal rather than add a call site.
+	if err := eng.Journal.SetApplyHooks(journal.ApplyHooks{
+		Project: journal.ProjectPosition,
+	}); err == nil {
+		t.Error("the engine left the apply-hook slot free for a second binding")
+	}
+}

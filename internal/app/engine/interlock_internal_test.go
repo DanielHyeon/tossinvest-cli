@@ -149,3 +149,45 @@ func TestTradingPolicyClauseNamesWhatIsOff(t *testing.T) {
 		t.Errorf("a policy that can sell and act live must pass: %v", err)
 	}
 }
+
+// --- the position projection's producer (task 6.1/6.3 succession) ------------
+
+// TestTheProjectionGuardAsksTheBindingAndNotTheData.
+//
+// Like the two clauses above, this is a guard against a future wiring change:
+// NewContext always binds the hook, so there is no configuration that reaches
+// the refusal, and the only way to test a guard against a future is to hand it
+// the future. The failure it prevents is the worst shape there is — silent, and
+// in the direction that lets entries through: with nothing bound the position
+// projection stays empty, reconciliation believes the account holds nothing, and
+// every holding the broker reports classifies as an external position instead of
+// a disagreement that blocks new exposure.
+func TestTheProjectionGuardAsksTheBindingAndNotTheData(t *testing.T) {
+	if err := checkProjectionWired(nil); err == nil {
+		t.Error("no journal at all must be refused")
+	}
+
+	unbound := openTestJournal(t)
+	err := checkProjectionWired(unbound)
+	if !errors.Is(err, ErrProjectionUnbound) {
+		t.Fatalf("err = %v, want ErrProjectionUnbound", err)
+	}
+	// The message has to say what goes wrong, because the operator's instinct on
+	// "reconciliation is quiet" is that nothing is wrong.
+	if !strings.Contains(err.Error(), "external position") {
+		t.Errorf("refusal %q does not name the fail-open it prevents", err)
+	}
+
+	bound := openTestJournal(t)
+	if err := bindApplyHooks(bound); err != nil {
+		t.Fatalf("bindApplyHooks: %v", err)
+	}
+	if err := checkProjectionWired(bound); err != nil {
+		t.Errorf("a bound journal must pass: %v", err)
+	}
+	// Bound once. A second binding is refused, which is what makes task 7.x
+	// extend the literal in gateway.go rather than add a second call site.
+	if err := bindApplyHooks(bound); err == nil {
+		t.Error("the hooks must not be bindable twice")
+	}
+}

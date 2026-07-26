@@ -37,6 +37,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -82,8 +83,67 @@ type engineWiring struct {
 	reconcile *reconcile.Tracker
 }
 
+// ErrProjectionUnbound means the fill apply hook that produces the position
+// projection was never bound (add-core-domain task 6.1/6.3 succession).
+//
+// It is a startup refusal because the failure it prevents is silent and opens
+// the gate. Reconciliation's local state is the projection; with no Project hook
+// the projection stays empty however many fills arrive, the engine's belief is
+// "we hold nothing", and every holding the broker reports is then classified as
+// an *external* position — which is a notice, not a block. The disagreement that
+// should have stopped new entries reads as a fact about the world instead.
+var ErrProjectionUnbound = errors.New(
+	"engine: the fill apply hooks are not bound, so the position projection would stay empty and " +
+		"reconciliation would believe the account holds nothing — every broker holding would read " +
+		"as an external position instead of a disagreement")
+
+// bindApplyHooks connects the position projection to the fill transaction.
+//
+// Both writes have to be one commit (design D7's 원자 apply hook): a fill the
+// projection never saw is a fill the reconciliation, the exit policy and the
+// entry gate all disagree about. The journal owns the atomic point and refuses
+// to own the domain rule, so the rule is injected here — once, at wiring time.
+//
+// Exit stays nil, and that is this change's boundary rather than an omission:
+// the exit-state applier arrives with the exit policy (task 7.x), and there is
+// nothing for it to resolve yet because nothing arms a pending proposal. When
+// 7.x binds it, it extends this literal — SetApplyHooks refuses a second call,
+// which is what makes "one wiring point" a property and not a habit.
+func bindApplyHooks(j *journal.Journal) error {
+	if err := j.SetApplyHooks(journal.ApplyHooks{Project: journal.ProjectPosition}); err != nil {
+		return fmt.Errorf("engine: binding the fill apply hooks: %w", err)
+	}
+	return nil
+}
+
+// checkProjectionWired is the guard that makes the binding above load-bearing
+// rather than customary.
+//
+// It is asked of the journal the profile is about to reconcile with, after
+// construction, for the same reason the interlock asks execgw.Gateway.Wiring()
+// instead of trusting gateway.go to have been written correctly: a future
+// reordering that drops the binding would otherwise produce an engine that
+// starts, trades, and is wrong about what it holds.
+func checkProjectionWired(j *journal.Journal) error {
+	if j == nil {
+		return errors.New("engine: no journal")
+	}
+	if !j.ProjectionBound() {
+		return ErrProjectionUnbound
+	}
+	return nil
+}
+
 // buildGateway constructs the execution stack and restores its projections.
 func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
+	// Before anything that reads a belief out of the journal: the belief has a
+	// producer. The RECONCILE projection restored below is compared against the
+	// position projection, so an unbound hook here is a comparison against a
+	// blank.
+	if err := checkProjectionWired(in.journal); err != nil {
+		return engineWiring{}, err
+	}
+
 	orders := execgw.OfficialOrders{Client: in.official}
 	account := execgw.OfficialAccount{Client: in.official}
 

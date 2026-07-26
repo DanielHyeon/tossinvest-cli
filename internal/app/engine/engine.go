@@ -389,6 +389,16 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		return nil, refuseStartup(auditLog, gate, err)
 	}
 
+	// --- 2b. the fill apply hooks -------------------------------------------
+	//
+	// Between opening the journal and anything that could record a fill. The
+	// projection is what reconciliation compares the account against, and a fill
+	// recorded before the hook is bound is a fill the projection never sees.
+	if err := bindApplyHooks(jrn); err != nil {
+		_ = jrn.Close()
+		return nil, refuseStartup(auditLog, gate, err)
+	}
+
 	// --- 3. the gateway -----------------------------------------------------
 	wiring, err := buildGateway(ctx, gatewayInputs{
 		journal:    jrn,

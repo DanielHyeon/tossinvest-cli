@@ -545,6 +545,26 @@
   (soak 목록·retry matrix는 landed). drift guard(`cmd/tossctl/soak_test.go`) 무수정 통과 확인 +
   "5.2 이전 attestation"(prices만 빠진 목록) 거부 케이스를 refusal 표에 추가했다.
 
+## 2026-07-26 [safe local] 미바인딩 apply hook은 fail-open이고, 엔진이 기동에서 막는다 (승계 F)
+
+- 사실: 6.3이 `LocalStateFromJournal`을 포지션 투영 소비로 재배선했다. 투영의 유일한 생산자는
+  fill 트랜잭션의 `Project` hook이다.
+- 문제: hook이 안 묶인 프로세스는 체결을 아무리 기록해도 투영이 비어 있고, 로컬 믿음이 "보유 0"이
+  된다. 그러면 브로커가 보고하는 모든 보유가 **불일치가 아니라 외부 포지션**으로 분류되고
+  (외부 편입은 알림이지 차단이 아니다), 진입이 막히지 않는다. 조용하고, 게이트를 여는 방향이다.
+- 이번 처리: (1) 엔진 프로필이 저널 open 직후(단계 2b) `SetApplyHooks{Project: ProjectPosition}`를
+  바인딩하고, (2) `buildGateway`가 그 전에 `checkProjectionWired`로 **미바인딩이면 기동을 거부**한다
+  (`ErrProjectionUnbound`). 인터록이 `Gateway.Wiring()`을 믿지 않고 묻는 것과 같은 이유 —
+  미래의 배선 변경이 조용히 되돌리는 것을 막는다.
+- 판정은 **바인딩 상태**에만 묻는다. "체결은 있는데 포지션이 없다" 휴리스틱은 v5에서 올라온 저널의
+  정상 상태(그 체결들은 투영보다 먼저다)라 업그레이드된 설치를 전부 거부한다.
+- `internal/reconcile` 쪽에 같은 가드를 넣지 않은 이유: `LocalStateFromJournal`은 hook 없는 저널로
+  도는 그 패키지의 테스트가 다수이고, 프로덕션에서 `reconcile.Tracker`·`recovery`를 구성하는 곳은
+  엔진 프로필 하나뿐이다(`cmd/`·`internal/app` 전수 확인). 구멍은 엔진 쪽에서 닫힌다.
+- Exit hook은 nil로 남긴다 — exit 상태 applier는 7.x이고, 지금은 해소할 pending 자체가 없다.
+  `SetApplyHooks`가 재바인딩을 거부하므로 7.x는 gateway.go의 그 리터럴을 확장해야 한다
+  (테스트가 "두 번째 바인딩은 실패한다"로 고정).
+
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
 
 - **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).

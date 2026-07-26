@@ -179,6 +179,27 @@ func (j *Journal) SetApplyHooks(hooks ApplyHooks) error {
 	return nil
 }
 
+// ProjectionBound reports whether a Project hook is bound.
+//
+// It exists for a wiring guard and not for control flow, and the thing it
+// guards is a fail-*open*: reconciliation's local state is the position
+// projection (internal/reconcile LocalStateFromJournal), and the projection is
+// produced by this hook. A process that records fills with nothing bound
+// believes it holds nothing, every broker holding then classifies as an external
+// position rather than a disagreement, and the entry gate is not raised. So a
+// profile that is going to reconcile has to be able to ask whether the thing
+// that produces its beliefs is connected.
+//
+// The question is asked of the binding and never inferred from the data. "There
+// are fills but no positions" is a legitimate state for a journal migrated from
+// v5, whose fills predate the projection entirely, and a heuristic that refused
+// that would refuse every upgraded install.
+func (j *Journal) ProjectionBound() bool {
+	j.applyMu.RLock()
+	defer j.applyMu.RUnlock()
+	return j.applyHooks.Project != nil
+}
+
 // runApplyHooks calls the injected functions inside the caller's transaction.
 //
 // The handle it builds is invalidated when this returns, which is what makes
