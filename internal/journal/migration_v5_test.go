@@ -14,10 +14,16 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 )
 
-// migration_v5_test.go covers task 0.2: the automatic pre-migration backup, the
-// restore path after a migration that dies partway, and the two schema
-// transitions that matter to a live account — v4 forward to v5 with every row
-// preserved, and an older build refusing a v5 journal instead of misreading it.
+// migration_v5_test.go covers extend-execution-contract task 0.2: the automatic
+// pre-migration backup, the restore path after a migration that dies partway,
+// and the two schema transitions that matter to a live account — v4 forward to
+// v5 with every row preserved, and an older build refusing a v5 journal instead
+// of misreading it.
+//
+// The step is pinned as v4→v5 explicitly (migrationOverride with target 5)
+// rather than "up to whatever this build writes", so that a later schema
+// version does not quietly turn these into a test of a different transition.
+// The current head's own step has its own file (migration_v6_test.go).
 
 // migrationTestInstant is the fake clock every migration test opens with, so the
 // backup file names in the assertions are exact rather than approximate.
@@ -134,13 +140,14 @@ func TestMigrationV4ToV5PreservesEveryRow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 5)
+	defer j.Close()
 	version, err := j.SchemaVersion(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if version != SchemaVersion {
-		t.Fatalf("schema version after upgrade = %d, want %d", version, SchemaVersion)
+	if version != 5 {
+		t.Fatalf("schema version after upgrade = %d, want 5", version)
 	}
 
 	after := countRows(t, j.db, v4Tables)
@@ -194,7 +201,7 @@ func TestMigrationV4ToV5PreservesEveryRow(t *testing.T) {
 // read a v5 journal as if the columns it does not know about were absent.
 func TestOlderBuildRefusesTheV5Journal(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "journal.db")
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 5)
 	seedV4Rows(t, j)
 	if err := j.Close(); err != nil {
 		t.Fatal(err)
@@ -216,7 +223,8 @@ func TestOlderBuildRefusesTheV5Journal(t *testing.T) {
 
 	// Refusing must not have touched the file: it is still a v5 journal with its
 	// rows, and no backup was taken for a migration that never ran.
-	reopened := openTestJournalAt(t, path)
+	reopened := openJournalAtSchema(t, path, 5)
+	defer reopened.Close()
 	if got := countRows(t, reopened.db, []string{"intents"})["intents"]; got != 1 {
 		t.Fatalf("intents after the refusal = %d, want 1", got)
 	}
@@ -240,7 +248,8 @@ func TestMigrationBacksUpBeforeApplying(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 5)
+	defer j.Close()
 
 	backups := backupsIn(t, dir)
 	if len(backups) != 1 {
@@ -396,7 +405,10 @@ func TestBackupNeverOverwritesAnExistingBackup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	openTestJournalAt(t, path)
+	upgraded := openJournalAtSchema(t, path, 5)
+	if err := upgraded.Close(); err != nil {
+		t.Fatal(err)
+	}
 
 	kept, err := os.ReadFile(occupied)
 	if err != nil {
@@ -426,6 +438,17 @@ func backupsIn(t *testing.T, dir string) []string {
 // migration, and checks it is the pre-migration database.
 func assertBackupIsV4(t *testing.T, backup string, want map[string]int) {
 	t.Helper()
+	assertBackupAtVersion(t, backup, 4, want, "decisions")
+}
+
+// assertBackupAtVersion is the shared check every migration step's backup has to
+// pass: self-contained, the pre-migration version, intact, with every row it had
+// and without the first table the interrupted step would have created.
+//
+// The tables to count are the keys of want, so each step's test names its own
+// set and a later step does not silently stop checking the earlier tables.
+func assertBackupAtVersion(t *testing.T, backup string, version int, want map[string]int, absentTable string) {
+	t.Helper()
 	ctx := context.Background()
 
 	for _, sidecar := range []string{backup + "-wal", backup + "-shm"} {
@@ -440,12 +463,12 @@ func assertBackupIsV4(t *testing.T, backup string, want map[string]int) {
 	}
 	defer db.Close()
 
-	var version int
-	if err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
+	var got int
+	if err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&got); err != nil {
 		t.Fatal(err)
 	}
-	if version != 4 {
-		t.Errorf("backup schema version = %d, want 4 (the pre-migration state)", version)
+	if got != version {
+		t.Errorf("backup schema version = %d, want %d (the pre-migration state)", got, version)
 	}
 	var integrity string
 	if err := db.QueryRowContext(ctx, "PRAGMA integrity_check").Scan(&integrity); err != nil {
@@ -454,16 +477,22 @@ func assertBackupIsV4(t *testing.T, backup string, want map[string]int) {
 	if !strings.EqualFold(strings.TrimSpace(integrity), "ok") {
 		t.Errorf("backup integrity_check = %q", integrity)
 	}
-	if got := countRows(t, db, v4Tables); !sameCounts(got, want) {
-		t.Errorf("backup rows = %v, want %v", got, want)
+	tables := make([]string, 0, len(want))
+	for table := range want {
+		tables = append(tables, table)
 	}
-	var hasDecisions int
+	sort.Strings(tables)
+	if counted := countRows(t, db, tables); !sameCounts(counted, want) {
+		t.Errorf("backup rows = %v, want %v", counted, want)
+	}
+	var present int
 	if err := db.QueryRowContext(ctx,
-		"SELECT count(*) FROM sqlite_master WHERE type='table' AND name='decisions'").Scan(&hasDecisions); err != nil {
+		"SELECT count(*) FROM sqlite_master WHERE type='table' AND name = ?",
+		absentTable).Scan(&present); err != nil {
 		t.Fatal(err)
 	}
-	if hasDecisions != 0 {
-		t.Error("the backup was taken after the migration started")
+	if present != 0 {
+		t.Errorf("the backup holds %s: it was taken after the migration started", absentTable)
 	}
 }
 

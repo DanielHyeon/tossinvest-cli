@@ -84,6 +84,8 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"attempt_transitions",
 		"decisions",
 		"execution_corrections",
+		"exit_events",
+		"exit_states",
 		"fill_events",
 		"fill_snapshots",
 		"flatten_sagas",
@@ -91,10 +93,14 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"intents",
 		"lineage_edges",
 		"mutation_attempts",
+		"operating_modes",
+		"position_adjustments",
+		"positions",
 		"reconcile_states",
 		"risk_reservations",
 		"schema_meta",
 		"spent_nonces",
+		"trade_outcomes",
 	}
 	rows, err := j.db.QueryContext(ctx,
 		`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)

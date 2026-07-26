@@ -7,7 +7,7 @@
 
 ## 0. journal v6 스키마 [T]
 
-- [ ] 0.1 design D7 표의 전사(단일 원자 마이그레이션): `positions`(entry_decision_id FK)·`position_adjustments`(expected_prev)·`operating_modes`·`exit_states`(entry/initial_stop/initial_risk/high_water/policy_kind/pending 3컬럼, baseline NOT NULL)·`exit_events`·`trade_outcomes` + 제약 자구 일치. 백업·복원·전이·구버전 거부 계약 테스트(2a 패턴)
+- [x] 0.1 design D7 표의 전사(단일 원자 마이그레이션): `positions`(entry_decision_id FK)·`position_adjustments`(expected_prev)·`operating_modes`·`exit_states`(entry/initial_stop/initial_risk/high_water/policy_kind/pending 3컬럼, baseline NOT NULL)·`exit_events`·`trade_outcomes` + 제약 자구 일치. 백업·복원·전이·구버전 거부 계약 테스트(2a 패턴)
 - [ ] 0.2 [T][High-risk] 원자 발급 API `RecordDecisionAndReserve`: 결정 삽입+예약 검증·삽입 한 트랜잭션, 거부 시 전체 롤백(고아 결정 없음 테스트), 실패 reason 매핑 명시 — LIMIT_REACHED←ErrReservationLimitExceeded / SNAPSHOT_RECOLLECTION_EXHAUSTED←ErrRecollectionExhausted(내부 재시도로 stale·superseded는 종단에서 여기 수렴) / VERSION_CONFLICT←단발 Reserve의 stale·superseded / DECISION_EXPIRED←만료(신규 sentinel 필요 — 현재 ErrInvalidRequest)
 - [ ] 0.3 [T][High-risk] tx-scoped apply hook: 체결 반영 트랜잭션이 주입된 투영·exit 적용 함수를 tx-scope에서 호출 — journal 공개 API 설계 문서화, hook 밖에서 taken_ratio·pending을 쓸 수 없음을 테스트
 
