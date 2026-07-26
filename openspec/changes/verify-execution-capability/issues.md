@@ -91,3 +91,9 @@ triggerPrice 를 시장가보다 훨씬 **위**로(발동 안 됨), orderPrice �
 - 안전 기제 승인: mutate.go 단일 mutation 파일(AST 증명), --yes/--force/env 우회 부재(테스트+소스 가드), 미체결가 산정 불가 시 추측 대신 거부, 잔여물 명명 오류. ModifyConditionalOrderRef additive 확인.
 - **보유 없는 계좌의 2.5(--conditional-buy-fallback)**: 보류 — 사용자가 KR 1주 보유 시 불필요한 작업. 사용자가 skip을 실제로 만나면 그때 옵트인 플래그로 구현(이중 차단 설계는 승인됨을 기록). 단 BUY 폴백으로도 매도가능수량 예약 의미(2.8 후반)는 미측정으로 남음을 report에 명시할 것.
 - **2.9 비용 실측**: 이 도구로 불가(미체결가 설계상 commission 없음) — 정직한 경로는 실제 체결뿐. 판정: tracer 실전 1주 왕복(사용자 승인 트랙)의 체결에서 수집하거나 사용자의 임의 실거래 1건에서 수집. 그때까지 비용 모델은 보수 placeholder 유지(§0.9 정합).
+
+## Manager 판정 (배치 승인 전환, 2026-07-26)
+
+- 사용자 결정에 따라 승인 모델을 run당 1회 배치로 전환(커밋 1df778a). 이 파일 상단의 "재실행해도 mutation은 매번 typed confirmation" · "취소도 typed confirmation" 서술은 구모델 기준 — 현행은 배치 승인이 기본, `--confirm-each` 옵트인. 계획 밖 mutation은 ErrOutsidePlan으로 전체 중단(전송 0건), mutate.go의 gate 경유는 AST 정적 가드로 증명.
+- 배치 거부 시 읽기 전용 단계도 중단: 계약 문언대로 승인 — 읽기 증거는 --confirm-each로 도달 가능.
+- sell-boundary 수량을 계획 시점 SellableQuantity 실측으로 표기(실패 시 blind 승인 대신 단계 제외): 승인.
