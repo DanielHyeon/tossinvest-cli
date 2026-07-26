@@ -128,10 +128,17 @@ func fullGate() config.AutomationGate {
 	}
 }
 
-// TestGateOffStartsAndTouchesNothing is the §0.2 test. With the gate off — which
-// is every config in existence — startup must behave exactly as it did before the
-// interlock: no attestation read, no broker call, no refusal.
-func TestGateOffStartsAndTouchesNothing(t *testing.T) {
+// TestGateOffStartsAndDoesNoGateWork is the §0.2 test, narrowed by task 7.1.
+//
+// The original assertion was "no broker call at all". That is no longer the
+// contract and the change is deliberate: the account read moved out of the gate's
+// verification and into construction, because the journal, the gateway and the
+// reconcile projection are all scoped by the account (design D8 step 1). What
+// remains true — and is what §0.2 is actually about — is that the gate itself
+// does nothing: no attestation is read, no Guardian is published, no refusal is
+// possible. So the account read is asserted at exactly one, and the gate's own
+// outputs are asserted absent.
+func TestGateOffStartsAndDoesNoGateWork(t *testing.T) {
 	dir := isolate(t)
 	writeGateConfig(t, dir, config.AutomationGate{})
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
@@ -150,8 +157,15 @@ func TestGateOffStartsAndTouchesNothing(t *testing.T) {
 	if eng.Guardian != nil {
 		t.Error("no Guardian may be published when the gate is off")
 	}
-	if got := accountCalls(); got != 0 {
-		t.Errorf("the gate-off path made %d broker call(s); it must make none", got)
+	if !eng.Automation.AttestationExpiresAt.IsZero() {
+		t.Error("the gate-off path must not read an attestation")
+	}
+	if got := accountCalls(); got != 1 {
+		t.Errorf("account reads = %d, want exactly 1 — the construction-path read (task 7.1), "+
+			"and nothing the gate adds to it", got)
+	}
+	if eng.AccountRef != "123-45" {
+		t.Errorf("AccountRef = %q; the gate-off engine must still know its account", eng.AccountRef)
 	}
 }
 

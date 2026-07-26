@@ -3,12 +3,16 @@ package engine_test
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
 )
@@ -50,6 +54,55 @@ func writeEngineConfig(t *testing.T, dir string) {
 	if err := os.WriteFile(filepath.Join(dir, "config.json"), data, 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
+}
+
+// engineStub answers the reads engine startup performs and counts the account
+// list among them.
+//
+// Since task 7.1 the account is resolved on every start, gate or no gate, so a
+// test that constructs an engine needs a broker that can answer
+// GET /api/v1/accounts. Before 7.1 the gate-off path made no call at all and
+// these tests passed with no server; the count is exposed so the new behaviour
+// is asserted rather than assumed.
+func engineStub(t *testing.T, accountNo string) (*httptest.Server, func() int) {
+	t.Helper()
+	var mu sync.Mutex
+	calls := 0
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/accounts":
+			mu.Lock()
+			calls++
+			mu.Unlock()
+			_, _ = w.Write([]byte(`{"result":[{"accountNo":"` + accountNo + `","accountSeq":7,"accountType":"BROKERAGE"}]}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	return srv, func() int {
+		mu.Lock()
+		defer mu.Unlock()
+		return calls
+	}
+}
+
+// engineOptions is the standard startup input for a test engine: an isolated
+// config directory and an official client pointed at the stub.
+func engineOptions(dir string, srv *httptest.Server) engine.Options {
+	opts := engine.Options{ConfigDir: dir}
+	if srv != nil {
+		opts.OfficialOptions = []official.Option{
+			official.WithBaseURL(srv.URL),
+			official.WithHTTPClient(srv.Client()),
+		}
+	}
+	return opts
 }
 
 func writeCredentials(t *testing.T, dir, key, secret string) {
@@ -108,8 +161,9 @@ func TestNewIgnoresOpenAPIConfigToggles(t *testing.T) {
 	dir := isolate(t)
 	writeEngineConfig(t, dir)
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
 
-	ctx, err := engine.New(engine.Options{ConfigDir: dir})
+	ctx, err := engine.New(engineOptions(dir, srv))
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -131,8 +185,9 @@ func TestNewResolvesPathsFromConfigDir(t *testing.T) {
 	dir := isolate(t)
 	writeEngineConfig(t, dir)
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
 
-	ctx, err := engine.New(engine.Options{ConfigDir: dir})
+	ctx, err := engine.New(engineOptions(dir, srv))
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -157,8 +212,9 @@ func TestNewCarriesTradingPolicy(t *testing.T) {
 		dir := isolate(t)
 		writeEngineConfig(t, dir)
 		writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+		srv, _ := engineStub(t, "123-45")
 
-		ctx, err := engine.New(engine.Options{ConfigDir: dir})
+		ctx, err := engine.New(engineOptions(dir, srv))
 		if err != nil {
 			t.Fatalf("New: %v", err)
 		}
@@ -171,8 +227,9 @@ func TestNewCarriesTradingPolicy(t *testing.T) {
 		dir := isolate(t)
 		// No config file: defaults have every trading toggle off.
 		writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+		srv, _ := engineStub(t, "123-45")
 
-		ctx, err := engine.New(engine.Options{ConfigDir: dir})
+		ctx, err := engine.New(engineOptions(dir, srv))
 		if err != nil {
 			t.Fatalf("New: %v", err)
 		}
@@ -203,12 +260,89 @@ func TestNewAcceptsEnvCredentials(t *testing.T) {
 	writeEngineConfig(t, dir)
 	t.Setenv("TOSSCTL_OPENAPI_KEY", "env-key-0000000000")
 	t.Setenv("TOSSCTL_OPENAPI_SECRET", "env-secret")
+	srv, _ := engineStub(t, "123-45")
 
-	ctx, err := engine.New(engine.Options{ConfigDir: dir})
+	ctx, err := engine.New(engineOptions(dir, srv))
 	if err != nil {
 		t.Fatalf("New with env credentials: %v", err)
 	}
 	if ctx.Official == nil {
 		t.Error("env credentials must produce an official client")
+	}
+}
+
+// --- task 7.1: the account is resolved on every start -----------------------
+//
+// Before 7.1 the account read lived inside the gate's attestation check, so an
+// engine with the gate off — every engine today — never learned which account
+// its credentials belong to. Everything downstream needs that string: the
+// journal records intents against it, the gateway refuses to be built without
+// it, and the reconcile projection is scoped by it. Resolving it only when the
+// gate happens to be on made the identity of the account a function of a
+// feature toggle (design D8 step 1).
+
+// TestStartupResolvesTheAccountWithTheGateOff is the requirement itself.
+func TestStartupResolvesTheAccountWithTheGateOff(t *testing.T) {
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, accountCalls := engineStub(t, "123-45")
+
+	ctx, err := engine.New(engineOptions(dir, srv))
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if ctx.AccountRef != "123-45" {
+		t.Errorf("AccountRef = %q, want the account the credentials resolve to", ctx.AccountRef)
+	}
+	if ctx.Automation.Enabled || ctx.Automation.Verified {
+		t.Error("the gate must still be off; only the account read moved")
+	}
+	if ctx.Automation.AccountRef != "123-45" {
+		t.Errorf("Automation.AccountRef = %q; the status must report the resolved account too",
+			ctx.Automation.AccountRef)
+	}
+	if got := accountCalls(); got != 1 {
+		t.Errorf("account reads = %d, want exactly 1 — one read at startup, not one per consumer", got)
+	}
+}
+
+// TestStartupRefusesWhenTheAccountCannotBeResolved: an engine that cannot name
+// its own account cannot journal an intent against it, so there is nothing safe
+// to return. Fail closed rather than hand back a half-built engine.
+func TestStartupRefusesWhenTheAccountCannotBeResolved(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		body string
+		code int
+	}{
+		{"broker error", `{"error":{"code":"internal","message":"boom"}}`, http.StatusInternalServerError},
+		{"no accounts at all", `{"result":[]}`, http.StatusOK},
+		{"account with no number", `{"result":[{"accountNo":"  ","accountSeq":7}]}`, http.StatusOK},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := isolate(t)
+			writeEngineConfig(t, dir)
+			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.URL.Path == "/oauth2/token" {
+					_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+					return
+				}
+				w.WriteHeader(tc.code)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			t.Cleanup(srv.Close)
+
+			ctx, err := engine.New(engineOptions(dir, srv))
+			if !errors.Is(err, engine.ErrAccountUnresolved) {
+				t.Fatalf("want ErrAccountUnresolved, got %v", err)
+			}
+			if ctx != nil {
+				t.Error("a refused startup must return no engine at all")
+			}
+		})
 	}
 }

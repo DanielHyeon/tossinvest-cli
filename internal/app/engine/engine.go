@@ -42,6 +42,19 @@ var ErrOfficialCredentialsRequired = errors.New(
 	"official Open API credentials are required to start the engine: run `tossctl openapi login` " +
 		"or set TOSSCTL_OPENAPI_KEY and TOSSCTL_OPENAPI_SECRET (the engine never falls back to the web session)")
 
+// ErrAccountUnresolved means startup could not learn which account the
+// credentials belong to (task 7.1, design D8 step 1).
+//
+// It is a refusal and not a warning, with the gate on or off. Every durable
+// record the engine writes is scoped by the account reference — the journal's
+// intents, the risk reservations, the RECONCILE states — and the gateway refuses
+// to be constructed without one. An engine that cannot name its account is an
+// engine whose records cannot be attributed, which is worse than an engine that
+// did not start.
+var ErrAccountUnresolved = errors.New(
+	"engine: the account could not be resolved from GET /api/v1/accounts, so nothing the engine " +
+		"records could be attributed to it")
+
 // Options are the engine's startup inputs.
 type Options struct {
 	// ConfigDir overrides the config directory, exactly as the CLI's
@@ -88,6 +101,11 @@ type Context struct {
 	// (reads.go) declares no mutating method, so that call is not one the engine's
 	// API can express.
 	Official OfficialReads
+
+	// AccountRef is the account the credentials resolve to, read once at startup
+	// and independent of the automation gate (task 7.1). It is the reference
+	// every durable record is scoped by.
+	AccountRef string
 
 	// Automation reports what the startup interlock decided about the automation
 	// gate. Zero value = gate off.
@@ -138,16 +156,23 @@ type ConditionalMutator = trading.ConditionalBroker
 // preference, and the engine's broker is not negotiable.
 //
 // With config's automation gate on, four more refusals apply — no Guardian, zero
-// limits, no/expired/mismatched capability attestation — all in interlock.go. With
-// the gate off (the default, and every config written before schema v5) New makes
-// no network call and behaves exactly as it did before the interlock existed.
+// limits, no/expired/mismatched capability attestation — all in interlock.go.
+//
+// Since task 7.1 one broker read happens on every start, gate or no gate: the
+// account resolution below. It is the only network call a gate-off engine makes,
+// and it is a read the engine needs regardless of what the gate says.
 func New(opts Options) (*Context, error) {
 	return NewContext(context.Background(), opts)
 }
 
-// NewContext is New with a caller-supplied context. The context is used only by
-// the automation-gate interlock's account read; with the gate off nothing in this
-// function performs I/O over the network.
+// NewContext is New with a caller-supplied context. The context bounds the
+// startup account read and, with the gate on, the interlock's checks.
+//
+// The construction order is fixed by engine-safety ("엔진 프로필은 다음 순서로
+// 구성한다"): account resolution → journal → gateway → interlock. Each step is a
+// precondition for the next, and the interlock runs last precisely so that it can
+// verify what the earlier steps produced instead of taking their success on
+// trust.
 func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	getenv := opts.Getenv
 	if getenv == nil {
@@ -191,10 +216,37 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		clk = clock.System()
 	}
 
-	// The interlock runs before the context is returned, so a refused gate
-	// produces no engine at all rather than an engine somebody could still
-	// place orders with.
-	automation, err := runInterlock(ctx, cfg.Engine.AutomationGate, paths, off, auditLog, clk.Now(), opts.Guardian)
+	gate := cfg.Engine.AutomationGate
+	status := newAutomationStatus(gate, paths)
+
+	// The audit trail is written before anything can refuse: an operator's
+	// settings change is worth recording whether or not the engine then agrees to
+	// start on it, and the refusal record that may follow is what ties the two
+	// together (§0.5).
+	if err := recordGateSettings(auditLog, gate, status.AttestationFile); err != nil {
+		// A settings change we cannot record is a settings change nobody can
+		// audit. Refusing here is the conservative direction: the engine does not
+		// start, and no order is placed off the record.
+		return nil, fmt.Errorf("engine: recording the automation-gate audit trail: %w", err)
+	}
+
+	// --- 1. account resolution (unconditional) ------------------------------
+	//
+	// This used to be step 5 of the gate's verification, which meant a gate-off
+	// engine never performed it. It is here now because it is not a gate concern:
+	// the journal, the gateway and the reconcile projection are all scoped by the
+	// account, and comparing an attestation against it is only one of its uses.
+	accountRef, err := resolveAccountRef(ctx, off)
+	if err != nil {
+		return nil, refuseStartup(auditLog, gate, fmt.Errorf("%w: %w", ErrAccountUnresolved, err))
+	}
+	status.AccountRef = accountRef
+
+	// --- 4. the interlock ---------------------------------------------------
+	//
+	// It runs before the context is returned, so a refused gate produces no
+	// engine at all rather than an engine somebody could still place orders with.
+	automation, err := runInterlock(status, gate, auditLog, clk.Now(), opts.Guardian)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +260,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		Config:      cfg,
 		TokenFile:   tokenFile,
 		Official:    off,
+		AccountRef:  accountRef,
 		Automation:  automation,
 		Guardian:    guardian,
 		Audit:       auditLog,

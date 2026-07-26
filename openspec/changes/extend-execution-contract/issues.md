@@ -516,6 +516,22 @@
   — 스냅샷을 하나도 주지 않은 상태에서 자체 조회한 sellable 전량으로 주문이 나간다(확정 하한이라면
   0이라 주문이 없다). 기존 `TestLiquidationSizesFromTheSellableQuantity`가 더 넓은 characterization이다.
 
+## 2026-07-26 [safe local] 게이트 OFF의 "브로커 호출 0회" 단언이 반전됐다 (task 7.1)
+
+- 사실: `interlock_test.go`의 `TestGateOffStartsAndTouchesNothing`은 "게이트 OFF 경로는
+  브로커를 한 번도 부르지 않는다"를 §0.2 근거로 고정하고 있었다. 7.1은 계좌 해석을 게이트
+  검증 밖으로 빼서 기동 경로로 옮기므로(D8 1단계), 이 단언은 성립할 수 없다.
+- 이번 처리: 테스트를 `TestGateOffStartsAndDoesNoGateWork`로 바꾸고 단언을 좁혔다 —
+  계좌 읽기는 **정확히 1회**, attestation 미읽기(ExpiresAt 0), Guardian 미공개,
+  `AccountRef` 채워짐. §0.2가 실제로 보호하는 것(게이트가 아무 일도 하지 않는다)은
+  그대로 남고, "네트워크 0회"라는 더 강한 부수 성질만 내려놓았다.
+- 8.2 참고: 이 단언 변경은 8.2의 사전 열거 목록(1.1·1.3·5.1·5.2·7.4)에 **없다**. 7.1이
+  필연적으로 만드는 변경이므로 Manager 확인 대상으로 여기 기록한다. 같은 파일의
+  `fullGate()` 헬퍼도 7.5에서 3개 한도가 추가되면 갱신이 필요하다.
+- 기동 비용 변화: 게이트 OFF 엔진이 기동당 `GET /api/v1/accounts` 1회를 새로 낸다.
+  §0.4 예산에서 기동 1회는 라인이 아니다(재시작 빈도 ≪ 폴링 빈도).
+
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

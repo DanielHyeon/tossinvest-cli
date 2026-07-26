@@ -51,7 +51,7 @@
 
 ## 7. 엔진 배선·인터록 (순서 고정: 7.1→7.2→7.3→7.4→7.5)
 
-- [ ] 7.1 [T] 계좌 해석 무조건화: 게이트 OFF에서도 엔진 기동 시 계좌 해석(`GET /api/v1/accounts`) — interlock 내부에서 분리
+- [x] 7.1 [T] 계좌 해석 무조건화: 게이트 OFF에서도 엔진 기동 시 계좌 해석(`GET /api/v1/accounts`) — interlock 내부에서 분리
 - [ ] 7.2 [T][High-risk] journal 편입: 엔진 프로필이 journal open — 파일시스템 allowlist·무결성 검사가 기동 조건이 됨을 문서화, config-dir 격리 보존, tmpfs 테스트는 격리 경로. 기동 시 `PruneSpentNonces` 1회 수행(보존 불변식 내)
 - [ ] 7.3 [T][High-risk] **Pre-Edit 후** Gateway 구성(journal·EntryGate journal-투영 재구성·해소기·예약 저장소 — nonce 소비는 1.7에서 journal 트랜잭션에 병합됨) → `runInterlock`은 구성 후 실행
 - [ ] 7.4 [T][High-risk] **Pre-Edit 후** `Context.TradingService` 봉인 + flatten을 자체 배선으로 전환(엔진 Context 미의존) — 정적 봉인 테스트, flatten P1 동작 characterization

@@ -28,9 +28,13 @@ package engine
 // who copied a config between machines, or swapped credentials, and is now about
 // to trade an account nobody verified.
 //
-// That read happens only when the gate is on. With the gate off — every machine
-// today — engine.New makes no network call at all and behaves precisely as it did
-// before this file existed (§0.2).
+// Since task 7.1 that read is no longer the interlock's: engine.NewContext
+// performs it on every start, gate or no gate, because the journal and the
+// gateway are scoped by the account too (design D8 step 1). The interlock
+// receives the resolved reference and compares. The §0.2 promise it used to make
+// — "the gate-off path makes no network call" — is therefore narrower now: the
+// gate-off path performs no *gate* work, and the one account read it does perform
+// is a read the engine profile needs regardless.
 //
 // # Audit (§0.5)
 //
@@ -102,8 +106,8 @@ type AutomationStatus struct {
 	// Verified reports that every interlock precondition held. It is false
 	// whenever Enabled is false — an off gate is not a verified one.
 	Verified bool
-	// AccountRef is the account the credentials resolved to. Only populated when
-	// the gate is on, because that is the only case where it is read.
+	// AccountRef is the account the credentials resolved to. Populated on every
+	// start since task 7.1 — the read is no longer conditional on the gate.
 	AccountRef string
 	// AttestationFile is where the attestation was looked for.
 	AttestationFile string
@@ -150,43 +154,51 @@ func boundIfPositive(v float64) execgw.Limit {
 	return execgw.Limit{}
 }
 
-// runInterlock records the audit trail and then verifies the gate.
-//
-// The audit comes first on purpose: an operator's change is worth recording
-// whether or not the engine then agrees to start on it, and the refusal record
-// that follows is what ties the two together.
-func runInterlock(ctx context.Context, gate config.AutomationGate, paths config.Paths,
-	reads OfficialReads, log *audit.Log, now time.Time, guardian execgw.Guardian,
-) (AutomationStatus, error) {
-	status := AutomationStatus{
+// newAutomationStatus is the status before anything has been verified: the
+// config's own account of itself.
+func newAutomationStatus(gate config.AutomationGate, paths config.Paths) AutomationStatus {
+	return AutomationStatus{
 		Enabled:         gate.Enabled,
 		AttestationFile: attestationPath(gate, paths),
 		Limits:          gateLimits(gate),
 	}
+}
 
-	if err := recordGateSettings(log, gate, status.AttestationFile); err != nil {
-		// A settings change we cannot record is a settings change nobody can
-		// audit, and §0.5 makes the audit trail mandatory rather than
-		// best-effort. Refusing here is the conservative direction: the engine
-		// does not start, and no order is placed off the record.
-		return status, fmt.Errorf("engine: recording the automation-gate audit trail: %w", err)
+// refuseStartup records a refusal against the gate and returns the error
+// unchanged, so a caller can `return nil, refuseStartup(...)`.
+//
+// It records only when the gate is on. A gate-off engine that fails to start has
+// not attempted anything the gate audit is about, and writing a "gate refused"
+// line for it would make the audit trail say something untrue.
+func refuseStartup(log *audit.Log, gate config.AutomationGate, err error) error {
+	if !gate.Enabled || log == nil {
+		return err
 	}
+	_ = log.Record(audit.Entry{
+		Action:  audit.ActionGateRefused,
+		Setting: "engine.automation_gate.enabled",
+		Old:     "true",
+		New:     "true",
+		Detail:  err.Error(),
+	})
+	return err
+}
 
+// runInterlock verifies the gate against what construction produced.
+//
+// The audit of the settings themselves happens earlier, in NewContext: it must
+// precede the account read, which can itself refuse the start (task 7.1).
+func runInterlock(status AutomationStatus, gate config.AutomationGate,
+	log *audit.Log, now time.Time, guardian execgw.Guardian,
+) (AutomationStatus, error) {
 	if !gate.Enabled {
 		// Off is the default and the whole of the behaviour: no attestation is
-		// read, no broker call is made, nothing is verified because nothing is
-		// permitted.
+		// read, nothing is verified because nothing is permitted.
 		return status, nil
 	}
 
-	if err := verifyGate(ctx, &status, reads, guardian, now); err != nil {
-		_ = log.Record(audit.Entry{
-			Action:  audit.ActionGateRefused,
-			Setting: "engine.automation_gate.enabled",
-			Old:     "true",
-			New:     "true",
-			Detail:  err.Error(),
-		})
+	if err := verifyGate(&status, guardian, now); err != nil {
+		_ = refuseStartup(log, gate, err)
 		return status, err
 	}
 
@@ -209,9 +221,7 @@ func runInterlock(ctx context.Context, gate config.AutomationGate, paths config.
 }
 
 // verifyGate is the six-step check. It stops at the first failure.
-func verifyGate(ctx context.Context, status *AutomationStatus, reads OfficialReads,
-	guardian execgw.Guardian, now time.Time,
-) error {
+func verifyGate(status *AutomationStatus, guardian execgw.Guardian, now time.Time) error {
 	// 1-2. The authority and its limits, before any I/O: these are configuration
 	//      mistakes and there is no reason to spend a broker call discovering one.
 	if guardian == nil {
@@ -230,13 +240,14 @@ func verifyGate(ctx context.Context, status *AutomationStatus, reads OfficialRea
 	}
 	status.AttestationExpiresAt = att.ExpiresAt
 
-	// 5. The account the credentials actually reach.
-	accountRef, err := resolveAccountRef(ctx, reads)
-	if err != nil {
-		return fmt.Errorf("%w: the account could not be resolved, so the attestation cannot be "+
-			"matched against it: %w", ErrAutomationGateRefused, err)
+	// 5. The account the credentials actually reach. Resolved during
+	//    construction (task 7.1) rather than here, because it is needed whether
+	//    or not the gate is on; an empty one means construction let a start
+	//    through that it should have refused.
+	accountRef := strings.TrimSpace(status.AccountRef)
+	if accountRef == "" {
+		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, ErrAccountUnresolved)
 	}
-	status.AccountRef = accountRef
 
 	// 6. Expiry, account match and endpoint coverage, in one verification.
 	if err := att.Verify(now, accountRef, RequiredEndpoints()); err != nil {
