@@ -94,6 +94,17 @@ type Options struct {
 	// 7.5). Nil discards it — obs.Logger's methods are nil-safe — which is what
 	// the tests that only assert on the audit trail want.
 	Logger *obs.Logger
+	// Publisher is the transport critical alerts are delivered over. Nil is the
+	// default and it is *not* neutral: with no transport a critical alert stays
+	// PENDING in the outbox, latches the entry gate, and eventually tightens the
+	// operating mode. That is the specified direction (risk-management: critical
+	// 알림 outbox 전달 실패 지속 → ENTRY_BLOCKED) — an engine that cannot tell its
+	// operator a position is unprotected should not be opening more.
+	//
+	// It is a wiring field rather than a config block because nothing in this
+	// change audits notification settings, and an operational setting with no
+	// audit trail is the thing §0.5 exists to prevent.
+	Publisher obs.Publisher
 
 	// protectionOverride satisfies interlock clause 6. Unexported, therefore
 	// test-only, and reached through export_test.go.
@@ -165,6 +176,25 @@ type Context struct {
 	// at startup and it is what a reconciliation loop observes into.
 	Reconcile *reconcile.Tracker
 
+	// Retrier runs the engine's required queries under the retry matrix. It is
+	// exported because every loop that reads the broker has to go through it:
+	// that is what stamps a query's freshness (and therefore what clears a
+	// staleness block), and what turns a 401/403 into a durable ENTRY_BLOCKED
+	// rather than a latch a restart lifts.
+	Retrier *execgw.Retrier
+
+	// Notifier grades and delivers the engine's alerts, and owns the critical
+	// outbox. Exported for the same reason Entry is: an operator surface has to
+	// be able to flush and acknowledge a backlog.
+	Notifier *obs.Notifier
+
+	// Ingest folds holdings the projection has never seen into it; Converge
+	// writes a quantity mismatch back to the account's own number. A
+	// reconciliation loop drives both, and between them they are what makes the
+	// automatic ADJUSTMENT_APPLIED release reachable rather than theoretical.
+	Ingest   *reconcile.Ingestor
+	Converge *reconcile.Converger
+
 	// Automation reports what the startup interlock decided about the automation
 	// gate. Zero value = gate off.
 	Automation AutomationStatus
@@ -173,6 +203,12 @@ type Context struct {
 	Guardian execgw.Guardian
 	// Audit is the operational-settings audit log.
 	Audit *audit.Log
+
+	// exitFloor is the RECONCILE cap the exit observation loop consults. It stays
+	// unexported: it is a seam of one loop, not an operator surface, and handing
+	// it out would invite a second caller to bound a liquidation by it (§0.3 —
+	// manual flatten reads its own sellable quantity and must keep doing so).
+	exitFloor *reconcileFloor
 
 	// official is the concrete client behind Official. It stays unexported: the
 	// engine's own wiring occasionally needs the concrete type, and handing it
@@ -406,6 +442,8 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		official:   off,
 		accountRef: accountRef,
 		clock:      clk,
+		logger:     opts.Logger,
+		publisher:  opts.Publisher,
 	})
 	if err != nil {
 		_ = jrn.Close()
@@ -445,6 +483,11 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		Entry:          wiring.entry,
 		Resolver:       wiring.resolver,
 		Reconcile:      wiring.reconcile,
+		Retrier:        wiring.retrier,
+		Notifier:       wiring.notifier,
+		Ingest:         wiring.ingest,
+		Converge:       wiring.converge,
+		exitFloor:      wiring.floor,
 		Automation:     automation,
 		Guardian:       guardian,
 		Audit:          auditLog,

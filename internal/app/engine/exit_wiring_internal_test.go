@@ -12,8 +12,12 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
 func TestBindingWiresBothApplyHooks(t *testing.T) {
@@ -68,5 +72,56 @@ func TestTheBoundExitApplierIsTheJournalsOwn(t *testing.T) {
 		AveragePrice: "70000", ObservedAt: "2026-03-30T00:30:00Z",
 	}); err != nil {
 		t.Fatalf("RecordFill through the bound hooks: %v", err)
+	}
+}
+
+// --- the production constructors (task 7.4 succession) -------------------------
+
+// TestTheRetrierCarriesItsEscalationFields is the succession item task 3.2 left
+// behind: the trigger producers were wired and nothing constructed them, so the
+// escalation was code with no caller.
+//
+// The fields are checked by *behaviour*, not by reflection: a 401 through the
+// Retrier has to leave ENTRY_BLOCKED on disk, because an in-memory latch is
+// lifted by exactly the restart an operator performs when they see a credential
+// error.
+func TestTheRetrierCarriesItsEscalationFields(t *testing.T) {
+	ctx := context.Background()
+	j := openTestJournal(t)
+	clk := clock.NewFake(time.Date(2026, 3, 30, 1, 0, 0, 0, time.UTC))
+	gate := execgw.NewEntryGate(clk, nil)
+
+	notifier := newNotifier(j, gate, "acct-wiring", nil, nil, clk)
+	retrier := newRetrier(j, gate, "acct-wiring", notifier, nil, clk)
+
+	err := retrier.Query(ctx, execgw.QueryHoldings, func(context.Context) error {
+		return official.ErrAuth
+	})
+	if err == nil {
+		t.Fatal("a 401 must be returned, not swallowed")
+	}
+	rec, modeErr := j.CurrentOperatingMode(ctx, "acct-wiring")
+	if modeErr != nil {
+		t.Fatalf("CurrentOperatingMode: %v", modeErr)
+	}
+	if rec.Mode != journal.ModeEntryBlocked {
+		t.Fatalf("mode = %s, want ENTRY_BLOCKED persisted — a latch alone is lifted by a restart", rec.Mode)
+	}
+	if rec.Cause != journal.ModeTriggerCredentialRejected {
+		t.Errorf("cause = %s, want the enumerated trigger", rec.Cause)
+	}
+}
+
+// TestTheNotifierIsScopedToTheAccountAndTheGate: without AccountRef the
+// undelivered-alert producer degrades to a latch, and without the journal the
+// outbox is not durable at all.
+func TestTheNotifierIsScopedToTheAccountAndTheGate(t *testing.T) {
+	j := openTestJournal(t)
+	clk := clock.NewFake(time.Date(2026, 3, 30, 1, 0, 0, 0, time.UTC))
+	gate := execgw.NewEntryGate(clk, nil)
+
+	n := newNotifier(j, gate, "acct-wiring", nil, nil, clk)
+	if n.Journal == nil || n.Gate == nil || n.AccountRef != "acct-wiring" {
+		t.Fatalf("notifier = %+v, want the durable outbox, the gate and the account", n)
 	}
 }

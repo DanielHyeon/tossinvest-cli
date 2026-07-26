@@ -45,6 +45,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
@@ -73,6 +74,10 @@ type gatewayInputs struct {
 	official   *official.Client
 	accountRef string
 	clock      clock.Clock
+	// logger and publisher are the alert path's two halves. Both may be nil; see
+	// newNotifier for what a nil publisher costs.
+	logger    *obs.Logger
+	publisher obs.Publisher
 }
 
 // engineWiring is the execution stack the engine profile owns.
@@ -81,6 +86,18 @@ type engineWiring struct {
 	entry     *execgw.EntryGate
 	resolver  *execgw.Resolver
 	reconcile *reconcile.Tracker
+	// retrier and notifier are the two producers task 3.2 wired and nothing
+	// constructed (issues.md: "엔진 프로필에는 아직 Retrier도 Notifier도 구성하는
+	// 곳이 없다"). They are built here, with their escalation fields populated.
+	retrier  *execgw.Retrier
+	notifier *obs.Notifier
+	// converge issues the adjustment that makes an ADJUSTMENT_APPLIED release
+	// reachable for a quantity mismatch (task 7.5 succession).
+	converge *reconcile.Converger
+	// ingest folds external holdings in and alerts on them.
+	ingest *reconcile.Ingestor
+	// floor is the exit loop's RECONCILE cap source.
+	floor *reconcileFloor
 }
 
 // ErrProjectionUnbound means the fill apply hook that produces the position
@@ -223,10 +240,36 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		return engineWiring{}, fmt.Errorf("engine: constructing the execution gateway: %w", err)
 	}
 
+	// The alert path and the query retrier, in that order: the Retrier announces
+	// its transitions through the Notifier, so the Notifier has to exist first.
+	notifier := newNotifier(in.journal, entry, in.accountRef, in.logger, in.publisher, in.clock)
+	retrier := newRetrier(in.journal, entry, in.accountRef, notifier, nil, in.clock)
+
+	// The two writers a reconciliation pass needs. They are separate because the
+	// events are: a holding with no local instance is folded in and reported
+	// (Ingestor), and a quantity the account disagrees with is converged to the
+	// account's own number (Converger). Both write, which is what makes the
+	// ADJUSTMENT_APPLIED release reachable at all (issues.md, task 6.3).
+	alerter := notifierAlerter{notifier: notifier}
+	ingest := &reconcile.Ingestor{
+		Journal: in.journal, Alert: alerter, AccountRef: in.accountRef,
+	}
+	converge := &reconcile.Converger{
+		Journal: in.journal, Credit: tracker, AccountRef: in.accountRef,
+	}
+
 	return engineWiring{
 		gateway:   gateway,
 		entry:     entry,
 		resolver:  resolver,
 		reconcile: tracker,
+		retrier:   retrier,
+		notifier:  notifier,
+		ingest:    ingest,
+		converge:  converge,
+		floor: &reconcileFloor{
+			official: in.official, tracker: tracker, journal: in.journal,
+			retrier: retrier, clk: in.clock, account: in.accountRef,
+		},
 	}, nil
 }
