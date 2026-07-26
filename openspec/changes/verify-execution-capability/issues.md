@@ -101,3 +101,60 @@ triggerPrice 를 시장가보다 훨씬 **위**로(발동 안 됨), orderPrice �
 ## Manager 판정 (웹 콘솔, 2026-07-26)
 
 - 사용자 결정: 검증을 웹 화면에서 수행. 승인 채널을 TTY→localhost 웹 폼으로 확장하되 등가성 조건을 태스크 1.6에 명시(토큰+CSRF+nonce 타이핑, runner 레일 무변경, CLI 비대화 승인 경로 신설 금지). TTY의 실질은 "사람의 의도적 타이핑"이며 웹 폼 타이핑은 같은 강도 — 자동화 차단의 실체는 양쪽 모두 결의된 사용자를 막지 못하고, 지키는 것은 사고·에이전트의 무의도 mutation이다. P4 웹 데몬 아키텍처와는 별개의 임시 운영자 표면임을 명시(단일 사용자·루프백 한정).
+
+## 2026-07-26 · task 1.6 (`tossctl console`) 구현
+
+### ⓪ seam 변경 없음 — `internal/verifylive`는 한 줄도 바뀌지 않았다
+
+설계 지시는 "Confirmer seam이 주입 가능하지 않으면 unexported 생성자를 만들라"였으나, 확인 결과
+`verifylive.Options.Confirm` / `.ConfirmBatch` 는 이미 exported 필드이고 `verifylive.New` 가
+공개 생성자다. 콘솔은 자신의 `BatchConfirmer` 를 넘기는 것으로 끝이며, verifylive 패키지 파일은
+**추가·수정 0건**이다. 계획 인가(`Plan.Authorises`)·상한·취소·`ErrOutsidePlan` 전부 무변경.
+
+주입 가능성이 넓다는 점은 대신 `cmd/tossctl` 쪽 정적 가드로 좁혔다 — `console_test.go` 가
+(a) `verify.go` 의 runner 가 여전히 `terminalConfirmer` / `terminalBatchConfirmer` 를 쓰는지 AST로,
+(b) `internal/console` 를 import 하는 파일이 `console.go` 하나뿐인지 소스 워크로 검증한다.
+
+### ② safe local — 오승인 처리: 틀린 nonce는 재시도가 아니라 중단
+
+TTY 계약은 "Type the confirmation string to approve, anything else to abort" 다. 웹에서 재입력을
+허용하면 5분 창이 5분치 추측으로 바뀌므로 같은 계약을 택했다: 틀리면 `ErrRefused` 를 runner에
+전달해 실행이 끝나고(전송 0건), 페이지가 다시 시작하라고 안내한다. 승인 거부는 record에
+`KindApproval`·`refused` 로 남고 `StepCount` 는 0이라 다음 시도를 막지 않는다.
+
+### ② safe local — 콘솔은 항상 "이어하기"이고, 프로세스당 검증 1회다
+
+- `verify run` 의 "기록이 있으면 `--resume` 없이는 거부" 가드는 콘솔에 옮기지 않았다. 콘솔에는
+  잊을 수 있는 플래그가 없고, runner 자체가 판정이 끝난 단계를 건너뛰며 plan에서 사유와 함께
+  제외하므로 기록을 이어가는 것이 유일하게 안전한 기본값이다.
+- 대신 **한 프로세스에서 단계를 밟은 검증은 1회로 제한**했다(`Console.spent`). 조건주문 존속은
+  등록한 프로세스가 죽은 뒤에만 관측되므로, 이 경계는 안내문이 아니라 거부로 구현했다. 재시작한
+  콘솔은 기록을 읽어 `awaiting-restart` 를 감지하고 버튼 라벨을 "이어하기"로 바꾼다.
+
+### ② safe local — `--confirm-each` 미제공, per-mutation confirmer는 거부값
+
+태스크 지시대로 웹은 배치 승인 전용이다. `verifylive.Options.Confirm` 은 nil을 거부하므로
+`consoleMutationConfirmer()` 를 넣었고, 이 함수는 항상 `ErrNotATerminal` 을 돌려준다 — 나중에
+누군가 `ConfirmEach` 를 켜더라도 승인이 아니라 거부로 실패한다. `console.go` 가 `ConfirmEach:` 를
+쓰지 않는 것도 테스트가 확인한다.
+
+### ② safe local — `consoleProbeSymbol` 은 `verify run --symbol` 기본값의 복제다
+
+`verify.go` 는 라이브 주문 경로라 이 태스크 범위에서 건드리지 않았다. 대신 상수를 콘솔 쪽에
+따로 두고, 두 값이 어긋나면 실패하는 테스트를 뒀다(`TestConsoleProbeSymbolMatchesVerifyRunsDefault`).
+
+### ② safe local — 기존 테스트 파일 1건 수정: `help_convention_test.go`
+
+`TestMutatingAnnotationOnTradeCommands` 는 `mutating=true` 인 leaf 커맨드를 화이트리스트로
+강제한다. `tossctl console` 은 runner를 통해 실주문을 낼 수 있으므로 정직하게
+`mutating=true` 로 표기했고, 그 목록에 사유 주석과 함께 추가했다. 프로덕션 동작 변경 없음.
+
+### 남은 위험 · 범위 밖
+
+| 항목 | 상태 |
+|---|---|
+| HTTP(평문) | 루프백 전용이라 TLS 없음. 세션 토큰은 URL→쿠키 1회 교환 후 주소창에서 제거된다 |
+| 세션 토큰이 터미널 스크롤백에 남는다 | 설계상 그렇다 — "터미널 점유 = 인증"이 인증 모델이다. 토큰은 프로세스마다 새로 발급된다 |
+| 게이트 ON | 콘솔 범위 밖(태스크 명시). 라우트도 없고 대시보드가 그렇게 적는다 |
+| 진행 스트리밍 | SSE 아님 — 2초 meta refresh. 단, nonce 폼이 떠 있는 동안에는 새로고침하지 않는다(입력 유실 방지) |
+| `cmd/tossctl` 의 TestMain에는 testenv 가드가 없다 | 기존 상태 유지. 신규 `internal/console` 테스트에는 설치했다 |
