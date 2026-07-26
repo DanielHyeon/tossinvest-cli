@@ -250,6 +250,88 @@
   운영자에게 "신호가 아무것도 내지 않았다"와 "말이 안 되는 값을 냈다"를 알려주는 것이다.
   두 경우 다 거부이므로 안전 방향의 차이는 없다.
 
+## 2026-07-26 [safe local] `AppliedFill`에 직전 스냅샷 쌍을 추가했다 (task 6.1)
+
+- 사실: 투영의 원가는 주문 기여분 `누적체결 × 평균가`의 **변화**다. hook은 스냅샷 upsert
+  **뒤에** 돌아서(fills.go 순서) 직전 값이 그 시점에 이미 사라져 있다.
+- 문제: 직전 쌍 없이 쓸 수 있는 근사는 "델타 × 주문의 현재 평균가"뿐인데, 한 주문이 서로 다른
+  가격으로 두 번 이상 체결되면 틀린다(50@100 후 50@110 → 현재평균 105, 한계원가는 5500인데
+  근사는 5250). 취득단가는 실질 본전·실현 R의 분자라 §0.3 인접이다.
+- 이번 처리: `AppliedFill`에 `PrevCumulativeQuantity`·`PrevAveragePrice`·`OrderedQuantity`
+  3필드 **가산**(apply_hook.go 선언 + fills.go에서 `prev`·`obs.Quantity` 대입). 기존 필드·
+  hook 계약·guarded 컬럼 규칙 무변경. 한 식이 체결·정정·terminal 세 경로를 모두 덮는다.
+- 검증: `TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis`(첫 관측은 빈 쌍,
+  두 번째는 (5, 70000), 5@70000+5@80000 → 75000).
+
+## 2026-07-26 [safe local] OPENING 종료는 **주문별** 원주문 수량이고 lineage가 합성한다 (task 6.1)
+
+- 사실: 스펙은 "OPENING 종료 판단(원주문 수량)"이라고만 적는다. D7의 `positions`에는 추적 중인
+  주문을 담을 컬럼이 없다(정정 교체 시 브로커가 새 주문번호를 준다 — lineage.go).
+- 이번 처리: 완료 판정은 **체결 중인 주문 자신의** 주문수량 대비다. 정정 교체가 없으면 그것이
+  곧 원주문이고, 있으면 부모는 체결분에서 `SUCCEEDED`(전이표의 lineage 차원)로 끝나고 자식의
+  주문수량이 잔여라서 체인 전체가 원요청에서 정확히 완료된다. "기억된 원주문"으로 판정하려면
+  스키마에 없는 주문 식별자를 투영이 들고 있어야 하고, 수량을 바꾼 정정에서는 그쪽이 틀린다.
+- 부수 규칙: 주문수량이 `""`(미상)이면 완료를 판정할 수 없으므로 브로커가 terminal이라고 할
+  때까지 `WORKING`이다 — 완료를 가정하면 아직 체결 중인 진입을 OPEN으로 닫는다.
+- 검증: `TestOpeningCompletesAtTheOrderedQuantity`, `TestLineageSuccessionKeepsThePositionOpening`,
+  `TestAnAmendmentKeepsOneInstance`(journal), `TestNoOrderedQuantityLeavesTheOrderWorking`.
+
+## 2026-07-26 [safe local] 금지 전이는 투영자가 같은 트랜잭션에서 RECONCILE을 쓰고 체결은 커밋된다 (task 6.1)
+
+- 사실: 스펙은 "허용되지 않은 전이는 오류이며 RECONCILE로 전이한다(산식 보정 금지)"인데,
+  `positions.state` CHECK에 RECONCILE은 없다 — RECONCILE은 `reconcile_states`의 시스템 상태다.
+- 문제: hook이 오류를 반환하면 체결 트랜잭션 전체가 롤백되어 **스냅샷이 전진하지 않고**
+  다음 폴에서 같은 실패가 반복된다(체결 검출 영구 정지). 브로커가 알려준 사실을 잃는 쪽이
+  그것과 불일치하는 쪽보다 나쁘다.
+- 이번 처리: 투영은 수량·단가를 **동결**(산식 보정 금지)하고, 같은 apply tx 안에서
+  `reconcile_states`에 심볼 스코프 행을 넣는다(활성 행이 있으면 no-op — `entered_at`이 폴마다
+  전진하면 영원히 새 상태로 보인다). 체결 스냅샷·이벤트는 정상 커밋된다. 사유 매핑은 둘뿐이다:
+  초과매도 = `QUANTITY_MISMATCH`(지역 수량과 브로커 체결의 문자 그대로의 불일치), 나머지 셋 =
+  `ATTRIBUTION_FAILED`. hook에서 exported `*Journal` 메서드를 못 쓰므로(단일 커넥션, apply_hook.go
+  규칙 4) `EnterReconcile`의 규칙을 handle 위에 다시 적었다.
+- 후속 task 입력: **6.3**의 자동 해제(ADJUSTMENT_APPLIED)가 이 경로로 들어온 상태도 대상이다.
+  조정만으로는 해제하지 않는다 — 해제 규칙은 6.3의 몫(`TestAnAdjustmentConvergesAFrozenProjection`이
+  "블록은 그대로"를 단언하므로 6.3이 이 단언을 바꿔야 한다 = 사전 열거 대상 1건).
+
+## 2026-07-26 [safe local] CLOSING 중 매수 체결(E31–E33)을 금지 전이로 판정했다 (task 6.1)
+
+- 사실: 스펙이 표가 다뤄야 한다고 열거한 것은 즉시 전량체결·OPENING 종료·SCALING·lineage·
+  매도 귀속·CLOSED 종결성이고, "청산 주문 진행 중 진입 체결"은 열거에 없다. 초과매도·귀속불가와
+  달리 이것은 산술적 불가능이 아니라 **판정**이다.
+- 이번 처리: 금지(RECONCILE). 근거는 §0.9 보수 방향 — 한 포지션에 상반된 두 지시가 동시에
+  살아 있고 투영은 엔진이 아직 어느 쪽을 믿는지 알 수 없다. SCALING으로 처리하면 보호 경로가
+  줄어드는 중이라고 믿는 동안 포지션이 커진다. 잃는 것은 없다(체결은 기록되고 수량 권위는
+  계좌이며 6.2가 수렴시킨다). **수량이 움직이지 않는 delta 0 관측(정정·terminal)은 금지가
+  아니다** — 금지는 수량이 움직였을 때만 발화한다(E13–E15는 허용).
+- 후속 task 입력: **7.4**가 t0 하회 전량 청산을 발의할 때 작업 중인 진입 주문을 먼저 취소하지
+  않으면 그 창에서 들어온 체결이 이 RECONCILE을 만든다. 취소가 7.x 설계에 들어가야 한다.
+
+## 2026-07-26 [safe local] 미관측 평균가는 0이 아니고, 인스턴스 원가를 영구 미상으로 만든다 (task 6.1)
+
+- 사실: `averageFilledPrice`는 nullable이고(openapi) journal의 규약은 `""`=미관측이다
+  (fill_snapshots.average_price). D7의 `positions.avg_price`는 `TEXT NOT NULL`이라 `""`가 쓸 수 있다.
+- 문제: 미관측을 0으로 접으면 취득단가가 과소 계상되고 → 실질 본전이 내려가고 → **손실 구간을
+  본전으로 오인해 청산**한다. 방향이 fail-open이다.
+- 이번 처리: 미관측 가격은 `position.Unknown`(`""`)이고, 한 번 미상이 된 인스턴스의 원가는
+  수명 내내 미상으로 남는다(빠진 조각은 뒤 조각들의 평균으로 복구되지 않는다). 수량 투영은
+  정상 진행한다 — 수량은 알고 있다. 읽는 쪽이 `""`에서 fail-closed 하는 것이 계약이다.
+- 함께: `avg_price`는 투영에서 **유일하게 반올림되는 값**이다(원가 ÷ 수량은 종료하지 않을 수
+  있다). 소수 12자리·half-away-from-zero(`big.Rat.FloatString`), 수량 산술은 riskcalc 정확 연산
+  그대로. 근거와 누적 오차 상한은 `internal/position/decimal.go`의 `avgPriceScale` 주석.
+- 검증: `TestAnUnpricedFillPoisonsTheCostBasis`, `TestAnUnpricedFillLeavesTheBasisUnknown`.
+
+## 2026-07-26 [observation] 인스턴스 귀속은 (계좌·시장·심볼)의 최신 인스턴스다 (task 6.1)
+
+- 투영은 체결을 그 심볼의 `instance_seq` 최대 행에 귀속시킨다. 스키마에 주문→인스턴스 링크가
+  없고(D7 표에 없다) 추가하려면 v6를 다시 열어야 하기 때문이다.
+- 한계: **닫힌 인스턴스에 속한 주문의 지연 정정**(CLOSED 후 새 인스턴스가 열린 뒤 도착하는
+  EXECUTION_CORRECTION)은 현 인스턴스의 원가로 간다. 수량은 움직이지 않으므로 노출·손절 계약에는
+  영향이 없고, 잘못될 수 있는 것은 취득단가다. 지금은 CLOSED 인스턴스에 대한 delta 0 관측이
+  종결성 규칙으로 무시되므로(E16–E18, X16–X18) 오귀속은 "새 인스턴스가 이미 열려 있을 때"로
+  한정된다.
+- 후속 task 입력: **6.4**의 provenance 질의가 주문→인스턴스 조인을 필요로 하면 그때
+  `fill_events`에 인스턴스 참조를 더하는 것이 자연스럽다(추가 컬럼 = 새 스키마 버전).
+
 ## Manager 판정 (1차 물결 검증, 2026-07-26)
 
 - **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).

@@ -116,6 +116,23 @@ type AppliedFill struct {
 	CumulativeQuantity string
 	AveragePrice       string
 	FilledAmount       string
+	// OrderedQuantity is the quantity the order was placed for — 원주문 수량,
+	// which is what the projection judges "this entry is complete" against
+	// (internal/position). It is the broker's own `quantity` from this snapshot.
+	OrderedQuantity string
+	// PrevCumulativeQuantity and PrevAveragePrice are the snapshot as it stood
+	// *before* this observation. They are carried rather than re-read because by
+	// the time a hook runs the row has already been advanced and the previous
+	// values no longer exist anywhere.
+	//
+	// They are what makes a cost basis exact. An order's contribution to a
+	// position is `cumulative filled × average price`, so what one observation
+	// contributes is the change in that product — and without the previous pair
+	// the only available approximation is "the delta cost the order's *current*
+	// average", which is wrong for every order that filled in more than one
+	// piece at more than one price. Both are "" on an order's first observation.
+	PrevCumulativeQuantity string
+	PrevAveragePrice       string
 	// Corrected reports an EXECUTION_CORRECTION: the quantity did not move but
 	// the average price or the amount did, so the position's cost basis has.
 	Corrected bool

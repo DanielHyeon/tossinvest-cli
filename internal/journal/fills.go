@@ -412,9 +412,16 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		CumulativeQuantity: orZero(obs.FilledQuantity),
 		AveragePrice:       obs.AveragePrice,
 		FilledAmount:       obs.FilledAmount,
-		Corrected:          res.Corrected,
-		BrokerVisibleAt:    obs.BrokerVisibleAt,
-		CommittedAt:        now,
+		OrderedQuantity:    obs.Quantity,
+		// `prev` is the row this transaction has just overwritten. It is read
+		// here and nowhere else because this is the last scope in which it
+		// exists (add-core-domain task 6.1: the projection's cost basis is the
+		// change in the order's `filled × average`, which needs both ends).
+		PrevCumulativeQuantity: prev.FilledQuantity,
+		PrevAveragePrice:       prev.AveragePrice,
+		Corrected:              res.Corrected,
+		BrokerVisibleAt:        obs.BrokerVisibleAt,
+		CommittedAt:            now,
 	}); err != nil {
 		return res, err
 	}
