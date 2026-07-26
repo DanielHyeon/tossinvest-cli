@@ -122,7 +122,14 @@ Leave it running. Ctrl-C stops it and keeps everything already recorded; running
 it again appends to the same record, so a reboot costs a cycle, not a day.
 
 Three consecutive days is the bar (execution-verification). At the default
-15-minute interval that is roughly 288 cycles.`),
+15-minute interval that is roughly 288 cycles.
+
+While a live verification is running (` + "`tossctl verify run`" + ` or ` + "`tossctl console`" + `)
+this command delays its cycle instead of competing for the same rate limit — the
+two share one account and one budget, and a verification step lost to a 429 costs
+a real order. The marker is a file beside the evidence record; a stale one (over
+five minutes untouched) is ignored, so a crashed verification cannot wedge the
+survey.`),
 		// official: every read goes to the Open API. Not mutating: the survey
 		// issues no request that can change an account.
 		Annotations:  map[string]string{"source": "official"},

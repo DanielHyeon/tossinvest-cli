@@ -172,3 +172,84 @@ TTY 계약은 "Type the confirmation string to approve, anything else to abort" 
 - **측정 0건의 원인 3가지 전부 환경**: 일요일 휴장(M1), account-seq 429(M4), 보유 0(M5). 그런데 `fail`/`skipped`가 terminal이라 **콘솔(always-resume, redo 부재)에서는 재측정이 불가** — 콘솔 단독 운용이라는 사용자 결정과 충돌하는 갭. task 1.7 발주.
 - **`--conditional-buy-fallback` 최종 기각** (앞선 보류 판정의 발동 조건 "사용자가 skip을 실제로 만나면"이 성립했으나): BUY 폴백으로 측정 가능한 것은 조건주문 등록·조회·존속·정정·취소 endpoint뿐이고, **2c의 임계 입력인 SELL측**(SINGLE+MARKET 손절 실동작·sell-boundary·sellable 예약 의미, 2.5 후반·2.6·2.8)은 보유 없이는 어떤 폴백으로도 측정 불가. long-only 제품은 모든 포지션에 SELL 보호가 필요하므로 SELL측 미측정 = 게이트 영구 폐쇄. 따라서 **KR 종목 1주 보유는 폴백으로 우회할 수 없는 선행 조건**이고, 1주를 보유하면 폴백은 불필요해진다(보류 판정의 자체 논리). 사용자 협조 절차에 "1회, 임의 KR 종목 1주 수동 매수"를 선행 조건으로 확정한다 — 도구는 계속 매수하지 않는다(레일 유지).
 - **1.7 범위 통제**: 재측정은 fail·skipped 단계에 한정하고 반드시 **새 배치 승인(신규 nonce)** 경유 — 비대화 승인 경로 신설 금지 유지. 장시간 경고는 advisory(정규장 달력을 하드 레일로 박지 않음 — 주문 접수 창은 [미측정]). 429 대응은 읽기 전용 단계만 재시도, mutation 자동 재시도 금지.
+
+## 2026-07-26 · task 1.7 (재측정 경로·실행 강건성) 구현
+
+### ① 재측정 — 라우트를 늘리지 않고 mode로 분기
+
+`/verify/start`에 `mode=redo` 폼 값을 더했다. 새 라우트(`/verify/redo`)를 만들면
+`static_test.go`의 두 게이트 표(세션 전수·CSRF 전수)와 라우트 수 하한을 함께 고쳐야 하고,
+"승인 문을 하나로 유지한다"는 1.6의 성질이 약해진다. 라우트 표는 무변경(7개)이다.
+
+**대상 집합은 폼이 아니라 기록에서 계산한다.** `handleStart`는 `c.redoSet()`으로
+`capability-verify.jsonl`을 다시 읽어 `verifylive.RedoSet`을 부른다. 폼에 단계 ID를 넣어도
+무시된다 — 런타임 테스트(`TestTheRedoSetComesFromTheRecordAndNotFromTheForm`)와 소스 가드
+(`pages.go`에 `verifylive.StepID(` 변환·`r.PostForm[` 접근 금지) 양쪽으로 고정했다. 폼이
+단계를 지명할 수 있으면 이미 pass한 단계에 두 번째 실주문을 겨눌 수 있기 때문이다.
+
+`refused`는 대상이 아니다(태스크 문언이 fail·skipped로 한정). 어차피 콘솔은 배치 승인 전용이라
+단계 수준 `refused`를 만들 수 없다 — 배치 거부는 `KindApproval` 라인이고 단계 판정이 아니다.
+
+### ② advisory — Go 코드가 읽지 못하게 막았다
+
+`verifylive.KRSessionAdvisory`는 판정을, 템플릿은 문장을 담당한다. `static_test.go`에
+**data.go·templates.go 밖에서 `.Outside`·`KRSessionAdvisory(`를 언급하면 실패**하는 가드를
+넣었다 — advisory가 조건문이 되는 순간 미측정 달력이 레일이 되기 때문이다.
+
+`steps.go`의 `sessionLabel()`이 같은 창(평일 09:00–15:30 KST)을 쓰고 있었으므로 hours.go로
+옮겨 정의를 하나로 만들었다. 출력 문자열은 기존과 동일하고 테스트가 그 동일성을 고정한다.
+
+advisory 문장은 한국어다 — 유일한 소비자가 한국어 콘솔 화면이다. 실측 코드
+`order-hours-closed`와 `HTTP 422`는 원문 그대로 인용해 증거와 대조 가능하게 뒀다.
+
+### ③ 429 — 셋 다 했고, 하나는 지시보다 더 갔다
+
+**account-seq**: 지시는 "run당 1회 캐시"였다. 확인해보니 `official.Client`는 이미 성공 후
+캐시한다 — 진짜 낭비는 **`/api/v1/accounts`를 두 번 읽는 것**이었다. `buildVerifyBroker`가
+계좌 표기용으로 1회 읽고 seq를 버리면, 각 단계의 첫 account-scoped GET이 lazy 해석으로 또
+읽는다. 그 두 번째가 M4의 429다. 이제 첫 조회의 seq로 `WithAccountSeq` 클라이언트를 구성해
+**lazy 해석이 아예 일어나지 않는다**(토큰은 디스크 캐시라 재교환 없음).
+
+부수 효과 1건 — 표기용 계좌와 헤더 계좌를 **같은 엔트리**에서 뽑도록 바꿨다. 기존에는
+표기는 DisplayName이 빈 것을 건너뛰며 스캔하고 헤더는 `accts[0]`을 썼다. 자격증명 1세트 =
+계좌 1개인 현 환경에서는 차이가 없지만, 다계좌에서는 "A를 측정했다고 적고 B를 측정"할 수
+있는 잠재 불일치였다. ID가 숫자가 아니면 seq=0으로 두어 기존 lazy 경로로 되돌아간다.
+
+부수 효과 2건 — **이 계정 조회 자체도 429면 재시도한다**. 태스크 문언은 "읽기 전용 단계"지만
+이 호출은 Runner가 생기기도 전, 사람에게 아무것도 묻기 전에 run 전체를 죽이는 지점이고
+M4에서 실제로 죽은 호출이다. 정책 상수는 `verifylive.ReadRetryExtraAttempts` /
+`ReadRetryBackoff`로 export해 정의를 한 곳에만 뒀다.
+
+**읽기 재시도**: `readRetry`(제네릭 헬퍼)가 `official.ErrRateLimited`에만, 15s·30s로 2회 더
+보낸다. **모든 시도가 개별 `Call`로 기록에 남는다** — 1.3 retry matrix의 입력이 시도 로그
+자체이므로, 성공한 시도만 남기면 재시도가 존재하는 이유를 기록이 감춘다.
+
+`plan.go`의 sellable 조회도 같은 경로를 탄다(단계가 아직 없으므로 로깅은 생략). 이 읽기가
+429로 죽으면 매도측 배치 전체가 조용히 plan에서 빠지는데, 그게 M4의 실제 피해다.
+
+**mutation 재시도 없음**: transport 데코레이터가 아니라 읽기 경로만 부르는 헬퍼로 만든 이유다.
+`TestAMutationIsNeverRetried`가 429 하에서 `PlaceOrder` 전송 1건·대기 0초를 고정한다.
+
+**run 전역 재시도 예산은 두지 않았다** — 호출당 2회로만 제한했다. 최악의 경우 429가 지속되면
+읽기 1건당 45초를 쓴다(읽기 10건이면 7분 남짓). 상태와 테스트 표면을 늘릴 값어치가 있는지
+Manager 판단을 남긴다.
+
+### ③ soak 일시정지 — soak은 파일을 모른다
+
+`internal/runlock`(신규, os·time만 의존)이 마커를 소유하고, verify/console 배선이 run 동안
+보유·1분 주기 갱신한다. **soak은 `Options.PauseWhile` 훅만 받는다** — `internal/soak`이
+runlock을 직접 import해도 정적 가드는 통과하지만, "soak은 자기 기록 말고 아무것도 만지지
+않는다"는 성질과 fake clock 테스트 가능성을 지키려고 seam으로 뒀다. 배선은 cmd/tossctl.
+
+stale 기준은 mtime 5분(갱신 1분 = 4회 연속 실패해야 죽은 것으로 본다). 마커를 못 쓰면
+verify는 한 줄 안내만 하고 그대로 진행한다 — 양방향 advisory다.
+
+### 남은 위험 · 범위 밖
+
+| 항목 | 상태 |
+|---|---|
+| 재측정도 프로세스당 1회 | `Console.spent` 그대로. 재측정 뒤 또 재측정하려면 콘솔 재시작 — 조건주문 존속 경계 보존이 우선 |
+| 429 지속 시 run 소요 | 읽기당 최대 45초. 진행 로그에 재시도 사유·대기를 출력한다 |
+| `cmd/tossctl` TestMain에 testenv 가드 없음 | 1.6에서 기록한 기존 상태 유지. 신규 테스트는 httptest·순수 stub만 쓴다 |
+| 주문 접수 창 | 여전히 [미측정]. advisory는 평일 09:00–15:30 KST라는 가장 거친 선만 긋는다 |
+| `docs/WORKFLOW.md` 미커밋 수정 | 작업 시작 시점에 이미 워킹트리에 있던 사용자 편집. 손대지 않았고 스테이징도 하지 않았다 |

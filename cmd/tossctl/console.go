@@ -96,7 +96,17 @@ flag, here or on ` + "`tossctl verify run`" + `, that answers it for you.
 
 The conditional-order persistence check needs a NEW process, so this console runs
 at most one verification per start: when it stops there, quit with Ctrl-C, start
-the console again, and press 이어하기.`),
+the console again, and press 이어하기.
+
+A step whose last verdict is fail or skipped can be attempted again from the
+verify screen's 재측정 button — the market was closed, the broker throttled, the
+account held nothing. The set is worked out from the evidence record, never from
+the page: a step that passed is never re-measured, and a re-measurement asks for
+its own batch approval with a new confirmation string like any other run.
+
+While a verification is running this command marks the account busy so a
+concurrent ` + "`tossctl soak run`" + ` delays its cycle rather than spending the same
+rate limit.`),
 		// official: the verification it drives reaches the Open API. mutating: it
 		// can place live orders — through the verify runner, after a typed approval.
 		Annotations:  map[string]string{"source": "official", "mutating": "true"},
