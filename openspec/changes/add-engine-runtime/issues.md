@@ -103,3 +103,17 @@ Pre-Edit Gate:
   드라이버의 `DefaultMarket`("kr")은 편입 판정 쪽만 덮는다. 브로커 payload가
   `marketCountry`를 항상 실어 보내므로 도달 불가에 가깝지만, 두 기본값이 한
   기제의 두 반쪽인 것은 사실이다 — 편입을 실제로 켜는 change가 정리할 자리.
+
+## Manager 판정 (구현 완료, 2026-07-27)
+
+독립 검증: `make gate` 재실행 GATE PASS(병행 세션의 7단계 gate.sh 기준), 전체 스위트 -race **2873**/52pkg 0 FAIL 재실행, flock 시스템콜·ModeTrigger 상수·조립 전 잠금 테스트·콘솔 게이트 개념 금지 테스트 직접 확인. 편차 6건 전건 승인:
+
+- **ReconcileDriver.Health() 추가**: 승인 — 5주기 임계는 Run 반환으로 읽을 수 없고, filldetect의 기존 카운터와 대칭. 루프 행동 무변경.
+- **루프 주입 구조**(deps 가드로 엔진 패키지가 filldetect를 직접 import 불가 → cmd 조립): 승인 — 기존 의존성 규율을 지키는 올바른 형태.
+- **마커 JSON**(runlock 산문 계약과 분리, Fresh·상수만 재사용+drift): 승인 — stale 바이너리 경고에 binstamp가 필요하다는 근거 타당.
+- **Hints.Validate 추출**(조립·런타임 검증 단일 정의), HoldingsRaw 확장, 타임아웃 파라미터화: 전건 승인.
+- **비-Unix flock 정직 거부**(soak의 편의 저하와 달리 단일 writer가 걸린 사안): 승인 — 방향 구분이 정확하다.
+- found-not-fixed: verifylive/plan.go gofmt 오염은 base 시점 기존 상태(병행 세션 활동 구간 — 소유 불명이므로 무접촉 유지), Ingestor.DefaultMarket 이원화는 adoption 활성 change 소관 기록, obs transport·Guardian 미배선은 landed 방향 그대로 — 승인.
+- **병행 세션 무접촉 확인**: Makefile·gate.sh·AGENTS.md·CLAUDE.md·.gitignore·신규 change 디렉터리(harden-net-rr-gate·adopt-stockos-full-sdd)·docs/WORKFLOW.md 전부 스테이징 이력 없음을 커밋 범위로 확인.
+
+**GATE PASS 확정 · archive 진행.** 실전 기동은 여전히 불가(ProtectionReady 상수 미충족 — 2c까지), autostart는 저장소 준비만·활성화는 게이트 ON §0.7 항목.
