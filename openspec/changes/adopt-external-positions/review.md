@@ -48,3 +48,17 @@ Manager 재검증(4건 코드 확인 — 전부 사실): trade_outcomes.go:175-1
 - **P3 골든 목록·task 1.4 문구·HighWater seed·Stabiliser 미수렴**: 전건 채택
 
 ## 라운드 3 (대기)
+
+## 라운드 3 (2026-07-27 — 판정 REVISE, 잔여 P1 2·P2 2·P3 4)
+
+라운드 2 P1은 6건 중 5건 종결 확인(알림 복원·provenance 충돌 소멸·계상 일치·순환 의존 해소를 리뷰어가 코드·문서 대조로 검증). Manager 재검증: realized_r 산식(trade_outcomes.go:200-211)·핸드오프 TTL 상수 — 인용 그대로.
+
+### Manager 처분 (4판에 반영)
+
+- **P1 observed_price 신선도 공백**: 채택 — "편입 tx 직전 시세 관측·staleness ≤ 15s 초과 시 연기" SHALL(exit-policy delta·tasks 2.2), §0.4 계상에 편입 후보 심볼당 시세 1콜 추가(reconciliation delta·A6·tasks 2.1)
+- **P1 매수 leg 기준가 이원화**: 채택 — **observed_price 단일화**(분자·분모 t0 epoch 일치), cost_basis는 기록·표시용으로 격하·cost_basis_src 산식 분기 삭제(A7·tasks 1.6)
+- **P2 매도 leg 조인**: 채택 — exit_events→mutation_attempts→fill_events 명시 조인 SHALL(A7·tasks 1.6, 시간창 매칭 금지)
+- **P2 대시보드 시점 상대 괄호**: 채택 — (a)안: 괄호 삭제·자격 정의를 exit-policy/position-ledger에 위임(대시보드 스펙), task 2.7은 델타 없는 구현이 됨
+- **P3 4건**(A6 예시 수치·proposal 태그·Impact 콘솔·무관리 확정 래치 구현 노트): 전건 채택
+
+## 라운드 4 (대기 — 확인만)
