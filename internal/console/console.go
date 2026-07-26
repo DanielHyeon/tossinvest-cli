@@ -67,6 +67,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
@@ -138,6 +139,24 @@ type Options struct {
 	// Out receives the console's own operator lines: the URL, and what is left
 	// live on the account when it shuts down.
 	Out io.Writer
+
+	// Relaunch re-executes this binary so a NEW process instance starts, which is
+	// what the conditional-persistence measurement needs and what resets this
+	// process's one-verification cap (task 1.8 ①). Nil hides the button and the
+	// page says to restart by hand. See restart.go.
+	Relaunch Relaunch
+	// Handoff carries one already-authenticated browser across that restart. Nil
+	// means the operator reads the new session URL off the terminal, which is what
+	// happened before this existed.
+	Handoff Handoff
+	// RestartSoak stops the read-only survey and starts it again, detached (task
+	// 1.8 ②). Nil hides the button.
+	RestartSoak RestartSoak
+	// Binary fingerprints the installed executable. The console takes one reading
+	// at construction and compares it per render, so a console left running across
+	// a reinstall says so instead of quietly being the old build. Nil uses
+	// binstamp.Self.
+	Binary func() (binstamp.Stamp, error)
 }
 
 // Console is the server.
@@ -152,6 +171,17 @@ type Console struct {
 	// approval path with extra steps.
 	session string
 	csrf    string
+
+	// startedWith is the fingerprint of the binary this process was loaded from,
+	// taken once. Everything after compares against it: a console that has been
+	// running since before the last install is an old build wearing a current
+	// page, and the dashboard says so rather than letting the operator discover it
+	// through a behaviour that is missing.
+	startedWith binstamp.Stamp
+	// relaunch carries a restart request from the handler to Serve, which owns the
+	// listener and is therefore the only thing that may release the port the new
+	// process has to bind.
+	relaunch chan int
 
 	mu   sync.Mutex
 	addr string
@@ -169,11 +199,12 @@ func New(o Options) (*Console, error) {
 		return nil, ErrNoVerifyWiring
 	}
 	c := &Console{
-		opts:    o,
-		now:     o.Now,
-		out:     o.Out,
-		session: newToken(32),
-		csrf:    newToken(16),
+		opts:     o,
+		now:      o.Now,
+		out:      o.Out,
+		session:  newToken(32),
+		csrf:     newToken(16),
+		relaunch: make(chan int, 1),
 	}
 	if c.now == nil {
 		c.now = func() time.Time { return time.Now().UTC() }
@@ -181,6 +212,13 @@ func New(o Options) (*Console, error) {
 	if c.out == nil {
 		c.out = io.Discard
 	}
+	if c.opts.Binary == nil {
+		c.opts.Binary = binstamp.Self
+	}
+	// A console that cannot fingerprint itself keeps the zero stamp, and
+	// binstamp.Stamp.Same then answers "unchanged": an unanswerable question must
+	// never turn into a warning the operator cannot act on.
+	c.startedWith, _ = c.opts.Binary()
 	c.handler = c.routes()
 	return c, nil
 }
@@ -240,12 +278,15 @@ func (c *Console) Serve(ctx context.Context, ln net.Listener) error {
 	served := make(chan error, 1)
 	go func() { served <- srv.Serve(ln) }()
 
+	relaunchPort := 0
 	select {
 	case err := <-served:
 		if errors.Is(err, http.ErrServerClosed) {
 			return nil
 		}
 		return err
+	case relaunchPort = <-c.relaunch:
+		fmt.Fprintf(c.out, "\n재시작 요청 — 이 프로세스를 같은 바이너리로 다시 실행한다 (포트 %d 유지).\n", relaunchPort)
 	case <-ctx.Done():
 	}
 
@@ -256,6 +297,12 @@ func (c *Console) Serve(ctx context.Context, ln net.Listener) error {
 		return err
 	}
 	<-served
+
+	if relaunchPort != 0 && c.opts.Relaunch != nil {
+		// The socket is closed, so the port the new process has to bind is free.
+		// A successful implementation replaces this process and never returns.
+		return c.opts.Relaunch(relaunchPort)
+	}
 	return nil
 }
 
@@ -351,6 +398,8 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.handleStart)))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))
 	mux.HandleFunc("/verify/abort", c.session0(c.mutating(c.handleAbort)))
+	mux.HandleFunc("/restart", c.session0(c.mutating(c.handleRestart)))
+	mux.HandleFunc("/soak/restart", c.session0(c.mutating(c.handleSoakRestart)))
 	mux.HandleFunc("/report", c.session0(c.handleReport))
 	mux.HandleFunc("/report.json", c.session0(c.handleReportJSON))
 	return mux
@@ -369,18 +418,14 @@ func (c *Console) session0(next http.HandlerFunc) http.HandlerFunc {
 		// First visit: the token is in the URL. Exchange it for a cookie and
 		// redirect, so the token stops being in the address bar.
 		if token := r.URL.Query().Get("session"); tokenEqual(token, c.session) {
-			http.SetCookie(w, &http.Cookie{
-				Name:     sessionCookie,
-				Value:    c.session,
-				Path:     "/",
-				HttpOnly: true,
-				SameSite: http.SameSiteStrictMode,
-			})
-			target := *r.URL
-			q := target.Query()
-			q.Del("session")
-			target.RawQuery = q.Encode()
-			http.Redirect(w, r, target.RequestURI(), http.StatusSeeOther)
+			c.grantSession(w, r)
+			return
+		}
+		// Or the browser is coming back from a restart this console's predecessor
+		// started. The token is single-use and short-lived, it was minted by an
+		// already-authenticated session, and it grants a session and nothing more
+		// — see restart.go.
+		if c.acceptHandoff(w, r) {
 			return
 		}
 		c.refuse(w, http.StatusForbidden, "세션 토큰이 없거나 일치하지 않는다",

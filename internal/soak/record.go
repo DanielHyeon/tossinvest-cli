@@ -22,6 +22,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 )
 
 // FileName is the record's default name inside the data directory.
@@ -133,6 +135,15 @@ type Cycle struct {
 	Credential   Credential       `json:"credential"`
 	Endpoints    []EndpointResult `json:"endpoints"`
 	Completeness Completeness     `json:"completeness"`
+
+	// Binary is the executable the process that wrote this cycle was running.
+	//
+	// It carries no measurement. It is here so a reader — the operator console's
+	// dashboard, in practice — can tell whether the survey appending to this file
+	// is the build that is installed, without a process table and without a pid
+	// that means nothing an hour later. It is additive and optional: every line
+	// written before this field existed parses exactly as it did.
+	Binary binstamp.Stamp `json:"binary,omitzero"`
 }
 
 // Recorder appends cycles to the record.

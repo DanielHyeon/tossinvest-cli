@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
@@ -37,6 +38,10 @@ type soakView struct {
 	Ready      bool
 	Reasons    []string
 	Days       []soak.Day
+	// Binary is the executable the survey said it was running, as of its last
+	// recorded cycle. The zero stamp means the record predates the survey
+	// stamping itself, which reads as unknown and never as stale.
+	Binary binstamp.Stamp
 }
 
 // attestView is the capability attestation, read.
@@ -95,12 +100,71 @@ func (v verifyView) RedoList() string {
 	return strings.Join(parts, ", ")
 }
 
+// binaryView is the stale-binary reading for both long-running processes.
+//
+// The question is the same one twice — "is the process still the installed build?"
+// — and the two halves answer it from different evidence because the console can
+// see itself and cannot see the soak:
+//
+//	console   its own fingerprint, taken once at startup, against the file at that
+//	          path now. Nothing to ask anybody: this process knows what it loaded.
+//	soak      the fingerprint the survey stamps on every cycle it records. It is
+//	          the survey's own statement about itself as of its last cycle, which
+//	          is the simplest honest source: no process table to scrape, no pid to
+//	          guess at, no second definition of "the soak" to keep in step.
+//
+// A soak record written by a build from before this existed carries no stamp, and
+// that reads as unknown rather than as stale — the same direction binstamp takes
+// everywhere.
+type binaryView struct {
+	// Installed is the executable on disk right now.
+	Installed binstamp.Stamp
+	// Console is what this process was loaded from.
+	Console binstamp.Stamp
+	// Soak is what the survey said it was running, at its last recorded cycle.
+	Soak binstamp.Stamp
+	// SoakAt is when that cycle was.
+	SoakAt time.Time
+}
+
+// ConsoleStale reports that this console is running an older build than the one
+// installed.
+func (v binaryView) ConsoleStale() bool { return !v.Console.Same(v.Installed) }
+
+// SoakStale reports the same about the survey.
+func (v binaryView) SoakStale() bool { return v.Soak.Known() && !v.Soak.Same(v.Installed) }
+
+// InstalledAt renders the installed build's timestamp for the page.
+func (v binaryView) InstalledAt() string {
+	if !v.Installed.Known() {
+		return "(알 수 없음)"
+	}
+	return v.Installed.ModTime.Format("2006-01-02 15:04:05Z")
+}
+
+// ConsoleAt renders this process's build timestamp.
+func (v binaryView) ConsoleAt() string {
+	if !v.Console.Known() {
+		return "(알 수 없음)"
+	}
+	return v.Console.ModTime.Format("2006-01-02 15:04:05Z")
+}
+
+// SoakBuildAt renders the survey's build timestamp.
+func (v binaryView) SoakBuildAt() string {
+	if !v.Soak.Known() {
+		return "(알 수 없음)"
+	}
+	return v.Soak.ModTime.Format("2006-01-02 15:04:05Z")
+}
+
 // snapshot is the whole dashboard.
 type snapshot struct {
 	Now         time.Time
 	Soak        soakView
 	Attestation attestView
 	Verify      verifyView
+	Binary      binaryView
 	// Session is the KR market-hours reading. It is advisory: nothing on this
 	// console consults it before starting anything.
 	Session verifylive.SessionAdvisory
@@ -108,13 +172,25 @@ type snapshot struct {
 
 func (c *Console) snapshot() snapshot {
 	now := c.now()
+	soakView := c.readSoak(now)
 	return snapshot{
 		Now:         now,
-		Soak:        c.readSoak(now),
+		Soak:        soakView,
 		Attestation: c.readAttestation(now),
 		Verify:      c.readVerify(),
+		Binary:      c.readBinary(soakView),
 		Session:     verifylive.KRSessionAdvisory(now),
 	}
+}
+
+// readBinary compares the installed executable against the two processes that are
+// meant to be it.
+func (c *Console) readBinary(sv soakView) binaryView {
+	v := binaryView{Console: c.startedWith, Soak: sv.Binary, SoakAt: sv.LastAt}
+	if c.opts.Binary != nil {
+		v.Installed, _ = c.opts.Binary()
+	}
+	return v
 }
 
 func (c *Console) readSoak(now time.Time) soakView {
@@ -144,6 +220,7 @@ func (c *Console) readSoak(now time.Time) soakView {
 	v.StreakDays = summary.StreakDays
 	v.FirstAt, v.LastAt = summary.FirstAt, summary.LastAt
 	v.Days = summary.Days
+	v.Binary = summary.Binary
 	v.Ready, v.Reasons = summary.Evaluate(now, criteria)
 	return v
 }

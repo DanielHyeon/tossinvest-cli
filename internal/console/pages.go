@@ -39,9 +39,16 @@ var pages = template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTem
 
 type dashboardPage struct {
 	Nav     string
+	CSRF    string
 	Refresh bool
+	Notice  string
 	Snap    snapshot
 	Run     *runView
+	// CanRestart and CanRestartSoak report that the caller wired the seam. A
+	// button for something this build cannot do would be a button that answers
+	// with an apology.
+	CanRestart     bool
+	CanRestartSoak bool
 }
 
 func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +57,14 @@ func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 			"이 콘솔의 화면은 대시보드·검증·리포트 셋뿐이다.")
 		return
 	}
-	page := dashboardPage{Nav: "dashboard", Snap: c.snapshot()}
+	page := dashboardPage{
+		Nav:            "dashboard",
+		CSRF:           c.csrf,
+		Notice:         r.URL.Query().Get("notice"),
+		Snap:           c.snapshot(),
+		CanRestart:     c.opts.Relaunch != nil,
+		CanRestartSoak: c.opts.RestartSoak != nil,
+	}
 	if run := c.currentRun(); run != nil {
 		v := run.snapshot()
 		page.Run = &v
@@ -72,6 +86,9 @@ type verifyPage struct {
 	Notice   string
 	Refresh  bool
 	Resuming bool
+	// CanRestart reports that the restart button is wired, so the page can offer
+	// the process boundary rather than describe it as a chore.
+	CanRestart bool
 }
 
 func (c *Console) handleVerify(w http.ResponseWriter, r *http.Request) {
@@ -84,12 +101,13 @@ func (c *Console) renderVerify(w http.ResponseWriter, notice string) {
 
 	snap := c.snapshot()
 	page := verifyPage{
-		Nav:      "verify",
-		CSRF:     c.csrf,
-		Snap:     snap,
-		Steps:    steps.String(),
-		Notice:   notice,
-		Resuming: snap.Verify.Resume,
+		Nav:        "verify",
+		CSRF:       c.csrf,
+		Snap:       snap,
+		Steps:      steps.String(),
+		Notice:     notice,
+		Resuming:   snap.Verify.Resume,
+		CanRestart: c.opts.Relaunch != nil,
 	}
 
 	c.mu.Lock()

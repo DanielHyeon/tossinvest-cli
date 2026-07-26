@@ -46,6 +46,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 )
 
@@ -211,9 +212,41 @@ type Options struct {
 	// filesystem. Nil never pauses.
 	PauseWhile func() (paused bool, reason string)
 
+	// Binary fingerprints the executable this process was started from.
+	//
+	// It is read once when the Runner is built — that is what this process IS —
+	// and again at each cycle boundary, which is how a survey that has been
+	// running for two days notices that the binary under it was reinstalled. The
+	// reading is stamped on every recorded cycle so a reader of the record can
+	// tell which build produced it.
+	//
+	// Nil means the survey does not fingerprint itself: no stamp on the record, no
+	// self-upgrade, and no warning anywhere. That is the pre-1.8 behaviour and it
+	// is still a valid way to run.
+	Binary func() (binstamp.Stamp, error)
+
+	// ReExec replaces this process with the installed binary, preserving the
+	// arguments it was started with.
+	//
+	// It is consulted only at a cycle boundary: a cycle in flight is finished and
+	// recorded first, so an upgrade can never cost a measurement. An
+	// implementation does not return on success; a return of any kind ends the
+	// loop (with ErrUpgraded when there was no error), and an error is logged and
+	// the survey carries on with the build it has.
+	//
+	// The record is unaffected either way. It is append-only on disk, every append
+	// is synced before it returns, and the new process opens the same path — the
+	// streak is a property of the file, not of the process.
+	ReExec func() error
+
 	// Progress receives a human-readable line per cycle. Nil is silent.
 	Progress io.Writer
 }
+
+// ErrUpgraded ends a run because the binary under it was replaced and the process
+// handed over to the new one. Everything recorded so far is on disk and the
+// successor appends to the same file.
+var ErrUpgraded = errors.New("soak: the installed binary changed and this process handed over to it")
 
 // Runner executes the survey.
 type Runner struct {
@@ -223,6 +256,10 @@ type Runner struct {
 	// move can be recognised as a refresh.
 	lastTokenExpiry time.Time
 	haveTokenExpiry bool
+
+	// startedWith is the executable this process was loaded from. Every cycle is
+	// stamped with it and every boundary is compared against it.
+	startedWith binstamp.Stamp
 }
 
 // New validates the options and returns a Runner.
@@ -245,7 +282,13 @@ func New(opts Options) (*Runner, error) {
 	if opts.Cycles < 0 {
 		return nil, fmt.Errorf("soak: a negative cycle count (%d) is not a run", opts.Cycles)
 	}
-	return &Runner{opts: opts}, nil
+	r := &Runner{opts: opts}
+	if opts.Binary != nil {
+		// A fingerprint that cannot be taken is not a reason to refuse to survey.
+		// It leaves the stamp zero, which every reader treats as "not known".
+		r.startedWith, _ = opts.Binary()
+	}
+	return r, nil
 }
 
 // Run executes cycles until the count is reached or the context is cancelled.
@@ -272,6 +315,13 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 		r.writeProgress(cycle, i+1)
 
+		// The cycle boundary, and the only place an upgrade may happen: the cycle
+		// above is finished, recorded and synced, so handing over here cannot cost
+		// a measurement.
+		if err := r.upgradeIfReplaced(); err != nil {
+			return err
+		}
+
 		last := r.opts.Cycles != 0 && i == r.opts.Cycles-1
 		if last {
 			return nil
@@ -285,6 +335,37 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// upgradeIfReplaced hands over to a newly installed binary, at a cycle boundary.
+//
+// Everything about it fails towards "keep surveying". A fingerprint that cannot be
+// taken, a binary that has not moved, a re-exec that refuses — each of them returns
+// nil and the loop continues with the process it has. The survey's job is to run
+// for days; being one build behind is a note on a dashboard, and stopping would be
+// a lost day.
+func (r *Runner) upgradeIfReplaced() error {
+	if r.opts.Binary == nil || r.opts.ReExec == nil || !r.startedWith.Known() {
+		return nil
+	}
+	installed, err := r.opts.Binary()
+	if err != nil {
+		r.writeLine("설치된 바이너리를 확인할 수 없다 (%v) — 이대로 계속한다", err)
+		return nil
+	}
+	if r.startedWith.Same(installed) {
+		return nil
+	}
+
+	r.writeLine("설치된 바이너리가 바뀌었다 (%s → %s). 사이클 경계에서 새 바이너리로 자기 재실행한다 — "+
+		"기록 파일은 그대로 이어진다", r.startedWith.Describe(), installed.Describe())
+	if err := r.opts.ReExec(); err != nil {
+		r.writeLine("자기 재실행 실패 (%v) — 기존 바이너리로 서베이를 계속한다", err)
+		return nil
+	}
+	// A real re-exec never gets here. A seam that does is telling us the handover
+	// happened in a way this process cannot observe, so the loop ends.
+	return ErrUpgraded
 }
 
 // PausePoll is how often a paused survey asks again.
@@ -350,6 +431,7 @@ func (r *Runner) RunCycle(ctx context.Context) (Cycle, error) {
 		FormatVersion: RecordFormatVersion,
 		Kind:          KindCycle,
 		StartedAt:     r.opts.Clock.Now(),
+		Binary:        r.startedWith,
 	}
 
 	// 1. accounts — also the credential probe. It is the one read that must

@@ -23,6 +23,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 )
 
 // Day is one calendar day (UTC) of the soak.
@@ -108,6 +110,16 @@ type Summary struct {
 	// All covers the whole record; Window covers the streak only.
 	All    Stats `json:"all"`
 	Window Stats `json:"window"`
+
+	// Binary is the executable the survey said it was running, as of the most
+	// recent cycle that recorded one.
+	//
+	// It is the survey's own statement about itself, which is what makes it worth
+	// having: a reader can tell whether the process appending to this file is the
+	// build that is installed without scraping a process table or guessing at a
+	// pid. A record written before the survey stamped itself leaves it zero, which
+	// reads as "not known" everywhere and never as "out of date".
+	Binary binstamp.Stamp `json:"binary,omitzero"`
 }
 
 // Summarize reads a set of cycles.
@@ -128,6 +140,13 @@ func Summarize(cycles []Cycle) Summary {
 		// the conflict is reported separately, and the newest is the one they
 		// meant.
 		s.AccountRef = latestAccount(ordered)
+	}
+
+	for i := len(ordered) - 1; i >= 0; i-- {
+		if ordered[i].Binary.Known() {
+			s.Binary = ordered[i].Binary
+			break
+		}
 	}
 
 	s.Days = daysOf(ordered)

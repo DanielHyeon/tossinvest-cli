@@ -31,6 +31,7 @@ package binstamp
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -95,11 +96,34 @@ func Of(path string) (Stamp, error) {
 	return Stamp{Path: path, Size: info.Size(), ModTime: info.ModTime().UTC()}, nil
 }
 
-// Self fingerprints the executable this process was started from.
+// Self fingerprints the executable at this process's own path.
+//
+// "At this path", not "the bytes this process is running": once the file has been
+// replaced those are different things, and the difference is the whole point. Call
+// it once at startup to learn what this process is, and again later to learn what
+// is installed.
 func Self() (Stamp, error) {
-	path, err := os.Executable()
+	path, err := SelfPath()
 	if err != nil {
-		return Stamp{}, fmt.Errorf("binstamp: locating this executable: %w", err)
+		return Stamp{}, err
 	}
 	return Of(path)
+}
+
+// deletedSuffix is what Linux appends to /proc/self/exe when the executable has
+// been unlinked, which is what an install by rename leaves behind.
+const deletedSuffix = " (deleted)"
+
+// SelfPath is where this process's executable lives.
+//
+// The suffix is stripped because a reinstall that renames over the binary leaves
+// os.Executable reporting a path that does not exist — and the path without it is
+// exactly the one the new build now occupies, which is the file the caller is
+// asking about.
+func SelfPath() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("binstamp: locating this executable: %w", err)
+	}
+	return strings.TrimSuffix(path, deletedSuffix), nil
 }

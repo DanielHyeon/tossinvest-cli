@@ -104,10 +104,79 @@ form { display: inline; }
 </main></body></html>
 {{end}}
 
+{{/*
+  "restart" is the interstitial the browser holds while this process is replaced.
+  It refreshes to a different URL than itself — the same origin, carrying the
+  one-time handoff token — so it writes its own meta tag instead of the shared
+  two-second one.
+*/}}
+{{define "restart"}}<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="refresh" content="{{.RefreshContent}}">
+<title>재시작 중 — tossctl console</title>
+<style>{{template "style"}}</style></head><body><main>
+<h1>콘솔을 다시 시작하는 중</h1>
+<p class="notice">같은 바이너리를 같은 포트로 다시 실행한다. <strong>{{.Delay}}초 뒤</strong> 이 페이지가
+자동으로 새 프로세스로 돌아간다 — 돌아오지 않으면 아래 링크를 누르거나 터미널에 출력된 새 세션 링크를 열어라.</p>
+<p><a href="{{.Target}}">지금 새 프로세스로 이동</a></p>
+{{if .Note}}<p class="notice">{{.Note}}</p>{{end}}
+<p class="muted">재시작이 하는 일은 하나뿐이다: <strong>새 프로세스 인스턴스</strong>를 만든다.
+조건주문 존속 판정은 증거 기록의 <code>process.instance_id</code>(기동마다 새로 발급)를 보므로,
+이것이 그 측정에 필요한 프로세스 경계다. 게이트·설정·계좌는 아무것도 바뀌지 않고, 배치 승인은
+새 확인 문자열로 처음부터 다시 받는다.</p>
+</main></body></html>
+{{end}}
+
+{{/*
+  "staleconsole" / "stalesoak" are the two halves of the stale-binary warning.
+  They are advisory and they are quiet when there is nothing to say: a banner
+  that is always on screen is a banner nobody reads.
+*/}}
+{{define "stalebinary"}}
+{{if .ConsoleStale}}
+<p class="notice"><strong>이 콘솔은 설치된 바이너리보다 오래되었다.</strong>
+실행 중 {{.ConsoleAt}} · 설치됨 {{.InstalledAt}} — [콘솔 재시작]을 누르면 새 바이너리로 올라온다.</p>
+{{end}}
+{{if .SoakStale}}
+<p class="notice"><strong>실행 중인 soak은 설치된 바이너리보다 오래되었다.</strong>
+마지막 사이클이 보고한 빌드 {{.SoakBuildAt}} · 설치됨 {{.InstalledAt}} —
+soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한다. 기다릴 수 없으면 [soak 재시작].</p>
+{{end}}
+{{end}}
+
 {{define "dashboard"}}
 {{template "head" .}}
 <h1>대시보드</h1>
 <p class="muted">이 화면은 로컬 파일만 읽는다. 네트워크 호출도, 설정 변경도 하지 않는다.</p>
+{{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
+{{template "stalebinary" .Snap.Binary}}
+
+<section>
+  <h2>도구 프로세스</h2>
+  <p class="muted">아래 두 버튼은 <strong>도구를 다시 띄우는 것</strong>이다 — 게이트·주문 능력·위험 한도와는
+  무관하고, 승인 등가성(새 확인 문자열 타이핑)도 그대로다.</p>
+  {{if .CanRestart}}
+  <form method="post" action="/restart">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <button type="submit" class="secondary">콘솔 재시작</button>
+  </form>
+  {{else}}
+  <p class="muted">콘솔 재시작 배선이 없다 — 종료(Ctrl-C) 후 직접 다시 시작하라.</p>
+  {{end}}
+  {{if .CanRestartSoak}}
+  <form method="post" action="/soak/restart">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <button type="submit" class="secondary">soak 재시작</button>
+  </form>
+  {{else}}
+  <p class="muted">soak 재기동 배선이 없다.</p>
+  {{end}}
+  <p class="muted">콘솔 재시작은 <strong>새 프로세스 인스턴스</strong>를 만든다 — 프로세스당 1회 검증 상한이
+  초기화되고, 조건주문 존속 측정에 필요한 프로세스 경계가 생긴다. soak 재시작은 조회 전용 서베이를
+  SIGINT 후 다시 띄우는 것이고 자격증명은 건드리지 않는다.</p>
+</section>
 
 <section>
   <h2>soak (조회 전용 서베이)</h2>
@@ -173,7 +242,7 @@ form { display: inline; }
   </table>
   {{end}}
   {{if .AwaitingRestart}}
-  <p class="notice">{{.AwaitingRestart}} 단계는 <strong>새 프로세스</strong>를 기다린다 — 콘솔을 종료하고 다시 시작한 뒤 이어하기.</p>
+  <p class="notice">{{.AwaitingRestart}} 단계는 <strong>새 프로세스</strong>를 기다린다 — 위의 [콘솔 재시작] 뒤 이어하기.</p>
   {{end}}
   {{if .Outstanding}}
   <p class="danger">계좌에 아직 살아 있는 객체:</p>
@@ -192,9 +261,17 @@ form { display: inline; }
 
 {{if .Spent}}
 <section>
-  <p class="notice"><strong>이 프로세스는 이미 검증을 수행했다.</strong> 콘솔을 종료(Ctrl-C)하고
-  다시 시작한 뒤 이어하기를 눌러라. 조건주문 존속은 등록한 프로세스가 죽은 뒤에만 관측할 수 있으므로
-  이 경계는 우회하지 않는다.</p>
+  <p class="notice"><strong>이 프로세스는 이미 검증을 수행했다.</strong> 조건주문 존속은 등록한 프로세스가
+  죽은 뒤에만 관측할 수 있으므로 이 경계는 우회하지 않는다.</p>
+  {{if .CanRestart}}
+  <p>아래 버튼이 콘솔을 같은 포트로 다시 띄운다 — 돌아오면 [이어하기]를 누르면 된다.</p>
+  <form method="post" action="/restart">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <button type="submit">콘솔 재시작</button>
+  </form>
+  {{else}}
+  <p>콘솔을 종료(Ctrl-C)하고 다시 시작한 뒤 이어하기를 눌러라.</p>
+  {{end}}
 </section>
 {{end}}
 
@@ -250,9 +327,16 @@ form { display: inline; }
   <ul>{{range .Summary.Outstanding}}<li>{{.Kind}} {{.ID}} ({{.Symbol}}){{if .Deliberate}} — 의도적으로 남긴 것, 이어하기가 취소한다{{else}} — <strong>취소되지 않았다. 직접 처리하라.</strong>{{end}}</li>{{end}}</ul>
   {{end}}
   {{if .AwaitingRestart}}
-  <p class="notice"><strong>여기서 프로세스 경계다.</strong> 콘솔을 종료(Ctrl-C)하고 다시 시작한 뒤
-  이어하기를 눌러라. 조건주문이 이 프로세스보다 오래 사는지가 다음 측정이므로, 같은 프로세스에서
-  이어갈 수는 없다.</p>
+  <p class="notice"><strong>여기서 프로세스 경계다.</strong> 조건주문이 이 프로세스보다 오래 사는지가
+  다음 측정이므로, 같은 프로세스에서 이어갈 수는 없다.</p>
+  {{if $.CanRestart}}
+  <form method="post" action="/restart">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <button type="submit">콘솔 재시작 후 이어하기</button>
+  </form>
+  {{else}}
+  <p>콘솔을 종료(Ctrl-C)하고 다시 시작한 뒤 이어하기를 눌러라.</p>
+  {{end}}
   {{end}}
   <p><a href="/report">리포트 보기</a></p>
   {{end}}

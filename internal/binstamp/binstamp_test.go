@@ -3,6 +3,7 @@ package binstamp
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -116,5 +117,24 @@ func TestSelfFindsTheTestBinary(t *testing.T) {
 	}
 	if !stamp.Same(stamp) {
 		t.Error("a stamp differs from itself")
+	}
+}
+
+// TestSelfPathSurvivesAReinstallByRename.
+//
+// Linux reports /proc/self/exe as "/path (deleted)" once the file has been
+// unlinked, which is what installing over a running binary looks like. The path
+// without the suffix is where the new build now is, and that is the file the
+// caller wants stat'ed.
+func TestSelfPathSurvivesAReinstallByRename(t *testing.T) {
+	path, err := SelfPath()
+	if err != nil {
+		t.Fatalf("SelfPath: %v", err)
+	}
+	if strings.HasSuffix(path, deletedSuffix) {
+		t.Errorf("SelfPath returned %q with the deleted marker still on it", path)
+	}
+	if path == "" {
+		t.Error("SelfPath returned nothing")
 	}
 }

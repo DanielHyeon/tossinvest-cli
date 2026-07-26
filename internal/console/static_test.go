@@ -131,7 +131,7 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 			t.Errorf("%s is registered without session0; it is reachable without the session token", r.Path)
 		}
 	}
-	if len(routes) < 7 {
+	if len(routes) < 9 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -147,6 +147,12 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/verify/start":   true,
 		"/verify/approve": true,
 		"/verify/abort":   true,
+		// The two restarts (task 1.8). Neither touches an account, but both are
+		// acts rather than readings, and a page that could be made to restart the
+		// console by embedding an image would be a denial of service with a nice
+		// interface.
+		"/restart":      true,
+		"/soak/restart": true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -329,11 +335,35 @@ func TestTheConsoleHoldsNoBrokerOfItsOwn(t *testing.T) {
 	}
 }
 
+// TestTheConsoleStartsNoProcessOfItsOwn.
+//
+// Task 1.8 puts two restarts on the dashboard, and neither of them is implemented
+// here: Relaunch and RestartSoak are functions cmd/tossctl supplies, and this
+// package only decides whether the person asking has cleared both gates. That is
+// what lets the whole restart surface be tested with httptest and no fork — and it
+// is what keeps "the console runs nothing" true after the buttons exist.
+func TestTheConsoleStartsNoProcessOfItsOwn(t *testing.T) {
+	for name, src := range packageFiles(t) {
+		if strings.Contains(src, `"os/exec"`) || strings.Contains(src, `"syscall"`) {
+			t.Errorf("%s imports a process-spawning package; Relaunch and RestartSoak are seams the caller "+
+				"fills, so that nothing here forks and no test has to", name)
+		}
+		code := strings.Join(nonCommentLines(src), "\n")
+		for _, banned := range []string{"os.StartProcess", "exec.Command", "syscall.Exec", "os.Process"} {
+			if strings.Contains(code, banned) {
+				t.Errorf("%s contains %q; the console asks for a restart, it does not perform one", name, banned)
+			}
+		}
+	}
+}
+
 // TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites.
 //
 // Everything this package reads is a local file, and it reads them to render a
-// page. A write from here would be a state change nobody approved — and the one
-// legitimate writer, verifylive's recorder, is opened by the caller.
+// page. A write from here would be a state change nobody approved — and the two
+// legitimate writers are both the caller's: verifylive's recorder, and the handoff
+// store behind console.Handoff (task 1.8 ①), which owns the 0600 file, the
+// single-use rule and the window so that this package owns none of them.
 func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 	for name, src := range packageFiles(t) {
 		code := strings.Join(nonCommentLines(src), "\n")
