@@ -169,7 +169,11 @@ const (
 	// operator-cleared: the specific rule that fired travels in the detail.
 	ReasonBrokerStateUnknown ReasonCode = "unknown_broker_state"
 	// ReasonReconcileMismatch: local state and the account disagree beyond the
-	// documented tolerance. Clears on a successful reconciliation.
+	// documented tolerance. Releasable, but not by a clean pass on its own: the
+	// disagreement has to have been *acted on* — an adjustment converges the
+	// projection and a re-read after it agrees (add-core-domain task 6.3). A
+	// snapshot that happens to agree while nothing was fixed is a coincidence,
+	// and releasing on it reads a coincidence as a resolution.
 	ReasonReconcileMismatch ReasonCode = "reconciliation_mismatch"
 	// ReasonReconcilePermanent: reconciliation failed the configured number of
 	// times in a row. Operator resolution only — the automatic retry has already

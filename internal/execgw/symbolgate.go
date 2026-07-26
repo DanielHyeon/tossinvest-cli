@@ -127,14 +127,23 @@ func (g *EntryGate) SymbolBlocks() []SymbolBlock {
 // The split is "can a later read disprove this":
 //
 //   - a snapshot that could not be read, was stale, or disagreed about a
-//     quantity is a condition a fresh, agreeing comparison closes, so it lands
-//     on ReasonReconcileMismatch (auto-released by a clean reconcile);
+//     quantity is a condition something can close, so it lands on
+//     ReasonReconcileMismatch, which reconciliation may release automatically;
 //   - an identifier in conflicting contexts, or a broker record nothing local
 //     can be attributed to, is not. openapi documents CANCEL_REJECTED and
 //     REPLACE_REJECTED as separate order records whose concrete shape is
 //     [형태 미측정 — 2b 2.1], so "we saw it again and it still does not fit"
 //     is not evidence that it has been resolved. Those land on
 //     ReasonReconcilePermanent, which nothing automatic clears.
+//
+// "May release automatically" is narrower than it was, and the narrowing is
+// task 6.3's: a coincidentally clean pass does not release the block. The
+// release is caused, not observed — an adjustment converges the projection
+// (release cause ADJUSTMENT_APPLIED) and a re-read after it agrees. The
+// distinction matters because a broker snapshot can agree for a moment while the
+// disagreement that raised the block is untouched, and releasing on that reads a
+// coincidence as a resolution. This function still only chooses *which* reason a
+// cause maps to; internal/reconcile owns when either one is let go.
 //
 // An unknown cause maps to the operator-only reason. The journal refuses to
 // write one, so reaching this branch means the row predates this build — and
