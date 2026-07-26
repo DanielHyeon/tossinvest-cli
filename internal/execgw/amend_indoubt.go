@@ -405,8 +405,18 @@ func (r *Resolver) knownLineage(ctx context.Context, orderID string) (brokerstat
 // Symbol-scoped rather than account-wide on purpose: the engine holds one
 // in-flight mutation per symbol, so within a symbol the amended order is unique;
 // widening the scan would only add candidates that cannot be it.
+//
+// Candidates are deduplicated by orderId for the same reason scanBoth does it
+// (task 2.4): `status` is a group label and PARTIAL_FILLED belongs to both the
+// OPEN and the CLOSED group (openapi), so a partially filled successor is
+// returned twice and the caller's uniqueness test — "exactly one successor" —
+// would read one order as two and park. Identity is byte-exact: `orderId` is an
+// opaque token.
 func (r *Resolver) findSuccessors(ctx context.Context, m *matcher, originalID string, cfg ResolveConfig) ([]orderFacts, error) {
-	var out []orderFacts
+	var (
+		out  []orderFacts
+		seen = map[string]bool{}
+	)
 	for _, status := range []string{"OPEN", "CLOSED"} {
 		raws, err := ScanOrders(ctx, r.Orders, OrderQuery{Status: status, Symbol: m.symbol}, cfg.MaxPages)
 		if err != nil {
@@ -417,10 +427,11 @@ func (r *Resolver) findSuccessors(ctx context.Context, m *matcher, originalID st
 			if err != nil {
 				return nil, fmt.Errorf("an order in the %s list could not be read: %w", status, err)
 			}
-			if facts.OrderID == originalID {
+			if facts.OrderID == originalID || seen[facts.OrderID] {
 				continue
 			}
 			if m.matches(facts) {
+				seen[facts.OrderID] = true
 				out = append(out, facts)
 			}
 		}

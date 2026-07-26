@@ -329,7 +329,7 @@ func (r *Resolver) Resolve(ctx context.Context, attemptID string) (Resolution, e
 			stable := absent >= cfg.StableObservations
 			longEnough := clk.Now().Sub(started) >= cfg.MinObservation
 			if stable && longEnough {
-				proven, why := r.absenceCorroborated(ctx, intent)
+				proven, why := r.absenceCorroborated(ctx, rec, intent)
 				if proven {
 					res.State = journal.StateFailedConfirmed
 					res.Reason = ReasonCode(journal.ReasonResolvedAbsent)
@@ -378,12 +378,34 @@ func (r *Resolver) park(ctx context.Context, attempt *journal.Attempt, res Resol
 	return res, nil
 }
 
-// scanBoth walks OPEN and CLOSED to the last page and returns every match.
+// scanBoth walks OPEN and CLOSED to the last page and returns every distinct
+// match.
 //
 // Both lists, every time, even after a match: a duplicate sitting in the other
 // list is exactly the situation that must not be reported as a clean single hit.
+//
+// # Why the results are deduplicated by orderId before anything counts them
+//
+// The `status` query parameter is a *group label*, not the order's own status,
+// and the groups overlap: "OPEN: 진행 중 주문 그룹 — orders[].status ∈ {PENDING,
+// PARTIAL_FILLED, PENDING_CANCEL, PENDING_REPLACE}" and "CLOSED: 종료된 주문
+// 그룹 — … REPLACE_REJECTED, PARTIAL_FILLED" (openapi, GET /api/v1/orders). A
+// partially filled order is therefore returned by *both* queries — and a
+// partial fill plus a lost response is the single most likely way an attempt
+// lands in doubt at all.
+//
+// Without this dedup that order matches twice, the caller reads two matches as
+// "we cannot tell which one is ours", and the attempt parks permanently for an
+// operator. The duplication is an artefact of how the question was asked, not a
+// fact about the account, so it is removed here rather than reasoned about
+// upstream. Identity is byte-exact: `orderId` is an opaque token (openapi
+// contracts no shape), so two records are the same order only if their ids are
+// the same bytes.
 func (r *Resolver) scanBoth(ctx context.Context, m *matcher, cfg ResolveConfig) ([]matchedOrder, error) {
-	var matches []matchedOrder
+	var (
+		matches []matchedOrder
+		seen    = map[string]int{} // orderId (verbatim) → index into matches
+	)
 	for _, status := range []string{"OPEN", "CLOSED"} {
 		raws, err := ScanOrders(ctx, r.Orders, OrderQuery{Status: status, Symbol: m.symbol}, cfg.MaxPages)
 		if err != nil {
@@ -396,9 +418,17 @@ func (r *Resolver) scanBoth(ctx context.Context, m *matcher, cfg ResolveConfig) 
 				// Treating it as absence could close an attempt that exists.
 				return nil, fmt.Errorf("an order in the %s list could not be read: %w", status, err)
 			}
-			if m.matches(facts) {
-				matches = append(matches, matchedOrder{orderFacts: facts, listStatus: status})
+			if !m.matches(facts) {
+				continue
 			}
+			if at, already := seen[facts.OrderID]; already {
+				// Same order, second group. Record where it was seen — the detail
+				// an operator reads should say so — and keep one match.
+				matches[at].listStatus += "+" + status
+				continue
+			}
+			seen[facts.OrderID] = len(matches)
+			matches = append(matches, matchedOrder{orderFacts: facts, listStatus: status})
 		}
 	}
 	return matches, nil
@@ -407,9 +437,22 @@ func (r *Resolver) scanBoth(ctx context.Context, m *matcher, cfg ResolveConfig) 
 // absenceCorroborated performs the account cross-check. It answers (proven, why)
 // where why is a human-readable sentence used either as the confirmation detail or
 // as the reason the attempt parks.
-func (r *Resolver) absenceCorroborated(ctx context.Context, intent journal.Intent) (bool, string) {
+func (r *Resolver) absenceCorroborated(ctx context.Context, rec journal.AttemptRecord,
+	intent journal.Intent,
+) (bool, string) {
 	if r.Account == nil {
 		return false, "absence cannot be corroborated: no account reader is configured"
+	}
+	// The cross-check compares the account now against a baseline taken before
+	// this attempt was dispatched. Anything else that was sent on this symbol
+	// inside that window moves the same numbers, so the comparison stops meaning
+	// what it has to mean, and absence cannot be inferred from it at all
+	// (order-execution: "관측 창 동안 같은 심볼에 다른 mutation이 전송되었다면
+	// delta 교차 확인은 무효이며 자동 FAILED_CONFIRMED는 금지된다"). Parking is
+	// the only honest answer: we cannot prove a negative from contaminated
+	// evidence, and guessing here retires an order that may be live.
+	if contaminated, why := r.windowContaminated(ctx, rec, intent); contaminated {
+		return false, why
 	}
 	baseline, ok := DecodeBaseline(intent.Notes)
 	if !ok {
@@ -449,6 +492,42 @@ func (r *Resolver) absenceCorroborated(ctx context.Context, intent journal.Inten
 
 	return true, fmt.Sprintf("the %s holding and the buying power are unchanged from the pre-dispatch baseline",
 		intent.Symbol)
+}
+
+// windowContaminated reports whether another mutation on this symbol was
+// dispatched inside the observation window, and says which one.
+//
+// The window starts at this attempt's own dispatch, because that is when its
+// baseline stopped being current. A mutation that was journalled but provably
+// never sent does not contaminate anything and is excluded by the journal query.
+//
+// A journal that cannot be read is treated as contamination rather than as
+// cleanliness: "I could not check" and "I checked and it was clean" must not
+// produce the same answer when the answer authorises retiring an order.
+func (r *Resolver) windowContaminated(ctx context.Context, rec journal.AttemptRecord,
+	intent journal.Intent,
+) (bool, string) {
+	since := rec.DispatchStartedAt
+	if strings.TrimSpace(since) == "" {
+		since = rec.RecordedAt
+	}
+	others, err := r.Journal.MutationsDispatchedSince(ctx, intent.Market, intent.Symbol, since, rec.ID)
+	if err != nil {
+		return true, fmt.Sprintf(
+			"absence cannot be corroborated: the journal could not be checked for other %s mutations: %v",
+			intent.Symbol, err)
+	}
+	if len(others) == 0 {
+		return false, ""
+	}
+	ids := make([]string, 0, len(others))
+	for _, other := range others {
+		ids = append(ids, fmt.Sprintf("%s (%s, %s)", other.ID, other.Kind, other.State))
+	}
+	return true, fmt.Sprintf(
+		"absence cannot be corroborated: %s was also touched by %s while this attempt was being observed, "+
+			"so the buying power and holding deltas no longer describe this order alone",
+		intent.Symbol, strings.Join(ids, ", "))
 }
 
 // nearZero reports whether a delta is zero within a scale-relative tolerance.
