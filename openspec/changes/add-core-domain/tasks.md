@@ -49,7 +49,7 @@
 
 ## 7. Exit 정책 (사용자 요구 — 손익 극대화)
 
-- [ ] 7.1 [T][High-risk] `internal/exitpolicy` ratchet 이식: t0 기준선=진입 손절, high_water 프로브, 후보 합성(max·strict >)·입력 검증, 트리거 표 — test_baseline_ratchet 이식(+high_since_entry 케이스) + **3중 단조 property**(기준선·레벨·워터마크)
+- [x] 7.1 [T][High-risk] `internal/exitpolicy` ratchet 이식: t0 기준선=진입 손절, high_water 프로브, 후보 합성(max·strict >)·입력 검증, 트리거 표 — test_baseline_ratchet 이식(+high_since_entry 케이스) + **3중 단조 property**(기준선·레벨·워터마크)
 - [ ] 7.2 [T][High-risk] ladder 이식: rung 기본 세트(`[미검증]` provenance)·정책 검증(목표 단조·잠금 비감소)·분모 규칙(누적=초기, rung=잔여) — test_profit_ladder 이식(float→decimal 재작성 명시)
 - [ ] 7.3 [T][High-risk] pending 수명주기: 레벨/rung당 1회·미해소 억제·거부 시 재무장·크래시 복원(중복발의·미재발의 양방향 테스트), policy_kind 단일
 - [ ] 7.4 [T][High-risk] 판정 루프: 최신가 관측(기본 5초·§0.4 예산·SLO 양보·**`RecordSuccess(QueryPrice)` 배선** — 미배선 시 게이트 ON에서 전 진입이 QUERY_STALE 차단됨)·두절 에스컬레이션(15초=landed 쿼리 staleness 진입 차단 → 60초=ENTRY_BLOCKED 모드 강화)·발의(t0 하회 전량·40% 부분·rung)·`exit_events` 기록 — Guardian 위험 감소 경로 경유
