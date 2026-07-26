@@ -179,16 +179,16 @@ func TestOutboxSurvivesTheV2Migration(t *testing.T) {
 		return j
 	}
 
-	// Simulate a v2 database by dropping everything later versions added and
-	// rolling the recorded version back.
-	first := open()
-	for _, table := range []string{"flatten_steps", "flatten_sagas", "alert_outbox"} {
-		if _, err := first.db.ExecContext(ctx, "DROP TABLE "+table); err != nil {
-			t.Fatalf("dropping %s: %v", table, err)
-		}
-	}
-	if _, err := first.db.ExecContext(ctx, "PRAGMA user_version = 2"); err != nil {
-		t.Fatalf("rolling back the schema version: %v", err)
+	// A real v2 database: the migration list stops at version 2, so the file on
+	// disk is what the build of that era wrote. (It used to be simulated by
+	// dropping the tables later versions added, which stopped working at v5:
+	// that version also adds columns, and an ALTER cannot be undone by a DROP
+	// TABLE. The assertions below are unchanged.)
+	first, err := Open(ctx, Options{Path: path, Clock: clk,
+		FSProber:          FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt}),
+		migrationOverride: &migrationPlan{steps: migrationsThrough(2), target: 2}})
+	if err != nil {
+		t.Fatalf("Open at schema v2: %v", err)
 	}
 	if err := first.Close(); err != nil {
 		t.Fatalf("Close: %v", err)

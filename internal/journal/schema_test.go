@@ -82,6 +82,8 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 	wantTables := []string{
 		"alert_outbox",
 		"attempt_transitions",
+		"decisions",
+		"execution_corrections",
 		"fill_events",
 		"fill_snapshots",
 		"flatten_sagas",
@@ -89,7 +91,10 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"intents",
 		"lineage_edges",
 		"mutation_attempts",
+		"reconcile_states",
+		"risk_reservations",
 		"schema_meta",
+		"spent_nonces",
 	}
 	rows, err := j.db.QueryContext(ctx,
 		`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
@@ -118,10 +123,15 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"notes", "order_type", "price", "quantity", "side", "source", "symbol",
 			"time_in_force", "trading_day",
 		},
+		// Schema v5 (extend-execution-contract task 0.1) extends the attempt with
+		// its decision, the idempotency key it claimed and the exact bytes a
+		// replay may resend.
 		"mutation_attempts": {
-			"attempt_no", "broker_order_id", "detail", "dispatch_started_at",
-			"fingerprint", "id", "intent_id", "kind", "reason_code", "recorded_at",
-			"settled_at", "state", "target_order_id",
+			"account_ref", "attempt_no", "broker_order_id", "client_order_id",
+			"decision_id", "detail", "dispatch_started_at", "fingerprint",
+			"generation", "id", "intent_id", "kind", "last_replay_at", "reason_code",
+			"recorded_at", "replay_count", "safety_class", "serializer_version",
+			"settled_at", "state", "target_order_id", "wire_body",
 		},
 		"attempt_transitions": {
 			"at", "attempt_id", "detail", "from_state", "id", "reason_code", "to_state",
@@ -132,10 +142,12 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"requested_quantity",
 		},
 		// Schema v2 (task 3.2): the cumulative-snapshot fill ledger.
+		// filled_amount is v5: without a previous amount, an amount-only
+		// execution correction cannot be detected.
 		"fill_snapshots": {
 			"average_price", "broker_visible_at", "committed_at", "detail",
-			"fail_closed", "filled_quantity", "market", "observed_at", "order_id",
-			"quantity", "reason_code", "state", "symbol", "terminal",
+			"fail_closed", "filled_amount", "filled_quantity", "market", "observed_at",
+			"order_id", "quantity", "reason_code", "state", "symbol", "terminal",
 		},
 		"fill_events": {
 			"average_price", "broker_visible_at", "committed_at", "cumulative_quantity",
@@ -156,6 +168,32 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"acknowledged_at", "acknowledged_by", "attempts", "body", "created_at",
 			"delivered_at", "event_key", "event_type", "id", "last_attempt_at",
 			"last_error", "payload", "severity", "state", "title",
+		},
+		// Schema v5 (extend-execution-contract task 0.1): the decision contract,
+		// what it reserved, what it consumed, and the two records that keep the
+		// broker's picture and ours reconcilable. design.md D9 is the normative
+		// table; execution_contract_test.go pins the constraints.
+		"decisions": {
+			"account_ref", "client_order_id", "expires_at", "generation", "id",
+			"issued_at", "limits_json", "nonce", "preimage_kind", "risk_hash",
+			"risk_preimage", "safety_class",
+		},
+		"risk_reservations": {
+			"account_ref", "amount", "attempt_id", "currency", "decision_id", "id",
+			"kind", "release_reason", "released_at", "snapshot_as_of", "state",
+			"trading_day",
+		},
+		"spent_nonces": {
+			"consumed_at", "decision_id", "nonce",
+		},
+		"reconcile_states": {
+			"account_ref", "cause", "entered_at", "evidence", "id", "release_cause",
+			"released_at", "symbol",
+		},
+		"execution_corrections": {
+			"account_ref", "cumulative_qty", "id", "new_avg_price",
+			"new_filled_amount", "observed_at", "order_id", "prev_avg_price",
+			"prev_filled_amount",
 		},
 	}
 	for table, want := range wantColumns {
@@ -444,6 +482,17 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_fill_snapshots_terminal",
 		"idx_fill_events_order",
 		"idx_fill_events_symbol",
+		// Schema v5: the decision contract's lookup paths — expiry sweeps,
+		// per-account reservation sums, the restart sweep for orphaned holds and
+		// the correction history of one order.
+		"idx_decisions_account",
+		"idx_decisions_expires",
+		"idx_reservations_decision",
+		"idx_reservations_attempt",
+		"idx_reservations_held",
+		"idx_spent_nonces_consumed",
+		"idx_reconcile_account",
+		"idx_corrections_order",
 	} {
 		if !got[want] {
 			t.Errorf("missing index %s (have %v)", want, keysOf(got))

@@ -47,6 +47,13 @@ type Options struct {
 	// BusyTimeout overrides how long a blocked writer waits. Zero uses
 	// defaultBusyTimeout.
 	BusyTimeout time.Duration
+
+	// migrationOverride replaces the forward-step list and the version this
+	// build claims to understand. Unexported, therefore test-only: the migration
+	// tests need a genuine older database on disk and a step that fails partway,
+	// and neither can be expressed with the released migration list. Nil in
+	// production, where defaultMigrationPlan applies.
+	migrationOverride *migrationPlan
 }
 
 // Journal is an open journal database.
@@ -124,7 +131,11 @@ func Open(ctx context.Context, opts Options) (*Journal, error) {
 		db.Close()
 		return nil, err
 	}
-	if err := j.migrate(ctx); err != nil {
+	plan := defaultMigrationPlan()
+	if opts.migrationOverride != nil {
+		plan = *opts.migrationOverride
+	}
+	if err := j.migrate(ctx, plan); err != nil {
 		db.Close()
 		return nil, err
 	}
@@ -185,30 +196,48 @@ func (j *Journal) SchemaVersion(ctx context.Context) (int, error) {
 
 // migrate applies every pending forward step inside one transaction per step, and
 // refuses to run against a newer schema.
-func (j *Journal) migrate(ctx context.Context) error {
+//
+// A journal that already holds rows is copied first (backup.go). The copy is
+// taken before the first step and the migration is abandoned if it cannot be
+// taken: the additive rules leave no way back down, so the copy is the only
+// recovery from a step that dies partway, and starting without one would trade a
+// live account's history for a faster startup.
+func (j *Journal) migrate(ctx context.Context, plan migrationPlan) error {
 	current, err := j.SchemaVersion(ctx)
 	if err != nil {
 		return err
 	}
-	if current > SchemaVersion {
+	if current > plan.target {
 		return fmt.Errorf("%w: found version %d, this build understands %d — upgrade tossctl or point %s elsewhere",
-			ErrSchemaTooNew, current, SchemaVersion, EnvDataDir)
+			ErrSchemaTooNew, current, plan.target, EnvDataDir)
 	}
-	if current == SchemaVersion {
+	if current == plan.target {
 		return nil
 	}
 
-	for _, m := range migrations {
+	// current == 0 is a database this run just created: there is no history to
+	// lose, and a backup of it would only litter the data directory.
+	backup := ""
+	if current > 0 {
+		backup, err = j.backupBeforeMigration(ctx, current, plan.target)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, m := range plan.steps {
 		if m.Version <= current {
 			continue
 		}
 		if err := j.applyMigration(ctx, m); err != nil {
-			return err
+			return j.withRestoreHint(err, backup)
 		}
 		current = m.Version
 	}
-	if current != SchemaVersion {
-		return fmt.Errorf("journal: migration ended at version %d, want %d", current, SchemaVersion)
+	if current != plan.target {
+		return j.withRestoreHint(
+			fmt.Errorf("journal: migration ended at version %d, want %d", current, plan.target),
+			backup)
 	}
 	return nil
 }

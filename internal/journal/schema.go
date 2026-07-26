@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 4
+const SchemaVersion = 5
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -14,9 +14,28 @@ const SchemaVersion = 4
 //     it in a comment instead.
 //  4. Never rewrite historical rows in a migration. The attempt history and the
 //     intent fields are the audit trail Phase 2's ledger imports.
+//
+// There is no down-migration and there will not be one: a step that could undo
+// itself would have to drop a column, which rule 3 forbids. The rollback is "run
+// the previous binary", which refuses the newer user_version (ErrSchemaTooNew)
+// rather than misreading it, and the recovery from a migration that fails partway
+// is the automatic pre-migration backup (backup.go).
 type migration struct {
 	Version int
 	SQL     string
+}
+
+// migrationPlan is the set of forward steps to apply and the version this build
+// claims to understand. Production always uses defaultMigrationPlan; the
+// migration tests substitute their own to build an older database on disk and to
+// inject a step that fails partway.
+type migrationPlan struct {
+	steps  []migration
+	target int
+}
+
+func defaultMigrationPlan() migrationPlan {
+	return migrationPlan{steps: migrations, target: SchemaVersion}
 }
 
 // migrations is the ordered list of forward steps. Index is irrelevant; Version is
@@ -29,6 +48,10 @@ var migrations = []migration{
 	{Version: 3, SQL: schemaV3},
 	// schemaV4 lives in flatten.go, next to the code that reads it (task 4.4).
 	{Version: 4, SQL: schemaV4},
+	// schemaV5 lives in execution_contract.go: it is the transcription of
+	// design.md D9 for change extend-execution-contract (task 0.1), and the code
+	// that reads its tables arrives in the later tasks of that change.
+	{Version: 5, SQL: schemaV5},
 }
 
 // schemaV1 is the initial schema.

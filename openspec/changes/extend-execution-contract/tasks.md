@@ -7,8 +7,8 @@
 
 ## 0. journal v5 스키마 [T]
 
-- [ ] 0.1 design D9 표의 전사(단일 원자 마이그레이션): `decisions`(account_ref·preimage_kind 포함)·`risk_reservations`(attempt_id 포함)·`spent_nonces`·`reconcile_states`·`execution_corrections` + `mutation_attempts` additive(decision_id·safety_class·generation·client_order_id·wire_body·serializer_version·replay_count·last_replay_at) + `fill_snapshots.filled_amount` + UNIQUE 제약 전부. 컬럼·제약은 표와 자구 일치
-- [ ] 0.2 직전 자동 백업·복원 절차·실패 무손상 테스트, v4→v5 전이·구버전 거부 스키마 계약 테스트
+- [x] 0.1 design D9 표의 전사(단일 원자 마이그레이션): `decisions`(account_ref·preimage_kind 포함)·`risk_reservations`(attempt_id 포함)·`spent_nonces`·`reconcile_states`·`execution_corrections` + `mutation_attempts` additive(decision_id·safety_class·generation·client_order_id·wire_body·serializer_version·replay_count·last_replay_at) + `fill_snapshots.filled_amount` + UNIQUE 제약 전부. 컬럼·제약은 표와 자구 일치
+- [x] 0.2 직전 자동 백업·복원 절차·실패 무손상 테스트, v4→v5 전이·구버전 거부 스키마 계약 테스트
 
 ## 1. 결정 영속·멱등키
 
