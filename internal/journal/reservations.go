@@ -71,6 +71,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
@@ -100,6 +101,18 @@ var (
 
 	// ErrReservationNotFound means no risk_reservations row carries that id.
 	ErrReservationNotFound = errors.New("journal: risk reservation not found")
+
+	// ErrDecisionExpired means the decision's expiry had already passed when the
+	// reservation transaction read it. Nothing is reserved and, under the atomic
+	// issuance API, nothing is issued either.
+	//
+	// It wraps ErrInvalidRequest deliberately: every caller that already tests
+	// for that keeps behaving exactly as it did, and what the new sentinel adds
+	// is the ability to tell this refusal apart from the other invalid requests
+	// — which is what the DECISION_EXPIRED issuance reason needs and what
+	// ErrInvalidRequest alone could never provide (risk-management: 예약 실패는
+	// 원인별 안정 reason-code로 기록된다).
+	ErrDecisionExpired = fmt.Errorf("%w: decision expired", ErrInvalidRequest)
 )
 
 // Reservation is a stored risk_reservations row.
@@ -247,19 +260,43 @@ func (j *Journal) Reserve(ctx context.Context, req ReserveRequest) (ReserveResul
 	}
 	defer tx.Rollback()
 
+	if err := reservePrecheck(ctx, tx, req, plan, now); err != nil {
+		return ReserveResult{}, err
+	}
+	out, err := reserveRows(ctx, tx, req, plan, now)
+	if err != nil {
+		return ReserveResult{}, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return ReserveResult{}, fmt.Errorf("journal: committing the reservation for decision %s: %w",
+			plan.decisionID, err)
+	}
+	return out, nil
+}
+
+// reservePrecheck is the half of the reservation transaction that runs before
+// the decision row has to exist: the snapshot's age and the ledger version the
+// caller sized against.
+//
+// It is split out because the atomic issuance API (issuance.go) writes the
+// decision *inside* this same transaction, between these checks and the ones in
+// reserveRows. Refusing a stale snapshot before inserting anything keeps the
+// insert off the hot path of a refusal that was going to happen anyway.
+func reservePrecheck(ctx context.Context, tx *sql.Tx, req ReserveRequest, plan reservePlan, now time.Time) error {
 	// 1. The snapshot's age, judged against the injected clock rather than
 	//    against anything the caller said about the time.
 	if err := checkSnapshotFresh(req.SnapshotAsOf, now, req.Staleness); err != nil {
-		return ReserveResult{}, err
+		return err
 	}
 
 	// 2. The ledger version, before anything this transaction does moves it.
 	current, err := reservationVersion(ctx, tx, plan.accountRef)
 	if err != nil {
-		return ReserveResult{}, err
+		return err
 	}
 	if current != req.ObservedVersion {
-		return ReserveResult{}, fmt.Errorf(
+		return fmt.Errorf(
 			"%w: the caller sized against version %d, the ledger is at %d",
 			ErrSnapshotSuperseded, req.ObservedVersion, current)
 	}
@@ -271,9 +308,17 @@ func (j *Journal) Reserve(ctx context.Context, req ReserveRequest) (ReserveResul
 	//    caller's snapshot — a release only frees headroom, and the caller's
 	//    snapshot never counted our holds in the first place.
 	if _, err := sweepLapsedReservations(ctx, tx, plan.accountRef, now); err != nil {
-		return ReserveResult{}, err
+		return err
 	}
+	return nil
+}
 
+// reserveRows is the half that needs the decision on disk: it reads the
+// decision back, sums the aggregate and inserts. Everything it writes is undone
+// by the caller's rollback, which is what makes a refusal here leave no
+// submittable decision behind when the decision was written by this same
+// transaction.
+func reserveRows(ctx context.Context, tx *sql.Tx, req ReserveRequest, plan reservePlan, now time.Time) (ReserveResult, error) {
 	// 4. The decision, read inside the transaction. A decision that expired
 	//    between issue and reservation authorises nothing.
 	if err := checkDecisionReservable(ctx, tx, plan, now); err != nil {
@@ -320,11 +365,6 @@ func (j *Journal) Reserve(ctx context.Context, req ReserveRequest) (ReserveResul
 		return ReserveResult{}, err
 	}
 	out.Version = version
-
-	if err := tx.Commit(); err != nil {
-		return ReserveResult{}, fmt.Errorf("journal: committing the reservation for decision %s: %w",
-			plan.decisionID, err)
-	}
 	return out, nil
 }
 
@@ -381,31 +421,48 @@ func (j *Journal) ReserveWithRecollection(ctx context.Context, collect CollectSn
 	if collect == nil {
 		return ReserveResult{}, fmt.Errorf("%w: reserving needs a snapshot collector", ErrInvalidRequest)
 	}
-	policy = policy.resolve()
-	deadline := j.clk.Now().Add(policy.Budget)
-
-	var last error
-	for attempt := 1; attempt <= policy.MaxAttempts; attempt++ {
-		if now := j.clk.Now(); now.After(deadline) {
-			return ReserveResult{}, fmt.Errorf(
-				"%w: the %s budget expired after %d attempt(s): %w",
-				ErrRecollectionExhausted, policy.Budget, attempt-1, orNoAttempt(last))
-		}
+	return recollectLoop(j.clk, policy, func(attempt int) (ReserveResult, error) {
 		req, err := collect(ctx, attempt)
 		if err != nil {
 			return ReserveResult{}, fmt.Errorf("journal: collecting the broker snapshot: %w", err)
 		}
-		result, err := j.Reserve(ctx, req)
+		return j.Reserve(ctx, req)
+	})
+}
+
+// recollectLoop is the bounded collect-validate-insert loop, shared by
+// ReserveWithRecollection and by the atomic issuance API (issuance.go).
+//
+// It is one function and not two copies because the two properties that make it
+// safe — the only retryable errors are the two that mean "this snapshot no
+// longer describes the account", and exhausting the attempts or the budget is a
+// refusal rather than a fallback to the last snapshot seen — are the kind that
+// a second copy quietly loses. A limit refusal is returned immediately:
+// collecting the same account again will not make it fit, and retrying a limit
+// is how a cap becomes a suggestion.
+func recollectLoop[T any](clk clock.Clock, policy RecollectPolicy, run func(attempt int) (T, error)) (T, error) {
+	var zero T
+	policy = policy.resolve()
+	deadline := clk.Now().Add(policy.Budget)
+
+	var last error
+	for attempt := 1; attempt <= policy.MaxAttempts; attempt++ {
+		if now := clk.Now(); now.After(deadline) {
+			return zero, fmt.Errorf(
+				"%w: the %s budget expired after %d attempt(s): %w",
+				ErrRecollectionExhausted, policy.Budget, attempt-1, orNoAttempt(last))
+		}
+		out, err := run(attempt)
 		switch {
 		case err == nil:
-			return result, nil
+			return out, nil
 		case errors.Is(err, ErrSnapshotStale), errors.Is(err, ErrSnapshotSuperseded):
 			last = err
 		default:
-			return ReserveResult{}, err
+			return zero, err
 		}
 	}
-	return ReserveResult{}, fmt.Errorf("%w: %d attempts spent: %w",
+	return zero, fmt.Errorf("%w: %d attempts spent: %w",
 		ErrRecollectionExhausted, policy.MaxAttempts, orNoAttempt(last))
 }
 
@@ -709,8 +766,8 @@ func checkDecisionReservable(ctx context.Context, tx *sql.Tx, plan reservePlan, 
 		return fmt.Errorf("journal: decision %s expires_at: %w", plan.decisionID, err)
 	}
 	if !expires.After(now) {
-		return fmt.Errorf("%w: decision %s expired at %s; an expired decision reserves nothing",
-			ErrInvalidRequest, plan.decisionID, expiresAt)
+		return fmt.Errorf("%w at %s; decision %s reserves nothing after that instant",
+			ErrDecisionExpired, expiresAt, plan.decisionID)
 	}
 
 	// A decision reserves once. Re-reserving would double-count the same

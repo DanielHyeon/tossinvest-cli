@@ -119,3 +119,39 @@
   head 전이(v5→v6)는 `migration_v6_test.go`로 따로 세웠다. 백업 검사 헬퍼는
   `assertBackupAtVersion(backup, version, want, absentTable)`로 일반화해 두 파일이 공유한다.
   단언은 하나도 약해지지 않았다(같은 검사를 두 전이에 각각 건다).
+
+## 2026-07-26 [safe local] 만료 sentinel은 `ErrInvalidRequest`를 감싼다 (task 0.2)
+
+- 사실: 태스크는 DECISION_EXPIRED에 **신규 sentinel**을 요구한다(현재 만료는
+  `checkDecisionReservable`이 `ErrInvalidRequest`로 낸다 — reservations.go). 그런데 landed
+  `TestReservationRequiresARecordedUnexpiredDecision`은 만료가 `ErrInvalidRequest`임을 단언하고,
+  단발 `Reserve`의 공개 계약도 그렇다.
+- 이번 처리: `ErrDecisionExpired = fmt.Errorf("%w: decision expired", ErrInvalidRequest)`.
+  `errors.Is(err, ErrInvalidRequest)`는 그대로 참이므로 기존 API·호출자·테스트는 하나도 약해지지
+  않고, 새로 얻는 것은 "이 거부를 다른 invalid request와 구별할 수 있다"뿐이다 — 그게 정확히
+  reason 매핑에 필요한 것이다.
+- 검증: `TestIssuanceRefusesAnExpiredDecision`(두 sentinel 동시 만족),
+  `TestSingleShotReserveStillRefusesTheExpiredDecision`(단발 API 무변경).
+
+## 2026-07-26 [safe local] 재수집 변형을 함께 구현했다 — 그래야 reason 매핑이 도달 가능하다 (task 0.2)
+
+- 사실: 태스크의 reason 매핑은 `SNAPSHOT_RECOLLECTION_EXHAUSTED←ErrRecollectionExhausted`를
+  요구하는데, 그 오류는 재수집 루프에서만 나온다. `RecordDecisionAndReserve` 단발 API만으로는
+  네 reason 중 하나가 구조적으로 도달 불가능하고, 도달 불가능한 매핑은 테스트할 수 없다.
+- 이번 처리: `RecordDecisionAndReserveWithRecollection`(+`CollectIssue`)을 같이 추가했다.
+  루프 본체는 landed `ReserveWithRecollection`에서 `recollectLoop[T]`로 추출해 **두 API가
+  같은 루프를 공유**한다 — 재시도 가능 오류 집합·데드라인·소진=거부라는 세 성질이 사본 사이에서
+  갈라지지 않게 하려는 것이다. `ReserveWithRecollection`의 동작은 무변경(기존 테스트 green).
+- 부수 효과: 재수집 예산(10초)이 결정 TTL(60초)보다 짧다는 D1의 논증이 테스트로 고정된다 —
+  `TestIssuanceWithRecollectionExpiresWithTheDecision`은 TTL을 예산보다 짧게 만들어 루프가
+  결정보다 오래 살면 DECISION_EXPIRED로 끝남을 보인다.
+
+## 2026-07-26 [observation] 원자 발급의 거부 순서는 precheck → 결정 삽입 → 예약 (task 0.2)
+
+- 트랜잭션 안 순서: 스냅샷 신선도·원장 버전(결정 행이 필요 없는 거부) → 결정 INSERT →
+  `checkDecisionReservable`(만료·계좌·1회) → 총계 → 예약 INSERT. 그래서 VERSION_CONFLICT는
+  결정을 쓰기 전에, DECISION_EXPIRED·LIMIT_REACHED는 쓴 뒤에 롤백으로 거부된다.
+- 후속 task 입력: **4.1** 발급자가 reason을 기록할 때 한 요청이 두 reason에 해당할 수
+  있다(예: 만료된 결정 + 소진된 한도). 위 순서가 곧 우선순위이며, `IssueRefusalReason`의
+  분기 순서(한도 → 만료 → 소진 → 버전)는 **오류 래핑** 우선순위라 서로 다르다 —
+  `ErrRecollectionExhausted`가 마지막 stale/superseded를 감싸므로 버전보다 먼저 검사해야 한다.

@@ -277,7 +277,22 @@ func (j *Journal) RecordDecision(ctx context.Context, req DecisionRequest) (Deci
 	if err != nil {
 		return Decision{}, err
 	}
-	if _, err := j.db.ExecContext(ctx,
+	if err := insertDecisionRow(ctx, j.db, dec); err != nil {
+		return Decision{}, err
+	}
+	return dec, nil
+}
+
+// execer is the write half of *sql.DB and *sql.Tx alike, which is what lets one
+// insert statement serve both the issuer's own transaction and the atomic
+// issuance transaction (issuance.go). A single writer means the two paths
+// cannot drift into writing different rows for the same decision.
+type execer interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
+func insertDecisionRow(ctx context.Context, ex execer, dec Decision) error {
+	if _, err := ex.ExecContext(ctx,
 		`INSERT INTO decisions
 		   (id, account_ref, generation, safety_class, preimage_kind, risk_preimage,
 		    risk_hash, client_order_id, limits_json, nonce, issued_at, expires_at)
@@ -286,9 +301,9 @@ func (j *Journal) RecordDecision(ctx context.Context, req DecisionRequest) (Deci
 		dec.RiskPreimage, dec.RiskHash, nullableString(dec.ClientOrderID),
 		nullableString(dec.LimitsJSON), dec.Nonce,
 		formatJournalTime(dec.IssuedAt), formatJournalTime(dec.ExpiresAt)); err != nil {
-		return Decision{}, fmt.Errorf("journal: recording decision %s: %w", dec.ID, err)
+		return fmt.Errorf("journal: recording decision %s: %w", dec.ID, err)
 	}
-	return dec, nil
+	return nil
 }
 
 // build validates the request and derives everything the row stores.
