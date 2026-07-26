@@ -1,5 +1,7 @@
 # Change: add-core-domain
 
+> **[사용자 추가 요구 2026-07-26 — 재작성 시 반영]** StockOS 손익 극대화 exit 정책 이식: `internal/exitpolicy` 순수 판정 모듈 — (a) **baseline ratchet**(`exit/baseline_ratchet.py`: R 트리거 기준선 단계 상승 0.4R→스톱 −0.5R / 0.8R→본전 / 1.0R→부분익절 40% / 1.2R→+0.3R 잠금 / 2.0R→+0.8R 잠금, provenance 주석·보수 기본값), (b) **profit ladder**(`profit_ladder.py` multi-rung ratchet: 목표 도달→부분익절→보호선 승격→다음 rung, 판정 시점/체결 시점 필드 분리 보존, FillModel STOP_FIRST 보수 기본), (c) 본전은 비용 차감 실질 본전(`break_even_sell_price` — costs 모델 결합). 이식 테스트: test_baseline_ratchet·test_profit_ladder·test_exit_strategy(범위 내 액션만). **불변식: 기준선은 단조 상승만**(§0.9 정합). 제외: 신호 기반 트레일(EMA9/VWAP/CVD/trendline — P3 신호 계층), TIME_EXIT/EOD(P3 스케줄러), limit-up hold(P3). **액추에이션은 2c 소관**: 기준선 상승 = 브로커측 stop 교체(조건주문 modify=신규 ID — 2c 원자 교체 기계), 부분익절 = RISK_REDUCING 청산(Guardian 경유), 부분익절 후 잔량 보호 수량 조정 = 2c 수량 정합.
+
 > **[동결 — 재작성 대기]** 2026-07-26 2라운드 리뷰(25건, `review.md` 후반부)에서 착수 불가 판정. 이 스펙은 선행 계약(extend-execution-contract) 재작성 **이전** 기준으로 쓰여 있어 사실과 다르다: 2-클래스 어휘, 기각된 `min(로컬,계좌)` 상한, 빈 스냅샷 표지 등. 재작성은 2a 구현 완료 후 수행하며, 그때 반영할 확정 사항 — 구조적 RR·등급배수는 입력 생산자 부재로 P3 이관, HALT_ALL 어휘를 모드×클래스 표로, 비용 모델은 KIS 수치 이식 금지(2b 2.9 실측값), 최소 RR provenance 정정(1.5는 StockOS 최저값), journal 버전 단일화, 판정 체인과 예약 트랜잭션의 권위 관계 명시, flatten·발동 주문 방향 소유권은 2c와 협의.
 
 ## Why
