@@ -70,12 +70,26 @@ func Classify(in ProvenanceInputs) Kind {
 	}
 }
 
-// ExitEligible reports whether a position acquired this way may be managed by
-// the exit policy.
+// ExitEligible reports whether a position may be managed by the exit policy.
 //
-// Only the engine's own positions are. An externally or manually acquired
-// position has no entry decision and therefore no entry stop, and D5's whole
-// first correction is that the t0 baseline *is* the entry stop: a position with
-// no baseline is a position the ratchet cannot protect, and pretending otherwise
-// would put a made-up stop on somebody else's shares.
-func ExitEligible(entryDecisionID string) bool { return orEmpty(entryDecisionID) != "" }
+// It is the single predicate the whole build asks (position-ledger: 자격 판정은
+// 단일 술어 함수로 모은다 SHALL). Two records can justify a baseline and there is
+// no third:
+//
+//	entry_decision_id  the engine opened it, and the decision's stop is t0.
+//	adoption_id        it was adopted (change adopt-external-positions), and the
+//	                   adoption record's synthetic stop is t0.
+//
+// A position with neither has no stop to build a baseline out of and no risk to
+// measure R against, and inventing one for somebody else's shares is the failure
+// this predicate exists to prevent. Before the adoption change that was the only
+// possible answer for an external holding; it is now a statement about the
+// records, not about how the shares were acquired.
+//
+// The reconcile fold guard is deliberately *not* a caller: an adopted position
+// carries no entry decision, so a fold landing on one is an ordinary
+// re-reconciliation and the guard there compares entry_decision_id explicitly
+// (design A1).
+func ExitEligible(entryDecisionID, adoptionID string) bool {
+	return orEmpty(entryDecisionID) != "" || orEmpty(adoptionID) != ""
+}

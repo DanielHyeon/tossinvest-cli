@@ -95,6 +95,7 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"mutation_attempts",
 		"operating_modes",
 		"position_adjustments",
+		"position_adoptions",
 		"positions",
 		"reconcile_states",
 		"risk_reservations",
@@ -200,6 +201,19 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"account_ref", "cumulative_qty", "id", "new_avg_price",
 			"new_filled_amount", "observed_at", "order_id", "prev_avg_price",
 			"prev_filled_amount",
+		},
+		// Schema v7 (adopt-external-positions design A1): the adoption record and
+		// the one nullable column that points at it. `adoption_id` is listed here
+		// because a golden column list is how a set-once column stops being
+		// quietly widened — adding a second reference column would show up as a
+		// diff in this literal.
+		"position_adoptions": {
+			"cost_basis", "cost_basis_src", "id", "market", "observed_at",
+			"observed_price", "preimage_digest", "quantity", "symbol", "synthetic_stop",
+		},
+		"positions": {
+			"account_ref", "adoption_id", "avg_price", "closed_at", "entry_decision_id",
+			"id", "instance_seq", "market", "opened_at", "quantity", "state", "symbol",
 		},
 	}
 	for table, want := range wantColumns {

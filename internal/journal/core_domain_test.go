@@ -534,6 +534,10 @@ func TestCoreDomainTablesAreStrict(t *testing.T) {
 	for _, table := range []string{
 		"positions", "position_adjustments", "operating_modes",
 		"exit_states", "exit_events", "trade_outcomes",
+		// v7's adoption record joins the same list rather than getting its own:
+		// STRICT is a package-wide convention, and a per-migration copy of it is
+		// a list somebody forgets to add the next table to.
+		"position_adoptions",
 	} {
 		var ddl string
 		if err := j.db.QueryRowContext(ctx,

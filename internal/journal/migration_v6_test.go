@@ -89,16 +89,17 @@ func TestMigrationV5ToV6PreservesEveryRow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	// Stopped at 6 rather than run to head: this file is the v5→v6 step's
+	// contract, and a later change adding v7 must not silently turn it into a
+	// test of a different transition (migration_v5_test.go pins v4→v5 the same
+	// way, and migration_v7_test.go is v6→v7's).
+	j := openJournalAtSchema(t, path, 6)
 	version, err := j.SchemaVersion(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if version != SchemaVersion {
-		t.Fatalf("schema version after upgrade = %d, want %d", version, SchemaVersion)
-	}
-	if SchemaVersion != 6 {
-		t.Fatalf("this file is the v5→v6 contract; SchemaVersion is %d", SchemaVersion)
+	if version != 6 {
+		t.Fatalf("schema version after upgrade = %d, want 6", version)
 	}
 
 	after := countRows(t, j.db, v5Tables)
@@ -153,13 +154,13 @@ func TestMigrationV4ToV6IsOneRunOfTwoSteps(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 6)
 	version, err := j.SchemaVersion(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if version != SchemaVersion {
-		t.Fatalf("schema version = %d, want %d", version, SchemaVersion)
+	if version != 6 {
+		t.Fatalf("schema version = %d, want 6", version)
 	}
 	if got := countRows(t, j.db, v4Tables); !sameCounts(got, before) {
 		t.Errorf("rows after the two-step migration = %v, want %v", got, before)
@@ -182,7 +183,7 @@ func TestMigrationV4ToV6IsOneRunOfTwoSteps(t *testing.T) {
 // v6 journal as though positions and exit states did not exist.
 func TestOlderBuildRefusesTheV6Journal(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "journal.db")
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 6)
 	seedV5Rows(t, j)
 	if err := j.Close(); err != nil {
 		t.Fatal(err)
@@ -204,7 +205,7 @@ func TestOlderBuildRefusesTheV6Journal(t *testing.T) {
 
 	// The refusal must not have touched the file: it is still a v6 journal with
 	// its rows, and no backup was taken for a migration that never ran.
-	reopened := openTestJournalAt(t, path)
+	reopened := openJournalAtSchema(t, path, 6)
 	if got := countRows(t, reopened.db, []string{"decisions"})["decisions"]; got != 1 {
 		t.Fatalf("decisions after the refusal = %d, want 1", got)
 	}
@@ -229,7 +230,7 @@ func TestV6MigrationBacksUpBeforeApplying(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 6)
 
 	backups := backupsIn(t, dir)
 	if len(backups) != 1 {

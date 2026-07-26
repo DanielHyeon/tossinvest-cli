@@ -82,9 +82,13 @@ type ExternalPositionAlert struct {
 	PositionID string
 	// BrokerAsOf is when the snapshot this came from was current.
 	BrokerAsOf string
-	// ExitEligible is false on every alert this type carries, and it is carried
-	// rather than implied because it is the operationally important half: the
-	// engine now knows about the position and will not protect it.
+	// ExitEligible is the operationally important half of the alert: whether the
+	// engine will protect the position it has just discovered.
+	//
+	// It used to be hardcoded false, which was true while an external holding
+	// could never become managed. Since adopt-external-positions it is the
+	// eligibility predicate's answer, because a re-reconciliation of an already
+	// adopted holding must not tell an operator it is unprotected.
 	ExitEligible bool
 }
 
@@ -110,9 +114,14 @@ type IngestedPosition struct {
 	// pass of the loop recomputing the same difference, or a retry after a crash.
 	Applied bool
 	// ExitEligible reports whether the exit policy may manage the instance. It is
-	// false for everything this file writes, and it is reported rather than
-	// assumed so a caller can assert it.
+	// the single predicate's answer, not a constant: false for a holding this
+	// file has just folded in, and true for one a previous cycle adopted and this
+	// one is re-reconciling.
 	ExitEligible bool
+	// Adopted reports that the eligibility above comes from an adoption record.
+	// It is what tells the adoption judgement "this one is already managed" from
+	// "this one is a candidate", without a second read of the projection.
+	Adopted bool
 }
 
 // IngestReport is what one ingest did.
@@ -221,13 +230,22 @@ func (in *Ingestor) IngestExternalPositions(ctx context.Context, diff Diff) (Ing
 			PositionID:   result.Position.ID,
 			Applied:      result.Applied,
 			ExitEligible: result.Position.ExitEligible(),
+			Adopted:      result.Position.Adopted(),
 		}
-		if folded.ExitEligible {
+		if strings.TrimSpace(result.Position.EntryDecisionID) != "" {
 			// The instance the adjustment landed on carries an entry decision, so
 			// this was not an external position at all — the comparison and the
 			// projection disagree about whether the engine opened it. Widening what
 			// the exit policy manages on the strength of that disagreement is the
 			// one thing this path must not do.
+			//
+			// The test is `entry_decision_id` explicitly and NOT the eligibility
+			// predicate (design A1). Since adopt-external-positions an eligible
+			// position can also be one this engine adopted, and a fold landing on
+			// *that* is the ordinary re-reconciliation path — the quantity
+			// comparison a managed external position needs on every cycle. Guarding
+			// on eligibility would refuse it and freeze the loop on exactly the
+			// positions the change exists to manage.
 			return report, fmt.Errorf(
 				"reconcile: the holding of %s folded onto instance %s, which carries an entry decision; "+
 					"an external position must not inherit one", symbol, folded.PositionID)
@@ -240,7 +258,7 @@ func (in *Ingestor) IngestExternalPositions(ctx context.Context, diff Diff) (Ing
 		if err := in.Alert.ExternalPositionFound(ctx, ExternalPositionAlert{
 			AccountRef: account, Market: market, Symbol: symbol,
 			Quantity: folded.Quantity, PositionID: folded.PositionID,
-			BrokerAsOf: asOf, ExitEligible: false,
+			BrokerAsOf: asOf, ExitEligible: folded.ExitEligible,
 		}); err != nil {
 			// The adjustment is committed either way, so the fold is reported. An
 			// undelivered alert is still a failure — the operator does not know the

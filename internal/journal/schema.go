@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 6
+const SchemaVersion = 7
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -56,6 +56,11 @@ var migrations = []migration{
 	// for change add-core-domain (task 0.1), and the code that reads its tables
 	// arrives in the later tasks of that change.
 	{Version: 6, SQL: schemaV6},
+	// schemaV7 lives in adoption.go: it is the transcription of design.md A1 for
+	// change adopt-external-positions, and the code that reads its table is in
+	// the same file — the adoption record has exactly one writer and the layout
+	// is what enforces it.
+	{Version: 7, SQL: schemaV7},
 }
 
 // schemaV1 is the initial schema.

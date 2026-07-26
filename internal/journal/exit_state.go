@@ -49,19 +49,26 @@ import (
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/position"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
-// ErrPositionNotExitEligible means the position has no entry decision, so there
-// is no stop to build a baseline out of and no risk to measure R against.
+// ErrPositionNotExitEligible means the position carries neither an entry
+// decision nor an adoption record, so there is no stop to build a baseline out
+// of and no risk to measure R against.
 //
 // exit-policy makes this a refusal plus an operator alert rather than a
-// best-effort guess (entry 결정이 없는 포지션은 exit 정책의 대상이 아니며 발견
-// 시 알림을 발송한다 SHALL). The alert is the observation loop's (task 7.4); the
+// best-effort guess (entry 결정도 편입 기록도 없는 포지션은 exit 정책의 대상이
+// 아니며 발견 시 알림을 발송한다 SHALL). The alert is the observation loop's; the
 // refusal is here, because this is where a caller would otherwise create the
 // state that makes the position managed.
+//
+// The eligibility test is internal/position.ExitEligible and is spelled nowhere
+// else: two sources justify a baseline, and a second copy of "which columns
+// count" is how they drift apart.
 var ErrPositionNotExitEligible = errors.New(
-	"journal: the position has no entry decision, so it is not an exit-policy target")
+	"journal: the position carries neither an entry decision nor an adoption record, " +
+		"so it is not an exit-policy target")
 
 // ErrExitStateExists means the position already has one. A second exit state is
 // a second baseline for one position, which is the thing "포지션당 정책 하나"
@@ -121,16 +128,17 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 	}
 	defer tx.Rollback()
 
-	var decisionID sql.NullString
-	err = tx.QueryRowContext(ctx, `SELECT entry_decision_id FROM positions WHERE id = ?`, id).
-		Scan(&decisionID)
+	var decisionID, adoptionID sql.NullString
+	err = tx.QueryRowContext(ctx,
+		`SELECT entry_decision_id, adoption_id FROM positions WHERE id = ?`, id).
+		Scan(&decisionID, &adoptionID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ExitState{}, fmt.Errorf("%w: %s", ErrPositionNotFound, id)
 	}
 	if err != nil {
 		return ExitState{}, fmt.Errorf("journal: reading position %s: %w", id, err)
 	}
-	if strings.TrimSpace(decisionID.String) == "" {
+	if !position.ExitEligible(decisionID.String, adoptionID.String) {
 		return ExitState{}, fmt.Errorf("%w: %s", ErrPositionNotExitEligible, id)
 	}
 

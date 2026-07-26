@@ -425,9 +425,14 @@ type Position struct {
 	Symbol      string
 	InstanceSeq int64
 	// EntryDecisionID is empty for an externally or manually acquired position:
-	// no decision justifies it, and it is therefore not an exit-policy target.
+	// no decision justifies it. It is set once by the fill that opens the
+	// instance and never written again.
 	EntryDecisionID string
-	State           string
+	// AdoptionID is empty until the position is adopted into exit management
+	// (adoption.go). It is the second — and last — record that can justify a
+	// baseline, and it too is set once.
+	AdoptionID string
+	State      string
 	// Quantity is a decimal string; AvgPrice is a decimal string or "" when the
 	// cost basis is not known.
 	Quantity string
@@ -436,20 +441,29 @@ type Position struct {
 	ClosedAt string
 }
 
-// ExitEligible reports whether the exit policy may manage this position.
-func (p Position) ExitEligible() bool { return position.ExitEligible(p.EntryDecisionID) }
+// ExitEligible reports whether the exit policy may manage this position. It is
+// the single predicate (internal/position) and never an inline column test.
+func (p Position) ExitEligible() bool {
+	return position.ExitEligible(p.EntryDecisionID, p.AdoptionID)
+}
+
+// Adopted reports that the position's eligibility comes from an adoption record
+// rather than from an entry decision. The two open an exit state from different
+// sources, so the branch is a stored fact rather than an inference.
+func (p Position) Adopted() bool { return strings.TrimSpace(p.AdoptionID) != "" }
 
 // ErrPositionNotFound means no projected instance matches.
 var ErrPositionNotFound = errors.New("journal: no projected position")
 
 const positionSelect = `SELECT id, account_ref, market, symbol, instance_seq,
-	coalesce(entry_decision_id, ''), state, quantity, avg_price,
+	coalesce(entry_decision_id, ''), coalesce(adoption_id, ''), state, quantity, avg_price,
 	coalesce(opened_at, ''), coalesce(closed_at, '') FROM positions`
 
 func scanPosition(row rowScanner) (Position, error) {
 	var p Position
 	err := row.Scan(&p.ID, &p.AccountRef, &p.Market, &p.Symbol, &p.InstanceSeq,
-		&p.EntryDecisionID, &p.State, &p.Quantity, &p.AvgPrice, &p.OpenedAt, &p.ClosedAt)
+		&p.EntryDecisionID, &p.AdoptionID, &p.State, &p.Quantity, &p.AvgPrice,
+		&p.OpenedAt, &p.ClosedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Position{}, ErrPositionNotFound
 	}
