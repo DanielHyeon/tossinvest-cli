@@ -615,3 +615,35 @@
   자기 계좌를 손으로 만진 것은 오작동이 아니고, critical outbox 미배달은 진입을 막는다.
 - 함께(문서 표류): `internal/execgw/symbolgate.go`의 주석이 아직 "auto-released by a clean
   reconcile"이라고 적는다. execgw는 동시 작업 영역이라 건드리지 않았다 — 배선 wave에서 정정.
+
+## 2026-07-26 [safe local] 주문→인스턴스 링크는 provenance에 필요 없다 — exit_events가 이미 참조를 든다 (task 6.4)
+
+- 승계 과제(6.1 [observation]): "6.4의 provenance 질의가 주문→인스턴스 조인을 필요로 하면 그때
+  `fill_events`에 인스턴스 참조를 더하는 것이 자연스럽다(추가 컬럼 = 새 스키마 버전)."
+- **판정: 필요 없다.** 스펙이 요구하는 사슬은 결정→intent→attempt→fill→position→exit 판정→청산이고,
+  각 간선에 이미 선언된 컬럼이 있다:
+  - 진입 절반: `positions.entry_decision_id` → `decisions.id` ← `mutation_attempts.decision_id`,
+    그 attempt의 `intent_id`와 `broker_order_id` → `fill_events.order_id`.
+  - 청산 절반: `exit_events.position_id`(FK)와 `exit_events.proposed_intent_id` → `intents.id` →
+    그 intent의 attempt → 주문번호 → `fill_events`. 판정 이벤트가 청산 intent를 **이름으로**
+    들고 있으므로 시간창이 필요 없다.
+- 검토한 선택지와 기각 사유:
+  - (A) `fill_events`에 `position_id` 추가 — v6를 다시 여는 것이고 "한 버전 번호에 하나의
+    스키마"(position-ledger 원장 스키마 확장 규칙 SHALL)에 어긋난다. **이 change에서 기각.**
+  - (B) `positions`에 진입 주문번호 컬럼 추가 — 같은 이유로 기각. 정정 교체가 주문번호를 바꾸므로
+    lineage 해소도 함께 들어와야 해서 (A)보다 나쁘다.
+  - (C) **선택**: 있는 컬럼으로 조인한다. 스키마 변경 0.
+- **남는 한계(명시)**: exit 판정을 거치지 않은 감소 — 수동 flatten, 운영자 매도 — 는 사슬에
+  나타나지 않는다. 자기 결정과 자기 intent를 갖지만 포지션에 붙일 선언된 컬럼이 없고, 시간으로
+  붙이는 것이 스펙이 금지한 휴리스틱이다. 후속 change가 이 링크를 원하면 (A)를 새 스키마 버전으로
+  하는 것이 맞다 — `docs/aggregates.md` §3에 같은 내용을 적었다.
+- 함께: 6.1이 기록한 **원 한계**(닫힌 인스턴스에 속한 주문의 지연 정정이 현 인스턴스 원가로 간다)는
+  provenance와 무관하게 그대로다. 그것은 조인이 아니라 귀속 규칙의 문제이고, 수량은 움직이지
+  않으므로 노출·손절 계약에 영향이 없다.
+- 질의는 **단일**이다(UNION ALL + CTE). 여러 왕복으로 조립한 사슬은 여러 **시점**으로 조립한
+  사슬이고, 그 사이에 들어온 체결은 한 번도 참이 아니었던 답을 만든다. journal 타임스탬프가
+  초 해상도라 같은 초 안의 인과 순서는 rank 컬럼이 잡는다.
+- 검증: `TestWhyDoesThisPositionExist`, `TestTheProvenanceChainReachesTheClose`(7.4 이전이라
+  `exit_events`를 직접 넣는다 — 행이 있어야만 도는 조인은 아무도 시험하지 않은 조인이다),
+  `TestAnEmptyExitHistoryStillWalks`, `TestAnExternalPositionHasNoEntryProvenance`(가까운 결정을
+  주워오지 않음), `TestAnotherDecisionsFillsAreNotThisPositionsProvenance`.
