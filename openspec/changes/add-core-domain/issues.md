@@ -709,3 +709,11 @@
   `exit_events`를 직접 넣는다 — 행이 있어야만 도는 조인은 아무도 시험하지 않은 조인이다),
   `TestAnEmptyExitHistoryStillWalks`, `TestAnExternalPositionHasNoEntryProvenance`(가까운 결정을
   주워오지 않음), `TestAnotherDecisionsFillsAreNotThisPositionsProvenance`.
+
+## Manager 판정 (3차 물결 검증, 2026-07-26)
+
+- 독립 재실행 0 FAIL(2168). F·G 판정 12건 전부 승인 — 특히: 발급자를 execgw에 배치(risk 뒤로 journal을 끌지 않음 — 2.4 성질 보존), 진입은 OPEN_EXPOSURE만 예약(일손실 예약은 "진다"를 전제하는 셈·현금은 브로커 사실 — 논증 승인), 한도를 정책에서 파생하는 unexported 구성(찍는 한도≠사이징 한도인 Guardian은 생성 불가), 조항 6을 마지막에 평가(도달=1–5 통과 증명), Block에서 에스컬레이션 금지(락 순서 역전 방지)·nil announcer(예산 소진 transport로 공지 금지·재진입 데드락 제거), 미바인딩 가드는 ProjectionBound() 명시 확인(휴리스틱 금지 준수)·엔진 배치 논증.
+- G: ADJUSTMENT_APPLIED 1회용 크레딧, 계정 스코프 협소화, provenance를 proposed_intent_id 조인으로(스키마 무변경 — v6 단일 규칙 보존), 사전 열거 4건 정확.
+- VERSION_CONFLICT의 Guardian 경유 도달 불가(수렴 특성) — 스펙 위반 아님(단발 Reserve 경로에서 도달), 기록 유지.
+- 체크박스 삼킴 재발 1건(8cd2a98의 6.3): 내용 정확·귀속 부정확 — 9.1 기록 대상, 이후 지시문 유지.
+- 4차 승계 확정: exit 관측 두절 트리거(EXIT_OBSERVATION_OUTAGE)·Retrier/Notifier 생산 배선·escalation 필드 population → 7.4. Exit applier 바인딩 → 7.x. 수량 불일치 수렴 조정 발행 → 7.4 reconcile 루프 항목. 전량 청산 전 working 진입 취소 선행(E31) → 7.4. 2c 인계: profileProtection flip + 테스트 seam 삭제.
