@@ -73,6 +73,15 @@ func newE2EBroker(t *testing.T) (*e2eBroker, *httptest.Server) {
 			b.servePrices(w, r)
 		case r.URL.Path == "/api/v1/orders" && r.Method == http.MethodPost:
 			b.serveCreate(t, w, r)
+		case r.URL.Path == "/api/v1/orders" && r.Method == http.MethodGet:
+			// The open-order list. Empty is a real answer and it is the one this
+			// broker gives: the tracer needs the *freshness* of the read, not its
+			// contents.
+			_, _ = w.Write([]byte(`{"result":{"orders":[],"nextCursor":"","hasNext":false}}`))
+		case r.URL.Path == "/api/v1/buying-power":
+			_, _ = w.Write([]byte(`{"result":{"cashBuyingPower":"100000000","currency":"KRW"}}`))
+		case r.URL.Path == "/api/v1/holdings":
+			_, _ = w.Write([]byte(`{"result":{"items":[]}}`))
 		case strings.HasPrefix(r.URL.Path, "/api/v1/orders/") && r.Method == http.MethodGet:
 			b.serveReadBack(w, r)
 		default:
