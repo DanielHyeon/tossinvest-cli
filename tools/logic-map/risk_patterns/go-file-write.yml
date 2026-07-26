@@ -1,0 +1,9 @@
+id: go-file-write
+language: Go
+severity: warning
+message: file writes are side effects; record atomicity, permissions, and rollback behavior.
+rule:
+  any:
+    - pattern: os.WriteFile($$$ARGS)
+    - pattern: os.Create($$$ARGS)
+    - pattern: $FILE.Write($$$ARGS)

@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+# Full SDD commit observation. The small local append is synchronous; the
+# Python collector queues heavy index/graph refreshes in a detached worker.
+if [ "$(git config --bool sdd.captureCommits 2>/dev/null)" = "false" ]; then
+  exit 0
+fi
+
+REPO="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+PYTHON_BIN=""
+if [ -x "$REPO/.sdd/.venv/bin/python" ]; then
+  PYTHON_BIN="$REPO/.sdd/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON_BIN="python3"
+fi
+
+if [ -n "$PYTHON_BIN" ]; then
+  "$PYTHON_BIN" "$REPO/tools/sdd-history/git_commit_event.py" ||
+    printf '%s\n' "[post-commit] warning: event capture failed" >&2
+fi
+
+exit 0

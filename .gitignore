@@ -58,3 +58,28 @@ docs/superpowers/
 
 # TossOS: 루트 CLAUDE.md 는 개발 계약 포인터라 추적한다 (upstream 28행 무시 규칙 재정의)
 !/CLAUDE.md
+
+# Full SDD tracked agent configuration. settings.local.json remains machine-local.
+!/.claude/
+/.claude/*
+!/.claude/CLAUDE.md
+!/.claude/settings.json
+/.claude/settings.local.json
+
+# Full SDD local indexes, event buffers, generated graph applications.
+/.codegraph/
+/.ai-context/
+/.sdd/.venv/
+/.sdd/gbrain-home/
+/.sdd/index-state.json
+/.sdd/history/checkpoints/
+/.sdd/history/index-refresh.lock
+/.sdd/history/refresh-queue/
+/.sdd/history/events/*.jsonl
+!/\.sdd/history/events/.gitkeep
+/tmp/create-context-graph/
+/docs/memory/index.jsonl
+/docs/memory/index.db
+/docs/memory/.ledger.lock
+/docs/memory/.index-*
+/docs/memory/.index.*.backup-*

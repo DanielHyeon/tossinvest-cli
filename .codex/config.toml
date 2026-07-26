@@ -1,0 +1,19 @@
+[shell_environment_policy]
+inherit = "core"
+
+[mcp_servers.codegraph]
+command = "codegraph"
+args = ["serve", "--mcp", "--path", ".", "--no-watch"]
+
+[mcp_servers.gbrain]
+command = "python3"
+args = ["tools/sdd/gbrain_project.py", "serve"]
+
+[mcp_servers.codegraph.tools.codegraph_callers]
+approval_mode = "approve"
+
+[mcp_servers.codegraph.tools.codegraph_impact]
+approval_mode = "approve"
+
+[mcp_servers.codegraph.tools.codegraph_node]
+approval_mode = "approve"

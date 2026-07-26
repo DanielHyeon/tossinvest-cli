@@ -1,0 +1,9 @@
+id: go-http-request
+language: Go
+severity: warning
+message: outbound HTTP calls need timeout, retry, rate-budget, and idempotency analysis.
+rule:
+  any:
+    - pattern: http.Get($$$ARGS)
+    - pattern: http.Post($$$ARGS)
+    - pattern: $CLIENT.Do($$$ARGS)

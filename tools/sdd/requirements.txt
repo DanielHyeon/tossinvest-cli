@@ -1,0 +1,2 @@
+# Must match the shared TypeDB server protocol exactly.
+typedb-driver==3.11.5

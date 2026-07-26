@@ -1,0 +1,6 @@
+id: go-float64-cast
+language: Go
+severity: hint
+message: float64 conversion in money or quantity paths needs precision evidence.
+rule:
+  pattern: float64($VALUE)

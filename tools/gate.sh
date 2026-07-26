@@ -3,14 +3,16 @@
 # gate.sh — openspec change 완료 게이트
 #
 # 하나의 change 를 "완료" 로 선언해도 되는지 기계적으로 검사한다. 사람이 눈으로
-# 훑는 대신 아래 6개 조건을 전부 통과해야만 exit 0 이 된다.
+# 훑는 대신 아래 8개 조건을 전부 통과해야만 exit 0 이 된다.
 #
 #   1. tasks.md 존재
 #   2. 미완료 체크박스 0개
 #   3. review.md 존재 (gstack 리뷰 기록)
-#   4. make test 통과
-#   5. make vet 통과
-#   6. make validate 통과
+#   4. Function Logic Map 산출물 완성 또는 명시적 면제
+#   5. make sdd-check 통과
+#   6. make test 통과
+#   7. make vet 통과
+#   8. make validate 통과
 #
 # 사용법:
 #   bash tools/gate.sh <change-id>
@@ -23,8 +25,8 @@
 # 종료 코드: 0 = PASS, 1 = 게이트 실패, 2 = 사용법 오류
 set -eu
 
-# 전체 게이트 단계 수 (tasks / 미완료 / review / make test / make vet / make validate)
-TOTAL_STEPS=6
+# 전체 게이트 단계 수
+TOTAL_STEPS=8
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
@@ -122,10 +124,19 @@ if [ ! -f "$REVIEW_FILE" ]; then
 fi
 echo "OK: $REVIEW_FILE"
 
-# ---- 4~6. make test / vet / validate --------------------------------------
+# ---- 4. Function Logic Map -------------------------------------------------
 
 STEP_NO=4
-for target in test vet validate; do
+step "$STEP_NO/$TOTAL_STEPS Function Logic Map 증거 확인"
+if ! python3 tools/logic-map/check_analysis.py --change "$CHANGE_ID"; then
+	fail "Function Logic Map 산출물 미완료"
+fi
+echo "OK: Function Logic Map"
+
+# ---- 5~8. Full SDD / test / vet / validate --------------------------------
+
+STEP_NO=5
+for target in sdd-check test vet validate; do
 	step "$STEP_NO/$TOTAL_STEPS make $target"
 	if ! make "$target"; then
 		fail "make $target 실패"

@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "codegraph": {
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp",
+        "--path",
+        ".",
+        "--no-watch"
+      ]
+    },
+    "gbrain": {
+      "command": "python3",
+      "args": [
+        "tools/sdd/gbrain_project.py",
+        "serve"
+      ]
+    }
+  }
+}
