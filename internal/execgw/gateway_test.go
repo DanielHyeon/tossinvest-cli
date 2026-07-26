@@ -135,7 +135,14 @@ func newGateway(t *testing.T, broker trading.Broker) (*execgw.Gateway, *journal.
 // exactly as a Guardian would.
 
 func testLimits() execgw.Limits {
-	return execgw.Limits{MaxQuantity: 10, MaxNotional: 1_000_000, Currency: "KRW"}
+	return execgw.Limits{
+		MaxQuantity:        execgw.Bound(10),
+		MaxNotional:        execgw.Bound(1_000_000),
+		MaxTotalExposure:   execgw.Bound(5_000_000),
+		MaxDailyLossAmount: execgw.Bound(200_000),
+		MaxDailyLossRatio:  execgw.Bound(0.02),
+		Currency:           "KRW",
+	}
 }
 
 func issuerFor(j *journal.Journal, clk clock.Clock) *execgw.Issuer {
@@ -306,7 +313,7 @@ func TestGuardianRefusalsNeverReachBroker(t *testing.T) {
 			name: "quantity over the snapshot limit",
 			decide: func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision {
 				limits := testLimits()
-				limits.MaxQuantity = 1
+				limits.MaxQuantity = execgw.Bound(1)
 				return entryDecision(t, j, clk, intent, limits)
 			},
 			want: execgw.ReasonGuardianLimitExceeded,
@@ -315,7 +322,7 @@ func TestGuardianRefusalsNeverReachBroker(t *testing.T) {
 			name: "notional over the snapshot limit",
 			decide: func(t *testing.T, j *journal.Journal, clk clock.Clock) execgw.GuardianDecision {
 				limits := testLimits()
-				limits.MaxNotional = 1000
+				limits.MaxNotional = execgw.Bound(1000)
 				return entryDecision(t, j, clk, intent, limits)
 			},
 			want: execgw.ReasonGuardianLimitExceeded,

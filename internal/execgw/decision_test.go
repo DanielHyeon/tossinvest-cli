@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"math"
 	"net/http"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -547,6 +549,193 @@ func TestResubmittingASpentDecisionIsRefusedAcrossProcesses(t *testing.T) {
 	}
 	if places, _, _ := broker.totals(); places != 1 {
 		t.Errorf("broker place calls: got %d, want 1", places)
+	}
+}
+
+// --- the durable one-shot nonce (task 1.7) -----------------------------------
+
+// TestSpentDecisionIsRefusedAfterAJournalRestart is the spec's "재시작 후 결정
+// 재사용 시도" end to end: the process is gone, the decision snapshot is still on
+// disk and unexpired, and the gateway refuses it because the consumption record
+// is in the journal rather than in a map that died with the process.
+//
+// The mutation is a cancel on purpose: it carries no idempotency key, so the
+// refusal can only come from the nonce.
+func TestSpentDecisionIsRefusedAfterAJournalRestart(t *testing.T) {
+	clk := clock.NewFake(fixedNow)
+	path := filepath.Join(t.TempDir(), "journal.db")
+	open := func() *journal.Journal {
+		t.Helper()
+		j, err := journal.Open(context.Background(), journal.Options{
+			Path: path, Clock: clk,
+			FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+		})
+		if err != nil {
+			t.Fatalf("journal.Open: %v", err)
+		}
+		return j
+	}
+	gatewayOver := func(j *journal.Journal, broker trading.Broker) *execgw.Gateway {
+		t.Helper()
+		gw, err := execgw.New(execgw.Options{
+			Journal: j, Trading: trading.NewService(openPolicy(), broker), Clock: clk,
+			AccountRef: "acct-7", Source: "test",
+		})
+		if err != nil {
+			t.Fatalf("execgw.New: %v", err)
+		}
+		return gw
+	}
+
+	broker := &fakeBroker{result: domain.MutationResult{Kind: "cancel", Status: "accepted", OrderID: "O-9"}}
+	first := open()
+	decision := exitDecision(t, first, clk, journal.KindCancel, "kr", "005930", "BUY", 2)
+	intent := orderintent.CancelIntent{OrderID: "O-1", Symbol: "005930"}
+	req := execgw.CancelRequest{
+		Intent:   intent,
+		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: decision,
+	}
+	if _, err := gatewayOver(first, broker).Cancel(context.Background(), req); err != nil {
+		t.Fatalf("first Cancel: %v", err)
+	}
+	if err := first.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	restarted := open()
+	t.Cleanup(func() { _ = restarted.Close() })
+	// A different symbol, so the refusal cannot be the symbol latch: the same
+	// decision, re-presented, must be refused for having been spent.
+	req.Intent = orderintent.CancelIntent{OrderID: "O-2", Symbol: "000660"}
+	req.Order.Market = "kr"
+	_, err := gatewayOver(restarted, broker).Cancel(context.Background(), req)
+	var rejected *execgw.RejectedError
+	if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonGuardianNonceReused {
+		t.Fatalf("want %q after a restart, got %v", execgw.ReasonGuardianNonceReused, err)
+	}
+	if _, cancels, _ := broker.totals(); cancels != 1 {
+		t.Errorf("broker cancel calls: got %d, want 1", cancels)
+	}
+}
+
+// TestPartialLimitSnapshotIsRefused: four bounds out of five is not
+// four-fifths of an authorisation. The issuer API cannot produce one, so the row
+// is edited behind its back — and the entry is still refused.
+func TestPartialLimitSnapshotIsRefused(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-1"}}
+	gw, j, clk := newGateway(t, broker)
+	req := placeRequest(t, j, clk)
+
+	partial := testLimits()
+	partial.MaxDailyLossRatio = execgw.Limit{}
+	encoded, err := execgw.EncodeLimits(partial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tamperDecision(t, j, req.Decision.ID, "limits_json", encoded)
+
+	_, err = gw.Place(context.Background(), req)
+	var rejected *execgw.RejectedError
+	if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonGuardianLimitsUnset {
+		t.Fatalf("want %q, got %v", execgw.ReasonGuardianLimitsUnset, err)
+	}
+	if !strings.Contains(rejected.Detail, "daily loss ratio") {
+		t.Errorf("the refusal must name the missing bound, got %q", rejected.Detail)
+	}
+	if places, _, _ := broker.totals(); places != 0 {
+		t.Errorf("broker place calls: got %d, want 0", places)
+	}
+}
+
+// TestLimitsValidate is the fail-closed table: every field is required, every
+// value has to be a positive finite number, the ratio is a ratio, and the money
+// bounds need a currency to be money in.
+func TestLimitsValidate(t *testing.T) {
+	if err := testLimits().Validate(); err != nil {
+		t.Fatalf("the complete snapshot must validate: %v", err)
+	}
+
+	cases := []struct {
+		name   string
+		mutate func(*execgw.Limits)
+		want   string
+	}{
+		{"quantity unset", func(l *execgw.Limits) { l.MaxQuantity = execgw.Limit{} }, "order quantity"},
+		{"notional unset", func(l *execgw.Limits) { l.MaxNotional = execgw.Limit{} }, "order notional"},
+		{"total exposure unset", func(l *execgw.Limits) { l.MaxTotalExposure = execgw.Limit{} },
+			"total open exposure"},
+		{"daily loss amount unset", func(l *execgw.Limits) { l.MaxDailyLossAmount = execgw.Limit{} },
+			"daily loss amount"},
+		{"daily loss ratio unset", func(l *execgw.Limits) { l.MaxDailyLossRatio = execgw.Limit{} },
+			"daily loss ratio"},
+		{"zero", func(l *execgw.Limits) { l.MaxQuantity = execgw.Bound(0) }, "authorises nothing"},
+		{"negative", func(l *execgw.Limits) { l.MaxNotional = execgw.Bound(-1) }, "authorises nothing"},
+		{"NaN", func(l *execgw.Limits) { l.MaxTotalExposure = execgw.Bound(math.NaN()) }, "finite"},
+		{"Inf", func(l *execgw.Limits) { l.MaxDailyLossAmount = execgw.Bound(math.Inf(1)) }, "finite"},
+		{"ratio above one", func(l *execgw.Limits) { l.MaxDailyLossRatio = execgw.Bound(1.5) },
+			"bounds nothing"},
+		{"no currency", func(l *execgw.Limits) { l.Currency = " " }, "currency"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			limits := testLimits()
+			tc.mutate(&limits)
+			err := limits.Validate()
+			if err == nil {
+				t.Fatal("want a refusal")
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("error %q does not mention %q", err, tc.want)
+			}
+		})
+	}
+}
+
+// TestLimitCurrencyMustMatchTheOrder: the money bounds are expressed in one
+// currency, so measuring an order in another against them is a comparison that
+// was never valid — not a conversion to perform.
+func TestLimitCurrencyMustMatchTheOrder(t *testing.T) {
+	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-1"}}
+	gw, j, clk := newGateway(t, broker)
+
+	limits := testLimits()
+	limits.Currency = "USD"
+	intent := placeIntent() // KRW
+	_, err := gw.Place(context.Background(), execgw.PlaceRequest{
+		Intent:   intent,
+		Decision: entryDecision(t, j, clk, intent, limits),
+	})
+	var rejected *execgw.RejectedError
+	if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonGuardianLimitExceeded {
+		t.Fatalf("want %q, got %v", execgw.ReasonGuardianLimitExceeded, err)
+	}
+	if places, _, _ := broker.totals(); places != 0 {
+		t.Errorf("broker place calls: got %d, want 0", places)
+	}
+}
+
+// TestNonceIsSpentBeforeTheBrokerCall: the consumption is committed with the
+// dispatch, so an attempt that reached the broker has a consumption record
+// whatever the broker then answered.
+func TestNonceIsSpentBeforeTheBrokerCall(t *testing.T) {
+	broker := &fakeBroker{err: errors.New("connection reset after the request was written")}
+	gw, j, clk := newGateway(t, broker)
+	req := placeRequest(t, j, clk)
+
+	if _, err := gw.Place(context.Background(), req); err == nil {
+		t.Fatal("the fixture broker must fail")
+	}
+	dec, err := j.LookupDecision(context.Background(), req.Decision.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spent, err := j.NonceSpent(context.Background(), dec.Nonce)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !spent {
+		t.Fatal("a decision whose mutation reached the broker must be spent")
 	}
 }
 

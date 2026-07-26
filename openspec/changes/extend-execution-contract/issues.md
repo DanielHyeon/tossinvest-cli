@@ -192,6 +192,73 @@
   `riskcalc`는 아직 어디서도 import되지 않는다 — 배선은 그 태스크들의 몫이며, 6.1은 계약만
   낸다는 태스크 문언대로다.
 
+## 2026-07-26 [safe local] `Limits` 항목별 configured 비트가 `app/engine/interlock.go`를 컴파일 깨뜨렸다 (task 1.7)
+
+- 사실: 1.7은 `execgw.Limits`를 `float64` 3필드 → `Limit{Set,Value}` 5필드로 바꾼다
+  (주문 수량·주문 notional·총 개방 노출·일일 손실 절대액·일일 손실 비율). 유일한 비-테스트
+  소비자가 `internal/app/engine/interlock.go`(section 7 소유)이므로 그 파일이 컴파일되지
+  않는다 — 트리를 빨갛게 두지 않으려면 손댈 수밖에 없다.
+- 이번 처리: **의미 무변경 기계적 적응만.** `gateLimits`가 `boundIfPositive`로 두 항목의
+  비트를 세우고(config에 양수일 때만 — 부재가 "0이라는 한도"가 되지 않는다), 인터록의
+  `IsZero()` 검사를 `!MaxQuantity.Set && !MaxNotional.Set`으로 바꿨다(옛 `<=0 && <=0`과
+  동일). audit 문자열은 `.Value`를 쓴다. 인터록 단언은 `interlock_test.go:176`의
+  `MaxQuantity != 10` → `MaxQuantity.Value != 10` 한 줄뿐이다.
+- 결과: config에는 아직 총 노출·일손실 항목이 없으므로 `gateLimits` 스냅샷은 5개 중 2개만
+  설정된다. 그 스냅샷을 실은 EXPOSURE_RAISING 결정은 **Gateway가 거부한다** — 스펙이 요구하는
+  fail-closed 방향이고("부분적으로 무제한인 게이트는 허가된 게이트가 아니다"), 2a에서 진입
+  결정을 발급하는 생산 코드는 없으므로 현재 동작 영향은 0이다.
+- 후속 task 입력: **7.5**가 (1) config에 총 개방 노출·일일 손실 절대액·일일 손실 비율을
+  추가하고, (2) 인터록 검사를 `Limits.Validate()`로 교체해야 한다(항목별 fail-closed는 이미
+  그 함수 안에 있다). **7.3**도 입력이 있다 — 태스크 문언의 "NonceStore 구성"은 이제 존재하지
+  않는 배선이다(아래 항목).
+
+## 2026-07-26 [observation] nonce 소비가 `MarkDispatchStarted`에 병합되면서 execgw의 `NonceStore`가 사라졌다 (task 1.7)
+
+- 사실: D5·스펙이 "소비 기록은 전송 시작 기록과 같은 트랜잭션에서 남긴다(SHALL)"를 요구하므로
+  소비는 `journal.Attempt.MarkDispatchStarted`의 `BEGIN IMMEDIATE` 안으로 들어갔다. 그 결과
+  Gateway가 호출할 대상이 없어져 `execgw.NonceStore`·`NewMemoryNonceStore`·`Options.Nonces`를
+  삭제했다(외부 배선처 0곳이었다). 재시작에 잊는 저장소를 엔진 프로필이 주입할 수 있는 구멍
+  자체를 없앤 것이기도 하다.
+- 부수 효과 2건, 둘 다 보수 방향이라 그대로 뒀다:
+  1. **소비가 마지막 재검증보다 먼저 일어난다.** MarkDispatchStarted가 커밋된 뒤 dispatch
+     클로저가 행을 다시 읽어 검증한다. 그 재검증이 거부하면 아무것도 전송되지 않았는데 결정은
+     소비된 상태다 — 마지막 검사에서 떨어진 결정을 재사용 가능하게 두는 것보다 낫다.
+  2. **재제출 거부는 journal에 attempt로 남지 않는다.** 소비 여부·키 점유는 Prepare 전에
+     durable 조회로 걸러 `guardian_nonce_reused`를 낸다. 근거는 기존 심볼 in-flight 거부와
+     같다 — 그 결정을 소비한 attempt가 이미 기록이다.
+- 후속 task 입력: **7.3**의 "Gateway 구성(…·NonceStore·…)" 문언은 갱신이 필요하다. durable
+  저장소는 journal 그 자체이며 주입할 필드가 없다. **보존 스윕**(`PruneSpentNonces`)은 호출자가
+  아직 없다 — 불변식(보존 ≥ 최대 결정 TTL)은 함수가 스스로 강제하고 테스트로 고정했지만,
+  주기적 호출 배선은 엔진 루프를 소유하는 change의 몫이다.
+
+## 2026-07-26 [observation] `riskcalc.WithinLimit`을 1.7에 배선하지 않았다 — 동률 판정이 다르다 (task 1.7)
+
+- 사실: 6.1의 issues 항목은 "1.7과 7.5가 riskcalc를 소비한다"고 적었다. 배선하지 않았다.
+  이유 둘: (1) `WithinLimit`은 `Money`(통화 있는 총계) 비교이고 1.7이 검사하는 두 항목 중
+  **주문 수량에는 통화가 없다** — notional만 바꾸면 한 스냅샷 안에서 두 비교의 규칙이 갈린다.
+  (2) 판정이 다르다: `riskcalc.WithinLimit`은 **동률을 초과로** 본다("Reaching the limit is not
+  staying under it"), execgw의 주문당 검사는 P1부터 `value > limit`로 **동률을 허용**한다.
+- 판단: 동률 의미를 조용히 뒤집는 것은 1.7의 위임 범위 밖이다(사이징·한도 수치는 2d). 지금
+  바꾸면 "한도 정확히 채우는 주문"이 거부로 전환되는데, 이는 보수 방향이지만 **한도 수치의
+  의미 변경**이라 사람 판단이 필요하다.
+- 후속 task 입력: **Manager 판정 필요** — 주문당 한도의 동률을 (a) 현행 유지(허용), (b)
+  riskcalc과 통일(초과) 중 어느 쪽으로 할지. (b)라면 `execgw.checkLimits`가 riskcalc을
+  import하고 수량 비교에도 같은 허용오차 규칙을 쓰는 형태가 자연스럽다. **7.5**가 인터록에서
+  같은 한도를 쓰므로 그 전에 정해지는 것이 좋다.
+
+## 2026-07-26 [observation] RISK_REDUCING preimage는 가격·주문유형을 결속하지 않는다 (task 1.4)
+
+- 사실: P1의 `GuardianDecision.IntentHash`는 canonical intent 전체(주문유형·통화모드·fractional
+  플래그 포함)를 결속했다. 이번 change는 그것을 클래스별 preimage로 대체했고, 스펙이 정한
+  `ReductionIntent` 필드는 계좌·시장·심볼·방향·상한 수량·사유뿐이다. 따라서 **같은 심볼·방향·
+  수량 이하의 매도라면 가격이나 주문유형(limit↔market)을 바꿔도 preimage 검증을 통과한다.**
+  (`RiskIntent` 쪽은 진입가가 필드라 이 구멍이 없다.)
+- 판단: 2a에서 RISK_REDUCING 발급자는 flatten 하나이고 발급자=호출자이므로 악용 경로가 없다.
+  스펙이 필드 목록을 명시했으므로 임의로 필드를 늘리는 것은 자구 이탈이다.
+- 후속 task 입력: 보호주문(2c)·Guardian(2d)에서 발급자와 제출자가 분리되면 재검토 대상이다.
+  선택지는 `ReductionIntent`에 상한 가격을 추가하거나(스펙 개정), 청산 가격 결정을 발급자
+  소관으로 못 박는 것이다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

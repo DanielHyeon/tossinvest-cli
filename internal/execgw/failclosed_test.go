@@ -328,7 +328,12 @@ func TestGatewayRefusesFailClosedBranchesBeforeDispatch(t *testing.T) {
 	out, err := gw.Place(context.Background(), execgw.PlaceRequest{
 		Intent: intent,
 		Decision: entryDecision(t, j, clk, intent, execgw.Limits{
-			MaxQuantity: 10, MaxNotional: 100_000, Currency: "USD",
+			MaxQuantity:        execgw.Bound(10),
+			MaxNotional:        execgw.Bound(100_000),
+			MaxTotalExposure:   execgw.Bound(500_000),
+			MaxDailyLossAmount: execgw.Bound(20_000),
+			MaxDailyLossRatio:  execgw.Bound(0.02),
+			Currency:           "USD",
 		}),
 	})
 

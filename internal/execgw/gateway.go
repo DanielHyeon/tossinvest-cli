@@ -12,12 +12,13 @@
 //
 // # The ordering this package exists to guarantee
 //
-//	journal.Prepare  → RECORDED, committed and fsynced (nothing sent yet)
-//	verify decision  → intent hash, expiry, limit snapshot
-//	MarkDispatchStarted → committed, so a crash from here on is discoverable
-//	spend the nonce  → one-shot, immediately before the call
-//	broker call      → exactly once, never retried
-//	settle           → CONFIRMED | FAILED_CONFIRMED | NOT_DISPATCHED | IN_DOUBT
+//	read the decision   → from the journal; the caller supplies only its id
+//	journal.Prepare     → RECORDED with the decision binding, committed and fsynced
+//	verify the decision → preimage, class, expiry, key, limit snapshot
+//	MarkDispatchStarted → committed *with the nonce spent in the same transaction*
+//	re-read and re-verify → the row again, immediately before the call
+//	broker call         → exactly once, never retried
+//	settle              → CONFIRMED | FAILED_CONFIRMED | NOT_DISPATCHED | IN_DOUBT
 //
 // Each step is a precondition for the next, and the two that protect a live
 // account are the first and the last: an intent that is not on disk is never
@@ -63,8 +64,6 @@ type Options struct {
 	// Source names what produces the intents (strategy id, "operator", …).
 	// Defaults to "engine".
 	Source string
-	// Nonces spends one-shot Guardian nonces. Defaults to NewMemoryNonceStore().
-	Nonces NonceStore
 	// Entry gates new exposure on required-query freshness and on latched
 	// failures (retry matrix, task 2.6). Optional: nil means no gate, which is
 	// what the pure gateway tests use. Engine wiring always supplies one.
@@ -96,7 +95,6 @@ type Gateway struct {
 	clk        clock.Clock
 	accountRef string
 	source     string
-	nonces     NonceStore
 	entry      *EntryGate
 	preflight  *Preflight
 	orders     OrderReader
@@ -124,7 +122,6 @@ func New(opts Options) (*Gateway, error) {
 		clk:        opts.Clock,
 		accountRef: strings.TrimSpace(opts.AccountRef),
 		source:     strings.TrimSpace(opts.Source),
-		nonces:     opts.Nonces,
 		entry:      opts.Entry,
 		preflight:  opts.Preflight,
 		orders:     opts.Orders,
@@ -135,9 +132,6 @@ func New(opts Options) (*Gateway, error) {
 	}
 	if g.source == "" {
 		g.source = "engine"
-	}
-	if g.nonces == nil {
-		g.nonces = NewMemoryNonceStore()
 	}
 	if g.newID == nil {
 		g.newID = randomID
@@ -385,12 +379,11 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 		return Outcome{Reason: rejected.Reason, Detail: rejected.Detail}, rejected
 	}
 
-	//    0b. The idempotency key is claimed by one attempt per account, durably.
-	//        Re-submitting a spent decision is caught here rather than by the
-	//        UNIQUE index, so it reports "already spent" instead of a write
-	//        error — and, like the check above, it is not journalled: the attempt
-	//        that claimed the key is the record.
-	if rejected, err := g.checkKeyUnclaimed(ctx, prep); err != nil {
+	//    0b. A decision is spent once. Re-submitting one is caught here rather
+	//        than by the UNIQUE index or the dispatch transaction, so it reports
+	//        "already spent" instead of a write error — and, like the check
+	//        above, it is not journalled: the attempt that spent it is the record.
+	if rejected, err := g.checkDecisionUnspent(ctx, prep, decision); err != nil {
 		return Outcome{Reason: ReasonInvalidRequest, Detail: err.Error()}, err
 	} else if rejected != nil {
 		return Outcome{Reason: rejected.Reason, Detail: rejected.Detail}, rejected
@@ -460,11 +453,6 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 			return notSent(reject(ReasonGuardianKeyMismatch,
 				"the idempotency key recorded for this attempt is not the one the decision now carries"))
 		}
-		if err := g.nonces.Consume(fresh.Nonce, now); err != nil {
-			return notSent(reject(ReasonGuardianNonceReused,
-				"the decision for %s was already spent", plan.symbol))
-		}
-
 		// The tracker is what separates "provably never sent" from "may have
 		// executed"; without it a connection error would have to be treated as
 		// ambiguous every time.
@@ -474,6 +462,13 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 		return classifyMutation(tracker.State(), result, callErr)
 	}, g.roundTripFor(plan))
 	if err != nil {
+		// The nonce is spent inside the transaction that records the dispatch, so
+		// a reuse surfaces here rather than as a refusal from the closure. The
+		// attempt is still RECORDED and nothing was sent: close it as such.
+		if errors.Is(err, journal.ErrNonceSpent) {
+			return g.refuse(ctx, attempt, out, reject(ReasonGuardianNonceReused,
+				"the decision for %s was already spent", plan.symbol))
+		}
 		return out, fmt.Errorf("execgw: settling the %s of %s: %w", plan.kind, plan.symbol, err)
 	}
 
@@ -613,26 +608,41 @@ func notSent(rejected *RejectedError) journal.DispatchOutcome {
 	}
 }
 
-// checkKeyUnclaimed reports whether the decision's idempotency key already
-// belongs to an attempt on this account.
+// checkDecisionUnspent reports whether this decision has already been submitted
+// once.
 //
-// It is a durable check, not an in-memory one: the attempt that claimed the key
-// may have been recorded by an earlier process, and the whole reason the key
-// exists is that a second submission under it would collect the first order's
-// result rather than place a new one.
-func (g *Gateway) checkKeyUnclaimed(ctx context.Context, prep journal.PrepareRequest) (*RejectedError, error) {
-	if prep.ClientOrderID == "" {
+// Both halves are durable reads, not in-memory state: the attempt that spent the
+// decision may belong to an earlier process, and a restarted engine holding a
+// persisted decision snapshot is exactly the reuse the spec names
+// ("재시작 후 결정 재사용 시도"). The authoritative refusal is still the insert
+// inside the dispatch transaction — this one exists so the common case is
+// refused before an attempt is recorded for it, and so the reason code says
+// "already spent" rather than surfacing as a write error.
+func (g *Gateway) checkDecisionUnspent(ctx context.Context, prep journal.PrepareRequest,
+	decision journal.Decision,
+) (*RejectedError, error) {
+	if prep.ClientOrderID != "" {
+		rec, err := g.journal.AttemptForClientOrderID(ctx, prep.Intent.AccountRef, prep.ClientOrderID)
+		switch {
+		case err == nil:
+			return reject(ReasonGuardianNonceReused,
+				"attempt %s already submitted this decision", rec.ID), nil
+		case !errors.Is(err, journal.ErrAttemptNotFound):
+			return nil, fmt.Errorf("execgw: checking whether the idempotency key is claimed: %w", err)
+		}
+	}
+	if decision.Nonce == "" {
 		return nil, nil
 	}
-	rec, err := g.journal.AttemptForClientOrderID(ctx, prep.Intent.AccountRef, prep.ClientOrderID)
-	if errors.Is(err, journal.ErrAttemptNotFound) {
-		return nil, nil
-	}
+	spent, err := g.journal.NonceSpent(ctx, decision.Nonce)
 	if err != nil {
-		return nil, fmt.Errorf("execgw: checking whether the idempotency key is claimed: %w", err)
+		return nil, fmt.Errorf("execgw: checking whether the decision was spent: %w", err)
 	}
-	return reject(ReasonGuardianNonceReused,
-		"attempt %s already submitted this decision", rec.ID), nil
+	if spent {
+		return reject(ReasonGuardianNonceReused,
+			"decision %s was already spent", short(decision.ID)), nil
+	}
+	return nil, nil
 }
 
 // prepareRequest turns a plan and its persisted decision into the journal's

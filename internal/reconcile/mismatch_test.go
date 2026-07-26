@@ -386,7 +386,14 @@ func TestGatewayKeepsExitsOpenUnderAMismatch(t *testing.T) {
 	buyDecision, err := issuer.IssueEntry(context.Background(), execgw.EntryRequest{
 		Market: "us", Symbol: "AAPL", Side: "buy", Quantity: 1, EntryPrice: 200,
 		StopPrice: 180, PolicyVersion: "test/v1",
-		Limits: execgw.Limits{MaxQuantity: 10, MaxNotional: 100000, Currency: "USD"},
+		Limits: execgw.Limits{
+			MaxQuantity:        execgw.Bound(10),
+			MaxNotional:        execgw.Bound(100000),
+			MaxTotalExposure:   execgw.Bound(500000),
+			MaxDailyLossAmount: execgw.Bound(20000),
+			MaxDailyLossRatio:  execgw.Bound(0.02),
+			Currency:           "USD",
+		},
 	})
 	if err != nil {
 		t.Fatal(err)

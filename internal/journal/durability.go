@@ -471,12 +471,22 @@ func (j *Journal) Prepare(ctx context.Context, req PrepareRequest) (*Attempt, er
 	}, nil
 }
 
-// MarkDispatchStarted records that the request is going out. It must commit before
-// the broker call, so a crash between the two is discoverable as IN_DOUBT.
+// MarkDispatchStarted records that the request is going out, and spends the
+// decision's one-shot nonce in the same transaction.
+//
+// The two are one write because they are one fact: "this authorisation is now
+// being used". A separate write would add a second commit to the hot path and,
+// worse, would have a window in which the dispatch is recorded and the nonce is
+// not — which is a decision that can be submitted twice after a crash
+// (engine-safety: "소비 기록은 전송 시작 기록과 같은 트랜잭션에서 남긴다").
+//
+// It must commit before the broker call, so a crash between the two is
+// discoverable as IN_DOUBT. An attempt with no decision spends nothing.
 func (a *Attempt) MarkDispatchStarted(ctx context.Context) error {
 	return a.transition(ctx, StateDispatchStarted, transitionOpts{
 		from:               []AttemptState{StateRecorded},
 		setDispatchStarted: true,
+		consumeNonce:       true,
 	})
 }
 
@@ -520,6 +530,9 @@ type transitionOpts struct {
 	brokerOrderID      string
 	setDispatchStarted bool
 	setSettled         bool
+	// consumeNonce spends the decision's nonce in the same transaction. Only the
+	// dispatch transition sets it.
+	consumeNonce bool
 }
 
 // transition updates the attempt row and appends the transition history in one
@@ -546,6 +559,11 @@ func (a *Attempt) transition(ctx context.Context, to AttemptState, o transitionO
 	}
 	if err := checkTransitionAllowed(a.id, current, to, o.from); err != nil {
 		return err
+	}
+	if o.consumeNonce {
+		if err := consumeDecisionNonce(ctx, tx, a.id, now); err != nil {
+			return err
+		}
 	}
 
 	set := []string{"state = ?"}

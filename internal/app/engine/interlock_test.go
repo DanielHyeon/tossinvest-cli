@@ -173,7 +173,7 @@ func TestGateOnWithEverythingInPlaceStarts(t *testing.T) {
 	if eng.Guardian == nil {
 		t.Error("the injected Guardian must be published once verified")
 	}
-	if eng.Automation.Limits.MaxQuantity != 10 || eng.Automation.Limits.MaxNotional != 1_000_000 {
+	if eng.Automation.Limits.MaxQuantity.Value != 10 || eng.Automation.Limits.MaxNotional.Value != 1_000_000 {
 		t.Errorf("limits = %+v, want the configured ceilings", eng.Automation.Limits)
 	}
 	if eng.Automation.Limits.Currency != "KRW" {

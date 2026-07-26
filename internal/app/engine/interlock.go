@@ -125,12 +125,29 @@ func attestationPath(gate config.AutomationGate, paths config.Paths) string {
 }
 
 // gateLimits turns the config's ceilings into the Guardian's limit snapshot.
+//
+// Only the two per-order ceilings exist in the config today, so only those two
+// bits are set. execgw.Limits now requires five, and an EXPOSURE_RAISING
+// decision carrying this snapshot would be refused by the gateway — which is the
+// fail-closed direction ("부분적으로 무제한인 게이트는 허가된 게이트가 아니다")
+// and is why the interlock keeps checking exactly what it checked before until
+// the remaining three are added to the config (task 7.5; see issues.md).
 func gateLimits(gate config.AutomationGate) execgw.Limits {
 	return execgw.Limits{
-		MaxQuantity: gate.MaxOrderQuantity,
-		MaxNotional: gate.MaxOrderNotional,
+		MaxQuantity: boundIfPositive(gate.MaxOrderQuantity),
+		MaxNotional: boundIfPositive(gate.MaxOrderNotional),
 		Currency:    strings.ToUpper(strings.TrimSpace(gate.LimitCurrency)),
 	}
+}
+
+// boundIfPositive marks a limit as configured only when it carries a usable
+// number, so an absent config value stays an absent limit rather than becoming
+// "a limit of zero".
+func boundIfPositive(v float64) execgw.Limit {
+	if v > 0 {
+		return execgw.Bound(v)
+	}
+	return execgw.Limit{}
 }
 
 // runInterlock records the audit trail and then verifies the gate.
@@ -182,8 +199,8 @@ func runInterlock(ctx context.Context, gate config.AutomationGate, paths config.
 		Detail: fmt.Sprintf("account=%s attestation expires %s limits qty=%s notional=%s %s",
 			status.MaskedAccount(),
 			status.AttestationExpiresAt.UTC().Format(time.RFC3339),
-			limitString(status.Limits.MaxQuantity),
-			limitString(status.Limits.MaxNotional),
+			limitString(status.Limits.MaxQuantity.Value),
+			limitString(status.Limits.MaxNotional.Value),
 			status.Limits.Currency),
 	}); err != nil {
 		return status, fmt.Errorf("engine: recording the automation-gate acceptance: %w", err)
@@ -200,7 +217,7 @@ func verifyGate(ctx context.Context, status *AutomationStatus, reads OfficialRea
 	if guardian == nil {
 		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, ErrGuardianRequired)
 	}
-	if status.Limits.IsZero() {
+	if !status.Limits.MaxQuantity.Set && !status.Limits.MaxNotional.Set {
 		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, ErrLimitsRequired)
 	}
 

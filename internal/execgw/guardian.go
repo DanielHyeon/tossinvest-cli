@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
@@ -40,6 +40,22 @@ type AuthorizationRequest struct {
 	Currency   string
 }
 
+// Limit is one bound in the snapshot.
+//
+// The Set bit is explicit rather than inferred from the value because "0" and
+// "nobody configured this" must not be the same thing. A zero read as "no limit"
+// is a gate that is open; a zero read as "limit of zero" is a gate that refuses
+// everything. Neither is what an unset field means, and only an explicit bit can
+// say so (engine-safety: "하나라도 누락·0·NaN·Inf이면 거부 — 부분적으로
+// 무제한인 게이트는 허가된 게이트가 아니다").
+type Limit struct {
+	Set   bool    `json:"set"`
+	Value float64 `json:"value"`
+}
+
+// Bound returns a configured limit.
+func Bound(v float64) Limit { return Limit{Set: true, Value: v} }
+
 // Limits is the risk snapshot taken when the decision was made.
 //
 // It is a snapshot, not a live lookup, on purpose: the gateway re-verifies the
@@ -47,18 +63,66 @@ type AuthorizationRequest struct {
 // limit that changed in between cannot silently widen an in-flight
 // authorisation. It travels as JSON in the decision row's limits_json, which is
 // why the fields carry tags.
+//
+// All five bounds are required on an EXPOSURE_RAISING decision. Two of them are
+// measured here (the per-order ones); the account-level three are carried so the
+// decision records what it was sized against and so the startup interlock and
+// the risk reservation have one source to compare — measuring them belongs to
+// the reservation, which is the only place the account totals exist.
 type Limits struct {
 	// MaxQuantity is the largest quantity this decision authorises.
-	MaxQuantity float64 `json:"max_quantity"`
+	MaxQuantity Limit `json:"max_quantity"`
 	// MaxNotional is the largest quantity×price this decision authorises, in
 	// Currency.
-	MaxNotional float64 `json:"max_notional"`
-	// Currency is the currency MaxNotional is expressed in.
+	MaxNotional Limit `json:"max_notional"`
+	// MaxTotalExposure is the account-wide open exposure ceiling, in Currency.
+	MaxTotalExposure Limit `json:"max_total_exposure"`
+	// MaxDailyLossAmount is the absolute daily loss ceiling, in Currency.
+	MaxDailyLossAmount Limit `json:"max_daily_loss_amount"`
+	// MaxDailyLossRatio is the daily loss ceiling as a fraction of capital, in
+	// (0, 1].
+	MaxDailyLossRatio Limit `json:"max_daily_loss_ratio"`
+	// Currency is the currency the money bounds are expressed in.
 	Currency string `json:"currency"`
 }
 
-// IsZero reports whether the snapshot carries no usable limit at all.
-func (l Limits) IsZero() bool { return l.MaxQuantity <= 0 && l.MaxNotional <= 0 }
+// Validate reports why a snapshot is not one an entry may be authorised by.
+//
+// Fail-closed and per field: a snapshot with four bounds out of five is not
+// four-fifths of an authorisation, it is a gate with a hole in it. Non-finite
+// values are refused for the same reason a missing one is — NaN compares false
+// against everything, so a NaN bound is an absent bound that looks present.
+func (l Limits) Validate() error {
+	fields := []struct {
+		name  string
+		limit Limit
+	}{
+		{"order quantity", l.MaxQuantity},
+		{"order notional", l.MaxNotional},
+		{"total open exposure", l.MaxTotalExposure},
+		{"daily loss amount", l.MaxDailyLossAmount},
+		{"daily loss ratio", l.MaxDailyLossRatio},
+	}
+	for _, f := range fields {
+		switch {
+		case !f.limit.Set:
+			return fmt.Errorf("the %s limit is not configured", f.name)
+		case math.IsNaN(f.limit.Value) || math.IsInf(f.limit.Value, 0):
+			return fmt.Errorf("the %s limit is not a finite number", f.name)
+		case f.limit.Value <= 0:
+			return fmt.Errorf("the %s limit is %v; a limit that authorises nothing is not a limit",
+				f.name, f.limit.Value)
+		}
+	}
+	if l.MaxDailyLossRatio.Value > 1 {
+		return fmt.Errorf("the daily loss ratio limit is %v; a ratio above 1 bounds nothing",
+			l.MaxDailyLossRatio.Value)
+	}
+	if strings.TrimSpace(l.Currency) == "" {
+		return errors.New("the limit snapshot names no currency, so its money bounds mean nothing")
+	}
+	return nil
+}
 
 // EncodeLimits renders a snapshot for the decision row.
 func EncodeLimits(l Limits) (string, error) {
@@ -101,41 +165,15 @@ type GuardianDecision struct {
 // IsZero reports whether the reference names nothing.
 func (d GuardianDecision) IsZero() bool { return strings.TrimSpace(d.ID) == "" }
 
-// ErrNonceReused means a one-shot nonce was presented twice.
-var ErrNonceReused = errors.New("execgw: guardian nonce has already been used")
-
-// NonceStore spends one-shot nonces. Implementations must be safe for concurrent
-// use and must make Consume atomic: two goroutines presenting the same nonce is
-// exactly the race that would duplicate a live order.
-type NonceStore interface {
-	// Consume marks the nonce as spent, returning ErrNonceReused if it already was.
-	Consume(nonce string, now time.Time) error
-}
-
-// NewMemoryNonceStore returns the in-memory store.
+// The one-shot nonce has no store type here on purpose.
 //
-// It is not durable, and durability is required (engine-safety: "one-shot nonce
-// 저장소는 journal 기반이어야 한다"). It survives here as the default for the
-// narrower gateway tests until the journal-backed store folds consumption into
-// the dispatch transaction (task 1.7).
-func NewMemoryNonceStore() NonceStore {
-	return &memoryNonceStore{seen: make(map[string]time.Time)}
-}
-
-type memoryNonceStore struct {
-	mu   sync.Mutex
-	seen map[string]time.Time
-}
-
-func (s *memoryNonceStore) Consume(nonce string, now time.Time) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if _, used := s.seen[nonce]; used {
-		return ErrNonceReused
-	}
-	s.seen[nonce] = now
-	return nil
-}
+// Consumption happens inside journal.Attempt.MarkDispatchStarted — the same
+// transaction that records the dispatch — so there is nothing for the gateway to
+// call and no interface an engine profile could wire to something that forgets
+// on restart (engine-safety: "one-shot nonce 저장소는 journal 기반이어야 한다",
+// "소비 기록은 전송 시작 기록과 같은 트랜잭션에서 남긴다"). What the gateway does
+// do is the *advisory* pre-check below, so an obvious re-submission is refused
+// before an attempt is recorded for it.
 
 // loadDecision reads the decision a submission refers to.
 //
@@ -386,23 +424,27 @@ func checkLimits(dec journal.Decision, plan mutationPlan) *RejectedError {
 		return reject(ReasonGuardianLimitsUnset,
 			"the limit snapshot on decision %s is unreadable: %v", short(dec.ID), err)
 	}
-	if limits.IsZero() {
+	// Every bound, or none of them. A snapshot missing one field authorises new
+	// exposure with one dimension unbounded, and the field that is missing is the
+	// one nobody thought about.
+	if err := limits.Validate(); err != nil {
 		return reject(ReasonGuardianLimitsUnset,
-			"the decision for %s carries an empty limit snapshot", plan.symbol)
+			"the limit snapshot on decision %s is not one an entry may be authorised by: %v",
+			short(dec.ID), err)
 	}
-	if limits.MaxQuantity > 0 && plan.quantity > limits.MaxQuantity {
+	if plan.quantity > limits.MaxQuantity.Value {
 		return reject(ReasonGuardianLimitExceeded,
 			"quantity %s exceeds the authorised maximum %s",
-			decimalString(plan.quantity), decimalString(limits.MaxQuantity))
+			decimalString(plan.quantity), decimalString(limits.MaxQuantity.Value))
 	}
-	if limits.MaxNotional > 0 {
-		if notional := plan.notional(); notional > limits.MaxNotional {
-			return reject(ReasonGuardianLimitExceeded,
-				"notional %s exceeds the authorised maximum %s",
-				decimalString(notional), decimalString(limits.MaxNotional))
-		}
+	if notional := plan.notional(); notional > limits.MaxNotional.Value {
+		return reject(ReasonGuardianLimitExceeded,
+			"notional %s exceeds the authorised maximum %s",
+			decimalString(notional), decimalString(limits.MaxNotional.Value))
 	}
-	if limits.Currency != "" && plan.currency != "" && limits.Currency != plan.currency {
+	// The money bounds are in the snapshot's currency, so a mismatch is not a
+	// conversion to perform — it is a comparison that was never valid.
+	if plan.currency != "" && !strings.EqualFold(limits.Currency, plan.currency) {
 		return reject(ReasonGuardianLimitExceeded,
 			"the limit snapshot is in %s but the order is in %s", limits.Currency, plan.currency)
 	}

@@ -18,7 +18,7 @@
 - [x] 1.4 [T][High-risk] 결정 영속·검증: 발급자가 Gateway 호출 전 `decisions` 기록(클래스별 preimage: RiskIntent/ReductionIntent), Gateway는 journal에서 읽은 preimage·키로 재검증(호출자 공급 값 금지). 바꿔치기·키 불일치 거부 테스트
 - [x] 1.5 [T][High-risk] class↔형태 일치 검증: Gateway가 노출 증가 여부를 독립 계산, EXPOSURE_RAISING ⇔ raisesExposure 불일치 거부(BUY+RISK_REDUCING 거부 테스트). 한도 면제를 `KindCancel` 리터럴 → 검증된 class 기준으로 재작성(guardian.go:181-183)
 - [x] 1.6 [T][High-risk] flatten 결정의 1급화: `decisionFor`가 ReductionIntent preimage를 journal에 기록 후 제출 — flatten 동작(취소→매도 saga·한도 미적용) 무변경 회귀 고정
-- [ ] 1.7 [T] `Limits` fail-closed(항목별 configured·양수·유한·통화, 총 노출·일손실 추가) + journal NonceStore(소비를 MarkDispatchStarted 트랜잭션에 병합, 보존 ≥ 최대 TTL 불변식, 재시작 재사용 거부)
+- [x] 1.7 [T] `Limits` fail-closed(항목별 configured·양수·유한·통화, 총 노출·일손실 추가) + journal NonceStore(소비를 MarkDispatchStarted 트랜잭션에 병합, 보존 ≥ 최대 TTL 불변식, 재시작 재사용 거부)
 
 ## 2. 멱등 재생 골격 (2b attestation 전 비활성)
 
