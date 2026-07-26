@@ -275,3 +275,152 @@ docs/WORKFLOW.md 미커밋 수정은 사용자 편집으로 확인 — 스테이
 - 콘솔·soak **재시작 버튼은 §0.7 운영 토글이 아니다**: 게이트·주문 능력·리스크 한도와 무관한 read-only 도구의 프로세스 재기동이며, 승인 등가성(새 nonce 타이핑)과 게이트 라우트 부재는 그대로다. 반대로 게이트 ON은 여전히 콘솔 범위 밖(2c 후 사람 승인).
 - 웹 재시작의 핵심 위험은 "존속 측정의 프로세스 경계 훼손"이다 — re-exec은 pid가 유지되므로, 존속 판정 기준이 `process.instance_id`(기동마다 신규)임을 확인·고정하는 것을 1.8의 완료 조건으로 명시했다. 클라이언트 상태 소멸이 측정의 본질이고 instance_id가 그 증거다.
 - 한글화에서 evidence record의 `title`은 영어 유지 — 이미 쌓인 레코드와의 비교성이 표시 언어보다 우선한다. 화면 라벨은 렌더 계층 매핑으로 해결(전 단계 drift 테스트).
+
+## 2026-07-27 · task 1.8 (콘솔 운영 자동화·전면 한글화) 구현
+
+### ① 존속 판정 기준 — 확인 결과: **이미 instance_id 기준**, pid 기준 없음
+
+`steps.go stepConditionalPersist`는 `registrar == r.process.InstanceID`로 판정하고,
+`registeringProcess()`는 레코드의 `Process.InstanceID`를 돌려준다. `Process.PID`를 읽는 곳은
+`record.go NewProcess`(기록)와 `runner.go writeBanner`(배너 출력) 둘뿐이다. **교정할 것이 없었고,
+대신 양방향으로 고정했다:**
+
+- 런타임(`TestTheProcessBoundaryIsTheInstanceIDAndNotThePID`): ⓐ **pid 동일 + instance_id 신규**
+  → `pass`(= re-exec은 유효한 프로세스 경계), ⓑ **instance_id 동일 + pid 상이** → `awaiting-restart`
+  (= 자기 조건주문의 존속을 스스로 증명할 수 없다). 테스트는 기록의 pid 집합이 1개임까지 확인해
+  하네스가 pid 고정을 그만두면 통과가 우연이 되지 않게 했다.
+- 정적(`TestTheProcessBoundaryIsNeverJudgedByPID`): record.go·runner.go 밖에서 `process.PID`를
+  읽으면 실패. runner.go에서도 `Fprint` 줄이 아니면 실패. `registrar == r.process.InstanceID`
+  문자열이 사라져도 실패.
+
+### ① 재시작 — 핸들러는 재실행하지 않는다, Serve가 한다
+
+`POST /restart`(세션+CSRF)는 ⓐ 진행 중 실행 거부 → ⓑ 핸드오프 mint → ⓒ 인터스티셜 렌더 →
+ⓓ 포트를 채널로 Serve에 넘김, 까지만 한다. **핸들러가 exec하면 안 되는 이유는 명확하다**: 방금
+응답한 커넥션을 쥐고 있고 리스너가 열려 있어 후속 프로세스가 그 포트를 bind할 수 없다. Serve가
+settle → Shutdown → `Relaunch(port)` 순으로 수행한다. 실제 루프백 소켓 위에서 후속 프로세스가
+같은 포트를 bind할 수 있음을 `TestServeIsWhatExecutesTheRelaunchAndItReleasesThePortFirst`가 확인한다.
+
+**진행 중 검증에서는 재시작을 거부한다**(게이트가 아니라 안전 사유): 미체결 주문을 남긴 채
+프로세스를 버리는 유일한 경로이기 때문이다. 먼저 끝내거나 거부하라고 화면이 말한다.
+
+### ① 핸드오프 토큰 생애주기 (구현된 그대로)
+
+| 단계 | 동작 |
+|---|---|
+| mint | 이미 세션+CSRF를 통과한 `POST /restart` 핸들러에서만. `internal/handoff`가 20바이트 crypto/rand 토큰을 `console-handoff.json`(0600, 데이터 디렉터리 0700 안)에 쓰고 fsync. TTL 2분 |
+| 전달 | 인터스티셜이 **같은 origin**의 `/?handoff=<tok>`으로 3초 뒤 meta refresh. 포트를 고정하므로 상대 URL로 충분하다 |
+| consume | 새 프로세스의 `session0`이 `handoff` 쿼리를 보면 `Consume` 호출. **파일을 먼저 지우고 나서** 판정한다 — 일치/불일치/만료 전부 토큰을 소모한다 |
+| 성공 | 세션 쿠키 발급 + 쿼리에서 `handoff`·`session` 제거 후 303. 주소창·히스토리·referrer에 남지 않는다 |
+| 재사용 | 파일이 없으므로 `ErrNoHandoff` → 403 "1회용" 안내 |
+| 오답 | `ErrMismatch` → 403. **그리고 진짜 토큰도 함께 소모된다** — 지시("재사용 거부")보다 엄격하다. 추측 창을 남기지 않는 방향이고, 비용은 이미 앉아 있는 콘솔에서 클릭 한 번이다 |
+| 만료 | `ErrExpired` → 403, 파일은 이미 소모 |
+| 미청구 | 2분 뒤 무효. `Discard()`도 있지만 기동 시 호출하지 않는다(후속 프로세스가 브라우저보다 먼저 뜨므로) |
+
+**넘어가는 것은 세션뿐이다.** CSRF 토큰도, 승인도, `spent`도 넘어가지 않는다 —
+`TestARestartResetsTheProcessCapAndNothingElse`가 ⓐ `spent=false`, ⓑ 이전 CSRF 거부,
+ⓒ 시작하면 여전히 **새 nonce 폼**에서 정지·전송 0건을 고정한다. 새 세션 URL은 종전대로 터미널에도
+출력된다(터미널 점유가 여전히 신뢰의 뿌리다).
+
+### ② soak 재시작 — autostart 스크립트와 같은 메커니즘
+
+`cmd/tossctl/soakproc.go`가 `pgrep -f "tossctl soak run"`(스크립트와 **동일 패턴**, 테스트로 고정)
+→ SIGINT → 종료 대기(최대 30초) → `setsid`로 재기동, 출력은 기존 `soak.log`에 append.
+**종료하지 않으면 새로 띄우지 않는다** — 기록 하나에 서베이 둘이 붙고 rate 예산을 나눠 쓰는 편이
+사람이 필요한 서베이보다 나쁘다. 자기 pid는 절대 신호하지 않는다. 네 동작(find/signal/alive/spawn)
+전부 패키지 변수 seam이라 테스트는 fork·signal하지 않는다.
+
+### ② soak 자기 업그레이드 — 사이클 경계에서만, 실패 방향은 전부 "계속 돈다"
+
+`soak.Options`에 `Binary`(지문)·`ReExec`(재실행) seam 추가. 사이클을 기록·fsync한 **뒤**에만
+비교하므로 업그레이드가 측정을 잃게 할 수 없다. 지문을 못 읽으면·바뀌지 않았으면·재실행이 실패하면
+전부 nil을 돌려주고 서베이는 계속한다(한 빌드 뒤처지는 것은 대시보드의 한 줄, 멈추는 것은 하루 손실).
+
+**기록·streak 무영향을 실제로 보였다**(`TestTheRecordAndTheStreakSurviveAnUpgrade`):
+가짜 시계로 3일치 사이클 → 사이클 사이에 재설치 → 경계에서 핸드오버 → **같은 파일**을 여는 후속
+러너가 2일 추가 → 파일에서 다시 읽은 streak = 5일, 앞선 3줄은 바이트 그대로, 마지막 사이클의
+빌드 지문은 후속 프로세스의 것.
+
+### ② stale 판정 — 콘솔은 자기 자신, soak은 자기 기록 (선택과 사유)
+
+| 대상 | 근거 | 왜 이것인가 |
+|---|---|---|
+| 콘솔 | 기동 시 1회 뜬 `binstamp.Self()` vs 렌더 시점의 같은 경로 | 이 프로세스는 자기가 무엇을 적재했는지 안다. 물어볼 곳이 없다 |
+| soak | **사이클마다 기록에 찍는 자기 지문**(`Cycle.binary`, additive·`omitzero`) vs 설치된 바이너리 | 프로세스 테이블 스크래핑도, 한 시간 뒤면 의미 없는 pid 추적도 필요 없다. 서베이 자신의 진술이고 대시보드는 이미 그 파일을 읽고 있다 |
+
+지문은 mtime+size다(해시 아님 — 사이클마다 40MB를 해싱할 이유가 없다). **관측 실패는 변경이
+아니다**: `Stamp.Same`은 어느 쪽이든 unknown이면 "같다"를 돌려주므로, 근거 없는 경고가 화면에
+뜨는 일이 없다(실패 방향은 놓친 알림이지 거짓 알림이 아니다). `binstamp.SelfPath`는 리눅스가
+붙이는 `" (deleted)"`를 떼어내 rename 방식 재설치도 감지된다.
+
+### ③ 한글화 — 번역한 것과 원문으로 남긴 것
+
+**번역**: 콘솔 전 화면, runner 진행 출력(`r.out`), 배치·단계별 승인 프롬프트, `--list` 단계 목록,
+리포트·`verify status` 텍스트, preflight 생략 사유, 단계 판정 사유, `Step.Proves`·`Step.Procedure`.
+
+**원문 유지 — 각각의 사유:**
+
+| 대상 | 사유 |
+|---|---|
+| step ID, verdict 값, observation key/value/**detail** | 기록의 조인 키이자 증거 삼중항 그 자체. 화면은 verdict를 `pass (통과)`처럼 **기록값을 앞세워** glossing한다 |
+| 브로커 어휘 (`clientOrderId`·`sellableQuantity`·`order-hours-closed`·`HTTP 422`·endpoint 경로·`WATCHING`·`SINGLE`) | 번역하면 증거를 브로커 응답과 대조할 수 없다. `TestTheBrokerVocabularyIsNotTranslated`가 고정 |
+| `Step.Title` | 레코드 `title` 필드. Manager 판정대로 기존 레코드와의 비교성 우선. 화면 라벨은 `verifylive.StepLabel` 매핑이고 `TestEveryCatalogueStepHasAKoreanLabel`이 전 단계 커버를, `TestTheEnglishTitleIsUntouched`가 Title에 한글이 섞이면 실패시킨다 |
+| `PlannedMutation`의 `Ends`/`Note`/`Pricing`/`Quantity` | **`approval.plan_digest`의 해시 입력**. 번역하면 이미 디스크에 있는 레코드(M3의 `sha256:fac7f233…`)와 digest가 갈라지고 "같은 계획이 재시작을 넘어 재승인되었다"가 확인 불가능해진다 |
+| JSON 다운로드(`/report.json`) | 지시대로 무변경 |
+
+**digest를 지키면서 화면을 한글로 하는 방법**: `EndsKO`/`NoteKO`/`PricingKO`를 `json:"-"`
+사이드카로 나란히 싣고 `Plan.WriteLines`가 그것을 렌더한다. digest 불변을
+`TestTheDisplayLanguageCannotMoveThePlanDigest`가 고정한다(태그 한 글자를 지우면 다른 증상 없이
+digest가 움직이므로 테스트가 필요하다). 번역이 빠진 줄은 `orFallback`이 원문을 보여준다 —
+라이브 요청의 되돌리기 자리가 공백이 되는 것보다 낫다. 카탈로그 전수 커버는
+`TestTheApprovalSummaryIsRenderedInKorean`이 강제한다.
+
+**CLI도 한글이다**(`verify run`은 runner 출력을 공유한다 — 태스크가 허용). grep 가능성을 위해
+영어를 남겨야 하는 곳은 위 표의 다섯 줄뿐이고, 모두 테스트로 고정했다.
+
+### 편차 (전건, 사유 포함)
+
+1. **재실행 argv에 `--port`를 고정한다.** 지시는 "argv 보존"이지만, `--port` 없이 띄운 콘솔은
+   OS가 고른 포트에 브라우저가 앉아 있다. 그 포트를 유지하지 않으면 핸드오프 토큰이 갈 곳이 없고
+   ①의 "브라우저 연속성"이 성립하지 않는다. 나머지 argv(서브커맨드·`--config-dir`·기타 플래그)는
+   순서까지 보존한다. `argvWithPort` 순수 함수 + 4케이스 테스트.
+2. **오답 핸드오프도 토큰을 소모한다.** 지시는 "재사용 거부"였다. 추측 창을 남기지 않는 방향이
+   더 보수적이고, 비용은 이미 콘솔 앞에 앉은 사람의 클릭 한 번이다.
+3. **진행 중 검증에서 콘솔 재시작 거부.** 지시에 없던 거부를 하나 추가했다. §0 취지 — 살아 있는
+   주문을 남긴 채 프로세스를 버리는 경로를 만들지 않는다.
+4. **observation `detail`은 번역하지 않았다.** "화면 전부 한글" 지시와 "evidence-record field
+   values 원문 유지" 지시가 겹치는 지점이다. key/value/detail을 증거 삼중항으로 묶어 통째로
+   원문에 두는 쪽을 택했다 — 절반만 번역하면 기록이 두 언어로 갈린다. 리포트 화면의 chrome
+   (제목·열 이름·판정·미검증 목록 안내)은 한글이다. **Manager 판단을 남긴다.**
+5. **`conditional-trigger`의 deferred 사유 중복 접두사 제거.** 카탈로그의 `Deferred`가 이미
+   "별도 세션 — 시장 조건 필요:"로 시작하는데 `deferStep`이 같은 문구를 한 번 더 붙이고 있었다
+   (1.7 이전부터의 중복). 한 번만 말한다.
+6. **`soak.Cycle`에 `binary` 필드 추가**(additive·`omitzero`). 이 필드가 없던 빌드가 쓴 줄은
+   그대로 파싱되고 unknown으로 읽힌다.
+7. **정적 가드 2건 추가·1건 확장**: 콘솔 패키지는 `os/exec`·`syscall`을 import하지 않는다(전부
+   seam); 라우트 표의 상태 변경 목록에 `/restart`·`/soak/restart` 추가(라우트 하한 7→9);
+   "콘솔은 쓰지 않는다" 가드의 주석에 핸드오프 seam을 명시.
+8. **비유닉스 플랫폼**: `reexecSelf`는 `errors.ErrUnsupported`를 담은 정직한 오류를 돌려주고
+   버튼은 그대로 보인다(사라져서 어느 빌드인지 헷갈리게 하지 않는다). `setsid`도 no-op.
+   이 change가 측정하는 것은 어차피 리눅스에서만 돈다.
+
+### 레일 확인 (무변경)
+
+- 게이트 라우트 없음(9개 라우트 전부 대시보드·검증·재시작·리포트). 대시보드는 여전히 "이 콘솔은
+  게이트를 켜지 않는다"고 적는다.
+- 승인 우회 없음 — 판정은 여전히 `verifylive.Batch.Verify` 하나뿐(`static_test.go`).
+- 비대화 승인 경로 신설 없음 — 핸드오프는 **세션**만 준다.
+- 배치 승인은 여전히 화면에 방금 표시된 nonce를 사람이 타이핑해야 한다.
+- redo 집합은 여전히 기록에서만 계산한다(폼 가드 무변경).
+- 재시작은 도구 재기동이다(§0.7 비해당 — Manager 판정 기록됨).
+
+### 남은 위험 · 범위 밖
+
+| 항목 | 상태 |
+|---|---|
+| observation `detail` 영어 | 위 편차 4. Manager 판단 대기 |
+| `pgrep` 의존 | autostart 스크립트와 같은 의존이다. 없으면 재기동이 오류를 돌려주고 화면이 그대로 보여 준다 |
+| 핸드오프 중 브라우저가 늦게 돌아옴 | 2분 창을 넘기면 터미널의 새 세션 링크를 쓰면 된다. 인터스티셜이 그렇게 적는다 |
+| 재시작 인터스티셜의 3초 | 고정값. 느린 기계에서 이르면 브라우저 오류 페이지가 뜨지만 링크가 같은 페이지에 있다 |
+| soak 재기동 후 첫 사이클까지의 공백 | 재기동은 새 프로세스이므로 interval 처음부터. streak는 일 단위라 영향 없다 |
+| `docs/WORKFLOW.md` 미커밋 수정 | 작업 시작 시점에 이미 워킹트리에 있던 사용자 편집. 손대지 않았고 스테이징도 하지 않았다 |
