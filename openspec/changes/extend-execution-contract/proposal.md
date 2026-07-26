@@ -1,47 +1,43 @@
 # Change: extend-execution-contract
 
-> 2026-07-26 설계 재작성. 초판(조건주문 = 새 MutationKind)은 proposal-freeze 리뷰에서 P1과 조립되지 않음이 확인되어 폐기했다 — `review.md`.
+> 2026-07-26 3판. 1·2판과 리뷰 3라운드(108건)의 기록은 `review.md`. 3판의 재범위 원칙: **측정 의존성으로 경계를 긋는다** — 이 change(2a)는 실계좌 측정 없이 확정 가능한 강제 장치만 담고, 조건주문·보호주문 관련은 전부 2b(측정) 이후의 2c로 이동했다.
 
 ## Why
 
-add-core-domain의 리뷰가 드러낸 구조적 오류: 무인 자동매매의 안전 근거 전체가 "네이티브 조건주문이 브로커에 상주한다"에 걸려 있는데, **조건주문 경로는 P1이 만든 안전 아키텍처 바깥에 통째로 있다.** 이 change의 리뷰는 그 위에 두 가지를 더 확정했다.
+리뷰 3라운드가 확정한 사실 위에서 P1 실행 계약을 정정·강화한다:
 
-**조건주문은 주문이 아니다.** 식별자 네임스페이스·수명주기·응답 형태가 다르고, 그 실행은 **별개의 주문을 만든다**. 조건주문 식별자를 일반 주문의 브로커 주문번호 자리에 넣으면 그 값이 체결 감지 추적 집합(`journal.TrackedFillOrders` → `filldetect`)과 reconciliation의 로컬 미체결 목록으로 흘러가는데, 그 식별자는 일반 주문 조회에 유효하지 않다 — **보호주문 하나가 전 종목 체결 감지를 죽이고 진입을 영구 차단한다.**
+- **P1 스펙의 사실 오류**: "자동 재제출 절대 금지 — 브로커 멱등성 키가 없으므로 무조건". 실제로는 `clientOrderId` 멱등키가 문서화되어 있고(동일 키·본문 재요청은 이전 결과 재반환, 10분 유효 — openapi), 엔진 경로는 이 필드를 쓰지 않는다. 응답 유실을 위해 설계된 장치를 비워두고 더 약한 대체물(조회 휴리스틱)만 만든 상태다.
+- **fail-open 실재**: 게이트가 거래 정책을 보지 않아 매수만 되고 청산 불가한 naked long으로 기동 가능(`verifyGate`), 한도는 수량·notional 둘 다 0일 때만 거부(`Limits.IsZero()`), nonce가 in-memory, 결정이 위험 입력(손절·노출)에 결속되지 않음, `Context.TradingService`가 exported라 확인 토큰만으로 mutation 가능.
+- **총계 한도가 제출 시점에 강제 불가**: 서로 다른 심볼의 동시 결정이 같은 스냅샷을 각각 통과해 합산 한도를 초과한다(in-flight 락은 심볼 단위).
+- **P1의 브로커 모델이 계약보다 좁다**: OrderStatus는 10개가 문서화("OPEN/CLOSED 수준" 전제보다 풍부)되어 있고 `CANCEL_REJECTED`/`REPLACE_REJECTED`는 별도 주문 레코드를 만든다. `orderId`는 opaque token(형태 검증 금지). 평균 체결가는 부분 체결마다 바뀐다(정정 이벤트 필요).
 
-**브로커에 멱등키가 있다.** P1 확정 스펙은 "자동 재제출 절대 금지 — 브로커 멱등성 키가 없으므로 무조건"이라고 쓰고 있지만, `docs/migration/openapi.latest.json`은 두 생성 엔드포인트 모두에 `clientOrderId`를 멱등키로 문서화한다(동일 키·동일 본문 재요청은 이전 결과를 그대로 반환, 10분 유효). 그런데 `internal/execgw`는 이 필드를 한 번도 쓰지 않는다 — 응답 유실이라는 정확히 그 상황을 위해 설계된 장치를 자동 경로가 비워둔 채, 훨씬 약한 대체물(pagination·안정화 조회·fingerprint 휴리스틱)을 만들어 놓았다.
-
-그 밖에 코드로 확인된 fail-open: 게이트가 거래 정책을 보지 않아 **매수만 되고 손절·청산은 불가한 naked long**으로 기동할 수 있고(`verifyGate`), 한도는 수량·notional이 **둘 다** 0일 때만 기동을 거부하며(`Limits.IsZero()`), `Context.TradingService`가 exported라 확인 토큰만으로 조건주문을 낼 수 있고, 성공한 조건주문 취소·정정은 어댑터가 식별자를 반환하지 않아 전부 IN_DOUBT로 간다.
-
-이 change는 강제 장치(레일)만 다룬다. 판단 정책(Guardian 판정 체인·한도 수치)은 후행 add-core-domain이 맡는다. 경계 원칙: **여기는 실패해도 안전한 레일, 거기는 그 레일 위의 판단.** P1이 오늘 그렇게 하듯 이 change는 합성 GuardianDecision만으로 완전히 테스트된다.
+채택 원칙(StockOS 실행 무결성 분석 → 토스 계약으로 재구현): 불확실성은 상태로 격리, 불일치는 RECONCILE로 중단(산식 보정 금지), 결정은 영속 후 실행, 브로커가 보증하지 않는 것은 타입으로 표시.
 
 ## What Changes
 
-- **조건주문의 형제 수명주기**: 자체 journal 테이블과 자체 식별자 컬럼. 단계 모델(RECORDED→DISPATCH_STARTED→ACKED/IN_DOUBT→종결)과 원칙은 공유하되 저장소는 분리한다. 조건주문 intent는 유형·만료일·leg별 방향·트리거가를 자체 컬럼으로 보존해 해소 시점 fingerprint 재계산을 가능하게 한다
-- **발동 주문 다리**: 등록 시 leg별 예상 주문 기록 → 조건주문 상태 폴러가 `triggeredOrderId` 관측 → 그 **주문 id**를 일반 추적·체결·reconcile 경로에 lineage와 함께 편입. 예상 주문은 일회성·유계이며 종결은 체결 귀속 완료 후
-- **멱등 재생**: attempt별 결정적 멱등키를 전송 전에 영속하고, 해소의 1차 절차를 동일 본문 재요청으로 한다. 재시도가 아니라 **정체 회수**다 — 같은 키는 새 주문을 만들 수 없다. 어떤 조회 응답도 멱등키를 싣지 않으므로 조회는 키로 매칭할 수 없고, 이 비대칭이 1차 절차와 폴백이 서로를 대체하지 못하는 이유다. 실계좌 능력 검증 전에는 사용하지 않는다
-- **3-클래스 safety**: EXPOSURE_RAISING / RISK_REDUCING / **PROTECTION_WEAKENING**. 취소를 일괄로 위험 감소로 분류하지 않는다 — 활성 보호의 취소는 위험 증가다. 클래스당 심볼 latch를 유지해 해소의 유일 매칭을 보장하되, RISK_REDUCING은 진입의 in-flight·IN_DOUBT에 막히지 않는다(§0.3)
-- **청산 수량 예약**: `보유 − 미체결 SELL − 대기 조건주문 예약 − 동시 예약`의 원자적 총량. 단건 상한은 보호 100 + 청산 100이 각각 통과해 매도 200이 되는 것을 막지 못한다. 권위는 최근 브로커 스냅샷이며 로컬 파생을 상한 상향 근거로 쓰지 않는다
-- **진입 측 위험 예약**: 결정 발급과 같은 트랜잭션. 브로커 조회는 트랜잭션 밖에서 수집하고 안에서 as-of·staleness를 검증한다(journal은 단일 커넥션이므로 네트워크를 트랜잭션에 넣으면 보호 경로까지 막힌다). nonce 소비 후 만료는 예약을 풀지 않고, 일일 손실 예약은 거래일 경계에서 소멸한다
-- **총계 한도의 계산 계약**: 정의되지 않은 양에 예약을 걸 수 없으므로 계산 계약을 여기서 정의한다(수치는 add-core-domain)
-- **결정 계약**: RiskIntent 해시 + **preimage를 journal에 영속**(제출자 공급 값으로 재검증하면 순환한다), 결정에 safety class 탑재, 한도 면제를 종류 리터럴이 아닌 class 기준으로 재작성, 한도 항목별 fail-closed, journal 기반 NonceStore
-- **엔진 배선·인터록**: 엔진 프로필의 Gateway 구성(현재 존재하지 않는다), 조건주문 mutation 메서드 노출 봉인, `RequiredEndpoints()`에 조건주문 등록·취소·정정 + 목록 조회 + 매도가능수량 조회 추가, 거래 정책 검증, 한도 단일 출처
+- **결정 계약**: safety class(EXPOSURE_RAISING/RISK_REDUCING, PROTECTION_WEAKENING은 enum 예약) + RiskIntent preimage journal 영속(Gateway는 journal에서 재검증) + generation. 한도 면제를 `KindCancel` 리터럴에서 class 기준으로 재작성
+- **멱등키 기계**: 결정 결속 결정적 `clientOrderId`, RECORDED 단계에 canonical wire body·serializer version 불변 저장, TTL−margin 시간 규칙, 재생 골격(2b attestation 전 비활성), 재생 상한·폴백. confirm token(canonical)은 무변경
+- **진입 측 위험 예약**: 판정·예약 원자 트랜잭션(네트워크는 밖), 해제는 브로커 종결 상태 정본(미체결 만료 포함), nonce 소비 후 만료는 미해제, 일일 손실 예약의 거래일 소멸, 재수집 상한·fail-closed, decimal 산술
+- **RECONCILE 상태**: 불일치·조회 불가 시 행동 제한 상태로 전이(진입·수량 확대 금지, 확정 하한 위험 축소 허용)
+- **총계 한도 계산 계약**(수치는 2d) + 한도 항목별 fail-closed
+- **브로커 취급 정정**: opaque 식별자 규칙(round-trip 확인·상충 시 RECONCILE), OrderStatus 10개 파생 확장, EXECUTION_CORRECTION 이벤트
+- **엔진 배선·봉인**: Gateway 구성, `TradingService` 봉인, 인터록 강화(한도 fail-closed·거래 정책·단일 출처·Gateway 확인), flatten 결정에 class 부여
+- **journal v5 단일 원자 마이그레이션**: design.md D9 표의 전사 + durable NonceStore
 
 ## Capabilities
 
 ### Modified Capabilities
 
-- `order-execution`: IN_DOUBT 해소를 멱등 재생 우선으로 재정의(**"멱등키가 없다"는 사실 오류 정정**), MutationAttempt 수명주기를 조건주문·safety class로 확장
-- `engine-safety`: ExecutionGateway 봉인과 자동화 게이트 기동 인터록을 강화
+- `order-execution`: IN_DOUBT 해소 재정의(멱등키 사실 정정·재생 1차·조회 폴백), MutationAttempt 수명주기(wire body·키 영속), 브로커 상태 파생(문서화된 10개 enum)
+- `engine-safety`: ExecutionGateway 봉인(엔진 배선·TradingService), 자동화 게이트 기동 인터록(fail-closed 한도·거래 정책·단일 출처)
 
 ### New Capabilities
 
-(없음 — 기존 두 capability의 계약 확장이다)
+(없음)
 
 ## Impact
 
-- Affected code: `internal/execgw`(멱등키·safety class·RiskIntent·예약·nonce), `internal/journal`(조건주문 테이블·예상 주문·예약·nonce, v5 단일 원자 마이그레이션), `internal/app/engine`(Gateway 구성·인터록 강화·봉인), `internal/trading`·`internal/official`(조건주문 어댑터의 식별자 반환, 엔진용 Gateway 경유 진입점), `internal/filldetect`·`internal/reconcile`(발동 주문 편입)
-- 선행: P1 archive 완료(됨)
-- 후행: `add-core-domain`(재범위)이 이 계약 위에서 Guardian 판정을 구현
-- 병행: `verify-execution-capability`가 조건주문 능력 + **멱등키 실동작**(재생 응답 내용·유효 창·계좌 스코프)을 attestation에 추가
-- **upstream 파일 수정 예정**: `internal/trading/conditional.go`, `internal/official/conditional_writes.go`, `internal/app/engine/engine.go`. 전부 High-risk → Pre-Edit 전문 선언 필요
-- 이 계약이 완성되기 전에는 자동 **진입**이 불가하다. 게이트는 기본 OFF를 유지한다
+- Affected code: `internal/execgw`(결정 영속·class·멱등키·재생·예약·RECONCILE), `internal/journal`(v5·NonceStore·정정 이벤트), `internal/app/engine`(Gateway 구성·봉인·인터록), `internal/brokerstate`(상태 enum 확장), `internal/flatten`(결정 class)
+- **upstream 수정(Pre-Edit 필수)**: `internal/orderintent/intent.go`, `internal/official/orders_write.go`(clientOrderId 배선), `internal/trading`(엔진 진입점), `internal/app/engine/engine.go`(봉인)
+- 후행: 2b `verify-execution-capability`(멱등키 실동작·TTL 마진·CANCEL_REJECTED 레코드 형태·조건주문 속성 측정) → 2c `add-protection-orders`(조건주문 형제 수명주기·발동 주문 다리·격리 원장·청산 수량 예약·PROTECTION_WEAKENING·flatten 조건주문 취소 — 2b 결과 위에서 작성) → 2d `add-core-domain`(판단 정책, 재작성 대기)
+- 이 change 완료 후에도 자동 진입은 불가하다(Guardian 발급자는 2d). 게이트 기본 OFF 유지

@@ -2,133 +2,92 @@
 
 ## ADDED Requirements
 
-### Requirement: 조건주문의 형제 수명주기
-조건주문의 등록·취소·정정은 일반 주문과 **같은 단계**를 거치되 **자체 저장소**를 가져야 한다(SHALL): journal 선기록 → DISPATCH_STARTED → 결과 분류 → 필요 시 해소. 조건주문 식별자를 일반 주문의 브로커 주문번호 컬럼에 저장해서는 안 된다(SHALL NOT — 그 컬럼은 체결 감지 추적 집합과 reconciliation의 로컬 미체결 목록으로 흘러가며, 조건주문 식별자는 일반 주문 조회에 유효하지 않아 체결 감지 사이클 전체와 진입 경로를 영구히 실패시킨다). 조건주문 intent는 유형(SINGLE/OCO/OTO)·만료일·leg별 방향·트리거가·주문가를 자체 컬럼으로 보존해야 하며(SHALL), 해소 시점의 fingerprint 재계산이 이 컬럼들로 가능해야 한다. 엔진 경로에서 확인 토큰만 검사하고 브로커를 직접 호출하는 제출은 존재해서는 안 된다(SHALL NOT). CLI/MCP 표면의 기존 확인 토큰 경로는 변경 대상이 아니다.
-
-#### Scenario: 조건주문 등록 후 체결 감지 계속 동작
-- **WHEN** 보호주문이 성공적으로 등록되고 다음 체결 감지 사이클이 수행되면
-- **THEN** 감지 사이클이 정상 완료되며, 조건주문 식별자로 인한 조회 실패가 발생하지 않는다
-
-#### Scenario: 조건주문 등록 후 reconciliation
-- **WHEN** 활성 조건주문이 있는 상태에서 reconciliation이 수행되면
-- **THEN** 조건주문이 로컬 미체결 주문으로 오인되어 진입이 차단되지 않는다
-
-#### Scenario: OTO 조건주문의 해소 fingerprint
-- **WHEN** 두 leg의 방향이 서로 다른 조건주문의 해소가 필요하면
-- **THEN** 저장된 leg별 컬럼에서 fingerprint를 재계산할 수 있다
-
-### Requirement: 발동 주문의 편입
-조건주문 발동으로 생성된 주문은 일반 주문으로서 기존 추적·체결·reconciliation 경로에 편입되어야 한다(SHALL). 조건주문 등록이 확정되면 leg별 예상 주문 레코드(조건주문 식별자·leg 식별·심볼·방향·최대 수량·상태)를 기록하고(SHALL), 조건주문 상태 조회를 주기적으로 수행해 leg의 상태와 발동 주문 식별자를 관측한다(SHALL). 발동 주문 식별자가 관측되면 그 주문을 조건주문으로의 lineage와 함께 추적 대상에 편입한다(SHALL). 발동 주문에 대해 intent를 소급 생성해서는 안 된다(SHALL NOT — 내지 않은 주문에 의도를 부여하면 provenance가 거짓이 된다).
-
-예상 주문 레코드는 일회성이고 유계여야 한다(SHALL): leg가 발동하면 그 레코드는 발동 주문 식별자로 소비되어 이후 매칭에 사용되지 않고, 브로커측 자동 취소(OCO 반대편)와 만료는 상태 조회로 관측해 종결시키며, 종결은 체결 귀속 완료 이후에 수행하고 tombstone을 보존 기간 동안 유지한다. 낡은 예상 주문이 실제 외부 주문을 엔진 포지션으로 흡수해서는 안 된다(SHALL NOT — 위험한 실패 방향은 매칭 실패가 아니라 거짓 매칭이다).
-
-조건주문 상태 조회는 체결 감지와 rate limit 그룹을 공유하므로 예산을 명시해야 하며(SHALL), 이 조회의 실패가 보호 경로를 차단해서는 안 된다(SHALL NOT).
-
-#### Scenario: 브로커측 손절 발동으로 포지션 청산
-- **WHEN** 브로커에 등록된 stop 조건주문이 발동해 전량 체결되면
-- **THEN** 발동 주문이 추적에 편입되어 그 체결이 포지션에 반영되고, 영구 불일치로 보고되지 않는다
-
-#### Scenario: OCO 반대편 자동 취소
-- **WHEN** OCO의 한쪽 leg가 발동해 반대편이 브로커측에서 자동 취소되면
-- **THEN** 상태 조회가 이를 관측해 해당 예상 주문 레코드를 종결시킨다
-
-#### Scenario: 만료된 예상 주문과 수동 매도
-- **WHEN** 조건주문이 만료된 뒤 운영자가 같은 심볼을 수동 매도하면
-- **THEN** 그 체결이 엔진 포지션으로 흡수되지 않고 외부 거래로 분류된다
-
-### Requirement: Mutation Safety Class와 직렬화
-모든 mutation은 세 safety class 중 하나로 분류되어야 한다(SHALL):
-
-- **EXPOSURE_RAISING** — 진입 제출, 노출 증가
-- **RISK_REDUCING** — 보호주문 생성·증량, reduce-only 청산, 미체결 진입의 취소
-- **PROTECTION_WEAKENING** — 활성 보호주문의 취소·수량 축소, 청산 주문의 취소
-
-취소를 일괄로 위험 감소로 분류해서는 안 된다(SHALL NOT — 활성 보호주문의 취소는 보호를 제거하므로 위험을 증가시킨다). 분류 판별자는 mutation 종류와 방향이 아니라 대상이 해당 포지션의 보호인지 여부이며, 예상 주문 레코드가 그 판정의 권위다(SHALL).
-
-직렬화는 클래스별로 분리된다(SHALL): EXPOSURE_RAISING은 심볼당 1건, RISK_REDUCING도 심볼당 1건이되 EXPOSURE_RAISING의 in-flight·IN_DOUBT에 의해 차단되지 않으며(SHALL NOT — §0.3), PROTECTION_WEAKENING은 대상 조건주문 식별자 단위로 직렬화한다. 클래스별 심볼 단위 제한은 해소 시 유일 매칭의 근거이므로 제거할 수 없다(SHALL NOT — 제거하면 해소 절차가 다른 주문을 이 attempt의 결과로 확정하는 거짓 CONFIRMED가 가능해진다).
-
-PROTECTION_WEAKENING은 가장 엄격한 규칙을 받는다(SHALL): 원자적 교체의 일부이고 무보호 창이 측정·유계일 때만 허용되며, audit 기록을 요구한다.
-
-#### Scenario: 진입 IN_DOUBT 중 손절 제출
-- **WHEN** 같은 심볼의 진입 attempt가 IN_DOUBT인 상태에서 보호주문 제출이 요청되면
-- **THEN** 제출이 차단되지 않고 수행된다
-
-#### Scenario: 활성 보호의 취소 시도
-- **WHEN** 포지션의 유일한 활성 보호주문을 취소하는 mutation이 요청되면
-- **THEN** PROTECTION_WEAKENING으로 분류되어 위험 감소 경로의 면제를 받지 못한다
-
-#### Scenario: 동시 위험 감소 mutation
-- **WHEN** 같은 심볼에 보호주문 생성과 청산 제출이 동시에 요청되면
-- **THEN** 하나만 in-flight로 진행하고 다른 하나는 대기한다
-
-### Requirement: 청산 수량 예약
-매도 mutation의 수량은 원자적 예약으로 통제되어야 하며(SHALL), 단건 상한으로는 충분하지 않다(SHALL NOT — 개별 주문이 각각 상한을 통과해도 합계가 보유 수량을 초과할 수 있다). 가용 매도 수량은 `보유 수량 − 미체결 매도 주문 − 대기 중 조건주문의 예약 수량 − 유효한 동시 예약`으로 계산한다(SHALL). 브로커 주문 요청에 reduce-only 필드가 없으므로 이 계산이 유일한 oversell 방어다.
-
-수량의 권위는 가장 최근 브로커 스냅샷이며(SHALL), 로컬 파생 보유수량을 상한을 높이는 근거로 사용해서는 안 된다(SHALL NOT — 로컬 파생은 외부 주문을 제외하므로 실제보다 클 수 있다). 브로커 스냅샷이 staleness 한계를 넘으면 critical 알림과 함께 가장 최근 값을 보수적으로 사용하고, 스냅샷이 전혀 없으면 로컬 매도를 수행하지 않는다(SHALL NOT — 그 구간의 보호는 브로커측 조건주문이 담당한다).
-
-#### Scenario: 보호와 청산의 합계 초과
-- **WHEN** 보유 100주에 대해 100주 보호주문이 등록된 상태에서 100주 청산이 요청되면
-- **THEN** 가용 매도 수량이 예약에 의해 0이므로 청산이 거부되거나 보호 취소 후로 순서화된다
-
-#### Scenario: 동시 청산 요청
-- **WHEN** 같은 심볼에 대해 두 경로가 동시에 전량 청산을 요청하면
-- **THEN** 하나만 예약에 성공하고 다른 하나는 가용 수량 부족으로 거부된다
-
-#### Scenario: 계좌 스냅샷 부재
-- **WHEN** 브로커 계좌 스냅샷을 한 번도 얻지 못한 상태에서 로컬 청산이 요청되면
-- **THEN** 로컬 매도가 수행되지 않고 critical 알림이 발송된다
-
 ### Requirement: 원자적 위험 예약
 계좌 전체에 걸친 한도(총 개방 노출, 일일 손실, 현금)의 판정과 그 결과의 예약은 하나의 journal 트랜잭션 안에서 수행되어야 한다(SHALL). 서로 다른 심볼에 대한 동시 결정이 같은 스냅샷을 각각 통과해 합산 한도를 초과하는 것은 허용되지 않는다(SHALL NOT).
 
-브로커 조회를 이 트랜잭션 안에서 수행해서는 안 된다(SHALL NOT — journal은 단일 커넥션이므로 네트워크 왕복 동안 모든 mutation 기록이 막히며, 여기에는 이 계약이 지키려는 보호 경로가 포함된다). 스냅샷은 트랜잭션 밖에서 수집하고, 트랜잭션 안에서는 스냅샷의 as-of 조건과 staleness 한계를 검증한 뒤 예약을 삽입하며, 조건 불충족이면 롤백하고 재수집한다(SHALL).
+브로커 조회를 이 트랜잭션 안에서 수행해서는 안 된다(SHALL NOT — journal은 단일 커넥션이므로 네트워크 왕복 동안 모든 mutation 기록이 막힌다). 스냅샷은 트랜잭션 밖에서 수집하고, 안에서 as-of·staleness를 검증한 뒤 예약을 삽입하며, 불충족이면 롤백하고 재수집한다(SHALL). 재수집은 횟수 상한(기본 3회)과 총 데드라인을 가지며 초과 시 fail-closed로 거부한다(SHALL). 예약 산술은 decimal 문자열 연산이며 float 누적을 사용하지 않는다(SHALL NOT).
 
-예약 해제는 다음에서만 일어난다(SHALL): 체결 또는 취소 확정, 제출 실패 확정, 결정 만료(단 nonce가 소비되지 않은 경우에 한한다 — 소비 후에는 주문이 접수됐을 수 있으므로 만료가 예약을 풀어서는 안 된다). IN_DOUBT는 해소 전까지 예약을 유지하고(SHALL), UNRESOLVED_IN_DOUBT의 예약은 운영자 해소로만 해제된다(SHALL). 일일 손실 예약은 거래일 경계에서 소멸해야 한다(SHALL — 그러지 않으면 주차된 attempt 하나가 다음 거래일을 조용히 정지시킨다).
+예약 해제의 정본은 **attempt의 브로커 종결 상태 도달**이다(SHALL): FILLED·CANCELED·REJECTED·NOT_DISPATCHED·FAILED_CONFIRMED — 체결 없이 장 마감에 만료되어 종결된 주문을 포함한다. 그 외 해제는 nonce 미소비 상태의 결정 만료뿐이며, nonce 소비 후 만료는 예약을 해제하지 않는다(SHALL NOT — 주문이 접수됐을 수 있다). UNRESOLVED_IN_DOUBT의 예약은 운영자 해소로만 풀린다(SHALL). 일일 손실 예약은 시장별 거래일 경계에서 소멸한다(SHALL).
 
 #### Scenario: 동시 다심볼 결정
 - **WHEN** 총 개방 노출 한도의 잔여분이 1건분만 남은 상태에서 서로 다른 두 심볼의 결정이 동시에 요청되면
 - **THEN** 하나만 예약에 성공하고 다른 하나는 한도 초과로 거부된다
 
+#### Scenario: 미체결 만료 주문의 예약 해제
+- **WHEN** 예약을 보유한 주문이 체결 없이 장 마감에 만료되어 종결 상태로 관측되면
+- **THEN** 예약이 BROKER_TERMINAL 사유로 해제되어 한도가 누수되지 않는다
+
 #### Scenario: nonce 소비 후 만료
 - **WHEN** nonce가 소비된 뒤 응답이 유실되고 결정 유효 시간이 지나면
 - **THEN** 예약은 만료를 이유로 해제되지 않고 해소 완료까지 유지된다
 
-#### Scenario: 거래일 경계
-- **WHEN** 일일 손실 예약을 보유한 채 거래일이 바뀌면
-- **THEN** 그 예약은 소멸하고 새 거래일의 한도가 온전히 사용 가능하다
+#### Scenario: 재수집 상한 초과
+- **WHEN** 스냅샷 as-of 검증이 상한 횟수까지 연속 실패하면
+- **THEN** 결정 발급이 fail-closed로 거부되고 사유가 기록된다
+
+### Requirement: RECONCILE 상태
+권위 값의 불일치는 산식으로 보정하지 않고 RECONCILE 상태로 전이해야 한다(SHALL). 진입 조건: 브로커 보유·매도가능 조회가 불가하거나 staleness 한계를 초과, 로컬 파생 수량과 브로커 스냅샷의 불일치, 같은 브로커 식별자가 상충하는 계좌·심볼 컨텍스트에 출현.
+
+RECONCILE 상태에서는 신규 진입과 수량 확대가 금지되고(SHALL NOT), 읽기·계좌 동기화·운영자 확인은 허용되며, 위험 축소는 **확정 하한 수량**으로만 허용된다(SHALL — 수량이 불확실해도 과소 청산은 안전한 방향이며, §0.3 손절 즉시성은 유지되어야 한다). 해제는 재조회 일치와 원인 기록을 요구한다(SHALL).
+
+#### Scenario: 수량 불일치 시 청산 요청
+- **WHEN** RECONCILE 상태에서 청산이 요청되면
+- **THEN** 확정 하한 수량까지만 제출되고 초과분은 해소 후로 보류된다
+
+#### Scenario: 진입 시도
+- **WHEN** RECONCILE 상태에서 진입 의도가 평가되면
+- **THEN** 거부되고 RECONCILE 사유가 기록된다
 
 ### Requirement: 총계 한도의 계산 계약
-총 개방 노출·일일 손실·현금은 계산 계약이 정의되어야 하며(SHALL), 정의되지 않은 양에 예약을 걸어서는 안 된다(SHALL NOT). 계약은 다음을 모두 포함한다: 각 값의 권위 데이터, 미체결 주문과 대기 중 조건주문의 평가 가격, 통화 정규화와 환율 권위·staleness 허용치, 실현 손익과 미실현 손익의 포함 범위, 수수료·세금 반영, 시장별 거래일 경계(P1 시간 규율 준수), 예약의 합산 방식, 외부 수동 거래의 취급. 입력 중 하나라도 stale하거나 미지이면 fail-closed로 진입을 거부한다(SHALL). 수치 자체는 이 계약의 대상이 아니다.
+총 개방 노출·일일 손실·현금은 계산 계약이 정의되어야 하며(SHALL), 정의되지 않은 양에 예약을 걸어서는 안 된다(SHALL NOT). 계약은 다음을 포함한다: 각 값의 권위 데이터, 미체결 주문의 평가 가격, 통화 정규화와 환율 권위·staleness 허용치, 실현/미실현 손익의 포함 범위, 수수료·세금 반영, 시장별 거래일 경계(P1 시간 규율 준수), 예약 합산 방식, 외부 수동 거래의 취급. 입력이 stale하거나 미지이면 fail-closed로 진입을 거부한다(SHALL). 수치는 이 계약의 대상이 아니다(2d).
 
 #### Scenario: 환율 stale
 - **WHEN** 외화 자산의 원화 환산에 필요한 환율이 staleness 한계를 넘으면
 - **THEN** 총 개방 노출 판정이 fail-closed로 진입을 거부한다
 
+### Requirement: 브로커 식별자의 opaque 취급
+브로커가 발급하는 주문 식별자는 opaque token으로 취급해야 한다(SHALL — openapi는 `orderId`에 형태·패턴을 계약하지 않는다). 클라이언트는 형태·prefix·길이 패턴을 검증하거나 해석해서는 안 되며(SHALL NOT), null·빈 문자열만 거부한다(SHALL). 식별자는 응답 원문 그대로(변환 없이) 계좌 스코프와 함께 저장하고(SHALL), 생성 응답의 식별자는 상세조회 round-trip으로 실재를 확인한다(SHALL). 같은 식별자가 상충하는 계좌·심볼 컨텍스트에 나타나면 RECONCILE로 전이한다(SHALL).
+
+#### Scenario: 예상 밖 형식의 식별자
+- **WHEN** 생성 응답이 지금까지와 전혀 다른 형식의 orderId를 반환하면
+- **THEN** 파싱·검증 없이 opaque 값으로 저장되고 round-trip 조회로 실재가 확인된다
+
+#### Scenario: 빈 식별자
+- **WHEN** 생성 응답의 orderId가 비어 있으면
+- **THEN** ACK로 처리되지 않고 IN_DOUBT 해소가 시작된다
+
+### Requirement: 체결 정정 이벤트
+누적 체결 수량이 동일한데 평균 체결가 또는 체결 금액이 변경된 관측은 수량을 재반영하지 않고 EXECUTION_CORRECTION 이벤트로 기록해야 한다(SHALL — 평균 체결가는 부분 체결마다 바뀌는 값이므로(openapi) 중복 판정 키에 포함해서는 안 된다(SHALL NOT)). 누적 수량 감소는 P1 규칙대로 fail-closed를 유지한다.
+
+#### Scenario: 수량 동일·평균가 변경
+- **WHEN** 같은 주문의 누적 수량이 동일하고 평균 체결가만 달라진 스냅샷이 관측되면
+- **THEN** 수량 delta 없이 정정 이벤트가 기록되고 포지션 수량은 변하지 않는다
+
 ## MODIFIED Requirements
 
 ### Requirement: IN_DOUBT 해소
-IN_DOUBT 해소의 목적은 **정체 회수**다 — 주문이 접수됐는지, 접수됐다면 어떤 식별자인지를 확정하는 것이며, 정체를 모르는 채 다시 주문을 내는 것은 금지된다(SHALL NOT).
+IN_DOUBT 해소의 목적은 **정체 회수**다 — 주문이 접수됐는지, 접수됐다면 어떤 식별자인지 확정하는 것이며, 정체를 모르는 채 다시 주문을 내는 것은 금지된다(SHALL NOT).
 
-해소는 다음 순서를 따른다(SHALL):
+공식 API의 주문 생성은 클라이언트 제공 멱등키를 지원한다(openapi `clientOrderId`: "동일 값으로 재요청 시 이전 주문 결과를 그대로 재반환합니다", 유효 10분). 해소는 다음 순서를 따른다(SHALL):
 
-1. **멱등 재생**: 공식 API의 생성 엔드포인트는 클라이언트 제공 멱등키를 지원하며 동일 키·동일 본문의 재요청은 새 주문을 만들지 않고 이전 결과를 반환한다. 엔진은 mutation attempt마다 결정적 멱등키를 발행해 전송 시작 이전에 journal에 영속해야 하고(SHALL), 응답 유실 시 동일 본문·동일 키의 재요청 응답에서 식별자를 회수한다. 이 재요청은 재시도가 아니다 — 새 주문을 만들 수 없기 때문이다. 멱등키의 실제 동작(재생 응답 내용·유효 창·계좌 스코프)이 실계좌 능력 검증으로 확인되기 전에는 이 단계를 사용하지 않는다(SHALL NOT).
-2. **조회 대조 (폴백)**: 멱등키 유효 창 경과, 능력 미검증, 키 충돌, 또는 멱등키를 받지 않는 mutation(취소·정정)인 경우 journal에 저장된 fingerprint로 미체결과 종결 **양쪽** 목록을 pagination 완주하며 대조한다. 어떤 조회 응답도 멱등키를 싣지 않으므로 조회는 키로 매칭할 수 없다(SHALL NOT — 이것이 1단계와 2단계가 서로를 대체하지 못하는 이유다).
-3. **부재 판정**: 최소 관찰 기간에 걸친 연속 N회(기본 3회) 안정화 조회 + 매수가능금액·보유수량 delta 교차 확인 후에만 부재로 판정한다.
-4. **해소 불능**: 증명 불가 시 UNRESOLVED_IN_DOUBT로 해당 심볼 신규 진입을 영구 차단하고 운영자 해소만 허용한다.
+1. **멱등 재생**: RECORDED 단계에 영속된 동일 키·동일 wire body의 재요청 응답에서 식별자를 회수한다. 재생은 재시도가 아니다 — 같은 키는 유효 창 안에서 새 주문을 만들 수 없다. 적용 조건: (a) 실동작이 능력 attestation으로 확인됨 `[미측정 — 2b 전 비활성]`, (b) `elapsed(전송 시작) < TTL − margin`(margin 기본 60초 — 경과 근거가 로컬 시계이므로 마진 없는 경계 사용 금지(SHALL NOT)), (c) 재생 횟수 상한(기본 2회) 이내. 재생은 새 attempt를 만들지 않고 같은 attempt의 해소 기록(횟수·시각)으로 남는다(SHALL).
+2. **조회 대조 (폴백)**: 창 초과, 미검증, `idempotency-key-conflict`, 멱등키를 받지 않는 mutation(취소·정정)은 journal fingerprint로 미체결·종결 양쪽 목록을 pagination 완주하며 대조한다. 조회 응답은 멱등키를 싣지 않으므로 키로 매칭할 수 없다(SHALL NOT — 두 절차는 서로를 대체하지 못한다).
+3. **부재 판정**: 최소 관찰 기간에 걸친 연속 N회(기본 3회) 안정화 조회 + 매수가능금액·보유수량 delta 교차 확인 후에만.
+4. **해소 불능**: UNRESOLVED_IN_DOUBT로 해당 심볼 신규 진입 영구 차단, 운영자 해소만 허용.
 
-2단계의 유일 매칭을 보장하기 위해 엔진은 safety class별로 심볼당 in-flight mutation을 1개로 제한한다(SHALL). 이 제한을 제거하면 다른 주문이 이 attempt의 결과로 확정되는 거짓 CONFIRMED가 발생할 수 있다(SHALL NOT 제거).
+재생 경로는 Gateway의 해소 전용 진입점으로만 수행되어야 하며(SHALL), 그 진입점은 저장된 wire body의 재전송만 가능하고 새 본문을 구성할 수 없어야 한다(SHALL NOT — 두 번째 제출 문이 되지 않음을 정적 테스트로 증명). 조회 대조의 유일 매칭을 위해 심볼당 in-flight mutation 1개 제한을 유지한다(SHALL). 단, 미해소 EXPOSURE_RAISING attempt가 같은 심볼의 RISK_REDUCING mutation을 차단해서는 안 되며(SHALL NOT — §0.3), 그 경우 RISK_REDUCING 수량은 RECONCILE 상태 규칙(확정 하한)을 따른다.
 
 #### Scenario: 멱등 재생으로 정체 회수
-- **WHEN** 능력 검증이 완료된 상태에서 주문 제출 응답이 유실되면
-- **THEN** 동일 키·동일 본문 재요청의 응답에서 주문 식별자를 회수해 CONFIRMED로 종결하며, 두 번째 주문은 생성되지 않는다
+- **WHEN** 능력 검증 완료 상태에서 주문 제출 응답이 유실되고 TTL−margin 이내에 해소가 시작되면
+- **THEN** 저장된 wire body의 재요청 응답에서 orderId를 회수해 CONFIRMED로 종결하며 두 번째 주문은 생성되지 않는다
 
-#### Scenario: 멱등 유효 창 경과
-- **WHEN** 멱등키 유효 창이 지난 뒤 해소를 시작하면
-- **THEN** 재생을 사용하지 않고 조회 대조 절차로 진행한다
+#### Scenario: 마진 경계 초과
+- **WHEN** 전송 시작 후 경과 시간이 TTL−margin을 넘긴 뒤 해소가 시작되면
+- **THEN** 재생을 사용하지 않고 조회 대조로 진행한다
 
-#### Scenario: 제출 응답 유실 후 주문이 2페이지에 존재
-- **WHEN** 조회 대조에서 대상 주문이 목록 2페이지 이후에 있으면
-- **THEN** pagination 완주로 발견되어 CONFIRMED로 종결된다
+#### Scenario: 재생 응답도 유실
+- **WHEN** 재생 요청의 응답이 상한 횟수까지 유실되면
+- **THEN** 재생 기록이 남고 조회 대조로 전환되며 자동 재제출은 발생하지 않는다
 
 #### Scenario: 단발 부재 조회
 - **WHEN** 첫 조회에서 주문이 보이지 않으면
@@ -136,10 +95,10 @@ IN_DOUBT 해소의 목적은 **정체 회수**다 — 주문이 접수됐는지,
 
 #### Scenario: 해소 불능
 - **WHEN** 관찰 기간 내 존재도 부재도 증명되지 않으면
-- **THEN** UNRESOLVED_IN_DOUBT로 표기되어 해당 심볼의 신규 진입이 영구 차단되고 운영자 알림이 발송된다 (보호·청산 경로는 계속 동작)
+- **THEN** UNRESOLVED_IN_DOUBT로 표기되어 해당 심볼의 신규 진입이 영구 차단되고 운영자 알림이 발송된다 (위험 축소 경로는 계속 동작)
 
 ### Requirement: MutationAttempt 수명주기
-각 MutationAttempt는 RECORDED → DISPATCH_STARTED → (ACKED | IN_DOUBT) → 종결(CONFIRMED | NOT_DISPATCHED | FAILED_CONFIRMED | UNRESOLVED_IN_DOUBT) 단계를 가져야 한다(SHALL). 이 단계 모델은 조건주문 mutation에도 동일하게 적용되나 저장소는 분리된다(SHALL — 조건주문의 형제 수명주기 참조). RECORDED는 fsync 완료 후에만 DISPATCH_STARTED로 진행하며(SHALL), 멱등키는 RECORDED 단계에서 함께 영속된다(SHALL). 재시작 시 RECORDED 단계에서 멈춘 attempt는 NOT_DISPATCHED로 안전 종결하고, DISPATCH_STARTED 이후 단계는 해소 절차 완료 전까지 차단 대상으로 취급한다(SHALL). 다만 차단의 범위는 safety class 규칙을 따르며, 미해소 EXPOSURE_RAISING attempt가 같은 심볼의 RISK_REDUCING mutation을 차단해서는 안 된다(SHALL NOT).
+각 MutationAttempt는 RECORDED → DISPATCH_STARTED → (ACKED | IN_DOUBT) → 종결(CONFIRMED | NOT_DISPATCHED | FAILED_CONFIRMED | UNRESOLVED_IN_DOUBT) 단계를 가져야 한다(SHALL). RECORDED는 fsync 완료 후에만 DISPATCH_STARTED로 진행하며(SHALL), RECORDED 단계에서 멱등키(`clientOrderId`)와 canonical wire body·serializer version이 함께 불변 영속된다(SHALL — 재생은 저장본만 사용하며 구조화 필드에서 본문을 재구성해서는 안 된다(SHALL NOT)). 멱등키는 결정에 결속된 결정적 값이며 확인 토큰의 canonical 입력에는 포함되지 않는다(SHALL NOT — CLI confirm token 무변경). 재시작 시 RECORDED에서 멈춘 attempt는 NOT_DISPATCHED로 안전 종결하고, DISPATCH_STARTED 이후는 해소 완료 전까지 차단 대상으로 취급하되 차단 범위는 safety class 규칙을 따른다(SHALL).
 
 #### Scenario: 전송 시작 전 크래시
 - **WHEN** RECORDED까지만 기록된 attempt가 재시작 시 발견되면
@@ -147,8 +106,25 @@ IN_DOUBT 해소의 목적은 **정체 회수**다 — 주문이 접수됐는지,
 
 #### Scenario: 전송 중 크래시
 - **WHEN** DISPATCH_STARTED로 기록된 attempt가 재시작 시 발견되면
-- **THEN** 영속된 멱등키로 해소 절차가 시작되고 완료 전까지 같은 클래스의 신규 mutation이 차단된다
+- **THEN** 영속된 멱등키·wire body로 해소 절차가 시작된다
 
-#### Scenario: 조건주문 attempt의 동일 단계
-- **WHEN** 조건주문 등록 attempt가 DISPATCH_STARTED로 기록된 뒤 재시작되면
-- **THEN** 같은 단계 모델의 해소 절차가 조건주문 저장소에서 수행된다
+#### Scenario: 직렬화 규칙 변경 후 재생
+- **WHEN** 바이너리 업데이트로 직렬화 규칙이 바뀐 뒤 이전 attempt의 재생이 필요하면
+- **THEN** 저장된 wire body가 그대로 사용되어 본문 불일치(idempotency-key-conflict)가 발생하지 않는다
+
+### Requirement: 브로커 상태 파생
+주문 종결 상태는 공식 API의 원시 status만이 아니라 `(status, canceledAt, execution.filledQuantity, quantity, lineage)`에 대한 우선순위 파생 함수로 결정해야 한다(SHALL). 파생은 문서화된 OrderStatus 전체를 다룬다(SHALL — openapi): PENDING, PENDING_CANCEL, PENDING_REPLACE, PARTIAL_FILLED, FILLED, CANCELED, REJECTED, CANCEL_REJECTED, REPLACE_REJECTED, REPLACED. 미지의 status 값은 UNKNOWN_BROKER_STATE로 fail-closed 처리한다(SHALL: 해당 심볼 신규 진입 차단 + 알림).
+
+`CANCEL_REJECTED`·`REPLACE_REJECTED`는 "별도 주문 레코드로 생성됨"(openapi — 원주문은 이전 상태로 복귀). 취소·정정의 해소 절차는 이 별도 레코드의 존재를 인지해야 하며(SHALL), 레코드의 구체 형태는 `[미측정 — 2b]`이므로 인지·귀속에 실패한 레코드는 외부 주문으로 분류하지 않고 RECONCILE로 처리한다(SHALL — fail-closed).
+
+#### Scenario: CLOSED + canceledAt 존재
+- **WHEN** status=CANCELED이고 canceledAt이 설정된 주문을 파생하면
+- **THEN** CANCELLED로 판정된다 (filledQuantity>0이면 부분체결 후 취소로 기록)
+
+#### Scenario: 취소 거부 레코드 관측
+- **WHEN** 취소 요청 후 CANCEL_REJECTED 상태의 별도 주문 레코드가 관측되면
+- **THEN** 원주문은 이전 상태로 복귀한 것으로 파생되고, 별도 레코드는 외부 주문으로 분류되지 않는다
+
+#### Scenario: 미지의 status 값
+- **WHEN** 파생 함수가 알 수 없는 status 문자열을 받으면
+- **THEN** UNKNOWN_BROKER_STATE로 fail-closed 처리되고 알림이 발송된다

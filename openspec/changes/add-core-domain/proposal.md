@@ -1,5 +1,7 @@
 # Change: add-core-domain
 
+> **[동결 — 재작성 대기]** 2026-07-26 2라운드 리뷰(25건, `review.md` 후반부)에서 착수 불가 판정. 이 스펙은 선행 계약(extend-execution-contract) 재작성 **이전** 기준으로 쓰여 있어 사실과 다르다: 2-클래스 어휘, 기각된 `min(로컬,계좌)` 상한, 빈 스냅샷 표지 등. 재작성은 2a 구현 완료 후 수행하며, 그때 반영할 확정 사항 — 구조적 RR·등급배수는 입력 생산자 부재로 P3 이관, HALT_ALL 어휘를 모드×클래스 표로, 비용 모델은 KIS 수치 이식 금지(2b 2.9 실측값), 최소 RR provenance 정정(1.5는 StockOS 최저값), journal 버전 단일화, 판정 체인과 예약 트랜잭션의 권위 관계 명시, flatten·발동 주문 방향 소유권은 2c와 협의.
+
 ## Why
 
 P1이 만든 주문 실행 계층(Gateway·journal·체결 감지·reconcile)은 GuardianDecision 없이는 주문을 낼 수 없다 — 그런데 Guardian은 아직 초안 인터페이스뿐이다. 실전 직행(U2) 체제에서 자동매매를 켜는 마지막 조각은 위험 엔진(한도·손절·사이징)과 포지션·보호주문 체계다. StockOS에서 검증된 거래 불변조건(Guardian 판정 순서, No Stop = No Trade, 위험 기반 수량, kill switch BLOCK-ONLY)을 Toss 코드베이스에 이식한다.

@@ -1,122 +1,149 @@
 # Design: extend-execution-contract
 
-> 2026-07-26 재작성. 초판 설계(조건주문 = 새 MutationKind)는 proposal-freeze 리뷰에서 P1과 조립되지 않음이 확인되어 폐기했다. 근거·발견 전문은 `review.md`.
+> 2026-07-26 3판. 1·2판의 발견 전체는 `review.md`. 3판의 경계 원칙: **이 change는 측정 없이 확정 가능한 것만 담는다.** 조건주문·보호주문·발동 주문 귀속·청산 수량 예약은 어떤 형태로도 이 change에 들어오지 않는다(2c `add-protection-orders`, 2b 측정 후 작성). 브로커 동작에 관한 모든 서술은 `docs/migration/openapi.latest.json` 인용을 달거나 `[미측정]`으로 표시한다.
 
 ## Context
 
-P1은 place/cancel/amend에 대해 완결된 안전 계약을 만들었다: journal 선기록 → DISPATCH_STARTED → 분류 → IN_DOUBT 해소, GuardianDecision 재검증, 심볼당 in-flight 1개, raw mutator 봉인. 조건주문은 그 계약 밖에 있고, 무인 자동 보호 경로로 쓰려면 안으로 들여와야 한다.
+P1은 place/cancel/amend에 대해 journal 선기록 → DISPATCH_STARTED → 분류 → IN_DOUBT 해소, GuardianDecision 재검증, 심볼당 in-flight 1개, raw mutator 봉인을 만들었다. 리뷰 3라운드가 확정한 사실:
 
-리뷰가 두 가지를 새로 확정했다. 첫째, **조건주문은 주문이 아니다** — 식별자 네임스페이스·수명주기·응답 형태가 다르고 그 실행은 별개의 주문을 만든다. 둘째, **브로커에 멱등키가 있다** — P1이 "없다"고 전제한 것과 달리 `clientOrderId`가 두 생성 엔드포인트 모두에 문서화되어 있고, 엔진은 그것을 쓰지 않고 있다.
+- **브로커에 멱등키가 있다**: `OrderCreateRequest.clientOrderId` — "멱등성 키로 사용됩니다 … 동일 값으로 재요청 시 이전 주문 결과를 그대로 재반환합니다 … 멱등성 키는 10분간 유효" (openapi). P1 스펙의 "브로커 멱등성 키가 없으므로"는 사실 오류이고, 엔진 경로는 이 필드를 쓰지 않는다(`PlaceIntent`·`orderCreateV0/V1`에 필드 부재).
+- **어떤 조회 응답도 `clientOrderId`를 싣지 않는다**(`Order`·`OrderResponse`만 echo): 멱등키는 조회 매칭자가 될 수 없고 재요청 응답으로만 정체를 회수한다.
+- **`orderId`는 opaque token**: 계약에 형태·패턴이 없다(64자 난수 example). 형태 검증 금지.
+- **OrderStatus는 10개가 문서화**되어 있고, P1 스펙의 "OPEN/CLOSED 수준" 전제보다 풍부하다. 특히 `CANCEL_REJECTED`/`REPLACE_REJECTED`는 "별도 주문 레코드로 생성됨"(openapi) — 로컬 intent 없는 레코드가 정상 경로에서 생긴다.
+- **체결은 누적 모델**: `OrderExecution{filledQuantity, averageFilledPrice(부분 체결 시 평균), filledAmount, filledAt, commission}` — 개별 체결 ID 없음. P1 journal이 이미 watermark 규칙(delta>0 전진 / 동일 no-op / delta<0 fail-closed)을 구현하고 있다(fills.go).
+
+설계 원칙(StockOS 실행 무결성 분석에서 채택, 토스 계약에 맞춰 재구현): **불확실성은 상태로 격리하고, 불일치는 계산하지 않고 RECONCILE로 멈추고, 결정은 영속 후 실행하며, 브로커가 보증하지 않는 것은 코드 타입으로 표시한다.**
 
 ## Goals / Non-Goals
 
-**Goals**: 조건주문의 형제 수명주기와 발동 주문 다리, 멱등 재생 기반 정체 회수, 3-클래스 safety 분류와 클래스별 직렬화, 청산 수량 예약, 결정의 위험 입력 결합, 한도·게이트 fail-closed.
+**Goals**: 결정 계약 강화(safety class·RiskIntent preimage·generation), 멱등키 기계(발급·영속·TTL 마진·재생 골격), 진입 측 위험 예약, RECONCILE 상태 의미, 한도 fail-closed + 총계 계산 계약, 브로커 식별자·상태 취급 정정, 엔진 Gateway 배선·봉인, journal NonceStore. 전부 httptest + 합성 결정으로 테스트 가능하다.
 
-**Non-Goals**: Guardian 판정 체인·한도 **수치**(add-core-domain), 포지션 aggregate·보호 saga(add-core-domain), 실계좌 능력 검증(verify-execution-capability), MCP 표면의 Gateway 우회(P4까지 문서화된 잔존 리스크).
+**Non-Goals**: 조건주문 일체(2c), 발동 주문 귀속·격리 원장(2c), 청산 수량 예약·PROTECTION_WEAKENING(2c), 멱등 재생의 실사용 활성화(2b attestation 후), Guardian 판정 체인·한도 수치(2d), 전략(P3).
 
 ## Decisions
 
-### D1. 조건주문은 형제 수명주기다 — 같은 테이블에 얹지 않는다
+### D1. 결정은 영속 후 실행 — preimage와 generation을 싣는다
 
-조건주문 mutation은 자체 journal 테이블(`conditional_attempts`)과 자체 식별자 컬럼(`conditional_order_id`)을 갖는다. `conditionalOrderId`를 `broker_order_id`에 넣지 않는다.
+GuardianDecision은 제출 전에 journal에 영속된다: RiskIntent preimage(원문 JSON), 그 canonical hash, safety class, 한도 스냅샷, nonce, 만료, generation. Gateway는 제출 직전 **journal에서 읽은** preimage로 해시를 재계산해 주문 파라미터와 대조한다 — 호출자 공급 값으로 재검증하면 순환한다(2라운드 C7).
 
-넣으면 안 되는 이유가 코드로 확인됐다: `TrackedFillOrders`가 CONFIRMED attempt의 `broker_order_id`를 체결 감지 추적 집합에 UNION하고(fills.go:502) 감지기는 추적 id 조회 실패를 사이클 전체 실패로 처리한다(detect.go:386-389). `conditionalOrderId`는 `GET /orders/{id}`에 유효하지 않으므로 **첫 보호주문 하나가 전 종목 체결 감지를 죽인다.** 같은 값이 `LocalState.OpenOrders`를 거쳐 `MissingOrders`가 되고 영구 진입 차단을 만든다(compare.go:85-108, 299-306, 181).
+영속이 닫는 것은 결정→제출 사이 TOCTOU다. "위험 입력이 제출자가 통제하지 않는 권위에서 온다"는 것은 발급자(2d Guardian)의 계약이며, 이 change는 그 자리를 인터페이스로 남긴다.
 
-수명주기 **단계**는 P1과 같다(RECORDED → DISPATCH_STARTED → ACKED/IN_DOUBT → 종결) — 그 단계는 "요청은 보냈는데 응답을 못 받았다"를 다루는 것이고 그 문제는 주문 유형과 무관하다. 공유하는 것은 단계와 원칙이지 테이블이 아니다.
+`generation`은 같은 intent의 교체·재발급 순서를 매긴다(StockOS OcoAggregate.generation 채택). 결정·attempt·예약이 같은 generation을 참조한다.
 
-조건주문 intent는 자체 컬럼을 갖는다: 유형(SINGLE/OCO/OTO), 만료일, leg별 (방향·트리거가·주문가·유형). `intents` 행은 단일 side·수량·가격만 가지며 `prepareRequest`가 BUY/SELL 아닌 side를 거부하므로(gateway.go:565-569) OTO를 표현할 수 없고, fingerprint는 불변 intent 행에서 필드를 되읽어 매칭하므로(fingerprint.go:35-38) 컬럼 없이는 해소 시점 재계산이 불가능하다.
+### D2. 멱등키 = 결정에 결속된 결정적 `clientOrderId`
 
-### D2. 발동 주문 다리 — 발동된 것은 일반 주문이고 일반 기계에 속한다
+`clientOrderId = deterministic(intent_id, generation)` (≤36자, `[a-zA-Z0-9\-_]`, openapi 패턴). **RECORDED 단계에서** attempt 행에 영속되고, canonical wire body(직렬화 결과 그대로) + serializer version도 함께 불변 저장된다 — 재생은 저장된 body만 사용한다(2라운드 N8: 구조화 필드에서 재구성하면 바이너리 버전에 따라 본문이 달라질 수 있다).
 
-조건주문 등록이 확정되면 leg별 예상 주문 레코드를 남긴다(조건주문 ID·leg 식별·심볼·방향·최대 수량·상태). 조건주문 상태 폴러가 `GET /api/v1/conditional-orders`를 주기적으로 읽어 leg의 `first.status`/`second.status`/`triggeredOrderId`를 관측한다. `triggeredOrderId`가 나타나면 **그 주문 id**를 일반 주문 추적 집합·체결 경로·reconcile에 편입하고 조건주문으로의 lineage를 기록한다.
+**canonical 딜레마의 해소(2라운드 R4)**: 멱등키를 `CanonicalPlace`(확인 토큰의 입력)에 넣지 않는다 — 넣으면 모든 CLI confirm token이 바뀐다(§0.2). 대신 **결정이 키를 명시 필드로 싣고**, Gateway가 `attempt.client_order_id == decision.client_order_id`를 재검증한다. 키는 canonical 밖에서 인가된다.
 
-`TriggeredOrderID`는 leg별로 실재하며(conditional_reads.go:20, models.go:771-793) openapi가 "일반 주문 API에 그대로 사용할 수 있습니다"라고 명시한다. 따라서 휴리스틱 매칭은 필요 없다 — 초판 설계의 Open Question은 저장소가 이미 답하고 있었다.
+일반 주문 경로 배선: `orderintent.PlaceIntent`·`official.orderCreateV0/V1`에 필드 추가(upstream 수정 — Pre-Edit 대상), CLI 경로는 무변경(키 미전달 = 멱등성 미적용, openapi가 허용).
 
-**예상 주문은 일회성이고 유계다**: leg가 발동하면 그 레코드는 발동 주문 id로 소비되어 더 이상 매칭에 쓰이지 않는다. OCO 패배 leg의 브로커측 자동 취소와 `expireDate` 만료는 폴러가 관측해 레코드를 종결시킨다. 종결은 **체결 귀속이 끝난 뒤** 수행하고 tombstone을 보존 기간 동안 남긴다. 이렇게 하지 않으면 낡은 예상 주문이 운영자의 진짜 수동 매도를 엔진 포지션으로 흡수한다 — D2의 위험한 방향은 매칭 실패가 아니라 거짓 매칭이다.
+### D3. 멱등 재생은 TTL 마진 안에서만, attestation 뒤에서만
 
-폴러는 `ORDER_INFO` rate limit 그룹을 체결 감지 루프와 공유하므로 예산을 명시하고(§0.4), 폴러 실패가 보호 경로를 막지 않는다.
+IN_DOUBT 해소의 1차 절차는 동일 키·저장된 wire body의 재요청이고 응답의 `orderId`가 권위다. 단:
 
-### D3. 멱등 재생을 정체 회수의 1차 절차로 쓴다
+- **시간 규칙**: `elapsed(dispatch_started_at) < TTL − margin`일 때만. TTL은 문서상 10분 `[미측정 — 2b]`, margin 기본 60초(왕복 p99 + 시계 오차, 2b에서 실측 조정). 경과 근거가 전송 시작의 로컬 시계이므로 마진 없는 경계 사용은 창 밖 재생 = 새 주문이 된다(2라운드 N4).
+- **활성화 규칙**: 재생 실동작(원본 결과 재반환·유효 창·계좌 스코프)이 2b attestation으로 확인되기 전에는 이 경로를 타지 않는다. 코드·테스트는 지금 만들고 활성화 플래그는 attestation이 켠다.
+- **폴백**: 창 초과·미검증·`idempotency-key-conflict`·키를 받지 않는 mutation(취소·정정)은 P1 조회 절차(fingerprint·pagination·안정화). 두 절차는 서로를 대체하지 못한다 — 조회 응답에 키가 없기 때문.
+- **재생 자체의 응답 유실**: 같은 attempt에 재생 시도 횟수·시각을 append 기록하고, 상한(기본 2회) 초과 시 조회 절차로 전환. 재생은 새 attempt를 만들지 않는다 — 같은 attempt의 해소 단계다(2라운드 N7: "재생 진행 중"은 attempt 상태가 아니라 해소 절차의 내부 단계이며, journal에는 replay_attempts 카운터·시각만 기록).
+- **재생 writer의 봉인**: Resolver는 P1 불변식대로 mutator를 갖지 않는다. 재생은 Gateway의 해소 전용 진입점(저장된 body 전송만 가능, 새 본문 구성 불가)으로 수행하고, 그 진입점이 두 번째 제출 문이 되지 않음을 정적 테스트로 증명한다.
 
-Gateway는 attempt별 결정적 `clientOrderId`(attempt 식별자에서 파생, ≤36자, `[a-zA-Z0-9\-_]`)를 발행해 **DISPATCH_STARTED 이전에 영속**한다. 응답이 유실되면 해소의 첫 단계는 **동일 본문·동일 키 재요청**이고, 응답의 `orderId`/`conditionalOrderId`가 권위다.
+### D4. Safety class는 이 change에서 둘, enum은 셋
 
-이것은 재시도가 아니다. 같은 키의 재요청은 새 주문을 만들 수 없다("동일 값으로 재요청 시 이전 주문 결과를 그대로 재반환"). P1이 금지한 것은 **정체를 모르는 채 다시 주문을 내는 것**이고, 멱등 재생은 정확히 그 반대다.
+결정은 `safety_class`를 명시 필드로 싣는다: **EXPOSURE_RAISING**(진입 제출) / **RISK_REDUCING**(reduce-only 청산, 미체결 진입의 취소). enum 값 **PROTECTION_WEAKENING**은 예약만 한다 — 발급자·소비자는 2c(보호주문이 존재해야 의미가 있다).
 
-제약이 하나 있고 그것이 설계를 결정한다: **어떤 조회 응답도 `clientOrderId`를 싣지 않는다**(`Order`, `ConditionalOrderDetailResponse` 모두). 따라서 멱등키는 조회 매칭자가 될 수 없고 오직 재요청 응답으로만 정체를 회수한다.
+한도 면제는 `KindCancel` 리터럴이 아니라 class 기준으로 재작성한다(guardian.go:181-183). 빈 한도 스냅샷은 "의도적 면제"의 표지가 아니다 — class가 양성 표지다: EXPOSURE_RAISING은 필수 한도 전부 설정된 스냅샷 없이는 거부되고, RISK_REDUCING은 스냅샷을 싣지 않는다.
 
-폴백 조건(P1의 fingerprint·pagination·안정화 절차를 그대로 사용): 유효 창(문서 기준 10분) 경과, 능력 검증 미완료, `idempotency-key-conflict`. cancel/modify는 멱등키를 받지 않으므로 항상 조회 절차를 쓴다.
+직렬화는 P1 규칙 유지: 심볼당 in-flight 1개. 이 change에는 조건주문이 없으므로 클래스별 latch 분리가 필요 없다 — RISK_REDUCING(청산·취소)이 EXPOSURE_RAISING의 IN_DOUBT에 막히지 않아야 한다는 §0.3 요구만 반영한다: **미해소 EXPOSURE_RAISING은 같은 심볼의 RISK_REDUCING을 차단하지 않되, RISK_REDUCING의 수량은 RECONCILE 규칙(D6)을 따른다.**
 
-**문서는 실측이 아니다.** 재생 응답이 원본 결과를 돌려주는지, 창이 실제로 10분인지, 키가 계좌 스코프인지는 `verify-execution-capability`의 필수 항목이며, 검증 전에는 재생을 사용하지 않고 P1 절차만 쓴다.
+### D5. 진입 측 위험 예약 — 네트워크는 트랜잭션 밖
 
-### D4. Safety class는 셋이다
+총 개방 노출·일일 손실·현금의 판정과 예약은 하나의 journal 트랜잭션에서 원자적으로 수행한다. 브로커 스냅샷은 트랜잭션 **밖에서** 수집하고(journal은 `SetMaxOpenConns(1)` — 안에 네트워크를 넣으면 모든 mutation 기록이 막힌다), 안에서 스냅샷 as-of·staleness를 검증한 뒤 삽입하며, 불충족이면 롤백·재수집한다. **재수집은 상한(기본 3회)·총 데드라인을 갖고 초과 시 fail-closed 거부**(2라운드 N15).
 
-- **EXPOSURE_RAISING**: 진입 제출, 노출 증가
-- **RISK_REDUCING**: 보호주문 생성·증량, reduce-only 청산, **미체결 진입의 취소**
-- **PROTECTION_WEAKENING**: 활성 보호주문의 취소·수량 축소, 청산 주문의 취소
+예약 해제 트리거(닫힌 목록이 아니라 **브로커 종결 상태 도달**이 정본):
+- attempt가 브로커 종결 상태(FILLED / CANCELED / REJECTED / NOT_DISPATCHED / FAILED_CONFIRMED)에 도달 — **미체결 만료 포함**(2라운드 N3: 당일 주문의 장 마감 만료가 어느 트리거에도 없어 일상 누수)
+- nonce **미소비** 상태의 결정 만료 (소비 후 만료는 주문이 접수됐을 수 있으므로 해제하지 않는다)
+- UNRESOLVED_IN_DOUBT의 예약은 운영자 해소로만
+- 일일 손실 예약은 거래일 경계(시장별, P1 시간 규율)에서 소멸
 
-초판의 "모든 취소는 RISK_REDUCING"은 틀렸다. 활성 손절의 취소는 보호를 제거하므로 위험 **증가**이며, 그 분류대로면 시스템에서 가장 덜 통제된 mutation이 된다(latch·한도·HALT_ALL 전부 면제). 판별자는 kind×방향이 아니라 **취소 대상이 이 포지션의 보호인가**이고, 그 레지스트리가 D2의 예상 주문 기록이다.
+예약 산술은 decimal 문자열 연산(P1 journal 관례)이며 float 누적을 쓰지 않는다.
 
-PROTECTION_WEAKENING은 가장 엄격하다: HALT_ALL에서 금지, 원자적 교체의 일부이며 무보호 창이 유계로 측정될 때만 허용, audit 필수.
+### D6. RECONCILE은 행동 제한 상태다
 
-직렬화:
-- EXPOSURE_RAISING: 심볼당 1건 (P1 규칙 유지)
-- RISK_REDUCING: EXPOSURE_RAISING에 막히지 않는다(§0.3). **자기들끼리는 심볼당 1건** — 초판이 "대상 식별자 단위"라 했지만 보호주문 생성과 reduce-only 청산에는 제출 시점에 그런 식별자가 없다. 두 개의 독립된 심볼 latch(클래스당 하나)가 정답이다
-- PROTECTION_WEAKENING: 대상 조건주문 ID 단위(이 클래스는 항상 대상이 있다)
+권위 값 불일치는 산식으로 보정하지 않고 RECONCILE 상태로 전이한다(StockOS `evaluate_synthetic_oco`의 원칙 채택). 이 change에서의 진입 조건: 브로커 보유·매도가능 조회 불가 또는 stale 초과, 로컬 파생과 브로커 스냅샷의 수량 불일치, 같은 식별자가 상충하는 계좌·심볼에 출현.
 
-멱등 재생(D3)이 활성이면 유일 매칭이 키에서 오므로 latch는 유일성 근거가 아니라 동시성 제어로 남는다. 재생이 미검증이면 latch가 P1과 같은 유일성 근거로 작동한다 — 그래서 클래스당 1건이 필요하다.
+RECONCILE 중 허용/금지:
+- 금지: 신규 진입, 수량 확대, (2c 예약) 보호 임의 취소
+- 허용: 읽기·계좌 동기화·운영자 확인, **확정 하한 수량의 위험 축소**(과소 보호·과소 청산은 안전한 방향 — 수량을 정확히 몰라도 확정 하한으로는 행동 가능, §0.3)
+- 해제: 재조회 일치 + 원인 기록
 
-### D5. 청산 수량 예약 — 상한이 아니라 예약이다
+### D7. 브로커 식별자는 opaque, 상태는 문서화된 10개
 
-`min(확정 보유, 매도가능)`은 **단건** 상한이라 총 매도 의무를 막지 못한다. 보유 100주에 stop 100주 등록과 청산 100주 제출이 각각 상한을 통과해 살아있는 매도 200주가 된다. WATCHING 조건주문은 `triggeredOrderId`가 null이라 브로커 주문이 존재하지 않고 따라서 브로커가 예약하는 것도 없다.
+식별자 취급(KIS 형태 검증의 교훈을 원칙으로만 채택): null·빈 문자열 거부, 응답 원문 그대로 저장(trim·변환 금지), 계좌 스코프와 함께 저장, 생성 응답의 id를 상세조회 round-trip으로 확인, 예상 밖 형식도 파싱하지 않음, 같은 id가 상충 컨텍스트에 나타나면 RECONCILE. **정규식·prefix 검증 금지** — `orderId`는 opaque token이다(openapi).
 
-진입 측 노출 예약과 대칭으로 **청산 수량 예약**을 둔다:
+브로커 상태 파생을 문서화된 enum 전체로 확장한다: PENDING / PENDING_CANCEL / PENDING_REPLACE / PARTIAL_FILLED / FILLED / CANCELED / REJECTED / CANCEL_REJECTED / REPLACE_REJECTED / REPLACED (openapi OrderStatus). 미지 값은 P1대로 UNKNOWN_BROKER_STATE fail-closed. `CANCEL_REJECTED`/`REPLACE_REJECTED`는 "별도 주문 레코드로 생성됨"(openapi) — 취소·정정 해소 절차가 이 레코드를 인지해야 하며, 그 레코드의 구체 형태(원주문 링크 여부)는 `[미측정 — 2b]`이므로 인지 실패는 외부 분류가 아니라 RECONCILE로 처리한다.
 
-```
-가용 매도 수량 = 보유 − 미체결 SELL − WATCHING 조건주문의 예약 수량 − 유효한 동시 예약
-```
+체결 정정 이벤트: 누적 수량 동일 + `averageFilledPrice`/`filledAmount` 변경은 수량 재반영 없이 EXECUTION_CORRECTION 이벤트로 기록한다(P1 watermark의 "identical snapshots are a no-op"을 세분화 — 평균가는 부분 체결마다 바뀌는 값이므로(openapi) dedup 키에 넣지 않는다).
 
-원자적 총량이며 단건 min이 아니다. 브로커 응답에 reduce-only 필드가 없으므로(orders_write.go) 이 계산이 유일한 방어다.
+### D8. 엔진 Gateway 배선과 봉인
 
-**stale 시 권위는 브로커 스냅샷이다.** 초판은 계좌 조회가 stale이면 로컬 확정 보유수량을 쓰라고 했는데 방향이 반대다 — `NetPositions`는 외부 주문을 제외하므로 로컬이 실제보다 클 수 있고, reconciliation 메인 계약은 브로커를 최종 권위로 규정한다. 규칙: 가장 최근 브로커 스냅샷을 쓰고 staleness 한계와 critical 알림을 붙인다. 브로커 스냅샷이 아예 없으면 로컬 매도를 하지 않는다 — 그 구간의 보호는 이미 브로커측 조건주문이 담당한다(§0.3 만족).
+엔진 프로필이 ExecutionGateway를 구성한다(현재 `execgw.New`는 flatten CLI에만 존재, 엔진 Context에 Gateway 필드 없음). `Context.TradingService`(exported, 확인 토큰만으로 mutation 가능)를 봉인한다 — 엔진 컨텍스트는 mutation 메서드를 가진 값을 노출하지 않으며 정적 테스트로 증명. `runInterlock`과의 구성 순서, EntryGate·Resolver·NonceStore·예약 저장소 연결을 명시한다.
 
-### D6. 예약 트랜잭션에 네트워크를 넣지 않는다
+인터록 강화: (1) 필수 한도 항목별 configured·양수·유한·통화 일치 — 하나라도 누락이면 거부, (2) 거래 정책이 매도·실주문 실행을 허용하지 않으면 거부(naked long 방지; 조건주문 정책 검증은 2c), (3) Guardian 한도를 감사된 설정 한도 단일 출처에서 구성 — 동등성 검증은 EXPOSURE_RAISING 결정에만, (4) Gateway 미구성 시 거부. flatten의 결정 발급(`decisionFor`)은 RISK_REDUCING class를 싣도록 갱신한다 — class 도입이 비상 청산을 깨지 않아야 한다(2라운드 2d-C2의 절반; 조건주문 취소는 2c).
 
-`journal.Open`은 `SetMaxOpenConns(1)`이다(journal.go:108-110). 브로커 조회를 `BEGIN IMMEDIATE` 안에 넣으면 HTTP 왕복 동안 단일 writer를 점유해 `Prepare`·`MarkDispatchStarted`·`Settle`이 전부 막힌다 — 이 change가 지키려는 보호 경로까지.
+### D9. journal v5 — 단일 원자 마이그레이션, 스키마는 여기에
 
-절차: 브로커 스냅샷을 트랜잭션 **밖에서** 수집 → 트랜잭션 안에서 as-of/버전과 staleness 한계를 검증하고 예약을 삽입 → 조건 불충족이면 롤백하고 재수집. 트랜잭션 스코프 내부 API(기존 journal 메서드 재진입 금지)와 락 순서를 명시한다. 동시성 테스트는 `SetMaxOpenConns(1)`이 이미 모든 문장을 직렬화하므로 `-race`만으로는 아무것도 증명하지 못한다 — 스냅샷 as-of 조건이 실제로 재검증을 유발하는지를 직접 검증해야 한다.
+태스크는 이 표의 전사다. 전 컬럼 decimal은 TEXT.
 
-### D7. 결정은 safety class와 RiskIntent preimage를 싣는다
+**`decisions`** — 결정 영속(D1)
+| 컬럼 | 타입/제약 |
+|---|---|
+| id | TEXT PK |
+| intent_id | TEXT NOT NULL REFERENCES intents(id) |
+| generation | INTEGER NOT NULL DEFAULT 0 |
+| safety_class | TEXT NOT NULL CHECK(EXPOSURE_RAISING\|RISK_REDUCING\|PROTECTION_WEAKENING) |
+| risk_preimage | TEXT NOT NULL (canonical JSON 원문) |
+| risk_hash | TEXT NOT NULL |
+| client_order_id | TEXT (place만, ≤36자) |
+| limits_json | TEXT (EXPOSURE_RAISING 필수, RISK_REDUCING NULL) |
+| nonce | TEXT NOT NULL UNIQUE |
+| issued_at / expires_at | TEXT NOT NULL |
+| UNIQUE(intent_id, generation) | |
 
-`Limits`의 configured 비트만으로는 "의도적 면제"(위험 감소)와 "부주의한 미설정"(진입)이 구별되지 않는다 — 둘 다 모든 비트가 false다. 결정에 **safety class**를 실어 양성 표지로 삼는다. 단일 출처 동등성 검증(주입된 결정 한도 == 감사된 설정 한도)은 EXPOSURE_RAISING 결정에만 적용한다. 초판의 태스크 4.4와 6.3은 이 구분 없이는 서로 모순이었다.
+**`risk_reservations`** — 진입 측 예약(D5)
+| 컬럼 | 타입/제약 |
+|---|---|
+| id | INTEGER PK AUTOINCREMENT |
+| decision_id | TEXT NOT NULL REFERENCES decisions(id) |
+| account_ref | TEXT NOT NULL |
+| kind | TEXT NOT NULL CHECK(OPEN_EXPOSURE\|DAILY_LOSS\|CASH) |
+| amount / currency | TEXT NOT NULL |
+| trading_day | TEXT (DAILY_LOSS만, 시장별 거래일) |
+| snapshot_as_of | TEXT NOT NULL (검증에 쓴 브로커 스냅샷 시각) |
+| state | TEXT NOT NULL CHECK(HELD\|RELEASED) DEFAULT HELD |
+| released_at / release_reason | TEXT (해제 시 필수, reason enum: BROKER_TERMINAL\|EXPIRED_UNCONSUMED\|OPERATOR\|DAY_BOUNDARY) |
 
-`KindCancel` 리터럴에 묶인 한도 면제(guardian.go:181-183)를 **safety class 기준으로 재작성**한다. 그러지 않으면 새 조건주문 취소 kind가 한도 검사에 걸려 이 change가 §0.3 위반을 새로 만든다.
+**`spent_nonces`** — durable NonceStore
+| nonce TEXT PK · decision_id TEXT · consumed_at TEXT NOT NULL | 보존 기간 정책 포함 |
 
-RiskIntent(계좌·시장·심볼·방향·진입가·손절가·목표가·수량·정책 버전)는 canonical 해시로 결정에 결합되고, **preimage를 결정과 함께 journal에 영속**한다. Gateway는 제출 시 호출자가 준 위험 데이터가 아니라 **journal에서 읽은 preimage**로 재검증한다 — 제출자가 공급한 값으로 재계산하면 검증이 순환한다.
+**`mutation_attempts` 확장(additive 컬럼)** — client_order_id TEXT, wire_body TEXT, serializer_version TEXT, replay_count INTEGER DEFAULT 0, last_replay_at TEXT. UNIQUE 인덱스(account_ref, client_order_id) WHERE client_order_id IS NOT NULL.
 
-### D8. 총계 한도의 계산 계약은 여기에 속한다
+**`execution_corrections`** — order_id·prev/new averageFilledPrice·filledAmount·observed_at (D7).
 
-정의되지 않은 양에 예약을 걸 수는 없다. 총 개방 노출·일일 손실·현금의 **계산 계약**(권위 데이터, 미체결·조건주문의 평가 가격, 통화 정규화와 FX 권위·staleness, 실현/미실현 범위, 시장별 거래일 경계, 예약 합산, stale 시 fail-closed)을 이 change에서 정의한다. **수치**는 add-core-domain이 정한다.
-
-일일 손실 예약은 거래일 경계에서 소멸해야 한다. 그러지 않으면 주차된 attempt 하나가 다음 날 거래를 조용히 정지시킨다.
-
-### D9. journal v5는 하나의 원자적 마이그레이션
-
-`conditional_intents`, `conditional_attempts`, `expected_orders`, `risk_reservations`(진입·청산 양방향), `spent_nonces`를 **한 번의** v5 마이그레이션으로 추가한다. 세 태스크로 쪼개면 같은 스키마 버전이 서로 다른 구조를 뜻하게 되어 immutable version 계약과 충돌한다.
-
-**롤백은 구버전 바이너리 실행이 아니다** — `ErrSchemaTooNew`로 기동이 거부된다. 복구 경로는 마이그레이션 직전 자동 백업으로의 복원이며 절차와 테스트를 만든다.
+마이그레이션 직전 자동 백업 + 복원 절차·테스트. 구버전 바이너리는 ErrSchemaTooNew — 롤백 수단이 아니며 복구는 백업 복원.
 
 ## Risks / Trade-offs
 
-- [멱등 재생이 문서와 다르게 동작] → 능력 검증 항목, 미검증 시 P1 절차만 사용. 재생 없이도 설계가 성립하도록 클래스당 심볼 latch 유지
-- [조건주문 상태 폴러가 rate budget을 소비] → 예산 명시, 폴러 실패가 보호 경로를 막지 않음, 체결 감지 SLO와의 우선순위 정의
-- [D2가 reconcile의 외부 주문 판정을 바꾼다] → 바뀌어야 할 단언과 불변인 단언을 태스크에 열거(무조건 green 요구 금지)
-- [`TradingService` unexport가 기존 소비자를 깬다] → 엔진 프로필 한정, CLI 표면 무영향을 characterization 테스트로 고정
+- [멱등 재생이 문서와 다르게 동작] → 2b attestation 전 비활성, 폴백은 P1 절차 그대로. 재생 없이도 전체가 성립
+- [upstream 4파일 수정(orderintent·orders_write·trading·engine)] → Pre-Edit 전문 선언, CLI 무영향 characterization 테스트
+- [CANCEL_REJECTED 별도 레코드의 형태 미측정] → 인지 실패는 RECONCILE(fail-closed), 2b 측정 항목
+- [예약 재수집 루프와 폴링 경합] → 상한·데드라인·fail-closed, §0.4 rate budget 내
 
 ## Migration Plan
 
-journal v5 단일 원자 마이그레이션. 직전 자동 백업 → 실패 시 복원. 스키마 계약 테스트로 v4→v5 전이와 구버전 거부를 고정.
+journal v5 단일 원자 마이그레이션(D9 표). 직전 백업 → 실패 시 복원. 스키마 계약 테스트.
 
 ## Open Questions
 
-- 멱등 재생의 실제 응답(원본 결과 vs 오류), 유효 창, 계좌 스코프 — verify-execution-capability 필수 항목
-- 조건주문 modify는 같은 `conditionalOrderId`를 반환하므로 amend lineage가 이전되지 않는다. 정정 IN_DOUBT 해소는 leg의 트리거가·수량 재조회로 판정하는 별도 절차가 된다 — 구현 시 절차 확정
+- margin 기본 60초의 타당성 — 2b 왕복 p99 실측으로 조정
+- `CANCEL_REJECTED` 별도 레코드가 목록 조회에 어떻게 나타나는가 — 2b
