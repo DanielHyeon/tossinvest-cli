@@ -408,6 +408,14 @@ func (j *Journal) Prepare(ctx context.Context, req PrepareRequest) (*Attempt, er
 		return nil, err
 	}
 
+	// The binding is checked against the decision row inside this transaction.
+	// The foreign key already refuses an attempt that names no decision at all;
+	// this refuses one that names a decision saying something else, which is the
+	// half a foreign key cannot see.
+	if err := checkDecisionBinding(ctx, tx, req); err != nil {
+		return nil, err
+	}
+
 	var attemptNo int
 	if err := tx.QueryRowContext(ctx,
 		"SELECT coalesce(max(attempt_no), 0) + 1 FROM mutation_attempts WHERE intent_id = ?",

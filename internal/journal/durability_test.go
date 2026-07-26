@@ -243,24 +243,36 @@ func TestPrepareValidation(t *testing.T) {
 
 // --- the decision binding (task 1.3) ----------------------------------------
 
-// insertTestDecision writes the decisions row an attempt can point at. Task 1.3
-// records the binding; the API issuers use to create these rows is task 1.4, so
-// the row is written directly here.
+// insertTestDecision writes the decisions row an attempt can point at, through
+// the issuer API so the fixture is a decision the gateway would also accept.
 func insertTestDecision(t *testing.T, j *Journal, id, accountRef, class string, generation int) {
 	t.Helper()
-	key := ""
-	if class != SafetyClassRiskReducing {
-		key = DeriveClientOrderID(id, generation)
-	}
-	_, err := j.db.ExecContext(context.Background(),
-		`INSERT INTO decisions (id, account_ref, generation, safety_class, preimage_kind,
-		   risk_preimage, risk_hash, client_order_id, nonce, issued_at, expires_at)
-		 VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-		id, accountRef, generation, class, PreimageKindReductionIntent,
-		`{"kind":"REDUCTION_INTENT"}`, "hash-"+id, nullableString(key), "nonce-"+id,
-		testNow, testNow)
+	issued, err := time.Parse(time.RFC3339, testNow)
 	if err != nil {
-		t.Fatalf("inserting decision %s: %v", id, err)
+		t.Fatal(err)
+	}
+	req := DecisionRequest{
+		ID: id, AccountRef: accountRef, Generation: generation, SafetyClass: class,
+		Kind: KindPlace, Nonce: "nonce-" + id,
+		IssuedAt: issued, ExpiresAt: issued.Add(time.Minute),
+	}
+	if class == SafetyClassExposureRaising {
+		req.Preimage = RiskIntent{
+			AccountRef: accountRef, Market: "us", Symbol: "AAPL", Side: "BUY",
+			Quantity: "10", EntryPrice: "200.5", StopPrice: "190", PolicyVersion: "test/v1",
+		}
+		req.LimitsJSON = `{"max_quantity":"100"}`
+	} else {
+		req.Preimage = ReductionIntent{
+			AccountRef: accountRef, Market: "us", Symbol: "AAPL", Side: "SELL",
+			MaxQuantity: "10", Reason: "test",
+		}
+		// A cancel or a sell decision carries no key; the tests that need one ask
+		// for a place decision.
+		req.Kind = KindCancel
+	}
+	if _, err := j.RecordDecision(context.Background(), req); err != nil {
+		t.Fatalf("RecordDecision(%s): %v", id, err)
 	}
 }
 
