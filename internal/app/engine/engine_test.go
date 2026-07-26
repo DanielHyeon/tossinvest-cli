@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
@@ -514,4 +516,117 @@ func seedSpentNonce(t *testing.T, dir, id string, at time.Time) string {
 		t.Fatalf("seed %s: MarkDispatchStarted: %v", id, err)
 	}
 	return dec.Nonce
+}
+
+// --- task 7.3: the gateway is constructed by the engine profile -------------
+
+// TestStartupConstructsTheGateway is the requirement itself. `execgw.New` used to
+// be called from exactly one place — the flatten CLI — which meant the engine
+// profile had a journal-less, gateway-less order path and nothing said so.
+func TestStartupConstructsTheGateway(t *testing.T) {
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
+
+	eng, err := startEngine(t, dir, srv)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if eng.Gateway == nil {
+		t.Fatal("the engine profile must construct an ExecutionGateway")
+	}
+	if eng.Entry == nil {
+		t.Error("the gateway's entry gate must be reachable: an operator has to be able to see and clear a latch")
+	}
+	if eng.Resolver == nil {
+		t.Error("an IN_DOUBT attempt with no resolver is an attempt nothing will ever settle")
+	}
+	if eng.Reconcile == nil {
+		t.Error("the reconcile tracker is the projection's owner; without it a restart forgets every block")
+	}
+
+	wiring := eng.Gateway.Wiring()
+	if !wiring.Orders {
+		// issues.md 2026-07-26: the round-trip check is inert without this, and a
+		// place is then confirmed on the broker's ack alone.
+		t.Error("Options.Orders must be wired, or the identifier round trip never runs")
+	}
+	if !wiring.Entry {
+		t.Error("Options.Entry must be wired")
+	}
+	if !wiring.Preflight {
+		t.Error("Options.Preflight must be wired: a nil preflight is not a skipped check, it is no check")
+	}
+	if !wiring.Replay {
+		t.Error("Options.Replay must be wired to the official token manager")
+	}
+	if wiring.Attested {
+		t.Error("the replay capability is not attested in this build; the predicate must stay nil " +
+			"so the entry point resends nothing [미측정 — 2b 전 비활성]")
+	}
+}
+
+// TestStartupRebuildsTheReconcileProjection is the restart half of task 4.1: the
+// journal is authoritative and the in-memory latches are a projection of it.
+//
+// Without the Restore call at startup, a restart silently clears every block a
+// disagreement raised — which is the one failure mode persisting the states was
+// meant to remove.
+func TestStartupRebuildsTheReconcileProjection(t *testing.T) {
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
+
+	seedAccountWideReconcile(t, dir, "123-45", "local derivation and the broker disagree")
+
+	eng, err := startEngine(t, dir, srv)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	rejected := eng.Entry.CheckEntry()
+	if rejected == nil {
+		t.Fatal("a restart must not clear an active account-wide RECONCILE state")
+	}
+	// The gate's latch reason comes from the row's cause (ReconcileReasonFor), so
+	// a QUANTITY_MISMATCH row restores as a mismatch block; the tracker is the
+	// side that knows an account-wide row is its permanent promotion.
+	if rejected.Reason != execgw.ReasonReconcileMismatch {
+		t.Errorf("entry refused for %q, want the reconcile block restored from the journal", rejected.Reason)
+	}
+	if !strings.Contains(rejected.Detail, "disagree") {
+		t.Errorf("the restored block lost its evidence: %q", rejected.Detail)
+	}
+	blocks := eng.Reconcile.Blocks()
+	if len(blocks) != 1 {
+		t.Fatalf("tracker restored %d block(s), want 1", len(blocks))
+	}
+	if !blocks[0].Permanent {
+		t.Error("an account-wide row is the permanent promotion; a clean pass must not release it")
+	}
+}
+
+// seedAccountWideReconcile writes an active account-wide RECONCILE row into the
+// journal the engine will later open.
+func seedAccountWideReconcile(t *testing.T, dir, accountRef, evidence string) {
+	t.Helper()
+	ctx := context.Background()
+	j, err := journal.Open(ctx, journal.Options{
+		Path:     filepath.Join(dir, journal.DBFileName),
+		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+	})
+	if err != nil {
+		t.Fatalf("seed reconcile: open journal: %v", err)
+	}
+	defer func() { _ = j.Close() }()
+
+	if _, _, err := j.EnterReconcile(ctx, journal.EnterReconcileRequest{
+		AccountRef: accountRef,
+		Cause:      journal.ReconcileCauseQuantityMismatch,
+		Evidence:   evidence,
+	}); err != nil {
+		t.Fatalf("seed reconcile: %v", err)
+	}
 }

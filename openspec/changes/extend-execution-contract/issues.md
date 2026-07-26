@@ -559,6 +559,73 @@
   journal(같은 경로)을 **둘 다** 연다. 단일 프로세스·순차 오픈이라 동작하지만 의도된 상태는
   아니며 7.4의 자체 배선 전환이 없앤다.
 
+## 2026-07-26 [blocking→해소] Pre-Edit 범위 이탈 1건: `internal/official`에 `AuthHeaders` 추가 (task 7.3)
+
+- 사실: 승계 목록은 "HTTPReplay transport 배선 — 헤더는 official 토큰 매니저에 연결"을
+  7.3에 배정했다. `HTTPReplay.Headers`는 `func(ctx) (map[string]string, error)`인데
+  official의 토큰 접근(`c.tm.token`)과 계좌 seq 해석(`c.ensureAccountSeq`)이 **둘 다
+  비공개**다. 토큰 캐시 파일을 엔진이 직접 읽는 우회는 갱신 정책이 둘로 갈라진다.
+- 이번 처리: `internal/official/auth_headers.go` **신규 파일**에 additive 메서드
+  `(*Client).AuthHeaders(ctx) (map[string]string, error)` 하나. 기존 파일 0줄 변경,
+  기존 호출자 0곳 영향, 새 능력 부여 없음(이 클라이언트를 쥔 코드는 이미 모든 엔드포인트를
+  호출할 수 있다). 헤더 이름 상수 2개(`HeaderAuthorization`·`HeaderAccount`)를 함께 내서
+  호출자가 철자를 새로 발명하지 않게 했다.
+- 위임 범위 판단: 위임된 Pre-Edit는 `app/engine/{engine,interlock}.go`·`config/engine.go`·
+  `cmd/tossctl/flatten.go` 4개였고 `internal/official`은 그 밖이다. 태스크 지시문이
+  "small official accessor가 필요할 수 있다 — additive 메서드를 넘으면 issues.md에 기록하고
+  transport를 nil로 두라"고 했고, 실제로 **additive 메서드 하나로 끝났으므로** 배선했다.
+  넘었다면 nil + `[미측정 — 2b]`였을 것이다. **Manager 확인 요망**.
+- 안전성: attestation이 nil이므로 재생 진입점은 `replay_not_attested`로 즉시 폴백한다.
+  transport는 컴파일·리뷰되지만 실행되지 않는다(dark).
+
+## 2026-07-26 [safe local] `execgw.Gateway.Wiring()` 추가 — 인터록이 "구성됨"을 물어볼 수 있게 (task 7.3)
+
+- 사실: `Options`의 Orders·Entry·Preflight·Replay·Attested는 전부 nil 허용이고, nil이면
+  보장이 조용히 사라진다(Orders nil → ack만으로 CONFIRMED). 7.5 인터록의 "Gateway 구성
+  확인" 항목은 gateway 포인터가 non-nil인지가 아니라 **무엇이 배선됐는지**를 물어야 한다.
+- 이번 처리: `execgw.Gateway.Wiring() Wiring`(bool 5개) 추가. 순수 읽기, 내부 값을 넘겨주지
+  않는다(포인터가 아니라 bool). 7.3이 배선하고 7.5가 검증한다.
+
+## 2026-07-26 [safe local] Preflight도 배선했다 — 태스크 문언에 없지만 nil은 "검사 생략"이 아니다 (task 7.3)
+
+- 7.3 문언은 journal·EntryGate·해소기·예약 저장소·Orders·Replay만 열거한다. `Preflight`를
+  nil로 두면 주문 형태 검사와 자금 확인이 **사라진다**(failclosed.go: "A nil reader does not
+  mean skip the check" — 그건 Preflight 내부 규칙이고, Preflight 자체가 nil이면 호출이 없다).
+- 생산 gateway가 fail-closed 검사 없이 서는 것은 스펙 방향과 반대이므로 배선했다.
+  `execgw.OfficialAccount{Client: off}`가 입력이며, 진입 결정 발급자가 없는 2a에서 동작
+  영향은 0이다.
+
+## 2026-07-26 [safe local] 예약 저장소는 배선할 필드가 없다 — journal 자체다 (task 7.3)
+
+- 7.3 문언의 "예약 저장소"는 별도 주입 지점이 아니다. 3.1이 예약을 `journal.Reserve`/
+  `ReserveWithRecollection`으로 냈고 nonce 소비는 1.7이 `MarkDispatchStarted` 트랜잭션에
+  병합했으므로, Gateway에 넘길 것은 journal 하나뿐이다(1.7 issues 항목이 예고한 대로
+  `execgw.NonceStore`·`Options.Nonces`는 존재하지 않는다).
+- 예약 배선의 계약("버전 읽기 → 스냅샷 수집 → Reserve")은 진입 결정을 발급하는 쪽의 몫이고
+  2a에는 그 발급자가 없다 — Gateway 구성 단계에서 할 일은 없다.
+
+## 2026-07-26 [safe local] 재생 transport가 자체 http.Client를 든다 (task 7.3)
+
+- 사실: `official.Client`의 `hc`는 비공개이고, 접근자를 하나 더 내는 것은 7.3의 범위를 더
+  넓힌다. `HTTPReplay`는 `*http.Client`를 요구한다(타임아웃 없는 재생은 자기가 쓰는 키보다
+  오래 사는 재생이다).
+- 이번 처리: 엔진이 `&http.Client{Timeout: 15s}`를 만들어 넘긴다. official의 401 재시도를
+  **상속하지 않는 것이 옳다** — 재생은 전송 전에 journal에 계수되므로 transport 레벨 재시도는
+  계수되지 않은 요청을 보낸다(replay_transport.go의 "No retry" 근거와 같다).
+- 결과: 테스트에서 재생 transport의 BaseURL은 httptest 서버지만 HTTP 클라이언트는 기본
+  transport다. attestation nil이라 호출되지 않으므로 관측되지 않는다.
+- `ReplayConfig`는 기본값 그대로다 — `MaxWaits`·margin 수치는 `[미측정 — 2b]`(왕복 p99 측정
+  전 임의 조정 금지).
+
+## 2026-07-26 [safe local] 새 파일 `internal/app/engine/gateway.go` (task 7.3)
+
+- 위임된 Pre-Edit 파일은 `engine.go`였다. 배선 전체를 거기 넣으면 500줄이 넘어 리뷰가
+  어려워지므로 같은 패키지의 새 파일로 냈다. 공개 계약 변경은 `Context`의 필드 4개
+  (`Gateway`·`Entry`·`Resolver`·`Reconcile`)뿐이고 그것들은 `engine.go`에 있다.
+- 네 필드 모두 mutator가 아니다: Gateway는 GuardianDecision 없이는 아무것도 제출하지 못하고,
+  Entry·Resolver·Tracker는 브로커 mutation 경로를 갖지 않는다. 봉인 테스트(7.4)가 이를
+  `trading.Broker`/`ConditionalBroker` 구현 여부로 확인한다.
+
 ---
 
 ## Manager 판정 (1차 물결 검증, 2026-07-26)

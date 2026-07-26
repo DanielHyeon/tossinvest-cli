@@ -164,6 +164,42 @@ func New(opts Options) (*Gateway, error) {
 // it against — two time sources would make the expiry meaningless.
 func (g *Gateway) Now() time.Time { return g.clk.Now() }
 
+// Wiring reports which optional dependencies a gateway was constructed with.
+//
+// Every one of these is nil-able in Options, and every one of them changes what
+// the gateway guarantees rather than merely how fast it is: without Orders a
+// created order's identifier is never checked against the broker, without Entry
+// nothing stops a new entry during a RECONCILE. "Optional" is a statement about
+// the narrower unit tests, not about a production gateway — so the startup
+// interlock asks this question instead of assuming the answer
+// (engine-safety: "엔진 프로필에 ExecutionGateway가 구성됨").
+type Wiring struct {
+	// Orders reports that the round-trip reader is wired, so a created order's
+	// identifier is confirmed against the broker before the attempt settles.
+	Orders bool
+	// Entry reports that the entry gate is wired.
+	Entry bool
+	// Preflight reports that the fail-closed pre-submission checks are wired.
+	Preflight bool
+	// Replay reports that a replay transport exists. It does not mean replay is
+	// enabled — see Attested.
+	Replay bool
+	// Attested reports that an attestation predicate is wired. Without one the
+	// replay entry point resends nothing [미측정 — 2b 전 비활성].
+	Attested bool
+}
+
+// Wiring reports this gateway's optional dependencies.
+func (g *Gateway) Wiring() Wiring {
+	return Wiring{
+		Orders:    g.orders != nil,
+		Entry:     g.entry != nil,
+		Preflight: g.preflight != nil,
+		Replay:    g.replay != nil,
+		Attested:  g.attested != nil,
+	}
+}
+
 // OrderRef describes the broker order a cancel or an amend acts on. The gateway
 // cannot read these off a CancelIntent/AmendIntent — upstream's intents carry only
 // an order id — and the journal needs them to record what was attempted and to

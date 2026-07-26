@@ -35,6 +35,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
@@ -125,6 +126,27 @@ type Context struct {
 	// reach the broker. Close closes it, and the engine owns it — a caller that
 	// closes this handle behind the engine's back breaks the gateway.
 	Journal *journal.Journal
+
+	// Gateway is the engine's only order mutation surface (task 7.3).
+	//
+	// Unlike a trading.Service it is safe to hand out: every method on it demands
+	// a GuardianDecision that was persisted before the call, journals the intent
+	// before dispatch, and settles the attempt afterwards. "Submit without an
+	// authorisation" is not an API it can express.
+	Gateway *execgw.Gateway
+
+	// Entry is the gate new exposure is checked against — staleness and latches.
+	// Exported because an operator surface has to be able to see a latch and
+	// clear it; it opens nothing on its own.
+	Entry *execgw.EntryGate
+
+	// Resolver settles IN_DOUBT attempts by observation. It writes to the
+	// journal and reads from the broker; it has no mutation path.
+	Resolver *execgw.Resolver
+
+	// Reconcile owns the RECONCILE projection: it was restored from the journal
+	// at startup and it is what a reconciliation loop observes into.
+	Reconcile *reconcile.Tracker
 
 	// Automation reports what the startup interlock decided about the automation
 	// gate. Zero value = gate off.
@@ -267,10 +289,31 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		return nil, refuseStartup(auditLog, gate, err)
 	}
 
+	// --- 3. the gateway -----------------------------------------------------
+	//
+	// No lineage recorder on the trading service: the engine records order
+	// lineage in the journal transaction (design D2), not in the CLI's JSON
+	// cache. trading.Service without a recorder behaves exactly as upstream's
+	// does when lineage is unset.
+	tradingService := trading.NewService(cfg.Trading, broker).WithConditional(broker)
+	wiring, err := buildGateway(ctx, gatewayInputs{
+		journal:    jrn,
+		trading:    tradingService,
+		official:   off,
+		accountRef: accountRef,
+		clock:      clk,
+	})
+	if err != nil {
+		_ = jrn.Close()
+		return nil, refuseStartup(auditLog, gate, err)
+	}
+
 	// --- 4. the interlock ---------------------------------------------------
 	//
 	// It runs before the context is returned, so a refused gate produces no
-	// engine at all rather than an engine somebody could still place orders with.
+	// engine at all rather than an engine somebody could still place orders with,
+	// and it runs *after* construction so that "a gateway exists" is something it
+	// verifies rather than assumes.
 	automation, err := runInterlock(status, gate, auditLog, clk.Now(), opts.Guardian)
 	if err != nil {
 		_ = jrn.Close()
@@ -282,23 +325,23 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	}
 
 	return &Context{
-		Paths:       paths,
-		Config:      cfg,
-		TokenFile:   tokenFile,
-		Official:    off,
-		AccountRef:  accountRef,
-		Journal:     jrn,
-		Automation:  automation,
-		Guardian:    guardian,
-		Audit:       auditLog,
-		official:    off,
-		broker:      broker,
-		conditional: broker,
-		// No lineage recorder: the engine records order lineage in the journal
-		// transaction (design D2), not in the CLI's JSON cache. Until the journal
-		// lands, trading.Service without a recorder behaves exactly as upstream's
-		// does when lineage is unset.
-		TradingService: trading.NewService(cfg.Trading, broker).WithConditional(broker),
+		Paths:          paths,
+		Config:         cfg,
+		TokenFile:      tokenFile,
+		Official:       off,
+		AccountRef:     accountRef,
+		Journal:        jrn,
+		Gateway:        wiring.gateway,
+		Entry:          wiring.entry,
+		Resolver:       wiring.resolver,
+		Reconcile:      wiring.reconcile,
+		Automation:     automation,
+		Guardian:       guardian,
+		Audit:          auditLog,
+		official:       off,
+		broker:         broker,
+		conditional:    broker,
+		TradingService: tradingService,
 	}, nil
 }
 
