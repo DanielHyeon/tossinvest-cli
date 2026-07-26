@@ -83,6 +83,20 @@ type Options struct {
 	// NewID generates intent and attempt ids. Defaults to a 128-bit random hex
 	// string; tests inject a deterministic sequence.
 	NewID func() string
+
+	// Replay resends the request body an IN_DOUBT attempt stored, so its
+	// identity can be recovered from the broker's idempotent answer (replay.go).
+	// Optional: without it, an IN_DOUBT attempt is resolved by observation
+	// alone, which is what this build does today.
+	Replay ReplayTransport
+	// ReplayConfig tunes the replay bounds. Zero fields take the defaults.
+	ReplayConfig ReplayConfig
+	// Attested reports whether the replay capability has been verified against
+	// the real broker. Nil — the default — means "not attested", and the replay
+	// entry point resends nothing: the capability is measured by
+	// verify-execution-capability and the replay path stays off until then
+	// [미측정 — 2b 전 비활성].
+	Attested func(ctx context.Context) bool
 }
 
 // Gateway is the engine's only order mutation surface.
@@ -99,6 +113,9 @@ type Gateway struct {
 	preflight  *Preflight
 	orders     OrderReader
 	newID      func() string
+	replay     ReplayTransport
+	replayCfg  ReplayConfig
+	attested   func(ctx context.Context) bool
 
 	// inflight holds the in-process claim on a symbol for the duration of a
 	// mutation, so two goroutines cannot both pass the journal's in-flight check.
@@ -126,6 +143,9 @@ func New(opts Options) (*Gateway, error) {
 		preflight:  opts.Preflight,
 		orders:     opts.Orders,
 		newID:      opts.NewID,
+		replay:     opts.Replay,
+		replayCfg:  opts.ReplayConfig,
+		attested:   opts.Attested,
 	}
 	if g.clk == nil {
 		g.clk = clock.System()

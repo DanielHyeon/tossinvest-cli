@@ -48,6 +48,42 @@ const (
 	// the caller asserts is a limit bypass waiting to be used.
 	ReasonGuardianClassMismatch ReasonCode = "guardian_safety_class_mismatch"
 
+	// --- idempotent replay (extend-execution-contract 2.1/2.2) ---------------
+	//
+	// Appended, never reordered. These describe the *replay* — the resend of a
+	// stored body under its stored idempotency key — and none of them is a
+	// statement about whether the original order exists. That distinction is why
+	// the replay path has its own vocabulary instead of reusing the dispatch
+	// codes above.
+
+	// ReasonReplayRecovered: the replay returned the original order's identity
+	// and the attempt is CONFIRMED. No second order was created — inside the
+	// key's ten-minute window the same key cannot make one (openapi).
+	ReasonReplayRecovered ReasonCode = "replay_identity_recovered"
+	// ReasonReplayInProgress: `409 request-in-progress` (openapi). The broker is
+	// still processing the original request, so the replay established nothing
+	// and does not consume the cap.
+	ReasonReplayInProgress ReasonCode = "replay_request_in_progress"
+	// ReasonReplayKeyConflict: the key does not name this attempt's order —
+	// `422 idempotency-key-conflict` (openapi), or a 2xx echoing a different
+	// key. It is a defect in this program and is never FAILED_CONFIRMED: the
+	// attempt parks for an operator.
+	ReasonReplayKeyConflict ReasonCode = "replay_idempotency_key_conflict"
+	// ReasonReplayNotAttested: the replay capability attestation is not in
+	// place, so nothing was resent. Default state until the capability is
+	// measured [미측정 — 2b 전 비활성].
+	ReasonReplayNotAttested ReasonCode = "replay_not_attested"
+	// ReasonReplayExpired: too little of the idempotency key's documented
+	// ten-minute life is left for a replay to be safe. Re-checked before every
+	// individual send, never once per procedure.
+	ReasonReplayExpired ReasonCode = "replay_key_window_expired"
+	// ReasonReplayExhausted: the per-attempt replay cap is spent, or the broker
+	// stayed "in progress" past the wait bound. The query fallback takes over.
+	ReasonReplayExhausted ReasonCode = "replay_attempts_exhausted"
+	// ReasonReplayIneligible: the attempt is not one a replay is defined for —
+	// wrong state, no stored body, no key, or a mutation kind that carries none.
+	ReasonReplayIneligible ReasonCode = "replay_ineligible"
+
 	// --- request / policy ---------------------------------------------------
 
 	// ReasonInvalidRequest: the mutation request itself is not recordable
