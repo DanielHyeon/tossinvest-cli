@@ -267,3 +267,11 @@
 - **5.2 잔여 원문 저장 위반의 배정**: `journal/lineage.go:118`(ResolveConfirmedWithLineage의 trim — cancel 해소는 원문·amend 해소는 trim으로 갈라진 상태), `journal/fills.go:173/385/393`, `filldetect/payload.go:84` → **5.3 담당자에게 배정**(fills·payload는 원래 범위, lineage는 동일 해소 쓰기 경로의 정합 회복).
 - **round-trip이 Options.Orders 배선 전 무효** → 7.5 인터록 "Gateway 구성 확인"에 Orders 배선 검증 항목 추가로 승계.
 - 5.1의 보수 판정(REPLACED without successor → UNKNOWN, CANCELED+successor → UNKNOWN, PENDING_* 무증거) 승인 — 전부 fail-closed 방향.
+
+## Manager 판정 (2차 물결 검증, 2026-07-26)
+
+- **경계값(tie) 의미론**: 변경 불필요 — 두 의미론은 각자의 스펙과 정합한다. 주문 단위 Max는 포함 상한("largest quantity this decision authorises" — 10 허용), 총계 한도는 도달 시 차단(risk-management "한도 중 하나라도 **도달**한 상태 → 거부"). riskcalc.WithinLimit(tie=초과)와 execgw 주문 검사(tie=허용)를 그대로 유지하고 이 구분을 여기 기록한다.
+- **interlock.go 기계적 적응(선언된 Pre-Edit 이탈)**: 승인 — 의미 보존·컴파일 수복 한정, 3개 누락 한도와 `Limits.Validate()` 전환은 7.5 승계 확인.
+- **d30eaa8의 광역 git add**: 섹션 1 담당자가 5.3 체크박스를 자기 커밋에 포함시킴 — "체크박스=산출물 동일 커밋" 규칙 위반(내용은 정확, 되돌리지 않음). 8.1 diff 리뷰 기록 대상. 이후 물결 지시문에 경로 지정 스테이징 재강조.
+- **ReductionIntent의 가격·유형 미결속**: 2a에서 비악용(발급자=호출자). 2c/2d가 발급자를 분리할 때 결속 확장 필수 — 2c 선행 조건 목록에 승계.
+- **design.md "D6a" 미존재 참조**: Manager 편집 실수 — 스펙 요구명 참조로 정정.

@@ -150,7 +150,7 @@ nonce 소비는 `MarkDispatchStarted` 트랜잭션에 병합한다 — 단일 �
 - [upstream 수정 4+2파일] → Pre-Edit 전문, CLI confirm token 무변경 characterization
 - [brokerstate 재작성이 P1 파생 소비자에 파급] → 기존 테스트 중 바뀌어야 할 단언 사전 열거(무조건 green 금지)
 - [journal-in-engine의 파일시스템 조건] → 의도된 상속임을 명시, tmpfs 테스트는 격리 경로 사용
-- [staleness 수치가 2a에 필요] → 아래 D6a 보수 기본값을 6.1이 전사(2d는 보수 방향으로만 대체)
+- [staleness 수치가 2a에 필요] → 스펙 "총계 한도의 계산 계약"의 보수 기본값(계좌 10s·환율 60s)을 6.1이 전사(2d는 보수 방향으로만 대체)
 
 ## Migration Plan
 
