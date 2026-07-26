@@ -29,12 +29,104 @@ package config
 // neither. The engine reads these into the Guardian's limit snapshot at startup
 // and refuses to start if they are zero while the gate is on.
 
+import (
+	"sort"
+	"strings"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
+)
+
 // Engine holds the automated-trading engine's settings.
 //
 // The CLI ignores this block entirely: it configures the unattended engine
 // profile (internal/app/engine), not `tossctl`.
 type Engine struct {
 	AutomationGate AutomationGate `json:"automation_gate"`
+	// Adoption configures whether externally acquired holdings are taken into
+	// exit management. Zero value = off, which is what every pre-adoption config
+	// produces.
+	Adoption Adoption `json:"adoption"`
+}
+
+// Adoption is the external-position adoption feature's settings (change
+// adopt-external-positions, design A3).
+//
+// # Off by default, and off is the landed behaviour
+//
+// §0.2 again: the zero value is the safe one. With `enabled` false the engine
+// behaves exactly as it did before this change — including raising the unmanaged
+// holding alert, which design A4 keeps regardless of this toggle. What the
+// toggle turns on is the engine *acting* on that discovery.
+//
+// Turning it on is a §0.7 action: a human decision, recorded in the audit trail
+// (recordGateSettings). Nothing in TossOS flips it.
+//
+// # Why the fraction has a floor and not just a ceiling
+//
+// `default_stop_pct` is the whole of the synthetic protection: the stop is
+// `observed × (1 − pct)` and there is nothing else. Below
+// exitpolicy.MinStopPct the band is narrower than the noise between two
+// observations and than the round-trip cost of the exit itself, which makes it
+// a device that liquidates on the first tick rather than a stop. A value outside
+// [0.02, 1) is therefore refused, and a refused block leaves adoption entirely
+// off rather than running on a number nobody chose.
+type Adoption struct {
+	// Enabled turns adoption on. Default false, and false is the only value any
+	// pre-adoption config can produce.
+	Enabled bool `json:"enabled"`
+
+	// DefaultStopPct is the synthetic stop's distance below the adoption
+	// observation, as a fraction. Must be in [0.02, 1) whenever the block is
+	// meaningful; see Rejected.
+	DefaultStopPct float64 `json:"default_stop_pct,omitempty"`
+
+	// ExcludeSymbols are never adopted. It is the fine-grained control *inside*
+	// enabled: an operator who wants the engine to manage everything except one
+	// long-term holding names it here rather than turning the feature off.
+	ExcludeSymbols []string `json:"exclude_symbols,omitempty"`
+
+	// Rejected explains why the block was refused, and is empty when it was
+	// accepted. A refused block is zeroed, so `Enabled` is already false — this
+	// field exists so the engine can say *why* rather than silently ignoring what
+	// an operator wrote.
+	Rejected string `json:"rejected,omitempty"`
+}
+
+// Excludes reports whether a symbol is on the exclusion list.
+func (a Adoption) Excludes(symbol string) bool {
+	want := strings.ToUpper(strings.TrimSpace(symbol))
+	if want == "" {
+		return false
+	}
+	for _, s := range a.ExcludeSymbols {
+		if s == want {
+			return true
+		}
+	}
+	return false
+}
+
+// validate reports why the block cannot be used, or "" when it can.
+//
+// A block that is off *and* carries no fraction is not validated at all: that is
+// the absent block, and every config written before this change is one.
+func (a Adoption) validate() string {
+	if !a.Enabled && a.DefaultStopPct == 0 {
+		return ""
+	}
+	if err := exitpolicy.ValidateStopPct(a.DefaultStopPct); err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+// rawAdoption is the parse shape. Enabled is a pointer for the same reason the
+// gate's is: an explicit false and an absent key are distinguishable in tests,
+// and both produce false.
+type rawAdoption struct {
+	Enabled        *bool    `json:"enabled"`
+	DefaultStopPct float64  `json:"default_stop_pct"`
+	ExcludeSymbols []string `json:"exclude_symbols"`
 }
 
 // AutomationGate is the master switch for unattended order placement.
@@ -108,6 +200,50 @@ type rawAutomationGate struct {
 
 type rawEngine struct {
 	AutomationGate *rawAutomationGate `json:"automation_gate"`
+	Adoption       *rawAdoption       `json:"adoption"`
+}
+
+// mergeAdoption copies a present adoption block onto the defaults, or refuses it.
+//
+// A refused block is *zeroed*, not partially kept: exit-policy's scenario is
+// "설정이 거부되고 편입은 전면 비활성으로 남는다", and a block that kept `enabled`
+// while dropping the fraction would be adoption running on a stop nobody chose.
+func mergeAdoption(cfg *Engine, raw *rawAdoption) {
+	if raw == nil {
+		return
+	}
+	next := Adoption{DefaultStopPct: raw.DefaultStopPct}
+	if raw.Enabled != nil {
+		next.Enabled = *raw.Enabled
+	}
+	next.ExcludeSymbols = normaliseSymbols(raw.ExcludeSymbols)
+
+	if why := next.validate(); why != "" {
+		cfg.Adoption = Adoption{Rejected: why}
+		return
+	}
+	cfg.Adoption = next
+}
+
+// normaliseSymbols upper-cases, trims, drops blanks and de-duplicates, so
+// "005930" and " 005930 " are one exclusion rather than two and the list can be
+// compared as text in the audit trail.
+func normaliseSymbols(in []string) []string {
+	if len(in) == 0 {
+		return nil
+	}
+	seen := map[string]bool{}
+	out := make([]string, 0, len(in))
+	for _, s := range in {
+		symbol := strings.ToUpper(strings.TrimSpace(s))
+		if symbol == "" || seen[symbol] {
+			continue
+		}
+		seen[symbol] = true
+		out = append(out, symbol)
+	}
+	sort.Strings(out)
+	return out
 }
 
 // mergeEngine copies a present engine block onto the defaults.
@@ -115,7 +251,11 @@ type rawEngine struct {
 // An absent block, an absent automation_gate, or a nil receiver all leave the
 // defaults alone — and the defaults are off.
 func mergeEngine(cfg *Engine, raw *rawEngine) {
-	if raw == nil || raw.AutomationGate == nil {
+	if raw == nil {
+		return
+	}
+	mergeAdoption(cfg, raw.Adoption)
+	if raw.AutomationGate == nil {
 		return
 	}
 	gate := raw.AutomationGate

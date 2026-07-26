@@ -16,7 +16,7 @@
 - [ ] 2.1 **엔진 reconcile 구동 루프 신설**(design A6): 주기 60초, 전체 스냅샷(미체결 pagination ≤ MaxPages + holdings + 통화별 잔고 — 부분 실패 폐기) → Stabiliser(수집 2회) → 비교·fold → **Tracker.Observe 구동**(확정 하한 캡의 전제) → 편입 판정. §0.4 계상 문서화(주기당 수집 2회 × (2+통화 수)콜 + 편입 후보 시세 배치 1콜·MaxPages 상한). 실행 술어 `AutomationStatus.Verified`
 - [ ] 2.2 편입 판정·영속: enabled=true + 비RECONCILE + 신선 조건(Stabiliser·staleness ≤ 10s) + 비제외 → position_adoptions 영속(observed_price는 **편입 tx 직전 시세 관측·staleness ≤ 15s — 초과 시 연기**, exit 관측과 동일 경로 `[기존 제약 float64]`; cost_basis는 **원문 문자열 보존** — official 어댑터에 holdings 원문 접근 additive 추가) → adoption_id set-once → exit_state open. 크래시 복구·재대사 시 기편입 인식
 - [ ] 2.3 **manage-forward 테스트 2종**(design A2): ① 편입 트랜잭션은 매도 발의 0건 ② 편입 관측가와 다른 첫 exit 관측(P1≠P0, 원가 대비 ±50% 포함)에서 래칫 규칙이 정상 적용됨(발의 발생이 정상임을 고정)
-- [ ] 2.4 config: `adoption.enabled`(기본 false — zero-value 안전 테스트), `default_stop_pct`(**0.02 ≤ pct < 1** 검증·거부·하한 근거 provenance), `exclude_symbols`. enabled flip audit(§0.5)
+- [x] 2.4 config: `adoption.enabled`(기본 false — zero-value 안전 테스트), `default_stop_pct`(**0.02 ≤ pct < 1** 검증·거부·하한 근거 provenance), `exclude_symbols`. enabled flip audit(§0.5)
 - [ ] 2.5 알림·이벤트(design A4): **무관리 보유 알림은 enabled 무관 존치**(기존 동작 — §0.2), 편입 성공 이벤트가 대체, 제외·실패 알림, 전이 상태만 무알림, 외부 수량 증가 감지 알림
 - [ ] 2.6 trade-analytics 구분 집계(adoption_id 조인, 표본 수 병기)
 - [ ] 2.7 대시보드 자격 표시를 편입 포함으로 확장(design A9 — 대시보드 landed 후, `internal/console` 소폭 수정의 유일 예외)

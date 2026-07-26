@@ -124,6 +124,26 @@
               "enum": ["KRW", "USD"]
             }
           }
+        },
+        "adoption": {
+          "description": "Whether externally acquired holdings are taken into the engine's exit management. Off by default; turning it on is a human decision recorded in the audit log. A default_stop_pct outside [0.02, 1) is refused and leaves adoption entirely off — below 0.02 the protective band is narrower than observation noise and the round-trip cost, which makes it a device that liquidates on the first tick.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "default_stop_pct": {
+              "type": "number",
+              "minimum": 0.02,
+              "exclusiveMaximum": 1
+            },
+            "exclude_symbols": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
         }
       }
     }

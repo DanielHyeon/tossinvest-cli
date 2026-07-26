@@ -51,6 +51,19 @@ const (
 	ActionGateRefused = "automation_gate.refused"
 	// ActionGateAccepted is a startup the interlock allowed.
 	ActionGateAccepted = "automation_gate.accepted"
+	// ActionAdoptionToggle is external-position adoption being turned on or off
+	// (change adopt-external-positions, §0.5/§0.7).
+	//
+	// It is a separate action from the gate's toggle because it authorises a
+	// different thing: the gate decides whether the engine may place orders
+	// unattended at all, and this decides whether it starts placing them for
+	// positions its owner bought by hand. An operator auditing "when did the
+	// engine start managing my long-term holdings" has to be able to find that
+	// answer without reading it out of a gate entry.
+	ActionAdoptionToggle = "adoption.toggle"
+	// ActionAdoptionSetting is a change to how adoption behaves once on: the
+	// synthetic stop's width, or the exclusion list.
+	ActionAdoptionSetting = "adoption.setting"
 )
 
 // Entry is one recorded change.

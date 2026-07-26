@@ -630,7 +630,21 @@ func resolveAccountRef(ctx context.Context, reads OfficialReads) (string, error)
 
 // recordGateSettings appends an audit entry for each setting that changed since
 // the last recorded value.
-func recordGateSettings(log *audit.Log, gate config.AutomationGate, attestationFile string) error {
+//
+// Adoption's three settings are recorded here rather than in a second pass, and
+// for the same reason the gate's are: §0.5 asks for operational settings to be
+// traceable, and a trail assembled from two files written at two moments cannot
+// answer "what was the engine configured with when it started" in one read.
+//
+// A *rejected* adoption block is recorded too, with the reason. An operator who
+// wrote a 0.5 % stop and found adoption off has to be able to find out from the
+// audit trail that the number was refused rather than ignored.
+func recordGateSettings(log *audit.Log, gate config.AutomationGate,
+	adoption config.Adoption, attestationFile string) error {
+	adoptionDetail := ""
+	if adoption.Rejected != "" {
+		adoptionDetail = "the configured block was refused and adoption stays off: " + adoption.Rejected
+	}
 	changes := []struct {
 		action  string
 		setting string
@@ -639,6 +653,12 @@ func recordGateSettings(log *audit.Log, gate config.AutomationGate, attestationF
 	}{
 		{audit.ActionGateToggle, "engine.automation_gate.enabled", strconv.FormatBool(gate.Enabled),
 			"attestation file: " + attestationFile},
+		{audit.ActionAdoptionToggle, "engine.adoption.enabled",
+			strconv.FormatBool(adoption.Enabled), adoptionDetail},
+		{audit.ActionAdoptionSetting, "engine.adoption.default_stop_pct",
+			limitString(adoption.DefaultStopPct), ""},
+		{audit.ActionAdoptionSetting, "engine.adoption.exclude_symbols",
+			strings.Join(adoption.ExcludeSymbols, ","), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.max_order_quantity", limitString(gate.MaxOrderQuantity), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.max_order_notional", limitString(gate.MaxOrderNotional), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.max_total_exposure", limitString(gate.MaxTotalExposure), ""},

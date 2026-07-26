@@ -227,7 +227,9 @@ func TestPublishedSchemaAcceptsTheEngineBlock(t *testing.T) {
 	if !ok {
 		t.Fatal("the published schema has no `engine` block, but the code writes one")
 	}
-	if _, ok := engine.Properties["automation_gate"]; !ok {
-		t.Error("the published schema's engine block declares no automation_gate")
+	for _, block := range []string{"automation_gate", "adoption"} {
+		if _, ok := engine.Properties[block]; !ok {
+			t.Errorf("the published schema's engine block declares no %s, but the code writes one", block)
+		}
 	}
 }
