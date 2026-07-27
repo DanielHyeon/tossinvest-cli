@@ -25,6 +25,10 @@ type Client struct {
 	tm         *tokenManager
 	mu         sync.Mutex // guards accountSeq lazy resolution
 	accountSeq int        // used for X-Tossinvest-Account header (0 = unset, resolved lazily)
+	// rates is the last rate-limit budget seen per request path (ratebudget.go).
+	// Read-only from a caller's point of view and never consulted by this
+	// package's own logic — it records, it does not decide.
+	rates rateBudgets
 }
 
 // Option configures a Client.
@@ -79,12 +83,20 @@ type apiEnvelope struct {
 }
 
 // doRequest executes req, returning (statusCode, body, error).
+//
+// It is also where the rate-limit headers are read (ratebudget.go). This is the
+// only place they exist: the callers above get (status, body) and the status is
+// mapped onto a sentinel error, so by the time anyone could ask about the budget
+// the response is gone. Recording here is purely additive — the return values and
+// every error are unchanged — and it covers the 429 case too, which is the single
+// most informative response and the one the error mapping used to discard.
 func (c *Client) doRequest(req *http.Request) (int, []byte, error) {
 	resp, err := c.hc.Do(req)
 	if err != nil {
 		return 0, nil, fmt.Errorf("%w: %s", ErrTransport, err)
 	}
 	defer resp.Body.Close()
+	c.rates.record(readRateBudget(req.URL.Path, resp.Header, time.Now()))
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return resp.StatusCode, nil, fmt.Errorf("%w: reading body: %s", ErrTransport, err)

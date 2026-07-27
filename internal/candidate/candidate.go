@@ -57,16 +57,38 @@ const (
 // SourceID names one data source, as it appears in a candidate's `sources` list.
 //
 // The identity is the *source*, not the transport: an official ranking reached
-// through the hybrid client's WTS fallback is still SourceOfficialRankings, with
+// through the hybrid client's WTS fallback is still SourceOfficialTradingValue, with
 // Observation.ViaFallback set. Collapsing those two into one id is what makes
 // over-polling invisible — see D14.
 type SourceID string
 
 const (
-	// SourceOfficialRankings is GET /api/v1/rankings. It is the source that must
-	// be sufficient on its own: WTS sessions expire and discovery cannot stop
-	// with them.
-	SourceOfficialRankings SourceID = "official_rankings"
+	// The official ranking endpoint serves several ranking *types*, and each one
+	// is its own source rather than three calls sharing an id.
+	//
+	// They were one id until the section-2 review, and the collision was not
+	// cosmetic. A scan may only cool a candidate when every source that raised it
+	// answered (scan.go), and that check is keyed by SourceID — so with one
+	// shared id, a 429 on the gainers list was masked by the two rankings that
+	// did answer, and a candidate only ever raised by the rate-limited one got
+	// cooled by a scan that had never looked at it. The cooling clock then
+	// expires it, which discards first_seen_at. The same collision also collapsed
+	// the per-source rate budgets to whichever call returned last.
+	//
+	// Merging the three into a single Source would be the other wrong fix: two
+	// lists carrying the same symbol would produce two observations with the same
+	// (source, symbol, instant), and section 3's per-source rate series would then
+	// difference one against the other.
+
+	// SourceOfficialTradingValue ranks by trading value — where money is going
+	// now, which is the question this change is actually asking.
+	SourceOfficialTradingValue SourceID = "official_rankings_trading_value"
+	// SourceOfficialTradingVolume ranks by share count.
+	SourceOfficialTradingVolume SourceID = "official_rankings_trading_volume"
+	// SourceOfficialGainers ranks by change. By definition a list of moves that
+	// have already happened, which is why it is one input among several rather
+	// than the list.
+	SourceOfficialGainers SourceID = "official_rankings_top_gainers"
 	// SourceOfficialPrices is GET /api/v1/prices — 200 symbols per call, and no
 	// day high in the response.
 	SourceOfficialPrices SourceID = "official_prices"

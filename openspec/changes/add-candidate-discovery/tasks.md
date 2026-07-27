@@ -46,28 +46,38 @@ mutating 단계가 없다 — 검증은 fixture와 주입 clock으로 한다.
 
 ## 2. 원천
 
-- [ ] 2.1 [T] 공식 Open API 어댑터 — `Rankings`(`MARKET_TRADING_AMOUNT`,
+- [x] 2.1 [T] 공식 Open API 어댑터 — `Rankings`(`MARKET_TRADING_AMOUNT`,
   `MARKET_TRADING_VOLUME`, `TOP_GAINERS`), `MarketInvestorTrading`, 지표 캔들.
   **공식 원천만으로 후보가 산출됨**을 테스트로 고정.
-- [ ] 2.2 [T] WTS 어댑터 — 인기 순위, 투자자 순매수 순위, 테마, AI 시그널, 스크리너.
+- [x] 2.2 [T] WTS 어댑터 — 인기 순위, 투자자 순매수 순위, 테마, AI 시그널, 스크리너.
   가산 원천이며 없어도 산출이 멈추지 않는다.
-- [ ] 2.3 [T] 원천 강등 — 일부 실패 시 남은 원천으로 계속하고 `sources`·`completeness`·
+- [x] 2.3 [T] 원천 강등 — 일부 실패 시 남은 원천으로 계속하고 `sources`·`completeness`·
   `degraded`를 후보와 스캔 결과에 기록. RED: WTS 전부 실패 시 후보 0건 → GREEN.
-- [ ] 2.4 [T] 원천 병합 — 같은 `(market, symbol)`을 올린 여러 원천이 후보 **하나**가 되고
+- [x] 2.4 [T] 원천 병합 — 같은 `(market, symbol)`을 올린 여러 원천이 후보 **하나**가 되고
   각 원천이 그 하나를 지지한 것으로 기록된다.
-- [ ] 2.5 [T] hybrid 우회를 강등으로 기록(D14) — **적용 범위는 `official_prices`뿐**.
+- [x] 2.5 [T] hybrid 우회를 강등으로 기록(D14) — **적용 범위는 `official_prices`뿐**.
   랭킹·캔들·투자자는 hybrid에서 **official-only이고 우회가 없다**([client.go:185-220]) —
   최초 D14는 이것을 확인하지 않고 썼다. RED: 우회로 채운 `prices` 후보가 공식이 응답한 후보와
   구분되지 않는다 → GREEN. 랭킹 관측에 `ViaFallback`이 찍히면 그것은 우회가 아니라 버그다.
-- [ ] 2.5b [T] 랭킹 429는 **강등이 아니라 결손**으로 기록(D14 결정 2). 우회라는 완충재가 없으므로
+- [x] 2.5b [T] 랭킹 429는 **강등이 아니라 결손**으로 기록(D14 결정 2). 우회라는 완충재가 없으므로
   429 한 번에 원천이 통째로 사라진다. RED: 랭킹 실패가 `completeness`에 남지 않는다 → GREEN.
-- [ ] 2.6 [T] rate 예산 잔량 헤더(`X-RateLimit-Limit`/`Remaining`/`Reset`) 기록(D13 결정 2).
+- [x] 2.6 [T] rate 예산 잔량 헤더(`X-RateLimit-Limit`/`Remaining`/`Reset`) 기록(D13 결정 2).
   지금은 어디서도 읽지 않아 429가 나야 예산을 안다. RED: 200 응답에서 잔량이 유실 → GREEN.
   **D15 결정**: `internal/official`에 읽기 전용 헤더 노출을 **가산**한다. proposal Impact의
   "수정 없음"을 그에 맞게 고친다 — 헤더는 429에서 sentinel로 바뀌며 버려지고
   ([execgw/retry.go:183]), 유일한 대안인 RoundTripper는 `internal/execgw`라 §6.1 격리가 막는다.
-- [ ] 2.7 [T] 원천별 간격 — 시장이 아니라 원천에 붙고, 느린 원천이 빠른 원천을 묶지 않는다.
-  기본값 WTS 5초(하한 3초) / 공식 랭킹 15초(하한 5초).
+- [x] 2.7 [T] 원천별 간격 — 시장이 아니라 원천에 붙고, 느린 원천이 빠른 원천을 묶지 않는다.
+  기본값 WTS 5초(하한 3초) / 공식 랭킹 15초(하한 5초). → `Schedule`(정책과 due 판정만;
+  루프는 §5가 갖는다). `YieldToEngine`이 spec R7의 최상위 우선순위에 처음으로 동사를 준다.
+- [x] 2.8 [T] **냉각은 침묵이 아니라 증거로 한다**(§2 구현 중 발견). 후보를 냉각하려면
+  **그 후보를 올렸던 원천이 전부 이번 스캔에 응답**해야 한다. 느슨하게 하면 랭킹 429 한 번이
+  전 watchlist를 냉각시키고 냉각 시계가 그것을 만료시켜, **일시적 rate limit이 우리가 일찍
+  발견했다는 기록 전체를 지운다.** 아무것도 실패하지 않으면서.
+  → `coolAbsent` + `TestAScanDoesNotCoolASymbolItDidNotLookFor`,
+  `TestOneSurvivingSupporterIsNotEnoughToCool`.
+- [x] 2.9 [T] 시장별 panel 구성 — 그 시장을 볼 수 없는 원천은 **panel에서 빠진다**.
+  "응답했는데 목록에 없다"가 냉각의 근거이므로, 구조적으로 못 보는 원천이 panel에 있으면
+  매 스캔 그 시장 후보를 전부 냉각시킨다. → `candidatesrc.Panel`.
 
 ## 3. 시간축 지표
 

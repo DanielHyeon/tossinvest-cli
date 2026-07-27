@@ -290,3 +290,103 @@ task 6.4가 갚는다.
 
 §1은 리뷰 수정을 반영해 닫는다. §2는 위 blocking [contract] 항목이 계약에 반영된 상태에서
 시작한다 — D14 정정, D15(헤더 노출), D16(디스크), D9 정정, 표면 Requirement 모두 반영 완료.
+
+---
+
+# §2 리뷰 (2026-07-28) — 원천·강등·rate 예산
+
+보이스: Eng(적대적), 별도 컨텍스트. 대상: `internal/candidate/{source,scan}.go`,
+신규 패키지 `internal/candidatesrc`, `internal/official/ratebudget.go` + `client.go` 1줄.
+
+## §2-1. 가장 중요한 발견 — 내가 §2에서 만든 결함이 §2에서 만든 방어를 무력화했다 (P0)
+
+`candidatesrc.Panel`이 공식 랭킹 **3종**을 만드는데 셋 다 `ID()`가
+`SourceOfficialRankings` 하나였다.
+
+냉각 규칙(2.8)은 "그 후보를 올린 원천이 **전부** 응답했을 때만 냉각"이고, 그 판정은
+**source id로** 한다. id가 겹치면 **응답한 원천이 응답 못 한 원천을 대신 보증한다.**
+
+```
+scan1: TOP_GAINERS만 035720을 올림 → Sources=[official_rankings]
+scan2: TOP_GAINERS 429, 나머지 둘 응답(035720 없음)
+       responded["official_rankings"]=true  ← 살아남은 둘이 세운 것
+       → 035720 냉각 → 30분 뒤 만료 → first_seen_at 소멸
+```
+
+방금 만든 방어가 방금 만든 배선에 의해 꺼져 있었다. 리뷰어가 실행으로 재현했다.
+`ScanResult.Budgets`도 같은 이유로 마지막 호출 하나로 뭉개지고 있었다.
+
+**수정**: 랭킹 종류마다 자기 id(`..._trading_value`/`_trading_volume`/`_top_gainers`).
+셋을 하나의 Source로 합치는 것은 반대 방향의 오답이다 — 같은 심볼이 두 리스트에 있으면
+`(source, symbol, instant)`가 같은 관측 2건이 되고 §3의 원천별 rate 계열이 서로를 차분한다.
+그리고 `Collect`가 **id가 겹치는 panel을 읽기 전에 거부**한다. 한 번 돌기 시작하면 보이지 않는
+종류의 결함이라 값싼 검사를 앞에 둔다.
+
+## §2-2. 빈 200이 부재의 증거가 되고 있었다 (P1)
+
+행 0개로 성공한 랭킹 — 장 시간 밖, 서버 blip, 심볼이 전부 빈 body — 은 **아무것에 대해서도
+답하지 않았다.** 그것을 완전한 커버리지로 치면 **200 응답 하나가 전 watchlist를 냉각**시킨다.
+429 경로에서 막은 파괴에 아무 실패 없이 도달한다. → 빈 reading은 응답하되 보증하지 않는다
+(`Missing`에 사유와 함께 남는다).
+
+## §2-3. 한 심볼의 거절이 시장 전체를 멈추고 있었다 (P1)
+
+`Promote`는 마지막 관측보다 이른 시각을 거부한다(§1에서 넣은 방어). 그런데 루프가 거기서
+중단되면 나머지 심볼이 승격되지 않고 냉각도 건너뛴다. 루프가 정렬돼 있으므로 **같은 심볼이
+이후 모든 스캔을 막고**, 1초짜리 NTP 보정이 관측을 계속 쌓으면서 watchlist 전체를 만료시킨다.
+→ 실패는 `ScanResult.Rejected`로 모으고 pass는 끝까지 간다.
+
+## §2-4. `Schedule`에 락이 없었다 (P1)
+
+`YieldToEngine`은 **정의상** 스캔 루프 밖의 관찰자가 부른다 — 그것이 존재 이유다. 즉 setter와
+reader가 구조적으로 다른 goroutine이다. 재현된 것은 미묘한 race가 아니라 Go의 복구 불가능한
+`fatal error: concurrent map read and map write`이고, 엔진과 같은 프로세스에서 돌면 체결
+감지를 함께 죽인다. → mutex. `-race`로 확인.
+
+## §2-5. panel에서 빠진 원천이 후보를 영구히 냉각 불가로 만들었다 (P2)
+
+`Candidate.Sources`는 누적이므로, 한 번 올린 뒤 설정에서 제거된 원천(운영자가 WTS를 내리는
+것 — 설계가 평시로 규정한 일)은 다시는 `responded`에 나타나지 않는다. → panel과 교집합.
+없어진 원천은 "증거 부족"이 아니라 "없는 원천"이다.
+
+## §2-6. `internal/official`에 대한 것들
+
+원장 경로가 의존하는 패키지라 여기가 가장 조심스러웠다. 리뷰어가 명시적으로 무결을 확인한
+것: `rateBudgets`는 RWMutex로 안전, nil map 읽기 안전, 토큰 갱신은 `doRequest`를 우회하므로
+map을 오염시키지 않음, 기존 호출자의 동작·반환·에러 매핑 **무변경**.
+
+찾은 것 둘:
+
+- **map이 무한히 자란다** — 키가 raw path인데 취소·정정·종목별 캔들은 경로에 id가 박힌다.
+  장수하는 엔진 클라이언트가 주문 id마다 항목을 쌓고, 더 나쁘게는 **캔들 예산이 종목마다
+  쪼개져** 서버가 실제로 재는 그룹 단위 잔량을 영영 못 본다. 500개 id로 재현. → `{id}`로 정규화.
+- **reset 휴리스틱이 못 읽는 값에 확신을 붙였다** — epoch **밀리초**(흔한 인코딩)가 서기
+  58541년, 나노초 지연이 2001년. 둘 다 `ResetEpoch`로 라벨링됐다. 2001년을 기다리는 호출자는
+  아예 안 기다리고 58541년을 기다리는 호출자는 안 끝난다. → 범위 밖은 `ResetUnparsed`.
+
+## §2-7. 나머지
+
+- `isRateLimited`가 맨 `"429"` 부분문자열을 봤다 — 한국 종목코드(`429000`), trace id, API
+  에러 body에 실려 오는 request id가 전부 429로 집계된다. 그 집계가 미문서화 `RANKING` 한도의
+  유일한 측정값이고 §5의 백오프 근거다. → 앵커드 매칭.
+- `decimal()`이 `NaN`/`Inf`를 `"NaN"`/`"+Inf"`로 렌더했다. `parseDecimal`은 `ParseFloat`가
+  err 없이 받아들이는 이 값들을 그대로 통과시킨다. **무한대 거래대금은 모든 임계를 통과한다** —
+  `rank/0 = +Inf`를 이미 거부한 것과 같은 실패를 한 칸 옆에서. → 부재(`""`)로.
+- WTS 인기 순위가 `market` 인자를 받고 버렸다. panel만이 유일한 방어였다. → 원천 자체가 거부.
+- `rankingsPath` 복사본 → `official.PathRankings`를 공유. 표류하면 조회가 빗나가고, 빗나감은
+  "헤더 안 보냄"과 구분되지 않아 측정이 조용히 꺼진다.
+- 미설정 원천이 `Every()=0` — 매 tick due, floor 없음, 엔진 양보 없음. §3이 붙일 캔들이
+  가장 비싸고 가장 그렇게 도착하기 쉽다. → 알려진 가장 보수적인 간격(15초)으로.
+
+## §2에서 수용하지 않은 것
+
+- **만료 후보 정리(`PruneExpiredCandidates`)**: 지적은 맞다. §4가 극값·veto 이력 컬럼을
+  추가하기 전에 배선하면 spec이 남기라고 한 데이터를 실패 없이 파괴한다. tasks의 순서 가드 유지.
+- **`coolAbsent`의 전체 테이블 읽기**: 시장·상태로 SQL에서 거르는 것이 맞다. §5가 루프를
+  만들 때 함께 한다 — 지금은 호출자가 없다.
+
+## 결과
+
+- `go test ./...` — 3202 pass, 0 fail (57 packages)
+- `go test -race ./internal/candidate/` — clean
+- `go vet ./...` · `make lint` — clean

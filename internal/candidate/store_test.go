@@ -49,7 +49,7 @@ func TestAReportedValueIsNeverConfusedWithADerivedOne(t *testing.T) {
 	s, _ := openStore(t)
 	ctx := context.Background()
 
-	in := obs("005930", t0, SourceOfficialRankings, Reported{
+	in := obs("005930", t0, SourceOfficialTradingValue, Reported{
 		Rank: 3, RankTotal: 100, TradingValue: "1000000", TradingVolume: "500", Price: "70000",
 	})
 	if err := s.RecordObservations(ctx, []Observation{in}); err != nil {
@@ -84,9 +84,9 @@ func TestTheSourceOfEveryObservationSurvivesTheRoundTrip(t *testing.T) {
 	ctx := context.Background()
 
 	err := s.RecordObservations(ctx, []Observation{
-		obs("005930", t0, SourceOfficialRankings, Reported{Rank: 1, RankTotal: 50}),
+		obs("005930", t0, SourceOfficialTradingValue, Reported{Rank: 1, RankTotal: 50}),
 		{
-			Market: "KR", Symbol: "005930", Source: SourceOfficialRankings,
+			Market: "KR", Symbol: "005930", Source: SourceOfficialTradingValue,
 			ObservedAt: t0.Add(15 * time.Second),
 			Reported:   Reported{Rank: 1, RankTotal: 50},
 			// D14: the same source id, reached a different way. Recording this
@@ -125,7 +125,7 @@ func TestASecondScanDoesNotOverwriteTheFirst(t *testing.T) {
 	ctx := context.Background()
 
 	for i, at := range []time.Time{t0, t0.Add(15 * time.Second), t0.Add(30 * time.Second)} {
-		o := obs("005930", at, SourceOfficialRankings, Reported{
+		o := obs("005930", at, SourceOfficialTradingValue, Reported{
 			Rank: 5 - i, RankTotal: 100, TradingValue: "1000",
 		})
 		if err := s.RecordObservations(ctx, []Observation{o}); err != nil {
@@ -163,7 +163,7 @@ func TestTheHistoryOutlivesTheProcess(t *testing.T) {
 		t.Fatalf("Open: %v", err)
 	}
 	if err := first.RecordObservations(ctx, []Observation{
-		obs("005930", t0, SourceOfficialRankings, Reported{Rank: 1, RankTotal: 100}),
+		obs("005930", t0, SourceOfficialTradingValue, Reported{Rank: 1, RankTotal: 100}),
 	}); err != nil {
 		t.Fatalf("RecordObservations: %v", err)
 	}
@@ -236,7 +236,7 @@ func TestAScanningStoreDoesNotBlockTheEngineFromStarting(t *testing.T) {
 	// A scan in progress: rows being written, the handle open.
 	for i := 0; i < 20; i++ {
 		o := obs("00593"+string(rune('0'+i%10)), t0.Add(time.Duration(i)*time.Second),
-			SourceOfficialRankings, Reported{Rank: i + 1, RankTotal: 100})
+			SourceOfficialTradingValue, Reported{Rank: i + 1, RankTotal: 100})
 		if err := s.RecordObservations(ctx, []Observation{o}); err != nil {
 			t.Fatalf("RecordObservations: %v", err)
 		}
@@ -380,7 +380,7 @@ func TestTheStoredInstantOrdersLikeTime(t *testing.T) {
 	}
 	for _, at := range instants {
 		if err := s.RecordObservations(ctx, []Observation{
-			obs("005930", at, SourceOfficialRankings, Reported{Rank: 1, RankTotal: 100}),
+			obs("005930", at, SourceOfficialTradingValue, Reported{Rank: 1, RankTotal: 100}),
 		}); err != nil {
 			t.Fatalf("RecordObservations(%v): %v", at, err)
 		}
@@ -541,7 +541,7 @@ func TestANewCandidateDoesNotInheritTheDeadOnesSources(t *testing.T) {
 		t.Fatalf("Promote: %v", err)
 	}
 	if err := s.NoteSources(ctx, "KR", "005930",
-		[]SourceID{SourceWTSPopular, SourceOfficialRankings}, 5, 2, true); err != nil {
+		[]SourceID{SourceWTSPopular, SourceOfficialTradingValue}, 5, 2, true); err != nil {
 		t.Fatalf("NoteSources: %v", err)
 	}
 	cooled := t0.Add(time.Minute)
@@ -585,7 +585,7 @@ func TestRecordingSourcesOneAtATimeKeepsThemAll(t *testing.T) {
 		t.Fatalf("Promote: %v", err)
 	}
 	if err := s.NoteSources(ctx, "KR", "005930",
-		[]SourceID{SourceOfficialRankings}, 5, 5, false); err != nil {
+		[]SourceID{SourceOfficialTradingValue}, 5, 5, false); err != nil {
 		t.Fatalf("NoteSources #1: %v", err)
 	}
 	if err := s.NoteSources(ctx, "KR", "005930",
@@ -626,7 +626,7 @@ func TestARankWithoutItsListLengthIsRefused(t *testing.T) {
 	// +Inf clears every threshold it is compared against — a maximal signal
 	// manufactured out of a missing field.
 	err := s.RecordObservations(ctx, []Observation{
-		obs("005930", t0, SourceOfficialRankings, Reported{Rank: 5, RankTotal: 0}),
+		obs("005930", t0, SourceOfficialTradingValue, Reported{Rank: 5, RankTotal: 0}),
 	})
 	if err == nil {
 		t.Error("an observation ranked 5 of an unstated list was accepted")
@@ -652,7 +652,7 @@ func TestPruningRawObservationsLeavesTheCandidateSummary(t *testing.T) {
 	ctx := context.Background()
 
 	if err := s.RecordObservations(ctx, []Observation{
-		obs("005930", t0, SourceOfficialRankings, Reported{Rank: 1, RankTotal: 100}),
+		obs("005930", t0, SourceOfficialTradingValue, Reported{Rank: 1, RankTotal: 100}),
 	}); err != nil {
 		t.Fatalf("RecordObservations: %v", err)
 	}
