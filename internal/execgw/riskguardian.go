@@ -205,6 +205,13 @@ type RiskGuardianOptions struct {
 	Announcer journal.ModeAnnouncer
 	// NewID mints decision ids and nonces. Defaults to 128 bits of randomness.
 	NewID func() string
+	// Observer records what each entry verdict measured (change
+	// add-net-rr-measurement). Optional: a Guardian without one issues exactly as
+	// it did before, which is what keeps the measurement from being load-bearing.
+	//
+	// It is called after the ledger has answered and it must not block — see
+	// observation.go.
+	Observer EntryObserver
 }
 
 // RiskGuardian is the risk authority. Its fields are unexported because two of
@@ -224,6 +231,7 @@ type RiskGuardian struct {
 	recollect     journal.RecollectPolicy
 	announcer     journal.ModeAnnouncer
 	newID         func() string
+	observer      EntryObserver
 }
 
 // NewRiskGuardian validates the configuration and derives the limit snapshot.
@@ -283,6 +291,7 @@ func NewRiskGuardian(opts RiskGuardianOptions) (*RiskGuardian, error) {
 		recollect:     opts.Recollect,
 		announcer:     opts.Announcer,
 		newID:         newID,
+		observer:      opts.Observer,
 	}, nil
 }
 
@@ -338,10 +347,16 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 	// The chain, once. Everything after this point is the ledger's answer, not a
 	// second judgement of the intent.
 	if verdict := evaluateChain(in); !verdict.Allowed {
+		// The refusal population's first persistence. It has no decision and no
+		// preimage, so this is the only record that will ever exist of it —
+		// design D6's asymmetry, and why a lost refusal is counted under its own
+		// kind.
+		g.observeEntry(g.entryObservation(in, journal.OutcomeRefusedChain, verdict))
 		return Issued{}, errors.Join(chainRefusal(verdict), g.escalateFor(ctx, verdict))
 	}
 	exposure, verdict := risk.EntryExposureValue(in)
 	if !verdict.Allowed {
+		g.observeEntry(g.entryObservation(in, journal.OutcomeRefusedChain, verdict))
 		return Issued{}, chainRefusal(verdict)
 	}
 
@@ -410,8 +425,27 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 			}, nil
 		}, g.recollect)
 	if err != nil {
-		return Issued{}, issuanceRefusal(err)
+		refusal := issuanceRefusal(err)
+		// The chain allowed and the ledger did not. Recording this as a chain
+		// refusal would attribute the account being full to the intent's geometry,
+		// which is the distinction R2-5 asked for: a null decision reference cannot
+		// tell the three outcomes apart, so the outcome is stored.
+		row := g.entryObservation(in, journal.OutcomeAllowedIssuanceRefused, risk.Decision{})
+		if refused, ok := refusal.(*IssueRefusal); ok && refused.Stage == StageIssuance {
+			row.IssuanceReasonCode = refused.Reason
+			g.observeEntry(row)
+		}
+		return Issued{}, refusal
 	}
+	// After the commit, never before it: an observation inside the transaction
+	// would roll this decision back when the measurement failed. And handed over
+	// without waiting — the caller's next move is the Gateway submission, and the
+	// decision's 60-second TTL is running.
+	issued := g.entryObservation(in, journal.OutcomeAllowedIssued, risk.Decision{})
+	issued.DecisionID = out.Decision.ID
+	issued.IssuedAt = out.Decision.IssuedAt
+	g.observeEntry(issued)
+
 	return Issued{
 		Decision:     GuardianDecision{ID: out.Decision.ID, Generation: out.Decision.Generation},
 		ExpiresAt:    out.Decision.ExpiresAt,

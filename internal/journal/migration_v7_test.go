@@ -85,16 +85,17 @@ func TestMigrationV6ToV7PreservesEveryRow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	// Stopped at 7 rather than run to head: this file is the v6→v7 step's
+	// contract, and add-net-rr-measurement's v8 must not silently turn it into a
+	// test of a different transition (migration_v6_test.go pins v5→v6 the same
+	// way and says so, and migration_v8_test.go is v7→v8's).
+	j := openJournalAtSchema(t, path, 7)
 	version, err := j.SchemaVersion(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if version != SchemaVersion {
-		t.Fatalf("schema version after upgrade = %d, want %d", version, SchemaVersion)
-	}
-	if SchemaVersion != 7 {
-		t.Fatalf("this file is the v6→v7 contract; SchemaVersion is %d", SchemaVersion)
+	if version != 7 {
+		t.Fatalf("schema version after upgrade = %d, want 7", version)
 	}
 
 	after := countRows(t, j.db, v6AllTables)
@@ -153,7 +154,7 @@ func TestMigrationV6ToV7PreservesEveryRow(t *testing.T) {
 // unprotected while reporting it as unmanaged.
 func TestOlderBuildRefusesTheV7Journal(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "journal.db")
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 7)
 	seedV6Rows(t, j)
 	if err := j.Close(); err != nil {
 		t.Fatal(err)
@@ -177,7 +178,7 @@ func TestOlderBuildRefusesTheV7Journal(t *testing.T) {
 
 	// The refusal must not have touched the file, and it must not have taken a
 	// backup for a migration that never ran.
-	reopened := openTestJournalAt(t, path)
+	reopened := openJournalAtSchema(t, path, 7)
 	if got := countRows(t, reopened.db, []string{"positions"})["positions"]; got != 1 {
 		t.Fatalf("positions after the refusal = %d, want 1", got)
 	}
@@ -201,7 +202,7 @@ func TestV7MigrationBacksUpBeforeApplying(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 7)
 
 	backups := backupsIn(t, dir)
 	if len(backups) != 1 {
@@ -306,7 +307,7 @@ func TestFailedV7MigrationLeavesTheJournalRestorable(t *testing.T) {
 	assertBackupAtVersion(t, backups[0], 6, before, "position_adoptions")
 	restoreBackup(t, backups[0], path)
 
-	restored := openTestJournalAt(t, path)
+	restored := openJournalAtSchema(t, path, 7)
 	if got := countRows(t, restored.db, v6AllTables); !sameCounts(got, before) {
 		t.Errorf("rows after restoring the backup = %v, want %v", got, before)
 	}
@@ -314,8 +315,7 @@ func TestFailedV7MigrationLeavesTheJournalRestorable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if version != SchemaVersion {
-		t.Errorf("the restored journal must migrate forward: version = %d, want %d",
-			version, SchemaVersion)
+	if version != 7 {
+		t.Errorf("the restored journal must migrate forward: version = %d, want 7", version)
 	}
 }

@@ -1,0 +1,46 @@
+{
+  "file": "internal/risk/chain.go",
+  "source_sha256": "111526544ab08d65e2455a95e1cadda4ab3bc5812a84b1757f1bb903edcfe277",
+  "package": "risk",
+  "function": "at",
+  "signature": "at(params=2, results=1)",
+  "start": {
+    "line": 144,
+    "column": 1
+  },
+  "end": {
+    "line": 149,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 146,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

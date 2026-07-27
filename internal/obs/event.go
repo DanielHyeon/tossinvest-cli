@@ -194,6 +194,35 @@ const (
 	// means somebody re-enabled entries on a live account.
 	EventOperatingMode EventType = "engine.operating_mode"
 
+	// --- measurement ----------------------------------------------------------
+	//
+	// One rule governs this group and it is a SHALL NOT: measurement failures are
+	// never critical. risk-management's "분석·성과 작업 실패는 트리거가 아니다" is
+	// the requirement, and the mechanism it protects against is this file's own
+	// grading table — an event listed there goes to the durable outbox, and an
+	// outbox entry that cannot be delivered latches the entry gate and escalates
+	// the operating mode to ENTRY_BLOCKED, which only an operator can lift.
+	//
+	// So a typo in a v8 column name must not be able to stop a live account
+	// trading. Membership in criticalEvents is the only switch that could do that,
+	// and measurement_test.go asserts the non-membership rather than trusting it.
+
+	// EventEntryObservationFailed is an entry verdict whose observation could not
+	// be written (change add-net-rr-measurement). The verdict itself stands: the
+	// observation is outside the issuance transaction precisely so that losing it
+	// cannot roll a decision back.
+	//
+	// Normal, deliberately. What is lost is a row in an analysis table; nothing
+	// about the account's safety changed, and the loss is separately counted in a
+	// store that does not share a failure domain with the one that just failed
+	// (internal/measure/degrade).
+	EventEntryObservationFailed EventType = "measurement.entry_observation_failed"
+	// EventEntryObservationReconstructed is a lost observation rebuilt from a
+	// decision preimage. Normal: it is the repair working, and the row carries a
+	// marker saying its ratios were recomputed under today's rates rather than the
+	// ones the verdict used.
+	EventEntryObservationReconstructed EventType = "measurement.entry_observation_reconstructed"
+
 	// --- Phase 2, reserved --------------------------------------------------
 	//
 	// Declared now so the enum is stable before the features exist: a consumer

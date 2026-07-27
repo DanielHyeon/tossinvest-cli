@@ -20,8 +20,12 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
-// DefaultMinRewardRisk is the minimum (target − entry) / (entry − stop) an entry
-// must offer.
+// DefaultMinRewardRisk is the minimum **gross** ratio (target − entry) /
+// (entry − stop) an entry must offer.
+//
+// The basis is part of the value. A threshold is only meaningful against the
+// ratio it was set for, and the two cited below were both set against gross or
+// structural ratios — see the provenance limit at the end of this comment.
 //
 // # Provenance
 //
@@ -41,7 +45,32 @@ import (
 //     floor the live buy gate still applies today.
 //
 // 1.5 was considered and rejected: it is the lowest tier of the live gate's
-// per-setup range (2.0–4.0), not a floor anyone chose deliberately.
+// per-setup range (2.0–4.0), not a floor anyone chose deliberately. That reason
+// does not depend on the basis, so changing the basis to net does not revive 1.5.
+//
+// # The provenance does not carry over to a net basis
+//
+// Both citations above are gross- or structural-ratio gates, one of them
+// market-specific and operator-tunable. Neither is evidence for any net-basis
+// value, and a change that switches the basis may not inherit 2.0 as its
+// justification (risk-management SHALL NOT) — it has to derive a value from
+// observed verdicts, which is what change add-net-rr-measurement exists to start
+// producing.
+//
+// Two further traps that change has to clear, both recorded because they are
+// counter-intuitive:
+//
+//   - **A net threshold below 2.0 is not automatically stricter.** The two
+//     requirements cross over at a stop width of s* = (1 + r)(c − 1) / (R − r),
+//     where c is the break-even ratio, r the net threshold and R the gross one.
+//     Past that width the net rule is *looser*. netrr_inversion_test.go computes
+//     the crossover from the live cost model.
+//   - **The crossover moves with the rates.** All seven are `[미검증]`
+//     over-estimates today; measuring them downward moves s* down too, widening
+//     the range where a net threshold relaxes the gate.
+//
+// The forms that are monotonically safe are a net threshold at or above 2.0, or
+// keeping gross 2.0 and adding a net check as a conjunction.
 const DefaultMinRewardRisk = "2.0"
 
 // Side is the direction of the proposed mutation.

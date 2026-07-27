@@ -42,7 +42,7 @@
 | 주문당 수량·notional | **포함 상한** — 같으면 통과, 초과면 차단 | design D2, issues.md 판정 유지 |
 | 총 개방 노출·일일 손실 | **도달 시 차단(≥)** | 예약 트랜잭션 실장과 일치 — `riskcalc.WithinLimit`(동률 fail-closed)을 그대로 소비 |
 | 현금 | 포함 상한 — notional+비용이 현금과 같으면 통과 | 원본 `>` 비교와 동일 |
-| 최소 RR | **미달만 거부** — 정확히 2.0은 통과 | "미달"의 문언. 유리수 정확 비교라 경계가 부동소수점 산물이 아니다 |
+| 최소 RR | **미달만 거부** — 정확히 2.0은 통과 | "미달"의 문언. 유리수 정확 비교라 경계가 부동소수점 산물이 아니다. **이 정밀도 근거는 총 RR 게이트에만 성립한다** — 순 RR 관측값은 `BreakEvenSellPrice`의 float64 산술에서 온 본전을 물려받으므로 마지막 유효자리에 상대오차가 있다(관측값이므로 결함이 아니라 기록 대상). 순 기준으로 게이트를 옮기는 change는 본전을 위로 올림하거나 유리수 end-to-end로 바꾸는 것을 **선행**해야 한다 — `internal/risk/netrr_test.go`가 반례 둘(요율 0에서 등호, 고정밀 진입가에서 순 > 총)을 고정한다 |
 | 재진입 쿨다운 | 경과 시각 도달이면 통과 | 초 해상도 시계에서 쿨다운이 무한정 늘어나지 않게 |
 | 계좌자본 | 0 이하면 즉시 차단 | risk-management 명문 |
 | 집계 입력(총 노출·일손실) | **음수는 비교하지 않고 거부**(`INPUT_UNAVAILABLE`) | 둘 다 생산자 계약상 크기다(`riskcalc.DailyLoss`는 `max(0, −net)`). 부호 있는 손익을 넘기면 손실 난 날이 "한도 여유"로 읽힌다 — 이 파일에서 유일하게 게이트를 여는 방향의 입력 오류라 이름으로 막는다 |
@@ -71,7 +71,7 @@ risk-management의 열거를 코드 위치와 함께 옮긴다.
 
 | 항목 | 이유 |
 |---|---|
-| 최소 RR 2.0 | 원 체인에 없다. 전략 계층의 `expected_rr` 게이트를 의도 산술로 승격 — 신호 산출물이 아니라 의도 필드 세 개의 순수 산술이다. 기본값 provenance: parker_vwap `default_lock.py:35-38`(§22 #2 lock, 초기값 2.0 — Plan 044가 1.3으로 완화한 것은 §0.9 역방향이라 미추종), `live_entry_contract.py:53`(`_DEFAULT_US_MIN_RR = 2.0`). 1.5는 live 게이트 최저 티어 값이라 기각 |
+| 최소 RR 2.0 | 원 체인에 없다. 전략 계층의 `expected_rr` 게이트를 의도 산술로 승격 — 신호 산출물이 아니라 의도 필드 세 개의 순수 산술이다. **기준은 총 RR이다.** 기본값 provenance: parker_vwap `default_lock.py:35-38`(§22 #2 lock, 초기값 2.0 — Plan 044가 1.3으로 완화한 것은 §0.9 역방향이라 미추종), `live_entry_contract.py:53`(`_DEFAULT_US_MIN_RR = 2.0`, **미국 시장 한정·설정 가능 범위 2.0~4.0의 구조 RR 플로어**). 1.5는 live 게이트 최저 티어 값이라 기각 — 이 근거는 기준(총·순)에 의존하지 않으므로 기준을 순으로 바꾸는 것만으로 해소되지 않는다. **인용된 두 출처는 모두 총·구조 RR 게이트이며 순 기준 선례가 아니다** — 순 기준으로 거론되는 값은 StockOS `early_entry_geometry.py`의 `NET_RR_INSUFFICIENT`(KRX 1.5 / US 2.0)과 058 사후 분석 처방 1.3이고, 둘 다 파일·문서 경로와 검증 상태를 병기하지 않으면 provenance 없는 수치다. 순 기준 임계값을 정하는 change는 총 2.0을 승계 근거로 인용할 수 없고 관측 분포에서 도출해야 한다(risk-management SHALL NOT) |
 | 심볼 allowlist | 아래 구조 대체 참조 |
 | `STOP_MISSING` | 원본은 `OrderCandidate.__post_init__` 생성자가 강제해 Guardian 사유 코드가 없다. TossOS는 생성자가 없으므로 체인이 사유를 낸다 |
 | 진입 latch 단계 | TossOS 실장(execgw EntryGate — 401/403·SLO·RECONCILE·recovery) |

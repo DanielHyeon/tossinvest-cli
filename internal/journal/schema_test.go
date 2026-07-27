@@ -83,6 +83,10 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"alert_outbox",
 		"attempt_transitions",
 		"decisions",
+		// Schema v8 (add-net-rr-measurement, design D1): the entry verdict
+		// observation. Analysis-only and self-contained — it is in this list
+		// because the list is every table, not because the ledger import reads it.
+		"entry_decision_observations",
 		"execution_corrections",
 		"exit_events",
 		"exit_states",

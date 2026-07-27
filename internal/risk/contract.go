@@ -23,6 +23,24 @@ package risk
 // break-even comparison stays in the cost model's float64 domain, because a
 // break-even price is a valuation and its input rates are approximations to
 // begin with.
+//
+// # What that means for the net ratio recorded beside the gate
+//
+// netrr.go computes (target − B) / (B − stop) with the same exact rationals, but B
+// arrives as a decimal string rendered from float64 arithmetic — so the observed
+// net ratio inherits the cost model's bounded relative error in its last
+// significant digits. As an observation that is a limitation to record, not a
+// defect: no verdict turns on it.
+//
+// A change promoting the net ratio to a gate must resolve this **first**, and the
+// reason is the one this comment opens with. Two concrete counterexamples are
+// pinned in netrr_test.go: with every rate zero the net ratio equals the gross one
+// exactly, and at a high-precision entry price the rendered B can land below the
+// entry, making the net ratio *larger* than the gross one. A gate whose boundary
+// moves with the binary expansion of a price is the failure these rationals exist
+// to prevent. The conservative fix is to round B **up** before comparing — a larger
+// break-even lowers the net ratio, so the error is monotonically safe — or to carry
+// the cost arithmetic in rationals end to end.
 
 import (
 	"fmt"
@@ -102,7 +120,7 @@ func RiskBasedQuantity(riskBudget, entryPrice, stopPrice string) (string, error)
 
 // --- chain steps ------------------------------------------------------------
 
-// checkStopContract is the chain's fourth rung: No Stop = No Trade, a protective
+// checkStopContract is the chain's fifth rung: No Stop = No Trade, a protective
 // stop, a target above the entry, and a target above the cost-inclusive
 // break-even.
 //
@@ -167,7 +185,14 @@ func checkStopContract(in Input) Decision {
 	return allow()
 }
 
-// checkMinRewardRisk is the chain's sixth rung.
+// checkMinRewardRisk is the chain's seventh rung, and it judges the **gross**
+// ratio: (target − entry) / (entry − stop), against Policy.MinRewardRisk.
+//
+// Gross is the whole of what this gate has ever measured, and naming it matters
+// now that a net ratio exists beside it. The net one — (target − B) / (B − stop),
+// where B is the cost-inclusive break-even — is computed by risk.NetRewardRisk and
+// recorded as an *observation* (change add-net-rr-measurement). It is not an input
+// here and this rung's verdicts are unchanged by its existence.
 //
 // A refusal to compute maps to MIN_RR_NOT_MET, not to a pass and not to a zero:
 // whatever the reason, the intent has not demonstrated the ratio it is required

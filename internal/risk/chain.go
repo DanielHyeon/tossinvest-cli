@@ -29,7 +29,31 @@ type Decision struct {
 	Allowed bool
 	Reason  ReasonCode
 	Detail  string
+	// Step names where the verdict stopped: an entryChain rung name,
+	// StepPreflight, or StepReduction. Empty on an ALLOW, which stopped nowhere.
+	//
+	// Added by change add-net-rr-measurement so the observation record can say
+	// which rung refused (risk-management: 정지한 체인 단계는 판정이 직접 보고해야
+	// 한다 SHALL). It has to be reported rather than derived: ReasonInputUnavailable
+	// is raised at 42 sites in this package, so a reason→rung map is many-to-one
+	// and would be silently wrong for exactly the refusals hardest to diagnose.
+	//
+	// Additive. The rung functions do not set it — Evaluate stamps the rung it was
+	// running — so no rung's internal logic changed to make this field exist, and
+	// no verdict moved.
+	Step string
 }
+
+// Steps that are not entryChain rungs. Distinct names because they are distinct
+// facts: a preflight failure means the caller handed over something unusable, and
+// a reduction is not judged by the entry chain at all. Recording either as a rung
+// would file it under a check that never ran.
+const (
+	// StepPreflight is the pre-chain usability check (preflight).
+	StepPreflight = "preflight"
+	// StepReduction is the reduce-only branch (evaluateReduction).
+	StepReduction = "reduction"
+)
 
 func allow() Decision { return Decision{Allowed: true, Reason: ReasonAllowed} }
 
@@ -101,17 +125,27 @@ func EntryChainSteps() []string {
 // submission time.
 func Evaluate(in Input) Decision {
 	if d := preflight(in); !d.Allowed {
-		return d
+		return at(StepPreflight, d)
 	}
 	if in.Intent.Side == SideSell {
-		return evaluateReduction(in)
+		return at(StepReduction, evaluateReduction(in))
 	}
 	for _, s := range entryChain {
 		if d := s.eval(in); !d.Allowed {
-			return d
+			return at(s.name, d)
 		}
 	}
 	return allow()
+}
+
+// at stamps a refusal with the step that produced it. An ALLOW passes through
+// untouched: it stopped nowhere, so naming the last rung it cleared would be a
+// column that reads as a refusal site.
+func at(step string, d Decision) Decision {
+	if !d.Allowed {
+		d.Step = step
+	}
+	return d
 }
 
 // preflight refuses an input the chain cannot evaluate at all.
@@ -265,7 +299,7 @@ func checkSymbolAllowlist(in Input) Decision {
 
 // --- 6. order size -----------------------------------------------------------------------
 
-// checkOrderSize is the chain's fifth rung: the quantity itself, then the
+// checkOrderSize is the chain's sixth rung: the quantity itself, then the
 // per-trade risk budget, then the configured per-order ceilings.
 //
 // The risk budget is checked before the configured ceilings because it is

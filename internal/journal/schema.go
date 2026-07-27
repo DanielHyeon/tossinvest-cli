@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 7
+const SchemaVersion = 8
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -61,6 +61,12 @@ var migrations = []migration{
 	// the same file — the adoption record has exactly one writer and the layout
 	// is what enforces it.
 	{Version: 7, SQL: schemaV7},
+	// schemaV8 lives in entryobservation.go: it is the transcription of design.md
+	// D1 for change add-net-rr-measurement, and the code that reads and writes its
+	// table is in the same file — the observation has one writer on the trading
+	// path and one on the reconstruction path, and the layout is what keeps the
+	// contract tables out of both.
+	{Version: 8, SQL: schemaV8},
 }
 
 // schemaV1 is the initial schema.

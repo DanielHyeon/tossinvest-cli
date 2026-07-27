@@ -108,8 +108,16 @@ const (
 
 	// --- 6. minimum reward:risk ------------------------------------------------
 
-	// ReasonMinRRNotMet: (target − entry) / (entry − stop) is below the minimum,
-	// or cannot be computed. A ratio nobody could compute is not a ratio of zero.
+	// ReasonMinRRNotMet: the **gross** ratio (target − entry) / (entry − stop) is
+	// below Policy.MinRewardRisk, or cannot be computed. A ratio nobody could
+	// compute is not a ratio of zero.
+	//
+	// Gross, and only gross. The net ratio — (target − B) / (B − stop), where B is
+	// the cost-inclusive break-even — exists beside it as an *observation*
+	// (risk.NetRewardRisk, change add-net-rr-measurement) and no code raises this
+	// reason on account of it. There is deliberately no second code: the closest
+	// thing to a net-basis refusal the chain has is TARGET_BELOW_BREAK_EVEN at the
+	// stop-contract rung, which catches the case where costs eat the whole target.
 	ReasonMinRRNotMet ReasonCode = "MIN_RR_NOT_MET"
 
 	// --- 7. cash ---------------------------------------------------------------
