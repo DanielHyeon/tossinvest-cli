@@ -532,6 +532,13 @@ func (r *Runner) Plan(ctx context.Context) Plan {
 	passed := func(id StepID) bool { return willRun[id] || Passed(r.prior, id) }
 
 	ordinal := 0
+	// The prologue comes first on the list because it runs first: while a leftover
+	// fills the exposure cap, nothing below it can send anything (cleanup.go).
+	for _, line := range r.planCleanup() {
+		ordinal++
+		line.Ordinal = ordinal
+		plan.Mutations = append(plan.Mutations, line)
+	}
 	for _, step := range Steps() {
 		if settled, verdict := r.settled(step.ID); settled {
 			if step.Mutates {

@@ -133,7 +133,7 @@ type Options struct {
 	// VerifyRecordUS is the US market's evidence record. A capability verdict
 	// belongs to an account and a market, so the two never share a file.
 	VerifyRecordUS string
-	Attestation  string
+	Attestation    string
 
 	// MinSoakDays is the consecutive-day bar the soak is judged against.
 	MinSoakDays int

@@ -60,6 +60,12 @@ var stepLabels = map[StepID]string{
 // An unknown id comes back as itself. That is the honest answer for a record
 // written by a newer build than the one reading it, and it is never silently blank.
 func StepLabel(id StepID) string {
+	// The cleanup prologue is labelled here rather than in stepLabels: that map is
+	// asserted to hold the catalogue and nothing but the catalogue, and the
+	// prologue is deliberately not a catalogue step (cleanup.go).
+	if id == StepCleanup {
+		return CleanupLabel
+	}
 	if label, ok := stepLabels[id]; ok {
 		return label
 	}

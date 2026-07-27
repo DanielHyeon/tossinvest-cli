@@ -397,8 +397,9 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   <p><a href="/report">리포트 보기</a></p>
   {{end}}
 </section>
-{{end}}{{else}}
+{{end}}{{end}}
 
+{{if .ShowStart}}
 {{template "hours" .Snap.Session}}
 
 <section>

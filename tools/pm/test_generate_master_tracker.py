@@ -26,6 +26,7 @@ class TrackerTests(unittest.TestCase):
             "console-click-approval",
             "verify-us-market",
             "apply-us-measurement-fixes",
+            "verify-clears-leftovers",
         ):
             path = changes / change
             path.mkdir(parents=True)

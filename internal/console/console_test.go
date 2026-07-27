@@ -103,10 +103,10 @@ func newHarness(t *testing.T, tweak ...func(*Options)) *harness {
 		StartVerify:    realStarter(broker, record),
 		VerifyRecord:   record,
 		VerifyRecordUS: usRecordPath(record),
-		SoakRecord:   filepath.Join(dir, soak.FileName),
-		Attestation:  filepath.Join(dir, attest.FileName),
-		MinSoakDays:  3,
-		Out:          io.Discard,
+		SoakRecord:     filepath.Join(dir, soak.FileName),
+		Attestation:    filepath.Join(dir, attest.FileName),
+		MinSoakDays:    3,
+		Out:            io.Discard,
 	}
 	for _, f := range tweak {
 		f(&o)

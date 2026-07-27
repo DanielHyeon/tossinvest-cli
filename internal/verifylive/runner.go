@@ -273,6 +273,24 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 		return summary, err
 	}
 
+	// Before the catalogue: whatever an earlier run left resting. It is on the list
+	// the operator just approved, and until it is gone the exposure cap refuses
+	// every mutating step below (cleanup.go).
+	if outcome, err, stop := r.cleanup(ctx); outcome.Step != "" || err != nil {
+		if outcome.Step != "" {
+			summary.Outcomes = append(summary.Outcomes, outcome)
+		}
+		if stop {
+			summary.Halted = true
+			summary.Halt = outcome.Reason
+			if outcome.Reason == "" {
+				summary.Halt = "정리를 기록하지 못했다"
+			}
+			summary.Outstanding = r.outstanding()
+			return summary, err
+		}
+	}
+
 	for _, step := range Steps() {
 		if err := ctx.Err(); err != nil {
 			summary.Halted = true

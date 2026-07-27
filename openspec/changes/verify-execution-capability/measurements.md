@@ -78,3 +78,22 @@ run `run-M6WQZ5WKGGE4KS4C`, 승인 채널 = 콘솔 클릭(console-click-approval
 CLI는 `--redo`로 넘지만 **콘솔은 always-resume + redo 부재**라, 환경 원인(휴장·429·보유 0)으로
 실패·생략된 측정을 웹 화면에서 다시 수행할 방법이 없다 — 콘솔 단독 운용(사용자 결정)에서는
 검증이 "완료·측정 0건"으로 고착된다. 재측정 경로·장시간 사전 경고·429 강건성을 1.7로 발주.
+
+## 3차 실행 — US 재개 (2026-07-27 22:40 KST / 09:40 EDT, 콘솔 경유)
+
+run `run-G5DKDM3F4JVP5XM2`, 기록 `capability-verify-us.jsonl`, 5단계 기록. 2차 실행이
+`awaiting-restart`로 멈춰 둔 조건주문을 **다른 프로세스 인스턴스**가 읽어 마무리했다.
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M18 | **조건주문은 등록한 프로세스가 죽어도 존속한다** — `proc-PNA2FRT…`가 등록한 조건주문을 `proc-NZF4D55…`가 status `WATCHING`으로 다시 읽었다. 2c의 전제 중 가장 중요한 것: 브로커측 손절은 우리 프로세스의 생존과 무관하게 계좌에 남아 있으므로, **엔진이 죽어 있는 동안에도 보호가 유효하다**. 이것이 앱측 손절이 아니라 브로커측 보호주문을 쓰는 이유 자체다 | conditional-persist `conditional.survives_process_exit=true`, `conditional.status.after_restart=WATCHING` |
+| M19 | **US 조건주문 정정은 새 식별자를 발급하고 옛 식별자를 즉시 무효화한다** — `hjbGwc27…` → `H621LabR…`, 옛 id는 `404`로 더 이상 읽히지 않는다. 정정 후 status `WATCHING` 유지. **2c는 정정 응답의 새 id를 원장에 반드시 반영해야 한다** — 옛 id를 들고 있으면 취소도 조회도 실패하고, 그 상태는 "보호가 있다고 믿지만 추적하지 못하는" 최악이다 | conditional-modify `conditional.modify_issues_new_id=true`, `conditional.modify_invalidates_old_id=true` |
+| M20 | **US 조건주문 취소가 동작한다** — `DELETE /api/v1/conditional-orders/{id}` 수락 후 식별자가 더 이상 읽히지 않는다. 2.5의 등록·조회·존속·정정·취소가 US에서 모두 pass다(발동만 deferred) | conditional-cancel `conditional.cancel.ok=true`, `conditional.cancel.gone_after=true` |
+| M21 | **체결 비용은 여전히 미측정** — 검증 주문 2건 모두 미체결(설계상 체결 불가 지정가), 따라서 수수료·세금 실측은 이 경로로 얻을 수 없다 | costs `costs.orders_filled=0`, `costs.collected=false` |
+
+### 도구 갭 — 잔여물 교착 (→ change `verify-clears-leftovers`)
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M22 | **도구가 자기 잔여물을 치울 수 없다** — M16으로 취소하지 못한 주문 1건(`OsBakht…`, PENDING)이 남았고, 이 상태에서 ① [이어하기]는 order-cancel이 terminal(`fail`)이라 건너뛰며 그 취소는 어느 계획에도 없어 `ErrOutsidePlan`, ② [재측정]은 세 단계 모두 첫 요청이 노출 상한(`1 live order(s) … cap is 1`)에 걸려 거절, ③ 브로커 앱에서 손으로 취소해도 상한은 **기록**을 보고 세므로 계속 차단. 3차 실행이 5단계를 기록하고도 이 주문을 남긴 채 끝난 것이 실증이다 | order-amend·sell-boundary reason(`ErrExposureCap`), 3차 실행 종료 메시지("객체 1건이 아직 계좌에 살아 있다"), costs `order.status.…afmp1j2=PENDING` |
+| M23 | **승인 창 만료가 장중 창 3개를 소모했다** — 22:03·22:27·(그 사이 1회) 세 번의 실행이 모두 `승인 창 만료`로 0단계 종료. 원인 둘: ① 만료 문구가 "확인 문자열이 만료되었다"라고 말하는데 콘솔 승인에는 문자열이 없다(console-click-approval 이후 잔존 문구), ② **끝난 실행이 화면에 있는 동안 시작 제어가 렌더되지 않아** 만료될 때마다 콘솔 재시작이 강제됐다. M11과 같은 계열의 결함이며 원인은 다르다 | `capability-verify-us.jsonl`의 approval 3건(verdict `refused`), `console-launch.log`의 `0 step(s) recorded` 3회, `internal/console/templates.go` 시작 섹션의 `{{else}}` 분기 |

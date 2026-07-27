@@ -74,6 +74,14 @@ const KindStep = "step"
 // steps skip it on the Kind, which is what the field was put there for.
 const KindApproval = "approval"
 
+// KindCleanup marks the prologue that removes what an earlier run left resting.
+//
+// It is a third kind for the reason KindStep's comment anticipated: the line
+// records live requests and their artifacts, so Outstanding has to see it, but it
+// measures no capability, so every reader that walks the procedure has to skip it.
+// isStepEntry is the single place that decides which of those two it is.
+const KindCleanup = "cleanup"
+
 // Verdict is a step's outcome.
 type Verdict string
 

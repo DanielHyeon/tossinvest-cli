@@ -77,9 +77,15 @@ var (
 	// there is no step that proceeds without one.
 	ErrNotATerminal = errors.New(
 		"verify: 모든 라이브 mutation은 터미널에서 확인받아야 한다 — 이 명령에는 설계상 자동화 플래그가 없다")
-	// ErrConfirmationExpired means the nonce timed out. It is a refusal, not a
-	// failure: nothing was sent.
-	ErrConfirmationExpired = errors.New("verify: 확인 문자열이 만료되었다. 아무것도 전송되지 않았다")
+	// ErrConfirmationExpired means the approval window closed before it was
+	// answered. It is a refusal, not a failure: nothing was sent.
+	//
+	// The wording names the window rather than the device, because the two
+	// channels answer it differently — a typed string at a terminal, a click on
+	// the console — and the console has no confirmation string to expire. Telling
+	// an operator that a string they were never shown has expired sends them
+	// looking for it (2026-07-27: three console windows lapsed under this text).
+	ErrConfirmationExpired = errors.New("verify: 승인 창이 만료되었다. 아무것도 전송되지 않았다")
 	// ErrRefused means the typed text did not match, or the operator sent EOF.
 	ErrRefused = errors.New("verify: 확인 문자열이 일치하지 않는다. 아무것도 전송되지 않았다")
 )

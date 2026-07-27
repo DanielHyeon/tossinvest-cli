@@ -11,6 +11,7 @@
     "console-adoption-controls",
     "console-click-approval",
     "verify-us-market",
-    "apply-us-measurement-fixes"
+    "apply-us-measurement-fixes",
+    "verify-clears-leftovers"
   ]
 }

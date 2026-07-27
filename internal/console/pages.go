@@ -108,6 +108,17 @@ type verifyPage struct {
 	// CanRestart reports that the restart button is wired, so the page can offer
 	// the process boundary rather than describe it as a chore.
 	CanRestart bool
+	// ShowStart reports that the screen offers a way to begin a verification.
+	//
+	// It is false only while a run is actually working or waiting for its
+	// approval, where the action the operator needs is on the run itself. A run
+	// that has *finished* leaves the controls up: on 2026-07-27 three approval
+	// windows lapsed and each time the screen came back with no buttons on it at
+	// all, so the only way to try again was restarting the console — three live
+	// market windows spent on nothing (measurements.md M11, M18). The controls
+	// coming back is not a loosening: Spent and "이어할 단계가 없다" still decide
+	// whether the button does anything.
+	ShowStart bool
 }
 
 // RefreshSeconds mirrors dashboardPage's: two seconds while a run is working.
@@ -150,6 +161,7 @@ func (c *Console) renderVerify(w http.ResponseWriter, market, notice string) {
 	page.Spent = c.spent
 	c.mu.Unlock()
 
+	page.ShowStart = true
 	if run := c.currentRun(); run != nil {
 		v := run.snapshot()
 		page.Run = &v
@@ -160,6 +172,7 @@ func (c *Console) renderVerify(w http.ResponseWriter, market, notice string) {
 		}
 		// Refresh while the runner is working, never while the form is on screen.
 		page.Refresh = !v.Done && !v.Awaiting
+		page.ShowStart = v.Done
 	}
 	c.render(w, "verify", page)
 }

@@ -88,7 +88,9 @@ func NormalizeMarket(market string) string {
 }
 
 // SameMarket compares two market names.
-func SameMarket(a, b string) bool { return strings.EqualFold(strings.TrimSpace(a), strings.TrimSpace(b)) }
+func SameMarket(a, b string) bool {
+	return strings.EqualFold(strings.TrimSpace(a), strings.TrimSpace(b))
+}
 
 // SafePrice is a price and the reasoning that produced it, so the record can say
 // why an order was priced where it was.
