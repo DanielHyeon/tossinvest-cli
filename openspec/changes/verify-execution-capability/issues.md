@@ -461,3 +461,19 @@ digest가 움직이므로 테스트가 필요하다). 번역이 빠진 줄은 `o
 | `internal/ops/read_operations.go:150` MCP/CLI orders read의 선택적 status | 사용자 호출 시 400 | 후속 태스크 후보 — 우선순위 낮음 |
 | `official.Client` 공용 가드(빈 status 거부/기본값) | 재발 방지 구조 | High-risk 공용 funnel — 2c 또는 별도 태스크에서 결정 |
 | `cmd/tossctl/soak.go:118` 낡은 도움말 | 문구 drift | 1.10에 포함 |
+
+## Manager 판정 (1.10 verifylive read-fixtures status, 2026-07-27)
+
+독립 검증: 커밋 `c652c27` diff 직접 리뷰(steps.go 두 그룹 walk·per-page readRetry·evidence request context에 status 추가, plan.go 무접촉 — 승인 레일 파일 범위 밖 확인), **병행 세션의 internal/journal 미커밋 편집으로 워킹트리 빌드 불가**(boolToInt·isUniqueViolation 중복 선언)라서 `git archive c652c27` 클린 export에서 검증: `go build ./...` 성공, **전체 스위트 `go test ./... -race -count=1` 2893/52pkg 0 FAIL**, gofmt·vet clean. 바이너리는 동일 export에서 빌드해 양 경로 설치(2026-07-27 09:20 KST).
+
+편차·판단 전건 승인:
+
+- **page 상한을 그룹별로**: 승인. 공유 예산이면 긴 CLOSED 이력이 OPEN 읽기를 통째로 밀어내 fixture에서 진행 중 상태 전부가 소리 없이 빠진다 — 상한의 목적(429 예방) 보존하면서 수집 목적(상태 다양성)에 옳다.
+- **digest 고정 테스트를 구현 전 바이너리 값으로 고정**: 승인 — resume 호환의 직접 증명. digest 입력이 `Digest(plan.Mutations)`뿐임을 코드 경로(plan.go→record.go)로 확인.
+- **evidence request context에 status 추가**: 승인 — additive, 어느 그룹을 읽었는지 기록 가능해짐.
+- **verifylive.go 카탈로그 문구 "(전체 상태)" 교정**: 승인 — API가 거부하는 요청을 서술하던 문구.
+- 부수 soak.go 도움말·:619 주석 교정: 승인(1.9 이연 항목 소화).
+
+수용 잔여 위험: OPEN walk도 10페이지 상한이나 상한 도달 관측을 기록하지 않음 — fixture 단계는 완전성이 아니라 다양성이 목적이라 수용. 브로커가 스펙과 달리 OPEN을 페이지네이션하면 soak의 PageLimitReached가 별도로 잡는다.
+
+실기기 미확정: fake 대상 검증만 완료 — 실브로커 200은 [soak 재시작] 후 첫 사이클과 오늘 재측정의 read-fixtures pass로 확인한다.
