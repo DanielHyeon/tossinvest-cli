@@ -24,6 +24,14 @@ package verifylive
 //	          operator who wants to stop halfway through a boundary probe should be
 //	          able to.
 //
+// # Two renderings of one list
+//
+// The functions above are the terminal's. The console asks the same question with
+// a click on a session- and CSRF-gated screen (operator-console: 검증 배치 승인의
+// 형식), so it renders Summary — the list without the typed tail — and judges the
+// window with Expired. Both readings come from the same Plan.WriteLines, because a
+// second rendering would be a second list to keep in step with the first.
+//
 // The batch model is only as strong as the list. A summary that omitted a mutation
 // would be consent obtained for something the operator never saw, so the list is
 // derived structurally from the step catalogue (plan.go) and Plan.Authorises is
@@ -194,8 +202,16 @@ func NewBatch(plan Plan, resumed bool, now time.Time) Batch {
 	}
 }
 
-// Prompt renders the whole list and the one string that approves it.
-func (b Batch) Prompt() string {
+// Summary renders the list itself — everything an approver has to read, and
+// nothing about how they answer.
+//
+// It exists because the console approves with a click (operator-console: 검증 배치
+// 승인의 형식) and a screen that printed "확인 문자열을 입력하라" would be describing an
+// approval method that is not in force there. Splitting the string rather than
+// re-rendering the plan in HTML keeps one source for the list: the terminal and
+// the browser show the same bytes, which is what makes "the list is complete" a
+// claim about one thing instead of two.
+func (b Batch) Summary() string {
 	var s strings.Builder
 	scope := "이 실행"
 	if b.Resumed {
@@ -209,18 +225,33 @@ func (b Batch) Prompt() string {
 
 	b.Plan.WriteLines(&s)
 
-	fmt.Fprintf(&s, "\n  확인 문자열      %s (만료 %s)\n\n",
-		b.Nonce, b.ExpiresAt.UTC().Format("15:04:05Z"))
-	s.WriteString("이것들은 실제 계좌에 나가는 실제 요청이다. 확인 문자열을 입력하면 위 목록만 승인되고 " +
+	s.WriteString("\n이것들은 실제 계좌에 나가는 실제 요청이다. 승인되는 것은 위 목록뿐이고 " +
 		"그 외에는\n아무것도 승인되지 않는다 — 목록에 없는 것을 보내야 하는 단계는 적응하는 대신 실행을 " +
 		"멈추고 다시 묻는다.\n가격은 각 단계가 실행될 때 명시된 규칙으로 재호가된다.\n")
+	return s.String()
+}
+
+// Prompt renders the whole list and the one string that approves it at a
+// terminal. It is Summary plus the typed tail, so the two cannot drift.
+func (b Batch) Prompt() string {
+	var s strings.Builder
+	s.WriteString(b.Summary())
+	fmt.Fprintf(&s, "\n  확인 문자열      %s (만료 %s)\n\n",
+		b.Nonce, b.ExpiresAt.UTC().Format("15:04:05Z"))
 	s.WriteString("배치를 승인하려면 확인 문자열을 입력하라. 그 외의 입력은 중단이다: ")
 	return s.String()
 }
 
+// Expired reports that the approval window has closed.
+//
+// It is the same window Verify enforces, spelled once: the console judges an
+// expiry without a typed string to compare, and a second clock rule here would be
+// a second definition of "too late".
+func (b Batch) Expired(now time.Time) bool { return !now.Before(b.ExpiresAt) }
+
 // Verify checks a typed answer against the batch.
 func (b Batch) Verify(input string, now time.Time) error {
-	if !now.Before(b.ExpiresAt) {
+	if b.Expired(now) {
 		return ErrConfirmationExpired
 	}
 	if strings.TrimSpace(input) != b.Nonce {
@@ -251,6 +282,17 @@ func ConfirmBatch(in io.Reader, out io.Writer, b Batch, interactive bool, now ti
 
 // BatchConfirmer is how the runner asks for the run-wide approval.
 type BatchConfirmer func(b Batch) error
+
+// The channels an approval can arrive through, as the evidence record names them.
+//
+// The record is what proves later that a person was shown a list and answered, so
+// it has to say which act that was. ApprovalChannelTyped is the zero value's
+// meaning — every caller that does not say otherwise is at a terminal.
+const (
+	ApprovalChannelTyped        = "one typed expiring string for the whole run"
+	ApprovalChannelConsoleClick = "one click on the console's approval screen (loopback session + CSRF), " +
+		"inside the same expiring window"
+)
 
 // newNonce returns a short, unambiguous, typeable token.
 //

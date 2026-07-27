@@ -128,7 +128,7 @@ form { display: inline; }
 <p class="muted">재시작이 하는 일은 하나뿐이다: <strong>새 프로세스 인스턴스</strong>를 만든다.
 조건주문 존속 판정은 증거 기록의 <code>process.instance_id</code>(기동마다 새로 발급)를 보므로,
 이것이 그 측정에 필요한 프로세스 경계다. 게이트·설정·계좌는 아무것도 바뀌지 않고, 배치 승인은
-새 확인 문자열로 처음부터 다시 받는다.</p>
+새 계획으로 처음부터 다시 받는다.</p>
 </main></body></html>
 {{end}}
 
@@ -160,7 +160,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 <section>
   <h2>도구 프로세스</h2>
   <p class="muted">아래 두 버튼은 <strong>도구를 다시 띄우는 것</strong>이다 — 게이트·주문 능력·위험 한도와는
-  무관하고, 승인 등가성(새 확인 문자열 타이핑)도 그대로다.</p>
+  무관하고, 승인 절차(새 계획을 보고 다시 승인)도 그대로다.</p>
   {{if .CanRestart}}
   <form method="post" action="/restart">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
@@ -340,20 +340,17 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   {{if .Awaiting}}
   <p class="danger"><strong>여기서부터 실제 계좌에 요청이 나간다.</strong> 아래 목록이 이 실행이 보낼 수 있는
   전부다. 목록에 없는 요청은 전송되지 않으며, 보내야 하는 상황이 되면 실행이 멈춘다.</p>
-  <pre>{{.Batch.Prompt}}</pre>
+  <pre>{{$.Prompt}}</pre>
   <form method="post" action="/verify/approve">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
-    <label for="nonce">위에 표시된 확인 문자열을 그대로 입력하라:</label><br>
-    <input id="nonce" name="nonce" type="text" autocomplete="off" autocapitalize="off"
-           autocorrect="off" spellcheck="false" required>
-    <button type="submit">승인</button>
+    <button type="submit">위 목록을 승인하고 실행</button>
   </form>
   <form method="post" action="/verify/abort">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
     <button type="submit" class="secondary">거부</button>
   </form>
-  <p class="muted">승인은 세션 토큰 · CSRF 토큰 · 직접 타이핑한 확인 문자열 3중이 모두 맞을 때만 성립한다.
-  틀리거나 만료되면 아무것도 전송되지 않고 이 실행은 중단된다. 단계별 확인(--confirm-each)은 웹에서는
+  <p class="muted">승인은 이 화면의 클릭 한 번이다 — 세션 토큰과 CSRF 토큰을 갖춘 이 폼의 제출만 승인이 된다.
+  승인 창(5분)이 지나면 아무것도 전송되지 않고 이 실행은 중단된다. 단계별 확인(--confirm-each)은 웹에서는
   제공하지 않는다 — 콘솔은 배치 승인 전용이다.</p>
   {{end}}
 
@@ -407,12 +404,18 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   {{if .Snap.Verify.AwaitingRestart}}
   <p class="notice"><code>{{.Snap.Verify.AwaitingRestart}}</code> ({{stepLabel .Snap.Verify.AwaitingRestart}}) 단계가 새 프로세스를 기다리고 있었다. 이 콘솔이 그 새 프로세스다.</p>
   {{end}}
-  <p>시작하면 이 실행이 보낼 수 있는 <strong>모든 라이브 요청의 목록</strong>과 확인 문자열이 표시된다.
-  그 문자열을 직접 입력하기 전에는 아무것도 전송되지 않는다.</p>
+  <p>시작하면 이 실행이 보낼 수 있는 <strong>모든 라이브 요청의 목록</strong>이 표시되고,
+  그 목록을 승인하는 버튼을 누르기 전에는 아무것도 전송되지 않는다.</p>
+  {{$nothingToResume := and .Resuming (not .Snap.Verify.Pending)}}
+  {{if $nothingToResume}}
+  <p class="notice"><strong>이어할 단계가 없다</strong> — 모든 단계에 판정이 있어 이어하기는 아무것도
+  측정하지 않는다(2026-07-27에 이 버튼이 두 번 눌려 장중 창이 측정 0건으로 끝났다).
+  {{if .Snap.Verify.Redo}}다시 측정하려면 아래 <strong>재측정</strong>을 사용하라.{{end}}</p>
+  {{end}}
   <form method="post" action="/verify/start">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
     <input type="hidden" name="mode" value="resume">
-    <button type="submit" {{if .Spent}}disabled{{end}}>{{if .Resuming}}이어하기{{else}}검증 시작{{end}}</button>
+    <button type="submit" {{if or .Spent $nothingToResume}}disabled{{end}}>{{if .Resuming}}이어하기{{else}}검증 시작{{end}}</button>
   </form>
 </section>
 
@@ -430,7 +433,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   <p class="muted">대상: {{.RedoList}}</p>
   <p class="notice"><code>pass</code>·<code>deferred</code> 단계는 대상이 아니다 — 이미 측정된 속성을 위해
   실주문을 다시 내지 않는다. 대상 목록은 폼이 아니라 <strong>증거 기록</strong>에서 계산한다.
-  재측정도 계획을 처음부터 다시 만들고 <strong>새 확인 문자열</strong>을 타이핑해야 요청이 나간다.
+  재측정도 계획을 처음부터 다시 만들고 <strong>그 계획을 다시 승인</strong>해야 요청이 나간다.
   설계상 생략되는 단계(보유 0, <code>--include-ttl-edge</code> 옵트인)는 preflight가 다시 걸러 무해하다.</p>
   <form method="post" action="/verify/start">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">

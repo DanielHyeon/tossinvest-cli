@@ -381,6 +381,7 @@ func consoleVerifyStarter(root *rootOptions, recordPath string) console.StartVer
 			Recorder:        recorder,
 			Confirm:         consoleMutationConfirmer(),
 			ConfirmBatch:    confirm,
+			ApprovalChannel: verifylive.ApprovalChannelConsoleClick,
 			Out:             out,
 			AccountRef:      accountRef,
 			Symbol:          consoleProbeSymbol,

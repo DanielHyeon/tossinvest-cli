@@ -65,6 +65,11 @@ type Options struct {
 	// ConfirmEach opts out of the batch approval and back into a typed
 	// confirmation immediately before every single mutation.
 	ConfirmEach bool
+	// ApprovalChannel is how the person answered, for the evidence record. The
+	// zero value is the terminal's typed string, so a caller that does not set it
+	// records what it always recorded (§0.2); the console sets
+	// ApprovalChannelConsoleClick.
+	ApprovalChannel string
 	// Out receives operator progress.
 	Out io.Writer
 	// Now is the clock, injectable for the tests.
@@ -118,9 +123,11 @@ type Runner struct {
 	confirm      Confirmer
 	confirmBatch BatchConfirmer
 	confirmEach  bool
-	out          io.Writer
-	now          func() time.Time
-	sleep        func(ctx context.Context, d time.Duration) error
+	// approvalChannel is what the record says about how the approval arrived.
+	approvalChannel string
+	out             io.Writer
+	now             func() time.Time
+	sleep           func(ctx context.Context, d time.Duration) error
 
 	// plan is the batch the operator approved. Nil means nothing is approved, and
 	// mutate.go's authorise treats that as "send nothing" rather than as
@@ -170,6 +177,7 @@ func New(o Options) (*Runner, error) {
 		confirm:         o.Confirm,
 		confirmBatch:    o.ConfirmBatch,
 		confirmEach:     o.ConfirmEach,
+		approvalChannel: strings.TrimSpace(o.ApprovalChannel),
 		out:             o.Out,
 		now:             o.Now,
 		sleep:           o.Sleep,
@@ -183,6 +191,9 @@ func New(o Options) (*Runner, error) {
 		redo:            map[StepID]bool{},
 		prior:           append([]Entry(nil), o.Prior...),
 		process:         o.Process,
+	}
+	if r.approvalChannel == "" {
+		r.approvalChannel = ApprovalChannelTyped
 	}
 	if r.out == nil {
 		r.out = io.Discard
@@ -338,9 +349,17 @@ func (r *Runner) writeBanner() {
 			"만료 확인 문자열을\n  기다린다. 여기에 --yes는 없다.\n\n")
 		return
 	}
-	fmt.Fprintf(r.out, "  승인: 실행 전체에 대해 만료되는 확인 문자열 1개. 이 실행이 보낼 수 있는 모든 "+
+	// The banner names the gate the operator is actually about to meet: a typed
+	// string at a terminal, a click on the console's approval screen. Describing
+	// the other one would be the tool telling them to do something that does not
+	// work here.
+	answer := "만료되는 확인 문자열 1개"
+	if r.approvalChannel == ApprovalChannelConsoleClick {
+		answer = "만료되는 승인 1건(화면의 클릭)"
+	}
+	fmt.Fprintf(r.out, "  승인: 실행 전체에 대해 %s. 이 실행이 보낼 수 있는 모든 "+
 		"라이브 요청을\n  먼저 나열하고, 목록에 없는 것은 절대 전송되지 않으며, 보내야 하는 상황이 되면 "+
-		"실행이 멈춘다.\n  여기에 --yes는 없다. 단계별 확인은 `--confirm-each`다.\n\n")
+		"실행이 멈춘다.\n  여기에 --yes는 없다. 단계별 확인은 `--confirm-each`다.\n\n", answer)
 }
 
 // approveBatch is the run-wide gate.
@@ -415,7 +434,7 @@ func (r *Runner) recordApproval(plan Plan, batch Batch, verdict Verdict, reason 
 		Verdict:       verdict,
 		Reason:        reason,
 		Observations: []Observation{
-			{Key: "approval.model", Value: "batch", Detail: "one typed expiring string for the whole run"},
+			{Key: "approval.model", Value: "batch", Detail: r.approvalChannel},
 			{Key: "approval.requests_listed", Value: strconv.Itoa(len(plan.Mutations))},
 			{Key: "approval.steps_listed", Value: joinSteps(plan.MutatingSteps())},
 			{Key: "approval.plan_digest", Value: plan.Digest()},

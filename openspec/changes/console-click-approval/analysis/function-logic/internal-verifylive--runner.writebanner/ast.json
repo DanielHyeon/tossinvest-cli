@@ -1,0 +1,120 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/runner.go",
+  "source_sha256": "9f5f8ac5b505791e4c632fcfd69ab58b6e7c804e68cf87499cf247ce05728a6a",
+  "package": "verifylive",
+  "function": "writeBanner",
+  "receiver": "Runner",
+  "signature": "Runner.writeBanner(params=0, results=0)",
+  "start": {
+    "line": 343,
+    "column": 1
+  },
+  "end": {
+    "line": 363,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 347,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 357,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 350,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 3
+      },
+      "text": "maskedAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 32
+      },
+      "text": "orNone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 50
+      },
+      "text": "orNone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 358,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

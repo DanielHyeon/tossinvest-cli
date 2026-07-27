@@ -209,3 +209,63 @@ func TestTheBatchApprovalOutlastsAReadOfTheList(t *testing.T) {
 			"approval of different numbers", BatchApprovalTTL)
 	}
 }
+
+// --- the summary the console renders ---------------------------------------------
+//
+// console-click-approval: the console approves with a click, so it must not render
+// a confirmation string or an instruction to type one. It must still render the
+// complete list — that is what the batch model rests on — and it must be the same
+// list the terminal prints rather than a second rendering of the same plan.
+
+// TestSummaryCarriesTheListWithoutTheTypedInstruction.
+func TestSummaryCarriesTheListWithoutTheTypedInstruction(t *testing.T) {
+	now := time.Now()
+	b := testBatch(now)
+	summary := b.Summary()
+
+	for _, want := range []string{
+		"라이브 MUTATION 배치", "요청 1건", "order-cancel", "005930", "이 단계 안에서 취소된다",
+	} {
+		if !strings.Contains(summary, want) {
+			t.Errorf("the summary does not contain %q:\n%s", want, summary)
+		}
+	}
+	for _, banned := range []string{b.Nonce, "확인 문자열", "입력하라"} {
+		if strings.Contains(summary, banned) {
+			t.Errorf("the summary contains %q; the console approves with a click:\n%s", banned, summary)
+		}
+	}
+}
+
+// TestPromptIsTheSummaryPlusTheTypedTail — the TTY output is unchanged, and there
+// is one source for the list.
+func TestPromptIsTheSummaryPlusTheTypedTail(t *testing.T) {
+	now := time.Now()
+	b := testBatch(now)
+	if !strings.HasPrefix(b.Prompt(), b.Summary()) {
+		t.Errorf("the terminal prompt no longer starts with the summary the console shows:\n%s", b.Prompt())
+	}
+	tail := strings.TrimPrefix(b.Prompt(), b.Summary())
+	for _, want := range []string{b.Nonce, "확인 문자열", "입력하라"} {
+		if !strings.Contains(tail, want) {
+			t.Errorf("the terminal prompt lost %q:\n%s", want, tail)
+		}
+	}
+}
+
+// TestExpiredIsTheSameWindowVerifyUses — the console judges the window with the
+// batch's own answer rather than a second clock rule.
+func TestExpiredIsTheSameWindowVerifyUses(t *testing.T) {
+	now := time.Now()
+	b := testBatch(now)
+	if b.Expired(now) {
+		t.Error("a fresh batch reports itself expired")
+	}
+	after := now.Add(BatchApprovalTTL + time.Second)
+	if !b.Expired(after) {
+		t.Error("a batch past its window does not report itself expired")
+	}
+	if err := b.Verify(b.Nonce, after); !errors.Is(err, ErrConfirmationExpired) {
+		t.Errorf("Expired and Verify disagree about the window: Verify said %v", err)
+	}
+}

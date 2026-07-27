@@ -37,6 +37,12 @@ runs: `run-FOVHBDARTNFK3RKD`(21:31 KST) → `run-WE3EF3ZOHDCNBWGT`(22:46, 승인
 |---|---|---|
 | M10 | **`GET /api/v1/orders`·`orders/{id}` 최초 성공** (56사이클 만): 설치 후 첫 완주 사이클(10:19:14 KST)에서 6/6 엔드포인트 OK·completeness evaluated·ok. walk는 26페이지/2,320건(limit=100), 도중 429 두 번을 15s 백오프로 흡수(soak.log 한글 안내 2건, 요청 28건 계상, latency 35.2s에 대기 포함). **계정 CLOSED 이력 ≥2,500건**(25페이지 상한 도달 — detail에 명시) — 구 limit 20으로는 125+페이지가 필요해 페이지 상한만으로도 원리적 완주 불가였음을 확증. attest 차단은 streak 3일차(7/28 충족 예정)·token refresh 관측(당일 21:27 KST 만료 예정) 2건만 잔존. 재시작 직후 버스트 사이클 2건은 연속 재시작 SIGINT로 중단된 것(2건 중 1건은 945건/10페이지까지 진행) — account-seq 해석 429는 M4 기지 사항 유지 | capability-soak.jsonl 사이클 `2026-07-27T01:19:14Z`(전건 OK), `01:18:50Z`·`01:19:02Z`(중단 사이클); soak.log 01:19:19·01:19:35 백오프 안내; `tossctl soak status` NOT READY 잔여 2건 |
 
+### 2026-07-27 장중 창 (09:00–15:30 KST) — 측정 0건
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M11 | **장중 창이 무동작 버튼으로 소모됨**: 이 날 콘솔에서 검증이 두 번 시작됐고(`YW7XSICTO4` 14:09 이전, `ORZEYQU6SI` 18:39 이후) 둘 다 `0 step(s) recorded`(에러 없음)로 끝났다 — 증거 기록 파일의 마지막 쓰기는 여전히 2026-07-26 22:48이고 단계 판정도 1차 실행 그대로다. 원인은 승인 이전이다: 시작 화면의 기본 버튼 [이어하기](`mode=resume`)는 판정이 terminal인 단계를 건너뛰는데(`Runner.settled`) 현재 기록은 전 단계가 terminal이라 **구조적으로 무동작**이며, 실제로 측정하는 [재측정](`mode=redo`)은 아래쪽 별도 섹션에 있었다. 승인 화면·nonce 타이핑에는 도달하지도 않았다. → change `console-click-approval`(무동작 기본값 제거 + 승인 클릭화) 발주 | `~/.local/share/tossos/console-launch.log` 두 줄(`verification … finished — 0 step(s) recorded`), `capability-verify.jsonl` mtime 2026-07-26T22:48:58+0900, `internal/console/pages.go` handleStart·`templates.go` 시작 화면 |
+
 ### 미측정으로 남은 항목 (이번 실행 기준)
 
 - 2.1 status enum fixture / 2.7 멱등키 재생·conflict / 2.2 place-cancel-amend / 2.8 sellable 의미: **휴장 + 429로 전부 미측정** — 장중 재실행 필요.

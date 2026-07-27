@@ -1,0 +1,80 @@
+{
+  "file": "internal/verifylive/plan_test.go",
+  "source_sha256": "e03e83b4b5f8f539f1f026f3be799aa78144364b00c321994f4ed4fd19e1ae13",
+  "package": "verifylive",
+  "function": "assertNothingWasSent",
+  "signature": "assertNothingWasSent(params=2, results=0)",
+  "start": {
+    "line": 789,
+    "column": 1
+  },
+  "end": {
+    "line": 796,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 791,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 792,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 791,
+        "column": 22
+      },
+      "text": "broker.seen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 6
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 41
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 793,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -794,3 +794,33 @@ func assertNothingWasSent(t *testing.T, broker *fakeBroker) {
 		}
 	}
 }
+
+// TestTheApprovalChannelIsRecordedAsGiven.
+//
+// console-click-approval: the console approves with a click, and the record has to
+// say so. The zero value keeps the terminal's wording, so every caller that does
+// not set it is unchanged (§0.2).
+func TestTheApprovalChannelIsRecordedAsGiven(t *testing.T) {
+	detailFor := func(t *testing.T, channel string) string {
+		t.Helper()
+		broker := newFakeBroker().withHolding("005930", 3)
+		h := newHarness(t, broker, alwaysConfirm())
+		if _, err := h.run(Options{HoldingSymbol: "005930", ApprovalChannel: channel}); err != nil {
+			t.Fatalf("run: %v", err)
+		}
+		for _, o := range approvalEntry(t, h.entries()).Observations {
+			if o.Key == "approval.model" {
+				return o.Detail
+			}
+		}
+		t.Fatal("the approval entry carries no approval.model observation")
+		return ""
+	}
+
+	if got := detailFor(t, ""); got != ApprovalChannelTyped {
+		t.Errorf("an unset channel recorded %q, want the terminal's wording %q", got, ApprovalChannelTyped)
+	}
+	if got := detailFor(t, ApprovalChannelConsoleClick); got != ApprovalChannelConsoleClick {
+		t.Errorf("the console channel recorded %q, want %q", got, ApprovalChannelConsoleClick)
+	}
+}

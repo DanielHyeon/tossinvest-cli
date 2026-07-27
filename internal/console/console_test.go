@@ -67,6 +67,7 @@ func realStarter(broker *fakeBroker, recordPath string) StartVerify {
 			Recorder:        rec,
 			Confirm:         func(verifylive.Mutation) error { return verifylive.ErrNotATerminal },
 			ConfirmBatch:    confirm,
+			ApprovalChannel: verifylive.ApprovalChannelConsoleClick,
 			Out:             out,
 			AccountRef:      "123-45-678901",
 			Symbol:          "005930",
@@ -358,15 +359,14 @@ func TestTheApprovalRoutesRefuseAGET(t *testing.T) {
 
 // --- the approval triple ----------------------------------------------------------
 
-// TestAWrongCSRFTokenSendsNothing. The nonce is right; the form is not one this
+// TestAWrongCSRFTokenSendsNothing. The click is right; the form is not one this
 // console drew.
 func TestAWrongCSRFTokenSendsNothing(t *testing.T) {
 	h := newHarness(t)
-	view := h.startAndWait(t)
+	h.startAndWait(t)
 
 	resp := h.post(t, "/verify/approve", url.Values{
-		"csrf":  {"not-the-csrf-token"},
-		"nonce": {view.Batch.Nonce},
+		"csrf": {"not-the-csrf-token"},
 	})
 	if resp.StatusCode != http.StatusForbidden {
 		t.Fatalf("status = %d, want 403", resp.StatusCode)
@@ -383,12 +383,11 @@ func TestAWrongCSRFTokenSendsNothing(t *testing.T) {
 // that never had the token.
 func TestAMissingSessionOnTheApprovalSendsNothing(t *testing.T) {
 	h := newHarness(t)
-	view := h.startAndWait(t)
+	h.startAndWait(t)
 
 	anonymous := &http.Client{}
 	resp, err := anonymous.PostForm(h.srv.URL+"/verify/approve", url.Values{
-		"csrf":  {h.csrf},
-		"nonce": {view.Batch.Nonce},
+		"csrf": {h.csrf},
 	})
 	if err != nil {
 		t.Fatalf("POST: %v", err)
@@ -403,35 +402,31 @@ func TestAMissingSessionOnTheApprovalSendsNothing(t *testing.T) {
 	}
 }
 
-// TestAWrongNonceSendsNothingAndStopsTheRun.
+// TestDecliningSendsNothingAndStopsTheRun.
 //
-// This is the TTY contract: "anything else aborts the run". Nothing was sent, so
-// the cost of a typo is starting the form again — and a mismatch does not become
-// five minutes of guesses.
-func TestAWrongNonceSendsNothingAndStopsTheRun(t *testing.T) {
+// The typed string is gone, so the way to say no is the [거부] button. The contract
+// it inherits is the terminal's — "anything else aborts the run" — and the record
+// keeps the refusal without recording a step, so the next attempt is not mistaken
+// for a restart over finished work.
+func TestDecliningSendsNothingAndStopsTheRun(t *testing.T) {
 	h := newHarness(t)
-	view := h.startAndWait(t)
+	h.startAndWait(t)
 
-	resp := h.post(t, "/verify/approve", url.Values{
-		"csrf":  {h.csrf},
-		"nonce": {view.Batch.Nonce + "X"},
-	})
+	resp := h.post(t, "/verify/abort", url.Values{"csrf": {h.csrf}})
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("status = %d, want the verify page back", resp.StatusCode)
 	}
 
 	final := h.waitForFinish(t)
 	if n := h.broker.mutationCount(); n != 0 {
-		t.Errorf("%d mutating broker call(s) after a wrong nonce", n)
+		t.Errorf("%d mutating broker call(s) after a refusal", n)
 	}
 	if !final.Summary.Halted {
 		t.Error("the run continued after the approval was refused")
 	}
 	if len(h.broker.placements()) != 0 {
-		t.Errorf("orders were placed after a wrong nonce: %+v", h.broker.placements())
+		t.Errorf("orders were placed after a refusal: %+v", h.broker.placements())
 	}
-	// The record keeps the refusal but records no step, so the next attempt is
-	// not mistaken for a restart over finished work.
 	entries := loadRecord(t, h.record)
 	if n := verifylive.StepCount(entries); n != 0 {
 		t.Errorf("%d step(s) were recorded for a refused approval", n)
@@ -441,20 +436,17 @@ func TestAWrongNonceSendsNothingAndStopsTheRun(t *testing.T) {
 	}
 }
 
-// TestAnExpiredNonceSendsNothing. The window is the same one the terminal has,
-// checked by the same verifylive.Batch.Verify.
-func TestAnExpiredNonceSendsNothing(t *testing.T) {
+// TestAnExpiredApprovalSendsNothing. The window is the same one the terminal has,
+// judged by the same verifylive.Batch.
+func TestAnExpiredApprovalSendsNothing(t *testing.T) {
 	// The console's clock runs two hours ahead of the runner's, so the batch is
 	// minted with a live expiry and read after it has passed.
 	h := newHarness(t, func(o *Options) {
 		o.Now = func() time.Time { return time.Now().UTC().Add(2 * time.Hour) }
 	})
-	view := h.startAndWait(t)
+	h.startAndWait(t)
 
-	h.post(t, "/verify/approve", url.Values{
-		"csrf":  {h.csrf},
-		"nonce": {view.Batch.Nonce},
-	})
+	h.post(t, "/verify/approve", url.Values{"csrf": {h.csrf}})
 
 	final := h.waitForFinish(t)
 	if n := h.broker.mutationCount(); n != 0 {
@@ -479,15 +471,15 @@ func TestTheApprovedFlowRunsExactlyTheApprovedBatch(t *testing.T) {
 		t.Fatal("the plan offered for approval is empty; there would be nothing to prove")
 	}
 	page := body(t, h.get(t, "/verify"))
-	if !strings.Contains(page, view.Batch.Nonce) {
-		t.Error("the page does not display the nonce it is asking for")
+	if strings.Contains(page, view.Batch.Nonce) {
+		t.Error("the page displays a confirmation string it does not ask for")
 	}
 	// The page must carry the terminal's summary verbatim — the batch model's
 	// safety claim is that the list is complete, and a second rendering would be a
 	// second list to keep in step. Compared with whitespace collapsed, because the
 	// terminal wraps at eighty-odd columns and the browser does not.
 	shown := flatten(page)
-	if !strings.Contains(shown, flatten(view.Batch.Prompt())) {
+	if !strings.Contains(shown, flatten(view.Batch.Summary())) {
 		t.Errorf("the page does not show the same batch summary the CLI prints:\n%s", truncateForLog(page))
 	}
 	// The summary is rendered in the display language (task 1.8 ③). The English
@@ -502,10 +494,7 @@ func TestTheApprovedFlowRunsExactlyTheApprovedBatch(t *testing.T) {
 		}
 	}
 
-	h.post(t, "/verify/approve", url.Values{
-		"csrf":  {h.csrf},
-		"nonce": {view.Batch.Nonce},
-	})
+	h.post(t, "/verify/approve", url.Values{"csrf": {h.csrf}})
 	final := h.waitForFinish(t)
 
 	if n := h.broker.mutationCount(); n == 0 {
@@ -554,8 +543,8 @@ func TestAbortRefusesWithoutTypingAnything(t *testing.T) {
 // again would be a console that could not measure it.
 func TestASecondVerificationInTheSameProcessIsRefused(t *testing.T) {
 	h := newHarness(t)
-	view := h.startAndWait(t)
-	h.post(t, "/verify/approve", url.Values{"csrf": {h.csrf}, "nonce": {view.Batch.Nonce}})
+	h.startAndWait(t)
+	h.post(t, "/verify/approve", url.Values{"csrf": {h.csrf}})
 	h.waitForFinish(t)
 
 	page := body(t, h.post(t, "/verify/start", url.Values{"csrf": {h.csrf}}))

@@ -10,9 +10,9 @@ package console
 //	                state-changing route also goes through the CSRF gate. A handler
 //	                registered without one would be a page — or an approval —
 //	                reachable by anybody who can open a socket on this machine.
-//	borrowed judge  the nonce comparison is verifylive.Batch.Verify's. A second
-//	                comparison here could drift into accepting what the terminal
-//	                would refuse.
+//	borrowed judge  the approval window is verifylive.Batch's answer, and no typed
+//	                string is read back here. A second judgement in this package
+//	                could drift into accepting what the terminal would refuse.
 //	loopback        the address is spelled once, and it is 127.0.0.1.
 //	no bypass       nothing reads an environment variable, and nothing can preset
 //	                the session token.
@@ -188,21 +188,26 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 	}
 }
 
-// TestTheNonceIsJudgedByVerifylive.
+// TestTheApprovalWindowIsJudgedByVerifylive.
 //
-// The equivalence claim in tasks.md 1.6 is that the web approval is the same act
-// as the terminal one. It can only stay true if the same code decides: a
-// comparison written here would be a second definition of "correct", and the two
-// would drift the first time either changed.
-func TestTheNonceIsJudgedByVerifylive(t *testing.T) {
+// The console approves with a click (operator-console: 검증 배치 승인의 형식), so the
+// one thing left to judge is the window — and it is judged by the batch itself. A
+// clock rule written here would be a second definition of "too late" that drifts
+// from the terminal's the first time either changed.
+//
+// The nonce assertions are the other half: nothing in this package may read one
+// back or compare one, because a typed string is not what approves anything here.
+func TestTheApprovalWindowIsJudgedByVerifylive(t *testing.T) {
 	src := packageFiles(t)["pages.go"]
 	code := strings.Join(nonCommentLines(src), "\n")
-	if !strings.Contains(code, "view.Batch.Verify(") {
-		t.Error("pages.go no longer asks verifylive.Batch to judge the typed nonce")
+	if !strings.Contains(code, "view.Batch.Expired(") {
+		t.Error("pages.go no longer asks verifylive.Batch whether the approval window has closed")
 	}
-	for _, banned := range []string{"== view.Batch.Nonce", "Nonce ==", "== nonce"} {
+	for _, banned := range []string{
+		"== view.Batch.Nonce", "Nonce ==", "== nonce", `PostFormValue("nonce")`, "ExpiresAt",
+	} {
 		if strings.Contains(code, banned) {
-			t.Errorf("pages.go compares the nonce itself (%q); verifylive.Batch.Verify is the only judge", banned)
+			t.Errorf("pages.go judges the approval itself (%q); verifylive.Batch is the only judge", banned)
 		}
 	}
 	// And nothing in the package invents an approval.
@@ -210,7 +215,7 @@ func TestTheNonceIsJudgedByVerifylive(t *testing.T) {
 		body := strings.Join(nonCommentLines(fileSrc), "\n")
 		for _, banned := range []string{"AUTO_APPROVE", "SKIP_CONFIRM", "NO_CONFIRM", "TOSSCTL_CONSOLE_TOKEN"} {
 			if strings.Contains(body, banned) {
-				t.Errorf("%s contains %q; the approval must be typed by a person", name, banned)
+				t.Errorf("%s contains %q; the approval must be a person's own act", name, banned)
 			}
 		}
 	}

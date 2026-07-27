@@ -139,7 +139,9 @@ func (c *Console) renderVerify(w http.ResponseWriter, notice string) {
 		v := run.snapshot()
 		page.Run = &v
 		if v.Batch != nil {
-			page.Prompt = v.Batch.Prompt()
+			// Summary, not Prompt: the tail Prompt carries tells the reader to type
+			// a string, and typing is not how this screen approves anything.
+			page.Prompt = v.Batch.Summary()
 		}
 		// Refresh while the runner is working, never while the form is on screen.
 		page.Refresh = !v.Done && !v.Awaiting
@@ -175,6 +177,18 @@ func (c *Console) handleStart(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		redo = set
+	} else if snap := c.readVerify(); snap.Present && len(snap.Pending) == 0 {
+		// The no-op that cost a market window on 2026-07-27: every step already has
+		// a terminal verdict, so an ordinary resume walks the catalogue, settles
+		// nothing and finishes with no steps recorded. Refusing it here is what
+		// makes the disabled button on the page more than decoration — a stale tab
+		// posts the same form.
+		notice := "이어할 단계가 없다 — 모든 단계에 판정이 있다. 아무것도 전송되지 않았다."
+		if len(snap.Redo) > 0 {
+			notice += " 다시 측정하려면 [재측정]을 사용하라."
+		}
+		c.redirectVerify(w, r, notice)
+		return
 	}
 	if _, err := c.startRun(redo); err != nil {
 		c.redirectVerify(w, r, err.Error())
@@ -183,11 +197,18 @@ func (c *Console) handleStart(w http.ResponseWriter, r *http.Request) {
 	c.redirectVerify(w, r, "")
 }
 
-// handleApprove is the typed confirmation.
+// handleApprove is the approval, and it is a click.
 //
-// verifylive.Batch.Verify is the judge — the same call the terminal makes, with
-// the same TTL and the same exact-match rule — and its answer goes to the runner
-// whatever it is. There is no branch here that approves anything.
+// What has to be true for a request to reach the line that approves: it carried a
+// session (or a handoff) this process issued, it carried this process's CSRF
+// token, a plan is parked and waiting, and the window that plan was minted with is
+// still open. That is the whole gate — no typed string (operator-console: 검증 배치
+// 승인의 형식, 사용자 결정 2026-07-27), and nothing that a scheduler or an agent
+// could satisfy on a person's behalf.
+//
+// The window is still verifylive's own answer (Batch.Expired), for the reason the
+// comparison was borrowed before: a second rule for "too late" would drift from
+// the one the terminal enforces.
 func (c *Console) handleApprove(w http.ResponseWriter, r *http.Request) {
 	run := c.currentRun()
 	if run == nil {
@@ -200,7 +221,10 @@ func (c *Console) handleApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	answer := view.Batch.Verify(r.PostFormValue("nonce"), c.now())
+	var answer error
+	if view.Batch.Expired(c.now()) {
+		answer = verifylive.ErrConfirmationExpired
+	}
 	if !run.deliver(answer) {
 		c.redirectVerify(w, r, "승인 창이 이미 닫혔다. 아무것도 전송되지 않았다.")
 		return
@@ -233,9 +257,9 @@ func refusalNotice(err error) string {
 	case err == nil:
 		return ""
 	case strings.Contains(err.Error(), verifylive.ErrConfirmationExpired.Error()):
-		return "확인 문자열이 만료되었다. 아무것도 전송되지 않았다. 콘솔을 다시 시작해 새 승인을 받아라."
+		return "승인 창이 만료되었다. 아무것도 전송되지 않았다. 콘솔을 다시 시작해 새 승인을 받아라."
 	default:
-		return "입력한 문자열이 일치하지 않는다. 아무것도 전송되지 않았고 이 실행은 중단되었다."
+		return "승인되지 않았다. 아무것도 전송되지 않았고 이 실행은 중단되었다."
 	}
 }
 

@@ -10,7 +10,7 @@ package console
 //	                                      and the record is on disk
 //	the form cannot name a step         — a step id in the POST body is ignored;
 //	                                      only the file decides
-//	nothing is sent without a nonce     — a re-measurement is an ordinary run with
+//	nothing is sent without an approval — a re-measurement is an ordinary run with
 //	                                      an ordinary batch approval in front of it
 //	the advisory never blocks           — it is a paragraph, not a gate
 
@@ -121,12 +121,12 @@ func TestARemeasureAskedForWithNothingToRedoSendsNothing(t *testing.T) {
 
 // --- the run ------------------------------------------------------------------------
 
-// TestARemeasureRunsOnlyTheFailedStepAndStillAsksForANewNonce.
+// TestARemeasureRunsOnlyTheFailedStepAndStillAsksForANewApproval.
 //
 // The whole point of task 1.7: a terminal fail becomes attemptable again, through
-// the same door as everything else. The plan is rebuilt, the nonce is new, and the
-// steps that passed are left exactly where they are.
-func TestARemeasureRunsOnlyTheFailedStepAndStillAsksForANewNonce(t *testing.T) {
+// the same door as everything else. The plan is rebuilt, the approval is asked for
+// again, and the steps that passed are left exactly where they are.
+func TestARemeasureRunsOnlyTheFailedStepAndStillAsksForANewApproval(t *testing.T) {
 	h := newHarness(t)
 	seedVerdicts(t, h.record, verifylive.VerdictPass, map[verifylive.StepID]verifylive.Verdict{
 		verifylive.StepOrderCancel: verifylive.VerdictFail,
@@ -139,11 +139,11 @@ func TestARemeasureRunsOnlyTheFailedStepAndStillAsksForANewNonce(t *testing.T) {
 	if len(view.Redo) != 1 || view.Redo[0] != verifylive.StepOrderCancel {
 		t.Fatalf("the run's redo set is %v, want only %s", view.Redo, verifylive.StepOrderCancel)
 	}
-	if view.Batch == nil || strings.TrimSpace(view.Batch.Nonce) == "" {
+	if view.Batch == nil {
 		t.Fatal("the re-measurement did not ask for a batch approval")
 	}
 	if n := h.broker.mutationCount(); n != 0 {
-		t.Fatalf("%d mutating broker call(s) before the nonce was typed", n)
+		t.Fatalf("%d mutating broker call(s) before the plan was approved", n)
 	}
 	// Every planned line belongs to the step being re-measured.
 	for _, m := range view.Batch.Plan.Mutations {
@@ -152,7 +152,7 @@ func TestARemeasureRunsOnlyTheFailedStepAndStillAsksForANewNonce(t *testing.T) {
 		}
 	}
 
-	h.post(t, "/verify/approve", url.Values{"csrf": {h.csrf}, "nonce": {view.Batch.Nonce}})
+	h.post(t, "/verify/approve", url.Values{"csrf": {h.csrf}})
 	final := h.waitForFinish(t)
 
 	if got := len(h.broker.placements()); got != 1 {
@@ -180,9 +180,9 @@ func TestARemeasureRunsOnlyTheFailedStepAndStillAsksForANewNonce(t *testing.T) {
 	}
 }
 
-// TestARemeasureSendsNothingWhenTheNonceIsWrong. The redo path has no shortcut
-// around the approval — it is the same confirmer, the same Batch.Verify.
-func TestARemeasureSendsNothingWhenTheNonceIsWrong(t *testing.T) {
+// TestARemeasureSendsNothingWhenItIsDeclined. The redo path has no shortcut
+// around the approval — it is the same confirmer and the same run-wide batch.
+func TestARemeasureSendsNothingWhenItIsDeclined(t *testing.T) {
 	h := newHarness(t)
 	seedVerdicts(t, h.record, verifylive.VerdictPass, map[verifylive.StepID]verifylive.Verdict{
 		verifylive.StepOrderCancel: verifylive.VerdictFail,
@@ -190,13 +190,13 @@ func TestARemeasureSendsNothingWhenTheNonceIsWrong(t *testing.T) {
 	h.authenticate(t)
 
 	h.post(t, "/verify/start", url.Values{"csrf": {h.csrf}, "mode": {"redo"}})
-	view := h.waitForBatch(t)
+	h.waitForBatch(t)
 
-	h.post(t, "/verify/approve", url.Values{"csrf": {h.csrf}, "nonce": {view.Batch.Nonce + "X"}})
+	h.post(t, "/verify/abort", url.Values{"csrf": {h.csrf}})
 	final := h.waitForFinish(t)
 
 	if n := h.broker.mutationCount(); n != 0 {
-		t.Errorf("%d mutating broker call(s) after a wrong nonce on a re-measurement", n)
+		t.Errorf("%d mutating broker call(s) after a declined re-measurement", n)
 	}
 	if !final.Summary.Halted {
 		t.Error("the re-measurement continued after the approval was refused")
@@ -256,24 +256,28 @@ func TestTheRedoSetComesFromTheRecordAndNotFromTheForm(t *testing.T) {
 	}
 }
 
-// TestAnOrdinaryStartIsStillNotARemeasure. The default button keeps the
-// always-resume behaviour: a settled step stays settled.
+// TestAnOrdinaryStartIsStillNotARemeasure.
+//
+// The default button never re-runs a settled step. With a record that has one
+// non-terminal step left, resuming walks to that step and leaves the rest alone —
+// and the fully-settled case is refused outright (click_approval_test.go).
 func TestAnOrdinaryStartIsStillNotARemeasure(t *testing.T) {
 	h := newHarness(t)
 	seedVerdicts(t, h.record, verifylive.VerdictPass, map[verifylive.StepID]verifylive.Verdict{
-		verifylive.StepOrderCancel: verifylive.VerdictFail,
+		verifylive.StepOrderCancel:        verifylive.VerdictFail,
+		verifylive.StepConditionalPersist: verifylive.VerdictAwaitingRestart,
 	})
 	h.authenticate(t)
 
 	h.post(t, "/verify/start", url.Values{"csrf": {h.csrf}, "mode": {"resume"}})
 	final := h.waitForFinish(t)
 
-	if n := h.broker.mutationCount(); n != 0 {
-		t.Errorf("%d mutating broker call(s) from an ordinary resume over a fully settled record", n)
-	}
 	for _, o := range final.Summary.Outcomes {
+		if o.Step == verifylive.StepConditionalPersist {
+			continue
+		}
 		if !o.AlreadySettled {
-			t.Errorf("%s ran on an ordinary resume; every step already has a terminal verdict", o.Step)
+			t.Errorf("%s ran on an ordinary resume; it already has a terminal verdict", o.Step)
 		}
 	}
 }

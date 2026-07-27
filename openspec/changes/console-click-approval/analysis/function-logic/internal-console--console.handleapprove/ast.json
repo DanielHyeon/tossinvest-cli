@@ -1,0 +1,204 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/console/pages.go",
+  "source_sha256": "ed44258234517e4e3a15463ec8c5ce9ff04b0f18921ae0120db3c6c2073315ce",
+  "package": "console",
+  "function": "handleApprove",
+  "receiver": "Console",
+  "signature": "Console.handleApprove(params=2, results=0)",
+  "start": {
+    "line": 212,
+    "column": 1
+  },
+  "end": {
+    "line": 237,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 216,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 221,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 230,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 234,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 9
+      },
+      "text": "c.currentRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 3
+      },
+      "text": "c.redirectVerify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 10
+      },
+      "text": "run.snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 3
+      },
+      "text": "c.redirectVerify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 5
+      },
+      "text": "view.Batch.Expired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 24
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 6
+      },
+      "text": "run.deliver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 3
+      },
+      "text": "c.redirectVerify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 3
+      },
+      "text": "c.redirectVerify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 26
+      },
+      "text": "refusalNotice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 2
+      },
+      "text": "c.redirectVerify"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 226,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}
