@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/pricing.go",
+  "file": "internal/verifylive/pricing.go",
   "source_sha256": "09a74104124885c7b0ebf438d71b69b64cea9be62a688acb479b7caf1a7f9353",
   "package": "verifylive",
   "function": "SameMarket",

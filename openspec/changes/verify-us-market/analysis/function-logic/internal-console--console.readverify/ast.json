@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/data.go",
+  "file": "internal/console/data.go",
   "source_sha256": "416a98b72af85874f61a6deb19abe79174635a117dbd763fb6560aa4a270c7e1",
   "package": "console",
   "function": "readVerify",

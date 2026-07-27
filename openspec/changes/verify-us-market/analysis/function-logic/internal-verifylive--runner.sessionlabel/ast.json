@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/hours.go",
+  "file": "internal/verifylive/hours.go",
   "source_sha256": "57e5abc394ceaf57bd131e5156710c5d474469466427a3e2d13a4eb4c50898b4",
   "package": "verifylive",
   "function": "sessionLabel",

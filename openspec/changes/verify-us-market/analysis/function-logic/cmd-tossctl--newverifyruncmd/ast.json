@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/cmd/tossctl/verify.go",
+  "file": "cmd/tossctl/verify.go",
   "source_sha256": "1c22a458a48fbe95734ffcb6ae6c77125330efc43c1764b9233b5e17f22541d8",
   "package": "main",
   "function": "newVerifyRunCmd",

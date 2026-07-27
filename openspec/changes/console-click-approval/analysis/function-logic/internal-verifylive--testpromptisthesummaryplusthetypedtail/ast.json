@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/confirm_test.go",
+  "file": "internal/verifylive/confirm_test.go",
   "source_sha256": "f8d05c2aa9a7938b4d08651ee2ef6ecbbbfc4b495f763ba6f6212374f17f1a19",
   "package": "verifylive",
   "function": "TestPromptIsTheSummaryPlusTheTypedTail",

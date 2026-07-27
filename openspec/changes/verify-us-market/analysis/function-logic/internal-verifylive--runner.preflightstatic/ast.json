@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/runner.go",
+  "file": "internal/verifylive/runner.go",
   "source_sha256": "46d01fbf5e67b2dbbc42a023c76ae0db7832c6701259fd3e906b17e03fecbffd",
   "package": "verifylive",
   "function": "preflightStatic",

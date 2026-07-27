@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/pages.go",
+  "file": "internal/console/pages.go",
   "source_sha256": "ed44258234517e4e3a15463ec8c5ce9ff04b0f18921ae0120db3c6c2073315ce",
   "package": "console",
   "function": "handleStart",

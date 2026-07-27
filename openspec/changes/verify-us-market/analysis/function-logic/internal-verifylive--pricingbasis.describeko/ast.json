@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/plan.go",
+  "file": "internal/verifylive/plan.go",
   "source_sha256": "e27e007181778088c8ccab53904cc80272a34ade0160273163cd590284c79a97",
   "package": "verifylive",
   "function": "DescribeKO",

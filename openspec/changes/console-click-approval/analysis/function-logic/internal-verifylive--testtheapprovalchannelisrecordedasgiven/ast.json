@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/plan_test.go",
+  "file": "internal/verifylive/plan_test.go",
   "source_sha256": "cdc85024a653157c896d46d47becbc712e67bd68e43a0494710c5e0e390692d8",
   "package": "verifylive",
   "function": "TestTheApprovalChannelIsRecordedAsGiven",

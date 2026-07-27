@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/remeasure_test.go",
+  "file": "internal/console/remeasure_test.go",
   "source_sha256": "c9b96a6e8c5566cbbba107a0d0fc73efb09b6b97d06546bf56ddf225bc1ca05c",
   "package": "console",
   "function": "TestAnOrdinaryStartIsStillNotARemeasure",

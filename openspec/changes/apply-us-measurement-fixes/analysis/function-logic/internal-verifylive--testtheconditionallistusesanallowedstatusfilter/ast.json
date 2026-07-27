@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/us_market_test.go",
+  "file": "internal/verifylive/us_market_test.go",
   "source_sha256": "42885c16e4b3742b55d945e4abc7578020a528775def6a4ede61c0b8ea364cbb",
   "package": "verifylive",
   "function": "TestTheConditionalListUsesAnAllowedStatusFilter",

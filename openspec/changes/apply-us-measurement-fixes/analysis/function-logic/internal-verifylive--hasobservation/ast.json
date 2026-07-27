@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/fake_broker_test.go",
+  "file": "internal/verifylive/fake_broker_test.go",
   "source_sha256": "0fad6a437d582cb68ff83eec970147fc3c2110eaddfc5492ee90b362d9fe7740",
   "package": "verifylive",
   "function": "hasObservation",

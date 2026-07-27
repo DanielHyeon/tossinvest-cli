@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/static_test.go",
+  "file": "internal/console/static_test.go",
   "source_sha256": "aeecffddfc954acc30f00514643f4d79b31c43265ae51e84c0014e3ac39df29b",
   "package": "console",
   "function": "TestTheApprovalWindowIsJudgedByVerifylive",

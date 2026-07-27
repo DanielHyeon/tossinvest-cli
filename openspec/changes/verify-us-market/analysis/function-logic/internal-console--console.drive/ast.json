@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/run.go",
+  "file": "internal/console/run.go",
   "source_sha256": "af4f693b06bce20584457ada9081b194e3ca5b2d70c2fcbb7b06350a14d8d2f8",
   "package": "console",
   "function": "drive",

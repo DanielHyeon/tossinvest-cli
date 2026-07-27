@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/console_test.go",
+  "file": "internal/console/console_test.go",
   "source_sha256": "7a2138fc19d972aa906585a0b030cb7e43ce37754119a922c8d5e9d0c29f0acf",
   "package": "console",
   "function": "realStarter",

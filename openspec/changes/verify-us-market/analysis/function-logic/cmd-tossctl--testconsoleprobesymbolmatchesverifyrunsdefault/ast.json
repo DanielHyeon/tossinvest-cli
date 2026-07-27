@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/cmd/tossctl/console_test.go",
+  "file": "cmd/tossctl/console_test.go",
   "source_sha256": "609aa2d9fec3d3d27f4034e5739ebe4aac88260877c8d1754191fbb65df3e37e",
   "package": "main",
   "function": "TestConsoleProbeSymbolMatchesVerifyRunsDefault",

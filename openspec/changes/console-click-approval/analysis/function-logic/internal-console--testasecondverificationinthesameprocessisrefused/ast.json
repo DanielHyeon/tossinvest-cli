@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/console_test.go",
+  "file": "internal/console/console_test.go",
   "source_sha256": "4d8bf9a087b46d59da69a47ab5ae8492c46d0999f85bde39b2248975a8fc70bc",
   "package": "console",
   "function": "TestASecondVerificationInTheSameProcessIsRefused",

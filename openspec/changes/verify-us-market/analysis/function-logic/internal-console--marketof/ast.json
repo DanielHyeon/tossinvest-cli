@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/pages.go",
+  "file": "internal/console/pages.go",
   "source_sha256": "a062c7d8f515576dc806fafcd99518f68c45959992af3410cc02963cf90a1dfd",
   "package": "console",
   "function": "marketOf",

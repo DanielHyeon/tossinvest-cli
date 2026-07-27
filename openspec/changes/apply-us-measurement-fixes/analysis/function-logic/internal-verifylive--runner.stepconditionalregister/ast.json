@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/steps.go",
+  "file": "internal/verifylive/steps.go",
   "source_sha256": "be176577eca38bcfa267dff909f864f037582aad37ca0e6311004c1f177fcc92",
   "package": "verifylive",
   "function": "stepConditionalRegister",

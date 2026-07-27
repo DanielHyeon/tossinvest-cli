@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/static_test.go",
+  "file": "internal/console/static_test.go",
   "source_sha256": "0d5c27296c7b61b316ad85278b37ad75b09aead58793ce8473d3b97fefedd93d",
   "package": "console",
   "function": "TestTheRedoSetIsReadFromTheRecordAndNeverFromTheRequest",

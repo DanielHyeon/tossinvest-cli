@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/fake_broker_test.go",
+  "file": "internal/console/fake_broker_test.go",
   "source_sha256": "393b77b2344373a06e79303e97115e043b6b761cfa121bd5925be88617b41a4f",
   "package": "console",
   "function": "PriceLimits",

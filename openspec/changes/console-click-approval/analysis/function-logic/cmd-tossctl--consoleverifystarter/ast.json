@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/cmd/tossctl/console.go",
+  "file": "cmd/tossctl/console.go",
   "source_sha256": "3f5a76f72fccb189af27130385aa16a174995c3ed2c1c60998780e71fbb63213",
   "package": "main",
   "function": "consoleVerifyStarter",

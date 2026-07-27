@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/record.go",
+  "file": "internal/verifylive/record.go",
   "source_sha256": "14e2a8e73691109d218fed530974c4583f707390df8d298c1590db66a7ee8c53",
   "package": "verifylive",
   "function": "RecordFileName",
