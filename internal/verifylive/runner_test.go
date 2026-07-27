@@ -786,6 +786,132 @@ func TestReadFixturesRecordsTheStatusesTheAccountHasProduced(t *testing.T) {
 	}
 }
 
+// TestReadFixturesAsksTheOrderListForAStatusItActuallyAccepts.
+//
+// `GET /api/v1/orders` requires status, with enum {OPEN, CLOSED} and no member
+// meaning "everything" (openapi.latest.json). A walk that omitted it was refused
+// with 400 invalid-request on every live cycle (measurements.md M7), so the fixture
+// step could not collect a single status on a real account.
+func TestReadFixturesAsksTheOrderListForAStatusItActuallyAccepts(t *testing.T) {
+	broker := newFakeBroker()
+	broker.orderPages = [][]json.RawMessage{{
+		mustOrderJSON("h-1", "005930", "BUY", "FILLED", 1, 70000, ""),
+	}}
+	h := newHarness(t, broker, alwaysConfirm())
+	h.seedSettled(t, VerdictPass, StepReadFixtures)
+
+	if _, err := h.run(Options{}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if got := h.verdict(StepReadFixtures); got != VerdictPass {
+		e, _ := LastEntry(h.entries(), StepReadFixtures)
+		t.Fatalf("verdict = %q, want pass: %s", got, e.Reason)
+	}
+	for _, req := range broker.seen() {
+		if req == "GET /orders status=" {
+			t.Error("the fixture walk asked for the order list with no status; the live API answers that " +
+				"with 400 invalid-request and the step collects nothing")
+		}
+	}
+}
+
+// TestReadFixturesCollectsBothStatusGroups.
+//
+// The list is CLOSED ∪ OPEN and there is no third call that returns it in one go,
+// so a walk of one group is a fixture set missing every status the other group
+// holds — and the working statuses (PENDING and friends) only ever appear in OPEN.
+func TestReadFixturesCollectsBothStatusGroups(t *testing.T) {
+	broker := newFakeBroker()
+	broker.orderPages = [][]json.RawMessage{
+		{mustOrderJSON("h-1", "005930", "BUY", "FILLED", 1, 70000, "")},
+		{mustOrderJSON("h-2", "005930", "SELL", "CANCELED", 1, 70000, "2026-07-20T10:00:00+09:00")},
+		{mustOrderJSON("h-3", "005930", "BUY", "REPLACED", 1, 70000, "")},
+	}
+	broker.withWorkingOrder("w-1", "005930", "PENDING")
+	h := newHarness(t, broker, alwaysConfirm())
+	h.seedSettled(t, VerdictPass, StepReadFixtures)
+
+	if _, err := h.run(Options{}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if got := h.verdict(StepReadFixtures); got != VerdictPass {
+		t.Fatalf("verdict = %q, want pass", got)
+	}
+	got, _ := h.observation(StepReadFixtures, "order.status.observed")
+	if got != "CANCELED,FILLED,PENDING,REPLACED" {
+		t.Errorf("order.status.observed = %q, want the three closed statuses and the working one", got)
+	}
+	if read, _ := h.observation(StepReadFixtures, "order.history.orders_read"); read != "4" {
+		t.Errorf("order.history.orders_read = %q, want 4 — three pages of history plus the working order", read)
+	}
+	if unobserved, _ := h.observation(StepReadFixtures, "order.status.documented_unobserved"); strings.Contains(
+		unobserved, "PENDING,") || unobserved == "PENDING" {
+		t.Errorf("documented_unobserved = %q, but PENDING was read out of the OPEN group", unobserved)
+	}
+	// The CLOSED walk followed its cursor to the end; the OPEN group is one call.
+	if got := broker.countRequests("GET /orders status=CLOSED"); got != 3 {
+		t.Errorf("the CLOSED walk made %d request(s), want 3 — one per page", got)
+	}
+	if got := broker.countRequests("GET /orders status=OPEN"); got != 1 {
+		t.Errorf("the OPEN walk made %d request(s), want 1 — the group is not paginated", got)
+	}
+}
+
+// TestAnOrderInBothStatusGroupsIsNotAFault.
+//
+// openapi.latest.json puts PARTIAL_FILLED in OPEN *and* in CLOSED, so one partially
+// filled order honestly comes back from both walks. The fixture set is a set of
+// status values, so the overlap collapses on its own — what must not happen is the
+// step treating the repeat as a broken list, which is the failure 1.9 removed from
+// the soak's completeness judgement for the same reason.
+func TestAnOrderInBothStatusGroupsIsNotAFault(t *testing.T) {
+	broker := newFakeBroker()
+	partial := broker.withWorkingOrder("p-1", "005930", "PARTIAL_FILLED")
+	broker.withClosedOrder(partial)
+	broker.withClosedOrder(mustOrderJSON("h-1", "005930", "BUY", "FILLED", 1, 70000, ""))
+	h := newHarness(t, broker, alwaysConfirm())
+	h.seedSettled(t, VerdictPass, StepReadFixtures)
+
+	if _, err := h.run(Options{}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if got := h.verdict(StepReadFixtures); got != VerdictPass {
+		e, _ := LastEntry(h.entries(), StepReadFixtures)
+		t.Fatalf("verdict = %q, want pass — an order in both groups is one order: %s", got, e.Reason)
+	}
+	if got, _ := h.observation(StepReadFixtures, "order.status.observed"); got != "FILLED,PARTIAL_FILLED" {
+		t.Errorf("order.status.observed = %q, want each status named once however many groups it came from", got)
+	}
+	if got, _ := h.observation(StepReadFixtures, "order.status.count.PARTIAL_FILLED"); got != "2" {
+		t.Errorf("order.status.count.PARTIAL_FILLED = %q, want 2 — the count is occurrences, and the same "+
+			"order appearing in both groups is what the API documents", got)
+	}
+}
+
+// TestTheFixtureWalkStillBacksOffOnARateLimit. Two 429s and the third attempt
+// answers, per read, exactly as before the walk was split in two.
+func TestTheFixtureWalkStillBacksOffOnARateLimit(t *testing.T) {
+	broker := newFakeBroker().withThrottle("orders", 2)
+	broker.orderPages = [][]json.RawMessage{{
+		mustOrderJSON("h-1", "005930", "BUY", "FILLED", 1, 70000, ""),
+	}}
+	h := newHarness(t, broker, alwaysConfirm())
+	h.seedSettled(t, VerdictPass, StepReadFixtures)
+
+	if _, err := h.run(Options{}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if got := h.verdict(StepReadFixtures); got != VerdictPass {
+		t.Errorf("verdict = %q, want pass — the third attempt answered", got)
+	}
+	if want := 45 * time.Second; h.slept != want {
+		t.Errorf("the walk waited %s between attempts, want %s (15s then 30s)", h.slept, want)
+	}
+	if got := broker.countRequests("GET /orders status=CLOSED"); got != 3 {
+		t.Errorf("the CLOSED read was sent %d time(s), want 3 (one attempt plus two retries)", got)
+	}
+}
+
 // TestReadFixturesSkipsAnEmptyHistoryWithAWayForward.
 func TestReadFixturesSkipsAnEmptyHistoryWithAWayForward(t *testing.T) {
 	broker := newFakeBroker()

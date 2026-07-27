@@ -221,36 +221,82 @@ func (f *fakeBroker) PriceLimits(_ context.Context, symbol string) (domain.Price
 	return l, nil
 }
 
+// openStatusGroup is the OPEN half of the broker's two lifecycle groups, as
+// openapi.latest.json defines them. PARTIAL_FILLED is deliberately in here *and*
+// reachable from the closed pages: the spec puts it in both groups, so a fake that
+// kept them disjoint could never reproduce the overlap.
+var openStatusGroup = map[string]bool{
+	"PENDING": true, "PENDING_CANCEL": true, "PENDING_REPLACE": true, "PARTIAL_FILLED": true,
+}
+
+// OrdersPageRaw answers the order list the way the documented one does.
+//
+// A request that carries no status is refused with the live API's own answer — 400
+// invalid-request naming the field (measurements.md M7, observed on 46/46 soak
+// cycles). openapi.latest.json marks the parameter required, with enum
+// {OPEN, CLOSED} and no member meaning "everything", so a walk that omits it reads
+// nothing at all on a real account. A fake that answered such a request anyway
+// would let that bug pass every test in this package, which is exactly what
+// happened.
+//
+// OPEN ignores the cursor and returns every working order in one response; CLOSED
+// is the paginated history, served from orderPages.
 func (f *fakeBroker) OrdersPageRaw(_ context.Context, filter official.OrdersFilter, cursor string) (official.RawOrderPage, error) {
 	f.log("GET /orders status=" + filter.Status)
-	if filter.Status == "OPEN" {
+	if err := f.throttled("orders"); err != nil {
+		return official.RawOrderPage{}, err
+	}
+	switch filter.Status {
+	case "OPEN":
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		var open []json.RawMessage
 		for _, raw := range f.orders {
 			var v rawOrderView
-			if err := json.Unmarshal(raw, &v); err == nil && v.Status == "PENDING" {
+			if err := json.Unmarshal(raw, &v); err == nil && openStatusGroup[v.Status] {
 				open = append(open, raw)
 			}
 		}
 		return official.RawOrderPage{Orders: open}, nil
+	case "CLOSED":
+		if len(f.orderPages) == 0 {
+			return official.RawOrderPage{}, nil
+		}
+		idx := 0
+		if cursor != "" {
+			fmt.Sscanf(cursor, "p%d", &idx)
+		}
+		if idx >= len(f.orderPages) {
+			return official.RawOrderPage{}, nil
+		}
+		page := official.RawOrderPage{Orders: f.orderPages[idx]}
+		if idx+1 < len(f.orderPages) {
+			page.HasNext = true
+			page.NextCursor = fmt.Sprintf("p%d", idx+1)
+		}
+		return page, nil
+	default:
+		return official.RawOrderPage{}, &official.APIError{
+			Code: 400,
+			Body: `{"error":{"code":"invalid-request","message":"status is required",` +
+				`"details":[{"field":"status","reason":"required"}]}}`,
+		}
 	}
-	if len(f.orderPages) == 0 {
-		return official.RawOrderPage{}, nil
-	}
-	idx := 0
-	if cursor != "" {
-		fmt.Sscanf(cursor, "p%d", &idx)
-	}
-	if idx >= len(f.orderPages) {
-		return official.RawOrderPage{}, nil
-	}
-	page := official.RawOrderPage{Orders: f.orderPages[idx]}
-	if idx+1 < len(f.orderPages) {
-		page.HasNext = true
-		page.NextCursor = fmt.Sprintf("p%d", idx+1)
-	}
-	return page, nil
+}
+
+// withClosedOrder puts one order in the CLOSED history, on its own page.
+func (f *fakeBroker) withClosedOrder(raw json.RawMessage) *fakeBroker {
+	f.orderPages = append(f.orderPages, []json.RawMessage{raw})
+	return f
+}
+
+// withWorkingOrder puts one order in the account so the OPEN group is not empty.
+func (f *fakeBroker) withWorkingOrder(id, symbol, status string) json.RawMessage {
+	raw := mustOrderJSON(id, symbol, "BUY", status, 1, 70000, "")
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.orders[id] = raw
+	return raw
 }
 
 func (f *fakeBroker) OrderRawByID(_ context.Context, orderID string) (json.RawMessage, error) {

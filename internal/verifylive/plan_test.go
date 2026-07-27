@@ -18,6 +18,7 @@ package verifylive
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"regexp"
 	"strings"
@@ -581,6 +582,66 @@ func TestTheBatchApprovalIsRecordedWithWhatWasApproved(t *testing.T) {
 	want := len(op.lastBatch(t).Plan.Mutations)
 	if values["approval.requests_listed"] != trim(float64(want)) {
 		t.Errorf("approval.requests_listed = %q, want %d", values["approval.requests_listed"], want)
+	}
+}
+
+// --- the digest is stable across builds -----------------------------------------------
+
+// planDigest20260727 is the digest of the plan a 3-share KR holding produces, taken
+// from the build that was in the operator's hands on 2026-07-27.
+//
+// It is pinned rather than recomputed because approval.plan_digest is what ties an
+// evidence record to the list a person actually read: a resumed run whose digest no
+// longer matches the record's cannot claim the same batch was approved across the
+// restart (measurements.md M3), and a live verification that is halfway through
+// would have to start over. Changing this constant is therefore a deliberate act
+// with a live cost, not a test fixup — if an edit moves it, the edit changed what
+// the operator is agreeing to.
+const planDigest20260727 = "sha256:cef553cba1548ab3e918147119c0c587"
+
+// TestThePlanDigestIsPinnedAcrossBuilds.
+func TestThePlanDigestIsPinnedAcrossBuilds(t *testing.T) {
+	broker := newFakeBroker().withHolding("005930", 3)
+	h := newHarness(t, broker, alwaysConfirm())
+	r := h.runner(t, Options{HoldingSymbol: "005930"})
+
+	if got := r.Plan(context.Background()).Digest(); got != planDigest20260727 {
+		t.Errorf("plan digest = %q, want %q.\nThe approved-list fingerprint moved. Every record on disk "+
+			"carries the old value, so a --resume can no longer prove the same batch was approved.", got,
+			planDigest20260727)
+	}
+}
+
+// TestThePlanDigestDoesNotDependOnWhatTheReadStepsSee.
+//
+// The digest is Digest(plan.Mutations), and the plan is derived from the step
+// catalogue, the record and the operator's flags. The one account read it makes is
+// the sellable quantity. Nothing a read-only step does — least of all how
+// read-fixtures walks the order list — may reach it, because the operator resuming
+// a half-finished verification is entitled to the same fingerprint from a build
+// whose read steps were fixed underneath them.
+func TestThePlanDigestDoesNotDependOnWhatTheReadStepsSee(t *testing.T) {
+	empty := newFakeBroker().withHolding("005930", 3)
+
+	busy := newFakeBroker().withHolding("005930", 3)
+	busy.orderPages = [][]json.RawMessage{
+		{mustOrderJSON("h-1", "005930", "BUY", "FILLED", 1, 70000, "")},
+		{mustOrderJSON("h-2", "005930", "SELL", "CANCELED", 1, 70000, "2026-07-20T10:00:00+09:00")},
+		{mustOrderJSON("h-3", "005930", "BUY", "PARTIAL_FILLED", 2, 70000, "")},
+	}
+	busy.withWorkingOrder("w-1", "005930", "PENDING")
+	busy.withWorkingOrder("w-2", "005930", "PARTIAL_FILLED")
+
+	digests := map[string]string{}
+	for name, broker := range map[string]*fakeBroker{"empty history": empty, "busy account": busy} {
+		h := newHarness(t, broker, alwaysConfirm())
+		r := h.runner(t, Options{HoldingSymbol: "005930"})
+		digests[name] = r.Plan(context.Background()).Digest()
+	}
+	if digests["empty history"] != digests["busy account"] {
+		t.Errorf("the plan digest moved with the account's order history: %q vs %q — the approval "+
+			"fingerprint must depend on the list, not on what the reads happen to find",
+			digests["empty history"], digests["busy account"])
 	}
 }
 

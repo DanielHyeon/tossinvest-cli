@@ -29,9 +29,35 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
+// The broker's two order lifecycle groups, and the only two values
+// GET /api/v1/orders accepts for its `status` parameter.
+//
+// openapi.latest.json marks the parameter required, with enum {OPEN, CLOSED} and no
+// member meaning "everything": a request that omits it is answered with 400
+// invalid-request naming the field, on every cycle, on a real account
+// (measurements.md M7). Reading the whole list therefore means reading both groups
+// and taking the union — the shape internal/soak's walk was corrected to in the same
+// investigation.
+//
+// The groups are labels over the per-order status and they are not disjoint: the
+// spec puts PARTIAL_FILLED in both. The same order coming back from each of them is
+// one order, and nothing here may read that as a broken list.
+const (
+	statusOpen   = "OPEN"
+	statusClosed = "CLOSED"
+)
+
 // maxFixturePages bounds the history walk. The status fixtures need variety, not
 // completeness, and an account with years of orders should not turn step one into
 // a rate-limit incident.
+//
+// It bounds each group separately rather than the two together. CLOSED is the whole
+// history of the account — the walk sets no from/to bound — and is what the cap
+// exists to contain; OPEN is not paginated at all, since the spec has it ignore
+// cursor and limit and answer with every working order at once. A budget shared
+// between them would let a long history spend the whole allowance and leave nothing
+// for the OPEN read, which would silently drop every working status from the fixture
+// set — and the working statuses are precisely the ones CLOSED can never show.
 const maxFixturePages = 10
 
 // documentedOrderStatuses is the OrderStatus enum as the API documents it
@@ -92,42 +118,59 @@ func (r *Runner) stepReadFixtures(ctx context.Context, sr *stepRun) error {
 	counts := map[string]int{}
 	shapes := map[string][]string{}
 	var (
-		cursor string
 		pages  int
 		orders int
 	)
-	for pages < maxFixturePages {
-		page, err := readRetry(ctx, r, sr, EndpointReadOrders, map[string]string{"cursor": cursor},
-			func(ctx context.Context) (official.RawOrderPage, error) {
-				return r.broker.OrdersPageRaw(ctx, official.OrdersFilter{}, cursor)
-			},
-			func(p official.RawOrderPage) any { return len(p.Orders) })
-		if err != nil {
-			return err
-		}
-		pages++
-		for _, raw := range page.Orders {
-			orders++
-			var view rawOrderView
-			if err := json.Unmarshal(raw, &view); err != nil {
-				continue
+	// CLOSED then OPEN. Between them they are the whole order list; there is no
+	// third call that returns it in one go (see the status constants above), and a
+	// walk of one group alone is a fixture set missing every status the other holds.
+	//
+	// An order that comes back from both groups needs no special handling. What is
+	// being collected is the *set* of status values the account has produced, so a
+	// PARTIAL_FILLED order that is honestly in each group contributes the one value
+	// twice and the set absorbs it; only the per-status count sees the repeat, and
+	// occurrences are what that count means.
+	for _, group := range []string{statusClosed, statusOpen} {
+		cursor := ""
+		// The loop is written the same way for both groups on purpose. The spec says
+		// CLOSED paginates and OPEN does not, and following whatever the broker hands
+		// back is how a group that behaves otherwise gets read rather than truncated
+		// on an assumption; the page cap is what keeps that generosity bounded.
+		for page := 0; page < maxFixturePages; page++ {
+			p, err := readRetry(ctx, r, sr, EndpointReadOrders,
+				map[string]string{"status": group, "cursor": cursor},
+				func(ctx context.Context) (official.RawOrderPage, error) {
+					return r.broker.OrdersPageRaw(ctx, official.OrdersFilter{Status: group}, cursor)
+				},
+				func(p official.RawOrderPage) any { return len(p.Orders) })
+			if err != nil {
+				return err
 			}
-			status := strings.TrimSpace(view.Status)
-			if status == "" {
-				status = "(absent)"
+			pages++
+			for _, raw := range p.Orders {
+				orders++
+				var view rawOrderView
+				if err := json.Unmarshal(raw, &view); err != nil {
+					continue
+				}
+				status := strings.TrimSpace(view.Status)
+				if status == "" {
+					status = "(absent)"
+				}
+				counts[status]++
+				if _, seen := shapes[status]; !seen {
+					shapes[status] = keySet(raw)
+				}
 			}
-			counts[status]++
-			if _, seen := shapes[status]; !seen {
-				shapes[status] = keySet(raw)
+			if !p.HasNext || p.NextCursor == "" || p.NextCursor == cursor {
+				break
 			}
+			cursor = p.NextCursor
 		}
-		if !page.HasNext || page.NextCursor == "" || page.NextCursor == cursor {
-			break
-		}
-		cursor = page.NextCursor
 	}
 
-	sr.observe("order.history.orders_read", strconv.Itoa(orders), fmt.Sprintf("%d page(s)", pages))
+	sr.observe("order.history.orders_read", strconv.Itoa(orders),
+		fmt.Sprintf("%d page(s) across the CLOSED and OPEN groups", pages))
 	if orders == 0 {
 		sr.skip("계좌에 주문 이력이 없어 상태 표를 도출할 대상이 아직 없다. " +
 			"아래 주문 단계들이 주문을 만드니, 그 뒤에 `--redo read-fixtures`로 이 단계를 다시 실행하라")
@@ -900,9 +943,9 @@ func (r *Runner) openOrderIDs(ctx context.Context, sr *stepRun) (map[string]bool
 	cursor := ""
 	for page := 0; page < maxFixturePages; page++ {
 		p, err := readRetry(ctx, r, sr, EndpointReadOrders,
-			map[string]string{"status": "OPEN", "cursor": cursor},
+			map[string]string{"status": statusOpen, "cursor": cursor},
 			func(ctx context.Context) (official.RawOrderPage, error) {
-				return r.broker.OrdersPageRaw(ctx, official.OrdersFilter{Status: "OPEN"}, cursor)
+				return r.broker.OrdersPageRaw(ctx, official.OrdersFilter{Status: statusOpen}, cursor)
 			},
 			func(page official.RawOrderPage) any { return len(page.Orders) })
 		if err != nil {

@@ -155,7 +155,8 @@ func Steps() []Step {
 			Proves: "문서화된 열 가지 OrderStatus 값 중 이 계좌가 실제로 만들어낸 것이 무엇이고, CANCEL_REJECTED/REPLACE_REJECTED 레코드가 주문 목록에서 어떤 모양인지",
 			Tasks:  []string{"2.1"},
 			Procedure: []string{
-				"GET /api/v1/orders (전체 상태)를 페이지 상한까지 훑는다",
+				"GET /api/v1/orders를 CLOSED(커서 페이지네이션)와 OPEN(전량 반환) 두 그룹 모두 " +
+					"페이지 상한까지 훑는다 — status는 필수이고 '전체'에 해당하는 값이 없다",
 				"서로 다른 status·필드 모양·건수를 기록한다 — 식별자는 digest만 남기고 값 자체는 저장하지 않는다",
 				"CANCEL_REJECTED / REPLACE_REJECTED가 독립 레코드로 나타나는지, 원주문으로 되짚는 필드를 갖는지 기록한다",
 			},

@@ -115,9 +115,11 @@ Each cycle records three things:
   credentials    did the authenticated read work, and did the cached access
                  token's expiry move forward (an unattended refresh)
   endpoints      success, latency and throttling per endpoint
-  completeness   does the order list paginate without loops or duplicates, does
-                 it contain every order the broker reports as open, does a quote
-                 request return a quote per symbol
+  completeness   does each status group (CLOSED, OPEN) paginate without loops or
+                 duplicates, does every order returned carry an identifier, does a
+                 quote request return a quote per symbol. An order reported in both
+                 groups — the spec puts PARTIAL_FILLED in each — is recorded as an
+                 observation, not a fault
 
 Leave it running. Ctrl-C stops it and keeps everything already recorded; running
 it again appends to the same record, so a reboot costs a cycle, not a day.
@@ -617,8 +619,8 @@ func (r soakReads) OrdersPage(ctx context.Context, status, cursor string) (soak.
 		if err := json.Unmarshal(raw, &head); err != nil {
 			// A page entry that does not carry an identifier is itself a
 			// completeness problem, and the walk should see it as one rather than
-			// abort: an empty id can never match an open order, so the coverage
-			// check reports it.
+			// abort: nothing can reconcile against an order it cannot name, which is
+			// what the blank-identifier check fails on.
 			out.IDs = append(out.IDs, "")
 			continue
 		}

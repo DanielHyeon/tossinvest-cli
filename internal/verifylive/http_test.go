@@ -82,7 +82,18 @@ func (s *apiServer) serve(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"result":{"upperLimitPrice":"91000","lowerLimitPrice":"49000","currency":"KRW"}}`)
 
 	case path == "/api/v1/orders" && r.Method == http.MethodGet:
-		s.writeOrderList(w, r.URL.Query().Get("status"))
+		// status is required and has no "everything" member (openapi.latest.json,
+		// measurements.md M7). Answering a request that omits it would make this
+		// server more permissive than the account the tool is pointed at, and the
+		// wiring test would then prove nothing about the walk that matters.
+		switch status := r.URL.Query().Get("status"); status {
+		case "OPEN", "CLOSED":
+			s.writeOrderList(w, status)
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, `{"error":{"code":"invalid-request","message":"status is required",`+
+				`"details":[{"field":"status","reason":"required"}]}}`)
+		}
 
 	case path == "/api/v1/orders" && r.Method == http.MethodPost:
 		s.createOrder(w, body)
@@ -238,6 +249,9 @@ func (s *apiServer) writeOrderList(w http.ResponseWriter, status string) {
 	var parts []string
 	for id, working := range s.orders {
 		if status == "OPEN" && !working {
+			continue
+		}
+		if status == "CLOSED" && working {
 			continue
 		}
 		state := "CANCELED"
