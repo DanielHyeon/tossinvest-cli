@@ -1050,6 +1050,218 @@ func TestTheBaselineFollowsFirstSeenAtThroughCoolingAndExpiry(t *testing.T) {
 	}
 }
 
+// --- task 4.9: the first sighting's rank is a column too -------------------------
+
+// TestTheFirstRankFollowsFirstSeenAtThroughCoolingAndExpiry is the baseline's
+// lifecycle claim applied to the field task 4.9 adds, and it is the same D1 rule
+// on a third fact of the same grade.
+//
+// Kept through cooling and re-entry: dropping it there reopens D1's bypass one
+// field along. A symbol that had climbed to 5th leaves the ranking list for one
+// scan, comes back, and records 5th as where we first saw it — so seen_late
+// answers "we caught it early" from then on.
+//
+// Reset on expiry: the next pass is a different candidate, and D20's whole finding
+// is that a dead life's position answers for a live one in the unsafe direction.
+func TestTheFirstRankFollowsFirstSeenAtThroughCoolingAndExpiry(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 148, 150, t0, SourceOfficialTradingValue); err != nil {
+		t.Fatalf("NoteFirstRank: %v", err)
+	}
+
+	cooled := t0.Add(time.Minute)
+	if err := s.Cool(ctx, "KR", "005930", cooled); err != nil {
+		t.Fatalf("Cool: %v", err)
+	}
+	if got, _, err := s.FirstRank(ctx, "KR", "005930"); err != nil || got.Rank != 148 {
+		t.Fatalf("the first rank during cooling = %d (%v), want 148", got.Rank, err)
+	}
+
+	back, err := s.Promote(ctx, "KR", "005930", cooled.Add(time.Minute))
+	if err != nil {
+		t.Fatalf("re-Promote: %v", err)
+	}
+	if !back.FirstSeenAt.Equal(t0) {
+		t.Fatalf("first_seen_at after a re-entry = %v, want %v", back.FirstSeenAt, t0)
+	}
+	// The re-entry offers its current — much higher — position, and the store
+	// refuses it because one is already recorded.
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 5, 150,
+		cooled.Add(time.Minute), SourceOfficialTradingValue); err != nil {
+		t.Fatalf("NoteFirstRank on the re-entry: %v", err)
+	}
+	kept, _, err := s.FirstRank(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("FirstRank after the re-entry: %v", err)
+	}
+	if kept.Rank != 148 || kept.Total != 150 || !kept.At.Equal(t0) ||
+		kept.Source != SourceOfficialTradingValue {
+		t.Errorf("the first rank after a re-entry = %+v, want the original 148 of 150 at %v — a "+
+			"symbol that had climbed to 5th would come back recording 5th as where we first "+
+			"saw it, and seen_late would clear for it from then on", kept, t0)
+	}
+
+	// Expiry. The staleness clock alone gets there: nobody re-promoted it.
+	after := cooled.Add(time.Minute).Add(DefaultStalenessTTL).Add(DefaultCoolingTTL)
+	state, _, err := s.Candidate(ctx, "KR", "005930", after)
+	if err != nil {
+		t.Fatalf("Candidate: %v", err)
+	}
+	if state.State != StateExpired {
+		t.Fatalf("state at +%v = %v, want %v", after.Sub(t0), state.State, StateExpired)
+	}
+	fresh, err := s.Promote(ctx, "KR", "005930", after)
+	if err != nil {
+		t.Fatalf("Promote after expiry: %v", err)
+	}
+	reset, _, err := s.FirstRank(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("FirstRank after expiry: %v", err)
+	}
+	if reset.Recorded() {
+		t.Errorf("a new candidate inherited the expired one's first rank (%+v); D20's finding is "+
+			"that this answers a live candidate's seen_late with a dead one's position", reset)
+	}
+	if !reset.At.IsZero() || reset.Source != "" {
+		t.Errorf("the first rank's instant and source survived expiry: %+v", reset)
+	}
+	// The new life records its own, and it is the position it actually came back at.
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 5, 150, after, SourceOfficialGainers); err != nil {
+		t.Fatalf("NoteFirstRank after expiry: %v", err)
+	}
+	again, _, err := s.FirstRank(ctx, "KR", "005930")
+	if err != nil || again.Rank != 5 {
+		t.Fatalf("the new life's first rank = %d (%v), want 5", again.Rank, err)
+	}
+	sighting := MeasureFirstSighting(fresh, again, nil)
+	if !sighting.Measured || sighting.PercentilePct != "96.666666666666" {
+		t.Errorf("the new life's sighting = measured %v at %s%%, want 5 of 150",
+			sighting.Measured, sighting.PercentilePct)
+	}
+}
+
+// TestARankFromOutsideTheIdentityWindowIsNotStored is the write half of the
+// backstop.
+//
+// The ordinary caller is a scan loop that offers a ranked reading on every tick,
+// and the first one it offers is not necessarily the first sighting: a candidate
+// raised by prices or candles carries no position until some ranking list picks it
+// up, which may be hours later. Storing that would be D17's late baseline with no
+// safe direction — so it is not stored, it is not an error, and seen_late stays
+// unmeasured rather than answering from a later moment.
+func TestARankFromOutsideTheIdentityWindowIsNotStored(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+	late := t0.Add(DefaultStalenessTTL)
+	got, err := s.NoteFirstRank(ctx, "KR", "005930", 4, 150, late, SourceOfficialTradingValue)
+	if err != nil {
+		t.Fatalf("NoteFirstRank outside the window = %v, want no error; a candidate first raised "+
+			"by a source that carries no position is ordinary", err)
+	}
+	if got.Recorded() {
+		t.Errorf("a reading %v after first_seen_at was stored as the first sighting: %+v",
+			DefaultStalenessTTL, got)
+	}
+	stored, _, err := s.FirstRank(ctx, "KR", "005930")
+	if err != nil || stored.Recorded() {
+		t.Errorf("the store kept %+v (%v), want nothing", stored, err)
+	}
+	// One second inside it is stored, so the boundary is where it says it is.
+	inside := t0.Add(DefaultStalenessTTL - time.Second)
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 4, 150, inside, SourceOfficialTradingValue); err != nil {
+		t.Fatalf("NoteFirstRank inside the window: %v", err)
+	}
+	if stored, _, _ := s.FirstRank(ctx, "KR", "005930"); stored.Rank != 4 {
+		t.Errorf("a reading one second inside the window was not stored: %+v", stored)
+	}
+}
+
+// TestARankOfZeroIsNotAFirstSighting. Absent is not zero, and a rank of 0 with a
+// list length is not a position at the top of the list — percentileOf would make
+// it exactly that.
+func TestARankOfZeroIsNotAFirstSighting(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+	for _, bad := range []struct{ rank, total int }{{0, 150}, {12, 0}, {-1, 150}, {0, 0}, {151, 150}} {
+		if _, err := s.NoteFirstRank(ctx, "KR", "005930", bad.rank, bad.total, t0,
+			SourceOfficialTradingValue); err == nil {
+			t.Errorf("NoteFirstRank accepted %d of %d", bad.rank, bad.total)
+		}
+	}
+	// And the other refusals a provenance write cannot make silently.
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 12, 150, time.Time{},
+		SourceOfficialTradingValue); err == nil {
+		t.Error("NoteFirstRank accepted a first sighting with no instant")
+	}
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 12, 150, t0, "  "); err == nil {
+		t.Error("NoteFirstRank accepted a first sighting with no source")
+	}
+	if _, err := s.NoteFirstRank(ctx, "KR", "999999", 12, 150, t0,
+		SourceOfficialTradingValue); !errors.Is(err, ErrNoCandidate) {
+		t.Errorf("NoteFirstRank against an unknown candidate = %v, want ErrNoCandidate", err)
+	}
+	if got, found, err := s.FirstRank(ctx, "KR", "999999"); err != nil || found || got.Recorded() {
+		t.Errorf("FirstRank of an unknown candidate = %+v found=%v (%v)", got, found, err)
+	}
+}
+
+// TestPruningRawObservationsLeavesTheFirstRankToo extends D11's promise to the
+// column task 4.9 adds. It is the case the column exists for: the rows the rank
+// came from are exactly what retention removes, and seen_late is a question about
+// the longest-running candidates.
+func TestPruningRawObservationsLeavesTheFirstRankToo(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	if err := s.RecordObservations(ctx, []Observation{
+		obs("005930", t0, SourceOfficialTradingValue, Reported{Rank: 148, RankTotal: 150, Price: "10000"}),
+	}); err != nil {
+		t.Fatalf("RecordObservations: %v", err)
+	}
+	c, err := s.Promote(ctx, "KR", "005930", t0)
+	if err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 148, 150, t0, SourceOfficialTradingValue); err != nil {
+		t.Fatalf("NoteFirstRank: %v", err)
+	}
+	if _, err := s.PruneObservations(ctx, t0.Add(DefaultRawRetention)); err != nil {
+		t.Fatalf("PruneObservations: %v", err)
+	}
+	rows, err := s.Observations(ctx, "KR", "005930", time.Time{})
+	if err != nil {
+		t.Fatalf("Observations: %v", err)
+	}
+	if len(rows) != 0 {
+		t.Fatalf("%d raw rows survived the prune, want 0", len(rows))
+	}
+	first, _, err := s.FirstRank(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("FirstRank after the prune: %v", err)
+	}
+	if first.Rank != 148 || first.Total != 150 || !first.At.Equal(t0) {
+		t.Errorf("the first rank after the prune = %+v, want 148 of 150 at %v", first, t0)
+	}
+	sighting := MeasureFirstSighting(c, first, rows)
+	if !sighting.Measured {
+		t.Errorf("seen_late is unmeasurable once the rows are gone (%q); the column exists so "+
+			"that the longest-running candidates are the ones it can still answer for",
+			sighting.Why)
+	}
+}
+
 // TestPruningRawObservationsLeavesTheBaselineToo extends D11's promise to the
 // column D17 added: PruneObservations reaches `observations` and nothing else, so
 // the tidy-up that would have taken first_seen_at cannot take the first price
@@ -1159,6 +1371,36 @@ func writeV1Store(t *testing.T, path string) {
 			t.Fatalf("seeding a v1 observation: %v", err)
 		}
 	}
+	// Two ranked rows for the same candidate: one that could be its first sighting
+	// and one from half an hour later, so the v3 backfill has both to choose from.
+	for _, r := range []struct {
+		at   time.Time
+		rank int
+	}{{t0, 12}, {t0.Add(30 * time.Minute), 4}} {
+		_, err = db.Exec(`INSERT INTO observations
+			(market, symbol, source, observed_at, rank, rank_total, newly_listed, price, via_fallback)
+			VALUES ('KR','005930','official_rankings_trading_value',?,?,150,0,'10000',0)`,
+			stamp(r.at), r.rank)
+		if err != nil {
+			t.Fatalf("seeding a v1 ranked observation: %v", err)
+		}
+	}
+	// And a second candidate whose only surviving ranked row is an hour after it
+	// was first seen — the shape the backfill has to leave alone.
+	_, err = db.Exec(`INSERT INTO candidates
+		(market, symbol, first_seen_at, last_seen_at, sources, sources_attempted, sources_responded, degraded)
+		VALUES ('KR','000660',?,?,'official_rankings_trading_value',5,5,0)`,
+		stamp(t0), stamp(t0.Add(time.Hour)))
+	if err != nil {
+		t.Fatalf("seeding the second v1 candidate: %v", err)
+	}
+	_, err = db.Exec(`INSERT INTO observations
+		(market, symbol, source, observed_at, rank, rank_total, newly_listed, price, via_fallback)
+		VALUES ('KR','000660','official_rankings_trading_value',?,9,150,0,'20000',0)`,
+		stamp(t0.Add(time.Hour)))
+	if err != nil {
+		t.Fatalf("seeding the second v1 candidate's observation: %v", err)
+	}
 }
 
 // TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows.
@@ -1178,7 +1420,10 @@ func TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows(t *testing.T) {
 	defer func() { _ = s.Close() }()
 
 	cols := candidateColumns(t, s)
-	for _, want := range []string{"first_price", "first_price_at", "first_price_source"} {
+	for _, want := range []string{
+		"first_price", "first_price_at", "first_price_source",
+		"first_rank", "first_rank_total", "first_rank_at", "first_rank_source",
+	} {
 		if !cols[want] {
 			t.Errorf("after the migration candidates still has no %s", want)
 		}
@@ -1189,8 +1434,9 @@ func TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows(t *testing.T) {
 		`SELECT value FROM store_meta WHERE key = 'schema_version'`).Scan(&version); err != nil {
 		t.Fatalf("reading the schema version: %v", err)
 	}
-	if version != "2" {
-		t.Errorf("schema version after the migration = %q, want 2", version)
+	if version != fmt.Sprint(SchemaVersion) {
+		t.Errorf("schema version after the migration = %q, want %d — a store two versions behind "+
+			"climbs both rungs in order", version, SchemaVersion)
 	}
 
 	// The rows it had are the rows it has.
@@ -1212,8 +1458,8 @@ func TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Observations: %v", err)
 	}
-	if len(rows) != 2 {
-		t.Fatalf("%d raw rows survived the migration, want 2", len(rows))
+	if len(rows) != 4 {
+		t.Fatalf("%d raw rows survived the migration, want 4", len(rows))
 	}
 
 	// The backfill: the oldest surviving priced row becomes the baseline.
@@ -1240,6 +1486,47 @@ func TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows(t *testing.T) {
 		t.Errorf("a later reading overwrote the backfilled baseline: %q", again.Price)
 	}
 
+	// The v3 backfill, which is deliberately narrower than the v2 one.
+	//
+	// D17's price backfill takes the earliest surviving priced row outright and
+	// relies on first_price_at plus the read-time comparison to catch a late one. A
+	// rank has no safe direction to be wrong in, so this rung applies the identity
+	// window on the way in too: the row at t0 is inside it and becomes the first
+	// rank, the row half an hour later is not and does not.
+	first, found, err := s.FirstRank(ctx, "KR", "005930")
+	if err != nil || !found {
+		t.Fatalf("FirstRank after the migration: %v found=%v", err, found)
+	}
+	if first.Rank != 12 || first.Total != 150 || !first.At.Equal(t0) ||
+		first.Source != SourceOfficialTradingValue {
+		t.Errorf("the backfilled first rank = %+v, want 12 of 150 at %v from %q",
+			first, t0, SourceOfficialTradingValue)
+	}
+
+	// The candidate whose only surviving ranked row is an hour late keeps none.
+	// Unmeasured is the honest answer there, and it is the one D10 makes safe.
+	late, found, err := s.FirstRank(ctx, "KR", "000660")
+	if err != nil || !found {
+		t.Fatalf("FirstRank of the second candidate: %v found=%v", err, found)
+	}
+	if late.Recorded() {
+		t.Errorf("a row an hour after first_seen_at was backfilled as the first sighting: %+v "+
+			"— a rank has no safe direction to be wrong in", late)
+	}
+	sighting := MeasureFirstSighting(
+		Candidate{Key: Key{Market: "KR", Symbol: "000660"}, FirstSeenAt: t0}, late, nil)
+	if sighting.Measured {
+		t.Errorf("seen_late is measurable for the candidate the backfill left alone: %+v", sighting)
+	}
+
+	// And the backfilled one is set once from here on, like the baseline.
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 3, 150, t0, SourceWTSPopular); err != nil {
+		t.Fatalf("NoteFirstRank: %v", err)
+	}
+	if again, _, _ := s.FirstRank(ctx, "KR", "005930"); again.Rank != 12 {
+		t.Errorf("a later reading overwrote the backfilled first rank: %d", again.Rank)
+	}
+
 	// Reopening is a no-op rather than a second climb.
 	if err := s.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
@@ -1251,6 +1538,220 @@ func TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows(t *testing.T) {
 	defer func() { _ = reopened.Close() }()
 	if got, _, err := reopened.Baseline(ctx, "KR", "005930"); err != nil || got.Price != "10000" {
 		t.Errorf("the baseline after reopening = %q (%v), want 10000", got.Price, err)
+	}
+}
+
+// v2Schema is the schema exactly as SchemaVersion 2 wrote it: v1 plus D17's three
+// baseline columns. Spelled out rather than derived for v1Schema's reason — a
+// ladder test that builds its "old" database from the current source migrates a
+// current file and calls it an old one.
+const v2Schema = `
+CREATE TABLE IF NOT EXISTS observations (
+	id             INTEGER PRIMARY KEY AUTOINCREMENT,
+	market         TEXT    NOT NULL,
+	symbol         TEXT    NOT NULL,
+	source         TEXT    NOT NULL,
+	observed_at    TEXT    NOT NULL,
+	rank           INTEGER NOT NULL DEFAULT 0,
+	rank_total     INTEGER NOT NULL DEFAULT 0,
+	newly_listed   INTEGER NOT NULL DEFAULT 0,
+	trading_value  TEXT,
+	trading_volume TEXT,
+	price          TEXT,
+	day_high       TEXT,
+	day_low        TEXT,
+	via_fallback   INTEGER NOT NULL DEFAULT 0,
+	CHECK (newly_listed IN (0,1)),
+	CHECK (via_fallback IN (0,1)),
+	CHECK (rank >= 0 AND rank_total >= 0)
+) STRICT;
+CREATE INDEX IF NOT EXISTS idx_observations_symbol_time
+	ON observations(market, symbol, observed_at);
+CREATE INDEX IF NOT EXISTS idx_observations_time ON observations(observed_at);
+CREATE TABLE IF NOT EXISTS candidates (
+	market             TEXT NOT NULL,
+	symbol             TEXT NOT NULL,
+	first_seen_at      TEXT NOT NULL,
+	last_seen_at       TEXT NOT NULL,
+	cooled_at          TEXT,
+	sources            TEXT NOT NULL DEFAULT '',
+	sources_attempted  INTEGER NOT NULL DEFAULT 0,
+	sources_responded  INTEGER NOT NULL DEFAULT 0,
+	degraded           INTEGER NOT NULL DEFAULT 0,
+	first_price        TEXT,
+	first_price_at     TEXT,
+	first_price_source TEXT,
+	PRIMARY KEY (market, symbol),
+	CHECK (degraded IN (0,1))
+) STRICT;
+CREATE TABLE IF NOT EXISTS store_meta (
+	key   TEXT PRIMARY KEY,
+	value TEXT NOT NULL
+) STRICT;
+INSERT INTO store_meta (key, value) VALUES ('schema_version', '2');
+`
+
+// writeV2Store builds a schema-2 database: a candidate that already has its
+// baseline recorded and its ranked rows still in the raw table, the way a build
+// from between D17 and task 4.9 would have left one.
+func writeV2Store(t *testing.T, path string) {
+	t.Helper()
+	db, err := sql.Open("sqlite", dsn(path, time.Second))
+	if err != nil {
+		t.Fatalf("opening a v2 store: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+	if _, err := db.Exec(v2Schema); err != nil {
+		t.Fatalf("creating the v2 schema: %v", err)
+	}
+	_, err = db.Exec(`INSERT INTO candidates
+		(market, symbol, first_seen_at, last_seen_at, cooled_at, sources,
+		 sources_attempted, sources_responded, degraded,
+		 first_price, first_price_at, first_price_source)
+		VALUES ('KR','005930',?,?,NULL,'official_rankings_trading_value',5,4,1,
+		        '10000',?,'official_prices')`,
+		stamp(t0), stamp(t0.Add(time.Minute)), stamp(t0))
+	if err != nil {
+		t.Fatalf("seeding the v2 candidate: %v", err)
+	}
+	for _, r := range []struct {
+		at   time.Time
+		rank int
+	}{{t0, 12}, {t0.Add(time.Minute), 8}} {
+		_, err = db.Exec(`INSERT INTO observations
+			(market, symbol, source, observed_at, rank, rank_total, newly_listed, price, via_fallback)
+			VALUES ('KR','005930','official_rankings_trading_value',?,?,150,0,'10000',0)`,
+			stamp(r.at), r.rank)
+		if err != nil {
+			t.Fatalf("seeding a v2 observation: %v", err)
+		}
+	}
+	// A second candidate promoted an hour later, with a ranked row from nine
+	// minutes before that — the gap between two lives, or the drift of a symbol
+	// nobody had promoted yet. It is inside the symmetric read-time window and it
+	// is the shape D20 names, so the backfill must not take it.
+	crossed := t0.Add(time.Hour)
+	_, err = db.Exec(`INSERT INTO candidates
+		(market, symbol, first_seen_at, last_seen_at, sources, sources_attempted, sources_responded, degraded)
+		VALUES ('KR','000660',?,?,'official_rankings_trading_value',5,5,0)`,
+		stamp(crossed), stamp(crossed))
+	if err != nil {
+		t.Fatalf("seeding the second v2 candidate: %v", err)
+	}
+	_, err = db.Exec(`INSERT INTO observations
+		(market, symbol, source, observed_at, rank, rank_total, newly_listed, price, via_fallback)
+		VALUES ('KR','000660','official_rankings_trading_value',?,148,150,0,'10000',0)`,
+		stamp(crossed.Add(-9*time.Minute)))
+	if err != nil {
+		t.Fatalf("seeding the gap observation: %v", err)
+	}
+}
+
+// TestAStoreAtSchemaTwoOpensMigratesAndKeepsItsRows is the second rung on its own.
+//
+// The v1 test climbs both, which is the case that proves the ladder runs in order
+// — and it is exactly the case that cannot catch a rung that only works when the
+// one below it has just run in the same transaction. Most stores in the field are
+// at v2, so v2 → v3 is the step an upgrade actually takes.
+func TestAStoreAtSchemaTwoOpensMigratesAndKeepsItsRows(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "candidates.db")
+	writeV2Store(t, path)
+
+	s, err := Open(ctx, Options{Path: path, FSProber: FixedFSProber(FSInfo{Name: "ext4"})})
+	if err != nil {
+		t.Fatalf("Open on a v2 store: %v", err)
+	}
+	defer func() { _ = s.Close() }()
+
+	cols := candidateColumns(t, s)
+	for _, want := range []string{
+		"first_rank", "first_rank_total", "first_rank_at", "first_rank_source",
+	} {
+		if !cols[want] {
+			t.Errorf("after the migration candidates still has no %s", want)
+		}
+	}
+	var version string
+	if err := s.db.QueryRowContext(ctx,
+		`SELECT value FROM store_meta WHERE key = 'schema_version'`).Scan(&version); err != nil {
+		t.Fatalf("reading the schema version: %v", err)
+	}
+	if version != fmt.Sprint(SchemaVersion) {
+		t.Errorf("schema version after the migration = %q, want %d", version, SchemaVersion)
+	}
+
+	// Everything the file already had is still there and unchanged. Additive and
+	// nullable is WORKFLOW §0.6's preference precisely so that this holds.
+	got, found, err := s.Candidate(ctx, "KR", "005930", t0.Add(2*time.Minute))
+	if err != nil || !found {
+		t.Fatalf("Candidate: %v found=%v", err, found)
+	}
+	if !got.FirstSeenAt.Equal(t0) || !got.LastSeenAt.Equal(t0.Add(time.Minute)) {
+		t.Errorf("the lifecycle instants across the migration = %v / %v, want %v / %v",
+			got.FirstSeenAt, got.LastSeenAt, t0, t0.Add(time.Minute))
+	}
+	if got.SourcesAttempted != 5 || got.SourcesResponded != 4 || !got.Degraded {
+		t.Errorf("completeness across the migration = %d/%d degraded=%v, want 4/5 degraded",
+			got.SourcesResponded, got.SourcesAttempted, got.Degraded)
+	}
+	baseline, _, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("Baseline: %v", err)
+	}
+	if baseline.Price != "10000" || !baseline.At.Equal(t0) {
+		t.Errorf("the baseline across the migration = %+v, want 10000 at %v", baseline, t0)
+	}
+	rows, err := s.Observations(ctx, "KR", "005930", time.Time{})
+	if err != nil {
+		t.Fatalf("Observations: %v", err)
+	}
+	if len(rows) != 2 {
+		t.Fatalf("%d raw rows survived the migration, want 2", len(rows))
+	}
+
+	// And the new rung's own work: the earliest ranked row inside the identity
+	// window becomes the first rank, so seen_late answers for a candidate that
+	// predates the column instead of collapsing to unmeasured.
+	first, _, err := s.FirstRank(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("FirstRank: %v", err)
+	}
+	if first.Rank != 12 || first.Total != 150 || !first.At.Equal(t0) {
+		t.Errorf("the backfilled first rank = %+v, want 12 of 150 at %v", first, t0)
+	}
+	sighting := MeasureFirstSighting(got, first, rows)
+	if !sighting.Measured || sighting.PercentilePct != "92" {
+		t.Errorf("the sighting after the migration = measured %v at %s%%, want 92%%",
+			sighting.Measured, sighting.PercentilePct)
+	}
+
+	// And the row from the gap is not backfilled, which is the whole point of the
+	// rung being narrower than D17's. The read-time window is symmetric because a
+	// scan can stamp the promotion and the reading a moment apart; at migration
+	// time the earlier side is where D20's two shapes live and nothing downstream
+	// could tell a baked-in wrong rank from a right one.
+	gap, _, err := s.FirstRank(ctx, "KR", "000660")
+	if err != nil {
+		t.Fatalf("FirstRank of the second candidate: %v", err)
+	}
+	if gap.Recorded() {
+		t.Errorf("a ranked row nine minutes before first_seen_at was backfilled as the first "+
+			"sighting: %+v — that is the gap between two lives, and it reads 148th for a "+
+			"candidate that crossed near the top", gap)
+	}
+
+	// Reopening is a no-op rather than a second climb.
+	if err := s.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	reopened, err := Open(ctx, Options{Path: path, FSProber: FixedFSProber(FSInfo{Name: "ext4"})})
+	if err != nil {
+		t.Fatalf("reopening the migrated store: %v", err)
+	}
+	defer func() { _ = reopened.Close() }()
+	if again, _, err := reopened.FirstRank(ctx, "KR", "005930"); err != nil || again.Rank != 12 {
+		t.Errorf("the first rank after reopening = %d (%v), want 12", again.Rank, err)
 	}
 }
 

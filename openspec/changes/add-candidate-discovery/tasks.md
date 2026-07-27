@@ -132,28 +132,75 @@ mutating 단계가 없다 — 검증은 fixture와 주입 clock으로 한다.
 
 ## 4. 추격 위험 veto
 
-- [ ] 4.1 [T] `seen_late` — 최초 관측 시점에 이미 임계를 크게 초과.
-- [ ] 4.2 [T] `extended` — 최초 발견가 대비 확장률 상한 초과.
-- [ ] 4.2b [T] **너무 늦은 기준선은 `false`가 아니라 `unmeasured`**(D17 판정). 마이그레이션
+- [x] 4.1 [T] `seen_late` — 최초 관측 시점에 이미 임계를 크게 초과.
+- [x] 4.2 [T] `extended` — 최초 발견가 대비 확장률 상한 초과.
+- [x] 4.2b [T] **너무 늦은 기준선은 `false`가 아니라 `unmeasured`**(D17 판정). 마이그레이션
       백필과 prune은 최초 발견가보다 늦은 기준선을 저장할 수 있고, 늦은 기준선은 확장률을
       **과소평가**해 `extended`를 `false` 쪽으로 민다 — veto를 끄는 방향이다.
       RED: 기준선이 최초 발견보다 한참 늦은 후보가 "안 늘어남"으로 통과 → GREEN(미측정).
       경계는 `DefaultStalenessTTL`(10분).
-- [ ] 4.3 [T] `near_high` — **일중 고가까지의 거리가 하한 미만**(`distance_pct < 2.0`).
+- [x] 4.3 [T] `near_high` — **일중 고가까지의 거리가 하한 미만**(`distance_pct < 2.0`).
       경계 고정: 1.99% true / 2.00% false / 2.01% false.
       비교는 `<`다. RED: 산문의 "상한 초과"를 그대로 구현해 `>`를 쓰면 **고점에서 먼 후보에
       veto가 걸리고 고점에 붙은 후보가 통과한다** → GREEN(부호 정정). D3이 거부권이라 부른
       판정이 정확히 반대로 도는 자리이므로 경계 세 점을 전부 고정한다.
-- [ ] 4.4 [T] **3-상태 veto**(D10) — `true`/`false`/`unmeasured`. RED: 캔들을 못 받은 후보의
+- [x] 4.4 [T] **3-상태 veto**(D10) — `true`/`false`/`unmeasured`. RED: 캔들을 못 받은 후보의
   `near_high`가 `false`로 저장되어 "veto 통과"로 집계 → GREEN(`unmeasured`는 통과가 아니다).
   이 change에서 **가장 중요한 테스트**다 — 상세조회는 초당 5회·종목당 1회이므로 미측정이
   예외가 아니라 평시다.
-- [ ] 4.5 [T] veto가 점수와 **분리**됨을 고정. RED: 가속도 최상위가 `near_high`를 상쇄해
+- [x] 4.5 [T] veto가 점수와 **분리**됨을 고정. RED: 가속도 최상위가 `near_high`를 상쇄해
   통과 → GREEN(거부권 유지).
-- [ ] 4.6 [T] veto 후보도 저장·보고된다. 늦게 본 비율을 셀 수 있어야 한다.
-- [ ] 4.7 [T] **입력 나이 상한** — 오래된 캔들로 만든 `near_high=false`는 `unmeasured`다.
+- [x] 4.6 [T] veto 후보도 저장·보고된다. 늦게 본 비율을 셀 수 있어야 한다.
+- [x] 4.7 [T] **입력 나이 상한** — 오래된 캔들로 만든 `near_high=false`는 `unmeasured`다.
   캔들이 초당 5회라 한 번 얻은 고가는 재사용된다. 3분 된 캔들로 만든 "위험하지 않음"은 측정이
   아니라 기억이고, 그 구분이 사라지면 4.4가 막은 실패가 한 단계 아래에서 재현된다.
+
+- [x] 4.8 [T] §4 구현이 찾은 스펙 구멍 넷을 설계에 반영(D18·D19·D20 + D17 나머지 절반).
+  - **세 veto 중 둘에 임계값이 저장소 어디에도 없었다**(D18). 구현자가 지어내기를 거부한 것이
+    옳다 — D6은 출처 없는 정책 숫자를 금지한다. 근거가 생길 때까지 `seen_late`·`extended`는
+    veto하지 않고 **그림자로만 기록**한다. §3.5가 가속도에 이미 쓰는 규칙이다.
+  - **입력 나이 상한의 비대칭이 수명 상한과 반대**였다(D19). 수명 쪽은 거부가 비싸서 600초에
+    있고, veto 입력은 **수락이 비싸다** — 오래된 캔들의 "위험하지 않음"이 veto를 끈다.
+    tasks.md 4.7이 3분을 이미 기억이라 부르는데 600초는 그것을 수락한다. → 2분, 유도는 후퇴가
+    아니라 캔들 전달 빈도. `extended`의 최신가에도 적용(같은 방향의 과소평가).
+  - **죽은 후보의 관측이 산 후보를 대신 답할 수 있었다**(D20). 148위로 사라졌다 5위로 돌아온
+    종목이 "일찍 잡았다"로 기록된다 — `seen_late`가 정확히 반대로 답한다. → 대칭 ±10분 창.
+  - **D17이 가격만 보고 순위를 놓쳤다.** 최초 순위도 prunable한 곳에만 있어 `seen_late`가
+    가장 오래 달린 후보에서 무너진다. → `first_rank`/`_total`/`_source` 칼럼(schema v3).
+
+- [x] 4.9 [T] D17 나머지 절반 구현 — `first_rank`·`first_rank_total`·`first_rank_source`
+  (schema v3, `first_price`와 같은 수명 규칙). 들어가면 D20의 대칭 창은 백스톱으로 내려간다.
+  → `first_rank_at`을 **하나 더** 뒀다(설계는 3칼럼). `first_price_at`이 있는 이유가 그대로
+  적용되고, 그것이 없으면 저장된 순위의 정체를 읽는 쪽에서 검사할 수 없다 — issues.md 1.
+  `MeasureFirstSighting`이 `MeasureExpansion`처럼 저장값을 인자로 받고, 슬라이스의 행으로
+  대체하지 않는다(D17이 가격에서 막은 바로 그 대체). 마이그레이션 백필은 `first_seen_at`
+  **이후** 10분 안의 행만 쓴다 — 순위는 틀릴 안전한 방향이 없어서 D17의 무조건 백필을 쓸 수
+  없고, 대칭 창으로 백필하면 D20의 두 형태를 저장 시점에 구워 넣는다(issues.md 5).
+  RED: 실제 저장소로 재현한 "간격의 148위 행" → `measured=true rank=148/150 seen_late=clear`.
+  ※ `Collect`는 아직 `NoteFirstRank`를 부르지 않는다 — `NoteFirstPrice`와 같은 상태이고
+  둘 다 §5(5.1)에서 배선한다. issues.md 4.
+
+- [x] 4.11 [T] §4 적대적 리뷰(2026-07-28)가 찾은 18번째 강제 통과 경로 수정.
+  - **비양수 임계가 목록 전체를 measured-and-clear로 만들었다(P0)**. `"0"`·`"-0"`·`"0.0"`·
+    `"-1"`이 전부 파싱되어 `distance < 0`이 모든 후보에서 false다. §5가 손잡이를
+    `strconv.FormatFloat`로 렌더하면 부재한 YAML 키가 `""`가 아니라 `"0"`이 되고,
+    `near_high`는 D18상 유일하게 승인된 임계를 가진 veto다. → `THRESHOLD_NOT_POSITIVE`
+    (D18 정정). 세 코드 모두에서 `clear`→`unmeasured`로만 바뀐다.
+  - **기준선 정체성 가드가 한쪽뿐이었다(P1-1)**. `AssessExtended`는 늦은 기준선만 거부했는데
+    `MeasureExpansion`은 기준선을 **뒤로** 옮기고 원 관측은 후보 수명보다 48시간 오래 산다.
+    죽은 삶의 30,000이 산 삶의 기준선이 되어 두 배가 된 후보가 `-33.33%`·`clear`로 읽혔다.
+    → `|FirstAt − FirstSeenAt|` 대칭 + `BASELINE_TOO_EARLY`.
+  - **`VetoCodes`가 exported mutable slice였다(P1-3)**. 네 번째 코드는 거부하지만 코드를
+    **빼는** 방향은 무방비다 — `VetoCodes = nil`이면 zero `Chase`가 통과하고, 한 칸을
+    덮어쓰면 seen_late RAISED인 `Chase`가 통과한다. → `[3]VetoCode` 값 타입 + 길이·내용 고정.
+  - `TestAnAbsentInputAgeLimitIsTheDefaultAndNotNoLimit`가 **가드를 지워도 초록**이었다
+    (0/−1h 상한은 모든 나이를 거부하므로 §3 `ZERO_ELAPSED_SECONDS`와 같은 형태) →
+    기본값 **안쪽**도 단언. `TestTheVetoCannotSeeAScoreToBeOffsetBy`가 최상위 필드만 봤다 →
+    재귀 + 사유를 적은 숫자 allowlist(미사용 항목도 실패). `PercentileExceeds`가
+    `Rank > RankTotal`(200/150 → −33%, clear)을 막지 않았다 → 거부.
+    D19 커버리지 산술 과장(600후보 **및** 백오프 2단계)을 `veto.go` 주석에서 제거 — 상수는 유지.
+- [ ] 4.10 [T] `seen_late`·`extended`의 **그림자 밴드** 기록(D18). veto하지 않는다.
+  밴드는 측정 도구이므로 출처 없이 정해도 되지만(§3.5 선례), **veto 임계는 실측 후 사람 승인**이다.
 
 ## 5. 사람이 보는 표면
 

@@ -99,7 +99,9 @@ var ErrSchemaTooNew = errors.New("candidate: store schema is newer than this bui
 //
 //	1  observations, candidates, store_meta
 //	2  candidates.first_price / first_price_at / first_price_source (D17)
-const SchemaVersion = 2
+//	3  candidates.first_rank / first_rank_total / first_rank_at /
+//	   first_rank_source (D17's other half, D20)
+const SchemaVersion = 3
 
 const schema = `
 -- Raw observations. One row per (source, symbol, instant). Prunable (D11).
@@ -164,6 +166,32 @@ CREATE TABLE IF NOT EXISTS candidates (
 	first_price        TEXT,
 	first_price_at     TEXT,
 	first_price_source TEXT,
+	-- The first sighting's list position (D17's other half, D20). Same grade of
+	-- fact as first_price, same lifecycle: set once on the first ranked
+	-- observation of a life, preserved across cooling and re-entry, reset on
+	-- expiry.
+	--
+	-- It is a column for D17's reason and for one more. The rank at first sighting
+	-- lives only in the prunable observations table (D11) and callers window their
+	-- reads, so seen_late collapsed to NO_FIRST_SIGHTING on exactly the
+	-- longest-running candidates — the ones the question is about. Worse, D8
+	-- separates observation from promotion on purpose, so ranked rows keep
+	-- arriving for a symbol that is cooling, expired, or was never promoted: a row
+	-- from the gap between two lives lands inside the ±TTL identity window and
+	-- becomes the new life's "first sighting". A symbol promoted 4th of 150 then
+	-- read as one we caught at 148th and seen_late cleared.
+	--
+	-- NULL means no ranked observation has been recorded for this life yet. It is
+	-- not rank 0 — a rank of 0 is not a position, and the CHECK below refuses one
+	-- rather than letting it reach the percentile as the top of every list.
+	--
+	-- The CHECKs are spelled per column rather than at the table, so that the
+	-- ALTER TABLE steps in the ladder can carry the identical text and a migrated
+	-- store ends up with the same constraints as a fresh one.
+	first_rank         INTEGER CHECK (first_rank IS NULL OR first_rank > 0),
+	first_rank_total   INTEGER CHECK (first_rank_total IS NULL OR first_rank_total > 0),
+	first_rank_at      TEXT,
+	first_rank_source  TEXT,
 
 	PRIMARY KEY (market, symbol),
 	CHECK (degraded IN (0,1))
@@ -377,6 +405,74 @@ var migrations = map[int][]string{
 		                   WHERE o.market = candidates.market AND o.symbol = candidates.symbol
 		                     AND o.price IS NOT NULL
 		                   ORDER BY o.observed_at, o.id LIMIT 1)`,
+	},
+	2: {
+		`ALTER TABLE candidates ADD COLUMN first_rank INTEGER
+		   CHECK (first_rank IS NULL OR first_rank > 0)`,
+		`ALTER TABLE candidates ADD COLUMN first_rank_total INTEGER
+		   CHECK (first_rank_total IS NULL OR first_rank_total > 0)`,
+		`ALTER TABLE candidates ADD COLUMN first_rank_at TEXT`,
+		`ALTER TABLE candidates ADD COLUMN first_rank_source TEXT`,
+		// Backfill, but only from a row that could be this life's first sighting.
+		//
+		// D17's price backfill takes the earliest surviving priced row outright,
+		// and it can afford to: a late baseline is caught at read time, because
+		// first_price_at is stored beside the value and AssessExtended compares the
+		// two. A rank has no safe direction to be wrong in — the symbol may have
+		// climbed or slid since — so the same unconditional backfill would write a
+		// later moment's position as the first sighting and nothing downstream
+		// could tell. So the window guard is applied here as well as at read time,
+		// and a candidate with no row inside it keeps NULL: unmeasured, named, and
+		// never a pass (D10).
+		//
+		// And the window here is one-sided, where nearFirstSighting's is symmetric.
+		// The read-time window has to admit a reading a little before the promotion,
+		// because a scan can stamp the two moments apart. This one must not: at
+		// migration time the earlier side is exactly where the two shapes D20 names
+		// live — a previous life's row from the gap, and the pre-promotion drift of a
+		// symbol that sat at 5th all morning and was 100th ten minutes before it
+		// crossed. Neither is distinguishable from a legitimate reading afterwards,
+		// and a plausible wrong rank outranks a named missing one: D10 stops an
+		// unmeasured veto being read as a pass, and nothing stops a plausible number.
+		// So only a row at or after first_seen_at qualifies, and that row belongs to
+		// this life by construction.
+		//
+		// The comparison is on whole seconds, from the first nineteen characters of
+		// the fixed-width stamp — "2026-07-28T09:00:00", which is the ISO-8601 form
+		// SQLite's date functions read. The fraction is dropped, so the boundary is
+		// good to within a second of DefaultStalenessTTL. That is acceptable for a
+		// backfill in a way it would not be at read time: the runtime comparison in
+		// nearFirstSighting is exact, and this one errs by at most a second on a
+		// ten-minute window in a direction the read-time check re-applies anyway.
+		`UPDATE candidates SET
+		   first_rank = (SELECT o.rank FROM observations o
+		                  WHERE o.market = candidates.market AND o.symbol = candidates.symbol
+		                    AND o.rank > 0 AND o.rank_total > 0
+		                    AND o.observed_at >= candidates.first_seen_at
+		                    AND CAST(strftime('%s', substr(o.observed_at, 1, 19)) AS INTEGER)
+		                      - CAST(strftime('%s', substr(candidates.first_seen_at, 1, 19)) AS INTEGER) < 600
+		                  ORDER BY o.observed_at, o.id LIMIT 1),
+		   first_rank_total = (SELECT o.rank_total FROM observations o
+		                  WHERE o.market = candidates.market AND o.symbol = candidates.symbol
+		                    AND o.rank > 0 AND o.rank_total > 0
+		                    AND o.observed_at >= candidates.first_seen_at
+		                    AND CAST(strftime('%s', substr(o.observed_at, 1, 19)) AS INTEGER)
+		                      - CAST(strftime('%s', substr(candidates.first_seen_at, 1, 19)) AS INTEGER) < 600
+		                  ORDER BY o.observed_at, o.id LIMIT 1),
+		   first_rank_at = (SELECT o.observed_at FROM observations o
+		                  WHERE o.market = candidates.market AND o.symbol = candidates.symbol
+		                    AND o.rank > 0 AND o.rank_total > 0
+		                    AND o.observed_at >= candidates.first_seen_at
+		                    AND CAST(strftime('%s', substr(o.observed_at, 1, 19)) AS INTEGER)
+		                      - CAST(strftime('%s', substr(candidates.first_seen_at, 1, 19)) AS INTEGER) < 600
+		                  ORDER BY o.observed_at, o.id LIMIT 1),
+		   first_rank_source = (SELECT o.source FROM observations o
+		                  WHERE o.market = candidates.market AND o.symbol = candidates.symbol
+		                    AND o.rank > 0 AND o.rank_total > 0
+		                    AND o.observed_at >= candidates.first_seen_at
+		                    AND CAST(strftime('%s', substr(o.observed_at, 1, 19)) AS INTEGER)
+		                      - CAST(strftime('%s', substr(candidates.first_seen_at, 1, 19)) AS INTEGER) < 600
+		                  ORDER BY o.observed_at, o.id LIMIT 1)`,
 	},
 }
 
@@ -808,9 +904,19 @@ func (s *Store) Promote(ctx context.Context, market, symbol string, at time.Time
 		  -- baseline, and extended would answer "no" for it from then on.
 		  first_price        = CASE WHEN ? THEN NULL ELSE candidates.first_price        END,
 		  first_price_at     = CASE WHEN ? THEN NULL ELSE candidates.first_price_at     END,
-		  first_price_source = CASE WHEN ? THEN NULL ELSE candidates.first_price_source END`,
+		  first_price_source = CASE WHEN ? THEN NULL ELSE candidates.first_price_source END,
+		  -- And the first sighting's rank, on the same rule and for the same reason
+		  -- (task 4.9). Carrying it across expiry would answer a new life's
+		  -- seen_late with a dead life's position; dropping it on re-entry would
+		  -- reopen the D1 bypass, since a symbol that left the list for one scan
+		  -- would come back and record its current — high — position as the one we
+		  -- first saw it at.
+		  first_rank         = CASE WHEN ? THEN NULL ELSE candidates.first_rank         END,
+		  first_rank_total   = CASE WHEN ? THEN NULL ELSE candidates.first_rank_total   END,
+		  first_rank_at      = CASE WHEN ? THEN NULL ELSE candidates.first_rank_at      END,
+		  first_rank_source  = CASE WHEN ? THEN NULL ELSE candidates.first_rank_source  END`,
 		market, symbol, stamp(firstSeen), stamp(at),
-		reset, reset, reset, reset, reset, reset, reset)
+		reset, reset, reset, reset, reset, reset, reset, reset, reset, reset, reset)
 	if err != nil {
 		return Candidate{}, fmt.Errorf("candidate: promoting %s:%s: %w", market, symbol, err)
 	}
@@ -1065,6 +1171,191 @@ func (s *Store) Baseline(ctx context.Context, market, symbol string) (Baseline, 
 	}
 	b, err := decodeBaseline(price, at, source, market, symbol)
 	return b, true, err
+}
+
+// --- the first sighting's rank (task 4.9, D17's other half) ----------------------
+
+// FirstRank is where a candidate stood in its list the first time we saw it, as a
+// stored fact rather than a derived one.
+//
+// It is Baseline's twin and it exists for two reasons rather than one. D17's
+// reason first: the position lives only in the observations table, which is pruned
+// after two trading days (D11) and which callers window with `since`, so seen_late
+// collapsed to NO_FIRST_SIGHTING on the longest-running candidates — the ones the
+// question is actually about.
+//
+// The second is D20's, and it is worse than a missing answer. D8 keeps observation
+// and promotion independent on purpose, so ranked rows keep arriving for a symbol
+// that is cooling, expired or was never promoted. Any of those rows can land inside
+// the ±TTL window that decides which reading is a life's first sighting, and the
+// error has a direction: a symbol that drifted to the bottom of the list before it
+// crossed again is measured from there, so a candidate promoted 4th of 150 reads as
+// one we caught at 148th and seen_late clears.
+//
+// The instant travels with the value for the reason D17 gives about first_price_at:
+// a reader with only the number cannot tell whether it is this life's first
+// sighting or a later moment's, and the whole defect above is exactly that
+// confusion. Storing it makes the identity checkable at read time rather than
+// merely trusted.
+type FirstRank struct {
+	// Rank is the 1-based position and Total is that list's length. Zero means no
+	// ranked observation has been recorded for this life — never "the bottom of the
+	// list", which is a different fact and the one D8 refuses to convert into it.
+	Rank, Total int
+	// At is when that reading was observed, and Source is who reported it.
+	At     time.Time
+	Source SourceID
+}
+
+// Recorded reports that a first rank exists. Both halves are required: a rank
+// without its list length cannot be normalised, and rank/0 is +Inf, which clears
+// every threshold it is compared against.
+func (f FirstRank) Recorded() bool { return f.Rank > 0 && f.Total > 0 }
+
+// NoteFirstRank records a candidate's first sighting position, once.
+//
+// It is NoteFirstPrice's twin, with one addition: the reading has to be one that
+// could be this life's first sighting. NoteFirstPrice can accept any reading
+// because a late baseline is caught at read time by comparing first_price_at with
+// first_seen_at; here the same comparison is applied on the way in as well, because
+// the ordinary caller is a scan loop that will offer a ranked reading on every
+// tick, and the first one it offers after a restart, a re-entry, or a candidate
+// first raised by a source that carries no rank is not the first sighting.
+//
+// A reading outside the window is not an error and is not stored. It is the
+// ordinary state of a candidate raised by prices or candles and only later seen on
+// a ranking list: having no first rank is the honest answer there, and it makes
+// seen_late unmeasured rather than wrong.
+//
+// The window is DefaultStalenessTTL rather than this store's own StalenessTTL
+// override, because nearFirstSighting — the read-time backstop — is written against
+// the constant. A store-local value would let the two disagree, and the direction
+// they would disagree in is a rank this side stored and that side refuses.
+func (s *Store) NoteFirstRank(ctx context.Context, market, symbol string,
+	rank, total int, at time.Time, source SourceID) (FirstRank, error) {
+
+	market = strings.ToUpper(strings.TrimSpace(market))
+	symbol = strings.TrimSpace(symbol)
+	switch {
+	case rank <= 0 || total <= 0:
+		return FirstRank{}, fmt.Errorf(
+			"candidate: NoteFirstRank of %s:%s has no position (%d of %d); "+
+				"absent is not rank 0 and a rank without its list length cannot be normalised",
+			market, symbol, rank, total)
+	case rank > total:
+		return FirstRank{}, fmt.Errorf("candidate: NoteFirstRank of %s:%s is ranked %d of %d",
+			market, symbol, rank, total)
+	case at.IsZero():
+		return FirstRank{}, fmt.Errorf(
+			"candidate: NoteFirstRank of %s:%s has no instant; a first sighting whose lateness "+
+				"cannot be judged is not one", market, symbol)
+	}
+	id, err := normaliseSource(source)
+	if err != nil {
+		return FirstRank{}, fmt.Errorf("candidate: NoteFirstRank of %s:%s: %w", market, symbol, err)
+	}
+	at = at.UTC()
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return FirstRank{}, fmt.Errorf("candidate: beginning a first-rank write: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var (
+		firstSeen  string
+		storedRank sql.NullInt64
+		storedTot  sql.NullInt64
+		storedAt   sql.NullString
+		storedBy   sql.NullString
+	)
+	row := tx.QueryRowContext(ctx,
+		`SELECT first_seen_at, first_rank, first_rank_total, first_rank_at, first_rank_source
+		   FROM candidates WHERE market = ? AND symbol = ?`, market, symbol)
+	switch err := row.Scan(&firstSeen, &storedRank, &storedTot, &storedAt, &storedBy); {
+	case errors.Is(err, sql.ErrNoRows):
+		return FirstRank{}, fmt.Errorf("%w: %s:%s has no candidate to record a first rank against",
+			ErrNoCandidate, market, symbol)
+	case err != nil:
+		return FirstRank{}, fmt.Errorf("candidate: reading the first rank of %s:%s: %w",
+			market, symbol, err)
+	}
+	if storedRank.Valid && storedRank.Int64 > 0 {
+		return decodeFirstRank(storedRank, storedTot, storedAt, storedBy, market, symbol)
+	}
+	seen, err := parseStamp(firstSeen)
+	if err != nil {
+		return FirstRank{}, fmt.Errorf("candidate %s:%s has an unreadable first_seen_at: %w",
+			market, symbol, err)
+	}
+	if !nearFirstSighting(at, seen) {
+		// Not this life's first sighting, so nothing is stored and nothing failed.
+		// The candidate keeps no first rank, which is what makes seen_late say it
+		// could not measure rather than answer from a later moment's position.
+		return FirstRank{}, nil
+	}
+
+	// The predicate repeats the read for NoteFirstPrice's reason: two writers that
+	// both saw NULL would otherwise both write, and the later one would overwrite
+	// the first sighting with a later reading's position.
+	_, err = tx.ExecContext(ctx, `
+		UPDATE candidates
+		   SET first_rank = ?, first_rank_total = ?, first_rank_at = ?, first_rank_source = ?
+		 WHERE market = ? AND symbol = ? AND first_rank IS NULL`,
+		rank, total, stamp(at), string(id), market, symbol)
+	if err != nil {
+		return FirstRank{}, fmt.Errorf("candidate: recording the first rank of %s:%s: %w",
+			market, symbol, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return FirstRank{}, fmt.Errorf("candidate: committing the first rank of %s:%s: %w",
+			market, symbol, err)
+	}
+	return FirstRank{Rank: rank, Total: total, At: at, Source: id}, nil
+}
+
+// FirstRank returns a candidate's stored first sighting position.
+//
+// The second return distinguishes "no such candidate" from "a candidate no ranking
+// source has reported yet", exactly as Store.Baseline does.
+func (s *Store) FirstRank(ctx context.Context, market, symbol string) (FirstRank, bool, error) {
+	market = strings.ToUpper(strings.TrimSpace(market))
+	symbol = strings.TrimSpace(symbol)
+
+	var (
+		rank, total sql.NullInt64
+		at, source  sql.NullString
+	)
+	row := s.db.QueryRowContext(ctx,
+		`SELECT first_rank, first_rank_total, first_rank_at, first_rank_source FROM candidates
+		  WHERE market = ? AND symbol = ?`, market, symbol)
+	switch err := row.Scan(&rank, &total, &at, &source); {
+	case errors.Is(err, sql.ErrNoRows):
+		return FirstRank{}, false, nil
+	case err != nil:
+		return FirstRank{}, false, fmt.Errorf("candidate: reading the first rank of %s:%s: %w",
+			market, symbol, err)
+	}
+	f, err := decodeFirstRank(rank, total, at, source, market, symbol)
+	return f, true, err
+}
+
+func decodeFirstRank(rank, total sql.NullInt64, at, source sql.NullString,
+	market, symbol string) (FirstRank, error) {
+
+	if !rank.Valid || !total.Valid || rank.Int64 <= 0 || total.Int64 <= 0 {
+		return FirstRank{}, nil
+	}
+	f := FirstRank{Rank: int(rank.Int64), Total: int(total.Int64), Source: SourceID(source.String)}
+	if at.Valid {
+		parsed, err := parseStamp(at.String)
+		if err != nil {
+			return FirstRank{}, fmt.Errorf(
+				"candidate %s:%s has an unreadable first_rank_at: %w", market, symbol, err)
+		}
+		f.At = parsed
+	}
+	return f, nil
 }
 
 func decodeBaseline(price, at, source sql.NullString, market, symbol string) (Baseline, error) {

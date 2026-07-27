@@ -524,3 +524,67 @@ candidatesrc·`cmd/`·미래의 레인이 `Candidate`를 읽고 `execgw`를 부�
 
 수정을 두 갈래로 위임(파일 소유 분리) — `metrics.go`(P0-1·P0-2·P1-2·P1-3·P1-4·P1-5) /
 `level.go`+`store.go`(P0-3의 D17 칼럼·P1-1의 `big.Rat`·P2).
+
+---
+
+# §4 리뷰 (2026-07-28) — 추격 위험 veto
+
+구현자가 `unmeasured`가 `false`가 될 수 있었던 **경로 17개를 열거하고 각각 테스트로 닫았다.**
+리뷰의 과제는 **18번째를 찾는 것**이었고, 찾았다.
+
+## P0 — 임계 `"0"`이 전 목록을 통과시킨다
+
+```
+threshold "0" / "-0" / "0.0" / "-1"  -> measured=true clear=true reason=""
+threshold " "                        -> THRESHOLD_ABSENT   (맞음)
+threshold "1e2"                      -> THRESHOLD_UNREADABLE (맞음)
+```
+
+`thresholdReason`이 **빈 값과 해석 불가만** 거부한다. `"0"`은 멀쩡한 유리수라 판정이 진행되고
+`distance < 0`은 고가 아래 모든 후보에서 거짓이다.
+
+현실적 입력: §5가 계약 손잡이를 `strconv.FormatFloat`로 렌더하면 **부재한 YAML 키는 `""`가
+아니라 `"0"`**이다. 그리고 `near_high`는 D18상 **유일하게 승인된 임계를 가진 veto**다 —
+살아 있는 veto 표면 전체가 꺼진다.
+
+같은 파일이 이 결함 계열을 이미 알고 있고 **다른 필드는 막아 뒀다**: 비양수 `MaxInputAge`는
+기본값으로 떨어지며 주석이 "the same defect as a zero DayHigh meaning 'at the high'"라고 쓴다.
+task 1.1이 `DayHigh`에 대해 쓴 실패가 **같은 비교의 반대편 피연산자**에서 재현된 것이다.
+
+## P1
+
+**기준선 동일성 가드가 한쪽만 본다.** 늦은 기준선만 거부한다. 그런데 `MeasureExpansion`은
+기준선을 **뒤로도** 옮기고 원 관측은 후보 수명보다 48시간 오래 산다. 죽은 삶의 가격이 산 삶의
+기준선이 되어 **2배 오른 후보가 −33%로 측정된다**(§3 P0-3이 창의 반대편에서 재현).
+
+**D20의 창이 닫는다고 한 것을 닫지 못한다.** 설계가 "두 삶은 냉각 TTL만큼 떨어져 있다"고 썼는데
+그것은 **승격**에 대해서만 참이다. D8이 관측과 승격을 일부러 분리했으므로 냉각·만료 중에도
+순위 행이 들어온다. 실제 저장소로 재현: 만료 9분 전 148위 행이 새 삶의 최초 관측이 되고
+`seen_late`가 clear. 만료 없이도 된다 — 아침 내내 5위였다가 −10분에 100위로 밀린 종목을
+4위에서 승격하면 최초 관측이 100/150이다. **4.9가 개선이 아니라 유일한 수리다.**
+
+**`VetoCodes`가 내보낸 가변 슬라이스**이고 모든 술어가 그것으로 정의된다.
+`VetoCodes = nil` → 전부 통과. 네 번째 코드를 거부하는 방향은 맞고 **코드를 빼는 방향이 무방비**다.
+
+**D18의 귀결**: 둘이 `THRESHOLD_ABSENT`인 동안 `Passed()`는 도달 불가이고 집계 `Passed`는
+항상 0이다. 고장이 아니라 D18+D10+spec이 함께 낳는 정직한 결과이며, §5가 이것을 "고치고"
+싶어질 때 **유일하게 틀린 수리가 `THRESHOLD_ABSENT`를 통과로 세는 것**이다.
+
+## P2
+
+`TestAnAbsentInputAgeLimitIsTheDefaultAndNotNoLimit`이 **맞는 이유로 통과하지 않는다** — 가드를
+통째로 지워도 green이다(0 상한은 모든 나이를 거부하므로 단언이 만족된다). §3의
+`ZERO_ELAPSED_SECONDS` 패턴 그대로다. 점수 차단 테스트가 최상위 필드만 걷는다.
+`PercentileExceeds`가 `Rank > RankTotal`을 막지 않는다. **D19의 커버리지 산술이 4배 낙관적**
+이었다(120초 중 90초가 백오프면 2 tick·약 150종목). 결정은 유지하고 근거 문장을 고쳤다.
+
+## 깨지지 않은 것 (변이로 확인)
+
+`Clear()`에서 measured 요구를 빼면 **16개 테스트가 실패**한다 — 척추가 실재한다.
+`near_high` 부호는 `<`·정확 유리수이고 **거리 0%(고가에 정확히 붙은 가격)가 `true`**다.
+집계의 `Total == Passed + Vetoed + Unmeasured`는 구조적이다(switch가 배타·전수).
+JSON 왕복은 모든 상태를 `unmeasured (NOT_EVALUATED)`로 떨어뜨리고 gob은 아예 거부한다 —
+안전한 방향. 인식 못 하는 코드도 통과가 아니다. 격리 폐포는 여전히 `{internal/clock}`.
+
+리뷰가 남긴 §5 경고: `if !chase.NearHigh.Dangerous() { score += 2 }`는 한 줄이고 컴파일된다.
+패키지 안에서는 막을 수 없으므로 **§5 리뷰의 항목**이다.
