@@ -43,6 +43,29 @@ runs: `run-FOVHBDARTNFK3RKD`(21:31 KST) → `run-WE3EF3ZOHDCNBWGT`(22:46, 승인
 |---|---|---|
 | M11 | **장중 창이 무동작 버튼으로 소모됨**: 이 날 콘솔에서 검증이 두 번 시작됐고(`YW7XSICTO4` 14:09 이전, `ORZEYQU6SI` 18:39 이후) 둘 다 `0 step(s) recorded`(에러 없음)로 끝났다 — 증거 기록 파일의 마지막 쓰기는 여전히 2026-07-26 22:48이고 단계 판정도 1차 실행 그대로다. 원인은 승인 이전이다: 시작 화면의 기본 버튼 [이어하기](`mode=resume`)는 판정이 terminal인 단계를 건너뛰는데(`Runner.settled`) 현재 기록은 전 단계가 terminal이라 **구조적으로 무동작**이며, 실제로 측정하는 [재측정](`mode=redo`)은 아래쪽 별도 섹션에 있었다. 승인 화면·nonce 타이핑에는 도달하지도 않았다. → change `console-click-approval`(무동작 기본값 제거 + 승인 클릭화) 발주 | `~/.local/share/tossos/console-launch.log` 두 줄(`verification … finished — 0 step(s) recorded`), `capability-verify.jsonl` mtime 2026-07-26T22:48:58+0900, `internal/console/pages.go` handleStart·`templates.go` 시작 화면 |
 
+## 2차 실행 — US 시장 (2026-07-27 21:39 KST / 08:39 EDT, 콘솔 경유)
+
+run `run-M6WQZ5WKGGE4KS4C`, 승인 채널 = 콘솔 클릭(console-click-approval), 기록
+`~/.local/share/tossos/capability-verify-us.jsonl`, 심볼 MWG(보유 115주), 10단계 기록.
+**US 정규장(09:30–16:00 ET) 시작 전 프리마켓 시간대**에 실행됐다.
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M12 | **SINGLE + MARKET 매도 조건주문이 US에서 등록된다** — 보유(MWG) 대상, 등록 직후 status `WATCHING`, `first_leg_status` `WATCHING`, `triggeredOrderId`는 등록 시 **null**(문서 형태와 일치). 2c의 기본 가설(보호 = SINGLE+MARKET 손절 단독)이 **처음으로 실측 지지**를 받았다. OCO/OTO가 LIMIT 전용이라는 문서 제약과도 정합 | conditional-register 단계 observations `conditional.register.ok/type/order_type/status.after_register/triggered_order_id.at_register` |
+| M13 | **조건주문은 매도가능수량을 예약하지 않는다** — 조건주문 등록 전 115, 등록 후에도 115. 브로커가 청산 수량을 잡아주지 않으므로 **2c의 청산 수량 예약은 엔진이 계산·유지해야 한다**(= "한 심볼에 브로커측 매도 청구권 1개" 불변식을 우리가 강제해야 하는 이유) | sellable-reserved 단계 `conditional.reserves_sellable_quantity=false`, `sellable.baseline_recall.MWG=115`, `sellable.with_conditional.MWG=115` |
+| M14 | **멱등키 실동작 확인(2.7)** — 동일 `clientOrderId`+동일 본문 재요청이 **같은 orderId를 재반환**하고 두 번째 주문을 만들지 않는다(open orders delta 1). 본문이 다르면 `422 idempotency-key-conflict`. **조건주문도 같은 키로 재생하면 같은 `conditionalOrderId`를 반환**한다. 주문 왕복 지연 최대 **169ms**(3회 중 최악) — 재생 안전 마진 산정 입력. 키의 계좌 스코프는 단일 계좌라 원리적 미검증 | idempotency 단계 observations, conditional-register `idempotency.conditional_replay_returns_same_id` |
+| M15 | **US 프리마켓에서 주문·조건주문이 수락된다** — 08:39 EDT(정규장 전)에 지정가 주문 접수와 조건주문 등록이 모두 성공했다. KR의 `order-hours-closed` 422와 **다른 동작**이며, US 휴장·시간외 응답을 [미측정]으로 두던 advisory의 전제가 이 시간대에 한해 해소됐다(휴일·정규장 종료 후는 여전히 미측정) | conditional-register `conditional.register.session="outside US regular hours 08:39 EDT"`, 같은 run의 order 단계 접수 |
+| M16 | **주문 취소가 `409 already-processing`으로 거절될 수 있다** — `{"code":"already-processing","message":"지금은 주문을 변경할 수 없어요. 잠시 후 다시 시도해주세요.","data":{"retryAfterSeconds":1}}`. 브로커가 **재시도 힌트(retryAfterSeconds)** 를 준다. 도구는 취소를 재시도하지 않아 order-cancel이 fail로 남았고, 취소되지 않은 주문 1건이 노출 상한(1건)을 채워 **order-amend·sell-boundary가 연쇄 차단**됐다 — 2a 주문 오류 분류표와 2c 취소 경로에 이 코드와 재시도 규칙을 넣어야 한다 | order-cancel 단계 reason, requestId `r4zrJzFgIxqPHPhh` |
+| M17 | **조건주문 목록의 `status` 필터는 `OPEN`/`CLOSED`만 허용** — 그 외 값은 `400 invalid-request`, `data.field="status"`, `allowedValues=["OPEN","CLOSED"]`, message "유효하지 않은 주문 상태 필터입니다". 일반 주문의 M7과 같은 계열이며 **조건주문 목록 조회 경로에도 같은 제약**이 있다. 현재 코드가 다른 값을 보내고 있으므로 교정 대상 | conditional-register `conditional.list_by_status.ok=false`, requestId `rK2pMdhWbAID0fLn` |
+
+### 이 실행이 남긴 계좌 잔여물 (2026-07-27 21:40 KST 기준 살아 있음)
+
+- `order OsBakhtsu54X8pIXZjDO1KcOrl14B_7PnX0r75XXe5afmp1j2BNrfMaWwkKGPJyv` (MWG) — M16으로 취소 실패
+- `conditional-order hjbGwc27O8eiv3xqvk2t2qp0-4E4qOvRLTYPvV2-JN4` (MWG) — 존속 측정(conditional-persist)을 위해 **의도적으로 존속 중**
+
+`conditional-persist`가 `awaiting-restart`다: 등록한 프로세스가 죽은 뒤에만 존속을 관측할 수
+있으므로 콘솔 재시작 후 이어하기가 필요하며, 절차를 마치면 도구가 둘 다 취소한다.
+
 ### 미측정으로 남은 항목 (이번 실행 기준)
 
 - 2.1 status enum fixture / 2.7 멱등키 재생·conflict / 2.2 place-cancel-amend / 2.8 sellable 의미: **휴장 + 429로 전부 미측정** — 장중 재실행 필요.
