@@ -132,7 +132,12 @@ this command delays its cycle instead of competing for the same rate limit — t
 two share one account and one budget, and a verification step lost to a 429 costs
 a real order. The marker is a file beside the evidence record; a stale one (over
 five minutes untouched) is ignored, so a crashed verification cannot wedge the
-survey.`),
+survey.
+
+An order read the broker throttles (429) is tried twice more, fifteen and thirty
+seconds apart, before the cycle records it as a failure — so a throttled cycle
+can take about a minute longer than a clean one. Nothing else is retried, and no
+retried attempt is hidden from the record.`),
 		// official: every read goes to the Open API. Not mutating: the survey
 		// issues no request that can change an account.
 		Annotations:  map[string]string{"source": "official"},
@@ -606,8 +611,24 @@ func (r soakReads) Holdings(ctx context.Context) (int, error) {
 	return len(positions), nil
 }
 
+// soakOrdersPageLimit is the page size the order walk asks for.
+//
+// One hundred is the maximum openapi.latest.json allows on GET /api/v1/orders;
+// the default, which this walk used to take, is twenty. That default is what
+// turned the CLOSED walk into a burst: this account's history is longer than a
+// hundred orders, so every cycle paged it twenty at a time with no gap between
+// requests — seven requests in 535ms, then a 429, then a second 429 on the
+// order-by-id read caught in the same penalty window, on every cycle measured
+// (measurements.md M8). At a hundred per page the same walk is two requests.
+//
+// Asking for more pages worth of orders per request changes nothing else: the
+// walk still follows nextCursor to the end of the group, and MaxOrderPages still
+// bounds it.
+const soakOrdersPageLimit = 100
+
 func (r soakReads) OrdersPage(ctx context.Context, status, cursor string) (soak.OrderPage, error) {
-	page, err := r.api.OrdersPageRaw(ctx, official.OrdersFilter{Status: status}, cursor)
+	page, err := r.api.OrdersPageRaw(ctx,
+		official.OrdersFilter{Status: status, Limit: soakOrdersPageLimit}, cursor)
 	if err != nil {
 		return soak.OrderPage{}, err
 	}

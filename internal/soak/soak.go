@@ -180,6 +180,54 @@ const (
 // the cap is unread, not wrong.
 const defaultMaxOrderPages = 25
 
+// ReadRetryExtraAttempts is how many more times an order read is sent after the
+// broker answered 429. Three attempts in total.
+//
+// # Why the order reads have a retry at all
+//
+// The survey and the supervised live verification share one account and one rate
+// budget, and the order list is the expensive read: the CLOSED group is the
+// account's whole history and it is walked page by page. On 2026-07-27 a clean
+// cycle — a quarter of an hour after the previous one, every other endpoint OK —
+// still lost GET /api/v1/orders to a 429 seven requests in, and the
+// GET /api/v1/orders/{id} that follows it landed inside the same penalty window
+// (measurements.md M8, cycles 00:25:27Z, 00:25:41Z and 00:40:42Z). The account's
+// CLOSED history is past a hundred orders, so it reproduced on every cycle. An
+// endpoint that never succeeds is an attestation that can never be written, for a
+// condition that clears in seconds.
+//
+// # Why these numbers
+//
+// They are verifylive.ReadRetryExtraAttempts and verifylive.ReadRetryBackoff, to
+// the digit: two extra attempts, fifteen then thirty seconds apart. The two tools
+// hit the same broker with the same credential, and one policy that an operator
+// can hold in their head is worth more than two tuned ones. The reasoning for the
+// values is written out in internal/verifylive/retry.go and not repeated here.
+//
+// # Why this is a second copy rather than an import
+//
+// internal/verifylive imports internal/official, and static_test.go asserts that
+// internal/soak's transitive import graph contains no package that can place,
+// amend or cancel an order — internal/official among them. Importing verifylive
+// for two constants would trade the survey's compile-time mutation exclusion for
+// a saved duplicate, which is the wrong way round.
+//
+// The duplication is kept honest by TestTheBackoffMatchesTheVerificationTool,
+// which asserts the numbers rather than trusting this comment. If one side
+// changes, change the other.
+const ReadRetryExtraAttempts = 2
+
+// ReadRetryBackoff is the wait before extra attempt n, counted from zero.
+//
+// Mirrors verifylive.ReadRetryBackoff; see ReadRetryExtraAttempts for why there
+// are two of them.
+func ReadRetryBackoff(extra int) time.Duration {
+	if extra <= 0 {
+		return 15 * time.Second
+	}
+	return 30 * time.Second
+}
+
 // Options configures a Runner.
 type Options struct {
 	// Reads is the broker surface. Required.
@@ -489,13 +537,32 @@ func (r *Runner) RunCycle(ctx context.Context) (Cycle, error) {
 
 // --- individual probes ------------------------------------------------------
 
-// probe times a single read and classifies its outcome.
+// probe times a single read and classifies its outcome. One call, one request,
+// no retry — which is what every endpoint but the two order reads gets.
 func (r *Runner) probe(ctx context.Context, endpoint string, call func(context.Context) error) EndpointResult {
 	started := r.opts.Clock.Now()
 	err := call(ctx)
+	return r.result(endpoint, 1, started, err)
+}
+
+// probeRetrying is probe with the 429 backoff on it (ReadRetryExtraAttempts).
+//
+// Requests is the number of attempts made, not the number that worked: a refused
+// call still spent the account's rate budget, and the record is what sizes that
+// budget. LatencyMS stays what it has always been for a multi-request probe —
+// wall time from the first attempt to the last — so a cycle that waited is
+// visibly a cycle that waited.
+func (r *Runner) probeRetrying(ctx context.Context, endpoint string, call func(context.Context) error) EndpointResult {
+	started := r.opts.Clock.Now()
+	attempts, err := r.retryRateLimited(ctx, endpoint, call)
+	return r.result(endpoint, attempts, started, err)
+}
+
+// result assembles one endpoint's record from what the attempts came to.
+func (r *Runner) result(endpoint string, requests int, started time.Time, err error) EndpointResult {
 	result := EndpointResult{
 		Endpoint:  endpoint,
-		Requests:  1,
+		Requests:  requests,
 		LatencyMS: r.opts.Clock.Since(started).Milliseconds(),
 	}
 	if err != nil {
@@ -506,6 +573,43 @@ func (r *Runner) probe(ctx context.Context, endpoint string, call func(context.C
 	result.OK = true
 	result.Class = ClassOK
 	return result
+}
+
+// retryRateLimited runs call, and runs it again — up to ReadRetryExtraAttempts
+// more times, waiting ReadRetryBackoff in between — for as long as the failure
+// classifies as ClassRateLimited. It returns how many attempts were made and the
+// outcome of the last one.
+//
+// Only a 429 is retried. A 400 answered a second time is the same 400, and the
+// rate budget spent proving it is the thing that is actually scarce here; the
+// failure is recorded and the cycle moves on, exactly as before.
+//
+// The classification comes from Options.Classify — the same seam that already
+// tells this package what a refused credential looks like — because internal/soak
+// cannot name official.ErrRateLimited without importing the package that can
+// place an order (see ReadRetryExtraAttempts). With no Classify set nothing
+// classifies as ClassRateLimited and nothing is retried, which is the pre-1.11
+// behaviour.
+//
+// The wait goes through Options.Clock, so a test drives it with a fake and the
+// survey's one real sleep stays in one place.
+func (r *Runner) retryRateLimited(ctx context.Context, endpoint string, call func(context.Context) error) (attempts int, err error) {
+	for extra := 0; ; extra++ {
+		attempts++
+		err = call(ctx)
+		if err == nil || r.classify(err) != ClassRateLimited || extra >= ReadRetryExtraAttempts {
+			return attempts, err
+		}
+		wait := ReadRetryBackoff(extra)
+		r.writeLine("%s가 429(rate limited)로 거부되었다. %s 기다린 뒤 다시 읽는다 (%d/%d)",
+			endpoint, wait, extra+1, ReadRetryExtraAttempts)
+		if sleepErr := r.opts.Clock.Sleep(ctx, wait); sleepErr != nil {
+			// The operator interrupted, or the deadline passed. The rate limit is
+			// still the reason the read has no answer, so that is what is returned
+			// — the cycle records a throttled endpoint, not a cancelled one.
+			return attempts, err
+		}
+	}
 }
 
 func (r *Runner) probeAccounts(ctx context.Context) ([]string, EndpointResult) {
@@ -600,8 +704,16 @@ func (r *Runner) walkOrders(ctx context.Context, status string) orderWalk {
 			walk.pageLimit = true
 			return walk
 		}
-		page, err := r.opts.Reads.OrdersPage(ctx, status, cursor)
-		walk.requests++
+		// Every attempt is added to requests, including the ones the broker
+		// throttled: the walk is the burstiest thing the survey does and the
+		// record is what the rate budget is sized from (measurements.md M8).
+		var page OrderPage
+		attempts, err := r.retryRateLimited(ctx, EndpointOrders, func(ctx context.Context) error {
+			var err error
+			page, err = r.opts.Reads.OrdersPage(ctx, status, cursor)
+			return err
+		})
+		walk.requests += attempts
 		if err != nil {
 			walk.err = err
 			return walk
@@ -650,7 +762,10 @@ func (r *Runner) probeOrderByID(ctx context.Context, closed, open orderWalk) End
 		return EndpointResult{Endpoint: EndpointOrderByID, Skipped: true, SkipReason: reason}
 	}
 	id := ids[0]
-	return r.probe(ctx, EndpointOrderByID, func(ctx context.Context) error {
+	// Retried on 429 like the walk it follows, and for the same reason: this read
+	// goes out immediately after the last page, so a penalty window opened by the
+	// walk catches it too (measurements.md M8).
+	return r.probeRetrying(ctx, EndpointOrderByID, func(ctx context.Context) error {
 		return r.opts.Reads.Order(ctx, id)
 	})
 }

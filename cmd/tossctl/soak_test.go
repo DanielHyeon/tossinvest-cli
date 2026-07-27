@@ -19,9 +19,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,6 +48,10 @@ type soakServer struct {
 
 	mu       sync.Mutex
 	requests []string // "METHOD /path"
+	// orderListQueries is the query string of every GET /api/v1/orders, kept
+	// apart from requests because the page size is a property of the query and
+	// not of the path (task 1.11).
+	orderListQueries []url.Values
 }
 
 func newSoakServer(t *testing.T) *soakServer {
@@ -54,6 +60,9 @@ func newSoakServer(t *testing.T) *soakServer {
 	s.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		s.requests = append(s.requests, r.Method+" "+r.URL.Path)
+		if r.URL.Path == "/api/v1/orders" {
+			s.orderListQueries = append(s.orderListQueries, r.URL.Query())
+		}
 		s.mu.Unlock()
 
 		w.Header().Set("Content-Type", "application/json")
@@ -86,6 +95,12 @@ func (s *soakServer) seen() []string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return append([]string(nil), s.requests...)
+}
+
+func (s *soakServer) orderLists() []url.Values {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]url.Values(nil), s.orderListQueries...)
 }
 
 // pointSoakAt wires the soak command at srv for the duration of the test. It
@@ -202,6 +217,69 @@ func TestSoakRunSurveysEveryRequiredEndpoint(t *testing.T) {
 	}
 	if !c.Completeness.Evaluated || !c.Completeness.OK {
 		t.Errorf("completeness = %+v, want an evaluated pass", c.Completeness)
+	}
+}
+
+// TestSoakOrderWalkAsksForTheLargestPageTheAPIAllows (task 1.11).
+//
+// The walk used to take the API's default page size of twenty. On an account
+// whose CLOSED history runs past a hundred orders that is five requests fired
+// back to back where two would do, and it is what made every clean cycle end in a
+// 429 on GET /api/v1/orders (measurements.md M8). The cheapest half of the fix is
+// to stop asking for the small pages.
+//
+// Asserted against the real query string rather than the filter value, because
+// the filter is only worth anything if the client actually puts it on the wire.
+func TestSoakOrderWalkAsksForTheLargestPageTheAPIAllows(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	srv := newSoakServer(t)
+	pointSoakAt(t, srv, filepath.Join(configDir, "token.json"))
+
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "run", "--cycles", "1", "--interval", "0"); err != nil {
+		t.Fatalf("soak run: %v", err)
+	}
+
+	queries := srv.orderLists()
+	if len(queries) == 0 {
+		t.Fatal("the soak never asked for the order list")
+	}
+	for _, q := range queries {
+		if got := q.Get("limit"); got != "100" {
+			t.Errorf("GET /api/v1/orders?%s: limit = %q, want \"100\" (the openapi maximum; "+
+				"an absent limit is the default 20 and is what burst into a 429)", q.Encode(), got)
+		}
+		// The page size is the only thing that changed. The status group is still
+		// required and still walked as two groups (task 1.9).
+		if status := q.Get("status"); status != "OPEN" && status != "CLOSED" {
+			t.Errorf("GET /api/v1/orders?%s: status = %q, want OPEN or CLOSED", q.Encode(), status)
+		}
+	}
+}
+
+// TestSoakClassifiesTheBrokerSentinels is the wiring half of the 429 backoff.
+//
+// internal/soak decides what to retry from the Class its Options.Classify hands
+// back — it cannot name official.ErrRateLimited itself, because that package is
+// kept out of its import graph (internal/soak/static_test.go). So the retry is
+// only scoped to a 429 if this function says so, and only this function can be
+// asked.
+func TestSoakClassifiesTheBrokerSentinels(t *testing.T) {
+	for _, tc := range []struct {
+		err  error
+		want soak.Class
+	}{
+		{nil, soak.ClassOK},
+		{official.ErrRateLimited, soak.ClassRateLimited},
+		{fmt.Errorf("reading the order list: %w", official.ErrRateLimited), soak.ClassRateLimited},
+		{official.ErrAuth, soak.ClassAuth},
+		{official.ErrIPNotAllowed, soak.ClassAuth},
+		{official.ErrTransport, soak.ClassTransport},
+		{official.ErrServer, soak.ClassServer},
+		{errors.New(`official: 400 invalid-request {"field":"status"}`), soak.ClassOther},
+	} {
+		if got := classifySoakError(tc.err); got != tc.want {
+			t.Errorf("classifySoakError(%v) = %q, want %q", tc.err, got, tc.want)
+		}
 	}
 }
 
