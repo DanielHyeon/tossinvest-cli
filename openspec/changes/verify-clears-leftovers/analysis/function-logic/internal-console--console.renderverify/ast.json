@@ -1,6 +1,6 @@
 {
   "file": "internal/console/pages.go",
-  "source_sha256": "534bd50b3499ad3b1f99a52a117225600c67f432df4d1b7df530435a211c3eea",
+  "source_sha256": "e14d74b598a9e2ef84915de36f1bb90fd981cf1dce2a4836df369f8c1eb4fab4",
   "package": "console",
   "function": "renderVerify",
   "receiver": "Console",

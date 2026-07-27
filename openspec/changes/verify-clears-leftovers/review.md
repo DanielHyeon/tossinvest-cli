@@ -7,7 +7,7 @@ Function Logic Map: applied — `analysis/function-logic/` 6 target, `check_anal
 **전제를 실제 기록으로 재검증했다.** 제안이 "도구가 자기 잔여물에 갇혔다"고 주장했으므로,
 구현 전에 사용자의 실제 US 기록(19줄)을 그대로 읽어 대상 선정 로직을 돌렸다:
 
-```
+```text
 outstanding: kind=order id=OsBakhtsu…afmp1j2 symbol=MWG deliberate=false
 redo set:    [idempotency-ttl-edge order-cancel order-amend sell-boundary]
 cleanup target: order OsBakhtsu…afmp1j2 (MWG)
@@ -48,6 +48,13 @@ cleanup line:   step=cleanup kind=cancel-order symbol=MWG maxQty=0
   승인 대기 화면에서 두 번째 실행을 시작할 수 있게 된다 — 전용 테스트로 막았다.
   `Spent`와 "이어할 단계가 없다"는 종전대로 버튼을 비활성화한다(전용 테스트로 고정).
 
+- **리뷰가 잡은 잔여 구멍 하나**: 첫 구현은 runner만 고쳤고, 콘솔의 "이어할 단계가 없다"
+  가드는 여전히 `Pending`만 봤다. 사용자의 실제 기록이 정확히 그 상태다 — 모든 단계가
+  terminal이고 잔여물 1건. 즉 재측정 대상이 우연히 있었기에 막히지 않았을 뿐,
+  `[재측정]`이 비어 있는 기록이라면 같은 교착이 그대로 남았다. `PendingCleanup`을
+  verifylive에 두고 화면과 서버 가드가 **같은 함수**를 부르게 했다 — 규칙의 두 번째 사본이
+  이 결함이 자라난 방식이기 때문이다.
+
 **남은 관찰**: 정리는 `preflightStatic`의 시장 일치 검사를 거치지 않는다. 의도적이다 —
 그 검사는 *주문을 내는* 쪽의 규칙이고, 다른 시장 심볼이라는 이유로 취소를 거부하면 지금
 고치려는 교착을 그대로 재현한다. 취소는 식별자만으로 이뤄지고 시장별 가격 규칙을 쓰지 않는다.
@@ -74,13 +81,14 @@ cleanup line:   step=cleanup kind=cancel-order symbol=MWG maxQty=0
 
 ## 4. QA
 
-- `go build ./...`, `go vet ./...` clean. `go test ./...` **3126 passed**.
+- `go build ./...`, `go vet ./...` clean. `go test ./...` **3127 passed**.
 - RED 관측(순서대로): 잔여 주문이 있어도 계획에 정리 줄이 없음 → GREEN, 다음 실행이
   잔여물을 남긴 채 끝남 → GREEN, 막혀 있던 `--redo order-cancel`이 상한으로 거절됨 →
   GREEN(pass, 잔여물 0), 정리 실패가 기록되지 않음 → GREEN, 끝난 실행 뒤 콘솔에 시작
-  제어가 없음 → GREEN(있음), spent 프로세스에서 시작 제어가 사라짐 → GREEN(보이되 비활성).
-- 실계좌 확인은 다음 US 실행에서 이뤄진다: `[재측정]`의 승인 목록 첫 줄에 `OsBakht…`의
-  취소가 보여야 하고, 승인 후 그 주문이 사라져야 한다.
+  제어가 없음 → GREEN(있음), spent 프로세스에서 시작 제어가 사라짐 → GREEN(보이되 비활성),
+  잔여물이 있는데 이어하기가 무동작으로 거부됨 → GREEN(가드를 되돌려 FAIL을 확인한 뒤 복원).
+- 실계좌 확인은 다음 US 실행에서 이뤄진다: `[재측정]`(또는 `[이어하기]`)의 승인 목록 첫 줄에
+  `OsBakht…`의 취소가 보여야 하고, 승인 후 그 주문이 사라져야 한다.
 
 ## 5. 완료 조건
 

@@ -206,12 +206,18 @@ func (c *Console) handleStart(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		redo = set
-	} else if snap := c.readVerify(market); snap.Present && len(snap.Pending) == 0 {
+	} else if snap := c.readVerify(market); snap.Present && len(snap.Pending) == 0 &&
+		len(snap.Cleanup) == 0 {
 		// The no-op that cost a market window on 2026-07-27: every step already has
 		// a terminal verdict, so an ordinary resume walks the catalogue, settles
 		// nothing and finishes with no steps recorded. Refusing it here is what
 		// makes the disabled button on the page more than decoration — a stale tab
 		// posts the same form.
+		//
+		// A leftover is the exception, and it is why the Cleanup test is here: a
+		// record whose steps are all terminal but which still holds an order this
+		// tool could not cancel has exactly one thing left to send, and refusing
+		// that start is what made the leftover unremovable in the first place.
 		notice := "이어할 단계가 없다 — 모든 단계에 판정이 있다. 아무것도 전송되지 않았다."
 		if len(snap.Redo) > 0 {
 			notice += " 다시 측정하려면 [재측정]을 사용하라."

@@ -87,13 +87,33 @@ func cleanupStep() Step {
 // The list comes from the record, which is what makes "this tool created it" a
 // fact rather than a guess. Nothing else on the account is ever a target.
 func (r *Runner) cleanupTargets() []Artifact {
+	return cleanupFrom(r.prior, func(id StepID) bool {
+		settled, _ := r.settled(id)
+		return settled
+	})
+}
+
+// PendingCleanup is cleanupTargets for a caller holding only the record.
+//
+// It exists because "is there anything to do?" is asked in two places and must be
+// answered the same way in both. The console refuses a resume that would walk the
+// catalogue and settle nothing — the no-op that cost a market window on
+// 2026-07-27 — and a record whose steps are all terminal *but* which still holds a
+// leftover is not that no-op: the run has one live cancel to send. Answering that
+// question from a second copy of the rule is how the deadlock this file exists to
+// remove would grow back on the console side.
+func PendingCleanup(entries []Entry) []Artifact {
+	return cleanupFrom(entries, func(id StepID) bool { return Settled(entries, id) })
+}
+
+func cleanupFrom(entries []Entry, settled func(StepID) bool) []Artifact {
 	var out []Artifact
-	for _, a := range Outstanding(r.prior) {
+	for _, a := range Outstanding(entries) {
 		switch a.Kind {
 		case KindOrder:
 			out = append(out, a)
 		case KindConditional:
-			if settled, _ := r.settled(StepConditionalCancel); settled {
+			if settled(StepConditionalCancel) {
 				out = append(out, a)
 			}
 		}

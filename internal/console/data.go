@@ -89,7 +89,15 @@ type verifyView struct {
 	// AwaitingRestart names the step that is waiting for a new process.
 	AwaitingRestart verifylive.StepID
 	Outstanding     []verifylive.Artifact
+	// Cleanup are the leftovers a run started now would offer to cancel. It is
+	// what keeps "every step is terminal" from reading as "there is nothing to
+	// do": a record with a leftover has one live cancel left in it, and refusing
+	// to start is what left the account holding an order nothing could remove.
+	Cleanup []verifylive.Artifact
 }
+
+// CleanupCount is what the start screen prints before anything is sent.
+func (v verifyView) CleanupCount() int { return len(v.Cleanup) }
 
 // RedoCount is what the start screen prints before anything is sent.
 func (v verifyView) RedoCount() int { return len(v.Redo) }
@@ -305,6 +313,7 @@ func (c *Console) readVerify(market string) verifyView {
 	v.Pending = progress.Pending
 	v.AwaitingRestart = progress.AwaitingRestart
 	v.Outstanding = progress.Outstanding
+	v.Cleanup = verifylive.PendingCleanup(entries)
 	for _, s := range progress.Steps {
 		if s.Verdict.Terminal() {
 			v.Done++

@@ -410,9 +410,13 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   {{if .Snap.Verify.AwaitingRestart}}
   <p class="notice"><code>{{.Snap.Verify.AwaitingRestart}}</code> ({{stepLabel .Snap.Verify.AwaitingRestart}}) 단계가 새 프로세스를 기다리고 있었다. 이 콘솔이 그 새 프로세스다.</p>
   {{end}}
+  {{if .Snap.Verify.Cleanup}}
+  <p class="notice"><strong>이전 실행이 남긴 객체 {{.Snap.Verify.CleanupCount}}건</strong>을 이 실행이 먼저 취소한다 —
+  승인 목록의 첫 줄에 표시된다. 그것이 노출 상한을 채우고 있는 동안에는 아래 단계들이 아무것도 보낼 수 없다.</p>
+  {{end}}
   <p>시작하면 이 실행이 보낼 수 있는 <strong>모든 라이브 요청의 목록</strong>이 표시되고,
   그 목록을 승인하는 버튼을 누르기 전에는 아무것도 전송되지 않는다.</p>
-  {{$nothingToResume := and .Resuming (not .Snap.Verify.Pending)}}
+  {{$nothingToResume := and .Resuming (not .Snap.Verify.Pending) (not .Snap.Verify.Cleanup)}}
   {{if $nothingToResume}}
   <p class="notice"><strong>이어할 단계가 없다</strong> — 모든 단계에 판정이 있어 이어하기는 아무것도
   측정하지 않는다(2026-07-27에 이 버튼이 두 번 눌려 장중 창이 측정 0건으로 끝났다).

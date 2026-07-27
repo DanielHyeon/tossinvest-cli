@@ -18,6 +18,9 @@
   없다" 가드는 그대로 비활성화한다. 진행 중인 실행에서는 시작 섹션을 감춘다.
   RED: 0단계로 끝난 실행 뒤 폼이 사라짐 → GREEN.
 - [x] 1.7 만료 문구 교정 — 콘솔 승인에는 확인 문자열이 없다.
+- [x] 1.8 [T] "이어할 단계가 없다" 가드가 정리 대상을 고려한다 — 판정이 모두 terminal이어도
+  잔여물이 있으면 이어하기는 무동작이 아니다. 화면과 서버 가드가 같은 판정
+  (`verifylive.PendingCleanup`)을 쓴다. RED: 잔여물이 있는데 버튼이 비활성 → GREEN.
 - [x] 2.1 Function Logic Map + `check_analysis.py`
 - [x] 2.2 PM registry allowlist + fixture, `make sdd-sync && make sdd-check && make gate`
 - [x] 2.3 measurements.md에 3차 실행(M18~M21)과 도구 갭(M22 잔여물 교착, M23 승인 창

@@ -14,7 +14,34 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
+
+// seedLeftoverOrder appends the line an order-cancel failure leaves behind: a
+// mutating step that created an order and never recorded cancelling it.
+func seedLeftoverOrder(t *testing.T, path string) {
+	t.Helper()
+	rec, err := verifylive.OpenRecorder(path)
+	if err != nil {
+		t.Fatalf("OpenRecorder: %v", err)
+	}
+	defer rec.Close()
+
+	now := time.Now().UTC()
+	if err := rec.Append(verifylive.Entry{
+		StepID: verifylive.StepOrderCancel, Title: "place and cancel",
+		Verdict: verifylive.VerdictFail, Reason: "409 already-processing",
+		AccountRef: attest.Mask("123-45-678901"), StartedAt: now, FinishedAt: now, Mutating: true,
+		Artifacts: []verifylive.Artifact{{
+			Kind: "order", ID: "order-left", Symbol: "005930", CreatedAt: now,
+		}},
+	}); err != nil {
+		t.Fatalf("Append: %v", err)
+	}
+}
 
 // startForm reports whether the page offers a way to begin a verification.
 func startForm(page string) bool {
@@ -94,5 +121,40 @@ func TestASpentProcessStillDisablesTheStartControls(t *testing.T) {
 	}
 	if !disabledStart(page) {
 		t.Errorf("a spent process offers an enabled start control:\n%s", truncateForLog(page))
+	}
+}
+
+// TestALeftoverKeepsResumeAvailable.
+//
+// "Every step has a terminal verdict" is what the no-op guard refuses, and it is
+// the right rule — except when the record also holds an order this tool could not
+// cancel. Then the run has exactly one live request left in it, and refusing the
+// start is what made that order unremovable.
+func TestALeftoverKeepsResumeAvailable(t *testing.T) {
+	h := newHarness(t)
+	seedVerdicts(t, h.record, verifylive.VerdictPass, nil)
+	seedLeftoverOrder(t, h.record)
+	h.authenticate(t)
+
+	page := body(t, h.get(t, "/verify"))
+	if !startForm(page) {
+		t.Fatalf("no start control on a record that still holds a leftover:\n%s", truncateForLog(page))
+	}
+	if disabledStart(page) {
+		t.Errorf("the resume is disabled although a leftover order is still on the account:\n%s",
+			truncateForLog(page))
+	}
+
+	// And the guard behind the button agrees with the button: a stale tab posting
+	// the same form must not be told there is nothing to do.
+	h.post(t, "/verify/start", url.Values{"csrf": {h.csrf}, "mode": {"resume"}})
+	defer h.stopRun()
+	if run := h.currentRun(); run == nil {
+		page = body(t, h.get(t, "/verify"))
+		if strings.Contains(page, "이어할 단계가 없다") {
+			t.Fatalf("the server refused the resume as a no-op while a leftover was outstanding:\n%s",
+				truncateForLog(page))
+		}
+		t.Fatal("the resume did not start a run")
 	}
 }
