@@ -31,6 +31,12 @@ runs: `run-FOVHBDARTNFK3RKD`(21:31 KST) → `run-WE3EF3ZOHDCNBWGT`(22:46, 승인
 | M8 | **orders walk 429 버스트**: 1.9 수정으로 400은 사라졌으나(walk가 5페이지/100건 수집 시작), CLOSED walk가 기본 `limit`(20)으로 페이지를 간격 없이 연발 — 클린 사이클(직전 사이클과 15분 간격, 타 엔드포인트 전부 OK)에서도 **7요청/535ms(≈13 req/s) 후 429**, 직후 `GET /api/v1/orders/{id}` 1요청도 429(패널티 창). 계정 CLOSED 이력 ≥100건이라 기본 limit으로는 매 사이클 재현 → orders 미성공 지속 → attestation 차단. openapi `limit`은 최대 100(기본 20). 기존 실측과 정합: 관측 지속 한도 9.67 req/s(soak status), M4 한도 창 미상. → task 1.11 발주 | capability-soak.jsonl 사이클 `2026-07-27T00:40:42Z`(requests 7·latency 535ms·rate_limited), `00:25:27Z`·`00:25:41Z` 동일 패턴; openapi paths./api/v1/orders.get.parameters.limit |
 | M9 | **매수 1주 holdings 반영**: 사용자 토스 앱 KR 1주 매수(2026-07-27 개장 직후) 후 holdings positions 2 → 3 관측 — 2.5·sell-boundary·2.8의 선행 조건 충족 | capability-soak.jsonl positions 추이(41사이클 연속 2 → 3), `00:40:42Z` 사이클 positions 3 |
 
+### 1.11 수정 바이너리 실브로커 확인 (2026-07-27 10:12 KST 설치)
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M10 | **`GET /api/v1/orders`·`orders/{id}` 최초 성공** (56사이클 만): 설치 후 첫 완주 사이클(10:19:14 KST)에서 6/6 엔드포인트 OK·completeness evaluated·ok. walk는 26페이지/2,320건(limit=100), 도중 429 두 번을 15s 백오프로 흡수(soak.log 한글 안내 2건, 요청 28건 계상, latency 35.2s에 대기 포함). **계정 CLOSED 이력 ≥2,500건**(25페이지 상한 도달 — detail에 명시) — 구 limit 20으로는 125+페이지가 필요해 페이지 상한만으로도 원리적 완주 불가였음을 확증. attest 차단은 streak 3일차(7/28 충족 예정)·token refresh 관측(당일 21:27 KST 만료 예정) 2건만 잔존. 재시작 직후 버스트 사이클 2건은 연속 재시작 SIGINT로 중단된 것(2건 중 1건은 945건/10페이지까지 진행) — account-seq 해석 429는 M4 기지 사항 유지 | capability-soak.jsonl 사이클 `2026-07-27T01:19:14Z`(전건 OK), `01:18:50Z`·`01:19:02Z`(중단 사이클); soak.log 01:19:19·01:19:35 백오프 안내; `tossctl soak status` NOT READY 잔여 2건 |
+
 ### 미측정으로 남은 항목 (이번 실행 기준)
 
 - 2.1 status enum fixture / 2.7 멱등키 재생·conflict / 2.2 place-cancel-amend / 2.8 sellable 의미: **휴장 + 429로 전부 미측정** — 장중 재실행 필요.
