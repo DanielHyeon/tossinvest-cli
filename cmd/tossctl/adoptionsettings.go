@@ -26,15 +26,31 @@ import (
 // The console.AdoptionSettings adaptation lives in console.go — the only file
 // this command allows to import internal/console.
 func newAdoptionSettingsSeam(root *rootOptions) *consoleAdoptionSettings {
-	var path string
-	if root != nil && strings.TrimSpace(root.configDir) != "" {
-		path = filepath.Join(root.configDir, "config.json")
-	} else if paths, err := config.DefaultPaths(); err == nil {
-		path = paths.ConfigFile
-	} else {
+	svc := configServiceFor(root)
+	if svc == nil {
 		return nil
 	}
-	return &consoleAdoptionSettings{svc: config.NewService(path)}
+	return &consoleAdoptionSettings{svc: svc}
+}
+
+// configServiceFor resolves the per-profile config file the same way every other
+// path is resolved: --config-dir wins, the default paths otherwise. It is shared
+// with the console's read-only Guardian-limits seam (console.go), so the screen
+// that displays a limit and the screen that edits the adoption block cannot end
+// up reading two different files.
+func configServiceFor(root *rootOptions) *config.Service {
+	var path string
+	switch {
+	case root != nil && strings.TrimSpace(root.configDir) != "":
+		path = filepath.Join(root.configDir, "config.json")
+	default:
+		paths, err := config.DefaultPaths()
+		if err != nil {
+			return nil
+		}
+		path = paths.ConfigFile
+	}
+	return config.NewService(path)
 }
 
 type consoleAdoptionSettings struct{ svc *config.Service }

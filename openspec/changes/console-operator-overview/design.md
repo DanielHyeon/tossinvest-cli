@@ -68,7 +68,7 @@ src := packageFiles(t)["console.go"]
 ## D3. 정적 검사의 단위는 "인터페이스"가 아니라 "`Options`가 받는 능력"이다
 
 `read-only 불변식`은 "콘솔이 주입받는 브로커 인터페이스는 조회 메서드만 선언한다"이고,
-이것을 지키는 것이 `TestTheConsoleBrokerInterfaceDeclaresNothingButReads`다. 그 검사에는 구멍이
+이것을 지키던 것이 `TestTheConsoleBrokerInterfaceDeclaresNothingButReads`다(§1에서 대체됨). 그 검사에는 구멍이
 셋 있고, 셋 다 이 change가 새 파일과 새 seam을 추가하는 순간 열린다.
 
 **구멍 1 — 파일 하드코딩.** `packageFiles(t)["holdings.go"]` 한 파일만 읽는다
@@ -117,6 +117,32 @@ Options 필드 → 선언 타입 → (인터페이스면 메서드 집합 / func
 **변이 검증 필수**: 새 파일에 mutation 메서드를 가진 seam을 `Options`에 추가 → FAIL,
 제거 → PASS. func 타입으로도 같은 것을 확인.
 
+### 이 결정은 두 군데가 부족했다 (2026-07-28 구현 리뷰, 변이로 확인)
+
+첫 구현은 변이 셋(인터페이스 seam·func 타입·미열거 필드)을 전부 잡았다. 그런데 리뷰가
+**한 홉만 더 가면 통과하는 모양 넷**을 찾았고, 원인은 구현이 아니라 이 결정문에 있다.
+
+**부족 1 — "능력"을 메서드 집합이 아니라 타입 이름으로 읽었다.** 위 도식은 "선언 타입 →
+메서드 집합"이라고 썼지만, 실제로 필요한 것은 **도달 가능한 모든 인터페이스의 메서드 집합**이다.
+`HoldingsReader.Holdings`가 `PlaceOrder`·`CancelOrder`를 가진 핸들을 **반환**하면 allowlist를
+손대지 않고도 통과한다. 그 타입 이름만 `OrderHandle`로 바꾸면 실패한다 — **검사가 철자를 보고
+있다는 증거**다. 같은 구멍으로 `any` + 인라인 타입 단언, 제네릭(`Seam[OrderPlacer]`), 타입
+별칭이 지나간다.
+
+**부족 2 — 단위로 고른 `Options`가 좁다.** 패키지 전역 `var`와 `*Console`의 메서드로도 능력이
+붙는다. 리뷰가 `SetDesk(d Desk)` + 패키지 전역 변수로 **패키지 전 테스트를 통과**시켰다.
+"콘솔이 받는 능력이 전부 열거되어 있다"는 불변식이 **한 구조체를 통해 받은 능력에 대해서만**
+강제되고 있었다.
+
+**정정된 결정**: 검사 단위는 `Options` 필드 + **`*Console`의 내보낸 메서드** + **패키지 전역
+인터페이스 변수**이고, 각 진입점에서 **타입을 고정점까지 해소해** 도달 가능한 모든 인터페이스의
+메서드 집합에 allowlist를 적용한다. 이름 대조는 그 위의 보조 장치이지 그 자체가 검사가 아니다.
+
+라우트 쪽에도 같은 종류가 하나 있었다 — 추출기가 `call.Fun`이 `SelectorExpr`일 때만 보므로
+`register := mux.HandleFunc`으로 등록한 라우트가 **다섯 가드 전부에게 보이지 않는다.** 리뷰가
+그 경로로 인증 없는 `POST /verify/order/cancel`을 200으로 서빙시켰다. **등록자를 값으로 가져가는
+것 자체를 실패로 만든다** — 값을 따라가도록 가르치지 않는다.
+
 ## D4. 브로커 0콜과 `peek` — 그리고 그 대가
 
 개요는 계좌 요약을 보이므로 holdings 캐시를 원한다. 자기 요청으로 갱신하게 두면 **가장 오래
@@ -154,7 +180,7 @@ add-candidate-discovery D10과 같은 규칙이다. 값을 얻지 못한 것과 
 
 **결정**: 각 숫자는 `(값, 측정됨, 사유)`로 전달한다. 렌더 시점에 `0`과 `—`가 갈린다.
 
-사유는 **다섯**이고 각각 다른 대응을 요구한다. 초안은 셋이라고 썼는데, 코드는 이미 넷을
+사유는 **일곱**이고 각각 다른 대응을 요구한다. 초안은 셋이라고 썼는데, 코드는 이미 넷을
 모델링하고 있었다([holdings.go:83](../../../internal/console/holdings.go#L83)의 `Wired`).
 
 | 사유 | 언제 | 운영자가 할 일 |
@@ -164,9 +190,22 @@ add-candidate-discovery D10과 같은 규칙이다. 값을 얻지 못한 것과 
 | `journal_unreadable` | 원장 파일 부재·스키마 불일치 | 엔진 기동 또는 콘솔 갱신 |
 | `seam_unwired` | 이 빌드에 그 seam이 배선되지 않았다 | 배선한다 |
 | `never_fetched` | 캐시가 한 번도 채워진 적 없다 | 해당 화면을 연다 |
+| `config_unreadable` | seam은 배선됐는데 config를 파싱하지 못했다 | 설정 파일을 고친다 |
+| `journal_value_unparsable` | 원장은 열렸는데 값이 숫자가 아니다 | 원장을 조사한다 — 엔진 기동이 아니다 |
 
-사유 없는 "—"는 대응할 수 없는 표시다. 다섯을 하나로 뭉치면 운영자는 기다릴지 고칠지
+사유 없는 "—"는 대응할 수 없는 표시다. 일곱을 하나로 뭉치면 운영자는 기다릴지 고칠지
 배선할지 알 수 없다.
+
+**여섯 번째는 구현 중에 나왔다(I-2, Manager 판정).** 초안은 다섯이었고, 구현자는 다섯을
+유지한 채 이 경우만 코드 없는 자유 문장으로 렌더했다. 판정은 **코드를 추가하는 쪽**이다 —
+이 열거의 일이 "운영자가 무엇을 고쳐야 하는가"를 남김없이 적는 것이기 때문이다. 자유 문장으로만
+존재하는 사유는 셀 수도, **없음을 테스트할 수도** 없고, 그러면 다음 사람이 일곱 번째도 문장으로
+쓴다. 그 시점에 열거는 표면을 더 이상 기술하지 않는다.
+
+**일곱 번째는 그 판정이 옳았다는 증거다(I-4).** 구현자가 같은 근거를 제가 열거하지 않은
+경우에 적용했다 — 원장은 **열렸는데** 값이 숫자가 아닌 경우다. `journal_unreadable`은 여기서
+틀린 조언이다(엔진을 기동하라는 뜻이 되는데 원장은 이미 열렸다). 판정문이 예고한 "일곱 번째"가
+판정 다음 날 실제로 나왔고, 문장이 아니라 코드로 나왔다.
 
 ## D6. "오늘"의 경계는 시장마다 다르다
 
@@ -251,6 +290,12 @@ in-process로 계산해 Guardian에 넘기는 값이고([risk/input.go:159](../.
 원장의 어떤 테이블에도 소진분이 없다.
 
 **결정**: 소진분은 **한 축만** 산출한다 — 오늘 실현손익(원장 동결 값) 대 `max_daily_loss_amount`.
+
+**통화 충돌(I-3, 구현 중 발견).** `max_daily_loss_amount`는 `limit_currency` 한 통화의 한
+숫자이고 오늘 실현손익은 시장별 숫자다. "시장을 가로지르는 합계 금지"(D6)와 "실현손익 대 일일
+손실 한도 산출"을 함께 지키려면 **통화가 일치하는 시장에서만** 비율이 성립한다. 한도 통화와
+시장 통화가 다르면 두 숫자를 나란히 보이되 **비율은 내지 않고 그 이유를 행에 적는다.**
+환산해서 비율을 만드는 것은 D6이 금지하는 그 합계를 한 칸 옆에서 다시 만드는 것이다.
 나머지 축(개방 노출·주문 수량·주문 금액)은 **구조적으로 미측정**이라고 화면이 말한다. 이것을
 적어 두지 않으면 구현자가 holdings에서 무언가를 계산하고, 그 숫자는 측정된 한도 소진분처럼
 렌더된다 — 있지도 않은 보호를 믿게 만드는 화면이 한도가 없는 화면보다 나쁘다.
@@ -322,7 +367,8 @@ rate_budget:
 refresh:
   overview_seconds: holdingsTTL     # 상수에서 파생
 unmeasured_reasons:
-  [verify_suspended, broker_read_failed, journal_unreadable, seam_unwired, never_fetched]
+  [verify_suspended, broker_read_failed, journal_unreadable, seam_unwired, never_fetched,
+   config_unreadable, journal_value_unparsable]
 today_boundary: per-market-local-midnight   # clock.Market.Location(); 화면이 어느 경계인지 출력
 account_panel_split_by_market: true         # 통화를 섞은 합계 금지
 today_panel_split_by_market:   true

@@ -390,6 +390,47 @@ func brokerNumber(present bool, v float64) string {
 	return decimalText(v)
 }
 
+// livePositions reads the ledger half of the positions join, and only that half.
+//
+// It was lifted out of positions (change console-operator-overview task 2.3) for
+// one reason: positions calls holdings.get, which refreshes. The overview screen
+// needs the same managed/unmanaged split and is not allowed to make a broker call
+// at all, so reusing positions there would have quietly put the console's
+// longest-lived tab on the rate budget — one holdings call per refresh, forever,
+// from a screen whose whole contract is that it makes none.
+//
+// The returned view carries whichever journal state was reached, including a read
+// that failed part way: a partial answer with the failure named beats an empty
+// screen, which is the same trade the two dashboard screens already make.
+func (c *Console) livePositions(ctx context.Context) ([]journal.PositionExit, journalView, []string) {
+	ro, jv := c.openJournal(ctx)
+	if ro == nil {
+		return nil, jv, nil
+	}
+	defer ro.Close()
+
+	var (
+		rows     []journal.PositionExit
+		accounts []string
+	)
+	refs, err := ro.AccountRefs(ctx)
+	if err != nil {
+		jv.State, jv.Detail = journalFailed, err.Error()
+	}
+	for _, ref := range refs {
+		got, err := ro.LivePositionExits(ctx, ref)
+		if err != nil {
+			jv.State, jv.Detail = journalFailed, err.Error()
+			break
+		}
+		if len(got) > 0 {
+			accounts = append(accounts, attest.Mask(ref))
+		}
+		rows = append(rows, got...)
+	}
+	return rows, jv, accounts
+}
+
 // positions builds the positions screen.
 func (c *Console) positions(ctx context.Context) positionsView {
 	now := c.now()
@@ -397,27 +438,8 @@ func (c *Console) positions(ctx context.Context) positionsView {
 
 	v := positionsView{Holdings: c.holdings.get(ctx, now, hold, why)}
 
-	ro, jv := c.openJournal(ctx)
-	v.Journal = jv
-	var journalRows []journal.PositionExit
-	if ro != nil {
-		defer ro.Close()
-		refs, err := ro.AccountRefs(ctx)
-		if err != nil {
-			v.Journal.State, v.Journal.Detail = journalFailed, err.Error()
-		}
-		for _, ref := range refs {
-			rows, err := ro.LivePositionExits(ctx, ref)
-			if err != nil {
-				v.Journal.State, v.Journal.Detail = journalFailed, err.Error()
-				break
-			}
-			if len(rows) > 0 {
-				v.Accounts = append(v.Accounts, attest.Mask(ref))
-			}
-			journalRows = append(journalRows, rows...)
-		}
-	}
+	journalRows, jv, accounts := c.livePositions(ctx)
+	v.Journal, v.Accounts = jv, accounts
 
 	v.Rows = joinPositions(v.Holdings.Rows, journalRows, v.Journal.Readable())
 	return v
@@ -697,7 +719,17 @@ func dashIfEmpty(s string) string {
 // presentation only — nothing here is arithmetic on a price, and the journal's
 // side of the screen stays in the decimal strings the ledger stores.
 func decimalText(v float64) string {
-	text := strconv.FormatFloat(v, 'f', -1, 64)
+	return groupDecimalText(strconv.FormatFloat(v, 'f', -1, 64))
+}
+
+// groupDecimalText groups a plain decimal string's integer part in threes.
+//
+// It is separate from decimalText because the overview sums the ledger's own
+// decimal strings with math/big rather than through float64 (overview.go): a
+// day's realised P&L is money the journal froze, and rounding it through a float
+// on the way to the screen would put a number beside the frozen R that disagrees
+// with it.
+func groupDecimalText(text string) string {
 	sign := ""
 	if strings.HasPrefix(text, "-") {
 		sign, text = "-", text[1:]

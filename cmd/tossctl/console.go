@@ -48,9 +48,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
@@ -105,7 +107,10 @@ the restart handoff token). Opening that URL in this machine's browser is what
 authenticates you, so possession of this terminal is the credential. Do not
 paste the link anywhere else.
 
-  dashboard   soak progress, attestation state, verification progress
+  overview    /dashboard — engine state, holdings, today's realised P&L, the
+              leftovers and the Guardian limits, gathered per market. Read-only:
+              no form, and it makes no broker call of its own
+  console     / — soak progress, attestation state, verification progress
   positions   what the account holds, joined to the engine's exit lines
   history     completed round trips and the exit judgement stream
   verify      the step list, the batch summary, the typed approval, live progress
@@ -215,6 +220,11 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		RunLockPath: verifyRunLockPath(verifyRecord),
 		Settings:    consoleSettingsSeam(root),
 
+		// The overview's read-only view of the Guardian's ceilings (change
+		// console-operator-overview). Five numbers and a currency: the console
+		// displays what the file says and can change none of it.
+		GateLimits: consoleGateLimitsSeam(root),
+
 		// The three seams task 1.8 puts behind the console's two restart buttons.
 		// internal/console executes nothing: it decides whether the person asking
 		// has cleared the session and CSRF gates, and then calls one of these.
@@ -254,6 +264,65 @@ func consoleSettingsSeam(root *rootOptions) console.AdoptionSettings {
 		return s
 	}
 	return nil
+}
+
+// consoleGateLimitsSeam hands the overview screen the Guardian's ceilings, and
+// nothing else (change console-operator-overview task 5.1).
+//
+// It reads. There is no writer here and there is not going to be one: turning the
+// automation gate on or moving a limit is a §0.7 human decision taken outside any
+// browser, and the console's spec says in writing that it cannot edit them. What
+// crosses the boundary is five float64s and a currency string — not the config
+// service, and not the gate's own type, which internal/console is forbidden to
+// name at all (its TestTheConsoleDecidesNothingAboutTheGate).
+//
+// A console with no resolvable config file gets no seam, and the overview renders
+// the limits as seam 미배선 rather than as zero. The same nil-on-the-concrete-type
+// care as consoleSettingsSeam: a typed-nil inside the interface would look wired.
+func consoleGateLimitsSeam(root *rootOptions) console.GateLimitsReader {
+	svc := configServiceFor(root)
+	if svc == nil {
+		return nil
+	}
+	return consoleGateLimits{svc: svc}
+}
+
+type consoleGateLimits struct{ svc *config.Service }
+
+// consoleGateLimitsTimeout bounds one read of the config file.
+//
+// The seam takes no context — it is one method and the console holds nothing else
+// of the config service — so the deadline is set here. It matters because of what
+// is on the other end: the overview reloads itself every 30 seconds and an
+// operator leaves it open all day, and a config read on a wedged filesystem with
+// context.Background() behind it would hold an HTTP handler open with no bound at
+// all. The overview's whole design is that every failure is a sentence on the
+// page; a render that never returns is the one failure it has no words for.
+const consoleGateLimitsTimeout = 5 * time.Second
+
+// GateLimits satisfies console.GateLimitsReader.
+//
+// A read failure is returned rather than swallowed: the overview renders an
+// unreadable limit as unmeasured with the error beside it, which is neither zero
+// nor unlimited — and both of those would be a screen telling an operator
+// something nobody read. A timeout arrives as one of those failures.
+func (s consoleGateLimits) GateLimits() (console.GateLimits, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), consoleGateLimitsTimeout)
+	defer cancel()
+
+	cfg, err := s.svc.Load(ctx)
+	if err != nil {
+		return console.GateLimits{}, err
+	}
+	gate := cfg.Engine.AutomationGate
+	return console.GateLimits{
+		MaxOrderQuantity:   gate.MaxOrderQuantity,
+		MaxOrderNotional:   gate.MaxOrderNotional,
+		MaxTotalExposure:   gate.MaxTotalExposure,
+		MaxDailyLossAmount: gate.MaxDailyLossAmount,
+		MaxDailyLossRatio:  gate.MaxDailyLossRatio,
+		Currency:           gate.LimitCurrency,
+	}, nil
 }
 
 // newConsoleHoldings builds the console's holdings reader, lazily.

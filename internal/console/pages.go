@@ -41,12 +41,16 @@ var pageFuncs = template.FuncMap{
 
 // pages is the whole template set. The dashboard screens live in their own const
 // (templates_portfolio.go) and are parsed into it here, so they share "head",
-// "foot" and the one stylesheet rather than growing a second look.
+// "foot" and the one stylesheet rather than growing a second look. The overview
+// joins the same chain and reuses "journalstate" from the portfolio set, so the
+// four journal failures are worded once for every screen that can hit them.
 var pages = template.Must(
 	template.Must(
-		template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates)).
-			Parse(portfolioTemplates)).
-		Parse(settingsTemplates))
+		template.Must(
+			template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates)).
+				Parse(portfolioTemplates)).
+			Parse(settingsTemplates)).
+		Parse(overviewTemplates))
 
 // --- dashboard --------------------------------------------------------------
 
@@ -72,11 +76,11 @@ func (dashboardPage) RefreshSeconds() int { return 2 }
 func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		c.refuse(w, http.StatusNotFound, "그런 경로는 없다",
-			"이 콘솔의 화면은 대시보드·포지션·거래 이력·편입 설정·검증·리포트 여섯뿐이다.")
+			"이 콘솔의 화면은 개요·검증 콘솔·포지션·거래 이력·편입 설정·검증·리포트 일곱뿐이다.")
 		return
 	}
 	page := dashboardPage{
-		Nav:            "dashboard",
+		Nav:            "verify-console",
 		CSRF:           c.csrf,
 		Notice:         r.URL.Query().Get("notice"),
 		Snap:           c.snapshot(),

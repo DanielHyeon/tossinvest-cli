@@ -194,6 +194,14 @@ type Options struct {
 	// and hides the per-symbol designation buttons.
 	Settings AdoptionSettings
 
+	// GateLimits reads the engine's automation-gate ceilings for the overview's
+	// safety panel (change console-operator-overview; overview.go). It is a seam
+	// of its own rather than a third method on Settings: that one writes config
+	// and this one only reads it, and a screen that wants to show a limit must
+	// not thereby hold the ability to edit the adoption block. Nil renders the
+	// limits as seam 미배선 and leaves every other panel working.
+	GateLimits GateLimitsReader
+
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
 	// The console shows whether the engine is running and can start and stop the
@@ -489,6 +497,10 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/engine/stop", c.session0(c.mutating(c.handleEngineStop)))
 	mux.HandleFunc("/report", c.session0(c.handleReport))
 	mux.HandleFunc("/report.json", c.session0(c.handleReportJSON))
+	// The operator overview (change console-operator-overview). It registers
+	// itself from overview.go, which is the case the route table's static guards
+	// could not see until this change widened them.
+	c.registerOverview(mux)
 	return mux
 }
 

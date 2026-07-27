@@ -24,6 +24,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -69,53 +70,182 @@ type route struct {
 	Path      string
 	Session   bool
 	CSRFGated bool
+	// File is where the registration was found, so a failure names the file the
+	// reviewer has to open.
+	File string
 }
 
-// registeredRoutes reads Console.routes out of the source.
+// registrarNames are the two mux methods that put a handler on the table.
+var registrarNames = map[string]bool{"HandleFunc": true, "Handle": true}
+
+// registeredRoutes reads Console.routes out of the source — out of every file in
+// the package, not out of one.
+//
+// It parsed console.go alone until change console-operator-overview. A route
+// registered anywhere else was invisible to all four route guards at once: no
+// account verb was checked against its path, no CSRF gate was demanded of it, and
+// the read-route list never noticed it existed. That is worse than an absent
+// guard, because the guards were still green — the failure this prevents is a new
+// screen carrying an act into the table with every test still passing.
+//
+// Handle is recognised alongside HandleFunc, and a registration is no longer
+// skipped for carrying an unexpected number of arguments (task 1.2): both were
+// ways for a route to leave the table without anything saying so.
+//
+// # Two ways out of the table that are refused rather than followed
+//
+// The scan reads a registration whose registrar is spelled at the call site. It
+// therefore has to refuse the two shapes that hide the call site from it, because
+// following them would mean writing a second, partial Go evaluator inside a test:
+//
+//	the registrar as a value    `register := mux.HandleFunc` and then
+//	                            `register("POST /verify/order/cancel", h)`. The
+//	                            call's Fun is an *ast.Ident, so the scan skipped
+//	                            it in silence and every one of the five route
+//	                            guards passed: no session gate demanded, no CSRF
+//	                            gate demanded, a method pattern unnoticed and two
+//	                            account verbs unread. At runtime that route
+//	                            answered an UNAUTHENTICATED POST with 200 while
+//	                            /dashboard answered 403.
+//	a mounted subtree           `mux.Handle("/x/", subRouter)` hands every path
+//	                            beneath /x/ to a table registered somewhere this
+//	                            scan cannot see. The registration itself looks
+//	                            fine; what it serves is invisible.
+//
+// Both fail loudly. A guard that follows values is a guard whose reader has to
+// believe it followed them all.
 func registeredRoutes(t *testing.T) []route {
 	t.Helper()
-	src := packageFiles(t)["console.go"]
-	if src == "" {
-		t.Fatal("console.go is missing; the routing table cannot be checked")
+	files := packageFiles(t)
+	names := make([]string, 0, len(files))
+	for name := range files {
+		names = append(names, name)
 	}
-	file := parseFile(t, "console.go", src)
+	sort.Strings(names)
 
 	var routes []route
-	ast.Inspect(file, func(n ast.Node) bool {
-		call, ok := n.(*ast.CallExpr)
-		if !ok {
-			return true
-		}
-		sel, ok := call.Fun.(*ast.SelectorExpr)
-		if !ok || sel.Sel.Name != "HandleFunc" || len(call.Args) != 2 {
-			return true
-		}
-		lit, ok := call.Args[0].(*ast.BasicLit)
-		if !ok || lit.Kind != token.STRING {
-			t.Errorf("a route is registered with a non-literal path: %v", call.Args[0])
-			return true
-		}
-		r := route{Path: strings.Trim(lit.Value, `"`)}
-		if outer, ok := call.Args[1].(*ast.CallExpr); ok {
-			if fn, ok := outer.Fun.(*ast.SelectorExpr); ok && fn.Sel.Name == "session0" {
-				r.Session = true
+	for _, name := range names {
+		file := parseFile(t, name, files[name])
+		// Selectors that appear as a call's Fun. Anything naming a registrar and
+		// NOT in here is the registrar taken as a value. ast.Inspect is
+		// pre-order, so a CallExpr is always recorded before its own Fun is
+		// visited.
+		called := map[ast.Expr]bool{}
+		ast.Inspect(file, func(n ast.Node) bool {
+			if sel, ok := n.(*ast.SelectorExpr); ok && registrarNames[sel.Sel.Name] && !called[sel] {
+				t.Errorf("%s takes %s as a value rather than calling it. The route table is read out "+
+					"of the call site, so a registration made through a variable is invisible to every "+
+					"guard in this file at once — session gate, CSRF gate, method pattern and account "+
+					"verb — and the route still answers requests", name, sel.Sel.Name)
 			}
-		}
-		ast.Inspect(call.Args[1], func(inner ast.Node) bool {
-			if c, ok := inner.(*ast.CallExpr); ok {
-				if fn, ok := c.Fun.(*ast.SelectorExpr); ok && fn.Sel.Name == "mutating" {
-					r.CSRFGated = true
+			call, ok := n.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			sel, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok || !registrarNames[sel.Sel.Name] {
+				return true
+			}
+			called[sel] = true
+			if len(call.Args) == 0 {
+				t.Errorf("%s registers a route with no path at all", name)
+				return true
+			}
+			lit, ok := call.Args[0].(*ast.BasicLit)
+			if !ok || lit.Kind != token.STRING {
+				t.Errorf("%s registers a route with a non-literal path: %v", name, call.Args[0])
+				return true
+			}
+			r := route{Path: routePathLiteral(lit.Value), File: name}
+			if strings.HasSuffix(r.Path, "/") && r.Path != "/" {
+				t.Errorf("%s registers the subtree pattern %q. Everything beneath it is served by a "+
+					"handler this scan cannot look inside, so the routes that actually answer are "+
+					"registered somewhere no guard in this file reads", name, r.Path)
+			}
+			for _, arg := range call.Args[1:] {
+				if opaqueHandler(arg) {
+					t.Errorf("%s registers %q with a handler this scan cannot see through (%T). A route "+
+						"whose handler is a value is a route whose gates cannot be read off the "+
+						"registration", name, r.Path, arg)
 				}
+				if outer, ok := arg.(*ast.CallExpr); ok {
+					if fn, ok := outer.Fun.(*ast.SelectorExpr); ok && fn.Sel.Name == "session0" {
+						r.Session = true
+					}
+				}
+				ast.Inspect(arg, func(inner ast.Node) bool {
+					if c, ok := inner.(*ast.CallExpr); ok {
+						if fn, ok := c.Fun.(*ast.SelectorExpr); ok && fn.Sel.Name == "mutating" {
+							r.CSRFGated = true
+						}
+					}
+					return true
+				})
 			}
+			routes = append(routes, r)
 			return true
 		})
-		routes = append(routes, r)
-		return true
-	})
+	}
 	if len(routes) == 0 {
 		t.Fatal("no routes were found; the guard is not reading the routing table")
 	}
 	return routes
+}
+
+// routePathLiteral is the path inside a Go string literal, in either quotation
+// form.
+//
+// It trimmed only `"`. A raw string literal — `mux.HandleFunc(`+"`"+`/x`+"`"+`, …)` —
+// therefore carried its backticks into the route table, and the guard that
+// noticed was TestNoRouteIsRegisteredWithAMethodPattern, which reported a method
+// pattern. Neither the defect nor the file it named was the real one, and a
+// failure message that sends a reader to the wrong place is worse than a silent
+// one: they go and look, find nothing, and learn to distrust the guard.
+func routePathLiteral(value string) string {
+	return strings.Trim(value, "\"`")
+}
+
+// TestTheRoutePathIsReadOutOfEitherQuotationForm.
+func TestTheRoutePathIsReadOutOfEitherQuotationForm(t *testing.T) {
+	for _, tc := range []struct{ literal, want string }{
+		{`"/dashboard"`, "/dashboard"},
+		{"`/dashboard`", "/dashboard"},
+		{`"GET /dashboard"`, "GET /dashboard"}, // still caught as a method pattern
+	} {
+		if got := routePathLiteral(tc.literal); got != tc.want {
+			t.Errorf("routePathLiteral(%s) = %q, want %q; a path that keeps its quotes matches nothing "+
+				"in this file and fails under whichever guard compares strings first", tc.literal,
+				got, tc.want)
+		}
+	}
+}
+
+// opaqueHandler reports a handler argument whose gates cannot be read off the
+// registration.
+//
+// What the scan can see through is a chain of gate wrappers ending in a method
+// value on the console (c.session0(c.mutating(c.handleX))) or a literal function.
+// An identifier is not one of those: it is a value assigned elsewhere, and a
+// *http.ServeMux is a legal value for it.
+func opaqueHandler(expr ast.Expr) bool {
+	switch v := expr.(type) {
+	case *ast.CallExpr:
+		for _, arg := range v.Args {
+			if _, ok := arg.(*ast.BasicLit); ok {
+				continue // a wrapper's own literal argument is not the handler
+			}
+			if opaqueHandler(arg) {
+				return true
+			}
+		}
+		return false
+	case *ast.SelectorExpr, *ast.FuncLit:
+		return false
+	case *ast.ParenExpr:
+		return opaqueHandler(v.X)
+	default:
+		return true
+	}
 }
 
 // TestEveryRouteGoesThroughTheSessionGate.
@@ -131,12 +261,51 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 			t.Errorf("%s is registered without session0; it is reachable without the session token", r.Path)
 		}
 	}
-	// Seven verification-console routes, the two dashboard screens
-	// (add-operator-dashboard) and the engine's two process-control routes
-	// (add-engine-runtime). The floor is asserted so that a guard which stops
-	// parsing the table cannot pass by reading nothing.
-	if len(routes) < 13 {
+	// The floor is the canary for "the extractor stopped parsing", so it follows
+	// the real number rather than sitting at some historical low. The seventeen,
+	// enumerated so the number and the list cannot drift apart the way they did
+	// once already (the list added to sixteen while the assertion said
+	// seventeen — the settings SCREEN was missing from it, and a comment that
+	// does not add up is a comment the next reader stops checking against):
+	//
+	//	7  the verification console: /, /verify, /verify/start, /verify/approve,
+	//	   /verify/abort, /report, /report.json
+	//	2  the dashboard screens (add-operator-dashboard): /positions, /history
+	//	1  the settings screen (console-adoption-controls): /settings
+	//	2  its two edits: /settings/save, /settings/include
+	//	2  the engine's process control (add-engine-runtime): /engine/start,
+	//	   /engine/stop
+	//	2  the restarts: /restart, /soak/restart
+	//	1  the overview (console-operator-overview): /dashboard
+	//
+	// A floor below the truth would let a scanner that read only console.go's
+	// first half go on passing.
+	if len(routes) < 17 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
+	}
+}
+
+// TestNoRouteIsRegisteredWithAMethodPattern.
+//
+// Go 1.22's `HandleFunc("GET /dashboard", …)` is legal and it is the natural way
+// to say what this screen is. It must not be used here, because the extractor
+// above reads the literal as the path: the route table would then hold
+// "GET /dashboard" and every path-keyed guard would go quietly wrong at once —
+// the read-route list reports the screen unregistered, the account-verb scan
+// searches a string that is no longer a path, and the CSRF pairing compares
+// against names nothing will ever match.
+//
+// Constraining the method is worth having; it arrives with the change that
+// teaches the extractor to split the pattern (console-orders-screen). Until
+// then this fails loudly instead of leaving four guards looking at the wrong
+// strings.
+func TestNoRouteIsRegisteredWithAMethodPattern(t *testing.T) {
+	for _, r := range registeredRoutes(t) {
+		if strings.ContainsAny(r.Path, " \t") || !strings.HasPrefix(r.Path, "/") {
+			t.Errorf("%s registers %q, which is a method pattern rather than a path; the route "+
+				"table's extractor reads the literal as the path, so every path comparison in this "+
+				"file silently stops matching", r.File, r.Path)
+		}
 	}
 }
 
@@ -422,15 +591,55 @@ var consoleStateChanging = []string{
 	"/engine/start", "/engine/stop", "/settings/save", "/settings/include",
 }
 
+// --- the verbs, spelled once and shared by both surfaces --------------------------
+//
+// This file guards two surfaces — the route table and the injected capabilities —
+// and each used to keep its own private verb list. They drifted, and the drift was
+// not visible from either side: "flatten" was on the route list and missing from
+// the capability list, so a seam whose only method was Flatten — liquidating the
+// whole account — went through the capability walk under its own name while a
+// route called /flatten would have failed on sight.
+//
+// The shared set is now spelled once and each surface adds what only it can mean.
+
+// sharedAccountVerbs name a request against the account. Neither a path nor a
+// method may be spelled with one.
+var sharedAccountVerbs = []string{
+	"order", "sell", "buy", "cancel", "modify", "amend", "flatten",
+}
+
+// routeOnlyAccountVerbs name a way to reach the account that only a URL can be
+// accused of.
+//
+// They are deliberately NOT checked on methods and types, because this package
+// legitimately declares GateLimitsReader (a read of a configured ceiling),
+// AdoptionSettings (the operator-console spec requires that seam by name) and
+// Handoff (the console's own single-use session token). None of the three is a
+// request against an account; a *path* carrying any of those words would be.
+var routeOnlyAccountVerbs = []string{
+	"gate", "credential", "secret", "token", "adopt", "enroll",
+}
+
+// methodOnlyMutationVerbs are the spellings a method or a type reaches for that a
+// path would not: a URL says /orders, a method says PlaceOrder.
+var methodOnlyMutationVerbs = []string{
+	"place", "create", "delete", "update", "submit", "transfer", "withdraw", "conditional",
+}
+
+// accountVerbs is what the route table is held to.
+var accountVerbs = append(append([]string{}, sharedAccountVerbs...), routeOnlyAccountVerbs...)
+
 // TestNoRouteNamesAnAccountMutation.
 //
 // Two claims in one walk of the route table:
 //
 //	no account verbs   nothing anywhere in the table is spelled like placing,
 //	                   cancelling or amending an order, opening a gate, or
-//	                   reaching a credential — including the five routes that ARE
-//	                   allowed to change something, because none of them touches
-//	                   the account.
+//	                   reaching a credential — including the routes in
+//	                   consoleStateChanging, which ARE allowed to change
+//	                   something, because none of them touches the account. (The
+//	                   count is deliberately not written here: it was "five" while
+//	                   the list held nine.)
 //	nothing else acts  every other route is a reading. A path outside the list
 //	                   above that reads like an act is either a mistake or a
 //	                   requirement change, and both should stop here.
@@ -439,14 +648,10 @@ func TestNoRouteNamesAnAccountMutation(t *testing.T) {
 	for _, path := range consoleStateChanging {
 		allowed[path] = true
 	}
-	// Verbs that would name a request against the account, or a way to open one.
-	accountVerbs := []string{
-		"order", "sell", "buy", "cancel", "modify", "amend", "flatten",
-		"gate", "credential", "secret", "token", "adopt", "enroll",
-	}
 	// Verbs that name an act rather than a reading. The allowed routes are
-	// exempt: the verification control surface, the restarts, and the two
-	// adoption-settings edits. The config-write vocabulary is here so a future
+	// exempt: the verification control surface, the two restarts, the engine's
+	// two process-control routes, and the two adoption-settings edits — which is
+	// consoleStateChanging in full. The config-write vocabulary is here so a future
 	// unlisted /settings/anything cannot sail past this guard the way an
 	// unrecognized act otherwise would (console-adoption-controls, review P2-7).
 	actVerbs := append([]string{"start", "stop", "approve", "abort", "restart", "reset", "delete",
@@ -482,12 +687,12 @@ func TestNoRouteNamesAnAccountMutation(t *testing.T) {
 
 // TestTheDashboardScreensAreReads.
 //
-// The positions and history routes exist, go through the session gate like
-// everything else, and are NOT behind the CSRF gate — a read route that demanded
-// a POST would be a page nobody can open, which is the failure this catches from
-// the other side.
+// The positions, history and overview routes exist, go through the session gate
+// like everything else, and are NOT behind the CSRF gate — a read route that
+// demanded a POST would be a page nobody can open, which is the failure this
+// catches from the other side.
 func TestTheDashboardScreensAreReads(t *testing.T) {
-	want := map[string]bool{"/positions": false, "/history": false}
+	want := map[string]bool{"/positions": false, "/history": false, "/dashboard": false}
 	found := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
 		gated, ok := want[r.Path]
@@ -509,68 +714,134 @@ func TestTheDashboardScreensAreReads(t *testing.T) {
 	}
 }
 
-// TestTheConsoleBrokerInterfaceDeclaresNothingButReads.
+// --- the injected capabilities (change console-operator-overview, task 1.4) ---------
+
+// mutationVerbs name a request against an account, in any spelling a method or a
+// type is likely to use. See sharedAccountVerbs for why the two lists differ.
+var mutationVerbs = append(append([]string{}, sharedAccountVerbs...), methodOnlyMutationVerbs...)
+
+// consoleCapabilities enumerates every field console.Options declares and what
+// that field is permitted to be. A nil entry means "carries no method set": plain
+// data, or a func-type seam whose name and signature are checked instead.
 //
-// The spec's "광폭 브로커 인터페이스 주입 차단" scenario. verifylive.Broker has
-// PlaceOrder, CancelOrder, ModifyOrder and three conditional-order mutations on
-// it; handing that to a read-only screen would make "the console places no order"
-// a fact about what the handlers happen to call rather than about what they can.
+// The unit of the check is the FIELD rather than the interface, because checking
+// interfaces left three holes and all three opened the moment this change added a
+// file and a seam:
 //
-// The interface is read out of the source rather than through reflection because
-// the claim is about the declaration: a method that exists but is never called at
+//	one file        the previous guard read packageFiles(t)["holdings.go"]. A wide
+//	                interface declared in any other file failed nothing at all.
+//	no func types   five of the seven injected seams are func types — StartVerify,
+//	                StartEngine, StopEngine, Relaunch, RestartSoak — and a scan for
+//	                *ast.InterfaceType sees none of them. `type PlaceOrderFunc
+//	                func(context.Context, domain.Position) error` would have been
+//	                injected straight past it: no interface to find, and no banned
+//	                import either, because cmd/tossctl is what fills it in.
+//	one allowlist   a single allowlist cannot cover every interface. Handoff
+//	                declares Mint and Consume, AdoptionSettings declares Load and
+//	                Save, and the operator-console spec requires the second of
+//	                those in writing. Widening the one allowlist to fit them would
+//	                have let `interface{ Holdings(...); PlaceOrder(...) }` through.
+//
+// Patching those one at a time moves the hardcoding from a file name to a type
+// name and no further. So each field names its own permitted method set, and a
+// field that is absent from this map fails on that alone — the invariant is not
+// "the broker seam is narrow", it is "every capability this console is handed is
+// enumerated here".
+var consoleCapabilities = map[string][]string{
+	// Plain data: paths, numbers and lists. Nothing to reach an account with.
+	"Port":              nil,
+	"SoakRecord":        nil,
+	"VerifyRecord":      nil,
+	"VerifyRecordUS":    nil,
+	"Attestation":       nil,
+	"MinSoakDays":       nil,
+	"RequiredEndpoints": nil,
+	"JournalPath":       nil,
+	"RunLockPath":       nil,
+	"EngineMarker":      nil,
+
+	// Func-type seams. A func has no method set, so what is checked is its field
+	// name and every type its signature mentions.
+	"StartVerify": nil,
+	"Relaunch":    nil,
+	"RestartSoak": nil,
+	"StartEngine": nil,
+	"StopEngine":  nil,
+	"Now":         nil,
+	"Binary":      nil,
+	// Out is io.Writer: the console's own operator lines, not an account.
+	"Out": nil,
+
+	// Interface seams: exactly these methods each, and no embedding.
+	"Handoff":  {"Mint", "Consume"},
+	"Holdings": {"Holdings"},
+	"Settings": {"Load", "Save"},
+	// The Guardian limits are a read, and they are a seam of their own rather
+	// than a third method on Settings: that one writes the adoption block, and a
+	// screen that only wants to display a ceiling must not gain the ability to
+	// edit configuration on the way (console-operator-overview D8).
+	"GateLimits": {"GateLimits"},
+}
+
+// TestEveryCapabilityTheConsoleReceivesIsEnumeratedAndDeclaresNothingButReads.
+//
+// The spec's "광폭 브로커 인터페이스 주입 차단", "새 파일에 선언된 광폭 seam",
+// "func 타입으로 주입된 mutation 능력" and "열거되지 않은 새 능력" scenarios, in one
+// walk. verifylive.Broker has PlaceOrder, CancelOrder, ModifyOrder and three
+// conditional-order mutations on it; handing that to a read-only screen would
+// make "the console places no order" a fact about what the handlers happen to
+// call rather than about what they are able to call.
+//
+// Declarations are read out of the source rather than through reflection because
+// the claim is about the declaration: a method that exists and is never called at
 // runtime is exactly what this has to catch.
-func TestTheConsoleBrokerInterfaceDeclaresNothingButReads(t *testing.T) {
-	src := packageFiles(t)["holdings.go"]
-	if src == "" {
-		t.Fatal("holdings.go is missing; the broker interface cannot be checked")
-	}
-	file := parseFile(t, "holdings.go", src)
+func TestEveryCapabilityTheConsoleReceivesIsEnumeratedAndDeclaresNothingButReads(t *testing.T) {
+	files := parsedPackage(t)
+	declaredTypes := packageTypes(files)
 
-	allowed := map[string]bool{"Holdings": true}
-	banned := []string{
-		"place", "order", "cancel", "modify", "amend", "sell", "buy", "create",
-		"delete", "update", "submit", "transfer", "withdraw", "conditional",
+	fields := optionsFields(t, files)
+	if len(fields) == 0 {
+		t.Fatal("no Options fields were read; the guard is not looking at the injection surface")
 	}
 
-	var declared []string
-	ast.Inspect(file, func(n ast.Node) bool {
-		spec, ok := n.(*ast.TypeSpec)
-		if !ok || spec.Name.Name != "HoldingsReader" {
-			return true
-		}
-		iface, ok := spec.Type.(*ast.InterfaceType)
-		if !ok {
-			t.Fatal("HoldingsReader is not an interface; the console's broker seam must stay a narrow one")
-			return false
-		}
-		for _, method := range iface.Methods.List {
-			for _, name := range method.Names {
-				declared = append(declared, name.Name)
+	declared := map[string]bool{}
+	for _, field := range fields {
+		for _, name := range field.Names {
+			declared[name.Name] = true
+			checkVerbs(t, "the Options field "+name.Name, name.Name)
+			allowed, enumerated := consoleCapabilities[name.Name]
+			if !enumerated {
+				t.Errorf("console.Options declares %q, which is not in consoleCapabilities; a capability "+
+					"the console receives without being enumerated is one nobody argued for", name.Name)
+				continue
 			}
-			if len(method.Names) == 0 {
-				t.Error("HoldingsReader embeds another interface; whatever that interface gains, " +
-					"this one gains silently")
-			}
+			checkCapability(t, name.Name, field.Type, allowed, declaredTypes)
 		}
-		return false
-	})
-
-	if len(declared) == 0 {
-		t.Fatal("no HoldingsReader methods were read; the guard is not looking at the interface")
+		if len(field.Names) == 0 {
+			t.Error("console.Options embeds a struct; whatever that struct gains, Options gains silently")
+		}
 	}
-	for _, name := range declared {
-		if !allowed[name] {
-			t.Errorf("HoldingsReader declares %q; the console is handed reads and nothing else", name)
+
+	// The allowlist rots in the other direction too. A field removed from Options
+	// while its entry stayed behind fails nothing, and the next reader takes the
+	// entry for a description of the injection surface — which is the whole job
+	// this map has. An entry with no field is a claim about a capability nobody
+	// receives any more.
+	stale := make([]string, 0, len(consoleCapabilities))
+	for name := range consoleCapabilities {
+		if !declared[name] {
+			stale = append(stale, name)
 		}
-		lowered := strings.ToLower(name)
-		for _, verb := range banned {
-			if strings.Contains(lowered, verb) {
-				t.Errorf("HoldingsReader declares %q, which names the mutation verb %q", name, verb)
-			}
-		}
+	}
+	sort.Strings(stale)
+	for _, name := range stale {
+		t.Errorf("consoleCapabilities enumerates %q and console.Options no longer declares it; an "+
+			"allowlist that outlives its field stops describing the injection surface", name)
 	}
 
 	// And nothing in the package names verifylive's wide broker as its own seam.
+	// The enumeration above would catch it arriving through Options; this catches
+	// it arriving as a local variable, a parameter or a struct field elsewhere.
 	for name, fileSrc := range packageFiles(t) {
 		code := strings.Join(nonCommentLines(fileSrc), "\n")
 		if strings.Contains(code, "verifylive.Broker") {
@@ -578,6 +849,525 @@ func TestTheConsoleBrokerInterfaceDeclaresNothingButReads(t *testing.T) {
 				"and the dashboard is handed HoldingsReader instead", name)
 		}
 	}
+}
+
+// externalOptionTypes are the types from another package an Options field may be
+// declared as.
+//
+// The guard reads this package's source, so it cannot read another package's
+// method set. A qualified type in Options is therefore an unreadable method set,
+// and each one has to be argued for here rather than waved through: io.Writer
+// takes the console's own operator lines and can reach nothing.
+var externalOptionTypes = map[string]bool{"io.Writer": true}
+
+// goBuiltinTypes are the spellings that positively carry no method set.
+var goBuiltinTypes = map[string]bool{
+	"bool": true, "string": true, "error": true, "byte": true, "rune": true,
+	"int": true, "int8": true, "int16": true, "int32": true, "int64": true,
+	"uint": true, "uint8": true, "uint16": true, "uint32": true, "uint64": true,
+	"uintptr": true, "float32": true, "float64": true,
+	"complex64": true, "complex128": true,
+}
+
+// checkCapability resolves one Options field's declared type and holds it to the
+// allowlist entry the field was enumerated with.
+//
+// # Why it resolves to a fixed point rather than one hop
+//
+// The previous version followed a field's type exactly one step and then checked
+// the SPELLING of every name it had passed. That is a name filter wearing a
+// capability filter's documentation, and four separate shapes went straight
+// through it:
+//
+//	a second interface   HoldingsReader.Holdings returning an extra AccountHandle
+//	                     that declares PlaceOrder, CancelOrder and Flatten. The
+//	                     guard verb-checked the name "AccountHandle", found nothing,
+//	                     and never opened it. Renaming the identical type to
+//	                     OrderHandle failed — which is the proof: what was being
+//	                     checked was the word, not the method set.
+//	a generic seam       `type Desk Seam[OrderPlacer]`. The walker had no
+//	                     *ast.IndexExpr case, so it returned no names at all and the
+//	                     verb check ran over an empty list.
+//	an alias chain       `type Ticker = Wide`. One hop lands on an *ast.Ident, not
+//	                     an *ast.InterfaceType, and the error for that was skipped
+//	                     for any field enumerated nil.
+//	an empty static type `Feed any`, type-asserted at the use site to
+//	                     `interface{ PlaceOrder(...) }`. A field that can hold
+//	                     anything is a field the enumeration cannot describe.
+//
+// So: every type reachable from the field is verb-checked, every interface
+// reachable from it is opened, and the field's own resolved shape must be one the
+// guard can positively read a method set off.
+func checkCapability(t *testing.T, field string, expr ast.Expr, allowed []string,
+	declaredTypes map[string]ast.Expr) {
+	t.Helper()
+
+	subject := "Options." + field
+	names, ifaces := capabilityClosure(expr, declaredTypes)
+	for _, name := range names {
+		checkVerbs(t, "the type "+name+" reached through "+subject, name)
+	}
+	for _, iface := range ifaces {
+		checkNoEmbedding(t, "an interface reached through "+subject, iface)
+	}
+
+	resolved := resolveDeclared(expr, declaredTypes)
+	seam, isInterface := resolved.(*ast.InterfaceType)
+	if !isInterface {
+		if len(allowed) > 0 {
+			t.Errorf("Options.%s is enumerated with the methods %v, but its declared type resolves to "+
+				"%T rather than to an interface this package declares; the guard cannot read what it "+
+				"was handed", field, allowed, resolved)
+		}
+		if !methodless(resolved, declaredTypes, map[string]bool{}) {
+			t.Errorf("Options.%s resolves to %T, which is neither an interface this package declares, "+
+				"nor a func type, nor plain data. A nil entry in consoleCapabilities is the claim that "+
+				"the field carries no method set, and the guard has to be able to see that rather than "+
+				"assume it", field, resolved)
+		}
+		return
+	}
+	if len(seam.Methods.List) == 0 {
+		t.Errorf("Options.%s is an empty interface. It declares no capability and accepts every one: "+
+			"the use site type-asserts it back to whatever it likes, and the enumeration describes "+
+			"nothing", field)
+		return
+	}
+
+	declared := map[string]bool{}
+	for _, method := range seam.Methods.List {
+		if len(method.Names) == 0 {
+			continue // reported by checkNoEmbedding
+		}
+		for _, name := range method.Names {
+			declared[name.Name] = true
+		}
+	}
+
+	want := map[string]bool{}
+	for _, name := range allowed {
+		want[name] = true
+	}
+	for name := range declared {
+		if !want[name] {
+			t.Errorf("the seam injected as Options.%s declares %q, which consoleCapabilities does not "+
+				"allow it; the console is handed reads and nothing else", field, name)
+		}
+	}
+	for name := range want {
+		if !declared[name] {
+			t.Errorf("the seam injected as Options.%s no longer declares %q; the seam's shape is part "+
+				"of the spec", field, name)
+		}
+	}
+}
+
+// checkNoEmbedding fails on an interface that embeds another one: whatever the
+// embedded interface gains, this one gains silently.
+func checkNoEmbedding(t *testing.T, subject string, iface *ast.InterfaceType) {
+	t.Helper()
+	for _, method := range iface.Methods.List {
+		if len(method.Names) == 0 {
+			t.Errorf("%s embeds another interface; whatever that interface gains, this one gains "+
+				"silently", subject)
+		}
+	}
+}
+
+// resolveDeclared follows a chain of package-declared type names to the
+// declaration that is finally not another name.
+//
+// One hop was not enough: `type Ticker = Wide` and `type A B; type B C` both put
+// the method set two names away, and the guard's whole claim is about the method
+// set.
+func resolveDeclared(expr ast.Expr, declaredTypes map[string]ast.Expr) ast.Expr {
+	seen := map[string]bool{}
+	for {
+		ident, ok := expr.(*ast.Ident)
+		if !ok {
+			return expr
+		}
+		next, ok := declaredTypes[ident.Name]
+		if !ok || seen[ident.Name] {
+			return expr
+		}
+		seen[ident.Name] = true
+		expr = next
+	}
+}
+
+// capabilityClosure walks everything one declaration can reach — the type itself,
+// the types in its signature, the types those declarations name, to a fixed point
+// — and returns every identifier worth verb-checking and every interface found on
+// the way.
+//
+// A struct's field NAMES are checked only when the field's type could carry a
+// capability. GateLimits.MaxOrderNotional is a ceiling on orders and not an
+// order, and failing on it would push the next person to rename the ceiling; a
+// field spelled `PlaceOrder func(...)` still fails, because a func type can.
+func capabilityClosure(expr ast.Expr, declaredTypes map[string]ast.Expr) ([]string, []*ast.InterfaceType) {
+	var (
+		names    []string
+		ifaces   []*ast.InterfaceType
+		seenName = map[string]bool{}
+		seenNode = map[ast.Expr]bool{}
+		queue    []ast.Expr
+	)
+	push := func(e ast.Expr) {
+		if e == nil || seenNode[e] {
+			return
+		}
+		seenNode[e] = true
+		queue = append(queue, e)
+	}
+	var addName func(string)
+	addName = func(n string) {
+		if seenName[n] {
+			return
+		}
+		seenName[n] = true
+		names = append(names, n)
+		if decl, ok := declaredTypes[n]; ok {
+			push(decl)
+		}
+	}
+	pushFieldTypes := func(fl *ast.FieldList) {
+		if fl == nil {
+			return
+		}
+		for _, f := range fl.List {
+			push(f.Type)
+		}
+	}
+
+	push(expr)
+	for len(queue) > 0 {
+		e := queue[0]
+		queue = queue[1:]
+		switch v := e.(type) {
+		case *ast.Ident:
+			addName(v.Name)
+		case *ast.SelectorExpr:
+			addName(v.Sel.Name)
+		case *ast.StarExpr:
+			push(v.X)
+		case *ast.ParenExpr:
+			push(v.X)
+		case *ast.ArrayType:
+			push(v.Elt)
+		case *ast.Ellipsis:
+			push(v.Elt)
+		case *ast.MapType:
+			push(v.Key)
+			push(v.Value)
+		case *ast.ChanType:
+			push(v.Value)
+		case *ast.IndexExpr: // Seam[OrderPlacer]
+			push(v.X)
+			push(v.Index)
+		case *ast.IndexListExpr: // Seam[A, B]
+			push(v.X)
+			for _, idx := range v.Indices {
+				push(idx)
+			}
+		case *ast.FuncType:
+			pushFieldTypes(v.TypeParams)
+			pushFieldTypes(v.Params)
+			pushFieldTypes(v.Results)
+		case *ast.InterfaceType:
+			ifaces = append(ifaces, v)
+			for _, m := range v.Methods.List {
+				for _, n := range m.Names {
+					addName(n.Name)
+				}
+				push(m.Type)
+			}
+		case *ast.StructType:
+			for _, f := range v.Fields.List {
+				if carriesCapability(f.Type, declaredTypes, map[string]bool{}) {
+					for _, n := range f.Names {
+						addName(n.Name)
+					}
+				}
+				push(f.Type)
+			}
+		}
+	}
+	return names, ifaces
+}
+
+// carriesCapability reports a type that could hold a method set or a callable.
+func carriesCapability(expr ast.Expr, declaredTypes map[string]ast.Expr, seen map[string]bool) bool {
+	switch v := expr.(type) {
+	case *ast.FuncType, *ast.InterfaceType, *ast.IndexExpr, *ast.IndexListExpr:
+		return true
+	case *ast.SelectorExpr:
+		return true // another package's type: unreadable here, so assumed capable
+	case *ast.Ident:
+		if seen[v.Name] {
+			return false
+		}
+		seen[v.Name] = true
+		if decl, ok := declaredTypes[v.Name]; ok {
+			return carriesCapability(decl, declaredTypes, seen)
+		}
+		return false
+	case *ast.StarExpr:
+		return carriesCapability(v.X, declaredTypes, seen)
+	case *ast.ParenExpr:
+		return carriesCapability(v.X, declaredTypes, seen)
+	case *ast.ArrayType:
+		return carriesCapability(v.Elt, declaredTypes, seen)
+	case *ast.Ellipsis:
+		return carriesCapability(v.Elt, declaredTypes, seen)
+	case *ast.MapType:
+		return carriesCapability(v.Key, declaredTypes, seen) ||
+			carriesCapability(v.Value, declaredTypes, seen)
+	case *ast.ChanType:
+		return carriesCapability(v.Value, declaredTypes, seen)
+	case *ast.StructType:
+		for _, f := range v.Fields.List {
+			if carriesCapability(f.Type, declaredTypes, seen) {
+				return true
+			}
+		}
+		return false
+	}
+	return true
+}
+
+// methodless reports a shape the guard can positively read an empty method set
+// off: a func type, plain data, or an argued-for type from another package.
+//
+// The point of the positive form is that "the guard did not recognise it" must
+// not read as "it is fine". A nil entry in consoleCapabilities is a claim that
+// the field carries no method set, and an unresolvable name is not evidence for
+// that claim.
+func methodless(expr ast.Expr, declaredTypes map[string]ast.Expr, seen map[string]bool) bool {
+	switch v := expr.(type) {
+	case *ast.FuncType:
+		return true
+	case *ast.StructType:
+		return true // data; its field types are verb-checked by the closure
+	case *ast.Ident:
+		if goBuiltinTypes[v.Name] {
+			return true
+		}
+		if seen[v.Name] {
+			return false
+		}
+		seen[v.Name] = true
+		if decl, ok := declaredTypes[v.Name]; ok {
+			return methodless(decl, declaredTypes, seen)
+		}
+		return false // any, a generic parameter, an unresolvable name
+	case *ast.SelectorExpr:
+		pkg, ok := v.X.(*ast.Ident)
+		return ok && externalOptionTypes[pkg.Name+"."+v.Sel.Name]
+	case *ast.StarExpr:
+		return methodless(v.X, declaredTypes, seen)
+	case *ast.ParenExpr:
+		return methodless(v.X, declaredTypes, seen)
+	case *ast.ArrayType:
+		return methodless(v.Elt, declaredTypes, seen)
+	case *ast.MapType:
+		return methodless(v.Key, declaredTypes, seen) && methodless(v.Value, declaredTypes, seen)
+	case *ast.ChanType:
+		return methodless(v.Value, declaredTypes, seen)
+	}
+	return false
+}
+
+// checkVerbs fails when an identifier names a request against the account.
+func checkVerbs(t *testing.T, subject, name string) {
+	t.Helper()
+	lowered := strings.ToLower(name)
+	for _, verb := range mutationVerbs {
+		if strings.Contains(lowered, verb) {
+			t.Errorf("%s names the mutation verb %q; this console is handed readings", subject, verb)
+		}
+	}
+}
+
+// optionsFields finds the Options struct wherever in the package it is declared.
+func optionsFields(t *testing.T, files map[string]*ast.File) []*ast.Field {
+	t.Helper()
+	var out []*ast.Field
+	found := 0
+	for name, file := range files {
+		ast.Inspect(file, func(n ast.Node) bool {
+			spec, ok := n.(*ast.TypeSpec)
+			if !ok || spec.Name.Name != "Options" {
+				return true
+			}
+			st, ok := spec.Type.(*ast.StructType)
+			if !ok {
+				t.Fatalf("%s declares Options as something other than a struct", name)
+				return false
+			}
+			found++
+			out = append(out, st.Fields.List...)
+			return false
+		})
+	}
+	if found != 1 {
+		t.Fatalf("%d Options declarations were found; the injection surface is one struct", found)
+	}
+	return out
+}
+
+// packageTypes indexes every type this package declares, so a field naming one
+// can be resolved to what it actually is.
+func packageTypes(files map[string]*ast.File) map[string]ast.Expr {
+	out := map[string]ast.Expr{}
+	for _, file := range files {
+		ast.Inspect(file, func(n ast.Node) bool {
+			if spec, ok := n.(*ast.TypeSpec); ok {
+				out[spec.Name.Name] = spec.Type
+			}
+			return true
+		})
+	}
+	return out
+}
+
+// parsedPackage parses every non-test source file once.
+func parsedPackage(t *testing.T) map[string]*ast.File {
+	t.Helper()
+	out := map[string]*ast.File{}
+	for name, src := range packageFiles(t) {
+		out[name] = parseFile(t, name, src)
+	}
+	return out
+}
+
+// TestNoCapabilityReachesTheConsoleAroundOptions.
+//
+// The Options walk answers "is every capability handed in through that struct
+// enumerated". It does not answer the sentence consoleCapabilities actually
+// makes, which is "every capability this console is handed is enumerated here" —
+// and the difference is one package-level variable wide:
+//
+//	var packageDesk Desk
+//	func (c *Console) SetDesk(d Desk) { packageDesk = d }
+//
+// with PlaceOrder and CancelOrder on Desk passed the ENTIRE package suite. Options
+// never mentions it, no banned import is needed because cmd/tossctl is what fills
+// it in, and nothing else in this file was looking anywhere but at that one
+// struct.
+//
+// So this walks the package itself: every exported method on *Console, every
+// package-level var, and every interface declared anywhere in the package that is
+// not one of the enumerated seams — including the inline `interface{ PlaceOrder(…) }`
+// of a type assertion, which is how a capability smuggled in as `any` gets used.
+func TestNoCapabilityReachesTheConsoleAroundOptions(t *testing.T) {
+	files := parsedPackage(t)
+	declaredTypes := packageTypes(files)
+	seams := optionsSeamInterfaces(t, files, declaredTypes)
+
+	names := make([]string, 0, len(files))
+	for name := range files {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	checkedInterfaces := 0
+	for _, name := range names {
+		file := files[name]
+
+		for _, decl := range file.Decls {
+			switch d := decl.(type) {
+			case *ast.FuncDecl:
+				if d.Recv == nil || !d.Name.IsExported() || !receiverIsConsole(d.Recv) {
+					continue
+				}
+				subject := "the exported method (*Console)." + d.Name.Name + " in " + name
+				checkVerbs(t, subject, d.Name.Name)
+				closureNames, ifaces := capabilityClosure(d.Type, declaredTypes)
+				for _, n := range closureNames {
+					checkVerbs(t, "the type "+n+" reached through "+subject, n)
+				}
+				for _, iface := range ifaces {
+					checkNoEmbedding(t, "an interface reached through "+subject, iface)
+				}
+			case *ast.GenDecl:
+				if d.Tok != token.VAR {
+					continue
+				}
+				for _, spec := range d.Specs {
+					vs, ok := spec.(*ast.ValueSpec)
+					if !ok {
+						continue
+					}
+					for _, ident := range vs.Names {
+						subject := "the package-level var " + ident.Name + " in " + name
+						checkVerbs(t, subject, ident.Name)
+						if vs.Type == nil {
+							continue
+						}
+						closureNames, ifaces := capabilityClosure(vs.Type, declaredTypes)
+						for _, n := range closureNames {
+							checkVerbs(t, "the type "+n+" reached through "+subject, n)
+						}
+						for _, iface := range ifaces {
+							checkNoEmbedding(t, "an interface reached through "+subject, iface)
+						}
+					}
+				}
+			}
+		}
+
+		ast.Inspect(file, func(n ast.Node) bool {
+			iface, ok := n.(*ast.InterfaceType)
+			if !ok || seams[iface] {
+				return true
+			}
+			checkedInterfaces++
+			checkNoEmbedding(t, "an interface declared in "+name, iface)
+			for _, m := range iface.Methods.List {
+				for _, mn := range m.Names {
+					checkVerbs(t, "the method "+mn.Name+" on an interface declared in "+name, mn.Name)
+				}
+			}
+			return true
+		})
+	}
+
+	// Positive control: the walk found the seams and told them apart from
+	// everything else. A zero on either side is a walk that stopped looking.
+	if len(seams) == 0 {
+		t.Error("no Options field resolved to an interface; the seam set is empty and every interface " +
+			"in the package is being checked as if it were an incidental one")
+	}
+	_ = checkedInterfaces
+}
+
+// receiverIsConsole reports a method on *Console (or Console).
+func receiverIsConsole(recv *ast.FieldList) bool {
+	if recv == nil || len(recv.List) == 0 {
+		return false
+	}
+	expr := recv.List[0].Type
+	if star, ok := expr.(*ast.StarExpr); ok {
+		expr = star.X
+	}
+	ident, ok := expr.(*ast.Ident)
+	return ok && ident.Name == "Console"
+}
+
+// optionsSeamInterfaces is the set of interface declarations that ARE the
+// enumerated seams, so the package-wide walk can hold everything else to the
+// stricter "no mutation verb at all" rule without re-reporting them.
+func optionsSeamInterfaces(t *testing.T, files map[string]*ast.File,
+	declaredTypes map[string]ast.Expr) map[*ast.InterfaceType]bool {
+	t.Helper()
+	out := map[*ast.InterfaceType]bool{}
+	for _, field := range optionsFields(t, files) {
+		if iface, ok := resolveDeclared(field.Type, declaredTypes).(*ast.InterfaceType); ok {
+			out[iface] = true
+		}
+	}
+	return out
 }
 
 // TestTheConsoleOpensTheJournalReadOnly.

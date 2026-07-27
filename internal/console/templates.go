@@ -65,7 +65,14 @@ form { display: inline; }
 <header><div>
   <strong>tossctl console</strong>
   <nav>
-    <a href="/" {{if eq .Nav "dashboard"}}class="on"{{end}}>대시보드</a>
+    {{/*
+      Two screens, two names. The root is the verification console — soak,
+      attestation, binary provenance, the approval window — and /dashboard is the
+      overview of the account. Both were labelled 대시보드 until change
+      console-operator-overview, which is one name for two different questions.
+    */}}
+    <a href="/dashboard" {{if eq .Nav "overview"}}class="on"{{end}}>개요</a>
+    <a href="/" {{if eq .Nav "verify-console"}}class="on"{{end}}>검증 콘솔</a>
     <a href="/positions" {{if eq .Nav "positions"}}class="on"{{end}}>포지션</a>
     <a href="/history" {{if eq .Nav "history"}}class="on"{{end}}>거래 이력</a>
     <a href="/settings" {{if eq .Nav "settings"}}class="on"{{end}}>편입 설정</a>

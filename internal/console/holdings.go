@@ -54,7 +54,10 @@ import (
 //
 // Every method added here is a capability the operator console gains, so there
 // is exactly one and static_test.go's
-// TestTheConsoleBrokerInterfaceDeclaresNothingButReads fails if that changes.
+// TestEveryCapabilityTheConsoleReceivesIsEnumeratedAndDeclaresNothingButReads
+// fails if that changes — and so does it if any type reachable FROM this
+// signature declares one, which is how an extra return value carrying
+// PlaceOrder/CancelOrder/Flatten went through the guard that came before it.
 // cmd/tossctl supplies the implementation; this package imports no client of any
 // kind.
 type HoldingsReader interface {
@@ -101,8 +104,19 @@ type holdingsSnapshot struct {
 	HeldReason string
 }
 
-// Stale reports a reading older than the TTL. It is only ever true alongside
-// Held: an unheld request refreshes instead.
+// Stale reports a reading older than the TTL.
+//
+// It used to be true only alongside Held, because an unheld get refreshes
+// instead of returning something old. peek broke that (change
+// console-operator-overview D4): the overview reads the cache without refreshing
+// it at all, so a reading older than the TTL now reaches a screen with Held
+// false and nothing withholding anything. The comment is corrected rather than
+// deleted because the old sentence was the reason a reader could take an
+// unheld-and-old snapshot to be impossible — and the overview renders exactly
+// that, every time it is opened past the TTL with /positions left closed.
+//
+// Nothing branches on this today; the screens print the reading's age and its
+// timestamp instead, which says the same thing without a threshold in it.
 func (s holdingsSnapshot) Stale() bool { return s.Present && s.Age > holdingsTTL }
 
 // AgeSeconds is the reading's age for the page, rounded to a whole second.
@@ -166,14 +180,44 @@ func (c *holdingsCache) get(ctx context.Context, now time.Time, hold bool, holdR
 		c.refreshLocked(ctx, now)
 	}
 
+	snap := c.snapshotLocked(now)
+	snap.Held, snap.HeldReason = hold, holdReason
+	return snap
+}
+
+// peek returns the current reading and refreshes nothing, whatever its age.
+//
+// The overview screen makes no broker call at all (change
+// console-operator-overview D4: the longest-lived tab in the console must not be
+// the one that spends the rate budget), and get has no mode that does this — an
+// unheld get refreshes the moment the TTL has passed. The available way to reach
+// zero calls was therefore get(ctx, now, true, …), and the console renders a held
+// refresh as "검증 중 — 갱신 보류". On a machine where no verification is running
+// that sentence is invented, and it is invented about why somebody's account
+// numbers are old. This is the read that says nothing it did not observe.
+//
+// A cache nothing has ever filled comes back Wired and not Present. That is its
+// own state — "아직 읽지 않음" — and it is deliberately distinct from a failed
+// fetch and from a withheld one, because the operator's next move differs: open
+// the positions screen, fix the credentials, or wait.
+func (c *holdingsCache) peek(now time.Time) holdingsSnapshot {
+	if c == nil || c.reader == nil {
+		return holdingsSnapshot{}
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.snapshotLocked(now)
+}
+
+// snapshotLocked renders the cache's current contents. The caller holds the
+// mutex and decides whether a refresh happened first.
+func (c *holdingsCache) snapshotLocked(now time.Time) holdingsSnapshot {
 	snap := holdingsSnapshot{
-		Wired:      true,
-		Present:    c.present,
-		Rows:       append([]domain.Position(nil), c.rows...),
-		At:         c.at,
-		Error:      c.lastErr,
-		Held:       hold,
-		HeldReason: holdReason,
+		Wired:   true,
+		Present: c.present,
+		Rows:    append([]domain.Position(nil), c.rows...),
+		At:      c.at,
+		Error:   c.lastErr,
 	}
 	if c.present {
 		snap.Age = now.Sub(c.at)

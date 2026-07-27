@@ -14,9 +14,11 @@ package main
 // reach the console package.
 
 import (
+	"context"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -402,4 +404,82 @@ func orNothing(s string) string {
 		return "(nothing)"
 	}
 	return s
+}
+
+// --- the overview's Guardian limits (change console-operator-overview, task 5.1) ---
+
+// TestTheConsoleIsHandedTheLimitsAsNumbersAndNoWayToWriteThem.
+//
+// The overview displays the automation gate's ceilings. What crosses the boundary
+// to do that is five float64s and a currency string — not the config service,
+// which owns Init and a surgical writer, and not the gate's own type, which
+// internal/console is forbidden to name at all. A seam with a second method would
+// be the console gaining the ability to move a risk limit from a browser, which
+// its spec says in writing it does not have.
+func TestTheConsoleIsHandedTheLimitsAsNumbersAndNoWayToWriteThem(t *testing.T) {
+	seam := consoleGateLimitsSeam(&rootOptions{configDir: t.TempDir()})
+	if seam == nil {
+		t.Fatal("no limits seam was built for a resolvable config directory")
+	}
+
+	typ := reflect.TypeOf(seam)
+	if typ.NumMethod() != 1 || typ.Method(0).Name != "GateLimits" {
+		names := make([]string, 0, typ.NumMethod())
+		for i := 0; i < typ.NumMethod(); i++ {
+			names = append(names, typ.Method(i).Name)
+		}
+		t.Fatalf("the limits seam declares %v, want exactly [GateLimits]", names)
+	}
+
+	if !consoleOptionFields(t)["GateLimits"] {
+		t.Error("console.Options is built without GateLimits; the overview's safety panel has no " +
+			"ceilings to show and renders them as seam 미배선 forever")
+	}
+}
+
+// TestTheLimitsReadIsBounded.
+//
+// The seam takes no context, so the deadline has to be set inside it. What is on
+// the other end is a screen that reloads every 30 seconds and stays open all day:
+// a config read with a bare context.Background() behind it would hold an HTTP
+// handler open with no bound on a wedged filesystem, and a render that never
+// returns is the one failure the overview has no words for — every other one is a
+// sentence on the page.
+func TestTheLimitsReadIsBounded(t *testing.T) {
+	src, err := os.ReadFile("console.go")
+	if err != nil {
+		t.Fatalf("reading console.go: %v", err)
+	}
+	code := string(src)
+	if strings.Contains(code, "s.svc.Load(context.Background())") {
+		t.Error("consoleGateLimits.GateLimits loads the config with an unbounded context")
+	}
+	if !strings.Contains(code, "context.WithTimeout(context.Background(), consoleGateLimitsTimeout)") {
+		t.Error("consoleGateLimits.GateLimits no longer bounds its read with consoleGateLimitsTimeout")
+	}
+	if consoleGateLimitsTimeout <= 0 {
+		t.Errorf("consoleGateLimitsTimeout is %s; a non-positive deadline expires immediately",
+			consoleGateLimitsTimeout)
+	}
+}
+
+// TestTheConsoleComesUpWithoutTheLimitsSeam.
+//
+// A console that refused to start because it could not resolve a config file
+// would be a console unavailable at exactly the moment somebody is trying to work
+// out what is wrong. The seam is nil and the overview says so, panel by panel.
+func TestTheConsoleComesUpWithoutTheLimitsSeam(t *testing.T) {
+	c, err := console.New(console.Options{
+		StartVerify: func(
+			context.Context, verifylive.BatchConfirmer, io.Writer, string, []verifylive.StepID,
+		) (verifylive.Summary, []verifylive.Entry, error) {
+			return verifylive.Summary{}, nil, nil
+		},
+	})
+	if err != nil {
+		t.Fatalf("a console with no limits seam refused to start: %v", err)
+	}
+	if c.Handler() == nil {
+		t.Error("the console came up with no handler")
+	}
 }
