@@ -1,6 +1,8 @@
 # TossOS 개발 워크플로 (SDD 계약)
 
 > 이 문서는 TossOS를 **개발**하는 모든 에이전트·개발자에게 적용된다.
+> 이 문서는 상세 개발 절차와 완료 조건의 **단일 정본**이다.
+> `.claude/CLAUDE.md`와 `.codex/agents.md`는 이 문서를 대체하지 않는 최소 안전 부트스트랩이다.
 > tossctl을 **운용**하는 에이전트 규칙은 AGENTS.md를 따른다 (두 문서의 스코프는 AGENTS.md 상단 참조).
 > 개정: 2026-07-26 gstack 리뷰(codex + CEO/Eng/DX 4보이스) 결정 반영 — 기록은 openspec/changes/archive/2026-07-26-add-tossos-foundation/review.md
 > 개정 2: 2026-07-26 StockOS SDD 규칙(stockos/.claude/CLAUDE.md) 중 이식 가능 규칙 적용 — §0, 권위 경계, 위험도, Pre-Edit 선언, 완료 보고 조건

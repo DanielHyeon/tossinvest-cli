@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the shared Full SDD contract across Claude, Codex, and root entrypoints."""
+"""Verify the minimal Claude/Codex safety bootstrap and workflow routing."""
 
 from __future__ import annotations
 
@@ -10,34 +10,26 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ".claude/CLAUDE.md"
 MIRROR = ".codex/agents.md"
+WORKFLOW = "docs/WORKFLOW.md"
 START = "<!-- SDD_SHARED_START -->"
 END = "<!-- SDD_SHARED_END -->"
-REQUIRED_SECTIONS = (
-    "최상위 안전 불변식",
-    "계약(OpenSpec)",
-    "증거(CodeGraph hard evidence)",
-    "증거 보조(CodeGraphContext)",
-    "실행(Superpowers TDD)",
-    "게이트(gstack)",
-    "파일기반 episodic",
+REQUIRED_BOOTSTRAP = (
+    "사람 승인 없는 LIVE 주문",
+    "mutating: true",
+    "토글 OFF",
+    "손절·비상 청산",
+    "High-risk",
+    "운영 토글 flip",
+    "docs/WORKFLOW.md",
+    "OpenSpec",
+    "CodeGraph hard evidence",
     "Function Logic Map",
-    "SDD Control Graph",
-    "PM 조정 계층",
-    "Enterprise Scale Addendum",
-)
-REQUIRED_COMMANDS = (
-    "scripts/memory-recall.sh",
-    "tools/sdd/gbrain_project.py search",
-    "tools/sdd/capture_change_base.py --change",
-    "openspec validate <change-id> --strict",
-    "codegraph callers <symbol>",
-    "codegraphcontext update . --quiet",
-    "go run ./tools/logic-map",
+    "make sdd-sync",
     "make sdd-check",
     "make gate CHANGE=<change-id>",
-    "tools/pm/generate_master_tracker.py --check",
 )
 REQUIRED_PATHS = (
+    "docs/WORKFLOW.md",
     "tools/logic-map/extract_go_ast.go",
     "tools/logic-map/check_analysis.py",
     "tools/sdd-history/agent_save_hook.py",
@@ -63,8 +55,9 @@ def mirror_text(source_text: str) -> str:
     if shared is None:
         raise ValueError(f"{SOURCE}: shared markers missing")
     return (
-        "# TossOS — Full SDD agent contract (Codex)\n\n"
-        "이 파일은 `.claude/CLAUDE.md`의 공유 블록 mirror다.\n\n"
+        "# TossOS — agent safety bootstrap (Codex)\n\n"
+        "이 파일은 `.claude/CLAUDE.md`의 최소 안전 부트스트랩 mirror다.\n"
+        "상세 개발 절차의 단일 정본은 `docs/WORKFLOW.md`이며 개발 작업 전에 반드시 읽는다.\n\n"
         f"{START}\n{shared}\n{END}\n"
     )
 
@@ -75,30 +68,33 @@ def check(root: Path = ROOT) -> list[str]:
     mirror_path = root / MIRROR
     if not source_path.exists() or not mirror_path.exists():
         return [f"missing agent config: {SOURCE if not source_path.exists() else MIRROR}"]
+
     source_text = source_path.read_text(encoding="utf-8")
     mirror_value = mirror_path.read_text(encoding="utf-8")
     source_block = block(source_text)
     mirror_block = block(mirror_value)
     if source_block is None or mirror_block is None:
-        errors.append("shared SDD markers missing")
+        errors.append("minimal safety bootstrap markers missing")
         return errors
     if source_block != mirror_block:
-        errors.append("Claude/Codex shared SDD block drift; run --generate")
-    for value in REQUIRED_SECTIONS:
+        errors.append("Claude/Codex minimal safety bootstrap drift; run --generate")
+    for value in REQUIRED_BOOTSTRAP:
         if value not in source_block:
-            errors.append(f"required section missing: {value}")
-    for value in REQUIRED_COMMANDS:
-        if value not in source_block:
-            errors.append(f"required command missing: {value}")
+            errors.append(f"required bootstrap contract missing: {value}")
+    for path, text in ((SOURCE, source_text), (MIRROR, mirror_value)):
+        if WORKFLOW not in text:
+            errors.append(f"{path} does not route to {WORKFLOW}")
     for value in REQUIRED_PATHS:
         if not (root / value).exists():
             errors.append(f"referenced path missing: {value}")
+
     root_claude = (root / "CLAUDE.md").read_text(encoding="utf-8")
     root_agents = (root / "AGENTS.md").read_text(encoding="utf-8")
-    if ".claude/CLAUDE.md" not in root_claude:
-        errors.append("root CLAUDE.md does not route to Full SDD source")
-    if ".claude/CLAUDE.md" not in root_agents:
-        errors.append("root AGENTS.md does not route to Full SDD source")
+    if SOURCE not in root_claude or WORKFLOW not in root_claude:
+        errors.append("root CLAUDE.md does not route to bootstrap and workflow")
+    if SOURCE not in root_agents or WORKFLOW not in root_agents:
+        errors.append("root AGENTS.md does not route to bootstrap and workflow")
+
     try:
         settings = json.loads(
             (root / ".claude" / "settings.json").read_text(encoding="utf-8")
@@ -141,7 +137,7 @@ def main() -> int:
         for error in errors:
             print(f"  - {error}")
         return 1
-    print("[agent-config] Claude/Codex/root Full SDD contracts are synchronized")
+    print("[agent-config] Claude/Codex safety bootstrap and workflow routing are synchronized")
     return 0
 
 
