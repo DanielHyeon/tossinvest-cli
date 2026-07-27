@@ -477,3 +477,17 @@ digest가 움직이므로 테스트가 필요하다). 번역이 빠진 줄은 `o
 수용 잔여 위험: OPEN walk도 10페이지 상한이나 상한 도달 관측을 기록하지 않음 — fixture 단계는 완전성이 아니라 다양성이 목적이라 수용. 브로커가 스펙과 달리 OPEN을 페이지네이션하면 soak의 PageLimitReached가 별도로 잡는다.
 
 실기기 미확정: fake 대상 검증만 완료 — 실브로커 200은 [soak 재시작] 후 첫 사이클과 오늘 재측정의 read-fixtures pass로 확인한다.
+
+## Manager 판정 (1.11 soak orders walk 429 백오프, 2026-07-27)
+
+독립 검증: Teammate 격리 worktree 커밋 `c3ec553`(→ cherry-pick `b560af1`, 트리 byte-identical 확인) diff 직접 리뷰 — 재시도가 두 order read(`walkOrders` 페이지 호출·`probeOrderByID`)에만 국한되고 credential probe 비재시도가 테스트로 고정됨을 확인. Manager가 worktree에서 전체 스위트 `go test ./... -race -count=1` **2903/52pkg 0 FAIL** 재실행, `go vet`·`gofmt` clean. RED 증거 5건(기존 코드 실패 재현) 보고 검토. 바이너리는 `git archive b560af1` 클린 export에서 빌드해 양 경로 설치(2026-07-27 10:12:28 KST, 29333285B) — 병행 세션 미커밋 편집이 있는 워킹트리는 빌드 소스로 쓰지 않음(1.10과 동일 절차).
+
+편차 판정 — 전건 승인:
+
+- **sleep seam 신설 없음**: 승인. `clock.Clock`에 ctx 존중 `Sleep`이 이미 있어 Options 무변경 — 발주가 허용한 최소 결과.
+- **429 판정을 `errors.Is(official.ErrRateLimited)` 대신 기존 `Options.Classify` seam으로**: 승인. `static_test.go`의 transitive mutation-import 차단(`internal/official` 포함)과 양립하는 유일한 경로. `classifySoakError`의 해당 매핑을 신규 테스트로 고정, Classify 미설정이면 재시도 0회(pre-1.11 동작 보존).
+- **verifylive import 거부 + soak 로컬 상수 + 드리프트 테스트**: 승인. `verifylive/retry.go`가 `internal/official`을 import — 상수 2개 아끼려고 컴파일타임 mutation 제외 보증을 깨는 방향이 오답. 드리프트 테스트(`TestTheBackoffMatchesTheVerificationTool`)가 값 일치를 강제.
+
+수용 잔여 위험: ① 재시도로 회복한 사이클이 observed-rate 통계에 ok로 집계되나 백오프 벽시계가 elapsed에 포함돼 낮은 값으로만 기여(max 통계라 부풀림 불가 — 보수 방향). ② `LatencyMS`에 백오프 대기 포함 — task 1.3 retry matrix는 latency가 아니라 `requests`·class를 읽어야 한다. ③ throttled 사이클 최대 ~90s 연장(15분 간격에서 무해). ④ `limit=100`의 실브로커 효과는 httptest 쿼리스트링 검증까지 — 실측은 설치 후 첫 self re-exec 사이클에서 관측(M8 후속, 아래 기록 예정).
+
+Function Logic Map: not-applicable — 조회 전용 soak 패키지, High-risk 함수 무접촉(1.9 판정과 동일 근거). `probe`는 결과 조립을 `result`로 추출한 리팩터만으로 1호출/`Requests:1` 동작 불변(테스트 유지).
