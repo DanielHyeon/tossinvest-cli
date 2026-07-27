@@ -436,3 +436,28 @@ digest가 움직이므로 테스트가 필요하다). 번역이 빠진 줄은 `o
 - **plan digest 보존 설계**(영문 필드+json:"-" 한글 사이드카+digest 고정 테스트): 승인 — M3 "재시작 간 동일 digest" 증거의 연속성이 표시 언어보다 우선. 이 판단이 1.8의 하중 결정.
 - 중복 prefix 제거·Cycle.binary additive·정적 가드 확장(라우트 9·os/exec 금지)·비unix ErrUnsupported: 전건 승인.
 - instance_id는 이미 올바랐음(양방향 테스트로 고정됨) — 발주 시 우려는 기우로 판명, 고정 테스트는 가치 있음.
+
+## Manager 판정 (1.9 soak 주문 목록 status 필수 파라미터, 2026-07-27)
+
+발주 배경: 실계좌 soak 46/46 사이클에서 `GET /api/v1/orders` 400 `invalid-request(field: status)` — measurements.md M7. openapi 원문 재확인: `status`는 required, enum `OPEN`/`CLOSED`, "전체" 그룹 없음, `PARTIAL_FILLED`는 **양쪽 그룹 모두** 소속.
+
+독립 검증: 커밋 `b7b0140` diff 직접 리뷰(probeOrders·walkOrders·probeOrderByID·completenessOf), `go test ./internal/soak/ -race` 71/71 재실행, gofmt·vet clean, 커밋 범위 soak 3파일+tasks.md 확인(금지 파일 무접촉), 제거 필드 `OpenOrdersMissing`의 잔존 소비자 0 확인. 팀메이트 근거 주장 3건 원문 대조: PARTIAL_FILLED 양그룹(openapi status 파라미터 description 일치), `execgw.Resolver.scanBoth`의 양그룹 dedupe 선례(indoubt.go:409 실재), soak 디코더에 `DisallowUnknownFields` 부재(additive 호환 성립).
+
+편차 판정 — 전건 승인:
+
+- **completenessOf를 합집합 대신 두 walk 분리 입력으로**: 승인. 발주문("합집합, 중복 카운트 유지")대로 병합 후 중복을 세면 PARTIAL_FILLED 1건마다 매 사이클 completeness FAIL → attest 재차단 — 고치려던 버그의 재배치다. 그룹 내 중복만 실패(cursor 신뢰성 문제), 양그룹 중복은 `orders_in_both_statuses` 관측 — 발주 취지(판정 의미 보존) 우선이 옳다. OPEN walk 내부 중복 검사 신설은 기존보다 엄격한 방향.
+- **open-coverage 검사 제거 → `blank_order_ids` 실패 검사로 대체**: 승인. 재정의 하에서 open⊆합집합은 구성상 항상 참(공허) — 발주문이 예고한 재정의 허용 범위. blank id는 구 검사가 실제로 잡을 수 있던 유일한 구체 결함이며 실패 유지가 옳다.
+- **record 스키마 additive 변경 + 포맷 버전 미증가**: 승인. 제거 필드 optional·소비자 0, 신규 필드 omitempty, soak 자기 재기동(1.8) 중 동일 record 이어쓰기 보존이 우선.
+- **Function Logic Map: not-applicable**: 승인. 수정 3함수(probeOrders·probeOrderByID·completenessOf)는 조회 전용 soak 패키지 — `Reads`에 mutating 메서드가 구조적으로 없고 static_test.go가 강제. High-risk 아님. (단, change에 `base-commit.txt` 부재로 check_analysis가 수정 함수 산출 불가 — 2b 생성 시점이 capture 도구 도입 전. 2b는 도구 태스크 중심 change로 예외 기록하고, 이후 change부터는 생성 직후 고정 원칙 유지.)
+
+실기기 미확정: fake 대상 검증만 완료 — 실브로커 200 확인은 새 바이너리 설치 후 [soak 재시작] 뒤 첫 사이클에서 관측한다(다음 soak status로 확인 예정).
+
+이연 항목(1.9 조사 결과, 별도 처리):
+
+| 경로 | 상태 | 처리 |
+|---|---|---|
+| `internal/verifylive/steps.go:102` read-fixtures `OrdersFilter{}` | 오늘 재측정 차단 요인 | **task 1.10 즉시 발주** |
+| `internal/app/engine/tracer.go:361` 빈 status | 비도달(비테스트 호출자 없음) | 2c 배선 시 함께 교정 |
+| `internal/ops/read_operations.go:150` MCP/CLI orders read의 선택적 status | 사용자 호출 시 400 | 후속 태스크 후보 — 우선순위 낮음 |
+| `official.Client` 공용 가드(빈 status 거부/기본값) | 재발 방지 구조 | High-risk 공용 funnel — 2c 또는 별도 태스크에서 결정 |
+| `cmd/tossctl/soak.go:118` 낡은 도움말 | 문구 drift | 1.10에 포함 |
