@@ -22,8 +22,11 @@ package console
 // This is the first broker call the console has ever made, so the accounting is
 // explicit and it is enforced by holdingsCache rather than described:
 //
-//	lazy        a refresh happens because somebody opened a page. There is no
-//	            background poller, and a console left open overnight costs nothing.
+//	lazy        a refresh happens because a page was requested — by the operator,
+//	            or by the positions screen re-opening itself at the TTL (change
+//	            refresh-positions-screen). There is no server-side poller: an open
+//	            positions tab costs at most one call per TTL, a closed one costs
+//	            nothing, and a verification in progress suspends even that.
 //	one call    a refresh is exactly one GET /api/v1/holdings. The current price
 //	            comes from that response's lastPrice; a per-symbol quote fan-out
 //	            would turn one call into one-per-holding for a number the first

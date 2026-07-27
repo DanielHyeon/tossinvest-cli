@@ -267,7 +267,9 @@ def validate_target(target: Path, root: Path) -> tuple[list[str], tuple[str, str
             errors.append(f"{target.name}: function map missing section {section}")
     if relative not in logic or function not in logic:
         errors.append(f"{target.name}: function map is not source/function-bound")
-    branches = value.get("branches", [])
+    # The Go extractor marshals a nil slice as JSON null, so a branchless
+    # function arrives as "branches": null rather than []. Treat both as empty.
+    branches = value.get("branches") or []
     branch_map = texts.get("branch-test-map.md", "")
     if "# Branch Test Map" not in branch_map:
         errors.append(f"{target.name}: branch test map header missing")

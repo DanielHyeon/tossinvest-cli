@@ -58,7 +58,7 @@ form { display: inline; }
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-{{if .Refresh}}<meta http-equiv="refresh" content="2">{{end}}
+{{if .Refresh}}<meta http-equiv="refresh" content="{{.RefreshSeconds}}">{{end}}
 <title>tossctl console</title>
 <style>{{template "style"}}</style>
 </head><body>

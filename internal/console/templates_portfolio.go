@@ -82,6 +82,21 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 {{if .Rows}}
 <section>
   <h2>보유 종목</h2>
+{{/*
+  두 공지는 상호 배타다: AnyUnknown은 원장이 답하지 않았을 때, AnyJournalAbsent는
+  원장이 답했고 그 안에 포지션이 없을 때만 참이다. 같은 상태의 모든 행에 공통인
+  사유는 여기서 한 번만 말하고, 행에는 판정 라벨만 남는다 — 사유를 행마다 반복하면
+  표가 아니라 같은 문단의 목록이 된다 (change refresh-positions-screen).
+*/}}
+  {{if .AnyUnknown}}
+  <p class="notice"><strong>관리 여부 불명 보유가 있다.</strong> 엔진 원장을 읽지 못했으므로 아래
+  해당 보유가 엔진 관리 대상인지 알 수 없다 — 위의 원장 안내를 보라. 관리 중이 아니라고 단정하지 않는다.</p>
+  {{end}}
+  {{if .AnyJournalAbsent}}
+  <p class="notice"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이
+  아니므로 손절·익절 라인도 없다. 수동 보유를 엔진 관리로 편입하는 것은 이 화면의 기능이 아니다
+  (편입은 엔진 대사 루프의 몫이다).</p>
+  {{end}}
   <table>
     <tr>
       {{if .Multi}}<th>계좌</th>{{end}}
@@ -97,6 +112,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td class="{{if .Gain}}ok{{else}}bad{{end}}">{{.Rate}}</td>
       <td>{{.Label}}</td>
     </tr>
+    {{if .HasDetail}}
     <tr>
       <td colspan="{{if $.Snap.Multi}}9{{else}}8{{end}}">
         {{if .HasExit}}
@@ -125,6 +141,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         {{end}}
       </td>
     </tr>
+    {{end}}
     {{end}}
   </table>
   <p class="muted"><strong>관리 외(미편입)</strong>은 엔진의 exit 정책 대상이 아니라는 뜻이다 — 손절·익절이

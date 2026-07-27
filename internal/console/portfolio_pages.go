@@ -9,21 +9,30 @@ package console
 // and a read route behind it fails too — a screen that only answered POSTs would
 // be a screen nobody can open.
 //
-// There is no meta refresh on either. The broker reading is cached for
-// holdingsTTL and a page that reloaded itself every two seconds would spend the
-// operator's attention on a number that has not moved; the cache's age is printed
-// instead, so refreshing is a decision rather than a default.
+// The positions screen reloads itself at the holdings cache TTL — no faster
+// (change refresh-positions-screen; spec "rate budget 보호"). Each reload is an
+// ordinary lazy request, so an open tab costs at most one holdings call per TTL
+// and a verification in progress still suspends the broker call entirely. The
+// history screen renders frozen values and stays manual.
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 type positionsPage struct {
 	Nav  string
 	Snap positionsView
 }
 
-// Refresh is what the head template reads. The dashboard's two-second reload
-// belongs to a verification in progress, not to a holdings table.
-func (positionsPage) Refresh() bool { return false }
+// Refresh is what the head template reads: the positions screen asks the
+// browser to reload, at the period RefreshSeconds names.
+func (positionsPage) Refresh() bool { return true }
+
+// RefreshSeconds is the reload period: exactly the holdings cache TTL, derived
+// from it so the two cannot drift apart — a period under the TTL would be a
+// reload that costs broker calls faster than the budget the spec fixes.
+func (positionsPage) RefreshSeconds() int { return int(holdingsTTL / time.Second) }
 
 func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 	c.render(w, "positions", positionsPage{Nav: "positions", Snap: c.positions(r.Context())})

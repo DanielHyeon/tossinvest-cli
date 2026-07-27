@@ -117,6 +117,73 @@ evidence
             ):
                 self.assertEqual(check_analysis.check("change", root), [])
 
+    def test_null_branches_from_the_go_extractor_are_accepted(self) -> None:
+        # The Go extractor marshals a nil slice as JSON null, so a branchless
+        # function arrives as "branches": null rather than []. The bundle must
+        # validate instead of crashing on the None.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "internal" / "sample.go"
+            source.parent.mkdir(parents=True)
+            source.write_text("package sample\nfunc Run() {}\n", encoding="utf-8")
+            target = (
+                root
+                / "openspec"
+                / "changes"
+                / "change"
+                / "analysis"
+                / "function-logic"
+                / "pkg--run"
+            )
+            target.mkdir(parents=True)
+            (target / "ast.json").write_text(
+                json.dumps(
+                    {
+                        "file": "internal/sample.go",
+                        "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                        "package": "sample",
+                        "function": "Run",
+                        "signature": "Run(params=0, results=0)",
+                        "start": {"line": 2, "column": 1},
+                        "end": {"line": 2, "column": 14},
+                        "branches": None,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (target / "function-logic-map.md").write_text(
+                """# Function Logic Map: `Run`
+- Source: `internal/sample.go`
+## Inputs and invariants
+evidence
+## Branches and early returns
+evidence
+## Calls and live bindings
+evidence
+## State mutations and fallbacks
+evidence
+## Safety conclusion
+evidence
+""",
+                encoding="utf-8",
+            )
+            (target / "branch-test-map.md").write_text(
+                "# Branch Test Map: `Run`\n| B1 | leaf | test | yes | yes |\n",
+                encoding="utf-8",
+            )
+            (target / "risk-pattern-report.md").write_text(
+                "# Risk Pattern Report: `Run`\ninternal/sample.go\n",
+                encoding="utf-8",
+            )
+            with mock.patch(
+                "check_analysis.resolve_base",
+                return_value="base",
+            ), mock.patch(
+                "check_analysis.changed_existing_functions",
+                return_value={},
+            ):
+                self.assertEqual(check_analysis.check("change", root), [])
+
     def test_modified_function_cannot_use_exemption(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -62,6 +62,11 @@ type dashboardPage struct {
 	CanRestartSoak bool
 }
 
+// RefreshSeconds is the reload period the head template writes while Refresh is
+// true: two seconds, because this screen is following a running verification.
+// The positions screen carries its own, slower period (portfolio_pages.go).
+func (dashboardPage) RefreshSeconds() int { return 2 }
+
 func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		c.refuse(w, http.StatusNotFound, "그런 경로는 없다",
@@ -101,6 +106,9 @@ type verifyPage struct {
 	// the process boundary rather than describe it as a chore.
 	CanRestart bool
 }
+
+// RefreshSeconds mirrors dashboardPage's: two seconds while a run is working.
+func (verifyPage) RefreshSeconds() int { return 2 }
 
 func (c *Console) handleVerify(w http.ResponseWriter, r *http.Request) {
 	c.renderVerify(w, r.URL.Query().Get("notice"))

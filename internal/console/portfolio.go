@@ -169,6 +169,31 @@ type positionsView struct {
 // Multi reports that the journal holds more than one account.
 func (v positionsView) Multi() bool { return len(v.Accounts) > 1 }
 
+// AnyUnknown reports that at least one row's management state could not be
+// determined because the journal did not answer. The reason is the same for
+// every such row, so the page says it once (change refresh-positions-screen)
+// while each row keeps its 관리 여부 불명 verdict.
+func (v positionsView) AnyUnknown() bool {
+	for _, r := range v.Rows {
+		if r.Unknown() {
+			return true
+		}
+	}
+	return false
+}
+
+// AnyJournalAbsent reports at least one broker holding the readable journal has
+// no position for — a manual buy the engine never entered. One state, one
+// notice: the rows keep the 관리 외(미편입) label and the page explains it once.
+func (v positionsView) AnyJournalAbsent() bool {
+	for _, r := range v.Rows {
+		if r.JournalReadable && !r.InJournal {
+			return true
+		}
+	}
+	return false
+}
+
 // NoManaged reports a journal that was read and holds no live position at all.
 //
 // It is a separate sentence from "엔진 미가동" because it is a different fact: the
@@ -269,15 +294,15 @@ func (r positionRow) Label() string {
 	}
 }
 
-// Reason explains an absent exit line. It is empty when there is one to show.
+// Reason explains an absent exit line, for the states that are private to the
+// row. The two page-global states — the journal could not be read, the journal
+// has no position for a broker holding — are the same sentence on every such
+// row, so they render as one page-level notice each (positionsView.AnyUnknown /
+// AnyJournalAbsent; change refresh-positions-screen) and return "" here.
 func (r positionRow) Reason() string {
 	switch {
-	case r.Unknown():
-		return "엔진 원장을 읽지 못했으므로 이 보유가 엔진 관리 대상인지 알 수 없다 — 위의 원장 안내를 보라. " +
-			"관리 중이 아니라고 단정하지 않는다."
-	case !r.InJournal:
-		return "엔진 원장에 이 종목의 포지션이 없다 — 엔진이 진입한 포지션이 아니므로 손절·익절 라인도 없다. " +
-			"수동 보유를 엔진 관리로 편입하는 것은 이 화면의 기능이 아니다."
+	case r.Unknown(), !r.InJournal:
+		return ""
 	case !r.Eligible:
 		return "진입 결정(entry decision)도 편입 기록(adoption)도 없는 포지션이다. exit 정책은 그중 하나의 " +
 			"손절가를 기준선으로 삼는데 둘 다 없으므로 대상이 아니다."
@@ -288,6 +313,12 @@ func (r positionRow) Reason() string {
 		return ""
 	}
 }
+
+// HasDetail reports that the row's second line has something to say: an exit
+// line, the journal half, or a row-specific reason. A row whose only story is a
+// page-global state renders no second line at all — the notice above the table
+// is that story, told once.
+func (r positionRow) HasDetail() bool { return r.HasExit || r.InJournal || r.Reason() != "" }
 
 // BrokerMissing reports a projection row the account does not confirm.
 func (r positionRow) BrokerMissing() bool { return r.InJournal && !r.InBroker }

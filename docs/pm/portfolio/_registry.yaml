@@ -7,6 +7,7 @@
   "stories": ["STORY-TOS-001"],
   "bootstrap_change_allowlist": [
     "verify-execution-capability",
-    "add-net-rr-measurement"
+    "add-net-rr-measurement",
+    "refresh-positions-screen"
   ]
 }

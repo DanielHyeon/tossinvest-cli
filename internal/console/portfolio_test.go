@@ -323,7 +323,7 @@ func TestAnUnmanagedHoldingIsLabelledExactlyOnce(t *testing.T) {
 			"and the page must say what it means", n)
 	}
 	for _, want := range []string{
-		"엔진 원장에 이 종목의 포지션이 없다", // 000660: broker only
+		"엔진 원장에 포지션이 없는 보유", // 000660: broker only — the page-level notice
 		// 035420: a journal position with neither justifying record. Since
 		// adopt-external-positions there are two, and the reason names both —
 		// "no entry decision" alone would now be an incomplete answer.

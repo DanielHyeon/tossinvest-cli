@@ -1,0 +1,40 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "9ed71a113e2690cd486ea3365124aac287a791660e51fe768bcee652a3ffee72",
+  "package": "console",
+  "function": "Multi",
+  "receiver": "positionsView",
+  "signature": "positionsView.Multi(params=0, results=1)",
+  "start": {
+    "line": 170,
+    "column": 1
+  },
+  "end": {
+    "line": 170,
+    "column": 67
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 170,
+        "column": 39
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 46
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

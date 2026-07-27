@@ -1,0 +1,109 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "6fba39e8eea4a3be4d1bfd04a9140c95ffd55f68378faa3371c9e2909946e389",
+  "package": "console",
+  "function": "Reason",
+  "receiver": "positionRow",
+  "signature": "positionRow.Reason(params=0, results=1)",
+  "start": {
+    "line": 302,
+    "column": 1
+  },
+  "end": {
+    "line": 315,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 303,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 309,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 312,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 305,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 310,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 313,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 7
+      },
+      "text": "r.Unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 29
+      },
+      "text": "r.Basis"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
