@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	tossapp "github.com/JungHoonGhae/tossinvest-cli/internal/app"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/auth"
-	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/hybrid"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/i18n"
@@ -153,11 +152,32 @@ func newRootCmd() *cobra.Command {
 		newMarketCmd(opts),
 		newCommunityCmd(opts),
 		newOrderCmd(opts),
+		// flatten-all is the emergency exit (task 4.5). Registered here and
+		// implemented entirely in flatten.go: no existing command changes.
+		newFlattenCmd(opts),
 		newExportCmd(opts),
 		newPushCmd(opts),
 		newMonitorCmd(opts),
 		newMCPCmd(opts),
 		newOpsCmd(opts),
+		// soak is the read-only capability survey the automation gate's
+		// attestation is built from (task 1.1). New file, new command; nothing
+		// existing changes.
+		newSoakCmd(opts),
+		// verify is the supervised live half of the same measurement (task 1.5):
+		// the endpoints a read-only survey structurally cannot prove. Also a new
+		// file and a new command.
+		newVerifyCmd(opts),
+		// console is the loopback operator surface for that same verification
+		// (task 1.6): the same runner, the same rails, approved on a page instead
+		// of at a terminal. New file, new command; `verify` is unchanged.
+		newConsoleCmd(opts),
+		// engine is the automated trading runtime (change add-engine-runtime):
+		// the production caller the reconciliation, exit-observation and
+		// fill-detection loops never had. It refuses to start in this build —
+		// interlock clause 6 is an unmet constant until protective orders land —
+		// and nothing existing changes.
+		newEngineCmd(opts),
 	)
 
 	return cmd
@@ -448,14 +468,11 @@ func configFilePath(opts *rootOptions) (string, error) {
 // resolveBackend returns the effective routing backend preference.
 // The --backend flag takes precedence over cfg.Prefer.
 // An empty flag means "use config". Invalid flag values are rejected.
+//
+// Delegates so the CLI and the engine cannot disagree about what --backend
+// means.
 func resolveBackend(cfg config.OpenAPI, flag string) (string, error) {
-	if flag == "" {
-		return cfg.Prefer, nil
-	}
-	if norm, ok := config.NormalizeBackend(flag); ok {
-		return norm, nil
-	}
-	return "", fmt.Errorf("invalid --backend value %q: must be one of auto, wts, openapi", flag)
+	return tossapp.ResolveBackend(cfg, flag)
 }
 
 func humanizeDuration(d time.Duration) string {
@@ -477,85 +494,35 @@ func humanizeDuration(d time.Duration) string {
 	return fmt.Sprintf("%ds", int(d.Seconds()))
 }
 
+// newAppContext delegates to app.New: the wiring itself now lives in
+// internal/app so the trading engine shares one definition of "which paths hold
+// the session" and "which backend may place orders" with the CLI.
+//
+// The cobra layer keeps its own appContext struct rather than using app.Context
+// directly: every command file in this package reads app.format / app.client /
+// app.config, and renaming those call sites across the CLI would be a much
+// larger diff than this mapping — with no behaviour change to show for it.
 func newAppContext(opts *rootOptions) (*appContext, error) {
-	format, err := output.ParseFormat(opts.outputFormat)
-	if err != nil {
-		return nil, err
-	}
-
-	paths, err := config.DefaultPaths()
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.configDir != "" {
-		paths.ConfigDir = opts.configDir
-		paths.ConfigFile = filepath.Join(opts.configDir, "config.json")
-		paths.SessionFile = filepath.Join(opts.configDir, "session.json")
-		paths.LineageFile = filepath.Join(opts.configDir, "trading-lineage.json")
-	}
-
-	if opts.sessionFile != "" {
-		paths.SessionFile = opts.sessionFile
-	}
-
-	store := session.NewFileStore(paths.SessionFile)
-	sess, err := store.Load(context.Background())
-	if err != nil && !errors.Is(err, session.ErrNoSession) {
-		return nil, err
-	}
-
-	loginConfig := auth.DefaultLoginConfig(paths.CacheDir)
-	configService := config.NewService(paths.ConfigFile)
-	cfg, err := configService.Load(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	wtsClient := tossclient.New(tossclient.Config{
-		Session:       sess,
-		TradingPolicy: cfg.Trading,
+	built, err := tossapp.New(tossapp.Options{
+		OutputFormat: opts.outputFormat,
+		ConfigDir:    opts.configDir,
+		SessionFile:  opts.sessionFile,
+		Backend:      opts.backend,
 	})
-
-	prefer, err := resolveBackend(cfg.OpenAPI, opts.backend)
 	if err != nil {
 		return nil, err
 	}
-
-	credFile, tokenFile, err := resolveOpenAPIPaths(opts)
-	if err != nil {
-		return nil, err
-	}
-	creds, err := official.LoadCredentials(os.Getenv, credFile)
-	if err != nil {
-		return nil, fmt.Errorf("loading official credentials: %w", err)
-	}
-
-	var off *official.Client
-	if creds != nil && cfg.OpenAPI.Enabled && prefer != "wts" {
-		off = official.New(*creds, tokenFile)
-	}
-
-	h := hybrid.New(wtsClient, off, hybrid.Policy{Prefer: prefer, Fallback: cfg.OpenAPI.Fallback}, os.Stderr)
-
-	lineage := orderlineage.NewService(paths.LineageFile)
 	return &appContext{
-		format:        format,
-		paths:         paths,
-		config:        cfg,
-		configService: configService,
-		loginConfig:   loginConfig,
-		authService: auth.NewService(store, paths.SessionFile, auth.Options{
-			LoginConfig:     loginConfig,
-			Validator:       wtsClient,
-			ExtensionRunner: wtsClient,
-		}),
-		client:         h,
-		session:        sess,
-		tokenFile:      tokenFile,
-		lineageService: lineage,
-		// The trading service records lineage itself, so every surface that
-		// mutates through it (cobra, MCP, `ops call`) leaves the same trail.
-		tradingService: trading.NewService(cfg.Trading, h.Broker()).WithLineage(lineage),
+		format:         built.Format,
+		paths:          built.Paths,
+		config:         built.Config,
+		configService:  built.ConfigService,
+		loginConfig:    built.LoginConfig,
+		authService:    built.AuthService,
+		client:         built.Client,
+		session:        built.Session,
+		tokenFile:      built.TokenFile,
+		lineageService: built.LineageService,
+		tradingService: built.TradingService,
 	}, nil
 }

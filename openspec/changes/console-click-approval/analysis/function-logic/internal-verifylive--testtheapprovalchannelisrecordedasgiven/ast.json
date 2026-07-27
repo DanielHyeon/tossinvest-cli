@@ -1,0 +1,234 @@
+{
+  "file": "internal/verifylive/plan_test.go",
+  "source_sha256": "cdc85024a653157c896d46d47becbc712e67bd68e43a0494710c5e0e390692d8",
+  "package": "verifylive",
+  "function": "TestTheApprovalChannelIsRecordedAsGiven",
+  "signature": "TestTheApprovalChannelIsRecordedAsGiven(params=1, results=0)",
+  "start": {
+    "line": 803,
+    "column": 1
+  },
+  "end": {
+    "line": 826,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 808,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 811,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 812,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 820,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 823,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 813,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 817,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 805,
+        "column": 3
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 806,
+        "column": 13
+      },
+      "text": "withHolding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 806,
+        "column": 13
+      },
+      "text": "newFakeBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 807,
+        "column": 8
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 807,
+        "column": 30
+      },
+      "text": "alwaysConfirm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 808,
+        "column": 16
+      },
+      "text": "h.run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 809,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 811,
+        "column": 21
+      },
+      "text": "approvalEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 811,
+        "column": 38
+      },
+      "text": "h.entries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 816,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 820,
+        "column": 12
+      },
+      "text": "detailFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 821,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 823,
+        "column": 12
+      },
+      "text": "detailFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 824,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 804,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 806,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 807,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 808,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 820,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 823,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

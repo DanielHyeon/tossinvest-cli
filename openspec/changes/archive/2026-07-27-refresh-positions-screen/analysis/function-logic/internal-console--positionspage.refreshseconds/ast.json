@@ -1,0 +1,39 @@
+{
+  "file": "internal/console/portfolio_pages.go",
+  "source_sha256": "34c76d92be37b00c38bf0b4b43056009ebf55b1731e2f04726189a731cc8f208",
+  "package": "console",
+  "function": "RefreshSeconds",
+  "receiver": "positionsPage",
+  "signature": "positionsPage.RefreshSeconds(params=0, results=1)",
+  "start": {
+    "line": 35,
+    "column": 1
+  },
+  "end": {
+    "line": 35,
+    "column": 84
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 35,
+        "column": 45
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 52
+      },
+      "text": "int"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

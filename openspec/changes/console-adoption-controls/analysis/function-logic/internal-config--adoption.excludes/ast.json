@@ -1,0 +1,39 @@
+{
+  "file": "internal/config/engine.go",
+  "source_sha256": "6cc1a5a6cc6e42e39d41a5f2c8c7ac32c2c3aad70d64996c5cca049a8aab71e1",
+  "package": "config",
+  "function": "Excludes",
+  "receiver": "Adoption",
+  "signature": "Adoption.Excludes(params=1, results=1)",
+  "start": {
+    "line": 103,
+    "column": 1
+  },
+  "end": {
+    "line": 105,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 9
+      },
+      "text": "onSymbolList"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,56 @@
+{
+  "file": "internal/verifylive/confirm_test.go",
+  "source_sha256": "a4215f440a5e00a2365e53ddc948051f55fd65eeca34f7b593c1a4f36040c7a8",
+  "package": "verifylive",
+  "function": "TestTheBatchApprovalOutlastsAReadOfTheList",
+  "signature": "TestTheBatchApprovalOutlastsAReadOfTheList(params=1, results=0)",
+  "start": {
+    "line": 202,
+    "column": 1
+  },
+  "end": {
+    "line": 211,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 203,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

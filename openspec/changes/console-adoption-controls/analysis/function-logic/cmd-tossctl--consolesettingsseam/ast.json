@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "04fda4ade5a0b4c5b3cd404526641ff08d5f6bf4dbea9506118a7c630f41cab8",
+  "package": "main",
+  "function": "consoleSettingsSeam",
+  "signature": "consoleSettingsSeam(params=1, results=1)",
+  "start": {
+    "line": 231,
+    "column": 1
+  },
+  "end": {
+    "line": 236,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 233,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 10
+      },
+      "text": "newAdoptionSettingsSeam"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 232,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

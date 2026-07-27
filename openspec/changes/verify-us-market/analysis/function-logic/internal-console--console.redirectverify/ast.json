@@ -1,0 +1,88 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "a062c7d8f515576dc806fafcd99518f68c45959992af3410cc02963cf90a1dfd",
+  "package": "console",
+  "function": "redirectVerify",
+  "receiver": "Console",
+  "signature": "Console.redirectVerify(params=3, results=0)",
+  "start": {
+    "line": 282,
+    "column": 1
+  },
+  "end": {
+    "line": 288,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 32
+      },
+      "text": "urlQueryEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 47
+      },
+      "text": "marketOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 284,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 26
+      },
+      "text": "urlQueryEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 2
+      },
+      "text": "http.Redirect"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 285,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

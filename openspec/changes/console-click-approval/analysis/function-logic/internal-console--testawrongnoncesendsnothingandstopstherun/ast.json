@@ -1,0 +1,258 @@
+{
+  "file": "internal/console/console_test.go",
+  "source_sha256": "249622e8695e21739dffcd885f4a0fd99f5cdecc8e8a8d4f470f2b83287e90e7",
+  "package": "console",
+  "function": "TestAWrongNonceSendsNothingAndStopsTheRun",
+  "signature": "TestAWrongNonceSendsNothingAndStopsTheRun(params=1, results=0)",
+  "start": {
+    "line": 411,
+    "column": 1
+  },
+  "end": {
+    "line": 442,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 419,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 427,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 430,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 436,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 439,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 7
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 10
+      },
+      "text": "h.startAndWait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 10
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 11
+      },
+      "text": "h.waitForFinish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 10
+      },
+      "text": "h.broker.mutationCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 9
+      },
+      "text": "h.broker.placements"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 431,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 431,
+        "column": 59
+      },
+      "text": "h.broker.placements"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 435,
+        "column": 13
+      },
+      "text": "loadRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 10
+      },
+      "text": "verifylive.StepCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 412,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 413,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 415,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 423,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 424,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 436,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

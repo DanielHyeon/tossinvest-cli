@@ -1,0 +1,54 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "6fba39e8eea4a3be4d1bfd04a9140c95ffd55f68378faa3371c9e2909946e389",
+  "package": "console",
+  "function": "AnyJournalAbsent",
+  "receiver": "positionsView",
+  "signature": "positionsView.AnyJournalAbsent(params=0, results=1)",
+  "start": {
+    "line": 188,
+    "column": 1
+  },
+  "end": {
+    "line": 195,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 191,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

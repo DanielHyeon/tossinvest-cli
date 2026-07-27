@@ -1,0 +1,63 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "6fba39e8eea4a3be4d1bfd04a9140c95ffd55f68378faa3371c9e2909946e389",
+  "package": "console",
+  "function": "AnyUnknown",
+  "receiver": "positionsView",
+  "signature": "positionsView.AnyUnknown(params=0, results=1)",
+  "start": {
+    "line": 176,
+    "column": 1
+  },
+  "end": {
+    "line": 183,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 6
+      },
+      "text": "r.Unknown"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

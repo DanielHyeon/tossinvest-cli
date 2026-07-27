@@ -1,0 +1,13 @@
+{
+  "id": "STORY-TOS-001",
+  "title": "Adopt the full StockOS SDD workflow in TossOS",
+  "feature": "FEAT-TOS-001",
+  "status": "done",
+  "change_id": "adopt-stockos-full-sdd",
+  "acceptance": [
+    "All required CLIs pass sdd-doctor",
+    "Go Function Logic Map tooling works",
+    "Agent rules and hooks are synchronized",
+    "Full repository gate passes"
+  ]
+}

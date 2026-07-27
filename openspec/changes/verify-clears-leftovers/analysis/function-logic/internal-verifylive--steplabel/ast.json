@@ -1,0 +1,78 @@
+{
+  "file": "internal/verifylive/korean.go",
+  "source_sha256": "ab68e007e7a7b3e01d8326deb0bb757f03ad98e9ae39af27c7a1a04ec09f2329",
+  "package": "verifylive",
+  "function": "StepLabel",
+  "signature": "StepLabel(params=1, results=1)",
+  "start": {
+    "line": 62,
+    "column": 1
+  },
+  "end": {
+    "line": 73,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 70,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 9
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 69,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,155 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "1c22a458a48fbe95734ffcb6ae6c77125330efc43c1764b9233b5e17f22541d8",
+  "package": "main",
+  "function": "resolveVerifyRecordFor",
+  "signature": "resolveVerifyRecordFor(params=3, results=2)",
+  "start": {
+    "line": 517,
+    "column": 1
+  },
+  "end": {
+    "line": 530,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 518,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 522,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 526,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 519,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 523,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 527,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 529,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 16
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
+        "column": 10
+      },
+      "text": "verifylive.RecordFileName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 20
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 523,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 525,
+        "column": 14
+      },
+      "text": "journal.DataDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 529,
+        "column": 9
+      },
+      "text": "filepath.Join"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 518,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 521,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 525,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

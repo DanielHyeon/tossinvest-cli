@@ -1,0 +1,47 @@
+{
+  "file": "internal/console/console_test.go",
+  "source_sha256": "7a2138fc19d972aa906585a0b030cb7e43ce37754119a922c8d5e9d0c29f0acf",
+  "package": "console",
+  "function": "usRecordPath",
+  "signature": "usRecordPath(params=1, results=1)",
+  "start": {
+    "line": 850,
+    "column": 1
+  },
+  "end": {
+    "line": 852,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 851,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 851,
+        "column": 9
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 851,
+        "column": 23
+      },
+      "text": "filepath.Dir"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

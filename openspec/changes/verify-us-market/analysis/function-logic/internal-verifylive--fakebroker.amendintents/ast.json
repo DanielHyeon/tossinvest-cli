@@ -1,0 +1,72 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "84f02b8343eb39a404f6d4fa9f5dcd97c073776853228acdf7b10c3f2007f06f",
+  "package": "verifylive",
+  "function": "amendIntents",
+  "receiver": "fakeBroker",
+  "signature": "fakeBroker.amendIntents(params=0, results=1)",
+  "start": {
+    "line": 773,
+    "column": 1
+  },
+  "end": {
+    "line": 777,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 776,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 774,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 775,
+        "column": 8
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 776,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 776,
+        "column": 16
+      }
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 775,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    }
+  ],
+  "revision": "current"
+}

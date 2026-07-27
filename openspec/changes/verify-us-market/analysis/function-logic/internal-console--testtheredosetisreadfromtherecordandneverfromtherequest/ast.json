@@ -1,0 +1,167 @@
+{
+  "file": "internal/console/static_test.go",
+  "source_sha256": "0d5c27296c7b61b316ad85278b37ad75b09aead58793ce8473d3b97fefedd93d",
+  "package": "console",
+  "function": "TestTheRedoSetIsReadFromTheRecordAndNeverFromTheRequest",
+  "signature": "TestTheRedoSetIsReadFromTheRecordAndNeverFromTheRequest(params=1, results=0)",
+  "start": {
+    "line": 233,
+    "column": 1
+  },
+  "end": {
+    "line": 251,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 10
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 23
+      },
+      "text": "nonCommentLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 39
+      },
+      "text": "packageFiles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 10
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 23
+      },
+      "text": "nonCommentLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 39
+      },
+      "text": "packageFiles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

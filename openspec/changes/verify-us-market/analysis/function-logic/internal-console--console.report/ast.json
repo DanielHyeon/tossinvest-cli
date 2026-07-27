@@ -1,0 +1,96 @@
+{
+  "file": "internal/console/data.go",
+  "source_sha256": "416a98b72af85874f61a6deb19abe79174635a117dbd763fb6560aa4a270c7e1",
+  "package": "console",
+  "function": "report",
+  "receiver": "Console",
+  "signature": "Console.report(params=1, results=2)",
+  "start": {
+    "line": 346,
+    "column": 1
+  },
+  "end": {
+    "line": 352,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 348,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 349,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 351,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 347,
+        "column": 18
+      },
+      "text": "verifylive.LoadEntries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 347,
+        "column": 41
+      },
+      "text": "c.verifyRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 9
+      },
+      "text": "verifylive.BuildReport"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 32
+      },
+      "text": "c.verifyRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 65
+      },
+      "text": "c.now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 347,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

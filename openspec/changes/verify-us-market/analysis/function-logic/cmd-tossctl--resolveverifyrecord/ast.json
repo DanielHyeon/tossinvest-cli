@@ -1,0 +1,39 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "1c22a458a48fbe95734ffcb6ae6c77125330efc43c1764b9233b5e17f22541d8",
+  "package": "main",
+  "function": "resolveVerifyRecord",
+  "signature": "resolveVerifyRecord(params=2, results=2)",
+  "start": {
+    "line": 508,
+    "column": 1
+  },
+  "end": {
+    "line": 510,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 509,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 9
+      },
+      "text": "resolveVerifyRecordFor"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

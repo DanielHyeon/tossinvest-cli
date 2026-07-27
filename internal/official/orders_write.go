@@ -21,6 +21,11 @@ import (
 // Schema: OrderCreateQuantityBased (openapi.latest.json)
 // Required: symbol, side, orderType, quantity.
 // Optional: price (LIMIT only), timeInForce (LIMIT only).
+// clientOrderId is the idempotency key: "동일 값으로 재요청 시 이전 주문 결과를
+// 그대로 재반환합니다 … 멱등성 키는 10분간 유효하며" and "서버는 자동 생성하지
+// 않습니다" (openapi.latest.json). omitempty is therefore load-bearing: an absent
+// field means "멱등성 미적용", and "" is not a value the documented pattern
+// `^[a-zA-Z0-9\-_]+$` accepts.
 type orderCreateV0 struct {
 	Symbol                string `json:"symbol"`
 	Side                  string `json:"side"`
@@ -28,6 +33,7 @@ type orderCreateV0 struct {
 	Quantity              string `json:"quantity"`
 	Price                 string `json:"price,omitempty"`
 	TimeInForce           string `json:"timeInForce,omitempty"`
+	ClientOrderID         string `json:"clientOrderId,omitempty"`
 	ConfirmHighValueOrder bool   `json:"confirmHighValueOrder"`
 }
 
@@ -41,13 +47,20 @@ type orderCreateV1 struct {
 	Side                  string `json:"side"`
 	OrderType             string `json:"orderType"`
 	OrderAmount           string `json:"orderAmount"`
+	ClientOrderID         string `json:"clientOrderId,omitempty"`
 	ConfirmHighValueOrder bool   `json:"confirmHighValueOrder"`
 }
 
 // apiOrderCreateResponse mirrors the OrderResponse schema returned by
 // POST /api/v1/orders (inside the {"result": ...} envelope).
+//
+// ClientOrderID is "요청 시 전달한 값 그대로 반환. 미전달 시 null"
+// (OrderResponse.clientOrderId, openapi.latest.json) — the pointer distinguishes
+// that documented null from an echo of a different key, which is not a response
+// about the order this process sent.
 type apiOrderCreateResponse struct {
-	OrderID string `json:"orderId"`
+	OrderID       string  `json:"orderId"`
+	ClientOrderID *string `json:"clientOrderId"`
 }
 
 // apiOrderOperationResponse mirrors the OrderOperationResponse schema returned
@@ -97,6 +110,7 @@ func buildOrderCreate(intent orderintent.PlaceIntent) (any, error) {
 			Side:                  side,
 			OrderType:             "MARKET",
 			OrderAmount:           formatDecimal(intent.Amount),
+			ClientOrderID:         intent.ClientOrderID,
 			ConfirmHighValueOrder: false,
 		}, nil
 	}
@@ -105,6 +119,7 @@ func buildOrderCreate(intent orderintent.PlaceIntent) (any, error) {
 	v0 := orderCreateV0{
 		Symbol:                intent.Symbol,
 		Side:                  side,
+		ClientOrderID:         intent.ClientOrderID,
 		ConfirmHighValueOrder: false,
 	}
 
@@ -176,6 +191,16 @@ func (c *Client) PlaceOrder(ctx context.Context, intent orderintent.PlaceIntent)
 	var resp apiOrderCreateResponse
 	if err := c.postWithHeaders(ctx, "/api/v1/orders", body, hdrs, &resp); err != nil {
 		return trading.MutationResult{}, err
+	}
+	// The echo is read back rather than ignored: the response is documented to
+	// return the key "요청 시 전달한 값 그대로" (OrderResponse.clientOrderId), so a
+	// different non-null key describes a different order. Accepting it as an ack
+	// would attach somebody else's order id to this attempt. A null/absent echo is
+	// the documented shape for an unkeyed request and is left alone.
+	if intent.ClientOrderID != "" && resp.ClientOrderID != nil && *resp.ClientOrderID != intent.ClientOrderID {
+		return trading.MutationResult{}, fmt.Errorf(
+			"order response echoed clientOrderId %q but the request sent %q",
+			*resp.ClientOrderID, intent.ClientOrderID)
 	}
 	return trading.MutationResult{
 		Kind:     "place",

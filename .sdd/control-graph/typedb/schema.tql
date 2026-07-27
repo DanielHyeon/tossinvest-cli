@@ -1,0 +1,35 @@
+define
+
+entity event,
+  owns event-hash @key,
+  owns event-type,
+  owns summary,
+  owns occurred-at,
+  owns ref-uri;
+
+entity change,
+  owns change-id @key;
+
+entity agent,
+  owns agent-name @key;
+
+relation event-touches,
+  relates source-event,
+  relates touched-change;
+
+relation agent-acted,
+  relates acting-agent,
+  relates on-event;
+
+event plays event-touches:source-event,
+      plays agent-acted:on-event;
+change plays event-touches:touched-change;
+agent plays agent-acted:acting-agent;
+
+attribute event-hash, value string;
+attribute event-type, value string;
+attribute summary, value string;
+attribute occurred-at, value string;
+attribute ref-uri, value string;
+attribute change-id, value string;
+attribute agent-name, value string;

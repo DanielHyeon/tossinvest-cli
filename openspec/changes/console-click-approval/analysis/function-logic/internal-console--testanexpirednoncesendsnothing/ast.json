@@ -1,0 +1,164 @@
+{
+  "file": "internal/console/console_test.go",
+  "source_sha256": "249622e8695e21739dffcd885f4a0fd99f5cdecc8e8a8d4f470f2b83287e90e7",
+  "package": "console",
+  "function": "TestAnExpiredNonceSendsNothing",
+  "signature": "TestAnExpiredNonceSendsNothing(params=1, results=0)",
+  "start": {
+    "line": 446,
+    "column": 1
+  },
+  "end": {
+    "line": 466,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 450,
+        "column": 30
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 7
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 450,
+        "column": 37
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 450,
+        "column": 37
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 450,
+        "column": 37
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 10
+      },
+      "text": "h.startAndWait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 2
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 11
+      },
+      "text": "h.waitForFinish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 10
+      },
+      "text": "h.broker.mutationCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 449,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 450,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 452,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 459,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 460,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

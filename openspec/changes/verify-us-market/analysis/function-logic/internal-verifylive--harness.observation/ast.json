@@ -1,0 +1,88 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "10a8f36115eaf7a2c6725bb63b2e56d14196e01d9e3c0336a7bcf7a5fcf7e556",
+  "package": "verifylive",
+  "function": "observation",
+  "receiver": "harness",
+  "signature": "harness.observation(params=2, results=2)",
+  "start": {
+    "line": 751,
+    "column": 1
+  },
+  "end": {
+    "line": 764,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 753,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 754,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 757,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 758,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 759,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 763,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 2
+      },
+      "text": "h.t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 20
+      },
+      "text": "h.entries"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

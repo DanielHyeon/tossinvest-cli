@@ -1,0 +1,177 @@
+{
+  "file": "internal/verifylive/hours.go",
+  "source_sha256": "57e5abc394ceaf57bd131e5156710c5d474469466427a3e2d13a4eb4c50898b4",
+  "package": "verifylive",
+  "function": "usSessionAdvisory",
+  "signature": "usSessionAdvisory(params=1, results=1)",
+  "start": {
+    "line": 117,
+    "column": 1
+  },
+  "end": {
+    "line": 150,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 14
+      },
+      "text": "clock.MarketUS.Location"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 8
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 8
+      },
+      "text": "now.In"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 17
+      },
+      "text": "clock.MarketUS.InRegularSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 11
+      },
+      "text": "at.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 13
+      },
+      "text": "at.Zone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 11
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

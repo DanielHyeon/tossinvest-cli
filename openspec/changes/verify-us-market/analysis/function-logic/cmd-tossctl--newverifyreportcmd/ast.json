@@ -1,0 +1,94 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "1c22a458a48fbe95734ffcb6ae6c77125330efc43c1764b9233b5e17f22541d8",
+  "package": "main",
+  "function": "newVerifyReportCmd",
+  "signature": "newVerifyReportCmd(params=2, results=1)",
+  "start": {
+    "line": 224,
+    "column": 1
+  },
+  "end": {
+    "line": 251,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 244,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 11
+      },
+      "text": "runVerifyReport"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

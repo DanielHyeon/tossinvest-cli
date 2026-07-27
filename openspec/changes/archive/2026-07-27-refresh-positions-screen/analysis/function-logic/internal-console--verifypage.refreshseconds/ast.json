@@ -1,0 +1,30 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "3fa1a39209e5330d1b02fb6cc8b629c3c27a46d0caa41ca86399f51fff7ebe52",
+  "package": "console",
+  "function": "RefreshSeconds",
+  "receiver": "verifyPage",
+  "signature": "verifyPage.RefreshSeconds(params=0, results=1)",
+  "start": {
+    "line": 111,
+    "column": 1
+  },
+  "end": {
+    "line": 111,
+    "column": 52
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 111,
+        "column": 42
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

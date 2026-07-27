@@ -1,0 +1,55 @@
+{
+  "file": "internal/verifylive/pricing.go",
+  "source_sha256": "09a74104124885c7b0ebf438d71b69b64cea9be62a688acb479b7caf1a7f9353",
+  "package": "verifylive",
+  "function": "SameMarket",
+  "signature": "SameMarket(params=2, results=1)",
+  "start": {
+    "line": 91,
+    "column": 1
+  },
+  "end": {
+    "line": 91,
+    "column": 107
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 91,
+        "column": 37
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 44
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 62
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 84
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

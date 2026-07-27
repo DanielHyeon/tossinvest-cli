@@ -72,6 +72,65 @@ func (c *Client) Holdings(ctx context.Context, symbol string) ([]domain.Position
 	return adaptHoldings(raw.Items), nil
 }
 
+// RawHolding is one holding with the broker's own decimal strings preserved.
+//
+// # Why this exists beside Holdings
+//
+// [Client.Holdings] adapts every number to float64 for internal/domain, which is
+// the right shape for a CLI that prints a portfolio. It is the wrong shape for a
+// record: TossOS stores decimals as strings precisely because binary floats
+// cannot hold a broker's decimals exactly, and a value that has been through
+// float64 and back has lost the evidence of what the broker actually said.
+//
+// The adoption record needs that evidence. `position_adoptions.cost_basis` is
+// the broker's `averagePurchasePrice` verbatim — whether it is inclusive of fees
+// is `[미측정 — 2b 실측 대상]`, and answering that question later requires the
+// original string rather than a re-rendering of a float.
+//
+// It is additive: nothing existing changes, and this reads the same endpoint.
+type RawHolding struct {
+	Symbol string
+	// MarketCountry is the broker's own "KR"/"US".
+	MarketCountry string
+	Currency      string
+	// Quantity, AveragePurchasePrice and LastPrice are the payload's strings,
+	// untouched. Empty means the broker's payload carried no value for that
+	// field, which is a different fact from zero.
+	Quantity             string
+	AveragePurchasePrice string
+	LastPrice            string
+}
+
+// HoldingsRaw fetches the same holdings [Client.Holdings] does, without adapting
+// the decimals.
+//
+// symbol is optional, exactly as it is on Holdings: empty returns all holdings.
+// It is one request to `GET /api/v1/holdings`, so a caller that needs both
+// shapes should call this one and adapt, rather than calling both and spending
+// two requests out of the §0.4 budget.
+func (c *Client) HoldingsRaw(ctx context.Context, symbol string) ([]RawHolding, error) {
+	q := url.Values{}
+	if symbol != "" {
+		q.Set("symbol", symbol)
+	}
+	var raw apiHoldingsOverview
+	if err := c.getAcct(ctx, "/api/v1/holdings", q, &raw); err != nil {
+		return nil, err
+	}
+	out := make([]RawHolding, 0, len(raw.Items))
+	for _, item := range raw.Items {
+		out = append(out, RawHolding{
+			Symbol:               item.Symbol,
+			MarketCountry:        item.MarketCountry,
+			Currency:             item.Currency,
+			Quantity:             item.Quantity,
+			AveragePurchasePrice: item.AveragePurchasePrice,
+			LastPrice:            item.LastPrice,
+		})
+	}
+	return out, nil
+}
+
 // adaptHoldings converts a slice of official HoldingsItem records to
 // []domain.Position.
 //

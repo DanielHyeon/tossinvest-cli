@@ -1,0 +1,125 @@
+{
+  "file": "internal/console/static_test.go",
+  "source_sha256": "cf50431776eb9f59f0ec6105fa9c8cc604dfbdac8200834cb4a64eec7450c3d4",
+  "package": "console",
+  "function": "TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate",
+  "signature": "TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(params=1, results=0)",
+  "start": {
+    "line": 149,
+    "column": 1
+  },
+  "end": {
+    "line": 189,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 177,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 180,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 185,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 20
+      },
+      "text": "registeredRoutes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 174,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 176,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	SchemaVersion = 4
+	SchemaVersion = 5
 	// DefaultSchemaURL is derived from version.Repo (single source of truth).
 	DefaultSchemaURL = "https://raw.githubusercontent.com/" + version.Repo + "/main/schemas/config.schema.json"
 )
@@ -106,6 +106,9 @@ type File struct {
 	Trading       Trading     `json:"trading"`
 	UpdateCheck   UpdateCheck `json:"update_check"`
 	OpenAPI       OpenAPI     `json:"openapi"`
+	// Engine configures the unattended trading engine. Zero value = gate off,
+	// which is what every pre-v5 config produces (engine.go).
+	Engine Engine `json:"engine"`
 }
 
 type Status struct {
@@ -118,6 +121,7 @@ type Status struct {
 	Trading             Trading     `json:"trading"`
 	UpdateCheck         UpdateCheck `json:"update_check"`
 	OpenAPI             OpenAPI     `json:"openapi"`
+	Engine              Engine      `json:"engine"`
 }
 
 type InitResult struct {
@@ -170,6 +174,7 @@ type rawFile struct {
 	Trading       rawTrading     `json:"trading"`
 	UpdateCheck   rawUpdateCheck `json:"update_check"`
 	OpenAPI       *rawOpenAPI    `json:"openapi,omitempty"`
+	Engine        *rawEngine     `json:"engine,omitempty"`
 }
 
 func NewService(path string) *Service {
@@ -206,6 +211,7 @@ func (s *Service) Status(context.Context) (Status, error) {
 		Trading:             cfg.Trading,
 		UpdateCheck:         cfg.UpdateCheck,
 		OpenAPI:             cfg.OpenAPI,
+		Engine:              cfg.Engine,
 	}, nil
 }
 
@@ -323,6 +329,10 @@ func (s *Service) load() (File, bool, legacyMetadata, error) {
 			cfg.OpenAPI.Prefer = "auto"
 		}
 	}
+
+	// Engine: absent block → the zero Engine, whose automation gate is off. See
+	// engine.go for why every default in that block is the closed one.
+	mergeEngine(&cfg.Engine, raw.Engine)
 
 	return cfg, true, meta, nil
 }

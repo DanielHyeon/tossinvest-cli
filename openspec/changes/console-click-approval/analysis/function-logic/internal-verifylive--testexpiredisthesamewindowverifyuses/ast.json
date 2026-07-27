@@ -1,0 +1,157 @@
+{
+  "file": "internal/verifylive/confirm_test.go",
+  "source_sha256": "f8d05c2aa9a7938b4d08651ee2ef6ecbbbfc4b495f763ba6f6212374f17f1a19",
+  "package": "verifylive",
+  "function": "TestExpiredIsTheSameWindowVerifyUses",
+  "signature": "TestExpiredIsTheSameWindowVerifyUses(params=1, results=0)",
+  "start": {
+    "line": 258,
+    "column": 1
+  },
+  "end": {
+    "line": 271,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 9
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 7
+      },
+      "text": "testBatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 5
+      },
+      "text": "b.Expired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 11
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 6
+      },
+      "text": "b.Expired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 12
+      },
+      "text": "b.Verify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 39
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 259,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 260,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 268,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

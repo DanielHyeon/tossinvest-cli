@@ -176,6 +176,65 @@ func TestInferMarketFromStockCode(t *testing.T) {
 	}
 }
 
+// TestCanonicalPlaceIsUnchangedByClientOrderID is the characterization the
+// idempotency-key wiring promised (extend-execution-contract D2, WORKFLOW §0.2).
+//
+// PlaceIntent gained a ClientOrderID field so the engine can send the broker's
+// idempotency key. The CLI's confirm token is derived from CanonicalPlace, and a
+// human retypes it — so the canonical string, and therefore the token, must be
+// byte-identical to what this build produced before the field existed. The golden
+// literals below are that "before": they were computed from the upstream
+// canonical function and are not to be recomputed from the current code.
+func TestCanonicalPlaceIsUnchangedByClientOrderID(t *testing.T) {
+	const (
+		goldenCanonical = "kind=place|amount=0|currency_mode=KRW|fractional=false|market=kr|" +
+			"order_type=limit|price=70000|quantity=2|side=buy|symbol=005930"
+		goldenToken = "49d696b2ea74"
+
+		goldenFractionalCanonical = "kind=place|amount=100.5|currency_mode=USD|fractional=true|market=us|" +
+			"order_type=market|price=0|quantity=0|side=buy|symbol=TSLL"
+		goldenFractionalToken = "d07b81cfee82"
+	)
+
+	base := PlaceIntent{
+		Symbol: "005930", Market: "kr", Side: "buy", OrderType: "limit",
+		Quantity: 2, Price: 70000, CurrencyMode: "KRW",
+	}
+	fractional := PlaceIntent{
+		Symbol: "TSLL", Market: "us", Side: "buy", OrderType: "market",
+		Amount: 100.5, CurrencyMode: "USD", Fractional: true,
+	}
+
+	for _, tc := range []struct {
+		name      string
+		intent    PlaceIntent
+		canonical string
+		token     string
+	}{
+		{"quantity based", base, goldenCanonical, goldenToken},
+		{"amount based", fractional, goldenFractionalCanonical, goldenFractionalToken},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := CanonicalPlace(tc.intent); got != tc.canonical {
+				t.Fatalf("canonical string drifted:\n got %q\nwant %q", got, tc.canonical)
+			}
+			if got := ConfirmToken(CanonicalPlace(tc.intent)); got != tc.token {
+				t.Fatalf("confirm token drifted: got %q, want %q", got, tc.token)
+			}
+
+			keyed := tc.intent
+			keyed.ClientOrderID = "tos-9RKcGr0v3ZmiHZ7mQ0dQi7uS4uWTaWyL"
+			if got := CanonicalPlace(keyed); got != tc.canonical {
+				t.Errorf("the idempotency key entered the canonical string:\n got %q\nwant %q",
+					got, tc.canonical)
+			}
+			if got := ConfirmToken(CanonicalPlace(keyed)); got != tc.token {
+				t.Errorf("the idempotency key changed the confirm token: got %q, want %q", got, tc.token)
+			}
+		})
+	}
+}
+
 func TestConfirmTokenIsDeterministic(t *testing.T) {
 	canonical := CanonicalPlace(PlaceIntent{
 		Symbol:       "TSLL",

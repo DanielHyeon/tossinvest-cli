@@ -1,0 +1,111 @@
+{
+  "file": "internal/console/remeasure_test.go",
+  "source_sha256": "c9b96a6e8c5566cbbba107a0d0fc73efb09b6b97d06546bf56ddf225bc1ca05c",
+  "package": "console",
+  "function": "TestAnOrdinaryStartIsStillNotARemeasure",
+  "signature": "TestAnOrdinaryStartIsStillNotARemeasure(params=1, results=0)",
+  "start": {
+    "line": 264,
+    "column": 1
+  },
+  "end": {
+    "line": 283,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 275,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 276,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 279,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 7
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 2
+      },
+      "text": "seedVerdicts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 2
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 11
+      },
+      "text": "h.waitForFinish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 273,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

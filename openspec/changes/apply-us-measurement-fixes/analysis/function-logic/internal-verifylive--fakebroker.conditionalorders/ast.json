@@ -1,0 +1,129 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "0fad6a437d582cb68ff83eec970147fc3c2110eaddfc5492ee90b362d9fe7740",
+  "package": "verifylive",
+  "function": "ConditionalOrders",
+  "receiver": "fakeBroker",
+  "signature": "fakeBroker.ConditionalOrders(params=5, results=2)",
+  "start": {
+    "line": 325,
+    "column": 1
+  },
+  "end": {
+    "line": 351,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 329,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 336,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 342,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 345,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 330,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 2
+      },
+      "text": "f.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 8
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 348,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 328,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    }
+  ],
+  "revision": "current"
+}

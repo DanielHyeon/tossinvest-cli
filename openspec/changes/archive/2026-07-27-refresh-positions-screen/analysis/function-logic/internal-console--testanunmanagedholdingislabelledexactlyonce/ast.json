@@ -1,0 +1,165 @@
+{
+  "file": "internal/console/portfolio_test.go",
+  "source_sha256": "52e4fbda9d9ed1c03ee0eb5d1b9847363ff55e9fabbdb57f542e88dbd2a108bf",
+  "package": "console",
+  "function": "TestAnUnmanagedHoldingIsLabelledExactlyOnce",
+  "signature": "TestAnUnmanagedHoldingIsLabelledExactlyOnce(params=1, results=0)",
+  "start": {
+    "line": 313,
+    "column": 1
+  },
+  "end": {
+    "line": 343,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 325,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 332,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 7
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 2
+      },
+      "text": "seedJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 10
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 10
+      },
+      "text": "strings.Count"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 321,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

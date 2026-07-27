@@ -11,7 +11,7 @@
     },
     "schema_version": {
       "type": "integer",
-      "const": 4
+      "const": 5
     },
     "trading": {
       "type": "object",
@@ -89,6 +89,61 @@
         "fallback": {
           "type": "boolean",
           "default": true
+        }
+      }
+    },
+    "engine": {
+      "description": "Unattended trading engine settings. Ignored by tossctl itself.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "automation_gate": {
+          "description": "Master switch for unattended order placement. Turning it on is a human decision and is recorded in the audit log; the engine still refuses to start without a valid capability attestation and non-zero limits.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "attestation_file": {
+              "type": "string"
+            },
+            "max_order_quantity": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0
+            },
+            "max_order_notional": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0
+            },
+            "limit_currency": {
+              "type": "string",
+              "enum": ["KRW", "USD"]
+            }
+          }
+        },
+        "adoption": {
+          "description": "Whether externally acquired holdings are taken into the engine's exit management. Off by default; turning it on is a human decision recorded in the audit log. A default_stop_pct outside [0.02, 1) is refused and leaves adoption entirely off — below 0.02 the protective band is narrower than observation noise and the round-trip cost, which makes it a device that liquidates on the first tick.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "default_stop_pct": {
+              "type": "number",
+              "minimum": 0.02,
+              "exclusiveMaximum": 1
+            },
+            "exclude_symbols": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
         }
       }
     }

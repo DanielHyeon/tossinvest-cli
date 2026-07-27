@@ -1,0 +1,259 @@
+{
+  "file": "internal/console/data.go",
+  "source_sha256": "416a98b72af85874f61a6deb19abe79174635a117dbd763fb6560aa4a270c7e1",
+  "package": "console",
+  "function": "readVerify",
+  "receiver": "Console",
+  "signature": "Console.readVerify(params=1, results=1)",
+  "start": {
+    "line": 287,
+    "column": 1
+  },
+  "end": {
+    "line": 314,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 309,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 291,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 296,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 26
+      },
+      "text": "c.verifyRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 58
+      },
+      "text": "verifylive.NormalizeMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 10
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 14
+      },
+      "text": "verifylive.Steps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 18
+      },
+      "text": "verifylive.LoadEntries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 13
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 14
+      },
+      "text": "verifylive.BuildProgress"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 14
+      },
+      "text": "verifylive.StepCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 11
+      },
+      "text": "verifylive.RedoSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 6
+      },
+      "text": "s.Verdict.Terminal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 293,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 295,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 303,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 310,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,12 @@
+# Branch Test Map: `TestAWrongNonceSendsNothingAndStopsTheRun`
+
+- Source: `internal/console/console_test.go`
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | `if resp.StatusCode != http.StatusOK {` (internal/console/console_test.go:419) | 이 함수 자체가 테스트다 | yes | yes |
+| B2 | `if n := h.broker.mutationCount(); n != 0 {` (internal/console/console_test.go:424) | 이 함수 자체가 테스트다 | yes | yes |
+| B3 | `if !final.Summary.Halted {` (internal/console/console_test.go:427) | 이 함수 자체가 테스트다 | yes | yes |
+| B4 | `if len(h.broker.placements()) != 0 {` (internal/console/console_test.go:430) | 이 함수 자체가 테스트다 | yes | yes |
+| B5 | `if n := verifylive.StepCount(entries); n != 0 {` (internal/console/console_test.go:436) | 이 함수 자체가 테스트다 | yes | yes |
+| B6 | `if len(entries) == 0 {` (internal/console/console_test.go:439) | 이 함수 자체가 테스트다 | yes | yes |

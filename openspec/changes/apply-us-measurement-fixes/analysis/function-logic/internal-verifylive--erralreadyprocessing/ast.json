@@ -1,0 +1,30 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "0fad6a437d582cb68ff83eec970147fc3c2110eaddfc5492ee90b362d9fe7740",
+  "package": "verifylive",
+  "function": "errAlreadyProcessing",
+  "signature": "errAlreadyProcessing(params=0, results=1)",
+  "start": {
+    "line": 416,
+    "column": 1
+  },
+  "end": {
+    "line": 419,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 417,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

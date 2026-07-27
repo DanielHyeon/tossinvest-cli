@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+# Index freshness is explicit (`make sdd-sync`) and post-commit observation is
+# detached. The only synchronous check is local tracked-memory validation.
+
+REPO="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+if command -v python3 >/dev/null 2>&1; then
+  python3 "$REPO/scripts/memory_index.py" check --memory-root "$REPO/docs/memory"
+fi

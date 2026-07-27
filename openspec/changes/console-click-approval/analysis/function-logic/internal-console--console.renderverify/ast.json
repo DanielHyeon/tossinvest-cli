@@ -1,0 +1,170 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "ed44258234517e4e3a15463ec8c5ce9ff04b0f18921ae0120db3c6c2073315ce",
+  "package": "console",
+  "function": "renderVerify",
+  "receiver": "Console",
+  "signature": "Console.renderVerify(params=2, results=0)",
+  "start": {
+    "line": 119,
+    "column": 1
+  },
+  "end": {
+    "line": 150,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 2
+      },
+      "text": "verifylive.WriteSteps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 10
+      },
+      "text": "c.snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 15
+      },
+      "text": "steps.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 2
+      },
+      "text": "c.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 2
+      },
+      "text": "c.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 12
+      },
+      "text": "c.currentRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 8
+      },
+      "text": "run.snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 18
+      },
+      "text": "v.Batch.Summary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 144,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 147,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,120 @@
+{
+  "file": "internal/verifylive/confirm.go",
+  "source_sha256": "7180c5b9c8dda08c28eb64baea78bf83d3e69a304dcd5eac582f6c55f1eb7768",
+  "package": "verifylive",
+  "function": "Summary",
+  "receiver": "Batch",
+  "signature": "Batch.Summary(params=0, results=1)",
+  "start": {
+    "line": 214,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 93
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 2
+      },
+      "text": "s.WriteString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 2
+      },
+      "text": "b.Plan.WriteLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 2
+      },
+      "text": "s.WriteString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 9
+      },
+      "text": "s.String"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 218,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

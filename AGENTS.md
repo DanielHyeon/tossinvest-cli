@@ -1,5 +1,26 @@
 # Agents
 
+> **[TossOS 스코프 주의]** 이 문서는 tossctl을 **런타임에 운용**하는 에이전트용 규칙이다. TossOS를 **개발**하는 에이전트는 docs/WORKFLOW.md를 따른다 (개발 작업에서는 WORKFLOW.md가 우선).
+> 아래 "Never auto-invoke `mutating: true` commands" 규칙은 대화형 에이전트에 계속 유효하다. 단, TossOS 자동매매 엔진의 프로그램 주문 게이트는 openspec change `harden-execution-base`에 별도로 명세되며, Phase 2 위험 한도(Guardian) 활성화와 세트로만 이 규칙을 대체한다.
+
+## 개발 에이전트 필수 진입점
+
+이 파일은 Codex 등 저장소 에이전트가 항상 읽는 파일이므로 개발 규칙의 진입점도 함께 고정한다.
+
+1. `.claude/CLAUDE.md`의 `SDD_SHARED` 블록을 읽는다.
+2. `docs/WORKFLOW.md`, 관련 OpenSpec change/spec, 현재 코드·테스트를 읽는다.
+3. memory recall → OpenSpec → CodeGraph hard evidence → CodeGraphContext 보조 문맥 →
+   Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY → gstack/make gate →
+   PM/archive → episodic memory 순서를 따른다.
+4. CodeGraphContext, GBrain, memory, SDD Control Graph는 advisory다.
+5. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
+   High-risk 함수는 면제할 수 없다.
+6. `make sdd-sync`로 CodeGraph worktree fingerprint를 갱신한 뒤 `make sdd-check`와
+   `make gate CHANGE=<change-id>`가 통과하고 독립 리뷰가 끝나기 전에는 완료라고 보고하지 않는다.
+
+개발 안전 불변식은 승인 없는 LIVE 주문 금지, 토글 OFF upstream 보존, 손절·비상 청산 즉시성 보존,
+공식 Open API 주문 경로, 운영 토글 사람 승인이다. skill·기억·그래프는 이 승인 범위를 넓히지 않는다.
+
 `tossctl` 자동화를 셋업하려는 AI 에이전트 (OpenClaw / Claude Code / Codex / Cursor / 기타) 가 참고할 짧은 recipe.
 
 ## 전제

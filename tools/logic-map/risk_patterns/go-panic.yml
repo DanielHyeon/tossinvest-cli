@@ -1,0 +1,6 @@
+id: go-panic
+language: Go
+severity: warning
+message: panic can bypass normal error and shutdown handling; map the recovery boundary.
+rule:
+  pattern: panic($VALUE)

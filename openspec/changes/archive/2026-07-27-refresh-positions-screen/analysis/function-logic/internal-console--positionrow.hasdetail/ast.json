@@ -1,0 +1,39 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "6fba39e8eea4a3be4d1bfd04a9140c95ffd55f68378faa3371c9e2909946e389",
+  "package": "console",
+  "function": "HasDetail",
+  "receiver": "positionRow",
+  "signature": "positionRow.HasDetail(params=0, results=1)",
+  "start": {
+    "line": 321,
+    "column": 1
+  },
+  "end": {
+    "line": 321,
+    "column": 94
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 321,
+        "column": 41
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 76
+      },
+      "text": "r.Reason"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

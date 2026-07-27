@@ -1,0 +1,33 @@
+# Function Logic Map: `usRecordPath`
+
+- Source: `internal/console/console_test.go` (revision: current)
+- AST evidence: `ast.json`
+- Risk scan: `risk-pattern-report.md`
+- Change: `verify-us-market`
+
+## Inputs and invariants
+
+| Input/state | Valid range | Source of truth | Failure behavior |
+|---|---|---|---|
+| 테스트 입력 | 테스트가 구성한 하네스 상태 | 테스트 코드 | 실패는 t.Error/t.Fatal |
+
+## Branches and early returns
+
+| Branch | Condition | Mutation/side effect | Return/error | Required test |
+|---|---|---|---|---|
+| B1 | 분기 없음 — 단일 경로 (internal/console/console_test.go) | 아래 State mutations 참조 | 정상 반환 | 이 함수 자체가 테스트다 |
+
+## Calls and live bindings
+
+| Callee | Why called | Error/timeout/retry contract | Evidence |
+|---|---|---|---|
+| 하네스·fake broker 헬퍼 | 시나리오 구동 | 테스트 전용 | AST callees |
+
+## State mutations and fallbacks
+
+- 테스트/하네스 함수다 — httptest·fake broker만 사용하고 실계좌 side effect가 없다. 이 change에서의 변경은 시장 매개변수와 US 보유를 재현하기 위한 것이다.
+
+## Safety conclusion
+
+- Safe edit boundary: 거부 경로의 주장(‘mutating broker call 0건’)이 약해지지 않을 것.
+- High-risk impact: no — 테스트 코드이며 프로덕션 경로가 아니다.

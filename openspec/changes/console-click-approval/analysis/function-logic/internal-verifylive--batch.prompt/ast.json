@@ -1,0 +1,88 @@
+{
+  "file": "internal/verifylive/confirm.go",
+  "source_sha256": "7180c5b9c8dda08c28eb64baea78bf83d3e69a304dcd5eac582f6c55f1eb7768",
+  "package": "verifylive",
+  "function": "Prompt",
+  "receiver": "Batch",
+  "signature": "Batch.Prompt(params=0, results=1)",
+  "start": {
+    "line": 236,
+    "column": 1
+  },
+  "end": {
+    "line": 243,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 2
+      },
+      "text": "s.WriteString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 16
+      },
+      "text": "b.Summary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 12
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 12
+      },
+      "text": "b.ExpiresAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 2
+      },
+      "text": "s.WriteString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 9
+      },
+      "text": "s.String"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

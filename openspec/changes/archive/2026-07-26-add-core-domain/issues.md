@@ -1,0 +1,1046 @@
+# Issues: add-core-domain
+
+> 구현 중 발견한 스펙·코드 마찰 기록. advisory only — 권위는 spec + 코드 + 테스트.
+> 분류: **blocking**(구현 중단 + Manager 호출) / **safe local**(스펙 의도 명백, 구현하며 기록) / **observation**(후속 task 입력)
+
+## 2026-07-26 [safe local] D7 표가 nullability를 적지 않은 컬럼의 해석 (task 0.1)
+
+- 사실: D7 표는 일부 컬럼에만 `NOT NULL`을 명시한다(`account_ref·market·symbol NOT NULL`,
+  `entry_price·initial_stop·initial_risk TEXT NOT NULL`, `baseline_price NOT NULL`,
+  `high_water NOT NULL`, `expected_prev_quantity TEXT NOT NULL`, `broker_as_of NOT NULL`).
+  enum 컬럼은 `state CHECK(...)`, `kind CHECK(...)`, `mode CHECK(...)`,
+  `actor CHECK(AUTO|OPERATOR)`, `policy_kind CHECK(...)`, `ratchet_level CHECK(...)`처럼
+  CHECK만 적혀 있고, 기본값 컬럼은 `taken_ratio_total TEXT NOT NULL DEFAULT '0'`(NOT NULL 명시)와
+  `completed INTEGER DEFAULT 0`(미명시)로 갈린다.
+- 문제: SQLite에서 `CHECK (x IN (...))`는 x가 NULL이면 결과가 NULL이라 **제약을 통과한다**.
+  자구 그대로 옮기면 `state`, `mode`, `actor`, `policy_kind`, `ratchet_level`이 전부 NULL을
+  허용하고, 열거값 밖의 상태가 "NULL"이라는 이름으로 존재하게 된다. DEFAULT만 있는 컬럼도
+  명시적 `NULL` 쓰기로 기본값을 무력화할 수 있다.
+- 이번 처리: **v5 전사가 `risk_reservations.state`에 내린 판정을 그대로 승계**한다 —
+  D9는 `state CHECK(HELD|RELEASED) DEFAULT HELD`였고 전사는
+  `state TEXT NOT NULL DEFAULT 'HELD' CHECK (...)`였다(execution_contract.go:174).
+  규칙: **v6 신규 테이블에서 enum CHECK를 가진 컬럼과 DEFAULT를 가진 컬럼은 NOT NULL**.
+  적용 대상: `positions.state`, `position_adjustments.kind`, `operating_modes.mode`,
+  `operating_modes.actor`, `exit_states.policy_kind`, `exit_states.ratchet_level`,
+  `exit_states.completed`. 표의 열거·기본값 자구는 하나도 바꾸지 않았다.
+- 검증: `TestPositionsStateCheck`(NULL state 거부), `TestExitStatesEnumsAndDefaults`
+  (taken_ratio_total·completed NOT NULL), `TestOperatingModesConstraints`.
+
+## 2026-07-26 [safe local] `exit_events`의 "id PK"를 INTEGER AUTOINCREMENT로 전사 (task 0.1)
+
+- 사실: D7은 `position_adjustments`·`operating_modes`·`exit_events` 셋 다 "id PK"로만 적는다.
+  journal의 기존 관례는 두 갈래다 — 호출자 발행 안정 PK(`intents.id`, `reconcile_states.id`)와
+  append-only 이벤트 로그의 자동증가 정수(`attempt_transitions`, `fill_events`,
+  `lineage_edges`).
+- 이번 처리: `exit_events`만 `INTEGER PRIMARY KEY AUTOINCREMENT`. 근거는 그 테이블의 성격이다 —
+  5초 주기 관측 판정의 순서 자체가 기록 대상이고, 호출자가 재시도로 되찾을 안정 id가 없다
+  (`fill_events`와 같은 모양). `position_adjustments`(compare-and-append 재시도 인식)와
+  `operating_modes`(전환 멱등)는 호출자 발행 TEXT PK로 남겼다.
+- 후속 task 입력: **7.4**가 exit_events를 쓸 때 "같은 판정 재관측"의 중복은 PK가 막지 않는다 —
+  중복 회피가 필요하면 판정 루프 쪽의 조건(레벨/워터마크 무변화 시 미기록)으로 처리해야 한다.
+
+## 2026-07-26 [safe local] `position_adjustments`의 prev/new avg_price 표현 (task 0.1)
+
+- 사실: D7은 "prev/new quantity·avg_price"라고만 적는다(4개 컬럼, nullability·기본값 미기재).
+  외부 편입 포지션은 브로커가 취득단가를 주지 않을 수 있다.
+- 이번 처리: 수량 쌍은 `TEXT NOT NULL`(수량 없는 수량 조정은 조정이 아니다), 단가 쌍은
+  `TEXT NOT NULL DEFAULT ''` — `''`가 "미관측"이라는 규약은 바로 옆
+  `fill_snapshots.average_price`(schemaV2)와 `execution_corrections.new_avg_price`(schemaV5)가
+  이미 쓰는 것이다. NULL을 쓰지 않은 이유도 v5와 같다: NULL은 인덱스·비교에서 서로 구별되는
+  값이라 "미관측"의 동치 비교를 조용히 깨뜨린다.
+
+## 2026-07-26 [safe local] `exit_states.pending_intent_id`에 FK를 걸지 않았다 (task 0.1)
+
+- 사실: D7은 `pending_intent_id TEXT`로만 적는다(FK 미기재). 반면 exit-policy 스펙의
+  "제출 전 크래시" 시나리오는 **발의 기록 → 제출**의 순서를 요구한다.
+- 이번 처리: FK 없음(자구대로). `intents(id)` FK를 걸면 intent가 아직 없는 시점에 pending을
+  무장하는 것이 구조적으로 불가능해지고, 그 순서가 정확히 크래시 복원을 가능하게 하는
+  순서다. 스키마 주석에 이 이유를 남겼다.
+
+## 2026-07-26 [safe local] `operating_modes`의 "현재=최신 행"과 초 해상도 타임스탬프 (task 0.1)
+
+- 사실: D7은 "append-only, 현재=최신 행"이라고 적고, journal의 타임스탬프 규약은 RFC3339
+  **초 해상도**다(decision.go `formatJournalTime`). 한 초 안에 두 번 전환하면 `created_at`만으로는
+  순서가 결정되지 않는다.
+- 이번 처리: 스키마는 그대로 두고, 읽기 규약을 `(created_at, rowid)` 정렬로 못박아 컬럼 주석에
+  남겼다(fills.go의 `ORDER BY a.recorded_at DESC, a.rowid DESC`와 같은 처리).
+- 후속 task 입력: **3.1**의 현재 모드 조회는 반드시 `ORDER BY created_at DESC, rowid DESC LIMIT 1`.
+  `created_at`만으로 정렬하면 보수 강화 직후의 완화가 먼저 읽힐 수 있다.
+
+## 2026-07-26 [observation] `positions.opened_at`/`closed_at`은 nullable로 남겼다 (task 0.1)
+
+- D7은 두 컬럼에 제약을 적지 않는다. `closed_at`은 정의상 CLOSED 전까지 NULL이고, `opened_at`은
+  체결 전 상태(FLAT/OPENING)의 행이 존재할 수 있어 nullable로 두었다. 시각 컬럼의 허용 방향이라
+  안전 제약을 약화하지 않는다. **6.1**이 상태기계를 구현할 때 "OPEN 이상은 opened_at NOT NULL"을
+  코드 불변식으로 강제하면 된다(스키마 재작업 불필요 — 나중에 CHECK를 추가하려면 테이블 재작성이
+  필요하므로 코드 쪽이 맞다).
+
+## 2026-07-26 [safe local] 비용 override의 미지 키는 무시가 아니라 거부 (task 1.1)
+
+- 사실: StockOS `costs.py:170-176` `_resolve_rate`는 env에 없는 키를 기본값으로 통과시키고,
+  `tests/test_costs_env_override.py:57-63`은 "무관한 키가 모델을 흔들지 않는다"를 단언한다.
+  env에는 수백 개의 무관한 키가 정상적으로 존재하므로 원본에서는 그것이 옳다.
+- 문제: TossOS의 override는 전용 설정 블록이다. 인식되지 않는 키는 무관한 키가 아니라 **오타**이고,
+  오타를 조용히 기본값으로 통과시키면 운영자가 설정했다고 믿는 값이 설정되지 않은 채 동작한다.
+  §0.5(설정 변경 추적 가능)와 어긋난다.
+- 이번 처리: 미지 키는 `ErrInvalidRate`로 거부(원본보다 엄격한 방향). 원본 케이스 2를
+  `TestUnknownOverrideKeyIsRefused`로 **반전 이식**했고, 원본이 실제로 지키던 성질(모델이 모르는
+  override가 모델을 흔들지 않는다)은 `TestNoOverridesReturnsDefaults` + 거부로 보존된다.
+- 후속 task 입력: **4.x**가 설정 스키마를 배선할 때 미지 키 거부는 기동 실패로 이어진다
+  (costs.py 모듈 docstring의 "Failure mode"와 같은 계약).
+
+## 2026-07-26 [safe local] 실질 본전의 최소이익 하한은 native 통화 (task 1.1)
+
+- 사실: `costs.py:269-284` `_native_profit_floor`는 KRW 최소이익 하한을 `usd_krw_rate`로 나눠
+  USD로 환산하고, `tests/test_costs_env_override.py:263-283`이 그 환산을 단언한다.
+- 문제: 통화 정규화는 `internal/riskcalc`의 소관이고 거기에는 환율 신선도 상한
+  (`FXRateStaleness=60s`)과 "환율 없으면 암묵적 1:1 금지"가 이미 있다(riskcalc.convert).
+  비용 모델 안에 상한 없는 두 번째 환산을 두면 stale 환율로 계산된 본전가가 조용히 통과한다.
+- 이번 처리: `BreakEvenSellPriceWithFloor`의 하한은 **거래 자체 통화**로 받는다. 케이스 16은
+  `TestUSBreakEvenAppliesNativeProfitFloorAndFXFee`로 이식 — 검증 대상 산술(하한 가산 + 매도측
+  비율 그로스업)은 동일하고 환산 단계만 호출자 책임으로 옮겼다.
+
+## 2026-07-26 [safe local] KRX 보드 차원(KOSPI/KOSDAQ/KONEX) 미이식 (task 1.1)
+
+- 사실: `costs.py:76-78`은 보드별 거래세율을 따로 갖는다.
+- 문제: TossOS의 시장 어휘는 `internal/clock.Market`("kr"/"us")이고 journal·intent·브로커
+  클라이언트 어디에도 보드 차원이 없다. 보드를 구별할 수 없는 프로그램에 보드별 요율을 두면
+  어느 요율이 쓰였는지 아무도 모른다.
+- 이번 처리: KR 단일 요율을 보드 최대치 방향(과대 추정)으로 둔다. 요율은 전부 `[미검증]`이므로
+  **2b 실측**이 이 결정을 함께 재검토한다. 보드를 구별할 입력이 생기면 그때 차원을 추가한다.
+
+## 2026-07-26 [safe local] `migration_v5_test.go`가 head 버전을 따라다니고 있었다 (task 0.1)
+
+- 사실: v5 전이 테스트 4건이 `openTestJournalAt`(= head까지 마이그레이션)을 썼다. SchemaVersion이
+  6이 되는 순간 `TestMigrationV4ToV5PreservesEveryRow`는 v4→v6 테스트가 되고,
+  `TestOlderBuildRefusesTheV5Journal`의 "두 버전 이름이 메시지에 있다" 단언과
+  `TestMigrationBacksUpBeforeApplying`의 `v4-pre-v5` 파일명 단언은 그냥 깨진다.
+- 이번 처리: 그 4건을 `openJournalAtSchema(t, path, 5)`로 고정해 **v4→v5 전이 테스트로 유지**하고,
+  head 전이(v5→v6)는 `migration_v6_test.go`로 따로 세웠다. 백업 검사 헬퍼는
+  `assertBackupAtVersion(backup, version, want, absentTable)`로 일반화해 두 파일이 공유한다.
+  단언은 하나도 약해지지 않았다(같은 검사를 두 전이에 각각 건다).
+
+## 2026-07-26 [safe local] 만료 sentinel은 `ErrInvalidRequest`를 감싼다 (task 0.2)
+
+- 사실: 태스크는 DECISION_EXPIRED에 **신규 sentinel**을 요구한다(현재 만료는
+  `checkDecisionReservable`이 `ErrInvalidRequest`로 낸다 — reservations.go). 그런데 landed
+  `TestReservationRequiresARecordedUnexpiredDecision`은 만료가 `ErrInvalidRequest`임을 단언하고,
+  단발 `Reserve`의 공개 계약도 그렇다.
+- 이번 처리: `ErrDecisionExpired = fmt.Errorf("%w: decision expired", ErrInvalidRequest)`.
+  `errors.Is(err, ErrInvalidRequest)`는 그대로 참이므로 기존 API·호출자·테스트는 하나도 약해지지
+  않고, 새로 얻는 것은 "이 거부를 다른 invalid request와 구별할 수 있다"뿐이다 — 그게 정확히
+  reason 매핑에 필요한 것이다.
+- 검증: `TestIssuanceRefusesAnExpiredDecision`(두 sentinel 동시 만족),
+  `TestSingleShotReserveStillRefusesTheExpiredDecision`(단발 API 무변경).
+
+## 2026-07-26 [safe local] 재수집 변형을 함께 구현했다 — 그래야 reason 매핑이 도달 가능하다 (task 0.2)
+
+- 사실: 태스크의 reason 매핑은 `SNAPSHOT_RECOLLECTION_EXHAUSTED←ErrRecollectionExhausted`를
+  요구하는데, 그 오류는 재수집 루프에서만 나온다. `RecordDecisionAndReserve` 단발 API만으로는
+  네 reason 중 하나가 구조적으로 도달 불가능하고, 도달 불가능한 매핑은 테스트할 수 없다.
+- 이번 처리: `RecordDecisionAndReserveWithRecollection`(+`CollectIssue`)을 같이 추가했다.
+  루프 본체는 landed `ReserveWithRecollection`에서 `recollectLoop[T]`로 추출해 **두 API가
+  같은 루프를 공유**한다 — 재시도 가능 오류 집합·데드라인·소진=거부라는 세 성질이 사본 사이에서
+  갈라지지 않게 하려는 것이다. `ReserveWithRecollection`의 동작은 무변경(기존 테스트 green).
+- 부수 효과: 재수집 예산(10초)이 결정 TTL(60초)보다 짧다는 D1의 논증이 테스트로 고정된다 —
+  `TestIssuanceWithRecollectionExpiresWithTheDecision`은 TTL을 예산보다 짧게 만들어 루프가
+  결정보다 오래 살면 DECISION_EXPIRED로 끝남을 보인다.
+
+## 2026-07-26 [observation] 원자 발급의 거부 순서는 precheck → 결정 삽입 → 예약 (task 0.2)
+
+- 트랜잭션 안 순서: 스냅샷 신선도·원장 버전(결정 행이 필요 없는 거부) → 결정 INSERT →
+  `checkDecisionReservable`(만료·계좌·1회) → 총계 → 예약 INSERT. 그래서 VERSION_CONFLICT는
+  결정을 쓰기 전에, DECISION_EXPIRED·LIMIT_REACHED는 쓴 뒤에 롤백으로 거부된다.
+- 후속 task 입력: **4.1** 발급자가 reason을 기록할 때 한 요청이 두 reason에 해당할 수
+  있다(예: 만료된 결정 + 소진된 한도). 위 순서가 곧 우선순위이며, `IssueRefusalReason`의
+  분기 순서(한도 → 만료 → 소진 → 버전)는 **오류 래핑** 우선순위라 서로 다르다 —
+  `ErrRecollectionExhausted`가 마지막 stale/superseded를 감싸므로 버전보다 먼저 검사해야 한다.
+
+## 2026-07-26 [safe local] apply hook의 범위는 "해소"이고 "무장"은 7.3의 몫이다 (task 0.3)
+
+- 사실: D7의 괄호는 "taken_ratio·pending **해소**는 여기서만"이고, exit-policy 스펙의 발의
+  무장(pending_action/level/intent_id 세팅)은 관측 판정 경로(별도 트랜잭션)에서 일어난다.
+  태스크 0.3 문장("hook 밖에서 taken_ratio·pending을 쓸 수 없음")은 그보다 넓게 읽힌다.
+- 이번 처리: `ApplyTx`는 `MoveTakenRatioTotal`·`ResolvePending`만 갖는다(무장 API 없음).
+  결과적으로 **지금은 네 컬럼의 writer가 apply_hook.go 하나뿐**이고,
+  `TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook`이 다른 production 파일에서 컬럼 이름이
+  등장하기만 해도 실패한다.
+- 후속 task 입력: **7.3**이 무장 writer를 추가할 때는 그 함수도 `apply_hook.go`에 두어야 한다
+  (다른 파일에 두면 layout 테스트가 실패한다 — 그게 의도된 강제 검토 지점이다). 무장은 fill
+  트랜잭션이 아니라 발의 트랜잭션에서 일어나므로 `*Journal` 메서드 형태가 맞다.
+
+## 2026-07-26 [safe local] `ApplyTx.Exec`은 투영 테이블용이고 guarded 컬럼은 거부한다 (task 0.3)
+
+- 사실: 투영(6.1)은 `positions`·`position_adjustments`의 모양을 소유하고, journal이 그 상태기계를
+  소유해서는 안 된다(position-ledger: journal이 도메인 상태기계를 직접 소유하는 것도 아니다).
+  그래서 hook에는 일반 `Exec`가 필요하다. 그런데 일반 Exec가 있으면 hook이 그것으로
+  `taken_ratio_total`을 쓸 수 있고, 그러면 layout 테스트가 볼 수 없는 writer가 생긴다.
+- 이번 처리: `ApplyTx.Exec`는 쿼리 문자열에 guarded 컬럼 이름이 있으면 `ErrInvalidRequest`로
+  거부한다(런타임). 같은 목록이 layout 테스트에도 있고, 둘은 한쪽이 바뀌면 사람이 대조하도록
+  일부러 이중화했다. 문자열 검사라는 한계는 명시한다 — 우회하려면 SQL을 동적으로 조립해야 하고,
+  그건 리뷰에서 보인다.
+
+## 2026-07-26 [observation] hook은 거부·no-op 스냅샷에서 호출되지 않는다 (task 0.3)
+
+- 계약: fail-closed 스냅샷(호출자 판정, 수량 감소, 역순 관측)과 바이트 동일 재관측에서는 hook이
+  돌지 않는다. 반영된 것이 없으므로 적용할 것도 없고, 거부된 체결을 투영하는 hook은 원장이
+  방금 믿지 않기로 한 값을 포지션에 쓰는 것이 된다.
+- 반대로 delta 0이어도 **정정(EXECUTION_CORRECTION)과 terminal 전이**에서는 호출된다 — 수량은
+  안 움직였지만 취득단가와 주문 종결성은 움직였고, 둘 다 포지션의 상태다.
+- 후속 task 입력: **6.1**의 투영 함수는 `AppliedFill.Delta == "0"`인 호출을 정상 입력으로
+  다뤄야 한다(정정·terminal).
+
+## 2026-07-26 [safe local] 현금 부족 사유 코드를 하나로 합쳤다 (task 2.1)
+
+- 사실: guardian.py:462-466은 `INSUFFICIENT_CASH`(원금 기준)와 `INSUFFICIENT_CASH_AFTER_COSTS`
+  (비용 포함)를 분리한다. risk-management 이식 분류표는 "현금(INSUFFICIENT_CASH·비용 포함)"
+  하나만 열거한다.
+- 이번 처리: 스펙대로 단일 코드. 비용 포함 검사가 항상 더 엄격하므로 두 코드의 거부 집합은
+  포함 관계이고, 코드를 둘로 두면 같은 사건이 원장에 두 이름으로 남는다. 어느 항목이
+  모자랐는지는 Detail이 숫자로 싣는다("the entry needs 90090 KRW including estimated cost
+  but 90000 KRW is available").
+- 이식된 테스트: `test_guardian_requires_cash_for_order_plus_costs` →
+  `TestCashIsMeasuredWithCostsIncluded`(같은 입력, 코드만 단일화).
+
+## 2026-07-26 [safe local] 최소 RR provenance는 원본 lock의 **초기값**이다 (task 2.2)
+
+- 사실: 스펙은 "provenance: StockOS parker_vwap §22 lock 2.0"이라고 적는데, 실제
+  `strategies/parker_vwap/default_lock.py:35-38`의 **현재 값은 1.3**이다 — Plan 044가
+  2.0→1.3으로 완화했고 그 이력이 같은 파일 :83에 남아 있다. 2.0은 그 lock의 초기값이고,
+  현행으로 살아 있는 2.0은 `live_entry_contract.py:53`
+  (`_DEFAULT_US_MIN_RR = Decimal("2.0")`)다.
+- 이번 처리: 스펙의 2.0을 유지하되 코드 주석의 provenance를 정확히 적었다(초기 lock 값 +
+  live 게이트 현행 기본값, 그리고 Plan 044의 완화를 따르지 않는 이유가 §0.9라는 것).
+  원본의 현재 값을 따라가는 것은 손절·사이징 인접 파라미터의 완화 방향이라 금지다.
+
+## 2026-07-26 [safe local] 크기 검사가 최소 RR보다 앞이라 a090 케이스 하나를 재작성했다 (task 2.2)
+
+- 사실: TossOS 체인 순서는 "손절 계약 → 주문 크기 → 최소 RR → 현금"(risk-management 표)인데
+  a090의 순서는 "stop → rr → grade → size"다. 그래서 a090
+  `test_us_market_stop_rr_rungs_still_enforced`가 의존하는 성질("사이징이 막혀도 RR이 먼저
+  보인다")은 TossOS에서 그대로 성립하지 않는다 — 통화 불일치로 사이징이 먼저 닫힌다.
+- 이번 처리: 순서는 스펙 표가 권위이므로 바꾸지 않고, 케이스를 **의도 통화와 같은 통화의
+  정책**으로 재작성해 이식했다(`TestForeignCurrencyIntentIsNotSizedAgainstADomesticBudget`
+  후반부). 원본이 지키던 성질(stop·RR rung은 시장을 건너 동일)은 그대로 검증된다.
+- 부수 기록: 크기 단계 **안**의 순서는 수량 → 위험예산 상한 → 설정 주문당 상한이다. 위험예산
+  상한이 앞인 이유는 그것이 방금 검증한 손절에서 파생된 사이징 규칙이고, 설정 상한은 그
+  바깥의 봉투이기 때문이다(docs/guardian-chain.md §1).
+
+## 2026-07-26 [safe local] 스펙에 없는 두 기본값 — 위험예산과 비용 모델 부재 (task 2.1/2.2)
+
+- 사실: 체인을 평가하려면 risk-management의 보수 기본값 6개(주문당 notional·수량·총 노출·
+  일손실·자본비·통화) 외에 **per-trade 위험예산**이 필요하다. 스펙에 값이 없다.
+- 이번 처리: `RiskBudget = MaxDailyLoss`로 **유도**했다. 측정값이 아니라, 일일 손실 한도가
+  이미 함의하는 최대 per-trade 위험이다 — 즉 이 상한은 없던 허가를 만들지 않는다. 더 작게
+  사이징하는 발급자는 자유롭고(§0.9 보수 방향), 더 크게 요구하는 의도는 거부된다.
+  코드 주석에 "측정값 아님·유도값"으로 명시했다.
+- 함께 처리: `costs.Model`의 zero value는 모든 요율이 0이라 **거래가 공짜로 보인다**(현금
+  과소 계상 + 실질 본전이 진입가로 내려앉음). 요율 0은 합법적인 설정값이라 값으로는 구별할
+  수 없으므로 `configured` 비트를 추가하고(`Model.Configured()`), 진입 경로 preflight가
+  모델 부재를 `INPUT_UNAVAILABLE`로 거부한다. **위험 감소 경로는 이 질문을 하지 않는다** —
+  "청산 비용을 계산할 수 없다"가 "그러니 들고 있어라"가 되면 §0.3 위반이다.
+
+## 2026-07-26 [observation] `stop = "0"`은 STOP_MISSING이 아니라 INVALID_TARGET_STOP (task 2.2)
+
+- 사실: a090 `test_stop_missing_rejected`는 `stop=0.0`을 `stop_missing`으로 판정한다.
+  test_target_stop_contract의 `test_candidate_rejects_zero_stop`은 같은 값을 생성자
+  ValueError로 막는다. 두 원본이 같은 입력에 다른 이름을 붙인다.
+- 이번 처리: TossOS 입력은 decimal **문자열**이라 "부재"(`""`)와 "값은 있으나 가격이 아님"
+  (`"0"`)이 구별된다. 부재 = `STOP_MISSING`, 비가격 = `INVALID_TARGET_STOP`. 구별의 실익은
+  운영자에게 "신호가 아무것도 내지 않았다"와 "말이 안 되는 값을 냈다"를 알려주는 것이다.
+  두 경우 다 거부이므로 안전 방향의 차이는 없다.
+
+## 2026-07-26 [safe local] `AppliedFill`에 직전 스냅샷 쌍을 추가했다 (task 6.1)
+
+- 사실: 투영의 원가는 주문 기여분 `누적체결 × 평균가`의 **변화**다. hook은 스냅샷 upsert
+  **뒤에** 돌아서(fills.go 순서) 직전 값이 그 시점에 이미 사라져 있다.
+- 문제: 직전 쌍 없이 쓸 수 있는 근사는 "델타 × 주문의 현재 평균가"뿐인데, 한 주문이 서로 다른
+  가격으로 두 번 이상 체결되면 틀린다(50@100 후 50@110 → 현재평균 105, 한계원가는 5500인데
+  근사는 5250). 취득단가는 실질 본전·실현 R의 분자라 §0.3 인접이다.
+- 이번 처리: `AppliedFill`에 `PrevCumulativeQuantity`·`PrevAveragePrice`·`OrderedQuantity`
+  3필드 **가산**(apply_hook.go 선언 + fills.go에서 `prev`·`obs.Quantity` 대입). 기존 필드·
+  hook 계약·guarded 컬럼 규칙 무변경. 한 식이 체결·정정·terminal 세 경로를 모두 덮는다.
+- 검증: `TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis`(첫 관측은 빈 쌍,
+  두 번째는 (5, 70000), 5@70000+5@80000 → 75000).
+
+## 2026-07-26 [safe local] OPENING 종료는 **주문별** 원주문 수량이고 lineage가 합성한다 (task 6.1)
+
+- 사실: 스펙은 "OPENING 종료 판단(원주문 수량)"이라고만 적는다. D7의 `positions`에는 추적 중인
+  주문을 담을 컬럼이 없다(정정 교체 시 브로커가 새 주문번호를 준다 — lineage.go).
+- 이번 처리: 완료 판정은 **체결 중인 주문 자신의** 주문수량 대비다. 정정 교체가 없으면 그것이
+  곧 원주문이고, 있으면 부모는 체결분에서 `SUCCEEDED`(전이표의 lineage 차원)로 끝나고 자식의
+  주문수량이 잔여라서 체인 전체가 원요청에서 정확히 완료된다. "기억된 원주문"으로 판정하려면
+  스키마에 없는 주문 식별자를 투영이 들고 있어야 하고, 수량을 바꾼 정정에서는 그쪽이 틀린다.
+- 부수 규칙: 주문수량이 `""`(미상)이면 완료를 판정할 수 없으므로 브로커가 terminal이라고 할
+  때까지 `WORKING`이다 — 완료를 가정하면 아직 체결 중인 진입을 OPEN으로 닫는다.
+- 검증: `TestOpeningCompletesAtTheOrderedQuantity`, `TestLineageSuccessionKeepsThePositionOpening`,
+  `TestAnAmendmentKeepsOneInstance`(journal), `TestNoOrderedQuantityLeavesTheOrderWorking`.
+
+## 2026-07-26 [safe local] 금지 전이는 투영자가 같은 트랜잭션에서 RECONCILE을 쓰고 체결은 커밋된다 (task 6.1)
+
+- 사실: 스펙은 "허용되지 않은 전이는 오류이며 RECONCILE로 전이한다(산식 보정 금지)"인데,
+  `positions.state` CHECK에 RECONCILE은 없다 — RECONCILE은 `reconcile_states`의 시스템 상태다.
+- 문제: hook이 오류를 반환하면 체결 트랜잭션 전체가 롤백되어 **스냅샷이 전진하지 않고**
+  다음 폴에서 같은 실패가 반복된다(체결 검출 영구 정지). 브로커가 알려준 사실을 잃는 쪽이
+  그것과 불일치하는 쪽보다 나쁘다.
+- 이번 처리: 투영은 수량·단가를 **동결**(산식 보정 금지)하고, 같은 apply tx 안에서
+  `reconcile_states`에 심볼 스코프 행을 넣는다(활성 행이 있으면 no-op — `entered_at`이 폴마다
+  전진하면 영원히 새 상태로 보인다). 체결 스냅샷·이벤트는 정상 커밋된다. 사유 매핑은 둘뿐이다:
+  초과매도 = `QUANTITY_MISMATCH`(지역 수량과 브로커 체결의 문자 그대로의 불일치), 나머지 셋 =
+  `ATTRIBUTION_FAILED`. hook에서 exported `*Journal` 메서드를 못 쓰므로(단일 커넥션, apply_hook.go
+  규칙 4) `EnterReconcile`의 규칙을 handle 위에 다시 적었다.
+- 후속 task 입력: **6.3**의 자동 해제(ADJUSTMENT_APPLIED)가 이 경로로 들어온 상태도 대상이다.
+  조정만으로는 해제하지 않는다 — 해제 규칙은 6.3의 몫(`TestAnAdjustmentConvergesAFrozenProjection`이
+  "블록은 그대로"를 단언하므로 6.3이 이 단언을 바꿔야 한다 = 사전 열거 대상 1건).
+
+## 2026-07-26 [safe local] CLOSING 중 매수 체결(E31–E33)을 금지 전이로 판정했다 (task 6.1)
+
+- 사실: 스펙이 표가 다뤄야 한다고 열거한 것은 즉시 전량체결·OPENING 종료·SCALING·lineage·
+  매도 귀속·CLOSED 종결성이고, "청산 주문 진행 중 진입 체결"은 열거에 없다. 초과매도·귀속불가와
+  달리 이것은 산술적 불가능이 아니라 **판정**이다.
+- 이번 처리: 금지(RECONCILE). 근거는 §0.9 보수 방향 — 한 포지션에 상반된 두 지시가 동시에
+  살아 있고 투영은 엔진이 아직 어느 쪽을 믿는지 알 수 없다. SCALING으로 처리하면 보호 경로가
+  줄어드는 중이라고 믿는 동안 포지션이 커진다. 잃는 것은 없다(체결은 기록되고 수량 권위는
+  계좌이며 6.2가 수렴시킨다). **수량이 움직이지 않는 delta 0 관측(정정·terminal)은 금지가
+  아니다** — 금지는 수량이 움직였을 때만 발화한다(E13–E15는 허용).
+- 후속 task 입력: **7.4**가 t0 하회 전량 청산을 발의할 때 작업 중인 진입 주문을 먼저 취소하지
+  않으면 그 창에서 들어온 체결이 이 RECONCILE을 만든다. 취소가 7.x 설계에 들어가야 한다.
+
+## 2026-07-26 [safe local] 미관측 평균가는 0이 아니고, 인스턴스 원가를 영구 미상으로 만든다 (task 6.1)
+
+- 사실: `averageFilledPrice`는 nullable이고(openapi) journal의 규약은 `""`=미관측이다
+  (fill_snapshots.average_price). D7의 `positions.avg_price`는 `TEXT NOT NULL`이라 `""`가 쓸 수 있다.
+- 문제: 미관측을 0으로 접으면 취득단가가 과소 계상되고 → 실질 본전이 내려가고 → **손실 구간을
+  본전으로 오인해 청산**한다. 방향이 fail-open이다.
+- 이번 처리: 미관측 가격은 `position.Unknown`(`""`)이고, 한 번 미상이 된 인스턴스의 원가는
+  수명 내내 미상으로 남는다(빠진 조각은 뒤 조각들의 평균으로 복구되지 않는다). 수량 투영은
+  정상 진행한다 — 수량은 알고 있다. 읽는 쪽이 `""`에서 fail-closed 하는 것이 계약이다.
+- 함께: `avg_price`는 투영에서 **유일하게 반올림되는 값**이다(원가 ÷ 수량은 종료하지 않을 수
+  있다). 소수 12자리·half-away-from-zero(`big.Rat.FloatString`), 수량 산술은 riskcalc 정확 연산
+  그대로. 근거와 누적 오차 상한은 `internal/position/decimal.go`의 `avgPriceScale` 주석.
+- 검증: `TestAnUnpricedFillPoisonsTheCostBasis`, `TestAnUnpricedFillLeavesTheBasisUnknown`.
+
+## 2026-07-26 [observation] 인스턴스 귀속은 (계좌·시장·심볼)의 최신 인스턴스다 (task 6.1)
+
+- 투영은 체결을 그 심볼의 `instance_seq` 최대 행에 귀속시킨다. 스키마에 주문→인스턴스 링크가
+  없고(D7 표에 없다) 추가하려면 v6를 다시 열어야 하기 때문이다.
+- 한계: **닫힌 인스턴스에 속한 주문의 지연 정정**(CLOSED 후 새 인스턴스가 열린 뒤 도착하는
+  EXECUTION_CORRECTION)은 현 인스턴스의 원가로 간다. 수량은 움직이지 않으므로 노출·손절 계약에는
+  영향이 없고, 잘못될 수 있는 것은 취득단가다. 지금은 CLOSED 인스턴스에 대한 delta 0 관측이
+  종결성 규칙으로 무시되므로(E16–E18, X16–X18) 오귀속은 "새 인스턴스가 이미 열려 있을 때"로
+  한정된다.
+- 후속 task 입력: **6.4**의 provenance 질의가 주문→인스턴스 조인을 필요로 하면 그때
+  `fill_events`에 인스턴스 참조를 더하는 것이 자연스럽다(추가 컬럼 = 새 스키마 버전).
+
+## 2026-07-26 [safe local] 체결 watermark는 심볼 단위이고 정정은 제외한다 (task 6.2)
+
+- 사실: 스펙은 "체결 watermark의 불변을 재검증"이라고만 적고 범위를 정하지 않는다.
+- 이번 처리: `fill_events`의 심볼별 `MAX(id)`. 계좌 전역으로 잡으면 아무 심볼에서 체결이 날
+  때마다 무관한 심볼의 조정이 폐기되고, 조정 루프가 바쁜 계좌에서 영원히 수렴하지 못한다.
+  `execution_corrections`는 **제외** — 정정은 취득단가만 움직이고 수량을 움직이지 않으므로
+  수량에 관한 조정을 무효화할 수 없다.
+- 기대 이전 값만으로 부족한 이유(= watermark가 존재하는 이유)를 테스트로 고정했다:
+  수집과 커밋 사이에 같은 수량의 매수·매도가 들어오면 수량은 같고 세계는 다르다
+  (`TestAMovedFillWatermarkIsDiscardedEvenWhenTheQuantityMatches`).
+
+## 2026-07-26 [safe local] 조정 id는 파생값이라 재적용이 stale이 아니라 멱등이다 (task 6.2)
+
+- 문제: 커밋 직후 크래시로 호출자가 결과를 못 받고 재시도하면, 수량은 **정당하게** 이동한 뒤라
+  기대 이전 값 검사가 그 재시도를 stale로 판정한다 — 복구를 폐기로 오인한다.
+- 이번 처리: id를 조정의 내용(스코프·kind·기대 이전 값·새 수량·새 단가·broker_as_of)에서
+  파생하고, 트랜잭션 안에서 **비교보다 먼저** id 조회를 한다. 이미 있으면 저장된 행과 수렴된
+  포지션을 `Applied=false`로 돌려준다. 조정 행과 포지션 수렴은 한 트랜잭션이므로 크래시는
+  둘 다이거나 둘 다 아니다.
+- 검증: `TestReapplyingTheSameAdjustmentIsANoOp`(행 1개 유지), `TestAnAdjustmentSurvivesARestart`.
+
+## 2026-07-26 [safe local] MANUAL은 운영자 선언에서만 나오고, 조정은 CLOSED를 되살리지 않는다 (task 6.2)
+
+- 분류(`position.Classify`): 운영자 선언 → MANUAL, 지역 인스턴스 없음 → EXTERNAL, 그 외 →
+  UNKNOWN. "사람이 했을 것 같다"는 추측이고 `kind` 컬럼은 증거이므로 MANUAL은 선언에서만 나온다.
+  UNKNOWN은 "안 봤다"가 아니라 "귀속에 실패했다"는 판정이다(core_domain.go 주석과 동일).
+- 수렴 상태 규칙: 새 수량 0 → CLOSED(+`closed_at`), 양수인데 현재 상태가 살아 있으면
+  **상태 유지**(계좌 스냅샷은 작업 중인 주문의 존재를 모른다), 없거나 CLOSED면 OPEN.
+- CLOSED 인스턴스에 계좌가 수량을 보고하면 되살리지 않고 **다음 인스턴스**를 연다
+  (`entry_decision_id` NULL — exit 대상 아님). CLOSED 종결성과 외부 편입이 같은 규칙으로 만난다.
+- 검증: `TestAnExternalHoldingOnAClosedSymbolOpensTheNextInstance`,
+  `TestClassifyNamesTheProvenance`, `TestAnAdjustmentToZeroClosesTheInstance`.
+
+## 2026-07-26 [safe local] 집계 입력의 음수는 비교하지 않고 거부 (task 2.3)
+
+- 사실: 2.1/2.2 커밋이 2.3의 검사(크기·현금·allowlist·재진입·총계·중복)까지 함께 실장했고,
+  스펙 표와 대조한 결과 순서·경계·사유 코드는 전부 일치했다. 2.3에서 새로 필요한 코드는
+  하나뿐이었다.
+- 문제: `AccountState.OpenExposure`·`DailyRealizedLoss`는 생산자 계약상 **크기**다
+  (`riskcalc.DailyLoss`는 `loss := 0.0; if net < 0 { loss = -net }`, aggregate.go:252-256).
+  그런데 체인은 그것을 검사하지 않고 `WithinLimit`에 넘긴다. 호출자가 부호 있는 손익을
+  넘기면 10만원 잃은 날이 `-100000`으로 도착하고, 절대·비율 두 비교가 모두 "한도 여유"로
+  읽는다 — 이 체인에서 유일하게 게이트를 여는 방향의 입력 오류다.
+- 이번 처리: `magnitudeIn`(moneyIn + 음수 거부)을 두 집계 입력에 적용, `INPUT_UNAVAILABLE`.
+  0은 통과한다(개방 없음·손실 없음이 정상 케이스). 경계 규칙표(docs/guardian-chain.md §2)에
+  행 추가.
+- 검증: `TestNegativeAggregatesAreRefusedRatherThanCompared`.
+
+## 2026-07-26 [safe local] 진입 latch는 execgw가 생산하고 체인은 소비만 한다 (task 2.4)
+
+- 사실: 태스크는 "기존 EntryGate 사유 매핑, 중복 판정 없음"을 요구한다. 스펙이 부르는 네 조건
+  (401/403·SLO·RECONCILE·recovery)을 `internal/risk`가 다시 유도하면 게이트 규칙의 사본이
+  생기고, 사본은 해제 규칙이 사유마다 다르기 때문에(자동 해제/운영자 전용/심볼 범위) 정확히
+  중요한 날에 갈라진다.
+- 이번 처리: `execgw.(*EntryGate).EntryLatchFor(market, symbol)`가 `CheckEntryFor` — 봉인된
+  제출 시퀀스가 부르는 그 호출 — 의 답을 체인의 두 평문 값으로 옮긴다. `internal/risk`는
+  execgw를 import하지 않는다(그러면 journal이 체인 뒤로 딸려 들어온다).
+- 파일 배치 편차: 태스크는 `internal/execgw/retry.go`를 지목했으나 신규
+  `internal/execgw/entrylatch.go`에 두었다 — retry.go는 재시도 매트릭스 파일이고, 2.4의
+  비중복 논거를 그 파일 헤더에 섞으면 둘 다 읽기 어려워진다. 3.1의 투영도 같은 이유로
+  `modegate.go`.
+- **열거 밖 사유도 전달한다**: 체인이 게이트 사유의 부분집합만 보면 Guardian이 허용한 의도를
+  Gateway가 곧바로 거부하고, 그 사이에 결정·예약 왕복이 낀다. 신선도·flatten·IN_DOUBT·
+  알림 미전달도 같은 값으로 도착한다.
+- 검증: `TestEveryEntryBlockingConditionReachesTheChain`(네 조건을 production 경로로 발생),
+  `TestTheLatchSurfaceNeverDisagreesWithTheGate`(2^5 조합 — 사유·detail이 게이트와 동일),
+  `TestTheChainNeverRederivesTheLatch`.
+
+## 2026-07-26 [safe local] 모드 전환은 journal이 소유하고 게이트가 구현한다 (task 3.1)
+
+- 사실: 스펙은 "모드 전환 = journal 영속 + EntryGate 계좌 latch 투영"을 SHALL로 적는다.
+  두 패키지에 걸친 요구라 소유자를 정해야 했고, 방향은 이미 정해져 있다(execgw → journal).
+- 이번 처리: journal이 `ModeProjector` 인터페이스(1메서드)를 들고 `TransitionOperatingMode`가
+  커밋 후 호출한다. `*execgw.EntryGate`가 구현체다. 공개 API에 "투영 없이 append"도
+  "append 없이 투영"도 없다 — 전자는 게이트가 모르는 강화를, 후자는 재시작이 복원할 수 없는
+  차단을 남긴다. 2a의 `ReservationAuditor` 인터페이스와 같은 모양이다.
+- **순서는 커밋 → 투영**이고 근거는 완화 방향이다: 투영이 먼저면 근거 행이 durable해지기 전에
+  latch가 풀리고, 그 사이 크래시는 "게이트는 열렸는데 journal은 ENTRY_BLOCKED"로 복귀한다.
+  반대 방향(강화 후 미투영)은 한 프로세스 안 마이크로초 창이고 `RestoreOperatingModeProjection`이
+  기동 때 닫는다.
+- `latchOrder` 말미에 추가(관례: append). 앞의 사유들은 운영자가 고칠 구체적 결함이고 모드는
+  대개 그 결과이므로, 원인을 먼저 보여주는 것이 조치 가능한 순서이기도 하다. 체인은 어차피
+  모드 단계(2)가 latch 단계(3)보다 앞이라 `OPERATING_MODE_BLOCKED`로 보고한다.
+- 검증: `TestAnAutomaticTighteningRefusesTheNextPlace`(게이트웨이 경유),
+  `TestTheRestartRebuildsTheModeLatch`, `TestModeClassTableIsComplete`(9셀 + fail-closed 4).
+
+## 2026-07-26 [safe local] 트리거 목표가 현재 모드보다 느슨하면 오류가 아니라 no-op (task 3.1/3.2)
+
+- 사실: "동시 적용 시 보수 우선(SHALL)"과 "자동 강화는 즉시(SHALL)"가 한 요청에서 만나는
+  경우가 있다 — 운영자가 HALT_ALL을 건 계좌에서 일손실 트리거(목표 ENTRY_BLOCKED)가 발화.
+- 이번 처리: 오류가 아니라 **no-op**(행 없음·투영 없음·알림 없음·`changed=false`). 오류로 하면
+  5초 주기 트리거가 매 주기 오류를 내고 호출자마다 특례가 생긴다. 반대로 AUTO의 `NORMAL` 지정과
+  `HALT_ALL` 지정은 요청 자체가 틀린 것이라 오류다(`ErrModeRelaxationRequiresOperator`,
+  `ErrHaltAllIsNeverAutomatic`).
+- **부수 효과가 본질적이다**: 이 no-op이 알림 되먹임 고리를 닫는다. 강화 → critical 알림 →
+  전달 실패 → (트리거) critical outbox 실패 → 강화? 이미 ENTRY_BLOCKED라 no-op이고, 전환이
+  없으므로 알림도 없다. `TestTheAlertEscalationLoopTerminates`가 이것을 고정한다.
+
+## 2026-07-26 [safe local] 완화의 승인은 `cause`에 실어 durable하게 남긴다 (task 3.2)
+
+- 사실: 스펙은 완화에 "사람 승인(§0.7) + audit"을 요구한다. D7의 `operating_modes` 표에는
+  승인 컬럼이 없고, 0.1 스키마는 이 change에서 재작업 대상이 아니다.
+- 이번 처리: 요청에 `Approval` 필드를 두고 완화 시 필수로 만든 뒤, 저장은
+  `cause + " | approved-by: " + approval`로 한다 — `reconcile_states`의 해제 evidence가 쓰는
+  것과 같은 관용구(`evidence + " | released: " + evidence`). audit 줄은 커밋 **전에** 쓰고,
+  실패하면 전환 전체가 롤백된다(2a `OperatorReleaseReservation`과 같은 순서·같은 이유).
+- 결과: journal 단독으로 "누가 승인했나"에 답할 수 있고, audit 파일은 전/후 값·주체·시각을
+  따로 갖는다.
+- 검증: `TestTheApprovedRelaxationIsAuditedWithBothValues`,
+  `TestAFailedAuditWriteAbortsTheRelaxation`, `TestRelaxationRequiresAnApproval`.
+
+## 2026-07-26 [observation] 자동 강화 트리거의 **생산자** 배선은 이 태스크 밖 (task 3.2 → 4.x·7.4)
+
+- 3.2가 실장한 것은 트리거→목적 상태의 닫힌 열거와 전환 API(`EscalateOperatingMode`)다.
+  실제로 그것을 부르는 쪽은 아직 없다:
+
+  | 트리거 | 생산자 | 어느 task |
+  |---|---|---|
+  | `DAILY_LOSS_LIMIT_REACHED` | 발급자(체인이 DAILY_LOSS_LIMIT_REACHED로 거부한 뒤) | 4.x |
+  | `BROKER_AUTH_REJECTED` | `execgw.Retrier`(현재는 게이트 latch만) | 4.x |
+  | `CRITICAL_ALERT_UNDELIVERED` | `obs.Notifier.deliver`(현재는 게이트 latch만) | 4.x |
+  | `EXIT_OBSERVATION_OUTAGE` | 판정 루프 60초 두절 | 7.4 |
+
+- 지금 넷 중 둘만 배선하면 절반만 동작하는 상태로 남고, 두 생산자가 journal 핸들을 새로
+  가져야 한다(엔진 배선 문제). **네 개를 한 번에 배선하는 것이 맞고 그 자리는 엔진 배선
+  태스크다.** 현재도 안전한 이유: 401/403과 알림 미전달은 이미 EntryGate latch로 진입을
+  막는다 — 모드 강화는 그 위에 "재시작을 건너 살아남는 영속" 층을 더한다.
+
+## 2026-07-26 [safe local] `EventOperatingMode`를 critical로 승급 (task 3.3)
+
+- 사실: `obs/event.go`는 이 이벤트를 "Phase 2 예약"으로 선언만 해뒀고 등급표에 없었다
+  (미지 이벤트 = normal).
+- 이번 처리: `criticalEvents`에 추가. 양방향 모두 사람을 깨울 사건이다 — 강화는 엔진이 스스로
+  진입을 멈췄다는 뜻이고(네 트리거 전부 사람이 조치해야 풀린다), 완화는 라이브 계좌에서
+  누군가 진입을 다시 켰다는 뜻이다(§0.7이 두 번째 눈을 원하는 바로 그 변경).
+- critical이므로 outbox에 먼저 durable하게 쓰인다 — 전환을 알리고 죽은 프로세스의 알림도
+  남는다. 되먹임 고리는 위 항목의 no-op 규칙이 닫는다.
+
+## 2026-07-26 [safe local] 발급자를 `internal/execgw`에 두었다 (task 4.1)
+
+- 사실: 태스크는 "`internal/risk` issuer type or new file"이라 적는다. 그런데 발급자는 셋을 동시에
+  필요로 한다 — 체인(`internal/risk`), 원자 발급 API(`internal/journal`), 결정 참조·TTL·한도
+  스냅샷(`internal/execgw`).
+- 문제: `internal/risk`에 두면 그 패키지가 journal을 import한다. 2.4 판정이 세운 성질
+  ("`internal/risk`는 execgw를 import하지 않는다 — 그러면 journal이 체인 뒤로 딸려 들어온다")이
+  깨지고, 체인의 순수성(값만 받는 함수)이 패키지 의존성 수준에서 사라진다.
+- 이번 처리: `internal/execgw/riskguardian.go`. 의존 방향은 이미 execgw → journal이고
+  execgw → risk를 더해도 순환이 없다(risk는 costs·riskcalc·clock만 import). 결정 계약을 소유한
+  패키지가 그 발급자도 소유하는 배치이고, 2.4의 파일 배치 편차와 같은 성격이다.
+- 검증: `internal/risk`의 import 목록 무변경(chain.go에 `EntryExposureValue` 1개 추가만).
+
+## 2026-07-26 [safe local] 진입 예약은 OPEN_EXPOSURE 하나다 (task 4.1)
+
+- 사실: 예약 kind는 셋이다(`OPEN_EXPOSURE`·`DAILY_LOSS`·`CASH`, execution_contract.go:67-69).
+  스펙은 "총계 한도의 최종 권위는 예약 트랜잭션"이라고만 적고 어느 kind를 거는지는 적지 않는다.
+- 이번 처리: 진입은 `OPEN_EXPOSURE` 하나만 건다. 근거는 kind별로 다르다:
+  - `DAILY_LOSS`는 **실현** 손실이다. 진입은 그것을 움직이지 않으므로 예약할 것이 없고,
+    "이 거래가 질 것"을 전제로 손실 한도를 미리 깎는 것은 스펙에 없는 신규 정책이다.
+  - `CASH`는 설정 한도가 아니라 브로커 사실이다. 예약의 한도 비교는 도달=차단(≥)인데 체인의 현금
+    검사는 포함 상한(정확히 커버하면 통과)이라, 가용현금을 "한도"로 넘기면 두 규칙이 경계에서
+    어긋난다. 현금은 체인이 비용 포함으로 이미 검사한다.
+- 예약 금액은 `risk.EntryExposureValue`(지정가 × 수량 + 과대 추정 비용) — 체인의
+  `checkOpenExposure`가 방금 여유를 확인한 바로 그 수이고, 그래서 새 export가 필요했다.
+  같은 수를 호출자가 다시 계산하면 경계에서 갈라진다.
+- 후속 task 입력: **8.1**이 실현 손실을 기록하면 `DAILY_LOSS` 예약의 생산자는 그쪽이다.
+
+## 2026-07-26 [observation] VERSION_CONFLICT는 발급자 경로에서 도달 불가 (task 4.1)
+
+- 사실: 태스크는 네 reason이 전부 표면화되는 테스트를 요구한다. 그런데 발급자는 항상 재수집 루프
+  (`RecordDecisionAndReserveWithRecollection`)를 쓰고, `recollectLoop`는 stale·superseded를
+  마지막에 `ErrRecollectionExhausted`로 감싼다(0.2 판정: "내부 재시도로 stale·superseded는
+  종단에서 여기 수렴"). 그래서 발급자에서 나오는 버전 경합은 전부
+  `SNAPSHOT_RECOLLECTION_EXHAUSTED`다.
+- 이번 처리: 도달 가능한 셋(LIMIT_REACHED·SNAPSHOT_RECOLLECTION_EXHAUSTED·DECISION_EXPIRED)을
+  end-to-end로 고정하고, VERSION_CONFLICT는 단발 `Reserve`의 공개 계약으로 남긴다(journal의
+  `IssueRefusalReason` 테스트가 매핑을 고정). 테스트 주석에 도달 불가의 이유를 적었다 —
+  "테스트가 없다"와 "구조적으로 일어날 수 없다"는 다른 사실이다.
+
+## 2026-07-26 [safe local] HELD 예약 검증이 바꾼 테스트 **셋업** 2곳 — 단언은 무변경 (task 5.1)
+
+- 사실: Gateway가 EXPOSURE_RAISING 제출에 HELD 예약을 요구하면, 예약 없이 진입 결정을 만들던
+  기존 테스트 픽스처가 전부 거부된다. 실제로 성공 경로까지 가는 곳은 둘뿐이었다 —
+  `internal/execgw/gateway_test.go`의 `raisingDecision`(execgw의 모든 진입 테스트가 경유)과
+  `internal/reconcile/recovery_test.go`의 `entry()`("복구 후에는 통과한다").
+- 이번 처리: 두 곳 다 **셋업에 예약 1행을 추가**했다(`j.Reserve` — 결정은 이미 있으므로 원장을
+  거기에 맞추는 것뿐). 단언은 하나도 바뀌지 않았고 약해지지도 않았다. 픽스처가 두 트랜잭션을
+  쓰는 것은 D1 위반이 아니다 — D1은 **발급 경로**의 계약이고, 그 경로는 `RiskGuardian`이
+  원자 API로 만들고 4.1 테스트가 고정한다.
+- 검사 위치: `checkDecision` **뒤**(2d). 이유는 클래스다 — 검증된 클래스만이 "예약이 필요한가"에
+  답할 수 있고, 호출자가 주장한 클래스로 판단하면 매수가 RISK_REDUCING 배지를 달고 총계 한도를
+  건너뛴다. 부수 효과로 게이트·preflight·결정 검증 거부가 먼저 나므로 `mismatch_test`처럼
+  앞 단계에서 거부되던 테스트는 무영향이다.
+- 제출 직전 재검증에 넣지 않은 이유: HELD 해제 경로는 (a) attempt 종결 — 이 attempt는 아직
+  발송 전이고, (b) 만료 결정의 lapse sweep — 그 창은 재읽기 `checkDecision`의 만료 검사가
+  이미 닫는다. 파일 주석에 적었다.
+
+## 2026-07-26 [safe local] 조항 6은 상수이고, 수락 경로는 테스트 전용 seam으로 유지했다 (task 5.2)
+
+- 사실: 경계 규칙은 "ProtectionReady 표지는 **미충족 상수**로만 존재"다. 그대로 구현하면
+  게이트 ON 완전 통과가 이 저장소에서 구조적으로 불가능해지고, 수락 경로를 다루던 기존 테스트 4건
+  (`TestGateOnWithEverythingInPlaceStarts`·`TestGateToggleIsAudited`의 두 번째 기동·
+  `TestAcceptedStartAuditsEveryLimit`·`TestGateDecisionIsLoggedStructurally/verified`)이
+  전부 "거부" 테스트로 바뀐다 — 감사 수락 줄·검증된 구조적 로그가 2c까지 무검증으로 남는다.
+- 이번 처리: 상수는 상수로 두고(`profileProtection = ProtectionUnwired`, config 키도 Options
+  필드도 없음), 네 테스트는 `export_test.go`의 `SetProtectionReadyForTest()`(비공개 필드
+  `protectionOverride`)로 조항 6만 충족시킨다. `journalFSProber`와 같은 패턴이고 빌드 바이너리에는
+  없다. **단언은 4건 모두 무변경** — 바뀐 것은 헬퍼 이름뿐(`openProtectedGateEngine`).
+- 조항 순서는 마지막이다. 그래야 "조항 6 도달"이 곧 "1~5 통과"의 증명이 되고(4.2 조합 테스트가
+  그 성질을 쓴다), 운영자에게는 자기가 고칠 수 있는 결함이 먼저 보인다.
+- 가격 조회: `engine.RequiredEndpoints()`에 `GET /api/v1/prices` 1행 추가가 실제 델타 전부였다
+  (soak 목록·retry matrix는 landed). drift guard(`cmd/tossctl/soak_test.go`) 무수정 통과 확인 +
+  "5.2 이전 attestation"(prices만 빠진 목록) 거부 케이스를 refusal 표에 추가했다.
+
+## 2026-07-26 [safe local] 미바인딩 apply hook은 fail-open이고, 엔진이 기동에서 막는다 (승계 F)
+
+- 사실: 6.3이 `LocalStateFromJournal`을 포지션 투영 소비로 재배선했다. 투영의 유일한 생산자는
+  fill 트랜잭션의 `Project` hook이다.
+- 문제: hook이 안 묶인 프로세스는 체결을 아무리 기록해도 투영이 비어 있고, 로컬 믿음이 "보유 0"이
+  된다. 그러면 브로커가 보고하는 모든 보유가 **불일치가 아니라 외부 포지션**으로 분류되고
+  (외부 편입은 알림이지 차단이 아니다), 진입이 막히지 않는다. 조용하고, 게이트를 여는 방향이다.
+- 이번 처리: (1) 엔진 프로필이 저널 open 직후(단계 2b) `SetApplyHooks{Project: ProjectPosition}`를
+  바인딩하고, (2) `buildGateway`가 그 전에 `checkProjectionWired`로 **미바인딩이면 기동을 거부**한다
+  (`ErrProjectionUnbound`). 인터록이 `Gateway.Wiring()`을 믿지 않고 묻는 것과 같은 이유 —
+  미래의 배선 변경이 조용히 되돌리는 것을 막는다.
+- 판정은 **바인딩 상태**에만 묻는다. "체결은 있는데 포지션이 없다" 휴리스틱은 v5에서 올라온 저널의
+  정상 상태(그 체결들은 투영보다 먼저다)라 업그레이드된 설치를 전부 거부한다.
+- `internal/reconcile` 쪽에 같은 가드를 넣지 않은 이유: `LocalStateFromJournal`은 hook 없는 저널로
+  도는 그 패키지의 테스트가 다수이고, 프로덕션에서 `reconcile.Tracker`·`recovery`를 구성하는 곳은
+  엔진 프로필 하나뿐이다(`cmd/`·`internal/app` 전수 확인). 구멍은 엔진 쪽에서 닫힌다.
+- Exit hook은 nil로 남긴다 — exit 상태 applier는 7.x이고, 지금은 해소할 pending 자체가 없다.
+  `SetApplyHooks`가 재바인딩을 거부하므로 7.x는 gateway.go의 그 리터럴을 확장해야 한다
+  (테스트가 "두 번째 바인딩은 실패한다"로 고정).
+
+## 2026-07-26 [safe local] 자동 강화 트리거 생산자 3/4 배선 — 게이트가 아니라 생산자에서 (승계 F)
+
+- 3.2의 생산자 표 중 셋을 배선했다: `BROKER_AUTH_REJECTED`←`execgw.Retrier`(401/403),
+  `CRITICAL_ALERT_UNDELIVERED`←`obs.Notifier.deliver` 실패, `DAILY_LOSS_LIMIT_REACHED`←
+  `execgw.RiskGuardian`(체인의 일손실 rung 거부). 넷째(`EXIT_OBSERVATION_OUTAGE`)는 7.4.
+- **`EntryGate.Block` 안에서 강화하지 않았다.** 한 지점에 모으는 쪽이 깔끔해 보이지만
+  락 순서가 반대가 된다: `TransitionOperatingMode`는 커밋 후 `ProjectOperatingMode`로
+  게이트 뮤텍스를 잡는다. Block(게이트 뮤텍스 보유) → journal 쓰기와 정면으로 교차한다.
+  또 Block에는 ctx가 없다. 그래서 각 생산자에서, 어떤 락도 잡지 않은 지점에서 부른다.
+- `obs`는 `deliver`가 `n.mu`를 놓은 **뒤** 부르고 **announcer는 nil**이다. 방금 예산을 전부
+  소진한 그 transport로 전환을 알리면 배달 불가 알림이 하나 더 쌓이고 예산을 한 번 더 태운다.
+  전환은 저널과 구조적 로그에 남고, 운영자의 원래 알림은 outbox에 PENDING으로 남는다.
+  부수 효과로 `deliver` 재진입 경로가 사라진다(뮤텍스는 재진입 불가라 그게 데드락이었다).
+- 실패한 강화는 **삼키지 않는다**: 지속되지 않은 강화는 재시작이 푸는 차단이고, 자격증명 오류를
+  본 운영자가 하는 첫 행동이 재시작이다. execgw에는 로거가 없으므로(obs → execgw 방향)
+  `errors.Join`으로 원 오류에 붙인다 — `ClassifyQueryError`·`errors.Is`는 그대로 동작한다.
+  obs는 로거가 있으므로 error 레벨 로그.
+- 일손실 생산자가 발급자인 이유: "한도 도달"을 판정하는 곳이 체인의 그 rung이다. 발급자는 P&L을
+  계산하지 않는다 — `AccountState.DailyRealizedLoss`는 `riskcalc.DailyLoss`의 출력이고, 그것을
+  최신으로 유지하는 루프는 **8.1/7.x**다. 이 승계가 공급한 것은 전환이고, 그 태스크들이 공급할
+  것은 0이 아닌 실현 손실을 넘기는 호출자다. 자본 ≤ 0 분기도 같은 사유·같은 목적 상태다.
+- 엔진 프로필에는 아직 `Retrier`도 `Notifier`도 **구성하는 곳이 없다**(프로덕션 생성자 전수
+  확인 — 폴링 루프가 7.4의 산출물이다). 그래서 이 승계의 배선은 생산자 쪽 필드와 발화이고,
+  엔진이 그 둘을 만들 때 `Escalate`·`AccountRef`를 채우는 것이 7.4의 몫이다.
+
+## Manager 판정 (1차 물결 검증, 2026-07-26)
+
+- **독립 재실행**: `go test ./... -race -count=1` 0 FAIL (1947 tests, 43 pkgs). tasks.md worktree의 미커밋 unchecking은 에이전트 경합 잔재로 확인·폐기(HEAD 정확).
+- **0.x 편차 10건 승인**: nonce 재사용 가능성으로 고아 없음 증명(더 강함), 재수집 발급 변형(EXHAUSTED 도달 가능성 확보), apply hook 3중 강제(런타임·AST 도달성·파일 배치 — 7.3 arming을 apply_hook.go로 강제하는 배치 규칙 포함), ErrDecisionExpired가 ErrInvalidRequest를 wrap(기존 계약 비약화), operating_modes 최신 행 정렬 (created_at, rowid) → 3.1 입력, hooks가 delta-0 정정·terminal 전이에도 발화 → 6.1 입력.
+- **1.x·2.x 판정 8건 승인**: unknown override key **거부**(원본은 무시 — 오타가 조용히 기본값이 되는 것보다 낫다, 의도적 역전 승인), zero-value 비용 모델의 무료 취급 차단(configured 비트 — 진입 거부·감소 경로 비대상, 스스로 찾은 fail-open), math/big 유리수(수량 floor·RR 경계 — 이진 전개가 아니라 규칙의 경계), INSUFFICIENT_CASH 병합, size-before-RR 순서(스펙 순서 준수 — a090 재작성 명시), stop="0"→INVALID_TARGET_STOP.
+- **min-RR provenance 정정**: 스펙 인용을 live_entry_contract.py:53으로 교체(default_lock은 Plan 044에서 1.3 완화 — §0.9상 추종 안 함, 2.0 유지). 값 무변경.
+- 이식 대조: costs 20/20, guardian 8+4대체/8제외, target_stop 13/16제외(P3 신호층), a090 15/21제외 — 제외 사유 전수 파일 헤더 기록 확인.
+
+## Manager 판정 (2차 물결 검증, 2026-07-26)
+
+- 독립 재실행 0 FAIL(2084). C·E 판정 16건 전부 승인 — 특히: 집계 입력 부호 fail-open 봉합(magnitudeIn), commit-then-project 순서(완화 방향 기준 선택·강화 창은 Restore로 폐쇄), 보수 우선 no-op(알림 실패 피드백 루프 차단), latch 전체 통과(부분 뷰였다면 Guardian 허용→Gateway 즉시 거부의 왕복 낭비), E31 ENTRY_WHILE_CLOSING 거부(§0.9), 거부 시 detector 비정지.
+- 승계 확정: ProjectPosition SetApplyHooks 바인딩 → 3차 F(엔진 배선 영역), Exit applier 바인딩 → 4차 7.x. 자동 강화 트리거 생산자 배선(일손실·401/403·critical outbox) → 3차 F, exit 관측 두절 → 4차 7.4. 6.3의 사전 열거 단언 1건(조정 후 차단 유지 → ADJUSTMENT_APPLIED 해제 반전) → 3차 G. 주문→인스턴스 링크 → G의 6.4 검토. 7.x 입력: 전량 청산 발의 전 working 진입 취소 선행(E31 회피).
+
+## 2026-07-26 [safe local] 로컬 포지션 출처를 투영으로 교체 — 계좌 스코프가 함께 좁아졌다 (task 6.3)
+
+- 사실: `LocalStateFromJournal`은 `j.NetPositions`(체결 스냅샷의 side별 합)를 읽었다. 스펙은
+  "로컬 포지션 상태의 출처는 Position 투영"이며 "fills-only 파생과 별도의 두 번째 포지션 계산을
+  두지 않는다(SHALL NOT)"이다.
+- 이번 처리: `reconcile.HeldBySymbol`(비-CLOSED 인스턴스의 심볼별 riskcalc 정확 합)로 교체.
+  미체결 주문 절반(lineage 해소 현재 주문번호)은 무변경. `NetPositions`는 **삭제하지 않았다** —
+  journal의 공개 계약이고 다른 소비자가 있을 수 있다. 대신 그것이 더 이상 대사의 출처가 아님을
+  테스트로 고정했다(`TestLocalStateReadsTheProjectionNotTheFills`: 조정 후 체결 원장은 10,
+  투영은 4, 로컬 상태는 4).
+- **부수 효과(의도적)**: `NetPositions`는 accountRef를 무시하고 전 계좌 체결을 합산했다. 투영은
+  `positions.account_ref`로 필터되므로 이제 다계좌 journal에서 남의 포지션을 자기 믿음으로 읽지
+  않는다(`TestAnotherAccountsProjectionIsNotThisAccountsBelief`).
+- **market 차원**: 심볼 합산이다(`[미측정]` — 보유 스냅샷의 market 제공 여부 미확인). 한 심볼의
+  두 시장 인스턴스는 한 비교 단위로 합쳐진다(`TestTheProjectionIsSummedAtSymbolLevel`).
+- 후속 task 입력(**fail-open 방향**): `SetApplyHooks(Project: ProjectPosition)`가 배선되지 않은
+  프로세스는 `positions`가 비어 로컬 믿음이 전부 0이 되고, 브로커 보유는 전부 external로 분류되어
+  **진입이 차단되지 않는다**. 배선은 3차 F(엔진 배선)의 몫이며, 그쪽에 "hook 미바인딩이면 기동
+  거부 또는 대사 거부" 테스트가 필요하다. 여기서 교차 검사를 넣지 않은 이유: v6 이전부터 체결
+  이력이 있는 계좌는 정당하게 "체결 있음 + 투영 없음"이라 휴리스틱이 오탐한다.
+
+## 2026-07-26 [safe local] 해제는 관측이 아니라 원인을 요구한다 — 사전 열거 단언 4건 (task 6.3)
+
+- 스펙: 비영구 차단의 자동 해제는 "조정 이벤트가 반영된 뒤의 재조회 일치"에만 근거하며(SHALL),
+  조정 없는 우연한 일치는 해제하지 못한다(SHALL NOT).
+- 이번 처리: `Tracker.AdjustmentApplied(symbols...)`(조정을 적용한 쪽이 호출) + 다음 관측 1회에서만
+  유효한 심볼별 credit. 관측이 끝나면 무조건 소진한다 — "조정 뒤의 재조회"는 재조회 **1회**이고,
+  그 재조회가 여전히 불일치면 조정이 해결하지 못한 것이므로 credit을 남기면 나중의 우연이 쓴다.
+  release cause는 `ADJUSTMENT_APPLIED`(journal 상수 집합 확장 — 0.1의 Manager 조건대로 쓰기 시점
+  검증 `ValidReconcileReleaseCause`에 추가). 상태표 `Auto`는 `clean_reconcile` →
+  `adjusted_reconcile`. Restore는 credit을 복원하지 않는다(크래시 전 조정을 적용한 프로세스는 없다).
+- **사전 열거 — 이 task가 바꾼 기존 단언 4건**:
+  1. `journal/position_adjustments_test.go: TestAnAdjustmentConvergesAFrozenProjection` —
+     "조정 후에도 블록은 그대로"가 종단 단언이었다. 이제 그것은 **중간** 단언이고, 뒤이은
+     ADJUSTMENT_APPLIED 해제로 닫히는 것까지가 종단이다(승계 지정 1건).
+  2. `reconcile/mismatch_test.go: TestSuccessResetsTheFailureCounter` — `len(out.Cleared) != 1`
+     → `!= 0` + `AwaitingAdjustment == 1`. 카운터 리셋(보존 SHALL)은 그대로다. 게이트 단언의
+     문구도 바꿨다: 심볼 스코프 블록은 원래 계좌 latch를 걸지 않았으므로 "clean reconcile이
+     게이트를 연다"는 사실 진술이 아니었다.
+  3. `reconcile/restore_test.go: TestWriteThroughRecordsTheStateWithItsEvidence` — "clean pass가
+     행을 닫고 cause는 RECHECK_MATCHED"가 "우연한 일치는 닫지 못하고, 조정+재조회가
+     ADJUSTMENT_APPLIED로 닫는다"로 바뀌었다.
+  4. `reconcile/compare_test.go: openJournal` / `recovery_test.go: openJournalAt`(픽스처) —
+     `SetApplyHooks(Project: ProjectPosition)`를 바인딩한다. 값 단언은 그대로지만
+     (`TestLocalStateNetsBuysAgainstSells`의 6, `TestRecoveryThatEndsInDisagreement…`의 10 vs 4)
+     그 수가 나오는 경로가 체결 원장에서 투영으로 바뀌었다.
+- **운영상 대가(명시)**: 아무것도 쓰지 않고 저절로 사라진 불일치는 운영자가 풀 때까지 남는다.
+  §0.9 보수 방향이며, 루프의 정상 경로는 수량 불일치를 조정으로 수렴시키므로(계좌가 권위) 항상
+  무언가를 쓴다. 4차 대사 루프가 수량 불일치에 대해서도 조정을 발행하지 않으면 이 대가가
+  일상화된다 — **4차 입력**.
+
+## 2026-07-26 [safe local] 외부 보유의 market 미상은 추측하지 않고 거부한다 (task 6.3)
+
+- 사실: `positions`는 (account, market, symbol, instance_seq)로 키가 잡히고 조정 요청은 market을
+  요구한다. 그런데 보유 스냅샷이 market을 담는지는 `[미측정]`이고, `Collector`는 브로커의
+  `MarketType`을 그대로 옮기므로 빈 문자열일 수 있다.
+- 이번 처리: 보유가 market을 말하면 그것을, 아니면 `Ingestor.DefaultMarket`(호출자가 선언한
+  계좌의 거래소)을, 둘 다 없으면 **거부**한다. 임의 placeholder를 쓰면 운영자가 없는 거래소에서
+  포지션을 찾게 된다. 심볼 합산 비교에는 영향이 없지만 감사 기록에는 있다.
+- 함께: 조정이 **entry_decision_id를 가진 인스턴스**에 떨어지면 오류다(외부 포지션이 결정을
+  물려받아 exit 정책 대상이 되는 것 — 남의 주식에 만든 손절을 거는 경로). 비교와 투영이
+  "엔진이 연 포지션인가"에서 갈렸다는 뜻이므로, 그 상태로 exit 관리 범위를 넓히지 않는다.
+
+## 2026-07-26 [observation] 외부 포지션 알림은 obs가 아니라 reconcile의 인터페이스다 (task 6.3)
+
+- `internal/obs`에 external-position 이벤트 타입이 없고, 이 task의 파일 범위 밖이다(동시 작업 경합).
+- 이번 처리: `reconcile.Alerter`(단일 메서드) 인터페이스로 주입한다. 알림은 조정이 **실제로
+  적용된** 경우에만 발화한다 — 루프는 30초마다 도는데 매 폴 알림은 아무도 읽지 않는다. 조정 id가
+  내용 파생이라 재수집이 같은 차이를 다시 계산해도 `Applied=false`로 인식된다.
+- 후속 task 입력: 엔진 배선(3차 F 또는 4차)이 `obs.Notifier`를 이 인터페이스에 어댑트하고
+  `obs/event.go`에 이벤트 타입을 더해야 한다. 등급은 critical이 아니라 normal이 맞다 — 사람이
+  자기 계좌를 손으로 만진 것은 오작동이 아니고, critical outbox 미배달은 진입을 막는다.
+- 함께(문서 표류): `internal/execgw/symbolgate.go`의 주석이 아직 "auto-released by a clean
+  reconcile"이라고 적는다. execgw는 동시 작업 영역이라 건드리지 않았다 — 배선 wave에서 정정.
+
+## 2026-07-26 [safe local] 주문→인스턴스 링크는 provenance에 필요 없다 — exit_events가 이미 참조를 든다 (task 6.4)
+
+- 승계 과제(6.1 [observation]): "6.4의 provenance 질의가 주문→인스턴스 조인을 필요로 하면 그때
+  `fill_events`에 인스턴스 참조를 더하는 것이 자연스럽다(추가 컬럼 = 새 스키마 버전)."
+- **판정: 필요 없다.** 스펙이 요구하는 사슬은 결정→intent→attempt→fill→position→exit 판정→청산이고,
+  각 간선에 이미 선언된 컬럼이 있다:
+  - 진입 절반: `positions.entry_decision_id` → `decisions.id` ← `mutation_attempts.decision_id`,
+    그 attempt의 `intent_id`와 `broker_order_id` → `fill_events.order_id`.
+  - 청산 절반: `exit_events.position_id`(FK)와 `exit_events.proposed_intent_id` → `intents.id` →
+    그 intent의 attempt → 주문번호 → `fill_events`. 판정 이벤트가 청산 intent를 **이름으로**
+    들고 있으므로 시간창이 필요 없다.
+- 검토한 선택지와 기각 사유:
+  - (A) `fill_events`에 `position_id` 추가 — v6를 다시 여는 것이고 "한 버전 번호에 하나의
+    스키마"(position-ledger 원장 스키마 확장 규칙 SHALL)에 어긋난다. **이 change에서 기각.**
+  - (B) `positions`에 진입 주문번호 컬럼 추가 — 같은 이유로 기각. 정정 교체가 주문번호를 바꾸므로
+    lineage 해소도 함께 들어와야 해서 (A)보다 나쁘다.
+  - (C) **선택**: 있는 컬럼으로 조인한다. 스키마 변경 0.
+- **남는 한계(명시)**: exit 판정을 거치지 않은 감소 — 수동 flatten, 운영자 매도 — 는 사슬에
+  나타나지 않는다. 자기 결정과 자기 intent를 갖지만 포지션에 붙일 선언된 컬럼이 없고, 시간으로
+  붙이는 것이 스펙이 금지한 휴리스틱이다. 후속 change가 이 링크를 원하면 (A)를 새 스키마 버전으로
+  하는 것이 맞다 — `docs/aggregates.md` §3에 같은 내용을 적었다.
+- 함께: 6.1이 기록한 **원 한계**(닫힌 인스턴스에 속한 주문의 지연 정정이 현 인스턴스 원가로 간다)는
+  provenance와 무관하게 그대로다. 그것은 조인이 아니라 귀속 규칙의 문제이고, 수량은 움직이지
+  않으므로 노출·손절 계약에 영향이 없다.
+- 질의는 **단일**이다(UNION ALL + CTE). 여러 왕복으로 조립한 사슬은 여러 **시점**으로 조립한
+  사슬이고, 그 사이에 들어온 체결은 한 번도 참이 아니었던 답을 만든다. journal 타임스탬프가
+  초 해상도라 같은 초 안의 인과 순서는 rank 컬럼이 잡는다.
+- 검증: `TestWhyDoesThisPositionExist`, `TestTheProvenanceChainReachesTheClose`(7.4 이전이라
+  `exit_events`를 직접 넣는다 — 행이 있어야만 도는 조인은 아무도 시험하지 않은 조인이다),
+  `TestAnEmptyExitHistoryStillWalks`, `TestAnExternalPositionHasNoEntryProvenance`(가까운 결정을
+  주워오지 않음), `TestAnotherDecisionsFillsAreNotThisPositionsProvenance`.
+
+## Manager 판정 (3차 물결 검증, 2026-07-26)
+
+- 독립 재실행 0 FAIL(2168). F·G 판정 12건 전부 승인 — 특히: 발급자를 execgw에 배치(risk 뒤로 journal을 끌지 않음 — 2.4 성질 보존), 진입은 OPEN_EXPOSURE만 예약(일손실 예약은 "진다"를 전제하는 셈·현금은 브로커 사실 — 논증 승인), 한도를 정책에서 파생하는 unexported 구성(찍는 한도≠사이징 한도인 Guardian은 생성 불가), 조항 6을 마지막에 평가(도달=1–5 통과 증명), Block에서 에스컬레이션 금지(락 순서 역전 방지)·nil announcer(예산 소진 transport로 공지 금지·재진입 데드락 제거), 미바인딩 가드는 ProjectionBound() 명시 확인(휴리스틱 금지 준수)·엔진 배치 논증.
+- G: ADJUSTMENT_APPLIED 1회용 크레딧, 계정 스코프 협소화, provenance를 proposed_intent_id 조인으로(스키마 무변경 — v6 단일 규칙 보존), 사전 열거 4건 정확.
+- VERSION_CONFLICT의 Guardian 경유 도달 불가(수렴 특성) — 스펙 위반 아님(단발 Reserve 경로에서 도달), 기록 유지.
+- 체크박스 삼킴 재발 1건(8cd2a98의 6.3): 내용 정확·귀속 부정확 — 9.1 기록 대상, 이후 지시문 유지.
+- 4차 승계 확정: exit 관측 두절 트리거(EXIT_OBSERVATION_OUTAGE)·Retrier/Notifier 생산 배선·escalation 필드 population → 7.4. Exit applier 바인딩 → 7.x. 수량 불일치 수렴 조정 발행 → 7.4 reconcile 루프 항목. 전량 청산 전 working 진입 취소 선행(E31) → 7.4. 2c 인계: profileProtection flip + 테스트 seam 삭제.
+
+## 2026-07-26 [safe local] 워터마크의 t0 시드는 진입가다 (task 7.1)
+
+- 사실: 스펙은 `exit_states.high_water` NOT NULL·관측마다 단조 갱신만 정하고 t0 값을 적지 않는다.
+  원본은 `high_since_entry`가 optional이라 t0 개념이 없다.
+- 이번 처리: `OpenRatchetState`/`OpenLadderState`가 **진입가**를 시드로 쓴다. 포지션은 그 가격에
+  취득됐으므로 "존재한 이래 관측된 최고가"의 정직한 하한이고, 더 낮게 시드하면 첫 관측이 전부
+  신고가로 보인다. 더 높게 시드할 근거는 없다(관측되지 않은 가격).
+- 부수 효과: t0 직후 R은 정확히 0이고 어떤 트리거도 만족하지 않는다 — 원본이 `current_price`로
+  프로브할 때와 첫 관측 이후로는 동일하다.
+
+## 2026-07-26 [safe local] 기준선 하회 발의를 ratchet 평가기 안에 넣었다 (task 7.1)
+
+- 사실: 원본 `baseline_ratchet.py`는 stop **상승** 전용 모듈이고, 하회 판정은 이식 대상이 아닌
+  `exit_strategy.py`(신호층 파이프라인)에 있다. 반면 스펙의 t0 요구사항은 "관측 가격이 진입
+  손절가를 하회하면 전량 청산이 발의된다"를 시나리오로 갖는다.
+- 이번 처리: 평가기의 출력에 포함. 대신 순서를 명시했다 — 워터마크 → 레벨·기준선 합성 →
+  **새 기준선**으로 하회 판정. 합성된 기준선은 이전 것보다 낮을 수 없으므로 이 순서는 항상
+  같거나 더 자주 발동한다(§0.9 허용 방향). ladder의 `_check_protected_stop`도 같은 순서로 통일.
+- **§0-3 관련 판정**: 미해소 발의 억제를 하회 청산에 적용하지 **않는다**. 미체결 부분익절이
+  손절을 지연시키는 것은 "손절 즉시성 약화"다. 대신 `CancelPendingFirst`를 켜서 7.4가
+  working 주문 선취소 후 제출하도록 알린다(2차 물결의 E31 승계 항목과 같은 규칙).
+  같은 하회 청산이 이미 pending이면 그건 중복이므로 억제한다.
+
+## 2026-07-26 [safe local] ladder는 protected_stop_pct를 저장하지 않는다 (task 7.2)
+
+- 사실: 원본 `LadderState`는 `activated_rung_index`와 `protected_stop_pct`를 함께 들고 다닌다.
+  D7의 `exit_states`에는 `active_rung`과 `baseline_price`만 있고 percent 컬럼이 없다.
+- 이번 처리: percent는 rung 표에서 파생한다. 저장된 percent가 저장된 rung과 어긋난 행은 아무도
+  설명할 수 없고, 권위가 둘이면 어느 쪽이 보호인지 정해지지 않는다. 보호는 가격
+  (`baseline_price`)이고, rung 잠금은 ratchet과 **같은** `ComputeProtectedStop`에 들어간다 —
+  원본이 그 모듈을 따로 뽑은 이유가 정확히 두 경로의 R4 단일화다.
+- 부수 효과(의도적): ladder 포지션도 첫 rung 전에 보호된다. 원본은 `activated_rung_index >= 0`
+  일 때만 검사하므로 그 구간이 무보호다 — D5 첫 수정과 같은 구멍이라 같은 방식으로 막았다.
+
+## 2026-07-26 [observation] ladder policy_id를 영속할 컬럼이 없다 (task 7.2)
+
+- 사실: 원본은 `LadderState.policy_id`를 들고 평가 때 정책과 대조한다(불일치 시 ValueError).
+  이식은 그 검사를 그대로 옮겼지만, D7 `exit_states`에는 policy_id 컬럼이 없다(rung 정책은 config).
+- 결과: TossOS에서 그 검사는 호출자가 config의 정책을 그대로 넘기는 한 항상 통과한다. 즉
+  **활성 포지션이 있는 동안 rung 표를 교체하면 감지되지 않고**, 그 포지션의 `active_rung`이
+  새 표의 인덱스로 재해석된다.
+- 후속 task 입력: **7.4/config** — 활성 ladder 포지션이 있는 동안의 정책 교체를 금지하거나,
+  교체 시 해당 포지션을 운영자 확인 대상으로 올려야 한다. 스키마 변경(v7)은 이 change 범위 밖.
+
+## 2026-07-26 [safe local] 누적 비율은 초기 수량을 저장하지 않고 수량에서 복원한다 (task 7.3)
+
+- 사실: `taken_ratio_total`은 초기 수량 기준인데 `exit_states`에는 initial_quantity 컬럼이 없다
+  (D7은 그 컬럼을 `trade_outcomes`에만 둔다).
+- 이번 처리: 항등식으로 복원한다 — `remaining_before = remaining_after + sold`,
+  `after = taken_before + sold × (1 − taken_before) ÷ remaining_before`. 유리수 연산이라 정확하고
+  컬럼이 필요 없다(`exitpolicy.TakenAfterFill`, 100→40→30→30 왕복 테스트). 컬럼을 추가했다면
+  같은 수에 대한 두 번째 권위가 됐을 것이다.
+- **모든 SELL 체결이 계상된다** — 발의된 주문뿐 아니라 수동·flatten 매도도. 실제로 포지션의
+  일부가 사라졌고, 그것을 무시한 누적 비율은 남지 않은 수량에 대고 익절을 재발의한다.
+- **BUY(스케일인)는 비율을 움직이지 않는다.** 분모인 "초기 수량"이 바뀌는 사건이고 이 change에는
+  그 규칙이 없다. 조용히 재해석하지 않고 그대로 둔다 — 8.x 입력.
+
+## 2026-07-26 [safe local] LADDER 거부·취소는 rung을 되감고 기준선은 되감지 않는다 (task 7.3)
+
+- 사실: 스펙은 "거부·취소 시 해당 레벨은 재발의 가능해진다(SHALL)"이다. ratchet의 40% 부분익절은
+  `taken_ratio_total`이 안 움직였으므로 자동으로 재발의 가능해진다. ladder는 rung 인덱스로
+  dedup하므로(`idx > activated_rung`) 승격된 채로 두면 그 rung은 영원히 재발의 불가다.
+- 이번 처리: `ResolveExitProposal`이 LADDER에서 `active_rung`을 `pending_level − 1`로 되감는다.
+  `baseline_price`는 되감지 **않는다** — 이미 부여된 보호이고 §0.9는 반대 방향을 허용하지 않는다.
+  다음 평가는 이미 그 잠금을 반영한 기준선 위에서 rung을 재발의한다(보수적 조합).
+- 한계(명시): 미해소 중에도 rung 승격은 일어나므로(원본의 decision-time 필드), 발의된 rung보다
+  높은 rung이 그 사이 도달했다면 되감기가 그 승격을 잃는다. 기준선은 남으므로 다음 관측이
+  최고 rung으로 다시 승격하고 그 rung의 부분익절만 발의한다 — 원본의
+  `_highest_reached_rung_index`가 원래 하는 동작과 같다.
+
+## 2026-07-26 [safe local] 무장 writer를 apply_hook.go에 넣었다 — 0.3의 강제 검토 지점 준수 (task 7.3)
+
+- 0.3의 후속 입력("7.3이 무장 writer를 추가할 때는 그 함수도 apply_hook.go에 두어야 한다")을
+  그대로 따랐다. guarded 4컬럼을 이름으로라도 언급하는 코드는 전부 `apply_hook.go`에 있다:
+  `armExitProposalTx`·`AttachExitIntent`·`ResolveExitProposal`·`ExitState`/`OpenExitStates` 리더·
+  `ApplyExitFill`. 나머지 행(기준선·워터마크·레벨·rung·completed·`exit_events`)은 신설
+  `exit_state.go`가 갖고, 그 파일은 네 이름을 한 번도 쓰지 않는다
+  (`TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook` 무변경 통과).
+- 이 이음매는 어색하다(한 트랜잭션이 두 파일에 걸친다). 어색함이 곧 강제 검토 지점이므로
+  allowed 목록은 건드리지 않았다.
+- 판정 트랜잭션은 하나다: 상태 전진 + 무장 + `exit_events` 한 커밋. 셋을 나누면 무장과 기록
+  사이의 크래시가 "설명할 수 없는 발의"나 "다음 관측의 중복 발의"를 만든다.
+
+## 2026-07-26 [safe local] pending 해소는 terminal 체결에서만 (task 7.3)
+
+- 부분 체결로 아직 working인 주문은 발의에 답한 것이 아니다. 거기서 해소하면 살아 있는 주문
+  위에 같은 레벨이 재무장되고 두 개의 매도가 동시에 뜬다. `taken_ratio_total`은 실제로 움직인
+  수량이므로 부분 체결에서도 움직인다 — 둘의 시점이 다른 것이 정상이다.
+- 해소 키는 **발의의 intent id**다. "매도가 났다"가 아니라 "그 발의의 주문이 종결됐다"가 조건이다.
+
+## 2026-07-26 [observation] exit_events에 사유 텍스트 컬럼이 없다 (task 7.3)
+
+- `ResolveExitProposal`은 REFUSED/CANCELLED만 기록하고 사유는 기록하지 못한다(D7에 자유 텍스트
+  컬럼 없음). 거부한 주체(Guardian·Gateway)가 자기 기록을 갖고 있고, 조인은 이벤트가 싣는
+  `proposed_intent_id`다. 7.4가 알림에 사유를 실을 때 이 조인을 쓰면 된다.
+
+## 2026-07-26 [safe local] 엔진 배선에 exit applier 가드를 추가했다 (task 7.3 / 2차 승계 이행)
+
+- `bindApplyHooks`가 `SetApplyHooks{Project, Exit}` 하나로 둘 다 묶고(재바인딩 거부가 강제한 대로
+  gateway.go의 그 리터럴을 확장), `checkProjectionWired`가 `ExitApplierBound()`도 묻는다
+  (`ErrExitApplierUnbound`).
+- 미바인딩의 성격은 투영과 다르다: 게이트를 여는 fail-open이 아니라 **조용한 fail-closed**다
+  (해소되지 않는 pending이 이후 모든 발의를 억제 → 포지션마다 한 번 발의하고 침묵). 그래도
+  가드를 넣은 이유는 "제안이 없는 시스템"과 구별이 안 되기 때문이다.
+- `TestBindingWiresBothApplyHooks`·`TestTheGuardNoticesAHalfBoundJournal`. 기존
+  interlock 테스트(두 번째 바인딩 거부)는 무변경 통과.
+
+## 2026-07-26 [observation] 7.4로 넘기는 seam 목록 (task 7.1~7.3)
+
+- 관측 루프·가격 폴링·`RecordSuccess(QueryPrice)`·두절 에스컬레이션: 미구현(7.4).
+- 발의 제출: `RecordExitJudgement`(무장) → intent 발급 → `AttachExitIntent` → 제출 순서를
+  지켜야 크래시 복원이 성립한다. 반대 순서(발급 먼저)는 발급 후 무장 전 크래시에서 중복 발의.
+- `CancelPendingFirst == true`인 발의는 working 주문 취소가 선행되어야 한다(오버셀 방지).
+- `ErrRefused`(입력 검증 실패)는 알림 대상이다 — 판정을 수행하지 않았다는 사실이지 "변화 없음"이
+  아니다. `RefusalError.Field`가 어느 불변식인지 싣는다.
+- 외부 편입 포지션의 알림: `OpenExitState`가 `ErrPositionNotExitEligible`로 거부한다. 알림은 7.4.
+- 확정 하한 캡(7.5): 캡된 잔여를 pending으로 유지하는 규칙은 미구현. 현재는 발의 1건 = pending 1건.
+- `LadderTransition.Changed`/`RatchetDecision.Changed`가 "`exit_events`에 기록할 판정"의 조건을
+  이미 계산해 준다(0.1의 후속 입력 — 중복 회피는 판정 루프 쪽 조건으로).
+
+## 2026-07-26 [safe local] intent id를 제출 **전에** 찍는다 — 부착이 제출 뒤면 크래시가 막힌다 (task 7.4)
+
+- 사실: 7.3이 세운 크래시 계약은 "무장 → 발급 → 부착 → 제출"이고, 태스크 문장도 같다.
+  그런데 landed `execgw.Gateway`는 `prepareRequest`에서 `g.newID()`로 intent id를 찍는다 —
+  호출자는 제출이 끝나야 id를 안다.
+- 문제: 그러면 순서가 "무장 → 발급 → 제출 → 부착"이 되고, 제출과 부착 사이 크래시가
+  **살아 있는 매도 주문 위에 아무것도 해소할 수 없는 pending**을 남긴다(`ApplyExitFill`은
+  `PendingIntentID == IntentID`로 해소하고 빈 값은 매치되지 않는다). 그 포지션은 이후 모든
+  발의가 억제된다 — 7.3이 "조용한 fail-closed"라고 부른 바로 그 상태.
+- 이번 처리: `execgw.PlaceRequest.IntentID`(선택) 가산. 비어 있으면 종전대로 게이트웨이가
+  찍으므로 기존 호출자 전원 무영향. 권한은 여전히 GuardianDecision이고 이것은 PK다.
+  같은 id·같은 조건의 재제출은 `Prepare`가 **identity recovery**로 인식하고(기존 계약),
+  조건이 다르면 `ErrIntentMutated`로 거부한다.
+- 함께: `journal.IntentAttempted`. Prepare가 발송 전에 커밋하므로 attempt 부재는 부재의
+  증명이고, 재기동한 루프가 "그 발의가 제출되긴 했는가"에 답할 수 있다. Prepare는 두 번째
+  **attempt**를 거부하지 않으므로 이 질문은 루프가 해야 한다.
+- 검증: `TestAPreMintedIntentIDIsTheOneRecorded`, `TestAnOmittedIntentIDStillMintsOne`,
+  `TestAReusedIntentIDIsARecoveryAndNotASecondIntent`, `TestIntentAttemptedProvesAbsenceBeforeADispatch`.
+
+## 2026-07-26 [safe local] 청산 지정가는 기준선이 아니라 **관측가**다 (task 7.4)
+
+- 사실: 자동 주문은 LIMIT 전용이고(riskcalc), exit 상태에서 "이 아래로는 거래하지 않는다"는
+  뜻을 가진 유일한 수는 `baseline_price`다. 처음 구현은 그것을 지정가로 썼다.
+- 문제: **하회 청산은 정의상 관측가 < 기준선**이다. 기준선에 지정가를 걸면 매도 주문이
+  시장 위에 얹혀 체결되지 않는다 — 보호를 목적으로 낸 주문이 보호하지 않는다.
+- 이번 처리: 지정가 = **그 판정을 만든 관측가**. 양방향에서 marketable하다(익절은 트리거
+  위에서, 청산은 기준선 아래에서 관측된다). 잔존 리스크(관측과 브로커 수신 사이의 추가 변동을
+  지정가가 쫓아가지 않음)는 design.md가 이미 "표본 사이" 리스크로 열거한 그 창이고 새로운
+  것이 아니다 — 코드 주석에 명시.
+
+## 2026-07-26 [safe local] 선행 취소는 **무장보다 앞**이고, 취소 실패는 판정을 멈추지 않는다 (task 7.4)
+
+- 사실: `RatchetDecision.CancelPendingFirst`는 미해소 익절이 있는데 하회가 발생했을 때 켜진다.
+  그런데 `armExitProposalTx`는 pending이 있으면 두 번째 무장을 **거부**한다. 그래서 "무장 후
+  취소"는 구조적으로 불가능하다 — 무장 자체가 먼저 실패한다.
+- 이번 처리: 순서를 `취소 → 해소 → 무장 → 발급 → 부착 → 제출`로 둔다. 취소하는 대상은 둘이다:
+  (a) working 진입 매수 — 2차 물결의 E31 승계(청산 중 진입 체결 = 금지 전이 = RECONCILE),
+  전량 청산이면 `CancelPendingFirst`와 무관하게 항상, (b) 미해소 익절 매도 —
+  `CancelPendingFirst`일 때. 해소(`ResolveExitProposal(CANCELLED)`)는 **취소 성공 후에만**
+  한다. 살아 있는 매도 위에서 레벨을 재무장하면 그것이 곧 오버셀이다.
+- **취소 실패는 판정을 멈추지 않는다**: 워터마크·기준선은 그대로 전진하고 발의만 보류된다.
+  보류는 조용하지 않다 — `noteDelay`가 시계를 걸고 유계(기본 30초, IN_DOUBT 해소 절차의 bound)를
+  넘으면 critical `exit.liquidation_delayed`. §0.3의 "지연이 유계를 넘으면 critical 알림" 그대로.
+- 검증: `TestABreachDisplacesAnOutstandingTakeProfit`,
+  `TestAWorkingEntryIsCancelledBeforeTheLiquidation`,
+  `TestAnUncancellableEntryWithholdsTheLiquidationAndAlertsPastTheBound`.
+
+## 2026-07-26 [safe local] 캡된 잔여는 프로세스가 기억하지 않고 원장에서 재파생한다 (task 7.5)
+
+- 스펙 자구: "잔여는 pending으로 유지되어 해소 후 같은 레벨 identity로 재발의되며".
+- 문제: 무장된 pending은 **재발의를 억제한다**(수명주기의 목적). 잔여를 pending으로 유지하면
+  같은 문장이 요구하는 "해소 후 재발의"가 그 pending 때문에 일어나지 않는다. 두 요구가
+  자구 그대로는 서로를 막는다.
+- 이번 처리: 캡 > 0이면 캡분을 제출하고 알림(`exit.proposal_capped`, 잔여 수량 포함).
+  캡 = 0이면 아무것도 제출하지 않고 발의를 **해소**(REFUSED)해 레벨을 재발의 가능 상태로
+  되돌린다. 잔여는 어느 쪽이든 잊히지 않는다 — 하회는 여전히 하회이고 rung은 여전히
+  미체결이므로 **다음 관측이 같은 레벨 identity로 원장에서 다시 유도한다**. 프로세스 메모리에
+  잔여 큐를 두지 않은 이유가 이것이다: 대사 사고 뒤에 가장 일어나기 쉬운 사건이 재시작이고,
+  메모리에 있던 잔여는 정확히 그때 사라진다.
+- 검증: `TestTheConfirmedFloorCapsTheLiquidation`,
+  `TestAZeroFloorSubmitsNothingAndLeavesTheLevelProposable`(해제 후 재발의까지),
+  `TestAFloorThatCannotBeComputedSellsNothing`, `TestNoFloorSourceCapsNothing`(§0.3 회귀).
+
+## 2026-07-26 [safe local] ladder policy_id 부재를 **결과로** 탐지한다 (task 7.4 / 7.2 승계)
+
+- 승계 과제(7.2 observation): "활성 ladder 포지션이 있는 동안의 rung 표 교체를 금지하거나
+  운영자 확인 대상으로 올려야 한다. 스키마 변경(v7)은 범위 밖."
+- 이번 처리 두 겹: (1) 관측자는 생성 시점에 rung 표를 **스냅샷**한다 — 한 프로세스가 도는
+  동안 교체는 불가능하고, 교체하려면 재시작해야 한다. (2) 재시작이 바꾼 표는 포지션별로
+  `checkLadderPolicyStillFits`가 결과로 잡는다: 활성 rung의 설정상 잠금가가 저장된 기준선보다
+  **위**면(기준선은 단조이고 그 rung이 이미 올려놨어야 한다) 그 표는 그 rung을 활성화한 표가
+  아니다. rung 수가 저장 인덱스보다 적은 표도 같은 검사에서 걸린다.
+- **한계 명시**: 목표%·부분비율만 바꾼 교체는 탐지되지 않는다. 그것을 닫으려면 `policy_id`
+  컬럼이 필요하고 컬럼에는 새 스키마 버전이 필요하다(v6 단일 규칙). 후속 change의 몫.
+- 판정 결과는 "판정 거부 + 알림"(critical `exit.judgement_refused`)이고 그 포지션에는 주문을
+  내지 않는다. 검증: `TestARungTableSwappedUnderALivePositionIsRefused`,
+  `TestARungTableShorterThanTheStoredIndexIsRefused`.
+
+## 2026-07-26 [safe local] SLO 양보도 두절 시계를 태운다 (task 7.4)
+
+- 스펙은 "체결 감지 SLO에 양보"와 "두절 60초 → ENTRY_BLOCKED"를 따로 적는다. 두 문장이 만나는
+  지점이 정해져 있지 않다.
+- 이번 처리: 양보한 사이클도 `lastObserved`를 갱신하지 않는다. 즉 지속적인 양보는 지속적인
+  실패와 **같은 사다리**에 도달한다. 근거는 포지션 쪽에서 본 사실이다 — "못 봤다"와
+  "안 봤다"는 보호 부재라는 점에서 구별되지 않는다. 반대로 만들면 체결 감지가 계속 뒤처지는
+  동안 무기한 무손절이 되고, 그것이 정확히 60초 규칙이 금지하는 상태다.
+- 배선 현황: 엔진 프로필은 `SLO: nil`이다 — 이 빌드에는 체결 감지 **루프**를 구성하는 곳이
+  없어서 양보할 대상이 실재하지 않는다. 항상 "안 뒤처졌다"고 답하는 소스를 배선하는 것은
+  측정이 아니라 주장이므로 두지 않았다. 순서 자체는 exitloop.go에 고정되고 단위 테스트가
+  덮는다. 실제 detector 배선은 그것을 만드는 change의 몫.
+
+## 2026-07-26 [safe local] 포지션이 없는 계좌는 두절 상태가 아니다 (task 7.4)
+
+- 보유가 0이면 관측할 것이 없고 보호받지 못하는 것도 없다. 그런데 "마지막 성공 관측"만 보면
+  기동 후 60초가 지난 유휴 계좌가 전부 두절로 읽히고 ENTRY_BLOCKED가 된다 — 그리고 그 상태를
+  풀 수 있는 유일한 사건(진입)이 차단된다. 자기 잠금이다.
+- 이번 처리: working set이 비면 시계를 리셋하고 가격 조회도 하지 않는다(§0.4 부수 이득).
+  검증: `TestAnAccountHoldingNothingIsNotInAnOutage`.
+
+## 2026-07-26 [safe local] exit 상태를 여는 주체는 관측 루프이고, 동결 쌍은 **결정의** 진입가·손절가다 (task 7.4)
+
+- 사실: apply hook은 exit 상태를 **열지** 않는다(0.3 판정: hook의 범위는 해소). `OpenExitState`는
+  `*Journal` 메서드이고 부르는 곳이 없었다.
+- 이번 처리: 관측 루프의 working-set 스캔이 연다 — 보유 중이고 entry 결정이 있는데 상태가 없는
+  포지션. 같은 스캔이 외부 포지션 알림(`exit.position_unmanaged`, normal, 포지션당 1회)의
+  자리이기도 하다.
+- 동결 쌍은 체결 평균가가 아니라 **진입 결정의 지정가·손절가**다(`decisions.risk_preimage`의
+  RiskIntent). 근거: 둘 다 t0에 알려져 있고, Guardian 체인이 사이징·판정한 바로 그 수이며,
+  그 차이가 곧 초기 위험이다. 평균 체결가는 진입이 체결되는 **동안 움직인다** — 움직이는 값을
+  R의 분모로 동결하면 같은 가격이 포지션 수명 중에 두 개의 R을 갖는다.
+
+## 2026-07-26 [safe local] 무설정 알림 transport는 중립이 아니다 (task 7.4 배선 승계)
+
+- `obs.Notifier.Publisher`가 nil이면 모든 critical 알림이 미배달로 끝나고, 게이트 latch +
+  지속 실패 시 ENTRY_BLOCKED로 이어진다. 이것은 스펙 방향 그대로다(risk-management: critical
+  알림 outbox 전달 실패 지속 → ENTRY_BLOCKED) — 포지션이 보호되지 않는다는 사실을 운영자에게
+  전할 수 없는 엔진이 새 포지션을 열어서는 안 된다.
+- 이번 처리: `engine.Options.Publisher`(배선 필드, 기본 nil). **설정 블록으로 만들지 않았다** —
+  이 change에는 알림 설정을 audit하는 코드가 없고, audit 없는 운영 설정이 §0.5가 막으려는
+  그것이다. 지금 대가가 0인 이유: 조항 6이 이미 게이트 ON을 막는다.
+- 후속 입력: 알림 transport를 설정으로 노출하는 change는 `recordGateSettings`와 같은 audit
+  경로를 함께 가져와야 한다.
+
+## 2026-07-26 [safe local] 수량 불일치 수렴은 두 시장에 걸친 심볼을 추측하지 않는다 (task 7.5 / 6.3 승계)
+
+- 6.3이 남긴 대가("4차 대사 루프가 수량 불일치에 대해서도 조정을 발행하지 않으면 이 대가가
+  일상화된다")를 `reconcile.Converger`로 닫았다. 계좌가 권위이므로 산술은 없다 —
+  `QuantityMismatch.Authority()`를 쓰고 증거(기대 이전 값·체결 watermark·broker_as_of)를 싣는다.
+- 두 가지를 추측 대신 거부한다: (a) 로컬 수량이 **두 시장의 인스턴스**에 걸친 심볼 — 비교는
+  심볼 수준이고(`[미측정 — 보유 스냅샷의 market 차원]`) 조정은 인스턴스 수준이라 어느 거래소가
+  움직였는지 정할 근거가 없다, (b) 살아 있는 로컬 인스턴스가 없는 심볼 — 그것은 Ingestor의
+  경우이고 여기서 접으면 같은 사건에 writer가 둘이 된다. 거부는 차단을 그대로 두므로 보수 방향.
+- kind는 `UNKNOWN`(position.Classify): 인스턴스가 있으니 EXTERNAL이 아니고 선언이 없으니
+  MANUAL이 아니다. 크레딧은 `Applied=false`(재적용)에도 준다 — 해제 규칙이 요구하는 것은
+  "재조회 전에 이 심볼에 대해 무언가 쓰였다"이지 "이 프로세스가 썼다"가 아니다.
+- 검증: `TestConvergenceMakesTheBlockReleasable`(불일치→차단→수렴→clean→ADJUSTMENT_APPLIED 해제),
+  `TestACoincidentalAgreementStillDoesNotRelease`(6.3의 규칙 비약화 확인).
+
+## 2026-07-26 [safe local] 왕복 다리는 `fill_events.id`로 귀속한다 — 시각 추정 아님 (task 8.1)
+
+- 문제: `trade_outcomes`는 실현손익과 초기 수량을 요구하는데, "어느 체결이 이 인스턴스의
+  것인가"에 답할 컬럼이 없다(주문→인스턴스 링크는 6.4가 이 change에서 기각). 시각으로 붙이는
+  것은 스펙이 금지한 휴리스틱이다.
+- 이번 처리: `fill_events.id`는 단조 append 시퀀스다. 하한 = **이 인스턴스 진입 결정의 주문들이
+  만든 최소 id**, 상한 = 없음(종결 트랜잭션 안에서 계산하므로 이후 체결이 아직 존재하지 않는다).
+  한 심볼의 인스턴스는 구성상 서로 겹치지 않으므로(새 인스턴스는 직전이 CLOSED일 때만 열리고
+  CLOSED는 종결) 이 창은 근사가 아니라 정확한 분할이다. 로컬 intent가 없는 체결은 조인되지
+  않아 자동 제외된다(투영도 같은 이유로 움직이지 않았다).
+- 초기 수량 = 창 안의 BUY 누적 수량. 실현손익 = 매도 실현액 − 매수 원가 − 양측 비용(internal/costs).
+  실현 R = pnl ÷ (초기 위험 × 초기 수량).
+
+## 2026-07-26 [safe local] 동결 실패는 삼킨다 — 분석이 주문 경로를 깨뜨릴 수 없다 (task 8.1)
+
+- trade-analytics: 분석 작업의 실패·지연이 체결 반영·청산 처리를 지연시키거나 실행 상태를
+  되돌려서는 안 된다(SHALL NOT). 동결은 CLOSED 트랜잭션 **안**에 있으므로 오류를 반환하면
+  브로커가 이미 보고한 체결이 롤백된다 — 6.1이 투영 실패에 대해 금지한 바로 그 실패 모드.
+- 이번 처리: `freezeTradeOutcomeTx`는 오류를 반환하지 않는다. 계산할 수 없으면 행을 쓰지 않고
+  포지션은 정상 종결한다. 빠진 행은 `BackfillTradeOutcome`이 복구한다 — CLOSED는 종결이라
+  읽는 데이터가 더 이상 움직이지 않으므로 backfill이 내는 수는 종결 시점이 냈을 수와 같다.
+  덮어쓰기는 거부한다(`ErrTradeOutcomeExists`) — "이후 비동기 작업이 원시 행을 갱신하지 않는다"가
+  동결의 내용이다.
+- 쓰지 않는 경우: 비용 모델 미설정(공짜 왕복은 실적을 영구히 과장한다), 미관측 평균가(0으로
+  접으면 아무도 내지 않은 이익), entry 결정 없음(초기 위험이 없다).
+- 검증: `TestAnAnalyticsFailureDoesNotRollBackTheClose`,
+  `TestABackfillRecoversTheGapAndRefusesToRewriteIt`, `TestAnUnpricedFillLeavesNoOutcome`.
+
+## 2026-07-26 [safe local] 비용 모델은 `ApplyHooks`의 세 번째 필드로 주입한다 (task 8.1)
+
+- 동결 행의 손익은 공유 비용 모델로 계산해야 하는데(SHALL — 이중 정의 금지) journal이 운영자의
+  수치를 소유해서는 안 된다. 0.3이 세운 "재바인딩 거부가 하나의 배선 지점을 강제한다"는 성질을
+  유지하려면 gateway.go의 그 리터럴을 다시 확장하는 것이 유일한 자리다.
+- 이번 처리: `ApplyHooks.Costs costs.Model`, `ApplyTx.costs`로 전달. 7.3이 예고한 대로 리터럴이
+  또 한 번 늘었고 그 어색함이 곧 강제 검토 지점이다. `journal` → `costs` 의존은 신규지만 순환은
+  없다(costs는 clock만 import).
+
+## 2026-07-26 [observation] tracer는 필수 조회 4종을 전부 갱신해야 진입할 수 있다 (task 8.2)
+
+- 처음 구현은 가격만 읽었고, 게이트웨이가 `open_orders has never been observed successfully`로
+  진입을 거부했다. 게이트는 넷 다에 fail-closed이고 "한 번도 성공하지 않은 조회 = 무한히 낡음"이다.
+- 이번 처리: tracer가 open orders·buying power·holdings·price를 전부 Retrier 경유로 읽는다.
+  이것은 우회가 아니라 tracer가 존재하는 이유의 일부다 — 실전 실행이 가장 먼저 해야 하는 일이고,
+  여기서 하면 실행은 완전하고 신선한 그림을 갖거나 아예 시작하지 않는다.
+- 후속 입력: 엔진에 조회 루프(체결 감지·대사)가 생기면 그 루프들이 같은 Retrier를 쓰는 한
+  tracer의 이 단계는 중복이 되지만 무해하다(성공은 freshness 갱신뿐).
+
+## 2026-07-26 [observation] 4차 물결이 남긴 것 (task 7.4~8.2)
+
+- **체결 감지 루프·대사 루프의 프로덕션 배선은 이 wave 밖**이다. 만들어진 것은 그것들이 쓸
+  부품(`Retrier`·`Notifier`·`Ingestor`·`Converger`·`reconcileFloor`)과 exit 관측 루프이며,
+  `Context`에 노출되어 있다. `filldetect.Detector`를 구성하는 곳은 여전히 없고, 그래서
+  `ExitObserverOptions.SLO`도 nil이다.
+- **`Context.ExitObserver`는 게이트 검증 시에만 조립된다**. 조항 6이 이 빌드에서 그것을 막으므로
+  프로덕션에서 루프는 구성되지만 기동되지 않는다 — D8이 예고한 상태 그대로이며, 2c가 조항 6을
+  뒤집을 때 `profileProtection` flip과 함께 이 경로가 처음 살아난다.
+- **일손실 실현값의 생산자**: 3차 물결이 "`AccountState.DailyRealizedLoss`를 최신으로 유지하는
+  루프는 8.1/7.x"라고 적었다. 8.1이 공급한 것은 `trade_outcomes`와
+  `AggregateTradeOutcomes(...).NetPnL`이다. 그것을 읽어 `AccountState`에 넣는 **호출자**는 여전히
+  없다 — 발급자를 부르는 진입 루프(신호 계층, P3)의 몫이다.
+
+## Manager 판정 (4차 물결·완료 게이트, 2026-07-26)
+
+- H·I 판정 24건 전부 승인. 특히: 하회 판정을 새 기준선 기준으로(≥원본 발동), pending 억제의 하회 청산 비적용(§0.3)+CancelPendingFirst, 하회 청산 가격을 기준선→관측가로 정정(기준선 지정가는 시장가 위라 영구 미체결 — 실작동 버그), cancel→resolve→arm 재순서, ladder 첫 rung 전 보호, ErrExitApplierUnbound 가드(ProjectionBound 패턴 준수).
+- 의도적 미구현 5건 승인: SLO nil(detector 루프 부재 — "측정 아닌 주장" 거부 논리 타당), ExitObserver의 미검증 게이트 거부(D8·조항 6 정합 — 테스트로 고정), ladder policy_id 컬럼(v6 단일 규칙 — 탐지 가능 범위는 처리·2c/2d-후속 입력), 알림 config 블록(§0.5 audit 배관 범위 밖 — nil publisher 결과 기록), DailyRealizedLoss 공급자(진입 루프=P3 소관 — 자동 진입이 없는 동안 차단할 대상도 없음).
+- 9.1 diff 리뷰: upstream 무수정(2d 대상 파일 전부 TossOS 생성 확인), 조건주문·보호 발급 0줄(비테스트 grep 무적중), 신호 입력 0, [미검증]/[미측정] 태그 전수, 6.3 사전 열거 4건 준수. 체크박스 귀속 위반 2건(8cd2a98의 6.3, 이전 d30eaa8의 5.3 — 2a) 기록: 내용 정확·귀속 부정확, 프로세스 개선은 지시문 반영 완료.
+- 9.2 독립 재실행: `go test ./... -race -count=1` 0 FAIL (2358 tests, 45 pkgs), vet clean.
+- 9.3 property(3중 단조·96행 전이표 4중 증명)·crash(마이그레이션·apply·pending 양방향·e2e 중단)·race(발급·예약·모드)·pending 테스트 전수 확인. issues.md 전 항목 판정 완료.

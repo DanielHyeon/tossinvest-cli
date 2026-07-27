@@ -1,0 +1,40 @@
+{
+  "file": "internal/console/data.go",
+  "source_sha256": "416a98b72af85874f61a6deb19abe79174635a117dbd763fb6560aa4a270c7e1",
+  "package": "console",
+  "function": "snapshot",
+  "receiver": "Console",
+  "signature": "Console.snapshot(params=0, results=1)",
+  "start": {
+    "line": 184,
+    "column": 1
+  },
+  "end": {
+    "line": 184,
+    "column": 84
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 184,
+        "column": 41
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 48
+      },
+      "text": "c.snapshotFor"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

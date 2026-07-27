@@ -1,0 +1,80 @@
+{
+  "file": "internal/console/data.go",
+  "source_sha256": "416a98b72af85874f61a6deb19abe79174635a117dbd763fb6560aa4a270c7e1",
+  "package": "console",
+  "function": "redoSet",
+  "receiver": "Console",
+  "signature": "Console.redoSet(params=1, results=2)",
+  "start": {
+    "line": 323,
+    "column": 1
+  },
+  "end": {
+    "line": 329,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 325,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 326,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 18
+      },
+      "text": "verifylive.LoadEntries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 41
+      },
+      "text": "c.verifyRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 9
+      },
+      "text": "verifylive.RedoSet"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

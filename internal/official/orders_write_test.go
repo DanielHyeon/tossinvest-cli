@@ -142,9 +142,135 @@ func TestBuildOrderCreateMarket(t *testing.T) {
 	}
 }
 
+// TestBuildOrderCreateCarriesClientOrderID pins the idempotency key onto both
+// request variants.
+//
+// openapi (OrderCreateRequest.clientOrderId): "클라이언트 지정 주문 식별자.
+// 멱등성 키로 사용됩니다 … 미전달: 멱등성 미적용" — so an empty key must leave the
+// field out of the body entirely rather than send "", which is not a key the
+// pattern `^[a-zA-Z0-9\-_]+$` even allows.
+func TestBuildOrderCreateCarriesClientOrderID(t *testing.T) {
+	cases := []struct {
+		name   string
+		intent orderintent.PlaceIntent
+	}{
+		{
+			name: "quantity based",
+			intent: orderintent.PlaceIntent{
+				Symbol: "005930", Side: "buy", OrderType: "limit", Quantity: 10, Price: 70000,
+				ClientOrderID: "tos-abc_DEF-123",
+			},
+		},
+		{
+			name: "amount based",
+			intent: orderintent.PlaceIntent{
+				Symbol: "TSLA", Side: "buy", Fractional: true, Amount: 100.5,
+				ClientOrderID: "tos-abc_DEF-123",
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			body, err := buildOrderCreate(tc.intent)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, _ := json.Marshal(body)
+			if got := string(b); !strings.Contains(got, `"clientOrderId":"tos-abc_DEF-123"`) {
+				t.Fatalf("the idempotency key did not reach the wire body: %s", got)
+			}
+
+			keyless := tc.intent
+			keyless.ClientOrderID = ""
+			body, err = buildOrderCreate(keyless)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, _ = json.Marshal(body)
+			if got := string(b); strings.Contains(got, "clientOrderId") {
+				t.Fatalf("an unkeyed order must omit the field entirely: %s", got)
+			}
+		})
+	}
+}
+
 // ---------------------------------------------------------------------------
 // PlaceOrder integration test
 // ---------------------------------------------------------------------------
+
+// TestPlaceOrderRejectsAForeignClientOrderIDEcho: openapi (OrderResponse
+// .clientOrderId) says the response returns "요청 시 전달한 값 그대로" — so an echo
+// that names a *different* key is not a response about the order we sent, and
+// treating it as an ack would confirm somebody else's order. Absent or null is
+// tolerated (that is the documented shape for an unkeyed request).
+func TestPlaceOrderRejectsAForeignClientOrderIDEcho(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/orders":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"result":{"orderId":"O1","clientOrderId":"somebody-elses-key"}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	c := New(Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL), WithHTTPClient(srv.Client()), WithAccountSeq(7))
+
+	_, err := c.PlaceOrder(context.Background(), orderintent.PlaceIntent{
+		Symbol: "TSLA", Market: "us", Side: "buy", OrderType: "limit", Quantity: 3, Price: 150.25,
+		ClientOrderID: "tos-mine",
+	})
+	if err == nil {
+		t.Fatal("an echoed idempotency key that is not ours must not be accepted as an ack")
+	}
+	if !strings.Contains(err.Error(), "clientOrderId") {
+		t.Fatalf("the error must name the mismatch, got %v", err)
+	}
+}
+
+// TestPlaceOrderEchoedClientOrderIDMatches is the happy path of the same check.
+func TestPlaceOrderEchoedClientOrderIDMatches(t *testing.T) {
+	var gotBody string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/orders":
+			var m map[string]any
+			_ = json.NewDecoder(r.Body).Decode(&m)
+			b, _ := json.Marshal(m)
+			gotBody = string(b)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"result":{"orderId":"O1","clientOrderId":"tos-mine"}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	c := New(Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL), WithHTTPClient(srv.Client()), WithAccountSeq(7))
+
+	res, err := c.PlaceOrder(context.Background(), orderintent.PlaceIntent{
+		Symbol: "TSLA", Market: "us", Side: "buy", OrderType: "limit", Quantity: 3, Price: 150.25,
+		ClientOrderID: "tos-mine",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.OrderID != "O1" {
+		t.Fatalf("OrderID: want O1, got %q", res.OrderID)
+	}
+	if !strings.Contains(gotBody, `"clientOrderId":"tos-mine"`) {
+		t.Fatalf("the key did not reach the broker: %s", gotBody)
+	}
+}
 
 // TestPlaceOrder verifies POST body JSON and X-Tossinvest-Account header via httptest.
 func TestPlaceOrder(t *testing.T) {

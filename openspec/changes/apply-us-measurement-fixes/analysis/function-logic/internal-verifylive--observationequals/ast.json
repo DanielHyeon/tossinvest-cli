@@ -1,0 +1,94 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "0fad6a437d582cb68ff83eec970147fc3c2110eaddfc5492ee90b362d9fe7740",
+  "package": "verifylive",
+  "function": "observationEquals",
+  "signature": "observationEquals(params=5, results=1)",
+  "start": {
+    "line": 842,
+    "column": 1
+  },
+  "end": {
+    "line": 854,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 845,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 848,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 849,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 846,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 850,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 853,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 843,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 844,
+        "column": 11
+      },
+      "text": "LastEntry"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 844,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

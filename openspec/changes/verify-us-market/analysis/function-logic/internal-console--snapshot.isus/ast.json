@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/data.go",
+  "source_sha256": "416a98b72af85874f61a6deb19abe79174635a117dbd763fb6560aa4a270c7e1",
+  "package": "console",
+  "function": "IsUS",
+  "receiver": "snapshot",
+  "signature": "snapshot.IsUS(params=0, results=1)",
+  "start": {
+    "line": 207,
+    "column": 1
+  },
+  "end": {
+    "line": 207,
+    "column": 73
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 207,
+        "column": 33
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

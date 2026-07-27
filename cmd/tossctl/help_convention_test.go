@@ -98,7 +98,28 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// `ops call` reaches the same write operations `order` does — it dispatches
 		// through the same trading.Service gate — so it must declare itself too.
 		// Everything else here is a typed trade action.
-		"tossctl ops call":                 true,
+		"tossctl ops call": true,
+		// flatten-all cancels every order and sells every position (task 4.5).
+		// It is the most consequential trade action here, so it declares itself
+		// like the rest.
+		"tossctl flatten-all": true,
+		// verify run places live orders — one minimum-quantity limit order at a
+		// time, each confirmed at a terminal and cancelled in the same step
+		// (verify-execution-capability task 1.5). `verify status` and `verify
+		// report` read the local record only and are not listed here.
+		"tossctl verify run": true,
+		// console drives the same verify runner from a loopback page
+		// (verify-execution-capability task 1.6). It places live orders only
+		// through that runner and only after the typed approval, but it *can*
+		// place them, so it declares itself like `verify run` does.
+		"tossctl console": true,
+		// engine run drives the reconciliation, exit-observation and fill-detection
+		// loops (add-engine-runtime task 1.2). The exit observer places real
+		// reduce-only orders once the automation gate is verified, so it declares
+		// itself even though interlock clause 6 makes a verified gate unreachable
+		// in this build: the annotation describes what the command is, not what
+		// this build happens to permit.
+		"tossctl engine run":               true,
 		"tossctl order place":              true,
 		"tossctl order cancel":             true,
 		"tossctl order amend":              true,

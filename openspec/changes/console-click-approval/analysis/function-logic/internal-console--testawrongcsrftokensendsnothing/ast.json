@@ -1,0 +1,142 @@
+{
+  "file": "internal/console/console_test.go",
+  "source_sha256": "4d8bf9a087b46d59da69a47ab5ae8492c46d0999f85bde39b2248975a8fc70bc",
+  "package": "console",
+  "function": "TestAWrongCSRFTokenSendsNothing",
+  "signature": "TestAWrongCSRFTokenSendsNothing(params=1, results=0)",
+  "start": {
+    "line": 364,
+    "column": 1
+  },
+  "end": {
+    "line": 380,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 371,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 377,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 7
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 366,
+        "column": 2
+      },
+      "text": "h.startAndWait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 10
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 10
+      },
+      "text": "h.broker.mutationCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 6
+      },
+      "text": "snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 6
+      },
+      "text": "h.currentRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 365,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 368,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 374,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

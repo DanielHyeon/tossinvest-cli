@@ -1,0 +1,93 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "1c22a458a48fbe95734ffcb6ae6c77125330efc43c1764b9233b5e17f22541d8",
+  "package": "main",
+  "function": "loadVerifyRecord",
+  "signature": "loadVerifyRecord(params=2, results=3)",
+  "start": {
+    "line": 490,
+    "column": 1
+  },
+  "end": {
+    "line": 500,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 492,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 493,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 497,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 21
+      },
+      "text": "resolveVerifyRecordFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 18
+      },
+      "text": "verifylive.LoadEntries"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

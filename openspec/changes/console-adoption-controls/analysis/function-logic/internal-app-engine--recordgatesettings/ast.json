@@ -1,0 +1,195 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "3dbc1d0219b5590c8d66f268a3434001f67a328d6f3ba6cc7ba84b6377afb220",
+  "package": "engine",
+  "function": "recordGateSettings",
+  "signature": "recordGateSettings(params=4, results=1)",
+  "start": {
+    "line": 642,
+    "column": 1
+  },
+  "end": {
+    "line": 681,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 645,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 675,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 676,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 677,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 680,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 654,
+        "column": 62
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 657,
+        "column": 4
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 659,
+        "column": 4
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 661,
+        "column": 4
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 666,
+        "column": 4
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 667,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 668,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 669,
+        "column": 74
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 670,
+        "column": 77
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 671,
+        "column": 76
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 673,
+        "column": 4
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 673,
+        "column": 20
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 676,
+        "column": 16
+      },
+      "text": "log.RecordChange"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 644,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 646,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 648,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 676,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
