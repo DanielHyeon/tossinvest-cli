@@ -13,6 +13,34 @@ from gbrain_project import GBRAIN_HOME, project_environment
 
 ROOT = Path(__file__).resolve().parents[2]
 
+# `gbrain sources list` answers these on stdout with returncode 0 when it cannot
+# reach the engine at all. Measured 2026-07-28: a wedged `gbrain serve` kept the
+# project lock's heartbeat alive while its PGLite postmaster was dead, so every
+# probe exited 0 saying "connect timed out". Reading that as an empty listing
+# blamed source registration for an engine fault and hid the real remedy.
+UNREACHABLE_MARKERS = (
+    "connect timed out",
+    "timed out waiting for pglite lock",
+    "could not connect",
+)
+
+
+def probe_unreachable(listed: subprocess.CompletedProcess) -> bool:
+    """Report that the probe reached no engine, whatever its exit status."""
+    text = (listed.stdout + listed.stderr).lower()
+    return any(marker in text for marker in UNREACHABLE_MARKERS)
+
+
+def source_registered(listed: subprocess.CompletedProcess, source: str) -> bool:
+    """Report that a reachable engine listed this source.
+
+    An unreachable probe is never evidence either way, so it answers False here
+    and the caller stops on probe_unreachable before acting on it.
+    """
+    if probe_unreachable(listed):
+        return False
+    return source in listed.stdout
+
 
 def run(
     command: list[str],
@@ -102,7 +130,14 @@ def sync(full: bool = False, include_gbrain: bool = True) -> list[str]:
             failures.append("gbrain engine locked during source probe")
             record_index_state(successes)
             return failures
-        if source not in listed.stdout:
+        if probe_unreachable(listed):
+            # Stop here rather than fall through. `sources add` and `sync` would
+            # both fail against the same dead engine and append their own
+            # failures, burying the single fact that explains all three.
+            failures.append("gbrain engine unreachable")
+            record_index_state(successes)
+            return failures
+        if not source_registered(listed, source):
             if not run(
                 ["gbrain", "sources", "add", source, "--path", str(ROOT)],
                 timeout=60,

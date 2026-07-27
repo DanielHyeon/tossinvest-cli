@@ -399,7 +399,8 @@ func (r *Runner) stepOrderCancel(ctx context.Context, sr *stepRun) error {
 	if err != nil {
 		return err
 	}
-	sr.observe("order.place.ok", "true", EndpointPlaceOrder+" accepted a minimum-quantity KR limit order")
+	sr.observe("order.place.ok", "true",
+		EndpointPlaceOrder+" accepted a minimum-quantity "+spec.Market+" limit order")
 
 	if view, err := r.readOrder(ctx, sr, orderID); err == nil {
 		sr.observe("order.status.after_place", orDash(view.Status), "")
@@ -435,7 +436,15 @@ func (r *Runner) stepOrderAmend(ctx context.Context, sr *stepRun) error {
 	if err != nil {
 		return err
 	}
-	sr.observe("order.amend.ok", "true", EndpointModifyOrder+" accepted a KR price+quantity amend")
+	// The request follows the market (amendOrder), so the sentence recorded beside
+	// it has to as well — a US amend carries no quantity, and a record that says it
+	// did describes a request the broker answers 400 us-modify-quantity-not-supported.
+	amended := "price+quantity"
+	if !SameMarket(spec.Market, MarketKR) {
+		amended = "price-only"
+	}
+	sr.observe("order.amend.ok", "true",
+		EndpointModifyOrder+" accepted a "+spec.Market+" "+amended+" amend")
 	sr.observe("order.amend.issues_new_id", strconv.FormatBool(currentID != orderID),
 		"original "+orderID+" -> current "+currentID)
 

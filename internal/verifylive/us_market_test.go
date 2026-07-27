@@ -225,6 +225,84 @@ func TestTheUSAdvisorySaysItsClosedResponseIsUnmeasured(t *testing.T) {
 	}
 }
 
+// --- the record says which market it measured ------------------------------------
+
+// observationDetail returns a step's recorded detail for a key.
+func observationDetail(t *testing.T, entries []Entry, step StepID, key string) string {
+	t.Helper()
+	e, ok := LastEntry(entries, step)
+	if !ok {
+		t.Fatalf("no record entry for %s", step)
+	}
+	for _, o := range e.Observations {
+		if o.Key == key {
+			return o.Detail
+		}
+	}
+	t.Fatalf("%s recorded no %s", step, key)
+	return ""
+}
+
+// TestTheRecordDoesNotCallAUSRequestAKROne.
+//
+// The request already follows the market (TestTheUSAmendSendsNoQuantity), but the
+// sentence written beside it did not: both details were fixed strings naming KR.
+// A US run therefore recorded that the broker "accepted a KR price+quantity
+// amend" on a request that carried no quantity at all.
+//
+// That is not cosmetic. The record is the evidence a later change reads to decide
+// what the broker does, and a false sentence in it is worse than a missing one —
+// change 2c reads exactly these lines to write the attribution rules.
+func TestTheRecordDoesNotCallAUSRequestAKROne(t *testing.T) {
+	h := newHarness(t, usBroker(), alwaysConfirm())
+	if _, err := h.run(Options{Market: MarketUS, Symbol: "MWG", HoldingSymbol: "MWG"}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	entries := h.entries()
+
+	place := observationDetail(t, entries, StepOrderCancel, "order.place.ok")
+	if strings.Contains(place, MarketKR) {
+		t.Errorf("a US placement was recorded as a KR one: %s", place)
+	}
+	if !strings.Contains(place, MarketUS) {
+		t.Errorf("the placement detail does not say which market it measured: %s", place)
+	}
+
+	amend := observationDetail(t, entries, StepOrderAmend, "order.amend.ok")
+	if strings.Contains(amend, MarketKR) {
+		t.Errorf("a US amend was recorded as a KR one: %s", amend)
+	}
+	if !strings.Contains(amend, MarketUS) {
+		t.Errorf("the amend detail does not say which market it measured: %s", amend)
+	}
+	// The US request omits the quantity, so a detail claiming one describes a
+	// request the broker would have rejected with us-modify-quantity-not-supported.
+	if strings.Contains(amend, "quantity") {
+		t.Errorf("a US amend detail claims a quantity the request never carried: %s", amend)
+	}
+}
+
+// TestTheKRRecordStillSaysKR — the other half. Naming the market must not turn
+// into naming nothing.
+func TestTheKRRecordStillSaysKR(t *testing.T) {
+	h := newHarness(t, newFakeBroker().withHolding("005930", 3), alwaysConfirm())
+	if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	entries := h.entries()
+
+	if d := observationDetail(t, entries, StepOrderCancel, "order.place.ok"); !strings.Contains(d, MarketKR) {
+		t.Errorf("the KR placement detail no longer says KR: %s", d)
+	}
+	amend := observationDetail(t, entries, StepOrderAmend, "order.amend.ok")
+	if !strings.Contains(amend, MarketKR) {
+		t.Errorf("the KR amend detail no longer says KR: %s", amend)
+	}
+	if !strings.Contains(amend, "quantity") {
+		t.Errorf("the KR amend detail drops the quantity the broker requires: %s", amend)
+	}
+}
+
 // --- the cancel retry (measurements.md M16) --------------------------------------
 
 // TestACancelRetriesWhileTheBrokerSaysAlreadyProcessing.
