@@ -28,6 +28,7 @@ class TrackerTests(unittest.TestCase):
             "apply-us-measurement-fixes",
             "verify-clears-leftovers",
             "verify-survives-already-processing",
+            "add-candidate-discovery",
         ):
             path = changes / change
             path.mkdir(parents=True)

@@ -108,3 +108,36 @@ run `run-IXCQU5UBZE`, 재측정 대상 4단계(승인 목록 8건), 4단계 기�
 | M24 | **`409 already-processing`은 취소 전용이 아니다 — 정정에도 온다.** `POST /api/v1/orders` 수락(107ms) **직후**의 `POST /api/v1/orders/{id}/modify`가 같은 코드·같은 `retryAfterSeconds:1`로 거절됐다(requestId `si1tUiUvi8DzWXr5`). 브로커가 접수를 처리하는 동안 그 주문에 대한 **모든 후속 변경**이 이 창에 걸린다고 보는 것이 맞다 — 2c의 손절 정정·취소 경로 전부에 이 코드 처리가 필요하다 | order-amend 단계 reason·calls |
 | M25 | **M16 교정이 실계좌에서 작동한다** — order-cancel이 409를 만나 1회 재시도 후 수락, 단계 **pass**. `order.status.after_cancel=PENDING_CANCEL`, `canceledAt` 존재, `filledQuantity=0`. 접수 후 상태는 `PENDING`, `timeInForce=DAY` | order-cancel `order.cancel.retries=1`, `order.cancel.ok=true` |
 | M26 | **도구 결함: 실패한 단계가 자기가 낸 주문을 취소하지 않는다** — order-amend가 정정 거절로 조기 반환하면서 방금 접수한 주문을 남겼고(성공 경로에만 `cancelLiveOrders`가 있다), 그 1건이 노출 상한을 채워 **sell-boundary가 `ErrExposureCap`으로 아무것도 보내지 못했다**. "이 도구가 만든 객체는 모두 취소되어 끝난다"는 불변식이 실패 경로에서 성립하지 않는다 | order-amend artifacts(cancelled=false), sell-boundary reason |
+
+## 5차 실행 — US 재측정 2단계 (2026-07-28 00:54 KST / 11:54 EDT, 콘솔 경유)
+
+run `run-EZQRKZZ7WPEMDS2I`, 재측정 대상 2단계(승인 목록 6건). 직전 실행
+(`run-QY3MJTSONBTL6CTR`)이 M26의 잔여 주문을 정리 prologue로 취소해 상한이 비어 있었다.
+**US 측정이 이 실행으로 완료됐다** — 12단계 pass, `conditional-trigger`만 설계상 deferred,
+`idempotency-ttl-edge`는 요청하지 않아 skipped.
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M27 | **M24·M26 교정이 실계좌에서 작동한다** — order-amend가 409를 만나 1회 재시도 후 수락(**pass**), 그리고 그 단계가 만든 주문 2건이 모두 취소된 채 끝났다(artifacts 4건 = 접수 2 + 취소 2). 연쇄로 막혀 있던 sell-boundary도 **pass** | order-amend `order.amend.retries=1`, `order.amend.ok=true`, artifacts cancelled=true ×2 |
+| M28 | **일반 주문 정정은 새 식별자를 발급하고 옛 식별자를 `PENDING_REPLACE`로 남긴다** — 조건주문 정정(M19)이 옛 id를 **404로 즉시 무효화**하는 것과 **다르다**. 2c의 귀속 규칙은 두 경로를 같게 다루면 안 된다: 조건주문은 "옛 id는 없다", 일반 주문은 "옛 id는 대체 중 상태로 읽힌다" | order-amend `order.amend.issues_new_id=true`, `order.amend.original_status=PENDING_REPLACE`, `order.amend.current_status=PENDING` |
+| M29 | **미체결 매도 지정가 주문은 매도가능수량을 예약한다** — 매도 1주를 걸어두는 동안 sellable 115 → **114**. **조건주문은 예약하지 않는다(M13)**. 이 대조가 2c 설계의 핵심 입력이다: 브로커측 조건주문 손절은 청산 수량을 잡아주지 않으므로 엔진이 스스로 유지해야 하고, 지정가 매도로 보호를 거는 대안은 수량을 잡아주는 대신 시장가 즉시성을 잃는다 | sell-boundary `sell.reservation.resting_sell_reserves=true`, `sellable_at_start=115`, `sellable_with_resting_sell=114` |
+| M30 | **보유 초과 매도는 `422 insufficient-sellable-quantity`로 거절된다**(requestId `sBNQ5vxQ65…`). 부분 매도는 수락된다. **전량 매도는 미검증** — 보유 115주가 도구의 노출 상한(1주)을 넘어 원리적으로 이 경로로는 측정할 수 없다 | sell-boundary `partial_accepted=true`, `over_holding_rejected=true`, `full_accepted=unverified` |
+
+### 남은 도구 결함 (경미)
+
+`order.amend.ok`의 detail이 시장과 무관하게 `"accepted a KR price+quantity amend"`로 고정돼
+있다([steps.go:438](../../../internal/verifylive/steps.go)). 실제 요청은 시장별로 갈라진다
+(US는 quantity 미전송 — [mutate.go:404-410](../../../internal/verifylive/mutate.go)). 동작은
+옳고 **기록이 US 실행에 대해 사실이 아닌 문장을 남긴다**. 기록의 정확성 문제이므로 교정 대상.
+
+### US 측정 최종 상태
+
+| 상태 | 단계 |
+|---|---|
+| pass (12) | read-fixtures, sellable-baseline, idempotency, order-cancel, order-amend, sell-boundary, conditional-register, sellable-reserved, conditional-persist, conditional-modify, conditional-cancel, costs |
+| deferred (1) | conditional-trigger — 체결될 의도의 주문이 필요해 별도 세션 |
+| skipped (1) | idempotency-ttl-edge — 두 번째 라이브 주문을 의도적으로 만드는 단계, 요청하지 않음 |
+
+**2c(`add-protection-orders`) 착수에 필요한 실측은 확보됐다**: 조건주문의 프로세스 존속(M18),
+US 등록 가능(M12), 정정의 식별자 교체 규칙(M19·M28), 청산 수량 예약 여부의 대조(M13·M29),
+취소·정정의 `already-processing` 처리(M16·M24).
