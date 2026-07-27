@@ -63,27 +63,53 @@ func productionFiles(t *testing.T) []string {
 
 // TestFixedFSProberIsTestOnly.
 //
-// journal.FixedFSProber makes the filesystem guard answer whatever the caller
-// says, which is exactly right for a test on a tmpfs and exactly wrong anywhere
-// else: the guard exists because fsync does not mean fsync on some mounts, and a
-// production path that stubs it out has turned the durability contract into a
-// comment.
+// FixedFSProber makes the filesystem guard answer whatever the caller says, which
+// is exactly right for a test on a tmpfs and exactly wrong anywhere else: the
+// guard exists because fsync does not mean fsync on some mounts, and a production
+// path that stubs it out has turned the durability contract into a comment.
 //
 // The definition itself is production code and is allowed; every *use* of it must
 // be in a _test.go file.
+//
+// There are two definitions, and that is deliberate rather than sloppy.
+// internal/candidate carries its own copy of the guard because importing
+// internal/journal would put the order ledger's API inside the discovery
+// package's type universe, which the discovery isolation requirement forbids
+// (openspec candidate-discovery, "발굴은 주문 경로에 도달할 수 없어야 한다"). The
+// two allowlists are held together by internal/candidate/fsguard_drift_test.go,
+// which reads the ledger's source and fails when they diverge.
 func TestFixedFSProberIsTestOnly(t *testing.T) {
 	root := repoRoot(t)
-	// The one file allowed to mention it: where it is defined.
-	definition := filepath.Join(root, "internal", "journal", "fsguard.go")
+	// The files allowed to mention it: the ones that define it. Listed
+	// explicitly, so a third copy of the durability stub has to be argued for in
+	// a diff to this test rather than appearing quietly beside it.
+	definitions := []string{
+		filepath.Join(root, "internal", "journal", "fsguard.go"),
+		filepath.Join(root, "internal", "candidate", "fsguard.go"),
+	}
+	isDefinition := map[string]bool{}
+	for _, path := range definitions {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("reading %s: %v", path, err)
+		}
+		// An allowlist entry earns its place by actually declaring the function.
+		// Otherwise this list becomes a way to exempt a file that merely calls it,
+		// which is the exact thing being prevented.
+		if !strings.Contains(string(data), "func FixedFSProber(") {
+			rel, _ := filepath.Rel(root, path)
+			t.Fatalf("%s is allowlisted as a definition of FixedFSProber but does not declare it; "+
+				"the allowlist is exempting a use", rel)
+		}
+		isDefinition[path] = true
+	}
+
 	// journal.go's Options doc explains why tests inject it. A comment is not a
 	// use, but allowing the file wholesale would be too broad, so the doc mention
 	// is matched exactly.
 	docMention := filepath.Join(root, "internal", "journal", "journal.go")
 
 	for _, path := range productionFiles(t) {
-		if path == definition {
-			continue
-		}
 		data, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("reading %s: %v", path, err)
@@ -91,13 +117,47 @@ func TestFixedFSProberIsTestOnly(t *testing.T) {
 		if !strings.Contains(string(data), "FixedFSProber") {
 			continue
 		}
+		rel, _ := filepath.Rel(root, path)
+
+		// A definition file is exempt for its declaration, not wholesale. The
+		// exemption exists so `func FixedFSProber(...)` can be written down; a
+		// *call* to it inside the same file is the same defect as a call anywhere
+		// else, and is in fact the likelier one — the tempting "fix" for the
+		// nil-prober branch in CheckFilesystem is to default it to a fixed prober,
+		// which turns the durability guard off for every caller that omits one.
+		if isDefinition[path] {
+			if line, called := callsFixedFSProber(string(data)); called {
+				t.Errorf("%s:%d calls FixedFSProber. Declaring it is allowed here; "+
+					"calling it disables the filesystem durability guard for every caller", rel, line)
+			}
+			continue
+		}
 		if path == docMention && onlyInComments(string(data), "FixedFSProber") {
 			continue
 		}
-		rel, _ := filepath.Rel(root, path)
-		t.Errorf("%s uses journal.FixedFSProber. It disables the filesystem durability guard and "+
+		t.Errorf("%s uses FixedFSProber. It disables the filesystem durability guard and "+
 			"belongs only in _test.go files", rel)
 	}
+}
+
+// callsFixedFSProber reports a call site — `FixedFSProber(` not preceded by
+// `func ` — outside comments, and the 1-based line it is on.
+func callsFixedFSProber(src string) (int, bool) {
+	for i, line := range strings.Split(src, "\n") {
+		code := line
+		if idx := strings.Index(code, "//"); idx >= 0 {
+			code = code[:idx]
+		}
+		idx := strings.Index(code, "FixedFSProber(")
+		if idx < 0 {
+			continue
+		}
+		if strings.HasSuffix(strings.TrimSpace(code[:idx]), "func") {
+			continue
+		}
+		return i + 1, true
+	}
+	return 0, false
 }
 
 // TestNoProductionCodeHardcodesATestTransport catches the other shape of the same
