@@ -95,13 +95,13 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   {{if .AnyJournalAbsent}}
   <p class="notice"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이
   아니므로 손절·익절 라인도 없다. 편입 실행은 엔진 대사 루프의 몫이고, 이 화면은
-  [관리 편입 지정]으로 지정만 한다 — 지정된 심볼은 다음 대사 주기(엔진 가동 시)에 편입 후보가 된다.</p>
+  [관리 편입] 체크로 지정만 한다 — 지정된 심볼은 다음 대사 주기(엔진 가동 시)에 편입 후보가 된다.</p>
   {{end}}
   <table>
     <tr>
       {{if .Multi}}<th>계좌</th>{{end}}
       <th>심볼</th><th>수량</th><th>평단</th><th>현재가</th><th>평가금액</th><th>평가손익</th><th>수익률</th>
-      <th>관리</th>
+      <th>관리 편입</th>
     </tr>
     {{range .Rows}}
     <tr>
@@ -110,17 +110,21 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td>{{.Qty}}</td><td>{{.Avg}}</td><td>{{.Last}}</td><td>{{.Value}}</td>
       <td class="{{if .Gain}}ok{{else}}bad{{end}}">{{.PnL}}</td>
       <td class="{{if .Gain}}ok{{else}}bad{{end}}">{{.Rate}}</td>
-      <td>{{.Label}}
-        {{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown)}}
-        <br><form method="post" action="/settings/include" style="display:inline">
+      <td>{{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown)}}
+        {{/*
+          라벨과 체크박스는 한 컨트롤이다: 미체크 = 관리 외(미편입), 체크 = 관리
+          편입(사용자 UX 결정 2026-07-27). 라벨 문자열은 positionRow.Label이
+          단독 정의한다 — 여기 두 번째 철자를 두지 않는다.
+        */}}
+        <form method="post" action="/settings/include" style="display:inline">
         <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="symbol"
         value="{{.Symbol}}">{{if .Designated}}<input type="hidden" name="remove" value="1">{{end}}
         <label><input type="checkbox" {{if .Designated}}checked{{end}}
         onchange="if(confirm('{{.Symbol}} {{if .Designated}}편입 예약을 해제할까요? 이미 편입된 포지션에는 영향이 없습니다.{{else}}을(를) 엔진 관리에 편입할까요? 엔진 가동 시 손절·익절이 자동 적용됩니다.{{end}}')){this.form.submit()}else{this.checked={{if .Designated}}true{{else}}false{{end}}}">
-        <strong>관리 편입</strong></label></form>
+        <strong>{{.Label}}</strong></label></form>
         {{if .Designated}}<br><span class="ok">편입 예약됨</span><span class="muted"> — 엔진 가동 시
         자동 편입(아직 손절·익절 미적용)</span>{{end}}
-        {{end}}
+      {{else}}{{.Label}}{{end}}
       </td>
     </tr>
     {{if .HasDetail}}
@@ -156,7 +160,8 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
     {{end}}
   </table>
   <p class="muted"><strong>관리 외(미편입)</strong>은 엔진의 exit 정책 대상이 아니라는 뜻이다 — 손절·익절이
-  자동으로 걸려 있지 않다. 관리 중인 행의 <strong>자격 근거</strong>는 그 보호가 어디서 왔는지를 말한다:
+  자동으로 걸려 있지 않다. 체크된 <strong>관리 편입</strong>은 편입 예약 상태다 — 실제 손절·익절은 엔진이
+  가동되어 대사 루프가 편입을 완료한 뒤부터 걸린다. 관리 중인 행의 <strong>자격 근거</strong>는 그 보호가 어디서 왔는지를 말한다:
   <em>진입 결정</em>은 엔진이 직접 진입한 포지션, <em>편입 기록</em>은 사용자가 수동 매수한 보유를 엔진이
   편입한 것이다. 편입 자체는 엔진의 대사 루프가 수행하며 이 화면의 기능이 아니다 — 이 화면은 읽기 전용이다.</p>
 </section>

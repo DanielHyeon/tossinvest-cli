@@ -36,7 +36,8 @@ package console
 // adopted rather than entered.
 //
 // A holding with no journal position at all, and a journal position with neither
-// record, are both 관리 외(미편입) — one label, as the spec fixes it — and each
+// record, are both unmanaged — labelled 관리 외(미편입), or 관리 편입 once the
+// operator has designated the symbol (the spec fixes both spellings) — and each
 // carries its own reason. Folding an external holding *into* management is the
 // engine's reconciliation loop's job; this screen can only designate a symbol
 // for it — a config write through the settings seam (console-adoption-controls)
@@ -280,13 +281,19 @@ func (r positionRow) Managed() bool { return r.InJournal && r.Eligible }
 // observe.
 func (r positionRow) Unknown() bool { return !r.JournalReadable && !r.InJournal }
 
-// Label is the verdict in the status column. The unmanaged label is fixed by the
-// spec to this exact string; there is not a second spelling of it anywhere in
-// this package.
+// Label is the verdict in the status column. The unmanaged labels are fixed by
+// the spec to these exact strings — one spelling each, defined only here: 관리
+// 외(미편입) unchecked, 관리 편입 designated (사용자 UX 결정 2026-07-27). The
+// designated label reports a reservation, not protection — the template keeps
+// the 편입 예약됨 note beside it — and an unreadable journal stays 관리 여부
+// 불명 regardless of designation, because a console that could not open the
+// ledger has not observed anything to promote.
 func (r positionRow) Label() string {
 	switch {
 	case r.Unknown():
 		return "관리 여부 불명"
+	case !r.Managed() && r.Designated:
+		return "관리 편입"
 	case !r.Managed():
 		return "관리 외(미편입)"
 	case r.HasExit && r.Exit.Completed:

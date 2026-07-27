@@ -147,3 +147,24 @@ config의 enabled를 뒤집을 수 있다. 방어는 루프백 전용·SameSite=
 - 목록 텍스트 편집은 <details> 고급 접힘으로 이동(기능 보존·1차 경로 아님).
 - pin: TestDesignationAppliesTheDefaultStopFraction·TestRemovingADesignationOnlyAffects
   TheFuture·TestTheStopFractionIsASlider. 콘솔 패키지 전체 green.
+
+## 사용자 UX 결정 반영 (2026-07-27) — 라벨이 체크 상태를 반영
+
+사용자 지시: ① 관리 열 헤더를 "관리 편입"으로, ② 미편입 행의 판정 라벨을 체크박스
+상태에 연동 — 미체크 "관리 외(미편입)"·체크 "관리 편입". 반영(Requirement 수준 —
+포지션 가시성 MODIFIED delta 추가, 본 기록이 경량 재리뷰):
+
+- `positionRow.Label`에 B3 분기 추가(`!Managed && Designated` → "관리 편입") —
+  Unknown(관리 여부 불명) 뒤에만 삽입해 원장 미판독 보수성 유지. FLM:
+  `internal-console--positionrow.label`.
+- 템플릿: 헤더 `<th>관리 편입</th>`, 지정 가능 행은 라벨을 체크박스의 라벨로 병합
+  (한 행 한 문구 — `{{.Label}}`이 유일 정의, 고정 철자 이중화 제거). "편입 예약됨"
+  병기는 유지 — 라벨은 예약의 표시이지 보호 성립이 아니다(각주 문단에 명시).
+- 정직성 유지 근거: "관리 편입" 라벨만으로 보호가 걸렸다고 읽힐 위험은 "편입
+  예약됨 — 엔진 가동 시 자동 편입(아직 손절·익절 미적용)" 병기와 각주("실제
+  손절·익절은 엔진이 가동되어 대사 루프가 편입을 완료한 뒤부터")로 상쇄한다.
+- pin: TestTheStatusColumnHeaderSaysAdoption·TestAnUnmanagedRowsLabelFollowsIts
+  Checkbox(신규 파일 portfolio_label_test.go — RED 관측 후 GREEN). 콘솔 패키지
+  128건 green. TestTheUnmanagedLabelIsSpelledOnce 불변(관리 외 철자 단일 정의 유지).
+- P4(잔여): Label B5("관리 종료")·B7("엔진 관리(대기)")는 이번 변경 무접촉 기존
+  분기로 직접 pin 테스트가 없다 — 다음 라운드 보강 후보.
