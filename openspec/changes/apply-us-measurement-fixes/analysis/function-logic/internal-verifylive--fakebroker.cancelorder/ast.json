@@ -1,0 +1,165 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/fake_broker_test.go",
+  "source_sha256": "0fad6a437d582cb68ff83eec970147fc3c2110eaddfc5492ee90b362d9fe7740",
+  "package": "verifylive",
+  "function": "CancelOrder",
+  "receiver": "fakeBroker",
+  "signature": "fakeBroker.CancelOrder(params=2, results=2)",
+  "start": {
+    "line": 421,
+    "column": 1
+  },
+  "end": {
+    "line": 438,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 425,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 430,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 427,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 431,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 2
+      },
+      "text": "f.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 8
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 36
+      },
+      "text": "errAlreadyProcessing"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 6
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 435,
+        "column": 22
+      },
+      "text": "mustOrderJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 435,
+        "column": 75
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 3
+      },
+      "text": "parseDecimal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "--",
+      "at": {
+        "line": 426,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 434,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 424,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    }
+  ],
+  "revision": "current"
+}

@@ -77,6 +77,15 @@ type fakeBroker struct {
 	// amends are the modify intents as they arrived, so a test can assert what
 	// the request carried rather than what it meant to carry.
 	amends []orderintent.AmendIntent
+	// cancelAlreadyProcessing scripts n consecutive 409 already-processing
+	// refusals on cancel, as measured on 2026-07-27 (M16).
+	cancelAlreadyProcessing int
+	// placeAlreadyProcessing scripts the same refusal on placement, which must
+	// NOT be retried.
+	placeAlreadyProcessing int
+	// rejectBadConditionalStatus answers the conditional list with the broker's
+	// own 400 unless the filter is OPEN or CLOSED (M17).
+	rejectBadConditionalStatus bool
 	// rejectOversell refuses a sell larger than the holding.
 	rejectOversell bool
 	// dropConditionalsOnRestart deletes conditional orders, so the persistence
@@ -317,9 +326,20 @@ func (f *fakeBroker) ConditionalOrders(_ context.Context, status, symbol, _ stri
 	f.log("GET /conditional-orders")
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if f.rejectBadConditionalStatus && status != "" && status != "OPEN" && status != "CLOSED" {
+		return domain.ConditionalOrderList{}, &official.APIError{Code: 400,
+			Body: `{"error":{"requestId":"rTEST","code":"invalid-request","message":"유효하지 않은 주문 상태 ` +
+				`필터입니다. OPEN 또는 CLOSED 만 허용됩니다.","data":{"field":"status",` +
+				`"allowedValues":["OPEN","CLOSED"]}}}`}
+	}
 	var out []domain.ConditionalOrder
 	for _, c := range f.conds {
-		if status != "" && c.Status != status {
+		// OPEN is the filter value for a conditional that is still being watched;
+		// the per-order status (WATCHING) is a different vocabulary.
+		if status == "OPEN" && c.Status != "WATCHING" {
+			continue
+		}
+		if status != "" && status != "OPEN" && status != "CLOSED" && c.Status != status {
 			continue
 		}
 		if symbol != "" && c.Symbol != symbol {
@@ -344,6 +364,13 @@ func (f *fakeBroker) ConditionalOrder(_ context.Context, id string) (domain.Cond
 // --- writes -------------------------------------------------------------------
 
 func (f *fakeBroker) PlaceOrder(_ context.Context, intent orderintent.PlaceIntent) (trading.MutationResult, error) {
+	f.mu.Lock()
+	if f.placeAlreadyProcessing > 0 {
+		f.placeAlreadyProcessing--
+		f.mu.Unlock()
+		return trading.MutationResult{}, errAlreadyProcessing()
+	}
+	f.mu.Unlock()
 	f.log(fmt.Sprintf("POST /orders %s %s x%v @%v key=%s",
 		intent.Side, intent.Symbol, intent.Quantity, intent.Price, intent.ClientOrderID))
 	if err := f.throttled("place"); err != nil {
@@ -385,10 +412,20 @@ func (f *fakeBroker) PlaceOrder(_ context.Context, intent orderintent.PlaceInten
 	return trading.MutationResult{Kind: "place", OrderID: id}, nil
 }
 
+// errAlreadyProcessing is the broker's measured transient refusal, verbatim.
+func errAlreadyProcessing() error {
+	return &official.APIError{Code: 409, Body: `{"error":{"requestId":"rTEST","code":"already-processing",` +
+		`"message":"지금은 주문을 변경할 수 없어요. 잠시 후 다시 시도해주세요.","data":{"retryAfterSeconds":1}}}`}
+}
+
 func (f *fakeBroker) CancelOrder(_ context.Context, orderID string) (trading.MutationResult, error) {
 	f.log("POST /orders/" + orderID + "/cancel")
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if f.cancelAlreadyProcessing > 0 {
+		f.cancelAlreadyProcessing--
+		return trading.MutationResult{}, errAlreadyProcessing()
+	}
 	raw, ok := f.orders[orderID]
 	if !ok {
 		return trading.MutationResult{}, &official.APIError{Code: 404, Body: `{"error":{"code":"order-not-found"}}`}
@@ -774,4 +811,66 @@ func (f *fakeBroker) amendIntents() []orderintent.AmendIntent {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return append([]orderintent.AmendIntent(nil), f.amends...)
+}
+
+// verdictOf reads a step's recorded verdict.
+func verdictOf(t *testing.T, entries []Entry, step StepID) Verdict {
+	t.Helper()
+	e, ok := LastEntry(entries, step)
+	if !ok {
+		t.Fatalf("no record entry for %s", step)
+	}
+	return e.Verdict
+}
+
+// hasObservation reports that a step recorded an observation key.
+func hasObservation(t *testing.T, entries []Entry, step StepID, key string) bool {
+	t.Helper()
+	e, ok := LastEntry(entries, step)
+	if !ok {
+		return false
+	}
+	for _, o := range e.Observations {
+		if o.Key == key {
+			return true
+		}
+	}
+	return false
+}
+
+// observationEquals reports that a step recorded key with value.
+func observationEquals(t *testing.T, entries []Entry, step StepID, key, want string) bool {
+	t.Helper()
+	e, ok := LastEntry(entries, step)
+	if !ok {
+		return false
+	}
+	for _, o := range e.Observations {
+		if o.Key == key {
+			return o.Value == want
+		}
+	}
+	return false
+}
+
+// anyObservation reports that some step recorded this key.
+func anyObservation(entries []Entry, key string) bool {
+	for _, e := range entries {
+		for _, o := range e.Observations {
+			if o.Key == key {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// anyFailureMentioning reports a step that failed citing text.
+func anyFailureMentioning(entries []Entry, text string) bool {
+	for _, e := range entries {
+		if e.Verdict == VerdictFail && strings.Contains(e.Reason, text) {
+			return true
+		}
+	}
+	return false
 }

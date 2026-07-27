@@ -10,6 +10,7 @@
     "add-net-rr-measurement",
     "console-adoption-controls",
     "console-click-approval",
-    "verify-us-market"
+    "verify-us-market",
+    "apply-us-measurement-fixes"
   ]
 }

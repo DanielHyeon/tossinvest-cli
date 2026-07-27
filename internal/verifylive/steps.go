@@ -621,10 +621,13 @@ func (r *Runner) stepConditionalRegister(ctx context.Context, sr *stepRun) error
 		sr.observe("conditional.read_by_id.ok", "false", truncateError(err))
 	}
 
+	// OPEN, not WATCHING: the filter's vocabulary is not the conditional's own
+	// status. "OPEN: 진행 중(감시 중·일시중지·주문 진행 중 포함)" and anything outside
+	// {OPEN, CLOSED} is 400 invalid-request with allowedValues (measured, M17).
 	list, err := readRetry(ctx, r, sr, EndpointReadConditionals,
-		map[string]string{"status": "WATCHING", "symbol": symbol},
+		map[string]string{"status": ConditionalStatusOpen, "symbol": symbol},
 		func(ctx context.Context) (domain.ConditionalOrderList, error) {
-			return r.broker.ConditionalOrders(ctx, "WATCHING", symbol, "", 50)
+			return r.broker.ConditionalOrders(ctx, ConditionalStatusOpen, symbol, "", 50)
 		},
 		func(l domain.ConditionalOrderList) any { return len(l.Orders) })
 	if err != nil {

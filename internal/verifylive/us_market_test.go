@@ -224,3 +224,95 @@ func TestTheUSAdvisorySaysItsClosedResponseIsUnmeasured(t *testing.T) {
 		t.Errorf("the KR advisory lost its measured code: %s", kr.Detail)
 	}
 }
+
+// --- the cancel retry (measurements.md M16) --------------------------------------
+
+// TestACancelRetriesWhileTheBrokerSaysAlreadyProcessing.
+//
+// Measured on 2026-07-27: a cancel came back 409 already-processing with
+// data.retryAfterSeconds, the tool did not retry, and the order it could not
+// cancel filled the live-exposure cap and blocked the two steps after it.
+func TestACancelRetriesWhileTheBrokerSaysAlreadyProcessing(t *testing.T) {
+	broker := newFakeBroker().withHolding("005930", 3)
+	broker.cancelAlreadyProcessing = 1
+	h := newHarness(t, broker, alwaysConfirm())
+
+	if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+
+	// The refusal is consumed by whichever step cancels first; what matters is
+	// that no step was left with an order it could not cancel.
+	if anyFailureMentioning(h.entries(), "already-processing") {
+		t.Error("a transient already-processing still ended a step")
+	}
+	for _, a := range Outstanding(h.entries()) {
+		// The conditional left for the persistence step is deliberate; an order
+		// nobody chose to leave is the failure this retry exists to prevent.
+		if !a.Deliberate {
+			t.Errorf("the run left %s %s live after a retryable refusal", a.Kind, a.ID)
+		}
+	}
+	// The record says a retry happened rather than presenting it as a clean first try.
+	if !anyObservation(h.entries(), "order.cancel.retries") {
+		t.Error("the record does not say the cancel had to be retried")
+	}
+}
+
+// TestACancelStopsRetryingAtTheCap — a broker that never lets go still ends the
+// step, and the order is reported as still live.
+func TestACancelStopsRetryingAtTheCap(t *testing.T) {
+	broker := newFakeBroker().withHolding("005930", 3)
+	broker.cancelAlreadyProcessing = 99
+	h := newHarness(t, broker, alwaysConfirm())
+
+	if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if !anyFailureMentioning(h.entries(), "already-processing") {
+		t.Error("a cancel that is refused every time did not end its step")
+	}
+	if n := broker.countRequests("POST /orders/"); n > 12 {
+		t.Errorf("%d order-scoped POST(s); the retry looks uncapped", n)
+	}
+	if len(Outstanding(h.entries())) == 0 {
+		t.Error("an order that could not be cancelled is not reported as still live")
+	}
+}
+
+// TestAPlacementIsNeverRetried — the exception is cancels and only cancels.
+//
+// order-cancel is the first step that places anything, so a transient refusal on
+// placement has to end that step rather than be retried into a pass.
+func TestAPlacementIsNeverRetried(t *testing.T) {
+	broker := newFakeBroker().withHolding("005930", 3)
+	broker.placeAlreadyProcessing = 1
+	h := newHarness(t, broker, alwaysConfirm())
+
+	if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if !anyFailureMentioning(h.entries(), "already-processing") {
+		t.Error("a refused placement was retried away instead of ending its step")
+	}
+}
+
+// --- the conditional list filter (measurements.md M17) ---------------------------
+
+// TestTheConditionalListUsesAnAllowedStatusFilter.
+//
+// Measured: the endpoint allows OPEN and CLOSED only, and answers 400
+// invalid-request with allowedValues for anything else. The tool was sending
+// WATCHING, which is a conditional's own status rather than a filter value.
+func TestTheConditionalListUsesAnAllowedStatusFilter(t *testing.T) {
+	broker := newFakeBroker().withHolding("005930", 3)
+	broker.rejectBadConditionalStatus = true
+	h := newHarness(t, broker, alwaysConfirm())
+
+	if _, err := h.run(Options{HoldingSymbol: "005930"}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if !observationEquals(t, h.entries(), StepConditionalRegister, "conditional.list_by_status.ok", "true") {
+		t.Error("the conditional list still uses a status filter the broker refuses")
+	}
+}

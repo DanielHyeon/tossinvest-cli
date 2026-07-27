@@ -30,11 +30,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
 // Endpoints, spelled as internal/soak and internal/app/engine spell theirs.
@@ -53,6 +56,13 @@ const (
 	EndpointReadPriceLimits     = "GET /api/v1/price-limits"
 	EndpointReadConditionals    = "GET /api/v1/conditional-orders"
 	EndpointReadConditionalByID = "GET /api/v1/conditional-orders/{id}"
+
+	// The conditional-order list's status filter vocabulary. Measured 2026-07-27
+	// (M17): anything outside these two is 400 invalid-request with
+	// allowedValues=["OPEN","CLOSED"]. A conditional's own status (WATCHING) is a
+	// different vocabulary and is not a filter value.
+	ConditionalStatusOpen   = "OPEN"
+	ConditionalStatusClosed = "CLOSED"
 )
 
 // MaxLiveOrders is the absolute cap on orders this tool has resting at once.
@@ -291,9 +301,35 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 		return err
 	}
 
-	started := r.now()
-	res, err := r.broker.CancelOrder(ctx, orderID)
-	sr.logCall(EndpointCancelOrder, map[string]string{"orderId": orderID}, started, r.now(), res, err)
+	var (
+		res      trading.MutationResult
+		err      error
+		attempts int
+	)
+	for attempts = 1; ; attempts++ {
+		started := r.now()
+		res, err = r.broker.CancelOrder(ctx, orderID)
+		sr.logCall(EndpointCancelOrder, map[string]string{"orderId": orderID}, started, r.now(), res, err)
+		if err == nil {
+			break
+		}
+		wait, transient := transientCancelRefusal(err)
+		if !transient || attempts > CancelRetryAttempts {
+			break
+		}
+		fmt.Fprintf(r.out, "    취소가 일시적으로 거절되었다 (already-processing). %s 뒤 다시 시도한다 (%d/%d)\n",
+			wait, attempts, CancelRetryAttempts)
+		if sleepErr := r.sleep(ctx, wait); sleepErr != nil {
+			err = sleepErr
+			break
+		}
+	}
+	if attempts > 1 {
+		// Honest either way: a cancel that needed three tries is not a cancel that
+		// worked first time, and the record is what a later reader judges from.
+		sr.observe("order.cancel.retries", strconv.Itoa(attempts-1),
+			"브로커가 409 already-processing으로 거절해 재시도했다 (measurements.md M16)")
+	}
 	if err != nil {
 		return err
 	}
@@ -304,6 +340,58 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 			"취소가 원주문 "+orderID+"에 대해 "+id+"를 돌려주었다")
 	}
 	return nil
+}
+
+// CancelRetryAttempts is how many extra times a cancel is tried after the broker
+// refuses it as transient.
+//
+// Measured 2026-07-27 (M16): `409 already-processing` with
+// `data.retryAfterSeconds`, on a cancel of an order this tool had just placed.
+// Not retrying left the order live, and a live order this tool cannot cancel
+// fills the exposure cap and blocks every step after it.
+//
+// The retry is scoped to cancels on purpose. A cancel only reduces exposure, and
+// retrying one repeats an action a person already approved rather than widening
+// what was approved — the same reasoning that keeps a confirmation prompt off the
+// cancel path (§0.3). Placements, amends and conditional registrations are not
+// retried: repeating those could create a second live order.
+const CancelRetryAttempts = 2
+
+// CancelRetryMaxWait caps what the broker's own retryAfterSeconds can ask for.
+const CancelRetryMaxWait = 5 * time.Second
+
+// transientCancelRefusal reports the measured "try again shortly" refusal and how
+// long the broker asked for.
+//
+// It matches on the broker's own code rather than on the HTTP status alone: a 409
+// that means something else must not be retried into a loop.
+func transientCancelRefusal(err error) (time.Duration, bool) {
+	var apiErr *official.APIError
+	if !errors.As(err, &apiErr) || apiErr.Code != http.StatusConflict {
+		return 0, false
+	}
+	var body struct {
+		Error struct {
+			Code string `json:"code"`
+			Data struct {
+				RetryAfterSeconds float64 `json:"retryAfterSeconds"`
+			} `json:"data"`
+		} `json:"error"`
+	}
+	if jsonErr := json.Unmarshal([]byte(apiErr.Body), &body); jsonErr != nil {
+		return 0, false
+	}
+	if body.Error.Code != "already-processing" {
+		return 0, false
+	}
+	wait := time.Duration(body.Error.Data.RetryAfterSeconds * float64(time.Second))
+	if wait <= 0 {
+		wait = time.Second
+	}
+	if wait > CancelRetryMaxWait {
+		wait = CancelRetryMaxWait
+	}
+	return wait, true
 }
 
 // amendOrder is the gated amend.

@@ -1,0 +1,143 @@
+{
+  "file": "internal/verifylive/us_market_test.go",
+  "source_sha256": "af2a6955975544831542c3c2d1b49095af85a26f148d3e20e20a86df50ecb1fc",
+  "package": "verifylive",
+  "function": "TestTheUSAdvisorySaysItsClosedResponseIsUnmeasured",
+  "signature": "TestTheUSAdvisorySaysItsClosedResponseIsUnmeasured(params=1, results=0)",
+  "start": {
+    "line": 214,
+    "column": 1
+  },
+  "end": {
+    "line": 226,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 8
+      },
+      "text": "SessionAdvisoryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 37
+      },
+      "text": "atET"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 8
+      },
+      "text": "SessionAdvisoryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 37
+      },
+      "text": "atKST"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -409,8 +409,8 @@ func (c *Console) writeBanner() {
 	fmt.Fprintf(c.out, "  loopback only. The link above carries this process's session token — valid until the\n"+
 		"  console stops. Opening it in this machine's browser is what authenticates you, so do\n"+
 		"  not paste it anywhere else.\n")
-	fmt.Fprintf(c.out, "  read-only everywhere except the verification approval, which still needs the typed\n"+
-		"  confirmation string the page shows you. Ctrl-C stops the console.\n\n")
+	fmt.Fprintf(c.out, "  read-only everywhere except the verification approval, which is a click on the\n"+
+		"  screen that shows the plan. Ctrl-C stops the console.\n\n")
 }
 
 // settle waits for a run in progress, then reports what is still live.
