@@ -20,6 +20,7 @@ package console
 //	                StartVerify it is handed.
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -70,6 +71,15 @@ type route struct {
 	Path      string
 	Session   bool
 	CSRFGated bool
+	// ReadOnly reports the `readOnly` wrapper on the handler chain: GET and HEAD
+	// only, 405 for everything else (console.go).
+	//
+	// It exists because the record used to carry no method at all, and a guard
+	// asked whether a route is a read could therefore only look at CSRFGated —
+	// which turns "it is a GET" into "it is not protected", and grants an
+	// exception on the strength of the route being unprotected. With that
+	// reasoning a POST to the exempted path is served on a session cookie alone.
+	ReadOnly bool
 	// File is where the registration was found, so a failure names the file the
 	// reviewer has to open.
 	File string
@@ -175,8 +185,13 @@ func registeredRoutes(t *testing.T) []route {
 				}
 				ast.Inspect(arg, func(inner ast.Node) bool {
 					if c, ok := inner.(*ast.CallExpr); ok {
-						if fn, ok := c.Fun.(*ast.SelectorExpr); ok && fn.Sel.Name == "mutating" {
-							r.CSRFGated = true
+						if fn, ok := c.Fun.(*ast.SelectorExpr); ok {
+							switch fn.Sel.Name {
+							case "mutating":
+								r.CSRFGated = true
+							case "readOnly":
+								r.ReadOnly = true
+							}
 						}
 					}
 					return true
@@ -262,7 +277,7 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 		}
 	}
 	// The floor is the canary for "the extractor stopped parsing", so it follows
-	// the real number rather than sitting at some historical low. The seventeen,
+	// the real number rather than sitting at some historical low. The eighteen,
 	// enumerated so the number and the list cannot drift apart the way they did
 	// once already (the list added to sixteen while the assertion said
 	// seventeen — the settings SCREEN was missing from it, and a comment that
@@ -277,10 +292,11 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	//	   /engine/stop
 	//	2  the restarts: /restart, /soak/restart
 	//	1  the overview (console-operator-overview): /dashboard
+	//	1  the orders screen (console-orders-screen): /orders
 	//
 	// A floor below the truth would let a scanner that read only console.go's
 	// first half go on passing.
-	if len(routes) < 17 {
+	if len(routes) < 18 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -629,9 +645,52 @@ var methodOnlyMutationVerbs = []string{
 // accountVerbs is what the route table is held to.
 var accountVerbs = append(append([]string{}, sharedAccountVerbs...), routeOnlyAccountVerbs...)
 
-// TestNoRouteNamesAnAccountMutation.
+// consoleAccountReads are the exact route paths that READ the account's order
+// record rather than acting on it (change console-orders-screen, task 3.3).
 //
-// Two claims in one walk of the route table:
+// The account-verb ban is a loose string test and looseness is what makes it
+// useful: /orders/cancel and /order-place are caught by the same line. Reading a
+// record is not what that ban aims at, so this is the hole — and it is a set of
+// whole paths compared byte for byte.
+//
+// Every softer comparison has a name and a specific failure:
+//
+//	prefix match      /orders/cancel is a path beginning with /orders.
+//	strings.ToLower   /Orders is a second route, because Go's mux matches the
+//	                  path case-sensitively.
+//	TrimSuffix("/")   /orders/ is worse than a duplicate: in Go 1.22+ a trailing
+//	                  slash makes it a SUBTREE pattern, so /orders/cancel is
+//	                  routed to that handler.
+//
+// orders_static_test.go registers all three shapes and requires the guard to
+// fail on each, which is the only form of that assertion that measures anything:
+// "the allowlist does not contain /orders/cancel" stays true under all three.
+var consoleAccountReads = map[string]bool{"/orders": true}
+
+// routeReadsTheAccountRecord reports the account-verb exception applying to one
+// route.
+//
+// Three facts, all required. The path is compared byte for byte against
+// consoleAccountReads. ReadOnly is the `readOnly` wrapper actually being on the
+// chain, which is what makes "this is a read" a fact the table carries rather
+// than an inference from the absence of a gate. And a route inside the CSRF gate
+// is a state change by this file's own definition, whatever it is called.
+func routeReadsTheAccountRecord(r route) bool {
+	return consoleAccountReads[r.Path] && r.ReadOnly && !r.CSRFGated
+}
+
+// routeFindings is the account-mutation judgement for ONE route, as a pure
+// function of the record.
+//
+// It is extracted from the test rather than written inside it because the
+// exception above has to be measurable, and registeredRoutes parses this
+// package's source off disk: a test cannot register a fake /orders/cancel to
+// watch the guard refuse it. Without the extraction the only assertion available
+// is "that path is not in the allowlist", which measures nothing — it holds
+// under a prefix match, under ToLower and under a trailing-slash trim, which are
+// exactly the three ways the exception grows.
+//
+// Two claims, in the two loops the table has always had:
 //
 //	no account verbs   nothing anywhere in the table is spelled like placing,
 //	                   cancelling or amending an order, opening a gate, or
@@ -643,7 +702,13 @@ var accountVerbs = append(append([]string{}, sharedAccountVerbs...), routeOnlyAc
 //	nothing else acts  every other route is a reading. A path outside the list
 //	                   above that reads like an act is either a mistake or a
 //	                   requirement change, and both should stop here.
-func TestNoRouteNamesAnAccountMutation(t *testing.T) {
+//
+// The exception is consulted in BOTH. The second loop's verbs include the
+// account verbs, so /orders trips it too — and the wrong repair is to add
+// /orders to consoleStateChanging to silence the second one, because that list
+// is what TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate demands a CSRF
+// gate for, and a read route behind the CSRF gate is a page nobody can open.
+func routeFindings(r route) []string {
 	allowed := map[string]bool{}
 	for _, path := range consoleStateChanging {
 		allowed[path] = true
@@ -658,41 +723,66 @@ func TestNoRouteNamesAnAccountMutation(t *testing.T) {
 		"save", "include", "enable", "config"},
 		accountVerbs...)
 
+	var findings []string
+	reads := routeReadsTheAccountRecord(r)
+	lowered := strings.ToLower(r.Path)
+	for _, verb := range accountVerbs {
+		if strings.Contains(lowered, verb) && !reads {
+			findings = append(findings, fmt.Sprintf(
+				"route %s names %q; this console has no route that touches the account, its gate "+
+					"or its credentials", r.Path, verb))
+		}
+	}
+	if allowed[r.Path] || reads {
+		return findings
+	}
+	for _, verb := range actVerbs {
+		if strings.Contains(lowered, verb) {
+			findings = append(findings, fmt.Sprintf(
+				"route %s names %q but is not in consoleStateChanging; a route that acts has to be "+
+					"argued for and CSRF-gated", r.Path, verb))
+		}
+	}
+	return findings
+}
+
+// routeTableFindings is routeFindings over a whole table, plus the one claim that
+// is about the table rather than about a route: every path the state-changing
+// list names is actually registered. A list naming a route nobody registers has
+// stopped describing this console.
+func routeTableFindings(routes []route) []string {
+	var findings []string
 	seen := map[string]bool{}
-	for _, r := range registeredRoutes(t) {
+	for _, r := range routes {
 		seen[r.Path] = true
-		lowered := strings.ToLower(r.Path)
-		for _, verb := range accountVerbs {
-			if strings.Contains(lowered, verb) {
-				t.Errorf("route %s names %q; this console has no route that touches the account, "+
-					"its gate or its credentials", r.Path, verb)
-			}
-		}
-		if allowed[r.Path] {
-			continue
-		}
-		for _, verb := range actVerbs {
-			if strings.Contains(lowered, verb) {
-				t.Errorf("route %s names %q but is not in consoleStateChanging; a route that acts has to "+
-					"be argued for and CSRF-gated", r.Path, verb)
-			}
-		}
+		findings = append(findings, routeFindings(r)...)
 	}
 	for _, path := range consoleStateChanging {
 		if !seen[path] {
-			t.Errorf("%s is in the state-changing list but is not registered", path)
+			findings = append(findings, fmt.Sprintf(
+				"%s is in the state-changing list but is not registered", path))
 		}
+	}
+	return findings
+}
+
+// TestNoRouteNamesAnAccountMutation applies the judgement to the real table.
+func TestNoRouteNamesAnAccountMutation(t *testing.T) {
+	for _, finding := range routeTableFindings(registeredRoutes(t)) {
+		t.Error(finding)
 	}
 }
 
 // TestTheDashboardScreensAreReads.
 //
-// The positions, history and overview routes exist, go through the session gate
-// like everything else, and are NOT behind the CSRF gate — a read route that
-// demanded a POST would be a page nobody can open, which is the failure this
-// catches from the other side.
+// The positions, history, overview and orders routes exist, go through the
+// session gate like everything else, and are NOT behind the CSRF gate — a read
+// route that demanded a POST would be a page nobody can open, which is the
+// failure this catches from the other side.
 func TestTheDashboardScreensAreReads(t *testing.T) {
-	want := map[string]bool{"/positions": false, "/history": false, "/dashboard": false}
+	want := map[string]bool{
+		"/positions": false, "/history": false, "/dashboard": false, "/orders": false,
+	}
 	found := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
 		gated, ok := want[r.Path]
@@ -747,40 +837,85 @@ var mutationVerbs = append(append([]string{}, sharedAccountVerbs...), methodOnly
 // field that is absent from this map fails on that alone — the invariant is not
 // "the broker seam is narrow", it is "every capability this console is handed is
 // enumerated here".
-var consoleCapabilities = map[string][]string{
+var consoleCapabilities = map[string]capability{
 	// Plain data: paths, numbers and lists. Nothing to reach an account with.
-	"Port":              nil,
-	"SoakRecord":        nil,
-	"VerifyRecord":      nil,
-	"VerifyRecordUS":    nil,
-	"Attestation":       nil,
-	"MinSoakDays":       nil,
-	"RequiredEndpoints": nil,
-	"JournalPath":       nil,
-	"RunLockPath":       nil,
-	"EngineMarker":      nil,
+	"Port":              {},
+	"SoakRecord":        {},
+	"VerifyRecord":      {},
+	"VerifyRecordUS":    {},
+	"Attestation":       {},
+	"MinSoakDays":       {},
+	"RequiredEndpoints": {},
+	"JournalPath":       {},
+	"RunLockPath":       {},
+	"EngineMarker":      {},
 
 	// Func-type seams. A func has no method set, so what is checked is its field
 	// name and every type its signature mentions.
-	"StartVerify": nil,
-	"Relaunch":    nil,
-	"RestartSoak": nil,
-	"StartEngine": nil,
-	"StopEngine":  nil,
-	"Now":         nil,
-	"Binary":      nil,
+	"StartVerify": {},
+	"Relaunch":    {},
+	"RestartSoak": {},
+	"StartEngine": {},
+	"StopEngine":  {},
+	"Now":         {},
+	"Binary":      {},
 	// Out is io.Writer: the console's own operator lines, not an account.
-	"Out": nil,
+	"Out": {},
 
 	// Interface seams: exactly these methods each, and no embedding.
-	"Handoff":  {"Mint", "Consume"},
-	"Holdings": {"Holdings"},
-	"Settings": {"Load", "Save"},
+	"Handoff":  {Methods: []string{"Mint", "Consume"}},
+	"Holdings": {Methods: []string{"Holdings"}},
+	"Settings": {Methods: []string{"Load", "Save"}},
 	// The Guardian limits are a read, and they are a seam of their own rather
 	// than a third method on Settings: that one writes the adoption block, and a
 	// screen that only wants to display a ceiling must not gain the ability to
 	// edit configuration on the way (console-operator-overview D8).
-	"GateLimits": {"GateLimits"},
+	"GateLimits": {Methods: []string{"GateLimits"}},
+	// The order record, read (change console-orders-screen, task 3.7).
+	//
+	// One method, and it fetches. The verb list is not touched to make room for
+	// it: deleting "order" from the list would let a future /order/place and a
+	// future PlaceOrder through at the same time, which is the failure the list
+	// is for. Instead the exemptions below are per field and per spelling, and
+	// they are the argument for each name in writing.
+	"Orders": {
+		Methods: []string{"Orders"},
+		VerbExemptions: map[string]string{
+			"Orders": "the Options field, and the seam's one method. It lists the account's " +
+				"orders; naming it anything else would describe something it does not do",
+			"OrdersReader": "the seam type. Reader is the whole claim and the method set above " +
+				"is what enforces it",
+			"OrdersReading": "the value one call returns: two lists and each one's own outcome",
+			"OrderRecord": "one plain order as the broker spelled it — every field a string, " +
+				"because an absent value is not a zero",
+			"ConditionalRecord": "one conditional order, same shape. \"conditional\" is a banned " +
+				"method verb because CreateConditionalOrder is a mutation; this is the record " +
+				"of one, and the screen exists precisely because a leftover conditional is " +
+				"invisible everywhere else",
+		},
+	},
+}
+
+// capability is what one console.Options field is permitted to be.
+type capability struct {
+	// Methods is the exact method set an interface seam may declare. An empty
+	// list is the claim that the field carries no method set at all.
+	Methods []string
+	// VerbExemptions are the identifiers reachable through this field that may
+	// name an account verb, each mapped to the argument for it.
+	//
+	// The verb scan is a name filter over the capability closure, and the closure
+	// walk's own documentation says what it is: a supplementary device above the
+	// real check, which is the method set. A name filter with no escape hatch
+	// forces the opposite of what it is for — a seam that lists the account's
+	// ORDERS either gets a name that lies about what it reads, or the verb is
+	// deleted from the shared list and every future PlaceOrder walks through the
+	// hole.
+	//
+	// So the hatch is here, at the field, one spelling at a time, with the reason
+	// written down. PlaceOrder on this same seam still fails, because it is not
+	// in this map — and the method set above would fail it a second time.
+	VerbExemptions map[string]string
 }
 
 // TestEveryCapabilityTheConsoleReceivesIsEnumeratedAndDeclaresNothingButReads.
@@ -808,13 +943,17 @@ func TestEveryCapabilityTheConsoleReceivesIsEnumeratedAndDeclaresNothingButReads
 	for _, field := range fields {
 		for _, name := range field.Names {
 			declared[name.Name] = true
-			checkVerbs(t, "the Options field "+name.Name, name.Name)
 			allowed, enumerated := consoleCapabilities[name.Name]
 			if !enumerated {
+				// Reported before the verb check so that an unenumerated field
+				// gets the message that matters: an unlisted capability fails on
+				// being unlisted, whatever it is called.
 				t.Errorf("console.Options declares %q, which is not in consoleCapabilities; a capability "+
 					"the console receives without being enumerated is one nobody argued for", name.Name)
+				checkVerbs(t, "the Options field "+name.Name, name.Name)
 				continue
 			}
+			checkVerbsExcept(t, "the Options field "+name.Name, name.Name, allowed.VerbExemptions)
 			checkCapability(t, name.Name, field.Type, allowed, declaredTypes)
 		}
 		if len(field.Names) == 0 {
@@ -898,14 +1037,15 @@ var goBuiltinTypes = map[string]bool{
 // So: every type reachable from the field is verb-checked, every interface
 // reachable from it is opened, and the field's own resolved shape must be one the
 // guard can positively read a method set off.
-func checkCapability(t *testing.T, field string, expr ast.Expr, allowed []string,
+func checkCapability(t *testing.T, field string, expr ast.Expr, cap capability,
 	declaredTypes map[string]ast.Expr) {
 	t.Helper()
 
 	subject := "Options." + field
+	allowed := cap.Methods
 	names, ifaces := capabilityClosure(expr, declaredTypes)
 	for _, name := range names {
-		checkVerbs(t, "the type "+name+" reached through "+subject, name)
+		checkVerbsExcept(t, "the type "+name+" reached through "+subject, name, cap.VerbExemptions)
 	}
 	for _, iface := range ifaces {
 		checkNoEmbedding(t, "an interface reached through "+subject, iface)
@@ -1181,6 +1321,21 @@ func methodless(expr ast.Expr, declaredTypes map[string]ast.Expr, seen map[strin
 // checkVerbs fails when an identifier names a request against the account.
 func checkVerbs(t *testing.T, subject, name string) {
 	t.Helper()
+	checkVerbsExcept(t, subject, name, nil)
+}
+
+// checkVerbsExcept is checkVerbs with one seam's argued-for spellings allowed
+// through.
+//
+// An exemption is keyed on the WHOLE identifier, not on the verb. Exempting the
+// name "Orders" leaves "PlaceOrder", "CancelOrders" and "OrdersPlacer" failing on
+// the same seam, because none of them is that string — which is what keeps the
+// hatch the size of the argument written beside it.
+func checkVerbsExcept(t *testing.T, subject, name string, exempt map[string]string) {
+	t.Helper()
+	if _, ok := exempt[name]; ok {
+		return
+	}
 	lowered := strings.ToLower(name)
 	for _, verb := range mutationVerbs {
 		if strings.Contains(lowered, verb) {

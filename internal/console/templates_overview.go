@@ -141,9 +141,11 @@ const overviewTemplates = `
   <dl>
     <dt>미체결 건수</dt><dd>{{template "cell" .Snap.Open.Count}}</dd>
   </dl>
-  <p class="muted">이 칸은 <strong>0이 아니라 미측정</strong>이다. 주문 조회 seam은 다음 change
-  (<code>console-orders-screen</code>)가 배선하며, 그때까지 0을 적어 두면 "미체결 없음"으로 읽힌다 —
-  이 화면이 세우는 규칙을 이 화면 자신에게 먼저 적용한 자리다.</p>
+  <p class="muted">일반 주문과 조건주문을 <strong>함께</strong> 센 값이다. 한쪽만 읽혔으면 합계를
+  내지 않고 미측정으로 적는다 — 조건주문도 노출 상한을 채우는 잔여물이므로, 한쪽만 세고 낸
+  "0건"은 다음 검증을 막고 있는 잔여물을 화면에서 지운다.
+  <br>이 화면은 브로커를 부르지 않는다(0콜). 값을 채우는 것은
+  <a href="{{.Snap.Open.Where}}">주문 화면</a>을 여는 것뿐이다.</p>
 </section>
 
 {{/* --- 안전 --- */}}

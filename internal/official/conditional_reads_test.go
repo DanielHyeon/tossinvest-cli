@@ -79,3 +79,70 @@ func TestConditionalOrdersIntegration(t *testing.T) {
 		t.Fatalf("first trigger: %v", got.Orders[0].First.TriggerPrice)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// The raw-preserving read (change console-orders-screen, task 1.5)
+// ---------------------------------------------------------------------------
+
+// TestTheRawConditionalReadKeepsAnAbsentValueApartFromAZeroOne.
+//
+// A conditional order is the durable artefact in this product: M18 measured that
+// one survives the process that registered it, and verifylive's cleanup counts it
+// as a leftover filling the exposure cap exactly like a plain order. So it goes on
+// the same screen, under the same rule — a quantity or a trigger price the broker
+// did not send is not zero.
+func TestTheRawConditionalReadKeepsAnAbsentValueApartFromAZeroOne(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/conditional-orders":
+			_, _ = w.Write([]byte(`{"result":{"conditionalOrders":[` +
+				// A market-type conditional: orderPrice is null because there is
+				// no limit, and targetProfitRate is null because this leg is a
+				// stop rather than a profit target.
+				`{"conditionalOrderId":"co-1","type":"SINGLE","status":"WATCHING",` +
+				`"symbol":"005930","market":"KR","quantity":"10","orderType":"MARKET",` +
+				`"expireDate":"2026-12-31","first":{"type":"STOP","status":"WATCHING",` +
+				`"triggerPrice":"70000","targetProfitRate":null,"orderPrice":null,` +
+				`"triggeredOrderId":null},"second":null,"createdAt":"2026-07-08T09:00:00+09:00"}` +
+				`],"nextCursor":"co-cursor","hasNext":true}}`))
+		default:
+			t.Errorf("unexpected path %q", r.URL.Path)
+		}
+	}))
+	defer srv.Close()
+
+	c := New(
+		Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL),
+		WithHTTPClient(srv.Client()),
+		WithAccountSeq(1),
+	)
+
+	got, err := c.ConditionalOrdersRaw(context.Background(), "OPEN", "", "", 0)
+	if err != nil {
+		t.Fatalf("ConditionalOrdersRaw: %v", err)
+	}
+	if len(got.Orders) != 1 {
+		t.Fatalf("want 1 conditional order, got %d", len(got.Orders))
+	}
+	o := got.Orders[0]
+	for _, tc := range []struct{ field, got, want string }{
+		{"quantity", o.Quantity, "10"},
+		{"trigger price", o.TriggerPrice, "70000"},
+		{"order price", o.OrderPrice, ""},
+		{"market", o.Market, "KR"},
+		{"status", o.Status, "WATCHING"},
+		{"id", o.ID, "co-1"},
+	} {
+		if tc.got != tc.want {
+			t.Errorf("%s = %q, want %q", tc.field, tc.got, tc.want)
+		}
+	}
+	if !got.HasNext || got.NextCursor != "co-cursor" {
+		t.Errorf("page boundary: hasNext=%v cursor=%q; a truncated conditional page is the same "+
+			"confidently short count as a truncated order page", got.HasNext, got.NextCursor)
+	}
+}

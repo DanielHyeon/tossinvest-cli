@@ -91,9 +91,15 @@ consoleAccountReads = {"/orders"}   // 바이트 일치. 접두 아님, 대소�
 그래서 "GET"은 **"CSRF 보호가 없다"**로 퇴화하고, 예외가 보호되지 않았다는 이유로 부여된다.
 그 상태에서 `POST /orders`는 세션 쿠키만으로 CSRF 없이 통과한다.
 
-**결정**: `mutating`의 거울인 `reading(next)` wrapper를 도입한다. GET/HEAD가 아니면 405이고,
-같은 `ast.Inspect` 분기가 인식한다. 예외 조건은 그때 비로소 문자 그대로 검사 가능해진다 —
-`route.Path == "/orders" && route.Reading && !route.CSRFGated`.
+**결정**: `mutating`의 거울인 **`readOnly(next)`** wrapper를 도입한다.
+
+GET/HEAD가 아니면 405이고, 같은 `ast.Inspect` 분기가 인식한다. 예외 조건은 그때 비로소 문자
+그대로 검사 가능해진다 — `route.Path == "/orders" && route.ReadOnly && !route.CSRFGated`.
+
+**이름 정정(구현 중 발견)**: 초안은 이것을 `reading(next)`이라 불렀다. 그런데
+`internal/console`에는 이미 `type reading struct`가 `(값, 측정됨, 사유)` 삼중항으로 있다 —
+**한 단어가 한 패키지에서 두 뜻을 갖는다.** 쓴 사람에게만 자연스럽고 이후 모두를 오도한다.
+값 타입이 그 단어에 대한 권리가 더 크고 이미 커밋됐으므로 wrapper를 `readOnly`로 바꾼다.
 
 **메서드 패턴(`"GET /orders"`)은 쓰지 않는다.** 현행 추출기는 리터럴을 그대로 경로로 읽으므로
 (`strings.Trim(lit.Value, "\"")`) 경로가 `GET /orders`가 되어 **모든 경로 대조가 어긋난다.**
@@ -177,7 +183,8 @@ guards:
   account_read_exact_paths: ["/orders"]   # 바이트 일치. 접두·대소문자·후행슬래시 전부 아님
   consulted_in_both_loops: true           # accountVerbs 루프 + actVerbs 루프
   do_not_touch: consoleStateChanging      # 여기 넣으면 CSRF 게이트가 요구된다
-  reading_wrapper: true                   # GET/HEAD 외 405, 같은 AST 검사가 인식
+  readonly_wrapper: true                  # GET/HEAD 외 405, 같은 AST 검사가 인식
+                                          # 이름은 readOnly — reading은 값 타입이 쓴다
   method_patterns: false
 reads:
   orders_raw: additive-in-internal-official     # RawHolding 선례. Orders/adaptOrder 무변경

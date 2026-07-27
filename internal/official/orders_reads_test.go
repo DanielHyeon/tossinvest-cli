@@ -265,3 +265,181 @@ func TestOrderByIDIntegration(t *testing.T) {
 		t.Fatalf("X-Tossinvest-Account: want 5, got %q", gotHeader)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// The raw-preserving read (change console-orders-screen, task 1.1-1.4)
+// ---------------------------------------------------------------------------
+
+// ordersRawServer serves one page of two orders: one the broker priced and
+// filled, one it sent nulls for, and one priced at a genuine zero.
+func ordersRawServer(t *testing.T, hasNext bool, nextCursor string) *httptest.Server {
+	t.Helper()
+	next := "null"
+	if nextCursor != "" {
+		next = `"` + nextCursor + `"`
+	}
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+		case "/api/v1/orders":
+			_, _ = w.Write([]byte(`{"result":{"orders":[` +
+				// A pending market order: price is null and the whole execution
+				// object is null, which is what the API sends while an order is
+				// alive.
+				`{"orderId":"pending-1","symbol":"005930","side":"BUY","orderType":"MARKET",` +
+				`"timeInForce":"DAY","status":"PENDING","quantity":"10","price":null,"currency":"KRW",` +
+				`"orderedAt":"2026-03-29T09:30:00+09:00","canceledAt":null,"orderAmount":null,` +
+				`"execution":null},` +
+				// A filled order whose average price really is zero-something.
+				`{"orderId":"filled-1","symbol":"AAPL","side":"SELL","orderType":"LIMIT",` +
+				`"timeInForce":"DAY","status":"FILLED","quantity":"5","price":"0","currency":"USD",` +
+				`"orderedAt":"2026-03-28T22:00:00Z","canceledAt":null,"orderAmount":null,` +
+				`"execution":{"filledQuantity":"5","averageFilledPrice":"0","filledAmount":"0",` +
+				`"commission":null,"tax":null,"filledAt":null,"settlementDate":null}}` +
+				`],"nextCursor":` + next + `,"hasNext":` + boolText(hasNext) + `}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+}
+
+func boolText(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
+func ordersRawClient(t *testing.T, srv *httptest.Server) *Client {
+	t.Helper()
+	return New(
+		Credentials{APIKey: "k", SecretKey: "s"},
+		filepath.Join(t.TempDir(), "t.json"),
+		WithBaseURL(srv.URL),
+		WithHTTPClient(srv.Client()),
+		WithAccountSeq(3),
+	)
+}
+
+// TestTheAdaptedOrderReadCannotTellAnAbsentPriceFromAZeroOne pins the reason the
+// raw read below exists, and pins Orders' behaviour while it is at it.
+//
+// It is not a complaint about Orders: float64 is the right shape for a CLI that
+// prints a portfolio, and every existing caller depends on exactly this. It is
+// the measurement that says a screen which has to render "the broker sent no
+// value" as something other than 0 cannot be built on it.
+func TestTheAdaptedOrderReadCannotTellAnAbsentPriceFromAZeroOne(t *testing.T) {
+	srv := ordersRawServer(t, false, "")
+	defer srv.Close()
+
+	got, err := ordersRawClient(t, srv).Orders(context.Background(), OrdersFilter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("want 2 orders, got %d", len(got))
+	}
+	if got[0].Price != 0 || got[1].Price != 0 {
+		t.Fatalf("Orders no longer collapses a null price to 0 (%v, %v); if that changed on purpose "+
+			"the raw read's reason for existing changed with it", got[0].Price, got[1].Price)
+	}
+	if got[0].AverageExecutionPrice != 0 || got[1].AverageExecutionPrice != 0 {
+		t.Fatalf("Orders no longer collapses a null execution to 0 (%v, %v)",
+			got[0].AverageExecutionPrice, got[1].AverageExecutionPrice)
+	}
+}
+
+// TestTheRawOrderReadKeepsAnAbsentValueApartFromAZeroOne.
+//
+// The screen's whole claim is "what the broker did not send is not zero". The
+// API sends price as null for a market order and the entire execution object as
+// null while an order is pending, so every live order arrives with an average
+// fill price of nothing — and rendering that as 0 says the order filled.
+func TestTheRawOrderReadKeepsAnAbsentValueApartFromAZeroOne(t *testing.T) {
+	srv := ordersRawServer(t, false, "")
+	defer srv.Close()
+
+	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(page.Orders) != 2 {
+		t.Fatalf("want 2 orders, got %d", len(page.Orders))
+	}
+
+	pending, filled := page.Orders[0], page.Orders[1]
+	for _, tc := range []struct{ field, got, want string }{
+		{"pending price", pending.Price, ""},
+		{"pending filledQuantity", pending.FilledQuantity, ""},
+		{"pending averageFilledPrice", pending.AverageFilledPrice, ""},
+		{"filled price", filled.Price, "0"},
+		{"filled filledQuantity", filled.FilledQuantity, "5"},
+		{"filled averageFilledPrice", filled.AverageFilledPrice, "0"},
+		{"pending quantity", pending.Quantity, "10"},
+	} {
+		if tc.got != tc.want {
+			t.Errorf("%s = %q, want %q; an absent value that arrives as a number cannot be told "+
+				"from a measured zero once it is on the screen", tc.field, tc.got, tc.want)
+		}
+	}
+	if pending.Status != "PENDING" {
+		t.Errorf("status = %q, want PENDING unmodified; internal/brokerstate is what derives a "+
+			"state from it and it needs the broker's own word", pending.Status)
+	}
+	if pending.ID != "pending-1" || filled.ID != "filled-1" {
+		t.Errorf("order ids = %q, %q; the order number is a column on the screen",
+			pending.ID, filled.ID)
+	}
+}
+
+// TestTheRawOrderReadDerivesTheMarketFromTheCurrency.
+//
+// The /orders response carries no market and no name. currency is decoded by the
+// adapted read and then dropped, so a market column is either derived here or it
+// does not exist — and a screen with no market cannot answer "which of these is
+// in the session that is open right now".
+func TestTheRawOrderReadDerivesTheMarketFromTheCurrency(t *testing.T) {
+	srv := ordersRawServer(t, false, "")
+	defer srv.Close()
+
+	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if page.Orders[0].Currency != "KRW" || page.Orders[0].Market != "KR" {
+		t.Errorf("KRW order: currency %q market %q, want KRW/KR",
+			page.Orders[0].Currency, page.Orders[0].Market)
+	}
+	if page.Orders[1].Currency != "USD" || page.Orders[1].Market != "US" {
+		t.Errorf("USD order: currency %q market %q, want USD/US",
+			page.Orders[1].Currency, page.Orders[1].Market)
+	}
+	if got := marketFromCurrency("JPY"); got != "" {
+		t.Errorf("marketFromCurrency(JPY) = %q, want empty; a currency this build does not know "+
+			"is an unknown market, not a guessed one", got)
+	}
+}
+
+// TestTheRawOrderReadReportsThatThePageWasTruncated.
+//
+// Orders decodes nextCursor and hasNext and drops both, so a caller counting a
+// first page has no way to know there is a second one. A count taken from a
+// truncated page is a confidently short number, which on this screen means
+// leftovers that are filling the exposure cap disappear.
+func TestTheRawOrderReadReportsThatThePageWasTruncated(t *testing.T) {
+	srv := ordersRawServer(t, true, "cursor-2")
+	defer srv.Close()
+
+	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !page.HasNext {
+		t.Error("HasNext is false on a page the broker said has a successor; the count would be " +
+			"rendered as a settled number")
+	}
+	if page.NextCursor != "cursor-2" {
+		t.Errorf("NextCursor = %q, want cursor-2", page.NextCursor)
+	}
+}

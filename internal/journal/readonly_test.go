@@ -122,6 +122,10 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		"LivePositionExits": true,
 		"AccountExitEvents": true,
 		"AccountTradeTrips": true,
+		// The orders screen's origin join (change console-orders-screen, task
+		// 2.1). It is a SELECT DISTINCT over one column of mutation_attempts and
+		// it reaches the same mode=ro connection every other read here does.
+		"BrokerOrderIDs": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {
@@ -244,5 +248,85 @@ func TestOpenReadOnlyReadsWhatTheEngineIsWriting(t *testing.T) {
 	}
 	if len(rows) != 2 {
 		t.Fatalf("a later write is invisible to the read-only handle: %+v", rows)
+	}
+}
+
+// --- the order-origin read (change console-orders-screen, tasks 2.1-2.3) --------
+
+// insertAttemptWithBrokerOrder records one PLACE attempt the broker acked.
+func insertAttemptWithBrokerOrder(t *testing.T, j *Journal, attemptID, intentID, brokerOrderID string) {
+	t.Helper()
+	if _, err := j.db.ExecContext(context.Background(),
+		`INSERT INTO mutation_attempts
+		   (id, intent_id, kind, state, attempt_no, broker_order_id, fingerprint, recorded_at)
+		 VALUES (?, ?, 'PLACE', 'RECORDED', 1, ?, 'fp', '2026-03-30T00:30:00Z')`,
+		attemptID, intentID, brokerOrderID); err != nil {
+		t.Fatalf("insert attempt %s: %v", attemptID, err)
+	}
+}
+
+// TestTheLedgerCanSayWhichBrokerOrdersTheEngineIssued.
+//
+// The orders screen has to distinguish an order the engine placed from one a
+// person placed in the app, and the only record of the first is
+// mutation_attempts.broker_order_id — the id the broker handed back when it
+// acked. Without this read the screen either omits the column or invents it, and
+// an invented "manual" label on an engine order is an operator concluding the
+// engine is idle while it is trading.
+func TestTheLedgerCanSayWhichBrokerOrdersTheEngineIssued(t *testing.T) {
+	path := filepath.Join(t.TempDir(), DBFileName)
+	j := openTestJournalAt(t, path)
+	insertIntent(t, j, "intent-1")
+	insertAttemptWithBrokerOrder(t, j, "a-1", "intent-1", "ord-b")
+	insertAttemptWithBrokerOrder(t, j, "a-2", "intent-1", "ord-a")
+	// A retry of the same order: the id is recorded twice and the screen must
+	// not see it twice.
+	insertAttemptWithBrokerOrder(t, j, "a-3", "intent-1", "ord-a")
+	// An attempt the broker never acked. There is no order to attribute, and an
+	// empty id matching an order with no id would attribute every one of them.
+	insertAttemptWithBrokerOrder(t, j, "a-4", "intent-1", "")
+
+	got, err := openTestReadOnly(t, path).BrokerOrderIDs(context.Background())
+	if err != nil {
+		t.Fatalf("BrokerOrderIDs: %v", err)
+	}
+	want := []string{"ord-a", "ord-b"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("BrokerOrderIDs = %v, want %v (sorted, de-duplicated, and no empty id)", got, want)
+	}
+}
+
+// TestALedgerWithoutTheAttemptTableIsRefusedAtOpenRatherThanPerQuery.
+//
+// readOnlyTables exists for exactly this. Without the table registered,
+// OpenReadOnly succeeds and the query above fails one statement at a time — and a
+// failed query that the screen turns into zero rows reads as "every order was
+// placed by hand". The refusal has to happen once, at open, where it can be named.
+func TestALedgerWithoutTheAttemptTableIsRefusedAtOpenRatherThanPerQuery(t *testing.T) {
+	path := filepath.Join(t.TempDir(), DBFileName)
+	j := openTestJournalAt(t, path)
+	// The engine's own foreign keys point at this table, so a real journal cannot
+	// lose it — which is why the guard is worth having: the failure it catches is
+	// a hand-built or partially-restored file, and that is the one nobody would
+	// think to check before believing the screen.
+	for _, stmt := range []string{
+		"PRAGMA foreign_keys = OFF",
+		"DROP TABLE attempt_transitions",
+		"DROP TABLE mutation_attempts",
+	} {
+		if _, err := j.db.ExecContext(context.Background(), stmt); err != nil {
+			t.Fatalf("%s: %v", stmt, err)
+		}
+	}
+	if err := j.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	_, err := OpenReadOnly(context.Background(), ReadOnlyOptions{Path: path})
+	if !errors.Is(err, ErrSchemaTooOld) {
+		t.Fatalf("OpenReadOnly on a journal with no mutation_attempts = %v, want ErrSchemaTooOld", err)
+	}
+	if !strings.Contains(err.Error(), "mutation_attempts") {
+		t.Errorf("the refusal does not name the missing table: %v", err)
 	}
 }

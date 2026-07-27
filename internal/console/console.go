@@ -194,6 +194,15 @@ type Options struct {
 	// and hides the per-symbol designation buttons.
 	Settings AdoptionSettings
 
+	// Orders is the read-only view of the account's order record the orders
+	// screen reads (orders.go). It declares one method, behind which the caller
+	// makes the two broker calls one refresh costs — the plain order page and
+	// the conditional one — so this package can neither spend the budget twice
+	// nor report one endpoint's silence as the other's zero. Nil leaves the
+	// orders screen unmeasured with the reason seam 미배선 and every other screen
+	// working.
+	Orders OrdersReader
+
 	// GateLimits reads the engine's automation-gate ceilings for the overview's
 	// safety panel (change console-operator-overview; overview.go). It is a seam
 	// of its own rather than a third method on Settings: that one writes config
@@ -252,6 +261,10 @@ type Console struct {
 	// only thing in this process that can make a broker request of its own, and
 	// holdings.go is where its rate-budget contract is written down.
 	holdings *holdingsCache
+	// ordersCache is the lazy, TTL'd cache in front of Options.Orders. One
+	// refresh through it is the two broker calls the orders screen's rate-budget
+	// contract allows, and orders.go is where that contract is written down.
+	ordersCache *ordersCache
 
 	mu   sync.Mutex
 	addr string
@@ -296,6 +309,7 @@ func New(o Options) (*Console, error) {
 	// never turn into a warning the operator cannot act on.
 	c.startedWith, _ = c.opts.Binary()
 	c.holdings = newHoldingsCache(o.Holdings, holdingsTTL)
+	c.ordersCache = newOrdersCache(o.Orders, ordersTTL)
 	c.handler = c.routes()
 	return c, nil
 }
@@ -501,6 +515,11 @@ func (c *Console) routes() http.Handler {
 	// itself from overview.go, which is the case the route table's static guards
 	// could not see until this change widened them.
 	c.registerOverview(mux)
+	// The orders screen (change console-orders-screen). Same arrangement: it
+	// registers itself from orders.go, and it is the one path in this table the
+	// account-verb guard grants an exception to — byte-exact, and only while the
+	// `readOnly` wrapper below is on it.
+	c.registerOrders(mux)
 	return mux
 }
 
@@ -555,6 +574,53 @@ func (c *Console) mutating(next http.HandlerFunc) http.HandlerFunc {
 		if !tokenEqual(r.PostFormValue("csrf"), c.csrf) {
 			c.refuse(w, http.StatusForbidden, "CSRF 토큰이 없거나 일치하지 않는다",
 				"이 폼은 콘솔이 방금 그린 페이지에서만 제출할 수 있다. 페이지를 새로 열고 다시 시도하라. "+
+					"아무것도 전송되지 않았다.")
+			return
+		}
+		next(w, r)
+	}
+}
+
+// readOnly is mutating's mirror: a route that only reads must answer GET and
+// HEAD and refuse every other method (change console-orders-screen, task 3.2).
+//
+// The name states the guarantee at the call site — c.session0(c.readOnly(h)) —
+// and it is deliberately not `reading`, which is what design.md D3 first called
+// it: this package already spells `reading` for the (value, measured, reason)
+// triple every screen renders through (overview.go). Go would have compiled both,
+// because a method name lives in its type's namespace, and that is exactly the
+// kind of collision that reads fine to whoever wrote it (issues.md I-2, Manager
+// ruling 2026-07-28).
+//
+// # Why a wrapper rather than a comment
+//
+// The route table's static guards read the registration, and what a registration
+// carries is {path, session gate, CSRF gate}. There is no method in it. So a
+// guard asked to confirm that an exempted route is "a GET" has only one thing to
+// look at — whether the CSRF gate is absent — and that turns the sentence into
+// "it is not protected". The exception would then be granted BECAUSE the route is
+// unprotected, and in that state a POST to it is served on a session cookie with
+// no CSRF token at all.
+//
+// This makes the method a fact of the chain instead. static_test.go reads it off
+// the same registration the other two gates are read off, and the runtime
+// refusal is the second lock (orders_static_test.go posts to /orders and expects
+// 405).
+//
+// Go 1.22's method patterns — HandleFunc("GET /orders", …) — would say the same
+// thing to the mux and nothing at all to the guards: the route extractor reads
+// the literal as the path, so the table would hold "GET /orders" and every
+// path-keyed comparison in static_test.go would silently stop matching.
+//
+// It is not applied to every read route on this console. The rest are covered by
+// not naming an account verb in the first place, and a wrapper on all of them
+// would make the one place it is load-bearing invisible.
+func (c *Console) readOnly(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			w.Header().Set("Allow", http.MethodGet+", "+http.MethodHead)
+			c.refuse(w, http.StatusMethodNotAllowed, "읽기 전용 화면이다",
+				"이 경로는 조회만 한다. 주문을 내거나 정정·취소하는 수단은 이 콘솔에 없다. "+
 					"아무것도 전송되지 않았다.")
 			return
 		}

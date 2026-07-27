@@ -64,10 +64,20 @@ var ErrJournalMissing = errors.New("journal: no database at that path")
 var ErrSchemaTooOld = errors.New("journal: the database is older than the tables this build reads")
 
 // readOnlyTables are the tables a read-only reader needs to exist before it can
-// answer anything. They are the v6 core domain: a journal without them is a
-// pre-v6 file, and every query below would fail one statement at a time instead
-// of once, clearly, at open.
-var readOnlyTables = []string{"positions", "exit_states", "exit_events", "trade_outcomes"}
+// answer anything. They are the v6 core domain plus the v1 attempt log: a journal
+// without them is a pre-v6 file, and every query below would fail one statement
+// at a time instead of once, clearly, at open.
+//
+// mutation_attempts joined the list with BrokerOrderIDs (change
+// console-orders-screen, task 2.2), and the failure it forecloses is specific:
+// unregistered, OpenReadOnly succeeds, that one query fails, and a query failure
+// the screen renders as zero rows says every order on the account was placed by
+// hand. It costs nothing in practice — the table is schemaV1's and the four
+// above are schemaV6's, so any journal that has them has it — which is exactly
+// the property that makes registering it additive rather than a new refusal.
+var readOnlyTables = []string{
+	"positions", "exit_states", "exit_events", "trade_outcomes", "mutation_attempts",
+}
 
 // ReadOnlyOptions configures OpenReadOnly.
 type ReadOnlyOptions struct {

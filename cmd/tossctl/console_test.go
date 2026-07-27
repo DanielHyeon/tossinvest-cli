@@ -15,10 +15,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -26,6 +29,7 @@ import (
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
@@ -250,6 +254,19 @@ func TestTheConsoleIsHandedOneCapabilityAndNotABroker(t *testing.T) {
 		t.Fatalf("the console's holdings reader declares %v, want exactly [Holdings]", names)
 	}
 
+	// The orders screen's read is the same claim a second time (change
+	// console-orders-screen, task 4.6): one method, and the wide broker it came
+	// from is not reachable from the value that crosses the boundary.
+	var orders console.OrdersReader = consoleOrdersSeam(&rootOptions{})
+	ordersType := reflect.TypeOf(orders)
+	if ordersType.NumMethod() != 1 || ordersType.Method(0).Name != "Orders" {
+		names := make([]string, 0, ordersType.NumMethod())
+		for i := 0; i < ordersType.NumMethod(); i++ {
+			names = append(names, ordersType.Method(i).Name)
+		}
+		t.Fatalf("the console's orders reader declares %v, want exactly [Orders]", names)
+	}
+
 	// And the console.Options literal never receives a broker of any kind. The
 	// field list is read out of the source because the failure this guards against
 	// is somebody adding one, which no runtime test would ever execute.
@@ -260,7 +277,17 @@ func TestTheConsoleIsHandedOneCapabilityAndNotABroker(t *testing.T) {
 	if !fields["Holdings"] {
 		t.Error("console.Options is built without Holdings; the positions screen has no broker")
 	}
+	if !fields["Orders"] {
+		t.Error("console.Options is built without Orders; the orders screen has no read")
+	}
 	for name := range fields {
+		if why, exempt := consoleFieldExemptions[name]; exempt {
+			if strings.TrimSpace(why) == "" {
+				t.Errorf("the exemption for the %s field has no reason; an unargued exemption is "+
+					"this ban quietly getting shorter", name)
+			}
+			continue
+		}
 		lowered := strings.ToLower(name)
 		for _, banned := range []string{"broker", "client", "order", "place", "cancel"} {
 			if strings.Contains(lowered, banned) {
@@ -269,6 +296,20 @@ func TestTheConsoleIsHandedOneCapabilityAndNotABroker(t *testing.T) {
 			}
 		}
 	}
+}
+
+// consoleFieldExemptions are the console.Options fields whose names may contain a
+// word the ban above looks for, each with the argument.
+//
+// It is a hole and it is the size of this map. The alternative — deleting "order"
+// from the list — would stop catching a future PlaceOrder field at the same
+// moment, and that is what the list is for. A field named here is still held to
+// the shape check above: the value handed across the boundary has one method, and
+// the wide broker is not reachable from it.
+var consoleFieldExemptions = map[string]string{
+	"Orders": "the orders screen's read (change console-orders-screen). It lists the account's " +
+		"orders and cannot be named without the word; the seam declares exactly Orders, and " +
+		"lazyOrders keeps two method values rather than the verifylive.Broker they came from",
 }
 
 // consoleOptionFields reads the keys of the console.Options literal in console.go.
@@ -481,5 +522,118 @@ func TestTheConsoleComesUpWithoutTheLimitsSeam(t *testing.T) {
 	}
 	if c.Handler() == nil {
 		t.Error("the console came up with no handler")
+	}
+}
+
+// --- the orders screen's read (change console-orders-screen, task 4.6) -------------
+
+// TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient.
+//
+// verifylive.Broker does not declare the raw order reads, so the path has to be
+// chosen explicitly, and the tempting choice is a second *official.Client built
+// here. That client resolves the account sequence again — the /api/v1/accounts
+// read that came back 429 three times on 2026-07-26 and cost a run three steps
+// (measurements.md M4) — for an answer the first resolution already had.
+//
+// So the seam goes through verifyBrokerFactory like everything else, and this is
+// what fails if somebody adds a second construction path.
+func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T) {
+	srv := newVerifyServer(t)
+	built := 0
+	previous := verifyBrokerFactory
+	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+		built++
+		return official.New(
+			official.Credentials{APIKey: "k", SecretKey: "s"},
+			filepath.Join(t.TempDir(), "token.json"),
+			official.WithBaseURL(srv.URL),
+			official.WithHTTPClient(srv.Client()),
+			official.WithAccountSeq(7),
+		), "123-45-678901", nil
+	}
+	t.Cleanup(func() { verifyBrokerFactory = previous })
+
+	seam := consoleOrdersSeam(&rootOptions{})
+	for i := 0; i < 3; i++ {
+		if _, err := seam.Orders(context.Background()); err != nil {
+			t.Fatalf("Orders: %v", err)
+		}
+	}
+	if built != 1 {
+		t.Errorf("the broker was built %d times for three refreshes; each build resolves the "+
+			"account sequence and that is the read that gets rate limited", built)
+	}
+
+	// The source half: nothing in this file constructs a client of its own.
+	src := readSource(t, "console.go")
+	if strings.Contains(src, "official.New(") {
+		t.Error("console.go constructs an *official.Client. The orders seam reuses the one " +
+			"verifyBrokerFactory already resolved the account for; a second one duplicates that " +
+			"resolution and doubles the 429 exposure")
+	}
+	if !strings.Contains(src, "verifyBrokerFactory(l.root)") {
+		t.Error("the orders seam no longer goes through verifyBrokerFactory")
+	}
+}
+
+// TestTheOrdersSeamCarriesEachListsOutcomeSeparately.
+//
+// One refresh is two calls, and losing one of them must not take the other down.
+// The console renders the missing half as unmeasured and refuses to add the
+// counts; returning an error for the pair would throw away the half that answered
+// and leave the screen with nothing to be honest about.
+func TestTheOrdersSeamCarriesEachListsOutcomeSeparately(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/oauth2/token":
+			fmt.Fprint(w, `{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`)
+		case "/api/v1/orders":
+			fmt.Fprint(w, `{"result":{"orders":[{"orderId":"o-1","symbol":"005930","side":"BUY",`+
+				`"orderType":"MARKET","status":"PENDING","quantity":"10","price":null,`+
+				`"currency":"KRW","orderedAt":"2026-07-27T09:30:00+09:00","canceledAt":null,`+
+				`"execution":null}],"nextCursor":null,"hasNext":true}}`)
+		case "/api/v1/conditional-orders":
+			// The half that fails.
+			w.WriteHeader(http.StatusTooManyRequests)
+			fmt.Fprint(w, `{"error":{"code":"rate-limited"}}`)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	previous := verifyBrokerFactory
+	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+		return official.New(
+			official.Credentials{APIKey: "k", SecretKey: "s"},
+			filepath.Join(t.TempDir(), "token.json"),
+			official.WithBaseURL(srv.URL),
+			official.WithHTTPClient(srv.Client()),
+			official.WithAccountSeq(7),
+		), "123-45-678901", nil
+	}
+	t.Cleanup(func() { verifyBrokerFactory = previous })
+
+	reading, err := consoleOrdersSeam(&rootOptions{}).Orders(context.Background())
+	if err != nil {
+		t.Fatalf("Orders returned an error for a half-answered reading: %v", err)
+	}
+	if len(reading.Plain) != 1 || reading.Plain[0].ID != "o-1" {
+		t.Fatalf("the plain list did not survive the conditional failure: %+v", reading.Plain)
+	}
+	if reading.PlainError != "" {
+		t.Errorf("the plain list carries an error it did not have: %q", reading.PlainError)
+	}
+	if !reading.PlainTruncated {
+		t.Error("hasNext was dropped; the count would be rendered as a settled number")
+	}
+	if reading.ConditionalError == "" {
+		t.Error("the conditional failure was swallowed; the screen would render 0 conditional " +
+			"orders as a measured value while a leftover held the exposure cap")
+	}
+	// And the absent values arrived absent rather than as zero.
+	if reading.Plain[0].Price != "" || reading.Plain[0].AverageFilledPrice != "" {
+		t.Errorf("a null price/execution arrived as %q/%q; the raw read exists so that an absent "+
+			"value is not a number", reading.Plain[0].Price, reading.Plain[0].AverageFilledPrice)
 	}
 }

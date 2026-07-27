@@ -58,6 +58,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/spf13/cobra"
@@ -215,7 +216,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// The dashboard's three seams (change add-operator-dashboard). The console
 		// reads the journal itself — read-only, per request — and is handed a
 		// broker that can do exactly one thing.
-		Holdings:    newConsoleHoldings(root),
+		Holdings: newConsoleHoldings(root),
+		// The orders screen's read (change console-orders-screen). One method,
+		// behind which this file makes the two calls a refresh costs.
+		Orders:      consoleOrdersSeam(root),
 		JournalPath: journalPath,
 		RunLockPath: verifyRunLockPath(verifyRecord),
 		Settings:    consoleSettingsSeam(root),
@@ -367,6 +371,129 @@ func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Po
 	}
 	l.mu.Unlock()
 	return read(ctx, symbol)
+}
+
+// --- the orders screen's read (change console-orders-screen, task 4.6) ------------
+//
+// The console declares one method and this is the only thing in the binary that
+// satisfies it. Behind that one method are the two broker calls one refresh
+// costs, which is where they belong: the console cannot then spend the budget
+// twice, and it cannot report one endpoint's silence as the other's zero.
+
+// consoleOrdersPageLimit bounds one page of each list.
+//
+// It is a page and not the whole history on purpose — the screen is "what is
+// alive and what happened today", and an unbounded walk would be a loop of broker
+// calls behind one page load. When the broker says there is more, the console
+// renders the count as a floor ("N건 이상") rather than as a number, which is why
+// truncating here is honest rather than lossy.
+const consoleOrdersPageLimit = 100
+
+// consoleOrdersReader is the part of the live client the orders screen needs.
+//
+// verifyBrokerFactory returns a verifylive.Broker, which does not declare the
+// raw order reads — it declares OrdersPageRaw, whose orders are undecoded JSON.
+// The concrete client has both, so the path is chosen by asserting for exactly
+// the two reads rather than by building a second *official.Client: that second
+// client would resolve the account sequence a second time, and that resolution is
+// the call that came back 429 three times on 2026-07-26 and cost a run three
+// steps (measurements.md M4).
+type consoleOrdersReader interface {
+	OrdersRaw(ctx context.Context, filter official.OrdersFilter) (official.RawOrderList, error)
+	ConditionalOrdersRaw(ctx context.Context, status, symbol, cursor string,
+		limit int) (official.RawConditionalOrderList, error)
+}
+
+// consoleOrdersSeam builds the console's orders reader, lazily.
+//
+// Lazily for newConsoleHoldings' reason: constructing the client resolves the
+// account against the Open API, and doing that at `tossctl console` startup would
+// make a screen the operator may never open into a precondition for the console
+// coming up.
+func consoleOrdersSeam(root *rootOptions) console.OrdersReader {
+	return &lazyOrders{root: root}
+}
+
+type lazyOrders struct {
+	root *rootOptions
+
+	mu sync.Mutex
+	// Only the two method values are kept, never the broker they came from.
+	// Nothing here or afterwards holds an interface with PlaceOrder on it.
+	plain       func(context.Context, official.OrdersFilter) (official.RawOrderList, error)
+	conditional func(context.Context, string, string, string, int) (official.RawConditionalOrderList, error)
+}
+
+// Orders satisfies console.OrdersReader.
+//
+// The two calls are sequential and each one's outcome is carried separately. A
+// failure on one is NOT returned as an error for the pair: the console renders
+// that half as unmeasured and refuses to add the counts, and collapsing them into
+// one error would take the measured half down with the missing one.
+//
+// An error is returned only when there is no reading at all to describe — no
+// credentials, or a client that does not have these reads.
+func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) {
+	l.mu.Lock()
+	plain, conditional := l.plain, l.conditional
+	if plain == nil || conditional == nil {
+		broker, _, err := verifyBrokerFactory(l.root)
+		if err != nil {
+			l.mu.Unlock()
+			return console.OrdersReading{}, err
+		}
+		reads, ok := broker.(consoleOrdersReader)
+		if !ok {
+			l.mu.Unlock()
+			return console.OrdersReading{}, fmt.Errorf(
+				"console: this build's broker (%T) has no raw order reads; the orders screen needs "+
+					"the broker's own decimal strings, because a value that has been through float64 "+
+					"cannot say whether the broker sent one at all", broker)
+		}
+		plain, conditional = reads.OrdersRaw, reads.ConditionalOrdersRaw
+		l.plain, l.conditional = plain, conditional
+	}
+	l.mu.Unlock()
+
+	var out console.OrdersReading
+
+	page, err := plain(ctx, official.OrdersFilter{Limit: consoleOrdersPageLimit})
+	if err != nil {
+		out.PlainError = err.Error()
+	} else {
+		out.PlainTruncated = page.HasNext
+		out.Plain = make([]console.OrderRecord, 0, len(page.Orders))
+		for _, o := range page.Orders {
+			out.Plain = append(out.Plain, console.OrderRecord{
+				ID: o.ID, Symbol: o.Symbol, Side: o.Side, Kind: o.OrderType, Status: o.Status,
+				Market: o.Market, Currency: o.Currency,
+				Quantity: o.Quantity, Price: o.Price,
+				FilledQuantity: o.FilledQuantity, AverageFilledPrice: o.AverageFilledPrice,
+				OrderedAt: o.OrderedAt, CanceledAt: o.CanceledAt,
+			})
+		}
+	}
+
+	// The OPEN group, not a per-order status: openapi says the two vocabularies
+	// differ, and this filter's job is to fetch exactly the conditionals that are
+	// still watching — the ones filling the live-exposure cap.
+	conds, err := conditional(ctx, verifylive.ConditionalStatusOpen, "", "", consoleOrdersPageLimit)
+	if err != nil {
+		out.ConditionalError = err.Error()
+	} else {
+		out.ConditionalTruncated = conds.HasNext
+		out.Conditional = make([]console.ConditionalRecord, 0, len(conds.Orders))
+		for _, o := range conds.Orders {
+			out.Conditional = append(out.Conditional, console.ConditionalRecord{
+				ID: o.ID, Symbol: o.Symbol, Market: o.Market, Kind: o.Type, Status: o.Status,
+				Quantity: o.Quantity, TriggerPrice: o.TriggerPrice, OrderPrice: o.OrderPrice,
+				ConditionKind: o.ConditionType, Triggered: o.TriggeredOrderID,
+				ExpireDate: o.ExpireDate, CreatedAt: o.CreatedAt,
+			})
+		}
+	}
+
+	return out, nil
 }
 
 // consoleHandoffPath is where the single-use restart token lives: beside the

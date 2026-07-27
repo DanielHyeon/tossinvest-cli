@@ -363,13 +363,19 @@ type todayMarketRow struct {
 
 // openOrdersPanel is how many live orders the account is carrying.
 //
-// It is unmeasured in this change and the reason is seam_unwired, not zero. The
-// order-reading seam lands in console-orders-screen, where the data it needs is
-// being made readable; until then a 0 here would read as "미체결 없음", which is
-// the exact failure this change's own rule exists to prevent. This is the first
-// place that rule is applied, and it is applied to this change.
+// It was unmeasured with the reason seam_unwired until console-orders-screen
+// wired the order-reading seam, which is what that reason means and what it asks
+// the operator for. It is now the same count the orders screen shows, and it is
+// still not a number when either list is missing: a total that quietly means "the
+// plain orders only" is a measured-looking zero while a conditional leftover is
+// holding the exposure cap.
 type openOrdersPanel struct {
 	Count reading
+	// Where is the screen that fills the cache, when this panel has nothing to
+	// show because nobody has opened it. The overview refreshes nothing itself,
+	// so without the pointer the operator is told to wait for something that will
+	// never happen (D4's cost, written down).
+	Where string
 }
 
 // --- safety -----------------------------------------------------------------------
@@ -486,7 +492,7 @@ func (c *Console) overview(ctx context.Context) overviewView {
 	v.Today = todayPanelFrom(now, trips, jv)
 	v.Recent = recentPanelFrom(events, jv)
 
-	v.Open = openOrdersPanel{Count: unmeasuredFor(reasonSeamUnwired)}
+	v.Open = c.openOrdersPanelFrom(now)
 	v.Safety = c.safetyPanelFrom(v.Today)
 	v.VerifyRunning, v.VerifyNote = c.verifyHold(now)
 	return v
@@ -722,6 +728,45 @@ func brokerReadable(snap holdingsSnapshot) reading {
 	default:
 		return unmeasuredFor(reasonNeverFetched)
 	}
+}
+
+// openOrdersPanelFrom counts the live orders out of the orders cache, without
+// refreshing it.
+//
+// peek and not get: this screen's contract is zero broker calls per render (D4),
+// and the orders screen's refresh costs two. The longest-lived tab in the console
+// must not be the one that spends the budget, so a cache nothing has filled reads
+// as never_fetched and the panel points at the screen that fills it.
+//
+// The count is the orders screen's own combined reading, which refuses to add the
+// two lists when either is unmeasured. Reproducing the addition here would be a
+// second definition of "미체결 N건" on the same console, and the two would
+// disagree the first time a conditional read failed.
+func (c *Console) openOrdersPanelFrom(now time.Time) openOrdersPanel {
+	panel := openOrdersPanel{Where: "/orders"}
+	snap := c.ordersCache.peek(now)
+
+	plain := listUnmeasured(snap, snap.Lists.PlainError)
+	conditional := listUnmeasured(snap, snap.Lists.ConditionalError)
+
+	plainLive := 0
+	if plain.Known() {
+		for _, rec := range snap.Lists.Plain {
+			row := rowFromOrder(rec, originUnknown)
+			if row.Live || row.Unresolved {
+				plainLive++
+			}
+		}
+	}
+	conditionalLive := 0
+	if conditional.Known() {
+		conditionalLive = len(snap.Lists.Conditional)
+	}
+	truncated := (plain.Known() && snap.Lists.PlainTruncated) ||
+		(conditional.Known() && snap.Lists.ConditionalTruncated)
+
+	panel.Count = combinedLive(plain, conditional, plainLive, conditionalLive, truncated)
+	return panel
 }
 
 // todayPanelFrom counts what closed since each market's own local midnight.
