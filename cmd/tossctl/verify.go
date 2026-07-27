@@ -215,6 +215,8 @@ Reads only the local record. It makes no network call.`),
 			return runVerifyStatus(cmd, root, opts)
 		},
 	}
+	cmd.Flags().StringVar(&opts.market, "market", verifylive.MarketKR,
+		"Market whose evidence record to read: KR or US")
 	cmd.Flags().StringVar(&opts.record, "record", "", "Override the evidence record path")
 	return cmd
 }
@@ -242,6 +244,8 @@ Reads only the local record. It makes no network call.`),
 			return runVerifyReport(cmd, root, opts)
 		},
 	}
+	cmd.Flags().StringVar(&opts.market, "market", verifylive.MarketKR,
+		"Market whose evidence record to read: KR or US")
 	cmd.Flags().StringVar(&opts.record, "record", "", "Override the evidence record path")
 	return cmd
 }

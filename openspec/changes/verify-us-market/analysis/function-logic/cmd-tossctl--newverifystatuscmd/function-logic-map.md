@@ -1,4 +1,4 @@
-# Function Logic Map: `loadVerifyRecord`
+# Function Logic Map: `newVerifyStatusCmd`
 
 - Source: `cmd/tossctl/verify.go` (revision: current)
 - AST evidence: `ast.json`
@@ -16,8 +16,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if err != nil {` (cmd/tossctl/verify.go:492, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
-| B2 | `if err != nil {` (cmd/tossctl/verify.go:496, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
+| B1 | 분기 없음 — 단일 경로 (cmd/tossctl/verify.go) | 아래 State mutations 참조 | 정상 반환 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
 
 ## Calls and live bindings
 

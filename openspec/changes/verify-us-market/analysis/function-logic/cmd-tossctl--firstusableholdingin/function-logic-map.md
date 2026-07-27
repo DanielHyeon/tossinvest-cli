@@ -16,10 +16,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if err != nil {` (cmd/tossctl/verify.go:421, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
-| B2 | `for _, p := range positions {` (cmd/tossctl/verify.go:424, range) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
-| B3 | `if p.Quantity < verifylive.MinQuantity {` (cmd/tossctl/verify.go:425, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
-| B4 | `if !verifylive.SameMarket(verifylive.MarketOf(p.Symbol), market) {` (cmd/tossctl/verify.go:428, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
+| B1 | `if err != nil {` (cmd/tossctl/verify.go:425, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
+| B2 | `for _, p := range positions {` (cmd/tossctl/verify.go:428, range) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
+| B3 | `if p.Quantity < verifylive.MinQuantity {` (cmd/tossctl/verify.go:429, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
+| B4 | `if !verifylive.SameMarket(verifylive.MarketOf(p.Symbol), market) {` (cmd/tossctl/verify.go:432, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
 
 ## Calls and live bindings
 

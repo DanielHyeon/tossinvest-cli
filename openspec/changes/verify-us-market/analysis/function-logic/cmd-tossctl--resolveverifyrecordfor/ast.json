@@ -1,15 +1,15 @@
 {
   "file": "/mnt/D/project/axipient/TossOS/cmd/tossctl/verify.go",
-  "source_sha256": "c5fb926a8f5e2e24c6ad885684b3907ff3b0a9db2ec87d0eec260d6af30bdc40",
+  "source_sha256": "1c22a458a48fbe95734ffcb6ae6c77125330efc43c1764b9233b5e17f22541d8",
   "package": "main",
   "function": "resolveVerifyRecordFor",
   "signature": "resolveVerifyRecordFor(params=3, results=2)",
   "start": {
-    "line": 513,
+    "line": 517,
     "column": 1
   },
   "end": {
-    "line": 526,
+    "line": 530,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 514,
+        "line": 518,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 518,
+        "line": 522,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 522,
+        "line": 526,
         "column": 2
       }
     }
@@ -42,13 +42,6 @@
     {
       "kind": "return",
       "at": {
-        "line": 515,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
         "line": 519,
         "column": 3
       }
@@ -63,7 +56,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 525,
+        "line": 527,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 529,
         "column": 2
       }
     }
@@ -72,7 +72,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 514,
+        "line": 518,
         "column": 16
       },
       "text": "strings.TrimSpace"
@@ -80,7 +80,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 517,
+        "line": 521,
         "column": 10
       },
       "text": "verifylive.RecordFileName"
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 518,
+        "line": 522,
         "column": 20
       },
       "text": "strings.TrimSpace"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 519,
+        "line": 523,
         "column": 10
       },
       "text": "filepath.Join"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 521,
+        "line": 525,
         "column": 14
       },
       "text": "journal.DataDir"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 523,
+        "line": 527,
         "column": 14
       },
       "text": "fmt.Errorf"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 525,
+        "line": 529,
         "column": 9
       },
       "text": "filepath.Join"
@@ -130,21 +130,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 514,
+        "line": 518,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 517,
+        "line": 521,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 521,
+        "line": 525,
         "column": 2
       }
     }

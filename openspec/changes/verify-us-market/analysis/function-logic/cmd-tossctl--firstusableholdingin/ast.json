@@ -1,15 +1,15 @@
 {
   "file": "/mnt/D/project/axipient/TossOS/cmd/tossctl/verify.go",
-  "source_sha256": "c5fb926a8f5e2e24c6ad885684b3907ff3b0a9db2ec87d0eec260d6af30bdc40",
+  "source_sha256": "1c22a458a48fbe95734ffcb6ae6c77125330efc43c1764b9233b5e17f22541d8",
   "package": "main",
   "function": "firstUsableHoldingIn",
   "signature": "firstUsableHoldingIn(params=3, results=1)",
   "start": {
-    "line": 419,
+    "line": 423,
     "column": 1
   },
   "end": {
-    "line": 434,
+    "line": 438,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 421,
+        "line": 425,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 424,
+        "line": 428,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 425,
+        "line": 429,
         "column": 3
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 428,
+        "line": 432,
         "column": 3
       }
     }
@@ -50,21 +50,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 422,
+        "line": 426,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 431,
+        "line": 435,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 433,
+        "line": 437,
         "column": 2
       }
     }
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 420,
+        "line": 424,
         "column": 20
       },
       "text": "broker.Holdings"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 428,
+        "line": 432,
         "column": 7
       },
       "text": "verifylive.SameMarket"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 428,
+        "line": 432,
         "column": 29
       },
       "text": "verifylive.MarketOf"
@@ -99,7 +99,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 420,
+        "line": 424,
         "column": 2
       }
     }

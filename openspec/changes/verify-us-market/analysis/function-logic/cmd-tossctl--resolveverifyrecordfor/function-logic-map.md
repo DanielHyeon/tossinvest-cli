@@ -16,9 +16,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `if trimmed := strings.TrimSpace(override); trimmed != "" {` (cmd/tossctl/verify.go:514, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
-| B2 | `if root != nil && strings.TrimSpace(root.configDir) != "" {` (cmd/tossctl/verify.go:518, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
-| B3 | `if err != nil {` (cmd/tossctl/verify.go:522, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
+| B1 | `if trimmed := strings.TrimSpace(override); trimmed != "" {` (cmd/tossctl/verify.go:518, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
+| B2 | `if root != nil && strings.TrimSpace(root.configDir) != "" {` (cmd/tossctl/verify.go:522, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
+| B3 | `if err != nil {` (cmd/tossctl/verify.go:526, if) | 아래 State mutations 참조 | 조건 불충족 시 조기 반환 또는 분기 | internal/verifylive/us_market_test.go, internal/console/us_market_test.go 및 기존 패키지 테스트 |
 
 ## Calls and live bindings
 
