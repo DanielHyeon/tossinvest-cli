@@ -121,11 +121,18 @@ func (d *ReconcileDriver) judgeHoldings(ctx context.Context, snapshot reconcile.
 		}
 
 		// --- findings ------------------------------------------------------
-		if !d.opts.Adoption.Enabled {
+		// Exclusion is judged first: it wins over the global switch AND over a
+		// per-symbol designation (exit-policy: exclude가 항상 우선 — 동시 등재는
+		// 편입하지 않는다), so the alert can name the list the operator wrote.
+		if d.opts.Adoption.Excludes(symbol) {
 			unmanaged = append(unmanaged, p)
 			continue
 		}
-		if d.opts.Adoption.Excludes(symbol) {
+		// A candidate is either globally admitted or individually designated
+		// (change console-adoption-controls). The designated path runs through
+		// the same gates above — nothing about RECONCILE, freshness or the
+		// Stabiliser is relaxed for it.
+		if !d.opts.Adoption.Enabled && !d.opts.Adoption.Included(symbol) {
 			unmanaged = append(unmanaged, p)
 			continue
 		}
@@ -350,15 +357,23 @@ func (d *ReconcileDriver) alertUnmanaged(ctx context.Context, p journal.Position
 	}
 	d.unmanaged[p.ID] = true
 
-	why := "adoption is off, so the engine records the holding and leaves it alone"
+	// The why-matrix (change console-adoption-controls design D2): every row is
+	// a different actionable fact, and the one thing this switch may never do is
+	// tell the owner of a tried-and-failed designation that "adoption is off" —
+	// that sentence sends them to the wrong setting.
+	why := "adoption is off and the symbol is not designated, so the engine records the holding " +
+		"and leaves it alone"
 	switch {
 	case d.opts.Adoption.Rejected != "":
 		why = "the adoption settings were refused, so adoption is off: " + d.opts.Adoption.Rejected
-	case d.opts.Adoption.Enabled && d.opts.Adoption.Excludes(p.Symbol):
+	case d.opts.Adoption.Excludes(p.Symbol):
 		why = "the symbol is on adoption.exclude_symbols, so it is deliberately left unprotected"
 	case d.opts.Adoption.Enabled:
 		why = "adoption is on but this holding could not be adopted this cycle; it is unprotected " +
 			"until it can be"
+	case d.opts.Adoption.Included(p.Symbol):
+		why = "the symbol is designated on adoption.include_symbols and the adoption was tried, but " +
+			"this cycle failed; it is unprotected until a cycle succeeds"
 	}
 
 	d.alert(ctx, obs.Event{

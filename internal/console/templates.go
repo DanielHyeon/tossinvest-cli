@@ -68,6 +68,7 @@ form { display: inline; }
     <a href="/" {{if eq .Nav "dashboard"}}class="on"{{end}}>대시보드</a>
     <a href="/positions" {{if eq .Nav "positions"}}class="on"{{end}}>포지션</a>
     <a href="/history" {{if eq .Nav "history"}}class="on"{{end}}>거래 이력</a>
+    <a href="/settings" {{if eq .Nav "settings"}}class="on"{{end}}>편입 설정</a>
     <a href="/verify" {{if eq .Nav "verify"}}class="on"{{end}}>검증</a>
     <a href="/report" {{if eq .Nav "report"}}class="on"{{end}}>리포트</a>
   </nav>

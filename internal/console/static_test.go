@@ -164,6 +164,12 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		// not a thing a page should be able to do.
 		"/engine/start": true,
 		"/engine/stop":  true,
+		// The adoption-settings edits (console-adoption-controls task 3.2). The
+		// only thing either writes is the engine.adoption config block through
+		// the injected seam — no journal, no broker, no account — but a config
+		// that outlives the console is exactly what CSRF must gate.
+		"/settings/save":    true,
+		"/settings/include": true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -398,8 +404,9 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 
 // consoleStateChanging is the complete list of routes that are allowed to change
 // anything, transcribed from the operator-console spec: 콘솔의 상태변경 행위는
-// 검증 실행 제어(시작·승인·중단)와 프로세스 기동·정지(자기 재시작·soak 재시작·
-// 엔진 시작/정지)뿐이다(SHALL — 계좌 무접촉).
+// 검증 실행 제어(시작·승인·중단), 프로세스 기동·정지(자기 재시작·soak 재시작·
+// 엔진 시작/정지), 편입 설정 편집(편입 설정 저장·종목 편입 지정)뿐이다(SHALL —
+// 계좌 무접촉; 편입 설정 편집의 대상은 engine.adoption config 블록만이다).
 //
 // It is the same set TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate uses,
 // named separately here because the two tests ask different questions of it: one
@@ -407,7 +414,7 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 // even looks like an act.
 var consoleStateChanging = []string{
 	"/verify/start", "/verify/approve", "/verify/abort", "/restart", "/soak/restart",
-	"/engine/start", "/engine/stop",
+	"/engine/start", "/engine/stop", "/settings/save", "/settings/include",
 }
 
 // TestNoRouteNamesAnAccountMutation.
@@ -432,9 +439,13 @@ func TestNoRouteNamesAnAccountMutation(t *testing.T) {
 		"order", "sell", "buy", "cancel", "modify", "amend", "flatten",
 		"gate", "credential", "secret", "token", "adopt", "enroll",
 	}
-	// Verbs that name an act rather than a reading. The five allowed routes are
-	// exempt: they are the verification control surface and the two restarts.
-	actVerbs := append([]string{"start", "stop", "approve", "abort", "restart", "reset", "delete"},
+	// Verbs that name an act rather than a reading. The allowed routes are
+	// exempt: the verification control surface, the restarts, and the two
+	// adoption-settings edits. The config-write vocabulary is here so a future
+	// unlisted /settings/anything cannot sail past this guard the way an
+	// unrecognized act otherwise would (console-adoption-controls, review P2-7).
+	actVerbs := append([]string{"start", "stop", "approve", "abort", "restart", "reset", "delete",
+		"save", "include", "enable", "config"},
 		accountVerbs...)
 
 	seen := map[string]bool{}

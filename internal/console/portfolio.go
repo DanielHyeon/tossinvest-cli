@@ -38,8 +38,9 @@ package console
 // A holding with no journal position at all, and a journal position with neither
 // record, are both 관리 외(미편입) — one label, as the spec fixes it — and each
 // carries its own reason. Folding an external holding *into* management is the
-// engine's reconciliation loop's job and this screen deliberately cannot do it:
-// every route is a GET.
+// engine's reconciliation loop's job; this screen can only designate a symbol
+// for it — a config write through the settings seam (console-adoption-controls)
+// — and still cannot adopt anything itself.
 //
 // There is a third answer and it is not that label: when the journal could not be
 // read, a holding is 관리 여부 불명. "Unmanaged" is a finding, and a console that
@@ -249,8 +250,11 @@ type positionRow struct {
 	// Adopted reports which record makes the row eligible. It is display only:
 	// the verdict is Eligible, and this says why.
 	Adopted bool
-	HasExit bool
-	Exit    journal.ExitState
+	// Designated reports the symbol is on adoption.include_symbols — stamped by
+	// the handler from the settings seam, display only (console-adoption-controls).
+	Designated bool
+	HasExit    bool
+	Exit       journal.ExitState
 }
 
 // Basis names the record that justifies the exit baseline, for the operator who

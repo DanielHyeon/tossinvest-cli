@@ -22,6 +22,7 @@ class TrackerTests(unittest.TestCase):
             "adopt-stockos-full-sdd",
             "verify-execution-capability",
             "add-net-rr-measurement",
+            "console-adoption-controls",
         ):
             path = changes / change
             path.mkdir(parents=True)

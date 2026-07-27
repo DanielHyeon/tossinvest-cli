@@ -659,6 +659,11 @@ func recordGateSettings(log *audit.Log, gate config.AutomationGate,
 			limitString(adoption.DefaultStopPct), ""},
 		{audit.ActionAdoptionSetting, "engine.adoption.exclude_symbols",
 			strings.Join(adoption.ExcludeSymbols, ","), ""},
+		// The designation list turns specific real holdings into sell-capable
+		// managed positions, so it is a §0.5 setting like the toggle it bypasses
+		// (change console-adoption-controls, review round 1 P1-2).
+		{audit.ActionAdoptionSetting, "engine.adoption.include_symbols",
+			strings.Join(adoption.IncludeSymbols, ","), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.max_order_quantity", limitString(gate.MaxOrderQuantity), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.max_order_notional", limitString(gate.MaxOrderNotional), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.max_total_exposure", limitString(gate.MaxTotalExposure), ""},

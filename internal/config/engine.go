@@ -85,6 +85,13 @@ type Adoption struct {
 	// long-term holding names it here rather than turning the feature off.
 	ExcludeSymbols []string `json:"exclude_symbols,omitempty"`
 
+	// IncludeSymbols are adoption candidates even with Enabled false — the
+	// per-symbol designation (change console-adoption-controls). Exclusion wins
+	// when a symbol is on both lists; the engine owns that judgement. The list
+	// is market-agnostic, like ExcludeSymbols. Empty is exactly the pre-change
+	// behaviour (§0.2).
+	IncludeSymbols []string `json:"include_symbols,omitempty"`
+
 	// Rejected explains why the block was refused, and is empty when it was
 	// accepted. A refused block is zeroed, so `Enabled` is already false — this
 	// field exists so the engine can say *why* rather than silently ignoring what
@@ -94,11 +101,20 @@ type Adoption struct {
 
 // Excludes reports whether a symbol is on the exclusion list.
 func (a Adoption) Excludes(symbol string) bool {
+	return onSymbolList(a.ExcludeSymbols, symbol)
+}
+
+// Included reports whether a symbol is on the per-symbol designation list.
+func (a Adoption) Included(symbol string) bool {
+	return onSymbolList(a.IncludeSymbols, symbol)
+}
+
+func onSymbolList(list []string, symbol string) bool {
 	want := strings.ToUpper(strings.TrimSpace(symbol))
 	if want == "" {
 		return false
 	}
-	for _, s := range a.ExcludeSymbols {
+	for _, s := range list {
 		if s == want {
 			return true
 		}
@@ -111,7 +127,10 @@ func (a Adoption) Excludes(symbol string) bool {
 // A block that is off *and* carries no fraction is not validated at all: that is
 // the absent block, and every config written before this change is one.
 func (a Adoption) validate() string {
-	if !a.Enabled && a.DefaultStopPct == 0 {
+	// "Meaningful" widened by console-adoption-controls: an include list alone
+	// promises those symbols a synthetic stop, so it needs the fraction exactly
+	// as enabled does. Off with neither is the absent block everybody has.
+	if !a.Enabled && len(a.IncludeSymbols) == 0 && a.DefaultStopPct == 0 {
 		return ""
 	}
 	if err := exitpolicy.ValidateStopPct(a.DefaultStopPct); err != nil {
@@ -127,6 +146,7 @@ type rawAdoption struct {
 	Enabled        *bool    `json:"enabled"`
 	DefaultStopPct float64  `json:"default_stop_pct"`
 	ExcludeSymbols []string `json:"exclude_symbols"`
+	IncludeSymbols []string `json:"include_symbols"`
 }
 
 // AutomationGate is the master switch for unattended order placement.
@@ -217,6 +237,7 @@ func mergeAdoption(cfg *Engine, raw *rawAdoption) {
 		next.Enabled = *raw.Enabled
 	}
 	next.ExcludeSymbols = normaliseSymbols(raw.ExcludeSymbols)
+	next.IncludeSymbols = normaliseSymbols(raw.IncludeSymbols)
 
 	if why := next.validate(); why != "" {
 		cfg.Adoption = Adoption{Rejected: why}

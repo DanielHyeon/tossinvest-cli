@@ -192,6 +192,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Holdings:    newConsoleHoldings(root),
 		JournalPath: journalPath,
 		RunLockPath: verifyRunLockPath(verifyRecord),
+		Settings:    consoleSettingsSeam(root),
 
 		// The three seams task 1.8 puts behind the console's two restart buttons.
 		// internal/console executes nothing: it decides whether the person asking
@@ -222,6 +223,17 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 // PlaceOrder, CancelOrder and the conditional-order mutations never becomes
 // reachable from internal/console, so "the dashboard cannot send an order" is a
 // fact about the wiring rather than about the handlers.
+
+// consoleSettingsSeam adapts the adoption-settings seam
+// (adoptionsettings.go) to the console's interface. The nil check happens on
+// the concrete pointer HERE: a typed-nil inside the interface would defeat the
+// console's own `Settings != nil` wiring test.
+func consoleSettingsSeam(root *rootOptions) console.AdoptionSettings {
+	if s := newAdoptionSettingsSeam(root); s != nil {
+		return s
+	}
+	return nil
+}
 
 // newConsoleHoldings builds the console's holdings reader, lazily.
 //

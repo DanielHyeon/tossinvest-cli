@@ -94,8 +94,8 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   {{end}}
   {{if .AnyJournalAbsent}}
   <p class="notice"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이
-  아니므로 손절·익절 라인도 없다. 수동 보유를 엔진 관리로 편입하는 것은 이 화면의 기능이 아니다
-  (편입은 엔진 대사 루프의 몫이다).</p>
+  아니므로 손절·익절 라인도 없다. 편입 실행은 엔진 대사 루프의 몫이고, 이 화면은
+  [관리 편입 지정]으로 지정만 한다 — 지정된 심볼은 다음 대사 주기(엔진 가동 시)에 편입 후보가 된다.</p>
   {{end}}
   <table>
     <tr>
@@ -110,7 +110,18 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td>{{.Qty}}</td><td>{{.Avg}}</td><td>{{.Last}}</td><td>{{.Value}}</td>
       <td class="{{if .Gain}}ok{{else}}bad{{end}}">{{.PnL}}</td>
       <td class="{{if .Gain}}ok{{else}}bad{{end}}">{{.Rate}}</td>
-      <td>{{.Label}}</td>
+      <td>{{.Label}}
+        {{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown)}}
+        <br><form method="post" action="/settings/include" style="display:inline">
+        <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="symbol"
+        value="{{.Symbol}}">{{if .Designated}}<input type="hidden" name="remove" value="1">{{end}}
+        <label><input type="checkbox" {{if .Designated}}checked{{end}}
+        onchange="if(confirm('{{.Symbol}} {{if .Designated}}편입 예약을 해제할까요? 이미 편입된 포지션에는 영향이 없습니다.{{else}}을(를) 엔진 관리에 편입할까요? 엔진 가동 시 손절·익절이 자동 적용됩니다.{{end}}')){this.form.submit()}else{this.checked={{if .Designated}}true{{else}}false{{end}}}">
+        <strong>관리 편입</strong></label></form>
+        {{if .Designated}}<br><span class="ok">편입 예약됨</span><span class="muted"> — 엔진 가동 시
+        자동 편입(아직 손절·익절 미적용)</span>{{end}}
+        {{end}}
+      </td>
     </tr>
     {{if .HasDetail}}
     <tr>

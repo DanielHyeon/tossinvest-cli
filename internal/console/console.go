@@ -184,6 +184,12 @@ type Options struct {
 	// half of the check; the in-process half always applies.
 	RunLockPath string
 
+	// Settings is the console's one config write surface: the engine.adoption
+	// block, read raw and written surgically (change console-adoption-controls;
+	// settings.go). Nil leaves the settings screen read-only-with-an-explanation
+	// and hides the per-symbol designation buttons.
+	Settings AdoptionSettings
+
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
 	// The console shows whether the engine is running and can start and stop the
@@ -461,6 +467,9 @@ func (c *Console) routes() http.Handler {
 	// directions.
 	mux.HandleFunc("/positions", c.session0(c.handlePositions))
 	mux.HandleFunc("/history", c.session0(c.handleHistory))
+	mux.HandleFunc("/settings", c.session0(c.handleSettings))
+	mux.HandleFunc("/settings/save", c.session0(c.mutating(c.handleSettingsSave)))
+	mux.HandleFunc("/settings/include", c.session0(c.mutating(c.handleSettingsInclude)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.handleStart)))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))

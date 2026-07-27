@@ -23,6 +23,12 @@ import (
 type positionsPage struct {
 	Nav  string
 	Snap positionsView
+	// CSRF rides along for the per-row designation forms (settings.go); the
+	// page itself stays a GET reading.
+	CSRF string
+	// CanDesignate reports the settings seam is wired and readable, so the
+	// designation buttons render at all.
+	CanDesignate bool
 }
 
 // Refresh is what the head template reads: the positions screen asks the
@@ -35,7 +41,16 @@ func (positionsPage) Refresh() bool { return true }
 func (positionsPage) RefreshSeconds() int { return int(holdingsTTL / time.Second) }
 
 func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
-	c.render(w, "positions", positionsPage{Nav: "positions", Snap: c.positions(r.Context())})
+	page := positionsPage{Nav: "positions", Snap: c.positions(r.Context()), CSRF: c.csrf}
+	if c.opts.Settings != nil {
+		if block, _, err := c.opts.Settings.Load(); err == nil {
+			page.CanDesignate = true
+			for i := range page.Snap.Rows {
+				page.Snap.Rows[i].Designated = block.Included(page.Snap.Rows[i].Symbol)
+			}
+		}
+	}
+	c.render(w, "positions", page)
 }
 
 type historyPage struct {
