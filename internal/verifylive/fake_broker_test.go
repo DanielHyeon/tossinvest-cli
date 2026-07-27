@@ -74,6 +74,9 @@ type fakeBroker struct {
 	modifyLeavesOldReadable bool
 	// amendIssuesNewID makes an order amend mint a new identifier.
 	amendIssuesNewID bool
+	// amends are the modify intents as they arrived, so a test can assert what
+	// the request carried rather than what it meant to carry.
+	amends []orderintent.AmendIntent
 	// rejectOversell refuses a sell larger than the holding.
 	rejectOversell bool
 	// dropConditionalsOnRestart deletes conditional orders, so the persistence
@@ -399,6 +402,9 @@ func (f *fakeBroker) CancelOrder(_ context.Context, orderID string) (trading.Mut
 
 func (f *fakeBroker) ModifyOrder(_ context.Context, intent orderintent.AmendIntent) (trading.MutationResult, error) {
 	f.log("POST /orders/" + intent.OrderID + "/modify")
+	f.mu.Lock()
+	f.amends = append(f.amends, intent)
+	f.mu.Unlock()
 	f.mu.Lock()
 	raw, ok := f.orders[intent.OrderID]
 	f.mu.Unlock()
@@ -761,4 +767,11 @@ func (h *harness) observation(id StepID, key string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// amendIntents returns the modify intents this broker received.
+func (f *fakeBroker) amendIntents() []orderintent.AmendIntent {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]orderintent.AmendIntent(nil), f.amends...)
 }

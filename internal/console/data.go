@@ -69,6 +69,9 @@ type verifyView struct {
 	Record  string
 	Present bool
 	Error   string
+	// Market is the market this reading belongs to. A verdict in one market says
+	// nothing about the same step in another, so the two are never merged.
+	Market string
 
 	AccountRef string
 	Steps      []verifylive.Outcome
@@ -168,12 +171,20 @@ type snapshot struct {
 	// Engine is the engine runtime's state, read from its advisory marker
 	// (change add-engine-runtime).
 	Engine engineView
-	// Session is the KR market-hours reading. It is advisory: nothing on this
-	// console consults it before starting anything.
+	// Session is the market-hours reading for the screen's market. It is
+	// advisory: nothing on this console consults it before starting anything.
 	Session verifylive.SessionAdvisory
+	// Market is the market this snapshot was read for. Everything above that
+	// comes from the evidence record belongs to it and to no other market.
+	Market string
 }
 
-func (c *Console) snapshot() snapshot {
+// snapshot reads the dashboard for the KR market, which is what a caller that
+// does not care about markets has always been reading.
+func (c *Console) snapshot() snapshot { return c.snapshotFor(verifylive.MarketKR) }
+
+func (c *Console) snapshotFor(market string) snapshot {
+	market = verifylive.NormalizeMarket(market)
 	now := c.now()
 	soakView := c.readSoak(now)
 	binary := c.readBinary(soakView)
@@ -181,12 +192,19 @@ func (c *Console) snapshot() snapshot {
 		Now:         now,
 		Soak:        soakView,
 		Attestation: c.readAttestation(now),
-		Verify:      c.readVerify(),
+		Verify:      c.readVerify(market),
 		Binary:      binary,
 		Engine:      c.readEngine(now, binary.Installed),
-		Session:     verifylive.KRSessionAdvisory(now),
+		Session:     verifylive.SessionAdvisoryFor(market, now),
+		Market:      market,
 	}
 }
+
+// MarketLabel is what the screen calls this market.
+func (s snapshot) MarketLabel() string { return s.Market }
+
+// IsUS reports the market, for the template's market switch.
+func (s snapshot) IsUS() bool { return s.Market == verifylive.MarketUS }
 
 // readBinary compares the installed executable against the two processes that are
 // meant to be it.
@@ -266,8 +284,9 @@ func (c *Console) readAttestation(now time.Time) attestView {
 	return v
 }
 
-func (c *Console) readVerify() verifyView {
-	v := verifyView{Record: c.opts.VerifyRecord, Total: len(verifylive.Steps())}
+func (c *Console) readVerify(market string) verifyView {
+	v := verifyView{Record: c.verifyRecord(market), Market: verifylive.NormalizeMarket(market),
+		Total: len(verifylive.Steps())}
 	if strings.TrimSpace(v.Record) == "" {
 		return v
 	}
@@ -301,19 +320,33 @@ func (c *Console) readVerify() verifyView {
 // a step to re-run — including one that already passed, which is the single thing
 // the redo path must not do. The form says "redo" and nothing else; what that
 // means is decided by verifylive.RedoSet against the evidence on disk.
-func (c *Console) redoSet() ([]verifylive.StepID, error) {
-	entries, err := verifylive.LoadEntries(c.opts.VerifyRecord)
+func (c *Console) redoSet(market string) ([]verifylive.StepID, error) {
+	entries, err := verifylive.LoadEntries(c.verifyRecord(market))
 	if err != nil {
 		return nil, err
 	}
 	return verifylive.RedoSet(entries), nil
 }
 
-// report renders the verify report the report page and its JSON download share.
-func (c *Console) report() (verifylive.Report, error) {
-	entries, err := verifylive.LoadEntries(c.opts.VerifyRecord)
+// verifyRecord is the evidence file for a market.
+//
+// The US path falls back to the KR record only when the caller wired no US file
+// at all, which is a misconfiguration rather than a market: reading one market's
+// verdicts under another market's name is the one thing this must never do, so a
+// missing wire reads as an empty record instead.
+func (c *Console) verifyRecord(market string) string {
+	if verifylive.NormalizeMarket(market) == verifylive.MarketUS {
+		return c.opts.VerifyRecordUS
+	}
+	return c.opts.VerifyRecord
+}
+
+// report renders the verify report the report page and its JSON download share,
+// for one market.
+func (c *Console) report(market string) (verifylive.Report, error) {
+	entries, err := verifylive.LoadEntries(c.verifyRecord(market))
 	if err != nil {
 		return verifylive.Report{}, err
 	}
-	return verifylive.BuildReport(c.opts.VerifyRecord, entries, c.now()), nil
+	return verifylive.BuildReport(c.verifyRecord(market), entries, c.now()), nil
 }

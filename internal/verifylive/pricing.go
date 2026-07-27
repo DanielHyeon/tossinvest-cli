@@ -56,13 +56,39 @@ const MinOffset = 0.05
 // same price anyway, and the number stops describing what will happen.
 const MaxOffset = 0.60
 
-// MarketKR is the only market this tool's mutating steps run against.
+// The markets this tool's mutating steps can run against.
 //
-// The amend step needs KR semantics (quantity on a modify is "KR only" —
-// OrderModifyRequest.quantity, openapi.latest.json) and the daily price band that
-// bounds a safe limit price only exists for KR. A US symbol is skipped with a
-// reason rather than probed with rules that were written for somewhere else.
-const MarketKR = "KR"
+// A run carries one of them (Options.Market) and sends orders only for symbols in
+// it: a symbol from the other market is skipped with a reason rather than probed
+// with rules written for somewhere else. What differs between the two is the
+// broker's own contract, not this tool's preference —
+//
+//	KR  a modify requires a quantity ("KR 주식: 필수"), and the daily price band
+//	    (상한가/하한가) bounds how far from the market an order may be priced.
+//	US  a modify must not carry a quantity ("US 주식: 전달 불가" →
+//	    400 us-modify-quantity-not-supported), and there is no daily band —
+//	    GET /api/v1/price-limits returns null, so the offset alone decides.
+//
+// Both citations are OrderModifyRequest / PriceLimitResponse in
+// docs/migration/openapi.latest.json.
+const (
+	MarketKR = "KR"
+	MarketUS = "US"
+)
+
+// NormalizeMarket resolves a market name. The zero value is KR, so a caller that
+// says nothing gets the behaviour this tool had before it knew about US (§0.2).
+func NormalizeMarket(market string) string {
+	switch {
+	case strings.EqualFold(strings.TrimSpace(market), MarketUS):
+		return MarketUS
+	default:
+		return MarketKR
+	}
+}
+
+// SameMarket compares two market names.
+func SameMarket(a, b string) bool { return strings.EqualFold(strings.TrimSpace(a), strings.TrimSpace(b)) }
 
 // SafePrice is a price and the reasoning that produced it, so the record can say
 // why an order was priced where it was.

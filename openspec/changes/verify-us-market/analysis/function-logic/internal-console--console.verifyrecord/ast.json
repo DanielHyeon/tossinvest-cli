@@ -1,0 +1,56 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/console/data.go",
+  "source_sha256": "416a98b72af85874f61a6deb19abe79174635a117dbd763fb6560aa4a270c7e1",
+  "package": "console",
+  "function": "verifyRecord",
+  "receiver": "Console",
+  "signature": "Console.verifyRecord(params=1, results=1)",
+  "start": {
+    "line": 337,
+    "column": 1
+  },
+  "end": {
+    "line": 342,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 341,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 5
+      },
+      "text": "verifylive.NormalizeMarket"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

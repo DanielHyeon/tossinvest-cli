@@ -49,9 +49,17 @@ func realStarter(broker *fakeBroker, recordPath string) StartVerify {
 		ctx context.Context,
 		confirm verifylive.BatchConfirmer,
 		out io.Writer,
+		market string,
 		redo []verifylive.StepID,
 	) (verifylive.Summary, []verifylive.Entry, error) {
 		var empty verifylive.Summary
+		symbol := "005930"
+		if verifylive.NormalizeMarket(market) == verifylive.MarketUS {
+			// What the command does: the US probes use a symbol the account holds,
+			// and the verdicts go in the US record.
+			recordPath = usRecordPath(recordPath)
+			symbol = usProbeSymbol
+		}
 		prior, err := verifylive.LoadEntries(recordPath)
 		if err != nil {
 			return empty, nil, err
@@ -70,7 +78,8 @@ func realStarter(broker *fakeBroker, recordPath string) StartVerify {
 			ApprovalChannel: verifylive.ApprovalChannelConsoleClick,
 			Out:             out,
 			AccountRef:      "123-45-678901",
-			Symbol:          "005930",
+			Market:          market,
+			Symbol:          symbol,
 			Offset:          verifylive.DefaultOffset,
 			MaxSellQuantity: verifylive.DefaultMaxSellQuantity,
 			Redo:            redo,
@@ -91,8 +100,9 @@ func newHarness(t *testing.T, tweak ...func(*Options)) *harness {
 	record := filepath.Join(dir, verifylive.FileName)
 
 	o := Options{
-		StartVerify:  realStarter(broker, record),
-		VerifyRecord: record,
+		StartVerify:    realStarter(broker, record),
+		VerifyRecord:   record,
+		VerifyRecordUS: usRecordPath(record),
 		SoakRecord:   filepath.Join(dir, soak.FileName),
 		Attestation:  filepath.Join(dir, attest.FileName),
 		MinSoakDays:  3,
@@ -834,4 +844,9 @@ func truncateForLog(s string) string {
 // mistake a future "just let me reach it from my phone" edit would make.
 func newAnyInterfaceListener() (net.Listener, error) {
 	return net.Listen("tcp", "0.0.0.0:0")
+}
+
+// usRecordPath is the US record beside a KR one, as the command wires it.
+func usRecordPath(krRecord string) string {
+	return filepath.Join(filepath.Dir(krRecord), verifylive.USFileName)
 }

@@ -308,11 +308,21 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 
 // amendOrder is the gated amend.
 func (r *Runner) amendOrder(ctx context.Context, sr *stepRun, orderID, symbol string, price, quantity float64) (string, error) {
+	// The broker defines a modify differently in each market, so the request and
+	// the line a person approves both follow the market rather than a default.
+	// "KR 주식: 필수 … US 주식: 전달 불가. 제공 시 400 us-modify-quantity-not-supported"
+	// (OrderModifyRequest.quantity, docs/migration/openapi.latest.json).
+	sendQuantity := SameMarket(MarketOf(symbol), MarketKR)
+	quantityLine := fmt.Sprintf("새 수량          %s주 — KR은 정정에 수량을 요구한다", trim(quantity))
+	if !sendQuantity {
+		quantityLine = fmt.Sprintf("수량             %s주 그대로 — US 정정은 수량을 보내지 않는다"+
+			"(보내면 400 us-modify-quantity-not-supported)", trim(quantity))
+	}
 	detail := []string{
 		fmt.Sprintf("주문             %s", orderID),
 		fmt.Sprintf("종목             %s", symbol),
 		fmt.Sprintf("새 지정가        %s (시장에서 더 멀고 여전히 체결 불가)", trim(price)),
-		fmt.Sprintf("새 수량          %s주 — KR은 정정에 수량을 요구한다", trim(quantity)),
+		quantityLine,
 	}
 	if err := r.gate(sr, request{
 		Kind: MutateAmendOrder, Symbol: symbol, Quantity: quantity, Detail: detail,
@@ -321,7 +331,10 @@ func (r *Runner) amendOrder(ctx context.Context, sr *stepRun, orderID, symbol st
 		return "", err
 	}
 
-	intent := orderintent.AmendIntent{OrderID: orderID, Price: &price, Quantity: &quantity}
+	intent := orderintent.AmendIntent{OrderID: orderID, Price: &price}
+	if sendQuantity {
+		intent.Quantity = &quantity
+	}
 	started := r.now()
 	res, err := r.broker.ModifyOrder(ctx, intent)
 	sr.logCall(EndpointModifyOrder, intent, started, r.now(), res, err)

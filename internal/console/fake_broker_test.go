@@ -83,21 +83,39 @@ func (f *fakeBroker) Accounts(context.Context) ([]domain.Account, error) {
 	return []domain.Account{{ID: "1", DisplayName: "123-45-678901"}}, nil
 }
 
-func (f *fakeBroker) Holdings(context.Context, string) ([]domain.Position, error) { return nil, nil }
+// usProbeSymbol is the US holding this fake account carries, standing in for the
+// real one (MWG, 115 shares at $1.27). The US probes need a symbol the account
+// already owns, so the fake owns one.
+const usProbeSymbol = "MWG"
 
-func (f *fakeBroker) SellableQuantity(context.Context, string) (domain.SellableQuantity, error) {
+func (f *fakeBroker) Holdings(context.Context, string) ([]domain.Position, error) {
+	return []domain.Position{{Symbol: usProbeSymbol, Quantity: 115}}, nil
+}
+
+func (f *fakeBroker) SellableQuantity(_ context.Context, symbol string) (domain.SellableQuantity, error) {
+	if symbol == usProbeSymbol {
+		return domain.SellableQuantity{Symbol: symbol, Quantity: 115}, nil
+	}
 	return domain.SellableQuantity{}, errors.New("nothing held")
 }
 
 func (f *fakeBroker) Prices(_ context.Context, symbols []string) ([]domain.Quote, error) {
 	out := make([]domain.Quote, 0, len(symbols))
 	for _, s := range symbols {
+		if s == usProbeSymbol {
+			out = append(out, domain.Quote{Symbol: s, Last: 1.27, Currency: "USD"})
+			continue
+		}
 		out = append(out, domain.Quote{Symbol: s, Last: 70000, Currency: "KRW"})
 	}
 	return out, nil
 }
 
-func (f *fakeBroker) PriceLimits(context.Context, string) (domain.PriceLimits, error) {
+func (f *fakeBroker) PriceLimits(_ context.Context, symbol string) (domain.PriceLimits, error) {
+	if symbol == usProbeSymbol {
+		// US has no daily band; the endpoint returns null for both bounds.
+		return domain.PriceLimits{Symbol: symbol}, nil
+	}
 	return domain.PriceLimits{Symbol: "005930", UpperLimit: 91000, LowerLimit: 49000}, nil
 }
 

@@ -1,0 +1,39 @@
+{
+  "file": "internal/console/console_test.go",
+  "source_sha256": "4d8bf9a087b46d59da69a47ab5ae8492c46d0999f85bde39b2248975a8fc70bc",
+  "package": "console",
+  "function": "newAnyInterfaceListener",
+  "signature": "newAnyInterfaceListener(params=0, results=2)",
+  "start": {
+    "line": 835,
+    "column": 1
+  },
+  "end": {
+    "line": 837,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 836,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 836,
+        "column": 9
+      },
+      "text": "net.Listen"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

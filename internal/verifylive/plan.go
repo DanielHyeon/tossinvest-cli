@@ -108,21 +108,42 @@ const (
 	PriceIdenticalBody  PricingBasis = "identical-body"
 )
 
+// bandClause says what bounds the price besides the offset.
+//
+// KR has a daily price band and the clamp is part of what the operator approves.
+// US has none — GET /api/v1/price-limits returns null — so a line that claimed a
+// band would be describing a rule that did not run. The KR wording is byte-for-byte
+// what it has always been, because Describe's English is what the plan digest is
+// taken over and a moved byte there invalidates a resumed run's approval.
+func bandClause(market string) string {
+	if SameMarket(market, MarketKR) {
+		return " and clamped inside the day's price band"
+	}
+	return " (this market has no daily price band, so the offset alone decides how far the price sits)"
+}
+
+func bandClauseKO(market string) string {
+	if SameMarket(market, MarketKR) {
+		return "당일 가격제한폭 안으로 clamp"
+	}
+	return "이 시장에는 당일 가격제한폭이 없어 오프셋만으로 거리가 정해진다"
+}
+
 // Describe renders the basis with the offset this run is actually using.
 func (b PricingBasis) Describe(offset float64, market string) string {
 	switch b {
 	case PriceFarBuy:
 		return fmt.Sprintf("LIMIT, %.0f%% BELOW the last trade at the moment the step runs, snapped to the %s "+
-			"tick grid and clamped inside the day's price band — re-quoted by this same rule and never closer "+
-			"to the market than it allows", offset*100, market)
+			"tick grid%s — re-quoted by this same rule and never closer "+
+			"to the market than it allows", offset*100, market, bandClause(market))
 	case PriceFarSell:
 		return fmt.Sprintf("LIMIT, %.0f%% ABOVE the last trade at the moment the step runs, snapped to the %s "+
-			"tick grid and clamped inside the day's price band — re-quoted by this same rule and never closer "+
-			"to the market than it allows", offset*100, market)
+			"tick grid%s — re-quoted by this same rule and never closer "+
+			"to the market than it allows", offset*100, market, bandClause(market))
 	case PriceFarStop:
 		return fmt.Sprintf("MARKET stop whose trigger sits %.0f%% BELOW the last trade at the moment the step "+
-			"runs, snapped to the %s tick grid and clamped inside the day's price band, so it cannot fire",
-			offset*100, market)
+			"runs, snapped to the %s tick grid%s, so it cannot fire",
+			offset*100, market, bandClause(market))
 	case PriceOneTickFurther:
 		return "one tick FURTHER from the market than the price above, on the same grid — the smallest change " +
 			"the broker will accept as a change"
@@ -143,15 +164,15 @@ func (b PricingBasis) DescribeKO(offset float64, market string) string {
 	switch b {
 	case PriceFarBuy:
 		return fmt.Sprintf("LIMIT. 단계가 실행되는 시점의 최종체결가보다 %.0f%% 아래, %s 호가 단위에 스냅하고 "+
-			"당일 가격제한폭 안으로 clamp — 같은 규칙으로 재호가하며 규칙이 허용하는 것보다 시장에 가까워지지 않는다",
-			offset*100, market)
+			"%s — 같은 규칙으로 재호가하며 규칙이 허용하는 것보다 시장에 가까워지지 않는다",
+			offset*100, market, bandClauseKO(market))
 	case PriceFarSell:
 		return fmt.Sprintf("LIMIT. 단계가 실행되는 시점의 최종체결가보다 %.0f%% 위, %s 호가 단위에 스냅하고 "+
-			"당일 가격제한폭 안으로 clamp — 같은 규칙으로 재호가하며 규칙이 허용하는 것보다 시장에 가까워지지 않는다",
-			offset*100, market)
+			"%s — 같은 규칙으로 재호가하며 규칙이 허용하는 것보다 시장에 가까워지지 않는다",
+			offset*100, market, bandClauseKO(market))
 	case PriceFarStop:
 		return fmt.Sprintf("MARKET 손절. 발동가가 실행 시점 최종체결가보다 %.0f%% 아래이고 %s 호가 단위에 스냅, "+
-			"당일 가격제한폭 안으로 clamp — 발동할 수 없는 위치다", offset*100, market)
+			"%s — 발동할 수 없는 위치다", offset*100, market, bandClauseKO(market))
 	case PriceOneTickFurther:
 		return "위 가격보다 시장에서 한 호가 더 먼 값(같은 호가 단위) — 브로커가 '변경'으로 받아주는 최소 변화"
 	case PriceIdenticalBody:

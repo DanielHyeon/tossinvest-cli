@@ -1,0 +1,103 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/hours.go",
+  "source_sha256": "57e5abc394ceaf57bd131e5156710c5d474469466427a3e2d13a4eb4c50898b4",
+  "package": "verifylive",
+  "function": "sessionLabel",
+  "receiver": "Runner",
+  "signature": "Runner.sessionLabel(params=0, results=1)",
+  "start": {
+    "line": 157,
+    "column": 1
+  },
+  "end": {
+    "line": 164,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 7
+      },
+      "text": "SessionAdvisoryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 36
+      },
+      "text": "r.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 13
+      },
+      "text": "a.At.Zone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 23
+      },
+      "text": "a.At.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 25
+      },
+      "text": "a.At.Format"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 158,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

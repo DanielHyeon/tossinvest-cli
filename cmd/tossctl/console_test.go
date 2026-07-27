@@ -135,9 +135,9 @@ func TestConsoleProbeSymbolMatchesVerifyRunsDefault(t *testing.T) {
 	if f == nil {
 		t.Fatal("verify run has no --symbol")
 	}
-	if f.DefValue != consoleProbeSymbol {
+	if f.DefValue != consoleProbeSymbolKR {
 		t.Errorf("console probes %s but `verify run --symbol` defaults to %s; the two must agree",
-			consoleProbeSymbol, f.DefValue)
+			consoleProbeSymbolKR, f.DefValue)
 	}
 }
 

@@ -60,6 +60,10 @@ type runState struct {
 	cancelFn  context.CancelFunc
 	done      chan struct{}
 	now       func() time.Time
+	// market is the market this run sends orders in. It is fixed at start: a run
+	// that could change market mid-flight would be a run whose approved plan and
+	// whose evidence record disagreed about what was measured.
+	market string
 	// redo is the re-measurement set this run was started with, empty for an
 	// ordinary run. It is kept so the progress page can say which mode it is in
 	// after the start screen is gone.
@@ -105,6 +109,8 @@ type runView struct {
 	Steps      int
 	// Redo names the steps this run was started to re-measure, empty otherwise.
 	Redo []verifylive.StepID
+	// Market is the market this run sends orders in.
+	Market string
 }
 
 // Remeasuring reports the re-measurement mode, for the page.
@@ -149,6 +155,7 @@ func (r *runState) snapshot() runView {
 		Done:       r.finishedFlag,
 		Steps:      r.steps,
 		Redo:       append([]verifylive.StepID(nil), r.redo...),
+		Market:     r.market,
 	}
 	if r.partial != "" {
 		v.Lines = append(v.Lines, r.partial)
@@ -293,7 +300,7 @@ func (c *Console) currentRun() *runState {
 // the caller read off the record. It reaches the runner as verifylive's Redo and
 // nothing more: the approval, the plan and every rail behind them are the same
 // ones an ordinary run goes through.
-func (c *Console) startRun(redo []verifylive.StepID) (*runState, error) {
+func (c *Console) startRun(market string, redo []verifylive.StepID) (*runState, error) {
 	c.mu.Lock()
 	if c.spent {
 		c.mu.Unlock()
@@ -312,6 +319,7 @@ func (c *Console) startRun(redo []verifylive.StepID) (*runState, error) {
 		cancelFn:  cancel,
 		done:      make(chan struct{}),
 		now:       c.now,
+		market:    verifylive.NormalizeMarket(market),
 		redo:      append([]verifylive.StepID(nil), redo...),
 	}
 	c.run = run
@@ -326,7 +334,7 @@ func (c *Console) drive(ctx context.Context, run *runState) {
 	defer close(run.done)
 	defer run.cancel()
 
-	summary, entries, err := c.opts.StartVerify(ctx, run.confirmer(ctx), run, run.redo)
+	summary, entries, err := c.opts.StartVerify(ctx, run.confirmer(ctx), run, run.market, run.redo)
 	steps := verifylive.StepCount(entries)
 	run.finish(summary, err, steps)
 

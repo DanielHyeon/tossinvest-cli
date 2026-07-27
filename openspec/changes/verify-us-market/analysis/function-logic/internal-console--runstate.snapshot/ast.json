@@ -1,0 +1,142 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/console/run.go",
+  "source_sha256": "af4f693b06bce20584457ada9081b194e3ca5b2d70c2fcbb7b06350a14d8d2f8",
+  "package": "console",
+  "function": "snapshot",
+  "receiver": "runState",
+  "signature": "runState.snapshot(params=0, results=1)",
+  "start": {
+    "line": 142,
+    "column": 1
+  },
+  "end": {
+    "line": 167,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 2
+      },
+      "text": "r.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 8
+      },
+      "text": "r.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 22
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 22
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 11
+      },
+      "text": "r.err.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 164,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 144,
+        "column": 2
+      },
+      "text": "r.mu.Unlock"
+    }
+  ],
+  "revision": "current"
+}

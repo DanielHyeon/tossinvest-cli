@@ -32,6 +32,8 @@ package verifylive
 import (
 	"fmt"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 )
 
 // KRRegularOpen and KRRegularClose bound the KR continuous session in Asia/Seoul,
@@ -91,15 +93,72 @@ func KRSessionAdvisory(now time.Time) SessionAdvisory {
 	}
 }
 
+// SessionAdvisoryFor reads the clock for a market.
+//
+// KR keeps its own reading because it is the one backed by a measurement: this
+// account has actually been refused with order-hours-closed, and the advisory
+// quotes that code. US goes through internal/clock, which is the calendar the
+// rest of the product already judges sessions with (America/New_York, so the
+// DST transition is the zone's rather than a fixed offset's). Writing a second
+// US calendar here would put two answers to "is the market open" in one
+// repository.
+//
+// The US text says its closed-market response is unmeasured, and it says so
+// rather than borrowing KR's code: nothing has observed what this broker returns
+// for a US order outside the session, and an advisory that implied otherwise
+// would be asserting a fact nobody has.
+func SessionAdvisoryFor(market string, now time.Time) SessionAdvisory {
+	if NormalizeMarket(market) != MarketUS {
+		return KRSessionAdvisory(now)
+	}
+	return usSessionAdvisory(now)
+}
+
+func usSessionAdvisory(now time.Time) SessionAdvisory {
+	loc, err := clock.MarketUS.Location()
+	if err != nil {
+		// No tzdata. Report the reading as unknown rather than guessing an
+		// offset: near a DST boundary a guess is simply wrong, and this is an
+		// advisory, so "cannot say" is an honest answer that blocks nothing.
+		return SessionAdvisory{
+			At: now.UTC(), Outside: false, Label: "US session unknown",
+			Detail: "이 호스트에 시간대 데이터가 없어 US 장시간을 판정할 수 없다. 안내를 생략한다 — " +
+				"판정 불가는 차단 사유가 아니다.",
+		}
+	}
+	at := now.In(loc)
+	inside, err := clock.MarketUS.InRegularSession(at)
+	if err != nil {
+		inside = false
+	}
+	const unmeasured = "US 휴장·시간외에 이 브로커가 주문에 무엇을 돌려주는지는 이 계좌에서 " +
+		"아직 관측되지 않았다([미측정]) — 다른 시장의 실측을 이 시장의 근거로 쓰지 않는다. " +
+		"mutation 단계는 실패할 수도, 접수될 수도 있다."
+	stamp := at.Format("2006-01-02 15:04")
+	zone, _ := at.Zone()
+	if inside {
+		return SessionAdvisory{
+			At: at, Outside: false, Label: "US regular hours",
+			Detail: fmt.Sprintf("%s %s는 US 정규장(09:30–16:00 ET) 안이다. 거래소 휴장일은 확인하지 "+
+				"않는다 — 그 달력은 미측정이다.", stamp, zone),
+		}
+	}
+	return SessionAdvisory{
+		At: at, Outside: true, Label: "outside US regular hours",
+		Detail: fmt.Sprintf("%s %s는 US 정규장(09:30–16:00 ET) 밖이다. %s", stamp, zone, unmeasured),
+	}
+}
+
 // sessionLabel records which session a mutation was accepted in.
 //
 // It is a KST clock reading, not a market-calendar lookup: the record should say
 // what time it was and let the reader judge, rather than bake a holiday table
 // into evidence.
 func (r *Runner) sessionLabel() string {
-	a := KRSessionAdvisory(r.now())
+	a := SessionAdvisoryFor(r.market, r.now())
+	zone, _ := a.At.Zone()
 	if a.Label == "weekend" {
-		return "weekend " + a.At.Format("2006-01-02 15:04 KST")
+		return "weekend " + a.At.Format("2006-01-02 15:04 ") + zone
 	}
-	return a.Label + " " + a.At.Format("15:04 KST")
+	return a.Label + " " + a.At.Format("15:04 ") + zone
 }

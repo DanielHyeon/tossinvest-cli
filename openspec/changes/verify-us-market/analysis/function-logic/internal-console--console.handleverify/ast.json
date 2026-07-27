@@ -1,0 +1,56 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/console/pages.go",
+  "source_sha256": "a062c7d8f515576dc806fafcd99518f68c45959992af3410cc02963cf90a1dfd",
+  "package": "console",
+  "function": "handleVerify",
+  "receiver": "Console",
+  "signature": "Console.handleVerify(params=2, results=0)",
+  "start": {
+    "line": 116,
+    "column": 1
+  },
+  "end": {
+    "line": 118,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 2
+      },
+      "text": "c.renderVerify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 20
+      },
+      "text": "marketOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 33
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 33
+      },
+      "text": "r.URL.Query"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -71,6 +71,7 @@ import (
 
 type verifyOptions struct {
 	record string
+	market string
 
 	symbol          string
 	holdingSymbol   string
@@ -175,10 +176,12 @@ has none. The tool never buys anything to create one.`),
 		"Print the procedure and exit; no credentials are read and no request is made")
 	cmd.Flags().BoolVar(&opts.resume, "resume", false,
 		"Continue a verification that is already on the record")
+	cmd.Flags().StringVar(&opts.market, "market", verifylive.MarketKR,
+		"Market this run measures: KR or US. A run sends orders only for symbols in its own market")
 	cmd.Flags().StringVar(&opts.symbol, "symbol", "005930",
-		"KR symbol the buy-side probes are placed against")
+		"Symbol the buy-side probes are placed against (KR default; a US run uses a held US symbol)")
 	cmd.Flags().StringVar(&opts.holdingSymbol, "holding-symbol", "",
-		"Held KR symbol the sell-side and conditional steps use (default: the first suitable holding)")
+		"Held symbol the sell-side and conditional steps use (default: the first suitable holding in this market)")
 	cmd.Flags().Float64Var(&opts.offsetPct, "offset-pct", verifylive.DefaultOffset*100,
 		"How far from the last trade orders are priced, in percent")
 	cmd.Flags().Float64Var(&opts.maxSellQuantity, "max-sell-quantity", verifylive.DefaultMaxSellQuantity,
@@ -265,7 +268,8 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
 	defer stop()
 
-	recordPath, err := resolveVerifyRecord(root, opts.record)
+	market := verifylive.NormalizeMarket(opts.market)
+	recordPath, err := resolveVerifyRecordFor(root, opts.record, market)
 	if err != nil {
 		return err
 	}
@@ -291,7 +295,14 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 
 	holding := strings.TrimSpace(opts.holdingSymbol)
 	if holding == "" {
-		holding = firstUsableHolding(ctx, broker)
+		holding = firstUsableHoldingIn(ctx, broker, market)
+	}
+	symbol := strings.TrimSpace(opts.symbol)
+	if market == verifylive.MarketUS && !verifylive.SameMarket(verifylive.MarketOf(symbol), market) {
+		// The --symbol default is KR's. A US run that kept it would plan orders
+		// this run is not allowed to send, so it falls back to the held US symbol
+		// and the runner's own gates skip the buy-side probes if there is none.
+		symbol = holding
 	}
 
 	recorder, err := verifylive.OpenRecorder(recordPath)
@@ -308,7 +319,8 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 		ConfirmEach:     opts.confirmEach,
 		Out:             out,
 		AccountRef:      accountRef,
-		Symbol:          strings.TrimSpace(opts.symbol),
+		Market:          market,
+		Symbol:          symbol,
 		HoldingSymbol:   holding,
 		Offset:          opts.offsetPct / 100,
 		MaxSellQuantity: opts.maxSellQuantity,
@@ -395,6 +407,16 @@ func terminalBatchConfirmer(cmd *cobra.Command) verifylive.BatchConfirmer {
 // is the same outcome as an account with nothing in it and a better one than
 // aborting a run whose read-only steps would have worked.
 func firstUsableHolding(ctx context.Context, broker verifylive.Broker) string {
+	return firstUsableHoldingIn(ctx, broker, verifylive.MarketKR)
+}
+
+// firstUsableHoldingIn picks a holding the sell-side and conditional steps can
+// use in one market.
+//
+// Usable means whole shares: this tool places no fractional orders, so a holding
+// below one share (a US fractional position) is passed over rather than probed
+// with an order the broker would refuse.
+func firstUsableHoldingIn(ctx context.Context, broker verifylive.Broker, market string) string {
 	positions, err := broker.Holdings(ctx, "")
 	if err != nil {
 		return ""
@@ -403,7 +425,7 @@ func firstUsableHolding(ctx context.Context, broker verifylive.Broker) string {
 		if p.Quantity < verifylive.MinQuantity {
 			continue
 		}
-		if verifylive.MarketOf(p.Symbol) != verifylive.MarketKR {
+		if !verifylive.SameMarket(verifylive.MarketOf(p.Symbol), market) {
 			continue
 		}
 		return p.Symbol
@@ -462,7 +484,7 @@ func runVerifyReport(cmd *cobra.Command, root *rootOptions, opts *verifyOptions)
 }
 
 func loadVerifyRecord(root *rootOptions, opts *verifyOptions) (string, []verifylive.Entry, error) {
-	recordPath, err := resolveVerifyRecord(root, opts.record)
+	recordPath, err := resolveVerifyRecordFor(root, opts.record, opts.market)
 	if err != nil {
 		return "", nil, err
 	}
@@ -480,17 +502,27 @@ func loadVerifyRecord(root *rootOptions, opts *verifyOptions) (string, []verifyl
 // and otherwise the record is durable state and belongs in the data directory
 // next to the journal, not among the configuration.
 func resolveVerifyRecord(root *rootOptions, override string) (string, error) {
+	return resolveVerifyRecordFor(root, override, verifylive.MarketKR)
+}
+
+// resolveVerifyRecordFor is resolveVerifyRecord for one market.
+//
+// A capability verdict belongs to an account *and* a market, so each market keeps
+// its own file (verifylive.RecordFileName). An explicit --record still wins, and
+// an unspecified market resolves to the KR file every existing record lives in.
+func resolveVerifyRecordFor(root *rootOptions, override, market string) (string, error) {
 	if trimmed := strings.TrimSpace(override); trimmed != "" {
 		return trimmed, nil
 	}
+	name := verifylive.RecordFileName(market)
 	if root != nil && strings.TrimSpace(root.configDir) != "" {
-		return filepath.Join(root.configDir, verifylive.FileName), nil
+		return filepath.Join(root.configDir, name), nil
 	}
 	dir, err := journal.DataDir()
 	if err != nil {
 		return "", fmt.Errorf("verify: resolving the record location: %w", err)
 	}
-	return filepath.Join(dir, verifylive.FileName), nil
+	return filepath.Join(dir, name), nil
 }
 
 // --- the soak/verify rate-budget marker -------------------------------------------

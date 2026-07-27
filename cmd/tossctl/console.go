@@ -61,12 +61,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// consoleProbeSymbol is the KR symbol the buy-side probes are placed against.
+// consoleProbeSymbolKR is the KR symbol the buy-side probes are placed against.
 //
 // It is `verify run --symbol`'s default, restated rather than shared because
 // verify.go is a live-order path and this task's scope is additive. Drift is not
 // left to review: console_test.go asserts the two agree.
-const consoleProbeSymbol = "005930"
+const consoleProbeSymbolKR = "005930"
+
+// consoleProbeSymbol picks the symbol the buy-side probes use in a market.
+//
+// KR has a default worth pinning: a large, liquid, always-quoted name. US has no
+// equivalent constant here on purpose — which US symbols an account can afford to
+// place a one-share order against differs per account, so the probe uses a symbol
+// the account already holds. Buy and sell probes then share one symbol, which
+// keeps the exposure to a single name and makes the opposite-pending rejection
+// observable in the same run. No usable US holding means the US probes are
+// skipped by the runner's own gates, with the reason recorded.
+func consoleProbeSymbol(ctx context.Context, broker verifylive.Broker, market string) string {
+	if verifylive.NormalizeMarket(market) != verifylive.MarketUS {
+		return consoleProbeSymbolKR
+	}
+	return firstUsableHoldingIn(ctx, broker, verifylive.MarketUS)
+}
 
 type consoleOptions struct {
 	port int
@@ -147,6 +163,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	if err != nil {
 		return err
 	}
+	verifyRecordUS, err := resolveVerifyRecordFor(root, "", verifylive.MarketUS)
+	if err != nil {
+		return err
+	}
 	soakRecord, err := resolveSoakRecord(root, "")
 	if err != nil {
 		return err
@@ -178,9 +198,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	out := cmd.OutOrStdout()
 	return console.ListenAndServe(ctx, console.Options{
 		Port:              opts.port,
-		StartVerify:       consoleVerifyStarter(root, verifyRecord),
+		StartVerify:       consoleVerifyStarter(root),
 		SoakRecord:        soakRecord,
 		VerifyRecord:      verifyRecord,
+		VerifyRecordUS:    verifyRecordUS,
 		Attestation:       attestation,
 		MinSoakDays:       soak.DefaultCriteria().MinConsecutiveDays,
 		RequiredEndpoints: engine.RequiredEndpoints(),
@@ -352,15 +373,23 @@ func argvWithPort(args []string, port int) []string {
 // (task 1.7). The console computes the set from the evidence record — never from
 // the request — and it changes only which steps the runner will walk: the plan is
 // rebuilt and a new expiring string still has to be typed before anything is sent.
-func consoleVerifyStarter(root *rootOptions, recordPath string) console.StartVerify {
+func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 	return func(
 		ctx context.Context,
 		confirm verifylive.BatchConfirmer,
 		out io.Writer,
+		market string,
 		redo []verifylive.StepID,
 	) (verifylive.Summary, []verifylive.Entry, error) {
 		var empty verifylive.Summary
 
+		market = verifylive.NormalizeMarket(market)
+		// The record is resolved per run rather than captured once, because it is
+		// the market that decides which file this run's verdicts belong in.
+		recordPath, err := resolveVerifyRecordFor(root, "", market)
+		if err != nil {
+			return empty, nil, err
+		}
 		prior, err := verifylive.LoadEntries(recordPath)
 		if err != nil {
 			return empty, nil, err
@@ -384,8 +413,9 @@ func consoleVerifyStarter(root *rootOptions, recordPath string) console.StartVer
 			ApprovalChannel: verifylive.ApprovalChannelConsoleClick,
 			Out:             out,
 			AccountRef:      accountRef,
-			Symbol:          consoleProbeSymbol,
-			HoldingSymbol:   firstUsableHolding(ctx, broker),
+			Market:          market,
+			Symbol:          consoleProbeSymbol(ctx, broker, market),
+			HoldingSymbol:   firstUsableHoldingIn(ctx, broker, market),
 			Offset:          verifylive.DefaultOffset,
 			MaxSellQuantity: verifylive.DefaultMaxSellQuantity,
 			TTLWait:         verifylive.DefaultTTLWait,

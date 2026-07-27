@@ -96,6 +96,7 @@ func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 type verifyPage struct {
 	Nav      string
 	CSRF     string
+	Market   string
 	Snap     snapshot
 	Steps    string
 	Run      *runView
@@ -113,17 +114,31 @@ type verifyPage struct {
 func (verifyPage) RefreshSeconds() int { return 2 }
 
 func (c *Console) handleVerify(w http.ResponseWriter, r *http.Request) {
-	c.renderVerify(w, r.URL.Query().Get("notice"))
+	c.renderVerify(w, marketOf(r), r.URL.Query().Get("notice"))
 }
 
-func (c *Console) renderVerify(w http.ResponseWriter, notice string) {
+// marketOf reads the screen's market from the request.
+//
+// One place, for both the query string and the form, and it normalises through
+// verifylive: an unrecognised value is KR rather than an error, because the worst
+// this decides is which record is displayed and the safe default is the one every
+// existing record lives in.
+func marketOf(r *http.Request) string {
+	if v := strings.TrimSpace(r.URL.Query().Get("market")); v != "" {
+		return verifylive.NormalizeMarket(v)
+	}
+	return verifylive.NormalizeMarket(r.PostFormValue("market"))
+}
+
+func (c *Console) renderVerify(w http.ResponseWriter, market, notice string) {
 	var steps bytes.Buffer
 	verifylive.WriteSteps(&steps, false)
 
-	snap := c.snapshot()
+	snap := c.snapshotFor(market)
 	page := verifyPage{
 		Nav:        "verify",
 		CSRF:       c.csrf,
+		Market:     snap.Market,
 		Snap:       snap,
 		Steps:      steps.String(),
 		Notice:     notice,
@@ -164,9 +179,10 @@ const startModeRedo = "redo"
 // rebuilt from scratch and a new nonce has to be typed either way, so there is no
 // path here that re-measures anything without a person approving that list.
 func (c *Console) handleStart(w http.ResponseWriter, r *http.Request) {
+	market := marketOf(r)
 	var redo []verifylive.StepID
 	if r.PostFormValue("mode") == startModeRedo {
-		set, err := c.redoSet()
+		set, err := c.redoSet(market)
 		if err != nil {
 			c.redirectVerify(w, r, "기록을 읽을 수 없다: "+err.Error()+" 아무것도 전송되지 않았다.")
 			return
@@ -177,7 +193,7 @@ func (c *Console) handleStart(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		redo = set
-	} else if snap := c.readVerify(); snap.Present && len(snap.Pending) == 0 {
+	} else if snap := c.readVerify(market); snap.Present && len(snap.Pending) == 0 {
 		// The no-op that cost a market window on 2026-07-27: every step already has
 		// a terminal verdict, so an ordinary resume walks the catalogue, settles
 		// nothing and finishes with no steps recorded. Refusing it here is what
@@ -190,7 +206,7 @@ func (c *Console) handleStart(w http.ResponseWriter, r *http.Request) {
 		c.redirectVerify(w, r, notice)
 		return
 	}
-	if _, err := c.startRun(redo); err != nil {
+	if _, err := c.startRun(market, redo); err != nil {
 		c.redirectVerify(w, r, err.Error())
 		return
 	}
@@ -264,9 +280,9 @@ func refusalNotice(err error) string {
 }
 
 func (c *Console) redirectVerify(w http.ResponseWriter, r *http.Request, notice string) {
-	target := "/verify"
+	target := "/verify?market=" + urlQueryEscape(marketOf(r))
 	if strings.TrimSpace(notice) != "" {
-		target += "?notice=" + urlQueryEscape(notice)
+		target += "&notice=" + urlQueryEscape(notice)
 	}
 	http.Redirect(w, r, target, http.StatusSeeOther)
 }
@@ -281,9 +297,10 @@ type reportPage struct {
 	Error   string
 }
 
-func (c *Console) handleReport(w http.ResponseWriter, _ *http.Request) {
-	page := reportPage{Nav: "report", Snap: c.snapshot()}
-	rep, err := c.report()
+func (c *Console) handleReport(w http.ResponseWriter, r *http.Request) {
+	market := marketOf(r)
+	page := reportPage{Nav: "report", Snap: c.snapshotFor(market)}
+	rep, err := c.report(market)
 	if err != nil {
 		page.Error = err.Error()
 	} else {
@@ -294,8 +311,8 @@ func (c *Console) handleReport(w http.ResponseWriter, _ *http.Request) {
 	c.render(w, "report", page)
 }
 
-func (c *Console) handleReportJSON(w http.ResponseWriter, _ *http.Request) {
-	rep, err := c.report()
+func (c *Console) handleReportJSON(w http.ResponseWriter, r *http.Request) {
+	rep, err := c.report(marketOf(r))
 	if err != nil {
 		c.refuse(w, http.StatusInternalServerError, "리포트를 읽을 수 없다", err.Error())
 		return

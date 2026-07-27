@@ -1,0 +1,194 @@
+{
+  "file": "internal/verifylive/hours.go",
+  "source_sha256": "de83f1b8e2606aa577e7c1e8ac76b1d40f4e2f3127dd55da359a4b84a354ade5",
+  "package": "verifylive",
+  "function": "KRSessionAdvisory",
+  "signature": "KRSessionAdvisory(params=1, results=1)",
+  "start": {
+    "line": 63,
+    "column": 1
+  },
+  "end": {
+    "line": 92,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 81,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 9
+      },
+      "text": "time.FixedZone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 8
+      },
+      "text": "now.In"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 10
+      },
+      "text": "at.Hour"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 25
+      },
+      "text": "at.Minute"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 13
+      },
+      "text": "at.Weekday"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 46
+      },
+      "text": "at.Weekday"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 11
+      },
+      "text": "at.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

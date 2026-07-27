@@ -1,0 +1,56 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/console/fake_broker_test.go",
+  "source_sha256": "393b77b2344373a06e79303e97115e043b6b761cfa121bd5925be88617b41a4f",
+  "package": "console",
+  "function": "SellableQuantity",
+  "receiver": "fakeBroker",
+  "signature": "fakeBroker.SellableQuantity(params=2, results=2)",
+  "start": {
+    "line": 95,
+    "column": 1
+  },
+  "end": {
+    "line": 100,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 36
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

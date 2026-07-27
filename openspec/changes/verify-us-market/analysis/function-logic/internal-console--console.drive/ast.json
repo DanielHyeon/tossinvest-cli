@@ -1,0 +1,152 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/console/run.go",
+  "source_sha256": "af4f693b06bce20584457ada9081b194e3ca5b2d70c2fcbb7b06350a14d8d2f8",
+  "package": "console",
+  "function": "drive",
+  "receiver": "Console",
+  "signature": "Console.drive(params=2, results=0)",
+  "start": {
+    "line": 333,
+    "column": 1
+  },
+  "end": {
+    "line": 350,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 341,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 8
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 8
+      },
+      "text": "run.cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 27
+      },
+      "text": "c.opts.StartVerify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 51
+      },
+      "text": "run.confirmer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 11
+      },
+      "text": "verifylive.StepCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 2
+      },
+      "text": "run.finish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 3
+      },
+      "text": "c.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 3
+      },
+      "text": "c.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 18
+      },
+      "text": "errSuffix"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 345,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 334,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 335,
+        "column": 2
+      },
+      "text": "run.cancel"
+    }
+  ],
+  "revision": "current"
+}

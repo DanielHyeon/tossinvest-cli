@@ -1,0 +1,39 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/cmd/tossctl/verify.go",
+  "source_sha256": "c5fb926a8f5e2e24c6ad885684b3907ff3b0a9db2ec87d0eec260d6af30bdc40",
+  "package": "main",
+  "function": "firstUsableHolding",
+  "signature": "firstUsableHolding(params=2, results=1)",
+  "start": {
+    "line": 409,
+    "column": 1
+  },
+  "end": {
+    "line": 411,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 9
+      },
+      "text": "firstUsableHoldingIn"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -112,6 +112,7 @@ type StartVerify func(
 	ctx context.Context,
 	confirm verifylive.BatchConfirmer,
 	out io.Writer,
+	market string,
 	redo []verifylive.StepID,
 ) (verifylive.Summary, []verifylive.Entry, error)
 
@@ -129,6 +130,9 @@ type Options struct {
 	// reports, not an error.
 	SoakRecord   string
 	VerifyRecord string
+	// VerifyRecordUS is the US market's evidence record. A capability verdict
+	// belongs to an account and a market, so the two never share a file.
+	VerifyRecordUS string
 	Attestation  string
 
 	// MinSoakDays is the consecutive-day bar the soak is judged against.

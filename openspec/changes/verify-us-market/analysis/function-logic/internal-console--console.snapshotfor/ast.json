@@ -1,0 +1,125 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/console/data.go",
+  "source_sha256": "416a98b72af85874f61a6deb19abe79174635a117dbd763fb6560aa4a270c7e1",
+  "package": "console",
+  "function": "snapshotFor",
+  "receiver": "Console",
+  "signature": "Console.snapshotFor(params=1, results=1)",
+  "start": {
+    "line": 186,
+    "column": 1
+  },
+  "end": {
+    "line": 201,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 11
+      },
+      "text": "verifylive.NormalizeMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 9
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 14
+      },
+      "text": "c.readSoak"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 12
+      },
+      "text": "c.readBinary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 16
+      },
+      "text": "c.readAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 16
+      },
+      "text": "c.readVerify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 16
+      },
+      "text": "c.readEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 16
+      },
+      "text": "verifylive.SessionAdvisoryFor"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

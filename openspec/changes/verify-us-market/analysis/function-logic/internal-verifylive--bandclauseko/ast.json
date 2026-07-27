@@ -1,0 +1,55 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/plan.go",
+  "source_sha256": "e27e007181778088c8ccab53904cc80272a34ade0160273163cd590284c79a97",
+  "package": "verifylive",
+  "function": "bandClauseKO",
+  "signature": "bandClauseKO(params=1, results=1)",
+  "start": {
+    "line": 125,
+    "column": 1
+  },
+  "end": {
+    "line": 130,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 127,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 5
+      },
+      "text": "SameMarket"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,127 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/cmd/tossctl/console_test.go",
+  "source_sha256": "609aa2d9fec3d3d27f4034e5739ebe4aac88260877c8d1754191fbb65df3e37e",
+  "package": "main",
+  "function": "TestConsoleProbeSymbolMatchesVerifyRunsDefault",
+  "signature": "TestConsoleProbeSymbolMatchesVerifyRunsDefault(params=1, results=0)",
+  "start": {
+    "line": 129,
+    "column": 1
+  },
+  "end": {
+    "line": 142,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 9
+      },
+      "text": "findCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 21
+      },
+      "text": "findCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 33
+      },
+      "text": "newRootCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 7
+      },
+      "text": "Lookup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 7
+      },
+      "text": "run.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

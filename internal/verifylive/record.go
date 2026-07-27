@@ -40,6 +40,25 @@ import (
 // attestation is built.
 const FileName = "capability-verify.jsonl"
 
+// USFileName is the US market's record.
+//
+// A verdict is about an account *and a market*: the same StepID means "the broker
+// accepts a stop order" in one market and says nothing about the other. Sharing
+// one file would let a US pass settle a KR step through settled/RedoSet, which
+// would record a capability nobody measured. Separate files keep every existing
+// mechanism — StepCount, RedoSet, resume, the plan digest, one-run-per-process —
+// working unchanged, per market.
+const USFileName = "capability-verify-us.jsonl"
+
+// RecordFileName is the evidence file for a market. An unspecified market is KR,
+// which is the file every existing record already lives in.
+func RecordFileName(market string) string {
+	if NormalizeMarket(market) == MarketUS {
+		return USFileName
+	}
+	return FileName
+}
+
 // RecordFormatVersion is the format this build writes and understands.
 const RecordFormatVersion = 1
 

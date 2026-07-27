@@ -310,13 +310,18 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 
 {{define "verify"}}
 {{template "head" .}}
-<h1>실계좌 검증</h1>
+<h1>실계좌 검증 <span class="muted">{{.Market}} 시장</span></h1>
+<p class="muted">검증 능력은 계좌와 <strong>시장</strong>의 속성이다 — 아래 모든 것은 {{.Market}} 기록만 읽는다.
+한 시장의 판정은 다른 시장의 단계를 완료로 만들지 않는다.
+{{if .Snap.IsUS}}<a href="/verify?market=KR">KR 검증으로</a>{{else}}<a href="/verify?market=US">US 검증으로</a>{{end}}
+· <a href="/report?market={{.Market}}">이 시장 리포트</a></p>
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
 
 {{if .Spent}}
 <section>
   <p class="notice"><strong>이 프로세스는 이미 검증을 수행했다.</strong> 조건주문 존속은 등록한 프로세스가
-  죽은 뒤에만 관측할 수 있으므로 이 경계는 우회하지 않는다.</p>
+  죽은 뒤에만 관측할 수 있으므로 이 경계는 우회하지 않는다. 다른 시장을 이어서 측정할 때도 마찬가지다 —
+  재시작한 뒤 그 시장 화면에서 시작하라.</p>
   {{if .CanRestart}}
   <p>아래 버튼이 콘솔을 같은 포트로 다시 띄운다 — 돌아오면 [이어하기]를 누르면 된다.</p>
   <form method="post" action="/restart">
@@ -331,7 +336,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 
 {{if .Run}}{{with .Run}}
 <section>
-  <h2>실행 {{.ID}} <span class="muted">시작 {{.StartedAt.Format "15:04:05Z"}}</span></h2>
+  <h2>실행 {{.ID}} <span class="muted">{{.Market}} 시장 · 시작 {{.StartedAt.Format "15:04:05Z"}}</span></h2>
   {{if .Remeasuring}}
   <p class="notice"><strong>재측정 {{len .Redo}}단계</strong> — {{.RedoList}}. 판정이 pass인 단계는
   건드리지 않는다. 아래 목록을 승인해야만 요청이 나간다.</p>
@@ -414,6 +419,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   {{end}}
   <form method="post" action="/verify/start">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <input type="hidden" name="market" value="{{.Market}}">
     <input type="hidden" name="mode" value="resume">
     <button type="submit" {{if or .Spent $nothingToResume}}disabled{{end}}>{{if .Resuming}}이어하기{{else}}검증 시작{{end}}</button>
   </form>
@@ -437,6 +443,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   설계상 생략되는 단계(보유 0, <code>--include-ttl-edge</code> 옵트인)는 preflight가 다시 걸러 무해하다.</p>
   <form method="post" action="/verify/start">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <input type="hidden" name="market" value="{{$.Market}}">
     <input type="hidden" name="mode" value="redo">
     <button type="submit" {{if $.Spent}}disabled{{end}}>재측정 {{.RedoCount}}단계</button>
   </form>

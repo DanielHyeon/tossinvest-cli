@@ -65,6 +65,10 @@ type Options struct {
 	// ConfirmEach opts out of the batch approval and back into a typed
 	// confirmation immediately before every single mutation.
 	ConfirmEach bool
+	// Market is the market this run sends orders in. The zero value is KR, so a
+	// caller that says nothing behaves exactly as this tool did before it knew
+	// about US (§0.2). A symbol from another market is skipped with a reason.
+	Market string
 	// ApprovalChannel is how the person answered, for the evidence record. The
 	// zero value is the terminal's typed string, so a caller that does not set it
 	// records what it always recorded (§0.2); the console sets
@@ -123,6 +127,8 @@ type Runner struct {
 	confirm      Confirmer
 	confirmBatch BatchConfirmer
 	confirmEach  bool
+	// market is the market this run may send orders in.
+	market string
 	// approvalChannel is what the record says about how the approval arrived.
 	approvalChannel string
 	out             io.Writer
@@ -177,6 +183,7 @@ func New(o Options) (*Runner, error) {
 		confirm:         o.Confirm,
 		confirmBatch:    o.ConfirmBatch,
 		confirmEach:     o.ConfirmEach,
+		market:          NormalizeMarket(o.Market),
 		approvalChannel: strings.TrimSpace(o.ApprovalChannel),
 		out:             o.Out,
 		now:             o.Now,
@@ -521,9 +528,9 @@ func (r *Runner) preflightStatic(step Step, passed func(StepID) bool) (string, b
 			"그것을 만들려고 매수하지 않는다. KR 종목을 최소 1주 보유한 뒤 --resume으로 다시 실행하라 " +
 			"(--holding-symbol로 종목을 지정할 수도 있다)", true
 	}
-	if step.Mutates && MarketOf(r.mutationSymbol(step)) != MarketKR {
-		return fmt.Sprintf("%s는 KR 종목이 아니다. 이 단계가 의존하는 정정·가격제한폭 규칙은 KR의 것이므로, "+
-			"틀린 규칙으로 시험하는 대신 US 경로는 미검증으로 남긴다", r.mutationSymbol(step)), true
+	if symbol := r.mutationSymbol(step); step.Mutates && !SameMarket(MarketOf(symbol), r.market) {
+		return fmt.Sprintf("%s는 %s 종목인데 이 실행의 시장은 %s다. 한 실행은 자기 시장의 종목에만 주문을 "+
+			"내며, 다른 시장은 그 시장으로 실행할 때 측정한다", symbol, MarketOf(symbol), r.market), true
 	}
 	return "", false
 }

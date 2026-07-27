@@ -232,7 +232,7 @@ func TestTheApprovalWindowIsJudgedByVerifylive(t *testing.T) {
 // the half that survives somebody adding a "convenient" parameter later.
 func TestTheRedoSetIsReadFromTheRecordAndNeverFromTheRequest(t *testing.T) {
 	code := strings.Join(nonCommentLines(packageFiles(t)["pages.go"]), "\n")
-	if !strings.Contains(code, "c.redoSet()") {
+	if !strings.Contains(code, "c.redoSet(market)") {
 		t.Error("handleStart no longer asks the record which steps may be re-measured")
 	}
 	for _, banned := range []string{

@@ -1,0 +1,71 @@
+{
+  "file": "/mnt/D/project/axipient/TossOS/internal/verifylive/hours.go",
+  "source_sha256": "57e5abc394ceaf57bd131e5156710c5d474469466427a3e2d13a4eb4c50898b4",
+  "package": "verifylive",
+  "function": "SessionAdvisoryFor",
+  "signature": "SessionAdvisoryFor(params=2, results=1)",
+  "start": {
+    "line": 110,
+    "column": 1
+  },
+  "end": {
+    "line": 115,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 112,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 5
+      },
+      "text": "NormalizeMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 10
+      },
+      "text": "KRSessionAdvisory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 9
+      },
+      "text": "usSessionAdvisory"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}
