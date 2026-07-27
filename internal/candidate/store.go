@@ -96,7 +96,10 @@ const (
 var ErrSchemaTooNew = errors.New("candidate: store schema is newer than this build")
 
 // SchemaVersion is the schema this build writes and understands.
-const SchemaVersion = 1
+//
+//	1  observations, candidates, store_meta
+//	2  candidates.first_price / first_price_at / first_price_source (D17)
+const SchemaVersion = 2
 
 const schema = `
 -- Raw observations. One row per (source, symbol, instant). Prunable (D11).
@@ -144,6 +147,23 @@ CREATE TABLE IF NOT EXISTS candidates (
 	sources_attempted  INTEGER NOT NULL DEFAULT 0,
 	sources_responded  INTEGER NOT NULL DEFAULT 0,
 	degraded           INTEGER NOT NULL DEFAULT 0,
+	-- The expansion baseline (D17). It is a fact of the same grade as
+	-- first_seen_at and it follows the same lifecycle: preserved across cooling
+	-- and re-entry, reset on expiry.
+	--
+	-- It is a column rather than a query over the observations table because that
+	-- table is prunable (D11, DefaultRawRetention 48h) and because
+	-- SourceObservations' documented "since" window narrows it further. Deriving
+	-- the baseline from either produced a re-based one — a candidate that had
+	-- tripled reported 50% expansion with Measured true and no reason — and the
+	-- extended veto then read "not extended" on exactly the longest-running
+	-- candidates.
+	--
+	-- NULL means no observation has carried a price yet. It is not "0", the same
+	-- rule every other decimal in this package follows.
+	first_price        TEXT,
+	first_price_at     TEXT,
+	first_price_source TEXT,
 
 	PRIMARY KEY (market, symbol),
 	CHECK (degraded IN (0,1))
@@ -316,6 +336,50 @@ func dsn(path string, busy time.Duration) string {
 	return uri.String() + "?" + q.Encode()
 }
 
+// migrations[v] brings a store stamped at version v up to v+1.
+//
+// The CREATE TABLE statements above are IF NOT EXISTS, so they build the current
+// shape on a new file and do nothing at all to an existing one. Everything that
+// has to happen to a store somebody already has is here, and it is a ladder rather
+// than one step, so a store two versions behind climbs both rungs in order.
+//
+// Additive and nullable, which is WORKFLOW §0.6's preference for a schema change
+// and is what makes the step reversible: an older binary opening a v2 file reads
+// columns it does not select, and the rows it does read are unchanged.
+var migrations = map[int][]string{
+	1: {
+		`ALTER TABLE candidates ADD COLUMN first_price TEXT`,
+		`ALTER TABLE candidates ADD COLUMN first_price_at TEXT`,
+		`ALTER TABLE candidates ADD COLUMN first_price_source TEXT`,
+		// Backfill from the raw rows that are still there.
+		//
+		// The alternative is to leave the column NULL and let the next priced
+		// observation fill it, and that is strictly worse: the next observation is
+		// newer than every row already in the table, so it sets a later baseline
+		// and understates every expansion measured against it. The earliest
+		// surviving raw row is the oldest evidence that exists at this moment.
+		//
+		// It can still be later than the candidate's true first price, if the rows
+		// that carried it were already pruned. That is why first_price_at is
+		// written with it and why D17 asks for the instant: a baseline three days
+		// old and one twenty minutes old are different events, and a reader who has
+		// only the value cannot tell which they are looking at.
+		`UPDATE candidates SET
+		   first_price = (SELECT o.price FROM observations o
+		                   WHERE o.market = candidates.market AND o.symbol = candidates.symbol
+		                     AND o.price IS NOT NULL
+		                   ORDER BY o.observed_at, o.id LIMIT 1),
+		   first_price_at = (SELECT o.observed_at FROM observations o
+		                   WHERE o.market = candidates.market AND o.symbol = candidates.symbol
+		                     AND o.price IS NOT NULL
+		                   ORDER BY o.observed_at, o.id LIMIT 1),
+		   first_price_source = (SELECT o.source FROM observations o
+		                   WHERE o.market = candidates.market AND o.symbol = candidates.symbol
+		                     AND o.price IS NOT NULL
+		                   ORDER BY o.observed_at, o.id LIMIT 1)`,
+	},
+}
+
 func (s *Store) migrate(ctx context.Context) error {
 	if _, err := s.db.ExecContext(ctx, schema); err != nil {
 		return fmt.Errorf("candidate: creating the schema in %s: %w", s.path, err)
@@ -325,6 +389,8 @@ func (s *Store) migrate(ctx context.Context) error {
 		`SELECT value FROM store_meta WHERE key = 'schema_version'`).Scan(&found)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
+		// No stamp means the statements above just built the file, so it is already
+		// at the current version and there is nothing to climb.
 		_, err = s.db.ExecContext(ctx,
 			`INSERT INTO store_meta (key, value) VALUES ('schema_version', ?)`,
 			fmt.Sprint(SchemaVersion))
@@ -342,6 +408,44 @@ func (s *Store) migrate(ctx context.Context) error {
 	if version > SchemaVersion {
 		return fmt.Errorf("%w (found %d, this build understands %d)",
 			ErrSchemaTooNew, version, SchemaVersion)
+	}
+	if version == SchemaVersion {
+		return nil
+	}
+	return s.climb(ctx, version)
+}
+
+// climb runs the migration ladder from `version` to SchemaVersion in one
+// transaction, so a store is never left half way up it. A rung with no statements
+// is refused rather than skipped: a gap in the ladder means this build believes it
+// understands a shape nobody wrote the step for.
+func (s *Store) climb(ctx context.Context, version int) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("candidate: beginning the migration of %s: %w", s.path, err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	for v := version; v < SchemaVersion; v++ {
+		stmts, ok := migrations[v]
+		if !ok {
+			return fmt.Errorf("candidate: %s is at schema %d and this build has no step to %d",
+				s.path, v, v+1)
+		}
+		for _, stmt := range stmts {
+			if _, err := tx.ExecContext(ctx, stmt); err != nil {
+				return fmt.Errorf("candidate: migrating %s from schema %d to %d: %w",
+					s.path, v, v+1, err)
+			}
+		}
+	}
+	_, err = tx.ExecContext(ctx,
+		`UPDATE store_meta SET value = ? WHERE key = 'schema_version'`, fmt.Sprint(SchemaVersion))
+	if err != nil {
+		return fmt.Errorf("candidate: stamping schema %d on %s: %w", SchemaVersion, s.path, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("candidate: committing the migration of %s: %w", s.path, err)
 	}
 	return nil
 }
@@ -422,8 +526,15 @@ func (s *Store) RecordObservations(ctx context.Context, in []Observation) error 
 	defer func() { _ = stmt.Close() }()
 
 	for _, o := range rows {
-		_, err := stmt.ExecContext(ctx,
-			o.Market, o.Symbol, string(o.Source), stamp(o.ObservedAt),
+		// Normalised on the way in as well as on the way out, so the two spellings
+		// cannot disagree: a padded id written verbatim and looked up trimmed would
+		// answer with an empty series and no error.
+		id, err := normaliseSource(o.Source)
+		if err != nil {
+			return fmt.Errorf("candidate: recording %s: %w", o.Key(), err)
+		}
+		_, err = stmt.ExecContext(ctx,
+			o.Market, o.Symbol, string(id), stamp(o.ObservedAt),
 			o.Reported.Rank, o.Reported.RankTotal, boolToInt(o.Reported.NewlyListed),
 			nullable(o.Reported.TradingValue), nullable(o.Reported.TradingVolume),
 			nullable(o.Reported.Price), nullable(o.Reported.DayHigh), nullable(o.Reported.DayLow),
@@ -476,6 +587,97 @@ func (s *Store) Observations(ctx context.Context, market, symbol string, since t
 		return nil, fmt.Errorf("candidate: reading observations of %s:%s: %w", market, symbol, err)
 	}
 	return out, nil
+}
+
+// SourceObservations returns one source's readings of one symbol at or after
+// `since`, oldest first.
+//
+// This is the read D9's last section requires, and it exists because the obvious
+// one is wrong. Observations above interleaves every source in time order, and
+// TradingValue is a different cumulative per source — different unit, different
+// aggregation window, different fallback status. A rate differenced across that
+// mixture measures the gap between two sources' conventions, and it compiles, and
+// the number it produces is plausible. So the series a metric is computed from is
+// keyed by (market, symbol, source), and this is the only read that produces one.
+//
+// No index is added for it. idx_observations_symbol_time already seeks straight to
+// (market, symbol) and walks in observed_at order, so the source predicate is a
+// filter on rows this query was going to visit anyway and nothing has to be
+// sorted. A fourth column would trim that walk and cost another index on the table
+// D16 identifies as the one that can fill the ledger's filesystem.
+func (s *Store) SourceObservations(ctx context.Context, market, symbol string,
+	source SourceID, since time.Time) ([]Observation, error) {
+
+	market = strings.ToUpper(strings.TrimSpace(market))
+	symbol = strings.TrimSpace(symbol)
+	source, err := normaliseSource(source)
+	if err != nil {
+		return nil, fmt.Errorf("candidate: reading observations of %s:%s: %w", market, symbol, err)
+	}
+
+	query := `
+		SELECT market, symbol, source, observed_at, rank, rank_total, newly_listed,
+		       trading_value, trading_volume, price, day_high, day_low, via_fallback
+		  FROM observations
+		 WHERE market = ? AND symbol = ? AND source = ?`
+	args := []any{market, symbol, string(source)}
+	if !since.IsZero() {
+		query += ` AND observed_at >= ?`
+		args = append(args, stamp(since))
+	}
+	query += ` ORDER BY observed_at, id`
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("candidate: reading %s observations of %s:%s: %w",
+			source, market, symbol, err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var out []Observation
+	for rows.Next() {
+		o, err := scanObservation(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, o)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("candidate: reading %s observations of %s:%s: %w",
+			source, market, symbol, err)
+	}
+	return out, nil
+}
+
+// SourceSeries returns one source's series for one symbol, ready to measure.
+//
+// A symbol this source has never reported comes back as an empty series rather
+// than an error: not having looked yet is an ordinary state, and every metric
+// answers WARMING_UP for it. NewSourceSeries refuses an empty input because it
+// could not tell whose series it was; here the identity is in the arguments.
+func (s *Store) SourceSeries(ctx context.Context, market, symbol string,
+	source SourceID, since time.Time) (SourceSeries, error) {
+
+	rows, err := s.SourceObservations(ctx, market, symbol, source, since)
+	if err != nil {
+		return SourceSeries{}, err
+	}
+	if len(rows) == 0 {
+		// The id is normalised here too, so an empty series names the source the
+		// store actually looked for rather than the spelling the caller used.
+		id, err := normaliseSource(source)
+		if err != nil {
+			return SourceSeries{}, err
+		}
+		return SourceSeries{
+			Key: Key{
+				Market: strings.ToUpper(strings.TrimSpace(market)),
+				Symbol: strings.TrimSpace(symbol),
+			},
+			Source: id,
+		}, nil
+	}
+	return NewSourceSeries(rows)
 }
 
 // ObservationsSince returns every retained reading at or after `since`, oldest
@@ -596,8 +798,19 @@ func (s *Store) Promote(ctx context.Context, market, symbol string, at time.Time
 		  sources           = CASE WHEN ? THEN '' ELSE candidates.sources           END,
 		  sources_attempted = CASE WHEN ? THEN 0  ELSE candidates.sources_attempted END,
 		  sources_responded = CASE WHEN ? THEN 0  ELSE candidates.sources_responded END,
-		  degraded          = CASE WHEN ? THEN 0  ELSE candidates.degraded          END`,
-		market, symbol, stamp(firstSeen), stamp(at), reset, reset, reset, reset)
+		  degraded          = CASE WHEN ? THEN 0  ELSE candidates.degraded          END,
+		  -- The baseline is first_seen_at's twin (D17): kept through cooling and
+		  -- re-entry, cleared only when the candidate expires and the next pass is
+		  -- a different candidate. Carrying it across expiry would measure a new
+		  -- life's expansion from a dead one's price; dropping it on re-entry would
+		  -- reopen the D1 bypass one field along — a symbol that had already
+		  -- doubled would leave the list for one scan and come back with a fresh
+		  -- baseline, and extended would answer "no" for it from then on.
+		  first_price        = CASE WHEN ? THEN NULL ELSE candidates.first_price        END,
+		  first_price_at     = CASE WHEN ? THEN NULL ELSE candidates.first_price_at     END,
+		  first_price_source = CASE WHEN ? THEN NULL ELSE candidates.first_price_source END`,
+		market, symbol, stamp(firstSeen), stamp(at),
+		reset, reset, reset, reset, reset, reset, reset)
 	if err != nil {
 		return Candidate{}, fmt.Errorf("candidate: promoting %s:%s: %w", market, symbol, err)
 	}
@@ -715,6 +928,159 @@ func (s *Store) NoteSources(ctx context.Context, market, symbol string,
 		return fmt.Errorf("candidate: committing the sources of %s:%s: %w", market, symbol, err)
 	}
 	return nil
+}
+
+// --- the expansion baseline (D17) ------------------------------------------------
+
+// Baseline is the first price anyone reported for a candidate.
+//
+// It is the denominator of the `extended` veto, and it is a stored fact rather
+// than a derived one for the reason the schema comment gives: derived from the
+// observations table it moves whenever the table is pruned or windowed, and it
+// moves in the direction that reports a candidate which has tripled as having
+// gained 50%.
+//
+// The instant and the source travel with the value because the value alone cannot
+// be read. "Two times the baseline" is a different event when the baseline is
+// twenty minutes old and when it is three days old, and a reader with only the
+// number cannot tell which one they have (D17) — the same reason D9 stores both
+// windows' actual seconds beside the ratio built from them.
+type Baseline struct {
+	// Price is the source's own string, verbatim (D6). Empty means no observation
+	// has carried a price yet — which is not the same fact as a price of zero, and
+	// the column is NULL rather than 0 so the two cannot merge.
+	Price string
+	// At is when that price was observed, and Source is who reported it.
+	At     time.Time
+	Source SourceID
+}
+
+// Recorded reports that a baseline exists. It is deliberately not "Price != 0":
+// the absent case has no number at all.
+func (b Baseline) Recorded() bool { return strings.TrimSpace(b.Price) != "" }
+
+// NoteFirstPrice records a candidate's baseline price, once.
+//
+// Once is the whole contract. The first priced observation of a candidate's life
+// sets it and nothing overwrites it while that life lasts — not a later scan, not
+// a session boundary, not a re-entry after cooling. D17 decided against a session
+// reset explicitly: a tripling spread over three days is still chasing, and the
+// lifecycle already requires the candidate to have stayed on the lists throughout
+// (forty minutes of silence expires it).
+//
+// It returns the baseline in force after the call, which for every call but the
+// first is the one that was already there. Callers can therefore write on every
+// priced reading without checking first, and the store is what makes it idempotent.
+//
+// An unknown candidate is an error, for NoteSources' reason: a provenance write
+// that lands nowhere and returns nil hides the gap more completely than a failure
+// would.
+func (s *Store) NoteFirstPrice(ctx context.Context, market, symbol, price string,
+	at time.Time, source SourceID) (Baseline, error) {
+
+	market = strings.ToUpper(strings.TrimSpace(market))
+	symbol = strings.TrimSpace(symbol)
+	price = strings.TrimSpace(price)
+	if price == "" {
+		return Baseline{}, fmt.Errorf(
+			"candidate: NoteFirstPrice of %s:%s has no price; absent is not a baseline", market, symbol)
+	}
+	if at.IsZero() {
+		return Baseline{}, fmt.Errorf(
+			"candidate: NoteFirstPrice of %s:%s has no instant; a baseline whose age is unknown "+
+				"cannot be read", market, symbol)
+	}
+	id, err := normaliseSource(source)
+	if err != nil {
+		return Baseline{}, fmt.Errorf("candidate: NoteFirstPrice of %s:%s: %w", market, symbol, err)
+	}
+	at = at.UTC()
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return Baseline{}, fmt.Errorf("candidate: beginning a baseline write: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var (
+		stored   sql.NullString
+		storedAt sql.NullString
+		storedBy sql.NullString
+	)
+	row := tx.QueryRowContext(ctx,
+		`SELECT first_price, first_price_at, first_price_source FROM candidates
+		  WHERE market = ? AND symbol = ?`, market, symbol)
+	switch err := row.Scan(&stored, &storedAt, &storedBy); {
+	case errors.Is(err, sql.ErrNoRows):
+		return Baseline{}, fmt.Errorf("%w: %s:%s has no candidate to record a baseline against",
+			ErrNoCandidate, market, symbol)
+	case err != nil:
+		return Baseline{}, fmt.Errorf("candidate: reading the baseline of %s:%s: %w", market, symbol, err)
+	}
+	if strings.TrimSpace(stored.String) != "" {
+		return decodeBaseline(stored, storedAt, storedBy, market, symbol)
+	}
+
+	// The WHERE clause repeats the guard the read just made. Two writers racing on
+	// the same candidate would otherwise both see NULL and the later one would
+	// overwrite the earlier baseline with a newer price — the exact re-basing this
+	// column exists to stop, arriving through concurrency instead of through
+	// retention. IMMEDIATE transactions make that unlikely; the predicate makes it
+	// impossible.
+	_, err = tx.ExecContext(ctx, `
+		UPDATE candidates
+		   SET first_price = ?, first_price_at = ?, first_price_source = ?
+		 WHERE market = ? AND symbol = ? AND first_price IS NULL`,
+		price, stamp(at), string(id), market, symbol)
+	if err != nil {
+		return Baseline{}, fmt.Errorf("candidate: recording the baseline of %s:%s: %w",
+			market, symbol, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return Baseline{}, fmt.Errorf("candidate: committing the baseline of %s:%s: %w",
+			market, symbol, err)
+	}
+	return Baseline{Price: price, At: at, Source: id}, nil
+}
+
+// Baseline returns a candidate's stored first price.
+//
+// The second return distinguishes "no such candidate" from "a candidate with no
+// baseline yet". Both produce an unrecorded Baseline, and only one of them is a
+// question about the candidate lifecycle.
+func (s *Store) Baseline(ctx context.Context, market, symbol string) (Baseline, bool, error) {
+	market = strings.ToUpper(strings.TrimSpace(market))
+	symbol = strings.TrimSpace(symbol)
+
+	var price, at, source sql.NullString
+	row := s.db.QueryRowContext(ctx,
+		`SELECT first_price, first_price_at, first_price_source FROM candidates
+		  WHERE market = ? AND symbol = ?`, market, symbol)
+	switch err := row.Scan(&price, &at, &source); {
+	case errors.Is(err, sql.ErrNoRows):
+		return Baseline{}, false, nil
+	case err != nil:
+		return Baseline{}, false, fmt.Errorf("candidate: reading the baseline of %s:%s: %w",
+			market, symbol, err)
+	}
+	b, err := decodeBaseline(price, at, source, market, symbol)
+	return b, true, err
+}
+
+func decodeBaseline(price, at, source sql.NullString, market, symbol string) (Baseline, error) {
+	if strings.TrimSpace(price.String) == "" {
+		return Baseline{}, nil
+	}
+	b := Baseline{Price: price.String, Source: SourceID(source.String)}
+	if at.Valid {
+		parsed, err := parseStamp(at.String)
+		if err != nil {
+			return Baseline{}, fmt.Errorf(
+				"candidate %s:%s has an unreadable first_price_at: %w", market, symbol, err)
+		}
+		b.At = parsed
+	}
+	return b, nil
 }
 
 // Candidates returns every stored candidate with its state as of `at`.
@@ -938,6 +1304,37 @@ func nullable(s string) any {
 		return nil
 	}
 	return trimmed
+}
+
+// normaliseSource puts a source id into the one spelling the table stores.
+//
+// Market and symbol were normalised on every read from the beginning and the
+// source was not, so a padded or mis-cased id — from a configuration file, from a
+// hand-written query, from a caller building the id by concatenation — selected no
+// rows and returned no error. Downstream that is an empty series, and an empty
+// series is WARMING_UP: "the scan has just started, nothing needs fixing", for
+// something that will never start.
+//
+// Lowercasing is safe rather than lossy: every SourceID in this package is lower
+// snake case, so the map is injective over the ids that exist, and no spelling can
+// be folded onto a different source.
+//
+// An id that is empty after trimming is refused. That one cannot be a typo in the
+// case of a real source — it is a caller that has no source at all — and answering
+// it with silence is the failure this function exists to stop, in its most
+// complete form.
+//
+// It deliberately does not check membership of the known set. That list lives in
+// candidate.go beside the constants, and a second copy here would be a list that
+// goes stale the first time a source is added — refusing a legitimate source is a
+// worse failure than the one being fixed.
+func normaliseSource(id SourceID) (SourceID, error) {
+	trimmed := strings.ToLower(strings.TrimSpace(string(id)))
+	if trimmed == "" {
+		return "", fmt.Errorf("candidate: %q is not a source id; a read with no source "+
+			"would answer with an empty series and no error", string(id))
+	}
+	return SourceID(trimmed), nil
 }
 
 func boolToInt(b bool) int {

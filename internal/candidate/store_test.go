@@ -2,7 +2,9 @@ package candidate
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -259,6 +261,73 @@ func TestTheStoreIsItsOwnFile(t *testing.T) {
 	}
 	if DBFileName == "journal.db" {
 		t.Fatalf("DBFileName = %q; the discovery store must not be the ledger", DBFileName)
+	}
+}
+
+// --- task 3.4c: the store can be asked for one source's rows --------------------
+
+// TestOneSourcesReadingsCanBeReadWithoutTheOthers is the read D9's last section
+// requires the store to have.
+//
+// Observations returns every source's rows for a symbol interleaved in time
+// order, and that is the right answer for "show me everything we saw". It is the
+// wrong input for a rate: TradingValue is a different cumulative per source, so a
+// difference taken across the interleaving measures the gap between two sources'
+// conventions. The metrics are keyed by (market, symbol, source), so the store has
+// to be able to answer that key — and the mixed read has to stay available and
+// stay obviously mixed, rather than being quietly narrowed.
+func TestOneSourcesReadingsCanBeReadWithoutTheOthers(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	if err := s.RecordObservations(ctx, []Observation{
+		obs("005930", t0, SourceOfficialTradingValue, Reported{
+			Rank: 1, RankTotal: 100, TradingValue: "10000000000"}),
+		obs("005930", t0.Add(15*time.Second), SourceWTSPopular, Reported{
+			Rank: 4, RankTotal: 30, TradingValue: "9500000000"}),
+		obs("005930", t0.Add(30*time.Second), SourceOfficialTradingValue, Reported{
+			Rank: 1, RankTotal: 100, TradingValue: "10600000000"}),
+		obs("005930", t0.Add(45*time.Second), SourceWTSPopular, Reported{
+			Rank: 3, RankTotal: 30, TradingValue: "9800000000"}),
+	}); err != nil {
+		t.Fatalf("RecordObservations: %v", err)
+	}
+
+	all, err := s.Observations(ctx, "KR", "005930", time.Time{})
+	if err != nil {
+		t.Fatalf("Observations: %v", err)
+	}
+	if len(all) != 4 {
+		t.Fatalf("the mixed read returned %d rows, want 4", len(all))
+	}
+
+	only, err := s.SourceObservations(ctx, "KR", "005930", SourceOfficialTradingValue, time.Time{})
+	if err != nil {
+		t.Fatalf("SourceObservations: %v", err)
+	}
+	if len(only) != 2 {
+		t.Fatalf("the official series returned %d rows, want 2 — it carries another source's "+
+			"readings, and differencing them would measure the difference between the two", len(only))
+	}
+	for i, o := range only {
+		if o.Source != SourceOfficialTradingValue {
+			t.Errorf("row %d is from %s", i, o.Source)
+		}
+		if i > 0 && o.ObservedAt.Before(only[i-1].ObservedAt) {
+			t.Errorf("rows came back %v then %v; the documented order is oldest first",
+				only[i-1].ObservedAt, o.ObservedAt)
+		}
+	}
+
+	// `since` still narrows, so a metric can ask for the last two minutes of one
+	// source rather than reading two trading days of rows to use three of them.
+	recent, err := s.SourceObservations(ctx, "KR", "005930",
+		SourceOfficialTradingValue, t0.Add(30*time.Second))
+	if err != nil {
+		t.Fatalf("SourceObservations(since): %v", err)
+	}
+	if len(recent) != 1 {
+		t.Fatalf("the windowed read returned %d rows, want 1", len(recent))
 	}
 }
 
@@ -685,5 +754,575 @@ func TestPruningRawObservationsLeavesTheCandidateSummary(t *testing.T) {
 	}
 	if !cands[0].FirstSeenAt.Equal(t0) {
 		t.Errorf("first_seen_at after the prune = %v, want %v", cands[0].FirstSeenAt, t0)
+	}
+}
+
+// --- D17: the expansion baseline is a column, not a query over prunable rows ----
+
+// TestTheCandidateSummaryCarriesTheFirstPrice is D17's schema half.
+//
+// D11's retention table promised the candidate summary would keep the "극값" until
+// the candidate expired. The candidates table had no such column — timestamps,
+// sources, counters and degraded, and nothing else — so the baseline behind the
+// `extended` veto lived only in `observations`, which PruneObservations empties
+// every two days and SourceObservations narrows on request.
+func TestTheCandidateSummaryCarriesTheFirstPrice(t *testing.T) {
+	s, _ := openStore(t)
+	cols := candidateColumns(t, s)
+	for _, want := range []string{"first_price", "first_price_at", "first_price_source"} {
+		if !cols[want] {
+			t.Errorf("candidates has no %s column; the extended veto's baseline lives only in "+
+				"the prunable observations table", want)
+		}
+	}
+}
+
+func candidateColumns(t *testing.T, s *Store) map[string]bool {
+	t.Helper()
+	rows, err := s.db.QueryContext(context.Background(),
+		`SELECT name FROM pragma_table_info('candidates')`)
+	if err != nil {
+		t.Fatalf("pragma_table_info: %v", err)
+	}
+	defer func() { _ = rows.Close() }()
+	cols := map[string]bool{}
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			t.Fatalf("scan: %v", err)
+		}
+		cols[name] = true
+	}
+	return cols
+}
+
+// TestPruningTheRawRowsDoesNotRebaseTheExpansionBaseline is D17's behavioural
+// half, and the §3 review's P0 measured end to end.
+//
+// Before the column existed:
+//
+//	before the prune  measured=true  first="10000"  gain=200.0%
+//	after the prune   measured=true  first="20000"  gain=50.0%   why=""
+//
+// A candidate that had tripled reported a 50% expansion, with Measured true and
+// no reason given, on exactly the candidates that had run longest — the ones
+// `extended` exists for. D17 predicted the failure would degrade to unmeasured;
+// it did not, and a wrong number is worse than a missing one because D10 stops
+// the missing one from being read as a pass.
+func TestPruningTheRawRowsDoesNotRebaseTheExpansionBaseline(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	// The candidate stays on the lists for the whole fifty hours. That is what
+	// makes it the candidate D17 is about: it outlives the 48-hour raw retention
+	// window while keeping its first_seen_at, so it is the one whose baseline used
+	// to disappear. A gap instead of a scan here would expire it, and an expired
+	// candidate is a different candidate with a new baseline by design — see
+	// TestTheBaselineFollowsFirstSeenAtThroughCoolingAndExpiry.
+	instants := []time.Time{t0, t0.Add(49 * time.Hour), t0.Add(50 * time.Hour)}
+	prices := map[time.Time]string{
+		instants[0]: "10000", instants[1]: "20000", instants[2]: "30000",
+	}
+	for at := t0; !at.After(instants[2]); at = at.Add(9 * time.Minute) {
+		if _, err := s.Promote(ctx, "KR", "005930", at); err != nil {
+			t.Fatalf("Promote at %v: %v", at, err)
+		}
+	}
+	for _, at := range instants {
+		if err := s.RecordObservations(ctx, []Observation{
+			obs("005930", at, SourceOfficialPrices, Reported{Price: prices[at]}),
+		}); err != nil {
+			t.Fatalf("RecordObservations: %v", err)
+		}
+		// What a scan does on every priced reading: write it and let the store
+		// decide whether it is the first one.
+		if _, err := s.NoteFirstPrice(ctx, "KR", "005930", prices[at], at, SourceOfficialPrices); err != nil {
+			t.Fatalf("NoteFirstPrice at %v: %v", at, err)
+		}
+	}
+	if c, _, err := s.Candidate(ctx, "KR", "005930", instants[2]); err != nil || c.State != StateActive {
+		t.Fatalf("the candidate is %v at +50h (%v); the scenario needs it alive", c.State, err)
+	}
+
+	baseline, found, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil || !found {
+		t.Fatalf("Baseline: %v found=%v", err, found)
+	}
+	all, err := s.Observations(ctx, "KR", "005930", time.Time{})
+	if err != nil {
+		t.Fatalf("Observations: %v", err)
+	}
+	before := MeasureExpansion(baseline, all)
+	if before.FirstPrice != "10000" || before.GainPct != "200" {
+		t.Fatalf("before the prune: first=%q gain=%s%%, want 10000 and 200%%",
+			before.FirstPrice, before.GainPct)
+	}
+
+	newest := instants[len(instants)-1]
+	if _, err := s.PruneObservations(ctx, newest.Add(-DefaultRawRetention)); err != nil {
+		t.Fatalf("PruneObservations: %v", err)
+	}
+	left, err := s.Observations(ctx, "KR", "005930", time.Time{})
+	if err != nil {
+		t.Fatalf("Observations after the prune: %v", err)
+	}
+	if len(left) != 2 {
+		t.Fatalf("%d raw rows survived the prune, want 2", len(left))
+	}
+
+	pruned, found, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil || !found {
+		t.Fatalf("Baseline after the prune: %v found=%v", err, found)
+	}
+	after := MeasureExpansion(pruned, left)
+	if after.FirstPrice != "10000" || !after.FirstAt.Equal(t0) {
+		t.Errorf("baseline after the prune = %q at %v, want 10000 at %v — retention re-based it",
+			after.FirstPrice, after.FirstAt, t0)
+	}
+	if after.GainPct != "200" {
+		t.Errorf("gain after the prune = %s%%, want 200%% — a candidate that tripled reports %s%%",
+			after.GainPct, after.GainPct)
+	}
+	if after.FirstSource != SourceOfficialPrices {
+		t.Errorf("the baseline's source = %q, want %q — D17 keeps the instant and the source "+
+			"beside the value so a reader can tell a 20-minute-old baseline from a 3-day-old one",
+			after.FirstSource, SourceOfficialPrices)
+	}
+}
+
+// TestTheBaselineIsSetOnceAndNotOverwritten.
+//
+// Every priced reading is written; only the first one lands. A store that took
+// the latest instead would re-base the baseline on every scan, which is the same
+// defect as the prune with a shorter fuse.
+func TestTheBaselineIsSetOnceAndNotOverwritten(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+
+	first, err := s.NoteFirstPrice(ctx, "KR", "005930", "10000", t0, SourceWTSPopular)
+	if err != nil {
+		t.Fatalf("NoteFirstPrice: %v", err)
+	}
+	if first.Price != "10000" || !first.At.Equal(t0) || first.Source != SourceWTSPopular {
+		t.Fatalf("the first baseline came back as %+v", first)
+	}
+
+	again, err := s.NoteFirstPrice(ctx, "KR", "005930", "30000", t0.Add(time.Hour), SourceOfficialPrices)
+	if err != nil {
+		t.Fatalf("NoteFirstPrice #2: %v", err)
+	}
+	if again.Price != "10000" || !again.At.Equal(t0) || again.Source != SourceWTSPopular {
+		t.Errorf("the second write moved the baseline to %+v; it is set once and never "+
+			"overwritten while the candidate lives", again)
+	}
+
+	stored, _, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("Baseline: %v", err)
+	}
+	if stored.Price != "10000" {
+		t.Errorf("the stored baseline is %q, want 10000", stored.Price)
+	}
+}
+
+// TestAnAbsentBaselineIsNotAZeroOne.
+//
+// The same rule every decimal in this package follows: NULL means no observation
+// has carried a price yet, and it must not read as a price of zero — a baseline
+// of zero is a denominator that makes every ratio infinite and every threshold
+// pass.
+func TestAnAbsentBaselineIsNotAZeroOne(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+
+	got, found, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil || !found {
+		t.Fatalf("Baseline: %v found=%v", err, found)
+	}
+	if got.Recorded() {
+		t.Errorf("a candidate nobody has priced reports a baseline of %q", got.Price)
+	}
+	if got.Price != "" {
+		t.Errorf("the absent baseline reads as %q", got.Price)
+	}
+
+	// And an unknown candidate is a different answer from a candidate with no
+	// baseline. Both are unrecorded; only one is a lifecycle question.
+	if _, found, err := s.Baseline(ctx, "KR", "999999"); err != nil || found {
+		t.Errorf("Baseline of an unknown candidate: found=%v err=%v", found, err)
+	}
+	if _, err := s.NoteFirstPrice(ctx, "KR", "999999", "1000", t0, SourceOfficialPrices); !errors.Is(err, ErrNoCandidate) {
+		t.Errorf("NoteFirstPrice against an unknown candidate = %v, want ErrNoCandidate", err)
+	}
+	// An empty price is not a baseline either.
+	if _, err := s.NoteFirstPrice(ctx, "KR", "005930", "  ", t0, SourceOfficialPrices); err == nil {
+		t.Error("an empty price was accepted as a baseline")
+	}
+}
+
+// TestTheBaselineFollowsFirstSeenAtThroughCoolingAndExpiry is D17's lifecycle
+// claim, and it is D1's rule applied to the second field of the same grade.
+//
+// Kept through cooling and re-entry: dropping it there would reopen the bypass D1
+// closed, one field along. A symbol that has already doubled leaves the ranking
+// list for one scan, comes back, and gets a fresh baseline — so `extended`
+// answers "not extended" for it from then on, exactly as `seen_late` would have
+// answered "not late" if first_seen_at moved.
+//
+// Reset on expiry: the next pass is a different candidate, and measuring its
+// expansion from a dead candidate's price is measuring across two lives.
+func TestTheBaselineFollowsFirstSeenAtThroughCoolingAndExpiry(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+	if _, err := s.NoteFirstPrice(ctx, "KR", "005930", "10000", t0, SourceOfficialPrices); err != nil {
+		t.Fatalf("NoteFirstPrice: %v", err)
+	}
+
+	cooled := t0.Add(time.Minute)
+	if err := s.Cool(ctx, "KR", "005930", cooled); err != nil {
+		t.Fatalf("Cool: %v", err)
+	}
+	if got, _, err := s.Baseline(ctx, "KR", "005930"); err != nil || got.Price != "10000" {
+		t.Fatalf("the baseline during cooling = %q (%v), want 10000", got.Price, err)
+	}
+
+	back, err := s.Promote(ctx, "KR", "005930", cooled.Add(time.Minute))
+	if err != nil {
+		t.Fatalf("re-Promote: %v", err)
+	}
+	if !back.FirstSeenAt.Equal(t0) {
+		t.Fatalf("first_seen_at after a re-entry = %v, want %v", back.FirstSeenAt, t0)
+	}
+	kept, _, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("Baseline after the re-entry: %v", err)
+	}
+	if kept.Price != "10000" || !kept.At.Equal(t0) || kept.Source != SourceOfficialPrices {
+		t.Errorf("the baseline after a re-entry = %+v, want the original 10000 at %v — a symbol "+
+			"that had already doubled would come back with a fresh baseline and never read "+
+			"as extended again", kept, t0)
+	}
+
+	// Expiry. The staleness clock alone gets there: nobody re-promoted it.
+	after := cooled.Add(time.Minute).Add(DefaultStalenessTTL).Add(DefaultCoolingTTL)
+	state, _, err := s.Candidate(ctx, "KR", "005930", after)
+	if err != nil {
+		t.Fatalf("Candidate: %v", err)
+	}
+	if state.State != StateExpired {
+		t.Fatalf("state at +%v = %v, want %v", after.Sub(t0), state.State, StateExpired)
+	}
+	fresh, err := s.Promote(ctx, "KR", "005930", after)
+	if err != nil {
+		t.Fatalf("Promote after expiry: %v", err)
+	}
+	if !fresh.FirstSeenAt.Equal(after) {
+		t.Fatalf("first_seen_at after expiry = %v, want the new pass %v", fresh.FirstSeenAt, after)
+	}
+	reset, _, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("Baseline after expiry: %v", err)
+	}
+	if reset.Recorded() {
+		t.Errorf("a new candidate inherited the expired one's baseline (%+v); its expansion "+
+			"would be measured across two lives", reset)
+	}
+	if !reset.At.IsZero() || reset.Source != "" {
+		t.Errorf("the baseline's instant and source survived expiry: %+v", reset)
+	}
+
+	// And the new life can set its own.
+	if _, err := s.NoteFirstPrice(ctx, "KR", "005930", "90000", after, SourceWTSPopular); err != nil {
+		t.Fatalf("NoteFirstPrice after expiry: %v", err)
+	}
+	if got, _, err := s.Baseline(ctx, "KR", "005930"); err != nil || got.Price != "90000" {
+		t.Errorf("the new life's baseline = %q (%v), want 90000", got.Price, err)
+	}
+}
+
+// TestPruningRawObservationsLeavesTheBaselineToo extends D11's promise to the
+// column D17 added: PruneObservations reaches `observations` and nothing else, so
+// the tidy-up that would have taken first_seen_at cannot take the first price
+// either.
+func TestPruningRawObservationsLeavesTheBaselineToo(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	if err := s.RecordObservations(ctx, []Observation{
+		obs("005930", t0, SourceOfficialPrices, Reported{Price: "10000"}),
+	}); err != nil {
+		t.Fatalf("RecordObservations: %v", err)
+	}
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+	if _, err := s.NoteFirstPrice(ctx, "KR", "005930", "10000", t0, SourceOfficialPrices); err != nil {
+		t.Fatalf("NoteFirstPrice: %v", err)
+	}
+	if _, err := s.PruneObservations(ctx, t0.Add(48*time.Hour)); err != nil {
+		t.Fatalf("PruneObservations: %v", err)
+	}
+
+	got, _, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil {
+		t.Fatalf("Baseline: %v", err)
+	}
+	if got.Price != "10000" || !got.At.Equal(t0) {
+		t.Errorf("the baseline after the prune = %+v, want 10000 at %v", got, t0)
+	}
+}
+
+// --- the schema ladder ------------------------------------------------------------
+
+// v1Schema is the schema exactly as SchemaVersion 1 wrote it. It is spelled out
+// rather than derived, because a migration test that builds its "old" database
+// from the current source cannot fail: it would migrate a v2 file and call it a
+// v1 one.
+const v1Schema = `
+CREATE TABLE IF NOT EXISTS observations (
+	id             INTEGER PRIMARY KEY AUTOINCREMENT,
+	market         TEXT    NOT NULL,
+	symbol         TEXT    NOT NULL,
+	source         TEXT    NOT NULL,
+	observed_at    TEXT    NOT NULL,
+	rank           INTEGER NOT NULL DEFAULT 0,
+	rank_total     INTEGER NOT NULL DEFAULT 0,
+	newly_listed   INTEGER NOT NULL DEFAULT 0,
+	trading_value  TEXT,
+	trading_volume TEXT,
+	price          TEXT,
+	day_high       TEXT,
+	day_low        TEXT,
+	via_fallback   INTEGER NOT NULL DEFAULT 0,
+	CHECK (newly_listed IN (0,1)),
+	CHECK (via_fallback IN (0,1)),
+	CHECK (rank >= 0 AND rank_total >= 0)
+) STRICT;
+CREATE INDEX IF NOT EXISTS idx_observations_symbol_time
+	ON observations(market, symbol, observed_at);
+CREATE INDEX IF NOT EXISTS idx_observations_time ON observations(observed_at);
+CREATE TABLE IF NOT EXISTS candidates (
+	market             TEXT NOT NULL,
+	symbol             TEXT NOT NULL,
+	first_seen_at      TEXT NOT NULL,
+	last_seen_at       TEXT NOT NULL,
+	cooled_at          TEXT,
+	sources            TEXT NOT NULL DEFAULT '',
+	sources_attempted  INTEGER NOT NULL DEFAULT 0,
+	sources_responded  INTEGER NOT NULL DEFAULT 0,
+	degraded           INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY (market, symbol),
+	CHECK (degraded IN (0,1))
+) STRICT;
+CREATE TABLE IF NOT EXISTS store_meta (
+	key   TEXT PRIMARY KEY,
+	value TEXT NOT NULL
+) STRICT;
+INSERT INTO store_meta (key, value) VALUES ('schema_version', '1');
+`
+
+// writeV1Store builds a schema-1 database with one candidate and its raw rows,
+// the way a build from before D17 would have left one.
+func writeV1Store(t *testing.T, path string) {
+	t.Helper()
+	db, err := sql.Open("sqlite", dsn(path, time.Second))
+	if err != nil {
+		t.Fatalf("opening a v1 store: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+	if _, err := db.Exec(v1Schema); err != nil {
+		t.Fatalf("creating the v1 schema: %v", err)
+	}
+	_, err = db.Exec(`INSERT INTO candidates
+		(market, symbol, first_seen_at, last_seen_at, sources, sources_attempted, sources_responded, degraded)
+		VALUES ('KR','005930',?,?,'official_prices',5,5,0)`,
+		stamp(t0), stamp(t0.Add(time.Minute)))
+	if err != nil {
+		t.Fatalf("seeding the v1 candidate: %v", err)
+	}
+	for i, price := range []string{"10000", "11000"} {
+		_, err = db.Exec(`INSERT INTO observations
+			(market, symbol, source, observed_at, rank, rank_total, newly_listed, price, via_fallback)
+			VALUES ('KR','005930','official_prices',?,0,0,0,?,0)`,
+			stamp(t0.Add(time.Duration(i)*time.Minute)), price)
+		if err != nil {
+			t.Fatalf("seeding a v1 observation: %v", err)
+		}
+	}
+}
+
+// TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows.
+//
+// Additive and nullable, which is WORKFLOW §0.6's preference for a schema change:
+// nothing already in the file is rewritten, so the step cannot lose a
+// first_seen_at, and that is the field this package exists to protect.
+func TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "candidates.db")
+	writeV1Store(t, path)
+
+	s, err := Open(ctx, Options{Path: path, FSProber: FixedFSProber(FSInfo{Name: "ext4"})})
+	if err != nil {
+		t.Fatalf("Open on a v1 store: %v", err)
+	}
+	defer func() { _ = s.Close() }()
+
+	cols := candidateColumns(t, s)
+	for _, want := range []string{"first_price", "first_price_at", "first_price_source"} {
+		if !cols[want] {
+			t.Errorf("after the migration candidates still has no %s", want)
+		}
+	}
+
+	var version string
+	if err := s.db.QueryRowContext(ctx,
+		`SELECT value FROM store_meta WHERE key = 'schema_version'`).Scan(&version); err != nil {
+		t.Fatalf("reading the schema version: %v", err)
+	}
+	if version != "2" {
+		t.Errorf("schema version after the migration = %q, want 2", version)
+	}
+
+	// The rows it had are the rows it has.
+	got, _, err := s.Candidate(ctx, "KR", "005930", t0.Add(2*time.Minute))
+	if err != nil {
+		t.Fatalf("Candidate: %v", err)
+	}
+	if !got.FirstSeenAt.Equal(t0) {
+		t.Errorf("first_seen_at across the migration = %v, want %v", got.FirstSeenAt, t0)
+	}
+	if len(got.Sources) != 1 || got.Sources[0] != SourceOfficialPrices {
+		t.Errorf("sources across the migration = %v", got.Sources)
+	}
+	if got.SourcesAttempted != 5 || got.SourcesResponded != 5 {
+		t.Errorf("completeness across the migration = %d/%d",
+			got.SourcesResponded, got.SourcesAttempted)
+	}
+	rows, err := s.Observations(ctx, "KR", "005930", time.Time{})
+	if err != nil {
+		t.Fatalf("Observations: %v", err)
+	}
+	if len(rows) != 2 {
+		t.Fatalf("%d raw rows survived the migration, want 2", len(rows))
+	}
+
+	// The backfill: the oldest surviving priced row becomes the baseline.
+	//
+	// Leaving it NULL for the next scan to fill would be strictly worse — that
+	// reading is newer than everything already in the table, so it would set a
+	// later baseline and understate every expansion measured against it. This is
+	// the oldest evidence that exists at the moment of the upgrade, and
+	// first_price_at is written with it so a reader can see how old that is.
+	baseline, found, err := s.Baseline(ctx, "KR", "005930")
+	if err != nil || !found {
+		t.Fatalf("Baseline after the migration: %v found=%v", err, found)
+	}
+	if baseline.Price != "10000" || !baseline.At.Equal(t0) || baseline.Source != SourceOfficialPrices {
+		t.Errorf("the backfilled baseline = %+v, want 10000 at %v from %q",
+			baseline, t0, SourceOfficialPrices)
+	}
+
+	// And it is set once from here on, like any other.
+	if _, err := s.NoteFirstPrice(ctx, "KR", "005930", "50000", t0.Add(time.Hour), SourceWTSPopular); err != nil {
+		t.Fatalf("NoteFirstPrice: %v", err)
+	}
+	if again, _, _ := s.Baseline(ctx, "KR", "005930"); again.Price != "10000" {
+		t.Errorf("a later reading overwrote the backfilled baseline: %q", again.Price)
+	}
+
+	// Reopening is a no-op rather than a second climb.
+	if err := s.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	reopened, err := Open(ctx, Options{Path: path, FSProber: FixedFSProber(FSInfo{Name: "ext4"})})
+	if err != nil {
+		t.Fatalf("reopening the migrated store: %v", err)
+	}
+	defer func() { _ = reopened.Close() }()
+	if got, _, err := reopened.Baseline(ctx, "KR", "005930"); err != nil || got.Price != "10000" {
+		t.Errorf("the baseline after reopening = %q (%v), want 10000", got.Price, err)
+	}
+}
+
+// TestAStoreFromANewerBuildIsRefused keeps the other end of the ladder honest: an
+// older binary must not read a file whose columns it does not know about as a
+// file whose values are absent.
+func TestAStoreFromANewerBuildIsRefused(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "candidates.db")
+	s, err := Open(ctx, Options{Path: path, FSProber: FixedFSProber(FSInfo{Name: "ext4"})})
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, err := s.db.ExecContext(ctx,
+		`UPDATE store_meta SET value = ? WHERE key = 'schema_version'`,
+		fmt.Sprint(SchemaVersion+1)); err != nil {
+		t.Fatalf("stamping a future version: %v", err)
+	}
+	if err := s.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	_, err = Open(ctx, Options{Path: path, FSProber: FixedFSProber(FSInfo{Name: "ext4"})})
+	if !errors.Is(err, ErrSchemaTooNew) {
+		t.Fatalf("Open on a newer schema = %v, want ErrSchemaTooNew", err)
+	}
+}
+
+// --- the source id is normalised on both sides of the write ----------------------
+
+// TestAPaddedSourceIdIsNotASilentWarmUp.
+//
+// Market and symbol were normalised on every read from the beginning and the
+// source was not, so a padded or mis-cased id selected no rows and returned no
+// error. Downstream an empty series is WARMING_UP — "the scan has just started,
+// nothing needs fixing" — for something that will never start.
+func TestAPaddedSourceIdIsNotASilentWarmUp(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+	if err := s.RecordObservations(ctx, []Observation{
+		obs("005930", t0, SourceOfficialPrices, Reported{Price: "70000"}),
+	}); err != nil {
+		t.Fatalf("RecordObservations: %v", err)
+	}
+	for _, id := range []SourceID{" official_prices", "official_prices ", "Official_Prices"} {
+		got, err := s.SourceObservations(ctx, "KR", "005930", id, time.Time{})
+		if err != nil {
+			t.Fatalf("SourceObservations(%q): %v", id, err)
+		}
+		if len(got) != 1 {
+			t.Errorf("SourceObservations(%q) returned %d rows and no error; downstream that is "+
+				"WARMING_UP — \"the scan just started\" — for a wiring defect", id, len(got))
+		}
+	}
+	// And the write side agrees with the read side, so a padded id cannot be
+	// stored in a spelling no read will ever find.
+	if err := s.RecordObservations(ctx, []Observation{
+		obs("000660", t0, " Official_Prices ", Reported{Price: "200000"}),
+	}); err != nil {
+		t.Fatalf("RecordObservations with a padded source: %v", err)
+	}
+	got, err := s.SourceObservations(ctx, "KR", "000660", SourceOfficialPrices, time.Time{})
+	if err != nil {
+		t.Fatalf("SourceObservations: %v", err)
+	}
+	if len(got) != 1 || got[0].Source != SourceOfficialPrices {
+		t.Errorf("a padded id was written verbatim and is unreachable: %d rows", len(got))
+	}
+
+	if _, err := s.SourceObservations(ctx, "KR", "005930", "  ", time.Time{}); err == nil {
+		t.Error("an empty source id was accepted and answered with silence")
+	}
+	if _, err := s.SourceSeries(ctx, "KR", "005930", "  ", time.Time{}); err == nil {
+		t.Error("SourceSeries accepted an empty source id")
 	}
 }

@@ -390,3 +390,137 @@ map을 오염시키지 않음, 기존 호출자의 동작·반환·에러 매핑
 - `go test ./...` — 3202 pass, 0 fail (57 packages)
 - `go test -race ./internal/candidate/` — clean
 - `go vet ./...` · `make lint` — clean
+
+---
+
+# §3 리뷰 (2026-07-28) — 시간축 지표
+
+별도 컨텍스트 2종. 렌즈 ①은 **산술이 맞는가·미산출이 임계를 통과할 수 있는가**,
+렌즈 ②는 **"측정하지 못했다"가 호출자까지 살아남는가·격리 테스트가 실제로 막는가**.
+
+두 리뷰가 **각각 다른 P0**를 찾았다. 하나는 둘 다 찾았다.
+
+## P0-1 — 아무도 값을 넣지 않은 가속도가 "측정됨"이라고 말한다 (렌즈 ②)
+
+```
+Acceleration{}.Computed() = true   Ratio="" Reason="" Crossings=[]
+RankMove{}.Computed()     = true   PercentileGain="" Reason=""
+```
+
+`Computed()`가 `Reason == ""`이므로 **할당되지 않은 구조체가 "측정했고 아무 임계도 넘지
+않았다"로 읽힌다.** 미측정이 아니라 통과다.
+
+이것이 뼈아픈 이유: `level.go`는 같은 규칙을 자기 헤더에 써 놓고
+(`The zero value of both structs is unmeasured, so a field nobody assigned cannot read as a
+candidate somebody checked`) `TestTheZeroValueOfEveryLevelMetricIsUnmeasured`로 고정했다.
+같은 섹션에서 같은 날 만들어진 `metrics.go`가 정반대다. **D10을 강제하려고 만든 섹션 안에서
+D10이 깨져 있었다.**
+
+§4·§5가 이것을 만날 자연스러운 철자가 셋이다 — `map[Key]Acceleration`의 miss,
+`make([]Acceleration, n)` 후 성공한 것만 채우기, hot queue 밖 후보의 미할당 필드.
+
+## P0-2 — `TallyCrossings`가 그런 후보를 **양쪽 집계에서** 떨어뜨린다 (렌즈 ②)
+
+```
+TallyCrossings([]Acceleration{{}})
+  Crossed     = map[1.3:0 1.5:0 1.8:0 2.0:0 2.5:0]
+  NotComputed = map[]            ← 입력 1개 중 0개 계상
+```
+
+`Computed()`가 참이라 미산출 분기를 건너뛰고, `Crossings`가 nil이라 어느 임계도 올리지 않는다.
+후보가 사라진다. spec은 스캔 출력에 미측정 사유를 가진 후보 수를 요구하는데, **그 수가 정확히
+아무도 측정하지 않은 후보만큼 짧아진다.** 화면의 기본 읽기가 "대부분 미확인"에서 "다 측정했고
+조용하다"로 뒤집힌다. `CrossingTally`에 분모가 없어서 읽는 사람이 알아챌 방법도 없다.
+
+같은 루프에 둘 더: 중복 임계가 한 후보를 두 번 세고(`1.3:2`), `ShadowThresholds` 밖의 임계가
+키로 조용히 추가된다(`9.9:1`).
+
+## P0-3 — 확장률 기준선이 조용히 옮겨가고, 옮겨간 값을 "측정됨"이라고 말한다 (두 렌즈 모두)
+
+```
+rows 10000@t0, 20000@t0+49h, 30000@t0+50h
+prune 전: measured=true  first="10000"  gain=200.0%
+prune 후: measured=true  why=""  first="20000"  gain=50.0%
+```
+
+3배 오른 후보가 50% 확장으로 보고된다. `extended` veto가 **가장 오래 달린 후보 — 가장 걸릴
+만한 후보 — 에서** "안 늘어남"을 읽는다.
+
+D17은 이것을 "미측정이 된다"로 예측했다. 실제는 한 단계 나쁘다 — **틀린 숫자는 없는 숫자보다
+나쁘다.** 미측정은 `extended`를 통과로 만들지 않지만(D10) 50%는 만든다. D17 본문을 정정했다.
+
+그리고 prune을 기다리지 않는다. `SourceObservations`의 doc 주석이 권하는 `since` 창 읽기
+("최근 2분치만 요청")가 그대로 기준선을 옮긴다. **doc이 권하는 사용법이 결함을 만든다.**
+
+## P1
+
+**P1-1. `DistancePct`가 float64라 4.3의 경계를 지킬 수 없다.** 두 자리 소수 가격쌍 ~5M 개
+독립 스윕: **정확히 2.00%인데 float이 `1.99999999999999267253`인 경우 9,598건**(첫 사례
+`high=2.50 price=2.45`). 계약이 `2.00% false`로 못박은 자리에서 전부 `true`가 된다.
+KRW 정수 가격은 깨끗하고 US 두 자리 소수에서만 나오는데, 거기가 실제로 도는 곳이다.
+방향은 보수적이지만 **코드가 그 방향을 보장하지 않는다** — 입력 계열의 우연이다.
+그리고 `metrics.go`는 같은 오류 계열을 **이름을 대며** 거부하고 `big.Rat`을 쓴다. veto 경계를
+거는 쪽이 그 파일이 거부한 산술을 쓰고 있었다.
+
+**P1-2. `ZERO_ELAPSED_SECONDS`가 `Accelerate`에서 도달 불가**이고 그 이름을 단 테스트는
+`WARMING_UP`을 받고 통과한다(두 창이 통째로 비어 `!Computed()`와 "교차 없음"을 만족).
+더 나쁜 것은 그것이 가리려던 경우가 **조용히 통과**한다는 것 — 같은 순간을 공유하는 두 행 중
+`start`가 **나중 것**으로 해소되어 중복이 건너뛰어지고, 직전 델타가 `1500−1200`이 된다.
+**재생된 스캔이나 중복 행이 사유 코드도 흔적도 없이 가속도를 바꾼다.**
+
+**P1-3. 세 원인이 `WARMING_UP` 하나로 뭉친다** — 원천 혼합 오류, 저장소 읽기 실패, `at` 시점에
+관측이 아예 없음. 하필 **"아무것도 안 고쳐도 된다"를 뜻하는 통**이다. D9의 교정이 명시적으로
+구분을 요구한다. `level.go`는 같은 결함을 만나 `LevelMixedCandidates`로 올바르게 갈랐고
+그 이유를 주석에 써 뒀다 — 같은 섹션에서 두 파일이 반대로 갔다.
+
+**P1-4. `RankChange`의 `window`가 아무것도 제한하지 않는다.** 30초·30분·9시간·40시간이 전부
+`gain="80"`에 사유 없음. 계약 손잡이 이름은 `percentile_gain_30s_pct`다. 그리고 `RankMove`에
+`Seconds`가 없다 — D9가 `Window`에 넣은 이유가 "읽는 사람이 타임스탬프에서 다시 유도하지
+않게"였다.
+
+**P1-5. 벽시계 가드가 8개 진입점 중 1개만 본다.** 변이로 확인: `time.Since`·`Until`·`After`·
+`Tick`·`NewTimer`·`NewTicker`·`AfterFunc`, 그리고 `import gotime "time"` 별칭까지 전부 통과.
+§5의 `watch` 루프와 5.4의 429 백오프가 쓸 철자들이다.
+
+## P2 (반영)
+
+`formatDecimal`의 무-과장 규칙에 테스트가 없다(truncate→round 변이가 패키지 전체를 통과;
+`1.8 − 1e-13`이 `"1.8"`로 렌더되고 플래그는 미교차) · `SourceObservations`가 `source`를 trim
+하지 않아 배선 결함이 `WARMING_UP`이 된다 · 읽을 수 없는 가격 하나가 `extended`를 48시간
+꺼뜨리고 읽어 낸 입력도 버린다 · 시간 역전 쌍이 `ZERO_ELAPSED_SECONDS`로 잘못 표시된다 ·
+`Expansion{}`/`RangePosition{}`이 사유 없는 미측정이다 · 같은 순간 동률에서 `LastPrice`가
+**가장 먼저 삽입된 행**으로 해소된다(이름과 반대).
+
+## 격리 테스트(6.1)의 실제 경계 — 변이로 확인
+
+**잡는다**: 직접·간접(체인 출력)·`_test.go`·컴파일되지 않는 build tag 뒤·외부 test 패키지·
+새 하위 패키지. 6종 전부 FAIL 후 되돌리면 PASS.
+
+**잡지 못한다**: 모듈 내부 import가 필요 없는 주문 경로 — `http.Post(".../api/v1/orders", …)`
+한 줄이 **네 테스트를 전부 통과한다**(모듈 접두사 없는 경로는 걷기에서 버려진다).
+`linkname`·`unsafe`·`os/exec`도 간선이 없어 못 본다. 그리고 **배선 방향**은 제약하지 않는다 —
+candidatesrc·`cmd/`·미래의 레인이 `Candidate`를 읽고 `execgw`를 부르는 것은 막지 않는다.
+
+그러므로 spec 문장은 **`internal/candidate` 안에서** 참이다. D7에 이 경계를 적었다.
+그리고 실제로 자물쇠 역할을 하는 것은 금지 목록이 아니라 **의존 폐포가 `{internal/clock}`임을
+고정하는 테스트**다 — 목록에 있든 없든 새 간선이면 실패한다.
+
+금지 목록 자체는 현재 트리 대비 **완전**하다(리뷰어가 전 패키지를 열거해 확인;
+주문 동사를 정의하는 프로덕션 코드는 `internal/official/orders_write.go`뿐이고 목록에 있다).
+
+## 깨지지 않은 것
+
+부재≠0이 끝까지 유지된다(41개 입력 탐침: `1e5`·`1,000,000`·`NaN`·`Inf`·유니코드 숫자·
+`1_000`·`0x10` 전부 `FIGURE_UNREADABLE`, 공백류만 `FIGURE_ABSENT`) · 임계 비교가 다섯 다
+정확한 유리수 위에서 같은 방향 · 원천 격리가 관례가 아니라 **구조적**(`SourceSeries.rows`가
+비공개라 패키지 밖에서 이물 행으로 만들 수 없다) · `RangePosition`이 고가와 가격을 **같은
+관측**에서 가져온다(변이로 확인) · 새 store 읽기가 인덱스·정렬 보장을 그대로 쓴다
+(`EXPLAIN QUERY PLAN` 동일, `USE TEMP B-TREE` 없음) · `store.go` diff가 순수 가산.
+
+가속도의 midpoint 앵커링은 **정확하다** — 리뷰어가 7종 계열로 늘어난 창을 가속도로 만들려
+했고 전부 정확히 `"1"`이 나왔다. 두 앵커가 같은 행으로 겹치는 경우도 없다.
+
+## 결과
+
+수정을 두 갈래로 위임(파일 소유 분리) — `metrics.go`(P0-1·P0-2·P1-2·P1-3·P1-4·P1-5) /
+`level.go`+`store.go`(P0-3의 D17 칼럼·P1-1의 `big.Rat`·P2).

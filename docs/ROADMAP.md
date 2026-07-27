@@ -92,9 +92,15 @@ StockOS 순수 로직 이식 순위: costs → structural_rr → tradeplan/contr
 
 **착수 조건**: T1.14 주문 경로 검증 + T2.8 tracer slice end-to-end 검증 완료 (실행 기반 신뢰 확보 — 승격 단계 아님).
 
+**T3.1은 이 조건에서 분리한다(2026-07-28).** 발굴은 **읽기 전용**이고 주문 경로를 건드리지
+않으므로, 주문 실행 신뢰를 착수 조건으로 걸 이유가 없다. 오히려 반대다 — 발굴은 시간축
+데이터를 쌓아야 쓸모가 생기고, 쌓기 시작하는 시점이 늦을수록 레인이 붙을 때 근거가 없다.
+T3.1의 착수 조건은 **없다**(별도 change `add-candidate-discovery`, 격리 테스트로 주문 경로
+의존 부재를 고정).
+
 | ID | 작업 | 비고 |
 |----|------|------|
-| T3.1 | internal/candidate: 후보 수집 + CandidateEvidence. WTS 만료 시 공식 API 소스로 강등해도 후보가 계속 나오는 구성 명시 | 원칙 5 |
+| T3.1 | internal/candidate: 후보 수집 + CandidateEvidence. WTS 만료 시 공식 API 소스로 강등해도 후보가 계속 나오는 구성 명시 | 원칙 5 · **별도 change `add-candidate-discovery`로 분리, 착수 조건 없음(읽기 전용)** |
 | T3.2 | internal/strategy: 독립 매수 레인 인터페이스, 레인별 ON/OFF, OFF 후 청산 지속 | |
 | T3.3 | internal/scheduler: 장 시간 인지 루프 (T1.13 clock/calendar 기반) | |
 | T3.4 | internal/performance: 레인별 성과(결정적 링크 없으면 표시 금지), markout 윈도우(기본 5/15/30분), 비용 후 기대값 기반 슬롯 배분 | |
