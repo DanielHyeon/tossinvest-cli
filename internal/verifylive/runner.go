@@ -314,6 +314,7 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 			sr.skip(reason)
 		} else {
 			r.dispatch(ctx, step.ID, sr)
+			r.sweepStep(ctx, sr)
 		}
 
 		entry := r.entryFor(sr)

@@ -1,0 +1,293 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "85031b079a2e84683a40d345b933c6af907b5f971b0f6b8db1c25adf68c12f8e",
+  "package": "verifylive",
+  "function": "ModifyOrder",
+  "receiver": "fakeBroker",
+  "signature": "fakeBroker.ModifyOrder(params=2, results=2)",
+  "start": {
+    "line": 443,
+    "column": 1
+  },
+  "end": {
+    "line": 479,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 447,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 456,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 466,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 450,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 457,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 478,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 2
+      },
+      "text": "f.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 3
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 450,
+        "column": 36
+      },
+      "text": "errAlreadyProcessing"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 453,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 6
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 16
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 39
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 13
+      },
+      "text": "f.nextIDLocked"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 30
+      },
+      "text": "mustOrderJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 22
+      },
+      "text": "mustOrderJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 446,
+        "column": 2
+      }
+    },
+    {
+      "kind": "--",
+      "at": {
+        "line": 448,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 454,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 462,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 464,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 467,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 470,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 473,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 474,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

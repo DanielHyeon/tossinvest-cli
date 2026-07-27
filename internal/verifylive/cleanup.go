@@ -184,6 +184,48 @@ func (r *Runner) runCleanup(ctx context.Context, sr *stepRun, targets []Artifact
 	sr.resolve(first)
 }
 
+// sweepStep cancels what a step placed and did not clear.
+//
+// The success paths already do this; the failure paths walked away. On 2026-07-28
+// that cost two measurements at once: order-amend was refused, returned on the
+// error, and left the order it had just placed resting — filling the one-order
+// exposure cap that sell-boundary then needed (measurements.md M24). The step's
+// verdict is untouched by the sweep: a swept step is still a failed measurement,
+// and saying otherwise would be the record flattering the run.
+//
+// Scope is exactly the artifacts this step created and did not cancel. Not the
+// record's leftovers — those belong to the prologue, which puts each one on a list
+// a person approves.
+//
+// Two conditions skip it, and they are one rule said twice: when the run is not
+// allowed to send anything, it does not send this either.
+//
+//	sr.abort set     the step tried to send something outside the approved plan,
+//	                 or stdin was not a terminal, or the context died. The run is
+//	                 stopping; the artifact is reported and the next run's prologue
+//	                 offers its cancel on a list.
+//	ctx cancelled    the operator interrupted.
+func (r *Runner) sweepStep(ctx context.Context, sr *stepRun) {
+	if sr.abort != nil || ctx.Err() != nil {
+		return
+	}
+	mine := []Entry{{StepID: sr.step.ID, Artifacts: sr.artifacts}}
+	for _, a := range Outstanding(mine) {
+		if a.Kind != KindOrder {
+			// A conditional order outliving its step is the persistence design,
+			// not a leak: conditional-persist has to read it from a later process.
+			continue
+		}
+		if err := r.cancelOrder(ctx, sr, a.ID, a.Symbol, "이 단계가 실패해 남긴 주문 — 다음 단계의 노출 상한을 비운다"); err != nil {
+			// Honest and non-fatal: the step already has its verdict, and the
+			// artifact stays outstanding for the screen, the record and the next
+			// run's prologue to deal with.
+			sr.observe("step.sweep.failed", "true", truncateError(err))
+			return
+		}
+	}
+}
+
 // cleanup is the prologue as the run sees it: it writes its own line to the record
 // and reports whether the run has to stop.
 func (r *Runner) cleanup(ctx context.Context) (Outcome, error, bool) {

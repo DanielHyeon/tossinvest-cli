@@ -83,6 +83,9 @@ type fakeBroker struct {
 	// placeAlreadyProcessing scripts the same refusal on placement, which must
 	// NOT be retried.
 	placeAlreadyProcessing int
+	// modifyAlreadyProcessing scripts n consecutive 409 already-processing
+	// refusals on modify, as measured on 2026-07-28 (M24).
+	modifyAlreadyProcessing int
 	// rejectBadConditionalStatus answers the conditional list with the broker's
 	// own 400 unless the filter is OPEN or CLOSED (M17).
 	rejectBadConditionalStatus bool
@@ -441,6 +444,11 @@ func (f *fakeBroker) ModifyOrder(_ context.Context, intent orderintent.AmendInte
 	f.log("POST /orders/" + intent.OrderID + "/modify")
 	f.mu.Lock()
 	f.amends = append(f.amends, intent)
+	if f.modifyAlreadyProcessing > 0 {
+		f.modifyAlreadyProcessing--
+		f.mu.Unlock()
+		return trading.MutationResult{}, errAlreadyProcessing()
+	}
 	f.mu.Unlock()
 	f.mu.Lock()
 	raw, ok := f.orders[intent.OrderID]

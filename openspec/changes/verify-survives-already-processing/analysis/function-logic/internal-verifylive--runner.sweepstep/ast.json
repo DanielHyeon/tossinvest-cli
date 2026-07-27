@@ -1,0 +1,127 @@
+{
+  "file": "internal/verifylive/cleanup.go",
+  "source_sha256": "41f2c7d5eeaad5fe58fef66de7c17db5902d8a021577ec9cc92783346354076c",
+  "package": "verifylive",
+  "function": "sweepStep",
+  "receiver": "Runner",
+  "signature": "Runner.sweepStep(params=2, results=0)",
+  "start": {
+    "line": 208,
+    "column": 1
+  },
+  "end": {
+    "line": 227,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 224,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 24
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 20
+      },
+      "text": "Outstanding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 13
+      },
+      "text": "r.cancelOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 4
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 44
+      },
+      "text": "truncateError"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

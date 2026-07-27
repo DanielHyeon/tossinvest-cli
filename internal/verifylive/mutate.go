@@ -313,12 +313,12 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 		if err == nil {
 			break
 		}
-		wait, transient := transientCancelRefusal(err)
-		if !transient || attempts > CancelRetryAttempts {
+		wait, transient := transientRefusal(err)
+		if !transient || attempts > TransientRetryAttempts {
 			break
 		}
 		fmt.Fprintf(r.out, "    취소가 일시적으로 거절되었다 (already-processing). %s 뒤 다시 시도한다 (%d/%d)\n",
-			wait, attempts, CancelRetryAttempts)
+			wait, attempts, TransientRetryAttempts)
 		if sleepErr := r.sleep(ctx, wait); sleepErr != nil {
 			err = sleepErr
 			break
@@ -342,30 +342,33 @@ func (r *Runner) cancelOrder(ctx context.Context, sr *stepRun, orderID, symbol, 
 	return nil
 }
 
-// CancelRetryAttempts is how many extra times a cancel is tried after the broker
-// refuses it as transient.
+// TransientRetryAttempts is how many extra times a request is tried after the
+// broker refuses it as transient.
 //
-// Measured 2026-07-27 (M16): `409 already-processing` with
-// `data.retryAfterSeconds`, on a cancel of an order this tool had just placed.
-// Not retrying left the order live, and a live order this tool cannot cancel
-// fills the exposure cap and blocks every step after it.
+// Measured 2026-07-27 (M16) on a cancel and 2026-07-28 (M24) on a modify, both
+// against an order this tool had just placed: `409 already-processing` with
+// `data.retryAfterSeconds`. The refusal is the broker saying it is still
+// processing the placement — it is not about which verb follows.
 //
-// The retry is scoped to cancels on purpose. A cancel only reduces exposure, and
-// retrying one repeats an action a person already approved rather than widening
-// what was approved — the same reasoning that keeps a confirmation prompt off the
-// cancel path (§0.3). Placements, amends and conditional registrations are not
-// retried: repeating those could create a second live order.
-const CancelRetryAttempts = 2
+// The retry is scoped to cancels and amends, and the line is drawn at whether the
+// request can *create* anything. A cancel removes an order; an amend replaces one
+// with the same order priced one tick further from the market. Neither can produce
+// a second live order however many times it is sent, so retrying one repeats an
+// action a person already approved rather than widening what was approved — the
+// same reasoning that keeps a confirmation prompt off the cancel path (§0.3).
+// Placements and conditional registrations are still never retried: repeating
+// those could leave two live objects where the operator approved one.
+const TransientRetryAttempts = 2
 
-// CancelRetryMaxWait caps what the broker's own retryAfterSeconds can ask for.
-const CancelRetryMaxWait = 5 * time.Second
+// TransientRetryMaxWait caps what the broker's own retryAfterSeconds can ask for.
+const TransientRetryMaxWait = 5 * time.Second
 
-// transientCancelRefusal reports the measured "try again shortly" refusal and how
-// long the broker asked for.
+// transientRefusal reports the measured "try again shortly" refusal and how long
+// the broker asked for.
 //
 // It matches on the broker's own code rather than on the HTTP status alone: a 409
 // that means something else must not be retried into a loop.
-func transientCancelRefusal(err error) (time.Duration, bool) {
+func transientRefusal(err error) (time.Duration, bool) {
 	var apiErr *official.APIError
 	if !errors.As(err, &apiErr) || apiErr.Code != http.StatusConflict {
 		return 0, false
@@ -388,8 +391,8 @@ func transientCancelRefusal(err error) (time.Duration, bool) {
 	if wait <= 0 {
 		wait = time.Second
 	}
-	if wait > CancelRetryMaxWait {
-		wait = CancelRetryMaxWait
+	if wait > TransientRetryMaxWait {
+		wait = TransientRetryMaxWait
 	}
 	return wait, true
 }
@@ -423,9 +426,38 @@ func (r *Runner) amendOrder(ctx context.Context, sr *stepRun, orderID, symbol st
 	if sendQuantity {
 		intent.Quantity = &quantity
 	}
-	started := r.now()
-	res, err := r.broker.ModifyOrder(ctx, intent)
-	sr.logCall(EndpointModifyOrder, intent, started, r.now(), res, err)
+	// The retry loop is inlined here rather than shared with cancelOrder's, and
+	// that is the static guard's doing: TestTheApprovedPlanIsTheOnlyThingMutateGoActsOn
+	// requires the gate and the broker call it authorises to sit in one function.
+	// A shared helper reads better and would put a mutating call one hop away from
+	// its gate, which is the arrangement the guard exists to prevent.
+	var (
+		res      trading.MutationResult
+		err      error
+		attempts int
+	)
+	for attempts = 1; ; attempts++ {
+		started := r.now()
+		res, err = r.broker.ModifyOrder(ctx, intent)
+		sr.logCall(EndpointModifyOrder, intent, started, r.now(), res, err)
+		if err == nil {
+			break
+		}
+		wait, transient := transientRefusal(err)
+		if !transient || attempts > TransientRetryAttempts {
+			break
+		}
+		fmt.Fprintf(r.out, "    정정이 일시적으로 거절되었다 (already-processing). %s 뒤 다시 시도한다 (%d/%d)\n",
+			wait, attempts, TransientRetryAttempts)
+		if sleepErr := r.sleep(ctx, wait); sleepErr != nil {
+			err = sleepErr
+			break
+		}
+	}
+	if attempts > 1 {
+		sr.observe("order.amend.retries", strconv.Itoa(attempts-1),
+			"브로커가 409 already-processing으로 거절해 재시도했다 (measurements.md M24)")
+	}
 	if err != nil {
 		return "", err
 	}

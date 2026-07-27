@@ -97,3 +97,14 @@ run `run-G5DKDM3F4JVP5XM2`, 기록 `capability-verify-us.jsonl`, 5단계 기록.
 |---|---|---|
 | M22 | **도구가 자기 잔여물을 치울 수 없다** — M16으로 취소하지 못한 주문 1건(`OsBakht…`, PENDING)이 남았고, 이 상태에서 ① [이어하기]는 order-cancel이 terminal(`fail`)이라 건너뛰며 그 취소는 어느 계획에도 없어 `ErrOutsidePlan`, ② [재측정]은 세 단계 모두 첫 요청이 노출 상한(`1 live order(s) … cap is 1`)에 걸려 거절, ③ 브로커 앱에서 손으로 취소해도 상한은 **기록**을 보고 세므로 계속 차단. 3차 실행이 5단계를 기록하고도 이 주문을 남긴 채 끝난 것이 실증이다 | order-amend·sell-boundary reason(`ErrExposureCap`), 3차 실행 종료 메시지("객체 1건이 아직 계좌에 살아 있다"), costs `order.status.…afmp1j2=PENDING` |
 | M23 | **승인 창 만료가 장중 창 3개를 소모했다** — 22:03·22:27·(그 사이 1회) 세 번의 실행이 모두 `승인 창 만료`로 0단계 종료. 원인 둘: ① 만료 문구가 "확인 문자열이 만료되었다"라고 말하는데 콘솔 승인에는 문자열이 없다(console-click-approval 이후 잔존 문구), ② **끝난 실행이 화면에 있는 동안 시작 제어가 렌더되지 않아** 만료될 때마다 콘솔 재시작이 강제됐다. M11과 같은 계열의 결함이며 원인은 다르다 | `capability-verify-us.jsonl`의 approval 3건(verdict `refused`), `console-launch.log`의 `0 step(s) recorded` 3회, `internal/console/templates.go` 시작 섹션의 `{{else}}` 분기 |
+
+## 4차 실행 — US 재측정 (2026-07-28 00:20 KST / 11:20 EDT, 콘솔 경유)
+
+run `run-IXCQU5UBZE`, 재측정 대상 4단계(승인 목록 8건), 4단계 기록. 직전 정리 실행
+(`run-3YX2BQPECCFLVF5O`)이 M22의 잔여 주문을 승인 목록 위에서 취소해 노출 상한이 비어 있었다.
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M24 | **`409 already-processing`은 취소 전용이 아니다 — 정정에도 온다.** `POST /api/v1/orders` 수락(107ms) **직후**의 `POST /api/v1/orders/{id}/modify`가 같은 코드·같은 `retryAfterSeconds:1`로 거절됐다(requestId `si1tUiUvi8DzWXr5`). 브로커가 접수를 처리하는 동안 그 주문에 대한 **모든 후속 변경**이 이 창에 걸린다고 보는 것이 맞다 — 2c의 손절 정정·취소 경로 전부에 이 코드 처리가 필요하다 | order-amend 단계 reason·calls |
+| M25 | **M16 교정이 실계좌에서 작동한다** — order-cancel이 409를 만나 1회 재시도 후 수락, 단계 **pass**. `order.status.after_cancel=PENDING_CANCEL`, `canceledAt` 존재, `filledQuantity=0`. 접수 후 상태는 `PENDING`, `timeInForce=DAY` | order-cancel `order.cancel.retries=1`, `order.cancel.ok=true` |
+| M26 | **도구 결함: 실패한 단계가 자기가 낸 주문을 취소하지 않는다** — order-amend가 정정 거절로 조기 반환하면서 방금 접수한 주문을 남겼고(성공 경로에만 `cancelLiveOrders`가 있다), 그 1건이 노출 상한을 채워 **sell-boundary가 `ErrExposureCap`으로 아무것도 보내지 못했다**. "이 도구가 만든 객체는 모두 취소되어 끝난다"는 불변식이 실패 경로에서 성립하지 않는다 | order-amend artifacts(cancelled=false), sell-boundary reason |
