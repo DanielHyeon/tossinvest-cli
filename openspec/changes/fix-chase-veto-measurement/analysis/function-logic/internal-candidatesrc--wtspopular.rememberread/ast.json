@@ -1,16 +1,16 @@
 {
   "file": "internal/candidatesrc/candidatesrc.go",
-  "source_sha256": "f71c63715b55130e9c2c45b260ebfc5eee71c6b3c7932f5614aa4c702506131f",
+  "source_sha256": "c7cf79f18210516d3320e6ab8922a40eee120dd894be2a70f35c13d71f7f587a",
   "package": "candidatesrc",
   "function": "rememberRead",
   "receiver": "wtsPopular",
   "signature": "wtsPopular.rememberRead(params=3, results=2)",
   "start": {
-    "line": 466,
+    "line": 510,
     "column": 1
   },
   "end": {
-    "line": 490,
+    "line": 535,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 471,
+        "line": 515,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 472,
+        "line": 516,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 479,
+        "line": 524,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 483,
+        "line": 528,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 486,
+        "line": 531,
         "column": 2
       }
     }
@@ -59,14 +59,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 487,
+        "line": 532,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 489,
+        "line": 534,
         "column": 2
       }
     }
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 469,
+        "line": 513,
         "column": 9
       },
       "text": "strings.ToUpper"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 469,
+        "line": 513,
         "column": 25
       },
       "text": "strings.TrimSpace"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 470,
+        "line": 514,
         "column": 13
       },
       "text": "make"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 470,
+        "line": 514,
         "column": 35
       },
       "text": "len"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 472,
+        "line": 516,
         "column": 16
       },
       "text": "wtsSymbol"
@@ -115,7 +115,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 476,
+        "line": 520,
+        "column": 24
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 520,
+        "column": 39
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 520,
+        "column": 55
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
         "column": 8
       },
       "text": "w.now.Now"
@@ -123,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 477,
+        "line": 522,
         "column": 2
       },
       "text": "w.mu.Lock"
@@ -131,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 478,
+        "line": 523,
         "column": 8
       },
       "text": "w.mu.Unlock"
@@ -139,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 486,
+        "line": 531,
         "column": 6
       },
       "text": "previous.usableAt"
@@ -149,56 +173,63 @@
     {
       "kind": ":=",
       "at": {
-        "line": 469,
+        "line": 513,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 470,
+        "line": 514,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 472,
+        "line": 516,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 473,
+        "line": 517,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 476,
+        "line": 520,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 521,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 480,
+        "line": 525,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 482,
+        "line": 527,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 484,
+        "line": 529,
         "column": 3
       }
     }
@@ -208,7 +239,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 478,
+        "line": 523,
         "column": 2
       },
       "text": "w.mu.Unlock"

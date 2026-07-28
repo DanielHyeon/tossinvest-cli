@@ -66,13 +66,28 @@ import (
 //	operation and must not expire what it happens during. A source inside its
 //	backoff is not out of service, and its memory should survive the whole ladder.
 //
-//	Past it, the thing the memory would qualify is gone anyway. A candidate nobody
-//	re-promoted for DefaultStalenessTTL cools implicitly (Store.stateAt), and from
-//	there the watchlist turns over. So the memory stays valid for exactly as long as
-//	the candidate lives it would be used to qualify, and the moment those start
-//	ending it stops answering. Beyond this bound the answer is `unknown`, which is
-//	the honest one: nobody knows whether a symbol joined the list during an hour we
-//	were not reading it.
+//	Past it, the same span is already the one the rest of the system uses for this
+//	shape of claim. candidate.nearFirstSighting is DefaultStalenessTTL too, and it
+//	bounds how far a reading may sit from first_seen_at and still be the reading
+//	that life was first seen in — so for any candidate whose life began before the
+//	memory went stale, both NoteFirstRank and MeasureFirstSighting refuse the
+//	position regardless of what this memory would have said about it.
+//
+//	The one case that leaves open is the life that begins on the recovering reading
+//	itself. Its first_seen_at is that instant, so that window is wide open, and a
+//	set recorded before the outage answers `no` about a symbol it last saw an hour
+//	ago — the qualifying answer, arriving at the moment cooling plus staleness has
+//	expired the whole watchlist and the scan is re-promoting it. That case is why
+//	the bound is here rather than left to nearFirstSighting; the two together close
+//	both ends. Beyond this bound the answer is `unknown`, which is the honest one:
+//	nobody knows whether a symbol joined the list during an hour we were not
+//	reading it.
+//
+//	Corrected 2026-07-28. This paragraph used to say the candidate the memory would
+//	qualify is "gone anyway" past the bound, on the implicit cooling in
+//	Store.stateAt. Cooled is not gone: stateAt cools at staleness and expires only
+//	at staleness + DefaultCoolingTTL — forty minutes — and a cooled candidate keeps
+//	first_seen_at, first_price and first_rank.
 //
 // Neither the scan interval nor the engine yield needs a term of its own: the
 // official ranking's interval is 15s and the WTS list's 5s (cmd/tossctl's
@@ -178,8 +193,9 @@ type officialRanking struct {
 	// the one design D3 refuses to spell as "yes".
 	//
 	// Two conditions decide whether an entry may answer, and neither of them is
-	// "it exists". It has to have arrived whole — see rememberRead — and it has to
-	// be no older than previousReadingTTL.
+	// "it exists". It has to have arrived whole — which is decided against the set
+	// that is actually kept, see rememberRead — and it has to be no older than
+	// previousReadingTTL.
 	seen map[string]previousReading
 	mu   sync.Mutex
 	// now is the time source the memory's age is measured against. Injected for
@@ -245,7 +261,11 @@ func (o *officialRanking) Read(ctx context.Context, market string) (candidate.Re
 	// The previous reading's set is taken and replaced under one lock, before any
 	// row is built, so two concurrent reads of the same market cannot each answer
 	// from a set the other has already replaced.
-	previous, hadPrevious := o.rememberRead(market, raw.Items, o.count == total)
+	//
+	// What goes in is the request, not the comparison. Whether this reading is whole
+	// enough to become the memory is a question about the set that gets remembered,
+	// and that set is built inside rememberRead — see the note there.
+	previous, hadPrevious := o.rememberRead(market, raw.Items, o.count)
 	rows := make([]candidate.Row, 0, total)
 	for _, item := range raw.Items {
 		symbol := strings.TrimSpace(item.Symbol)
@@ -305,7 +325,26 @@ func (o *officialRanking) Read(ctx context.Context, market string) (candidate.Re
 // reason. It used to be swapped in deliberately, on the argument that "it saw
 // nothing" is still what it saw; that argument holds only for a source that asked
 // for nothing, and neither of these does.
-func (o *officialRanking) rememberRead(market string, items []domain.RankingItem, whole bool) (
+//
+// # The comparison is against the set that is kept, not the rows that arrived
+//
+// Corrected 2026-07-28. `whole` used to be computed by the caller as
+// `o.count == len(raw.Items)`, and len(raw.Items) counts rows this function then
+// drops: a row whose symbol is blank is absent from `current` and absent from the
+// reading's rows, but it was still being counted towards the request. Three items
+// of the three requested with two of them blank was therefore a whole reading whose
+// memory held one symbol, and the next whole reading reported the other two as new
+// entrants — measured, stored in candidates.first_rank_newly_listed, which is
+// write-once. All three blank was worse: no rows at all, so the scan filed the
+// reading under Missing, while the memory became an empty *non-nil* set that
+// usableAt accepts, and every row of the next reading answered `yes`.
+//
+// So the request comes in and the comparison is made here, where `current` exists.
+// Both halves are needed: the request has to match what arrived, and what arrived
+// has to be what is kept. RankTotal is left as len(items) — the row count is what
+// the endpoint served and it is the right percentile denominator; it is only the
+// memory that must not be built out of a set that lost rows.
+func (o *officialRanking) rememberRead(market string, items []domain.RankingItem, requested int) (
 	map[string]bool, bool) {
 
 	key := strings.ToUpper(strings.TrimSpace(market))
@@ -315,6 +354,7 @@ func (o *officialRanking) rememberRead(market string, items []domain.RankingItem
 			current[symbol] = true
 		}
 	}
+	whole := requested == len(items) && len(current) == len(items)
 	at := o.now.Now()
 	o.mu.Lock()
 	defer o.mu.Unlock()
@@ -421,7 +461,7 @@ func (w *wtsPopular) Read(ctx context.Context, market string) (candidate.Reading
 	}
 
 	total := len(raw.Stocks)
-	previous, hadPrevious := w.rememberRead(market, raw.Stocks, w.size == total)
+	previous, hadPrevious := w.rememberRead(market, raw.Stocks, w.size)
 	rows := make([]candidate.Row, 0, total)
 	for _, s := range raw.Stocks {
 		symbol := wtsSymbol(s)
@@ -462,8 +502,12 @@ func wtsSymbol(s domain.RankedStock) string {
 }
 
 // rememberRead is officialRanking.rememberRead for this source's row type, with
-// the same two conditions and for the same reasons.
-func (w *wtsPopular) rememberRead(market string, stocks []domain.RankedStock, whole bool) (
+// the same two conditions and for the same reasons — including the one about which
+// count the wholeness comparison is made against. A stock with neither a Symbol nor
+// a ProductCode is dropped from `current` and from the rows, and counting it
+// towards the requested size would let a degraded reading become the yardstick for
+// the next whole one.
+func (w *wtsPopular) rememberRead(market string, stocks []domain.RankedStock, requested int) (
 	map[string]bool, bool) {
 
 	key := strings.ToUpper(strings.TrimSpace(market))
@@ -473,6 +517,7 @@ func (w *wtsPopular) rememberRead(market string, stocks []domain.RankedStock, wh
 			current[symbol] = true
 		}
 	}
+	whole := requested == len(stocks) && len(current) == len(stocks)
 	at := w.now.Now()
 	w.mu.Lock()
 	defer w.mu.Unlock()

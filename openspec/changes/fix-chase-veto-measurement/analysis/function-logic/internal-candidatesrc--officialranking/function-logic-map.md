@@ -2,7 +2,7 @@
 
 - Source: `internal/candidatesrc/candidatesrc.go`
 - Change: `fix-chase-veto-measurement`
-- AST evidence: `ast.json` (revision `current`, L208–224, 분기 3개)
+- AST evidence: `ast.json` (revision `current`, L224–240, 분기 3개)
 - Risk scan: `risk-pattern-report.md`
 
 공식 순위 어댑터의 생성자. 이 change가 **`clk clock.Clock` 인자 하나**를 더했다(리뷰 F1) —

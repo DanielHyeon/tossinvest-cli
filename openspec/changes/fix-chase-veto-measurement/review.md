@@ -294,3 +294,54 @@ D10의 주장 자체는 검증됐다(세 함수 무변경 가능). 다만 유혹
 
 사용자 승인(2026-07-28, "A")은 **철회된 도출 위에서 받은 것**이므로 그대로 이월되지
 않는다. 값 투입 전 재승인 필요.
+
+---
+
+## 구현 후 독립 리뷰 3차 (2026-07-28) — pre-gate
+
+별도 문맥. 모든 지적이 실행 가능한 probe 또는 mutation으로 재현된 상태로 도착했고,
+Teammate가 각각을 코드에서 재확인한 뒤 반영했다. 기록은 `issues.md` I16–I19,
+tasks.md §10.
+
+| 등급 | 지적 | 판정 |
+|---|---|---|
+| P0-1 | `whole` 판정이 기억이 버리는 행(빈 심볼) 위에서 내려진다 | **수용** — issues.md I16 |
+| P1-2 | `FirstRanksHeld`를 단언하는 테스트가 없다 | **수용** — 아래 |
+| P1-3 | `recordFirsts`가 같은 tick의 자격 있는 읽기를 버린다 | **수용** — issues.md I17 |
+| P2-1 | 기억 TTL의 두 번째 근거가 거짓 | **수용, 대체 근거는 수정** — I18 |
+| P2-2 | `usableAt`의 zero instant 반쪽 미고정 | 수용 |
+| P2-3 | `Panel`이 주입 clock을 전달하는지 미고정 | 수용 |
+| P2-4 | 술어의 `RankRequested <= 0` 반쪽 미고정 | 수용 |
+| P2-5 | `TallySightingSources`의 source 없는 skip 미고정 | 수용 |
+| P2-6 | 소비자 가드가 못 보는 형태 | **기록만** — 아래 |
+| P2-7 | P0-1 이후의 잔여 | **기록만** — issues.md I19 |
+
+**P1-2**: `result.FirstRanksHeld++`만 지우고 `continue`를 남기면
+`./internal/candidate/...`와 `./cmd/tossctl/...`이 전부 green이었다. 보류 *동작*은
+`TestASessionStartDoesNotStampThePanelAsSeenLate`가 고정하지만 그 테스트가 카운터를 읽지
+않았다. 그 테스트에 두 tick의 `FirstRanksHeld`(3 → 0)와 `FirstRanks`(0 → 3)를 더했다.
+확인: mutation을 넣으면 이제 4건이 실패한다.
+
+**P2-1에 대한 Teammate의 이견 (수용하되 근거는 다르게)**: 리뷰가 제안한 대체 근거
+— "`nearFirstSighting`이 `first_seen_at`에서 `DefaultStalenessTTL`보다 먼 위치를 거부하므로
+그보다 오래된 기억은 어차피 최초 순위를 자격 부여할 수 없다" — 는 **추론으로는 성립하지
+않는다.** 기억의 나이는 `T_read - T_mem`이고 그 창이 묶는 것은
+`T_read - first_seen_at`이다. 회복 읽기 자신이 새 생명을 시작시키면 `first_seen_at`이 그
+instant이므로 창이 열려 있고, 그 경우가 정확히 F1 probe가 재현한 시나리오다. 그래서 두
+문장으로 나누어 적었다 — 리뷰의 사실은 절반(기억보다 먼저 시작된 생명)에 대해 참이고,
+덮지 못하는 절반이 이 bound가 존재하는 이유다. 같은 숫자, 두 기구가 양 끝을 닫는다.
+
+**P1-2에 대한 부수 사실**: `internal/candidate/firstsighting_source_test.go`는
+`base-commit.txt`(b268593) 기준 **신규 파일**이므로 이 편집은 Function Logic Map 대상을
+늘리지 않는다(`check_analysis.py`는 `old_source == ""`이면 즉시 반환한다). 리뷰가 예상한
+"추가되는 target"은 발생하지 않았다.
+
+### P2-6 (기록만) — 소비자 가드가 구조적으로 못 보는 형태
+
+같은 패키지의 한 줄 helper에서 클라이언트를 받아 `client.CreateConditionalOrder(…)`를
+부르면 `cmd/tossctl/candidate.go`에서도 가드가 green이다. **회귀가 아니다** — 이미
+`internal/candidate/consumer_guard_test.go:89-108`과 `cmd/tossctl/candidatepanel.go:15-21`이
+같은 문장을 적고 있고, 그래서 가드가 금지하는 것이 **생성**(`official.New`·`tossclient.New`)
+이며 그 두 줄이 판정을 읽지 않는 파일로 옮겨져 있다. selector 스캔은 값에 붙은 메서드를
+볼 수 없고, 그것을 볼 수 있는 검사는 타입 해석(go/types)을 요구하는 더 넓은 change다.
+다음 리뷰어가 이것을 새 결함으로 다시 발견하지 않도록 여기에 남긴다.

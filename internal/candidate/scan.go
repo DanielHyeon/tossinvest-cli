@@ -295,6 +295,27 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 		// carry one without the other — the prices endpoint has no rank and a WTS
 		// popularity row has no price — and folding them together would leave a
 		// candidate raised by both with the field only one of them reported.
+		//
+		// # Panel order among equals, and a qualified reading is not the equal of an
+		// unqualified one
+		//
+		// Corrected 2026-07-28. The rank was taken from the panel-order-first source
+		// carrying a position, full stop, and recordFirsts then declined to store it
+		// if the reading it came from could not qualify it — discarding a qualified
+		// position another source had reported in the same tick. That is reachable and
+		// it is permanent: a source that persistently comes back short never replaces
+		// its own memory, so its NewlyListed stays unknown for as long as the
+		// degradation lasts, and being first in Panel's order it claims firstRanked for
+		// every symbol it lists and holds first_rank for all of them. Whether the
+		// official rankings endpoint returns the hundred rows it is asked for is the
+		// question this change exists to make answerable, so the failure it would
+		// cause is not hypothetical.
+		//
+		// So a qualified reading displaces an unqualified one, and panel order decides
+		// among readings of the same standing. When nothing in the panel qualifies —
+		// the session's first tick, and every one-shot `tossctl candidate scan` — the
+		// panel-order-first position is still what is held, which keeps recordFirsts'
+		// refusal intact for the case it was written for.
 		firstPriced = map[string]Observation{}
 		firstRanked = map[string]Observation{}
 		// covered is every symbol a responding source reported.
@@ -400,8 +421,11 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 			if _, taken := firstPriced[symbol]; !taken && strings.TrimSpace(r.Price) != "" {
 				firstPriced[symbol] = o
 			}
-			if _, taken := firstRanked[symbol]; !taken && r.Rank > 0 && r.RankTotal > 0 {
-				firstRanked[symbol] = o
+			if r.Rank > 0 && r.RankTotal > 0 {
+				held, taken := firstRanked[symbol]
+				if !taken || (!qualifiesFirstRank(held.Reported) && qualifiesFirstRank(o.Reported)) {
+					firstRanked[symbol] = o
+				}
 			}
 		}
 	}
@@ -560,7 +584,13 @@ func recordFirsts(ctx context.Context, store *Store, market string, at time.Time
 		// facts were taken, the refusal it produces is named, and it is the honest
 		// record of where this candidate was when we first saw it. Skipping it would
 		// swap a diagnosis an operator can act on for the absence of one.
-		if !o.Reported.NewlyListed.Known() || o.Reported.RankRequested <= 0 {
+		//
+		// By the time a position gets here it is the best-standing one the panel
+		// offered this tick — Collect prefers a qualified reading over a panel-earlier
+		// unqualified one — so reaching this branch means no source in the panel could
+		// qualify the symbol at all, which is the session-start case this refusal is
+		// about.
+		if !qualifiesFirstRank(o.Reported) {
 			result.FirstRanksHeld++
 			continue
 		}
@@ -590,6 +620,24 @@ func recordFirsts(ctx context.Context, store *Store, market string, at time.Time
 		// unmeasured rather than wrong.
 	}
 	return nil
+}
+
+// qualifiesFirstRank reports that a reading carries the two facts a stored first
+// sighting position needs in order to ever answer seen_late.
+//
+// The source's own new-entrant answer, and the row count it asked its endpoint for.
+// Neither is a judgement about the market: one is "did I hold a previous reading of
+// this list", the other is "how many rows did I request", and a reading missing
+// either of them cannot say what its position meant.
+//
+// It is one predicate rather than the same two clauses in two places because the two
+// places have to agree. Collect uses it to decide which of a tick's readings claims
+// the position, and recordFirsts uses it to decide whether that position is written
+// at all; a Collect that preferred a reading recordFirsts then held would discard the
+// qualified one and store nothing, which is the defect this predicate was extracted
+// while fixing.
+func qualifiesFirstRank(r Reported) bool {
+	return r.NewlyListed.Known() && r.RankRequested > 0
 }
 
 // coolAbsent cools the active candidates whose supporters were all present in

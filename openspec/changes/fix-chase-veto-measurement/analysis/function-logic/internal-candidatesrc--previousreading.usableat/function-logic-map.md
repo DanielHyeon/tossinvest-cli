@@ -2,7 +2,7 @@
 
 - Source: `internal/candidatesrc/candidatesrc.go`
 - Change: `fix-chase-veto-measurement`
-- AST evidence: `ast.json` (revision `current`, L99–105, 분기 1개)
+- AST evidence: `ast.json` (revision `current`, L114–120, 분기 1개)
 - Risk scan: `risk-pattern-report.md`
 
 **신규 함수**다(리뷰 F1). 기억된 직전 읽기가 `at` 시각의 질문에 답할 자격이 있는지를 판정한다.
@@ -17,6 +17,13 @@
 상한은 여기서 고르지 않는다. `previousReadingTTL = candidate.DefaultStalenessTTL`이고,
 그 값은 `BackoffLadder` 마지막 rung의 2배라는 기존 도출을 그대로 물려받는다.
 
+**2026-07-28**: 그 상수 옆의 두 번째 근거가 틀려서 정정했다(issues.md I18). "그 지점을
+넘으면 기억이 자격 부여할 대상이 사라진다"는 거짓이다 — `Store.stateAt`은 staleness에
+*냉각*시키고 만료는 40분이며 냉각된 후보는 세 first 칼럼을 그대로 갖는다. 참인 두 문장은
+(a) 기억보다 먼저 시작된 생명에 대해서는 `nearFirstSighting`이 이미 양쪽(`NoteFirstRank`·
+`MeasureFirstSighting`)에서 거부하고, (b) 그것이 덮지 못하는 **회복 읽기 자신이 시작시키는
+생명**이 이 bound가 존재하는 이유라는 것이다.
+
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
@@ -30,7 +37,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `p.symbols == nil` 또는 `p.at.IsZero()` 또는 `at.IsZero()` | 없음 — 순수 판정 | `false` (미상) | `TestASourcesFirstReadingHasNoAnswerAboutNewEntrants`(nil 기억) |
+| B1 | `p.symbols == nil` 또는 `p.at.IsZero()` 또는 `at.IsZero()` | 없음 — 순수 판정 | `false` (미상) | `TestASourcesFirstReadingHasNoAnswerAboutNewEntrants`(nil 기억) · `TestAMemoryWithNoInstantOnEitherSideIsNotAnAnswer`(zero instant 네 case + 정상 대조군) |
 
 무분기 꼬리: `age := at.Sub(p.at)` 후 `age >= 0 && age < previousReadingTTL`.
 `age >= 0`이 시계 역행을 거부하고(`TestAClockThatStepsBackwardsDoesNotMakeTheMemoryFresh`),

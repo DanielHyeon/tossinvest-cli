@@ -2,7 +2,7 @@
 
 - Source: `internal/candidatesrc/candidatesrc.go`
 - Change: `fix-chase-veto-measurement`
-- AST evidence: `ast.json` (revision `current`, L500–527, 분기 4개)
+- AST evidence: `ast.json` (revision `current`, L545–572, 분기 4개)
 - Risk scan: `risk-pattern-report.md`
 
 한 시장의 소스 목록을 만든다. 이 change가 **`clk clock.Clock` 인자**를 더해 두 어댑터 모두에
@@ -20,7 +20,7 @@ present-and-empty가 아니라 **부재**여야 한다.
 | `official` | `RankingReader` 또는 nil | `cmd/tossctl/candidatepanel.go` | nil이면 공식 세 소스 부재 |
 | `budget` | `BudgetReader` 또는 nil | 같은 곳 | nil은 예산 미보고 |
 | `wts` | `PopularityReader` 또는 nil | 같은 곳 | nil이면 WTS 부재 — typed-nil 방지는 호출부의 `wtsPopularityReader` |
-| `clk` | `clock.Clock` 또는 nil | 호출자 | nil은 각 생성자가 시스템 시계로 대체 |
+| `clk` | `clock.Clock` 또는 nil | 호출자 | nil은 각 생성자가 시스템 시계로 대체. **전달 자체**를 `TestThePanelHandsItsClockToEverySourceItBuilds`가 잡는다 |
 
 ## Branches and early returns
 
@@ -51,5 +51,5 @@ B3의 false arm은 **도달 불가**다 — 세 type은 이 파일의 컴파일 
 
 ## Safety conclusion
 
-- Safe edit boundary: 시그니처 가산(`clk`) + 두 생성자 호출에 인자 1개. 멤버십 규칙 무변경.
+- Safe edit boundary: 시그니처 가산(`clk`) + 두 생성자 호출에 인자 1개. 멤버십 규칙 무변경. 2026-07-28 편집 없음 — 테스트만 더했다.
 - High-risk impact: no (배선). `MarketKR` 가드가 풀리면 US 후보가 매 스캔 냉각되고 냉각 시계가 first_seen_at을 지운다 — 기존 위험이며 이 change가 건드리지 않았다.

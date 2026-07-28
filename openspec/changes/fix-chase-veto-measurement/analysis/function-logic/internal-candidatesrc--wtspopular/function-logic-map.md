@@ -2,7 +2,7 @@
 
 - Source: `internal/candidatesrc/candidatesrc.go`
 - Change: `fix-chase-veto-measurement`
-- AST evidence: `ast.json` (revision `current`, L396–404, 분기 2개)
+- AST evidence: `ast.json` (revision `current`, L436–444, 분기 2개)
 - Risk scan: `risk-pattern-report.md`
 
 WTS 인기 순위 어댑터의 생성자. 이 change가 `clk clock.Clock`을 더했다 — 두 어댑터가 같은 두

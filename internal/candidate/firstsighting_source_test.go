@@ -230,8 +230,25 @@ func TestASessionStartDoesNotStampThePanelAsSeenLate(t *testing.T) {
 	opts := cycleOpts(MarketKR, src)
 	opts.Thresholds = seenLateThresholds()
 
-	if _, err := Cycle(ctx, s, opts); err != nil {
+	res, err := Cycle(ctx, s, opts)
+	if err != nil {
 		t.Fatalf("first Cycle: %v", err)
+	}
+	// The counter that says so, asserted here because nothing else asserts it.
+	//
+	// Added 2026-07-28. The hold *behaviour* was pinned by the rest of this test —
+	// removing the write left the store's columns filled and the reasons wrong — but
+	// removing only `result.FirstRanksHeld++` left the whole suite green, so the
+	// count could stop counting while the refusal kept working. It is the number
+	// `tossctl candidate scan` prints to say a one-shot command cannot qualify
+	// anything, and a scan that held three positions and reported none of them is
+	// indistinguishable from a scan that had nothing to hold.
+	if res.Scan.FirstRanksHeld != 3 {
+		t.Errorf("the session's first scan held %d positions, want 3 — one for each candidate "+
+			"whose only reading was the one the source could not qualify", res.Scan.FirstRanksHeld)
+	}
+	if res.Scan.FirstRanks != 0 {
+		t.Errorf("%d first ranks were stored on the session's first scan", res.Scan.FirstRanks)
 	}
 	verdicts, err := Assess(ctx, s, AssessOptions{
 		Market: MarketKR, At: t0, Thresholds: seenLateThresholds(),
@@ -284,8 +301,21 @@ func TestASessionStartDoesNotStampThePanelAsSeenLate(t *testing.T) {
 	clk.Advance(20 * time.Second)
 	at := clk.Now()
 	opts.Schedule = NewSchedule(nil)
-	if _, err := Cycle(ctx, s, opts); err != nil {
+	res, err = Cycle(ctx, s, opts)
+	if err != nil {
 		t.Fatalf("second Cycle: %v", err)
+	}
+	// And the counter goes back to zero, which is the other half of what it means.
+	// A watch loop reports a held count on its first turn and none afterwards; a
+	// count that stayed at three would say the panel never becomes measurable.
+	if res.Scan.FirstRanksHeld != 0 {
+		t.Errorf("the second scan held %d positions; its reading carries both qualifiers for "+
+			"every row, so there is nothing left to hold", res.Scan.FirstRanksHeld)
+	}
+	if res.Scan.FirstRanks != 3 {
+		t.Errorf("%d first ranks stored on the second scan, want 3 — the three symbols this "+
+			"reading listed, each getting the position it was first qualified at",
+			res.Scan.FirstRanks)
 	}
 	verdicts, err = Assess(ctx, s, AssessOptions{
 		Market: MarketKR, At: at, Thresholds: seenLateThresholds(),

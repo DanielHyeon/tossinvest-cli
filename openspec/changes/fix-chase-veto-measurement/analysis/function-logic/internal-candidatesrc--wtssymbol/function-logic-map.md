@@ -2,7 +2,7 @@
 
 - Source: `internal/candidatesrc/candidatesrc.go`
 - Change: `fix-chase-veto-measurement`
-- AST evidence: `ast.json` (revision `current`, L457–462, 분기 1개)
+- AST evidence: `ast.json` (revision `current`, L497–502, 분기 1개)
 - Risk scan: `risk-pattern-report.md`
 
 **신규 함수** — 루프 안 두 줄을 뽑아냈다. 뽑아낸 이유가 이 change의 요점이다:

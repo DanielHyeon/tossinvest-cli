@@ -1,15 +1,15 @@
 {
   "file": "internal/candidatesrc/candidatesrc.go",
-  "source_sha256": "f71c63715b55130e9c2c45b260ebfc5eee71c6b3c7932f5614aa4c702506131f",
+  "source_sha256": "c7cf79f18210516d3320e6ab8922a40eee120dd894be2a70f35c13d71f7f587a",
   "package": "candidatesrc",
   "function": "OfficialRanking",
   "signature": "OfficialRanking(params=5, results=2)",
   "start": {
-    "line": 208,
+    "line": 224,
     "column": 1
   },
   "end": {
-    "line": 224,
+    "line": 240,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 212,
+        "line": 228,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 215,
+        "line": 231,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 218,
+        "line": 234,
         "column": 2
       }
     }
@@ -42,14 +42,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 213,
+        "line": 229,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 221,
+        "line": 237,
         "column": 2
       }
     }
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 213,
+        "line": 229,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 219,
+        "line": 235,
         "column": 9
       },
       "text": "clock.System"
@@ -76,21 +76,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 211,
+        "line": 227,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 216,
+        "line": 232,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 219,
+        "line": 235,
         "column": 3
       }
     }

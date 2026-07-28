@@ -98,11 +98,11 @@ staleness 10분 = 40분이면 감시목록 전체가 만료되어 회복 스캔�
 (a) `DefaultStalenessTTL`과 `MaxRankPriorAge`는 둘 다 `BackoffLadder` 마지막 rung(300s)의
 **두 배**이고, 그 근거는 ladder 옆에 적혀 있다: 그만한 후퇴는 정상 운영이며 그 사이에
 일어난 것을 만료시켜서는 안 된다. 소스가 백오프 안에 있는 것은 정지가 아니므로 기억은
-ladder 전체를 견뎌야 한다. (b) 그 지점을 넘으면 기억이 자격 부여할 대상 자체가
+ladder 전체를 견뎌야 한다. ~~(b) 그 지점을 넘으면 기억이 자격 부여할 대상 자체가
 사라진다 — 아무도 재승격하지 않은 후보는 `DefaultStalenessTTL`에 암묵 냉각되고 거기서부터
-감시목록이 회전한다. 즉 기억은 **자기가 자격 부여할 후보 수명이 사는 동안 정확히 그만큼**
-유효하다. 스캔 간격(공식 15s·WTS 5s)과 엔진 양보(2배)는 전부 ladder 마지막 rung 훨씬
-안쪽이라 별도 항이 필요 없다. 시계가 뒤로 가면(음수 나이) 역시 쓰지 않는다.
+감시목록이 회전한다.~~ **(b)는 2026-07-28 정정했다 — I18을 보라.** 냉각은 소멸이 아니고
+만료는 40분이다. 스캔 간격(공식 15s·WTS 5s)과 엔진 양보(2배)는 전부 ladder 마지막 rung
+훨씬 안쪽이라 별도 항이 필요 없다. 시계가 뒤로 가면(음수 나이) 역시 쓰지 않는다.
 
 **결정 2 (F2, 완전성)**: 소스 자신의 비교(요청 ≠ 도착)가 짧다고 말하는 읽기는 기억을
 **교체하지 않는다.** probe: 100행 중 3행 degraded 읽기 다음의 완전 읽기가 100행 중
@@ -179,6 +179,16 @@ nil은 `clock.System()`이다.
 그것을 만든 소스별로 나눈 census. 두 표면(`tossctl candidate scan`, `/signals`)이 **같은
 reducer**를 쓴다(§4.3의 규칙). `/signals`는 스캔 기록을 볼 수 없으므로 (a)를 렌더할 수
 없고 (b)만 렌더한다.
+
+**증상 문장 정정 (2026-07-28, 3차 리뷰 P1-3)**: 이 항목과 `sightingsource.go` 머리말은
+"엔드포인트가 계속 짧으면 모든 읽기가 절단이고 census가 `READING_TRUNCATED`로 찬다"고
+썼다. 이 빌드에서는 그렇게 되지 않는다. 짧은 읽기는 기억을 교체하지 않으므로(F2) 그
+소스의 신규 진입 사실이 **영구히 `unknown`**이 되고, 그러면 자격 없는 위치는 저장되지
+않으므로(F7) `first_rank`가 아예 생기지 않는다. 실제 증상은 **`NO_FIRST_RANK`**이며,
+후보가 동일성 창(10분)보다 오래 살면 **`NO_FIRST_SIGHTING`**으로 바뀐다 — 그때는 평가
+창 안의 어떤 읽기도 `first_seen_at`에 충분히 가깝지 않기 때문이다. 스캔 쪽 증상은
+`ScanResult.FirstRanksHeld`가 0으로 내려오지 않는 것이다. `READING_TRUNCATED`는 신규 진입
+사실이 살아 있는 **부분** 저하에서 나타난다. 두 문장을 제자리에서 고쳤다.
 
 **한계를 기록한다**: 요청 행 수는 Row를 타고 오므로 **행이 0개인 읽기는 (a)에 나타날 수
 없다** — 가장 극단적인 절단이 가장 설명되지 않는다. `Reading` 자체에 수를 실으면 고쳐지고,
@@ -321,14 +331,23 @@ Branch Test Map을 쓰면서 두 분기에 대해 "이 분기를 덮는 테스�
 결함은 아니지만 evidence가 정직하려면 남겨야 하는 목록이다. **전부 이 change 이전부터 있던
 분기**이고, 이 change가 만든 분기 중 커버되지 않은 것은 I14의 둘뿐이었다(이제 커버된다).
 
-- `internal/candidatesrc` — 빈 심볼 skip 넷(`officialRanking.Read` B4,
+- ~~`internal/candidatesrc` — 빈 심볼 skip 넷(`officialRanking.Read` B4,
   `officialRanking.rememberRead` B2, `wtsPopular.Read` B4, `wtsPopular.rememberRead` B2).
   빈 `Symbol`을 가진 fixture가 없다. 행 집합과 기억 집합이 **같은 조건으로** 걸러진다는
-  것이 이 change의 전제인데, 그 대칭은 구조로만 서 있다.
-- `internal/candidatesrc` — `OfficialRanking`의 `count <= 0` 반쪽, `WTSPopular`의
-  `size <= 0`. 생산 호출부는 `Panel`의 리터럴 100·30뿐이다.
-- `internal/candidatesrc.Panel` — 주입 clock이 네 소스에 **전달되는지**를 잡는 테스트가
-  없다. 유효성 테스트들은 두 생성자를 직접 부른다.
+  것이 이 change의 전제인데, 그 대칭은 구조로만 서 있다.~~
+  **2026-07-28 정정·해소 — I16을 보라.** 문장 자체가 틀렸다. 두 **집합**은 같은 조건으로
+  걸러지지만, 그 읽기가 *온전한가*를 결정하는 비교는 걸러지기 **전**의 행 수로 이루어지고
+  있었다. `blank_symbol_test.go`가 네 분기를 전부 덮는다.
+- ~~`internal/candidatesrc` — `OfficialRanking`의 `count <= 0` 반쪽, `WTSPopular`의
+  `size <= 0`.~~ `count <= 0` 반쪽은 여전히 커버 없음이다. 생산 호출부는 `Panel`의 리터럴
+  100·30뿐이다.
+- ~~`internal/candidatesrc.Panel` — 주입 clock이 네 소스에 **전달되는지**를 잡는 테스트가
+  없다.~~ **해소** — `clock_wiring_test.go`의 `TestThePanelHandsItsClockToEverySourceItBuilds`가
+  네 소스를 각각 신선도 경계 너머로 몬다. 네 생성자 어느 하나에 `nil`을 넣으면 실패한다.
+- ~~`previousReading.usableAt`의 zero instant 두 반쪽~~ **부분 해소** —
+  `TestAMemoryWithNoInstantOnEitherSideIsNotAnAnswer`. 네 case 중 가드를 실제로 가르는
+  것은 양쪽 다 zero인 경우 하나뿐이고(나머지 둘은 부호 검사와 TTL이 각각 먼저 거부한다)
+  그 사실을 테스트 주석이 말한다.
 - `internal/candidate.Collect` — 인자 검증 둘(빈 시장, zero instant), 패널·not-asked 모순,
   빈 심볼 skip, 저장 실패 전파 넷, mis-wire와 성공 읽기가 함께 있는 경우.
 - `internal/candidate.Observation.validate` — 여덟 case 중 테스트가 넘기는 것은
@@ -344,3 +363,105 @@ Branch Test Map을 쓰면서 두 분기에 대해 "이 분기를 덮는 테스�
 
 각 항목은 해당 `analysis/function-logic/*/branch-test-map.md`에 **커버 없음**으로 표기되어
 있다.
+
+## I16. `whole` 판정이 기억이 버리는 행 위에서 내려지고 있었다 — **P0, 2026-07-28 (3차 리뷰 P0-1)**
+
+**발견**: `officialRanking.Read`가 `o.count == len(raw.Items)`로 온전 여부를 계산해
+`rememberRead`에 넘겼다. `len(raw.Items)`는 **빈 심볼 행을 센다.** 그런데 rows(`:251-254`)도
+기억 집합 `current`(`:313-317`)도 그 행을 버린다. 즉 판정의 분모와 기억의 내용이 다른
+집합이었다. WTS도 같다(`w.size == total`).
+
+**두 가지 결과, 둘 다 실행으로 재현됨**:
+
+1. **일부 빈 행** — 3행 요청, 3행 도착, 그중 2행이 빈 심볼 → `whole = true`, 기억은 심볼
+   1개. 다음 온전한 읽기가 나머지 2개를 **신규 진입으로 측정**하고 `measured=true
+   newlyListed=yes truncation=whole`로 write-once 칼럼 `candidates.first_rank_newly_listed`에
+   기록한다.
+2. **전부 빈 행** — `Reading.Rows`가 비어 `Collect`는 그 읽기를 `Missing`으로 분류하는데,
+   `whole = true`라 기억은 **비어 있지만 non-nil인 집합**으로 교체된다. `usableAt`은
+   `p.symbols != nil`만 보므로(`:100`) 그 집합이 답하고, 다음 읽기의 **모든 행**이 `yes`가
+   된다.
+
+이것은 F2가 닫았다고 커밋 메시지가 주장한 결함이 다른 문으로 들어온 것이고, 이 change가
+막으려는 방향 그대로 **잘못 `Measured`인 관측**을 만든다.
+
+**결정**: `whole`을 `rememberRead` 안에서, `current`가 존재하는 자리에서 계산한다.
+
+```go
+whole := requested == len(items) && len(current) == len(items)
+```
+
+두 항 모두 필요하다 — 요청 수가 도착 행 수와 같아야 하고, 도착한 행이 **기억에 남는
+행**이어야 한다. 호출자는 비교 대신 요청 수(`o.count` / `w.size`)를 넘긴다.
+
+**`RankTotal`은 그대로 `len(items)`다.** 엔드포인트가 실제로 서브한 행 수가 백분위의
+올바른 분모이고, 고쳐야 하는 것은 **기억이 잃어버린 행 위에 세워지는 것**뿐이다.
+
+**확인**: `internal/candidatesrc/blank_symbol_test.go`(신규 파일)가 세 shape(일부 빈, 전부
+빈, WTS)과 대조군 하나를 몬다. `whole`을 옛 형태로 되돌리면 세 테스트가 실패한다
+(2026-07-28 실행).
+
+## I17. 자격 있는 읽기가 같은 tick 안에서 버려지고 있었다 — **P1, 2026-07-28 (3차 리뷰 P1-3)**
+
+**발견**: `Collect`(`scan.go:403-405`)는 `firstRanked[symbol]`을 **패널 순서에서 처음으로
+위치를 실은 소스**에서 가져오고, `recordFirsts`(`:563-566`)는 그 하나가 자격 미상이면
+보류한다. 두 규칙이 따로 결정하므로, 자격 없는 `SourceOfficialTradingValue` 읽기와 자격
+있는 `SourceOfficialTradingVolume` 읽기(4 of 100, new-entrant=no, whole)가 한 `Collect`에
+함께 있으면 결과는 `FirstRanks=0 FirstRanksHeld=1`이고 **아무것도 저장되지 않는다.**
+
+**왜 영구적인가**: 계속 짧게 오는 소스는 자기 기억을 교체하지 않으므로(F2) `NewlyListed`가
+영구히 `unknown`이고, `Panel`의 순서에서 첫 번째(`candidatesrc.go:515`)이므로 자기가
+나열하는 모든 심볼의 `firstRanked`를 선점해 시장 전체의 `first_rank`를 무기한 막는다.
+공식 순위 엔드포인트가 요청한 100행을 주는지는 측정된 적이 없으므로 가정이 아니다.
+
+**결정**: 자격 있는 읽기가 자격 없는 읽기를 **밀어낸다**. 자격 판정은 두 자리가 공유하는
+술어 `qualifiesFirstRank(Reported)` 하나다 —
+`NewlyListed.Known() && RankRequested > 0`. 같은 자격의 읽기 사이에서는 **패널 순서가
+그대로 결정한다**(가장 높은 순위가 이기는 규칙이 아니다 — 그것은 스캔이 여러 참인 답 중
+가장 놀라운 것을 고르는 형태다). 패널의 **어떤** 소스도 자격이 없으면 위치는 여전히
+보류되므로 §9.7의 세션 시작 규칙은 그대로다.
+
+**확인**: `internal/candidate/firstrank_qualifier_test.go`(신규 파일) 5건. 선점 규칙을
+옛 형태로 되돌리면 2건이, 술어의 `RankRequested > 0` 반쪽을 지우면 1건이 실패한다
+(2026-07-28 실행).
+
+## I18. 기억 TTL의 두 번째 근거가 틀렸다 — 정정 (3차 리뷰 P2-1)
+
+`candidatesrc.go`의 `previousReadingTTL` 주석은 근거 둘을 든다. 첫째(마지막 backoff rung의
+2배)는 정확하다. 둘째 — "이 지점을 넘으면 기억이 자격 부여할 대상 자체가 사라진다" — 는
+**틀렸다**: `Store.stateAt`(`store.go:1842-1854`)는 staleness(10분)에 후보를 *냉각*시키고
+만료는 staleness + `DefaultCoolingTTL` = **40분**이며, 냉각된 후보는
+`first_seen_at`·`first_price`·`first_rank`를 그대로 갖는다.
+
+리뷰는 대체 근거로 `nearFirstSighting`(`veto.go:850`, `gap < DefaultStalenessTTL`)을
+제안했다. **그 추론은 그대로는 성립하지 않는다.** 기억의 나이는 `T_read - T_mem`이고
+`nearFirstSighting`이 묶는 것은 `T_read - first_seen_at`이라, 회복 읽기 그 자체가 새 생명을
+시작시키는 경우(`first_seen_at = T_read`, gap 0)에는 창이 활짝 열려 있다. 그리고 그 경우가
+바로 F1 probe가 재현한 시나리오다 — 40분 공백이 감시목록을 만료시키고 회복 스캔이 패널을
+일괄 재승격하며, 목록을 떠난 적 없는 심볼이 장애 이전 집합에 대해 `no`를 받는다.
+
+**따라서 두 문장으로 고쳤다**: (a) 기억보다 먼저 생명이 시작된 후보에 대해서는
+`nearFirstSighting`이 `NoteFirstRank`와 `MeasureFirstSighting` 양쪽에서 이미 거부하므로 이
+bound가 없어도 안전하다 — 이것이 리뷰가 옳게 짚은 절반이다. (b) 그것이 **덮지 못하는**
+경우가 회복 읽기 자신이 시작시키는 생명이고, **그 경우가 이 bound가 존재하는 이유다.**
+같은 숫자, 두 기구가 양 끝을 각각 닫는다.
+
+## I19. P0-1 수리 뒤에도 남는 것 (3차 리뷰 P2-7)
+
+정직하게 적는다. 두 잔여는 실재하고 이 change가 고치지 않는다.
+
+1. **행이 0개인 읽기는 `ScanResult.Readings`에 나타날 수 없다.** 요청 행 수가 Row를 타고
+   오기 때문이고(I9의 한계와 같은 원인), 전부 빈 심볼인 읽기는 행이 0개다. 즉 **가장 큰
+   피해를 주는 읽기에 대해 운영자의 직접 측정이 침묵한다.** 침묵이 전부는 아니다 — 그
+   읽기는 자기 사유와 함께 `Missing`에 들어가고, 이제 기억도 교체하지 못한다. 수리는
+   `Reading` 자체에 수를 싣는 것이고 그것은 모든 소스가 구현하는 seam을 바꾸는 더 넓은
+   change다.
+2. **일부만 빈 읽기는 스캔 출력에서 여전히 `whole`로 보고된다.** `ReadingFacts`는
+   `Requested = o.count`, `Arrived = RankTotal = len(items)`이고 `len(items)`는 빈 행을
+   센다. 3행 요청·3행 도착·2행 빈 읽기는 `100 requested, 100 arrived` 형태로 보이고
+   `Truncation()`은 `no`다. 이것은 **의도적으로 남긴다**: `RankTotal`은 엔드포인트가 서브한
+   행 수이고 백분위의 올바른 분모이며, `ReadingFacts.Truncation()`은 저장된 위치의
+   `Truncation`과 **같은 함수**여야 한다는 것이 §3의 불변식이다. 남는 사실은 절단 사실이
+   **전송**(요청 대비 서브된 행)을 서술하지 그 행들의 **사용 가능성**을 서술하지 않는다는
+   것이고, 둘은 빈 심볼에서만 갈린다. 기억 쪽은 I16이 닫았으므로 이 divergence가 측정을
+   오염시키는 경로는 남아 있지 않다.

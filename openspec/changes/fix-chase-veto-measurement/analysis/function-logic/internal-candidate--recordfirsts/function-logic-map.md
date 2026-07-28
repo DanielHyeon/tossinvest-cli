@@ -2,7 +2,7 @@
 
 - Source: `internal/candidate/scan.go`
 - Change: `fix-chase-veto-measurement`
-- AST evidence: `ast.json` (revision `current`, L504–593, 분기 13개)
+- AST evidence: `ast.json` (revision `current`, L528–623, 분기 13개)
 - Risk scan: `risk-pattern-report.md`
 
 승격된 후보 중 아직 stored first가 없는 것에 대해 첫 가격과 첫 순위를 쓴다. 이 change가
@@ -27,7 +27,7 @@ tick의 모든 읽기, 그리고 `tossctl candidate scan`이 취하는 **모든*
 |---|---|---|---|
 | `promoted` | 이번 pass가 승격한 심볼 | `Collect` | 비면 no-op |
 | `summaries` | **승격 이후에** 읽는다 | `store.Summaries` | 만료로 초기화된 생명이 '이미 기록됨'으로 읽히지 않게 |
-| `ranked[symbol]` | 패널 순서상 첫 순위 행 | `Collect`의 `firstRanked` | 없으면 skip |
+| `ranked[symbol]` | 이번 tick에서 **자격이 가장 높은** 순위 행(동률이면 패널 순서) | `Collect`의 `firstRanked` | 없으면 skip |
 | `o.Reported.NewlyListed` / `RankRequested` | 자격 두 사실 | 소스 어댑터 | 둘 중 하나라도 없으면 **보류** |
 
 ## Branches and early returns
@@ -43,7 +43,7 @@ tick의 모든 읽기, 그리고 `tossctl candidate scan`이 취하는 **모든*
 | B7 | `NoteFirstPrice` 오류 | `Rejected` | 계속 | **커버 없음** |
 | B8 | else — 성공 | `result.FirstPrices++` | — | `TestAScanReportsTheShadowRecordForEveryCodeThatHasOne` |
 | B9 | `!ok || !needRank[symbol]` | skip | continue | `TestAPositionStoredBeforeTheFactsExistedIsNotFilledInByALaterScan`(이미 있음) |
-| B10 | `!NewlyListed.Known() || RankRequested <= 0` **(신규)** | `result.FirstRanksHeld++`, **쓰지 않는다** | continue | `TestASessionStartDoesNotStampThePanelAsSeenLate` · `TestTheHeldCountIsRenderedAndSaysWhichCommandCanNeverQualifyAPosition` |
+| B10 | `!qualifiesFirstRank(o.Reported)` **(신규)** | `result.FirstRanksHeld++`, **쓰지 않는다** | continue | `TestASessionStartDoesNotStampThePanelAsSeenLate` · `TestWhenNoReadingInTheTickCanQualifyThePositionIsHeld` · `TestAReadingThatNeverRecordedItsRequestIsHeldToo` · `TestTheHeldCountIsRenderedAndSaysWhichCommandCanNeverQualifyAPosition` |
 | B11 | `NoteFirstRank` 결과 switch | — | — | `TestARePromotionAfterExpiryIsQualifiedByTheReadingThatSawTheSymbolReturn` |
 | B12 | `err != nil` | `Rejected` | 계속 | **커버 없음** |
 | B13 | `stored.Recorded()` | `result.FirstRanks++` | — | `TestAScanReportsTheShadowRecordForEveryCodeThatHasOne` |
@@ -51,6 +51,12 @@ tick의 모든 읽기, 그리고 `tossctl candidate scan`이 취하는 **모든*
 B11의 세 번째 경우(오류도 아니고 `Recorded()`도 아닌 것)는 **의도적으로 아무것도 하지
 않는다** — 동일성 창 밖 읽기가 그것이고, 순위를 싣지 않는 소스가 처음 올린 후보의 일상
 상태다. 함수 끝의 주석이 그 침묵을 설명한다.
+
+**B10의 조건이 2026-07-28에 술어로 바뀌었다** (pre-gate 리뷰 P1-3, issues.md I17). 같은 두
+절이 `Collect`의 `firstRanked` 선택에도 필요해졌고, 두 자리가 서로 다른 규칙을 갖는 것이
+바로 그 결함이었다 — `Collect`가 채택한 읽기를 여기서 보류하면 같은 tick의 자격 있는
+읽기가 버려진다. 이제 `qualifiesFirstRank` 하나를 둘이 공유하므로 어긋날 수 없고,
+이 분기에 도달한다는 것은 **패널의 어떤 소스도** 그 심볼을 자격 부여하지 못했다는 뜻이다.
 
 ## Calls and live bindings
 

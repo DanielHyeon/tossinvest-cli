@@ -1,15 +1,15 @@
 {
   "file": "internal/candidatesrc/candidatesrc.go",
-  "source_sha256": "f71c63715b55130e9c2c45b260ebfc5eee71c6b3c7932f5614aa4c702506131f",
+  "source_sha256": "c7cf79f18210516d3320e6ab8922a40eee120dd894be2a70f35c13d71f7f587a",
   "package": "candidatesrc",
   "function": "newlyListed",
   "signature": "newlyListed(params=3, results=1)",
   "start": {
-    "line": 340,
+    "line": 380,
     "column": 1
   },
   "end": {
-    "line": 348,
+    "line": 388,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 341,
+        "line": 381,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 344,
+        "line": 384,
         "column": 2
       }
     }
@@ -34,21 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 342,
+        "line": 382,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 345,
+        "line": 385,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 347,
+        "line": 387,
         "column": 2
       }
     }
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 342,
+        "line": 382,
         "column": 10
       },
       "text": "candidate.NewlyListedUnknown"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 345,
+        "line": 385,
         "column": 10
       },
       "text": "candidate.NewlyListedNo"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 347,
+        "line": 387,
         "column": 9
       },
       "text": "candidate.NewlyListedYes"

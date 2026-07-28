@@ -1,16 +1,16 @@
 {
   "file": "internal/candidatesrc/candidatesrc.go",
-  "source_sha256": "f71c63715b55130e9c2c45b260ebfc5eee71c6b3c7932f5614aa4c702506131f",
+  "source_sha256": "c7cf79f18210516d3320e6ab8922a40eee120dd894be2a70f35c13d71f7f587a",
   "package": "candidatesrc",
   "function": "usableAt",
   "receiver": "previousReading",
   "signature": "previousReading.usableAt(params=1, results=1)",
   "start": {
-    "line": 99,
+    "line": 114,
     "column": 1
   },
   "end": {
-    "line": 105,
+    "line": 120,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 100,
+        "line": 115,
         "column": 2
       }
     }
@@ -27,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 101,
+        "line": 116,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 104,
+        "line": 119,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 100,
+        "line": 115,
         "column": 25
       },
       "text": "p.at.IsZero"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 100,
+        "line": 115,
         "column": 42
       },
       "text": "at.IsZero"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 103,
+        "line": 118,
         "column": 9
       },
       "text": "at.Sub"
@@ -69,7 +69,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 103,
+        "line": 118,
         "column": 2
       }
     }

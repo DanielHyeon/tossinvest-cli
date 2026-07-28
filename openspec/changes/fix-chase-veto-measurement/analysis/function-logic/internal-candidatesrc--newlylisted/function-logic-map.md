@@ -2,7 +2,7 @@
 
 - Source: `internal/candidatesrc/candidatesrc.go`
 - Change: `fix-chase-veto-measurement`
-- AST evidence: `ast.json` (revision `current`, L340–348, 분기 2개)
+- AST evidence: `ast.json` (revision `current`, L380–388, 분기 2개)
 - Risk scan: `risk-pattern-report.md`
 
 **신규 함수**. 한 심볼에 대한 3-상태 답이다.

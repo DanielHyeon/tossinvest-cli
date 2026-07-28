@@ -156,6 +156,35 @@
   issues.md I10.
 - [x] 9.11 [P2-F11] v3 fixture + 칼럼·CHECK 고정, 루프 길이 가드. issues.md I12.
 
+## 10. pre-gate 리뷰 3차의 지적 반영 (2026-07-28)
+
+전부 probe·mutation으로 재현된 상태로 도착했고, 반영 후 같은 mutation으로 RED를 확인했다.
+기록은 `issues.md` I16–I19, `review.md` "구현 후 독립 리뷰 3차".
+
+- [x] 10.1 [P0-1] `whole` 판정을 `rememberRead` 안으로, `current`가 존재하는 자리로 옮긴다
+  (`requested == len(items) && len(current) == len(items)`). `RankTotal`은 그대로 둔다.
+  빈 심볼 fixture 신규(`blank_symbol_test.go`) — 일부 빈·전부 빈·WTS·대조군. issues.md I16.
+- [x] 10.2 [P1-2] `TestASessionStartDoesNotStampThePanelAsSeenLate`가 두 tick의
+  `FirstRanksHeld`(3 → 0)와 `FirstRanks`(0 → 3)를 단언한다. 이 파일은 base 기준 신규
+  파일이라 FLM 대상이 늘지 않는다.
+- [x] 10.3 [P1-3] `Collect`가 자격 있는 읽기를 자격 없는 것보다 먼저 채택한다. 자격 판정은
+  `qualifiesFirstRank` 하나로 모아 `recordFirsts`와 공유한다. 같은 자격끼리는 패널 순서.
+  `firstrank_qualifier_test.go` 신규 5건. issues.md I17.
+- [x] 10.4 [P2-1] `previousReadingTTL`의 두 번째 근거를 참인 문장으로 교체.
+  리뷰의 대체 근거는 절반만 성립하므로 두 문장으로 나눴다. issues.md I18.
+- [x] 10.5 [P2-2·P2-3] `usableAt`의 zero instant와 `Panel`의 clock 전달을 고정
+  (`clock_wiring_test.go` 신규).
+- [x] 10.6 [P2-4·P2-5] 술어의 `RankRequested > 0` 반쪽과 `TallySightingSources`의
+  source 없는 skip을 고정(`sightingsource_skip_test.go` 신규).
+- [x] 10.7 [P1-3 부수] `sightingsource.go` 머리말과 issues.md I9의 증상 문장 정정 —
+  계속 짧은 엔드포인트의 증상은 `READING_TRUNCATED`가 아니라 `NO_FIRST_RANK`(→
+  `NO_FIRST_SIGHTING`)와 내려오지 않는 `FirstRanksHeld`다.
+- [x] 10.8 [P2-6·P2-7] 기록만 — 소비자 가드가 못 보는 형태는 `review.md`에, P0-1 이후의
+  잔여 둘은 issues.md I19에.
+- [x] 10.9 FLM 증거 재생성. 편집한 생산 파일 둘(`candidatesrc.go`, `scan.go`)에 묶인 기존
+  target 13개의 `ast.json`을 다시 만들고, 새 함수 `qualifiesFirstRank`의 target을 추가한다.
+  `check_analysis.py` exit 0.
+
 ## 후속 (이 change의 체크박스가 아니다)
 
 - **`extended = 6` 투입** (사용자 결정 2026-07-28: "수리하고 후속 change").

@@ -6,12 +6,29 @@ package candidate
 // # The question it exists for
 //
 // Nobody has measured whether the official rankings endpoint returns the hundred
-// rows it is asked for. If it does not, every reading is truncated, every first
-// sighting taken from it is refused under READING_TRUNCATED, and the distribution
-// the follow-up change would choose a seen_late threshold from does not exist —
-// while the screen shows a large unmeasured count and no way to tell which of the
-// four ranking sources produced it. The same is true of NEW_ENTRANT_UNKNOWN and
-// REQUEST_UNRECORDED, which are refusals about a reading rather than about a symbol.
+// rows it is asked for. If it does not, the distribution the follow-up change would
+// choose a seen_late threshold from does not exist — while the screen shows a large
+// unmeasured count and no way to tell which of the four ranking sources produced it.
+//
+// # Which refusal a short endpoint actually shows (corrected 2026-07-28)
+//
+// This said READING_TRUNCATED, which is what a short endpoint would produce on its
+// own. It is not what this build produces, because two other rules reach the reading
+// first. A source that comes back short never replaces its own memory, so its
+// new-entrant answer stays unknown for as long as the degradation lasts; and a
+// position no reading in the tick could qualify is not stored at all, it is counted
+// in ScanResult.FirstRanksHeld. So nothing is ever written for those candidates, and
+// what the census fills with is NO_FIRST_RANK — turning into NO_FIRST_SIGHTING once
+// the candidate is older than the identity window, since by then no reading left in
+// the assessment window is near enough to first_seen_at to be the one.
+//
+// READING_TRUNCATED is what appears when the *other* half is intact: a source that
+// answers about its previous reading and still arrives short, which is the shape a
+// partial degradation takes rather than a permanent one.
+//
+// All four of those reasons — plus NEW_ENTRANT_UNKNOWN and REQUEST_UNRECORDED — are
+// statements about a reading rather than about a symbol, and none of them says whose
+// reading it was. That is what this file adds.
 //
 // A count per code, which is what VetoTally gives, cannot separate "the official
 // trading-value list comes back short" from "the WTS popularity list does". Those

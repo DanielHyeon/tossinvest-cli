@@ -2,7 +2,7 @@
 
 - Source: `internal/candidatesrc/candidatesrc.go`
 - Change: `fix-chase-veto-measurement`
-- AST evidence: `ast.json` (revision `current`, L408–449, 분기 4개)
+- AST evidence: `ast.json` (revision `current`, L448–489, 분기 4개)
 - Risk scan: `risk-pattern-report.md`
 
 WTS 인기 순위 한 판을 읽는다. 공식 순위와 같은 두 사실(`RankRequested`, `NewlyListed`)을
@@ -28,14 +28,14 @@ WTS 인기 순위 한 판을 읽는다. 공식 순위와 같은 두 사실(`Rank
 | B1 | `m != candidate.MarketKR` | **클라이언트를 부르지 않는다** | `Reading{}, error` | `TestThePopularityRankingRefusesAMarketItCannotSee` |
 | B2 | `err != nil` | 없음 — 기억 교체 이전 | `Reading{}, error` | `internal/candidatesrc`의 fake err 경로 |
 | B3 | `for _, s := range raw.Stocks` | `rows` append | — | `TestTheWTSPopularityListReportsTheSameTwoFacts` |
-| B4 | `symbol == ""` — Symbol도 ProductCode도 없는 행 | 행을 만들지 않는다 | continue | **없음** (아래 주석) |
+| B4 | `symbol == ""` — Symbol도 ProductCode도 없는 행 | 행을 만들지 않고, 그래서 그 읽기는 온전하지 않다 | continue | `TestTheWTSMemoryIsAlsoBuiltFromTheRowsItKeeps` |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `w.reader.GetStockRanking(ctx, w.size)` | 인기 순위 | 오류는 래핑 | ast.json calls |
-| `w.rememberRead(market, raw.Stocks, w.size == total)` | 직전 집합 취득 + 조건부 교체 | 오류 없음 | ast.json calls |
+| `w.rememberRead(market, raw.Stocks, w.size)` | 직전 집합 취득 + 조건부 교체(온전 여부는 그 안에서 판정 — issues.md I16) | 오류 없음 | ast.json calls |
 | `wtsSymbol(s)` | 행의 식별자 | 순수 | ast.json calls |
 | `newlyListed(previous, hadPrevious, symbol)` | 3-상태 | 순수 | ast.json calls |
 
