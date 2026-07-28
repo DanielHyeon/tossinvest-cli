@@ -22,10 +22,13 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
@@ -527,6 +530,141 @@ func TestTheConsoleComesUpWithoutTheLimitsSeam(t *testing.T) {
 
 // --- the orders screen's read (change console-orders-screen, task 4.6) -------------
 
+// TestOneRefreshAsksTheOpenGroupAndTheClosedGroupSeparatelyAndTheLiveOneWhole.
+//
+// This is the wire, and it is the finding an adversarial review of the first
+// implementation opened with (design D2, amended). `status` is `required: true`
+// on GET /api/v1/orders, and the two groups behave differently in a way that
+// decides whether this screen can do its job at all:
+//
+//	status=OPEN    "모든 대기 중 주문을 전량 반환합니다. limit, cursor 는 무시되며"
+//	status=CLOSED  "limit (기본 20, 최대 100), cursor, from/to 파라미터 모두 적용"
+//
+// The first implementation sent neither — `?limit=100` and nothing else. That is
+// one of two failures depending on how the broker treats a missing required
+// parameter: a rejection, which makes the live count permanently unmeasured, or
+// one hundred rows spanning the account's whole history, in which case a live
+// order past row 100 is absent from the table AND from the count, rendered as
+// "0건 이상". The leftover then hides behind an 이상 nobody can resolve, because
+// this adapter deliberately does not walk pages (I-3).
+//
+// So the live half is asked for by the name that cannot truncate, and the closed
+// half is a separate request because a cancelled or rejected order never becomes
+// a trade and therefore never appears on /history either. Three calls, and the
+// honesty is what the number is for.
+func TestOneRefreshAsksTheOpenGroupAndTheClosedGroupSeparatelyAndTheLiveOneWhole(t *testing.T) {
+	type wire struct {
+		path  string
+		query url.Values
+	}
+	var (
+		mu   sync.Mutex
+		seen []wire
+	)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/oauth2/token" {
+			fmt.Fprint(w, `{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`)
+			return
+		}
+		mu.Lock()
+		seen = append(seen, wire{path: r.URL.Path, query: r.URL.Query()})
+		mu.Unlock()
+
+		switch {
+		case r.URL.Path == "/api/v1/orders" && r.URL.Query().Get("status") == "OPEN":
+			fmt.Fprint(w, `{"result":{"orders":[{"orderId":"live-1","symbol":"005930","side":"BUY",`+
+				`"orderType":"MARKET","status":"PENDING","quantity":"10","price":null,`+
+				`"currency":"KRW","orderedAt":"2026-07-27T09:30:00+09:00","canceledAt":null,`+
+				`"execution":null}],"nextCursor":null,"hasNext":false}}`)
+		case r.URL.Path == "/api/v1/orders" && r.URL.Query().Get("status") == "CLOSED":
+			fmt.Fprint(w, `{"result":{"orders":[{"orderId":"done-1","symbol":"AAPL","side":"SELL",`+
+				`"orderType":"LIMIT","status":"CANCELED","quantity":"5","price":"200",`+
+				`"currency":"USD","orderedAt":"2026-07-27T00:10:00Z",`+
+				`"canceledAt":"2026-07-27T00:11:00Z","execution":null}],`+
+				`"nextCursor":"c2","hasNext":true}}`)
+		case r.URL.Path == "/api/v1/orders":
+			// The shape this test exists to make impossible. The broker documents
+			// status as required; answering 400 here is the friendlier of the two
+			// things a real one does.
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, `{"error":{"code":"missing-required-parameter","message":"status"}}`)
+		case r.URL.Path == "/api/v1/conditional-orders":
+			fmt.Fprint(w, `{"result":{"conditionalOrders":[],"nextCursor":null,"hasNext":false}}`)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	previous := verifyBrokerFactory
+	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+		return official.New(
+			official.Credentials{APIKey: "k", SecretKey: "s"},
+			filepath.Join(t.TempDir(), "token.json"),
+			official.WithBaseURL(srv.URL),
+			official.WithHTTPClient(srv.Client()),
+			official.WithAccountSeq(7),
+		), "123-45-678901", nil
+	}
+	t.Cleanup(func() { verifyBrokerFactory = previous })
+
+	reading, err := consoleOrdersSeam(&rootOptions{}).Orders(context.Background())
+	if err != nil {
+		t.Fatalf("Orders: %v", err)
+	}
+
+	mu.Lock()
+	got := append([]wire(nil), seen...)
+	mu.Unlock()
+
+	if len(got) != 3 {
+		t.Fatalf("one refresh made %d broker call(s): %+v; the budget for this screen is three — "+
+			"미체결 1콜 + 종결 1콜 + 조건주문 1콜", len(got), got)
+	}
+
+	live, closed, conditional := got[0], got[1], got[2]
+	if live.path != "/api/v1/orders" || live.query.Get("status") != "OPEN" {
+		t.Errorf("the live read went out as %s?%s; without status=OPEN the broker either refuses "+
+			"the request or answers one page over the account's whole history, and the live order "+
+			"past row 100 is then missing from the table and from the count",
+			live.path, live.query.Encode())
+	}
+	if live.query.Get("limit") != "" || live.query.Get("cursor") != "" {
+		t.Errorf("the live read carried limit=%q cursor=%q; the API ignores both for OPEN, and "+
+			"sending them says on the wire that this call can be truncated when it cannot",
+			live.query.Get("limit"), live.query.Get("cursor"))
+	}
+	if closed.path != "/api/v1/orders" || closed.query.Get("status") != "CLOSED" {
+		t.Errorf("the second read went out as %s?%s, want the CLOSED group — a cancelled or "+
+			"rejected order never becomes a trade, so /history never shows it and this call is "+
+			"the only place that information exists", closed.path, closed.query.Encode())
+	}
+	if closed.query.Get("limit") != strconv.Itoa(consoleOrdersPageLimit) {
+		t.Errorf("the closed read asked for limit=%q, want %d", closed.query.Get("limit"),
+			consoleOrdersPageLimit)
+	}
+	if conditional.path != "/api/v1/conditional-orders" {
+		t.Errorf("the third call was %s, want the conditional endpoint", conditional.path)
+	}
+
+	// And the reading keeps the two plain lists apart, because only one of them
+	// can be truncated.
+	if len(reading.Open) != 1 || reading.Open[0].ID != "live-1" {
+		t.Errorf("the open list is %+v, want the one pending order", reading.Open)
+	}
+	if reading.OpenTruncated {
+		t.Error("the open list reports a truncation; OPEN returns every pending order, so the " +
+			"live count is a number rather than a floor")
+	}
+	if len(reading.Closed) != 1 || reading.Closed[0].ID != "done-1" {
+		t.Errorf("the closed list is %+v, want the one cancelled order", reading.Closed)
+	}
+	if !reading.ClosedTruncated {
+		t.Error("hasNext was dropped from the closed list; that count would be a settled number")
+	}
+}
+
 // TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient.
 //
 // verifylive.Broker does not declare the raw order reads, so the path has to be
@@ -578,22 +716,29 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 
 // TestTheOrdersSeamCarriesEachListsOutcomeSeparately.
 //
-// One refresh is two calls, and losing one of them must not take the other down.
-// The console renders the missing half as unmeasured and refuses to add the
-// counts; returning an error for the pair would throw away the half that answered
+// One refresh is three calls, and losing one of them must not take the others
+// down. The console renders the missing part as unmeasured and refuses to add the
+// counts; returning an error for the set would throw away the parts that answered
 // and leave the screen with nothing to be honest about.
 func TestTheOrdersSeamCarriesEachListsOutcomeSeparately(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/oauth2/token":
+		switch {
+		case r.URL.Path == "/oauth2/token":
 			fmt.Fprint(w, `{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`)
-		case "/api/v1/orders":
+		case r.URL.Path == "/api/v1/orders" && r.URL.Query().Get("status") == "OPEN":
 			fmt.Fprint(w, `{"result":{"orders":[{"orderId":"o-1","symbol":"005930","side":"BUY",`+
 				`"orderType":"MARKET","status":"PENDING","quantity":"10","price":null,`+
 				`"currency":"KRW","orderedAt":"2026-07-27T09:30:00+09:00","canceledAt":null,`+
-				`"execution":null}],"nextCursor":null,"hasNext":true}}`)
-		case "/api/v1/conditional-orders":
-			// The half that fails.
+				`"execution":null}],"nextCursor":null,"hasNext":false}}`)
+		case r.URL.Path == "/api/v1/orders":
+			// The closed page is the one that can be truncated.
+			fmt.Fprint(w, `{"result":{"orders":[{"orderId":"o-0","symbol":"005930","side":"BUY",`+
+				`"orderType":"LIMIT","status":"FILLED","quantity":"10","price":"70000",`+
+				`"currency":"KRW","orderedAt":"2026-07-26T09:30:00+09:00","canceledAt":null,`+
+				`"execution":{"filledQuantity":"10","averageFilledPrice":"70000"}}],`+
+				`"nextCursor":"c2","hasNext":true}}`)
+		case r.URL.Path == "/api/v1/conditional-orders":
+			// The part that fails.
 			w.WriteHeader(http.StatusTooManyRequests)
 			fmt.Fprint(w, `{"error":{"code":"rate-limited"}}`)
 		default:
@@ -618,22 +763,25 @@ func TestTheOrdersSeamCarriesEachListsOutcomeSeparately(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Orders returned an error for a half-answered reading: %v", err)
 	}
-	if len(reading.Plain) != 1 || reading.Plain[0].ID != "o-1" {
-		t.Fatalf("the plain list did not survive the conditional failure: %+v", reading.Plain)
+	if len(reading.Open) != 1 || reading.Open[0].ID != "o-1" {
+		t.Fatalf("the open list did not survive the conditional failure: %+v", reading.Open)
 	}
-	if reading.PlainError != "" {
-		t.Errorf("the plain list carries an error it did not have: %q", reading.PlainError)
+	if reading.OpenError != "" {
+		t.Errorf("the open list carries an error it did not have: %q", reading.OpenError)
 	}
-	if !reading.PlainTruncated {
-		t.Error("hasNext was dropped; the count would be rendered as a settled number")
+	if len(reading.Closed) != 1 || reading.Closed[0].ID != "o-0" {
+		t.Fatalf("the closed list did not survive the conditional failure: %+v", reading.Closed)
+	}
+	if !reading.ClosedTruncated {
+		t.Error("hasNext was dropped; the closed count would be rendered as a settled number")
 	}
 	if reading.ConditionalError == "" {
 		t.Error("the conditional failure was swallowed; the screen would render 0 conditional " +
 			"orders as a measured value while a leftover held the exposure cap")
 	}
 	// And the absent values arrived absent rather than as zero.
-	if reading.Plain[0].Price != "" || reading.Plain[0].AverageFilledPrice != "" {
+	if reading.Open[0].Price != "" || reading.Open[0].AverageFilledPrice != "" {
 		t.Errorf("a null price/execution arrived as %q/%q; the raw read exists so that an absent "+
-			"value is not a number", reading.Plain[0].Price, reading.Plain[0].AverageFilledPrice)
+			"value is not a number", reading.Open[0].Price, reading.Open[0].AverageFilledPrice)
 	}
 }

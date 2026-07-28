@@ -277,7 +277,7 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 		}
 	}
 	// The floor is the canary for "the extractor stopped parsing", so it follows
-	// the real number rather than sitting at some historical low. The eighteen,
+	// the real number rather than sitting at some historical low. The nineteen,
 	// enumerated so the number and the list cannot drift apart the way they did
 	// once already (the list added to sixteen while the assertion said
 	// seventeen — the settings SCREEN was missing from it, and a comment that
@@ -293,10 +293,11 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	//	2  the restarts: /restart, /soak/restart
 	//	1  the overview (console-operator-overview): /dashboard
 	//	1  the orders screen (console-orders-screen): /orders
+	//	1  the discovery screen (add-candidate-discovery): /signals
 	//
 	// A floor below the truth would let a scanner that read only console.go's
 	// first half go on passing.
-	if len(routes) < 18 {
+	if len(routes) < 19 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -775,13 +776,14 @@ func TestNoRouteNamesAnAccountMutation(t *testing.T) {
 
 // TestTheDashboardScreensAreReads.
 //
-// The positions, history, overview and orders routes exist, go through the
-// session gate like everything else, and are NOT behind the CSRF gate — a read
-// route that demanded a POST would be a page nobody can open, which is the
+// The positions, history, overview, orders and signals routes exist, go through
+// the session gate like everything else, and are NOT behind the CSRF gate — a
+// read route that demanded a POST would be a page nobody can open, which is the
 // failure this catches from the other side.
 func TestTheDashboardScreensAreReads(t *testing.T) {
 	want := map[string]bool{
 		"/positions": false, "/history": false, "/dashboard": false, "/orders": false,
+		"/signals": false,
 	}
 	found := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -871,6 +873,11 @@ var consoleCapabilities = map[string]capability{
 	// screen that only wants to display a ceiling must not gain the ability to
 	// edit configuration on the way (console-operator-overview D8).
 	"GateLimits": {Methods: []string{"GateLimits"}},
+	// The discovery store's assessment, read (change add-candidate-discovery,
+	// task 5.5). One method, and it fetches nothing from an account: behind it is
+	// internal/candidate, whose own dependency closure is {internal/clock}, so
+	// there is no order verb anywhere in what this seam can reach.
+	"Signals": {Methods: []string{"Signals"}},
 	// The order record, read (change console-orders-screen, task 3.7).
 	//
 	// One method, and it fetches. The verb list is not touched to make room for

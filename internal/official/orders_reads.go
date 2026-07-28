@@ -2,6 +2,8 @@ package official
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -195,13 +197,51 @@ type RawOrderList struct {
 	HasNext    bool
 }
 
+// ErrOrderStatusRequired is what the raw order reads answer when the caller did
+// not name a lifecycle group.
+//
+// # Why this is a refusal and not a default
+//
+// `status` is documented `required: true` on both order list endpoints, and it is
+// not a filter like `symbol` or `limit`: it selects between two differently shaped
+// answers. Picking one here would be this client deciding which question the
+// caller meant, and the wrong choice is silent — a plain read defaulted to CLOSED
+// would answer with one page of old orders and no indication that every live one
+// is missing.
+//
+// The refusal is here, in the client, rather than in a caller's tests, because the
+// failure it prevents was a caller forgetting. `/orders` shipped composing
+// `?limit=100` with no status, which is either a rejected request or one page over
+// the account's whole history — and in the second case a live order past row 100
+// is absent from the screen and from its counts, rendered as a floor nobody can
+// resolve. A rule that lives only at the composition site is forgotten again at
+// the next composition site, by a change nobody is reviewing for this.
+//
+// It is not classified as retryable and ShouldFallback answers false for it, which
+// is right: a request this client will not send is not a reason to reach for the
+// web session.
+var ErrOrderStatusRequired = errors.New("official: an order list read must name a status group")
+
 // OrdersRaw fetches the same page [Client.Orders] does, without adapting the
 // decimals and without discarding the page boundary.
 //
 // It is one request to `GET /api/v1/orders`, the same one Orders makes, so a
 // caller that needs both shapes should call this one and adapt rather than
 // spending two requests out of the §0.4 budget.
+//
+// filter.Status is required (see [ErrOrderStatusRequired]) and its value is passed
+// verbatim. The broker is the authority on which groups exist; this read refuses
+// the absence of an answer, not an answer it has not seen before.
 func (c *Client) OrdersRaw(ctx context.Context, filter OrdersFilter) (RawOrderList, error) {
+	if strings.TrimSpace(filter.Status) == "" {
+		return RawOrderList{}, fmt.Errorf("%w: GET /api/v1/orders documents it as required, and the "+
+			"two groups are different questions — status=OPEN returns every pending order and "+
+			"ignores limit and cursor, status=CLOSED returns one page and spans the whole account "+
+			"history when no from/to is given. Without it the request is either refused or silently "+
+			"bounded, and a silently bounded live read is a leftover the caller cannot see",
+			ErrOrderStatusRequired)
+	}
+
 	q := url.Values{}
 	if filter.Status != "" {
 		q.Set("status", filter.Status)

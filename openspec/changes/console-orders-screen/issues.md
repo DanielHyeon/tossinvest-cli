@@ -84,6 +84,111 @@ Go에서 메서드 이름은 타입의 네임스페이스에 있으므로 `func 
 없으므로 **방향 필터는 조건주문에 적용되지 않는다**(제외가 아니라 미적용) — 제외하면 매수 필터를
 걸었을 때 잔여 조건주문이 조용히 사라진다.
 
+## I-5 — 조건주문 id는 이 빌드의 `mutation_attempts`에 도달하지 않는다 (분류: 조사 결과, P1-1 근거)
+
+**질문**: 리뷰 P1-1은 두 수리 중 하나를 고르라고 했다 — ① `firstNonBlank(rec.Triggered, rec.ID)`로
+조인하거나, ② 조건주문 id가 실제로 원장에 기록되지 않는다면 `불명`으로 렌더한다.
+
+**조사**(현재 HEAD, `rg` + 호출부 추적):
+
+- `mutation_attempts`를 **쓰는** 경로는 `internal/journal`의 `Attempt` 수명주기뿐이고, 그 `kind`는
+  `KindPlace`·`KindCancel`·`KindAmend` 셋이다([durability.go:62](../../../internal/journal/durability.go#L62)).
+  `broker_order_id`는 `MarkAcked`가 넣으며 값은 `execgw`가 `PlaceOrder`/`CancelOrder`/`ModifyOrder`
+  응답에서 얻은 **일반 주문** 번호다([lineage.go:122](../../../internal/journal/lineage.go#L122)).
+- `internal/execgw` 전체에 `Conditional`이라는 식별자가 **하나도 없다**. 조건주문은 그 게이트웨이를
+  지나지 않는다.
+- 조건주문 등록의 실제 경로는 둘이다: `trading.Service.ConditionalPlace`
+  ([conditional.go:123](../../../internal/trading/conditional.go#L123), `cmd/tossctl/order.go`가 호출)와
+  `internal/verifylive/mutate.go`. **둘 다 journal attempt를 열지 않으며**, `internal/verifylive`의
+  비테스트 파일에는 `journal` import 자체가 없다.
+
+**결론**: 조건주문 id는 이 빌드에서 그 칼럼에 기록되지 않는다. 따라서 조인의 **불일치는 증거가
+아니다** — 원장에 물어본 적 없는 질문에 "그 밖"이라고 답하는 것이다.
+
+**처리(두 수리를 다 적용)**: `conditionalOriginOf`를 따로 두고 `Triggered → ID` 순으로 조회하되,
+**불일치는 `originOther`가 아니라 `originUnknown`**으로 판정한다. 근거:
+
+- 불일치를 `불명`으로 두는 것이 위 조사 결과가 요구하는 정직함이다.
+- 그럼에도 조회를 살려 두는 이유는, 일치는 **진짜 증거**이기 때문이다. 언젠가 조건주문 등록이
+  원장을 남기게 되면 화면은 그날 바로 사실을 말한다. `불명` 상수로 굳혀 두면 영원히 침묵한다.
+- 리뷰가 시연한 fixture(조건주문 자신의 id가 `mutation_attempts`에 있는 원장)를 테스트에 그대로
+  넣었다 — 그 행은 이제 `엔진 발주`로 렌더된다.
+- 원장이 읽히는데도 `불명`이 나오는 이유는 **페이지 안내 1회**로 설명한다. 설명 없는 `불명`이
+  설명 있는 `엔진 발주` 옆에 있으면 조인 버그로 읽히고, 다음 사람이 열을 "정리"한다.
+
+## I-6 — `PARTIAL_FILLED`는 두 그룹 양쪽에 속한다 (분류: safe local)
+
+**발견**: design D2 개정으로 일반 주문이 `OPEN`·`CLOSED` 두 호출이 되면서, openapi의 그룹 정의를
+다시 읽어야 했다. `status` 파라미터 설명은 `PARTIAL_FILLED`를 **양쪽 집합 모두에** 열거한다:
+
+```text
+OPEN   ∈ {PENDING, PARTIAL_FILLED, PENDING_CANCEL, PENDING_REPLACE}
+CLOSED ∈ {FILLED, CANCELED, REJECTED, REPLACED, CANCEL_REJECTED, REPLACE_REJECTED, PARTIAL_FILLED}
+```
+
+한 주문이 두 응답에 모두 나올 수 있고, 그러면 표에 두 행·집계에 두 건이 된다. 부분 체결은 흔한
+상태이므로 예외가 아니다.
+
+**처리**: 주문번호로 중복을 제거하고 **미체결 사본이 이긴다**(브로커가 방금 "대기 중"이라고 말한
+쪽이다). 테스트로 고정했고, 제거를 빼면 그 테스트가 실패한다.
+
+## I-7 — 변이 검증 표 (리뷰가 요구한 증명)
+
+리뷰의 핵심 관찰은 "다섯 개의 변이가 전체 스위트를 통과했다"였다. 그래서 이번 수정은 각각에 대해
+**결함을 다시 넣고 새 테스트가 실패하는지** 확인했다. 10건 전부가 물었다.
+
+- 라이브 읽기에서 `Status: OPEN` 제거 →
+  `TestOneRefreshAsksTheOpenGroupAndTheClosedGroupSeparatelyAndTheLiveOneWhole`
+- `CLOSED` 호출 통째로 제거 → 같은 테스트(2콜로 떨어진다)
+- 두 일반 그룹이 잘림 플래그를 공유 → `TestTheLiveCountIsANumberEvenWhenTheClosedPageWasTruncated`
+- 중복 제거 삭제 → `TestAnOrderInBothGroupsIsOneRowAndIsCountedOnce`
+- 개요에서 시각·나이·TTL 표시 제거 → `TestTheOverviewNeverRendersAStaleOrdersReadingAsAMeasuredNumber`
+- `/orders` 합계를 굵은 숫자만으로 되돌리고 출처를 다른 문단에 →
+  `TestTheOrdersCountsCarryTheirOwnProvenanceInTheSameBreath`
+- 조건주문 조인을 `rec.Triggered`로 되돌림 →
+  `TestAWatchingConditionalIsNeverLabelledOtherByAJoinThatCannotSucceed`
+- 방향 필터에서 `!r.Conditional &&` 삭제 → `TestASideFilterNeverHidesAWatchingConditional`
+- 시장 필터에서 `—` 예외 삭제 → `TestAMarketFilterNeverHidesAnOrderWhoseMarketIsUnknown`
+- `OrdersRaw`가 받은 `status`를 버리게 함 → `TestBothOrderReadsSendTheGroupTheyWereGiven`
+- `OrdersRaw`의 status 가드를 무력화(조건이 결코 참이 되지 않게) →
+  `TestTheRawReadsRefuseARequestWithNoStatusGroup`, `TestOrdersFilterEmptyOmits…`
+- `ConditionalOrdersRaw`의 status 가드를 무력화 → `TestTheRawReadsRefuseARequestWithNoStatusGroup`
+
+> 마지막 두 변이는 처음에 가드를 **삭제**하는 형태로 넣었더니 미사용 import 때문에 **빌드가**
+> 깨져 테스트가 실행조차 되지 않았다. 컴파일러가 잡은 것은 증명이 아니므로 조건을 절대 참이 될
+> 수 없는 값으로 바꾸는 형태로 다시 넣었고, 그때 두 테스트가 실제로 물었다.
+
+## I-8 — status 가드는 클라이언트에 있어야 한다 (분류: Manager 판정에 따른 번복)
+
+**처음 판단(틀림)**: `OrdersRaw`에 status 가드를 넣지 않고 `cmd/tossctl`에만 두었다. 이유로
+"`internal/official`의 additive 확인 grep(`git diff -U0 … | grep '^-[^-]'`)에 삭제 줄이 잡힌다"를
+들었다.
+
+**Manager 판정**: 그것은 **보증이 아니라 증명을 최적화한 것**이다. 이 change의 additive 주장은
+**High-risk 패키지의 기존 호출자**에 대한 것이다 — `Orders`·`OrderByID`·`adaptOrder`·
+`ConditionalOrders`와 그 호출자의 동작이 같다는 것. `OrdersRaw`와 `ConditionalOrdersRaw`는
+**이 change가 만든 심볼**이므로 그것을 고쳐서 깨질 선행 호출자가 없다. grep은 주장의 증거이지
+주장 자체가 아니며, **검사와 검사 대상이 어긋나면 움직여야 하는 것은 검사다.**
+
+그리고 이것이 중요한 이유는 방금 고친 P0의 모양 그 자체다 — **호출자가 잊었다.** 호출부에만
+사는 규칙은 다음 호출부에서, 이 건을 리뷰하지 않는 change에서 똑같이 잊힌다.
+
+**처리**: 두 raw 읽기 모두 빈 `status`를 거부한다(`ErrOrderStatusRequired`). 에러는 파라미터
+이름과 이유를 말하고, **요청을 보내기 전에** 거부한다 — 잊은 호출자가 rate limit 슬롯을 써 가며
+알아낼 일이 아니다. `ShouldFallback`은 이 에러에 false를 답한다(호출자 실수이지 장애가 아니다).
+`cmd/tossctl`의 와이어 테스트도 그대로 둔다 — 두 계층이 맞고, 라이브 읽기가 OPEN 그룹을
+묻는다는 것을 증명하는 것은 그쪽이다.
+
+두 엔드포인트의 문구는 **다르게** 썼다. 일반 주문은 `status=OPEN`이 전량 반환이라 생략이
+"거부 아니면 조용한 절단"이지만, **조건주문은 두 그룹 모두 페이지네이션한다**(`limit` 기본 20,
+최대 100). 조건주문 쪽에 "전량 반환"이라고 적었으면 이 change가 막으려는 바로 그 종류의
+사실 아닌 문장이 됐을 것이다.
+
+**additive 확인 형식도 바뀐다.** 이제 `git diff … | grep '^-[^-]'`에는 가드의 줄이 잡히므로,
+**선행 심볼이 그대로임**을 보이는 형식으로 확인한다 — 두 파일의 최상위 선언을 `9969238`과
+바이트 비교해 `OrdersRaw`·`ConditionalOrdersRaw`(이 change가 만든 것)와 import 블록(삽입만)
+외에는 전부 unchanged임을 보인다. `internal/journal`은 여전히 변경 0이다.
+
 ---
 
 ## Manager 판정 (2026-07-28)

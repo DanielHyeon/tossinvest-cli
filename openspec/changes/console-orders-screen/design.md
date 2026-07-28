@@ -58,7 +58,22 @@ nullable로, `execution` 전체를 미체결 동안 null로 정의하므로, **�
 **함정**: 일반 주문만 부르는 화면은 조건주문 잔여물이 살아서 다음 검증을 막고 있는데
 **"미체결 0건"을 측정된 값으로 렌더한다.** 이 change가 막으려는 실패를 이 change가 저지른다.
 
-**결정**: 화면당 브로커 호출 **2콜**(주문 + 조건주문), 한 TTL, 두 목록을 구분해 표시한다.
+**결정**: 화면당 브로커 호출 **3콜**(미체결 주문 + 종결 주문 + 조건주문), 한 TTL,
+목록을 구분해 표시한다.
+
+**초안은 2콜이었고 그것이 P0를 만들었다(구현 리뷰).** `status`는 이 엔드포인트에서
+`required: true`이고, **`status=OPEN`은 `limit`·`cursor`를 무시하고 대기 주문을 전량
+반환한다** — 잔여물을 구조적으로 놓칠 수 없는 유일한 호출이다. 생략하면 둘 중 하나가 된다:
+브로커가 거부해 일반 주문이 영구 미측정이 되거나, 계좌 **전 기간**에 대한 한 페이지가 돌아와
+**101번째의 살아 있는 주문이 표에도 집계에도 없이 `0건 이상`으로 렌더된다.** 이 change가
+막으려는 실패 그 자체다.
+
+`OPEN`과 `CLOSED`는 별개 호출이므로 둘을 구분해 보이려면 셋이 된다. **예산 숫자보다 정직이
+앞선다** — 그리고 종결 주문은 `/history`가 대신하지 못한다: **취소·거부된 주문은 체결이 되지
+않으므로 왕복 기록에 영영 나타나지 않는다.** 다른 어디에도 없는 정보다.
+
+상한은 여전히 유계다. 두 일반 호출은 같은 rate 그룹(`ORDER_HISTORY`)이고 조건주문은 다른
+그룹이며, 갱신은 TTL당 한 번·검증 중에는 보류된다.
 그리고 **부분 실패는 합산하지 않는다** — 조건주문 조회만 실패하면 총계는 "N건 + 조건주문
 미측정"이지 N건이 아니다. 확신에 찬 0은 도달 불가능해야 한다.
 
@@ -166,6 +181,23 @@ return adaptOrders(raw.Orders), nil   // 둘 다 버린다
 
 이것을 spec에 적어 둔다. 적지 않으면 다음 사람이 "이름 열이 왜 없지"를 다시 조사한다.
 
+## D9. 오래된 읽기는 측정값이 아니다 (구현 리뷰 P0-2)
+
+개요 화면은 설계상 브로커를 부르지 않는다(overview D4). 그래서 미체결 건수는 **마지막
+`/orders` 방문이 만든 숫자에 얼어붙는다** — 세 시간 전에 비어 있던 계좌를 지금도 0건이라고
+말하고, 나이도 표시도 없다. 같은 화면 세 섹션 위의 보유 패널은 캐시 시각과 경과를 찍는다.
+
+overview D4가 **콜드 캐시는 다뤘고**(`never_fetched`) **오래된 캐시는 측정된 채로 남겼다.**
+빈 것과 낡은 것은 다른 실패이고, 둘 다 "0"으로 렌더되면 구분이 사라진다.
+
+**결정**: 캐시 나이가 TTL을 넘으면 그 값은 **측정값이 아니다.** 개요는 그것을 미측정으로
+렌더하거나, 최소한 **캐시 시각과 경과를 값 옆에 함께** 렌더한다(보유 패널이 이미 하는 대로).
+`/orders` 자신도 마찬가지다 — 합계를 굵은 숫자로 내면서 실패와 나이를 다른 문단에 두면,
+읽는 사람이 두 문단을 잇지 않는다.
+
+두 화면이 같은 캐시에 대해 다른 말을 하는 것이 이 저장소가 반복해서 겪는 실패이고,
+**틀린 말을 하는 쪽이 하필 운영자가 열어 두는 화면**이다.
+
 ## D8. 이 화면에도 행위가 없다
 
 `/orders`는 GET뿐이고 폼이 없다. 주문을 내거나 정정·취소하는 수단이 없다. 확인 문자열
@@ -178,7 +210,7 @@ return adaptOrders(raw.Orders), nil   // 둘 다 버린다
 
 ```yaml
 route:
-  orders: /orders             # GET, session0, reading wrapper, CSRF 밖
+  orders: /orders             # GET, session0, readOnly wrapper, CSRF 밖
 guards:
   account_read_exact_paths: ["/orders"]   # 바이트 일치. 접두·대소문자·후행슬래시 전부 아님
   consulted_in_both_loops: true           # accountVerbs 루프 + actVerbs 루프
@@ -191,7 +223,8 @@ reads:
   conditional_orders: true                      # 다른 엔드포인트. 잔여물은 양쪽 다다
   journal_origin: additive-in-journal-readonly  # mutation_attempts + readOnlyTables 등록
 rate_budget:
-  orders_calls_per_refresh: 2   # 주문 1 + 조건주문 1
+  orders_calls_per_refresh: 3   # 미체결 1 + 종결 1 + 조건주문 1
+  plain_status_required: true   # status=OPEN은 limit/cursor를 무시하고 전량 반환한다
   orders_cache_ttl_seconds: 15
   filters_applied: in-process   # 캐시를 쪼개지 않는다
 columns: [submitted_at, symbol, market, side, status,

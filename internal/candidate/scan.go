@@ -91,10 +91,21 @@ type ScanResult struct {
 	Observations, Candidates int
 	// Cooled counts the candidates this scan stopped seeing.
 	Cooled int
+	// FirstPrices and FirstRanks count the candidates whose baseline and first
+	// sighting position this scan recorded for the first time (D17 and its other
+	// half). They are the durable half of two vetoes, and a scan that writes
+	// neither leaves both permanently unmeasured while nothing fails — so the
+	// count is on the result rather than inferred from the store.
+	FirstPrices, FirstRanks int
 	// Rejected names the symbols the store declined to record. A scan with
 	// rejections is not a failed scan — the rest of the market still went
 	// through — but it is not a clean one either, and the count is what makes a
 	// clock that runs backwards visible before it expires the watchlist.
+	//
+	// It also carries the two stored firsts' write failures. Those happen after a
+	// successful promotion, so the candidate is counted and the failure is named:
+	// a promoted candidate with no baseline is a live record with a veto that can
+	// never be measured, which is worth seeing.
 	Rejected []SymbolFailure
 
 	// Budgets is the rate allowance each source reported, by source. A source
@@ -180,6 +191,18 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 		// what makes two sources on one symbol one candidate with two supporters
 		// rather than two candidates with half the evidence each.
 		raisedBy = map[string][]SourceID{}
+		// firstReading is, per symbol, the reading this scan would record as the
+		// candidate's first price and first sighting position if it turns out not
+		// to have one yet (D17 and its other half).
+		//
+		// Panel order decides, and it decides once: the first source in the panel
+		// that carried a price wins the baseline, the first that carried a
+		// position wins the rank. They are tracked separately because a source can
+		// carry one without the other — the prices endpoint has no rank and a WTS
+		// popularity row has no price — and folding them together would leave a
+		// candidate raised by both with the field only one of them reported.
+		firstPriced = map[string]Observation{}
+		firstRanked = map[string]Observation{}
 		// covered is every symbol a responding source reported.
 		covered = map[string]bool{}
 		// responded is every source that answered. Together with covered it is
@@ -246,7 +269,7 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 			if symbol == "" {
 				continue
 			}
-			observations = append(observations, Observation{
+			o := Observation{
 				Market: market, Symbol: symbol, Source: id, ObservedAt: at,
 				Reported: Reported{
 					Rank: r.Rank, RankTotal: r.RankTotal, NewlyListed: r.NewlyListed,
@@ -254,9 +277,16 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 					Price: r.Price, DayHigh: r.DayHigh, DayLow: r.DayLow,
 				},
 				ViaFallback: reading.ViaFallback,
-			})
+			}
+			observations = append(observations, o)
 			covered[symbol] = true
 			raisedBy[symbol] = append(raisedBy[symbol], id)
+			if _, taken := firstPriced[symbol]; !taken && strings.TrimSpace(r.Price) != "" {
+				firstPriced[symbol] = o
+			}
+			if _, taken := firstRanked[symbol]; !taken && r.Rank > 0 && r.RankTotal > 0 {
+				firstRanked[symbol] = o
+			}
 		}
 	}
 
@@ -282,6 +312,7 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 		symbols = append(symbols, symbol)
 	}
 	sort.Strings(symbols)
+	promoted := make([]string, 0, len(symbols))
 
 	// One symbol's refusal is not the market's.
 	//
@@ -303,6 +334,12 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 			continue
 		}
 		result.Candidates++
+		promoted = append(promoted, symbol)
+	}
+
+	if err := recordFirsts(ctx, store, market, at, promoted,
+		firstPriced, firstRanked, &result); err != nil {
+		return result, err
 	}
 
 	cooled, err := coolAbsent(ctx, store, market, covered, responded, seen, at)
@@ -317,6 +354,92 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 		return result, fmt.Errorf("%w: %v", ErrFallbackNotPossible, misWired)
 	}
 	return result, nil
+}
+
+// recordFirsts writes the two stored firsts for the candidates that still lack
+// them (D17, and D17's other half).
+//
+// # Why the missing set is read once instead of asked per symbol
+//
+// Both NoteFirstPrice and NoteFirstRank are idempotent, so the naive wiring is to
+// call them on every reading and let the store decide. That is correct and it is
+// two IMMEDIATE transactions per symbol per tick — the write lock taken a few
+// hundred times a scan to discover that there was nothing to write — against the
+// table D16 names as the one that can fill the ledger's filesystem. issues.md 4
+// left this decision to section 5 for that reason.
+//
+// So the summaries are read once, and a symbol is written to only when its column
+// is still NULL. The store's own guard stays in place underneath: it is what makes
+// two writers racing on one candidate keep the earlier baseline, and this pass is
+// an optimisation on top of it rather than a replacement for it.
+//
+// # The read has to happen after the promotions
+//
+// Promote clears both columns when an expired candidate crosses again (D1), so a
+// missing set gathered before the loop would say "already recorded" for a life that
+// had just been reset — and the new life would run with the dead one's baseline
+// still in place if the write were skipped. Reading after is what makes the new
+// life's first reading the new life's first price.
+//
+// A write that fails is named in Rejected rather than aborting the pass. The
+// candidate is already promoted at that point; losing the rest of the market
+// because one baseline could not be stored is the shape scan.go refuses everywhere
+// else.
+func recordFirsts(ctx context.Context, store *Store, market string, at time.Time,
+	promoted []string, priced, ranked map[string]Observation, result *ScanResult) error {
+
+	if len(promoted) == 0 {
+		return nil
+	}
+	summaries, err := store.Summaries(ctx, at)
+	if err != nil {
+		return err
+	}
+	needPrice := map[string]bool{}
+	needRank := map[string]bool{}
+	for _, s := range summaries {
+		if s.Market != market {
+			continue
+		}
+		needPrice[s.Symbol] = !s.Baseline.Recorded()
+		needRank[s.Symbol] = !s.FirstRank.Recorded()
+	}
+
+	for _, symbol := range promoted {
+		if o, ok := priced[symbol]; ok && needPrice[symbol] {
+			_, err := store.NoteFirstPrice(ctx, market, symbol,
+				o.Reported.Price, o.ObservedAt, o.Source)
+			if err != nil {
+				result.Rejected = append(result.Rejected, SymbolFailure{
+					Symbol: symbol,
+					Reason: fmt.Sprintf("the first price could not be recorded: %v", err),
+				})
+			} else {
+				result.FirstPrices++
+			}
+		}
+		o, ok := ranked[symbol]
+		if !ok || !needRank[symbol] {
+			continue
+		}
+		stored, err := store.NoteFirstRank(ctx, market, symbol,
+			o.Reported.Rank, o.Reported.RankTotal, o.ObservedAt, o.Source)
+		switch {
+		case err != nil:
+			result.Rejected = append(result.Rejected, SymbolFailure{
+				Symbol: symbol,
+				Reason: fmt.Sprintf("the first sighting position could not be recorded: %v", err),
+			})
+		case stored.Recorded():
+			result.FirstRanks++
+		}
+		// A reading outside the identity window around first_seen_at is neither
+		// stored nor an error — it is the ordinary state of a candidate raised by a
+		// source that carries no position and only later seen on a ranking list.
+		// Having no first rank is the honest answer there, and it makes seen_late
+		// unmeasured rather than wrong.
+	}
+	return nil
 }
 
 // coolAbsent cools the active candidates whose supporters were all present in

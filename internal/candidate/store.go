@@ -227,10 +227,14 @@ type Options struct {
 
 // Store is an open discovery store.
 type Store struct {
-	db        *sql.DB
-	path      string
-	clk       clock.Clock
-	fs        FSInfo
+	db   *sql.DB
+	path string
+	clk  clock.Clock
+	fs   FSInfo
+	// prober is kept so free space can be asked again. Open's answer is a verdict
+	// about the mount and is settled once; the space left on it is not, and D16
+	// makes discovery stop for that one.
+	prober    FSProber
 	cooling   time.Duration
 	staleness time.Duration
 }
@@ -323,7 +327,7 @@ func Open(ctx context.Context, opts Options) (*Store, error) {
 		staleness = DefaultStalenessTTL
 	}
 	s := &Store{
-		db: db, path: path, clk: clk, fs: fs,
+		db: db, path: path, clk: clk, fs: fs, prober: prober,
 		cooling: cooling, staleness: staleness,
 	}
 
@@ -571,6 +575,15 @@ func (s *Store) CoolingTTL() time.Duration { return s.cooling }
 // time axis is what this package measures; a second, unmockable time source would
 // be a hole in the only thing being tested.
 func (s *Store) Now() time.Time { return s.clk.Now() }
+
+// Clock is this store's time source, for a caller that has to wait rather than
+// only to stamp.
+//
+// The watch loop is the caller, and it exists so that the loop's wait and the
+// loop's instants come from one clock. Two would be one too many: the loop would
+// sleep on wall time while its records were stamped from a fake, and a test that
+// advanced the fake would measure a cadence the loop never had.
+func (s *Store) Clock() clock.Clock { return s.clk }
 
 // PruneStale drops raw observations older than the retention window, measured
 // back from this store's own clock, and reports how many went.
@@ -821,6 +834,78 @@ func (s *Store) PruneObservations(ctx context.Context, before time.Time) (int64,
 	n, err := res.RowsAffected()
 	if err != nil {
 		return 0, fmt.Errorf("candidate: counting pruned observations: %w", err)
+	}
+	return n, nil
+}
+
+// PruneExpiredCandidates deletes candidate summaries whose life ended more than
+// `grace` before `at`, and reports how many went.
+//
+// # D11's other half finally has an enforcer
+//
+// D11 splits retention in two — raw observations for a couple of trading days,
+// candidate summaries "until the candidate expires" — and until this existed the
+// second half was a sentence with nothing behind it. `candidates` is one row per
+// symbol rather than the hundreds a scan writes, so it is not D16's volume
+// problem; it is D16's *shape* problem, because it grew without bound on the
+// filesystem the order ledger writes to and nothing would ever have stopped it.
+//
+// # Why the grace period rather than deleting on expiry
+//
+// A summary is a set of facts ABOUT a series of readings: first_seen_at is when
+// this life's readings started, first_price and first_rank are what two of those
+// readings said. Once the readings are gone the summary joins to nothing, and
+// that is the instant it stops being evidence. So the sweep waits one raw
+// retention window after the life ended, and `grace` defaults to
+// DefaultRawRetention rather than to zero: a zero grace period would delete
+// first_seen_at while two trading days of the rows it explains were still on
+// disk, and D3 needs the vetoed and the missed to stay countable.
+//
+// A caller who passes zero gets the default, never "no grace at all". That is the
+// same rule VetoThresholds.MaxInputAge and WatchInterval follow, against the same
+// failure: the unset field that switches a bound off.
+//
+// # The expiry instant is not in a column
+//
+// stateAt derives it, and for the candidate nobody re-promoted it derives it from
+// last_seen_at + staleness rather than from cooled_at, which is NULL. A statement
+// written against cooled_at alone would never reach exactly the candidates this
+// exists for — the ones a killed scan left behind — so both branches are spelled
+// out, each against a cutoff computed here from this store's own TTLs. The
+// comparison is on the stored text: stamp is fixed-width, so lexical order is
+// chronological order (§1 review), and computing the cutoffs in Go keeps the
+// boundary exact rather than losing the fraction to strftime.
+//
+// Deleting an expired summary is not a lifecycle event. D1 already says the next
+// crossing after expiry is a new candidate with a new first_seen_at, and Promote
+// resets every column on an expired row to produce exactly that. Removing the row
+// reaches the same state by a shorter path.
+func (s *Store) PruneExpiredCandidates(ctx context.Context, at time.Time,
+	grace time.Duration) (int64, error) {
+
+	if grace <= 0 {
+		grace = DefaultRawRetention
+	}
+	if at.IsZero() {
+		return 0, fmt.Errorf("candidate: pruning expired summaries needs an instant")
+	}
+	// stateAt closes the boundary at the far end (cooled_at + ttl reads as
+	// expired), so `<=` here is that same closed edge one grace period later.
+	cooledCutoff := at.Add(-grace).Add(-s.cooling)
+	lastSeenCutoff := cooledCutoff.Add(-s.staleness)
+
+	res, err := s.db.ExecContext(ctx, `
+		DELETE FROM candidates
+		 WHERE (cooled_at IS NOT NULL AND cooled_at    <= ?)
+		    OR (cooled_at IS NULL     AND last_seen_at <= ?)`,
+		stamp(cooledCutoff), stamp(lastSeenCutoff))
+	if err != nil {
+		return 0, fmt.Errorf("candidate: pruning summaries expired before %s: %w",
+			stamp(at.Add(-grace)), err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("candidate: counting pruned summaries: %w", err)
 	}
 	return n, nil
 }
@@ -1405,6 +1490,145 @@ func (s *Store) Candidates(ctx context.Context, at time.Time) ([]Candidate, erro
 		return nil, fmt.Errorf("candidate: reading candidates: %w", err)
 	}
 	return out, nil
+}
+
+// Summary is a candidate together with the two stored facts that outlive its raw
+// rows: the expansion baseline (D17) and the first sighting's list position
+// (D17's other half, D20).
+//
+// It exists so that a scan and a screen can read all three in one query instead of
+// three per candidate. That is not only an efficiency: the scan is the writer of
+// both columns, and it has to know which candidates still lack them in order to
+// write each one *once*. Asking per candidate would be two transactions per symbol
+// per tick against the table D16 identifies as the one that can fill the ledger's
+// filesystem.
+type Summary struct {
+	Candidate
+	// Baseline is the stored first price, unrecorded when no observation has
+	// carried one for this life yet.
+	Baseline Baseline
+	// FirstRank is the stored first sighting position, unrecorded when no ranked
+	// observation has been recorded for this life yet.
+	FirstRank FirstRank
+}
+
+// Summaries returns every stored candidate with its state as of `at` and both
+// stored firsts.
+//
+// Same contract as Candidates about `at`: the state is derived at read time rather
+// than swept, so a candidate that cooled before a restart reads as expired
+// afterwards without anything having run in between.
+func (s *Store) Summaries(ctx context.Context, at time.Time) ([]Summary, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT market, symbol, first_seen_at, last_seen_at, cooled_at,
+		       sources, sources_attempted, sources_responded, degraded,
+		       first_price, first_price_at, first_price_source,
+		       first_rank, first_rank_total, first_rank_at, first_rank_source
+		  FROM candidates
+		 ORDER BY market, symbol`)
+	if err != nil {
+		return nil, fmt.Errorf("candidate: reading candidate summaries: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var out []Summary
+	for rows.Next() {
+		var (
+			c                       Candidate
+			first, last             string
+			cooled                  sql.NullString
+			sources                 string
+			degraded                int
+			price, priceAt, priceBy sql.NullString
+			rank, rankTotal         sql.NullInt64
+			rankAt, rankBy          sql.NullString
+			baseline                Baseline
+			firstRank               FirstRank
+			parseErr                error
+		)
+		err := rows.Scan(&c.Market, &c.Symbol, &first, &last, &cooled,
+			&sources, &c.SourcesAttempted, &c.SourcesResponded, &degraded,
+			&price, &priceAt, &priceBy, &rank, &rankTotal, &rankAt, &rankBy)
+		if err != nil {
+			return nil, fmt.Errorf("candidate: scanning a candidate summary: %w", err)
+		}
+		if c.FirstSeenAt, parseErr = parseStamp(first); parseErr != nil {
+			return nil, fmt.Errorf("candidate %s:%s has an unreadable first_seen_at: %w",
+				c.Market, c.Symbol, parseErr)
+		}
+		if c.LastSeenAt, parseErr = parseStamp(last); parseErr != nil {
+			return nil, fmt.Errorf("candidate %s:%s has an unreadable last_seen_at: %w",
+				c.Market, c.Symbol, parseErr)
+		}
+		if cooled.Valid {
+			if c.CooledAt, parseErr = parseStamp(cooled.String); parseErr != nil {
+				return nil, fmt.Errorf("candidate %s:%s has an unreadable cooled_at: %w",
+					c.Market, c.Symbol, parseErr)
+			}
+		}
+		c.Sources = decodeSources(sources)
+		c.Degraded = degraded == 1
+		c.State = stateAt(c, s.cooling, s.staleness, at)
+
+		if baseline, parseErr = decodeBaseline(price, priceAt, priceBy, c.Market, c.Symbol); parseErr != nil {
+			return nil, parseErr
+		}
+		if firstRank, parseErr = decodeFirstRank(rank, rankTotal, rankAt, rankBy,
+			c.Market, c.Symbol); parseErr != nil {
+			return nil, parseErr
+		}
+		out = append(out, Summary{Candidate: c, Baseline: baseline, FirstRank: firstRank})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("candidate: reading candidate summaries: %w", err)
+	}
+	return out, nil
+}
+
+// Checkpoint reclaims the write-ahead log and reports how many of its pages went.
+//
+// It is TRUNCATE rather than PASSIVE because the size is the point (D16). The WAL
+// grows beside the table and does not shrink on its own while a long-lived reader
+// is attached — the console's candidate screen is exactly such a reader — so a
+// store whose rows have been pruned can still be holding the bytes that pruning was
+// supposed to release, on the filesystem the ledger writes to.
+//
+// A busy checkpoint is not an error. TRUNCATE cannot complete while another
+// connection is reading, and a scan that failed because a screen was open would
+// make the cleanup less reliable than no cleanup at all. The `busy` return says it
+// was skipped so a caller can say so rather than report a reclamation that did not
+// happen.
+func (s *Store) Checkpoint(ctx context.Context) (busy bool, pages int64, err error) {
+	var busyFlag, log, checkpointed sql.NullInt64
+	row := s.db.QueryRowContext(ctx, `PRAGMA wal_checkpoint(TRUNCATE)`)
+	if err := row.Scan(&busyFlag, &log, &checkpointed); err != nil {
+		return false, 0, fmt.Errorf("candidate: checkpointing the write-ahead log: %w", err)
+	}
+	return busyFlag.Int64 != 0, checkpointed.Int64, nil
+}
+
+// FreeSpace re-probes the filesystem hosting the store and reports the bytes
+// available to this user.
+//
+// It re-probes rather than reusing what Open found, because free space is the one
+// property of a filesystem that changes while the process runs — and it is the one
+// D16 makes discovery stop for. Open's FSInfo answers "may we write here at all";
+// this answers "is there room left", and the second question has to be asked again
+// on every cycle.
+func (s *Store) FreeSpace() (int64, error) {
+	if s.prober == nil {
+		return 0, fmt.Errorf("%w: no prober configured", ErrProbeUnsupported)
+	}
+	info, err := s.prober.Probe(filepath.Dir(s.path))
+	if err != nil {
+		return 0, fmt.Errorf("candidate: probing the free space of %s: %w",
+			filepath.Dir(s.path), err)
+	}
+	if !info.FreeMeasured {
+		return 0, fmt.Errorf("%w: %s reported no free space", ErrProbeUnsupported,
+			filepath.Dir(s.path))
+	}
+	return info.FreeBytes, nil
 }
 
 // Candidate returns one candidate with its state as of `at`.

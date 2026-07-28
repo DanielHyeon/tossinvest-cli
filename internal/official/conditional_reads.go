@@ -2,8 +2,10 @@ package official
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -139,8 +141,23 @@ type RawConditionalOrderList struct {
 // The parameters are ConditionalOrders' exactly, so the two are interchangeable
 // at the call site and the caller picks the shape it needs rather than calling
 // both and spending two requests.
+//
+// status is required (see [ErrOrderStatusRequired]) and its value is passed
+// verbatim. Unlike the plain endpoint, both groups here paginate — `limit`
+// defaults to 20 and caps at 100 for OPEN as well — so naming the group buys a
+// defined question rather than a whole answer, and the caller still has to read
+// HasNext.
 func (c *Client) ConditionalOrdersRaw(ctx context.Context, status, symbol, cursor string,
 	limit int) (RawConditionalOrderList, error) {
+	if strings.TrimSpace(status) == "" {
+		return RawConditionalOrderList{}, fmt.Errorf("%w: GET /api/v1/conditional-orders documents "+
+			"it as required, and the two groups are different questions — OPEN is "+
+			"{WATCHING, PAUSED, ORDERING, ORDERED}, which is exactly the set filling the "+
+			"live-exposure cap, and CLOSED is {COMPLETED, EXPIRED}. Without it the request is one "+
+			"the broker is entitled to refuse, and a refused leftover read renders as no leftovers",
+			ErrOrderStatusRequired)
+	}
+
 	q := url.Values{}
 	if status != "" {
 		q.Set("status", status)

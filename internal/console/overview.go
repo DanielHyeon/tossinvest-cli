@@ -376,6 +376,31 @@ type openOrdersPanel struct {
 	// so without the pointer the operator is told to wait for something that will
 	// never happen (D4's cost, written down).
 	Where string
+
+	// Present, TakenAt and AgeSeconds are WHEN the count was true, and they travel
+	// with the value rather than sitting in a paragraph underneath it (D9).
+	//
+	// This screen refreshes nothing, so the number below is as old as the last
+	// /orders visit and nothing here will ever make it younger. D4 gave the cold
+	// cache a reason of its own (never_fetched) and left the old one rendered as a
+	// plain measured number — so a count taken while the account was empty went on
+	// saying 0건 for hours after an order landed, with no age and no marker, while
+	// /orders said 1건. The holdings panel three sections up has printed its own
+	// instant and age since the day it shipped.
+	Present    bool
+	TakenAt    string
+	AgeSeconds int
+	// Stale reports that the reading is older than the cache TTL. Past it the
+	// value is not a measurement of the account as it is now, and the screen says
+	// so beside the number instead of letting a bold figure speak for itself.
+	Stale bool
+	// TTLSeconds is the bound Stale was judged against, so the page can print what
+	// it means rather than a bare verdict.
+	TTLSeconds int
+	// VerifyHeld reports that a live verification is suspending the refresh of the
+	// screen that fills this cache. It is a fact about /orders and not about this
+	// reading, which is why it is not one of the unmeasured reasons here.
+	VerifyHeld bool
 }
 
 // --- safety -----------------------------------------------------------------------
@@ -746,26 +771,28 @@ func (c *Console) openOrdersPanelFrom(now time.Time) openOrdersPanel {
 	panel := openOrdersPanel{Where: "/orders"}
 	snap := c.ordersCache.peek(now)
 
-	plain := listUnmeasured(snap, snap.Lists.PlainError)
+	panel.Present = snap.Present
+	panel.TakenAt = snap.TakenAt()
+	panel.AgeSeconds = snap.AgeSeconds()
+	panel.Stale = snap.Stale()
+	panel.TTLSeconds = snap.TTLSeconds()
+	panel.VerifyHeld, _ = c.verifyHold(now)
+
+	open := listUnmeasured(snap, snap.Lists.OpenError)
 	conditional := listUnmeasured(snap, snap.Lists.ConditionalError)
 
-	plainLive := 0
-	if plain.Known() {
-		for _, rec := range snap.Lists.Plain {
-			row := rowFromOrder(rec, originUnknown)
-			if row.Live || row.Unresolved {
-				plainLive++
-			}
-		}
+	openLive := 0
+	if open.Known() {
+		openLive = len(snap.Lists.Open)
 	}
 	conditionalLive := 0
 	if conditional.Known() {
 		conditionalLive = len(snap.Lists.Conditional)
 	}
-	truncated := (plain.Known() && snap.Lists.PlainTruncated) ||
+	truncated := (open.Known() && snap.Lists.OpenTruncated) ||
 		(conditional.Known() && snap.Lists.ConditionalTruncated)
 
-	panel.Count = combinedLive(plain, conditional, plainLive, conditionalLive, truncated)
+	panel.Count = combinedLive(open, conditional, openLive, conditionalLive, truncated)
 	return panel
 }
 

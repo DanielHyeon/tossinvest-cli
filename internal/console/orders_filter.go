@@ -13,10 +13,10 @@ package console
 //
 // Every one of these is applied to the reading the cache already holds. Passing
 // them as broker parameters would split the cache by filter combination —
-// /orders?status=live and ?status=closed would each be a key of their own — and
-// the two calls a refresh costs would become four, then eight, out of the same
-// §0.4 budget. The reading is one page of each endpoint; the filter is a view of
-// it.
+// /orders?state=live and ?state=closed would each be a key of their own — and the
+// three calls a refresh costs would become six, then twelve, out of the same §0.4
+// budget. The reading is the broker's pending group whole plus one page of each
+// of the other two; the filter is a view of it.
 
 import (
 	"net/http"
@@ -173,18 +173,32 @@ func currentValue(c orderFilterChoice, axis string) string {
 
 // filterRows applies the choice to the rows already fetched.
 //
-// A conditional order matches the 미체결 state filter and never the 종결 one: the
-// list came from the broker's OPEN group, so every row in it is watching. It
-// matches no side filter at all, because the conditional payload carries no side
-// — filtering by 매수 must not hide it silently, so a side filter is treated as
-// not applying to conditionals rather than as excluding them.
+// # A filter narrows what is shown; it must never decide something is absent
+//
+// Every axis here has the same rule, and it is the rule the whole screen is for:
+// a row the filter cannot judge is NOT filtered out. A filter that quietly drops
+// the rows it has no answer for is a screen saying "there is nothing like that"
+// about rows it is looking straight at — and the row it drops is a live order.
+//
+//   - 방향: a conditional order's payload carries no side at all, so a side filter
+//     does not apply to it rather than excluding it. Otherwise a 매수 filter hides
+//     every live conditional leftover behind one click.
+//   - 시장: a row whose market this build could not name renders as "—" (the plain
+//     order endpoint has no market field; it is derived from a currency, and a
+//     currency that is neither KRW nor USD derives nothing). Same shape, one axis
+//     over: it is not-applicable, not excluded.
+//   - 상태: r.Live is the broker's own grouping (see rowFromOrder), so this axis
+//     always has an answer and nothing is exempt from it. A conditional order is
+//     live and therefore never matches 종결 — the list came from the broker's OPEN
+//     group, so every row in it is still watching.
 func filterRows(rows []orderRow, c orderFilterChoice) []orderRow {
 	if !c.Applied() {
 		return rows
 	}
 	out := make([]orderRow, 0, len(rows))
 	for _, r := range rows {
-		if c.Market != "" && !strings.EqualFold(r.Market, c.Market) {
+		if c.Market != "" && r.Market != marketUnknownLabel &&
+			!strings.EqualFold(r.Market, c.Market) {
 			continue
 		}
 		if c.Side != "" && !r.Conditional && !strings.EqualFold(r.Side, sideLabel(c.Side)) {
@@ -192,11 +206,11 @@ func filterRows(rows []orderRow, c orderFilterChoice) []orderRow {
 		}
 		switch c.State {
 		case filterStateLive:
-			if !r.Live && !r.Unresolved {
+			if !r.Live {
 				continue
 			}
 		case filterStateClosed:
-			if r.Live || r.Unresolved {
+			if r.Live {
 				continue
 			}
 		}

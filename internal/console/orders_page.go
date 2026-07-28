@@ -45,6 +45,6 @@ type ordersPage struct {
 // derived from the constant rather than written again (positionsPage's
 // precedent). A period shorter than the TTL would be a reload that costs broker
 // calls faster than the budget allows; a period equal to it holds one open tab to
-// the two calls per TTL the spec fixes for this screen.
+// the three calls per TTL the spec fixes for this screen.
 func (ordersPage) Refresh() bool       { return true }
 func (ordersPage) RefreshSeconds() int { return int(ordersTTL / time.Second) }

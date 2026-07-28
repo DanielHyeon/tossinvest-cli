@@ -52,6 +52,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -114,6 +115,9 @@ paste the link anywhere else.
   console     / — soak progress, attestation state, verification progress
   positions   what the account holds, joined to the engine's exit lines
   history     completed round trips and the exit judgement stream
+  signals     /signals — what the discovery sources have been saying over time,
+              with what nobody has checked spelled out rather than left blank. It
+              reads the discovery store and calls no source
   verify      the step list, the batch summary, the typed approval, live progress
   report      the measured attributes and the ones still unverified, plus JSON
 
@@ -218,7 +222,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// broker that can do exactly one thing.
 		Holdings: newConsoleHoldings(root),
 		// The orders screen's read (change console-orders-screen). One method,
-		// behind which this file makes the two calls a refresh costs.
+		// behind which this file makes the three calls a refresh costs.
 		Orders:      consoleOrdersSeam(root),
 		JournalPath: journalPath,
 		RunLockPath: verifyRunLockPath(verifyRecord),
@@ -228,6 +232,12 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// console-operator-overview). Five numbers and a currency: the console
 		// displays what the file says and can change none of it.
 		GateLimits: consoleGateLimitsSeam(root),
+
+		// The discovery screen's read (change add-candidate-discovery, task 5.5).
+		// It opens internal/candidate's store, runs its assessment and hands over
+		// values — no source is called, so an open /signals tab spends none of the
+		// account's rate budget and does not become a second discoverer.
+		Signals: consoleSignalsSeam(root),
 
 		// The three seams task 1.8 puts behind the console's two restart buttons.
 		// internal/console executes nothing: it decides whether the person asking
@@ -376,17 +386,40 @@ func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Po
 // --- the orders screen's read (change console-orders-screen, task 4.6) ------------
 //
 // The console declares one method and this is the only thing in the binary that
-// satisfies it. Behind that one method are the two broker calls one refresh
+// satisfies it. Behind that one method are the three broker calls one refresh
 // costs, which is where they belong: the console cannot then spend the budget
-// twice, and it cannot report one endpoint's silence as the other's zero.
+// three times over, and it cannot report one endpoint's silence as another's zero.
 
-// consoleOrdersPageLimit bounds one page of each list.
+// The two values the `status` query parameter of GET /api/v1/orders takes. It is
+// documented `required: true`, and the parameter is not a filter in the way the
+// other five are — it selects between two differently-shaped answers:
+//
+//	OPEN    "모든 대기 중 주문을 전량 반환합니다. limit, cursor 는 무시되며"
+//	CLOSED  "limit (기본 20, 최대 100), cursor, from/to 파라미터 모두 적용됩니다"
+//
+// The first implementation of this screen sent neither and asked for limit=100,
+// which is either a rejected request (the live count permanently unmeasured) or
+// one page over the account's entire history (a live order past row 100 missing
+// from the table AND from the count, rendered as "0건 이상"). Both are the failure
+// the screen exists to prevent. They are constants rather than literals so the
+// call sites read as a choice between two groups and not as a filter somebody may
+// tidy away.
+const (
+	orderGroupOpen   = "OPEN"
+	orderGroupClosed = "CLOSED"
+)
+
+// consoleOrdersPageLimit bounds one page of the CLOSED list.
 //
 // It is a page and not the whole history on purpose — the screen is "what is
 // alive and what happened today", and an unbounded walk would be a loop of broker
 // calls behind one page load. When the broker says there is more, the console
-// renders the count as a floor ("N건 이상") rather than as a number, which is why
+// renders that count as a floor ("N건 이상") rather than as a number, which is why
 // truncating here is honest rather than lossy.
+//
+// It is deliberately NOT sent with the OPEN request. The API ignores it there, so
+// sending it would put a bound on the wire that the answer does not have — and the
+// live count's whole claim is that it cannot be short.
 const consoleOrdersPageLimit = 100
 
 // consoleOrdersReader is the part of the live client the orders screen needs.
@@ -426,10 +459,10 @@ type lazyOrders struct {
 
 // Orders satisfies console.OrdersReader.
 //
-// The two calls are sequential and each one's outcome is carried separately. A
-// failure on one is NOT returned as an error for the pair: the console renders
-// that half as unmeasured and refuses to add the counts, and collapsing them into
-// one error would take the measured half down with the missing one.
+// The three calls are sequential and each one's outcome is carried separately. A
+// failure on one is NOT returned as an error for the set: the console renders that
+// part as unmeasured and refuses to add the counts, and collapsing them into one
+// error would take the measured parts down with the missing one.
 //
 // An error is returned only when there is no reading at all to describe — no
 // credentials, or a client that does not have these reads.
@@ -457,21 +490,32 @@ func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) 
 
 	var out console.OrdersReading
 
-	page, err := plain(ctx, official.OrdersFilter{Limit: consoleOrdersPageLimit})
+	// The live half. status=OPEN and nothing else: the broker returns every
+	// pending order for it, so this list cannot be short and the count taken from
+	// it is a number rather than a floor. That is the only call on this screen
+	// which structurally cannot miss a leftover, and missing a leftover is what
+	// the screen is for.
+	open, err := plain(ctx, official.OrdersFilter{Status: orderGroupOpen})
 	if err != nil {
-		out.PlainError = err.Error()
+		out.OpenError = err.Error()
 	} else {
-		out.PlainTruncated = page.HasNext
-		out.Plain = make([]console.OrderRecord, 0, len(page.Orders))
-		for _, o := range page.Orders {
-			out.Plain = append(out.Plain, console.OrderRecord{
-				ID: o.ID, Symbol: o.Symbol, Side: o.Side, Kind: o.OrderType, Status: o.Status,
-				Market: o.Market, Currency: o.Currency,
-				Quantity: o.Quantity, Price: o.Price,
-				FilledQuantity: o.FilledQuantity, AverageFilledPrice: o.AverageFilledPrice,
-				OrderedAt: o.OrderedAt, CanceledAt: o.CanceledAt,
-			})
-		}
+		out.OpenTruncated = open.HasNext
+		out.Open = consoleOrderRecords(open.Orders)
+	}
+
+	// The finished half. It is a call of its own rather than a saving, because a
+	// cancelled or a rejected order never becomes a trade — so /history, which is
+	// built from round trips, never shows it. This is the only place that
+	// information exists at all.
+	closed, err := plain(ctx, official.OrdersFilter{
+		Status: orderGroupClosed,
+		Limit:  consoleOrdersPageLimit,
+	})
+	if err != nil {
+		out.ClosedError = err.Error()
+	} else {
+		out.ClosedTruncated = closed.HasNext
+		out.Closed = consoleOrderRecords(closed.Orders)
 	}
 
 	// The OPEN group, not a per-order status: openapi says the two vocabularies
@@ -494,6 +538,27 @@ func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) 
 	}
 
 	return out, nil
+}
+
+// consoleOrderRecords carries one page of raw orders across the console boundary.
+//
+// Every value stays the string the broker sent. parseDecimal anywhere on this path
+// would put back the zero the whole raw read exists to keep out: the API sends
+// price as null for a market order and the entire execution object as null while
+// an order is alive, so a converted reading says every live order filled at
+// nothing.
+func consoleOrderRecords(orders []official.RawOrder) []console.OrderRecord {
+	out := make([]console.OrderRecord, 0, len(orders))
+	for _, o := range orders {
+		out = append(out, console.OrderRecord{
+			ID: o.ID, Symbol: o.Symbol, Side: o.Side, Kind: o.OrderType, Status: o.Status,
+			Market: o.Market, Currency: o.Currency,
+			Quantity: o.Quantity, Price: o.Price,
+			FilledQuantity: o.FilledQuantity, AverageFilledPrice: o.AverageFilledPrice,
+			OrderedAt: o.OrderedAt, CanceledAt: o.CanceledAt,
+		})
+	}
+	return out
 }
 
 // consoleHandoffPath is where the single-use restart token lives: beside the
@@ -644,4 +709,141 @@ func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 // ever did, it refuses, which is the direction a mistake here has to fail in.
 func consoleMutationConfirmer() verifylive.Confirmer {
 	return func(verifylive.Mutation) error { return verifylive.ErrNotATerminal }
+}
+
+// --- the discovery screen (change add-candidate-discovery, task 5.5) ---------------
+//
+// The seam below hands /signals a read of the discovery store, and nothing else.
+// It lives in this file because console_test.go's
+// TestOnlyConsoleGoReachesTheConsolePackage allows exactly one importer of
+// internal/console: a second one would be a second place the web confirmer could
+// be wired, and reviewing one file is the only way that claim stays checkable.
+//
+// # It reads and it never scans
+//
+// candidate.Assess loads what is already stored and calls no source. That is the
+// whole arrangement: spec Requirement 7 ranks the account's rate budget engine >
+// verification > discovery, and a browser tab reloading every fifteen seconds into
+// a second discoverer would compete with `tossctl candidate watch` for the
+// undocumented RANKING limit — where one 429 costs the entire source, because the
+// rankings have no WTS fallback (D14 decision 2). It would also write a second
+// near-duplicate observation per symbol per tick into the series the acceleration
+// is differenced from.
+//
+// # And it opens the store per read rather than holding it
+//
+// Store.Checkpoint's own documentation names this screen as the long-lived reader
+// that stops `wal_checkpoint(TRUNCATE)` from reclaiming anything — and the write-
+// ahead log grows beside the table on the filesystem the order ledger writes to
+// (D16). A console that held the store open would quietly disable the cleanup the
+// watch loop runs every turn. Opening for the length of one render costs a file
+// open every refresh and keeps that sweep working.
+
+// consoleSignalsMarkets is what the screen reports on, in the contract's order
+// (design.md 결정된 계약값: markets.KR and markets.US, both enabled from the start).
+var consoleSignalsMarkets = []string{candidate.MarketKR, candidate.MarketUS}
+
+// consoleSignalsPanelWhy is why the screen cannot name the sources a scan lost.
+//
+// ScanResult.Missing is the only thing that carries a source id together with the
+// reason it did not answer, and it lives for the length of one cycle in the
+// process that ran it. The console is not that process and the store persists no
+// scan record, so this reading has no names to give — and saying so is the whole
+// of the rule task 5.7 states: a degradation nobody can attribute is a display
+// nobody can act on, and inventing an attribution would be worse than admitting
+// the gap. See openspec/changes/add-candidate-discovery/issues.md.
+//
+// What IS on the screen is the store's own per-candidate completeness — attempted,
+// answered and degraded, as recorded by the last scan that touched each row — so
+// the page is not silent about degradation, only about which source caused it.
+const consoleSignalsPanelWhy = "이 콘솔 프로세스는 스캔을 돌리지 않는다. " +
+	"빠진 원천의 이름과 사유는 스캔 결과에만 있고 저장소에 남지 않으므로, " +
+	"`tossctl candidate scan`이나 `tossctl candidate watch`의 출력에서 확인한다. " +
+	"아래 후보별 완전성은 저장소가 기록한 마지막 스캔의 값이다."
+
+// consoleSignals is the seam's implementation.
+type consoleSignals struct {
+	// open resolves the discovery store. It is a field rather than a direct call
+	// so this package's tests can point it at a temporary one.
+	open func() (*candidate.Store, error)
+}
+
+// consoleSignalsSeam wires the discovery screen.
+//
+// What crosses the boundary is a value: verdicts, tallies and a panel report.
+// internal/candidate's Store — which can promote, cool and prune — never becomes
+// reachable from internal/console, so "the discovery screen changes nothing" is a
+// fact about the wiring rather than about the handlers.
+func consoleSignalsSeam(root *rootOptions) console.SignalsReader {
+	return &consoleSignals{
+		open: func() (*candidate.Store, error) { return candidateStoreFactory(root) },
+	}
+}
+
+// Signals reads every contract market's assessment as of one instant.
+func (s *consoleSignals) Signals(ctx context.Context) (console.SignalsReading, error) {
+	store, err := s.open()
+	if err != nil {
+		return console.SignalsReading{}, fmt.Errorf("candidate: opening the discovery store: %w", err)
+	}
+	defer func() { _ = store.Close() }()
+
+	// One instant for every market, taken from the store's clock rather than this
+	// process's: every input age on the page is measured against it, and two
+	// markets read at two instants would answer the same question differently.
+	at := store.Now()
+	out := console.SignalsReading{At: at}
+	for _, market := range consoleSignalsMarkets {
+		out.Markets = append(out.Markets, consoleSignalsMarket(ctx, store, market, at))
+	}
+	return out, nil
+}
+
+// consoleSignalsMarket assesses one market.
+//
+// A market that could not be read comes back present with Why set rather than
+// omitted: a market missing from the page is indistinguishable from a market with
+// nothing in it, which is the confusion this whole screen exists to remove, one
+// level up from the veto.
+func consoleSignalsMarket(ctx context.Context, store *candidate.Store, market string,
+	at time.Time) console.SignalsMarket {
+
+	out := console.SignalsMarket{
+		Market: market,
+		Panel:  console.SignalsPanel{Why: consoleSignalsPanelWhy},
+	}
+	verdicts, err := candidate.Assess(ctx, store, candidate.AssessOptions{
+		Market: market,
+		At:     at,
+		// The one approved threshold in the repository. seen_late and extended have
+		// none (D18), so their vetoes come back THRESHOLD_ABSENT — unmeasured, and
+		// never a pass. Supplying an invented number here is the thing D6 forbids
+		// and the thing the screen would then render as a measurement.
+		Thresholds: candidate.VetoThresholds{
+			NearHighDistancePct: candidate.DefaultNearHighThresholdPct,
+		},
+	})
+	if err != nil {
+		out.Why = err.Error()
+		return out
+	}
+	out.Verdicts = verdicts
+
+	chases := make([]candidate.Chase, 0, len(verdicts))
+	var accelerations []candidate.Acceleration
+	seenLate := make([]candidate.ShadowBand, 0, len(verdicts))
+	extended := make([]candidate.ShadowBand, 0, len(verdicts))
+	for _, v := range verdicts {
+		chases = append(chases, v.Chase)
+		accelerations = append(accelerations, v.Accelerations...)
+		seenLate = append(seenLate, v.SeenLateBand)
+		extended = append(extended, v.ExtendedBand)
+	}
+	out.Vetoes = candidate.TallyVetoes(chases)
+	out.Crossings = candidate.TallyCrossings(accelerations)
+	out.Bands = map[candidate.VetoCode]candidate.BandTally{
+		candidate.VetoSeenLate: candidate.TallyBands(candidate.VetoSeenLate, seenLate),
+		candidate.VetoExtended: candidate.TallyBands(candidate.VetoExtended, extended),
+	}
+	return out
 }

@@ -21,5 +21,13 @@ func (statfsProber) Probe(dir string) (FSInfo, error) {
 	// bits keeps a magic such as btrfs' 0x9123683E from sign-extending into a
 	// negative int64 on the latter.
 	magic := int64(st.Type) & 0xFFFFFFFF
-	return FSInfo{Name: FilesystemName(magic), Magic: magic}, nil
+	// Bavail rather than Bfree: the reserved blocks are not available to this
+	// process, and counting them would let discovery keep writing right up to the
+	// point where the ledger's own write is the one that fails (D16).
+	info := FSInfo{Name: FilesystemName(magic), Magic: magic}
+	if st.Bsize > 0 {
+		info.FreeBytes = int64(st.Bavail) * int64(st.Bsize)
+		info.FreeMeasured = true
+	}
+	return info, nil
 }

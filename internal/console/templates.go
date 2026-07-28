@@ -75,6 +75,7 @@ form { display: inline; }
     <a href="/" {{if eq .Nav "verify-console"}}class="on"{{end}}>검증 콘솔</a>
     <a href="/positions" {{if eq .Nav "positions"}}class="on"{{end}}>포지션</a>
     <a href="/orders" {{if eq .Nav "orders"}}class="on"{{end}}>주문</a>
+    <a href="/signals" {{if eq .Nav "signals"}}class="on"{{end}}>발굴 신호</a>
     <a href="/history" {{if eq .Nav "history"}}class="on"{{end}}>거래 이력</a>
     <a href="/settings" {{if eq .Nav "settings"}}class="on"{{end}}>편입 설정</a>
     <a href="/verify" {{if eq .Nav "verify"}}class="on"{{end}}>검증</a>

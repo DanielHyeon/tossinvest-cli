@@ -135,17 +135,31 @@ const overviewTemplates = `
   </table>
 </section>
 
-{{/* --- 미체결 --- */}}
+{{/* --- 미체결 ---
+     건수와 "언제의 건수인가"는 한 사실이다(D9). 이 화면은 캐시를 갱신하지 않으므로 이 숫자는
+     마지막 주문 화면 방문에서 얼어붙어 있고, 나이를 적지 않으면 세 시간 전 빈 계좌의 "0건"이
+     지금 계좌의 사실로 읽힌다. TTL을 넘긴 값은 측정값이 아니며 그렇게 적는다. */}}
 <section>
   <h2>살아 있는 주문</h2>
   <dl>
-    <dt>미체결 건수</dt><dd>{{template "cell" .Snap.Open.Count}}</dd>
+    <dt>미체결 건수</dt>
+    <dd>{{with .Snap.Open}}{{if .Count.Known}}
+      {{if .Stale}}<span class="muted">{{.Count.Value}}</span>{{else}}{{.Count.Value}}{{end}}
+      {{if .Present}}<span class="muted">— {{.TakenAt}}에 읽은 값 ({{.AgeSeconds}}초 전)</span>{{end}}
+      {{if .Stale}}<br><strong class="bad">캐시 TTL({{.TTLSeconds}}초)을 넘었다 — 지금 계좌의
+      측정값이 아니다.</strong> <span class="muted">이 화면은 갱신하지 않으므로 이 숫자는
+      <a href="{{.Where}}">주문 화면</a>을 다시 열기 전까지 그대로다.</span>{{end}}
+      {{else}}{{template "unmeasured" .Count}}
+      {{if eq .Count.Code "never_fetched"}}<br><a href="{{.Where}}">주문 화면을 열면 이 값이 채워진다</a>{{end}}
+      {{end}}{{end}}</dd>
   </dl>
   <p class="muted">일반 주문과 조건주문을 <strong>함께</strong> 센 값이다. 한쪽만 읽혔으면 합계를
   내지 않고 미측정으로 적는다 — 조건주문도 노출 상한을 채우는 잔여물이므로, 한쪽만 세고 낸
   "0건"은 다음 검증을 막고 있는 잔여물을 화면에서 지운다.
   <br>이 화면은 브로커를 부르지 않는다(0콜). 값을 채우는 것은
-  <a href="{{.Snap.Open.Where}}">주문 화면</a>을 여는 것뿐이다.</p>
+  <a href="{{.Snap.Open.Where}}">주문 화면</a>을 여는 것뿐이다.
+  {{if .Snap.Open.VerifyHeld}}<br><strong>검증 실행 중이라 주문 화면의 갱신도 보류된다</strong> —
+  검증이 끝나 그 화면을 다시 열기 전까지 이 값은 갱신되지 않는다.{{end}}</p>
 </section>
 
 {{/* --- 안전 --- */}}

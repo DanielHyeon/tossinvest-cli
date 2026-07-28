@@ -66,9 +66,10 @@
 - [x] 4.1 [T] `OrdersReader` — 콘솔이 `internal/official`을 import하지 않는다(기존
       `TestTheConsoleHoldsNoBrokerOfItsOwn` 유지). 필터 타입은 **콘솔 로컬**이다 —
       `official.OrdersFilter`를 명명할 수 없다.
-- [x] 4.2 [T] 캐시 TTL 15초 이상, lazy, 서버측 폴러 없음. 갱신 1회 = **2콜**(주문 + 조건주문).
+- [x] 4.2 [T] 캐시 TTL 15초 이상, lazy, 서버측 폴러 없음. 갱신 1회 = **3콜**
+      (미체결 + 종결 + 조건주문 — design D2 개정, §8.1).
 - [x] 4.3 [T] 필터는 **캐시 위에서 in-process**(D6). RED: 브로커 파라미터로 넘기면
-      `?status=OPEN`과 `?status=CLOSED`가 별개 캐시 키가 되어 TTL당 2콜이 4콜이 된다 → GREEN.
+      `?state=live`와 `?state=closed`가 별개 캐시 키가 되어 TTL당 3콜이 6콜이 된다 → GREEN.
 - [x] 4.4 [T] 검증 중 갱신 보류를 holdings와 **같은 판정**으로 상속(in-process run 신호 +
       다른 프로세스 runlock mtime 5분 상한). RED: 검증 중에도 조회가 나간다 → GREEN.
 - [x] 4.5 [T] **부분 실패는 합산하지 않는다**. RED: 조건주문 조회만 실패했는데 총계가 일반
@@ -119,3 +120,61 @@
 - [ ] 7.3 `make sdd-sync && make sdd-check && make gate CHANGE=console-orders-screen`
 - [ ] 7.4 독립 리뷰(별도 컨텍스트) — 특히 ① 원장·official 가산이 **정말로 기존 동작을 바꾸지
       않는지**, ② 예외가 실제로 정확 경로 1건인지, ③ 조건주문 부분 실패가 합산되지 않는지
+
+## 8. 구현 리뷰 대응 (적대적 리뷰 P0×2 / P1×3, 2026-07-28)
+
+> 리뷰가 찾아낸 가장 날카로운 사실: **다섯 개의 변이가 전체 스위트를 통과했다.** 그래서 각
+> 수정마다 결함을 다시 넣어 새 테스트가 실제로 실패하는지 확인했다 — 변이 12건 전부가
+> 물었고, 목록은 `issues.md` I-7에 있다.
+> `internal/journal`은 변경 0이고, `internal/official`은 이 change가 만든 두 raw 읽기
+> (`OrdersRaw`·`ConditionalOrdersRaw`)에만 status 가드가 들어갔다 — 선행 심볼은 전부
+> `9969238`과 바이트 동일하다(§8.10, `issues.md` I-8).
+
+- [x] 8.1 [T] **P0-1** 갱신 1회를 3콜로: `status=OPEN` + `status=CLOSED` + 조건주문.
+      RED(`TestOneRefreshAsksTheOpenGroupAndTheClosedGroupSeparatelyAndTheLiveOneWhole`):
+      실제 와이어가 `GET /api/v1/orders?limit=100` 한 건이었다 — `status`는 `required: true`이고
+      생략하면 거부되거나 **전 기간 한 페이지**가 돌아와 101번째 살아 있는 주문이 표에도 집계에도
+      없이 `0건 이상`이 된다 → GREEN. `OPEN`에는 `limit`·`cursor`를 **보내지 않는다**(API가 무시).
+- [x] 8.2 [T] `OrdersReading`을 세 목록으로 분리(`Open`/`Closed`/`Conditional`)하고 잘림 플래그도
+      각각. RED(`TestTheLiveCountIsANumberEvenWhenTheClosedPageWasTruncated`): 잘림을 공유하면
+      **미체결 건수가 하한이 된다** — `OPEN`이 전량 반환이라 얻은 정확성을 종결 페이지가 도로
+      깎는다 → GREEN. 미체결 건수는 이제 하한이 아니라 숫자다.
+- [x] 8.3 [T] 두 그룹에 겹쳐 오는 주문 중복 제거. openapi는 `PARTIAL_FILLED`를 **OPEN과 CLOSED
+      양쪽**에 정의하므로 한 주문이 두 번 온다. RED(`TestAnOrderInBothGroupsIsOneRowAndIsCountedOnce`):
+      한 주문이 두 행·두 건이 된다 → GREEN(미체결 사본이 이긴다).
+- [x] 8.4 [T] **P0-2 / D9** 개요의 미체결 건수에 캐시 시각·경과·TTL 초과 표시를 값과 **같은 셀**에.
+      RED(`TestTheOverviewNeverRendersAStaleOrdersReadingAsAMeasuredNumber`): 개요는 설계상
+      갱신하지 않으므로 세 시간 전 빈 계좌의 `0건`을 나이도 표시도 없이 측정값으로 렌더했다 →
+      GREEN. 검증 중에는 "주문 화면 갱신도 보류된다"를 함께 적는다(`verify_suspended` 사유를
+      쓰지 않는 이유는 보유 패널의 `brokerReadable`과 같다 — 이 화면은 보류될 것이 없다).
+- [x] 8.5 [T] **P1-3** `/orders` 합계도 같은 규율. RED
+      (`TestTheOrdersCountsCarryTheirOwnProvenanceInTheSameBreath`): 굵은 합계와 나이·실패가
+      다른 문단이면 읽는 사람이 둘을 잇지 않는다 → GREEN(조회 시각은 합계 `<dd>` 안, 실패·보류
+      문단은 같은 `<section>` 안).
+- [x] 8.6 [T] **P1-1** 조건주문 발주 주체 조인. RED
+      (`TestAWatchingConditionalIsNeverLabelledOtherByAJoinThatCannotSucceed`):
+      `rec.Triggered`는 감시 중인 조건주문에서 항상 비어 있고 어댑터는 OPEN 그룹만 부르므로
+      **화면에 나오는 모든 행이 `engineIDs[""]`를 조회했고**, 그 결과가 상수 `그 밖`이었다 → GREEN.
+      이 빌드에서 조건주문 id는 `mutation_attempts`에 **기록되지 않으므로**(§8.7) 불일치는
+      `불명`이고, 일치는 증거이므로 `엔진 발주`로 적는다. 페이지 안내 1회로 이유를 말한다.
+- [x] 8.7 조사 결과 기록: `mutation_attempts`를 쓰는 것은 `internal/execgw`의 PLACE/CANCEL/AMEND
+      경로뿐이고 `broker_order_id`는 `PlaceOrder`/`CancelOrder`/`ModifyOrder`가 돌려준 **일반 주문**
+      번호다. 조건주문 등록은 `trading.Service.ConditionalPlace`와 `internal/verifylive`를 지나며
+      **둘 다 journal attempt를 열지 않는다**(`internal/verifylive`에는 journal import 자체가 없다).
+      → 조건주문 id는 이 빌드에서 그 칼럼에 도달하지 않는다.
+- [x] 8.8 [T] **P1-2 / P2-1** 필터의 "판정할 수 없는 행은 걸러 내지 않는다" 규칙을 테스트로 고정.
+      RED(`TestASideFilterNeverHidesAWatchingConditional`, `TestAMarketFilterNeverHidesAnOrderWhoseMarketIsUnknown`):
+      `!r.Conditional &&`를 지워도 전체 스위트가 통과했고, 시장 축은 시장이 `—`인 살아 있는 주문을
+      **실제로 제외하고 있었다** → GREEN(시장도 방향과 같은 "해당 없음"으로).
+- [x] 8.9 [T] `TestOrdersFilterEmpty` 개명·재작성 →
+      `TestOrdersFilterEmptyOmitsEveryParameterIncludingTheRequiredOne`. 빈 필터가 파라미터를
+      하나도 보내지 않는다는 **클라이언트 동작**은 그대로 고정하되, 그것이 쓸 수 있는 호출 형태라는
+      뜻이 아님을 이름과 주석에 적었다 — 이 테스트를 허가로 읽은 것이 P0-1의 출처다.
+      `TestBothOrderReadsSendTheGroupTheyWereGiven`를 추가해 두 읽기가 받은 그룹을 그대로
+      와이어에 싣는지 고정한다.
+- [x] 8.10 [T] **가드를 클라이언트로 옮긴다**(Manager 판정, `issues.md` I-8). `OrdersRaw`와
+      `ConditionalOrdersRaw`가 빈 `status`를 `ErrOrderStatusRequired`로 거부하고, **요청을 보내기
+      전에** 거부한다. RED(`TestTheRawReadsRefuseARequestWithNoStatusGroup`): 호출부에만 사는
+      규칙은 다음 호출부에서 똑같이 잊힌다 — 방금 고친 P0의 모양이 정확히 그것이다 → GREEN.
+      두 엔드포인트의 문구는 다르다: 조건주문은 두 그룹 모두 페이지네이션하므로 "전량 반환"이라
+      쓰지 않는다. `cmd/tossctl`의 와이어 테스트는 그대로 둔다(두 계층).

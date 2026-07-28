@@ -9,7 +9,7 @@ package console
 // still alive — and that is the question an operator asks before deciding whether
 // the next verification can send anything at all.
 //
-// # Two lists, never summed across a failure
+// # Three lists, never summed across a failure
 //
 // A conditional order is on a different endpoint from a plain one, and in this
 // product it is the durable artefact rather than the corner case: M18 measured
@@ -19,9 +19,21 @@ package console
 // value while a conditional leftover was blocking the next verification — which
 // is the exact failure this screen exists to prevent.
 //
-// So one refresh is two calls, and if only one of them answers the screen says
-// so. A confident zero has to be unreachable: the two counts are added only when
-// both were measured.
+// The plain endpoint is itself two calls, and the reason is the same one. Its
+// `status` parameter is documented `required: true` and it selects between two
+// differently shaped answers: OPEN returns every pending order and ignores limit
+// and cursor, CLOSED paginates and spans the whole account history when no dates
+// are given. Asking for neither — which the first implementation did — is either
+// a refused request or one page over all time, and in the second case a live
+// order past row 100 is missing from the table AND from the count, rendered as
+// "0건 이상". Asking for OPEN by name is the only shape of this call that
+// structurally cannot miss a leftover. The finished half is a call of its own
+// because a cancelled or rejected order never becomes a trade, so /history never
+// shows it either.
+//
+// So one refresh is three calls, and if only some of them answer the screen says
+// so. A confident zero has to be unreachable: the counts are added only when the
+// lists behind them were measured.
 //
 // # It is a reading, and the route table can check that
 //
@@ -49,12 +61,12 @@ import (
 // OrdersReader is the console's entire view of the account's order record: one
 // read, and it cannot change anything.
 //
-// It declares ONE method although a refresh is two broker calls. The two calls
+// It declares ONE method although a refresh is three broker calls. Those calls
 // are the adapter's business (cmd/tossctl), and keeping them there is what stops
-// this package from being able to spend the rate budget twice, or to spend it on
-// one endpoint and report the other as zero: the outcome of each call arrives
-// inside the value, so a partial answer is a partial answer rather than a short
-// number.
+// this package from being able to spend the rate budget three times over, or to
+// spend it on one endpoint and report another as zero: the outcome of each call
+// arrives inside the value, so a partial answer is a partial answer rather than a
+// short number.
 //
 // The filter types are this package's own. official.OrdersFilter cannot be named
 // here — internal/official is a banned import, and it is banned because it is the
@@ -73,18 +85,42 @@ type OrdersReader interface {
 // an order is alive — so on this screen an absent value is the normal case, not
 // the edge one, and rendering it as 0 says the order filled.
 //
-// The two lists carry their own failures rather than one shared error. Losing the
-// conditional list while the plain one answered is the case the whole screen is
-// built around, and it cannot be expressed by returning an error for the pair.
+// # Three lists, and the first one cannot be short
+//
+// The plain endpoint's two groups are separate readings because they behave
+// differently in the only way that matters here. `status=OPEN` returns every
+// pending order — "limit, cursor 는 무시되며" — so the live list is structurally
+// whole and its count is a number. `status=CLOSED` paginates, so that list is a
+// page and its count can be a floor. Merging them would put the closed page's
+// truncation on the live count and turn an exact answer into "N건 이상".
+//
+// Each list carries its own failure rather than one shared error. Losing the
+// conditional list while the plain ones answered is the case the whole screen is
+// built around, and it cannot be expressed by returning an error for the set.
 type OrdersReading struct {
-	// Plain is one page of /api/v1/orders, both live and finished.
-	Plain []OrderRecord
-	// PlainError is why there is no plain list, empty when there is one.
-	PlainError string
-	// PlainTruncated reports that the broker said there is another page. The
+	// Open is the broker's OPEN group of /api/v1/orders: every pending order,
+	// whole. This is the list a leftover cannot hide from.
+	Open []OrderRecord
+	// OpenError is why there is no open list, empty when there is one.
+	OpenError string
+	// OpenTruncated reports that the broker said there is another page of
+	// pending orders. Per the documented contract it is always false — OPEN
+	// ignores limit and cursor and returns the lot. It exists so that a broker
+	// contradicting its own documentation is reported rather than assumed away:
+	// the screen would rather say "N건 이상" than assert an exactness it was just
+	// told it does not have.
+	OpenTruncated bool
+
+	// Closed is one page of the CLOSED group. It is a separate call and not a
+	// luxury: a cancelled or rejected order never becomes a trade, so /history
+	// never shows it, and this is the only place that fact exists.
+	Closed []OrderRecord
+	// ClosedError is why there is no closed list.
+	ClosedError string
+	// ClosedTruncated reports that the broker said there is another page. The
 	// count is then "N건 이상": a number taken off a truncated page is a
-	// confidently short one, and what goes missing is a leftover.
-	PlainTruncated bool
+	// confidently short one.
+	ClosedTruncated bool
 
 	// Conditional is the broker's OPEN group of /api/v1/conditional-orders —
 	// the live ones, which is exactly the set that fills the exposure cap.
@@ -185,6 +221,20 @@ func (s ordersSnapshot) TakenAt() string {
 // AgeSeconds is the reading's age, rounded to a whole second.
 func (s ordersSnapshot) AgeSeconds() int { return int(s.Age.Round(time.Second) / time.Second) }
 
+// TTLSeconds is the age at which a reading stops being a measurement, so the
+// screens can print the bound they are judging against rather than a bare verdict.
+func (ordersSnapshot) TTLSeconds() int { return int(ordersTTL / time.Second) }
+
+// Stale reports a reading older than the TTL.
+//
+// Past the TTL a reading is not a measurement (design D9). On this screen that is
+// rare — the refresh is lazy but it happens on every request outside a hold — and
+// on the overview it is the normal case, because that screen refreshes nothing by
+// contract and the count therefore freezes at whatever the last /orders visit
+// produced. A three-hour-old "0건" rendered as a measured number is a screen
+// telling an operator the account is quiet while an order sits on it.
+func (s ordersSnapshot) Stale() bool { return s.Present && s.Age > ordersTTL }
+
 // ordersCache is the lazy, single-flight cache in front of one OrdersReader.
 //
 // It is holdingsCache's arrangement, and for the same reasons: the mutex is held
@@ -269,7 +319,8 @@ func (c *ordersCache) snapshotLocked(now time.Time) ordersSnapshot {
 }
 
 // refreshLocked performs the one seam call a refresh is allowed. Behind it the
-// adapter makes two broker calls, one per endpoint.
+// adapter makes three broker calls: the broker's pending group, its finished
+// group and the conditional endpoint.
 //
 // A failure keeps the previous reading rather than discarding it, exactly as the
 // holdings cache does: an operator looking at a two-minute-old order list with
@@ -419,13 +470,29 @@ func decimalFor(s string) float64 {
 
 // rowFromOrder turns one plain order into a line.
 //
-// The live/closed split is internal/brokerstate's answer, not a switch written
-// here. That package already models the ten-value OrderStatus enum, the
-// contradictions it makes expressible, and the fail-closed UNKNOWN for anything
-// it cannot explain; a second definition of "still open" on this screen would
-// drift from the one the engine acts on, and the drift would show up as a
-// leftover the screen calls finished.
-func rowFromOrder(rec OrderRecord, origin orderOrigin) orderRow {
+// # pending is the broker's answer, not a derivation
+//
+// The live/closed split comes from WHICH GROUP the row was fetched in.
+// `status=OPEN` is documented as "모든 대기 중 주문을 전량 반환" — the broker's own
+// statement of what is still alive, and complete by construction — so it is the
+// authority for the count. Deriving aliveness from the per-order status string
+// instead would put a second definition of "still open" on this screen, and the
+// two would disagree exactly when the status is one this build has not seen: the
+// leftover would be filed under 종결 by a screen built to find it.
+//
+// # internal/brokerstate still judges the status column
+//
+// That package models the ten-value OrderStatus enum, the contradictions it makes
+// expressible, and the fail-closed UNKNOWN for anything it cannot explain. Its
+// verdict is what the 상태 불명 label reports.
+//
+// When the two disagree in the dangerous direction — the broker returned the row
+// in the pending group and the status string reads as terminal — the row is marked
+// unresolved and stays in the live count. Fail-closed here means "it can still
+// change". The opposite disagreement is not flagged: PARTIAL_FILLED is documented
+// as belonging to BOTH groups, so a closed-group row whose status reads as open is
+// the API's own overlap rather than a contradiction.
+func rowFromOrder(rec OrderRecord, origin orderOrigin, pending bool) orderRow {
 	shown, unparsed := orderInstant(rec.OrderedAt)
 	row := orderRow{
 		At:       shown,
@@ -450,10 +517,16 @@ func rowFromOrder(rec OrderRecord, origin orderOrigin) orderRow {
 		FilledQuantity: decimalFor(rec.FilledQuantity),
 	}
 	derived := brokerstate.Derive(view)
+	row.Live = pending
 	row.Unresolved = derived.FailClosed
-	row.Live = !derived.Terminal && !derived.FailClosed
-	if derived.FailClosed {
+	switch {
+	case derived.FailClosed:
 		row.Detail = derived.Detail
+	case pending && derived.Terminal:
+		row.Unresolved = true
+		row.Detail = "브로커는 이 주문을 미체결(OPEN) 그룹으로 돌려줬는데 상태 문자열 " +
+			strings.TrimSpace(rec.Status) + " 은(는) 종결로 읽힌다. 둘 중 하나가 틀렸고, " +
+			"종결로 읽지 않는다 — 아직 바뀔 수 있는 주문을 끝난 것으로 세면 잔여물이 사라진다."
 	}
 	return row
 }
@@ -498,6 +571,12 @@ func firstNonBlank(values ...string) string {
 	return ""
 }
 
+// marketUnknownLabel is what a row whose market this build could not name renders
+// as. It is a value rather than a literal because the market filter has to be able
+// to recognise it: an unknown market is not-applicable to a filter, never
+// excluded by one.
+const marketUnknownLabel = "—"
+
 // marketLabel normalises the broker's market to the two this console names, and
 // says so when it is neither.
 //
@@ -511,7 +590,7 @@ func marketLabel(market string) string {
 	case "US":
 		return "US"
 	case "":
-		return "—"
+		return marketUnknownLabel
 	default:
 		return strings.ToUpper(strings.TrimSpace(market))
 	}
@@ -560,7 +639,7 @@ func (c *Console) ledgerOrigins(ctx context.Context) (map[string]bool, journalVi
 	return out, jv
 }
 
-// originOf decides one row's origin from the ledger's answer.
+// originOf decides one plain order's origin from the ledger's answer.
 func originOf(id string, engineIDs map[string]bool, jv journalView) orderOrigin {
 	if !jv.Readable() {
 		return originUnknown
@@ -569,6 +648,45 @@ func originOf(id string, engineIDs map[string]bool, jv journalView) orderOrigin 
 		return originEngine
 	}
 	return originOther
+}
+
+// conditionalOriginOf decides one conditional order's origin, and it is a
+// different function because the ledger answers a different amount of the
+// question.
+//
+// # The ledger was never asked about conditionals
+//
+// mutation_attempts is written by internal/execgw, whose three kinds are PLACE,
+// CANCEL and AMEND of a PLAIN order; its broker_order_id is what PlaceOrder,
+// CancelOrder and ModifyOrder handed back. Registering a conditional order goes
+// through trading.Service.ConditionalPlace and internal/verifylive, neither of
+// which opens a journal attempt at all. So in this build a conditional order's id
+// is never written to that column, and its ABSENCE from the set is not evidence of
+// anything: "그 밖" would be a verdict on a question nobody put to the ledger.
+//
+// # And the id it used to be asked about was always empty
+//
+// The first implementation joined on rec.Triggered — the plain order a conditional
+// turned into — which is empty for exactly as long as the conditional is still
+// watching, and the adapter requests only the OPEN group. The lookup was therefore
+// engineIDs[""] on every row the screen can show, and BrokerOrderIDs excludes the
+// empty id by design. The label was a constant wearing a determination's clothes,
+// and the constant was the wrong one: an invented "manual" label on an engine
+// order is an operator concluding the engine is idle while it is trading.
+//
+// A positive hit is still honoured — on the triggered order's id first and the
+// conditional's own id second — because if either ever does reach the ledger, that
+// IS evidence and the screen should say so the day it appears. A miss is 불명.
+func conditionalOriginOf(rec ConditionalRecord, engineIDs map[string]bool, jv journalView) orderOrigin {
+	if !jv.Readable() {
+		return originUnknown
+	}
+	for _, id := range []string{rec.Triggered, rec.ID} {
+		if trimmed := strings.TrimSpace(id); trimmed != "" && engineIDs[trimmed] {
+			return originEngine
+		}
+	}
+	return originUnknown
 }
 
 // --- the counts -------------------------------------------------------------------
@@ -616,18 +734,26 @@ type ordersView struct {
 	// reads it and the page prints the notice once, never per row.
 	Journal journalView
 
-	// Plain and Conditional are each list's own measurement. They are separate
-	// because losing one of the two is the case this screen is built around.
-	Plain       reading
+	// Open, Closed and Conditional are each list's own measurement. They are
+	// separate because losing one of the three is the case this screen is built
+	// around.
+	Open        reading
+	Closed      reading
 	Conditional reading
 
-	// LiveCount and LiveTotal are the live counts of each list, and Live is the
-	// two added — which happens only when BOTH were measured. A total that
-	// silently drops the conditional half is the confidently short number that
-	// hides a leftover.
-	PlainLive       reading
+	// OpenLive and ConditionalLive are the live counts of the two live lists, and
+	// Live is the two added — which happens only when BOTH were measured. A total
+	// that silently drops the conditional half is the confidently short number
+	// that hides a leftover.
+	//
+	// OpenLive is a number and not a floor: it is the size of the broker's OPEN
+	// group, which the API returns whole.
+	OpenLive        reading
 	ConditionalLive reading
 	Live            reading
+	// ClosedCount is how many finished orders the closed page carried. It can be
+	// a floor — that list paginates.
+	ClosedCount reading
 
 	// Rows is what the table shows after the filter, live first.
 	Rows []orderRow
@@ -665,6 +791,24 @@ func (v ordersView) AnyUnresolved() bool {
 	return false
 }
 
+// AnyConditionalOrigin reports at least one conditional row on a page whose ledger
+// WAS readable, so the screen can explain once why those rows can still say 불명.
+//
+// Without the sentence an unexplained 불명 sitting beside an explained 엔진 발주
+// reads as a bug in the join, and the next person deletes the honesty to make the
+// column look consistent.
+func (v ordersView) AnyConditionalOrigin() bool {
+	if !v.Journal.Readable() {
+		return false
+	}
+	for _, r := range v.Rows {
+		if r.Conditional {
+			return true
+		}
+	}
+	return false
+}
+
 // AnyUnparsedTime reports at least one row whose timestamp would not parse.
 func (v ordersView) AnyUnparsedTime() bool {
 	for _, r := range v.Rows {
@@ -688,38 +832,59 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	engineIDs, jv := c.ledgerOrigins(ctx)
 	v.Journal = jv
 
-	v.Plain = listUnmeasured(v.Broker, v.Broker.Lists.PlainError)
-	v.Conditional = listUnmeasured(v.Broker, v.Broker.Lists.ConditionalError)
+	lists := v.Broker.Lists
+	v.Open = listUnmeasured(v.Broker, lists.OpenError)
+	v.Closed = listUnmeasured(v.Broker, lists.ClosedError)
+	v.Conditional = listUnmeasured(v.Broker, lists.ConditionalError)
 
 	var all []orderRow
-	plainLive := 0
-	if v.Plain.Known() {
-		for _, rec := range v.Broker.Lists.Plain {
-			row := rowFromOrder(rec, originOf(rec.ID, engineIDs, jv))
-			if row.Live || row.Unresolved {
-				plainLive++
+	openLive := 0
+	// pending is the set of ids the broker just called pending. The closed page
+	// is filtered against it because PARTIAL_FILLED is documented as belonging to
+	// BOTH groups, so one order can arrive in both answers — and two rows for one
+	// order would be one order counted twice and one row an operator cancels
+	// twice.
+	pending := make(map[string]bool)
+	if v.Open.Known() {
+		for _, rec := range lists.Open {
+			all = append(all, rowFromOrder(rec, originOf(rec.ID, engineIDs, jv), true))
+			if id := strings.TrimSpace(rec.ID); id != "" {
+				pending[id] = true
 			}
-			all = append(all, row)
+			openLive++
+		}
+	}
+	closedCount := 0
+	if v.Closed.Known() {
+		for _, rec := range lists.Closed {
+			if pending[strings.TrimSpace(rec.ID)] {
+				continue
+			}
+			all = append(all, rowFromOrder(rec, originOf(rec.ID, engineIDs, jv), false))
+			closedCount++
 		}
 	}
 	conditionalLive := 0
 	if v.Conditional.Known() {
-		for _, rec := range v.Broker.Lists.Conditional {
-			all = append(all, rowFromConditional(rec, originOf(rec.Triggered, engineIDs, jv)))
+		for _, rec := range lists.Conditional {
+			all = append(all, rowFromConditional(rec, conditionalOriginOf(rec, engineIDs, jv)))
 			conditionalLive++
 		}
 	}
 
-	v.Truncated = (v.Plain.Known() && v.Broker.Lists.PlainTruncated) ||
-		(v.Conditional.Known() && v.Broker.Lists.ConditionalTruncated)
+	v.Truncated = (v.Open.Known() && lists.OpenTruncated) ||
+		(v.Closed.Known() && lists.ClosedTruncated) ||
+		(v.Conditional.Known() && lists.ConditionalTruncated)
 
-	v.PlainLive = countReading(v.Plain, plainLive, v.Broker.Lists.PlainTruncated)
-	v.ConditionalLive = countReading(v.Conditional, conditionalLive, v.Broker.Lists.ConditionalTruncated)
-	v.Live = combinedLive(v.Plain, v.Conditional, plainLive, conditionalLive, v.Truncated)
+	v.OpenLive = countReading(v.Open, openLive, lists.OpenTruncated)
+	v.ClosedCount = countReading(v.Closed, closedCount, lists.ClosedTruncated)
+	v.ConditionalLive = countReading(v.Conditional, conditionalLive, lists.ConditionalTruncated)
+	v.Live = combinedLive(v.Open, v.Conditional, openLive, conditionalLive,
+		lists.OpenTruncated || lists.ConditionalTruncated)
 
 	sortRows(all)
 	v.Total = len(all)
-	v.Enabled = v.Plain.Known() || v.Conditional.Known()
+	v.Enabled = v.Open.Known() || v.Closed.Known() || v.Conditional.Known()
 	v.Filtered = choice.Applied()
 	v.Rows = filterRows(all, choice)
 	v.Shown = len(v.Rows)
@@ -742,20 +907,20 @@ func countReading(measurement reading, n int, truncated bool) reading {
 // screen. A total that quietly means "the plain orders only" is a measured-looking
 // zero while a conditional leftover holds the exposure cap — the failure this
 // change exists to prevent, committed by this change.
-func combinedLive(plain, conditional reading, plainN, conditionalN int, truncated bool) reading {
+func combinedLive(open, conditional reading, openN, conditionalN int, truncated bool) reading {
 	switch {
-	case plain.Known() && conditional.Known():
-		return measured(countText(plainN+conditionalN, truncated))
-	case plain.Known():
+	case open.Known() && conditional.Known():
+		return measured(countText(openN+conditionalN, truncated))
+	case open.Known():
 		return unmeasuredWithDetail(reasonFor(conditional),
-			"일반 주문 "+countText(plainN, truncated)+"은 읽었고 조건주문은 읽지 못했다. "+
+			"일반 주문 "+countText(openN, truncated)+"은 읽었고 조건주문은 읽지 못했다. "+
 				"둘을 합치지 않는다 — 조건주문도 노출 상한을 채우는 잔여물이다")
 	case conditional.Known():
-		return unmeasuredWithDetail(reasonFor(plain),
+		return unmeasuredWithDetail(reasonFor(open),
 			"조건주문 "+countText(conditionalN, truncated)+"은 읽었고 일반 주문은 읽지 못했다. "+
 				"둘을 합치지 않는다")
 	default:
-		return plain
+		return open
 	}
 }
 

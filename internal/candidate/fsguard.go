@@ -73,6 +73,18 @@ type FSInfo struct {
 	Name string
 	// Magic is the raw statfs f_type value, 0 when unavailable.
 	Magic int64
+	// FreeBytes is the space available to this user on that filesystem, and
+	// FreeMeasured is the absent-versus-zero flag for it (D16).
+	//
+	// The flag is load-bearing and is the reason this is not one field. A prober
+	// that cannot answer would otherwise report "0 bytes free", which is the most
+	// alarming possible reading of a measurement nobody made — and the opposite
+	// mistake, defaulting an unmeasured probe to "plenty", is the one that lets
+	// discovery fill the filesystem the ledger writes to. Neither is safe, so the
+	// two states are kept apart and the caller decides, exactly as Budget.Reported
+	// does for the rate allowance.
+	FreeBytes    int64
+	FreeMeasured bool
 }
 
 // FSProber inspects the filesystem hosting a directory.

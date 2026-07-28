@@ -1007,6 +1007,16 @@ func TestTheVetoCannotSeeAScoreToBeOffsetBy(t *testing.T) {
 		reflect.TypeOf(RankMove{}):          true,
 		reflect.TypeOf(CrossingTally{}):     true,
 		reflect.TypeOf(ThresholdCrossing{}): true,
+		// The shadow bands (task 4.10) are here for D18's reason rather than D3's.
+		// They are not a score; they are the record of a quantity nobody has
+		// approved a threshold for, and a veto that could see one would be deciding
+		// against a number chosen without a source — which is what D6 forbids and
+		// what the whole band arrangement exists to avoid. Keeping them out of the
+		// closure is the input half of that; band.go's own static test closes the
+		// other direction.
+		reflect.TypeOf(ShadowBand{}):   true,
+		reflect.TypeOf(BandCrossing{}): true,
+		reflect.TypeOf(BandTally{}):    true,
 	}
 	allowed := map[string]string{
 		"VetoInputs.Candidate.SourcesAttempted": "D4 completeness, not a score",

@@ -199,28 +199,116 @@ mutating 단계가 없다 — 검증은 fixture와 주입 clock으로 한다.
     재귀 + 사유를 적은 숫자 allowlist(미사용 항목도 실패). `PercentileExceeds`가
     `Rank > RankTotal`(200/150 → −33%, clear)을 막지 않았다 → 거부.
     D19 커버리지 산술 과장(600후보 **및** 백오프 2단계)을 `veto.go` 주석에서 제거 — 상수는 유지.
-- [ ] 4.10 [T] `seen_late`·`extended`의 **그림자 밴드** 기록(D18). veto하지 않는다.
+- [x] 4.10 [T] `seen_late`·`extended`의 **그림자 밴드** 기록(D18). veto하지 않는다.
   밴드는 측정 도구이므로 출처 없이 정해도 되지만(§3.5 선례), **veto 임계는 실측 후 사람 승인**이다.
+  → `band.go`. `seen_late` 50/70/80/90/95 백분위, `extended` 10/20/30/50/100%.
+  밴드가 veto가 되는 것을 **구조로** 막는다: ① `ShadowBand`에 `Dangerous`/`Clear`/`Raised`가
+  없다(§4 리뷰가 §5에 남긴 한 줄짜리 실수를 쓸 철자가 없다), ② 교차 비교가 `>=`로 veto의 `>`와
+  **다르다**(밴드 경계는 히스토그램 칸이지 판정선이 아니다), ③ 밴드 3종이
+  `TestTheVetoCannotSeeAScoreToBeOffsetBy`의 score 집합에 들어가 `VetoInputs` 폐포에서 도달
+  불가, ④ `TestNoFunctionThatProducesAVerdictCanSeeAShadowBand`가 `VetoState`/`Chase`를
+  반환하는 함수 10개를 AST로 걸어 밴드 식별자 언급을 거부한다. 변이 5종 확인(M3~M7).
+  밴드의 입력 검사는 veto와 **같다** — 죽은 삶의 기준선·늦은 기준선·오래된 최신가는 전부
+  그럴듯한 틀린 숫자를 만들고, 그 숫자가 바로 임계를 도출할 데이터셋에 들어간다. 두 사슬은
+  따로 쓰고 `TestABandNamesTheSameMissingInputTheVetoWould`가 fsguard 표류 테스트와 같은
+  방식으로 묶는다(변이 M4로 확인).
 
 ## 5. 사람이 보는 표면
 
-- [ ] 5.1 [T] `tossctl candidate scan` — 1회 스캔. `mutating: false`. 출력에 **shadow 임계별
+- [x] 5.0 [T] **issues.md 4의 배선** — `Collect`가 `NoteFirstPrice`·`NoteFirstRank`를 함께 부른다.
+  칼럼만 있고 writer가 없으면 `extended`는 영원히 `NO_BASELINE`, `seen_late`는 `NO_FIRST_RANK`이고
+  **아무것도 실패하지 않는다**. → `recordFirsts`. panel 순서로 가격/순위를 각각 하나씩 고르고,
+  D16의 write 예산 때문에 `Store.Summaries`로 **한 번** 읽어 아직 없는 후보에만 쓴다(순진한
+  배선은 심볼당 tick당 IMMEDIATE 트랜잭션 2개다). 읽기는 promote **뒤**에 해야 한다 — `Promote`가
+  만료 시 두 칼럼을 지우므로 앞에서 읽으면 새 삶이 죽은 삶의 기준선을 그대로 쓴다(변이 M2로 확인).
+  쓰기 실패는 `Rejected`에 이름으로 남고 스캔은 계속한다.
+- [x] 5.1 [T] `tossctl candidate scan` — 1회 스캔. `mutating: false`. 출력에 **shadow 임계별
   교차 수**(veto 통과가 아니다 — 말을 갈라 쓴다), **미측정 veto를 가진 후보 수**, 강등·백오프.
-- [ ] 5.2 [T] `tossctl candidate watch` — 반복 스캔. 간격 하한 강제. 보존 정리와 WAL 회수를
+  → `cmd/tossctl/candidate.go` + `internal/candidate/watch.go`의 `Cycle`/`Assess`.
+  표는 미측정을 통과 **위에** 놓고, `passed 0` 옆에 D18 때문에 구조적으로 0이라는 문장을 붙인다
+  (JSON은 `veto.passed_note`). 그 문장이 없으면 다음 사람이 "고장"으로 읽고, D18이 지목한
+  **유일하게 틀린 수리**가 `THRESHOLD_ABSENT`를 통과로 세는 것이다. 변이 M17로 확인.
+  JSON은 `CycleResult`를 직접 marshal하지 않는다 — `VetoState`의 필드가 비공개라 `{}`로 나가고,
+  `{}`를 읽는 소비자는 그 타입이 막으려던 결론을 정확히 낸다.
+- [x] 5.2 [T] `tossctl candidate watch` — 반복 스캔. 간격 하한 강제. 보존 정리와 WAL 회수를
   스캔 주기 안에서 집행(D16) — 정리는 옵션이 아니다.
-- [ ] 5.3 [T] 실계좌 검증 runlock이 살아 있으면 `watch` 시작 거부.
-- [ ] 5.3b [T] **엔진이 돌면 간격을 늘린다**(spec R7 정정). 우선순위 표에서 최상위인 엔진에만
+  → `Watch`/`WatchInterval`(기본 15초·하한 3초 = 계약의 가장 빠른 원천 floor). 대기는
+  **주입 clock의 `Sleep`**이다 — 벽시계 가드 11종이 이 루프를 위해 만들어졌고, 변이 M13이
+  `time.Sleep`을 넣으면 가드가 잡는다. `runCleanup`이 매 주기 prune + `wal_checkpoint(TRUNCATE)`.
+- [x] 5.3 [T] 실계좌 검증 runlock이 살아 있으면 `watch` 시작 거부.
+  → 저장소를 열기 **전에** 검사한다(예산에 대한 거절이 파일을 남기지 않게). stale lock은 무시 —
+  크래시한 검증의 대가는 거절 1회이지 손으로 파일을 지울 때까지의 정지가 아니다.
+- [x] 5.3b [T] **엔진이 돌면 간격을 늘린다**(spec R7 정정). 우선순위 표에서 최상위인 엔진에만
   지키는 동사가 없었다. RED: 엔진 실행 중에도 간격이 그대로 → GREEN(물러나고 그 사실을 기록).
-- [ ] 5.3c [T] **여유 공간 하한**(D16). 아래로 내려가면 발굴이 먼저 쓰기를 멈추고 말한다.
+  → `Cycle`이 매 주기 `Schedule.YieldToEngine`을 호출하고 `CycleResult.EngineYield`·`Intervals`에
+  기록한다. 엔진 감지는 `internal/enginelock`을 import하지 않고 **함수로 주입**한다 — 폐포가
+  자물쇠이므로(D7). 변이 M11로 확인.
+- [x] 5.3c [T] **여유 공간 하한**(D16). 아래로 내려가면 발굴이 먼저 쓰기를 멈추고 말한다.
   RED: 공간이 차면 원장 쓰기가 ENOSPC → GREEN(발굴이 먼저 멈춘다). 원장과 같은 파일시스템이다.
-- [ ] 5.4 [T] 429 백오프 + 백오프 사실을 스캔 결과에 기록.
-- [ ] 5.5 [T] 콘솔 **`/signals`** — 후보 목록, 최초 발견 시각, 지표, veto 사유, 원천·완전성.
+  → `FSInfo.FreeBytes`/`FreeMeasured` + `Store.FreeSpace()`(매 주기 재측정 — 마운트 판정은 한 번
+  끝나지만 남은 공간은 아니다) + `DefaultFreeSpaceFloor` 512MiB. **읽기도 멈춘다** — 저장할 수
+  없는 행을 위해 엔진과 공유하는 rate 예산을 쓰는 것이므로(변이 M9). **측정 못 한 공간은 공간이
+  아니다** — 프로브 실패도 halt다(변이 M8). 정리를 공간 검사 **앞**에 두어 하한을 넘긴 저장소가
+  스스로 돌아올 길을 남긴다.
+- [x] 5.4 [T] 429 백오프 + 백오프 사실을 스캔 결과에 기록.
+  → `Backoff`/`Retreat`, 사다리 30→60→120→300초(꼭대기에서 고정; `DefaultStalenessTTL`과
+  `MaxRankPriorAge`가 마지막 rung의 2배로 유도되므로 사다리가 바뀌면 두 상한이 조용히 움직인다).
+  후퇴 중인 원천은 panel에서 **빼지 않고 실패로 남긴다** — 빼면 `coverageAnswered`가 "없어진 원천"으로
+  읽어 그 원천만 올린 후보를 냉각시키고, 냉각 시계가 만료시켜 §2.8이 막은 파괴에 도달한다(변이 M10).
+  자기 후퇴는 `ErrHeldByBackoff`로 `ErrRateLimited`와 구분한다 — 같이 세면 미문서화 RANKING 한도의
+  유일한 측정값이 우리 사다리 길이의 함수가 된다.
+- [x] 5.0 [T] §3·§4가 §5에 남긴 배선 — `Collect`가 `NoteFirstPrice`·`NoteFirstRank`를 호출한다.
+      RED: 스캔이 가격과 순위를 보고도 저장하지 않아 `extended`가 `NO_BASELINE`,
+      `seen_late`가 `NO_FIRST_RANK`로 영원히 남는다 → GREEN. 만료 시 칼럼이 초기화되므로
+      읽기는 `Promote` **뒤에** 온다.
+- [x] 5.8 [T] 만료된 후보 요약 정리(D11 집행자). 만료 후 `DefaultRawRetention` 경과분을 지운다 —
+      원 관측이 사라지면 그 요약은 아무것과도 조인되지 않는다. RED: 집행자가 없어 요약이 무한히
+      쌓인다 → GREEN. `watch` 주기 안에서 집행한다(D16과 같은 이유).
+      → `Store.PruneExpiredCandidates(at, grace)` + `runCleanup`이 매 주기 호출,
+      `CleanupReport.Summaries`와 CLI `retention` 줄에 계상. 만료 시각은 칼럼이 아니라
+      `stateAt`의 유도값이므로 **암묵 냉각 분기까지 두 갈래로** 쓴다 — `cooled_at`만 보는 문장은
+      스캔이 죽어서 남은 후보(이 집행자가 존재하는 이유 그 자체)에 영영 닿지 않는다.
+      grace 0/음수는 **하한이 아니라 기본값** `DefaultRawRetention`이다.
+      변이 3종 확인: 0=무제한(M1) / 암묵 분기 제거(M2) / 냉각 TTL 누락(M3) 전부 FAIL.
+      ※ 기존 `TestACycleEnforcesRetentionItselfRatherThanLeavingItToACaller`의 fixture는
+      "3일 전에 한 번 승격하고 만 후보"였고 그것은 이 sweep의 정당한 대상이다. 주장(원 관측
+      prune이 요약을 가져가지 않는다)을 유지하려면 후보가 **살아 있어야** 하므로 fixture를
+      staleness 간격으로 계속 승격하는 형태로 고쳤다 — D17이 말한 "자기 원 관측보다 오래 사는
+      후보"가 정확히 그 경우다.
+- [x] 5.5 [T] 콘솔 **`/signals`** — 후보 목록, 최초 발견 시각, 지표, veto 사유, 원천·완전성.
   **읽기 전용 화면**. 확인 문자열 타이핑 같은 마찰을 넣지 않는다.
   경로 이름은 StockOS의 `/signals`에 맞춘다(사용자 지시 2026-07-28).
-- [ ] 5.6 [T] **미측정이 통과처럼 보이지 않는다**(새 spec Requirement). veto 사유가 하나도
+  → `internal/console/signals.go` + `templates_signals.go`, `Options.Signals SignalsReader`,
+  `cmd/tossctl/console.go`의 `consoleSignalsSeam`. 화면은 **스캔을 일으키지 않는다** —
+  `candidate.Assess`만 부르므로 rate 예산 소비가 0이고, 열린 탭이 두 번째 발굴자가 되지 않는다
+  (spec R7 · D14: 랭킹 429는 원천 상실). 저장소는 렌더 1회 동안만 열었다 닫는다 —
+  `Store.Checkpoint`의 주석이 지목한 "긴 수명 독자"가 바로 이 화면이고, 붙잡고 있으면
+  watch 주기의 WAL 회수가 조용히 꺼진다.
+  `readOnly` wrapper는 붙이지 않았다: console.go가 그 wrapper는 `/orders` 한 곳에서만
+  load-bearing이라고 적어 뒀고, 이 경로는 account verb를 하나도 쓰지 않는다.
+- [x] 5.6 [T] **미측정이 통과처럼 보이지 않는다**(새 spec Requirement). veto 사유가 하나도
   없는 행은 "모두 측정했고 안전"과 "한 번도 확인 안 함" 둘 다일 수 있고, 후자가 평시다.
   RED: 세 veto가 모두 `unmeasured`인 후보가 통과 후보와 같게 보인다 → GREEN.
-- [ ] 5.7 [T] 강등을 **빠진 원천 이름**으로 말한다. 사유 없는 불리언은 대응할 수 없는 표시다.
+  → 세 veto가 **각자의 칸과 각자의 단어**를 갖는다(위험/측정·안전/미측정+사유 코드).
+  "사유가 하나도 없는 행"이라는 상태가 렌더에 존재하지 않는다. 행 판정은 `Chase.Vetoed()` →
+  `Chase.Passed()` → 미확인 순이며 `n / 3 사유 측정`을 함께 적는다.
+  `Passed`는 D18 때문에 구조적으로 0이고, 숫자 **옆에** 그 문장을 붙인다(칸을 숨기지 않는다).
+  집계의 분모는 `후보`(VetoTally)와 `계열`(CrossingTally)로 갈라 적는다(D21).
+  변이 확인: naive `!Dangerous()`+"아무것도 안 터졌으니 통과"(M-A, 콘솔 테스트와
+  `TestNoConsumerReadsAVetoThroughItsDroppableSecondReturn` 동시 FAIL) / passedNote 제거(M-B) /
+  0일 때 칸 숨김(M-C) / 계열↔후보 라벨 교환(M-D) / 사유를 `Reason()` 대신 원시 필드로(M-H').
+- [x] 5.7 [T] 강등을 **빠진 원천 이름**으로 말한다. 사유 없는 불리언은 대응할 수 없는 표시다.
+  → `SignalsPanel.Missing []candidate.SourceFailure`를 이름·사유·429 여부로 렌더한다.
+  **강등인데 이름이 없으면 그 사실을 결함으로 적는다** — 빈 목록은 "복구됐다"로 읽힌다.
+  변이 확인: 목록 제거(M-E) / `Unnamed` 무력화(M-F) / 미측정 panel을 "강등 없음"으로(M-G).
+  ※ 오늘의 배선에서는 콘솔 프로세스가 스캔을 돌지 않아 `Missing`을 채울 원천이 없다.
+  panel은 `seam_unwired` + "이름은 `tossctl candidate scan` 출력에 있다"로 렌더한다.
+  D7(console-operator-overview)의 미체결 패널과 같은 형태이며, 근본 해소는 issues.md 9.
+
+- [ ] 5.9 [T] 스캔 기록 영속(schema v4) — 빠진 원천의 **이름**이 화면에 직접 도달하도록.
+      현재는 한 사이클의 in-memory `ScanResult.Missing`에만 있어 `/signals`가 CLI로 안내한다(D22).
+      **이 change의 범위 밖**이며 후속으로 남긴다. 콘솔이 요청마다 `Cycle`을 돌리는 우회는
+      금지다 — 열린 탭이 두 번째 발굴자가 되어 D12의 우선순위를 뒤집는다.
 
 ## 6. 격리와 게이트
 

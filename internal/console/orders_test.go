@@ -120,8 +120,9 @@ func newOrdersHarness(t *testing.T, reader *countingOrders, tweak ...func(*Optio
 
 // TestOneOrdersRefreshIsOneSeamCallAndTheTTLIsTheSpecFloorOrMore.
 //
-// Behind the one seam call the adapter makes two broker calls — the plain page
-// and the conditional page — which is the rate-budget contract for this screen.
+// Behind the one seam call the adapter makes three broker calls — the pending
+// group, the finished page and the conditional page — which is the rate-budget
+// contract for this screen.
 // The console's own half of that contract is that a refresh happens once per TTL,
 // lazily, with no server-side poller: a second tab inside the TTL is free.
 func TestOneOrdersRefreshIsOneSeamCallAndTheTTLIsTheSpecFloorOrMore(t *testing.T) {
@@ -129,7 +130,7 @@ func TestOneOrdersRefreshIsOneSeamCallAndTheTTLIsTheSpecFloorOrMore(t *testing.T
 		t.Fatalf("ordersTTL is %s; the operator-console spec fixes a floor of 15 seconds", ordersTTL)
 	}
 
-	reader := &countingOrders{lists: OrdersReading{Plain: []OrderRecord{livePlainOrder("o-1", "005930")}}}
+	reader := &countingOrders{lists: OrdersReading{Open: []OrderRecord{livePlainOrder("o-1", "005930")}}}
 	h := newOrdersHarness(t, reader)
 	h.authenticate(t)
 
@@ -163,11 +164,12 @@ func TestOneOrdersRefreshIsOneSeamCallAndTheTTLIsTheSpecFloorOrMore(t *testing.T
 // TestChangingAFilterCostsNoBrokerCall.
 //
 // D6. Passing the filters to the broker would make /orders?state=live and
-// ?state=closed separate cache keys, and the two calls a refresh costs would
-// become four out of the same budget. The filters are a view of the reading.
+// ?state=closed separate cache keys, and the three calls a refresh costs would
+// become six out of the same budget. The filters are a view of the reading.
 func TestChangingAFilterCostsNoBrokerCall(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain:       []OrderRecord{livePlainOrder("o-1", "005930"), filledPlainOrder("o-2", "AAPL")},
+		Open:        []OrderRecord{livePlainOrder("o-1", "005930")},
+		Closed:      []OrderRecord{filledPlainOrder("o-2", "AAPL")},
 		Conditional: []ConditionalRecord{watchingConditional("co-1", "005930")},
 	}}
 	h := newOrdersHarness(t, reader)
@@ -192,7 +194,7 @@ func TestChangingAFilterCostsNoBrokerCall(t *testing.T) {
 // particular. It is asserted through the run-lock marker because that is the half
 // a test can drive without starting a verification.
 func TestTheOrdersRefreshYieldsToALiveVerification(t *testing.T) {
-	reader := &countingOrders{lists: OrdersReading{Plain: []OrderRecord{livePlainOrder("o-1", "005930")}}}
+	reader := &countingOrders{lists: OrdersReading{Open: []OrderRecord{livePlainOrder("o-1", "005930")}}}
 	lock := filepath.Join(t.TempDir(), "run.lock")
 	h := newOrdersHarness(t, reader, func(o *Options) { o.RunLockPath = lock })
 	h.authenticate(t)
@@ -229,7 +231,7 @@ func TestTheOrdersRefreshYieldsToALiveVerification(t *testing.T) {
 // built to catch.
 func TestAConditionalReadThatFailedIsNeverAddedIntoTheTotal(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain:            []OrderRecord{livePlainOrder("o-1", "005930")},
+		Open:             []OrderRecord{livePlainOrder("o-1", "005930")},
 		Conditional:      nil,
 		ConditionalError: "429 Too Many Requests",
 	}}
@@ -259,9 +261,9 @@ func TestAConditionalReadThatFailedIsNeverAddedIntoTheTotal(t *testing.T) {
 	if !strings.Contains(view.Live.Why(), "합치지 않는다") {
 		t.Errorf("the combined value's reason does not say the two are not added: %q", view.Live.Why())
 	}
-	if !view.PlainLive.Known() || view.PlainLive.Value() != "1건" {
+	if !view.OpenLive.Known() || view.OpenLive.Value() != "1건" {
 		t.Errorf("the plain count is %q; one list failing must not take the other down",
-			view.PlainLive.Value())
+			view.OpenLive.Value())
 	}
 }
 
@@ -272,7 +274,7 @@ func TestAConditionalReadThatFailedIsNeverAddedIntoTheTotal(t *testing.T) {
 // one direction only.
 func TestAPlainReadThatFailedIsNeverAddedIntoTheTotalEither(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		PlainError:  "500 Internal Server Error",
+		OpenError:   "500 Internal Server Error",
 		Conditional: []ConditionalRecord{watchingConditional("co-1", "005930")},
 	}}
 	h := newOrdersHarness(t, reader)
@@ -341,7 +343,8 @@ func TestAnUnwiredOrdersSeamSaysSoAndLeavesEveryOtherScreenWorking(t *testing.T)
 // filled at nothing, which is the opposite of what is true.
 func TestALiveOrderRendersItsMissingFillAsADashAndNeverAsZero(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain: []OrderRecord{livePlainOrder("o-1", "005930"), filledPlainOrder("o-2", "AAPL")},
+		Open:   []OrderRecord{livePlainOrder("o-1", "005930")},
+		Closed: []OrderRecord{filledPlainOrder("o-2", "AAPL")},
 	}}
 	h := newOrdersHarness(t, reader)
 	h.authenticate(t)
@@ -388,7 +391,7 @@ func TestALiveOrderRendersItsMissingFillAsADashAndNeverAsZero(t *testing.T) {
 // TestAConditionalOrderIsCountedAsLiveAndMarkedAsWhatItIs.
 func TestAConditionalOrderIsCountedAsLiveAndMarkedAsWhatItIs(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain:       []OrderRecord{filledPlainOrder("o-2", "AAPL")},
+		Closed:      []OrderRecord{filledPlainOrder("o-2", "AAPL")},
 		Conditional: []ConditionalRecord{watchingConditional("co-1", "005930")},
 	}}
 	h := newOrdersHarness(t, reader)
@@ -426,8 +429,8 @@ func TestAConditionalOrderIsCountedAsLiveAndMarkedAsWhatItIs(t *testing.T) {
 // TestATruncatedPageIsACountWithAFloorAndNotANumber.
 func TestATruncatedPageIsACountWithAFloorAndNotANumber(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain:          []OrderRecord{livePlainOrder("o-1", "005930")},
-		PlainTruncated: true,
+		Closed:          []OrderRecord{filledPlainOrder("o-2", "AAPL")},
+		ClosedTruncated: true,
 	}}
 	h := newOrdersHarness(t, reader)
 	h.authenticate(t)
@@ -440,6 +443,99 @@ func TestATruncatedPageIsACountWithAFloorAndNotANumber(t *testing.T) {
 	if !strings.Contains(page, "페이지가 잘렸다") {
 		t.Error("the page does not say it was truncated")
 	}
+
+	// The other direction: OPEN is documented to return every pending order, so
+	// this cannot happen — but if a broker says it did, the screen reports what it
+	// was told rather than the exactness it assumed. Believing the documentation
+	// over the answer is how a leftover goes missing behind a confident number.
+	contradicting := &countingOrders{lists: OrdersReading{
+		Open:          []OrderRecord{livePlainOrder("o-1", "005930")},
+		OpenTruncated: true,
+	}}
+	h2 := newOrdersHarness(t, contradicting)
+	h2.authenticate(t)
+	h2.get(t, "/orders")
+
+	view := h2.Console.orders(context.Background(), orderFilterChoice{})
+	if !view.Live.Known() || view.Live.Value() != "1건 이상" {
+		t.Errorf("the live count is %q when the broker reported another page of pending orders; "+
+			"the count is exact BECAUSE that answer is whole, so an answer that says otherwise "+
+			"makes it a floor again", view.Live.Value())
+	}
+}
+
+// TestTheLiveCountIsANumberEvenWhenTheClosedPageWasTruncated.
+//
+// The two plain groups behave differently and the difference is the whole reason
+// there are two calls. status=OPEN returns every pending order — "limit, cursor 는
+// 무시되며" — so the live count cannot be short. status=CLOSED paginates, so that
+// count can be. Sharing one truncation flag between them turns an exact live
+// answer into "N건 이상", which is the one thing an operator cannot resolve: they
+// cannot tell whether the leftover they are looking for is in the part that was
+// not sent.
+func TestTheLiveCountIsANumberEvenWhenTheClosedPageWasTruncated(t *testing.T) {
+	reader := &countingOrders{lists: OrdersReading{
+		Open:            []OrderRecord{livePlainOrder("o-1", "005930")},
+		Closed:          []OrderRecord{filledPlainOrder("o-2", "AAPL")},
+		ClosedTruncated: true,
+	}}
+	h := newOrdersHarness(t, reader)
+	h.authenticate(t)
+	h.get(t, "/orders")
+
+	view := h.Console.orders(context.Background(), orderFilterChoice{})
+	if !view.Live.Known() || view.Live.Value() != "1건" {
+		t.Errorf("the live count is %q, want exactly 1건; the closed page's truncation says nothing "+
+			"about the pending group, which the broker returns whole", view.Live.Value())
+	}
+	if !view.OpenLive.Known() || view.OpenLive.Value() != "1건" {
+		t.Errorf("the open count is %q, want 1건", view.OpenLive.Value())
+	}
+	if !view.ClosedCount.Known() || view.ClosedCount.Value() != "1건 이상" {
+		t.Errorf("the closed count is %q, want 1건 이상 — that list really was truncated",
+			view.ClosedCount.Value())
+	}
+}
+
+// TestAnOrderInBothGroupsIsOneRowAndIsCountedOnce.
+//
+// openapi puts PARTIAL_FILLED in BOTH group definitions:
+//
+//	OPEN   ∈ {PENDING, PARTIAL_FILLED, PENDING_CANCEL, PENDING_REPLACE}
+//	CLOSED ∈ {FILLED, CANCELED, REJECTED, REPLACED, …, PARTIAL_FILLED}
+//
+// so asking for both groups can return one order twice. Two rows for one order is
+// one order counted twice in the live total and one row an operator tries to
+// cancel twice; the pending copy is the live one and it wins.
+func TestAnOrderInBothGroupsIsOneRowAndIsCountedOnce(t *testing.T) {
+	both := livePlainOrder("o-both", "005930")
+	both.Status = "PARTIAL_FILLED"
+	both.FilledQuantity = "4"
+	both.AverageFilledPrice = "70000"
+
+	reader := &countingOrders{lists: OrdersReading{
+		Open:   []OrderRecord{both},
+		Closed: []OrderRecord{both},
+	}}
+	h := newOrdersHarness(t, reader)
+	h.authenticate(t)
+	h.get(t, "/orders")
+
+	view := h.Console.orders(context.Background(), orderFilterChoice{})
+	if view.Total != 1 {
+		t.Errorf("an order returned in both groups produced %d rows; PARTIAL_FILLED belongs to both "+
+			"by the API's own definition, and one order is one row", view.Total)
+	}
+	if !view.Live.Known() || view.Live.Value() != "1건" {
+		t.Errorf("the live count is %q, want 1건", view.Live.Value())
+	}
+	if !view.ClosedCount.Known() || view.ClosedCount.Value() != "0건" {
+		t.Errorf("the closed count is %q; the pending copy is the live one and it wins",
+			view.ClosedCount.Value())
+	}
+	if len(view.Rows) == 1 && !view.Rows[0].Live {
+		t.Error("the surviving row is not live; the broker just returned it in the pending group")
+	}
 }
 
 // TestTheOriginColumnSaysUnknownWhenTheLedgerCouldNotBeRead.
@@ -448,7 +544,7 @@ func TestATruncatedPageIsACountWithAFloorAndNotANumber(t *testing.T) {
 // engine look idle, and an idle engine is what an operator restarts.
 func TestTheOriginColumnSaysUnknownWhenTheLedgerCouldNotBeRead(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain: []OrderRecord{livePlainOrder("o-1", "005930")},
+		Open: []OrderRecord{livePlainOrder("o-1", "005930")},
 	}}
 	h := newOrdersHarness(t, reader) // no JournalPath: unwired
 	h.authenticate(t)
@@ -483,7 +579,8 @@ func TestTheOriginColumnTellsAnEngineOrderFromAnyOther(t *testing.T) {
 	seedEngineJournal(t, path, ordersJournalFixture)
 
 	reader := &countingOrders{lists: OrdersReading{
-		Plain: []OrderRecord{livePlainOrder("engine-order", "005930"), filledPlainOrder("hand-order", "AAPL")},
+		Open:   []OrderRecord{livePlainOrder("engine-order", "005930")},
+		Closed: []OrderRecord{filledPlainOrder("hand-order", "AAPL")},
 	}}
 	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
 	h.authenticate(t)
@@ -516,13 +613,176 @@ INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, broker_or
 VALUES ('a-1','intent-1','PLACE','RECORDED',1,'engine-order','fp-1','2026-07-27T00:30:00Z');
 `
 
+// TestAWatchingConditionalIsNeverLabelledOtherByAJoinThatCannotSucceed.
+//
+// The first implementation joined a conditional row on rec.Triggered — the plain
+// order the conditional turned into. That field is empty for exactly as long as
+// the conditional is still watching, and the adapter asks for nothing but the
+// watching ones, so the lookup was engineIDs[""] on every row this screen can
+// show. BrokerOrderIDs excludes the empty id by construction, so the answer was
+// always a miss and every conditional was labelled 그 밖 — a constant wearing a
+// determination's clothes.
+//
+// The constant was also the wrong one. This screen's own words: "an invented
+// 'manual' label on an engine order is an operator concluding the engine is idle
+// while it is trading."
+//
+// The fixture is the one the review demonstrated with: a journal whose
+// mutation_attempts really does carry the conditional's own id. Nothing in this
+// build writes one there (conditional placement goes through
+// trading.Service.ConditionalPlace and internal/verifylive, neither of which opens
+// a journal attempt), which is exactly why a miss has to read as 불명 — but a hit
+// is evidence, and the screen has to be able to report it the day one appears.
+func TestAWatchingConditionalIsNeverLabelledOtherByAJoinThatCannotSucceed(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	seedEngineJournal(t, path, ordersJournalFixture+conditionalJournalFixture)
+
+	reader := &countingOrders{lists: OrdersReading{
+		Open: []OrderRecord{livePlainOrder("engine-order", "005930")},
+		Conditional: []ConditionalRecord{
+			watchingConditional("co-engine", "005930"),
+			watchingConditional("co-elsewhere", "AAPL"),
+		},
+	}}
+	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
+	h.authenticate(t)
+	h.get(t, "/orders")
+
+	view := h.Console.orders(context.Background(), orderFilterChoice{})
+	got := map[string]orderOrigin{}
+	for _, r := range view.Rows {
+		got[r.ID] = r.Origin
+	}
+
+	if got["co-engine"] != originEngine {
+		t.Errorf("the conditional whose id IS in mutation_attempts is labelled %q, want %q — the "+
+			"join is on an id that exists rather than on Triggered, which is empty on every row "+
+			"this screen can show", got["co-engine"], originEngine)
+	}
+	if got["co-elsewhere"] != originUnknown {
+		t.Errorf("a conditional the ledger does not know is labelled %q, want %q. The ledger was "+
+			"never asked about conditionals — mutation_attempts records PLACE/CANCEL/AMEND of plain "+
+			"orders — so its silence is not evidence that a person made this one",
+			got["co-elsewhere"], originUnknown)
+	}
+	if got["engine-order"] != originEngine {
+		t.Errorf("the plain engine order is labelled %q; the conditional join must not have "+
+			"disturbed the plain one", got["engine-order"])
+	}
+
+	page := body(t, h.get(t, "/orders"))
+	if !strings.Contains(page, "조건주문의 발주 주체") {
+		t.Error("the page does not explain why a conditional's origin can be 불명 with a readable " +
+			"ledger; an unexplained 불명 beside an explained 엔진 발주 reads as a bug")
+	}
+}
+
+// conditionalJournalFixture puts a conditional order's own id in the ledger's
+// attempt table. Nothing in this build writes one there today; the fixture exists
+// so the join is tested against an id that can match rather than against the empty
+// string, which never can.
+const conditionalJournalFixture = `
+INSERT INTO intents (id, created_at, market, trading_day, account_ref, symbol, side, order_type,
+                     time_in_force, quantity, price, currency, source, fingerprint, notes)
+VALUES ('intent-2','2026-07-27T00:20:00Z','kr','2026-07-27','123-45-678901','005930','SELL','LIMIT',
+        'DAY','10','70000','KRW','engine','fp-2','');
+INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, broker_order_id,
+                               fingerprint, recorded_at)
+VALUES ('a-2','intent-2','PLACE','RECORDED',1,'co-engine','fp-2','2026-07-27T00:20:00Z');
+`
+
+// TestASideFilterNeverHidesAWatchingConditional.
+//
+// A conditional order's payload carries no side at all. If a side filter excluded
+// the rows it cannot judge, one click on 매수 would empty every live conditional
+// off a screen whose entire job is to show that they are still there — and the
+// screen would then read as "no buy orders" rather than as "this filter has
+// nothing to say about two of these rows".
+//
+// It is pinned in both directions because "not applicable" and "matches BUY" look
+// identical from one of them.
+func TestASideFilterNeverHidesAWatchingConditional(t *testing.T) {
+	reader := &countingOrders{lists: OrdersReading{
+		Open:        []OrderRecord{livePlainOrder("o-buy", "005930")},
+		Conditional: []ConditionalRecord{watchingConditional("co-1", "005930")},
+	}}
+	h := newOrdersHarness(t, reader)
+	h.authenticate(t)
+
+	for _, side := range []string{"BUY", "SELL"} {
+		page := body(t, h.get(t, "/orders?side="+side))
+		if !strings.Contains(page, "co-1") {
+			t.Errorf("?side=%s hid the watching conditional order. A payload with no direction that "+
+				"falls out of a direction filter is a live leftover hiding behind the filter — the "+
+				"same failure as counting it as zero, one interaction later", side)
+		}
+		view := h.Console.orders(context.Background(),
+			filterChoiceFromQuery(t, "/orders?side="+side))
+		found := false
+		for _, r := range view.Rows {
+			if r.ID == "co-1" {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("?side=%s excluded the conditional row from the view", side)
+		}
+	}
+
+	// And the side filter still narrows the rows it CAN judge.
+	sell := h.Console.orders(context.Background(), filterChoiceFromQuery(t, "/orders?side=SELL"))
+	for _, r := range sell.Rows {
+		if r.ID == "o-buy" {
+			t.Error("?side=SELL kept a BUY order; the axis has an answer for plain orders and must " +
+				"use it")
+		}
+	}
+}
+
+// TestAMarketFilterNeverHidesAnOrderWhoseMarketIsUnknown.
+//
+// The same shape as the side axis, one axis over. The plain order endpoint carries
+// no market field — it is derived from the currency — so an order in a currency
+// that is neither KRW nor USD arrives with no market and renders as "—". Excluding
+// it from BOTH market filters means a live order that is on the unfiltered screen
+// vanishes from every filtered one, and vanishing is the thing this screen exists
+// to stop.
+func TestAMarketFilterNeverHidesAnOrderWhoseMarketIsUnknown(t *testing.T) {
+	odd := livePlainOrder("o-odd-market", "7203")
+	odd.Market, odd.Currency = "", "JPY"
+
+	reader := &countingOrders{lists: OrdersReading{
+		Open: []OrderRecord{livePlainOrder("o-kr", "005930"), odd},
+	}}
+	h := newOrdersHarness(t, reader)
+	h.authenticate(t)
+
+	for _, market := range []string{"KR", "US"} {
+		page := body(t, h.get(t, "/orders?market="+market))
+		if !strings.Contains(page, "o-odd-market") {
+			t.Errorf("?market=%s hid a live order whose market this build could not name. An "+
+				"unnameable market is not-applicable to the filter, exactly as a missing side is on "+
+				"the direction axis — not excluded by it", market)
+		}
+	}
+
+	// A market this build CAN name is still filtered.
+	us := h.Console.orders(context.Background(), filterChoiceFromQuery(t, "/orders?market=US"))
+	for _, r := range us.Rows {
+		if r.ID == "o-kr" {
+			t.Error("?market=US kept a KR order; the axis has an answer for that row and must use it")
+		}
+	}
+}
+
 // TestAFilteredTableShowsTheWholeCountBesideTheFilteredOne.
 //
 // A filtered screen with only its own count on it reads as "these are all the
 // orders", and the row that is not on the screen is the leftover.
 func TestAFilteredTableShowsTheWholeCountBesideTheFilteredOne(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain: []OrderRecord{livePlainOrder("o-1", "005930"), filledPlainOrder("o-2", "AAPL")},
+		Open:   []OrderRecord{livePlainOrder("o-1", "005930")},
+		Closed: []OrderRecord{filledPlainOrder("o-2", "AAPL")},
 	}}
 	h := newOrdersHarness(t, reader)
 	h.authenticate(t)
@@ -582,7 +842,7 @@ func TestTheOrdersScreenReloadsItselfAtTheCacheTTLAndNoFaster(t *testing.T) {
 // that stays true is that a form appearing here fails a test.
 func TestTheOrdersScreenOffersNoWayToActOnAnOrder(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain:       []OrderRecord{livePlainOrder("o-1", "005930")},
+		Open:        []OrderRecord{livePlainOrder("o-1", "005930")},
 		Conditional: []ConditionalRecord{watchingConditional("co-1", "005930")},
 	}}
 	h := newOrdersHarness(t, reader)
@@ -614,7 +874,7 @@ func TestTheOrdersScreenOffersNoWayToActOnAnOrder(t *testing.T) {
 func TestAnUnresolvableBrokerStateIsNotReportedAsClosed(t *testing.T) {
 	odd := livePlainOrder("o-odd", "005930")
 	odd.Status = "SOMETHING_NEW"
-	reader := &countingOrders{lists: OrdersReading{Plain: []OrderRecord{odd}}}
+	reader := &countingOrders{lists: OrdersReading{Open: []OrderRecord{odd}}}
 	h := newOrdersHarness(t, reader)
 	h.authenticate(t)
 	h.get(t, "/orders")
@@ -642,7 +902,7 @@ func TestAnUnresolvableBrokerStateIsNotReportedAsClosed(t *testing.T) {
 func TestAnUnparseableOrderTimeIsShownVerbatimRatherThanDropped(t *testing.T) {
 	odd := livePlainOrder("o-1", "005930")
 	odd.OrderedAt = "27/07/2026 09:30"
-	reader := &countingOrders{lists: OrdersReading{Plain: []OrderRecord{odd}}}
+	reader := &countingOrders{lists: OrdersReading{Open: []OrderRecord{odd}}}
 	h := newOrdersHarness(t, reader)
 	h.authenticate(t)
 
@@ -665,7 +925,8 @@ func TestAnUnparseableOrderTimeIsShownVerbatimRatherThanDropped(t *testing.T) {
 // orders screen filled.
 func TestTheOverviewOpenOrdersPanelHasARealValueOnceTheSeamIsWired(t *testing.T) {
 	reader := &countingOrders{lists: OrdersReading{
-		Plain:       []OrderRecord{livePlainOrder("o-1", "005930"), filledPlainOrder("o-2", "AAPL")},
+		Open:        []OrderRecord{livePlainOrder("o-1", "005930")},
+		Closed:      []OrderRecord{filledPlainOrder("o-2", "AAPL")},
 		Conditional: []ConditionalRecord{watchingConditional("co-1", "005930")},
 	}}
 	h := newOrdersHarness(t, reader)
@@ -703,6 +964,137 @@ func TestTheOverviewOpenOrdersPanelHasARealValueOnceTheSeamIsWired(t *testing.T)
 	if !strings.Contains(body(t, h.get(t, "/dashboard")), "2건") {
 		t.Error("the overview page does not render the live count it now has")
 	}
+}
+
+// TestTheOverviewNeverRendersAStaleOrdersReadingAsAMeasuredNumber.
+//
+// Design D9. The overview makes no broker call by contract (overview D4), so this
+// count freezes at whatever the last /orders visit produced — for as long as
+// nobody opens that screen again:
+//
+//	cache filled while the account was empty → the engine places an order
+//	→ nobody opens /orders → three hours later /dashboard says 미체결 건수 0건
+//	  with no age and no marker, and /orders says 1건.
+//
+// The holdings panel three sections up has printed its cache instant and age since
+// the day it shipped. D4 handled the COLD cache (never_fetched) and left the OLD
+// one measured; empty and stale are different failures, and rendered as the same
+// "0" the difference is gone.
+func TestTheOverviewNeverRendersAStaleOrdersReadingAsAMeasuredNumber(t *testing.T) {
+	reader := &countingOrders{lists: OrdersReading{}}
+	h := newOrdersHarness(t, reader)
+	h.authenticate(t)
+
+	// Fill the cache while the account is empty, exactly as an operator would.
+	h.get(t, "/orders")
+	fresh := h.Console.overview(context.Background())
+	if !fresh.Open.Count.Known() || fresh.Open.Count.Value() != "0건" {
+		t.Fatalf("a reading taken this instant is %q, want 0건", fresh.Open.Count.Value())
+	}
+	if fresh.Open.Stale {
+		t.Error("a reading taken this instant is marked stale")
+	}
+
+	// Three hours pass and nothing opens /orders. The overview refreshes nothing,
+	// so the number below is about an account that stopped existing three hours
+	// ago.
+	h.clock.advance(3 * time.Hour)
+	old := h.Console.overview(context.Background())
+	if reader.count() != 1 {
+		t.Fatalf("the overview refreshed the cache (%d calls); its contract is zero broker calls",
+			reader.count())
+	}
+	if !old.Open.Stale {
+		t.Error("a three-hour-old reading is not marked stale; past the TTL a reading is not a " +
+			"measurement of anything")
+	}
+	if !old.Open.Present || old.Open.AgeSeconds != 3*60*60 {
+		t.Errorf("the panel carries age %ds present=%v; the value has to travel with the instant it "+
+			"was taken, exactly as the holdings panel already does",
+			old.Open.AgeSeconds, old.Open.Present)
+	}
+	if old.Open.TakenAt != h.clock.Now().Add(-3*time.Hour).UTC().Format("2006-01-02 15:04:05Z") {
+		t.Errorf("the panel's instant is %q, want the moment the cache was filled", old.Open.TakenAt)
+	}
+
+	page := body(t, h.get(t, "/dashboard"))
+	if !strings.Contains(page, old.Open.TakenAt) {
+		t.Error("the overview renders the count without the instant it was read at; a bold number " +
+			"with its provenance in another paragraph is not read as one fact")
+	}
+	if !strings.Contains(page, "TTL") {
+		t.Error("the overview does not say the reading is past the cache TTL")
+	}
+}
+
+// TestTheOrdersCountsCarryTheirOwnProvenanceInTheSameBreath.
+//
+// P1-3, the same rule on the screen that owns the number. The counts section used
+// to print a bold 합계 and leave the cache instant, the age, the withheld refresh
+// and the last failure to a separate paragraph below it. Two paragraphs are two
+// facts; nobody joins them, and the one that gets read is the bold one.
+func TestTheOrdersCountsCarryTheirOwnProvenanceInTheSameBreath(t *testing.T) {
+	reader := &countingOrders{lists: OrdersReading{
+		Open: []OrderRecord{livePlainOrder("o-1", "005930")},
+	}}
+	h := newOrdersHarness(t, reader)
+	h.authenticate(t)
+
+	page := body(t, h.get(t, "/orders"))
+	counts := sectionAround(t, page, "미체결")
+	view := h.Console.orders(context.Background(), orderFilterChoice{})
+
+	// The instant is beside the number itself, not merely in the same section:
+	// the count and when it was true are one statement.
+	total := strings.Index(counts, "<strong>"+view.Live.Value()+"</strong>")
+	if total < 0 {
+		t.Fatalf("the counts section has no 합계 of %q: %s", view.Live.Value(), counts)
+	}
+	sameCell := counts[total:]
+	if end := strings.Index(sameCell, "</dd>"); end >= 0 {
+		sameCell = sameCell[:end]
+	}
+	for _, want := range []string{view.Broker.TakenAt(), "초 전"} {
+		if !strings.Contains(sameCell, want) {
+			t.Errorf("the 합계 cell does not carry %q. A bold total with its age in a different "+
+				"paragraph reads as a current measurement, and the paragraph is what gets skipped",
+				want)
+		}
+	}
+
+	// And the last failure is in the same section as the counts it qualifies. It
+	// is a separate assertion because a reading can be present AND stale for a
+	// reason: the refresh that would have replaced it did not answer.
+	reader.mu.Lock()
+	reader.err = errors.New("429 Too Many Requests")
+	reader.mu.Unlock()
+	h.clock.advance(ordersTTL)
+
+	failed := sectionAround(t, body(t, h.get(t, "/orders")), "미체결")
+	if !strings.Contains(failed, "429 Too Many Requests") {
+		t.Error("the failed refresh is not in the section that carries the counts; the numbers " +
+			"above it are then the ones before the failure, said with no qualification")
+	}
+}
+
+// sectionAround returns the <section> containing the first occurrence of marker,
+// so a test can assert that two facts are in the same one rather than merely on
+// the same page.
+func sectionAround(t *testing.T, page, marker string) string {
+	t.Helper()
+	at := strings.Index(page, marker)
+	if at < 0 {
+		t.Fatalf("the page has no %q", marker)
+	}
+	start := strings.LastIndex(page[:at], "<section")
+	if start < 0 {
+		t.Fatalf("%q is not inside a <section>", marker)
+	}
+	end := strings.Index(page[start:], "</section>")
+	if end < 0 {
+		t.Fatalf("the section holding %q is not closed", marker)
+	}
+	return page[start : start+end]
 }
 
 // TestTheOrdersScreenIsReachableFromEveryOtherScreen.

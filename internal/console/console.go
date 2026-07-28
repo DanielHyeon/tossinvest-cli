@@ -196,12 +196,22 @@ type Options struct {
 
 	// Orders is the read-only view of the account's order record the orders
 	// screen reads (orders.go). It declares one method, behind which the caller
-	// makes the two broker calls one refresh costs — the plain order page and
-	// the conditional one — so this package can neither spend the budget twice
-	// nor report one endpoint's silence as the other's zero. Nil leaves the
+	// makes the three broker calls one refresh costs — the pending order group,
+	// the finished one and the conditional endpoint — so this package can neither
+	// spend the budget three times over nor report one endpoint's silence as
+	// another's zero. Nil leaves the
 	// orders screen unmeasured with the reason seam 미배선 and every other screen
 	// working.
 	Orders OrdersReader
+
+	// Signals is the discovery store's read for the /signals screen (change
+	// add-candidate-discovery; signals.go). One method, behind which the caller
+	// opens internal/candidate's store and runs its assessment — this package
+	// never holds the handle that can promote, cool or prune, and the screen
+	// causes no scan and therefore spends none of the account's rate budget. Nil
+	// leaves the screen unmeasured with the reason seam 미배선; an empty list
+	// would read as "the market is quiet".
+	Signals SignalsReader
 
 	// GateLimits reads the engine's automation-gate ceilings for the overview's
 	// safety panel (change console-operator-overview; overview.go). It is a seam
@@ -262,7 +272,7 @@ type Console struct {
 	// holdings.go is where its rate-budget contract is written down.
 	holdings *holdingsCache
 	// ordersCache is the lazy, TTL'd cache in front of Options.Orders. One
-	// refresh through it is the two broker calls the orders screen's rate-budget
+	// refresh through it is the three broker calls the orders screen's rate-budget
 	// contract allows, and orders.go is where that contract is written down.
 	ordersCache *ordersCache
 
@@ -520,6 +530,11 @@ func (c *Console) routes() http.Handler {
 	// account-verb guard grants an exception to — byte-exact, and only while the
 	// `readOnly` wrapper below is on it.
 	c.registerOrders(mux)
+	// The discovery screen (change add-candidate-discovery, task 5.5). Same
+	// arrangement again, and it touches no account at all: what it renders is a
+	// read of internal/candidate's own store, whose dependency closure is
+	// {internal/clock}.
+	c.registerSignals(mux)
 	return mux
 }
 

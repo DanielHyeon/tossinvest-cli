@@ -1827,3 +1827,158 @@ func TestAPaddedSourceIdIsNotASilentWarmUp(t *testing.T) {
 		t.Error("SourceSeries accepted an empty source id")
 	}
 }
+
+// --- task 5.8: the summary retention D11 promised and nobody enforced -------------
+
+// TestASummaryIsKeptUntilItsRawObservationsAreGoneAndThenDeleted.
+//
+// D11 splits retention in two and gives the second half no enforcer: raw rows go
+// after DefaultRawRetention and candidate summaries are kept "until the candidate
+// expires", which nothing ever did. The default behaviour was unbounded growth on
+// the filesystem D16 says the order ledger writes to.
+//
+// The grace period is not a number chosen here. Once the raw observations of a
+// life are gone, its summary joins to nothing — first_seen_at, first_price and
+// first_rank are facts ABOUT a series of readings, and with no readings left
+// there is nothing to read them against. So the summary goes one retention window
+// after the life ended, and not before: a candidate that expired a minute ago
+// still has two trading days of rows behind it.
+func TestASummaryIsKeptUntilItsRawObservationsAreGoneAndThenDeleted(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+	if err := s.Cool(ctx, "KR", "005930", t0.Add(time.Minute)); err != nil {
+		t.Fatalf("Cool: %v", err)
+	}
+	// Cooled at t0+1m, so the life ends at t0+1m+DefaultCoolingTTL.
+	expiry := t0.Add(time.Minute).Add(DefaultCoolingTTL)
+
+	// One nanosecond short of the grace period the summary is still there. The
+	// boundary is asserted from both sides because a sweep that fired early would
+	// delete first_seen_at while the rows it explains are still on disk, and that
+	// is the one direction D11 wrote the split to prevent.
+	deleted, err := s.PruneExpiredCandidates(ctx, expiry.Add(DefaultRawRetention-time.Nanosecond),
+		DefaultRawRetention)
+	if err != nil {
+		t.Fatalf("PruneExpiredCandidates: %v", err)
+	}
+	if deleted != 0 {
+		t.Errorf("the sweep deleted %d summary/summaries a nanosecond before the grace period "+
+			"elapsed; the raw rows it explains are still on disk", deleted)
+	}
+	if _, found, err := s.Candidate(ctx, "KR", "005930", expiry); err != nil || !found {
+		t.Fatalf("the summary is gone early: found=%v err=%v", found, err)
+	}
+
+	deleted, err = s.PruneExpiredCandidates(ctx, expiry.Add(DefaultRawRetention), DefaultRawRetention)
+	if err != nil {
+		t.Fatalf("PruneExpiredCandidates: %v", err)
+	}
+	if deleted != 1 {
+		t.Errorf("the sweep deleted %d summaries once the raw observations were gone, want 1; "+
+			"a summary that joins to nothing grows forever on the ledger's filesystem", deleted)
+	}
+	if _, found, err := s.Candidate(ctx, "KR", "005930", expiry); err != nil || found {
+		t.Errorf("the expired summary survived the sweep: found=%v err=%v", found, err)
+	}
+}
+
+// TestTheExpirySweepCannotReachACandidateThatIsStillAlive.
+//
+// Three lives it must not touch, and the third is the one that would go
+// unnoticed: a candidate nobody has re-promoted cools IMPLICITLY at
+// last_seen_at + staleness (Store.stateAt), so its expiry instant is not in any
+// column. A sweep written against cooled_at alone would either miss it forever or
+// — with the obvious repair of "cooled_at IS NULL means never cooled" — delete a
+// candidate that is still active.
+func TestTheExpirySweepCannotReachACandidateThatIsStillAlive(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	for _, symbol := range []string{"active", "cooling", "implicit"} {
+		if _, err := s.Promote(ctx, "KR", symbol, t0); err != nil {
+			t.Fatalf("Promote(%s): %v", symbol, err)
+		}
+	}
+	// "active" keeps being seen; "cooling" was cooled a moment ago; "implicit"
+	// was simply never seen again.
+	if _, err := s.Promote(ctx, "KR", "active", t0.Add(2*DefaultRawRetention)); err != nil {
+		t.Fatalf("Promote(active): %v", err)
+	}
+	if err := s.Cool(ctx, "KR", "cooling", t0.Add(2*DefaultRawRetention)); err != nil {
+		t.Fatalf("Cool(cooling): %v", err)
+	}
+
+	at := t0.Add(2 * DefaultRawRetention).Add(time.Minute)
+	deleted, err := s.PruneExpiredCandidates(ctx, at, DefaultRawRetention)
+	if err != nil {
+		t.Fatalf("PruneExpiredCandidates: %v", err)
+	}
+	// Only "implicit" is old enough: it cooled implicitly at t0+staleness and
+	// expired at t0+staleness+cooling, well over a retention window before `at`.
+	if deleted != 1 {
+		t.Errorf("the sweep deleted %d summaries, want 1 (only the implicitly cooled one is "+
+			"past its grace period)", deleted)
+	}
+	for _, symbol := range []string{"active", "cooling"} {
+		_, found, err := s.Candidate(ctx, "KR", symbol, at)
+		if err != nil {
+			t.Fatalf("Candidate(%s): %v", symbol, err)
+		}
+		if !found {
+			t.Errorf("the sweep deleted %q, which has not expired at that instant; a live "+
+				"candidate's first_seen_at is the whole claim this package makes", symbol)
+		}
+	}
+	if _, found, err := s.Candidate(ctx, "KR", "implicit", at); err != nil || found {
+		t.Errorf("the implicitly cooled candidate survived: found=%v err=%v; its expiry instant "+
+			"is in no column, so a sweep written against cooled_at alone never reaches it",
+			found, err)
+	}
+}
+
+// TestAnAbsentGracePeriodIsTheDefaultAndNotNoGraceAtAll.
+//
+// Zero switching a bound off is the failure shape this package keeps meeting — a
+// zero DayHigh meaning "at the high", a zero veto threshold meaning "no
+// threshold", a zero watch interval meaning "as fast as possible". Here the
+// unset field would mean "delete every expired summary immediately", which
+// destroys the record D3 requires to stay countable ("늦게 본 비율"의 회계) the
+// moment a candidate cools.
+func TestAnAbsentGracePeriodIsTheDefaultAndNotNoGraceAtAll(t *testing.T) {
+	s, _ := openStore(t)
+	ctx := context.Background()
+
+	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Promote: %v", err)
+	}
+	if err := s.Cool(ctx, "KR", "005930", t0); err != nil {
+		t.Fatalf("Cool: %v", err)
+	}
+	justExpired := t0.Add(DefaultCoolingTTL).Add(time.Second)
+
+	for _, grace := range []time.Duration{0, -time.Hour} {
+		deleted, err := s.PruneExpiredCandidates(ctx, justExpired, grace)
+		if err != nil {
+			t.Fatalf("PruneExpiredCandidates(grace=%s): %v", grace, err)
+		}
+		if deleted != 0 {
+			t.Fatalf("a grace period of %s deleted %d just-expired summaries; an unset bound is "+
+				"the default, never no bound", grace, deleted)
+		}
+	}
+	// And the default is genuinely applied rather than the sweep having refused to
+	// run: past it, the same call with the same zero grace deletes the row.
+	deleted, err := s.PruneExpiredCandidates(ctx,
+		t0.Add(DefaultCoolingTTL).Add(DefaultRawRetention), 0)
+	if err != nil {
+		t.Fatalf("PruneExpiredCandidates: %v", err)
+	}
+	if deleted != 1 {
+		t.Errorf("with the default grace period applied the sweep deleted %d, want 1; the guard "+
+			"above would pass just as well if the sweep never deleted anything", deleted)
+	}
+}

@@ -2,9 +2,11 @@ package official
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -183,8 +185,29 @@ func TestOrdersIntegration(t *testing.T) {
 	}
 }
 
-// TestOrdersFilterEmpty verifies that Orders() with zero filter omits all params.
-func TestOrdersFilterEmpty(t *testing.T) {
+// TestOrdersFilterEmptyOmitsEveryParameterIncludingTheRequiredOne.
+//
+// # What this pins, and what it must not be read as licensing
+//
+// It pins ONE thing: OrdersFilter's zero value contributes no query parameters,
+// so the client never invents a value the caller did not ask for. That matters
+// because status changes the SHAPE of the answer, not just its contents —
+// `status=OPEN` returns every pending order and ignores limit and cursor, while
+// `status=CLOSED` paginates and, with no from/to, spans the account's whole
+// history. A client that quietly picked one would be choosing between two
+// different questions on behalf of every existing caller.
+//
+// It is NOT a statement that the empty filter is a usable call. openapi marks
+// `status` `required: true`, so this request is one the broker is entitled to
+// refuse, and every caller in this repo passes one: cmd/tossctl/soak.go,
+// internal/verifylive/steps.go (twice), internal/execgw/orders_source.go and the
+// console's orders adapter. This test used to be named for the absence alone, and
+// an implementation read it as permission — the console's live read went out as
+// `?limit=100` with no status, which is either a rejected request (미체결 for ever
+// unmeasured) or one page over all time (a live order past row 100 missing from
+// the count, rendered as "0건 이상"). The name and this comment exist so that the
+// next reader sees a pinned client behaviour rather than a sanctioned call shape.
+func TestOrdersFilterEmptyOmitsEveryParameterIncludingTheRequiredOne(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth2/token":
@@ -217,6 +240,135 @@ func TestOrdersFilterEmpty(t *testing.T) {
 	}
 	if len(got) != 0 {
 		t.Fatalf("want 0 orders, got %d", len(got))
+	}
+
+	// The raw read does NOT behave the same way, and the difference is deliberate.
+	// It was introduced by the change that built the orders screen, so nothing
+	// predates it and it can be made unable to send this request at all —
+	// see TestTheRawReadsRefuseARequestWithNoStatusGroup.
+	if _, err := c.OrdersRaw(context.Background(), OrdersFilter{}); !errors.Is(err, ErrOrderStatusRequired) {
+		t.Fatalf("OrdersRaw with an empty filter = %v, want ErrOrderStatusRequired; Orders keeps "+
+			"its behaviour because callers predate it, and the new read does not have that excuse", err)
+	}
+}
+
+// TestTheRawReadsRefuseARequestWithNoStatusGroup.
+//
+// The client is where this belongs, and the reason is the shape of the bug it
+// replaces: **the caller forgot.** `/orders` shipped composing `?limit=100` with
+// no status — either a refused request, or one page over the account's entire
+// history in which a live order past row 100 is missing from the screen and from
+// its counts. A rule enforced only at the composition site is forgotten at the
+// next composition site, by a change nobody is reviewing for this one.
+//
+// So: both raw reads refuse, the error names the parameter and says why, and the
+// refusal happens before any request is made — a caller that forgot must not spend
+// a rate-limit slot finding out.
+func TestTheRawReadsRefuseARequestWithNoStatusGroup(t *testing.T) {
+	requests := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/oauth2/token" {
+			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+			return
+		}
+		requests++
+		_, _ = w.Write([]byte(`{"result":{"orders":[],"conditionalOrders":[],"hasNext":false}}`))
+	}))
+	defer srv.Close()
+	c := ordersRawClient(t, srv)
+
+	for _, tc := range []struct {
+		name string
+		call func() error
+	}{
+		{"OrdersRaw/empty", func() error {
+			_, err := c.OrdersRaw(context.Background(), OrdersFilter{})
+			return err
+		}},
+		{"OrdersRaw/blank", func() error {
+			_, err := c.OrdersRaw(context.Background(), OrdersFilter{Status: "   "})
+			return err
+		}},
+		{"ConditionalOrdersRaw/empty", func() error {
+			_, err := c.ConditionalOrdersRaw(context.Background(), "", "", "", 0)
+			return err
+		}},
+		{"ConditionalOrdersRaw/blank", func() error {
+			_, err := c.ConditionalOrdersRaw(context.Background(), "  ", "", "", 0)
+			return err
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.call()
+			if !errors.Is(err, ErrOrderStatusRequired) {
+				t.Fatalf("err = %v, want ErrOrderStatusRequired", err)
+			}
+			if !strings.Contains(err.Error(), "status") {
+				t.Errorf("the error does not name the parameter: %v", err)
+			}
+			if !strings.Contains(err.Error(), "OPEN") {
+				t.Errorf("the error does not say which group answers the live question: %v", err)
+			}
+		})
+	}
+
+	if requests != 0 {
+		t.Errorf("a refused request still reached the broker %d time(s); a caller that forgot must "+
+			"not spend a rate-limit slot finding out", requests)
+	}
+
+	// And it must not be mistaken for the API being unavailable: falling back to
+	// the web session with a request this client refused to build would be
+	// answering a malformed question somewhere else.
+	_, err := c.OrdersRaw(context.Background(), OrdersFilter{})
+	if ShouldFallback(err) {
+		t.Error("a missing status group is reported as a reason to fall back to the unofficial " +
+			"client; it is a caller mistake, not an outage")
+	}
+}
+
+// TestBothOrderReadsSendTheGroupTheyWereGiven.
+//
+// status is not a filter like the other five: it selects between two differently
+// shaped answers, one of which (OPEN) is the only call on this endpoint that
+// cannot be truncated. So "the caller's group reaches the wire, unchanged" is a
+// claim worth a test of its own, on both reads, and it is what fails if either one
+// starts defaulting, normalising or dropping it.
+func TestBothOrderReadsSendTheGroupTheyWereGiven(t *testing.T) {
+	for _, group := range []string{"OPEN", "CLOSED"} {
+		t.Run(group, func(t *testing.T) {
+			var seen []string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/oauth2/token":
+					_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
+				case "/api/v1/orders":
+					seen = append(seen, r.URL.Query().Get("status"))
+					_, _ = w.Write([]byte(`{"result":{"orders":[],"nextCursor":null,"hasNext":false}}`))
+				default:
+					http.NotFound(w, r)
+				}
+			}))
+			defer srv.Close()
+
+			c := ordersRawClient(t, srv)
+			if _, err := c.Orders(context.Background(), OrdersFilter{Status: group}); err != nil {
+				t.Fatalf("Orders: %v", err)
+			}
+			if _, err := c.OrdersRaw(context.Background(), OrdersFilter{Status: group}); err != nil {
+				t.Fatalf("OrdersRaw: %v", err)
+			}
+			for i, got := range seen {
+				if got != group {
+					t.Errorf("request %d went out with status=%q, want %q — the group decides "+
+						"whether the answer is every pending order or one page of history",
+						i, got, group)
+				}
+			}
+			if len(seen) != 2 {
+				t.Fatalf("the two reads made %d request(s), want 2", len(seen))
+			}
+		})
 	}
 }
 
@@ -360,7 +512,7 @@ func TestTheRawOrderReadKeepsAnAbsentValueApartFromAZeroOne(t *testing.T) {
 	srv := ordersRawServer(t, false, "")
 	defer srv.Close()
 
-	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{})
+	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{Status: "OPEN"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -403,7 +555,7 @@ func TestTheRawOrderReadDerivesTheMarketFromTheCurrency(t *testing.T) {
 	srv := ordersRawServer(t, false, "")
 	defer srv.Close()
 
-	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{})
+	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{Status: "OPEN"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -431,7 +583,7 @@ func TestTheRawOrderReadReportsThatThePageWasTruncated(t *testing.T) {
 	srv := ordersRawServer(t, true, "cursor-2")
 	defer srv.Close()
 
-	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{})
+	page, err := ordersRawClient(t, srv).OrdersRaw(context.Background(), OrdersFilter{Status: "OPEN"})
 	if err != nil {
 		t.Fatal(err)
 	}

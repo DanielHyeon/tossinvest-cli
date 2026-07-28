@@ -180,7 +180,7 @@ add-candidate-discovery D10과 같은 규칙이다. 값을 얻지 못한 것과 
 
 **결정**: 각 숫자는 `(값, 측정됨, 사유)`로 전달한다. 렌더 시점에 `0`과 `—`가 갈린다.
 
-사유는 **일곱**이고 각각 다른 대응을 요구한다. 초안은 셋이라고 썼는데, 코드는 이미 넷을
+사유는 **여덟**이고 각각 다른 대응을 요구한다. 초안은 셋이라고 썼는데, 코드는 이미 넷을
 모델링하고 있었다([holdings.go:83](../../../internal/console/holdings.go#L83)의 `Wired`).
 
 | 사유 | 언제 | 운영자가 할 일 |
@@ -192,8 +192,9 @@ add-candidate-discovery D10과 같은 규칙이다. 값을 얻지 못한 것과 
 | `never_fetched` | 캐시가 한 번도 채워진 적 없다 | 해당 화면을 연다 |
 | `config_unreadable` | seam은 배선됐는데 config를 파싱하지 못했다 | 설정 파일을 고친다 |
 | `journal_value_unparsable` | 원장은 열렸는데 값이 숫자가 아니다 | 원장을 조사한다 — 엔진 기동이 아니다 |
+| `discovery_unreadable` | 발굴 저장소를 읽지 못했다 | 발굴 저장소를 조사한다 |
 
-사유 없는 "—"는 대응할 수 없는 표시다. 일곱을 하나로 뭉치면 운영자는 기다릴지 고칠지
+사유 없는 "—"는 대응할 수 없는 표시다. 여덟을 하나로 뭉치면 운영자는 기다릴지 고칠지
 배선할지 알 수 없다.
 
 **여섯 번째는 구현 중에 나왔다(I-2, Manager 판정).** 초안은 다섯이었고, 구현자는 다섯을
@@ -206,6 +207,12 @@ add-candidate-discovery D10과 같은 규칙이다. 값을 얻지 못한 것과 
 경우에 적용했다 — 원장은 **열렸는데** 값이 숫자가 아닌 경우다. `journal_unreadable`은 여기서
 틀린 조언이다(엔진을 기동하라는 뜻이 되는데 원장은 이미 열렸다). 판정문이 예고한 "일곱 번째"가
 판정 다음 날 실제로 나왔고, 문장이 아니라 코드로 나왔다.
+
+**여덟 번째는 `/signals`가 가져왔다.** 발굴 저장소를 읽지 못한 경우이고 `journal_unreadable`은
+여기서 **틀린 조언**이다(원장을 고치라는 뜻이 되는데 원장은 멀쩡하다) — I-4가 재사용을 거부한
+것과 같은 이유다. **열거는 화면별이 아니라 콘솔 전체의 것**이다: 운영자가 무엇을 고쳐야 하는가는
+어느 화면에서 봤는지와 무관하다. 그러므로 새 사유는 한 화면이 아니라 이 표에 추가되고,
+공유 map을 쓴다.
 
 ## D6. "오늘"의 경계는 시장마다 다르다
 
@@ -368,7 +375,7 @@ refresh:
   overview_seconds: holdingsTTL     # 상수에서 파생
 unmeasured_reasons:
   [verify_suspended, broker_read_failed, journal_unreadable, seam_unwired, never_fetched,
-   config_unreadable, journal_value_unparsable]
+   config_unreadable, journal_value_unparsable, discovery_unreadable]
 today_boundary: per-market-local-midnight   # clock.Market.Location(); 화면이 어느 경계인지 출력
 account_panel_split_by_market: true         # 통화를 섞은 합계 금지
 today_panel_split_by_market:   true
