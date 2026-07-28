@@ -43,11 +43,21 @@ func valueObs(symbol string, at time.Time, source SourceID, value string) Observ
 }
 
 // rankObs is one ranked reading with no cumulative figure on it.
+//
+// `newly` is still a bool here because every caller is asserting one of the two
+// *measured* answers — that is what these tests are about. The third state is not
+// spellable through this helper on purpose: a reading whose source had no previous
+// reading is a different fixture, and the tests that need one build it directly so
+// that "unknown" cannot arrive by omitting an argument.
 func rankObs(market, symbol string, at time.Time, source SourceID,
 	rank, total int, newly bool) Observation {
+	answer := NewlyListedNo()
+	if newly {
+		answer = NewlyListedYes()
+	}
 	return Observation{
 		Market: market, Symbol: symbol, Source: source, ObservedAt: at,
-		Reported: Reported{Rank: rank, RankTotal: total, NewlyListed: newly},
+		Reported: Reported{Rank: rank, RankTotal: total, NewlyListed: answer},
 	}
 }
 
@@ -654,9 +664,9 @@ func TestANotComputedAccelerationCrossesNothingAndIsCountedApart(t *testing.T) {
 // fifth clears the 20%p contract threshold on its first sighting.
 //
 // The list boundary is what makes this constant rather than occasional — the rows
-// around 140–150 of 150 churn in and out on every scan — and a symbol whose volume
-// has just spiked does not enter at the boundary, it enters mid-list. So the path
-// is taken every scan and the manufactured gain is routinely maximal.
+// at the far end of the list churn in and out on every scan — and a symbol whose
+// volume has just spiked does not enter at the boundary, it enters mid-list. So the
+// path is taken every scan and the manufactured gain is routinely maximal.
 //
 // The fix is not a better fill. It is to record newly_listed as its own fact and
 // leave the gain absent, which is the same rule as every other absent value in
@@ -667,12 +677,12 @@ func TestANewlyListedSymbolDoesNotClimbFromLastPlace(t *testing.T) {
 		rank int
 	}{
 		{"entering mid-list, where a spiking symbol enters", 45},
-		{"entering at the boundary, which churns every scan", 148},
+		{"entering at the boundary, which churns every scan", 98},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			series := seriesOf(t,
 				rankObs(MarketKR, "005930", t0.Add(30*time.Second),
-					SourceOfficialTradingValue, tc.rank, 150, true),
+					SourceOfficialTradingValue, tc.rank, 100, true),
 			)
 			got := RankChange(series, t0.Add(30*time.Second), DefaultAccelerationWindow)
 
@@ -689,12 +699,19 @@ func TestANewlyListedSymbolDoesNotClimbFromLastPlace(t *testing.T) {
 			}
 			// The separate fact survives, because it is the one that says whether we
 			// are arriving late: a symbol that first appears at 12th and one that
-			// first appears at 148th are different events (D8).
-			if !got.NewlyListed {
-				t.Error("newly_listed was dropped; it is the fact that replaces the invented gain")
+			// first appears at 98th are different events (D8).
+			//
+			// Asked as Yes() rather than as a bare truth test, which is the whole of
+			// the fact's change of shape: `!got.NewlyListed` used to pass for a value
+			// nobody had measured as well as for a measured "yes", and there was no
+			// third answer to tell them apart.
+			if !got.NewlyListed.Yes() {
+				t.Errorf("newly_listed = %s; it is the fact that replaces the invented gain, "+
+					"and it has to be the measured yes rather than merely not-a-no",
+					got.NewlyListed)
 			}
-			if got.Rank != tc.rank || got.RankTotal != 150 {
-				t.Errorf("rank = %d of %d, want %d of 150", got.Rank, got.RankTotal, tc.rank)
+			if got.Rank != tc.rank || got.RankTotal != 100 {
+				t.Errorf("rank = %d of %d, want %d of 100", got.Rank, got.RankTotal, tc.rank)
 			}
 		})
 	}
@@ -703,36 +720,44 @@ func TestANewlyListedSymbolDoesNotClimbFromLastPlace(t *testing.T) {
 // TestTheSameNumberOfPlacesIsADifferentMoveInADifferentList is why the move is a
 // percentile and not a count of positions.
 //
-// The KR panel returns 150 rows and the US panel 100, so "up thirty places" is
-// two different distances (D8). A raw position delta compared against one
-// threshold silently applies a stricter bar to the longer list.
+// The two lists this system actually reads are different lengths — the official
+// ranking serves up to 100 rows and the WTS popularity list 30 — so "up three
+// places" is two different distances (D8). A raw position delta compared against
+// one threshold silently applies a stricter bar to the longer list.
+//
+// Corrected 2026-07-28. This test used to make the point with a 150-row list
+// against a 100-row one and said in its own comment that the KR panel returns 150
+// rows. No panel in this system has ever returned 150 rows; the arithmetic was
+// right and the premise was fiction, which is worse than a wrong number because it
+// is the sentence the next person quotes. The two lengths here are now the two that
+// exist, and they are read from the two sources that declare them.
 func TestTheSameNumberOfPlacesIsADifferentMoveInADifferentList(t *testing.T) {
-	kr := seriesOf(t,
-		rankObs(MarketKR, "005930", t0, SourceOfficialTradingValue, 70, 150, false),
+	popular := seriesOf(t,
+		rankObs(MarketKR, "005930", t0, SourceWTSPopular, 21, 30, false),
 		rankObs(MarketKR, "005930", t0.Add(30*time.Second),
-			SourceOfficialTradingValue, 40, 150, false),
+			SourceWTSPopular, 18, 30, false),
 	)
-	us := seriesOf(t,
-		rankObs(MarketUS, "AAPL", t0, SourceOfficialTradingValue, 70, 100, false),
-		rankObs(MarketUS, "AAPL", t0.Add(30*time.Second),
-			SourceOfficialTradingValue, 40, 100, false),
+	official := seriesOf(t,
+		rankObs(MarketKR, "005930", t0, SourceOfficialTradingValue, 21, 100, false),
+		rankObs(MarketKR, "005930", t0.Add(30*time.Second),
+			SourceOfficialTradingValue, 18, 100, false),
 	)
 
-	krMove := RankChange(kr, t0.Add(30*time.Second), DefaultAccelerationWindow)
-	usMove := RankChange(us, t0.Add(30*time.Second), DefaultAccelerationWindow)
-	if !krMove.Computed() || !usMove.Computed() {
-		t.Fatalf("rank moves were not computed: %q / %q", krMove.Reason, usMove.Reason)
+	popularMove := RankChange(popular, t0.Add(30*time.Second), DefaultAccelerationWindow)
+	officialMove := RankChange(official, t0.Add(30*time.Second), DefaultAccelerationWindow)
+	if !popularMove.Computed() || !officialMove.Computed() {
+		t.Fatalf("rank moves were not computed: %q / %q", popularMove.Reason, officialMove.Reason)
 	}
-	if krMove.PercentileGain != "20" {
-		t.Errorf("KR gain = %q, want %q (thirty places of a hundred and fifty)",
-			krMove.PercentileGain, "20")
+	if popularMove.PercentileGain != "10" {
+		t.Errorf("the 30-row list's gain = %q, want %q (three places of thirty)",
+			popularMove.PercentileGain, "10")
 	}
-	if usMove.PercentileGain != "30" {
-		t.Errorf("US gain = %q, want %q (thirty places of a hundred)",
-			usMove.PercentileGain, "30")
+	if officialMove.PercentileGain != "3" {
+		t.Errorf("the 100-row list's gain = %q, want %q (three places of a hundred)",
+			officialMove.PercentileGain, "3")
 	}
-	if krMove.PercentileGain == usMove.PercentileGain {
-		t.Error("thirty places is the same move in a 150-row list and a 100-row one; " +
+	if popularMove.PercentileGain == officialMove.PercentileGain {
+		t.Error("three places is the same move in a 30-row list and a 100-row one; " +
 			"the gain is not normalised by the list length")
 	}
 }
@@ -747,24 +772,24 @@ func TestTheSameNumberOfPlacesIsADifferentMoveInADifferentList(t *testing.T) {
 // affects are exactly the rows the record needs to be honest about.
 func TestAChurningSymbolIsMeasuredAgainstWhatWeActuallySaw(t *testing.T) {
 	series := seriesOf(t,
-		rankObs(MarketKR, "005930", t0, SourceOfficialTradingValue, 149, 150, false),
+		rankObs(MarketKR, "005930", t0, SourceOfficialTradingValue, 99, 100, false),
 		// Gone from the source's previous reading, back now, two places higher.
 		rankObs(MarketKR, "005930", t0.Add(60*time.Second),
-			SourceOfficialTradingValue, 147, 150, true),
+			SourceOfficialTradingValue, 97, 100, true),
 	)
 
 	got := RankChange(series, t0.Add(60*time.Second), DefaultAccelerationWindow)
 	if !got.Computed() {
 		t.Fatalf("a symbol with a stored previous reading was not measured: %s", got.Reason)
 	}
-	if !got.NewlyListed {
-		t.Error("newly_listed was dropped; the record has to show the series has a hole in it")
+	if !got.NewlyListed.Yes() {
+		t.Errorf("newly_listed = %s; the record has to show the series has a hole in it, "+
+			"and it has to be the measured yes rather than merely not-a-no", got.NewlyListed)
 	}
-	// Two places of a hundred and fifty. Not the 2 that "previously last" would
-	// have credited it with, and nowhere near a threshold either way.
-	if got.PercentileGain != "1.333333333333" {
-		t.Errorf("gain = %q, want %q (two places of a hundred and fifty)",
-			got.PercentileGain, "1.333333333333")
+	// Two places of a hundred. Not the 2 that "previously last" would have credited
+	// it with, and nowhere near a threshold either way.
+	if got.PercentileGain != "2" {
+		t.Errorf("gain = %q, want %q (two places of a hundred)", got.PercentileGain, "2")
 	}
 }
 

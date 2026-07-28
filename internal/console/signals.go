@@ -390,6 +390,11 @@ type signalsVetoTally struct {
 	// PassedNote is why Passed is structurally zero. It is rendered beside the
 	// number and never instead of it.
 	PassedNote string
+	// Alarms is the tally's own arithmetic, failed. Empty is the ordinary state and
+	// it is not a claim that the numbers are right, only that they are not provably
+	// wrong — which is why these are rendered beside the counts rather than instead
+	// of them.
+	Alarms []string
 	// Codes is the per-code raised/unmeasured breakdown, in D3's order.
 	Codes []signalsCodeCount
 	// Reasons is the missing-input census across every code, biggest first. It is
@@ -508,6 +513,30 @@ const signalsPassedNote = "구조적으로 0이다 — seen_late와 extended에�
 const signalsPassedUnexpected = "0이 아니다 — D18 이후 seen_late·extended의 임계가 사람 승인을 " +
 	"받았거나, 아니면 THRESHOLD_ABSENT를 통과로 센 것이다. 후자가 D18이 지목한 유일하게 " +
 	"틀린 수리이므로 먼저 그쪽을 확인한다."
+
+// signalsTallyAlarm is one arithmetic contradiction as this screen words it.
+//
+// The judgement lives in candidate.VetoTally.Anomalies and is not repeated here.
+// That split is the lesson from the fourth shadow band: a rule implemented twice
+// eventually disagrees with itself, and the disagreement shows up as a page that
+// looks calm. What each surface owns is the sentence, because the readers differ —
+// this one is a browser page in Korean, the scan output is a terminal in English,
+// and the numbers under both are the same numbers.
+//
+// It is rendered beside the counts rather than instead of them: the counts are what
+// the alarm is about, and a screen that replaced them would hide the evidence.
+func signalsTallyAlarm(a candidate.TallyAnomaly) string {
+	switch a.Kind {
+	case candidate.TallyPassedWithoutThreshold:
+		return "경보 — " + a.Arithmetic() +
+			". 임계가 없는 veto는 clear가 될 수 없으므로, 그 옆의 통과는 THRESHOLD_ABSENT를 " +
+			"통과로 센 것이다. D18이 지목한 유일하게 틀린 수리다."
+	default:
+		return "경보 — " + a.Arithmetic() +
+			". 세 버킷은 구조적으로 서로소이므로 합이 전체를 넘었다는 것은 " +
+			"미측정 veto를 가진 후보가 통과로 집계됐다는 뜻이다. 미측정은 통과가 아니다(D10)."
+	}
+}
 
 // signalsSeriesNote is D21 as a sentence on the page.
 const signalsSeriesNote = "분모는 후보가 아니라 계열이다 — 계열은 (시장·종목·원천)이고, " +
@@ -645,6 +674,14 @@ func signalsVetoesFrom(c candidate.Chase) []signalsVeto {
 }
 
 // signalsSightingMetric renders the first sighting's list position.
+//
+// The new-entrant marker is three-state now and this is the first build in which
+// any of the three can appear. The field was declared on five types and assigned by
+// no production source, so `if s.NewlyListed` was structurally false and the marker
+// could not be drawn — the screen said nothing about a fact the record claimed to
+// keep, and nothing failed. Rendering the negative and the unknown as well as the
+// positive is what makes the difference visible: a cell that says nothing is what
+// the broken version looked like.
 func signalsSightingMetric(s candidate.Sighting) signalsMetric {
 	if !s.Measured {
 		return unmeasuredMetric(string(s.Reason()))
@@ -653,10 +690,24 @@ func signalsSightingMetric(s candidate.Sighting) signalsMetric {
 	if s.PercentilePct != "" {
 		text += " (" + s.PercentilePct + "%p)"
 	}
-	if s.NewlyListed {
-		text += " · 신규 진입"
+	return measuredMetric(text + " · " + signalsNewlyListedText(s.NewlyListed))
+}
+
+// signalsNewlyListedText spells the three states of the new-entrant fact.
+//
+// The unknown arm is not dead code by construction — MeasureFirstSighting refuses
+// an unknown fact, so a Sighting reaching here measured has a known one today — but
+// it is what any other producer of a Sighting would land on, and a blank cell there
+// would be indistinguishable from the shipped defect.
+func signalsNewlyListedText(n candidate.NewlyListed) string {
+	switch {
+	case n.Yes():
+		return "신규 진입"
+	case n.No():
+		return "직전 읽기에 있었음"
+	default:
+		return "신규 진입 미상"
 	}
-	return measuredMetric(text)
 }
 
 // signalsExpansionMetric renders the expansion from the stored baseline.
@@ -689,6 +740,9 @@ func signalsVetoTallyFrom(t candidate.VetoTally) signalsVetoTally {
 	}
 	if t.Passed != 0 {
 		out.PassedNote = signalsPassedUnexpected
+	}
+	for _, a := range t.Anomalies() {
+		out.Alarms = append(out.Alarms, signalsTallyAlarm(a))
 	}
 	for _, code := range candidate.VetoCodes {
 		out.Codes = append(out.Codes, signalsCodeCount{

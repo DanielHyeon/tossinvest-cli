@@ -139,6 +139,15 @@ const signalsTemplates = `
   <dt>통과한 후보</dt>
   <dd>{{.Passed}} <span class="muted">({{.PassedNote}})</span></dd>
 </dl>
+{{/*
+  집계 항등식 경보. 임계의 유무와 무관하게 계산되므로 임계가 하나도 없는 지금도
+  작동한다. 숫자 옆에 붙고 숫자를 대체하지 않는다 — 경보의 근거가 그 숫자다.
+*/}}
+{{if .Alarms}}
+{{range .Alarms}}
+<p class="bad">{{.}}</p>
+{{end}}
+{{end}}
 <table>
   <thead><tr><th>사유 코드</th><th>위험</th><th>미측정</th></tr></thead>
   <tbody>

@@ -115,9 +115,15 @@ func (s SourceID) Official() bool { return strings.HasPrefix(string(s), "officia
 // means the source did not carry the field — see the package doc's second rule.
 type Reported struct {
 	// Rank is the symbol's 1-based position in the list that carried it, 0 when
-	// the source is not a ranking. RankTotal is that list's length, which is what
-	// makes two lists of different sizes comparable as percentiles (D8).
+	// the source is not a ranking. RankTotal is that list's length as it arrived,
+	// which is what makes two lists of different sizes comparable as percentiles
+	// (D8).
 	Rank, RankTotal int
+	// RankRequested is how many rows the source asked for, 0 when it declared no
+	// size. RankTotal ÷ RankRequested is what separates a short list from a
+	// truncated reading of a long one, and only the source knows the second
+	// number — it used to be discarded at the adapter.
+	RankRequested int
 	// NewlyListed reports that this symbol was not in the previous reading of
 	// this list.
 	//
@@ -125,7 +131,11 @@ type Reported struct {
 	// pretending the symbol was previously last (D8, correction 1). Synthesising
 	// a previous rank makes every ordinary churn at the list boundary look like a
 	// maximal jump, and the boundary churns constantly.
-	NewlyListed bool
+	//
+	// Three-state, and unknown is the zero value: a source that has not read this
+	// list before has no answer, and recording that as "it was not there" would
+	// make the first scan of every session declare the whole panel newly listed.
+	NewlyListed NewlyListed
 	// TradingValue and TradingVolume are the cumulative intraday figures the
 	// source reported. Rates and accelerations are derived from the difference
 	// between two of these, never stored here.
@@ -275,6 +285,13 @@ func (o Observation) validate() (Observation, error) {
 	case o.Reported.Rank < 0 || o.Reported.RankTotal < 0:
 		return Observation{}, fmt.Errorf("candidate: observation of %s:%s has a negative rank (%d/%d)",
 			out.Market, out.Symbol, o.Reported.Rank, o.Reported.RankTotal)
+	case o.Reported.RankRequested < 0:
+		// Absent is 0 here, so a negative is not a smaller absence — it is a number
+		// nothing could have produced, and truncationOf would read it as unknown and
+		// hide it. Refused at the boundary for the same reason a negative rank is.
+		return Observation{}, fmt.Errorf(
+			"candidate: observation of %s:%s asked for %d rows; absent is 0, not a negative",
+			out.Market, out.Symbol, o.Reported.RankRequested)
 	case o.Reported.Rank > 0 && o.Reported.RankTotal == 0:
 		// A rank with no list length is an impossible reading, and it is the one
 		// that does damage downstream rather than at the point of entry: the rank

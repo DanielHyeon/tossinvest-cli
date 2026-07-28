@@ -1070,7 +1070,8 @@ func TestTheFirstRankFollowsFirstSeenAtThroughCoolingAndExpiry(t *testing.T) {
 	if _, err := s.Promote(ctx, "KR", "005930", t0); err != nil {
 		t.Fatalf("Promote: %v", err)
 	}
-	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 148, 150, t0, SourceOfficialTradingValue); err != nil {
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(148, 150, t0, SourceOfficialTradingValue)); err != nil {
 		t.Fatalf("NoteFirstRank: %v", err)
 	}
 
@@ -1091,8 +1092,8 @@ func TestTheFirstRankFollowsFirstSeenAtThroughCoolingAndExpiry(t *testing.T) {
 	}
 	// The re-entry offers its current — much higher — position, and the store
 	// refuses it because one is already recorded.
-	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 5, 150,
-		cooled.Add(time.Minute), SourceOfficialTradingValue); err != nil {
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(5, 150, cooled.Add(time.Minute), SourceOfficialTradingValue)); err != nil {
 		t.Fatalf("NoteFirstRank on the re-entry: %v", err)
 	}
 	kept, _, err := s.FirstRank(ctx, "KR", "005930")
@@ -1131,7 +1132,8 @@ func TestTheFirstRankFollowsFirstSeenAtThroughCoolingAndExpiry(t *testing.T) {
 		t.Errorf("the first rank's instant and source survived expiry: %+v", reset)
 	}
 	// The new life records its own, and it is the position it actually came back at.
-	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 5, 150, after, SourceOfficialGainers); err != nil {
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(5, 150, after, SourceOfficialGainers)); err != nil {
 		t.Fatalf("NoteFirstRank after expiry: %v", err)
 	}
 	again, _, err := s.FirstRank(ctx, "KR", "005930")
@@ -1162,7 +1164,8 @@ func TestARankFromOutsideTheIdentityWindowIsNotStored(t *testing.T) {
 		t.Fatalf("Promote: %v", err)
 	}
 	late := t0.Add(DefaultStalenessTTL)
-	got, err := s.NoteFirstRank(ctx, "KR", "005930", 4, 150, late, SourceOfficialTradingValue)
+	got, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(4, 150, late, SourceOfficialTradingValue))
 	if err != nil {
 		t.Fatalf("NoteFirstRank outside the window = %v, want no error; a candidate first raised "+
 			"by a source that carries no position is ordinary", err)
@@ -1177,7 +1180,8 @@ func TestARankFromOutsideTheIdentityWindowIsNotStored(t *testing.T) {
 	}
 	// One second inside it is stored, so the boundary is where it says it is.
 	inside := t0.Add(DefaultStalenessTTL - time.Second)
-	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 4, 150, inside, SourceOfficialTradingValue); err != nil {
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(4, 150, inside, SourceOfficialTradingValue)); err != nil {
 		t.Fatalf("NoteFirstRank inside the window: %v", err)
 	}
 	if stored, _, _ := s.FirstRank(ctx, "KR", "005930"); stored.Rank != 4 {
@@ -1195,21 +1199,22 @@ func TestARankOfZeroIsNotAFirstSighting(t *testing.T) {
 		t.Fatalf("Promote: %v", err)
 	}
 	for _, bad := range []struct{ rank, total int }{{0, 150}, {12, 0}, {-1, 150}, {0, 0}, {151, 150}} {
-		if _, err := s.NoteFirstRank(ctx, "KR", "005930", bad.rank, bad.total, t0,
-			SourceOfficialTradingValue); err == nil {
+		if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+			storedFirstRank(bad.rank, bad.total, t0, SourceOfficialTradingValue)); err == nil {
 			t.Errorf("NoteFirstRank accepted %d of %d", bad.rank, bad.total)
 		}
 	}
 	// And the other refusals a provenance write cannot make silently.
-	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 12, 150, time.Time{},
-		SourceOfficialTradingValue); err == nil {
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(12, 150, time.Time{}, SourceOfficialTradingValue)); err == nil {
 		t.Error("NoteFirstRank accepted a first sighting with no instant")
 	}
-	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 12, 150, t0, "  "); err == nil {
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(12, 150, t0, "  ")); err == nil {
 		t.Error("NoteFirstRank accepted a first sighting with no source")
 	}
-	if _, err := s.NoteFirstRank(ctx, "KR", "999999", 12, 150, t0,
-		SourceOfficialTradingValue); !errors.Is(err, ErrNoCandidate) {
+	if _, err := s.NoteFirstRank(ctx, "KR", "999999",
+		storedFirstRank(12, 150, t0, SourceOfficialTradingValue)); !errors.Is(err, ErrNoCandidate) {
 		t.Errorf("NoteFirstRank against an unknown candidate = %v, want ErrNoCandidate", err)
 	}
 	if got, found, err := s.FirstRank(ctx, "KR", "999999"); err != nil || found || got.Recorded() {
@@ -1234,7 +1239,8 @@ func TestPruningRawObservationsLeavesTheFirstRankToo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Promote: %v", err)
 	}
-	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 148, 150, t0, SourceOfficialTradingValue); err != nil {
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(148, 150, t0, SourceOfficialTradingValue)); err != nil {
 		t.Fatalf("NoteFirstRank: %v", err)
 	}
 	if _, err := s.PruneObservations(ctx, t0.Add(DefaultRawRetention)); err != nil {
@@ -1520,7 +1526,8 @@ func TestAStoreLeftByAnOlderBuildOpensMigratesAndKeepsItsRows(t *testing.T) {
 	}
 
 	// And the backfilled one is set once from here on, like the baseline.
-	if _, err := s.NoteFirstRank(ctx, "KR", "005930", 3, 150, t0, SourceWTSPopular); err != nil {
+	if _, err := s.NoteFirstRank(ctx, "KR", "005930",
+		storedFirstRank(3, 150, t0, SourceWTSPopular)); err != nil {
 		t.Fatalf("NoteFirstRank: %v", err)
 	}
 	if again, _, _ := s.FirstRank(ctx, "KR", "005930"); again.Rank != 12 {
@@ -1710,9 +1717,9 @@ func TestAStoreAtSchemaTwoOpensMigratesAndKeepsItsRows(t *testing.T) {
 		t.Fatalf("%d raw rows survived the migration, want 2", len(rows))
 	}
 
-	// And the new rung's own work: the earliest ranked row inside the identity
-	// window becomes the first rank, so seen_late answers for a candidate that
-	// predates the column instead of collapsing to unmeasured.
+	// And the rung's own work: the earliest ranked row inside the identity window
+	// becomes the first rank, so the position survives for a candidate that predates
+	// the column.
 	first, _, err := s.FirstRank(ctx, "KR", "005930")
 	if err != nil {
 		t.Fatalf("FirstRank: %v", err)
@@ -1720,10 +1727,34 @@ func TestAStoreAtSchemaTwoOpensMigratesAndKeepsItsRows(t *testing.T) {
 	if first.Rank != 12 || first.Total != 150 || !first.At.Equal(t0) {
 		t.Errorf("the backfilled first rank = %+v, want 12 of 150 at %v", first, t0)
 	}
+
+	// Corrected 2026-07-28. This used to assert that the backfilled position was
+	// immediately measurable at the 92nd percentile, and that assertion is now the
+	// wrong one to make rather than a number that has moved: the schema-4 rung adds
+	// the two facts that decide whether a position can answer seen_late at all, and
+	// it deliberately backfills neither. Nobody measured them when these rows were
+	// written — the boolean this store kept was structurally false in every row ever
+	// inserted, because no source assigned it — so copying it forward would have
+	// converted "nobody looked" into "the source said this symbol was already
+	// listed" for the entire stored history, in one UPDATE.
+	//
+	// So what is asserted now is the honest pair: the position crossed the migration
+	// intact and is visible, and the veto refuses to measure from it under a reason
+	// that names why. A store somebody already has gets its answer back one scan
+	// after the upgrade, when a source reports a reading it can qualify.
 	sighting := MeasureFirstSighting(got, first, rows)
-	if !sighting.Measured || sighting.PercentilePct != "92" {
-		t.Errorf("the sighting after the migration = measured %v at %s%%, want 92%%",
-			sighting.Measured, sighting.PercentilePct)
+	if sighting.Measured {
+		t.Errorf("the sighting after the migration is measured at %s%%; the rung backfilled "+
+			"no new-entrant fact, so there is nothing that says what this position means",
+			sighting.PercentilePct)
+	}
+	if sighting.Reason() != VetoNewEntrantUnknown {
+		t.Errorf("the migrated sighting's reason = %q, want %q", sighting.Reason(),
+			VetoNewEntrantUnknown)
+	}
+	if sighting.Rank != 12 || sighting.RankTotal != 150 {
+		t.Errorf("the refused sighting reports %d of %d; it has to still show what it read",
+			sighting.Rank, sighting.RankTotal)
 	}
 
 	// And the row from the gap is not backfilled, which is the whole point of the

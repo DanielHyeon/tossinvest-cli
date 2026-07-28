@@ -71,8 +71,8 @@ package candidate
 //	                                           life by 48h and the baseline moves
 //	                                           backwards onto them.
 //	a ranked row from between two lives        was the first sighting until task
-//	                                           4.9. A symbol promoted 4th of 150
-//	                                           read as one caught at 148th, and
+//	                                           4.9. A symbol promoted 4th of 100
+//	                                           read as one caught at 98th, and
 //	                                           `seen_late` cleared.
 //	a reading from three minutes ago           the price has moved since, so
 //	                                           `near_high` reads "there is room"
@@ -186,6 +186,31 @@ const (
 	// same window on the way in, so this is a migration, a fixture or a hand-edited
 	// file rather than a scan.
 	VetoFirstRankNotFirst VetoUnmeasured = "FIRST_RANK_NOT_FIRST"
+	// VetoNewEntrantUnknown: the reading the first sighting's position came from
+	// belongs to a source that had no previous reading of that list, so nobody
+	// knows whether the symbol had just joined it.
+	//
+	// It is deliberately not one of the four "nothing was stored" reasons above.
+	// Those are the store's own gaps — retention did what it is supposed to, the
+	// panel carries no ranking source, the column predates the schema. This one is
+	// not a gap at all: the position is there, it is this life's, and the *source*
+	// did not have the answer that would make it mean something. The remedies are
+	// different, so a screen full of one must not read like a screen full of the
+	// other — a scan that has just started will produce a screen full of this and
+	// the correct action is to wait for the second reading.
+	//
+	// design D3: the refusal is not a ratio and not a floor. It is the source
+	// saying so.
+	VetoNewEntrantUnknown VetoUnmeasured = "NEW_ENTRANT_UNKNOWN"
+	// VetoReadingTruncated: the source asked for more rows than arrived, so the
+	// list length the percentile would normalise by never existed.
+	//
+	// candidatesrc.go wrote the warning before the defect: "a caller that asked for
+	// 150 and got 100 would compute rank percentiles against a list length that
+	// never existed". The reading that asked for a hundred and got three is the
+	// same shape, and its top row comes out at the 66.7th percentile — mid-list,
+	// measured, safe-looking.
+	VetoReadingTruncated VetoUnmeasured = "READING_TRUNCATED"
 	// VetoBaselineTooLate: the stored first price postdates first_seen_at by more
 	// than the staleness TTL, so it is not the first price and every expansion
 	// measured from it is an understatement (D17).
@@ -451,12 +476,16 @@ func (c Chase) NotMeasured() []VetoCode {
 // Sighting is where a candidate stood in its list the first time we ever saw it.
 //
 // This is seen_late's input, and D8 says why it is the position rather than the
-// price: 12위로 진입한 종목과 148위로 진입한 종목은 다른 사건이고, 전자가 많다면 우리
+// price: 12위로 진입한 종목과 98위로 진입한 종목은 다른 사건이고, 전자가 많다면 우리
 // 스캔이 늦다는 뜻이다. A symbol that was already twelfth the first time it appeared
 // had been climbing for a while before our first scan caught it, and a run of
 // those is how we learn the scan interval or the source panel is late. That is
 // the remedy D3 attaches to seen_late and it is not the remedy it attaches to
 // extended, which is why the two are separate codes.
+//
+// (D8's own example said 148th of 150; corrected 2026-07-28, because no list this
+// system reads has ever had 150 rows. The official ranking serves at most 100 and
+// the WTS popularity list 30.)
 //
 // # Why it can be lost, and why it is a column
 //
@@ -477,8 +506,10 @@ type Sighting struct {
 	Measured bool
 	Why      VetoUnmeasured
 	// PercentilePct is the position as a share of that list's own length: 0 at the
-	// bottom, just under 100 at the top. Normalised for D8's reason — the KR panel
-	// returns 150 rows and the US panel 100, so "twelfth" is two different facts.
+	// bottom, just under 100 at the top. Normalised for D8's reason — the official
+	// ranking returns up to 100 rows and the WTS popularity list 30, so "twelfth"
+	// is two different facts (corrected 2026-07-28: the number here was 150 for
+	// both panels, and no panel has ever returned 150 rows).
 	// Empty means unmeasured, never "0".
 	PercentilePct string
 	// Rank and RankTotal are the reading's own position and list length, kept
@@ -496,10 +527,19 @@ type Sighting struct {
 	// previous reading. Recorded beside the percentile and never folded into it
 	// (D8 correction 1).
 	//
-	// It comes from the raw row the stored rank was taken from, when that row is
-	// still held, so it is false after a prune. Nothing is decided by it — see
-	// newlyListedAt.
-	NewlyListed bool
+	// It is three-state, it comes from the column stored beside the position, and
+	// unlike every other field here it *is* consulted: a position from a reading
+	// whose source had no previous reading cannot answer "did we miss the early
+	// part of this move", because the source has told us it does not know. See
+	// MeasureFirstSighting. The refusal is D3's, and it is a refusal rather than a
+	// synthesis — D8 correction 1 forbids deriving the percentile from this fact
+	// and says nothing about declining to derive one at all.
+	NewlyListed NewlyListed
+	// Truncation is whether the reading arrived whole, from the requested row
+	// count stored beside the position. Three-state, and it is consulted for the
+	// same reason: the percentile normalises by a list length, and a truncated
+	// reading's arrived count is not one.
+	Truncation Truncation
 }
 
 // Reason names the missing input of an unmeasured sighting, and never comes back
@@ -533,7 +573,7 @@ func (s Sighting) PercentileExceeds(thresholdPct string) (exceeds, measured bool
 	threshold, why := parseFigure(thresholdPct)
 	// Three impossible readings of the same pair, and all three answer unmeasured.
 	// A rank past the end of its own list is the third: the percentile is
-	// (total − rank) ÷ total, so 200 of 150 is −33%, which is below every threshold
+	// (total − rank) ÷ total, so 150 of 100 is −50%, which is below every threshold
 	// there is and clears seen_late for a symbol that cannot be where it says it
 	// is. Observation.validate refuses it on the way into the store — for the same
 	// reason, one field over — so what is left is a Sighting built outside a
@@ -561,7 +601,7 @@ func (s Sighting) PercentileExceeds(thresholdPct string) (exceeds, measured bool
 //	                                       from 148th, and seen_late clears
 //	a row from before the promotion        a symbol at 5th all morning that slid
 //	                                       to 100th ten minutes before it was
-//	                                       promoted at 4th reads as 100/150
+//	                                       promoted at 4th reads as 90/100
 //
 // Neither needs an expiry, and the first does not even need the two lives to be
 // close: nine minutes is enough. Candidate carries nothing that separates the two
@@ -577,14 +617,25 @@ func (s Sighting) PercentileExceeds(thresholdPct string) (exceeds, measured bool
 //
 // # What the slice is still for
 //
-// Three things, none of them the measurement: the reasons that describe *why*
+// Two things, neither of them the measurement: the reasons that describe *why*
 // there is no stored rank (nothing recorded, nothing ranked, nothing that could
-// have been the first), the reading those reasons report so a screen can show how
-// far it is from first_seen_at, and NewlyListed — the source's own report that the
-// symbol was absent from its previous reading (D8 correction 1), which is a fact
-// beside the percentile rather than an input to it. After a prune the matching row
-// is gone and NewlyListed is false; it decides nothing, and PercentileExceeds does
-// not read it.
+// have been the first), and the reading those reasons report so a screen can show
+// how far it is from first_seen_at.
+//
+// It is no longer where the new-entrant fact comes from. That fact used to be
+// looked up by matching the stored position against a row in this slice, and the
+// lookup could not work: Assess loads the last DefaultAssessHistory — ten minutes —
+// so for every candidate older than that the matching row is simply not here. The
+// answer came back `false` for the whole list, all day, which is how a fact
+// declared across five layers managed never to be recorded. It is a stored column
+// beside the position now, on first_price_at's precedent.
+//
+// # And two of the qualifiers are consulted rather than merely displayed
+//
+// design D3 and D4. A position from a source with no previous reading, and a
+// position from a reading that arrived short, are both refused under their own
+// names. Neither refusal invents a number: one asks the source whether it held a
+// previous reading, the other compares two counts the source declared.
 func MeasureFirstSighting(c Candidate, first FirstRank, observations []Observation) Sighting {
 	out := Sighting{FirstSeenAt: c.FirstSeenAt}
 	// A slice carrying two symbols means the caller has lost track of which
@@ -607,6 +658,7 @@ func MeasureFirstSighting(c Candidate, first FirstRank, observations []Observati
 
 	out.Rank, out.RankTotal = first.Rank, first.Total
 	out.At, out.Source = first.At, first.Source
+	out.NewlyListed, out.Truncation = first.NewlyListed, first.Truncation()
 	switch {
 	case first.At.IsZero():
 		// A position with no instant cannot be checked against first_seen_at at all,
@@ -619,8 +671,38 @@ func MeasureFirstSighting(c Candidate, first FirstRank, observations []Observati
 		// file — and the stored position belongs to another moment.
 		out.Why = VetoFirstRankNotFirst
 		return out
+	case !out.NewlyListed.Known():
+		// design D3. The position is this life's and it still cannot answer the
+		// question, because the source that produced it had no previous reading of
+		// the list — so "this symbol was already twelfth when we arrived" and "this
+		// symbol had just joined and we caught it at twelfth" are the same reading.
+		//
+		// This is the path that used to stamp a whole session. Cooling plus
+		// staleness is forty minutes, so any gap longer than that expires the entire
+		// watchlist; the next scan re-promotes the whole panel at once and each
+		// symbol records its *current* rank as the one we first saw it at. The top
+		// of the list is then marked seen_late for the rest of the day — not because
+		// we were late to those symbols but because our process started.
+		//
+		// The alternative was to count the batch: "a scan that promoted more than N%
+		// of the panel is a bulk re-promotion". That N is another number with no
+		// source, which is the disease this whole change is treating, so it is not
+		// used. What is used is the source's own answer, and here the source's own
+		// answer is that it does not have one.
+		out.Why = VetoNewEntrantUnknown
+		return out
+	case out.Truncation.Yes():
+		// design D4. The percentile normalises by RankTotal, and RankTotal is what
+		// arrived. A reading that asked for a hundred rows and got three has a top
+		// row at the 66.7th percentile of a list that never existed — measured,
+		// mid-list, and safe-looking. The same refusal covers the one-row reading
+		// whose only row comes out at percentile 0, the bottom of its own list.
+		//
+		// Again not a floor: no minimum row count is invented here. The comparison
+		// is between two numbers the source itself declared.
+		out.Why = VetoReadingTruncated
+		return out
 	}
-	out.NewlyListed = newlyListedAt(observations, first)
 	out.Measured = true
 	out.PercentilePct = formatDecimal(percentileOf(out.Rank, out.RankTotal))
 	return out
@@ -680,25 +762,8 @@ func unstoredFirstSighting(out Sighting, c Candidate, observations []Observation
 	o := observations[row]
 	out.Rank, out.RankTotal = o.Reported.Rank, o.Reported.RankTotal
 	out.At, out.Source, out.NewlyListed = o.ObservedAt, o.Source, o.Reported.NewlyListed
+	out.Truncation = truncationOf(o.Reported.RankRequested, o.Reported.RankTotal)
 	return out
-}
-
-// newlyListedAt reports the source's own "absent from the previous reading" flag
-// for the stored first sighting, when the row it was taken from is still held.
-//
-// Matched on instant, source and position together rather than on the instant
-// alone: a single scan stamps one instant on every source's row for a symbol, so
-// the instant by itself selects several. A miss leaves it false, which is the
-// ordinary state after a prune — the flag is recorded beside the percentile and is
-// never folded into it (D8 correction 1), so nothing is decided by it.
-func newlyListedAt(observations []Observation, first FirstRank) bool {
-	for _, o := range observations {
-		if o.Source == first.Source && o.ObservedAt.Equal(first.At) &&
-			o.Reported.Rank == first.Rank && o.Reported.RankTotal == first.Total {
-			return o.Reported.NewlyListed
-		}
-	}
-	return false
 }
 
 // nearFirstSighting reports that a reading could be the one a candidate was first

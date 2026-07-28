@@ -31,6 +31,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -95,6 +96,22 @@ type officialRanking struct {
 	typ    string
 	id     candidate.SourceID
 	count  int
+	// seen is the previous reading's symbol set, per market. It is what makes the
+	// new-entrant fact measurable at all: nothing else in the system holds "what
+	// this list looked like last time", and the store cannot answer it because the
+	// question is about one source's own consecutive readings rather than about the
+	// symbol.
+	//
+	// Per market, and that is not tidiness. One adapter instance serves whichever
+	// market it is handed, so a single set would let a KR reading decide whether a
+	// US symbol had just joined the US list — an answer about a different list,
+	// arriving as a measurement.
+	//
+	// A market with no entry has no previous reading, so its first reading reports
+	// unknown for every row. That is the state after every process start, and it is
+	// the one design D3 refuses to spell as "yes".
+	seen map[string]map[string]bool
+	mu   sync.Mutex
 }
 
 // OfficialRanking returns a Source over one official ranking type.
@@ -103,6 +120,10 @@ type officialRanking struct {
 // through: a larger value is silently truncated by the server, and a caller that
 // asked for 150 and got 100 would compute rank percentiles against a list length
 // that never existed.
+//
+// The cap is why the requested count reported on every Row is o.count rather than
+// the caller's argument: the comparison that decides whether a reading came back
+// short has to be against the request that was actually made.
 //
 // An unrecognised ranking type is refused rather than given a fallback id, since
 // a fallback would put it back into a collision with a real source.
@@ -136,6 +157,10 @@ func (o *officialRanking) Read(ctx context.Context, market string) (candidate.Re
 	}
 
 	total := len(raw.Items)
+	// The previous reading's set is taken and replaced under one lock, before any
+	// row is built, so two concurrent reads of the same market cannot each answer
+	// from a set the other has already replaced.
+	previous, hadPrevious := o.rememberRead(market, raw.Items)
 	rows := make([]candidate.Row, 0, total)
 	for _, item := range raw.Items {
 		symbol := strings.TrimSpace(item.Symbol)
@@ -146,6 +171,13 @@ func (o *officialRanking) Read(ctx context.Context, market string) (candidate.Re
 			Symbol:    symbol,
 			Rank:      item.Rank,
 			RankTotal: total,
+			// What was asked for, beside what arrived. The API caps count at 100 and
+			// truncates silently, and this file's own comment on OfficialRanking has
+			// warned since it was written that a caller who does not keep both numbers
+			// computes percentiles against a list length that never existed. Keeping
+			// it is what turns that warning into something a store can check.
+			RankRequested: o.count,
+			NewlyListed:   newlyListed(previous, hadPrevious, symbol),
 			// domain.RankingItem is float64 throughout, so a field the API sent as
 			// null already reads as 0 by the time it gets here and the distinction
 			// is unrecoverable. These three are ranking-defining figures that a
@@ -159,6 +191,52 @@ func (o *officialRanking) Read(ctx context.Context, market string) (candidate.Re
 		})
 	}
 	return candidate.Reading{Rows: rows, Budget: o.rateBudget()}, nil
+}
+
+// rememberRead swaps in this reading's symbol set for `market` and returns the one
+// it replaced, together with whether there was one.
+//
+// The two returns are the three states at their source. `hadPrevious` false is not
+// an empty previous reading — an empty one would be evidence that every symbol here
+// is new, and no previous reading at all is evidence of nothing.
+//
+// The set is replaced even when the reading is empty, because an empty reading is
+// still a reading of this list. It is not counted as coverage by the scan (that is
+// a different question, about whether a symbol left), but as far as "what did this
+// source see last time" goes, it saw nothing, and the next reading's rows really
+// were absent from it.
+func (o *officialRanking) rememberRead(market string, items []domain.RankingItem) (map[string]bool, bool) {
+	key := strings.ToUpper(strings.TrimSpace(market))
+	current := make(map[string]bool, len(items))
+	for _, item := range items {
+		if symbol := strings.TrimSpace(item.Symbol); symbol != "" {
+			current[symbol] = true
+		}
+	}
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	if o.seen == nil {
+		o.seen = map[string]map[string]bool{}
+	}
+	previous, had := o.seen[key]
+	o.seen[key] = current
+	return previous, had
+}
+
+// newlyListed is the three-state answer for one symbol.
+//
+// No previous reading means unknown, and that is the whole of design D2: "absent
+// from the previous reading" is vacuously true of every row of a first reading, so
+// spelling it `yes` would mark the entire panel as new every time the process
+// starts. The bool that used to sit in this field could not say it.
+func newlyListed(previous map[string]bool, had bool, symbol string) candidate.NewlyListed {
+	if !had {
+		return candidate.NewlyListedUnknown()
+	}
+	if previous[symbol] {
+		return candidate.NewlyListedNo()
+	}
+	return candidate.NewlyListedYes()
 }
 
 // rateBudget translates the official client's reading into the scan's.
@@ -189,6 +267,12 @@ type PopularityReader interface {
 type wtsPopular struct {
 	reader PopularityReader
 	size   int
+	// seen is the previous reading's symbol set, keyed by market for
+	// officialRanking's reason. This source serves only KR, so the map holds one
+	// entry in practice — it is keyed anyway because the guard below is on Read and
+	// a keyed map cannot be the thing that stops being true if that guard moves.
+	seen map[string]map[string]bool
+	mu   sync.Mutex
 }
 
 // WTSPopular returns a Source over the WTS popularity ranking.
@@ -222,12 +306,10 @@ func (w *wtsPopular) Read(ctx context.Context, market string) (candidate.Reading
 	}
 
 	total := len(raw.Stocks)
+	previous, hadPrevious := w.rememberRead(market, raw.Stocks)
 	rows := make([]candidate.Row, 0, total)
 	for _, s := range raw.Stocks {
-		symbol := strings.TrimSpace(s.Symbol)
-		if symbol == "" {
-			symbol = strings.TrimSpace(s.ProductCode)
-		}
+		symbol := wtsSymbol(s)
 		if symbol == "" {
 			continue
 		}
@@ -237,10 +319,50 @@ func (w *wtsPopular) Read(ctx context.Context, market string) (candidate.Reading
 		// fields empty is the whole point: empty means the source did not report
 		// it, and section 3 computes rates per source precisely so that a silent
 		// zero from here cannot dilute a real figure from the official ranking.
-		rows = append(rows, candidate.Row{Symbol: symbol, Rank: s.Rank, RankTotal: total})
+		//
+		// The two facts about the reading itself are not in that category. They are
+		// things this adapter knows and nothing downstream can recover: how many rows
+		// it asked for, and what the list looked like last time.
+		rows = append(rows, candidate.Row{
+			Symbol: symbol, Rank: s.Rank, RankTotal: total,
+			RankRequested: w.size,
+			NewlyListed:   newlyListed(previous, hadPrevious, symbol),
+		})
 	}
 	// WTS sends no rate headers, so the budget is unreported — not zero.
 	return candidate.Reading{Rows: rows}, nil
+}
+
+// wtsSymbol is the identity this source reports a row under.
+//
+// It is a function rather than two lines inside the loop because the previous
+// reading's set has to be keyed by the same string the rows are keyed by. A set
+// built from `s.Symbol` while the rows fall back to `s.ProductCode` would report
+// every fallback row as a new entrant on every single reading.
+func wtsSymbol(s domain.RankedStock) string {
+	if symbol := strings.TrimSpace(s.Symbol); symbol != "" {
+		return symbol
+	}
+	return strings.TrimSpace(s.ProductCode)
+}
+
+// rememberRead is officialRanking.rememberRead for this source's row type.
+func (w *wtsPopular) rememberRead(market string, stocks []domain.RankedStock) (map[string]bool, bool) {
+	key := strings.ToUpper(strings.TrimSpace(market))
+	current := make(map[string]bool, len(stocks))
+	for _, s := range stocks {
+		if symbol := wtsSymbol(s); symbol != "" {
+			current[symbol] = true
+		}
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.seen == nil {
+		w.seen = map[string]map[string]bool{}
+	}
+	previous, had := w.seen[key]
+	w.seen[key] = current
+	return previous, had
 }
 
 // Panel builds the source list for one market.

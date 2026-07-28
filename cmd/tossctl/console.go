@@ -891,13 +891,12 @@ func consoleSignalsMarket(ctx context.Context, store *candidate.Store, market st
 	verdicts, err := candidate.Assess(ctx, store, candidate.AssessOptions{
 		Market: market,
 		At:     at,
-		// The one approved threshold in the repository. seen_late and extended have
-		// none (D18), so their vetoes come back THRESHOLD_ABSENT — unmeasured, and
-		// never a pass. Supplying an invented number here is the thing D6 forbids
-		// and the thing the screen would then render as a measurement.
-		Thresholds: candidate.VetoThresholds{
-			NearHighDistancePct: candidate.DefaultNearHighThresholdPct,
-		},
+		// The same thresholds `tossctl candidate scan` applies, from the same
+		// function. This used to be its own literal, and a literal on each side of
+		// the seam is how the two surfaces come to disagree about the same store at
+		// the same instant — each one internally consistent, neither one failing.
+		// See vetothresholds.go.
+		Thresholds: candidateVetoThresholds(),
 	})
 	if err != nil {
 		out.Why = err.Error()

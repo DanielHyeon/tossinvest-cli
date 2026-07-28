@@ -353,8 +353,8 @@ type RankMove struct {
 	Reason NotComputed
 	// NewlyListed is the source's own report that this symbol was absent from its
 	// previous reading. It is recorded here and never converted into a previous
-	// rank — see RankChange.
-	NewlyListed bool
+	// rank — see RankChange. Three-state: a source's first reading has no answer.
+	NewlyListed NewlyListed
 }
 
 // Computed reports that this move has a gain. Like Acceleration.Computed it
@@ -794,10 +794,15 @@ func TallyCrossings(in []Acceleration) CrossingTally {
 //
 // # Normalised, because the lists are different lengths
 //
-// The KR panel returns 150 rows and the US panel 100 (D8), so "up thirty places"
-// is two different distances. The move is therefore in percentile points, each
-// reading normalised by its own RankTotal, which also survives a source returning
-// a shorter list than it did last time.
+// The two ranking lists this system reads are different lengths — the official
+// ranking serves up to 100 rows in both markets and the WTS popularity list 30 (D8)
+// — so "up thirty places" is two different distances. The move is therefore in
+// percentile points, each reading normalised by its own RankTotal, which also
+// survives a source returning a shorter list than it did last time.
+//
+// Corrected 2026-07-28: this said "the KR panel returns 150 rows and the US panel
+// 100". No panel has ever returned 150 rows, in either market. The normalisation is
+// needed and the sentence explaining why it was needed was fiction.
 //
 // # newly_listed is a fact, not a previous rank
 //
@@ -887,8 +892,8 @@ func RankChange(s SourceSeries, at time.Time, window time.Duration) RankMove {
 }
 
 // percentile is a reading's position as a share of its own list, 0 at the bottom
-// and just under 100 at the top. Dividing by RankTotal is what makes a 150-row
-// list and a 100-row one comparable.
+// and just under 100 at the top. Dividing by RankTotal is what makes a 30-row WTS
+// popularity list and a 100-row official ranking comparable.
 func percentile(o Observation) *big.Rat {
 	total := big.NewRat(int64(o.Reported.RankTotal), 1)
 	behind := big.NewRat(int64(o.Reported.RankTotal-o.Reported.Rank), 1)

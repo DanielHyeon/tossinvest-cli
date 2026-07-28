@@ -341,29 +341,21 @@ func candidateWiring(ctx context.Context, root *rootOptions, market string) (
 
 // candidateCycleOptions assembles one turn's configuration.
 //
-// The veto thresholds are worth reading twice. Only near_high has a contract value
-// (design.md 결정된 계약값, `near_high_threshold_pct: 2.0`); the other two are left
-// empty on purpose, so their vetoes report THRESHOLD_ABSENT rather than a number
-// this command invented. D18: 근거 없는 임계는 veto가 되지 못한다.
-//
-// The empty strings are also why nothing here renders a knob with
-// strconv.FormatFloat. An absent YAML key formatted that way arrives as "0", and a
-// threshold of zero parses — near_high's comparison is `distance < threshold`, which
-// is false for every candidate below its high, so the only live veto in the system
-// would report itself measured and clear for the whole list. The store refuses a
-// non-positive threshold (THRESHOLD_NOT_POSITIVE) and this side does not manufacture
-// one.
+// The thresholds come from candidateVetoThresholds rather than from a literal here.
+// There used to be a literal here and another in the /signals seam, and nothing held
+// them together: editing one is the ordinary way to change a threshold, and the
+// result is two screens answering differently about the same store at the same
+// instant with nothing failing. vetothresholds.go carries the argument and the
+// values.
 func candidateCycleOptions(root *rootOptions, market string, sources []candidate.Source,
 	sched *candidate.Schedule, backoff *candidate.Backoff) candidate.CycleOptions {
 
 	return candidate.CycleOptions{
-		Market:   market,
-		Sources:  sources,
-		Schedule: sched,
-		Backoff:  backoff,
-		Thresholds: candidate.VetoThresholds{
-			NearHighDistancePct: candidate.DefaultNearHighThresholdPct,
-		},
+		Market:        market,
+		Sources:       sources,
+		Schedule:      sched,
+		Backoff:       backoff,
+		Thresholds:    candidateVetoThresholds(),
 		EngineRunning: candidateEngineProbe(root),
 	}
 }
@@ -550,9 +542,13 @@ type candidateReport struct {
 	} `json:"recorded"`
 
 	Veto struct {
-		Total       int            `json:"total"`
-		Passed      int            `json:"passed"`
-		PassedNote  string         `json:"passed_note,omitempty"`
+		Total      int    `json:"total"`
+		Passed     int    `json:"passed"`
+		PassedNote string `json:"passed_note,omitempty"`
+		// Alarms is the tally's own arithmetic, failed. It is a list rather than a
+		// boolean because each entry carries the numbers that produced it, and a
+		// consumer told only that something is inconsistent has nothing to check.
+		Alarms      []string       `json:"alarms,omitempty"`
 		Vetoed      int            `json:"vetoed"`
 		Unmeasured  int            `json:"unmeasured"`
 		Raised      map[string]int `json:"raised"`
@@ -630,6 +626,37 @@ const passedUnexpected = "not 0: either seen_late and extended have had threshol
 
 const shadowNote = "records and decides nothing; this is what a threshold will be derived from"
 
+// tallyAlarm is one arithmetic contradiction as this surface words it.
+//
+// The judgement is candidate.VetoTally.Anomalies and it is not repeated here — the
+// two screens must not be able to disagree about whether the numbers add up. What
+// is here is the sentence, because who is reading differs: this one is read in a
+// terminal beside the counts it is about, and it names the one repair D18 forbids
+// because that is the repair that produces this state without anybody approving a
+// threshold.
+func tallyAlarm(a candidate.TallyAnomaly) string {
+	switch a.Kind {
+	case candidate.TallyPassedWithoutThreshold:
+		return "ALARM " + a.Arithmetic() +
+			". A veto with no threshold cannot be clear, so a pass counted beside one is " +
+			"THRESHOLD_ABSENT being read as a pass — the single repair D18 forbids"
+	default:
+		return "ALARM " + a.Arithmetic() +
+			". The three buckets are disjoint by construction, so a sum above the total " +
+			"means a candidate was counted as passing while one of its vetoes was not " +
+			"measured. Unmeasured is not a pass (D10)"
+	}
+}
+
+// candidateTallyAlarms renders every anomaly in a tally.
+func candidateTallyAlarms(t candidate.VetoTally) []string {
+	var out []string
+	for _, a := range t.Anomalies() {
+		out = append(out, tallyAlarm(a))
+	}
+	return out
+}
+
 func buildCandidateReport(res candidate.CycleResult) candidateReport {
 	var r candidateReport
 	r.Market, r.At = res.Market, res.At.UTC().Format(time.RFC3339)
@@ -677,6 +704,10 @@ func buildCandidateReport(res candidate.CycleResult) candidateReport {
 	if res.Vetoes.Passed != 0 {
 		r.Veto.PassedNote = passedUnexpected
 	}
+	// Beside the note, not instead of it. The note is about a count that is
+	// structurally zero while no threshold is approved; this is about the tally
+	// contradicting itself, which is true or false whatever the thresholds are.
+	r.Veto.Alarms = candidateTallyAlarms(res.Vetoes)
 	r.Veto.Raised = map[string]int{}
 	r.Veto.NotMeasured = map[string]int{}
 	for code, n := range res.Vetoes.Raised {
@@ -820,6 +851,9 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 	}
 	for _, line := range sortedCounts(report.Veto.Reasons) {
 		fmt.Fprintf(w, "  reason       %s\n", line)
+	}
+	for _, line := range report.Veto.Alarms {
+		fmt.Fprintf(w, "  %s\n", line)
 	}
 
 	fmt.Fprintf(w, "\nshadow crossings — acceleration (%s)\n", shadowNote)

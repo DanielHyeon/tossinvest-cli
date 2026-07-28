@@ -18,9 +18,22 @@ import (
 
 // pricedRow is a ranking row that carries a price, which is what a scan needs in
 // order to have anything to record as a baseline.
+//
+// Corrected 2026-07-28: it now also carries the two facts a ranking source knows
+// about its own reading — that the source held a previous reading and this symbol
+// was in it, and that it asked for exactly as many rows as arrived. A real source
+// reports both, and a row without them is a row whose position cannot answer
+// seen_late at all. Leaving them at their zero values here would have made every
+// scan-level test in this package exercise only the refusal, which is the half that
+// is easy to get right.
+//
+// The other states are built explicitly where they are the subject — see
+// firstsighting_source_test.go and truncation_test.go — so that "unknown" is
+// never something a fixture arrives at by omission.
 func pricedRow(symbol string, rank, total int, price string) Row {
 	return Row{
-		Symbol: symbol, Rank: rank, RankTotal: total,
+		Symbol: symbol, Rank: rank, RankTotal: total, RankRequested: total,
+		NewlyListed:  NewlyListedNo(),
 		TradingValue: "1000000", TradingVolume: "500", Price: price,
 	}
 }

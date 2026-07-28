@@ -26,7 +26,7 @@ package candidate
 //
 // # Retention is two layers and only one of them is prunable (D11)
 //
-// KR at 15s is roughly 5,760 scans a day; five sources at 100-150 rows each puts
+// KR at 15s is roughly 5,760 scans a day; five sources at 30-100 rows each puts
 // the raw table in the millions of rows per day, tens of millions per month. That
 // does not fit a local SQLite queried every 15 seconds, so raw rows are prunable.
 //
@@ -101,7 +101,14 @@ var ErrSchemaTooNew = errors.New("candidate: store schema is newer than this bui
 //	2  candidates.first_price / first_price_at / first_price_source (D17)
 //	3  candidates.first_rank / first_rank_total / first_rank_at /
 //	   first_rank_source (D17's other half, D20)
-const SchemaVersion = 3
+//	4  observations.newly_listed_state / observations.rank_requested and
+//	   candidates.first_rank_newly_listed / first_rank_requested — the two facts
+//	   a source knows about its own reading, three-state and nullable
+//
+// Every rung is additive and nullable: nothing is dropped and nothing is renamed,
+// so an older binary opening a newer file reads columns it does not select and the
+// rows it does read are unchanged.
+const SchemaVersion = 4
 
 const schema = `
 -- Raw observations. One row per (source, symbol, instant). Prunable (D11).
@@ -118,7 +125,28 @@ CREATE TABLE IF NOT EXISTS observations (
 	observed_at    TEXT    NOT NULL,
 	rank           INTEGER NOT NULL DEFAULT 0,
 	rank_total     INTEGER NOT NULL DEFAULT 0,
+	-- newly_listed is the schema-1 boolean and it is kept, written and never read
+	-- back. Forward-only means the column is not dropped and not renamed, so a
+	-- binary from before schema 4 opening this file still finds the shape it
+	-- expects; 1 there means the same thing it always meant, and 0 means what it
+	-- always meant to that binary — "not flagged" — which is exactly as much as it
+	-- was ever able to say.
 	newly_listed   INTEGER NOT NULL DEFAULT 0,
+	-- The three-state fact this build reads. NULL is unknown, and every row
+	-- written before schema 4 has NULL because nobody measured this then. That is
+	-- not a fallback, it is what happened.
+	--
+	-- The CHECKs on the two schema-4 columns are spelled per column rather than at
+	-- the table, so the ALTER TABLE steps in the ladder can carry the identical
+	-- text and a migrated store ends up with the same constraints as a fresh one —
+	-- the rule the candidates table's first_rank columns already follow.
+	newly_listed_state TEXT
+		CHECK (newly_listed_state IS NULL OR newly_listed_state IN ('yes','no')),
+	-- How many rows the source asked for. NULL is unknown for the same reason.
+	-- A positive value beside rank_total is what separates a short list from a
+	-- truncated reading of a long one.
+	rank_requested INTEGER
+		CHECK (rank_requested IS NULL OR rank_requested > 0),
 	trading_value  TEXT,
 	trading_volume TEXT,
 	price          TEXT,
@@ -178,8 +206,8 @@ CREATE TABLE IF NOT EXISTS candidates (
 	-- separates observation from promotion on purpose, so ranked rows keep
 	-- arriving for a symbol that is cooling, expired, or was never promoted: a row
 	-- from the gap between two lives lands inside the ±TTL identity window and
-	-- becomes the new life's "first sighting". A symbol promoted 4th of 150 then
-	-- read as one we caught at 148th and seen_late cleared.
+	-- becomes the new life's "first sighting". A symbol promoted 4th of 100 then
+	-- read as one we caught at 98th and seen_late cleared.
 	--
 	-- NULL means no ranked observation has been recorded for this life yet. It is
 	-- not rank 0 — a rank of 0 is not a position, and the CHECK below refuses one
@@ -192,6 +220,26 @@ CREATE TABLE IF NOT EXISTS candidates (
 	first_rank_total   INTEGER CHECK (first_rank_total IS NULL OR first_rank_total > 0),
 	first_rank_at      TEXT,
 	first_rank_source  TEXT,
+	-- The two facts the source knew about the reading the position came from, on
+	-- first_rank's lifecycle and for first_rank_at's reason.
+	--
+	-- They are here rather than looked up in the observations table at read time,
+	-- and that is not an optimisation. Assess loads readings from the last
+	-- DefaultAssessHistory — ten minutes — so the row a first sighting came from is
+	-- outside the slice for every candidate older than that, which is every
+	-- candidate the seen_late question is actually about. A fact read from the
+	-- slice would therefore be unknown for the whole list, all day, and the refusal
+	-- built on it (design D3) would make seen_late structurally unmeasurable rather
+	-- than honestly measured. That is D20's collapse in a new spelling, and the
+	-- repair is the one D17 and D20 already chose twice: a fact that has to outlive
+	-- the prunable table becomes a column beside the value it qualifies.
+	--
+	-- NULL is unknown in both. A candidate whose first rank was stored before
+	-- schema 4 has no answer here, which is exactly true.
+	first_rank_newly_listed TEXT
+		CHECK (first_rank_newly_listed IS NULL OR first_rank_newly_listed IN ('yes','no')),
+	first_rank_requested    INTEGER
+		CHECK (first_rank_requested IS NULL OR first_rank_requested > 0),
 
 	PRIMARY KEY (market, symbol),
 	CHECK (degraded IN (0,1))
@@ -478,6 +526,31 @@ var migrations = map[int][]string{
 		                      - CAST(strftime('%s', substr(candidates.first_seen_at, 1, 19)) AS INTEGER) < 600
 		                  ORDER BY o.observed_at, o.id LIMIT 1)`,
 	},
+	3: {
+		// The two facts a source knows about its own reading, three-state and
+		// nullable. Additive only: the schema-1 `newly_listed` boolean stays where
+		// it is, still written and still readable by an older build.
+		`ALTER TABLE observations ADD COLUMN newly_listed_state TEXT
+		   CHECK (newly_listed_state IS NULL OR newly_listed_state IN ('yes','no'))`,
+		`ALTER TABLE observations ADD COLUMN rank_requested INTEGER
+		   CHECK (rank_requested IS NULL OR rank_requested > 0)`,
+		`ALTER TABLE candidates ADD COLUMN first_rank_newly_listed TEXT
+		   CHECK (first_rank_newly_listed IS NULL OR first_rank_newly_listed IN ('yes','no'))`,
+		`ALTER TABLE candidates ADD COLUMN first_rank_requested INTEGER
+		   CHECK (first_rank_requested IS NULL OR first_rank_requested > 0)`,
+		// And no backfill, where both rungs above have one.
+		//
+		// There is nothing honest to backfill from. The schema-1 `newly_listed`
+		// column is 0 in every row ever written, because no production source
+		// assigned the field it came from — that is the defect this rung exists for
+		// — so copying it would turn "nobody measured this" into "the source said
+		// it was already listed" for the entire stored history in one statement,
+		// and every one of those positions would then be a position seen_late is
+		// allowed to measure from. The requested row count was never stored at all,
+		// so there is not even a wrong number to copy.
+		//
+		// Existing rows are unknown. That is not a fallback; it is what happened.
+	},
 }
 
 func (s *Store) migrate(ctx context.Context) error {
@@ -627,8 +700,9 @@ func (s *Store) RecordObservations(ctx context.Context, in []Observation) error 
 	stmt, err := tx.PrepareContext(ctx, `
 		INSERT INTO observations
 		  (market, symbol, source, observed_at, rank, rank_total, newly_listed,
+		   newly_listed_state, rank_requested,
 		   trading_value, trading_volume, price, day_high, day_low, via_fallback)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
 	if err != nil {
 		return fmt.Errorf("candidate: preparing the observation insert: %w", err)
 	}
@@ -644,7 +718,13 @@ func (s *Store) RecordObservations(ctx context.Context, in []Observation) error 
 		}
 		_, err = stmt.ExecContext(ctx,
 			o.Market, o.Symbol, string(id), stamp(o.ObservedAt),
-			o.Reported.Rank, o.Reported.RankTotal, boolToInt(o.Reported.NewlyListed),
+			o.Reported.Rank, o.Reported.RankTotal,
+			// The schema-1 boolean keeps its old meaning for an older build: 1 when
+			// the source said the symbol was new, 0 otherwise. It is never read back
+			// by this build — newly_listed_state is — because 0 there cannot say
+			// whether it means "no" or "nobody looked".
+			boolToInt(o.Reported.NewlyListed.Yes()),
+			newlyListedToStore(o.Reported.NewlyListed), positive(o.Reported.RankRequested),
 			nullable(o.Reported.TradingValue), nullable(o.Reported.TradingVolume),
 			nullable(o.Reported.Price), nullable(o.Reported.DayHigh), nullable(o.Reported.DayLow),
 			boolToInt(o.ViaFallback))
@@ -667,7 +747,8 @@ func (s *Store) Observations(ctx context.Context, market, symbol string, since t
 	symbol = strings.TrimSpace(symbol)
 
 	query := `
-		SELECT market, symbol, source, observed_at, rank, rank_total, newly_listed,
+		SELECT market, symbol, source, observed_at, rank, rank_total,
+		       newly_listed_state, rank_requested,
 		       trading_value, trading_volume, price, day_high, day_low, via_fallback
 		  FROM observations
 		 WHERE market = ? AND symbol = ?`
@@ -725,7 +806,8 @@ func (s *Store) SourceObservations(ctx context.Context, market, symbol string,
 	}
 
 	query := `
-		SELECT market, symbol, source, observed_at, rank, rank_total, newly_listed,
+		SELECT market, symbol, source, observed_at, rank, rank_total,
+		       newly_listed_state, rank_requested,
 		       trading_value, trading_volume, price, day_high, day_low, via_fallback
 		  FROM observations
 		 WHERE market = ? AND symbol = ? AND source = ?`
@@ -795,7 +877,8 @@ func (s *Store) SourceSeries(ctx context.Context, market, symbol string,
 func (s *Store) ObservationsSince(ctx context.Context, market string, since time.Time) ([]Observation, error) {
 	market = strings.ToUpper(strings.TrimSpace(market))
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT market, symbol, source, observed_at, rank, rank_total, newly_listed,
+		SELECT market, symbol, source, observed_at, rank, rank_total,
+		       newly_listed_state, rank_requested,
 		       trading_value, trading_volume, price, day_high, day_low, via_fallback
 		  FROM observations
 		 WHERE market = ? AND observed_at >= ?
@@ -999,9 +1082,19 @@ func (s *Store) Promote(ctx context.Context, market, symbol string, at time.Time
 		  first_rank         = CASE WHEN ? THEN NULL ELSE candidates.first_rank         END,
 		  first_rank_total   = CASE WHEN ? THEN NULL ELSE candidates.first_rank_total   END,
 		  first_rank_at      = CASE WHEN ? THEN NULL ELSE candidates.first_rank_at      END,
-		  first_rank_source  = CASE WHEN ? THEN NULL ELSE candidates.first_rank_source  END`,
+		  first_rank_source  = CASE WHEN ? THEN NULL ELSE candidates.first_rank_source  END,
+		  -- And the two facts about the reading that position came from, on the same
+		  -- clause. A qualifier left behind by an expiry would describe a reading the
+		  -- new life's rank did not come from, and the direction is the dangerous one:
+		  -- a stale "the source had a previous reading" is what lets a first rank
+		  -- nobody could qualify be measured from anyway.
+		  first_rank_newly_listed =
+		    CASE WHEN ? THEN NULL ELSE candidates.first_rank_newly_listed END,
+		  first_rank_requested    =
+		    CASE WHEN ? THEN NULL ELSE candidates.first_rank_requested    END`,
 		market, symbol, stamp(firstSeen), stamp(at),
-		reset, reset, reset, reset, reset, reset, reset, reset, reset, reset, reset)
+		reset, reset, reset, reset, reset, reset, reset, reset, reset, reset, reset,
+		reset, reset)
 	if err != nil {
 		return Candidate{}, fmt.Errorf("candidate: promoting %s:%s: %w", market, symbol, err)
 	}
@@ -1274,8 +1367,8 @@ func (s *Store) Baseline(ctx context.Context, market, symbol string) (Baseline, 
 // that is cooling, expired or was never promoted. Any of those rows can land inside
 // the ±TTL window that decides which reading is a life's first sighting, and the
 // error has a direction: a symbol that drifted to the bottom of the list before it
-// crossed again is measured from there, so a candidate promoted 4th of 150 reads as
-// one we caught at 148th and seen_late clears.
+// crossed again is measured from there, so a candidate promoted 4th of 100 reads as
+// one we caught at 98th and seen_late clears.
 //
 // The instant travels with the value for the reason D17 gives about first_price_at:
 // a reader with only the number cannot tell whether it is this life's first
@@ -1290,7 +1383,23 @@ type FirstRank struct {
 	// At is when that reading was observed, and Source is who reported it.
 	At     time.Time
 	Source SourceID
+	// NewlyListed and Requested are what the source knew about that reading:
+	// whether the symbol was in its previous reading of the same list, and how many
+	// rows it had asked for. Both are stored beside the position rather than looked
+	// up later, because the row they came from lives in the prunable observations
+	// table and Assess only loads the last DefaultAssessHistory of it — see the
+	// schema comment on first_rank_newly_listed.
+	//
+	// NewlyListed is three-state with unknown as its zero value; Requested is 0 when
+	// nothing was recorded. A first rank stored before schema 4 carries neither, and
+	// that is exactly true of it.
+	NewlyListed NewlyListed
+	Requested   int
 }
+
+// Truncation is what the stored requested count says about the reading the position
+// came from. Unknown when no count was recorded.
+func (f FirstRank) Truncation() Truncation { return truncationOf(f.Requested, f.Total) }
 
 // Recorded reports that a first rank exists. Both halves are required: a rank
 // without its list length cannot be normalised, and rank/0 is +Inf, which clears
@@ -1316,11 +1425,22 @@ func (f FirstRank) Recorded() bool { return f.Rank > 0 && f.Total > 0 }
 // override, because nearFirstSighting — the read-time backstop — is written against
 // the constant. A store-local value would let the two disagree, and the direction
 // they would disagree in is a rank this side stored and that side refuses.
+//
+// # It takes the whole reading rather than a position
+//
+// The position on its own cannot be judged. Whether it can answer seen_late depends
+// on two things only the source knew at the moment it read — whether it held a
+// previous reading of the list, and how many rows it had asked for — and those facts
+// have to be written in the same statement as the position or they are not facts
+// about the same reading. A separate setter would leave a window in which a stored
+// rank has no idea where it came from, and the honest reading of that window is the
+// one this change was written to remove.
 func (s *Store) NoteFirstRank(ctx context.Context, market, symbol string,
-	rank, total int, at time.Time, source SourceID) (FirstRank, error) {
+	first FirstRank) (FirstRank, error) {
 
 	market = strings.ToUpper(strings.TrimSpace(market))
 	symbol = strings.TrimSpace(symbol)
+	rank, total, at := first.Rank, first.Total, first.At
 	switch {
 	case rank <= 0 || total <= 0:
 		return FirstRank{}, fmt.Errorf(
@@ -1334,8 +1454,12 @@ func (s *Store) NoteFirstRank(ctx context.Context, market, symbol string,
 		return FirstRank{}, fmt.Errorf(
 			"candidate: NoteFirstRank of %s:%s has no instant; a first sighting whose lateness "+
 				"cannot be judged is not one", market, symbol)
+	case first.Requested < 0:
+		return FirstRank{}, fmt.Errorf(
+			"candidate: NoteFirstRank of %s:%s asked for %d rows; absent is 0, not a negative",
+			market, symbol, first.Requested)
 	}
-	id, err := normaliseSource(source)
+	id, err := normaliseSource(first.Source)
 	if err != nil {
 		return FirstRank{}, fmt.Errorf("candidate: NoteFirstRank of %s:%s: %w", market, symbol, err)
 	}
@@ -1348,16 +1472,20 @@ func (s *Store) NoteFirstRank(ctx context.Context, market, symbol string,
 	defer func() { _ = tx.Rollback() }()
 
 	var (
-		firstSeen  string
-		storedRank sql.NullInt64
-		storedTot  sql.NullInt64
-		storedAt   sql.NullString
-		storedBy   sql.NullString
+		firstSeen   string
+		storedRank  sql.NullInt64
+		storedTot   sql.NullInt64
+		storedAt    sql.NullString
+		storedBy    sql.NullString
+		storedNewly sql.NullString
+		storedReq   sql.NullInt64
 	)
 	row := tx.QueryRowContext(ctx,
-		`SELECT first_seen_at, first_rank, first_rank_total, first_rank_at, first_rank_source
+		`SELECT first_seen_at, first_rank, first_rank_total, first_rank_at, first_rank_source,
+		        first_rank_newly_listed, first_rank_requested
 		   FROM candidates WHERE market = ? AND symbol = ?`, market, symbol)
-	switch err := row.Scan(&firstSeen, &storedRank, &storedTot, &storedAt, &storedBy); {
+	switch err := row.Scan(&firstSeen, &storedRank, &storedTot, &storedAt, &storedBy,
+		&storedNewly, &storedReq); {
 	case errors.Is(err, sql.ErrNoRows):
 		return FirstRank{}, fmt.Errorf("%w: %s:%s has no candidate to record a first rank against",
 			ErrNoCandidate, market, symbol)
@@ -1366,7 +1494,8 @@ func (s *Store) NoteFirstRank(ctx context.Context, market, symbol string,
 			market, symbol, err)
 	}
 	if storedRank.Valid && storedRank.Int64 > 0 {
-		return decodeFirstRank(storedRank, storedTot, storedAt, storedBy, market, symbol)
+		return decodeFirstRank(storedRank, storedTot, storedAt, storedBy,
+			storedNewly, storedReq, market, symbol)
 	}
 	seen, err := parseStamp(firstSeen)
 	if err != nil {
@@ -1385,9 +1514,12 @@ func (s *Store) NoteFirstRank(ctx context.Context, market, symbol string,
 	// the first sighting with a later reading's position.
 	_, err = tx.ExecContext(ctx, `
 		UPDATE candidates
-		   SET first_rank = ?, first_rank_total = ?, first_rank_at = ?, first_rank_source = ?
+		   SET first_rank = ?, first_rank_total = ?, first_rank_at = ?, first_rank_source = ?,
+		       first_rank_newly_listed = ?, first_rank_requested = ?
 		 WHERE market = ? AND symbol = ? AND first_rank IS NULL`,
-		rank, total, stamp(at), string(id), market, symbol)
+		rank, total, stamp(at), string(id),
+		newlyListedToStore(first.NewlyListed), positive(first.Requested),
+		market, symbol)
 	if err != nil {
 		return FirstRank{}, fmt.Errorf("candidate: recording the first rank of %s:%s: %w",
 			market, symbol, err)
@@ -1396,7 +1528,10 @@ func (s *Store) NoteFirstRank(ctx context.Context, market, symbol string,
 		return FirstRank{}, fmt.Errorf("candidate: committing the first rank of %s:%s: %w",
 			market, symbol, err)
 	}
-	return FirstRank{Rank: rank, Total: total, At: at, Source: id}, nil
+	return FirstRank{
+		Rank: rank, Total: total, At: at, Source: id,
+		NewlyListed: first.NewlyListed, Requested: first.Requested,
+	}, nil
 }
 
 // FirstRank returns a candidate's stored first sighting position.
@@ -1408,30 +1543,37 @@ func (s *Store) FirstRank(ctx context.Context, market, symbol string) (FirstRank
 	symbol = strings.TrimSpace(symbol)
 
 	var (
-		rank, total sql.NullInt64
-		at, source  sql.NullString
+		rank, total, requested sql.NullInt64
+		at, source, newly      sql.NullString
 	)
 	row := s.db.QueryRowContext(ctx,
-		`SELECT first_rank, first_rank_total, first_rank_at, first_rank_source FROM candidates
+		`SELECT first_rank, first_rank_total, first_rank_at, first_rank_source,
+		        first_rank_newly_listed, first_rank_requested FROM candidates
 		  WHERE market = ? AND symbol = ?`, market, symbol)
-	switch err := row.Scan(&rank, &total, &at, &source); {
+	switch err := row.Scan(&rank, &total, &at, &source, &newly, &requested); {
 	case errors.Is(err, sql.ErrNoRows):
 		return FirstRank{}, false, nil
 	case err != nil:
 		return FirstRank{}, false, fmt.Errorf("candidate: reading the first rank of %s:%s: %w",
 			market, symbol, err)
 	}
-	f, err := decodeFirstRank(rank, total, at, source, market, symbol)
+	f, err := decodeFirstRank(rank, total, at, source, newly, requested, market, symbol)
 	return f, true, err
 }
 
-func decodeFirstRank(rank, total sql.NullInt64, at, source sql.NullString,
-	market, symbol string) (FirstRank, error) {
+func decodeFirstRank(rank, total sql.NullInt64, at, source, newly sql.NullString,
+	requested sql.NullInt64, market, symbol string) (FirstRank, error) {
 
 	if !rank.Valid || !total.Valid || rank.Int64 <= 0 || total.Int64 <= 0 {
 		return FirstRank{}, nil
 	}
-	f := FirstRank{Rank: int(rank.Int64), Total: int(total.Int64), Source: SourceID(source.String)}
+	f := FirstRank{
+		Rank: int(rank.Int64), Total: int(total.Int64), Source: SourceID(source.String),
+		NewlyListed: newlyListedFromStore(newly.String, newly.Valid),
+	}
+	if requested.Valid && requested.Int64 > 0 {
+		f.Requested = int(requested.Int64)
+	}
 	if at.Valid {
 		parsed, err := parseStamp(at.String)
 		if err != nil {
@@ -1523,7 +1665,8 @@ func (s *Store) Summaries(ctx context.Context, at time.Time) ([]Summary, error) 
 		SELECT market, symbol, first_seen_at, last_seen_at, cooled_at,
 		       sources, sources_attempted, sources_responded, degraded,
 		       first_price, first_price_at, first_price_source,
-		       first_rank, first_rank_total, first_rank_at, first_rank_source
+		       first_rank, first_rank_total, first_rank_at, first_rank_source,
+		       first_rank_newly_listed, first_rank_requested
 		  FROM candidates
 		 ORDER BY market, symbol`)
 	if err != nil {
@@ -1541,14 +1684,16 @@ func (s *Store) Summaries(ctx context.Context, at time.Time) ([]Summary, error) 
 			degraded                int
 			price, priceAt, priceBy sql.NullString
 			rank, rankTotal         sql.NullInt64
-			rankAt, rankBy          sql.NullString
+			rankReq                 sql.NullInt64
+			rankAt, rankBy, rankNew sql.NullString
 			baseline                Baseline
 			firstRank               FirstRank
 			parseErr                error
 		)
 		err := rows.Scan(&c.Market, &c.Symbol, &first, &last, &cooled,
 			&sources, &c.SourcesAttempted, &c.SourcesResponded, &degraded,
-			&price, &priceAt, &priceBy, &rank, &rankTotal, &rankAt, &rankBy)
+			&price, &priceAt, &priceBy, &rank, &rankTotal, &rankAt, &rankBy,
+			&rankNew, &rankReq)
 		if err != nil {
 			return nil, fmt.Errorf("candidate: scanning a candidate summary: %w", err)
 		}
@@ -1574,7 +1719,7 @@ func (s *Store) Summaries(ctx context.Context, at time.Time) ([]Summary, error) 
 			return nil, parseErr
 		}
 		if firstRank, parseErr = decodeFirstRank(rank, rankTotal, rankAt, rankBy,
-			c.Market, c.Symbol); parseErr != nil {
+			rankNew, rankReq, c.Market, c.Symbol); parseErr != nil {
 			return nil, parseErr
 		}
 		out = append(out, Summary{Candidate: c, Baseline: baseline, FirstRank: firstRank})
@@ -1743,13 +1888,15 @@ func scanObservation(row rowScanner) (Observation, error) {
 	var (
 		o                    Observation
 		observed             string
-		newly, fallback      int
+		fallback             int
+		newly                sql.NullString
+		requested            sql.NullInt64
 		value, volume, price sql.NullString
 		dayHigh, dayLow      sql.NullString
 		source               string
 	)
 	err := row.Scan(&o.Market, &o.Symbol, &source, &observed,
-		&o.Reported.Rank, &o.Reported.RankTotal, &newly,
+		&o.Reported.Rank, &o.Reported.RankTotal, &newly, &requested,
 		&value, &volume, &price, &dayHigh, &dayLow, &fallback)
 	if err != nil {
 		return Observation{}, fmt.Errorf("candidate: scanning an observation: %w", err)
@@ -1759,7 +1906,13 @@ func scanObservation(row rowScanner) (Observation, error) {
 			o.Market, o.Symbol, err)
 	}
 	o.Source = SourceID(source)
-	o.Reported.NewlyListed = newly == 1
+	// The schema-1 boolean is deliberately not consulted. It is 0 in every row ever
+	// written and 0 there cannot say whether it means "no" or "nobody looked", so
+	// reading it would reintroduce the fold this change exists to undo.
+	o.Reported.NewlyListed = newlyListedFromStore(newly.String, newly.Valid)
+	if requested.Valid && requested.Int64 > 0 {
+		o.Reported.RankRequested = int(requested.Int64)
+	}
 	o.ViaFallback = fallback == 1
 	o.Reported.TradingValue = value.String
 	o.Reported.TradingVolume = volume.String
@@ -1819,6 +1972,20 @@ func nullable(s string) any {
 		return nil
 	}
 	return trimmed
+}
+
+// positive is nullable for a count: a non-positive value is absent rather than a
+// number, so it becomes SQL NULL and reads back as unmeasured.
+//
+// It exists because the requested row count is the one integer in this store where
+// 0 is not a smaller quantity. "Asked for no rows" is not a reading anything could
+// produce, and storing 0 would make truncationOf compare a real arrival against it
+// and call every such reading short.
+func positive(n int) any {
+	if n <= 0 {
+		return nil
+	}
+	return n
 }
 
 // normaliseSource puts a source id into the one spelling the table stores.

@@ -892,11 +892,16 @@ func TestAScanReportsTheShadowRecordForEveryCodeThatHasOne(t *testing.T) {
 			t.Errorf("%s band: measured + not measured = %d, total = %d", code, sum, tally.Total)
 		}
 	}
-	// The seen_late band is measurable on the first scan: the first sighting is the
-	// reading that promoted the candidate, and section 5 now stores its position.
+	// The seen_late band is measurable here because the fixture source reports what
+	// a real one reports: it held a previous reading of this list and asked for as
+	// many rows as arrived. The stored position is necessary and it is not
+	// sufficient — a position from a source's very first reading is refused under
+	// NEW_ENTRANT_UNKNOWN, which is what stops a session start stamping the panel
+	// (design D3). That refusal has its own test; this one is about the bands.
 	if got := res.Bands[VetoSeenLate].Measured; got != 1 {
-		t.Errorf("seen_late band measured = %d, want 1 — the stored first rank is what makes "+
-			"it measurable, and this scan is what wrote it", got)
+		t.Errorf("seen_late band measured = %d, want 1 — the stored first rank and the "+
+			"source's own report of the reading are what make it measurable, and this scan "+
+			"is what wrote both", got)
 	}
 }
 

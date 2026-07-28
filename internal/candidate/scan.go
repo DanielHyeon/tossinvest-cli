@@ -329,7 +329,8 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 			o := Observation{
 				Market: market, Symbol: symbol, Source: id, ObservedAt: at,
 				Reported: Reported{
-					Rank: r.Rank, RankTotal: r.RankTotal, NewlyListed: r.NewlyListed,
+					Rank: r.Rank, RankTotal: r.RankTotal, RankRequested: r.RankRequested,
+					NewlyListed:  r.NewlyListed,
 					TradingValue: r.TradingValue, TradingVolume: r.TradingVolume,
 					Price: r.Price, DayHigh: r.DayHigh, DayLow: r.DayLow,
 				},
@@ -479,8 +480,16 @@ func recordFirsts(ctx context.Context, store *Store, market string, at time.Time
 		if !ok || !needRank[symbol] {
 			continue
 		}
-		stored, err := store.NoteFirstRank(ctx, market, symbol,
-			o.Reported.Rank, o.Reported.RankTotal, o.ObservedAt, o.Source)
+		// The whole reading, not just the position. What the source knew about it —
+		// whether it held a previous reading of that list, and how many rows it asked
+		// for — is stored in the same statement, because those two facts are what
+		// decide later whether the position can answer seen_late at all, and a fact
+		// written afterwards is a fact about a different moment.
+		stored, err := store.NoteFirstRank(ctx, market, symbol, FirstRank{
+			Rank: o.Reported.Rank, Total: o.Reported.RankTotal,
+			At: o.ObservedAt, Source: o.Source,
+			NewlyListed: o.Reported.NewlyListed, Requested: o.Reported.RankRequested,
+		})
 		switch {
 		case err != nil:
 			result.Rejected = append(result.Rejected, SymbolFailure{

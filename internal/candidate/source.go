@@ -73,11 +73,21 @@ type Row struct {
 	// Symbol identifies the instrument. Required.
 	Symbol string
 	// Rank is the 1-based position in the list that carried it, 0 when this
-	// source is not a ranking. RankTotal is that list's length.
+	// source is not a ranking. RankTotal is that list's length as it arrived.
 	Rank, RankTotal int
+	// RankRequested is how many rows the source asked its endpoint for, 0 when
+	// the source declares no size. It is stored beside RankTotal rather than
+	// compared here for D6's reason — the reading and anything derived from it are
+	// different columns — and because the comparison's answer is a fact the store
+	// has to keep: RankTotal alone cannot tell a three-row list from a hundred-row
+	// request that returned three.
+	RankRequested int
 	// NewlyListed reports that this symbol was absent from the previous reading
 	// of this list. Recorded as its own fact, never folded into a rank velocity.
-	NewlyListed bool
+	//
+	// Three-state: a source with no previous reading has no answer, and that is
+	// not the same as answering "it was not there". See newlylisted.go.
+	NewlyListed NewlyListed
 	// TradingValue and TradingVolume are the cumulative intraday figures.
 	TradingValue, TradingVolume string
 	// Price is the last traded price.

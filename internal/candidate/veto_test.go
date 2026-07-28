@@ -18,8 +18,22 @@ func rankedObs(at time.Time, source SourceID, rank, total int) Observation {
 // file supplies one, because a candidate without one is not measurable — the same
 // contract storedBaseline carries for the expansion, and pinned the same way in
 // TestASightingWithNoStoredRankIsNotMeasuredFromARow.
+//
+// Corrected 2026-07-28 for the two qualifiers the position now carries. Both are
+// spelled as the ordinary measured case — the source held a previous reading and
+// this symbol was in it, and the reading arrived whole — because that is the state
+// in which a first sighting means what these tests say it means. Leaving them at
+// their zero values would make every sighting in this file unmeasured, which would
+// have made the tests pass by measuring nothing.
+//
+// The other two states are exercised where they are the subject:
+// TestAPositionFromASourcesFirstReadingCannotAnswerSeenLate and
+// TestATruncatedReadingsPositionIsNotAPercentile build their own FirstRank.
 func storedFirstRank(rank, total int, at time.Time, source SourceID) FirstRank {
-	return FirstRank{Rank: rank, Total: total, At: at, Source: source}
+	return FirstRank{
+		Rank: rank, Total: total, At: at, Source: source,
+		NewlyListed: NewlyListedNo(), Requested: total,
+	}
 }
 
 // aCandidate is the summary the vetoes judge their inputs' lateness against.
@@ -493,9 +507,16 @@ func TestAnAssessmentWithNoInstantCannotJudgeAnInputsAge(t *testing.T) {
 
 // TestASymbolAlreadyHighInItsListWhenWeFirstSawItIsSeenLate.
 //
-// D8: 12위로 진입한 종목과 148위로 진입한 종목은 다른 사건이고, 전자가 많다면 우리 스캔이
-// 늦다는 뜻이다. The percentile is normalised by the list's own length because the
-// KR panel returns 150 rows and the US panel 100.
+// D8: 12위로 진입한 종목과 목록 하단으로 진입한 종목은 다른 사건이고, 전자가 많다면 우리
+// 스캔이 늦다는 뜻이다. The percentile is normalised by the list's own length because
+// the two lists this system reads are different lengths — the official ranking
+// serves up to 100 rows and the WTS popularity list 30.
+//
+// Corrected 2026-07-28: this comment said the KR panel returns 150 rows and quoted
+// D8's 148th-place example. No panel has ever returned 150 rows. The fixture below
+// keeps its synthetic 150-row list because what is under test is the arithmetic of
+// normalising by whatever length arrived, and a list length in a fixture is not a
+// claim about the sources — the comment was.
 func TestASymbolAlreadyHighInItsListWhenWeFirstSawItIsSeenLate(t *testing.T) {
 	c := aCandidate(t0)
 	late := MeasureFirstSighting(c, storedFirstRank(12, 150, t0, SourceOfficialTradingValue), []Observation{
@@ -1121,7 +1142,8 @@ func TestAVetoedCandidateIsStillStoredAndReported(t *testing.T) {
 	if _, err := s.NoteFirstPrice(ctx, MarketKR, "005930", "99500", t0, SourceOfficialCandles); err != nil {
 		t.Fatalf("NoteFirstPrice: %v", err)
 	}
-	if _, err := s.NoteFirstRank(ctx, MarketKR, "005930", 5, 150, t0, SourceOfficialTradingValue); err != nil {
+	if _, err := s.NoteFirstRank(ctx, MarketKR, "005930",
+		storedFirstRank(5, 150, t0, SourceOfficialTradingValue)); err != nil {
 		t.Fatalf("NoteFirstRank: %v", err)
 	}
 
@@ -1487,7 +1509,8 @@ func TestARankedRowFromTheGapBetweenTwoLivesIsNotThisLifesFirstSighting(t *testi
 	if err := s.Cool(ctx, MarketKR, "005930", t0.Add(time.Minute)); err != nil {
 		t.Fatalf("Cool: %v", err)
 	}
-	if _, err := s.NoteFirstRank(ctx, MarketKR, "005930", 5, 150, t0, SourceOfficialTradingValue); err != nil {
+	if _, err := s.NoteFirstRank(ctx, MarketKR, "005930",
+		storedFirstRank(5, 150, t0, SourceOfficialTradingValue)); err != nil {
 		t.Fatalf("NoteFirstRank: %v", err)
 	}
 
@@ -1515,7 +1538,8 @@ func TestARankedRowFromTheGapBetweenTwoLivesIsNotThisLifesFirstSighting(t *testi
 		t.Fatalf("the second life kept the first's first_seen_at (%v); the test needs two lives",
 			c.FirstSeenAt)
 	}
-	if _, err := s.NoteFirstRank(ctx, MarketKR, "005930", 4, 150, reborn, SourceOfficialTradingValue); err != nil {
+	if _, err := s.NoteFirstRank(ctx, MarketKR, "005930",
+		storedFirstRank(4, 150, reborn, SourceOfficialTradingValue)); err != nil {
 		t.Fatalf("NoteFirstRank: %v", err)
 	}
 
