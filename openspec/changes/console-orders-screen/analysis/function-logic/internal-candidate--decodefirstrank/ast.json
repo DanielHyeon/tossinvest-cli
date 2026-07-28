@@ -1,0 +1,132 @@
+{
+  "file": "internal/candidate/store.go",
+  "source_sha256": "791621bffd8b36359046c20a53f68810e31d65e96e3d49a2170e5b02a6aecc2f",
+  "package": "candidate",
+  "function": "decodeFirstRank",
+  "signature": "decodeFirstRank(params=6, results=2)",
+  "start": {
+    "line": 1428,
+    "column": 1
+  },
+  "end": {
+    "line": 1444,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1431,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1435,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1437,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1432,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1438,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1443,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1434,
+        "column": 23
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1434,
+        "column": 47
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1434,
+        "column": 73
+      },
+      "text": "SourceID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1436,
+        "column": 18
+      },
+      "text": "parseStamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1438,
+        "column": 24
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1434,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1436,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1441,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

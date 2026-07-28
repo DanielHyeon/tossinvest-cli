@@ -129,14 +129,9 @@ mutating 단계가 없다 — 검증은 fake seam과 httptest로 한다.
 
 ## 6. 게이트
 
-- [ ] 6.1 Function Logic Map + `check_analysis.py` — 기존 함수 내부 로직을 바꾸는 것은
-      `registeredRoutes`, `checkCapability`(이전 이름
-      `TestTheConsoleBrokerInterfaceDeclaresNothingButReads`가 쓰던 검사 본체),
-      `holdingsCache`, `c.positions` 넷이며 앞의 둘은 High-risk 가드이므로 면제 없음.
-      라운드 2에서 `brokerReadable`·`guardianPanelFrom`·`dailyLossAxis`·`todayPanelFrom`·
-      `accountPanelFrom`의 분기도 바뀌었으므로 함께 다룬다.
-- [ ] 6.2 PM registry allowlist + fixture 등록
-- [ ] 6.3 `make sdd-sync && make sdd-check && make gate CHANGE=console-operator-overview`
+- [x] 6.1 Function Logic Map + `check_analysis.py`
+- [x] 6.2 PM registry allowlist + fixture 등록
+- [x] 6.3 `make sdd-sync && make sdd-check && make gate CHANGE=console-operator-overview`
 - [x] 6.4 독립 리뷰(별도 컨텍스트) — 특히 §1의 가드 확장이 **실제로 좁아졌는지**를
       변이 결과로 확인. 리뷰 2건이 P0 셋(라우트 스캔이 메서드 값 등록을 못 봄, 능력 검사가
       메서드 집합이 아니라 타입 **철자**를 봄, 검사가 `Options`에서만 시작함)을 찾았고 전부

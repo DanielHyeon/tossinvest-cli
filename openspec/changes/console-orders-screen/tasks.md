@@ -114,12 +114,18 @@
 > `internal/official`·`internal/journal`의 새 심볼은 전부 신규 leaf이며 기존 함수 본문은
 > 한 줄도 바뀌지 않았다. 구현 중 발견한 스펙 편차 4건은 `issues.md`에 있다.
 
-- [ ] 7.1 Function Logic Map + `check_analysis.py` — **면제 없음**. `internal/journal`과
-      `internal/official`은 High-risk 표면이고, 라우트 가드 판정부도 High-risk 가드다.
-- [ ] 7.2 PM registry allowlist + fixture 등록
-- [ ] 7.3 `make sdd-sync && make sdd-check && make gate CHANGE=console-orders-screen`
-- [ ] 7.4 독립 리뷰(별도 컨텍스트) — 특히 ① 원장·official 가산이 **정말로 기존 동작을 바꾸지
-      않는지**, ② 예외가 실제로 정확 경로 1건인지, ③ 조건주문 부분 실패가 합산되지 않는지
+- [x] 7.1 Function Logic Map + `check_analysis.py` — **면제 없음**. `internal/journal`·`internal/official`
+      가산 함수와 라우트 가드 판정부를 전부 매핑했고, 대부분의 결론이 `High-risk impact: yes`다.
+- [x] 7.2 PM registry allowlist + fixture 등록
+- [x] 7.3 `make sdd-sync && make sdd-check && make gate CHANGE=console-orders-screen`
+- [x] 7.4 독립 리뷰(별도 컨텍스트) — 완료. 세 물음 전부 실행으로 답했다.
+      ① httptest 기록으로 네 호출의 요청이 바이트 동일하고 계정 해석 1회 공유, 401 재시도·에러 분류·
+         429의 rate 예산 기록까지 같은 경로임을 확인. 스키마 이력상 v6 테이블이 있는데
+         `mutation_attempts`만 없는 버전은 존재하지 않음(전진 전용·drop/rename 금지).
+      ② `/orders/cancel`·`/orders/new`·`/orders/amend`·`/Orders`·`/orders/` 다섯이 전부 실패,
+         `POST /orders`는 405. 접두 일치·`ToLower`로 바꾸면 각각 통과함을 변이로 확인.
+      ③ 조건주문만 실패하면 "N건 + 미측정"이고 합산되지 않음. 그리고 리뷰가 **P0 둘을 더 찾았다** —
+         `status` 누락으로 잔여물이 숨을 수 있었고, 개요가 오래된 읽기를 측정값으로 냈다.
 
 ## 8. 구현 리뷰 대응 (적대적 리뷰 P0×2 / P1×3, 2026-07-28)
 

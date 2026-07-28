@@ -1,0 +1,93 @@
+{
+  "file": "internal/console/holdings.go",
+  "source_sha256": "bddb0d958c3e6178ad23b8b6b3047d6cc38dfaa00de23a97dd874c649c9c90df",
+  "package": "console",
+  "function": "snapshotLocked",
+  "receiver": "holdingsCache",
+  "signature": "holdingsCache.snapshotLocked(params=1, results=1)",
+  "start": {
+    "line": 214,
+    "column": 1
+  },
+  "end": {
+    "line": 229,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 224,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 19
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 14
+      },
+      "text": "now.Sub"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 225,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

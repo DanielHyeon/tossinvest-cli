@@ -206,6 +206,15 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	}
 
 	out := cmd.OutOrStdout()
+
+	// The console's one live client, shared by every seam below that reads through
+	// it. Building it resolves the account against the Open API, and that read is
+	// the call which came back 429 three times on 2026-07-26 and cost a
+	// verification run three steps (measurements.md M4) — so it happens once per
+	// console process, not once per screen the operator opens. It is still lazy:
+	// nothing is built until a screen asks.
+	reads := newConsoleBroker(root)
+
 	return console.ListenAndServe(ctx, console.Options{
 		Port:              opts.port,
 		StartVerify:       consoleVerifyStarter(root),
@@ -220,10 +229,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// The dashboard's three seams (change add-operator-dashboard). The console
 		// reads the journal itself — read-only, per request — and is handed a
 		// broker that can do exactly one thing.
-		Holdings: newConsoleHoldings(root),
+		Holdings: newConsoleHoldings(reads),
 		// The orders screen's read (change console-orders-screen). One method,
 		// behind which this file makes the three calls a refresh costs.
-		Orders:      consoleOrdersSeam(root),
+		Orders:      consoleOrdersSeam(reads),
 		JournalPath: journalPath,
 		RunLockPath: verifyRunLockPath(verifyRecord),
 		Settings:    consoleSettingsSeam(root),
@@ -339,47 +348,92 @@ func (s consoleGateLimits) GateLimits() (console.GateLimits, error) {
 	}, nil
 }
 
-// newConsoleHoldings builds the console's holdings reader, lazily.
+// --- the console's one account resolution -----------------------------------------
+
+// consoleBroker is the live client every read seam on this console shares.
 //
-// Lazily because constructing the client resolves the account against the Open
-// API, and doing that at `tossctl console` startup would make a screen the
-// operator may never open into a precondition for the console coming up at all.
-// The first render pays for it; a failure is a sentence on the page.
-func newConsoleHoldings(root *rootOptions) console.HoldingsReader {
-	return &lazyHoldings{root: root}
+// Building that client resolves the account against the Open API: one
+// /api/v1/accounts read inside buildVerifyBroker, which is the call that came back
+// 429 three times on 2026-07-26 and cost a verification run three steps
+// (measurements.md M4). Each seam used to build its own, so a session that opened
+// the positions screen and then /orders paid for that resolution twice — per
+// process, not per refresh, but twice. This type is where the "once" lives.
+//
+// It widens nothing. A seam is handed this resolver and nothing else, and what
+// crosses into internal/console is still one bound method value per screen; the
+// client those method values come from was always reachable from this file, since
+// a bound method pins its receiver, and it is reachable from the console neither
+// before nor after.
+type consoleBroker struct {
+	root *rootOptions
+
+	mu     sync.Mutex
+	client verifylive.Broker
+}
+
+// newConsoleBroker holds the console's live client, and builds nothing yet.
+//
+// Lazily because that build resolves the account, and doing it at `tossctl
+// console` startup would make a screen the operator may never open into a
+// precondition for the console coming up at all. The first render pays for it; a
+// failure is a sentence on the page.
+func newConsoleBroker(root *rootOptions) *consoleBroker {
+	return &consoleBroker{root: root}
+}
+
+// resolve returns the console's live client, building it on the first call.
+//
+// The build happens under the lock, so two screens opened in the same second make
+// one resolution and the second waits for it instead of starting a second
+// /api/v1/accounts read. Waiting is the point: what is being serialised is exactly
+// the call whose rate limit costs a run its steps.
+//
+// A failure is returned rather than remembered: credentials that were not there
+// when the console started may be there after `tossctl openapi login`, and what
+// stops a failing build from being retried on every render is the console's own
+// cache (holdings.go bounds attempts by the TTL, not by successes).
+func (c *consoleBroker) resolve() (verifylive.Broker, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.client != nil {
+		return c.client, nil
+	}
+	broker, _, err := verifyBrokerFactory(c.root)
+	if err != nil {
+		return nil, err
+	}
+	c.client = broker
+	return c.client, nil
+}
+
+// newConsoleHoldings builds the console's holdings reader.
+//
+// It is handed the shared resolver rather than the root options, which is what
+// makes the account resolution behind the positions screen the same one the orders
+// screen uses. The laziness is unchanged — it now lives in consoleBroker.resolve.
+func newConsoleHoldings(shared *consoleBroker) console.HoldingsReader {
+	return &lazyHoldings{shared: shared}
 }
 
 // holdingsFunc is the single capability the console is handed.
 type holdingsFunc func(ctx context.Context, symbol string) ([]domain.Position, error)
 
 type lazyHoldings struct {
-	root *rootOptions
-
-	mu   sync.Mutex
-	read holdingsFunc
+	shared *consoleBroker
 }
 
 // Holdings satisfies console.HoldingsReader.
 //
-// A build failure is returned rather than remembered: credentials that were not
-// there when the console started may be there after `tossctl openapi login`, and
-// the console's own cache is what stops a failing build from being retried on
-// every render (holdings.go bounds attempts by the TTL, not successes).
+// The method value is taken off the shared client per call and dropped again. This
+// type holds no broker and no field at all beyond the resolver, so the Open API
+// client's PlaceOrder / CancelOrder / ModifyOrder are not reachable from the value
+// that crosses into internal/console.
 func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Position, error) {
-	l.mu.Lock()
-	read := l.read
-	if read == nil {
-		broker, _, err := verifyBrokerFactory(l.root)
-		if err != nil {
-			l.mu.Unlock()
-			return nil, err
-		}
-		// Only the method value is kept. Nothing here or afterwards holds the
-		// wide broker interface.
-		read = broker.Holdings
-		l.read = read
+	broker, err := l.shared.resolve()
+	if err != nil {
+		return nil, err
 	}
-	l.mu.Unlock()
+	var read holdingsFunc = broker.Holdings
 	return read(ctx, symbol)
 }
 
@@ -427,37 +481,35 @@ const consoleOrdersPageLimit = 100
 // verifyBrokerFactory returns a verifylive.Broker, which does not declare the
 // raw order reads — it declares OrdersPageRaw, whose orders are undecoded JSON.
 // The concrete client has both, so the path is chosen by asserting for exactly
-// the two reads rather than by building a second *official.Client: that second
-// client would resolve the account sequence a second time, and that resolution is
-// the call that came back 429 three times on 2026-07-26 and cost a run three
-// steps (measurements.md M4).
+// the two reads on the client the console has already resolved, rather than by
+// building a second *official.Client. That second client would resolve the account
+// sequence again, and that resolution is the call that came back 429 three times
+// on 2026-07-26 and cost a run three steps (measurements.md M4) — the same reason
+// this seam takes consoleBroker rather than rootOptions.
 type consoleOrdersReader interface {
 	OrdersRaw(ctx context.Context, filter official.OrdersFilter) (official.RawOrderList, error)
 	ConditionalOrdersRaw(ctx context.Context, status, symbol, cursor string,
 		limit int) (official.RawConditionalOrderList, error)
 }
 
-// consoleOrdersSeam builds the console's orders reader, lazily.
+// consoleOrdersSeam builds the console's orders reader.
 //
-// Lazily for newConsoleHoldings' reason: constructing the client resolves the
-// account against the Open API, and doing that at `tossctl console` startup would
-// make a screen the operator may never open into a precondition for the console
-// coming up.
-func consoleOrdersSeam(root *rootOptions) console.OrdersReader {
-	return &lazyOrders{root: root}
+// It is handed the same shared resolver newConsoleHoldings gets, so opening this
+// screen after the positions screen costs no second account resolution. The
+// laziness is unchanged and now lives in one place — consoleBroker.resolve.
+func consoleOrdersSeam(shared *consoleBroker) console.OrdersReader {
+	return &lazyOrders{shared: shared}
 }
 
 type lazyOrders struct {
-	root *rootOptions
-
-	mu sync.Mutex
-	// Only the two method values are kept, never the broker they came from.
-	// Nothing here or afterwards holds an interface with PlaceOrder on it.
-	plain       func(context.Context, official.OrdersFilter) (official.RawOrderList, error)
-	conditional func(context.Context, string, string, string, int) (official.RawConditionalOrderList, error)
+	shared *consoleBroker
 }
 
 // Orders satisfies console.OrdersReader.
+//
+// The two read method values are taken off the shared client per call and dropped
+// again: this type holds no broker, so nothing reachable from the value the
+// console was handed has PlaceOrder on it.
 //
 // The three calls are sequential and each one's outcome is carried separately. A
 // failure on one is NOT returned as an error for the set: the console renders that
@@ -467,26 +519,18 @@ type lazyOrders struct {
 // An error is returned only when there is no reading at all to describe — no
 // credentials, or a client that does not have these reads.
 func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) {
-	l.mu.Lock()
-	plain, conditional := l.plain, l.conditional
-	if plain == nil || conditional == nil {
-		broker, _, err := verifyBrokerFactory(l.root)
-		if err != nil {
-			l.mu.Unlock()
-			return console.OrdersReading{}, err
-		}
-		reads, ok := broker.(consoleOrdersReader)
-		if !ok {
-			l.mu.Unlock()
-			return console.OrdersReading{}, fmt.Errorf(
-				"console: this build's broker (%T) has no raw order reads; the orders screen needs "+
-					"the broker's own decimal strings, because a value that has been through float64 "+
-					"cannot say whether the broker sent one at all", broker)
-		}
-		plain, conditional = reads.OrdersRaw, reads.ConditionalOrdersRaw
-		l.plain, l.conditional = plain, conditional
+	broker, err := l.shared.resolve()
+	if err != nil {
+		return console.OrdersReading{}, err
 	}
-	l.mu.Unlock()
+	reads, ok := broker.(consoleOrdersReader)
+	if !ok {
+		return console.OrdersReading{}, fmt.Errorf(
+			"console: this build's broker (%T) has no raw order reads; the orders screen needs "+
+				"the broker's own decimal strings, because a value that has been through float64 "+
+				"cannot say whether the broker sent one at all", broker)
+	}
+	plain, conditional := reads.OrdersRaw, reads.ConditionalOrdersRaw
 
 	var out console.OrdersReading
 
@@ -634,6 +678,29 @@ func argvWithPort(args []string, port int) []string {
 // (task 1.7). The console computes the set from the evidence record — never from
 // the request — and it changes only which steps the runner will walk: the plan is
 // rebuilt and a new expiring string still has to be typed before anything is sent.
+//
+// This is the one place in the console that does NOT take the shared read client,
+// and that is deliberate. It builds its own through verifyBrokerFactory on every
+// run, which costs one more /api/v1/accounts read than reusing the console's,
+// because:
+//
+//   - The run is about to place real orders, and the account it names in the
+//     evidence record is the one it resolved at run start. Reusing a resolution
+//     performed whenever the operator happened to open a read screen — possibly
+//     hours earlier, possibly before `tossctl openapi login` replaced the
+//     credentials — would produce a record naming an account that this run never
+//     confirmed. An unconfirmed account on a record of real orders is worse than
+//     one extra read.
+//   - The resolution's failure contract differs. A read screen renders it as a
+//     sentence and stays up; here it is fatal before a person is asked anything,
+//     under verifylive's read retry policy (resolveVerifyAccount).
+//   - Reads and a verification are different trust contexts. The read seams are
+//     handed a client stripped to bound method values; the runner needs the whole
+//     broker, and that asymmetry should not be resolved by giving the read path's
+//     client the wider job.
+//
+// The cost is bounded: one resolution per run started, not per screen and not per
+// refresh.
 func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 	return func(
 		ctx context.Context,

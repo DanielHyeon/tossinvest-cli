@@ -152,3 +152,18 @@ spec·design은 아니므로 구현자가 고치지 않았다.**
 spec의 `②와 ③은 시장별(KR/US)로 나누어 표시하고`는 그대로 만족한다. 추가되는 것은 "그 둘 중
 어느 쪽도 아닌 것이 있으면 있다고 말한다"이며, 같은 요구사항의 `값이 없는 항목을 화면에서
 조용히 생략하지 않는다`가 요구하는 바다.
+
+---
+
+## 증거 생산 pass 후속 — `TestNoCapabilityReachesTheConsoleAroundOptions`의 공회전 대조 (2026-07-28)
+
+이 change의 리뷰 지적 P0-3을 막으려고 만든 가드가, 자기 걷기가 비었을 때는 조용히 통과했다.
+세 걷기(Options seam 해석 / 패키지 전역 인터페이스 순회 / `*Console` exported 메서드 순회) 중
+단언되던 것은 seam 하나뿐이고 인터페이스 계수는 `_ = checkedInterfaces`로 버려졌다. 세부와 변이
+증거는 `add-candidate-discovery/issues.md` §11 G-1에 한 벌로 적었다(같은 함수, 같은 수정).
+
+이 change 쪽 조치는 동일하다: 세 걷기에 각자 대조를 붙이고(B21·B22·B23–B25·B26),
+`analysis/function-logic/internal-console--testnocapabilityreachestheconsolearoundoptions/`의
+ast.json·분기표·논리 지도를 새 본문에 맞춰 다시 만들었다. 이 change의 다른 target 중
+`internal/console/static_test.go`에 묶인 `current` revision 전부도 파일 해시가 바뀌어 재생성했다
+(본문 무변경이므로 분기표는 그대로다).

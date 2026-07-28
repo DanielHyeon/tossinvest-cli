@@ -1,0 +1,46 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "bcaf9fcec860939950ca2650d5603ca11c4c69a220da1eb4fa0556fcc7a3d42c",
+  "package": "console",
+  "function": "decimalText",
+  "signature": "decimalText(params=1, results=1)",
+  "start": {
+    "line": 721,
+    "column": 1
+  },
+  "end": {
+    "line": 723,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 722,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 722,
+        "column": 9
+      },
+      "text": "groupDecimalText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 722,
+        "column": 26
+      },
+      "text": "strconv.FormatFloat"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

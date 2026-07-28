@@ -1,0 +1,211 @@
+{
+  "file": "internal/verifylive/us_market_test.go",
+  "source_sha256": "78c330a2fb4c3827316a489a49719925fc82412d6c7f23e7b6b4b64bdb242ced",
+  "package": "verifylive",
+  "function": "TestTheKRRecordStillSaysKR",
+  "signature": "TestTheKRRecordStillSaysKR(params=1, results=0)",
+  "start": {
+    "line": 287,
+    "column": 1
+  },
+  "end": {
+    "line": 304,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 289,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 7
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 21
+      },
+      "text": "withHolding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 21
+      },
+      "text": "newFakeBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 63
+      },
+      "text": "alwaysConfirm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 15
+      },
+      "text": "h.run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 13
+      },
+      "text": "h.entries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 10
+      },
+      "text": "observationDetail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 77
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 11
+      },
+      "text": "observationDetail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 289,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 292,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 294,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

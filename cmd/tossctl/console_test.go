@@ -19,6 +19,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -246,7 +247,13 @@ func TestOnlyConsoleGoReachesTheConsolePackage(t *testing.T) {
 // PlaceOrder / CancelOrder / ModifyOrder are not reachable from the console even
 // by type assertion.
 func TestTheConsoleIsHandedOneCapabilityAndNotABroker(t *testing.T) {
-	var reader console.HoldingsReader = newConsoleHoldings(&rootOptions{})
+	// One shared resolver behind both seams, as runConsole wires them
+	// (TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce owns that half).
+	// Sharing the resolution changes nothing about the shape of what crosses the
+	// boundary, which is what this test is here to keep saying.
+	shared := newConsoleBroker(&rootOptions{})
+
+	var reader console.HoldingsReader = newConsoleHoldings(shared)
 
 	typ := reflect.TypeOf(reader)
 	if typ.NumMethod() != 1 || typ.Method(0).Name != "Holdings" {
@@ -260,7 +267,7 @@ func TestTheConsoleIsHandedOneCapabilityAndNotABroker(t *testing.T) {
 	// The orders screen's read is the same claim a second time (change
 	// console-orders-screen, task 4.6): one method, and the wide broker it came
 	// from is not reachable from the value that crosses the boundary.
-	var orders console.OrdersReader = consoleOrdersSeam(&rootOptions{})
+	var orders console.OrdersReader = consoleOrdersSeam(shared)
 	ordersType := reflect.TypeOf(orders)
 	if ordersType.NumMethod() != 1 || ordersType.Method(0).Name != "Orders" {
 		names := make([]string, 0, ordersType.NumMethod())
@@ -312,7 +319,8 @@ func TestTheConsoleIsHandedOneCapabilityAndNotABroker(t *testing.T) {
 var consoleFieldExemptions = map[string]string{
 	"Orders": "the orders screen's read (change console-orders-screen). It lists the account's " +
 		"orders and cannot be named without the word; the seam declares exactly Orders, and " +
-		"lazyOrders keeps two method values rather than the verifylive.Broker they came from",
+		"lazyOrders takes its two read method values off the shared client per call and keeps " +
+		"neither them nor the verifylive.Broker they came from",
 }
 
 // consoleOptionFields reads the keys of the console.Options literal in console.go.
@@ -609,7 +617,7 @@ func TestOneRefreshAsksTheOpenGroupAndTheClosedGroupSeparatelyAndTheLiveOneWhole
 	}
 	t.Cleanup(func() { verifyBrokerFactory = previous })
 
-	reading, err := consoleOrdersSeam(&rootOptions{}).Orders(context.Background())
+	reading, err := consoleOrdersSeam(newConsoleBroker(&rootOptions{})).Orders(context.Background())
 	if err != nil {
 		t.Fatalf("Orders: %v", err)
 	}
@@ -673,8 +681,15 @@ func TestOneRefreshAsksTheOpenGroupAndTheClosedGroupSeparatelyAndTheLiveOneWhole
 // read that came back 429 three times on 2026-07-26 and cost a run three steps
 // (measurements.md M4) — for an answer the first resolution already had.
 //
-// So the seam goes through verifyBrokerFactory like everything else, and this is
-// what fails if somebody adds a second construction path.
+// So the seam reads through the console's shared client, and this is what fails if
+// somebody adds a second construction path.
+//
+// This is the *per-seam* half only: it counts builds behind one seam across
+// refreshes and says nothing about what a whole console session costs. The
+// console-level claim — every read screen together, one resolution — is
+// TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce, and it was written
+// because this test passed for the whole time a session that opened the positions
+// screen and /orders resolved the account twice.
 func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T) {
 	srv := newVerifyServer(t)
 	built := 0
@@ -691,7 +706,7 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 	}
 	t.Cleanup(func() { verifyBrokerFactory = previous })
 
-	seam := consoleOrdersSeam(&rootOptions{})
+	seam := consoleOrdersSeam(newConsoleBroker(&rootOptions{}))
 	for i := 0; i < 3; i++ {
 		if _, err := seam.Orders(context.Background()); err != nil {
 			t.Fatalf("Orders: %v", err)
@@ -709,8 +724,9 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 			"verifyBrokerFactory already resolved the account for; a second one duplicates that " +
 			"resolution and doubles the 429 exposure")
 	}
-	if !strings.Contains(src, "verifyBrokerFactory(l.root)") {
-		t.Error("the orders seam no longer goes through verifyBrokerFactory")
+	if !strings.Contains(src, "l.shared.resolve()") {
+		t.Error("the orders seam no longer reads through the console's shared client; a resolver " +
+			"of its own is a second /api/v1/accounts read per session")
 	}
 }
 
@@ -759,7 +775,7 @@ func TestTheOrdersSeamCarriesEachListsOutcomeSeparately(t *testing.T) {
 	}
 	t.Cleanup(func() { verifyBrokerFactory = previous })
 
-	reading, err := consoleOrdersSeam(&rootOptions{}).Orders(context.Background())
+	reading, err := consoleOrdersSeam(newConsoleBroker(&rootOptions{})).Orders(context.Background())
 	if err != nil {
 		t.Fatalf("Orders returned an error for a half-answered reading: %v", err)
 	}
@@ -783,5 +799,232 @@ func TestTheOrdersSeamCarriesEachListsOutcomeSeparately(t *testing.T) {
 	if reading.Open[0].Price != "" || reading.Open[0].AverageFilledPrice != "" {
 		t.Errorf("a null price/execution arrived as %q/%q; the raw read exists so that an absent "+
 			"value is not a number", reading.Open[0].Price, reading.Open[0].AverageFilledPrice)
+	}
+}
+
+// consoleBrokerBuildSites are the functions in console.go that may build a live
+// client of their own, each with the argument for why its resolution is separate.
+//
+// Every entry costs one more /api/v1/accounts read per console process — the read
+// that came back 429 three times on 2026-07-26 and cost a verification run three
+// steps (measurements.md M4). The map is the whole permitted set: a seam that
+// resolves on its own instead of sharing has to be argued for here first, which is
+// what makes "the console resolves the account once" checkable rather than a claim
+// somebody has to re-derive from the wiring.
+var consoleBrokerBuildSites = map[string]string{
+	"consoleBroker.resolve": "the console's one read client. Every read seam is handed this same " +
+		"resolver, so opening every screen the console serves costs one resolution per process " +
+		"rather than one per screen",
+	"consoleVerifyStarter": "a verification run resolves its own account at run start, on purpose. " +
+		"The record it writes names the account it confirmed at the moment real orders were about " +
+		"to be sent, not one resolved whenever a read screen happened to be opened — possibly " +
+		"before `tossctl openapi login` replaced the credentials. One resolution per run started",
+}
+
+// TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce.
+//
+// The claim is about the console, not about one seam. Each read seam already
+// resolved the account once *inside itself*, and that was true while a session
+// that opened the positions screen and then /orders resolved it twice — which is
+// the shape a per-seam test cannot see and this one is for.
+//
+// The runtime half opens every read screen the console serves, twice each and then
+// both at once, against a factory that counts. The static half binds it to the
+// wiring: runConsole builds one shared resolver and hands it to every seam, and
+// nothing else in console.go builds a client except the sites argued for in
+// consoleBrokerBuildSites.
+func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
+	srv := newVerifyServer(t)
+	var (
+		mu    sync.Mutex
+		built int
+	)
+	previous := verifyBrokerFactory
+	// The factory stands in for buildVerifyBroker, whose body is the
+	// /api/v1/accounts read this test counts: one call here is one resolution.
+	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+		mu.Lock()
+		built++
+		mu.Unlock()
+		return official.New(
+			official.Credentials{APIKey: "k", SecretKey: "s"},
+			filepath.Join(t.TempDir(), "token.json"),
+			official.WithBaseURL(srv.URL),
+			official.WithHTTPClient(srv.Client()),
+			official.WithAccountSeq(7),
+		), "123-45-678901", nil
+	}
+	t.Cleanup(func() { verifyBrokerFactory = previous })
+
+	resolutions := func() int {
+		mu.Lock()
+		defer mu.Unlock()
+		return built
+	}
+
+	// The seams as runConsole wires them: one resolver, built once at startup,
+	// every screen opened off it afterwards.
+	shared := newConsoleBroker(&rootOptions{})
+	positions, orders := newConsoleHoldings(shared), consoleOrdersSeam(shared)
+	screens := []struct {
+		name string
+		open func() error
+	}{
+		{"/dashboard 포지션", func() error {
+			_, err := positions.Holdings(context.Background(), "")
+			return err
+		}},
+		{"/orders", func() error {
+			_, err := orders.Orders(context.Background())
+			return err
+		}},
+	}
+	for round := 0; round < 2; round++ {
+		for _, screen := range screens {
+			if err := screen.open(); err != nil {
+				t.Fatalf("opening %s (round %d): %v", screen.name, round+1, err)
+			}
+		}
+	}
+	if got := resolutions(); got != 1 {
+		t.Errorf("opening every console read screen resolved the account %d times, want 1. "+
+			"Each seam resolving for itself is one /api/v1/accounts read per screen, and that "+
+			"read is the one that came back 429 three times on 2026-07-26 (measurements.md M4)", got)
+	}
+
+	// And two screens opened in the same second are still one resolution: the
+	// build is serialised rather than raced, which is the case a warm cache hides.
+	before := resolutions()
+	cold := newConsoleBroker(&rootOptions{})
+	coldPositions, coldOrders := newConsoleHoldings(cold), consoleOrdersSeam(cold)
+	var wg sync.WaitGroup
+	errs := make([]error, len(screens))
+	for i := range screens {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			switch i {
+			case 0:
+				_, errs[i] = coldPositions.Holdings(context.Background(), "")
+			default:
+				_, errs[i] = coldOrders.Orders(context.Background())
+			}
+		}(i)
+	}
+	wg.Wait()
+	for i, err := range errs {
+		if err != nil {
+			t.Fatalf("opening %s concurrently: %v", screens[i].name, err)
+		}
+	}
+	if got := resolutions() - before; got != 1 {
+		t.Errorf("two screens opened at once resolved the account %d times, want 1; the build "+
+			"has to be serialised, not raced", got)
+	}
+
+	// --- the wiring half -----------------------------------------------------
+	//
+	// The runtime half above built the seams the way runConsole does. This is what
+	// keeps that true, and what a future seam has to pass.
+	file, err := parser.ParseFile(token.NewFileSet(), "console.go", readSource(t, "console.go"), 0)
+	if err != nil {
+		t.Fatalf("parsing console.go: %v", err)
+	}
+
+	// Nothing but the argued-for sites builds a client.
+	sites := map[string]int{}
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+		name := fn.Name.Name
+		if fn.Recv != nil && len(fn.Recv.List) > 0 {
+			receiver := strings.TrimPrefix(types.ExprString(fn.Recv.List[0].Type), "*")
+			name = receiver + "." + name
+		}
+		ast.Inspect(fn.Body, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			if ident, ok := call.Fun.(*ast.Ident); ok && ident.Name == "verifyBrokerFactory" {
+				sites[name]++
+			}
+			return true
+		})
+	}
+	for name := range sites {
+		if why, argued := consoleBrokerBuildSites[name]; !argued || strings.TrimSpace(why) == "" {
+			t.Errorf("%s builds a live client of its own and is not argued for in "+
+				"consoleBrokerBuildSites; every separate build is one more /api/v1/accounts "+
+				"read per console process", name)
+		}
+	}
+	for name := range consoleBrokerBuildSites {
+		if sites[name] == 0 {
+			t.Errorf("consoleBrokerBuildSites still argues for %s, which no longer builds a "+
+				"client; an exemption nobody uses is one the next reader will reuse", name)
+		}
+	}
+
+	// And runConsole builds ONE resolver and hands it to every read seam.
+	var (
+		holder    string
+		builds    int
+		seamArgs  = map[string]string{}
+		seamNames = []string{"newConsoleHoldings", "consoleOrdersSeam"}
+	)
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Name.Name != "runConsole" {
+			continue
+		}
+		ast.Inspect(fn.Body, func(n ast.Node) bool {
+			switch node := n.(type) {
+			case *ast.AssignStmt:
+				for i, rhs := range node.Rhs {
+					call, ok := rhs.(*ast.CallExpr)
+					if !ok {
+						continue
+					}
+					ident, ok := call.Fun.(*ast.Ident)
+					if !ok || ident.Name != "newConsoleBroker" || i >= len(node.Lhs) {
+						continue
+					}
+					builds++
+					if target, ok := node.Lhs[i].(*ast.Ident); ok {
+						holder = target.Name
+					}
+				}
+			case *ast.CallExpr:
+				ident, ok := node.Fun.(*ast.Ident)
+				if !ok || len(node.Args) != 1 {
+					return true
+				}
+				for _, seam := range seamNames {
+					if ident.Name == seam {
+						seamArgs[seam] = types.ExprString(node.Args[0])
+					}
+				}
+			}
+			return true
+		})
+	}
+	if builds != 1 {
+		t.Fatalf("runConsole builds %d shared resolvers, want exactly 1; a second one is a "+
+			"second account resolution wearing the shared resolver's name", builds)
+	}
+	for _, seam := range seamNames {
+		got, wired := seamArgs[seam]
+		if !wired {
+			t.Errorf("runConsole no longer wires %s; the guard is not reading the console's "+
+				"read seams", seam)
+			continue
+		}
+		if got != holder {
+			t.Errorf("runConsole hands %s %q while the shared resolver is %q; a seam with its "+
+				"own resolver resolves the account a second time", seam, got, holder)
+		}
 	}
 }

@@ -1,0 +1,80 @@
+{
+  "file": "internal/official/orders_reads.go",
+  "source_sha256": "1346743bfc6dea2337f17e3dbac292babdae2a73c7f42dc087d68dd412642e95",
+  "package": "official",
+  "function": "OrderByID",
+  "receiver": "Client",
+  "signature": "Client.OrderByID(params=2, results=2)",
+  "start": {
+    "line": 115,
+    "column": 1
+  },
+  "end": {
+    "line": 121,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 12
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 45
+      },
+      "text": "url.PathEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 9
+      },
+      "text": "adaptOrder"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

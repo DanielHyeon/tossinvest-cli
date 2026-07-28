@@ -1,0 +1,84 @@
+{
+  "file": "internal/console/static_test.go",
+  "source_sha256": "eb0c15e56f2895086b6c16e515f49940453307985514e6928e3e541f1685edec",
+  "package": "console",
+  "function": "packageTypes",
+  "signature": "packageTypes(params=1, results=1)",
+  "start": {
+    "line": 1383,
+    "column": 1
+  },
+  "end": {
+    "line": 1394,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 1385,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1387,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1390,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1393,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1386,
+        "column": 3
+      },
+      "text": "ast.Inspect"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1384,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1387,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1388,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

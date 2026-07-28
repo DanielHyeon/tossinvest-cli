@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/adoptionsettings.go",
+  "source_sha256": "e8ae8ab98af80253d4c8715340cb2bd9a9bcf177d3780dd078781dedbed6b53e",
+  "package": "main",
+  "function": "newAdoptionSettingsSeam",
+  "signature": "newAdoptionSettingsSeam(params=1, results=1)",
+  "start": {
+    "line": 28,
+    "column": 1
+  },
+  "end": {
+    "line": 34,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 9
+      },
+      "text": "configServiceFor"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

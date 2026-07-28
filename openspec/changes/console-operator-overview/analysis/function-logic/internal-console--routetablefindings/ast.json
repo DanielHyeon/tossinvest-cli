@@ -1,0 +1,116 @@
+{
+  "file": "internal/console/static_test.go",
+  "source_sha256": "eb0c15e56f2895086b6c16e515f49940453307985514e6928e3e541f1685edec",
+  "package": "console",
+  "function": "routeTableFindings",
+  "signature": "routeTableFindings(params=1, results=1)",
+  "start": {
+    "line": 754,
+    "column": 1
+  },
+  "end": {
+    "line": 768,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 757,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 761,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 762,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 767,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 759,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 759,
+        "column": 31
+      },
+      "text": "routeFindings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 763,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 763,
+        "column": 32
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 756,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 758,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 759,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 763,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

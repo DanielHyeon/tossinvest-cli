@@ -1,0 +1,87 @@
+{
+  "file": "cmd/tossctl/console_test.go",
+  "source_sha256": "85d9f3fcee393ead51e81a16bc898ad15bca9164cbd695f0c65e245ef5d3a22c",
+  "package": "main",
+  "function": "TestTheConsoleComesUpWithoutTheLimitsSeam",
+  "signature": "TestTheConsoleComesUpWithoutTheLimitsSeam(params=1, results=0)",
+  "start": {
+    "line": 523,
+    "column": 1
+  },
+  "end": {
+    "line": 537,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 531,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 534,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 528,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 524,
+        "column": 12
+      },
+      "text": "console.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 532,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 534,
+        "column": 5
+      },
+      "text": "c.Handler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 535,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 524,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

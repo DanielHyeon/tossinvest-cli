@@ -1,0 +1,31 @@
+{
+  "file": "internal/candidate/store.go",
+  "source_sha256": "791621bffd8b36359046c20a53f68810e31d65e96e3d49a2170e5b02a6aecc2f",
+  "package": "candidate",
+  "function": "Clock",
+  "receiver": "Store",
+  "signature": "Store.Clock(params=0, results=1)",
+  "start": {
+    "line": 586,
+    "column": 1
+  },
+  "end": {
+    "line": 586,
+    "column": 53
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 586,
+        "column": 39
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

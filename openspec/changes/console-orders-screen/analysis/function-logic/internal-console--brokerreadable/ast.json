@@ -1,0 +1,125 @@
+{
+  "file": "internal/console/overview.go",
+  "source_sha256": "669daa49a85420c0edd254193c301eb7ec566eb4ec482107d96fe62a50f78cd6",
+  "package": "console",
+  "function": "brokerReadable",
+  "signature": "brokerReadable(params=1, results=1)",
+  "start": {
+    "line": 714,
+    "column": 1
+  },
+  "end": {
+    "line": 725,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 715,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 716,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 718,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 720,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 722,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 717,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 719,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 721,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 723,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 717,
+        "column": 10
+      },
+      "text": "unmeasuredFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 719,
+        "column": 10
+      },
+      "text": "measured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 721,
+        "column": 10
+      },
+      "text": "unmeasuredFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 723,
+        "column": 10
+      },
+      "text": "unmeasuredFor"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -1,0 +1,45 @@
+{
+  "file": "internal/official/orders_reads_test.go",
+  "source_sha256": "57ebcdf03d99231b6dd70d10b2a1218a0dc3dcd455cf6329b4460a5d2dc362f0",
+  "package": "official",
+  "function": "boolText",
+  "signature": "boolText(params=1, results=1)",
+  "start": {
+    "line": 459,
+    "column": 1
+  },
+  "end": {
+    "line": 464,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 461,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

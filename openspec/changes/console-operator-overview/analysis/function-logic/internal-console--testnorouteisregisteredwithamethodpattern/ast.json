@@ -1,0 +1,71 @@
+{
+  "file": "internal/console/static_test.go",
+  "source_sha256": "eb0c15e56f2895086b6c16e515f49940453307985514e6928e3e541f1685edec",
+  "package": "console",
+  "function": "TestNoRouteIsRegisteredWithAMethodPattern",
+  "signature": "TestNoRouteIsRegisteredWithAMethodPattern(params=1, results=0)",
+  "start": {
+    "line": 319,
+    "column": 1
+  },
+  "end": {
+    "line": 327,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 321,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 20
+      },
+      "text": "registeredRoutes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 6
+      },
+      "text": "strings.ContainsAny"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 45
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

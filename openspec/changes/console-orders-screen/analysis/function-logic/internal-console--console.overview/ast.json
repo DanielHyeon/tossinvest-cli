@@ -1,0 +1,196 @@
+{
+  "file": "internal/console/overview.go",
+  "source_sha256": "e41f6c2c15bdb728efd4148fefcfab1d81e2440da9524641e242a99f6fdbebf1",
+  "package": "console",
+  "function": "overview",
+  "receiver": "Console",
+  "signature": "Console.overview(params=1, results=1)",
+  "start": {
+    "line": 507,
+    "column": 1
+  },
+  "end": {
+    "line": 524,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 523,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 9
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 511,
+        "column": 18
+      },
+      "text": "c.opts.Binary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 13
+      },
+      "text": "c.readEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 29
+      },
+      "text": "c.overviewLedger"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 516,
+        "column": 14
+      },
+      "text": "c.accountPanelFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 517,
+        "column": 12
+      },
+      "text": "todayPanelFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 13
+      },
+      "text": "recentPanelFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 520,
+        "column": 11
+      },
+      "text": "c.openOrdersPanelFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
+        "column": 13
+      },
+      "text": "c.safetyPanelFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 34
+      },
+      "text": "c.verifyHold"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 508,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 509,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 511,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 512,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 514,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 515,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 516,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 517,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 518,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 520,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 521,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 522,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

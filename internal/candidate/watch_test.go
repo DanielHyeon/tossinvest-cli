@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -158,6 +159,11 @@ func TestDiscoveryStopsWritingBeforeTheLedgerRunsOutOfSpace(t *testing.T) {
 // Absent is not zero, and here it is not "plenty" either. A probe that fails is the
 // one case where continuing is a guess about the exact resource D16 says discovery
 // must lose first, so the unmeasured answer halts and names itself.
+//
+// This is the first of FreeSpace's two unmeasured shapes: the probe returned an
+// error. The second — a probe that returns no error and no measurement — is the
+// test below, and the two are asserted by the reason they give because that is the
+// only thing that tells them apart from outside.
 func TestSpaceItCouldNotMeasureIsNotSpaceItHas(t *testing.T) {
 	prober := newSpaceProber(plentyOfSpace)
 	clk := clock.NewFake(t0)
@@ -175,8 +181,67 @@ func TestSpaceItCouldNotMeasureIsNotSpaceItHas(t *testing.T) {
 	if res.Space.Checked {
 		t.Error("an unmeasured space report claims to have been checked")
 	}
-	if res.Space.Why == "" {
-		t.Error("the space report is unmeasured and names no reason")
+	// Which of the two reasons, and not merely that there was one. FreeSpace has a
+	// second unmeasured path with a different cause and a different fix, and a
+	// non-empty Why cannot tell this test which one it just drove.
+	if !strings.Contains(res.Space.Why, "statfs: no such device") {
+		t.Errorf("Space.Why = %q, want it to carry the failing probe's own error; a reason that "+
+			"does not name the probe failure is the other unmeasured shape, not this one",
+			res.Space.Why)
+	}
+}
+
+// TestAProbeThatAnsweredWithoutMeasuringIsAlsoNotSpaceItHas is FreeSpace's other
+// unmeasured shape, and the one FSInfo.FreeMeasured exists for.
+//
+// A prober can return no error at all and still have measured nothing. That is why
+// D16 kept FreeBytes and FreeMeasured as two fields instead of one: the platform
+// probe can answer "may we write here" — which is what Open asks — and leave "is
+// there room" blank. FreeBytes is then whatever the struct was left holding, and
+// here it is deliberately a generous number, because believing an unmeasured
+// generous number is the mistake that fills the filesystem the order ledger writes
+// to, and the console would show a calm discovery loop the whole way down.
+//
+// The sibling test above cannot reach this: spaceProber.fail sets err and leaves
+// FreeMeasured true, so it stops at the probe-error branch one step earlier.
+func TestAProbeThatAnsweredWithoutMeasuringIsAlsoNotSpaceItHas(t *testing.T) {
+	// Not newSpaceProber, which sets FreeMeasured. The whole shape being tested is
+	// a probe that succeeds, names an allowlisted filesystem so the store opens,
+	// and reports no measurement of the space on it.
+	prober := &spaceProber{info: FSInfo{Name: "ext4", FreeBytes: plentyOfSpace}}
+	s := openStoreOver(t, prober, clock.NewFake(t0))
+
+	res, err := Cycle(context.Background(), s, cycleOpts(MarketKR,
+		&fakeSource{id: SourceOfficialTradingValue, rows: []Row{row("005930", 1, 100)}}))
+	if err != nil {
+		t.Fatalf("Cycle: %v", err)
+	}
+	if !res.Halted {
+		t.Fatal("a probe that measured no free space was read as the plenty it happened to be " +
+			"carrying; discovery kept writing to the filesystem the order ledger is on")
+	}
+	if res.Space.Checked {
+		t.Error("an unmeasured space report claims to have been checked")
+	}
+	if res.Space.Free != 0 {
+		t.Errorf("Space.Free = %d on a report that measured nothing; the unmeasured reading is "+
+			"carrying the prober's number as if it were one", res.Space.Free)
+	}
+	if res.Scan.Observations != 0 {
+		t.Errorf("%d observations were written on a filesystem whose free space is unmeasured",
+			res.Scan.Observations)
+	}
+	// And it says which of the two it was. The reason travels as text on the report
+	// rather than as a wrapped error, so the name is the whole distinction between
+	// "the probe failed" and "the probe answered and had no measurement in it".
+	if !strings.Contains(res.Space.Why, "reported no free space") {
+		t.Errorf("Space.Why = %q, want it to name the probe that answered without measuring",
+			res.Space.Why)
+	}
+	if !strings.Contains(res.HaltReason, "could not be measured") {
+		t.Errorf("HaltReason = %q, want the unmeasured-filesystem halt rather than the "+
+			"below-the-floor one; an unmeasured filesystem is not a filesystem with a number "+
+			"under the floor and the operator has to be told which it is", res.HaltReason)
 	}
 }
 

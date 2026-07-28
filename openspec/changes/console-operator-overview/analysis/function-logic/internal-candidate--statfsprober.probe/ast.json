@@ -1,0 +1,140 @@
+{
+  "file": "internal/candidate/fsprobe_linux.go",
+  "source_sha256": "5d90f1b19ad8cfee7c455e5b3d4f4860a36d893a4d46fbad42c3be05421c0d59",
+  "package": "candidate",
+  "function": "Probe",
+  "receiver": "statfsProber",
+  "signature": "statfsProber.Probe(params=1, results=2)",
+  "start": {
+    "line": 15,
+    "column": 1
+  },
+  "end": {
+    "line": 33,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 18,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 12
+      },
+      "text": "syscall.Statfs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 11
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 23
+      },
+      "text": "FilesystemName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 20
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 39
+      },
+      "text": "int64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 29,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 30,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

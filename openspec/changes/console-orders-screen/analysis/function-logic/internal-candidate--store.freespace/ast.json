@@ -1,0 +1,142 @@
+{
+  "file": "internal/candidate/store.go",
+  "source_sha256": "791621bffd8b36359046c20a53f68810e31d65e96e3d49a2170e5b02a6aecc2f",
+  "package": "candidate",
+  "function": "FreeSpace",
+  "receiver": "Store",
+  "signature": "Store.FreeSpace(params=0, results=2)",
+  "start": {
+    "line": 1618,
+    "column": 1
+  },
+  "end": {
+    "line": 1632,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1619,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1623,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1627,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1620,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1624,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1628,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1631,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1620,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1622,
+        "column": 15
+      },
+      "text": "s.prober.Probe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1622,
+        "column": 30
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1624,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1625,
+        "column": 4
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1628,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1629,
+        "column": 4
+      },
+      "text": "filepath.Dir"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1622,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

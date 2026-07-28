@@ -1,0 +1,320 @@
+{
+  "file": "internal/candidate/store_test.go",
+  "source_sha256": "78a7e00ed25d48c457a271f77b710897ba0c33aef94473c8a1590cfd12fea7b8",
+  "package": "candidate",
+  "function": "TestASummaryIsKeptUntilItsRawObservationsAreGoneAndThenDeleted",
+  "signature": "TestASummaryIsKeptUntilItsRawObservationsAreGoneAndThenDeleted(params=1, results=0)",
+  "start": {
+    "line": 1846,
+    "column": 1
+  },
+  "end": {
+    "line": 1887,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1850,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1853,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1865,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1868,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1872,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1877,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1880,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 1884,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1847,
+        "column": 10
+      },
+      "text": "openStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1848,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1850,
+        "column": 15
+      },
+      "text": "s.Promote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1851,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1853,
+        "column": 12
+      },
+      "text": "s.Cool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1853,
+        "column": 40
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1854,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1857,
+        "column": 12
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1857,
+        "column": 12
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1863,
+        "column": 18
+      },
+      "text": "s.PruneExpiredCandidates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1863,
+        "column": 48
+      },
+      "text": "expiry.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1866,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1869,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1872,
+        "column": 22
+      },
+      "text": "s.Candidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1873,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1876,
+        "column": 17
+      },
+      "text": "s.PruneExpiredCandidates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1876,
+        "column": 47
+      },
+      "text": "expiry.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1878,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1881,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1884,
+        "column": 22
+      },
+      "text": "s.Candidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1885,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1847,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1848,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1850,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1853,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1857,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1863,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1872,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1876,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1884,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

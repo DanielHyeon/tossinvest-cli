@@ -1,0 +1,124 @@
+{
+  "file": "cmd/tossctl/adoptionsettings.go",
+  "source_sha256": "e8ae8ab98af80253d4c8715340cb2bd9a9bcf177d3780dd078781dedbed6b53e",
+  "package": "main",
+  "function": "configServiceFor",
+  "signature": "configServiceFor(params=1, results=1)",
+  "start": {
+    "line": 41,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 48,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 49,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 22
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 17
+      },
+      "text": "config.DefaultPaths"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 9
+      },
+      "text": "config.NewService"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 45,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

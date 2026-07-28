@@ -212,3 +212,69 @@ cmd 쪽을 제외하려던 것이 아니다. 같은 처리를 적용하고 그 �
 숨는다** — 0으로 세는 것과 같은 실패가 한 상호작용 뒤에 일어나는 것이다.
 조건주문 상태기계를 만들지 않은 것도 맞다. 브로커의 상태 문자열을 그대로 보고하는 것이
 정직하고, 유도하면 **잔여물이 다음 검증을 막는지 결정하는 상태에 두 번째 정본**이 생긴다.
+
+---
+
+## I-8 — `openOrdersPanelFrom`의 doc 주석이 rate budget을 **둘**이라고 적고 있었다 (2026-07-28, 수정 완료)
+
+`internal/console/overview.go`의 `openOrdersPanelFrom` doc 주석이 “주문 화면의 갱신은 **둘**이
+든다”고 적었다. design D2 개정(I-6)으로 일반 주문이 `OPEN`·`CLOSED` 두 그룹으로 갈라지면서 실제
+비용은 **셋**(미체결 그룹 + 종결 그룹 + 조건주문)이고, spec delta와 `internal/console/console.go:199`,
+`console.go:275`, `TestOneRefreshAsksTheOpenGroupAndTheClosedGroupSeparatelyAndTheLiveOneWhole`가
+모두 셋이라고 말한다. 동작은 처음부터 셋이었으므로 계약 위반은 아니지만, **주석에 적힌 틀린
+rate budget 숫자는 다음 사람이 예산을 잡는 근거**가 된다 — 이 콘솔에서 계정 하나의 rate budget은
+엔진·실계좌 검증과 공유된다(spec Requirement 7).
+
+수정: 주석을 “셋 — 미체결 그룹 1 + 종결 그룹 1 + 조건주문 1”로 고치고, 갈라 세는 이유(D2:
+한 엔드포인트의 침묵을 다른 쪽의 0으로 보고하지 않는다)를 함께 적었다. 본문은 무변경이므로
+`analysis/function-logic/internal-console--console.openorderspanelfrom/`의 분기표(B1·B2)는 그대로이고,
+같은 문서의 “문서 drift(발견, 미수정)” 항목을 수정 완료로 갱신했다. 위 §Manager 판정 I-3에 남은
+“갱신당 2콜”은 D2 개정 **이전에** 내려진 판정의 기록이므로 그대로 둔다 — 그 판정의 요지(페이지네이션
+순회를 두지 않았다)는 콜 수와 무관하게 유효하다.
+
+부수: `internal/console/static_test.go`의 `TestNoCapabilityReachesTheConsoleAroundOptions` 수정
+(add-candidate-discovery/issues.md §11 G-1)으로 이 change의 diff hunk가 그 함수와 교차하게 되어
+`internal-console--testnocapabilityreachestheconsolearoundoptions` target을 이 change에도 신설했다.
+이 change의 base commit에는 그 함수가 이미 존재하므로 revision은 `current`다.
+
+---
+
+## I-9 — 콘솔이 계좌를 **화면마다** 해석하고 있었다 (2026-07-28, 수정 완료)
+
+`runConsole`은 `Holdings: newConsoleHoldings(root)`와 `Orders: consoleOrdersSeam(root)`를 서로
+독립적으로 배선했고, 두 seam이 **각자** 첫 사용에서 `verifyBrokerFactory`를 불렀다. 그 함수는
+`buildVerifyBroker` — `resolveVerifyAccount`, 즉 2026-07-26에 429를 세 번 받아 검증 실행 3스텝을
+잃게 한 `/api/v1/accounts` 읽기(measurements.md M4)를 하는 곳이다. 따라서 포지션 화면과 `/orders`를
+모두 여는 콘솔 세션은 그 읽기를 **프로세스당 2회** 했고, 검증 실행이 세 번째를 더했다.
+
+**주석이 과잉 주장하고 있었다.** `consoleOrdersSeam`의 doc 주석은 두 번째 클라이언트를 만들면
+"계좌 시퀀스를 다시 해석한다"고 적었는데, 콘솔 전체로 보면 그 해석은 이미 두 번 일어나고 있었다.
+`TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient`는 **seam 하나 안의** 구축만 세므로
+그 주석이 틀린 내내 통과했다 — 이 브랜치의 리뷰 다섯 라운드가 걷어내 온 바로 그 모양이다.
+
+수정:
+
+- `consoleBroker` + `newConsoleBroker` + `resolve()` — 콘솔이 공유하는 계좌 해석 1회. 구축은 락
+  안에서 일어나 동시 개시 2건도 1회로 묶인다. 실패는 캐시하지 않는다(`openapi login` 이후 재시도).
+- 두 읽기 seam은 `*rootOptions` 대신 이 공유 resolver를 받는다. **넘어가는 능력은 그대로다** —
+  `lazyHoldings`/`lazyOrders`는 브로커도 method value도 필드로 갖지 않고 호출마다 지역 변수로
+  꺼내 쓴다. `TestTheConsoleIsHandedOneCapabilityAndNotABroker`와 internal/console의 능력 순회는
+  약화 없이 그대로 통과한다.
+- `TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce` — **콘솔 단위**의 주장. 모든 읽기 화면을
+  열어(순차 2회 + 동시 1회) 해석 1회를 확인하고, 소스에서 ① `verifyBrokerFactory`를 부르는 함수
+  집합이 이유가 적힌 `consoleBrokerBuildSites`와 정확히 일치하는지, ② `runConsole`이 공유 resolver를
+  정확히 하나 만들어 모든 읽기 seam에 넘기는지 검사한다. RED는 2회를 보였고, 수정 후 seam별
+  resolver를 되돌리는 변이에서 다시 2회로 실패한다(같은 변이에서 seam 단위 테스트는 계속 통과 —
+  이 테스트가 무엇을 새로 잡는지가 그것이다).
+- seam 단위 테스트는 남기되 doc 주석에 **범위가 seam 하나**라고 적었다.
+
+**검증 실행은 공유하지 않는다(의도).** `consoleVerifyStarter`는 실행마다 자기 클라이언트를 만들며,
+이유를 그 함수의 주석에 적었다: 기록에 적히는 계좌는 실주문 직전에 그 실행이 확인한 계좌여야 하고,
+읽기 화면이 언젠가(자격증명 교체 이전일 수도 있다) 해석해 둔 값을 물려받으면 기록이 아무도
+재확인하지 않은 계좌를 이름 붙이게 된다. 해석 실패의 계약도 다르다 — 읽기는 화면 위 문장이고
+검증은 실행 전 치명이다. 비용은 실행당 1회로 묶여 있다.
+
+증거: `cmd/tossctl/console.go`·`console_test.go`에 묶인 이 change의 모든 target을 재생성했고,
+`newConsoleBroker`·`consoleBroker.resolve`·`newConsoleHoldings`·
+`TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce` 4종을 신설했다. `lazyHoldings.Holdings`는
+본문이 바뀌었으므로 revision이 `base`에서 `current`로 올라갔다.

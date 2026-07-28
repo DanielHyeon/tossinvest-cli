@@ -387,13 +387,19 @@ mutating 단계가 없다 — 검증은 fixture와 주입 clock으로 한다.
   (candidatesrc·`cmd/`·미래 레인이 `Candidate`를 읽고 `execgw`를 부르는 것)은 제약하지 않는다.
   D7에 적었다. 실제 자물쇠는 금지 목록이 아니라 **의존 폐포가 `{internal/clock}`임을 고정하는
   테스트**다 — 목록에 있든 없든 새 간선이면 실패한다.
-- [ ] 6.2 Function Logic Map + `check_analysis.py`
-- [ ] 6.3 PM registry allowlist + fixture 등록
+- [x] 6.2 Function Logic Map + `check_analysis.py` → 세 change 합쳐 485 target. 증거 생산 자체가
+      리뷰 5라운드가 못 잡은 결함 넷을 찾았다 — 계좌 해석 프로세스당 2회, `FreeMeasured` B3 무테스트,
+      능력 걷기의 공허 통과, 갱신 비용 주석 2콜(실제 3콜).
+- [x] 6.3 PM registry allowlist + fixture 등록 → `generate_master_tracker.py --check` 통과.
 - [x] 6.4 `docs/ROADMAP.md` Phase 3 갱신 — T3.1을 이 change로 분리하고 착수 조건을 고친다
       → 착수 조건 분리 근거를 Phase 3 머리에 명시(읽기 전용이라 주문 경로 신뢰가 선행 조건이
       될 이유가 없고, 시간축 데이터는 늦게 쌓기 시작할수록 레인이 붙을 때 근거가 없다).
-- [ ] 6.5 `make sdd-sync && make sdd-check && make gate CHANGE=add-candidate-discovery`
-- [ ] 6.6 독립 리뷰(gstack) — 특히 격리 테스트가 실제로 컴파일 차단을 하는지
+- [x] 6.5 `make sdd-sync && make sdd-check && make gate CHANGE=add-candidate-discovery`
+- [x] 6.6 독립 리뷰 — §1·§2·§3(2렌즈)·§4·§5가 각각 별도 컨텍스트에서 검토됐고 전부 review.md에 있다.
+      격리 테스트는 §3 리뷰가 **변이 6종**(직접·간접·`_test.go`·컴파일 안 되는 build tag 뒤·외부 test
+      패키지·새 하위 패키지)으로 확인했고, **잡지 못하는 것**도 실행으로 확인해 D7에 적었다 —
+      모듈 내부 import가 필요 없는 주문 경로(`http.Post`)는 네 테스트를 전부 통과한다.
+      실제 자물쇠는 금지 목록이 아니라 의존 폐포가 `{internal/clock}`임을 고정하는 테스트다.
 
 ## 착수 조건 — 충족 (2026-07-28)
 

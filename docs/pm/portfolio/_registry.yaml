@@ -1,10 +1,18 @@
 {
   "project": "TossOS",
   "prefix": "TOS",
-  "initiatives": ["INIT-TOS-001"],
-  "epics": ["EPIC-TOS-001"],
-  "features": ["FEAT-TOS-001"],
-  "stories": ["STORY-TOS-001"],
+  "initiatives": [
+    "INIT-TOS-001"
+  ],
+  "epics": [
+    "EPIC-TOS-001"
+  ],
+  "features": [
+    "FEAT-TOS-001"
+  ],
+  "stories": [
+    "STORY-TOS-001"
+  ],
   "bootstrap_change_allowlist": [
     "verify-execution-capability",
     "add-net-rr-measurement",
@@ -14,6 +22,8 @@
     "apply-us-measurement-fixes",
     "verify-clears-leftovers",
     "verify-survives-already-processing",
-    "add-candidate-discovery"
+    "add-candidate-discovery",
+    "console-operator-overview",
+    "console-orders-screen"
   ]
 }

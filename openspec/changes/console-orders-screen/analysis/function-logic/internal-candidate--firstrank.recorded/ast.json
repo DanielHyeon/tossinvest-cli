@@ -1,0 +1,31 @@
+{
+  "file": "internal/candidate/store.go",
+  "source_sha256": "791621bffd8b36359046c20a53f68810e31d65e96e3d49a2170e5b02a6aecc2f",
+  "package": "candidate",
+  "function": "Recorded",
+  "receiver": "FirstRank",
+  "signature": "FirstRank.Recorded(params=0, results=1)",
+  "start": {
+    "line": 1298,
+    "column": 1
+  },
+  "end": {
+    "line": 1298,
+    "column": 72
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1298,
+        "column": 38
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

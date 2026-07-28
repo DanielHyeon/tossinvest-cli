@@ -1,0 +1,210 @@
+{
+  "file": "cmd/tossctl/console_test.go",
+  "source_sha256": "85d9f3fcee393ead51e81a16bc898ad15bca9164cbd695f0c65e245ef5d3a22c",
+  "package": "main",
+  "function": "TestTheConsoleIsHandedTheLimitsAsNumbersAndNoWayToWriteThem",
+  "signature": "TestTheConsoleIsHandedTheLimitsAsNumbersAndNoWayToWriteThem(params=1, results=0)",
+  "start": {
+    "line": 471,
+    "column": 1
+  },
+  "end": {
+    "line": 490,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 473,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 478,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "for",
+      "at": {
+        "line": 480,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 486,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 10
+      },
+      "text": "consoleGateLimitsSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 56
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 9
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 5
+      },
+      "text": "typ.NumMethod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 29
+      },
+      "text": "typ.Method"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 30
+      },
+      "text": "typ.NumMethod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 19
+      },
+      "text": "typ.NumMethod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 26
+      },
+      "text": "typ.Method"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 6
+      },
+      "text": "consoleOptionFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 479,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 480,
+        "column": 7
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 480,
+        "column": 36
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 481,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

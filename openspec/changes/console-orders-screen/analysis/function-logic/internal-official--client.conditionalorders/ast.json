@@ -1,0 +1,213 @@
+{
+  "file": "internal/official/conditional_reads.go",
+  "source_sha256": "d58782c48af7a01718e4981d47c3e2116712c89dc79a110e62c92dfd3fae17fb",
+  "package": "official",
+  "function": "ConditionalOrders",
+  "receiver": "Client",
+  "signature": "Client.ConditionalOrders(params=5, results=2)",
+  "start": {
+    "line": 48,
+    "column": 1
+  },
+  "end": {
+    "line": 76,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 64,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 3
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 3
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 3
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 18
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 12
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 47
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 27
+      },
+      "text": "adaptConditionalOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 15
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 15
+      },
+      "text": "time.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

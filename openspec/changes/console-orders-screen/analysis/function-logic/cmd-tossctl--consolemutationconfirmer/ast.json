@@ -1,0 +1,37 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "13914d63557f6a5376038f92059e52e1bc647f3416d7e398f42074255bc0a97f",
+  "package": "main",
+  "function": "consoleMutationConfirmer",
+  "signature": "consoleMutationConfirmer(params=0, results=1)",
+  "start": {
+    "line": 518,
+    "column": 1
+  },
+  "end": {
+    "line": 520,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 519,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 519,
+        "column": 43
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -1433,7 +1433,11 @@ func TestNoCapabilityReachesTheConsoleAroundOptions(t *testing.T) {
 	}
 	sort.Strings(names)
 
-	checkedInterfaces := 0
+	// The three positive controls at the bottom read these. They are counted here
+	// and not inferred afterwards because the thing being controlled for is a walk
+	// that visited nothing, and a walk that visited nothing leaves no other trace.
+	visitedInterfaces := map[*ast.InterfaceType]bool{}
+	checkedConsoleMethods := 0
 	for _, name := range names {
 		file := files[name]
 
@@ -1443,6 +1447,7 @@ func TestNoCapabilityReachesTheConsoleAroundOptions(t *testing.T) {
 				if d.Recv == nil || !d.Name.IsExported() || !receiverIsConsole(d.Recv) {
 					continue
 				}
+				checkedConsoleMethods++
 				subject := "the exported method (*Console)." + d.Name.Name + " in " + name
 				checkVerbs(t, subject, d.Name.Name)
 				closureNames, ifaces := capabilityClosure(d.Type, declaredTypes)
@@ -1481,10 +1486,13 @@ func TestNoCapabilityReachesTheConsoleAroundOptions(t *testing.T) {
 
 		ast.Inspect(file, func(n ast.Node) bool {
 			iface, ok := n.(*ast.InterfaceType)
-			if !ok || seams[iface] {
+			if !ok {
 				return true
 			}
-			checkedInterfaces++
+			visitedInterfaces[iface] = true
+			if seams[iface] {
+				return true
+			}
 			checkNoEmbedding(t, "an interface declared in "+name, iface)
 			for _, m := range iface.Methods.List {
 				for _, mn := range m.Names {
@@ -1495,13 +1503,43 @@ func TestNoCapabilityReachesTheConsoleAroundOptions(t *testing.T) {
 		})
 	}
 
-	// Positive control: the walk found the seams and told them apart from
-	// everything else. A zero on either side is a walk that stopped looking.
+	// Positive controls. Every assertion above is of the form "nothing found", so
+	// each of the three walks passes this test loudest when it looked at nothing at
+	// all, and the controls are the only thing standing between that and a green
+	// run. They are three and not one because the three walks fail independently.
+	//
+	// Note what is NOT asserted: that some interface outside the seam set was
+	// checked. Today every interface this package declares IS an Options seam, and
+	// that is the healthy state rather than a broken walk — an incidental
+	// `interface{ PlaceOrder(…) }` appearing is the thing being guarded against,
+	// not a precondition of guarding. So the control on that walk is that it
+	// reached interface declarations at all, and that it reached the same ones the
+	// Options walk resolved by its own separate route.
 	if len(seams) == 0 {
 		t.Error("no Options field resolved to an interface; the seam set is empty and every interface " +
 			"in the package is being checked as if it were an incidental one")
 	}
-	_ = checkedInterfaces
+	if len(visitedInterfaces) == 0 {
+		t.Error("the package-wide walk reached no interface declaration at all; it is vacuous, and " +
+			"an interface{ PlaceOrder(...) } declared anywhere in this package — including the " +
+			"inline one of a type assertion — would reach the console unreported")
+	}
+	missedSeams := 0
+	for iface := range seams {
+		if !visitedInterfaces[iface] {
+			missedSeams++
+		}
+	}
+	if missedSeams > 0 {
+		t.Errorf("%d of the %d Options seams were never visited by the package-wide walk; the two "+
+			"walks are not looking at the same package, so whatever the package-wide one is "+
+			"missing it is missing silently", missedSeams, len(seams))
+	}
+	if checkedConsoleMethods == 0 {
+		t.Error("no exported method on *Console was checked; the method walk is vacuous, and a " +
+			"capability attached to the console rather than passed through Options — the P0-3 " +
+			"shape this test exists for — would pass the entire package suite")
+	}
 }
 
 // receiverIsConsole reports a method on *Console (or Console).

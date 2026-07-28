@@ -1,0 +1,77 @@
+{
+  "file": "internal/candidate/scan.go",
+  "source_sha256": "f974502f7601c0d47bb2d6ff51c87ac1e5045c1f88fff9e362f598b7e8aea992",
+  "package": "candidate",
+  "function": "coverageAnswered",
+  "signature": "coverageAnswered(params=3, results=1)",
+  "start": {
+    "line": 563,
+    "column": 1
+  },
+  "end": {
+    "line": 575,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 565,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 566,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 570,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 571,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 574,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 564,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 569,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

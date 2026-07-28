@@ -759,9 +759,11 @@ func brokerReadable(snap holdingsSnapshot) reading {
 // refreshing it.
 //
 // peek and not get: this screen's contract is zero broker calls per render (D4),
-// and the orders screen's refresh costs two. The longest-lived tab in the console
-// must not be the one that spends the budget, so a cache nothing has filled reads
-// as never_fetched and the panel points at the screen that fills it.
+// and the orders screen's refresh costs three — the pending order group, the
+// finished one and the conditional endpoint, which D2 kept apart so one
+// endpoint's silence is never reported as another's zero. The longest-lived tab in
+// the console must not be the one that spends the budget, so a cache nothing has
+// filled reads as never_fetched and the panel points at the screen that fills it.
 //
 // The count is the orders screen's own combined reading, which refuses to add the
 // two lists when either is unmeasured. Reproducing the addition here would be a

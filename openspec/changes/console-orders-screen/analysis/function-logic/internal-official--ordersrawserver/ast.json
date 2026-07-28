@@ -1,0 +1,170 @@
+{
+  "file": "internal/official/orders_reads_test.go",
+  "source_sha256": "57ebcdf03d99231b6dd70d10b2a1218a0dc3dcd455cf6329b4460a5d2dc362f0",
+  "package": "official",
+  "function": "ordersRawServer",
+  "signature": "ordersRawServer(params=3, results=1)",
+  "start": {
+    "line": 427,
+    "column": 1
+  },
+  "end": {
+    "line": 457,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 430,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 434,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 435,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 437,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 453,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 433,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 9
+      },
+      "text": "httptest.NewServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 28
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 11
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 19
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 11
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 19
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 48
+      },
+      "text": "boolText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 4
+      },
+      "text": "http.NotFound"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 431,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 436,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 438,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

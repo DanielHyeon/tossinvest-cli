@@ -1,0 +1,29 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "9ffd8b85f4c50e24ee7989fc4da44cdb9f5e6022689199cba8eef571893e90a8",
+  "package": "main",
+  "function": "newConsoleBroker",
+  "signature": "newConsoleBroker(params=1, results=1)",
+  "start": {
+    "line": 380,
+    "column": 1
+  },
+  "end": {
+    "line": 382,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 381,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -263,3 +263,54 @@ Manager 판정이 필요하면: spec Requirement 7에 "tick은 어떤 원천도 
 `isolation_test.go`가 자기 경계를 doc에 적은 선례를 따라 **테스트 자신의 doc 주석에 적었고**
 검출기 자체의 표 테스트를 붙였다. 스펙 문장("발굴은 주문 경로에 도달할 수 없어야 한다")과
 달리 이 가드는 spec Requirement가 아니라 §4 리뷰의 후속이므로 스펙 변경은 필요 없다.
+
+---
+
+## 11. 증거 생산 pass가 찾은 결함 둘 — 수정 완료 (2026-07-28, 분류 ② safe local)
+
+**G-1 — `TestNoCapabilityReachesTheConsoleAroundOptions`의 positive control이 공회전했다.**
+리뷰 지적 P0-3(“`Options`가 아니라 `*Console`에 붙은 능력은 전 패키지 스위트를 통과한다”)을
+막으려고 만든 가드 안에, 같은 모양의 과장이 들어 있었다. 세 걷기(Options seam 해석, 패키지 전역
+인터페이스 순회, `*Console` exported 메서드 순회) 중 **단언되는 것은 seam 하나뿐**이었고,
+`checkedInterfaces`는 세기만 하고 `_ = checkedInterfaces`로 버려졌다. 바로 위 주석은 “어느 쪽이든
+0이면 걷기가 멈춘 것”이라고 적었지만 그 문장은 코드에 없었다. 따라서 `receiverIsConsole`이 항상
+false를 답해도, `ast.Inspect` 콜백이 첫 노드에서 멈춰도 테스트는 초록으로 통과했다 —
+**아무것도 보지 않은 걷기가 가장 조용히 통과하는** 구조였다.
+
+수정: 세 걷기에 각자의 대조를 붙였다. `len(seams) > 0`(B21), 패키지 전역 걷기가 인터페이스 선언에
+닿았는가(B22), 그 걷기가 `Options` 걷기가 자기 경로로 찾은 seam 노드에 **전부** 닿았는가(B23–B25),
+`*Console` exported 메서드를 하나라도 검사했는가(B26).
+
+의도적으로 단언하지 않은 것: “seam 밖 인터페이스를 하나 이상 셌다”. 측정 결과 이 패키지가 선언한
+인터페이스는 6개이고 **6개 전부가 `Options` seam**이다. 즉 비-seam 0은 걷기가 고장난 상태가 아니라
+건강한 상태이므로, 0을 실패로 만들면 정상 트리가 빨개진다. 그래서 대조를 “닿았는가 + 같은 노드에
+닿았는가”로 세웠다. 이 지점이 원래 주석의 사실 오류이기도 하다.
+
+변이 확인(수정 전 통과 → 수정 후 실패):
+`receiverIsConsole`이 항상 false → B26 실패(`the method walk is vacuous`).
+`ast.Inspect` 콜백이 즉시 `false` → B22·B25 실패(`reached no interface declaration at all`,
+`6 of the 6 Options seams were never visited`).
+파일 하나(`holdings.go`)를 걷기에서 제외 → B25 실패(`1 of the 6`).
+
+**G-2 — `Store.FreeSpace`의 B3(`!info.FreeMeasured`)에 테스트가 없었다.**
+`TestSpaceItCouldNotMeasureIsNotSpaceItHas`가 halt를 몰아가는 `spaceProber.fail`은 `err`만 세우고
+`FreeMeasured`는 **true로 남긴다**. 따라서 그 테스트가 지나는 것은 B2(프로브 오류)이고 B3에는
+닿지 않는다. B3은 D16이 `FreeBytes`와 `FreeMeasured`를 두 필드로 나눈 바로 그 부재-대-0 플래그를
+읽는 분기인데, 트리 전체에 그 분기를 지나는 테스트가 없었다. §5 리뷰의 변이는 halt 조건 자체를
+바꿔서 두 분기에 동시에 영향을 줬기 때문에 덮은 것처럼 보였을 뿐이다. **동작은 옳고, 이름이
+약속한 커버리지가 없었다.**
+
+수정: `TestAProbeThatAnsweredWithoutMeasuringIsAlsoNotSpaceItHas` 신설. 오류 없이 성공하면서
+`FreeMeasured == false`이고 `FreeBytes`는 넉넉한 숫자를 든 프로버 — 즉 “측정되지 않은 관대한 숫자”
+— 로 발굴이 멈추는지, 그리고 두 미측정 사유 중 **어느 쪽인지 이름으로 말하는지**(`Space.Why`가
+`reported no free space`)를 단언한다. 형제 테스트도 `Space.Why`가 프로브 자신의 오류를 나르는지로
+좁혀, 두 사유가 서로를 대신할 수 없게 했다.
+
+변이 확인: `store.go`에서 B3(`if !info.FreeMeasured { ... }`)을 삭제하고 `internal/candidate`
+전체를 돌리면 **새 테스트 하나만** 실패한다(`a probe that measured no free space was read as the
+plenty it happened to be carrying`). 삭제 전 그 분기를 지키던 테스트가 없었다는 직접 증거다.
+
+증거 재생성: `internal/console/static_test.go`에 묶인 이 change의 `current` revision target 전부와
+`internal-console--testnocapabilityreachestheconsolearoundoptions`의 분기표·상태 절·안전 결론.
+`internal/candidate/watch_test.go`는 이 change의 base commit 이후 **신설 파일**이라 gate가 evidence를
+요구하지 않는다(`git diff <base>`가 `new file mode`로 보고한다).

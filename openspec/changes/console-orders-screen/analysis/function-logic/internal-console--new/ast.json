@@ -1,0 +1,206 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "ca39a8f37d2b3c18ace9d0ddcac63f1962b1c5fee3d3b1a0d3a2cf4ef111076e",
+  "package": "console",
+  "function": "New",
+  "signature": "New(params=1, results=2)",
+  "start": {
+    "line": 296,
+    "column": 1
+  },
+  "end": {
+    "line": 325,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 298,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 309,
+        "column": 30
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 13
+      },
+      "text": "newToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 13
+      },
+      "text": "newToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 37
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 37
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 21
+      },
+      "text": "c.opts.Binary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 15
+      },
+      "text": "newHoldingsCache"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 18
+      },
+      "text": "newOrdersCache"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 14
+      },
+      "text": "c.routes"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 309,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 312,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 315,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 322,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,100 @@
+{
+  "file": "internal/measure/counterfactual.go",
+  "source_sha256": "ac05b5382bc4c368b8170f1b83f797195245617b058d492632b184be3a4df78c",
+  "package": "measure",
+  "function": "unconstrainedAccount",
+  "signature": "unconstrainedAccount(params=1, results=1)",
+  "start": {
+    "line": 319,
+    "column": 1
+  },
+  "end": {
+    "line": 339,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 322,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 326,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 22
+      },
+      "text": "money"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 22
+      },
+      "text": "money"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 22
+      },
+      "text": "money"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 22
+      },
+      "text": "money"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 323,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 324,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

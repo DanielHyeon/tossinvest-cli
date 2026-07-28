@@ -1,0 +1,65 @@
+{
+  "file": "internal/candidate/source.go",
+  "source_sha256": "2515ac9bda3797beef179f6dd7cb86a6bc690beb6aebe856967989c53b5c10e3",
+  "package": "candidate",
+  "function": "Ran",
+  "receiver": "Schedule",
+  "signature": "Schedule.Ran(params=2, results=0)",
+  "start": {
+    "line": 268,
+    "column": 1
+  },
+  "end": {
+    "line": 272,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 2
+      },
+      "text": "s.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 8
+      },
+      "text": "s.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 18
+      },
+      "text": "at.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 270,
+        "column": 2
+      },
+      "text": "s.mu.Unlock"
+    }
+  ],
+  "revision": "base"
+}

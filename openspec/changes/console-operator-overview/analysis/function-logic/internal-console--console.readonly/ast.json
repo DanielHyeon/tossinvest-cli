@@ -1,0 +1,79 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "ca39a8f37d2b3c18ace9d0ddcac63f1962b1c5fee3d3b1a0d3a2cf4ef111076e",
+  "package": "console",
+  "function": "readOnly",
+  "receiver": "Console",
+  "signature": "Console.readOnly(params=1, results=1)",
+  "start": {
+    "line": 633,
+    "column": 1
+  },
+  "end": {
+    "line": 644,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 635,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 634,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 640,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 636,
+        "column": 4
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 636,
+        "column": 4
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 637,
+        "column": 4
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 642,
+        "column": 3
+      },
+      "text": "next"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

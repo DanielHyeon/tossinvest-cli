@@ -1,0 +1,342 @@
+{
+  "file": "internal/testenv/static_test.go",
+  "source_sha256": "ace1eb15988547b88038f56b78c54663786baa46b2723e8d39bee508b52b0637",
+  "package": "testenv_test",
+  "function": "TestFixedFSProberIsTestOnly",
+  "signature": "TestFixedFSProberIsTestOnly(params=1, results=0)",
+  "start": {
+    "line": 81,
+    "column": 1
+  },
+  "end": {
+    "line": 141,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 10
+      },
+      "text": "repoRoot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 3
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 3
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 16
+      },
+      "text": "os.ReadFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 24
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 14
+      },
+      "text": "filepath.Rel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 16
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 23
+      },
+      "text": "productionFiles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 16
+      },
+      "text": "os.ReadFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 24
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 13
+      },
+      "text": "filepath.Rel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 23
+      },
+      "text": "callsFixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 42
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 28
+      },
+      "text": "onlyInComments"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 43
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
