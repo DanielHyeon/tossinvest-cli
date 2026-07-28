@@ -29,6 +29,8 @@ class TrackerTests(unittest.TestCase):
             "verify-clears-leftovers",
             "verify-survives-already-processing",
             "add-candidate-discovery",
+            "console-operator-overview",
+            "console-orders-screen",
         ):
             path = changes / change
             path.mkdir(parents=True)
