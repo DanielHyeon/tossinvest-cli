@@ -763,9 +763,16 @@ const consoleSignalsPanelWhy = "이 콘솔 프로세스는 스캔을 돌리지 �
 
 // consoleSignals is the seam's implementation.
 type consoleSignals struct {
-	// open resolves the discovery store. It is a field rather than a direct call
-	// so this package's tests can point it at a temporary one.
-	open func() (*candidate.Store, error)
+	// open resolves the discovery store and hands back the release for it. It is a
+	// field rather than a direct call so this package's tests can point it at a
+	// temporary one.
+	//
+	// It takes the caller's context because Open migrates: the schema check, the
+	// ladder behind it and every query afterwards belong to the request that asked
+	// for the page, and this page reloads itself every fifteen seconds. A request
+	// the browser has already abandoned used to keep all of it running under
+	// context.Background().
+	open func(ctx context.Context) (*candidate.Store, func(), error)
 }
 
 // consoleSignalsSeam wires the discovery screen.
@@ -776,17 +783,19 @@ type consoleSignals struct {
 // fact about the wiring rather than about the handlers.
 func consoleSignalsSeam(root *rootOptions) console.SignalsReader {
 	return &consoleSignals{
-		open: func() (*candidate.Store, error) { return candidateStoreFactory(root) },
+		open: func(ctx context.Context) (*candidate.Store, func(), error) {
+			return candidateStoreFactory(ctx, root)
+		},
 	}
 }
 
 // Signals reads every contract market's assessment as of one instant.
 func (s *consoleSignals) Signals(ctx context.Context) (console.SignalsReading, error) {
-	store, err := s.open()
+	store, release, err := s.open(ctx)
 	if err != nil {
 		return console.SignalsReading{}, fmt.Errorf("candidate: opening the discovery store: %w", err)
 	}
-	defer func() { _ = store.Close() }()
+	defer release()
 
 	// One instant for every market, taken from the store's clock rather than this
 	// process's: every input age on the page is measured against it, and two
@@ -829,21 +838,12 @@ func consoleSignalsMarket(ctx context.Context, store *candidate.Store, market st
 	}
 	out.Verdicts = verdicts
 
-	chases := make([]candidate.Chase, 0, len(verdicts))
-	var accelerations []candidate.Acceleration
-	seenLate := make([]candidate.ShadowBand, 0, len(verdicts))
-	extended := make([]candidate.ShadowBand, 0, len(verdicts))
-	for _, v := range verdicts {
-		chases = append(chases, v.Chase)
-		accelerations = append(accelerations, v.Accelerations...)
-		seenLate = append(seenLate, v.SeenLateBand)
-		extended = append(extended, v.ExtendedBand)
-	}
-	out.Vetoes = candidate.TallyVetoes(chases)
-	out.Crossings = candidate.TallyCrossings(accelerations)
-	out.Bands = map[candidate.VetoCode]candidate.BandTally{
-		candidate.VetoSeenLate: candidate.TallyBands(candidate.VetoSeenLate, seenLate),
-		candidate.VetoExtended: candidate.TallyBands(candidate.VetoExtended, extended),
-	}
+	// The same reducer the scan output uses, rather than the same three
+	// constructors called again here. This block used to assemble the tallies by
+	// hand: the two agreed, and the whole cost sat in the future — a fourth shadow
+	// band added to internal/candidate would have appeared on `tossctl candidate
+	// scan` and not on /signals, and a band missing from a page renders as a band
+	// nobody crossed rather than as one nobody counted.
+	out.Vetoes, out.Crossings, out.Bands = candidate.TallyVerdicts(verdicts)
 	return out
 }

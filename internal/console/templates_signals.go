@@ -89,8 +89,15 @@ const signalsTemplates = `
   <dt>응답 / 시도</dt>
   <dd>{{.AnsweredText}}{{if .TakenAt}} <span class="muted">— {{.TakenAt}} 스캔</span>{{end}}</dd>
   <dt>강등</dt>
-  <dd>{{if .Degraded}}<strong class="bad">있음</strong>{{else}}<span class="ok">없음 — 전 원천 응답</span>{{end}}</dd>
+  <dd>{{if .Degraded}}<strong class="bad">있음</strong>{{else if .NothingAttempted}}<strong>판단 불가 — 시도한 원천이 없다</strong>{{else}}<span class="ok">없음 — 전 원천 응답</span>{{end}}</dd>
 </dl>
+{{if .NothingAttempted}}
+<p class="notice"><strong>이 스캔은 원천을 하나도 부르지 않았다.</strong> 일정상 아직 부를
+때가 아닌 원천만 있었다는 뜻이다(엔진 양보로 간격이 두 배가 됐거나, tick이 모든 원천의
+간격보다 짧거나, 시각이 뒤로 갔을 때). 강등이 아니므로 찾아야 할 고장난 원천은 없지만,
+"전 원천 응답"도 아니다 — 아래 숫자들은 이번 통과가 아니라 마지막으로 실제 읽은 통과의
+것이다.</p>
+{{end}}
 {{if .Missing}}
 <table>
   <thead><tr><th>빠진 원천</th><th>사유</th><th>rate limit</th></tr></thead>

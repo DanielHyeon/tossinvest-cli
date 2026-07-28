@@ -305,10 +305,76 @@ mutating 단계가 없다 — 검증은 fixture와 주입 clock으로 한다.
   panel은 `seam_unwired` + "이름은 `tossctl candidate scan` 출력에 있다"로 렌더한다.
   D7(console-operator-overview)의 미체결 패널과 같은 형태이며, 근본 해소는 issues.md 9.
 
-- [ ] 5.9 [T] 스캔 기록 영속(schema v4) — 빠진 원천의 **이름**이 화면에 직접 도달하도록.
-      현재는 한 사이클의 in-memory `ScanResult.Missing`에만 있어 `/signals`가 CLI로 안내한다(D22).
-      **이 change의 범위 밖**이며 후속으로 남긴다. 콘솔이 요청마다 `Cycle`을 돌리는 우회는
-      금지다 — 열린 탭이 두 번째 발굴자가 되어 D12의 우선순위를 뒤집는다.
+### §5 리뷰 반영 (2026-07-28, 별도 컨텍스트 Eng 리뷰)
+
+- [x] 5.9 [T] **P0 — 일정상 아무것도 due하지 않은 turn이 루프를 죽이고 그것을 시장 실패로
+      보고했다.** `Cycle`이 빈 panel을 `Collect`에 넘기면 `ErrNoSourceAnswered`가 나오고
+      (panel이 비었다는 사실에 대해서는 참이고 시장에 대해서는 거짓이다), `Watch`→`OnError`→
+      false로 루프가 끝난다. 끝나면 아무도 승격하지 않고 `stateAt`이 `last_seen_at + 10분`에
+      암묵 냉각, 그 30분 뒤 만료 → **약 40분 안에 저장소의 모든 `first_seen_at`이 사라진다**.
+      §2.8과 D17이 막으려던 파괴를 §5가 추가한 기능이 일으켰고, 운영자에게는 "no source
+      answered"(= 브로커·시장 문제)로 보인다.
+      도달 경로 3종 전부 평시다 — ① 엔진 양보(`engineYieldFactor=2`가 15초를 30초로 만드는데
+      tick은 `DefaultWatchInterval` 15초 그대로. `--market US`는 `candidatesrc.Panel`이 WTS를
+      빼므로 **무조건** 공식 3종 단일 간격) ② `--interval`이 모든 원천의 간격보다 짧을 때
+      (flag help가 "floor of 3s"로 권한다) ③ 시각이 한 간격 이상 뒤로 갈 때(NTP·resume;
+      `Schedule.due`가 `!at.Before(last.Add(every))`라 전 원천이 동시에 not-due).
+      → 빈 panel은 오류가 아니라 `CycleResult.Quiet`로 기록하고 계속한다. 정리·공간 검사·평가는
+      그대로 돈다(평가를 건너뛰면 조용한 turn이 "시장이 비었다"로 보고된다).
+      → tick과 일정의 관계를 고정한다: `Schedule.UntilNextDue` + `watchWait` =
+      **운영자 tick보다 빠르지 않고, 어떤 원천이든 읽을 수 있게 되는 시점보다 빠르지 않다.**
+      `UntilNextDue`는 panel 전체의 최솟값이므로 늘어나는 상한이 가장 빠른 원천에 묶인다.
+      → `tossctl`의 `OnError`가 `ErrNoSourceAnswered`에서 루프를 유지한다. 기존 주석이
+      "Cycle only returns an error for the second"라고 적었는데 사실이 아니었고, panel 전체가
+      429 후퇴 중이면 시장 장애 없이 같은 자리에 도달한다.
+      테스트 4종 + 변이 3종(빈 panel 분기 제거 / `NotAsked` 제거 / `watchWait`을 tick 고정).
+- [x] 5.10 [T] **P1-1 — 아직 부를 때가 아닌 원천이, 물어보지도 않은 시장에 대해 보증했다.**
+      `Cycle`은 due한 것만 `Collect`에 넘기고 `Collect`는 넘겨받은 것으로 냉각 자격 panel을
+      만들었다. `coverageAnswered`가 not-due 원천을 "없어진 원천"으로 읽고 응답 요구를 그만둔다.
+      재현: `official_rankings_top_gainers`(not due) + `wts_popular`(due·응답·목록에서 빠짐)로
+      올라온 후보가 **다른 지지 원천을 한 번도 묻지 않은 스캔에 의해 냉각된다.**
+      엔진이 켜지는 순간 KR 배선에서 격 tick마다 도달한다(공식 30초 / WTS 10초 대 15초 tick).
+      → `heldSource`에 준 "있는데 실패함" 모양을 같은 이유로 확장한다: `CollectOptions.NotAsked`가
+      냉각 자격 집합(`heard`)에만 들어가고 `Attempted`·`Missing`·`Degraded`는 건드리지 않는다
+      (not-due는 강등이 아니다 — 강등으로 적으면 멀쩡한 원천을 찾으러 간다).
+      §2-5는 그대로다: panel에 아예 없는 원천은 여전히 "없어진 원천"이고 냉각을 막지 않는다.
+- [x] 5.11 [T] **P1-2 — `/signals`가 원천 0개 panel을 "전 원천 응답"으로 렌더했다.**
+      `signalsPanelFrom`이 `Known`만 보고 분기해 `응답 / 시도 0 / 0` 위에 `강등: 없음 — 전 원천
+      응답`을 **ok 클래스로** 그렸다. veto보다 한 단계 위이고 표 각주가 바로 그 문장을 믿으라고
+      말한다. → `signalsPanelView.NothingAttempted` + 템플릿 3분기. 강등이 아니라는 것도 함께
+      적는다. 변이: `NothingAttempted`를 항상 false로 → FAIL.
+- [x] 5.12 [T] **P2 — 사다리 리셋의 배선과 0행 200.** `for id := range scan.Budgets {
+      off.Recovered(id) }`를 지워도 저장소 전체 스위트가 통과했고, "429가 아닌 실패 전부에서
+      리셋"도 통과했다(후퇴 중인 원천이 매 tick 자기 후퇴를 지운다).
+      `TestARecoveredSourceStartsTheLadderAgainFromTheBottom`은 단위만 보면서 이름으로 배선을
+      주장했다 → `TestBackoffRecoveredBringsTheLadderBackToItsBottomRung`으로 개명하고 배선
+      테스트 2종을 추가했다.
+      **0행 200은 사다리를 리셋하지 않는다**(결정): `Budgets[id]`가 "응답했으나 행이 없어
+      커버리지로 세지 않는다"는 분류 **앞에서** 쓰이고 있었다 — 이 파일이 다른 어디에서도
+      증거로 취급하지 않는 판독이 유일하게 회복으로 세어졌다. 빈 목록 반환은 rate limit에 걸린
+      서비스가 흔히 하는 load shedding이므로, 서버가 덜 달라고 말하는 순간 폴링을 원상 복구하는
+      셈이 된다. → `ScanResult.Vouched`(행을 실은 응답만)가 회복 신호다. 예산 헤더는 D13 결정 2의
+      유일한 측정값이므로 응답 전체에 대해 그대로 기록한다. 변이 3종 전부 FAIL.
+- [x] 5.13 [T] **P2 — 나머지 표면.**
+      ① CLI `passedNote`가 무조건이라 `passed 7 (structurally 0: …)`이 가능했다 → 콘솔이 이미
+      쓰던 문장 교체 분기를 이식(`passedUnexpected`). 칸을 비우지는 않는다 — 0이 아니게 되는
+      경로가 D18이 지목한 유일하게 틀린 수리이므로 그것이 화면을 더 조용하게 만들면 안 된다.
+      ② `scan`/`watch`가 저장소를 **닫지 않았다** — `candidateWiring`이 doc과 달리 `func() {}`를
+      돌려줬고, 중단된 `watch`가 원장 옆에 checkpoint 안 된 WAL을 남겼다 → 팩토리가 release를
+      함께 돌려준다(fixture는 소유권을 유지한 채 호출 횟수만 센다).
+      ③ `/signals`가 15초마다 `context.Background()`로 저장소를 열고 마이그레이션했다 →
+      요청 context를 팩토리까지 관통시킨다.
+      ④ `consoleSignalsMarket`이 `tallyVerdicts`를 손으로 복제했다(네 번째 밴드를 한쪽에만
+      추가하면 다른 쪽에 안 나타난다) → `candidate.TallyVerdicts` 하나로 모으고, 콘솔 배선이
+      `Tally*` 생성자를 직접 부르지 않는다는 정적 테스트로 고정.
+      ⑤ 정적 소비자 가드의 **실제 경계**: 변이로 확인한 6종 중 4종(괄호·`== false`·`!= true`·
+      method value/expression)은 값싸게 넓혔고, 나머지 2종(결과를 변수에 담는 형태, pair를
+      method value로 받는 형태 — 후자는 `chase.NearHigh` 필드 읽기와 타입 없이 구분 불가)은
+      `isolation_test.go`가 하는 것처럼 **테스트 자신의 doc 주석에 경계로 적었다.** 검출기
+      자체의 표 테스트를 추가했다.
+      ⑥ `candidateVerifyLockPath` 오류가 runlock 게이트를 조용히 건너뛰었다 → fail-open은
+      유지하되(읽기 전용 루프가 데이터 디렉터리 오설정으로 못 도는 것이 더 나쁘다) 이유를
+      stderr에 적는다. 말없이 건너뛴 게이트는 통과한 게이트와 구분되지 않는다.
 
 ## 6. 격리와 게이트
 
@@ -337,3 +403,16 @@ mutating 단계가 없다 — 검증은 fixture와 주입 clock으로 한다.
    `near_high` 2.0% 3-상태(D10). 레인별 임계는 기록만 하고 판정은 T3.2가 한다.
 2. **스캔 간격** — 시장이 아니라 원천별(D13). WTS 5초, 공식 랭킹 15초 + 실측 기록.
 3. **KR·US** — 처음부터 동시 ON, `policy_version`을 시장별로 분리.
+
+## 후속 — 이 change의 범위 밖 (체크박스가 아니다)
+
+게이트는 미완료 체크박스를 0개로 요구한다. 아래는 **하지 않기로 결정한 것**이지 남은 일이
+아니므로 체크박스로 두지 않는다. 근거는 design.md에 있고, 하려면 새 change가 필요하다.
+
+- **스캔 기록 영속(schema v4)** — 빠진 원천의 **이름**이 `/signals`에 직접 도달하게 한다(D22).
+  지금은 한 사이클의 in-memory `ScanResult.Missing`에만 있어 화면이 CLI로 안내한다.
+  **콘솔이 요청마다 `Cycle`을 돌리는 우회는 금지다** — 열린 탭이 두 번째 발굴자가 되어
+  D12의 우선순위(엔진 > 검증 > 발굴)를 뒤집고, D14가 말한 "429 한 번에 원천 전손"을 자초한다.
+- **`seen_late`·`extended`의 veto 임계** — 저장소 어디에도 값이 없고 지어내지 않는다(D18).
+  그림자 밴드가 한 달치 실측을 쌓으면 **사람이 승인**한다. 그때까지 두 veto는 판정하지 않으며,
+  `Chase.Passed()`가 구조적으로 0인 것은 고장이 아니다.

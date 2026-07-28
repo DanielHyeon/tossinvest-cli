@@ -511,12 +511,18 @@ func TestASourceHeldByTheBackoffIsNotAskedAndDoesNotVouch(t *testing.T) {
 	}
 }
 
-// TestARecoveredSourceStartsTheLadderAgainFromTheBottom.
+// TestBackoffRecoveredBringsTheLadderBackToItsBottomRung is the unit, and only the
+// unit.
 //
 // A retreat that never reset would leave a source at five minutes for the rest of
 // the session after one bad minute, which is the earliness this change exists to buy
 // being spent on a 429 that is long over.
-func TestARecoveredSourceStartsTheLadderAgainFromTheBottom(t *testing.T) {
+//
+// It was called TestARecoveredSourceStartsTheLadderAgainFromTheBottom, which
+// claimed the wiring as well: nothing here calls Cycle, so deleting the recovery
+// from the cycle left this green (§5 review P2). The wiring is pinned by the two
+// tests below.
+func TestBackoffRecoveredBringsTheLadderBackToItsBottomRung(t *testing.T) {
 	b := NewBackoff()
 	b.Note(SourceOfficialGainers, t0)
 	b.Note(SourceOfficialGainers, t0.Add(30*time.Second))
@@ -525,6 +531,127 @@ func TestARecoveredSourceStartsTheLadderAgainFromTheBottom(t *testing.T) {
 		t.Errorf("step after a recovery = %d, want 1 — the ladder never came back down",
 			r.Step)
 	}
+}
+
+// ladderRun drives one source through a scripted sequence of readings and reports
+// the rung its retreat is on at the end.
+//
+// A second source answers on every turn throughout. Without it a panel of one
+// held source is a panel where nobody answered, and the turn would be measuring
+// Collect's refusal rather than the ladder.
+type ladderStep struct {
+	// after is how far past the previous step this one runs.
+	after time.Duration
+	// rows, err are what the source under test answers with.
+	rows []Row
+	err  error
+	// wantHeld, wantStep are asserted when set: the retreat in force at this
+	// instant, and which rung it is on. wantStep 0 asserts no retreat at all.
+	wantStep int
+	why      string
+}
+
+func runLadder(t *testing.T, steps []ladderStep) {
+	t.Helper()
+	clk := clock.NewFake(t0)
+	s := openStoreOver(t, newSpaceProber(plentyOfSpace), clk)
+	ctx := context.Background()
+
+	answering := &fakeSource{
+		id:   SourceOfficialTradingValue,
+		rows: []Row{pricedRow("005930", 12, 100, "10000")},
+	}
+	subject := &fakeSource{id: SourceOfficialGainers}
+	opts := cycleOpts(MarketKR, answering, subject)
+	opts.Schedule = NewSchedule(nil)
+	opts.Backoff = NewBackoff()
+
+	for i, step := range steps {
+		if step.after > 0 {
+			clk.Advance(step.after)
+		}
+		subject.rows, subject.err = step.rows, step.err
+		res, err := Cycle(ctx, s, opts)
+		if err != nil {
+			t.Fatalf("step %d: Cycle: %v", i+1, err)
+		}
+		got := 0
+		for _, r := range res.Backoff {
+			if r.Source == SourceOfficialGainers {
+				got = r.Step
+			}
+		}
+		if got != step.wantStep {
+			t.Errorf("step %d (at %s): the gainers ranking is on rung %d, want %d — %s",
+				i+1, clk.Now().Sub(t0), got, step.wantStep, step.why)
+		}
+	}
+}
+
+// TestACycleAndNotOnlyTheLadderBringsARecoveredSourceBackDown pins the wiring the
+// unit test above does not reach.
+//
+// Deleting the recovery from Cycle passes the whole repository suite otherwise.
+// What it costs is not visible either: the source keeps being read, just at 30,
+// 60, 120 and then 300 second spacing for the rest of the session, and a scan that
+// quietly polls slower reports a calm market (spec Requirement 7).
+func TestACycleAndNotOnlyTheLadderBringsARecoveredSourceBackDown(t *testing.T) {
+	limited := fmt.Errorf("%w: the gainers ranking", ErrRateLimited)
+	rows := []Row{pricedRow("000660", 5, 100, "5000")}
+	runLadder(t, []ladderStep{
+		{err: limited, wantStep: 1, why: "one 429 is the bottom rung"},
+		{
+			after: 31 * time.Second, rows: rows, wantStep: 0,
+			why: "the retreat has expired and the source answered with rows",
+		},
+		{
+			after: 15 * time.Second, err: limited, wantStep: 1,
+			why: "the ladder was reset by the answered read, so a new 429 starts at the " +
+				"bottom rather than at rung 2",
+		},
+	})
+}
+
+// TestOnlyAReadingWithRowsInItClearsARetreat is the other half, and it is two
+// findings at once.
+//
+// The first is that a failure which is not a 429 must not reset the ladder.
+// heldSource's own refusal is such a failure — it is deliberately worded to avoid
+// the anchors isRateLimited matches — so a reset on any non-429 failure would let
+// a held source clear its own retreat on the very next tick, and the ladder would
+// never climb past its bottom rung.
+//
+// The second is the zero-row 200. Budgets[id] is written before the same reading
+// is classified as "responded with no rows; not counted as coverage", so the one
+// reading this file refuses to treat as evidence anywhere else was the one that
+// counted as recovery. Load-shedding by returning an empty list is a common way a
+// rate-limited service degrades, and reading that as a recovery takes the polling
+// rate straight back up at the moment the server is asking for less.
+func TestOnlyAReadingWithRowsInItClearsARetreat(t *testing.T) {
+	limited := fmt.Errorf("%w: the gainers ranking", ErrRateLimited)
+	runLadder(t, []ladderStep{
+		{err: limited, wantStep: 1, why: "one 429 is the bottom rung"},
+		{
+			after: 15 * time.Second, err: limited, wantStep: 1,
+			why: "the source is inside its own retreat, so it is not called and heldSource " +
+				"answers for it — a refusal that must not be read as a recovery",
+		},
+		{
+			after: 16 * time.Second, err: errors.New("the upstream ranking is unavailable"),
+			wantStep: 0,
+			why:      "the retreat expired; a plain failure raises no new one",
+		},
+		{
+			after: 15 * time.Second, rows: []Row{}, wantStep: 0,
+			why: "a 200 with no rows in it raises no retreat either",
+		},
+		{
+			after: 15 * time.Second, err: limited, wantStep: 2,
+			why: "neither the plain failure, the held tick nor the zero-row 200 is a reading " +
+				"this scan counts as coverage, so none of them reset the ladder and the " +
+				"second 429 is the second rung",
+		},
+	})
 }
 
 // --- task 5.2: the interval floor ------------------------------------------------

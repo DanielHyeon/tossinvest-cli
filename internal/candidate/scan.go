@@ -112,6 +112,24 @@ type ScanResult struct {
 	// that reported nothing has a Budget with Reported false rather than an
 	// absent entry, so a caller reading the map cannot mistake silence for zero.
 	Budgets map[SourceID]Budget
+
+	// Vouched names the sources whose reading counted as coverage: they answered
+	// AND carried at least one row.
+	//
+	// It is a shorter list than Responded counts, and the gap is the zero-row
+	// 200. This file already refuses to treat that reading as evidence anywhere
+	// else — it responds without vouching, and lands in Missing with its reason —
+	// and the one place it used to count as evidence was the backoff ladder,
+	// because Budgets was written before the same reading was classified. A
+	// rate-limited service that sheds load by returning an empty list would have
+	// been read as a source that recovered, and the ladder would have gone
+	// straight back to the bottom on the reading that says least (§5 review P2).
+	//
+	// So the recovery signal is this list rather than the budget map. The budget
+	// headers are still recorded for every responder, empty or not: they are the
+	// only measurement of the undocumented RANKING limit (D13 decision 2) and
+	// they are true whatever the body carried.
+	Vouched []SourceID
 }
 
 // RateLimitedSources returns the sources this scan lost to a 429.
@@ -137,6 +155,24 @@ type CollectOptions struct {
 	At time.Time
 	// Sources is the panel. Order is preserved in the result.
 	Sources []Source
+	// NotAsked names sources that belong to this market's panel and were
+	// deliberately not read on this pass — the schedule has not come round to
+	// them.
+	//
+	// They are here for one reason: cooling. A candidate may be cooled only when
+	// every source that raised it answered and none of them listed it, and that
+	// check is made against the sources this scan was in a position to hear
+	// from. heldSource was given the present-and-failing shape precisely so a
+	// 429'd source could not vouch; the other reason a source is absent — the
+	// interval has not elapsed — reached coverageAnswered as "a source that is
+	// gone" and stopped being required to answer. A candidate raised by a
+	// not-due ranking and a due popularity list was then cooled by a scan that
+	// never asked the ranking (§5 review P1-1).
+	//
+	// They are NOT sources: nothing here is read, nothing is attempted, and
+	// nothing lands in Missing. A not-due source is not a degradation — reporting
+	// it as one would send an operator looking for a source that is working.
+	NotAsked []SourceID
 }
 
 // Collect runs one scan: read every source, record what they said, and move the
@@ -176,6 +212,26 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 					"a source that answers would vouch for one that did not", market, id)
 		}
 		seen[id] = true
+	}
+
+	// heard is every source this scan was in a position to hear from: the panel it
+	// read, plus the ones the schedule passed over. Only cooling consults it — see
+	// CollectOptions.NotAsked and coolAbsent.
+	//
+	// A source in both is refused for the reason the duplicate-id check above
+	// exists: it is a contradiction in the caller's own bookkeeping, it is cheap to
+	// see here, and it is impossible to notice once the loop is running.
+	heard := make(map[SourceID]bool, len(seen)+len(opts.NotAsked))
+	for id := range seen {
+		heard[id] = true
+	}
+	for _, id := range opts.NotAsked {
+		if seen[id] {
+			return ScanResult{}, fmt.Errorf(
+				"candidate: %q is both in the %s panel and listed as not asked; "+
+					"a source cannot be read and passed over on the same pass", id, market)
+		}
+		heard[id] = true
 	}
 
 	result := ScanResult{
@@ -263,6 +319,7 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 			continue
 		}
 		responded[id] = true
+		result.Vouched = append(result.Vouched, id)
 
 		for _, r := range reading.Rows {
 			symbol := strings.TrimSpace(r.Symbol)
@@ -342,7 +399,7 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 		return result, err
 	}
 
-	cooled, err := coolAbsent(ctx, store, market, covered, responded, seen, at)
+	cooled, err := coolAbsent(ctx, store, market, covered, responded, heard, at)
 	result.Cooled = cooled
 	if err != nil {
 		return result, err
@@ -451,20 +508,29 @@ func recordFirsts(ctx context.Context, store *Store, market string, at time.Time
 //	responded  excludes candidates whose supporters did not all answer. Absent
 //	           evidence is not evidence of absence, and treating it as such turns
 //	           one 429 into a mass expiry of first_seen_at values.
-//	panel      excludes supporters that are no longer in the panel at all.
+//	heard      excludes supporters that are no longer in the panel at all.
 //
-// The third is subtler than it looks. Candidate.Sources accumulates over a
-// candidate's life, so a source that raised it once and has since been removed
-// from the configuration — an operator dropping WTS, which the design treats as
-// routine — would never appear in `responded` again. Without this guard those
-// candidates become permanently un-coolable and can only leave through the
-// staleness fallback, which store.go reserves for the scan that died. A supporter
-// that no longer exists is not missing evidence; it is a source that is gone.
+// The third is subtler than it looks, and there are three ways for a supporter to
+// be missing from a pass rather than two:
 //
-// A candidate whose supporters are *all* outside the panel is still left alone:
-// nothing in this scan was in a position to see it.
+//	it failed        it is in `heard` and not in `responded` — present and
+//	                 failing, which is heldSource's shape and a 429's.
+//	it was passed    it is in `heard` and not in `responded` either, because the
+//	over             schedule has not come round to it. Same shape, same answer:
+//	                 not being asked is not evidence about the symbols it raises
+//	                 (§5 review P1-1, CollectOptions.NotAsked).
+//	it is gone       it is in neither. Candidate.Sources accumulates over a
+//	                 candidate's life, so a source removed from the configuration
+//	                 — an operator dropping WTS, which the design treats as
+//	                 routine — would never appear in `responded` again. Without
+//	                 this case those candidates become permanently un-coolable and
+//	                 can only leave through the staleness fallback, which store.go
+//	                 reserves for the scan that died.
+//
+// A candidate whose supporters are *all* gone is still left alone: nothing in
+// this scan was in a position to see it.
 func coolAbsent(ctx context.Context, store *Store, market string,
-	covered map[string]bool, responded, panel map[SourceID]bool, at time.Time) (int, error) {
+	covered map[string]bool, responded, heard map[SourceID]bool, at time.Time) (int, error) {
 
 	existing, err := store.Candidates(ctx, at)
 	if err != nil {
@@ -475,7 +541,7 @@ func coolAbsent(ctx context.Context, store *Store, market string,
 		if c.Market != market || c.State != StateActive || covered[c.Symbol] {
 			continue
 		}
-		if !coverageAnswered(c.Sources, responded, panel) {
+		if !coverageAnswered(c.Sources, responded, heard) {
 			continue
 		}
 		if err := store.Cool(ctx, market, c.Symbol, at); err != nil {
@@ -487,12 +553,17 @@ func coolAbsent(ctx context.Context, store *Store, market string,
 }
 
 // coverageAnswered reports that this scan was in a position to observe the
-// candidate's absence: at least one of its supporters is still in the panel, and
-// every supporter that is in the panel answered.
-func coverageAnswered(sources []SourceID, responded, panel map[SourceID]bool) bool {
+// candidate's absence: at least one of its supporters could have been heard from,
+// and every supporter that could have been answered.
+//
+// `heard` is the panel plus the sources the schedule passed over, which is what
+// makes the middle case of coolAbsent's table block cooling instead of enabling
+// it. A supporter that is in `heard` and not in `responded` is a supporter this
+// scan has no evidence from, whether it failed or was never asked.
+func coverageAnswered(sources []SourceID, responded, heard map[SourceID]bool) bool {
 	present := 0
 	for _, id := range sources {
-		if !panel[id] {
+		if !heard[id] {
 			continue
 		}
 		present++

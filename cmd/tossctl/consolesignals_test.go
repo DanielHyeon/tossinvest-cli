@@ -23,14 +23,18 @@ import (
 func signalsFixtureStore(t *testing.T, clk clock.Clock) *consoleSignals {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), candidate.DBFileName)
-	open := func() (*candidate.Store, error) {
-		return candidate.Open(context.Background(), candidate.Options{
+	open := func(ctx context.Context) (*candidate.Store, func(), error) {
+		store, err := candidate.Open(ctx, candidate.Options{
 			Path:  path,
 			Clock: clk,
 			FSProber: candidate.FixedFSProber(candidate.FSInfo{
 				Name: "ext4", FreeBytes: 1 << 40, FreeMeasured: true,
 			}),
 		})
+		if err != nil {
+			return nil, func() {}, err
+		}
+		return store, func() { _ = store.Close() }, nil
 	}
 	return &consoleSignals{open: open}
 }
@@ -49,7 +53,7 @@ func TestTheSignalsSeamReadsTheStoreAndCallsNoSource(t *testing.T) {
 	ctx := context.Background()
 
 	// Seed one candidate through the store's own writer.
-	store, err := seam.open()
+	store, _, err := seam.open(ctx)
 	if err != nil {
 		t.Fatalf("opening the fixture store: %v", err)
 	}
@@ -121,11 +125,11 @@ func TestTheSignalsSeamDoesNotHoldTheStoreOpenAcrossReads(t *testing.T) {
 	if _, err := seam.Signals(ctx); err != nil {
 		t.Fatalf("Signals: %v", err)
 	}
-	store, err := seam.open()
+	store, release, err := seam.open(ctx)
 	if err != nil {
 		t.Fatalf("opening the fixture store: %v", err)
 	}
-	defer func() { _ = store.Close() }()
+	defer release()
 	busy, _, err := store.Checkpoint(ctx)
 	if err != nil {
 		t.Fatalf("Checkpoint: %v", err)

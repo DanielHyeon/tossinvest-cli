@@ -271,6 +271,50 @@ func (s *Schedule) Ran(id SourceID, at time.Time) {
 	s.lastRun[id] = at.UTC()
 }
 
+// UntilNextDue is how long until the earliest of these sources may be read.
+//
+// It exists so the loop's tick and the per-source schedule stop being two numbers
+// that have to happen to match. `DefaultWatchInterval` is 15s and the official
+// sources are 15s, which agreed until engineYieldFactor doubled one of them and
+// not the other — and the loop then woke every other tick to discover that
+// nothing was due (§5 review P0). A wake-up that can read nothing is not free:
+// it is a retention sweep, a free-space probe and a whole market's assessment.
+//
+// The second return distinguishes "nothing to ask about" from "due now", which is
+// the same absent-versus-zero rule this package applies everywhere else. A zero
+// duration with `known` true means at least one source may be read this instant;
+// `known` false means the panel was empty and the caller's own tick is all there
+// is to go on.
+//
+// A source that has never run is due now, matching Due.
+func (s *Schedule) UntilNextDue(sources []Source, at time.Time) (time.Duration, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var (
+		soonest time.Duration
+		known   bool
+	)
+	for _, src := range sources {
+		id := src.ID()
+		last, ran := s.lastRun[id]
+		if !ran {
+			return 0, true
+		}
+		wait := last.Add(s.every(id)).Sub(at)
+		if wait < 0 {
+			// Due already. Reported as zero rather than as a negative number: how
+			// far past due a source is says nothing a caller here can act on, and a
+			// negative wait is one arithmetic slip away from a sleep that never ends.
+			wait = 0
+		}
+		if !known || wait < soonest {
+			soonest, known = wait, true
+		}
+	}
+	return soonest, known
+}
+
 // DueSources returns the subset of sources that may be read now, preserving the
 // caller's order.
 func (s *Schedule) DueSources(sources []Source, at time.Time) []Source {

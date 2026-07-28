@@ -455,6 +455,21 @@ type signalsPanelView struct {
 	// task 5.7 exists to remove, so the screen calls it out rather than rendering
 	// an empty list.
 	Unnamed bool
+	// NothingAttempted reports the third state of a KNOWN panel: a pass that
+	// attempted no source at all.
+	//
+	// Known was separated from Degraded because "no source is missing" and "nobody
+	// told us which sources are missing" render identically as a boolean. This is
+	// the same failure one step further in: a known panel with 0 / 0 on it is not
+	// a panel where every source answered, and rendering it in the ok class puts
+	// the page's strongest reassurance above numbers that were computed from
+	// nothing (§5 review P1-2). It is produced by a scan cycle on which the
+	// schedule had nothing due — the engine yield, a tick below every source's
+	// interval, a clock that stepped backwards.
+	//
+	// It is deliberately not Degraded: nothing was lost, and an operator sent to
+	// look for a failing source finds one that is working.
+	NothingAttempted bool
 }
 
 type signalsMissingSource struct {
@@ -746,6 +761,10 @@ func signalsPanelFrom(p SignalsPanel) signalsPanelView {
 		Read:         measured(""),
 		AnsweredText: strconv.Itoa(p.Responded) + " / " + strconv.Itoa(p.Attempted),
 		Degraded:     p.Degraded,
+		// A pass that attempted nothing answered a question nobody asked. See
+		// signalsPanelView.NothingAttempted — the branch exists so that 0 / 0 can
+		// never reach the "전 원천 응답" sentence.
+		NothingAttempted: p.Attempted <= 0,
 	}
 	if !p.At.IsZero() {
 		out.TakenAt = p.At.UTC().Format("2006-01-02 15:04:05Z")

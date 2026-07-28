@@ -48,6 +48,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -475,6 +476,22 @@ type CycleResult struct {
 	// schedule working.
 	Backoff []Retreat
 	NotDue  []SourceID
+	// Quiet reports that the schedule had nothing due at all, so no source was read
+	// and nothing was written.
+	//
+	// It is the other half of the sentence above, and it is a field rather than a
+	// derivation from len(NotDue) because the fact it carries is what a caller has
+	// to branch on. A turn with an empty panel is not a market that could not be
+	// read: Collect answers ErrNoSourceAnswered for a panel of no sources, which is
+	// true of what it was handed and false about the market, and a loop that stopped
+	// there would stop promoting — every first_seen_at in the store then goes to the
+	// implicit cooling clock and the expiry after it, inside forty minutes, while
+	// the operator is told the sources went quiet (§5 review P0).
+	//
+	// Everything the turn owes besides the scan still happened: retention ran, the
+	// free space was measured, and the assessment was taken — a quiet turn that
+	// reported an empty market would be the same lie one level up.
+	Quiet bool
 	// EngineYield reports that discovery lengthened its intervals because the engine
 	// is running (spec Requirement 7). Intervals is what they became.
 	EngineYield bool
@@ -557,6 +574,7 @@ func Cycle(ctx context.Context, store *Store, opts CycleOptions) (CycleResult, e
 	// 4. The panel for this turn: what is due, with the retreating ones present and
 	//    failing rather than absent. See heldSource.
 	panel := make([]Source, 0, len(opts.Sources))
+	var notAsked []SourceID
 	due := sched.DueSources(opts.Sources, at)
 	dueIDs := make(map[SourceID]bool, len(due))
 	for _, src := range due {
@@ -566,6 +584,7 @@ func Cycle(ctx context.Context, store *Store, opts CycleOptions) (CycleResult, e
 		id := src.ID()
 		if !dueIDs[id] {
 			res.NotDue = append(res.NotDue, id)
+			notAsked = append(notAsked, id)
 			continue
 		}
 		if retreat, held := off.Held(id, at); held {
@@ -576,7 +595,38 @@ func Cycle(ctx context.Context, store *Store, opts CycleOptions) (CycleResult, e
 		sched.Ran(id, at)
 	}
 
-	scan, err := Collect(ctx, store, CollectOptions{Market: opts.Market, At: at, Sources: panel})
+	// 4b. Nothing due is the schedule working, and it is not a market failure.
+	//
+	// Collect answers ErrNoSourceAnswered for a panel of no sources, which is true
+	// of what it was handed and says nothing about the market — and the loop above
+	// it ended on that error. The three ways to get here are all ordinary: the
+	// engine yield doubles the sources' interval while the tick stays where it was,
+	// an operator asks for a tick below every source's interval, or the clock steps
+	// backwards by at least one interval. See CycleResult.Quiet for what the loop
+	// ending costs.
+	//
+	// The turn's other duties have already run — retention above, the free space
+	// above that — and the assessment still runs below, because a quiet turn that
+	// reported an empty market would be the same lie one level up.
+	//
+	// A panel that is empty because there are no sources CONFIGURED is not this: it
+	// is a wiring defect, there is no schedule involved, and Collect's "0 source(s)
+	// attempted" is the accurate thing to say about it. So the branch requires that
+	// there was something to pass over.
+	if len(panel) == 0 && len(opts.Sources) > 0 {
+		res.Quiet = true
+		res.Scan = ScanResult{
+			Market:  strings.ToUpper(strings.TrimSpace(opts.Market)),
+			At:      at.UTC(),
+			Budgets: map[SourceID]Budget{},
+		}
+		res.Backoff = off.Active(at)
+		return assessInto(ctx, store, opts, res, at)
+	}
+
+	scan, err := Collect(ctx, store, CollectOptions{
+		Market: opts.Market, At: at, Sources: panel, NotAsked: notAsked,
+	})
 	res.Scan = scan
 	if err != nil {
 		if !errors.Is(err, ErrFallbackNotPossible) {
@@ -588,15 +638,32 @@ func Cycle(ctx context.Context, store *Store, opts CycleOptions) (CycleResult, e
 	}
 
 	// 5. The ladder moves on what the scan found, and it moves both ways.
+	//
+	// The recovery signal is Vouched rather than Budgets. A budget entry is written
+	// for every source that answered, including the zero-row 200 this file refuses
+	// to treat as coverage anywhere else — and load-shedding by returning an empty
+	// list is a common way a rate-limited service degrades, so that reading is
+	// exactly the one that must not take the ladder back to the bottom.
 	for _, missing := range scan.Missing {
 		if missing.RateLimited {
 			off.Note(missing.Source, at)
 		}
 	}
-	for id := range scan.Budgets {
+	for _, id := range scan.Vouched {
 		off.Recovered(id)
 	}
 	res.Backoff = off.Active(at)
+
+	return assessInto(ctx, store, opts, res, at)
+}
+
+// assessInto adds the read-only assessment to a turn's result.
+//
+// It is shared by the ordinary path and the quiet one deliberately: a turn on
+// which nothing was due still holds everything the last one found, and a caller
+// that received zero verdicts from it would render an empty market.
+func assessInto(ctx context.Context, store *Store, opts CycleOptions,
+	res CycleResult, at time.Time) (CycleResult, error) {
 
 	if opts.SkipAssessment {
 		return res, nil
@@ -612,12 +679,18 @@ func Cycle(ctx context.Context, store *Store, opts CycleOptions) (CycleResult, e
 		return res, err
 	}
 	res.Verdicts = verdicts
-	res.Vetoes, res.Crossings, res.Bands = tallyVerdicts(verdicts)
+	res.Vetoes, res.Crossings, res.Bands = TallyVerdicts(verdicts)
 	return res, nil
 }
 
-// tallyVerdicts reduces the assessment to the three counts a screen reads.
-func tallyVerdicts(in []Verdict) (VetoTally, CrossingTally, map[VetoCode]BandTally) {
+// TallyVerdicts reduces an assessment to the three counts a screen reads.
+//
+// It is exported because there are two screens. The console's discovery seam
+// assembled the same three tallies by hand, so a fourth shadow band added here
+// would have appeared on the scan output and not on /signals — and a band that is
+// missing from a page renders as a band nobody crossed rather than as one nobody
+// counted (§5 review P2).
+func TallyVerdicts(in []Verdict) (VetoTally, CrossingTally, map[VetoCode]BandTally) {
 	chases := make([]Chase, 0, len(in))
 	var accelerations []Acceleration
 	seenLate := make([]ShadowBand, 0, len(in))
@@ -768,11 +841,40 @@ func Watch(ctx context.Context, store *Store, opts WatchOptions) error {
 		if opts.Cycles > 0 && i == opts.Cycles-1 {
 			break
 		}
-		if err := clk.Sleep(ctx, interval); err != nil {
+		if err := clk.Sleep(ctx, watchWait(opts.CycleOptions, interval, res.At)); err != nil {
 			// A cancelled context is how a watch normally ends, and the caller is the
 			// one that knows whether it asked for it.
 			return err
 		}
 	}
 	return nil
+}
+
+// watchWait is how long the loop sleeps after a turn.
+//
+// The tick and the per-source schedule are two different numbers and this is where
+// they meet. `DefaultWatchInterval` and the official sources' interval are both 15
+// seconds, which agreed right up until engineYieldFactor doubled one of them and
+// not the other — and the loop then woke every other tick to find nothing due (§5
+// review P0). Those turns are no longer errors, but they are still a retention
+// sweep, a free-space probe and a whole market's assessment spent to learn that a
+// source cannot be read yet.
+//
+// So: never sooner than the operator's tick, and never sooner than the schedule
+// would allow any source to be read. The second is bounded by the first source
+// that comes due — UntilNextDue is a minimum across the panel — so it can lengthen
+// the wait to that instant and no further, whatever a single slow source is
+// configured at.
+//
+// A nil schedule falls back to the tick. Cycle builds a fresh one per turn in that
+// case, so every source is always due and there is nothing to wait for.
+func watchWait(opts CycleOptions, tick time.Duration, at time.Time) time.Duration {
+	if opts.Schedule == nil {
+		return tick
+	}
+	until, known := opts.Schedule.UntilNextDue(opts.Sources, at)
+	if !known || until <= tick {
+		return tick
+	}
+	return until
 }

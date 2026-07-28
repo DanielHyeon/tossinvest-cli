@@ -68,10 +68,21 @@ type candidateOptions struct {
 	cycles   int
 }
 
-// candidateStoreFactory opens the discovery store. A package variable so this
-// package's own tests can point the commands at a temporary one; there is no flag
-// for it, because a path flag on a read-only command is one more way for an operator
-// to end up with two stores and half a history in each.
+// candidateStoreFactory opens the discovery store and hands back the release for
+// what it opened. A package variable so this package's own tests can point the
+// commands at a temporary one; there is no flag for it, because a path flag on a
+// read-only command is one more way for an operator to end up with two stores and
+// half a history in each.
+//
+// The release is part of the contract rather than left to the caller's judgement
+// about ownership. The store this returns is a SQLite handle in WAL mode, and a
+// handle nobody closes leaves the write-ahead log un-checkpointed beside the order
+// ledger — on the filesystem D16 says discovery has to be the first to stop
+// writing to. A fixture that owns its own store returns a release that does
+// nothing, which is the only place the two differ.
+//
+// The context is the caller's: Open migrates, and a request the browser has
+// already abandoned should not still be running a schema ladder (§5 review P2).
 var candidateStoreFactory = openCandidateStore
 
 // candidatePanelFactory builds a market's source panel, same seam and same reason.
@@ -130,6 +141,11 @@ The interval has a floor of %s and defaults to %s; a shorter one is raised, beca
 discovery shares one account and one rate budget with the engine and the live
 verification, and being read-only does not make it free.
 
+It is also never shorter than the schedule allows: the loop waits until the first
+source may next be read rather than waking to find nothing due. Each source has
+its own interval and the engine yield doubles them, so a tick that once matched
+those numbers stops matching them the moment the engine starts.
+
 Three things happen on every turn besides the scan:
 
   retention   raw observations past their window are pruned and the write-ahead
@@ -151,7 +167,7 @@ The command refuses to start while a live account verification holds its run loc
 	}
 	cmd.Flags().StringVar(&opts.market, "market", candidate.MarketKR, "Market to scan: KR or US")
 	cmd.Flags().DurationVar(&opts.interval, "interval", candidate.DefaultWatchInterval,
-		"How often to scan; raised to the floor if shorter")
+		"How often to scan; raised to the floor if shorter, and to the instant a source may next be read")
 	cmd.Flags().IntVar(&opts.cycles, "cycles", 0,
 		"Stop after this many scans; 0 runs until interrupted")
 	return cmd
@@ -168,7 +184,7 @@ func runCandidateScan(cmd *cobra.Command, root *rootOptions, opts *candidateOpti
 	if err != nil {
 		return err
 	}
-	store, sources, cleanup, err := candidateWiring(root, market)
+	store, sources, cleanup, err := candidateWiring(ctx, root, market)
 	if err != nil {
 		return err
 	}
@@ -198,7 +214,22 @@ func runCandidateWatch(cmd *cobra.Command, root *rootOptions, opts *candidateOpt
 	// The live verification outranks discovery and the run lock is the mechanism.
 	// Checked before anything is opened: a refusal about the rate budget should not
 	// leave a store file behind it.
-	if lockPath, lerr := candidateVerifyLockPath(root); lerr == nil {
+	//
+	// A path that cannot be resolved leaves the gate un-run, and that is reported
+	// rather than passed over. Fail-open is the right direction here — a discovery
+	// loop refusing to start because a data directory is misconfigured is worse than
+	// one that starts beside a verification, and the loop is read-only — but a gate
+	// that skips itself in silence is indistinguishable from a gate that ran and
+	// found nothing, which is the one thing spec Requirement 7's ordering must not
+	// be able to look like.
+	lockPath, lerr := candidateVerifyLockPath(root)
+	switch {
+	case lerr != nil:
+		fmt.Fprintf(cmd.ErrOrStderr(),
+			"note: whether a live account verification is running could not be checked (%v). "+
+				"Discovery is starting anyway because it is read-only, but the priority "+
+				"engine > verification > discovery is not being enforced on this run\n", lerr)
+	default:
 		if fresh, at := runlock.Fresh(lockPath, time.Now(), runlock.StaleAfter); fresh {
 			return fmt.Errorf("%w (%s, last touched %s). Discovery is read-only and late costs "+
 				"nothing; a verification step lost to a rate limit costs a real order and a "+
@@ -207,7 +238,7 @@ func runCandidateWatch(cmd *cobra.Command, root *rootOptions, opts *candidateOpt
 		}
 	}
 
-	store, sources, cleanup, err := candidateWiring(root, market)
+	store, sources, cleanup, err := candidateWiring(ctx, root, market)
 	if err != nil {
 		return err
 	}
@@ -234,10 +265,29 @@ func runCandidateWatch(cmd *cobra.Command, root *rootOptions, opts *candidateOpt
 			}
 		},
 		// A market that could not be read for one tick is not a reason to end a
-		// session; a store that cannot be written is. Collect already returns
-		// ErrNoSourceAnswered for the first, and Cycle only returns an error for the
-		// second — so a reported error stops the loop and is reported as itself.
+		// session; a store that cannot be written is.
+		//
+		// That was the intention and the wiring did not carry it. Cycle propagates
+		// ErrNoSourceAnswered, so the one failure named here as survivable was the
+		// one that ended the loop — and once the loop is gone nobody promotes, the
+		// implicit cooling clock runs at last_seen_at + 10m and the expiry 30
+		// minutes after that, so every first_seen_at in the store goes inside about
+		// forty minutes. It is reachable without a market outage: a panel whose
+		// sources are all inside their own 429 backoff answers exactly this, during
+		// the rate limit the ladder exists to ride out.
+		//
+		// A turn on which the schedule had nothing due does not arrive here at all
+		// any more — CycleResult.Quiet — so what is left is a genuine read failure,
+		// and the message says the loop is continuing so it cannot be mistaken for
+		// the kind that stops one.
 		OnError: func(cycleErr error) bool {
+			if errors.Is(cycleErr, candidate.ErrNoSourceAnswered) {
+				fmt.Fprintf(cmd.ErrOrStderr(),
+					"cycle failed, still running: %v. The next turn is in %s; nothing was "+
+						"cooled, because a source that did not answer does not vouch\n",
+					cycleErr, interval)
+				return true
+			}
 			fmt.Fprintf(cmd.ErrOrStderr(), "cycle failed: %v\n", cycleErr)
 			return false
 		},
@@ -258,26 +308,35 @@ func runCandidateWatch(cmd *cobra.Command, root *rootOptions, opts *candidateOpt
 // candidateWiring opens the store and builds the panel, returning a cleanup that is
 // safe to defer.
 //
-// The store is not closed when it came from the test seam, because that fixture owns
-// it — closing a store the caller supplied is the kind of ownership confusion that
-// makes a second command in the same process fail for no visible reason. The
-// production factory is the only one that hands over something this function opened.
-func candidateWiring(root *rootOptions, market string) (*candidate.Store, []candidate.Source, func(), error) {
-	store, err := candidateStoreFactory(root)
+// The cleanup is the store factory's own release, so the store is closed by whoever
+// opened it and a fixture that owns its store is left alone. It used to be
+// `func() {}` while this comment described the release — so `scan` and `watch`,
+// the two commands whose whole argument is that they clean up after themselves on
+// every turn, both leaked the handle. An interrupted `watch` left an
+// un-checkpointed write-ahead log beside the ledger.
+//
+// A panel failure releases the store before returning: the caller is being handed
+// an error, so nothing will defer the cleanup for it.
+func candidateWiring(ctx context.Context, root *rootOptions, market string) (
+	*candidate.Store, []candidate.Source, func(), error) {
+
+	store, release, err := candidateStoreFactory(ctx, root)
 	if err != nil {
 		return nil, nil, func() {}, err
 	}
 	sources, err := candidatePanelFactory(root, market)
 	if err != nil {
+		release()
 		return nil, nil, func() {}, err
 	}
 	if len(sources) == 0 {
+		release()
 		return nil, nil, func() {}, fmt.Errorf(
 			"candidate: no source can serve %s. The official Open API rankings are the "+
 				"required source (run `tossctl openapi login`); the WTS lists are additive",
 			market)
 	}
-	return store, sources, func() {}, nil
+	return store, sources, release, nil
 }
 
 // candidateCycleOptions assembles one turn's configuration.
@@ -380,15 +439,19 @@ func candidateFormat(root *rootOptions) output.Format {
 // It follows the verification record's rule so an isolated --config-dir profile gets
 // its own store and the default one sits in the data directory beside the ledger —
 // a separate file and a separate lock, which is D2's whole arrangement.
-func openCandidateStore(root *rootOptions) (*candidate.Store, error) {
+func openCandidateStore(ctx context.Context, root *rootOptions) (*candidate.Store, func(), error) {
 	path := ""
 	if root != nil && strings.TrimSpace(root.configDir) != "" {
 		path = filepath.Join(root.configDir, candidate.DBFileName)
 	}
-	return candidate.Open(context.Background(), candidate.Options{
+	store, err := candidate.Open(ctx, candidate.Options{
 		Path:  path,
 		Clock: clock.System(),
 	})
+	if err != nil {
+		return nil, func() {}, err
+	}
+	return store, func() { _ = store.Close() }, nil
 }
 
 // buildCandidatePanel assembles the market's sources from whatever credentials
@@ -450,6 +513,12 @@ type candidateReport struct {
 	At         string `json:"at"`
 	Halted     bool   `json:"halted"`
 	HaltReason string `json:"halt_reason,omitempty"`
+	// Quiet reports that the schedule had nothing due, so no source was read.
+	//
+	// It is a field of its own rather than a consumer's inference from
+	// `sources.attempted == 0`, because those two facts used to be the same
+	// rendering and one of them is an outage. See candidate.CycleResult.Quiet.
+	Quiet bool `json:"quiet"`
 
 	Sources struct {
 		Attempted int      `json:"attempted"`
@@ -543,12 +612,29 @@ const passedNote = "structurally 0: seen_late and extended have no approved thre
 	"(design.md D18), so no candidate can have all three vetoes measured and clear. " +
 	"An absent threshold is not a pass"
 
+// passedUnexpected is what the same slot says when the count is NOT zero.
+//
+// The sentence above asserts a zero, so it cannot be printed beside a figure that
+// contradicts it — the console reached the same conclusion in signals.go and wrote
+// the reason down there: a note contradicted by the figure next to it is a note
+// the next reader stops checking against. Printing it unconditionally would have
+// produced `passed 7 (structurally 0: …)`.
+//
+// The slot is never empty, which is the other half. The way this count becomes
+// non-zero without a human having approved a threshold is somebody counting
+// THRESHOLD_ABSENT as a pass — the single repair D18 forbids — and that repair
+// must not be able to make the output tidier than it was before.
+const passedUnexpected = "not 0: either seen_late and extended have had thresholds approved " +
+	"since design.md D18, or THRESHOLD_ABSENT is being counted as a pass. The second is the " +
+	"one wrong repair D18 names, so check that first"
+
 const shadowNote = "records and decides nothing; this is what a threshold will be derived from"
 
 func buildCandidateReport(res candidate.CycleResult) candidateReport {
 	var r candidateReport
 	r.Market, r.At = res.Market, res.At.UTC().Format(time.RFC3339)
 	r.Halted, r.HaltReason = res.Halted, res.HaltReason
+	r.Quiet = res.Quiet
 
 	r.Sources.Attempted = res.Scan.Attempted
 	r.Sources.Responded = res.Scan.Responded
@@ -588,6 +674,9 @@ func buildCandidateReport(res candidate.CycleResult) candidateReport {
 	r.Veto.Vetoed = res.Vetoes.Vetoed
 	r.Veto.Unmeasured = res.Vetoes.Unmeasured
 	r.Veto.PassedNote = passedNote
+	if res.Vetoes.Passed != 0 {
+		r.Veto.PassedNote = passedUnexpected
+	}
 	r.Veto.Raised = map[string]int{}
 	r.Veto.NotMeasured = map[string]int{}
 	for code, n := range res.Vetoes.Raised {
@@ -677,9 +766,20 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 		fmt.Fprintf(w, "\nHALTED  %s\n", res.HaltReason)
 	}
 
-	fmt.Fprintf(w, "\nsources        %d attempted, %d responded%s\n",
-		report.Sources.Attempted, report.Sources.Responded,
-		map[bool]string{true: "  (degraded)"}[report.Sources.Degraded])
+	if report.Quiet {
+		// 0 attempted with no sentence beside it is the shape an operator reads as
+		// an outage, and the shape the console renders as "every source answered".
+		// Nobody was asked; nothing was lost.
+		fmt.Fprintf(w, "\nsources        nothing was due — no source was read this turn, and "+
+			"nothing was lost\n")
+		fmt.Fprintf(w, "               the schedule had not come round to any of them "+
+			"(the engine yield doubles the intervals; a tick shorter than every source's "+
+			"interval and a clock that steps backwards do the same)\n")
+	} else {
+		fmt.Fprintf(w, "\nsources        %d attempted, %d responded%s\n",
+			report.Sources.Attempted, report.Sources.Responded,
+			map[bool]string{true: "  (degraded)"}[report.Sources.Degraded])
+	}
 	for _, m := range report.Sources.Missing {
 		limited := ""
 		if m.RateLimited {
@@ -713,7 +813,7 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 	fmt.Fprintf(w, "  unmeasured   %d  ← the default reading is \"mostly unchecked\", not \"mostly safe\"\n",
 		report.Veto.Unmeasured)
 	fmt.Fprintf(w, "  vetoed       %d\n", report.Veto.Vetoed)
-	fmt.Fprintf(w, "  passed       %d  (%s)\n", report.Veto.Passed, passedNote)
+	fmt.Fprintf(w, "  passed       %d  (%s)\n", report.Veto.Passed, report.Veto.PassedNote)
 	for _, code := range candidate.VetoCodes {
 		fmt.Fprintf(w, "  %-12s raised %d, unmeasured %d\n", string(code),
 			report.Veto.Raised[string(code)], report.Veto.NotMeasured[string(code)])

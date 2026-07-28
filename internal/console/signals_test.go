@@ -586,3 +586,39 @@ func TestAPassCountThatIsNotZeroSaysWhichOfTheTwoThingsHappened(t *testing.T) {
 			"must not be able to make the page quieter")
 	}
 }
+
+// TestAPanelThatAttemptedNothingIsNotAPanelWhereEveryoneAnswered is the §5
+// review's P1-2.
+//
+// signalsPanelFrom branched only on Known, so a known panel that attempted no
+// source at all rendered `응답 / 시도  0 / 0` above `강등: 없음 — 전 원천 응답` in
+// the ok class. "We asked nobody" rendered as "all sources answered" — one level
+// above the veto, and the table's own footer tells the reader to trust exactly
+// that sentence before reading a quiet candidate list as a quiet market.
+//
+// It is the same producer, too: a cycle on which the schedule had nothing due
+// manufactures exactly this ScanResult — attempted 0, responded 0, degraded
+// false — so producer and renderer agreed on the wrong answer before either of
+// them was wired to the other.
+func TestAPanelThatAttemptedNothingIsNotAPanelWhereEveryoneAnswered(t *testing.T) {
+	reading := oneMarket(neverChecked("005930"))
+	reading.Markets[0].Panel = SignalsPanel{
+		Known: true, At: signalsNow, Attempted: 0, Responded: 0,
+	}
+	page := renderSignals(t, newSignalsHarness(t, &stubSignals{reading: reading}))
+
+	if strings.Contains(page, "없음 — 전 원천 응답") {
+		t.Error("a pass that attempted no source renders as one where every source answered. " +
+			"0 / 0 is not completeness; it is a pass that asked nobody, and the ok class on " +
+			"that sentence is the page telling the reader the numbers below it can be trusted")
+	}
+	if !strings.Contains(page, "시도한 원천이 없다") {
+		t.Errorf("the panel attempted nothing and the page does not say so:\n%s", page)
+	}
+	// And it is still not a degradation: nothing was lost, so an operator must not
+	// be sent looking for a source that is working.
+	if strings.Contains(page, "강등인데 빠진 원천 이름이 없다") {
+		t.Error("a pass that attempted nothing is reported as a degradation that named no " +
+			"source; nothing went missing and the two need different responses")
+	}
+}
