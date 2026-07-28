@@ -112,13 +112,21 @@ T3.1의 착수 조건은 **없다**(별도 change `add-candidate-discovery`, 격
 |----|------|------|
 | T4.1 | cmd/tossosd: 데몬 부팅·config·graceful shutdown (internal/app 공유). 계좌당 단일 주문 writer 보장 | 원칙 9 |
 | T4.2 | internal/httpapi: REST + SSE(sequence id 순서 보장·스키마 버전), 로컬 토큰 인증 | |
-| T4.3 | 운영 엔드포인트: 상태, 운영 모드 전환(typed-confirmation), 레인 제어, reconciliation 강제 실행 | |
+| T4.3 | 운영 엔드포인트: 상태, 운영 모드 전환(확인 모달), 레인 제어, reconciliation 강제 실행 | |
 
 ## Phase 5 — 운영 콘솔 → 풀 UI  (change: `add-ops-console`, `add-web-ui`)
 
 리뷰 결정: UI를 2단계로 분할. 5a는 안전 운영에 필요한 최소 표면, 5b는 capped-live 성공 후.
 
-**5a — 운영 콘솔 (`add-ops-console`)**: 상태·포지션·미체결·차단 사유·reconciliation 상태·운영 모드/kill switch(typed-confirmation)·실현손익 요약. style.css 디자인 시스템 + 안전 UX(사유 입력·차단 칩) + useDashboardStream 이식. 차트 없음.
+**5a — 운영 콘솔 (`add-ops-console`)**: 상태·포지션·미체결·차단 사유·reconciliation 상태·운영 모드/kill switch(확인 모달)·실현손익 요약. style.css 디자인 시스템 + 안전 UX(사유 입력·차단 칩) + useDashboardStream 이식. 차트 없음.
+
+**확인 모달의 계약**: UI에서 되돌리기 어려운 조작(운영 모드 전환, kill switch, reconciliation
+강제 실행)은 **수행 내용을 문장으로 보여주는 메시지 박스 + 확인 버튼**으로 승인한다.
+확인 문구 타이핑은 **금지**한다(사용자 지시 2026-07-27). 마찰이 아니라 **무엇이 일어나는지를
+보여주는 것**이 이 모달의 안전 기여분이므로, 모달은 대상·현재 상태·전환 후 상태·되돌리는
+방법을 명시해야 한다. 기본 포커스는 취소이고 확인은 명시적 클릭이다.
+CLI(`tossctl flatten-all`, `tossctl verify run`)는 메시지 박스가 없으므로 기존 TTY
+typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한다.
 
 **5b — 풀 UI (`add-web-ui`, 실전 운영 안정화 후)**: 후보 랭킹·레인 성과·분석 화면·차트(경량 라이브러리 채택 우선 평가, 그린필드는 최후). API client는 TossOS 계약 신규 작성(TanStack Query 도입 여부 이 change에서 결정).
 
