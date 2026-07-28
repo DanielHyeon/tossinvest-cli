@@ -25,6 +25,7 @@
     "add-candidate-discovery",
     "console-operator-overview",
     "console-orders-screen",
-    "fix-chase-veto-measurement"
+    "fix-chase-veto-measurement",
+    "retire-gainers-source"
   ]
 }

@@ -23,8 +23,8 @@ package candidate
 //
 // Both are reachable in the shipped wiring the moment the engine starts:
 // engineYieldFactor doubles the official sources' 15s to 30s while the loop still
-// ticks at DefaultWatchInterval, and candidatesrc.Panel gives --market US exactly
-// three official sources at one interval.
+// ticks at DefaultWatchInterval, and candidatesrc.Panel gives --market US nothing
+// but official rankings, all of them sharing one interval.
 
 import (
 	"context"
@@ -228,8 +228,8 @@ func TestATurnWithNothingDueIsNotAMarketFailure(t *testing.T) {
 // engineYieldFactor turns the official sources' 15s into 30s while the loop is
 // still ticking at DefaultWatchInterval, so the tick after the engine starts has
 // nothing due. For `--market US` that is unconditional: candidatesrc.Panel drops
-// the WTS source for any market except KR, so the US panel is exactly three
-// official sources at one interval and there is nothing else that could be due.
+// the WTS source for any market except KR, so the US panel is official rankings
+// alone, sharing one interval, and there is nothing else that could be due.
 func TestTheEngineYieldDoesNotEndTheDiscoveryLoop(t *testing.T) {
 	clk := clock.NewFake(t0)
 	s := openStoreOver(t, newSpaceProber(plentyOfSpace), clk)

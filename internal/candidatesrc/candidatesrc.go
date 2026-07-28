@@ -138,9 +138,13 @@ type BudgetReader interface {
 	RateBudget(path string) official.RateBudget
 }
 
-// Official ranking types this change reads. TOP_LOSERS is deliberately absent:
+// Official ranking types this package names. TOP_LOSERS is deliberately absent:
 // discovery is looking for the start of a move up, and a losers list would raise
 // candidates that the veto would then have to reject one at a time.
+//
+// Naming a type here is not the same as reading it. RankingTopGainers is declared,
+// mapped to a source id below, and on no panel — see Panel for why it came off and
+// what would put it back. Deleting it would take the argument with it.
 const (
 	RankingTradingAmount = "MARKET_TRADING_AMOUNT"
 	RankingTradingVolume = "MARKET_TRADING_VOLUME"
@@ -553,11 +557,51 @@ func Panel(market string, official RankingReader, budget BudgetReader, wts Popul
 		// going now" rather than "what has already moved", which is the
 		// difference between early discovery and a gainers list.
 		//
-		// The errors are discarded here because the three types are compile-time
-		// constants of this package with entries in rankingSourceID — a failure
-		// would be a defect in this file, and TestEveryPanelSourceHasItsOwnID
-		// fails if one ever slips.
-		for _, typ := range []string{RankingTradingAmount, RankingTradingVolume, RankingTopGainers} {
+		// The errors are discarded here because every type in this literal is a
+		// compile-time constant of this package with an entry in rankingSourceID —
+		// a failure would be a defect in this file rather than a condition to handle.
+		//
+		// Discarding it is only defensible while something fails when it happens, and
+		// until this change nothing did. This comment used to name
+		// TestEveryPanelSourceHasItsOwnID, and that test does not catch it: it walks
+		// the panel it is handed and checks it for duplicate ids and emptiness, while a
+		// type with no rankingSourceID entry yields a panel that is one element shorter,
+		// still unique and still not empty. So the suite stayed green for a panel that
+		// read two lists while its author believed it read three — the failure shape
+		// this change exists to remove, sitting under the sentence that claimed to
+		// prevent it. The guard that does catch it is
+		// TestEveryRankingTypeThePanelNamesBecomesASourceItBuilds in
+		// snapshot_drift_test.go, which compares the types this literal names against
+		// the sources Panel returns when it is called.
+		//
+		// # RankingTopGainers is deliberately absent, and its constant is not
+		//
+		// It was in this literal and it never answered. Read sends `realtime`, and
+		// the API refuses that duration for TOP_GAINERS and TOP_LOSERS with a 400
+		// `unsupported-ranking-duration` — a fact docs/migration/openapi.latest.json
+		// carried for forty-six days before the wiring arrived, and
+		// snapshot_drift_test.go is what now reads it. Nothing failed while this ran:
+		// the source was filed as a degradation on every single scan, which turned
+		// the degradation flag into a light that is always on.
+		//
+		// The repair is not a different duration. `realtime` is the duration that
+		// answers the question this package asks (see Read); a ranking type that
+		// cannot be asked in that window is a ranking type that does not answer it,
+		// so the source comes off the panel and the constants stay for the day it is
+		// reconsidered (design D2).
+		//
+		// Putting it back needs all four of these, and the fourth is the hard one:
+		//
+		//	a measured, approved threshold for the late-entry veto — it is what
+		//	would filter a list of moves that have already happened;
+		//	shadow bands that resolve the range this list lives in, so the filter
+		//	can discriminate inside it;
+		//	an intraday observation of whether the 1d ranking updates during the
+		//	session or is a daily batch;
+		//	a design for ranks measured over different windows sharing one
+		//	percentile, because a 1d position and a realtime position are not the
+		//	same measurement and the row carries no window.
+		for _, typ := range []string{RankingTradingAmount, RankingTradingVolume} {
 			if src, err := OfficialRanking(official, budget, typ, 100, clk); err == nil {
 				sources = append(sources, src)
 			}

@@ -32,6 +32,7 @@ class TrackerTests(unittest.TestCase):
             "console-operator-overview",
             "console-orders-screen",
             "fix-chase-veto-measurement",
+            "retire-gainers-source",
         ):
             path = changes / change
             path.mkdir(parents=True)

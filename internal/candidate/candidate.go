@@ -88,6 +88,15 @@ const (
 	// SourceOfficialGainers ranks by change. By definition a list of moves that
 	// have already happened, which is why it is one input among several rather
 	// than the list.
+	//
+	// It is not on any panel. The API refuses the duration the ranking adapter
+	// sends for this type — 400 unsupported-ranking-duration — so it never
+	// answered at all, and a source that cannot answer is a configuration defect
+	// rather than a degradation (`retire-gainers-source`). The id stays because
+	// an observation already written under it has to read back as something the
+	// system recognises, and because putting the source back should be one slice
+	// element rather than a rediscovery of why each ranking type needs its own
+	// id. candidatesrc.Panel carries the conditions for reopening that decision.
 	SourceOfficialGainers SourceID = "official_rankings_top_gainers"
 	// SourceOfficialPrices is GET /api/v1/prices — 200 symbols per call, and no
 	// day high in the response.

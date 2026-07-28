@@ -363,13 +363,26 @@ func candidateCycleOptions(root *rootOptions, market string, sources []candidate
 // RANKING group is not in the published limit table at all. One interval per market
 // ties every source to the strictest one and throws away the earliness this whole
 // change buys.
+//
+// # candidate.SourceOfficialGainers is not here, and that is half of one edit
+//
+// It came off candidatesrc.Panel because the API refuses the duration that source
+// sends, so it has never returned anything. Leaving its cadence behind would cost
+// nothing at runtime and that is exactly the danger: an interval with no source
+// behind it makes no call and raises no error, it only tells the next reader that
+// the source is alive and polled every fifteen seconds. That reader then tunes a
+// number for something nobody reads.
+//
+// candidateschedule_drift_test.go is what makes the half-done edit fail. The
+// obligation runs one way: a panel source with no interval here is not a violation,
+// it reads at unconfiguredFloor, which internal/candidate/source.go put there for
+// precisely that case.
 func candidateIntervals() map[candidate.SourceID]candidate.Interval {
 	official := candidate.Interval{Every: 15 * time.Second, Floor: 5 * time.Second}
 	wts := candidate.Interval{Every: 5 * time.Second, Floor: 3 * time.Second}
 	return map[candidate.SourceID]candidate.Interval{
 		candidate.SourceOfficialTradingValue:  official,
 		candidate.SourceOfficialTradingVolume: official,
-		candidate.SourceOfficialGainers:       official,
 		candidate.SourceWTSPopular:            wts,
 	}
 }
