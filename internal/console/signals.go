@@ -121,6 +121,11 @@ type SignalsMarket struct {
 	// Bands is the shadow record for the two codes D18 left without a threshold.
 	// It decides nothing.
 	Bands map[candidate.VetoCode]candidate.BandTally
+	// Sightings is the first-sighting record reduced by the source that produced
+	// it. Vetoes counts the reasons and this says whose readings they came from,
+	// which is the difference between "seen_late is mostly unmeasured" and "the
+	// official trading-value ranking is coming back short".
+	Sightings []candidate.SourceSightings
 	// Panel is the source panel's completeness for the pass this reading knows
 	// about.
 	Panel SignalsPanel
@@ -251,7 +256,21 @@ type signalsMarketView struct {
 	Veto  signalsVetoTally
 	Accel signalsAccelTally
 	Bands []signalsBandTally
-	Rows  []signalsRow
+	// Sightings says which source's readings the first-sighting refusals came from.
+	// The veto census says how many and why; this says whose, which is the
+	// difference between a number to watch and a source to go and look at.
+	Sightings []signalsSightingSource
+	Rows      []signalsRow
+}
+
+// signalsSightingSource is one ranking source's first-sighting record.
+type signalsSightingSource struct {
+	Source   string
+	Total    int
+	Measured int
+	// NotMeasured is the census of refusals for this source's readings, biggest
+	// first — the same ordering the veto reasons use so the two blocks read alike.
+	NotMeasured []signalsReasonCount
 }
 
 // --- one candidate ------------------------------------------------------------------
@@ -580,6 +599,7 @@ func signalsMarketFrom(m SignalsMarket, now time.Time) signalsMarketView {
 	out.Veto = signalsVetoTallyFrom(m.Vetoes)
 	out.Accel = signalsAccelTallyFrom(m.Crossings)
 	out.Bands = signalsBandTalliesFrom(m.Bands)
+	out.Sightings = signalsSightingSourcesFrom(m.Sightings)
 	for _, verdict := range m.Verdicts {
 		out.Rows = append(out.Rows, signalsRowFrom(verdict, now))
 	}
@@ -802,6 +822,26 @@ func signalsBandTalliesFrom(in map[candidate.VetoCode]candidate.BandTally) []sig
 		}
 		block.NotMeasured = sortedSignalsCounts(counts)
 		out = append(out, block)
+	}
+	return out
+}
+
+// signalsSightingSourcesFrom renders the per-source first-sighting record.
+//
+// The reduction is candidate.TallySightingSources and it is not repeated here, for
+// the reason the veto tally is not repeated either: the scan output and this page
+// have to be able to disagree about wording and never about counts.
+func signalsSightingSourcesFrom(in []candidate.SourceSightings) []signalsSightingSource {
+	var out []signalsSightingSource
+	for _, s := range in {
+		counts := map[string]int{}
+		for why, n := range s.NotMeasured {
+			counts[string(why)] = n
+		}
+		out = append(out, signalsSightingSource{
+			Source: string(s.Source), Total: s.Total, Measured: s.Measured,
+			NotMeasured: sortedSignalsCounts(counts),
+		})
 	}
 	return out
 }

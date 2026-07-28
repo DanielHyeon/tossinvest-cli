@@ -106,8 +106,29 @@ var ErrSchemaTooNew = errors.New("candidate: store schema is newer than this bui
 //	   a source knows about its own reading, three-state and nullable
 //
 // Every rung is additive and nullable: nothing is dropped and nothing is renamed,
-// so an older binary opening a newer file reads columns it does not select and the
-// rows it does read are unchanged.
+// so no rung can lose a first_seen_at and every rung is a pure extension of the one
+// below it.
+//
+// # What that does NOT buy, corrected 2026-07-28
+//
+// This said an older binary opening a newer file "reads columns it does not select
+// and the rows it does read are unchanged". The columns would indeed be readable —
+// and no older binary gets that far, because migrate refuses a file stamped above
+// its own SchemaVersion with ErrSchemaTooNew, deliberately and with a test on it
+// (TestAStoreFromANewerBuildIsRefused). The refusal is the right behaviour: this
+// store's rows feed a veto, and a build reading a newer file would silently see the
+// facts it does not know about as absent, which is the one thing this package's
+// whole design refuses.
+//
+// So downgrading is not a schema operation here. The rollback plan is the one the
+// data grade allows — delete or move candidates.db aside and let the older build
+// create a fresh one — and it costs the observation history and every first_seen_at,
+// first_price and first_rank in it. That is survivable because these rows are
+// derived: the ledger is elsewhere (D2, a separate file and a separate lock), no
+// order depends on them, and discovery starts measuring again on the next scan. It
+// is not free — every candidate life in flight restarts, and seen_late and extended
+// are unmeasured until each one is seen again. WORKFLOW §0.6 asks for the plan to be
+// written down rather than for it to be cheap; issues.md 5 records it.
 const SchemaVersion = 4
 
 const schema = `
@@ -423,9 +444,16 @@ func dsn(path string, busy time.Duration) string {
 // has to happen to a store somebody already has is here, and it is a ladder rather
 // than one step, so a store two versions behind climbs both rungs in order.
 //
-// Additive and nullable, which is WORKFLOW §0.6's preference for a schema change
-// and is what makes the step reversible: an older binary opening a v2 file reads
-// columns it does not select, and the rows it does read are unchanged.
+// Additive and nullable, which is WORKFLOW §0.6's preference for a schema change.
+// What it buys is that climbing cannot lose anything: no rung drops a column, no
+// rung rewrites a row, and a rung that fails leaves the file where it was, because
+// climb runs the whole ladder in one transaction.
+//
+// Corrected 2026-07-28: it does not make the step reversible. An older binary does
+// not open a newer file at all — migrate returns ErrSchemaTooNew — so the way back
+// is to move candidates.db aside and let the older build make a new one, at the cost
+// of the history in it. See SchemaVersion for why that cost is acceptable here and
+// what it actually is.
 var migrations = map[int][]string{
 	1: {
 		`ALTER TABLE candidates ADD COLUMN first_price TEXT`,

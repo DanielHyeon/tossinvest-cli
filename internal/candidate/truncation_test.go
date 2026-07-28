@@ -161,14 +161,26 @@ func TestAShortListThatIsNotTruncatedIsStillMeasurable(t *testing.T) {
 	}
 }
 
-// TestAPositionWithNoRecordedRequestIsRefusedByTheOtherRuleRatherThanThisOne.
+// TestAPositionWithNoRecordedRequestIsRefusedUnderItsOwnReason.
 //
-// Truncation is unknown for every row written before schema 4, and unknown is not
-// truncated — nothing is concluded from it. Those rows are refused anyway, under the
-// new-entrant reason, because that fact is unknown for them too. The distinction
-// matters for what an operator is told: "this reading came back short" and "nobody
-// recorded what this reading asked for" are different problems.
-func TestAPositionWithNoRecordedRequestIsRefusedByTheOtherRuleRatherThanThisOne(t *testing.T) {
+// Corrected 2026-07-28, and the correction is the body rather than the prose. This
+// was TestAPositionWithNoRecordedRequestIsRefusedByTheOtherRuleRatherThanThisOne: it
+// said in its name and in its comment that such a position is refused, and then
+// asserted that it was measured. Both halves came from issues.md decision 3, which
+// held that a row with no recorded request also has no new-entrant fact and is
+// therefore already refused by the rule above.
+//
+// That is true of the rows this build writes and it is not true of the type. The
+// pair (measured new entrant, unrecorded request) is representable — a fixture, a
+// store half-filled by an older build, a future producer — and it was measured: a
+// one-row reading of it comes out at percentile 0, the bottom of its own list, which
+// clears every seen_late threshold there could be. Unmeasured turning into a pass is
+// the one shape D10 exists to stop, so the refusal is structural now.
+//
+// The two reasons stay separate for what they tell an operator: "this reading came
+// back short" is a live fault to chase and "nobody recorded what this reading asked
+// for" is a row from before schema 4, with nothing to chase.
+func TestAPositionWithNoRecordedRequestIsRefusedUnderItsOwnReason(t *testing.T) {
 	c := aCandidate(t0)
 	first := storedFirstRank(4, 100, t0, SourceOfficialTradingValue)
 	first.Requested = 0
@@ -178,9 +190,42 @@ func TestAPositionWithNoRecordedRequestIsRefusedByTheOtherRuleRatherThanThisOne(
 		t.Errorf("a position with no recorded request reports truncation %s; nothing was "+
 			"measured about it", got.Truncation)
 	}
-	if !got.Measured {
-		t.Errorf("the position was refused as %s; an unknown request is not a truncated "+
-			"reading and must not be treated as one", got.Reason())
+	if got.Measured {
+		t.Errorf("the position was measured at %s%%; whether the reading it came from "+
+			"arrived whole was never recorded, so the list length the percentile "+
+			"normalises by is not known to have existed", got.PercentilePct)
+	}
+	if got.Reason() != VetoRequestUnrecorded {
+		t.Errorf("reason = %q, want %q — and it is not READING_TRUNCATED, because unmeasured "+
+			"is not a measured negative", got.Reason(), VetoRequestUnrecorded)
+	}
+}
+
+// TestTheOneRowReadingWithNoRecordedRequestIsTheCaseThatMattered is the arithmetic
+// that makes the refusal above load-bearing rather than tidy.
+//
+// One row, one total, nothing recorded about the request. percentileOf(1, 1) is 0 —
+// the bottom of the list — and seen_late raises on percentile *above* its threshold,
+// so 0 clears every threshold that could ever be set. A symbol that was the whole of
+// a one-row reading would read as one we caught at the very bottom of a long list.
+func TestTheOneRowReadingWithNoRecordedRequestIsTheCaseThatMattered(t *testing.T) {
+	if got := formatDecimal(percentileOf(1, 1)); got != "0" {
+		t.Fatalf("percentileOf(1, 1) = %s, want 0; the case this test exists for has changed "+
+			"shape", got)
+	}
+	c := aCandidate(t0)
+	first := storedFirstRank(1, 1, t0, SourceOfficialTradingValue)
+	first.Requested = 0
+	first.NewlyListed = NewlyListedYes()
+
+	got := MeasureFirstSighting(c, first, nil)
+	if got.Measured {
+		t.Fatalf("measured at %s%%: the new-entrant fact was recorded and the request was "+
+			"not, and that pair used to reach the percentile", got.PercentilePct)
+	}
+	if state := AssessSeenLate(got, seenLateThresholds()); state.Clear() || state.Dangerous() {
+		t.Errorf("seen_late = %v; percentile 0 would have cleared, and a cleared veto is one "+
+			"third of a pass", state)
 	}
 }
 

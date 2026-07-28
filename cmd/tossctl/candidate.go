@@ -41,16 +41,12 @@ import (
 	"strings"
 	"time"
 
-	tossclient "github.com/JungHoonGhae/tossinvest-cli/internal/client"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/session"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/candidatesrc"
 	"github.com/spf13/cobra"
 )
 
@@ -446,50 +442,11 @@ func openCandidateStore(ctx context.Context, root *rootOptions) (*candidate.Stor
 	return store, func() { _ = store.Close() }, nil
 }
 
-// buildCandidatePanel assembles the market's sources from whatever credentials
-// exist.
-//
-// The official rankings are required and the WTS popularity list is additive, which
-// is spec Requirement 5's hard half: WTS sessions expire on ordinary days, so a
-// configuration that stops without one stops routinely.
-func buildCandidatePanel(root *rootOptions, market string) ([]candidate.Source, error) {
-	credFile, tokenFile, err := resolveOpenAPIPaths(root)
-	if err != nil {
-		return nil, err
-	}
-	creds, err := official.LoadCredentials(os.Getenv, credFile)
-	if err != nil {
-		return nil, fmt.Errorf("candidate: reading the Open API credentials: %w", err)
-	}
-	if creds == nil {
-		return nil, fmt.Errorf(
-			"candidate: no Open API credentials. The official rankings are discovery's " +
-				"required source — run `tossctl openapi login`")
-	}
-	client := official.New(*creds, tokenFile)
-
-	// The WTS half is optional and its absence is ordinary. A missing or unreadable
-	// session degrades the panel; it does not stop it.
-	var wts *tossclient.Client
-	if sess, serr := session.NewFileStore(resolveSessionFile(root)).Load(context.Background()); serr == nil && sess != nil {
-		if cfg, cerr := loadConfig(root); cerr == nil {
-			wts = tossclient.New(tossclient.Config{Session: sess, TradingPolicy: cfg.Trading})
-		}
-	}
-	return candidatesrc.Panel(market, client, client, wtsPopularityReader(wts)), nil
-}
-
-// wtsPopularityReader converts a possibly-nil client into a possibly-nil reader.
-//
-// A typed nil inside a non-nil interface is the classic way for "no WTS session" to
-// become a nil dereference three layers down, and Panel's contract is that a nil
-// reader means the source is absent from the panel.
-func wtsPopularityReader(c *tossclient.Client) candidatesrc.PopularityReader {
-	if c == nil {
-		return nil
-	}
-	return c
-}
+// buildCandidatePanel is in candidatepanel.go, and that file's header says why: it
+// is the one line in this command that turns credentials into a client carrying
+// every write the backend has, and this file renders the chase verdict. The consumer
+// guard reads what a file says rather than what its package imports, because inside
+// cmd/tossctl the import graph already contains everything.
 
 // --- rendering -----------------------------------------------------------------------
 
@@ -538,8 +495,35 @@ type candidateReport struct {
 		Cooled       int `json:"cooled"`
 		FirstPrices  int `json:"first_prices"`
 		FirstRanks   int `json:"first_ranks"`
-		Rejected     int `json:"rejected"`
+		// FirstRanksHeld counts the positions the scan declined to store because
+		// their reading carried neither qualifier. A one-shot `scan` reports one
+		// for every candidate it promotes, every time, and that is the fact: a
+		// command that builds its panel, reads once and exits has no previous
+		// reading to compare against and therefore cannot qualify anything.
+		FirstRanksHeld int `json:"first_ranks_held"`
+		Rejected       int `json:"rejected"`
 	} `json:"recorded"`
+
+	// Readings is what each ranking source asked for and what arrived.
+	//
+	// It is the direct measurement behind the open question this change leaves
+	// open: whether the official rankings endpoint returns the hundred rows it is
+	// asked for. If it does not, every first sighting from it is refused and the
+	// distribution a seen_late threshold would be chosen from is empty.
+	Readings []struct {
+		Source    string `json:"source"`
+		Requested int    `json:"requested"`
+		Arrived   int    `json:"arrived"`
+		Whole     bool   `json:"whole"`
+	} `json:"readings,omitempty"`
+
+	// Sightings is the first-sighting record by the source that produced it.
+	Sightings []struct {
+		Source      string         `json:"source"`
+		Total       int            `json:"total"`
+		Measured    int            `json:"measured"`
+		NotMeasured map[string]int `json:"not_measured"`
+	} `json:"sightings,omitempty"`
 
 	Veto struct {
 		Total      int    `json:"total"`
@@ -694,7 +678,36 @@ func buildCandidateReport(res candidate.CycleResult) candidateReport {
 	r.Recorded.Cooled = res.Scan.Cooled
 	r.Recorded.FirstPrices = res.Scan.FirstPrices
 	r.Recorded.FirstRanks = res.Scan.FirstRanks
+	r.Recorded.FirstRanksHeld = res.Scan.FirstRanksHeld
 	r.Recorded.Rejected = len(res.Scan.Rejected)
+
+	for _, id := range sortedSourceIDs(res.Scan.Readings) {
+		facts := res.Scan.Readings[id]
+		r.Readings = append(r.Readings, struct {
+			Source    string `json:"source"`
+			Requested int    `json:"requested"`
+			Arrived   int    `json:"arrived"`
+			Whole     bool   `json:"whole"`
+		}{
+			Source: string(id), Requested: facts.Requested, Arrived: facts.Arrived,
+			Whole: facts.Truncation().No(),
+		})
+	}
+	for _, s := range res.Sightings {
+		notMeasured := map[string]int{}
+		for why, n := range s.NotMeasured {
+			notMeasured[string(why)] = n
+		}
+		r.Sightings = append(r.Sightings, struct {
+			Source      string         `json:"source"`
+			Total       int            `json:"total"`
+			Measured    int            `json:"measured"`
+			NotMeasured map[string]int `json:"not_measured"`
+		}{
+			Source: string(s.Source), Total: s.Total, Measured: s.Measured,
+			NotMeasured: notMeasured,
+		})
+	}
 
 	r.Veto.Total = res.Vetoes.Total
 	r.Veto.Passed = res.Vetoes.Passed
@@ -829,10 +842,25 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 		fmt.Fprintf(w, "  engine yield the engine is running, so the source intervals are longer\n")
 	}
 
+	for _, rd := range report.Readings {
+		state := "short"
+		if rd.Whole {
+			state = "whole"
+		}
+		fmt.Fprintf(w, "  reading      %s — %d requested, %d arrived (%s)\n",
+			rd.Source, rd.Requested, rd.Arrived, state)
+	}
+
 	fmt.Fprintf(w, "\nrecorded       %d observations, %d candidates, %d cooled\n",
 		report.Recorded.Observations, report.Recorded.Candidates, report.Recorded.Cooled)
 	fmt.Fprintf(w, "  firsts       %d first prices, %d first ranks newly stored\n",
 		report.Recorded.FirstPrices, report.Recorded.FirstRanks)
+	if report.Recorded.FirstRanksHeld > 0 {
+		fmt.Fprintf(w, "  held         %d position(s) not stored — the reading that carried them "+
+			"had no previous reading to compare against, and a first rank is written once. "+
+			"A single `scan` can never qualify one; `watch` qualifies from its second turn\n",
+			report.Recorded.FirstRanksHeld)
+	}
 	if report.Recorded.Rejected > 0 {
 		fmt.Fprintf(w, "  rejected     %d symbol(s) the store declined\n", report.Recorded.Rejected)
 		for _, r := range res.Scan.Rejected {
@@ -854,6 +882,16 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 	}
 	for _, line := range report.Veto.Alarms {
 		fmt.Fprintf(w, "  %s\n", line)
+	}
+
+	if len(report.Sightings) > 0 {
+		fmt.Fprintf(w, "\nfirst sightings by source — which readings seen_late is refusing\n")
+		for _, s := range report.Sightings {
+			fmt.Fprintf(w, "  %-38s %d of %d measured\n", s.Source, s.Measured, s.Total)
+			for _, line := range sortedCounts(s.NotMeasured) {
+				fmt.Fprintf(w, "    refused    %s\n", line)
+			}
+		}
 	}
 
 	fmt.Fprintf(w, "\nshadow crossings — acceleration (%s)\n", shadowNote)
@@ -910,6 +948,17 @@ func orderedCounts(keys []string, counts map[string]int) string {
 		return "none"
 	}
 	return strings.Join(parts, " · ")
+}
+
+// sortedSourceIDs orders a per-source map so two runs of the same scan print the
+// same report and a diff of two reports is about the numbers.
+func sortedSourceIDs(in map[candidate.SourceID]candidate.ReadingFacts) []candidate.SourceID {
+	out := make([]candidate.SourceID, 0, len(in))
+	for id := range in {
+		out = append(out, id)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
 }
 
 // sortedCounts renders a reason map deterministically, biggest first then by name.

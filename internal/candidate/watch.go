@@ -503,6 +503,10 @@ type CycleResult struct {
 	Vetoes    VetoTally
 	Crossings CrossingTally
 	Bands     map[VetoCode]BandTally
+	// Sightings is the same assessment reduced by the source that produced each
+	// first sighting, so that a screen full of one refusal can name which reading
+	// is producing it. See sightingsource.go.
+	Sightings []SourceSightings
 }
 
 // RateLimited reports that at least one source was lost to a 429 this turn.
@@ -680,6 +684,7 @@ func assessInto(ctx context.Context, store *Store, opts CycleOptions,
 	}
 	res.Verdicts = verdicts
 	res.Vetoes, res.Crossings, res.Bands = TallyVerdicts(verdicts)
+	res.Sightings = TallySightingSources(verdicts)
 	return res, nil
 }
 

@@ -52,7 +52,7 @@ func TestTheOfficialRankingAsksForTheRealtimeList(t *testing.T) {
 	f := &fakeRankings{out: domain.Ranking{Items: []domain.RankingItem{
 		{Rank: 1, Symbol: "005930", TradingAmount: 1e9, TradingVolume: 5000, LastPrice: 70000},
 	}}}
-	src, mkErr := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	src, mkErr := OfficialRanking(f, nil, RankingTradingAmount, 100, nil)
 	if mkErr != nil {
 		t.Fatalf("OfficialRanking: %v", mkErr)
 	}
@@ -76,7 +76,7 @@ func TestTheOfficialRankingAsksForTheRealtimeList(t *testing.T) {
 // the arithmetic.
 func TestTheRequestedCountIsCappedAtTheDocumentedMaximum(t *testing.T) {
 	f := &fakeRankings{}
-	src, mkErr := OfficialRanking(f, nil, RankingTopGainers, 500)
+	src, mkErr := OfficialRanking(f, nil, RankingTopGainers, 500, nil)
 	if mkErr != nil {
 		t.Fatalf("OfficialRanking: %v", mkErr)
 	}
@@ -96,7 +96,7 @@ func TestTheRankTotalIsTheListWeActuallyReceived(t *testing.T) {
 	f := &fakeRankings{out: domain.Ranking{Items: []domain.RankingItem{
 		{Rank: 1, Symbol: "005930"}, {Rank: 2, Symbol: "000660"}, {Rank: 3, Symbol: "035720"},
 	}}}
-	src, mkErr := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	src, mkErr := OfficialRanking(f, nil, RankingTradingAmount, 100, nil)
 	if mkErr != nil {
 		t.Fatalf("OfficialRanking: %v", mkErr)
 	}
@@ -121,7 +121,7 @@ func TestTheRankTotalIsTheListWeActuallyReceived(t *testing.T) {
 // signal available about a limit nobody documented.
 func TestARateLimitedRankingIsReportedAsOne(t *testing.T) {
 	f := &fakeRankings{err: fmt.Errorf("get /rankings: %w", official.ErrRateLimited)}
-	src, mkErr := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	src, mkErr := OfficialRanking(f, nil, RankingTradingAmount, 100, nil)
 	if mkErr != nil {
 		t.Fatalf("OfficialRanking: %v", mkErr)
 	}
@@ -141,7 +141,7 @@ func TestTheReportedRateBudgetTravelsWithTheReading(t *testing.T) {
 		Limit: 10, Remaining: 4, Reset: reset, Reported: true,
 	}}
 
-	src, mkErr := OfficialRanking(f, budget, RankingTradingAmount, 100)
+	src, mkErr := OfficialRanking(f, budget, RankingTradingAmount, 100, nil)
 	if mkErr != nil {
 		t.Fatalf("OfficialRanking: %v", mkErr)
 	}
@@ -163,7 +163,7 @@ func TestTheReportedRateBudgetTravelsWithTheReading(t *testing.T) {
 func TestAnUnreportedBudgetStaysUnreported(t *testing.T) {
 	f := &fakeRankings{out: domain.Ranking{Items: []domain.RankingItem{{Rank: 1, Symbol: "005930"}}}}
 
-	noAccessorSrc, noAccessorMkErr := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	noAccessorSrc, noAccessorMkErr := OfficialRanking(f, nil, RankingTradingAmount, 100, nil)
 	if noAccessorMkErr != nil {
 		t.Fatalf("OfficialRanking: %v", noAccessorMkErr)
 	}
@@ -175,7 +175,7 @@ func TestAnUnreportedBudgetStaysUnreported(t *testing.T) {
 		t.Errorf("a client with no budget accessor reported %+v", noAccessor.Budget)
 	}
 
-	silentSrc, silentMkErr := OfficialRanking(f, fakeBudget{}, RankingTradingAmount, 100)
+	silentSrc, silentMkErr := OfficialRanking(f, fakeBudget{}, RankingTradingAmount, 100, nil)
 	if silentMkErr != nil {
 		t.Fatalf("OfficialRanking: %v", silentMkErr)
 	}
@@ -200,7 +200,7 @@ func TestThePopularityRankingReportsNoTradingFigures(t *testing.T) {
 	f := &fakePopular{out: domain.StockRanking{Stocks: []domain.RankedStock{
 		{Rank: 1, Symbol: "005930", Name: "삼성전자"},
 	}}}
-	got, err := WTSPopular(f, 30).Read(context.Background(), candidate.MarketKR)
+	got, err := WTSPopular(f, 30, nil).Read(context.Background(), candidate.MarketKR)
 	if err != nil {
 		t.Fatalf("Read: %v", err)
 	}
@@ -223,7 +223,7 @@ func TestThePopularityRankingFallsBackToTheProductCode(t *testing.T) {
 	f := &fakePopular{out: domain.StockRanking{Stocks: []domain.RankedStock{
 		{Rank: 1, ProductCode: "A005930"},
 	}}}
-	got, err := WTSPopular(f, 30).Read(context.Background(), candidate.MarketKR)
+	got, err := WTSPopular(f, 30, nil).Read(context.Background(), candidate.MarketKR)
 	if err != nil {
 		t.Fatalf("Read: %v", err)
 	}
@@ -244,8 +244,8 @@ func TestTheUSPanelDoesNotIncludeTheKoreanPopularityRanking(t *testing.T) {
 	official := &fakeRankings{}
 	wts := &fakePopular{}
 
-	kr := Panel(candidate.MarketKR, official, nil, wts)
-	us := Panel(candidate.MarketUS, official, nil, wts)
+	kr := Panel(candidate.MarketKR, official, nil, wts, nil)
+	us := Panel(candidate.MarketUS, official, nil, wts, nil)
 
 	if !hasSource(kr, candidate.SourceWTSPopular) {
 		t.Error("the KR panel is missing the WTS popularity ranking")
@@ -266,11 +266,11 @@ func TestTheUSPanelDoesNotIncludeTheKoreanPopularityRanking(t *testing.T) {
 // expires. A panel built without an official client is allowed to exist, but the
 // caller has to be able to see that it did, which the source list makes plain.
 func TestThePanelWithoutAnOfficialClientIsNotSilentlyWTSOnly(t *testing.T) {
-	only := Panel(candidate.MarketKR, nil, nil, &fakePopular{})
+	only := Panel(candidate.MarketKR, nil, nil, &fakePopular{}, nil)
 	if len(only) != 1 || only[0].ID() != candidate.SourceWTSPopular {
 		t.Fatalf("panel = %v, want just the WTS source", only)
 	}
-	if len(Panel(candidate.MarketKR, nil, nil, nil)) != 0 {
+	if len(Panel(candidate.MarketKR, nil, nil, nil, nil)) != 0 {
 		t.Error("a panel with no clients is not empty")
 	}
 }
@@ -295,7 +295,7 @@ func hasSource(panel []candidate.Source, id candidate.SourceID) bool {
 // clock expires it and first_seen_at is gone.
 func TestEveryPanelSourceHasItsOwnID(t *testing.T) {
 	for _, market := range []string{candidate.MarketKR, candidate.MarketUS} {
-		panel := Panel(market, &fakeRankings{}, nil, &fakePopular{})
+		panel := Panel(market, &fakeRankings{}, nil, &fakePopular{}, nil)
 		seen := map[candidate.SourceID]bool{}
 		for _, src := range panel {
 			id := src.ID()
@@ -313,7 +313,7 @@ func TestEveryPanelSourceHasItsOwnID(t *testing.T) {
 // TestAnUnknownRankingTypeIsRefused. A fallback id would put the new source back
 // into a collision with a real one, which is the defect this guard exists for.
 func TestAnUnknownRankingTypeIsRefused(t *testing.T) {
-	if _, err := OfficialRanking(&fakeRankings{}, nil, "MARKET_SOMETHING_NEW", 100); err == nil {
+	if _, err := OfficialRanking(&fakeRankings{}, nil, "MARKET_SOMETHING_NEW", 100, nil); err == nil {
 		t.Fatal("an unknown ranking type was accepted and given some source id")
 	}
 }
@@ -330,7 +330,7 @@ func TestAnInfiniteTradingValueIsAbsentRatherThanInfinite(t *testing.T) {
 		{Rank: 1, Symbol: "005930",
 			TradingAmount: math.Inf(1), TradingVolume: math.NaN(), LastPrice: 70000},
 	}}}
-	src, mkErr := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	src, mkErr := OfficialRanking(f, nil, RankingTradingAmount, 100, nil)
 	if mkErr != nil {
 		t.Fatalf("OfficialRanking: %v", mkErr)
 	}
@@ -358,7 +358,7 @@ func TestThePopularityRankingRefusesAMarketItCannotSee(t *testing.T) {
 	f := &fakePopular{out: domain.StockRanking{Stocks: []domain.RankedStock{
 		{Rank: 1, Symbol: "005930"},
 	}}}
-	if _, err := WTSPopular(f, 30).Read(context.Background(), candidate.MarketUS); err == nil {
+	if _, err := WTSPopular(f, 30, nil).Read(context.Background(), candidate.MarketUS); err == nil {
 		t.Fatal("the Korean popularity ranking answered a US scan")
 	}
 	if f.gotSize != 0 {

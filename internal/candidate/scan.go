@@ -97,6 +97,28 @@ type ScanResult struct {
 	// neither leaves both permanently unmeasured while nothing fails — so the
 	// count is on the result rather than inferred from the store.
 	FirstPrices, FirstRanks int
+	// FirstRanksHeld counts the positions this scan declined to store because the
+	// reading they came from carried neither of the two facts that decide whether a
+	// position can answer seen_late — see recordFirsts.
+	//
+	// It is counted rather than passed over in silence for the same reason
+	// FirstRanks is counted: a scan that stores nothing and a scan that had nothing
+	// to store are the same output otherwise, and only one of them means the panel
+	// is about to become measurable. A watch loop reports a held count on its first
+	// turn and zero afterwards; a `scan` reports one every time, which is the fact
+	// that says a one-shot command cannot qualify anything.
+	FirstRanksHeld int
+	// Readings is what each ranking source asked for and what arrived, per source.
+	//
+	// It exists because nobody has measured whether the official rankings endpoint
+	// returns the hundred rows it is asked for. If it does not, every reading is
+	// truncated, seen_late is refused for every candidate raised by it, and the
+	// distribution the follow-up threshold would be chosen from does not exist —
+	// and today that would be visible only as a screen full of READING_TRUNCATED,
+	// several candidate lives after the fact. This answers it in one scan.
+	//
+	// A source that carries no position at all (prices, candles) has no entry.
+	Readings map[SourceID]ReadingFacts
 	// Rejected names the symbols the store declined to record. A scan with
 	// rejections is not a failed scan — the rest of the market still went
 	// through — but it is not a clean one either, and the count is what makes a
@@ -131,6 +153,21 @@ type ScanResult struct {
 	// they are true whatever the body carried.
 	Vouched []SourceID
 }
+
+// ReadingFacts is one source's own account of one reading: how many rows it asked
+// its endpoint for and how many arrived.
+//
+// Both numbers rather than the comparison, because the comparison is one bit and
+// the question this exists to answer is "how short". A hundred requested and
+// ninety-nine arriving and a hundred requested and three arriving are the same
+// Truncation and two different conversations to have with the API.
+type ReadingFacts struct {
+	Requested, Arrived int
+}
+
+// Truncation is what the two numbers say. Same rule the stored position is held to,
+// from the same function, so the scan report and the veto cannot disagree.
+func (r ReadingFacts) Truncation() Truncation { return truncationOf(r.Requested, r.Arrived) }
 
 // RateLimitedSources returns the sources this scan lost to a 429.
 //
@@ -239,6 +276,7 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 		At:        at,
 		Attempted: len(opts.Sources),
 		Budgets:   make(map[SourceID]Budget, len(opts.Sources)),
+		Readings:  make(map[SourceID]ReadingFacts, len(opts.Sources)),
 	}
 
 	var (
@@ -302,6 +340,26 @@ func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult
 		result.Responded++
 		anyRead = true
 		result.Budgets[id] = reading.Budget
+		// What this source asked for and what it got.
+		//
+		// Taken from a row rather than from the source, because a Source is an
+		// interface with one method and this package has no way to ask it anything
+		// else. Every row of one reading carries the same requested count — the
+		// adapters set it from their own field — so the first row's is the reading's.
+		//
+		// The cost of that is stated rather than hidden: a reading with no rows
+		// carries no requested count either, so the emptiest reading of all is the one
+		// this record cannot describe. It is not silent about it — an empty reading
+		// already lands in Missing with its own reason one block down — but the
+		// arithmetic "asked for a hundred, received none" is not here. Putting the
+		// count on Reading itself would be the repair, and it is a wider change than
+		// this one: Reading is the seam every source implements.
+		if len(reading.Rows) > 0 && reading.Rows[0].RankRequested > 0 {
+			result.Readings[id] = ReadingFacts{
+				Requested: reading.Rows[0].RankRequested,
+				Arrived:   reading.Rows[0].RankTotal,
+			}
+		}
 
 		// An empty reading is NOT evidence that anything left the list.
 		//
@@ -478,6 +536,32 @@ func recordFirsts(ctx context.Context, store *Store, market string, at time.Time
 		}
 		o, ok := ranked[symbol]
 		if !ok || !needRank[symbol] {
+			continue
+		}
+		// A position whose reading carries neither fact is not written at all.
+		//
+		// first_rank is write-once, so storing one is a decision about the rest of the
+		// candidate's life. A reading from a source with no previous reading — every
+		// reading of a session's first tick, and every reading a one-shot `tossctl
+		// candidate scan` ever takes, because that command builds its panel, reads
+		// once and exits — carries NULL in both qualifier columns. Stored, it makes
+		// seen_late permanently unmeasurable for that life and nothing can fill the
+		// columns afterwards: the facts belong to a reading that is gone, and a later
+		// reading's answer is about a later reading.
+		//
+		// Not stored, the candidate reports NO_FIRST_RANK for one tick and the next
+		// qualified reading becomes its first sighting — still inside the ±TTL
+		// identity window, since the official interval is fifteen seconds and the
+		// window is ten minutes. One is recoverable and the other is not, so the scan
+		// takes the recoverable one. It is also what makes NEW_ENTRANT_UNKNOWN's
+		// "wait for the second reading" true.
+		//
+		// A *truncated* reading is written. It is not an unqualified position: both
+		// facts were taken, the refusal it produces is named, and it is the honest
+		// record of where this candidate was when we first saw it. Skipping it would
+		// swap a diagnosis an operator can act on for the absence of one.
+		if !o.Reported.NewlyListed.Known() || o.Reported.RankRequested <= 0 {
+			result.FirstRanksHeld++
 			continue
 		}
 		// The whole reading, not just the position. What the source knew about it —

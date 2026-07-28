@@ -50,7 +50,10 @@ func newlyListedBySymbol(rows []candidate.Row) map[string]candidate.NewlyListed 
 // measuring when our process came up rather than anything about the market.
 func TestASourcesFirstReadingHasNoAnswerAboutNewEntrants(t *testing.T) {
 	f := &fakeRankings{out: rankingOf("005930", "000660", "035720")}
-	src, err := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	// Three requested and three arriving, so this test is about the first reading
+	// rather than about a truncated one. The two refusals are separate rules and a
+	// fixture that trips both proves neither.
+	src, err := OfficialRanking(f, nil, RankingTradingAmount, 3, nil)
 	if err != nil {
 		t.Fatalf("OfficialRanking: %v", err)
 	}
@@ -74,7 +77,9 @@ func TestASourcesFirstReadingHasNoAnswerAboutNewEntrants(t *testing.T) {
 // TestTheSecondReadingSeparatesTheSymbolsThatJoinedFromTheOnesThatStayed.
 func TestTheSecondReadingSeparatesTheSymbolsThatJoinedFromTheOnesThatStayed(t *testing.T) {
 	f := &fakeRankings{out: rankingOf("005930", "000660")}
-	src, err := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	// Two requested and two arriving on every reading below: whole readings, so the
+	// memory is replaced each time and what is under test is the comparison.
+	src, err := OfficialRanking(f, nil, RankingTradingAmount, 2, nil)
 	if err != nil {
 		t.Fatalf("OfficialRanking: %v", err)
 	}
@@ -120,7 +125,7 @@ func TestTheSecondReadingSeparatesTheSymbolsThatJoinedFromTheOnesThatStayed(t *t
 // with nothing to distinguish it from a real one.
 func TestOneSourceServingTwoMarketsDoesNotAnswerAboutTheWrongList(t *testing.T) {
 	f := &fakeRankings{out: rankingOf("005930", "000660")}
-	src, err := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	src, err := OfficialRanking(f, nil, RankingTradingAmount, 2, nil)
 	if err != nil {
 		t.Fatalf("OfficialRanking: %v", err)
 	}
@@ -133,6 +138,10 @@ func TestOneSourceServingTwoMarketsDoesNotAnswerAboutTheWrongList(t *testing.T) 
 	us, err := src.Read(ctx, candidate.MarketUS)
 	if err != nil {
 		t.Fatalf("US Read: %v", err)
+	}
+	if len(us.Rows) != 2 {
+		t.Fatalf("the US reading carried %d rows, want 2; a loop over an empty slice asserts "+
+			"nothing and passes", len(us.Rows))
 	}
 	for _, r := range us.Rows {
 		if r.NewlyListed.Known() {
@@ -155,16 +164,26 @@ func TestOneSourceServingTwoMarketsDoesNotAnswerAboutTheWrongList(t *testing.T) 
 	}
 }
 
-// TestAnEmptyReadingIsStillAReadingOfThisList.
+// TestAnEmptyReadingDoesNotBecomeThePreviousReading.
 //
-// The scan refuses to count an empty reading as coverage, because "answered with no
-// rows" is not evidence that a symbol left. That is a different question from this
-// one: as far as "what did this source see last time" goes, it saw nothing, and the
-// rows of the next reading really were absent from it. Skipping the swap would make
-// the next reading compare against a list two readings old.
-func TestAnEmptyReadingIsStillAReadingOfThisList(t *testing.T) {
+// Corrected 2026-07-28, and the correction is a reversal. This test used to be
+// TestAnEmptyReadingIsStillAReadingOfThisList and it asserted that a symbol coming
+// back after an empty reading answers `yes`, on the argument that "as far as what
+// this source saw last time goes, it saw nothing".
+//
+// That argument is the one design D4 refuses one field over: a reading that asked
+// for rows and received none is not a list of no rows. It is a list we saw none of.
+// Under the old rule the empty reading became the yardstick, so the next complete
+// reading reported every row in it as a new entrant — the whole panel marked 신규
+// 진입 by a server blip, measured, and written onto the candidate rows. The scan
+// already refuses to treat the same reading as coverage for the same reason; this is
+// that rule reaching the memory.
+//
+// So the empty reading leaves the memory alone, and 005930 — which was in the last
+// whole reading and is here again — answers `no`.
+func TestAnEmptyReadingDoesNotBecomeThePreviousReading(t *testing.T) {
 	f := &fakeRankings{out: rankingOf("005930")}
-	src, err := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	src, err := OfficialRanking(f, nil, RankingTradingAmount, 1, nil)
 	if err != nil {
 		t.Fatalf("OfficialRanking: %v", err)
 	}
@@ -182,9 +201,10 @@ func TestAnEmptyReadingIsStillAReadingOfThisList(t *testing.T) {
 		t.Fatalf("third Read: %v", err)
 	}
 	got := newlyListedBySymbol(back.Rows)
-	if !got["005930"].Yes() {
-		t.Errorf("005930 answered %s after the list it was in went empty and it came back; "+
-			"the previous reading was the empty one", got["005930"])
+	if !got["005930"].No() {
+		t.Errorf("005930 answered %s after an empty reading in between; the empty one asked "+
+			"for a row and received none, which is not a list this symbol was absent from",
+			got["005930"])
 	}
 }
 
@@ -196,13 +216,17 @@ func TestAnEmptyReadingIsStillAReadingOfThisList(t *testing.T) {
 // 66.7th percentile of a list that never existed.
 func TestTheRequestedRowCountTravelsBesideTheOneThatArrived(t *testing.T) {
 	f := &fakeRankings{out: rankingOf("005930", "000660", "035720")}
-	src, err := OfficialRanking(f, nil, RankingTradingAmount, 100)
+	src, err := OfficialRanking(f, nil, RankingTradingAmount, 100, nil)
 	if err != nil {
 		t.Fatalf("OfficialRanking: %v", err)
 	}
 	got, err := src.Read(context.Background(), candidate.MarketKR)
 	if err != nil {
 		t.Fatalf("Read: %v", err)
+	}
+	if len(got.Rows) != 3 {
+		t.Fatalf("the reading carried %d rows, want 3; the loop below asserts nothing on an "+
+			"empty slice", len(got.Rows))
 	}
 	for _, r := range got.Rows {
 		if r.RankRequested != 100 {
@@ -224,7 +248,7 @@ func TestTheRequestedRowCountTravelsBesideTheOneThatArrived(t *testing.T) {
 // on a comparison against a request that was never made.
 func TestTheRequestedCountIsTheCappedOneRatherThanTheOneTheCallerAsked(t *testing.T) {
 	f := &fakeRankings{out: rankingOf("005930")}
-	src, err := OfficialRanking(f, nil, RankingTradingAmount, 500)
+	src, err := OfficialRanking(f, nil, RankingTradingAmount, 500, nil)
 	if err != nil {
 		t.Fatalf("OfficialRanking: %v", err)
 	}
@@ -251,19 +275,25 @@ func TestTheRequestedCountIsTheCappedOneRatherThanTheOneTheCallerAsked(t *testin
 // nothing on the screen explains.
 func TestTheWTSPopularityListReportsTheSameTwoFacts(t *testing.T) {
 	f := &fakePopular{out: popularityOf("005930", "000660")}
-	src := WTSPopular(f, 30)
+	// Two requested and two arriving, so these readings are whole. The production
+	// size is thirty and Panel is what fixes it there; what is under test here is
+	// that this adapter reports both numbers at all.
+	src := WTSPopular(f, 2, nil)
 	ctx := context.Background()
 
 	first, err := src.Read(ctx, candidate.MarketKR)
 	if err != nil {
 		t.Fatalf("first Read: %v", err)
 	}
+	if len(first.Rows) != 2 {
+		t.Fatalf("the first WTS reading carried %d rows, want 2", len(first.Rows))
+	}
 	for _, r := range first.Rows {
 		if r.NewlyListed.Known() {
 			t.Errorf("%s: the first WTS reading answered %s", r.Symbol, r.NewlyListed)
 		}
-		if r.RankRequested != 30 {
-			t.Errorf("%s: RankRequested = %d, want 30", r.Symbol, r.RankRequested)
+		if r.RankRequested != 2 {
+			t.Errorf("%s: RankRequested = %d, want 2", r.Symbol, r.RankRequested)
 		}
 	}
 
@@ -290,7 +320,7 @@ func TestAWTSRowIdentifiedByItsProductCodeIsNotANewEntrantEveryTime(t *testing.T
 		{Rank: 1, ProductCode: "A005930"}, {Rank: 2, ProductCode: "A000660"},
 	}}
 	f := &fakePopular{out: byProductCode}
-	src := WTSPopular(f, 30)
+	src := WTSPopular(f, 2, nil)
 	ctx := context.Background()
 
 	if _, err := src.Read(ctx, candidate.MarketKR); err != nil {
@@ -299,6 +329,9 @@ func TestAWTSRowIdentifiedByItsProductCodeIsNotANewEntrantEveryTime(t *testing.T
 	second, err := src.Read(ctx, candidate.MarketKR)
 	if err != nil {
 		t.Fatalf("second Read: %v", err)
+	}
+	if len(second.Rows) != 2 {
+		t.Fatalf("the second reading carried %d rows, want 2", len(second.Rows))
 	}
 	for _, r := range second.Rows {
 		if !r.NewlyListed.No() {

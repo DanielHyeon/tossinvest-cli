@@ -32,11 +32,77 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
+
+// previousReadingTTL is how old the remembered reading may be and still be "the
+// reading one tick ago".
+//
+// # Why the memory needs an expiry at all
+//
+// Existence was the whole condition when this was written, and existence survives
+// an outage. A read that fails returns before the swap, so a source that spent an
+// hour inside the 429 ladder comes back holding the set it held an hour ago — and
+// every symbol still on the list is then answered `no`, which is the answer that
+// qualifies a first sighting. Meanwhile cooling plus staleness is forty minutes, so
+// that same outage has expired the entire watchlist and the recovering scan
+// re-promotes the whole panel at once. The two meet exactly: the reading that
+// re-stamps the panel is the one whose memory is least entitled to speak, and the
+// verdict comes out measured. That is the path design D3 exists to cut, still open.
+//
+// # Where the number comes from
+//
+// Not from here. It is candidate.DefaultStalenessTTL, and it is that value for the
+// two reasons that value has:
+//
+//	The gap it tolerates is the one the design guarantees. DefaultStalenessTTL and
+//	MaxRankPriorAge are both twice the longest rung of candidate.BackoffLadder
+//	(300s), on the argument written at the ladder: a retreat that long is normal
+//	operation and must not expire what it happens during. A source inside its
+//	backoff is not out of service, and its memory should survive the whole ladder.
+//
+//	Past it, the thing the memory would qualify is gone anyway. A candidate nobody
+//	re-promoted for DefaultStalenessTTL cools implicitly (Store.stateAt), and from
+//	there the watchlist turns over. So the memory stays valid for exactly as long as
+//	the candidate lives it would be used to qualify, and the moment those start
+//	ending it stops answering. Beyond this bound the answer is `unknown`, which is
+//	the honest one: nobody knows whether a symbol joined the list during an hour we
+//	were not reading it.
+//
+// Neither the scan interval nor the engine yield needs a term of its own: the
+// official ranking's interval is 15s and the WTS list's 5s (cmd/tossctl's
+// candidateIntervals), the yield doubles them, and every one of those is far inside
+// the ladder's last rung.
+const previousReadingTTL = candidate.DefaultStalenessTTL
+
+// previousReading is one source's memory of one market's list.
+//
+// The instant is half the fact. A set with no instant cannot say whether it is the
+// reading one tick ago or the reading before an outage, and those two produce the
+// same `no` for a symbol that never left the list.
+type previousReading struct {
+	symbols map[string]bool
+	at      time.Time
+}
+
+// usableAt reports that this memory may answer a question asked at `at`.
+//
+// Two ways to be unusable and both are ordinary. Older than the TTL is the outage
+// above. Later than the reading asking — a clock stepping backwards — is refused
+// rather than treated as age zero, because "the previous reading is in the future"
+// is not a statement about the market either.
+func (p previousReading) usableAt(at time.Time) bool {
+	if p.symbols == nil || p.at.IsZero() || at.IsZero() {
+		return false
+	}
+	age := at.Sub(p.at)
+	return age >= 0 && age < previousReadingTTL
+}
 
 // RankingReader is the one official method the discovery adapters need.
 //
@@ -110,8 +176,16 @@ type officialRanking struct {
 	// A market with no entry has no previous reading, so its first reading reports
 	// unknown for every row. That is the state after every process start, and it is
 	// the one design D3 refuses to spell as "yes".
-	seen map[string]map[string]bool
+	//
+	// Two conditions decide whether an entry may answer, and neither of them is
+	// "it exists". It has to have arrived whole — see rememberRead — and it has to
+	// be no older than previousReadingTTL.
+	seen map[string]previousReading
 	mu   sync.Mutex
+	// now is the time source the memory's age is measured against. Injected for
+	// clock.System's usual reason: a bound nothing can drive to an instant is a
+	// bound nothing tests.
+	now clock.Clock
 }
 
 // OfficialRanking returns a Source over one official ranking type.
@@ -127,7 +201,13 @@ type officialRanking struct {
 //
 // An unrecognised ranking type is refused rather than given a fallback id, since
 // a fallback would put it back into a collision with a real source.
-func OfficialRanking(reader RankingReader, budget BudgetReader, typ string, count int) (candidate.Source, error) {
+//
+// A nil clock is the system one. The clock is what dates the remembered reading,
+// and a source that cannot date its own memory cannot tell the reading one tick ago
+// from the reading before an outage.
+func OfficialRanking(reader RankingReader, budget BudgetReader, typ string, count int,
+	clk clock.Clock) (candidate.Source, error) {
+
 	id, ok := rankingSourceID[typ]
 	if !ok {
 		return nil, fmt.Errorf("candidatesrc: unknown ranking type %q", typ)
@@ -135,7 +215,12 @@ func OfficialRanking(reader RankingReader, budget BudgetReader, typ string, coun
 	if count <= 0 || count > 100 {
 		count = 100
 	}
-	return &officialRanking{reader: reader, budget: budget, typ: typ, id: id, count: count}, nil
+	if clk == nil {
+		clk = clock.System()
+	}
+	return &officialRanking{
+		reader: reader, budget: budget, typ: typ, id: id, count: count, now: clk,
+	}, nil
 }
 
 func (o *officialRanking) ID() candidate.SourceID { return o.id }
@@ -160,7 +245,7 @@ func (o *officialRanking) Read(ctx context.Context, market string) (candidate.Re
 	// The previous reading's set is taken and replaced under one lock, before any
 	// row is built, so two concurrent reads of the same market cannot each answer
 	// from a set the other has already replaced.
-	previous, hadPrevious := o.rememberRead(market, raw.Items)
+	previous, hadPrevious := o.rememberRead(market, raw.Items, o.count == total)
 	rows := make([]candidate.Row, 0, total)
 	for _, item := range raw.Items {
 		symbol := strings.TrimSpace(item.Symbol)
@@ -194,18 +279,35 @@ func (o *officialRanking) Read(ctx context.Context, market string) (candidate.Re
 }
 
 // rememberRead swaps in this reading's symbol set for `market` and returns the one
-// it replaced, together with whether there was one.
+// it replaced, together with whether that one may be used.
 //
-// The two returns are the three states at their source. `hadPrevious` false is not
-// an empty previous reading — an empty one would be evidence that every symbol here
-// is new, and no previous reading at all is evidence of nothing.
+// The two returns are the three states at their source. `usable` false is not an
+// empty previous reading — an empty one would be evidence that every symbol here is
+// new, and no usable previous reading at all is evidence of nothing.
 //
-// The set is replaced even when the reading is empty, because an empty reading is
-// still a reading of this list. It is not counted as coverage by the scan (that is
-// a different question, about whether a symbol left), but as far as "what did this
-// source see last time" goes, it saw nothing, and the next reading's rows really
-// were absent from it.
-func (o *officialRanking) rememberRead(market string, items []domain.RankingItem) (map[string]bool, bool) {
+// # A short reading does not become the previous reading
+//
+// The swap used to be unconditional, and that made a degraded reading the yardstick
+// for the next whole one. Three rows arriving out of a hundred requested is not a
+// list of three; it is a hundred-row list we saw three rows of. Replace the memory
+// with those three and the next complete reading finds ninety-seven symbols "absent
+// from the previous reading" and reports every one of them as a new entrant —
+// measured, stored on the candidate row, and rendered as 신규 진입. This package's own
+// newlylisted.go says the same thing one field over ("a truncated reading is not a
+// list", design D4), and the comparison that decides it is the one the source
+// already makes: requested against arrived.
+//
+// So a short reading leaves the memory alone. The next whole reading then compares
+// against the last whole reading, which is older by however long the degradation
+// lasted — and that is what the age bound on the memory is for.
+//
+// An empty reading is short by the same comparison and is left out for the same
+// reason. It used to be swapped in deliberately, on the argument that "it saw
+// nothing" is still what it saw; that argument holds only for a source that asked
+// for nothing, and neither of these does.
+func (o *officialRanking) rememberRead(market string, items []domain.RankingItem, whole bool) (
+	map[string]bool, bool) {
+
 	key := strings.ToUpper(strings.TrimSpace(market))
 	current := make(map[string]bool, len(items))
 	for _, item := range items {
@@ -213,14 +315,20 @@ func (o *officialRanking) rememberRead(market string, items []domain.RankingItem
 			current[symbol] = true
 		}
 	}
+	at := o.now.Now()
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	if o.seen == nil {
-		o.seen = map[string]map[string]bool{}
+		o.seen = map[string]previousReading{}
 	}
-	previous, had := o.seen[key]
-	o.seen[key] = current
-	return previous, had
+	previous := o.seen[key]
+	if whole {
+		o.seen[key] = previousReading{symbols: current, at: at}
+	}
+	if !previous.usableAt(at) {
+		return nil, false
+	}
+	return previous.symbols, true
 }
 
 // newlyListed is the three-state answer for one symbol.
@@ -271,8 +379,12 @@ type wtsPopular struct {
 	// officialRanking's reason. This source serves only KR, so the map holds one
 	// entry in practice — it is keyed anyway because the guard below is on Read and
 	// a keyed map cannot be the thing that stops being true if that guard moves.
-	seen map[string]map[string]bool
+	//
+	// Same two conditions as officialRanking's: whole, and no older than
+	// previousReadingTTL.
+	seen map[string]previousReading
 	mu   sync.Mutex
+	now  clock.Clock
 }
 
 // WTSPopular returns a Source over the WTS popularity ranking.
@@ -281,11 +393,14 @@ type wtsPopular struct {
 // gone, because a WTS session expiring is an ordinary event rather than an
 // incident — which is why the official ranking, not this, is the one required to
 // be sufficient alone.
-func WTSPopular(reader PopularityReader, size int) candidate.Source {
+func WTSPopular(reader PopularityReader, size int, clk clock.Clock) candidate.Source {
 	if size <= 0 {
 		size = 30
 	}
-	return &wtsPopular{reader: reader, size: size}
+	if clk == nil {
+		clk = clock.System()
+	}
+	return &wtsPopular{reader: reader, size: size, now: clk}
 }
 
 func (w *wtsPopular) ID() candidate.SourceID { return candidate.SourceWTSPopular }
@@ -306,7 +421,7 @@ func (w *wtsPopular) Read(ctx context.Context, market string) (candidate.Reading
 	}
 
 	total := len(raw.Stocks)
-	previous, hadPrevious := w.rememberRead(market, raw.Stocks)
+	previous, hadPrevious := w.rememberRead(market, raw.Stocks, w.size == total)
 	rows := make([]candidate.Row, 0, total)
 	for _, s := range raw.Stocks {
 		symbol := wtsSymbol(s)
@@ -346,8 +461,11 @@ func wtsSymbol(s domain.RankedStock) string {
 	return strings.TrimSpace(s.ProductCode)
 }
 
-// rememberRead is officialRanking.rememberRead for this source's row type.
-func (w *wtsPopular) rememberRead(market string, stocks []domain.RankedStock) (map[string]bool, bool) {
+// rememberRead is officialRanking.rememberRead for this source's row type, with
+// the same two conditions and for the same reasons.
+func (w *wtsPopular) rememberRead(market string, stocks []domain.RankedStock, whole bool) (
+	map[string]bool, bool) {
+
 	key := strings.ToUpper(strings.TrimSpace(market))
 	current := make(map[string]bool, len(stocks))
 	for _, s := range stocks {
@@ -355,14 +473,20 @@ func (w *wtsPopular) rememberRead(market string, stocks []domain.RankedStock) (m
 			current[symbol] = true
 		}
 	}
+	at := w.now.Now()
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.seen == nil {
-		w.seen = map[string]map[string]bool{}
+		w.seen = map[string]previousReading{}
 	}
-	previous, had := w.seen[key]
-	w.seen[key] = current
-	return previous, had
+	previous := w.seen[key]
+	if whole {
+		w.seen[key] = previousReading{symbols: current, at: at}
+	}
+	if !previous.usableAt(at) {
+		return nil, false
+	}
+	return previous.symbols, true
 }
 
 // Panel builds the source list for one market.
@@ -373,7 +497,9 @@ func (w *wtsPopular) rememberRead(market string, stocks []domain.RankedStock) (m
 // source that structurally cannot see the market provides no such evidence. A
 // present-but-always-empty source would therefore cool every candidate in that
 // market on every scan, and the cooling clock would then expire them.
-func Panel(market string, official RankingReader, budget BudgetReader, wts PopularityReader) []candidate.Source {
+func Panel(market string, official RankingReader, budget BudgetReader, wts PopularityReader,
+	clk clock.Clock) []candidate.Source {
+
 	market = strings.ToUpper(strings.TrimSpace(market))
 	var sources []candidate.Source
 
@@ -387,7 +513,7 @@ func Panel(market string, official RankingReader, budget BudgetReader, wts Popul
 		// would be a defect in this file, and TestEveryPanelSourceHasItsOwnID
 		// fails if one ever slips.
 		for _, typ := range []string{RankingTradingAmount, RankingTradingVolume, RankingTopGainers} {
-			if src, err := OfficialRanking(official, budget, typ, 100); err == nil {
+			if src, err := OfficialRanking(official, budget, typ, 100, clk); err == nil {
 				sources = append(sources, src)
 			}
 		}
@@ -395,7 +521,7 @@ func Panel(market string, official RankingReader, budget BudgetReader, wts Popul
 	// The WTS popularity ranking is a Korean-market product. Handing it a US
 	// market would produce Korean rows filed under US — worse than absent.
 	if wts != nil && market == candidate.MarketKR {
-		sources = append(sources, WTSPopular(wts, 30))
+		sources = append(sources, WTSPopular(wts, 30, clk))
 	}
 	return sources
 }

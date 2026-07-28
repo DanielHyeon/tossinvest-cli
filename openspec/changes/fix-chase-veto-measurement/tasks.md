@@ -125,6 +125,35 @@
   커밋 → sync → gate를 끊기지 않게 한 번에 돌린다.
 - [ ] 8.4 별도 문맥 리뷰(구현 후). `review.md`에 추가 기록.
 
+## 9. 구현 후 독립 리뷰 2건의 지적 반영 (2026-07-28)
+
+리뷰 둘 다 실행 가능한 probe와 mutation으로 확인한 지적이다. 기록은 `issues.md` I3·I5–I13.
+
+- [x] 9.1 [P0-F1] 기억된 직전 읽기에 **유효 조건**을 붙인다. 신선도 상한은
+  `candidate.DefaultStalenessTTL`(= `BackoffLadder` 마지막 rung의 2배)이고 값을 새로
+  고르지 않는다. 시계 역행도 거부. `OfficialRanking`·`WTSPopular`·`Panel`이
+  `clock.Clock`을 받는다. issues.md I6.
+- [x] 9.2 [P0-F2] 소스 자신의 비교로 **짧은 읽기는 기억을 교체하지 않는다.** 빈 읽기도
+  같은 규칙. `TestAnEmptyReadingIsStillAReadingOfThisList`를 뒤집었다.
+- [x] 9.3 [P0-F3] §3의 절단 사슬에 배선 테스트를 건다(`Cycle` + `Assess`).
+  두 mutation이 이제 실패하는 것을 확인했다. issues.md I13.
+- [x] 9.4 [P1-F4] `MeasureFirstSighting`이 `!Truncation.Known()`을 새 사유
+  `REQUEST_UNRECORDED`로 거부한다. issues.md I3(뒤집음).
+- [x] 9.5 [P1-F5] 소비자 가드 세 구멍(클라이언트 생성·import 게이트·alias/dot import).
+  `official.New`를 금지하고 클라이언트 생성을 `cmd/tossctl/candidatepanel.go`로 옮겼다.
+  issues.md I11.
+- [x] 9.6 [P1-F6] 스키마 4 이전 후보는 재자격 부여되지 않는다 — 제안된 fill 대신 문장을
+  고치고 양쪽을 테스트로 고정했다. issues.md I8.
+- [x] 9.7 [P1-F7] 자격 부여할 수 없는 최초 순위는 저장하지 않고 `FirstRanksHeld`로 센다.
+  issues.md I7.
+- [x] 9.8 [P1-F8] 소스별 요청/도착 행 수와 최초 관측 census를 스캔 리포트와 `/signals`에
+  올린다. issues.md I9.
+- [x] 9.9 [P2-F9] `NEW_ENTRANT_UNKNOWN`의 대응 문장과 스키마 롤백 주장 정정 + 롤백 계획
+  기록. issues.md I5·I7.
+- [x] 9.10 [P2-F10] 패널 크기 drift 가드를 조이고 못 잡는 것을 테스트로 적었다.
+  issues.md I10.
+- [x] 9.11 [P2-F11] v3 fixture + 칼럼·CHECK 고정, 루프 길이 가드. issues.md I12.
+
 ## 후속 (이 change의 체크박스가 아니다)
 
 - **`extended = 6` 투입** (사용자 결정 2026-07-28: "수리하고 후속 change").

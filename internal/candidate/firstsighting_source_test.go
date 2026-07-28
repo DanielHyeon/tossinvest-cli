@@ -188,6 +188,20 @@ func TestTheUnqualifiedReasonIsNotOneOfTheStoresOwnGaps(t *testing.T) {
 // position. Before this change each of them was then measurable, so the top of the
 // list was raised on the first scan of every session. Now the whole panel is
 // unmeasured under one named reason, and none of it is counted as having passed.
+//
+// # Corrected 2026-07-28: which reason, and for how long
+//
+// This asserted NEW_ENTRANT_UNKNOWN on the first scan, which meant the unqualified
+// position had been stored — and first_rank is written once, so it stayed stored for
+// the rest of each candidate's life. The refusal was correct and permanent, and
+// permanent was not the intention: veto.go told the operator to wait for the second
+// reading, and waiting did nothing.
+//
+// recordFirsts now declines to store a position whose reading carries neither
+// qualifier, so the first scan leaves NO_FIRST_RANK — the recoverable state — and
+// the second scan's qualified reading becomes the first sighting for every one of
+// these candidates, still inside the ±TTL identity window. What the session start
+// costs is one tick, not a session.
 func TestASessionStartDoesNotStampThePanelAsSeenLate(t *testing.T) {
 	clk := clock.NewFake(t0)
 	s := openStoreOver(t, newSpaceProber(plentyOfSpace), clk)
@@ -236,10 +250,25 @@ func TestASessionStartDoesNotStampThePanelAsSeenLate(t *testing.T) {
 				"no previous reading to say whether the symbol had just joined",
 				v.Summary.Symbol, state)
 		}
-		if state.Reason() != VetoNewEntrantUnknown {
+		// NO_FIRST_RANK rather than NEW_ENTRANT_UNKNOWN, and the difference is the
+		// whole of the repair: nothing was stored, so nothing is fixed in place. The
+		// reason an operator sees is the recoverable one, and the next tick recovers
+		// it.
+		if state.Reason() != VetoNoFirstRank {
 			t.Errorf("%s: reason = %q, want %q", v.Summary.Symbol, state.Reason(),
-				VetoNewEntrantUnknown)
+				VetoNoFirstRank)
 		}
+	}
+	// And nothing was written, which is the fact behind the reason above.
+	stored, _, err := s.FirstRank(ctx, MarketKR, "005930")
+	if err != nil {
+		t.Fatalf("FirstRank: %v", err)
+	}
+	if stored.Recorded() {
+		t.Errorf("the session's first scan stored %d of %d from a reading it could not "+
+			"qualify. first_rank is written once, so that position would answer for the "+
+			"rest of this candidate's life and nothing could fill the columns beside it",
+			stored.Rank, stored.Total)
 	}
 	tally, _, _ := TallyVerdicts(verdicts)
 	if tally.Passed != 0 {
@@ -281,27 +310,70 @@ func TestASessionStartDoesNotStampThePanelAsSeenLate(t *testing.T) {
 			"means measured, not cleared", state)
 	}
 
-	// And the two that were already there on the first reading stay unmeasured: the
-	// reading their stored position came from is still the unqualified one, and a
-	// later reading does not retroactively qualify it.
-	held, _ := seenLateOf(t, verdicts, "005930")
-	if held.Reason() != VetoNewEntrantUnknown {
-		t.Errorf("a candidate whose first sighting came from the unqualified reading now "+
-			"reports %v; the stored position did not change and neither did what is known "+
-			"about it", held)
+	// And the two that were already on the list are measurable too, from the second
+	// reading — because the first one stored nothing for them.
+	//
+	// Corrected 2026-07-28. This used to assert that they stayed NEW_ENTRANT_UNKNOWN
+	// for good, on the grounds that "a later reading does not retroactively qualify"
+	// the stored position. That is still true of a stored position; what changed is
+	// that no position was stored. The second reading's is the first one this
+	// candidate has, it is inside the identity window, and its `no` is an honest
+	// answer about the list — so the candidate is measurable one tick after the
+	// process came up rather than never.
+	//
+	// Note what is *not* claimed: that this is the position the symbol had when the
+	// process started. It is the position at the second reading, and the reason that
+	// is acceptable is the same reason the ±TTL window exists — inside it, a reading
+	// is the one this life was first seen in.
+	held, heldSighting := seenLateOf(t, verdicts, "005930")
+	if !heldSighting.Measured {
+		t.Fatalf("a candidate that was on the list at process start is unmeasured (%s) one "+
+			"tick later; the first scan stored nothing for it, so the second reading's "+
+			"qualified position is the first one it has", heldSighting.Reason())
+	}
+	if !heldSighting.NewlyListed.No() {
+		t.Errorf("its stored fact = %s, want no — it was in the source's previous reading",
+			heldSighting.NewlyListed)
+	}
+	if heldSighting.PercentilePct != "99" {
+		t.Errorf("percentile = %q, want 99 (1st of 100)", heldSighting.PercentilePct)
+	}
+	if !held.Dangerous() {
+		t.Errorf("seen_late = %v for a candidate first seen at the top of a hundred-row "+
+			"list", held)
 	}
 }
 
-// TestARePromotionAfterExpiryIsQualifiedByTheSourceThatWasAlreadyRunning is task
+// TestARePromotionAfterExpiryIsQualifiedByTheReadingThatSawTheSymbolReturn is task
 // 2.3.
 //
 // This is the other half of the session-start rule and it is why the refusal is not
-// simply "the first scan is untrustworthy". A candidate that expires mid-session and
-// crosses again gets a new first_seen_at and a new first rank — and by then the
-// source has been reading the list all along, so it reports `no`. "It was already in
-// the list" is an honest answer for a first sighting: it says we did not catch this
-// symbol arriving, which is precisely what seen_late is about.
-func TestARePromotionAfterExpiryIsQualifiedByTheSourceThatWasAlreadyRunning(t *testing.T) {
+// simply "the first scan is untrustworthy". A candidate that expires and crosses
+// again gets a new first_seen_at and a new first rank, and that reading can be
+// qualified — so the refusal costs the session's first tick and not the re-entries.
+//
+// # Corrected 2026-07-28: which answer a re-promotion actually gets
+//
+// This test used to script the return as `no` and say in its failure message that
+// "the source has been reading this list for forty minutes", which nothing
+// established: the scripted source hands back whatever the fixture spells, and
+// design D3's sentence — that a re-promotion is qualified because the source still
+// holds a previous reading — was an assumption about the adapter rather than a
+// property of it.
+//
+// It is now a property, and it points the other way. candidatesrc's memory expires
+// at previousReadingTTL, so a forty-minute gap in *reading* leaves the source with
+// no answer at all. What is left is the case that reaches here in production: the
+// symbol leaves the list, the source keeps reading it every tick, the candidate
+// cools and expires with nothing to promote it, and then the symbol comes back — and
+// against a fresh previous reading that is `yes`. A candidate cannot be cooled while
+// a source it has is still listing it, so `no` on a re-promotion would require a
+// forty-minute gap in the reading, which is exactly the gap the memory no longer
+// survives.
+//
+// `yes` is the stronger answer anyway: it says the symbol joined the list between
+// two consecutive readings and we saw where it landed.
+func TestARePromotionAfterExpiryIsQualifiedByTheReadingThatSawTheSymbolReturn(t *testing.T) {
 	clk := clock.NewFake(t0)
 	s := openStoreOver(t, newSpaceProber(plentyOfSpace), clk)
 	ctx := context.Background()
@@ -321,7 +393,7 @@ func TestARePromotionAfterExpiryIsQualifiedByTheSourceThatWasAlreadyRunning(t *t
 	// clears the stored first rank and starts a new life on the next crossing.
 	clk.Advance(DefaultCoolingTTL + DefaultStalenessTTL + time.Minute)
 	reborn := clk.Now()
-	src.readings = [][]Row{{heldRow("005930", 4, 100)}}
+	src.readings = [][]Row{{enteredRow("005930", 4, 100)}}
 	opts.Schedule = NewSchedule(nil)
 	if _, err := Cycle(ctx, s, opts); err != nil {
 		t.Fatalf("second Cycle: %v", err)
@@ -335,11 +407,12 @@ func TestARePromotionAfterExpiryIsQualifiedByTheSourceThatWasAlreadyRunning(t *t
 	}
 	state, sighting := seenLateOf(t, verdicts, "005930")
 	if !sighting.Measured {
-		t.Fatalf("the re-promotion is unmeasured (%s); the source has been reading this list "+
-			"for forty minutes and answered `no`, which is an answer", sighting.Reason())
+		t.Fatalf("the re-promotion is unmeasured (%s); the reading that saw the symbol come "+
+			"back answered about its own previous reading, which is an answer",
+			sighting.Reason())
 	}
-	if !sighting.NewlyListed.No() {
-		t.Errorf("the re-promotion's stored fact = %s, want no", sighting.NewlyListed)
+	if !sighting.NewlyListed.Yes() {
+		t.Errorf("the re-promotion's stored fact = %s, want yes", sighting.NewlyListed)
 	}
 	if sighting.Rank != 4 || sighting.PercentilePct != "96" {
 		t.Errorf("the new life's sighting = %d of %d at %s%%, want 4 of 100 at 96%% — the new "+
@@ -347,8 +420,8 @@ func TestARePromotionAfterExpiryIsQualifiedByTheSourceThatWasAlreadyRunning(t *t
 			sighting.Rank, sighting.RankTotal, sighting.PercentilePct)
 	}
 	if !state.Dangerous() {
-		t.Errorf("seen_late = %v; a candidate whose life began at 4th of a hundred, on a "+
-			"reading that says it was already in the list, is one we arrived late to", state)
+		t.Errorf("seen_late = %v; a candidate whose life began at 4th of a hundred is one we "+
+			"arrived late to", state)
 	}
 }
 

@@ -194,14 +194,44 @@ const (
 	// Those are the store's own gaps — retention did what it is supposed to, the
 	// panel carries no ranking source, the column predates the schema. This one is
 	// not a gap at all: the position is there, it is this life's, and the *source*
-	// did not have the answer that would make it mean something. The remedies are
-	// different, so a screen full of one must not read like a screen full of the
-	// other — a scan that has just started will produce a screen full of this and
-	// the correct action is to wait for the second reading.
+	// did not have the answer that would make it mean something.
+	//
+	// # What an operator does about it, corrected 2026-07-28
+	//
+	// This said "the correct action is to wait for the second reading", and that was
+	// false in the direction that matters: first_rank is written once, so a position
+	// stored from an unqualified reading held this reason for the rest of the
+	// candidate's life however long anybody waited. The sentence described the
+	// intention rather than the code.
+	//
+	// It is true now, and it is true because of the other half of the repair rather
+	// than because of a change here: recordFirsts no longer stores a position whose
+	// reading carries neither fact, so a session's first tick leaves NO_FIRST_RANK —
+	// recoverable — and the next tick's qualified reading becomes the first sighting
+	// while it is still inside the identity window. So this reason now means a stored
+	// position from a reading that was qualified in one respect and not the other,
+	// and the transient session-start case reports NO_FIRST_RANK instead. The two are
+	// different reasons on the screen, which is what tells an operator whether
+	// waiting helps: this one does not resolve until the candidate's life does.
 	//
 	// design D3: the refusal is not a ratio and not a floor. It is the source
 	// saying so.
 	VetoNewEntrantUnknown VetoUnmeasured = "NEW_ENTRANT_UNKNOWN"
+	// VetoRequestUnrecorded: the reading the position came from never recorded how
+	// many rows it asked for, so whether it arrived whole cannot be decided.
+	//
+	// Separate from READING_TRUNCATED because unmeasured is not a measured negative
+	// — the rule this package has now kept in five places — and because the remedies
+	// differ. Truncated is the endpoint returning less than it was asked for, and it
+	// is a live fault an operator can chase. This one is a row from before schema 4
+	// or a producer that declares no size, and there is nothing to chase: the fact
+	// was never taken.
+	//
+	// It is a refusal rather than a shrug. A reading of one row whose request nobody
+	// recorded produces percentile 0 — the bottom of its own list — and 0 clears
+	// every seen_late threshold there could be, so measuring it is how an unmeasured
+	// reading turns into a pass.
+	VetoRequestUnrecorded VetoUnmeasured = "REQUEST_UNRECORDED"
 	// VetoReadingTruncated: the source asked for more rows than arrived, so the
 	// list length the percentile would normalise by never existed.
 	//
@@ -690,6 +720,20 @@ func MeasureFirstSighting(c Candidate, first FirstRank, observations []Observati
 		// used. What is used is the source's own answer, and here the source's own
 		// answer is that it does not have one.
 		out.Why = VetoNewEntrantUnknown
+		return out
+	case !out.Truncation.Known():
+		// The reading never recorded what it asked for, so nothing here can say it
+		// arrived whole. issues.md decision 3 held that these rows were already
+		// refused by the rule above — that a position with no recorded request also
+		// has no new-entrant fact — and that is a property of the rows this build
+		// happens to write rather than of the type. The pair (measured new entrant,
+		// unrecorded request) is representable, was reachable, and came out measured:
+		// a one-row reading of it yields percentile 0, the bottom of its own list,
+		// which clears every seen_late threshold there could be.
+		//
+		// So the refusal is structural. Unmeasured is not a measured negative, here
+		// as in the five other places this package spells that rule.
+		out.Why = VetoRequestUnrecorded
 		return out
 	case out.Truncation.Yes():
 		// design D4. The percentile normalises by RankTotal, and RankTotal is what

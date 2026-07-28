@@ -78,17 +78,90 @@ var verdictReaders = map[string]string{
 	"internal/console/tally_alarm_test.go":         "asserts the tally alarm on the page",
 }
 
-// orderVerbs are the package selectors that can submit, amend, cancel or liquidate.
+// orderVerbs are the package selectors that can submit, amend, cancel or liquidate,
+// keyed by the package's own name and mapped to the selector prefixes that matter.
+// A nil list means every exported call on that package.
 //
 // They are the roots isolation_test.go's forbidden table names, expressed as things
 // a file says rather than as things a package imports — which is the only form that
 // still discriminates inside cmd/tossctl.
+//
+// # official.New, and what a selector scan cannot see
+//
+// The first four entries name packages whose whole purpose is the order path, so any
+// call into them is the thing being forbidden. internal/official is not like that:
+// it is the read client as well, and this repository's discovery adapters are built
+// on its Rankings method. So only some of its surface is an order verb.
+//
+// The three write prefixes were the original list and they match nothing in this
+// tree, which is worth stating rather than leaving as a comfortable silence: there
+// is no package-level official.Place. The writes are methods — Client.PlaceOrder,
+// Client.CreateConditionalOrder, Client.CancelConditionalOrder
+// (internal/official/conditional_writes.go) — and by the time a file has a *Client
+// in hand the package name is gone from the call site. `client.CreateConditionalOrder(…)`
+// is invisible to any scan of this shape, and cmd/tossctl/candidate.go used to
+// construct exactly that client.
+//
+// What is visible is the construction. `official.New` is the one line that turns
+// credentials into a value carrying every write the backend has, so that is what a
+// verdict-reading file may not say. The write prefixes stay beside it: they cost
+// nothing and they would catch a package-level helper the day somebody adds one.
 var orderVerbs = map[string][]string{
 	"execgw":      nil, // every exported call on the execution gateway
 	"orderintent": nil,
 	"trading":     nil,
 	"flatten":     nil,
-	"official":    {"Place", "Cancel", "Modify"},
+	"official":    {"Place", "Cancel", "Modify", "New"},
+}
+
+// orderPackagePaths maps each key above onto the import path it names, so that an
+// aliased import is resolved rather than matched by spelling.
+//
+// The candidate side has done this since it was written (candidateImportName) and
+// this side did not, which left `import eg ".../internal/execgw"` followed by
+// `eg.Submit(…)` passing — one line, no import-graph change, in a package whose
+// import graph already contains the execution gateway.
+var orderPackagePaths = map[string]string{
+	"execgw":      "/internal/execgw",
+	"orderintent": "/internal/orderintent",
+	"trading":     "/internal/trading",
+	"flatten":     "/internal/flatten",
+	"official":    "/internal/official",
+}
+
+// orderVerbNames is what this file calls each order package by, and the prefixes
+// that matter for it.
+//
+// It starts from the canonical names — a file naming `trading.Something` without
+// importing it would not compile, but a guard that only trusts the import list is a
+// guard that stops working the day the resolution has a hole in it — and then adds
+// whatever local name each import actually binds.
+func orderVerbNames(file *ast.File, module string) map[string][]string {
+	out := make(map[string][]string, len(orderVerbs))
+	for name, prefixes := range orderVerbs {
+		out[name] = prefixes
+	}
+	for _, spec := range file.Imports {
+		path := strings.Trim(spec.Path.Value, `"`)
+		for key, suffix := range orderPackagePaths {
+			if path != module+suffix {
+				continue
+			}
+			local := key
+			if spec.Name != nil {
+				local = spec.Name.Name
+			}
+			if local == "_" || local == "." {
+				// A blank import binds no identifier and a dot import binds every
+				// exported name with no qualifier at all — neither is reachable by a
+				// selector scan. namesAnOrderVerb refuses both outright rather than
+				// mapping them onto a name that would then match nothing.
+				continue
+			}
+			out[local] = orderVerbs[key]
+		}
+	}
+	return out
 }
 
 // goFilesUnder walks the repository for .go files, skipping this package (which
@@ -142,7 +215,45 @@ func candidateImportName(file *ast.File, module string) (string, bool) {
 	return "", false
 }
 
+// unqualifiedVerdictSelectors are the ones a file can say without naming this
+// package at all.
+//
+// `Passed` is the predicate and `Chase` is the field on Verdict — `v.Chase.Passed()`
+// and `v.Chase.SeenLate` are how both screens reach the judgement, and neither of
+// them requires an import: a helper in the same package that returns a
+// candidate.Verdict makes every type name vanish from the call site, and design D6
+// case 2 is exactly that shape inside cmd/tossctl.
+//
+// # Why it is two names and not all of verdictSymbols
+//
+// `Verdict` and `VetoTally` stay in the qualified list only, and that is a measured
+// decision rather than a shortcut. Scanning `Verdict` unqualified matches
+// cmd/tossctl/verify.go:363 (`o.Verdict`, a live-verification step's outcome),
+// internal/console/data.go:318 (`s.Verdict.Terminal()`, an order state) and three
+// console tests — none of which has ever seen a chase judgement. Adding five files
+// to the allowlist to catch a spelling collision would make the list longer than the
+// set of files anybody has thought about, and an allowlist nobody can read is one
+// nobody re-examines.
+//
+// Nothing escapes through the gap. To hold a chase judgement without importing this
+// package a file has to get one from a helper, and to use it, it has to select
+// `.Chase` or `.Passed` — `.SeenLate`, `.Extended` and `.NearHigh` are reachable only
+// through `.Chase`, and VetoTally's own pass count is spelled `.Passed`. Naming
+// either type outright still requires the import, which the qualified scan sees.
+//
+// `Sighting` and `SeenLate` were in this set for one draft and are not: they are the
+// measurements a judgement is made *from*, so a fixture that builds one is not a
+// consumer of the verdict.
+var unqualifiedVerdictSelectors = map[string]bool{
+	"Passed": true, "Chase": true,
+}
+
 // namesVerdict reports whether a parsed file reads a chase judgement.
+//
+// `pkg` is what this package is imported as, or "" when it is not imported at all —
+// which does not end the question. The qualified form (`candidate.Chase`) needs the
+// import; the unqualified one does not, and the unqualified one is the case the
+// guard was written for.
 func namesVerdict(file *ast.File, pkg string) bool {
 	found := false
 	ast.Inspect(file, func(n ast.Node) bool {
@@ -150,12 +261,12 @@ func namesVerdict(file *ast.File, pkg string) bool {
 		if !ok {
 			return true
 		}
-		if id, ok := sel.X.(*ast.Ident); ok && id.Name == pkg && verdictSymbols[sel.Sel.Name] {
+		if id, ok := sel.X.(*ast.Ident); ok && pkg != "" && id.Name == pkg &&
+			verdictSymbols[sel.Sel.Name] {
 			found = true
 		}
-		// And the verdict's own predicate, wherever the value came from. A helper
-		// that returns a Chase makes the type name disappear from the call site.
-		if sel.Sel.Name == "Passed" {
+		// And the verdict's own predicate and fields, wherever the value came from.
+		if unqualifiedVerdictSelectors[sel.Sel.Name] {
 			found = true
 		}
 		return true
@@ -165,7 +276,27 @@ func namesVerdict(file *ast.File, pkg string) bool {
 
 // namesAnOrderVerb reports whether a parsed file can say place, amend, cancel or
 // liquidate, and which selector said it.
-func namesAnOrderVerb(file *ast.File) (string, bool) {
+//
+// The package names are resolved from the file's own imports rather than matched by
+// spelling, for candidateImportName's reason one direction over: an alias is the
+// cheapest way past a guard that compares literal words, and this side did not
+// resolve them.
+func namesAnOrderVerb(file *ast.File, module string) (string, bool) {
+	// A dot import binds the package's exported names with no qualifier, so nothing
+	// below could ever see them. It is refused as the package having been named.
+	for _, spec := range file.Imports {
+		if spec.Name == nil || spec.Name.Name != "." {
+			continue
+		}
+		path := strings.Trim(spec.Path.Value, `"`)
+		for key, suffix := range orderPackagePaths {
+			if path == module+suffix {
+				return key + " (dot-imported, so its calls carry no qualifier at all)", true
+			}
+		}
+	}
+
+	names := orderVerbNames(file, module)
 	var found string
 	ast.Inspect(file, func(n ast.Node) bool {
 		sel, ok := n.(*ast.SelectorExpr)
@@ -176,7 +307,7 @@ func namesAnOrderVerb(file *ast.File) (string, bool) {
 		if !ok {
 			return true
 		}
-		prefixes, listed := orderVerbs[id.Name]
+		prefixes, listed := names[id.Name]
 		if !listed {
 			return true
 		}
@@ -213,10 +344,15 @@ func TestOnlyTheListedFilesCanNameTheChaseVerdict(t *testing.T) {
 		if err != nil {
 			t.Fatalf("parsing %s: %v", rel, err)
 		}
-		pkg, imports := candidateImportName(parsed, module)
-		if !imports {
-			continue
-		}
+		// The import is looked up and the scan runs either way.
+		//
+		// It used to gate the whole scan: a file that did not import this package was
+		// skipped outright. Go imports are per file and cmd/tossctl is one package, so
+		// a new file there that takes a candidate.Chase from a helper beside it and
+		// calls .Passed() needs no import of its own — design D6 case 2, which this
+		// guard was written for, walked straight through the gate meant to catch it.
+		// So the import now decides only whether the qualified form can be resolved.
+		pkg, _ := candidateImportName(parsed, module)
 		if !namesVerdict(parsed, pkg) {
 			continue
 		}
@@ -246,6 +382,7 @@ func TestOnlyTheListedFilesCanNameTheChaseVerdict(t *testing.T) {
 // own text does.
 func TestNoFileThatReadsTheVerdictCanAlsoPlaceAnOrder(t *testing.T) {
 	root := moduleRoot(t)
+	module := modulePath(t, root)
 	fset := token.NewFileSet()
 	for rel, why := range verdictReaders {
 		parsed, err := parser.ParseFile(fset, filepath.Join(root, rel), nil,
@@ -253,7 +390,7 @@ func TestNoFileThatReadsTheVerdictCanAlsoPlaceAnOrder(t *testing.T) {
 		if err != nil {
 			t.Fatalf("parsing %s: %v", rel, err)
 		}
-		if verb, bad := namesAnOrderVerb(parsed); bad {
+		if verb, bad := namesAnOrderVerb(parsed, module); bad {
 			t.Errorf("%s reads the chase verdict (%s) and also names %s.\n\n"+
 				"spec candidate-discovery: 후보에서 주문으로 가는 코드가 컴파일되지 않아야 한다. "+
 				"One file that can do both is one edit away from doing both in sequence, and "+
@@ -273,6 +410,7 @@ func TestNoFileThatReadsTheVerdictCanAlsoPlaceAnOrder(t *testing.T) {
 // be replaced rather than the guard trusted.
 func TestTheConsumerGuardFiresOnAFileThatNamesAnOrderVerb(t *testing.T) {
 	root := moduleRoot(t)
+	module := modulePath(t, root)
 	const fixture = "cmd/tossctl/order.go"
 	if _, listed := verdictReaders[fixture]; listed {
 		t.Fatalf("%s is now a verdict reader, so it cannot serve as the positive control", fixture)
@@ -282,13 +420,93 @@ func TestTheConsumerGuardFiresOnAFileThatNamesAnOrderVerb(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parsing %s: %v", fixture, err)
 	}
-	verb, bad := namesAnOrderVerb(parsed)
+	verb, bad := namesAnOrderVerb(parsed, module)
 	if !bad {
 		t.Fatalf("the order-verb detector found nothing in %s, which is the order command. "+
 			"TestNoFileThatReadsTheVerdictCanAlsoPlaceAnOrder is passing because it is "+
 			"matching nothing", fixture)
 	}
 	t.Logf("positive control: %s names %s", fixture, verb)
+}
+
+// TestTheOrderVerbDetectorSeesTheFormsThatUsedToWalkPast is the positive control for
+// the three holes F5 measured, each one written out as the source it would be.
+//
+// A guard's claim is a set of things it did not find, so the only evidence that it
+// finds anything is a fixture it must reject. These three were verified green — that
+// is, forbidden and undetected — before this test existed.
+func TestTheOrderVerbDetectorSeesTheFormsThatUsedToWalkPast(t *testing.T) {
+	module := modulePath(t, moduleRoot(t))
+	for _, tc := range []struct {
+		name string
+		src  string
+	}{
+		{
+			// (a) The client, not the package. Every write on the official backend is
+			// a method on *official.Client, so `client.CreateConditionalOrder(…)`
+			// carries no package name at all. What is visible is the constructor.
+			name: "constructing the official client",
+			src: `package main
+import "` + module + `/internal/official"
+func f(creds official.Credentials, token string) {
+	client := official.New(creds, token)
+	_ = client
+}`,
+		},
+		{
+			// (c) An alias. The candidate side has resolved these since it was
+			// written; this side compared spellings.
+			name: "an aliased execution gateway",
+			src: `package main
+import eg "` + module + `/internal/execgw"
+func f(g *eg.Gateway) { _ = g }`,
+		},
+		{
+			name: "a dot-imported execution gateway",
+			src: `package main
+import . "` + module + `/internal/execgw"
+func f() {}`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			parsed, err := parser.ParseFile(token.NewFileSet(), "fixture.go", tc.src,
+				parser.SkipObjectResolution)
+			if err != nil {
+				t.Fatalf("parsing the fixture: %v", err)
+			}
+			verb, bad := namesAnOrderVerb(parsed, module)
+			if !bad {
+				t.Errorf("the detector found nothing in:\n%s\n\nEach of these was verified to "+
+					"pass the guard while doing the thing the guard forbids", tc.src)
+			}
+			t.Logf("detected: %s", verb)
+		})
+	}
+}
+
+// TestTheVerdictDetectorSeesAReaderThatNeverImportsThisPackage is D6 case 2 as a
+// fixture: cmd/tossctl is one Go package, so a new file in it can take a
+// candidate.Chase from a helper beside it and never write the import.
+func TestTheVerdictDetectorSeesAReaderThatNeverImportsThisPackage(t *testing.T) {
+	const src = `package main
+func f() {
+	v := latestVerdict()
+	if v.Chase.Passed() {
+		submit(v)
+	}
+}`
+	parsed, err := parser.ParseFile(token.NewFileSet(), "fixture.go", src,
+		parser.SkipObjectResolution)
+	if err != nil {
+		t.Fatalf("parsing the fixture: %v", err)
+	}
+	// "" is what candidateImportName reports for a file that does not import this
+	// package, and the scan has to run anyway — that is the whole finding.
+	if !namesVerdict(parsed, "") {
+		t.Error("the verdict detector found nothing in a file that reads Chase.Passed() " +
+			"without importing this package. That file needs zero import edges, which is " +
+			"why the unit of this guard is the file's text rather than its import list")
+	}
 }
 
 // TestTheVerdictDetectorFiresOnAFileThatReadsOne is the other positive control: the

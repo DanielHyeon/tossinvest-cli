@@ -1740,8 +1740,24 @@ func TestAStoreAtSchemaTwoOpensMigratesAndKeepsItsRows(t *testing.T) {
 	//
 	// So what is asserted now is the honest pair: the position crossed the migration
 	// intact and is visible, and the veto refuses to measure from it under a reason
-	// that names why. A store somebody already has gets its answer back one scan
-	// after the upgrade, when a source reports a reading it can qualify.
+	// that names why.
+	//
+	// Corrected again 2026-07-28. The sentence here said "a store somebody already
+	// has gets its answer back one scan after the upgrade, when a source reports a
+	// reading it can qualify", and that is not what happens. NoteFirstRank returns
+	// early whenever first_rank is already set, recordFirsts does not even offer a
+	// reading for a candidate that has one, and neither would help if they did: the
+	// two facts describe *the reading this position came from*, that reading is gone,
+	// and a later reading's answer is an answer about a later reading. Filling the
+	// columns from one would be the substitution design D3 exists to refuse, arriving
+	// through the back door.
+	//
+	// What is true is narrower and it is the honest version: this candidate's
+	// seen_late stays unmeasured for the rest of *this life*. When the life ends —
+	// cooling then expiry — Promote clears first_rank, the next crossing records a
+	// new one from a reading a running source can qualify, and the candidate becomes
+	// measurable then. A migrated store recovers at the pace its candidates turn
+	// over, not at the pace it scans.
 	sighting := MeasureFirstSighting(got, first, rows)
 	if sighting.Measured {
 		t.Errorf("the sighting after the migration is measured at %s%%; the rung backfilled "+

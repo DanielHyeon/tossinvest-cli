@@ -69,6 +69,7 @@ const signalsTemplates = `
   {{template "signalsveto" .Veto}}
   {{template "signalsaccel" .Accel}}
   {{range .Bands}}{{template "signalsband" .}}{{end}}
+  {{template "signalssightings" .}}
   {{template "signalstable" .}}
   {{end}}
 </section>
@@ -187,6 +188,35 @@ const signalsTemplates = `
 {{if .NotMeasured}}
 <p class="muted">미측정:
 {{range $i, $r := .NotMeasured}}{{if $i}} · {{end}}<code>{{$r.Reason}}</code> {{$r.Count}}{{end}}</p>
+{{end}}
+{{end}}
+
+{{/*
+  "signalssightings" — 최초 관측을 원천별로 나눈다.
+
+  veto census는 사유별 건수를 준다. 그것으로는 "공식 거래대금 순위가 짧게 온다"와
+  "WTS 인기 목록이 짧게 온다"를 구분할 수 없는데, 둘은 가서 볼 곳이 다르고 그 중
+  하나는 seen_late 분포 전체가 비는 원인이다. 공식 순위가 요청한 100행을 실제로
+  주는지는 아직 아무도 재지 않았다 — 주지 않는다면 그 원천의 최초 관측은 전부
+  READING_TRUNCATED이고, 후속 change가 임계를 고를 분포가 존재하지 않는다.
+*/}}
+{{define "signalssightings"}}
+{{if .Sightings}}
+<h3>최초 관측 — 원천별</h3>
+<p class="muted">seen_late가 어느 원천의 읽기를 거부하고 있는지. 후보 한 건은 최초
+관측을 하나만 가지므로 분모는 후보 수다.</p>
+<table>
+  <thead><tr><th>원천</th><th>측정 / 보유</th><th>거부 사유</th></tr></thead>
+  <tbody>
+  {{range .Sightings}}
+    <tr>
+      <td><code>{{.Source}}</code></td>
+      <td>{{.Measured}} / {{.Total}}</td>
+      <td>{{if .NotMeasured}}{{range $i, $r := .NotMeasured}}{{if $i}} · {{end}}<code>{{$r.Reason}}</code> {{$r.Count}}{{end}}{{else}}<span class="muted">없음</span>{{end}}</td>
+    </tr>
+  {{end}}
+  </tbody>
+</table>
 {{end}}
 {{end}}
 

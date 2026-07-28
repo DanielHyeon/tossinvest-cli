@@ -911,5 +911,7 @@ func consoleSignalsMarket(ctx context.Context, store *candidate.Store, market st
 	// scan` and not on /signals, and a band missing from a page renders as a band
 	// nobody crossed rather than as one nobody counted.
 	out.Vetoes, out.Crossings, out.Bands = candidate.TallyVerdicts(verdicts)
+	// Same reducer as the scan output's, for the same reason as the line above it.
+	out.Sightings = candidate.TallySightingSources(verdicts)
 	return out
 }
