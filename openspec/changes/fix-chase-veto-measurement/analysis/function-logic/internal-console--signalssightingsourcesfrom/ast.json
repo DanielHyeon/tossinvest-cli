@@ -1,0 +1,101 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "5655aecbeb5b89901b014786a1119b550959f3c2114e88f93abac512799955f8",
+  "package": "console",
+  "function": "signalsSightingSourcesFrom",
+  "signature": "signalsSightingSourcesFrom(params=1, results=1)",
+  "start": {
+    "line": 834,
+    "column": 1
+  },
+  "end": {
+    "line": 847,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 836,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 838,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 846,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 839,
+        "column": 11
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 841,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 842,
+        "column": 12
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 843,
+        "column": 17
+      },
+      "text": "sortedSignalsCounts"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 837,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 839,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 841,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

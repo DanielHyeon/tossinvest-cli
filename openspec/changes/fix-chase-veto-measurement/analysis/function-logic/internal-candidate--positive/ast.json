@@ -1,0 +1,45 @@
+{
+  "file": "internal/candidate/store.go",
+  "source_sha256": "95cae5ba2bee288b6ef3c65fa5fbe79d0e783db6609b2df8dbef6783bedc51b1",
+  "package": "candidate",
+  "function": "positive",
+  "signature": "positive(params=1, results=1)",
+  "start": {
+    "line": 2012,
+    "column": 1
+  },
+  "end": {
+    "line": 2017,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 2013,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 2014,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 2016,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

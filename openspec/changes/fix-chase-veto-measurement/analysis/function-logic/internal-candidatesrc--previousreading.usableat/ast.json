@@ -1,0 +1,79 @@
+{
+  "file": "internal/candidatesrc/candidatesrc.go",
+  "source_sha256": "f71c63715b55130e9c2c45b260ebfc5eee71c6b3c7932f5614aa4c702506131f",
+  "package": "candidatesrc",
+  "function": "usableAt",
+  "receiver": "previousReading",
+  "signature": "previousReading.usableAt(params=1, results=1)",
+  "start": {
+    "line": 99,
+    "column": 1
+  },
+  "end": {
+    "line": 105,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 25
+      },
+      "text": "p.at.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 42
+      },
+      "text": "at.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 9
+      },
+      "text": "at.Sub"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

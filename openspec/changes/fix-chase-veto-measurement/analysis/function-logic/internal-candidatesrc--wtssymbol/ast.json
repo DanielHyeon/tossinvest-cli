@@ -1,0 +1,70 @@
+{
+  "file": "internal/candidatesrc/candidatesrc.go",
+  "source_sha256": "f71c63715b55130e9c2c45b260ebfc5eee71c6b3c7932f5614aa4c702506131f",
+  "package": "candidatesrc",
+  "function": "wtsSymbol",
+  "signature": "wtsSymbol(params=1, results=1)",
+  "start": {
+    "line": 457,
+    "column": 1
+  },
+  "end": {
+    "line": 462,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 458,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 459,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 461,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 15
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 458,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

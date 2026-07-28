@@ -287,3 +287,60 @@ import는 selector가 아예 없으므로 **그 자체로 위반**으로 본다.
 `Cycle` + `Assess`로 몰아 `Chase.SeenLate.Reason() == READING_TRUNCATED`를 단언하고,
 완전한 3행 읽기가 여전히 측정 가능하다는 대조군을 옆에 둔다(길이가 결정하지 않는다).
 확인: 두 mutation 모두 이제 실패한다.
+
+## I14. 음수 요청 행 수의 두 거부에 테스트가 없었다 — Function Logic Map 생산이 찾았다 (task 8.1)
+
+Branch Test Map을 쓰면서 두 분기에 대해 "이 분기를 덮는 테스트"를 적을 수 없었다.
+
+- `internal/candidate/candidate.go:Observation.validate` B7 — `o.Reported.RankRequested < 0`
+- `internal/candidate/store.go:Store.NoteFirstRank` B5 — `first.Requested < 0`
+
+둘 다 **이 change가 만든 분기**이고, 둘 다 아무 테스트도 넘기지 않았다. 더 나쁜 것은
+`truncation_test.go:TestTruncationComparesTheTwoNumbersTheSourceDeclared`의 표에
+`{"a negative request, which validate refuses at the boundary", -1, 100, TruncationUnknown()}`
+라는 **부제목이 그 주장을 하고 있었다**는 점이다 — 이름이 동작을 서술하고 본문은 그것을
+확인하지 않는 형태이며, 앞 change의 evidence 생산이 찾은 결함 넷 중 하나와 같은 모양이다.
+
+**왜 조용한 결함인가**: `positive()`가 비양수를 SQL NULL로 접고 `truncationOf`가
+`requested <= 0`을 `TruncationUnknown()`으로 접는다. 그래서 음수가 경계를 통과하면 그 행은
+"아무도 재지 않았다"로 **위장한 채** 저장되고, 저장 뒤에는 미기록과 구분할 방법이 없다.
+`first_rank_requested`는 write-once 칼럼이므로 그 후보의 남은 생명 전체가 그 값으로 답한다.
+
+**처리**: `internal/candidate/negative_request_test.go`(신규 파일)가 두 거부를 각각 몰고,
+`truncationOf(-1, 100) == TruncationUnknown()`을 먼저 단언해 거부가 무엇에 대한 것인지를
+고정한다. `NoteFirstRank` 쪽은 거부가 **쓰기 이전**임(칼럼이 여전히 비어 있음)과
+`Requested = 0`(부재)은 여전히 수락됨을 함께 확인한다 — 거부가 부호에 대한 것이지 자격
+칼럼의 부재에 대한 것이 아니라는 것.
+
+**확인**: 두 case를 `false && …`로 무력화하면 두 테스트가 모두 실패한다(2026-07-28 실행).
+새 파일이므로 FLM 대상 집합은 78개로 그대로다(`check_analysis.py`는 새로 추가된 파일의
+함수를 면제한다).
+
+## I15. Branch Test Map이 기록한 미커버 분기 (task 8.1)
+
+결함은 아니지만 evidence가 정직하려면 남겨야 하는 목록이다. **전부 이 change 이전부터 있던
+분기**이고, 이 change가 만든 분기 중 커버되지 않은 것은 I14의 둘뿐이었다(이제 커버된다).
+
+- `internal/candidatesrc` — 빈 심볼 skip 넷(`officialRanking.Read` B4,
+  `officialRanking.rememberRead` B2, `wtsPopular.Read` B4, `wtsPopular.rememberRead` B2).
+  빈 `Symbol`을 가진 fixture가 없다. 행 집합과 기억 집합이 **같은 조건으로** 걸러진다는
+  것이 이 change의 전제인데, 그 대칭은 구조로만 서 있다.
+- `internal/candidatesrc` — `OfficialRanking`의 `count <= 0` 반쪽, `WTSPopular`의
+  `size <= 0`. 생산 호출부는 `Panel`의 리터럴 100·30뿐이다.
+- `internal/candidatesrc.Panel` — 주입 clock이 네 소스에 **전달되는지**를 잡는 테스트가
+  없다. 유효성 테스트들은 두 생성자를 직접 부른다.
+- `internal/candidate.Collect` — 인자 검증 둘(빈 시장, zero instant), 패널·not-asked 모순,
+  빈 심볼 skip, 저장 실패 전파 넷, mis-wire와 성공 읽기가 함께 있는 경우.
+- `internal/candidate.Observation.validate` — 여덟 case 중 테스트가 넘기는 것은
+  `Rank > 0 && RankTotal == 0` 하나(`TestARankWithoutItsListLengthIsRefused`)와 이번에
+  추가한 B7뿐이다.
+- `internal/candidate.Store` — 손상된 stamp·I/O 실패 경로 전반(`Promote`의 인자 검증 둘 포함).
+- `cmd/tossctl.buildCandidatePanel` / `wtsPopularityReader` — **직접 테스트가 하나도 없다**
+  (`rg 'buildCandidatePanel' cmd/tossctl/*_test.go` 0건). 이 change가 이 함수에 한 것은
+  파일 이동과 `clock.System()` 인자 하나이고, 이동 자체는 소비자 가드 세 테스트가 잡는다.
+- `cmd/tossctl.consoleSignalsMarket` B1 — `Assess` 실패 경로. 렌더 쪽만
+  `internal/console`이 `Markets[0].Why`를 직접 세워 잡는다.
+- `internal/candidate.assessInto` B2 — `Assess` 실패 전파.
+
+각 항목은 해당 `analysis/function-logic/*/branch-test-map.md`에 **커버 없음**으로 표기되어
+있다.

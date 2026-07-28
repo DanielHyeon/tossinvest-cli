@@ -1,0 +1,117 @@
+{
+  "file": "internal/candidatesrc/candidatesrc_test.go",
+  "source_sha256": "2d2cc40546c656c8a292530cbeb4ae810766d80ef7e6905758cef6512f923836",
+  "package": "candidatesrc",
+  "function": "TestARateLimitedRankingIsReportedAsOne",
+  "signature": "TestARateLimitedRankingIsReportedAsOne(params=1, results=0)",
+  "start": {
+    "line": 122,
+    "column": 1
+  },
+  "end": {
+    "line": 132,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 16
+      },
+      "text": "OfficialRanking"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 12
+      },
+      "text": "src.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 21
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

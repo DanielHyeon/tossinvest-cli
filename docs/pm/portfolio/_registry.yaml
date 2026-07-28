@@ -24,6 +24,7 @@
     "verify-survives-already-processing",
     "add-candidate-discovery",
     "console-operator-overview",
-    "console-orders-screen"
+    "console-orders-screen",
+    "fix-chase-veto-measurement"
   ]
 }

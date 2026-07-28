@@ -1,0 +1,39 @@
+{
+  "file": "internal/candidate/store.go",
+  "source_sha256": "95cae5ba2bee288b6ef3c65fa5fbe79d0e783db6609b2df8dbef6783bedc51b1",
+  "package": "candidate",
+  "function": "Truncation",
+  "receiver": "FirstRank",
+  "signature": "FirstRank.Truncation(params=0, results=1)",
+  "start": {
+    "line": 1430,
+    "column": 1
+  },
+  "end": {
+    "line": 1430,
+    "column": 89
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1430,
+        "column": 46
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1430,
+        "column": 53
+      },
+      "text": "truncationOf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,46 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "56733e44c5620f0d6215bfc3ce07804164431153fac724de82fd7ebf99153b10",
+  "package": "main",
+  "function": "wtsPopularityReader",
+  "signature": "wtsPopularityReader(params=1, results=1)",
+  "start": {
+    "line": 495,
+    "column": 1
+  },
+  "end": {
+    "line": 500,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 497,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

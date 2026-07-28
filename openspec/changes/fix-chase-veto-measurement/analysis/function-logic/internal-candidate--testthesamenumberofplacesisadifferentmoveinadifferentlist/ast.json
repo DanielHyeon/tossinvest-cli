@@ -1,0 +1,228 @@
+{
+  "file": "internal/candidate/metrics_test.go",
+  "source_sha256": "64e00d23133215edd348c2d9c1e9612dd598510b971eddf998cacd4080286d38",
+  "package": "candidate",
+  "function": "TestTheSameNumberOfPlacesIsADifferentMoveInADifferentList",
+  "signature": "TestTheSameNumberOfPlacesIsADifferentMoveInADifferentList(params=1, results=0)",
+  "start": {
+    "line": 734,
+    "column": 1
+  },
+  "end": {
+    "line": 763,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 748,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 751,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 755,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 759,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 735,
+        "column": 13
+      },
+      "text": "seriesOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 736,
+        "column": 3
+      },
+      "text": "rankObs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 737,
+        "column": 3
+      },
+      "text": "rankObs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 737,
+        "column": 31
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 740,
+        "column": 14
+      },
+      "text": "seriesOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 741,
+        "column": 3
+      },
+      "text": "rankObs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 742,
+        "column": 3
+      },
+      "text": "rankObs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 742,
+        "column": 31
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 17
+      },
+      "text": "RankChange"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 37
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 747,
+        "column": 18
+      },
+      "text": "RankChange"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 747,
+        "column": 39
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 6
+      },
+      "text": "popularMove.Computed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 33
+      },
+      "text": "officialMove.Computed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 749,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 756,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 760,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 735,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 740,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 746,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 747,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

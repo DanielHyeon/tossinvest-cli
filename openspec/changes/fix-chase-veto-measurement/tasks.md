@@ -114,10 +114,12 @@
 
 ## 8. 증거와 게이트
 
-- [ ] 8.1 코드 편집을 **전부 끝낸 뒤** Function Logic Map + Branch Test Map 생성.
+- [x] 8.1 코드 편집을 **전부 끝낸 뒤** Function Logic Map + Branch Test Map 생성.
   대상 집합은 예측하지 말고 `python3 tools/logic-map/check_analysis.py --change
   fix-chase-veto-measurement`가 보고하는 것으로 정의한다. 편집된 `Test*` 함수가 포함된다.
-- [ ] 8.2 `docs/pm/portfolio/_registry.yaml` allowlist **와**
+  **78개** 산출. 생산이 찾은 것은 issues.md I14(음수 요청 행 수의 두 거부에 테스트가
+  없었다 — `negative_request_test.go` 추가)와 I15(미커버 분기 목록).
+- [x] 8.2 `docs/pm/portfolio/_registry.yaml` allowlist **와**
   `tools/pm/test_generate_master_tracker.py`의 fixture 목록 **둘 다**에 change id 등록.
   한쪽만 하면 PM tracker 테스트가 깨진다(선례 있음).
 - [ ] 8.3 `make sdd-sync` → `make sdd-check` → `make gate CHANGE=fix-chase-veto-measurement`.

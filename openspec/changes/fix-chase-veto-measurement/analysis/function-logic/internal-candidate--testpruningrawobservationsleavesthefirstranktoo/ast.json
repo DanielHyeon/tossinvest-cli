@@ -1,0 +1,351 @@
+{
+  "file": "internal/candidate/store_test.go",
+  "source_sha256": "191c4afe0a6b17b4707b7b1174d022b4430f013270e41512a41d228ad914c46d",
+  "package": "candidate",
+  "function": "TestPruningRawObservationsLeavesTheFirstRankToo",
+  "signature": "TestPruningRawObservationsLeavesTheFirstRankToo(params=1, results=0)",
+  "start": {
+    "line": 1229,
+    "column": 1
+  },
+  "end": {
+    "line": 1269,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1233,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1239,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1246,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1250,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1253,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1257,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 1260,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 1264,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1230,
+        "column": 10
+      },
+      "text": "openStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1231,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1233,
+        "column": 12
+      },
+      "text": "s.RecordObservations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1234,
+        "column": 3
+      },
+      "text": "obs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1236,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1238,
+        "column": 12
+      },
+      "text": "s.Promote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1240,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1242,
+        "column": 15
+      },
+      "text": "s.NoteFirstRank"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1243,
+        "column": 3
+      },
+      "text": "storedFirstRank"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1244,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1246,
+        "column": 15
+      },
+      "text": "s.PruneObservations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1246,
+        "column": 40
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1247,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1249,
+        "column": 15
+      },
+      "text": "s.Observations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1251,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1253,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1254,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1254,
+        "column": 54
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1256,
+        "column": 19
+      },
+      "text": "s.FirstRank"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1258,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1260,
+        "column": 49
+      },
+      "text": "first.At.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1261,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1263,
+        "column": 14
+      },
+      "text": "MeasureFirstSighting"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1265,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1230,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1231,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1233,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1238,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1242,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1246,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1249,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1256,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1263,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,140 @@
+{
+  "file": "internal/candidatesrc/candidatesrc_test.go",
+  "source_sha256": "2d2cc40546c656c8a292530cbeb4ae810766d80ef7e6905758cef6512f923836",
+  "package": "candidatesrc",
+  "function": "TestTheUSPanelDoesNotIncludeTheKoreanPopularityRanking",
+  "signature": "TestTheUSPanelDoesNotIncludeTheKoreanPopularityRanking(params=1, results=0)",
+  "start": {
+    "line": 243,
+    "column": 1
+  },
+  "end": {
+    "line": 260,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 253,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 8
+      },
+      "text": "Panel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 8
+      },
+      "text": "Panel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 6
+      },
+      "text": "hasSource"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 5
+      },
+      "text": "hasSource"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

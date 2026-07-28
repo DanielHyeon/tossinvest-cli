@@ -1,0 +1,46 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "725f6c6b365255317a4de293278d528f7f880216e9cebf369733bf253bea55bb",
+  "package": "main",
+  "function": "candidateCycleOptions",
+  "signature": "candidateCycleOptions(params=5, results=1)",
+  "start": {
+    "line": 346,
+    "column": 1
+  },
+  "end": {
+    "line": 357,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 349,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 18
+      },
+      "text": "candidateVetoThresholds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 18
+      },
+      "text": "candidateEngineProbe"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

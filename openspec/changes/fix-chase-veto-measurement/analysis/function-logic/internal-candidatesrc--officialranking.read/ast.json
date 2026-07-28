@@ -1,0 +1,233 @@
+{
+  "file": "internal/candidatesrc/candidatesrc.go",
+  "source_sha256": "f71c63715b55130e9c2c45b260ebfc5eee71c6b3c7932f5614aa4c702506131f",
+  "package": "candidatesrc",
+  "function": "Read",
+  "receiver": "officialRanking",
+  "signature": "officialRanking.Read(params=2, results=2)",
+  "start": {
+    "line": 228,
+    "column": 1
+  },
+  "end": {
+    "line": 279,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 233,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 238,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 241,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 14
+      },
+      "text": "o.reader.Rankings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 32
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 31
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 11
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 27
+      },
+      "text": "o.rememberRead"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 13
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 10
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 19
+      },
+      "text": "newlyListed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 19
+      },
+      "text": "decimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 19
+      },
+      "text": "decimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 19
+      },
+      "text": "decimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 47
+      },
+      "text": "o.rateBudget"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 251,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 255,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

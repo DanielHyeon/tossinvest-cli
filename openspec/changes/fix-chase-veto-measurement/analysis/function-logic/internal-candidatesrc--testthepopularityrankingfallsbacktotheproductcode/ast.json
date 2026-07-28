@@ -1,0 +1,102 @@
+{
+  "file": "internal/candidatesrc/candidatesrc_test.go",
+  "source_sha256": "2d2cc40546c656c8a292530cbeb4ae810766d80ef7e6905758cef6512f923836",
+  "package": "candidatesrc",
+  "function": "TestThePopularityRankingFallsBackToTheProductCode",
+  "signature": "TestThePopularityRankingFallsBackToTheProductCode(params=1, results=0)",
+  "start": {
+    "line": 222,
+    "column": 1
+  },
+  "end": {
+    "line": 233,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 14
+      },
+      "text": "Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 14
+      },
+      "text": "WTSPopular"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 42
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

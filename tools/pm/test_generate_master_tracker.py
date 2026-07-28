@@ -31,6 +31,7 @@ class TrackerTests(unittest.TestCase):
             "add-candidate-discovery",
             "console-operator-overview",
             "console-orders-screen",
+            "fix-chase-veto-measurement",
         ):
             path = changes / change
             path.mkdir(parents=True)

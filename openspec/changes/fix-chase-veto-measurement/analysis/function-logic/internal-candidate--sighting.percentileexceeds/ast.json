@@ -1,0 +1,94 @@
+{
+  "file": "internal/candidate/veto.go",
+  "source_sha256": "8f1b5d80861b937557a88348b6ee5d7e5cf6b465b95cd32cb140157c76e2ac4e",
+  "package": "candidate",
+  "function": "PercentileExceeds",
+  "receiver": "Sighting",
+  "signature": "Sighting.PercentileExceeds(params=1, results=2)",
+  "start": {
+    "line": 599,
+    "column": 1
+  },
+  "end": {
+    "line": 615,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 600,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 611,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 601,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 612,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 614,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 20
+      },
+      "text": "parseFigure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 614,
+        "column": 9
+      },
+      "text": "Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 614,
+        "column": 9
+      },
+      "text": "percentileOf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 603,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
