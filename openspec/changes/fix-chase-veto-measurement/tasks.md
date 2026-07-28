@@ -122,10 +122,10 @@
 - [x] 8.2 `docs/pm/portfolio/_registry.yaml` allowlist **와**
   `tools/pm/test_generate_master_tracker.py`의 fixture 목록 **둘 다**에 change id 등록.
   한쪽만 하면 PM tracker 테스트가 깨진다(선례 있음).
-- [ ] 8.3 `make sdd-sync` → `make sdd-check` → `make gate CHANGE=fix-chase-veto-measurement`.
+- [x] 8.3 `make sdd-sync` → `make sdd-check` → `make gate CHANGE=fix-chase-veto-measurement`.
   sync와 gate 사이에 `.go` 편집이 들어가면 CodeGraph fingerprint가 다시 stale이 된다 —
   커밋 → sync → gate를 끊기지 않게 한 번에 돌린다.
-- [ ] 8.4 별도 문맥 리뷰(구현 후). `review.md`에 추가 기록.
+- [x] 8.4 별도 문맥 리뷰(구현 후). `review.md`에 추가 기록.
 
 ## 9. 구현 후 독립 리뷰 2건의 지적 반영 (2026-07-28)
 
