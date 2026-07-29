@@ -724,16 +724,43 @@ func (sr *stepRun) cancelled(kind, id, symbol string, at time.Time, note string)
 	})
 }
 
-// markDeliberate flags the artifact that is *meant* to outlive the process, so
-// the end-of-run check does not report the conditional-persistence design as a
-// leak.
-func (sr *stepRun) markDeliberate(kind, id, note string) {
+// markHeld records that this object stays live on purpose and says who is
+// waiting on it.
+//
+// Two readers, two fields. Deliberate is for the person: the end-of-run check and
+// every screen use it to say "this is not a leak". HeldUntil is for the cleanup
+// rule: the object is not offered for cancellation until gate reaches a terminal
+// verdict recorded after this line (cleanup.go holdGate).
+//
+// It only reaches an artifact this step actually recorded. A step that reads an
+// object back without creating one — conditional-persist is the case today — has
+// nothing to mark, and calling this is harmless there rather than a second way to
+// declare a hold.
+func (sr *stepRun) markHeld(kind, id string, gate StepID, chain, note string) {
 	for i := range sr.artifacts {
 		if sr.artifacts[i].Kind == kind && sr.artifacts[i].ID == id && !sr.artifacts[i].Cancelled {
 			sr.artifacts[i].Deliberate = true
+			sr.artifacts[i].HeldUntil = gate
+			sr.artifacts[i].ChainID = chain
 			sr.artifacts[i].Note = note
 		}
 	}
+}
+
+// chainOf returns the chain identifier the record already carries for an object,
+// newest mention first: this step, then what this run has written, then the
+// record it started from.
+//
+// A modify creates a new identifier and invalidates the old one at once
+// (measurements.md M19, M40), so the successor has to inherit its predecessor's
+// chain here — after the fact the broker cannot say the two were one protection.
+func (r *Runner) chainOf(sr *stepRun, kind, id string) string {
+	for _, entries := range [][]Entry{{{Artifacts: sr.artifacts}}, r.written, r.prior} {
+		if c := ChainOf(entries, kind, id); c != "" {
+			return c
+		}
+	}
+	return ""
 }
 
 // latencyStats summarises the round trips a step measured, which is the input to

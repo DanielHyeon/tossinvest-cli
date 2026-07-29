@@ -190,6 +190,26 @@ type Artifact struct {
 	// Deliberate marks the conditional order that is meant to survive the
 	// process exit. It is still outstanding; it is just not a mistake.
 	Deliberate bool `json:"deliberate,omitempty"`
+	// HeldUntil names the step whose terminal verdict releases this object.
+	//
+	// Until that step decides — and decides *after* this line was written — the
+	// cleanup prologue must not offer to cancel it. It exists because a
+	// measurement that spans runs has to be able to say what it is waiting on:
+	// the conditional a persistence step reads from a later process, and the
+	// child order a trigger measurement has to watch fill. Without it, the only
+	// object the prologue protected was a conditional order, and only ever
+	// against one step's verdict (see holdGate).
+	//
+	// Empty is the record every line written before 2026-07-30 carries, and it
+	// keeps exactly the judgement it has today.
+	HeldUntil StepID `json:"held_until,omitempty"`
+	// ChainID groups the objects one measurement created.
+	//
+	// A conditional modify issues a new identifier and invalidates the old one
+	// immediately (measurements.md M19, M40 — both markets), so "these two are
+	// one protection" is not derivable from the broker afterwards. Before this
+	// field the link lived only in the prose of Note.
+	ChainID string `json:"chain_id,omitempty"`
 	// Note explains an artifact whose state needs one.
 	Note string `json:"note,omitempty"`
 }
@@ -436,9 +456,45 @@ func Passed(entries []Entry, id StepID) bool {
 // an order created in one step and cancelled in another nets out. This is the
 // function that decides whether the tool can report a clean finish.
 func Outstanding(entries []Entry) []Artifact {
-	order := []string{}
-	latest := map[string]Artifact{}
+	var out []Artifact
+	for _, l := range outstandingLines(entries) {
+		out = append(out, l.Artifact)
+	}
+	return out
+}
+
+// ChainOf returns the chain identifier the record carries for an object, taking
+// the newest line that names one.
+//
+// Empty means the record does not group this object with anything, which is what
+// every line written before 2026-07-30 says.
+func ChainOf(entries []Entry, kind, id string) string {
+	chain := ""
 	for _, e := range entries {
+		for _, a := range e.Artifacts {
+			if a.Kind == kind && a.ID == id && a.ChainID != "" {
+				chain = a.ChainID
+			}
+		}
+	}
+	return chain
+}
+
+// outstandingLine is an outstanding artifact together with the index of the line
+// Outstanding chose for it.
+//
+// The index is not decoration. The cleanup rule reads HeldUntil off this
+// artifact, so the verdict that releases it has to be measured against the line
+// that carried that field and no other (cleanup.go heldAfter).
+type outstandingLine struct {
+	Artifact
+	at int
+}
+
+func outstandingLines(entries []Entry) []outstandingLine {
+	order := []string{}
+	latest := map[string]outstandingLine{}
+	for i, e := range entries {
 		for _, a := range e.Artifacts {
 			key := a.Kind + "\x00" + a.ID
 			if _, seen := latest[key]; !seen {
@@ -450,13 +506,13 @@ func Outstanding(entries []Entry) []Artifact {
 				// resurrect it. Cancellation is monotone.
 				continue
 			}
-			latest[key] = a
+			latest[key] = outstandingLine{Artifact: a, at: i}
 		}
 	}
-	var out []Artifact
+	var out []outstandingLine
 	for _, key := range order {
-		if a := latest[key]; !a.Cancelled {
-			out = append(out, a)
+		if l := latest[key]; !l.Cancelled {
+			out = append(out, l)
 		}
 	}
 	return out

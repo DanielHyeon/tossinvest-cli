@@ -646,7 +646,13 @@ func (r *Runner) stepConditionalRegister(ctx context.Context, sr *stepRun) error
 		sr.observe("conditional.list_by_status.contains_new", strconv.FormatBool(containsConditional(list.Orders, id)), "")
 	}
 
-	sr.markDeliberate("conditional-order", id,
+	// A replayed registration returns the identifier it returned before, so the
+	// chain this run belongs to may already be on the record.
+	chain := r.chainOf(sr, KindConditional, id)
+	if chain == "" {
+		chain = newToken("chain")
+	}
+	sr.markHeld(KindConditional, id, StepConditionalCancel, chain,
 		"left registered on purpose: the next step proves the broker holds it after this process exits")
 	return nil
 }
@@ -704,7 +710,8 @@ func (r *Runner) stepConditionalPersist(ctx context.Context, sr *stepRun) error 
 		fmt.Sprintf("registered by process %s, read back by %s as status %s",
 			shortID(registrar), shortID(r.process.InstanceID), orDash(co.Status)))
 	sr.observe("conditional.status.after_restart", orDash(co.Status), "")
-	sr.markDeliberate("conditional-order", id, "still live; the cancel step below removes it")
+	sr.markHeld(KindConditional, id, StepConditionalCancel, r.chainOf(sr, KindConditional, id),
+		"still live; the cancel step below removes it")
 	return nil
 }
 
@@ -767,7 +774,11 @@ func (r *Runner) stepConditionalModify(ctx context.Context, sr *stepRun) error {
 		sr.observe("conditional.status.after_modify", orDash(co.Status), "")
 		sr.observe("conditional.trigger_after_modify", trim(co.First.TriggerPrice), "")
 	}
-	sr.markDeliberate("conditional-order", newID, "still live; the cancel step below removes it")
+	// The successor inherits the replaced order's chain: the old identifier is
+	// gone from the broker (M19, M40) and only the record can still say the two
+	// were one protection.
+	sr.markHeld(KindConditional, newID, StepConditionalCancel, r.chainOf(sr, KindConditional, id),
+		"still live; the cancel step below removes it")
 	return nil
 }
 

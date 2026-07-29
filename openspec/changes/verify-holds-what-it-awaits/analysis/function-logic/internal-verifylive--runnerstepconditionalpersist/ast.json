@@ -1,0 +1,275 @@
+{
+  "file": "internal/verifylive/steps.go",
+  "source_sha256": "6e4efcd49348175841a9be3d327bec505fcb7f793a73715a4ebbe406c842f2b5",
+  "package": "verifylive",
+  "function": "stepConditionalPersist",
+  "receiver": "Runner",
+  "signature": "Runner.stepConditionalPersist(params=2, results=1)",
+  "start": {
+    "line": 684,
+    "column": 1
+  },
+  "end": {
+    "line": 716,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 686,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 691,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 704,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 688,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 700,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 707,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 715,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 685,
+        "column": 20
+      },
+      "text": "r.liveConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 687,
+        "column": 3
+      },
+      "text": "sr.skip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 690,
+        "column": 22
+      },
+      "text": "r.registeringProcess"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 692,
+        "column": 3
+      },
+      "text": "sr.awaitRestart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 692,
+        "column": 19
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 697,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 698,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 699,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 703,
+        "column": 13
+      },
+      "text": "r.readConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 705,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 705,
+        "column": 60
+      },
+      "text": "truncateError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 706,
+        "column": 3
+      },
+      "text": "sr.fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 706,
+        "column": 92
+      },
+      "text": "truncateError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 710,
+        "column": 3
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 711,
+        "column": 4
+      },
+      "text": "shortID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 711,
+        "column": 24
+      },
+      "text": "shortID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 711,
+        "column": 55
+      },
+      "text": "orDash"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 712,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 712,
+        "column": 49
+      },
+      "text": "orDash"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 2
+      },
+      "text": "sr.markHeld"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 58
+      },
+      "text": "r.chainOf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 685,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 690,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 703,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

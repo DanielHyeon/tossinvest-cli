@@ -1,0 +1,390 @@
+{
+  "file": "internal/verifylive/steps.go",
+  "source_sha256": "6e4efcd49348175841a9be3d327bec505fcb7f793a73715a4ebbe406c842f2b5",
+  "package": "verifylive",
+  "function": "stepConditionalModify",
+  "receiver": "Runner",
+  "signature": "Runner.stepConditionalModify(params=2, results=1)",
+  "start": {
+    "line": 729,
+    "column": 1
+  },
+  "end": {
+    "line": 783,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 731,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 736,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 740,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 753,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 759,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "else",
+      "at": {
+        "line": 769,
+        "column": 9
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 760,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "else",
+      "at": {
+        "line": 763,
+        "column": 10
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 773,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 733,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 737,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 742,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 754,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 782,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 730,
+        "column": 20
+      },
+      "text": "r.liveConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 732,
+        "column": 3
+      },
+      "text": "sr.skip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 735,
+        "column": 17
+      },
+      "text": "r.readConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 739,
+        "column": 16
+      },
+      "text": "OneTickFurther"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 739,
+        "column": 65
+      },
+      "text": "MarketOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 741,
+        "column": 3
+      },
+      "text": "sr.skip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 747,
+        "column": 15
+      },
+      "text": "trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 749,
+        "column": 15
+      },
+      "text": "r.expireDate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 74
+      },
+      "text": "trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 16
+      },
+      "text": "r.modifyConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 756,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 49
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 760,
+        "column": 16
+      },
+      "text": "r.readConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 761,
+        "column": 4
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 49
+      },
+      "text": "truncateError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 4
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 4
+      },
+      "text": "sr.fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 773,
+        "column": 16
+      },
+      "text": "r.readConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 774,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 774,
+        "column": 49
+      },
+      "text": "orDash"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 775,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 775,
+        "column": 50
+      },
+      "text": "trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 2
+      },
+      "text": "sr.markHeld"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 61
+      },
+      "text": "r.chainOf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 730,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 735,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 739,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 745,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 752,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 760,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 773,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

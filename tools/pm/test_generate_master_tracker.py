@@ -37,6 +37,7 @@ class TrackerTests(unittest.TestCase):
             "verify-reopens-conditional-chain",
             "attest-covers-supervised-mutations",
             "verify-plans-the-object-it-mutates",
+            "verify-holds-what-it-awaits",
         ):
             path = changes / change
             path.mkdir(parents=True)

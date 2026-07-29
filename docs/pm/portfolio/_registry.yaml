@@ -30,6 +30,7 @@
     "refine-extended-shadow-bands",
     "verify-reopens-conditional-chain",
     "attest-covers-supervised-mutations",
-    "verify-plans-the-object-it-mutates"
+    "verify-plans-the-object-it-mutates",
+    "verify-holds-what-it-awaits"
   ]
 }
