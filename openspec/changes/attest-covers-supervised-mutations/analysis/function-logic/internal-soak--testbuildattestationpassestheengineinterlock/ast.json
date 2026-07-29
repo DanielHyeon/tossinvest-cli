@@ -1,0 +1,220 @@
+{
+  "file": "internal/soak/attest_test.go",
+  "source_sha256": "9e225583ec5a3bc5bd51e8c747895490663350e5deadbbf2a786516ff0f7bfbb",
+  "package": "soak_test",
+  "function": "TestBuildAttestationPassesTheEngineInterlock",
+  "signature": "TestBuildAttestationPassesTheEngineInterlock(params=1, results=0)",
+  "start": {
+    "line": 182,
+    "column": 1
+  },
+  "end": {
+    "line": 207,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 7
+      },
+      "text": "soak.Summarize"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 22
+      },
+      "text": "threeCleanDays"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 9
+      },
+      "text": "soakStart.AddDate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 12
+      },
+      "text": "soak.BuildAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 37
+      },
+      "text": "criteria"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 6
+      },
+      "text": "a.IssuedAt.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 6
+      },
+      "text": "a.ExpiresAt.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 12
+      },
+      "text": "a.Verify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 43
+      },
+      "text": "soak.RequiredEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 204,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

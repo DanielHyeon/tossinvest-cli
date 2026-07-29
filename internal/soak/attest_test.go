@@ -183,7 +183,7 @@ func TestBuildAttestationPassesTheEngineInterlock(t *testing.T) {
 	s := soak.Summarize(threeCleanDays())
 	now := soakStart.AddDate(0, 0, 3)
 
-	a, err := soak.BuildAttestation(s, criteria(), now, "tester", "")
+	a, err := soak.BuildAttestation(s, criteria(), now, "tester", "", nil)
 	if err != nil {
 		t.Fatalf("BuildAttestation: %v", err)
 	}
@@ -219,7 +219,7 @@ func TestBuildAttestationNeverClaimsAnEndpointItDidNotExercise(t *testing.T) {
 		})
 	}
 
-	_, err := soak.BuildAttestation(soak.Summarize(cycles), criteria(), soakStart.AddDate(0, 0, 3), "tester", "")
+	_, err := soak.BuildAttestation(soak.Summarize(cycles), criteria(), soakStart.AddDate(0, 0, 3), "tester", "", nil)
 	if err == nil {
 		t.Fatal("BuildAttestation put a mutation endpoint into a read-only attestation")
 	}
@@ -232,7 +232,7 @@ func TestBuildAttestationNeverClaimsAnEndpointItDidNotExercise(t *testing.T) {
 // caller can print them.
 func TestBuildAttestationRefusesAnIncompleteSoak(t *testing.T) {
 	s := soak.Summarize(threeCleanDays()[:2])
-	_, err := soak.BuildAttestation(s, criteria(), soakStart.AddDate(0, 0, 1), "tester", "")
+	_, err := soak.BuildAttestation(s, criteria(), soakStart.AddDate(0, 0, 1), "tester", "", nil)
 	if err == nil {
 		t.Fatal("BuildAttestation wrote an attestation for a one-day soak")
 	}
@@ -249,7 +249,7 @@ func TestBuildAttestationCarriesTheMeasuredRate(t *testing.T) {
 		// Six requests inside a two-second cycle, none of them throttled.
 		cycles[i].FinishedAt = cycles[i].StartedAt.Add(2 * time.Second)
 	}
-	a, err := soak.BuildAttestation(soak.Summarize(cycles), criteria(), soakStart.AddDate(0, 0, 3), "tester", "note")
+	a, err := soak.BuildAttestation(soak.Summarize(cycles), criteria(), soakStart.AddDate(0, 0, 3), "tester", "note", nil)
 	if err != nil {
 		t.Fatalf("BuildAttestation: %v", err)
 	}

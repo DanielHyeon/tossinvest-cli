@@ -1,0 +1,280 @@
+{
+  "file": "cmd/tossctl/soak_test.go",
+  "source_sha256": "57604acdb4f452abce9710aff8f3ab76cca3971ce24af7e2710009a0a1b61717",
+  "package": "main",
+  "function": "seedQualifyingRecord",
+  "signature": "seedQualifyingRecord(params=2, results=0)",
+  "start": {
+    "line": 549,
+    "column": 1
+  },
+  "end": {
+    "line": 586,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 558,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "for",
+      "at": {
+        "line": 559,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 576,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 581,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 550,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 551,
+        "column": 14
+      },
+      "text": "soak.OpenRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 555,
+        "column": 8
+      },
+      "text": "rec.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 11
+      },
+      "text": "Truncate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 11
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 11
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 11
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 560,
+        "column": 10
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 560,
+        "column": 10
+      },
+      "text": "start.AddDate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 560,
+        "column": 39
+      },
+      "text": "time.Duration"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 565,
+        "column": 20
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 571,
+        "column": 22
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 576,
+        "column": 22
+      },
+      "text": "soak.RequiredEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 577,
+        "column": 19
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 581,
+        "column": 14
+      },
+      "text": "rec.Append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 582,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 551,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 557,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 558,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 558,
+        "column": 25
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 559,
+        "column": 7
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 559,
+        "column": 28
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 560,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 561,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 577,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 581,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 555,
+        "column": 2
+      },
+      "text": "rec.Close"
+    }
+  ],
+  "revision": "base"
+}

@@ -1,0 +1,118 @@
+{
+  "file": "internal/soak/attest_test.go",
+  "source_sha256": "9e225583ec5a3bc5bd51e8c747895490663350e5deadbbf2a786516ff0f7bfbb",
+  "package": "soak_test",
+  "function": "TestBuildAttestationRefusesAnIncompleteSoak",
+  "signature": "TestBuildAttestationRefusesAnIncompleteSoak(params=1, results=0)",
+  "start": {
+    "line": 233,
+    "column": 1
+  },
+  "end": {
+    "line": 242,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 236,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 7
+      },
+      "text": "soak.Summarize"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 22
+      },
+      "text": "threeCleanDays"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 12
+      },
+      "text": "soak.BuildAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 37
+      },
+      "text": "criteria"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 49
+      },
+      "text": "soakStart.AddDate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

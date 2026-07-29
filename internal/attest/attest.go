@@ -102,6 +102,54 @@ type Attestation struct {
 	VerifiedBy string `json:"verified_by,omitempty"`
 	// Notes is free-form operator context.
 	Notes string `json:"notes,omitempty"`
+
+	// SupervisedBy records what proved each endpoint the read-only soak cannot
+	// exercise. Additive and optional: an attestation written before this field
+	// existed reads unchanged, so FormatVersion does not move.
+	//
+	// It exists because the interlock's refusal says what is *missing* and
+	// nothing says what a gate that started was allowed to start on. An auditor
+	// a month later is asking exactly that.
+	SupervisedBy []Proof `json:"supervised_by,omitempty"`
+}
+
+// Proof is one endpoint and the supervised measurement that established it.
+//
+// The read-only soak proves reads by running unattended for days. It structurally
+// cannot prove a write — it contains no mutation transport — so those come from
+// the supervised one-off live check, where a person approved every request. This
+// type is what carries that second kind of evidence, and it lives here because
+// both the writer and the reader already depend on this package and neither
+// should have to depend on the other.
+type Proof struct {
+	// Endpoint is "METHOD /path", spelled the way internal/soak,
+	// internal/verifylive and internal/app/engine all spell it.
+	Endpoint string `json:"endpoint"`
+	// At is when the call succeeded.
+	At time.Time `json:"at"`
+	// AccountRef is the account the evidence names, as its record wrote it —
+	// which for the verification record is masked. Carried per proof rather than
+	// once, so the account check is local to the evidence it is checking.
+	AccountRef string `json:"account_ref"`
+	// Source is where the evidence was read from, and Market which market's
+	// record it was. An operator reading this a month later needs to be able to
+	// go and look at the file.
+	Source string `json:"source,omitempty"`
+	Market string `json:"market,omitempty"`
+}
+
+// SameAccountMasked reports whether a reference written in full and one that may
+// have been masked describe the same account.
+//
+// The soak record keeps the account unmasked; the verification record never does
+// (record.go: "the unmasked number never enters this file"). Binding the two is
+// therefore comparing a number with its own mask, and doing it in one place stops
+// a caller from inventing a second rule.
+func SameAccountMasked(full, other string) bool {
+	if strings.TrimSpace(full) == "" || strings.TrimSpace(other) == "" {
+		return false
+	}
+	return sameAccount(full, other) || Mask(full) == strings.TrimSpace(other)
 }
 
 // Load reads an attestation from disk.

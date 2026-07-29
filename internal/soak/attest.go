@@ -171,7 +171,8 @@ func endpointReason(endpoint string, stat EndpointStat) string {
 //
 // verifiedBy names who ran it and notes is free-form operator context; both end
 // up in the audit trail the engine prints at startup.
-func BuildAttestation(s Summary, c Criteria, now time.Time, verifiedBy, notes string) (attest.Attestation, error) {
+func BuildAttestation(s Summary, c Criteria, now time.Time, verifiedBy, notes string,
+	supervised []attest.Proof) (attest.Attestation, error) {
 	c = c.withDefaults()
 
 	ok, reasons := s.Evaluate(now, c)
@@ -192,14 +193,21 @@ func BuildAttestation(s Summary, c Criteria, now time.Time, verifiedBy, notes st
 		}
 	}
 
+	accepted, err := acceptSupervised(s.AccountRef, now, c.Validity, supervised)
+	if err != nil {
+		return attest.Attestation{}, err
+	}
+	for _, p := range accepted {
+		endpoints = append(endpoints, p.Endpoint)
+	}
+
 	note := fmt.Sprintf(
 		"read-only capability soak: %d cycle(s) over %d consecutive day(s) (%s..%s), %d token refresh(es) "+
-			"observed, %d throttled call(s). Mutation endpoints are NOT covered: %s remain to be proven by the "+
-			"supervised live check (verify-execution-capability task 2.2).",
+			"observed, %d throttled call(s). %s",
 		s.Window.Cycles, s.StreakDays,
 		s.WindowStart.UTC().Format("2006-01-02"), s.LastAt.UTC().Format("2006-01-02"),
 		s.Window.TokenRefreshes, s.Window.RateLimited,
-		strings.Join(LiveOnlyEndpoints(), ", "))
+		mutationNote(accepted))
 	if strings.TrimSpace(notes) != "" {
 		note = strings.TrimSpace(notes) + " | " + note
 	}
@@ -214,7 +222,110 @@ func BuildAttestation(s Summary, c Criteria, now time.Time, verifiedBy, notes st
 		RateLimitPerSecond: s.Window.MaxSustainedRatePerSecond,
 		VerifiedBy:         strings.TrimSpace(verifiedBy),
 		Notes:              note,
+		SupervisedBy:       accepted,
 	}, nil
+}
+
+// acceptSupervised decides which of the supervised proofs may be attested.
+//
+// The set it can draw from is closed to LiveOnlyEndpoints() — the calls this
+// read-only tool structurally cannot make. That closure is the whole safety
+// argument, and it cuts two ways:
+//
+//	a read           is refused. One supervised success is not what days of
+//	                 unattended operation prove, and accepting it here would let
+//	                 a supervised run launder a soak that failed the same read.
+//	another mutation is refused. The verification record also exercises
+//	                 conditional orders; the gate does not require them, and an
+//	                 attestation that claims what nobody asked for is a claim
+//	                 waiting to be relied on.
+//
+// It is the mirror of the refusal above it: that one keeps mutations out of the
+// soak's own evidence, this one keeps everything else out of the supervised
+// evidence. Together they make each source prove only its own half.
+//
+// Two failure modes are told apart deliberately:
+//
+//	wrong account  is an error. A record for a different account sitting on the
+//	               expected path is a misconfiguration, and skipping it would make
+//	               that indistinguishable from having no evidence at all.
+//	stale/future   is a skip. Evidence from months ago is an ordinary state — the
+//	               check was run and then time passed — and the gate's own
+//	               MissingEndpoints already reports the consequence.
+func acceptSupervised(accountRef string, now time.Time, validity time.Duration,
+	supervised []attest.Proof) ([]attest.Proof, error) {
+
+	allowed := map[string]bool{}
+	for _, e := range LiveOnlyEndpoints() {
+		allowed[normaliseEndpoint(e)] = true
+	}
+
+	var accepted []attest.Proof
+	seen := map[string]bool{}
+	for _, p := range supervised {
+		endpoint := strings.Join(strings.Fields(strings.TrimSpace(p.Endpoint)), " ")
+		if endpoint == "" {
+			continue
+		}
+		key := normaliseEndpoint(endpoint)
+		if !allowed[key] {
+			return nil, fmt.Errorf(
+				"soak: refusing to attest %q from the supervised record — only %s may come from there, "+
+					"because the reads are what the unattended soak proves and a single supervised success "+
+					"does not establish the same property",
+				endpoint, strings.Join(LiveOnlyEndpoints(), ", "))
+		}
+		if !attest.SameAccountMasked(accountRef, p.AccountRef) {
+			return nil, fmt.Errorf(
+				"soak: refusing to attest %q — the supervised evidence names account %s but this soak is "+
+					"for %s. A record for another account on the expected path is a misconfiguration, not "+
+					"an absence of evidence",
+				endpoint, p.AccountRef, attest.Mask(accountRef))
+		}
+		age := now.Sub(p.At)
+		if age < 0 || age >= validity {
+			continue
+		}
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		p.Endpoint = endpoint
+		accepted = append(accepted, p)
+	}
+	return accepted, nil
+}
+
+// mutationNote is the sentence an operator reads before deciding whether the gate
+// can be turned on: which mutations are covered, and which are not.
+func mutationNote(accepted []attest.Proof) string {
+	have := map[string]bool{}
+	for _, p := range accepted {
+		have[normaliseEndpoint(p.Endpoint)] = true
+	}
+	var covered, missing []string
+	for _, e := range LiveOnlyEndpoints() {
+		if have[normaliseEndpoint(e)] {
+			covered = append(covered, e)
+		} else {
+			missing = append(missing, e)
+		}
+	}
+	switch {
+	case len(missing) == 0:
+		return fmt.Sprintf("Mutation endpoints covered by the supervised live check: %s.",
+			strings.Join(covered, ", "))
+	case len(covered) == 0:
+		return fmt.Sprintf("Mutation endpoints are NOT covered: %s remain to be proven by the "+
+			"supervised live check (verify-execution-capability task 2.2).", strings.Join(missing, ", "))
+	default:
+		return fmt.Sprintf("Mutation endpoints covered by the supervised live check: %s. Still NOT "+
+			"covered: %s.", strings.Join(covered, ", "), strings.Join(missing, ", "))
+	}
+}
+
+func normaliseEndpoint(e string) string {
+	return strings.Join(strings.Fields(strings.ToUpper(strings.TrimSpace(e))), " ")
 }
 
 // MissingForEngine returns the endpoints an engine requires that this

@@ -1,0 +1,62 @@
+{
+  "file": "internal/soak/attest.go",
+  "source_sha256": "3337eb56c89d710ec077c1efb90c78365b4adc469abbebb654fc8dfdbcffb096",
+  "package": "soak",
+  "function": "normaliseEndpoint",
+  "signature": "normaliseEndpoint(params=1, results=1)",
+  "start": {
+    "line": 327,
+    "column": 1
+  },
+  "end": {
+    "line": 329,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 9
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 22
+      },
+      "text": "strings.Fields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 37
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 53
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

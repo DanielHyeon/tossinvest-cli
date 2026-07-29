@@ -1,0 +1,149 @@
+{
+  "file": "internal/soak/attest_test.go",
+  "source_sha256": "9e225583ec5a3bc5bd51e8c747895490663350e5deadbbf2a786516ff0f7bfbb",
+  "package": "soak_test",
+  "function": "TestBuildAttestationNeverClaimsAnEndpointItDidNotExercise",
+  "signature": "TestBuildAttestationNeverClaimsAnEndpointItDidNotExercise(params=1, results=0)",
+  "start": {
+    "line": 212,
+    "column": 1
+  },
+  "end": {
+    "line": 229,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 12
+      },
+      "text": "threeCleanDays"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 25
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 12
+      },
+      "text": "soak.BuildAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 34
+      },
+      "text": "soak.Summarize"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 58
+      },
+      "text": "criteria"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 70
+      },
+      "text": "soakStart.AddDate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 23
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 217,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
