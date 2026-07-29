@@ -55,7 +55,9 @@ package candidate
 // fsguard_drift_test.go pins the filesystem allowlist to the ledger's.
 
 import (
+	"fmt"
 	"math/big"
+	"sort"
 	"time"
 )
 
@@ -73,10 +75,62 @@ var SeenLatePercentileBands = []string{"50", "70", "80", "90", "95"}
 // ExtendedGainBands are the gains `extended` is recorded against, in percent since
 // the first price recorded for the candidate.
 //
-// Five values spanning one ordinary intraday move to a doubling. 10 is inside a
-// normal day's range for a name that is on a trading-value ranking at all; 100 is
-// the case D17 uses throughout as the one that must not read as "has not run".
-var ExtendedGainBands = []string{"10", "20", "30", "50", "100"}
+// # What the first five were, and why five were not enough
+//
+// The scale began as 10·20·30·50·100: one ordinary intraday move to a doubling. 10
+// is inside a normal day's range for a name that is on a trading-value ranking at
+// all; 100 is the case D17 uses throughout as the one that must not read as "has not
+// run". Those five are still here, with the same values in the same order, because
+// they have been reported against — `crossed 10 0 · 20 0 · 30 0 · 50 0 · 100 0` has
+// been read by people, and moving one would make a column name mean something new in
+// their memory for a record that has no migration on disk.
+//
+// The measurement of 2026-07-28 is why more were needed: 131 candidates measured,
+// and all 131 crossed nothing. The scale's finest edge was 10 and `bandCrossings`
+// compares with `>=`, so everything below 10% — which on an ordinary day is
+// everything — was one bucket. The tally's arithmetic held and the measured count
+// was honest; what did not exist was a distribution anybody could pick a threshold
+// out of. A record that answers no question is still reported as a record.
+//
+// # Why these new edges
+//
+//	0            The sign change, and the only value here that was not chosen.
+//	             Arithmetic put it there: expansionBandValue returns gainPct, which
+//	             is negative for a candidate below the price it was first seen at,
+//	             and with every edge at 10 or above a candidate 20% down and a
+//	             candidate 9% up left the identical record. Both are "no chase risk"
+//	             and they are different facts. `>=` means a candidate exactly at its
+//	             first price crosses it, so what 0 divides is "declined" from "did
+//	             not decline".
+//	2 4 6 8      A regular grid across 0–10, not a list of interesting values. The
+//	             spacing is what was chosen and its basis is the sentence above: if
+//	             10 is one ordinary day, five steps inside one ordinary day is 2
+//	             percentage points. No edge here was picked for what it is.
+//
+// # 6 is on the grid, and a threshold candidate under discussion is also 6
+//
+// The two are the same number by coincidence — 6 is a multiple of 2 — and the
+// coincidence is harmless only because a scale value cannot reach a verdict. That is
+// not a claim this comment makes on its own behalf. It was false until this change:
+// on 2026-07-28 a reviewer put `if v.ExtendedBand.Crossed("6") { v.Chase.Extended =
+// RaisedVeto() }` into assessOne and every one of the four structural guards, `go
+// vet` and 51 packages of tests passed. The guards read only functions returning a
+// VetoState or a Chase, and assessOne returns a Verdict.
+//
+// What closed it is in this change and not in this sentence: the band statements
+// left assessOne for shadowBandsFor, whose scope has no Chase in it, and
+// TestNoFunctionThatProducesAVerdictCanSeeAShadowBand now reads Verdict results,
+// pointer/slice/map results, the crossing vocabulary and any read of a verdict's own
+// band fields. Putting that line back is a failing test.
+//
+// # The spacing is provisional
+//
+// 2 percentage points is a guess about where the mass is. Nobody has seen the 131
+// values themselves — only that they all fell below 10 — which is why BandTally now
+// carries the quantiles of Value. When a session's distribution is in, the spacing
+// is decided from it rather than from this paragraph, and if the mass turns out to
+// sit in 0–2 then this scale collapses the same way the last one did.
+var ExtendedGainBands = []string{"0", "2", "4", "6", "8", "10", "20", "30", "50", "100"}
 
 // BandsFor returns the bands recorded for a veto code, empty for a code that has
 // none.
@@ -203,9 +257,21 @@ func sightingBandValue(s Sighting) (*big.Rat, VetoUnmeasured) {
 //
 // The signature is AssessExtended's because the checks are AssessExtended's: the
 // candidate summary dates the baseline, the instant dates the latest price, and the
-// thresholds carry the input-age ceiling. Only the threshold itself is unused, and
-// that is the point — the value is recorded and nothing is compared against a number
-// nobody approved.
+// thresholds carry the input-age ceiling.
+//
+// # Exactly one field of VetoThresholds is unread
+//
+// The thresholds argument is not an unused parameter and describing it as one is
+// wrong. th.inputAge() is read on the line below and it decides whether a latest
+// price is recent enough to be about now — a check the band applies for
+// expansionBandReason's stated reason, that a plausible wrong number in this dataset
+// is worse than a named gap.
+//
+// What is unread is ExtendedGainPct, the threshold itself, and that single omission
+// is the design: the value is recorded and nothing is compared against a number
+// nobody approved. TestMeasureExtendedBandNeverReadsTheVetoThreshold fails if it is
+// ever read, by source and by behaviour, because until that test existed reading it
+// broke nothing.
 func MeasureExtendedBand(e Expansion, c Candidate, at time.Time, th VetoThresholds) ShadowBand {
 	out := ShadowBand{Code: VetoExtended}
 	if why := expansionBandReason(e, c, at, th.inputAge()); why != "" {
@@ -310,6 +376,126 @@ type BandTally struct {
 	Crossed map[string]int
 	// NotMeasured counts the rest by the input that was missing.
 	NotMeasured map[VetoUnmeasured]int
+	// Quantiles are positions in the distribution of the values themselves, in
+	// BandQuantilePoints' order. Empty when nothing was measured.
+	//
+	// They exist because the crossings alone could not answer the question that
+	// produced this change. On 2026-07-28 the extended tally read `measured 131 of
+	// 156, crossed 10/20/30/50/100 all 0`, and from that nobody could say whether
+	// the 131 values sat at +9 or at −1: ShadowBand.Value is computed for every
+	// candidate and appeared on no surface at all. A scale chosen against crossings
+	// that all agree is a scale chosen against no distribution.
+	Quantiles []BandQuantile
+	// QuantileBase is how many values the quantiles were computed from.
+	//
+	// It is reported rather than assumed equal to Measured. They are equal whenever
+	// every measured value parses, which is every value formatDecimal produces — and
+	// a day when they differ is a day the difference has to be visible, not a day
+	// the median quietly describes a subset.
+	QuantileBase int
+}
+
+// BandQuantile is one position in the distribution of a tally's measured values.
+type BandQuantile struct {
+	// Name is the position, as BandQuantilePoints names it.
+	Name string
+	// Value is the value at that position, an exact decimal string like
+	// ShadowBand.Value. It is one of the measured values and never an average of
+	// two, so it can be negative and it is always a number something actually was.
+	Value string
+}
+
+// BandQuantilePoints are the positions reported, in the order they are reported.
+//
+// Five, spanning the whole range, for the same reason a band scale spans one: the
+// question a reader has is where the mass is, and min/max alone answer it only when
+// the distribution is uniform. The pairs are percent positions and are applied by
+// nearest rank — no interpolation, so every figure printed is a value some candidate
+// actually had rather than one halfway between two candidates that do not exist.
+var BandQuantilePoints = []struct {
+	Name string
+	Pct  int
+}{
+	{"min", 0}, {"p25", 25}, {"median", 50}, {"p75", 75}, {"max", 100},
+}
+
+// bandQuantiles is BandQuantilePoints applied to a set of values by nearest rank.
+//
+// Nearest rank is `ceil(p/100 × n)`, one-based, clamped into the slice. The
+// alternative — interpolating between neighbours — would print a number no candidate
+// had, and this is the surface a threshold gets chosen from.
+func bandQuantiles(values []*big.Rat) []BandQuantile {
+	if len(values) == 0 {
+		return nil
+	}
+	sort.Slice(values, func(i, j int) bool { return values[i].Cmp(values[j]) < 0 })
+	out := make([]BandQuantile, 0, len(BandQuantilePoints))
+	for _, point := range BandQuantilePoints {
+		// (p×n + 99) / 100 is ceil(p×n/100) in integer arithmetic.
+		rank := (point.Pct*len(values) + 99) / 100
+		if rank < 1 {
+			rank = 1
+		}
+		if rank > len(values) {
+			rank = len(values)
+		}
+		out = append(out, BandQuantile{Name: point.Name, Value: formatDecimal(values[rank-1])})
+	}
+	return out
+}
+
+// Collapsed reports that every measured record produced the same crossings, so this
+// tally's scale resolved nothing.
+//
+// It is the arithmetic of the failure that produced this change, made checkable.
+// `measured 131 of 156, crossed 10/20/30/50/100 all 0` is a row where the invariants
+// hold, the measured count is honest and nothing is wrong except the only thing the
+// record is for: there is no distribution in it to approve a threshold from. That
+// state was found by a person reading the same line twice, and a state that depends
+// on somebody noticing is a state that is normally not noticed.
+//
+// The test needs no idea of what the scale was meant to resolve: if a band was
+// crossed by some measured records and not others, the scale separated something.
+// Every count being 0 or Measured means it separated nothing.
+//
+// One measurement counts as collapsed, because one measurement is not a
+// distribution either.
+//
+// A code with no scale is not collapsed. BandsFor returns nil for a veto whose
+// threshold a person has already approved — near_high today, and extended on the day
+// issues I3 is carried out — and TallyBands then seeds Crossed from an empty list,
+// so the loop below runs zero times and "every band was crossed by all or none"
+// would be vacuously true of any tally with one measured record in it. The alarm
+// would light on that code and never go out, and an alarm that is always on is what
+// teaches a reader to skip the block it is in. A scale that does not exist did not
+// fail to resolve anything.
+//
+// It says nothing about any candidate. It is a statement about the instrument, which
+// is why it may exist on a tally while ShadowBand carries no predicate but Crossed.
+func (t BandTally) Collapsed() bool {
+	if t.Measured < 1 || len(t.Crossed) == 0 {
+		return false
+	}
+	for _, n := range t.Crossed {
+		if n != 0 && n != t.Measured {
+			return false
+		}
+	}
+	return true
+}
+
+// CollapsedAlarm is the sentence a collapsed tally is reported with, empty when the
+// scale resolved something.
+//
+// It carries the numbers that produced it for the reason candidateReport.Alarms
+// gives: a consumer told only that something is inconsistent has nothing to check.
+func (t BandTally) CollapsedAlarm() string {
+	if !t.Collapsed() {
+		return ""
+	}
+	return fmt.Sprintf("ALARM %s: all %d measured record(s) produced the same crossings, so "+
+		"this scale resolved nothing and no threshold may be approved from it. The counts "+
+		"beside it are honest and answer no question", string(t.Code), t.Measured)
 }
 
 // TallyBands counts a set of shadow records for one code.
@@ -318,6 +504,11 @@ type BandTally struct {
 // than dropped or measured: nobody measured *this* code for that candidate, and the
 // alternative — letting a seen_late percentile land in an extended gain's buckets —
 // is a wiring defect that would produce a completely plausible histogram.
+//
+// It also carries the distribution of the values, not only of the crossings. The
+// crossings answer "how many were above each edge" and the whole failure this change
+// repairs is a set of edges against which every answer was the same; the quantiles
+// answer "where were they" and do not depend on the edges being right.
 func TallyBands(code VetoCode, in []ShadowBand) BandTally {
 	bands := BandsFor(code)
 	out := BandTally{
@@ -330,6 +521,7 @@ func TallyBands(code VetoCode, in []ShadowBand) BandTally {
 		out.Crossed[band] = 0
 	}
 	seen := make(map[string]bool, len(bands))
+	values := make([]*big.Rat, 0, len(in))
 	for _, b := range in {
 		if !b.Measured || b.Code != code {
 			why := b.Reason()
@@ -340,6 +532,20 @@ func TallyBands(code VetoCode, in []ShadowBand) BandTally {
 			continue
 		}
 		out.Measured++
+		// The rendered value and not the exact rational, on purpose: the quantiles
+		// describe the numbers a person reads, and formatDecimal truncates a
+		// non-terminating one towards zero. The difference is one unit in the last of
+		// twelve fractional digits and it cannot reach a crossing, which bandCrossings
+		// decides on the exact value.
+		//
+		// A measured record always carries a Value and formatDecimal always produces a
+		// decimal, so the refusal below is unreachable today. It is written as a
+		// refusal rather than an assumption because the count it feeds is reported
+		// separately: a value that stopped parsing would shorten the base rather than
+		// move the median, and the shorter base is on the screen.
+		if v, ok := new(big.Rat).SetString(b.Value); ok {
+			values = append(values, v)
+		}
 		for k := range seen {
 			delete(seen, k)
 		}
@@ -356,5 +562,7 @@ func TallyBands(code VetoCode, in []ShadowBand) BandTally {
 			}
 		}
 	}
+	out.QuantileBase = len(values)
+	out.Quantiles = bandQuantiles(values)
 	return out
 }

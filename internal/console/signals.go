@@ -458,7 +458,15 @@ type signalsBandTally struct {
 	Measured int
 	// ShadowNote labels the record as a record. A band is a histogram bucket and
 	// never a verdict (task 4.10), and the page has to say so where the numbers are.
-	ShadowNote  string
+	ShadowNote string
+	// Alarm is set when every measured record on this scale produced the same
+	// crossings, and it is empty on the ordinary state.
+	//
+	// Without it a collapsed tally renders here as an ordinary row: the invariants
+	// hold, the measured count is honest, and the only thing wrong is the one thing
+	// the record exists for. That state was found by a person reading the same line
+	// twice, and the requirement this field serves says it must not be left to that.
+	Alarm       string
 	Crossed     []signalsReasonCount
 	NotMeasured []signalsReasonCount
 }
@@ -532,6 +540,27 @@ const signalsPassedNote = "구조적으로 0이다 — seen_late와 extended에�
 const signalsPassedUnexpected = "0이 아니다 — D18 이후 seen_late·extended의 임계가 사람 승인을 " +
 	"받았거나, 아니면 THRESHOLD_ABSENT를 통과로 센 것이다. 후자가 D18이 지목한 유일하게 " +
 	"틀린 수리이므로 먼저 그쪽을 확인한다."
+
+// signalsBandAlarm is the sentence a collapsed shadow tally is reported with here,
+// empty when the scale resolved something.
+//
+// The judgement is candidate.BandTally.Collapsed and is not repeated, for
+// signalsTallyAlarm's reason: a rule implemented twice eventually disagrees with
+// itself and the disagreement shows up as a page that looks calm. What this surface
+// owns is the wording, because its reader is a browser page in Korean and the scan
+// output's reader is a terminal in English.
+//
+// It carries the numbers that produced it. A consumer told only that something is
+// wrong has nothing to check, and the counts beside this sentence are exactly what
+// it is about — which is also why it is rendered beside them and never instead.
+func signalsBandAlarm(t candidate.BandTally) string {
+	if !t.Collapsed() {
+		return ""
+	}
+	return "경보 — 측정된 " + strconv.Itoa(t.Measured) + "건이 전부 같은 교차 집합을 냈다. " +
+		"이 눈금은 아무것도 분해하지 못했으므로 여기서 임계를 승인할 수 없다. 옆의 건수는 " +
+		"정직하고, 어떤 질문에도 답하지 않는다."
+}
 
 // signalsTallyAlarm is one arithmetic contradiction as this screen words it.
 //
@@ -809,7 +838,7 @@ func signalsBandTalliesFrom(in map[candidate.VetoCode]candidate.BandTally) []sig
 		}
 		block := signalsBandTally{
 			Code: string(code), Total: tally.Total, Measured: tally.Measured,
-			ShadowNote: signalsShadowNote,
+			ShadowNote: signalsShadowNote, Alarm: signalsBandAlarm(tally),
 		}
 		for _, band := range candidate.BandsFor(code) {
 			block.Crossed = append(block.Crossed, signalsReasonCount{

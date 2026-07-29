@@ -232,9 +232,15 @@ func TestTheScanJSONReportsTheCountsAnOperatorActsOn(t *testing.T) {
 		ShadowAcceleration struct {
 			Crossed map[string]int `json:"crossed"`
 		} `json:"shadow_acceleration"`
+		// crossed is a list and not a map: encoding/json sorts map keys as strings,
+		// and the extended scale is numeric with ten edges, so the map form emitted
+		// `"0","10","100","2",…`. See bandCount.
 		ShadowBands map[string]struct {
-			Total   int            `json:"total"`
-			Crossed map[string]int `json:"crossed"`
+			Total   int `json:"total"`
+			Crossed []struct {
+				Band  string `json:"band"`
+				Count int    `json:"count"`
+			} `json:"crossed"`
 		} `json:"shadow_bands"`
 	}
 	if err := json.Unmarshal([]byte(out), &report); err != nil {
@@ -267,6 +273,17 @@ func TestTheScanJSONReportsTheCountsAnOperatorActsOn(t *testing.T) {
 		}
 		if band.Total != 1 {
 			t.Errorf("%s band total = %d, want 1", code, band.Total)
+		}
+		want := candidate.BandsFor(candidate.VetoCode(code))
+		if len(band.Crossed) != len(want) {
+			t.Fatalf("%s crossed has %d entries, want %d", code, len(band.Crossed), len(want))
+		}
+		for i, entry := range band.Crossed {
+			if entry.Band != want[i] {
+				t.Errorf("%s crossed[%d] = %q, want %q — the scale's order is the order a "+
+					"distribution is read down, and it is the one thing a JSON object of "+
+					"numeric keys cannot carry", code, i, entry.Band, want[i])
+			}
 		}
 	}
 }

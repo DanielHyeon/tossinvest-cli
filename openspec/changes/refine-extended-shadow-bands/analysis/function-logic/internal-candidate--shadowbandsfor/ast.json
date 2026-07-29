@@ -1,0 +1,46 @@
+{
+  "file": "internal/candidate/watch.go",
+  "source_sha256": "1aa356933d8e9ad3ea2b98a4ded5d25972eb163c16897edff4240584ad7b0106",
+  "package": "candidate",
+  "function": "shadowBandsFor",
+  "signature": "shadowBandsFor(params=5, results=2)",
+  "start": {
+    "line": 438,
+    "column": 1
+  },
+  "end": {
+    "line": 443,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 9
+      },
+      "text": "MeasureSeenLateBand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 3
+      },
+      "text": "MeasureExtendedBand"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

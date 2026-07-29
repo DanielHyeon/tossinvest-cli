@@ -26,6 +26,7 @@
     "console-operator-overview",
     "console-orders-screen",
     "fix-chase-veto-measurement",
-    "retire-gainers-source"
+    "retire-gainers-source",
+    "refine-extended-shadow-bands"
   ]
 }

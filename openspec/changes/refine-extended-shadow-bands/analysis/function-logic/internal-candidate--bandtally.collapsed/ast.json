@@ -1,0 +1,78 @@
+{
+  "file": "internal/candidate/band.go",
+  "source_sha256": "301d1c0167f9618911bceaad6053f6d88ed4eee1d0f55f4a9381d74a446cff48",
+  "package": "candidate",
+  "function": "Collapsed",
+  "receiver": "BandTally",
+  "signature": "BandTally.Collapsed(params=0, results=1)",
+  "start": {
+    "line": 475,
+    "column": 1
+  },
+  "end": {
+    "line": 485,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 479,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 480,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 477,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 481,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 484,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 23
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

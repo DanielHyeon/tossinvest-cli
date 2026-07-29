@@ -1,0 +1,62 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "de0adcf52d62132b6be3cd493155bd3cd0ce4c334200160511b474eb070d284a",
+  "package": "console",
+  "function": "signalsBandAlarm",
+  "signature": "signalsBandAlarm(params=1, results=1)",
+  "start": {
+    "line": 556,
+    "column": 1
+  },
+  "end": {
+    "line": 563,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 557,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 558,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 560,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 6
+      },
+      "text": "t.Collapsed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 560,
+        "column": 35
+      },
+      "text": "strconv.Itoa"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

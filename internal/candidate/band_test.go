@@ -273,13 +273,24 @@ func TestABandOfAnotherCodeIsNotCountedAsMeasured(t *testing.T) {
 // band answers false to every band there is. So "crossed nothing" and "we never
 // looked" are the same answer from Crossed and different answers from Measured,
 // which is why a caller has to read Measured.
+//
+// # Both method sets, because Go has two
+//
+// The version of this test that read reflect.TypeOf(band) read the *value* method
+// set, and a method declared on *ShadowBand is not in it. `func (b *ShadowBand)
+// Dangerous() bool` would have compiled, been callable on every addressable band in
+// the package, and left this test green — the whole vocabulary this test exists to
+// forbid, reachable through the one spelling it could not see. reflect.PointerTo's
+// method set contains both, so it is the one to ask.
 func TestAShadowBandCannotBeReadAsAVeto(t *testing.T) {
 	band := MeasureSeenLateBand(aSighting(12, 100, t0))
-	typ := reflect.TypeOf(band)
-	for _, forbidden := range []string{"Dangerous", "Clear", "Raised", "Vetoed", "Passed", "State"} {
-		if _, ok := typ.MethodByName(forbidden); ok {
-			t.Errorf("ShadowBand has a %s method; a band is a measuring instrument and the "+
-				"vocabulary of a verdict is what turns one into the other", forbidden)
+	value := reflect.TypeOf(band)
+	for _, typ := range []reflect.Type{value, reflect.PointerTo(value)} {
+		for _, forbidden := range []string{"Dangerous", "Clear", "Raised", "Vetoed", "Passed", "State"} {
+			if _, ok := typ.MethodByName(forbidden); ok {
+				t.Errorf("%s has a %s method; a band is a measuring instrument and the "+
+					"vocabulary of a verdict is what turns one into the other", typ, forbidden)
+			}
 		}
 	}
 }
@@ -288,17 +299,44 @@ func TestAShadowBandCannotBeReadAsAVeto(t *testing.T) {
 //
 // TestTheVetoCannotSeeAScoreToBeOffsetBy closes the input direction: a band cannot
 // be reached from VetoInputs, because the band types are in that test's score set.
-// This closes the other one — no function anywhere in this package that returns a
-// VetoState or a Chase may so much as mention a band. There is therefore no
-// conversion to call, and adding one fails here rather than reading as a reasonable
-// diff.
+// This closes the other one — no function anywhere in this package that produces a
+// VetoState, a Chase or a Verdict may read a band. There is therefore no conversion
+// to call, and adding one fails here rather than reading as a reasonable diff.
+//
+// # What "read a band" means, and why it is not "mention a band"
+//
+// Three vocabularies are refused, and each is refused for its own reason.
+//
+//	the constructors and types  ShadowBand, MeasureExtendedBand, ExtendedGainBands …
+//	                            A verdict-producing function that builds a band has
+//	                            the band's value in hand; the whole of §0 is moving
+//	                            those statements out of assessOne.
+//	the predicates              Crossed and Crossings. band.go says Crossed is the
+//	                            only predicate on the type, so this is the whole of
+//	                            the vocabulary a decision could be phrased in — via
+//	                            a field, a local, a parameter or a return value.
+//	reading the verdict's own   v.ExtendedBand anywhere other than the left of an
+//	slots                       assignment. This is the spelling the review actually
+//	                            used, and it names no constructor and no predicate
+//	                            of its own until the selector after it.
+//
+// What is deliberately NOT refused is Measured, Value and Reason: the veto's own
+// inputs carry fields by those names (Expansion.Measured, Sighting.Reason), so a
+// name-based refusal would fail on functions that never touch a band. The residue
+// is written down in the change's issues.md rather than left to be discovered.
 func TestNoFunctionThatProducesAVerdictCanSeeAShadowBand(t *testing.T) {
 	bandNames := map[string]bool{
 		"ShadowBand": true, "BandCrossing": true, "BandTally": true,
 		"MeasureSeenLateBand": true, "MeasureExtendedBand": true, "TallyBands": true,
 		"SeenLatePercentileBands": true, "ExtendedGainBands": true, "BandsFor": true,
+		// The read vocabulary. Without these the check reads only construction, and
+		// a function handed a finished band — as a parameter, a local or a field —
+		// could branch on it without naming anything above.
+		"Crossed": true, "Crossings": true,
 	}
-	verdicts := map[string]bool{"VetoState": true, "Chase": true}
+	// The Verdict's own band slots. Written is assembly; read is a decision.
+	bandFields := map[string]bool{"SeenLateBand": true, "ExtendedBand": true}
+	verdicts := map[string]bool{"VetoState": true, "Chase": true, "Verdict": true}
 
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, ".", func(fi os.FileInfo) bool {
@@ -317,30 +355,41 @@ func TestNoFunctionThatProducesAVerdictCanSeeAShadowBand(t *testing.T) {
 				}
 				produces := false
 				for _, result := range fn.Type.Results.List {
-					if ident, ok := result.Type.(*ast.Ident); ok && verdicts[ident.Name] {
-						produces = true
+					for _, named := range verdictResultNames(result.Type) {
+						if verdicts[named] {
+							produces = true
+						}
 					}
 				}
 				if !produces {
 					continue
 				}
 				checked++
+				written := assignedTo(fn)
 				ast.Inspect(fn, func(n ast.Node) bool {
-					ident, ok := n.(*ast.Ident)
-					if ok && bandNames[ident.Name] {
+					if ident, ok := n.(*ast.Ident); ok && bandNames[ident.Name] {
 						t.Errorf("%s:%s produces a verdict and mentions %s; a shadow band is a "+
 							"measurement and a veto is a decision, and D18 says the second one "+
 							"waits for a person to approve a number",
 							filepath.Base(name), fn.Name.Name, ident.Name)
+					}
+					if sel, ok := n.(*ast.SelectorExpr); ok && bandFields[sel.Sel.Name] && !written[sel] {
+						t.Errorf("%s:%s produces a verdict and reads %s; assembling a band into a "+
+							"verdict is the left of an assignment and nothing else. Reading one "+
+							"here is the single line the 2026-07-28 review used to make a band "+
+							"decide a veto",
+							filepath.Base(name), fn.Name.Name, sel.Sel.Name)
 					}
 					return true
 				})
 			}
 		}
 	}
-	if checked == 0 {
-		t.Fatal("no function producing a VetoState or a Chase was found; the check would " +
-			"pass vacuously")
+	if checked < verdictProducers {
+		t.Fatalf("checked %d verdict-producing functions, want at least %d; a selector that "+
+			"stopped matching reports success over the functions it no longer reads, which is "+
+			"exactly how this check passed while assessOne was outside it",
+			checked, verdictProducers)
 	}
 	t.Logf("checked %d verdict-producing functions", checked)
 }

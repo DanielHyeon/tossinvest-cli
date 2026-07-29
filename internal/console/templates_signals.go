@@ -180,9 +180,18 @@ const signalsTemplates = `
 {{end}}
 {{end}}
 
+{{/*
+  "signalsband" — 그림자 밴드. 붕괴 경보는 건수 위에 붙고 건수를 대체하지 않는다:
+  경보가 말하는 대상이 그 건수이고, 숫자를 지우면 근거를 지우는 것이다. 측정된 기록
+  전부가 같은 교차 집합을 냈다는 사실은 산술로는 아무 문제가 없어서, 경보가 없으면
+  평범한 행으로 읽힌다 — 사람이 같은 줄을 두 번 읽어야 알아차리는 상태다.
+*/}}
 {{define "signalsband"}}
 <h3>그림자 밴드 — {{.Code}} <span class="muted">(veto가 아니다)</span></h3>
 <p class="muted">{{.ShadowNote}}</p>
+{{if .Alarm}}
+<p class="bad">{{.Alarm}}</p>
+{{end}}
 <p class="muted">후보 {{.Total}}개 중 {{.Measured}}개 측정. 교차:
 {{range $i, $c := .Crossed}}{{if $i}} · {{end}}{{$c.Reason}} {{$c.Count}}{{end}}</p>
 {{if .NotMeasured}}

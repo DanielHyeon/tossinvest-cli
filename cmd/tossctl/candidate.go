@@ -561,13 +561,7 @@ type candidateReport struct {
 		NotComputed map[string]int `json:"not_computed"`
 	} `json:"shadow_acceleration"`
 
-	ShadowBands map[string]struct {
-		Note        string         `json:"note"`
-		Total       int            `json:"total"`
-		Measured    int            `json:"measured"`
-		Crossed     map[string]int `json:"crossed"`
-		NotMeasured map[string]int `json:"not_measured"`
-	} `json:"shadow_bands"`
+	ShadowBands map[string]shadowBandReport `json:"shadow_bands"`
 
 	Retention struct {
 		Ran    bool  `json:"ran"`
@@ -756,27 +750,30 @@ func buildCandidateReport(res candidate.CycleResult) candidateReport {
 		r.ShadowAcceleration.NotComputed[string(why)] = n
 	}
 
-	r.ShadowBands = map[string]struct {
-		Note        string         `json:"note"`
-		Total       int            `json:"total"`
-		Measured    int            `json:"measured"`
-		Crossed     map[string]int `json:"crossed"`
-		NotMeasured map[string]int `json:"not_measured"`
-	}{}
+	r.ShadowBands = map[string]shadowBandReport{}
 	for code, tally := range res.Bands {
 		notMeasured := map[string]int{}
 		for why, n := range tally.NotMeasured {
 			notMeasured[string(why)] = n
 		}
-		r.ShadowBands[string(code)] = struct {
-			Note        string         `json:"note"`
-			Total       int            `json:"total"`
-			Measured    int            `json:"measured"`
-			Crossed     map[string]int `json:"crossed"`
-			NotMeasured map[string]int `json:"not_measured"`
-		}{
+		// Driven by BandsFor and not by ranging the tally's map, so an edge nobody
+		// crossed keeps its place in the list instead of arriving wherever Go's map
+		// iteration put it.
+		crossed := make([]bandCount, 0, len(tally.Crossed))
+		for _, band := range candidate.BandsFor(code) {
+			crossed = append(crossed, bandCount{Band: band, Count: tally.Crossed[band]})
+		}
+		quantiles := make([]bandQuantile, 0, len(tally.Quantiles))
+		for _, q := range tally.Quantiles {
+			quantiles = append(quantiles, bandQuantile{Name: q.Name, Value: q.Value})
+		}
+		r.ShadowBands[string(code)] = shadowBandReport{
 			Note: shadowNote, Total: tally.Total, Measured: tally.Measured,
-			Crossed: tally.Crossed, NotMeasured: notMeasured,
+			Crossed: crossed, Quantiles: quantiles, QuantileBase: tally.QuantileBase,
+			// The judgement is candidate.BandTally's and is not repeated here, for
+			// tallyAlarm's reason: two screens must not be able to disagree about
+			// whether a scale resolved anything.
+			Alarm: tally.CollapsedAlarm(), NotMeasured: notMeasured,
 		}
 	}
 
@@ -910,8 +907,10 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 	fmt.Fprintf(w, "\nshadow crossings — acceleration (%s)\n", shadowNote)
 	fmt.Fprintf(w, "  measured     %d of %d series\n",
 		report.ShadowAcceleration.Computed, report.ShadowAcceleration.Total)
-	fmt.Fprintf(w, "  crossed      %s\n", orderedCounts(candidate.ShadowThresholds,
-		report.ShadowAcceleration.Crossed))
+	for _, line := range wrapCounts("  crossed      ",
+		orderedCountParts(candidate.ShadowThresholds, report.ShadowAcceleration.Crossed)) {
+		fmt.Fprintln(w, line)
+	}
 	for _, line := range sortedCounts(report.ShadowAcceleration.NotComputed) {
 		fmt.Fprintf(w, "  not computed %s\n", line)
 	}
@@ -923,7 +922,26 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 		}
 		fmt.Fprintf(w, "\nshadow bands — %s (%s; not a veto)\n", string(code), shadowNote)
 		fmt.Fprintf(w, "  measured     %d of %d\n", band.Measured, band.Total)
-		fmt.Fprintf(w, "  crossed      %s\n", orderedCounts(candidate.BandsFor(code), band.Crossed))
+		if band.Alarm != "" {
+			// Above the counts and not below them. The counts are what somebody
+			// reading this row is going to take away, and the whole failure was that
+			// they looked fine.
+			fmt.Fprintf(w, "  %s\n", band.Alarm)
+		}
+		for _, line := range wrapCounts("  crossed      ", bandCountParts(band.Crossed)) {
+			fmt.Fprintln(w, line)
+		}
+		// The values themselves, beside the crossings. A scale is chosen from where
+		// the mass is and the crossings cannot show that: the scale this change
+		// replaced reported 131 measured and every crossing zero, which is the same
+		// row a distribution at −1 and a distribution at +9 would both produce.
+		for _, line := range wrapCounts("  values       ", quantileParts(band.Quantiles)) {
+			fmt.Fprintln(w, line)
+		}
+		if band.QuantileBase != band.Measured {
+			fmt.Fprintf(w, "               computed from %d of the %d measured value(s); the rest "+
+				"could not be read as numbers\n", band.QuantileBase, band.Measured)
+		}
 		for _, line := range sortedCounts(band.NotMeasured) {
 			fmt.Fprintf(w, "  not measured %s\n", line)
 		}
@@ -953,10 +971,7 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 // orderedCounts renders a count map in the order its keys were declared, so a band
 // that nobody crossed still occupies its column.
 func orderedCounts(keys []string, counts map[string]int) string {
-	parts := make([]string, 0, len(keys))
-	for _, k := range keys {
-		parts = append(parts, fmt.Sprintf("%s %d", k, counts[k]))
-	}
+	parts := orderedCountParts(keys, counts)
 	if len(parts) == 0 {
 		return "none"
 	}

@@ -364,6 +364,23 @@ func Assess(ctx context.Context, store *Store, opts AssessOptions) ([]Verdict, e
 }
 
 // assessOne is one candidate's verdict from its summary and its retained readings.
+//
+// # Why the two shadow records are measured somewhere else
+//
+// This is the only function in the package where a Chase and a shadow band would
+// otherwise be in scope together, and band.go's whole argument is that the distance
+// between the two must not be one line. It was one line: the proposal-freeze review
+// of 2026-07-28 added
+//
+//	if v.ExtendedBand.Crossed("6") { v.Chase.Extended = RaisedVeto() }
+//
+// here, and `go vet`, the four structural guards and 51 packages of tests all
+// passed. An unapproved number decided a veto and nothing failed.
+//
+// So the measuring left. What stays is the assembly: the two fields are filled from
+// shadowBandsFor's results and never read back, which is the one shape
+// TestNoFunctionThatProducesAVerdictCanSeeAShadowBand allows a verdict-producing
+// function to have. Reading either field here now fails that test.
 func assessOne(summary Summary, rows []Observation, at time.Time,
 	th VetoThresholds, window time.Duration) Verdict {
 
@@ -379,8 +396,7 @@ func assessOne(summary Summary, rows []Observation, at time.Time,
 		At:         at,
 		Thresholds: th,
 	})
-	v.SeenLateBand = MeasureSeenLateBand(v.Sighting)
-	v.ExtendedBand = MeasureExtendedBand(v.Expansion, summary.Candidate, at, th)
+	v.SeenLateBand, v.ExtendedBand = shadowBandsFor(summary, v.Sighting, v.Expansion, at, th)
 
 	// One series per source, never one series over all of them. D9 warns that the
 	// mixed version compiles and produces a plausible number, and that the number is
@@ -405,6 +421,25 @@ func assessOne(summary Summary, rows []Observation, at time.Time,
 			Accelerate(series, FieldTradingValue, at, window))
 	}
 	return v
+}
+
+// shadowBandsFor measures one candidate's two shadow records, in the order the
+// Verdict declares them.
+//
+// It takes the inputs and not the Verdict. That is the whole of its design: a
+// parameter list without a Chase in it is a scope where `v.Chase.Extended =
+// RaisedVeto()` has nothing to write to, so the substitution band.go is built to
+// prevent has no spelling here either. Handing it a *Verdict would have moved the
+// one-line transition rather than removed it — and would have moved it somewhere
+// the check does not look, because this function returns no verdict type.
+//
+// It decides nothing. Both results are records; see band.go's header for why two of
+// the three vetoes record instead of deciding.
+func shadowBandsFor(summary Summary, sighting Sighting, expansion Expansion,
+	at time.Time, th VetoThresholds) (ShadowBand, ShadowBand) {
+
+	return MeasureSeenLateBand(sighting),
+		MeasureExtendedBand(expansion, summary.Candidate, at, th)
 }
 
 // --- one cycle -----------------------------------------------------------------------
