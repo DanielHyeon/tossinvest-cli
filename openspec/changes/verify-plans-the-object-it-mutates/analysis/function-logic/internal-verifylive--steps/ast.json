@@ -1,0 +1,29 @@
+{
+  "file": "internal/verifylive/verifylive.go",
+  "source_sha256": "175cbf5a8eafb19da306a0524420ed768ee6d90506190c72bffe12e427d273b8",
+  "package": "verifylive",
+  "function": "Steps",
+  "signature": "Steps(params=0, results=1)",
+  "start": {
+    "line": 163,
+    "column": 1
+  },
+  "end": {
+    "line": 514,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

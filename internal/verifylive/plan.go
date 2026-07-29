@@ -395,7 +395,12 @@ func (p Plan) Authorises(step StepID, kind MutationKind, symbol, side string, qu
 		if m.Step != step || m.Kind != kind {
 			continue
 		}
-		if m.Symbol != "" && !strings.EqualFold(m.Symbol, strings.TrimSpace(symbol)) {
+		// Exact, including the empty case. A planned line that names no symbol is a
+		// line that does not say what it is a request about, and such a line must
+		// not stand in for one that does — the only request it goes on authorising
+		// is an equally symbol-less one, which is a cleanup of an old artifact whose
+		// symbol was never recorded.
+		if !strings.EqualFold(strings.TrimSpace(m.Symbol), strings.TrimSpace(symbol)) {
 			continue
 		}
 		if m.Side != "" && !strings.EqualFold(m.Side, strings.TrimSpace(side)) {
@@ -562,6 +567,20 @@ func (r *Runner) Plan(ctx context.Context) Plan {
 		}
 
 		symbol := r.mutationSymbol(step)
+		if strings.TrimSpace(symbol) == "" {
+			// A line with no symbol does not say what the request is about, and
+			// Authorises would have nothing to compare — the same "do not ask a
+			// person to approve what cannot be stated" the unknown quantity takes.
+			// A KR run never reaches here (MarketOf("") is US, so the market check
+			// above catches it first); a US run on an account holding nothing does.
+			willRun[step.ID] = false
+			plan.Excluded = append(plan.Excluded, PlanExclusion{
+				Step: step.ID,
+				Reason: "이 실행에는 이 단계가 무엇에 대해 요청을 보낼지 정할 종목이 없다. 대상을 " +
+					"이름하지 못하는 줄은 승인 목록에 올리지 않는다",
+			})
+			continue
+		}
 		lines, notes, ok := r.planStep(step, symbol, sellable, sellableKnown)
 		if !ok {
 			willRun[step.ID] = false

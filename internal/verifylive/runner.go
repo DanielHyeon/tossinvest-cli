@@ -554,7 +554,27 @@ func (r *Runner) preflightStatic(step Step, passed func(StepID) bool) (string, b
 	return "", false
 }
 
+// mutationSymbol is what a step's live requests are about.
+//
+// It is the single answer to that question: the plan reads it to write the line an
+// operator approves (plan.go), and preflight reads it to keep a run inside its own
+// market. Those two have to agree with the step body, because the plan's symbol is
+// compared exactly against the request's — a step resolving its target one way while
+// the list said another does not send the wrong thing, it sends nothing and stops
+// the run (2026-07-29, conditional-modify, twice).
+//
+// The conditional steps are the case that made this explicit. They act on the
+// conditional order the record already carries, whose symbol is a property of the
+// account rather than of this run's flags. Before it is registered — a full run that
+// starts from the beginning — the answer is the holding, because that is what
+// conditional-register is about to register against.
 func (r *Runner) mutationSymbol(step Step) string {
+	if step.ActsOnConditional {
+		if _, symbol, ok := r.liveConditional(); ok && strings.TrimSpace(symbol) != "" {
+			return symbol
+		}
+		return r.holdingSymbol
+	}
 	if step.NeedsHolding {
 		return r.holdingSymbol
 	}

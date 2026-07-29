@@ -129,6 +129,19 @@ type Step struct {
 	// it. Such a step is skipped with a reason; the tool never buys to create the
 	// holding it needs.
 	NeedsHolding bool `json:"needs_holding,omitempty"`
+	// ActsOnConditional reports that the step's requests are about the conditional
+	// order this verification already registered, rather than about the run's probe
+	// symbol.
+	//
+	// It exists because the approval list has to name the object. The plan is built
+	// before anything runs and has to state which symbol each line is about; a step
+	// that resolves its target from the record at run time (liveConditional) would
+	// otherwise be listed against a symbol nobody is going to send anything for —
+	// which is exactly what stopped the KR run twice on 2026-07-29. It is
+	// deliberately NOT NeedsHolding: a leftover conditional has to stay cancellable
+	// on an account whose holding has since gone, which is when a leftover matters
+	// most.
+	ActsOnConditional bool `json:"acts_on_conditional,omitempty"`
 	// OptIn is the flag that unlocks the step, empty when it runs by default.
 	OptIn string `json:"opt_in,omitempty"`
 	// Deferred marks a step that this tool cannot drive at all, and says so up
@@ -439,12 +452,13 @@ func Steps() []Step {
 			},
 		},
 		{
-			ID:        StepConditionalModify,
-			Title:     "Conditional modify issues a new id",
-			Proves:    "정정이 원자적인지 아니면 취소 후 재생성인지 — openapi는 기존 id가 무효화되고 새 id가 발급된다고 적고 있고, 2.6은 그것을 인용이 아니라 실측으로 요구한다",
-			Tasks:     []string{"2.5"},
-			Mutates:   true,
-			DependsOn: []StepID{StepConditionalRegister},
+			ID:                StepConditionalModify,
+			Title:             "Conditional modify issues a new id",
+			Proves:            "정정이 원자적인지 아니면 취소 후 재생성인지 — openapi는 기존 id가 무효화되고 새 id가 발급된다고 적고 있고, 2.6은 그것을 인용이 아니라 실측으로 요구한다",
+			Tasks:             []string{"2.5"},
+			Mutates:           true,
+			ActsOnConditional: true,
+			DependsOn:         []StepID{StepConditionalRegister},
 			Procedure: []string{
 				"조건주문의 발동가를 한 호가 정정한다",
 				"응답이 돌려주는 식별자를 기록한다",
@@ -464,12 +478,13 @@ func Steps() []Step {
 			},
 		},
 		{
-			ID:        StepConditionalCancel,
-			Title:     "Conditional cancel",
-			Proves:    "DELETE /api/v1/conditional-orders/{id}가 보호를 제거하고, 계좌가 발견 당시 상태로 남는지",
-			Tasks:     []string{"2.5"},
-			Mutates:   true,
-			DependsOn: []StepID{StepConditionalRegister},
+			ID:                StepConditionalCancel,
+			Title:             "Conditional cancel",
+			Proves:            "DELETE /api/v1/conditional-orders/{id}가 보호를 제거하고, 계좌가 발견 당시 상태로 남는지",
+			Tasks:             []string{"2.5"},
+			Mutates:           true,
+			ActsOnConditional: true,
+			DependsOn:         []StepID{StepConditionalRegister},
 			Procedure: []string{
 				"살아 있는 조건주문을 취소한다",
 				"다시 읽어 사라졌음을 기록한다",

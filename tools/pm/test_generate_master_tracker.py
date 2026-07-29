@@ -36,6 +36,7 @@ class TrackerTests(unittest.TestCase):
             "refine-extended-shadow-bands",
             "verify-reopens-conditional-chain",
             "attest-covers-supervised-mutations",
+            "verify-plans-the-object-it-mutates",
         ):
             path = changes / change
             path.mkdir(parents=True)
