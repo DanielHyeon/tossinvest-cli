@@ -443,16 +443,20 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 {{if .Redo}}
 <section>
   <h2>재측정</h2>
-  <p>마지막 판정이 <code>fail</code> 또는 <code>skipped</code>인 단계는 <strong>{{.RedoCount}}개</strong>다.
+  <p>재측정 대상은 <strong>{{.RedoCount}}개</strong>다 — 마지막 판정이 <code>fail</code>·<code>skipped</code>인
+  단계, 그리고 <strong>통과했지만 그 통과가 만든 조건주문이 사라져 아래 단계들이 측정할 수 없게 된 단계</strong>다.
   이어하기는 이 단계들을 건너뛴다(판정이 이미 terminal이므로). 재측정은 이 단계들만 다시 시도한다.</p>
   <table>
     <tr><th>단계</th><th>이름</th><th>마지막 판정</th><th>사유</th></tr>
     {{$redo := .Redo}}
-    {{range .Steps}}{{if redoable .Verdict}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
+    {{range .Steps}}{{if inRedo $redo .Step}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
   </table>
   <p class="muted">대상: {{.RedoList}}</p>
-  <p class="notice"><code>pass</code>·<code>deferred</code> 단계는 대상이 아니다 — 이미 측정된 속성을 위해
-  실주문을 다시 내지 않는다. 대상 목록은 폼이 아니라 <strong>증거 기록</strong>에서 계산한다.
+  <p class="notice"><code>deferred</code>·<code>refused</code> 단계는 대상이 아니다. <code>pass</code>도
+  대상이 아니다 — 이미 측정된 속성을 위해 실주문을 다시 내지 않는다. 단 하나의 예외는
+  <strong>그 통과가 확립한 성질이 더 이상 참이 아닌 경우</strong>다: 조건주문 등록이 남긴 조건주문이
+  사라지면 존속·정정·취소는 영원히 <code>skipped</code>가 되므로, 그 전제를 다시 세우는 것은
+  아는 것을 다시 재는 것이 아니다. 대상 목록은 폼이 아니라 <strong>증거 기록</strong>에서 계산한다.
   재측정도 계획을 처음부터 다시 만들고 <strong>그 계획을 다시 승인</strong>해야 요청이 나간다.
   설계상 생략되는 단계(보유 0, <code>--include-ttl-edge</code> 옵트인)는 preflight가 다시 걸러 무해하다.</p>
   <form method="post" action="/verify/start">

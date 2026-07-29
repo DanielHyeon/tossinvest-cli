@@ -34,6 +34,7 @@ class TrackerTests(unittest.TestCase):
             "fix-chase-veto-measurement",
             "retire-gainers-source",
             "refine-extended-shadow-bands",
+            "verify-reopens-conditional-chain",
         ):
             path = changes / change
             path.mkdir(parents=True)

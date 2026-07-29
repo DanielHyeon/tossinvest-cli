@@ -1,0 +1,71 @@
+{
+  "file": "internal/verifylive/cleanup_test.go",
+  "source_sha256": "bfe5725960c9718507ddfad287fbb1e498ada42d09ce1f00257eb7a4df668673",
+  "package": "verifylive",
+  "function": "TestAConditionalWithNoCancelVerdictIsNotCleanedUp",
+  "signature": "TestAConditionalWithNoCancelVerdictIsNotCleanedUp(params=1, results=0)",
+  "start": {
+    "line": 321,
+    "column": 1
+  },
+  "end": {
+    "line": 325,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 322,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 12
+      },
+      "text": "PendingCleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 27
+      },
+      "text": "conditionalRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 57
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 322,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

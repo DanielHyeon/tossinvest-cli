@@ -1,0 +1,126 @@
+{
+  "file": "internal/console/remeasure_test.go",
+  "source_sha256": "3344b75f7d45776ef401cef2bc0e5bd07f18fd6597c679b16cb14d03a9542c28",
+  "package": "console",
+  "function": "TestTheRemeasureTableShowsTheReopenedRegister",
+  "signature": "TestTheRemeasureTableShowsTheReopenedRegister(params=1, results=0)",
+  "start": {
+    "line": 456,
+    "column": 1
+  },
+  "end": {
+    "line": 465,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 462,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 7
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 2
+      },
+      "text": "seedConditionalDeadlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 13
+      },
+      "text": "redoSection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 28
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 36
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 41
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 78
+      },
+      "text": "truncateForLog"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 457,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 461,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,71 @@
+{
+  "file": "internal/verifylive/redo_test.go",
+  "source_sha256": "56029675025105f9295e1a9c0685ac93b7aa9417362ac8260691c30d3f83956d",
+  "package": "verifylive",
+  "function": "TestRedoSetDoesNotReopenAPassThatLeftNothingBehind",
+  "signature": "TestRedoSetDoesNotReopenAPassThatLeftNothingBehind(params=1, results=0)",
+  "start": {
+    "line": 228,
+    "column": 1
+  },
+  "end": {
+    "line": 236,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 5
+      },
+      "text": "has"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 9
+      },
+      "text": "RedoSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 77
+      },
+      "text": "RedoSet"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

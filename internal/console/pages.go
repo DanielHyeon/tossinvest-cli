@@ -25,12 +25,25 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
-// pageFuncs are the only two things the templates can compute that Go does not
-// hand them ready-made. redoable is verifylive's own answer, not a second
-// definition of it: the table that marks a row "재측정 대상" has to agree with the
-// set the button actually starts.
+// pageFuncs are the only things the templates can compute that Go does not hand
+// them ready-made. inRedo asks the set itself rather than re-deriving it: the
+// table that marks a row "재측정 대상" has to agree with the set the button
+// actually starts.
+//
+// It used to call verifylive.RedoableVerdict on the row's verdict, which was the
+// same answer while the set was a function of the verdict alone. It is not any
+// more — a passed conditional-register whose order is gone is in the set (see
+// verifylive/redo.go) — so a table asking the verdict would have hidden the one
+// row that unblocks the chain while the button re-ran it.
 var pageFuncs = template.FuncMap{
-	"redoable": verifylive.RedoableVerdict,
+	"inRedo": func(set []verifylive.StepID, id verifylive.StepID) bool {
+		for _, s := range set {
+			if s == id {
+				return true
+			}
+		}
+		return false
+	},
 	// stepLabel and verdict are the render-layer mapping task 1.8 ③ asks for: the
 	// record keeps its English `title` and its verdict values, and the screen puts
 	// Korean next to them. verifylive owns both maps and a drift test there fails

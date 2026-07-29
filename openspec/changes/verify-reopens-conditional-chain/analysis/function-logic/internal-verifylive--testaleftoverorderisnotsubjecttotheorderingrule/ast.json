@@ -1,0 +1,70 @@
+{
+  "file": "internal/verifylive/cleanup_test.go",
+  "source_sha256": "bfe5725960c9718507ddfad287fbb1e498ada42d09ce1f00257eb7a4df668673",
+  "package": "verifylive",
+  "function": "TestALeftoverOrderIsNotSubjectToTheOrderingRule",
+  "signature": "TestALeftoverOrderIsNotSubjectToTheOrderingRule(params=1, results=0)",
+  "start": {
+    "line": 329,
+    "column": 1
+  },
+  "end": {
+    "line": 340,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 9
+      },
+      "text": "PendingCleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 336,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,78 @@
+{
+  "file": "internal/verifylive/cleanup_test.go",
+  "source_sha256": "bfe5725960c9718507ddfad287fbb1e498ada42d09ce1f00257eb7a4df668673",
+  "package": "verifylive",
+  "function": "TestAVerdictOlderThanTheConditionalDoesNotCleanItUp",
+  "signature": "TestAVerdictOlderThanTheConditionalDoesNotCleanItUp(params=1, results=0)",
+  "start": {
+    "line": 291,
+    "column": 1
+  },
+  "end": {
+    "line": 302,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 13
+      },
+      "text": "conditionalRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 12
+      },
+      "text": "PendingCleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 37
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 292,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 298,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -78,11 +78,23 @@ func cleanupStep() Step {
 //	                      what it placed itself — so if the prologue does not take
 //	                      it, nothing will.
 //	a conditional order   is a target only once the step that cancels it has a
-//	                      terminal verdict. Before that it is the subject of a
+//	                      terminal verdict *recorded after that conditional
+//	                      appeared*. Before that it is the subject of a
 //	                      measurement: conditional-persist observes that it
 //	                      outlives the process that registered it, and a prologue
 //	                      that cancelled it first would delete the evidence and
 //	                      then report the step as unmeasurable.
+//
+// The second rule carried only the first half until 2026-07-29, and the missing
+// half cost the KR chain three market days. `skipped` is terminal. On 2026-07-26
+// the account held nothing, so conditional-cancel skipped; on 2026-07-28 a run
+// registered a conditional and halted at the persistence step as designed; the
+// resumed process read that 07-26 skip, took it as authority, and cancelled the
+// conditional 308 milliseconds before the measurement that existed to read it.
+// Every run after that skipped in the same place, and conditional-register was
+// `pass` so no redo could put the subject back (see redo.go).
+//
+// A verdict recorded before an object existed is not a verdict about that object.
 //
 // The list comes from the record, which is what makes "this tool created it" a
 // fact rather than a guess. Nothing else on the account is ever a target.
@@ -113,12 +125,51 @@ func cleanupFrom(entries []Entry, settled func(StepID) bool) []Artifact {
 		case KindOrder:
 			out = append(out, a)
 		case KindConditional:
-			if settled(StepConditionalCancel) {
+			if settled(StepConditionalCancel) && decidedAfter(entries, StepConditionalCancel, a) {
 				out = append(out, a)
 			}
 		}
 	}
 	return out
+}
+
+// decidedAfter reports whether step id's newest line was written after the line
+// that first recorded artifact a.
+//
+// Position in the record, not a clock. The evidence file is append-only JSONL, so
+// index order is monotone by construction; timestamps are not, and the record
+// shows why the artifact's own CreatedAt cannot stand in for one — a cancellation
+// line carries the zero time, and Outstanding lets the last mention of an
+// identifier win.
+//
+// Fail-closed in both directions. No creating line and no decision line both mean
+// "no authority to cancel", and the conservative answer when the record does not
+// say is to leave the measurement its subject. A missing creating line cannot
+// actually happen for an artifact Outstanding returned — it came from some line —
+// but the guard is written so that it could not matter if it did.
+func decidedAfter(entries []Entry, id StepID, a Artifact) bool {
+	created := -1
+	for i := range entries {
+		for _, x := range entries[i].Artifacts {
+			if x.Kind == a.Kind && x.ID == a.ID {
+				created = i
+				break
+			}
+		}
+		if created >= 0 {
+			break
+		}
+	}
+	if created < 0 {
+		return false
+	}
+	decided := -1
+	for i := range entries {
+		if entries[i].StepID == id {
+			decided = i
+		}
+	}
+	return decided > created
 }
 
 // planCleanup renders the targets as approval lines.

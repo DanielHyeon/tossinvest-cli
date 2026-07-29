@@ -260,3 +260,81 @@ func TestCleanupIsNotAMeasuredStep(t *testing.T) {
 		}
 	}
 }
+
+// --- the verdict must be about *this* conditional ------------------------------
+//
+// The tests below pin the rule that 2026-07-28 proved was missing. The record is
+// hand-built here on purpose: the failure was an *ordering* between two runs days
+// apart, and the harness runs one invocation at a time against a live-ish broker,
+// so a seeded record is the only way to state "this line was written before that
+// object existed" as a fact rather than as a timing accident.
+
+// conditionalRecord seeds the shape of capability-verify.jsonl on 2026-07-28.
+func conditionalRecord(before []Entry, after []Entry) []Entry {
+	reg := Entry{
+		Kind: KindStep, StepID: StepConditionalRegister, Verdict: VerdictPass,
+		Artifacts: []Artifact{{
+			Kind: KindConditional, ID: "grLKqiGuCVS7mj", Symbol: "333430", Deliberate: true,
+		}},
+	}
+	out := append([]Entry{}, before...)
+	out = append(out, reg)
+	return append(out, after...)
+}
+
+// TestAVerdictOlderThanTheConditionalDoesNotCleanItUp is the 2026-07-28 regression.
+//
+// conditional-cancel skipped on 07-26 because the account held nothing. That line
+// says nothing about a conditional order registered two days later, and using it
+// as the authority to cancel one destroyed the subject of the persistence
+// measurement 308 milliseconds before the measurement ran.
+func TestAVerdictOlderThanTheConditionalDoesNotCleanItUp(t *testing.T) {
+	entries := conditionalRecord([]Entry{
+		{Kind: KindStep, StepID: StepConditionalRegister, Verdict: VerdictSkipped},
+		{Kind: KindStep, StepID: StepConditionalPersist, Verdict: VerdictSkipped},
+		{Kind: KindStep, StepID: StepConditionalCancel, Verdict: VerdictSkipped},
+	}, nil)
+
+	if got := PendingCleanup(entries); len(got) != 0 {
+		t.Fatalf("the prologue would cancel the conditional the persistence step has to read, on the "+
+			"authority of a verdict recorded before it existed: %+v", got)
+	}
+}
+
+// TestAVerdictNewerThanTheConditionalOpensCleanup is the other half: the guard
+// must still let a genuine leftover through, or verify-clears-leftovers' deadlock
+// grows back.
+func TestAVerdictNewerThanTheConditionalOpensCleanup(t *testing.T) {
+	entries := conditionalRecord(nil, []Entry{
+		{Kind: KindStep, StepID: StepConditionalCancel, Verdict: VerdictFail},
+	})
+
+	got := PendingCleanup(entries)
+	if len(got) != 1 || got[0].ID != "grLKqiGuCVS7mj" {
+		t.Fatalf("a conditional whose cancel failed *after* it was registered is a leftover and must be "+
+			"cleaned up, got %+v", got)
+	}
+}
+
+// TestAConditionalWithNoCancelVerdictIsNotCleanedUp keeps the fail-closed
+// direction explicit: no decision recorded means no authority to cancel.
+func TestAConditionalWithNoCancelVerdictIsNotCleanedUp(t *testing.T) {
+	if got := PendingCleanup(conditionalRecord(nil, nil)); len(got) != 0 {
+		t.Fatalf("with no conditional-cancel line at all the prologue has no authority to cancel: %+v", got)
+	}
+}
+
+// TestALeftoverOrderIsNotSubjectToTheOrderingRule: the ordering rule is about the
+// one artifact that is deliberately left alive. An order never is.
+func TestALeftoverOrderIsNotSubjectToTheOrderingRule(t *testing.T) {
+	entries := []Entry{
+		{Kind: KindStep, StepID: StepConditionalCancel, Verdict: VerdictSkipped},
+		{Kind: KindStep, StepID: StepOrderCancel, Verdict: VerdictFail, Artifacts: []Artifact{
+			{Kind: KindOrder, ID: "OsBakht", Symbol: "005930"},
+		}},
+	}
+	got := PendingCleanup(entries)
+	if len(got) != 1 || got[0].Kind != KindOrder {
+		t.Fatalf("a leftover order is always a cleanup target, got %+v", got)
+	}
+}

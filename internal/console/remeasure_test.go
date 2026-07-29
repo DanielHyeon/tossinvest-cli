@@ -361,3 +361,105 @@ func TestTheRemeasureScreenCarriesTheAdvisoryToo(t *testing.T) {
 		t.Errorf("the re-measure offer is missing from the same screen:\n%s", truncateForLog(page))
 	}
 }
+
+// --- the table and the button must name the same steps --------------------------
+
+// seedConditionalDeadlock writes the shape the KR record had after 2026-07-28:
+// conditional-register passed and left a conditional order alive on purpose, the
+// cleanup prologue cancelled it, and everything that needed it skipped.
+func seedConditionalDeadlock(t *testing.T, path string) {
+	t.Helper()
+	rec, err := verifylive.OpenRecorder(path)
+	if err != nil {
+		t.Fatalf("OpenRecorder: %v", err)
+	}
+	defer rec.Close()
+
+	now := time.Now().UTC()
+	line := func(id verifylive.StepID, v verifylive.Verdict, arts ...verifylive.Artifact) {
+		if err := rec.Append(verifylive.Entry{
+			StepID: id, Title: string(id), Verdict: v, Artifacts: arts,
+			Reason:     "seeded by the test",
+			AccountRef: attest.Mask("123-45-678901"), StartedAt: now, FinishedAt: now,
+		}); err != nil {
+			t.Fatalf("Append: %v", err)
+		}
+	}
+
+	for _, step := range verifylive.Steps() {
+		line(step.ID, verifylive.VerdictPass)
+	}
+	line(verifylive.StepConditionalRegister, verifylive.VerdictPass, verifylive.Artifact{
+		Kind: verifylive.KindConditional, ID: "grLKqiGuCVS7mj", Symbol: "333430", Deliberate: true,
+	})
+	line(verifylive.StepCleanup, verifylive.VerdictPass, verifylive.Artifact{
+		Kind: verifylive.KindConditional, ID: "grLKqiGuCVS7mj", Symbol: "333430", Cancelled: true,
+	})
+	for _, id := range []verifylive.StepID{
+		verifylive.StepConditionalPersist, verifylive.StepConditionalModify,
+		verifylive.StepConditionalCancel,
+	} {
+		line(id, verifylive.VerdictSkipped)
+	}
+}
+
+// redoSection cuts the re-measurement section out of the page so an assertion
+// about its table cannot be satisfied by the full step list further down.
+func redoSection(t *testing.T, page string) string {
+	t.Helper()
+	start := strings.Index(page, "<h2>재측정</h2>")
+	if start < 0 {
+		t.Fatalf("the page has no re-measurement section:\n%s", truncateForLog(page))
+	}
+	rest := page[start:]
+	end := strings.Index(rest, "</section>")
+	if end < 0 {
+		t.Fatalf("the re-measurement section is not closed:\n%s", truncateForLog(rest))
+	}
+	return rest[:end]
+}
+
+// TestTheRemeasureTableNamesExactlyTheStepsTheButtonWouldRun.
+//
+// The table used to ask the row's verdict while the button asked the set. That was
+// the same answer until a passed conditional-register could be reopened; after
+// that the one row that unblocks the chain would have been missing from the table
+// the operator reads before approving.
+func TestTheRemeasureTableNamesExactlyTheStepsTheButtonWouldRun(t *testing.T) {
+	h := newHarness(t)
+	seedConditionalDeadlock(t, h.record)
+	h.authenticate(t)
+
+	entries, err := verifylive.LoadEntries(h.record)
+	if err != nil {
+		t.Fatalf("LoadEntries: %v", err)
+	}
+	want := verifylive.RedoSet(entries)
+	if len(want) == 0 {
+		t.Fatal("this test needs a non-empty redo set to say anything")
+	}
+
+	section := redoSection(t, body(t, h.get(t, "/verify")))
+	for _, id := range want {
+		if !strings.Contains(section, "<code>"+string(id)+"</code>") {
+			t.Errorf("the re-measurement table has no row for %s, but the button would run it:\n%s",
+				id, truncateForLog(section))
+		}
+	}
+	if got := strings.Count(section, "<tr><td><code>"); got != len(want) {
+		t.Errorf("the table has %d rows but the button would run %d steps (%v)", got, len(want), want)
+	}
+}
+
+// TestTheRemeasureTableShowsTheReopenedRegister states the specific row on its
+// own, so a future narrowing of the reopen rule cannot pass by emptying the set.
+func TestTheRemeasureTableShowsTheReopenedRegister(t *testing.T) {
+	h := newHarness(t)
+	seedConditionalDeadlock(t, h.record)
+	h.authenticate(t)
+
+	section := redoSection(t, body(t, h.get(t, "/verify")))
+	if !strings.Contains(section, "<code>"+string(verifylive.StepConditionalRegister)+"</code>") {
+		t.Fatalf("the conditional chain cannot be reopened from the console:\n%s", truncateForLog(section))
+	}
+}
