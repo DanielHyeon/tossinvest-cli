@@ -107,6 +107,47 @@ type fakeBroker struct {
 	// 429 classification; a test sets it to prove that nothing else is retried.
 	throttleErr error
 
+	// --- the trigger observation's script ---
+	//
+	// The trigger step is the only one whose subject is the passage of market time,
+	// so the fake counts reads rather than holding a clock: "fire on the third look
+	// at the conditional" is a thing a test can state, and "fire at 04:31:02" is not.
+	// Zero means never, which is the default and is the inconclusive ending.
+	//
+	// books is the top of book /orderbook answers with. A symbol with no entry
+	// answers with an empty book, which is how "the bid could not be read" is
+	// scripted.
+	books map[string]domain.OrderBook
+	// fireAfterReads fires the conditional on the nth read of it.
+	fireAfterReads int
+	// linkAfterReads exposes triggeredOrderId on the nth read of the conditional.
+	// It is separate from fireAfterReads because the gap between the two is the
+	// latency this whole step exists to measure.
+	linkAfterReads int
+	// childFillsAfterReads reports the child order filled on the nth read of it.
+	childFillsAfterReads int
+	// dropAfterReads drops the last trade to the trigger price on the nth read of
+	// /prices. Leaving it zero while the conditional still fires is a bid basis:
+	// the thing fired although no trade ever printed down to it.
+	dropAfterReads int
+	// fireOnCancel makes the trigger conditional fire at the instant it is
+	// cancelled: the share leaves the account and the conditional disappears, which
+	// is what a lost race looks like from outside. It is scripted separately from
+	// fireAfterReads because the two produce different evidence — a read can see a
+	// fired conditional, and this cannot, since a cancelled one stops reading back.
+	fireOnCancel bool
+	// firedID is the child order the fire produced.
+	firedID string
+	// triggerCondID is the conditional the trigger step registered, recognised by
+	// its clientOrderId prefix. The script applies to that one and no other: a full
+	// run also has the register step's far-below stop live, and firing that would
+	// be the fake inventing a market event nobody asked for.
+	triggerCondID string
+
+	condReads  map[string]int
+	priceReads int
+	childReads map[string]int
+
 	// --- what happened ---
 	requests []string
 	keys     map[string]keyedOrder
@@ -128,6 +169,9 @@ func newFakeBroker() *fakeBroker {
 		conds:                   map[string]domain.ConditionalOrder{},
 		keys:                    map[string]keyedOrder{},
 		throttle429:             map[string]int{},
+		books:                   map[string]domain.OrderBook{},
+		condReads:               map[string]int{},
+		childReads:              map[string]int{},
 		honourIdempotency:       true,
 		conflictOnDifferentBody: true,
 		modifyIssuesNewID:       true,
@@ -222,11 +266,69 @@ func (f *fakeBroker) SellableQuantity(_ context.Context, symbol string) (domain.
 
 func (f *fakeBroker) Prices(_ context.Context, symbols []string) ([]domain.Quote, error) {
 	f.log("GET /prices")
+	f.mu.Lock()
+	f.priceReads++
+	dropped := f.dropAfterReads > 0 && f.priceReads >= f.dropAfterReads
+	trigger := f.watchedTriggerLocked()
+	f.mu.Unlock()
+
 	out := make([]domain.Quote, 0, len(symbols))
 	for _, s := range symbols {
-		out = append(out, domain.Quote{Symbol: s, Last: f.quotes[s]})
+		last := f.quotes[s]
+		if dropped && trigger > 0 {
+			// A trade printed at the trigger. This is what a last-trade basis looks
+			// like from outside: the crossing is visible before the fire.
+			last = trigger
+		}
+		out = append(out, domain.Quote{Symbol: s, Last: last})
 	}
 	return out, nil
+}
+
+// watchedTriggerLocked is the trigger price of the conditional the trigger step
+// registered, so the scripted price drop lands exactly on it rather than on a
+// number the test has to keep in step by hand.
+func (f *fakeBroker) watchedTriggerLocked() float64 {
+	if c, ok := f.conds[f.triggerCondID]; ok {
+		return c.First.TriggerPrice
+	}
+	return 0
+}
+
+// Orderbook answers with one level a side, which is what US does; a test that
+// wants KR's ten sets them itself. Nothing in this package may read depth from it
+// (measurements.md M49).
+func (f *fakeBroker) Orderbook(_ context.Context, symbol string) (domain.OrderBook, error) {
+	f.log("GET /orderbook " + symbol)
+	if err := f.throttled("orderbook"); err != nil {
+		return domain.OrderBook{}, err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	ob, ok := f.books[symbol]
+	if !ok {
+		return domain.OrderBook{Symbol: symbol}, nil
+	}
+	return ob, nil
+}
+
+// withBook gives a symbol a top of book, and the last trade to go with it.
+func (f *fakeBroker) withBook(symbol string, bid, ask, last float64) *fakeBroker {
+	f.books[symbol] = domain.OrderBook{
+		Symbol: symbol,
+		Bids:   []domain.OrderBookLevel{{Price: bid, Volume: 100}},
+		Offers: []domain.OrderBookLevel{{Price: ask, Volume: 100}},
+	}
+	f.quotes[symbol] = last
+	return f
+}
+
+// firesOnRead scripts the trigger observation's happy path: the conditional fires
+// on read `fire`, exposes its child on read `link`, and that child reports filled
+// on read `fill` of the order.
+func (f *fakeBroker) firesOnRead(fire, link, fill int) *fakeBroker {
+	f.fireAfterReads, f.linkAfterReads, f.childFillsAfterReads = fire, link, fill
+	return f
 }
 
 func (f *fakeBroker) PriceLimits(_ context.Context, symbol string) (domain.PriceLimits, error) {
@@ -322,7 +424,14 @@ func (f *fakeBroker) OrderRawByID(_ context.Context, orderID string) (json.RawMe
 	if !ok {
 		return nil, &official.APIError{Code: 404, Body: `{"error":{"code":"order-not-found"}}`}
 	}
-	return raw, nil
+	if orderID != f.firedID {
+		return raw, nil
+	}
+	f.childReads[orderID]++
+	if f.childFillsAfterReads <= 0 || f.childReads[orderID] < f.childFillsAfterReads {
+		return raw, nil
+	}
+	return mustFilledOrderJSON(orderID), nil
 }
 
 func (f *fakeBroker) ConditionalOrders(_ context.Context, status, symbol, _ string, _ int) (domain.ConditionalOrderList, error) {
@@ -361,6 +470,23 @@ func (f *fakeBroker) ConditionalOrder(_ context.Context, id string) (domain.Cond
 	if !ok {
 		return domain.ConditionalOrder{}, &official.APIError{Code: 404, Body: `{"error":{"code":"conditional-order-not-found"}}`}
 	}
+	if id != f.triggerCondID {
+		return c, nil
+	}
+	f.condReads[id]++
+	n := f.condReads[id]
+	if f.fireAfterReads > 0 && n >= f.fireAfterReads {
+		c.First.Status = "TRIGGERED"
+		c.Status = "TRIGGERED"
+	}
+	if f.linkAfterReads > 0 && n >= f.linkAfterReads {
+		if f.firedID == "" {
+			f.firedID = f.nextIDLocked("child")
+			f.orders[f.firedID] = mustOrderJSON(f.firedID, c.Symbol, "SELL", "PENDING", c.Quantity, 0, "")
+		}
+		c.First.TriggeredOrderID = f.firedID
+	}
+	f.conds[id] = c
 	return c, nil
 }
 
@@ -501,6 +627,9 @@ func (f *fakeBroker) CreateConditionalOrder(_ context.Context, body official.Con
 	if body.ClientOrderID != "" {
 		f.keys[body.ClientOrderID] = keyedOrder{orderID: id, body: canonical}
 	}
+	if strings.HasPrefix(body.ClientOrderID, "TRIGGER-") {
+		f.triggerCondID = id
+	}
 	// A registered conditional reserves the shares, which is the property
 	// StepSellableReserved is looking for.
 	f.sellable[body.Symbol] -= parseDecimal(body.Quantity)
@@ -537,6 +666,20 @@ func (f *fakeBroker) CancelConditionalOrder(_ context.Context, id string) error 
 	c, ok := f.conds[id]
 	if !ok {
 		return &official.APIError{Code: 404, Body: `{"error":{"code":"conditional-order-not-found"}}`}
+	}
+	if f.fireOnCancel && id == f.triggerCondID {
+		// The trigger won the race. The broker accepts the cancel, the conditional
+		// is gone either way, and a share has left the account — which is the only
+		// trace left, because a cancelled conditional does not read back.
+		f.firedID = f.nextIDLocked("child")
+		f.orders[f.firedID] = mustFilledOrderJSON(f.firedID)
+		for i := range f.holdings {
+			if f.holdings[i].Symbol == c.Symbol {
+				f.holdings[i].Quantity -= c.Quantity
+			}
+		}
+		delete(f.conds, id)
+		return nil
 	}
 	f.sellable[c.Symbol] += c.Quantity
 	delete(f.conds, id)
@@ -586,6 +729,40 @@ func mustOrderJSON(id, symbol, side, status string, qty, price float64, canceled
 			"tax":                nil,
 			"filledAt":           nil,
 			"settlementDate":     nil,
+		},
+	}
+	b, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+// mustFilledOrderJSON is the child order after it filled.
+//
+// filledAt is deliberately null. The broker supplies no fill time — lastExecutedAt
+// is null on every completed order in both markets (measurements.md M44) — and a
+// fake that invented one would let the step read a timestamp it can never have in
+// production.
+func mustFilledOrderJSON(id string) json.RawMessage {
+	m := map[string]any{
+		"orderId":     id,
+		"symbol":      "TSLA",
+		"side":        "SELL",
+		"orderType":   "MARKET",
+		"timeInForce": "DAY",
+		"status":      "FILLED",
+		"quantity":    "1",
+		"currency":    "USD",
+		"orderedAt":   "2026-07-30 00:00:00.000",
+		"execution": map[string]any{
+			"filledQuantity":     "1",
+			"averageFilledPrice": "299.89",
+			"filledAmount":       "299.89",
+			"commission":         "0.02",
+			"tax":                "0.01",
+			"filledAt":           nil,
+			"settlementDate":     "2026-07-31",
 		},
 	}
 	b, err := json.Marshal(m)

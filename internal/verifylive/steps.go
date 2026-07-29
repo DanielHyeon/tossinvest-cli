@@ -97,7 +97,7 @@ func (r *Runner) dispatch(ctx context.Context, id StepID, sr *stepRun) {
 	case StepConditionalPersist:
 		err = r.stepConditionalPersist(ctx, sr)
 	case StepConditionalTrigger:
-		err = r.stepConditionalTrigger(sr)
+		err = r.stepConditionalTrigger(ctx, sr)
 	case StepConditionalModify:
 		err = r.stepConditionalModify(ctx, sr)
 	case StepConditionalCancel:
@@ -715,16 +715,9 @@ func (r *Runner) stepConditionalPersist(ctx context.Context, sr *stepRun) error 
 	return nil
 }
 
-func (r *Runner) stepConditionalTrigger(sr *stepRun) error {
-	sr.observe("conditional.trigger_observed", "false", sr.step.Deferred)
-	sr.observe("conditional.triggered_order_id_exposed", "unverified",
-		"triggeredOrderId links a conditional to the order it generated; it can only be read after a trigger")
-	sr.observe("conditional.triggered_order_latency", "unverified", "")
-	// The catalogue's own Deferred text already opens with the reason, so the
-	// prefix that used to be added here would say it twice.
-	sr.deferStep(sr.step.Deferred)
-	return nil
-}
+// stepConditionalTrigger lives in steps_trigger.go: it is the one step that
+// prices an order to be reached, and it is kept in its own file so that reading
+// "what does this tool do that could fill" is one file rather than a search.
 
 func (r *Runner) stepConditionalModify(ctx context.Context, sr *stepRun) error {
 	id, symbol, ok := r.liveConditional()
@@ -1014,14 +1007,38 @@ func (r *Runner) cancelLiveOrders(ctx context.Context, sr *stepRun, symbol, why 
 
 // --- record queries -----------------------------------------------------------
 
-// liveConditional finds the conditional order this verification still has
-// registered, across the record and this run.
+// liveConditional finds the conditional order the sellable-reserved, persistence,
+// modify and cancel steps are about.
+//
+// "The first outstanding conditional" was the whole rule while only one step could
+// create one. The trigger observation registers its own — it watches that one fire
+// rather than moving somebody else's — so on a full run there can be two, and the
+// first in record order is the trigger's. conditional-cancel would then cancel the
+// object the trigger step is measuring and leave the one it was asked to remove,
+// which is both measurements lost in one call.
+//
+// Provenance is what separates them, so provenance is what is asked. A conditional
+// this run cannot see the creation of — an old record, a resumed run — has no
+// creating step and stays eligible, which is the judgement every line written
+// before 2026-07-30 has today.
 func (r *Runner) liveConditional() (id, symbol string, ok bool) {
 	entries := r.allEntries()
-	for _, a := range Outstanding(entries) {
-		if a.Kind == "conditional-order" {
-			return a.ID, a.Symbol, true
+	createdBy := map[string]StepID{}
+	for _, e := range entries {
+		for _, a := range e.Artifacts {
+			if a.Kind != KindConditional || a.CreatedAt.IsZero() {
+				continue
+			}
+			if _, seen := createdBy[a.ID]; !seen {
+				createdBy[a.ID] = e.StepID
+			}
 		}
+	}
+	for _, a := range Outstanding(entries) {
+		if a.Kind != KindConditional || createdBy[a.ID] == StepConditionalTrigger {
+			continue
+		}
+		return a.ID, a.Symbol, true
 	}
 	return "", "", false
 }

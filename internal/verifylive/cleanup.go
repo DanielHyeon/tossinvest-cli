@@ -285,6 +285,15 @@ func (r *Runner) sweepStep(ctx context.Context, sr *stepRun) {
 			// not a leak: conditional-persist has to read it from a later process.
 			continue
 		}
+		if a.Deliberate {
+			// An order the step declared it is holding. The trigger observation is
+			// the case: the child order a conditional produces has to be allowed to
+			// fill, and cancelling it here would sweep away the measurement on the
+			// path where the step failed to see the fill in time — the one path
+			// where the evidence matters most. Nothing before 2026-07-30 marked an
+			// order deliberate, so this changes no existing step.
+			continue
+		}
 		if err := r.cancelOrder(ctx, sr, a.ID, a.Symbol, "이 단계가 실패해 남긴 주문 — 다음 단계의 노출 상한을 비운다"); err != nil {
 			// Honest and non-fatal: the step already has its verdict, and the
 			// artifact stays outstanding for the screen, the record and the next

@@ -106,6 +106,9 @@ const (
 	PriceFarStop        PricingBasis = "far-stop"
 	PriceOneTickFurther PricingBasis = "one-tick-further"
 	PriceIdenticalBody  PricingBasis = "identical-body"
+	// PriceNearStop is the one basis that aims at the market instead of away from
+	// it. It belongs to the opted-in trigger observation and to nothing else.
+	PriceNearStop PricingBasis = "near-stop"
 )
 
 // bandClause says what bounds the price besides the offset.
@@ -144,6 +147,11 @@ func (b PricingBasis) Describe(offset float64, market string) string {
 		return fmt.Sprintf("MARKET stop whose trigger sits %.0f%% BELOW the last trade at the moment the step "+
 			"runs, snapped to the %s tick grid%s, so it cannot fire",
 			offset*100, market, bandClause(market))
+	case PriceNearStop:
+		return "MARKET stop whose trigger sits BETWEEN the best bid and the last trade at the moment the step " +
+			"runs, on the " + market + " tick grid, SO THAT IT FIRES. This is the only price in this procedure " +
+			"that the market is expected to reach; if there is no tick between the two the step is skipped " +
+			"rather than the trigger being moved"
 	case PriceOneTickFurther:
 		return "one tick FURTHER from the market than the price above, on the same grid — the smallest change " +
 			"the broker will accept as a change"
@@ -173,6 +181,10 @@ func (b PricingBasis) DescribeKO(offset float64, market string) string {
 	case PriceFarStop:
 		return fmt.Sprintf("MARKET 손절. 발동가가 실행 시점 최종체결가보다 %.0f%% 아래이고 %s 호가 단위에 스냅, "+
 			"%s — 발동할 수 없는 위치다", offset*100, market, bandClauseKO(market))
+	case PriceNearStop:
+		return "MARKET 손절. 발동가가 실행 시점의 최우선 매수호가와 최종체결가 **사이**에 놓이고 " +
+			market + " 호가 단위 위에 있다 — **발동하라고** 놓는 것이다. 이 절차에서 시장이 닿기를 " +
+			"의도하는 유일한 가격이며, 두 값 사이에 유효한 호가 단위가 없으면 발동가를 옮기지 않고 건너뛴다"
 	case PriceOneTickFurther:
 		return "위 가격보다 시장에서 한 호가 더 먼 값(같은 호가 단위) — 브로커가 '변경'으로 받아주는 최소 변화"
 	case PriceIdenticalBody:
@@ -546,7 +558,7 @@ func (r *Runner) Plan(ctx context.Context) Plan {
 	}
 	for _, step := range Steps() {
 		if settled, verdict := r.settled(step.ID); settled {
-			if step.Mutates {
+			if r.mutatesNow(step) {
 				plan.Excluded = append(plan.Excluded, PlanExclusion{
 					Step: step.ID,
 					Reason: fmt.Sprintf("기록에 이미 %s로 판정되어 있다. 다시 실행하면 이미 끝난 측정을 위해 "+
@@ -556,13 +568,16 @@ func (r *Runner) Plan(ctx context.Context) Plan {
 			continue
 		}
 		if reason, skip := r.preflightStatic(step, passed); skip {
-			if step.Mutates {
+			if r.mutatesNow(step) {
 				plan.Excluded = append(plan.Excluded, PlanExclusion{Step: step.ID, Reason: reason})
 			}
 			continue
 		}
 		willRun[step.ID] = true
-		if !step.Mutates {
+		// mutatesNow, not step.Mutates: a step whose deferral has not been lifted
+		// by its opt-in sends nothing, and a plan line for it would put a live
+		// request on the list a person approves for work that will not happen.
+		if !r.mutatesNow(step) {
 			continue
 		}
 

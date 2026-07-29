@@ -126,6 +126,63 @@ func callsMethod(t *testing.T, name, src, method string) bool {
 	return found
 }
 
+// callsFunction reports a call to a package-level function by name, parsed rather
+// than grepped for the reason callsMethod is: a comment saying what a file does
+// not call has to stay legal.
+func callsFunction(t *testing.T, name, src, fn string) bool {
+	t.Helper()
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, name, src, 0)
+	if err != nil {
+		t.Fatalf("parsing %s: %v", name, err)
+	}
+	found := false
+	ast.Inspect(file, func(n ast.Node) bool {
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		if ident, ok := call.Fun.(*ast.Ident); ok && ident.Name == fn {
+			found = true
+		}
+		return true
+	})
+	return found
+}
+
+// functionParams returns a package-level function's parameter names, in order and
+// flattened across grouped declarations, so a test can assert a signature did not
+// grow an argument. A missing function is a failure rather than an empty list: the
+// guard has to notice a rename, not pass because it found nothing to check.
+func functionParams(t *testing.T, file, fn string) []string {
+	t.Helper()
+	src, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatalf("reading %s: %v", file, err)
+	}
+	fset := token.NewFileSet()
+	parsed, err := parser.ParseFile(fset, file, src, 0)
+	if err != nil {
+		t.Fatalf("parsing %s: %v", file, err)
+	}
+	for _, decl := range parsed.Decls {
+		d, ok := decl.(*ast.FuncDecl)
+		if !ok || d.Recv != nil || d.Name.Name != fn || d.Type.Params == nil {
+			continue
+		}
+		var names []string
+		for _, field := range d.Type.Params.List {
+			for _, ident := range field.Names {
+				names = append(names, ident.Name)
+			}
+		}
+		return names
+	}
+	t.Fatalf("%s declares no function %s; a guard that cannot find its subject is not guarding anything",
+		file, fn)
+	return nil
+}
+
 // TestNoAutomationBypassExists.
 //
 // tasks.md forbids an automation flag on the confirmation ("자동화 플래그 금지"),

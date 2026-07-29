@@ -102,6 +102,10 @@ func readRetry[T any](
 			return out, err
 		}
 		wait := ReadRetryBackoff(extra)
+		// Counted, not just printed. Inside the trigger observation's window the
+		// error bound on a timestamp is this wait rather than the polling interval,
+		// and the record has to be able to say so.
+		r.readBackoffs++
 		fmt.Fprintf(r.out, "  %s가 429(rate limited)로 거부되었다. %s 기다린 뒤 다시 읽는다 (%d/%d)\n",
 			endpoint, wait, extra+1, ReadRetryExtraAttempts)
 		if sleepErr := r.sleep(ctx, wait); sleepErr != nil {

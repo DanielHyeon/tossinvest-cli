@@ -365,7 +365,7 @@ func (p Progress) WriteText(w io.Writer) {
 // WriteSteps prints the catalogue without touching the account. It is what
 // `verify run --list` shows, and it is deliberately the same data the runner
 // walks — an operator should be able to read exactly what will happen.
-func WriteSteps(w io.Writer, includeTTLEdge bool) {
+func WriteSteps(w io.Writer, includeTTLEdge, includeTrigger bool) {
 	fmt.Fprintln(w, "실계좌 검증 절차")
 	writeWrapped(w, "  승인          ", "실행 전체에 대해 타이핑하는 만료 확인 문자열 1개. 무엇이든 전송되기 "+
 		"전에 이 실행이 계획한 모든 라이브 요청 — 동작·종목·방향·수량·가격 도출 방식·노출이 끝나는 방식 — 을 "+
@@ -389,7 +389,9 @@ func WriteSteps(w io.Writer, includeTTLEdge bool) {
 		}
 		if s.OptIn != "" {
 			state := "옵트인 " + s.OptIn
-			if includeTTLEdge && s.ID == StepIdempotencyTTLEdge {
+			asked := (includeTTLEdge && s.ID == StepIdempotencyTTLEdge) ||
+				(includeTrigger && s.ID == StepConditionalTrigger)
+			if asked {
 				state += " (요청됨)"
 			}
 			tags = append(tags, state)

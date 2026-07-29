@@ -164,7 +164,7 @@ func marketOf(r *http.Request) string {
 
 func (c *Console) renderVerify(w http.ResponseWriter, market, notice string) {
 	var steps bytes.Buffer
-	verifylive.WriteSteps(&steps, false)
+	verifylive.WriteSteps(&steps, false, false)
 
 	snap := c.snapshotFor(market)
 	page := verifyPage{

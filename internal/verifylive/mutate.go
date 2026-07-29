@@ -53,6 +53,7 @@ const (
 	EndpointReadHoldings        = "GET /api/v1/holdings"
 	EndpointReadSellable        = "GET /api/v1/sellable-quantity"
 	EndpointReadPrices          = "GET /api/v1/prices"
+	EndpointReadOrderbook       = "GET /api/v1/orderbook"
 	EndpointReadPriceLimits     = "GET /api/v1/price-limits"
 	EndpointReadConditionals    = "GET /api/v1/conditional-orders"
 	EndpointReadConditionalByID = "GET /api/v1/conditional-orders/{id}"
@@ -81,6 +82,21 @@ const MaxLiveOrdersTTLEdge = 2
 // and the persistence step is why it is a separate budget: the conditional is
 // deliberately alive while no order is.
 const MaxLiveConditionals = 1
+
+// MaxLiveConditionalsTrigger is the cap while the opt-in trigger observation runs.
+//
+// Two, and the second one is the trigger observation's own. It registers the stop
+// it is going to watch fire rather than moving the one conditional-register left
+// alive — the alternative would have the conditional-modify step below it drag the
+// same trigger back down a tick and undo the measurement — so on a full run there
+// are briefly two.
+//
+// It is the conditional budget and not the order one on purpose. The child order a
+// trigger produces never passes checkOrderCap, because this tool does not place
+// it: the broker creates it and the step discovers it through triggeredOrderId.
+// And once it fills it stops being outstanding at all (record.go Artifact.Filled),
+// so the ordinary MaxLiveOrders needs no exception here.
+const MaxLiveConditionalsTrigger = 2
 
 // ErrExposureCap means a step asked for more live exposure than the tool allows.
 var ErrExposureCap = errors.New("verify: the live-exposure cap would be exceeded")
@@ -606,9 +622,13 @@ func (r *Runner) checkOrderCap(sr *stepRun) error {
 }
 
 func (r *Runner) checkConditionalCap(sr *stepRun) error {
-	if n := r.liveCount("conditional-order", sr); n >= MaxLiveConditionals {
+	limit := MaxLiveConditionals
+	if sr.step.ID == StepConditionalTrigger {
+		limit = MaxLiveConditionalsTrigger
+	}
+	if n := r.liveCount("conditional-order", sr); n >= limit {
 		return fmt.Errorf("%w: %d live conditional order(s) from this tool already, and the cap is %d",
-			ErrExposureCap, n, MaxLiveConditionals)
+			ErrExposureCap, n, limit)
 	}
 	return nil
 }

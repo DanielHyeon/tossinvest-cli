@@ -194,7 +194,7 @@ func TestProgressOnAnUnstartedVerification(t *testing.T) {
 // what will happen before anything touches the account.
 func TestWriteStepsIsAReadableProcedure(t *testing.T) {
 	var out bytes.Buffer
-	WriteSteps(&out, false)
+	WriteSteps(&out, false, false)
 	text := out.String()
 	for _, s := range Steps() {
 		if !strings.Contains(text, string(s.ID)) {

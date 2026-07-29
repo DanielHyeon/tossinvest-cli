@@ -187,6 +187,30 @@ type Artifact struct {
 	CancelledAt time.Time `json:"cancelled_at,omitempty"`
 	// Cancelled reports that this tool confirmed the object is gone.
 	Cancelled bool `json:"cancelled"`
+	// Filled and FilledAt are the other way an object stops existing.
+	//
+	// Until 2026-07-30 there was only one, and "not cancelled" and "live" were the
+	// same sentence. A conditional order that fires produces a child order that is
+	// *meant* to fill, and a filled order is not a cancelled one — so without this
+	// the record insists a successful measurement's child is live forever: filling
+	// the exposure cap, printed as a leftover, and offered for cancellation by the
+	// next run's prologue.
+	//
+	// It is a second field rather than a reuse of Cancelled because this file is
+	// the document every entry in measurements.md is derived from. Writing a fill
+	// as a cancellation would behave correctly in all three of those places and
+	// make the trigger measurement's own conclusion read "we cancelled it".
+	//
+	// FilledAt is this tool's observation time, not the broker's. The broker
+	// supplies no fill time at all — lastExecutedAt is null on every completed
+	// order in both markets, and a US order's orderedAt carries only a date
+	// (measurements.md M44, M45) — so the polling interval that produced it is the
+	// error bound and is recorded alongside it as an observation.
+	//
+	// Absent is what every line written before 2026-07-30 carries, and such a line
+	// keeps exactly the judgement it has today.
+	Filled   bool      `json:"filled,omitempty"`
+	FilledAt time.Time `json:"filled_at,omitempty"`
 	// Deliberate marks the conditional order that is meant to survive the
 	// process exit. It is still outstanding; it is just not a mistake.
 	Deliberate bool `json:"deliberate,omitempty"`
@@ -501,9 +525,9 @@ func outstandingLines(entries []Entry) []outstandingLine {
 				order = append(order, key)
 			}
 			prev, seen := latest[key]
-			if seen && prev.Cancelled && !a.Cancelled {
-				// A later line that does not know about the cancel must not
-				// resurrect it. Cancellation is monotone.
+			if seen && prev.terminal() && !a.terminal() {
+				// A later line that does not know how this ended must not
+				// resurrect it. Both endings are monotone.
 				continue
 			}
 			latest[key] = outstandingLine{Artifact: a, at: i}
@@ -511,12 +535,20 @@ func outstandingLines(entries []Entry) []outstandingLine {
 	}
 	var out []outstandingLine
 	for _, key := range order {
-		if l := latest[key]; !l.Cancelled {
+		if l := latest[key]; !l.terminal() {
 			out = append(out, l)
 		}
 	}
 	return out
 }
+
+// terminal reports that this line says the object has stopped existing.
+//
+// Two ways, and the difference between them is recorded rather than flattened:
+// this tool cancelled it, or it filled. Every consumer of Outstanding asks the
+// same question through this one predicate, so a third ending added later is
+// honoured by all of them at once.
+func (a Artifact) terminal() bool { return a.Cancelled || a.Filled }
 
 // --- digests ------------------------------------------------------------------
 
