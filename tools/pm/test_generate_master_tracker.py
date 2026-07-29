@@ -38,6 +38,7 @@ class TrackerTests(unittest.TestCase):
             "attest-covers-supervised-mutations",
             "verify-plans-the-object-it-mutates",
             "verify-holds-what-it-awaits",
+            "verify-observes-the-trigger",
         ):
             path = changes / change
             path.mkdir(parents=True)
