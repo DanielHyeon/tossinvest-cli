@@ -141,3 +141,64 @@ run `run-EZQRKZZ7WPEMDS2I`, 재측정 대상 2단계(승인 목록 6건). 직전
 **2c(`add-protection-orders`) 착수에 필요한 실측은 확보됐다**: 조건주문의 프로세스 존속(M18),
 US 등록 가능(M12), 정정의 식별자 교체 규칙(M19·M28), 청산 수량 예약 여부의 대조(M13·M29),
 취소·정정의 `already-processing` 처리(M16·M24).
+
+## 6차 실행 — KR 장중 (2026-07-28 10:33 KST, 콘솔 경유)
+
+run `run-KGJZOUQY7UFCHCDK`, 기록 `capability-verify.jsonl`, 10단계 기록. **KR 정규장
+(09:00–15:30) 안에서 실행된 첫 측정**이다. 계좌 보유가 M5의 "KR 종목 0"에서 3종목
+(333430 6주, MWG 115주, TSLA 0.0002주)으로 바뀌어 SELL측 단계가 처음으로 실행 가능해졌다.
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M31 | **KR 주문 status enum 실측(2.1)** — CLOSED+OPEN 11페이지 197건에서 실제로 관측된 값은 `CANCELED`(119)·`FILLED`(65)·`REJECTED`(13) **셋뿐**이고, 세 값의 필드 구성은 동일하다. 문서에 있으나 이 계좌가 한 번도 만든 적 없는 값: `PENDING`·`PENDING_CANCEL`·`PENDING_REPLACE`·`PARTIAL_FILLED`·`CANCEL_REJECTED`·`REPLACE_REJECTED`·`REPLACED` — 이들에 대한 상태 파생은 **미측정**이다. 특히 2.1이 명시적으로 요구한 **`CANCEL_REJECTED`/`REPLACE_REJECTED`의 "별도 주문 레코드" 형태는 관측되지 않았다**(둘 다 `listed=false`) — 2.1은 이 실행으로 닫히지 않는다 | read-fixtures `order.status.observed`·`order.status.documented_unobserved`·`order.status.{cancel,replace}_rejected.listed` |
+| M32 | **KR 일반 주문의 접수·취소·정정이 장중에 동작한다(2.2)** — 최소 수량 지정가 접수 후 `PENDING`/`DAY`, 취소 수락, 정정 수락. 정정은 **새 id를 발급하고 옛 id는 `PENDING`으로 읽힌다**(US M28과 같은 계열). 다만 **취소 수락 직후 status가 여전히 `PENDING`이고 `canceledAt`이 없다** — US M25의 `PENDING_CANCEL`+`canceledAt` 존재와 다르다. 시장 차이인지 읽기 시점 차이인지는 이 관측만으로 가릴 수 없으나, 어느 쪽이든 **2a 상태 파생은 status 하나로 취소를 판정하면 안 된다**는 결론은 같다 | order-cancel `order.status.after_cancel=PENDING`·`order.canceled_at.present=false`, order-amend `order.amend.issues_new_id=true`·`original_status=PENDING` |
+| M33 | **KR 매도 경계(2.2·2.8)** — 부분 매도 수락, 보유 초과는 `422 insufficient-sellable-quantity`("주문수량이 일반매도가능수량을 초과하였습니다", requestId `s8bMo3dbo8lp1xqy`). **미체결 매도 지정가는 매도가능수량을 예약한다**(6 → 5). 전량 매도는 보유 6주가 도구의 노출 상한 1주를 넘어 **원리적으로 미측정** — US M30과 같은 한계 | sell-boundary `partial_accepted=true`, `resting_sell_reserves=true`, `over_holding_rejected=true`, `full_accepted=unverified` |
+| M34 | **KR 조건주문도 매도가능수량을 예약하지 않는다** — 등록 전 6, 등록 후 6. US M13과 같다. M33의 지정가 매도와의 대조가 **시장 양쪽에서 같은 방향으로** 확인됐다: 브로커측 조건주문 손절은 청산 수량을 잡아주지 않으므로 2c의 예약 공식은 엔진이 계산·유지해야 한다 | sellable-reserved `conditional.reserves_sellable_quantity=false`, `sellable.baseline_recall.333430=6`, `sellable.with_conditional.333430=6` |
+| M35 | **KR 멱등키 실동작(2.7)** — 동일 키+동일 본문 재요청이 같은 orderId를 반환하고 두 번째 주문을 만들지 않는다(open delta 1). 본문이 다르면 `422 idempotency-key-conflict`("동일한 clientOrderId 로 다른 내용의 주문을 요청할 수 없습니다"). 조건주문도 같은 키로 같은 `conditionalOrderId`를 반환한다. **주문 왕복 지연 최대 182ms**(US는 169ms) — 재생 안전 마진 입력. 키의 계좌 스코프는 단일 계좌라 미측정 | idempotency observations, conditional-register `idempotency.conditional_replay_returns_same_id=true` |
+| M36 | **M17(조건주문 목록 status 필터) 교정이 실계좌에서 확인됐다** — KR에서 목록 조회가 통과하고 새 조건주문을 포함한다. 아울러 read-fixtures가 429를 2회 만나고도 백오프 재시도로 **pass** — 1.11의 교정이 실계좌에서 작동한다 | conditional-register `list_by_status.ok=true`·`contains_new=true`, read-fixtures calls의 `rate limited` 2건 + 단계 pass |
+
+### 이 실행이 만든 교착 — 도구가 자기 측정 대상을 지웠다
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M37 | **정리 prologue가 존속 측정 대상을 취소해 KR 조건주문 체인이 교착됐다** — 10:34 등록된 `grLKqiGuC…`는 "다음 단계가 프로세스 종료 후 존속을 증명한다"는 이유로 **의도적으로 살려 둔** 객체인데, 1분 뒤 다음 실행(`run-TGPQY66LLIJ45PED`)의 `cleanup` 단계가 10:35:31에 이를 취소했고 **같은 실행의 `conditional-persist`가 같은 초에 "이 검증이 만든 살아 있는 조건주문이 없다"로 skip**했다. 이후 07-28 21:01·21:02, 07-29 20:31의 세 실행도 전부 같은 이유로 conditional-* 4단계를 skip — **2.5는 도구가 만든 교착으로 5일간 측정 0건**이었다. → change `verify-reopens-conditional-chain`로 교정 | `run-TGPQY66LLIJ45PED` cleanup artifact(`cancelled_at=2026-07-28T01:35:31Z`)와 같은 run의 conditional-persist skip reason, 이후 3개 run의 동일 reason |
+
+## 7차 실행 — KR 조건주문 체인 완주 (2026-07-29 21:43–23:16 KST, 콘솔 경유)
+
+runs: `run-B3L57BY47BFBVGZS`(21:43, 등록) → `run-OJRFYBGI4UOBM4MD`(22:23, 존속) →
+`run-RC4ENQM5XP5TMYBB`·`run-CBJUABS5FEBHD5YD`(22:28, 정정 2회 연속 fail) →
+`run-MFYCBNFYOH7B7TQW`(23:16, 정정·취소 완료). M37의 교착이 풀린 뒤 **KR 조건주문 체인이
+처음으로 끝까지 실행됐다.**
+
+| # | 사실 | 근거 |
+|---|---|---|
+| M38 | **KR SINGLE+MARKET 매도 조건주문이 정규장 밖에서 등록된다** — 21:43 KST(평일 장 종료 후) 등록 수락, status `WATCHING`, `first_leg_status` `WATCHING`, `triggeredOrderId` null. M1의 `order-hours-closed`(일요일 일반 주문 422)와 대조되지만 **두 관측의 조건이 같지 않다**(휴장일 일반 주문 vs 평일 장후 조건주문) — "조건주문만 예외"라고 단정할 수 없고, KR 정규장 밖 **일반** 주문 접수는 여전히 [미측정] | conditional-register `conditional.register.session="outside KR regular hours 21:43 KST"`, `status.after_register=WATCHING` |
+| M39 | **KR 조건주문도 등록한 프로세스가 죽어도 존속한다** — `proc-XNRHLSP…`가 등록한 것을 `proc-CEUKLMQ…`가 `WATCHING`으로 다시 읽었다. US M18과 같으며, **시장과 무관한 성질**로 확인됐다 | conditional-persist `conditional.survives_process_exit=true`, `status.after_restart=WATCHING` |
+| M40 | **KR 조건주문 정정도 새 식별자를 발급하고 옛 식별자를 즉시 404로 무효화한다** — `p7hQz7HAXc…` → `uiIndFbm…`, 옛 id는 `conditional-order-not-found`("존재하지 않는 설정입니다", requestId `tTXXXQMKNPt7Zuqw`). 정정 후 status `WATCHING`, 발동가 2625. **US M19와 동일** — 조건주문 정정의 식별자 교체 규칙은 시장 불변이고, 일반 주문 정정(M28·M32: 옛 id가 계속 읽힌다)과는 **다르다**. 2c 원장은 정정 응답의 새 id를 반드시 반영해야 한다 | conditional-modify `modify_issues_new_id=true`, `modify_invalidates_old_id=true`, `status.after_modify=WATCHING` |
+| M41 | **KR 조건주문의 정정·취소가 정규장 밖에서 접수된다** — 23:16 KST에 `POST …/modify`(124ms)와 `DELETE …/{id}`(77ms)가 모두 수락됐고 취소 후 식별자가 읽히지 않는다. 2.5가 요구한 "정규장 밖 동작" 중 **등록·정정·취소는 이것으로 측정**됐다. **발동은 여전히 미측정**이므로 "장 밖에서 손절이 작동한다"로 확대 해석하면 안 된다 | conditional-modify·conditional-cancel calls의 시각과 수락, `cancel.gone_after=true` |
+| M42 | **도구 결함: 승인 계획이 단계가 지목할 객체를 이름하지 않았다** — `conditional-modify`의 계획 줄은 실행의 probe 심볼(`005930`)로 만들어지는데 단계 본문은 살아 있는 조건주문의 심볼(`333430`)로 요청을 만든다. `Plan.Authorises`가 심볼을 정확 비교하므로 22:28의 두 실행이 `ErrOutsidePlan`으로 정지했다 — **전송 0건**, 단계당 GET 1회. 레일은 설계대로 동작했고 승인 밖 요청은 나가지 않았다. 이 결함은 M37의 교착이 풀려 modify가 **처음으로 인가 검사에 도달한 순간** 드러났다(그 전에는 항상 skip). → change `verify-plans-the-object-it-mutates`(`760d213`)로 교정, 같은 계좌에서 23:16 pass 확인 | 두 run의 conditional-modify reason(`… is about to modify-conditional for SELL 1 333430, which is not on the list approved …`), `console-launch.log`의 동일 문구 2회 |
+
+### KR 측정 최종 상태 (2026-07-29 23:16 기준)
+
+| 상태 | 단계 |
+|---|---|
+| pass (12) | read-fixtures, sellable-baseline, idempotency, order-cancel, order-amend, sell-boundary, conditional-register, sellable-reserved, conditional-persist, conditional-modify, conditional-cancel, costs |
+| deferred (1) | conditional-trigger — 체결될 의도의 주문이 필요해 별도 세션 |
+| skipped (1) | idempotency-ttl-edge — 두 번째 라이브 주문을 의도적으로 만드는 단계, 요청하지 않음 |
+
+**계좌 잔여물 0건** — 기록 전체를 재생해 계산한 미취소 artifact가 없다. 이 도구가 만든 객체는
+모두 취소된 채 끝났다.
+
+### 2.5에 남은 미측정 — 단계 pass는 task 완료가 아니다
+
+`verify run`의 조건주문 단계는 전부 pass지만, task 2.5가 요구하는 항목 중 다음은
+**도구가 측정하지 않는다**:
+
+- **발동 관측과 `triggeredOrderId` 노출 지연** — `conditional-trigger`가 설계상 deferred. 2c의 기본 가설(SINGLE+MARKET 손절)이 실제로 **발동해 체결되는지는 양 시장 모두 미측정**이며, 이것이 2.5의 가장 큰 구멍이다.
+- **만료** — 1주 만료로 등록하지만 만료 시점의 동작을 관측하는 단계가 없다.
+- **부분체결 잔량**과 **OCO sibling 취소 시점** — 단계 없음(OCO/OTO는 LIMIT 전용이라 보호 가설 밖이지만 2.5 문언에는 남아 있다).
+- **조건주문과 일반 매도 동시 제출의 거부 의미** — 단계 없음.
+- **ProtectiveCapability 속성 기록** — 실측은 JSONL에 있으나 2.5가 요구한 속성 형태로는 아직 산출하지 않았다.
+
+따라서 **2.5는 미완료**다. 등록·조회·존속·정정·취소·예약 여부는 양 시장에서 닫혔고,
+남은 것은 발동 계열이다.
