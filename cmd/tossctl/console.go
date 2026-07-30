@@ -238,9 +238,15 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Settings:    consoleSettingsSeam(root),
 
 		// The overview's read-only view of the Guardian's ceilings (change
-		// console-operator-overview). Five numbers and a currency: the console
+		// console-operator-overview). Five numbers and a currency: this seam
 		// displays what the file says and can change none of it.
 		GateLimits: consoleGateLimitsSeam(root),
+
+		// The settings screen's editor for those same ceilings (change
+		// console-sets-guardian-limits). Separate from the reader above, and its
+		// Save takes five numbers and a currency — there is no field on the wire
+		// for `enabled`, so the console still cannot open the automation gate.
+		Limits: consoleLimitSettingsSeam(root),
 
 		// The discovery screen's read (change add-candidate-discovery, task 5.5).
 		// It opens internal/candidate's store, runs its assessment and hands over
@@ -289,15 +295,28 @@ func consoleSettingsSeam(root *rootOptions) console.AdoptionSettings {
 	return nil
 }
 
+// consoleLimitSettingsSeam adapts the Guardian-limit editor (limitsettings.go).
+// Same nil-on-the-concrete-pointer care as above: a typed-nil inside the
+// interface would look wired and the screen would offer controls that panic
+// instead of explaining themselves.
+func consoleLimitSettingsSeam(root *rootOptions) console.LimitSettings {
+	if s := newLimitSettingsSeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
 // consoleGateLimitsSeam hands the overview screen the Guardian's ceilings, and
 // nothing else (change console-operator-overview task 5.1).
 //
-// It reads. There is no writer here and there is not going to be one: turning the
-// automation gate on or moving a limit is a §0.7 human decision taken outside any
-// browser, and the console's spec says in writing that it cannot edit them. What
-// crosses the boundary is five float64s and a currency string — not the config
-// service, and not the gate's own type, which internal/console is forbidden to
-// name at all (its TestTheConsoleDecidesNothingAboutTheGate).
+// It reads, and it stays a reader. The writer is a separate seam
+// (consoleLimitSettingsSeam, limitsettings.go) because the overview must not
+// gain the ability to change a number it exists to display.
+//
+// Turning the automation gate ON remains a §0.7 human decision taken outside any
+// browser and neither seam can do it; console-sets-guardian-limits separated the
+// ceilings from the switch rather than opening both. What crosses this boundary
+// is five float64s and a currency string — not the config service.
 //
 // A console with no resolvable config file gets no seam, and the overview renders
 // the limits as seam 미배선 rather than as zero. The same nil-on-the-concrete-type

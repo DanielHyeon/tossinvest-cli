@@ -221,6 +221,19 @@ type Options struct {
 	// limits as seam 미배선 and leaves every other panel working.
 	GateLimits GateLimitsReader
 
+	// Limits is the settings screen's editor for those same ceilings (change
+	// console-sets-guardian-limits; settings_limits.go). It is a third seam
+	// rather than a write method on GateLimits, for the reason that one is a
+	// third seam rather than a method on Settings: the overview shows a limit and
+	// must not thereby be able to change one.
+	//
+	// Its Save takes config.GuardianLimits, which carries the five ceilings and
+	// the currency and has no field for `enabled`. That is how the console's
+	// inability to open the gate survives future edits to the handlers — there is
+	// nowhere in the message to put the switch. Nil renders the limit section
+	// read-only with the reason seam 미배선.
+	Limits LimitSettings
+
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
 	// The console shows whether the engine is running and can start and stop the
@@ -507,6 +520,11 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/settings/save", c.session0(c.mutating(c.handleSettingsSave)))
 	mux.HandleFunc("/settings/include", c.session0(c.mutating(c.handleSettingsInclude)))
 	mux.HandleFunc("/settings/exclude", c.session0(c.mutating(c.handleSettingsExclude)))
+	// The Guardian-limit editor (change console-sets-guardian-limits). Two acts,
+	// both behind the same two gates, and neither can write the automation gate's
+	// own switch: the seam they save through takes a type with no field for it.
+	mux.HandleFunc("/settings/limits", c.session0(c.mutating(c.handleSettingsLimits)))
+	mux.HandleFunc("/settings/limits/preset", c.session0(c.mutating(c.handleSettingsLimitPreset)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.handleStart)))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))

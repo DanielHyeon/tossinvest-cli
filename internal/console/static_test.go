@@ -287,8 +287,10 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	//	   /verify/abort, /report, /report.json
 	//	2  the dashboard screens (add-operator-dashboard): /positions, /history
 	//	1  the settings screen (console-adoption-controls): /settings
-	//	3  its three edits: /settings/save, /settings/include, and
+	//	3  its three adoption edits: /settings/save, /settings/include, and
 	//	   /settings/exclude (console-excludes-in-one-click)
+	//	2  its two Guardian-limit edits: /settings/limits and
+	//	   /settings/limits/preset (console-sets-guardian-limits)
 	//	2  the engine's process control (add-engine-runtime): /engine/start,
 	//	   /engine/stop
 	//	2  the restarts: /restart, /soak/restart
@@ -298,7 +300,7 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	//
 	// A floor below the truth would let a scanner that read only console.go's
 	// first half go on passing.
-	if len(routes) < 20 {
+	if len(routes) < 22 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -359,6 +361,13 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/settings/save":    true,
 		"/settings/include": true,
 		"/settings/exclude": true,
+		// The Guardian-limit edits (console-sets-guardian-limits). They write the
+		// five ceilings and the currency inside engine.automation_gate and cannot
+		// write the gate's own switch: the seam they save through takes a type with
+		// no field for it. A page that could lower an exposure ceiling — or a
+		// forged request that could — is still an act.
+		"/settings/limits":        true,
+		"/settings/limits/preset": true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -599,9 +608,11 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 // consoleStateChanging is the complete list of routes that are allowed to change
 // anything, transcribed from the operator-console spec: 콘솔의 상태변경 행위는
 // 검증 실행 제어(시작·승인·중단), 프로세스 기동·정지(자기 재시작·soak 재시작·
-// 엔진 시작/정지), 편입 설정 편집(편입 설정 저장·종목 편입 지정·종목 제외 지정)
-// 뿐이다(SHALL — 계좌 무접촉; 편입 설정 편집의 대상은 engine.adoption config
-// 블록만이다).
+// 엔진 시작/정지), 편입 설정 편집(편입 설정 저장·종목 편입 지정·종목 제외 지정),
+// 그리고 Guardian 한도 편집(한도 프리셋 적용·개별 한도 저장) 뿐이다(SHALL — 계좌
+// 무접촉; 편입 설정 편집의 대상은 engine.adoption config 블록만이고, 한도 편집의
+// 대상은 engine.automation_gate의 다섯 한도와 한도 통화뿐이다 — enabled와 kill
+// switch는 콘솔 밖이다).
 //
 // It is the same set TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate uses,
 // named separately here because the two tests ask different questions of it: one
@@ -610,7 +621,7 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 var consoleStateChanging = []string{
 	"/verify/start", "/verify/approve", "/verify/abort", "/restart", "/soak/restart",
 	"/engine/start", "/engine/stop", "/settings/save", "/settings/include",
-	"/settings/exclude",
+	"/settings/exclude", "/settings/limits", "/settings/limits/preset",
 }
 
 // --- the verbs, spelled once and shared by both surfaces --------------------------
@@ -728,8 +739,13 @@ func routeFindings(r route) []string {
 	// "exclude" earns its place the hard way: it does not contain "include", so
 	// before it was listed an unargued /settings/exclude would have sailed past
 	// this guard entirely (console-excludes-in-one-click).
+	// "limit" and "preset" earn their places the same hard way "exclude" did: an
+	// unargued /settings/limits contains none of the verbs above, so before they
+	// were listed it would have sailed past this guard entirely. ("preset"
+	// happens to contain "reset" and would have tripped, which is luck, not a
+	// guard — /settings/limits alone would not have.)
 	actVerbs := append([]string{"start", "stop", "approve", "abort", "restart", "reset", "delete",
-		"save", "include", "exclude", "enable", "config"},
+		"save", "include", "exclude", "enable", "config", "limit", "preset"},
 		accountVerbs...)
 
 	var findings []string
@@ -881,6 +897,17 @@ var consoleCapabilities = map[string]capability{
 	// screen that only wants to display a ceiling must not gain the ability to
 	// edit configuration on the way (console-operator-overview D8).
 	"GateLimits": {Methods: []string{"GateLimits"}},
+	// The Guardian-limit editor (change console-sets-guardian-limits). A third
+	// seam for the same reason GateLimits is a second one: the overview displays
+	// a ceiling and must not thereby be able to change it.
+	//
+	// Its Save takes config.GuardianLimits — five ceilings and a currency, with
+	// no field for `enabled` and none for the attestation path. That is what
+	// keeps "the console cannot open the automation gate" true after this change
+	// opened the numbers: the switch has nowhere to travel. settings_limits_test.go
+	// reads that off the interface with reflection so the property is measured
+	// rather than described.
+	"Limits": {Methods: []string{"Load", "Save"}},
 	// The discovery store's assessment, read (change add-candidate-discovery,
 	// task 5.5). One method, and it fetches nothing from an account: behind it is
 	// internal/candidate, whose own dependency closure is {internal/clock}, so

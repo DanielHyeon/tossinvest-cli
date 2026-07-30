@@ -1,0 +1,139 @@
+{
+  "file": "internal/console/engineproc_test.go",
+  "source_sha256": "e2182828544090e0bc246d83fed94cb34350cfa3069113e0ccac2168760822bc",
+  "package": "console",
+  "function": "TestTheConsoleDecidesNothingAboutTheGate",
+  "signature": "TestTheConsoleDecidesNothingAboutTheGate(params=1, results=0)",
+  "start": {
+    "line": 187,
+    "column": 1
+  },
+  "end": {
+    "line": 209,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 199,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 203,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 9
+      },
+      "text": "packageFiles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 11
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 24
+      },
+      "text": "nonCommentLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 200,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

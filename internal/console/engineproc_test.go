@@ -170,17 +170,56 @@ func TestARefusedStartShowsTheEnginesOwnReason(t *testing.T) {
 // TestTheConsoleDecidesNothingAboutTheGate. The start seam is the only path, so
 // there is no branch here that could conclude "the gate is fine, start it
 // anyway": whatever the seam answers is the answer.
+//
+// The two lists below say different things, and the split is the point.
+//
+// "Interlock" and "ProtectionReady" name the engine's startup DECISION and stay
+// banned in every file. Nothing in this package may compute whether the engine
+// is allowed to run; it asks and prints the answer.
+//
+// "AutomationGate" and "automation_gate" name the config BLOCK. Since
+// console-sets-guardian-limits the settings screen edits the five ceilings
+// inside it, so those two spellings are permitted in the two files that do the
+// editing and nowhere else. That change moved the numbers into the console and
+// deliberately left the switch out — enforced by the shape of the seam, which
+// this package's settings_limits_test.go asserts with reflection, and by
+// config's writer, which never emits the `enabled` key.
 func TestTheConsoleDecidesNothingAboutTheGate(t *testing.T) {
+	// The limit editor and the page struct that carries the block to the
+	// template. Byte-for-byte file names: a prefix or suffix rule here would let
+	// a settings_limits_helper.go inherit the exemption without arguing for it.
+	mayNameTheBlock := map[string]bool{
+		"settings.go":        true,
+		"settings_limits.go": true,
+	}
 	src := packageFiles(t)
 	for name, file := range src {
 		code := strings.Join(nonCommentLines(file), "\n")
-		for _, banned := range []string{
-			"AutomationGate", "Interlock", "ProtectionReady", "automation_gate",
-		} {
-			if strings.Contains(code, banned) {
+		banned := []string{"Interlock", "ProtectionReady"}
+		if !mayNameTheBlock[name] {
+			banned = append(banned, "AutomationGate", "automation_gate")
+		}
+		for _, word := range banned {
+			if strings.Contains(code, word) {
 				t.Errorf("%s names %q; the console asks the engine process and displays its answer, "+
-					"it does not evaluate the gate", name, banned)
+					"it does not evaluate the gate", name, word)
 			}
+		}
+	}
+}
+
+// TestTheGateEditingExemptionIsNotIdle guards the guard: an exemption for a file
+// that no longer needs it is an exemption nobody will notice being used.
+func TestTheGateEditingExemptionIsNotIdle(t *testing.T) {
+	src := packageFiles(t)
+	for _, name := range []string{"settings.go", "settings_limits.go"} {
+		file, ok := src[name]
+		if !ok {
+			t.Errorf("%s is exempt from the gate-naming ban but is not in the package", name)
+			continue
+		}
+		if !strings.Contains(strings.Join(nonCommentLines(file), "\n"), "AutomationGate") {
+			t.Errorf("%s no longer names the gate block; drop its exemption", name)
 		}
 	}
 }

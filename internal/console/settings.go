@@ -52,6 +52,19 @@ type settingsPage struct {
 	// EngineRunning is the advisory marker's answer, for the honesty line: a
 	// running engine keeps its startup snapshot until restarted.
 	EngineRunning bool
+
+	// --- the Guardian limits (change console-sets-guardian-limits) ---
+
+	// LimitsWired reports the limit seam was injected. It is separate from Wired
+	// because the two seams are separate: a build with one and not the other
+	// renders the section it can serve and explains the other.
+	LimitsWired bool
+	// Gate is the automation gate block as the file spells it — `enabled`
+	// included, for display. Nothing on this page posts it back.
+	Gate config.AutomationGate
+	// LimitsLoadErr is an unreadable config on the limit side. It must not take
+	// the adoption section down with it.
+	LimitsLoadErr string
 }
 
 func (settingsPage) Refresh() bool { return false }
@@ -108,6 +121,14 @@ func (c *Console) handleSettings(w http.ResponseWriter, r *http.Request) {
 			page.LoadErr = err.Error()
 		}
 		page.Block, page.Verdict = block, verdict
+	}
+	if c.opts.Limits != nil {
+		page.LimitsWired = true
+		gate, err := c.opts.Limits.Load()
+		if err != nil {
+			page.LimitsLoadErr = err.Error()
+		}
+		page.Gate = gate
 	}
 	c.render(w, "settings", page)
 }

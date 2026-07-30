@@ -8,10 +8,11 @@ const settingsTemplates = `
 {{define "settings"}}
 {{template "head" .}}
 <h1>편입 설정</h1>
-<p class="muted">수동 매수 보유를 엔진의 exit 관리(손절·익절·래칫)에 편입하는 규칙을 편집한다.
-편입 실행은 <strong>엔진 대사 루프</strong>의 몫이고, 이 화면은 config의 <code>engine.adoption</code>
-블록만 기록한다. automation gate(운영 게이트)는 이 콘솔에서 편집할 수 없다 — 게이트 ON은 콘솔 밖
-승인 절차다.</p>
+<p class="muted">수동 매수 보유를 엔진의 exit 관리(손절·익절·래칫)에 편입하는 규칙과, Guardian이
+자동 진입에 적용하는 한도를 편집한다. 실행은 <strong>엔진</strong>의 몫이고 이 화면은 config의
+<code>engine.adoption</code> 블록과 게이트 블록의 <strong>한도</strong>만 기록한다.
+automation gate(운영 게이트)의 ON/OFF와 kill switch는 이 콘솔에서 편집할 수 없다 — 게이트 ON은 콘솔 밖
+승인 절차이고, 한도 저장은 그 스위치의 바이트에 손대지 않는다.</p>
 
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
 
@@ -55,6 +56,85 @@ const settingsTemplates = `
   +0.8R부터 편입가 기준 본전이 보호 바닥이 된다.</p>
 </section>
 {{end}}
+
+<section id="guardian-limits">
+  <h2>Guardian 한도</h2>
+  <p class="muted">자동 진입 하나가 얼마나 커질 수 있는지, 계좌가 얼마나 열릴 수 있는지, 하루에 얼마까지
+  잃으면 진입이 멈추는지. 다섯 값은 <strong>진입</strong>에만 적용된다 — 청산은 RISK_REDUCING이라 이
+  한도의 대상이 아니므로, 여기를 아무리 조여도 손절·비상 청산은 느려지지 않는다.</p>
+
+  {{if .LimitsLoadErr}}<p class="danger">한도를 읽을 수 없다: <code>{{.LimitsLoadErr}}</code></p>{{end}}
+
+  <table id="guardian-current">
+    <tr><th>한도</th><th>설정값</th></tr>
+    {{range .LimitRows}}<tr><td>{{.Label}}</td><td>{{.Value}}{{if .Unit}} {{.Unit}}{{end}}</td></tr>
+    {{end}}
+    <tr><td>한도 통화</td><td>{{.LimitCurrencyText}}</td></tr>
+  </table>
+
+  {{if .LimitsUnset}}
+  <p class="notice">다섯 값이 <strong>미설정</strong>이다. 게이트가 켜져 있어도 엔진은 이 상태로 기동하지
+  않는다. 아래 프리셋 하나를 누르면 다섯 값이 한 번에 기록된다 — 화면은 파일에 없는 숫자를 미리
+  그리지 않으므로, 누르기 전까지 엔진이 보는 것도 이 미설정 그대로다.</p>
+  {{else if .LimitsPartlyConfigured}}
+  <p class="danger"><strong>일부만 설정돼 있다.</strong> 기동 인터록은 다섯 값이 전부 양수·유한하고
+  통화가 있어야 통과시키므로 지금 상태로는 <strong>기동을 거부</strong>한다({{.LimitVerdict}}).
+  콘솔은 나머지를 임의로 채우지 않는다 — 부분적으로 무제한인 게이트를 조용히 완성하는 것이기
+  때문이다. <strong>프리셋</strong> 하나로 다섯 값을 함께 맞추거나, 고급에서 직접 채운다.</p>
+  {{else}}
+  <p class="muted">현재 값은 {{with .MatchingTier}}<strong>{{.}}</strong>와 일치한다{{else}}
+  <strong>사용자 지정값</strong>이다{{end}} — 레지스트리와 대조한 결과이고, 누가 골랐는지에 대한
+  주장은 아니다(같은 숫자를 손으로 적었을 수도 있다).</p>
+  {{end}}
+
+  <p class="muted">automation gate는 지금 <strong>{{if .Gate.Enabled}}ON{{else}}OFF{{end}}</strong>이다.
+  이 화면에는 그것을 바꾸는 버튼이 없다.</p>
+
+  {{if not .LimitsWired}}
+  <p class="notice"><strong>한도 저장이 배선되지 않았다.</strong> 이 빌드의 콘솔에는 Guardian 한도 저장
+  seam이 주입되지 않았다 — 표시는 되지만 저장할 수 없다. config.json을 직접 편집하라.</p>
+  {{else}}
+  <h3>프리셋</h3>
+  <p class="muted">StockOS <code>risk_profiles.py</code>의 티어를 옮긴 것이다. 클릭 한 번이 다섯 값과
+  통화를 함께 기록한다. <strong>등록된 티어 위로는 올릴 수 없다</strong> — 상한은 그 통화에 등록된
+  티어의 필드별 최대이고, 그보다 큰 값은 저장이 거부된다.</p>
+  {{range .LimitTierCards}}
+  <form method="post" action="/settings/limits/preset" onsubmit="return confirm('{{.Label}} 한도를 기록한다. 다음 엔진 기동부터 반영된다.')">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <input type="hidden" name="tier" value="{{.ID}}">
+    <p><button type="submit">{{.Label}}{{if .Recommended}} · 권장{{end}}</button>
+    <span class="muted">[{{.Limits.Currency}}] {{.Summary}}</span></p>
+  </form>
+  {{end}}
+
+  <details>
+    <summary class="muted">고급 — 개별 값 직접 기입 (보통은 위의 프리셋으로 관리한다)</summary>
+    <p class="muted">낮추는 방향은 양수인 한 자유롭다. 다섯 값 중 하나라도 비거나 0이면 저장이
+    거부된다 — 엔진이 기동을 거부할 블록은 기록하지 않는다.</p>
+    <form method="post" action="/settings/limits">
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      <p><label>1회 주문 수량 상한 (주)<br>
+      <input type="text" name="max_order_quantity" value="{{.FieldQuantity}}"></label></p>
+      <p><label>1회 주문 금액 상한<br>
+      <input type="text" name="max_order_notional" value="{{.FieldNotional}}"></label></p>
+      <p><label>계좌 개방 노출 상한<br>
+      <input type="text" name="max_total_exposure" value="{{.FieldExposure}}"></label></p>
+      <p><label>일일 손실 한도(금액)<br>
+      <input type="text" name="max_daily_loss_amount" value="{{.FieldDailyLoss}}"></label></p>
+      <p><label>일일 손실 한도(비율 — 0.01 = 1%)<br>
+      <input type="text" name="max_daily_loss_ratio" value="{{.FieldRatio}}"></label></p>
+      <p><label>한도 통화 (KRW 또는 USD)<br>
+      <input type="text" name="limit_currency" value="{{.FieldCurrency}}"></label></p>
+      <p><button type="submit">한도 저장</button></p>
+    </form>
+  </details>
+  {{end}}
+
+  <p class="muted">한도 통화는 하나다. Guardian 체인은 한도 통화와 다른 통화의 진입을 거부하므로
+  <strong>USD 한도를 기록하면 국내 자동 진입이, KRW 한도를 기록하면 미국 자동 진입이 닫힌다</strong>.
+  저장은 즉시 파일에 기록되지만 <strong>다음 엔진 기동부터 반영</strong>된다
+  {{if .EngineRunning}}— <strong>지금 엔진이 실행 중이다</strong>: 기동 시점 설정으로 계속 동작한다{{end}}.</p>
+</section>
 {{template "foot" .}}
 {{end}}
 `

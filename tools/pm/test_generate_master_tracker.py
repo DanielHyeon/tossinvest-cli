@@ -40,6 +40,7 @@ class TrackerTests(unittest.TestCase):
             "verify-holds-what-it-awaits",
             "verify-observes-the-trigger",
             "console-excludes-in-one-click",
+            "console-sets-guardian-limits",
         ):
             path = changes / change
             path.mkdir(parents=True)
