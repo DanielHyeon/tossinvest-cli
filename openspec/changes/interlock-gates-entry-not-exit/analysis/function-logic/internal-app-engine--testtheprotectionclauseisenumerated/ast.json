@@ -1,0 +1,228 @@
+{
+  "file": "internal/app/engine/runtime_wiring_test.go",
+  "source_sha256": "0272a586ab87d300d72fab0944f5f2732456ba6d6e3754dacdb1e90f7680078a",
+  "package": "engine_test",
+  "function": "TestTheProtectionClauseIsEnumerated",
+  "signature": "TestTheProtectionClauseIsEnumerated(params=1, results=0)",
+  "start": {
+    "line": 43,
+    "column": 1
+  },
+  "end": {
+    "line": 65,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 9
+      },
+      "text": "isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 2
+      },
+      "text": "writeGateConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 26
+      },
+      "text": "fullGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 2
+      },
+      "text": "writeCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 2
+      },
+      "text": "writeAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 12
+      },
+      "text": "interlockServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 12
+      },
+      "text": "openGateEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 40
+      },
+      "text": "matchedGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 13
+      },
+      "text": "engine.UnmetInterlockClauses"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 12
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

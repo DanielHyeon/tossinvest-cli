@@ -1,0 +1,102 @@
+{
+  "file": "cmd/tossctl/operatingsettings.go",
+  "source_sha256": "962668a46917581df94b0ad2b5d860d33d806c148f769f186bfc762786c2e7b0",
+  "package": "main",
+  "function": "recordPolicySave",
+  "signature": "recordPolicySave(params=2, results=0)",
+  "start": {
+    "line": 106,
+    "column": 1
+  },
+  "end": {
+    "line": 131,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 120,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 9
+      },
+      "text": "openAuditLog"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 7
+      },
+      "text": "log.Record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 13
+      },
+      "text": "boolText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 13
+      },
+      "text": "boolText"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

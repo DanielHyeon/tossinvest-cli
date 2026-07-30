@@ -165,6 +165,23 @@ type Options struct {
 	// binstamp.Self.
 	Binary func() (binstamp.Stamp, error)
 
+	// SystemUpdater is bound to the running executable and its fixed
+	// `.candidate`/`.rollback` siblings. The HTTP request supplies only the
+	// candidate hash the operator reviewed.
+	SystemUpdater SystemUpdater
+	// ReleaseDownloader discovers and fully verifies the constructor-bound
+	// official release. ReleaseCandidateStager publishes only its returned bytes
+	// to the updater's fixed sibling path. They are separate capabilities so a
+	// downloader cannot install and an installer cannot select a URL.
+	ReleaseDownloader      ReleaseDownloader
+	ReleaseCandidateStager ReleaseCandidateStager
+	// AcquireUpdateEngineLock takes the real journal-directory engine flock.
+	// Nil refuses installation; an advisory marker is not an exclusion.
+	AcquireUpdateEngineLock AcquireUpdateEngineLock
+	// CheckUpdateVerifyActivity is the strict external verification check run at
+	// the updater's commit boundary. Nil or any error refuses installation.
+	CheckUpdateVerifyActivity CheckUpdateVerifyActivity
+
 	// --- the dashboard (change add-operator-dashboard) ---
 	//
 	// All three are optional and all three fail to a state the page describes
@@ -193,6 +210,64 @@ type Options struct {
 	// settings.go). Nil leaves the settings screen read-only-with-an-explanation
 	// and hides the per-symbol designation buttons.
 	Settings AdoptionSettings
+
+	// Orders is the read-only view of the account's order record the orders
+	// screen reads (orders.go). It declares one method, behind which the caller
+	// makes the three broker calls one refresh costs — the pending order group,
+	// the finished one and the conditional endpoint — so this package can neither
+	// spend the budget three times over nor report one endpoint's silence as
+	// another's zero. Nil leaves the
+	// orders screen unmeasured with the reason seam 미배선 and every other screen
+	// working.
+	Orders OrdersReader
+
+	// Signals is the discovery store's read for the /signals screen (change
+	// add-candidate-discovery; signals.go). One method, behind which the caller
+	// opens internal/candidate's store and runs its assessment — this package
+	// never holds the handle that can promote, cool or prune, and the screen
+	// causes no scan and therefore spends none of the account's rate budget. Nil
+	// leaves the screen unmeasured with the reason seam 미배선; an empty list
+	// would read as "the market is quiet".
+	Signals SignalsReader
+
+	// GateLimits reads the engine's automation-gate ceilings for the overview's
+	// safety panel (change console-operator-overview; overview.go). It is a seam
+	// of its own rather than a third method on Settings: that one writes config
+	// and this one only reads it, and a screen that wants to show a limit must
+	// not thereby hold the ability to edit the adoption block. Nil renders the
+	// limits as seam 미배선 and leaves every other panel working.
+	GateLimits GateLimitsReader
+
+	// Limits is the settings screen's editor for those same ceilings (change
+	// console-sets-guardian-limits; settings_limits.go). It is a third seam
+	// rather than a write method on GateLimits, for the reason that one is a
+	// third seam rather than a method on Settings: the overview shows a limit and
+	// must not thereby be able to change one.
+	//
+	// Its Save takes config.GuardianLimits, which carries the five ceilings and
+	// the currency and has no field for `enabled`. That is how "editing a ceiling
+	// cannot turn the gate on" survives future edits to the handlers — there is
+	// nowhere in the message to put the switch. It stays true after
+	// console-owns-the-operating-toggles gave the console a way to write the
+	// switch: the way is a different seam. Nil renders the limit section
+	// read-only with the reason seam 미배선.
+	Limits LimitSettings
+
+	// --- the operating toggles (change console-owns-the-operating-toggles) ---
+
+	// TradingPolicy is the editor for the four `trading` toggles the engine's
+	// exit path uses. Its Save takes config.TradingPolicy — four fields, no
+	// amend, no conditional, no fractional — so the three the engine never
+	// reaches cannot be moved from here.
+	TradingPolicy TradingPolicySettings
+
+	// Gate writes engine.automation_gate.enabled, and only that key.
+	//
+	// A fifth seam rather than a method on Limits, and the separation is the
+	// safety property: a limit save emits no bytes for the switch and a switch
+	// save emits none for the ceilings, so neither can move the other through a
+	// read taken outside the file lock. Nil renders the gate section read-only.
+	Gate GateSwitch
 
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
@@ -240,10 +315,29 @@ type Console struct {
 	// process has to bind.
 	relaunch chan int
 
+	// activityMu serializes executable installation with the two routes that can
+	// start account/engine work. A successful commit leaves updateCommitted set
+	// until this old process exits, so a delayed request cannot start work in the
+	// binary that is about to be replaced.
+	activityMu      sync.Mutex
+	updateCommitted bool
+	// releaseMu serializes discovery through candidate publication without
+	// blocking engine/verification starts on network or TUF work.
+	releaseMu sync.Mutex
+	// releaseReceipt is process-local evidence for the exact candidate SHA. It
+	// intentionally disappears on restart; a surviving local candidate then
+	// returns to provenance-unknown until it is verified again.
+	releaseReceiptMu sync.Mutex
+	releaseReceipt   *signedReleaseReceipt
+
 	// holdings is the lazy, TTL'd cache in front of Options.Holdings. It is the
 	// only thing in this process that can make a broker request of its own, and
 	// holdings.go is where its rate-budget contract is written down.
 	holdings *holdingsCache
+	// ordersCache is the lazy, TTL'd cache in front of Options.Orders. One
+	// refresh through it is the three broker calls the orders screen's rate-budget
+	// contract allows, and orders.go is where that contract is written down.
+	ordersCache *ordersCache
 
 	mu   sync.Mutex
 	addr string
@@ -288,6 +382,7 @@ func New(o Options) (*Console, error) {
 	// never turn into a warning the operator cannot act on.
 	c.startedWith, _ = c.opts.Binary()
 	c.holdings = newHoldingsCache(o.Holdings, holdingsTTL)
+	c.ordersCache = newOrdersCache(o.Orders, ordersTTL)
 	c.handler = c.routes()
 	return c, nil
 }
@@ -474,8 +569,25 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/settings", c.session0(c.handleSettings))
 	mux.HandleFunc("/settings/save", c.session0(c.mutating(c.handleSettingsSave)))
 	mux.HandleFunc("/settings/include", c.session0(c.mutating(c.handleSettingsInclude)))
+	mux.HandleFunc("/settings/exclude", c.session0(c.mutating(c.handleSettingsExclude)))
+	// The Guardian-limit editor (change console-sets-guardian-limits). Two acts,
+	// both behind the same two gates, and neither can write the automation gate's
+	// own switch: the seam they save through takes a type with no field for it.
+	mux.HandleFunc("/settings/limits", c.session0(c.mutating(c.handleSettingsLimits)))
+	mux.HandleFunc("/settings/limits/preset", c.session0(c.mutating(c.handleSettingsLimitPreset)))
+	mux.HandleFunc("/settings/trading", c.session0(c.mutating(c.handleSettingsTrading)))
+	// The gate switch says what it is in its path (change
+	// console-owns-the-operating-toggles): the limit routes deliberately avoid
+	// gate vocabulary because they cannot touch the switch, and this one must
+	// carry it for the opposite reason — an audit reader has to be able to tell
+	// which line turned the engine loose.
+	mux.HandleFunc("/settings/gate", c.session0(c.mutating(c.handleSettingsGate)))
+	mux.HandleFunc("/settings/system-update/install",
+		c.session0(c.mutating(c.handleSystemUpdateInstall)))
+	mux.HandleFunc("/settings/system-update/download",
+		c.session0(c.mutating(c.handleSystemUpdateDownload)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
-	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.handleStart)))
+	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.startExclusive(c.handleStart))))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))
 	mux.HandleFunc("/verify/abort", c.session0(c.mutating(c.handleAbort)))
 	mux.HandleFunc("/restart", c.session0(c.mutating(c.handleRestart)))
@@ -485,10 +597,24 @@ func (c *Console) routes() http.Handler {
 	// touches the account: they start and stop a process whose *ability* to trade
 	// was decided by a §0.7 gate approval and is re-checked by its own startup
 	// interlock every time it comes up.
-	mux.HandleFunc("/engine/start", c.session0(c.mutating(c.handleEngineStart)))
+	mux.HandleFunc("/engine/start", c.session0(c.mutating(c.startExclusive(c.handleEngineStart))))
 	mux.HandleFunc("/engine/stop", c.session0(c.mutating(c.handleEngineStop)))
 	mux.HandleFunc("/report", c.session0(c.handleReport))
 	mux.HandleFunc("/report.json", c.session0(c.handleReportJSON))
+	// The operator overview (change console-operator-overview). It registers
+	// itself from overview.go, which is the case the route table's static guards
+	// could not see until this change widened them.
+	c.registerOverview(mux)
+	// The orders screen (change console-orders-screen). Same arrangement: it
+	// registers itself from orders.go, and it is the one path in this table the
+	// account-verb guard grants an exception to — byte-exact, and only while the
+	// `readOnly` wrapper below is on it.
+	c.registerOrders(mux)
+	// The discovery screen (change add-candidate-discovery, task 5.5). Same
+	// arrangement again, and it touches no account at all: what it renders is a
+	// read of internal/candidate's own store, whose dependency closure is
+	// {internal/clock}.
+	c.registerSignals(mux)
 	return mux
 }
 
@@ -543,6 +669,53 @@ func (c *Console) mutating(next http.HandlerFunc) http.HandlerFunc {
 		if !tokenEqual(r.PostFormValue("csrf"), c.csrf) {
 			c.refuse(w, http.StatusForbidden, "CSRF 토큰이 없거나 일치하지 않는다",
 				"이 폼은 콘솔이 방금 그린 페이지에서만 제출할 수 있다. 페이지를 새로 열고 다시 시도하라. "+
+					"아무것도 전송되지 않았다.")
+			return
+		}
+		next(w, r)
+	}
+}
+
+// readOnly is mutating's mirror: a route that only reads must answer GET and
+// HEAD and refuse every other method (change console-orders-screen, task 3.2).
+//
+// The name states the guarantee at the call site — c.session0(c.readOnly(h)) —
+// and it is deliberately not `reading`, which is what design.md D3 first called
+// it: this package already spells `reading` for the (value, measured, reason)
+// triple every screen renders through (overview.go). Go would have compiled both,
+// because a method name lives in its type's namespace, and that is exactly the
+// kind of collision that reads fine to whoever wrote it (issues.md I-2, Manager
+// ruling 2026-07-28).
+//
+// # Why a wrapper rather than a comment
+//
+// The route table's static guards read the registration, and what a registration
+// carries is {path, session gate, CSRF gate}. There is no method in it. So a
+// guard asked to confirm that an exempted route is "a GET" has only one thing to
+// look at — whether the CSRF gate is absent — and that turns the sentence into
+// "it is not protected". The exception would then be granted BECAUSE the route is
+// unprotected, and in that state a POST to it is served on a session cookie with
+// no CSRF token at all.
+//
+// This makes the method a fact of the chain instead. static_test.go reads it off
+// the same registration the other two gates are read off, and the runtime
+// refusal is the second lock (orders_static_test.go posts to /orders and expects
+// 405).
+//
+// Go 1.22's method patterns — HandleFunc("GET /orders", …) — would say the same
+// thing to the mux and nothing at all to the guards: the route extractor reads
+// the literal as the path, so the table would hold "GET /orders" and every
+// path-keyed comparison in static_test.go would silently stop matching.
+//
+// It is not applied to every read route on this console. The rest are covered by
+// not naming an account verb in the first place, and a wrapper on all of them
+// would make the one place it is load-bearing invisible.
+func (c *Console) readOnly(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			w.Header().Set("Allow", http.MethodGet+", "+http.MethodHead)
+			c.refuse(w, http.StatusMethodNotAllowed, "읽기 전용 화면이다",
+				"이 경로는 조회만 한다. 주문을 내거나 정정·취소하는 수단은 이 콘솔에 없다. "+
 					"아무것도 전송되지 않았다.")
 			return
 		}

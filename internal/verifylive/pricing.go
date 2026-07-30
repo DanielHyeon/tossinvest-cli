@@ -102,6 +102,11 @@ type SafePrice struct {
 	Basis string
 	// Clamped reports that the daily band, not the offset, decided the price.
 	Clamped bool
+	// Distinguishes reports that this price can tell the broker's two candidate
+	// readings of "the price" apart — see NearStopTrigger, which is the only
+	// function that sets it. It is false on every Far* price, none of which is
+	// trying to be reached at all.
+	Distinguishes bool
 }
 
 // ValidateOffset bounds the operator's offset.
@@ -179,6 +184,102 @@ func FarStopTrigger(last, lowerLimit, offset float64, market string) (SafePrice,
 	p.Basis = strings.Replace(p.Basis, "buy at", "stop trigger at", 1)
 	return p, nil
 }
+
+// NearStopTrigger prices a stop that is meant to fire.
+//
+// It is the one function in this file that breaks the file's own rule, and it is
+// a separate function for exactly that reason. Adding a direction or a near/far
+// argument to FarBuyLimit would put every mutating step's "this cannot fill"
+// arithmetic behind a boolean; here the dangerous case is unreachable unless a
+// caller names it, and static_test.go asserts only the opted-in trigger step does.
+//
+// # Where it puts the trigger, and why there
+//
+// A protective stop sells when the price falls to the trigger. "The price" is the
+// thing this measurement is trying to pin down: the broker's documentation does
+// not say whether a conditional order is evaluated against the last trade or
+// against the best bid, and after the fact the two are indistinguishable. The
+// interval between them is the one place where they disagree *now* —
+//
+//	bid < trigger <= last
+//
+//	the broker reads the bid    bid <= trigger is already true, so it fires at once
+//	the broker reads the last   it fires when a trade prints at or below the trigger
+//
+// so the delay between registration and the first observed trigger is itself the
+// answer. The trigger goes on the first tick *above the bid* rather than just
+// below the last trade: both fire under a bid basis, but the low placement needs
+// a real downtick under a last-trade basis, which is what separates the two
+// timings enough to read. TSLA trades every 0.18 seconds (measurements.md M49);
+// a trigger one tick under the last trade would fire in well under a second
+// either way and settle nothing.
+//
+// There is no fallback. A trigger this function invents outside the interval
+// measures the wrong thing, and one below the bid is a live stop that never fires
+// and has to be cleaned up — so every degenerate book comes back as an error and
+// the step skips rather than guessing (design.md D1).
+func NearStopTrigger(last, bid float64, market string) (SafePrice, error) {
+	if last <= 0 {
+		return SafePrice{}, fmt.Errorf(
+			"verify: no last price is available, so a trigger cannot be placed against the market")
+	}
+	if bid <= 0 {
+		return SafePrice{}, fmt.Errorf(
+			"verify: no best bid is available for %s, and the trigger has to sit above it — without the bid "+
+				"there is nothing to distinguish a bid basis from a last-trade basis", market)
+	}
+	if bid >= last {
+		return SafePrice{}, fmt.Errorf(
+			"verify: no room between the best bid %s and the last trade %s — a trigger cannot be both above "+
+				"the bid and at or below the last trade; wait for the book to open up or pick another symbol",
+			trim(bid), trim(last))
+	}
+
+	price := tickAbove(bid, market)
+	if price <= bid || price > last {
+		return SafePrice{}, fmt.Errorf(
+			"verify: the %s tick grid has no price between the best bid %s and the last trade %s (the next "+
+				"tick up is %s) — this step does not round its way to a trigger",
+			market, trim(bid), trim(last), trim(price))
+	}
+
+	// A trigger sitting exactly on the last trade fires immediately under either
+	// reading, so it settles nothing about the basis. It still fires, which is the
+	// primary measurement, so it is allowed and the record says what it cannot show.
+	distinguishes := price < last
+	basis := fmt.Sprintf("stop trigger at %s — the first %s tick above the best bid %s and at or below the "+
+		"last trade %s, so it is intended to fire", trim(price), market, trim(bid), trim(last))
+	if !distinguishes {
+		basis += ". It sits ON the last trade, so it cannot tell a bid basis from a last-trade basis"
+	}
+	return SafePrice{Price: price, Basis: basis, Distinguishes: distinguishes}, nil
+}
+
+// tickAbove is the next valid price strictly above one that is already on the grid.
+//
+// It counts in tick units rather than dividing and flooring, because the division
+// is where the float noise lives: 0.38/0.0001 is 3799.9999999999995, and a floor
+// of that answers 0.3799 — one tick *below* the bid it was asked to step above.
+// RoundDownToTick has the same shape and the same noise; it is left alone because
+// every existing caller feeds it a price it is meant to move away from, where an
+// error of one tick is in the safe direction. Here it would not be.
+//
+// The second snap is the US dollar boundary: below a dollar the grid is a
+// hundredth of a cent and at or above it a cent, so a step up can land off the
+// grid it just moved onto.
+func tickAbove(price float64, market string) float64 {
+	tick := TickSize(price, market)
+	up := round((math.Floor(price/tick+tickEpsilon) + 1) * tick)
+	if next := TickSize(up, market); next != tick {
+		up = round(math.Ceil(up/next-tickEpsilon) * next)
+	}
+	return up
+}
+
+// tickEpsilon absorbs the float noise in a price-over-tick division. It is many
+// orders of magnitude below one tick of the finest grid this tool prices on
+// (0.0001), so it can never move a price onto a neighbouring tick.
+const tickEpsilon = 1e-9
 
 // OneTickFurther moves a price one tick away from the market, in the direction
 // that keeps it un-fillable. It is what the amend and conditional-modify steps

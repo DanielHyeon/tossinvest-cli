@@ -1,0 +1,139 @@
+{
+  "file": "internal/config/limits_test.go",
+  "source_sha256": "d91917779997f2b4df2c52926bd94b45b044467a548aeea658904919783137f1",
+  "package": "config",
+  "function": "TestTheCeilingIsNotTheInterlock",
+  "signature": "TestTheCeilingIsNotTheInterlock(params=1, results=0)",
+  "start": {
+    "line": 305,
+    "column": 1
+  },
+  "end": {
+    "line": 320,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 316,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 14
+      },
+      "text": "GuardianCeiling"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 12
+      },
+      "text": "over.CeilingViolations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 38
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 12
+      },
+      "text": "over.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "kind": "*=",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 313,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 316,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,129 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "400a55c184b51d50c20be51422dc3379055b0bb26a18f6d646c00d86ab7f9bdc",
+  "package": "main",
+  "function": "consoleSignalsMarket",
+  "signature": "consoleSignalsMarket(params=4, results=1)",
+  "start": {
+    "line": 884,
+    "column": 1
+  },
+  "end": {
+    "line": 917,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 901,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 903,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 916,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 891,
+        "column": 19
+      },
+      "text": "candidate.Assess"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 899,
+        "column": 15
+      },
+      "text": "candidateVetoThresholds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 902,
+        "column": 13
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 913,
+        "column": 41
+      },
+      "text": "candidate.TallyVerdicts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 915,
+        "column": 18
+      },
+      "text": "candidate.TallySightingSources"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 887,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 891,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 902,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 905,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 913,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 915,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

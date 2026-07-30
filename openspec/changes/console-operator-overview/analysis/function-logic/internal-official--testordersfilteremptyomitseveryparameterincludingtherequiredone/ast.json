@@ -1,0 +1,384 @@
+{
+  "file": "internal/official/orders_reads_test.go",
+  "source_sha256": "57ebcdf03d99231b6dd70d10b2a1218a0dc3dcd455cf6329b4460a5d2dc362f0",
+  "package": "official",
+  "function": "TestOrdersFilterEmptyOmitsEveryParameterIncludingTheRequiredOne",
+  "signature": "TestOrdersFilterEmptyOmitsEveryParameterIncludingTheRequiredOne(params=1, results=0)",
+  "start": {
+    "line": 210,
+    "column": 1
+  },
+  "end": {
+    "line": 253,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 212,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 213,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 215,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 217,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 218,
+        "column": 5
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 9
+      },
+      "text": "httptest.NewServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 28
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 11
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 19
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 9
+      },
+      "text": "r.URL.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 8
+      },
+      "text": "q.Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 6
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 63
+      },
+      "text": "q.Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 11
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 19
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 4
+      },
+      "text": "http.NotFound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 8
+      },
+      "text": "srv.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 7
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 3
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 17
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 3
+      },
+      "text": "WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 3
+      },
+      "text": "WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 18
+      },
+      "text": "srv.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 3
+      },
+      "text": "WithAccountSeq"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 14
+      },
+      "text": "c.Orders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 23
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 37
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 15
+      },
+      "text": "c.OrdersRaw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 27
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 67
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 214,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 216,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 222,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 237,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 227,
+        "column": 2
+      },
+      "text": "srv.Close"
+    }
+  ]
+}

@@ -1,0 +1,746 @@
+package candidate
+
+// scan.go is one pass over the sources.
+//
+// # What a scan is responsible for not doing
+//
+// The interesting work here is negative. A scan must not:
+//
+//	stop because a source failed     WTS sessions expire on ordinary days, so a
+//	                                 panel that halts with them halts routinely.
+//	hide that a source failed        a candidate produced from two of five sources
+//	                                 is not wrong, but a reader who does not know
+//	                                 it was two of five is judging on less than
+//	                                 they think.
+//	report a failure as an empty     "we looked and the market is quiet" and "we
+//	market                           could not look" are different facts.
+//	cool a symbol it never looked    the one that would destroy the record — see
+//	for                              coolAbsent below.
+//
+// # The absent symbol, and why a 429 must not cool anything
+//
+// A scan cools the candidates its sources no longer raise. That is how a symbol
+// leaving the ranking list starts its cooling clock promptly, instead of waiting
+// for the staleness fallback, which exists for the scan that died rather than as
+// the normal path.
+//
+// But "no longer raised" is a claim about evidence, and the evidence is missing
+// exactly when a source fails. The rule is therefore narrower than "not seen this
+// time":
+//
+//	A candidate may be cooled only when EVERY source that previously supported
+//	it answered in this scan and none of them raised it.
+//
+// Anything looser destroys the record. If the ranking source 429s and the scan
+// cools everything it did not see, a rate limit cools the whole watchlist at
+// once — and the cooling clock then expires it, taking every first_seen_at with
+// it. A transient limit would erase the evidence of everything we found early,
+// and nothing would fail while it happened. Candidate.Sources is what makes the
+// narrow rule checkable: it already records who raised this candidate.
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"sort"
+	"strings"
+	"time"
+)
+
+// SourceFailure is one source that did not answer, and why.
+//
+// The reason travels with the id because "degraded: true" on its own is a flag an
+// operator cannot act on — an expired WTS session and a rate-limited official
+// endpoint call for opposite responses.
+type SourceFailure struct {
+	Source SourceID
+	// Reason is the error, as text, for a human.
+	Reason string
+	// RateLimited separates a 429 from every other failure. For the official
+	// ranking — which has no WTS fallback — the rate at which this happens is the
+	// only measurement available of an undocumented limit.
+	RateLimited bool
+}
+
+// SymbolFailure is one symbol the store refused to record, and why.
+//
+// Separate from SourceFailure because the remedies are unrelated: a source
+// failure is a network or session problem, a symbol failure is the lifecycle
+// declining a write — most often an instant that runs backwards.
+type SymbolFailure struct {
+	Symbol string
+	Reason string
+}
+
+// ScanResult is what one pass did and what it could not see.
+type ScanResult struct {
+	Market string
+	At     time.Time
+
+	// Attempted and Responded are the panel's completeness.
+	Attempted, Responded int
+	// Missing names every source that did not answer.
+	Missing []SourceFailure
+	// Degraded is true when any source is missing. It is derived rather than set,
+	// so it cannot disagree with Missing.
+	Degraded bool
+
+	// Observations and Candidates count what was written. Observations is per
+	// (source, symbol): two sources raising one symbol is two observations and
+	// one candidate.
+	Observations, Candidates int
+	// Cooled counts the candidates this scan stopped seeing.
+	Cooled int
+	// FirstPrices and FirstRanks count the candidates whose baseline and first
+	// sighting position this scan recorded for the first time (D17 and its other
+	// half). They are the durable half of two vetoes, and a scan that writes
+	// neither leaves both permanently unmeasured while nothing fails — so the
+	// count is on the result rather than inferred from the store.
+	FirstPrices, FirstRanks int
+	// FirstRanksHeld counts the positions this scan declined to store because the
+	// reading they came from carried neither of the two facts that decide whether a
+	// position can answer seen_late — see recordFirsts.
+	//
+	// It is counted rather than passed over in silence for the same reason
+	// FirstRanks is counted: a scan that stores nothing and a scan that had nothing
+	// to store are the same output otherwise, and only one of them means the panel
+	// is about to become measurable. A watch loop reports a held count on its first
+	// turn and zero afterwards; a `scan` reports one every time, which is the fact
+	// that says a one-shot command cannot qualify anything.
+	FirstRanksHeld int
+	// Readings is what each ranking source asked for and what arrived, per source.
+	//
+	// It exists because nobody has measured whether the official rankings endpoint
+	// returns the hundred rows it is asked for. If it does not, every reading is
+	// truncated, seen_late is refused for every candidate raised by it, and the
+	// distribution the follow-up threshold would be chosen from does not exist —
+	// and today that would be visible only as a screen full of READING_TRUNCATED,
+	// several candidate lives after the fact. This answers it in one scan.
+	//
+	// A source that carries no position at all (prices, candles) has no entry.
+	Readings map[SourceID]ReadingFacts
+	// Rejected names the symbols the store declined to record. A scan with
+	// rejections is not a failed scan — the rest of the market still went
+	// through — but it is not a clean one either, and the count is what makes a
+	// clock that runs backwards visible before it expires the watchlist.
+	//
+	// It also carries the two stored firsts' write failures. Those happen after a
+	// successful promotion, so the candidate is counted and the failure is named:
+	// a promoted candidate with no baseline is a live record with a veto that can
+	// never be measured, which is worth seeing.
+	Rejected []SymbolFailure
+
+	// Budgets is the rate allowance each source reported, by source. A source
+	// that reported nothing has a Budget with Reported false rather than an
+	// absent entry, so a caller reading the map cannot mistake silence for zero.
+	Budgets map[SourceID]Budget
+
+	// Vouched names the sources whose reading counted as coverage: they answered
+	// AND carried at least one row.
+	//
+	// It is a shorter list than Responded counts, and the gap is the zero-row
+	// 200. This file already refuses to treat that reading as evidence anywhere
+	// else — it responds without vouching, and lands in Missing with its reason —
+	// and the one place it used to count as evidence was the backoff ladder,
+	// because Budgets was written before the same reading was classified. A
+	// rate-limited service that sheds load by returning an empty list would have
+	// been read as a source that recovered, and the ladder would have gone
+	// straight back to the bottom on the reading that says least (§5 review P2).
+	//
+	// So the recovery signal is this list rather than the budget map. The budget
+	// headers are still recorded for every responder, empty or not: they are the
+	// only measurement of the undocumented RANKING limit (D13 decision 2) and
+	// they are true whatever the body carried.
+	Vouched []SourceID
+}
+
+// ReadingFacts is one source's own account of one reading: how many rows it asked
+// its endpoint for and how many arrived.
+//
+// Both numbers rather than the comparison, because the comparison is one bit and
+// the question this exists to answer is "how short". A hundred requested and
+// ninety-nine arriving and a hundred requested and three arriving are the same
+// Truncation and two different conversations to have with the API.
+type ReadingFacts struct {
+	Requested, Arrived int
+}
+
+// Truncation is what the two numbers say. Same rule the stored position is held to,
+// from the same function, so the scan report and the veto cannot disagree.
+func (r ReadingFacts) Truncation() Truncation { return truncationOf(r.Requested, r.Arrived) }
+
+// RateLimitedSources returns the sources this scan lost to a 429.
+//
+// The count over time is the measurement D13 decision 2 wants: an undocumented
+// limit inferred from how often we hit it, rather than guessed.
+func (r ScanResult) RateLimitedSources() []SourceID {
+	var out []SourceID
+	for _, m := range r.Missing {
+		if m.RateLimited {
+			out = append(out, m.Source)
+		}
+	}
+	return out
+}
+
+// CollectOptions configures one scan.
+type CollectOptions struct {
+	// Market is the market being scanned.
+	Market string
+	// At is the instant to record. Supplied by the caller — the scan does not
+	// call the clock itself, so a test can drive a whole session through it.
+	At time.Time
+	// Sources is the panel. Order is preserved in the result.
+	Sources []Source
+	// NotAsked names sources that belong to this market's panel and were
+	// deliberately not read on this pass — the schedule has not come round to
+	// them.
+	//
+	// They are here for one reason: cooling. A candidate may be cooled only when
+	// every source that raised it answered and none of them listed it, and that
+	// check is made against the sources this scan was in a position to hear
+	// from. heldSource was given the present-and-failing shape precisely so a
+	// 429'd source could not vouch; the other reason a source is absent — the
+	// interval has not elapsed — reached coverageAnswered as "a source that is
+	// gone" and stopped being required to answer. A candidate raised by a
+	// not-due ranking and a due popularity list was then cooled by a scan that
+	// never asked the ranking (§5 review P1-1).
+	//
+	// They are NOT sources: nothing here is read, nothing is attempted, and
+	// nothing lands in Missing. A not-due source is not a degradation — reporting
+	// it as one would send an operator looking for a source that is working.
+	NotAsked []SourceID
+}
+
+// Collect runs one scan: read every source, record what they said, and move the
+// candidate lifecycle to match.
+//
+// It returns ErrNoSourceAnswered when the whole panel failed. Everything short of
+// that is a degraded success, recorded as such.
+//
+// One case returns a populated result *and* an error: a source claiming a WTS
+// fallback it cannot have (ErrFallbackNotPossible). That is a wiring defect
+// rather than a market condition, so the scan completes — refusing to promote or
+// cool would expire the whole watchlist to report a bug — and the error is the
+// alarm. Callers should log it and keep the result.
+func Collect(ctx context.Context, store *Store, opts CollectOptions) (ScanResult, error) {
+	market := strings.ToUpper(strings.TrimSpace(opts.Market))
+	if market == "" {
+		return ScanResult{}, fmt.Errorf("candidate: a scan needs a market")
+	}
+	if opts.At.IsZero() {
+		return ScanResult{}, fmt.Errorf("candidate: a scan of %s has no instant", market)
+	}
+	at := opts.At.UTC()
+
+	// A panel with two sources under one id is refused before anything is read.
+	//
+	// `responded` and `Budgets` are keyed by source id, and the cooling rule is
+	// "every source that raised this candidate answered". A collision makes a
+	// source that answered vouch for one that did not, which is how a rate limit
+	// on one ranking cools candidates only the other one ever saw. It is cheap to
+	// check and impossible to notice once it is running.
+	seen := make(map[SourceID]bool, len(opts.Sources))
+	for _, src := range opts.Sources {
+		id := src.ID()
+		if seen[id] {
+			return ScanResult{}, fmt.Errorf(
+				"candidate: two sources in the %s panel share the id %q; "+
+					"a source that answers would vouch for one that did not", market, id)
+		}
+		seen[id] = true
+	}
+
+	// heard is every source this scan was in a position to hear from: the panel it
+	// read, plus the ones the schedule passed over. Only cooling consults it — see
+	// CollectOptions.NotAsked and coolAbsent.
+	//
+	// A source in both is refused for the reason the duplicate-id check above
+	// exists: it is a contradiction in the caller's own bookkeeping, it is cheap to
+	// see here, and it is impossible to notice once the loop is running.
+	heard := make(map[SourceID]bool, len(seen)+len(opts.NotAsked))
+	for id := range seen {
+		heard[id] = true
+	}
+	for _, id := range opts.NotAsked {
+		if seen[id] {
+			return ScanResult{}, fmt.Errorf(
+				"candidate: %q is both in the %s panel and listed as not asked; "+
+					"a source cannot be read and passed over on the same pass", id, market)
+		}
+		heard[id] = true
+	}
+
+	result := ScanResult{
+		Market:    market,
+		At:        at,
+		Attempted: len(opts.Sources),
+		Budgets:   make(map[SourceID]Budget, len(opts.Sources)),
+		Readings:  make(map[SourceID]ReadingFacts, len(opts.Sources)),
+	}
+
+	var (
+		observations []Observation
+		// raisedBy is the candidate identity to the sources that raised it. It is
+		// what makes two sources on one symbol one candidate with two supporters
+		// rather than two candidates with half the evidence each.
+		raisedBy = map[string][]SourceID{}
+		// firstReading is, per symbol, the reading this scan would record as the
+		// candidate's first price and first sighting position if it turns out not
+		// to have one yet (D17 and its other half).
+		//
+		// Panel order decides, and it decides once: the first source in the panel
+		// that carried a price wins the baseline, the first that carried a
+		// position wins the rank. They are tracked separately because a source can
+		// carry one without the other — the prices endpoint has no rank and a WTS
+		// popularity row has no price — and folding them together would leave a
+		// candidate raised by both with the field only one of them reported.
+		//
+		// # Panel order among equals, and a qualified reading is not the equal of an
+		// unqualified one
+		//
+		// Corrected 2026-07-28. The rank was taken from the panel-order-first source
+		// carrying a position, full stop, and recordFirsts then declined to store it
+		// if the reading it came from could not qualify it — discarding a qualified
+		// position another source had reported in the same tick. That is reachable and
+		// it is permanent: a source that persistently comes back short never replaces
+		// its own memory, so its NewlyListed stays unknown for as long as the
+		// degradation lasts, and being first in Panel's order it claims firstRanked for
+		// every symbol it lists and holds first_rank for all of them. Whether the
+		// official rankings endpoint returns the hundred rows it is asked for is the
+		// question this change exists to make answerable, so the failure it would
+		// cause is not hypothetical.
+		//
+		// So a qualified reading displaces an unqualified one, and panel order decides
+		// among readings of the same standing. When nothing in the panel qualifies —
+		// the session's first tick, and every one-shot `tossctl candidate scan` — the
+		// panel-order-first position is still what is held, which keeps recordFirsts'
+		// refusal intact for the case it was written for.
+		firstPriced = map[string]Observation{}
+		firstRanked = map[string]Observation{}
+		// covered is every symbol a responding source reported.
+		covered = map[string]bool{}
+		// responded is every source that answered. Together with covered it is
+		// what makes cooling a claim about evidence rather than about silence —
+		// see the file header.
+		responded = map[SourceID]bool{}
+		// misWired are sources that claimed a fallback they cannot have. Kept
+		// aside so the scan can finish and still fail loudly.
+		misWired []SourceID
+		anyRead  bool
+	)
+
+	for _, src := range opts.Sources {
+		id := src.ID()
+		reading, err := src.Read(ctx, market)
+		if err != nil {
+			result.Missing = append(result.Missing, SourceFailure{
+				Source:      id,
+				Reason:      err.Error(),
+				RateLimited: isRateLimited(err),
+			})
+			continue
+		}
+		if reading.ViaFallback && !id.hasFallback() {
+			// Loud, but not fatal to the whole pass. This is a wiring defect
+			// rather than a market event, and a deterministic wiring defect that
+			// aborted every scan would leave the watchlist un-promoted and
+			// un-cooled until the staleness clock expired all of it — destroying
+			// the first_seen_at record in order to report a bug.
+			//
+			// The source is dropped, the reason goes into Missing, and the error
+			// is returned at the end alongside a fully populated result.
+			result.Missing = append(result.Missing, SourceFailure{
+				Source: id,
+				Reason: fmt.Sprintf("%v (the reading is mis-wired)", ErrFallbackNotPossible),
+			})
+			misWired = append(misWired, id)
+			continue
+		}
+
+		result.Responded++
+		anyRead = true
+		result.Budgets[id] = reading.Budget
+		// What this source asked for and what it got.
+		//
+		// Taken from a row rather than from the source, because a Source is an
+		// interface with one method and this package has no way to ask it anything
+		// else. Every row of one reading carries the same requested count — the
+		// adapters set it from their own field — so the first row's is the reading's.
+		//
+		// The cost of that is stated rather than hidden: a reading with no rows
+		// carries no requested count either, so the emptiest reading of all is the one
+		// this record cannot describe. It is not silent about it — an empty reading
+		// already lands in Missing with its own reason one block down — but the
+		// arithmetic "asked for a hundred, received none" is not here. Putting the
+		// count on Reading itself would be the repair, and it is a wider change than
+		// this one: Reading is the seam every source implements.
+		if len(reading.Rows) > 0 && reading.Rows[0].RankRequested > 0 {
+			result.Readings[id] = ReadingFacts{
+				Requested: reading.Rows[0].RankRequested,
+				Arrived:   reading.Rows[0].RankTotal,
+			}
+		}
+
+		// An empty reading is NOT evidence that anything left the list.
+		//
+		// Cooling asks "did a source that covers this symbol answer and not list
+		// it". A ranking that returns zero rows — out of hours, a server blip, a
+		// body whose symbols were all blank — answered about nothing, and treating
+		// it as full coverage cools the entire watchlist on a single 200. That
+		// reaches the same destruction as the 429 case with nothing having failed
+		// at all, so an empty reading responds without vouching.
+		if len(reading.Rows) == 0 {
+			result.Missing = append(result.Missing, SourceFailure{
+				Source: id,
+				Reason: "responded with no rows; not counted as coverage",
+			})
+			continue
+		}
+		responded[id] = true
+		result.Vouched = append(result.Vouched, id)
+
+		for _, r := range reading.Rows {
+			symbol := strings.TrimSpace(r.Symbol)
+			if symbol == "" {
+				continue
+			}
+			o := Observation{
+				Market: market, Symbol: symbol, Source: id, ObservedAt: at,
+				Reported: Reported{
+					Rank: r.Rank, RankTotal: r.RankTotal, RankRequested: r.RankRequested,
+					NewlyListed:  r.NewlyListed,
+					TradingValue: r.TradingValue, TradingVolume: r.TradingVolume,
+					Price: r.Price, DayHigh: r.DayHigh, DayLow: r.DayLow,
+				},
+				ViaFallback: reading.ViaFallback,
+			}
+			observations = append(observations, o)
+			covered[symbol] = true
+			raisedBy[symbol] = append(raisedBy[symbol], id)
+			if _, taken := firstPriced[symbol]; !taken && strings.TrimSpace(r.Price) != "" {
+				firstPriced[symbol] = o
+			}
+			if r.Rank > 0 && r.RankTotal > 0 {
+				held, taken := firstRanked[symbol]
+				if !taken || (!qualifiesFirstRank(held.Reported) && qualifiesFirstRank(o.Reported)) {
+					firstRanked[symbol] = o
+				}
+			}
+		}
+	}
+
+	result.Degraded = len(result.Missing) > 0
+	if !anyRead {
+		// The mis-wire wins when both apply. "No source answered" is true but it
+		// is the symptom; a source claiming a fallback it cannot have is the
+		// cause, and it is the one an operator can act on.
+		if len(misWired) > 0 {
+			return result, fmt.Errorf("%w: %v", ErrFallbackNotPossible, misWired)
+		}
+		return result, fmt.Errorf("%w: %d source(s) attempted for %s",
+			ErrNoSourceAnswered, result.Attempted, market)
+	}
+
+	if err := store.RecordObservations(ctx, observations); err != nil {
+		return result, err
+	}
+	result.Observations = len(observations)
+
+	symbols := make([]string, 0, len(raisedBy))
+	for symbol := range raisedBy {
+		symbols = append(symbols, symbol)
+	}
+	sort.Strings(symbols)
+	promoted := make([]string, 0, len(symbols))
+
+	// One symbol's refusal is not the market's.
+	//
+	// Promote rejects an instant older than the candidate's last reading, which a
+	// clock step backwards produces. Aborting the loop there would leave the rest
+	// of the symbols un-promoted and skip cooling entirely — and because the loop
+	// is sorted, the same symbol would block every subsequent scan for as long as
+	// the clock was behind, expiring the whole watchlist while observations kept
+	// accumulating. So failures are collected and the pass finishes.
+	for _, symbol := range symbols {
+		if _, err := store.Promote(ctx, market, symbol, at); err != nil {
+			result.Rejected = append(result.Rejected, SymbolFailure{Symbol: symbol, Reason: err.Error()})
+			continue
+		}
+		err := store.NoteSources(ctx, market, symbol,
+			raisedBy[symbol], result.Attempted, result.Responded, result.Degraded)
+		if err != nil {
+			result.Rejected = append(result.Rejected, SymbolFailure{Symbol: symbol, Reason: err.Error()})
+			continue
+		}
+		result.Candidates++
+		promoted = append(promoted, symbol)
+	}
+
+	if err := recordFirsts(ctx, store, market, at, promoted,
+		firstPriced, firstRanked, &result); err != nil {
+		return result, err
+	}
+
+	cooled, err := coolAbsent(ctx, store, market, covered, responded, heard, at)
+	result.Cooled = cooled
+	if err != nil {
+		return result, err
+	}
+	if len(misWired) > 0 {
+		// The result is complete and usable; the error is the alarm. Both, because
+		// silently continuing would let a mis-wire run for weeks feeding the
+		// fallback-rate measurement a fact that cannot be true.
+		return result, fmt.Errorf("%w: %v", ErrFallbackNotPossible, misWired)
+	}
+	return result, nil
+}
+
+// recordFirsts writes the two stored firsts for the candidates that still lack
+// them (D17, and D17's other half).
+//
+// # Why the missing set is read once instead of asked per symbol
+//
+// Both NoteFirstPrice and NoteFirstRank are idempotent, so the naive wiring is to
+// call them on every reading and let the store decide. That is correct and it is
+// two IMMEDIATE transactions per symbol per tick — the write lock taken a few
+// hundred times a scan to discover that there was nothing to write — against the
+// table D16 names as the one that can fill the ledger's filesystem. issues.md 4
+// left this decision to section 5 for that reason.
+//
+// So the summaries are read once, and a symbol is written to only when its column
+// is still NULL. The store's own guard stays in place underneath: it is what makes
+// two writers racing on one candidate keep the earlier baseline, and this pass is
+// an optimisation on top of it rather than a replacement for it.
+//
+// # The read has to happen after the promotions
+//
+// Promote clears both columns when an expired candidate crosses again (D1), so a
+// missing set gathered before the loop would say "already recorded" for a life that
+// had just been reset — and the new life would run with the dead one's baseline
+// still in place if the write were skipped. Reading after is what makes the new
+// life's first reading the new life's first price.
+//
+// A write that fails is named in Rejected rather than aborting the pass. The
+// candidate is already promoted at that point; losing the rest of the market
+// because one baseline could not be stored is the shape scan.go refuses everywhere
+// else.
+func recordFirsts(ctx context.Context, store *Store, market string, at time.Time,
+	promoted []string, priced, ranked map[string]Observation, result *ScanResult) error {
+
+	if len(promoted) == 0 {
+		return nil
+	}
+	summaries, err := store.Summaries(ctx, at)
+	if err != nil {
+		return err
+	}
+	needPrice := map[string]bool{}
+	needRank := map[string]bool{}
+	for _, s := range summaries {
+		if s.Market != market {
+			continue
+		}
+		needPrice[s.Symbol] = !s.Baseline.Recorded()
+		needRank[s.Symbol] = !s.FirstRank.Recorded()
+	}
+
+	for _, symbol := range promoted {
+		if o, ok := priced[symbol]; ok && needPrice[symbol] {
+			_, err := store.NoteFirstPrice(ctx, market, symbol,
+				o.Reported.Price, o.ObservedAt, o.Source)
+			if err != nil {
+				result.Rejected = append(result.Rejected, SymbolFailure{
+					Symbol: symbol,
+					Reason: fmt.Sprintf("the first price could not be recorded: %v", err),
+				})
+			} else {
+				result.FirstPrices++
+			}
+		}
+		o, ok := ranked[symbol]
+		if !ok || !needRank[symbol] {
+			continue
+		}
+		// A position whose reading carries neither fact is not written at all.
+		//
+		// first_rank is write-once, so storing one is a decision about the rest of the
+		// candidate's life. A reading from a source with no previous reading — every
+		// reading of a session's first tick, and every reading a one-shot `tossctl
+		// candidate scan` ever takes, because that command builds its panel, reads
+		// once and exits — carries NULL in both qualifier columns. Stored, it makes
+		// seen_late permanently unmeasurable for that life and nothing can fill the
+		// columns afterwards: the facts belong to a reading that is gone, and a later
+		// reading's answer is about a later reading.
+		//
+		// Not stored, the candidate reports NO_FIRST_RANK for one tick and the next
+		// qualified reading becomes its first sighting — still inside the ±TTL
+		// identity window, since the official interval is fifteen seconds and the
+		// window is ten minutes. One is recoverable and the other is not, so the scan
+		// takes the recoverable one. It is also what makes NEW_ENTRANT_UNKNOWN's
+		// "wait for the second reading" true.
+		//
+		// A *truncated* reading is written. It is not an unqualified position: both
+		// facts were taken, the refusal it produces is named, and it is the honest
+		// record of where this candidate was when we first saw it. Skipping it would
+		// swap a diagnosis an operator can act on for the absence of one.
+		//
+		// By the time a position gets here it is the best-standing one the panel
+		// offered this tick — Collect prefers a qualified reading over a panel-earlier
+		// unqualified one — so reaching this branch means no source in the panel could
+		// qualify the symbol at all, which is the session-start case this refusal is
+		// about.
+		if !qualifiesFirstRank(o.Reported) {
+			result.FirstRanksHeld++
+			continue
+		}
+		// The whole reading, not just the position. What the source knew about it —
+		// whether it held a previous reading of that list, and how many rows it asked
+		// for — is stored in the same statement, because those two facts are what
+		// decide later whether the position can answer seen_late at all, and a fact
+		// written afterwards is a fact about a different moment.
+		stored, err := store.NoteFirstRank(ctx, market, symbol, FirstRank{
+			Rank: o.Reported.Rank, Total: o.Reported.RankTotal,
+			At: o.ObservedAt, Source: o.Source,
+			NewlyListed: o.Reported.NewlyListed, Requested: o.Reported.RankRequested,
+		})
+		switch {
+		case err != nil:
+			result.Rejected = append(result.Rejected, SymbolFailure{
+				Symbol: symbol,
+				Reason: fmt.Sprintf("the first sighting position could not be recorded: %v", err),
+			})
+		case stored.Recorded():
+			result.FirstRanks++
+		}
+		// A reading outside the identity window around first_seen_at is neither
+		// stored nor an error — it is the ordinary state of a candidate raised by a
+		// source that carries no position and only later seen on a ranking list.
+		// Having no first rank is the honest answer there, and it makes seen_late
+		// unmeasured rather than wrong.
+	}
+	return nil
+}
+
+// qualifiesFirstRank reports that a reading carries the two facts a stored first
+// sighting position needs in order to ever answer seen_late.
+//
+// The source's own new-entrant answer, and the row count it asked its endpoint for.
+// Neither is a judgement about the market: one is "did I hold a previous reading of
+// this list", the other is "how many rows did I request", and a reading missing
+// either of them cannot say what its position meant.
+//
+// It is one predicate rather than the same two clauses in two places because the two
+// places have to agree. Collect uses it to decide which of a tick's readings claims
+// the position, and recordFirsts uses it to decide whether that position is written
+// at all; a Collect that preferred a reading recordFirsts then held would discard the
+// qualified one and store nothing, which is the defect this predicate was extracted
+// while fixing.
+func qualifiesFirstRank(r Reported) bool {
+	return r.NewlyListed.Known() && r.RankRequested > 0
+}
+
+// coolAbsent cools the active candidates whose supporters were all present in
+// this scan, all answered, and none of them raised the candidate.
+//
+// Three guards, each closing a different way of getting this wrong.
+//
+//	covered    excludes symbols that were raised this scan.
+//	responded  excludes candidates whose supporters did not all answer. Absent
+//	           evidence is not evidence of absence, and treating it as such turns
+//	           one 429 into a mass expiry of first_seen_at values.
+//	heard      excludes supporters that are no longer in the panel at all.
+//
+// The third is subtler than it looks, and there are three ways for a supporter to
+// be missing from a pass rather than two:
+//
+//	it failed        it is in `heard` and not in `responded` — present and
+//	                 failing, which is heldSource's shape and a 429's.
+//	it was passed    it is in `heard` and not in `responded` either, because the
+//	over             schedule has not come round to it. Same shape, same answer:
+//	                 not being asked is not evidence about the symbols it raises
+//	                 (§5 review P1-1, CollectOptions.NotAsked).
+//	it is gone       it is in neither. Candidate.Sources accumulates over a
+//	                 candidate's life, so a source removed from the configuration
+//	                 — an operator dropping WTS, which the design treats as
+//	                 routine — would never appear in `responded` again. Without
+//	                 this case those candidates become permanently un-coolable and
+//	                 can only leave through the staleness fallback, which store.go
+//	                 reserves for the scan that died.
+//
+// A candidate whose supporters are *all* gone is still left alone: nothing in
+// this scan was in a position to see it.
+func coolAbsent(ctx context.Context, store *Store, market string,
+	covered map[string]bool, responded, heard map[SourceID]bool, at time.Time) (int, error) {
+
+	existing, err := store.Candidates(ctx, at)
+	if err != nil {
+		return 0, err
+	}
+	cooled := 0
+	for _, c := range existing {
+		if c.Market != market || c.State != StateActive || covered[c.Symbol] {
+			continue
+		}
+		if !coverageAnswered(c.Sources, responded, heard) {
+			continue
+		}
+		if err := store.Cool(ctx, market, c.Symbol, at); err != nil {
+			return cooled, err
+		}
+		cooled++
+	}
+	return cooled, nil
+}
+
+// coverageAnswered reports that this scan was in a position to observe the
+// candidate's absence: at least one of its supporters could have been heard from,
+// and every supporter that could have been answered.
+//
+// `heard` is the panel plus the sources the schedule passed over, which is what
+// makes the middle case of coolAbsent's table block cooling instead of enabling
+// it. A supporter that is in `heard` and not in `responded` is a supporter this
+// scan has no evidence from, whether it failed or was never asked.
+func coverageAnswered(sources []SourceID, responded, heard map[SourceID]bool) bool {
+	present := 0
+	for _, id := range sources {
+		if !heard[id] {
+			continue
+		}
+		present++
+		if !responded[id] {
+			return false
+		}
+	}
+	return present > 0
+}
+
+// isRateLimited reports a 429.
+//
+// The sentinel is the contract: an adapter that wants its failure counted as a
+// rate limit wraps ErrRateLimited, which candidatesrc does.
+//
+// The textual fallback is anchored, not a bare "429" search. An unanchored one
+// matched any error whose text happened to contain those three digits — a Korean
+// stock code, a trace id, a request id echoed inside an API error body, all of
+// which reach err.Error() because classifyStatus embeds the whole response. Every
+// false positive corrupts the one measurement available of the undocumented
+// RANKING limit and triggers a retreat nobody asked for, so the loose match costs
+// more than the cases it catches.
+func isRateLimited(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, ErrRateLimited) {
+		return true
+	}
+	text := strings.ToLower(err.Error())
+	for _, anchored := range []string{
+		"status 429", "http 429", "429 too many requests", "rate limit", "too many requests",
+	} {
+		if strings.Contains(text, anchored) {
+			return true
+		}
+	}
+	return false
+}

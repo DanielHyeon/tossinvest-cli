@@ -1,0 +1,93 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "725f6c6b365255317a4de293278d528f7f880216e9cebf369733bf253bea55bb",
+  "package": "main",
+  "function": "sortedSourceIDs",
+  "signature": "sortedSourceIDs(params=1, results=1)",
+  "start": {
+    "line": 955,
+    "column": 1
+  },
+  "end": {
+    "line": 962,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 957,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 960,
+        "column": 40
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 961,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 956,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 956,
+        "column": 39
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 958,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 960,
+        "column": 2
+      },
+      "text": "sort.Slice"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 956,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 958,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

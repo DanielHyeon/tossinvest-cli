@@ -1,0 +1,94 @@
+{
+  "file": "internal/official/orders_reads_test.go",
+  "source_sha256": "57ebcdf03d99231b6dd70d10b2a1218a0dc3dcd455cf6329b4460a5d2dc362f0",
+  "package": "official",
+  "function": "ordersRawClient",
+  "signature": "ordersRawClient(params=2, results=1)",
+  "start": {
+    "line": 466,
+    "column": 1
+  },
+  "end": {
+    "line": 475,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 9
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 3
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 17
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 3
+      },
+      "text": "WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 3
+      },
+      "text": "WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 18
+      },
+      "text": "srv.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 3
+      },
+      "text": "WithAccountSeq"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

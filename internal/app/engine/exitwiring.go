@@ -299,10 +299,9 @@ var ErrExitObserverUnavailable = errors.New(
 // The loop places orders without a human in the loop, which is exactly what the
 // automation gate is the master switch for (config.AutomationGate). Running it
 // on a gate-off engine would be unattended order placement with the switch off.
-// Interlock clause 6 (ProtectionReady) makes a verified gate impossible in this
-// build, so in practice this returns ErrExitObserverUnavailable until 2c — which
-// is the design (D8: 실전 실행은 verify 트랙 … 인터록 조항 6이 게이트 ON을
-// 기계적으로 막는다), not a gap.
+// ProtectionReady is enforced at the gateway for exposure-raising mutations,
+// not here at runtime startup. That keeps reduce-only exits available even while
+// broker-resident protective execution is UNWIRED.
 //
 // # Deference
 //

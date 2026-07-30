@@ -1,0 +1,240 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "56733e44c5620f0d6215bfc3ce07804164431153fac724de82fd7ebf99153b10",
+  "package": "main",
+  "function": "buildCandidatePanel",
+  "signature": "buildCandidatePanel(params=2, results=2)",
+  "start": {
+    "line": 463,
+    "column": 1
+  },
+  "end": {
+    "line": 488,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 465,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 482,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 483,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 466,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 470,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 473,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 487,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 30
+      },
+      "text": "resolveOpenAPIPaths"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 16
+      },
+      "text": "official.LoadCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 12
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 19
+      },
+      "text": "Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 19
+      },
+      "text": "session.NewFileStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 40
+      },
+      "text": "resolveSessionFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 71
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 19
+      },
+      "text": "loadConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 484,
+        "column": 10
+      },
+      "text": "tossclient.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 9
+      },
+      "text": "candidatesrc.Panel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 52
+      },
+      "text": "wtsPopularityReader"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 464,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 482,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 483,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 484,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

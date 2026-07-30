@@ -1,0 +1,141 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "9ffd8b85f4c50e24ee7989fc4da44cdb9f5e6022689199cba8eef571893e90a8",
+  "package": "main",
+  "function": "Signals",
+  "receiver": "consoleSignals",
+  "signature": "consoleSignals.Signals(params=1, results=2)",
+  "start": {
+    "line": 860,
+    "column": 1
+  },
+  "end": {
+    "line": 876,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 862,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 872,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 863,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 875,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 861,
+        "column": 25
+      },
+      "text": "s.open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 863,
+        "column": 36
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 865,
+        "column": 8
+      },
+      "text": "release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 870,
+        "column": 8
+      },
+      "text": "store.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 873,
+        "column": 17
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 873,
+        "column": 37
+      },
+      "text": "consoleSignalsMarket"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 861,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 870,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 871,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 873,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 865,
+        "column": 2
+      },
+      "text": "release"
+    }
+  ]
+}

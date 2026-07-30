@@ -1,0 +1,117 @@
+{
+  "file": "internal/candidate/band_test.go",
+  "source_sha256": "531a1c47604ea69093b4aae2780863bd6fd9ac64191e25779d176171f6d33c92",
+  "package": "candidate",
+  "function": "TestAShadowBandCannotBeReadAsAVeto",
+  "signature": "TestAShadowBandCannotBeReadAsAVeto(params=1, results=0)",
+  "start": {
+    "line": 285,
+    "column": 1
+  },
+  "end": {
+    "line": 296,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 289,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 10
+      },
+      "text": "MeasureSeenLateBand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 30
+      },
+      "text": "aSighting"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 11
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 44
+      },
+      "text": "reflect.PointerTo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 16
+      },
+      "text": "typ.MethodByName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 286,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

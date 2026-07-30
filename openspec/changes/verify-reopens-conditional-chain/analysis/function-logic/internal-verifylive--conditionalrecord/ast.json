@@ -1,0 +1,76 @@
+{
+  "file": "internal/verifylive/cleanup_test.go",
+  "source_sha256": "bfe5725960c9718507ddfad287fbb1e498ada42d09ce1f00257eb7a4df668673",
+  "package": "verifylive",
+  "function": "conditionalRecord",
+  "signature": "conditionalRecord(params=2, results=1)",
+  "start": {
+    "line": 273,
+    "column": 1
+  },
+  "end": {
+    "line": 283,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 8
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

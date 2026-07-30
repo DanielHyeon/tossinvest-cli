@@ -1,0 +1,169 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "de0adcf52d62132b6be3cd493155bd3cd0ce4c334200160511b474eb070d284a",
+  "package": "console",
+  "function": "signalsBandTalliesFrom",
+  "signature": "signalsBandTalliesFrom(params=1, results=1)",
+  "start": {
+    "line": 832,
+    "column": 1
+  },
+  "end": {
+    "line": 856,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 834,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 836,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 843,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 849,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 855,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 840,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 841,
+        "column": 42
+      },
+      "text": "signalsBandAlarm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 843,
+        "column": 24
+      },
+      "text": "candidate.BandsFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 844,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 850,
+        "column": 11
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 852,
+        "column": 23
+      },
+      "text": "sortedSignalsCounts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 853,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 835,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 839,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 844,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 848,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 850,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 852,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 853,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,127 @@
+{
+  "file": "cmd/tossctl/soak_test.go",
+  "source_sha256": "158aa423021f8e9143a354acc6e08c8911418dc9274a37890c34df14bde173c2",
+  "package": "main",
+  "function": "seedSupervisedRecord",
+  "signature": "seedSupervisedRecord(params=4, results=0)",
+  "start": {
+    "line": 598,
+    "column": 1
+  },
+  "end": {
+    "line": 617,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 601,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 606,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 600,
+        "column": 14
+      },
+      "text": "verifylive.OpenRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 602,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 604,
+        "column": 8
+      },
+      "text": "rec.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 606,
+        "column": 12
+      },
+      "text": "rec.Append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 609,
+        "column": 54
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 612,
+        "column": 54
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 615,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 600,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 606,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 604,
+        "column": 2
+      },
+      "text": "rec.Close"
+    }
+  ]
+}

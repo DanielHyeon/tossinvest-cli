@@ -1,0 +1,39 @@
+{
+  "file": "internal/candidate/scan.go",
+  "source_sha256": "9724c9f17b4f4c7171d3626dd17af92cd1ce42612a66cdc08b372b4ebb1a3c87",
+  "package": "candidate",
+  "function": "Truncation",
+  "receiver": "ReadingFacts",
+  "signature": "ReadingFacts.Truncation(params=0, results=1)",
+  "start": {
+    "line": 170,
+    "column": 1
+  },
+  "end": {
+    "line": 170,
+    "column": 94
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 170,
+        "column": 49
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 56
+      },
+      "text": "truncationOf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

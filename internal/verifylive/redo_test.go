@@ -116,3 +116,121 @@ func TestRedoableVerdictAgreesWithTheSet(t *testing.T) {
 		}
 	}
 }
+
+// --- reopening a chain whose subject is gone -----------------------------------
+//
+// A pass normally stays passed. The one exception is a pass whose established
+// property is no longer true: conditional-register proves "a conditional order is
+// registered and readable", and once that object is gone the property is false and
+// every step that depends on it can only skip. See design.md D2.
+
+// goneSubjectRecord is the KR record after 2026-07-28: register passed, the
+// prologue cancelled what it registered, and the three dependents skipped.
+func goneSubjectRecord(dependents map[StepID]Verdict) []Entry {
+	entries := []Entry{{
+		Kind: KindStep, StepID: StepConditionalRegister, Verdict: VerdictPass,
+		Artifacts: []Artifact{{
+			Kind: KindConditional, ID: "grLKqiGuCVS7mj", Symbol: "333430", Deliberate: true,
+		}},
+	}, {
+		Kind: KindCleanup, StepID: StepCleanup, Verdict: VerdictPass,
+		Artifacts: []Artifact{{
+			Kind: KindConditional, ID: "grLKqiGuCVS7mj", Symbol: "333430", Cancelled: true,
+		}},
+	}}
+	for _, step := range Steps() {
+		if v, ok := dependents[step.ID]; ok {
+			entries = append(entries, Entry{Kind: KindStep, StepID: step.ID, Verdict: v})
+		}
+	}
+	return entries
+}
+
+func has(ids []StepID, want StepID) bool {
+	for _, id := range ids {
+		if id == want {
+			return true
+		}
+	}
+	return false
+}
+
+// TestRedoSetReopensARegisterWhoseConditionalIsGone is the 2026-07-28 deadlock.
+// Three runs after it, the console still could not put a conditional order back.
+func TestRedoSetReopensARegisterWhoseConditionalIsGone(t *testing.T) {
+	entries := goneSubjectRecord(map[StepID]Verdict{
+		StepSellableReserved:   VerdictPass,
+		StepConditionalPersist: VerdictSkipped,
+		StepConditionalTrigger: VerdictDeferred,
+		StepConditionalModify:  VerdictSkipped,
+		StepConditionalCancel:  VerdictSkipped,
+	})
+
+	if !has(RedoSet(entries), StepConditionalRegister) {
+		t.Fatalf("the chain cannot be measured again from the console: %v", RedoSet(entries))
+	}
+}
+
+// TestRedoSetLeavesACompletedChainClosed is the narrowness half, taken from the
+// real US record: every dependent passed, only the trigger is deferred.
+func TestRedoSetLeavesACompletedChainClosed(t *testing.T) {
+	entries := goneSubjectRecord(map[StepID]Verdict{
+		StepSellableReserved:   VerdictPass,
+		StepConditionalPersist: VerdictPass,
+		StepConditionalTrigger: VerdictDeferred,
+		StepConditionalModify:  VerdictPass,
+		StepConditionalCancel:  VerdictPass,
+	})
+
+	if has(RedoSet(entries), StepConditionalRegister) {
+		t.Fatalf("a chain that finished is being offered for re-measurement, which would place a live "+
+			"conditional order for a property already established: %v", RedoSet(entries))
+	}
+}
+
+// TestRedoSetDoesNotReopenWhileTheConditionalIsAlive: the ordinary resume is what
+// continues a halted chain. Reopening would register a second conditional.
+func TestRedoSetDoesNotReopenWhileTheConditionalIsAlive(t *testing.T) {
+	entries := []Entry{{
+		Kind: KindStep, StepID: StepConditionalRegister, Verdict: VerdictPass,
+		Artifacts: []Artifact{{
+			Kind: KindConditional, ID: "grLKqiGuCVS7mj", Symbol: "333430", Deliberate: true,
+		}},
+	}, {
+		Kind: KindStep, StepID: StepConditionalPersist, Verdict: VerdictAwaitingRestart,
+	}}
+
+	if has(RedoSet(entries), StepConditionalRegister) {
+		t.Fatalf("the conditional is still live and the resume will read it; reopening would register a "+
+			"second one: %v", RedoSet(entries))
+	}
+}
+
+// TestRedoSetDoesNotReopenForADeferredDependentAlone: conditional-trigger can
+// never pass — this tool does not place an order meant to fill. A step that says
+// up front it cannot be driven is not a reason to send anything.
+func TestRedoSetDoesNotReopenForADeferredDependentAlone(t *testing.T) {
+	entries := goneSubjectRecord(map[StepID]Verdict{
+		StepSellableReserved:   VerdictPass,
+		StepConditionalPersist: VerdictPass,
+		StepConditionalTrigger: VerdictDeferred,
+		StepConditionalModify:  VerdictPass,
+		StepConditionalCancel:  VerdictPass,
+	})
+
+	if has(RedoSet(entries), StepConditionalRegister) {
+		t.Fatalf("a deferred dependent reopened the chain: %v", RedoSet(entries))
+	}
+}
+
+// TestRedoSetDoesNotReopenAPassThatLeftNothingBehind: the rule is keyed to the one
+// artifact designed to outlive its step. A step that merely passed is untouched.
+func TestRedoSetDoesNotReopenAPassThatLeftNothingBehind(t *testing.T) {
+	entries := []Entry{
+		{Kind: KindStep, StepID: StepOrderCancel, Verdict: VerdictPass},
+		{Kind: KindStep, StepID: StepSellBoundary, Verdict: VerdictSkipped},
+	}
+	if has(RedoSet(entries), StepOrderCancel) {
+		t.Fatalf("a passed step with no deliberate conditional was reopened: %v", RedoSet(entries))
+	}
+}

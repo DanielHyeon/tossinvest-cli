@@ -1,0 +1,55 @@
+{
+  "file": "internal/verifylive/runner.go",
+  "source_sha256": "88b72a32dcbb7236a4dc715aaa35e6f0a3acc60896847c87d5ed2a01076e20bc",
+  "package": "verifylive",
+  "function": "markDeliberate",
+  "receiver": "stepRun",
+  "signature": "stepRun.markDeliberate(params=3, results=0)",
+  "start": {
+    "line": 730,
+    "column": 1
+  },
+  "end": {
+    "line": 737,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 731,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 732,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 733,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 734,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -1,0 +1,126 @@
+{
+  "file": "internal/verifylive/cleanup.go",
+  "source_sha256": "d8ba99f24400a134b88b6a0f26532edeb1576898a66ff2048a9f8b93e510e5a1",
+  "package": "verifylive",
+  "function": "cleanupFrom",
+  "signature": "cleanupFrom(params=2, results=1)",
+  "start": {
+    "line": 121,
+    "column": 1
+  },
+  "end": {
+    "line": 134,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 124,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 125,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 127,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 20
+      },
+      "text": "Outstanding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 10
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 7
+      },
+      "text": "settled"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 41
+      },
+      "text": "decidedAfter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 11
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 126,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 129,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

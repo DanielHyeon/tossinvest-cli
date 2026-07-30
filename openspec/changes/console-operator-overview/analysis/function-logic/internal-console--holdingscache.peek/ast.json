@@ -1,0 +1,80 @@
+{
+  "file": "internal/console/holdings.go",
+  "source_sha256": "bddb0d958c3e6178ad23b8b6b3047d6cc38dfaa00de23a97dd874c649c9c90df",
+  "package": "console",
+  "function": "peek",
+  "receiver": "holdingsCache",
+  "signature": "holdingsCache.peek(params=1, results=1)",
+  "start": {
+    "line": 203,
+    "column": 1
+  },
+  "end": {
+    "line": 210,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 2
+      },
+      "text": "c.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 8
+      },
+      "text": "c.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 9
+      },
+      "text": "c.snapshotLocked"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 208,
+        "column": 2
+      },
+      "text": "c.mu.Unlock"
+    }
+  ]
+}

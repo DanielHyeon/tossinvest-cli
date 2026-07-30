@@ -1,0 +1,71 @@
+{
+  "file": "internal/verifylive/runner.go",
+  "source_sha256": "2a970729c3f6d55d44cca0297aed217ce04ccf37cf988cdc55c623afeba9d356",
+  "package": "verifylive",
+  "function": "chainOf",
+  "receiver": "Runner",
+  "signature": "Runner.chainOf(params=3, results=1)",
+  "start": {
+    "line": 757,
+    "column": 1
+  },
+  "end": {
+    "line": 764,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 758,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 759,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 760,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 763,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 759,
+        "column": 11
+      },
+      "text": "ChainOf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 759,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

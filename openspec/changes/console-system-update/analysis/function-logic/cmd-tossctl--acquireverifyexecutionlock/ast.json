@@ -1,0 +1,108 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "c9af165523c08a4feca6ad645c0e4e1323cc882ee71ec84df73cedb201e474f9",
+  "package": "main",
+  "function": "acquireVerifyExecutionLock",
+  "signature": "acquireVerifyExecutionLock(params=1, results=2)",
+  "start": {
+    "line": 382,
+    "column": 1
+  },
+  "end": {
+    "line": 394,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 389,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 14
+      },
+      "text": "engineJournalDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 15
+      },
+      "text": "enginelock.Acquire"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

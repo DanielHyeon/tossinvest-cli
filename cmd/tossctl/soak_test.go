@@ -37,6 +37,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
 // --- a fake official API ----------------------------------------------------
@@ -581,6 +582,134 @@ func seedQualifyingRecord(t *testing.T, path string) {
 			if err := rec.Append(c); err != nil {
 				t.Fatalf("Append: %v", err)
 			}
+		}
+	}
+}
+
+// --- the supervised half of the endpoint set --------------------------------
+//
+// The three tests below are the ones that decide whether an automation gate can
+// be satisfied at all. Until 2026-07-29 it could not: the interlock required two
+// POSTs, only `soak attest` wrote the attestation, and the soak is read-only by
+// construction. The evidence existed in the verification record and had no way in.
+
+// seedSupervisedRecord writes a verification record in which the two mutation
+// endpoints succeeded, the way a supervised live run leaves one.
+func seedSupervisedRecord(t *testing.T, path, accountRef string, at time.Time) {
+	t.Helper()
+	rec, err := verifylive.OpenRecorder(path)
+	if err != nil {
+		t.Fatalf("OpenRecorder: %v", err)
+	}
+	defer rec.Close()
+
+	if err := rec.Append(verifylive.Entry{
+		Kind: verifylive.KindStep, StepID: verifylive.StepOrderCancel,
+		Title: "Order cancel", Verdict: verifylive.VerdictPass, Mutating: true,
+		AccountRef: accountRef, StartedAt: at, FinishedAt: at.Add(time.Second),
+		Calls: []verifylive.Call{
+			{Endpoint: "POST /api/v1/orders", At: at},
+			{Endpoint: "POST /api/v1/orders/{id}/cancel", At: at.Add(time.Second)},
+		},
+	}); err != nil {
+		t.Fatalf("Append: %v", err)
+	}
+}
+
+// TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun.
+//
+// With both evidence sources present the attestation satisfies every endpoint the
+// interlock names. The gate still does not come up — clause 9 is a compile-time
+// constant and TestTheGateRefusesWithoutBrokerSideProtection pins that — but the
+// endpoint clause is now satisfiable, which it was not.
+func TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	seedSupervisedRecord(t, filepath.Join(configDir, verifylive.RecordFileName(verifylive.MarketKR)),
+		attest.Mask("123-45-678901"), time.Now().UTC().Add(-2*time.Hour))
+
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest"); err != nil {
+		t.Fatalf("soak attest: %v", err)
+	}
+	a, err := attest.Load(filepath.Join(configDir, attest.FileName))
+	if err != nil {
+		t.Fatalf("attest.Load: %v", err)
+	}
+
+	if missing := a.MissingEndpoints(engine.RequiredEndpoints()); len(missing) != 0 {
+		t.Fatalf("the engine still lacks %v after a supervised check proved the mutations", missing)
+	}
+	if len(a.SupervisedBy) != len(soak.LiveOnlyEndpoints()) {
+		t.Fatalf("SupervisedBy = %+v, want one entry per mutation so an auditor can see what proved it",
+			a.SupervisedBy)
+	}
+	for _, p := range a.SupervisedBy {
+		if p.Source == "" {
+			t.Errorf("%s carries no source; the evidence cannot be gone and looked at", p.Endpoint)
+		}
+	}
+}
+
+// TestSoakAttestRefusesSupervisedEvidenceFromAnotherAccount. A verification
+// record for a different portfolio sitting on the expected path is a
+// misconfiguration, and issuing anyway would hide it behind "not proven yet".
+func TestSoakAttestRefusesSupervisedEvidenceFromAnotherAccount(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	seedSupervisedRecord(t, filepath.Join(configDir, verifylive.RecordFileName(verifylive.MarketKR)),
+		attest.Mask("999-99-999999"), time.Now().UTC().Add(-2*time.Hour))
+
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest"); err == nil {
+		t.Fatal("an attestation was written from another account's verification record")
+	}
+	if _, err := os.Stat(filepath.Join(configDir, attest.FileName)); !os.IsNotExist(err) {
+		t.Error("a refused issue still left an attestation file behind")
+	}
+}
+
+// TestSoakAttestIgnoresSupervisedEndpointsTheGateDoesNotRequire. The verification
+// record also exercises conditional orders. Attesting them would be claiming
+// something nobody asked for, and a claim on this file is a claim a live-trading
+// gate reads.
+func TestSoakAttestIgnoresSupervisedEndpointsTheGateDoesNotRequire(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	path := filepath.Join(configDir, verifylive.RecordFileName(verifylive.MarketKR))
+	at := time.Now().UTC().Add(-2 * time.Hour)
+	seedSupervisedRecord(t, path, attest.Mask("123-45-678901"), at)
+
+	rec, err := verifylive.OpenRecorder(path)
+	if err != nil {
+		t.Fatalf("OpenRecorder: %v", err)
+	}
+	if err := rec.Append(verifylive.Entry{
+		Kind: verifylive.KindStep, StepID: verifylive.StepConditionalRegister,
+		Verdict: verifylive.VerdictPass, Mutating: true, AccountRef: attest.Mask("123-45-678901"),
+		StartedAt: at, FinishedAt: at,
+		Calls: []verifylive.Call{
+			{Endpoint: "POST /api/v1/conditional-orders", At: at},
+			{Endpoint: "GET /api/v1/sellable-quantity", At: at},
+		},
+	}); err != nil {
+		t.Fatalf("Append: %v", err)
+	}
+	rec.Close()
+
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest"); err != nil {
+		t.Fatalf("soak attest: %v", err)
+	}
+	a, err := attest.Load(filepath.Join(configDir, attest.FileName))
+	if err != nil {
+		t.Fatalf("attest.Load: %v", err)
+	}
+	for _, e := range a.Endpoints {
+		if strings.Contains(e, "conditional-orders") {
+			t.Errorf("the attestation claims %q, which the gate does not require", e)
+		}
+	}
+	for _, p := range a.SupervisedBy {
+		if strings.HasPrefix(p.Endpoint, "GET ") {
+			t.Errorf("%q was attested from the supervised record; reads are what the soak proves", p.Endpoint)
 		}
 	}
 }

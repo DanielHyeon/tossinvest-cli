@@ -1,0 +1,79 @@
+{
+  "file": "internal/config/limits_test.go",
+  "source_sha256": "d91917779997f2b4df2c52926bd94b45b044467a548aeea658904919783137f1",
+  "package": "config",
+  "function": "TestTheCeilingIsTheMaxAcrossRegisteredTiers",
+  "signature": "TestTheCeilingIsTheMaxAcrossRegisteredTiers(params=1, results=0)",
+  "start": {
+    "line": 137,
+    "column": 1
+  },
+  "end": {
+    "line": 161,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 154,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 157,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 15
+      },
+      "text": "GuardianCeiling"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 153,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

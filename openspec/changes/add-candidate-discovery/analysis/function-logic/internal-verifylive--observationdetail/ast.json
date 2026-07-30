@@ -1,0 +1,102 @@
+{
+  "file": "internal/verifylive/us_market_test.go",
+  "source_sha256": "78c330a2fb4c3827316a489a49719925fc82412d6c7f23e7b6b4b64bdb242ced",
+  "package": "verifylive",
+  "function": "observationDetail",
+  "signature": "observationDetail(params=4, results=1)",
+  "start": {
+    "line": 231,
+    "column": 1
+  },
+  "end": {
+    "line": 244,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 237,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 239,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 11
+      },
+      "text": "LastEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 2
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,176 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "946ee03dc40036c1297e5f4bdbbda06d88128d7409537e3cee9201e827bdf8b9",
+  "package": "engine",
+  "function": "runInterlock",
+  "signature": "runInterlock(params=5, results=2)",
+  "start": {
+    "line": 371,
+    "column": 1
+  },
+  "end": {
+    "line": 402,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 381,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 391,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 378,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 384,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 398,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 401,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 3
+      },
+      "text": "logGateDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 12
+      },
+      "text": "verifyGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 7
+      },
+      "text": "refuseStartup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 3
+      },
+      "text": "logGateDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
+        "column": 12
+      },
+      "text": "log.Record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 12
+      },
+      "text": "acceptanceDetail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 400,
+        "column": 2
+      },
+      "text": "logGateDecision"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 381,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 382,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 390,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 391,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

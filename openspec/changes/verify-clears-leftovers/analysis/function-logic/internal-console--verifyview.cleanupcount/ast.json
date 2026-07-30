@@ -1,0 +1,40 @@
+{
+  "file": "internal/console/data.go",
+  "source_sha256": "16079b2e881c318f3f99af77c293ee6ab89d699f84224e64a46d3e901888360c",
+  "package": "console",
+  "function": "CleanupCount",
+  "receiver": "verifyView",
+  "signature": "verifyView.CleanupCount(params=0, results=1)",
+  "start": {
+    "line": 100,
+    "column": 1
+  },
+  "end": {
+    "line": 100,
+    "column": 65
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 42
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 49
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

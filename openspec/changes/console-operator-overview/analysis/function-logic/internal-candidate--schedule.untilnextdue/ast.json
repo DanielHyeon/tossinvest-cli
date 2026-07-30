@@ -1,0 +1,165 @@
+{
+  "file": "internal/candidate/source.go",
+  "source_sha256": "acbae4b0e6c0bc7ccaf077971f944ee11a73c93d62db522d9850b1980d9f45fc",
+  "package": "candidate",
+  "function": "UntilNextDue",
+  "receiver": "Schedule",
+  "signature": "Schedule.UntilNextDue(params=2, results=2)",
+  "start": {
+    "line": 290,
+    "column": 1
+  },
+  "end": {
+    "line": 316,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 301,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 305,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 311,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 302,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 315,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 2
+      },
+      "text": "s.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 8
+      },
+      "text": "s.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 9
+      },
+      "text": "src.ID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 11
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 11
+      },
+      "text": "last.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 20
+      },
+      "text": "s.every"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 299,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 300,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 304,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 309,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 312,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 292,
+        "column": 2
+      },
+      "text": "s.mu.Unlock"
+    }
+  ],
+  "revision": "current"
+}

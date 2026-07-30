@@ -1,0 +1,78 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "725f6c6b365255317a4de293278d528f7f880216e9cebf369733bf253bea55bb",
+  "package": "main",
+  "function": "tallyAlarm",
+  "signature": "tallyAlarm(params=1, results=1)",
+  "start": {
+    "line": 621,
+    "column": 1
+  },
+  "end": {
+    "line": 633,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 622,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 623,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 627,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 624,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 628,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 624,
+        "column": 21
+      },
+      "text": "a.Arithmetic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 21
+      },
+      "text": "a.Arithmetic"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

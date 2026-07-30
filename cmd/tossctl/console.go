@@ -48,16 +48,22 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/localupdate"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -105,17 +111,25 @@ the restart handoff token). Opening that URL in this machine's browser is what
 authenticates you, so possession of this terminal is the credential. Do not
 paste the link anywhere else.
 
-  dashboard   soak progress, attestation state, verification progress
+  overview    /dashboard — engine state, holdings, today's realised P&L, the
+              leftovers and the Guardian limits, gathered per market. Read-only:
+              no form, and it makes no broker call of its own
+  console     / — soak progress, attestation state, verification progress
   positions   what the account holds, joined to the engine's exit lines
   history     completed round trips and the exit judgement stream
+  signals     /signals — what the discovery sources have been saying over time,
+              with what nobody has checked spelled out rather than left blank. It
+              reads the discovery store and calls no source
   verify      the step list, the batch summary, the typed approval, live progress
   report      the measured attributes and the ones still unverified, plus JSON
 
-Everything is read-only except the verification approval. The console places no
-order of its own, toggles no gate, edits no configuration and shows no
-credential: the only requests that reach the account are the ones the verify
-runner makes, under the same plan authorisation, the same exposure caps and the
-same cancellation rails as ` + "`tossctl verify run`" + `.
+Account access is read-only except the verification approval: the console places
+no order of its own and shows no credential. The settings screen can edit its
+explicit operating fields and can install only the fixed sibling
+` + "`<current tossctl>.candidate`" + ` after a human reviews its hash and build
+identity. It accepts no update path or command, refuses while engine or
+verification work is active, preserves a rollback binary, and restarts on the
+same loopback port only after a successful replacement.
 
 Approving is a three-part act and all three are required: the session token, a
 CSRF token the page carries, and the expiring confirmation string the page shows
@@ -189,31 +203,116 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	// reports the engine section as unwired and the verification console — which
 	// is what this command is for — is unaffected.
 	engineMarkerPath := ""
+	engineDir := ""
 	if dir, derr := engineJournalDir(root); derr == nil {
+		engineDir = dir
 		engineMarkerPath = enginelock.MarkerPath(dir)
 	} else {
 		fmt.Fprintf(cmd.ErrOrStderr(), "엔진 마커 경로를 해석할 수 없다 (%v). 엔진 상태 표시는 비어 있다.\n", derr)
 	}
 
 	out := cmd.OutOrStdout()
+	var systemUpdater console.SystemUpdater
+	var releaseDownloader console.ReleaseDownloader
+	var releaseCandidateStager console.ReleaseCandidateStager
+	if self, serr := binstamp.SelfPath(); serr != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "시스템 업데이트 경로를 해석할 수 없다 (%v). 설정의 업데이트 섹션은 비활성이다.\n", serr)
+	} else {
+		cachePath, cerr := resolveUpdateCachePath(root)
+		if cerr != nil {
+			fmt.Fprintf(cmd.ErrOrStderr(), "서명 검증 캐시 경로를 해석할 수 없다 (%v). 서명된 릴리스 다운로드는 비활성이다.\n", cerr)
+			if updater, uerr := localupdate.New(self); uerr != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "시스템 업데이트를 배선할 수 없다 (%v). 설정의 업데이트 섹션은 비활성이다.\n", uerr)
+			} else {
+				systemUpdater = updater
+				releaseCandidateStager = updater
+			}
+		} else {
+			updater, downloader, uerr := assembleConsoleSystemUpdate(
+				self, filepath.Join(filepath.Dir(cachePath), "sigstore"), version.Version)
+			if updater != nil {
+				systemUpdater = updater
+				releaseCandidateStager = updater
+			}
+			if uerr != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "서명된 릴리스 다운로드를 배선할 수 없다 (%v). 기존 후보 검토·설치는 계속 사용할 수 있다.\n", uerr)
+			} else {
+				releaseDownloader = downloader
+			}
+		}
+	}
+
+	var acquireUpdateEngineLock console.AcquireUpdateEngineLock
+	if engineDir != "" {
+		acquireUpdateEngineLock = func() (func(), error) {
+			lock, err := enginelock.Acquire(engineDir)
+			if err != nil {
+				return nil, err
+			}
+			return lock.Release, nil
+		}
+	}
+
+	// The console's one live client, shared by every seam below that reads through
+	// it. Building it resolves the account against the Open API, and that read is
+	// the call which came back 429 three times on 2026-07-26 and cost a
+	// verification run three steps (measurements.md M4) — so it happens once per
+	// console process, not once per screen the operator opens. It is still lazy:
+	// nothing is built until a screen asks.
+	reads := newConsoleBroker(root)
+
 	return console.ListenAndServe(ctx, console.Options{
-		Port:              opts.port,
-		StartVerify:       consoleVerifyStarter(root),
-		SoakRecord:        soakRecord,
-		VerifyRecord:      verifyRecord,
-		VerifyRecordUS:    verifyRecordUS,
-		Attestation:       attestation,
-		MinSoakDays:       soak.DefaultCriteria().MinConsecutiveDays,
-		RequiredEndpoints: engine.RequiredEndpoints(),
-		Out:               out,
+		Port:                    opts.port,
+		StartVerify:             consoleVerifyStarter(root),
+		SoakRecord:              soakRecord,
+		VerifyRecord:            verifyRecord,
+		VerifyRecordUS:          verifyRecordUS,
+		Attestation:             attestation,
+		MinSoakDays:             soak.DefaultCriteria().MinConsecutiveDays,
+		RequiredEndpoints:       engine.RequiredEndpoints(),
+		Out:                     out,
+		SystemUpdater:           systemUpdater,
+		ReleaseDownloader:       releaseDownloader,
+		ReleaseCandidateStager:  releaseCandidateStager,
+		AcquireUpdateEngineLock: acquireUpdateEngineLock,
+		CheckUpdateVerifyActivity: func() error {
+			return strictVerifyActivity(verifyRunLockPath(verifyRecord), time.Now().UTC())
+		},
 
 		// The dashboard's three seams (change add-operator-dashboard). The console
 		// reads the journal itself — read-only, per request — and is handed a
 		// broker that can do exactly one thing.
-		Holdings:    newConsoleHoldings(root),
+		Holdings: newConsoleHoldings(reads),
+		// The orders screen's read (change console-orders-screen). One method,
+		// behind which this file makes the three calls a refresh costs.
+		Orders:      consoleOrdersSeam(reads),
 		JournalPath: journalPath,
 		RunLockPath: verifyRunLockPath(verifyRecord),
 		Settings:    consoleSettingsSeam(root),
+
+		// The overview's read-only view of the Guardian's ceilings (change
+		// console-operator-overview). Five numbers and a currency: this seam
+		// displays what the file says and can change none of it.
+		GateLimits: consoleGateLimitsSeam(root),
+
+		// The settings screen's editor for those same ceilings (change
+		// console-sets-guardian-limits). Separate from the reader above, and its
+		// Save takes five numbers and a currency — there is no field on the wire
+		// for `enabled`, so the console still cannot open the automation gate.
+		Limits: consoleLimitSettingsSeam(root),
+
+		// The operating toggles (change console-owns-the-operating-toggles). Two
+		// seams and not one: each writes its own keys, so a policy save cannot
+		// carry a stale switch and a switch flip cannot carry stale ceilings.
+		// Both append the audit line the hand-edit path never left.
+		TradingPolicy: consoleTradingPolicySeam(root),
+		Gate:          consoleGateSwitchSeam(root),
+
+		// The discovery screen's read (change add-candidate-discovery, task 5.5).
+		// It opens internal/candidate's store, runs its assessment and hands over
+		// values — no source is called, so an open /signals tab spends none of the
+		// account's rate budget and does not become a second discoverer.
+		Signals: consoleSignalsSeam(root),
 
 		// The three seams task 1.8 puts behind the console's two restart buttons.
 		// internal/console executes nothing: it decides whether the person asking
@@ -256,48 +355,354 @@ func consoleSettingsSeam(root *rootOptions) console.AdoptionSettings {
 	return nil
 }
 
-// newConsoleHoldings builds the console's holdings reader, lazily.
+// consoleLimitSettingsSeam adapts the Guardian-limit editor (limitsettings.go).
+// Same nil-on-the-concrete-pointer care as above: a typed-nil inside the
+// interface would look wired and the screen would offer controls that panic
+// instead of explaining themselves.
+func consoleLimitSettingsSeam(root *rootOptions) console.LimitSettings {
+	if s := newLimitSettingsSeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
+// consoleTradingPolicySeam and consoleGateSwitchSeam adapt the two operating
+// editors (operatingsettings.go, change console-owns-the-operating-toggles).
 //
-// Lazily because constructing the client resolves the account against the Open
-// API, and doing that at `tossctl console` startup would make a screen the
-// operator may never open into a precondition for the console coming up at all.
-// The first render pays for it; a failure is a sentence on the page.
-func newConsoleHoldings(root *rootOptions) console.HoldingsReader {
-	return &lazyHoldings{root: root}
+// They live here rather than beside their implementations for the reason the
+// package's own guard states: only console.go may import internal/console, so
+// the file that names the interface is this one and the files that satisfy it
+// stay unaware of the consumer. Same nil-on-the-concrete-pointer care as above.
+func consoleTradingPolicySeam(root *rootOptions) console.TradingPolicySettings {
+	if s := newTradingPolicySeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
+func consoleGateSwitchSeam(root *rootOptions) console.GateSwitch {
+	if s := newGateSwitchSeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
+// consoleGateLimitsSeam hands the overview screen the Guardian's ceilings, and
+// nothing else (change console-operator-overview task 5.1).
+//
+// It reads, and it stays a reader. The writer is a separate seam
+// (consoleLimitSettingsSeam, limitsettings.go) because the overview must not
+// gain the ability to change a number it exists to display.
+//
+// Turning the automation gate ON remains a §0.7 human decision taken outside any
+// browser and neither seam can do it; console-sets-guardian-limits separated the
+// ceilings from the switch rather than opening both. What crosses this boundary
+// is five float64s and a currency string — not the config service.
+//
+// A console with no resolvable config file gets no seam, and the overview renders
+// the limits as seam 미배선 rather than as zero. The same nil-on-the-concrete-type
+// care as consoleSettingsSeam: a typed-nil inside the interface would look wired.
+func consoleGateLimitsSeam(root *rootOptions) console.GateLimitsReader {
+	svc := configServiceFor(root)
+	if svc == nil {
+		return nil
+	}
+	return consoleGateLimits{svc: svc}
+}
+
+type consoleGateLimits struct{ svc *config.Service }
+
+// consoleGateLimitsTimeout bounds one read of the config file.
+//
+// The seam takes no context — it is one method and the console holds nothing else
+// of the config service — so the deadline is set here. It matters because of what
+// is on the other end: the overview reloads itself every 30 seconds and an
+// operator leaves it open all day, and a config read on a wedged filesystem with
+// context.Background() behind it would hold an HTTP handler open with no bound at
+// all. The overview's whole design is that every failure is a sentence on the
+// page; a render that never returns is the one failure it has no words for.
+const consoleGateLimitsTimeout = 5 * time.Second
+
+// GateLimits satisfies console.GateLimitsReader.
+//
+// A read failure is returned rather than swallowed: the overview renders an
+// unreadable limit as unmeasured with the error beside it, which is neither zero
+// nor unlimited — and both of those would be a screen telling an operator
+// something nobody read. A timeout arrives as one of those failures.
+func (s consoleGateLimits) GateLimits() (console.GateLimits, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), consoleGateLimitsTimeout)
+	defer cancel()
+
+	cfg, err := s.svc.Load(ctx)
+	if err != nil {
+		return console.GateLimits{}, err
+	}
+	gate := cfg.Engine.AutomationGate
+	return console.GateLimits{
+		MaxOrderQuantity:   gate.MaxOrderQuantity,
+		MaxOrderNotional:   gate.MaxOrderNotional,
+		MaxTotalExposure:   gate.MaxTotalExposure,
+		MaxDailyLossAmount: gate.MaxDailyLossAmount,
+		MaxDailyLossRatio:  gate.MaxDailyLossRatio,
+		Currency:           gate.LimitCurrency,
+	}, nil
+}
+
+// --- the console's one account resolution -----------------------------------------
+
+// consoleBroker is the live client every read seam on this console shares.
+//
+// Building that client resolves the account against the Open API: one
+// /api/v1/accounts read inside buildVerifyBroker, which is the call that came back
+// 429 three times on 2026-07-26 and cost a verification run three steps
+// (measurements.md M4). Each seam used to build its own, so a session that opened
+// the positions screen and then /orders paid for that resolution twice — per
+// process, not per refresh, but twice. This type is where the "once" lives.
+//
+// It widens nothing. A seam is handed this resolver and nothing else, and what
+// crosses into internal/console is still one bound method value per screen; the
+// client those method values come from was always reachable from this file, since
+// a bound method pins its receiver, and it is reachable from the console neither
+// before nor after.
+type consoleBroker struct {
+	root *rootOptions
+
+	mu     sync.Mutex
+	client verifylive.Broker
+}
+
+// newConsoleBroker holds the console's live client, and builds nothing yet.
+//
+// Lazily because that build resolves the account, and doing it at `tossctl
+// console` startup would make a screen the operator may never open into a
+// precondition for the console coming up at all. The first render pays for it; a
+// failure is a sentence on the page.
+func newConsoleBroker(root *rootOptions) *consoleBroker {
+	return &consoleBroker{root: root}
+}
+
+// resolve returns the console's live client, building it on the first call.
+//
+// The build happens under the lock, so two screens opened in the same second make
+// one resolution and the second waits for it instead of starting a second
+// /api/v1/accounts read. Waiting is the point: what is being serialised is exactly
+// the call whose rate limit costs a run its steps.
+//
+// A failure is returned rather than remembered: credentials that were not there
+// when the console started may be there after `tossctl openapi login`, and what
+// stops a failing build from being retried on every render is the console's own
+// cache (holdings.go bounds attempts by the TTL, not by successes).
+func (c *consoleBroker) resolve() (verifylive.Broker, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.client != nil {
+		return c.client, nil
+	}
+	broker, _, err := verifyBrokerFactory(c.root)
+	if err != nil {
+		return nil, err
+	}
+	c.client = broker
+	return c.client, nil
+}
+
+// newConsoleHoldings builds the console's holdings reader.
+//
+// It is handed the shared resolver rather than the root options, which is what
+// makes the account resolution behind the positions screen the same one the orders
+// screen uses. The laziness is unchanged — it now lives in consoleBroker.resolve.
+func newConsoleHoldings(shared *consoleBroker) console.HoldingsReader {
+	return &lazyHoldings{shared: shared}
 }
 
 // holdingsFunc is the single capability the console is handed.
 type holdingsFunc func(ctx context.Context, symbol string) ([]domain.Position, error)
 
 type lazyHoldings struct {
-	root *rootOptions
-
-	mu   sync.Mutex
-	read holdingsFunc
+	shared *consoleBroker
 }
 
 // Holdings satisfies console.HoldingsReader.
 //
-// A build failure is returned rather than remembered: credentials that were not
-// there when the console started may be there after `tossctl openapi login`, and
-// the console's own cache is what stops a failing build from being retried on
-// every render (holdings.go bounds attempts by the TTL, not successes).
+// The method value is taken off the shared client per call and dropped again. This
+// type holds no broker and no field at all beyond the resolver, so the Open API
+// client's PlaceOrder / CancelOrder / ModifyOrder are not reachable from the value
+// that crosses into internal/console.
 func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Position, error) {
-	l.mu.Lock()
-	read := l.read
-	if read == nil {
-		broker, _, err := verifyBrokerFactory(l.root)
-		if err != nil {
-			l.mu.Unlock()
-			return nil, err
-		}
-		// Only the method value is kept. Nothing here or afterwards holds the
-		// wide broker interface.
-		read = broker.Holdings
-		l.read = read
+	broker, err := l.shared.resolve()
+	if err != nil {
+		return nil, err
 	}
-	l.mu.Unlock()
+	var read holdingsFunc = broker.Holdings
 	return read(ctx, symbol)
+}
+
+// --- the orders screen's read (change console-orders-screen, task 4.6) ------------
+//
+// The console declares one method and this is the only thing in the binary that
+// satisfies it. Behind that one method are the three broker calls one refresh
+// costs, which is where they belong: the console cannot then spend the budget
+// three times over, and it cannot report one endpoint's silence as another's zero.
+
+// The two values the `status` query parameter of GET /api/v1/orders takes. It is
+// documented `required: true`, and the parameter is not a filter in the way the
+// other five are — it selects between two differently-shaped answers:
+//
+//	OPEN    "모든 대기 중 주문을 전량 반환합니다. limit, cursor 는 무시되며"
+//	CLOSED  "limit (기본 20, 최대 100), cursor, from/to 파라미터 모두 적용됩니다"
+//
+// The first implementation of this screen sent neither and asked for limit=100,
+// which is either a rejected request (the live count permanently unmeasured) or
+// one page over the account's entire history (a live order past row 100 missing
+// from the table AND from the count, rendered as "0건 이상"). Both are the failure
+// the screen exists to prevent. They are constants rather than literals so the
+// call sites read as a choice between two groups and not as a filter somebody may
+// tidy away.
+const (
+	orderGroupOpen   = "OPEN"
+	orderGroupClosed = "CLOSED"
+)
+
+// consoleOrdersPageLimit bounds one page of the CLOSED list.
+//
+// It is a page and not the whole history on purpose — the screen is "what is
+// alive and what happened today", and an unbounded walk would be a loop of broker
+// calls behind one page load. When the broker says there is more, the console
+// renders that count as a floor ("N건 이상") rather than as a number, which is why
+// truncating here is honest rather than lossy.
+//
+// It is deliberately NOT sent with the OPEN request. The API ignores it there, so
+// sending it would put a bound on the wire that the answer does not have — and the
+// live count's whole claim is that it cannot be short.
+const consoleOrdersPageLimit = 100
+
+// consoleOrdersReader is the part of the live client the orders screen needs.
+//
+// verifyBrokerFactory returns a verifylive.Broker, which does not declare the
+// raw order reads — it declares OrdersPageRaw, whose orders are undecoded JSON.
+// The concrete client has both, so the path is chosen by asserting for exactly
+// the two reads on the client the console has already resolved, rather than by
+// building a second *official.Client. That second client would resolve the account
+// sequence again, and that resolution is the call that came back 429 three times
+// on 2026-07-26 and cost a run three steps (measurements.md M4) — the same reason
+// this seam takes consoleBroker rather than rootOptions.
+type consoleOrdersReader interface {
+	OrdersRaw(ctx context.Context, filter official.OrdersFilter) (official.RawOrderList, error)
+	ConditionalOrdersRaw(ctx context.Context, status, symbol, cursor string,
+		limit int) (official.RawConditionalOrderList, error)
+}
+
+// consoleOrdersSeam builds the console's orders reader.
+//
+// It is handed the same shared resolver newConsoleHoldings gets, so opening this
+// screen after the positions screen costs no second account resolution. The
+// laziness is unchanged and now lives in one place — consoleBroker.resolve.
+func consoleOrdersSeam(shared *consoleBroker) console.OrdersReader {
+	return &lazyOrders{shared: shared}
+}
+
+type lazyOrders struct {
+	shared *consoleBroker
+}
+
+// Orders satisfies console.OrdersReader.
+//
+// The two read method values are taken off the shared client per call and dropped
+// again: this type holds no broker, so nothing reachable from the value the
+// console was handed has PlaceOrder on it.
+//
+// The three calls are sequential and each one's outcome is carried separately. A
+// failure on one is NOT returned as an error for the set: the console renders that
+// part as unmeasured and refuses to add the counts, and collapsing them into one
+// error would take the measured parts down with the missing one.
+//
+// An error is returned only when there is no reading at all to describe — no
+// credentials, or a client that does not have these reads.
+func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) {
+	broker, err := l.shared.resolve()
+	if err != nil {
+		return console.OrdersReading{}, err
+	}
+	reads, ok := broker.(consoleOrdersReader)
+	if !ok {
+		return console.OrdersReading{}, fmt.Errorf(
+			"console: this build's broker (%T) has no raw order reads; the orders screen needs "+
+				"the broker's own decimal strings, because a value that has been through float64 "+
+				"cannot say whether the broker sent one at all", broker)
+	}
+	plain, conditional := reads.OrdersRaw, reads.ConditionalOrdersRaw
+
+	var out console.OrdersReading
+
+	// The live half. status=OPEN and nothing else: the broker returns every
+	// pending order for it, so this list cannot be short and the count taken from
+	// it is a number rather than a floor. That is the only call on this screen
+	// which structurally cannot miss a leftover, and missing a leftover is what
+	// the screen is for.
+	open, err := plain(ctx, official.OrdersFilter{Status: orderGroupOpen})
+	if err != nil {
+		out.OpenError = err.Error()
+	} else {
+		out.OpenTruncated = open.HasNext
+		out.Open = consoleOrderRecords(open.Orders)
+	}
+
+	// The finished half. It is a call of its own rather than a saving, because a
+	// cancelled or a rejected order never becomes a trade — so /history, which is
+	// built from round trips, never shows it. This is the only place that
+	// information exists at all.
+	closed, err := plain(ctx, official.OrdersFilter{
+		Status: orderGroupClosed,
+		Limit:  consoleOrdersPageLimit,
+	})
+	if err != nil {
+		out.ClosedError = err.Error()
+	} else {
+		out.ClosedTruncated = closed.HasNext
+		out.Closed = consoleOrderRecords(closed.Orders)
+	}
+
+	// The OPEN group, not a per-order status: openapi says the two vocabularies
+	// differ, and this filter's job is to fetch exactly the conditionals that are
+	// still watching — the ones filling the live-exposure cap.
+	conds, err := conditional(ctx, verifylive.ConditionalStatusOpen, "", "", consoleOrdersPageLimit)
+	if err != nil {
+		out.ConditionalError = err.Error()
+	} else {
+		out.ConditionalTruncated = conds.HasNext
+		out.Conditional = make([]console.ConditionalRecord, 0, len(conds.Orders))
+		for _, o := range conds.Orders {
+			out.Conditional = append(out.Conditional, console.ConditionalRecord{
+				ID: o.ID, Symbol: o.Symbol, Market: o.Market, Kind: o.Type, Status: o.Status,
+				Quantity: o.Quantity, TriggerPrice: o.TriggerPrice, OrderPrice: o.OrderPrice,
+				ConditionKind: o.ConditionType, Triggered: o.TriggeredOrderID,
+				ExpireDate: o.ExpireDate, CreatedAt: o.CreatedAt,
+			})
+		}
+	}
+
+	return out, nil
+}
+
+// consoleOrderRecords carries one page of raw orders across the console boundary.
+//
+// Every value stays the string the broker sent. parseDecimal anywhere on this path
+// would put back the zero the whole raw read exists to keep out: the API sends
+// price as null for a market order and the entire execution object as null while
+// an order is alive, so a converted reading says every live order filled at
+// nothing.
+func consoleOrderRecords(orders []official.RawOrder) []console.OrderRecord {
+	out := make([]console.OrderRecord, 0, len(orders))
+	for _, o := range orders {
+		out = append(out, console.OrderRecord{
+			ID: o.ID, Symbol: o.Symbol, Side: o.Side, Kind: o.OrderType, Status: o.Status,
+			Market: o.Market, Currency: o.Currency,
+			Quantity: o.Quantity, Price: o.Price,
+			FilledQuantity: o.FilledQuantity, AverageFilledPrice: o.AverageFilledPrice,
+			OrderedAt: o.OrderedAt, CanceledAt: o.CanceledAt,
+		})
+	}
+	return out
 }
 
 // consoleHandoffPath is where the single-use restart token lives: beside the
@@ -373,6 +778,29 @@ func argvWithPort(args []string, port int) []string {
 // (task 1.7). The console computes the set from the evidence record — never from
 // the request — and it changes only which steps the runner will walk: the plan is
 // rebuilt and a new expiring string still has to be typed before anything is sent.
+//
+// This is the one place in the console that does NOT take the shared read client,
+// and that is deliberate. It builds its own through verifyBrokerFactory on every
+// run, which costs one more /api/v1/accounts read than reusing the console's,
+// because:
+//
+//   - The run is about to place real orders, and the account it names in the
+//     evidence record is the one it resolved at run start. Reusing a resolution
+//     performed whenever the operator happened to open a read screen — possibly
+//     hours earlier, possibly before `tossctl openapi login` replaced the
+//     credentials — would produce a record naming an account that this run never
+//     confirmed. An unconfirmed account on a record of real orders is worse than
+//     one extra read.
+//   - The resolution's failure contract differs. A read screen renders it as a
+//     sentence and stays up; here it is fatal before a person is asked anything,
+//     under verifylive's read retry policy (resolveVerifyAccount).
+//   - Reads and a verification are different trust contexts. The read seams are
+//     handed a client stripped to bound method values; the runner needs the whole
+//     broker, and that asymmetry should not be resolved by giving the read path's
+//     client the wider job.
+//
+// The cost is bounded: one resolution per run started, not per screen and not per
+// refresh.
 func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 	return func(
 		ctx context.Context,
@@ -382,6 +810,14 @@ func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 		redo []verifylive.StepID,
 	) (verifylive.Summary, []verifylive.Entry, error) {
 		var empty verifylive.Summary
+
+		executionLock, err := acquireVerifyExecutionLock(root)
+		if err != nil {
+			return empty, nil, err
+		}
+		defer executionLock.Release()
+		fmt.Fprintf(out, "execution lock   %s (engine · update · verification exclusion)\n",
+			executionLock.Path())
 
 		market = verifylive.NormalizeMarket(market)
 		// The record is resolved per run rather than captured once, because it is
@@ -448,4 +884,142 @@ func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 // ever did, it refuses, which is the direction a mistake here has to fail in.
 func consoleMutationConfirmer() verifylive.Confirmer {
 	return func(verifylive.Mutation) error { return verifylive.ErrNotATerminal }
+}
+
+// --- the discovery screen (change add-candidate-discovery, task 5.5) ---------------
+//
+// The seam below hands /signals a read of the discovery store, and nothing else.
+// It lives in this file because console_test.go's
+// TestOnlyConsoleGoReachesTheConsolePackage allows exactly one importer of
+// internal/console: a second one would be a second place the web confirmer could
+// be wired, and reviewing one file is the only way that claim stays checkable.
+//
+// # It reads and it never scans
+//
+// candidate.Assess loads what is already stored and calls no source. That is the
+// whole arrangement: spec Requirement 7 ranks the account's rate budget engine >
+// verification > discovery, and a browser tab reloading every fifteen seconds into
+// a second discoverer would compete with `tossctl candidate watch` for the
+// undocumented RANKING limit — where one 429 costs the entire source, because the
+// rankings have no WTS fallback (D14 decision 2). It would also write a second
+// near-duplicate observation per symbol per tick into the series the acceleration
+// is differenced from.
+//
+// # And it opens the store per read rather than holding it
+//
+// Store.Checkpoint's own documentation names this screen as the long-lived reader
+// that stops `wal_checkpoint(TRUNCATE)` from reclaiming anything — and the write-
+// ahead log grows beside the table on the filesystem the order ledger writes to
+// (D16). A console that held the store open would quietly disable the cleanup the
+// watch loop runs every turn. Opening for the length of one render costs a file
+// open every refresh and keeps that sweep working.
+
+// consoleSignalsMarkets is what the screen reports on, in the contract's order
+// (design.md 결정된 계약값: markets.KR and markets.US, both enabled from the start).
+var consoleSignalsMarkets = []string{candidate.MarketKR, candidate.MarketUS}
+
+// consoleSignalsPanelWhy is why the screen cannot name the sources a scan lost.
+//
+// ScanResult.Missing is the only thing that carries a source id together with the
+// reason it did not answer, and it lives for the length of one cycle in the
+// process that ran it. The console is not that process and the store persists no
+// scan record, so this reading has no names to give — and saying so is the whole
+// of the rule task 5.7 states: a degradation nobody can attribute is a display
+// nobody can act on, and inventing an attribution would be worse than admitting
+// the gap. See openspec/changes/add-candidate-discovery/issues.md.
+//
+// What IS on the screen is the store's own per-candidate completeness — attempted,
+// answered and degraded, as recorded by the last scan that touched each row — so
+// the page is not silent about degradation, only about which source caused it.
+const consoleSignalsPanelWhy = "이 콘솔 프로세스는 스캔을 돌리지 않는다. " +
+	"빠진 원천의 이름과 사유는 스캔 결과에만 있고 저장소에 남지 않으므로, " +
+	"`tossctl candidate scan`이나 `tossctl candidate watch`의 출력에서 확인한다. " +
+	"아래 후보별 완전성은 저장소가 기록한 마지막 스캔의 값이다."
+
+// consoleSignals is the seam's implementation.
+type consoleSignals struct {
+	// open resolves the discovery store and hands back the release for it. It is a
+	// field rather than a direct call so this package's tests can point it at a
+	// temporary one.
+	//
+	// It takes the caller's context because Open migrates: the schema check, the
+	// ladder behind it and every query afterwards belong to the request that asked
+	// for the page, and this page reloads itself every fifteen seconds. A request
+	// the browser has already abandoned used to keep all of it running under
+	// context.Background().
+	open func(ctx context.Context) (*candidate.Store, func(), error)
+}
+
+// consoleSignalsSeam wires the discovery screen.
+//
+// What crosses the boundary is a value: verdicts, tallies and a panel report.
+// internal/candidate's Store — which can promote, cool and prune — never becomes
+// reachable from internal/console, so "the discovery screen changes nothing" is a
+// fact about the wiring rather than about the handlers.
+func consoleSignalsSeam(root *rootOptions) console.SignalsReader {
+	return &consoleSignals{
+		open: func(ctx context.Context) (*candidate.Store, func(), error) {
+			return candidateStoreFactory(ctx, root)
+		},
+	}
+}
+
+// Signals reads every contract market's assessment as of one instant.
+func (s *consoleSignals) Signals(ctx context.Context) (console.SignalsReading, error) {
+	store, release, err := s.open(ctx)
+	if err != nil {
+		return console.SignalsReading{}, fmt.Errorf("candidate: opening the discovery store: %w", err)
+	}
+	defer release()
+
+	// One instant for every market, taken from the store's clock rather than this
+	// process's: every input age on the page is measured against it, and two
+	// markets read at two instants would answer the same question differently.
+	at := store.Now()
+	out := console.SignalsReading{At: at}
+	for _, market := range consoleSignalsMarkets {
+		out.Markets = append(out.Markets, consoleSignalsMarket(ctx, store, market, at))
+	}
+	return out, nil
+}
+
+// consoleSignalsMarket assesses one market.
+//
+// A market that could not be read comes back present with Why set rather than
+// omitted: a market missing from the page is indistinguishable from a market with
+// nothing in it, which is the confusion this whole screen exists to remove, one
+// level up from the veto.
+func consoleSignalsMarket(ctx context.Context, store *candidate.Store, market string,
+	at time.Time) console.SignalsMarket {
+
+	out := console.SignalsMarket{
+		Market: market,
+		Panel:  console.SignalsPanel{Why: consoleSignalsPanelWhy},
+	}
+	verdicts, err := candidate.Assess(ctx, store, candidate.AssessOptions{
+		Market: market,
+		At:     at,
+		// The same thresholds `tossctl candidate scan` applies, from the same
+		// function. This used to be its own literal, and a literal on each side of
+		// the seam is how the two surfaces come to disagree about the same store at
+		// the same instant — each one internally consistent, neither one failing.
+		// See vetothresholds.go.
+		Thresholds: candidateVetoThresholds(),
+	})
+	if err != nil {
+		out.Why = err.Error()
+		return out
+	}
+	out.Verdicts = verdicts
+
+	// The same reducer the scan output uses, rather than the same three
+	// constructors called again here. This block used to assemble the tallies by
+	// hand: the two agreed, and the whole cost sat in the future — a fourth shadow
+	// band added to internal/candidate would have appeared on `tossctl candidate
+	// scan` and not on /signals, and a band missing from a page renders as a band
+	// nobody crossed rather than as one nobody counted.
+	out.Vetoes, out.Crossings, out.Bands = candidate.TallyVerdicts(verdicts)
+	// Same reducer as the scan output's, for the same reason as the line above it.
+	out.Sightings = candidate.TallySightingSources(verdicts)
+	return out
 }

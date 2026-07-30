@@ -1,0 +1,71 @@
+{
+  "file": "internal/verifylive/redo_test.go",
+  "source_sha256": "08e3e21d07e891b6ed09a268d4c6fe7c3436204a98071ba05772f28ea29ba1cf",
+  "package": "verifylive",
+  "function": "TestRedoableVerdictAgreesWithTheSet",
+  "signature": "TestRedoableVerdictAgreesWithTheSet(params=1, results=0)",
+  "start": {
+    "line": 104,
+    "column": 1
+  },
+  "end": {
+    "line": 118,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 13
+      },
+      "text": "RedoableVerdict"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

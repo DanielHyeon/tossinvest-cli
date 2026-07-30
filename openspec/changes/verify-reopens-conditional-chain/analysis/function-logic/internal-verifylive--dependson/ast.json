@@ -1,0 +1,53 @@
+{
+  "file": "internal/verifylive/redo.go",
+  "source_sha256": "6c8ef353fb2d679633cd7e7273e3aad668cd6c9d05912b529d7691cf021525a1",
+  "package": "verifylive",
+  "function": "dependsOn",
+  "signature": "dependsOn(params=2, results=1)",
+  "start": {
+    "line": 138,
+    "column": 1
+  },
+  "end": {
+    "line": 145,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 141,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

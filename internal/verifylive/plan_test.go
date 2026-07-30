@@ -47,7 +47,12 @@ func TestThePlanCarriesEveryMutationTheCatalogueDeclares(t *testing.T) {
 
 	// A one-share holding, so every declared quantity rule but the partial resolves.
 	for _, step := range Steps() {
-		if !step.Mutates {
+		// mutatesNow, not step.Mutates. A step whose deferral this run did not lift
+		// declares mutations it will not make: its body records an explicit
+		// "unverified" and sends nothing. Expecting a plan line for it would be
+		// asserting that the operator is asked to approve a live request for work
+		// that is not going to happen — the opposite of what this test is for.
+		if !r.mutatesNow(step) {
 			continue
 		}
 		if reason, skip := r.preflightStatic(step, func(StepID) bool { return true }); skip {

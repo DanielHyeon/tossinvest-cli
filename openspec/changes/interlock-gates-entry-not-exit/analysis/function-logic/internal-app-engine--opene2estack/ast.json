@@ -1,0 +1,46 @@
+{
+  "file": "internal/app/engine/exit_e2e_test.go",
+  "source_sha256": "030cf9acb637878df5f1d2128f98dfd74764e91915ef657167cb67029dc12ef8",
+  "package": "engine_test",
+  "function": "openE2EStack",
+  "signature": "openE2EStack(params=4, results=1)",
+  "start": {
+    "line": 208,
+    "column": 1
+  },
+  "end": {
+    "line": 211,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 9
+      },
+      "text": "buildE2EStack"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

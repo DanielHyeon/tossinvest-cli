@@ -111,6 +111,24 @@ func (f *fakeBroker) Prices(_ context.Context, symbols []string) ([]domain.Quote
 	return out, nil
 }
 
+// Orderbook answers with one level a side, which is what US does (M49). The
+// console never opts into the trigger observation, so this exists to satisfy the
+// interface rather than to be measured against.
+func (f *fakeBroker) Orderbook(_ context.Context, symbol string) (domain.OrderBook, error) {
+	if symbol == usProbeSymbol {
+		return domain.OrderBook{
+			Symbol: symbol,
+			Bids:   []domain.OrderBookLevel{{Price: 1.26, Volume: 10}},
+			Offers: []domain.OrderBookLevel{{Price: 1.28, Volume: 10}},
+		}, nil
+	}
+	return domain.OrderBook{
+		Symbol: symbol,
+		Bids:   []domain.OrderBookLevel{{Price: 69900, Volume: 10}},
+		Offers: []domain.OrderBookLevel{{Price: 70100, Volume: 10}},
+	}, nil
+}
+
 func (f *fakeBroker) PriceLimits(_ context.Context, symbol string) (domain.PriceLimits, error) {
 	if symbol == usProbeSymbol {
 		// US has no daily band; the endpoint returns null for both bounds.

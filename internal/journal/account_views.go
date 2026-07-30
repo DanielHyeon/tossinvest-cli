@@ -222,6 +222,54 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 	return out, nil
 }
 
+// BrokerOrderIDs returns every broker order id this engine's own mutation
+// attempts recorded, sorted and de-duplicated (change console-orders-screen,
+// task 2.1).
+//
+// # What it answers and what it deliberately does not
+//
+// The orders screen asks one question of the ledger: was this order number one
+// the engine caused to exist? mutation_attempts.broker_order_id is the whole
+// answer — it is written when the broker acks a PLACE, a CANCEL or an AMEND, so
+// an id in this set is an id some attempt of this engine's produced. An id that
+// is not in it is either somebody's manual order or an attempt the broker never
+// acked, and the screen says "그 밖" rather than naming a person.
+//
+// It is NOT scoped by account, unlike every other read in this file. The other
+// four project an account's positions and their history, where mixing two
+// accounts would be a wrong screen; this one compares against order numbers the
+// broker issued, which are the broker's own identifiers. Scoping would mean
+// joining through intents.account_ref, and a spelling difference between that
+// column and the account the console is looking at would silently drop rows —
+// which on this screen renders as "the engine placed none of these".
+//
+// The empty id is excluded rather than returned. broker_order_id defaults to ”
+// for an attempt that never got an ack, and an empty entry would match every
+// order whose id the payload omitted.
+func (r *ReadOnly) BrokerOrderIDs(ctx context.Context) ([]string, error) {
+	rows, err := r.db.QueryContext(ctx,
+		`SELECT DISTINCT broker_order_id FROM mutation_attempts
+		  WHERE broker_order_id <> ''
+		  ORDER BY broker_order_id`)
+	if err != nil {
+		return nil, fmt.Errorf("journal: listing the broker order ids in %s: %w", r.path, err)
+	}
+	defer rows.Close()
+
+	var out []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("journal: reading a broker order id: %w", err)
+		}
+		out = append(out, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: listing the broker order ids in %s: %w", r.path, err)
+	}
+	return out, nil
+}
+
 // AccountTradeTrips returns the frozen round trips of one account, oldest close
 // first, with the symbol and the t0 entry price joined in.
 //

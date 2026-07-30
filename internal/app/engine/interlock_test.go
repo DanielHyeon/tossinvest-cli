@@ -436,6 +436,32 @@ func TestGateOnRefusals(t *testing.T) {
 			wantMessage: "allow_live_order_actions",
 		},
 		{
+			// Placing is disabled. The clause used not to look, and the shape it
+			// let through is the one its own sentence forbids: a sell IS a place
+			// (internal/trading refuses on policy.Place regardless of side), so
+			// this engine starts and then refuses its first stop.
+			name:        "placing is disabled",
+			gate:        fullGate(),
+			trading:     &config.Trading{Sell: true, Cancel: true, Amend: true, AllowLiveOrderActions: true},
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrTradingPolicyRefused,
+			wantMessage: "trading.place",
+		},
+		{
+			// Cancelling is disabled. The exit observer cancels its own armed
+			// proposal, so an exit path without it stalls rather than exits.
+			name:        "cancelling is disabled",
+			gate:        fullGate(),
+			trading:     &config.Trading{Place: true, Sell: true, Amend: true, AllowLiveOrderActions: true},
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrTradingPolicyRefused,
+			wantMessage: "trading.cancel",
+		},
+		{
 			name:     "the Guardian carries different limits",
 			gate:     fullGate(),
 			writeAtt: true,
@@ -522,7 +548,13 @@ func TestGateOnRefusals(t *testing.T) {
 			}
 			srv, _ := interlockServer(t, tc.accountNo)
 
-			eng, err := openGateEngine(t, dir, srv, tc.guardian)
+			var eng *engine.Context
+			var err error
+			if tc.name == "no Guardian injected" {
+				eng, err = openGateWithoutProductionGuardian(t, dir, srv)
+			} else {
+				eng, err = openGateEngine(t, dir, srv, tc.guardian)
+			}
 			if err == nil {
 				t.Fatal("startup must be refused")
 			}
@@ -815,17 +847,26 @@ func withoutEndpoint(drop string) []string {
 	return out
 }
 
-// TestTheGateRefusesWithoutBrokerSideProtection is engine-safety's own scenario
-// ("보호 실행 미배선 기동 → 기동이 거부되고 보호주문 실행 선행이 안내된다").
+// TestNothingElseRefusesTheOperatorConfiguration is what this test became.
 //
-// The assertion that carries the most is where the refusal comes from. Clause 6
-// is evaluated last, so *reaching* it means every earlier clause passed on this
-// configuration: the limits are complete, the policy can exit, the attestation
-// is valid and covers every endpoint, the Guardian is the audited source and the
-// gateway is wired. The gate still does not come up, and it cannot be made to by
-// anything an operator can configure — that is the mechanical block the local
-// stop needs until a protective order lives at the broker.
-func TestTheGateRefusesWithoutBrokerSideProtection(t *testing.T) {
+// It used to be TestTheGateRefusesWithoutBrokerSideProtection, and its premise —
+// that a fully attested operator configuration still cannot start — is exactly
+// what interlock-gates-entry-not-exit inverts. The behaviour it asserted now
+// lives in two places: the runtime coming up is interlock_entry_test.go, and the
+// refusal of a raising mutation is internal/execgw's protection_test.go.
+//
+// What does not live anywhere else is the assertion this keeps: that on a
+// configuration an operator can actually produce, *no clause objects*. Clause 6
+// used to prove that by being reached last; with clause 6 gone from the list, the
+// only way to say it is to say it — enumerate every refusal and require the
+// absence of all of them, and require the audit to record an acceptance rather
+// than a refusal.
+//
+// It matters because the failure it catches is silent. A start that refuses for
+// an earlier reason would still look like "the engine did not come up", and the
+// operator would go on believing it is the protective-order change they are
+// waiting for.
+func TestNothingElseRefusesTheOperatorConfiguration(t *testing.T) {
 	dir := isolate(t)
 	writeGateConfig(t, dir, fullGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
@@ -833,22 +874,8 @@ func TestTheGateRefusesWithoutBrokerSideProtection(t *testing.T) {
 	srv, _ := interlockServer(t, "123-45")
 
 	eng, err := openGateEngine(t, dir, srv, matchedGuardian())
-	if err == nil {
-		t.Fatal("a gate with everything else in place must still be refused")
-	}
-	if eng != nil {
-		t.Error("a refused startup must return no engine at all")
-	}
-	if !errors.Is(err, engine.ErrAutomationGateRefused) {
-		t.Errorf("err = %v, want it to wrap ErrAutomationGateRefused", err)
-	}
-	if !errors.Is(err, engine.ErrProtectionNotWired) {
-		t.Fatalf("err = %v, want the protection clause to be the sole refusal — "+
-			"any other cause means an earlier clause failed on the same configuration", err)
-	}
-	// Every earlier clause's own error is absent, which is the "sole refusal"
-	// half stated directly rather than inferred from the ordering.
-	for _, other := range []error{
+	for _, clause := range []error{
+		engine.ErrAutomationGateRefused,
 		engine.ErrGuardianRequired,
 		engine.ErrLimitsRequired,
 		engine.ErrTradingPolicyRefused,
@@ -859,25 +886,27 @@ func TestTheGateRefusesWithoutBrokerSideProtection(t *testing.T) {
 		attest.ErrAccountMismatch,
 		attest.ErrEndpointNotAttested,
 	} {
-		if errors.Is(err, other) {
-			t.Errorf("err also wraps %v; clause 6 must be the only thing standing", other)
+		if errors.Is(err, clause) {
+			t.Errorf("a complete operator configuration was refused by %v", clause)
 		}
 	}
-	for _, want := range []string{"protective", "local judgement"} {
-		if !strings.Contains(err.Error(), want) {
-			t.Errorf("message %q does not tell the operator about %q", err, want)
-		}
+	if err != nil {
+		t.Fatalf("start: %v", err)
+	}
+	if eng == nil {
+		t.Fatal("a start with no refusal must return an engine")
 	}
 
-	// The refusal is on the record: a refused start produces no engine, so the
-	// audit line is the only trace that somebody tried (§0.5).
+	// The acceptance is on the record, and no refusal is. An audit trail that
+	// shows a refusal here would describe a gate that did not come up (§0.5).
 	entries := readAudit(t, filepath.Join(dir, "audit.log"))
-	refused := lastEntryFor(entries, "engine.automation_gate.enabled", audit.ActionGateRefused)
-	if refused == nil {
-		t.Fatalf("the refusal was not recorded; entries = %+v", entries)
+	if refused := lastEntryFor(entries, "engine.automation_gate.enabled",
+		audit.ActionGateRefused); refused != nil {
+		t.Errorf("a successful start recorded a refusal: %+v", refused)
 	}
-	if !strings.Contains(refused.Detail, "protective") {
-		t.Errorf("refusal detail = %q, want the cause in it", refused.Detail)
+	if accepted := lastEntryFor(entries, "engine.automation_gate.enabled",
+		audit.ActionGateAccepted); accepted == nil {
+		t.Fatalf("the acceptance was not recorded; entries = %+v", entries)
 	}
 }
 

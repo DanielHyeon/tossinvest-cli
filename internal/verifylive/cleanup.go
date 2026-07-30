@@ -71,34 +71,123 @@ func cleanupStep() Step {
 
 // cleanupTargets are the objects this run will offer to remove.
 //
-// Two rules, and the second one is the whole subtlety:
+// One rule:
 //
-//	an order              is always a target. No step in the catalogue ever
-//	                      cancels an order from an earlier run — each step cancels
-//	                      what it placed itself — so if the prologue does not take
-//	                      it, nothing will.
-//	a conditional order   is a target only once the step that cancels it has a
-//	                      terminal verdict. Before that it is the subject of a
-//	                      measurement: conditional-persist observes that it
-//	                      outlives the process that registered it, and a prologue
-//	                      that cancelled it first would delete the evidence and
-//	                      then report the step as unmeasurable.
+//	an object is a target once the step it names as its gate has a terminal
+//	verdict *recorded after the line that named it*.
 //
-// The list comes from the record, which is what makes "this tool created it" a
-// fact rather than a guess. Nothing else on the account is ever a target.
+// An object that names no gate has nothing to wait for and is always a target;
+// holdGate supplies the gate an old line meant but could not spell.
+//
+// The rule is what it is because of two failures a year apart in the same shape.
+//
+// On 2026-07-28 a conditional order registered on purpose — the persistence step
+// reads it back from a later process — was cancelled by the next run's prologue on
+// the authority of a `skipped` recorded on 07-26, when the account held nothing.
+// It died 308 milliseconds before the measurement that existed to read it, and
+// every run after that skipped in the same place; conditional-register was `pass`,
+// so no redo could put the subject back (see redo.go). *A verdict recorded before
+// an object existed is not a verdict about that object.*
+//
+// The second is the one this shape was generalised for. A conditional order that
+// fires produces a child market sell, and that child has to be **allowed to fill**
+// — not cancelling it is the measurement rather than a leak. Until 2026-07-30 the
+// guard above protected conditional orders only, and every order this tool created
+// was an unconditional target, so the next run would have cancelled the evidence.
+// The fix is not a third special case: it is letting the object say what it is
+// waiting for.
+//
+// Release is positional and never a clock (heldAfter). The list comes from the
+// record, which is what makes "this tool created it" a fact rather than a guess.
+// Nothing else on the account is ever a target.
 func (r *Runner) cleanupTargets() []Artifact {
+	return cleanupFrom(r.prior, func(id StepID) bool {
+		settled, _ := r.settled(id)
+		return settled
+	})
+}
+
+// PendingCleanup is cleanupTargets for a caller holding only the record.
+//
+// It exists because "is there anything to do?" is asked in two places and must be
+// answered the same way in both. The console refuses a resume that would walk the
+// catalogue and settle nothing — the no-op that cost a market window on
+// 2026-07-27 — and a record whose steps are all terminal *but* which still holds a
+// leftover is not that no-op: the run has one live cancel to send. Answering that
+// question from a second copy of the rule is how the deadlock this file exists to
+// remove would grow back on the console side.
+func PendingCleanup(entries []Entry) []Artifact {
+	return cleanupFrom(entries, func(id StepID) bool { return Settled(entries, id) })
+}
+
+func cleanupFrom(entries []Entry, settled func(StepID) bool) []Artifact {
 	var out []Artifact
-	for _, a := range Outstanding(r.prior) {
-		switch a.Kind {
-		case KindOrder:
-			out = append(out, a)
-		case KindConditional:
-			if settled, _ := r.settled(StepConditionalCancel); settled {
-				out = append(out, a)
-			}
+	for _, l := range outstandingLines(entries) {
+		gate := holdGate(l.Artifact)
+		if gate == "" {
+			out = append(out, l.Artifact)
+			continue
+		}
+		if settled(gate) && heldAfter(entries, gate, l.at) {
+			out = append(out, l.Artifact)
 		}
 	}
 	return out
+}
+
+// holdGate names the step whose verdict releases an object, or "" for an object
+// nothing is waiting on.
+//
+// The two defaults are the rule this file carried before objects could say what
+// they were waiting on, written out so the old records keep the judgement they
+// have today:
+//
+//	conditional order   conditional-cancel. It was the only step that could hold
+//	                    one, so `Deliberate` on an old line means exactly
+//	                    "held until conditional-cancel".
+//	order               nothing. Every order this tool left resting was a mistake
+//	                    it had to be able to clear, because no step cancels an
+//	                    order from an earlier run.
+//
+// The second default is the one a trigger measurement has to override: the child
+// order a conditional produces when it fires must be *allowed to fill*, and
+// "this run did not cancel it" is the measurement rather than a leak.
+func holdGate(a Artifact) StepID {
+	if a.HeldUntil != "" {
+		return a.HeldUntil
+	}
+	if a.Kind == KindConditional {
+		return StepConditionalCancel
+	}
+	return ""
+}
+
+// heldAfter reports whether the gate step's newest line came after the line at
+// index at — the line that named the gate.
+//
+// Reading the gate and measuring the verdict against the same line is the whole
+// definition. The alternative considered and rejected (design.md D2) measured
+// from the most recent line that declared *any* hold, which let a cancel that
+// failed after the hold be undone by any later mention of the object — rebuilding
+// the leftover deadlock verify-clears-leftovers exists to remove.
+//
+// Position in the record, not a clock. The evidence file is append-only JSONL, so
+// index order is monotone by construction; timestamps are not, and the record
+// shows why an artifact's own CreatedAt cannot stand in for one — a cancellation
+// line carries the zero time. A time-based release would also fire in the middle
+// of a trigger measurement's wait, where a long wait means the market has not
+// moved yet rather than that anything failed.
+//
+// Fail-closed: no line for the gate at all leaves decided at -1, which is not
+// after anything, so the measurement keeps its subject.
+func heldAfter(entries []Entry, gate StepID, at int) bool {
+	decided := -1
+	for i := range entries {
+		if entries[i].StepID == gate {
+			decided = i
+		}
+	}
+	return decided > at
 }
 
 // planCleanup renders the targets as approval lines.
@@ -162,6 +251,57 @@ func (r *Runner) runCleanup(ctx context.Context, sr *stepRun, targets []Artifact
 		}
 	}
 	sr.resolve(first)
+}
+
+// sweepStep cancels what a step placed and did not clear.
+//
+// The success paths already do this; the failure paths walked away. On 2026-07-28
+// that cost two measurements at once: order-amend was refused, returned on the
+// error, and left the order it had just placed resting — filling the one-order
+// exposure cap that sell-boundary then needed (measurements.md M24). The step's
+// verdict is untouched by the sweep: a swept step is still a failed measurement,
+// and saying otherwise would be the record flattering the run.
+//
+// Scope is exactly the artifacts this step created and did not cancel. Not the
+// record's leftovers — those belong to the prologue, which puts each one on a list
+// a person approves.
+//
+// Two conditions skip it, and they are one rule said twice: when the run is not
+// allowed to send anything, it does not send this either.
+//
+//	sr.abort set     the step tried to send something outside the approved plan,
+//	                 or stdin was not a terminal, or the context died. The run is
+//	                 stopping; the artifact is reported and the next run's prologue
+//	                 offers its cancel on a list.
+//	ctx cancelled    the operator interrupted.
+func (r *Runner) sweepStep(ctx context.Context, sr *stepRun) {
+	if sr.abort != nil || ctx.Err() != nil {
+		return
+	}
+	mine := []Entry{{StepID: sr.step.ID, Artifacts: sr.artifacts}}
+	for _, a := range Outstanding(mine) {
+		if a.Kind != KindOrder {
+			// A conditional order outliving its step is the persistence design,
+			// not a leak: conditional-persist has to read it from a later process.
+			continue
+		}
+		if a.Deliberate {
+			// An order the step declared it is holding. The trigger observation is
+			// the case: the child order a conditional produces has to be allowed to
+			// fill, and cancelling it here would sweep away the measurement on the
+			// path where the step failed to see the fill in time — the one path
+			// where the evidence matters most. Nothing before 2026-07-30 marked an
+			// order deliberate, so this changes no existing step.
+			continue
+		}
+		if err := r.cancelOrder(ctx, sr, a.ID, a.Symbol, "이 단계가 실패해 남긴 주문 — 다음 단계의 노출 상한을 비운다"); err != nil {
+			// Honest and non-fatal: the step already has its verdict, and the
+			// artifact stays outstanding for the screen, the record and the next
+			// run's prologue to deal with.
+			sr.observe("step.sweep.failed", "true", truncateError(err))
+			return
+		}
+	}
 }
 
 // cleanup is the prologue as the run sees it: it writes its own line to the record

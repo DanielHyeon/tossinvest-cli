@@ -1,0 +1,38 @@
+{
+  "file": "internal/candidate/wiring_test.go",
+  "source_sha256": "3ba34fd29e74ccaaea2bb20d7ab263f7891a35cbc77206f72915e3939f7428b5",
+  "package": "candidate",
+  "function": "pricedRow",
+  "signature": "pricedRow(params=4, results=1)",
+  "start": {
+    "line": 33,
+    "column": 1
+  },
+  "end": {
+    "line": 39,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 17
+      },
+      "text": "NewlyListedNo"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

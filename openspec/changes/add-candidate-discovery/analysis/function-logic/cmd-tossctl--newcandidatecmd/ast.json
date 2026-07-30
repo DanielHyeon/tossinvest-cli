@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "56733e44c5620f0d6215bfc3ce07804164431153fac724de82fd7ebf99153b10",
+  "package": "main",
+  "function": "newCandidateCmd",
+  "signature": "newCandidateCmd(params=1, results=1)",
+  "start": {
+    "line": 91,
+    "column": 1
+  },
+  "end": {
+    "line": 98,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 17
+      },
+      "text": "newCandidateScanCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 44
+      },
+      "text": "newCandidateWatchCmd"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

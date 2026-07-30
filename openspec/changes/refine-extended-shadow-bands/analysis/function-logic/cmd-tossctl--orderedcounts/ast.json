@@ -1,0 +1,78 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "162ad89e8607578579a94e00fdaa0a68bb3876eada19ffcfe0327a664566faed",
+  "package": "main",
+  "function": "orderedCounts",
+  "signature": "orderedCounts(params=2, results=1)",
+  "start": {
+    "line": 973,
+    "column": 1
+  },
+  "end": {
+    "line": 979,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 975,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 976,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 978,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 974,
+        "column": 11
+      },
+      "text": "orderedCountParts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 975,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 978,
+        "column": 9
+      },
+      "text": "strings.Join"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 974,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

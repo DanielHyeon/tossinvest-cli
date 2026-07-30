@@ -1,0 +1,235 @@
+{
+  "file": "internal/candidate/watch.go",
+  "source_sha256": "1aa356933d8e9ad3ea2b98a4ded5d25972eb163c16897edff4240584ad7b0106",
+  "package": "candidate",
+  "function": "assessOne",
+  "signature": "assessOne(params=5, results=1)",
+  "start": {
+    "line": 384,
+    "column": 1
+  },
+  "end": {
+    "line": 424,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 406,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 407,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 413,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 412,
+        "column": 42
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 423,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 15
+      },
+      "text": "MeasureFirstSighting"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 16
+      },
+      "text": "MeasureExpansion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 12
+      },
+      "text": "MeasureRangePosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
+        "column": 12
+      },
+      "text": "AssessChase"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 35
+      },
+      "text": "shadowBandsFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 24
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 2
+      },
+      "text": "sort.Slice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 16
+      },
+      "text": "NewSourceSeries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 21
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 4
+      },
+      "text": "Accelerate"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 390,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 391,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 407,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 408,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 410,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 419,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 420,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

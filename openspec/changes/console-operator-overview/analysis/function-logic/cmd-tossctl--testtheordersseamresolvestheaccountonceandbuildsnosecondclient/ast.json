@@ -1,0 +1,309 @@
+{
+  "file": "cmd/tossctl/console_test.go",
+  "source_sha256": "85d9f3fcee393ead51e81a16bc898ad15bca9164cbd695f0c65e245ef5d3a22c",
+  "package": "main",
+  "function": "TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient",
+  "signature": "TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(params=1, results=0)",
+  "start": {
+    "line": 693,
+    "column": 1
+  },
+  "end": {
+    "line": 731,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 710,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 711,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 715,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 722,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 727,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 699,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 694,
+        "column": 9
+      },
+      "text": "newVerifyServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 699,
+        "column": 10
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 701,
+        "column": 4
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 701,
+        "column": 18
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 702,
+        "column": 4
+      },
+      "text": "official.WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 703,
+        "column": 4
+      },
+      "text": "official.WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 703,
+        "column": 28
+      },
+      "text": "srv.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 704,
+        "column": 4
+      },
+      "text": "official.WithAccountSeq"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 707,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 10
+      },
+      "text": "consoleOrdersSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 28
+      },
+      "text": "newConsoleBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 711,
+        "column": 16
+      },
+      "text": "seam.Orders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 711,
+        "column": 28
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 712,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 716,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 721,
+        "column": 9
+      },
+      "text": "readSource"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 722,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 723,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 727,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 728,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 694,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 695,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 696,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 697,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 698,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 707,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 709,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 710,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 710,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 711,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 721,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

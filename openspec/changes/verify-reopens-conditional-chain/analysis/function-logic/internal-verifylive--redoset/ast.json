@@ -1,0 +1,110 @@
+{
+  "file": "internal/verifylive/redo.go",
+  "source_sha256": "6c8ef353fb2d679633cd7e7273e3aad668cd6c9d05912b529d7691cf021525a1",
+  "package": "verifylive",
+  "function": "RedoSet",
+  "signature": "RedoSet(params=1, results=1)",
+  "start": {
+    "line": 74,
+    "column": 1
+  },
+  "end": {
+    "line": 87,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 78,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 82,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 23
+      },
+      "text": "Steps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 12
+      },
+      "text": "LastEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 6
+      },
+      "text": "RedoableVerdict"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 36
+      },
+      "text": "subjectLost"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 10
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 83,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

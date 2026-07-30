@@ -80,17 +80,21 @@ func realGuardian(t *testing.T, policy risk.Policy) *execgw.RiskGuardian {
 	return g
 }
 
-// TestTheRealGuardianClearsEveryClauseButProtection is the combination test.
+// TestTheRealGuardianClearsEveryClause is the combination test.
 //
 // The gate carries the small_live set, the attestation is valid and covers every
 // endpoint, the policy can exit, the gateway is wired, and the injected Guardian
-// is the real one. Clause 6 is evaluated last, so a refusal that is *only* the
-// protection clause is the statement that clauses 1–5 all passed on this exact
-// configuration — including clause 4, which is the one this task is about.
+// is the real one — the numbers an operator actually gets from a preset. Every
+// clause has to pass on that exact configuration, and clause 4 is the one this
+// task is about: the two paths from the operator's numbers, config → interlock
+// and policy → Guardian, have to arrive at the same snapshot.
 //
-// Full gate-ON acceptance is not this change's to demonstrate: it belongs to the
-// change that wires broker-resident protective execution.
-func TestTheRealGuardianClearsEveryClauseButProtection(t *testing.T) {
+// It used to assert a refusal, because clause 6 stood at the end and nothing an
+// operator configured could get past it. Reaching that refusal was the proof that
+// clauses 1-5 passed. Since interlock-gates-entry-not-exit the same proof is the
+// start succeeding, which is a stronger statement: there is no last clause left
+// to hide behind.
+func TestTheRealGuardianClearsEveryClause(t *testing.T) {
 	dir := isolate(t)
 	writeGateConfig(t, dir, smallLiveGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
@@ -98,19 +102,9 @@ func TestTheRealGuardianClearsEveryClauseButProtection(t *testing.T) {
 	srv, _ := interlockServer(t, "123-45")
 
 	eng, err := openGateEngine(t, dir, srv, realGuardian(t, risk.DefaultPolicy()))
-	if err == nil {
-		t.Fatal("startup must be refused: this build wires no broker-side protection")
-	}
-	if eng != nil {
-		t.Error("a refused startup must return no engine at all")
-	}
-	if !errors.Is(err, engine.ErrProtectionNotWired) {
-		t.Fatalf("err = %v, want the protection clause; anything else means an earlier "+
-			"clause failed on the small_live default set", err)
-	}
 	// Clause 4 by name. A mismatch here would mean the two paths from the
-	// operator's numbers — config → interlock, policy → Guardian — disagree, and
-	// then the audit trail describes a gate that does not exist.
+	// operator's numbers disagree, and then the audit trail describes a gate that
+	// does not exist.
 	if errors.Is(err, engine.ErrGuardianLimitsMismatch) {
 		t.Errorf("the real Guardian's limits do not match the audited configuration: %v", err)
 	}
@@ -125,8 +119,17 @@ func TestTheRealGuardianClearsEveryClauseButProtection(t *testing.T) {
 		attest.ErrEndpointNotAttested,
 	} {
 		if errors.Is(err, other) {
-			t.Errorf("err also wraps %v; clause 6 must be the only thing standing", other)
+			t.Errorf("the small_live default set was refused by %v", other)
 		}
+	}
+	if err != nil {
+		t.Fatalf("the small_live default set must produce a verified gate: %v", err)
+	}
+	if eng == nil {
+		t.Fatal("a verified start must return an engine")
+	}
+	if eng.Automation.EntryPermitted {
+		t.Error("EntryPermitted = true: this build still leaves no protective order at the broker")
 	}
 }
 

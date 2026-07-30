@@ -1,0 +1,147 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "bcaf9fcec860939950ca2650d5603ca11c4c69a220da1eb4fa0556fcc7a3d42c",
+  "package": "console",
+  "function": "groupDecimalText",
+  "signature": "groupDecimalText(params=1, results=1)",
+  "start": {
+    "line": 732,
+    "column": 1
+  },
+  "end": {
+    "line": 751,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 734,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 740,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 741,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 747,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 750,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 734,
+        "column": 5
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 737,
+        "column": 20
+      },
+      "text": "strings.Cut"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 741,
+        "column": 16
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 742,
+        "column": 4
+      },
+      "text": "b.WriteByte"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 3
+      },
+      "text": "b.WriteRune"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 16
+      },
+      "text": "b.String"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 733,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 735,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 737,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 746,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 748,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

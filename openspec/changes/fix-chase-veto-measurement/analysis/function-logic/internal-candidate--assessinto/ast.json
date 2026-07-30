@@ -1,0 +1,114 @@
+{
+  "file": "internal/candidate/watch.go",
+  "source_sha256": "1895ed6fc72b61a753eb0d20fc58233dbddddfa6d6125f12be0c32e748da8cea",
+  "package": "candidate",
+  "function": "assessInto",
+  "signature": "assessInto(params=5, results=2)",
+  "start": {
+    "line": 669,
+    "column": 1
+  },
+  "end": {
+    "line": 689,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 672,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 682,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 673,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 683,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 688,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 675,
+        "column": 19
+      },
+      "text": "Assess"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 686,
+        "column": 41
+      },
+      "text": "TallyVerdicts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 687,
+        "column": 18
+      },
+      "text": "TallySightingSources"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 675,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 685,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 686,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 687,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

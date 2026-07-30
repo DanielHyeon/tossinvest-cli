@@ -97,7 +97,7 @@ func (r *Runner) dispatch(ctx context.Context, id StepID, sr *stepRun) {
 	case StepConditionalPersist:
 		err = r.stepConditionalPersist(ctx, sr)
 	case StepConditionalTrigger:
-		err = r.stepConditionalTrigger(sr)
+		err = r.stepConditionalTrigger(ctx, sr)
 	case StepConditionalModify:
 		err = r.stepConditionalModify(ctx, sr)
 	case StepConditionalCancel:
@@ -399,7 +399,8 @@ func (r *Runner) stepOrderCancel(ctx context.Context, sr *stepRun) error {
 	if err != nil {
 		return err
 	}
-	sr.observe("order.place.ok", "true", EndpointPlaceOrder+" accepted a minimum-quantity KR limit order")
+	sr.observe("order.place.ok", "true",
+		EndpointPlaceOrder+" accepted a minimum-quantity "+spec.Market+" limit order")
 
 	if view, err := r.readOrder(ctx, sr, orderID); err == nil {
 		sr.observe("order.status.after_place", orDash(view.Status), "")
@@ -435,7 +436,15 @@ func (r *Runner) stepOrderAmend(ctx context.Context, sr *stepRun) error {
 	if err != nil {
 		return err
 	}
-	sr.observe("order.amend.ok", "true", EndpointModifyOrder+" accepted a KR price+quantity amend")
+	// The request follows the market (amendOrder), so the sentence recorded beside
+	// it has to as well — a US amend carries no quantity, and a record that says it
+	// did describes a request the broker answers 400 us-modify-quantity-not-supported.
+	amended := "price+quantity"
+	if !SameMarket(spec.Market, MarketKR) {
+		amended = "price-only"
+	}
+	sr.observe("order.amend.ok", "true",
+		EndpointModifyOrder+" accepted a "+spec.Market+" "+amended+" amend")
 	sr.observe("order.amend.issues_new_id", strconv.FormatBool(currentID != orderID),
 		"original "+orderID+" -> current "+currentID)
 
@@ -637,7 +646,13 @@ func (r *Runner) stepConditionalRegister(ctx context.Context, sr *stepRun) error
 		sr.observe("conditional.list_by_status.contains_new", strconv.FormatBool(containsConditional(list.Orders, id)), "")
 	}
 
-	sr.markDeliberate("conditional-order", id,
+	// A replayed registration returns the identifier it returned before, so the
+	// chain this run belongs to may already be on the record.
+	chain := r.chainOf(sr, KindConditional, id)
+	if chain == "" {
+		chain = newToken("chain")
+	}
+	sr.markHeld(KindConditional, id, StepConditionalCancel, chain,
 		"left registered on purpose: the next step proves the broker holds it after this process exits")
 	return nil
 }
@@ -695,20 +710,14 @@ func (r *Runner) stepConditionalPersist(ctx context.Context, sr *stepRun) error 
 		fmt.Sprintf("registered by process %s, read back by %s as status %s",
 			shortID(registrar), shortID(r.process.InstanceID), orDash(co.Status)))
 	sr.observe("conditional.status.after_restart", orDash(co.Status), "")
-	sr.markDeliberate("conditional-order", id, "still live; the cancel step below removes it")
+	sr.markHeld(KindConditional, id, StepConditionalCancel, r.chainOf(sr, KindConditional, id),
+		"still live; the cancel step below removes it")
 	return nil
 }
 
-func (r *Runner) stepConditionalTrigger(sr *stepRun) error {
-	sr.observe("conditional.trigger_observed", "false", sr.step.Deferred)
-	sr.observe("conditional.triggered_order_id_exposed", "unverified",
-		"triggeredOrderId links a conditional to the order it generated; it can only be read after a trigger")
-	sr.observe("conditional.triggered_order_latency", "unverified", "")
-	// The catalogue's own Deferred text already opens with the reason, so the
-	// prefix that used to be added here would say it twice.
-	sr.deferStep(sr.step.Deferred)
-	return nil
-}
+// stepConditionalTrigger lives in steps_trigger.go: it is the one step that
+// prices an order to be reached, and it is kept in its own file so that reading
+// "what does this tool do that could fill" is one file rather than a search.
 
 func (r *Runner) stepConditionalModify(ctx context.Context, sr *stepRun) error {
 	id, symbol, ok := r.liveConditional()
@@ -758,7 +767,11 @@ func (r *Runner) stepConditionalModify(ctx context.Context, sr *stepRun) error {
 		sr.observe("conditional.status.after_modify", orDash(co.Status), "")
 		sr.observe("conditional.trigger_after_modify", trim(co.First.TriggerPrice), "")
 	}
-	sr.markDeliberate("conditional-order", newID, "still live; the cancel step below removes it")
+	// The successor inherits the replaced order's chain: the old identifier is
+	// gone from the broker (M19, M40) and only the record can still say the two
+	// were one protection.
+	sr.markHeld(KindConditional, newID, StepConditionalCancel, r.chainOf(sr, KindConditional, id),
+		"still live; the cancel step below removes it")
 	return nil
 }
 
@@ -994,14 +1007,38 @@ func (r *Runner) cancelLiveOrders(ctx context.Context, sr *stepRun, symbol, why 
 
 // --- record queries -----------------------------------------------------------
 
-// liveConditional finds the conditional order this verification still has
-// registered, across the record and this run.
+// liveConditional finds the conditional order the sellable-reserved, persistence,
+// modify and cancel steps are about.
+//
+// "The first outstanding conditional" was the whole rule while only one step could
+// create one. The trigger observation registers its own — it watches that one fire
+// rather than moving somebody else's — so on a full run there can be two, and the
+// first in record order is the trigger's. conditional-cancel would then cancel the
+// object the trigger step is measuring and leave the one it was asked to remove,
+// which is both measurements lost in one call.
+//
+// Provenance is what separates them, so provenance is what is asked. A conditional
+// this run cannot see the creation of — an old record, a resumed run — has no
+// creating step and stays eligible, which is the judgement every line written
+// before 2026-07-30 has today.
 func (r *Runner) liveConditional() (id, symbol string, ok bool) {
 	entries := r.allEntries()
-	for _, a := range Outstanding(entries) {
-		if a.Kind == "conditional-order" {
-			return a.ID, a.Symbol, true
+	createdBy := map[string]StepID{}
+	for _, e := range entries {
+		for _, a := range e.Artifacts {
+			if a.Kind != KindConditional || a.CreatedAt.IsZero() {
+				continue
+			}
+			if _, seen := createdBy[a.ID]; !seen {
+				createdBy[a.ID] = e.StepID
+			}
 		}
+	}
+	for _, a := range Outstanding(entries) {
+		if a.Kind != KindConditional || createdBy[a.ID] == StepConditionalTrigger {
+			continue
+		}
+		return a.ID, a.Symbol, true
 	}
 	return "", "", false
 }

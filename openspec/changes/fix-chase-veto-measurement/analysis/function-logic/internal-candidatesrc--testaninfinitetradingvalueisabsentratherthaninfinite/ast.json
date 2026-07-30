@@ -1,0 +1,172 @@
+{
+  "file": "internal/candidatesrc/candidatesrc_test.go",
+  "source_sha256": "2d2cc40546c656c8a292530cbeb4ae810766d80ef7e6905758cef6512f923836",
+  "package": "candidatesrc",
+  "function": "TestAnInfiniteTradingValueIsAbsentRatherThanInfinite",
+  "signature": "TestAnInfiniteTradingValueIsAbsentRatherThanInfinite(params=1, results=0)",
+  "start": {
+    "line": 328,
+    "column": 1
+  },
+  "end": {
+    "line": 351,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 334,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 342,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 348,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 19
+      },
+      "text": "math.Inf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 47
+      },
+      "text": "math.NaN"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 16
+      },
+      "text": "OfficialRanking"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 14
+      },
+      "text": "src.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 23
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 343,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 329,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 333,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 341,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

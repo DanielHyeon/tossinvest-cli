@@ -1,0 +1,38 @@
+{
+  "file": "internal/console/static_test.go",
+  "source_sha256": "eb0c15e56f2895086b6c16e515f49940453307985514e6928e3e541f1685edec",
+  "package": "console",
+  "function": "checkVerbs",
+  "signature": "checkVerbs(params=3, results=0)",
+  "start": {
+    "line": 1329,
+    "column": 1
+  },
+  "end": {
+    "line": 1332,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1330,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1331,
+        "column": 2
+      },
+      "text": "checkVerbsExcept"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

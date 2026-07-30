@@ -60,6 +60,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
@@ -78,11 +79,16 @@ type verifyOptions struct {
 	offsetPct       float64
 	maxSellQuantity float64
 	includeTTLEdge  bool
+	includeTrigger  bool
 	confirmEach     bool
 	ttlWait         time.Duration
+	triggerWindow   time.Duration
 	resume          bool
 	redo            []string
 	list            bool
+
+	// why is the reason an abort records against the chains it closes.
+	why string
 }
 
 func newVerifyCmd(root *rootOptions) *cobra.Command {
@@ -115,6 +121,7 @@ Read ` + "`tossctl verify run --list`" + ` before the first real run.`),
 		newVerifyRunCmd(root, opts),
 		newVerifyStatusCmd(root, opts),
 		newVerifyReportCmd(root, opts),
+		newVerifyAbortCmd(root, opts),
 	)
 	return cmd
 }
@@ -188,6 +195,11 @@ has none. The tool never buys anything to create one.`),
 		"Largest whole-holding sell the boundary step may place; above this the boundary is left unverified")
 	cmd.Flags().BoolVar(&opts.includeTTLEdge, "include-ttl-edge", false,
 		"Also probe the idempotency validity window — this deliberately creates a SECOND live order")
+	cmd.Flags().BoolVar(&opts.includeTrigger, "include-trigger", false,
+		"Also observe a conditional order FIRING. This registers a stop the market is meant to reach: "+
+			"if it does, one share is sold at market and it cannot be undone")
+	cmd.Flags().DurationVar(&opts.triggerWindow, "trigger-window", verifylive.DefaultTriggerWindow,
+		"How long the trigger observation waits for the market to reach its trigger before cancelling it")
 	cmd.Flags().BoolVar(&opts.confirmEach, "confirm-each", false,
 		"Ask for a separate typed confirmation immediately before every mutation, instead of one for the run")
 	cmd.Flags().DurationVar(&opts.ttlWait, "ttl-wait", verifylive.DefaultTTLWait,
@@ -259,7 +271,7 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	// so it is safe to run anywhere, which is the point: an operator should be
 	// able to see the whole procedure before deciding to run it.
 	if opts.list {
-		verifylive.WriteSteps(out, opts.includeTTLEdge)
+		verifylive.WriteSteps(out, opts.includeTTLEdge, opts.includeTrigger)
 		return nil
 	}
 
@@ -271,6 +283,14 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	// run report what is still live rather than being killed mid-cancel.
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
 	defer stop()
+
+	executionLock, err := acquireVerifyExecutionLock(root)
+	if err != nil {
+		return err
+	}
+	defer executionLock.Release()
+	fmt.Fprintf(out, "execution lock   %s (engine · update · verification exclusion)\n",
+		executionLock.Path())
 
 	market := verifylive.NormalizeMarket(opts.market)
 	recordPath, err := resolveVerifyRecordFor(root, opts.record, market)
@@ -329,7 +349,9 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 		Offset:          opts.offsetPct / 100,
 		MaxSellQuantity: opts.maxSellQuantity,
 		IncludeTTLEdge:  opts.includeTTLEdge,
+		IncludeTrigger:  opts.includeTrigger,
 		TTLWait:         opts.ttlWait,
+		TriggerWindow:   opts.triggerWindow,
 		Redo:            toStepIDs(opts.redo),
 		Prior:           prior,
 	})
@@ -349,6 +371,26 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 		return nil
 	}
 	return runErr
+}
+
+// acquireVerifyExecutionLock closes the cross-process start race among the
+// engine, executable replacement, and either verification entry point.
+//
+// The runlock marker remains advisory because its consumer is the soak. This is
+// the actual exclusion: a crash-released kernel flock in the journal directory,
+// acquired before account resolution and held through complete runner cleanup.
+func acquireVerifyExecutionLock(root *rootOptions) (*enginelock.Lock, error) {
+	dir, err := engineJournalDir(root)
+	if err != nil {
+		return nil, fmt.Errorf("verify: resolving execution exclusion: %w", err)
+	}
+	lock, err := enginelock.Acquire(dir)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"verify: engine, system update, or another verification owns the execution exclusion: %w",
+			err)
+	}
+	return lock, nil
 }
 
 // writeVerifySummary prints the end-of-run state, with the outstanding objects
@@ -447,6 +489,120 @@ func toStepIDs(names []string) []verifylive.StepID {
 	return out
 }
 
+// --- abort ----------------------------------------------------------------------
+
+func newVerifyAbortCmd(root *rootOptions, opts *verifyOptions) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "abort",
+		Short: "End a measurement chain this tool is still holding, and cancel what it holds",
+		Long: strings.TrimSpace(`
+Cancel every order and conditional order the evidence record says this tool created
+and has not finished with, and record that the measurement they belonged to is over.
+
+This exists because objects are released by a verdict and never by a clock. A
+conditional order waits for the cancel step; a child order waits for the trigger
+observation to decide. That is deliberate — a long wait means the market has not
+come to the price yet, not that anything failed, and a lease that expired halfway
+through would cancel the very thing being measured. The cost is that a measurement
+which never reaches a verdict holds its objects indefinitely, and the cleanup
+prologue will not offer them because it is doing what it was told.
+
+So this is the operator saying "I am ending this".
+
+  tossctl verify abort --list    show exactly what would be cancelled, send nothing
+  tossctl verify abort           cancel it, under one approval
+
+It lists the targets first and waits for the same single expiring confirmation
+` + "`verify run`" + ` uses. There is no separate prompt and no extra phrase to type.
+Nothing off that list is ever sent, and the targets come from this tool's own record
+— whatever else is on the account is not its business.`),
+		Annotations:  map[string]string{"source": "official", "mutating": "true"},
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runVerifyAbort(cmd, root, opts)
+		},
+	}
+	cmd.Flags().BoolVar(&opts.list, "list", false,
+		"Print what would be cancelled and exit; no request is made")
+	cmd.Flags().StringVar(&opts.market, "market", verifylive.MarketKR,
+		"Market whose evidence record to end: KR or US")
+	cmd.Flags().StringVar(&opts.why, "why", "",
+		"Why the measurement is being ended, recorded against the chains it closes")
+	cmd.Flags().StringVar(&opts.record, "record", "", "Override the evidence record path")
+	return cmd
+}
+
+func runVerifyAbort(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) error {
+	out := cmd.OutOrStdout()
+	recordPath, prior, err := loadVerifyRecord(root, opts)
+	if err != nil {
+		return err
+	}
+	targets := verifylive.AbortTargets(prior)
+	fmt.Fprintf(out, "evidence record  %s\n", recordPath)
+	if len(targets) == 0 {
+		fmt.Fprintln(out, "이 도구의 기록에 살아 있는 객체가 없다 — 끝낼 사슬이 없다.")
+		return nil
+	}
+	fmt.Fprintf(out, "\n끝낼 대상 %d건:\n", len(targets))
+	for _, a := range targets {
+		held := ""
+		if a.HeldUntil != "" {
+			held = fmt.Sprintf(" — %s의 판정을 기다리며 붙잡혀 있다", a.HeldUntil)
+		}
+		fmt.Fprintf(out, "  %s %s (%s)%s\n", a.Kind, a.ID, a.Symbol, held)
+	}
+	// --list is the read-only half, and it is listed first because "what would this
+	// cancel" has to be answerable without credentials or a network call.
+	if opts.list {
+		fmt.Fprintln(out, "\n--list: 아무것도 전송되지 않았다.")
+		return nil
+	}
+
+	ctx := cmd.Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
+	defer stop()
+
+	broker, accountRef, err := verifyBrokerFactory(root)
+	if err != nil {
+		return err
+	}
+	recorder, err := verifylive.OpenRecorder(recordPath)
+	if err != nil {
+		return err
+	}
+	defer recorder.Close()
+
+	runner, err := verifylive.New(verifylive.Options{
+		Broker:       broker,
+		Recorder:     recorder,
+		Confirm:      terminalConfirmer(cmd),
+		ConfirmBatch: terminalBatchConfirmer(cmd),
+		Out:          out,
+		AccountRef:   accountRef,
+		Market:       verifylive.NormalizeMarket(opts.market),
+		Prior:        prior,
+	})
+	if err != nil {
+		return err
+	}
+	result, abortErr := runner.Abort(ctx, opts.why)
+	if !result.Approved && result.Reason != "" {
+		fmt.Fprintf(out, "\n%s\n", result.Reason)
+	}
+	if len(result.Remaining) == 0 && result.Approved {
+		fmt.Fprintln(out, "\n계좌에 이 도구가 만든 살아 있는 객체가 남아 있지 않다.")
+	}
+	if abortErr != nil && (errors.Is(abortErr, context.Canceled) || errors.Is(abortErr, context.DeadlineExceeded)) {
+		fmt.Fprintln(out, "\ninterrupted — everything recorded so far is kept.")
+		return nil
+	}
+	return abortErr
+}
+
 // --- status and report ----------------------------------------------------------
 
 func runVerifyStatus(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) error {
@@ -542,8 +698,9 @@ func verifyRunLockPath(recordPath string) string {
 //
 // It is advisory in both directions and the return type says so: the release is
 // always callable, and a failure to take the marker is a line of output rather
-// than a reason to refuse. A verification that a person is standing over must not
-// be stopped by a lock file — see internal/runlock's package comment.
+// than a reason to refuse. The separate journal-directory execution flock has
+// already excluded engine/update/other-verification starts; this marker only
+// asks the soak to yield its rate budget.
 func holdVerifyRunLock(ctx context.Context, out io.Writer, recordPath string) func() {
 	path := verifyRunLockPath(recordPath)
 	release, err := runlock.Hold(ctx, path)

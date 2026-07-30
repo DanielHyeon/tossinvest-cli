@@ -25,12 +25,25 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
-// pageFuncs are the only two things the templates can compute that Go does not
-// hand them ready-made. redoable is verifylive's own answer, not a second
-// definition of it: the table that marks a row "재측정 대상" has to agree with the
-// set the button actually starts.
+// pageFuncs are the only things the templates can compute that Go does not hand
+// them ready-made. inRedo asks the set itself rather than re-deriving it: the
+// table that marks a row "재측정 대상" has to agree with the set the button
+// actually starts.
+//
+// It used to call verifylive.RedoableVerdict on the row's verdict, which was the
+// same answer while the set was a function of the verdict alone. It is not any
+// more — a passed conditional-register whose order is gone is in the set (see
+// verifylive/redo.go) — so a table asking the verdict would have hidden the one
+// row that unblocks the chain while the button re-ran it.
 var pageFuncs = template.FuncMap{
-	"redoable": verifylive.RedoableVerdict,
+	"inRedo": func(set []verifylive.StepID, id verifylive.StepID) bool {
+		for _, s := range set {
+			if s == id {
+				return true
+			}
+		}
+		return false
+	},
 	// stepLabel and verdict are the render-layer mapping task 1.8 ③ asks for: the
 	// record keeps its English `title` and its verdict values, and the screen puts
 	// Korean next to them. verifylive owns both maps and a drift test there fails
@@ -41,12 +54,20 @@ var pageFuncs = template.FuncMap{
 
 // pages is the whole template set. The dashboard screens live in their own const
 // (templates_portfolio.go) and are parsed into it here, so they share "head",
-// "foot" and the one stylesheet rather than growing a second look.
+// "foot" and the one stylesheet rather than growing a second look. The overview
+// joins the same chain and reuses "journalstate" from the portfolio set, so the
+// four journal failures are worded once for every screen that can hit them.
 var pages = template.Must(
 	template.Must(
-		template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates)).
-			Parse(portfolioTemplates)).
-		Parse(settingsTemplates))
+		template.Must(
+			template.Must(
+				template.Must(
+					template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates)).
+						Parse(portfolioTemplates)).
+					Parse(settingsTemplates)).
+				Parse(overviewTemplates)).
+			Parse(ordersTemplates)).
+		Parse(signalsTemplates))
 
 // --- dashboard --------------------------------------------------------------
 
@@ -72,11 +93,11 @@ func (dashboardPage) RefreshSeconds() int { return 2 }
 func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		c.refuse(w, http.StatusNotFound, "그런 경로는 없다",
-			"이 콘솔의 화면은 대시보드·포지션·거래 이력·편입 설정·검증·리포트 여섯뿐이다.")
+			"이 콘솔의 화면은 개요·검증 콘솔·포지션·주문·발굴 신호·거래 이력·편입 설정·검증·리포트 아홉뿐이다.")
 		return
 	}
 	page := dashboardPage{
-		Nav:            "dashboard",
+		Nav:            "verify-console",
 		CSRF:           c.csrf,
 		Notice:         r.URL.Query().Get("notice"),
 		Snap:           c.snapshot(),
@@ -143,7 +164,7 @@ func marketOf(r *http.Request) string {
 
 func (c *Console) renderVerify(w http.ResponseWriter, market, notice string) {
 	var steps bytes.Buffer
-	verifylive.WriteSteps(&steps, false)
+	verifylive.WriteSteps(&steps, false, false)
 
 	snap := c.snapshotFor(market)
 	page := verifyPage{
@@ -206,12 +227,18 @@ func (c *Console) handleStart(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		redo = set
-	} else if snap := c.readVerify(market); snap.Present && len(snap.Pending) == 0 {
+	} else if snap := c.readVerify(market); snap.Present && len(snap.Pending) == 0 &&
+		len(snap.Cleanup) == 0 {
 		// The no-op that cost a market window on 2026-07-27: every step already has
 		// a terminal verdict, so an ordinary resume walks the catalogue, settles
 		// nothing and finishes with no steps recorded. Refusing it here is what
 		// makes the disabled button on the page more than decoration — a stale tab
 		// posts the same form.
+		//
+		// A leftover is the exception, and it is why the Cleanup test is here: a
+		// record whose steps are all terminal but which still holds an order this
+		// tool could not cancel has exactly one thing left to send, and refusing
+		// that start is what made the leftover unremovable in the first place.
 		notice := "이어할 단계가 없다 — 모든 단계에 판정이 있다. 아무것도 전송되지 않았다."
 		if len(snap.Redo) > 0 {
 			notice += " 다시 측정하려면 [재측정]을 사용하라."

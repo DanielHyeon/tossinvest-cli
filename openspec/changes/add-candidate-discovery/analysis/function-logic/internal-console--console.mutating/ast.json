@@ -1,0 +1,158 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "8ac996f8664e7b97df9076cff79d842d102e669097d4ac451057a56159895b40",
+  "package": "console",
+  "function": "mutating",
+  "receiver": "Console",
+  "signature": "Console.mutating(params=1, results=1)",
+  "start": {
+    "line": 531,
+    "column": 1
+  },
+  "end": {
+    "line": 551,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 533,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 539,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 543,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 532,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 537,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 541,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 547,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 534,
+        "column": 4
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 534,
+        "column": 4
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 535,
+        "column": 4
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 539,
+        "column": 13
+      },
+      "text": "r.ParseForm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 540,
+        "column": 4
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 543,
+        "column": 7
+      },
+      "text": "tokenEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 543,
+        "column": 18
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 544,
+        "column": 4
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 549,
+        "column": 3
+      },
+      "text": "next"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 539,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

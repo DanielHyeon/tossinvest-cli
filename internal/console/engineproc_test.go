@@ -170,17 +170,77 @@ func TestARefusedStartShowsTheEnginesOwnReason(t *testing.T) {
 // TestTheConsoleDecidesNothingAboutTheGate. The start seam is the only path, so
 // there is no branch here that could conclude "the gate is fine, start it
 // anyway": whatever the seam answers is the answer.
+//
+// The two lists below say different things, and the split is the point.
+//
+// "Interlock" and "ProtectionReady" name the engine's startup DECISION and stay
+// banned in every file. Nothing in this package may compute whether the engine
+// is allowed to run; it asks and prints the answer.
+//
+// "AutomationGate" and "automation_gate" name the config BLOCK. Since
+// console-sets-guardian-limits the settings screen edits the five ceilings
+// inside it, and since console-owns-the-operating-toggles it also writes the
+// switch — so those spellings are permitted in the files that do the editing and
+// nowhere else.
+//
+// The switch moving into the console does not weaken the ban that matters. The
+// two words still banned everywhere are the engine's *decision*: nothing here
+// may compute whether the engine is allowed to run. The gate section renders a
+// pre-flight, and that pre-flight reads config values (`Limits().Validate()`,
+// the four trading toggles) rather than reproducing the interlock — it says so
+// on the screen, names the clauses it cannot judge, and refuses to claim a start
+// is guaranteed. Saving ON with a failing pre-flight is allowed for exactly this
+// reason: the console records a choice, the engine judges it.
 func TestTheConsoleDecidesNothingAboutTheGate(t *testing.T) {
+	// The editors and the page struct that carries the block to the template.
+	// Byte-for-byte file names: a prefix or suffix rule here would let a
+	// settings_limits_helper.go inherit the exemption without arguing for it.
+	//
+	// settings_operating.go is NOT here and that is worth noticing: the file that
+	// writes the switch never spells the key. Its seam takes a bool and the key
+	// lives in internal/config's closed member list, which is the same separation
+	// the limit path has — the console names a capability, not a config byte.
+	mayNameTheBlock := map[string]bool{
+		"settings.go":           true,
+		"settings_limits.go":    true,
+		"templates_settings.go": true,
+	}
 	src := packageFiles(t)
 	for name, file := range src {
 		code := strings.Join(nonCommentLines(file), "\n")
-		for _, banned := range []string{
-			"AutomationGate", "Interlock", "ProtectionReady", "automation_gate",
-		} {
-			if strings.Contains(code, banned) {
+		banned := []string{"Interlock", "ProtectionReady"}
+		if !mayNameTheBlock[name] {
+			banned = append(banned, "AutomationGate", "automation_gate")
+		}
+		for _, word := range banned {
+			if strings.Contains(code, word) {
 				t.Errorf("%s names %q; the console asks the engine process and displays its answer, "+
-					"it does not evaluate the gate", name, banned)
+					"it does not evaluate the gate", name, word)
 			}
+		}
+	}
+}
+
+// TestTheGateEditingExemptionIsNotIdle guards the guard: an exemption for a file
+// that no longer needs it is an exemption nobody will notice being used.
+func TestTheGateEditingExemptionIsNotIdle(t *testing.T) {
+	src := packageFiles(t)
+	// Each exempt file, with the spelling that earns it. settings_operating.go
+	// and templates_settings.go earn theirs with the snake-case key rather than
+	// the Go type: one writes `engine.automation_gate.enabled` through its seam,
+	// the other renders the section that does.
+	for name, spelling := range map[string]string{
+		"settings.go":           "AutomationGate",
+		"settings_limits.go":    "AutomationGate",
+		"templates_settings.go": "automation_gate",
+	} {
+		file, ok := src[name]
+		if !ok {
+			t.Errorf("%s is exempt from the gate-naming ban but is not in the package", name)
+			continue
+		}
+		if !strings.Contains(strings.Join(nonCommentLines(file), "\n"), spelling) {
+			t.Errorf("%s no longer names %q; drop its exemption", name, spelling)
 		}
 	}
 }

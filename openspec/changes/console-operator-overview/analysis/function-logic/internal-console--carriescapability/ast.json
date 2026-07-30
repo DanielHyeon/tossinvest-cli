@@ -1,0 +1,336 @@
+{
+  "file": "internal/console/static_test.go",
+  "source_sha256": "eb0c15e56f2895086b6c16e515f49940453307985514e6928e3e541f1685edec",
+  "package": "console",
+  "function": "carriesCapability",
+  "signature": "carriesCapability(params=3, results=1)",
+  "start": {
+    "line": 1247,
+    "column": 1
+  },
+  "end": {
+    "line": 1284,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "type-switch",
+      "at": {
+        "line": 1248,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 1249,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 1251,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 1253,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1254,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1258,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 1262,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 1264,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 1266,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 1268,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "case",
+      "at": {
+        "line": 1270,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "case",
+      "at": {
+        "line": 1273,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "case",
+      "at": {
+        "line": 1275,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "range",
+      "at": {
+        "line": 1276,
+        "column": 3
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 1277,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1250,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1252,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1255,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1259,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1261,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1263,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1265,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1267,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1269,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1271,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1274,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1278,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1281,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1283,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1259,
+        "column": 11
+      },
+      "text": "carriesCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1263,
+        "column": 10
+      },
+      "text": "carriesCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1265,
+        "column": 10
+      },
+      "text": "carriesCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1267,
+        "column": 10
+      },
+      "text": "carriesCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1269,
+        "column": 10
+      },
+      "text": "carriesCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1271,
+        "column": 10
+      },
+      "text": "carriesCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1272,
+        "column": 4
+      },
+      "text": "carriesCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1274,
+        "column": 10
+      },
+      "text": "carriesCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1277,
+        "column": 7
+      },
+      "text": "carriesCapability"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1248,
+        "column": 9
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1257,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1258,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

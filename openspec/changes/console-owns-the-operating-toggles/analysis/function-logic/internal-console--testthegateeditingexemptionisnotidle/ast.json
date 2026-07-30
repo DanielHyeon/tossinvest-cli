@@ -1,0 +1,110 @@
+{
+  "file": "internal/console/engineproc_test.go",
+  "source_sha256": "ffa9295d02234ebf693ede51a19de4a31eedae0385a05a7abb099b489c081be9",
+  "package": "console",
+  "function": "TestTheGateEditingExemptionIsNotIdle",
+  "signature": "TestTheGateEditingExemptionIsNotIdle(params=1, results=0)",
+  "start": {
+    "line": 226,
+    "column": 1
+  },
+  "end": {
+    "line": 246,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 9
+      },
+      "text": "packageFiles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 24
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 37
+      },
+      "text": "nonCommentLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 237,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

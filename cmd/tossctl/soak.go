@@ -41,6 +41,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -52,6 +53,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/spf13/cobra"
 )
 
@@ -69,6 +71,12 @@ type soakOptions struct {
 	out        string
 	verifiedBy string
 	notes      string
+	// verifyRecords overrides where the supervised live check's evidence is
+	// read from. Empty means the markets' standard paths — the same resolution
+	// `verify` itself uses. A flag one has to remember is how the attestation
+	// watcher came to sit idle for two days in July 2026; the default has to be
+	// the working one.
+	verifyRecords []string
 }
 
 func newSoakCmd(root *rootOptions) *cobra.Command {
@@ -220,6 +228,9 @@ to start until that has been done.`),
 	cmd.Flags().StringVar(&opts.out, "out", "", "Override where the attestation is written")
 	cmd.Flags().StringVar(&opts.verifiedBy, "verified-by", "", "Who ran the verification, for the audit trail")
 	cmd.Flags().StringVar(&opts.notes, "notes", "", "Free-form operator context recorded in the attestation")
+	cmd.Flags().StringSliceVar(&opts.verifyRecords, "verify-record", nil,
+		"Override where the supervised live check's evidence is read from; repeatable. "+
+			"Default: each market's standard verification record")
 	return cmd
 }
 
@@ -373,6 +384,89 @@ func maskSoakSummary(s soak.Summary) soak.Summary {
 
 // --- attest -----------------------------------------------------------------
 
+// supervisedProofs reads the live verification records for the mutation evidence
+// the read-only soak cannot produce.
+//
+// The records are resolved through resolveVerifyRecordFor — the same path
+// `verify` writes to — so the two commands cannot disagree about which file they
+// mean. A market with no record yet is not an error: the ordinary state of this
+// system is "KR done, US not yet" or the reverse, and a missing file is exactly
+// the "not proven" the interlock then reports.
+//
+// Only the endpoints internal/soak declares a read-only tool cannot make are
+// carried forward; BuildAttestation refuses anything else, and refusing there
+// rather than filtering here keeps the policy in one place.
+func supervisedProofs(root *rootOptions, opts *soakOptions, now time.Time,
+	validity time.Duration) ([]attest.Proof, error) {
+
+	type source struct{ market, path string }
+	var sources []source
+
+	if len(opts.verifyRecords) > 0 {
+		for _, p := range opts.verifyRecords {
+			if trimmed := strings.TrimSpace(p); trimmed != "" {
+				sources = append(sources, source{market: "", path: trimmed})
+			}
+		}
+	} else {
+		for _, market := range []string{verifylive.MarketKR, verifylive.MarketUS} {
+			path, err := resolveVerifyRecordFor(root, "", market)
+			if err != nil {
+				return nil, fmt.Errorf("soak attest: locating the %s verification record: %w", market, err)
+			}
+			sources = append(sources, source{market: market, path: path})
+		}
+	}
+
+	var proofs []attest.Proof
+	for _, s := range sources {
+		entries, err := verifylive.LoadEntries(s.path)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				// Never verified this market. Not an error — the interlock will
+				// say what is unproven.
+				continue
+			}
+			return nil, fmt.Errorf("soak attest: reading %s: %w", s.path, err)
+		}
+		evidence := verifylive.SucceededEndpoints(entries, now, validity)
+		if len(evidence.AccountRefs) > 1 {
+			return nil, fmt.Errorf(
+				"soak attest: %s names more than one account (%s) — refusing to draw mutation evidence "+
+					"from a record whose account is ambiguous",
+				s.path, strings.Join(evidence.AccountRefs, ", "))
+		}
+		ref := ""
+		if len(evidence.AccountRefs) == 1 {
+			ref = evidence.AccountRefs[0]
+		}
+		for endpoint, at := range evidence.Endpoints {
+			proofs = append(proofs, attest.Proof{
+				Endpoint:   endpoint,
+				At:         at,
+				AccountRef: ref,
+				Source:     filepath.Base(s.path),
+				Market:     s.market,
+			})
+		}
+	}
+
+	// Only the borrowable ones travel; anything else would make BuildAttestation
+	// refuse the whole issue over a call it was never being asked to attest.
+	allowed := map[string]bool{}
+	for _, e := range soak.LiveOnlyEndpoints() {
+		allowed[strings.ToUpper(e)] = true
+	}
+	var out []attest.Proof
+	for _, p := range proofs {
+		if allowed[strings.ToUpper(p.Endpoint)] {
+			out = append(out, p)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Endpoint < out[j].Endpoint })
+	return out, nil
+}
+
 func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) error {
 	summary, criteria, recordPath, err := loadSoakSummary(root, opts)
 	if err != nil {
@@ -387,7 +481,13 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) err
 		notes = strings.TrimSpace(notes + " surveyed base: " + base)
 	}
 
-	attestation, err := soak.BuildAttestation(summary, criteria, time.Now().UTC(), opts.verifiedBy, notes)
+	now := time.Now().UTC()
+	supervised, err := supervisedProofs(root, opts, now, criteria.Validity)
+	if err != nil {
+		return err
+	}
+
+	attestation, err := soak.BuildAttestation(summary, criteria, now, opts.verifiedBy, notes, supervised)
 	if err != nil {
 		// The reasons are already in the error, one per line. Nothing is written.
 		return err
@@ -412,11 +512,33 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) err
 	fmt.Fprintf(out, "  expires      %s\n", attestation.ExpiresAt.Format(time.RFC3339))
 	fmt.Fprintf(out, "  endpoints    %s\n", strings.Join(attestation.Endpoints, "\n               "))
 	fmt.Fprintf(out, "  observed     %.2f req/s sustained without a 429\n", attestation.RateLimitPerSecond)
-	fmt.Fprintln(out, "\nThe automation gate will still refuse to start: this attestation covers reads only.")
-	fmt.Fprintln(out, "Still to be proven by the supervised live check (verify-execution-capability task 2.2):")
-	for _, e := range soak.LiveOnlyEndpoints() {
-		fmt.Fprintf(out, "  - %s\n", e)
+
+	for _, p := range attestation.SupervisedBy {
+		market := p.Market
+		if market == "" {
+			market = "—"
+		}
+		fmt.Fprintf(out, "  supervised   %s ← %s (%s, %s)\n",
+			p.Endpoint, p.Source, market, p.At.UTC().Format(time.RFC3339))
 	}
+
+	missing := attestation.MissingEndpoints(soak.LiveOnlyEndpoints())
+	if len(missing) > 0 {
+		fmt.Fprintln(out, "\nThe automation gate will refuse to start: these calls are not covered.")
+		fmt.Fprintln(out, "They come from the supervised live check (verify-execution-capability task 2.2):")
+		for _, e := range missing {
+			fmt.Fprintf(out, "  - %s\n", e)
+		}
+		return nil
+	}
+
+	// Every endpoint the gate names is now covered. The gate still will not
+	// start, and saying so here is the point: an operator who read "8/8" and
+	// nothing else would reasonably conclude the opposite.
+	fmt.Fprintln(out, "\nEvery endpoint the automation gate requires is now covered.")
+	fmt.Fprintln(out, "The gate will still refuse to start: this build has no broker-resident protective")
+	fmt.Fprintln(out, "order execution (interlock clause 9). That is a compile-time constant no setting can")
+	fmt.Fprintln(out, "satisfy — the protective-order change flips it as the last step of its own work.")
 	return nil
 }
 

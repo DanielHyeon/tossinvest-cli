@@ -1,10 +1,18 @@
 {
   "project": "TossOS",
   "prefix": "TOS",
-  "initiatives": ["INIT-TOS-001"],
-  "epics": ["EPIC-TOS-001"],
-  "features": ["FEAT-TOS-001"],
-  "stories": ["STORY-TOS-001"],
+  "initiatives": [
+    "INIT-TOS-001"
+  ],
+  "epics": [
+    "EPIC-TOS-001"
+  ],
+  "features": [
+    "FEAT-TOS-001"
+  ],
+  "stories": [
+    "STORY-TOS-001"
+  ],
   "bootstrap_change_allowlist": [
     "verify-execution-capability",
     "add-net-rr-measurement",
@@ -12,6 +20,28 @@
     "console-click-approval",
     "verify-us-market",
     "apply-us-measurement-fixes",
-    "verify-clears-leftovers"
+    "verify-clears-leftovers",
+    "verify-survives-already-processing",
+    "add-candidate-discovery",
+    "console-operator-overview",
+    "console-orders-screen",
+    "fix-chase-veto-measurement",
+    "retire-gainers-source",
+    "refine-extended-shadow-bands",
+    "verify-reopens-conditional-chain",
+    "attest-covers-supervised-mutations",
+    "verify-plans-the-object-it-mutates",
+    "verify-holds-what-it-awaits",
+    "verify-observes-the-trigger",
+    "console-excludes-in-one-click",
+    "console-sets-guardian-limits",
+    "size-us-guardian-tier",
+    "interlock-gates-entry-not-exit",
+    "console-owns-the-operating-toggles",
+    "wire-production-risk-guardian",
+    "console-system-update",
+    "signed-release-system-update",
+    "prime-engine-account-seq",
+    "serialize-project-gbrain-serve"
   ]
 }

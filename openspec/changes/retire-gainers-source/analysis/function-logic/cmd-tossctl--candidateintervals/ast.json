@@ -1,0 +1,44 @@
+{
+  "file": "cmd/tossctl/candidate.go",
+  "source_sha256": "57fb1c4a907d60f44c92815de06b003f6d32ca0cc281ee7c1b287dab2c020879",
+  "package": "main",
+  "function": "candidateIntervals",
+  "signature": "candidateIntervals(params=0, results=1)",
+  "start": {
+    "line": 380,
+    "column": 1
+  },
+  "end": {
+    "line": 388,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 381,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 382,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

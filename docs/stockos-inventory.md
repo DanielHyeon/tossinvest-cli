@@ -8,7 +8,8 @@
 | 자산 | 판정 |
 |---|---|
 | `apps/web/src/style.css` (10,451 LOC 단일 파일 디자인 시스템) | **그대로 이식 — 최대 가치 자산** |
-| 안전 UX 패턴 (typed-confirmation, 사유 필수 입력, 차단사유 칩, 드로어 진단, ⌘K 팔레트) | 그대로 이식 |
+| 안전 UX 패턴 (사유 필수 입력, 차단사유 칩, 드로어 진단, ⌘K 팔레트) | 그대로 이식 |
+| StockOS의 typed-confirmation | **이식 안 함** — UI는 확인 모달(확인 버튼)로 대체(ROADMAP Phase 5a). CLI만 TTY 확인 유지 |
 | `apps/web/src/lib/useDashboardStream.ts` (SSE + 시퀀스 가드 + 폴링 폴백, 132줄) | 그대로 이식 |
 | 정책 상수표 (RISK_PROFILES, min_rr=1.5, 재진입 한도, 슬롯 30% 등) | 수치 그대로, env 결합 제거 |
 | 순수 로직 ~25개 모듈 | Go 재구현 + 테스트 케이스 이식 |

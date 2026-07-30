@@ -1,0 +1,122 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "bcaf9fcec860939950ca2650d5603ca11c4c69a220da1eb4fa0556fcc7a3d42c",
+  "package": "console",
+  "function": "positions",
+  "receiver": "Console",
+  "signature": "Console.positions(params=1, results=1)",
+  "start": {
+    "line": 435,
+    "column": 1
+  },
+  "end": {
+    "line": 446,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 9
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 15
+      },
+      "text": "c.verifyHold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 31
+      },
+      "text": "c.holdings.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 31
+      },
+      "text": "c.livePositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 11
+      },
+      "text": "joinPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 55
+      },
+      "text": "v.Journal.Readable"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 436,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 439,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 442,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,38 @@
+{
+  "file": "internal/candidate/veto_test.go",
+  "source_sha256": "f2fc8f0304f890295edf12a5fd0003a79cab0667530a074dc366e1f1c414f3cb",
+  "package": "candidate",
+  "function": "storedFirstRank",
+  "signature": "storedFirstRank(params=4, results=1)",
+  "start": {
+    "line": 32,
+    "column": 1
+  },
+  "end": {
+    "line": 37,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 16
+      },
+      "text": "NewlyListedNo"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,218 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "bcaf9fcec860939950ca2650d5603ca11c4c69a220da1eb4fa0556fcc7a3d42c",
+  "package": "console",
+  "function": "livePositions",
+  "receiver": "Console",
+  "signature": "Console.livePositions(params=1, results=3)",
+  "start": {
+    "line": 405,
+    "column": 1
+  },
+  "end": {
+    "line": 432,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 417,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 420,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 422,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 426,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 408,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 431,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 406,
+        "column": 12
+      },
+      "text": "c.openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 8
+      },
+      "text": "ro.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 15
+      },
+      "text": "ro.AccountRefs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 418,
+        "column": 40
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 15
+      },
+      "text": "ro.LivePositionExits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 41
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 426,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 32
+      },
+      "text": "attest.Mask"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 10
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 406,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 416,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 418,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 421,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 423,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 427,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 429,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 410,
+        "column": 2
+      },
+      "text": "ro.Close"
+    }
+  ]
+}

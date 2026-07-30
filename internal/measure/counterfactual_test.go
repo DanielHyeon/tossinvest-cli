@@ -229,13 +229,13 @@ func TestTheArtifactDeclaresWhatItCannotGive(t *testing.T) {
 	}
 
 	for _, required := range []string{
-		"boundary map",                  // ① supplied
+		"boundary map",                   // ① supplied
 		"only from the real-trade popul", // ② conditional
-		"미검증",                          // ③ not supplied: rates unmeasured
-		"needs closed positions",        // ④ not supplied
-		model.Fingerprint(),             // the model behind every number
-		"FEE_TAX_ONLY",                  // the scope
-		"수수료·세금 차감 후 RR",             // the metric's honest name
+		"미검증",                            // ③ not supplied: rates unmeasured
+		"needs closed positions",         // ④ not supplied
+		model.Fingerprint(),              // the model behind every number
+		"FEE_TAX_ONLY",                   // the scope
+		"수수료·세금 차감 후 RR",                 // the metric's honest name
 	} {
 		if !strings.Contains(rendered, required) {
 			t.Errorf("the artifact is missing %q:\n%s", required, rendered)

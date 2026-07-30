@@ -1,0 +1,86 @@
+{
+  "file": "internal/attest/attest.go",
+  "source_sha256": "d90c812d31fae77f3baa2e8a2db61d3e18a67f02f675cb1e4548e10847e72b23",
+  "package": "attest",
+  "function": "SameAccountMasked",
+  "signature": "SameAccountMasked(params=2, results=1)",
+  "start": {
+    "line": 148,
+    "column": 1
+  },
+  "end": {
+    "line": 153,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 150,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 38
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 9
+      },
+      "text": "sameAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 37
+      },
+      "text": "Mask"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 51
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

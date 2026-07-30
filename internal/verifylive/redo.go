@@ -32,8 +32,9 @@ package verifylive
 //	            for now holds — a holding exists, an opt-in was passed — it can.
 //	            If it does not, preflight skips it again and nothing is sent, which
 //	            is why a skip is safe to re-offer without inspecting why it skipped.
-//	pass        excluded. The property was established; re-measuring it would place
-//	            a live order to learn something already known.
+//	pass        excluded, with one exception below. The property was established;
+//	            re-measuring it would place a live order to learn something already
+//	            known.
 //	deferred    excluded. The step says up front that this tool cannot drive it at
 //	            all (a trigger needs the market to come to the price). Re-running it
 //	            produces the same "unverified" line.
@@ -41,6 +42,23 @@ package verifylive
 //	            "no" without them asking is not a retry, it is an override.
 //	awaiting-   excluded, and it is not in the set because it is not terminal:
 //	restart     the ordinary resume already picks it up.
+//
+// # The one pass that comes back
+//
+// A pass whose established property is *no longer true* is the exception, and
+// there is exactly one shape of it in this catalogue. conditional-register proves
+// "a conditional order is registered and can be read back", and it deliberately
+// leaves that order alive for the steps below it to measure against. If the order
+// is gone while those steps have not passed, the property the pass recorded is
+// false and every dependent can only skip — which is what the KR record did on
+// three consecutive runs after 2026-07-28 (see cleanup.go for how the subject was
+// destroyed). Re-running the register is not re-measuring something known; it is
+// rebuilding the precondition without which nothing below it can be measured at
+// all.
+//
+// The exception is deliberately narrow — three conditions, all required — and the
+// real US record is the check on it: there, every dependent passed and only the
+// trigger is deferred, so nothing reopens.
 //
 // The set is a suggestion, not an authorisation. Everything it names still goes
 // through a fresh plan and a fresh batch approval with a new nonce before a single
@@ -61,11 +79,69 @@ func RedoSet(entries []Entry) []StepID {
 			// Never attempted. An ordinary resume runs it; it is not a redo.
 			continue
 		}
-		if RedoableVerdict(e.Verdict) {
+		if RedoableVerdict(e.Verdict) || subjectLost(entries, step, e) {
 			out = append(out, step.ID)
 		}
 	}
 	return out
+}
+
+// subjectLost reports a passed step whose deliberately-surviving conditional order
+// is gone while something that needs it has not passed.
+//
+// All three conditions are required, and each one is load-bearing:
+//
+//	the step left a deliberate    keys the rule to the single artifact this tool
+//	conditional behind            designs to outlive its step. A step that merely
+//	                              passed — order-cancel, sell-boundary — is
+//	                              untouched, so this cannot widen into "re-run
+//	                              anything that passed".
+//	no conditional is alive       a halted chain still holding its subject is
+//	                              continued by the ordinary resume. Reopening it
+//	                              would register a second conditional order.
+//	a dependent has not passed    if everything that needs the subject is done,
+//	                              nothing is waiting and the account should be left
+//	                              alone. Deferred steps do not count: conditional-
+//	                              trigger says up front that this tool cannot drive
+//	                              it, so it can never be the reason to send
+//	                              anything.
+func subjectLost(entries []Entry, step Step, newest Entry) bool {
+	if newest.Verdict != VerdictPass {
+		return false
+	}
+	left := false
+	for _, a := range newest.Artifacts {
+		if a.Kind == KindConditional && a.Deliberate {
+			left = true
+			break
+		}
+	}
+	if !left {
+		return false
+	}
+	for _, a := range Outstanding(entries) {
+		if a.Kind == KindConditional {
+			return false
+		}
+	}
+	for _, dep := range Steps() {
+		if dep.Deferred != "" || !dependsOn(dep, step.ID) {
+			continue
+		}
+		if !Passed(entries, dep.ID) {
+			return true
+		}
+	}
+	return false
+}
+
+func dependsOn(s Step, id StepID) bool {
+	for _, d := range s.DependsOn {
+		if d == id {
+			return true
+		}
+	}
+	return false
 }
 
 // RedoableVerdict reports a verdict a re-measurement could change.

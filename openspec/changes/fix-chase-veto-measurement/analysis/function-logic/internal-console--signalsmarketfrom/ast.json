@@ -1,0 +1,206 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "5655aecbeb5b89901b014786a1119b550959f3c2114e88f93abac512799955f8",
+  "package": "console",
+  "function": "signalsMarketFrom",
+  "signature": "signalsMarketFrom(params=2, results=1)",
+  "start": {
+    "line": 592,
+    "column": 1
+  },
+  "end": {
+    "line": 608,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 594,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 603,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 596,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 607,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 593,
+        "column": 51
+      },
+      "text": "measured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 594,
+        "column": 12
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 595,
+        "column": 14
+      },
+      "text": "unmeasuredDiscovery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 14
+      },
+      "text": "signalsPanelFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 13
+      },
+      "text": "signalsVetoTallyFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 600,
+        "column": 14
+      },
+      "text": "signalsAccelTallyFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 601,
+        "column": 14
+      },
+      "text": "signalsBandTalliesFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 602,
+        "column": 18
+      },
+      "text": "signalsSightingSourcesFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 604,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 604,
+        "column": 31
+      },
+      "text": "signalsRowFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 606,
+        "column": 2
+      },
+      "text": "sortSignalsRows"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 593,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 594,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 595,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 598,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 599,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 600,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 601,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 602,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 604,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,63 @@
+{
+  "file": "internal/console/static_test.go",
+  "source_sha256": "eb0c15e56f2895086b6c16e515f49940453307985514e6928e3e541f1685edec",
+  "package": "console",
+  "function": "checkNoEmbedding",
+  "signature": "checkNoEmbedding(params=3, results=0)",
+  "start": {
+    "line": 1114,
+    "column": 1
+  },
+  "end": {
+    "line": 1122,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 1116,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1117,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1115,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1117,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1118,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

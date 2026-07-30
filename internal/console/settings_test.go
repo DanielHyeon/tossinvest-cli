@@ -140,7 +140,7 @@ func TestSettingsPostsWithoutCSRFWriteNothing(t *testing.T) {
 	h := settingsHarness(t, seam)
 	h.authenticate(t)
 
-	for _, path := range []string{"/settings/save", "/settings/include"} {
+	for _, path := range []string{"/settings/save", "/settings/include", "/settings/exclude"} {
 		resp := h.post(t, path, url.Values{
 			"symbol": {"005930"}, "default_stop_pct": {"0.05"},
 		})

@@ -100,12 +100,12 @@ func DefaultUSGrid() GridSpec {
 
 // GridPoint is one geometry and what the chain said about it.
 type GridPoint struct {
-	Market                     costs.Market
-	Entry, Stop, Target        string
-	StopWidth, RewardMultiple  string
-	Allowed                    bool
-	StoppedStep, ReasonCode    string
-	BreakEven, Gross, Net      string
+	Market                    costs.Market
+	Entry, Stop, Target       string
+	StopWidth, RewardMultiple string
+	Allowed                   bool
+	StoppedStep, ReasonCode   string
+	BreakEven, Gross, Net     string
 }
 
 // ThresholdOutcome is one candidate's boundary on one market's grid.
@@ -324,17 +324,17 @@ func unconstrainedAccount(market costs.Market) risk.AccountState {
 		headroom = "1000000000"
 	}
 	return risk.AccountState{
-		KillSwitchActive:   false,                    // 1. kill switch: off
-		Mode:               risk.ModeNormal,          // 2. operating mode: NORMAL
-		EntryBlockedLatch:  false,                    // 3. entry latch: clear
-		AllowedSymbols:     []string{"GRID"},         // 4. allowlist: the grid symbol
-		CashAvailable:      money(headroom, currency),// 8. cash: unlimited headroom
-		SameDayEntryCount:  0,                        // 9. re-entry: none today
-		PendingBuy:         false,                    // 9. no unfilled buy
-		OpenExposure:       money("0", currency),     // 10. open exposure: nothing open
-		DailyRealizedLoss:  money("0", currency),     // 11. daily loss: none
-		AccountEquity:      money(headroom, currency),// 11. equity: unlimited
-		DuplicateOrder:     false,                    // 12. duplicate: none
+		KillSwitchActive:  false,                     // 1. kill switch: off
+		Mode:              risk.ModeNormal,           // 2. operating mode: NORMAL
+		EntryBlockedLatch: false,                     // 3. entry latch: clear
+		AllowedSymbols:    []string{"GRID"},          // 4. allowlist: the grid symbol
+		CashAvailable:     money(headroom, currency), // 8. cash: unlimited headroom
+		SameDayEntryCount: 0,                         // 9. re-entry: none today
+		PendingBuy:        false,                     // 9. no unfilled buy
+		OpenExposure:      money("0", currency),      // 10. open exposure: nothing open
+		DailyRealizedLoss: money("0", currency),      // 11. daily loss: none
+		AccountEquity:     money(headroom, currency), // 11. equity: unlimited
+		DuplicateOrder:    false,                     // 12. duplicate: none
 	}
 }
 

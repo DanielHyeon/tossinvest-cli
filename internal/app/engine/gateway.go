@@ -79,6 +79,15 @@ type gatewayInputs struct {
 	// newNotifier for what a nil publisher costs.
 	logger    *obs.Logger
 	publisher obs.Publisher
+	// protectionOverride is Options.protectionOverride, forwarded so the gateway
+	// this builds judges by the same readiness the interlock reported. Without
+	// the forward, a test that satisfies the clause on the engine would get an
+	// engine claiming EntryPermitted and a gateway that refuses every buy.
+	//
+	// Nil in every shipped binary — Options has no exported setter for it, and
+	// internal/execgw's protection_test.go proves nothing produces the wired
+	// value outside test files.
+	protectionOverride *ProtectionReadiness
 }
 
 // engineWiring is the execution stack the engine profile owns.
@@ -231,8 +240,10 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		AccountRef: in.accountRef,
 		Source:     engineSource,
 		Entry:      entry,
-		Preflight:  &execgw.Preflight{Account: account, Clock: in.clock},
-		Orders:     orders,
+
+		ProtectionOverrideForTest: in.protectionOverride,
+		Preflight:                 &execgw.Preflight{Account: account, Clock: in.clock},
+		Orders:                    orders,
 		Replay: execgw.HTTPReplay{
 			BaseURL: in.official.BaseURL(),
 			HTTP:    &http.Client{Timeout: replayTimeout},

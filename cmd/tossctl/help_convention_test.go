@@ -108,6 +108,11 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// (verify-execution-capability task 1.5). `verify status` and `verify
 		// report` read the local record only and are not listed here.
 		"tossctl verify run": true,
+		// verify abort cancels what the verification is still holding. It sends
+		// only cancels — the safe direction — but a cancel is a live request and
+		// the whole reason this command exists is that the objects it reaches are
+		// ones no automatic path may touch (verify-observes-the-trigger).
+		"tossctl verify abort": true,
 		// console drives the same verify runner from a loopback page
 		// (verify-execution-capability task 1.6). It places live orders only
 		// through that runner and only after the typed approval, but it *can*

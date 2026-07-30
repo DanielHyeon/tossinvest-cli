@@ -1,0 +1,85 @@
+{
+  "file": "internal/candidatesrc/candidatesrc.go",
+  "source_sha256": "c7cf79f18210516d3320e6ab8922a40eee120dd894be2a70f35c13d71f7f587a",
+  "package": "candidatesrc",
+  "function": "newlyListed",
+  "signature": "newlyListed(params=3, results=1)",
+  "start": {
+    "line": 380,
+    "column": 1
+  },
+  "end": {
+    "line": 388,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 381,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 382,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 10
+      },
+      "text": "candidate.NewlyListedUnknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 10
+      },
+      "text": "candidate.NewlyListedNo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 9
+      },
+      "text": "candidate.NewlyListedYes"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "2db695d594ec06caa5dfe81096cc33beae0eec6b84922d5356552f5ddecea12b",
+  "package": "main",
+  "function": "consoleLimitSettingsSeam",
+  "signature": "consoleLimitSettingsSeam(params=1, results=1)",
+  "start": {
+    "line": 302,
+    "column": 1
+  },
+  "end": {
+    "line": 307,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 303,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 304,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 303,
+        "column": 10
+      },
+      "text": "newLimitSettingsSeam"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 303,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

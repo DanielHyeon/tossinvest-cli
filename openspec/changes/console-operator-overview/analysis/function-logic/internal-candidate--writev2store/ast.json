@@ -1,0 +1,360 @@
+{
+  "file": "internal/candidate/store_test.go",
+  "source_sha256": "78a7e00ed25d48c457a271f77b710897ba0c33aef94473c8a1590cfd12fea7b8",
+  "package": "candidate",
+  "function": "writeV2Store",
+  "signature": "writeV2Store(params=2, results=0)",
+  "start": {
+    "line": 1597,
+    "column": 1
+  },
+  "end": {
+    "line": 1648,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1600,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1604,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1614,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 1617,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1625,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1638,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1645,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1598,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1599,
+        "column": 13
+      },
+      "text": "sql.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1599,
+        "column": 32
+      },
+      "text": "dsn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1601,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1603,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1603,
+        "column": 21
+      },
+      "text": "db.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1604,
+        "column": 15
+      },
+      "text": "db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1605,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1607,
+        "column": 11
+      },
+      "text": "db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1613,
+        "column": 3
+      },
+      "text": "stamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1613,
+        "column": 14
+      },
+      "text": "stamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1613,
+        "column": 20
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1613,
+        "column": 42
+      },
+      "text": "stamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1615,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1620,
+        "column": 15
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1621,
+        "column": 12
+      },
+      "text": "db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1624,
+        "column": 4
+      },
+      "text": "stamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1626,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1633,
+        "column": 13
+      },
+      "text": "t0.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1634,
+        "column": 11
+      },
+      "text": "db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1637,
+        "column": 3
+      },
+      "text": "stamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1637,
+        "column": 19
+      },
+      "text": "stamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1639,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1641,
+        "column": 11
+      },
+      "text": "db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1644,
+        "column": 3
+      },
+      "text": "stamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1644,
+        "column": 9
+      },
+      "text": "crossed.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1646,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1599,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1603,
+        "column": 17
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1604,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1607,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1621,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1633,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1634,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1641,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1603,
+        "column": 2
+      }
+    }
+  ],
+  "revision": "current"
+}

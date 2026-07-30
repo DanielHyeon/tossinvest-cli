@@ -2,8 +2,11 @@ package official
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -118,6 +121,194 @@ func (c *Client) OrderByID(ctx context.Context, orderID string) (domain.Order, e
 		return domain.Order{}, err
 	}
 	return adaptOrder(raw), nil
+}
+
+// --- the raw-preserving read (change console-orders-screen, task 1.1-1.4) -------
+
+// RawOrder is one order with the broker's own decimal strings preserved.
+//
+// # Why this exists beside Orders
+//
+// [Client.Orders] sends every number through parseDecimal, which answers 0 for
+// an empty string and 0 for a string it cannot parse. That is the right shape
+// for a CLI printing a portfolio and every existing caller depends on it — but
+// it means that by the time an order reaches domain.Order, "the broker sent no
+// value", "the broker sent something unparseable" and "the broker sent zero" are
+// one number.
+//
+// That is not an edge case here. The API sends `price` as null for a market
+// order and the whole `execution` object as null while an order is still alive,
+// so EVERY open order arrives with a filled quantity and an average fill price of
+// zero. A screen built on that renders every live order as fully filled at a
+// price of 0.
+//
+// It is RawHolding's argument (asset_reads.go) applied to orders: a value that
+// has been through float64 and back has lost the evidence of what the broker
+// actually said, and here the evidence is the difference between "not filled" and
+// "filled at nothing". An empty string means the payload carried no value for
+// that field, which is a different fact from "0".
+//
+// It is additive. Orders, OrderByID, adaptOrder and adaptOrders are untouched,
+// this reads the same endpoint through the same getAcct path — so the token
+// refresh, the account header and the error classification are the same ones —
+// and no existing caller changes.
+type RawOrder struct {
+	// ID is orderId, the number the screen shows and the ledger joins on.
+	ID     string
+	Symbol string
+	// Side is "BUY" | "SELL".
+	Side string
+	// OrderType is "LIMIT" | "MARKET" | ….
+	OrderType string
+	// Status is the broker's own status string, unmodified. Deriving a state
+	// from it is internal/brokerstate's job and it needs the broker's own word,
+	// including a value this build has never seen.
+	Status string
+	// Currency is "KRW" | "USD" as the payload spelled it.
+	Currency string
+	// Market is "KR" | "US", derived from Currency, and empty for a currency this
+	// build does not recognise. The /orders response carries no market field and
+	// no name field at all; Orders decodes the currency and drops it, so a market
+	// column is either derived here or it does not exist.
+	Market string
+
+	// Quantity, Price, FilledQuantity and AverageFilledPrice are the payload's
+	// strings, untouched. Empty means the broker sent no value for that field.
+	Quantity           string
+	Price              string
+	FilledQuantity     string
+	AverageFilledPrice string
+
+	// OrderedAt and CanceledAt are the payload's timestamps, untouched. OrderedAt
+	// is the actual instant (RFC3339) rather than domain.Order.OrderDate's first
+	// ten characters, and CanceledAt has no home in domain.Order at all.
+	OrderedAt  string
+	CanceledAt string
+}
+
+// RawOrderList is one page of RawOrder, with the page boundary kept.
+//
+// [Client.Orders] decodes nextCursor and hasNext and then drops both, so its
+// caller cannot tell a complete list from the first page of a longer one. A count
+// taken from a truncated page is a confidently short number.
+type RawOrderList struct {
+	Orders     []RawOrder
+	NextCursor string
+	HasNext    bool
+}
+
+// ErrOrderStatusRequired is what the raw order reads answer when the caller did
+// not name a lifecycle group.
+//
+// # Why this is a refusal and not a default
+//
+// `status` is documented `required: true` on both order list endpoints, and it is
+// not a filter like `symbol` or `limit`: it selects between two differently shaped
+// answers. Picking one here would be this client deciding which question the
+// caller meant, and the wrong choice is silent — a plain read defaulted to CLOSED
+// would answer with one page of old orders and no indication that every live one
+// is missing.
+//
+// The refusal is here, in the client, rather than in a caller's tests, because the
+// failure it prevents was a caller forgetting. `/orders` shipped composing
+// `?limit=100` with no status, which is either a rejected request or one page over
+// the account's whole history — and in the second case a live order past row 100
+// is absent from the screen and from its counts, rendered as a floor nobody can
+// resolve. A rule that lives only at the composition site is forgotten again at
+// the next composition site, by a change nobody is reviewing for this.
+//
+// It is not classified as retryable and ShouldFallback answers false for it, which
+// is right: a request this client will not send is not a reason to reach for the
+// web session.
+var ErrOrderStatusRequired = errors.New("official: an order list read must name a status group")
+
+// OrdersRaw fetches the same page [Client.Orders] does, without adapting the
+// decimals and without discarding the page boundary.
+//
+// It is one request to `GET /api/v1/orders`, the same one Orders makes, so a
+// caller that needs both shapes should call this one and adapt rather than
+// spending two requests out of the §0.4 budget.
+//
+// filter.Status is required (see [ErrOrderStatusRequired]) and its value is passed
+// verbatim. The broker is the authority on which groups exist; this read refuses
+// the absence of an answer, not an answer it has not seen before.
+func (c *Client) OrdersRaw(ctx context.Context, filter OrdersFilter) (RawOrderList, error) {
+	if strings.TrimSpace(filter.Status) == "" {
+		return RawOrderList{}, fmt.Errorf("%w: GET /api/v1/orders documents it as required, and the "+
+			"two groups are different questions — status=OPEN returns every pending order and "+
+			"ignores limit and cursor, status=CLOSED returns one page and spans the whole account "+
+			"history when no from/to is given. Without it the request is either refused or silently "+
+			"bounded, and a silently bounded live read is a leftover the caller cannot see",
+			ErrOrderStatusRequired)
+	}
+
+	q := url.Values{}
+	if filter.Status != "" {
+		q.Set("status", filter.Status)
+	}
+	if filter.Symbol != "" {
+		q.Set("symbol", filter.Symbol)
+	}
+	if filter.From != "" {
+		q.Set("from", filter.From)
+	}
+	if filter.To != "" {
+		q.Set("to", filter.To)
+	}
+	if filter.Cursor != "" {
+		q.Set("cursor", filter.Cursor)
+	}
+	if filter.Limit > 0 {
+		q.Set("limit", strconv.Itoa(filter.Limit))
+	}
+
+	var raw apiOrderPage
+	if err := c.getAcct(ctx, "/api/v1/orders", q, &raw); err != nil {
+		return RawOrderList{}, err
+	}
+
+	out := RawOrderList{
+		Orders:     make([]RawOrder, 0, len(raw.Orders)),
+		NextCursor: raw.NextCursor,
+		HasNext:    raw.HasNext,
+	}
+	for _, o := range raw.Orders {
+		out.Orders = append(out.Orders, RawOrder{
+			ID:        o.OrderID,
+			Symbol:    o.Symbol,
+			Side:      o.Side,
+			OrderType: o.OrderType,
+			Status:    o.Status,
+			Currency:  o.Currency,
+			Market:    marketFromCurrency(o.Currency),
+			// Verbatim, deliberately. parseDecimal here would put the whole
+			// point of this type back: an empty string would become 0 and the
+			// screen would render a pending order as filled at zero.
+			Quantity:           o.Quantity,
+			Price:              o.Price,
+			FilledQuantity:     o.Execution.FilledQuantity,
+			AverageFilledPrice: o.Execution.AverageFilledPrice,
+			OrderedAt:          o.OrderedAt,
+			CanceledAt:         o.CanceledAt,
+		})
+	}
+	return out, nil
+}
+
+// marketFromCurrency names the market a trading currency implies.
+//
+// The /orders response has no market field. An unrecognised currency answers
+// empty rather than guessing: a wrong market on a row is worse than no market,
+// because the operator filters by it.
+func marketFromCurrency(currency string) string {
+	switch strings.ToUpper(strings.TrimSpace(currency)) {
+	case "KRW":
+		return "KR"
+	case "USD":
+		return "US"
+	default:
+		return ""
+	}
 }
 
 // adaptOrders converts a slice of official Order records to []domain.Order.

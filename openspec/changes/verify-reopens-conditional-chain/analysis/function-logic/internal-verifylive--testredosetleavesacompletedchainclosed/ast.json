@@ -1,0 +1,79 @@
+{
+  "file": "internal/verifylive/redo_test.go",
+  "source_sha256": "56029675025105f9295e1a9c0685ac93b7aa9417362ac8260691c30d3f83956d",
+  "package": "verifylive",
+  "function": "TestRedoSetLeavesACompletedChainClosed",
+  "signature": "TestRedoSetLeavesACompletedChainClosed(params=1, results=0)",
+  "start": {
+    "line": 176,
+    "column": 1
+  },
+  "end": {
+    "line": 189,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 13
+      },
+      "text": "goneSubjectRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 5
+      },
+      "text": "has"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 9
+      },
+      "text": "RedoSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 64
+      },
+      "text": "RedoSet"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

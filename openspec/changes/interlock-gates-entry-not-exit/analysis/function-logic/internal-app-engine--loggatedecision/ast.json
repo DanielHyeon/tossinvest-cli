@@ -1,0 +1,165 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "946ee03dc40036c1297e5f4bdbbda06d88128d7409537e3cee9201e827bdf8b9",
+  "package": "engine",
+  "function": "logGateDecision",
+  "signature": "logGateDecision(params=3, results=0)",
+  "start": {
+    "line": 433,
+    "column": 1
+  },
+  "end": {
+    "line": 466,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 456,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 461,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 463,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 21
+      },
+      "text": "status.MaskedAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 17
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 25
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 25
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 25
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 28
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 27
+      },
+      "text": "limitString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 3
+      },
+      "text": "logger.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 39
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 71
+      },
+      "text": "refusal.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 2
+      },
+      "text": "logger.Event"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 434,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 457,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

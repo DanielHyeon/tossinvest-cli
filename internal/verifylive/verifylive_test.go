@@ -118,15 +118,30 @@ func TestEveryMutatingStepDeclaresWhatItSends(t *testing.T) {
 // TestOnlyTheConditionalRegistrationOutlivesItsStep. Everything else this tool
 // sends is cleaned up where it was created, and the catalogue is where that claim
 // has to be true before the runtime can honour it.
+//
+// The rule has two halves and they are no longer each other's converse. Only a
+// conditional registration may outlive its step — that has not changed. But a
+// registration does not *have* to: the trigger observation registers the stop it
+// watches and either sees it fire or cancels it before returning, both inside one
+// step. So the second half asks the question that actually matters — if it does
+// not outlive the step, the step has to declare the cancel that ends it, because a
+// registration with neither answer is an exposure nobody accounted for.
 func TestOnlyTheConditionalRegistrationOutlivesItsStep(t *testing.T) {
 	for _, s := range Steps() {
+		declaresCancel := false
+		for _, m := range s.Mutations {
+			if m.Kind == MutateCancelConditional {
+				declaresCancel = true
+			}
+		}
 		for _, m := range s.Mutations {
 			outlives := strings.Contains(strings.ToLower(m.Ends), "outlive")
 			if outlives && m.Kind != MutateRegisterConditional {
 				t.Errorf("%s: a %s mutation claims to outlive its step: %s", s.ID, m.Kind, m.Ends)
 			}
-			if m.Kind == MutateRegisterConditional && !outlives {
-				t.Errorf("%s: the conditional registration does not warn that it is left alive: %s", s.ID, m.Ends)
+			if m.Kind == MutateRegisterConditional && !outlives && !declaresCancel {
+				t.Errorf("%s: the conditional registration neither warns that it is left alive nor is "+
+					"accompanied by the cancel that ends it: %s", s.ID, m.Ends)
 			}
 		}
 	}
@@ -180,16 +195,48 @@ func TestTTLEdgeStepIsOptInAndWarnsFirst(t *testing.T) {
 // observation carried out in a separate session under market conditions this tool
 // cannot manufacture. Recording it as deferred is what puts it on task 2.6's
 // no-automatic-entry list instead of leaving a silent gap.
+//
+// This used to assert the step did not mutate at all, which was the strongest
+// available way of saying "nobody can force this" while the step had no body. It
+// has one now, and that assertion would forbid the measurement itself — so what is
+// asserted instead is the property the old one was standing in for: the step
+// cannot run without being asked for by name, and the ask is the heaviest flag in
+// the tool. The behavioural half is TestWithoutTheOptInTheTriggerStepIsUnchanged.
 func TestTriggerObservationIsDeferredNotPromised(t *testing.T) {
 	s, ok := StepByID(StepConditionalTrigger)
 	if !ok {
 		t.Fatal("the trigger step is not in the catalogue")
 	}
 	if s.Deferred == "" {
-		t.Fatal("the trigger step must be marked deferred")
+		t.Fatal("the trigger step must stay marked deferred: without the opt-in it records an explicit " +
+			"unverified, which is what keeps it on task 2.6's no-automatic-entry list")
 	}
-	if s.Mutates {
-		t.Error("the trigger step must not mutate: it is an observation nobody can force")
+	if s.OptIn != FlagIncludeTrigger {
+		t.Errorf("OptIn = %q, want %q — an observation that sells a share must be asked for by name",
+			s.OptIn, FlagIncludeTrigger)
+	}
+	if !s.Mutates {
+		t.Error("the trigger step registers a live conditional in its opted-in form and has to declare it; " +
+			"a mutating step that does not say so cannot be authorised by the plan")
+	}
+	if !s.NeedsHolding {
+		t.Error("the trigger step sells a share it must already own; the tool never buys to create one")
+	}
+	if !strings.Contains(s.Procedure[0], "체결될 것을 의도한") {
+		t.Errorf("the step's first procedure line must say it makes the one order intended to fill, got %q",
+			s.Procedure[0])
+	}
+	// The default is off, and the default is what a runner with no options has.
+	r := &Runner{}
+	if r.optedIn(s) {
+		t.Error("a runner that was never told to include the trigger step considers it opted in")
+	}
+	if !r.deferredForm(s) {
+		t.Error("without the opt-in the step must run in its deferred form")
+	}
+	if r.mutatesNow(s) {
+		t.Error("without the opt-in the step must not be treated as mutating: the approval list would carry " +
+			"a live conditional registration for work that will not happen")
 	}
 }
 

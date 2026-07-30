@@ -1,0 +1,172 @@
+{
+  "file": "internal/app/engine/interlock_internal_test.go",
+  "source_sha256": "a2d7c7ad9e7bfa4ebcb586a627a6f5f56586b462c9bc988e78a966ddc5557a7a",
+  "package": "engine",
+  "function": "TestTradingPolicyClauseNamesWhatIsOff",
+  "signature": "TestTradingPolicyClauseNamesWhatIsOff(params=1, results=0)",
+  "start": {
+    "line": 128,
+    "column": 1
+  },
+  "end": {
+    "line": 163,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 149,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 11
+      },
+      "text": "checkTradingPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 8
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 25
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 12
+      },
+      "text": "checkTradingPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 12
+      },
+      "text": "checkTradingPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 160,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

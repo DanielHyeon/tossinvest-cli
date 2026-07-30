@@ -1,0 +1,173 @@
+{
+  "file": "internal/soak/attest_test.go",
+  "source_sha256": "9e225583ec5a3bc5bd51e8c747895490663350e5deadbbf2a786516ff0f7bfbb",
+  "package": "soak_test",
+  "function": "TestBuildAttestationCarriesTheMeasuredRate",
+  "signature": "TestBuildAttestationCarriesTheMeasuredRate(params=1, results=0)",
+  "start": {
+    "line": 246,
+    "column": 1
+  },
+  "end": {
+    "line": 265,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 253,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 256,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 259,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 12
+      },
+      "text": "threeCleanDays"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 26
+      },
+      "text": "cycles.StartedAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 12
+      },
+      "text": "soak.BuildAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 34
+      },
+      "text": "soak.Summarize"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 58
+      },
+      "text": "criteria"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 70
+      },
+      "text": "soakStart.AddDate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 250,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

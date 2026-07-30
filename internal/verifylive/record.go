@@ -187,9 +187,53 @@ type Artifact struct {
 	CancelledAt time.Time `json:"cancelled_at,omitempty"`
 	// Cancelled reports that this tool confirmed the object is gone.
 	Cancelled bool `json:"cancelled"`
+	// Filled and FilledAt are the other way an object stops existing.
+	//
+	// Until 2026-07-30 there was only one, and "not cancelled" and "live" were the
+	// same sentence. A conditional order that fires produces a child order that is
+	// *meant* to fill, and a filled order is not a cancelled one — so without this
+	// the record insists a successful measurement's child is live forever: filling
+	// the exposure cap, printed as a leftover, and offered for cancellation by the
+	// next run's prologue.
+	//
+	// It is a second field rather than a reuse of Cancelled because this file is
+	// the document every entry in measurements.md is derived from. Writing a fill
+	// as a cancellation would behave correctly in all three of those places and
+	// make the trigger measurement's own conclusion read "we cancelled it".
+	//
+	// FilledAt is this tool's observation time, not the broker's. The broker
+	// supplies no fill time at all — lastExecutedAt is null on every completed
+	// order in both markets, and a US order's orderedAt carries only a date
+	// (measurements.md M44, M45) — so the polling interval that produced it is the
+	// error bound and is recorded alongside it as an observation.
+	//
+	// Absent is what every line written before 2026-07-30 carries, and such a line
+	// keeps exactly the judgement it has today.
+	Filled   bool      `json:"filled,omitempty"`
+	FilledAt time.Time `json:"filled_at,omitempty"`
 	// Deliberate marks the conditional order that is meant to survive the
 	// process exit. It is still outstanding; it is just not a mistake.
 	Deliberate bool `json:"deliberate,omitempty"`
+	// HeldUntil names the step whose terminal verdict releases this object.
+	//
+	// Until that step decides — and decides *after* this line was written — the
+	// cleanup prologue must not offer to cancel it. It exists because a
+	// measurement that spans runs has to be able to say what it is waiting on:
+	// the conditional a persistence step reads from a later process, and the
+	// child order a trigger measurement has to watch fill. Without it, the only
+	// object the prologue protected was a conditional order, and only ever
+	// against one step's verdict (see holdGate).
+	//
+	// Empty is the record every line written before 2026-07-30 carries, and it
+	// keeps exactly the judgement it has today.
+	HeldUntil StepID `json:"held_until,omitempty"`
+	// ChainID groups the objects one measurement created.
+	//
+	// A conditional modify issues a new identifier and invalidates the old one
+	// immediately (measurements.md M19, M40 — both markets), so "these two are
+	// one protection" is not derivable from the broker afterwards. Before this
+	// field the link lived only in the prose of Note.
+	ChainID string `json:"chain_id,omitempty"`
 	// Note explains an artifact whose state needs one.
 	Note string `json:"note,omitempty"`
 }
@@ -436,31 +480,75 @@ func Passed(entries []Entry, id StepID) bool {
 // an order created in one step and cancelled in another nets out. This is the
 // function that decides whether the tool can report a clean finish.
 func Outstanding(entries []Entry) []Artifact {
-	order := []string{}
-	latest := map[string]Artifact{}
+	var out []Artifact
+	for _, l := range outstandingLines(entries) {
+		out = append(out, l.Artifact)
+	}
+	return out
+}
+
+// ChainOf returns the chain identifier the record carries for an object, taking
+// the newest line that names one.
+//
+// Empty means the record does not group this object with anything, which is what
+// every line written before 2026-07-30 says.
+func ChainOf(entries []Entry, kind, id string) string {
+	chain := ""
 	for _, e := range entries {
+		for _, a := range e.Artifacts {
+			if a.Kind == kind && a.ID == id && a.ChainID != "" {
+				chain = a.ChainID
+			}
+		}
+	}
+	return chain
+}
+
+// outstandingLine is an outstanding artifact together with the index of the line
+// Outstanding chose for it.
+//
+// The index is not decoration. The cleanup rule reads HeldUntil off this
+// artifact, so the verdict that releases it has to be measured against the line
+// that carried that field and no other (cleanup.go heldAfter).
+type outstandingLine struct {
+	Artifact
+	at int
+}
+
+func outstandingLines(entries []Entry) []outstandingLine {
+	order := []string{}
+	latest := map[string]outstandingLine{}
+	for i, e := range entries {
 		for _, a := range e.Artifacts {
 			key := a.Kind + "\x00" + a.ID
 			if _, seen := latest[key]; !seen {
 				order = append(order, key)
 			}
 			prev, seen := latest[key]
-			if seen && prev.Cancelled && !a.Cancelled {
-				// A later line that does not know about the cancel must not
-				// resurrect it. Cancellation is monotone.
+			if seen && prev.terminal() && !a.terminal() {
+				// A later line that does not know how this ended must not
+				// resurrect it. Both endings are monotone.
 				continue
 			}
-			latest[key] = a
+			latest[key] = outstandingLine{Artifact: a, at: i}
 		}
 	}
-	var out []Artifact
+	var out []outstandingLine
 	for _, key := range order {
-		if a := latest[key]; !a.Cancelled {
-			out = append(out, a)
+		if l := latest[key]; !l.terminal() {
+			out = append(out, l)
 		}
 	}
 	return out
 }
+
+// terminal reports that this line says the object has stopped existing.
+//
+// Two ways, and the difference between them is recorded rather than flattened:
+// this tool cancelled it, or it filled. Every consumer of Outstanding asks the
+// same question through this one predicate, so a third ending added later is
+// honoured by all of them at once.
+func (a Artifact) terminal() bool { return a.Cancelled || a.Filled }
 
 // --- digests ------------------------------------------------------------------
 

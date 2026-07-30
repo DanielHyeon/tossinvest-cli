@@ -1,0 +1,150 @@
+{
+  "file": "internal/official/client.go",
+  "source_sha256": "b9cae4259e2d778036f871285ab6667d22e3ee7f89d8d33f489c17642efa5883",
+  "package": "official",
+  "function": "doRequest",
+  "receiver": "Client",
+  "signature": "Client.doRequest(params=1, results=3)",
+  "start": {
+    "line": 93,
+    "column": 1
+  },
+  "end": {
+    "line": 105,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 15
+      },
+      "text": "c.hc.Do"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 8
+      },
+      "text": "resp.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 2
+      },
+      "text": "c.rates.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 17
+      },
+      "text": "readRateBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 59
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 15
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 32
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 98,
+        "column": 2
+      },
+      "text": "resp.Body.Close"
+    }
+  ]
+}

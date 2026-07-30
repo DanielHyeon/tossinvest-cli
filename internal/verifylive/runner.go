@@ -95,6 +95,14 @@ type Options struct {
 	MaxSellQuantity float64
 	// IncludeTTLEdge opts into the step that deliberately creates a second order.
 	IncludeTTLEdge bool
+	// IncludeTrigger opts into the trigger observation, which is the only step
+	// that registers something the market is meant to reach. A successful run
+	// sells one share and cannot be undone.
+	IncludeTrigger bool
+	// TriggerWindow is how long the trigger observation waits for the market to
+	// come to its trigger before cancelling it and recording the attempt as
+	// inconclusive. Zero is DefaultTriggerWindow.
+	TriggerWindow time.Duration
 	// TTLWait is how long the validity-window step waits before replaying. The
 	// document says the key lives ten minutes; the default overshoots it.
 	TTLWait time.Duration
@@ -146,8 +154,17 @@ type Runner struct {
 	offset          float64
 	maxSellQuantity float64
 	includeTTLEdge  bool
+	includeTrigger  bool
 	ttlWait         time.Duration
+	triggerWindow   time.Duration
 	redo            map[StepID]bool
+
+	// readBackoffs counts how many times a read-only call has waited out a 429 in
+	// this process. The trigger observation snapshots it around each poll: inside
+	// the observation window the error bound on a timestamp is the backoff, not
+	// the polling interval, and a record that did not say so would overstate its
+	// own precision (measurements.md M4, M8, M10).
+	readBackoffs int
 
 	runID   string
 	process Process
@@ -194,7 +211,9 @@ func New(o Options) (*Runner, error) {
 		offset:          offset,
 		maxSellQuantity: o.MaxSellQuantity,
 		includeTTLEdge:  o.IncludeTTLEdge,
+		includeTrigger:  o.IncludeTrigger,
 		ttlWait:         o.TTLWait,
+		triggerWindow:   o.TriggerWindow,
 		redo:            map[StepID]bool{},
 		prior:           append([]Entry(nil), o.Prior...),
 		process:         o.Process,
@@ -216,6 +235,9 @@ func New(o Options) (*Runner, error) {
 	}
 	if r.ttlWait <= 0 {
 		r.ttlWait = DefaultTTLWait
+	}
+	if r.triggerWindow <= 0 {
+		r.triggerWindow = DefaultTriggerWindow
 	}
 	if r.process.InstanceID == "" {
 		r.process = NewProcess(r.now())
@@ -314,6 +336,7 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 			sr.skip(reason)
 		} else {
 			r.dispatch(ctx, step.ID, sr)
+			r.sweepStep(ctx, sr)
 		}
 
 		entry := r.entryFor(sr)
@@ -484,6 +507,34 @@ func (r *Runner) settled(id StepID) (bool, Verdict) {
 	return true, e.Verdict
 }
 
+// deferredForm reports that this run will drive the step in its deferred shape:
+// it runs, and its body records an explicit "unverified" instead of measuring
+// anything.
+//
+// It exists because one step is now both deferred *and* opted in, and the two
+// gates disagree about what that means. A deferred step is never skipped — its
+// body has to run so the deferral lands on the record, which is what task 2.6
+// reads to decide where automatic entry stays forbidden. An opt-in step that was
+// not asked for is skipped outright. Getting a step that is both wrong in either
+// direction costs something real:
+//
+//	skip it              the unverified observations disappear from the record, and
+//	                     the report silently stops saying the property is unmeasured
+//	run it as mutating   the approval list carries a live request for a step the
+//	                     operator did not opt into
+//
+// So the deferral is lifted by the opt-in rather than overridden by it, and
+// mutatesNow is what the plan and the record consult instead of Step.Mutates.
+func (r *Runner) deferredForm(step Step) bool {
+	return step.Deferred != "" && (step.OptIn == "" || !r.optedIn(step))
+}
+
+// mutatesNow reports that the step can send a live request in this run. A step in
+// its deferred form declares mutations it will not make.
+func (r *Runner) mutatesNow(step Step) bool {
+	return step.Mutates && !r.deferredForm(step)
+}
+
 // preflight decides whether a step runs at all.
 //
 // It is the catalogue's own gates plus one more: a mutating step that is not on the
@@ -495,7 +546,7 @@ func (r *Runner) preflight(step Step) (string, bool) {
 	if reason, skip := r.preflightStatic(step, r.passed); skip {
 		return reason, true
 	}
-	if step.Mutates && !r.approvedStep(step.ID) {
+	if r.mutatesNow(step) && !r.approvedStep(step.ID) {
 		return "이 실행에서 승인된 배치에 없다 — " + r.unapprovedReason(step.ID), true
 	}
 	return "", false
@@ -527,10 +578,16 @@ func (r *Runner) unapprovedReason(id StepID) string {
 // because a plan that left out conditional-modify on the grounds that
 // conditional-register has not passed *yet* would exclude half the procedure.
 func (r *Runner) preflightStatic(step Step, passed func(StepID) bool) (string, bool) {
-	if step.Deferred != "" {
+	if r.deferredForm(step) {
 		// Never skipped. A deferred step still runs, and its body records the
 		// deferral as an explicit "unverified" — which is the whole reason task
 		// 2.6 can produce a list of what automatic entry is not allowed on.
+		//
+		// deferredForm rather than Step.Deferred: once the opt-in that unlocks a
+		// deferred step is present the deferral is lifted, and the gates below —
+		// the holding, the market, the dependencies — apply as they do to any
+		// other step. Returning here regardless would let an opted-in trigger
+		// observation run against an account with nothing to sell.
 		return "", false
 	}
 	if step.OptIn != "" && !r.optedIn(step) {
@@ -553,15 +610,45 @@ func (r *Runner) preflightStatic(step Step, passed func(StepID) bool) (string, b
 	return "", false
 }
 
+// mutationSymbol is what a step's live requests are about.
+//
+// It is the single answer to that question: the plan reads it to write the line an
+// operator approves (plan.go), and preflight reads it to keep a run inside its own
+// market. Those two have to agree with the step body, because the plan's symbol is
+// compared exactly against the request's — a step resolving its target one way while
+// the list said another does not send the wrong thing, it sends nothing and stops
+// the run (2026-07-29, conditional-modify, twice).
+//
+// The conditional steps are the case that made this explicit. They act on the
+// conditional order the record already carries, whose symbol is a property of the
+// account rather than of this run's flags. Before it is registered — a full run that
+// starts from the beginning — the answer is the holding, because that is what
+// conditional-register is about to register against.
 func (r *Runner) mutationSymbol(step Step) string {
+	if step.ActsOnConditional {
+		if _, symbol, ok := r.liveConditional(); ok && strings.TrimSpace(symbol) != "" {
+			return symbol
+		}
+		return r.holdingSymbol
+	}
 	if step.NeedsHolding {
 		return r.holdingSymbol
 	}
 	return r.symbol
 }
 
+// optedIn reports that the operator asked for a step that does not run by
+// default. The default is false: a new opt-in step whose flag was never wired up
+// stays off rather than on.
 func (r *Runner) optedIn(step Step) bool {
-	return step.ID == StepIdempotencyTTLEdge && r.includeTTLEdge
+	switch step.ID {
+	case StepIdempotencyTTLEdge:
+		return r.includeTTLEdge
+	case StepConditionalTrigger:
+		return r.includeTrigger
+	default:
+		return false
+	}
 }
 
 // passed looks in the record and in this run.
@@ -594,12 +681,15 @@ func (r *Runner) entryFor(sr *stepRun) Entry {
 		StartedAt:     sr.startedAt.UTC(),
 		FinishedAt:    r.now().UTC(),
 		AccountRef:    maskedAccount(r.accountRef),
-		Mutating:      sr.step.Mutates,
-		Verdict:       sr.verdict,
-		Reason:        sr.reason,
-		Calls:         sr.calls,
-		Observations:  sr.observations,
-		Artifacts:     sr.artifacts,
+		// The catalogue's flag as this run resolved it. A step whose deferral was
+		// not lifted declares mutations it does not make, and a line claiming it
+		// mutated would be a leftover this tool never created.
+		Mutating:     r.mutatesNow(sr.step),
+		Verdict:      sr.verdict,
+		Reason:       sr.reason,
+		Calls:        sr.calls,
+		Observations: sr.observations,
+		Artifacts:    sr.artifacts,
 	}
 }
 
@@ -703,16 +793,73 @@ func (sr *stepRun) cancelled(kind, id, symbol string, at time.Time, note string)
 	})
 }
 
-// markDeliberate flags the artifact that is *meant* to outlive the process, so
-// the end-of-run check does not report the conditional-persistence design as a
-// leak.
-func (sr *stepRun) markDeliberate(kind, id, note string) {
+// filled records the other ending: the object did what it was for and stopped
+// existing. An order filled; a conditional fired and became one.
+//
+// It carries the chain the object belonged to, so the record can still say the
+// conditional and the order it produced were one measurement after both of them
+// are terminal and neither is outstanding any more.
+func (sr *stepRun) filled(kind, id, symbol string, at time.Time, chain, note string) {
+	sr.artifacts = append(sr.artifacts, Artifact{
+		Kind: kind, ID: id, Symbol: symbol, FilledAt: at.UTC(), Filled: true,
+		ChainID: chain, Note: note,
+	})
+}
+
+// markHeld records that this object stays live on purpose and says who is
+// waiting on it.
+//
+// Two readers, two fields. Deliberate is for the person: the end-of-run check and
+// every screen use it to say "this is not a leak". HeldUntil is for the cleanup
+// rule: the object is not offered for cancellation until gate reaches a terminal
+// verdict recorded after this line (cleanup.go holdGate).
+//
+// It only reaches an artifact this step actually recorded. A step that reads an
+// object back without creating one — conditional-persist is the case today — has
+// nothing to mark, and calling this is harmless there rather than a second way to
+// declare a hold.
+func (sr *stepRun) markHeld(kind, id string, gate StepID, chain, note string) {
 	for i := range sr.artifacts {
 		if sr.artifacts[i].Kind == kind && sr.artifacts[i].ID == id && !sr.artifacts[i].Cancelled {
 			sr.artifacts[i].Deliberate = true
+			sr.artifacts[i].HeldUntil = gate
+			sr.artifacts[i].ChainID = chain
 			sr.artifacts[i].Note = note
 		}
 	}
+}
+
+// joinChain records which measurement an object belongs to, without claiming
+// anything about whether it is allowed to stay alive.
+//
+// markHeld says three things at once — this is deliberate, this step's verdict
+// releases it, and it is part of this chain — and the three are not always true
+// together. An object that is *supposed* to end inside the step that made it
+// belongs to a chain and nothing more: exempting it from the end-of-run leftover
+// check would hide exactly the case where the step did not get to finish.
+func (sr *stepRun) joinChain(kind, id, chain, note string) {
+	for i := range sr.artifacts {
+		if sr.artifacts[i].Kind == kind && sr.artifacts[i].ID == id && !sr.artifacts[i].terminal() {
+			sr.artifacts[i].ChainID = chain
+			sr.artifacts[i].Note = note
+		}
+	}
+}
+
+// chainOf returns the chain identifier the record already carries for an object,
+// newest mention first: this step, then what this run has written, then the
+// record it started from.
+//
+// A modify creates a new identifier and invalidates the old one at once
+// (measurements.md M19, M40), so the successor has to inherit its predecessor's
+// chain here — after the fact the broker cannot say the two were one protection.
+func (r *Runner) chainOf(sr *stepRun, kind, id string) string {
+	for _, entries := range [][]Entry{{{Artifacts: sr.artifacts}}, r.written, r.prior} {
+		if c := ChainOf(entries, kind, id); c != "" {
+			return c
+		}
+	}
+	return ""
 }
 
 // latencyStats summarises the round trips a step measured, which is the input to

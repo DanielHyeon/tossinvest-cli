@@ -1,0 +1,64 @@
+{
+  "file": "internal/official/reads.go",
+  "source_sha256": "722b9846047d6e37d67f3cc85d4ab635a5d7cc365bd1aa3401f8d6c26450c8f3",
+  "package": "official",
+  "function": "Accounts",
+  "receiver": "Client",
+  "signature": "Client.Accounts(params=1, results=2)",
+  "start": {
+    "line": 28,
+    "column": 1
+  },
+  "end": {
+    "line": 32,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 2
+      },
+      "text": "c.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 8
+      },
+      "text": "c.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 9
+      },
+      "text": "c.accountsLocked"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 30,
+        "column": 2
+      },
+      "text": "c.mu.Unlock"
+    }
+  ]
+}

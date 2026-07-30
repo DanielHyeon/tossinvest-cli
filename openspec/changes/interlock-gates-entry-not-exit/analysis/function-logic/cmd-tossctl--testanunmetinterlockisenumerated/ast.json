@@ -1,0 +1,165 @@
+{
+  "file": "cmd/tossctl/engine_test.go",
+  "source_sha256": "4aa1c8709e31187a1adf7aa4e72a66cc1809a3aa665d0d4e1abcf1b662c1c924",
+  "package": "main",
+  "function": "TestAnUnmetInterlockIsEnumerated",
+  "signature": "TestAnUnmetInterlockIsEnumerated(params=1, results=0)",
+  "start": {
+    "line": 155,
+    "column": 1
+  },
+  "end": {
+    "line": 175,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 163,
+        "column": 66
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 9
+      },
+      "text": "testenv.Isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 2
+      },
+      "text": "stubAssembly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 2
+      },
+      "text": "stubRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 20
+      },
+      "text": "runCLI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

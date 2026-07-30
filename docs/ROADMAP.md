@@ -92,9 +92,15 @@ StockOS 순수 로직 이식 순위: costs → structural_rr → tradeplan/contr
 
 **착수 조건**: T1.14 주문 경로 검증 + T2.8 tracer slice end-to-end 검증 완료 (실행 기반 신뢰 확보 — 승격 단계 아님).
 
+**T3.1은 이 조건에서 분리한다(2026-07-28).** 발굴은 **읽기 전용**이고 주문 경로를 건드리지
+않으므로, 주문 실행 신뢰를 착수 조건으로 걸 이유가 없다. 오히려 반대다 — 발굴은 시간축
+데이터를 쌓아야 쓸모가 생기고, 쌓기 시작하는 시점이 늦을수록 레인이 붙을 때 근거가 없다.
+T3.1의 착수 조건은 **없다**(별도 change `add-candidate-discovery`, 격리 테스트로 주문 경로
+의존 부재를 고정).
+
 | ID | 작업 | 비고 |
 |----|------|------|
-| T3.1 | internal/candidate: 후보 수집 + CandidateEvidence. WTS 만료 시 공식 API 소스로 강등해도 후보가 계속 나오는 구성 명시 | 원칙 5 |
+| T3.1 | internal/candidate: 후보 수집 + CandidateEvidence. WTS 만료 시 공식 API 소스로 강등해도 후보가 계속 나오는 구성 명시 | 원칙 5 · **별도 change `add-candidate-discovery`로 분리, 착수 조건 없음(읽기 전용)** |
 | T3.2 | internal/strategy: 독립 매수 레인 인터페이스, 레인별 ON/OFF, OFF 후 청산 지속 | |
 | T3.3 | internal/scheduler: 장 시간 인지 루프 (T1.13 clock/calendar 기반) | |
 | T3.4 | internal/performance: 레인별 성과(결정적 링크 없으면 표시 금지), markout 윈도우(기본 5/15/30분), 비용 후 기대값 기반 슬롯 배분 | |
@@ -106,13 +112,21 @@ StockOS 순수 로직 이식 순위: costs → structural_rr → tradeplan/contr
 |----|------|------|
 | T4.1 | cmd/tossosd: 데몬 부팅·config·graceful shutdown (internal/app 공유). 계좌당 단일 주문 writer 보장 | 원칙 9 |
 | T4.2 | internal/httpapi: REST + SSE(sequence id 순서 보장·스키마 버전), 로컬 토큰 인증 | |
-| T4.3 | 운영 엔드포인트: 상태, 운영 모드 전환(typed-confirmation), 레인 제어, reconciliation 강제 실행 | |
+| T4.3 | 운영 엔드포인트: 상태, 운영 모드 전환(확인 모달), 레인 제어, reconciliation 강제 실행 | |
 
 ## Phase 5 — 운영 콘솔 → 풀 UI  (change: `add-ops-console`, `add-web-ui`)
 
 리뷰 결정: UI를 2단계로 분할. 5a는 안전 운영에 필요한 최소 표면, 5b는 capped-live 성공 후.
 
-**5a — 운영 콘솔 (`add-ops-console`)**: 상태·포지션·미체결·차단 사유·reconciliation 상태·운영 모드/kill switch(typed-confirmation)·실현손익 요약. style.css 디자인 시스템 + 안전 UX(사유 입력·차단 칩) + useDashboardStream 이식. 차트 없음.
+**5a — 운영 콘솔 (`add-ops-console`)**: 상태·포지션·미체결·차단 사유·reconciliation 상태·운영 모드/kill switch(확인 모달)·실현손익 요약. style.css 디자인 시스템 + 안전 UX(사유 입력·차단 칩) + useDashboardStream 이식. 차트 없음.
+
+**확인 모달의 계약**: UI에서 되돌리기 어려운 조작(운영 모드 전환, kill switch, reconciliation
+강제 실행)은 **수행 내용을 문장으로 보여주는 메시지 박스 + 확인 버튼**으로 승인한다.
+확인 문구 타이핑은 **금지**한다(사용자 지시 2026-07-27). 마찰이 아니라 **무엇이 일어나는지를
+보여주는 것**이 이 모달의 안전 기여분이므로, 모달은 대상·현재 상태·전환 후 상태·되돌리는
+방법을 명시해야 한다. 기본 포커스는 취소이고 확인은 명시적 클릭이다.
+CLI(`tossctl flatten-all`, `tossctl verify run`)는 메시지 박스가 없으므로 기존 TTY
+typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한다.
 
 **5b — 풀 UI (`add-web-ui`, 실전 운영 안정화 후)**: 후보 랭킹·레인 성과·분석 화면·차트(경량 라이브러리 채택 우선 평가, 그린필드는 최후). API client는 TossOS 계약 신규 작성(TanStack Query 도입 여부 이 change에서 결정).
 

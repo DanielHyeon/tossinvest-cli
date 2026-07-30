@@ -71,6 +71,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
@@ -133,44 +134,36 @@ var ErrKeylessTransport = errors.New(
 	"engine: the automation gate is enabled but the order transport cannot carry an idempotency " +
 		"key — a place that cannot be replayed is not submittable")
 
-// ErrProtectionNotWired is the clause-6 refusal: the profile has no
-// broker-resident protective execution (engine-safety "브로커측 보호 실행이
-// 배선됨", add-core-domain task 5.2).
-//
-// It is the one interlock clause no configuration can satisfy, and that is the
-// requirement rather than a gap. This change's stop is a *local* judgement — a
-// price observation loop deciding to exit — and a local judgement is worth
-// nothing while the process is dead. A position opened by an engine that then
-// crashes has no protection at all until somebody notices. So automatic entry
-// stays mechanically off until the change that puts a protective order on the
-// broker flips the marker below.
-var ErrProtectionNotWired = errors.New(
-	"engine: the automation gate is enabled but this build has no broker-resident protective order " +
-		"execution — the stop is a local judgement and a local judgement does not survive the process, " +
-		"so automatic entry cannot be turned on until the protective-order change wires it")
-
 // ProtectionReadiness is whether broker-resident protective execution is wired
 // into this profile.
-type ProtectionReadiness string
+//
+// The type, the values and the build's constant all live in internal/execgw now
+// (change interlock-gates-entry-not-exit, design D3): the marker moved to the
+// place that enforces it, which is the gateway's mutation chokepoint. These
+// aliases exist because the interlock still *reports* the readiness, and an
+// operator surface reading `engine.ProtectionUnwired` should not have to know
+// which package the fact is stored in.
+type ProtectionReadiness = execgw.ProtectionReadiness
 
 const (
 	// ProtectionUnwired: nothing places or maintains a protective order at the
-	// broker. Positions are protected only by a local observation loop.
-	ProtectionUnwired ProtectionReadiness = "UNWIRED"
+	// broker. Positions are protected only by a local observation loop — which is
+	// protection that ends when the process does.
+	ProtectionUnwired = execgw.ProtectionUnwired
 	// ProtectionWired: protective execution is wired, so a position survives the
 	// engine dying. Nothing in this build produces this value.
-	ProtectionWired ProtectionReadiness = "WIRED"
+	ProtectionWired = execgw.ProtectionWired
 )
 
 // profileProtection is this build's readiness, and it is a constant on purpose.
 //
-// The task boundary is "보호주문·조건주문 코드 0줄 — ProtectionReady 표지는
-// 미충족 상수로만 존재": the marker exists so the interlock clause can be written
-// and tested now, and the change that actually wires protective execution flips
-// this one identifier as the last step of its own work. A field, a config key or
-// an Options knob would each be a way to claim readiness without having built
-// it, which is the claim this clause exists to refuse.
-const profileProtection = ProtectionUnwired
+// The marker exists so the clause can be written and tested now, and the change
+// that actually wires protective execution flips one identifier as the last step
+// of its own work. A field, a config key or an Options knob would each be a way
+// to claim readiness without having built it, which is the claim the clause
+// exists to refuse — so the value below is a constant, and so is the one it
+// forwards to.
+const profileProtection = execgw.ProfileProtection
 
 // ExposureLimiter is the capability an injected Guardian has to implement so the
 // interlock can prove clause 5.
@@ -253,10 +246,23 @@ type AutomationStatus struct {
 	AttestationExpiresAt time.Time
 	// Limits is the snapshot the Guardian was injected with.
 	Limits execgw.Limits
-	// Protection is the profile's broker-side protective execution readiness
-	// (clause 6). Reported on every start, gate or no gate, so an operator asking
-	// "why will the gate not come up" can see the answer without turning it on.
+	// Protection is the profile's broker-side protective execution readiness.
+	// Reported on every start, gate or no gate.
 	Protection ProtectionReadiness
+	// EntryPermitted reports whether this runtime may raise exposure.
+	//
+	// Separate from Verified because the two answer different questions, and
+	// since interlock-gates-entry-not-exit they can disagree: Verified decides
+	// whether the loops run at all, EntryPermitted decides what they are allowed
+	// to do. A verified runtime with EntryPermitted false is the normal state of
+	// every build before protective orders are wired — it reconciles, observes
+	// exits and detects fills, and any mutation that would add exposure is
+	// refused at the gateway.
+	//
+	// It is a report, not the enforcement. The refusal is execgw's, on the
+	// mutation's own shape; this field exists so an operator surface can say so
+	// without issuing an order to find out.
+	EntryPermitted bool
 }
 
 // MaskedAccount renders the account for logs and operator output.
@@ -380,6 +386,9 @@ func runInterlock(status AutomationStatus, gate config.AutomationGate,
 	}
 
 	status.Verified = true
+	// Starting is not permission. The gateway will refuse a raising mutation on
+	// its own; this is the same fact, reported before anybody tries.
+	status.EntryPermitted = status.Protection == ProtectionWired
 	if err := log.Record(audit.Entry{
 		Action:  audit.ActionGateAccepted,
 		Setting: "engine.automation_gate.enabled",
@@ -430,11 +439,25 @@ func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error)
 		"gate_verified", status.Verified,
 		"limit_currency", l.Currency,
 		"protection", string(status.Protection),
+		"entry_permitted", status.EntryPermitted,
 		"max_order_quantity", limitString(l.MaxQuantity.Value),
 		"max_order_notional", limitString(l.MaxNotional.Value),
 		"max_total_exposure", limitString(l.MaxTotalExposure.Value),
 		"max_daily_loss_amount", limitString(l.MaxDailyLossAmount.Value),
 		"max_daily_loss_ratio", limitString(l.MaxDailyLossRatio.Value),
+	}
+	// Design D6. A verified runtime whose protection is unwired is a state that
+	// did not exist before interlock-gates-entry-not-exit, and it is one an
+	// operator can misread as "the broker is holding my stop". `protection:
+	// UNWIRED` has been in this record since 5.2 and nobody reads a JSON enum for
+	// reassurance, so the fact goes in as a sentence: the stop is a judgement this
+	// process makes, and it stops being made when the process stops.
+	//
+	// A sentence, not a prompt. No typed confirmation, no extra approval.
+	if status.Verified && status.Protection != ProtectionWired {
+		fields = append(fields, obs.FieldDetail,
+			"보호는 이 프로세스가 살아 있는 동안만 유효하다 — 브로커에 손절 주문이 남지 않으므로 "+
+				"프로세스가 죽으면 보호도 사라진다. 노출을 늘리는 주문은 게이트웨이에서 거부된다")
 	}
 	if refusal != nil {
 		logger.Warn(obs.EventOperatingMode, append(fields, obs.FieldReason, refusal.Error())...)
@@ -506,21 +529,51 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
 		return fmt.Errorf("%w: %w: %w", ErrAutomationGateRefused, ErrKeylessTransport, err)
 	}
 
-	// 9. Broker-resident protection. Last, and the order is load-bearing: every
-	//    clause above is something an operator can fix today, and reaching this
-	//    one is therefore the proof that they already have. A refusal here says
-	//    "your configuration is complete and the missing piece is not yours".
-	if status.Protection != ProtectionWired {
-		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, ErrProtectionNotWired)
-	}
+	// Broker-resident protection used to be clause 9 here, and it refused the
+	// start. It does not any more (change interlock-gates-entry-not-exit).
+	//
+	// The clause's stated purpose was "자동 진입이 켜질 수 없다", and refusing the
+	// runtime went past it: the loops it also refused are reconcile, exit
+	// observation and fill detection, none of which can raise exposure — the
+	// package has no reachable buy at all (entryreach_test.go). What the refusal
+	// bought was that the exit observer never ran, so every holding carried no
+	// stop, which is the failure the clause names, applied to more positions
+	// rather than fewer.
+	//
+	// The refusal now lives at the mutation chokepoint, where "raises exposure"
+	// is computed from the mutation's own shape (execgw/protection.go). It is not
+	// weaker: it is asked once per order instead of once per start, and it cannot
+	// be skipped by a code path that never called the interlock.
 	return nil
 }
 
 // checkTradingPolicy is clause 3.
+// The clause has always said "매수는 가능한데 청산이 불가능한 조합으로는 기동할 수
+// 없다". Until change console-owns-the-operating-toggles it checked two of the four
+// toggles a liquidation actually needs, so the shape it forbade in prose was one an
+// operator could produce: the engine came up and refused its first stop.
+//
+//	place   a sell is a place. internal/trading refuses on policy.Place before it
+//	        ever looks at the side, so a sell-enabled place-disabled policy can
+//	        submit nothing at all.
+//	sell    the side.
+//	cancel  the exit observer cancels its own armed proposal (exitloop). Without
+//	        it an exit that needs replacing stalls instead of exiting.
+//	live    the master switch every mutation asks for.
+//
+// amend, conditional and fractional are deliberately absent: no loop in this
+// build uses them, and requiring what is not used turns an interlock into a
+// checklist.
 func checkTradingPolicy(policy config.Trading) error {
 	var missing []string
+	if !policy.Place {
+		missing = append(missing, "trading.place")
+	}
 	if !policy.Sell {
 		missing = append(missing, "trading.sell")
+	}
+	if !policy.Cancel {
+		missing = append(missing, "trading.cancel")
 	}
 	if !policy.AllowLiveOrderActions {
 		missing = append(missing, "trading.allow_live_order_actions")
@@ -609,7 +662,7 @@ func limitsString(l execgw.Limits) string {
 }
 
 // resolveAccountRef reads the account the credentials belong to.
-func resolveAccountRef(ctx context.Context, reads OfficialReads) (string, error) {
+func resolveAccountRef(ctx context.Context, reads *official.Client) (string, error) {
 	if reads == nil {
 		return "", errors.New("no official client")
 	}
@@ -617,15 +670,29 @@ func resolveAccountRef(ctx context.Context, reads OfficialReads) (string, error)
 	if err != nil {
 		return "", err
 	}
-	// DisplayName carries the official API's accountNo — the human account
-	// number (internal/official/reads.go adaptAccounts). ID is accountSeq, an
-	// internal key that means nothing to the operator reading an attestation.
-	for _, a := range accounts {
-		if strings.TrimSpace(a.DisplayName) != "" {
-			return strings.TrimSpace(a.DisplayName), nil
-		}
+	if len(accounts) == 0 {
+		return "", errors.New("the broker returned no accounts")
 	}
-	return "", errors.New("the broker returned no account number")
+	// DisplayName carries accountNo and ID carries accountSeq. The first record
+	// is the only implicit default; skipping an incomplete first record would
+	// let the journal name one account while the official header scopes another.
+	first := accounts[0]
+	accountRef := strings.TrimSpace(first.DisplayName)
+	if accountRef == "" {
+		return "", errors.New("the broker's first account record has no account number")
+	}
+	seq, err := strconv.Atoi(first.ID)
+	if err != nil || seq <= 0 {
+		return "", fmt.Errorf("the broker's first account record has invalid account sequence %q", first.ID)
+	}
+	selected, usable := reads.SelectedAccountSeq()
+	if !usable || selected != seq {
+		return "", fmt.Errorf(
+			"the selected official account sequence %d does not match the first account record %d",
+			selected, seq,
+		)
+	}
+	return accountRef, nil
 }
 
 // recordGateSettings appends an audit entry for each setting that changed since

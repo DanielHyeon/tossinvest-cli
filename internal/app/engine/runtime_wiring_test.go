@@ -15,6 +15,7 @@ package engine_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -33,14 +34,20 @@ import (
 
 // --- the enumerated refusal ---------------------------------------------------------
 
-// TestTheProtectionClauseIsEnumerated is the scenario "게이트 ON + 인터록 미충족
-// 기동": the operator is shown the clause, not a wrapped sentence they have to
-// decode.
+// TestTheProtectionClauseIsNotEnumerated is the inverse of what this test used
+// to assert, and the inversion is the point.
 //
-// Clause 6 is the one every correctly configured machine reaches, so it is the
-// one the enumeration has to name well: an operator whose config is complete has
-// to be able to tell "you did something wrong" from "this build cannot do it".
-func TestTheProtectionClauseIsEnumerated(t *testing.T) {
+// It used to check that clause 6 was named well, because clause 6 was the one
+// every correctly configured machine reached. Since interlock-gates-entry-not-exit
+// it refuses no start, so naming it in the *startup refusal* enumeration would
+// send an operator to fix something that did not stop them — and, worse, to look
+// for a setting that does not exist.
+//
+// The list is "what stopped the engine". Broker-resident protection is no longer
+// on it; where it shows up instead is the operating-mode record's
+// `entry_permitted` field and the sentence beside it (design D6), and the
+// gateway's refusal of any mutation that would raise exposure.
+func TestTheProtectionClauseIsNotEnumerated(t *testing.T) {
 	dir := isolate(t)
 	writeGateConfig(t, dir, fullGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
@@ -48,19 +55,21 @@ func TestTheProtectionClauseIsEnumerated(t *testing.T) {
 	srv, _ := interlockServer(t, "123-45")
 
 	_, err := openGateEngine(t, dir, srv, matchedGuardian())
-	if err == nil {
-		t.Fatal("a build with no protective execution started a gate-ON engine")
+	if err != nil {
+		t.Fatalf("a complete configuration must start: %v", err)
 	}
-	clauses := engine.UnmetInterlockClauses(err)
-	if len(clauses) == 0 {
-		t.Fatalf("the refusal %v enumerated nothing", err)
+	if clauses := engine.UnmetInterlockClauses(err); len(clauses) != 0 {
+		t.Errorf("a successful start enumerated unmet clauses: %v", clauses)
 	}
-	joined := strings.Join(clauses, "\n")
-	if !strings.Contains(joined, "ProtectionReady") {
-		t.Errorf("the enumeration does not name clause 6:\n%s", joined)
-	}
-	if !strings.Contains(joined, "상세:") {
-		t.Errorf("the enumeration drops the specific message:\n%s", joined)
+
+	// And the enumeration itself must not carry a line nobody can produce: a
+	// clause that never refuses is a message an operator would chase and never
+	// clear.
+	refusal := fmt.Errorf("%w: %w", engine.ErrAutomationGateRefused, errors.New("some other cause"))
+	for _, line := range engine.UnmetInterlockClauses(refusal) {
+		if strings.Contains(line, "ProtectionReady") {
+			t.Errorf("the enumeration still offers a protection line: %q", line)
+		}
 	}
 }
 
@@ -110,7 +119,12 @@ func TestEachInterlockClauseHasALine(t *testing.T) {
 			if !tc.noGuardian {
 				guardian = matchedGuardian()
 			}
-			_, err := openGateEngine(t, dir, srv, guardian)
+			var err error
+			if tc.noGuardian {
+				_, err = openGateWithoutProductionGuardian(t, dir, srv)
+			} else {
+				_, err = openGateEngine(t, dir, srv, guardian)
+			}
 			if err == nil {
 				t.Fatal("the gate opened")
 			}

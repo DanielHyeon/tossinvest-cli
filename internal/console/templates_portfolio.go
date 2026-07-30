@@ -101,7 +101,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
     <tr>
       {{if .Multi}}<th>계좌</th>{{end}}
       <th>심볼</th><th>수량</th><th>평단</th><th>현재가</th><th>평가금액</th><th>평가손익</th><th>수익률</th>
-      <th>관리 편입</th>
+      <th>관리 편입</th><th>제외</th>
     </tr>
     {{range .Rows}}
     <tr>
@@ -110,11 +110,14 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td>{{.Qty}}</td><td>{{.Avg}}</td><td>{{.Last}}</td><td>{{.Value}}</td>
       <td class="{{if .Gain}}ok{{else}}bad{{end}}">{{.PnL}}</td>
       <td class="{{if .Gain}}ok{{else}}bad{{end}}">{{.Rate}}</td>
-      <td>{{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown)}}
+      <td>{{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown) (not .Excluded)}}
         {{/*
           라벨과 체크박스는 한 컨트롤이다: 미체크 = 관리 외(미편입), 체크 = 관리
           편입(사용자 UX 결정 2026-07-27). 라벨 문자열은 positionRow.Label이
           단독 정의한다 — 여기 두 번째 철자를 두지 않는다.
+
+          제외된 행에는 이 컨트롤을 두지 않는다: 엔진이 제외를 편입보다 우선하므로
+          여기서 체크해도 편입되지 않고, 체크되는 컨트롤은 그 자체가 약속이다.
         */}}
         <form method="post" action="/settings/include" style="display:inline">
         <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="symbol"
@@ -124,12 +127,28 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         <strong>{{.Label}}</strong></label></form>
         {{if .Designated}}<br><span class="ok">편입 예약됨</span><span class="muted"> — 엔진 가동 시
         자동 편입(아직 손절·익절 미적용)</span>{{end}}
-      {{else}}{{.Label}}{{end}}
+      {{else}}{{.Label}}{{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown) .Excluded}}<br><span
+        class="muted">편입하려면 오른쪽 제외를 먼저 해제한다</span>{{end}}{{end}}
+      </td>
+      {{/*
+        제외 컨트롤. 행 조건은 편입 컨트롤과 **정확히 같다** — 조건이 하나면 두
+        컨트롤이 어긋날 수 없다. 관리 중인 행에 두지 않는 이유는 화면 정리가 아니다:
+        엔진의 judgeHoldings가 ExitEligible()에서 제외 판정보다 먼저 반환하므로
+        거기서는 이 클릭이 아무 효과도 내지 못한다(design D5).
+      */}}
+      <td>{{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown)}}
+        <form method="post" action="/settings/exclude" style="display:inline">
+        <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="symbol"
+        value="{{.Symbol}}">{{if .Excluded}}<input type="hidden" name="remove" value="1">{{end}}
+        <label><input type="checkbox" {{if .Excluded}}checked{{end}}
+        onchange="if(confirm('{{.Symbol}} {{if .Excluded}}제외를 해제할까요? 다시 편입 후보가 됩니다.{{else}}을(를) 편입에서 제외할까요? 엔진이 이 종목을 편입하지 않습니다 — 이미 편입된 포지션의 손절·익절에는 영향이 없습니다.{{end}}')){this.form.submit()}else{this.checked={{if .Excluded}}true{{else}}false{{end}}}">
+        <strong>{{if .Excluded}}제외됨{{else}}제외{{end}}</strong></label></form>
+      {{else}}<span class="muted">—</span>{{end}}
       </td>
     </tr>
     {{if .HasDetail}}
     <tr>
-      <td colspan="{{if $.Snap.Multi}}9{{else}}8{{end}}">
+      <td colspan="{{if $.Snap.Multi}}10{{else}}9{{end}}">
         {{if .HasExit}}
         <span class="muted">exit 라인 —</span>
         자격 근거 <strong>{{.Basis}}</strong> ·

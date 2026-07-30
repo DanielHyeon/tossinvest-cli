@@ -131,9 +131,15 @@ func TestTradingPolicyClauseNamesWhatIsOff(t *testing.T) {
 		policy config.Trading
 		want   string
 	}{
-		{"sell off", config.Trading{AllowLiveOrderActions: true}, "trading.sell"},
-		{"live actions off", config.Trading{Sell: true}, "allow_live_order_actions"},
-		{"both off", config.Trading{}, "and"},
+		{"sell off", config.Trading{Place: true, Cancel: true, AllowLiveOrderActions: true}, "trading.sell"},
+		{"live actions off", config.Trading{Place: true, Sell: true, Cancel: true}, "allow_live_order_actions"},
+		// The two the clause did not check until console-owns-the-operating-toggles.
+		// A sell is a place, and the exit observer cancels its own proposal, so a
+		// policy without them is a policy that cannot liquidate — which is the
+		// combination this clause's own sentence forbids.
+		{"placing off", config.Trading{Sell: true, Cancel: true, AllowLiveOrderActions: true}, "trading.place"},
+		{"cancelling off", config.Trading{Place: true, Sell: true, AllowLiveOrderActions: true}, "trading.cancel"},
+		{"all off", config.Trading{}, "and"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := checkTradingPolicy(tc.policy)
@@ -145,8 +151,14 @@ func TestTradingPolicyClauseNamesWhatIsOff(t *testing.T) {
 			}
 		})
 	}
-	if err := checkTradingPolicy(config.Trading{Sell: true, AllowLiveOrderActions: true}); err != nil {
-		t.Errorf("a policy that can sell and act live must pass: %v", err)
+	full := config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true}
+	if err := checkTradingPolicy(full); err != nil {
+		t.Errorf("a policy that can place, sell, cancel and act live must pass: %v", err)
+	}
+	// amend, conditional and fractional are not required: no loop in this build
+	// uses them, and an interlock that demands unused capability is a checklist.
+	if err := checkTradingPolicy(full); err != nil {
+		t.Errorf("the four required toggles must be sufficient: %v", err)
 	}
 }
 

@@ -1,0 +1,63 @@
+{
+  "file": "internal/verifylive/record.go",
+  "source_sha256": "372c6607bcd8b0e9683007cd6aa1794155e569581dffd3db7870a00292aadb5a",
+  "package": "verifylive",
+  "function": "Outstanding",
+  "signature": "Outstanding(params=1, results=1)",
+  "start": {
+    "line": 458,
+    "column": 1
+  },
+  "end": {
+    "line": 464,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 20
+      },
+      "text": "outstandingLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 461,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,761 @@
+{
+  "file": "internal/localupdate/updater.go",
+  "source_sha256": "ba15b48a4142f40cdcb4832734d05c6191da33ef483bdd3a0a9c7f0ec9d13c1b",
+  "package": "localupdate",
+  "function": "Install",
+  "receiver": "Updater",
+  "signature": "Updater.Install(params=2, results=2)",
+  "start": {
+    "line": 139,
+    "column": 1
+  },
+  "end": {
+    "line": 228,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 153,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 157,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 144,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 154,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 158,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 164,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 170,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 173,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 178,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 184,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 206,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 215,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 2
+      },
+      "text": "u.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 8
+      },
+      "text": "u.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 6
+      },
+      "text": "replacementSupported"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 19
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 35
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 9
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 33
+      },
+      "text": "u.prepareCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 8
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 18
+      },
+      "text": "openNoFollowExecutable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 8
+      },
+      "text": "current.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 22
+      },
+      "text": "inspectOpen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 13
+      },
+      "text": "commitGuard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 23
+      },
+      "text": "copyOpenToTemp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 56
+      },
+      "text": "filepath.Base"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 8
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 23
+      },
+      "text": "inspectPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 12
+      },
+      "text": "sameOpenFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 12
+      },
+      "text": "u.rename"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 12
+      },
+      "text": "u.syncDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 12
+      },
+      "text": "sameOpenFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 12
+      },
+      "text": "u.rename"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 12
+      },
+      "text": "u.syncDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 17
+      },
+      "text": "u.restoreRollback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 162,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 202,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 209,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 141,
+        "column": 2
+      },
+      "text": "u.mu.Unlock"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 156,
+        "column": 2
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 166,
+        "column": 2
+      },
+      "text": "current.Close"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "os.Remove"
+    }
+  ]
+}

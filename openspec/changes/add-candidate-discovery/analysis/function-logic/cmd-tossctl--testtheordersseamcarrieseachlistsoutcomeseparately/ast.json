@@ -1,0 +1,427 @@
+{
+  "file": "cmd/tossctl/console_test.go",
+  "source_sha256": "85d9f3fcee393ead51e81a16bc898ad15bca9164cbd695f0c65e245ef5d3a22c",
+  "package": "main",
+  "function": "TestTheOrdersSeamCarriesEachListsOutcomeSeparately",
+  "signature": "TestTheOrdersSeamCarriesEachListsOutcomeSeparately(params=1, results=0)",
+  "start": {
+    "line": 739,
+    "column": 1
+  },
+  "end": {
+    "line": 803,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 741,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 742,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 744,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 749,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 756,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 760,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 779,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 782,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 785,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 788,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 791,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 794,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 799,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 768,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 740,
+        "column": 9
+      },
+      "text": "httptest.NewServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 740,
+        "column": 28
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 743,
+        "column": 4
+      },
+      "text": "fmt.Fprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 42
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 42
+      },
+      "text": "r.URL.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 745,
+        "column": 4
+      },
+      "text": "fmt.Fprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 751,
+        "column": 4
+      },
+      "text": "fmt.Fprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 758,
+        "column": 4
+      },
+      "text": "w.WriteHeader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 759,
+        "column": 4
+      },
+      "text": "fmt.Fprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 761,
+        "column": 4
+      },
+      "text": "w.WriteHeader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 10
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 4
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 18
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 771,
+        "column": 4
+      },
+      "text": "official.WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 4
+      },
+      "text": "official.WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 28
+      },
+      "text": "srv.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 773,
+        "column": 4
+      },
+      "text": "official.WithAccountSeq"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 776,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 18
+      },
+      "text": "Orders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 18
+      },
+      "text": "consoleOrdersSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 36
+      },
+      "text": "newConsoleBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 77
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 786,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 788,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 789,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 795,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 740,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 766,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 767,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 776,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 778,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

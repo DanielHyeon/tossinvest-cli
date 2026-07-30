@@ -1,0 +1,400 @@
+{
+  "file": "internal/localupdate/updater.go",
+  "source_sha256": "ba15b48a4142f40cdcb4832734d05c6191da33ef483bdd3a0a9c7f0ec9d13c1b",
+  "package": "localupdate",
+  "function": "inspectOpen",
+  "signature": "inspectOpen(params=6, results=2)",
+  "start": {
+    "line": 472,
+    "column": 1
+  },
+  "end": {
+    "line": 526,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 480,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 483,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 487,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 501,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "range",
+      "at": {
+        "line": 505,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 508,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 478,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 481,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 484,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 488,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 492,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 496,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 499,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 502,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 509,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 512,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 15
+      },
+      "text": "file.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 6
+      },
+      "text": "IsRegular"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 6
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 5
+      },
+      "text": "Perm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 5
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 484,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 15
+      },
+      "text": "file.Seek"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 10
+      },
+      "text": "sha256.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 15
+      },
+      "text": "io.Copy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 13
+      },
+      "text": "buildinfo.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 502,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 504,
+        "column": 14
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 504,
+        "column": 38
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 18
+      },
+      "text": "info.Size"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 18
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 18
+      },
+      "text": "info.ModTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 516,
+        "column": 18
+      },
+      "text": "hex.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 516,
+        "column": 37
+      },
+      "text": "hash.Sum"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 487,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 491,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 504,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 506,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

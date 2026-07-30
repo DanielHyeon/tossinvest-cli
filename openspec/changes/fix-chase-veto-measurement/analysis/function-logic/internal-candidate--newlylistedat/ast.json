@@ -1,0 +1,63 @@
+{
+  "file": "internal/candidate/veto.go",
+  "source_sha256": "1c2bc3acfab63482c47e7d0f6b49031eda388f5a5e1c6c719b2750c2b8bc7989",
+  "package": "candidate",
+  "function": "newlyListedAt",
+  "signature": "newlyListedAt(params=2, results=1)",
+  "start": {
+    "line": 694,
+    "column": 1
+  },
+  "end": {
+    "line": 702,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 695,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 696,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 698,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 701,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 696,
+        "column": 34
+      },
+      "text": "o.ObservedAt.Equal"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

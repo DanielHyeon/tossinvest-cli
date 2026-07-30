@@ -105,6 +105,15 @@ const (
 // flag an operator has to pass.
 const FlagIncludeTTLEdge = "--include-ttl-edge"
 
+// FlagIncludeTrigger is the opt-in that unlocks StepConditionalTrigger.
+//
+// It is the heaviest flag in this tool. Every other step places orders that
+// cannot fill; this one registers a stop the market is expected to reach, and a
+// successful run sells a share and cannot be undone. Without it the step keeps
+// recording exactly the unverified observations it recorded before the step could
+// be driven at all.
+const FlagIncludeTrigger = "--include-trigger"
+
 // Step is one entry of the procedure.
 type Step struct {
 	// ID is the record's join key.
@@ -129,6 +138,19 @@ type Step struct {
 	// it. Such a step is skipped with a reason; the tool never buys to create the
 	// holding it needs.
 	NeedsHolding bool `json:"needs_holding,omitempty"`
+	// ActsOnConditional reports that the step's requests are about the conditional
+	// order this verification already registered, rather than about the run's probe
+	// symbol.
+	//
+	// It exists because the approval list has to name the object. The plan is built
+	// before anything runs and has to state which symbol each line is about; a step
+	// that resolves its target from the record at run time (liveConditional) would
+	// otherwise be listed against a symbol nobody is going to send anything for —
+	// which is exactly what stopped the KR run twice on 2026-07-29. It is
+	// deliberately NOT NeedsHolding: a leftover conditional has to stay cancellable
+	// on an account whose holding has since gone, which is when a leftover matters
+	// most.
+	ActsOnConditional bool `json:"acts_on_conditional,omitempty"`
 	// OptIn is the flag that unlocks the step, empty when it runs by default.
 	OptIn string `json:"opt_in,omitempty"`
 	// Deferred marks a step that this tool cannot drive at all, and says so up
@@ -428,23 +450,62 @@ func Steps() []Step {
 			},
 		},
 		{
-			ID:        StepConditionalTrigger,
-			Title:     "Trigger observation and triggeredOrderId latency",
-			Proves:    "발동 후 생성된 주문이 얼마 만에 보이는지, triggeredOrderId가 둘을 잇는지",
-			Tasks:     []string{"2.5"},
-			Deferred:  "별도 세션 — 시장 조건 필요: 체결될 의도의 주문 없이는 발동을 임의로 만들 수 없고, 이 도구는 그런 주문을 내지 않는다",
-			DependsOn: []StepID{StepConditionalRegister},
+			ID:     StepConditionalTrigger,
+			Title:  "Trigger observation and triggeredOrderId latency",
+			Proves: "발동 후 생성된 주문이 얼마 만에 보이는지, triggeredOrderId가 둘을 잇는지, 그 주문이 체결되는지 — 2c의 보호 원장이 기대는 유일한 미측정 항목",
+			Tasks:  []string{"2.5"},
+			// Mutating and needing a holding, but only in its opted-in form. Without
+			// the flag the step still runs and still records the same unverified
+			// observations it always has — deferredForm is what keeps those two
+			// facts from contradicting each other, and it is why the plan does not
+			// carry a line for this step unless the flag is present.
+			Mutates:      true,
+			NeedsHolding: true,
+			OptIn:        FlagIncludeTrigger,
+			Deferred: "별도 세션 — 시장 조건 필요: 체결될 의도의 주문 없이는 발동을 임의로 만들 수 없고, " +
+				"이 도구는 " + FlagIncludeTrigger + " 없이는 그런 주문을 내지 않는다",
 			Procedure: []string{
-				"미검증으로 기록해 task 2.6이 자동 진입 금지 시장·유형 목록에 넣도록 한다",
+				"경고: 이 단계는 체결될 것을 의도한 유일한 주문을 만든다. 성공하면 1주가 시장가로 팔리고 되돌릴 수 없다.",
+				"최우선 매수호가와 최종체결가 사이에 발동가를 놓는다 — 두 값이 갈리는 자리라야 " +
+					"브로커가 조건을 무엇으로 평가하는지 사후에 구별된다. 사이에 유효한 호가 단위가 없으면 건너뛴다",
+				"1주짜리 SINGLE MARKET SELL 손절을 그 발동가로 등록한다",
+				"시세와 조건주문을 함께 폴링한다. 발동을 임계 도달보다 먼저 보면 호가 기준, 나중에 보면 체결가 기준이다",
+				"발동·triggeredOrderId 노출·child 체결의 관측 시각을 각각 그때의 폴링 간격과 함께 기록한다 — " +
+					"브로커는 체결 시각을 주지 않는다 (measurements.md M44)",
+				"child 주문은 붙잡아 체결시킨다. 취소하지 않는 것이 이 단계의 측정 내용이다",
+				"임계에 도달하지 못한 채 창이 끝나면 자기가 등록한 조건주문을 자기 창 안에서 취소하고, " +
+					"취소 직후 재확인해 발동 흔적이 보이면 미도달로 끝내지 않는다",
+			},
+			Mutations: []StepMutation{
+				{
+					Kind: MutateRegisterConditional, Side: "sell", Quantity: QuantityOne, Pricing: PriceNearStop,
+					Ends: "IT IS MEANT TO FIRE. If it does, the broker creates a MARKET SELL for one share and " +
+						"that share is sold — irreversibly. If it does not fire inside the observation window, " +
+						"this step cancels it before it returns",
+					EndsKO: "발동하는 것이 목적이다. 발동하면 브로커가 1주짜리 시장가 매도를 만들고 그 1주는 " +
+						"팔린다 — 되돌릴 수 없다. 관측 창 안에 발동하지 않으면 이 단계가 반환 전에 취소한다",
+					Note: "the only request this tool makes that is intended to be reached by the market. " +
+						"Everything else in this procedure is priced so it cannot be",
+					NoteKO: "이 도구가 만드는 요청 중 시장이 닿기를 의도하는 유일한 것이다. " +
+						"이 절차의 나머지 전부는 닿을 수 없도록 가격이 정해진다",
+				},
+				{
+					Kind: MutateCancelConditional,
+					Ends: "used when the observation window ends without the trigger being reached; the step " +
+						"cancels what it registered and re-reads once more in case the two raced",
+					EndsKO: "임계에 도달하지 못한 채 관측 창이 끝났을 때 쓴다. 자기가 등록한 것을 취소하고, " +
+						"취소와 발동이 경합했을 경우를 대비해 한 번 더 다시 읽는다",
+				},
 			},
 		},
 		{
-			ID:        StepConditionalModify,
-			Title:     "Conditional modify issues a new id",
-			Proves:    "정정이 원자적인지 아니면 취소 후 재생성인지 — openapi는 기존 id가 무효화되고 새 id가 발급된다고 적고 있고, 2.6은 그것을 인용이 아니라 실측으로 요구한다",
-			Tasks:     []string{"2.5"},
-			Mutates:   true,
-			DependsOn: []StepID{StepConditionalRegister},
+			ID:                StepConditionalModify,
+			Title:             "Conditional modify issues a new id",
+			Proves:            "정정이 원자적인지 아니면 취소 후 재생성인지 — openapi는 기존 id가 무효화되고 새 id가 발급된다고 적고 있고, 2.6은 그것을 인용이 아니라 실측으로 요구한다",
+			Tasks:             []string{"2.5"},
+			Mutates:           true,
+			ActsOnConditional: true,
+			DependsOn:         []StepID{StepConditionalRegister},
 			Procedure: []string{
 				"조건주문의 발동가를 한 호가 정정한다",
 				"응답이 돌려주는 식별자를 기록한다",
@@ -464,12 +525,13 @@ func Steps() []Step {
 			},
 		},
 		{
-			ID:        StepConditionalCancel,
-			Title:     "Conditional cancel",
-			Proves:    "DELETE /api/v1/conditional-orders/{id}가 보호를 제거하고, 계좌가 발견 당시 상태로 남는지",
-			Tasks:     []string{"2.5"},
-			Mutates:   true,
-			DependsOn: []StepID{StepConditionalRegister},
+			ID:                StepConditionalCancel,
+			Title:             "Conditional cancel",
+			Proves:            "DELETE /api/v1/conditional-orders/{id}가 보호를 제거하고, 계좌가 발견 당시 상태로 남는지",
+			Tasks:             []string{"2.5"},
+			Mutates:           true,
+			ActsOnConditional: true,
+			DependsOn:         []StepID{StepConditionalRegister},
 			Procedure: []string{
 				"살아 있는 조건주문을 취소한다",
 				"다시 읽어 사라졌음을 기록한다",
@@ -519,6 +581,12 @@ type Broker interface {
 	Holdings(ctx context.Context, symbol string) ([]domain.Position, error)
 	SellableQuantity(ctx context.Context, symbol string) (domain.SellableQuantity, error)
 	Prices(ctx context.Context, symbols []string) ([]domain.Quote, error)
+	// Orderbook is the depth ladder. It is here for one caller: the trigger
+	// observation has to put its trigger between the best bid and the last trade,
+	// and domain.Quote carries no bid. US answers with one level per side and KR
+	// with ten (measurements.md M49), so nothing may read depth from it — only the
+	// best of each side.
+	Orderbook(ctx context.Context, symbol string) (domain.OrderBook, error)
 	PriceLimits(ctx context.Context, symbol string) (domain.PriceLimits, error)
 	OrdersPageRaw(ctx context.Context, filter official.OrdersFilter, cursor string) (official.RawOrderPage, error)
 	OrderRawByID(ctx context.Context, orderID string) (json.RawMessage, error)

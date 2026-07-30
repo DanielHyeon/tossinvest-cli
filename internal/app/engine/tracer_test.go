@@ -5,11 +5,9 @@ package engine_test
 // thing standing between "a bounded experiment" and "an automated trader with
 // no strategy".
 //
-// The live run is the verify track's (D8). It cannot happen from this build at
-// all: every order the tracer places needs a GuardianDecision, the engine only
-// holds a Guardian once the interlock verified the automation gate, and clause 6
-// (ProtectionReady) is an unmet constant — which the last test in this file
-// asserts rather than assumes.
+// The live run is the verify track's (D8). Every order the tracer places needs a
+// GuardianDecision, and while ProtectionReady is UNWIRED the gateway refuses
+// the exposure-raising entry even though the verified runtime itself may start.
 
 import (
 	"context"
@@ -116,7 +114,7 @@ func TestTheSmallestValidParameterSetPasses(t *testing.T) {
 // judgement → liquidation → CLOSED, through the real gateway and the real exit
 // loop, against the httptest broker.
 func TestTheTracerDrivesEntryRatchetAndExit(t *testing.T) {
-	s := newE2EStack(t)
+	s := newEntryCapableE2EStack(t)
 	s.broker.quote("005930", "70000")
 	tracer := newTracer(t, s, tracerParams())
 
@@ -308,11 +306,26 @@ func (stubEntryIssuer) IssueEntry(context.Context, execgw.EntryIssuance) (execgw
 	return execgw.Issued{}, errors.New("not reached")
 }
 
-// TestALiveTracerRunIsBlockedByTheInterlock is the D8 claim, asserted rather
-// than assumed: the tracer's orders need a Guardian, the engine only holds one
-// behind a verified gate, and clause 6 makes a verified gate unreachable in this
-// build. The live run therefore belongs to the verify track by construction.
-func TestALiveTracerRunIsBlockedByTheInterlock(t *testing.T) {
+// TestALiveTracerRunIsBlockedByTheProtectionRefusal is the D8 claim, asserted
+// rather than assumed — with the reason it is true now stated correctly.
+//
+// It used to be true by construction: the tracer's orders need a Guardian, the
+// engine only holds one behind a verified gate, and clause 6 made a verified gate
+// unreachable, so there was no Context to run a tracer with at all. Since
+// interlock-gates-entry-not-exit the Context exists, and the claim rests on two
+// narrower facts instead:
+//
+//   - EntryPermitted is false, asserted here. Everything the tracer submits is a
+//     buy, and this is the runtime saying so before one is attempted.
+//   - The submission itself is refused at the gateway, which is asserted where
+//     the refusal lives (internal/execgw's protection_test.go) rather than
+//     re-driven through the tracer here. That is deliberate: a second assertion
+//     of the same guard in a second place is a second thing to get wrong, which
+//     is the reasoning tracer.go already gives for not adding a second gate.
+//
+// The third fact, that nothing in the runtime can reach the tracer at all, is
+// entryreach_test.go.
+func TestALiveTracerRunIsBlockedByTheProtectionRefusal(t *testing.T) {
 	dir := isolate(t)
 	writeGateConfig(t, dir, smallLiveGate())
 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
@@ -320,14 +333,15 @@ func TestALiveTracerRunIsBlockedByTheInterlock(t *testing.T) {
 	srv, _ := interlockServer(t, "123-45")
 
 	eng, err := openGateEngine(t, dir, srv, realGuardian(t, risk.DefaultPolicy()))
-	if err == nil {
-		t.Fatal("a gate-ON engine must not be constructible while clause 6 is unmet")
+	if err != nil {
+		t.Fatalf("the gate must verify on the small_live set: %v", err)
 	}
-	if eng != nil {
-		t.Fatal("a refused startup returns no engine, so there is nothing to run a tracer with")
+	if eng.Automation.EntryPermitted {
+		t.Fatal("EntryPermitted = true: the tracer's buys would be authorised on a build " +
+			"that leaves no protective order at the broker")
 	}
-	if !errors.Is(err, engine.ErrProtectionNotWired) {
-		t.Fatalf("err = %v, want the protection clause", err)
+	if eng.Automation.Protection != engine.ProtectionUnwired {
+		t.Errorf("Protection = %q, want UNWIRED", eng.Automation.Protection)
 	}
 }
 

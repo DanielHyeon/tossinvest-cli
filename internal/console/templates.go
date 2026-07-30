@@ -65,8 +65,17 @@ form { display: inline; }
 <header><div>
   <strong>tossctl console</strong>
   <nav>
-    <a href="/" {{if eq .Nav "dashboard"}}class="on"{{end}}>대시보드</a>
+    {{/*
+      Two screens, two names. The root is the verification console — soak,
+      attestation, binary provenance, the approval window — and /dashboard is the
+      overview of the account. Both were labelled 대시보드 until change
+      console-operator-overview, which is one name for two different questions.
+    */}}
+    <a href="/dashboard" {{if eq .Nav "overview"}}class="on"{{end}}>개요</a>
+    <a href="/" {{if eq .Nav "verify-console"}}class="on"{{end}}>검증 콘솔</a>
     <a href="/positions" {{if eq .Nav "positions"}}class="on"{{end}}>포지션</a>
+    <a href="/orders" {{if eq .Nav "orders"}}class="on"{{end}}>주문</a>
+    <a href="/signals" {{if eq .Nav "signals"}}class="on"{{end}}>발굴 신호</a>
     <a href="/history" {{if eq .Nav "history"}}class="on"{{end}}>거래 이력</a>
     <a href="/settings" {{if eq .Nav "settings"}}class="on"{{end}}>편입 설정</a>
     <a href="/verify" {{if eq .Nav "verify"}}class="on"{{end}}>검증</a>
@@ -410,9 +419,13 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   {{if .Snap.Verify.AwaitingRestart}}
   <p class="notice"><code>{{.Snap.Verify.AwaitingRestart}}</code> ({{stepLabel .Snap.Verify.AwaitingRestart}}) 단계가 새 프로세스를 기다리고 있었다. 이 콘솔이 그 새 프로세스다.</p>
   {{end}}
+  {{if .Snap.Verify.Cleanup}}
+  <p class="notice"><strong>이전 실행이 남긴 객체 {{.Snap.Verify.CleanupCount}}건</strong>을 이 실행이 먼저 취소한다 —
+  승인 목록의 첫 줄에 표시된다. 그것이 노출 상한을 채우고 있는 동안에는 아래 단계들이 아무것도 보낼 수 없다.</p>
+  {{end}}
   <p>시작하면 이 실행이 보낼 수 있는 <strong>모든 라이브 요청의 목록</strong>이 표시되고,
   그 목록을 승인하는 버튼을 누르기 전에는 아무것도 전송되지 않는다.</p>
-  {{$nothingToResume := and .Resuming (not .Snap.Verify.Pending)}}
+  {{$nothingToResume := and .Resuming (not .Snap.Verify.Pending) (not .Snap.Verify.Cleanup)}}
   {{if $nothingToResume}}
   <p class="notice"><strong>이어할 단계가 없다</strong> — 모든 단계에 판정이 있어 이어하기는 아무것도
   측정하지 않는다(2026-07-27에 이 버튼이 두 번 눌려 장중 창이 측정 0건으로 끝났다).
@@ -430,16 +443,20 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 {{if .Redo}}
 <section>
   <h2>재측정</h2>
-  <p>마지막 판정이 <code>fail</code> 또는 <code>skipped</code>인 단계는 <strong>{{.RedoCount}}개</strong>다.
+  <p>재측정 대상은 <strong>{{.RedoCount}}개</strong>다 — 마지막 판정이 <code>fail</code>·<code>skipped</code>인
+  단계, 그리고 <strong>통과했지만 그 통과가 만든 조건주문이 사라져 아래 단계들이 측정할 수 없게 된 단계</strong>다.
   이어하기는 이 단계들을 건너뛴다(판정이 이미 terminal이므로). 재측정은 이 단계들만 다시 시도한다.</p>
   <table>
     <tr><th>단계</th><th>이름</th><th>마지막 판정</th><th>사유</th></tr>
     {{$redo := .Redo}}
-    {{range .Steps}}{{if redoable .Verdict}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
+    {{range .Steps}}{{if inRedo $redo .Step}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
   </table>
   <p class="muted">대상: {{.RedoList}}</p>
-  <p class="notice"><code>pass</code>·<code>deferred</code> 단계는 대상이 아니다 — 이미 측정된 속성을 위해
-  실주문을 다시 내지 않는다. 대상 목록은 폼이 아니라 <strong>증거 기록</strong>에서 계산한다.
+  <p class="notice"><code>deferred</code>·<code>refused</code> 단계는 대상이 아니다. <code>pass</code>도
+  대상이 아니다 — 이미 측정된 속성을 위해 실주문을 다시 내지 않는다. 단 하나의 예외는
+  <strong>그 통과가 확립한 성질이 더 이상 참이 아닌 경우</strong>다: 조건주문 등록이 남긴 조건주문이
+  사라지면 존속·정정·취소는 영원히 <code>skipped</code>가 되므로, 그 전제를 다시 세우는 것은
+  아는 것을 다시 재는 것이 아니다. 대상 목록은 폼이 아니라 <strong>증거 기록</strong>에서 계산한다.
   재측정도 계획을 처음부터 다시 만들고 <strong>그 계획을 다시 승인</strong>해야 요청이 나간다.
   설계상 생략되는 단계(보유 0, <code>--include-ttl-edge</code> 옵트인)는 preflight가 다시 걸러 무해하다.</p>
   <form method="post" action="/verify/start">

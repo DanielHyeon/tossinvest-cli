@@ -10,12 +10,17 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   build:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     strategy:
       fail-fast: false
       matrix:
@@ -37,12 +42,21 @@ jobs:
             asset: tossctl-linux-arm64
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version-file: go.mod
+
+      - name: Validate canonical release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::release requires a canonical vMAJOR.MINOR.PATCH tag"
+            exit 1
+          fi
 
       - name: Build
         env:
@@ -72,12 +86,12 @@ jobs:
             cd dist/${{ matrix.asset }} && zip -r ../${{ matrix.asset }}.zip tossctl.exe auth-helper && cd ../..
             shasum -a 256 dist/${{ matrix.asset }}.zip > dist/${{ matrix.asset }}.zip.sha256
           else
-            tar -C dist/${{ matrix.asset }} -czf dist/${{ matrix.asset }}.tar.gz tossctl auth-helper
+            tar --format=ustar -C dist/${{ matrix.asset }} -czf dist/${{ matrix.asset }}.tar.gz tossctl auth-helper
             shasum -a 256 dist/${{ matrix.asset }}.tar.gz > dist/${{ matrix.asset }}.tar.gz.sha256
           fi
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: ${{ matrix.asset }}
           path: |
@@ -86,14 +100,28 @@ jobs:
             dist/${{ matrix.asset }}.zip
             dist/${{ matrix.asset }}.zip.sha256
 
+      - name: Attest Unix release archive
+        if: matrix.goos != 'windows'
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4
+        with:
+          subject-path: dist/${{ matrix.asset }}.tar.gz
+
+      - name: Attest Windows release archive
+        if: matrix.goos == 'windows'
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4
+        with:
+          subject-path: dist/${{ matrix.asset }}.zip
+
   release:
     runs-on: ubuntu-latest
     needs: [build]
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Download artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: dist
           merge-multiple: true
@@ -124,18 +152,19 @@ jobs:
           done
 
           if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
-            gh release edit "$TAG" --notes-file /tmp/release-notes.md --repo "$GH_REPO"
-            gh release upload "$TAG" "${ASSETS[@]}" --clobber --repo "$GH_REPO"
-          else
-            gh release create "$TAG" "${ASSETS[@]}" --title "$TAG" --notes-file /tmp/release-notes.md --repo "$GH_REPO"
+            echo "::error::release $TAG already exists; attested release assets are immutable — publish a new patch tag"
+            exit 1
           fi
+          gh release create "$TAG" "${ASSETS[@]}" --title "$TAG" --notes-file /tmp/release-notes.md --repo "$GH_REPO"
 
   update-homebrew-tap:
     runs-on: ubuntu-latest
     needs: [release]
+    permissions:
+      contents: read
     steps:
       - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v4
+        uses: dopplerhq/cli-action@4819d808ab99e5cde19a0637a16536a4038fad73 # v4
 
       - name: Fetch Homebrew token
         id: doppler
@@ -152,7 +181,7 @@ jobs:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 
       - name: Download artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: dist
           merge-multiple: true
@@ -172,14 +201,14 @@ jobs:
           echo "linux_x86_sha=$LINUX_X86_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Checkout Homebrew tap
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           repository: ${{ github.repository_owner }}/homebrew-tossinvest-cli
           token: ${{ steps.doppler.outputs.HOMEBREW_TAP_TOKEN }}
           path: tap
 
       - name: Checkout source for formula rendering
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           path: src
 

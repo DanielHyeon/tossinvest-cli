@@ -1,0 +1,250 @@
+{
+  "file": "internal/measure/counterfactual_test.go",
+  "source_sha256": "fbf3262b8c008821056fc350400b8688d0b035bdb1445189802690c24c6996d6",
+  "package": "measure_test",
+  "function": "TestTheArtifactDeclaresWhatItCannotGive",
+  "signature": "TestTheArtifactDeclaresWhatItCannotGive(params=1, results=0)",
+  "start": {
+    "line": 211,
+    "column": 1
+  },
+  "end": {
+    "line": 250,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 240,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 11
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 8
+      },
+      "text": "krGrid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 13
+      },
+      "text": "measure.Grid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 33
+      },
+      "text": "measure.DefaultUSGrid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 14
+      },
+      "text": "Render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 25
+      },
+      "text": "model.Fingerprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 17
+      },
+      "text": "strings.Index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 17
+      },
+      "text": "strings.Index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 3
+      },
+      "text": "model.Fingerprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

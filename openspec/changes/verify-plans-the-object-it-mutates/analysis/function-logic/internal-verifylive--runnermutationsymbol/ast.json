@@ -1,0 +1,101 @@
+{
+  "file": "internal/verifylive/runner.go",
+  "source_sha256": "88b72a32dcbb7236a4dc715aaa35e6f0a3acc60896847c87d5ed2a01076e20bc",
+  "package": "verifylive",
+  "function": "mutationSymbol",
+  "receiver": "Runner",
+  "signature": "Runner.mutationSymbol(params=1, results=1)",
+  "start": {
+    "line": 571,
+    "column": 1
+  },
+  "end": {
+    "line": 582,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 572,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 573,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 578,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 574,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 576,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 579,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 581,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 23
+      },
+      "text": "r.liveConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 50
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 573,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

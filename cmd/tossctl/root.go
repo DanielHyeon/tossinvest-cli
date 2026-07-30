@@ -178,6 +178,11 @@ func newRootCmd() *cobra.Command {
 		// interlock clause 6 is an unmet constant until protective orders land —
 		// and nothing existing changes.
 		newEngineCmd(opts),
+		// candidate is the read-only discovery surface (change add-candidate-discovery,
+		// tasks 5.1–5.4): one scan, and the loop that repeats it while enforcing
+		// retention and the free-space floor. It places nothing — the package behind
+		// it cannot see an order path at all — and nothing existing changes.
+		newCandidateCmd(opts),
 	)
 
 	return cmd
