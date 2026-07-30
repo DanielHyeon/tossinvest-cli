@@ -165,6 +165,23 @@ type Options struct {
 	// binstamp.Self.
 	Binary func() (binstamp.Stamp, error)
 
+	// SystemUpdater is bound to the running executable and its fixed
+	// `.candidate`/`.rollback` siblings. The HTTP request supplies only the
+	// candidate hash the operator reviewed.
+	SystemUpdater SystemUpdater
+	// ReleaseDownloader discovers and fully verifies the constructor-bound
+	// official release. ReleaseCandidateStager publishes only its returned bytes
+	// to the updater's fixed sibling path. They are separate capabilities so a
+	// downloader cannot install and an installer cannot select a URL.
+	ReleaseDownloader      ReleaseDownloader
+	ReleaseCandidateStager ReleaseCandidateStager
+	// AcquireUpdateEngineLock takes the real journal-directory engine flock.
+	// Nil refuses installation; an advisory marker is not an exclusion.
+	AcquireUpdateEngineLock AcquireUpdateEngineLock
+	// CheckUpdateVerifyActivity is the strict external verification check run at
+	// the updater's commit boundary. Nil or any error refuses installation.
+	CheckUpdateVerifyActivity CheckUpdateVerifyActivity
+
 	// --- the dashboard (change add-operator-dashboard) ---
 	//
 	// All three are optional and all three fail to a state the page describes
@@ -297,6 +314,21 @@ type Console struct {
 	// listener and is therefore the only thing that may release the port the new
 	// process has to bind.
 	relaunch chan int
+
+	// activityMu serializes executable installation with the two routes that can
+	// start account/engine work. A successful commit leaves updateCommitted set
+	// until this old process exits, so a delayed request cannot start work in the
+	// binary that is about to be replaced.
+	activityMu      sync.Mutex
+	updateCommitted bool
+	// releaseMu serializes discovery through candidate publication without
+	// blocking engine/verification starts on network or TUF work.
+	releaseMu sync.Mutex
+	// releaseReceipt is process-local evidence for the exact candidate SHA. It
+	// intentionally disappears on restart; a surviving local candidate then
+	// returns to provenance-unknown until it is verified again.
+	releaseReceiptMu sync.Mutex
+	releaseReceipt   *signedReleaseReceipt
 
 	// holdings is the lazy, TTL'd cache in front of Options.Holdings. It is the
 	// only thing in this process that can make a broker request of its own, and
@@ -550,8 +582,12 @@ func (c *Console) routes() http.Handler {
 	// carry it for the opposite reason — an audit reader has to be able to tell
 	// which line turned the engine loose.
 	mux.HandleFunc("/settings/gate", c.session0(c.mutating(c.handleSettingsGate)))
+	mux.HandleFunc("/settings/system-update/install",
+		c.session0(c.mutating(c.handleSystemUpdateInstall)))
+	mux.HandleFunc("/settings/system-update/download",
+		c.session0(c.mutating(c.handleSystemUpdateDownload)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
-	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.handleStart)))
+	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.startExclusive(c.handleStart))))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))
 	mux.HandleFunc("/verify/abort", c.session0(c.mutating(c.handleAbort)))
 	mux.HandleFunc("/restart", c.session0(c.mutating(c.handleRestart)))
@@ -561,7 +597,7 @@ func (c *Console) routes() http.Handler {
 	// touches the account: they start and stop a process whose *ability* to trade
 	// was decided by a §0.7 gate approval and is re-checked by its own startup
 	// interlock every time it comes up.
-	mux.HandleFunc("/engine/start", c.session0(c.mutating(c.handleEngineStart)))
+	mux.HandleFunc("/engine/start", c.session0(c.mutating(c.startExclusive(c.handleEngineStart))))
 	mux.HandleFunc("/engine/stop", c.session0(c.mutating(c.handleEngineStop)))
 	mux.HandleFunc("/report", c.session0(c.handleReport))
 	mux.HandleFunc("/report.json", c.session0(c.handleReportJSON))

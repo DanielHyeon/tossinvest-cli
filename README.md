@@ -153,7 +153,40 @@ tossctl auth login
 tossctl account summary --output json
 ```
 
-설치 후 새 버전이 나오면 `tossctl update` 로 갱신할 수 있습니다 (Homebrew로 설치했다면 `brew upgrade tossctl-cli` 로 자동 위임됩니다).
+설치 후에는 `tossctl console` → 설정 → **시스템 업데이트**에서
+**서명된 최신 릴리스 확인·다운로드**를 누릅니다. 공식 GitHub Actions
+`release.yml`이 태그에서 만든 정확한 플랫폼 archive인지 Sigstore/SLSA
+provenance, Fulcio 인증서, Rekor 투명성 증거와 archive SHA-256을 모두 확인한
+뒤에만 고정 sibling `<현재 tossctl>.candidate`로 staging합니다. 화면에서
+태그·asset·signer·두 SHA-256을 검토한 다음 별도 **설치 및 재기동** 버튼을
+눌러야 실제 실행 파일이 바뀝니다. 확인·다운로드만으로 엔진을 정지하거나
+재기동하거나 주문을 실행하지 않습니다.
+
+기존 `tossctl update`는 호환성을 위해 남아 있지만 checksum-only 레거시
+경로입니다. 읽기 전용 확인은 `tossctl update --check`, 새 설치는 위의 서명된
+콘솔 경로를 사용합니다. Homebrew 설치는 계속 `brew upgrade tossctl-cli`를
+사용할 수 있습니다.
+
+현재 설치된 구버전에 시스템 업데이트 메뉴 자체가 없다면 그 구버전은 새 기능을
+스스로 실행할 수 없으므로, 메뉴가 들어 있는 바이너리를 **최초 한 번만** 설치해야
+합니다. 그 한 번 이후의 공식 릴리스는 위 콘솔 메뉴에서 다운로드할 수 있으며
+매번 `/tmp/claude-.../tossctl-menu`를 수동 설치할 필요가 없습니다.
+
+저장소의 아직 릴리스되지 않은 개발 빌드를 시험할 때만, 임시 Claude/Codex 작업
+디렉터리의 바이너리를 직접 덮어쓰지 않고 다음 target으로 검증된 소스를 고정
+sibling candidate에 staging합니다.
+
+```bash
+make stage-local-update
+```
+
+기본 대상은 `~/.local/bin/tossctl.candidate`입니다. 그 다음 `tossctl console`
+설정의 **시스템 업데이트** 섹션에서 경로·SHA-256·Go/module·platform 정보를
+검토하고 **설치 및 재기동**을 누릅니다. 콘솔은 실제 엔진 flock을 잡을 수 없거나
+실계좌 검증이 진행 중이면 설치를 거부하고, 이전 실행 파일은
+`~/.local/bin/tossctl.rollback`에 보존합니다. 이 target 자체는 설치·재기동을
+하지 않습니다. 다른 설치 경로라면
+`make stage-local-update TOSSCTL_INSTALL_PATH=/absolute/path/to/tossctl`을 사용합니다.
 
 > `auth login`에는 Google Chrome과 Python이 필요하며, 설치 스크립트가 자동으로 설정합니다.
 > Windows, Homebrew, 소스 빌드 등 다른 설치 방법은 [설치](#설치) 섹션을 참고하세요.

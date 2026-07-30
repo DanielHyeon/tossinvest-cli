@@ -119,7 +119,12 @@ func TestEachInterlockClauseHasALine(t *testing.T) {
 			if !tc.noGuardian {
 				guardian = matchedGuardian()
 			}
-			_, err := openGateEngine(t, dir, srv, guardian)
+			var err error
+			if tc.noGuardian {
+				_, err = openGateWithoutProductionGuardian(t, dir, srv)
+			} else {
+				_, err = openGateEngine(t, dir, srv, guardian)
+			}
 			if err == nil {
 				t.Fatal("the gate opened")
 			}

@@ -201,9 +201,9 @@ func TestTheConsoleDecidesNothingAboutTheGate(t *testing.T) {
 	// lives in internal/config's closed member list, which is the same separation
 	// the limit path has — the console names a capability, not a config byte.
 	mayNameTheBlock := map[string]bool{
-		"settings.go":            true,
-		"settings_limits.go":     true,
-		"templates_settings.go":  true,
+		"settings.go":           true,
+		"settings_limits.go":    true,
+		"templates_settings.go": true,
 	}
 	src := packageFiles(t)
 	for name, file := range src {

@@ -188,7 +188,10 @@ func TestTheSeamsWithVerbExemptionsAreEnumeratedAndArgued(t *testing.T) {
 			"Orders": true, "OrdersReader": true, "OrdersReading": true,
 			"OrderRecord": true, "ConditionalRecord": true,
 		},
-		"Gate": {"Gate": true, "GateSwitch": true},
+		"Gate":                      {"Gate": true, "GateSwitch": true},
+		"AcquireUpdateEngineLock":   {"AcquireUpdateEngineLock": true},
+		"CheckUpdateVerifyActivity": {"CheckUpdateVerifyActivity": true},
+		"SystemUpdater":             {"SystemUpdater": true, "Install": true},
 	}
 
 	for field, cap := range consoleCapabilities {

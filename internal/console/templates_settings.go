@@ -211,6 +211,77 @@ automation gate(운영 게이트)의 ON/OFF와 kill switch는 이 콘솔에서 �
   </form>
   {{end}}
 </section>
+
+<section id="system-update">
+  <h2>시스템 업데이트</h2>
+  <p class="muted">서버가 고정한 공식 저장소·현재 플랫폼의 최신 stable archive만 확인한다.
+  archive SHA-256, GitHub Actions/Sigstore 서명, 정확한 release workflow·tag·source commit,
+  transparency log를 모두 검증한 뒤에만 후보를 만든다. 다운로드는 설치·엔진 정지·재기동을 하지 않는다.</p>
+
+  {{if .ReleaseDownloadWired}}
+  <form method="post" action="/settings/system-update/download"
+    onsubmit="return confirm('공식 최신 릴리스를 확인하고 서명을 검증한 뒤 fixed candidate로 staging한다. 설치와 재기동은 하지 않는다.')">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <p><button type="submit">서명된 최신 릴리스 확인·다운로드</button></p>
+  </form>
+  {{else}}
+  <p class="notice"><strong>서명 릴리스 다운로드가 배선되지 않았다.</strong>
+  현재 실행 파일은 로컬 candidate만 검토할 수 있다.</p>
+  {{end}}
+
+  <p class="muted">개발 세션의 임시 경로를 직접 설치하지 않는다. 이 화면이 볼 수 있는 후보는
+  실행 중인 파일 바로 옆의 <code>.candidate</code> 하나뿐이고, 후보 코드는 검사 중 실행되지 않는다.
+  설치는 엔진·실계좌 검증이 모두 멈춘 상태에서만 가능하며, 기존 실행 파일은
+  <code>.rollback</code>으로 보존한 뒤 같은 포트의 새 콘솔로 재기동한다.</p>
+
+  {{if not .UpdateWired}}
+  <p class="notice"><strong>시스템 업데이트가 배선되지 않았다.</strong> 이 빌드는 설정 화면에서
+  실행 파일을 교체할 수 없다.</p>
+  {{else}}
+  <h3>현재 실행 파일</h3>
+  <table>
+    <tr><th>경로</th><td><code>{{.Update.Current.Path}}</code></td></tr>
+    <tr><th>크기·수정 시각</th><td>{{.Update.Current.Size}} bytes · {{.UpdateCurrentTime}}</td></tr>
+    <tr><th>SHA-256</th><td><code>{{.Update.Current.SHA256}}</code></td></tr>
+  </table>
+
+  <h3>staged candidate</h3>
+  <p><code>{{.Update.CandidatePath}}</code></p>
+  {{if .Update.Installable}}
+  {{if .ReleaseVerified}}
+  <p class="notice"><strong>이 프로세스에서 서명 검증됨.</strong>
+  {{.ReleaseReceipt.Tag}} · <code>{{.ReleaseReceipt.AssetName}}</code> · archive
+  <code>{{.ReleaseReceipt.ArchiveSHA256}}</code><br>
+  signer <code>{{.ReleaseReceipt.Signer}}</code><br>
+  source commit <code>{{.ReleaseReceipt.SourceCommit}}</code>
+  {{if .ReleaseReceipt.Bootstrap}}<br>현재 빌드는 release semver가 없어 bootstrap으로 처리했다.
+  버전 순서를 주장하지 않는다.{{end}}</p>
+  {{else}}
+  <p class="notice"><strong>출처 확인 안 됨.</strong> 이 프로세스가 서명 릴리스를 검증해 만든
+  candidate라는 증거가 없다. 재기동 뒤 남은 로컬 candidate도 여기에 해당한다. 아래 hash·module·
+  command·platform을 검토해 설치할 수는 있지만, “서명 확인됨”으로 표시하지 않는다.</p>
+  {{end}}
+  <table>
+    <tr><th>크기·수정 시각</th><td>{{.Update.Candidate.Size}} bytes · {{.UpdateCandidateTime}}</td></tr>
+    <tr><th>SHA-256</th><td><code>{{.Update.Candidate.SHA256}}</code></td></tr>
+    <tr><th>Go</th><td>{{.Update.Candidate.GoVersion}}</td></tr>
+    <tr><th>module</th><td><code>{{.Update.Candidate.ModulePath}}</code> {{.Update.Candidate.ModuleVersion}}</td></tr>
+    <tr><th>command</th><td><code>{{.Update.Candidate.CommandPath}}</code></td></tr>
+    <tr><th>platform</th><td>{{.Update.Candidate.GOOS}}/{{.Update.Candidate.GOARCH}}</td></tr>
+    <tr><th>VCS revision</th><td><code>{{.Update.Candidate.VCSRevision}}</code>
+    {{if .Update.Candidate.VCSModified}}(modified){{else}}(clean){{end}}</td></tr>
+  </table>
+  <form method="post" action="/settings/system-update/install"
+    onsubmit="return confirm('위 SHA-256의 staged candidate를 설치하고 이 콘솔을 재기동한다.')">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <input type="hidden" name="reviewed_sha256" value="{{.Update.Candidate.SHA256}}">
+    <p><button type="submit">검토한 candidate 설치 및 재기동</button></p>
+  </form>
+  {{else}}
+  <p class="notice"><strong>설치할 수 없다.</strong> {{.Update.Reason}}</p>
+  {{end}}
+  {{end}}
+</section>
 {{template "foot" .}}
 {{end}}
 `

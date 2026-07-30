@@ -300,7 +300,7 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	//
 	// A floor below the truth would let a scanner that read only console.go's
 	// first half go on passing.
-	if len(routes) < 22 {
+	if len(routes) < 23 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -375,8 +375,10 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		// validation and no audit line — the console path is the one that has all
 		// three. A forged request that turned the gate on would be exactly the act
 		// this list exists to keep behind the token.
-		"/settings/trading": true,
-		"/settings/gate":    true,
+		"/settings/trading":                true,
+		"/settings/gate":                   true,
+		"/settings/system-update/download": true,
+		"/settings/system-update/install":  true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -631,7 +633,8 @@ var consoleStateChanging = []string{
 	"/verify/start", "/verify/approve", "/verify/abort", "/restart", "/soak/restart",
 	"/engine/start", "/engine/stop", "/settings/save", "/settings/include",
 	"/settings/exclude", "/settings/limits", "/settings/limits/preset",
-	"/settings/trading", "/settings/gate",
+	"/settings/trading", "/settings/gate", "/settings/system-update/download",
+	"/settings/system-update/install",
 }
 
 // consoleGateWriters is the exact route that may spell "gate" (change
@@ -922,6 +925,16 @@ var consoleCapabilities = map[string]capability{
 	"StopEngine":  {},
 	"Now":         {},
 	"Binary":      {},
+	"AcquireUpdateEngineLock": {
+		VerbExemptions: map[string]string{
+			"AcquireUpdateEngineLock": "holds the real engine flock while replacing the local executable; it carries no account capability",
+		},
+	},
+	"CheckUpdateVerifyActivity": {
+		VerbExemptions: map[string]string{
+			"CheckUpdateVerifyActivity": "reads whether external verification is active and refuses local executable replacement; it mutates no account state",
+		},
+	},
 	// Out is io.Writer: the console's own operator lines, not an account.
 	"Out": {},
 
@@ -975,6 +988,18 @@ var consoleCapabilities = map[string]capability{
 	// internal/candidate, whose own dependency closure is {internal/clock}, so
 	// there is no order verb anywhere in what this seam can reach.
 	"Signals": {Methods: []string{"Signals"}},
+	"SystemUpdater": {
+		Methods: []string{"Inspect", "Install"},
+		VerbExemptions: map[string]string{
+			"SystemUpdater": "the fixed-sibling local executable updater; its exact two-method set is enumerated here",
+			"Install":       "installs reviewed local executable bytes and has no broker or account capability",
+		},
+	},
+	// Signed release retrieval and fixed candidate publication are split. The
+	// downloader can select no path and cannot install; the stager receives
+	// already verified bytes and can publish only the updater's fixed sibling.
+	"ReleaseDownloader":      {Methods: []string{"Fetch"}},
+	"ReleaseCandidateStager": {Methods: []string{"StageCandidate"}},
 	// The order record, read (change console-orders-screen, task 3.7).
 	//
 	// One method, and it fetches. The verb list is not touched to make room for

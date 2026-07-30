@@ -1,0 +1,84 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "e6159d29ec6c306f4a9a942c50e634235683d592e393c0f37ccb6eac6bb92a81",
+  "package": "main",
+  "function": "newConsoleCmd",
+  "signature": "newConsoleCmd(params=1, results=1)",
+  "start": {
+    "line": 97,
+    "column": 1
+  },
+  "end": {
+    "line": 164,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 157,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 11
+      },
+      "text": "runConsole"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 2
+      },
+      "text": "IntVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

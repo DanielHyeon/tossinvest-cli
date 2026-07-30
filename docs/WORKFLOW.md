@@ -185,6 +185,105 @@ python3 tools/pm/generate_master_tracker.py
 python3 tools/pm/generate_master_tracker.py --check
 ```
 
+## CodeGraph·CodeGraphContext 설치와 사용
+
+StockOS와 동일하게 CodeGraph는 현재 코드 구조의 **hard evidence**이고,
+CodeGraphContext는 관련 파일·교차 모듈 문맥을 넓히는 **supporting evidence**다.
+CodeGraphContext 결과만으로 production 코드를 수정하지 않으며, 충돌하면 현재 HEAD와
+CodeGraph 결과를 우선한다.
+
+### 설치 상태 확인
+
+저장소 루트에서 다음을 실행한다.
+
+```bash
+command -v codegraph
+codegraph --version
+codegraph status .
+
+command -v codegraphcontext
+codegraphcontext version
+codegraphcontext doctor
+codegraphcontext stats .
+```
+
+`command -v`가 실패하거나 doctor/status가 실행되지 않을 때만 설치한다. 이미 정상인
+도구를 작업 도중 재설치·업그레이드하지 않는다.
+
+### 미설치 시 설치
+
+CodeGraph의 macOS/Linux 공식 standalone installer는 자체 runtime과 CLI를 설치한다.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
+```
+
+Node.js를 이미 관리하고 있다면 공식 npm 패키지도 사용할 수 있다.
+
+```bash
+npm install -g @colbymchenry/codegraph
+```
+
+CodeGraphContext는 TossOS 워크스테이션에서 `uv` 격리 도구로 설치한다. `pipx`를 쓰는
+환경에서는 `pipx install codegraphcontext`도 가능하다.
+
+```bash
+uv tool install codegraphcontext
+```
+
+설치 후 새 셸에서 경로와 진단을 다시 확인한다.
+
+```bash
+codegraph --version
+codegraphcontext version
+codegraphcontext doctor
+```
+
+CodeGraph의 `codegraph install`은 Codex/Claude 등의 전역 설정을 수정할 수 있다.
+TossOS는 저장소의 `.mcp.json`, `.codex/config.toml`, `.claude/settings.json`을
+동기화하여 사용하므로 에이전트가 이를 무조건 실행하지 않는다. Codex 설정 조각만
+확인해야 할 때는 파일을 쓰지 않는 다음 명령을 사용한다.
+
+```bash
+codegraph install --print-config codex
+```
+
+### 프로젝트 최초 초기화
+
+새 checkout에 인덱스가 없을 때 한 번 실행한다.
+
+```bash
+codegraph init .
+codegraphcontext index .
+```
+
+TossOS의 표준 진입점은 아래 `make sdd-sync`다. CodeGraph의 `.codegraph/`가 없으면
+초기화하고, 있으면 증분 sync하며, CodeGraphContext와 TossOS 전용 GBrain도 함께
+갱신한다.
+
+### 직접 질의
+
+```bash
+codegraph query "<symbol-or-question>"
+codegraph context "<symbol-or-task>"
+codegraph callers "<symbol>"
+codegraph callees "<symbol>"
+codegraph impact "<symbol>"
+
+codegraphcontext update . --quiet
+codegraphcontext report .
+codegraphcontext stats .
+```
+
+기존 함수나 민감 경로를 수정할 때는 최소한 definition/context와 callers, impact를
+확인한다. CodeGraphContext 보고서는 후보 문맥으로만 사용하고 현재 HEAD와
+Function Logic Map으로 교차검증한다.
+
+공식 설치 문서:
+
+- CodeGraph: <https://github.com/colbymchenry/codegraph#1-install-the-cli>
+- CodeGraphContext: <https://codegraphcontext.github.io/getting-started/installation/>
+
 ## 설치·동기화 명령
 
 ```bash
@@ -202,6 +301,38 @@ GBrain 실행 파일은 StockOS와 같은 전역 설치를 재사용하지만 �
 MCP와 CLI가 모두 `tools/sdd/gbrain_project.py`를 경유하므로 다른 프로젝트의 `gbrain serve`
 단일-writer 잠금이나 기억 데이터와 충돌하지 않는다. 기본 색인은 `--no-embed`이므로
 로컬 LLM이나 외부 임베딩 API 키가 없어도 코드·키워드·심볼 검색을 사용할 수 있다.
+
+### GBrain 단일 프로세스와 busy 복구
+
+PGLite는 데이터 홈당 한 프로세스만 열 수 있다. Codex와 Claude가 같은 저장소에서 동시에
+MCP를 초기화해도 `tools/sdd/gbrain_project.py`의
+`.sdd/gbrain-home/.gbrain/tossos-process.lock` kernel flock이 먼저 시작한 GBrain만
+허용한다. 후발 프로세스는 PGLite 내부에서 기다리지 않고 즉시 exit 75와
+`[gbrain-project] busy:` 진단을 반환한다. flock은 프로세스가 crash/SIGKILL로 종료되어도
+커널이 회수하므로 이 파일을 수동 삭제할 필요가 없다.
+
+동시에 여러 에이전트가 작업할 때 GBrain MCP는 한 세션만 사용할 수 있다. 다른 세션은
+advisory GBrain 없이 CodeGraph hard evidence와 파일 memory를 사용한다. 활성 MCP 중
+`make sdd-sync`를 실행하면 GBrain은 `advisory busy` warning으로 건너뛰고
+CodeGraph/CodeGraphContext 동기화는 계속한다. GBrain freshness는 소유 세션 종료 후 다음
+`make sdd-sync`에서 갱신된다. 이 예외는 exit 75와 `[gbrain-project] busy:`가 함께
+확인된 경우에만 적용한다. 일반 nonzero source probe, source registration, sync 오류는
+GBrain freshness를 갱신하지 않고 기존처럼 incomplete로 보고한다.
+
+중복 프로세스가 의심되면 삭제·종료 전에 다음 세 항목을 함께 확인한다.
+
+```bash
+pgrep -af 'gbrain serve'
+cat .sdd/gbrain-home/.gbrain/brain.pglite/.gbrain-lock/lock
+tr '\0' '\n' </proc/<pid>/environ | grep '^GBRAIN_HOME='
+```
+
+같은 `GBRAIN_HOME`의 `gbrain serve` 중 PGLite lock JSON의 `pid`가 살아 있고
+`refreshed_at`이 steal grace(기본 600초) 안에서 갱신된 프로세스만 현재 소유자다.
+복구가 필요하면 **비소유 GBrain 자식에만** 먼저 `SIGTERM`을 보내고 종료를 확인한다.
+소유자, Codex/Claude 부모 프로세스, `.gbrain-lock` 디렉터리는 자동 종료·삭제하지 않는다.
+fresh heartbeat의 legacy 소유자가 있으면 새 wrapper도 이를 busy로 인식하며, dead PID나
+stale heartbeat 정리는 GBrain 자체의 token-checked stale-lock recovery에 맡긴다.
 
 TypeDB/Neo4j 서비스 실행 상태는 doctor가 보고하지만 CI hard gate가 아니다. background worker의 외부 graph sync는
 `TOSSOS_TYPEDB_SYNC=1`, `TOSSOS_CONTEXT_GRAPH_SYNC=1`로 명시적으로 활성화한다.

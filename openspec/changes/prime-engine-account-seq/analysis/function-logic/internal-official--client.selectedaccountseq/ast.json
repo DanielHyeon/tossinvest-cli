@@ -1,0 +1,55 @@
+{
+  "file": "internal/official/reads.go",
+  "source_sha256": "722b9846047d6e37d67f3cc85d4ab635a5d7cc365bd1aa3401f8d6c26450c8f3",
+  "package": "official",
+  "function": "SelectedAccountSeq",
+  "receiver": "Client",
+  "signature": "Client.SelectedAccountSeq(params=0, results=2)",
+  "start": {
+    "line": 61,
+    "column": 1
+  },
+  "end": {
+    "line": 64,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 9
+      },
+      "text": "c.accountSeq.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 9
+      },
+      "text": "int"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

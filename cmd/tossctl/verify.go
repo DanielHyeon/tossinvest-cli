@@ -60,6 +60,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
@@ -283,6 +284,14 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
 	defer stop()
 
+	executionLock, err := acquireVerifyExecutionLock(root)
+	if err != nil {
+		return err
+	}
+	defer executionLock.Release()
+	fmt.Fprintf(out, "execution lock   %s (engine · update · verification exclusion)\n",
+		executionLock.Path())
+
 	market := verifylive.NormalizeMarket(opts.market)
 	recordPath, err := resolveVerifyRecordFor(root, opts.record, market)
 	if err != nil {
@@ -362,6 +371,26 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 		return nil
 	}
 	return runErr
+}
+
+// acquireVerifyExecutionLock closes the cross-process start race among the
+// engine, executable replacement, and either verification entry point.
+//
+// The runlock marker remains advisory because its consumer is the soak. This is
+// the actual exclusion: a crash-released kernel flock in the journal directory,
+// acquired before account resolution and held through complete runner cleanup.
+func acquireVerifyExecutionLock(root *rootOptions) (*enginelock.Lock, error) {
+	dir, err := engineJournalDir(root)
+	if err != nil {
+		return nil, fmt.Errorf("verify: resolving execution exclusion: %w", err)
+	}
+	lock, err := enginelock.Acquire(dir)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"verify: engine, system update, or another verification owns the execution exclusion: %w",
+			err)
+	}
+	return lock, nil
 }
 
 // writeVerifySummary prints the end-of-run state, with the outstanding objects
@@ -669,8 +698,9 @@ func verifyRunLockPath(recordPath string) string {
 //
 // It is advisory in both directions and the return type says so: the release is
 // always callable, and a failure to take the marker is a line of output rather
-// than a reason to refuse. A verification that a person is standing over must not
-// be stopped by a lock file — see internal/runlock's package comment.
+// than a reason to refuse. The separate journal-directory execution flock has
+// already excluded engine/update/other-verification starts; this marker only
+// asks the soak to yield its rate budget.
 func holdVerifyRunLock(ctx context.Context, out io.Writer, recordPath string) func() {
 	path := verifyRunLockPath(recordPath)
 	release, err := runlock.Hold(ctx, path)

@@ -242,8 +242,8 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		Entry:      entry,
 
 		ProtectionOverrideForTest: in.protectionOverride,
-		Preflight:  &execgw.Preflight{Account: account, Clock: in.clock},
-		Orders:     orders,
+		Preflight:                 &execgw.Preflight{Account: account, Clock: in.clock},
+		Orders:                    orders,
 		Replay: execgw.HTTPReplay{
 			BaseURL: in.official.BaseURL(),
 			HTTP:    &http.Client{Timeout: replayTimeout},

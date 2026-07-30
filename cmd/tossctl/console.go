@@ -59,9 +59,11 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/localupdate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -121,11 +123,13 @@ paste the link anywhere else.
   verify      the step list, the batch summary, the typed approval, live progress
   report      the measured attributes and the ones still unverified, plus JSON
 
-Everything is read-only except the verification approval. The console places no
-order of its own, toggles no gate, edits no configuration and shows no
-credential: the only requests that reach the account are the ones the verify
-runner makes, under the same plan authorisation, the same exposure caps and the
-same cancellation rails as ` + "`tossctl verify run`" + `.
+Account access is read-only except the verification approval: the console places
+no order of its own and shows no credential. The settings screen can edit its
+explicit operating fields and can install only the fixed sibling
+` + "`<current tossctl>.candidate`" + ` after a human reviews its hash and build
+identity. It accepts no update path or command, refuses while engine or
+verification work is active, preserves a rollback binary, and restarts on the
+same loopback port only after a successful replacement.
 
 Approving is a three-part act and all three are required: the session token, a
 CSRF token the page carries, and the expiring confirmation string the page shows
@@ -199,13 +203,55 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	// reports the engine section as unwired and the verification console — which
 	// is what this command is for — is unaffected.
 	engineMarkerPath := ""
+	engineDir := ""
 	if dir, derr := engineJournalDir(root); derr == nil {
+		engineDir = dir
 		engineMarkerPath = enginelock.MarkerPath(dir)
 	} else {
 		fmt.Fprintf(cmd.ErrOrStderr(), "엔진 마커 경로를 해석할 수 없다 (%v). 엔진 상태 표시는 비어 있다.\n", derr)
 	}
 
 	out := cmd.OutOrStdout()
+	var systemUpdater console.SystemUpdater
+	var releaseDownloader console.ReleaseDownloader
+	var releaseCandidateStager console.ReleaseCandidateStager
+	if self, serr := binstamp.SelfPath(); serr != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "시스템 업데이트 경로를 해석할 수 없다 (%v). 설정의 업데이트 섹션은 비활성이다.\n", serr)
+	} else {
+		cachePath, cerr := resolveUpdateCachePath(root)
+		if cerr != nil {
+			fmt.Fprintf(cmd.ErrOrStderr(), "서명 검증 캐시 경로를 해석할 수 없다 (%v). 서명된 릴리스 다운로드는 비활성이다.\n", cerr)
+			if updater, uerr := localupdate.New(self); uerr != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "시스템 업데이트를 배선할 수 없다 (%v). 설정의 업데이트 섹션은 비활성이다.\n", uerr)
+			} else {
+				systemUpdater = updater
+				releaseCandidateStager = updater
+			}
+		} else {
+			updater, downloader, uerr := assembleConsoleSystemUpdate(
+				self, filepath.Join(filepath.Dir(cachePath), "sigstore"), version.Version)
+			if updater != nil {
+				systemUpdater = updater
+				releaseCandidateStager = updater
+			}
+			if uerr != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "서명된 릴리스 다운로드를 배선할 수 없다 (%v). 기존 후보 검토·설치는 계속 사용할 수 있다.\n", uerr)
+			} else {
+				releaseDownloader = downloader
+			}
+		}
+	}
+
+	var acquireUpdateEngineLock console.AcquireUpdateEngineLock
+	if engineDir != "" {
+		acquireUpdateEngineLock = func() (func(), error) {
+			lock, err := enginelock.Acquire(engineDir)
+			if err != nil {
+				return nil, err
+			}
+			return lock.Release, nil
+		}
+	}
 
 	// The console's one live client, shared by every seam below that reads through
 	// it. Building it resolves the account against the Open API, and that read is
@@ -216,15 +262,22 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	reads := newConsoleBroker(root)
 
 	return console.ListenAndServe(ctx, console.Options{
-		Port:              opts.port,
-		StartVerify:       consoleVerifyStarter(root),
-		SoakRecord:        soakRecord,
-		VerifyRecord:      verifyRecord,
-		VerifyRecordUS:    verifyRecordUS,
-		Attestation:       attestation,
-		MinSoakDays:       soak.DefaultCriteria().MinConsecutiveDays,
-		RequiredEndpoints: engine.RequiredEndpoints(),
-		Out:               out,
+		Port:                    opts.port,
+		StartVerify:             consoleVerifyStarter(root),
+		SoakRecord:              soakRecord,
+		VerifyRecord:            verifyRecord,
+		VerifyRecordUS:          verifyRecordUS,
+		Attestation:             attestation,
+		MinSoakDays:             soak.DefaultCriteria().MinConsecutiveDays,
+		RequiredEndpoints:       engine.RequiredEndpoints(),
+		Out:                     out,
+		SystemUpdater:           systemUpdater,
+		ReleaseDownloader:       releaseDownloader,
+		ReleaseCandidateStager:  releaseCandidateStager,
+		AcquireUpdateEngineLock: acquireUpdateEngineLock,
+		CheckUpdateVerifyActivity: func() error {
+			return strictVerifyActivity(verifyRunLockPath(verifyRecord), time.Now().UTC())
+		},
 
 		// The dashboard's three seams (change add-operator-dashboard). The console
 		// reads the journal itself — read-only, per request — and is handed a
@@ -757,6 +810,14 @@ func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 		redo []verifylive.StepID,
 	) (verifylive.Summary, []verifylive.Entry, error) {
 		var empty verifylive.Summary
+
+		executionLock, err := acquireVerifyExecutionLock(root)
+		if err != nil {
+			return empty, nil, err
+		}
+		defer executionLock.Release()
+		fmt.Fprintf(out, "execution lock   %s (engine · update · verification exclusion)\n",
+			executionLock.Path())
 
 		market = verifylive.NormalizeMarket(market)
 		// The record is resolved per run rather than captured once, because it is

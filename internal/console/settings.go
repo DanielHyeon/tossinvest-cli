@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/localupdate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
 )
 
@@ -79,6 +80,13 @@ type settingsPage struct {
 	// TradingLoadErr is an unreadable config on the policy side, isolated from
 	// the other two sections for the same reason.
 	TradingLoadErr string
+
+	// --- staged system update (change console-system-update) ---
+	UpdateWired          bool
+	ReleaseDownloadWired bool
+	Update               localupdate.Inspection
+	ReleaseVerified      bool
+	ReleaseReceipt       signedReleaseReceipt
 }
 
 func (settingsPage) Refresh() bool { return false }
@@ -156,6 +164,14 @@ func (c *Console) handleSettings(w http.ResponseWriter, r *http.Request) {
 	// block including `enabled`, and a second reader of one key is how a screen
 	// ends up disagreeing with itself.
 	page.GateWired = c.opts.Gate != nil
+	if c.opts.SystemUpdater != nil {
+		page.UpdateWired = true
+		page.Update = c.opts.SystemUpdater.Inspect()
+		page.ReleaseReceipt, page.ReleaseVerified =
+			c.signedReleaseReceipt(page.Update.Candidate.SHA256)
+	}
+	page.ReleaseDownloadWired =
+		c.opts.ReleaseDownloader != nil && c.opts.ReleaseCandidateStager != nil
 	c.render(w, "settings", page)
 }
 

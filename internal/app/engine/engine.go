@@ -77,8 +77,9 @@ type Options struct {
 	// All of these are inert while the gate is off, which is the default and is
 	// what every existing config produces.
 
-	// Guardian is the risk authority that authorises mutations. Required when
-	// the automation gate is on; ignored when it is off.
+	// Guardian is the risk authority that authorises mutations. Production
+	// constructs one from the configured limits after the account and journal
+	// are open; tests may inject one explicitly. Ignored when the gate is off.
 	Guardian execgw.Guardian
 	// Clock drives the attestation's expiry check. Defaults to clock.System();
 	// tests inject a fake so "expired" is a decision and not a race.
@@ -117,6 +118,15 @@ type Options struct {
 	// same reason journalFSProber is: a production caller must not be able to
 	// claim a capability the build does not have.
 	protectionOverride *ProtectionReadiness
+
+	// disableProductionGuardian preserves direct interlock coverage of the
+	// Guardian-required clause. It is unexported and reached only through
+	// export_test.go; production always constructs the Guardian when the gate is
+	// on and none was explicitly injected.
+	disableProductionGuardian bool
+	// productionGuardianFactory is an unexported constructor seam used only to
+	// prove one construction and cleanup in tests. Nil is the real factory.
+	productionGuardianFactory productionGuardianFactory
 
 	// journalFSProber overrides the filesystem probe the journal's durability
 	// guard uses. Unexported, therefore test-only — the same arrangement
@@ -461,6 +471,31 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		return nil, refuseStartup(auditLog, gate, err)
 	}
 
+	// --- 3b. the risk authority ---------------------------------------------
+	//
+	// Production cannot inject this from cmd/tossctl: the account and the one
+	// writable journal do not exist there yet. Construct it here, after both are
+	// known and before the interlock asks what limits it authorises against.
+	//
+	// An explicit Guardian remains an intentional package-test seam. Gate OFF
+	// constructs nothing: its zero limits are not a policy, and the CLI refuses
+	// that profile because there is no verified loop set to run.
+	guardian := opts.Guardian
+	if gate.Enabled && guardian == nil && !opts.disableProductionGuardian {
+		factory := opts.productionGuardianFactory
+		if factory == nil {
+			factory = defaultProductionGuardianFactory
+		}
+		guardian, err = factory(
+			gate, jrn, clk, accountRef, wiring.notifier,
+		)
+		if err != nil {
+			_ = jrn.Close()
+			return nil, refuseStartup(auditLog, gate,
+				fmt.Errorf("%w: %w", ErrAutomationGateRefused, err))
+		}
+	}
+
 	// --- 4. the interlock ---------------------------------------------------
 	//
 	// It runs before the context is returned, so a refused gate produces no
@@ -468,7 +503,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	// and it runs *after* construction so that "a gateway exists" is something it
 	// verifies rather than assumes.
 	automation, err := runInterlock(status, gate, auditLog, opts.Logger, gateFacts{
-		guardian:  opts.Guardian,
+		guardian:  guardian,
 		trading:   cfg.Trading,
 		gateway:   wiring.gateway,
 		transport: path.broker,
@@ -478,9 +513,8 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		_ = jrn.Close()
 		return nil, err
 	}
-	var guardian execgw.Guardian
-	if automation.Verified {
-		guardian = opts.Guardian
+	if !automation.Verified {
+		guardian = nil
 	}
 
 	return &Context{

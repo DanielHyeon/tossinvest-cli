@@ -1,0 +1,64 @@
+{
+  "file": "internal/localupdate/updater.go",
+  "source_sha256": "ba15b48a4142f40cdcb4832734d05c6191da33ef483bdd3a0a9c7f0ec9d13c1b",
+  "package": "localupdate",
+  "function": "Inspect",
+  "receiver": "Updater",
+  "signature": "Updater.Inspect(params=0, results=1)",
+  "start": {
+    "line": 110,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 2
+      },
+      "text": "u.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 8
+      },
+      "text": "u.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 9
+      },
+      "text": "u.inspectLocked"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 112,
+        "column": 2
+      },
+      "text": "u.mu.Unlock"
+    }
+  ]
+}

@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -20,11 +21,17 @@ const defaultTimeout = 15 * time.Second
 // Client is the official Toss Open API client.
 // It manages OAuth2 token acquisition/refresh and provides authed HTTP helpers.
 type Client struct {
-	base       string
-	hc         *http.Client
-	tm         *tokenManager
-	mu         sync.Mutex // guards accountSeq lazy resolution
-	accountSeq int        // used for X-Tossinvest-Account header (0 = unset, resolved lazily)
+	base string
+	hc   *http.Client
+	tm   *tokenManager
+	// mu serializes unresolved account discovery and validates later public
+	// discovery against an implicit selection. accountsLocked requires it and
+	// may perform the /accounts HTTP request while held.
+	mu sync.Mutex
+	// accountSeq is read atomically so an already selected account-scoped
+	// request never waits behind unrelated public account-list I/O.
+	accountSeq         atomic.Int64 // 0 = unresolved; positive = selected; negative = invalid
+	accountSeqExplicit bool         // immutable after New returns
 	// rates is the last rate-limit budget seen per request path (ratebudget.go).
 	// Read-only from a caller's point of view and never consulted by this
 	// package's own logic — it records, it does not decide.
@@ -48,11 +55,14 @@ func WithHTTPClient(hc *http.Client) Option {
 	}
 }
 
-// WithAccountSeq sets the default account sequence number sent as the
-// X-Tossinvest-Account header on account-scoped endpoints (BuyingPower, Holdings).
+// WithAccountSeq configures the account sequence used by account-scoped
+// endpoints. A positive value is an explicit selection, zero remains unresolved
+// and is discovered lazily, and a negative value is rejected before discovery
+// or header emission.
 func WithAccountSeq(seq int) Option {
 	return func(c *Client) {
-		c.accountSeq = seq
+		c.accountSeq.Store(int64(seq))
+		c.accountSeqExplicit = seq > 0
 	}
 }
 
@@ -133,20 +143,30 @@ func (c *Client) get(ctx context.Context, path string, q url.Values, out any) er
 	return c.getWithHeaders(ctx, path, q, nil, out)
 }
 
-// ensureAccountSeq returns the account sequence number, resolving it lazily
-// when no seq was provided via WithAccountSeq. The first call (accountSeq==0)
-// fetches /api/v1/accounts, parses the first entry's ID, and caches the result.
-// Subsequent calls return the cached value with no network round-trip. The mu
-// field serialises concurrent first-call resolution so /accounts is called at
-// most once. Callers that set WithAccountSeq at construction time skip the
-// fetch entirely.
+// ensureAccountSeq returns a positive selected sequence. Zero triggers the
+// shared account-discovery path; a successful positive first record is cached
+// and shared by concurrent scoped callers and by a public Accounts request
+// already in flight. Failed, empty, or invalid discovery remains unresolved so
+// a later caller may retry. A positive explicit value skips discovery, while a
+// negative explicit value is rejected before any request or header emission.
 func (c *Client) ensureAccountSeq(ctx context.Context) (int, error) {
+	if seq := c.accountSeq.Load(); seq != 0 {
+		if seq > 0 {
+			return int(seq), nil
+		}
+		return 0, fmt.Errorf("lazy account-seq resolution: configured account sequence %d is not positive",
+			seq)
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.accountSeq != 0 {
-		return c.accountSeq, nil
+	if seq := c.accountSeq.Load(); seq != 0 {
+		if seq > 0 {
+			return int(seq), nil
+		}
+		return 0, fmt.Errorf("lazy account-seq resolution: configured account sequence %d is not positive",
+			seq)
 	}
-	accts, err := c.Accounts(ctx)
+	accts, err := c.accountsLocked(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("lazy account-seq resolution: %w", err)
 	}
@@ -157,7 +177,16 @@ func (c *Client) ensureAccountSeq(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("lazy account-seq resolution: parsing account ID %q: %w", accts[0].ID, err)
 	}
-	c.accountSeq = seq
+	if seq <= 0 {
+		return 0, fmt.Errorf("lazy account-seq resolution: account ID %q is not positive", accts[0].ID)
+	}
+	selected := c.accountSeq.Load()
+	if selected != int64(seq) {
+		return 0, fmt.Errorf(
+			"lazy account-seq resolution: discovered account sequence %d but selected sequence is %d",
+			seq, selected,
+		)
+	}
 	return seq, nil
 }
 

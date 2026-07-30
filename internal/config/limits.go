@@ -132,7 +132,7 @@ var guardianTiers = []GuardianTier{
 		},
 	},
 	{
-		ID:    "us-single-name",
+		ID: "us-single-name",
 		// The label names no class of stock on purpose. "대형주 1주" would be a
 		// promise this tier does not keep — a $500 order ceiling does not reach
 		// one share of every US large cap — and the card prints the five numbers

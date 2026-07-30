@@ -1,4 +1,5 @@
 BINARY := bin/tossctl
+TOSSCTL_INSTALL_PATH ?= $(HOME)/.local/bin/tossctl
 GOFMT ?= $(shell go env GOROOT)/bin/gofmt
 VERSION ?= dev
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
@@ -7,12 +8,19 @@ LDFLAGS := -X github.com/JungHoonGhae/tossinvest-cli/internal/version.Version=$(
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Commit=$(COMMIT) \
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Date=$(DATE)
 
-.PHONY: build run test vet cover validate gate lint fmt tidy clean \
+.PHONY: build stage-local-update run test vet cover validate gate lint fmt tidy clean \
 	sdd-doctor sdd-sync sdd-sync-full sdd-test sdd-check sdd-hooks-install sdd-infra
 
 build:
 	mkdir -p bin
 	go build -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/tossctl
+
+# Build a reviewable sibling candidate. This target never overwrites the
+# installed executable and never restarts a process; the authenticated settings
+# screen performs those two acts after showing the candidate's hash/build facts.
+stage-local-update: build
+	mkdir -p $(dir $(TOSSCTL_INSTALL_PATH))
+	install -m755 $(BINARY) $(TOSSCTL_INSTALL_PATH).candidate
 
 run:
 	go run -ldflags "$(LDFLAGS)" ./cmd/tossctl

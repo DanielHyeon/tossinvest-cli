@@ -1,0 +1,54 @@
+{
+  "file": "internal/official/client.go",
+  "source_sha256": "b592d38ac4dc1d7a00e5bbc8434185eaeb9a2a71cf13d51c8f1e4a6d68bb3560",
+  "package": "official",
+  "function": "WithAccountSeq",
+  "signature": "WithAccountSeq(params=1, results=1)",
+  "start": {
+    "line": 62,
+    "column": 1
+  },
+  "end": {
+    "line": 67,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 3
+      },
+      "text": "c.accountSeq.Store"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 22
+      },
+      "text": "int64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

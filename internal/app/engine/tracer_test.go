@@ -5,11 +5,9 @@ package engine_test
 // thing standing between "a bounded experiment" and "an automated trader with
 // no strategy".
 //
-// The live run is the verify track's (D8). It cannot happen from this build at
-// all: every order the tracer places needs a GuardianDecision, the engine only
-// holds a Guardian once the interlock verified the automation gate, and clause 6
-// (ProtectionReady) is an unmet constant — which the last test in this file
-// asserts rather than assumes.
+// The live run is the verify track's (D8). Every order the tracer places needs a
+// GuardianDecision, and while ProtectionReady is UNWIRED the gateway refuses
+// the exposure-raising entry even though the verified runtime itself may start.
 
 import (
 	"context"

@@ -110,3 +110,63 @@ webhook 페이로드:
 ```
 
 새 Check 함수는 schema 진단 메시지만 반환하면 됩니다 — `expectStatus` / `expectPath` 가 기본 패턴.
+## 서명된 공식 릴리스 시스템 업데이트
+
+`tossctl console` → 설정 → 시스템 업데이트에서 **서명된 최신 릴리스
+확인·다운로드**를 누른다. 요청 폼의 URL·repository·tag·대상 경로 값은 선택자로
+사용하지 않는다. 바이너리에 고정된 공식 repository, 현재 GOOS/GOARCH asset,
+GitHub Actions workflow와 Sigstore public-good 신뢰 루트만 사용한다.
+
+검증 조건:
+
+- GitHub의 canonical latest stable tag이며 현재 release semver보다 새 버전이다.
+  `dev` 빌드는 최초 release bootstrap으로만 예외 처리하고 화면에 표시한다.
+- archive SHA-256과 SLSA v1 subject digest가 일치한다.
+- Fulcio chain/SCT, Rekor inclusion/checkpoint와 integrated timestamp가 검증된다.
+- 인증서 issuer와 SAN이 공식 `release.yml@refs/tags/<tag>`와 정확히 일치한다.
+- provenance의 repository, workflow path, tag ref, source commit과 다운로드한
+  Go binary의 VCS revision이 일치하고 modified build가 아니다.
+
+네트워크는 `api.github.com`, GitHub의 고정 release asset host,
+`tmaproduction.blob.core.windows.net/attestations/` 및 Sigstore public-good
+TUF 서비스가 필요하다. 최초 실행에서는 TUF metadata 갱신 때문에 시간이 더 걸릴
+수 있다. 응답·redirect·pagination·bundle 수·archive 확장 크기는 모두 제한되며
+검증 실패 시 현재 실행 파일과 기존 candidate를 유지한다.
+
+성공해도 설치는 일어나지 않는다. 설정 화면에 tag, asset, archive SHA-256,
+signer workflow, candidate SHA-256이 표시되고, 사람이 별도 **설치 및 재기동**을
+눌러야 한다. 콘솔을 재시작하면 candidate 자체는 검사할 수 있지만 process-local
+서명 영수증은 사라지므로 출처를 “확인 안 됨”으로 표시한다.
+
+기존 candidate 보존 후 새 candidate의 directory sync가 실패하면 자동 복구를
+시도한다. 복구까지 실패한 경우 오류에 표시되는 recovery 경로의 파일을 보존하고
+운영자가 수동으로 비교·복구한다. 다운로드는 엔진 정지·재기동, gate 변경,
+계좌 접근이나 주문을 수행하지 않는다.
+
+시스템 업데이트 메뉴가 없는 구버전은 이 기능을 호출할 수 없다. 메뉴가 포함된
+바이너리를 최초 한 번 설치한 뒤에는 공식 릴리스마다 수동 `install`을 반복할
+필요가 없다. `tossctl update`는 checksum-only 레거시 경로이므로 자동화하지
+않고, 확인만 필요하면 `tossctl update --check`를 사용한다.
+
+## 로컬 개발 빌드 시스템 업데이트
+
+임시 Claude/Codex 작업 디렉터리의 바이너리를 `install` 명령으로 직접 덮어쓰지
+않는다. 저장소 gate가 끝난 뒤 다음 target으로 현재 설치 경로의 고정 sibling
+candidate를 만든다.
+
+```bash
+make stage-local-update
+```
+
+`tossctl console` → 설정 → 시스템 업데이트에서 candidate SHA-256과 build
+metadata를 확인하고 설치한다. 설치는 다음 조건을 모두 만족해야 한다.
+
+- 실계좌 검증이 진행 중이지 않다.
+- 실제 engine journal flock을 획득할 수 있다.
+- 실행 중인 콘솔이 시작할 때 본 현재 바이너리와 설치 직전 바이너리가 같다.
+- 화면에서 검토한 SHA-256과 준비된 candidate 바이트가 같다.
+
+성공하면 현재 경로는 원자적으로 교체되고 직전 바이너리는
+`<tossctl>.rollback`에 남는다. 후보 경로는 HTTP 요청으로 선택할 수 없고 항상
+`<tossctl>.candidate`이다. target이나 콘솔은 gate를 켜거나 주문을 실행하지
+않는다.

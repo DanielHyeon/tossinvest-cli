@@ -68,6 +68,10 @@ func newUpdateCmd(opts *rootOptions) *cobra.Command {
 				return writeUpdateCheckResult(out, format, version.Version, latest, updateAvailable, method)
 			}
 
+			fmt.Fprintln(cmd.ErrOrStderr(),
+				"경고: `tossctl update`는 레거시 checksum-only 경로입니다. "+
+					"서명된 릴리스 검증은 콘솔의 설정 → 시스템 업데이트를 사용하세요.")
+
 			if !updateAvailable {
 				fmt.Fprintf(out, "Already up to date (v%s).\n", version.Version)
 				return nil

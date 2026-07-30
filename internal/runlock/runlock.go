@@ -77,9 +77,10 @@ type Lock struct {
 
 // Acquire creates or refreshes the marker.
 //
-// It does not fail when the file already exists: this is advisory, and a second
-// verification is a thing the console's own process boundary prevents, not
-// something a lock file should be arbitrating.
+// It does not fail when the file already exists: this marker is advisory and is
+// not what arbitrates verification execution. The command layer separately
+// holds the journal-directory kernel flock shared with engine and system update;
+// this file only tells soak/discovery to yield their rate budget.
 func Acquire(path string, now time.Time) (*Lock, error) {
 	l := &Lock{path: path}
 	if err := l.write(now); err != nil {

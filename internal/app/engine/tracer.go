@@ -17,14 +17,14 @@ package engine
 // the caller's parameters, spelled out and bounded; nothing in this file decides
 // what to buy.
 //
-// # Why running it live is already impossible here
+// # Why the production entry still refuses while protection is unwired
 //
 // Every order it places goes through execgw.Gateway with a GuardianDecision, and
-// the engine profile only holds a Guardian once the startup interlock verified
-// the automation gate. Interlock clause 6 (ProtectionReady) is an unmet constant
-// in this build, so a gate-ON engine cannot be constructed at all — the tracer
-// inherits that refusal rather than repeating it. Adding a second gate here
-// would be a second place to get the answer wrong.
+// the engine profile only holds a Guardian once the startup interlock verifies
+// the automation gate. The runtime can now be constructed while
+// ProtectionReady is UNWIRED, but the gateway refuses the tracer's
+// exposure-raising entry from the mutation's own shape. Adding a second gate
+// here would be a second place to get the answer wrong.
 //
 // What the tracer *does* add is a set of bounds that hold whatever the gate
 // says, because "the gate is off" is not a reason to accept an unbounded

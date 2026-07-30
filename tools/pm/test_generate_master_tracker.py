@@ -44,6 +44,11 @@ class TrackerTests(unittest.TestCase):
             "size-us-guardian-tier",
             "interlock-gates-entry-not-exit",
             "console-owns-the-operating-toggles",
+            "wire-production-risk-guardian",
+            "console-system-update",
+            "signed-release-system-update",
+            "prime-engine-account-seq",
+            "serialize-project-gbrain-serve",
         ):
             path = changes / change
             path.mkdir(parents=True)

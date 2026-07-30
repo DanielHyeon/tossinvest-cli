@@ -37,13 +37,13 @@ package main
 // simpler and is this change's own rule: every loop in the set refuses to be
 // constructed without a verified gate, so there is nothing to run.
 //
-// # This command cannot start in this build
+// # Protection readiness gates entries, not the runtime
 //
-// Interlock clause 6 (ProtectionReady) is an unmet constant until the
-// protective-order change flips it, so a gate-ON engine cannot be assembled at
-// all. `engine run` therefore refuses, today, on every machine — which is the
-// design and not a gap. Its live behaviour is reachable only through the
-// test-only interlock seam.
+// ProtectionReady remains UNWIRED until the protective-order change flips it,
+// but it no longer prevents reconciliation, exit observation or fill detection
+// from running. Instead, the gateway refuses exposure-raising mutations while
+// leaving reductions available. Startup still requires a verified automation
+// gate and the real RiskGuardian assembled from its configured limits.
 
 import (
 	"context"
@@ -143,10 +143,10 @@ check before spawning anything. The marker is not the exclusion — the lock is.
 SIGINT or SIGTERM stops it: the loops are cancelled, allowed to finish the cycle
 they are in, and the journal is closed cleanly. A second signal exits at once.
 
-This build cannot start the engine on any machine. Interlock clause 6 requires
-broker-resident protective execution, which this build does not have, so the
-command refuses with that clause named. That is the safety design working, not a
-misconfiguration.`),
+Broker-resident protective execution is currently reported separately from the
+startup interlock. When it is UNWIRED, the verified runtime may reconcile,
+observe exits and detect fills, but the gateway refuses every mutation that
+raises exposure. Reduce-only exits remain available.`),
 		// official: every read and every order goes through the Open API. mutating:
 		// the loops place real reduce-only exits once the gate is verified, which
 		// is the whole point of the command.
@@ -266,28 +266,7 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 // seam every other engine test uses.
 var engineAssemble = func(ctx context.Context, root *rootOptions, clk clock.Clock,
 	logger *obs.Logger) (*engine.Context, error) {
-	configDir := ""
-	if root != nil {
-		configDir = root.configDir
-	}
-	return engine.NewContext(ctx, engine.Options{
-		ConfigDir: configDir,
-		Clock:     clk,
-		Logger:    logger,
-		Operator:  engineOperator(),
-		// Guardian and Publisher are deliberately absent.
-		//
-		// Guardian: no production issuer exists before the change that introduces
-		// one, and the interlock refuses a gate-ON engine without it — which is
-		// the fail-closed direction and costs nothing while clause 6 refuses
-		// first anyway.
-		//
-		// Publisher: a nil transport makes every critical alert undeliverable, the
-		// outbox row stays PENDING, the entry gate latches and sustained failure
-		// tightens the mode. That is the specified direction (risk-management) and
-		// it is recorded in exitwiring.go's newNotifier; configuring a transport is
-		// an operational setting with an audit trail, which is a change of its own.
-	})
+	return assembleEngine(ctx, root, clk, logger, nil)
 }
 
 // engineOperator names who started the engine, for the audit trail. It is the OS

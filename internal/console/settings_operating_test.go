@@ -258,12 +258,12 @@ func TestTheGateSectionSaysWhatStarts(t *testing.T) {
 
 	page := body(t, h.get(t, "/settings"))
 	for _, want := range []string{
-		"대사·exit 관측",            // the loops
-		"되돌릴 수 없다",              // adoption is irreversible
-		"첫 대사 주기에 편입이 일어난다",     // and it happens immediately
-		"TSLA",                  // what is exempt from it
-		"프로세스가 죽으면 보호도 사라진다",    // the protection's lifetime
-		"게이트웨이에서 계속 거부된다",       // entry is still refused
+		"대사·exit 관측",        // the loops
+		"되돌릴 수 없다",          // adoption is irreversible
+		"첫 대사 주기에 편입이 일어난다", // and it happens immediately
+		"TSLA", // what is exempt from it
+		"프로세스가 죽으면 보호도 사라진다", // the protection's lifetime
+		"게이트웨이에서 계속 거부된다",    // entry is still refused
 	} {
 		if !strings.Contains(page, want) {
 			t.Errorf("the gate section does not say %q:\n%s", want, page)

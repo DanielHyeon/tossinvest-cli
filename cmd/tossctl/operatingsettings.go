@@ -109,8 +109,8 @@ func recordPolicySave(before, after config.TradingPolicy) {
 		return
 	}
 	for _, field := range []struct {
-		setting     string
-		from, to    bool
+		setting  string
+		from, to bool
 	}{
 		{"trading.place", before.Place, after.Place},
 		{"trading.sell", before.Sell, after.Sell},

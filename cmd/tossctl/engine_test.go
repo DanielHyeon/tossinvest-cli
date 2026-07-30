@@ -13,10 +13,9 @@ package main
 // order the refusals happen in, which is the part engine-safety fixes.
 //
 // The engine.Context values here are hand-built and carry only the automation
-// status, which is the one field the sequence branches on. A test that needed a
-// real one would need a verified gate, and interlock clause 6 makes that
-// unreachable outside internal/app/engine's own test-only seam — which is the
-// safety property working, not a gap in the coverage.
+// status, which is the one field the sequence branches on. The actual production
+// assembly — including the real account, journal and RiskGuardian — is covered
+// separately by the tagged CLI assembly regression.
 
 import (
 	"context"

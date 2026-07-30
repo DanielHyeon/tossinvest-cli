@@ -1,0 +1,173 @@
+{
+  "file": "internal/official/reads.go",
+  "source_sha256": "722b9846047d6e37d67f3cc85d4ab635a5d7cc365bd1aa3401f8d6c26450c8f3",
+  "package": "official",
+  "function": "accountsLocked",
+  "receiver": "Client",
+  "signature": "Client.accountsLocked(params=1, results=2)",
+  "start": {
+    "line": 38,
+    "column": 1
+  },
+  "end": {
+    "line": 55,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "else",
+      "at": {
+        "line": 46,
+        "column": 9
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 46,
+        "column": 9
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 41,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 48,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 12
+      },
+      "text": "c.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 14
+      },
+      "text": "c.accountSeq.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 22
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 3
+      },
+      "text": "c.accountSeq.Store"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 22
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 49
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 9
+      },
+      "text": "adaptAccounts"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

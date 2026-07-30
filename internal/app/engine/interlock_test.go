@@ -548,7 +548,13 @@ func TestGateOnRefusals(t *testing.T) {
 			}
 			srv, _ := interlockServer(t, tc.accountNo)
 
-			eng, err := openGateEngine(t, dir, srv, tc.guardian)
+			var eng *engine.Context
+			var err error
+			if tc.name == "no Guardian injected" {
+				eng, err = openGateWithoutProductionGuardian(t, dir, srv)
+			} else {
+				eng, err = openGateEngine(t, dir, srv, tc.guardian)
+			}
 			if err == nil {
 				t.Fatal("startup must be refused")
 			}

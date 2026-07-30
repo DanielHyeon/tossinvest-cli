@@ -71,6 +71,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
@@ -661,7 +662,7 @@ func limitsString(l execgw.Limits) string {
 }
 
 // resolveAccountRef reads the account the credentials belong to.
-func resolveAccountRef(ctx context.Context, reads OfficialReads) (string, error) {
+func resolveAccountRef(ctx context.Context, reads *official.Client) (string, error) {
 	if reads == nil {
 		return "", errors.New("no official client")
 	}
@@ -669,15 +670,29 @@ func resolveAccountRef(ctx context.Context, reads OfficialReads) (string, error)
 	if err != nil {
 		return "", err
 	}
-	// DisplayName carries the official API's accountNo — the human account
-	// number (internal/official/reads.go adaptAccounts). ID is accountSeq, an
-	// internal key that means nothing to the operator reading an attestation.
-	for _, a := range accounts {
-		if strings.TrimSpace(a.DisplayName) != "" {
-			return strings.TrimSpace(a.DisplayName), nil
-		}
+	if len(accounts) == 0 {
+		return "", errors.New("the broker returned no accounts")
 	}
-	return "", errors.New("the broker returned no account number")
+	// DisplayName carries accountNo and ID carries accountSeq. The first record
+	// is the only implicit default; skipping an incomplete first record would
+	// let the journal name one account while the official header scopes another.
+	first := accounts[0]
+	accountRef := strings.TrimSpace(first.DisplayName)
+	if accountRef == "" {
+		return "", errors.New("the broker's first account record has no account number")
+	}
+	seq, err := strconv.Atoi(first.ID)
+	if err != nil || seq <= 0 {
+		return "", fmt.Errorf("the broker's first account record has invalid account sequence %q", first.ID)
+	}
+	selected, usable := reads.SelectedAccountSeq()
+	if !usable || selected != seq {
+		return "", fmt.Errorf(
+			"the selected official account sequence %d does not match the first account record %d",
+			selected, seq,
+		)
+	}
+	return accountRef, nil
 }
 
 // recordGateSettings appends an audit entry for each setting that changed since
