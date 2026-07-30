@@ -277,7 +277,7 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 		}
 	}
 	// The floor is the canary for "the extractor stopped parsing", so it follows
-	// the real number rather than sitting at some historical low. The nineteen,
+	// the real number rather than sitting at some historical low. The twenty,
 	// enumerated so the number and the list cannot drift apart the way they did
 	// once already (the list added to sixteen while the assertion said
 	// seventeen — the settings SCREEN was missing from it, and a comment that
@@ -287,7 +287,8 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	//	   /verify/abort, /report, /report.json
 	//	2  the dashboard screens (add-operator-dashboard): /positions, /history
 	//	1  the settings screen (console-adoption-controls): /settings
-	//	2  its two edits: /settings/save, /settings/include
+	//	3  its three edits: /settings/save, /settings/include, and
+	//	   /settings/exclude (console-excludes-in-one-click)
 	//	2  the engine's process control (add-engine-runtime): /engine/start,
 	//	   /engine/stop
 	//	2  the restarts: /restart, /soak/restart
@@ -297,7 +298,7 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	//
 	// A floor below the truth would let a scanner that read only console.go's
 	// first half go on passing.
-	if len(routes) < 19 {
+	if len(routes) < 20 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -350,12 +351,14 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		// not a thing a page should be able to do.
 		"/engine/start": true,
 		"/engine/stop":  true,
-		// The adoption-settings edits (console-adoption-controls task 3.2). The
-		// only thing either writes is the engine.adoption config block through
-		// the injected seam — no journal, no broker, no account — but a config
-		// that outlives the console is exactly what CSRF must gate.
+		// The adoption-settings edits (console-adoption-controls task 3.2,
+		// console-excludes-in-one-click task 1.19). The only thing any of them
+		// writes is the engine.adoption config block through the injected seam —
+		// no journal, no broker, no account — but a config that outlives the
+		// console is exactly what CSRF must gate.
 		"/settings/save":    true,
 		"/settings/include": true,
+		"/settings/exclude": true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -596,8 +599,9 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 // consoleStateChanging is the complete list of routes that are allowed to change
 // anything, transcribed from the operator-console spec: 콘솔의 상태변경 행위는
 // 검증 실행 제어(시작·승인·중단), 프로세스 기동·정지(자기 재시작·soak 재시작·
-// 엔진 시작/정지), 편입 설정 편집(편입 설정 저장·종목 편입 지정)뿐이다(SHALL —
-// 계좌 무접촉; 편입 설정 편집의 대상은 engine.adoption config 블록만이다).
+// 엔진 시작/정지), 편입 설정 편집(편입 설정 저장·종목 편입 지정·종목 제외 지정)
+// 뿐이다(SHALL — 계좌 무접촉; 편입 설정 편집의 대상은 engine.adoption config
+// 블록만이다).
 //
 // It is the same set TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate uses,
 // named separately here because the two tests ask different questions of it: one
@@ -606,6 +610,7 @@ func TestTheConsoleWritesNothingButTheEvidenceItsRunnerWrites(t *testing.T) {
 var consoleStateChanging = []string{
 	"/verify/start", "/verify/approve", "/verify/abort", "/restart", "/soak/restart",
 	"/engine/start", "/engine/stop", "/settings/save", "/settings/include",
+	"/settings/exclude",
 }
 
 // --- the verbs, spelled once and shared by both surfaces --------------------------
@@ -720,8 +725,11 @@ func routeFindings(r route) []string {
 	// consoleStateChanging in full. The config-write vocabulary is here so a future
 	// unlisted /settings/anything cannot sail past this guard the way an
 	// unrecognized act otherwise would (console-adoption-controls, review P2-7).
+	// "exclude" earns its place the hard way: it does not contain "include", so
+	// before it was listed an unargued /settings/exclude would have sailed past
+	// this guard entirely (console-excludes-in-one-click).
 	actVerbs := append([]string{"start", "stop", "approve", "abort", "restart", "reset", "delete",
-		"save", "include", "enable", "config"},
+		"save", "include", "exclude", "enable", "config"},
 		accountVerbs...)
 
 	var findings []string

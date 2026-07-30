@@ -254,8 +254,12 @@ type positionRow struct {
 	// Designated reports the symbol is on adoption.include_symbols — stamped by
 	// the handler from the settings seam, display only (console-adoption-controls).
 	Designated bool
-	HasExit    bool
-	Exit       journal.ExitState
+	// Excluded reports the symbol is on adoption.exclude_symbols, stamped from the
+	// same read as Designated (console-excludes-in-one-click). Zero value is the
+	// pre-change row in every branch that reads it.
+	Excluded bool
+	HasExit  bool
+	Exit     journal.ExitState
 }
 
 // Basis names the record that justifies the exit baseline, for the operator who
@@ -283,15 +287,23 @@ func (r positionRow) Unknown() bool { return !r.JournalReadable && !r.InJournal 
 
 // Label is the verdict in the status column. The unmanaged labels are fixed by
 // the spec to these exact strings — one spelling each, defined only here: 관리
-// 외(미편입) unchecked, 관리 편입 designated (사용자 UX 결정 2026-07-27). The
-// designated label reports a reservation, not protection — the template keeps
-// the 편입 예약됨 note beside it — and an unreadable journal stays 관리 여부
-// 불명 regardless of designation, because a console that could not open the
-// ledger has not observed anything to promote.
+// 외(미편입) unchecked, 관리 편입 designated (사용자 UX 결정 2026-07-27), 관리
+// 제외 excluded (사용자 결정 2026-07-30). The designated label reports a
+// reservation, not protection — the template keeps the 편입 예약됨 note beside
+// it — and an unreadable journal stays 관리 여부 불명 regardless of either list,
+// because a console that could not open the ledger has not observed anything to
+// promote.
+//
+// Exclusion is judged before designation because the engine judges it first
+// (adoption.go: exclude가 항상 우선). A row on both lists is a row the engine
+// will not adopt, and a label that said 관리 편입 there would be the screen
+// predicting the opposite of what happens.
 func (r positionRow) Label() string {
 	switch {
 	case r.Unknown():
 		return "관리 여부 불명"
+	case !r.Managed() && r.Excluded:
+		return "관리 제외"
 	case !r.Managed() && r.Designated:
 		return "관리 편입"
 	case !r.Managed():

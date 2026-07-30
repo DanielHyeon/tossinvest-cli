@@ -45,8 +45,11 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 	if c.opts.Settings != nil {
 		if block, _, err := c.opts.Settings.Load(); err == nil {
 			page.CanDesignate = true
+			// One Load stamps both lists: two reads could return two different
+			// snapshots and draw a row that is on neither or on both.
 			for i := range page.Snap.Rows {
 				page.Snap.Rows[i].Designated = block.Included(page.Snap.Rows[i].Symbol)
+				page.Snap.Rows[i].Excluded = block.Excludes(page.Snap.Rows[i].Symbol)
 			}
 		}
 	}

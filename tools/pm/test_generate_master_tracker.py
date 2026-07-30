@@ -39,6 +39,7 @@ class TrackerTests(unittest.TestCase):
             "verify-plans-the-object-it-mutates",
             "verify-holds-what-it-awaits",
             "verify-observes-the-trigger",
+            "console-excludes-in-one-click",
         ):
             path = changes / change
             path.mkdir(parents=True)

@@ -1,0 +1,440 @@
+{
+  "file": "internal/console/settings.go",
+  "source_sha256": "9e16a5a2eb45ded5e6eb6c1c78d081c7449259804acdd056a8ef8d1bac068a82",
+  "package": "console",
+  "function": "handleSettingsExclude",
+  "receiver": "Console",
+  "signature": "Console.handleSettingsExclude(params=2, results=0)",
+  "start": {
+    "line": 228,
+    "column": 1
+  },
+  "end": {
+    "line": 290,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 250,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 259,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 232,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 237,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 242,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 252,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 256,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 281,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 12
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 28
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 46
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 21
+      },
+      "text": "c.opts.Settings.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 3
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 86
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 5
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 25
+      },
+      "text": "withoutSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 13
+      },
+      "text": "c.opts.Settings.Save"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 4
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 58
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 3
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 52
+      },
+      "text": "effectNotice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 65
+      },
+      "text": "c.engineRunning"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 6
+      },
+      "text": "next.Excludes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 25
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 32
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 39
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 3
+      },
+      "text": "sort.Strings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 5
+      },
+      "text": "next.Included"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 25
+      },
+      "text": "withoutSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 12
+      },
+      "text": "c.opts.Settings.Save"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 3
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 50
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 2
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 56
+      },
+      "text": "effectNotice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 69
+      },
+      "text": "c.engineRunning"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 249,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 260,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 269,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 270,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 279,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

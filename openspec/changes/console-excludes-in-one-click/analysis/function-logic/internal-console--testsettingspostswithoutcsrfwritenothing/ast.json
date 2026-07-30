@@ -1,0 +1,123 @@
+{
+  "file": "internal/console/settings_test.go",
+  "source_sha256": "fa1bcd448d1d979fdbe5b897e715a1d25e7233dba8c44a92e84e5385c8145b65",
+  "package": "console",
+  "function": "TestSettingsPostsWithoutCSRFWriteNothing",
+  "signature": "TestSettingsPostsWithoutCSRFWriteNothing(params=1, results=0)",
+  "start": {
+    "line": 138,
+    "column": 1
+  },
+  "end": {
+    "line": 155,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 7
+      },
+      "text": "settingsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 11
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 17
+      },
+      "text": "seam.saved"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 149,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

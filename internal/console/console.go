@@ -506,6 +506,7 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/settings", c.session0(c.handleSettings))
 	mux.HandleFunc("/settings/save", c.session0(c.mutating(c.handleSettingsSave)))
 	mux.HandleFunc("/settings/include", c.session0(c.mutating(c.handleSettingsInclude)))
+	mux.HandleFunc("/settings/exclude", c.session0(c.mutating(c.handleSettingsExclude)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.handleStart)))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))

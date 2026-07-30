@@ -1,0 +1,132 @@
+{
+  "file": "internal/console/portfolio_pages.go",
+  "source_sha256": "512d4561d61fbe814e8577eb7c3519ea1df9004d1004d076d8679d6dfafe1580",
+  "package": "console",
+  "function": "handlePositions",
+  "receiver": "Console",
+  "signature": "Console.handlePositions(params=2, results=0)",
+  "start": {
+    "line": 43,
+    "column": 1
+  },
+  "end": {
+    "line": 57,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 50,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 48
+      },
+      "text": "c.positions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 60
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 23
+      },
+      "text": "c.opts.Settings.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 36
+      },
+      "text": "block.Included"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 34
+      },
+      "text": "block.Excludes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 47,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 51,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 52,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

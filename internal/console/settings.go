@@ -173,13 +173,7 @@ func (c *Console) handleSettingsInclude(w http.ResponseWriter, r *http.Request) 
 	next.Rejected = ""
 
 	if r.PostFormValue("remove") == "1" {
-		kept := make([]string, 0, len(next.IncludeSymbols))
-		for _, s := range next.IncludeSymbols {
-			if s != symbol {
-				kept = append(kept, s)
-			}
-		}
-		next.IncludeSymbols = kept
+		next.IncludeSymbols = withoutSymbol(next.IncludeSymbols, symbol)
 		if err := c.opts.Settings.Save(next); err != nil {
 			c.redirectSettings(w, r, "해제 안 됨 — "+err.Error())
 			return
@@ -191,6 +185,17 @@ func (c *Console) handleSettingsInclude(w http.ResponseWriter, r *http.Request) 
 	if !next.Included(symbol) {
 		next.IncludeSymbols = append(append([]string(nil), next.IncludeSymbols...), symbol)
 		sort.Strings(next.IncludeSymbols)
+	}
+	// The engine resolves exclusion ∧ designation by ignoring the designation, so
+	// the standing-rule sentence below is false for an excluded symbol. The row
+	// hides this control on such a row (templates_portfolio.go), but hiding is a
+	// UI decision and this handler is still reachable — refusing would be friction
+	// and recording is harmless, so what changes is that the answer stops claiming
+	// a reservation the engine will not honour (design D6).
+	reserved := symbol + " 편입 예약됨 — 상시 규칙이다(청산 후 재매수도 다음 대사 주기에 재편입)."
+	if next.Excludes(symbol) {
+		reserved = symbol + " 지정은 기록됐으나 편입되지 않는다 — 이 심볼은 제외 목록에 있고 " +
+			"제외가 편입보다 우선한다. 편입하려면 제외를 먼저 해제한다."
 	}
 	// The one-click designation must not bounce the user to a form (사용자 UX
 	// 결정 2026-07-27): when no valid stop fraction was ever chosen, the console
@@ -206,8 +211,93 @@ func (c *Console) handleSettingsInclude(w http.ResponseWriter, r *http.Request) 
 		c.redirectSettings(w, r, "지정 안 됨 — "+err.Error())
 		return
 	}
-	c.redirectSettings(w, r, symbol+" 편입 예약됨 — 상시 규칙이다(청산 후 재매수도 다음 대사 주기에 재편입)."+
-		usedDefault+" "+effectNotice(c.engineRunning()))
+	c.redirectSettings(w, r, reserved+usedDefault+" "+effectNotice(c.engineRunning()))
+}
+
+// handleSettingsExclude designates one symbol as never-adopted, from the row
+// that already names it.
+//
+// It is deliberately not a call into the full form. The form's save rebuilds the
+// whole block from what the browser sent back, so excluding one symbol that way
+// means re-sending the other three values — and a list that fails to make the
+// round trip is a long-term holding that quietly becomes adoptable again. That
+// is the failure LoadRawEngineAdoption was built to prevent
+// (console-adoption-controls review round 1, P1-1); the textarea reopened it at
+// the keyboard. Here the operator sends one symbol and the server re-reads the
+// block, so a value this request never mentioned cannot be lost by it.
+func (c *Console) handleSettingsExclude(w http.ResponseWriter, r *http.Request) {
+	if c.opts.Settings == nil {
+		c.refuse(w, http.StatusNotImplemented, "제외가 배선되지 않았다",
+			"이 빌드의 콘솔에는 편입 설정 저장 seam이 주입되지 않았다.")
+		return
+	}
+	symbol := strings.ToUpper(strings.TrimSpace(r.PostFormValue("symbol")))
+	if symbol == "" {
+		c.refuse(w, http.StatusBadRequest, "심볼이 없다", "제외 지정에는 심볼이 필요하다.")
+		return
+	}
+	current, _, err := c.opts.Settings.Load()
+	if err != nil {
+		c.redirectSettings(w, r, "제외 안 됨 — 설정 파일을 읽을 수 없다: "+err.Error())
+		return
+	}
+
+	next := current
+	next.Rejected = ""
+
+	if r.PostFormValue("remove") == "1" {
+		next.ExcludeSymbols = withoutSymbol(next.ExcludeSymbols, symbol)
+		if err := c.opts.Settings.Save(next); err != nil {
+			c.redirectSettings(w, r, "제외 해제 안 됨 — "+err.Error())
+			return
+		}
+		c.redirectSettings(w, r, symbol+" 제외 해제됨 — 편입 후보로 돌아갈 뿐이고, 실제 편입 여부는 "+
+			"전역 설정과 편입 지정이 정한다. "+effectNotice(c.engineRunning()))
+		return
+	}
+
+	if !next.Excludes(symbol) {
+		next.ExcludeSymbols = append(append([]string(nil), next.ExcludeSymbols...), symbol)
+		sort.Strings(next.ExcludeSymbols)
+	}
+	// Exclusion wins over designation in the engine, so a block carrying both is a
+	// block whose include list has no effect. The console does not write one. This
+	// direction is the conservative one — the engine ends up doing less — so it
+	// happens without asking; the answer says which half went (design D3).
+	dropped := ""
+	if next.Included(symbol) {
+		next.IncludeSymbols = withoutSymbol(next.IncludeSymbols, symbol)
+		dropped = " 같은 심볼의 편입 지정도 함께 해제됐다 — 제외가 편입보다 우선하므로 남겨두면 " +
+			"아무 효과 없는 지정이 된다."
+	}
+	// No default stop fraction is filled in here, and that asymmetry with the
+	// designation path is deliberate. Adoption.validate() demands a fraction when
+	// the INCLUDE list is non-empty; the exclude list is not in that condition. A
+	// fraction written as a side effect of "leave this holding alone" would be a
+	// number the operator never chose, sitting in the file for whenever adoption
+	// is turned on later (design D4).
+	if err := c.opts.Settings.Save(next); err != nil {
+		c.redirectSettings(w, r, "제외 안 됨 — "+err.Error())
+		return
+	}
+	// Present tense would be a lie while the engine is up: it runs on the snapshot
+	// it started with, so it can still adopt this symbol on its very next cycle —
+	// and once adopted, the exclusion is inert for that position forever. The
+	// sentence therefore records the setting and lets effectNotice say when it
+	// bites (adversarial review A1).
+	c.redirectSettings(w, r, symbol+" 편입 제외 기록됨 — 이미 편입된 포지션이 있다면 그 포지션의 "+
+		"손절·익절에는 영향이 없다."+dropped+" "+effectNotice(c.engineRunning()))
+}
+
+// withoutSymbol returns the list with one already-normalised symbol removed.
+func withoutSymbol(list []string, symbol string) []string {
+	kept := make([]string, 0, len(list))
+	for _, s := range list {
+		if s != symbol {
+			kept = append(kept, s)
+		}
+	}
+	return kept
 }
 
 // effectNotice is the fixed honesty line about when a save takes effect.
