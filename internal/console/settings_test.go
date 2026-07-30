@@ -62,6 +62,27 @@ func settingsHarness(t *testing.T, seam *fakeSettings) *dashboardHarness {
 	})
 }
 
+func TestExternalPositionAutomaticManagementHasADiscoverableMenu(t *testing.T) {
+	h := settingsHarness(t, &fakeSettings{})
+	h.authenticate(t)
+
+	page := h.page(t, "/settings")
+	for _, want := range []string{
+		`href="/settings#adoption"`,
+		">외부 종목 자동관리</a>",
+		`<section id="adoption">`,
+		"<h1>외부 종목 자동관리 설정</h1>",
+		"수동 매수",
+		"기존 공통 익절·보호선·손익 극대화 정책",
+		"저장 자체는 편입이나 주문을 실행하지 않는다",
+		"엔진 대사 루프",
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("external-position automatic-management menu is missing %q", want)
+		}
+	}
+}
+
 // TestTheSettingsScreenShowsTheRawBlockAndTheVerdict: a refused block renders
 // the file's own lists next to the reason — the read side of P1-1.
 func TestTheSettingsScreenShowsTheRawBlockAndTheVerdict(t *testing.T) {

@@ -1,0 +1,102 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "837770d1c7b2a4bc4cecd9c1ab99b319ba7e76b339936e390c515e39a370205a",
+  "package": "console",
+  "function": "URL",
+  "receiver": "Console",
+  "signature": "Console.URL(params=0, results=1)",
+  "start": {
+    "line": 434,
+    "column": 1
+  },
+  "end": {
+    "line": 443,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 439,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 436,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 440,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 442,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 10
+      },
+      "text": "strings.TrimSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 29
+      },
+      "text": "c.remote.publicURL.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 10
+      },
+      "text": "c.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 438,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

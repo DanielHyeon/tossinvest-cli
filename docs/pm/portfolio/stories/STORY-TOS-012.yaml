@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-012",
+  "title": "Verify conditional trigger observation",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "verify-observes-the-trigger",
+    "path": "openspec/changes/verify-observes-the-trigger"
+  },
+  "acceptance": ["The verify-observes-the-trigger OpenSpec contract and tasks are satisfied"]
+}

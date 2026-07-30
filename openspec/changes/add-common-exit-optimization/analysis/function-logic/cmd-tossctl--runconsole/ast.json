@@ -1,0 +1,900 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "ef133dc61d797dff9fadf273cb2ac7bd66c9f6c0c404fcdfe9a93195838e60a6",
+  "package": "main",
+  "function": "runConsole",
+  "signature": "runConsole(params=3, results=1)",
+  "start": {
+    "line": 166,
+    "column": 1
+  },
+  "end": {
+    "line": 337,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "else",
+      "at": {
+        "line": 210,
+        "column": 9
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "else",
+      "at": {
+        "line": 220,
+        "column": 9
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 222,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "else",
+      "at": {
+        "line": 230,
+        "column": 10
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 224,
+        "column": 4
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "else",
+      "at": {
+        "line": 226,
+        "column": 11
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 233,
+        "column": 4
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 237,
+        "column": 4
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "else",
+      "at": {
+        "line": 239,
+        "column": 11
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 182,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 186,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 250,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 252,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 279,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 323,
+        "column": 41
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 334,
+        "column": 42
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 335,
+        "column": 42
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 9
+      },
+      "text": "cmd.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 15
+      },
+      "text": "signal.NotifyContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 8
+      },
+      "text": "stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 23
+      },
+      "text": "resolveVerifyRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 25
+      },
+      "text": "resolveVerifyRecordFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 21
+      },
+      "text": "resolveSoakRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 22
+      },
+      "text": "resolveSoakAttestationPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 22
+      },
+      "text": "journal.DefaultPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 15
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 18
+      },
+      "text": "engineJournalDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 22
+      },
+      "text": "enginelock.MarkerPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 15
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 9
+      },
+      "text": "cmd.OutOrStdout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 19
+      },
+      "text": "binstamp.SelfPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 15
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 22
+      },
+      "text": "resolveUpdateCachePath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 4
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 16
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 24
+      },
+      "text": "localupdate.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 5
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 17
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 33
+      },
+      "text": "assembleConsoleSystemUpdate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 11
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 25
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 5
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 17
+      },
+      "text": "cmd.ErrOrStderr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 17
+      },
+      "text": "enginelock.Acquire"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 11
+      },
+      "text": "newConsoleBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 9
+      },
+      "text": "console.ListenAndServe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 28
+      },
+      "text": "consoleVerifyStarter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 28
+      },
+      "text": "soak.DefaultCriteria"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 28
+      },
+      "text": "engine.RequiredEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 11
+      },
+      "text": "strictVerifyActivity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 32
+      },
+      "text": "verifyRunLockPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 65
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 65
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 13
+      },
+      "text": "newConsoleHoldings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 17
+      },
+      "text": "consoleOrdersSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 17
+      },
+      "text": "verifyRunLockPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 17
+      },
+      "text": "consoleSettingsSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 17
+      },
+      "text": "consoleExitPolicySettingsSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 15
+      },
+      "text": "consoleGateLimitsSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 303,
+        "column": 11
+      },
+      "text": "consoleLimitSettingsSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 18
+      },
+      "text": "consoleTradingPolicySeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 18
+      },
+      "text": "consoleGateSwitchSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 12
+      },
+      "text": "consoleSignalsSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 16
+      },
+      "text": "consoleRelaunch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 16
+      },
+      "text": "handoff.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 28
+      },
+      "text": "consoleHandoffPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 48
+      },
+      "text": "restartSoak"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 49
+      },
+      "text": "startEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 49
+      },
+      "text": "stopEngine"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 169,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 207,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 208,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 209,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 221,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 224,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 227,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 228,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 231,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 234,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 235,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 240,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 247,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 248,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 174,
+        "column": 2
+      },
+      "text": "stop"
+    }
+  ]
+}

@@ -11,6 +11,7 @@
 
 /.env
 /.env.*
+!/.env.example
 
 /auth-helper/.venv/
 /auth-helper/.pytest_cache/
@@ -55,6 +56,7 @@ docs/superpowers/
 # 시크릿 — 위 `/.env`, `/.env.*` 는 루트만 덮으므로 하위 디렉터리까지 확장한다.
 .env
 .env.*
+!/.env.example
 
 # TossOS: 루트 CLAUDE.md 는 개발 계약 포인터라 추적한다 (upstream 28행 무시 규칙 재정의)
 !/CLAUDE.md

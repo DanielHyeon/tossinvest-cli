@@ -1,0 +1,7 @@
+{
+  "id": "EPIC-TOS-002",
+  "title": "Execution verification and trading safety",
+  "initiative": "INIT-TOS-002",
+  "intent": "active",
+  "features": ["FEAT-TOS-002", "FEAT-TOS-003"]
+}

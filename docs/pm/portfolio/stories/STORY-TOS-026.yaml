@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-026",
+  "title": "Optimize and configure the common exit policy",
+  "feature": "FEAT-TOS-005",
+  "intent": "active",
+  "openspec": {
+    "change_id": "add-common-exit-optimization",
+    "path": "openspec/changes/add-common-exit-optimization"
+  },
+  "acceptance": ["The add-common-exit-optimization OpenSpec contract and tasks are satisfied"]
+}

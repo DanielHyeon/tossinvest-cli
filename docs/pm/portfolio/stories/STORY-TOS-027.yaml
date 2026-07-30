@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-027",
+  "title": "Add candidate discovery",
+  "feature": "FEAT-TOS-006",
+  "intent": "active",
+  "openspec": {
+    "change_id": "add-candidate-discovery",
+    "path": "openspec/changes/add-candidate-discovery"
+  },
+  "acceptance": ["The add-candidate-discovery OpenSpec contract and tasks are satisfied"]
+}

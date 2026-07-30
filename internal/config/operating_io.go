@@ -105,6 +105,30 @@ func (s *Service) LoadRawTrading() (Trading, error) {
 	return doc.Trading, nil
 }
 
+// LoadEngineAutostart reads the operator's process-lifecycle approval.
+//
+// Missing files, engine blocks and keys all mean false. Autostart is not
+// inferred from the automation gate: the machine may be armed for a deliberate
+// manual start without being approved to start after every reboot.
+func (s *Service) LoadEngineAutostart() (bool, error) {
+	data, err := os.ReadFile(s.path)
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	var doc struct {
+		Engine struct {
+			Autostart bool `json:"autostart"`
+		} `json:"engine"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false, fmt.Errorf("config: parsing %s: %w", s.path, err)
+	}
+	return doc.Engine.Autostart, nil
+}
+
 // SaveTradingPolicy writes the four toggles into config.json, surgically.
 func (s *Service) SaveTradingPolicy(p TradingPolicy) error {
 	return s.spliceInto(func(data []byte) ([]byte, error) {
@@ -125,6 +149,14 @@ func (s *Service) SaveTradingPolicy(p TradingPolicy) error {
 func (s *Service) SaveEngineGateEnabled(on bool) error {
 	return s.spliceInto(func(data []byte) ([]byte, error) {
 		return spliceMembers(data, gateValueSpan, insertEmptyGate, gateSwitchMembers(on))
+	})
+}
+
+// SaveEngineAutostart writes engine.autostart and no other key.
+func (s *Service) SaveEngineAutostart(on bool) error {
+	return s.spliceInto(func(data []byte) ([]byte, error) {
+		return spliceMembers(data, engineValueSpan, insertEmptyEngine,
+			[]gateMember{{"autostart", []byte(boolLiteral(on))}})
 	})
 }
 
@@ -241,6 +273,17 @@ func spliceMembers(
 // tradingValueSpan locates the top-level `trading` object.
 func tradingValueSpan(data []byte) (start, end int64, found bool, err error) {
 	return valueSpan(data, "trading")
+}
+
+// engineValueSpan locates the top-level engine object.
+func engineValueSpan(data []byte) (start, end int64, found bool, err error) {
+	return valueSpan(data, "engine")
+}
+
+// insertEmptyEngine creates the top-level engine block without granting any
+// capability. The caller splices the one requested key afterwards.
+func insertEmptyEngine(data []byte) ([]byte, error) {
+	return insertKey(data, 0, int64(len(data)), "engine", []byte("{}"))
 }
 
 // insertEmptyTrading adds an empty top-level `trading` object.

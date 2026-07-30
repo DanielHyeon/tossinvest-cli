@@ -1,0 +1,39 @@
+{
+  "file": "internal/config/operating_io.go",
+  "source_sha256": "548faa7f244a8b08fbbebdfd235233c1370148b5654fe13d685f79b91721a178",
+  "package": "config",
+  "function": "tradingValueSpan",
+  "signature": "tradingValueSpan(params=1, results=4)",
+  "start": {
+    "line": 242,
+    "column": 1
+  },
+  "end": {
+    "line": 244,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 9
+      },
+      "text": "valueSpan"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

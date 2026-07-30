@@ -61,3 +61,18 @@
       `make test`(회귀 0) + `make vet` + `openspec validate console-adoption-controls
       --strict --no-interactive` + 격리 worktree `make gate CHANGE=console-adoption-controls`
       + 독립 검증
+
+## 5. 요구사항 개정 — 외부 종목 자동관리 메뉴 [M/T]
+
+- [x] 5.1 기존 Story↔change 1:1을 유지하고 proposal/design/operator-console delta를
+      메뉴 발견 가능성 요구로 개정한다. 새 편입·정책·주문 로직은 범위 밖으로 고정하고
+      requirement-change 리뷰를 기록한다.
+- [x] 5.2 RED: navigation에 `외부 종목 자동관리`와 `/settings#adoption`이 없거나,
+      첫 섹션에 anchor·수동 매수·기존 공통 정책·엔진 대사 실행 경계가 없으면 실패하는
+      template 회귀 테스트를 추가한다.
+- [x] 5.3 GREEN: 기존 `/settings` handler/seam을 유지한 채 navigation label/href,
+      adoption section anchor, 제목과 설명만 최소 변경한다.
+- [x] 5.4 VERIFY: focused/race/full/vet/strict/PM 검사를 실행하고 독립 UI·안전 리뷰,
+      Function Logic Map not-applicable 근거, 배포 후 무인증 브라우저 스모크를 기록한다.
+      구현·배포 검증은 `verification.md`에 기록했다. change 전체의 기존 별도 컨텍스트
+      ACCEPT와 이번 UI 경량 Manager 분리 리뷰 패스를 함께 적용했다.

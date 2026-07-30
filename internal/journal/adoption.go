@@ -57,6 +57,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
@@ -142,6 +143,8 @@ type AdoptionRequest struct {
 	SyntheticStop string
 	// ObservedAt is when the observation was taken, RFC3339 UTC.
 	ObservedAt string
+	// ExitPolicyID is empty for legacy RATCHET or one registered common ladder.
+	ExitPolicyID string
 }
 
 // PositionAdoption is one stored adoption record.
@@ -156,6 +159,7 @@ type PositionAdoption struct {
 	SyntheticStop   string
 	ObservedAt      string
 	PreimageDigest  string
+	ExitPolicyID    string
 }
 
 // AdoptPosition records an adoption and points the position at it, in one
@@ -216,11 +220,12 @@ func (j *Journal) AdoptPosition(ctx context.Context, req AdoptionRequest) (Posit
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO position_adoptions
 		  (id, symbol, market, quantity, cost_basis, cost_basis_src, observed_price,
-		   synthetic_stop, observed_at, preimage_digest)
-		VALUES (?,?,?,?,?,?,?,?,?,?)`,
+		   synthetic_stop, observed_at, preimage_digest, exit_policy_id)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
 		adoption.ID, adoption.Symbol, adoption.Market, adoption.Quantity,
 		nullableString(adoption.CostBasis), adoption.CostBasisSource, adoption.ObservedPrice,
-		adoption.SyntheticStop, adoption.ObservedAt, adoption.PreimageDigest); err != nil {
+		adoption.SyntheticStop, adoption.ObservedAt, adoption.PreimageDigest,
+		nullableString(adoption.ExitPolicyID)); err != nil {
 		if isUniqueViolation(err) {
 			return PositionAdoption{}, fmt.Errorf("%w: %s", ErrPositionAlreadyAdopted, adoption.ID)
 		}
@@ -278,7 +283,8 @@ func (j *Journal) OpenAdoptedExitState(ctx context.Context, positionID string) (
 	}
 	return j.OpenExitState(ctx, ExitStateSeed{
 		PositionID:  strings.TrimSpace(positionID),
-		PolicyKind:  ExitPolicyRatchet,
+		PolicyKind:  policyKindForID(adoption.ExitPolicyID),
+		PolicyID:    adoption.ExitPolicyID,
 		EntryPrice:  adoption.ObservedPrice,
 		InitialStop: adoption.SyntheticStop,
 	})
@@ -321,7 +327,8 @@ func (j *Journal) Adoption(ctx context.Context, id string) (PositionAdoption, er
 }
 
 const adoptionSelect = `SELECT a.id, a.symbol, a.market, a.quantity, coalesce(a.cost_basis, ''),
-	a.cost_basis_src, a.observed_price, a.synthetic_stop, a.observed_at, a.preimage_digest
+	a.cost_basis_src, a.observed_price, a.synthetic_stop, a.observed_at, a.preimage_digest,
+	coalesce(a.exit_policy_id,'')
 	FROM position_adoptions a`
 
 func readAdoptionTx(ctx context.Context, tx *sql.Tx, id string) (PositionAdoption, error) {
@@ -340,7 +347,7 @@ func scanAdoption(rows *sql.Rows) (PositionAdoption, error) {
 	var a PositionAdoption
 	if err := rows.Scan(&a.ID, &a.Symbol, &a.Market, &a.Quantity, &a.CostBasis,
 		&a.CostBasisSource, &a.ObservedPrice, &a.SyntheticStop, &a.ObservedAt,
-		&a.PreimageDigest); err != nil {
+		&a.PreimageDigest, &a.ExitPolicyID); err != nil {
 		return PositionAdoption{}, fmt.Errorf("journal: reading an adoption record: %w", err)
 	}
 	return a, nil
@@ -355,6 +362,7 @@ func (r AdoptionRequest) record() (PositionAdoption, error) {
 		ObservedPrice: strings.TrimSpace(r.ObservedPrice),
 		SyntheticStop: strings.TrimSpace(r.SyntheticStop),
 		ObservedAt:    strings.TrimSpace(r.ObservedAt),
+		ExitPolicyID:  strings.TrimSpace(r.ExitPolicyID),
 	}
 	switch {
 	case strings.TrimSpace(r.PositionID) == "":
@@ -367,6 +375,12 @@ func (r AdoptionRequest) record() (PositionAdoption, error) {
 		return PositionAdoption{}, fmt.Errorf(
 			"%w: an adoption records when its observation was taken; a synthetic stop with no "+
 				"observation instant cannot be audited", ErrInvalidRequest)
+	}
+	if a.ExitPolicyID != "" {
+		if _, ok := exitpolicy.CommonPolicyByID(a.ExitPolicyID); !ok {
+			return PositionAdoption{}, fmt.Errorf("%w: unknown common exit policy %q",
+				ErrInvalidRequest, a.ExitPolicyID)
+		}
 	}
 
 	var err error
@@ -444,8 +458,16 @@ func adoptionDigest(positionID string, a PositionAdoption) string {
 	for _, part := range []string{
 		positionID, a.Symbol, a.Market, a.Quantity, a.CostBasis, a.CostBasisSource,
 		a.ObservedPrice, a.SyntheticStop, a.ObservedAt,
+		a.ExitPolicyID,
 	} {
 		fmt.Fprintf(h, "%d:%s|", len(part), part)
 	}
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func policyKindForID(policyID string) string {
+	if strings.TrimSpace(policyID) == "" {
+		return ExitPolicyRatchet
+	}
+	return ExitPolicyLadder
 }

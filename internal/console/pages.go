@@ -36,6 +36,7 @@ import (
 // verifylive/redo.go) — so a table asking the verdict would have hidden the one
 // row that unblocks the chain while the button re-ran it.
 var pageFuncs = template.FuncMap{
+	"add1": func(value int) int { return value + 1 },
 	"inRedo": func(set []verifylive.StepID, id verifylive.StepID) bool {
 		for _, s := range set {
 			if s == id {
@@ -62,12 +63,14 @@ var pages = template.Must(
 		template.Must(
 			template.Must(
 				template.Must(
-					template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates)).
-						Parse(portfolioTemplates)).
-					Parse(settingsTemplates)).
-				Parse(overviewTemplates)).
-			Parse(ordersTemplates)).
-		Parse(signalsTemplates))
+					template.Must(
+						template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates)).
+							Parse(portfolioTemplates)).
+						Parse(settingsTemplates)).
+					Parse(overviewTemplates)).
+				Parse(ordersTemplates)).
+			Parse(signalsTemplates)).
+		Parse(optimizationTemplates))
 
 // --- dashboard --------------------------------------------------------------
 

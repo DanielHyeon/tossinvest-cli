@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-007",
+  "title": "Clear verification leftovers safely",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "verify-clears-leftovers",
+    "path": "openspec/changes/verify-clears-leftovers"
+  },
+  "acceptance": ["The verify-clears-leftovers OpenSpec contract and tasks are satisfied"]
+}

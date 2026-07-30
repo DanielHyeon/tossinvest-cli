@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-002",
+  "title": "Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "align-full-sdd-pm-contract",
+    "path": "openspec/changes/align-full-sdd-pm-contract"
+  },
+  "acceptance": [
+    "docs/WORKFLOW.md follows the StockOS Full SDD sequence while preserving TossOS-specific safety and Go tooling",
+    "Every active OpenSpec change maps to exactly one TossOS Story",
+    "Bootstrap change exceptions are removed from the PM contract and generator",
+    "PM status is derived from OpenSpec artifacts rather than manually asserted"
+  ]
+}

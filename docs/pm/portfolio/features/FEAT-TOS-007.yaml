@@ -1,0 +1,7 @@
+{
+  "id": "FEAT-TOS-007",
+  "title": "Secure remote access and signed releases",
+  "epic": "EPIC-TOS-005",
+  "intent": "active",
+  "stories": ["STORY-TOS-031", "STORY-TOS-032", "STORY-TOS-033"]
+}

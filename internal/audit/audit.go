@@ -43,6 +43,10 @@ const FileName = "audit.log"
 const (
 	// ActionGateToggle is the automation gate being turned on or off.
 	ActionGateToggle = "automation_gate.toggle"
+	// ActionEngineAutostart is the separate process-lifecycle approval. It does
+	// not grant order capability; it records whether console startup may attempt
+	// to start the already-gated engine.
+	ActionEngineAutostart = "engine.autostart"
 	// ActionLimitChange is a Guardian limit being changed.
 	ActionLimitChange = "automation_gate.limit"
 	// ActionGateRefused is a startup the interlock refused. Recorded because a
@@ -73,6 +77,14 @@ const (
 	// may leave the process. An operator asking "when did I allow this thing to
 	// sell" must not have to read that out of a gate line.
 	ActionTradingPolicy = "trading.policy"
+	// ActionExitPolicy is an operator selecting the immutable common
+	// take-profit/protection profile for newly managed positions.
+	ActionExitPolicy = "exit_policy.common"
+	// Remote console authentication events are separate from setting changes.
+	ActionRemoteLogin       = "console.remote.login"
+	ActionRemoteLoginFailed = "console.remote.login_failed"
+	ActionRemoteRateLimited = "console.remote.rate_limited"
+	ActionRemoteLogout      = "console.remote.logout"
 )
 
 // Entry is one recorded change.

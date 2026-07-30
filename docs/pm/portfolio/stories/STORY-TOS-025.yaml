@@ -1,0 +1,15 @@
+{
+  "id": "STORY-TOS-025",
+  "title": "Control automatic management of externally acquired positions",
+  "feature": "FEAT-TOS-005",
+  "intent": "active",
+  "openspec": {
+    "change_id": "console-adoption-controls",
+    "path": "openspec/changes/console-adoption-controls"
+  },
+  "acceptance": [
+    "A clearly named top-level menu opens the existing external-position automatic-management settings",
+    "Manual purchases are adopted only by the existing engine reconciliation path when the operator enables or designates them",
+    "No new order, journal-adoption, or live-toggle authority is added to the console"
+  ]
+}

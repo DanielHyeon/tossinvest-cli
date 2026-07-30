@@ -1,0 +1,267 @@
+{
+  "file": "internal/config/operating_io_test.go",
+  "source_sha256": "ca514568d5f2998c69ca8eabbf06bf594292b6446b0437de890966c9b462067c",
+  "package": "config_test",
+  "function": "TestConcurrentAutostartAndLimitSavesPreserveBoth",
+  "signature": "TestConcurrentAutostartAndLimitSavesPreserveBoth(params=1, results=0)",
+  "start": {
+    "line": 182,
+    "column": 1
+  },
+  "end": {
+    "line": 213,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 15
+      },
+      "text": "writeConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "wg.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 9
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 11
+      },
+      "text": "svc.SaveEngineAutostart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 9
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 11
+      },
+      "text": "svc.SaveEngineGateLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 2
+      },
+      "text": "wg.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 9
+      },
+      "text": "readDoc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 5
+      },
+      "text": "engineOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 45
+      },
+      "text": "engineOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 5
+      },
+      "text": "gateOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 45
+      },
+      "text": "float64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 41
+      },
+      "text": "gateOf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "kind": "go",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 188,
+        "column": 3
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 192,
+        "column": 3
+      },
+      "text": "wg.Done"
+    }
+  ]
+}

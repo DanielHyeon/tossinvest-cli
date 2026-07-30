@@ -1,0 +1,87 @@
+{
+  "file": "internal/journal/adoption.go",
+  "source_sha256": "6adc78fcb71ddfc90ee929f0df2acc005105677d93a61a96c26932bb7a90dcf4",
+  "package": "journal",
+  "function": "adoptionDigest",
+  "signature": "adoptionDigest(params=2, results=1)",
+  "start": {
+    "line": 456,
+    "column": 1
+  },
+  "end": {
+    "line": 466,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 458,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 465,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 7
+      },
+      "text": "sha256.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 28
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 9
+      },
+      "text": "hex.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 28
+      },
+      "text": "h.Sum"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 457,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

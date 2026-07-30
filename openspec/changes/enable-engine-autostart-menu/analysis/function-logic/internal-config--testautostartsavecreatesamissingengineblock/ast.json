@@ -1,0 +1,140 @@
+{
+  "file": "internal/config/operating_io_test.go",
+  "source_sha256": "ca514568d5f2998c69ca8eabbf06bf594292b6446b0437de890966c9b462067c",
+  "package": "config_test",
+  "function": "TestAutostartSaveCreatesAMissingEngineBlock",
+  "signature": "TestAutostartSaveCreatesAMissingEngineBlock(params=1, results=0)",
+  "start": {
+    "line": 150,
+    "column": 1
+  },
+  "end": {
+    "line": 163,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 15
+      },
+      "text": "writeConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 12
+      },
+      "text": "svc.SaveEngineAutostart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 9
+      },
+      "text": "readDoc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 5
+      },
+      "text": "engineOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 27
+      },
+      "text": "engineOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

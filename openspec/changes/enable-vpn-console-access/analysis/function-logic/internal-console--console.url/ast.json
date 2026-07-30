@@ -1,0 +1,133 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "85d2bb460f96627d062ed9cfbccfd64ca13ad3de1dee21d0af3d3d70e8e70178",
+  "package": "console",
+  "function": "URL",
+  "receiver": "Console",
+  "signature": "Console.URL(params=0, results=1)",
+  "start": {
+    "line": 434,
+    "column": 1
+  },
+  "end": {
+    "line": 446,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 436,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 442,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 437,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 439,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 443,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 11
+      },
+      "text": "strings.TrimSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 30
+      },
+      "text": "c.remote.publicURL.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 10
+      },
+      "text": "strings.TrimSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 29
+      },
+      "text": "c.remote.publicURL.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 10
+      },
+      "text": "c.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

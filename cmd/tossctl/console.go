@@ -91,7 +91,14 @@ func consoleProbeSymbol(ctx context.Context, broker verifylive.Broker, market st
 }
 
 type consoleOptions struct {
-	port int
+	port            int
+	bind            string
+	allowedCIDRs    []string
+	publicURL       string
+	tlsCert         string
+	tlsKey          string
+	remoteTokenFile string
+	trustedNetwork  bool
 }
 
 func newConsoleCmd(root *rootOptions) *cobra.Command {
@@ -101,15 +108,21 @@ func newConsoleCmd(root *rootOptions) *cobra.Command {
 		Use:   "console",
 		Short: "Serve the local operator console for the live-account verification",
 		Long: strings.TrimSpace(`
-Serve a small web console on 127.0.0.1 for driving the one-off live-account
-verification from a browser instead of a terminal.
+Serve a small web console for driving the one-off live-account verification
+from a browser instead of a terminal.
 
-It binds the loopback interface and nothing else. There is no flag to change
-that. On start it prints a URL carrying this process's session token — it stays
+	By default it binds 127.0.0.1 and prints a URL carrying this process's session
+token — it stays
 valid until the console stops, and it is not single-use (the single-use one is
 the restart handoff token). Opening that URL in this machine's browser is what
 authenticates you, so possession of this terminal is the credential. Do not
 paste the link anywhere else.
+
+	Remote access is an explicit, all-or-nothing VPN mode. --bind, --allowed-cidr,
+	--public-url, --tls-cert, and --tls-key are required together with exactly one
+	access mode. --trusted-network uses authenticated VPN membership as the
+	application access boundary and presents no login. --remote-token-file retains
+	the compatibility login mode. The two access modes cannot be combined.
 
   overview    /dashboard — engine state, holdings, today's realised P&L, the
               leftovers and the Guardian limits, gathered per market. Read-only:
@@ -131,10 +144,10 @@ identity. It accepts no update path or command, refuses while engine or
 verification work is active, preserves a rollback binary, and restarts on the
 same loopback port only after a successful replacement.
 
-Approving is a three-part act and all three are required: the session token, a
-CSRF token the page carries, and the expiring confirmation string the page shows
-you, typed back by hand. Anything missing or wrong sends nothing. There is no
-flag, here or on ` + "`tossctl verify run`" + `, that answers it for you.
+	Approving still requires the CSRF token the page carries and the expiring
+	confirmation string the page shows you, typed back by hand. Native/token-auth
+	mode also requires its session token. Trusted-network access removes only
+	application login; it does not answer a confirmation or approval for you.
 
 The conditional-order persistence check needs a NEW process, so this console runs
 at most one verification per start: when it stops there, quit with Ctrl-C, start
@@ -160,6 +173,20 @@ rate limit.`),
 
 	cmd.Flags().IntVar(&opts.port, "port", 0,
 		"Loopback port to serve on; 0 lets the OS pick a free one")
+	cmd.Flags().StringVar(&opts.bind, "bind", "",
+		"Remote-mode bind IP (requires every remote access flag)")
+	cmd.Flags().StringSliceVar(&opts.allowedCIDRs, "allowed-cidr", nil,
+		"VPN client CIDR allowed to reach the console; repeat for multiple networks")
+	cmd.Flags().StringVar(&opts.publicURL, "public-url", "",
+		"Canonical HTTPS URL used by remote browsers, including the port")
+	cmd.Flags().StringVar(&opts.tlsCert, "tls-cert", "",
+		"PEM TLS certificate file for the remote public URL")
+	cmd.Flags().StringVar(&opts.tlsKey, "tls-key", "",
+		"PEM TLS private-key file for the remote public URL")
+	cmd.Flags().StringVar(&opts.remoteTokenFile, "remote-token-file", "",
+		"0600 file containing the remote login token (minimum 32 bytes)")
+	cmd.Flags().BoolVar(&opts.trustedNetwork, "trusted-network", false,
+		"Trust host loopback or allowed VPN membership; no application login")
 	return cmd
 }
 
@@ -168,10 +195,15 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	// Ctrl-C has to let a verification in progress finish cancelling whatever it
-	// has resting; internal/console waits for that before it shuts the socket.
-	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
+	// Ctrl-C and the container's SIGTERM have to let account work settle before
+	// the socket and any child engine disappear.
+	ctx, stop := signal.NotifyContext(ctx, consoleTerminationSignals()...)
 	defer stop()
+
+	remote, err := remoteAccessOptions(opts)
+	if err != nil {
+		return err
+	}
 
 	verifyRecord, err := resolveVerifyRecord(root, "")
 	if err != nil {
@@ -215,7 +247,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	var systemUpdater console.SystemUpdater
 	var releaseDownloader console.ReleaseDownloader
 	var releaseCandidateStager console.ReleaseCandidateStager
-	if self, serr := binstamp.SelfPath(); serr != nil {
+	if os.Getenv("TOSSOS_CONTAINER") == "1" {
+		fmt.Fprintln(cmd.ErrOrStderr(),
+			"컨테이너 실행에서는 시스템 업데이트가 비활성이다. 검증된 image를 교체해 업데이트하라.")
+	} else if self, serr := binstamp.SelfPath(); serr != nil {
 		fmt.Fprintf(cmd.ErrOrStderr(), "시스템 업데이트 경로를 해석할 수 없다 (%v). 설정의 업데이트 섹션은 비활성이다.\n", serr)
 	} else {
 		cachePath, cerr := resolveUpdateCachePath(root)
@@ -260,9 +295,22 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	// console process, not once per screen the operator opens. It is still lazy:
 	// nothing is built until a screen asks.
 	reads := newConsoleBroker(root)
+	engineBoot := consoleEngineBootSeam(root)
+	var engineBootLoad func() (bool, error)
+	if engineBoot != nil {
+		engineBootLoad = engineBoot.Load
+	}
+	engineBootNote := runConfiguredEngineAutostart(
+		engineBootLoad,
+		func() (string, error) { return startEngine(root) },
+	)
+	if engineBootNote != "" {
+		fmt.Fprintln(cmd.ErrOrStderr(), engineBootNote)
+	}
 
-	return console.ListenAndServe(ctx, console.Options{
+	serveErr := console.ListenAndServe(ctx, console.Options{
 		Port:                    opts.port,
+		Remote:                  remote,
 		StartVerify:             consoleVerifyStarter(root),
 		SoakRecord:              soakRecord,
 		VerifyRecord:            verifyRecord,
@@ -285,10 +333,11 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Holdings: newConsoleHoldings(reads),
 		// The orders screen's read (change console-orders-screen). One method,
 		// behind which this file makes the three calls a refresh costs.
-		Orders:      consoleOrdersSeam(reads),
-		JournalPath: journalPath,
-		RunLockPath: verifyRunLockPath(verifyRecord),
-		Settings:    consoleSettingsSeam(root),
+		Orders:       consoleOrdersSeam(reads),
+		JournalPath:  journalPath,
+		RunLockPath:  verifyRunLockPath(verifyRecord),
+		Settings:     consoleSettingsSeam(root),
+		ExitPolicies: consoleExitPolicySettingsSeam(root),
 
 		// The overview's read-only view of the Guardian's ceilings (change
 		// console-operator-overview). Five numbers and a currency: this seam
@@ -307,6 +356,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// Both append the audit line the hand-edit path never left.
 		TradingPolicy: consoleTradingPolicySeam(root),
 		Gate:          consoleGateSwitchSeam(root),
+		EngineBoot:    engineBoot,
 
 		// The discovery screen's read (change add-candidate-discovery, task 5.5).
 		// It opens internal/candidate's store, runs its assessment and hands over
@@ -329,10 +379,115 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// trade: `engine run` re-checks the §0.7-approved gate and the whole
 		// startup interlock every time it comes up, and a refusal comes back here
 		// as the engine's own words.
-		EngineMarker: engineMarkerPath,
-		StartEngine:  func() (string, error) { return startEngine(root) },
-		StopEngine:   func() (string, error) { return stopEngine(root) },
+		EngineMarker:   engineMarkerPath,
+		StartEngine:    func() (string, error) { return startEngine(root) },
+		StopEngine:     func() (string, error) { return stopEngine(root) },
+		EngineBootNote: engineBootNote,
 	})
+	return finishConsole(
+		os.Getenv("TOSSOS_CONTAINER") == "1",
+		serveErr,
+		func() (string, error) { return stopEngine(root) },
+		cmd.ErrOrStderr(),
+	)
+}
+
+// finishConsole gives a container-owned engine its graceful-stop budget while
+// preserving the HTTP server's original error. Keeping this policy outside the
+// assembly function makes every shutdown branch testable without signals,
+// sockets, processes, or a broker session.
+func finishConsole(
+	container bool,
+	serveErr error,
+	stopEngine func() (string, error),
+	stderr io.Writer,
+) error {
+	if !container {
+		return serveErr
+	}
+	if stopEngine == nil {
+		return serveErr
+	}
+	note, engineStopErr := stopEngine()
+	if strings.TrimSpace(note) != "" {
+		fmt.Fprintln(stderr, note)
+	}
+	if engineStopErr != nil {
+		fmt.Fprintf(stderr, "컨테이너 종료 중 엔진 정지 실패: %v\n", engineStopErr)
+		if serveErr == nil {
+			return engineStopErr
+		}
+	}
+	return serveErr
+}
+
+func remoteAccessOptions(opts *consoleOptions) (console.RemoteAccess, error) {
+	if opts == nil {
+		return console.RemoteAccess{}, nil
+	}
+	enabled := strings.TrimSpace(opts.bind) != "" || len(opts.allowedCIDRs) != 0 ||
+		strings.TrimSpace(opts.publicURL) != "" || strings.TrimSpace(opts.tlsCert) != "" ||
+		strings.TrimSpace(opts.tlsKey) != "" || strings.TrimSpace(opts.remoteTokenFile) != "" ||
+		opts.trustedNetwork
+	if !enabled {
+		return console.RemoteAccess{}, nil
+	}
+	if opts.trustedNetwork && strings.TrimSpace(opts.remoteTokenFile) != "" {
+		return console.RemoteAccess{}, errors.New("console: --trusted-network and --remote-token-file cannot be combined")
+	}
+	if !opts.trustedNetwork && strings.TrimSpace(opts.remoteTokenFile) == "" {
+		return console.RemoteAccess{}, errors.New("console: remote mode requires --remote-token-file")
+	}
+	var token string
+	if !opts.trustedNetwork {
+		var err error
+		token, err = loadRemoteAccessToken(opts.remoteTokenFile)
+		if err != nil {
+			return console.RemoteAccess{}, err
+		}
+	}
+	return console.RemoteAccess{
+		Bind:           opts.bind,
+		AllowedCIDRs:   append([]string(nil), opts.allowedCIDRs...),
+		PublicURL:      opts.publicURL,
+		TLSCertFile:    opts.tlsCert,
+		TLSKeyFile:     opts.tlsKey,
+		AccessToken:    token,
+		TrustedNetwork: opts.trustedNetwork,
+		RecordAccess: func(event console.RemoteAccessEvent) error {
+			log := openAuditLog()
+			if log == nil {
+				return errors.New("console: remote access audit log is unavailable")
+			}
+			return log.RecordAction(event.Action, "console.remote", event.Peer, event.Detail)
+		},
+	}, nil
+}
+
+func loadRemoteAccessToken(path string) (string, error) {
+	path = strings.TrimSpace(path)
+	info, err := os.Lstat(path)
+	if err != nil {
+		return "", fmt.Errorf("console: reading remote token metadata: %w", err)
+	}
+	if !info.Mode().IsRegular() {
+		return "", errors.New("console: remote token must be a regular file")
+	}
+	if info.Mode().Perm()&0o077 != 0 {
+		return "", fmt.Errorf("console: remote token file %s must not be readable or writable by group/others (use chmod 600)", path)
+	}
+	if info.Size() > 4096 {
+		return "", errors.New("console: remote token file is unexpectedly large")
+	}
+	body, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("console: reading remote token: %w", err)
+	}
+	token := strings.TrimSpace(string(body))
+	if len(token) < 32 {
+		return "", errors.New("console: remote token must contain at least 32 bytes")
+	}
+	return token, nil
 }
 
 // --- the dashboard's broker (change add-operator-dashboard, task 1.3) ------------
@@ -350,6 +505,13 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 // console's own `Settings != nil` wiring test.
 func consoleSettingsSeam(root *rootOptions) console.AdoptionSettings {
 	if s := newAdoptionSettingsSeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
+func consoleExitPolicySettingsSeam(root *rootOptions) console.ExitPolicySettings {
+	if s := newExitPolicySettingsSeam(root); s != nil {
 		return s
 	}
 	return nil
@@ -382,6 +544,13 @@ func consoleTradingPolicySeam(root *rootOptions) console.TradingPolicySettings {
 
 func consoleGateSwitchSeam(root *rootOptions) console.GateSwitch {
 	if s := newGateSwitchSeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
+func consoleEngineBootSeam(root *rootOptions) console.EngineBootSettings {
+	if s := newConsoleEngineBoot(root); s != nil {
 		return s
 	}
 	return nil

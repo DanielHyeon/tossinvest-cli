@@ -1,0 +1,12 @@
+{
+  "id": "FEAT-TOS-006",
+  "title": "Candidate discovery and signal refinement",
+  "epic": "EPIC-TOS-004",
+  "intent": "active",
+  "stories": [
+    "STORY-TOS-027",
+    "STORY-TOS-028",
+    "STORY-TOS-029",
+    "STORY-TOS-030"
+  ]
+}

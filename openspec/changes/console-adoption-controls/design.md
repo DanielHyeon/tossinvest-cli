@@ -99,3 +99,21 @@ judgeHoldings의 게이트 **순서는 유지**(already-managed → RECONCILE �
 High-risk: `judgeHoldings`·`alertUnmanaged`(reconciliation)·`recordGateSettings`(audit)
 기존 함수 수정 — Pre-Edit 선언 + FLM 무면제 + 적대적 Eng 리뷰 + race 테스트. 콘솔
 불변식 개정 포함으로 change 전체에 적대적 관점 적용(라운드 1 완료 — review.md).
+
+## D7 — 외부 종목 자동관리 메뉴 (요구사항 개정 2026-07-31)
+
+기능을 복제하거나 새 route/handler를 만들지 않는다. 상단 navigation의 기존 `/settings`
+링크를 `/settings#adoption`으로 좁히고 표시명을 **외부 종목 자동관리**로 바꾼다.
+`settings` template의 첫 adoption section에 `id="adoption"`을 부여하므로 링크는 현재
+서버측 렌더링·저장 seam·CSRF 경로를 그대로 사용한다.
+
+화면 제목은 **외부 종목 자동관리 설정**으로 하고, 설명은 다음 경계를 분명히 한다.
+
+- 사용자가 수동 매수한 무기록 보유가 대상이다.
+- 자동 편입 ON 또는 종목별 지정이 후보를 결정하며 제외가 항상 우선한다.
+- 편입 완료 후에는 현재 공통 익절·보호선·손익 극대화 정책이 적용된다.
+- 저장은 편입이나 주문을 즉시 실행하지 않으며 다음 엔진 기동의 대사 루프가 수행한다.
+
+변경 표면은 template 상수와 문자열 단언 테스트뿐이다. config, journal, reconcile,
+exit-policy 계산, route 분류, CSRF, 주문·LIVE 권한은 수정하지 않는다. 기존 함수 내부
+로직을 바꾸지 않으므로 이번 개정의 Function Logic Map은 not-applicable이다.

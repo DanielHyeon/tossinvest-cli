@@ -1,0 +1,379 @@
+{
+  "file": "internal/exitpolicy/ladder.go",
+  "source_sha256": "66c4f4356e33a53bca02fa80c4c064058e4d03574d89138fcd85672fd07e8e40",
+  "package": "exitpolicy",
+  "function": "Validate",
+  "receiver": "LadderPolicy",
+  "signature": "LadderPolicy.Validate(params=0, results=1)",
+  "start": {
+    "line": 166,
+    "column": 1
+  },
+  "end": {
+    "line": 204,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 174,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 189,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 199,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 171,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 175,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 184,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 197,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 203,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 10
+      },
+      "text": "refusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 10
+      },
+      "text": "refusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 13
+      },
+      "text": "rung.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 16
+      },
+      "text": "parseRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 20
+      },
+      "text": "parseRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 6
+      },
+      "text": "target.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 11
+      },
+      "text": "refusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 42
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 14
+      },
+      "text": "parseRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 18
+      },
+      "text": "parseRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 6
+      },
+      "text": "stop.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 11
+      },
+      "text": "refusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 40
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 17
+      },
+      "text": "parseRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 11
+      },
+      "text": "refusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 43
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 6
+      },
+      "text": "trail.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 27
+      },
+      "text": "trail.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 37
+      },
+      "text": "big.NewRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 11
+      },
+      "text": "refusal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 174,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 181,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

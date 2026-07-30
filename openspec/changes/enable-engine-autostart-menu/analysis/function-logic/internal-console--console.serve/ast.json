@@ -1,0 +1,384 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "837770d1c7b2a4bc4cecd9c1ab99b319ba7e76b339936e390c515e39a370205a",
+  "package": "console",
+  "function": "Serve",
+  "receiver": "Console",
+  "signature": "Console.Serve(params=2, results=1)",
+  "start": {
+    "line": 481,
+    "column": 1
+  },
+  "end": {
+    "line": 541,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 482,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 508,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "select",
+      "at": {
+        "line": 516,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 518,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 530,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 535,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 484,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 510,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 519,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 521,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 531,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 538,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 540,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 12
+      },
+      "text": "c.listenerAllowed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 7
+      },
+      "text": "ln.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 2
+      },
+      "text": "c.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 11
+      },
+      "text": "String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 11
+      },
+      "text": "ln.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 2
+      },
+      "text": "c.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 504,
+        "column": 2
+      },
+      "text": "c.writeBanner"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 14
+      },
+      "text": "srv.ServeTLS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 13
+      },
+      "text": "srv.Serve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 523,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 524,
+        "column": 9
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 2
+      },
+      "text": "c.settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 528,
+        "column": 25
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 528,
+        "column": 45
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 529,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 530,
+        "column": 12
+      },
+      "text": "srv.Shutdown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 10
+      },
+      "text": "c.opts.Relaunch"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 482,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 483,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 487,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 499,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 506,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 515,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 517,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 522,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 528,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 530,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 507,
+        "column": 2
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 529,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}

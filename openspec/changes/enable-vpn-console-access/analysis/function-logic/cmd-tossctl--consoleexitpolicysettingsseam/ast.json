@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "15885682dd9ba6f9e67f8e2e2c9e81428db488c52603f04d55cbeedba484b1d0",
+  "package": "main",
+  "function": "consoleExitPolicySettingsSeam",
+  "signature": "consoleExitPolicySettingsSeam(params=1, results=1)",
+  "start": {
+    "line": 513,
+    "column": 1
+  },
+  "end": {
+    "line": 518,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 514,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 515,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 517,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 10
+      },
+      "text": "newExitPolicySettingsSeam"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 514,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

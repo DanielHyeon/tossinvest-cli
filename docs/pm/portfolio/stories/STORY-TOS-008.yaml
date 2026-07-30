@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-008",
+  "title": "Make verification survive already-processing responses",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "verify-survives-already-processing",
+    "path": "openspec/changes/verify-survives-already-processing"
+  },
+  "acceptance": ["The verify-survives-already-processing OpenSpec contract and tasks are satisfied"]
+}

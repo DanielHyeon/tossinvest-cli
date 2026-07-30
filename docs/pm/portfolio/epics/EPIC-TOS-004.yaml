@@ -1,0 +1,7 @@
+{
+  "id": "EPIC-TOS-004",
+  "title": "Candidate discovery and entry quality",
+  "initiative": "INIT-TOS-002",
+  "intent": "active",
+  "features": ["FEAT-TOS-006"]
+}

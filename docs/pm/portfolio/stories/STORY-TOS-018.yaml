@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-018",
+  "title": "Require explicit console click approval",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "console-click-approval",
+    "path": "openspec/changes/console-click-approval"
+  },
+  "acceptance": ["The console-click-approval OpenSpec contract and tasks are satisfied"]
+}

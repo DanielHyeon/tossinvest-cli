@@ -297,6 +297,7 @@ func (d *ReconcileDriver) adoptOne(ctx context.Context, c candidate, observed st
 		ObservedPrice: observed,
 		SyntheticStop: stop,
 		ObservedAt:    journal.RFC3339(d.clk.Now()),
+		ExitPolicyID:  d.opts.CommonPolicy,
 	})
 	if err != nil {
 		d.logDeferred(c.position, "the adoption was refused: "+err.Error())
@@ -333,6 +334,7 @@ func (d *ReconcileDriver) adoptOne(ctx context.Context, c candidate, observed st
 			"cost_basis":      adoption.CostBasis,
 			"cost_basis_src":  adoption.CostBasisSource,
 			"observed_at":     adoption.ObservedAt,
+			"exit_policy_id":  adoption.ExitPolicyID,
 		},
 	})
 	// A position that has just been adopted is no longer unmanaged; drop the

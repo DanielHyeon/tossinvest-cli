@@ -60,12 +60,15 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/subtle"
+	"crypto/tls"
 	"encoding/base32"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"net/netip"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -121,6 +124,10 @@ type Options struct {
 	// Port is the loopback port. Zero lets the OS pick a free one, which is the
 	// default: the URL is printed either way and nothing else has to find it.
 	Port int
+
+	// Remote opts into the authenticated VPN console. Its zero value preserves
+	// the original loopback-only terminal-possession mode.
+	Remote RemoteAccess
 
 	// StartVerify is how a verification is run. Required.
 	StartVerify StartVerify
@@ -210,6 +217,9 @@ type Options struct {
 	// settings.go). Nil leaves the settings screen read-only-with-an-explanation
 	// and hides the per-symbol designation buttons.
 	Settings AdoptionSettings
+	// ExitPolicies is the optimization page's load/save-only config seam. It
+	// carries no broker, gate, trading-toggle, or journal authority.
+	ExitPolicies ExitPolicySettings
 
 	// Orders is the read-only view of the account's order record the orders
 	// screen reads (orders.go). It declares one method, behind which the caller
@@ -269,6 +279,11 @@ type Options struct {
 	// read taken outside the file lock. Nil renders the gate section read-only.
 	Gate GateSwitch
 
+	// EngineBoot reads and writes only engine.autostart. It is deliberately
+	// separate from Gate: process lifecycle approval does not grant order
+	// capability, and a gate save must not silently approve reboot starts.
+	EngineBoot EngineBootSettings
+
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
 	// The console shows whether the engine is running and can start and stop the
@@ -289,6 +304,9 @@ type Options struct {
 	// StopEngine signals the running engine and waits for it. Nil hides the
 	// button.
 	StopEngine StopEngine
+	// EngineBootNote is a display-only result from the startup autostart
+	// decision made by cmd/tossctl before the HTTP listener opens.
+	EngineBootNote string
 }
 
 // Console is the server.
@@ -297,6 +315,7 @@ type Console struct {
 	now     func() time.Time
 	out     io.Writer
 	handler http.Handler
+	remote  *remoteRuntime
 
 	// session and csrf are minted once, per process. There is no way to set
 	// either from outside: a preset session token would be a non-interactive
@@ -360,22 +379,32 @@ func New(o Options) (*Console, error) {
 	if o.StartVerify == nil {
 		return nil, ErrNoVerifyWiring
 	}
+	now := o.Now
+	if now == nil {
+		now = func() time.Time { return time.Now().UTC() }
+	}
+	remote, err := newRemoteRuntime(o.Remote, now)
+	if err != nil {
+		return nil, err
+	}
 	c := &Console{
 		opts:     o,
-		now:      o.Now,
+		now:      now,
 		out:      o.Out,
+		remote:   remote,
 		session:  newToken(32),
 		csrf:     newToken(16),
 		relaunch: make(chan int, 1),
-	}
-	if c.now == nil {
-		c.now = func() time.Time { return time.Now().UTC() }
 	}
 	if c.out == nil {
 		c.out = io.Discard
 	}
 	if c.opts.Binary == nil {
 		c.opts.Binary = binstamp.Self
+	}
+	if note := strings.TrimSpace(o.EngineBootNote); note != "" {
+		c.engineNote = note
+		c.engineNoteAt = c.now()
 	}
 	// A console that cannot fingerprint itself keeps the zero stamp, and
 	// binstamp.Stamp.Same then answers "unchanged": an unanswerable question must
@@ -403,6 +432,12 @@ func (c *Console) Addr() string {
 
 // URL is what an operator pastes into a browser.
 func (c *Console) URL() string {
+	if c.remote != nil {
+		if c.remote.trustedNetwork {
+			return strings.TrimSuffix(c.remote.publicURL.String(), "/") + "/"
+		}
+		return strings.TrimSuffix(c.remote.publicURL.String(), "/") + "/login"
+	}
 	addr := c.Addr()
 	if addr == "" {
 		return ""
@@ -422,6 +457,24 @@ func Listen(port int) (net.Listener, error) {
 	return ln, nil
 }
 
+// ListenOn opens the explicitly configured remote socket. It is only used after
+// RemoteAccess has passed the all-or-nothing validation in New.
+func ListenOn(bind string, port int) (net.Listener, error) {
+	addr, err := netip.ParseAddr(strings.TrimSpace(bind))
+	if err != nil {
+		return nil, fmt.Errorf("console: remote bind must be an IP literal: %w", err)
+	}
+	network := "tcp6"
+	if addr.Unmap().Is4() {
+		network = "tcp4"
+	}
+	ln, err := net.Listen(network, net.JoinHostPort(bind, strconv.Itoa(port)))
+	if err != nil {
+		return nil, fmt.Errorf("console: binding %s:%d: %w", bind, port, err)
+	}
+	return ln, nil
+}
+
 // Serve runs the console until ctx is cancelled.
 //
 // A run in progress is not abandoned: the cancellation is handed to the runner,
@@ -429,7 +482,7 @@ func Listen(port int) (net.Listener, error) {
 // mid-cancel. Whatever the run leaves live is printed afterwards with the
 // runner's own naming.
 func (c *Console) Serve(ctx context.Context, ln net.Listener) error {
-	if err := loopbackOnly(ln); err != nil {
+	if err := c.listenerAllowed(ln); err != nil {
 		_ = ln.Close()
 		return err
 	}
@@ -437,11 +490,30 @@ func (c *Console) Serve(ctx context.Context, ln net.Listener) error {
 	c.addr = ln.Addr().String()
 	c.mu.Unlock()
 
-	srv := &http.Server{Handler: c.handler, ReadHeaderTimeout: 10 * time.Second}
+	srv := &http.Server{
+		Handler:           c.handler,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    1 << 20,
+	}
+	if c.remote != nil {
+		srv.TLSConfig = &tls.Config{
+			MinVersion:   tls.VersionTLS13,
+			Certificates: []tls.Certificate{c.remote.certificate},
+		}
+	}
 	c.writeBanner()
 
 	served := make(chan error, 1)
-	go func() { served <- srv.Serve(ln) }()
+	go func() {
+		if c.remote != nil {
+			served <- srv.ServeTLS(ln, "", "")
+			return
+		}
+		served <- srv.Serve(ln)
+	}()
 
 	relaunchPort := 0
 	select {
@@ -477,11 +549,38 @@ func ListenAndServe(ctx context.Context, o Options) error {
 	if err != nil {
 		return err
 	}
-	ln, err := Listen(o.Port)
+	var ln net.Listener
+	if c.remote != nil {
+		ln, err = ListenOn(c.remote.bind.String(), o.Port)
+	} else {
+		ln, err = Listen(o.Port)
+	}
 	if err != nil {
 		return err
 	}
 	return c.Serve(ctx, ln)
+}
+
+func (c *Console) listenerAllowed(ln net.Listener) error {
+	if c.remote == nil {
+		return loopbackOnly(ln)
+	}
+	if ln == nil {
+		return errors.New("console: there is no remote listener")
+	}
+	tcp, ok := ln.Addr().(*net.TCPAddr)
+	if !ok || tcp.IP == nil {
+		return fmt.Errorf("console: remote listener %v is not a TCP address", ln.Addr())
+	}
+	actual, ok := netip.AddrFromSlice(tcp.IP)
+	if !ok {
+		return fmt.Errorf("console: remote listener has an invalid address: %s", ln.Addr())
+	}
+	actual = actual.Unmap()
+	if actual != c.remote.bind {
+		return fmt.Errorf("console: remote listener %s does not match configured bind %s", actual, c.remote.bind)
+	}
+	return nil
 }
 
 // loopbackOnly is the bind refusal.
@@ -501,6 +600,18 @@ func loopbackOnly(ln net.Listener) error {
 
 func (c *Console) writeBanner() {
 	fmt.Fprintf(c.out, "tossctl console — %s\n", c.URL())
+	if c.remote != nil {
+		if c.remote.trustedNetwork {
+			fmt.Fprintf(c.out, "  trusted-network VPN mode. There is no application login. TLS, allowed CIDRs,\n"+
+				"  exact host/origin checks, CSRF, and action audit remain required.\n"+
+				"  Ctrl-C stops the console.\n\n")
+			return
+		}
+		fmt.Fprintf(c.out, "  remote VPN token mode. TLS, allowed CIDRs, host/origin checks, a separate login\n"+
+			"  token, and an audited short-lived session are all required. The token is never printed.\n"+
+			"  Ctrl-C stops the console.\n\n")
+		return
+	}
 	fmt.Fprintf(c.out, "  loopback only. The link above carries this process's session token — valid until the\n"+
 		"  console stops. Opening it in this machine's browser is what authenticates you, so do\n"+
 		"  not paste it anywhere else.\n")
@@ -559,6 +670,11 @@ func (c *Console) writeOutstanding(run *runState) {
 
 func (c *Console) routes() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", c.handleHealth)
+	if c.remote != nil && !c.remote.trustedNetwork {
+		mux.HandleFunc("/login", c.handleRemoteLogin)
+		mux.HandleFunc("/logout", c.session0(c.mutating(c.handleRemoteLogout)))
+	}
 	mux.HandleFunc("/", c.session0(c.handleDashboard))
 	// The two dashboard screens (change add-operator-dashboard). Both are GET
 	// readings and neither is behind `mutating`: there is nothing on them to
@@ -582,10 +698,15 @@ func (c *Console) routes() http.Handler {
 	// carry it for the opposite reason — an audit reader has to be able to tell
 	// which line turned the engine loose.
 	mux.HandleFunc("/settings/gate", c.session0(c.mutating(c.handleSettingsGate)))
+	mux.HandleFunc("/settings/autostart",
+		c.session0(c.mutating(c.startExclusive(c.handleSettingsAutostart))))
 	mux.HandleFunc("/settings/system-update/install",
 		c.session0(c.mutating(c.handleSystemUpdateInstall)))
 	mux.HandleFunc("/settings/system-update/download",
 		c.session0(c.mutating(c.handleSystemUpdateDownload)))
+	mux.HandleFunc("/optimization", c.session0(c.handleOptimization))
+	mux.HandleFunc("/optimization/exit-policy",
+		c.session0(c.mutating(c.handleOptimizationSave)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.startExclusive(c.handleStart))))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))
@@ -615,6 +736,9 @@ func (c *Console) routes() http.Handler {
 	// read of internal/candidate's own store, whose dependency closure is
 	// {internal/clock}.
 	c.registerSignals(mux)
+	if c.remote != nil {
+		return c.remote.security(mux)
+	}
 	return mux
 }
 
@@ -624,6 +748,21 @@ func (c *Console) routes() http.Handler {
 // should be obvious in a diff when one is missing.
 func (c *Console) session0(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if c.remote != nil {
+			if c.remote.trustedNetwork {
+				next(w, r)
+				return
+			}
+			if c.remote.hasSession(r) {
+				next(w, r)
+				return
+			}
+			if c.acceptHandoff(w, r) {
+				return
+			}
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
 		if c.hasSessionCookie(r) {
 			next(w, r)
 			return
@@ -660,6 +799,11 @@ func (c *Console) mutating(next http.HandlerFunc) http.HandlerFunc {
 			w.Header().Set("Allow", http.MethodPost)
 			c.refuse(w, http.StatusMethodNotAllowed, "POST 전용",
 				"승인 경로는 폼 제출로만 도달한다. 아무것도 전송되지 않았다.")
+			return
+		}
+		if c.remote != nil && !c.remote.sameOrigin(r) {
+			c.refuse(w, http.StatusForbidden, "요청 출처가 일치하지 않는다",
+				"원격 쓰기 요청은 설정된 HTTPS 주소에서 시작되어야 한다. 아무것도 전송되지 않았다.")
 			return
 		}
 		if err := r.ParseForm(); err != nil {

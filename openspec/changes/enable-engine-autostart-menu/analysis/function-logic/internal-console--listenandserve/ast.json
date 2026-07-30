@@ -1,0 +1,139 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "837770d1c7b2a4bc4cecd9c1ab99b319ba7e76b339936e390c515e39a370205a",
+  "package": "console",
+  "function": "ListenAndServe",
+  "signature": "ListenAndServe(params=2, results=1)",
+  "start": {
+    "line": 544,
+    "column": 1
+  },
+  "end": {
+    "line": 559,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 546,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 550,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "else",
+      "at": {
+        "line": 552,
+        "column": 9
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 555,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 547,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 556,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 558,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 545,
+        "column": 12
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 551,
+        "column": 13
+      },
+      "text": "ListenOn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 551,
+        "column": 22
+      },
+      "text": "c.remote.bind.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 13
+      },
+      "text": "Listen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 558,
+        "column": 9
+      },
+      "text": "c.Serve"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 545,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 551,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 553,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

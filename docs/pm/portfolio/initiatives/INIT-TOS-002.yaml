@@ -1,0 +1,6 @@
+{
+  "id": "INIT-TOS-002",
+  "title": "TossOS automated trading product",
+  "intent": "active",
+  "epics": ["EPIC-TOS-002", "EPIC-TOS-003", "EPIC-TOS-004"]
+}

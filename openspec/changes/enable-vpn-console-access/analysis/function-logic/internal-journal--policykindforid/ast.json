@@ -1,0 +1,54 @@
+{
+  "file": "internal/journal/adoption.go",
+  "source_sha256": "6adc78fcb71ddfc90ee929f0df2acc005105677d93a61a96c26932bb7a90dcf4",
+  "package": "journal",
+  "function": "policyKindForID",
+  "signature": "policyKindForID(params=1, results=1)",
+  "start": {
+    "line": 468,
+    "column": 1
+  },
+  "end": {
+    "line": 473,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 470,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 469,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

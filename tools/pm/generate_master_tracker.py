@@ -51,15 +51,61 @@ def active_changes(repo_root: Path = ROOT) -> set[str]:
     }
 
 
-def archived_changes(repo_root: Path = ROOT) -> set[str]:
-    archive = repo_root / "openspec" / "changes" / "archive"
-    if not archive.exists():
-        return set()
-    return {
-        re.sub(r"^\d{4}-\d{2}-\d{2}-", "", path.name)
-        for path in archive.iterdir()
-        if path.is_dir() and (path / "proposal.md").exists()
-    }
+def story_contract(story: dict) -> tuple[str | None, str | None]:
+    openspec = story.get("openspec")
+    if not isinstance(openspec, dict):
+        return None, None
+    change_id = openspec.get("change_id")
+    path = openspec.get("path")
+    return (
+        change_id if isinstance(change_id, str) and change_id else None,
+        path if isinstance(path, str) and path else None,
+    )
+
+
+def resolve_story_change(
+    story: dict,
+    repo_root: Path = ROOT,
+) -> tuple[str | None, Path | None, str | None]:
+    change_id, declared = story_contract(story)
+    if change_id is None or declared is None:
+        return change_id, None, "missing OpenSpec change_id/path"
+    relative = Path(declared)
+    if relative.is_absolute() or ".." in relative.parts:
+        return change_id, None, f"invalid OpenSpec path {declared}"
+    target = repo_root / relative
+    if not target.is_dir() or not (target / "proposal.md").exists():
+        return change_id, None, f"invalid OpenSpec path {declared}"
+    active_root = repo_root / "openspec" / "changes"
+    archive_root = active_root / "archive"
+    if target.parent == active_root and target.name == change_id:
+        return change_id, target, None
+    if (
+        target.parent == archive_root
+        and re.sub(r"^\d{4}-\d{2}-\d{2}-", "", target.name) == change_id
+    ):
+        return change_id, target, None
+    return change_id, None, f"invalid OpenSpec path {declared}"
+
+
+def derive_story_status(story: dict, repo_root: Path = ROOT) -> str:
+    _, change_path, error = resolve_story_change(story, repo_root)
+    if error or change_path is None:
+        return "invalid"
+    if change_path.parent.name == "archive":
+        return "archived"
+    tasks = change_path / "tasks.md"
+    if not tasks.exists():
+        return "designed"
+    checkboxes = re.findall(
+        r"(?m)^- \[([ xX])\]\s+",
+        tasks.read_text(encoding="utf-8"),
+    )
+    if not checkboxes:
+        return "designed"
+    if any(value == " " for value in checkboxes):
+        return "in_progress"
+    return "implemented"
 
 
 def validate(repo_root: Path = ROOT) -> list[str]:
@@ -70,6 +116,8 @@ def validate(repo_root: Path = ROOT) -> list[str]:
     features, feature_errors = inspect_objects("features", root)
     stories, story_errors = inspect_objects("stories", root)
     errors = initiative_errors + epic_errors + feature_errors + story_errors
+    if "bootstrap_change_allowlist" in registry:
+        errors.append("registry: bootstrap_change_allowlist is forbidden")
 
     expected = {
         "initiatives": set(initiatives),
@@ -118,26 +166,23 @@ def validate(repo_root: Path = ROOT) -> list[str]:
         parent = features.get(story.get("feature"))
         if parent is None or story["id"] not in parent.get("stories", []):
             errors.append(f"{story['id']}: feature reverse link missing")
+        if "status" in story:
+            errors.append(
+                f"{story['id']}: manual status is forbidden; derive it from OpenSpec"
+            )
 
     by_change: dict[str, list[str]] = {}
     for story in stories.values():
-        change = story.get("change_id")
-        if change:
+        change, _, contract_error = resolve_story_change(story, repo_root)
+        if contract_error:
+            errors.append(f"{story['id']}: {contract_error}")
+        if change is not None:
             by_change.setdefault(change, []).append(story["id"])
     for change, linked in by_change.items():
         if len(linked) != 1:
             errors.append(f"{change}: expected one story, got {linked}")
-        story = stories[linked[0]]
-        if story.get("status") in {"done", "completed"}:
-            if change not in archived_changes(repo_root):
-                errors.append(f"{change}: completed story must point to archived change")
-        elif change not in active_changes(repo_root):
-            errors.append(f"{change}: active story points to inactive/missing change")
-    allowlist = set(registry.get("bootstrap_change_allowlist", []))
-    for change in sorted(active_changes(repo_root) - set(by_change) - allowlist):
-        errors.append(f"{change}: active change has no story or bootstrap exception")
-    for change in sorted(allowlist - active_changes(repo_root)):
-        errors.append(f"{change}: stale bootstrap exception")
+    for change in sorted(active_changes(repo_root) - set(by_change)):
+        errors.append(f"{change}: active change has no Story")
     return errors
 
 
@@ -149,23 +194,38 @@ def render(repo_root: Path = ROOT) -> dict[str, str]:
     stories = objects("stories", root)
     master = ["# TossOS master tracker", ""]
     for initiative in initiatives.values():
-        master.append(f"## {initiative['id']} — {initiative['title']}")
+        master.append(
+            f"## {initiative['id']} — {initiative['title']} "
+            f"[{initiative.get('intent', 'unspecified')}]"
+        )
         for epic_id in initiative.get("epics", []):
             epic = epics[epic_id]
-            master.append(f"- {epic['id']} — {epic['title']} [{epic['status']}]")
+            master.append(
+                f"- {epic['id']} — {epic['title']} "
+                f"[{epic.get('intent', 'unspecified')}]"
+            )
             for feature_id in epic.get("features", []):
                 feature = features[feature_id]
-                master.append(f"  - {feature['id']} — {feature['title']} [{feature['status']}]")
+                master.append(
+                    f"  - {feature['id']} — {feature['title']} "
+                    f"[{feature.get('intent', 'unspecified')}]"
+                )
                 for story_id in feature.get("stories", []):
                     story = stories[story_id]
+                    change_id, _ = story_contract(story)
                     master.append(
-                        f"    - {story['id']} — {story['title']} [{story['status']}] "
-                        f"→ `{story.get('change_id', 'unbound')}`"
+                        f"    - {story['id']} — {story['title']} "
+                        f"[{derive_story_status(story, repo_root)}] "
+                        f"→ `{change_id or 'unbound'}`"
                     )
-    changes = ["# Active change map", "", "| Change | Story | Status |", "|---|---|---|"]
+    changes = ["# OpenSpec change map", "", "| Change | Story | Status |", "|---|---|---|"]
     for story in stories.values():
-        if story.get("change_id"):
-            changes.append(f"| `{story['change_id']}` | {story['id']} | {story['status']} |")
+        change_id, _ = story_contract(story)
+        if change_id:
+            changes.append(
+                f"| `{change_id}` | {story['id']} | "
+                f"{derive_story_status(story, repo_root)} |"
+            )
     readiness = ["# Release readiness", "", "| Story | Acceptance checks |", "|---|---|"]
     for story in stories.values():
         readiness.append(f"| {story['id']} | {len(story.get('acceptance', []))} |")

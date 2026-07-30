@@ -1,0 +1,170 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "85d2bb460f96627d062ed9cfbccfd64ca13ad3de1dee21d0af3d3d70e8e70178",
+  "package": "console",
+  "function": "ListenOn",
+  "signature": "ListenOn(params=2, results=2)",
+  "start": {
+    "line": 462,
+    "column": 1
+  },
+  "end": {
+    "line": 476,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 464,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 465,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 473,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 15
+      },
+      "text": "netip.ParseAddr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 5
+      },
+      "text": "Is4"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 5
+      },
+      "text": "addr.Unmap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 13
+      },
+      "text": "net.Listen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 33
+      },
+      "text": "net.JoinHostPort"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 56
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 467,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 469,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

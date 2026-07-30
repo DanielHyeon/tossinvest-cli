@@ -1,0 +1,7 @@
+{
+  "id": "FEAT-TOS-005",
+  "title": "Position adoption and common exit policy",
+  "epic": "EPIC-TOS-003",
+  "intent": "active",
+  "stories": ["STORY-TOS-025", "STORY-TOS-026"]
+}

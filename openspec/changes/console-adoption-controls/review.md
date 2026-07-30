@@ -1,5 +1,51 @@
 # Review: console-adoption-controls
 
+## requirement-change 리뷰 — 외부 종목 자동관리 메뉴 (2026-07-31)
+
+- 보이스 구성: Manager + 적대적 Eng/UI 안전 리뷰.
+- 사용자 의도: 수동 매수한 외부 종목을 기존 익절·보호선·손익 극대화 정책으로 자동
+  관리하는 설정을 메뉴에서 찾고 제어할 수 있어야 한다.
+- 현재 증거: `engine.adoption.enabled/include/exclude/default_stop_pct`,
+  `judgeHoldings → adopt → adoptOne`, config 저장 seam과 `/settings` UI가 이미 이를
+  수행한다. 새 엔진·정책 로직은 중복이며 허용하지 않는다.
+- 결정: **APPROVE — UI 발견 가능성만 개정**. 기존 `console-adoption-controls` Story와
+  change를 유지하고 navigation·anchor·제목·경계 설명만 수정한다.
+- 안전 처분: 저장은 config만 변경하고 편입·주문을 즉시 실행하지 않는다. 실제 편입은
+  다음 엔진 기동의 Verified reconcile 루프만 수행한다. LIVE 토글, Guardian, journal,
+  주문 경로는 무변경이다.
+- Function Logic Map: not-applicable — template 상수와 문자열 테스트만 바꾸며 기존 Go
+  함수 내부 분기·side effect·fallback은 수정하지 않는다.
+
+### Pre-Edit Gate
+
+```text
+- change/task: console-adoption-controls / 5.2-5.3
+- target symbols: baseTemplates, settingsTemplates; rendered settings test only
+- CodeGraph definition/impact: complete; template-local impact
+- CodeGraphContext: advisory update timed out; no authority taken from it
+- existing behavior: /settings already persists adoption controls; engine reconcile performs adoption
+- Function Logic Map: not-applicable; no function body edit
+- RED first: rendered menu/anchor/title/execution-boundary assertion
+- config/DB/journal rollback: none; text/template-only revision
+- safety: no LIVE toggle, engine start, policy calculation, journal mutation, or order path
+- decision: edit allowed after RED evidence
+```
+
+### 구현·배포 리뷰
+
+- 결과: **UI 개정 ACCEPT**. 기존 자동 편입 설정과 reconcile 경로를 새 기능처럼
+  복제하지 않았고, 메뉴 직접 링크와 실행 경계 설명만 추가했다.
+- 안전: 저장 POST·CSRF·검증·audit seam은 그대로다. 이번 개정은 설정 저장도 실행하지
+  않았으며 주문·journal·엔진 기동·LIVE 권한을 추가하지 않았다.
+- 회귀: 최종 console race, 전체 test/vet/validate, strict OpenSpec, PM 1:1,
+  code-reviewer 정적 검사를 통과했다.
+- 배포: healthy Compose image에서 무인증 `/settings` 렌더와 새 메뉴를 확인했고
+  엔진 마커가 생성되지 않았음을 확인했다.
+- 독립성: change 전체에는 2026-07-27 별도 컨텍스트 독립 검증 ACCEPT가 존재한다.
+  이번 template-only 개정은 WORKFLOW의 UI 경량 리뷰 규칙에 따라 Manager 분리 리뷰
+  패스, 자동 code-reviewer, 런타임 스모크로 재검토했다. 정식 SDD gate가 남아 있으면
+  archive/Full SDD 완료로 승격하지 않는다.
+
 ## proposal-freeze 라운드 1 (2026-07-27)
 
 - 보이스 구성: **적대적 Eng**(별도 컨텍스트 검증 에이전트 — 작성자 분리) + Manager.

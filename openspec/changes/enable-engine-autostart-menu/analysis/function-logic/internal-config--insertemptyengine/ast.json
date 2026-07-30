@@ -1,0 +1,61 @@
+{
+  "file": "internal/config/operating_io.go",
+  "source_sha256": "44646706b6b3ba94c896f21b3ea19435dcc8840e6047fee5502319587813cc59",
+  "package": "config",
+  "function": "insertEmptyEngine",
+  "signature": "insertEmptyEngine(params=1, results=2)",
+  "start": {
+    "line": 285,
+    "column": 1
+  },
+  "end": {
+    "line": 287,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 286,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 9
+      },
+      "text": "insertKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 28
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 34
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 56
+      }
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

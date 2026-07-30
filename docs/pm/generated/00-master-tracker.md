@@ -1,6 +1,51 @@
 # TossOS master tracker
 
-## INIT-TOS-001 — TossOS engineering control system
-- EPIC-TOS-001 — Full SDD adoption [done]
-  - FEAT-TOS-001 — StockOS SDD toolchain adaptation [done]
-    - STORY-TOS-001 — Adopt the full StockOS SDD workflow in TossOS [done] → `adopt-stockos-full-sdd`
+## INIT-TOS-001 — TossOS engineering control system [active]
+- EPIC-TOS-001 — Full SDD adoption [active]
+  - FEAT-TOS-001 — StockOS SDD toolchain adaptation [active]
+    - STORY-TOS-001 — Adopt the full StockOS SDD workflow in TossOS [archived] → `adopt-stockos-full-sdd`
+    - STORY-TOS-002 — Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one [in_progress] → `align-full-sdd-pm-contract`
+- EPIC-TOS-005 — Secure delivery and engineering operations [active]
+  - FEAT-TOS-007 — Secure remote access and signed releases [active]
+    - STORY-TOS-031 — Enable trusted-network VPN console access [implemented] → `enable-vpn-console-access`
+    - STORY-TOS-032 — Update TossOS from the console [implemented] → `console-system-update`
+    - STORY-TOS-033 — Require signed release system updates [implemented] → `signed-release-system-update`
+  - FEAT-TOS-008 — SDD graph service reliability [active]
+    - STORY-TOS-034 — Serialize project GBrain service ownership [implemented] → `serialize-project-gbrain-serve`
+## INIT-TOS-002 — TossOS automated trading product [active]
+- EPIC-TOS-002 — Execution verification and trading safety [active]
+  - FEAT-TOS-002 — Broker execution verification and measurement [active]
+    - STORY-TOS-003 — Verify execution capability before relying on broker behavior [in_progress] → `verify-execution-capability`
+    - STORY-TOS-004 — Measure net risk-reward from executable evidence [implemented] → `add-net-rr-measurement`
+    - STORY-TOS-005 — Verify US market broker behavior [implemented] → `verify-us-market`
+    - STORY-TOS-006 — Apply verified US measurement corrections [implemented] → `apply-us-measurement-fixes`
+    - STORY-TOS-007 — Clear verification leftovers safely [implemented] → `verify-clears-leftovers`
+    - STORY-TOS-008 — Make verification survive already-processing responses [implemented] → `verify-survives-already-processing`
+    - STORY-TOS-009 — Reopen conditional verification chains correctly [implemented] → `verify-reopens-conditional-chain`
+    - STORY-TOS-010 — Verify the exact object a mutation plan will change [implemented] → `verify-plans-the-object-it-mutates`
+    - STORY-TOS-011 — Verify conditional orders await the object they hold [implemented] → `verify-holds-what-it-awaits`
+    - STORY-TOS-012 — Verify conditional trigger observation [in_progress] → `verify-observes-the-trigger`
+  - FEAT-TOS-003 — Engine interlocks and Guardian controls [active]
+    - STORY-TOS-013 — Attest supervised mutation coverage [implemented] → `attest-covers-supervised-mutations`
+    - STORY-TOS-014 — Size the US Guardian risk tier [implemented] → `size-us-guardian-tier`
+    - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [implemented] → `interlock-gates-entry-not-exit`
+    - STORY-TOS-016 — Wire the production risk Guardian [implemented] → `wire-production-risk-guardian`
+    - STORY-TOS-017 — Prime engine account sequence safely [implemented] → `prime-engine-account-seq`
+- EPIC-TOS-003 — Operator console and engine lifecycle [active]
+  - FEAT-TOS-004 — Operator console controls and visibility [active]
+    - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
+    - STORY-TOS-019 — Provide an operator console overview [implemented] → `console-operator-overview`
+    - STORY-TOS-020 — Provide the console orders screen [implemented] → `console-orders-screen`
+    - STORY-TOS-021 — Manage console exclusions in one click [implemented] → `console-excludes-in-one-click`
+    - STORY-TOS-022 — Set Guardian limits from the console [implemented] → `console-sets-guardian-limits`
+    - STORY-TOS-023 — Own operating toggles in the console [implemented] → `console-owns-the-operating-toggles`
+    - STORY-TOS-024 — Configure engine autostart from the menu [implemented] → `enable-engine-autostart-menu`
+  - FEAT-TOS-005 — Position adoption and common exit policy [active]
+    - STORY-TOS-025 — Control automatic management of externally acquired positions [implemented] → `console-adoption-controls`
+    - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
+- EPIC-TOS-004 — Candidate discovery and entry quality [active]
+  - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
+    - STORY-TOS-027 — Add candidate discovery [implemented] → `add-candidate-discovery`
+    - STORY-TOS-028 — Fix chase-veto measurement [implemented] → `fix-chase-veto-measurement`
+    - STORY-TOS-029 — Retire the gainers candidate source [implemented] → `retire-gainers-source`
+    - STORY-TOS-030 — Refine extended-shadow bands [implemented] → `refine-extended-shadow-bands`

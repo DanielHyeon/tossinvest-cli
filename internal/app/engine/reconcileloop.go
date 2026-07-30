@@ -73,6 +73,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
@@ -152,6 +153,9 @@ type ReconcileDriverOptions struct {
 	// complete configuration: the loop still reconciles and still alerts on
 	// unmanaged holdings.
 	Adoption config.Adoption
+	// CommonPolicy is snapshotted into each adoption record. Empty means legacy
+	// RATCHET.
+	CommonPolicy string
 	// DefaultMarket is the venue a holding that names none is recorded under.
 	DefaultMarket string
 }
@@ -288,6 +292,12 @@ func NewReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver, error) {
 		return nil, fmt.Errorf("%w: adoption is on and there is no price read; the synthetic t0 is "+
 			"an observation and cannot be invented", ErrReconcileDriverUnavailable)
 	}
+	if id := strings.TrimSpace(opts.CommonPolicy); id != "" {
+		if _, ok := exitpolicy.CommonPolicyByID(id); !ok {
+			return nil, fmt.Errorf("%w: unknown common exit policy %q", ErrReconcileDriverUnavailable, id)
+		}
+		opts.CommonPolicy = id
+	}
 
 	d := &ReconcileDriver{
 		opts:      opts,
@@ -328,6 +338,7 @@ func (c *Context) ReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver
 	opts.Retrier = c.Retrier
 	opts.AccountRef = c.AccountRef
 	opts.Adoption = c.Config.Engine.Adoption
+	opts.CommonPolicy = c.Config.Engine.ExitPolicy.CommonPolicy
 	if opts.Prices == nil {
 		opts.Prices = c.Official
 	}

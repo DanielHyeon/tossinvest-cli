@@ -50,6 +50,7 @@ const (
 	CandidatePrevious        = "previous"
 	CandidateRealBreakeven   = "real_breakeven"
 	CandidateBaselineRatchet = "baseline_ratchet"
+	CandidateHighWaterRunner = "high_water_runner"
 )
 
 // StopCandidate is one candidate price tagged by the reason it exists. An empty

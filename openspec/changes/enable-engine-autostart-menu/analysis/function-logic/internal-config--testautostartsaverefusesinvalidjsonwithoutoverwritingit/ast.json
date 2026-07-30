@@ -1,0 +1,141 @@
+{
+  "file": "internal/config/operating_io_test.go",
+  "source_sha256": "ca514568d5f2998c69ca8eabbf06bf594292b6446b0437de890966c9b462067c",
+  "package": "config_test",
+  "function": "TestAutostartSaveRefusesInvalidJSONWithoutOverwritingIt",
+  "signature": "TestAutostartSaveRefusesInvalidJSONWithoutOverwritingIt(params=1, results=0)",
+  "start": {
+    "line": 165,
+    "column": 1
+  },
+  "end": {
+    "line": 180,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 174,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 15
+      },
+      "text": "writeConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 9
+      },
+      "text": "svc.SaveEngineAutostart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 20
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 37
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 19
+      },
+      "text": "os.ReadFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 5
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

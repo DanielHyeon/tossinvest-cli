@@ -2,8 +2,11 @@
   "id": "STORY-TOS-001",
   "title": "Adopt the full StockOS SDD workflow in TossOS",
   "feature": "FEAT-TOS-001",
-  "status": "done",
-  "change_id": "adopt-stockos-full-sdd",
+  "intent": "completed",
+  "openspec": {
+    "change_id": "adopt-stockos-full-sdd",
+    "path": "openspec/changes/archive/2026-07-26-adopt-stockos-full-sdd"
+  },
   "acceptance": [
     "All required CLIs pass sdd-doctor",
     "Go Function Logic Map tooling works",

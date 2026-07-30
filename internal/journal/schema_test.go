@@ -212,7 +212,7 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		// quietly widened — adding a second reference column would show up as a
 		// diff in this literal.
 		"position_adoptions": {
-			"cost_basis", "cost_basis_src", "id", "market", "observed_at",
+			"cost_basis", "cost_basis_src", "exit_policy_id", "id", "market", "observed_at",
 			"observed_price", "preimage_digest", "quantity", "symbol", "synthetic_stop",
 		},
 		"positions": {

@@ -328,6 +328,7 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	opts.Issuer = issuer
 	opts.Submit = c.Gateway
 	opts.AccountRef = c.AccountRef
+	opts.CommonPolicy = c.Config.Engine.ExitPolicy.CommonPolicy
 	if opts.Alerts == nil && c.Notifier != nil {
 		opts.Alerts = c.Notifier
 	}

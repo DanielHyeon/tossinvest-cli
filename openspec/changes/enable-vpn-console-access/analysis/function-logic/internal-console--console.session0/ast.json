@@ -1,0 +1,249 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "85d2bb460f96627d062ed9cfbccfd64ca13ad3de1dee21d0af3d3d70e8e70178",
+  "package": "console",
+  "function": "session0",
+  "receiver": "Console",
+  "signature": "Console.session0(params=1, results=1)",
+  "start": {
+    "line": 749,
+    "column": 1
+  },
+  "end": {
+    "line": 789,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 751,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 752,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 756,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 760,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 766,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 772,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 780,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 750,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 754,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 758,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 761,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 764,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 768,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 774,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 781,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 5
+      },
+      "text": "next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 756,
+        "column": 7
+      },
+      "text": "c.remote.hasSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 5
+      },
+      "text": "next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 760,
+        "column": 7
+      },
+      "text": "c.acceptHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 763,
+        "column": 4
+      },
+      "text": "http.Redirect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 6
+      },
+      "text": "c.hasSessionCookie"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 767,
+        "column": 4
+      },
+      "text": "next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 15
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 15
+      },
+      "text": "r.URL.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 45
+      },
+      "text": "tokenEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 773,
+        "column": 4
+      },
+      "text": "c.grantSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 6
+      },
+      "text": "c.acceptHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 3
+      },
+      "text": "c.refuse"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 772,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

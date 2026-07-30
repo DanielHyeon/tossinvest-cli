@@ -2,6 +2,124 @@
 
 운영 측면의 가이드 — API 회귀 감시 cron 설정, 알림 채널 등.
 
+## VPN 원격 콘솔
+
+기본 `tossctl console`은 계속 `127.0.0.1` HTTP와 터미널에 출력된 session URL만
+사용한다. Compose 원격 모드는 이 기본값의 완화가 아니라 별도 배포 모드다. 단일
+운영자의 명시적 선택으로 host loopback 또는 인증된 VPN membership을 application
+접근 경계로 사용하며 별도 로그인은 없다. HTTPS, 실제 peer CIDR, 정확한 Host/Origin,
+기존 CSRF는 계속 통과해야 한다. 원격 접근은 조회 전용이 아니며 현재 콘솔이 제공하는
+설정·엔진 제어·검증 기능을 그대로 쓸 수 있지만,
+새 주문 API나 자동 승인을 추가하지 않는다.
+
+### 사전 준비
+
+호스트의 실제 VPN 주소와 VPN client 대역을 먼저 확인한다. 아래 값은 예시이므로
+그대로 쓰지 않는다.
+
+```bash
+ip -brief address
+ip route
+```
+
+모바일에서 해석 가능한 VPN DNS 이름(예: `console.vpn.example`)을 준비하고 그
+이름이 SAN에 포함된 인증서를 발급한다. 사설 CA를 쓰면 해당 CA를 모바일 OS의
+신뢰 저장소에 설치한다. `--insecure` 우회는 없다.
+
+native 실행 예:
+
+```bash
+tossctl console \
+  --port 37085 \
+  --bind 10.8.0.1 \
+  --allowed-cidr 10.8.0.0/24 \
+  --public-url https://console.vpn.example:37085 \
+  --tls-cert /srv/tossos/secrets/tls.crt \
+  --tls-key /srv/tossos/secrets/tls.key \
+  --trusted-network
+```
+
+모든 remote flag는 한 세트다. 일부만 주거나, 전역 CIDR(`/0`), HTTP URL,
+URL host와 맞지 않는 인증서 또는 접근 모드 누락이면 기동 전에
+실패한다. `X-Forwarded-For`는 신뢰하지 않으므로 NAT가 client VPN 주소를 보존하지
+않는 환경에서는 요청이 닫힌 상태로 거부된다.
+
+Compose는 기본적으로 전용 `172.30.85.0/24` bridge를 만들고 그 대역과 실제 VPN
+client 대역을 각각 허용한다. 이 bridge는 호스트의 loopback publish를 거쳐 접근할
+때 보이는 source 주소를 한정하기 위한 것이다. 해당 대역이 호스트·VPN의 기존 route와
+겹치면 `.env`의 `TOSSOS_CONTAINER_CIDR`을 사용하지 않는 사설 대역으로 바꾼다.
+컨테이너 종료 유예는 75초다. 엔진이 실행 중이면 최대 60초 동안 현재 loop와 journal
+정합 close를 기다린 후 컨테이너를 종료하기 때문이다.
+
+### Docker Compose
+
+`.env.example`을 `.env`로 복사하고 실제 값을 입력한다. 세 secret 원본은 모두
+저장소 밖에 두고 `chmod 600`으로 제한한다. `TOSSOS_UID=$(id -u)`와
+`TOSSOS_GID=$(id -g)`를 설정하고 두 값이 0이 아닌지 확인한다. Compose는 이
+non-root identity로 실행하므로 0600 secret을 읽을 수 있고 config/data directory도
+같은 사용자가 읽고 쓸 수 있다. image 자체의 기본 identity는 `10001:10001`이다.
+
+```bash
+cp .env.example .env
+install -d -m 700 /srv/tossos/config /srv/tossos/data
+docker compose config
+docker compose build
+docker compose up -d
+docker compose ps
+```
+
+Compose의 host publish는
+`${TOSSOS_VPN_BIND_IP}:${TOSSOS_CONSOLE_PORT}:37085`이며 bind IP가 없으면
+`docker compose config`부터 실패한다. `.env`에 `0.0.0.0`이나 LAN/public interface
+주소를 넣지 않는다. 컨테이너 안의 `--bind 0.0.0.0`은 port NAT를 받기 위한
+것이며 host publish 제한과 애플리케이션 CIDR 검사를 없애지 않는다. 호스트
+방화벽에서도 해당 VPN interface와 client CIDR만 허용한다.
+
+`TOSSOS_DATA_DIR`은 `journal.db`와 `audit.log`가 직접 들어 있는 기존 TossOS
+애플리케이션 데이터 디렉터리를 가리킨다. Compose는 이를
+`/var/lib/tossos/data`에 직접 마운트하고 컨테이너의 `TOSSOS_DATA_DIR`도 같은
+경로로 고정한다. XDG base directory를 가리키는 값이 아니므로
+`.../data/tossos`처럼 한 단계 더 중첩하지 않는다.
+
+`/healthz`는 GET/HEAD에 `ok`만 반환하며 계좌·설정 상태를 공개하지 않는다.
+모바일에서는 먼저 VPN 연결 후 `TOSSOS_PUBLIC_URL/healthz`, 이어서 `/`를 확인한다.
+별도 application login이나 token 입력은 없다.
+
+### LIVE 주문과 엔진 자동 시작
+
+설정 화면의 **거래 정책** 네 토글과 **자동화 게이트**는 엔진이 프로그램 주문을
+낼 수 있는지 승인한다. 별도의 **엔진 자동 시작**은 프로세스 수명주기만 승인하며
+기본 OFF다.
+
+- 자동 시작 ON 저장은 기존 [엔진 시작]과 같은 경로로 즉시 기동을 한 번 시도한다.
+- Docker/콘솔이 재기동될 때 ON이면 같은 시도를 한 번 반복한다.
+- automation gate, Guardian 한도, capability attestation, 거래 정책, journal
+  flock 중 하나라도 기존 startup interlock을 통과하지 못하면 엔진은 거부된다.
+- 자동 시작 OFF는 다음 기동만 막는다. 현재 엔진은 대시보드의 [엔진 정지]로
+  graceful shutdown해야 한다.
+- Compose의 `restart: unless-stopped`와 enabled 상태의 Docker service가 부팅 후
+  콘솔을 다시 띄우고, 콘솔이 이 설정을 판정한다. 별도 privileged daemon이나
+  Docker socket mount는 없다.
+
+배포·업데이트 절차는 `engine.autostart`를 임의로 켜지 않는다. ON은 trusted-network
+브라우저의 CSRF 설정 폼에서 운영자가 직접 저장하고 audit에 남긴다.
+
+### 교체·회수·복구
+
+- TLS 인증서는 같은 public host SAN을 유지해 교체하고 container를 재생성한다.
+- broker session secret은 host에서 `tossctl auth login`으로 사람이 갱신한 뒤
+  container를 재생성한다. container 안에서 QR 인증을 자동화하지 않는다.
+- container에서는 콘솔의 self-update를 운영 절차로 사용하지 않는다.
+  `docker compose build` 또는 서명·검증된 image pull 후
+  `docker compose up -d`로 교체한다.
+- rollback은 이전 image tag로 `docker compose up -d`하거나 remote flag를 제거한
+  native loopback 실행으로 돌아간다. rollback도 automation gate를 켜거나 engine을
+  시작하지 않는다.
+
+인터넷 router port-forward, `0.0.0.0:37085` host publish, public cloud security
+group 개방은 이 명세 밖이며 금지한다. 다중 사용자가 필요하면 trusted-network
+범위를 넓히지 말고 IdP/RBAC를 별도 설계한다.
+
 ## API 회귀 감시 (`tossctl monitor api`)
 
 토스 웹 API는 예고 없이 변경됩니다. 과거 두 차례 user-facing 회귀가 있었습니다:

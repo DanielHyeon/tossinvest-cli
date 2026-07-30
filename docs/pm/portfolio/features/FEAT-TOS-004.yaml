@@ -1,0 +1,15 @@
+{
+  "id": "FEAT-TOS-004",
+  "title": "Operator console controls and visibility",
+  "epic": "EPIC-TOS-003",
+  "intent": "active",
+  "stories": [
+    "STORY-TOS-018",
+    "STORY-TOS-019",
+    "STORY-TOS-020",
+    "STORY-TOS-021",
+    "STORY-TOS-022",
+    "STORY-TOS-023",
+    "STORY-TOS-024"
+  ]
+}

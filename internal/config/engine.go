@@ -41,11 +41,35 @@ import (
 // The CLI ignores this block entirely: it configures the unattended engine
 // profile (internal/app/engine), not `tossctl`.
 type Engine struct {
+	// Autostart records the operator's separate approval to attempt an engine
+	// start whenever the console process starts. It does not grant order
+	// capability: the automation gate and the engine's startup interlock remain
+	// the only judges of that. Zero/missing is deliberately off.
+	Autostart      bool           `json:"autostart"`
 	AutomationGate AutomationGate `json:"automation_gate"`
 	// Adoption configures whether externally acquired holdings are taken into
 	// exit management. Zero value = off, which is what every pre-adoption config
 	// produces.
 	Adoption Adoption `json:"adoption"`
+	// ExitPolicy selects the immutable common profile for newly managed
+	// positions. Empty preserves the pre-change RATCHET behavior.
+	ExitPolicy ExitPolicy `json:"exit_policy"`
+}
+
+type ExitPolicy struct {
+	CommonPolicy string `json:"common_policy,omitempty"`
+	Rejected     string `json:"rejected,omitempty"`
+}
+
+func (p ExitPolicy) validate() string {
+	id := strings.TrimSpace(p.CommonPolicy)
+	if id == "" {
+		return ""
+	}
+	if _, ok := exitpolicy.CommonPolicyByID(id); !ok {
+		return "unknown common exit policy " + id
+	}
+	return ""
 }
 
 // Adoption is the external-position adoption feature's settings (change
@@ -219,8 +243,14 @@ type rawAutomationGate struct {
 }
 
 type rawEngine struct {
+	Autostart      *bool              `json:"autostart"`
 	AutomationGate *rawAutomationGate `json:"automation_gate"`
 	Adoption       *rawAdoption       `json:"adoption"`
+	ExitPolicy     *rawExitPolicy     `json:"exit_policy"`
+}
+
+type rawExitPolicy struct {
+	CommonPolicy string `json:"common_policy"`
 }
 
 // mergeAdoption copies a present adoption block onto the defaults, or refuses it.
@@ -275,7 +305,15 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 	if raw == nil {
 		return
 	}
+	if raw.Autostart != nil {
+		cfg.Autostart = *raw.Autostart
+	}
 	mergeAdoption(cfg, raw.Adoption)
+	if raw.ExitPolicy != nil {
+		next := ExitPolicy{CommonPolicy: strings.TrimSpace(raw.ExitPolicy.CommonPolicy)}
+		next.Rejected = next.validate()
+		cfg.ExitPolicy = next
+	}
 	if raw.AutomationGate == nil {
 		return
 	}

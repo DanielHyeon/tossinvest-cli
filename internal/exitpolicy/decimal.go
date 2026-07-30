@@ -73,6 +73,27 @@ func parseRat(field, value string) (*big.Rat, error) {
 	return r, nil
 }
 
+// parseRatio accepts the decimal spelling used by persisted ratios and the
+// exact rational spelling used by immutable policy tables (currently 1/3).
+// Persisted execution totals remain decimals; only a policy ratio may use a
+// slash, so no journal representation changes.
+func parseRatio(field, value string) (*big.Rat, error) {
+	raw := strings.TrimSpace(value)
+	if !strings.Contains(raw, "/") {
+		return parseRat(field, raw)
+	}
+	numerator, denominator, ok := strings.Cut(raw, "/")
+	if !ok || numerator == "" || denominator == "" ||
+		!onlyDigits(numerator) || !onlyDigits(denominator) {
+		return nil, fmt.Errorf("%s %q is not a decimal or positive rational", field, value)
+	}
+	r, ok := new(big.Rat).SetString(raw)
+	if !ok || r.Denom().Sign() <= 0 {
+		return nil, fmt.Errorf("%s %q is not a decimal or positive rational", field, value)
+	}
+	return r, nil
+}
+
 // parseRatOr reads a decimal string, treating "" as the given default. It is for
 // the columns whose empty spelling has a defined meaning — a taken ratio that has
 // never moved is "0", not unknown.

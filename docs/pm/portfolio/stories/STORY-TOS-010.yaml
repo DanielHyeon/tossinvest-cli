@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-010",
+  "title": "Verify the exact object a mutation plan will change",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "verify-plans-the-object-it-mutates",
+    "path": "openspec/changes/verify-plans-the-object-it-mutates"
+  },
+  "acceptance": ["The verify-plans-the-object-it-mutates OpenSpec contract and tasks are satisfied"]
+}

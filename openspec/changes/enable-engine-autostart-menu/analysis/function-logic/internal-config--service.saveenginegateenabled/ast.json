@@ -1,0 +1,63 @@
+{
+  "file": "internal/config/operating_io.go",
+  "source_sha256": "548faa7f244a8b08fbbebdfd235233c1370148b5654fe13d685f79b91721a178",
+  "package": "config",
+  "function": "SaveEngineGateEnabled",
+  "receiver": "Service",
+  "signature": "Service.SaveEngineGateEnabled(params=1, results=1)",
+  "start": {
+    "line": 125,
+    "column": 1
+  },
+  "end": {
+    "line": 129,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 127,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 9
+      },
+      "text": "s.spliceInto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 10
+      },
+      "text": "spliceMembers"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 62
+      },
+      "text": "gateSwitchMembers"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

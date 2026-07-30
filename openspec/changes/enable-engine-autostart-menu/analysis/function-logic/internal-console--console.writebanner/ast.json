@@ -1,0 +1,80 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "837770d1c7b2a4bc4cecd9c1ab99b319ba7e76b339936e390c515e39a370205a",
+  "package": "console",
+  "function": "writeBanner",
+  "receiver": "Console",
+  "signature": "Console.writeBanner(params=0, results=0)",
+  "start": {
+    "line": 598,
+    "column": 1
+  },
+  "end": {
+    "line": 611,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 600,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 604,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 49
+      },
+      "text": "c.URL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 601,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 606,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 609,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

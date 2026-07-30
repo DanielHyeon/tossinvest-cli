@@ -11,6 +11,12 @@
 
 ## What Changes
 
+- **요구사항 개정(2026-07-31 — 메뉴 발견 가능성)**: 이미 구현된 `/settings`의 편입
+  설정을 새 엔진 기능으로 복제하지 않고, 상단 메뉴에서 **외부 종목 자동관리**라는
+  이름과 `#adoption` 직접 링크로 노출한다. 화면 첫 제목·설명은 수동 매수 종목이 기존
+  익절·보호선·손익 극대화 정책에 편입된다는 결과와, 실제 실행 주체가 엔진 대사
+  루프라는 점을 명시한다. 기존 enabled·보호폭·제외·지정 저장 seam과 검증·audit을
+  그대로 사용한다.
 - **종목별 편입(config)**: `adoption.include_symbols` 신설 — enabled=false여도 이 목록의
   심볼은 편입 후보가 된다. 판정: `(enabled ∨ include(심볼)) ∧ ¬exclude(심볼)` — exclude가
   항상 우선. include 경유 편입도 신선 조건·staleness·합성 손절 규칙 전부 동일하다.
@@ -43,6 +49,8 @@
 
 ## Non-Goals
 
+- 별도 편입 엔진, 즉시 journal 편입, 수동 매수 주문 감지용 신규 API, 정책 계산 복제.
+  이번 개정은 기존 자동 편입 기능의 메뉴 발견 가능성과 설명만 바꾼다.
 - **편입 해제 없음 유지**(adopt-external-positions design A5): include 제거·exclude 추가는
   이미 편입된 포지션에 아무 효과가 없다(화면에 명시). 보호 제거 UI는 만들지 않는다.
 - automation_gate(운영 게이트)·Guardian 한도·kill switch의 콘솔 편집 — 금지 유지.

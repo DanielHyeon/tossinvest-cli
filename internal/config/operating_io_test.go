@@ -11,10 +11,12 @@ package config_test
 // carrying values it must not touch, and the assertion is on the bytes.
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
@@ -35,6 +37,7 @@ const full = `{
     "dangerous_automation": { "accept_fx_consent": true }
   },
   "engine": {
+    "autostart": false,
     "automation_gate": {
       "enabled": false,
       "limit_currency": "USD",
@@ -81,6 +84,132 @@ func gateOf(t *testing.T, doc map[string]any) map[string]any {
 		t.Fatalf("no automation_gate in %v", doc)
 	}
 	return gate
+}
+
+func engineOf(t *testing.T, doc map[string]any) map[string]any {
+	t.Helper()
+	engine, ok := doc["engine"].(map[string]any)
+	if !ok {
+		t.Fatalf("no engine in %v", doc)
+	}
+	return engine
+}
+
+func TestAutostartDefaultsOffAndLoadsExplicitValues(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		body string
+		want bool
+	}{
+		{"missing engine", `{"schema_version": 5}`, false},
+		{"missing key", `{"schema_version": 5, "engine": {}}`, false},
+		{"explicit false", `{"schema_version": 5, "engine": {"autostart": false}}`, false},
+		{"explicit true", `{"schema_version": 5, "engine": {"autostart": true}}`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			svc, _ := writeConfig(t, tc.body)
+			cfg, err := svc.Load(context.Background())
+			if err != nil {
+				t.Fatalf("Load: %v", err)
+			}
+			if cfg.Engine.Autostart != tc.want {
+				t.Fatalf("Autostart = %v, want %v", cfg.Engine.Autostart, tc.want)
+			}
+		})
+	}
+	if config.DefaultFile().Engine.Autostart {
+		t.Fatal("a new config must never opt into engine autostart")
+	}
+}
+
+func TestAutostartSaveMovesOnlyItsOwnKey(t *testing.T) {
+	svc, path := writeConfig(t, full)
+
+	if err := svc.SaveEngineAutostart(true); err != nil {
+		t.Fatalf("SaveEngineAutostart: %v", err)
+	}
+
+	doc := readDoc(t, path)
+	engine := engineOf(t, doc)
+	if engine["autostart"] != true {
+		t.Fatalf("autostart = %v, want true", engine["autostart"])
+	}
+	if gateOf(t, doc)["enabled"] != false {
+		t.Fatalf("autostart save moved the automation gate: %v", gateOf(t, doc)["enabled"])
+	}
+	adoption, _ := engine["adoption"].(map[string]any)
+	if adoption["enabled"] != true {
+		t.Fatalf("autostart save moved adoption: %v", adoption)
+	}
+	trading, _ := doc["trading"].(map[string]any)
+	if trading["fractional"] != true || trading["amend"] != true {
+		t.Fatalf("autostart save moved trading: %v", trading)
+	}
+}
+
+func TestAutostartSaveCreatesAMissingEngineBlock(t *testing.T) {
+	svc, path := writeConfig(t, `{"schema_version": 5, "trading": {"sell": true}}`)
+	if err := svc.SaveEngineAutostart(true); err != nil {
+		t.Fatalf("SaveEngineAutostart: %v", err)
+	}
+	doc := readDoc(t, path)
+	if engineOf(t, doc)["autostart"] != true {
+		t.Fatalf("engine = %v", engineOf(t, doc))
+	}
+	trading, _ := doc["trading"].(map[string]any)
+	if trading["sell"] != true {
+		t.Fatalf("autostart save changed an existing sibling block: %v", trading)
+	}
+}
+
+func TestAutostartSaveRefusesInvalidJSONWithoutOverwritingIt(t *testing.T) {
+	const broken = `{"schema_version": 5, "engine": {`
+	svc, path := writeConfig(t, broken)
+
+	err := svc.SaveEngineAutostart(true)
+	if err == nil || !strings.Contains(err.Error(), "valid JSON") {
+		t.Fatalf("err = %v, want invalid JSON refusal", err)
+	}
+	data, readErr := os.ReadFile(path)
+	if readErr != nil {
+		t.Fatalf("ReadFile: %v", readErr)
+	}
+	if string(data) != broken {
+		t.Fatalf("refused save still overwrote the file: %s", data)
+	}
+}
+
+func TestConcurrentAutostartAndLimitSavesPreserveBoth(t *testing.T) {
+	svc, path := writeConfig(t, full)
+	var wg sync.WaitGroup
+	errs := make(chan error, 2)
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		errs <- svc.SaveEngineAutostart(true)
+	}()
+	go func() {
+		defer wg.Done()
+		errs <- svc.SaveEngineGateLimits(config.GuardianLimits{
+			MaxOrderQuantity: 75, MaxOrderNotional: 250, MaxTotalExposure: 900,
+			MaxDailyLossAmount: 40, MaxDailyLossRatio: 0.008, Currency: "USD",
+		})
+	}()
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatalf("concurrent save: %v", err)
+		}
+	}
+
+	doc := readDoc(t, path)
+	if engineOf(t, doc)["autostart"] != true {
+		t.Fatalf("autostart update was lost: %v", engineOf(t, doc))
+	}
+	if gateOf(t, doc)["max_order_quantity"] != float64(75) {
+		t.Fatalf("limit update was lost: %v", gateOf(t, doc))
+	}
 }
 
 // TestTheSwitchSaveMovesOnlyTheSwitch. The ceilings beside it are the ones an

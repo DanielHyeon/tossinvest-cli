@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-011",
+  "title": "Verify conditional orders await the object they hold",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "verify-holds-what-it-awaits",
+    "path": "openspec/changes/verify-holds-what-it-awaits"
+  },
+  "acceptance": ["The verify-holds-what-it-awaits OpenSpec contract and tasks are satisfied"]
+}

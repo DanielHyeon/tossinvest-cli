@@ -1,0 +1,79 @@
+{
+  "file": "cmd/tossctl/engineproc_test.go",
+  "source_sha256": "fe06f3f6ce03ffcdf519d2cb8dced54e7c22ae9f153dc8d9372717515b429211",
+  "package": "main",
+  "function": "TestEngineArgsCarryTheExplicitSessionFileIntoTheChild",
+  "signature": "TestEngineArgsCarryTheExplicitSessionFileIntoTheChild(params=1, results=0)",
+  "start": {
+    "line": 113,
+    "column": 1
+  },
+  "end": {
+    "line": 127,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 10
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 23
+      },
+      "text": "engineArgs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,194 @@
+{
+  "file": "internal/config/operating_io_test.go",
+  "source_sha256": "ca514568d5f2998c69ca8eabbf06bf594292b6446b0437de890966c9b462067c",
+  "package": "config_test",
+  "function": "TestAutostartSaveMovesOnlyItsOwnKey",
+  "signature": "TestAutostartSaveMovesOnlyItsOwnKey(params=1, results=0)",
+  "start": {
+    "line": 125,
+    "column": 1
+  },
+  "end": {
+    "line": 148,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 141,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 15
+      },
+      "text": "writeConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 12
+      },
+      "text": "svc.SaveEngineAutostart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 9
+      },
+      "text": "readDoc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 12
+      },
+      "text": "engineOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 5
+      },
+      "text": "gateOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 60
+      },
+      "text": "gateOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 128,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

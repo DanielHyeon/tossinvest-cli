@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-034",
+  "title": "Serialize project GBrain service ownership",
+  "feature": "FEAT-TOS-008",
+  "intent": "active",
+  "openspec": {
+    "change_id": "serialize-project-gbrain-serve",
+    "path": "openspec/changes/serialize-project-gbrain-serve"
+  },
+  "acceptance": ["The serialize-project-gbrain-serve OpenSpec contract and tasks are satisfied"]
+}

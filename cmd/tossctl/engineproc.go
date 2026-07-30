@@ -212,6 +212,9 @@ func waitForEngineExit(pid int, timeout time.Duration) error {
 // isolated across the button.
 func engineArgs(root *rootOptions) []string {
 	args := []string{"engine", "run"}
+	if root != nil && strings.TrimSpace(root.sessionFile) != "" {
+		args = append([]string{"--session-file", root.sessionFile}, args...)
+	}
 	if root != nil && strings.TrimSpace(root.configDir) != "" {
 		args = append([]string{"--config-dir", root.configDir}, args...)
 	}

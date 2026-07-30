@@ -2,6 +2,6 @@
   "id": "EPIC-TOS-001",
   "title": "Full SDD adoption",
   "initiative": "INIT-TOS-001",
-  "status": "done",
+  "intent": "active",
   "features": ["FEAT-TOS-001"]
 }

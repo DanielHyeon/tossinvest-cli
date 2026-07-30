@@ -3,3 +3,36 @@
 | Story | Acceptance checks |
 |---|---|
 | STORY-TOS-001 | 4 |
+| STORY-TOS-002 | 4 |
+| STORY-TOS-003 | 1 |
+| STORY-TOS-004 | 1 |
+| STORY-TOS-005 | 1 |
+| STORY-TOS-006 | 1 |
+| STORY-TOS-007 | 1 |
+| STORY-TOS-008 | 1 |
+| STORY-TOS-009 | 1 |
+| STORY-TOS-010 | 1 |
+| STORY-TOS-011 | 1 |
+| STORY-TOS-012 | 1 |
+| STORY-TOS-013 | 1 |
+| STORY-TOS-014 | 1 |
+| STORY-TOS-015 | 1 |
+| STORY-TOS-016 | 1 |
+| STORY-TOS-017 | 1 |
+| STORY-TOS-018 | 1 |
+| STORY-TOS-019 | 1 |
+| STORY-TOS-020 | 1 |
+| STORY-TOS-021 | 1 |
+| STORY-TOS-022 | 1 |
+| STORY-TOS-023 | 1 |
+| STORY-TOS-024 | 1 |
+| STORY-TOS-025 | 3 |
+| STORY-TOS-026 | 1 |
+| STORY-TOS-027 | 1 |
+| STORY-TOS-028 | 1 |
+| STORY-TOS-029 | 1 |
+| STORY-TOS-030 | 1 |
+| STORY-TOS-031 | 4 |
+| STORY-TOS-032 | 1 |
+| STORY-TOS-033 | 1 |
+| STORY-TOS-034 | 1 |

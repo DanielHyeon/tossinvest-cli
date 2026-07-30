@@ -1,0 +1,38 @@
+{
+  "file": "internal/config/operating_io.go",
+  "source_sha256": "44646706b6b3ba94c896f21b3ea19435dcc8840e6047fee5502319587813cc59",
+  "package": "config",
+  "function": "engineValueSpan",
+  "signature": "engineValueSpan(params=1, results=4)",
+  "start": {
+    "line": 279,
+    "column": 1
+  },
+  "end": {
+    "line": 281,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 9
+      },
+      "text": "valueSpan"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

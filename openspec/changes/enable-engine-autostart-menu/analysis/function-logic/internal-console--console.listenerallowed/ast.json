@@ -1,0 +1,209 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "837770d1c7b2a4bc4cecd9c1ab99b319ba7e76b339936e390c515e39a370205a",
+  "package": "console",
+  "function": "listenerAllowed",
+  "receiver": "Console",
+  "signature": "Console.listenerAllowed(params=1, results=1)",
+  "start": {
+    "line": 561,
+    "column": 1
+  },
+  "end": {
+    "line": 581,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 562,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 565,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 569,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 573,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 577,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 563,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 566,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 570,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 574,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 578,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 580,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 563,
+        "column": 10
+      },
+      "text": "loopbackOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 566,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 568,
+        "column": 13
+      },
+      "text": "ln.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 73
+      },
+      "text": "ln.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 572,
+        "column": 16
+      },
+      "text": "netip.AddrFromSlice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 76
+      },
+      "text": "ln.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 576,
+        "column": 11
+      },
+      "text": "actual.Unmap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 578,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 568,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 572,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 576,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

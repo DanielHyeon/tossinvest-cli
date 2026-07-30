@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-005",
+  "title": "Verify US market broker behavior",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "verify-us-market",
+    "path": "openspec/changes/verify-us-market"
+  },
+  "acceptance": ["The verify-us-market OpenSpec contract and tasks are satisfied"]
+}

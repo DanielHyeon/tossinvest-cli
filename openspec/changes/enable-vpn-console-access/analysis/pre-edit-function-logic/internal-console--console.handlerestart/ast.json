@@ -1,0 +1,195 @@
+{
+  "file": "internal/console/restart.go",
+  "source_sha256": "cdfd8e277e636952e4687f5b48d520a980f85d61524bce3a9e23baa4b3f236dd",
+  "package": "console",
+  "function": "handleRestart",
+  "receiver": "Console",
+  "signature": "Console.handleRestart(params=2, results=0)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 135,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 110,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 120,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 3
+      },
+      "text": "c.redirectDashboard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 29
+      },
+      "text": "errNoRelaunch.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 12
+      },
+      "text": "c.currentRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 43
+      },
+      "text": "run.finished"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 3
+      },
+      "text": "c.redirectDashboard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 29
+      },
+      "text": "errRunInFlight.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 14
+      },
+      "text": "c.listeningPort"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 3
+      },
+      "text": "c.redirectDashboard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 17
+      },
+      "text": "c.mintHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 11
+      },
+      "text": "restartTarget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 2
+      },
+      "text": "c.render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 2
+      },
+      "text": "c.requestRelaunch"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

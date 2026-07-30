@@ -1,0 +1,194 @@
+{
+  "file": "internal/exitpolicy/decimal.go",
+  "source_sha256": "eded0b568d7c050b7249fb7ca92cebca1cb1cde5949540f2b7b490b740d77ca4",
+  "package": "exitpolicy",
+  "function": "parseRatio",
+  "signature": "parseRatio(params=2, results=2)",
+  "start": {
+    "line": 80,
+    "column": 1
+  },
+  "end": {
+    "line": 95,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 83,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 10
+      },
+      "text": "parseRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 32
+      },
+      "text": "strings.Cut"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 4
+      },
+      "text": "onlyDigits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 30
+      },
+      "text": "onlyDigits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 11
+      },
+      "text": "SetString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 11
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 12
+      },
+      "text": "Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 12
+      },
+      "text": "r.Denom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

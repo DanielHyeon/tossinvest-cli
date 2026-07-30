@@ -97,6 +97,11 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "autostart": {
+          "description": "Operator-approved engine process start when the TossOS console starts. Defaults off and never bypasses the automation gate or startup interlock.",
+          "type": "boolean",
+          "default": false
+        },
         "automation_gate": {
           "description": "Master switch for unattended order placement. Turning it on is a human decision and is recorded in the audit log; the engine still refuses to start without a valid capability attestation and non-zero limits.",
           "type": "object",
@@ -142,6 +147,21 @@
             "exclude_symbols": {
               "type": "array",
               "items": { "type": "string" }
+            }
+          }
+        },
+        "exit_policy": {
+          "description": "Immutable common take-profit/protection profile for newly managed positions. Omitted or empty preserves the legacy RATCHET behavior. Changing it never rebinds an active position.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "common_policy": {
+              "type": "string",
+              "enum": [
+                "COMMON_LADDER_BALANCED",
+                "COMMON_LADDER_RUNNER",
+                "COMMON_LADDER_HYBRID_50"
+              ]
             }
           }
         }

@@ -81,6 +81,12 @@ type settingsPage struct {
 	// the other two sections for the same reason.
 	TradingLoadErr string
 
+	// --- engine lifecycle approval (change enable-engine-autostart-menu) ---
+	AutostartWired   bool
+	Autostart        bool
+	AutostartLoadErr string
+	AutostartNote    string
+
 	// --- staged system update (change console-system-update) ---
 	UpdateWired          bool
 	ReleaseDownloadWired bool
@@ -164,6 +170,15 @@ func (c *Console) handleSettings(w http.ResponseWriter, r *http.Request) {
 	// block including `enabled`, and a second reader of one key is how a screen
 	// ends up disagreeing with itself.
 	page.GateWired = c.opts.Gate != nil
+	if c.opts.EngineBoot != nil {
+		page.AutostartWired = true
+		on, err := c.opts.EngineBoot.Load()
+		if err != nil {
+			page.AutostartLoadErr = err.Error()
+		}
+		page.Autostart = on
+	}
+	page.AutostartNote, _ = c.engineNoteNow()
 	if c.opts.SystemUpdater != nil {
 		page.UpdateWired = true
 		page.Update = c.opts.SystemUpdater.Inspect()

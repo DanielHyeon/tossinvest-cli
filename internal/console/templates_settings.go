@@ -7,12 +7,18 @@ package console
 const settingsTemplates = `
 {{define "settings"}}
 {{template "head" .}}
-<h1>편입 설정</h1>
-<p class="muted">수동 매수 보유를 엔진의 exit 관리(손절·익절·래칫)에 편입하는 규칙과, Guardian이
-자동 진입에 적용하는 한도를 편집한다. 실행은 <strong>엔진</strong>의 몫이고 이 화면은 config의
-<code>engine.adoption</code> 블록과 게이트 블록의 <strong>한도</strong>만 기록한다.
-automation gate(운영 게이트)의 ON/OFF와 kill switch는 이 콘솔에서 편집할 수 없다 — 게이트 ON은 콘솔 밖
-승인 절차이고, 한도 저장은 그 스위치의 바이트에 손대지 않는다.</p>
+<section id="adoption">
+<h1>외부 종목 자동관리 설정</h1>
+<p class="muted">기존 편입 설정을 명확히 분리한 메뉴다. 내가 직접
+<strong>수동 매수</strong>한 무기록 보유를 엔진 관리에 편입하고,
+편입 완료 후 <strong>기존 공통 익절·보호선·손익 극대화 정책</strong>을 그대로 적용하는
+규칙이다. 자동 편입 ON은 제외 종목을 뺀 모든 외부 보유를 후보로 만들고, 종목별 지정은
+자동 편입이 꺼져 있어도 선택한 심볼만 후보로 만든다. 제외가 항상 우선한다.</p>
+<p class="muted"><strong>저장 자체는 편입이나 주문을 실행하지 않는다.</strong>
+이 화면은 계좌·주문·원장을 건드리지 않고 <code>engine.adoption</code> 설정만 기록한다.
+실제 편입은 다음 엔진 기동의 <strong>엔진 대사 루프</strong>가 수행한다.
+이 편입 섹션의 저장으로는 automation gate(운영 게이트)의 ON/OFF와 kill switch를
+<strong>콘솔에서 편집할 수 없다</strong> — 아래 운영 설정은 별도 승인 표면이다.</p>
 
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
 
@@ -56,6 +62,7 @@ automation gate(운영 게이트)의 ON/OFF와 kill switch는 이 콘솔에서 �
   +0.8R부터 편입가 기준 본전이 보호 바닥이 된다.</p>
 </section>
 {{end}}
+</section>
 
 <section id="guardian-limits">
   <h2>Guardian 한도</h2>
@@ -209,6 +216,33 @@ automation gate(운영 게이트)의 ON/OFF와 kill switch는 이 콘솔에서 �
     <strong>자동화 게이트 ON</strong></label></p>
     <p><button type="submit">게이트 저장</button></p>
   </form>
+  {{end}}
+
+  <h3>엔진 자동 시작</h3>
+  <p class="muted">지금 <strong>{{if .Autostart}}ON{{else}}OFF{{end}}</strong>.
+  이 값은 <code>engine.autostart</code> 한 키만 기록한다. ON 저장 직후 엔진 기동을
+  한 번 시도하고, 이후 TossOS 콘솔이 부팅·재기동될 때도 같은 시도를 한다.
+  <strong>automation gate, Guardian 한도, capability attestation, 거래 정책,
+  journal 단일 writer 인터록은 그대로 최종 판단한다.</strong></p>
+  <p class="muted">OFF로 저장해도 현재 엔진은 정지하지 않는다. 현재 프로세스를 끄려면
+  대시보드의 [엔진 정지]를 사용한다.</p>
+  {{if .AutostartLoadErr}}
+  <p class="danger">엔진 자동 시작 설정을 읽을 수 없다: <code>{{.AutostartLoadErr}}</code></p>
+  {{end}}
+  {{if not .AutostartWired}}
+  <p class="notice"><strong>엔진 자동 시작 저장이 배선되지 않았다.</strong>
+  표시는 OFF이지만 저장하거나 기동할 수 없다.</p>
+  {{else}}
+  <form method="post" action="/settings/autostart">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <p><label><input type="checkbox" name="enabled" {{if .Autostart}}checked{{end}}>
+    <strong>엔진 자동 시작 ON</strong></label></p>
+    <p><button type="submit">자동 시작 저장·적용</button></p>
+  </form>
+  {{end}}
+  {{if .AutostartNote}}
+  <p class="notice">마지막 엔진 기동 결과:</p>
+  <pre>{{.AutostartNote}}</pre>
   {{end}}
 </section>
 

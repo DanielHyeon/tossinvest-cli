@@ -1,0 +1,98 @@
+services:
+  tossos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tossos:local
+    user: "${TOSSOS_UID:?set a non-root host uid}:${TOSSOS_GID:?set a non-root host gid}"
+    environment:
+      # The host path is already the application directory. Without this
+      # override XDG_DATA_HOME would append another /tossos and detach the
+      # console/engine from the existing journal and audit log.
+      TOSSOS_DATA_DIR: /var/lib/tossos/data
+    command:
+      - --config-dir
+      - /var/lib/tossos/config
+      - --session-file
+      - /run/tossos/session.json
+      - console
+      - --port
+      - "37085"
+      - --bind
+      - 0.0.0.0
+      - --allowed-cidr
+      - ${TOSSOS_CONTAINER_CIDR:-172.30.85.0/24}
+      - --allowed-cidr
+      - ${TOSSOS_VPN_CIDR:?set the VPN client CIDR}
+      - --public-url
+      - ${TOSSOS_PUBLIC_URL:?set the canonical HTTPS URL}
+      - --tls-cert
+      - /run/tossos/tls.crt
+      - --tls-key
+      - /run/tossos/tls.key
+      - --trusted-network
+    ports:
+      - "${TOSSOS_VPN_BIND_IP:?set the host VPN IP}:${TOSSOS_CONSOLE_PORT:-37085}:37085"
+    volumes:
+      - type: bind
+        source: ${TOSSOS_CONFIG_DIR:?set the host config directory}
+        target: /var/lib/tossos/config
+      - type: bind
+        source: ${TOSSOS_DATA_DIR:?set the host data directory}
+        target: /var/lib/tossos/data
+    secrets:
+      - source: broker-session
+        target: /run/tossos/session.json
+      - source: tls-cert
+        target: /run/tossos/tls.crt
+      - source: tls-key
+        target: /run/tossos/tls.key
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m
+      - /run/tossos:rw,noexec,nosuid,nodev,size=1m,uid=${TOSSOS_UID:?set a non-root host uid},gid=${TOSSOS_GID:?set a non-root host gid},mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+    # stopEngine waits up to 60s for the live-order loop to finish its current
+    # reconciliation and close the journal. Docker's default 10s would turn
+    # that graceful contract into SIGKILL.
+    stop_grace_period: 75s
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-check-certificate -qO- https://127.0.0.1:37085/healthz | grep -qx ok
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - tossos
+
+secrets:
+  broker-session:
+    file: ${TOSSOS_SESSION_FILE:?set the broker session file}
+  tls-cert:
+    file: ${TOSSOS_TLS_CERT_FILE:?set the TLS certificate file}
+  tls-key:
+    file: ${TOSSOS_TLS_KEY_FILE:?set the TLS private-key file}
+
+networks:
+  tossos:
+    driver: bridge
+    ipam:
+      config:
+        # A fixed, dedicated subnet makes the host-to-container request source
+        # predictable without granting every Docker bridge access.
+        - subnet: ${TOSSOS_CONTAINER_CIDR:-172.30.85.0/24}

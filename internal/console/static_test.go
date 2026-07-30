@@ -271,8 +271,12 @@ func opaqueHandler(expr ast.Expr) bool {
 // a developer's laptop includes every browser tab and every agent.
 func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	routes := registeredRoutes(t)
+	public := map[string]bool{
+		"/healthz": true, // fixed response only; container probes need no credential
+		"/login":   true, // the authentication endpoint itself
+	}
 	for _, r := range routes {
-		if !r.Session {
+		if !r.Session && !public[r.Path] {
 			t.Errorf("%s is registered without session0; it is reachable without the session token", r.Path)
 		}
 	}
@@ -300,7 +304,9 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	//
 	// A floor below the truth would let a scanner that read only console.go's
 	// first half go on passing.
-	if len(routes) < 23 {
+	// The authenticated remote surface adds /login, /logout and the fixed
+	// credential-free /healthz probe.
+	if len(routes) < 27 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -377,8 +383,11 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		// this list exists to keep behind the token.
 		"/settings/trading":                true,
 		"/settings/gate":                   true,
+		"/settings/autostart":              true,
 		"/settings/system-update/download": true,
 		"/settings/system-update/install":  true,
+		"/optimization/exit-policy":        true,
+		"/logout":                          true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -633,7 +642,8 @@ var consoleStateChanging = []string{
 	"/verify/start", "/verify/approve", "/verify/abort", "/restart", "/soak/restart",
 	"/engine/start", "/engine/stop", "/settings/save", "/settings/include",
 	"/settings/exclude", "/settings/limits", "/settings/limits/preset",
-	"/settings/trading", "/settings/gate", "/settings/system-update/download",
+	"/settings/trading", "/settings/gate", "/settings/autostart",
+	"/settings/system-update/download",
 	"/settings/system-update/install",
 }
 
@@ -906,6 +916,7 @@ var mutationVerbs = append(append([]string{}, sharedAccountVerbs...), methodOnly
 var consoleCapabilities = map[string]capability{
 	// Plain data: paths, numbers and lists. Nothing to reach an account with.
 	"Port":              {},
+	"Remote":            {},
 	"SoakRecord":        {},
 	"VerifyRecord":      {},
 	"VerifyRecordUS":    {},
@@ -915,6 +926,7 @@ var consoleCapabilities = map[string]capability{
 	"JournalPath":       {},
 	"RunLockPath":       {},
 	"EngineMarker":      {},
+	"EngineBootNote":    {},
 
 	// Func-type seams. A func has no method set, so what is checked is its field
 	// name and every type its signature mentions.
@@ -939,9 +951,13 @@ var consoleCapabilities = map[string]capability{
 	"Out": {},
 
 	// Interface seams: exactly these methods each, and no embedding.
-	"Handoff":  {Methods: []string{"Mint", "Consume"}},
-	"Holdings": {Methods: []string{"Holdings"}},
-	"Settings": {Methods: []string{"Load", "Save"}},
+	"Handoff":    {Methods: []string{"Mint", "Consume"}},
+	"Holdings":   {Methods: []string{"Holdings"}},
+	"Settings":   {Methods: []string{"Load", "Save"}},
+	"EngineBoot": {Methods: []string{"Load", "Save"}},
+	// The common exit-policy editor carries only the typed policy ID block. It
+	// cannot reach broker, journal, automation gate, or trading toggles.
+	"ExitPolicies": {Methods: []string{"Load", "Save"}},
 	// The Guardian limits are a read, and they are a seam of their own rather
 	// than a third method on Settings: that one writes the adoption block, and a
 	// screen that only wants to display a ceiling must not gain the ability to

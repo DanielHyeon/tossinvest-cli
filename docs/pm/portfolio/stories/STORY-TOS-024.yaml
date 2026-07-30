@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-024",
+  "title": "Configure engine autostart from the menu",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "enable-engine-autostart-menu",
+    "path": "openspec/changes/enable-engine-autostart-menu"
+  },
+  "acceptance": ["The enable-engine-autostart-menu OpenSpec contract and tasks are satisfied"]
+}

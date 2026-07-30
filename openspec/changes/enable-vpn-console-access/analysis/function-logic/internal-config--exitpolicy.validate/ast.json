@@ -1,0 +1,93 @@
+{
+  "file": "internal/config/engine.go",
+  "source_sha256": "01f2158931852abd45c063f40ba7d9c6d9a346e28a1d8128daf4a6b3b8126a13",
+  "package": "config",
+  "function": "validate",
+  "receiver": "ExitPolicy",
+  "signature": "ExitPolicy.validate(params=0, results=1)",
+  "start": {
+    "line": 59,
+    "column": 1
+  },
+  "end": {
+    "line": 68,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 62,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 8
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 14
+      },
+      "text": "exitpolicy.CommonPolicyByID"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

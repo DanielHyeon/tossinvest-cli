@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-004",
+  "title": "Measure net risk-reward from executable evidence",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "add-net-rr-measurement",
+    "path": "openspec/changes/add-net-rr-measurement"
+  },
+  "acceptance": ["The add-net-rr-measurement OpenSpec contract and tasks are satisfied"]
+}

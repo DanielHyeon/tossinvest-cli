@@ -115,7 +115,7 @@ func (r Rung) Validate() error {
 	if _, err := parseRat("rung stop percent", r.StopPct); err != nil {
 		return refusal("rung stop percent", err.Error())
 	}
-	ratio, err := parseRat("rung partial ratio", r.PartialRatio)
+	ratio, err := parseRatio("rung partial ratio", r.PartialRatio)
 	if err != nil {
 		return refusal("rung partial ratio", err.Error())
 	}
@@ -133,6 +133,9 @@ type LadderPolicy struct {
 	// FinalTakeFull makes the last rung liquidate the remainder rather than take
 	// its own partial (profit_ladder.py:159).
 	FinalTakeFull bool
+	// RunnerTrailPct protects the remainder from the high-water mark after the
+	// final rung. Empty disables the runner.
+	RunnerTrailPct string
 }
 
 // DefaultLadderPolicy is `default_policy()` (profit_ladder.py:163-176) verbatim:
@@ -186,6 +189,15 @@ func (p LadderPolicy) Validate() error {
 		if stop.Cmp(prevStop) < 0 {
 			return refusal("rung stop percent", fmt.Sprintf(
 				"rung stop_pct must be monotonically non-decreasing; %s < %s", rung.StopPct, prev.StopPct))
+		}
+	}
+	if p.RunnerTrailPct != "" {
+		trail, err := parseRat("runner trail percent", p.RunnerTrailPct)
+		if err != nil {
+			return refusal("runner trail percent", err.Error())
+		}
+		if trail.Sign() <= 0 || trail.Cmp(big.NewRat(100, 1)) >= 0 {
+			return refusal("runner trail percent", "runner trail percent must be in (0, 100)")
 		}
 	}
 	return nil
@@ -355,7 +367,19 @@ func EvaluateLadder(in LadderInput) (LadderTransition, error) {
 		if err != nil {
 			return LadderTransition{}, err
 		}
-		composed, err := ComputeProtectedStop(BuildCandidates(in.Baseline, "", lock), in.Baseline)
+		candidates := BuildCandidates(in.Baseline, "", lock)
+		if newIndex == len(in.Policy.Rungs)-1 && in.Policy.RunnerTrailPct != "" {
+			trailPct, err := parseRat("runner trail percent", in.Policy.RunnerTrailPct)
+			if err != nil {
+				return LadderTransition{}, refusal("runner trail percent", err.Error())
+			}
+			multiplier := new(big.Rat).Sub(one, new(big.Rat).Quo(trailPct, big.NewRat(100, 1)))
+			trail := new(big.Rat).Mul(probe, multiplier)
+			candidates = append(candidates, StopCandidate{
+				Name: CandidateHighWaterRunner, Price: formatPrice(trail),
+			})
+		}
+		composed, err := ComputeProtectedStop(candidates, in.Baseline)
 		if err != nil {
 			return LadderTransition{}, err
 		}
@@ -471,7 +495,7 @@ func percentOf(price, entry *big.Rat) *big.Rat {
 }
 
 func isPositive(value string) bool {
-	r, err := parseRat("value", value)
+	r, err := parseRatio("value", value)
 	return err == nil && r.Sign() > 0
 }
 

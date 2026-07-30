@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-031",
+  "title": "Enable trusted-network VPN console access",
+  "feature": "FEAT-TOS-007",
+  "intent": "active",
+  "openspec": {
+    "change_id": "enable-vpn-console-access",
+    "path": "openspec/changes/enable-vpn-console-access"
+  },
+  "acceptance": [
+    "The loopback-published console opens without an application login",
+    "The VPN-published console opens without an application login",
+    "VPN CIDR, explicit host bind, TLS, Host/Origin, and CSRF boundaries remain enforced",
+    "LIVE order and operating-toggle human approval invariants remain enforced"
+  ]
+}

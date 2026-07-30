@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-023",
+  "title": "Own operating toggles in the console",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "console-owns-the-operating-toggles",
+    "path": "openspec/changes/console-owns-the-operating-toggles"
+  },
+  "acceptance": ["The console-owns-the-operating-toggles OpenSpec contract and tasks are satisfied"]
+}

@@ -77,7 +77,8 @@ form { display: inline; }
     <a href="/orders" {{if eq .Nav "orders"}}class="on"{{end}}>주문</a>
     <a href="/signals" {{if eq .Nav "signals"}}class="on"{{end}}>발굴 신호</a>
     <a href="/history" {{if eq .Nav "history"}}class="on"{{end}}>거래 이력</a>
-    <a href="/settings" {{if eq .Nav "settings"}}class="on"{{end}}>편입 설정</a>
+    <a href="/settings#adoption" {{if eq .Nav "settings"}}class="on"{{end}}>외부 종목 자동관리</a>
+    <a href="/optimization" {{if eq .Nav "optimization"}}class="on"{{end}}>최적화</a>
     <a href="/verify" {{if eq .Nav "verify"}}class="on"{{end}}>검증</a>
     <a href="/report" {{if eq .Nav "report"}}class="on"{{end}}>리포트</a>
   </nav>

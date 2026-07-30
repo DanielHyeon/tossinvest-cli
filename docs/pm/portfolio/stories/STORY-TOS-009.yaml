@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-009",
+  "title": "Reopen conditional verification chains correctly",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "verify-reopens-conditional-chain",
+    "path": "openspec/changes/verify-reopens-conditional-chain"
+  },
+  "acceptance": ["The verify-reopens-conditional-chain OpenSpec contract and tasks are satisfied"]
+}

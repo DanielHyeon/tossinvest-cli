@@ -110,6 +110,22 @@ func TestStartingSpawnsTheEngineWithThisProfilesConfigDir(t *testing.T) {
 	}
 }
 
+func TestEngineArgsCarryTheExplicitSessionFileIntoTheChild(t *testing.T) {
+	args := strings.Join(engineArgs(&rootOptions{
+		configDir:   "/var/lib/tossos/config",
+		sessionFile: "/run/tossos/session.json",
+	}), " ")
+	for _, want := range []string{
+		"--config-dir /var/lib/tossos/config",
+		"--session-file /run/tossos/session.json",
+		"engine run",
+	} {
+		if !strings.Contains(args, want) {
+			t.Fatalf("args = %q, missing %q", args, want)
+		}
+	}
+}
+
 // TestARefusedStartReportsTheEnginesOwnLog is what makes the console unable to
 // paper over an unmet interlock: the refusal the engine printed is what comes
 // back.

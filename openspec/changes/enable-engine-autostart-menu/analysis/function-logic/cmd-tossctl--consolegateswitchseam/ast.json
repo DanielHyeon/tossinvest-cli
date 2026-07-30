@@ -1,0 +1,63 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "e6159d29ec6c306f4a9a942c50e634235683d592e393c0f37ccb6eac6bb92a81",
+  "package": "main",
+  "function": "consoleGateSwitchSeam",
+  "signature": "consoleGateSwitchSeam(params=1, results=1)",
+  "start": {
+    "line": 383,
+    "column": 1
+  },
+  "end": {
+    "line": 388,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 10
+      },
+      "text": "newGateSwitchSeam"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 384,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -1,0 +1,140 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "aec87df0eb373e7771cf18420a98de1dc480c98d32d42db6ee6ccda4b230d378",
+  "package": "console",
+  "function": "loopbackOnly",
+  "signature": "loopbackOnly(params=1, results=1)",
+  "start": {
+    "line": 491,
+    "column": 1
+  },
+  "end": {
+    "line": 503,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 492,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 493,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 497,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 500,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 502,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 13
+      },
+      "text": "ln.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 68
+      },
+      "text": "ln.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 23
+      },
+      "text": "tcp.IP.IsLoopback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 47
+      },
+      "text": "ln.Addr"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

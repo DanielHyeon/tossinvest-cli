@@ -1,0 +1,271 @@
+{
+  "file": "internal/console/restart.go",
+  "source_sha256": "930b9598b7346c4e66d435338f3132f422e37dd7d8db9bc8132e4b1ed3b603b0",
+  "package": "console",
+  "function": "grantSession",
+  "receiver": "Console",
+  "signature": "Console.grantSession(params=2, results=0)",
+  "start": {
+    "line": 233,
+    "column": 1
+  },
+  "end": {
+    "line": 269,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 236,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 241,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 239,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 246,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 254,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 15
+      },
+      "text": "c.remote.peer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 4
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 13
+      },
+      "text": "c.remote.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 37
+      },
+      "text": "peer.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 4
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 3
+      },
+      "text": "c.remote.issueSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 8
+      },
+      "text": "target.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 3
+      },
+      "text": "q.Del"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 21
+      },
+      "text": "q.Encode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 3
+      },
+      "text": "http.Redirect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 23
+      },
+      "text": "target.RequestURI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 2
+      },
+      "text": "http.SetCookie"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 7
+      },
+      "text": "target.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 2
+      },
+      "text": "q.Del"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 2
+      },
+      "text": "q.Del"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 20
+      },
+      "text": "q.Encode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 2
+      },
+      "text": "http.Redirect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 22
+      },
+      "text": "target.RequestURI"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 235,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

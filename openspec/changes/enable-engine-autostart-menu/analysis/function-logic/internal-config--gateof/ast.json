@@ -1,0 +1,71 @@
+{
+  "file": "internal/config/operating_io_test.go",
+  "source_sha256": "ca73121f8c4f2e637709e633fe4954908f398ee2cc99a86c85eb0957713c741a",
+  "package": "config_test",
+  "function": "gateOf",
+  "signature": "gateOf(params=2, results=1)",
+  "start": {
+    "line": 76,
+    "column": 1
+  },
+  "end": {
+    "line": 84,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

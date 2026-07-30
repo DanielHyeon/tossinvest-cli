@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-015",
+  "title": "Gate entry without delaying risk-reducing exits",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "interlock-gates-entry-not-exit",
+    "path": "openspec/changes/interlock-gates-entry-not-exit"
+  },
+  "acceptance": ["The interlock-gates-entry-not-exit OpenSpec contract and tasks are satisfied"]
+}

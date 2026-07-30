@@ -210,6 +210,9 @@ type ExitObserverOptions struct {
 	Ratchet *exitpolicy.RatchetConfig
 	// Ladder overrides the rung table. Nil takes exitpolicy's default.
 	Ladder *exitpolicy.LadderPolicy
+	// CommonPolicy is the startup snapshot applied only when a new exit state is
+	// opened. Empty preserves legacy RATCHET.
+	CommonPolicy string
 
 	// NewID mints intent ids. Defaults to 128 bits of randomness.
 	NewID func() string
@@ -240,15 +243,9 @@ type ExitObserver struct {
 	delayAlerted map[string]bool
 }
 
-// NewExitObserver validates the wiring and snapshots the policy tables.
-//
-// The tables are snapshotted rather than re-read, and that is the answer to the
-// gap issues.md records against task 7.2: `exit_states` has no `policy_id`, so a
-// rung table swapped under a live position would be undetectable and that
-// position's stored `active_rung` would be reinterpreted against the new table.
-// A process cannot swap it, because the observer holds its own copy for its
-// whole life; a restart that swaps it is caught per position by
-// [checkLadderPolicyStillFits] before the position is judged.
+// NewExitObserver validates the wiring and snapshots the common selection used
+// only for opening new states. Active ladder states carry their own policy ID
+// and are resolved independently on every judgement.
 func NewExitObserver(opts ExitObserverOptions) (*ExitObserver, error) {
 	switch {
 	case opts.Journal == nil:
@@ -284,6 +281,12 @@ func NewExitObserver(opts ExitObserverOptions) (*ExitObserver, error) {
 	}
 	if err := ladder.Validate(); err != nil {
 		return nil, fmt.Errorf("engine: the configured rung table is not a ladder: %w", err)
+	}
+	if id := strings.TrimSpace(opts.CommonPolicy); id != "" {
+		if _, ok := exitpolicy.CommonPolicyByID(id); !ok {
+			return nil, fmt.Errorf("engine: unknown common exit policy %q", id)
+		}
+		opts.CommonPolicy = id
 	}
 
 	clk := opts.Clock
@@ -527,9 +530,14 @@ func (o *ExitObserver) openState(ctx context.Context, p journal.Position) (journ
 			p.ID, decision.PreimageKind)
 	}
 
+	kind, policyID := journal.ExitPolicyRatchet, ""
+	if o.opts.CommonPolicy != "" {
+		kind, policyID = journal.ExitPolicyLadder, o.opts.CommonPolicy
+	}
 	state, err := o.opts.Journal.OpenExitState(ctx, journal.ExitStateSeed{
 		PositionID:  p.ID,
-		PolicyKind:  journal.ExitPolicyRatchet,
+		PolicyKind:  kind,
+		PolicyID:    policyID,
 		EntryPrice:  entry.EntryPrice,
 		InitialStop: entry.StopPrice,
 	})
@@ -719,7 +727,12 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, price, break
 
 func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakEven string,
 	cycle *ExitCycle) error {
-	if err := o.checkLadderPolicyStillFits(m); err != nil {
+	ladder, err := o.ladderFor(m)
+	if err != nil {
+		o.alertRefused(ctx, m, err)
+		return nil
+	}
+	if err := o.checkLadderPolicyStillFits(m, ladder); err != nil {
 		o.alertRefused(ctx, m, err)
 		return nil
 	}
@@ -735,18 +748,16 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakE
 		HighWater:     m.state.HighWater,
 		Baseline:      m.state.Baseline,
 		State: exitpolicy.LadderState{
-			// The policy id is the observer's own snapshot on both sides, which
-			// is precisely why checkLadderPolicyStillFits exists: `exit_states`
-			// stores no policy id, so this comparison cannot catch a swap and
-			// something else has to.
-			PolicyID:        o.ladder.PolicyID,
+			// The journal snapshot selects the immutable registry policy above,
+			// so the evaluator's identity check catches a mismatched state/table.
+			PolicyID:        ladder.PolicyID,
 			ActivatedRung:   m.state.ActiveRung,
 			TakenRatioTotal: m.state.TakenRatioTotal,
 			Completed:       m.state.Completed,
 			PendingAction:   exitpolicy.Action(m.state.PendingAction),
 			PendingRung:     pendingRung,
 		},
-		Policy: o.ladder,
+		Policy: ladder,
 	})
 	if err != nil {
 		o.alertRefused(ctx, m, err)
@@ -766,32 +777,21 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakE
 	}, transition.Proposal, transition.CancelPendingFirst, cycle)
 }
 
-// checkLadderPolicyStillFits is the storage-free half of "no rung-table swap
-// under a live position" (issues.md, task 7.2).
-//
-// `exit_states` has no `policy_id` column and this change does not open a new
-// schema version, so a swapped table cannot be detected by identity. What it can
-// be detected by is consequence: a rung that has been activated has already
-// raised the baseline to at least its own lock, and the baseline is monotone. So
-// a table whose rung *r* now locks *above* the stored baseline is a table that
-// was not the one rung *r* was activated from, and a table with fewer than *r*+1
-// rungs cannot explain the stored index at all.
-//
-// It does not catch a swap that moved only a target or a partial ratio. That
-// limitation is named rather than hidden: closing it needs the column, and the
-// column needs a schema version this change does not have.
-func (o *ExitObserver) checkLadderPolicyStillFits(m managed) error {
+// checkLadderPolicyStillFits is defence in depth after policy-ID resolution: an
+// active rung must still exist and its lock must be no stronger than the
+// monotone baseline the row already holds.
+func (o *ExitObserver) checkLadderPolicyStillFits(m managed, ladder exitpolicy.LadderPolicy) error {
 	rung := m.state.ActiveRung
 	if rung < 0 {
 		return nil
 	}
-	if rung >= len(o.ladder.Rungs) {
+	if rung >= len(ladder.Rungs) {
 		return fmt.Errorf(
 			"position %s stands on rung %d and the configured table has %d; the rung table was replaced "+
 				"under a live position and its stored index no longer names the same rung",
-			m.position.ID, rung, len(o.ladder.Rungs))
+			m.position.ID, rung, len(ladder.Rungs))
 	}
-	lock, err := exitpolicy.LockPrice(m.state.EntryPrice, o.ladder.Rungs[rung].StopPct)
+	lock, err := exitpolicy.LockPrice(m.state.EntryPrice, ladder.Rungs[rung].StopPct)
 	if err != nil {
 		return err
 	}
@@ -806,6 +806,23 @@ func (o *ExitObserver) checkLadderPolicyStillFits(m managed) error {
 			m.position.ID, rung, lock, m.state.Baseline)
 	}
 	return nil
+}
+
+func (o *ExitObserver) ladderFor(m managed) (exitpolicy.LadderPolicy, error) {
+	id := strings.TrimSpace(m.state.PolicyID)
+	if id == "" || id == "default_v1" {
+		if o.ladder.PolicyID != "default_v1" {
+			return exitpolicy.LadderPolicy{}, fmt.Errorf(
+				"position %s has legacy policy default_v1 but the injected test policy is %s",
+				m.position.ID, o.ladder.PolicyID)
+		}
+		return o.ladder, nil
+	}
+	policy, err := exitpolicy.CommonLadderForPosition(id, m.position.Adopted())
+	if err != nil {
+		return exitpolicy.LadderPolicy{}, fmt.Errorf("position %s: %w", m.position.ID, err)
+	}
+	return policy, nil
 }
 
 // record persists the judgement and, when it proposed something, submits it.

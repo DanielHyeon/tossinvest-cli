@@ -17,6 +17,8 @@
 ## Non-negotiable
 
 - 안전 불변식이 모든 skill, 기억, 그래프, 방법론보다 우선한다.
+- runtime config 변경은 audit로 추적 가능해야 한다.
+- Story/change scope가 허용하지 않으면 production trading code를 변경하지 않는다.
 - Full SDD 순서는 memory recall → OpenSpec → CodeGraph → CodeGraphContext →
   Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY → gstack/make gate → PM/archive → memory retain이다.
 - `make sdd-sync`가 기록한 CodeGraph worktree fingerprint가 stale이면 `make sdd-check`와 완료 gate를 통과할 수 없다.

@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-020",
+  "title": "Provide the console orders screen",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "console-orders-screen",
+    "path": "openspec/changes/console-orders-screen"
+  },
+  "acceptance": ["The console-orders-screen OpenSpec contract and tasks are satisfied"]
+}

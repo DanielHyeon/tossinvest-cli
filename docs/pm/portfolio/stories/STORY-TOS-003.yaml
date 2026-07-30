@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-003",
+  "title": "Verify execution capability before relying on broker behavior",
+  "feature": "FEAT-TOS-002",
+  "intent": "active",
+  "openspec": {
+    "change_id": "verify-execution-capability",
+    "path": "openspec/changes/verify-execution-capability"
+  },
+  "acceptance": ["The verify-execution-capability OpenSpec contract and tasks are satisfied"]
+}

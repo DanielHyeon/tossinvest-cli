@@ -89,6 +89,9 @@ type ExitStateSeed struct {
 	// design D5 specifies; LADDER is chosen by configuration and never by
 	// accident.
 	PolicyKind string
+	// PolicyID snapshots the exact immutable ladder. Empty LADDER means the
+	// pre-v9 default_v1 policy; RATCHET has no policy ID.
+	PolicyID string
 	// EntryPrice is the position's cost basis, and InitialStop the entry
 	// decision's stop price. Their difference is the R denominator, frozen here.
 	EntryPrice  string
@@ -112,6 +115,19 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 	if kind != ExitPolicyRatchet && kind != ExitPolicyLadder {
 		return ExitState{}, fmt.Errorf("%w: %q is neither %s nor %s; a position has exactly one policy",
 			ErrInvalidRequest, seed.PolicyKind, ExitPolicyRatchet, ExitPolicyLadder)
+	}
+	policyID := strings.TrimSpace(seed.PolicyID)
+	switch kind {
+	case ExitPolicyRatchet:
+		if policyID != "" {
+			return ExitState{}, fmt.Errorf("%w: RATCHET carries no ladder policy id", ErrInvalidRequest)
+		}
+	case ExitPolicyLadder:
+		if policyID == "" {
+			policyID = "default_v1"
+		} else if _, ok := exitpolicy.CommonPolicyByID(policyID); !ok && policyID != "default_v1" {
+			return ExitState{}, fmt.Errorf("%w: unknown ladder policy %q", ErrInvalidRequest, policyID)
+		}
 	}
 	// The arithmetic is the policy package's, not this file's. The t0 seed is the
 	// same for both kinds — the entry stop is the baseline whatever comes after
@@ -144,10 +160,10 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO exit_states
-		  (position_id, policy_kind, entry_price, initial_stop, initial_risk,
+		  (position_id, policy_kind, policy_id, entry_price, initial_stop, initial_risk,
 		   baseline_price, high_water, ratchet_level, active_rung, completed, updated_at)
-		VALUES (?,?,?,?,?,?,?,?,NULL,0,?)`,
-		id, kind, seed.EntryPrice, seed.InitialStop, open.InitialRisk,
+		VALUES (?,?,?,?,?,?,?,?,?,NULL,0,?)`,
+		id, kind, nullableString(policyID), seed.EntryPrice, seed.InitialStop, open.InitialRisk,
 		open.Baseline, open.HighWater, string(open.Level), now); err != nil {
 		if isUniqueViolation(err) {
 			return ExitState{}, fmt.Errorf("%w: %s", ErrExitStateExists, id)

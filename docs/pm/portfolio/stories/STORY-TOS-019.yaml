@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-019",
+  "title": "Provide an operator console overview",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "console-operator-overview",
+    "path": "openspec/changes/console-operator-overview"
+  },
+  "acceptance": ["The console-operator-overview OpenSpec contract and tasks are satisfied"]
+}

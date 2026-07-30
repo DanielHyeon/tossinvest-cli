@@ -231,6 +231,28 @@ func (c *Console) acceptHandoff(w http.ResponseWriter, r *http.Request) bool {
 // the address bar. It is shared by the session-token path and the handoff path so
 // the two cannot drift into setting different cookies.
 func (c *Console) grantSession(w http.ResponseWriter, r *http.Request) {
+	if c.remote != nil {
+		peer, ok := c.remote.peer(r)
+		if !ok {
+			c.refuse(w, http.StatusForbidden, "원격 접속 주소를 확인할 수 없다",
+				"재시작 핸드오프 세션을 만들지 않았다.")
+			return
+		}
+		if err := c.remote.record(RemoteAccessEvent{
+			Action: RemoteAccessLogin, Peer: peer.String(), Detail: "restart handoff",
+		}); err != nil {
+			c.refuse(w, http.StatusServiceUnavailable, "접근 감사를 기록할 수 없다",
+				"감사 기록 없이 원격 세션을 만들지 않았다.")
+			return
+		}
+		c.remote.issueSession(w, r, peer)
+		target := *r.URL
+		q := target.Query()
+		q.Del("handoff")
+		target.RawQuery = q.Encode()
+		http.Redirect(w, r, target.RequestURI(), http.StatusSeeOther)
+		return
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookie,
 		Value:    c.session,

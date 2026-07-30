@@ -1,0 +1,7 @@
+{
+  "id": "EPIC-TOS-003",
+  "title": "Operator console and engine lifecycle",
+  "initiative": "INIT-TOS-002",
+  "intent": "active",
+  "features": ["FEAT-TOS-004", "FEAT-TOS-005"]
+}

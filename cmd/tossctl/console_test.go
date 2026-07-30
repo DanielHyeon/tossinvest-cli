@@ -60,13 +60,13 @@ func TestConsoleIsRegisteredAndAnnotated(t *testing.T) {
 	}
 }
 
-// TestConsoleOffersOnlyThePortFlag.
+// TestConsoleOffersOnlyTheExplicitRemoteFlagSet.
 //
 // Every banned name here is a different way of making the console answer for a
-// person: a preset token, a preset approval, or an interface somebody else can
-// reach. The task's wording is "127.0.0.1 전용 바인딩(비루프백 거부)" and there is no
-// flag that negotiates with it.
-func TestConsoleOffersOnlyThePortFlag(t *testing.T) {
+// person: a token value on argv, a preset approval, or an unauthenticated
+// exposure. The remote interface is permitted only through the complete
+// TLS/CIDR/token-file set asserted below.
+func TestConsoleOffersOnlyTheExplicitRemoteFlagSet(t *testing.T) {
 	cmd := findCommand(newRootCmd(), "console")
 	if cmd == nil {
 		t.Fatal("console is not registered")
@@ -77,7 +77,7 @@ func TestConsoleOffersOnlyThePortFlag(t *testing.T) {
 
 	banned := []string{
 		// the interface
-		"host", "bind", "address", "addr", "interface", "listen", "public", "remote", "expose", "lan",
+		"host", "address", "addr", "interface", "listen", "public", "remote", "expose", "lan",
 		// the authentication
 		"token", "session", "session-token", "csrf", "no-auth", "insecure", "open",
 		// the approval
@@ -97,13 +97,14 @@ func TestConsoleOffersOnlyThePortFlag(t *testing.T) {
 		}
 	}
 
-	// And nothing beyond --port. Asserted against the source rather than the
+	// And nothing beyond the reviewed set. Asserted against the source rather than the
 	// flag set, because the flag set also carries the root command's persistent
 	// flags and a source count is what makes "a flag added here has to be
 	// justified in this test" true.
-	if got := declaredFlags(t, "console.go"); len(got) != 1 || got[0] != "port" {
-		t.Errorf("console.go registers %v, want exactly [port] — every other knob on this command would be "+
-			"a knob on an approval surface", got)
+	want := []string{"port", "bind", "allowed-cidr", "public-url", "tls-cert", "tls-key", "remote-token-file", "trusted-network"}
+	if got := declaredFlags(t, "console.go"); !reflect.DeepEqual(got, want) {
+		t.Errorf("console.go registers %v, want exactly %v — every other knob on this command would be "+
+			"an unreviewed knob on an approval surface", got, want)
 	}
 }
 

@@ -1,0 +1,7 @@
+{
+  "id": "FEAT-TOS-008",
+  "title": "SDD graph service reliability",
+  "epic": "EPIC-TOS-005",
+  "intent": "active",
+  "stories": ["STORY-TOS-034"]
+}

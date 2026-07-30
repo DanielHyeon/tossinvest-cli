@@ -1,0 +1,70 @@
+{
+  "file": "internal/journal/adoption.go",
+  "source_sha256": "6adc78fcb71ddfc90ee929f0df2acc005105677d93a61a96c26932bb7a90dcf4",
+  "package": "journal",
+  "function": "scanAdoption",
+  "signature": "scanAdoption(params=1, results=2)",
+  "start": {
+    "line": 346,
+    "column": 1
+  },
+  "end": {
+    "line": 354,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 348,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 351,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 353,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 12
+      },
+      "text": "rows.Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 348,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

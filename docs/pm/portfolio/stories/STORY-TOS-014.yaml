@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-014",
+  "title": "Size the US Guardian risk tier",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "size-us-guardian-tier",
+    "path": "openspec/changes/size-us-guardian-tier"
+  },
+  "acceptance": ["The size-us-guardian-tier OpenSpec contract and tasks are satisfied"]
+}

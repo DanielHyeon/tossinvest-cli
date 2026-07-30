@@ -1,0 +1,11 @@
+{
+  "id": "STORY-TOS-013",
+  "title": "Attest supervised mutation coverage",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "attest-covers-supervised-mutations",
+    "path": "openspec/changes/attest-covers-supervised-mutations"
+  },
+  "acceptance": ["The attest-covers-supervised-mutations OpenSpec contract and tasks are satisfied"]
+}

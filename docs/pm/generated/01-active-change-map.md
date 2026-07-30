@@ -1,5 +1,38 @@
-# Active change map
+# OpenSpec change map
 
 | Change | Story | Status |
 |---|---|---|
-| `adopt-stockos-full-sdd` | STORY-TOS-001 | done |
+| `adopt-stockos-full-sdd` | STORY-TOS-001 | archived |
+| `align-full-sdd-pm-contract` | STORY-TOS-002 | in_progress |
+| `verify-execution-capability` | STORY-TOS-003 | in_progress |
+| `add-net-rr-measurement` | STORY-TOS-004 | implemented |
+| `verify-us-market` | STORY-TOS-005 | implemented |
+| `apply-us-measurement-fixes` | STORY-TOS-006 | implemented |
+| `verify-clears-leftovers` | STORY-TOS-007 | implemented |
+| `verify-survives-already-processing` | STORY-TOS-008 | implemented |
+| `verify-reopens-conditional-chain` | STORY-TOS-009 | implemented |
+| `verify-plans-the-object-it-mutates` | STORY-TOS-010 | implemented |
+| `verify-holds-what-it-awaits` | STORY-TOS-011 | implemented |
+| `verify-observes-the-trigger` | STORY-TOS-012 | in_progress |
+| `attest-covers-supervised-mutations` | STORY-TOS-013 | implemented |
+| `size-us-guardian-tier` | STORY-TOS-014 | implemented |
+| `interlock-gates-entry-not-exit` | STORY-TOS-015 | implemented |
+| `wire-production-risk-guardian` | STORY-TOS-016 | implemented |
+| `prime-engine-account-seq` | STORY-TOS-017 | implemented |
+| `console-click-approval` | STORY-TOS-018 | implemented |
+| `console-operator-overview` | STORY-TOS-019 | implemented |
+| `console-orders-screen` | STORY-TOS-020 | implemented |
+| `console-excludes-in-one-click` | STORY-TOS-021 | implemented |
+| `console-sets-guardian-limits` | STORY-TOS-022 | implemented |
+| `console-owns-the-operating-toggles` | STORY-TOS-023 | implemented |
+| `enable-engine-autostart-menu` | STORY-TOS-024 | implemented |
+| `console-adoption-controls` | STORY-TOS-025 | implemented |
+| `add-common-exit-optimization` | STORY-TOS-026 | implemented |
+| `add-candidate-discovery` | STORY-TOS-027 | implemented |
+| `fix-chase-veto-measurement` | STORY-TOS-028 | implemented |
+| `retire-gainers-source` | STORY-TOS-029 | implemented |
+| `refine-extended-shadow-bands` | STORY-TOS-030 | implemented |
+| `enable-vpn-console-access` | STORY-TOS-031 | implemented |
+| `console-system-update` | STORY-TOS-032 | implemented |
+| `signed-release-system-update` | STORY-TOS-033 | implemented |
+| `serialize-project-gbrain-serve` | STORY-TOS-034 | implemented |
