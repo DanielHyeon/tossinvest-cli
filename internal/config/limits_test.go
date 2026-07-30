@@ -21,51 +21,85 @@ import (
 	"testing"
 )
 
-// TestTheTiersTranscribeStockOS pins every registered tier against the numbers
-// in packages/trading/stockos_trading/risk_profiles.py.
-func TestTheTiersTranscribeStockOS(t *testing.T) {
-	want := map[string]GuardianLimits{
-		// _KR_SMOKE
-		"kr-smoke": {
-			MaxOrderQuantity: 100, MaxOrderNotional: 500_000,
-			MaxTotalExposure: 5_000_000, MaxDailyLossAmount: 100_000,
-			MaxDailyLossRatio: 0.01, Currency: "KRW",
-		},
-		// _KR_SMALL_LIVE — also the five numbers risk-management approved.
-		"kr-small-live": {
-			MaxOrderQuantity: 100, MaxOrderNotional: 1_000_000,
-			MaxTotalExposure: 10_000_000, MaxDailyLossAmount: 100_000,
-			MaxDailyLossRatio: 0.01, Currency: "KRW",
-		},
-		// _US_SMOKE
-		"us-smoke": {
-			MaxOrderQuantity: 100, MaxOrderNotional: 100,
-			MaxTotalExposure: 300, MaxDailyLossAmount: 10,
-			MaxDailyLossRatio: 0.01, Currency: "USD",
-		},
-		// _US_SMALL_LIVE
-		"us-small-live": {
-			MaxOrderQuantity: 100, MaxOrderNotional: 300,
-			MaxTotalExposure: 1_000, MaxDailyLossAmount: 50,
-			MaxDailyLossRatio: 0.01, Currency: "USD",
-		},
-	}
+// stockOSTiers is the transcription corpus: the rows that must equal StockOS's
+// risk_profiles.py number for number.
+var stockOSTiers = map[string]GuardianLimits{
+	// _KR_SMOKE
+	"kr-smoke": {
+		MaxOrderQuantity: 100, MaxOrderNotional: 500_000,
+		MaxTotalExposure: 5_000_000, MaxDailyLossAmount: 100_000,
+		MaxDailyLossRatio: 0.01, Currency: "KRW",
+	},
+	// _KR_SMALL_LIVE — also the five numbers risk-management approved.
+	"kr-small-live": {
+		MaxOrderQuantity: 100, MaxOrderNotional: 1_000_000,
+		MaxTotalExposure: 10_000_000, MaxDailyLossAmount: 100_000,
+		MaxDailyLossRatio: 0.01, Currency: "KRW",
+	},
+	// _US_SMOKE
+	"us-smoke": {
+		MaxOrderQuantity: 100, MaxOrderNotional: 100,
+		MaxTotalExposure: 300, MaxDailyLossAmount: 10,
+		MaxDailyLossRatio: 0.01, Currency: "USD",
+	},
+	// _US_SMALL_LIVE
+	"us-small-live": {
+		MaxOrderQuantity: 100, MaxOrderNotional: 300,
+		MaxTotalExposure: 1_000, MaxDailyLossAmount: 50,
+		MaxDailyLossRatio: 0.01, Currency: "USD",
+	},
+}
 
+// tossOSMeasuredTiers are the rows with no StockOS counterpart (change
+// size-us-guardian-tier).
+//
+// They are listed apart from the transcription corpus rather than mixed into it
+// because they are held to a different standard: risk-management's provenance
+// requirement admits a TossOS number only against a cited measurement, and an
+// audit comparing this file to risk_profiles.py must not find them there and
+// conclude the transcription drifted.
+var tossOSMeasuredTiers = map[string]GuardianLimits{
+	// verify-execution-capability measurements.md M49 (2026-07-30 US 정규장).
+	// The derivation is asserted by TestTheUSTierMatchesItsRecordedDerivation.
+	"us-single-name": {
+		MaxOrderQuantity: 100, MaxOrderNotional: 500,
+		MaxTotalExposure: 1_500, MaxDailyLossAmount: 50,
+		MaxDailyLossRatio: 0.01, Currency: "USD",
+	},
+}
+
+// TestTheTiersTranscribeStockOS pins the ported tiers against the numbers in
+// packages/trading/stockos_trading/risk_profiles.py, and refuses any tier that
+// belongs to neither corpus.
+func TestTheTiersTranscribeStockOS(t *testing.T) {
 	tiers := GuardianTiers()
-	if len(tiers) != len(want) {
-		t.Fatalf("GuardianTiers() returned %d tiers, want %d", len(tiers), len(want))
+	if got, want := len(tiers), len(stockOSTiers)+len(tossOSMeasuredTiers); got != want {
+		t.Fatalf("GuardianTiers() returned %d tiers, want %d", got, want)
 	}
 	for _, tier := range tiers {
-		expected, ok := want[tier.ID]
-		if !ok {
+		if tier.Label == "" {
+			t.Errorf("tier %s has no label; the screen shows it before applying", tier.ID)
+		}
+		expected, ported := stockOSTiers[tier.ID]
+		if !ported {
+			if _, measured := tossOSMeasuredTiers[tier.ID]; measured {
+				continue
+			}
 			t.Errorf("unregistered tier %q; adding a tier raises the ceiling and needs its own argument", tier.ID)
 			continue
 		}
 		if tier.Limits != expected {
 			t.Errorf("tier %s = %+v, want %+v", tier.ID, tier.Limits, expected)
 		}
-		if tier.Label == "" {
-			t.Errorf("tier %s has no label; the screen shows it before applying", tier.ID)
+	}
+	for id, want := range tossOSMeasuredTiers {
+		tier, ok := GuardianTierByID(id)
+		if !ok {
+			t.Errorf("measured tier %q is not registered", id)
+			continue
+		}
+		if tier.Limits != want {
+			t.Errorf("tier %s = %+v, want %+v", id, tier.Limits, want)
 		}
 	}
 }
@@ -111,8 +145,8 @@ func TestTheCeilingIsTheMaxAcrossRegisteredTiers(t *testing.T) {
 			MaxDailyLossRatio: 0.01, Currency: "KRW",
 		}},
 		{"USD", GuardianLimits{
-			MaxOrderQuantity: 100, MaxOrderNotional: 300,
-			MaxTotalExposure: 1_000, MaxDailyLossAmount: 50,
+			MaxOrderQuantity: 100, MaxOrderNotional: 500,
+			MaxTotalExposure: 1_500, MaxDailyLossAmount: 50,
 			MaxDailyLossRatio: 0.01, Currency: "USD",
 		}},
 	} {
@@ -123,6 +157,165 @@ func TestTheCeilingIsTheMaxAcrossRegisteredTiers(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("ceiling(%s) = %+v, want %+v", tc.currency, got, tc.want)
 		}
+	}
+}
+
+// TestRegisteringTheUSTierMovedExactlyTwoCeilings (change size-us-guardian-tier,
+// tasks 2.2 and 2.3).
+//
+// The change's whole permission is "two USD fields move". A loosening that
+// leaked into a third field — or into KRW — would be outside what was argued and
+// approved, so the fields that must NOT move are asserted by name rather than
+// left to the ceiling table above to imply.
+func TestRegisteringTheUSTierMovedExactlyTwoCeilings(t *testing.T) {
+	usd, err := GuardianCeiling("USD")
+	if err != nil {
+		t.Fatalf("GuardianCeiling(USD): %v", err)
+	}
+	// The two that moved, and the values design D1 derived.
+	if usd.MaxOrderNotional != 500 {
+		t.Errorf("USD order ceiling = %v, want 500", usd.MaxOrderNotional)
+	}
+	if usd.MaxTotalExposure != 1_500 {
+		t.Errorf("USD exposure ceiling = %v, want 1500", usd.MaxTotalExposure)
+	}
+	// The three that did not. Quantity and ratio are shared by every tier in
+	// both currencies; the daily-loss amount stayed at us-small-live's because
+	// raising it left the approved KRW envelope for nothing (design D1).
+	if usd.MaxOrderQuantity != guardianOrderQuantityCap {
+		t.Errorf("USD quantity ceiling = %v, want the shared cap %v",
+			usd.MaxOrderQuantity, float64(guardianOrderQuantityCap))
+	}
+	if usd.MaxDailyLossRatio != 0.01 {
+		t.Errorf("USD ratio ceiling = %v, want 0.01", usd.MaxDailyLossRatio)
+	}
+	if usd.MaxDailyLossAmount != 50 {
+		t.Errorf("USD daily-loss ceiling = %v, want 50 — raising it exceeds the approved "+
+			"100,000 KRW above ~1,333 KRW/USD and buys no extra size", usd.MaxDailyLossAmount)
+	}
+
+	// KRW is untouched: the new tier is USD-only and the ceiling is per currency.
+	krw, err := GuardianCeiling("KRW")
+	if err != nil {
+		t.Fatalf("GuardianCeiling(KRW): %v", err)
+	}
+	want := stockOSTiers["kr-small-live"]
+	if krw != want {
+		t.Errorf("the KRW ceiling moved to %+v; this change argued only about USD (want %+v)",
+			krw, want)
+	}
+}
+
+// TestTheUSTierMatchesItsRecordedDerivation (task 2.6).
+//
+// Every number in design D1 is derived from something already in the tree. A
+// derivation nobody can re-run is a preference with a paragraph attached, so the
+// arithmetic is asserted rather than described.
+func TestTheUSTierMatchesItsRecordedDerivation(t *testing.T) {
+	tier, ok := GuardianTierByID("us-single-name")
+	if !ok {
+		t.Fatal("us-single-name is not registered")
+	}
+	got := tier.Limits
+
+	// Exposure is 3× the order ceiling — the stricter of the two registered US
+	// shapes (us-smoke is 300/100 = 3.00, us-small-live is 1000/300 = 3.33).
+	if got.MaxTotalExposure != 3*got.MaxOrderNotional {
+		t.Errorf("exposure %v is not 3x the order ceiling %v",
+			got.MaxTotalExposure, got.MaxOrderNotional)
+	}
+	smallLive := stockOSTiers["us-small-live"]
+	if smallLive.MaxTotalExposure/smallLive.MaxOrderNotional < 3 {
+		t.Errorf("us-small-live's shape is %v, no longer the looser of the two; the "+
+			"'stricter shape' argument in D1 needs rechecking",
+			smallLive.MaxTotalExposure/smallLive.MaxOrderNotional)
+	}
+
+	// The daily loss is us-small-live's, unchanged.
+	if got.MaxDailyLossAmount != smallLive.MaxDailyLossAmount {
+		t.Errorf("daily loss %v does not match us-small-live's %v; D1 chose not to move it",
+			got.MaxDailyLossAmount, smallLive.MaxDailyLossAmount)
+	}
+
+	// Quantity and ratio are family constants, not per-tier sizing.
+	for _, other := range GuardianTiers() {
+		if other.Limits.MaxOrderQuantity != got.MaxOrderQuantity {
+			t.Errorf("tier %s has quantity %v but us-single-name has %v; the quantity cap "+
+				"is a shared fat-finger backstop, not a sizing axis",
+				other.ID, other.Limits.MaxOrderQuantity, got.MaxOrderQuantity)
+		}
+		if other.Limits.MaxDailyLossRatio != got.MaxDailyLossRatio {
+			t.Errorf("tier %s has ratio %v but us-single-name has %v",
+				other.ID, other.Limits.MaxDailyLossRatio, got.MaxDailyLossRatio)
+		}
+	}
+
+	// The upper bound: $500 stays inside the approved 1,000,000 KRW per order
+	// while the won is below 2,000/USD. The arithmetic is the argument — if
+	// somebody raises this tier, this line says what they have to re-argue.
+	const parityBreaksAt = 2_000.0
+	approvedKRW := stockOSTiers["kr-small-live"].MaxOrderNotional
+	if got.MaxOrderNotional*parityBreaksAt > approvedKRW {
+		t.Errorf("order ceiling %v exceeds the approved %v KRW below %v KRW/USD; "+
+			"D1's equivalence argument no longer holds",
+			got.MaxOrderNotional, approvedKRW, parityBreaksAt)
+	}
+}
+
+// TestTheMeasuredInstrumentFitsWithHeadroom (task 2.7).
+//
+// The lower bound of the derivation, restated as the thing it has to buy.
+// measurements.md M49 (2026-07-30 US 정규장) observed TSLA at 299.88–299.94 with
+// a 0.0200% spread; the pending measurement is one share as SINGLE+MARKET, so
+// the fill price is unknown when the ceiling is checked.
+func TestTheMeasuredInstrumentFitsWithHeadroom(t *testing.T) {
+	const measuredShare = 300.0 // M49
+
+	usd, err := GuardianCeiling("USD")
+	if err != nil {
+		t.Fatalf("GuardianCeiling(USD): %v", err)
+	}
+	if usd.MaxOrderNotional < measuredShare {
+		t.Fatalf("one measured share at %v does not fit under the %v ceiling",
+			measuredShare, usd.MaxOrderNotional)
+	}
+	headroom := (usd.MaxOrderNotional - measuredShare) / measuredShare
+	if headroom < 0.5 {
+		t.Errorf("headroom over the measured share is %.1f%%; a market order's fill is "+
+			"not known when the ceiling is checked, so a ceiling this close to the "+
+			"observed price is one tick from refusing the measurement", headroom*100)
+	}
+}
+
+// TestEveryTierWouldStart (task 2.5): a preset the interlock refuses is a button
+// that records a file the engine will not boot on.
+func TestEveryTierWouldStart(t *testing.T) {
+	for _, tier := range GuardianTiers() {
+		if err := tier.Limits.Validate(); err != nil {
+			t.Errorf("tier %s would be refused by the startup interlock: %v", tier.ID, err)
+		}
+	}
+}
+
+// TestTheCeilingIsNotTheInterlock (task 3.1) is the fact design D4 turns into a
+// contract: the ceiling lives on the console's write path and the interlock has
+// no ceiling at all. Reading either verdict as the other is the mistake this
+// pins — believing a low ceiling bounds the system leads to believing the
+// hand-edited file is bounded too, and it is not.
+func TestTheCeilingIsNotTheInterlock(t *testing.T) {
+	usd, err := GuardianCeiling("USD")
+	if err != nil {
+		t.Fatalf("GuardianCeiling(USD): %v", err)
+	}
+	over := usd
+	over.MaxOrderNotional *= 10
+
+	if got := over.CeilingViolations(); len(got) == 0 {
+		t.Error("a block ten times over the ceiling produced no violation")
+	}
+	if err := over.Validate(); err != nil {
+		t.Errorf("the same block is refused by the interlock rules (%v); the two checks "+
+			"answer different questions and must not converge", err)
 	}
 }
 

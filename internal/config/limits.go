@@ -6,11 +6,18 @@ package config
 //
 // # Where the numbers come from
 //
-// This is a port of StockOS's packages/trading/stockos_trading/risk_profiles.py
-// — the (market, profile) → RiskProfile table. The numbers are transcribed
-// rather than re-derived so an audit can put the two files side by side, which
-// is what risk-management's 정책 수치의 provenance asks for: "모든 한도·정책
-// 수치는 코드에 출처(StockOS 파일·검증 상태)와 함께 기록되어야 한다".
+// Most of this is a port of StockOS's
+// packages/trading/stockos_trading/risk_profiles.py — the
+// (market, profile) → RiskProfile table. Those numbers are transcribed rather
+// than re-derived so an audit can put the two files side by side, which is what
+// risk-management's 정책 수치의 provenance asks for.
+//
+// One row is not a transcription. `us-single-name` is TossOS's own, and the
+// same requirement admits it under its second provenance category — a TossOS
+// measurement cited by identifier (change size-us-guardian-tier). Its comment
+// carries the citation and the derivation. The two kinds are kept visibly
+// distinct here and in limits_test.go so that "this number is not in
+// risk_profiles.py" reads as a recorded fact rather than as drift.
 //
 // TossOS spells currency where StockOS spells market. StockOS pins KRX→KRW and
 // NASD/NYSE/AMEX→USD in its own MarketMeta registry and its US tiers are
@@ -119,6 +126,59 @@ var guardianTiers = []GuardianTier{
 			MaxOrderQuantity:   guardianOrderQuantityCap,
 			MaxOrderNotional:   300,
 			MaxTotalExposure:   1_000,
+			MaxDailyLossAmount: 50,
+			MaxDailyLossRatio:  0.01,
+			Currency:           "USD",
+		},
+	},
+	{
+		ID:    "us-single-name",
+		// The label names no class of stock on purpose. "대형주 1주" would be a
+		// promise this tier does not keep — a $500 order ceiling does not reach
+		// one share of every US large cap — and the card prints the five numbers
+		// beside the label, so the bound is already visible where it is true.
+		Label: "미국 단일 종목 실거래 — 국내 자동 진입은 통화 불일치로 닫힌다",
+		// NOT a StockOS transcription. This is TossOS's own row (change
+		// size-us-guardian-tier, design D1) and it is the only tier here whose
+		// numbers an audit will not find in risk_profiles.py.
+		//
+		// Why it exists: the two ported US tiers are StockOS's smoke sizes, so
+		// the USD order ceiling landed at $300 — the same figure as one share of
+		// the instrument TossOS measured for its own execution test.
+		// verify-execution-capability/measurements.md M49 (2026-07-30, US 정규장)
+		// observed TSLA at 299.88–299.94, a 0.0200% spread. The pending
+		// measurement submits one share as SINGLE+MARKET, and a market order has
+		// no fill price to check when the ceiling is applied. A ceiling that
+		// clears the instrument by less than its own spread does not bound the
+		// operator; it sends them to hand-edit config.json, where the interlock
+		// applies and this ceiling does not (design D4).
+		//
+		// Why these numbers:
+		//   notional $500  — above: the console's KRW order ceiling (the max
+		//                    across the registered KRW tiers) is 1,000,000 KRW,
+		//                    and 500 x 2,000 = 1,000,000, so below 2,000 KRW/USD
+		//                    this authorises a SMALLER order than one click on
+		//                    this same screen already authorises in KRW. The USD
+		//                    axis stays the stricter of the two. Below: the
+		//                    measured $300 share, with room for a market fill.
+		//                    Rounded, because a ceiling is a backstop and sizing
+		//                    is RiskBudget's job (risk/input.go:223).
+		//   exposure $1,500 — 3x notional, the stricter of the two registered US
+		//                    shapes (us-smoke 3.00x, us-small-live 3.33x).
+		//   daily loss $50  — us-small-live's, deliberately NOT raised. $75 would
+		//                    have held that tier's 5%-of-exposure ratio, but
+		//                    100,000 KRW ÷ 75 = 1,333, so it leaves the approved
+		//                    KRW envelope at any rate above ~1,333/USD — and it
+		//                    buys nothing, since the notional ceiling binds
+		//                    first. §0.9: unclear means do not move it.
+		//   ratio 1% and quantity 100 — family constants, unchanged, so the
+		//                    loosening cannot leak into a third or fourth field.
+		//
+		// Human approval of these figures: 사용자 결정 2026-07-30.
+		Limits: GuardianLimits{
+			MaxOrderQuantity:   guardianOrderQuantityCap,
+			MaxOrderNotional:   500,
+			MaxTotalExposure:   1_500,
 			MaxDailyLossAmount: 50,
 			MaxDailyLossRatio:  0.01,
 			Currency:           "USD",

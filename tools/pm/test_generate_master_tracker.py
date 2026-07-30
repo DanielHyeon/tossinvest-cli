@@ -41,6 +41,7 @@ class TrackerTests(unittest.TestCase):
             "verify-observes-the-trigger",
             "console-excludes-in-one-click",
             "console-sets-guardian-limits",
+            "size-us-guardian-tier",
         ):
             path = changes / change
             path.mkdir(parents=True)
