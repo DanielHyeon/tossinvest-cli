@@ -228,11 +228,29 @@ type Options struct {
 	// must not thereby be able to change one.
 	//
 	// Its Save takes config.GuardianLimits, which carries the five ceilings and
-	// the currency and has no field for `enabled`. That is how the console's
-	// inability to open the gate survives future edits to the handlers — there is
-	// nowhere in the message to put the switch. Nil renders the limit section
+	// the currency and has no field for `enabled`. That is how "editing a ceiling
+	// cannot turn the gate on" survives future edits to the handlers — there is
+	// nowhere in the message to put the switch. It stays true after
+	// console-owns-the-operating-toggles gave the console a way to write the
+	// switch: the way is a different seam. Nil renders the limit section
 	// read-only with the reason seam 미배선.
 	Limits LimitSettings
+
+	// --- the operating toggles (change console-owns-the-operating-toggles) ---
+
+	// TradingPolicy is the editor for the four `trading` toggles the engine's
+	// exit path uses. Its Save takes config.TradingPolicy — four fields, no
+	// amend, no conditional, no fractional — so the three the engine never
+	// reaches cannot be moved from here.
+	TradingPolicy TradingPolicySettings
+
+	// Gate writes engine.automation_gate.enabled, and only that key.
+	//
+	// A fifth seam rather than a method on Limits, and the separation is the
+	// safety property: a limit save emits no bytes for the switch and a switch
+	// save emits none for the ceilings, so neither can move the other through a
+	// read taken outside the file lock. Nil renders the gate section read-only.
+	Gate GateSwitch
 
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
@@ -525,6 +543,13 @@ func (c *Console) routes() http.Handler {
 	// own switch: the seam they save through takes a type with no field for it.
 	mux.HandleFunc("/settings/limits", c.session0(c.mutating(c.handleSettingsLimits)))
 	mux.HandleFunc("/settings/limits/preset", c.session0(c.mutating(c.handleSettingsLimitPreset)))
+	mux.HandleFunc("/settings/trading", c.session0(c.mutating(c.handleSettingsTrading)))
+	// The gate switch says what it is in its path (change
+	// console-owns-the-operating-toggles): the limit routes deliberately avoid
+	// gate vocabulary because they cannot touch the switch, and this one must
+	// carry it for the opposite reason — an audit reader has to be able to tell
+	// which line turned the engine loose.
+	mux.HandleFunc("/settings/gate", c.session0(c.mutating(c.handleSettingsGate)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.handleStart)))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))

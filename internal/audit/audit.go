@@ -64,6 +64,15 @@ const (
 	// ActionAdoptionSetting is a change to how adoption behaves once on: the
 	// synthetic stop's width, or the exclusion list.
 	ActionAdoptionSetting = "adoption.setting"
+	// ActionTradingPolicy is one of the trading toggles moving (change
+	// console-owns-the-operating-toggles).
+	//
+	// Its own action rather than a gate entry, for the reason ActionAdoptionToggle
+	// is its own: it authorises a different thing. The gate decides whether the
+	// engine runs a loop; this decides whether the orders those loops decide on
+	// may leave the process. An operator asking "when did I allow this thing to
+	// sell" must not have to read that out of a gate line.
+	ActionTradingPolicy = "trading.policy"
 )
 
 // Entry is one recorded change.

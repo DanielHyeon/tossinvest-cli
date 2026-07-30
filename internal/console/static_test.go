@@ -368,6 +368,15 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		// forged request that could — is still an act.
 		"/settings/limits":        true,
 		"/settings/limits/preset": true,
+		// The operating toggles (console-owns-the-operating-toggles). The trading
+		// policy decides whether the engine may submit anything at all, and the
+		// gate decides whether it runs a loop. Both were `config.json` hand-edits
+		// until this change, which is to say both were changes with no CSRF, no
+		// validation and no audit line — the console path is the one that has all
+		// three. A forged request that turned the gate on would be exactly the act
+		// this list exists to keep behind the token.
+		"/settings/trading": true,
+		"/settings/gate":    true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -622,7 +631,28 @@ var consoleStateChanging = []string{
 	"/verify/start", "/verify/approve", "/verify/abort", "/restart", "/soak/restart",
 	"/engine/start", "/engine/stop", "/settings/save", "/settings/include",
 	"/settings/exclude", "/settings/limits", "/settings/limits/preset",
+	"/settings/trading", "/settings/gate",
 }
+
+// consoleGateWriters is the exact route that may spell "gate" (change
+// console-owns-the-operating-toggles).
+//
+// The ban on that word was written when the console could not touch the switch,
+// and it did real work: it caught a /settings/limits that quietly grew gate
+// vocabulary. Now one route legitimately writes `engine.automation_gate.enabled`,
+// and the spec's answer is not to delete the word from the list — it is to name
+// the one path, and to require the name rather than forbid it:
+//
+//	"게이트 스위치 라우트는 존재하며 상태변경 목록에 열거된다(SHALL — 이름을
+//	 숨기지 않는다: 무엇을 하는 라우트인지 이름이 말해야 감사가 읽힌다)."
+//
+// A route that turned the engine loose under a name like /settings/operating
+// would pass the verb ban and defeat the audit at the same time. So the
+// exception is byte-for-byte on the whole path, with none of the softening
+// consoleAccountReads spells out above — a prefix match would readmit
+// /settings/gate/force, ToLower would readmit /settings/Gate as a second route,
+// and a trailing-slash trim would make it a subtree pattern.
+var consoleGateWriters = map[string]bool{"/settings/gate": true}
 
 // --- the verbs, spelled once and shared by both surfaces --------------------------
 //
@@ -752,11 +782,18 @@ func routeFindings(r route) []string {
 	reads := routeReadsTheAccountRecord(r)
 	lowered := strings.ToLower(r.Path)
 	for _, verb := range accountVerbs {
-		if strings.Contains(lowered, verb) && !reads {
-			findings = append(findings, fmt.Sprintf(
-				"route %s names %q; this console has no route that touches the account, its gate "+
-					"or its credentials", r.Path, verb))
+		if !strings.Contains(lowered, verb) || reads {
+			continue
 		}
+		// The one route the spec requires to carry "gate" in its name, and only
+		// that word: /settings/gate must still not be allowed to grow "credential"
+		// or "sell".
+		if verb == "gate" && consoleGateWriters[r.Path] {
+			continue
+		}
+		findings = append(findings, fmt.Sprintf(
+			"route %s names %q; this console has no route that touches the account, its gate "+
+				"or its credentials", r.Path, verb))
 	}
 	if allowed[r.Path] || reads {
 		return findings
@@ -908,6 +945,31 @@ var consoleCapabilities = map[string]capability{
 	// reads that off the interface with reflection so the property is measured
 	// rather than described.
 	"Limits": {Methods: []string{"Load", "Save"}},
+	// The trading-policy editor (change console-owns-the-operating-toggles). Its
+	// Save takes config.TradingPolicy — place, sell, cancel and the live master —
+	// so amend, conditional and fractional have nowhere to travel, exactly as
+	// `enabled` has nowhere to travel through Limits.
+	"TradingPolicy": {Methods: []string{"Load", "Save"}},
+	// The automation gate's switch, write-only (same change).
+	//
+	// A fifth seam rather than a second method on Limits, and the separation is
+	// the safety property rather than tidiness: each save emits bytes for its own
+	// keys only, so a ceiling edit cannot carry a stale `enabled` back into the
+	// file and a switch flip cannot carry stale ceilings. There is no Load
+	// because Limits.Load already returns the whole block including the switch,
+	// and two readers of one key is how a screen disagrees with itself.
+	"Gate": {
+		Methods: []string{"Save"},
+		VerbExemptions: map[string]string{
+			"Gate": "the Options field and the seam type. The operator-console spec " +
+				"requires this name rather than tolerating it — a switch that turns the " +
+				"engine loose under a vaguer name would defeat the audit it is supposed " +
+				"to leave",
+			"GateSwitch": "the seam type. Switch is the whole claim: one boolean key, " +
+				"engine.automation_gate.enabled, and the closed member list in " +
+				"internal/config's operating_io.go is what enforces it",
+		},
+	},
 	// The discovery store's assessment, read (change add-candidate-discovery,
 	// task 5.5). One method, and it fetches nothing from an account: behind it is
 	// internal/candidate, whose own dependency closure is {internal/clock}, so

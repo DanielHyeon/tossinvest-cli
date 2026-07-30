@@ -172,39 +172,57 @@ func TestTheOrdersRouteIsRegisteredReadOnlyAndNothingElseIs(t *testing.T) {
 // the same moment, on the strength of a screen that only reads.
 //
 // So the list is untouched and the exemption is per field, per spelling, with the
-// argument written beside it. This is what fails when the hatch grows: a sixth
-// name, an exemption on a second seam, or a reason nobody wrote.
-func TestTheOrdersSeamIsTheOnlyCapabilityWithVerbExemptionsAndTheyAreEnumerated(t *testing.T) {
-	want := map[string]bool{
-		"Orders": true, "OrdersReader": true, "OrdersReading": true,
-		"OrderRecord": true, "ConditionalRecord": true,
+// argument written beside it. This is what fails when the hatch grows: an extra
+// name, an exemption on an unenumerated seam, or a reason nobody wrote.
+//
+// It used to say "exactly one seam", which was a fact about the code stated as a
+// rule. console-owns-the-operating-toggles produced the second: a seam whose one
+// method writes `engine.automation_gate.enabled`, which the operator-console spec
+// requires to be *named* rather than merely tolerated — an audit line that cannot
+// say which route turned the engine loose is not an audit line. The guarantee
+// that mattered was never the count; it was that every exemption is enumerated
+// here with its argument, and that is what this now checks.
+func TestTheSeamsWithVerbExemptionsAreEnumeratedAndArgued(t *testing.T) {
+	want := map[string]map[string]bool{
+		"Orders": {
+			"Orders": true, "OrdersReader": true, "OrdersReading": true,
+			"OrderRecord": true, "ConditionalRecord": true,
+		},
+		"Gate": {"Gate": true, "GateSwitch": true},
 	}
 
 	for field, cap := range consoleCapabilities {
 		if len(cap.VerbExemptions) == 0 {
 			continue
 		}
-		if field != "Orders" {
-			t.Errorf("console.Options.%s carries verb exemptions. Exactly one seam has an argument "+
-				"for one: a reading of the order record cannot be named without the word, and "+
-				"nothing else on this console is in that position", field)
+		names, enumerated := want[field]
+		if !enumerated {
+			t.Errorf("console.Options.%s carries verb exemptions and is not enumerated here. A seam "+
+				"that needs a forbidden word needs an argument for it in this file, beside the "+
+				"others, where the set can be read at a glance", field)
 			continue
 		}
 		for name, why := range cap.VerbExemptions {
-			if !want[name] {
-				t.Errorf("the orders seam exempts %q, which is not one of the five names the record "+
-					"needs. An exemption is the size of the argument written beside it", name)
+			if !names[name] {
+				t.Errorf("the %s seam exempts %q, which is not one of the names enumerated for it. "+
+					"An exemption is the size of the argument written beside it", field, name)
 			}
 			if strings.TrimSpace(why) == "" {
 				t.Errorf("the exemption for %q has no reason; an unargued exemption is the verb list "+
 					"quietly getting shorter", name)
 			}
 		}
-		for name := range want {
+		for name := range names {
 			if _, ok := cap.VerbExemptions[name]; !ok {
-				t.Errorf("the orders seam no longer exempts %q; either the seam was renamed and this "+
-					"list is stale, or the guard is passing for a reason nobody checked", name)
+				t.Errorf("the %s seam no longer exempts %q; either the seam was renamed and this "+
+					"list is stale, or the guard is passing for a reason nobody checked", field, name)
 			}
+		}
+	}
+	for field := range want {
+		if len(consoleCapabilities[field].VerbExemptions) == 0 {
+			t.Errorf("%s is enumerated as needing verb exemptions but carries none; a stale "+
+				"entry here is an exemption nobody would notice being re-added", field)
 		}
 	}
 

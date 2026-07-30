@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "e56ead23218bcfa2716415bd38b40dcd46487cd5b174e21091bcd730dd2bf7ff",
+  "package": "main",
+  "function": "consoleTradingPolicySeam",
+  "signature": "consoleTradingPolicySeam(params=1, results=1)",
+  "start": {
+    "line": 323,
+    "column": 1
+  },
+  "end": {
+    "line": 328,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 327,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 10
+      },
+      "text": "newTradingPolicySeam"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 324,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -436,6 +436,32 @@ func TestGateOnRefusals(t *testing.T) {
 			wantMessage: "allow_live_order_actions",
 		},
 		{
+			// Placing is disabled. The clause used not to look, and the shape it
+			// let through is the one its own sentence forbids: a sell IS a place
+			// (internal/trading refuses on policy.Place regardless of side), so
+			// this engine starts and then refuses its first stop.
+			name:        "placing is disabled",
+			gate:        fullGate(),
+			trading:     &config.Trading{Sell: true, Cancel: true, Amend: true, AllowLiveOrderActions: true},
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrTradingPolicyRefused,
+			wantMessage: "trading.place",
+		},
+		{
+			// Cancelling is disabled. The exit observer cancels its own armed
+			// proposal, so an exit path without it stalls rather than exits.
+			name:        "cancelling is disabled",
+			gate:        fullGate(),
+			trading:     &config.Trading{Place: true, Sell: true, Amend: true, AllowLiveOrderActions: true},
+			writeAtt:    true,
+			guardian:    matchedGuardian(),
+			accountNo:   "123-45",
+			wantErr:     engine.ErrTradingPolicyRefused,
+			wantMessage: "trading.cancel",
+		},
+		{
 			name:     "the Guardian carries different limits",
 			gate:     fullGate(),
 			writeAtt: true,

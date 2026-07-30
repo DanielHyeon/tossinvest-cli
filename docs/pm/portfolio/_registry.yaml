@@ -36,6 +36,7 @@
     "console-excludes-in-one-click",
     "console-sets-guardian-limits",
     "size-us-guardian-tier",
-    "interlock-gates-entry-not-exit"
+    "interlock-gates-entry-not-exit",
+    "console-owns-the-operating-toggles"
   ]
 }

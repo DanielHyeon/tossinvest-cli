@@ -547,10 +547,32 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
 }
 
 // checkTradingPolicy is clause 3.
+// The clause has always said "매수는 가능한데 청산이 불가능한 조합으로는 기동할 수
+// 없다". Until change console-owns-the-operating-toggles it checked two of the four
+// toggles a liquidation actually needs, so the shape it forbade in prose was one an
+// operator could produce: the engine came up and refused its first stop.
+//
+//	place   a sell is a place. internal/trading refuses on policy.Place before it
+//	        ever looks at the side, so a sell-enabled place-disabled policy can
+//	        submit nothing at all.
+//	sell    the side.
+//	cancel  the exit observer cancels its own armed proposal (exitloop). Without
+//	        it an exit that needs replacing stalls instead of exiting.
+//	live    the master switch every mutation asks for.
+//
+// amend, conditional and fractional are deliberately absent: no loop in this
+// build uses them, and requiring what is not used turns an interlock into a
+// checklist.
 func checkTradingPolicy(policy config.Trading) error {
 	var missing []string
+	if !policy.Place {
+		missing = append(missing, "trading.place")
+	}
 	if !policy.Sell {
 		missing = append(missing, "trading.sell")
+	}
+	if !policy.Cancel {
+		missing = append(missing, "trading.cancel")
 	}
 	if !policy.AllowLiveOrderActions {
 		missing = append(missing, "trading.allow_live_order_actions")

@@ -65,6 +65,20 @@ type settingsPage struct {
 	// LimitsLoadErr is an unreadable config on the limit side. It must not take
 	// the adoption section down with it.
 	LimitsLoadErr string
+
+	// --- the operating toggles (change console-owns-the-operating-toggles) ---
+
+	// TradingWired and GateWired report their seams separately, for the reason
+	// LimitsWired gives: a build with one and not the other renders what it can
+	// serve and explains the rest.
+	TradingWired bool
+	GateWired    bool
+	// Trading is the trading block as the file spells it. The screen edits four
+	// of its fields; the rest are displayed nowhere and posted back never.
+	Trading config.Trading
+	// TradingLoadErr is an unreadable config on the policy side, isolated from
+	// the other two sections for the same reason.
+	TradingLoadErr string
 }
 
 func (settingsPage) Refresh() bool { return false }
@@ -130,6 +144,18 @@ func (c *Console) handleSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		page.Gate = gate
 	}
+	if c.opts.TradingPolicy != nil {
+		page.TradingWired = true
+		trading, err := c.opts.TradingPolicy.Load()
+		if err != nil {
+			page.TradingLoadErr = err.Error()
+		}
+		page.Trading = trading
+	}
+	// The gate seam is write-only: LimitSettings.Load already returned the whole
+	// block including `enabled`, and a second reader of one key is how a screen
+	// ends up disagreeing with itself.
+	page.GateWired = c.opts.Gate != nil
 	c.render(w, "settings", page)
 }
 

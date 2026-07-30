@@ -88,7 +88,8 @@ automation gate(운영 게이트)의 ON/OFF와 kill switch는 이 콘솔에서 �
   {{end}}
 
   <p class="muted">automation gate는 지금 <strong>{{if .Gate.Enabled}}ON{{else}}OFF{{end}}</strong>이다.
-  이 화면에는 그것을 바꾸는 버튼이 없다.</p>
+  스위치는 <a href="#operating">아래 운영 섹션</a>에 있고, 이 섹션의 저장은 그 키의 바이트를
+  건드리지 않는다.</p>
 
   {{if not .LimitsWired}}
   <p class="notice"><strong>한도 저장이 배선되지 않았다.</strong> 이 빌드의 콘솔에는 Guardian 한도 저장
@@ -134,6 +135,81 @@ automation gate(운영 게이트)의 ON/OFF와 kill switch는 이 콘솔에서 �
   <strong>USD 한도를 기록하면 국내 자동 진입이, KRW 한도를 기록하면 미국 자동 진입이 닫힌다</strong>.
   저장은 즉시 파일에 기록되지만 <strong>다음 엔진 기동부터 반영</strong>된다
   {{if .EngineRunning}}— <strong>지금 엔진이 실행 중이다</strong>: 기동 시점 설정으로 계속 동작한다{{end}}.</p>
+</section>
+
+<section id="operating">
+  <h2>운영</h2>
+  <p class="muted">엔진이 실제로 돌기 위해 필요한 마지막 두 가지다. 이전에는 둘 다
+  <code>config.json</code> 손편집이었다 — 그 경로는 한도가 다 설정됐는지도, JSON이 여전히 유효한지도
+  확인하지 않고 audit에도 남기지 않는다.</p>
+
+  <h3>거래 정책</h3>
+  <p class="muted">엔진의 청산 경로가 실제로 쓰는 네 개다. <code>amend</code>·<code>conditional</code>·
+  <code>fractional</code>은 이 빌드의 어느 루프도 쓰지 않으므로 여기 없고, 저장은 그 세 값을
+  파일에 적힌 그대로 둔다.</p>
+
+  {{if .TradingLoadErr}}<p class="danger">거래 정책을 읽을 수 없다: <code>{{.TradingLoadErr}}</code></p>{{end}}
+
+  {{if not .TradingWired}}
+  <p class="notice"><strong>거래 정책 저장이 배선되지 않았다.</strong> 표시는 되지만 저장할 수 없다.</p>
+  <table><tr><th>토글</th><th>상태</th></tr>
+  {{range .TradingRows}}<tr><td>{{.Label}}</td><td>{{if .On}}켜짐{{else}}꺼짐{{end}}</td></tr>{{end}}
+  </table>
+  {{else}}
+  <form method="post" action="/settings/trading">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    {{range .TradingRows}}
+    <p><label><input type="checkbox" name="{{.Key}}" {{if .On}}checked{{end}}>
+    <strong>{{.Label}}</strong></label><br>
+    <span class="muted">{{.Why}}</span></p>
+    {{end}}
+    <p><button type="submit">거래 정책 저장</button></p>
+  </form>
+  <p class="muted">네 개가 모두 켜져야 기동 인터록 3절을 통과한다. 이 조합은 "엔진이 내 주식을
+  팔아도 된다"는 승인이다 — 켜는 것은 사람이고, 저장은 audit에 남는다.</p>
+  {{end}}
+
+  <h3>자동화 게이트</h3>
+  <p class="muted">지금 <strong>{{if .Gate.Enabled}}ON{{else}}OFF{{end}}</strong>. 이 스위치는
+  <code>engine.automation_gate.enabled</code> 한 키만 쓴다 — 다섯 한도의 바이트는 건드리지 않는다.</p>
+
+  <table>
+    <tr><th>기동 인터록 사전 판정</th><th>결과</th></tr>
+    {{range .GatePreflight}}
+    <tr><td>{{.Name}}<br><span class="muted">{{.Detail}}</span></td>
+    <td>{{if not .Judgeable}}판정 불가{{else if .OK}}통과{{else}}<strong>미충족</strong>{{end}}</td></tr>
+    {{end}}
+  </table>
+  <p class="muted">이 판정은 <strong>파일이 답하는 절에 한한다</strong>. Guardian 주입·게이트웨이
+  배선·전송의 키 운반은 구성된 프로세스에서만 알 수 있으므로 화면이 판정하지 못한다 —
+  <strong>사전 판정을 통과해도 기동이 보장되지 않는다.</strong> 최종 판단은 엔진의 인터록이고,
+  거부하면 미충족 항목을 열거한다.</p>
+
+  {{if .GateBlockers}}
+  <p class="danger"><strong>지금 켜면 기동이 거부된다.</strong> 미충족: {{range $i, $c := .GateBlockers}}{{if $i}}, {{end}}{{$c}}{{end}}.
+  기록은 되지만 엔진은 뜨지 않는다.</p>
+  {{end}}
+
+  <p class="notice"><strong>게이트를 켜면 시작되는 것.</strong> 다음 엔진 기동에서 대사·exit 관측·
+  체결 감지 세 루프가 돈다. 그 중 대사 루프의 마지막 단계가 <strong>편입</strong>이고,
+  <strong>편입은 되돌릴 수 없다</strong>(해제 기능은 존재하지 않는다 — 가용 수단은 사전 제외·자동
+  편입 끄기·flatten뿐이다).
+  {{if .AdoptionArmed}}지금 설정으로는 <strong>첫 대사 주기에 편입이 일어난다</strong>.
+  현재 제외 목록: <strong>{{.AdoptionExcludes}}</strong>.{{else}}지금은 자동 편입이 꺼져 있고 지정
+  목록도 비어 있어 편입 대상이 없다.{{end}}
+  보호는 <strong>이 프로세스가 살아 있는 동안만</strong> 유효하다 — 브로커에 손절 주문이 남지
+  않으므로 프로세스가 죽으면 보호도 사라진다. 노출을 늘리는 주문은 게이트웨이에서 계속 거부된다.</p>
+
+  {{if not .GateWired}}
+  <p class="notice"><strong>게이트 저장이 배선되지 않았다.</strong> 표시는 되지만 저장할 수 없다.</p>
+  {{else}}
+  <form method="post" action="/settings/gate">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <p><label><input type="checkbox" name="enabled" {{if .Gate.Enabled}}checked{{end}}>
+    <strong>자동화 게이트 ON</strong></label></p>
+    <p><button type="submit">게이트 저장</button></p>
+  </form>
+  {{end}}
 </section>
 {{template "foot" .}}
 {{end}}

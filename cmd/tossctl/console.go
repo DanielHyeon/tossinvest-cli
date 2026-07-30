@@ -248,6 +248,13 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// for `enabled`, so the console still cannot open the automation gate.
 		Limits: consoleLimitSettingsSeam(root),
 
+		// The operating toggles (change console-owns-the-operating-toggles). Two
+		// seams and not one: each writes its own keys, so a policy save cannot
+		// carry a stale switch and a switch flip cannot carry stale ceilings.
+		// Both append the audit line the hand-edit path never left.
+		TradingPolicy: consoleTradingPolicySeam(root),
+		Gate:          consoleGateSwitchSeam(root),
+
 		// The discovery screen's read (change add-candidate-discovery, task 5.5).
 		// It opens internal/candidate's store, runs its assessment and hands over
 		// values — no source is called, so an open /signals tab spends none of the
@@ -301,6 +308,27 @@ func consoleSettingsSeam(root *rootOptions) console.AdoptionSettings {
 // instead of explaining themselves.
 func consoleLimitSettingsSeam(root *rootOptions) console.LimitSettings {
 	if s := newLimitSettingsSeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
+// consoleTradingPolicySeam and consoleGateSwitchSeam adapt the two operating
+// editors (operatingsettings.go, change console-owns-the-operating-toggles).
+//
+// They live here rather than beside their implementations for the reason the
+// package's own guard states: only console.go may import internal/console, so
+// the file that names the interface is this one and the files that satisfy it
+// stay unaware of the consumer. Same nil-on-the-concrete-pointer care as above.
+func consoleTradingPolicySeam(root *rootOptions) console.TradingPolicySettings {
+	if s := newTradingPolicySeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
+func consoleGateSwitchSeam(root *rootOptions) console.GateSwitch {
+	if s := newGateSwitchSeam(root); s != nil {
 		return s
 	}
 	return nil
