@@ -1,0 +1,301 @@
+{
+  "file": "internal/reconcile/recovery_test.go",
+  "source_sha256": "d5f2f4543c4663eb6f0830fa7b283f1292561f1dfe671b720b54b556ce53f8d9",
+  "package": "reconcile_test",
+  "function": "TestExitsStayOpenWhileRecoveryIsIncomplete",
+  "signature": "TestExitsStayOpenWhileRecoveryIsIncomplete(params=1, results=0)",
+  "start": {
+    "line": 542,
+    "column": 1
+  },
+  "end": {
+    "line": 587,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 558,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 561,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 564,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 574,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 577,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 584,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 543,
+        "column": 7
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 544,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 545,
+        "column": 10
+      },
+      "text": "execgw.NewEntryGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 548,
+        "column": 13
+      },
+      "text": "execgw.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 550,
+        "column": 12
+      },
+      "text": "trading.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 559,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 15
+      },
+      "text": "reconcile.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 29
+      },
+      "text": "recoveryOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 54
+      },
+      "text": "recoveryCollector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 562,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 564,
+        "column": 17
+      },
+      "text": "gate.CheckEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 565,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 19
+      },
+      "text": "issuer.IssueReduction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 41
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 575,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 577,
+        "column": 15
+      },
+      "text": "gw.Cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 577,
+        "column": 25
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 582,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 585,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 543,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 544,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 545,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 546,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 548,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 561,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 564,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 568,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 569,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 570,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 577,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

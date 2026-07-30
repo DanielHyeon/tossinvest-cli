@@ -154,7 +154,11 @@ func TestAGateOffEngineRefusesWithoutEnumeratingClauses(t *testing.T) {
 // 기동": no loop starts, and the operator is shown the clauses.
 func TestAnUnmetInterlockIsEnumerated(t *testing.T) {
 	dir := testenv.Isolate(t)
-	refusal := fmt.Errorf("%w: %w", engine.ErrAutomationGateRefused, engine.ErrProtectionNotWired)
+	// Clause 8. It used to be the protection clause, which no longer refuses a
+	// start (change interlock-gates-entry-not-exit) — and a test that enumerates
+	// a clause the interlock cannot report would be asserting a message an
+	// operator can never see.
+	refusal := fmt.Errorf("%w: %w", engine.ErrAutomationGateRefused, engine.ErrKeylessTransport)
 	stubAssembly(t, nil, refusal)
 	stubRuntime(t, func(*engine.Context) (*engine.Runtime, error) { return nil, errStubRuntimeReached })
 
@@ -162,7 +166,7 @@ func TestAnUnmetInterlockIsEnumerated(t *testing.T) {
 	if !errors.Is(err, errEngineInterlockUnmet) {
 		t.Fatalf("err = %v, want errEngineInterlockUnmet", err)
 	}
-	if !strings.Contains(errOut, "ProtectionReady") {
+	if !strings.Contains(errOut, "idempotency key") {
 		t.Errorf("the refusal does not enumerate the unmet clause:\n%s", errOut)
 	}
 	if !strings.Contains(errOut, "  - ") {

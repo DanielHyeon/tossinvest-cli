@@ -1,0 +1,93 @@
+{
+  "file": "internal/app/engine/exit_e2e_test.go",
+  "source_sha256": "030cf9acb637878df5f1d2128f98dfd74764e91915ef657167cb67029dc12ef8",
+  "package": "engine_test",
+  "function": "newEntryCapableE2EStack",
+  "signature": "newEntryCapableE2EStack(params=1, results=1)",
+  "start": {
+    "line": 197,
+    "column": 1
+  },
+  "end": {
+    "line": 204,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 203,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 17
+      },
+      "text": "newE2EBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 9
+      },
+      "text": "isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 2
+      },
+      "text": "writeEngineConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 2
+      },
+      "text": "writeCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 9
+      },
+      "text": "openE2EStackProtected"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

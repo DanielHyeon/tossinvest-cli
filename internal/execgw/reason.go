@@ -98,6 +98,13 @@ const (
 	// The engine holds at most one in-flight mutation per symbol, which is what
 	// makes IN_DOUBT fingerprint matching unique by construction.
 	ReasonSymbolInFlight ReasonCode = "symbol_mutation_in_flight"
+	// ReasonProtectionNotWired: the mutation raises exposure and this build has
+	// no broker-resident protective order execution (interlock clause 6 —
+	// protection.go). It is distinct from every other refusal on this list
+	// because it is the one an operator cannot clear: no setting reaches it, and
+	// the fix is the change that wires protective orders. Reductions never carry
+	// it.
+	ReasonProtectionNotWired ReasonCode = "broker_protection_not_wired"
 
 	// --- broker outcomes ----------------------------------------------------
 

@@ -42,6 +42,7 @@ class TrackerTests(unittest.TestCase):
             "console-excludes-in-one-click",
             "console-sets-guardian-limits",
             "size-us-guardian-tier",
+            "interlock-gates-entry-not-exit",
         ):
             path = changes / change
             path.mkdir(parents=True)

@@ -84,6 +84,20 @@ type Options struct {
 	// string; tests inject a deterministic sequence.
 	NewID func() string
 
+	// ProtectionOverrideForTest replaces the build's ProfileProtection constant.
+	//
+	// It is exported only because the suites that need it are in other packages
+	// (internal/reconcile's gateway tests, internal/app/engine's tracer), and an
+	// export_test.go seam is visible only inside its own package. The guarantee it
+	// gives up — "no caller can spell this" — is restored by an assertion of the
+	// same class the repository already uses for the WTS mutators: no shipped file
+	// sets it, proved over the AST (protection_test.go).
+	//
+	// Setting it in non-test code is a way to claim broker-resident protective
+	// execution this build does not have. The name says so and the test enforces
+	// it; there is no other reason for this field to exist.
+	ProtectionOverrideForTest *ProtectionReadiness
+
 	// Replay resends the request body an IN_DOUBT attempt stored, so its
 	// identity can be recovered from the broker's idempotent answer (replay.go).
 	// Optional: without it, an IN_DOUBT attempt is resolved by observation
@@ -117,6 +131,10 @@ type Gateway struct {
 	replayCfg  ReplayConfig
 	attested   func(ctx context.Context) bool
 
+	// protectionOverride is Options.protectionOverride, carried so checkProtection
+	// can consult it. Nil in every built binary.
+	protectionOverride *ProtectionReadiness
+
 	// inflight holds the in-process claim on a symbol for the duration of a
 	// mutation, so two goroutines cannot both pass the journal's in-flight check.
 	inflightMu sync.Mutex
@@ -146,6 +164,8 @@ func New(opts Options) (*Gateway, error) {
 		replay:     opts.Replay,
 		replayCfg:  opts.ReplayConfig,
 		attested:   opts.Attested,
+
+		protectionOverride: opts.ProtectionOverrideForTest,
 	}
 	if g.clk == nil {
 		g.clk = clock.System()
@@ -481,7 +501,15 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	//    than raised before it, so "why did the engine not trade" is answerable
 	//    from the journal alone.
 	//
-	//    2a. The entry gate, for mutations that add exposure. Exits are never
+	//    2a. Broker-resident protection, for mutations that add exposure
+	//        (interlock clause 6 — protection.go). Ahead of the entry gate
+	//        because it is the cheaper answer and the one no configuration
+	//        changes: the operator who reads it needs a different change, not a
+	//        different setting.
+	if rejected := g.checkProtection(plan); rejected != nil {
+		return g.refuse(ctx, attempt, out, rejected)
+	}
+	//    2b. The entry gate, for mutations that add exposure. Exits are never
 	//        gated (§0.3).
 	if rejected := g.checkEntry(plan); rejected != nil {
 		return g.refuse(ctx, attempt, out, rejected)

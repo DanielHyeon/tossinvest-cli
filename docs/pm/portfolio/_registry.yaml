@@ -35,6 +35,7 @@
     "verify-observes-the-trigger",
     "console-excludes-in-one-click",
     "console-sets-guardian-limits",
-    "size-us-guardian-tier"
+    "size-us-guardian-tier",
+    "interlock-gates-entry-not-exit"
   ]
 }

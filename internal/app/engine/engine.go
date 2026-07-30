@@ -453,6 +453,8 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		clock:      clk,
 		logger:     opts.Logger,
 		publisher:  opts.Publisher,
+
+		protectionOverride: opts.protectionOverride,
 	})
 	if err != nil {
 		_ = jrn.Close()

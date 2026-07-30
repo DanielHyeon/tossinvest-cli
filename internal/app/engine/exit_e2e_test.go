@@ -186,9 +186,40 @@ func newE2EStack(t *testing.T) *e2eStack {
 	return openE2EStack(t, broker, srv, dir)
 }
 
+// newEntryCapableE2EStack is newE2EStack for the one suite that opens a position
+// rather than closing one.
+//
+// The exit stacks do not need it: every mutation they make is a sell or a cancel,
+// and interlock clause 6 does not touch those (execgw/protection.go). The tracer
+// buys, and a buy on a build with no broker-resident protective execution is
+// exactly what the clause refuses — so the tracer's slice has to say out loud
+// that it is running as the protective-order change will, not as this build does.
+func newEntryCapableE2EStack(t *testing.T) *e2eStack {
+	t.Helper()
+	broker, srv := newE2EBroker(t)
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	return openE2EStackProtected(t, broker, srv, dir)
+}
+
 // openE2EStack builds (or re-builds, for the restart test) the engine over one
 // config directory and one journal file.
 func openE2EStack(t *testing.T, broker *e2eBroker, srv *httptest.Server, dir string) *e2eStack {
+	t.Helper()
+	return buildE2EStack(t, broker, srv, dir, false)
+}
+
+// openE2EStackProtected is openE2EStack with interlock clause 6 satisfied, so
+// the gateway it builds admits a buy. See newEntryCapableE2EStack.
+func openE2EStackProtected(t *testing.T, broker *e2eBroker, srv *httptest.Server, dir string) *e2eStack {
+	t.Helper()
+	return buildE2EStack(t, broker, srv, dir, true)
+}
+
+func buildE2EStack(t *testing.T, broker *e2eBroker, srv *httptest.Server,
+	dir string, protectionReady bool,
+) *e2eStack {
 	t.Helper()
 	clk := clock.NewFake(e2eNow)
 	opts := engine.Options{
@@ -202,6 +233,9 @@ func openE2EStack(t *testing.T, broker *e2eBroker, srv *httptest.Server, dir str
 	opts.SetJournalProberForTest(journal.FixedFSProber(journal.FSInfo{
 		Name: "ext4", Magic: journal.MagicExt,
 	}))
+	if protectionReady {
+		opts.SetProtectionReadyForTest()
+	}
 	eng, err := engine.New(opts)
 	if err != nil {
 		t.Fatalf("engine.New: %v", err)

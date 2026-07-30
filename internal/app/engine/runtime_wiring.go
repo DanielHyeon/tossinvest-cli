@@ -217,7 +217,11 @@ var interlockClauses = []struct {
 	{ErrGuardianLimitsMismatch, "6. 한도 단일 출처 — Guardian이 감사된 한도와 다른 값으로 승인한다"},
 	{ErrGatewayRequired, "7. ExecutionGateway — 완전히 배선된 게이트웨이가 없다"},
 	{ErrKeylessTransport, "8. idempotency key — 주문 전송 경로가 키를 실을 수 없다"},
-	{ErrProtectionNotWired, "9. 브로커측 보호 실행(ProtectionReady) — 이 빌드에는 없다 [2c 소관]"},
+	// 브로커측 보호 실행(ProtectionReady)은 더 이상 이 목록에 없다. 기동을 거부하지
+	// 않기 때문이다 — 그 조항은 노출을 증가시키는 mutation 하나하나에 걸리는
+	// 게이트웨이 거부가 되었다(change interlock-gates-entry-not-exit).
+	// 이 목록은 "기동을 막은 것"의 열거이고, 여기 없는 항목을 열거하면 운영자는
+	// 고칠 수 없는 것을 고치려 든다.
 }
 
 // UnmetInterlockClauses renders a startup refusal as the enumerated list of

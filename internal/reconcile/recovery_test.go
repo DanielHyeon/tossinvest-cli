@@ -432,6 +432,9 @@ func TestGatewayRefusesNewOrdersUntilRecoveryCompletes(t *testing.T) {
 		AccountRef: "acct-7",
 		Source:     "test",
 		Entry:      gate,
+		// This suite drives buys to exercise the entry gate; interlock clause 6 is
+		// not what it is about (change interlock-gates-entry-not-exit).
+		ProtectionOverrideForTest: execgw.WiredProtectionForTest,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -548,6 +551,9 @@ func TestExitsStayOpenWhileRecoveryIsIncomplete(t *testing.T) {
 			Place: true, Sell: true, Cancel: true, Amend: true, AllowLiveOrderActions: true,
 		}, broker),
 		Clock: clk, AccountRef: "acct-7", Source: "test", Entry: gate,
+		// These suites drive buys to exercise the entry gate; interlock clause 6 is
+		// not what they are about (change interlock-gates-entry-not-exit).
+		ProtectionOverrideForTest: execgw.WiredProtectionForTest,
 	})
 	if err != nil {
 		t.Fatal(err)
