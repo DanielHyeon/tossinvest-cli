@@ -76,3 +76,12 @@ variables, mutation, `go`/`defer`, and external imports are rejected. Reverse
 import-graph taint reaches every registered authority root. Focused adversarial
 tests, affected-package race tests, full tests, vet, strict OpenSpec, SDD check,
 format and whitespace checks all passed on the exact reviewed commit.
+
+## Dependency-integrated rebase verification · 2026-08-01
+
+- Integration base: `70aabdc9936de08df458da13203437ba7d2dd572` (a041/a042 complete)
+- Reapplied source range: `178f583..2494cf0`; commits were replayed without conflicts.
+- Patch scope remains the independently reviewed a046 implementation; the base marker now
+  excludes already-integrated a041/a042 logic from this change's Function Logic Map audit.
+- Focused candidate/markout/console/CLI tests, focused vet, strict OpenSpec validation,
+  whitespace validation and index synchronization passed on the dependency-integrated tree.
