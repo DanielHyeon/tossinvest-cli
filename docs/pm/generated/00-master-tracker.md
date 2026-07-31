@@ -11,7 +11,7 @@
     - STORY-TOS-032 — Update TossOS from the console [implemented] → `console-system-update`
     - STORY-TOS-033 — Require signed release system updates [implemented] → `signed-release-system-update`
     - STORY-TOS-035 — Accept same-host console writes when privacy headers omit request origin [archived] → `fix-console-origin-fallback`
-    - STORY-TOS-036 — Preserve canonical origin on console form submissions [implemented] → `fix-console-referrer-origin`
+    - STORY-TOS-036 — Preserve canonical origin on console form submissions [archived] → `fix-console-referrer-origin`
   - FEAT-TOS-008 — SDD graph service reliability [active]
     - STORY-TOS-034 — Serialize project GBrain service ownership [implemented] → `serialize-project-gbrain-serve`
 ## INIT-TOS-002 — TossOS automated trading product [active]
