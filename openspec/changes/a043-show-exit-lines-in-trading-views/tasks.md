@@ -1,6 +1,6 @@
 ## 1. Read model과 RED
 
-- [ ] 1.1 a041/a042 snapshot API를 확인하고 positions/orders view builder 영향과 CSP·모바일 branch map을 작성한다.
+- [x] 1.1 a041/a042 snapshot API를 확인하고 positions/orders view builder 영향과 CSP·모바일 branch map을 작성한다.
 - [ ] 1.2 완전/stale/unknown/1주/미연결 order fixture의 렌더링 RED 테스트를 추가한다.
 
 ## 2. 화면 구현

@@ -14,6 +14,10 @@
 
 - OpenSpec strict validation: pass.
 - Mutation capability: none by contract.
+- Dependency baseline: implementation starts from `70aabdc`, after a041/a042 were
+  integrated and gated. `base-commit.txt` was advanced from the portfolio-planning
+  commit so a043's Function Logic Map and diff gate measure this change rather than
+  attributing its prerequisite snapshots to this UI change.
 
 ## Verdict
 
