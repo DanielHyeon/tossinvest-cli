@@ -175,7 +175,7 @@ func TestSettingsPostsWithoutCSRFWriteNothing(t *testing.T) {
 	}
 }
 
-// TestDesignatingASymbolFromThePositionsScreen: the row's button adds the symbol
+// TestDesignatingASymbolFromThePositionsScreen: the row's explicit button adds the symbol
 // to the include list — idempotently — and the response says it is a standing
 // rule taking effect at the next engine start.
 func TestDesignatingASymbolFromThePositionsScreen(t *testing.T) {
@@ -186,8 +186,9 @@ func TestDesignatingASymbolFromThePositionsScreen(t *testing.T) {
 
 	// The button renders on the unmanaged broker-only row, not on the managed one.
 	page := h.page(t, "/positions")
-	if !strings.Contains(page, `type="checkbox"`) || !strings.Contains(page, `action="/settings/include"`) {
-		t.Fatal("the positions screen offers no designation checkbox for an unmanaged holding")
+	if !strings.Contains(page, `>관리 편입 예약</button>`) ||
+		!strings.Contains(page, `action="/settings/include"`) {
+		t.Fatal("the positions screen offers no explicit designation button for an unmanaged holding")
 	}
 
 	for i := 0; i < 2; i++ {

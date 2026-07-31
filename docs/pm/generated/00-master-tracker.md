@@ -43,6 +43,7 @@
     - STORY-TOS-022 — Set Guardian limits from the console [implemented] → `console-sets-guardian-limits`
     - STORY-TOS-023 — Own operating toggles in the console [implemented] → `console-owns-the-operating-toggles`
     - STORY-TOS-024 — Configure engine autostart from the menu [implemented] → `enable-engine-autostart-menu`
+    - STORY-TOS-039 — Streamline trading views and remove CSP-blocked controls [archived] → `streamline-trading-views`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`

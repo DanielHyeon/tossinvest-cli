@@ -18,11 +18,12 @@ body {
   font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
   background: #fbfbfa; color: #1c1c1a;
 }
-main, header > div { max-width: 62rem; margin: 0 auto; }
+main, header > div { max-width: 72rem; margin: 0 auto; min-width: 0; }
 header { border-bottom: 1px solid #dcdcd6; margin-bottom: 1.5rem; }
 header > div { display: flex; gap: 1rem; align-items: baseline; padding: 0.9rem 0; }
 header strong { font-size: 0.95rem; letter-spacing: 0.02em; }
-nav a { margin-right: 0.9rem; color: #3a3a35; text-decoration: none; }
+nav { display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; min-width: 0; }
+nav a { color: #3a3a35; text-decoration: none; }
 nav a.on { font-weight: 600; text-decoration: underline; }
 h1 { font-size: 1.35rem; margin: 1.4rem 0 0.4rem; }
 h2 { font-size: 1.05rem; margin: 1.6rem 0 0.4rem; }
@@ -31,6 +32,7 @@ pre { overflow-x: auto; padding: 0.8rem; background: #f4f4f0; border-radius: 4px
       font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
 th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid #ececE6; vertical-align: top; }
+code { overflow-wrap: anywhere; }
 dl { display: grid; grid-template-columns: 12rem 1fr; gap: 0.25rem 1rem; margin: 0.4rem 0; }
 dt { color: #6a6a62; } dd { margin: 0; }
 .notice { border-left: 3px solid #b07000; background: #fff6e5; padding: 0.7rem 0.9rem; border-radius: 4px; }
@@ -42,6 +44,55 @@ button { font: inherit; padding: 0.45rem 1rem; border-radius: 4px; border: 1px s
          background: #1c1c1a; color: #fbfbfa; cursor: pointer; }
 button.secondary { background: transparent; color: #1c1c1a; }
 form { display: inline; }
+.page-intro { max-width: 52rem; }
+.data-table { table-layout: fixed; }
+.data-table caption { text-align: left; font-weight: 700; font-size: 1.05rem; padding: 0 0 0.65rem; }
+.data-table th, .data-table td { padding: 0.75rem 0.65rem; overflow-wrap: anywhere; }
+.data-table tbody tr:last-child > * { border-bottom: 0; }
+.position-row > :nth-child(1) { width: 15%; }
+.position-row > :nth-child(2) { width: 16%; }
+.position-row > :nth-child(3) { width: 14%; }
+.position-row > :nth-child(4) { width: 16%; }
+.position-row > :nth-child(5) { width: 23%; }
+.position-row > :nth-child(6) { width: 16%; }
+.status-pill { display: inline-block; border: 1px solid currentColor; border-radius: 999px; padding: 0.05rem 0.5rem; }
+.metric { display: block; font-size: 1rem; font-weight: 700; }
+.submetric { display: block; margin-top: 0.15rem; color: #6a6a62; font-size: 0.82rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: flex-start; }
+.actions form { display: block; }
+.actions button { padding: 0.32rem 0.65rem; font-size: 0.86rem; }
+.row-details, .explain { margin-top: 0.45rem; }
+.row-details summary, .explain summary { color: #4e4e48; cursor: pointer; font-weight: 600; }
+.detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem 0.9rem; margin-top: 0.5rem; }
+.detail-grid span { min-width: 0; }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; align-items: center; }
+.filter-group { display: flex; flex-wrap: wrap; gap: 0.35rem 0.7rem; align-items: center; }
+.filter-group .muted { margin-right: 0.15rem; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible {
+  outline: 3px solid #2878d0; outline-offset: 2px;
+}
+@media (max-width: 720px) {
+  body { padding-inline: 0.75rem; }
+  header > div { flex-wrap: wrap; align-items: flex-start; gap: 0.5rem; }
+  header > div > .muted { margin-left: 0 !important; width: 100%; }
+  nav { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; min-width: 0; }
+  dl { grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); }
+  button, summary, nav a, .filter-group a { min-height: 44px; display: inline-flex; align-items: center; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .data-table { display: block; }
+  .data-table caption { display: block; width: 100%; }
+  .data-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .data-table tbody, .data-table tr { display: block; width: 100%; }
+  .data-table tr > * { width: 100% !important; min-width: 0; }
+  .data-table tr { border: 1px solid #dcdcd6; border-radius: 6px; margin: 0.65rem 0; padding: 0.3rem 0.7rem; }
+  .data-table td, .data-table th[scope="row"] { display: grid; grid-template-columns: minmax(7rem, 40%) minmax(0, 1fr);
+    gap: 0.75rem; width: 100%; padding: 0.55rem 0; border-bottom: 1px solid #ecece6; }
+  .data-table td::before, .data-table th[scope="row"]::before { content: attr(data-label); color: #6a6a62;
+    font-weight: 500; }
+  .data-table tr > :last-child { border-bottom: 0; }
+  .actions { min-width: 0; }
+}
 @media (prefers-color-scheme: dark) {
   body { background: #16161a; color: #e6e6e0; }
   header { border-color: #33333a; } nav a { color: #c8c8c0; }
@@ -50,7 +101,9 @@ form { display: inline; }
   .notice { background: #2e2510; } .danger { background: #2e1414; }
   button.secondary { color: #e6e6e0; }
   input[type=text] { background: #111116; color: #e6e6e0; border-color: #44444c; }
+  .submetric, .row-details summary, .explain summary { color: #aaa9a0; }
 }
+@media (prefers-color-scheme: dark) and (max-width: 720px) { .data-table tr { border-color: #33333a; } }
 {{end}}
 
 {{define "head"}}<!doctype html>
@@ -71,16 +124,16 @@ form { display: inline; }
       overview of the account. Both were labelled 대시보드 until change
       console-operator-overview, which is one name for two different questions.
     */}}
-    <a href="/dashboard" {{if eq .Nav "overview"}}class="on"{{end}}>개요</a>
-    <a href="/" {{if eq .Nav "verify-console"}}class="on"{{end}}>검증 콘솔</a>
-    <a href="/positions" {{if eq .Nav "positions"}}class="on"{{end}}>포지션</a>
-    <a href="/orders" {{if eq .Nav "orders"}}class="on"{{end}}>주문</a>
-    <a href="/signals" {{if eq .Nav "signals"}}class="on"{{end}}>발굴 신호</a>
-    <a href="/history" {{if eq .Nav "history"}}class="on"{{end}}>거래 이력</a>
-    <a href="/settings#adoption" {{if eq .Nav "settings"}}class="on"{{end}}>외부 종목 자동관리</a>
-    <a href="/optimization" {{if eq .Nav "optimization"}}class="on"{{end}}>최적화</a>
-    <a href="/verify" {{if eq .Nav "verify"}}class="on"{{end}}>검증</a>
-    <a href="/report" {{if eq .Nav "report"}}class="on"{{end}}>리포트</a>
+    <a href="/dashboard" {{if eq .Nav "overview"}}class="on" aria-current="page"{{end}}>개요</a>
+    <a href="/" {{if eq .Nav "verify-console"}}class="on" aria-current="page"{{end}}>검증 콘솔</a>
+    <a href="/positions" {{if eq .Nav "positions"}}class="on" aria-current="page"{{end}}>포지션</a>
+    <a href="/orders" {{if eq .Nav "orders"}}class="on" aria-current="page"{{end}}>주문</a>
+    <a href="/signals" {{if eq .Nav "signals"}}class="on" aria-current="page"{{end}}>발굴 신호</a>
+    <a href="/history" {{if eq .Nav "history"}}class="on" aria-current="page"{{end}}>거래 이력</a>
+    <a href="/settings#adoption" {{if eq .Nav "settings"}}class="on" aria-current="page"{{end}}>외부 종목 자동관리</a>
+    <a href="/optimization" {{if eq .Nav "optimization"}}class="on" aria-current="page"{{end}}>최적화</a>
+    <a href="/verify" {{if eq .Nav "verify"}}class="on" aria-current="page"{{end}}>검증</a>
+    <a href="/report" {{if eq .Nav "report"}}class="on" aria-current="page"{{end}}>리포트</a>
   </nav>
   <span class="muted" style="margin-left:auto">127.0.0.1 전용 · 승인 외 읽기 전용</span>
 </div></header>

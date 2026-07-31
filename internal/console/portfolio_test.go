@@ -890,20 +890,22 @@ func TestAnAdoptedHoldingRendersAsManagedWithItsBasis(t *testing.T) {
 	}
 }
 
-// rowFor returns the fragment of the page between one symbol and the next table
-// row boundary, so a per-row assertion cannot be satisfied by another row.
+// rowFor returns the primary row carrying one symbol, so a per-row assertion
+// cannot be satisfied by a later holding or by the page-level explanation.
 func rowFor(t *testing.T, page, symbol string) string {
 	t.Helper()
-	at := strings.Index(page, symbol)
+	at := strings.Index(page, `data-symbol="`+symbol+`"`)
 	if at < 0 {
 		t.Fatalf("the page does not mention %s", symbol)
 	}
-	rest := page[at:]
-	if end := strings.Index(rest, "<tr>"); end > 0 {
-		// The row plus its exit-line row, which is the second <tr> of the pair.
-		if second := strings.Index(rest[end+4:], "<tr>"); second > 0 {
-			return rest[:end+4+second]
-		}
+	start := strings.LastIndex(page[:at], "<tr")
+	if start < 0 {
+		t.Fatalf("the %s marker is not inside a table row", symbol)
 	}
-	return rest
+	rest := page[start:]
+	if end := strings.Index(rest, "</tr>"); end >= 0 {
+		return rest[:end+len("</tr>")]
+	}
+	t.Fatalf("the %s row is not closed", symbol)
+	return ""
 }

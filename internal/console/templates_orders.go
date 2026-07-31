@@ -11,7 +11,7 @@ package console
 const ordersTemplates = `
 {{define "orders"}}{{template "head" .}}
 <h1>주문</h1>
-<p class="muted">계좌의 주문 기록이다. 읽기 전용 — 이 화면에서 주문을 내거나 정정·취소할 수 없다.
+<p class="muted page-intro">활성 상태와 최근 주문을 한 화면에서 확인한다. 읽기 전용 — 이 화면에서 주문을 내거나 정정·취소할 수 없다.
 {{.Snap.NowText}} 기준.</p>
 
 {{template "journalstate" .Snap.Journal}}
@@ -34,8 +34,8 @@ const ordersTemplates = `
   합계와 붙어 있다.
 */}}
 {{define "ordercounts"}}
-<section>
-  <h2>미체결</h2>
+<section class="order-summary">
+  <h2>미체결 주문 현황</h2>
   <dl>
     <dt>일반 주문 <span class="muted">OPEN 그룹</span></dt>
     <dd>{{if .OpenLive.Known}}{{.OpenLive.Value}}{{else}}<span class="muted">미측정
@@ -50,19 +50,18 @@ const ordersTemplates = `
       {{if .Live.Code}}({{.Live.Code}}){{end}}</span> — {{.Live.Why}}{{end}}</dd>
   </dl>
   {{template "orderbroker" .}}
-  <p class="muted">미체결 조회는 브로커의 <code>status=OPEN</code> 그룹이다 — 대기 주문을
+  <details class="explain"><summary>집계 기준</summary><p class="muted">미체결 조회는 브로커의 <code>status=OPEN</code> 그룹이다 — 대기 주문을
   <strong>전량</strong> 돌려주는 호출이므로 이 건수는 하한이 아니라 숫자다. 페이지 경계에 걸려
-  잘릴 수 있는 조회로 미체결을 세면 101번째의 살아 있는 주문이 표에서도 집계에서도 사라진다.</p>
+  잘릴 수 있는 조회로 미체결을 세면 101번째의 살아 있는 주문이 표에서도 집계에서도 사라진다.</p></details>
 
-  <h2>종결</h2>
   <dl>
     <dt>종결 주문 <span class="muted">CLOSED 그룹 한 페이지</span></dt>
     <dd>{{if .ClosedCount.Known}}{{.ClosedCount.Value}}{{else}}<span class="muted">미측정
       ({{.ClosedCount.Code}})</span> — {{.ClosedCount.Why}}{{end}}</dd>
   </dl>
-  <p class="muted">종결 목록은 따로 부른다. <strong>취소·거부된 주문은 체결이 되지 않으므로
+  <details class="explain"><summary>종결 목록 기준</summary><p class="muted">종결 목록은 따로 부른다. <strong>취소·거부된 주문은 체결이 되지 않으므로
   왕복 기록에 영영 나타나지 않는다</strong> — 거래 이력 화면이 대신하지 못하는 정보다.
-  이 목록은 페이지네이션되므로 건수가 "N건 이상"일 수 있다.</p>
+  이 목록은 페이지네이션되므로 건수가 "N건 이상"일 수 있다.</p></details>
 
   {{if .Truncated}}
   <p class="notice"><strong>페이지가 잘렸다.</strong> 브로커가 다음 페이지가 있다고 답했으므로
@@ -105,11 +104,13 @@ const ordersTemplates = `
 <section>
   <h2>필터</h2>
   {{if .Enabled}}
+  <nav class="filter-bar" aria-label="주문 필터">
   {{range .Filters}}
-  <p><span class="muted">{{.Label}}</span>
+  <span class="filter-group"><span class="muted">{{.Label}}</span>
   {{range .Options}}{{if .On}}<strong>{{.Label}}</strong>{{else}}<a href="{{.Href}}">{{.Label}}</a>{{end}}
-  {{end}}</p>
+  {{end}}</span>
   {{end}}
+  </nav>
   <p class="muted">{{.Selected.SummaryText}} — <strong>{{.Shown}}</strong>/{{.Total}}건{{if .Truncated}}
   이상{{end}} 표시</p>
   {{else}}
@@ -122,28 +123,28 @@ const ordersTemplates = `
 
 {{define "ordertable"}}
 <section>
-  <h2>주문 목록</h2>
   {{if .Rows}}
-  <table>
+  <table class="data-table orders-table">
+    <caption>주문 목록</caption>
     <thead><tr>
-      <th>시각(UTC)</th><th>심볼</th><th>시장</th><th>방향</th><th>구분</th><th>상태</th>
-      <th>주문수량</th><th>체결수량</th><th>주문가</th><th>평균체결가</th><th>주문번호</th><th>발주 주체</th>
+      <th scope="col">시각(UTC)</th><th scope="col">심볼·시장</th><th scope="col">방향·구분</th>
+      <th scope="col">상태·체결수량</th><th scope="col">주문수량</th><th scope="col">주문가</th><th scope="col">발주 주체</th>
     </tr></thead>
     <tbody>
     {{range .Rows}}
-      <tr>
-        <td>{{.At}}</td>
-        <td>{{.Symbol}}</td>
-        <td>{{.Market}}</td>
-        <td>{{.Side}}</td>
-        <td>{{.StateText}}{{if .Conditional}} <span class="muted">조건주문</span>{{end}}</td>
-        <td>{{.Status}}{{if .Detail}}<br><span class="muted">{{.Detail}}</span>{{end}}</td>
-        <td>{{.Quantity}}</td>
-        <td>{{.Filled}}</td>
-        <td>{{.Price}}</td>
-        <td>{{.AvgPrice}}</td>
-        <td><code>{{.ID}}</code></td>
-        <td>{{.OriginText}}</td>
+      <tr class="order-row">
+        <td data-label="시각">{{.At}}</td>
+        <th scope="row" data-label="종목"><code>{{.Symbol}}</code><span class="submetric">{{.Market}}</span></th>
+        <td data-label="방향·구분"><strong>{{.Side}}</strong><span class="submetric">{{if .Conditional}}조건주문{{else}}{{.StateText}}{{end}}</span></td>
+        <td data-label="상태·체결"><strong>{{.Status}}</strong><span class="submetric">체결 {{.Filled}}</span>
+          {{if .Detail}}<span class="submetric">{{.Detail}}</span>{{end}}
+          <details class="row-details"><summary>주문 추적 정보</summary><div class="detail-grid">
+            <span>주문번호 <code>{{.ID}}</code></span><span>평균체결가 <strong>{{.AvgPrice}}</strong></span>
+          </div></details>
+        </td>
+        <td data-label="수량"><strong>{{.Quantity}}</strong></td>
+        <td data-label="가격"><strong>{{.Price}}</strong></td>
+        <td data-label="발주 주체">{{.OriginText}}</td>
       </tr>
     {{end}}
     </tbody>

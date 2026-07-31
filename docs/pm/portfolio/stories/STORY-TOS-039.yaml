@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-039",
+  "title": "Streamline trading views and remove CSP-blocked controls",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "streamline-trading-views",
+    "path": "openspec/changes/archive/2026-07-31-streamline-trading-views"
+  },
+  "acceptance": [
+    "The positions screen presents management status, profit or loss, entry, active protection line, and take-profit progress as the primary scan path",
+    "Position designation and exclusion controls work under the deployed deny-by-default CSP without inline script or event handlers",
+    "The orders screen remains read-only while presenting live counts, compact filters, and order details without desktop or mobile overflow",
+    "Both screens remain truthful when broker or journal data is missing and retain the existing cache and rate-limit behavior",
+    "The change does not alter an exit policy, journal record, engine process, operating toggle, soak process, or LIVE order"
+  ]
+}

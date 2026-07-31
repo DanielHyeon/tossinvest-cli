@@ -289,8 +289,8 @@ func TestTheExcludeControlOnlyRendersOnUnmanagedKnownRows(t *testing.T) {
 	}
 }
 
-// TestTheExcludeControlAsksForNoTyping (사용자 결정 2026-07-27): the same single
-// confirm() the designation uses, and no text entry anywhere on the screen.
+// TestTheExcludeControlAsksForNoTyping: the CSP-safe explicit action stays one
+// click and asks for no script or text entry anywhere on the screen.
 func TestTheExcludeControlAsksForNoTyping(t *testing.T) {
 	seam := &fakeSettings{block: config.Adoption{DefaultStopPct: 0.05}}
 	h := settingsHarness(t, seam)
@@ -299,8 +299,10 @@ func TestTheExcludeControlAsksForNoTyping(t *testing.T) {
 
 	page := h.page(t, "/positions")
 	switch {
-	case !strings.Contains(page, "confirm("):
-		t.Error("the controls lost their single confirmation")
+	case strings.Contains(page, "confirm("):
+		t.Error("the controls still depend on a CSP-blocked confirmation handler")
+	case !strings.Contains(page, `>자동관리 제외</button>`):
+		t.Error("the screen has no explicit one-click exclusion action")
 	case strings.Contains(page, "prompt("):
 		t.Error("the positions screen asks the operator to type something")
 	case strings.Contains(page, `type="text"`):
