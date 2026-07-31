@@ -91,3 +91,12 @@ CLEAN 판정을 받았다. canonical DTO, account+market+market-local-day identi
 opaque broker id, CONFIRMED PLACE/AMEND evidence, collision-free bounded lineage,
 no-recompute/no-fuzzy-link, input-free 렌더, StockOS dark semantic palette의 WCAG
 AA 대비와 정직한 branch evidence를 확인했다. 완료 gate 실행을 승인한다.
+
+## Dependency-integrated base verification · 2026-08-01
+
+- Main integration base: `7cbb36e7984659b3b4a8c5dcc3605567dd477ba5`
+  (a041/a042/a046 complete).
+- The a043 commits replayed without conflict; the base marker now excludes the
+  already-integrated a046 candidate/markout work from a043's logic-map diff.
+- Focused operatorview/journal/console/CLI tests and Function Logic Map validation
+  pass on the combined tree. No LIVE mutation or operating toggle was invoked.
