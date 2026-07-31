@@ -1,7 +1,7 @@
 ## 1. 선행조건과 RED
 
 - [x] 1.1 a045/a046 완료를 선행 gate로 유지하고 첫 lane를 StockOS commit `d75113d3`, source-set digest `09260ac…`, KRX `parker_vwap_trend_v1` conservative constants로 proposal-freeze에서 고정한다.
-- [ ] 1.2 engine/gateway/Guardian/journal/console operating 함수의 CodeGraph impact와 Function Logic·Branch Test Map을 작성한다.
+- [x] 1.2 engine/gateway/Guardian/journal/console operating 함수의 CodeGraph impact와 Function Logic·Branch Test Map을 작성한다.
 - [ ] 1.3 lane 순수성, ApprovedCandidate pass+candidate-life/set/evidence provenance, OFF exit 보존, Guardian/protection/gate refusal, duplicate identity와 legacy RiskIntent canonical compatibility RED 테스트를 추가한다.
 - [ ] 1.4 activation manifest 모든 binding field의 mismatch/expiry/revocation과 decision→dispatch TOCTOU RED 테스트를 추가한다.
 - [ ] 1.5 sorted source path/blob manifest가 frozen source-set digest를 재현하는지 검증하고, 불일치 시 not_configured/OFF인 RED 테스트를 추가한다.
