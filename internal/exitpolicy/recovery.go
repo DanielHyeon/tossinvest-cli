@@ -29,40 +29,26 @@ type RecoveryPolicyDefinition struct {
 }
 
 type RatchetRecoveryDefinition struct {
-	Evaluation         RatchetSnapshotInput `json:"evaluation"`
-	PreviousHighWater  string               `json:"previous_high_water"`
-	PreviousProtection string               `json:"previous_protection"`
-	PreviousLevel      Level                `json:"previous_level"`
+	Evaluation RatchetSnapshotInput `json:"evaluation"`
 }
 
 type LadderRecoveryDefinition struct {
-	Evaluation         LadderSnapshotInput `json:"evaluation"`
-	PreviousHighWater  string              `json:"previous_high_water"`
-	PreviousProtection string              `json:"previous_protection"`
-	PreviousRung       int                 `json:"previous_rung"`
+	Evaluation LadderSnapshotInput `json:"evaluation"`
 }
 
-func NewRatchetRecoveryPolicy(evaluation RatchetSnapshotInput, previousHighWater,
-	previousProtection string, previousLevel Level) RecoveryPolicyDefinition {
+func NewRatchetRecoveryPolicy(evaluation RatchetSnapshotInput) RecoveryPolicyDefinition {
 	copy := evaluation
 	if evaluation.Input.Config != nil {
 		config := *evaluation.Input.Config
 		copy.Input.Config = &config
 	}
-	return RecoveryPolicyDefinition{Ratchet: &RatchetRecoveryDefinition{
-		Evaluation: copy, PreviousHighWater: strings.TrimSpace(previousHighWater),
-		PreviousProtection: strings.TrimSpace(previousProtection), PreviousLevel: previousLevel,
-	}}
+	return RecoveryPolicyDefinition{Ratchet: &RatchetRecoveryDefinition{Evaluation: copy}}
 }
 
-func NewLadderRecoveryPolicy(evaluation LadderSnapshotInput, previousHighWater,
-	previousProtection string, previousRung int) RecoveryPolicyDefinition {
+func NewLadderRecoveryPolicy(evaluation LadderSnapshotInput) RecoveryPolicyDefinition {
 	copy := evaluation
 	copy.Input.Policy.Rungs = append([]Rung(nil), evaluation.Input.Policy.Rungs...)
-	return RecoveryPolicyDefinition{Ladder: &LadderRecoveryDefinition{
-		Evaluation: copy, PreviousHighWater: strings.TrimSpace(previousHighWater),
-		PreviousProtection: strings.TrimSpace(previousProtection), PreviousRung: previousRung,
-	}}
+	return RecoveryPolicyDefinition{Ladder: &LadderRecoveryDefinition{Evaluation: copy}}
 }
 
 // ValidateRecoveryDerivation re-runs the exact immutable evaluator input and
@@ -80,15 +66,16 @@ func ValidateRecoveryDerivation(line ExitLineSnapshot, definition RecoveryPolicy
 	if ratchet := definition.Ratchet; ratchet != nil {
 		expected, err = EvaluateRatchetSnapshot(ratchet.Evaluation)
 		if err == nil {
-			expected = expected.ChangedFromState(ratchet.PreviousHighWater,
-				ratchet.PreviousProtection, ratchet.PreviousLevel, NoRung)
+			input := ratchet.Evaluation.Input
+			expected = expected.ChangedFromState(input.HighWater, input.Baseline, input.Level, NoRung)
 		}
 	} else {
 		ladder := definition.Ladder
 		expected, err = EvaluateLadderSnapshot(ladder.Evaluation)
 		if err == nil {
-			expected = expected.ChangedFromState(ladder.PreviousHighWater,
-				ladder.PreviousProtection, LevelNone, ladder.PreviousRung)
+			input := ladder.Evaluation.Input
+			expected = expected.ChangedFromState(input.HighWater, input.Baseline,
+				LevelNone, input.State.ActivatedRung)
 		}
 	}
 	if err != nil {

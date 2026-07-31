@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| exact line + exact evaluator input + previous state | one validated policy arm containing the original snapshot context, policy input, quantity and prior watermark/protection/stage | persisted a041 snapshot and a042 recovery evidence | `ErrRecoveryIdentity`; never reconstructs a substitute from output fields |
+| exact line + exact evaluator input | one validated policy arm containing the original snapshot context, policy input, quantity and prior watermark/protection/stage inside that input | persisted a041 snapshot and a042 recovery evidence | `ErrRecoveryIdentity`; never reconstructs a substitute from output fields |
 
 ## Branches and early returns
 
@@ -25,7 +25,7 @@
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `EvaluateRatchetSnapshot` / `EvaluateLadderSnapshot` | rerun the same pure evaluator over persisted exact inputs | error wraps as identity refusal; no fallback registry lookup | CodeGraph + AST |
-| `ChangedFromState` | bind previous watermark/protection/stage and the `Changed` bit | exact value comparison | CodeGraph + AST |
+| `ChangedFromState` | bind the evaluator input's original watermark/protection/stage and the `Changed` bit | exact value comparison; no redundant wrapper fields | CodeGraph + AST |
 
 ## State mutations and fallbacks
 

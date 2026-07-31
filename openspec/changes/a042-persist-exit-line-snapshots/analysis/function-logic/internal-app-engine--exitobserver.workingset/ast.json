@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "6e8dd9eece02e33cde6ad21928aa6dbcd4c23bf8266efd0e2e1a8e422a05a30d",
+  "source_sha256": "974564a36cbef47a7f9a5eddf8a4732a2842f1566baf0ae3a96e02f28b981c2f",
   "package": "engine",
   "function": "workingSet",
   "receiver": "ExitObserver",

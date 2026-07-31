@@ -823,8 +823,7 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observ
 	}
 
 	return o.record(ctx, m, snapshot,
-		exitpolicy.NewRatchetRecoveryPolicy(evaluation, m.state.HighWater, m.state.Baseline,
-			exitpolicy.Level(m.state.RatchetLevel)),
+		exitpolicy.NewRatchetRecoveryPolicy(evaluation),
 		quote, observation, cycle)
 }
 
@@ -885,8 +884,8 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observe
 	if !snapshot.Changed {
 		return nil
 	}
-	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(evaluation,
-		m.state.HighWater, m.state.Baseline, m.state.ActiveRung), quote, observation, cycle)
+	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(evaluation),
+		quote, observation, cycle)
 }
 
 func (o *ExitObserver) snapshotContext(m managed, quote observedQuote,

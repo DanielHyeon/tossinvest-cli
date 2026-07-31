@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"time"
 
@@ -305,16 +306,77 @@ func scanExitEvent(row rowScanner, event *ExitEvent) error {
 }
 
 func validateExitEventArmSuppression(event ExitEvent) error {
+	saved := event.Evaluation.Saved.Snapshot
+	recomputed := event.Evaluation.Recomputed.Snapshot
+	effective := event.Evaluation.Effective.Snapshot
+	source := strings.TrimSpace(event.Evaluation.EffectiveSource)
 	reason := strings.TrimSpace(event.ArmSuppressedReason)
-	if reason == "" {
+	if saved == nil && recomputed == nil && effective == nil && source == "" {
+		if reason != "" {
+			return fmt.Errorf("%w: legacy event cannot assert arm-suppression evidence",
+				ErrExitSnapshotCorrupt)
+		}
 		return nil
 	}
-	if reason != ArmSuppressedWorkingOrder {
+	if recomputed == nil || effective == nil {
+		return fmt.Errorf("%w: event evaluation tuple is incomplete", ErrExitSnapshotCorrupt)
+	}
+	if recomputed.Line.PositionID != event.PositionID || effective.Line.PositionID != event.PositionID ||
+		(saved != nil && saved.Line.PositionID != event.PositionID) {
+		return fmt.Errorf("%w: event evaluation belongs to another position", ErrExitSnapshotCorrupt)
+	}
+	var expectedSource exitpolicy.RecoverySource
+	switch source {
+	case EffectiveSourceRecomputed:
+		if !reflect.DeepEqual(*effective, *recomputed) {
+			return fmt.Errorf("%w: recomputed source does not match effective snapshot",
+				ErrExitSnapshotCorrupt)
+		}
+		expectedSource = exitpolicy.RecoveryRecomputed
+	case EffectiveSourceSaved:
+		if saved == nil || !reflect.DeepEqual(*effective, *saved) {
+			return fmt.Errorf("%w: saved source does not match effective snapshot",
+				ErrExitSnapshotCorrupt)
+		}
+		expectedSource = exitpolicy.RecoverySavedMonotone
+	default:
+		return fmt.Errorf("%w: unknown effective source %q", ErrExitSnapshotCorrupt, source)
+	}
+	var savedLine *exitpolicy.ExitLineSnapshot
+	if saved != nil {
+		line := saved.Line
+		savedLine = &line
+	}
+	selected, selectedSource, err := exitpolicy.SelectRecoverySnapshot(savedLine, recomputed.Line)
+	if err != nil || selectedSource != expectedSource || selected != effective.Line {
+		return fmt.Errorf("%w: effective event snapshot does not match recovery selection",
+			ErrExitSnapshotCorrupt)
+	}
+	if reason != "" && reason != ArmSuppressedWorkingOrder {
 		return fmt.Errorf("%w: unknown arm-suppression reason %q", ErrExitSnapshotCorrupt, reason)
 	}
-	if event.Evaluation.Recomputed.Snapshot == nil || event.Evaluation.Effective.Snapshot == nil ||
-		!event.Evaluation.Recomputed.Snapshot.Line.Orderable || event.ProposedIntentID != "" ||
-		event.Action != "" || event.Evaluation.EffectiveSource != EffectiveSourceRecomputed {
+	armed := event.Action != "" || event.ProposedIntentID != ""
+	if (event.Action == "") != (event.ProposedIntentID == "") {
+		return fmt.Errorf("%w: event arm action and intent evidence are partial", ErrExitSnapshotCorrupt)
+	}
+	if source == EffectiveSourceSaved {
+		if armed || reason != "" {
+			return fmt.Errorf("%w: saved-monotone event cannot carry arm evidence", ErrExitSnapshotCorrupt)
+		}
+		return nil
+	}
+	if recomputed.Line.Orderable && armed {
+		if reason != "" || event.Action != string(recomputed.Line.Action) {
+			return fmt.Errorf("%w: armed event contradicts immutable recomputed proposal",
+				ErrExitSnapshotCorrupt)
+		}
+		return nil
+	}
+	if recomputed.Line.Orderable && !armed && reason != ArmSuppressedWorkingOrder {
+		return fmt.Errorf("%w: orderable event without an arm needs typed suppression evidence",
+			ErrExitSnapshotCorrupt)
+	}
+	if !recomputed.Line.Orderable && (armed || reason != "") {
 		return fmt.Errorf("%w: arm-suppression reason lacks complete orderable evaluation evidence",
 			ErrExitSnapshotCorrupt)
 	}

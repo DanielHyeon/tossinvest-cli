@@ -34,6 +34,11 @@
 13. EVALUATED의 `projected_quantity`와 `state_only`가 NULL이면 partial tuple이다. legacy judgement는
     arm-suppression reason을 가질 수 없고, event read는 알려진 enum과 완전한 orderable evidence를
     함께 검증한다.
+14. event read는 `effective_source`에 따라 effective JSON이 recomputed 또는 saved candidate와
+    exact-match하고 `SelectRecoverySnapshot` 결과도 같아야 한다. orderable recomputed의 reason 삭제,
+    다른 valid JSON 치환, partial tuple, saved source 위조, non-orderable suppression은 모두 corruption이다.
+15. recovery evidence의 직전 상태는 별도 중복 필드로 저장하지 않고 exact evaluator input의
+    high-water/baseline/level 또는 activated rung을 직접 사용한다.
 
 ## Verification evidence
 
@@ -59,6 +64,9 @@
 - Exact semantic replay: forged ratchet level, ladder protection, same-floor remaining quantity,
   cancel-first and changed bits all fail closed; evaluated NULL state-only/projected fields and forged event
   arm-suppression evidence are typed corruption.
+- Event state-machine read: deleted/empty suppression reason, swapped valid effective JSON, forged source,
+  missing effective candidate, known reason on non-orderable evidence, and forged armed action all fail closed
+  in strict and per-row read-only projections.
 - Emergency isolation: a synchronously blocked corruption alert occurs only after another position's
   emergency proposal reaches the submit seam.
 

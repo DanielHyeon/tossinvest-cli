@@ -25,7 +25,7 @@
 ## State mutations and fallbacks
 
 - Reads exact saved/recomputed/effective JSON and scalar provenance columns.
-- A nonempty arm-suppression reason must be the known enum and carry complete recomputed/effective orderable evidence with no action or intent.
+- Legacy is allowed only when all evaluation candidates/source are absent. For v10 events the selected source must exact-match the corresponding candidate and `SelectRecoverySnapshot`; armed, suppressed and saved-monotone states are mutually exclusive and complete.
 
 ## Safety conclusion
 

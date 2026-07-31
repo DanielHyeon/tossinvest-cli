@@ -29,7 +29,7 @@ func ladderRecoverySnapshot(t *testing.T, price, quantity string) (ExitLineSnaps
 		t.Fatalf("EvaluateLadderSnapshot: %v", err)
 	}
 	snapshot = snapshot.ChangedFromState("10000", "9800", LevelNone, NoRung)
-	return snapshot, NewLadderRecoveryPolicy(evaluation, "10000", "9800", NoRung)
+	return snapshot, NewLadderRecoveryPolicy(evaluation)
 }
 
 func TestRecoveryAllowsLadderBeforeFirstRung(t *testing.T) {
@@ -127,7 +127,7 @@ func TestRecoveryRejectsForgedRatchetLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 	snapshot = snapshot.ChangedFromState("10000", "9800", LevelNone, NoRung)
-	recovery := NewRatchetRecoveryPolicy(evaluation, "10000", "9800", LevelNone)
+	recovery := NewRatchetRecoveryPolicy(evaluation)
 	snapshot.RatchetLevel = LevelProfitLock
 	if err := ValidateRecoveryDerivation(snapshot, recovery); !errors.Is(err, ErrRecoveryIdentity) {
 		t.Fatalf("error = %v, want forged level refusal", err)

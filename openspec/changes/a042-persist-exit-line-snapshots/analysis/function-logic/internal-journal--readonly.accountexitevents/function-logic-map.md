@@ -24,7 +24,7 @@
 
 ## State mutations and fallbacks
 
-- Preserves window ordering and adds persisted evaluation data. Invalid arm-suppression evidence clears the effective snapshot view and exposes `invalid_arm_suppression_evidence` without hiding other account rows.
+- Preserves window ordering and adds persisted evaluation data. Any incomplete or cross-candidate event state clears the effective snapshot view and exposes `invalid_arm_suppression_evidence` without hiding other account rows.
 
 ## Safety conclusion
 
