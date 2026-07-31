@@ -5,8 +5,8 @@
 
 ## Security decision
 
-**BLOCKED PENDING INDEPENDENT RE-REVIEW.** 최초 리뷰에서 activation/evidence binding,
-exported veto-order mutation, UI subtree 검사와 markout isolation detector 보완이 요구됐다.
+**CLEAN FOR DORMANT INTEGRATION.** activation/evidence binding, veto-order mutation,
+UI subtree, markout isolation과 pure approved-candidate boundary를 독립 재리뷰했다.
 수치 threshold의 최초 승인은 계속 별도 사람 evidence activation record다.
 
 ## Findings and decisions
@@ -57,3 +57,22 @@ Numeric activation remains absent. Runtime and UI stay
 `unapproved / passed=0 / verdict inactive`, and the reviewed dependency guards
 show no order or RiskIntent authority. Focused tests, affected-package race
 tests, and vet passed for the reviewed scope.
+
+## Independent boundary re-review · 2026-08-01
+
+- Reviewed scope: `30a61ce..fc13b6634866cdff7bc40bc49553792895cc96d5`
+- Verdict: **CLEAN**
+- New findings: **0**
+
+The final adversarial review verified the `go/types` cycle-safe allowlist over
+aliases, named underlying types, embedded fields, fixed arrays and generic type
+arguments. Only exact `candidate.ApprovedCandidate` plus immutable scalar/value
+composites cross the pure boundary. Pointer, map, slice, channel, signature,
+interface (`any`/`error`), unsafe, type-parameter and `candidate.Source`
+capabilities fail closed.
+
+Method values/expressions, type assertions, free or injected calls, package
+variables, mutation, `go`/`defer`, and external imports are rejected. Reverse
+import-graph taint reaches every registered authority root. Focused adversarial
+tests, affected-package race tests, full tests, vet, strict OpenSpec, SDD check,
+format and whitespace checks all passed on the exact reviewed commit.

@@ -63,7 +63,7 @@
     - STORY-TOS-028 — Fix chase-veto measurement [implemented] → `fix-chase-veto-measurement`
     - STORY-TOS-029 — Retire the gainers candidate source [implemented] → `retire-gainers-source`
     - STORY-TOS-030 — Refine extended-shadow bands [implemented] → `refine-extended-shadow-bands`
-    - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [in_progress] → `a046-approve-candidate-veto-thresholds`
+    - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [implemented] → `a046-approve-candidate-veto-thresholds`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
     - STORY-TOS-a047 — Add the strategy entry engine [in_progress] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [in_progress] → `a048-add-market-aware-scheduler`
