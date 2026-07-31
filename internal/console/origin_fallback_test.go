@@ -112,6 +112,29 @@ func TestHeaderlessCanonicalTLSPostReachesCSRFAndHandlerGates(t *testing.T) {
 	}
 }
 
+func TestExplicitOpaqueOriginCannotReachMutationHandler(t *testing.T) {
+	rig := newRemoteTestRig(t)
+	called := 0
+	handler := rig.console.mutating(func(w http.ResponseWriter, _ *http.Request) {
+		called++
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	r := remoteRequest(http.MethodPost, "/restart", "10.8.0.12:44035", "mobile",
+		url.Values{"csrf": {rig.console.csrf}})
+	r.Header.Set("Origin", "null")
+	w := httptest.NewRecorder()
+	handler(w, r)
+
+	if w.Code != http.StatusForbidden ||
+		!strings.Contains(w.Body.String(), "요청 출처가 일치하지 않는다") {
+		t.Fatalf("opaque-origin response = %d %q, want origin refusal", w.Code, w.Body.String())
+	}
+	if called != 0 {
+		t.Fatalf("opaque origin reached mutation handler %d time(s)", called)
+	}
+}
+
 func TestRemoteMutationOriginFallbackRejectsIndirectEvidence(t *testing.T) {
 	rig := newRemoteTestRig(t)
 	called := 0

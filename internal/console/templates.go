@@ -57,7 +57,7 @@ form { display: inline; }
 <html lang="ko"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="same-origin">
 {{if .Refresh}}<meta http-equiv="refresh" content="{{.RefreshSeconds}}">{{end}}
 <title>tossctl console</title>
 <style>{{template "style"}}</style>
@@ -126,7 +126,7 @@ form { display: inline; }
 {{define "restart"}}<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="same-origin">
 <meta http-equiv="refresh" content="{{.RefreshContent}}">
 <title>재시작 중 — tossctl console</title>
 <style>{{template "style"}}</style></head><body><main>

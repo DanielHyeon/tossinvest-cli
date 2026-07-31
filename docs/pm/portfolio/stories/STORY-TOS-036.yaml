@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-036",
+  "title": "Preserve canonical origin on console form submissions",
+  "feature": "FEAT-TOS-007",
+  "intent": "active",
+  "openspec": {
+    "change_id": "fix-console-referrer-origin",
+    "path": "openspec/changes/fix-console-referrer-origin"
+  },
+  "acceptance": [
+    "Console documents use a same-origin referrer policy so canonical HTTPS form submissions carry canonical origin evidence",
+    "A canonical browser form POST reaches the CSRF gate instead of being refused by the origin gate",
+    "Cross-origin requests and opaque origins remain rejected by the existing origin gate",
+    "The CSP remains deny-by-default and no test restarts the console, starts the engine, flips an operating toggle, or sends a LIVE order"
+  ]
+}

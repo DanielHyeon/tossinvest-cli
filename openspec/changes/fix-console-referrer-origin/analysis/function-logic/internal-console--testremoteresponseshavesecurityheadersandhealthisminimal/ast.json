@@ -1,0 +1,270 @@
+{
+  "file": "internal/console/remote_test.go",
+  "source_sha256": "59cd8a87850a2ff42bbd73fdcb364d61c9d1a8b2119071f5ca50eb478e73f263",
+  "package": "console",
+  "function": "TestRemoteResponsesHaveSecurityHeadersAndHealthIsMinimal",
+  "signature": "TestRemoteResponsesHaveSecurityHeadersAndHealthIsMinimal(params=1, results=0)",
+  "start": {
+    "line": 487,
+    "column": 1
+  },
+  "end": {
+    "line": 514,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 495,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 506,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 511,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 9
+      },
+      "text": "newRemoteTestRig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 489,
+        "column": 11
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 7
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 6
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 6
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 12
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 12
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 503,
+        "column": 12
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 505,
+        "column": 8
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 33
+      },
+      "text": "hw.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 39
+      },
+      "text": "hw.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 10
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 511,
+        "column": 15
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 488,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 489,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 499,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 503,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 504,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 505,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 509,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 510,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 511,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

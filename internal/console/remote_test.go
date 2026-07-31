@@ -496,6 +496,9 @@ func TestRemoteResponsesHaveSecurityHeadersAndHealthIsMinimal(t *testing.T) {
 			t.Errorf("missing %s", header)
 		}
 	}
+	if got := w.Header().Get("Referrer-Policy"); got != "same-origin" {
+		t.Errorf("Referrer-Policy = %q, want same-origin", got)
+	}
 
 	health := remoteRequest(http.MethodGet, "/healthz", "127.0.0.1:45000", "health", nil)
 	health.Host = "127.0.0.1:37085"

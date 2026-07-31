@@ -1,0 +1,178 @@
+{
+  "file": "internal/console/origin_fallback_test.go",
+  "source_sha256": "e359798d62a013c03426296692add9ee2f16dd0036d88f10ea527aa1a17b5d2e",
+  "package": "console",
+  "function": "TestExplicitOpaqueOriginCannotReachMutationHandler",
+  "signature": "TestExplicitOpaqueOriginCannotReachMutationHandler(params=1, results=0)",
+  "start": {
+    "line": 115,
+    "column": 1
+  },
+  "end": {
+    "line": 136,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 9
+      },
+      "text": "newRemoteTestRig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 13
+      },
+      "text": "rig.console.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 3
+      },
+      "text": "w.WriteHeader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 7
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 2
+      },
+      "text": "r.Header.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 7
+      },
+      "text": "httptest.NewRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 2
+      },
+      "text": "handler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 4
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 21
+      },
+      "text": "w.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 75
+      },
+      "text": "w.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 119,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,261 @@
+{
+  "file": "internal/console/remote.go",
+  "source_sha256": "bd3e18edb90b364b4aff592c5ac97f0b77c67d0bac66c25ff5d0d48b88c9a463",
+  "package": "console",
+  "function": "security",
+  "receiver": "remoteRuntime",
+  "signature": "remoteRuntime.security(params=1, results=1)",
+  "start": {
+    "line": 276,
+    "column": 1
+  },
+  "end": {
+    "line": 300,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 286,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 294,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 288,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 292,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 296,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 9
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 58
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 15
+      },
+      "text": "rr.peer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 4
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 34
+      },
+      "text": "peer.IsLoopback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 4
+      },
+      "text": "next.ServeHTTP"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 7
+      },
+      "text": "rr.peerAllowed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 32
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 4
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 3
+      },
+      "text": "next.ServeHTTP"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 285,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
