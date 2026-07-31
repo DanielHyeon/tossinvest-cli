@@ -16,10 +16,10 @@
 - **THEN** 값은 0이 아니라 `—`와 stale/unknown 사유로 표시된다
 
 ### Requirement: orders는 exit 주문 근거를 결정적으로 연결한다
-콘솔은 exit order를 decision ID로 기준선 snapshot에 연결하고 trigger line, observation, policy, rung과 reason을 표시해야 한다 (SHALL).
+콘솔은 broker order의 명시적 mutation-attempt intent lineage로 exit event의 decision ID와 기준선 snapshot을 연결하고 trigger line, observation, policy, rung과 reason을 표시해야 한다 (SHALL).
 
 #### Scenario: 연결된 손절 주문
-- **WHEN** journal order가 protection breach decision을 참조한다
+- **WHEN** broker order의 mutation attempt intent가 protection breach exit event를 참조한다
 - **THEN** 주문 상세는 당시 현재가와 보호선, 전량 사유를 표시한다
 
 #### Scenario: 연결 식별자 부재

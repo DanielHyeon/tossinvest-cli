@@ -1,6 +1,6 @@
 {
   "file": "internal/console/console.go",
-  "source_sha256": "c2da2e067ea19a2b7d490fdfd6cf37be06d84a163f4e27047f2a90a38b6abf75",
+  "source_sha256": "e14d15d46ec02c01c182e882950b1ebf7c3bcaa36ad098f4b4040c1fed1c9a5e",
   "package": "console",
   "function": "routes",
   "receiver": "Console",
@@ -127,6 +127,14 @@
         "column": 31
       },
       "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 690,
+        "column": 42
+      },
+      "text": "c.readOnly"
     },
     {
       "kind": "call",

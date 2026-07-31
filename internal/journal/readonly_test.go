@@ -126,6 +126,9 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		// 2.1). It is a SELECT DISTINCT over one column of mutation_attempts and
 		// it reaches the same mode=ro connection every other read here does.
 		"BrokerOrderIDs": true,
+		// a043's deterministic broker-order -> attempt -> exit-intent read. It is
+		// another SELECT-only projection on the same query-only connection.
+		"BrokerOrderExitLinks": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {

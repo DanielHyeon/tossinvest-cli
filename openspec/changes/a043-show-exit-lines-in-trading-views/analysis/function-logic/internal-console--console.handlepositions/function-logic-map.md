@@ -26,13 +26,13 @@
 |---|---|---|---|
 | `Console.positions` | assemble broker/journal snapshot | failures are values, not handler errors | CodeGraph: only caller is this handler |
 | `AdoptionSettings.Load` | preserve existing display-only designation context | no retry; error degrades locally | current HEAD + AST |
-| `operatorview.FromSnapshot` (planned) | build one canonical exit-line DTO from persisted snapshot | unknown/stale stays typed and renders as `—` | a041/a042 API + planned adapter tests |
+| `attachPositionExitLines` | build canonical exit-line DTOs from persisted snapshots | unknown/stale stays typed and renders as `—` | a041/a042 API + adapter/fixture tests |
 | `Console.render` | server-render semantic HTML under existing CSP | render failure follows common console error path | current HEAD + AST |
 
 ## State mutations and fallbacks
 
-- Current code puts CSRF-backed include/exclude forms directly on `/positions`; a043 removes those action surfaces while retaining the settings endpoints on `/settings`.
-- Planned mutation is view-local only: attach value DTOs and render. No journal, broker, config, or account write is reachable.
+- The previous CSRF-backed include/exclude forms were removed from `/positions`; existing settings endpoints remain outside the trading view.
+- Mutation is view-local only: attach value DTOs and render. No journal, broker, config, or account write is reachable.
 
 ## Safety conclusion
 

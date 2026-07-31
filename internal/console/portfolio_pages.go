@@ -18,17 +18,13 @@ package console
 import (
 	"net/http"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
 )
 
 type positionsPage struct {
 	Nav  string
 	Snap positionsView
-	// CSRF rides along for the per-row designation forms (settings.go); the
-	// page itself stays a GET reading.
-	CSRF string
-	// CanDesignate reports the settings seam is wired and readable, so the
-	// designation buttons render at all.
-	CanDesignate bool
 }
 
 // Refresh is what the head template reads: the positions screen asks the
@@ -41,10 +37,10 @@ func (positionsPage) Refresh() bool { return true }
 func (positionsPage) RefreshSeconds() int { return int(holdingsTTL / time.Second) }
 
 func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
-	page := positionsPage{Nav: "positions", Snap: c.positions(r.Context()), CSRF: c.csrf}
+	page := positionsPage{Nav: "positions", Snap: c.positions(r.Context())}
+	attachPositionExitLines(page.Snap.Rows, c.now())
 	if c.opts.Settings != nil {
 		if block, _, err := c.opts.Settings.Load(); err == nil {
-			page.CanDesignate = true
 			// One Load stamps both lists: two reads could return two different
 			// snapshots and draw a row that is on neither or on both.
 			for i := range page.Snap.Rows {
@@ -54,6 +50,31 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	c.render(w, "positions", page)
+}
+
+// attachPositionExitLines selects the already-persisted effective snapshot for
+// display. Freshness is evaluated at the screen boundary; no exit value is
+// recomputed here or in the template.
+func attachPositionExitLines(rows []positionRow, asOf time.Time) {
+	for i := range rows {
+		row := &rows[i]
+		if !row.HasExit {
+			continue
+		}
+		snapshot := row.Exit.Snapshot.WithFreshness(asOf, holdingsTTL)
+		source := operatorview.Source{
+			UnknownReason:     snapshot.UnknownReason,
+			StaleReason:       snapshot.StaleReason,
+			RemainingQuantity: row.JournalQuantity,
+			EffectiveSource:   "persisted effective snapshot",
+		}
+		if snapshot.Snapshot != nil {
+			source.Snapshot = &snapshot.Snapshot.Line
+			source.ObservationSource = snapshot.Snapshot.ObservationSource
+			source.ObservedAt = snapshot.Snapshot.ObservedAt
+		}
+		row.ExitLine = operatorview.BuildExitLine(source)
+	}
 }
 
 type historyPage struct {

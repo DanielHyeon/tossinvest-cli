@@ -687,7 +687,7 @@ func (c *Console) routes() http.Handler {
 	// readings and neither is behind `mutating`: there is nothing on them to
 	// submit, which is what static_test.go's two route tests assert from opposite
 	// directions.
-	mux.HandleFunc("/positions", c.session0(c.handlePositions))
+	mux.HandleFunc("/positions", c.session0(c.readOnly(c.handlePositions)))
 	mux.HandleFunc("/history", c.session0(c.handleHistory))
 	mux.HandleFunc("/settings", c.session0(c.handleSettings))
 	mux.HandleFunc("/settings/save", c.session0(c.mutating(c.handleSettingsSave)))

@@ -55,6 +55,19 @@ type AccountExitEvent struct {
 	Market string
 }
 
+// BrokerOrderExitLink is the exact read-only lineage from a broker order to the
+// exit judgement that proposed its intent. AttemptID/AttemptNo are carried so a
+// transport can disclose the join rather than merely claim that it happened.
+// Ambiguous links deliberately carry no Event.
+type BrokerOrderExitLink struct {
+	BrokerOrderID string
+	AttemptID     string
+	AttemptNo     int
+	IntentID      string
+	Event         ExitEvent
+	Ambiguous     bool
+}
+
 // TradeTrip is one frozen round trip plus the two joined facts the frozen row
 // does not hold.
 //
@@ -299,6 +312,105 @@ func (r *ReadOnly) BrokerOrderIDs(ctx context.Context) ([]string, error) {
 		return nil, fmt.Errorf("journal: listing the broker order ids in %s: %w", r.path, err)
 	}
 	return out, nil
+}
+
+// BrokerOrderExitLinks connects broker orders to persisted exit snapshots only
+// through explicit journal references:
+//
+//	broker order id -> mutation attempt -> intent id -> exit event
+//
+// Symbol, price and time are intentionally absent from the predicate. Multiple
+// attempts for the same intent and broker id are one link; different exit events
+// for one broker id are returned as one Ambiguous marker with no usable snapshot.
+func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context) ([]BrokerOrderExitLink, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT a.broker_order_id, a.id, a.attempt_no, a.intent_id, v.id
+		  FROM mutation_attempts a
+		  JOIN exit_events v ON v.proposed_intent_id = a.intent_id
+		 WHERE a.broker_order_id <> '' AND a.kind = 'PLACE'
+		 ORDER BY a.broker_order_id, a.attempt_no DESC, a.recorded_at DESC, a.id DESC, v.id DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("journal: linking broker orders to exit evidence in %s: %w", r.path, err)
+	}
+	type rawLink struct {
+		BrokerOrderID string
+		AttemptID     string
+		AttemptNo     int
+		IntentID      string
+		EventID       int64
+	}
+	var raw []rawLink
+	for rows.Next() {
+		var link rawLink
+		if err := rows.Scan(&link.BrokerOrderID, &link.AttemptID, &link.AttemptNo,
+			&link.IntentID, &link.EventID); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("journal: reading broker-order exit lineage: %w", err)
+		}
+		raw = append(raw, link)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, fmt.Errorf("journal: reading broker-order exit lineage: %w", err)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, fmt.Errorf("journal: closing broker-order exit lineage: %w", err)
+	}
+
+	byOrder := make(map[string]int, len(raw))
+	out := make([]BrokerOrderExitLink, 0, len(raw))
+	eventIDs := make(map[string]int64, len(raw))
+	for _, link := range raw {
+		if index, exists := byOrder[link.BrokerOrderID]; exists {
+			if eventIDs[link.BrokerOrderID] != link.EventID {
+				out[index].Ambiguous = true
+				out[index].Event = ExitEvent{}
+			}
+			continue
+		}
+		event, err := r.exitEventByID(ctx, link.EventID)
+		if err != nil {
+			return nil, err
+		}
+		byOrder[link.BrokerOrderID] = len(out)
+		eventIDs[link.BrokerOrderID] = link.EventID
+		out = append(out, BrokerOrderExitLink{
+			BrokerOrderID: link.BrokerOrderID, AttemptID: link.AttemptID,
+			AttemptNo: link.AttemptNo, IntentID: link.IntentID, Event: event,
+		})
+	}
+	return out, nil
+}
+
+func (r *ReadOnly) exitEventByID(ctx context.Context, eventID int64) (ExitEvent, error) {
+	row := r.db.QueryRowContext(ctx, `
+		SELECT id, position_id, coalesce(observed_price,''), coalesce(high_water,''),
+		       coalesce(baseline_after,''), coalesce(level_after,''), coalesce(action,''),
+		       coalesce(proposed_intent_id,''), created_at, position_generation, policy_id,
+		       policy_version, policy_digest, snapshot_id, decision_id, observation_id,
+		       next_target, next_protection, observation_source, observed_at, projected_quantity,
+		       proposal_ratio, state_only, suppressed_reason, saved_snapshot_json,
+		       recomputed_snapshot_json, effective_snapshot_json, effective_source,
+		       arm_suppressed_reason
+		  FROM exit_events WHERE id = ?`, eventID)
+	var event ExitEvent
+	var evidence exitEventEvidence
+	if err := row.Scan(&event.ID, &event.PositionID, &event.ObservedPrice, &event.HighWater,
+		&event.BaselineAfter, &event.LevelAfter, &event.Action, &event.ProposedIntentID,
+		&event.CreatedAt, &evidence.Generation, &evidence.PolicyID, &evidence.PolicyVersion,
+		&evidence.PolicyDigest, &evidence.SnapshotID, &evidence.DecisionID,
+		&evidence.ObservationID, &evidence.NextTarget, &evidence.NextProtection,
+		&evidence.ObservationSource, &evidence.ObservedAt, &evidence.ProjectedQuantity,
+		&evidence.ProposalRatio, &evidence.StateOnly, &evidence.SuppressedReason,
+		&evidence.SavedJSON, &evidence.RecomputedJSON, &evidence.EffectiveJSON,
+		&evidence.EffectiveSource, &evidence.ArmSuppressedReason); err != nil {
+		return ExitEvent{}, fmt.Errorf("journal: reading exit event %d for broker order: %w", eventID, err)
+	}
+	if err := hydrateExitEventEvidence(&event, evidence); err != nil {
+		event.Evaluation = ExitEvaluation{}
+		event.Evaluation.Effective.UnknownReason = "invalid_event_evidence"
+	}
+	return event, nil
 }
 
 // AccountTradeTrips returns the frozen round trips of one account, oldest close

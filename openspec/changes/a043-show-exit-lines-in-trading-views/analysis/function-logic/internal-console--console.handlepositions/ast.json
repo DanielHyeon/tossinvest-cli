@@ -1,16 +1,16 @@
 {
   "file": "internal/console/portfolio_pages.go",
-  "source_sha256": "512d4561d61fbe814e8577eb7c3519ea1df9004d1004d076d8679d6dfafe1580",
+  "source_sha256": "276fbb35d32dc03151528a46ee50b7cec82535332008836bb0cba014a5a16d03",
   "package": "console",
   "function": "handlePositions",
   "receiver": "Console",
   "signature": "Console.handlePositions(params=2, results=0)",
   "start": {
-    "line": 43,
+    "line": 39,
     "column": 1
   },
   "end": {
-    "line": 57,
+    "line": 53,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 45,
+        "line": 42,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 46,
+        "line": 43,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 50,
+        "line": 46,
         "column": 4
       }
     }
@@ -44,7 +44,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 44,
+        "line": 40,
         "column": 48
       },
       "text": "c.positions"
@@ -52,7 +52,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 44,
+        "line": 40,
         "column": 60
       },
       "text": "r.Context"
@@ -60,7 +60,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 46,
+        "line": 41,
+        "column": 2
+      },
+      "text": "attachPositionExitLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 42
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
         "column": 23
       },
       "text": "c.opts.Settings.Load"
@@ -68,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 51,
+        "line": 47,
         "column": 36
       },
       "text": "block.Included"
@@ -76,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 52,
+        "line": 48,
         "column": 34
       },
       "text": "block.Excludes"
@@ -84,7 +100,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 56,
+        "line": 52,
         "column": 2
       },
       "text": "c.render"
@@ -94,14 +110,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 44,
+        "line": 40,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 46,
+        "line": 43,
         "column": 6
       }
     },
@@ -109,20 +125,13 @@
       "kind": "=",
       "at": {
         "line": 47,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 51,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 52,
+        "line": 48,
         "column": 5
       }
     }

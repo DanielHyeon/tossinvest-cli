@@ -69,7 +69,8 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 {{template "head" .}}
 <h1>포지션</h1>
 <p class="muted page-intro">보유별 손익과 엔진의 현재 보호선을 한곳에서 확인한다.
-<strong>계좌·주문은 변경하지 않으며</strong>, 아래 편입·제외 조작은 자동관리 설정만 갱신한다.</p>
+<strong>계좌·주문·설정을 변경하지 않는 조회 전용 화면</strong>이다. 편입·제외 정책은
+<a href="/optimization?category=position-management">포지션 관리 최적화</a>에서 확인한다.</p>
 
 {{with .Snap}}
 {{template "journalstate" .Journal}}
@@ -93,14 +94,13 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   {{end}}
   {{if .AnyJournalAbsent}}
   <p class="notice"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이
-  아니므로 손절·익절 라인도 없다. [관리 편입 예약]은 설정만 기록하며, 지정된 심볼은 다음
-  대사 주기(엔진 가동 시)에 편입 후보가 된다.</p>
+  아니므로 손절·익절 라인도 없다. 편입 정책은 포지션 관리 최적화 화면에서 확인할 수 있다.</p>
   {{end}}
   <table class="data-table positions-table">
     <caption>보유 종목과 보호 상태</caption>
     <thead><tr>
       <th scope="col">종목</th><th scope="col">관리 편입</th><th scope="col">손익</th>
-      <th scope="col">가격</th><th scope="col">보호·익절</th><th scope="col">관리 동작</th>
+      <th scope="col">가격</th><th scope="col">보호·익절</th>
     </tr></thead>
     <tbody>
     {{range .Rows}}
@@ -111,31 +111,35 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td data-label="관리"><strong class="status-pill">{{.Label}}</strong>
         {{if .Managed}}<span class="submetric">자격 근거 {{.Basis}}</span>{{end}}
         {{if .Designated}}<span class="submetric ok">편입 예약됨 · 아직 보호 미적용</span>{{end}}
-        {{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown) .Excluded}}<span class="submetric">편입하려면 제외를 먼저 해제</span>{{end}}
+        {{if and .InBroker (not .Managed) (not .Unknown) .Excluded}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
       </td>
       <td data-label="손익" class="{{if .Gain}}ok{{else}}bad{{end}}">
         <span class="metric">평가손익 {{.PnL}}</span><span class="submetric">수익률 {{.Rate}}</span>
       </td>
       <td data-label="가격"><span class="metric">현재가 {{.Last}}</span>
         {{if .HasExit}}
-        <span class="submetric">진입가 <strong>{{.Exit.EntryPrice}}</strong></span>
+        <span class="submetric">진입가 <strong>{{.ExitLine.EntryPrice}}</strong></span>
         {{else}}<span class="submetric">평단 {{.Avg}}</span>{{end}}
       </td>
       <td data-label="보호·익절">
         {{if .HasExit}}
-        <span class="metric">현재 보호선 <strong>{{.Exit.Baseline}}</strong></span>
-        <span class="submetric">최초 손절 <strong>{{.Exit.InitialStop}}</strong></span>
-        <span class="submetric">익절 진행 <strong>{{.Taken}}</strong> · ladder rung {{.Rung}}</span>
+        <strong class="status-pill {{if .ExitLine.Fresh}}ok{{else if .ExitLine.Stale}}bad{{end}}">{{.ExitLine.StatusText}}</strong>
+        <span class="metric">현재 보호선 <strong>{{.ExitLine.CurrentProtection}}</strong></span>
+        <span class="submetric">다음 익절 <strong>{{.ExitLine.NextTarget}}</strong> · 다음 보호선 <strong>{{.ExitLine.NextProtection}}</strong></span>
+        <span class="submetric">단계 <strong>{{.ExitLine.Stage}}</strong> · 예상 수량 <strong>{{.ExitLine.ProjectedQuantity}}</strong></span>
+        {{if .ExitLine.Reason}}<span class="submetric bad">{{.ExitLine.Reason}}</span>{{end}}
+        {{if .ExitLine.OneShare}}<span class="submetric ok">{{.ExitLine.OneShareText}}</span><span class="submetric">{{.ExitLine.FinalExitText}}</span>{{end}}
         {{else}}<span class="metric muted">보호선 —</span>{{if .Reason}}<span class="submetric">보호 근거 없음</span>{{end}}{{end}}
         {{if .HasDetail}}
-        <details class="row-details"><summary>보호·원장 상세</summary><div class="detail-grid">
+        <details class="row-details"><summary>보호 근거와 원장 상세</summary><div class="detail-grid">
           <span>수량 <strong>{{.Qty}}</strong></span><span>평가금액 <strong>{{.Value}}</strong></span>
           {{if .Reason}}<span>{{.Reason}}</span>{{end}}
-          {{if .HasExit}}<span>워터마크 <strong>{{.Exit.HighWater}}</strong></span>
-          <span>래칫 단계 <strong>{{.Exit.RatchetLevel}}</strong></span>
-          <span>pending exit <strong>{{.Pending}}</strong></span>
-          <span>정책 {{.Exit.PolicyKind}} · 최초 리스크 {{.Exit.InitialRisk}}</span>
-          <span>갱신 {{.Exit.UpdatedAt}}</span>{{end}}
+          {{if .HasExit}}<span>관측가 <strong>{{.ExitLine.ObservedPrice}}</strong> · 워터마크 <strong>{{.ExitLine.HighWater}}</strong></span>
+          <span>최초 손절 <strong>{{.ExitLine.InitialStop}}</strong> · 판단 <strong>{{.ExitLine.ActionText}}</strong></span>
+          <span>정책 <strong>{{.ExitLine.Policy}}</strong> · position generation {{.ExitLine.PositionGeneration}}</span>
+          <span>decision <code>{{.ExitLine.DecisionID}}</code></span><span>snapshot <code>{{.ExitLine.SnapshotID}}</code></span>
+          <span>observation <code>{{.ExitLine.ObservationID}}</code> · {{.ExitLine.ObservationSource}}</span>
+          <span>평가 시각 {{.ExitLine.EvaluatedAt}} · 유효 근거 {{.ExitLine.EffectiveSource}}</span>{{end}}
           {{if .BrokerMissing}}<span class="bad">브로커 보유에 없다.</span>
           <span>원장은 {{.State}} 상태 수량 {{.JournalQuantity}}로 보고 있다.</span>
           {{else if .InJournal}}<span>원장 수량 {{.JournalQuantity}} · 원장 평단 {{.JournalAvgPrice}}</span>
@@ -143,21 +147,6 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         </div></details>
         {{end}}
       </td>
-      <td data-label="관리 동작"><div class="actions">
-        {{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown) (not .Excluded)}}
-        <form method="post" action="/settings/include">
-          <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="symbol" value="{{.Symbol}}">
-          {{if .Designated}}<input type="hidden" name="remove" value="1">{{end}}
-          <button type="submit" class="secondary" aria-label="{{.Symbol}} {{if .Designated}}편입 예약 해제{{else}}관리 편입 예약{{end}}">{{if .Designated}}편입 예약 해제{{else}}관리 편입 예약{{end}}</button>
-        </form>{{end}}
-        {{if and $.CanDesignate .InBroker (not .Managed) (not .Unknown)}}
-        <form method="post" action="/settings/exclude">
-          <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="symbol" value="{{.Symbol}}">
-          {{if .Excluded}}<input type="hidden" name="remove" value="1">{{end}}
-          <button type="submit" class="secondary" aria-label="{{.Symbol}} {{if .Excluded}}제외 해제{{else}}자동관리 제외{{end}}">{{if .Excluded}}제외 해제{{else}}자동관리 제외{{end}}</button>
-        </form>{{end}}
-        {{if or (not $.CanDesignate) .Managed .Unknown}}<span class="muted">—</span>{{end}}
-      </div><span class="submetric">설정만 변경 · 계좌/주문 영향 없음</span></td>
     </tr>
     {{end}}
     </tbody>
@@ -166,7 +155,8 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   자동으로 걸려 있지 않다. <strong>관리 편입</strong>으로 예약한 보유는 편입 예약 상태다 — 실제 손절·익절은 엔진이
   가동되어 대사 루프가 편입을 완료한 뒤부터 걸린다. 관리 중인 행의 <strong>자격 근거</strong>는 그 보호가 어디서 왔는지를 말한다:
   <em>진입 결정</em>은 엔진이 직접 진입한 포지션, <em>편입 기록</em>은 사용자가 수동 매수한 보유를 엔진이
-  편입한 것이다. 편입 자체는 엔진의 대사 루프가 수행하며 이 화면의 기능이 아니다 — 이 화면은 읽기 전용이다.</p>
+  편입한 것이다. 편입 자체는 엔진의 대사 루프가 수행하며 이 화면의 기능이 아니다 — 이 화면은 읽기 전용이다.
+  관련 설정은 <a href="/optimization?category=position-management">포지션 관리 최적화</a>에서 확인한다.</p>
   </details>
 </section>
 {{else}}

@@ -54,6 +54,8 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
 )
 
 // --- the seam --------------------------------------------------------------------
@@ -389,6 +391,14 @@ type orderRow struct {
 	Detail string
 
 	Origin orderOrigin
+
+	// ExitEvidence is true only when the journal supplies explicit
+	// broker_order_id -> attempt.intent_id -> exit_event.proposed_intent_id
+	// lineage. Symbol, price and time are never used to populate these fields.
+	ExitEvidence  bool
+	ExitLine      operatorview.ExitLineView
+	ExitAttemptID string
+	ExitIntentID  string
 }
 
 // OriginText is the label for the origin column.
@@ -612,31 +622,67 @@ func sideLabel(side string) string {
 
 // --- the origin join --------------------------------------------------------------
 
-// ledgerOrigins reads the set of broker order ids the engine's own attempts
-// recorded.
-//
-// The second return value is the ledger's verdict, and the caller renders every
-// row as 불명 when it is not readable. That is the whole reason this returns a
-// verdict rather than an empty set: an empty set and an unread ledger produce the
-// same map, and one of them means "the engine placed none of these" while the
-// other means "nobody looked".
-func (c *Console) ledgerOrigins(ctx context.Context) (map[string]bool, journalView) {
+// ledgerOrderEvidence reads origin ids and exit lineage from the same read-only
+// journal handle. A partial journal answer is not treated as trustworthy: both
+// the origin and the evidence labels fall back to unknown when either read
+// fails.
+func (c *Console) ledgerOrderEvidence(ctx context.Context) (map[string]bool,
+	map[string]journal.BrokerOrderExitLink, journalView,
+) {
 	ro, jv := c.openJournal(ctx)
 	if ro == nil {
-		return nil, jv
+		return nil, nil, jv
 	}
 	defer ro.Close()
 
 	ids, err := ro.BrokerOrderIDs(ctx)
 	if err != nil {
 		jv.State, jv.Detail = journalFailed, err.Error()
-		return nil, jv
+		return nil, nil, jv
 	}
-	out := make(map[string]bool, len(ids))
+	links, err := ro.BrokerOrderExitLinks(ctx)
+	if err != nil {
+		jv.State, jv.Detail = journalFailed, err.Error()
+		return nil, nil, jv
+	}
+	engineIDs := make(map[string]bool, len(ids))
 	for _, id := range ids {
-		out[id] = true
+		engineIDs[id] = true
 	}
-	return out, jv
+	byOrder := make(map[string]journal.BrokerOrderExitLink, len(links))
+	for _, link := range links {
+		byOrder[link.BrokerOrderID] = link
+	}
+	return engineIDs, byOrder, jv
+}
+
+// attachOrderExitEvidence maps an immutable, already-selected event snapshot.
+// It performs no lookup and no policy evaluation; absence is rendered as an
+// explicit unlinked state by the template.
+func attachOrderExitEvidence(row *orderRow, link journal.BrokerOrderExitLink, linked bool) {
+	if !linked {
+		return
+	}
+	row.ExitEvidence = true
+	row.ExitAttemptID = link.AttemptID
+	row.ExitIntentID = link.IntentID
+	if link.Ambiguous {
+		row.ExitLine = operatorview.BuildExitLine(operatorview.Source{
+			UnknownReason: "ambiguous_exit_evidence",
+		})
+		return
+	}
+	effective := link.Event.Evaluation.Effective
+	source := operatorview.Source{
+		UnknownReason:   effective.UnknownReason,
+		EffectiveSource: link.Event.Evaluation.EffectiveSource,
+	}
+	if effective.Snapshot != nil {
+		source.Snapshot = &effective.Snapshot.Line
+		source.ObservationSource = effective.Snapshot.ObservationSource
+		source.ObservedAt = effective.Snapshot.ObservedAt
+	}
+	row.ExitLine = operatorview.BuildExitLine(source)
 }
 
 // originOf decides one plain order's origin from the ledger's answer.
@@ -829,7 +875,7 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	v := ordersView{Now: now, Selected: choice}
 	v.Broker = c.ordersCache.get(ctx, now, hold, holdReason)
 
-	engineIDs, jv := c.ledgerOrigins(ctx)
+	engineIDs, exitLinks, jv := c.ledgerOrderEvidence(ctx)
 	v.Journal = jv
 
 	lists := v.Broker.Lists
@@ -847,7 +893,10 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	pending := make(map[string]bool)
 	if v.Open.Known() {
 		for _, rec := range lists.Open {
-			all = append(all, rowFromOrder(rec, originOf(rec.ID, engineIDs, jv), true))
+			row := rowFromOrder(rec, originOf(rec.ID, engineIDs, jv), true)
+			link, linked := exitLinks[strings.TrimSpace(rec.ID)]
+			attachOrderExitEvidence(&row, link, linked)
+			all = append(all, row)
 			if id := strings.TrimSpace(rec.ID); id != "" {
 				pending[id] = true
 			}
@@ -860,14 +909,25 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 			if pending[strings.TrimSpace(rec.ID)] {
 				continue
 			}
-			all = append(all, rowFromOrder(rec, originOf(rec.ID, engineIDs, jv), false))
+			row := rowFromOrder(rec, originOf(rec.ID, engineIDs, jv), false)
+			link, linked := exitLinks[strings.TrimSpace(rec.ID)]
+			attachOrderExitEvidence(&row, link, linked)
+			all = append(all, row)
 			closedCount++
 		}
 	}
 	conditionalLive := 0
 	if v.Conditional.Known() {
 		for _, rec := range lists.Conditional {
-			all = append(all, rowFromConditional(rec, conditionalOriginOf(rec, engineIDs, jv)))
+			row := rowFromConditional(rec, conditionalOriginOf(rec, engineIDs, jv))
+			for _, id := range []string{rec.Triggered, rec.ID} {
+				link, linked := exitLinks[strings.TrimSpace(id)]
+				if linked {
+					attachOrderExitEvidence(&row, link, true)
+					break
+				}
+			}
+			all = append(all, row)
 			conditionalLive++
 		}
 	}

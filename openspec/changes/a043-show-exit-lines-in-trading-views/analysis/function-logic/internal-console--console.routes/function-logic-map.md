@@ -16,8 +16,7 @@
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | remote exists and is not trusted-network mode | register login/logout | mux registration only | existing remote route tests |
-| B2 | all fixed routes | register exact path with session and relevant read/mutating wrapper | mux registration only | static route contract suite |
-| B3 | `/positions` exact route | planned `session0(readOnly(handlePositions))` | mux registration only | `TestTradingViewsAreInputFreeAndRejectPOST` |
+| B2 | remote security wrapper is configured | return the secured mux | mux construction only | existing remote route tests |
 
 ## Calls and live bindings
 
@@ -31,6 +30,7 @@
 
 - `routes` mutates only a newly allocated `http.ServeMux` during construction.
 - a043 narrows `/positions` from ANY-after-auth to GET/HEAD; it does not add a route or capability.
+- The `/positions` binding is an unconditional call, not an AST branch: `session0(readOnly(handlePositions))` is checked by the static route suite and POST test.
 
 ## Safety conclusion
 

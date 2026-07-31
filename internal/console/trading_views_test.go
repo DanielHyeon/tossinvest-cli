@@ -1,6 +1,8 @@
 package console
 
 import (
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -29,24 +31,24 @@ func TestPositionsControlsWorkUnderTheDeployedCSPWithoutScript(t *testing.T) {
 			t.Errorf("positions contains a CSP-incompatible %s", name)
 		}
 	}
-	for _, want := range []string{
-		`action="/settings/include"`,
-		`action="/settings/exclude"`,
-		`name="csrf" value="` + h.csrf + `"`,
-		`aria-label="000660 관리 편입 예약"`,
-		`aria-label="000660 자동관리 제외"`,
-		`>관리 편입 예약</button>`,
-		`>자동관리 제외</button>`,
-		"계좌·주문은 변경하지 않으며",
-	} {
-		if !strings.Contains(page, want) {
-			t.Errorf("positions is missing CSP-safe control contract %q", want)
+	for _, path := range []string{"/positions", "/orders"} {
+		response := h.post(t, path, url.Values{})
+		if response.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("POST %s = %d, want 405", path, response.StatusCode)
 		}
 	}
-	if strings.Contains(page, "편입 버튼은 없다") {
-		t.Error("positions still claims there is no adoption button")
+	for _, path := range []string{"/positions", "/orders"} {
+		page := body(t, h.get(t, path))
+		lower := strings.ToLower(page)
+		for _, forbidden := range []string{"<form", "<input", "<textarea", "<select", "<button", "contenteditable"} {
+			if strings.Contains(lower, forbidden) {
+				t.Errorf("%s contains forbidden input surface %q", path, forbidden)
+			}
+		}
 	}
-
+	if !strings.Contains(page, `/optimization?category=position-management`) {
+		t.Error("positions lacks the canonical position-management context link")
+	}
 }
 
 func TestRemoteTradingViewsKeepTheDenyByDefaultCSP(t *testing.T) {
@@ -86,16 +88,18 @@ func TestManagedPositionPrimaryRowShowsTheProtectionDecision(t *testing.T) {
 		"평가손익",
 		"수익률",
 		"진입가",
-		"70000",
 		"현재 보호선",
-		"69500",
-		"최초 손절",
-		"68000",
-		"익절 진행",
-		"0.25",
+		"근거 없음",
+		"다음 익절",
+		"예상 수량",
 	} {
 		if !strings.Contains(row, want) {
 			t.Errorf("managed position primary row is missing %q", want)
+		}
+	}
+	for _, raw := range []string{"69500", "HALF_RISK", "intent-77"} {
+		if strings.Contains(row, raw) {
+			t.Errorf("managed legacy row exposes raw exit value %q", raw)
 		}
 	}
 	if !strings.Contains(page, `<caption>보유 종목과 보호 상태</caption>`) ||

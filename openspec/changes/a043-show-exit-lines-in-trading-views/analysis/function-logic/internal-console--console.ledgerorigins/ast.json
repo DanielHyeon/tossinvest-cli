@@ -1,0 +1,164 @@
+{
+  "file": "internal/console/orders.go",
+  "source_sha256": "8622e7dd562669798d537ac1350b533f3def243232ff3a3de92bddd97387a3b3",
+  "package": "console",
+  "function": "ledgerOrigins",
+  "receiver": "Console",
+  "signature": "Console.ledgerOrigins(params=1, results=2)",
+  "start": {
+    "line": 623,
+    "column": 1
+  },
+  "end": {
+    "line": 640,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 625,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 631,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 636,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 626,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 633,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 639,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 624,
+        "column": 12
+      },
+      "text": "c.openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 8
+      },
+      "text": "ro.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 630,
+        "column": 14
+      },
+      "text": "ro.BrokerOrderIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 632,
+        "column": 40
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 635,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 635,
+        "column": 31
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 624,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 630,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 632,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 635,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 637,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 628,
+        "column": 2
+      },
+      "text": "ro.Close"
+    }
+  ],
+  "revision": "base"
+}

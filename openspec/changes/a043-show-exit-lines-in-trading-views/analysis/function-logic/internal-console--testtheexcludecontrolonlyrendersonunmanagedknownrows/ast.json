@@ -1,0 +1,155 @@
+{
+  "file": "internal/console/settings_exclude_test.go",
+  "source_sha256": "ec737f93c1b20b9c6b6d1067b1653fd73381415c1bdf4e3acf723d05cd209186",
+  "package": "console",
+  "function": "TestTheExcludeControlOnlyRendersOnUnmanagedKnownRows",
+  "signature": "TestTheExcludeControlOnlyRendersOnUnmanagedKnownRows(params=1, results=0)",
+  "start": {
+    "line": 272,
+    "column": 1
+  },
+  "end": {
+    "line": 285,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 7
+      },
+      "text": "settingsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 2
+      },
+      "text": "seedJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 10
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 16
+      },
+      "text": "rowFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 43
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 18
+      },
+      "text": "rowFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 45
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 273,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 279,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 282,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

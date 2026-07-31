@@ -128,19 +128,18 @@ func TestTheRouteTableJudgementStillCatchesAnActingRouteThatIsNotOnTheAllowlist(
 	}
 }
 
-// TestTheOrdersRouteIsRegisteredReadOnlyAndNothingElseIs.
+// TestTradingViewsAreRegisteredReadOnlyAndNothingElseIs.
 //
 // The exception is worth exactly one route. This is what fails if a second one is
 // quietly wrapped in `reading` to borrow it, and what fails if /orders loses the
 // wrapper and starts serving POSTs.
 func TestTheOrdersRouteIsRegisteredReadOnlyAndNothingElseIs(t *testing.T) {
-	found := false
+	found := map[string]bool{"/orders": false, "/positions": false}
 	for _, r := range registeredRoutes(t) {
-		if r.Path == "/orders" {
-			found = true
+		if _, tradingView := found[r.Path]; tradingView {
+			found[r.Path] = true
 			if !r.ReadOnly {
-				t.Error("/orders is registered without the readOnly wrapper; the exception that lets " +
-					"it exist is conditional on that wrapper")
+				t.Errorf("%s is registered without the readOnly wrapper", r.Path)
 			}
 			if r.CSRFGated {
 				t.Error("/orders is behind the CSRF gate; it is a reading and nobody could open it")
@@ -156,8 +155,10 @@ func TestTheOrdersRouteIsRegisteredReadOnlyAndNothingElseIs(t *testing.T) {
 				"not naming an account verb", r.Path)
 		}
 	}
-	if !found {
-		t.Error("/orders is not registered; the orders screen has no route")
+	for path, registered := range found {
+		if !registered {
+			t.Errorf("%s is not registered", path)
+		}
 	}
 }
 

@@ -13,11 +13,13 @@ positions는 baseline과 initial stop 일부를 표시하고 orders는 broker/jo
 1. console/httpapi에 의존하지 않는 `internal/operatorview`가 snapshot을 canonical `ExitLineView`로 한 번
    변환하고 console과 이후 a051 adapter가 공유한다. transport별 DTO가 수치·상태를 재해석하지 않는다.
 2. 1주는 `중간 매도 없음 · 보호선 승격`을 명시하며 projected quantity 0을 수량 0 주문처럼 표시하지 않는다.
-3. orders는 exit decision ID로 snapshot trigger를 연결하고 결정적 연결이 없으면 `근거 미연결`로 표시한다.
+3. orders는 `broker_order_id → mutation_attempt.intent_id → exit_event.proposed_intent_id`의 명시적
+   journal lineage로 exit decision/snapshot trigger를 연결하고 결정적 연결이 없으면 `근거 미연결`로 표시한다.
 4. CSP inline handler 없이 server-rendered semantic table/card를 사용한다.
 5. `/positions`와 `/orders`는 결과를 설명하는 read-only 화면이다. 설정은 a050의 카테고리 화면 한 곳에서만 변경하고 거래 화면에는 문맥형 deep link만 둔다.
-6. order와 snapshot 연결은 broker/order가 운반한 decision ID와 journal attempt provenance로만 수행한다.
-   symbol·가격·시각 유사도로 추정하거나 transport adapter가 다시 계산하지 않는다.
+6. `mutation_attempts.decision_id`는 Guardian 결정 FK이므로 exit-line join에 사용하지 않는다. 연결된
+   exit event가 운반한 exit decision ID와 snapshot을 표시하며, symbol·가격·시각 유사도로 추정하거나
+   transport adapter가 다시 계산하지 않는다.
 7. StockOS lane-console에서는 상태 chip, 핵심 요약, 접힌 provenance의 정보 구조만 참고한다. 이 두
    화면에는 `form`, `input`, `textarea`, `select`, `button`, `contenteditable`을 두지 않고 POST는 405로
    거부한다. 사용자가 값을 입력하거나 확인 절차를 수행할 일은 없다.

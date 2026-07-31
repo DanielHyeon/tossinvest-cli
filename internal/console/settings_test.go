@@ -175,20 +175,21 @@ func TestSettingsPostsWithoutCSRFWriteNothing(t *testing.T) {
 	}
 }
 
-// TestDesignatingASymbolFromThePositionsScreen: the row's explicit button adds the symbol
-// to the include list — idempotently — and the response says it is a standing
-// rule taking effect at the next engine start.
+// TestDesignatingASymbolThroughTheSettingsEndpoint: the trading view is input
+// free, while the existing guarded endpoint remains idempotent for settings UI
+// callers.
 func TestDesignatingASymbolFromThePositionsScreen(t *testing.T) {
 	seam := &fakeSettings{block: config.Adoption{DefaultStopPct: 0.05}}
 	h := settingsHarness(t, seam)
 	seedJournal(t, h.journal)
 	h.authenticate(t)
 
-	// The button renders on the unmanaged broker-only row, not on the managed one.
+	// The trading view links to the canonical management surface and carries no
+	// mutation control of its own.
 	page := h.page(t, "/positions")
-	if !strings.Contains(page, `>관리 편입 예약</button>`) ||
-		!strings.Contains(page, `action="/settings/include"`) {
-		t.Fatal("the positions screen offers no explicit designation button for an unmanaged holding")
+	if strings.Contains(page, `action="/settings/include"`) || strings.Contains(page, "<button") ||
+		!strings.Contains(page, `href="/optimization?category=position-management"`) {
+		t.Fatal("the positions screen is not an input-free link to canonical management")
 	}
 
 	for i := 0; i < 2; i++ {

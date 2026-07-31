@@ -1,0 +1,246 @@
+{
+  "file": "internal/console/orders.go",
+  "source_sha256": "8b8e5fa6f5ac036f3065d396dc8fd057ed76026c21eb93ba95fd3955b8fccf63",
+  "package": "console",
+  "function": "ledgerOrderEvidence",
+  "receiver": "Console",
+  "signature": "Console.ledgerOrderEvidence(params=1, results=3)",
+  "start": {
+    "line": 629,
+    "column": 1
+  },
+  "end": {
+    "line": 657,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 633,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 639,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 644,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 649,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 653,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 634,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 641,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 646,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 656,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 632,
+        "column": 12
+      },
+      "text": "c.openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 636,
+        "column": 8
+      },
+      "text": "ro.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 638,
+        "column": 14
+      },
+      "text": "ro.BrokerOrderIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 40
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 643,
+        "column": 16
+      },
+      "text": "ro.BrokerOrderExitLinks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 645,
+        "column": 40
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 648,
+        "column": 15
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 648,
+        "column": 37
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 652,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 652,
+        "column": 58
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 632,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 638,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 640,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 643,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 645,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 648,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 650,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 652,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 654,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 636,
+        "column": 2
+      },
+      "text": "ro.Close"
+    }
+  ]
+}
