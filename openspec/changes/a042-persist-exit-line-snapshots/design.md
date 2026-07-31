@@ -18,6 +18,15 @@ a041 snapshot은 계산 정본이지만 crash recovery의 정본은 SQLite journ
 5. console read model은 `saved`, `recomputed`, `effective`를 분리하고 각 값의 version/source/observed-at과 stale/unknown reason을 제공한다. 불명 상태를 화면 기본값으로 대체하지 않는다.
 6. protection/high-water만 같은 policy digest 안에서 단조 비교할 수 있다. rung은 같은 immutable policy digest에서만 비교하고 next target/protection은 선택된 policy snapshot에서 다시 파생한다. policy digest가 다르거나 후보 우열을 결정할 수 없으면 해당 포지션 entry/자동 판정을 격리한다.
 7. snapshot ID, decision ID, observation ID와 policy ID/version/digest는 exit event와 같은 transaction에 position generation별로 저장한다.
+8. `exit_states`는 현재 선택된 effective snapshot을 저장한다. 각 evaluation event는 하나의 coherent
+   record 안에 saved-before, recomputed candidate, selected effective와 `effective_source`를 함께 저장한다.
+   어느 후보가 선택된 뒤에도 다른 후보를 read path에서 재계산하거나 field별로 합성하지 않는다.
+9. a043 화면이 계산을 반복하지 않도록 projected quantity, ratio, state-only 여부와 suppressed reason을
+   evaluation event와 canonical read model에 저장한다. unknown은 NULL/typed reason으로 유지하고 0 또는
+   빈 문자열로 coalesce하지 않는다.
+10. quarantine은 `(position identity, position generation)`에만 귀속한다. 명시적인 human repair 또는
+    authoritative reconcile이 같은 generation의 격리를 해제하며, 동일 symbol의 미래 generation에는
+    자동 전파하지 않는다. 격리 알림의 실패·지연은 다른 position의 emergency exit를 막지 못한다.
 
 ### a041 typed seam handoff
 

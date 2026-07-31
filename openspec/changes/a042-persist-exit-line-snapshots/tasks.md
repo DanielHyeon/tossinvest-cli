@@ -6,8 +6,8 @@
 ## 2. 영속화와 복구
 
 - [ ] 2.1 nullable snapshot schema와 typed journal read/write 및 saved/recomputed/effective provenance read model을 구현하고, a041의 `PolicyIdentity`/`ExitDecisionProvenance` seam을 저장·복원한다. legacy NULL을 현재 registry digest로 backfill하지 않는다.
-- [ ] 2.2 evaluation event와 snapshot을 원자적으로 commit하고 recovery에 max-safe 규칙을 연결한다.
-- [ ] 2.3 corrupt snapshot 격리와 다른 emergency exit 비차단 테스트를 통과한다.
+- [ ] 2.2 evaluation event와 snapshot을 원자적으로 commit하고 recovery에 max-safe 규칙을 연결한다. event에는 saved-before, recomputed, effective, effective source와 projected quantity/ratio/state-only/suppressed reason을 함께 보존한다.
+- [ ] 2.3 corrupt snapshot은 현재 position generation만 격리하고 명시적인 repair/reconcile로만 해제하며, 알림 실패와 무관하게 다른 emergency exit가 진행되는 테스트를 통과한다.
 
 ## 3. 검증
 
