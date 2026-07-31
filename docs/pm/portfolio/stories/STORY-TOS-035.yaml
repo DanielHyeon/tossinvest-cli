@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "fix-console-origin-fallback",
-    "path": "openspec/changes/fix-console-origin-fallback"
+    "path": "openspec/changes/archive/2026-07-31-fix-console-origin-fallback"
   },
   "acceptance": [
     "A valid-CSRF POST received over TLS at the configured HTTPS host and port succeeds when both Origin and Referer are omitted",

@@ -36,4 +36,4 @@
 | `console-system-update` | STORY-TOS-032 | implemented |
 | `signed-release-system-update` | STORY-TOS-033 | implemented |
 | `serialize-project-gbrain-serve` | STORY-TOS-034 | implemented |
-| `fix-console-origin-fallback` | STORY-TOS-035 | implemented |
+| `fix-console-origin-fallback` | STORY-TOS-035 | archived |

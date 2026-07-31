@@ -54,3 +54,17 @@
 5. Archive the change, update the Story to the dated archive path, regenerate
    PM trackers, retain the credential-free investigation learning, and rerun
    PM/SDD checks.
+
+## Delivery result
+
+- Implementation commit: `6b124c4`.
+- Pushed branch: `origin/feat/p1-fix-console-origin-fallback`.
+- Built image: `tossos:local`,
+  `sha256:a0d0122a03eccd3324e867dc89b79aed793d1c640f5a588e20a3177cef6c1d0b`.
+- Compose service `tossos` was force-recreated with existing configuration,
+  mounts, secrets, and operating settings unchanged.
+- Runtime result: `healthy`, restart policy `unless-stopped`,
+  `127.0.0.1:37085→37085`.
+- Safe deployed probe: headerless `POST /restart` with deliberately invalid
+  CSRF returned HTTP 403 with the CSRF refusal and did not return the origin
+  refusal. The restart handler and all downstream mutations remained uncalled.
