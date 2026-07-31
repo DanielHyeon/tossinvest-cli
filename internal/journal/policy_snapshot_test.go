@@ -48,8 +48,8 @@ func TestLegacyLadderNullPolicyReadsAsDefaultV1(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if state.PolicyID != "default_v1" {
-		t.Fatalf("legacy policy id = %q, want default_v1", state.PolicyID)
+	if state.PolicyID != "" || state.Snapshot.UnknownReason == "" {
+		t.Fatalf("legacy state = %+v, want an explicit unknown without registry backfill", state)
 	}
 }
 

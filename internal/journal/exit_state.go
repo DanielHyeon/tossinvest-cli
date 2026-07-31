@@ -47,6 +47,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/position"
@@ -149,9 +150,10 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 	defer tx.Rollback()
 
 	var decisionID, adoptionID sql.NullString
+	var positionGeneration int64
 	err = tx.QueryRowContext(ctx,
-		`SELECT entry_decision_id, adoption_id FROM positions WHERE id = ?`, id).
-		Scan(&decisionID, &adoptionID)
+		`SELECT entry_decision_id, adoption_id, instance_seq FROM positions WHERE id = ?`, id).
+		Scan(&decisionID, &adoptionID, &positionGeneration)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ExitState{}, fmt.Errorf("%w: %s", ErrPositionNotFound, id)
 	}
@@ -170,10 +172,12 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO exit_states
 		  (position_id, policy_kind, policy_id, entry_price, initial_stop, initial_risk,
-		   baseline_price, high_water, ratchet_level, active_rung, completed, updated_at)
-		VALUES (?,?,?,?,?,?,?,?,?,NULL,0,?)`,
-		id, kind, nullableString(policyID), seed.EntryPrice, seed.InitialStop, open.InitialRisk,
-		open.Baseline, open.HighWater, string(open.Level), now); err != nil {
+		   baseline_price, high_water, ratchet_level, active_rung, completed, updated_at,
+		   snapshot_status, policy_version, policy_digest, position_generation)
+		VALUES (?,?,?,?,?,?,?,?,?,NULL,0,?,?,?,?,?)`,
+		id, kind, policyIdentity.ID, seed.EntryPrice, seed.InitialStop, open.InitialRisk,
+		open.Baseline, open.HighWater, string(open.Level), now, SnapshotStatusSeed,
+		policyIdentity.Version, policyIdentity.Digest, positionGeneration); err != nil {
 		if isUniqueViolation(err) {
 			return ExitState{}, fmt.Errorf("%w: %s", ErrExitStateExists, id)
 		}
@@ -235,6 +239,13 @@ func seedPolicyIdentity(kind, policyID string, adopted bool,
 // write access to what has been sold.
 type ExitJudgement struct {
 	PositionID string
+	// Snapshot is the exact a041 value consumed by the execution path. A zero
+	// value is accepted only by the pre-a042 compatibility path and never
+	// overwrites a previously evaluated v10 snapshot.
+	Snapshot          exitpolicy.ExitLineSnapshot
+	RecoveryPolicy    exitpolicy.RecoveryPolicyDefinition
+	ObservationSource string
+	ObservedAt        time.Time
 	// Provenance binds this write to the one immutable evaluator snapshot.
 	// It is a typed a041 seam; a042 persists the corresponding columns.
 	Provenance ExitDecisionProvenance
@@ -336,6 +347,16 @@ func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgeme
 			return fmt.Errorf("%w: proposal provenance must match its exit judgement", ErrInvalidRequest)
 		}
 	}
+	var recomputed *StoredExitSnapshot
+	if !judgement.Provenance.zero() {
+		candidate := StoredExitSnapshot{Line: judgement.Snapshot, RecoveryPolicy: judgement.RecoveryPolicy,
+			ObservationSource: strings.TrimSpace(judgement.ObservationSource),
+			ObservedAt:        judgement.ObservedAt.UTC().Format(time.RFC3339Nano)}
+		if err := validateJudgementSnapshot(id, judgement, candidate); err != nil {
+			return fmt.Errorf("%w: %v", ErrInvalidRequest, err)
+		}
+		recomputed = &candidate
+	}
 
 	now := j.nowString()
 	tx, err := j.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE
@@ -351,24 +372,113 @@ func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgeme
 	if current.Completed {
 		return fmt.Errorf("%w: %s", ErrExitStateCompleted, id)
 	}
-	if err := notBelow("high water", id, judgement.HighWater, current.HighWater); err != nil {
-		return err
+	if recomputed != nil && recomputed.Line.PositionGeneration != current.PositionGeneration {
+		return fmt.Errorf("%w: snapshot generation %d does not match position generation %d",
+			ErrInvalidRequest, recomputed.Line.PositionGeneration, current.PositionGeneration)
 	}
-	if err := notBelow("baseline", id, judgement.Baseline, current.Baseline); err != nil {
-		return err
+	if recomputed != nil {
+		var duplicate int
+		err := tx.QueryRowContext(ctx, `SELECT 1 FROM exit_events WHERE decision_id=?`,
+			recomputed.Line.DecisionID).Scan(&duplicate)
+		if err == nil {
+			// The deterministic decision was already committed by another
+			// observer. Returning ErrProposalPending is intentional: the engine
+			// treats it as a conservative no-submit outcome, whereas nil would
+			// make both observers submit the same already-armed proposal.
+			return ErrProposalPending
+		}
+		if !errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("journal: checking duplicate exit decision: %w", err)
+		}
+	}
+	// Legacy callers have no complete candidates to compare, so retain the old
+	// scalar monotonicity guards. Snapshot callers are decided below as one
+	// coherent tuple; checking their individual scalars first would reject the
+	// very stale-but-valid saved-snapshot recovery a042 requires.
+	if recomputed == nil {
+		if err := notBelow("high water", id, judgement.HighWater, current.HighWater); err != nil {
+			return err
+		}
+		if err := notBelow("baseline", id, judgement.Baseline, current.Baseline); err != nil {
+			return err
+		}
 	}
 	level := strings.TrimSpace(judgement.RatchetLevel)
 	if level == "" {
 		level = current.RatchetLevel
 	}
 
-	if _, err := tx.ExecContext(ctx, `
+	effectiveSource := ""
+	var saved, effective *StoredExitSnapshot
+	if current.Effective != nil {
+		copy := *current.Effective
+		saved = &copy
+	}
+	if recomputed != nil {
+		var savedLine *exitpolicy.ExitLineSnapshot
+		if saved != nil {
+			line := saved.Line
+			savedLine = &line
+		}
+		selected, source, selectErr := exitpolicy.SelectRecoverySnapshot(savedLine, recomputed.Line)
+		if selectErr != nil {
+			if _, qerr := quarantineExitSnapshotTx(ctx, tx, id, recomputed.Line.PositionGeneration,
+				"ambiguous_recovery", selectErr.Error(), now); qerr != nil {
+				return qerr
+			}
+			if err := tx.Commit(); err != nil {
+				return err
+			}
+			return fmt.Errorf("%w: %v", ErrExitSnapshotQuarantined, selectErr)
+		}
+		if source == exitpolicy.RecoverySavedMonotone {
+			effective = saved
+			effectiveSource = EffectiveSourceSaved
+		} else {
+			copy := *recomputed
+			copy.Line = selected
+			effective = &copy
+			effectiveSource = EffectiveSourceRecomputed
+		}
+		judgement.HighWater = effective.Line.HighWater
+		judgement.Baseline = effective.Line.CurrentProtection
+		judgement.RatchetLevel = string(effective.Line.RatchetLevel)
+		judgement.ActiveRung = effective.Line.ActiveRung
+		if effectiveSource == EffectiveSourceSaved {
+			judgement.Proposal = nil
+		}
+		level = strings.TrimSpace(judgement.RatchetLevel)
+	}
+
+	updateSQL := `
 		UPDATE exit_states
 		   SET baseline_price = ?, high_water = ?, ratchet_level = ?, active_rung = ?, updated_at = ?
-		 WHERE position_id = ?`,
-		judgement.Baseline, judgement.HighWater, level,
-		nullableRung(judgement.ActiveRung), now, id); err != nil {
+		 WHERE position_id = ?`
+	args := []any{judgement.Baseline, judgement.HighWater, level,
+		nullableRung(judgement.ActiveRung), now, id}
+	if effective != nil {
+		raw, err := encodeStoredSnapshot(*effective)
+		if err != nil {
+			return err
+		}
+		line := effective.Line
+		updateSQL = `UPDATE exit_states SET baseline_price=?,high_water=?,ratchet_level=?,active_rung=?,updated_at=?,
+			snapshot_status=?,policy_id=?,policy_version=?,policy_digest=?,snapshot_id=?,decision_id=?,observation_id=?,
+			position_generation=?,next_target=?,next_protection=?,last_observation_source=?,last_observed_at=?,
+			snapshot_action=?,snapshot_ratio=?,projected_quantity=?,state_only=?,suppressed_reason=?,effective_snapshot_json=?
+			WHERE position_id=?`
+		args = []any{line.CurrentProtection, line.HighWater, string(line.RatchetLevel), nullableRung(line.ActiveRung), now,
+			SnapshotStatusEvaluated, line.Policy.ID, line.Policy.Version, line.Policy.Digest, line.SnapshotID,
+			line.DecisionID, line.ObservationID, line.PositionGeneration, nullableString(line.NextTarget),
+			nullableString(line.NextProtection), effective.ObservationSource, effective.ObservedAt,
+			nullableString(string(line.Action)), nullableString(line.Ratio), line.ProjectedQuantity,
+			boolInt(line.StateOnly), nullableString(line.Suppressed), raw, id}
+	}
+	if _, err := tx.ExecContext(ctx, updateSQL, args...); err != nil {
 		return fmt.Errorf("journal: recording the exit judgement of %s: %w", id, err)
+	}
+	if err := j.runExitWriteHook("after_state"); err != nil {
+		return err
 	}
 
 	action := ""
@@ -378,13 +488,23 @@ func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgeme
 		if err := armExitProposalTx(ctx, tx, id, *judgement.Proposal, now); err != nil {
 			return err
 		}
+		if err := j.runExitWriteHook("after_arm"); err != nil {
+			return err
+		}
 	}
-	if err := appendExitEventTx(ctx, tx, exitEventRow{
+	event := exitEventRow{
 		PositionID: id, ObservedPrice: judgement.ObservedPrice,
 		HighWater: judgement.HighWater, BaselineAfter: judgement.Baseline,
 		LevelAfter: levelAfter(level, judgement.ActiveRung), Action: action,
 		ProposedIntentID: intentID, CreatedAt: now,
-	}); err != nil {
+	}
+	if recomputed != nil && effective != nil {
+		event.Evaluation = evaluationForEvent(saved, recomputed, effective, effectiveSource)
+	}
+	if err := appendExitEventTx(ctx, tx, event); err != nil {
+		return err
+	}
+	if err := j.runExitWriteHook("after_event"); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
@@ -396,24 +516,29 @@ func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgeme
 // exitProgress is the part of the row this file may read: everything except the
 // four the apply point owns.
 type exitProgress struct {
-	PolicyKind   string
-	Baseline     string
-	HighWater    string
-	RatchetLevel string
-	ActiveRung   int
-	Completed    bool
+	PolicyKind         string
+	PositionGeneration int64
+	Baseline           string
+	HighWater          string
+	RatchetLevel       string
+	ActiveRung         int
+	Completed          bool
+	Effective          *StoredExitSnapshot
 }
 
 func scanExitProgress(ctx context.Context, tx *sql.Tx, positionID string) (exitProgress, error) {
 	var (
-		out  exitProgress
-		rung sql.NullInt64
-		done int
+		out       exitProgress
+		rung      sql.NullInt64
+		done      int
+		effective sql.NullString
 	)
 	err := tx.QueryRowContext(ctx, `
-		SELECT policy_kind, baseline_price, high_water, ratchet_level, active_rung, completed
-		  FROM exit_states WHERE position_id = ?`, positionID).
-		Scan(&out.PolicyKind, &out.Baseline, &out.HighWater, &out.RatchetLevel, &rung, &done)
+		SELECT e.policy_kind, p.instance_seq, e.baseline_price, e.high_water, e.ratchet_level,
+		       e.active_rung, e.completed, e.effective_snapshot_json
+		  FROM exit_states e JOIN positions p ON p.id=e.position_id WHERE e.position_id = ?`, positionID).
+		Scan(&out.PolicyKind, &out.PositionGeneration, &out.Baseline, &out.HighWater,
+			&out.RatchetLevel, &rung, &done, &effective)
 	if errors.Is(err, sql.ErrNoRows) {
 		return exitProgress{}, fmt.Errorf("%w: position %s", ErrExitStateNotFound, positionID)
 	}
@@ -425,6 +550,13 @@ func scanExitProgress(ctx context.Context, tx *sql.Tx, positionID string) (exitP
 		out.ActiveRung = int(rung.Int64)
 	}
 	out.Completed = done != 0
+	if effective.Valid {
+		stored, err := decodeStoredSnapshot(effective.String)
+		if err != nil {
+			return exitProgress{}, fmt.Errorf("%w: %v", ErrExitSnapshotCorrupt, err)
+		}
+		out.Effective = &stored
+	}
 	return out, nil
 }
 
@@ -510,17 +642,57 @@ type exitEventRow struct {
 	Action           string
 	ProposedIntentID string
 	CreatedAt        string
+	Evaluation       *ExitEvaluation
 }
 
 func appendExitEventTx(ctx context.Context, tx *sql.Tx, row exitEventRow) error {
+	var savedJSON, recomputedJSON, effectiveJSON any
+	var generation, policyID, policyVersion, policyDigest, snapshotID, decisionID, observationID any
+	var nextTarget, nextProtection, source, observedAt, projected, ratio, stateOnly, suppressed, effectiveSource any
+	if row.Evaluation != nil && row.Evaluation.Effective.Snapshot != nil && row.Evaluation.Recomputed.Snapshot != nil {
+		encode := func(view ExitSnapshotView) (any, error) {
+			if view.Snapshot == nil {
+				return nil, nil
+			}
+			return encodeStoredSnapshot(*view.Snapshot)
+		}
+		var err error
+		if savedJSON, err = encode(row.Evaluation.Saved); err != nil {
+			return err
+		}
+		if recomputedJSON, err = encode(row.Evaluation.Recomputed); err != nil {
+			return err
+		}
+		if effectiveJSON, err = encode(row.Evaluation.Effective); err != nil {
+			return err
+		}
+		// The event identity belongs to the newly evaluated candidate. The
+		// selected effective snapshot may be the previously saved candidate; using
+		// its decision id here would collide on every legitimate stale recovery
+		// and erase which observation triggered this event.
+		e := row.Evaluation.Recomputed.Snapshot
+		line := e.Line
+		generation, policyID, policyVersion, policyDigest = line.PositionGeneration, line.Policy.ID, line.Policy.Version, line.Policy.Digest
+		snapshotID, decisionID, observationID = line.SnapshotID, line.DecisionID, line.ObservationID
+		nextTarget, nextProtection, source, observedAt = nullableString(line.NextTarget), nullableString(line.NextProtection), e.ObservationSource, e.ObservedAt
+		projected, ratio, stateOnly, suppressed = line.ProjectedQuantity, nullableString(line.Ratio), boolInt(line.StateOnly), nullableString(line.Suppressed)
+		effectiveSource = row.Evaluation.EffectiveSource
+	}
 	_, err := tx.ExecContext(ctx, `
 		INSERT INTO exit_events
 		  (position_id, observed_price, high_water, baseline_after, level_after,
-		   action, proposed_intent_id, created_at)
-		VALUES (?,?,?,?,?,?,?,?)`,
+		   action, proposed_intent_id, created_at, position_generation, policy_id,
+		   policy_version, policy_digest, snapshot_id, decision_id, observation_id,
+		   next_target, next_protection, observation_source, observed_at, projected_quantity,
+		   proposal_ratio, state_only, suppressed_reason, saved_snapshot_json,
+		   recomputed_snapshot_json, effective_snapshot_json, effective_source)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		row.PositionID, nullableString(row.ObservedPrice), nullableString(row.HighWater),
 		nullableString(row.BaselineAfter), nullableString(row.LevelAfter),
-		nullableString(row.Action), nullableString(row.ProposedIntentID), row.CreatedAt)
+		nullableString(row.Action), nullableString(row.ProposedIntentID), row.CreatedAt,
+		generation, policyID, policyVersion, policyDigest, snapshotID, decisionID, observationID,
+		nextTarget, nextProtection, source, observedAt, projected, ratio, stateOnly, suppressed,
+		savedJSON, recomputedJSON, effectiveJSON, effectiveSource)
 	if err != nil {
 		return fmt.Errorf("journal: recording the exit judgement of %s: %w", row.PositionID, err)
 	}
@@ -538,6 +710,7 @@ type ExitEvent struct {
 	Action           string
 	ProposedIntentID string
 	CreatedAt        string
+	Evaluation       ExitEvaluation
 }
 
 // ExitEvents returns one position's judgement history, oldest first.
@@ -546,7 +719,8 @@ func (j *Journal) ExitEvents(ctx context.Context, positionID string) ([]ExitEven
 	rows, err := j.db.QueryContext(ctx, `
 		SELECT id, position_id, coalesce(observed_price,''), coalesce(high_water,''),
 		       coalesce(baseline_after,''), coalesce(level_after,''), coalesce(action,''),
-		       coalesce(proposed_intent_id,''), created_at
+		       coalesce(proposed_intent_id,''), created_at, saved_snapshot_json,
+		       recomputed_snapshot_json, effective_snapshot_json, coalesce(effective_source,'')
 		  FROM exit_events WHERE position_id = ? ORDER BY id`, id)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading the exit history of %s: %w", id, err)
@@ -556,8 +730,7 @@ func (j *Journal) ExitEvents(ctx context.Context, positionID string) ([]ExitEven
 	var out []ExitEvent
 	for rows.Next() {
 		var e ExitEvent
-		if err := rows.Scan(&e.ID, &e.PositionID, &e.ObservedPrice, &e.HighWater,
-			&e.BaselineAfter, &e.LevelAfter, &e.Action, &e.ProposedIntentID, &e.CreatedAt); err != nil {
+		if err := scanExitEvent(rows, &e); err != nil {
 			return nil, fmt.Errorf("journal: reading the exit history of %s: %w", id, err)
 		}
 		out = append(out, e)

@@ -36,7 +36,8 @@ func TestMigrationV8ToV9PreservesRowsAndAddsNullableSnapshots(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 9)
+	t.Cleanup(func() { _ = j.Close() })
 	version, err := j.SchemaVersion(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -73,7 +74,7 @@ func TestV8BuildRefusesV9AndV9BacksUpBeforeApplying(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 9)
 	if err := j.Close(); err != nil {
 		t.Fatal(err)
 	}

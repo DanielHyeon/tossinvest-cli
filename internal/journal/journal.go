@@ -77,6 +77,10 @@ type Journal struct {
 	// would be a second answer.
 	modeMu        sync.RWMutex
 	modeProjector ModeProjector
+
+	// exitWriteHook is a same-package test seam for transaction fault injection.
+	// Production never assigns it.
+	exitWriteHook func(stage string) error
 }
 
 // Open resolves the path, verifies the filesystem, creates the data directory if

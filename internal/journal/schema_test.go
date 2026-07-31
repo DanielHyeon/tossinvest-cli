@@ -89,6 +89,7 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"entry_decision_observations",
 		"execution_corrections",
 		"exit_events",
+		"exit_snapshot_quarantines",
 		"exit_states",
 		"fill_events",
 		"fill_snapshots",

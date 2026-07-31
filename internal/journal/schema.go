@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 9
+const SchemaVersion = 10
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -68,6 +68,9 @@ var migrations = []migration{
 	// contract tables out of both.
 	{Version: 8, SQL: schemaV8},
 	{Version: 9, SQL: schemaV9},
+	// schemaV10 lives in exit_snapshot.go beside the typed snapshot and
+	// generation-scoped quarantine APIs that consume it.
+	{Version: 10, SQL: schemaV10},
 }
 
 // schemaV1 is the initial schema.

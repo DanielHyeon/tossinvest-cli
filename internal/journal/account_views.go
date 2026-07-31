@@ -142,6 +142,14 @@ func (r *ReadOnly) LivePositionExits(ctx context.Context, accountRef string) ([]
 		}
 		pe := PositionExit{Position: p, Exit: ExitState{ActiveRung: exitpolicy.NoRung}}
 		if state, ok := states[p.ID]; ok {
+			if state.SnapshotStatus == "" && state.PolicyIdentity.ID == "" {
+				identity, identityErr := legacyPolicyIdentity(state, p.Adopted())
+				if identityErr == nil {
+					state.PolicyIdentity = identity
+				} else {
+					state.Snapshot.UnknownReason = "legacy_policy_identity_unknown"
+				}
+			}
 			pe.Exit, pe.HasExit = state, true
 		}
 		out = append(out, pe)
@@ -167,11 +175,14 @@ func (r *ReadOnly) accountExitStates(ctx context.Context, accountRef string) (ma
 
 	out := map[string]ExitState{}
 	for rows.Next() {
-		state, err := scanExitState(rows)
+		result, err := scanExitStateResult(rows)
 		if err != nil {
 			return nil, err
 		}
-		out[state.PositionID] = state
+		// A semantic defect belongs to this position generation. Preserve the
+		// typed unknown reason for the operator instead of hiding every other
+		// healthy row behind a global query error.
+		out[result.State.PositionID] = result.State
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("journal: listing the exit states of %s: %w", accountRef, err)
@@ -194,7 +205,9 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 		SELECT * FROM (
 			SELECT v.id, v.position_id, coalesce(v.observed_price,''), coalesce(v.high_water,''),
 			       coalesce(v.baseline_after,''), coalesce(v.level_after,''), coalesce(v.action,''),
-			       coalesce(v.proposed_intent_id,''), v.created_at, p.symbol, p.market
+			       coalesce(v.proposed_intent_id,''), v.created_at, v.saved_snapshot_json,
+			       v.recomputed_snapshot_json, v.effective_snapshot_json,
+			       coalesce(v.effective_source,''), p.symbol, p.market
 			  FROM exit_events v
 			  JOIN positions p ON p.id = v.position_id
 			 WHERE p.account_ref = ?
@@ -209,11 +222,18 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 	var out []AccountExitEvent
 	for rows.Next() {
 		var e AccountExitEvent
+		var saved, recomputed, effective sql.NullString
 		if err := rows.Scan(&e.Event.ID, &e.Event.PositionID, &e.Event.ObservedPrice,
 			&e.Event.HighWater, &e.Event.BaselineAfter, &e.Event.LevelAfter, &e.Event.Action,
-			&e.Event.ProposedIntentID, &e.Event.CreatedAt, &e.Symbol, &e.Market); err != nil {
+			&e.Event.ProposedIntentID, &e.Event.CreatedAt, &saved, &recomputed, &effective,
+			&e.Event.Evaluation.EffectiveSource, &e.Symbol, &e.Market); err != nil {
 			return nil, fmt.Errorf("journal: reading an exit event of %s: %w", account, err)
 		}
+		// Event corruption is represented on the individual view. The account
+		// history remains readable and never recomputes a replacement value.
+		_ = decodeExitEventSnapshot(saved, &e.Event.Evaluation.Saved, "no_saved_evaluation")
+		_ = decodeExitEventSnapshot(recomputed, &e.Event.Evaluation.Recomputed, "legacy_event")
+		_ = decodeExitEventSnapshot(effective, &e.Event.Evaluation.Effective, "legacy_event")
 		out = append(out, e)
 	}
 	if err := rows.Err(); err != nil {

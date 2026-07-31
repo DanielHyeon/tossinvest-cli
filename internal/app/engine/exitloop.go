@@ -448,16 +448,16 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 	if err != nil {
 		return nil, err
 	}
-	states, err := o.opts.Journal.OpenExitStates(ctx, o.opts.AccountRef)
+	stateResults, err := o.opts.Journal.OpenExitStateResults(ctx, o.opts.AccountRef)
 	if err != nil {
 		return nil, err
 	}
-	byPosition := make(map[string]journal.ExitState, len(states))
-	for _, s := range states {
-		byPosition[s.PositionID] = s
+	byPosition := make(map[string]journal.ExitStateResult, len(stateResults))
+	for _, result := range stateResults {
+		byPosition[result.State.PositionID] = result
 	}
 
-	var out []managed
+	var out, refused []managed
 	for _, p := range positions {
 		if p.State == journal.PositionClosed || isZeroQuantity(p.Quantity) {
 			continue
@@ -471,7 +471,8 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			o.alertUnmanaged(ctx, p)
 			continue
 		}
-		state, ok := byPosition[p.ID]
+		result, ok := byPosition[p.ID]
+		state := result.State
 		if !ok {
 			opened, err := o.openState(ctx, p)
 			if err != nil {
@@ -489,12 +490,51 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			cycle.Opened++
 			state = opened
 		}
+		if result.Corruption != nil {
+			q, qerr := o.opts.Journal.QuarantineExitSnapshot(ctx, p.ID, p.InstanceSeq,
+				"stored_snapshot_corrupt", result.Corruption.Error())
+			if qerr != nil {
+				if cycle.Err == nil {
+					cycle.Err = qerr
+				}
+				continue
+			}
+			refused = append(refused, managed{position: p, state: state,
+				identityErr: fmt.Errorf("%w (quarantine version %d)", result.Corruption, q.Version)})
+			continue
+		}
+		if q, active, qerr := o.opts.Journal.ActiveExitSnapshotQuarantine(ctx, p.ID, p.InstanceSeq); qerr != nil {
+			if cycle.Err == nil {
+				cycle.Err = qerr
+			}
+			continue
+		} else if active {
+			refused = append(refused, managed{position: p, state: state,
+				identityErr: fmt.Errorf("%w (version %d): %s", journal.ErrExitSnapshotQuarantined, q.Version, q.Reason)})
+			continue
+		}
 		identity, identityErr := managedPolicyIdentity(state, p.Adopted())
+		if identityErr != nil {
+			q, qerr := o.opts.Journal.QuarantineExitSnapshot(ctx, p.ID, p.InstanceSeq,
+				"legacy_policy_identity_unknown", identityErr.Error())
+			if qerr != nil {
+				if cycle.Err == nil {
+					cycle.Err = qerr
+				}
+				continue
+			}
+			refused = append(refused, managed{position: p, state: state,
+				identityErr: fmt.Errorf("%w (quarantine version %d)", identityErr, q.Version)})
+			continue
+		}
 		out = append(out, managed{
 			position: p, state: state, policyIdentity: identity, identityErr: identityErr,
 		})
 	}
-	return out, nil
+	// Quarantined rows come last. alertRefused may synchronously retry a
+	// publisher, so every valid position—including an emergency breach—is
+	// recorded/armed/submitted before alert delivery can wait.
+	return append(out, refused...), nil
 }
 
 func managedPolicyIdentity(state journal.ExitState, adopted bool) (exitpolicy.PolicyIdentity, error) {
@@ -781,7 +821,9 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observ
 		return nil
 	}
 
-	return o.record(ctx, m, snapshot, cycle)
+	return o.record(ctx, m, snapshot,
+		exitpolicy.NewRatchetRecoveryPolicy(o.ratchet, breakEven, m.state.TakenRatioTotal),
+		quote, observation, cycle)
 }
 
 func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observedQuote,
@@ -840,7 +882,7 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observe
 	if !snapshot.Changed {
 		return nil
 	}
-	return o.record(ctx, m, snapshot, cycle)
+	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(ladder), quote, observation, cycle)
 }
 
 func (o *ExitObserver) snapshotContext(m managed, quote observedQuote,
@@ -939,11 +981,13 @@ func (o *ExitObserver) ladderFor(m managed) (exitpolicy.LadderPolicy, error) {
 // — submit first, record after — a crash in between leaves an order the ledger
 // cannot explain and the next observation proposes the same level again.
 func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolicy.ExitLineSnapshot,
-	cycle *ExitCycle) error {
+	recoveryPolicy exitpolicy.RecoveryPolicyDefinition, quote observedQuote,
+	observation cycleObservation, cycle *ExitCycle) error {
 	proposal := snapshot.ExecutableProposal()
 	quantity := snapshot.ProjectedQuantity
 	orderable := snapshot.Orderable && !proposal.Zero()
 	judgement := journal.ExitJudgement{
+		Snapshot: snapshot, RecoveryPolicy: recoveryPolicy,
 		PositionID: m.position.ID, ObservedPrice: snapshot.ObservedPrice,
 		HighWater: snapshot.HighWater, Baseline: snapshot.CurrentProtection,
 		RatchetLevel: string(snapshot.RatchetLevel), ActiveRung: snapshot.ActiveRung,
@@ -951,6 +995,11 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 			ObservationID: snapshot.ObservationID, SnapshotID: snapshot.SnapshotID,
 			DecisionID: snapshot.DecisionID, Policy: snapshot.Policy,
 		},
+	}
+	if quote.FetchedAt.IsZero() {
+		judgement.ObservationSource, judgement.ObservedAt = "cycle", observation.at
+	} else {
+		judgement.ObservationSource, judgement.ObservedAt = "quote_fetched_at", quote.FetchedAt
 	}
 
 	// Clearing the symbol comes *before* the arming, not after it, and the reason

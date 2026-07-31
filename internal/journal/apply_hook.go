@@ -513,6 +513,11 @@ type ExitState struct {
 	// runtime compatibility resolver. Rows read from the pre-a042 schema leave
 	// it zero rather than inventing a version or digest from today's registry.
 	PolicyIdentity exitpolicy.PolicyIdentity
+	// PositionGeneration scopes recovery and quarantine to this exact position
+	// instance. -1 means a pre-v10 row did not carry the evidence.
+	PositionGeneration int64
+	SnapshotStatus     string
+	Snapshot           ExitSnapshotView
 	// EntryPrice, InitialStop and InitialRisk are frozen at t0. InitialRisk is
 	// the denominator of every R the position is judged by and it does not move
 	// for a partial take-profit or an adjustment.
@@ -540,35 +545,17 @@ type ExitState struct {
 // Pending reports whether a proposal is outstanding.
 func (s ExitState) Pending() bool { return s.PendingAction != "" }
 
-const exitStateSelect = `SELECT position_id, policy_kind, coalesce(policy_id,''), entry_price, initial_stop, initial_risk,
+const exitStateSelect = `SELECT position_id, policy_kind, policy_id, entry_price, initial_stop, initial_risk,
 	baseline_price, high_water, ratchet_level, active_rung, taken_ratio_total,
 	coalesce(pending_action,''), coalesce(pending_level,''), coalesce(pending_intent_id,''),
-	completed, updated_at FROM exit_states`
+	completed, updated_at, snapshot_status, policy_version, policy_digest, snapshot_id,
+	decision_id, observation_id, position_generation, next_target, next_protection,
+	last_observation_source, last_observed_at, snapshot_action, snapshot_ratio,
+	projected_quantity, state_only, suppressed_reason, effective_snapshot_json FROM exit_states`
 
 func scanExitState(row rowScanner) (ExitState, error) {
-	var (
-		s    ExitState
-		rung sql.NullInt64
-		done int
-	)
-	err := row.Scan(&s.PositionID, &s.PolicyKind, &s.PolicyID, &s.EntryPrice, &s.InitialStop, &s.InitialRisk,
-		&s.Baseline, &s.HighWater, &s.RatchetLevel, &rung, &s.TakenRatioTotal,
-		&s.PendingAction, &s.PendingLevel, &s.PendingIntentID, &done, &s.UpdatedAt)
-	if errors.Is(err, sql.ErrNoRows) {
-		return ExitState{}, ErrExitStateNotFound
-	}
-	if err != nil {
-		return ExitState{}, fmt.Errorf("journal: reading an exit state: %w", err)
-	}
-	s.ActiveRung = -1
-	if s.PolicyKind == ExitPolicyLadder && s.PolicyID == "" {
-		s.PolicyID = "default_v1"
-	}
-	if rung.Valid {
-		s.ActiveRung = int(rung.Int64)
-	}
-	s.Completed = done != 0
-	return s, nil
+	result, err := scanExitStateResult(row)
+	return result.State, err
 }
 
 // ExitState returns one position's protection state.
@@ -588,12 +575,7 @@ func (j *Journal) ExitState(ctx context.Context, positionID string) (ExitState, 
 // definition of what is outstanding, and the two could disagree.
 func (j *Journal) OpenExitStates(ctx context.Context, accountRef string) ([]ExitState, error) {
 	account := strings.TrimSpace(accountRef)
-	rows, err := j.db.QueryContext(ctx, `
-		SELECT e.position_id, e.policy_kind, coalesce(e.policy_id,''), e.entry_price, e.initial_stop, e.initial_risk,
-		       e.baseline_price, e.high_water, e.ratchet_level, e.active_rung, e.taken_ratio_total,
-		       coalesce(e.pending_action,''), coalesce(e.pending_level,''),
-		       coalesce(e.pending_intent_id,''), e.completed, e.updated_at
-		  FROM exit_states e
+	rows, err := j.db.QueryContext(ctx, exitStateSelect+` e
 		  JOIN positions p ON p.id = e.position_id
 		 WHERE p.account_ref = ? AND e.completed = 0
 		 ORDER BY p.market, p.symbol, p.instance_seq`, account)
