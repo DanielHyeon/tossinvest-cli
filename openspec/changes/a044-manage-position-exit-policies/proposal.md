@@ -14,12 +14,13 @@
 ## What Changes
 
 - 종목별 정책 preview, 승인, release, re-adopt와 충돌 resolve를 정의한다.
-- `If-Match` 기반 낙관적 동시성과 before/after/actor/server-defined reason 감사를 요구한다.
+- version-bound opaque preview token 기반 console CAS(HTTP API는 `If-Match`)와 before/after/actor/server-defined reason 감사를 요구한다.
 - 공통 정책 변경은 기존 포지션을 자동 rebind하지 않는다.
 - release/re-adopt는 과거 high-water·rung을 재사용하지 않는다.
 - 정책 변경은 LIVE/automation toggle을 바꾸지 않는다.
 - a050의 `position-management` 카테고리에 종목별 관리와 외부 매수 자동편입을 함께 배치하고, 계좌·시장·종목·generation 단위의 현재값·기본값·실효값·설명을 제공한다.
 - 외부 매수 자동편입 기본값은 OFF, 합성 손절폭은 5%(허용 2~20%, 0.5% 단위), include/exclude 목록은 비어 있음이며 exclude가 우선한다. 종목별 정책 기본값은 공통 정책 상속이다.
+- UI는 server-defined preset과 현재 보유 행 action만 사용하며 자유 텍스트·숫자·symbol·reason 입력과 typed confirmation을 제공하지 않는다.
 - **비목표**: 정책 수치 자동 최적화, 신규 매수, 브로커 조건주문.
 
 ## Capabilities

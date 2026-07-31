@@ -6,3 +6,7 @@ journal은 override, release와 re-adopt event를 position/adoption generation�
 #### Scenario: 늦게 도착한 과거 event
 - **WHEN** release 후 새 generation이 열린 뒤 과거 generation의 event가 도착한다
 - **THEN** event를 격리하고 새 exit state를 변경하지 않는다
+
+#### Scenario: 같은 종목의 새 포지션
+- **WHEN** 과거 position generation이 격리된 뒤 동일 symbol의 새 position identity가 열린다
+- **THEN** 과거 격리는 새 lifecycle로 전파되지 않고 새 generation은 독립 상태로 시작한다

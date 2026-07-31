@@ -8,7 +8,7 @@
 - **THEN** 새 policy snapshot과 before/after/actor/server-defined reason audit가 한 transaction에 기록된다
 
 #### Scenario: stale version
-- **WHEN** 다른 write 뒤 오래된 `If-Match`로 적용한다
+- **WHEN** 다른 write 뒤 오래된 version을 담은 opaque console preview token 또는 API `If-Match`로 적용한다
 - **THEN** 412 version mismatch를 반환하고 정책과 audit effective state를 바꾸지 않는다
 
 ### Requirement: release와 re-adopt는 lifecycle을 분리한다

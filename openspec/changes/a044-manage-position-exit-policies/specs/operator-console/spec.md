@@ -29,3 +29,7 @@
 #### Scenario: release 요청
 - **WHEN** 운영자가 자동관리 해제를 선택한다
 - **THEN** 일반 설정 저장과 분리된 danger confirmation에서 보호 공백과 active exit 충돌 여부를 설명하고 3초 대기·명시 checkbox/button을 제공하되 문구 입력을 요구하지 않는다
+
+#### Scenario: 입력 없는 정책 제어
+- **WHEN** 운영자가 종목별 정책 또는 자동편입을 변경한다
+- **THEN** server preset·OFF/ON·0.5% stop option·현재 보유 행 action·server reason만 선택할 수 있고 자유 text/number/symbol/reason 입력이나 typed confirmation은 없다

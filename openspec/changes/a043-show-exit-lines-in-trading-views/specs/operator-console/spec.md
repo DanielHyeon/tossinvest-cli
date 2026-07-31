@@ -36,3 +36,7 @@
 #### Scenario: orders에서 보호주문 확인
 - **WHEN** 운영자가 exit 주문의 보호 설정을 확인하려 한다
 - **THEN** 화면은 `/optimization?category=exit-protection` 링크를 제공한다
+
+#### Scenario: 입력 없는 거래 화면
+- **WHEN** 운영자가 `/positions` 또는 `/orders`를 연다
+- **THEN** 화면에는 form/input/textarea/select/button/contenteditable이 없고 해당 경로의 POST는 405로 거부된다

@@ -16,12 +16,17 @@ positions는 baseline과 initial stop 일부를 표시하고 orders는 broker/jo
 3. orders는 exit decision ID로 snapshot trigger를 연결하고 결정적 연결이 없으면 `근거 미연결`로 표시한다.
 4. CSP inline handler 없이 server-rendered semantic table/card를 사용한다.
 5. `/positions`와 `/orders`는 결과를 설명하는 read-only 화면이다. 설정은 a050의 카테고리 화면 한 곳에서만 변경하고 거래 화면에는 문맥형 deep link만 둔다.
+6. order와 snapshot 연결은 broker/order가 운반한 decision ID와 journal attempt provenance로만 수행한다.
+   symbol·가격·시각 유사도로 추정하거나 transport adapter가 다시 계산하지 않는다.
+7. StockOS lane-console에서는 상태 chip, 핵심 요약, 접힌 provenance의 정보 구조만 참고한다. 이 두
+   화면에는 `form`, `input`, `textarea`, `select`, `button`, `contenteditable`을 두지 않고 POST는 405로
+   거부한다. 사용자가 값을 입력하거나 확인 절차를 수행할 일은 없다.
 
 ## Risks / Trade-offs
 
 - [정보량 증가로 다시 복잡해짐] → 기본 행은 현재/다음 핵심값만, provenance는 details로 접는다.
 - [stale snapshot 오인] → 평가 시각과 stale reason을 같은 시각 계층에 표시한다.
-- [거래 화면과 최적화 화면에 설정이 중복됨] → 거래 화면의 입력 control을 금지하고 canonical category deep link를 사용한다.
+- [거래 화면과 최적화 화면에 설정이 중복됨] → 거래 화면의 입력 control과 POST를 금지하고 canonical category deep link를 사용한다.
 
 ## Migration Plan
 
