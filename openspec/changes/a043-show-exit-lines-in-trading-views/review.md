@@ -36,6 +36,13 @@
 > than claiming a nonexistent oversized-row test. Task 3.2 and the gate remain
 > unchecked pending exact-commit re-review.
 
+> Correction (2026-08-01, UI evidence re-review): review of `28e079a`
+> accepted the dark contrast and B11 structural evidence, but found that the new
+> WCAG helper map called an unexecuted luminance-swap defense GREEN and that the
+> pre-existing media-boundary guards could be read as observed REDs. The branch
+> maps now label those conditions as unexecuted reviewed defenses; no code or UI
+> behavior changed. Task 3.2 and the gate remain pending one exact-commit review.
+
 - OpenSpec strict validation: pass.
 - Mutation capability: none by contract.
 - Dependency baseline: implementation starts from `70aabdc`, after a041/a042 were
