@@ -1,0 +1,141 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "9eb6ffdefb69f8d41c366b31fa88251b711628b762d0b29f79d76e613f3be8bb",
+  "package": "engine",
+  "function": "judge",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.judge(params=5, results=1)",
+  "start": {
+    "line": 736,
+    "column": 1
+  },
+  "end": {
+    "line": 754,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 738,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 743,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 748,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 749,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 751,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 740,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 745,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 750,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 752,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 739,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 742,
+        "column": 20
+      },
+      "text": "o.breakEven"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 10
+      },
+      "text": "o.judgeLadder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 10
+      },
+      "text": "o.judgeRatchet"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 742,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

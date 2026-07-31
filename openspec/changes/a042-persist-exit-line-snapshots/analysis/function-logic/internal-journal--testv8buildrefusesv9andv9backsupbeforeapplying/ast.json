@@ -1,0 +1,351 @@
+{
+  "file": "internal/journal/migration_v9_test.go",
+  "source_sha256": "f0eed886c8b7bfdd8132c60a33902c4a0914c4a3b06a8e0cef81ea8431beb7a8",
+  "package": "journal",
+  "function": "TestV8BuildRefusesV9AndV9BacksUpBeforeApplying",
+  "signature": "TestV8BuildRefusesV9AndV9BacksUpBeforeApplying(params=1, results=0)",
+  "start": {
+    "line": 68,
+    "column": 1
+  },
+  "end": {
+    "line": 99,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 9
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 9
+      },
+      "text": "openJournalAtSchema"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 2
+      },
+      "text": "seedV8Rows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 12
+      },
+      "text": "old.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 7
+      },
+      "text": "openJournalAtSchema"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 12
+      },
+      "text": "j.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 13
+      },
+      "text": "backupsIn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 3
+      },
+      "text": "filepath.Base"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 18
+      },
+      "text": "os.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 53
+      },
+      "text": "Perm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 53
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 12
+      },
+      "text": "Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 17
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 22
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 22
+      },
+      "text": "FixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 44
+      },
+      "text": "migrationsThrough"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 42
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 59
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 4
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 21
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

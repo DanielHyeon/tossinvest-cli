@@ -1,0 +1,46 @@
+{
+  "file": "internal/journal/apply_hook.go",
+  "source_sha256": "04d13896c2e170c3856789c56ec172165a8e2562962cf91c2effcefccfe26f13",
+  "package": "journal",
+  "function": "scanExitState",
+  "signature": "scanExitState(params=1, results=2)",
+  "start": {
+    "line": 556,
+    "column": 1
+  },
+  "end": {
+    "line": 559,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 558,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 17
+      },
+      "text": "scanExitStateResult"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 557,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

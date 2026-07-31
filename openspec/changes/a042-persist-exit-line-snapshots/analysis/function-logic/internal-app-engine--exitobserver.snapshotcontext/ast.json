@@ -1,0 +1,63 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "9eb6ffdefb69f8d41c366b31fa88251b711628b762d0b29f79d76e613f3be8bb",
+  "package": "engine",
+  "function": "snapshotContext",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.snapshotContext(params=3, results=2)",
+  "start": {
+    "line": 888,
+    "column": 1
+  },
+  "end": {
+    "line": 898,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 891,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 892,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 894,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 890,
+        "column": 24
+      },
+      "text": "stableObservationID"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 890,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

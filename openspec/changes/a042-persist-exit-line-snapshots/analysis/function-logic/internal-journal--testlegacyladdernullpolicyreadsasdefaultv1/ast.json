@@ -1,0 +1,232 @@
+{
+  "file": "internal/journal/policy_snapshot_test.go",
+  "source_sha256": "a0061bc40d069c13c548710bf26a068550bd7a3ae1b2940862b660aeb7a4f44d",
+  "package": "journal",
+  "function": "TestLegacyLadderNullPolicyReadsAsDefaultV1",
+  "signature": "TestLegacyLadderNullPolicyReadsAsDefaultV1(params=1, results=0)",
+  "start": {
+    "line": 30,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 7
+      },
+      "text": "exitFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 7
+      },
+      "text": "place"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 15
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 33
+      },
+      "text": "terminalFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 7
+      },
+      "text": "currentPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 15
+      },
+      "text": "j.OpenExitState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 15
+      },
+      "text": "j.db.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 16
+      },
+      "text": "j.ExitState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 34,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 38,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
