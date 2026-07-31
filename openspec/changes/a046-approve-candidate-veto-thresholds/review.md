@@ -34,3 +34,26 @@ exported veto-order mutation, UI subtree 검사와 markout isolation detector �
 
 follow-up 구현 후에도 독립 재리뷰와 최종 gate 전에는 승인하지 않는다. `unapproved/passed=0`과
 input-free UI는 유지하며, synthetic activation fixture는 numeric human approval이 아니다.
+
+## Independent re-review · 2026-08-01
+
+- Reviewed scope: `178f583..5da9a61`
+- Verdict: **CLEAN FOR DORMANT INTEGRATION**
+- Previous findings closed: Critical **2/2**, Warning **2/2**
+- New findings: **0**
+
+The re-review confirmed that opaque evidence bytes are hashed again at load time
+and bound to a strict separate activation record through version, market/session
+scope, canonical set digest, evidence digest, and bounded approval time. The
+same-version/different-digest registry conflict is fail-closed.
+
+The D3 veto order is now a private array exposed only through a copy accessor.
+The `candidate-filters` DOM subtree has no form, textarea, input, or
+`contenteditable` surface and contains exactly the KR/US × three-metric matrix.
+The markout package remains restricted by a production import allowlist and
+positive-control clock/polling detection.
+
+Numeric activation remains absent. Runtime and UI stay
+`unapproved / passed=0 / verdict inactive`, and the reviewed dependency guards
+show no order or RiskIntent authority. Focused tests, affected-package race
+tests, and vet passed for the reviewed scope.

@@ -14,5 +14,5 @@
 
 - [x] 3.1 `candidate-filters` descriptor와 화면에 label/help/default state/desired/effective/unit/range/direction/sample/evidence/apply timing을 구현한다.
 - [x] 3.2 unapproved를 숫자 0으로 표시하지 않는 read-only 상태, 시장·세션 전환, incomplete evidence, preview/CAS와 모바일·접근성 테스트를 통과한다.
-- [ ] 3.3 candidate focused/full test·vet·validate와 독립 리뷰를 통과한다.
-- [ ] 3.4 `make gate CHANGE=a046-approve-candidate-veto-thresholds`을 통과한다.
+- [x] 3.3 candidate focused/full test·vet·validate와 독립 리뷰를 통과한다.
+- [x] 3.4 `make gate CHANGE=a046-approve-candidate-veto-thresholds`을 통과한다.
