@@ -266,6 +266,11 @@ type ExitJudgement struct {
 	// part of this transaction; submitting it is the caller's next step, and the
 	// gap between the two is the crash window the arming exists to close.
 	Proposal *ExitProposal
+	// ArmSuppressedReason records why an otherwise executable immutable
+	// snapshot was persisted without arming its proposal. It is deliberately
+	// separate from Snapshot.Suppressed: the evaluator made a proposal, while
+	// the execution precondition withheld only its arming.
+	ArmSuppressedReason string
 }
 
 // ExitProposal is a proposal being armed.
@@ -497,6 +502,7 @@ func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgeme
 		HighWater: judgement.HighWater, BaselineAfter: judgement.Baseline,
 		LevelAfter: levelAfter(level, judgement.ActiveRung), Action: action,
 		ProposedIntentID: intentID, CreatedAt: now,
+		ArmSuppressedReason: judgement.ArmSuppressedReason,
 	}
 	if recomputed != nil && effective != nil {
 		event.Evaluation = evaluationForEvent(saved, recomputed, effective, effectiveSource)
@@ -634,15 +640,16 @@ const (
 )
 
 type exitEventRow struct {
-	PositionID       string
-	ObservedPrice    string
-	HighWater        string
-	BaselineAfter    string
-	LevelAfter       string
-	Action           string
-	ProposedIntentID string
-	CreatedAt        string
-	Evaluation       *ExitEvaluation
+	PositionID          string
+	ObservedPrice       string
+	HighWater           string
+	BaselineAfter       string
+	LevelAfter          string
+	Action              string
+	ProposedIntentID    string
+	CreatedAt           string
+	ArmSuppressedReason string
+	Evaluation          *ExitEvaluation
 }
 
 func appendExitEventTx(ctx context.Context, tx *sql.Tx, row exitEventRow) error {
@@ -685,14 +692,16 @@ func appendExitEventTx(ctx context.Context, tx *sql.Tx, row exitEventRow) error 
 		   policy_version, policy_digest, snapshot_id, decision_id, observation_id,
 		   next_target, next_protection, observation_source, observed_at, projected_quantity,
 		   proposal_ratio, state_only, suppressed_reason, saved_snapshot_json,
-		   recomputed_snapshot_json, effective_snapshot_json, effective_source)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		   recomputed_snapshot_json, effective_snapshot_json, effective_source,
+		   arm_suppressed_reason)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		row.PositionID, nullableString(row.ObservedPrice), nullableString(row.HighWater),
 		nullableString(row.BaselineAfter), nullableString(row.LevelAfter),
 		nullableString(row.Action), nullableString(row.ProposedIntentID), row.CreatedAt,
 		generation, policyID, policyVersion, policyDigest, snapshotID, decisionID, observationID,
 		nextTarget, nextProtection, source, observedAt, projected, ratio, stateOnly, suppressed,
-		savedJSON, recomputedJSON, effectiveJSON, effectiveSource)
+		savedJSON, recomputedJSON, effectiveJSON, effectiveSource,
+		nullableString(row.ArmSuppressedReason))
 	if err != nil {
 		return fmt.Errorf("journal: recording the exit judgement of %s: %w", row.PositionID, err)
 	}
@@ -701,16 +710,17 @@ func appendExitEventTx(ctx context.Context, tx *sql.Tx, row exitEventRow) error 
 
 // ExitEvent is one recorded judgement.
 type ExitEvent struct {
-	ID               int64
-	PositionID       string
-	ObservedPrice    string
-	HighWater        string
-	BaselineAfter    string
-	LevelAfter       string
-	Action           string
-	ProposedIntentID string
-	CreatedAt        string
-	Evaluation       ExitEvaluation
+	ID                  int64
+	PositionID          string
+	ObservedPrice       string
+	HighWater           string
+	BaselineAfter       string
+	LevelAfter          string
+	Action              string
+	ProposedIntentID    string
+	CreatedAt           string
+	ArmSuppressedReason string
+	Evaluation          ExitEvaluation
 }
 
 // ExitEvents returns one position's judgement history, oldest first.
@@ -720,7 +730,8 @@ func (j *Journal) ExitEvents(ctx context.Context, positionID string) ([]ExitEven
 		SELECT id, position_id, coalesce(observed_price,''), coalesce(high_water,''),
 		       coalesce(baseline_after,''), coalesce(level_after,''), coalesce(action,''),
 		       coalesce(proposed_intent_id,''), created_at, saved_snapshot_json,
-		       recomputed_snapshot_json, effective_snapshot_json, coalesce(effective_source,'')
+		       recomputed_snapshot_json, effective_snapshot_json, coalesce(effective_source,''),
+		       coalesce(arm_suppressed_reason,'')
 		  FROM exit_events WHERE position_id = ? ORDER BY id`, id)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading the exit history of %s: %w", id, err)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 )
 
@@ -24,8 +25,9 @@ const (
 // Exactly one arm must be present. It is evidence only and grants no execution
 // authority.
 type RecoveryPolicyDefinition struct {
-	Ratchet *RatchetRecoveryDefinition `json:"ratchet,omitempty"`
-	Ladder  *LadderPolicy              `json:"ladder,omitempty"`
+	RemainingQuantity string                     `json:"remaining_quantity"`
+	Ratchet           *RatchetRecoveryDefinition `json:"ratchet,omitempty"`
+	Ladder            *LadderPolicy              `json:"ladder,omitempty"`
 }
 
 type RatchetRecoveryDefinition struct {
@@ -34,31 +36,41 @@ type RatchetRecoveryDefinition struct {
 	TakenRatioTotal string        `json:"taken_ratio_total"`
 }
 
-func NewRatchetRecoveryPolicy(config RatchetConfig, realBreakeven, takenRatioTotal string) RecoveryPolicyDefinition {
-	return RecoveryPolicyDefinition{Ratchet: &RatchetRecoveryDefinition{
+func NewRatchetRecoveryPolicy(config RatchetConfig, realBreakeven, takenRatioTotal,
+	remainingQuantity string) RecoveryPolicyDefinition {
+	return RecoveryPolicyDefinition{RemainingQuantity: strings.TrimSpace(remainingQuantity), Ratchet: &RatchetRecoveryDefinition{
 		Config: config, RealBreakeven: strings.TrimSpace(realBreakeven),
 		TakenRatioTotal: strings.TrimSpace(takenRatioTotal),
 	}}
 }
 
-func NewLadderRecoveryPolicy(policy LadderPolicy) RecoveryPolicyDefinition {
+func NewLadderRecoveryPolicy(policy LadderPolicy, remainingQuantity string) RecoveryPolicyDefinition {
 	copy := policy
 	copy.Rungs = append([]Rung(nil), policy.Rungs...)
-	return RecoveryPolicyDefinition{Ladder: &copy}
+	return RecoveryPolicyDefinition{RemainingQuantity: strings.TrimSpace(remainingQuantity), Ladder: &copy}
 }
 
 // ValidateRecoveryDerivation resolves the selected immutable policy definition
 // by its exact identity and re-derives NextTarget/NextProtection. A digest is
 // not accepted as a substitute for this semantic check.
 func ValidateRecoveryDerivation(line ExitLineSnapshot, definition RecoveryPolicyDefinition) error {
+	if err := validateRecoverySnapshot(line); err != nil {
+		return err
+	}
 	if (definition.Ratchet == nil) == (definition.Ladder == nil) {
 		return fmt.Errorf("%w: recovery needs exactly one policy definition", ErrRecoveryIdentity)
+	}
+	if _, err := positive("recovery remaining quantity", definition.RemainingQuantity); err != nil {
+		return err
 	}
 	var target, protection string
 	if ratchet := definition.Ratchet; ratchet != nil {
 		identity, err := RatchetPolicyIdentity(ratchet.Config)
 		if err != nil || !sameRecoveryPolicy(identity, line.Policy) || line.ActiveRung != NoRung {
 			return fmt.Errorf("%w: ratchet definition does not resolve stored policy identity", ErrRecoveryIdentity)
+		}
+		if err := validateRatchetRecoveryOutput(line); err != nil {
+			return err
 		}
 		entry, _, risk, err := riskOf(line.EntryPrice, line.InitialStop)
 		if err != nil {
@@ -80,9 +92,15 @@ func ValidateRecoveryDerivation(line ExitLineSnapshot, definition RecoveryPolicy
 			return err
 		}
 	} else {
+		if err := definition.Ladder.Validate(); err != nil {
+			return fmt.Errorf("%w: invalid ladder definition: %v", ErrRecoveryIdentity, err)
+		}
 		identity, err := definition.Ladder.Identity()
-		if err != nil || !sameRecoveryPolicy(identity, line.Policy) || line.ActiveRung == NoRung {
+		if err != nil || !sameRecoveryPolicy(identity, line.Policy) {
 			return fmt.Errorf("%w: ladder definition does not resolve stored policy identity", ErrRecoveryIdentity)
+		}
+		if err := validateLadderRecoveryOutput(line, *definition.Ladder); err != nil {
+			return err
 		}
 		target, protection, err = nextLadderLine(line.EntryPrice, line.ActiveRung, *definition.Ladder)
 		if err != nil {
@@ -92,6 +110,73 @@ func ValidateRecoveryDerivation(line ExitLineSnapshot, definition RecoveryPolicy
 	if target != line.NextTarget || protection != line.NextProtection {
 		return fmt.Errorf("%w: derived next line is %q/%q, stored is %q/%q",
 			ErrRecoveryIdentity, target, protection, line.NextTarget, line.NextProtection)
+	}
+	return validateRecoveryProjection(line, definition.RemainingQuantity)
+}
+
+func validateRatchetRecoveryOutput(line ExitLineSnapshot) error {
+	if !line.RatchetLevel.Valid() {
+		return fmt.Errorf("%w: invalid ratchet level %q", ErrRecoveryIdentity, line.RatchetLevel)
+	}
+	switch line.Action {
+	case ActionNone, ActionBaselineBreach, ActionRatchetPartial:
+	default:
+		return fmt.Errorf("%w: action %q does not belong to ratchet policy", ErrRecoveryIdentity, line.Action)
+	}
+	if line.Action.Orderable() && line.Level != string(line.RatchetLevel) {
+		return fmt.Errorf("%w: ratchet proposal level %q does not match %q", ErrRecoveryIdentity, line.Level, line.RatchetLevel)
+	}
+	return nil
+}
+
+func validateLadderRecoveryOutput(line ExitLineSnapshot, policy LadderPolicy) error {
+	if line.RatchetLevel != LevelNone || line.ActiveRung < NoRung || line.ActiveRung >= len(policy.Rungs) {
+		return fmt.Errorf("%w: active rung %d is not in [-1,%d)", ErrRecoveryIdentity, line.ActiveRung, len(policy.Rungs))
+	}
+	switch line.Action {
+	case ActionNone, ActionLadderPartial, ActionLadderTakeProfit, ActionLadderHoldStopPromoted, ActionLadderStop:
+	default:
+		return fmt.Errorf("%w: action %q does not belong to ladder policy", ErrRecoveryIdentity, line.Action)
+	}
+	if line.Action.Orderable() {
+		level, err := strconv.Atoi(strings.TrimSpace(line.Level))
+		if err != nil || level != line.ActiveRung {
+			return fmt.Errorf("%w: ladder proposal level %q does not match active rung %d",
+				ErrRecoveryIdentity, line.Level, line.ActiveRung)
+		}
+	}
+	return nil
+}
+
+func validateRecoveryProjection(line ExitLineSnapshot, remaining string) error {
+	if line.Suppressed != "" && line.Suppressed != SuppressedPending && line.Suppressed != SuppressedAlreadyTaken {
+		return fmt.Errorf("%w: unknown suppression reason %q", ErrRecoveryIdentity, line.Suppressed)
+	}
+	if line.Action.Orderable() {
+		ratio, err := parseRatio("recovery proposal ratio", line.Ratio)
+		if err != nil || ratio.Sign() <= 0 || ratio.Cmp(one) > 0 || strings.TrimSpace(line.Level) == "" || line.Suppressed != "" {
+			return fmt.Errorf("%w: invalid orderable proposal ratio/level/suppression", ErrRecoveryIdentity)
+		}
+		projected, err := ProjectWholeShares(remaining, line.Ratio)
+		if err != nil || projected != line.ProjectedQuantity {
+			return fmt.Errorf("%w: projected quantity %q does not match whole-share projection %q",
+				ErrRecoveryIdentity, line.ProjectedQuantity, projected)
+		}
+		positiveProjection := projected != "0"
+		if line.Orderable != positiveProjection || line.StateOnly == positiveProjection {
+			return fmt.Errorf("%w: projection flags disagree", ErrRecoveryIdentity)
+		}
+		return nil
+	}
+	if line.Ratio != "" || line.Level != "" || line.ProjectedQuantity != "0" || line.Orderable {
+		return fmt.Errorf("%w: non-orderable action carries proposal fields", ErrRecoveryIdentity)
+	}
+	if line.Action == ActionLadderHoldStopPromoted {
+		if !line.StateOnly || (line.Suppressed != "" && line.Suppressed != SuppressedPending) {
+			return fmt.Errorf("%w: ladder state-only output is inconsistent", ErrRecoveryIdentity)
+		}
+	} else if line.StateOnly {
+		return fmt.Errorf("%w: only an orderable zero projection or ladder hold may be state-only", ErrRecoveryIdentity)
 	}
 	return nil
 }

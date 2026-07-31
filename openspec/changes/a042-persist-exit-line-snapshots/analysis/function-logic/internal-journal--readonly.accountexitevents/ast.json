@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/account_views.go",
-  "source_sha256": "f0e003202b9b94abc51fad333ecf36ca2d239e14df9e1833536395a5143abd15",
+  "source_sha256": "3c10da9056e557bf702027d3ab0803341fed166d16a8db659ef53f1d60775b85",
   "package": "journal",
   "function": "AccountExitEvents",
   "receiver": "ReadOnly",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 243,
+    "line": 245,
     "column": 2
   },
   "branches": [
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 217,
+        "line": 218,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "for",
       "at": {
-        "line": 223,
+        "line": 224,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 226,
+        "line": 227,
         "column": 3
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 239,
+        "line": 241,
         "column": 2
       }
     }
@@ -66,28 +66,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 218,
+        "line": 219,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 230,
+        "line": 232,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 240,
+        "line": 242,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 242,
+        "line": 244,
         "column": 2
       }
     }
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 218,
+        "line": 219,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 220,
+        "line": 221,
         "column": 8
       },
       "text": "rows.Close"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 224,
         "column": 6
       },
       "text": "rows.Next"
@@ -136,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 226,
+        "line": 227,
         "column": 13
       },
       "text": "rows.Scan"
@@ -144,26 +144,10 @@
     {
       "kind": "call",
       "at": {
-        "line": 230,
+        "line": 232,
         "column": 16
       },
       "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 234,
-        "column": 7
-      },
-      "text": "decodeExitEventSnapshot"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 235,
-        "column": 7
-      },
-      "text": "decodeExitEventSnapshot"
     },
     {
       "kind": "call",
@@ -177,6 +161,22 @@
       "kind": "call",
       "at": {
         "line": 237,
+        "column": 7
+      },
+      "text": "decodeExitEventSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 7
+      },
+      "text": "decodeExitEventSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
         "column": 9
       },
       "text": "append"
@@ -184,7 +184,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 239,
+        "line": 241,
         "column": 12
       },
       "text": "rows.Err"
@@ -192,7 +192,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 240,
+        "line": 242,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -216,22 +216,8 @@
     {
       "kind": ":=",
       "at": {
-        "line": 226,
+        "line": 227,
         "column": 6
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 234,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 235,
-        "column": 3
       }
     },
     {
@@ -249,9 +235,23 @@
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
+      "at": {
+        "line": 238,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
       "at": {
         "line": 239,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
         "column": 5
       }
     }
@@ -261,7 +261,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 220,
+        "line": 221,
         "column": 2
       },
       "text": "rows.Close"

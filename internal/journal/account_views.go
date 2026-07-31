@@ -207,7 +207,8 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 			       coalesce(v.baseline_after,''), coalesce(v.level_after,''), coalesce(v.action,''),
 			       coalesce(v.proposed_intent_id,''), v.created_at, v.saved_snapshot_json,
 			       v.recomputed_snapshot_json, v.effective_snapshot_json,
-			       coalesce(v.effective_source,''), p.symbol, p.market
+			       coalesce(v.effective_source,''), coalesce(v.arm_suppressed_reason,''),
+			       p.symbol, p.market
 			  FROM exit_events v
 			  JOIN positions p ON p.id = v.position_id
 			 WHERE p.account_ref = ?
@@ -226,7 +227,8 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 		if err := rows.Scan(&e.Event.ID, &e.Event.PositionID, &e.Event.ObservedPrice,
 			&e.Event.HighWater, &e.Event.BaselineAfter, &e.Event.LevelAfter, &e.Event.Action,
 			&e.Event.ProposedIntentID, &e.Event.CreatedAt, &saved, &recomputed, &effective,
-			&e.Event.Evaluation.EffectiveSource, &e.Symbol, &e.Market); err != nil {
+			&e.Event.Evaluation.EffectiveSource, &e.Event.ArmSuppressedReason,
+			&e.Symbol, &e.Market); err != nil {
 			return nil, fmt.Errorf("journal: reading an exit event of %s: %w", account, err)
 		}
 		// Event corruption is represented on the individual view. The account

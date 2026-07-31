@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/account_views.go",
-  "source_sha256": "f0e003202b9b94abc51fad333ecf36ca2d239e14df9e1833536395a5143abd15",
+  "source_sha256": "3c10da9056e557bf702027d3ab0803341fed166d16a8db659ef53f1d60775b85",
   "package": "journal",
   "function": "accountExitStates",
   "receiver": "ReadOnly",

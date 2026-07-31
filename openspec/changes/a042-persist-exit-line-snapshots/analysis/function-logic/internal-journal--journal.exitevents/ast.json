@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/exit_state.go",
-  "source_sha256": "0b5f371af29e42f9259f16aac16ddcc2b957953589736ce341be8188536643cb",
+  "source_sha256": "559a3770ab3126137dbe290faaa7a55ac0c25e80846d5b943079abe46ecb7bd9",
   "package": "journal",
   "function": "ExitEvents",
   "receiver": "Journal",
   "signature": "Journal.ExitEvents(params=2, results=2)",
   "start": {
-    "line": 717,
+    "line": 727,
     "column": 1
   },
   "end": {
-    "line": 742,
+    "line": 753,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 725,
+        "line": 736,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "for",
       "at": {
-        "line": 731,
+        "line": 742,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 733,
+        "line": 744,
         "column": 3
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 738,
+        "line": 749,
         "column": 2
       }
     }
@@ -51,28 +51,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 726,
+        "line": 737,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 734,
+        "line": 745,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 739,
+        "line": 750,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 741,
+        "line": 752,
         "column": 2
       }
     }
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 718,
+        "line": 728,
         "column": 8
       },
       "text": "strings.TrimSpace"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 719,
+        "line": 729,
         "column": 15
       },
       "text": "j.db.QueryContext"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 726,
+        "line": 737,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 728,
+        "line": 739,
         "column": 8
       },
       "text": "rows.Close"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 731,
+        "line": 742,
         "column": 6
       },
       "text": "rows.Next"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 733,
+        "line": 744,
         "column": 13
       },
       "text": "scanExitEvent"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 734,
+        "line": 745,
         "column": 16
       },
       "text": "fmt.Errorf"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 736,
+        "line": 747,
         "column": 9
       },
       "text": "append"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 738,
+        "line": 749,
         "column": 12
       },
       "text": "rows.Err"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 739,
+        "line": 750,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -163,35 +163,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 718,
+        "line": 728,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 719,
+        "line": 729,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 733,
+        "line": 744,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 736,
+        "line": 747,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 738,
+        "line": 749,
         "column": 5
       }
     }
@@ -201,7 +201,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 728,
+        "line": 739,
         "column": 2
       },
       "text": "rows.Close"

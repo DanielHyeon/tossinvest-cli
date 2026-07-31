@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/exit_state.go",
-  "source_sha256": "0b5f371af29e42f9259f16aac16ddcc2b957953589736ce341be8188536643cb",
+  "source_sha256": "559a3770ab3126137dbe290faaa7a55ac0c25e80846d5b943079abe46ecb7bd9",
   "package": "journal",
   "function": "OpenExitState",
   "receiver": "Journal",

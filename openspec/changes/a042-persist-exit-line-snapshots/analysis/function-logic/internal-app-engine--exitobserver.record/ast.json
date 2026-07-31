@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "9eb6ffdefb69f8d41c366b31fa88251b711628b762d0b29f79d76e613f3be8bb",
+  "source_sha256": "0c0d9c3cde150a55c16f6951d428906f0252be573f5c960fdcd1c0cfd06d9c81",
   "package": "engine",
   "function": "record",
   "receiver": "ExitObserver",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 1063,
+    "line": 1064,
     "column": 2
   },
   "branches": [
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "else",
       "at": {
-        "line": 1029,
+        "line": 1030,
         "column": 10
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 1035,
+        "line": 1036,
         "column": 2
       }
     },
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 1037,
+        "line": 1038,
         "column": 3
       }
     },
@@ -82,7 +82,7 @@
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 1048,
+        "line": 1049,
         "column": 2
       }
     },
@@ -90,7 +90,7 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 1049,
+        "line": 1050,
         "column": 3
       }
     },
@@ -98,7 +98,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 1057,
+        "line": 1058,
         "column": 2
       }
     }
@@ -114,28 +114,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 1053,
+        "line": 1054,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1055,
+        "line": 1056,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1058,
+        "line": 1059,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1061,
+        "line": 1062,
         "column": 2
       }
     }
@@ -200,7 +200,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1030,
+        "line": 1031,
         "column": 4
       },
       "text": "o.clearDelay"
@@ -208,7 +208,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1036,
+        "line": 1037,
         "column": 14
       },
       "text": "exitIntentID"
@@ -216,7 +216,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1038,
+        "line": 1039,
         "column": 15
       },
       "text": "o.opts.NewID"
@@ -224,7 +224,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1041,
+        "line": 1042,
         "column": 16
       },
       "text": "string"
@@ -232,7 +232,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1048,
+        "line": 1049,
         "column": 12
       },
       "text": "o.opts.Journal.RecordExitJudgement"
@@ -240,7 +240,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1049,
+        "line": 1050,
         "column": 6
       },
       "text": "errors.Is"
@@ -248,7 +248,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1055,
+        "line": 1056,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -256,7 +256,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1061,
+        "line": 1062,
         "column": 9
       },
       "text": "o.submit"
@@ -320,44 +320,51 @@
       }
     },
     {
+      "kind": "=",
+      "at": {
+        "line": 1029,
+        "column": 4
+      }
+    },
+    {
       "kind": ":=",
       "at": {
-        "line": 1034,
+        "line": 1035,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 1036,
+        "line": 1037,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 1038,
+        "line": 1039,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 1040,
+        "line": 1041,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1048,
+        "line": 1049,
         "column": 5
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 1060,
+        "line": 1061,
         "column": 2
       }
     }

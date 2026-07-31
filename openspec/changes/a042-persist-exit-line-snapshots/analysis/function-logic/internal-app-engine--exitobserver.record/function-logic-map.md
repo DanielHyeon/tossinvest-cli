@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1-B4 | proposal/orderability; clear working symbol; delay handling; deterministic intent id | may cancel collision before arm | error/hold | existing liquidation collision tests |
+| B1-B4 | proposal/orderability; clear working symbol; delay handling; deterministic intent id | may cancel collision before arm; an uncleared order sets typed arm suppression without mutating snapshot | error/hold | existing liquidation collision + typed arm-suppression tests |
 | B5-B7 | construct judgement; atomic record; nil proposal | state/event/arm commit | error or state-only success | journal atomic tests |
 | B8-B9 | proposal exists; submit | Guardian issuance and official gateway unchanged | existing result handling | E2E/emergency tests |
 
@@ -28,6 +28,7 @@
 ## State mutations and fallbacks
 
 - Adds exact snapshot plus source/time to judgement; no read-path recomputation.
+- A failed working-order clear withholds only the arm and records `working_order_not_cleared`; the immutable orderable snapshot still advances high-water/protection.
 - Arm-before-submit and zero-quantity state-only behavior remain unchanged.
 
 ## Safety conclusion

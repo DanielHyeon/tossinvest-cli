@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/exit_state.go",
-  "source_sha256": "0b5f371af29e42f9259f16aac16ddcc2b957953589736ce341be8188536643cb",
+  "source_sha256": "559a3770ab3126137dbe290faaa7a55ac0c25e80846d5b943079abe46ecb7bd9",
   "package": "journal",
   "function": "scanExitProgress",
   "signature": "scanExitProgress(params=3, results=2)",
   "start": {
-    "line": 529,
+    "line": 535,
     "column": 1
   },
   "end": {
-    "line": 561,
+    "line": 567,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 542,
+        "line": 548,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 545,
+        "line": 551,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 549,
+        "line": 555,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 553,
+        "line": 559,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 555,
+        "line": 561,
         "column": 3
       }
     }
@@ -58,28 +58,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 543,
+        "line": 549,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 546,
+        "line": 552,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 556,
+        "line": 562,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 560,
+        "line": 566,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 536,
+        "line": 542,
         "column": 9
       },
       "text": "Scan"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 536,
+        "line": 542,
         "column": 9
       },
       "text": "tx.QueryRowContext"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 542,
+        "line": 548,
         "column": 5
       },
       "text": "errors.Is"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 543,
+        "line": 549,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 546,
+        "line": 552,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 550,
+        "line": 556,
         "column": 20
       },
       "text": "int"
@@ -136,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 554,
+        "line": 560,
         "column": 18
       },
       "text": "decodeStoredSnapshot"
@@ -144,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 556,
+        "line": 562,
         "column": 27
       },
       "text": "fmt.Errorf"
@@ -154,35 +154,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 536,
+        "line": 542,
         "column": 2
       }
     },
     {
       "kind": "=",
-      "at": {
-        "line": 548,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 550,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 552,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
       "at": {
         "line": 554,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 556,
         "column": 3
       }
     },
@@ -190,6 +176,20 @@
       "kind": "=",
       "at": {
         "line": 558,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 560,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 564,
         "column": 3
       }
     }

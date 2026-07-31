@@ -55,6 +55,7 @@ ALTER TABLE exit_events ADD COLUMN saved_snapshot_json TEXT;
 ALTER TABLE exit_events ADD COLUMN recomputed_snapshot_json TEXT;
 ALTER TABLE exit_events ADD COLUMN effective_snapshot_json TEXT;
 ALTER TABLE exit_events ADD COLUMN effective_source TEXT;
+ALTER TABLE exit_events ADD COLUMN arm_suppressed_reason TEXT;
 
 CREATE UNIQUE INDEX idx_exit_events_decision ON exit_events(decision_id)
 	WHERE decision_id IS NOT NULL;
@@ -86,6 +87,8 @@ const (
 
 	QuarantineReleaseHumanRepair            = "HUMAN_REPAIR"
 	QuarantineReleaseAuthoritativeReconcile = "AUTHORITATIVE_RECONCILE"
+
+	ArmSuppressedWorkingOrder = "working_order_not_cleared"
 )
 
 var (
@@ -240,6 +243,25 @@ func validateJudgementSnapshot(positionID string, judgement ExitJudgement, store
 		string(line.RatchetLevel) != strings.TrimSpace(judgement.RatchetLevel) || line.ActiveRung != judgement.ActiveRung {
 		return errors.New("judgement fields do not match immutable snapshot")
 	}
+	expected := line.ExecutableProposal()
+	if expected.Zero() {
+		if judgement.Proposal != nil || judgement.ArmSuppressedReason != "" {
+			return errors.New("non-orderable snapshot cannot arm or suppress a proposal")
+		}
+		return nil
+	}
+	if judgement.Proposal == nil {
+		if judgement.ArmSuppressedReason != ArmSuppressedWorkingOrder {
+			return errors.New("orderable snapshot without a proposal needs a typed arm-suppression reason")
+		}
+		return nil
+	}
+	if judgement.ArmSuppressedReason != "" {
+		return errors.New("armed proposal cannot also carry an arm-suppression reason")
+	}
+	if judgement.Proposal.Action != string(expected.Action) || judgement.Proposal.Level != expected.Level {
+		return errors.New("armed proposal does not match immutable snapshot action and level")
+	}
 	return nil
 }
 
@@ -266,7 +288,8 @@ func scanExitEvent(row rowScanner, event *ExitEvent) error {
 	var saved, recomputed, effective sql.NullString
 	if err := row.Scan(&event.ID, &event.PositionID, &event.ObservedPrice, &event.HighWater,
 		&event.BaselineAfter, &event.LevelAfter, &event.Action, &event.ProposedIntentID,
-		&event.CreatedAt, &saved, &recomputed, &effective, &event.Evaluation.EffectiveSource); err != nil {
+		&event.CreatedAt, &saved, &recomputed, &effective, &event.Evaluation.EffectiveSource,
+		&event.ArmSuppressedReason); err != nil {
 		return err
 	}
 	if err := decodeExitEventSnapshot(saved, &event.Evaluation.Saved, "no_saved_evaluation"); err != nil {
@@ -360,7 +383,9 @@ func scanExitStateResult(row rowScanner) (ExitStateResult, error) {
 	// resolved against a041's pinned compatibility table at read time; it must
 	// not be mistaken for a partially written v10 tuple.
 	v10Evidence := []bool{status.Valid, version.Valid, digest.Valid, snapshotID.Valid,
-		decisionID.Valid, observationID.Valid, generation.Valid, effectiveJSON.Valid}
+		decisionID.Valid, observationID.Valid, generation.Valid, nextTarget.Valid,
+		nextProtection.Valid, source.Valid, observedAt.Valid, action.Valid, ratio.Valid,
+		projected.Valid, stateOnly.Valid, suppressed.Valid, effectiveJSON.Valid}
 	anyV10 := false
 	for _, present := range v10Evidence {
 		anyV10 = anyV10 || present
@@ -401,7 +426,9 @@ func scanExitStateResult(row rowScanner) (ExitStateResult, error) {
 	}
 	result.State.PolicyIdentity = identity
 	if status.String == SnapshotStatusSeed {
-		if snapshotID.Valid || decisionID.Valid || observationID.Valid || effectiveJSON.Valid {
+		if snapshotID.Valid || decisionID.Valid || observationID.Valid || nextTarget.Valid ||
+			nextProtection.Valid || source.Valid || observedAt.Valid || action.Valid || ratio.Valid ||
+			projected.Valid || stateOnly.Valid || suppressed.Valid || effectiveJSON.Valid {
 			result.State.Snapshot.UnknownReason = "partial_seed_tuple"
 			result.Corruption = fmt.Errorf("%w: seed carries partial evaluation evidence", ErrExitSnapshotCorrupt)
 		} else {

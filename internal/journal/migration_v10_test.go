@@ -34,7 +34,7 @@ func TestMigrationV9ToV10IsAdditiveNullableAndPreservesRows(t *testing.T) {
 		"exit_events": {"position_generation", "policy_id", "policy_version", "policy_digest", "snapshot_id",
 			"decision_id", "observation_id", "next_target", "next_protection", "observation_source", "observed_at",
 			"projected_quantity", "proposal_ratio", "state_only", "suppressed_reason", "saved_snapshot_json",
-			"recomputed_snapshot_json", "effective_snapshot_json", "effective_source"},
+			"recomputed_snapshot_json", "effective_snapshot_json", "effective_source", "arm_suppressed_reason"},
 	}
 	for table, names := range columns {
 		for _, name := range names {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -33,7 +34,7 @@ func ratchetSnapshotForState(t *testing.T, state ExitState, observation, price, 
 func judgementForSnapshot(snapshot exitpolicy.ExitLineSnapshot) ExitJudgement {
 	return ExitJudgement{
 		PositionID: snapshot.PositionID, Snapshot: snapshot,
-		RecoveryPolicy:    exitpolicy.NewRatchetRecoveryPolicy(exitpolicy.DefaultRatchetConfig(), "70010", "0"),
+		RecoveryPolicy:    exitpolicy.NewRatchetRecoveryPolicy(exitpolicy.DefaultRatchetConfig(), "70010", "0", "10"),
 		ObservationSource: "test_quote", ObservedAt: time.Date(2026, 7, 31, 14, 0, 0, 0, time.UTC),
 		Provenance: ExitDecisionProvenance{
 			ObservationID: snapshot.ObservationID, SnapshotID: snapshot.SnapshotID,
@@ -310,5 +311,136 @@ func TestReadOnlyExposesTypedSavedRecomputedEffectiveAndFreshness(t *testing.T) 
 	}
 	if view := latest.Effective.WithFreshness(observedAt.Add(2*time.Minute), time.Minute); !view.Stale || view.StaleReason != "observation_older_than_limit" {
 		t.Fatalf("old freshness = %+v", view)
+	}
+}
+
+func TestSeedRejectsEveryPartialV10OutputColumn(t *testing.T) {
+	columns := []struct {
+		name  string
+		value any
+	}{
+		{"snapshot_id", "snapshot"},
+		{"decision_id", "decision"},
+		{"observation_id", "observation"},
+		{"next_target", "71000"},
+		{"next_protection", "68000"},
+		{"last_observation_source", "test"},
+		{"last_observed_at", "2026-07-31T14:00:00Z"},
+		{"snapshot_action", "NONE"},
+		{"snapshot_ratio", "0.25"},
+		{"projected_quantity", "1"},
+		{"state_only", 0},
+		{"suppressed_reason", "blocked_by_pending_proposal"},
+		{"effective_snapshot_json", "{}"},
+	}
+	for _, column := range columns {
+		t.Run(column.name, func(t *testing.T) {
+			j := exitFixture(t)
+			_, seed := openedPosition(t, j, "10")
+			query := fmt.Sprintf("UPDATE exit_states SET %s=? WHERE position_id=?", column.name)
+			if _, err := j.db.Exec(query, column.value, seed.PositionID); err != nil {
+				t.Fatal(err)
+			}
+			results, err := j.OpenExitStateResults(context.Background(), "acct-1")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(results) != 1 || !errors.Is(results[0].Corruption, ErrExitSnapshotCorrupt) ||
+				results[0].State.Snapshot.UnknownReason != "partial_seed_tuple" {
+				t.Fatalf("partial %s result = %+v", column.name, results)
+			}
+		})
+	}
+}
+
+func TestLegacyDetectionRequiresEveryV10ColumnToBeNull(t *testing.T) {
+	j := exitFixture(t)
+	_, seed := openedPosition(t, j, "10")
+	if _, err := j.db.Exec(`UPDATE exit_states SET snapshot_status=NULL, policy_version=NULL,
+		policy_digest=NULL, snapshot_id=NULL, decision_id=NULL, observation_id=NULL,
+		position_generation=NULL, next_target=NULL, next_protection=NULL,
+		last_observation_source=NULL, last_observed_at=NULL, snapshot_action=NULL,
+		snapshot_ratio=NULL, projected_quantity='1', state_only=NULL,
+		suppressed_reason=NULL, effective_snapshot_json=NULL WHERE position_id=?`, seed.PositionID); err != nil {
+		t.Fatal(err)
+	}
+	results, err := j.OpenExitStateResults(context.Background(), "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 1 || !errors.Is(results[0].Corruption, ErrExitSnapshotCorrupt) ||
+		results[0].State.Snapshot.UnknownReason != "partial_snapshot_tuple" {
+		t.Fatalf("single-column v10 evidence was treated as legacy: %+v", results)
+	}
+}
+
+func TestOrderableSnapshotMustArmItsExactProposal(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		mutate func(*ExitJudgement)
+	}{
+		{"missing", func(j *ExitJudgement) { j.Proposal = nil }},
+		{"unknown_suppression", func(j *ExitJudgement) {
+			j.Proposal = nil
+			j.ArmSuppressedReason = "unknown"
+		}},
+		{"different_action", func(j *ExitJudgement) { j.Proposal.Action = string(exitpolicy.ActionLadderStop) }},
+		{"different_level", func(j *ExitJudgement) { j.Proposal.Level = "PROFIT_LOCK" }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			j := exitFixture(t)
+			_, seed := openedPosition(t, j, "10")
+			snapshot := ratchetSnapshotForState(t, seed, "obs-proposal-"+test.name, "67900", "70000", "68000")
+			judgement := judgementForSnapshot(snapshot)
+			judgement.Proposal = &ExitProposal{
+				Action: string(snapshot.Action), Level: snapshot.Level,
+				IntentID: "exit-exact", Provenance: judgement.Provenance,
+			}
+			test.mutate(&judgement)
+			if err := j.RecordExitJudgement(context.Background(), judgement); !errors.Is(err, ErrInvalidRequest) {
+				t.Fatalf("error = %v, want invalid request", err)
+			}
+			after := exitStateOf(t, j, seed.PositionID)
+			if after.SnapshotStatus != SnapshotStatusSeed || after.Pending() {
+				t.Fatalf("invalid proposal changed durable state: %+v", after)
+			}
+		})
+	}
+}
+
+func TestTypedArmSuppressionPersistsOrderableSnapshotWithoutArming(t *testing.T) {
+	j := exitFixture(t)
+	_, seed := openedPosition(t, j, "10")
+	snapshot := ratchetSnapshotForState(t, seed, "obs-working-order", "67900", "70000", "68000")
+	judgement := judgementForSnapshot(snapshot)
+	judgement.ArmSuppressedReason = ArmSuppressedWorkingOrder
+	if err := j.RecordExitJudgement(context.Background(), judgement); err != nil {
+		t.Fatal(err)
+	}
+	after := exitStateOf(t, j, seed.PositionID)
+	if after.SnapshotStatus != SnapshotStatusEvaluated || after.Snapshot.Snapshot == nil ||
+		after.Snapshot.Snapshot.Line != snapshot || after.Pending() {
+		t.Fatalf("suppressed arm did not retain exact snapshot without pending proposal: %+v", after)
+	}
+	events, err := j.ExitEvents(context.Background(), seed.PositionID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	last := events[len(events)-1]
+	if last.ArmSuppressedReason != ArmSuppressedWorkingOrder || last.ProposedIntentID != "" ||
+		last.Evaluation.Recomputed.Snapshot == nil || !last.Evaluation.Recomputed.Snapshot.Line.Orderable {
+		t.Fatalf("typed arm suppression evidence = %+v", last)
+	}
+	ro, err := OpenReadOnly(context.Background(), ReadOnlyOptions{Path: j.Path()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ro.Close()
+	accountEvents, err := ro.AccountExitEvents(context.Background(), "acct-1", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := accountEvents[len(accountEvents)-1].Event.ArmSuppressedReason; got != ArmSuppressedWorkingOrder {
+		t.Fatalf("read-model arm suppression = %q", got)
 	}
 }

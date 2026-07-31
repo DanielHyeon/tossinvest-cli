@@ -822,7 +822,7 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observ
 	}
 
 	return o.record(ctx, m, snapshot,
-		exitpolicy.NewRatchetRecoveryPolicy(o.ratchet, breakEven, m.state.TakenRatioTotal),
+		exitpolicy.NewRatchetRecoveryPolicy(o.ratchet, breakEven, m.state.TakenRatioTotal, m.position.Quantity),
 		quote, observation, cycle)
 }
 
@@ -882,7 +882,7 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observe
 	if !snapshot.Changed {
 		return nil
 	}
-	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(ladder), quote, observation, cycle)
+	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(ladder, m.position.Quantity), quote, observation, cycle)
 }
 
 func (o *ExitObserver) snapshotContext(m managed, quote observedQuote,
@@ -1026,6 +1026,7 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 		if !cleared {
 			o.noteDelay(ctx, m, "a working order on the symbol could not be taken off the book")
 			orderable = false
+			judgement.ArmSuppressedReason = journal.ArmSuppressedWorkingOrder
 		} else {
 			o.clearDelay(m.position.ID)
 		}
