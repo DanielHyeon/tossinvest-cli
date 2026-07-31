@@ -1,0 +1,150 @@
+{
+  "file": "internal/protection/domain.go",
+  "source_sha256": "e8129f75d86c839fc65e088d4b6ed8faab1e068f52f4c3e8f83395f55cd32a13",
+  "package": "protection",
+  "function": "DecideFlatten",
+  "signature": "DecideFlatten(params=6, results=1)",
+  "start": {
+    "line": 376,
+    "column": 1
+  },
+  "end": {
+    "line": 381,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 377,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 378,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 5
+      },
+      "text": "start.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 23
+      },
+      "text": "deadline.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 44
+      },
+      "text": "start.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 69
+      },
+      "text": "deadline.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 108
+      },
+      "text": "target.Scope.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 223
+      },
+      "text": "cancel.At.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 245
+      },
+      "text": "sellable.At.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 269
+      },
+      "text": "cancel.At.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 296
+      },
+      "text": "sellable.At.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 329
+      },
+      "text": "cancel.At.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 358
+      },
+      "text": "sellable.At.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 390
+      },
+      "text": "cancel.Scope.equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 427
+      },
+      "text": "sellable.Scope.equal"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

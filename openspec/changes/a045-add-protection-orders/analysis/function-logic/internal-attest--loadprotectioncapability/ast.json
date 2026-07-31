@@ -1,0 +1,70 @@
+{
+  "file": "internal/attest/protection_matrix.go",
+  "source_sha256": "23d068481c3879fc87a61ea4c17eb259f3d2631e0e4ec9ed63cc803359de9f57",
+  "package": "attest",
+  "function": "LoadProtectionCapability",
+  "signature": "LoadProtectionCapability(params=4, results=2)",
+  "start": {
+    "line": 296,
+    "column": 1
+  },
+  "end": {
+    "line": 302,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 299,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 17
+      },
+      "text": "ParseProtectionCapability"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 9
+      },
+      "text": "VerifyProtectionCapability"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

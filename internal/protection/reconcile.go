@@ -1,5 +1,7 @@
 package protection
 
+import "fmt"
+
 type DiscrepancyKind string
 
 const (
@@ -12,47 +14,72 @@ const (
 
 type Discrepancy struct {
 	Kind     DiscrepancyKind
+	Scope    Scope
 	SagaID   string
 	BrokerID string
-	Symbol   string
 }
 
 // Compare is classification only. It never guesses ownership, cancels an
 // orphan, replaces an order, or flattens a position.
-func Compare(local []Saga, broker []BrokerProtection) []Discrepancy {
+func Compare(scope Scope, local []Saga, broker []BrokerProtection) ([]Discrepancy, error) {
+	if err := scope.Validate(); err != nil {
+		return nil, err
+	}
 	localByBroker := make(map[string]Saga, len(local))
-	localBySymbol := make(map[string][]Saga, len(local))
+	var relevantLocal []Saga
 	for _, s := range local {
+		if err := s.Validate(); err != nil {
+			return nil, err
+		}
+		sagaScope := Scope{AccountRef: s.AccountRef, Profile: s.Profile, Market: s.Market, Symbol: s.Symbol}
+		if !sagaScope.equal(scope) {
+			return nil, fmt.Errorf("%w: local saga %s", ErrMixedScope, s.ID)
+		}
 		if s.State != StateActive && s.State != StateReplacing {
 			continue
 		}
 		if s.BrokerID != "" {
+			if _, exists := localByBroker[s.BrokerID]; exists {
+				return nil, fmt.Errorf("%w: local broker id %s", ErrDuplicateBrokerID, s.BrokerID)
+			}
 			localByBroker[s.BrokerID] = s
 		}
-		localBySymbol[s.Symbol] = append(localBySymbol[s.Symbol], s)
+		relevantLocal = append(relevantLocal, s)
 	}
 	brokerByID := make(map[string]BrokerProtection, len(broker))
-	brokerBySymbol := make(map[string][]BrokerProtection, len(broker))
+	seenBrokerIDs := make(map[string]bool, len(broker))
 	for _, b := range broker {
+		if !b.Scope.equal(scope) {
+			return nil, fmt.Errorf("%w: broker protection %s", ErrMixedScope, b.ID)
+		}
+		if b.ID == "" {
+			return nil, fmt.Errorf("%w: empty broker id", ErrDuplicateBrokerID)
+		}
+		if seenBrokerIDs[b.ID] {
+			return nil, fmt.Errorf("%w: %s", ErrDuplicateBrokerID, b.ID)
+		}
+		seenBrokerIDs[b.ID] = true
+		if b.Quantity < 1 || b.Trigger < 1 {
+			return nil, fmt.Errorf("%w: broker protection %s has invalid quantity/trigger", ErrInvalidSaga, b.ID)
+		}
 		if b.Terminal {
 			continue
 		}
 		brokerByID[b.ID] = b
-		brokerBySymbol[b.Symbol] = append(brokerBySymbol[b.Symbol], b)
 	}
 
 	var out []Discrepancy
 	for id, s := range localByBroker {
 		b, ok := brokerByID[id]
 		if !ok {
-			out = append(out, Discrepancy{Kind: DiscrepancyMissing, SagaID: s.ID, BrokerID: id, Symbol: s.Symbol})
+			out = append(out, Discrepancy{Kind: DiscrepancyMissing, Scope: scope, SagaID: s.ID, BrokerID: id})
 			continue
 		}
 		if b.Quantity != s.Quantity {
-			out = append(out, Discrepancy{Kind: DiscrepancyQuantityMismatch, SagaID: s.ID, BrokerID: id, Symbol: s.Symbol})
+			out = append(out, Discrepancy{Kind: DiscrepancyQuantityMismatch, Scope: scope, SagaID: s.ID, BrokerID: id})
 		}
 		if b.Trigger != s.Trigger {
-			out = append(out, Discrepancy{Kind: DiscrepancyTriggerMismatch, SagaID: s.ID, BrokerID: id, Symbol: s.Symbol})
+			out = append(out, Discrepancy{Kind: DiscrepancyTriggerMismatch, Scope: scope, SagaID: s.ID, BrokerID: id})
 		}
 	}
 	for _, b := range broker {
@@ -60,13 +87,12 @@ func Compare(local []Saga, broker []BrokerProtection) []Discrepancy {
 			continue
 		}
 		if _, ok := localByBroker[b.ID]; !ok {
-			out = append(out, Discrepancy{Kind: DiscrepancyOrphan, BrokerID: b.ID, Symbol: b.Symbol})
+			out = append(out, Discrepancy{Kind: DiscrepancyOrphan, Scope: scope, BrokerID: b.ID})
 		}
 	}
-	for symbol, orders := range brokerBySymbol {
-		if len(orders) > 1 && len(localBySymbol[symbol]) > 0 {
-			out = append(out, Discrepancy{Kind: DiscrepancyDuplicate, SagaID: localBySymbol[symbol][0].ID, Symbol: symbol})
-		}
+	activeBrokerCount := len(brokerByID)
+	if activeBrokerCount > 1 && len(relevantLocal) > 0 {
+		out = append(out, Discrepancy{Kind: DiscrepancyDuplicate, Scope: scope, SagaID: relevantLocal[0].ID})
 	}
-	return out
+	return out, nil
 }

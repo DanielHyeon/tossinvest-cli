@@ -43,6 +43,18 @@ The future tasks that edit official conditional writes, engine gateway/reservati
 reconciliation, or flatten remain unchecked and will require their own per-symbol AST,
 Function Logic Map, Branch Test Map, risk report, and human-attested evidence before editing.
 
+### Security follow-up mapping
+
+The independent review required changes to functions introduced by the first dormant commit.
+Before those edits, AST, Function Logic Map, Branch Test Map, and risk reports were created under
+`analysis/function-logic/` for attestation parsing/validation/scope checks, saga validation and
+transition, sell-claim and flatten decisions, reconciliation comparison, and repository update.
+The maps record the RED cases for external evidence recomputation, file/parent integrity, strict
+account grammar, state-specific saga fields, immutable persisted identity, typed exact scope,
+duplicate broker IDs, ordered two-second flatten observations, and int64 boundaries. They replace
+the original new-functions-only exemption for this follow-up diff; the initial commit's statement
+remains an accurate record of its own pre-edit gate.
+
 ## Dormant TDD coverage
 
 - strict version, unknown/trailing JSON, issue/expiry window, exact account/profile/market/
@@ -60,8 +72,16 @@ Function Logic Map, Branch Test Map, risk report, and human-attested evidence be
 - static absence of engine/command wiring, production HTTP/official/trading adapters, and
   paper/shadow/canary protection paths.
 
+The security follow-up additionally covers external evidence byte absence/tampering/extras,
+canonical capability-digest binding, exact evidence basename, parent/file link and permission
+checks, strict protection-only account normalization, cross-account/profile/market/symbol input,
+duplicate broker identity, invalid saga state-field combinations, persisted identity/state jumps,
+observation ordering and identity, and overflow-safe maximum-int64 sell claims.
+
 ## Intentionally incomplete
 
 External evidence production, real official gateway calls, sell-reservation integration,
 engine/a041 wiring, operational reconciliation/flatten, `ProtectionReady=WIRED`, console
 activation, and all LIVE handoff work remain blocked by the review's human-attestation gate.
+Trusted signer, signature format, and trust-root lifecycle are also unspecified. File ownership,
+permissions, and hashes establish local integrity only; they do not establish issuer authenticity.

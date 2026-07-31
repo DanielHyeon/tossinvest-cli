@@ -45,3 +45,9 @@ schema와 official client를 dormant 상태로 배포한 뒤 전체 gate 완료 
 ## Open Questions
 
 실제 profile claim과 evidence digest는 사람 attestation 전에는 채울 수 없다. 그 전 구현 허용 범위는 strict schema/parser, dormant domain, fake official gateway와 `UNWIRED/OFF` 경로뿐이며 실제 conditional mutation과 WIRED 전환은 금지한다.
+
+또한 attestation을 발행할 신뢰 signer, signature format, trust-root 배포·회전·폐기 정책이 아직
+명세되지 않았다. 현재의 exact basename, 동일 UID, `0700/0600`, hard-link 차단, post-read restat,
+SHA-256 evidence/capability binding은 로컬 무결성 검사일 뿐 발행자 진위성을 증명하지 않는다.
+따라서 외부 evidence bytes 검증에 성공하더라도 signer 명세와 독립 검증이 완료되기 전에는 이
+결과를 `ProtectionReady=WIRED`, 운영 토글 또는 주문 권한의 근거로 사용할 수 없다.

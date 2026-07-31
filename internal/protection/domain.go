@@ -22,7 +22,33 @@ var (
 	ErrOversell          = errors.New("protection: sell claims exceed the holding")
 	ErrInvalidBody       = errors.New("protection: invalid conditional body")
 	ErrConcurrentUpdate  = errors.New("protection: concurrent saga update")
+	ErrImmutableIdentity = errors.New("protection: immutable saga identity changed")
+	ErrMixedScope        = errors.New("protection: mixed reconciliation scope")
+	ErrDuplicateBrokerID = errors.New("protection: duplicate broker identity")
 )
+
+type Market string
+
+const (
+	MarketKR Market = "KR"
+	MarketUS Market = "US"
+)
+
+type Scope struct {
+	AccountRef string
+	Profile    string
+	Market     Market
+	Symbol     string
+}
+
+func (s Scope) Validate() error {
+	if s.AccountRef == "" || s.AccountRef != strings.TrimSpace(s.AccountRef) || s.Profile == "" || s.Profile != strings.TrimSpace(s.Profile) || s.Symbol == "" || s.Symbol != strings.TrimSpace(s.Symbol) || (s.Market != MarketKR && s.Market != MarketUS) {
+		return fmt.Errorf("%w: account/profile/market/symbol is invalid", ErrMixedScope)
+	}
+	return nil
+}
+
+func (s Scope) equal(other Scope) bool { return s == other }
 
 type State string
 
@@ -41,7 +67,7 @@ type Saga struct {
 	ID               string
 	AccountRef       string
 	Profile          string
-	Market           string
+	Market           Market
 	Symbol           string
 	Generation       int64
 	Revision         int64
@@ -139,7 +165,7 @@ func Transition(in Saga, event Event) (Saga, error) {
 		out.PendingQuantity = 0
 		out.Generation++
 	case EventTriggerObserved:
-		if in.State != StateActive && in.State != StateReplacing {
+		if in.State != StateActive {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		out.State = StateTriggered
@@ -157,6 +183,9 @@ func Transition(in Saga, event Event) (Saga, error) {
 	default:
 		return in, invalidTransition(in.State, event.Kind)
 	}
+	if err := out.Validate(); err != nil {
+		return in, fmt.Errorf("%w: transition output: %v", ErrInvalidTransition, err)
+	}
 	return out, nil
 }
 
@@ -166,18 +195,61 @@ func invalidTransition(state State, event EventKind) error {
 
 func (s Saga) Validate() error {
 	switch {
-	case strings.TrimSpace(s.ID) == "", strings.TrimSpace(s.AccountRef) == "", strings.TrimSpace(s.Profile) == "":
+	case s.ID == "" || s.ID != strings.TrimSpace(s.ID), s.AccountRef == "" || s.AccountRef != strings.TrimSpace(s.AccountRef), s.Profile == "" || s.Profile != strings.TrimSpace(s.Profile):
 		return fmt.Errorf("%w: identity is incomplete", ErrInvalidSaga)
-	case strings.TrimSpace(s.Market) == "", strings.TrimSpace(s.Symbol) == "":
+	case (s.Market != MarketKR && s.Market != MarketUS), s.Symbol == "" || s.Symbol != strings.TrimSpace(s.Symbol):
 		return fmt.Errorf("%w: instrument is incomplete", ErrInvalidSaga)
-	case s.Generation < 1, s.Trigger < 1, s.Quantity < 1:
+	case s.Generation < 1, s.Revision < 1, s.Trigger < 1, s.Quantity < 1:
 		return fmt.Errorf("%w: generation/trigger/quantity must be positive", ErrInvalidSaga)
-	case strings.TrimSpace(s.ClientOrderID) == "":
+	case s.ClientOrderID == "" || s.ClientOrderID != strings.TrimSpace(s.ClientOrderID):
 		return fmt.Errorf("%w: client order identity is absent", ErrInvalidSaga)
 	case !validState(s.State):
 		return fmt.Errorf("%w: unknown state %q", ErrInvalidSaga, s.State)
 	case s.UpdatedAt.IsZero():
 		return fmt.Errorf("%w: updated time is absent", ErrInvalidSaga)
+	}
+	if err := s.validateStateFields(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s Saga) validateStateFields() error {
+	nonempty := func(value string) bool { return value != "" && value == strings.TrimSpace(value) }
+	noPending := s.PendingTrigger == 0 && s.PendingQuantity == 0
+	switch s.State {
+	case StatePlanned:
+		if s.AttemptID != "" || s.BrokerID != "" || s.PreviousBrokerID != "" || s.ReconcileReason != "" || !noPending {
+			return fmt.Errorf("%w: PLANNED carries mutation state", ErrInvalidSaga)
+		}
+	case StateRegistering:
+		if !nonempty(s.AttemptID) || s.BrokerID != "" || s.PreviousBrokerID != "" || s.ReconcileReason != "" || !noPending {
+			return fmt.Errorf("%w: REGISTERING fields are inconsistent", ErrInvalidSaga)
+		}
+	case StateActive:
+		if !nonempty(s.AttemptID) || !nonempty(s.BrokerID) || s.ReconcileReason != "" || !noPending {
+			return fmt.Errorf("%w: ACTIVE fields are inconsistent", ErrInvalidSaga)
+		}
+	case StateReplacing:
+		if !nonempty(s.AttemptID) || !nonempty(s.BrokerID) || !nonempty(s.PreviousBrokerID) || s.PreviousBrokerID != s.BrokerID || s.ReconcileReason != "" || s.PendingTrigger < s.Trigger || s.PendingQuantity < 1 {
+			return fmt.Errorf("%w: REPLACING fields are inconsistent", ErrInvalidSaga)
+		}
+	case StateTriggered:
+		if !nonempty(s.BrokerID) || s.ReconcileReason != "" || !noPending {
+			return fmt.Errorf("%w: TRIGGERED fields are inconsistent", ErrInvalidSaga)
+		}
+	case StateClosed:
+		if !noPending {
+			return fmt.Errorf("%w: CLOSED carries pending replacement", ErrInvalidSaga)
+		}
+	case StateReconcile:
+		if !nonempty(s.ReconcileReason) {
+			return fmt.Errorf("%w: RECONCILE reason is absent", ErrInvalidSaga)
+		}
+	case StateInDoubt:
+		if !nonempty(s.AttemptID) || !nonempty(s.ReconcileReason) {
+			return fmt.Errorf("%w: IN_DOUBT mutation identity/reason is absent", ErrInvalidSaga)
+		}
 	}
 	return nil
 }
@@ -201,8 +273,12 @@ func ValidateSellClaims(holding int64, claims SellClaims) error {
 	if holding < 0 || claims.Protection < 0 || claims.OpenSell < 0 || claims.LocalReservation < 0 {
 		return fmt.Errorf("%w: negative quantity", ErrOversell)
 	}
-	if claims.Protection+claims.OpenSell+claims.LocalReservation > holding {
-		return fmt.Errorf("%w: holding=%d protection=%d open_sell=%d local=%d", ErrOversell, holding, claims.Protection, claims.OpenSell, claims.LocalReservation)
+	remaining := holding
+	for _, claim := range []int64{claims.Protection, claims.OpenSell, claims.LocalReservation} {
+		if claim > remaining {
+			return fmt.Errorf("%w: holding=%d protection=%d open_sell=%d local=%d", ErrOversell, holding, claims.Protection, claims.OpenSell, claims.LocalReservation)
+		}
+		remaining -= claim
 	}
 	return nil
 }
@@ -259,24 +335,28 @@ type Gateway interface {
 	Replace(context.Context, string, ConditionalBody) (BrokerProtection, error)
 	Cancel(context.Context, string) (CancelObservation, error)
 	Get(context.Context, string) (BrokerProtection, error)
-	List(context.Context, string) ([]BrokerProtection, error)
+	List(context.Context, Scope) ([]BrokerProtection, error)
 }
 
 type BrokerProtection struct {
+	Scope    Scope
 	ID       string
-	Symbol   string
 	Quantity int64
 	Trigger  int64
 	Terminal bool
 }
 
 type CancelObservation struct {
+	Scope     Scope
+	BrokerID  string
 	Terminal  bool
 	Triggered bool
 	At        time.Time
 }
 
 type SellableObservation struct {
+	Scope    Scope
+	BrokerID string
 	Quantity int64
 	At       time.Time
 }
@@ -288,8 +368,13 @@ const (
 	FlattenInDoubt FlattenDecision = "IN_DOUBT"
 )
 
-func DecideFlatten(deadline time.Time, cancel CancelObservation, sellable SellableObservation, required int64) FlattenDecision {
-	if deadline.IsZero() || required < 1 || !cancel.Terminal || cancel.Triggered || cancel.At.IsZero() || sellable.At.IsZero() || cancel.At.After(deadline) || sellable.At.After(deadline) || sellable.Quantity < required {
+type FlattenScope struct {
+	Scope    Scope
+	BrokerID string
+}
+
+func DecideFlatten(start, deadline time.Time, target FlattenScope, cancel CancelObservation, sellable SellableObservation, required int64) FlattenDecision {
+	if start.IsZero() || deadline.IsZero() || start.After(deadline) || deadline.Sub(start) > 2*time.Second || target.Scope.Validate() != nil || target.BrokerID == "" || required < 1 || !cancel.Terminal || cancel.Triggered || cancel.At.IsZero() || sellable.At.IsZero() || cancel.At.Before(start) || sellable.At.Before(cancel.At) || cancel.At.After(deadline) || sellable.At.After(deadline) || !cancel.Scope.equal(target.Scope) || !sellable.Scope.equal(target.Scope) || cancel.BrokerID != target.BrokerID || sellable.BrokerID != target.BrokerID || sellable.Quantity < required {
 		return FlattenInDoubt
 	}
 	return FlattenAllowed
