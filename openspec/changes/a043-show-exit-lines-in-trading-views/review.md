@@ -100,3 +100,12 @@ AA 대비와 정직한 branch evidence를 확인했다. 완료 gate 실행을 �
   already-integrated a046 candidate/markout work from a043's logic-map diff.
 - Focused operatorview/journal/console/CLI tests and Function Logic Map validation
   pass on the combined tree. No LIVE mutation or operating toggle was invoked.
+
+## Main integration gate · 2026-08-01
+
+- Integrated HEAD before this evidence commit: `5e2689f`.
+- `make sdd-sync`, focused operatorview/journal/console/CLI tests, and
+  `make gate CHANGE=a043-show-exit-lines-in-trading-views` passed on the main
+  integration branch after the base-marker correction.
+- The views remain read-only and input-free; this gate invoked no order mutation
+  and changed no operating toggle.
