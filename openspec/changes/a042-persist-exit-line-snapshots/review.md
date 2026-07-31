@@ -39,6 +39,9 @@
     다른 valid JSON 치환, partial tuple, saved source 위조, non-orderable suppression은 모두 corruption이다.
 15. recovery evidence의 직전 상태는 별도 중복 필드로 저장하지 않고 exact evaluator input의
     high-water/baseline/level 또는 activated rung을 직접 사용한다.
+16. event legacy 판정은 20개 v10 컬럼이 모두 NULL일 때만 허용한다. evaluation event는 generation,
+    policy/decision/snapshot/observation identity, observation metadata, projection/state-only와 JSON/source가
+    완전해야 하며 optional next line/ratio/suppression도 NULL-vs-value까지 recomputed candidate와 일치한다.
 
 ## Verification evidence
 
@@ -67,6 +70,9 @@
 - Event state-machine read: deleted/empty suppression reason, swapped valid effective JSON, forged source,
   missing effective candidate, known reason on non-orderable evidence, and forged armed action all fail closed
   in strict and per-row read-only projections.
+- Flattened event evidence: every v10 column as sole lifecycle evidence and every required NULL/identity-policy-
+  observation-projection mismatch on evaluation events fail closed in both readers; `decision_id` loss can no
+  longer be hidden while weakening dedup evidence.
 - Emergency isolation: a synchronously blocked corruption alert occurs only after another position's
   emergency proposal reaches the submit seam.
 

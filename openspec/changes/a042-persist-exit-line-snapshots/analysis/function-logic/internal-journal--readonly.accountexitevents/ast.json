@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/account_views.go",
-  "source_sha256": "4f99db9a9de41098f7ec6ce6741e2b3fc51b928c9592f5707b1ed516868a8b79",
+  "source_sha256": "5824b4e65c16b1ffb523da4dcd2c6f85101a22ddbc2236fca6302472ca1f51ea",
   "package": "journal",
   "function": "AccountExitEvents",
   "receiver": "ReadOnly",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 249,
+    "line": 254,
     "column": 2
   },
   "branches": [
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 218,
+        "line": 221,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "for",
       "at": {
-        "line": 224,
+        "line": 227,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 227,
+        "line": 230,
         "column": 3
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 239,
+        "line": 244,
         "column": 3
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 245,
+        "line": 250,
         "column": 2
       }
     }
@@ -74,28 +74,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 219,
+        "line": 222,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 232,
+        "line": 240,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 246,
+        "line": 251,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 248,
+        "line": 253,
         "column": 2
       }
     }
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 219,
+        "line": 222,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 221,
+        "line": 224,
         "column": 8
       },
       "text": "rows.Close"
@@ -136,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 224,
+        "line": 227,
         "column": 6
       },
       "text": "rows.Next"
@@ -144,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 227,
+        "line": 230,
         "column": 13
       },
       "text": "rows.Scan"
@@ -152,7 +152,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 232,
+        "line": 240,
         "column": 16
       },
       "text": "fmt.Errorf"
@@ -160,39 +160,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 236,
-        "column": 7
-      },
-      "text": "decodeExitEventSnapshot"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 237,
-        "column": 7
-      },
-      "text": "decodeExitEventSnapshot"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 238,
-        "column": 7
-      },
-      "text": "decodeExitEventSnapshot"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 239,
+        "line": 244,
         "column": 13
       },
-      "text": "validateExitEventArmSuppression"
+      "text": "hydrateExitEventEvidence"
     },
     {
       "kind": "call",
       "at": {
-        "line": 243,
+        "line": 248,
         "column": 9
       },
       "text": "append"
@@ -200,7 +176,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 245,
+        "line": 250,
         "column": 12
       },
       "text": "rows.Err"
@@ -208,7 +184,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 246,
+        "line": 251,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -232,63 +208,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 227,
+        "line": 230,
         "column": 6
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 236,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 237,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 238,
-        "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 239,
+        "line": 244,
         "column": 6
       }
     },
     {
       "kind": "=",
-      "at": {
-        "line": 240,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 241,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 243,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
       "at": {
         "line": 245,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 246,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 248,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
         "column": 5
       }
     }
@@ -298,7 +253,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 221,
+        "line": 224,
         "column": 2
       },
       "text": "rows.Close"

@@ -778,9 +778,12 @@ func (j *Journal) ExitEvents(ctx context.Context, positionID string) ([]ExitEven
 	rows, err := j.db.QueryContext(ctx, `
 		SELECT id, position_id, coalesce(observed_price,''), coalesce(high_water,''),
 		       coalesce(baseline_after,''), coalesce(level_after,''), coalesce(action,''),
-		       coalesce(proposed_intent_id,''), created_at, saved_snapshot_json,
-		       recomputed_snapshot_json, effective_snapshot_json, coalesce(effective_source,''),
-		       coalesce(arm_suppressed_reason,'')
+		       coalesce(proposed_intent_id,''), created_at, position_generation, policy_id,
+		       policy_version, policy_digest, snapshot_id, decision_id, observation_id,
+		       next_target, next_protection, observation_source, observed_at, projected_quantity,
+		       proposal_ratio, state_only, suppressed_reason, saved_snapshot_json,
+		       recomputed_snapshot_json, effective_snapshot_json, effective_source,
+		       arm_suppressed_reason
 		  FROM exit_events WHERE position_id = ? ORDER BY id`, id)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading the exit history of %s: %w", id, err)

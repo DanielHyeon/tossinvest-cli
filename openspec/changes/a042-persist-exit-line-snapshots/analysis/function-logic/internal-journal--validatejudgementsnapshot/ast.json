@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/exit_snapshot.go",
-  "source_sha256": "d5dec6c37be4f158b00a50dc3ef287246c559ca63a47d16e0d39a88f7cdd4c3e",
+  "source_sha256": "8ff927f80a9a0b372dc4de043186c76756e97a983f65c2315aac6232cb69ee49",
   "package": "journal",
   "function": "validateJudgementSnapshot",
   "signature": "validateJudgementSnapshot(params=3, results=1)",

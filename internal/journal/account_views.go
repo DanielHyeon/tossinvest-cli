@@ -205,9 +205,12 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 		SELECT * FROM (
 			SELECT v.id, v.position_id, coalesce(v.observed_price,''), coalesce(v.high_water,''),
 			       coalesce(v.baseline_after,''), coalesce(v.level_after,''), coalesce(v.action,''),
-			       coalesce(v.proposed_intent_id,''), v.created_at, v.saved_snapshot_json,
-			       v.recomputed_snapshot_json, v.effective_snapshot_json,
-			       coalesce(v.effective_source,''), coalesce(v.arm_suppressed_reason,''),
+			       coalesce(v.proposed_intent_id,''), v.created_at, v.position_generation, v.policy_id,
+			       v.policy_version, v.policy_digest, v.snapshot_id, v.decision_id, v.observation_id,
+			       v.next_target, v.next_protection, v.observation_source, v.observed_at,
+			       v.projected_quantity, v.proposal_ratio, v.state_only, v.suppressed_reason,
+			       v.saved_snapshot_json, v.recomputed_snapshot_json, v.effective_snapshot_json,
+			       v.effective_source, v.arm_suppressed_reason,
 			       p.symbol, p.market
 			  FROM exit_events v
 			  JOIN positions p ON p.id = v.position_id
@@ -223,22 +226,24 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 	var out []AccountExitEvent
 	for rows.Next() {
 		var e AccountExitEvent
-		var saved, recomputed, effective sql.NullString
+		var evidence exitEventEvidence
 		if err := rows.Scan(&e.Event.ID, &e.Event.PositionID, &e.Event.ObservedPrice,
 			&e.Event.HighWater, &e.Event.BaselineAfter, &e.Event.LevelAfter, &e.Event.Action,
-			&e.Event.ProposedIntentID, &e.Event.CreatedAt, &saved, &recomputed, &effective,
-			&e.Event.Evaluation.EffectiveSource, &e.Event.ArmSuppressedReason,
+			&e.Event.ProposedIntentID, &e.Event.CreatedAt, &evidence.Generation, &evidence.PolicyID,
+			&evidence.PolicyVersion, &evidence.PolicyDigest, &evidence.SnapshotID, &evidence.DecisionID,
+			&evidence.ObservationID, &evidence.NextTarget, &evidence.NextProtection,
+			&evidence.ObservationSource, &evidence.ObservedAt, &evidence.ProjectedQuantity,
+			&evidence.ProposalRatio, &evidence.StateOnly, &evidence.SuppressedReason,
+			&evidence.SavedJSON, &evidence.RecomputedJSON, &evidence.EffectiveJSON,
+			&evidence.EffectiveSource, &evidence.ArmSuppressedReason,
 			&e.Symbol, &e.Market); err != nil {
 			return nil, fmt.Errorf("journal: reading an exit event of %s: %w", account, err)
 		}
 		// Event corruption is represented on the individual view. The account
 		// history remains readable and never recomputes a replacement value.
-		_ = decodeExitEventSnapshot(saved, &e.Event.Evaluation.Saved, "no_saved_evaluation")
-		_ = decodeExitEventSnapshot(recomputed, &e.Event.Evaluation.Recomputed, "legacy_event")
-		_ = decodeExitEventSnapshot(effective, &e.Event.Evaluation.Effective, "legacy_event")
-		if err := validateExitEventArmSuppression(e.Event); err != nil {
+		if err := hydrateExitEventEvidence(&e.Event, evidence); err != nil {
 			e.Event.Evaluation.Effective.Snapshot = nil
-			e.Event.Evaluation.Effective.UnknownReason = "invalid_arm_suppression_evidence"
+			e.Event.Evaluation.Effective.UnknownReason = "invalid_event_evidence"
 		}
 		out = append(out, e)
 	}

@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/exit_state.go",
-  "source_sha256": "eeb5f797128e2f661b26413efe02da393afaf5f43a840e02639712b9f3a4432e",
+  "source_sha256": "f6a097d401b8d1ec259434284ec06cb210d0dccb1a879442c2698ac38da76260",
   "package": "journal",
   "function": "appendExitEventTx",
   "signature": "appendExitEventTx(params=3, results=1)",

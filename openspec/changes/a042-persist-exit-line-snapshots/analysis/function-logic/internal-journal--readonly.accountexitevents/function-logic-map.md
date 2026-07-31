@@ -20,11 +20,12 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| SQLite query + event scanner | read exact v10 evaluation projection and validate arm-suppression evidence | no recomputation; per-event corruption becomes typed unknown | CodeGraph + AST |
+| SQLite query + shared event evidence hydrator | scan every nullable v10 field and validate exact flattened/source/arm evidence | no recomputation; per-event corruption becomes typed unknown | CodeGraph + AST |
 
 ## State mutations and fallbacks
 
-- Preserves window ordering and adds persisted evaluation data. Any incomplete or cross-candidate event state clears the effective snapshot view and exposes `invalid_arm_suppression_evidence` without hiding other account rows.
+- Preserves window ordering and adds persisted evaluation data. Any incomplete or cross-candidate event state clears the effective snapshot view and exposes `invalid_event_evidence` without hiding other account rows.
+- Legacy is all-v10-NULL only, and evaluation identity/projection flattening is exact-matched to recomputed JSON.
 
 ## Safety conclusion
 

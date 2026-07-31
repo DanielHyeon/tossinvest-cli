@@ -286,23 +286,114 @@ func evaluationForEvent(saved, recomputed, effective *StoredExitSnapshot, source
 }
 
 func scanExitEvent(row rowScanner, event *ExitEvent) error {
-	var saved, recomputed, effective sql.NullString
+	var evidence exitEventEvidence
 	if err := row.Scan(&event.ID, &event.PositionID, &event.ObservedPrice, &event.HighWater,
 		&event.BaselineAfter, &event.LevelAfter, &event.Action, &event.ProposedIntentID,
-		&event.CreatedAt, &saved, &recomputed, &effective, &event.Evaluation.EffectiveSource,
-		&event.ArmSuppressedReason); err != nil {
+		&event.CreatedAt, &evidence.Generation, &evidence.PolicyID, &evidence.PolicyVersion,
+		&evidence.PolicyDigest, &evidence.SnapshotID, &evidence.DecisionID, &evidence.ObservationID,
+		&evidence.NextTarget, &evidence.NextProtection, &evidence.ObservationSource,
+		&evidence.ObservedAt, &evidence.ProjectedQuantity, &evidence.ProposalRatio,
+		&evidence.StateOnly, &evidence.SuppressedReason, &evidence.SavedJSON,
+		&evidence.RecomputedJSON, &evidence.EffectiveJSON, &evidence.EffectiveSource,
+		&evidence.ArmSuppressedReason); err != nil {
 		return err
 	}
-	if err := decodeExitEventSnapshot(saved, &event.Evaluation.Saved, "no_saved_evaluation"); err != nil {
+	return hydrateExitEventEvidence(event, evidence)
+}
+
+type exitEventEvidence struct {
+	Generation          sql.NullInt64
+	PolicyID            sql.NullString
+	PolicyVersion       sql.NullString
+	PolicyDigest        sql.NullString
+	SnapshotID          sql.NullString
+	DecisionID          sql.NullString
+	ObservationID       sql.NullString
+	NextTarget          sql.NullString
+	NextProtection      sql.NullString
+	ObservationSource   sql.NullString
+	ObservedAt          sql.NullString
+	ProjectedQuantity   sql.NullString
+	ProposalRatio       sql.NullString
+	StateOnly           sql.NullInt64
+	SuppressedReason    sql.NullString
+	SavedJSON           sql.NullString
+	RecomputedJSON      sql.NullString
+	EffectiveJSON       sql.NullString
+	EffectiveSource     sql.NullString
+	ArmSuppressedReason sql.NullString
+}
+
+func (e exitEventEvidence) any() bool {
+	return e.Generation.Valid || e.PolicyID.Valid || e.PolicyVersion.Valid || e.PolicyDigest.Valid ||
+		e.SnapshotID.Valid || e.DecisionID.Valid || e.ObservationID.Valid || e.NextTarget.Valid ||
+		e.NextProtection.Valid || e.ObservationSource.Valid || e.ObservedAt.Valid ||
+		e.ProjectedQuantity.Valid || e.ProposalRatio.Valid || e.StateOnly.Valid ||
+		e.SuppressedReason.Valid || e.SavedJSON.Valid || e.RecomputedJSON.Valid ||
+		e.EffectiveJSON.Valid || e.EffectiveSource.Valid || e.ArmSuppressedReason.Valid
+}
+
+func (e exitEventEvidence) full() bool {
+	return e.Generation.Valid && e.PolicyID.Valid && e.PolicyVersion.Valid && e.PolicyDigest.Valid &&
+		e.SnapshotID.Valid && e.DecisionID.Valid && e.ObservationID.Valid &&
+		e.ObservationSource.Valid && e.ObservedAt.Valid && e.ProjectedQuantity.Valid &&
+		e.StateOnly.Valid && e.RecomputedJSON.Valid && e.EffectiveJSON.Valid && e.EffectiveSource.Valid
+}
+
+func hydrateExitEventEvidence(event *ExitEvent, evidence exitEventEvidence) error {
+	if !evidence.any() {
+		event.Evaluation.Saved.UnknownReason = "no_saved_evaluation"
+		event.Evaluation.Recomputed.UnknownReason = "legacy_event"
+		event.Evaluation.Effective.UnknownReason = "legacy_event"
+		return nil
+	}
+	if !evidence.full() {
+		return fmt.Errorf("%w: event evaluation tuple is partial", ErrExitSnapshotCorrupt)
+	}
+	event.Evaluation.EffectiveSource = evidence.EffectiveSource.String
+	event.ArmSuppressedReason = evidence.ArmSuppressedReason.String
+	if err := decodeExitEventSnapshot(evidence.SavedJSON, &event.Evaluation.Saved, "no_saved_evaluation"); err != nil {
 		return err
 	}
-	if err := decodeExitEventSnapshot(recomputed, &event.Evaluation.Recomputed, "legacy_event"); err != nil {
+	if err := decodeExitEventSnapshot(evidence.RecomputedJSON, &event.Evaluation.Recomputed, "legacy_event"); err != nil {
 		return err
 	}
-	if err := decodeExitEventSnapshot(effective, &event.Evaluation.Effective, "legacy_event"); err != nil {
+	if err := decodeExitEventSnapshot(evidence.EffectiveJSON, &event.Evaluation.Effective, "legacy_event"); err != nil {
+		return err
+	}
+	if err := validateExitEventFlattenedEvidence(*event, evidence); err != nil {
 		return err
 	}
 	return validateExitEventArmSuppression(*event)
+}
+
+func validateExitEventFlattenedEvidence(event ExitEvent, evidence exitEventEvidence) error {
+	recomputed := event.Evaluation.Recomputed.Snapshot
+	if recomputed == nil {
+		return fmt.Errorf("%w: recomputed event snapshot is absent", ErrExitSnapshotCorrupt)
+	}
+	line := recomputed.Line
+	if evidence.Generation.Int64 != line.PositionGeneration || evidence.PolicyID.String != line.Policy.ID ||
+		evidence.PolicyVersion.String != line.Policy.Version || evidence.PolicyDigest.String != line.Policy.Digest ||
+		evidence.SnapshotID.String != line.SnapshotID || evidence.DecisionID.String != line.DecisionID ||
+		evidence.ObservationID.String != line.ObservationID ||
+		!nullableEventStringMatches(evidence.NextTarget, line.NextTarget) ||
+		!nullableEventStringMatches(evidence.NextProtection, line.NextProtection) ||
+		evidence.ObservationSource.String != recomputed.ObservationSource ||
+		evidence.ObservedAt.String != recomputed.ObservedAt ||
+		evidence.ProjectedQuantity.String != line.ProjectedQuantity ||
+		!nullableEventStringMatches(evidence.ProposalRatio, line.Ratio) ||
+		(line.StateOnly != (evidence.StateOnly.Int64 != 0)) ||
+		!nullableEventStringMatches(evidence.SuppressedReason, line.Suppressed) {
+		return fmt.Errorf("%w: flattened event columns do not match recomputed snapshot",
+			ErrExitSnapshotCorrupt)
+	}
+	return nil
+}
+
+func nullableEventStringMatches(value sql.NullString, expected string) bool {
+	present := strings.TrimSpace(expected) != ""
+	return value.Valid == present && (!present || value.String == expected)
 }
 
 func validateExitEventArmSuppression(event ExitEvent) error {

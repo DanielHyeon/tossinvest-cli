@@ -632,9 +632,103 @@ func TestExitEventReadRejectsForgedArmSuppressionEvidence(t *testing.T) {
 				}
 			}
 			if got == nil || got.Evaluation.Effective.Snapshot != nil ||
-				got.Evaluation.Effective.UnknownReason != "invalid_arm_suppression_evidence" {
+				got.Evaluation.Effective.UnknownReason != "invalid_event_evidence" {
 				t.Fatalf("account event did not fail closed: %+v", got)
 			}
+		})
+	}
+}
+
+func assertExitEventEvidenceCorrupt(t *testing.T, j *Journal, positionID string) {
+	t.Helper()
+	if _, err := j.ExitEvents(context.Background(), positionID); !errors.Is(err, ErrExitSnapshotCorrupt) {
+		t.Fatalf("strict event read error = %v, want typed corruption", err)
+	}
+	ro, err := OpenReadOnly(context.Background(), ReadOnlyOptions{Path: j.Path()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ro.Close()
+	events, err := ro.AccountExitEvents(context.Background(), "acct-1", 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, event := range events {
+		if event.Event.PositionID == positionID &&
+			event.Event.Evaluation.Effective.UnknownReason == "invalid_event_evidence" {
+			return
+		}
+	}
+	t.Fatalf("read-only event did not expose per-row corruption: %+v", events)
+}
+
+func TestLegacyEventRequiresEveryV10ColumnToBeNull(t *testing.T) {
+	columns := []struct {
+		name  string
+		value any
+	}{
+		{"position_generation", 7}, {"policy_id", "forged"}, {"policy_version", "forged"},
+		{"policy_digest", "forged"}, {"snapshot_id", "forged"}, {"decision_id", "forged"},
+		{"observation_id", "forged"}, {"next_target", "1"}, {"next_protection", "1"},
+		{"observation_source", "forged"}, {"observed_at", "forged"},
+		{"projected_quantity", "1"}, {"proposal_ratio", "1"}, {"state_only", 0},
+		{"suppressed_reason", "forged"}, {"saved_snapshot_json", "{}"},
+		{"recomputed_snapshot_json", "{}"}, {"effective_snapshot_json", "{}"},
+		{"effective_source", "forged"}, {"arm_suppressed_reason", "forged"},
+	}
+	for _, column := range columns {
+		t.Run(column.name, func(t *testing.T) {
+			j := exitFixture(t)
+			_, seed := openedPosition(t, j, "10")
+			query := fmt.Sprintf("UPDATE exit_events SET %s=? WHERE position_id=? AND action=?", column.name)
+			if _, err := j.db.Exec(query, column.value, seed.PositionID, ExitEventOpened); err != nil {
+				t.Fatal(err)
+			}
+			assertExitEventEvidenceCorrupt(t, j, seed.PositionID)
+		})
+	}
+}
+
+func TestEvaluatedEventRequiresExactFlattenedTuple(t *testing.T) {
+	tests := []struct {
+		name   string
+		column string
+		value  any
+	}{
+		{"generation_null", "position_generation", nil},
+		{"policy_id_null", "policy_id", nil}, {"policy_version_null", "policy_version", nil},
+		{"policy_digest_null", "policy_digest", nil}, {"snapshot_id_null", "snapshot_id", nil},
+		{"decision_id_null", "decision_id", nil}, {"observation_id_null", "observation_id", nil},
+		{"observation_source_null", "observation_source", nil}, {"observed_at_null", "observed_at", nil},
+		{"projected_null", "projected_quantity", nil}, {"state_only_null", "state_only", nil},
+		{"recomputed_null", "recomputed_snapshot_json", nil}, {"effective_null", "effective_snapshot_json", nil},
+		{"source_null", "effective_source", nil},
+		{"generation_mismatch", "position_generation", 99},
+		{"policy_digest_mismatch", "policy_digest", "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+		{"snapshot_id_mismatch", "snapshot_id", "forged"}, {"decision_id_mismatch", "decision_id", "forged"},
+		{"observation_id_mismatch", "observation_id", "forged"},
+		{"next_target_mismatch", "next_target", "999"}, {"next_protection_mismatch", "next_protection", "999"},
+		{"observation_source_mismatch", "observation_source", "forged"},
+		{"observed_at_mismatch", "observed_at", "2020-01-01T00:00:00Z"},
+		{"projected_mismatch", "projected_quantity", "999"},
+		{"proposal_ratio_mismatch", "proposal_ratio", "0.5"},
+		{"state_only_mismatch", "state_only", 1}, {"suppressed_mismatch", "suppressed_reason", "forged"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			j := exitFixture(t)
+			_, seed := openedPosition(t, j, "10")
+			snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-flat-"+test.name, "67900", "70000", "68000")
+			judgement := judgementForSnapshot(snapshot, recovery)
+			judgement.ArmSuppressedReason = ArmSuppressedWorkingOrder
+			if err := j.RecordExitJudgement(context.Background(), judgement); err != nil {
+				t.Fatal(err)
+			}
+			query := fmt.Sprintf("UPDATE exit_events SET %s=? WHERE decision_id=?", test.column)
+			if _, err := j.db.Exec(query, test.value, snapshot.DecisionID); err != nil {
+				t.Fatal(err)
+			}
+			assertExitEventEvidenceCorrupt(t, j, seed.PositionID)
 		})
 	}
 }

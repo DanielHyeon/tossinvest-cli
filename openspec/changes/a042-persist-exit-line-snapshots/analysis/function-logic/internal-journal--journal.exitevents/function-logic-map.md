@@ -20,12 +20,13 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| SQLite query + `scanExitEvent` | restore stored evaluation without recomputation and validate typed arm-suppression evidence | corruption returns `ErrExitSnapshotCorrupt` | CodeGraph + AST |
+| SQLite query + `scanExitEvent` | scan every nullable v10 event field, restore stored evaluation, and validate flattened/source/arm evidence | corruption returns `ErrExitSnapshotCorrupt` | CodeGraph + AST |
 
 ## State mutations and fallbacks
 
 - Reads exact saved/recomputed/effective JSON and scalar provenance columns.
 - Legacy is allowed only when all evaluation candidates/source are absent. For v10 events the selected source must exact-match the corresponding candidate and `SelectRecoverySnapshot`; armed, suppressed and saved-monotone states are mutually exclusive and complete.
+- Every flattened identity, policy, observation and projection field belongs to the recomputed candidate; required NULL or optional NULL/value mismatch is corruption.
 
 ## Safety conclusion
 

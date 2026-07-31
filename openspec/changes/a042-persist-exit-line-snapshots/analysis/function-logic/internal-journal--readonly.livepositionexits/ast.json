@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/account_views.go",
-  "source_sha256": "4f99db9a9de41098f7ec6ce6741e2b3fc51b928c9592f5707b1ed516868a8b79",
+  "source_sha256": "5824b4e65c16b1ffb523da4dcd2c6f85101a22ddbc2236fca6302472ca1f51ea",
   "package": "journal",
   "function": "LivePositionExits",
   "receiver": "ReadOnly",
