@@ -1,0 +1,235 @@
+{
+  "file": "internal/candidate/veto_test.go",
+  "source_sha256": "7733bd43222b4d1dd6c80e2b0a67b15767cb7775b8d4892af5e9f77c212d4df1",
+  "package": "candidate",
+  "function": "TestRemovingAVetoCodeCannotRemoveItsVeto",
+  "signature": "TestRemovingAVetoCodeCannotRemoveItsVeto(params=1, results=0)",
+  "start": {
+    "line": 1448,
+    "column": 1
+  },
+  "end": {
+    "line": 1479,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1451,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 1455,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1456,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1468,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1472,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1475,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1450,
+        "column": 11
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1451,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1451,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1452,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1453,
+        "column": 20
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1453,
+        "column": 32
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1457,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1467,
+        "column": 27
+      },
+      "text": "RaisedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1467,
+        "column": 51
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1467,
+        "column": 76
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1468,
+        "column": 5
+      },
+      "text": "chase.Passed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1469,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1472,
+        "column": 6
+      },
+      "text": "chase.Vetoed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1473,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1475,
+        "column": 12
+      },
+      "text": "TallyVetoes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1476,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1449,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1450,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1465,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1467,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1475,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

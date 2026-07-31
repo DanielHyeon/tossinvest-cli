@@ -52,8 +52,8 @@ package candidate
 //	                                           of — thresholdReason
 //	an absent input-age limit                  is the default, not no limit
 //	an unrecognised veto code                  is unmeasured, not the zero value
-//	a veto code removed from VetoCodes         cannot be, because the list is an
-//	                                           array and a caller gets a copy
+//	a veto code removed from orderedVetoCodes  cannot be, because the list is a
+//	                                           private array and callers get copies
 //
 // # Three inputs that are not about this candidate, or not about now
 //
@@ -111,8 +111,8 @@ const (
 	VetoNearHigh VetoCode = "near_high"
 )
 
-// VetoCodes is the three in D3's order, so every tally and every screen lists
-// them the same way.
+// orderedVetoCodes is the three in D3's order, so every tally and every screen
+// lists them the same way.
 //
 // Chase.Passed, Vetoed, HasUnmeasured and TallyVetoes all iterate this rather
 // than naming the three fields, so a fourth code is refused by Chase.State —
@@ -121,12 +121,13 @@ const (
 // It is an array rather than a slice because that iteration cuts both ways and
 // only one of the two directions was guarded (§4 review P1-3). A fourth code is
 // refused; a code *removed* from the list stops being consulted, and every
-// predicate here then answers as though its veto did not exist — `VetoCodes = nil`
-// makes the zero Chase pass, and overwriting one entry makes a Chase with that
-// veto RAISED pass. An exported slice is a shared backing array any caller can
-// write through. An array is a value: `range` and `len` are unchanged, and a
-// caller who takes it gets a copy.
-var VetoCodes = [3]VetoCode{VetoSeenLate, VetoExtended, VetoNearHigh}
+// predicate here then answers as though its veto did not exist. The array is
+// private; OrderedVetoCodes returns it by value so callers can iterate in the
+// canonical order without gaining mutation authority over package invariants.
+var orderedVetoCodes = [3]VetoCode{VetoSeenLate, VetoExtended, VetoNearHigh}
+
+// OrderedVetoCodes returns D3's fixed order as an independent array value.
+func OrderedVetoCodes() [3]VetoCode { return orderedVetoCodes }
 
 // VetoUnmeasured names the input a veto could not be measured from.
 //
@@ -454,7 +455,7 @@ func (c Chase) State(code VetoCode) VetoState {
 // verdict nobody computed, and under the candle budget that is the majority of
 // the list.
 func (c Chase) Passed() bool {
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		if !c.State(code).Clear() {
 			return false
 		}
@@ -464,7 +465,7 @@ func (c Chase) Passed() bool {
 
 // Vetoed reports that at least one veto fired.
 func (c Chase) Vetoed() bool {
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		if c.State(code).Dangerous() {
 			return true
 		}
@@ -476,7 +477,7 @@ func (c Chase) Vetoed() bool {
 // number spec Requirement 8 wants on the scan output: the screen's default
 // reading has to be "mostly unchecked", not "mostly safe".
 func (c Chase) HasUnmeasured() bool {
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		if !c.State(code).Measured() {
 			return true
 		}
@@ -487,7 +488,7 @@ func (c Chase) HasUnmeasured() bool {
 // Raised is the codes that fired, in D3's order.
 func (c Chase) Raised() []VetoCode {
 	var out []VetoCode
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		if c.State(code).Dangerous() {
 			out = append(out, code)
 		}
@@ -498,7 +499,7 @@ func (c Chase) Raised() []VetoCode {
 // NotMeasured is the codes nobody could measure, in D3's order.
 func (c Chase) NotMeasured() []VetoCode {
 	var out []VetoCode
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		if !c.State(code).Measured() {
 			out = append(out, code)
 		}
@@ -1185,7 +1186,7 @@ type VetoTally struct {
 	Unmeasured int
 
 	// Raised counts, per code, the candidates whose veto fired. Its keys are
-	// exactly VetoCodes even at zero, so a column that is missing cannot read as a
+	// exactly OrderedVetoCodes even at zero, so a missing column cannot read as a
 	// column nobody needed.
 	Raised map[VetoCode]int
 	// NotMeasured counts, per code, the candidates whose veto could not be
@@ -1201,16 +1202,16 @@ type VetoTally struct {
 func TallyVetoes(in []Chase) VetoTally {
 	out := VetoTally{
 		Total:       len(in),
-		Raised:      make(map[VetoCode]int, len(VetoCodes)),
-		NotMeasured: make(map[VetoCode]int, len(VetoCodes)),
+		Raised:      make(map[VetoCode]int, len(OrderedVetoCodes())),
+		NotMeasured: make(map[VetoCode]int, len(OrderedVetoCodes())),
 		Reasons:     map[VetoUnmeasured]int{},
 	}
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		out.Raised[code] = 0
 		out.NotMeasured[code] = 0
 	}
 	for _, c := range in {
-		for _, code := range VetoCodes {
+		for _, code := range OrderedVetoCodes() {
 			state := c.State(code)
 			switch {
 			case state.Dangerous():

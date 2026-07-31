@@ -1,0 +1,172 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "387d50d011c3f06cb148c3fc94b9b8bdc67014c20ba64cc0fd45f4745f9151e7",
+  "package": "console",
+  "function": "signalsVerdictFrom",
+  "signature": "signalsVerdictFrom(params=1, results=1)",
+  "start": {
+    "line": 687,
+    "column": 1
+  },
+  "end": {
+    "line": 698,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 690,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 691,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 693,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 695,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 692,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 694,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 696,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 688,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 688,
+        "column": 23
+      },
+      "text": "candidate.OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 688,
+        "column": 55
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 688,
+        "column": 59
+      },
+      "text": "c.NotMeasured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 689,
+        "column": 12
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 689,
+        "column": 50
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 689,
+        "column": 63
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 689,
+        "column": 67
+      },
+      "text": "candidate.OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 691,
+        "column": 7
+      },
+      "text": "c.Vetoed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 693,
+        "column": 7
+      },
+      "text": "c.Passed"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 688,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 689,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

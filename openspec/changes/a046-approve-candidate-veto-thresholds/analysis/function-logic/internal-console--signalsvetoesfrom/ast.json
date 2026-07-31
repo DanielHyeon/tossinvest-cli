@@ -1,0 +1,209 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "387d50d011c3f06cb148c3fc94b9b8bdc67014c20ba64cc0fd45f4745f9151e7",
+  "package": "console",
+  "function": "signalsVetoesFrom",
+  "signature": "signalsVetoesFrom(params=1, results=1)",
+  "start": {
+    "line": 707,
+    "column": 1
+  },
+  "end": {
+    "line": 723,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 709,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 712,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 713,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 715,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 717,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 722,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 708,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 708,
+        "column": 32
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 708,
+        "column": 36
+      },
+      "text": "candidate.OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 23
+      },
+      "text": "candidate.OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 710,
+        "column": 12
+      },
+      "text": "c.State"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 711,
+        "column": 29
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 8
+      },
+      "text": "state.Dangerous"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 715,
+        "column": 8
+      },
+      "text": "state.Clear"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 718,
+        "column": 18
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 718,
+        "column": 25
+      },
+      "text": "state.Reason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 720,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 708,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 710,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 711,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 714,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 716,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 718,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 720,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

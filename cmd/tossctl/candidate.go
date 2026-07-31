@@ -883,7 +883,7 @@ func writeCandidateTable(w io.Writer, res candidate.CycleResult, report candidat
 		report.Veto.Unmeasured)
 	fmt.Fprintf(w, "  vetoed       %d\n", report.Veto.Vetoed)
 	fmt.Fprintf(w, "  passed       %d  (%s)\n", report.Veto.Passed, report.Veto.PassedNote)
-	for _, code := range candidate.VetoCodes {
+	for _, code := range candidate.OrderedVetoCodes() {
 		fmt.Fprintf(w, "  %-12s raised %d, unmeasured %d\n", string(code),
 			report.Veto.Raised[string(code)], report.Veto.NotMeasured[string(code)])
 	}

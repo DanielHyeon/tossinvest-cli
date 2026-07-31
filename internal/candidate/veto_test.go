@@ -105,8 +105,8 @@ func TestTheZeroChaseDoesNotPassTheVeto(t *testing.T) {
 	if !c.HasUnmeasured() {
 		t.Error("the zero Chase reports nothing unmeasured")
 	}
-	if got := len(c.NotMeasured()); got != len(VetoCodes) {
-		t.Errorf("the zero Chase reports %d unmeasured codes, want all %d", got, len(VetoCodes))
+	if got := len(c.NotMeasured()); got != len(OrderedVetoCodes()) {
+		t.Errorf("the zero Chase reports %d unmeasured codes, want all %d", got, len(OrderedVetoCodes()))
 	}
 	if c.Vetoed() {
 		t.Error("the zero Chase reports a fired veto; unmeasured is neither of the other two")
@@ -285,7 +285,7 @@ func TestAnAbsentThresholdIsNotAPassedVeto(t *testing.T) {
 	if got.Passed() {
 		t.Fatal("a candidate assessed against no thresholds at all passes the chase veto")
 	}
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		state := got.State(code)
 		if state.Measured() {
 			t.Errorf("%s is measured against an absent threshold", code)
@@ -636,10 +636,10 @@ func TestAReadWhoseErrorWasDroppedIsNotAPass(t *testing.T) {
 	if got.Passed() {
 		t.Error("a candidate whose observations never arrived passes the chase veto")
 	}
-	if len(got.NotMeasured()) != len(VetoCodes) {
+	if len(got.NotMeasured()) != len(OrderedVetoCodes()) {
 		t.Errorf("unmeasured codes = %v, want all three", got.NotMeasured())
 	}
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		if got.State(code).Reason() == "" {
 			t.Errorf("%s is unmeasured and names no reason", code)
 		}
@@ -1247,7 +1247,7 @@ func TestEveryAssessedCandidateLandsInExactlyOneBucket(t *testing.T) {
 	}
 	// Every code has a key even at zero, so a missing column cannot read as a
 	// column nobody needed.
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		if _, ok := got.Raised[code]; !ok {
 			t.Errorf("Raised has no entry for %s", code)
 		}
@@ -1436,7 +1436,7 @@ func TestTheBaselineIdentityWindowIsSymmetric(t *testing.T) {
 // TestRemovingAVetoCodeCannotRemoveItsVeto is the §4 review's P1-3.
 //
 // Every predicate here — Passed, Vetoed, HasUnmeasured, Raised, NotMeasured and
-// TallyVetoes — is defined by iterating VetoCodes rather than by naming the three
+// TallyVetoes — is defined by iterating OrderedVetoCodes rather than naming the three
 // fields. That refuses a *fourth* code correctly: it has no field, so Chase.State
 // answers unmeasured and it can never be a pass. The other direction was
 // unguarded. As an exported slice the list is a shared backing array anybody can
@@ -1447,22 +1447,21 @@ func TestTheBaselineIdentityWindowIsSymmetric(t *testing.T) {
 // takes it gets a copy rather than the list the verdict is defined by.
 func TestRemovingAVetoCodeCannotRemoveItsVeto(t *testing.T) {
 	want := []VetoCode{VetoSeenLate, VetoExtended, VetoNearHigh}
-	if len(VetoCodes) != len(want) {
-		t.Fatalf("VetoCodes has %d entries, want %d — every predicate in this file is defined "+
-			"by this list", len(VetoCodes), len(want))
+	codes := OrderedVetoCodes()
+	if len(codes) != len(want) {
+		t.Fatalf("OrderedVetoCodes has %d entries, want %d — every predicate in this file is defined "+
+			"by this list", len(codes), len(want))
 	}
 	for i := range want {
-		if VetoCodes[i] != want[i] {
-			t.Errorf("VetoCodes[%d] = %q, want %q (D3's order, which every tally and every "+
-				"screen lists them in)", i, VetoCodes[i], want[i])
+		if codes[i] != want[i] {
+			t.Errorf("OrderedVetoCodes[%d] = %q, want %q (D3's order, which every tally and every "+
+				"screen lists them in)", i, codes[i], want[i])
 		}
 	}
 
 	// Taking the list and writing to it must not reach the verdict. Restoring it is
-	// a no-op once VetoCodes is a value; before that it undoes the damage this test
-	// would otherwise leave for the rest of the run.
-	codes := VetoCodes
-	defer func() { codes[0] = VetoSeenLate }()
+	// OrderedVetoCodes returns a value, so overwriting the copy cannot damage the
+	// package invariant or any test that runs later.
 	codes[0] = VetoNearHigh
 
 	chase := Chase{SeenLate: RaisedVeto(), Extended: ClearedVeto(), NearHigh: ClearedVeto()}

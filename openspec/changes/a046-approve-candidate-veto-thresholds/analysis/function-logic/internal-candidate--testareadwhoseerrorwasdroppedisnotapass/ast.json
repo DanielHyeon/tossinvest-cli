@@ -1,0 +1,214 @@
+{
+  "file": "internal/candidate/veto_test.go",
+  "source_sha256": "7733bd43222b4d1dd6c80e2b0a67b15767cb7775b8d4892af5e9f77c212d4df1",
+  "package": "candidate",
+  "function": "TestAReadWhoseErrorWasDroppedIsNotAPass",
+  "signature": "TestAReadWhoseErrorWasDroppedIsNotAPass(params=1, results=0)",
+  "start": {
+    "line": 625,
+    "column": 1
+  },
+  "end": {
+    "line": 647,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 636,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 639,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 642,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 643,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 626,
+        "column": 7
+      },
+      "text": "aCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 9
+      },
+      "text": "AssessChase"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 630,
+        "column": 15
+      },
+      "text": "MeasureFirstSighting"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 631,
+        "column": 15
+      },
+      "text": "MeasureExpansion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 632,
+        "column": 15
+      },
+      "text": "MeasureRangePosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 634,
+        "column": 15
+      },
+      "text": "vetoThresholds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 636,
+        "column": 5
+      },
+      "text": "got.Passed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 637,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 639,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 639,
+        "column": 9
+      },
+      "text": "got.NotMeasured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 639,
+        "column": 31
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 639,
+        "column": 35
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 53
+      },
+      "text": "got.NotMeasured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 642,
+        "column": 23
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 643,
+        "column": 6
+      },
+      "text": "Reason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 643,
+        "column": 6
+      },
+      "text": "got.State"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 644,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 626,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 628,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

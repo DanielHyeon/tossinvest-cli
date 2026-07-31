@@ -1,0 +1,177 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "387d50d011c3f06cb148c3fc94b9b8bdc67014c20ba64cc0fd45f4745f9151e7",
+  "package": "console",
+  "function": "signalsVetoTallyFrom",
+  "signature": "signalsVetoTallyFrom(params=1, results=1)",
+  "start": {
+    "line": 782,
+    "column": 1
+  },
+  "end": {
+    "line": 809,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 790,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 793,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 796,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 804,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 808,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 793,
+        "column": 20
+      },
+      "text": "t.Anomalies"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 794,
+        "column": 16
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 794,
+        "column": 35
+      },
+      "text": "signalsTallyAlarm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 796,
+        "column": 23
+      },
+      "text": "candidate.OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 797,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 798,
+        "column": 16
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 805,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 807,
+        "column": 16
+      },
+      "text": "sortedSignalsCounts"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 783,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 791,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 794,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 797,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 803,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 805,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 807,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

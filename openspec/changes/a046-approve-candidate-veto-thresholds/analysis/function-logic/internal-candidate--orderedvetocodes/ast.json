@@ -1,0 +1,29 @@
+{
+  "file": "internal/candidate/veto.go",
+  "source_sha256": "9ab135b45dc433172a6169b57d6ce7b8e4272251cbdca159df50850713498b53",
+  "package": "candidate",
+  "function": "OrderedVetoCodes",
+  "signature": "OrderedVetoCodes(params=0, results=1)",
+  "start": {
+    "line": 130,
+    "column": 1
+  },
+  "end": {
+    "line": 130,
+    "column": 64
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 130,
+        "column": 39
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

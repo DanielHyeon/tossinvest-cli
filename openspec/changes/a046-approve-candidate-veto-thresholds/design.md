@@ -21,6 +21,12 @@ candidate store는 shadow bands와 crossings를 보존하지만 두 veto thresho
    선택하고, 없으면 `not_measured`로 남긴다. 새로운 quote poll은 만들지 않는다. a049는 이 계약을 재사용한다.
 8. 기존 `near_high=2.0`은 자동 승인값으로 승격하지 않고 `legacy-unapproved` provenance로 명시한다.
    최초 numeric threshold set은 별도 사람 evidence review가 immutable version과 digest를 선택할 때만 active가 된다.
+9. threshold JSON 자체는 승인이 아니다. strict `ActivationRecord`가 version, market/session scope,
+   canonical set digest와 opaque evidence bytes의 SHA-256을 모두 결합하고,
+   `sample_window.to <= approved_at <= injected asOf + explicit skew`를 만족할 때만 loader가 set을 활성화한다.
+   registry는 같은 version이 다른 canonical set digest를 가리키는 것을 거부한다.
+10. D3 veto 순서는 private fixed array가 소유하고 `OrderedVetoCodes()`가 array copy를 반환한다.
+    콘솔·CLI consumer는 package invariant를 직접 변경할 수 없다.
 
 ## Risks / Trade-offs
 

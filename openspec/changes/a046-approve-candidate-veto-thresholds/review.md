@@ -5,7 +5,9 @@
 
 ## Security decision
 
-**ACCEPTED WITH DORMANT SCOPE.** schema, pure markout, evidence report, fail-closed loader와 read-only `unapproved/passed=0` 상태를 승인한다. 숫자 threshold의 최초 승인은 별도 사람 evidence activation record다.
+**BLOCKED PENDING INDEPENDENT RE-REVIEW.** 최초 리뷰에서 activation/evidence binding,
+exported veto-order mutation, UI subtree 검사와 markout isolation detector 보완이 요구됐다.
+수치 threshold의 최초 승인은 계속 별도 사람 evidence activation record다.
 
 ## Findings and decisions
 
@@ -13,6 +15,12 @@
 2. 추가 quote poll은 0건이며 누락은 0수익이 아니라 `not_measured`다.
 3. 기존 `near_high=2.0`은 `legacy-unapproved` provenance로 남기고 자동 승인하지 않는다.
 4. threshold option은 immutable evidence digest/version을 사용하고 UI에서 숫자를 입력하지 않는다.
+5. follow-up loader는 opaque evidence bytes의 SHA-256을 재계산하고 strict 별도
+   `ActivationRecord`의 version/scope/canonical set digest/evidence digest/approval time을 결합한다.
+6. 같은 version의 다른 canonical set digest는 동시성 안전 registry가 거부한다.
+7. D3 순서는 private array와 copy accessor로 고정하며 외부 source/compile guard가 mutation 권한 부재를 검증한다.
+8. candidate-filters 검사는 DOM 전체 subtree를 순회하고 KR/US 각각 정확히 세 metric을 검증한다.
+9. markout isolation 검사는 production import allowlist와 clock/polling positive control을 가진다.
 
 ## Verification evidence
 
@@ -24,4 +32,5 @@
 
 ## Verdict
 
-`unapproved/passed=0` 구현과 gate를 승인한다. 숫자 activation은 구현 완료와 분리한다.
+follow-up 구현 후에도 독립 재리뷰와 최종 gate 전에는 승인하지 않는다. `unapproved/passed=0`과
+input-free UI는 유지하며, synthetic activation fixture는 numeric human approval이 아니다.

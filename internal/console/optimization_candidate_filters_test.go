@@ -1,9 +1,10 @@
 package console
 
 import (
-	"regexp"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 func TestOptimizationCandidateFiltersRenderDormantReadOnlyEvidenceState(t *testing.T) {
@@ -20,40 +21,122 @@ func TestOptimizationCandidateFiltersRenderDormantReadOnlyEvidenceState(t *testi
 			t.Errorf("candidate filters page does not contain %q", want)
 		}
 	}
-	section := candidateFilterSection(t, page)
-	if regexp.MustCompile(`(?i)<(?:input|textarea)\b[^>]*(?:type=["']?(?:text|number)|contenteditable)`).MatchString(section) {
-		t.Fatalf("candidate filters exposes free text/number editing:\n%s", section)
-	}
-	if strings.Contains(section, `<form`) || strings.Contains(section, `type="hidden"`) {
-		t.Fatalf("unapproved candidate filters expose an apply transport:\n%s", section)
+	section := candidateFilterNode(t, page)
+	walkHTML(section, func(node *html.Node) {
+		if node.Type != html.ElementNode {
+			return
+		}
+		switch node.Data {
+		case "form", "textarea", "input":
+			t.Errorf("candidate filters exposes forbidden <%s> control", node.Data)
+		}
+		if _, found := htmlAttribute(node, "contenteditable"); found {
+			t.Errorf("candidate filters exposes contenteditable on <%s>", node.Data)
+		}
+	})
+}
+
+func TestCandidateFilterCardsContainExactMarketMetricMatrix(t *testing.T) {
+	h := newDashboardHarness(t, func(*Options) {})
+	h.authenticate(t)
+	section := candidateFilterNode(t, h.page(t, "/optimization"))
+	for _, market := range []string{"KR", "US"} {
+		articles := nodesByAttribute(section, "article", "id", "candidate-filters-"+market)
+		if len(articles) != 1 {
+			t.Fatalf("%s candidate-filter articles = %d, want exactly 1", market, len(articles))
+		}
+		cards := nodesByAttribute(articles[0], "div", "class", "detail-grid")
+		if len(cards) != 3 {
+			t.Errorf("%s candidate-filter metric cards = %d, want exactly 3", market, len(cards))
+		}
+		for _, metric := range []string{"seen_late", "extended", "near_high"} {
+			if got := exactElementTextCount(articles[0], "code", metric); got != 1 {
+				t.Errorf("%s %s metric code count = %d, want exactly 1", market, metric, got)
+			}
+		}
 	}
 }
 
 func TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly(t *testing.T) {
 	h := newDashboardHarness(t, func(*Options) {})
 	h.authenticate(t)
-	section := candidateFilterSection(t, h.page(t, "/optimization"))
-	if strings.Contains(section, "<table") {
+	page := h.page(t, "/optimization")
+	section := candidateFilterNode(t, page)
+	if len(nodesByName(section, "table")) != 0 {
 		t.Fatal("candidate filter cards use a wide table instead of wrapping definition lists")
 	}
 	for _, want := range []string{`aria-label="후보 필터 시장 전환"`, `href="#candidate-filters-KR"`,
 		`href="#candidate-filters-US"`, `aria-readonly="true"`, `<dl>`} {
-		if !strings.Contains(section, want) {
+		if !strings.Contains(page, want) {
 			t.Errorf("candidate filter section lacks accessible/mobile marker %q", want)
 		}
 	}
 }
 
-func candidateFilterSection(t *testing.T, page string) string {
+func candidateFilterNode(t *testing.T, page string) *html.Node {
 	t.Helper()
-	start := strings.Index(page, `<section id="candidate-filters"`)
-	if start < 0 {
-		t.Fatal("candidate-filters section absent")
+	document, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatalf("parse optimization HTML: %v", err)
 	}
-	rest := page[start:]
-	end := strings.Index(rest, `</section>`)
-	if end < 0 {
-		t.Fatal("candidate-filters section is not closed")
+	nodes := nodesByAttribute(document, "section", "id", "candidate-filters")
+	if len(nodes) != 1 {
+		t.Fatalf("candidate-filters sections = %d, want exactly 1", len(nodes))
 	}
-	return rest[:end+len(`</section>`)]
+	return nodes[0]
+}
+
+func walkHTML(root *html.Node, visit func(*html.Node)) {
+	visit(root)
+	for child := root.FirstChild; child != nil; child = child.NextSibling {
+		walkHTML(child, visit)
+	}
+}
+
+func htmlAttribute(node *html.Node, key string) (string, bool) {
+	for _, attribute := range node.Attr {
+		if strings.EqualFold(attribute.Key, key) {
+			return attribute.Val, true
+		}
+	}
+	return "", false
+}
+
+func nodesByName(root *html.Node, name string) []*html.Node {
+	var out []*html.Node
+	walkHTML(root, func(node *html.Node) {
+		if node.Type == html.ElementNode && strings.EqualFold(node.Data, name) {
+			out = append(out, node)
+		}
+	})
+	return out
+}
+
+func nodesByAttribute(root *html.Node, name, key, value string) []*html.Node {
+	var out []*html.Node
+	walkHTML(root, func(node *html.Node) {
+		if node.Type != html.ElementNode || !strings.EqualFold(node.Data, name) {
+			return
+		}
+		if got, found := htmlAttribute(node, key); found && got == value {
+			out = append(out, node)
+		}
+	})
+	return out
+}
+
+func exactElementTextCount(root *html.Node, name, want string) int {
+	count := 0
+	for _, node := range nodesByName(root, name) {
+		var text strings.Builder
+		walkHTML(node, func(descendant *html.Node) {
+			if descendant.Type == html.TextNode {
+				text.WriteString(descendant.Data)
+			}
+		})
+		if strings.TrimSpace(text.String()) == want {
+			count++
+		}
+	}
+	return count
 }

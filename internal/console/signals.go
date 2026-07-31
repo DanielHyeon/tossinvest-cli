@@ -685,8 +685,8 @@ func signalsRowFrom(v candidate.Verdict, now time.Time) signalsRow {
 // true of a verdict nobody computed, and under the candle budget that is most of
 // the list.
 func signalsVerdictFrom(c candidate.Chase) signalsVerdict {
-	measuredCount := len(candidate.VetoCodes) - len(c.NotMeasured())
-	detail := strconv.Itoa(measuredCount) + " / " + strconv.Itoa(len(candidate.VetoCodes)) + " 사유 측정"
+	measuredCount := len(candidate.OrderedVetoCodes()) - len(c.NotMeasured())
+	detail := strconv.Itoa(measuredCount) + " / " + strconv.Itoa(len(candidate.OrderedVetoCodes())) + " 사유 측정"
 	switch {
 	case c.Vetoed():
 		return signalsVerdict{Vetoed: true, Label: "거부", Detail: detail}
@@ -702,11 +702,11 @@ func signalsVerdictFrom(c candidate.Chase) signalsVerdict {
 // Both predicates require the measurement, so an unmeasured veto is neither and
 // falls to the third branch with its reason attached. The absent fourth branch is
 // deliberate: candidate.Chase.State answers an unrecognised code as unmeasured, so
-// a code added to VetoCodes without a field lands here as 미측정 rather than as a
+// a code added to OrderedVetoCodes without a field lands here as 미측정 rather than as a
 // blank cell.
 func signalsVetoesFrom(c candidate.Chase) []signalsVeto {
-	out := make([]signalsVeto, 0, len(candidate.VetoCodes))
-	for _, code := range candidate.VetoCodes {
+	out := make([]signalsVeto, 0, len(candidate.OrderedVetoCodes()))
+	for _, code := range candidate.OrderedVetoCodes() {
 		state := c.State(code)
 		cell := signalsVeto{Code: string(code)}
 		switch {
@@ -793,7 +793,7 @@ func signalsVetoTallyFrom(t candidate.VetoTally) signalsVetoTally {
 	for _, a := range t.Anomalies() {
 		out.Alarms = append(out.Alarms, signalsTallyAlarm(a))
 	}
-	for _, code := range candidate.VetoCodes {
+	for _, code := range candidate.OrderedVetoCodes() {
 		out.Codes = append(out.Codes, signalsCodeCount{
 			Code:       string(code),
 			Raised:     t.Raised[code],
@@ -831,7 +831,7 @@ func signalsAccelTallyFrom(t candidate.CrossingTally) signalsAccelTally {
 // does not reorder itself between refreshes as a map would.
 func signalsBandTalliesFrom(in map[candidate.VetoCode]candidate.BandTally) []signalsBandTally {
 	var out []signalsBandTally
-	for _, code := range candidate.VetoCodes {
+	for _, code := range candidate.OrderedVetoCodes() {
 		tally, ok := in[code]
 		if !ok {
 			continue

@@ -1,0 +1,380 @@
+{
+  "file": "internal/candidate/veto_test.go",
+  "source_sha256": "7733bd43222b4d1dd6c80e2b0a67b15767cb7775b8d4892af5e9f77c212d4df1",
+  "package": "candidate",
+  "function": "TestEveryAssessedCandidateLandsInExactlyOneBucket",
+  "signature": "TestEveryAssessedCandidateLandsInExactlyOneBucket(params=1, results=0)",
+  "start": {
+    "line": 1213,
+    "column": 1
+  },
+  "end": {
+    "line": 1261,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1224,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1231,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1234,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1237,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1245,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "range",
+      "at": {
+        "line": 1250,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 1251,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 1254,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 1258,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1215,
+        "column": 14
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1215,
+        "column": 39
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1215,
+        "column": 64
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1216,
+        "column": 14
+      },
+      "text": "RaisedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1216,
+        "column": 38
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1216,
+        "column": 63
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1217,
+        "column": 14
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1217,
+        "column": 39
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1217,
+        "column": 64
+      },
+      "text": "UnmeasuredVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1217,
+        "column": 79
+      },
+      "text": "noDayHighReason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1221,
+        "column": 14
+      },
+      "text": "RaisedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1221,
+        "column": 38
+      },
+      "text": "UnmeasuredVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1221,
+        "column": 81
+      },
+      "text": "ClearedVeto"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1223,
+        "column": 9
+      },
+      "text": "TallyVetoes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1224,
+        "column": 18
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1225,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1225,
+        "column": 46
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1228,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1232,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1235,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1238,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1243,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1246,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1250,
+        "column": 23
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1252,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1255,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1258,
+        "column": 17
+      },
+      "text": "noDayHighReason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1259,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1259,
+        "column": 40
+      },
+      "text": "noDayHighReason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1259,
+        "column": 71
+      },
+      "text": "noDayHighReason"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1214,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1251,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1254,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

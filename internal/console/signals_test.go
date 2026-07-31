@@ -230,9 +230,9 @@ func TestARowNobodyMeasuredDoesNotRenderLikeARowThatCleared(t *testing.T) {
 		t.Fatal("the measured-and-clear row and the never-checked row render identically")
 	}
 	// The measured row says what was measured.
-	if strings.Count(clear, "측정·안전") != len(candidate.VetoCodes) {
+	if strings.Count(clear, "측정·안전") != len(candidate.OrderedVetoCodes()) {
 		t.Errorf("the cleared row carries %d 측정·안전 cells, want %d — one per veto",
-			strings.Count(clear, "측정·안전"), len(candidate.VetoCodes))
+			strings.Count(clear, "측정·안전"), len(candidate.OrderedVetoCodes()))
 	}
 	if !strings.Contains(clear, "통과") {
 		t.Error("the row whose three vetoes were all measured and all clear does not say 통과")

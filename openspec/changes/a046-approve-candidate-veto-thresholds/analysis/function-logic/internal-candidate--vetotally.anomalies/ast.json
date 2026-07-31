@@ -1,0 +1,109 @@
+{
+  "file": "internal/candidate/tallycheck.go",
+  "source_sha256": "20e00ef961d9005de6a9cc5e3a1448882b8256cd307ee4d30fa50ec6d38ae085",
+  "package": "candidate",
+  "function": "Anomalies",
+  "receiver": "VetoTally",
+  "signature": "VetoTally.Anomalies(params=0, results=1)",
+  "start": {
+    "line": 111,
+    "column": 1
+  },
+  "end": {
+    "line": 131,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 115,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 23
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 10
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 116,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 124,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

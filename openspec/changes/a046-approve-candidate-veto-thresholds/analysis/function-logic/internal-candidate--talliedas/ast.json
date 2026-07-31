@@ -1,0 +1,84 @@
+{
+  "file": "internal/candidate/tally_alarm_test.go",
+  "source_sha256": "bffb95a074e97d4e2ef5f9e3e14cb476a53c47fd74defb684f0402d9e49a4d5c",
+  "package": "candidate",
+  "function": "talliedAs",
+  "signature": "talliedAs(params=5, results=1)",
+  "start": {
+    "line": 21,
+    "column": 1
+  },
+  "end": {
+    "line": 38,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 23
+      },
+      "text": "OrderedVetoCodes"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 35,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

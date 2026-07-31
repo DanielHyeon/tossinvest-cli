@@ -102,7 +102,7 @@ func (a TallyAnomaly) Arithmetic() string {
 	}
 }
 
-// Anomalies reports the tally's own arithmetic contradictions, in VetoCodes' order
+// Anomalies reports the tally's own arithmetic contradictions, in OrderedVetoCodes' order
 // so that two screens list them identically.
 //
 // An empty result is the normal state and it is not a claim that the numbers are
@@ -110,7 +110,7 @@ func (a TallyAnomaly) Arithmetic() string {
 // surfaces render the alarm beside the counts rather than instead of them.
 func (t VetoTally) Anomalies() []TallyAnomaly {
 	var out []TallyAnomaly
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		raised, notMeasured := t.Raised[code], t.NotMeasured[code]
 		if t.Passed+raised+notMeasured > t.Total {
 			out = append(out, TallyAnomaly{

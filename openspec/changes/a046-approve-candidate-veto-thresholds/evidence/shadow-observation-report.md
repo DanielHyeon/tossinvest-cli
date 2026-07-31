@@ -28,6 +28,11 @@ The fixture demonstrates first-observation-at-or-after-target selection, inclusi
 It is reusable by a049, but it is not market evidence and cannot approve a numeric
 threshold set.
 
+The activation fixtures in `internal/candidate/thresholdset_test.go` are likewise
+synthetic protocol fixtures. They demonstrate digest and time binding only; their
+decimal values and approver label are not human approval evidence and MUST NOT be
+copied into a runtime registry.
+
 ## Missing activation inputs
 
 - non-zero market/session sample count;

@@ -1,0 +1,302 @@
+{
+  "file": "internal/candidate/veto.go",
+  "source_sha256": "9ab135b45dc433172a6169b57d6ce7b8e4272251cbdca159df50850713498b53",
+  "package": "candidate",
+  "function": "TallyVetoes",
+  "signature": "TallyVetoes(params=1, results=1)",
+  "start": {
+    "line": 1202,
+    "column": 1
+  },
+  "end": {
+    "line": 1234,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 1209,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 1213,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 1214,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "switch",
+      "at": {
+        "line": 1216,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 1217,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 1219,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "switch",
+      "at": {
+        "line": 1224,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 1225,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 1227,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 1229,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1233,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1204,
+        "column": 16
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1205,
+        "column": 16
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1205,
+        "column": 39
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1205,
+        "column": 43
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1206,
+        "column": 16
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1206,
+        "column": 39
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1206,
+        "column": 43
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1209,
+        "column": 23
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1214,
+        "column": 24
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1215,
+        "column": 13
+      },
+      "text": "c.State"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1217,
+        "column": 9
+      },
+      "text": "state.Dangerous"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1219,
+        "column": 10
+      },
+      "text": "state.Measured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1221,
+        "column": 17
+      },
+      "text": "state.Reason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1225,
+        "column": 8
+      },
+      "text": "c.Vetoed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1227,
+        "column": 8
+      },
+      "text": "c.HasUnmeasured"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1203,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1210,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1211,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1215,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 1218,
+        "column": 5
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 1220,
+        "column": 5
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 1221,
+        "column": 5
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 1226,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 1228,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 1230,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

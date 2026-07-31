@@ -1,0 +1,79 @@
+{
+  "file": "internal/candidate/veto.go",
+  "source_sha256": "9ab135b45dc433172a6169b57d6ce7b8e4272251cbdca159df50850713498b53",
+  "package": "candidate",
+  "function": "Passed",
+  "receiver": "Chase",
+  "signature": "Chase.Passed(params=0, results=1)",
+  "start": {
+    "line": 457,
+    "column": 1
+  },
+  "end": {
+    "line": 464,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 458,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 459,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 460,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 23
+      },
+      "text": "OrderedVetoCodes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 7
+      },
+      "text": "Clear"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 7
+      },
+      "text": "c.State"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

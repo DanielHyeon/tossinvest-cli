@@ -27,7 +27,7 @@ func talliedAs(total, passed int, raised, notMeasured map[VetoCode]int,
 		NotMeasured: map[VetoCode]int{},
 		Reasons:     map[VetoUnmeasured]int{},
 	}
-	for _, code := range VetoCodes {
+	for _, code := range OrderedVetoCodes() {
 		out.Raised[code] = raised[code]
 		out.NotMeasured[code] = notMeasured[code]
 	}
