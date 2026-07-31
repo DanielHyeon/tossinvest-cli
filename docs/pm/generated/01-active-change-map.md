@@ -49,7 +49,7 @@
 | `a045-add-protection-orders` | STORY-TOS-a045 | in_progress |
 | `a046-approve-candidate-veto-thresholds` | STORY-TOS-a046 | implemented |
 | `a047-add-strategy-engine` | STORY-TOS-a047 | in_progress |
-| `a048-add-market-aware-scheduler` | STORY-TOS-a048 | in_progress |
+| `a048-add-market-aware-scheduler` | STORY-TOS-a048 | implemented |
 | `a049-add-lane-performance` | STORY-TOS-a049 | in_progress |
 | `a050-add-strategy-optimization` | STORY-TOS-a050 | in_progress |
 | `a051-add-httpapi-daemon` | STORY-TOS-a051 | in_progress |

@@ -156,7 +156,7 @@ type RateBudget struct {
 	// when Reported is true.
 	Limit, Remaining int
 	// Reset is the best-effort instant the window rolls over. ResetRaw is the
-	// header verbatim, kept because the encoding is undocumented and a later
+	// trimmed header value, kept because the encoding is undocumented and a later
 	// reader may be able to tell what this one could not.
 	Reset    time.Time
 	ResetRaw string
@@ -229,7 +229,7 @@ func readRateBudget(path string, header http.Header, now time.Time) RateBudget {
 
 	limit, hasLimit := headerInt(header, HeaderRateLimit)
 	remaining, hasRemaining := headerInt(header, HeaderRateRemaining)
-	raw := strings.TrimSpace(header.Get(HeaderRateReset))
+	raw, reset, resetKind := ParseRateBudgetReset(header.Get(HeaderRateReset), now)
 
 	if !hasLimit && !hasRemaining && raw == "" {
 		return b
@@ -237,25 +237,53 @@ func readRateBudget(path string, header http.Header, now time.Time) RateBudget {
 	b.Reported = true
 	b.Limit, b.Remaining = limit, remaining
 	b.ResetRaw = raw
-
-	switch {
-	case raw == "":
-		b.ResetKind = ResetAbsent
-	default:
-		seconds, err := strconv.ParseInt(raw, 10, 64)
-		switch {
-		case err != nil || seconds < 0:
-			b.ResetKind = ResetUnparsed
-		case seconds >= resetEpochThreshold:
-			b.ResetKind, b.Reset = ResetEpoch, time.Unix(seconds, 0).UTC()
-		default:
-			b.ResetKind, b.Reset = ResetDelta, now.UTC().Add(time.Duration(seconds)*time.Second)
-		}
-		if b.ResetKind != ResetUnparsed && !plausibleReset(b.Reset, now) {
-			b.ResetKind, b.Reset = ResetUnparsed, time.Time{}
-		}
-	}
+	b.Reset = reset
+	b.ResetKind = resetKind
 	return b
+}
+
+// ParseRateBudgetReset applies the official client's exact reset-header
+// semantics without mutating client state. The canonical raw value is trimmed
+// exactly as readRateBudget stores it, allowing downstream admission code to
+// validate a RateBudget without copying the threshold, plausibility bounds, or
+// overflow-sensitive delta arithmetic.
+func ParseRateBudgetReset(raw string, observedAt time.Time) (canonicalRaw string, reset time.Time, kind ResetKind) {
+	canonicalRaw = strings.TrimSpace(raw)
+	if canonicalRaw == "" {
+		return canonicalRaw, time.Time{}, ResetAbsent
+	}
+	seconds, err := strconv.ParseInt(canonicalRaw, 10, 64)
+	if err != nil || seconds < 0 || observedAt.IsZero() {
+		return canonicalRaw, time.Time{}, ResetUnparsed
+	}
+	if seconds >= resetEpochThreshold {
+		reset, kind = time.Unix(seconds, 0).UTC(), ResetEpoch
+	} else {
+		var ok bool
+		reset, ok = addResetDelta(observedAt, seconds)
+		if !ok {
+			return canonicalRaw, time.Time{}, ResetUnparsed
+		}
+		kind = ResetDelta
+	}
+	if !plausibleReset(reset, observedAt) {
+		return canonicalRaw, time.Time{}, ResetUnparsed
+	}
+	return canonicalRaw, reset, kind
+}
+
+func addResetDelta(observedAt time.Time, seconds int64) (time.Time, bool) {
+	const maxDurationSeconds = int64((time.Duration(1<<63 - 1)) / time.Second)
+	if seconds < 0 || seconds > maxDurationSeconds {
+		return time.Time{}, false
+	}
+	base := observedAt.UTC()
+	delta := time.Duration(seconds) * time.Second
+	reset := base.Add(delta)
+	if reset.Sub(base) != delta {
+		return time.Time{}, false
+	}
+	return reset, true
 }
 
 func headerInt(header http.Header, name string) (int, bool) {
@@ -272,9 +300,9 @@ func headerInt(header http.Header, name string) (int, bool) {
 
 // plausibleReset bounds a parsed reset to a window a rate limit could occupy.
 func plausibleReset(reset, now time.Time) bool {
-	if reset.IsZero() {
+	if reset.IsZero() || now.IsZero() {
 		return false
 	}
-	return !reset.Before(now.UTC().Add(-resetMaxBehind)) &&
-		!reset.After(now.UTC().Add(resetMaxAhead))
+	delta := reset.Sub(now.UTC())
+	return delta >= -resetMaxBehind && delta <= resetMaxAhead
 }

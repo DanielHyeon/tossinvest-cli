@@ -1,0 +1,340 @@
+{
+  "file": "internal/official/ratebudget_test.go",
+  "source_sha256": "4e11df190acb64b2b1dd1e7a9ae8fcf5c59afd9505dd831779a5e82b30b7fdc9",
+  "package": "official",
+  "function": "TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries",
+  "signature": "TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries(params=1, results=0)",
+  "start": {
+    "line": 211,
+    "column": 1
+  },
+  "end": {
+    "line": 242,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 236,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 20
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 20
+      },
+      "text": "time.Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 88
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 97
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 45
+      },
+      "text": "itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 50
+      },
+      "text": "Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 50
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 105
+      },
+      "text": "itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 110
+      },
+      "text": "Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 110
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 152
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 42
+      },
+      "text": "itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 47
+      },
+      "text": "Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 47
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 116
+      },
+      "text": "itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 121
+      },
+      "text": "Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 121
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 44
+      },
+      "text": "itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 49
+      },
+      "text": "Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 49
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 106
+      },
+      "text": "itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 111
+      },
+      "text": "Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 111
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 155
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 41
+      },
+      "text": "itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 46
+      },
+      "text": "Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 46
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 115
+      },
+      "text": "itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 120
+      },
+      "text": "Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 120
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 24
+      },
+      "text": "ParseRateBudgetReset"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 52
+      },
+      "text": "reset.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 235,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

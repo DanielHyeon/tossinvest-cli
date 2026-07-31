@@ -342,6 +342,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Settings:     consoleSettingsSeam(root),
 		ExitPolicies: consoleExitPolicySettingsSeam(root),
 
+		// The market schedule is a read-only projection. Keep it in its own
+		// capability block so the older dashboard source contract remains stable.
+		MarketSchedule: consoleMarketScheduleView{reader: consoleMarketScheduleSeam(root, reads)},
+
 		// The overview's read-only view of the Guardian's ceilings (change
 		// console-operator-overview). Five numbers and a currency: this seam
 		// displays what the file says and can change none of it.
@@ -693,6 +697,37 @@ func (c *consoleBroker) resolve() (verifylive.Broker, string, error) {
 	c.client, c.accountRef = broker, strings.TrimSpace(accountRef)
 	return c.client, c.accountRef, nil
 }
+
+func (c *consoleBroker) TypedMarketCalendar(ctx context.Context, country, date string) (official.MarketCalendarResponse, error) {
+	broker, _, err := c.resolve()
+	if err != nil {
+		return official.MarketCalendarResponse{}, err
+	}
+	reader, ok := broker.(typedMarketCalendarReader)
+	if !ok {
+		return official.MarketCalendarResponse{}, fmt.Errorf("console: this build's broker (%T) has no typed official calendar read", broker)
+	}
+	return reader.TypedMarketCalendar(ctx, country, date)
+}
+
+type consoleMarketScheduleView struct{ reader *consoleMarketScheduleReader }
+
+func (v consoleMarketScheduleView) Read(ctx context.Context) (console.MarketScheduleReading, error) {
+	status, err := v.reader.Read(ctx)
+	if err != nil {
+		return console.MarketScheduleReading{}, err
+	}
+	return console.MarketScheduleReading{
+		SchedulerDesired: status.SchedulerDesired, AutoStartDesired: status.AutoStartDesired,
+		SchedulerEffective: status.SchedulerEffective, AutoStartEffective: status.AutoStartEffective,
+		Market: status.Market, Session: status.Session, ApplyTiming: status.ApplyTiming,
+		CalendarSource: status.CalendarSource, CalendarVersion: status.CalendarVersion,
+		CalendarFetchedAt: status.CalendarFetchedAt, DecisionReason: status.DecisionReason,
+		NextTransition: status.NextTransition,
+	}, nil
+}
+
+var _ console.MarketScheduleReader = consoleMarketScheduleView{}
 
 // newConsoleHoldings builds the console's holdings reader.
 //

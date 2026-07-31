@@ -1,0 +1,221 @@
+{
+  "file": "internal/scheduler/budget.go",
+  "source_sha256": "9569cfb6db93df7ec359e92ebafcd7e258b9686c60fb8a7a996e98d998b6ab97",
+  "package": "scheduler",
+  "function": "BeginObservation",
+  "receiver": "BudgetCoordinator",
+  "signature": "BudgetCoordinator.BeginObservation(params=1, results=1)",
+  "start": {
+    "line": 177,
+    "column": 1
+  },
+  "end": {
+    "line": 210,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 188,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 2
+      },
+      "text": "c.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 8
+      },
+      "text": "c.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 11
+      },
+      "text": "newEndpointBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 50
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 15
+      },
+      "text": "io.ReadFull"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 16
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 30
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 185,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 192,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 203,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 182,
+        "column": 2
+      },
+      "text": "c.mu.Unlock"
+    }
+  ]
+}

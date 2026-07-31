@@ -1,0 +1,73 @@
+{
+  "file": "internal/scheduler/budget.go",
+  "source_sha256": "9569cfb6db93df7ec359e92ebafcd7e258b9686c60fb8a7a996e98d998b6ab97",
+  "package": "scheduler",
+  "function": "Observe",
+  "receiver": "BudgetCoordinator",
+  "signature": "BudgetCoordinator.Observe(params=1, results=0)",
+  "start": {
+    "line": 216,
+    "column": 1
+  },
+  "end": {
+    "line": 223,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 218,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 2
+      },
+      "text": "c.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 8
+      },
+      "text": "c.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 2
+      },
+      "text": "c.observeLocked"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 221,
+        "column": 2
+      },
+      "text": "c.mu.Unlock"
+    }
+  ]
+}

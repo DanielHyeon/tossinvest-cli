@@ -1,0 +1,87 @@
+{
+  "file": "internal/scheduler/desired.go",
+  "source_sha256": "ea217bc6aed4c6e677e46dab64cd4e4861a000abb044e50c1da954cf6bfac85a",
+  "package": "scheduler",
+  "function": "Load",
+  "receiver": "DesiredStore",
+  "signature": "DesiredStore.Load(params=1, results=2)",
+  "start": {
+    "line": 87,
+    "column": 1
+  },
+  "end": {
+    "line": 92,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 12
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 9
+      },
+      "text": "s.loadAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 18
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 18
+      },
+      "text": "time.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

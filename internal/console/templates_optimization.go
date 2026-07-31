@@ -7,6 +7,7 @@ const optimizationTemplates = `
 <p class="muted">StockOS의 공통 정책 세 가지를 TossOS의 decimal exit evaluator로 적용한다.
 이 화면은 <code>engine.exit_policy.common_policy</code> ID 하나만 저장하며 주문, automation gate,
 trading toggle, 편입 목록은 변경하지 않는다.</p>
+<p><a href="/strategy-runtime/market-schedule">strategy-runtime &gt; 시장·일정 보기</a></p>
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
 {{if .LoadErr}}<p class="danger">설정을 읽을 수 없다: <code>{{.LoadErr}}</code></p>{{end}}
 
@@ -89,6 +90,50 @@ trading toggle, 편입 목록은 변경하지 않는다.</p>
   <strong>기존 포지션</strong>은 exit state에 저장된 정책을 계속 사용하며 자동 변경되지 않는다.
   외부 매수는 편입 관측가를 entry/high-water t0로 사용하므로 과거 수익 때문에 즉시 익절하지 않는다.</p>
   {{if .EngineRunning}}<p class="notice">현재 엔진이 실행 중이다. 반영하려면 사람이 엔진을 재기동해야 한다.</p>{{end}}
+</section>
+{{template "foot" .}}
+{{end}}
+
+{{define "market-schedule"}}
+{{template "head" .}}
+<p><a href="/optimization">최적화</a> / <code>strategy-runtime</code></p>
+<h1>시장·일정</h1>
+<p class="muted">서버가 정의한 시장·세션 선택지와 official exchange calendar 근거를 읽는 화면이다.
+임의 종목, 운영 사유, 시각 또는 휴장일을 입력하지 않는다. 이 화면은 주문·운영 토글·설정을 변경하지 않는다.</p>
+{{if .LoadErr}}<p class="danger">상태를 읽지 못해 닫힌 기본값을 표시한다. 신규 진입은 fail-closed다.</p>{{end}}
+{{if .Unwired}}<p class="notice">scheduler seam 미배선 — 닫힌 기본값만 표시한다.</p>{{end}}
+
+<section aria-labelledby="scheduler-state-heading">
+  <h2 id="scheduler-state-heading">Scheduler 상태</h2>
+  <table>
+    <tr><th>항목</th><th>기본값</th><th>Desired</th><th>Effective</th></tr>
+    <tr><th>Scheduler</th><td>OFF</td><td>{{.SchedulerDesired}}</td><td><strong>{{.SchedulerEffective}}</strong></td></tr>
+    <tr><th>자동 시작</th><td>OFF</td><td>{{.AutoStartDesired}}</td><td>{{.AutoStartEffective}}</td></tr>
+    <tr><th>시장</th><td>선택 시장 없음</td><td colspan="2">{{.Market}}</td></tr>
+    <tr><th>세션</th><td>정규장</td><td colspan="2">{{.Session}}</td></tr>
+    <tr><th>적용 시점</th><td>다음 엔진 기동</td><td colspan="2">{{.ApplyTiming}}</td></tr>
+  </table>
+  <p class="muted">서버 정의 시장 범위: 선택 시장 없음, 한국, 미국. 서버 정의 세션: 정규장.</p>
+</section>
+
+<section aria-labelledby="calendar-heading">
+  <h2 id="calendar-heading">Exchange calendar · 읽기 전용</h2>
+  <table>
+    <tr><th>Source</th><td>{{.CalendarSource}}</td></tr>
+    <tr><th>Version</th><td><code>{{.CalendarVersion}}</code></td></tr>
+    <tr><th>Updated at</th><td>{{.CalendarUpdatedAt}}</td></tr>
+  </table>
+  <p>6시간 freshness 또는 장 시작 전 refresh 조건이 실패하면 신규 entry는 대기한다. calendar는 이 화면에서 수정할 수 없다.</p>
+</section>
+
+<section aria-labelledby="decision-heading">
+  <h2 id="decision-heading">현재 결정</h2>
+  <table>
+    <tr><th>Typed reason</th><td><code>{{.DecisionReason}}</code></td></tr>
+    <tr><th>다음 전환</th><td>{{.NextTransition}}</td></tr>
+  </table>
+  <p>{{.DecisionHelp}}</p>
+  <p><strong>신규 entry가 대기하거나 꺼져 있어도 exit·reconcile·fill detection은 계속된다.</strong></p>
 </section>
 {{template "foot" .}}
 {{end}}

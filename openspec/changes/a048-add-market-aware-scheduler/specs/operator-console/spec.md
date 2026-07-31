@@ -3,6 +3,7 @@
 ### Requirement: 시장 스케줄은 desired와 effective를 구분해 설명한다
 콘솔은 a050의 `strategy-runtime > 시장·일정` section에서 scheduler와 auto-start의 desired/effective 상태, 시장·세션 범위, calendar version/updated-at, 다음 전환 시각과 typed decision reason을 표시해야 한다 (SHALL).
 시장·세션 범위와 운영 reason은 server-defined option으로만 선택해야 하며 (SHALL), 임의 문자열·시간·휴장일 입력 control을 제공해서는 안 된다 (MUST NOT).
+시장 선택지는 `none`, `KR`, `US`만 제공해야 하며 (SHALL), 정확한 per-market calendar/activation binding이 없는 결합 시장을 광고해서는 안 된다 (MUST NOT).
 
 #### Scenario: 새 설치
 - **WHEN** scheduler 저장값이 없다

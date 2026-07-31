@@ -207,3 +207,43 @@ func TestAnImplausibleResetIsNotPresentedAsADetermination(t *testing.T) {
 		}
 	}
 }
+
+func TestParseRateBudgetResetUsesExactThresholdAndPlausibilityBoundaries(t *testing.T) {
+	now := budgetNow
+	epochThreshold := time.Unix(1_000_000_000, 0).UTC()
+	tests := []struct {
+		name      string
+		raw       string
+		observed  time.Time
+		wantRaw   string
+		wantReset time.Time
+		wantKind  ResetKind
+	}{
+		{name: "canonical whitespace", raw: " 60 ", observed: now, wantRaw: "60", wantReset: now.Add(time.Minute), wantKind: ResetDelta},
+		{name: "delta max ahead inclusive", raw: "86400", observed: now, wantRaw: "86400", wantReset: now.Add(24 * time.Hour), wantKind: ResetDelta},
+		{name: "delta beyond max ahead", raw: "86401", observed: now, wantRaw: "86401", wantKind: ResetUnparsed},
+		{name: "exact threshold is epoch", raw: "1000000000", observed: epochThreshold, wantRaw: "1000000000", wantReset: epochThreshold, wantKind: ResetEpoch},
+		{name: "epoch max behind inclusive", raw: itoa(now.Add(-time.Minute).Unix()), observed: now, wantRaw: itoa(now.Add(-time.Minute).Unix()), wantReset: now.Add(-time.Minute), wantKind: ResetEpoch},
+		{name: "epoch beyond max behind", raw: itoa(now.Add(-time.Minute - time.Second).Unix()), observed: now, wantRaw: itoa(now.Add(-time.Minute - time.Second).Unix()), wantKind: ResetUnparsed},
+		{name: "epoch max ahead inclusive", raw: itoa(now.Add(24 * time.Hour).Unix()), observed: now, wantRaw: itoa(now.Add(24 * time.Hour).Unix()), wantReset: now.Add(24 * time.Hour), wantKind: ResetEpoch},
+		{name: "epoch beyond max ahead", raw: itoa(now.Add(24*time.Hour + time.Second).Unix()), observed: now, wantRaw: itoa(now.Add(24*time.Hour + time.Second).Unix()), wantKind: ResetUnparsed},
+		{name: "duration wrapping integer", raw: "36028797018963969", observed: now, wantRaw: "36028797018963969", wantKind: ResetUnparsed},
+		{name: "zero observed at", raw: "60", wantRaw: "60", wantKind: ResetUnparsed},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			raw, reset, kind := ParseRateBudgetReset(tc.raw, tc.observed)
+			if raw != tc.wantRaw || kind != tc.wantKind || !reset.Equal(tc.wantReset) {
+				t.Fatalf("ParseRateBudgetReset(%q) = (%q, %s, %q), want (%q, %s, %q)",
+					tc.raw, raw, reset, kind, tc.wantRaw, tc.wantReset, tc.wantKind)
+			}
+		})
+	}
+}
+
+func TestAddResetDeltaRejectsDurationConversionOverflow(t *testing.T) {
+	maxDurationSeconds := int64((time.Duration(1<<63 - 1)) / time.Second)
+	if reset, ok := addResetDelta(budgetNow, maxDurationSeconds+1); ok || !reset.IsZero() {
+		t.Fatalf("overflowing delta derived reset %s with ok=%v", reset, ok)
+	}
+}

@@ -224,6 +224,10 @@ type Options struct {
 	// ExitPolicies is the optimization page's load/save-only config seam. It
 	// carries no broker, gate, trading-toggle, or journal authority.
 	ExitPolicies ExitPolicySettings
+	// MarketSchedule is a read-only projection of scheduler desired/effective
+	// state and its calendar provenance. Its single method returns plain display
+	// data; it cannot edit configuration, start the engine, or reach a broker.
+	MarketSchedule MarketScheduleReader
 
 	// Orders is the read-only view of the account's order record the orders
 	// screen reads (orders.go). It declares one method, behind which the caller
@@ -712,6 +716,7 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/settings/system-update/download",
 		c.session0(c.mutating(c.handleSystemUpdateDownload)))
 	mux.HandleFunc("/optimization", c.session0(c.handleOptimization))
+	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
 	mux.HandleFunc("/optimization/exit-policy",
 		c.session0(c.mutating(c.handleOptimizationSave)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))

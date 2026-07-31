@@ -1,0 +1,30 @@
+{
+  "file": "internal/scheduler/desired.go",
+  "source_sha256": "ea217bc6aed4c6e677e46dab64cd4e4861a000abb044e50c1da954cf6bfac85a",
+  "package": "scheduler",
+  "function": "ActivationBinding",
+  "receiver": "DesiredState",
+  "signature": "DesiredState.ActivationBinding(params=1, results=1)",
+  "start": {
+    "line": 201,
+    "column": 1
+  },
+  "end": {
+    "line": 207,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,162 @@
+{
+  "file": "internal/official/typed_calendar_reads.go",
+  "source_sha256": "5f97bf011626abd443e60df1028db26dc9b8c598eaa6e106c5377acf4696b143",
+  "package": "official",
+  "function": "TypedMarketCalendar",
+  "receiver": "Client",
+  "signature": "Client.TypedMarketCalendar(params=3, results=2)",
+  "start": {
+    "line": 37,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 12
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 28
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 36
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 12
+      },
+      "text": "validateMarketCalendarDate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 3
+      },
+      "text": "query.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 12
+      },
+      "text": "c.get"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
