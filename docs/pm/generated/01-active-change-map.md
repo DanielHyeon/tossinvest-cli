@@ -43,7 +43,7 @@
 | `streamline-trading-views` | STORY-TOS-039 | archived |
 | `a040-adopt-stockos-openspec-naming` | STORY-TOS-a040 | implemented |
 | `a041-complete-exit-line-contract` | STORY-TOS-a041 | implemented |
-| `a042-persist-exit-line-snapshots` | STORY-TOS-a042 | in_progress |
+| `a042-persist-exit-line-snapshots` | STORY-TOS-a042 | implemented |
 | `a043-show-exit-lines-in-trading-views` | STORY-TOS-a043 | in_progress |
 | `a044-manage-position-exit-policies` | STORY-TOS-a044 | in_progress |
 | `a045-add-protection-orders` | STORY-TOS-a045 | in_progress |

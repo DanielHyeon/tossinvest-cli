@@ -12,4 +12,4 @@
 ## 3. 검증
 
 - [x] 3.1 DB/WAL/SHM 보존, pre-migration backup 원자 복원, broker reconcile, reopen, fault-injection, full test·vet·validate를 통과한다.
-- [ ] 3.2 적대적 Eng 독립 리뷰와 `make gate CHANGE=a042-persist-exit-line-snapshots`을 통과한다.
+- [x] 3.2 적대적 Eng 독립 리뷰와 `make gate CHANGE=a042-persist-exit-line-snapshots`을 통과한다.
