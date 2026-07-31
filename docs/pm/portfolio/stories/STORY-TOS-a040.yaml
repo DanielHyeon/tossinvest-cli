@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-a040",
+  "title": "Adopt StockOS OpenSpec numbering and Story mapping",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a040-adopt-stockos-openspec-naming",
+    "path": "openspec/changes/a040-adopt-stockos-openspec-naming"
+  },
+  "acceptance": [
+    "Every new numbered change uses aNNN-kebab-intent and exactly one STORY-TOS-aNNN",
+    "The PM validator rejects a new numbered change whose Story number does not match",
+    "Legacy TossOS Story and change identifiers remain valid historical records",
+    "WORKFLOW and OpenSpec templates document the same naming contract"
+  ]
+}

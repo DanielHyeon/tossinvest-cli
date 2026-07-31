@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a042",
+  "title": "Persist and recover exit-line snapshots",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a042-persist-exit-line-snapshots",
+    "path": "openspec/changes/a042-persist-exit-line-snapshots"
+  },
+  "acceptance": [
+    "Exit-line state survives a process restart without lowering any protection",
+    "Policy version, active rung, high-water, next target and last observation remain attributable",
+    "The journal migration is additive and has a tested rollback and crash-recovery plan",
+    "A missing or corrupt snapshot fails closed for that position without delaying other emergency exits",
+    "Optimization read models distinguish saved, recomputed and effective values with source, time and stale or unknown explanations"
+  ]
+}

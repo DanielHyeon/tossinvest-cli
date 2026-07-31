@@ -1,6 +1,12 @@
 {
   "project": "TossOS",
   "prefix": "TOS",
+  "id_rules": {
+    "numbered_change": "aNNN-kebab-case-intent",
+    "numbered_story": "STORY-TOS-aNNN",
+    "numbered_change_cutover": 40,
+    "legacy_ids_renamed": false
+  },
   "initiatives": [
     "INIT-TOS-001",
     "INIT-TOS-002"
@@ -20,7 +26,11 @@
     "FEAT-TOS-005",
     "FEAT-TOS-006",
     "FEAT-TOS-007",
-    "FEAT-TOS-008"
+    "FEAT-TOS-008",
+    "FEAT-TOS-009",
+    "FEAT-TOS-010",
+    "FEAT-TOS-011",
+    "FEAT-TOS-012"
   ],
   "stories": [
     "STORY-TOS-001",
@@ -61,6 +71,18 @@
     "STORY-TOS-036",
     "STORY-TOS-037",
     "STORY-TOS-038",
-    "STORY-TOS-039"
+    "STORY-TOS-039",
+    "STORY-TOS-a040",
+    "STORY-TOS-a041",
+    "STORY-TOS-a042",
+    "STORY-TOS-a043",
+    "STORY-TOS-a044",
+    "STORY-TOS-a045",
+    "STORY-TOS-a046",
+    "STORY-TOS-a047",
+    "STORY-TOS-a048",
+    "STORY-TOS-a049",
+    "STORY-TOS-a050",
+    "STORY-TOS-a051"
   ]
 }

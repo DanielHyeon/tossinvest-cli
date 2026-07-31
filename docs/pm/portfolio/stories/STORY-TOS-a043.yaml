@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a043",
+  "title": "Show exit-line truth in positions and orders",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a043-show-exit-lines-in-trading-views",
+    "path": "openspec/changes/a043-show-exit-lines-in-trading-views"
+  },
+  "acceptance": [
+    "Positions shows initial stop, active protection, next target, next protection, rung and expected exit quantity from the authoritative snapshot",
+    "One-share positions state that intermediate take-profit is skipped and protection still advances",
+    "Orders links every exit order to its trigger line, observation, policy and rung",
+    "Unknown or stale data is shown explicitly and never fabricated as zero",
+    "Trading views keep settings read-only and link to the relevant exit-protection or position-management category"
+  ]
+}

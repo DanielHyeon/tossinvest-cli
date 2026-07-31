@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a050",
+  "title": "Add versioned strategy optimization lifecycle",
+  "feature": "FEAT-TOS-011",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a050-add-strategy-optimization",
+    "path": "openspec/changes/a050-add-strategy-optimization"
+  },
+  "acceptance": [
+    "Optimization exposes a parameter registry, settings snapshots, preview, apply, history and rollback",
+    "Every apply uses a version check and records actor, reason, before and after",
+    "Insufficient or unattributed evidence blocks a recommendation rather than inventing a score",
+    "Applying a setting does not automatically enable a lane or LIVE trading",
+    "Optimization uses six stable categories and every configurable field shows a plain-language description, registry default, desired and effective value, constraints, provenance and apply timing",
+    "Desktop and mobile layouts prevent category, default and safety-state confusion and preserve category-scoped drafts and saves"
+  ]
+}

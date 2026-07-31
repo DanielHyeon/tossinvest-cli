@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a044",
+  "title": "Manage per-position exit policies and lifecycle",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a044-manage-position-exit-policies",
+    "path": "openspec/changes/a044-manage-position-exit-policies"
+  },
+  "acceptance": [
+    "Operators can preview and approve a per-position policy override with optimistic concurrency",
+    "External positions can be adopted, released and re-adopted without reusing stale lifecycle state",
+    "Changing the global policy does not silently rebind existing positions",
+    "Every policy mutation records before, after, actor and reason without changing LIVE toggles",
+    "The position-management category separates per-symbol policy from external-position adoption and shows descriptions, defaults, desired and effective values, ranges and apply timing",
+    "Adoption defaults to OFF with a 5 percent stop, a 2 to 20 percent range in 0.5 percent steps, empty include and exclude lists, and exclusion precedence"
+  ]
+}

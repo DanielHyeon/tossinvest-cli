@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a051",
+  "title": "Add a mobile-ready HTTP API daemon",
+  "feature": "FEAT-TOS-012",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a051-add-httpapi-daemon",
+    "path": "openspec/changes/a051-add-httpapi-daemon"
+  },
+  "acceptance": [
+    "Versioned REST and SSE contracts expose engine, positions, orders, candidates, performance, settings and optimization",
+    "Local and VPN clients require no application token while network exposure remains private and TLS terminated",
+    "Write origin checks compare scheme, host and port rather than URL path",
+    "Writes use CSRF, idempotency, optimistic concurrency and audit without weakening LIVE approval rules",
+    "The optimization API returns the same ordered categories, field descriptions, defaults, desired and effective values, constraints and provenance as the web UI"
+  ]
+}

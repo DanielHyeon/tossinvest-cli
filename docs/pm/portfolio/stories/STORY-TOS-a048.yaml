@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a048",
+  "title": "Add market-aware strategy scheduling",
+  "feature": "FEAT-TOS-010",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a048-add-market-aware-scheduler",
+    "path": "openspec/changes/a048-add-market-aware-scheduler"
+  },
+  "acceptance": [
+    "KR and US entry scheduling honors sessions, holidays, early closes and US daylight saving time",
+    "Closed markets block new entries without stopping reconciliation or exit protection",
+    "Restart restores only previously operator-approved desired state",
+    "Polling schedules stay within the declared official API rate budget",
+    "The strategy-runtime market and schedule section explains desired and effective states, market and session scope, calendar provenance and typed wait reasons",
+    "Scheduler and autostart default to OFF, no market is selected, regular sessions only are allowed, and exchange calendars are read-only"
+  ]
+}

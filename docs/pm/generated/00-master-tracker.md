@@ -5,6 +5,7 @@
   - FEAT-TOS-001 — StockOS SDD toolchain adaptation [active]
     - STORY-TOS-001 — Adopt the full StockOS SDD workflow in TossOS [archived] → `adopt-stockos-full-sdd`
     - STORY-TOS-002 — Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one [in_progress] → `align-full-sdd-pm-contract`
+    - STORY-TOS-a040 — Adopt StockOS OpenSpec numbering and Story mapping [implemented] → `a040-adopt-stockos-openspec-naming`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [implemented] → `enable-vpn-console-access`
@@ -34,6 +35,7 @@
     - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [implemented] → `interlock-gates-entry-not-exit`
     - STORY-TOS-016 — Wire the production risk Guardian [implemented] → `wire-production-risk-guardian`
     - STORY-TOS-017 — Prime engine account sequence safely [implemented] → `prime-engine-account-seq`
+    - STORY-TOS-a045 — Add broker-resident protection orders [in_progress] → `a045-add-protection-orders`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
@@ -48,9 +50,23 @@
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
     - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
+  - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
+    - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [in_progress] → `a041-complete-exit-line-contract`
+    - STORY-TOS-a042 — Persist and recover exit-line snapshots [in_progress] → `a042-persist-exit-line-snapshots`
+    - STORY-TOS-a043 — Show exit-line truth in positions and orders [in_progress] → `a043-show-exit-lines-in-trading-views`
+    - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [in_progress] → `a044-manage-position-exit-policies`
+  - FEAT-TOS-012 — Mobile and service API [active]
+    - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [in_progress] → `a051-add-httpapi-daemon`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
     - STORY-TOS-027 — Add candidate discovery [implemented] → `add-candidate-discovery`
     - STORY-TOS-028 — Fix chase-veto measurement [implemented] → `fix-chase-veto-measurement`
     - STORY-TOS-029 — Retire the gainers candidate source [implemented] → `retire-gainers-source`
     - STORY-TOS-030 — Refine extended-shadow bands [implemented] → `refine-extended-shadow-bands`
+    - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [in_progress] → `a046-approve-candidate-veto-thresholds`
+  - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
+    - STORY-TOS-a047 — Add the strategy entry engine [in_progress] → `a047-add-strategy-engine`
+    - STORY-TOS-a048 — Add market-aware strategy scheduling [in_progress] → `a048-add-market-aware-scheduler`
+  - FEAT-TOS-011 — Lane performance and strategy optimization [active]
+    - STORY-TOS-a049 — Add deterministic lane performance attribution [in_progress] → `a049-add-lane-performance`
+    - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [in_progress] → `a050-add-strategy-optimization`

@@ -3,5 +3,5 @@
   "title": "Operator console and engine lifecycle",
   "initiative": "INIT-TOS-002",
   "intent": "active",
-  "features": ["FEAT-TOS-004", "FEAT-TOS-005"]
+  "features": ["FEAT-TOS-004", "FEAT-TOS-005", "FEAT-TOS-009", "FEAT-TOS-012"]
 }

@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a049",
+  "title": "Add deterministic lane performance attribution",
+  "feature": "FEAT-TOS-011",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a049-add-lane-performance",
+    "path": "openspec/changes/a049-add-lane-performance"
+  },
+  "acceptance": [
+    "Candidate, lane, decision, order, fill and close are attributed only through deterministic identifiers",
+    "Performance reports cost-adjusted PnL, realized R, slippage, 5/15/30 minute markouts and MFE/MAE where data exists",
+    "Missing links are reported as link_missing and never estimated as zero",
+    "Performance collection cannot place orders or change a LIVE toggle",
+    "The read-only performance-history category explains metric definitions, units, samples, periods and missing-data states and defaults to 30 days, all markets, all lanes and complete lineage"
+  ]
+}

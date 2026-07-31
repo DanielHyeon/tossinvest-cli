@@ -82,8 +82,105 @@ class TrackerTests(unittest.TestCase):
         )
         return path, json.loads(path.read_text(encoding="utf-8"))
 
+    def replace_with_numbered_story(
+        self,
+        root: Path,
+        *,
+        story_id: str = "STORY-TOS-a040",
+        change_id: str = "a040-example-change",
+    ) -> None:
+        portfolio = root / "docs" / "pm" / "portfolio"
+        old_path, story = self.story(root)
+        old_path.unlink()
+        story["id"] = story_id
+        story["openspec"] = {
+            "change_id": change_id,
+            "path": f"openspec/changes/{change_id}",
+        }
+        self.write_json(portfolio / "stories" / f"{story_id}.yaml", story)
+
+        registry_path = portfolio / "_registry.yaml"
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        registry["stories"] = [story_id]
+        self.write_json(registry_path, registry)
+
+        feature_path = portfolio / "features" / "FEAT-TOS-001.yaml"
+        feature = json.loads(feature_path.read_text(encoding="utf-8"))
+        feature["stories"] = [story_id]
+        self.write_json(feature_path, feature)
+
+        old_change = root / "openspec" / "changes" / "example-change"
+        new_change = root / "openspec" / "changes" / change_id
+        old_change.rename(new_change)
+
     def test_current_repository_is_valid(self):
         self.assertEqual(tracker.validate(), [])
+
+    def test_numbered_story_and_change_with_same_number_are_valid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fixture(root)
+            self.replace_with_numbered_story(root)
+            self.assertEqual(tracker.validate(root), [])
+
+    def test_numbered_story_change_mismatch_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fixture(root)
+            self.replace_with_numbered_story(
+                root,
+                story_id="STORY-TOS-a040",
+                change_id="a041-example-change",
+            )
+            errors = tracker.validate(root)
+            self.assertTrue(any("number mismatch" in error for error in errors))
+
+    def test_numbered_change_requires_kebab_intent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fixture(root)
+            self.replace_with_numbered_story(
+                root,
+                story_id="STORY-TOS-a040",
+                change_id="a040_bad_slug",
+            )
+            errors = tracker.validate(root)
+            self.assertTrue(any("invalid numbered change id" in error for error in errors))
+
+    def test_duplicate_numbered_change_number_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fixture(root)
+            self.replace_with_numbered_story(root)
+            duplicate = root / "openspec" / "changes" / "a040-other-change"
+            duplicate.mkdir(parents=True)
+            (duplicate / "proposal.md").write_text("# proposal\n", encoding="utf-8")
+            errors = tracker.validate(root)
+            self.assertTrue(any("duplicate numbered change a040" in error for error in errors))
+
+    def test_numeric_legacy_story_is_rejected_at_or_after_cutover(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fixture(root)
+            self.replace_with_numbered_story(
+                root,
+                story_id="STORY-TOS-040",
+                change_id="new-legacy-style-change",
+            )
+            errors = tracker.validate(root)
+            self.assertTrue(any("legacy numeric Story id" in error for error in errors))
+
+    def test_numbered_story_below_cutover_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fixture(root)
+            self.replace_with_numbered_story(
+                root,
+                story_id="STORY-TOS-a001",
+                change_id="a001-reused-number",
+            )
+            errors = tracker.validate(root)
+            self.assertTrue(any("below cutoff a040" in error for error in errors))
 
     def test_bootstrap_allowlist_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,0 +1,19 @@
+{
+  "id": "STORY-TOS-a045",
+  "title": "Add broker-resident protection orders",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a045-add-protection-orders",
+    "path": "openspec/changes/a045-add-protection-orders"
+  },
+  "acceptance": [
+    "A supported filled position receives broker-resident stop protection before exposure-raising automation can continue",
+    "Protection quantity follows partial fills without oversell or duplicate sell claims",
+    "Protection survives process restart and is reconciled by durable broker identifiers",
+    "Protection can only move in the safer direction and flatten cancels it before liquidation",
+    "ProtectionReady is WIRED only for attested market and order capabilities",
+    "The exit-protection category explains capability, OFF or unavailable defaults, desired and effective status, trigger, quantity, broker identity and reconciliation state",
+    "Protection weakening is separated from ordinary saves and requires an explicit before and after risk confirmation"
+  ]
+}

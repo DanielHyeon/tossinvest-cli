@@ -3,5 +3,5 @@
   "title": "Candidate discovery and entry quality",
   "initiative": "INIT-TOS-002",
   "intent": "active",
-  "features": ["FEAT-TOS-006"]
+  "features": ["FEAT-TOS-006", "FEAT-TOS-010", "FEAT-TOS-011"]
 }

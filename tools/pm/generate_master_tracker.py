@@ -11,6 +11,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 PORTFOLIO = ROOT / "docs" / "pm" / "portfolio"
 GENERATED = ROOT / "docs" / "pm" / "generated"
+NUMBERED_CHANGE_RE = re.compile(
+    r"^a(?P<number>\d{3})-(?P<intent>[a-z0-9]+(?:-[a-z0-9]+)*)$"
+)
+NUMBERED_CHANGE_PREFIX_RE = re.compile(r"^a\d{3}")
+NUMBERED_STORY_RE = re.compile(r"^STORY-TOS-a(?P<number>\d{3})$")
+LEGACY_NUMERIC_STORY_RE = re.compile(r"^STORY-TOS-(?P<number>\d{3})$")
+DEFAULT_NUMBERED_CUTOVER = 40
 
 
 def read(path: Path) -> dict:
@@ -108,6 +115,88 @@ def derive_story_status(story: dict, repo_root: Path = ROOT) -> str:
     return "implemented"
 
 
+def validate_numbered_contracts(
+    stories: dict[str, dict],
+    repo_root: Path = ROOT,
+    cutover: int = DEFAULT_NUMBERED_CUTOVER,
+) -> list[str]:
+    """Enforce the StockOS aNNN naming contract for new TossOS work.
+
+    Legacy TossOS stories and unnumbered changes remain valid. A numbered change,
+    however, is an explicit opt-in to the new contract and therefore must have a
+    kebab intent and the one Story carrying the same three-digit number.
+    """
+
+    errors: list[str] = []
+    change_ids = set(active_changes(repo_root))
+    for story in stories.values():
+        change_id, _ = story_contract(story)
+        if change_id:
+            change_ids.add(change_id)
+
+    changes_by_number: dict[str, list[str]] = {}
+    for change_id in sorted(change_ids):
+        if not NUMBERED_CHANGE_PREFIX_RE.match(change_id):
+            continue
+        match = NUMBERED_CHANGE_RE.fullmatch(change_id)
+        if match is None:
+            errors.append(f"invalid numbered change id {change_id}")
+            continue
+        if int(match.group("number")) < cutover:
+            errors.append(
+                f"{change_id}: numbered change is below cutoff a{cutover:03d}"
+            )
+        changes_by_number.setdefault(match.group("number"), []).append(change_id)
+
+    for number, numbered_changes in sorted(changes_by_number.items()):
+        if len(numbered_changes) > 1:
+            errors.append(
+                f"duplicate numbered change a{number}: {numbered_changes}"
+            )
+
+    for story in stories.values():
+        story_id = story["id"]
+        legacy_match = LEGACY_NUMERIC_STORY_RE.fullmatch(story_id)
+        if legacy_match and int(legacy_match.group("number")) >= cutover:
+            errors.append(
+                f"{story_id}: legacy numeric Story id is not allowed at or after "
+                f"cutoff a{cutover:03d}"
+            )
+        if not story_id.startswith("STORY-TOS-a"):
+            continue
+        story_match = NUMBERED_STORY_RE.fullmatch(story_id)
+        if story_match is None:
+            errors.append(f"invalid numbered Story id {story_id}")
+            continue
+        if int(story_match.group("number")) < cutover:
+            errors.append(
+                f"{story_id}: numbered Story is below cutoff a{cutover:03d}"
+            )
+        change_id, _ = story_contract(story)
+        change_match = NUMBERED_CHANGE_RE.fullmatch(change_id or "")
+        if change_match is None:
+            errors.append(
+                f"{story_id}: invalid numbered change id {change_id or 'missing'}"
+            )
+            continue
+        if story_match.group("number") != change_match.group("number"):
+            errors.append(
+                f"{story_id}: number mismatch with {change_id}"
+            )
+
+    for number, numbered_changes in sorted(changes_by_number.items()):
+        if len(numbered_changes) != 1:
+            continue
+        change_id = numbered_changes[0]
+        expected_story = f"STORY-TOS-a{number}"
+        story = stories.get(expected_story)
+        if story is None or story_contract(story)[0] != change_id:
+            errors.append(
+                f"{change_id}: expected matching Story {expected_story}"
+            )
+    return errors
+
+
 def validate(repo_root: Path = ROOT) -> list[str]:
     root = repo_root / "docs" / "pm" / "portfolio"
     registry = read(root / "_registry.yaml")
@@ -116,6 +205,12 @@ def validate(repo_root: Path = ROOT) -> list[str]:
     features, feature_errors = inspect_objects("features", root)
     stories, story_errors = inspect_objects("stories", root)
     errors = initiative_errors + epic_errors + feature_errors + story_errors
+    id_rules = registry.get("id_rules", {})
+    cutover = id_rules.get("numbered_change_cutover", DEFAULT_NUMBERED_CUTOVER)
+    if not isinstance(cutover, int) or isinstance(cutover, bool) or not 0 <= cutover <= 999:
+        errors.append("registry: numbered_change_cutover must be an integer from 0 to 999")
+        cutover = DEFAULT_NUMBERED_CUTOVER
+    errors.extend(validate_numbered_contracts(stories, repo_root, cutover))
     if "bootstrap_change_allowlist" in registry:
         errors.append("registry: bootstrap_change_allowlist is forbidden")
 

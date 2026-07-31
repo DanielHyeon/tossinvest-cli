@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a047",
+  "title": "Add the strategy entry engine",
+  "feature": "FEAT-TOS-010",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a047-add-strategy-engine",
+    "path": "openspec/changes/a047-add-strategy-engine"
+  },
+  "acceptance": [
+    "Approved candidates flow through a lane decision, RiskIntent, Guardian, durable intent and the official Open API gateway",
+    "Lane OFF blocks new entries while existing exits continue unchanged",
+    "No strategy path can bypass Guardian, operating mode, protection readiness or journal durability",
+    "LIVE activation requires one explicit operator approval and has no paper, shadow or canary order path",
+    "The strategy-runtime category separates parameters, lane state, autostart and LIVE approval and shows field descriptions, defaults, provenance and effective refusal reasons",
+    "Lane and autostart default to OFF, and unfrozen strategy values remain unconfigured and read-only"
+  ]
+}

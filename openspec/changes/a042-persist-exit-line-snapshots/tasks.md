@@ -1,0 +1,15 @@
+## 1. 스키마 분석과 RED
+
+- [ ] 1.1 a041 완료를 확인하고 journal migration/recovery 함수의 Function Logic·Branch Test Map과 rollback 계획을 작성한다.
+- [ ] 1.2 additive migration, atomic/coherent snapshot, legacy NULL, impossible mixed tuple, commit 전후 crash와 monotone reopen RED 테스트를 추가한다.
+
+## 2. 영속화와 복구
+
+- [ ] 2.1 nullable snapshot schema와 typed journal read/write 및 saved/recomputed/effective provenance read model을 구현한다.
+- [ ] 2.2 evaluation event와 snapshot을 원자적으로 commit하고 recovery에 max-safe 규칙을 연결한다.
+- [ ] 2.3 corrupt snapshot 격리와 다른 emergency exit 비차단 테스트를 통과한다.
+
+## 3. 검증
+
+- [ ] 3.1 DB/WAL/SHM 보존, pre-migration backup 원자 복원, broker reconcile, reopen, fault-injection, full test·vet·validate를 통과한다.
+- [ ] 3.2 적대적 Eng 독립 리뷰와 `make gate CHANGE=a042-persist-exit-line-snapshots`을 통과한다.

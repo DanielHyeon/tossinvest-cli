@@ -3,5 +3,5 @@
   "title": "StockOS SDD toolchain adaptation",
   "epic": "EPIC-TOS-001",
   "intent": "active",
-  "stories": ["STORY-TOS-001", "STORY-TOS-002"]
+  "stories": ["STORY-TOS-001", "STORY-TOS-002", "STORY-TOS-a040"]
 }

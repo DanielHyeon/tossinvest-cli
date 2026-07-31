@@ -177,7 +177,19 @@ Function Logic Map 완성/명시적 면제 + `make sdd-check` + `make test` + `m
 
 ### PM 계층
 
-`INIT-TOS → EPIC-TOS → FEAT-TOS → STORY-TOS → OpenSpec change`를 1:1 역추적한다.sh
+`INIT-TOS → EPIC-TOS → FEAT-TOS → STORY-TOS → OpenSpec change`를 1:1 역추적한다.
+
+#### 신규 OpenSpec·Story 명명 규칙 (StockOS 호환)
+
+- 신규 change는 `aNNN-<kebab-case-intent>` 형식을 사용한다. `NNN`은 저장소 전체에서 중복되지 않는 3자리 일련번호다.
+- 신규 Story는 `STORY-TOS-aNNN` 형식을 사용하며 같은 번호의 OpenSpec change 하나만 가리킨다.
+- 역방향도 동일하다. `aNNN-*` change마다 정확히 하나의 `STORY-TOS-aNNN`이 있어야 한다.
+- `NNN`은 `docs/pm/portfolio/_registry.yaml`, 활성·보관 OpenSpec change, Story 전체를 확인한 뒤 다음 번호를 배정한다.
+- 제목·의도 slug는 change 디렉터리에만 기록한다. Story ID에는 slug를 붙이지 않는다.
+- TossOS에서 이미 사용 중인 `STORY-TOS-001`부터 `STORY-TOS-039`와 기존 비번호 change는 호환성을 위해 이름을 바꾸지 않는다.
+- 이 규칙의 적용 기준선은 `a040-adopt-stockos-openspec-naming`이다. 이후 신규 문서는 번호 계약을 통과해야 한다.
+
+OpenSpec을 먼저 만들지 않는다. PM 계층에서 Story와 번호를 예약하고 같은 작업 흐름에서 대응 change를 생성해, Story와 OpenSpec이 항상 한 쌍으로 검증되게 한다.
 
 python3 tools/pm/generate_master_tracker.py
 python3 tools/pm/generate_master_tracker.py --check

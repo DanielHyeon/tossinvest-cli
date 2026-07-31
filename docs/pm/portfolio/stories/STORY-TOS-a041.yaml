@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a041",
+  "title": "Complete the authoritative take-profit and protection-line contract",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a041-complete-exit-line-contract",
+    "path": "openspec/changes/a041-complete-exit-line-contract"
+  },
+  "acceptance": [
+    "One authoritative snapshot explains entry, initial stop, active protection, next target, next protection and expected exit quantity",
+    "Protection baselines and high-water values never decrease",
+    "A one-share position never submits an intermediate partial take-profit but still advances its protection state",
+    "A one-share position exits exactly one share on final take-profit or protection breach",
+    "No zero-quantity order can be created",
+    "The exit-protection category receives authoritative preset defaults, plain-language descriptions and one-share previews without inventing UI values"
+  ]
+}

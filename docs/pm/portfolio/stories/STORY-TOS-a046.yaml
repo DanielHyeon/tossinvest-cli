@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a046",
+  "title": "Approve evidence-backed candidate veto thresholds",
+  "feature": "FEAT-TOS-006",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a046-approve-candidate-veto-thresholds",
+    "path": "openspec/changes/a046-approve-candidate-veto-thresholds"
+  },
+  "acceptance": [
+    "seen_late, extended and near_high thresholds are versioned with provenance and market scope",
+    "Missing or unapproved thresholds remain fail closed",
+    "An approved verdict can be emitted without submitting or authorizing any order",
+    "Threshold evidence includes deterministic observation and markout definitions",
+    "The candidate-filters category explains each metric, direction, unit, evidence and apply timing and shows unapproved as a state rather than a numeric zero"
+  ]
+}

@@ -41,3 +41,15 @@
 | STORY-TOS-037 | 9 |
 | STORY-TOS-038 | 5 |
 | STORY-TOS-039 | 5 |
+| STORY-TOS-a040 | 4 |
+| STORY-TOS-a041 | 6 |
+| STORY-TOS-a042 | 5 |
+| STORY-TOS-a043 | 5 |
+| STORY-TOS-a044 | 6 |
+| STORY-TOS-a045 | 7 |
+| STORY-TOS-a046 | 5 |
+| STORY-TOS-a047 | 6 |
+| STORY-TOS-a048 | 6 |
+| STORY-TOS-a049 | 5 |
+| STORY-TOS-a050 | 6 |
+| STORY-TOS-a051 | 5 |
