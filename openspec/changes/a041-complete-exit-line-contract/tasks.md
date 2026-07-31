@@ -14,4 +14,4 @@
 ## 3. 검증
 
 - [x] 3.1 Function Logic Map을 구현 후 AST와 맞추고 focused/race/full test·vet·validate를 통과한다.
-- [ ] 3.2 적대적 Eng 독립 리뷰와 `make gate CHANGE=a041-complete-exit-line-contract`을 통과한다.
+- [x] 3.2 적대적 Eng 독립 리뷰와 `make gate CHANGE=a041-complete-exit-line-contract`을 통과한다.

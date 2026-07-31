@@ -51,7 +51,7 @@
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
     - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
-    - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [in_progress] → `a041-complete-exit-line-contract`
+    - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [implemented] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [in_progress] → `a042-persist-exit-line-snapshots`
     - STORY-TOS-a043 — Show exit-line truth in positions and orders [in_progress] → `a043-show-exit-lines-in-trading-views`
     - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [in_progress] → `a044-manage-position-exit-policies`

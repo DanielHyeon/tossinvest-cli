@@ -20,3 +20,12 @@
 ## Verdict
 
 계약 구현을 승인한다. default-OFF/zero-order 회귀, deterministic identity, same-snapshot consumer와 independent implementation review를 gate 조건으로 한다.
+
+## Independent re-review · 2026-08-01
+
+- Scope: `bb2579037f54cee20630115c1d6b802f7a933273..ace73540f431230d61630e4a321a020ce46803f0`
+- Verdict: **CLEAN FOR INTEGRATION**.
+- Previous finding 1 closed: quote `FetchedAt` 또는 cycle 단일 fallback에서 opaque observation ID를 만들고 DecisionID-derived intent와 typed journal/proposal/mutation provenance로 연결했다. 실제 두 observer와 SQLite journal의 concurrent test는 proposal 1건·mutation attempt 1건만 허용한다.
+- Previous finding 2 closed: pre-a042 ID-only state는 fixed legacy policy identity와 정확히 일치할 때만 평가하고 common/adopted policy digest drift와 같은 ID/version 의미 변경은 fail-closed한다. a042 schema handoff는 별도로 명시했다.
+- Verification: focused Go tests, `go test -race -count=1 ./internal/exitpolicy ./internal/journal ./internal/app/engine`, `make test`, `make vet`, `make validate`, Function Logic Map checker와 `make sdd-check` PASS.
+- Safety: LIVE mutation을 실행하지 않았고 주문 권한·운영 토글·default-OFF 불변식을 변경하지 않았다.
