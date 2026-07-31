@@ -90,17 +90,11 @@ func TestTheTwoSurfacesApplyTheSameThresholds(t *testing.T) {
 	if scan != one {
 		t.Errorf("the scan cycle applies %+v and the constructor returns %+v", scan, one)
 	}
-	// And the values are still the ones D18 approved and did not approve: one
-	// threshold, and two deliberately absent.
-	if one.NearHighDistancePct != candidate.DefaultNearHighThresholdPct {
-		t.Errorf("near_high = %q, want the contract's %q",
-			one.NearHighDistancePct, candidate.DefaultNearHighThresholdPct)
-	}
-	if one.SeenLatePercentilePct != "" || one.ExtendedGainPct != "" {
-		t.Errorf("seen_late = %q and extended = %q; this change introduces no threshold, and "+
-			"a value here would be a policy number with no source, no market and no "+
-			"verification state — the thing design D6 forbids",
-			one.SeenLatePercentilePct, one.ExtendedGainPct)
+	// a046 deliberately activates no numeric threshold. The former near_high 2.0
+	// is descriptor provenance (`legacy-unapproved`), not a runtime fallback.
+	if one.SeenLatePercentilePct != "" || one.ExtendedGainPct != "" || one.NearHighDistancePct != "" {
+		t.Errorf("dormant thresholds = %+v; no value has a human evidence activation record, "+
+			"so every runtime threshold must remain absent", one)
 	}
 }
 

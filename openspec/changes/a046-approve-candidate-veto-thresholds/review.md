@@ -18,6 +18,9 @@
 
 - OpenSpec strict validation: pass.
 - Numeric evidence approval: absent by design.
+- Shadow observation report: `evidence/shadow-observation-report.md` — both KR/US
+  regular-session evidence are explicitly `not_measured`; the a049 golden fixture
+  is contract evidence only and cannot activate a threshold.
 
 ## Verdict
 

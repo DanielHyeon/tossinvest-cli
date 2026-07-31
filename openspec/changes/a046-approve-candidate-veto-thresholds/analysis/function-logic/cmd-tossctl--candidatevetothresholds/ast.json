@@ -1,0 +1,29 @@
+{
+  "file": "cmd/tossctl/vetothresholds.go",
+  "source_sha256": "d01585278b3942c919fe1687121b023ae12431c283a0b7ad25e3be1433a6171c",
+  "package": "main",
+  "function": "candidateVetoThresholds",
+  "signature": "candidateVetoThresholds(params=0, results=1)",
+  "start": {
+    "line": 43,
+    "column": 1
+  },
+  "end": {
+    "line": 45,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

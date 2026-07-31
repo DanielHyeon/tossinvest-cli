@@ -54,7 +54,7 @@ import (
 // a consumer that produced its own verdict rather than reading one would be doing
 // the same thing by a different route.
 var verdictSymbols = map[string]bool{
-	"Chase": true, "Verdict": true, "VetoTally": true,
+	"Chase": true, "Verdict": true, "ApprovedCandidate": true, "VetoTally": true,
 	"AssessChase": true, "TallyVetoes": true, "TallyVerdicts": true,
 }
 

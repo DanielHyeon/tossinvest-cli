@@ -287,11 +287,16 @@ const (
 	VetoThresholdNotPositive VetoUnmeasured = "THRESHOLD_NOT_POSITIVE"
 )
 
-// DefaultNearHighThresholdPct is the contract's `near_high_threshold_pct: 2.0`.
+// LegacyNearHighThresholdPct is the old `near_high_threshold_pct: 2.0` value.
 //
-// It is the distance to the day's high in percent and the comparison is `<`, so
-// smaller is more dangerous: 1.99% raises the veto and 2.00% does not.
-const DefaultNearHighThresholdPct = "2.0"
+// a046 explicitly classifies it as `legacy-unapproved`: descriptors may explain
+// its provenance, but runtime code must not use it without a complete immutable
+// human evidence activation record.
+const LegacyNearHighThresholdPct = "2.0"
+
+// DefaultNearHighThresholdPct is retained for source compatibility with the
+// measurement boundary tests. It is not a runtime default.
+const DefaultNearHighThresholdPct = LegacyNearHighThresholdPct
 
 // MaxVetoInputAge is how old a reading may be before a veto computed from it is a
 // memory rather than a measurement (tasks.md 4.7).
@@ -868,13 +873,10 @@ func percentileOf(rank, total int) *big.Rat {
 
 // VetoThresholds are the numbers the three vetoes are compared against.
 //
-// Only one of them is fixed by the contract. design.md's 결정된 계약값 gives
-// `near_high_threshold_pct: 2.0` and gives no value for the other two, so those
-// arrive from the caller and an absent one makes its veto unmeasured rather than
-// clear. That is the safe direction and it is the only one available: a number
-// this package invented would be a policy value with no source, applied market,
-// or verification state, which is exactly what D6 says must not exist. §5 records
-// them the way the shadow acceleration thresholds are recorded, and T3.2 decides.
+// Values arrive from a complete immutable ThresholdSet. An absent value makes its
+// veto unmeasured rather than clear. LegacyNearHighThresholdPct is not a default:
+// a number without evidence, applied market, session, and approval is precisely
+// what this contract refuses.
 type VetoThresholds struct {
 	// SeenLatePercentilePct is how far up its list a candidate may already have
 	// been the first time we saw it, in percentile points, compared with `>`.
@@ -883,8 +885,8 @@ type VetoThresholds struct {
 	// recorded for it, in percent, compared with `>`.
 	ExtendedGainPct string
 	// NearHighDistancePct is how close to the day's high is too close, as a
-	// distance in percent, compared with `<`. DefaultNearHighThresholdPct is the
-	// contract's value; the comparison's boundary is pinned to the digit.
+	// distance in percent, compared with `<`. Boundary behavior is pinned by tests
+	// independently of whether a numeric set is active.
 	NearHighDistancePct string
 	// MaxInputAge is how old a reading may be before a veto computed from it is
 	// unmeasured. Anything non-positive means MaxVetoInputAge: a bound nobody set

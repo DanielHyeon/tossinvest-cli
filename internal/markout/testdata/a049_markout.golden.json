@@ -1,0 +1,18 @@
+{
+  "decision_at": "2026-07-31T00:00:00Z",
+  "decision_price": "100",
+  "observations": [
+    {"at": "2026-07-31T00:05:10Z", "price": "102.5"},
+    {"at": "2026-07-31T00:15:45Z", "price": "101"},
+    {"at": "2026-07-31T00:31:01Z", "price": "99"}
+  ],
+  "expected": {
+    "decision_at": "2026-07-31T00:00:00Z",
+    "decision_price": "100",
+    "measurements": [
+      {"minutes": 5, "target_at": "2026-07-31T00:05:00Z", "status": "measured", "observed_at": "2026-07-31T00:05:10Z", "observed_price": "102.5", "return_pct": "2.5"},
+      {"minutes": 15, "target_at": "2026-07-31T00:15:00Z", "status": "measured", "observed_at": "2026-07-31T00:15:45Z", "observed_price": "101", "return_pct": "1"},
+      {"minutes": 30, "target_at": "2026-07-31T00:30:00Z", "status": "not_measured", "reason": "NO_OBSERVATION_WITHIN_TOLERANCE"}
+    ]
+  }
+}

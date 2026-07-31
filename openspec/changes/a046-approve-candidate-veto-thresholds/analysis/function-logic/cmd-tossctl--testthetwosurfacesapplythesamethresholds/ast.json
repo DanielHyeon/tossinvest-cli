@@ -1,0 +1,86 @@
+{
+  "file": "cmd/tossctl/vetothresholds_source_test.go",
+  "source_sha256": "06f2e44cc1b6cf81b1f2f760b22771ca7519415c55d4cbe70f65deb959207d52",
+  "package": "main",
+  "function": "TestTheTwoSurfacesApplyTheSameThresholds",
+  "signature": "TestTheTwoSurfacesApplyTheSameThresholds(params=1, results=0)",
+  "start": {
+    "line": 87,
+    "column": 1
+  },
+  "end": {
+    "line": 99,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 10
+      },
+      "text": "candidateCycleOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 9
+      },
+      "text": "candidateVetoThresholds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

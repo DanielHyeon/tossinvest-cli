@@ -19,12 +19,12 @@ package main
 // approved threshold to move — and it stops being cheap the moment somebody has a
 // value to introduce.
 //
-// # And why the values are what they are
+// # And why there are no values yet
 //
-// Only near_high has a contract value (design.md 결정된 계약값,
-// `near_high_threshold_pct: 2.0`). seen_late and extended are left empty on purpose,
-// so their vetoes report THRESHOLD_ABSENT — unmeasured, and never a pass — rather
-// than a number this command invented. D18: 근거 없는 임계는 veto가 되지 못한다.
+// a046's approved dormant scope has no numeric evidence activation record. All
+// three therefore report THRESHOLD_ABSENT — unmeasured, and never a pass — rather
+// than a number this command invented. The former near_high 2.0 is retained by the
+// descriptor as `legacy-unapproved` provenance only; it is not a runtime fallback.
 //
 // The empty strings are also why nothing here renders a knob with
 // strconv.FormatFloat. An absent YAML key formatted that way arrives as "0", and a
@@ -41,7 +41,5 @@ import "github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 // A function rather than a package-level variable, so that no caller can mutate what
 // the next one reads.
 func candidateVetoThresholds() candidate.VetoThresholds {
-	return candidate.VetoThresholds{
-		NearHighDistancePct: candidate.DefaultNearHighThresholdPct,
-	}
+	return candidate.VetoThresholds{}
 }

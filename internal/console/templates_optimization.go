@@ -9,6 +9,45 @@ const optimizationTemplates = `
 trading toggle, 편입 목록은 변경하지 않는다.</p>
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
 {{if .LoadErr}}<p class="danger">설정을 읽을 수 없다: <code>{{.LoadErr}}</code></p>{{end}}
+
+<section id="candidate-filters" aria-labelledby="candidate-filters-title">
+  <h2 id="candidate-filters-title">후보 필터</h2>
+  <p class="notice"><strong>미승인 · passed 구조적 0 · verdict 비활성</strong></p>
+  <p class="muted">수치 threshold의 evidence activation record가 아직 없다. 숫자 0을 기본값으로
+  대신하지 않으며 모든 행은 읽기 전용이다. 승인 가능한 registry option이 생기기 전에는 preview와
+  apply를 만들지 않는다. 향후 activation도 후보 판정만 바꾸며 <strong>주문·RiskIntent·LIVE 상태는 변경하지 않는다</strong>.</p>
+  <nav class="filter-bar" aria-label="후보 필터 시장 전환">
+    <a href="#candidate-filters-KR">KR regular</a>
+    <a href="#candidate-filters-US">US regular</a>
+  </nav>
+  {{range .CandidateFilterMarkets}}
+  <article id="candidate-filters-{{.Market}}" aria-label="{{.Market}} {{.Session}} 후보 필터">
+    <h3>{{.Market}} · {{.Session}}</h3>
+    {{range .Filters}}
+    <div class="detail-grid" aria-readonly="true">
+      <div>
+        <strong><code>{{.Key}}</code> · {{.Label}}</strong>
+        <p class="muted">{{.Help}}</p>
+      </div>
+      <dl>
+        <dt>default state</dt><dd>미승인 (<code>{{.DefaultState}}</code>)</dd>
+        <dt>desired</dt><dd>미승인 — 숫자 값 없음</dd>
+        <dt>effective</dt><dd>미승인 — verdict 비활성</dd>
+        <dt>단위 / 유효 범위</dt><dd>{{.Unit}} / {{.ValidRange}}</dd>
+        <dt>판정 방향</dt><dd>{{.Direction}}</dd>
+        <dt>표본 / evidence</dt><dd><code>{{.SampleState}}</code> / <code>{{.EvidenceState}}</code></dd>
+        <dt>적용 시점</dt><dd>{{.ApplyTiming}}</dd>
+        <dt>누락</dt><dd>{{range .MissingEvidence}}<code>{{.}}</code> {{end}}</dd>
+        <dt>preview / CAS</dt><dd>{{.PreviewContract}} — CAS 필수</dd>
+        {{if .LegacyValue}}<dt>legacy provenance</dt><dd><code>{{.LegacyValue}}</code> ·
+          <code>{{.Provenance}}</code> — desired/effective로 승격하지 않음</dd>{{end}}
+      </dl>
+    </div>
+    {{end}}
+  </article>
+  {{end}}
+</section>
+
 {{if .Current.Rejected}}<p class="danger">현재 설정은 엔진이 거부한다: {{.Current.Rejected}}</p>{{end}}
 {{if eq .Current.CommonPolicy ""}}
 <p class="notice"><strong>아직 공통 정책을 승인하지 않았다.</strong> 기존 RATCHET 동작이 유지된다.</p>
