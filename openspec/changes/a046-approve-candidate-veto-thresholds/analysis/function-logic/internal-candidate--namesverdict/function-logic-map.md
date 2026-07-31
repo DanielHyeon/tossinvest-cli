@@ -28,15 +28,15 @@
 |---|---|---|---|
 | `ast.Inspect` | walk every selector in one parsed file | pure in-memory traversal; no timeout/retry/I/O | CodeGraph + AST |
 | `candidateImportName` (caller-side) | bind aliases before this function runs | dot/blank imports are not treated as usable candidate identifiers | current source + alias positive control |
-| approved-candidate package-boundary guard | close `.Valid()` and other accessor laundering across files and dependent packages, and reject forbidden order dependency closure | separate new leaf helpers; cannot prove arbitrary cross-package primitive/boolean dataflow | security re-review High finding |
+| approved-candidate package-boundary guard | reverse-taint every dependent package independent of accessor/return type, then reject the full canonical authority dependency closure | separate pure-boundary and Guardian/decision-bridge permissions | security re-review High findings H1/H2 |
 
 ## State mutations and fallbacks
 
 - Only the local `found` flag changes; no repository or runtime state is mutated.
 - The detector does not compile or type-check fixtures. Its positive controls must therefore exercise exact parsed selector shapes.
 - Direct `AssessApprovedCandidate` is detected through `verdictSymbols`; it cannot be inferred from the result or `err == nil` alone.
-- Same-package `.Valid()` laundering is covered once any file in that package names the approved type/constructor. Cross-package accessor laundering is covered when the accessor package has an import path to that approved-candidate reader.
-- Conversion to an unrelated primitive/boolean that erases the approved-candidate accessor lineage is outside this AST guard’s evidence. The explicit pure boundary plus transitive no-order dependency rule is the handoff point for a047.
+- Same-package `.Valid()` laundering is covered once any file in that package names the approved type/constructor. Every cross-package importer that reaches such a reader is tainted from the import graph even if the reader returns only bool/error, so primitive conversion cannot erase package-level provenance.
+- A pure boundary permission never authorizes order/risk/ledger/engine reach. Any tainted package reaching the canonical `isolation_test.go` authority roots requires a separate, non-empty Guardian/decision bridge approval.
 
 ## Safety conclusion
 
