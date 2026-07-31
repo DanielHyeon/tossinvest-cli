@@ -1,0 +1,86 @@
+{
+  "file": "internal/console/remote.go",
+  "source_sha256": "3055e79b245a1ee37f67cd0fa0f8b65f58ab6125f75257e50560ed14a6ead52a",
+  "package": "console",
+  "function": "sameOriginForMutation",
+  "receiver": "remoteRuntime",
+  "signature": "remoteRuntime.sameOriginForMutation(params=1, results=1)",
+  "start": {
+    "line": 267,
+    "column": 1
+  },
+  "end": {
+    "line": 274,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 271,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 273,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 31
+      },
+      "text": "http.CanonicalHeaderKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 32
+      },
+      "text": "http.CanonicalHeaderKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 10
+      },
+      "text": "rr.sameOrigin"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

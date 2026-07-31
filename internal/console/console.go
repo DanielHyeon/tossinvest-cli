@@ -801,7 +801,7 @@ func (c *Console) mutating(next http.HandlerFunc) http.HandlerFunc {
 				"승인 경로는 폼 제출로만 도달한다. 아무것도 전송되지 않았다.")
 			return
 		}
-		if c.remote != nil && !c.remote.sameOrigin(r) {
+		if c.remote != nil && !c.remote.sameOriginForMutation(r) {
 			c.refuse(w, http.StatusForbidden, "요청 출처가 일치하지 않는다",
 				"원격 쓰기 요청은 설정된 HTTPS 주소에서 시작되어야 한다. 아무것도 전송되지 않았다.")
 			return

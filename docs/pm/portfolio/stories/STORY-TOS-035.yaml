@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-035",
+  "title": "Accept same-host console writes when privacy headers omit request origin",
+  "feature": "FEAT-TOS-007",
+  "intent": "active",
+  "openspec": {
+    "change_id": "fix-console-origin-fallback",
+    "path": "openspec/changes/fix-console-origin-fallback"
+  },
+  "acceptance": [
+    "A valid-CSRF POST received over TLS at the configured HTTPS host and port succeeds when both Origin and Referer are omitted",
+    "An explicit Origin or Referer that differs in scheme, host, or port remains rejected",
+    "URL paths are never part of the same-origin comparison",
+    "No test starts the engine, flips an operating toggle, or sends a LIVE order"
+  ]
+}

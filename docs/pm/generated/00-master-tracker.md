@@ -10,6 +10,7 @@
     - STORY-TOS-031 — Enable trusted-network VPN console access [implemented] → `enable-vpn-console-access`
     - STORY-TOS-032 — Update TossOS from the console [implemented] → `console-system-update`
     - STORY-TOS-033 — Require signed release system updates [implemented] → `signed-release-system-update`
+    - STORY-TOS-035 — Accept same-host console writes when privacy headers omit request origin [implemented] → `fix-console-origin-fallback`
   - FEAT-TOS-008 — SDD graph service reliability [active]
     - STORY-TOS-034 — Serialize project GBrain service ownership [implemented] → `serialize-project-gbrain-serve`
 ## INIT-TOS-002 — TossOS automated trading product [active]

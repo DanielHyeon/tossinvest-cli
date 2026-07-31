@@ -240,16 +240,37 @@ func (rr *remoteRuntime) peerAllowed(peer netip.Addr) bool {
 }
 
 func (rr *remoteRuntime) sameOrigin(r *http.Request) bool {
-	got := strings.TrimSpace(r.Header.Get("Origin"))
-	if got == "" {
-		referer := strings.TrimSpace(r.Header.Get("Referer"))
-		u, err := url.Parse(referer)
-		if err != nil || u.Scheme == "" || u.Host == "" {
+	originValues, originPresent := r.Header[http.CanonicalHeaderKey("Origin")]
+	if originPresent {
+		if len(originValues) != 1 {
 			return false
 		}
-		got = u.Scheme + "://" + u.Host
+		origin := strings.TrimSpace(originValues[0])
+		return origin != "" && origin == rr.origin
 	}
-	return got == rr.origin
+
+	refererValues, refererPresent := r.Header[http.CanonicalHeaderKey("Referer")]
+	if !refererPresent || len(refererValues) != 1 {
+		return false
+	}
+	referer := strings.TrimSpace(refererValues[0])
+	if referer == "" {
+		return false
+	}
+	u, err := url.Parse(referer)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return false
+	}
+	return u.Scheme+"://"+u.Host == rr.origin
+}
+
+func (rr *remoteRuntime) sameOriginForMutation(r *http.Request) bool {
+	_, originPresent := r.Header[http.CanonicalHeaderKey("Origin")]
+	_, refererPresent := r.Header[http.CanonicalHeaderKey("Referer")]
+	if originPresent || refererPresent {
+		return rr.sameOrigin(r)
+	}
+	return r.TLS != nil && "https://"+r.Host == rr.origin
 }
 
 func (rr *remoteRuntime) security(next http.Handler) http.Handler {
