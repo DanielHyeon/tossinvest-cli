@@ -62,3 +62,34 @@ Function Logic Map: not-applicable — only new Go functions were added. Detaile
 신뢰 signer/signature/trust-root가 명세되지 않았으므로 같은 UID가 작성한 digest-consistent 파일도
 authentic attestation으로 간주할 수 없다. 이 follow-up은 dormant parser/domain hardening일 뿐이며
 `WIRED`, real gateway, LIVE mutation, engine/UI activation 승인을 추가하지 않는다.
+
+## Independent security re-review · 2026-08-01
+
+- Review scope: `9c42285..46712f4`
+- Verdict: **CLEAN FOR DORMANT INTEGRATION**
+
+### Finding closure
+
+- H1: parse/verify 분리, 외부 evidence bytes SHA-256 재검산, canonical matrix digest binding을 확인해 closed.
+- H2: account/profile/market/symbol scope 강제와 mixed scope·duplicate broker ID fail-closed를 확인해 closed.
+- H3: state-specific saga invariant, transition output 검증, repository identity/state/revision guard를 확인해 closed.
+- H4: flatten의 start→cancel→sellable→deadline 순서, 최대 2초, exact scope·broker identity 검증을 확인해 closed.
+- H5: sell claim 계산이 subtraction 기반이며 `int64` overflow 경계를 fail-closed함을 확인해 closed.
+- M1: exact basename, direct-parent와 file의 symlink/owner/permission, hard-link count, post-read restat 검증을 확인해 closed.
+- M2: protection 전용 strict account grammar/canonicalization이 legacy arbitrary removal과 분리됐음을 확인해 closed.
+
+### Dormant boundary and remaining blocker
+
+`execgw.ProfileProtection`은 계속 `UNWIRED`이고 production `cmd/`·`internal/app/` import가 없으며,
+real official/trading gateway 또는 broker mutation 구현도 없다. 따라서 이 verdict는 dormant integration
+범위에만 유효하고 LIVE 주문, activation 또는 `ProtectionReady=WIRED` 승인이 아니다.
+
+신뢰 signer, signature format, trust-root 배포·회전·폐기 정책은 여전히 미명세다. 이 authenticity
+경계가 명세·구현·독립 검증되기 전까지 attestation 결과는 `WIRED` 전환 근거가 될 수 없다.
+
+### Verification
+
+- Focused protection/attestation tests: pass.
+- Focused race tests: pass.
+- `go vet ./...`: pass.
+- OpenSpec strict validation: pass (57/57).
