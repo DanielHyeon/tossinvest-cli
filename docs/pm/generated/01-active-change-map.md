@@ -38,4 +38,4 @@
 | `serialize-project-gbrain-serve` | STORY-TOS-034 | implemented |
 | `fix-console-origin-fallback` | STORY-TOS-035 | archived |
 | `fix-console-referrer-origin` | STORY-TOS-036 | archived |
-| `automate-soak-openapi-onboarding` | STORY-TOS-037 | in_progress |
+| `automate-soak-openapi-onboarding` | STORY-TOS-037 | archived |

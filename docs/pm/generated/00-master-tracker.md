@@ -12,7 +12,7 @@
     - STORY-TOS-033 — Require signed release system updates [implemented] → `signed-release-system-update`
     - STORY-TOS-035 — Accept same-host console writes when privacy headers omit request origin [archived] → `fix-console-origin-fallback`
     - STORY-TOS-036 — Preserve canonical origin on console form submissions [archived] → `fix-console-referrer-origin`
-    - STORY-TOS-037 — Automate Open API onboarding for soak restart [in_progress] → `automate-soak-openapi-onboarding`
+    - STORY-TOS-037 — Automate Open API onboarding for soak restart [archived] → `automate-soak-openapi-onboarding`
   - FEAT-TOS-008 — SDD graph service reliability [active]
     - STORY-TOS-034 — Serialize project GBrain service ownership [implemented] → `serialize-project-gbrain-serve`
 ## INIT-TOS-002 — TossOS automated trading product [active]

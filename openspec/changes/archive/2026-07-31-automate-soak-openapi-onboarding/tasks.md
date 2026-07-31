@@ -17,6 +17,6 @@
 
 ## 4. Verification and delivery
 
-- [ ] 4.1 Run focused tests, console race tests, full tests, vet, validate, secret scans, direct-TLS plus token-session and trusted-network peer/Host/origin/CSRF browser-contract QA, deployed missing-credential fail-closed QA, persistent marker path/mode/recovery tests, and rollback-procedure review without starting a real soak, engine, toggle, or LIVE order.
-- [ ] 4.2 Complete proposal-freeze and implementation security/QA reviews, refresh SDD indexes, and pass `make sdd-check` plus `make gate CHANGE=automate-soak-openapi-onboarding`.
-- [ ] 4.3 Commit and push the feature branch, build/recreate the Docker service, and verify the deployed one-click browser flow with an isolated empty config or otherwise blocked side effects.
+- [x] 4.1 Run focused tests, console race tests, full tests, vet, validate, secret scans, direct-TLS plus token-session and trusted-network peer/Host/origin/CSRF browser-contract QA, deployed missing-credential fail-closed QA, persistent marker path/mode/recovery tests, and rollback-procedure review without starting a real soak, engine, toggle, or LIVE order.
+- [x] 4.2 Complete proposal-freeze and implementation security/QA reviews, refresh SDD indexes, and pass `make sdd-check` plus `make gate CHANGE=automate-soak-openapi-onboarding`.
+- [x] 4.3 Commit and push the feature branch, build/recreate the Docker service, and verify the deployed one-click browser flow with an isolated empty config or otherwise blocked side effects.

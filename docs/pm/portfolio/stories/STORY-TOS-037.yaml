@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "automate-soak-openapi-onboarding",
-    "path": "openspec/changes/automate-soak-openapi-onboarding"
+    "path": "openspec/changes/archive/2026-07-31-automate-soak-openapi-onboarding"
   },
   "acceptance": [
     "One soak restart click reuses saved Open API credentials and starts or restarts the soak without another operator action",
