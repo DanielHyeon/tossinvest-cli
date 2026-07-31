@@ -23,7 +23,8 @@
 | B3 | candidate symbol is empty/non-canonical or `FirstSeenAt` is zero | none | zero value + typed `invalid_candidate_life` | incomplete candidate-life test |
 | B4 | `AssessChase` raises one or more vetoes | local value construction only | zero value + typed `veto_raised`, ordered veto codes | dangerous measurement test |
 | B5 | no veto is raised but one or more are unmeasured | local value construction only | zero value + typed `veto_unmeasured`, ordered veto codes | unmeasured measurement test |
-| B6 | all three vetoes are measured and clear | local value construction only | valid immutable `ApprovedCandidate` carrying candidate-life and threshold approval provenance | pass/provenance/deterministic-identity test |
+| B6 | defensive invariant: no raised/unmeasured code exists but `Passed()` is still false | local value construction only | zero value + typed `veto_unmeasured`; never mint on an inconsistent Chase | defensive branch is structurally unreachable under current `Chase`; map and source audit pin it |
+| Success | all three vetoes are measured and clear | local value construction only | valid immutable `ApprovedCandidate` carrying candidate-life and threshold approval provenance | pass/provenance/deterministic-identity test |
 
 ## Calls and live bindings
 

@@ -55,7 +55,8 @@ import (
 // the same thing by a different route.
 var verdictSymbols = map[string]bool{
 	"Chase": true, "Verdict": true, "ApprovedCandidate": true, "VetoTally": true,
-	"AssessChase": true, "TallyVetoes": true, "TallyVerdicts": true,
+	"AssessChase": true, "AssessApprovedCandidate": true,
+	"TallyVetoes": true, "TallyVerdicts": true,
 }
 
 // verdictReaders is every file outside this package that may name one of them.
