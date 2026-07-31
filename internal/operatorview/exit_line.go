@@ -205,16 +205,38 @@ func reasonText(reason string) string {
 		return "평가 시각을 확인할 수 없다"
 	case "not_evaluated_yet":
 		return "아직 exit 평가가 기록되지 않았다"
+	case "no_saved_evaluation":
+		return "저장된 exit 평가를 찾을 수 없다"
 	case "legacy_snapshot_absent", "legacy_event":
 		return "이전 원장에는 exit snapshot 근거가 없다"
+	case "invalid_stored_snapshot", "invalid_effective_snapshot":
+		return "저장된 exit snapshot의 무결성을 확인할 수 없다"
+	case "legacy_policy_identity_unknown", "legacy_adoption_context_required":
+		return "이전 원장의 exit 정책 정보를 확인할 수 없다"
+	case "partial_snapshot_tuple", "partial_evaluated_tuple", "partial_seed_tuple", "partial_tuple":
+		return "exit snapshot 정보가 일부만 기록되어 표시하지 않는다"
+	case "partial_policy_tuple", "invalid_policy_identity":
+		return "exit 정책 정보가 불완전하여 표시하지 않는다"
+	case "flattened_snapshot_mismatch":
+		return "exit snapshot 요약과 원본이 일치하지 않는다"
 	case "ambiguous_exit_evidence":
 		return "하나의 주문에 서로 다른 exit 판단 근거가 연결되어 표시하지 않는다"
+	case "exit_evidence_unlinked":
+		return "주문과 exit 판단 근거의 연결을 확인할 수 없다"
+	case "lineage_cycle":
+		return "주문 변경 계보가 순환하여 근거를 표시하지 않는다"
+	case "lineage_ambiguous":
+		return "주문 변경 계보가 여러 갈래여서 근거를 표시하지 않는다"
+	case "lineage_depth_exceeded":
+		return "주문 변경 계보가 표시 한도를 넘어 근거를 표시하지 않는다"
+	case "lineage_scope_mismatch":
+		return "주문 변경 계보의 계좌 또는 거래일이 일치하지 않아 표시하지 않는다"
 	case "invalid_event_evidence":
 		return "exit 판단 근거의 무결성을 확인할 수 없다"
 	case "":
 		return "exit snapshot 근거를 확인할 수 없다"
 	default:
-		return strings.TrimSpace(reason)
+		return "exit snapshot 근거를 안전하게 표시할 수 없다"
 	}
 }
 

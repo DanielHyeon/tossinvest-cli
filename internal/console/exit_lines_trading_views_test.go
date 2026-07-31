@@ -201,7 +201,7 @@ func TestOrdersJoinExitEvidenceOnlyByAttemptIntentLineage(t *testing.T) {
 	linked.OrderedAt = "2026-07-27T00:59:41Z"
 	unlinked := livePlainOrder("same-symbol-unlinked", "005930")
 	unlinked.OrderedAt = linked.OrderedAt
-	reader := &countingOrders{lists: OrdersReading{Open: []OrderRecord{linked, unlinked}}}
+	reader := &countingOrders{lists: OrdersReading{AccountRef: "123-45-678901", Open: []OrderRecord{linked, unlinked}}}
 	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
 	h.authenticate(t)
 	page := body(t, h.get(t, "/orders"))

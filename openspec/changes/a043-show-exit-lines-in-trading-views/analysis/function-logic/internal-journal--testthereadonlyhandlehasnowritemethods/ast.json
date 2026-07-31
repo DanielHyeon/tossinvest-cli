@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/readonly_test.go",
-  "source_sha256": "c4472ad5761b53c427b4bce86334f41c6125f5849106b96fda20efbce1d39ef9",
+  "source_sha256": "2b1a8300428ea8dba0e469354319f8dcb2d693b3e02e4a680101448b556efda9",
   "package": "journal",
   "function": "TestTheReadOnlyHandleHasNoWriteMethods",
   "signature": "TestTheReadOnlyHandleHasNoWriteMethods(params=1, results=0)",

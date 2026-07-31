@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| function inputs and deterministic fixture/read state | values accepted by the typed function signature | current source plus OpenSpec a043 | tests fail explicitly; production reads degrade to typed unknown/unlinked evidence |
+| visible scopes | exact composite tuples, possibly empty | broker reading | empty skips evidence SQL; failure marks journal unreadable |
 
 ## Branches and early returns
 
@@ -24,11 +24,11 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| typed callees listed in `ast.json` | Read origin IDs and exact broker-order/attempt-intent/exit-event lineage from one read-only journal handle; any read error fails the whole evidence view closed. | no retry is introduced; read errors and assertions preserve their existing fail-closed behavior | current AST and focused tests |
+| `BrokerOrderExitLinks` | get origin and exact lineage only for visible scopes | no retry; any error fails all evidence closed | current AST and focused tests |
 
 ## State mutations and fallbacks
 
-- Read origin IDs and exact broker-order/attempt-intent/exit-event lineage from one read-only journal handle; any read error fails the whole evidence view closed.
+- No unbounded `BrokerOrderIDs` query remains; empty pages do not issue evidence SQL.
 - No live order call, operating-toggle write, or policy recomputation is introduced by this function change.
 
 ## Safety conclusion

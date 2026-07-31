@@ -1,13 +1,7 @@
-# Risk Pattern Report: `Console.orders`
+# Risk Pattern Report: `internal/console/orders.go`
 
-Run:
+| Rule | Location | Message |
+|---|---|---|
+| — | — | No configured risk pattern matched |
 
-```bash
-ast-grep scan -c tools/logic-map/sgconfig.yml internal/console/orders.go
-```
-
-## Findings
-
-| Rule | Location | Classification | Function Logic Map link |
-|---|---|---|---|
-| none | `Console.orders` | reviewed-safe | target contains only bounded in-memory loops and read seams; no panic/go/defer/live mutation finding |
+> Findings are review candidates, not automatic defect verdicts.

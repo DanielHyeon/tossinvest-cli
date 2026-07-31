@@ -500,6 +500,7 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_attempts_state",
 		"idx_attempts_intent",
 		"idx_attempts_broker_order",
+		"idx_exit_events_proposed_intent",
 		"idx_transitions_attempt",
 		"idx_lineage_child",
 		"idx_lineage_parent",

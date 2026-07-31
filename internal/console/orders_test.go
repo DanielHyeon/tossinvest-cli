@@ -103,6 +103,9 @@ type ordersHarness struct {
 
 func newOrdersHarness(t *testing.T, reader *countingOrders, tweak ...func(*Options)) *ordersHarness {
 	t.Helper()
+	if reader.lists.AccountRef == "" {
+		reader.lists.AccountRef = "123-45-678901"
+	}
 	clk := newFakeClock()
 	oh := &ordersHarness{reader: reader, clock: clk}
 	oh.harness = newHarness(t, func(o *Options) {

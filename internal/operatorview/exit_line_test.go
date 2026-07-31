@@ -1,6 +1,7 @@
 package operatorview
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
@@ -15,6 +16,30 @@ func completeLine() exitpolicy.ExitLineSnapshot {
 		ActiveRung: 1, NextTarget: "12000", NextProtection: "10800",
 		Action: exitpolicy.ActionLadderPartial, Ratio: "0.25", ProjectedQuantity: "2",
 		Orderable: true,
+	}
+}
+
+func TestReasonTextMapsKnownCorruptionAndNeverLeaksRawCodes(t *testing.T) {
+	reasons := []string{
+		"observation_older_than_limit", "observation_in_future", "invalid_observed_at",
+		"no_saved_evaluation", "legacy_event", "invalid_stored_snapshot", "legacy_snapshot_absent",
+		"legacy_policy_identity_unknown", "legacy_adoption_context_required", "partial_snapshot_tuple",
+		"partial_policy_tuple", "invalid_policy_identity", "partial_seed_tuple", "not_evaluated_yet",
+		"partial_evaluated_tuple", "invalid_effective_snapshot", "flattened_snapshot_mismatch",
+		"invalid_event_evidence", "ambiguous_exit_evidence", "exit_evidence_unlinked",
+		"lineage_cycle", "lineage_ambiguous", "lineage_depth_exceeded", "lineage_scope_mismatch",
+	}
+	for _, reason := range reasons {
+		t.Run(reason, func(t *testing.T) {
+			got := reasonText(reason)
+			if got == "" || got == reason || strings.Contains(got, "_") {
+				t.Fatalf("reasonText(%q)=%q, want concise user-facing Korean", reason, got)
+			}
+		})
+	}
+	future := "future_unknown_snapshot_code"
+	if got := reasonText(future); strings.Contains(got, future) || strings.Contains(got, "_") {
+		t.Fatalf("future code leaked into UI: %q", got)
 	}
 }
 

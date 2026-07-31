@@ -1,13 +1,7 @@
-# Risk Pattern Report: `Console.ledgerOrderEvidence`
+# Risk Pattern Report: `internal/console/orders.go`
 
-Run:
+| Rule | Location | Message |
+|---|---|---|
+| — | — | No configured risk pattern matched |
 
-```bash
-python3 tools/logic-map/risk_pattern_report.py internal/console/orders.go
-```
-
-## Findings
-
-| Rule | Location | Classification | Function Logic Map link |
-|---|---|---|---|
-| none | `Console.ledgerOrderEvidence` | reviewed-safe | no configured panic/go/defer/mutation risk pattern matched; see safety conclusion |
+> Findings are review candidates, not automatic defect verdicts.

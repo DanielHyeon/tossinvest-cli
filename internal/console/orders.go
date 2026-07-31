@@ -54,6 +54,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate"
+	marketclock "github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
 )
@@ -100,6 +101,9 @@ type OrdersReader interface {
 // conditional list while the plain ones answered is the case the whole screen is
 // built around, and it cannot be expressed by returning an error for the set.
 type OrdersReading struct {
+	// AccountRef is the exact account resolved for all three broker reads. It is
+	// required to scope journal evidence; an empty value makes origin unknown.
+	AccountRef string
 	// Open is the broker's OPEN group of /api/v1/orders: every pending order,
 	// whole. This is the list a leftover cannot hide from.
 	Open []OrderRecord
@@ -626,8 +630,59 @@ func sideLabel(side string) string {
 // journal handle. A partial journal answer is not treated as trustworthy: both
 // the origin and the evidence labels fall back to unknown when either read
 // fails.
-func (c *Console) ledgerOrderEvidence(ctx context.Context) (map[string]bool,
-	map[string]journal.BrokerOrderExitLink, journalView,
+type orderEvidenceKey struct {
+	ID, AccountRef, TradingDay string
+}
+
+func evidenceKey(id, accountRef, market, rawAt string) (orderEvidenceKey, bool) {
+	id, accountRef = strings.TrimSpace(id), strings.TrimSpace(accountRef)
+	if id == "" || accountRef == "" {
+		return orderEvidenceKey{}, false
+	}
+	at, err := time.Parse(time.RFC3339, strings.TrimSpace(rawAt))
+	if err != nil {
+		return orderEvidenceKey{}, false
+	}
+	m, err := marketclock.ParseMarket(market)
+	if err != nil {
+		return orderEvidenceKey{}, false
+	}
+	day, err := m.TradingDay(at)
+	if err != nil {
+		return orderEvidenceKey{}, false
+	}
+	return orderEvidenceKey{ID: id, AccountRef: accountRef, TradingDay: day}, true
+}
+
+func visibleOrderEvidenceScopes(lists OrdersReading) []journal.BrokerOrderScope {
+	seen := map[orderEvidenceKey]bool{}
+	var scopes []journal.BrokerOrderScope
+	add := func(key orderEvidenceKey, ok bool) {
+		if !ok || seen[key] {
+			return
+		}
+		seen[key] = true
+		scopes = append(scopes, journal.BrokerOrderScope{BrokerOrderID: key.ID,
+			AccountRef: key.AccountRef, TradingDay: key.TradingDay})
+	}
+	for _, rec := range lists.Open {
+		add(evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt))
+	}
+	for _, rec := range lists.Closed {
+		add(evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt))
+	}
+	for _, rec := range lists.Conditional {
+		// A triggered order has its own creation instant. The conditional's
+		// CreatedAt must never be guessed as the child's trading day.
+		add(evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.CreatedAt))
+	}
+	return scopes
+}
+
+func (c *Console) ledgerOrderEvidence(ctx context.Context,
+	scopes []journal.BrokerOrderScope,
+) (map[orderEvidenceKey]bool,
+	map[orderEvidenceKey]journal.BrokerOrderExitLink, journalView,
 ) {
 	ro, jv := c.openJournal(ctx)
 	if ro == nil {
@@ -635,23 +690,22 @@ func (c *Console) ledgerOrderEvidence(ctx context.Context) (map[string]bool,
 	}
 	defer ro.Close()
 
-	ids, err := ro.BrokerOrderIDs(ctx)
+	if len(scopes) == 0 {
+		return map[orderEvidenceKey]bool{}, map[orderEvidenceKey]journal.BrokerOrderExitLink{}, jv
+	}
+	links, err := ro.BrokerOrderExitLinks(ctx, scopes)
 	if err != nil {
 		jv.State, jv.Detail = journalFailed, err.Error()
 		return nil, nil, jv
 	}
-	links, err := ro.BrokerOrderExitLinks(ctx)
-	if err != nil {
-		jv.State, jv.Detail = journalFailed, err.Error()
-		return nil, nil, jv
-	}
-	engineIDs := make(map[string]bool, len(ids))
-	for _, id := range ids {
-		engineIDs[id] = true
-	}
-	byOrder := make(map[string]journal.BrokerOrderExitLink, len(links))
+	engineIDs := make(map[orderEvidenceKey]bool, len(links))
+	byOrder := make(map[orderEvidenceKey]journal.BrokerOrderExitLink, len(links))
 	for _, link := range links {
-		byOrder[link.BrokerOrderID] = link
+		key := orderEvidenceKey{ID: link.BrokerOrderID, AccountRef: link.AccountRef, TradingDay: link.TradingDay}
+		engineIDs[key] = link.Engine
+		if link.Event.ID != 0 || link.Ambiguous {
+			byOrder[key] = link
+		}
 	}
 	return engineIDs, byOrder, jv
 }
@@ -668,7 +722,7 @@ func attachOrderExitEvidence(row *orderRow, link journal.BrokerOrderExitLink, li
 	row.ExitIntentID = link.IntentID
 	if link.Ambiguous {
 		row.ExitLine = operatorview.BuildExitLine(operatorview.Source{
-			UnknownReason: "ambiguous_exit_evidence",
+			UnknownReason: link.UnknownReason,
 		})
 		return
 	}
@@ -686,11 +740,11 @@ func attachOrderExitEvidence(row *orderRow, link journal.BrokerOrderExitLink, li
 }
 
 // originOf decides one plain order's origin from the ledger's answer.
-func originOf(id string, engineIDs map[string]bool, jv journalView) orderOrigin {
+func originOf(key orderEvidenceKey, valid bool, engineIDs map[orderEvidenceKey]bool, jv journalView) orderOrigin {
 	if !jv.Readable() {
 		return originUnknown
 	}
-	if engineIDs[strings.TrimSpace(id)] {
+	if valid && engineIDs[key] {
 		return originEngine
 	}
 	return originOther
@@ -720,17 +774,19 @@ func originOf(id string, engineIDs map[string]bool, jv journalView) orderOrigin 
 // and the constant was the wrong one: an invented "manual" label on an engine
 // order is an operator concluding the engine is idle while it is trading.
 //
-// A positive hit is still honoured — on the triggered order's id first and the
-// conditional's own id second — because if either ever does reach the ledger, that
-// IS evidence and the screen should say so the day it appears. A miss is 불명.
-func conditionalOriginOf(rec ConditionalRecord, engineIDs map[string]bool, jv journalView) orderOrigin {
+// A positive hit on the conditional's own composite identity is still honoured.
+// The triggered plain id is deliberately not tried here: its actual submission
+// instant is not in this payload, and borrowing CreatedAt would guess a trading
+// day. If it is visible as a plain row, that row is scoped from its own timestamp.
+// A miss is 불명.
+func conditionalOriginOf(key orderEvidenceKey, valid bool,
+	engineIDs map[orderEvidenceKey]bool, jv journalView,
+) orderOrigin {
 	if !jv.Readable() {
 		return originUnknown
 	}
-	for _, id := range []string{rec.Triggered, rec.ID} {
-		if trimmed := strings.TrimSpace(id); trimmed != "" && engineIDs[trimmed] {
-			return originEngine
-		}
+	if valid && engineIDs[key] {
+		return originEngine
 	}
 	return originUnknown
 }
@@ -875,10 +931,10 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	v := ordersView{Now: now, Selected: choice}
 	v.Broker = c.ordersCache.get(ctx, now, hold, holdReason)
 
-	engineIDs, exitLinks, jv := c.ledgerOrderEvidence(ctx)
-	v.Journal = jv
-
 	lists := v.Broker.Lists
+	scopes := visibleOrderEvidenceScopes(lists)
+	engineIDs, exitLinks, jv := c.ledgerOrderEvidence(ctx, scopes)
+	v.Journal = jv
 	v.Open = listUnmeasured(v.Broker, lists.OpenError)
 	v.Closed = listUnmeasured(v.Broker, lists.ClosedError)
 	v.Conditional = listUnmeasured(v.Broker, lists.ConditionalError)
@@ -893,8 +949,9 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	pending := make(map[string]bool)
 	if v.Open.Known() {
 		for _, rec := range lists.Open {
-			row := rowFromOrder(rec, originOf(rec.ID, engineIDs, jv), true)
-			link, linked := exitLinks[strings.TrimSpace(rec.ID)]
+			key, valid := evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt)
+			row := rowFromOrder(rec, originOf(key, valid, engineIDs, jv), true)
+			link, linked := exitLinks[key]
 			attachOrderExitEvidence(&row, link, linked)
 			all = append(all, row)
 			if id := strings.TrimSpace(rec.ID); id != "" {
@@ -909,8 +966,9 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 			if pending[strings.TrimSpace(rec.ID)] {
 				continue
 			}
-			row := rowFromOrder(rec, originOf(rec.ID, engineIDs, jv), false)
-			link, linked := exitLinks[strings.TrimSpace(rec.ID)]
+			key, valid := evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt)
+			row := rowFromOrder(rec, originOf(key, valid, engineIDs, jv), false)
+			link, linked := exitLinks[key]
 			attachOrderExitEvidence(&row, link, linked)
 			all = append(all, row)
 			closedCount++
@@ -919,14 +977,10 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	conditionalLive := 0
 	if v.Conditional.Known() {
 		for _, rec := range lists.Conditional {
-			row := rowFromConditional(rec, conditionalOriginOf(rec, engineIDs, jv))
-			for _, id := range []string{rec.Triggered, rec.ID} {
-				link, linked := exitLinks[strings.TrimSpace(id)]
-				if linked {
-					attachOrderExitEvidence(&row, link, true)
-					break
-				}
-			}
+			key, valid := evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.CreatedAt)
+			row := rowFromConditional(rec, conditionalOriginOf(key, valid, engineIDs, jv))
+			link, linked := exitLinks[key]
+			attachOrderExitEvidence(&row, link, linked)
 			all = append(all, row)
 			conditionalLive++
 		}

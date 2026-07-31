@@ -1,0 +1,155 @@
+{
+  "file": "internal/console/orders.go",
+  "source_sha256": "a7d47301a66728373ff71cb4e3e89fd8facd99d3c4c1e8a4428ac1f992dfe914",
+  "package": "console",
+  "function": "visibleOrderEvidenceScopes",
+  "signature": "visibleOrderEvidenceScopes(params=1, results=1)",
+  "start": {
+    "line": 657,
+    "column": 1
+  },
+  "end": {
+    "line": 680,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 661,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 668,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 671,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 674,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 662,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 679,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 665,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 669,
+        "column": 3
+      },
+      "text": "add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 669,
+        "column": 7
+      },
+      "text": "evidenceKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 672,
+        "column": 3
+      },
+      "text": "add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 672,
+        "column": 7
+      },
+      "text": "evidenceKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 677,
+        "column": 3
+      },
+      "text": "add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 677,
+        "column": 7
+      },
+      "text": "evidenceKey"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 658,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 660,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 664,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 665,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

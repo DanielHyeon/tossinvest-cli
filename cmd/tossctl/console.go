@@ -654,8 +654,9 @@ func (s consoleGateLimits) GateLimits() (console.GateLimits, error) {
 type consoleBroker struct {
 	root *rootOptions
 
-	mu     sync.Mutex
-	client verifylive.Broker
+	mu         sync.Mutex
+	client     verifylive.Broker
+	accountRef string
 }
 
 // newConsoleBroker holds the console's live client, and builds nothing yet.
@@ -679,18 +680,18 @@ func newConsoleBroker(root *rootOptions) *consoleBroker {
 // when the console started may be there after `tossctl openapi login`, and what
 // stops a failing build from being retried on every render is the console's own
 // cache (holdings.go bounds attempts by the TTL, not by successes).
-func (c *consoleBroker) resolve() (verifylive.Broker, error) {
+func (c *consoleBroker) resolve() (verifylive.Broker, string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.client != nil {
-		return c.client, nil
+		return c.client, c.accountRef, nil
 	}
-	broker, _, err := verifyBrokerFactory(c.root)
+	broker, accountRef, err := verifyBrokerFactory(c.root)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	c.client = broker
-	return c.client, nil
+	c.client, c.accountRef = broker, strings.TrimSpace(accountRef)
+	return c.client, c.accountRef, nil
 }
 
 // newConsoleHoldings builds the console's holdings reader.
@@ -716,7 +717,7 @@ type lazyHoldings struct {
 // client's PlaceOrder / CancelOrder / ModifyOrder are not reachable from the value
 // that crosses into internal/console.
 func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Position, error) {
-	broker, err := l.shared.resolve()
+	broker, _, err := l.shared.resolve()
 	if err != nil {
 		return nil, err
 	}
@@ -806,7 +807,7 @@ type lazyOrders struct {
 // An error is returned only when there is no reading at all to describe — no
 // credentials, or a client that does not have these reads.
 func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) {
-	broker, err := l.shared.resolve()
+	broker, accountRef, err := l.shared.resolve()
 	if err != nil {
 		return console.OrdersReading{}, err
 	}
@@ -820,6 +821,7 @@ func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) 
 	plain, conditional := reads.OrdersRaw, reads.ConditionalOrdersRaw
 
 	var out console.OrdersReading
+	out.AccountRef = accountRef
 
 	// The live half. status=OPEN and nothing else: the broker returns every
 	// pending order for it, so this list cannot be short and the count taken from

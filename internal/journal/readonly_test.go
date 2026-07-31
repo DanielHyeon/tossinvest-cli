@@ -268,37 +268,6 @@ func insertAttemptWithBrokerOrder(t *testing.T, j *Journal, attemptID, intentID,
 	}
 }
 
-// TestTheLedgerCanSayWhichBrokerOrdersTheEngineIssued.
-//
-// The orders screen has to distinguish an order the engine placed from one a
-// person placed in the app, and the only record of the first is
-// mutation_attempts.broker_order_id — the id the broker handed back when it
-// acked. Without this read the screen either omits the column or invents it, and
-// an invented "manual" label on an engine order is an operator concluding the
-// engine is idle while it is trading.
-func TestTheLedgerCanSayWhichBrokerOrdersTheEngineIssued(t *testing.T) {
-	path := filepath.Join(t.TempDir(), DBFileName)
-	j := openTestJournalAt(t, path)
-	insertIntent(t, j, "intent-1")
-	insertAttemptWithBrokerOrder(t, j, "a-1", "intent-1", "ord-b")
-	insertAttemptWithBrokerOrder(t, j, "a-2", "intent-1", "ord-a")
-	// A retry of the same order: the id is recorded twice and the screen must
-	// not see it twice.
-	insertAttemptWithBrokerOrder(t, j, "a-3", "intent-1", "ord-a")
-	// An attempt the broker never acked. There is no order to attribute, and an
-	// empty id matching an order with no id would attribute every one of them.
-	insertAttemptWithBrokerOrder(t, j, "a-4", "intent-1", "")
-
-	got, err := openTestReadOnly(t, path).BrokerOrderIDs(context.Background())
-	if err != nil {
-		t.Fatalf("BrokerOrderIDs: %v", err)
-	}
-	want := []string{"ord-a", "ord-b"}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("BrokerOrderIDs = %v, want %v (sorted, de-duplicated, and no empty id)", got, want)
-	}
-}
-
 // TestALedgerWithoutTheAttemptTableIsRefusedAtOpenRatherThanPerQuery.
 //
 // readOnlyTables exists for exactly this. Without the table registered,
