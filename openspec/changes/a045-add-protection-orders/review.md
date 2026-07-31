@@ -22,3 +22,16 @@
 ## Verdict
 
 dormant 범위만 구현할 수 있다. 실제 broker evidence 없이는 이 change의 LIVE capability task와 activation을 완료 처리하지 않는다.
+
+## Dormant implementation record · 2026-07-31
+
+### Pre-Edit Gate
+
+- change/task: `a045-add-protection-orders`, dormant portions only
+- target symbols: new strict protection-matrix parser and new pure protection domain/repository
+- existing behavior evidence: legacy attest tests/callers, `execgw.ProfileProtection`, official conditional client, engine gateway/reservations, reconciliation and flatten were inspected with current HEAD and refreshed CodeGraph
+- upstream inheritance impact: no existing Go function body changed; legacy attestation and UNWIRED entry refusal remain intact
+- failing tests first: yes; both new packages failed to compile before implementation and then passed focused/race verification
+- safety invariant review: pass for dormant scope; real mutation, WIRED, activation, and operational flatten remain blocked
+
+Function Logic Map: not-applicable — only new Go functions were added. Detailed hard-evidence and branch coverage are recorded in `analysis/dormant-impact.md`.
