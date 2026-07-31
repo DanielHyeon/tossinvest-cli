@@ -39,4 +39,4 @@
 | `fix-console-origin-fallback` | STORY-TOS-035 | archived |
 | `fix-console-referrer-origin` | STORY-TOS-036 | archived |
 | `automate-soak-openapi-onboarding` | STORY-TOS-037 | archived |
-| `fix-adoption-console-truth` | STORY-TOS-038 | in_progress |
+| `fix-adoption-console-truth` | STORY-TOS-038 | archived |

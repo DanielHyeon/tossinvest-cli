@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "fix-adoption-console-truth",
-    "path": "openspec/changes/fix-adoption-console-truth"
+    "path": "openspec/changes/archive/2026-07-31-fix-adoption-console-truth"
   },
   "acceptance": [
     "The positions screen reads the same journal file that an engine launched with the active config directory writes",

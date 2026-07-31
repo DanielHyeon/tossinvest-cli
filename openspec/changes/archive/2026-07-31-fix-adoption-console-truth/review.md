@@ -135,3 +135,26 @@
 - Other contracts were accepted: selected-only/no-fallback behavior for normal
   paths, v8 pre-query classification, authenticated remote CSP, real HTTP
   `7.5 → 0.075`, exact off-grid refusal, and lifecycle safety.
+
+## Implementation review round 3 remediation
+
+- Added `Console.openJournal` to the High-risk Function Logic Map boundary.
+- Added a RED integration test that creates the engine journal at the exact
+  whitespace-relative profile path and proves the positions page must render
+  its seeded markers.
+- Removed only the downstream `TrimSpace` normalization. Empty-path handling,
+  typed read-only states, no-fallback behavior, and all lifecycle boundaries
+  remain unchanged.
+
+## Implementation review round 4 — 2026-07-31
+
+- Voice: separate read-only Codex session restricted to the round-3 P1 and its
+  end-to-end path.
+- Verdict: **APPROVE**.
+- Disposition: the exact non-empty profile path now survives resolver,
+  `console.Options`, and `Console.openJournal` unchanged; empty remains unwired;
+  failures remain typed with no fallback; and `OpenReadOnly` retains
+  `mode=ro` plus `query_only`.
+- Regression evidence: `TestPositionsPreservesTheExactSelectedJournalPath`
+  failed before the one-line normalization removal and passed afterward. All
+  earlier blockers are resolved.

@@ -1,6 +1,6 @@
 {
   "file": "internal/console/portfolio.go",
-  "source_sha256": "95f44c384bb04e3fcec82e738adb852199884cdec121e49e2229ac73e6f0ec6e",
+  "source_sha256": "96c7406528507d3216cf2edf32afc99a1404f49fd19f97bdd0d0c9751a3c5566",
   "package": "console",
   "function": "openJournal",
   "receiver": "Console",
@@ -95,14 +95,6 @@
     }
   ],
   "calls": [
-    {
-      "kind": "call",
-      "at": {
-        "line": 135,
-        "column": 25
-      },
-      "text": "strings.TrimSpace"
-    },
     {
       "kind": "call",
       "at": {

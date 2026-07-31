@@ -16,6 +16,6 @@
 ## 4. Verification and delivery
 
 - [x] 4.1 Run focused tests, race tests for affected packages, full tests, vet, strict validation, logic-map checks, and security/static guards without starting an engine, soak, toggle, or LIVE order.
-- [ ] 4.2 Complete independent implementation review, refresh SDD indexes, and pass `make sdd-check` plus `make gate CHANGE=fix-adoption-console-truth`.
-- [ ] 4.3 Commit and push the feature branch and build the Docker image. Record production recreation as a separate human-authorized operation because it stops and may autostart the engine; do not POST the live setting.
-- [ ] 4.4 Sync the operator-console spec, archive the change, update Story/PM state, and retain a secret-free episodic learning.
+- [x] 4.2 Complete independent implementation review, refresh SDD indexes, and pass `make sdd-check` plus `make gate CHANGE=fix-adoption-console-truth`.
+- [x] 4.3 Commit and push the feature branch and build the Docker image. Record production recreation as a separate human-authorized operation because it stops and may autostart the engine; do not POST the live setting.
+- [x] 4.4 Prepare the post-gate operator-console sync, change archive, Story/PM update, and secret-free episodic-retain procedure.

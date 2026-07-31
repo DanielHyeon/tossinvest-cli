@@ -132,7 +132,7 @@ func (v journalView) Readable() bool { return v.State == journalOK }
 // The returned handle is nil whenever the view is not OK, and the caller closes
 // it otherwise.
 func (c *Console) openJournal(ctx context.Context) (*journal.ReadOnly, journalView) {
-	v := journalView{Path: strings.TrimSpace(c.opts.JournalPath), Build: journal.SchemaVersion}
+	v := journalView{Path: c.opts.JournalPath, Build: journal.SchemaVersion}
 	if v.Path == "" {
 		v.State = journalUnwired
 		return nil, v

@@ -46,7 +46,7 @@
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
-    - STORY-TOS-038 — Restore truthful adoption management controls [in_progress] → `fix-adoption-console-truth`
+    - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
     - STORY-TOS-027 — Add candidate discovery [implemented] → `add-candidate-discovery`
