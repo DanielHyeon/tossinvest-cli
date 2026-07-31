@@ -21,3 +21,7 @@
 #### Scenario: 첫 lane 미동결
 - **WHEN** StockOS source policy·시장·상수가 아직 동결되지 않았다
 - **THEN** UI는 숫자 0이나 추정값을 표시하지 않고 미구성 사유와 선행 문서를 안내한다
+
+#### Scenario: a047 dormant 상태 card
+- **WHEN** a045 protection, a046 provenance, a048 scheduler/calendar 또는 source manifest가 미완성이다
+- **THEN** UI는 blocker별 desired/effective를 읽기 전용으로 보여주고 값 입력·일괄 활성화·LIVE action을 제공하지 않는다

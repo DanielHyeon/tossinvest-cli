@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: strategy provenance는 주문까지 끊기지 않는다
-entry decision, RiskIntent, mutation attempt, broker order와 fill은 candidate ID와 lane ID/version을 결정적으로 연결해야 한다 (SHALL).
+entry decision, RiskIntent, mutation attempt, broker order와 fill은 candidate-life ID, threshold set/evidence digest와 lane ID/version을 결정적으로 연결해야 한다 (SHALL). 전략 provenance가 없는 legacy RiskIntent의 canonical bytes는 바뀌어서는 안 된다 (MUST NOT).
 
 #### Scenario: 정상 체결
 - **WHEN** strategy order가 체결된다

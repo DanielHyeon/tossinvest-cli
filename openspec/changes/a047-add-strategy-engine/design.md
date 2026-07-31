@@ -36,6 +36,22 @@ engine runtime에는 entry loop가 없고 Tracer는 production에서 호출되�
 12. source parity는 StockOS golden fixtures를 Go fixture로 번역해 accept/refusal reason, entry, 0.7% stop,
     3R target과 expected RR이 일치하도록 검증한다. source digest나 constants 변경은 새 lane version이며
     기존 manifest를 무효화한다. UI는 이 값을 직접 입력받지 않고 fixed server preset/provenance만 보여준다.
+13. official candle endpoint의 `1m` decimal strings를 exact decimal로 보존한 뒤 KST 정규장 경계에서
+    연속된 다섯 개의 closed minute만 하나의 5m bar로 집계한다. 미완성 bucket, 누락 minute, 장외 minute,
+    timezone-naive timestamp와 호출 시점에 아직 닫히지 않은 bar는 typed refusal이며 float64를 lane 입력
+    정본으로 사용하지 않는다.
+14. HALT/LIMIT/MANAGED와 freshness를 판정하는 authoritative symbol-state source는 별도 typed interface다.
+    quote 존재나 일일 price-limit 값으로 상태를 추측하지 않는다. authority가 없거나 30초보다 stale이면
+    lane은 `not_configured`/effective OFF다.
+15. a045 ProtectionReady가 WIRED가 아니거나 a046 candidate provenance, a048 scheduler/calendar claim,
+    reproducible StockOS source manifest 중 하나라도 없으면 구현은 dormant evaluation/descriptor까지만
+    제공한다. runtime loop, auto-start와 LIVE activation은 생성하지 않으며 exit/reconcile은 계속된다.
+16. a047의 console 표면은 fixed lane·constants·provenance와 각 blocker를 보여주는 read-only 상태 card다.
+    실제 lane/autostart/gate/LIVE 제어는 a050 canonical control plane에서 server preset과 별도 action으로
+    조립한다. text/number/textarea/contenteditable, 임의 symbol/reason, typed confirmation과 `enable all`은 없다.
+17. frozen source set은 sorted relative path, blob SHA-256과 canonical source-set digest를 담은 manifest로
+    재현되어야 한다. 고정된 `09260ac…`를 manifest로 재계산하지 못하면 provenance는 미검증이고 effective
+    state는 OFF이며 새 digest를 조용히 대입하지 않는다.
 
 ## Risks / Trade-offs
 
@@ -47,8 +63,12 @@ engine runtime에는 entry loop가 없고 Tracer는 production에서 호출되�
 
 ## Migration Plan
 
-lane interface와 dormant runtime을 배포하고 전체 gate 후 운영자가 LIVE를 한 번 승인한다. canary는 없다. rollback은 entry desired state OFF 후 exit/reconcile을 계속 실행한다.
+lane interface와 dormant evaluation/runtime seam을 배포한다. a045/a046/a048와 source manifest가 모두
+검증된 별도 activation change 전에는 LIVE manifest를 발급하지 않는다. canary 경로는 없다. rollback은
+entry desired state OFF 후 exit/reconcile을 계속 실행한다.
 
 ## Open Questions
 
-없음. 첫 lane source/market/constants는 위 결정으로 고정됐으며 수익성 승인을 의미하지 않는다.
+고정 source-set digest를 재현하는 sorted file/blob manifest가 구현 gate에서 확정되어야 한다. 재현 실패는
+새 값을 선택하는 근거가 아니라 dormant `not_configured` 상태를 유지하는 근거다. 첫 lane의 수익성 승인을
+의미하지 않는다.

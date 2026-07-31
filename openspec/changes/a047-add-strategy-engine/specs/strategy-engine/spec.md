@@ -26,6 +26,14 @@ strategy lane는 ApprovedCandidate와 versioned market inputs를 받아 EntryDec
 - **WHEN** runtime lane source/constants digest가 manifest의 frozen digest와 다르다
 - **THEN** desired state와 무관하게 effective entry는 OFF이고 새 manifest 승인 없이는 dispatch하지 않는다
 
+#### Scenario: 불완전한 5분봉
+- **WHEN** official 1분봉에 KST 정규장 밖 minute, 중간 누락 또는 아직 닫히지 않은 bucket이 있다
+- **THEN** lane은 해당 5분봉을 만들지 않고 typed bar-integrity refusal과 broker call 0건을 반환한다
+
+#### Scenario: 종목 상태 권위 부재
+- **WHEN** HALT/LIMIT/MANAGED를 판정할 authoritative 상태가 없거나 30초보다 stale이다
+- **THEN** quote나 price limit로 추측하지 않고 effective entry를 OFF로 유지한다
+
 ### Requirement: strategy entry는 공식 LIVE 경로만 사용한다
 승인된 strategy entry는 Guardian, durable journal과 official Open API gateway를 순서대로 통과해야 하며 paper/shadow/canary order path를 가져서는 안 된다 (MUST NOT).
 
