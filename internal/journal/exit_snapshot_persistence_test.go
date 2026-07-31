@@ -12,9 +12,10 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 )
 
-func ratchetSnapshotForState(t *testing.T, state ExitState, observation, price, high, baseline string) exitpolicy.ExitLineSnapshot {
+func ratchetSnapshotForState(t *testing.T, state ExitState, observation, price, high,
+	baseline string) (exitpolicy.ExitLineSnapshot, exitpolicy.RecoveryPolicyDefinition) {
 	t.Helper()
-	snapshot, err := exitpolicy.EvaluateRatchetSnapshot(exitpolicy.RatchetSnapshotInput{
+	evaluation := exitpolicy.RatchetSnapshotInput{
 		Context: exitpolicy.SnapshotContext{
 			PositionID: state.PositionID, PositionGeneration: state.PositionGeneration,
 			ObservationID: observation, RemainingQuantity: "10",
@@ -24,17 +25,21 @@ func ratchetSnapshotForState(t *testing.T, state ExitState, observation, price, 
 			HighWater: high, Baseline: baseline, RealBreakeven: "70010",
 			TakenRatioTotal: state.TakenRatioTotal, Level: exitpolicy.Level(state.RatchetLevel),
 		},
-	})
+	}
+	snapshot, err := exitpolicy.EvaluateRatchetSnapshot(evaluation)
 	if err != nil {
 		t.Fatalf("EvaluateRatchetSnapshot: %v", err)
 	}
-	return snapshot
+	snapshot = snapshot.ChangedFromState(high, baseline, exitpolicy.Level(state.RatchetLevel), exitpolicy.NoRung)
+	return snapshot, exitpolicy.NewRatchetRecoveryPolicy(evaluation, high, baseline,
+		exitpolicy.Level(state.RatchetLevel))
 }
 
-func judgementForSnapshot(snapshot exitpolicy.ExitLineSnapshot) ExitJudgement {
+func judgementForSnapshot(snapshot exitpolicy.ExitLineSnapshot,
+	recovery exitpolicy.RecoveryPolicyDefinition) ExitJudgement {
 	return ExitJudgement{
 		PositionID: snapshot.PositionID, Snapshot: snapshot,
-		RecoveryPolicy:    exitpolicy.NewRatchetRecoveryPolicy(exitpolicy.DefaultRatchetConfig(), "70010", "0", "10"),
+		RecoveryPolicy:    recovery,
 		ObservationSource: "test_quote", ObservedAt: time.Date(2026, 7, 31, 14, 0, 0, 0, time.UTC),
 		Provenance: ExitDecisionProvenance{
 			ObservationID: snapshot.ObservationID, SnapshotID: snapshot.SnapshotID,
@@ -50,8 +55,8 @@ func TestExitSnapshotPersistsWholeRecoveryCandidates(t *testing.T) {
 	j := exitFixture(t)
 	_, seed := openedPosition(t, j, "10")
 
-	first := ratchetSnapshotForState(t, seed, "obs-first", "70500", "70000", "68000")
-	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(first)); err != nil {
+	first, firstRecovery := ratchetSnapshotForState(t, seed, "obs-first", "70500", "70000", "68000")
+	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(first, firstRecovery)); err != nil {
 		t.Fatalf("first judgement: %v", err)
 	}
 	stored := exitStateOf(t, j, seed.PositionID)
@@ -64,8 +69,8 @@ func TestExitSnapshotPersistsWholeRecoveryCandidates(t *testing.T) {
 
 	// This evaluator raced from the seed and is weaker on the watermark axis.
 	// Recovery must keep the complete saved tuple; no scalar may be mixed in.
-	stale := ratchetSnapshotForState(t, seed, "obs-stale", "70200", "70000", "68000")
-	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(stale)); err != nil {
+	stale, staleRecovery := ratchetSnapshotForState(t, seed, "obs-stale", "70200", "70000", "68000")
+	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(stale, staleRecovery)); err != nil {
 		t.Fatalf("stale judgement: %v", err)
 	}
 	after := exitStateOf(t, j, seed.PositionID)
@@ -92,6 +97,49 @@ func TestExitSnapshotPersistsWholeRecoveryCandidates(t *testing.T) {
 	}
 }
 
+func TestSavedMonotoneRecoveryCannotArmRecomputedOrder(t *testing.T) {
+	j := exitFixture(t)
+	_, seed := openedPosition(t, j, "10")
+
+	saved, savedRecovery := ratchetSnapshotForState(t, seed, "obs-saved-safer", "70500", "70000", "68000")
+	if saved.Orderable {
+		t.Fatalf("saved fixture unexpectedly orderable: %+v", saved)
+	}
+	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(saved, savedRecovery)); err != nil {
+		t.Fatal(err)
+	}
+
+	stale, staleRecovery := ratchetSnapshotForState(t, seed, "obs-stale-order", "67900", "70000", "68000")
+	if !stale.Orderable {
+		t.Fatalf("stale fixture must propose an order: %+v", stale)
+	}
+	judgement := judgementForSnapshot(stale, staleRecovery)
+	judgement.Proposal = &ExitProposal{Action: string(stale.Action), Level: stale.Level,
+		IntentID: "exit-stale", Provenance: judgement.Provenance}
+	result, err := j.RecordExitJudgementResult(context.Background(), judgement)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.EffectiveSource != EffectiveSourceSaved ||
+		result.ArmOutcome != ExitArmSuppressedSavedMonotone || result.ArmedProposal != nil {
+		t.Fatalf("durable result = %+v, want saved/no arm", result)
+	}
+	after := exitStateOf(t, j, seed.PositionID)
+	if after.Pending() || after.Snapshot.Snapshot == nil || after.Snapshot.Snapshot.Line != saved {
+		t.Fatalf("saved recovery armed or replaced state: %+v", after)
+	}
+	events, err := j.ExitEvents(context.Background(), seed.PositionID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	last := events[len(events)-1]
+	if last.ProposedIntentID != "" || last.ArmSuppressedReason != "" ||
+		last.Evaluation.EffectiveSource != EffectiveSourceSaved ||
+		last.Evaluation.Recomputed.Snapshot == nil || !last.Evaluation.Recomputed.Snapshot.Line.Orderable {
+		t.Fatalf("saved recovery audit evidence = %+v", last)
+	}
+}
+
 func TestExitSnapshotWriteStagesRollbackAsOneTransaction(t *testing.T) {
 	for _, stage := range []string{"after_state", "after_arm", "after_event"} {
 		t.Run(stage, func(t *testing.T) {
@@ -101,8 +149,8 @@ func TestExitSnapshotWriteStagesRollbackAsOneTransaction(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			snapshot := ratchetSnapshotForState(t, seed, "obs-crash-"+stage, "67900", "70000", "68000")
-			judgement := judgementForSnapshot(snapshot)
+			snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-crash-"+stage, "67900", "70000", "68000")
+			judgement := judgementForSnapshot(snapshot, recovery)
 			judgement.Proposal = &ExitProposal{
 				Action: string(snapshot.Action), Level: snapshot.Level, IntentID: "exit-fault",
 				Provenance: judgement.Provenance,
@@ -140,8 +188,8 @@ func TestExitSnapshotWriteStagesRollbackAsOneTransaction(t *testing.T) {
 func TestExitSnapshotOutputDigestRejectsForgedDerivedLine(t *testing.T) {
 	j := exitFixture(t)
 	_, seed := openedPosition(t, j, "10")
-	snapshot := ratchetSnapshotForState(t, seed, "obs-forged-next", "70500", "70000", "68000")
-	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(snapshot)); err != nil {
+	snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-forged-next", "70500", "70000", "68000")
+	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(snapshot, recovery)); err != nil {
 		t.Fatal(err)
 	}
 	state := exitStateOf(t, j, seed.PositionID)
@@ -204,8 +252,8 @@ func TestKnownLegacyIdentityIsResolvedInMemoryWithoutBackfill(t *testing.T) {
 func TestExitSnapshotDuplicateDecisionIsNotRearmed(t *testing.T) {
 	j := exitFixture(t)
 	_, seed := openedPosition(t, j, "10")
-	snapshot := ratchetSnapshotForState(t, seed, "obs-duplicate", "67900", "70000", "68000")
-	judgement := judgementForSnapshot(snapshot)
+	snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-duplicate", "67900", "70000", "68000")
+	judgement := judgementForSnapshot(snapshot, recovery)
 	judgement.Proposal = &ExitProposal{Action: string(snapshot.Action), Level: snapshot.Level,
 		IntentID: "exit-duplicate", Provenance: judgement.Provenance}
 	if err := j.RecordExitJudgement(context.Background(), judgement); err != nil {
@@ -232,8 +280,8 @@ func TestExitSnapshotDuplicateDecisionIsNotRearmed(t *testing.T) {
 func TestExitSnapshotCorruptionIsPerPositionAndNeverRecomputed(t *testing.T) {
 	j := exitFixture(t)
 	_, first := openedPosition(t, j, "10")
-	snapshot := ratchetSnapshotForState(t, first, "obs-corrupt", "70500", "70000", "68000")
-	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(snapshot)); err != nil {
+	snapshot, recovery := ratchetSnapshotForState(t, first, "obs-corrupt", "70500", "70000", "68000")
+	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(snapshot, recovery)); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := j.db.Exec(`UPDATE exit_states SET effective_snapshot_json=effective_snapshot_json || '{}'
@@ -276,8 +324,8 @@ func TestExitSnapshotCorruptionIsPerPositionAndNeverRecomputed(t *testing.T) {
 func TestReadOnlyExposesTypedSavedRecomputedEffectiveAndFreshness(t *testing.T) {
 	j := exitFixture(t)
 	_, seed := openedPosition(t, j, "10")
-	snapshot := ratchetSnapshotForState(t, seed, "obs-read-model", "70500", "70000", "68000")
-	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(snapshot)); err != nil {
+	snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-read-model", "70500", "70000", "68000")
+	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(snapshot, recovery)); err != nil {
 		t.Fatal(err)
 	}
 	ro, err := OpenReadOnly(context.Background(), ReadOnlyOptions{Path: j.Path()})
@@ -374,6 +422,53 @@ func TestLegacyDetectionRequiresEveryV10ColumnToBeNull(t *testing.T) {
 	}
 }
 
+func TestEvaluatedTupleRequiresEveryNonOptionalFlattenedColumn(t *testing.T) {
+	for _, test := range []struct{ column, reason string }{
+		{"position_generation", "partial_policy_tuple"},
+		{"projected_quantity", "partial_evaluated_tuple"},
+		{"state_only", "partial_evaluated_tuple"},
+	} {
+		t.Run(test.column, func(t *testing.T) {
+			j := exitFixture(t)
+			_, seed := openedPosition(t, j, "10")
+			snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-null-"+test.column, "70500", "70000", "68000")
+			if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(snapshot, recovery)); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := j.db.Exec(fmt.Sprintf("UPDATE exit_states SET %s=NULL WHERE position_id=?", test.column),
+				seed.PositionID); err != nil {
+				t.Fatal(err)
+			}
+			results, err := j.OpenExitStateResults(context.Background(), "acct-1")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(results) != 1 || !errors.Is(results[0].Corruption, ErrExitSnapshotCorrupt) ||
+				results[0].State.Snapshot.UnknownReason != test.reason {
+				t.Fatalf("NULL %s result = %+v", test.column, results)
+			}
+		})
+	}
+}
+
+func TestLegacyJudgementRejectsEveryArmSuppressionReason(t *testing.T) {
+	for _, reason := range []string{ArmSuppressedWorkingOrder, "unknown"} {
+		t.Run(reason, func(t *testing.T) {
+			j := exitFixture(t)
+			_, seed := openedPosition(t, j, "10")
+			judgement := ExitJudgement{PositionID: seed.PositionID, HighWater: seed.HighWater,
+				Baseline: seed.Baseline, RatchetLevel: seed.RatchetLevel, ActiveRung: seed.ActiveRung,
+				ArmSuppressedReason: reason}
+			if err := j.RecordExitJudgement(context.Background(), judgement); !errors.Is(err, ErrInvalidRequest) {
+				t.Fatalf("error = %v, want invalid request", err)
+			}
+			if after := exitStateOf(t, j, seed.PositionID); after.SnapshotStatus != SnapshotStatusSeed {
+				t.Fatalf("legacy suppression changed state: %+v", after)
+			}
+		})
+	}
+}
+
 func TestOrderableSnapshotMustArmItsExactProposal(t *testing.T) {
 	for _, test := range []struct {
 		name   string
@@ -390,8 +485,8 @@ func TestOrderableSnapshotMustArmItsExactProposal(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			j := exitFixture(t)
 			_, seed := openedPosition(t, j, "10")
-			snapshot := ratchetSnapshotForState(t, seed, "obs-proposal-"+test.name, "67900", "70000", "68000")
-			judgement := judgementForSnapshot(snapshot)
+			snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-proposal-"+test.name, "67900", "70000", "68000")
+			judgement := judgementForSnapshot(snapshot, recovery)
 			judgement.Proposal = &ExitProposal{
 				Action: string(snapshot.Action), Level: snapshot.Level,
 				IntentID: "exit-exact", Provenance: judgement.Provenance,
@@ -411,8 +506,8 @@ func TestOrderableSnapshotMustArmItsExactProposal(t *testing.T) {
 func TestTypedArmSuppressionPersistsOrderableSnapshotWithoutArming(t *testing.T) {
 	j := exitFixture(t)
 	_, seed := openedPosition(t, j, "10")
-	snapshot := ratchetSnapshotForState(t, seed, "obs-working-order", "67900", "70000", "68000")
-	judgement := judgementForSnapshot(snapshot)
+	snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-working-order", "67900", "70000", "68000")
+	judgement := judgementForSnapshot(snapshot, recovery)
 	judgement.ArmSuppressedReason = ArmSuppressedWorkingOrder
 	if err := j.RecordExitJudgement(context.Background(), judgement); err != nil {
 		t.Fatal(err)
@@ -442,5 +537,37 @@ func TestTypedArmSuppressionPersistsOrderableSnapshotWithoutArming(t *testing.T)
 	}
 	if got := accountEvents[len(accountEvents)-1].Event.ArmSuppressedReason; got != ArmSuppressedWorkingOrder {
 		t.Fatalf("read-model arm suppression = %q", got)
+	}
+}
+
+func TestExitEventReadRejectsForgedArmSuppressionEvidence(t *testing.T) {
+	j := exitFixture(t)
+	_, seed := openedPosition(t, j, "10")
+	snapshot, recovery := ratchetSnapshotForState(t, seed, "obs-event-reason", "67900", "70000", "68000")
+	judgement := judgementForSnapshot(snapshot, recovery)
+	judgement.ArmSuppressedReason = ArmSuppressedWorkingOrder
+	if err := j.RecordExitJudgement(context.Background(), judgement); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.Exec(`UPDATE exit_events SET arm_suppressed_reason='unknown'
+		WHERE decision_id=?`, snapshot.DecisionID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.ExitEvents(context.Background(), seed.PositionID); !errors.Is(err, ErrExitSnapshotCorrupt) {
+		t.Fatalf("event read error = %v, want typed corruption", err)
+	}
+	ro, err := OpenReadOnly(context.Background(), ReadOnlyOptions{Path: j.Path()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ro.Close()
+	events, err := ro.AccountExitEvents(context.Background(), "acct-1", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	last := events[len(events)-1].Event
+	if last.Evaluation.Effective.Snapshot != nil ||
+		last.Evaluation.Effective.UnknownReason != "invalid_arm_suppression_evidence" {
+		t.Fatalf("account event did not fail closed: %+v", last)
 	}
 }

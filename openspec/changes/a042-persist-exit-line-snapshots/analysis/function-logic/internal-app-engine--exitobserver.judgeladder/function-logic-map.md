@@ -26,6 +26,7 @@
 ## State mutations and fallbacks
 
 - Passes original quote observation metadata with the exact evaluated snapshot.
+- The exact `LadderSnapshotInput` and previous watermark/protection/rung are persisted as recovery evidence; the rung table is defensively copied.
 
 ## Safety conclusion
 

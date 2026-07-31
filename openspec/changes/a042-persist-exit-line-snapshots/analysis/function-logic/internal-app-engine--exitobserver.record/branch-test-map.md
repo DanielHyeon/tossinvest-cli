@@ -13,3 +13,5 @@
 | B9 | submit after commit | crash ordering + emergency isolation test | yes | yes |
 | B10 | quote timestamp source | persisted read-model test | yes | yes |
 | B11 | cycle timestamp fallback | existing quote fallback test | yes | yes |
+| B12 | saved-monotone supersedes an orderable recomputation | journal durable-result test plus engine full suite | yes | yes |
+| B13 | durable result is not `armed` or has nil proposal | no submit/count increment | yes | yes |

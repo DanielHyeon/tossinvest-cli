@@ -298,7 +298,27 @@ func scanExitEvent(row rowScanner, event *ExitEvent) error {
 	if err := decodeExitEventSnapshot(recomputed, &event.Evaluation.Recomputed, "legacy_event"); err != nil {
 		return err
 	}
-	return decodeExitEventSnapshot(effective, &event.Evaluation.Effective, "legacy_event")
+	if err := decodeExitEventSnapshot(effective, &event.Evaluation.Effective, "legacy_event"); err != nil {
+		return err
+	}
+	return validateExitEventArmSuppression(*event)
+}
+
+func validateExitEventArmSuppression(event ExitEvent) error {
+	reason := strings.TrimSpace(event.ArmSuppressedReason)
+	if reason == "" {
+		return nil
+	}
+	if reason != ArmSuppressedWorkingOrder {
+		return fmt.Errorf("%w: unknown arm-suppression reason %q", ErrExitSnapshotCorrupt, reason)
+	}
+	if event.Evaluation.Recomputed.Snapshot == nil || event.Evaluation.Effective.Snapshot == nil ||
+		!event.Evaluation.Recomputed.Snapshot.Line.Orderable || event.ProposedIntentID != "" ||
+		event.Action != "" || event.Evaluation.EffectiveSource != EffectiveSourceRecomputed {
+		return fmt.Errorf("%w: arm-suppression reason lacks complete orderable evaluation evidence",
+			ErrExitSnapshotCorrupt)
+	}
+	return nil
 }
 
 func decodeExitEventSnapshot(raw sql.NullString, view *ExitSnapshotView, absent string) error {
@@ -437,7 +457,8 @@ func scanExitStateResult(row rowScanner) (ExitStateResult, error) {
 		return result, nil
 	}
 	full := status.String == SnapshotStatusEvaluated && snapshotID.Valid && decisionID.Valid &&
-		observationID.Valid && source.Valid && observedAt.Valid && effectiveJSON.Valid
+		observationID.Valid && generation.Valid && source.Valid && observedAt.Valid &&
+		projected.Valid && stateOnly.Valid && effectiveJSON.Valid
 	if !full {
 		result.State.Snapshot.UnknownReason = "partial_evaluated_tuple"
 		result.Corruption = fmt.Errorf("%w: evaluated snapshot tuple is incomplete", ErrExitSnapshotCorrupt)

@@ -1,4 +1,4 @@
-# Risk Pattern Report: `internal/exitpolicy/recovery.go`
+# Risk Pattern Report: `internal/journal/exit_state.go`
 
 | Rule | Location | Message |
 |---|---|---|

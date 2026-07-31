@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "0c0d9c3cde150a55c16f6951d428906f0252be573f5c960fdcd1c0cfd06d9c81",
+  "source_sha256": "6e8dd9eece02e33cde6ad21928aa6dbcd4c23bf8266efd0e2e1a8e422a05a30d",
   "package": "engine",
   "function": "judgeRatchet",
   "receiver": "ExitObserver",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 827,
+    "line": 829,
     "column": 2
   },
   "branches": [
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 808,
+        "line": 809,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 816,
+        "line": 817,
         "column": 2
       }
     }
@@ -73,21 +73,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 810,
+        "line": 811,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 821,
+        "line": 822,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 824,
+        "line": 825,
         "column": 2
       }
     }
@@ -144,14 +144,6 @@
     {
       "kind": "call",
       "at": {
-        "line": 793,
-        "column": 19
-      },
-      "text": "exitpolicy.EvaluateRatchetSnapshot"
-    },
-    {
-      "kind": "call",
-      "at": {
         "line": 803,
         "column": 21
       },
@@ -168,7 +160,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 809,
+        "line": 808,
+        "column": 19
+      },
+      "text": "exitpolicy.EvaluateRatchetSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 810,
         "column": 3
       },
       "text": "o.alertRefused"
@@ -176,7 +176,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 812,
+        "line": 813,
         "column": 2
       },
       "text": "o.clearRefused"
@@ -184,7 +184,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 814,
+        "line": 815,
         "column": 13
       },
       "text": "snapshot.ChangedFromState"
@@ -192,7 +192,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 815,
+        "line": 816,
         "column": 3
       },
       "text": "exitpolicy.Level"
@@ -200,7 +200,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 824,
+        "line": 825,
         "column": 9
       },
       "text": "o.record"
@@ -208,10 +208,18 @@
     {
       "kind": "call",
       "at": {
-        "line": 825,
+        "line": 826,
         "column": 3
       },
       "text": "exitpolicy.NewRatchetRecoveryPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 827,
+        "column": 4
+      },
+      "text": "exitpolicy.Level"
     }
   ],
   "assignments": [
@@ -244,9 +252,16 @@
       }
     },
     {
+      "kind": ":=",
+      "at": {
+        "line": 808,
+        "column": 2
+      }
+    },
+    {
       "kind": "=",
       "at": {
-        "line": 814,
+        "line": 815,
         "column": 2
       }
     }

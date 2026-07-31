@@ -289,6 +289,24 @@ type ExitProposal struct {
 	IntentID string
 }
 
+type ExitArmOutcome string
+
+const (
+	ExitArmNotRequested            ExitArmOutcome = "not_requested"
+	ExitArmArmed                   ExitArmOutcome = "armed"
+	ExitArmSuppressedSavedMonotone ExitArmOutcome = "suppressed_saved_monotone"
+	ExitArmSuppressedWorkingOrder  ExitArmOutcome = "suppressed_working_order"
+)
+
+// ExitJudgementResult is the only execution authority returned after the
+// transaction commits. Callers must not infer submission from their mutable
+// request value because recovery may select the previously saved candidate.
+type ExitJudgementResult struct {
+	EffectiveSource string
+	ArmOutcome      ExitArmOutcome
+	ArmedProposal   *ExitProposal
+}
+
 // ExitDecisionProvenance is the schema-independent handoff from the exit-line
 // evaluator to the journal and mutation gateway. It authorises nothing; the
 // Guardian decision remains the only order authority.
@@ -332,12 +350,31 @@ func sameExitDecisionProvenance(a, b ExitDecisionProvenance) bool {
 // RecordExitJudgement advances the state, arms the proposal if there is one, and
 // appends the history row — in one transaction.
 func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgement) error {
+	_, err := j.RecordExitJudgementResult(ctx, judgement)
+	return err
+}
+
+// RecordExitJudgementResult returns only the proposal that was durably armed
+// by the committed transaction. The request proposal is not execution
+// authority because saved-monotone recovery may supersede it.
+func (j *Journal) RecordExitJudgementResult(ctx context.Context,
+	judgement ExitJudgement) (ExitJudgementResult, error) {
+	result := ExitJudgementResult{ArmOutcome: ExitArmNotRequested}
+	err := j.recordExitJudgementTx(ctx, judgement, &result)
+	return result, err
+}
+
+func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudgement,
+	result *ExitJudgementResult) error {
 	id := strings.TrimSpace(judgement.PositionID)
 	if id == "" {
 		return fmt.Errorf("%w: a judgement needs a position", ErrInvalidRequest)
 	}
 	if err := judgement.Provenance.validate(); err != nil {
 		return err
+	}
+	if judgement.Provenance.zero() && strings.TrimSpace(judgement.ArmSuppressedReason) != "" {
+		return fmt.Errorf("%w: legacy judgement cannot assert an arm-suppression reason", ErrInvalidRequest)
 	}
 	if judgement.Proposal != nil {
 		if err := validateProposal(*judgement.Proposal); err != nil {
@@ -451,6 +488,7 @@ func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgeme
 		judgement.ActiveRung = effective.Line.ActiveRung
 		if effectiveSource == EffectiveSourceSaved {
 			judgement.Proposal = nil
+			judgement.ArmSuppressedReason = ""
 		}
 		level = strings.TrimSpace(judgement.RatchetLevel)
 	}
@@ -515,6 +553,17 @@ func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgeme
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("journal: recording the exit judgement of %s: %w", id, err)
+	}
+	result.EffectiveSource = effectiveSource
+	switch {
+	case effectiveSource == EffectiveSourceSaved:
+		result.ArmOutcome = ExitArmSuppressedSavedMonotone
+	case judgement.Proposal != nil:
+		proposal := *judgement.Proposal
+		result.ArmOutcome = ExitArmArmed
+		result.ArmedProposal = &proposal
+	case judgement.ArmSuppressedReason == ArmSuppressedWorkingOrder:
+		result.ArmOutcome = ExitArmSuppressedWorkingOrder
 	}
 	return nil
 }

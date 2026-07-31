@@ -20,11 +20,11 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| SQLite query + event scanner | read exact v10 evaluation projection | no recomputation | CodeGraph + AST |
+| SQLite query + event scanner | read exact v10 evaluation projection and validate arm-suppression evidence | no recomputation; per-event corruption becomes typed unknown | CodeGraph + AST |
 
 ## State mutations and fallbacks
 
-- Preserves window ordering and adds persisted evaluation data.
+- Preserves window ordering and adds persisted evaluation data. Invalid arm-suppression evidence clears the effective snapshot view and exposes `invalid_arm_suppression_evidence` without hiding other account rows.
 
 ## Safety conclusion
 

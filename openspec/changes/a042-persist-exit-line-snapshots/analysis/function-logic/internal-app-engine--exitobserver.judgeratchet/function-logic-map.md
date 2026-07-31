@@ -26,6 +26,7 @@
 ## State mutations and fallbacks
 
 - Only the `record` call gains observation metadata; evaluator and emergency branch are unchanged.
+- The exact `RatchetSnapshotInput` is retained and copied into recovery evidence together with the previous watermark/protection/level; recovery therefore reruns the same evaluator input.
 
 ## Safety conclusion
 

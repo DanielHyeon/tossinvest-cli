@@ -8,29 +8,28 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| exact line + immutable policy definition + remaining quantity | one validated policy arm, matching identity, positive remaining quantity | persisted a041 snapshot and a042 recovery evidence | `ErrRecoveryIdentity` or decimal validation error; never reconstructs a substitute |
+| exact line + exact evaluator input + previous state | one validated policy arm containing the original snapshot context, policy input, quantity and prior watermark/protection/stage | persisted a041 snapshot and a042 recovery evidence | `ErrRecoveryIdentity`; never reconstructs a substitute from output fields |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | snapshot identity/shape invalid, policy arm count != 1, or quantity invalid | none | fail closed | recovery forgery table |
-| B2 | ratchet identity/level/action valid | rederive from entry/risk/high/baseline | exact next line or refusal | existing exact derivation tests |
-| B3 | ladder definition/identity/rung valid, including `NoRung=-1` | rederive via `nextLadderLine` | exact next line or refusal | `TestRecoveryAllowsLadderBeforeFirstRung` |
-| B4 | derived line differs | none | `ErrRecoveryIdentity` | forged next-line tests |
-| B5 | projection semantics invalid | none | `ErrRecoveryIdentity` | semantic output table |
+| B1 | snapshot identity/shape invalid or policy arm count != 1 | none | fail closed | recovery forgery table |
+| B2 | ratchet arm | rerun `EvaluateRatchetSnapshot` then `ChangedFromState` | exact full line or refusal | ratchet recovery/forged-level tests |
+| B3 | ladder arm, including `NoRung=-1` | rerun `EvaluateLadderSnapshot` then `ChangedFromState` | exact full line or refusal | ladder recovery tests |
+| B4 | evaluator error | none | wrapped `ErrRecoveryIdentity` | invalid input tests |
+| B5 | any derived field differs | none | `ErrRecoveryIdentity` | quantity/protection/level/cancel/changed forgery table |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| policy identity functions | bind executable definition to persisted identity | errors propagate; no fallback registry lookup | CodeGraph + AST |
-| `nextRatchetLine` / `nextLadderLine` | independently rederive next target/protection | exact error propagation | CodeGraph + AST |
-| output/projection validators | enforce policy-kind and executable fields | fail closed | CodeGraph + AST |
+| `EvaluateRatchetSnapshot` / `EvaluateLadderSnapshot` | rerun the same pure evaluator over persisted exact inputs | error wraps as identity refusal; no fallback registry lookup | CodeGraph + AST |
+| `ChangedFromState` | bind previous watermark/protection/stage and the `Changed` bit | exact value comparison | CodeGraph + AST |
 
 ## State mutations and fallbacks
 
-- Pure validation only; no state mutation, registry fallback, or execution authority.
+- Pure validation only; `reflect.DeepEqual` covers every line field after exact re-evaluation. No state mutation, registry fallback, or execution authority.
 
 ## Safety conclusion
 

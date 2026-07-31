@@ -22,13 +22,14 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `RecordExitJudgement` | persist snapshot/event/arm | atomic local transaction | CodeGraph + AST |
+| `RecordExitJudgementResult` | persist snapshot/event/arm and return only the durably armed proposal | atomic local transaction; saved-monotone returns no authority | CodeGraph + AST |
 | `submit` | issue reduction after durable arm | existing Guardian + official gateway | CodeGraph + AST |
 
 ## State mutations and fallbacks
 
 - Adds exact snapshot plus source/time to judgement; no read-path recomputation.
 - A failed working-order clear withholds only the arm and records `working_order_not_cleared`; the immutable orderable snapshot still advances high-water/protection.
+- Submission is gated by `ExitArmArmed` plus a non-nil post-commit `ArmedProposal`; the mutable request proposal is never used as authority.
 - Arm-before-submit and zero-quantity state-only behavior remain unchanged.
 
 ## Safety conclusion

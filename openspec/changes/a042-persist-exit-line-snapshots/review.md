@@ -9,10 +9,10 @@
 2. policy/snapshot/decision/observation identity를 exit event와 같은 transaction에 저장한다.
 3. 현재 구 binary는 높은 schema version을 거부한다. rollback은 engine stop, DB/WAL/SHM 보존, pre-migration backup 복원과 broker reconcile이다.
 4. migration crash, WAL reopen, commit/ack window와 emergency exit lock latency를 fault test로 고정한다.
-5. `NextTarget`/`NextProtection`은 output digest를 권위로 삼지 않는다. evaluation event에 exact
-   ratchet config + real-breakeven + taken ratio 또는 exact ladder table을 저장하고, policy
-   ID/version/digest가 그 정의와 일치할 때만 선택 policy로 두 값을 다시 파생해 exact compare한다.
-   whole-output digest는 이 semantic derivation 뒤에 적용하는 accidental-corruption seal이다.
+5. output digest는 권위가 아니다. evaluation event에 원래 `SnapshotContext`와 ratchet/ladder
+   evaluator input, 직전 high-water/protection/stage를 저장하고 같은 pure evaluator와
+   `ChangedFromState`를 다시 실행한다. 모든 `ExitLineSnapshot` 필드가 exact-match일 때만 복구한다.
+   whole-output digest는 이 semantic replay 뒤에 적용하는 accidental-corruption seal이다.
 6. v9 legacy row는 기존 `policy_id`가 non-NULL이라는 이유만으로 partial-v10으로 분류하지 않는다.
    a041의 pinned legacy RATCHET/common-policy meaning은 read-time typed identity로만 복원하고 DB의
    NULL version/digest는 유지한다. adoption context가 필요한 RUNNER는 position record로 resolve하며,
@@ -24,10 +24,16 @@
 9. orderable snapshot의 proposal은 action/level이 exact evaluator output과 같아야 한다. 단, working
    order를 제거하지 못한 경우에는 snapshot을 비-orderable로 변조하지 않고 arm만 보류하며
    `working_order_not_cleared`를 event/read model에 기록한다. 알 수 없는 사유는 fail-closed다.
-10. ratio 범위·level·whole-share projection·state-only/orderable/suppression·policy-kind/action·rung
-    bounds를 semantic recovery validation에서 독립 검증한다.
+10. 수량·level·보호선·whole-share projection·state-only/orderable/suppression·policy-kind/action·rung,
+    `CancelPendingFirst`, `Changed`까지 exact evaluator replay로 검증한다. 같은 정수 projection이
+    나오는 수량 변경도 input/identity 불일치로 거부한다.
 11. 실제 Linux subprocess를 transaction 내부와 commit 직후에 SIGKILL하여 rollback/생존 경계를
     검증한다. hook error rollback은 이 테스트의 대체물이 아니다.
+12. engine은 요청에 담긴 proposal을 제출 권한으로 보지 않는다. journal transaction commit 뒤
+    반환된 `ExitArmArmed` + `ArmedProposal`만 제출하며, saved-monotone 선택은 typed no-arm 결과다.
+13. EVALUATED의 `projected_quantity`와 `state_only`가 NULL이면 partial tuple이다. legacy judgement는
+    arm-suppression reason을 가질 수 없고, event read는 알려진 enum과 완전한 orderable evidence를
+    함께 검증한다.
 
 ## Verification evidence
 
@@ -48,6 +54,11 @@
 - Proposal coherence: missing/mismatched action or level and unknown arm-suppression reason fail before a
   write; the known uncleared-working-order branch persists the exact orderable snapshot, no arm, and typed
   event/read-model evidence.
+- Durable execution authority: saved-monotone recovery over an orderable stale recomputation returns no
+  armed proposal, leaves pending false, preserves saved effective state, and retains both candidates in audit.
+- Exact semantic replay: forged ratchet level, ladder protection, same-floor remaining quantity,
+  cancel-first and changed bits all fail closed; evaluated NULL state-only/projected fields and forged event
+  arm-suppression evidence are typed corruption.
 - Emergency isolation: a synchronously blocked corruption alert occurs only after another position's
   emergency proposal reaches the submit seam.
 

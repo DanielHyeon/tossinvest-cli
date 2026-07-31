@@ -23,3 +23,5 @@
 | B19 | snapshot/decision/observation identity equality | identity contract tests | yes | yes |
 | B20 | flattened output/state equality | flattened corruption tests | yes | yes |
 | B21 | source/time equality and final attach | persistence/reopen tests | yes | yes |
+| B22 | EVALUATED `projected_quantity` is NULL | `TestEvaluatedTupleRequiresEveryNonOptionalFlattenedColumn` | yes | yes |
+| B23 | EVALUATED `state_only` is NULL | `TestEvaluatedTupleRequiresEveryNonOptionalFlattenedColumn` | yes | yes |

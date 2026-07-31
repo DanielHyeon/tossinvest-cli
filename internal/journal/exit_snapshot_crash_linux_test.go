@@ -79,13 +79,13 @@ func exitSnapshotCrashChild(t *testing.T, killBeforeCommit bool) {
 		t.Fatalf("SetApplyHooks: %v", err)
 	}
 	_, seed := openedPosition(t, j, "10")
-	prior := ratchetSnapshotForState(t, seed, "obs-crash-prior", "70500", "70500", "68000")
-	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(prior)); err != nil {
+	prior, priorRecovery := ratchetSnapshotForState(t, seed, "obs-crash-prior", "70500", "70500", "68000")
+	if err := j.RecordExitJudgement(context.Background(), judgementForSnapshot(prior, priorRecovery)); err != nil {
 		t.Fatalf("prior snapshot: %v", err)
 	}
 
-	next := ratchetSnapshotForState(t, seed, "obs-crash-next", "67900", "70500", "68000")
-	judgement := judgementForSnapshot(next)
+	next, nextRecovery := ratchetSnapshotForState(t, seed, "obs-crash-next", "67900", "70500", "68000")
+	judgement := judgementForSnapshot(next, nextRecovery)
 	judgement.Proposal = &ExitProposal{
 		Action: string(next.Action), Level: next.Level, IntentID: "exit-crash",
 		Provenance: judgement.Provenance,

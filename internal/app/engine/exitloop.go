@@ -790,7 +790,7 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observ
 		o.alertRefused(ctx, m, err)
 		return nil
 	}
-	snapshot, err := exitpolicy.EvaluateRatchetSnapshot(exitpolicy.RatchetSnapshotInput{
+	evaluation := exitpolicy.RatchetSnapshotInput{
 		Context: snapshotContext,
 		Input: exitpolicy.RatchetInput{
 			Entry:           m.state.EntryPrice,
@@ -804,7 +804,8 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observ
 			PendingAction:   exitpolicy.Action(m.state.PendingAction),
 			Config:          &o.ratchet,
 		},
-	})
+	}
+	snapshot, err := exitpolicy.EvaluateRatchetSnapshot(evaluation)
 	if err != nil {
 		o.alertRefused(ctx, m, err)
 		return nil
@@ -822,7 +823,8 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observ
 	}
 
 	return o.record(ctx, m, snapshot,
-		exitpolicy.NewRatchetRecoveryPolicy(o.ratchet, breakEven, m.state.TakenRatioTotal, m.position.Quantity),
+		exitpolicy.NewRatchetRecoveryPolicy(evaluation, m.state.HighWater, m.state.Baseline,
+			exitpolicy.Level(m.state.RatchetLevel)),
 		quote, observation, cycle)
 }
 
@@ -848,7 +850,7 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observe
 			pendingRung = idx
 		}
 	}
-	snapshot, err := exitpolicy.EvaluateLadderSnapshot(exitpolicy.LadderSnapshotInput{
+	evaluation := exitpolicy.LadderSnapshotInput{
 		Context: snapshotContext,
 		Input: exitpolicy.LadderInput{
 			EntryPrice:    m.state.EntryPrice,
@@ -870,7 +872,8 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observe
 			},
 			Policy: ladder,
 		},
-	})
+	}
+	snapshot, err := exitpolicy.EvaluateLadderSnapshot(evaluation)
 	if err != nil {
 		o.alertRefused(ctx, m, err)
 		return nil
@@ -882,7 +885,8 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observe
 	if !snapshot.Changed {
 		return nil
 	}
-	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(ladder, m.position.Quantity), quote, observation, cycle)
+	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(evaluation,
+		m.state.HighWater, m.state.Baseline, m.state.ActiveRung), quote, observation, cycle)
 }
 
 func (o *ExitObserver) snapshotContext(m managed, quote observedQuote,
@@ -1046,7 +1050,8 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 		}
 	}
 
-	if err := o.opts.Journal.RecordExitJudgement(ctx, judgement); err != nil {
+	recorded, err := o.opts.Journal.RecordExitJudgementResult(ctx, judgement)
+	if err != nil {
 		if errors.Is(err, journal.ErrProposalPending) {
 			// Another proposal is outstanding. The evaluator suppresses this in
 			// the normal path; reaching here means the row moved under the read,
@@ -1055,9 +1060,10 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 		}
 		return fmt.Errorf("engine: recording the exit judgement of %s: %w", m.position.ID, err)
 	}
-	if judgement.Proposal == nil {
+	if recorded.ArmedProposal == nil || recorded.ArmOutcome != journal.ExitArmArmed {
 		return nil
 	}
+	intentID = recorded.ArmedProposal.IntentID
 	cycle.Proposed++
 	return o.submit(ctx, m, proposal, quantity, intentID, judgement.ObservedPrice,
 		judgement.Provenance)

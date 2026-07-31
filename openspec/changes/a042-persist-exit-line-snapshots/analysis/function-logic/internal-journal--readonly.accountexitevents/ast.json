@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/account_views.go",
-  "source_sha256": "3c10da9056e557bf702027d3ab0803341fed166d16a8db659ef53f1d60775b85",
+  "source_sha256": "4f99db9a9de41098f7ec6ce6741e2b3fc51b928c9592f5707b1ed516868a8b79",
   "package": "journal",
   "function": "AccountExitEvents",
   "receiver": "ReadOnly",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 245,
+    "line": 249,
     "column": 2
   },
   "branches": [
@@ -50,7 +50,15 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 241,
+        "line": 239,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 245,
         "column": 2
       }
     }
@@ -80,14 +88,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 242,
+        "line": 246,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 244,
+        "line": 248,
         "column": 2
       }
     }
@@ -177,6 +185,14 @@
       "kind": "call",
       "at": {
         "line": 239,
+        "column": 13
+      },
+      "text": "validateExitEventArmSuppression"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
         "column": 9
       },
       "text": "append"
@@ -184,7 +200,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 241,
+        "line": 245,
         "column": 12
       },
       "text": "rows.Err"
@@ -192,7 +208,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 242,
+        "line": 246,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -242,16 +258,37 @@
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
         "line": 239,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 240,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 241,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 243,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 241,
+        "line": 245,
         "column": 5
       }
     }

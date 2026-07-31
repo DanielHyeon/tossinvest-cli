@@ -236,6 +236,10 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 		_ = decodeExitEventSnapshot(saved, &e.Event.Evaluation.Saved, "no_saved_evaluation")
 		_ = decodeExitEventSnapshot(recomputed, &e.Event.Evaluation.Recomputed, "legacy_event")
 		_ = decodeExitEventSnapshot(effective, &e.Event.Evaluation.Effective, "legacy_event")
+		if err := validateExitEventArmSuppression(e.Event); err != nil {
+			e.Event.Evaluation.Effective.Snapshot = nil
+			e.Event.Evaluation.Effective.UnknownReason = "invalid_arm_suppression_evidence"
+		}
 		out = append(out, e)
 	}
 	if err := rows.Err(); err != nil {

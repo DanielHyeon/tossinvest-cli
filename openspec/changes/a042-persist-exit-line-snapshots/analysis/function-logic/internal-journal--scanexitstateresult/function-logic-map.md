@@ -19,7 +19,7 @@
 | B3 | status absent but any v10 column present | none | `partial_snapshot_tuple` | single-column evidence test |
 | B4 | policy identity tuple partial/invalid | none | typed corruption | corruption matrix |
 | B5 | SEED carries any evaluation/output column | none | `partial_seed_tuple` | per-column SEED table |
-| B6 | EVALUATED tuple incomplete | none | `partial_evaluated_tuple` | corruption matrix |
+| B6 | EVALUATED tuple lacks snapshot/decision/observation/generation/source/time/projected quantity/state-only/JSON | none | `partial_evaluated_tuple` (generation remains `partial_policy_tuple`) | evaluated NULL-column table |
 | B7 | JSON invalid or flattened values differ | none | typed corruption | digest/flattened forgery tests |
 | B8 | complete exact tuple | attach stored snapshot | success | persistence/reopen tests |
 

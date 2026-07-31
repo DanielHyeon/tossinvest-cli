@@ -20,11 +20,12 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| SQLite query + `scanExitEvent` | restore stored evaluation without recomputation | bounded by context | CodeGraph + AST |
+| SQLite query + `scanExitEvent` | restore stored evaluation without recomputation and validate typed arm-suppression evidence | corruption returns `ErrExitSnapshotCorrupt` | CodeGraph + AST |
 
 ## State mutations and fallbacks
 
 - Reads exact saved/recomputed/effective JSON and scalar provenance columns.
+- A nonempty arm-suppression reason must be the known enum and carry complete recomputed/effective orderable evidence with no action or intent.
 
 ## Safety conclusion
 
