@@ -387,6 +387,7 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/settings/system-update/download": true,
 		"/settings/system-update/install":  true,
 		"/optimization/exit-policy":        true,
+		"/openapi/login/save":              true,
 		"/logout":                          true,
 	}
 	seen := map[string]bool{}
@@ -645,6 +646,7 @@ var consoleStateChanging = []string{
 	"/settings/trading", "/settings/gate", "/settings/autostart",
 	"/settings/system-update/download",
 	"/settings/system-update/install",
+	"/openapi/login/save",
 }
 
 // consoleGateWriters is the exact route that may spell "gate" (change
@@ -930,13 +932,15 @@ var consoleCapabilities = map[string]capability{
 
 	// Func-type seams. A func has no method set, so what is checked is its field
 	// name and every type its signature mentions.
-	"StartVerify": {},
-	"Relaunch":    {},
-	"RestartSoak": {},
-	"StartEngine": {},
-	"StopEngine":  {},
-	"Now":         {},
-	"Binary":      {},
+	"StartVerify":  {},
+	"Relaunch":     {},
+	"RestartSoak":  {},
+	"CheckOpenAPI": {},
+	"SaveOpenAPI":  {},
+	"StartEngine":  {},
+	"StopEngine":   {},
+	"Now":          {},
+	"Binary":       {},
 	"AcquireUpdateEngineLock": {
 		VerbExemptions: map[string]string{
 			"AcquireUpdateEngineLock": "holds the real engine flock while replacing the local executable; it carries no account capability",

@@ -1,0 +1,206 @@
+{
+  "file": "internal/console/restart.go",
+  "source_sha256": "dc9c413718cadc946ad60d5c161e3dbb6d90efe1ca56c2bf317230205632ad56",
+  "package": "console",
+  "function": "handleSoakRestart",
+  "receiver": "Console",
+  "signature": "Console.handleSoakRestart(params=2, results=0)",
+  "start": {
+    "line": 278,
+    "column": 1
+  },
+  "end": {
+    "line": 302,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 283,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 284,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 286,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 289,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 295,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 288,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 291,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 298,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 2
+      },
+      "text": "c.openAPIMu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 8
+      },
+      "text": "c.openAPIMu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 13
+      },
+      "text": "c.opts.CheckOpenAPI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 33
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 4
+      },
+      "text": "http.Redirect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 4
+      },
+      "text": "http.Redirect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 4
+      },
+      "text": "http.Redirect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 4
+      },
+      "text": "c.redirectDashboard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 30
+      },
+      "text": "credentialMessage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 2
+      },
+      "text": "c.restartSoakLocked"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 282,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 280,
+        "column": 2
+      },
+      "text": "c.openAPIMu.Unlock"
+    }
+  ]
+}

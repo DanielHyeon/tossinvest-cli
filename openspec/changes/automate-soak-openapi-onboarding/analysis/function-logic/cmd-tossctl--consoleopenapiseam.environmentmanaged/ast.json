@@ -1,0 +1,47 @@
+{
+  "file": "cmd/tossctl/console_openapi.go",
+  "source_sha256": "8318dbba2b5b5d82475f0b2d53ac9650e3599b1fddfe19bbb2b20261e34a94e7",
+  "package": "main",
+  "function": "environmentManaged",
+  "receiver": "consoleOpenAPISeam",
+  "signature": "consoleOpenAPISeam.environmentManaged(params=0, results=1)",
+  "start": {
+    "line": 200,
+    "column": 1
+  },
+  "end": {
+    "line": 203,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 9
+      },
+      "text": "s.deps.getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 3
+      },
+      "text": "s.deps.getenv"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

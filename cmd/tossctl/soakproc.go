@@ -84,7 +84,7 @@ func soakLogPath(recordPath string) string {
 // It returns one line describing what happened, which the dashboard prints
 // verbatim: the operator pressed a button on a process they cannot see, and the
 // answer has to say whether anything was actually stopped.
-func restartSoak(recordPath string) (string, error) {
+func restartSoak(recordPath string, prepareSpawn ...func() error) (string, error) {
 	binary, err := binstamp.SelfPath()
 	if err != nil {
 		return "", err
@@ -113,6 +113,11 @@ func restartSoak(recordPath string) (string, error) {
 		}
 	}
 
+	if len(prepareSpawn) > 0 && prepareSpawn[0] != nil {
+		if err := prepareSpawn[0](); err != nil {
+			return "", fmt.Errorf("새 soak 시작 직전 token cache를 준비하지 못했다: %w", err)
+		}
+	}
 	if err := soakSpawnDetached(binary, logPath); err != nil {
 		return "", err
 	}

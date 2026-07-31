@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-037",
+  "title": "Automate Open API onboarding for soak restart",
+  "feature": "FEAT-TOS-007",
+  "intent": "active",
+  "openspec": {
+    "change_id": "automate-soak-openapi-onboarding",
+    "path": "openspec/changes/automate-soak-openapi-onboarding"
+  },
+  "acceptance": [
+    "One soak restart click reuses saved Open API credentials and starts or restarts the soak without another operator action",
+    "Missing or rejected credentials lead to an HTTPS credential screen with explicit guidance instead of a false soak-start success notice",
+    "Submitting valid credentials validates and stores them, then starts the soak automatically without a second restart click",
+    "Secrets never appear in HTML responses, redirect URLs, logs, audit detail, memory, or test output",
+    "Credential submission remains behind the existing HTTPS host/origin, peer, session, request-size, CSRF, and audit boundaries",
+    "Access-token expiry is renewed by the existing official client and does not require repeated credential entry",
+    "Credential replacement publishes a verified regular 0600 file and keeps incomplete generations fail-closed",
+    "Old soak processes exit before a final token-cache invalidation fence and the replacement process starts only after that fence succeeds",
+    "No test starts a real soak, engine, operating toggle, or LIVE order"
+  ]
+}

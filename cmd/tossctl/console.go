@@ -221,6 +221,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	if err != nil {
 		return err
 	}
+	openAPISeam, err := newConsoleOpenAPISeam(root, defaultConsoleOpenAPIDeps())
+	if err != nil {
+		return err
+	}
 
 	journalPath, err := journal.DefaultPath()
 	if err != nil {
@@ -367,9 +371,17 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// The three seams task 1.8 puts behind the console's two restart buttons.
 		// internal/console executes nothing: it decides whether the person asking
 		// has cleared the session and CSRF gates, and then calls one of these.
-		Relaunch:    consoleRelaunch(out),
-		Handoff:     handoff.New(consoleHandoffPath(verifyRecord)),
-		RestartSoak: func() (string, error) { return restartSoak(soakRecord) },
+		Relaunch: consoleRelaunch(out),
+		Handoff:  handoff.New(consoleHandoffPath(verifyRecord)),
+		RestartSoak: func() (string, error) {
+			return restartSoak(soakRecord, openAPISeam.PrepareSpawn)
+		},
+		CheckOpenAPI: func(ctx context.Context) console.OpenAPICredentialCheck {
+			return toConsoleOpenAPICredentialCheck(openAPISeam.Check(ctx))
+		},
+		SaveOpenAPI: func(ctx context.Context, key, secret string) console.OpenAPICredentialCheck {
+			return toConsoleOpenAPICredentialCheck(openAPISeam.Save(ctx, key, secret))
+		},
 
 		// The engine's status and its two buttons (change add-engine-runtime,
 		// task 2.1). Same arrangement as the two restarts above: internal/console
@@ -390,6 +402,13 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		func() (string, error) { return stopEngine(root) },
 		cmd.ErrOrStderr(),
 	)
+}
+
+func toConsoleOpenAPICredentialCheck(result consoleOpenAPIResult) console.OpenAPICredentialCheck {
+	return console.OpenAPICredentialCheck{
+		State:   console.OpenAPICredentialState(result.State),
+		Message: result.Message,
+	}
 }
 
 // finishConsole gives a container-owned engine its graceful-stop budget while

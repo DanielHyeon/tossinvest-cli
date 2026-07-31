@@ -276,6 +276,32 @@ func (c *Console) grantSession(w http.ResponseWriter, r *http.Request) {
 // signals a process and spawns one, and nothing in this package knows how. What
 // the console contributes is the gate in front of it.
 func (c *Console) handleSoakRestart(w http.ResponseWriter, r *http.Request) {
+	c.openAPIMu.Lock()
+	defer c.openAPIMu.Unlock()
+	if c.opts.CheckOpenAPI != nil {
+		result := c.opts.CheckOpenAPI(r.Context())
+		switch result.State {
+		case OpenAPICredentialsReady:
+			// Continue to the existing process seam below.
+		case OpenAPICredentialsMissing:
+			http.Redirect(w, r, "/openapi/login?reason=missing", http.StatusSeeOther)
+			return
+		case OpenAPICredentialsRejected:
+			http.Redirect(w, r, "/openapi/login?reason=rejected", http.StatusSeeOther)
+			return
+		case OpenAPICredentialsSavedNotStarted:
+			http.Redirect(w, r, "/openapi/login?reason=pending", http.StatusSeeOther)
+			return
+		default:
+			c.redirectDashboard(w, r, credentialMessage(result,
+				"Open API 자격증명을 확인하지 못했다. soak은 시작하지 않았다."))
+			return
+		}
+	}
+	c.restartSoakLocked(w, r)
+}
+
+func (c *Console) restartSoakLocked(w http.ResponseWriter, r *http.Request) {
 	if c.opts.RestartSoak == nil {
 		c.redirectDashboard(w, r, errNoSoakRestart.Error())
 		return

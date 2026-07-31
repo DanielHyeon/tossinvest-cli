@@ -130,6 +130,47 @@ func newHarness(t *testing.T, tweak ...func(*Options)) *harness {
 	return h
 }
 
+// newTLSHarness gives credential-ingress tests a real TLS request boundary
+// without turning every loopback-console test into a remote-console test.
+func newTLSHarness(t *testing.T, tweak ...func(*Options)) *harness {
+	t.Helper()
+	dir := t.TempDir()
+	broker := newFakeBroker()
+	record := filepath.Join(dir, verifylive.FileName)
+
+	o := Options{
+		StartVerify:    realStarter(broker, record),
+		VerifyRecord:   record,
+		VerifyRecordUS: usRecordPath(record),
+		SoakRecord:     filepath.Join(dir, soak.FileName),
+		Attestation:    filepath.Join(dir, attest.FileName),
+		MinSoakDays:    3,
+		Out:            io.Discard,
+	}
+	for _, f := range tweak {
+		f(&o)
+	}
+
+	c, err := New(o)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	srv := httptest.NewTLSServer(c.Handler())
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatalf("cookiejar: %v", err)
+	}
+	client := srv.Client()
+	client.Jar = jar
+
+	h := &harness{Console: c, broker: broker, record: record, srv: srv, client: client}
+	t.Cleanup(func() {
+		h.stopRun()
+		srv.Close()
+	})
+	return h
+}
+
 // stopRun releases a run left blocked on an approval nobody typed.
 func (h *harness) stopRun() {
 	run := h.currentRun()

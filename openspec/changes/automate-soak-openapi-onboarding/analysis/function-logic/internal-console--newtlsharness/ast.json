@@ -1,0 +1,278 @@
+{
+  "file": "internal/console/console_test.go",
+  "source_sha256": "7c6be1824e838bb1235f139325bc13acca48e9ada7343725743527ac96330f0a",
+  "package": "console",
+  "function": "newTLSHarness",
+  "signature": "newTLSHarness(params=2, results=1)",
+  "start": {
+    "line": 135,
+    "column": 1
+  },
+  "end": {
+    "line": 172,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 9
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 12
+      },
+      "text": "newFakeBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 12
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 19
+      },
+      "text": "realStarter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 19
+      },
+      "text": "usRecordPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 19
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 19
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 3
+      },
+      "text": "f"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 12
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 9
+      },
+      "text": "httptest.NewTLSServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 31
+      },
+      "text": "c.Handler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 14
+      },
+      "text": "cookiejar.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 12
+      },
+      "text": "srv.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 3
+      },
+      "text": "h.stopRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 3
+      },
+      "text": "srv.Close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 141,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 158,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

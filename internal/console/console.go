@@ -166,6 +166,10 @@ type Options struct {
 	// RestartSoak stops the read-only survey and starts it again, detached (task
 	// 1.8 ②). Nil hides the button.
 	RestartSoak RestartSoak
+	// CheckOpenAPI and SaveOpenAPI are narrow, secret-free orchestration seams.
+	// The console never resolves credential paths or constructs an API client.
+	CheckOpenAPI CheckOpenAPICredentials
+	SaveOpenAPI  SaveOpenAPICredentials
 	// Binary fingerprints the installed executable. The console takes one reading
 	// at construction and compares it per render, so a console left running across
 	// a reinstall says so instead of quietly being the old build. Nil uses
@@ -333,6 +337,9 @@ type Console struct {
 	// listener and is therefore the only thing that may release the port the new
 	// process has to bind.
 	relaunch chan int
+	// openAPIMu keeps a credential check/save/restart transaction on one
+	// credential generation even when two browser requests arrive together.
+	openAPIMu sync.Mutex
 
 	// activityMu serializes executable installation with the two routes that can
 	// start account/engine work. A successful commit leaves updateCommitted set
@@ -713,6 +720,9 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/verify/abort", c.session0(c.mutating(c.handleAbort)))
 	mux.HandleFunc("/restart", c.session0(c.mutating(c.handleRestart)))
 	mux.HandleFunc("/soak/restart", c.session0(c.mutating(c.handleSoakRestart)))
+	mux.HandleFunc("/openapi/login", c.session0(c.credentialHTTPS(c.handleOpenAPILogin)))
+	mux.HandleFunc("/openapi/login/save",
+		c.session0(c.credentialHTTPS(c.mutating(c.handleOpenAPILoginSave, 8192))))
 	// The engine's process control (add-engine-runtime task 2.1). Two acts, both
 	// behind the same two gates as everything else that acts, and neither of them
 	// touches the account: they start and stop a process whose *ability* to trade
@@ -793,7 +803,7 @@ func (c *Console) session0(next http.HandlerFunc) http.HandlerFunc {
 //
 // "State-changing" here means the approval flow and nothing else. There is no
 // other POST on this console.
-func (c *Console) mutating(next http.HandlerFunc) http.HandlerFunc {
+func (c *Console) mutating(next http.HandlerFunc, bodyLimits ...int64) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.Header().Set("Allow", http.MethodPost)
@@ -806,7 +816,16 @@ func (c *Console) mutating(next http.HandlerFunc) http.HandlerFunc {
 				"원격 쓰기 요청은 설정된 HTTPS 주소에서 시작되어야 한다. 아무것도 전송되지 않았다.")
 			return
 		}
+		if len(bodyLimits) > 0 && bodyLimits[0] > 0 {
+			r.Body = http.MaxBytesReader(w, r.Body, bodyLimits[0])
+		}
 		if err := r.ParseForm(); err != nil {
+			var tooLarge *http.MaxBytesError
+			if errors.As(err, &tooLarge) {
+				c.refuse(w, http.StatusRequestEntityTooLarge, "요청 본문이 너무 크다",
+					"Open API 자격증명 폼의 허용 크기를 넘었다. 아무것도 저장하거나 시작하지 않았다.")
+				return
+			}
 			c.refuse(w, http.StatusBadRequest, "폼을 읽을 수 없다", "아무것도 전송되지 않았다.")
 			return
 		}

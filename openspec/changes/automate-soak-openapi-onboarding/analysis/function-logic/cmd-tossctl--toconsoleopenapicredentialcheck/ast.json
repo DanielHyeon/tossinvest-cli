@@ -1,0 +1,38 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "07e6fd46d9cbbe8a36015e6d884bbc19bbcd8592005c696816ea95f6d5306e1b",
+  "package": "main",
+  "function": "toConsoleOpenAPICredentialCheck",
+  "signature": "toConsoleOpenAPICredentialCheck(params=1, results=1)",
+  "start": {
+    "line": 407,
+    "column": 1
+  },
+  "end": {
+    "line": 412,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 12
+      },
+      "text": "console.OpenAPICredentialState"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

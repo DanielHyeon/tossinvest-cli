@@ -1,0 +1,368 @@
+{
+  "file": "cmd/tossctl/console_openapi.go",
+  "source_sha256": "8318dbba2b5b5d82475f0b2d53ac9650e3599b1fddfe19bbb2b20261e34a94e7",
+  "package": "main",
+  "function": "Check",
+  "receiver": "consoleOpenAPISeam",
+  "signature": "consoleOpenAPISeam.Check(params=1, results=1)",
+  "start": {
+    "line": 97,
+    "column": 1
+  },
+  "end": {
+    "line": 143,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 102,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 124,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 130,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 134,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 139,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 17
+      },
+      "text": "s.environmentManaged"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 19
+      },
+      "text": "s.deps.pending"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 11
+      },
+      "text": "openAPIUnavailable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 11
+      },
+      "text": "savedNotStarted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 16
+      },
+      "text": "official.LoadCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 10
+      },
+      "text": "openAPIUnavailable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 35
+      },
+      "text": "s.deps.temp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 11
+      },
+      "text": "openAPIUnavailable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 17
+      },
+      "text": "s.deps.validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 20
+      },
+      "text": "cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 11
+      },
+      "text": "openAPIUnavailable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 10
+      },
+      "text": "openAPIUnavailable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 16
+      },
+      "text": "classifyConsoleOpenAPI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 13
+      },
+      "text": "s.deps.remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 11
+      },
+      "text": "openAPIUnavailable"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

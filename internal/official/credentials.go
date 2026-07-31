@@ -59,7 +59,47 @@ func SaveCredentials(file string, c Credentials) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(file, data, 0o600)
+	tmp, err := os.CreateTemp(dir, ".openapi-credentials-*")
+	if err != nil {
+		return err
+	}
+	tmpName := tmp.Name()
+	closed := false
+	defer func() {
+		if !closed {
+			_ = tmp.Close()
+		}
+		_ = os.Remove(tmpName)
+	}()
+	if err := tmp.Chmod(0o600); err != nil {
+		return err
+	}
+	if _, err := tmp.Write(data); err != nil {
+		return err
+	}
+	if err := tmp.Sync(); err != nil {
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	closed = true
+	if err := os.Rename(tmpName, file); err != nil {
+		return err
+	}
+	info, err := os.Lstat(file)
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() || info.Mode().Perm() != 0o600 {
+		return errors.New("credential store did not produce a regular 0600 file")
+	}
+	parent, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer parent.Close()
+	return parent.Sync()
 }
 
 // DeleteCredentials removes the credentials file.
