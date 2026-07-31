@@ -28,6 +28,14 @@
 > entry below remains historical command evidence for `21d5a3b`, not approval.
 > Task 3.2 and the gate remain unchecked pending review of the next exact commit.
 
+> Correction (2026-08-01, UI exact-commit review): review of `53e9057`
+> confirmed the opaque identity, bounded lineage, read-only/CSP/mobile contracts,
+> but remained BLOCKED on dark-mode status contrast and an overstated B11 branch
+> PASS. The remediation adopts StockOS dark semantic colours with measured WCAG
+> AA contrast and records B11 as a structurally unreachable defense branch rather
+> than claiming a nonexistent oversized-row test. Task 3.2 and the gate remain
+> unchecked pending exact-commit re-review.
+
 - OpenSpec strict validation: pass.
 - Mutation capability: none by contract.
 - Dependency baseline: implementation starts from `70aabdc`, after a041/a042 were
@@ -59,6 +67,15 @@
   and `make sdd-check` also pass. A broad journal+console race run hit the
   repository test binary's 10-minute timeout under concurrent race load and is
   explicitly not counted as PASS evidence.
+- UI-review remediation GREEN (2026-08-01): the primary dark media block now
+  scopes StockOS semantic green `#22c55e` and red `#f43f5e`; a WCAG
+  relative-luminance regression test measures both against `#1d1d22` and
+  requires at least 4.5:1. B11 now explicitly records its one-row-per-depth
+  structural maximum (`scope_count × 33`) and the wider defense sentinel
+  (`scope_count × 33 × 8 + 1`) without claiming the unreachable branch ran.
+  Focused normal and serial race tests, full `make test`, `make vet`, strict
+  OpenSpec validation, Function Logic Map validation, and `git diff --check`
+  pass. Exact-commit independent re-review is still required before task 3.2.
 
 ## Verdict
 

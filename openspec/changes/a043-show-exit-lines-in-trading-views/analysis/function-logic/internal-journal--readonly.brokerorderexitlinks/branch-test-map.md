@@ -12,7 +12,7 @@
 | B8 | SQL query failure | missing-schema bounded test | existing | yes |
 | B9 | initialize one exact result per scope | market/day/opaque collision tests | old bare-id map collided | yes |
 | B10 | scan bounded linear result rows | all focused lineage tests | old N+1 query | yes |
-| B11 | sentinel row limit | oversized/row-bound contract | old unbounded query | yes |
+| B11 | sentinel row limit | structurally unreachable defense branch: one ancestor row per scope/depth gives at most `scope_count × 33`, while the sentinel is `scope_count × 33 × 8 + 1`; `TestBrokerOrderExitLinksRowSentinelIsStructurallyAboveTheQueryMaximum` freezes that inequality | not applicable — no honest RED can reach the branch under the scalar query shape | structural invariant, not branch PASS |
 | B12 | scan failure | corruption/read tests | existing | yes |
 | B13 | returned request identity mismatch | opaque/composite collision tests | trimmed id mismatch | yes |
 | B14 | exact CONFIRMED PLACE exists on current/ancestor node | direct/amend/state tests | overly broad attribution | yes |

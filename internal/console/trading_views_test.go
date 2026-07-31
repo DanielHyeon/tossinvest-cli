@@ -1,11 +1,13 @@
 package console
 
 import (
+	"math"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -158,6 +160,63 @@ func TestTradingViewsCarryWholePageResponsiveAndFocusContracts(t *testing.T) {
 			t.Errorf("responsive/accessibility contract missing %q", want)
 		}
 	}
+}
+
+func TestTradingViewsDarkSemanticStatusColorsMeetWCAGAA(t *testing.T) {
+	const darkSection = "#1d1d22"
+	darkStart := strings.Index(pageTemplates, "@media (prefers-color-scheme: dark) {")
+	if darkStart < 0 {
+		t.Fatal("dark semantic media block is missing")
+	}
+	darkEnd := strings.Index(pageTemplates[darkStart+1:], "@media (prefers-color-scheme: dark)")
+	if darkEnd < 0 {
+		t.Fatal("dark responsive media block is missing")
+	}
+	darkCSS := pageTemplates[darkStart : darkStart+1+darkEnd]
+	for name, contract := range map[string]struct {
+		selector string
+		token    string
+	}{
+		"fresh status":          {selector: ".ok { color: #22c55e; }", token: "#22c55e"},
+		"stale or error status": {selector: ".bad { color: #f43f5e; }", token: "#f43f5e"},
+	} {
+		if !strings.Contains(darkCSS, contract.selector) {
+			t.Errorf("dark semantic CSS is missing %s contract %q", name, contract.selector)
+		}
+		if ratio := wcagContrastRatio(t, contract.token, darkSection); ratio < 4.5 {
+			t.Errorf("%s token %s contrast on %s = %.2f:1, want at least 4.5:1", name, contract.token, darkSection, ratio)
+		}
+	}
+}
+
+func wcagContrastRatio(t *testing.T, foreground, background string) float64 {
+	t.Helper()
+	light, dark := relativeLuminance(t, foreground), relativeLuminance(t, background)
+	if light < dark {
+		light, dark = dark, light
+	}
+	return (light + 0.05) / (dark + 0.05)
+}
+
+func relativeLuminance(t *testing.T, raw string) float64 {
+	t.Helper()
+	if len(raw) != 7 || raw[0] != '#' {
+		t.Fatalf("invalid six-digit CSS color %q", raw)
+	}
+	channels := make([]float64, 3)
+	for index := range channels {
+		value, err := strconv.ParseUint(raw[1+index*2:3+index*2], 16, 8)
+		if err != nil {
+			t.Fatalf("invalid CSS color %q: %v", raw, err)
+		}
+		channel := float64(value) / 255
+		if channel <= 0.04045 {
+			channels[index] = channel / 12.92
+		} else {
+			channels[index] = math.Pow((channel+0.055)/1.055, 2.4)
+		}
+	}
+	return 0.2126*channels[0] + 0.7152*channels[1] + 0.0722*channels[2]
 }
 
 // TestRenderTradingViewFixtures writes only the deterministic fake broker and

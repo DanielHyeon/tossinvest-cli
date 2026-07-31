@@ -8,6 +8,10 @@ package console
 // fetched — a font, a framework, an icon set — would be a request this page
 // cannot make (there is nothing to make it to) and a dependency on somebody
 // else's server for a screen that authorises live orders.
+//
+// The dark semantic status colours follow the StockOS lane-console palette.
+// They are intentionally separate from the light colours: both must keep normal
+// text at WCAG AA contrast against their respective section backgrounds.
 
 const pageTemplates = `
 {{define "style"}}
@@ -99,6 +103,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   section { background: #1d1d22; border-color: #33333a; }
   pre { background: #111116; } th, td { border-color: #2a2a30; }
   .notice { background: #2e2510; } .danger { background: #2e1414; }
+  .ok { color: #22c55e; } .bad { color: #f43f5e; }
   button.secondary { color: #e6e6e0; }
   input[type=text] { background: #111116; color: #e6e6e0; border-color: #44444c; }
   .submetric, .row-details summary, .explain summary { color: #aaa9a0; }

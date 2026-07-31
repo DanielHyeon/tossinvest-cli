@@ -119,6 +119,18 @@ func TestBrokerOrderExitLinksTreatsBrokerOrderIDsAsOpaqueBytes(t *testing.T) {
 	}
 }
 
+// The recursive query selects one ancestor row per scope and depth: every
+// evidence lookup is a scalar subquery, so it cannot multiply those rows. The
+// wider sentinel remains defense in depth against a future SQL edit. This test
+// records that structural fact without pretending the guard is reachable today.
+func TestBrokerOrderExitLinksRowSentinelIsStructurallyAboveTheQueryMaximum(t *testing.T) {
+	queryMaximum := MaxBrokerOrderEvidenceScopes * (maxBrokerOrderLineageDepth + 1)
+	sentinel := MaxBrokerOrderEvidenceScopes*(maxBrokerOrderLineageDepth+1)*maxEvidenceRowsPerNode + 1
+	if maxEvidenceRowsPerNode <= 1 || sentinel <= queryMaximum {
+		t.Fatalf("row sentinel=%d must remain above the one-row-per-depth maximum=%d", sentinel, queryMaximum)
+	}
+}
+
 func TestBrokerOrderExitLinksAttributesOnlyConfirmedPlaceAttempts(t *testing.T) {
 	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
 	for _, id := range []string{"kind-cancel", "kind-amend", "state-recorded", "state-failed"} {

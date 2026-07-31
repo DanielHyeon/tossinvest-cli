@@ -1,0 +1,78 @@
+{
+  "file": "internal/console/trading_views_test.go",
+  "source_sha256": "443091c0c299f1c6a806587a6c1e64ebea98b726059aea759de769c7ad12f320",
+  "package": "console",
+  "function": "wcagContrastRatio",
+  "signature": "wcagContrastRatio(params=3, results=1)",
+  "start": {
+    "line": 192,
+    "column": 1
+  },
+  "end": {
+    "line": 199,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 17
+      },
+      "text": "relativeLuminance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 51
+      },
+      "text": "relativeLuminance"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

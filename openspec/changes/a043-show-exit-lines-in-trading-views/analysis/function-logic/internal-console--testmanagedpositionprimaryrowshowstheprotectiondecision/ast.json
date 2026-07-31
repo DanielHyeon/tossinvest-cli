@@ -1,15 +1,15 @@
 {
   "file": "internal/console/trading_views_test.go",
-  "source_sha256": "78822d0f23baf798d39a9aa3cd1fdf1518f3ea5ec746d9cdb2b1ee0f1dc82dcd",
+  "source_sha256": "443091c0c299f1c6a806587a6c1e64ebea98b726059aea759de769c7ad12f320",
   "package": "console",
   "function": "TestManagedPositionPrimaryRowShowsTheProtectionDecision",
   "signature": "TestManagedPositionPrimaryRowShowsTheProtectionDecision(params=1, results=0)",
   "start": {
-    "line": 71,
+    "line": 73,
     "column": 1
   },
   "end": {
-    "line": 109,
+    "line": 111,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 78,
+        "line": 80,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 82,
+        "line": 84,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 86,
+        "line": 88,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 96,
+        "line": 98,
         "column": 3
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "range",
       "at": {
-        "line": 100,
+        "line": 102,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 101,
+        "line": 103,
         "column": 3
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 105,
+        "line": 107,
         "column": 2
       }
     }
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 72,
+        "line": 74,
         "column": 7
       },
       "text": "newDashboardHarness"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 73,
+        "line": 75,
         "column": 2
       },
       "text": "seedJournal"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 74,
+        "line": 76,
         "column": 2
       },
       "text": "h.authenticate"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 76,
+        "line": 78,
         "column": 10
       },
       "text": "h.page"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 77,
+        "line": 79,
         "column": 11
       },
       "text": "strings.Index"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 79,
+        "line": 81,
         "column": 3
       },
       "text": "t.Fatal"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 81,
+        "line": 83,
         "column": 9
       },
       "text": "strings.Index"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 83,
+        "line": 85,
         "column": 3
       },
       "text": "t.Fatal"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 96,
+        "line": 98,
         "column": 7
       },
       "text": "strings.Contains"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 97,
+        "line": 99,
         "column": 4
       },
       "text": "t.Errorf"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 101,
+        "line": 103,
         "column": 6
       },
       "text": "strings.Contains"
@@ -163,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 102,
+        "line": 104,
         "column": 4
       },
       "text": "t.Errorf"
@@ -171,7 +171,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 105,
+        "line": 107,
         "column": 6
       },
       "text": "strings.Contains"
@@ -179,7 +179,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 106,
+        "line": 108,
         "column": 4
       },
       "text": "strings.Contains"
@@ -187,7 +187,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 106,
+        "line": 108,
         "column": 46
       },
       "text": "strings.Contains"
@@ -195,7 +195,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 109,
         "column": 3
       },
       "text": "t.Error"
@@ -205,35 +205,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 72,
+        "line": 74,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 76,
+        "line": 78,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 77,
+        "line": 79,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 81,
+        "line": 83,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 85,
+        "line": 87,
         "column": 2
       }
     }
