@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "3ed2e562f756e72abfcb7c820fcec4bec46d2bb95e0fc1d378ff8dbd4a6663cd",
+  "source_sha256": "09526149f088c0b45d9bd86d8d24c88b183e91002d38e81e879ebb66049952a7",
   "package": "engine",
   "function": "proposalQuantity",
   "signature": "proposalQuantity(params=2, results=2)",
   "start": {
-    "line": 1325,
+    "line": 1441,
     "column": 1
   },
   "end": {
-    "line": 1327,
+    "line": 1443,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 1326,
+        "line": 1442,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1326,
+        "line": 1442,
         "column": 9
       },
       "text": "exitpolicy.ProjectWholeShares"

@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "3ed2e562f756e72abfcb7c820fcec4bec46d2bb95e0fc1d378ff8dbd4a6663cd",
+  "source_sha256": "09526149f088c0b45d9bd86d8d24c88b183e91002d38e81e879ebb66049952a7",
   "package": "engine",
   "function": "judgeLadder",
   "receiver": "ExitObserver",
-  "signature": "ExitObserver.judgeLadder(params=5, results=1)",
+  "signature": "ExitObserver.judgeLadder(params=6, results=1)",
   "start": {
-    "line": 726,
+    "line": 787,
     "column": 1
   },
   "end": {
-    "line": 776,
+    "line": 844,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 729,
+        "line": 790,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 733,
+        "line": 794,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 738,
+        "line": 799,
         "column": 2
       }
     },
@@ -42,23 +42,31 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 739,
-        "column": 3
+        "line": 804,
+        "column": 2
       }
     },
     {
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 764,
-        "column": 2
+        "line": 805,
+        "column": 3
       }
     },
     {
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 772,
+        "line": 832,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 840,
         "column": 2
       }
     }
@@ -67,35 +75,42 @@
     {
       "kind": "return",
       "at": {
-        "line": 731,
+        "line": 792,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 735,
+        "line": 796,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 766,
+        "line": 801,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 773,
+        "line": 834,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 775,
+        "line": 841,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 843,
         "column": 2
       }
     }
@@ -104,7 +119,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 728,
+        "line": 789,
         "column": 17
       },
       "text": "o.ladderFor"
@@ -112,7 +127,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 730,
+        "line": 791,
         "column": 3
       },
       "text": "o.alertRefused"
@@ -120,7 +135,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 733,
+        "line": 794,
         "column": 12
       },
       "text": "o.checkLadderPolicyStillFits"
@@ -128,7 +143,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 734,
+        "line": 795,
         "column": 3
       },
       "text": "o.alertRefused"
@@ -136,7 +151,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 739,
+        "line": 798,
+        "column": 26
+      },
+      "text": "o.snapshotContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 805,
         "column": 18
       },
       "text": "exitpolicy.RungIndex"
@@ -144,7 +175,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 743,
+        "line": 809,
         "column": 19
       },
       "text": "exitpolicy.EvaluateLadderSnapshot"
@@ -152,15 +183,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 744,
-        "column": 12
-      },
-      "text": "o.snapshotContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 758,
+        "line": 826,
         "column": 22
       },
       "text": "exitpolicy.Action"
@@ -168,7 +191,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 765,
+        "line": 833,
         "column": 3
       },
       "text": "o.alertRefused"
@@ -176,7 +199,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 768,
+        "line": 836,
         "column": 2
       },
       "text": "o.clearRefused"
@@ -184,7 +207,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 770,
+        "line": 838,
         "column": 13
       },
       "text": "snapshot.ChangedFromState"
@@ -192,7 +215,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 771,
+        "line": 839,
         "column": 3
       },
       "text": "exitpolicy.Level"
@@ -200,7 +223,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 775,
+        "line": 843,
         "column": 9
       },
       "text": "o.record"
@@ -210,49 +233,56 @@
     {
       "kind": ":=",
       "at": {
-        "line": 728,
+        "line": 789,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 733,
+        "line": 794,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 737,
+        "line": 798,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 739,
+        "line": 803,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 805,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 740,
+        "line": 806,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 743,
+        "line": 809,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 770,
+        "line": 838,
         "column": 2
       }
     }

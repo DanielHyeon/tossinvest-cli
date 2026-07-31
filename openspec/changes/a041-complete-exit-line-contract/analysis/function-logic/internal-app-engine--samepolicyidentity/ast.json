@@ -1,0 +1,78 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "09526149f088c0b45d9bd86d8d24c88b183e91002d38e81e879ebb66049952a7",
+  "package": "engine",
+  "function": "samePolicyIdentity",
+  "signature": "samePolicyIdentity(params=2, results=1)",
+  "start": {
+    "line": 881,
+    "column": 1
+  },
+  "end": {
+    "line": 885,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 882,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 882,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 882,
+        "column": 36
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 883,
+        "column": 3
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 883,
+        "column": 35
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 884,
+        "column": 3
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 884,
+        "column": 34
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

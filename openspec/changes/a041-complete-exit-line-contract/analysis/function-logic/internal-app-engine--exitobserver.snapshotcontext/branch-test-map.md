@@ -2,4 +2,5 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | canonical context is created once and reused by the observer | a041 one-share observer integration tests | no | yes |
+| B1 | fetched quote context is deterministic and opaque | fetched-at identity test | yes | yes |
+| B2 | zero timestamp reuses one cycle fallback | fallback identity test | yes | yes |

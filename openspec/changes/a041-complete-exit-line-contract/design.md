@@ -18,6 +18,7 @@
 6. 정책은 stable ID만으로 식별하지 않는다. `policy ID + semantic version + canonical digest`를 immutable identity로 사용하며, 기존 identity 아래에서 rung 의미나 수치를 바꾸지 않는다.
 7. snapshot은 policy identity, position generation, observation identity와 canonical input digest에서 결정적으로 만든 `snapshot ID`와 `decision ID`를 가진다. a042 영속성과 a043 order linkage는 이 ID를 사용하고 symbol/time 근사 join을 금지한다.
 8. a041은 UI나 transport를 모르는 `internal/settingmeta`의 최소 계약(field key/type, control kind, finite stable option ID, default/effective state, apply timing, safety direction, provenance)을 정의한다. 각 domain change가 값을 소유하고 a050은 category composition만 소유한다.
+9. 관측 ID는 account/market/symbol/position generation/관측시각/canonical price의 length-prefixed SHA-256으로 만들고 원문 account를 노출하지 않는다. quote `FetchedAt`이 있으면 그것을 사용하고, 없으면 `ObserveOnce` 시작 시 한 번 캡처한 cycle instant/sequence를 모든 판정에 재사용한다. pre-a042 ID-only 정책 row는 고정된 legacy digest와 정확히 일치할 때만 해석하며, 그 밖의 null/unknown 의미는 fail-closed다.
 
 ## Risks / Trade-offs
 
@@ -27,7 +28,7 @@
 
 ## Migration Plan
 
-새 순수 타입과 테스트를 추가한 뒤 기존 evaluator/exitloop를 단계적으로 snapshot 소비로 전환한다. 정책·설정·원장 schema는 바꾸지 않아 rollback은 이전 호출 경로 복원이다.
+새 순수 타입과 테스트를 추가한 뒤 기존 evaluator/exitloop를 단계적으로 snapshot 소비로 전환한다. 정책·설정·원장 schema는 바꾸지 않는다. 대신 `ExitStateSeed.PolicyIdentity`, `ExitDecisionProvenance`, `PlaceRequest.ExitProvenance`를 a042가 소비할 typed seam으로 남긴다. a042 전까지 journal read의 zero identity는 임의 기본값이 아니라 unknown이며, engine만 고정 legacy identity와 정확히 일치하는 기존 row를 호환한다. rollback은 이전 호출 경로 복원이다.
 
 ## Open Questions
 

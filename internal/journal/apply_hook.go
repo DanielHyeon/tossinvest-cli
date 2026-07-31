@@ -509,6 +509,10 @@ type ExitState struct {
 	PositionID string
 	PolicyKind string
 	PolicyID   string
+	// PolicyIdentity is populated by new state creation and by the engine's
+	// runtime compatibility resolver. Rows read from the pre-a042 schema leave
+	// it zero rather than inventing a version or digest from today's registry.
+	PolicyIdentity exitpolicy.PolicyIdentity
 	// EntryPrice, InitialStop and InitialRisk are frozen at t0. InitialRisk is
 	// the denominator of every R the position is judged by and it does not move
 	// for a partial take-profit or an adjustment.

@@ -30,6 +30,7 @@ func buildCommonPolicies() []CommonPolicy {
 			ID: CommonLadderBalanced, Label: "균형형", Summary: "단계별 익절과 보호 승격을 균형 있게 적용합니다.",
 			Ladder: LadderPolicy{
 				PolicyID: CommonLadderBalanced, PolicyVersion: DefaultPolicyVersion,
+				PolicyDigest: balancedPolicyDigest,
 				Rungs: []Rung{
 					{TargetPct: "1.5", StopPct: "0", PartialRatio: "0"},
 					{TargetPct: "2.5", StopPct: "1.0", PartialRatio: "0.25"},
@@ -43,6 +44,7 @@ func buildCommonPolicies() []CommonPolicy {
 			ID: CommonLadderRunner, Label: "러너형", Summary: "초기 익절을 줄이고 상승 여력을 오래 보호합니다.",
 			Ladder: LadderPolicy{
 				PolicyID: CommonLadderRunner, PolicyVersion: DefaultPolicyVersion,
+				PolicyDigest: runnerPolicyDigest,
 				Rungs: []Rung{
 					{TargetPct: "2.5", StopPct: "0", PartialRatio: "0"},
 					{TargetPct: "4.5", StopPct: "2.0", PartialRatio: "0.15"},
@@ -55,6 +57,7 @@ func buildCommonPolicies() []CommonPolicy {
 			ID: CommonLadderHybrid50, Label: "하이브리드 50", Summary: "절반가량을 단계적으로 확보하고 나머지를 고점 추적으로 보호합니다.", Recommended: true,
 			Ladder: LadderPolicy{
 				PolicyID: CommonLadderHybrid50, PolicyVersion: DefaultPolicyVersion,
+				PolicyDigest: hybrid50PolicyDigest,
 				Rungs: []Rung{
 					{TargetPct: "1.8", StopPct: "0", PartialRatio: "0"},
 					{TargetPct: "3.0", StopPct: "1.2", PartialRatio: "0.25"},
@@ -70,8 +73,10 @@ func buildCommonPolicies() []CommonPolicy {
 		if err != nil {
 			panic(err)
 		}
-		policies[index].Ladder.PolicyVersion = identity.Version
-		policies[index].Ladder.PolicyDigest = identity.Digest
+		if identity.Version != policies[index].Ladder.PolicyVersion ||
+			identity.Digest != policies[index].Ladder.PolicyDigest {
+			panic(fmt.Sprintf("exitpolicy: pinned identity drift for %s", policies[index].ID))
+		}
 	}
 	return policies
 }
@@ -107,13 +112,16 @@ func CommonLadderForPosition(id string, adopted bool) (LadderPolicy, error) {
 		for i := range policy.Ladder.Rungs {
 			policy.Ladder.Rungs[i].PartialRatio = "0"
 		}
-		policy.Ladder.PolicyVersion = "1.0.0-adopted.1"
-		policy.Ladder.PolicyDigest = ""
+		policy.Ladder.PolicyVersion = adoptedRunnerPolicyVersion
+		policy.Ladder.PolicyDigest = adoptedRunnerPolicyDigest
 		identity, err := policy.Ladder.Identity()
 		if err != nil {
 			return LadderPolicy{}, err
 		}
-		policy.Ladder.PolicyDigest = identity.Digest
+		if identity.Digest != adoptedRunnerPolicyDigest {
+			return LadderPolicy{}, fmt.Errorf("%w: adopted RUNNER pinned identity drift",
+				ErrPolicyIdentityConflict)
+		}
 	}
 	return policy.Ladder, nil
 }

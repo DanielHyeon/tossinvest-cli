@@ -92,6 +92,10 @@ type ExitStateSeed struct {
 	// PolicyID snapshots the exact immutable ladder. Empty LADDER means the
 	// pre-v9 default_v1 policy; RATCHET has no policy ID.
 	PolicyID string
+	// PolicyIdentity is the immutable runtime meaning of PolicyKind/PolicyID.
+	// a042 owns the schema columns that will persist it; until then an omitted
+	// value is accepted only for the exact pinned pre-a042 compatibility table.
+	PolicyIdentity exitpolicy.PolicyIdentity
 	// EntryPrice is the position's cost basis, and InitialStop the entry
 	// decision's stop price. Their difference is the R denominator, frozen here.
 	EntryPrice  string
@@ -157,6 +161,11 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 	if !position.ExitEligible(decisionID.String, adoptionID.String) {
 		return ExitState{}, fmt.Errorf("%w: %s", ErrPositionNotExitEligible, id)
 	}
+	policyIdentity, err := seedPolicyIdentity(kind, policyID,
+		strings.TrimSpace(adoptionID.String) != "", seed.PolicyIdentity)
+	if err != nil {
+		return ExitState{}, err
+	}
 
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO exit_states
@@ -179,7 +188,41 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 	if err := tx.Commit(); err != nil {
 		return ExitState{}, fmt.Errorf("journal: opening the exit state of %s: %w", id, err)
 	}
-	return j.ExitState(ctx, id)
+	state, err := j.ExitState(ctx, id)
+	state.PolicyIdentity = policyIdentity
+	return state, err
+}
+
+func seedPolicyIdentity(kind, policyID string, adopted bool,
+	claimed exitpolicy.PolicyIdentity) (exitpolicy.PolicyIdentity, error) {
+	var (
+		expected exitpolicy.PolicyIdentity
+		err      error
+	)
+	if kind == ExitPolicyRatchet {
+		expected, err = exitpolicy.LegacyRatchetPolicyIdentity()
+	} else {
+		expected, err = exitpolicy.LegacyLadderPolicyIdentity(policyID, adopted)
+	}
+	if err != nil {
+		return exitpolicy.PolicyIdentity{}, err
+	}
+	if strings.TrimSpace(claimed.ID) == "" && strings.TrimSpace(claimed.Version) == "" &&
+		strings.TrimSpace(claimed.Digest) == "" {
+		return expected, nil
+	}
+	if err := claimed.Validate(); err != nil {
+		return exitpolicy.PolicyIdentity{}, err
+	}
+	if strings.TrimSpace(claimed.ID) != expected.ID ||
+		strings.TrimSpace(claimed.Version) != expected.Version ||
+		strings.TrimSpace(claimed.Digest) != expected.Digest {
+		return exitpolicy.PolicyIdentity{}, fmt.Errorf(
+			"%w: exit state seed claims %s@%s/%s, pinned meaning is %s@%s/%s",
+			exitpolicy.ErrPolicyIdentityConflict, claimed.ID, claimed.Version, claimed.Digest,
+			expected.ID, expected.Version, expected.Digest)
+	}
+	return expected, nil
 }
 
 // ExitJudgement is one evaluation's outcome, as the row and the history should
@@ -192,6 +235,9 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 // write access to what has been sold.
 type ExitJudgement struct {
 	PositionID string
+	// Provenance binds this write to the one immutable evaluator snapshot.
+	// It is a typed a041 seam; a042 persists the corresponding columns.
+	Provenance ExitDecisionProvenance
 	// ObservedPrice is the price judged, empty when the judgement had none.
 	ObservedPrice string
 	// HighWater and Baseline are the state after this judgement. Neither may be
@@ -213,6 +259,8 @@ type ExitJudgement struct {
 
 // ExitProposal is a proposal being armed.
 type ExitProposal struct {
+	// Provenance must exactly match the judgement that arms this proposal.
+	Provenance ExitDecisionProvenance
 	// Action is one of exitpolicy's orderable actions.
 	Action string
 	// Level is the proposal's identity: the ratchet level, or the rung index in
@@ -225,6 +273,46 @@ type ExitProposal struct {
 	IntentID string
 }
 
+// ExitDecisionProvenance is the schema-independent handoff from the exit-line
+// evaluator to the journal and mutation gateway. It authorises nothing; the
+// Guardian decision remains the only order authority.
+type ExitDecisionProvenance struct {
+	ObservationID string
+	SnapshotID    string
+	DecisionID    string
+	Policy        exitpolicy.PolicyIdentity
+}
+
+func (p ExitDecisionProvenance) zero() bool {
+	return strings.TrimSpace(p.ObservationID) == "" && strings.TrimSpace(p.SnapshotID) == "" &&
+		strings.TrimSpace(p.DecisionID) == "" && strings.TrimSpace(p.Policy.ID) == "" &&
+		strings.TrimSpace(p.Policy.Version) == "" && strings.TrimSpace(p.Policy.Digest) == ""
+}
+
+func (p ExitDecisionProvenance) validate() error {
+	if p.zero() {
+		return nil
+	}
+	if strings.TrimSpace(p.ObservationID) == "" || strings.TrimSpace(p.SnapshotID) == "" ||
+		strings.TrimSpace(p.DecisionID) == "" {
+		return fmt.Errorf("%w: exit decision provenance requires observation, snapshot, and decision ids",
+			ErrInvalidRequest)
+	}
+	if err := p.Policy.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func sameExitDecisionProvenance(a, b ExitDecisionProvenance) bool {
+	return strings.TrimSpace(a.ObservationID) == strings.TrimSpace(b.ObservationID) &&
+		strings.TrimSpace(a.SnapshotID) == strings.TrimSpace(b.SnapshotID) &&
+		strings.TrimSpace(a.DecisionID) == strings.TrimSpace(b.DecisionID) &&
+		strings.TrimSpace(a.Policy.ID) == strings.TrimSpace(b.Policy.ID) &&
+		strings.TrimSpace(a.Policy.Version) == strings.TrimSpace(b.Policy.Version) &&
+		strings.TrimSpace(a.Policy.Digest) == strings.TrimSpace(b.Policy.Digest)
+}
+
 // RecordExitJudgement advances the state, arms the proposal if there is one, and
 // appends the history row — in one transaction.
 func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgement) error {
@@ -232,9 +320,20 @@ func (j *Journal) RecordExitJudgement(ctx context.Context, judgement ExitJudgeme
 	if id == "" {
 		return fmt.Errorf("%w: a judgement needs a position", ErrInvalidRequest)
 	}
+	if err := judgement.Provenance.validate(); err != nil {
+		return err
+	}
 	if judgement.Proposal != nil {
 		if err := validateProposal(*judgement.Proposal); err != nil {
 			return err
+		}
+		if err := judgement.Proposal.Provenance.validate(); err != nil {
+			return err
+		}
+		if judgement.Provenance.zero() != judgement.Proposal.Provenance.zero() ||
+			(!judgement.Provenance.zero() &&
+				!sameExitDecisionProvenance(judgement.Provenance, judgement.Proposal.Provenance)) {
+			return fmt.Errorf("%w: proposal provenance must match its exit judgement", ErrInvalidRequest)
 		}
 	}
 

@@ -14,8 +14,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | iterate every static profile | attaches computed immutable digest | returns registered profiles | common policy descriptor contract test |
+| B1 | iterate every static profile | verifies canonical identity against the declared literal | returns registered profiles | pinned digest contract test |
 | B2 | identity construction fails | no partially usable registry escapes initialization | panic during process initialization | policy identity validation tests |
+| B3 | canonical digest differs from fixed declaration | no registry escapes initialization | panic | pinned digest drift test |
 
 ## Calls and live bindings
 
@@ -25,7 +26,7 @@
 
 ## State mutations and fallbacks
 
-- Only the newly allocated local table is mutated before it becomes the package registry.
+- The local table already declares fixed digests; construction verifies rather than invents them.
 - Existing target, stop, partial, and runner numbers are preserved.
 
 ## Safety conclusion

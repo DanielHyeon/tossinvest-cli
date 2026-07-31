@@ -17,7 +17,7 @@
 |---|---|---|---|---|
 | B1 | action non-orderable/projected zero | state judgement only | nil after record | zero-order tests |
 | B2 | full exit or cancel-first | cancel conflicting orders first | error/withhold if uncleared | existing delay tests |
-| B3 | orderable | mint intent and attach proposal to judgement | continue | integration tests |
+| B3 | orderable | derive intent from DecisionID and attach matching provenance | continue | concurrent integration test |
 | B4 | concurrent pending proposal | no second submission | nil | race test |
 | B5 | judgement-only | no issuer/broker call | nil | state-only tests |
 | B6 | armed proposal | increment cycle and submit projected quantity | submit result | integration tests |
@@ -29,10 +29,11 @@
 | `clearTheSymbol` | prevent oversell before full/cancel-first exit | failures withhold and alert by delay path | CodeGraph + AST |
 | `Journal.RecordExitJudgement` | atomically advance state/arm | pending race is benign no-op | CodeGraph + AST |
 | `submit` | Guardian reduction and official broker path | existing release/in-doubt contract | CodeGraph + AST |
+| `exitIntentID` | make snapshot decision the journal/mutation dedup key | malformed legacy ID uses existing random fallback | AST |
 
 ## State mutations and fallbacks
 
-- Journal mutation occurs before broker submission. Zero projection must never mint/arm/submit.
+- Journal mutation occurs before broker submission. Judgement/proposal provenance is identical; zero projection never mints/arms/submits.
 
 ## Safety conclusion
 

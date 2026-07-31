@@ -16,7 +16,7 @@
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | registry miss | none | error | unknown common policy test |
-| B2 | adopted RUNNER | clone partial ratios zero; derive distinct version/digest | ladder value | adopted runner tests |
+| B2 | adopted RUNNER | clone partial ratios zero; apply and verify pinned adopted version/digest | ladder value | adopted runner tests |
 | B3 | other policy/provenance | no semantic change | ladder value | common policy tests |
 
 ## Calls and live bindings
@@ -24,7 +24,7 @@
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `CommonPolicyByID` | deep-copy registered policy | pure lookup | CodeGraph + AST |
-| `LadderPolicy.Identity` | bind adopted variant to its actual semantics | pure/fail closed | CodeGraph + AST |
+| `LadderPolicy.Identity` | verify adopted variant against its fixed declared semantics | pure/fail closed | CodeGraph + AST |
 
 ## State mutations and fallbacks
 

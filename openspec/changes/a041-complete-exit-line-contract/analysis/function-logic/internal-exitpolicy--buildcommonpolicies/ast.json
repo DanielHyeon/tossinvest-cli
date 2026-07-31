@@ -1,6 +1,6 @@
 {
   "file": "internal/exitpolicy/common_policy.go",
-  "source_sha256": "e3e38657c7103d0e9f842c986bf82f4e20c5c37c328fce10cd435bc0234c0de7",
+  "source_sha256": "7f44c4c04a10df57c924445a17aa8bd6f6ec03004b4622fe064da1f60f707ca7",
   "package": "exitpolicy",
   "function": "buildCommonPolicies",
   "signature": "buildCommonPolicies(params=0, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 77,
+    "line": 82,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 68,
+        "line": 71,
         "column": 2
       }
     },
@@ -25,7 +25,15 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 70,
+        "line": 73,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 76,
         "column": 3
       }
     }
@@ -34,7 +42,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 76,
+        "line": 81,
         "column": 2
       }
     }
@@ -43,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 69,
+        "line": 72,
         "column": 20
       },
       "text": "policies.Ladder.Identity"
@@ -51,10 +59,26 @@
     {
       "kind": "call",
       "at": {
-        "line": 71,
+        "line": 74,
         "column": 4
       },
       "text": "panic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 4
+      },
+      "text": "panic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 10
+      },
+      "text": "fmt.Sprintf"
     }
   ],
   "assignments": [
@@ -68,21 +92,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 69,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 73,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 74,
+        "line": 72,
         "column": 3
       }
     }

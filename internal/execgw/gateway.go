@@ -241,6 +241,9 @@ type OrderRef struct {
 type PlaceRequest struct {
 	Intent   orderintent.PlaceIntent
 	Decision GuardianDecision
+	// ExitProvenance carries the immutable exit-line decision to the mutation
+	// boundary. It is informational in a041; a042 owns durable schema columns.
+	ExitProvenance *journal.ExitDecisionProvenance
 	// Baseline is the account snapshot taken before this order was decided. It
 	// is recorded on the intent and is what lets IN_DOUBT resolution prove
 	// absence later. Optional — see Baseline for what omitting it costs.

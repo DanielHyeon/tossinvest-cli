@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| managed position/state + quote | held quantity positive; LADDER policy snapshot matches state | journal/registry/quote | alert and hold on refusal |
+| managed position/state + quote | held quantity positive; runtime ID/version/digest matches executable LADDER table | journal fixed compatibility identity/registry/quote | alert and hold on refusal |
 | cycle | non-nil per observation pass | `ObserveOnce` | proposal count after arm |
 
 ## Branches and early returns
@@ -30,7 +30,7 @@
 
 ## State mutations and fallbacks
 
-- Current function re-materialises judgement/proposal after evaluation. Edit will consume a single snapshot.
+- The evaluator receives the preserved state ID/version/digest and refuses any current-table mismatch before `record`.
 
 ## Safety conclusion
 

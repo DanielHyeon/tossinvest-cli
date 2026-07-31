@@ -19,6 +19,13 @@ a041 snapshot은 계산 정본이지만 crash recovery의 정본은 SQLite journ
 6. protection/high-water만 같은 policy digest 안에서 단조 비교할 수 있다. rung은 같은 immutable policy digest에서만 비교하고 next target/protection은 선택된 policy snapshot에서 다시 파생한다. policy digest가 다르거나 후보 우열을 결정할 수 없으면 해당 포지션 entry/자동 판정을 격리한다.
 7. snapshot ID, decision ID, observation ID와 policy ID/version/digest는 exit event와 같은 transaction에 position generation별로 저장한다.
 
+### a041 typed seam handoff
+
+- a041의 `ExitStateSeed.PolicyIdentity`는 신규 state가 사용한 runtime identity를 전달하지만 schema에는 아직 쓰지 않는다. a042 migration은 이 값을 nullable policy ID/version/digest column에 같은 transaction으로 저장하고 이후 read에서 그대로 복원해야 한다.
+- a041의 `ExitJudgement.Provenance`, `ExitProposal.Provenance`, `PlaceRequest.ExitProvenance`는 동일한 observation/snapshot/decision/policy identity를 운반한다. a042는 exit event와 state snapshot에 이 tuple을 원자적으로 저장하고 judgement/proposal 불일치를 계속 거부한다.
+- 기존 row의 NULL version/digest는 unknown이다. a041 engine이 허용하는 고정 legacy digest는 migration backfill 값이 아니며, a042는 NULL을 현재 registry digest로 채우지 않는다. 정확한 과거 의미를 증명할 수 없는 row는 격리한다.
+- a041의 deterministic exit intent ID는 decision ID에서 파생된다. a042 dedup/recovery는 이 연결을 보존하되 Guardian decision을 주문 권한의 유일한 근거로 유지한다.
+
 ## Risks / Trade-offs
 
 - [migration 중 crash] → schema version transaction과 reopen fixture로 검증한다.

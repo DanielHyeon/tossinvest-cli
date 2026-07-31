@@ -8,3 +8,4 @@
 | B4 | one-share final/breach submit one | a041 exitloop final/breach tests | no | yes |
 | B5 | same snapshot has one deterministic proposal under concurrent consumers | a041 race test + existing journal pending invariant | no | yes |
 | B6 | changed transition reaches durable record | existing ladder integration tests | existing | yes |
+| B7 | snapshot context identity cannot be constructed | decimal/refusal tests | existing | yes |

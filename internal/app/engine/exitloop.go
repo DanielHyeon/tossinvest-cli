@@ -70,12 +70,14 @@ package engine
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"sort"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
@@ -240,6 +242,9 @@ type ExitObserver struct {
 	delayedSince map[string]time.Time
 	// delayAlerted stops that alert repeating within one delay.
 	delayAlerted map[string]bool
+	// observationSequence distinguishes fallback observations when the quote
+	// source supplies no FetchedAt and a test/frozen clock does not advance.
+	observationSequence atomic.Uint64
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used
@@ -373,6 +378,9 @@ type ExitCycle struct {
 // run, which drives the loop by hand rather than by clock.
 func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 	var cycle ExitCycle
+	observation := cycleObservation{
+		at: o.clk.Now().UTC(), sequence: o.observationSequence.Add(1),
+	}
 
 	if o.opts.SLO != nil && o.opts.SLO.FillDetectionBehind() {
 		// Yield the whole cycle, and let the outage clock keep running. See the
@@ -410,7 +418,7 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 	cycle.Observed = len(quotes)
 
 	for _, state := range states {
-		price, ok := quotes[strings.ToUpper(strings.TrimSpace(state.position.Symbol))]
+		quote, ok := quotes[strings.ToUpper(strings.TrimSpace(state.position.Symbol))]
 		if !ok {
 			// A symbol the price read did not answer for is a symbol this cycle
 			// did not observe. Hold it; the outage clock is per account and the
@@ -418,7 +426,7 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 			continue
 		}
 		cycle.Judged++
-		if err := o.judge(ctx, state, price, &cycle); err != nil && cycle.Err == nil {
+		if err := o.judge(ctx, state, quote, observation, &cycle); err != nil && cycle.Err == nil {
 			cycle.Err = err
 		}
 	}
@@ -427,8 +435,10 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 
 // managed is one position and the exit state that governs it.
 type managed struct {
-	position journal.Position
-	state    journal.ExitState
+	position       journal.Position
+	state          journal.ExitState
+	policyIdentity exitpolicy.PolicyIdentity
+	identityErr    error
 }
 
 // workingSet reconciles the held positions with the exit states, opening the
@@ -479,9 +489,27 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			cycle.Opened++
 			state = opened
 		}
-		out = append(out, managed{position: p, state: state})
+		identity, identityErr := managedPolicyIdentity(state, p.Adopted())
+		out = append(out, managed{
+			position: p, state: state, policyIdentity: identity, identityErr: identityErr,
+		})
 	}
 	return out, nil
+}
+
+func managedPolicyIdentity(state journal.ExitState, adopted bool) (exitpolicy.PolicyIdentity, error) {
+	identity := state.PolicyIdentity
+	if strings.TrimSpace(identity.ID) != "" || strings.TrimSpace(identity.Version) != "" ||
+		strings.TrimSpace(identity.Digest) != "" {
+		if err := identity.Validate(); err != nil {
+			return exitpolicy.PolicyIdentity{}, err
+		}
+		return identity, nil
+	}
+	if state.PolicyKind == journal.ExitPolicyLadder {
+		return exitpolicy.LegacyLadderPolicyIdentity(state.PolicyID, adopted)
+	}
+	return exitpolicy.LegacyRatchetPolicyIdentity()
 }
 
 // openState creates the protection state of a position that has just started
@@ -585,8 +613,18 @@ func (o *ExitObserver) openAdoptedState(ctx context.Context, p journal.Position)
 	return state, nil
 }
 
+type observedQuote struct {
+	Price     string
+	FetchedAt time.Time
+}
+
+type cycleObservation struct {
+	at       time.Time
+	sequence uint64
+}
+
 // observe performs the one price read of the cycle.
-func (o *ExitObserver) observe(ctx context.Context, symbols []string) (map[string]string, error) {
+func (o *ExitObserver) observe(ctx context.Context, symbols []string) (map[string]observedQuote, error) {
 	var quotes []domain.Quote
 	err := o.opts.Retrier.Query(ctx, execgw.QueryPrice, func(ctx context.Context) error {
 		var qerr error
@@ -597,14 +635,16 @@ func (o *ExitObserver) observe(ctx context.Context, symbols []string) (map[strin
 		return nil, err
 	}
 
-	out := make(map[string]string, len(quotes))
+	out := make(map[string]observedQuote, len(quotes))
 	for _, q := range quotes {
 		if q.Last <= 0 {
 			// A quote with no last trade is not an observation. Recording it as
 			// zero would read as a total collapse and liquidate the position.
 			continue
 		}
-		out[strings.ToUpper(strings.TrimSpace(q.Symbol))] = decimalOf(q.Last)
+		out[strings.ToUpper(strings.TrimSpace(q.Symbol))] = observedQuote{
+			Price: decimalOf(q.Last), FetchedAt: q.FetchedAt,
+		}
 	}
 	if len(out) == 0 {
 		return nil, fmt.Errorf("engine: the price read answered for none of %d held symbol(s)", len(symbols))
@@ -653,7 +693,12 @@ func (o *ExitObserver) checkOutage(ctx context.Context, cycle *ExitCycle) {
 }
 
 // judge evaluates one position and acts on what the evaluation asked for.
-func (o *ExitObserver) judge(ctx context.Context, m managed, price string, cycle *ExitCycle) error {
+func (o *ExitObserver) judge(ctx context.Context, m managed, quote observedQuote,
+	observation cycleObservation, cycle *ExitCycle) error {
+	if m.identityErr != nil {
+		o.alertRefused(ctx, m, m.identityErr)
+		return nil
+	}
 	breakEven, err := o.breakEven(m)
 	if err != nil {
 		o.alertRefused(ctx, m, err)
@@ -662,9 +707,9 @@ func (o *ExitObserver) judge(ctx context.Context, m managed, price string, cycle
 
 	switch m.state.PolicyKind {
 	case journal.ExitPolicyLadder:
-		return o.judgeLadder(ctx, m, price, breakEven, cycle)
+		return o.judgeLadder(ctx, m, quote, observation, breakEven, cycle)
 	default:
-		return o.judgeRatchet(ctx, m, price, breakEven, cycle)
+		return o.judgeRatchet(ctx, m, quote, observation, breakEven, cycle)
 	}
 }
 
@@ -687,14 +732,30 @@ func (o *ExitObserver) breakEven(m managed) (string, error) {
 	return o.opts.Costs.BreakEvenSellPrice(m.state.EntryPrice, quantity, market)
 }
 
-func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, price, breakEven string,
-	cycle *ExitCycle) error {
+func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observedQuote,
+	observation cycleObservation, breakEven string, cycle *ExitCycle) error {
+	activeIdentity, err := exitpolicy.RatchetPolicyIdentity(o.ratchet)
+	if err != nil || !samePolicyIdentity(m.policyIdentity, activeIdentity) {
+		if err == nil {
+			err = fmt.Errorf("%w: position %s preserves %s@%s/%s, active ratchet is %s@%s/%s",
+				exitpolicy.ErrPolicyIdentityConflict, m.position.ID,
+				m.policyIdentity.ID, m.policyIdentity.Version, m.policyIdentity.Digest,
+				activeIdentity.ID, activeIdentity.Version, activeIdentity.Digest)
+		}
+		o.alertRefused(ctx, m, err)
+		return nil
+	}
+	snapshotContext, err := o.snapshotContext(m, quote, observation)
+	if err != nil {
+		o.alertRefused(ctx, m, err)
+		return nil
+	}
 	snapshot, err := exitpolicy.EvaluateRatchetSnapshot(exitpolicy.RatchetSnapshotInput{
-		Context: o.snapshotContext(m, price),
+		Context: snapshotContext,
 		Input: exitpolicy.RatchetInput{
 			Entry:           m.state.EntryPrice,
 			InitialStop:     m.state.InitialStop,
-			ObservedPrice:   price,
+			ObservedPrice:   quote.Price,
 			HighWater:       m.state.HighWater,
 			Baseline:        m.state.Baseline,
 			RealBreakeven:   breakEven,
@@ -723,14 +784,19 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, price, break
 	return o.record(ctx, m, snapshot, cycle)
 }
 
-func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakEven string,
-	cycle *ExitCycle) error {
+func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observedQuote,
+	observation cycleObservation, breakEven string, cycle *ExitCycle) error {
 	ladder, err := o.ladderFor(m)
 	if err != nil {
 		o.alertRefused(ctx, m, err)
 		return nil
 	}
 	if err := o.checkLadderPolicyStillFits(m, ladder); err != nil {
+		o.alertRefused(ctx, m, err)
+		return nil
+	}
+	snapshotContext, err := o.snapshotContext(m, quote, observation)
+	if err != nil {
 		o.alertRefused(ctx, m, err)
 		return nil
 	}
@@ -741,17 +807,19 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakE
 		}
 	}
 	snapshot, err := exitpolicy.EvaluateLadderSnapshot(exitpolicy.LadderSnapshotInput{
-		Context: o.snapshotContext(m, price),
+		Context: snapshotContext,
 		Input: exitpolicy.LadderInput{
 			EntryPrice:    m.state.EntryPrice,
 			InitialStop:   m.state.InitialStop,
-			ObservedPrice: price,
+			ObservedPrice: quote.Price,
 			HighWater:     m.state.HighWater,
 			Baseline:      m.state.Baseline,
 			State: exitpolicy.LadderState{
 				// The journal snapshot selects the immutable registry policy above,
 				// so the evaluator's identity check catches a mismatched state/table.
-				PolicyID:        ladder.PolicyID,
+				PolicyID:        m.policyIdentity.ID,
+				PolicyVersion:   m.policyIdentity.Version,
+				PolicyDigest:    m.policyIdentity.Digest,
 				ActivatedRung:   m.state.ActiveRung,
 				TakenRatioTotal: m.state.TakenRatioTotal,
 				Completed:       m.state.Completed,
@@ -775,15 +843,45 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakE
 	return o.record(ctx, m, snapshot, cycle)
 }
 
-func (o *ExitObserver) snapshotContext(m managed, price string) exitpolicy.SnapshotContext {
-	observation := fmt.Sprintf("%s|%s|%s|%s|%d|%s|%s", o.opts.AccountRef,
-		strings.ToLower(strings.TrimSpace(m.position.Market)),
-		strings.ToUpper(strings.TrimSpace(m.position.Symbol)), m.position.ID,
-		m.position.InstanceSeq, o.clk.Now().UTC().Format(time.RFC3339Nano), strings.TrimSpace(price))
+func (o *ExitObserver) snapshotContext(m managed, quote observedQuote,
+	fallback cycleObservation) (exitpolicy.SnapshotContext, error) {
+	observationID, err := stableObservationID(o.opts.AccountRef, m, quote, fallback)
+	if err != nil {
+		return exitpolicy.SnapshotContext{}, err
+	}
 	return exitpolicy.SnapshotContext{
 		PositionID: m.position.ID, PositionGeneration: m.position.InstanceSeq,
-		ObservationID: observation, RemainingQuantity: m.position.Quantity,
+		ObservationID: observationID, RemainingQuantity: m.position.Quantity,
+	}, nil
+}
+
+func stableObservationID(accountRef string, m managed, quote observedQuote,
+	fallback cycleObservation) (string, error) {
+	price, err := riskcalc.CanonicalDecimal(quote.Price)
+	if err != nil {
+		return "", err
 	}
+	stampKind, stamp, sequence := "fetched_at", quote.FetchedAt.UTC().Format(time.RFC3339Nano), ""
+	if quote.FetchedAt.IsZero() {
+		stampKind, stamp = "cycle", fallback.at.UTC().Format(time.RFC3339Nano)
+		sequence = strconv.FormatUint(fallback.sequence, 10)
+	}
+	h := sha256.New()
+	for _, field := range []string{
+		strings.TrimSpace(accountRef), strings.ToLower(strings.TrimSpace(m.position.Market)),
+		strings.ToUpper(strings.TrimSpace(m.position.Symbol)), strings.TrimSpace(m.position.ID),
+		strconv.FormatInt(m.position.InstanceSeq, 10), stampKind, stamp, sequence, price,
+	} {
+		_, _ = fmt.Fprintf(h, "%d:", len(field))
+		_, _ = h.Write([]byte(field))
+	}
+	return "obs_" + fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+func samePolicyIdentity(a, b exitpolicy.PolicyIdentity) bool {
+	return strings.TrimSpace(a.ID) == strings.TrimSpace(b.ID) &&
+		strings.TrimSpace(a.Version) == strings.TrimSpace(b.Version) &&
+		strings.TrimSpace(a.Digest) == strings.TrimSpace(b.Digest)
 }
 
 // checkLadderPolicyStillFits is defence in depth after policy-ID resolution: an
@@ -849,6 +947,10 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 		PositionID: m.position.ID, ObservedPrice: snapshot.ObservedPrice,
 		HighWater: snapshot.HighWater, Baseline: snapshot.CurrentProtection,
 		RatchetLevel: string(snapshot.RatchetLevel), ActiveRung: snapshot.ActiveRung,
+		Provenance: journal.ExitDecisionProvenance{
+			ObservationID: snapshot.ObservationID, SnapshotID: snapshot.SnapshotID,
+			DecisionID: snapshot.DecisionID, Policy: snapshot.Policy,
+		},
 	}
 
 	// Clearing the symbol comes *before* the arming, not after it, and the reason
@@ -882,11 +984,15 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 
 	intentID := ""
 	if orderable {
-		intentID = o.opts.NewID()
+		intentID = exitIntentID(snapshot.DecisionID)
+		if intentID == "" {
+			intentID = o.opts.NewID()
+		}
 		judgement.Proposal = &journal.ExitProposal{
-			Action:   string(proposal.Action),
-			Level:    proposal.Level,
-			IntentID: intentID,
+			Action:     string(proposal.Action),
+			Level:      proposal.Level,
+			IntentID:   intentID,
+			Provenance: judgement.Provenance,
 		}
 	}
 
@@ -903,7 +1009,16 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 		return nil
 	}
 	cycle.Proposed++
-	return o.submit(ctx, m, proposal, quantity, intentID, judgement.ObservedPrice)
+	return o.submit(ctx, m, proposal, quantity, intentID, judgement.ObservedPrice,
+		judgement.Provenance)
+}
+
+func exitIntentID(decisionID string) string {
+	decisionID = strings.TrimSpace(decisionID)
+	if !strings.HasPrefix(decisionID, "eld_") || len(decisionID) != len("eld_")+sha256.Size*2 {
+		return ""
+	}
+	return "exit_" + strings.TrimPrefix(decisionID, "eld_")
 }
 
 // isFullExit reports a proposal that intends to close the position outright.
@@ -914,7 +1029,7 @@ func isFullExit(p exitpolicy.Proposal) bool {
 
 // submit takes an armed proposal to the broker.
 func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolicy.Proposal,
-	quantity, intentID, observed string) error {
+	quantity, intentID, observed string, provenance journal.ExitDecisionProvenance) error {
 	submitQuantity, capped, err := o.applyFloor(ctx, m, quantity)
 	if err != nil {
 		return err
@@ -958,9 +1073,10 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		return o.release(ctx, m, journal.ProposalRefused)
 	}
 	out, err := o.opts.Submit.Place(ctx, execgw.PlaceRequest{
-		Intent:   intent,
-		Decision: issued.Decision,
-		IntentID: intentID,
+		Intent:         intent,
+		Decision:       issued.Decision,
+		IntentID:       intentID,
+		ExitProvenance: &provenance,
 	})
 	switch {
 	case out.State == journal.StateConfirmed:

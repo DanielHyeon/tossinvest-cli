@@ -1,15 +1,15 @@
 {
   "file": "internal/exitpolicy/common_policy.go",
-  "source_sha256": "e3e38657c7103d0e9f842c986bf82f4e20c5c37c328fce10cd435bc0234c0de7",
+  "source_sha256": "7f44c4c04a10df57c924445a17aa8bd6f6ec03004b4622fe064da1f60f707ca7",
   "package": "exitpolicy",
   "function": "CommonPolicyFieldDescriptor",
   "signature": "CommonPolicyFieldDescriptor(params=0, results=1)",
   "start": {
-    "line": 181,
+    "line": 189,
     "column": 1
   },
   "end": {
-    "line": 199,
+    "line": 207,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 184,
+        "line": 192,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 190,
+        "line": 198,
         "column": 2
       }
     }
@@ -35,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 182,
+        "line": 190,
         "column": 14
       },
       "text": "RegisteredCommonPolicyDescriptors"
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 183,
+        "line": 191,
         "column": 13
       },
       "text": "make"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 183,
+        "line": 191,
         "column": 43
       },
       "text": "len"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 185,
+        "line": 193,
         "column": 13
       },
       "text": "append"
@@ -69,21 +69,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 182,
+        "line": 190,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 183,
+        "line": 191,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 185,
+        "line": 193,
         "column": 3
       }
     }

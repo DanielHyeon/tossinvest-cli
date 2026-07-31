@@ -1,0 +1,418 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "09526149f088c0b45d9bd86d8d24c88b183e91002d38e81e879ebb66049952a7",
+  "package": "engine",
+  "function": "submit",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.submit(params=7, results=1)",
+  "start": {
+    "line": 1031,
+    "column": 1
+  },
+  "end": {
+    "line": 1106,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1034,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1037,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1057,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1066,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1071,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "switch",
+      "at": {
+        "line": 1081,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 1082,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 1090,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 1095,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 1098,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 1100,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1035,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1042,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1059,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1067,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1073,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1089,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1094,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1097,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1104,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1033,
+        "column": 33
+      },
+      "text": "o.applyFloor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1037,
+        "column": 5
+      },
+      "text": "isZeroQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1042,
+        "column": 10
+      },
+      "text": "o.release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1045,
+        "column": 17
+      },
+      "text": "o.opts.Issuer.IssueReduction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1048,
+        "column": 16
+      },
+      "text": "costs.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1048,
+        "column": 29
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1048,
+        "column": 45
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1054,
+        "column": 11
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1058,
+        "column": 3
+      },
+      "text": "o.alertProposalRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1058,
+        "column": 44
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1059,
+        "column": 10
+      },
+      "text": "o.release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1066,
+        "column": 12
+      },
+      "text": "o.opts.Journal.AttachExitIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1067,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1070,
+        "column": 17
+      },
+      "text": "o.sellIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1072,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1073,
+        "column": 10
+      },
+      "text": "o.release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1075,
+        "column": 14
+      },
+      "text": "o.opts.Submit.Place"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1083,
+        "column": 3
+      },
+      "text": "o.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1086,
+        "column": 14
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1096,
+        "column": 3
+      },
+      "text": "o.noteDelay"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1097,
+        "column": 10
+      },
+      "text": "o.release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1101,
+        "column": 13
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1103,
+        "column": 3
+      },
+      "text": "o.alertProposalRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1104,
+        "column": 10
+      },
+      "text": "o.release"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1033,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1045,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1066,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1070,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1075,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1099,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1101,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

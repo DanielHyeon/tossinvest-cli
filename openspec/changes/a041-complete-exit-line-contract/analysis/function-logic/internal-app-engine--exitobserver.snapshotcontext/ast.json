@@ -1,24 +1,40 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "3ed2e562f756e72abfcb7c820fcec4bec46d2bb95e0fc1d378ff8dbd4a6663cd",
+  "source_sha256": "09526149f088c0b45d9bd86d8d24c88b183e91002d38e81e879ebb66049952a7",
   "package": "engine",
   "function": "snapshotContext",
   "receiver": "ExitObserver",
-  "signature": "ExitObserver.snapshotContext(params=2, results=1)",
+  "signature": "ExitObserver.snapshotContext(params=3, results=2)",
   "start": {
-    "line": 778,
+    "line": 846,
     "column": 1
   },
   "end": {
-    "line": 787,
+    "line": 856,
     "column": 2
   },
-  "branches": null,
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 849,
+        "column": 2
+      }
+    }
+  ],
   "returns": [
     {
       "kind": "return",
       "at": {
-        "line": 783,
+        "line": 850,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 852,
         "column": 2
       }
     }
@@ -27,81 +43,17 @@
     {
       "kind": "call",
       "at": {
-        "line": 779,
-        "column": 17
+        "line": 848,
+        "column": 24
       },
-      "text": "fmt.Sprintf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 780,
-        "column": 3
-      },
-      "text": "strings.ToLower"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 780,
-        "column": 19
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 781,
-        "column": 3
-      },
-      "text": "strings.ToUpper"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 781,
-        "column": 19
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 782,
-        "column": 27
-      },
-      "text": "Format"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 782,
-        "column": 27
-      },
-      "text": "UTC"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 782,
-        "column": 27
-      },
-      "text": "o.clk.Now"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 782,
-        "column": 71
-      },
-      "text": "strings.TrimSpace"
+      "text": "stableObservationID"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 779,
+        "line": 848,
         "column": 2
       }
     }

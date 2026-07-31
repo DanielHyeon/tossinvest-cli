@@ -1,0 +1,79 @@
+{
+  "file": "internal/journal/exit_state.go",
+  "source_sha256": "6cd6711d47d33f55db6132bbccd1d8ec77bd95345995cce43f3c20afca8c69ed",
+  "package": "journal",
+  "function": "zero",
+  "receiver": "ExitDecisionProvenance",
+  "signature": "ExitDecisionProvenance.zero(params=0, results=1)",
+  "start": {
+    "line": 286,
+    "column": 1
+  },
+  "end": {
+    "line": 290,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 53
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 3
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 44
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 3
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 48
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
