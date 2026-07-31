@@ -115,184 +115,8 @@ func transitiveAuthorityDependency(graph map[string][]string, start string) ([]s
 	return transitiveDependency(graph, start, forbiddenApprovedBoundaryPackage)
 }
 
-func boundaryTypeCapability(expr ast.Expr, interfaces, functions map[string]bool) string {
-	switch typ := expr.(type) {
-	case *ast.InterfaceType:
-		return "interface"
-	case *ast.FuncType:
-		return "function"
-	case *ast.StarExpr:
-		return "pointer"
-	case *ast.MapType:
-		return "map"
-	case *ast.ArrayType:
-		if typ.Len == nil {
-			return "slice"
-		}
-	case *ast.ChanType:
-		return "channel"
-	case *ast.Ident:
-		if interfaces[typ.Name] {
-			return "interface"
-		}
-		if functions[typ.Name] {
-			return "function"
-		}
-	}
-	return ""
-}
-
-func boundaryFieldNames(field *ast.Field) []string {
-	if len(field.Names) == 0 {
-		return []string{"<embedded>"}
-	}
-	names := make([]string, 0, len(field.Names))
-	for _, name := range field.Names {
-		names = append(names, name.Name)
-	}
-	return names
-}
-
-func isApprovedCandidateParameter(expr ast.Expr, candidatePkg string) bool {
-	if ident, ok := expr.(*ast.Ident); ok {
-		return candidatePkg == "." && ident.Name == "ApprovedCandidate"
-	}
-	selector, ok := expr.(*ast.SelectorExpr)
-	if !ok || selector.Sel.Name != "ApprovedCandidate" {
-		return false
-	}
-	pkg, ok := selector.X.(*ast.Ident)
-	return ok && pkg.Name == candidatePkg
-}
-
-func pureApprovedCandidateBoundaryViolations(packageRel, module string, files []*ast.File) []string {
-	interfaces := map[string]bool{}
-	functions := map[string]bool{}
-	for _, file := range files {
-		ast.Inspect(file, func(n ast.Node) bool {
-			if typ, ok := n.(*ast.TypeSpec); ok {
-				switch typ.Type.(type) {
-				case *ast.InterfaceType:
-					interfaces[typ.Name.Name] = true
-				case *ast.FuncType:
-					functions[typ.Name.Name] = true
-				}
-			}
-			return true
-		})
-	}
-
-	var findings []string
-	allowedImport := module + "/internal/candidate"
-	for _, file := range files {
-		candidatePkg, _ := candidateImportName(file, module)
-		for _, spec := range file.Imports {
-			path := strings.Trim(spec.Path.Value, `"`)
-			if path != allowedImport {
-				findings = append(findings, packageRel+" pure boundary imports "+path+
-					"; only "+allowedImport+" is allowed")
-			}
-		}
-		ast.Inspect(file, func(n ast.Node) bool {
-			switch item := n.(type) {
-			case *ast.TypeSpec:
-				if interfaces[item.Name.Name] {
-					findings = append(findings, packageRel+" pure boundary declares interface capability "+item.Name.Name)
-				}
-				if functions[item.Name.Name] {
-					findings = append(findings, packageRel+" pure boundary declares function capability "+item.Name.Name)
-				}
-				if structure, ok := item.Type.(*ast.StructType); ok {
-					for _, field := range structure.Fields.List {
-						if capability := boundaryTypeCapability(field.Type, interfaces, functions); capability != "" {
-							for _, name := range boundaryFieldNames(field) {
-								findings = append(findings, packageRel+" pure boundary declares "+capability+"-typed field "+name)
-							}
-						}
-					}
-				}
-			case *ast.ValueSpec:
-				if capability := boundaryTypeCapability(item.Type, interfaces, functions); capability == "interface" || capability == "function" {
-					for _, name := range item.Names {
-						findings = append(findings, packageRel+" pure boundary declares "+capability+"-typed variable "+name.Name)
-					}
-				}
-			case *ast.FuncLit:
-				findings = append(findings, packageRel+" pure boundary declares function literal capability")
-			}
-			return true
-		})
-		for _, decl := range file.Decls {
-			switch node := decl.(type) {
-			case *ast.GenDecl:
-				for _, spec := range node.Specs {
-					switch item := spec.(type) {
-					case *ast.ValueSpec:
-						if node.Tok != token.VAR {
-							continue
-						}
-						for _, name := range item.Names {
-							findings = append(findings, packageRel+" pure boundary declares package variable "+name.Name)
-						}
-					}
-				}
-			case *ast.FuncDecl:
-				parameters := map[string]ast.Expr{}
-				for _, field := range node.Type.Params.List {
-					capability := boundaryTypeCapability(field.Type, interfaces, functions)
-					for _, name := range field.Names {
-						parameters[name.Name] = field.Type
-						if capability != "" {
-							findings = append(findings, packageRel+" pure boundary declares "+capability+
-								"-typed parameter "+name.Name)
-						}
-					}
-				}
-				if node.Type.Results != nil {
-					for _, field := range node.Type.Results.List {
-						if capability := boundaryTypeCapability(field.Type, interfaces, functions); capability != "" {
-							findings = append(findings, packageRel+" pure boundary returns "+capability+" capability")
-						}
-					}
-				}
-				if node.Recv != nil {
-					for _, field := range node.Recv.List {
-						if capability := boundaryTypeCapability(field.Type, interfaces, functions); capability != "" {
-							findings = append(findings, packageRel+" pure boundary has "+capability+" receiver")
-						}
-					}
-				}
-				ast.Inspect(node.Body, func(n ast.Node) bool {
-					call, ok := n.(*ast.CallExpr)
-					if !ok {
-						return true
-					}
-					if called, ok := call.Fun.(*ast.Ident); ok {
-						if _, injected := parameters[called.Name]; injected {
-							findings = append(findings, packageRel+" pure boundary invokes function parameter "+called.Name)
-						}
-					}
-					selector, ok := call.Fun.(*ast.SelectorExpr)
-					if !ok {
-						return true
-					}
-					receiver, ok := selector.X.(*ast.Ident)
-					if !ok {
-						return true
-					}
-					parameterType, injected := parameters[receiver.Name]
-					if !injected || (isApprovedCandidateParameter(parameterType, candidatePkg) &&
-						approvedCandidateAccessors[selector.Sel.Name]) {
-						return true
-					}
-					findings = append(findings, packageRel+" pure boundary invokes method "+selector.Sel.Name+
-						" on parameter "+receiver.Name)
-					return true
-				})
-			}
-		}
-	}
-	return findings
+func pureApprovedCandidateBoundaryViolations(packageRel, module string, fset *token.FileSet, files []*ast.File) []string {
+	return typeCheckPureApprovedCandidateBoundary(packageRel, module, fset, files)
 }
 
 func auditApprovedCandidateBoundaries(root, module string, files []string) ([]string, error) {
@@ -373,7 +197,7 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 			findings = append(findings, packageRel+" has an empty approved-candidate boundary reason")
 		}
 		findings = append(findings,
-			pureApprovedCandidateBoundaryViolations(packageRel, module, filesByPackage[packageRel])...)
+			pureApprovedCandidateBoundaryViolations(packageRel, module, fset, filesByPackage[packageRel])...)
 	}
 	for packageRel := range approvedCandidateBoundaries {
 		if !directReaders[packageRel] {
@@ -481,10 +305,7 @@ func TestApprovedCandidateBoundaryRejectsReversePrimitiveLaundering(t *testing.T
 	files := map[string]string{
 		"internal/strategy/strategy.go": `package strategy
 import cv "` + module + `/internal/candidate"
-func Eligible(in cv.VetoInputs, set cv.ThresholdSet) (bool, error) {
-	_, err := cv.AssessApprovedCandidate(in, set)
-	return err == nil, err
-}`,
+func Eligible(approved cv.ApprovedCandidate) bool { return approved.Valid() }`,
 		"internal/testengine/engine.go": `package testengine
 import (
 	"` + module + `/internal/strategy"
@@ -552,10 +373,7 @@ func TestApprovedCandidateAuthorityReachCannotBeAllowedByBoundaryReason(t *testi
 	root, rels := writeApprovedBoundaryFixture(t, map[string]string{
 		"internal/strategy/strategy.go": `package strategy
 import cv "` + module + `/internal/candidate"
-func Eligible(in cv.VetoInputs, set cv.ThresholdSet) bool {
-	_, err := cv.AssessApprovedCandidate(in, set)
-	return err == nil
-}`,
+func Eligible(approved cv.ApprovedCandidate) bool { return approved.Valid() }`,
 		"internal/testengine/engine.go": `package testengine
 import (
 	"` + module + `/internal/strategy"
@@ -616,15 +434,14 @@ func EvaluateAndSubmit(approved cv.ApprovedCandidate, submitter Submitter, callb
 	}
 	for _, want := range []string{
 		"imports net/http",
-		"package variable packageCallback",
-		"interface capability Submitter",
-		"interface capability LocalSubmitter",
-		"function-typed field Callback",
-		"pointer-typed field Client",
-		"function-typed parameter callback",
-		"function-typed variable localCallback",
-		"function literal capability",
-		"invokes method Submit on parameter submitter",
+		"variable packageCallback",
+		"type Submitter",
+		"type LocalSubmitter",
+		"type Evaluator: field Callback",
+		"parameter callback",
+		"variable localCallback",
+		"forbids function literal",
+		"forbids free or injected function call",
 	} {
 		if !findingContains(findings, want) {
 			t.Errorf("pure-boundary findings = %v, want substring %q", findings, want)

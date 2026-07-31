@@ -10,7 +10,7 @@
 |---|---|---|---|
 | `root`, `module`, `files` | repository root, declared module, repository-relative `.go` files outside candidate | current worktree via `goFilesUnder` | parse/read error is returned; audit fails closed |
 | `approvedCandidateBoundaries` | direct pure readers only, each with non-empty rationale | a047 handoff review | missing/stale/empty permission becomes a finding |
-| pure reader package shape | candidate-only imports, no package state, interface/function capability, mutable API shapes, or calls on injected parameters | a046 return-only evaluator contract | any capability-bearing shape becomes a finding |
+| pure reader package shape | `go/types`-resolved candidate-only imports; no package state, interface/function capability, mutable/nested/generic API shapes, or non-accessor execution | a046 return-only evaluator contract | any capability-bearing shape or type-check failure becomes a finding |
 | `forbidden` | canonical authority roots | `isolation_test.go` | every transitive reach becomes an unconditional finding; a046 has no bridge exemption |
 
 ## Branches and early returns
@@ -34,7 +34,7 @@
 | `parser.ParseFile` | parse imports and approved symbols in production Go | any parse error aborts audit | current AST |
 | `candidateImportName`, `namesApprovedCandidateSymbol` | identify direct readers including aliases/dot imports | conservative direct-reader classification | positive controls |
 | `transitiveDependency` | compute reverse-taint reach and reconstruct paths | breadth-first, cycle-safe, no retry | H1 RED fixture |
-| `pureApprovedCandidateBoundaryViolations` | reject injected or hidden authority in direct reader syntax/imports | conservative AST check; candidate-only imports | H2 RED fixture |
+| `pureApprovedCandidateBoundaryViolations` | reject injected or hidden authority using a cycle-safe `go/types` value allowlist plus execution-form AST checks | custom candidate-only importer; no spelling fallback | 4th review RED matrix |
 | `transitiveAuthorityDependency` | detect any canonical authority root in dependency closure | breadth-first, cycle-safe, no retry and no exemption | H1 fixture |
 
 ## State mutations and fallbacks
