@@ -20,4 +20,12 @@
 
 #### Scenario: 승인 후 pass
 - **WHEN** 완전한 set 아래 모든 관측이 veto 조건을 벗어난다
-- **THEN** threshold version을 포함한 ApprovedCandidate verdict를 만들되 주문·RiskIntent는 만들지 않는다
+- **THEN** candidate-life ID, threshold version, set/evidence digest와 approved-at을 포함한 ApprovedCandidate verdict를 만들되 주문·RiskIntent는 만들지 않는다
+
+#### Scenario: 승인 set 아래 veto 또는 미측정
+- **WHEN** 완전한 set을 사용했지만 하나 이상의 veto가 raised 또는 unmeasured다
+- **THEN** ApprovedCandidate는 zero value이고 typed refusal을 반환한다
+
+#### Scenario: candidate-life provenance
+- **WHEN** 같은 normalized market/symbol과 같은 UTC instant의 FirstSeenAt을 다시 평가한다
+- **THEN** raw symbol을 포함하지 않는 동일한 deterministic candidate-life ID를 만들고, FirstSeenAt이 달라지면 다른 ID를 만든다

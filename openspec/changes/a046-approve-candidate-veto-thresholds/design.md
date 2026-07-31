@@ -27,6 +27,14 @@ candidate store는 shadow bands와 crossings를 보존하지만 두 veto thresho
    registry는 같은 version이 다른 canonical set digest를 가리키는 것을 거부한다.
 10. D3 veto 순서는 private fixed array가 소유하고 `OrderedVetoCodes()`가 array copy를 반환한다.
     콘솔·CLI consumer는 package invariant를 직접 변경할 수 없다.
+11. `ApprovedCandidate`는 세 veto가 모두 measured-and-clear인 경우에만 생성한다. raised 또는
+    unmeasured가 하나라도 있으면 zero value와 typed refusal을 반환한다. a047 handoff provenance는
+    threshold version뿐 아니라 canonical set digest, evidence digest와 approved-at을 값으로 복사한다.
+    Candidate life ID는 기존 lifecycle 정본인 normalized `(market, symbol, FirstSeenAt)`만 사용해,
+    domain separator `tossos:candidate-life:v1 + NUL` 뒤
+    `market + NUL + symbol + NUL + UTC RFC3339Nano FirstSeenAt`의 SHA-256으로 결정적으로 만든다.
+    외부 표기는 `candidate-life:v1:sha256:<lowercase hex>`다. ID는 raw symbol을 노출하지 않으며
+    zero FirstSeenAt 또는 non-canonical Key에는 fallback을 만들지 않는다.
 
 ## Risks / Trade-offs
 

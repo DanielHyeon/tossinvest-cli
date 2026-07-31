@@ -1,0 +1,285 @@
+{
+  "file": "internal/candidate/thresholdset.go",
+  "source_sha256": "39dc200f29f5964b3e1372b2b8d5809888a42fdd1bea1862d3fa3393738e134c",
+  "package": "candidate",
+  "function": "AssessApprovedCandidate",
+  "signature": "AssessApprovedCandidate(params=2, results=2)",
+  "start": {
+    "line": 582,
+    "column": 1
+  },
+  "end": {
+    "line": 616,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 583,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 588,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 591,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 598,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 602,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 606,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 584,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 589,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 592,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 599,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 603,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 607,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 610,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 584,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 587,
+        "column": 17
+      },
+      "text": "candidateLifeID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 589,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 589,
+        "column": 78
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 592,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 593,
+        "column": 4
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 596,
+        "column": 21
+      },
+      "text": "set.VetoThresholds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 597,
+        "column": 11
+      },
+      "text": "AssessChase"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 15
+      },
+      "text": "chase.Raised"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 31
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 602,
+        "column": 19
+      },
+      "text": "chase.NotMeasured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 602,
+        "column": 40
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 606,
+        "column": 6
+      },
+      "text": "chase.Passed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 607,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 587,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 596,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 597,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 598,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 602,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

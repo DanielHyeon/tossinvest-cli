@@ -1,6 +1,6 @@
 {
   "file": "internal/candidate/thresholdset.go",
-  "source_sha256": "7581f426bdb957f38ac9aaeaefeddabd5b19fc9964b74a346ed5486ca5f036a0",
+  "source_sha256": "39dc200f29f5964b3e1372b2b8d5809888a42fdd1bea1862d3fa3393738e134c",
   "package": "candidate",
   "function": "LoadThresholdSet",
   "receiver": "ThresholdRegistry",

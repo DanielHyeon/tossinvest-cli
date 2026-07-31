@@ -1,7 +1,11 @@
 package candidate
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -315,27 +319,127 @@ func TestThresholdSetDoesNotAliasTheSourceEvidenceOrActivation(t *testing.T) {
 	}
 }
 
-func TestApprovedCandidateCarriesThresholdVersionWithoutOrderAuthority(t *testing.T) {
-	set := loadSyntheticThresholdSet(t)
-	at := t0.Add(time.Minute)
-	got, err := AssessApprovedCandidate(VetoInputs{
-		Candidate: aCandidate(t0),
+func passingApprovedInputs(candidate Candidate) VetoInputs {
+	at := candidate.FirstSeenAt.Add(time.Minute)
+	return VetoInputs{
+		Candidate: candidate,
 		Sighting:  Sighting{Measured: true, Rank: 90, RankTotal: 100},
 		Expansion: Expansion{Measured: true, FirstPrice: "100", LastPrice: "110",
-			FirstAt: t0, LastAt: at},
+			FirstAt: candidate.FirstSeenAt, LastAt: at},
 		Range: RangePosition{Measured: true, High: "120", Price: "100", At: at},
 		At:    at,
-	}, set)
+	}
+}
+
+func TestAssessApprovedCandidateFailsClosed(t *testing.T) {
+	set := loadSyntheticThresholdSet(t)
+	pass := passingApprovedInputs(aCandidate(t0))
+	dangerous := pass
+	dangerous.Range = RangePosition{Measured: true, High: "120", Price: "119", At: pass.At}
+	unmeasured := pass
+	unmeasured.Range = RangePosition{}
+	wrongMarket := pass
+	wrongMarket.Candidate.Market = MarketUS
+	invalidLife := pass
+	invalidLife.Candidate.Symbol = ""
+	zeroFirstSeen := pass
+	zeroFirstSeen.Candidate.FirstSeenAt = time.Time{}
+
+	for _, tc := range []struct {
+		name       string
+		input      VetoInputs
+		set        ThresholdSet
+		wantKind   ApprovalErrorKind
+		wantVetoes []VetoCode
+	}{
+		{name: "invalid set", input: pass, wantKind: ApprovalInvalidSet},
+		{name: "wrong market", input: wrongMarket, set: set, wantKind: ApprovalScopeMismatch},
+		{name: "invalid candidate life", input: invalidLife, set: set, wantKind: ApprovalInvalidCandidateLife},
+		{name: "zero first seen", input: zeroFirstSeen, set: set, wantKind: ApprovalInvalidCandidateLife},
+		{name: "dangerous", input: dangerous, set: set, wantKind: ApprovalVetoRaised,
+			wantVetoes: []VetoCode{VetoNearHigh}},
+		{name: "unmeasured", input: unmeasured, set: set, wantKind: ApprovalVetoUnmeasured,
+			wantVetoes: []VetoCode{VetoNearHigh}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := AssessApprovedCandidate(tc.input, tc.set)
+			if got != (ApprovedCandidate{}) {
+				t.Fatalf("refused approval = %+v, want exact zero value", got)
+			}
+			var approvalErr *ApprovalError
+			if !errors.As(err, &approvalErr) {
+				t.Fatalf("error = %T %v, want *ApprovalError", err, err)
+			}
+			if approvalErr.Kind() != tc.wantKind {
+				t.Fatalf("error kind = %q, want %q", approvalErr.Kind(), tc.wantKind)
+			}
+			if !reflect.DeepEqual(approvalErr.Vetoes(), tc.wantVetoes) {
+				t.Fatalf("error vetoes = %v, want %v", approvalErr.Vetoes(), tc.wantVetoes)
+			}
+		})
+	}
+}
+
+func TestAssessApprovedCandidateReturnsPassWithImmutableProvenance(t *testing.T) {
+	set := loadSyntheticThresholdSet(t)
+	input := passingApprovedInputs(aCandidate(t0))
+	got, err := AssessApprovedCandidate(input, set)
 	if err != nil {
 		t.Fatalf("AssessApprovedCandidate: %v", err)
 	}
-	if !got.Chase.Passed() || got.ThresholdVersion != set.Version() {
-		t.Fatalf("approved verdict = %+v, want pass attributed to %q", got, set.Version())
+	if !got.Valid() || !got.Chase().Passed() {
+		t.Fatalf("approved verdict = %+v, want valid measured-and-clear pass", got)
 	}
-	if got.Key != (Key{Market: MarketKR, Symbol: "005930"}) {
-		t.Fatalf("approved key = %+v", got.Key)
+	if got.Key() != input.Candidate.Key || !got.FirstSeenAt().Equal(input.Candidate.FirstSeenAt) {
+		t.Fatalf("approved life = (%+v, %v), want (%+v, %v)",
+			got.Key(), got.FirstSeenAt(), input.Candidate.Key, input.Candidate.FirstSeenAt)
+	}
+	if got.ThresholdVersion() != set.Version() || got.SetDigest() != set.SetDigest() ||
+		got.EvidenceDigest() != set.EvidenceDigest() || !got.ApprovedAt().Equal(set.ApprovedAt()) {
+		t.Fatalf("approved provenance = version:%q set:%q evidence:%q at:%v",
+			got.ThresholdVersion(), got.SetDigest(), got.EvidenceDigest(), got.ApprovedAt())
+	}
+
+	typ := reflect.TypeOf(ApprovedCandidate{})
+	for index := range typ.NumField() {
+		field := typ.Field(index)
+		if field.IsExported() {
+			t.Errorf("ApprovedCandidate field %s is exported; provenance/pass invariant is mutable", field.Name)
+		}
 	}
 }
+
+func TestApprovedCandidateLifeIdentityUsesKeyAndFirstSeenAt(t *testing.T) {
+	set := loadSyntheticThresholdSet(t)
+	wantPayload := "tossos:candidate-life:v1\x00" + MarketKR + "\x00" + "005930" + "\x00" +
+		t0.UTC().Format(time.RFC3339Nano)
+	wantSum := sha256.Sum256([]byte(wantPayload))
+	wantID := CandidateLifeID("candidate-life:v1:sha256:" + hex.EncodeToString(wantSum[:]))
+
+	approve := func(t *testing.T, firstSeen time.Time) ApprovedCandidate {
+		t.Helper()
+		candidate := aCandidate(firstSeen)
+		got, err := AssessApprovedCandidate(passingApprovedInputs(candidate), set)
+		if err != nil {
+			t.Fatalf("AssessApprovedCandidate: %v", err)
+		}
+		return got
+	}
+	one := approve(t, t0)
+	sameInstant := approve(t, t0.In(time.FixedZone("same-instant", 9*60*60)))
+	differentLife := approve(t, t0.Add(time.Nanosecond))
+	if one.CandidateLifeID() != wantID || sameInstant.CandidateLifeID() != wantID {
+		t.Fatalf("same life IDs = (%q, %q), want %q", one.CandidateLifeID(), sameInstant.CandidateLifeID(), wantID)
+	}
+	if differentLife.CandidateLifeID() == wantID {
+		t.Fatalf("different FirstSeenAt reused candidate-life ID %q", wantID)
+	}
+	if strings.Contains(string(one.CandidateLifeID()), inputSymbolForTest) {
+		t.Fatalf("candidate-life ID %q exposes raw symbol", one.CandidateLifeID())
+	}
+}
+
+const inputSymbolForTest = "005930"
 
 func TestThresholdDescriptorsAreDormantAndLegacyNearHighIsNotEffective(t *testing.T) {
 	descriptors := CandidateFilterDescriptors()

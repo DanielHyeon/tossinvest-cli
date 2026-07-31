@@ -476,24 +476,141 @@ func (r *ThresholdRegistry) register(set ThresholdSet) error {
 	return nil
 }
 
-// ApprovedCandidate is the order-free verdict exposed after a complete set has
-// been loaded. ThresholdVersion makes later evidence attribution explicit.
+// CandidateLifeID is the opaque, deterministic identity of one candidate life.
+// It is derived only from the normalized Key and FirstSeenAt and never exposes
+// the raw symbol. A symbol that expires and crosses again gets a different ID.
+type CandidateLifeID string
+
+func (id CandidateLifeID) String() string { return string(id) }
+
+// ApprovalErrorKind is the fail-closed reason an ApprovedCandidate was not
+// minted. Callers can route refusals without parsing Error() text.
+type ApprovalErrorKind string
+
+const (
+	ApprovalInvalidSet           ApprovalErrorKind = "invalid_set"
+	ApprovalScopeMismatch        ApprovalErrorKind = "scope_mismatch"
+	ApprovalInvalidCandidateLife ApprovalErrorKind = "invalid_candidate_life"
+	ApprovalVetoRaised           ApprovalErrorKind = "veto_raised"
+	ApprovalVetoUnmeasured       ApprovalErrorKind = "veto_unmeasured"
+)
+
+// ApprovalError is a typed refusal. Vetoes returns a copy in D3 order so an
+// external caller cannot mutate the diagnostic held by the error.
+type ApprovalError struct {
+	kind      ApprovalErrorKind
+	vetoes    [3]VetoCode
+	vetoCount int
+	detail    string
+}
+
+func (e *ApprovalError) Error() string {
+	if e == nil {
+		return "candidate approval: <nil>"
+	}
+	if e.detail == "" {
+		return "candidate approval: " + string(e.kind)
+	}
+	return "candidate approval: " + string(e.kind) + ": " + e.detail
+}
+
+func (e *ApprovalError) Kind() ApprovalErrorKind {
+	if e == nil {
+		return ""
+	}
+	return e.kind
+}
+
+func (e *ApprovalError) Vetoes() []VetoCode {
+	if e == nil || e.vetoCount == 0 {
+		return nil
+	}
+	out := make([]VetoCode, e.vetoCount)
+	copy(out, e.vetoes[:e.vetoCount])
+	return out
+}
+
+func newApprovalError(kind ApprovalErrorKind, detail string, vetoes []VetoCode) *ApprovalError {
+	err := &ApprovalError{kind: kind, detail: detail}
+	err.vetoCount = min(len(vetoes), len(err.vetoes))
+	copy(err.vetoes[:], vetoes[:err.vetoCount])
+	return err
+}
+
+// ApprovedCandidate is an immutable, order-free, measured-and-clear verdict.
+// All fields are private so callers cannot turn a refusal or a different Chase
+// into an approved value. Accessors return value copies.
 type ApprovedCandidate struct {
-	Key
-	Chase            Chase
-	ThresholdVersion string
+	valid            bool
+	key              Key
+	firstSeenAt      time.Time
+	chase            Chase
+	candidateLifeID  CandidateLifeID
+	thresholdVersion string
+	setDigest        string
+	evidenceDigest   string
+	approvedAt       time.Time
+}
+
+func (c ApprovedCandidate) Valid() bool                      { return c.valid }
+func (c ApprovedCandidate) Key() Key                         { return c.key }
+func (c ApprovedCandidate) FirstSeenAt() time.Time           { return c.firstSeenAt }
+func (c ApprovedCandidate) Chase() Chase                     { return c.chase }
+func (c ApprovedCandidate) CandidateLifeID() CandidateLifeID { return c.candidateLifeID }
+func (c ApprovedCandidate) ThresholdVersion() string         { return c.thresholdVersion }
+func (c ApprovedCandidate) SetDigest() string                { return c.setDigest }
+func (c ApprovedCandidate) EvidenceDigest() string           { return c.evidenceDigest }
+func (c ApprovedCandidate) ApprovedAt() time.Time            { return c.approvedAt }
+
+func candidateLifeID(candidate Candidate) (CandidateLifeID, error) {
+	market := strings.ToUpper(strings.TrimSpace(candidate.Market))
+	symbol := strings.TrimSpace(candidate.Symbol)
+	switch {
+	case market != candidate.Market || (market != MarketKR && market != MarketUS):
+		return "", fmt.Errorf("market is absent, unsupported, or non-canonical")
+	case symbol == "" || symbol != candidate.Symbol:
+		return "", fmt.Errorf("symbol is absent or non-canonical")
+	case candidate.FirstSeenAt.IsZero():
+		return "", fmt.Errorf("first_seen_at is required")
+	}
+	payload := "tossos:candidate-life:v1\x00" + market + "\x00" + symbol + "\x00" +
+		candidate.FirstSeenAt.UTC().Format(time.RFC3339Nano)
+	sum := sha256.Sum256([]byte(payload))
+	return CandidateLifeID("candidate-life:v1:sha256:" + hex.EncodeToString(sum[:])), nil
 }
 
 func AssessApprovedCandidate(input VetoInputs, set ThresholdSet) (ApprovedCandidate, error) {
 	if !set.valid {
-		return ApprovedCandidate{}, fmt.Errorf("candidate threshold set: unapproved or invalid set")
+		return ApprovedCandidate{}, newApprovalError(ApprovalInvalidSet,
+			"candidate threshold set is unapproved or invalid", nil)
+	}
+	lifeID, err := candidateLifeID(input.Candidate)
+	if err != nil {
+		return ApprovedCandidate{}, newApprovalError(ApprovalInvalidCandidateLife, err.Error(), nil)
 	}
 	if input.Candidate.Market != set.scope.Market {
-		return ApprovedCandidate{}, fmt.Errorf("candidate threshold set: candidate market %q does not match %q",
-			input.Candidate.Market, set.scope.Market)
+		return ApprovedCandidate{}, newApprovalError(ApprovalScopeMismatch,
+			fmt.Sprintf("candidate market %q does not match threshold market %q",
+				input.Candidate.Market, set.scope.Market), nil)
 	}
 	input.Thresholds = set.VetoThresholds()
+	chase := AssessChase(input)
+	if raised := chase.Raised(); len(raised) != 0 {
+		return ApprovedCandidate{}, newApprovalError(ApprovalVetoRaised,
+			"one or more chase vetoes are dangerous", raised)
+	}
+	if unmeasured := chase.NotMeasured(); len(unmeasured) != 0 {
+		return ApprovedCandidate{}, newApprovalError(ApprovalVetoUnmeasured,
+			"one or more chase vetoes are not measured", unmeasured)
+	}
+	if !chase.Passed() {
+		return ApprovedCandidate{}, newApprovalError(ApprovalVetoUnmeasured,
+			"chase verdict did not establish measured-and-clear", nil)
+	}
 	return ApprovedCandidate{
-		Key: input.Candidate.Key, Chase: AssessChase(input), ThresholdVersion: set.version,
+		valid: true, key: input.Candidate.Key, firstSeenAt: input.Candidate.FirstSeenAt,
+		chase: chase, candidateLifeID: lifeID,
+		thresholdVersion: set.version, setDigest: set.setDigest,
+		evidenceDigest: set.evidenceDigest, approvedAt: set.approvedAt,
 	}, nil
 }

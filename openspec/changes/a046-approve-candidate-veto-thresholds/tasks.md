@@ -16,3 +16,12 @@
 - [x] 3.2 unapproved를 숫자 0으로 표시하지 않는 read-only 상태, 시장·세션 전환, incomplete evidence, preview/CAS와 모바일·접근성 테스트를 통과한다.
 - [x] 3.3 candidate focused/full test·vet·validate와 독립 리뷰를 통과한다.
 - [x] 3.4 `make gate CHANGE=a046-approve-candidate-veto-thresholds`을 통과한다.
+
+## 4. a047 handoff fail-closed 보강
+
+- [x] 4.1 `AssessApprovedCandidate` 변경 전 Function Logic Map과 Branch Test Map을 고정한다.
+- [x] 4.2 dangerous/unmeasured/wrong-market/pass와 candidate-life/provenance RED 테스트를 추가한다.
+- [x] 4.3 measured-and-clear 전용 typed approval과 immutable threshold/candidate-life provenance를 구현한다.
+- [ ] 4.4 focused/race/full test·vet·validate·SDD 검증을 통과한다.
+- [ ] 4.5 구현 컨텍스트와 분리된 독립 재리뷰를 통과한다.
+- [ ] 4.6 `make gate CHANGE=a046-approve-candidate-veto-thresholds`을 다시 통과한다.
