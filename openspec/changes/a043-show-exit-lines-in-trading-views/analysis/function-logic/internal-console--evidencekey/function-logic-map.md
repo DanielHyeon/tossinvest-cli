@@ -8,13 +8,13 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| broker id/account/market/time | all nonblank and canonical | broker reading + market clock | return invalid key, never guess |
+| broker id/account/market/time | broker id is byte-exact with `len(id)>0`; account/market/day are canonical | broker reading + market clock | return invalid key, never trim or guess the broker id |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | id/account absent | none | invalid | origin and unlinked tests |
+| B1 | broker id has zero bytes or canonical account is absent | none | invalid; whitespace-only broker id remains valid | opaque-id origin and journal tests |
 | B2 | timestamp invalid | none | invalid | unparsed timestamp tests |
 | B3 | market invalid | none | invalid | market fallback tests |
 | B4 | trading-day conversion fails | none | invalid | clock tests |
@@ -27,7 +27,7 @@
 
 ## State mutations and fallbacks
 
-- Pure identity construction; no state mutation or fallback to host-local dates.
+- Pure identity construction; broker id is never canonicalized and there is no fallback to host-local dates.
 
 ## Safety conclusion
 

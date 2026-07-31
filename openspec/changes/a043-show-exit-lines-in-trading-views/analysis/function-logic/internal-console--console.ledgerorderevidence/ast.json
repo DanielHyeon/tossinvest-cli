@@ -1,16 +1,16 @@
 {
   "file": "internal/console/orders.go",
-  "source_sha256": "e51624ca6ca79a4e36a1b0888f1269f660d39f558ab41455f1328e7b74692d0e",
+  "source_sha256": "4d80478264e74d1e179d3924bebe2b05944ecf3b8275898f50451789c445ea9e",
   "package": "console",
   "function": "ledgerOrderEvidence",
   "receiver": "Console",
   "signature": "Console.ledgerOrderEvidence(params=2, results=3)",
   "start": {
-    "line": 675,
+    "line": 702,
     "column": 1
   },
   "end": {
-    "line": 705,
+    "line": 732,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 681,
+        "line": 708,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 686,
+        "line": 713,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 690,
+        "line": 717,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 696,
+        "line": 723,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 700,
+        "line": 727,
         "column": 3
       }
     }
@@ -59,28 +59,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 682,
+        "line": 709,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 687,
+        "line": 714,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 692,
+        "line": 719,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 704,
+        "line": 731,
         "column": 2
       }
     }
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 680,
+        "line": 707,
         "column": 12
       },
       "text": "c.openJournal"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 684,
+        "line": 711,
         "column": 8
       },
       "text": "ro.Close"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 686,
+        "line": 713,
         "column": 5
       },
       "text": "len"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 689,
+        "line": 716,
         "column": 16
       },
       "text": "ro.BrokerOrderExitLinks"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 691,
+        "line": 718,
         "column": 40
       },
       "text": "err.Error"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 694,
+        "line": 721,
         "column": 15
       },
       "text": "make"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 694,
+        "line": 721,
         "column": 47
       },
       "text": "len"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 695,
+        "line": 722,
         "column": 13
       },
       "text": "make"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 695,
+        "line": 722,
         "column": 68
       },
       "text": "len"
@@ -163,56 +163,56 @@
     {
       "kind": ":=",
       "at": {
-        "line": 680,
+        "line": 707,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 689,
+        "line": 716,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 691,
+        "line": 718,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 694,
+        "line": 721,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 695,
+        "line": 722,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 697,
+        "line": 724,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 699,
+        "line": 726,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 701,
+        "line": 728,
         "column": 4
       }
     }
@@ -222,7 +222,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 684,
+        "line": 711,
         "column": 2
       },
       "text": "ro.Close"

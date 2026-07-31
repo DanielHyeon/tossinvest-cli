@@ -638,8 +638,8 @@ type orderEvidenceKey struct {
 }
 
 func evidenceKey(id, accountRef, market, rawAt string) (orderEvidenceKey, bool) {
-	id, accountRef = strings.TrimSpace(id), strings.TrimSpace(accountRef)
-	if id == "" || accountRef == "" {
+	accountRef = strings.TrimSpace(accountRef)
+	if len(id) == 0 || accountRef == "" {
 		return orderEvidenceKey{}, false
 	}
 	at, err := time.Parse(time.RFC3339, strings.TrimSpace(rawAt))
@@ -655,6 +655,33 @@ func evidenceKey(id, accountRef, market, rawAt string) (orderEvidenceKey, bool) 
 		return orderEvidenceKey{}, false
 	}
 	return orderEvidenceKey{ID: id, AccountRef: accountRef, Market: string(m), TradingDay: day}, true
+}
+
+// orderDedupeKey is the broker's exact order identity used only to collapse the
+// documented OPEN/CLOSED overlap. A valid identity uses the same account,
+// canonical market and market-local trading day as evidence lookup. If those
+// fields cannot be derived, the raw market/time remain in a tagged fallback so
+// an invalid row cannot hide a different row that merely reuses its opaque id.
+type orderDedupeKey struct {
+	ID, AccountRef, Market, TradingDay string
+	RawAt                              string
+	Fallback                           bool
+}
+
+func dedupeKey(id, accountRef, market, rawAt string) (orderDedupeKey, bool) {
+	if len(id) == 0 {
+		return orderDedupeKey{}, false
+	}
+	if evidence, valid := evidenceKey(id, accountRef, market, rawAt); valid {
+		return orderDedupeKey{ID: evidence.ID, AccountRef: evidence.AccountRef,
+			Market: evidence.Market, TradingDay: evidence.TradingDay}, true
+	}
+	canonicalMarket := market
+	if parsed, err := marketclock.ParseMarket(market); err == nil {
+		canonicalMarket = string(parsed)
+	}
+	return orderDedupeKey{ID: id, AccountRef: strings.TrimSpace(accountRef),
+		Market: canonicalMarket, RawAt: rawAt, Fallback: true}, true
 }
 
 func visibleOrderEvidenceScopes(rows []orderRow) []journal.BrokerOrderScope {
@@ -940,15 +967,15 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	// BOTH groups, so one order can arrive in both answers — and two rows for one
 	// order would be one order counted twice and one row an operator cancels
 	// twice.
-	pending := make(map[string]bool)
+	pending := make(map[orderDedupeKey]bool)
 	if v.Open.Known() {
 		for _, rec := range lists.Open {
 			key, valid := evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt)
 			row := rowFromOrder(rec, originUnknown, true)
 			row.EvidenceKey, row.EvidenceKeyValid = key, valid
 			all = append(all, row)
-			if id := strings.TrimSpace(rec.ID); id != "" {
-				pending[id] = true
+			if identity, ok := dedupeKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt); ok {
+				pending[identity] = true
 			}
 			openLive++
 		}
@@ -956,7 +983,8 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	closedCount := 0
 	if v.Closed.Known() {
 		for _, rec := range lists.Closed {
-			if pending[strings.TrimSpace(rec.ID)] {
+			identity, dedupe := dedupeKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt)
+			if dedupe && pending[identity] {
 				continue
 			}
 			key, valid := evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt)

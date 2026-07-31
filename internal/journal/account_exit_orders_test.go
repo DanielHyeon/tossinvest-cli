@@ -85,6 +85,40 @@ func TestBrokerOrderExitLinksScopesCollidingIDsByMarket(t *testing.T) {
 	}
 }
 
+func TestBrokerOrderExitLinksTreatsBrokerOrderIDsAsOpaqueBytes(t *testing.T) {
+	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
+	insertPosition(t, j, "opaque-position", nil)
+	insertIntent(t, j, "opaque-spaced-intent")
+	insertIntent(t, j, "opaque-plain-intent")
+	insertAttemptWithBrokerOrder(t, j, "opaque-spaced-attempt", "opaque-spaced-intent", " O-1 ")
+	insertAttemptWithBrokerOrder(t, j, "opaque-plain-attempt", "opaque-plain-intent", "O-1")
+	if _, err := j.db.ExecContext(context.Background(), `
+		INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+		VALUES ('opaque-position','SPACED','opaque-spaced-intent','2026-03-30T00:00:00Z'),
+		       ('opaque-position','PLAIN','opaque-plain-intent','2026-03-30T00:00:01Z')`); err != nil {
+		t.Fatal(err)
+	}
+	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(), []BrokerOrderScope{
+		{BrokerOrderID: " O-1 ", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"},
+		{BrokerOrderID: "O-1", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(links) != 2 || links[0].BrokerOrderID != " O-1 " || links[0].IntentID != "opaque-spaced-intent" ||
+		links[0].Event.Action != "SPACED" || !links[0].Engine ||
+		links[1].BrokerOrderID != "O-1" || links[1].IntentID != "opaque-plain-intent" ||
+		links[1].Event.Action != "PLAIN" || !links[1].Engine {
+		t.Fatalf("opaque broker order IDs were canonicalized or cross-linked: %+v", links)
+	}
+
+	if _, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(), []BrokerOrderScope{
+		{BrokerOrderID: "   ", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"},
+	}); err != nil {
+		t.Fatalf("whitespace-only opaque broker order ID was rejected: %v", err)
+	}
+}
+
 func TestBrokerOrderExitLinksAttributesOnlyConfirmedPlaceAttempts(t *testing.T) {
 	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
 	for _, id := range []string{"kind-cancel", "kind-amend", "state-recorded", "state-failed"} {
@@ -275,6 +309,109 @@ func TestBrokerOrderExitLinksFollowsValidatedAmendDescendants(t *testing.T) {
 	if len(links) != 1 || !links[0].Engine || links[0].Event.Evaluation.Effective.Snapshot == nil ||
 		links[0].Event.Evaluation.Effective.Snapshot.Line.DecisionID != snapshot.DecisionID {
 		t.Fatalf("amend descendant evidence = %+v", links)
+	}
+}
+
+func TestBrokerOrderExitLinksUsesCollisionFreeOpaqueLineagePaths(t *testing.T) {
+	for _, tc := range []struct {
+		name, parent, child string
+	}{
+		{name: "delimiter token is not a cycle", parent: "ROOT", child: "PREFIX|ROOT"},
+		{name: "JSON escaping preserves exact bytes", parent: "ROOT|\"quoted\"\nline", child: "CHILD|\"quoted\"\tline"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
+			insertPosition(t, j, "opaque-lineage-position", nil)
+			insertIntent(t, j, "opaque-root-intent")
+			insertIntent(t, j, "opaque-amend-intent")
+			insertAttemptWithBrokerOrder(t, j, "opaque-root-attempt", "opaque-root-intent", tc.parent)
+			if _, err := j.db.ExecContext(context.Background(), `
+				INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,target_order_id,broker_order_id,fingerprint,recorded_at)
+				VALUES ('opaque-amend-attempt','opaque-amend-intent','AMEND','CONFIRMED',1,?,?,'fp','2026-03-30T00:01:00Z');
+				INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+				VALUES ('opaque-lineage-position','OPAQUE_EXIT','opaque-root-intent','2026-03-30T00:00:00Z');
+				INSERT INTO lineage_edges(parent_order_id,child_order_id,relation,parent_filled_quantity,requested_quantity,intent_id,attempt_id,created_at)
+				VALUES (?,?,'replaces','0','1','opaque-amend-intent','opaque-amend-attempt','2026-03-30T00:01:00Z')`,
+				tc.parent, tc.child, tc.parent, tc.child); err != nil {
+				t.Fatal(err)
+			}
+			links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(),
+				[]BrokerOrderScope{{BrokerOrderID: tc.child, AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(links) != 1 || links[0].Ambiguous || !links[0].Engine || links[0].Event.Action != "OPAQUE_EXIT" {
+				t.Fatalf("opaque lineage path was corrupted: %+v", links)
+			}
+		})
+	}
+}
+
+func TestBrokerOrderExitLinksFailsClosedForPureSingleParentCycle(t *testing.T) {
+	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
+	insertIntent(t, j, "cycle-a-intent")
+	insertIntent(t, j, "cycle-b-intent")
+	cycleA, cycleB := "CYCLE|A", "CYCLE|\"B\"\n"
+	if _, err := j.db.ExecContext(context.Background(), `
+		INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,target_order_id,broker_order_id,fingerprint,recorded_at)
+		VALUES ('cycle-a-attempt','cycle-a-intent','AMEND','CONFIRMED',1,?,?,'fp','2026-03-30T00:01:00Z'),
+		       ('cycle-b-attempt','cycle-b-intent','AMEND','CONFIRMED',1,?,?,'fp','2026-03-30T00:02:00Z');
+		INSERT INTO lineage_edges(parent_order_id,child_order_id,relation,parent_filled_quantity,requested_quantity,intent_id,attempt_id,created_at)
+		VALUES (?,?,'replaces','0','1','cycle-a-intent','cycle-a-attempt','2026-03-30T00:01:00Z'),
+		       (?,?,'replaces','0','1','cycle-b-intent','cycle-b-attempt','2026-03-30T00:02:00Z')`,
+		cycleA, cycleB, cycleB, cycleA, cycleA, cycleB, cycleB, cycleA); err != nil {
+		t.Fatal(err)
+	}
+	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(),
+		[]BrokerOrderScope{{BrokerOrderID: cycleB, AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(links) != 1 || !links[0].Ambiguous || links[0].UnknownReason != "lineage_cycle" || links[0].Event.ID != 0 {
+		t.Fatalf("pure single-parent cycle did not fail closed: %+v", links)
+	}
+}
+
+func TestBrokerOrderExitLinksFailsClosedOnlyWhenLineageExceedsDepthBound(t *testing.T) {
+	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
+	insertPosition(t, j, "depth-position", nil)
+	insertIntent(t, j, "depth-root-intent")
+	insertAttemptWithBrokerOrder(t, j, "depth-root-attempt", "depth-root-intent", "DEPTH-0")
+	if _, err := j.db.ExecContext(context.Background(), `
+		INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+		VALUES ('depth-position','DEPTH_EXIT','depth-root-intent','2026-03-30T00:00:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	for i := 1; i <= maxBrokerOrderLineageDepth+1; i++ {
+		intentID, attemptID := fmt.Sprintf("depth-intent-%d", i), fmt.Sprintf("depth-attempt-%d", i)
+		parent, child := fmt.Sprintf("DEPTH-%d", i-1), fmt.Sprintf("DEPTH-%d", i)
+		insertIntent(t, j, intentID)
+		if _, err := j.db.ExecContext(context.Background(), `
+			INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,target_order_id,broker_order_id,fingerprint,recorded_at)
+			VALUES (?,?,'AMEND','CONFIRMED',1,?,?,'fp','2026-03-30T00:01:00Z')`,
+			attemptID, intentID, parent, child); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := j.db.ExecContext(context.Background(), `
+			INSERT INTO lineage_edges(parent_order_id,child_order_id,relation,parent_filled_quantity,requested_quantity,intent_id,attempt_id,created_at)
+			VALUES (?,?,'replaces','0','1',?,?,'2026-03-30T00:01:00Z')`,
+			parent, child, intentID, attemptID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(),
+		[]BrokerOrderScope{
+			{BrokerOrderID: fmt.Sprintf("DEPTH-%d", maxBrokerOrderLineageDepth), AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"},
+			{BrokerOrderID: fmt.Sprintf("DEPTH-%d", maxBrokerOrderLineageDepth+1), AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"},
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(links) != 2 || links[0].Ambiguous || !links[0].Engine || links[0].Event.Action != "DEPTH_EXIT" {
+		t.Fatalf("lineage exactly at depth bound did not remain linked: %+v", links)
+	}
+	if !links[1].Ambiguous || links[1].UnknownReason != "lineage_depth_exceeded" || links[1].Event.ID != 0 {
+		t.Fatalf("lineage beyond depth bound did not fail closed: %+v", links[1])
 	}
 }
 

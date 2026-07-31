@@ -16,10 +16,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1-B3 | OPEN is known; iterate rows and remember pending IDs | append composite-key evidence; count every OPEN row | none | order list + linked exit fixture |
-| B4-B6 | CLOSED is known; iterate and skip IDs already in OPEN | append composite-key evidence | none | partial-filled duplicate test |
+| B1-B3 | OPEN is known; iterate rows and remember exact scoped dedupe identities | append evidence key; count every OPEN row | no bare-id canonicalization | overlap + opaque/collision fixtures |
+| B4-B6 | CLOSED is known; iterate and skip only the same exact OPEN identity | append evidence key | market/day/opaque-id reuse remains visible | partial-filled duplicate + scoped collision table |
 | B7-B8 | conditional list is known; use its own id/time only | append watching rows; never guess triggered-order day | none | conditional origin tests |
-| B9-B11 | query and attach evidence after `filterRows` | mutate only filtered view rows | journal errors yield unknown | filtered >256 hidden-row test |
+| B9-B11 | query and attach evidence after `filterRows`; choose conditional/plain origin rules | mutate only filtered view rows | journal errors yield unknown | filtered >256 hidden-row test |
 
 ## Calls and live bindings
 
@@ -35,6 +35,7 @@
 
 - Broker cache is the only external read and retains its existing TTL/hold behavior.
 - Journal query is read-only, runs after local filtering, and is limited to rendered composite identities; symbol/price are never fuzzy join keys.
+- OPEN/CLOSED overlap uses account + canonical market + market-local day + opaque id. Invalid identities use a tagged raw fallback rather than a trimmed bare id.
 - No state mutation or order call is introduced.
 
 ## Safety conclusion

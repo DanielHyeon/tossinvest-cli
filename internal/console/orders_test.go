@@ -543,6 +543,42 @@ func TestAnOrderInBothGroupsIsOneRowAndIsCountedOnce(t *testing.T) {
 	}
 }
 
+func TestOpenClosedDedupeUsesExactScopedOrderIdentity(t *testing.T) {
+	baseOpen := livePlainOrder("REUSED", "005930")
+	baseClosed := filledPlainOrder("REUSED", "005930")
+	baseClosed.Market = baseOpen.Market
+	baseClosed.OrderedAt = baseOpen.OrderedAt
+
+	tests := []struct {
+		name   string
+		open   OrderRecord
+		closed OrderRecord
+		want   int
+	}{
+		{name: "the exact scoped identity overlaps", open: baseOpen, closed: baseClosed, want: 1},
+		{name: "opaque whitespace is part of the id", open: func() OrderRecord { r := baseOpen; r.ID = " REUSED "; return r }(), closed: baseClosed, want: 2},
+		{name: "the same id in another market is distinct", open: baseOpen, closed: func() OrderRecord { r := baseClosed; r.Market = "US"; return r }(), want: 2},
+		{name: "the same id on another market-local day is distinct", open: baseOpen, closed: func() OrderRecord { r := baseClosed; r.OrderedAt = "2026-07-28T00:30:00Z"; return r }(), want: 2},
+		{name: "equal invalid identities use a stable fallback", open: func() OrderRecord { r := baseOpen; r.OrderedAt = "not-a-time"; return r }(), closed: func() OrderRecord { r := baseClosed; r.OrderedAt = "not-a-time"; return r }(), want: 1},
+		{name: "different invalid timestamps do not collide", open: func() OrderRecord { r := baseOpen; r.OrderedAt = "bad-one"; return r }(), closed: func() OrderRecord { r := baseClosed; r.OrderedAt = "bad-two"; return r }(), want: 2},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := &countingOrders{lists: OrdersReading{AccountRef: "acct-1",
+				Open: []OrderRecord{tc.open}, Closed: []OrderRecord{tc.closed}}}
+			h := newOrdersHarness(t, reader)
+			view := h.Console.orders(context.Background(), orderFilterChoice{})
+			if view.Total != tc.want {
+				t.Fatalf("rows=%d want=%d: %+v", view.Total, tc.want, view.Rows)
+			}
+			wantClosed := tc.want - 1
+			if view.ClosedCount.Value() != fmt.Sprintf("%d건", wantClosed) {
+				t.Fatalf("closed count=%q want=%d건", view.ClosedCount.Value(), wantClosed)
+			}
+		})
+	}
+}
+
 // TestTheOriginColumnSaysUnknownWhenTheLedgerCouldNotBeRead.
 //
 // Reading an unreadable ledger as "somebody placed these by hand" makes a working
@@ -603,6 +639,42 @@ func TestTheOriginColumnTellsAnEngineOrderFromAnyOther(t *testing.T) {
 		if !strings.Contains(page, label) {
 			t.Errorf("the page does not distinguish %q", label)
 		}
+	}
+}
+
+func TestOpaqueBrokerOrderIDsKeepDistinctOriginAndExitEvidence(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	seedEngineJournal(t, path, `
+INSERT INTO intents (id, created_at, market, trading_day, account_ref, symbol, side, order_type,
+                     time_in_force, quantity, price, currency, source, fingerprint, notes)
+VALUES ('opaque-intent','2026-07-27T00:30:00Z','kr','2026-07-27','acct-1','005930','SELL','MARKET',
+        'DAY','1',NULL,'KRW','engine','opaque-fp','');
+INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, broker_order_id,
+                               fingerprint, recorded_at)
+VALUES ('opaque-attempt','opaque-intent','PLACE','CONFIRMED',1,' O-1 ','opaque-fp','2026-07-27T00:30:00Z');
+INSERT INTO positions(id,account_ref,market,symbol,instance_seq,entry_decision_id,state,quantity,avg_price,opened_at)
+VALUES ('opaque-position','acct-1','kr','005930',1,'opaque-decision','OPEN','1','70000','2026-07-27T00:20:00Z');
+INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+VALUES ('opaque-position','OPAQUE_EXIT','opaque-intent','2026-07-27T00:30:00Z');`)
+	live := livePlainOrder(" O-1 ", "005930")
+	closed := filledPlainOrder("O-1", "005930")
+	closed.Market, closed.OrderedAt = live.Market, live.OrderedAt
+	reader := &countingOrders{lists: OrdersReading{AccountRef: "acct-1",
+		Open: []OrderRecord{live}, Closed: []OrderRecord{closed}}}
+	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
+	view := h.Console.orders(context.Background(), orderFilterChoice{})
+	if len(view.Rows) != 2 || view.Total != 2 || view.ClosedCount.Value() != "1건" {
+		t.Fatalf("opaque IDs were deduplicated: total=%d closed=%s rows=%+v", view.Total, view.ClosedCount.Value(), view.Rows)
+	}
+	got := make(map[string]orderRow, len(view.Rows))
+	for _, row := range view.Rows {
+		got[row.ID] = row
+	}
+	if got[" O-1 "].Origin != originEngine || !got[" O-1 "].ExitEvidence || got[" O-1 "].ExitIntentID != "opaque-intent" {
+		t.Fatalf("spaced engine ID lost exact origin/evidence: %+v", got[" O-1 "])
+	}
+	if got["O-1"].Origin != originOther || got["O-1"].ExitEvidence {
+		t.Fatalf("plain ID inherited spaced ID evidence: %+v", got["O-1"])
 	}
 }
 

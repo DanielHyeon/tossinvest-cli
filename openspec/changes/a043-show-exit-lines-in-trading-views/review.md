@@ -21,6 +21,13 @@
 > bounding, and pre-filter evidence scopes. They are superseded by this correction;
 > task 3.2 remains unchecked until the next exact-commit review.
 
+> Correction (2026-08-01, second exact-commit review): review of `21d5a3b`
+> remained BLOCKED because broker order ids were trimmed, OPEN/CLOSED overlap used
+> a trimmed bare id, delimiter-encoded recursive paths could corrupt opaque ids,
+> and cycle/depth coverage did not isolate those branches. The hardening GREEN
+> entry below remains historical command evidence for `21d5a3b`, not approval.
+> Task 3.2 and the gate remain unchecked pending review of the next exact commit.
+
 - OpenSpec strict validation: pass.
 - Mutation capability: none by contract.
 - Dependency baseline: implementation starts from `70aabdc`, after a041/a042 were
@@ -37,9 +44,24 @@
   strict OpenSpec validation, Function Logic Map validation, `make sdd-sync`, and
   `make sdd-check` pass. The 1,000-parent adversarial lineage fixture completes
   within its two-second context and returns one fail-closed result without recursion fan-out.
+- Second-review RED (2026-08-01): focused tests reproduced `" O-1 "` collapsing
+  into `"O-1"`, market/day/invalid-time reuse being hidden by the OPEN set, and
+  a valid `PREFIX|ROOT → ROOT` lineage being misclassified as a cycle. The prior
+  combined branch fixture did not reach a pure single-parent cycle; no pure
+  depth-over-32 fixture existed.
+- Second-review GREEN (2026-08-01): broker ids remain byte-exact (only `len==0`
+  is empty); OPEN/CLOSED overlap uses account + canonical market + market-local
+  day + opaque id with a tagged raw fallback; recursive visited state is a JSON
+  array with exact `json_each` equality. Exact depth 32 stays linked and depth 33
+  fails closed. Focused tests, `make test`, `make vet`, Function Logic Map
+  validation, and serial focused race for all broker-order lineage plus changed
+  console identity/filter tests pass. Strict OpenSpec validation, `make sdd-sync`,
+  and `make sdd-check` also pass. A broad journal+console race run hit the
+  repository test binary's 10-minute timeout under concurrent race load and is
+  explicitly not counted as PASS evidence.
 
 ## Verdict
 
 독립 재리뷰 대기. canonical DTO, account+market+market-local-day identity,
-CONFIRMED PLACE/AMEND evidence, bounded lineage, no-recompute/no-fuzzy-link와
-input-free 렌더 검증이 승인 조건이다.
+opaque broker id, CONFIRMED PLACE/AMEND evidence, collision-free bounded lineage,
+no-recompute/no-fuzzy-link와 input-free 렌더 검증이 승인 조건이다.

@@ -1,6 +1,6 @@
 {
   "file": "internal/console/orders_test.go",
-  "source_sha256": "bd80f76ac176820808fbe91763659334584c16fd3d560623b49985c6e9fa687f",
+  "source_sha256": "2707a57e0337d498874a746c99a8fd1b8327b1d73269ed486056b36cb8ed2e32",
   "package": "console",
   "function": "newOrdersHarness",
   "signature": "newOrdersHarness(params=3, results=1)",

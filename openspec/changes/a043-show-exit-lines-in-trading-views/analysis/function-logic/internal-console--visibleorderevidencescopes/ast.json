@@ -1,15 +1,15 @@
 {
   "file": "internal/console/orders.go",
-  "source_sha256": "e51624ca6ca79a4e36a1b0888f1269f660d39f558ab41455f1328e7b74692d0e",
+  "source_sha256": "4d80478264e74d1e179d3924bebe2b05944ecf3b8275898f50451789c445ea9e",
   "package": "console",
   "function": "visibleOrderEvidenceScopes",
   "signature": "visibleOrderEvidenceScopes(params=1, results=1)",
   "start": {
-    "line": 660,
+    "line": 687,
     "column": 1
   },
   "end": {
-    "line": 673,
+    "line": 700,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 663,
+        "line": 690,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 665,
+        "line": 692,
         "column": 3
       }
     }
@@ -34,7 +34,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 672,
+        "line": 699,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 669,
+        "line": 696,
         "column": 12
       },
       "text": "append"
@@ -53,28 +53,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 661,
+        "line": 688,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 664,
+        "line": 691,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 668,
+        "line": 695,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 669,
+        "line": 696,
         "column": 3
       }
     }

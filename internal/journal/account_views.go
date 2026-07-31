@@ -327,10 +327,10 @@ func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context,
 		if marketErr != nil {
 			return nil, fmt.Errorf("%w: scope %d market: %v", ErrBrokerOrderEvidenceScope, i, marketErr)
 		}
-		clean[i] = BrokerOrderScope{BrokerOrderID: strings.TrimSpace(scope.BrokerOrderID),
+		clean[i] = BrokerOrderScope{BrokerOrderID: scope.BrokerOrderID,
 			AccountRef: strings.TrimSpace(scope.AccountRef), Market: string(market),
 			TradingDay: strings.TrimSpace(scope.TradingDay)}
-		if clean[i].BrokerOrderID == "" || clean[i].AccountRef == "" {
+		if len(clean[i].BrokerOrderID) == 0 || clean[i].AccountRef == "" {
 			return nil, fmt.Errorf("%w: scope %d has no broker order or account", ErrBrokerOrderEvidenceScope, i)
 		}
 		if _, err := time.Parse("2006-01-02", clean[i].TradingDay); err != nil {
@@ -345,7 +345,7 @@ func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context,
 	rows, err := r.db.QueryContext(ctx, `
 		WITH RECURSIVE
 		requested(request_index, order_id, account_ref, market, trading_day) AS (
-			SELECT CAST(key AS INTEGER), trim(json_extract(value,'$.broker_order_id')),
+			SELECT CAST(key AS INTEGER), json_extract(value,'$.broker_order_id'),
 			       trim(json_extract(value,'$.account_ref')), trim(json_extract(value,'$.market')),
 			       trim(json_extract(value,'$.trading_day'))
 			  FROM json_each(?)
@@ -353,11 +353,12 @@ func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context,
 		ancestors(request_index, requested_id, account_ref, market, trading_day,
 		          current_id, depth, path, cycle) AS (
 			SELECT request_index, order_id, account_ref, market, trading_day, order_id, 0,
-			       '|' || order_id || '|', 0 FROM requested
+			       json_array(order_id), 0 FROM requested
 			UNION ALL
 			SELECT x.request_index, x.requested_id, x.account_ref, x.market, x.trading_day,
-			       l.parent_order_id, x.depth+1, x.path || l.parent_order_id || '|',
-			       CASE WHEN instr(x.path, '|' || l.parent_order_id || '|') > 0 THEN 1 ELSE 0 END
+			       l.parent_order_id, x.depth+1, json_insert(x.path,'$[#]',l.parent_order_id),
+			       EXISTS(SELECT 1 FROM json_each(x.path) seen
+			               WHERE seen.value=l.parent_order_id)
 			  FROM ancestors x
 			  JOIN lineage_edges l ON l.id=(
 			       SELECT min(sl.id) FROM lineage_edges sl
@@ -481,7 +482,7 @@ func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context,
 			aggregates[requestIndex].unsafeReason = "lineage_ambiguous"
 		case totalParentCount > parentCount && aggregates[requestIndex].unsafeReason == "":
 			aggregates[requestIndex].unsafeReason = "lineage_scope_mismatch"
-		case depth >= maxBrokerOrderLineageDepth && aggregates[requestIndex].unsafeReason == "":
+		case depth >= maxBrokerOrderLineageDepth && totalParentCount > 0 && aggregates[requestIndex].unsafeReason == "":
 			aggregates[requestIndex].unsafeReason = "lineage_depth_exceeded"
 		case placeCount > 1 && aggregates[requestIndex].unsafeReason == "":
 			aggregates[requestIndex].unsafeReason = "ambiguous_exit_evidence"
