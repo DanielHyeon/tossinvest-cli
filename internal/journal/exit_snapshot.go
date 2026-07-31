@@ -372,6 +372,9 @@ func validateExitEventFlattenedEvidence(event ExitEvent, evidence exitEventEvide
 	if recomputed == nil {
 		return fmt.Errorf("%w: recomputed event snapshot is absent", ErrExitSnapshotCorrupt)
 	}
+	if evidence.StateOnly.Int64 != 0 && evidence.StateOnly.Int64 != 1 {
+		return fmt.Errorf("%w: event state-only flag is not canonical", ErrExitSnapshotCorrupt)
+	}
 	line := recomputed.Line
 	if evidence.Generation.Int64 != line.PositionGeneration || evidence.PolicyID.String != line.Policy.ID ||
 		evidence.PolicyVersion.String != line.Policy.Version || evidence.PolicyDigest.String != line.Policy.Digest ||

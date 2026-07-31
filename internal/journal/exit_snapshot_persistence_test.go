@@ -713,6 +713,7 @@ func TestEvaluatedEventRequiresExactFlattenedTuple(t *testing.T) {
 		{"projected_mismatch", "projected_quantity", "999"},
 		{"proposal_ratio_mismatch", "proposal_ratio", "0.5"},
 		{"state_only_mismatch", "state_only", 1}, {"suppressed_mismatch", "suppressed_reason", "forged"},
+		{"state_only_noncanonical", "state_only", 2},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
