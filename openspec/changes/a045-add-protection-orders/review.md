@@ -93,3 +93,11 @@ real official/trading gateway 또는 broker mutation 구현도 없다. 따라서
 - Focused race tests: pass.
 - `go vet ./...`: pass.
 - OpenSpec strict validation: pass (57/57).
+
+## Dependency-integrated dormant rebase · 2026-08-01
+
+- Integration base: `70aabdc9936de08df458da13203437ba7d2dd572` (a041/a042 complete).
+- Reapplied dormant source range: `9c42285..110fd80`; all three commits replayed without conflict.
+- Focused protection/attestation tests, strict OpenSpec validation and whitespace checks pass.
+- This rebase does not close the signer/trust-root blocker and does not authorize `WIRED`,
+  an operational toggle, or any broker mutation.
