@@ -38,11 +38,10 @@ var approvedCandidateAccessors = map[string]bool{
 // that adds the first reader. Stale permissions fail below.
 var approvedCandidateBoundaries = map[string]string{}
 
-// A package joining approved-candidate-derived decisions to authority requires a
-// permission distinct from the pure reader boundary. a047 may add only a reviewed
-// Guardian/decision bridge here, with a non-empty reason. A general boundary
-// permission cannot authorize execution, risk, ledger, or engine reachability.
-var approvedCandidateAuthorityBridges = map[string]string{}
+// a046 intentionally defines no authority-bridge exemption. If a047 introduces
+// a typed Guardian/decision bridge, it must replace the unconditional rejection
+// below together with a test that compares the complete reachable authority
+// root/path set for exact equality (both added and missing roots must fail).
 
 func namesApprovedCandidateSymbol(file *ast.File, pkg string) bool {
 	if file == nil || pkg == "" {
@@ -116,6 +115,186 @@ func transitiveAuthorityDependency(graph map[string][]string, start string) ([]s
 	return transitiveDependency(graph, start, forbiddenApprovedBoundaryPackage)
 }
 
+func boundaryTypeCapability(expr ast.Expr, interfaces, functions map[string]bool) string {
+	switch typ := expr.(type) {
+	case *ast.InterfaceType:
+		return "interface"
+	case *ast.FuncType:
+		return "function"
+	case *ast.StarExpr:
+		return "pointer"
+	case *ast.MapType:
+		return "map"
+	case *ast.ArrayType:
+		if typ.Len == nil {
+			return "slice"
+		}
+	case *ast.ChanType:
+		return "channel"
+	case *ast.Ident:
+		if interfaces[typ.Name] {
+			return "interface"
+		}
+		if functions[typ.Name] {
+			return "function"
+		}
+	}
+	return ""
+}
+
+func boundaryFieldNames(field *ast.Field) []string {
+	if len(field.Names) == 0 {
+		return []string{"<embedded>"}
+	}
+	names := make([]string, 0, len(field.Names))
+	for _, name := range field.Names {
+		names = append(names, name.Name)
+	}
+	return names
+}
+
+func isApprovedCandidateParameter(expr ast.Expr, candidatePkg string) bool {
+	if ident, ok := expr.(*ast.Ident); ok {
+		return candidatePkg == "." && ident.Name == "ApprovedCandidate"
+	}
+	selector, ok := expr.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "ApprovedCandidate" {
+		return false
+	}
+	pkg, ok := selector.X.(*ast.Ident)
+	return ok && pkg.Name == candidatePkg
+}
+
+func pureApprovedCandidateBoundaryViolations(packageRel, module string, files []*ast.File) []string {
+	interfaces := map[string]bool{}
+	functions := map[string]bool{}
+	for _, file := range files {
+		ast.Inspect(file, func(n ast.Node) bool {
+			if typ, ok := n.(*ast.TypeSpec); ok {
+				switch typ.Type.(type) {
+				case *ast.InterfaceType:
+					interfaces[typ.Name.Name] = true
+				case *ast.FuncType:
+					functions[typ.Name.Name] = true
+				}
+			}
+			return true
+		})
+	}
+
+	var findings []string
+	allowedImport := module + "/internal/candidate"
+	for _, file := range files {
+		candidatePkg, _ := candidateImportName(file, module)
+		for _, spec := range file.Imports {
+			path := strings.Trim(spec.Path.Value, `"`)
+			if path != allowedImport {
+				findings = append(findings, packageRel+" pure boundary imports "+path+
+					"; only "+allowedImport+" is allowed")
+			}
+		}
+		ast.Inspect(file, func(n ast.Node) bool {
+			switch item := n.(type) {
+			case *ast.TypeSpec:
+				if interfaces[item.Name.Name] {
+					findings = append(findings, packageRel+" pure boundary declares interface capability "+item.Name.Name)
+				}
+				if functions[item.Name.Name] {
+					findings = append(findings, packageRel+" pure boundary declares function capability "+item.Name.Name)
+				}
+				if structure, ok := item.Type.(*ast.StructType); ok {
+					for _, field := range structure.Fields.List {
+						if capability := boundaryTypeCapability(field.Type, interfaces, functions); capability != "" {
+							for _, name := range boundaryFieldNames(field) {
+								findings = append(findings, packageRel+" pure boundary declares "+capability+"-typed field "+name)
+							}
+						}
+					}
+				}
+			case *ast.ValueSpec:
+				if capability := boundaryTypeCapability(item.Type, interfaces, functions); capability == "interface" || capability == "function" {
+					for _, name := range item.Names {
+						findings = append(findings, packageRel+" pure boundary declares "+capability+"-typed variable "+name.Name)
+					}
+				}
+			case *ast.FuncLit:
+				findings = append(findings, packageRel+" pure boundary declares function literal capability")
+			}
+			return true
+		})
+		for _, decl := range file.Decls {
+			switch node := decl.(type) {
+			case *ast.GenDecl:
+				for _, spec := range node.Specs {
+					switch item := spec.(type) {
+					case *ast.ValueSpec:
+						if node.Tok != token.VAR {
+							continue
+						}
+						for _, name := range item.Names {
+							findings = append(findings, packageRel+" pure boundary declares package variable "+name.Name)
+						}
+					}
+				}
+			case *ast.FuncDecl:
+				parameters := map[string]ast.Expr{}
+				for _, field := range node.Type.Params.List {
+					capability := boundaryTypeCapability(field.Type, interfaces, functions)
+					for _, name := range field.Names {
+						parameters[name.Name] = field.Type
+						if capability != "" {
+							findings = append(findings, packageRel+" pure boundary declares "+capability+
+								"-typed parameter "+name.Name)
+						}
+					}
+				}
+				if node.Type.Results != nil {
+					for _, field := range node.Type.Results.List {
+						if capability := boundaryTypeCapability(field.Type, interfaces, functions); capability != "" {
+							findings = append(findings, packageRel+" pure boundary returns "+capability+" capability")
+						}
+					}
+				}
+				if node.Recv != nil {
+					for _, field := range node.Recv.List {
+						if capability := boundaryTypeCapability(field.Type, interfaces, functions); capability != "" {
+							findings = append(findings, packageRel+" pure boundary has "+capability+" receiver")
+						}
+					}
+				}
+				ast.Inspect(node.Body, func(n ast.Node) bool {
+					call, ok := n.(*ast.CallExpr)
+					if !ok {
+						return true
+					}
+					if called, ok := call.Fun.(*ast.Ident); ok {
+						if _, injected := parameters[called.Name]; injected {
+							findings = append(findings, packageRel+" pure boundary invokes function parameter "+called.Name)
+						}
+					}
+					selector, ok := call.Fun.(*ast.SelectorExpr)
+					if !ok {
+						return true
+					}
+					receiver, ok := selector.X.(*ast.Ident)
+					if !ok {
+						return true
+					}
+					parameterType, injected := parameters[receiver.Name]
+					if !injected || (isApprovedCandidateParameter(parameterType, candidatePkg) &&
+						approvedCandidateAccessors[selector.Sel.Name]) {
+						return true
+					}
+					findings = append(findings, packageRel+" pure boundary invokes method "+selector.Sel.Name+
+						" on parameter "+receiver.Name)
+					return true
+				})
+			}
+		}
+	}
+	return findings
+}
+
 func auditApprovedCandidateBoundaries(root, module string, files []string) ([]string, error) {
 	type productionFile struct {
 		rel, packageRel string
@@ -125,6 +304,7 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 	imports := make(map[string][]string)
 	directReaders := make(map[string]bool)
 	allPackages := make(map[string]bool)
+	filesByPackage := make(map[string][]*ast.File)
 	accessorFiles := make(map[string][]string)
 	fset := token.NewFileSet()
 	for _, rel := range files {
@@ -138,6 +318,7 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 		}
 		packageRel := filepath.ToSlash(filepath.Dir(rel))
 		allPackages[packageRel] = true
+		filesByPackage[packageRel] = append(filesByPackage[packageRel], parsed)
 		parsedFiles = append(parsedFiles, productionFile{rel: rel, packageRel: packageRel, file: parsed})
 		candidatePkg, importsCandidate := candidateImportName(parsed, module)
 		if importsCandidate && candidatePkg == "." {
@@ -191,6 +372,8 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 		if allowed && strings.TrimSpace(reason) == "" {
 			findings = append(findings, packageRel+" has an empty approved-candidate boundary reason")
 		}
+		findings = append(findings,
+			pureApprovedCandidateBoundaryViolations(packageRel, module, filesByPackage[packageRel])...)
 	}
 	for packageRel := range approvedCandidateBoundaries {
 		if !directReaders[packageRel] {
@@ -199,25 +382,13 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 	}
 	for packageRel := range tainted {
 		path, bad := transitiveAuthorityDependency(imports, packageRel)
-		reason, bridged := approvedCandidateAuthorityBridges[packageRel]
-		if bad && !bridged {
+		if bad {
 			detail := ""
 			if len(taintedFrom[packageRel]) != 0 {
 				detail = "; approved-candidate taint via " + strings.Join(taintedFrom[packageRel], " -> ")
 			}
 			findings = append(findings, packageRel+" reaches an authority package: "+
 				strings.Join(path, " -> ")+detail)
-		}
-		if bad && bridged && strings.TrimSpace(reason) == "" {
-			findings = append(findings, packageRel+" has an empty approved-candidate authority bridge reason")
-		}
-		if !bad && bridged {
-			findings = append(findings, packageRel+" has an authority bridge permission but reaches no authority package")
-		}
-	}
-	for packageRel := range approvedCandidateAuthorityBridges {
-		if !tainted[packageRel] {
-			findings = append(findings, packageRel+" has an authority bridge permission but no approved-candidate taint")
 		}
 	}
 	return findings, nil
@@ -334,17 +505,11 @@ func Run() { _, _ = strategy.Eligible; _ = execgw.Submit }`,
 	}
 
 	oldBoundaries := approvedCandidateBoundaries
-	oldBridges := approvedCandidateAuthorityBridges
-	defer func() {
-		approvedCandidateBoundaries = oldBoundaries
-		approvedCandidateAuthorityBridges = oldBridges
-	}()
+	defer func() { approvedCandidateBoundaries = oldBoundaries }()
 	approvedCandidateBoundaries = map[string]string{
 		"internal/strategy":   "pure bool/error strategy boundary fixture",
 		"internal/testengine": "a general boundary permission must not authorize execution",
 	}
-	approvedCandidateAuthorityBridges = map[string]string{}
-
 	findings, err := auditApprovedCandidateBoundaries(root, module, rels)
 	if err != nil {
 		t.Fatalf("auditing reverse primitive fixture: %v", err)
@@ -352,37 +517,6 @@ func Run() { _, _ = strategy.Eligible; _ = execgw.Submit }`,
 	want := "internal/testengine reaches an authority package: internal/testengine -> internal/execgw"
 	if !containsFinding(findings, want) {
 		t.Fatalf("reverse primitive laundering findings = %v, want %q", findings, want)
-	}
-
-	approvedCandidateBoundaries = map[string]string{
-		"internal/strategy": "pure bool/error strategy boundary fixture",
-	}
-	approvedCandidateAuthorityBridges = map[string]string{
-		"internal/testengine": " ",
-	}
-	findings, err = auditApprovedCandidateBoundaries(root, module, rels)
-	if err != nil {
-		t.Fatalf("auditing empty bridge fixture: %v", err)
-	}
-	if !containsFinding(findings, "internal/testengine has an empty approved-candidate authority bridge reason") {
-		t.Fatalf("empty bridge findings = %v", findings)
-	}
-
-	approvedCandidateAuthorityBridges = map[string]string{
-		"internal/testengine": "explicit Guardian/decision bridge fixture",
-		"internal/stale":      "must not survive without approved-candidate taint",
-	}
-	findings, err = auditApprovedCandidateBoundaries(root, module, rels)
-	if err != nil {
-		t.Fatalf("auditing explicit bridge fixture: %v", err)
-	}
-	if !containsFinding(findings, "internal/stale has an authority bridge permission but no approved-candidate taint") {
-		t.Fatalf("stale bridge findings = %v", findings)
-	}
-	for _, finding := range findings {
-		if strings.Contains(finding, "internal/testengine") {
-			t.Fatalf("explicit bridge still rejected: %v", findings)
-		}
 	}
 }
 
@@ -411,6 +545,164 @@ func TestApprovedCandidateBoundaryDetectsAllAuthorityRoots(t *testing.T) {
 	if forbiddenApprovedBoundaryPackage("internal/strategy") {
 		t.Error("unrelated pure strategy package classified as an authority root")
 	}
+}
+
+func TestApprovedCandidateAuthorityReachCannotBeAllowedByBoundaryReason(t *testing.T) {
+	module := modulePath(t, moduleRoot(t))
+	root, rels := writeApprovedBoundaryFixture(t, map[string]string{
+		"internal/strategy/strategy.go": `package strategy
+import cv "` + module + `/internal/candidate"
+func Eligible(in cv.VetoInputs, set cv.ThresholdSet) bool {
+	_, err := cv.AssessApprovedCandidate(in, set)
+	return err == nil
+}`,
+		"internal/testengine/engine.go": `package testengine
+import (
+	"` + module + `/internal/strategy"
+	"` + module + `/internal/journal"
+	"` + module + `/internal/execgw"
+)
+func Run() { _ = strategy.Eligible; _, _ = journal.Open, execgw.Submit }`,
+	})
+	oldBoundaries := approvedCandidateBoundaries
+	defer func() { approvedCandidateBoundaries = oldBoundaries }()
+	approvedCandidateBoundaries = map[string]string{
+		"internal/strategy":   "pure value-only strategy fixture",
+		"internal/testengine": "journal-only reason must not mask a later execgw root",
+	}
+
+	findings, err := auditApprovedCandidateBoundaries(root, module, rels)
+	if err != nil {
+		t.Fatalf("auditing reason-only bridge fixture: %v", err)
+	}
+	if !containsFinding(findings, "internal/testengine reaches an authority package:") {
+		t.Fatalf("reason-only bridge masked authority expansion: %v", findings)
+	}
+}
+
+func TestApprovedCandidatePureBoundaryRejectsInjectedAuthority(t *testing.T) {
+	module := modulePath(t, moduleRoot(t))
+	root, rels := writeApprovedBoundaryFixture(t, map[string]string{
+		"internal/strategy/strategy.go": `package strategy
+import (
+	"net/http"
+	cv "` + module + `/internal/candidate"
+)
+var packageCallback func()
+type Submitter interface { Submit() error }
+type Evaluator struct {
+	Callback func()
+	Client *http.Client
+}
+func EvaluateAndSubmit(approved cv.ApprovedCandidate, submitter Submitter, callback func()) bool {
+	type LocalSubmitter interface { Submit() error }
+	var localCallback func()
+	local := func() {}
+	_, _, _ = LocalSubmitter(nil), localCallback, local
+	callback()
+	_ = submitter.Submit()
+	return approved.Valid()
+}`,
+	})
+	oldBoundaries := approvedCandidateBoundaries
+	defer func() { approvedCandidateBoundaries = oldBoundaries }()
+	approvedCandidateBoundaries = map[string]string{
+		"internal/strategy": "fixture exercises the pure evaluator contract",
+	}
+
+	findings, err := auditApprovedCandidateBoundaries(root, module, rels)
+	if err != nil {
+		t.Fatalf("auditing injected authority fixture: %v", err)
+	}
+	for _, want := range []string{
+		"imports net/http",
+		"package variable packageCallback",
+		"interface capability Submitter",
+		"interface capability LocalSubmitter",
+		"function-typed field Callback",
+		"pointer-typed field Client",
+		"function-typed parameter callback",
+		"function-typed variable localCallback",
+		"function literal capability",
+		"invokes method Submit on parameter submitter",
+	} {
+		if !findingContains(findings, want) {
+			t.Errorf("pure-boundary findings = %v, want substring %q", findings, want)
+		}
+	}
+}
+
+func TestApprovedCandidatePureBoundaryAllowsValueOnlyEvaluator(t *testing.T) {
+	module := modulePath(t, moduleRoot(t))
+	root, rels := writeApprovedBoundaryFixture(t, map[string]string{
+		"internal/strategy/strategy.go": `package strategy
+import cv "` + module + `/internal/candidate"
+type Decision struct { CandidateLifeID string; Eligible bool }
+func Evaluate(approved cv.ApprovedCandidate) Decision {
+	return Decision{CandidateLifeID: approved.CandidateLifeID(), Eligible: approved.Valid()}
+}`,
+	})
+	oldBoundaries := approvedCandidateBoundaries
+	defer func() { approvedCandidateBoundaries = oldBoundaries }()
+	approvedCandidateBoundaries = map[string]string{
+		"internal/strategy": "value-only input to immutable result fixture",
+	}
+	findings, err := auditApprovedCandidateBoundaries(root, module, rels)
+	if err != nil {
+		t.Fatalf("auditing value-only fixture: %v", err)
+	}
+	if len(findings) != 0 {
+		t.Fatalf("value-only evaluator rejected: %v", findings)
+	}
+}
+
+func TestApprovedCandidateBoundaryParserAndDotImportControls(t *testing.T) {
+	module := modulePath(t, moduleRoot(t))
+	root, rels := writeApprovedBoundaryFixture(t, map[string]string{
+		"internal/dotreader/reader.go": `package dotreader
+import . "` + module + `/internal/candidate"
+func Evaluate(approved ApprovedCandidate) bool { return approved.Valid() }`,
+	})
+	findings, err := auditApprovedCandidateBoundaries(root, module, rels)
+	if err != nil {
+		t.Fatalf("auditing dot-import fixture: %v", err)
+	}
+	if !containsFinding(findings, "internal/dotreader reads ApprovedCandidate") {
+		t.Fatalf("dot-import direct reader was not detected: %v", findings)
+	}
+
+	badRoot, badRels := writeApprovedBoundaryFixture(t, map[string]string{
+		"internal/broken/broken.go": "package broken\nfunc {",
+	})
+	if _, err := auditApprovedCandidateBoundaries(badRoot, module, badRels); err == nil {
+		t.Fatal("malformed source did not fail the boundary audit closed")
+	}
+}
+
+func writeApprovedBoundaryFixture(t *testing.T, files map[string]string) (string, []string) {
+	t.Helper()
+	root := t.TempDir()
+	rels := make([]string, 0, len(files))
+	for rel, src := range files {
+		path := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatalf("creating fixture directory: %v", err)
+		}
+		if err := os.WriteFile(path, []byte(src), 0o600); err != nil {
+			t.Fatalf("writing fixture %s: %v", rel, err)
+		}
+		rels = append(rels, rel)
+	}
+	return root, rels
+}
+
+func findingContains(findings []string, want string) bool {
+	for _, finding := range findings {
+		if strings.Contains(finding, want) {
+			return true
+		}
+	}
+	return false
 }
 
 func containsFinding(findings []string, want string) bool {

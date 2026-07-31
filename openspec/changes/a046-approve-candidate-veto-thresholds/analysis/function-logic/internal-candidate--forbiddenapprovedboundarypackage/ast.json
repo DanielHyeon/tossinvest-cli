@@ -1,15 +1,15 @@
 {
   "file": "internal/candidate/approved_consumer_guard_test.go",
-  "source_sha256": "84ec24eac8d3bf7adc98376d28497a690c6b05b60943fa807774aed047e30918",
+  "source_sha256": "07b03b7c83b1075a970050bb6a2a74b4ed7398dc90a711a6d6bd59aa108041a5",
   "package": "candidate",
   "function": "forbiddenApprovedBoundaryPackage",
   "signature": "forbiddenApprovedBoundaryPackage(params=1, results=1)",
   "start": {
-    "line": 81,
+    "line": 80,
     "column": 1
   },
   "end": {
-    "line": 84,
+    "line": 83,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 83,
+        "line": 82,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 82,
+        "line": 81,
         "column": 2
       }
     }

@@ -4,8 +4,8 @@
 |---|---|---|---|---|
 | B1 | scan every supplied file | repository audit and temporary fixture audits | H1/H2 fixtures compile RED | focused GREEN |
 | B2 | `_test.go` input is excluded from production taint | repository audit | prior GREEN | focused regression GREEN |
-| B3 | malformed source fails the audit closed | parser error contract | existing parser contract | focused regression GREEN |
-| B4 | dot-imported candidate package is a direct reader | existing direct-reader controls | prior RED/GREEN | focused regression GREEN |
+| B3 | malformed source fails the audit closed | `TestApprovedCandidateBoundaryParserAndDotImportControls` | Low finding requested a real fixture | focused GREEN |
+| B4 | dot-imported candidate package is a direct reader | `TestApprovedCandidateBoundaryParserAndDotImportControls` | Low finding requested a real fixture | focused GREEN |
 | B5 | qualified/aliased approved symbol is checked when not dot imported | reverse primitive strategy fixture | H1 fixture compile RED | focused GREEN |
 | B6 | qualified/aliased approved symbol makes the package a direct reader | reverse primitive strategy fixture | H1 fixture compile RED | focused GREEN |
 | B7 | scan every import in a production file | reverse primitive engine fixture | H1 fixture compile RED | focused GREEN |
@@ -25,11 +25,10 @@
 | B21 | audit every general pure-boundary allowlist entry for staleness | reverse primitive fixture | H1 fixture compile RED | focused GREEN |
 | B22 | non-direct entry is stale even if the package is transitively tainted | `TestApprovedCandidateBoundaryRejectsReversePrimitiveLaundering` | H1 fixture compile RED | focused GREEN |
 | B23 | audit every tainted package's full authority closure | reverse primitive and journal fixtures | H1/H2 fixtures compile RED | focused GREEN |
-| B24 | authority reach without separate bridge becomes a full-path finding | `TestApprovedCandidateBoundaryRejectsReversePrimitiveLaundering` | H1 fixture compile RED | focused GREEN |
+| B24 | authority reach unconditionally becomes a full-path finding; a pure-boundary reason cannot exempt it | `TestApprovedCandidateBoundaryRejectsReversePrimitiveLaundering`, `TestApprovedCandidateAuthorityReachCannotBeAllowedByBoundaryReason` | reason-only bridge produced empty findings | focused GREEN |
 | B25 | reverse-taint path is attached to authority finding | reverse primitive fixture | H1 fixture compile RED | focused GREEN |
-| B26 | empty explicit bridge rationale fails closed | reverse primitive empty-bridge phase | bridge absent at RED | focused GREEN |
-| B27 | bridge permission with no authority reach is stale | bridge permission controls | bridge absent at RED | focused GREEN |
-| B28 | audit all explicit Guardian/decision bridge permissions for taint staleness | reverse primitive stale-bridge phase | bridge absent at RED | focused GREEN |
-| B29 | bridge permission without approved-candidate taint is rejected | reverse primitive stale-bridge phase | bridge absent at RED | focused GREEN |
 
 Current repository success (empty findings) remains covered by `TestApprovedCandidateConsumersStayInsidePureBoundaries`.
+The unbranched pure-boundary validation call is covered by `TestApprovedCandidatePureBoundaryRejectsInjectedAuthority`
+(external import, package/local state, local interface, function parameter/field/variable/literal, pointer field,
+and injected method/function calls) plus `TestApprovedCandidatePureBoundaryAllowsValueOnlyEvaluator`.
