@@ -26,7 +26,7 @@
 | `console-sets-guardian-limits` | STORY-TOS-022 | implemented |
 | `console-owns-the-operating-toggles` | STORY-TOS-023 | implemented |
 | `enable-engine-autostart-menu` | STORY-TOS-024 | implemented |
-| `console-adoption-controls` | STORY-TOS-025 | implemented |
+| `console-adoption-controls` | STORY-TOS-025 | archived |
 | `add-common-exit-optimization` | STORY-TOS-026 | implemented |
 | `add-candidate-discovery` | STORY-TOS-027 | implemented |
 | `fix-chase-veto-measurement` | STORY-TOS-028 | implemented |
@@ -39,3 +39,4 @@
 | `fix-console-origin-fallback` | STORY-TOS-035 | archived |
 | `fix-console-referrer-origin` | STORY-TOS-036 | archived |
 | `automate-soak-openapi-onboarding` | STORY-TOS-037 | archived |
+| `fix-adoption-console-truth` | STORY-TOS-038 | in_progress |

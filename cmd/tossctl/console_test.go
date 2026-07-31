@@ -361,13 +361,16 @@ func consoleOptionFields(t *testing.T) map[string]bool {
 
 // TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingElseDoes.
 //
-// The dashboard has no paths of its own: the journal is journal.DefaultPath()
-// (the engine's), and the run marker is the one `verify run` and the soak already
-// agree on. A second answer to "where is the journal" would be a console
-// reporting on a database nobody else is using.
+// The dashboard has no paths of its own: the journal resolver follows the
+// engine's active profile, and the run marker is the one `verify run` and the
+// soak already agree on.
 func TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingElseDoes(t *testing.T) {
 	src := readSource(t, "console.go")
-	for _, want := range []string{"journal.DefaultPath()", "verifyRunLockPath(verifyRecord)"} {
+	for _, want := range []string{
+		"consoleJournalPath(root)",
+		"JournalPath:  journalPath",
+		"verifyRunLockPath(verifyRecord)",
+	} {
 		if !strings.Contains(src, want) {
 			t.Errorf("console.go no longer resolves the dashboard's paths with %s", want)
 		}

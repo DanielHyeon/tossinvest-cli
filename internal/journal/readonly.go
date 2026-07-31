@@ -79,6 +79,13 @@ var readOnlyTables = []string{
 	"positions", "exit_states", "exit_events", "trade_outcomes", "mutation_attempts",
 }
 
+var readOnlyColumns = []struct {
+	table  string
+	column string
+}{
+	{table: "exit_states", column: "policy_id"},
+}
+
 // ReadOnlyOptions configures OpenReadOnly.
 type ReadOnlyOptions struct {
 	// Path is the SQLite file. Empty resolves DefaultPath(), the same way Open
@@ -201,6 +208,23 @@ func (r *ReadOnly) checkSchema(ctx context.Context) error {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			missing = append(missing, table)
+		case err != nil:
+			return fmt.Errorf("journal: inspecting the schema of %s: %w", r.path, err)
+		}
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("%w: version %d has no %s — start the engine once so it migrates",
+			ErrSchemaTooOld, r.version, strings.Join(missing, ", "))
+	}
+
+	for _, required := range readOnlyColumns {
+		var name string
+		err := r.db.QueryRowContext(ctx,
+			`SELECT name FROM pragma_table_info(?) WHERE name = ?`,
+			required.table, required.column).Scan(&name)
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			missing = append(missing, required.table+"."+required.column)
 		case err != nil:
 			return fmt.Errorf("journal: inspecting the schema of %s: %w", r.path, err)
 		}

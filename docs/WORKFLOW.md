@@ -7,7 +7,6 @@
 > 개정: 2026-07-26 gstack 리뷰(codex + CEO/Eng/DX 4보이스) 결정 반영 — 기록은 openspec/changes/archive/2026-07-26-add-tossos-foundation/review.md
 > 개정 2: 2026-07-26 StockOS SDD 규칙(stockos/.claude/CLAUDE.md) 중 이식 가능 규칙 적용 — §0, 권위 경계, 위험도, Pre-Edit 선언, 완료 보고 조건
 > 개정 3: 2026-07-27 StockOS Full SDD 도구 체계를 Go/TossOS에 맞게 이식 — OpenSpec change `adopt-stockos-full-sdd`
-> 개정 4: 2026-07-31 StockOS Full SDD 실행 순서·READY·증거 조정·PM 1:1·완료 계약 정렬 — OpenSpec change `align-full-sdd-pm-contract`
 
 ## 0. 최상위 안전 불변식
 
@@ -20,7 +19,7 @@
 5. 운영 설정(위험 한도·레인 ON/OFF·운영 모드) 변경은 audit 로그로 추적 가능해야 한다.
 6. 원장·journal 스키마 변경은 순서·rollback 계획을 명시하고 additive-nullable을 선호한다.
 7. 운영 토글 flip(레인 ON, 게이트 활성화, kill switch 해제)은 사람이 직접 승인한다. 에이전트가 자동 flip하지 않는다.
-8. Story와 OpenSpec change scope가 허용하지 않으면 production trading code, 주문·위험·원장 코드를 변경하지 않는다.
+8. Story/change scope가 허용하지 않으면 production trading code를 변경하지 않는다.change scope가 허용하지 않으면 주문·위험·원장 코드를 변경하지 않는다.
 9. 손절·익절·사이징 로직 변경은 단방향 안전(더 보수적)만 허용한다. 불명확하면 변경 금지로 판단한다.
 
 ## 권위 경계
@@ -29,10 +28,10 @@
 | 사실                        | 권위                                                    |
 | --------------------------- | ------------------------------------------------------- |
 | 의도된 동작·수용 기준      | `openspec/specs/` + 승인된 change                       |
-| 현재 코드 구조·동작        | 현재 HEAD + CodeGraph + `go test` + httptest 계약 테스트 |
+| 현재 코드 구조·동작        | 현재 HEAD + CodeGraph +`go test` + httptest 계약 테스트 |
 | 함수 내부 분기·side effect | 현재 HEAD + Go AST + Function Logic Map                 |
 | 브로커 실제 동작            | 공식 API 응답 fixture + 사람 승인 실계좌 검증 기록      |
-| 배포·완료 가능 여부        | gstack review + `make gate` + Manager 독립 검증          |
+| 배포·완료 가능 여부        | gstack review +`make gate` + Manager 독립 검증          |
 | 관련 문맥 후보              | CodeGraphContext                                        |
 | 과거 학습·의미 검색        | 파일 memory + GBrain                                    |
 | 에이전트·change 관계       | SDD Control Graph/Create Context Graph — advisory only |
@@ -44,32 +43,19 @@
 
 | 계층                | 도구                                   | TossOS 적용                                         |
 | ------------------- | -------------------------------------- | --------------------------------------------------- |
-| 안전                | TossOS safety invariants               | LIVE side effect·손절 즉시성·OFF upstream 보존      |
 | 계약                | OpenSpec                               | proposal/design/spec delta/tasks/review             |
 | hard evidence       | CodeGraph + 현재 HEAD                  | definition, callers, callees, impact                |
 | supporting evidence | CodeGraphContext                       | 문맥 확장과 누락 후보                               |
 | 함수 내부           | Go AST + ast-grep + Function Logic Map | 분기, early return, mutation, side effect, fallback |
-| 실행                | Superpowers                            | RED → GREEN → REFACTOR → VERIFY                     |
+| 실행                | Superpowers                            | RED → GREEN → REFACTOR → VERIFY                  |
 | 게이트              | gstack + Makefile                      | plan/code/security/QA review와 자동 완료 조건       |
-| 기억 episodic       | 파일 memory                            | 검증 전 실패·오판·교훈 후보                         |
-| 기억 canonical      | GBrain                                 | 검증된 결정의 의미 검색 보조                        |
-| 관측                | TypeDB SDD Control Graph + CCG          | 마스킹 event 관계의 비차단 관측                     |
-| PM                  | TOS portfolio generator                | initiative→epic→feature→story→change→phase→task 추적 |
+| 기억                | 파일 episodic + GBrain                 | 검증 전 episode와 의미 검색                         |
+| 관측                | TypeDB + Create Context Graph          | 마스킹 event 관계의 비차단 관측                     |
+| PM                  | TOS portfolio generator                | initiative→epic→feature→story→change 역추적     |
 
 StockOS와 전역 CLI·로컬 DB 서비스는 재사용할 수 있지만 인덱스, memory, PM 데이터,
 TypeDB database, Neo4j source는 TossOS namespace로 분리한다. Python AST 분석기는 Go 코드에
 재사용하지 않으며 `tools/logic-map/extract_go_ast.go`가 그 역할을 맡는다.
-
-### SDD 4계층 앵커
-
-- **계약(OpenSpec)**: scope, non-goals, acceptance criteria, design을 구현 전에 고정한다.
-- **증거(CodeGraph + CodeGraphContext + Function Logic Map)**: 현재 코드의 함수 간 구조와
-  함수 내부 실제 분기를 분리해 검증한다.
-- **실행(Superpowers TDD)**: RED → GREEN → REFACTOR → VERIFY를 순서대로 수행한다.
-- **게이트(gstack + Makefile)**: review, security, QA와 자동 검사를 통과한 변경만
-  archive·handoff 대상으로 인정한다.
-
-도구가 추가되거나 일부 advisory 도구가 실패해도 이 네 앵커와 §0 안전 불변식은 축소할 수 없다.
 
 ## 역할 분리
 
@@ -81,50 +67,18 @@ TypeDB database, Neo4j source는 TossOS namespace로 분리한다. Python AST �
 
 0. **기억 회고**: `scripts/memory-recall.sh "<키워드>"`와
    `python3 tools/sdd/gbrain_project.py search "<키워드>"`로 과거 학습을 찾고 현재 증거로 재검증한다.
-1. **Story와 계약**: Delivery Story를 먼저 만들고 정확히 하나의 예정 OpenSpec
-   `change_id`와 경로를 연결한다. 그다음 Manager가
-   `openspec/changes/<change-id>/`의 proposal, design, spec delta, tasks를 완성한다.
-   strict validate, 사람의 의도·안전 승인, 선행 Story 완료, 위험도, test 전략,
-   DB 변경 시 rollback, change당 single writer, PM generator `--check`가 모두 충족되어야
-   `READY`다.
-2. **구현 기준 고정**: `python3 tools/sdd/capture_change_base.py --change <change-id>`로
-   구현 전 commit을 고정하고 proposal-freeze 리뷰를 `review.md`에 기록한다.
-3. **CodeGraph hard evidence**: `make sdd-sync` 후 대상 symbol의 definition, callers,
-   callees, impact, test/config binding을 현재 HEAD와 함께 확인한다.
-4. **CodeGraphContext supporting evidence**: 관련 문맥과 누락 후보를 찾는다. 이 결과는
-   코드 변경 권한이 아니며 hard evidence를 대체하지 않는다.
-5. **증거 조정**: 두 도구와 현재 HEAD의 일치·불일치를
-   `analysis/code-context/codegraph-baseline.md`,
-   `codegraphcontext-context.md`, `evidence-reconciliation.md`에 기록한다.
-   불일치는 현재 HEAD와 테스트로 해소하기 전까지 편집을 차단한다.
-6. **함수 내부 증거**: 기존 함수 내부 편집이면 Go AST·ast-grep·Function Logic Map·
-   Branch Test Map을 먼저 작성한다. High-risk 함수는 면제할 수 없다.
-7. **Pre-Edit Gate**: 대상 심볼, 호출부, 기존 테스트, 불변식, 실패 테스트, rollback과
-   설정 영향 선언을 기록하고 통과한 뒤 production 파일을 편집한다.
-8. **Superpowers TDD**: RED → GREEN 최소 구현 → REFACTOR → VERIFY 순서를 지킨다.
-   각 task 체크는 해당 산출물과 같은 변경 단위에서 수행한다.
-9. **게이트와 독립 검증**: gstack code/security/QA 관점, `make sdd-check`, 대상 테스트,
-   전체 test/race/vet/validate를 실행하고 Manager가 diff와 테스트를 분리된 리뷰 패스로 재검증한다.
-10. **확정과 PM 동기화**: `make gate CHANGE=<change-id>` 성공 후 OpenSpec을 archive하고,
-    Story 경로와 파생 상태를 갱신한 뒤 PM generator/check를 통과시킨다. archive와 PM sync
-    전에는 change를 완료로 보고하지 않는다.
-11. **학습 유지**: 승인·테스트·리뷰와 merge 또는 deploy 근거가 있는 학습만 episodic으로
-    retain하고, 반복 검증된 내용만 canonical로 승격한다.
-
-### READY 판정
-
-첫 production 편집 전에 다음을 모두 확인한다. 하나라도 없으면 `NOT READY`다.
-
-```text
-- Story가 registry와 Feature에 등록되고 정확히 하나의 change를 가리킨다.
-- PM generator `--check`가 Story↔change 1:1과 계층의 양방향 링크를 통과한다.
-- proposal/design/spec delta/tasks가 완전하고 strict validate가 통과한다.
-- 사람의 범위·안전 승인이 있고 선행 Story가 완료되었다.
-- 위험도와 High-risk 경로, test 전략, review 보이스가 정해졌다.
-- DB/journal 변경이면 additive/rollback 순서가 있다.
-- CodeGraph baseline과 구현 전 base commit이 고정되었다.
-- change당 production writer가 한 명이다.
-```
+1. **계약**: Manager가 `openspec/changes/<change-id>/`에 proposal, design, spec delta, tasks를 작성하고
+   `python3 tools/sdd/capture_change_base.py --change <change-id>`로 구현 전 commit을 고정한다.
+2. **strict 검증**: `openspec validate <change-id> --strict --no-interactive`.
+3. **proposal-freeze**: 아래 리뷰 게이트를 실행하고 `review.md`를 남긴다.
+4. **hard evidence**: `make sdd-sync` 후 대상 symbol의 definition, callers, callees, impact, test/config binding을 확인한다.
+5. **supporting evidence**: CodeGraphContext로 관련 문맥 후보를 찾되 hard evidence와 현재 HEAD로 조정한다.
+6. **함수 내부 증거**: 기존 함수 내부 편집이면 Go AST·ast-grep·Function Logic Map·Branch Test Map을 작성한다.
+7. **Superpowers TDD**: RED → GREEN 최소 구현 → REFACTOR → VERIFY. 각 task 체크는 산출물 커밋과 같은 커밋에서 수행한다.
+8. **게이트**: gstack code/security/QA 관점과 `make sdd-check`, 대상 테스트, 전체 test/vet/validate를 실행한다.
+9. **독립 검증**: Manager가 diff와 테스트를 구현 컨텍스트와 분리해 재검증한다.
+10. **완료**: `make gate CHANGE=<change-id>` 성공 후 PM story를 동기화하고 `openspec archive <change-id>`한다.
+11. **학습 유지**: 재사용 가치가 있고 검증된 학습만 episodic으로 retain한 뒤 근거가 있을 때 canonical로 승격한다.
 
 ## 코드 증거 절차
 
@@ -143,11 +97,6 @@ codegraphcontext report .
 CodeGraph와 현재 HEAD가 다르면 인덱스를 갱신하고 파일을 직접 읽는다. CodeGraphContext 결과만으로
 production 편집을 허용하지 않는다. GBrain은 식별자를 모르는 의미 검색과 과거 결정 recall에 쓰며
 현재 코드 사실은 CodeGraph와 HEAD로 재확인한다.
-
-두 증거 계층의 결론이 다르면 그 차이를 숨기지 않는다. 변경마다
-`analysis/code-context/`의 세 파일에 질의, 기준 commit, 확인한 파일·심볼, 불일치,
-현재 HEAD로 내린 결론을 남긴다. 단순 문서·신규 leaf처럼 코드 구조 질의가 의미 없는 경우에도
-`evidence-reconciliation.md`에 `not-applicable` 사유와 확인한 변경 표면을 기록한다.
 
 ## Function Logic Map
 
@@ -228,40 +177,10 @@ Function Logic Map 완성/명시적 면제 + `make sdd-check` + `make test` + `m
 
 ### PM 계층
 
-`INIT-TOS → EPIC-TOS → FEAT-TOS → STORY-TOS → OpenSpec change → Phase → Task`를
-양방향으로
-역추적한다. **활성 OpenSpec change 하나는 Delivery Story 정확히 하나와 연결되고,
-Story 하나는 OpenSpec change 정확히 하나만 가리킨다.** bootstrap allowlist, 무기한
-예외, change-first 임시 고아 상태를 허용하지 않는다. 새 작업은 Story를 먼저 등록하고
-예정 `change_id`·경로를 연결한 다음 change를 만든다.
+`INIT-TOS → EPIC-TOS → FEAT-TOS → STORY-TOS → OpenSpec change`를 1:1 역추적한다.sh
 
-Phase와 Task의 정본은 별도 PM 상태 파일이 아니라 해당 change의 `tasks.md` 제목과
-체크박스다. 따라서 portfolio가 OpenSpec task 상태를 복제하지 않으며, Story 아래 실행
-단위는 `tasks.md`에서만 변경한다.
-
-PM 검사는 다음 계약을 fail-closed로 강제한다.
-
-```text
-- 활성 OpenSpec change 집합 = 활성 change를 가리키는 Story change_id 집합
-- 모든 Story는 openspec.change_id와 openspec.path를 각각 정확히 하나 가진다
-- 같은 change_id를 둘 이상의 Story가 가리킬 수 없다
-- Initiative/Epic/Feature/Story의 forward/reverse link가 모두 일치한다
-- archive Story 경로는 실제 YYYY-MM-DD-<change-id> 디렉터리와 일치한다
-- bootstrap allowlist와 Story의 수동 status 필드는 허용하지 않는다
-```
-
-portfolio 원본은 계층, intent, 수용 기준, OpenSpec mapping만 보관한다. Story 진행 상태는
-proposal 존재, tasks 체크박스, active/archive 경로에서 generator가 `designed`,
-`in_progress`, `implemented`, `archived`로 파생한다. generated tracker와 수동 `status`는
-권위가 아니며 직접 편집하지 않는다. 이미 Story 없이 archive된 역사 change에는 소급
-Story를 강제하지 않지만, Story가 archive를 가리키면 실제 날짜-prefix 경로를 검증한다.
-StockOS의 STK backlog나 PM 사실을 복사하지 않는다.
-
-```bash
 python3 tools/pm/generate_master_tracker.py
 python3 tools/pm/generate_master_tracker.py --check
-```
-
 ## CodeGraph·CodeGraphContext 설치와 사용
 
 StockOS와 동일하게 CodeGraph는 현재 코드 구조의 **hard evidence**이고,
@@ -283,7 +202,6 @@ codegraphcontext version
 codegraphcontext doctor
 codegraphcontext stats .
 ```
-
 `command -v`가 실패하거나 doctor/status가 실행되지 않을 때만 설치한다. 이미 정상인
 도구를 작업 도중 재설치·업그레이드하지 않는다.
 
@@ -294,20 +212,17 @@ CodeGraph의 macOS/Linux 공식 standalone installer는 자체 runtime과 CLI를
 ```bash
 curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
 ```
-
 Node.js를 이미 관리하고 있다면 공식 npm 패키지도 사용할 수 있다.
 
 ```bash
 npm install -g @colbymchenry/codegraph
 ```
-
 CodeGraphContext는 TossOS 워크스테이션에서 `uv` 격리 도구로 설치한다. `pipx`를 쓰는
 환경에서는 `pipx install codegraphcontext`도 가능하다.
 
 ```bash
 uv tool install codegraphcontext
 ```
-
 설치 후 새 셸에서 경로와 진단을 다시 확인한다.
 
 ```bash
@@ -315,7 +230,6 @@ codegraph --version
 codegraphcontext version
 codegraphcontext doctor
 ```
-
 CodeGraph의 `codegraph install`은 Codex/Claude 등의 전역 설정을 수정할 수 있다.
 TossOS는 저장소의 `.mcp.json`, `.codex/config.toml`, `.claude/settings.json`을
 동기화하여 사용하므로 에이전트가 이를 무조건 실행하지 않는다. Codex 설정 조각만
@@ -324,7 +238,6 @@ TossOS는 저장소의 `.mcp.json`, `.codex/config.toml`, `.claude/settings.json
 ```bash
 codegraph install --print-config codex
 ```
-
 ### 프로젝트 최초 초기화
 
 새 checkout에 인덱스가 없을 때 한 번 실행한다.
@@ -333,7 +246,6 @@ codegraph install --print-config codex
 codegraph init .
 codegraphcontext index .
 ```
-
 TossOS의 표준 진입점은 아래 `make sdd-sync`다. CodeGraph의 `.codegraph/`가 없으면
 초기화하고, 있으면 증분 sync하며, CodeGraphContext와 TossOS 전용 GBrain도 함께
 갱신한다.
@@ -351,7 +263,6 @@ codegraphcontext update . --quiet
 codegraphcontext report .
 codegraphcontext stats .
 ```
-
 기존 함수나 민감 경로를 수정할 때는 최소한 definition/context와 callers, impact를
 확인한다. CodeGraphContext 보고서는 후보 문맥으로만 사용하고 현재 HEAD와
 Function Logic Map으로 교차검증한다.
@@ -369,7 +280,6 @@ make sdd-sync                # CodeGraph/CodeGraphContext/GBrain 증분 갱신
 make sdd-sync-full           # 전체 재색인
 make sdd-check               # CodeGraph worktree freshness + memory/config/PM/tests/doctor
 ```
-
 `make sdd-sync`는 현재 tracked/untracked 소스 fingerprint를 로컬 상태에 기록한다.
 `make sdd-check`는 CodeGraph hard-evidence fingerprint 불일치를 차단하고,
 CodeGraphContext/GBrain 불일치는 advisory 경고만 출력한다.
@@ -403,7 +313,6 @@ pgrep -af 'gbrain serve'
 cat .sdd/gbrain-home/.gbrain/brain.pglite/.gbrain-lock/lock
 tr '\0' '\n' </proc/<pid>/environ | grep '^GBRAIN_HOME='
 ```
-
 같은 `GBRAIN_HOME`의 `gbrain serve` 중 PGLite lock JSON의 `pid`가 살아 있고
 `refreshed_at`이 steal grace(기본 600초) 안에서 갱신된 프로세스만 현재 소유자다.
 복구가 필요하면 **비소유 GBrain 자식에만** 먼저 `SIGTERM`을 보내고 종료를 확인한다.
@@ -449,26 +358,19 @@ TypeDB/Neo4j 서비스 실행 상태는 doctor가 보고하지만 CI hard gate�
 
 High-risk 경로: 라이브 주문 제출·취소·정정, 손절/익절/사이징, Guardian·kill switch·운영 모드, intent journal·원장 스키마, reconciliation, retry matrix·rate limit, 인증·세션, 체결 감지.
 
-## Pre-Edit 선언
+## Pre-Edit 선언 (High-risk 전용)
 
-비자명 production 코드 또는 기존 함수 내부 로직을 수정하기 직전, Teammate는 다음을
-`review.md` 또는 change 분석 산출물에 선언한다. High-risk 경로에는 면제가 없다.
-신규 leaf·문서·생성 tracker처럼 해당하지 않으면 `not-applicable` 사유와 변경 표면을 기록한다.
+High-risk 경로의 기존 코드를 수정하기 직전, Teammate는 다음을 선언하고 기록한다(구현 보고에 포함):
 
 ```text
 Pre-Edit Gate:
 - change id / task id:
 - 대상 심볼(패키지.함수):
-- CodeGraph definition/callers/callees/impact:
-- CodeGraphContext 후보와 evidence reconciliation:
-- 기존 동작 파악 근거: (현재 HEAD·기존 테스트·fixture·호출부 목록)
-- Function Logic Map / Branch Test Map: 경로 또는 not-applicable
+- 기존 동작 파악 근거: (기존 테스트·fixture·호출부 목록)
 - upstream 상속 테스트 영향: yes/no (yes면 회귀 방지 방법)
 - 실패 테스트 선행 작성: yes/no
-- 설정·DB·journal 변경과 rollback: 영향/없음 + 근거
 - 안전 불변식 §0 위반 여부 검토: 통과/차단
 ```
-
 근거 없이 기존 함수 내부 로직을 수정하는 것은 금지된다. 확신이 없으면 "의존 있음"으로 간주하고 호출부·테스트를 먼저 확인한다.
 
 ## 완료 보고 금지 조건
@@ -484,30 +386,22 @@ upstream 테스트 회귀 여부 (650 green 유지)
 Function Logic Map 적용/면제 근거
 agent config sync·PM check 결과
 CodeGraph/CodeGraphContext/GBrain freshness
-OpenSpec archive 경로와 Story 1:1/파생 상태
-Manager 또는 분리된 리뷰 패스의 판정
-merge 또는 deploy 상태와 memory 승격 근거
 남은 위험·미완료 항목
 ```
-
 ## 에이전트 실행 순서
 
 ```text
 1. CLAUDE.md / AGENTS.md → .claude/CLAUDE.md → 이 문서 확인
-2. memory recall
-3. Delivery Story 선등록 → OpenSpec 계약/READY → base commit/proposal-freeze
-4. CodeGraph hard evidence + 현재 HEAD·기존 테스트 확인
-5. CodeGraphContext/GBrain 보조 문맥 → evidence reconciliation
-6. 기존 함수 내부 편집이면 Go AST/Function Logic Map/Branch Test Map
-7. Pre-Edit 선언
-8. RED 테스트 → GREEN 최소 구현 → REFACTOR → VERIFY
-9. 위험도에 따른 gstack guard/review/security/QA + make sdd-sync + make sdd-check + make gate
-10. Manager 또는 분리된 리뷰 패스의 diff·테스트 재검증
-11. OpenSpec archive → Story 경로/PM 파생 상태 sync
-12. 검증된 episodic retain → 반복 근거가 있는 canonical promotion
-13. 완료 보고 (금지 조건 확인 후)
+2. memory recall + openspec/specs/ + 진행 중 change 확인
+3. CodeGraph hard evidence + 현재 코드·기존 테스트 확인
+4. CodeGraphContext/GBrain 보조 문맥 교차검증
+5. 기존 함수 내부 편집이면 Function Logic Map 작성
+6. High-risk면 Pre-Edit 선언
+7. RED 테스트 → GREEN 최소 구현 → Refactor → Verify
+8. gstack review + make sdd-check + make gate
+9. PM/archive 동기화 + 검증된 memory retain
+10. 완료 보고 (금지 조건 확인 후)
 ```
-
 ## 브랜치·커밋 규칙
 
 - `main`: TossOS 제품 안정 브랜치

@@ -39,11 +39,12 @@ const settingsTemplates = `
     <p><label><input type="checkbox" name="enabled" {{if .Block.Enabled}}checked{{end}}>
     <strong>자동 편입</strong> — 계좌의 모든 무기록 보유(수동 매수)를 다음 대사 주기에 편입한다</label></p>
     <p><label>합성 손절폭 — 편입가에서 얼마나 아래에 손절선을 둘지 (기본값 5%)<br>
-    <input type="range" name="default_stop_pct" min="0.02" max="0.2" step="0.005"
-      value="{{.StopPctSlider}}" style="width:20rem;vertical-align:middle"
-      oninput="document.getElementById('pctout').textContent=(Math.round(this.value*1000)/10)+'%'">
-    <output id="pctout"><strong>{{.StopPctPercent}}</strong></output></label>
-    <span class="muted">(마우스로 조절 — 2% ~ 20%)</span></p>
+    <input type="number" name="default_stop_percent" min="2" max="20" step="0.5"
+      value="{{.StopPctSlider}}" style="width:8rem"> %
+    <strong>(현재 {{.StopPctPercent}})</strong></label>
+    <span class="muted">(2% ~ 20%, 0.5% 단위)</span>
+    {{if .NeedsStopPctCorrection}}<br><span class="danger">현재 파일의 값은 새 입력 단위와 맞지 않는다.
+    저장하려면 2%~20% 범위의 0.5% 단위로 다시 선택한다.</span>{{end}}</p>
     <details>
       <summary class="muted">고급 — 목록 직접 편집 (보통은 포지션 화면의 버튼으로 관리한다)</summary>
       <p><label>제외 목록 (쉼표 구분 — 어떤 경로로도 편입하지 않는다, 지정보다 우선)<br>

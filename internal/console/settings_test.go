@@ -121,15 +121,15 @@ func TestSavingTheFormWritesTheBlock(t *testing.T) {
 	h.authenticate(t)
 
 	resp := h.post(t, "/settings/save", url.Values{
-		"csrf":             {h.csrf},
-		"default_stop_pct": {"0.05"},
-		"include_symbols":  {"005930, 000660"},
+		"csrf":                 {h.csrf},
+		"default_stop_percent": {"7.5"},
+		"include_symbols":      {"005930, 000660"},
 	})
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("save = %d", resp.StatusCode)
 	}
 	block, saves := seam.saved()
-	if saves != 1 || block.DefaultStopPct != 0.05 || len(block.IncludeSymbols) != 2 {
+	if saves != 1 || block.DefaultStopPct != 0.075 || len(block.IncludeSymbols) != 2 {
 		t.Errorf("saved block = %+v after %d saves", block, saves)
 	}
 	if block.Enabled {
@@ -145,12 +145,12 @@ func TestAnInvalidSaveWritesNothing(t *testing.T) {
 	h.authenticate(t)
 
 	h.post(t, "/settings/save", url.Values{
-		"csrf":             {h.csrf},
-		"default_stop_pct": {"0.001"},
-		"include_symbols":  {"005930"},
+		"csrf":                 {h.csrf},
+		"default_stop_percent": {"7.6"},
+		"include_symbols":      {"005930"},
 	})
 	if _, saves := seam.saved(); saves != 0 {
-		t.Error("an out-of-band fraction was written; the engine would zero it")
+		t.Error("an off-grid percentage reached the settings seam")
 	}
 }
 
@@ -248,19 +248,39 @@ func TestRemovingADesignationOnlyAffectsTheFuture(t *testing.T) {
 	}
 }
 
-// TestTheStopFractionIsASlider: no typing — a mouse-adjustable range input with
-// the default labelled (사용자 UX 결정 2026-07-27).
 func TestTheStopFractionIsASlider(t *testing.T) {
-	h := settingsHarness(t, &fakeSettings{})
-	h.authenticate(t)
-	page := h.page(t, "/settings")
-	for _, want := range []string{`type="range"`, "기본값 5%", `name="default_stop_pct"`} {
-		if !strings.Contains(page, want) {
-			t.Errorf("the settings screen does not carry %q; the fraction must be a slider "+
-				"with its default shown, not a text field", want)
-		}
-	}
-	if strings.Contains(page, `type="text" name="default_stop_pct"`) {
-		t.Error("the fraction is still a text field")
+	for _, tc := range []struct {
+		name        string
+		fraction    float64
+		wantValue   string
+		wantLabel   string
+		wantWarning bool
+	}{
+		{name: "default", wantValue: "5", wantLabel: "5%"},
+		{name: "selected", fraction: 0.075, wantValue: "7.5", wantLabel: "7.5%"},
+		{name: "legacy off-grid", fraction: 0.076, wantValue: "7.6", wantLabel: "7.6%", wantWarning: true},
+		{name: "legacy near-grid", fraction: 0.075000000001, wantValue: "7.5000000001", wantLabel: "7.5000000001%", wantWarning: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := settingsHarness(t, &fakeSettings{block: config.Adoption{DefaultStopPct: tc.fraction}})
+			h.authenticate(t)
+			page := h.page(t, "/settings")
+			for _, want := range []string{
+				`type="number"`, `name="default_stop_percent"`, `min="2"`, `max="20"`,
+				`step="0.5"`, `value="` + tc.wantValue + `"`, tc.wantLabel,
+			} {
+				if !strings.Contains(page, want) {
+					t.Errorf("settings page missing %q", want)
+				}
+			}
+			for _, banned := range []string{`type="range"`, "oninput=", "<script"} {
+				if strings.Contains(page, banned) {
+					t.Errorf("CSP-incompatible adoption control contains %q", banned)
+				}
+			}
+			if got := strings.Contains(page, "0.5% 단위로 다시 선택"); got != tc.wantWarning {
+				t.Errorf("legacy correction warning = %v, want %v", got, tc.wantWarning)
+			}
+		})
 	}
 }

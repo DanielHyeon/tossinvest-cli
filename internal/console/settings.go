@@ -11,6 +11,8 @@ package console
 // this screen and erase somebody's exclude list (review round 1, P1-1).
 
 import (
+	"fmt"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -109,19 +111,19 @@ func (p settingsPage) StopPct() string {
 	return strconv.FormatFloat(p.Block.DefaultStopPct, 'f', -1, 64)
 }
 
-// StopPctSlider is the slider position: the saved fraction, or the default.
+// StopPctSlider is the percentage input text: the saved fraction converted to a
+// human percentage, or the default.
 func (p settingsPage) StopPctSlider() string {
 	pct := p.Block.DefaultStopPct
-	if pct < 0.02 || pct >= 1 {
+	if math.IsNaN(pct) || math.IsInf(pct, 0) || pct < 0.02 || pct >= 1 {
 		pct = defaultStopPct
 	}
-	return strconv.FormatFloat(pct, 'f', -1, 64)
+	return fractionPercentText(pct)
 }
 
-// StopPctPercent renders the slider position as a percentage label.
+// StopPctPercent renders the percentage input with its unit.
 func (p settingsPage) StopPctPercent() string {
-	f, _ := strconv.ParseFloat(p.StopPctSlider(), 64)
-	return strconv.FormatFloat(f*100, 'f', -1, 64) + "%"
+	return p.StopPctSlider() + "%"
 }
 
 // engineRunning reads the enginelock marker's freshness — advisory, exactly as
@@ -208,14 +210,13 @@ func (c *Console) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 		ExcludeSymbols: splitSymbols(r.PostFormValue("exclude_symbols")),
 		IncludeSymbols: splitSymbols(r.PostFormValue("include_symbols")),
 	}
-	if raw := strings.TrimSpace(r.PostFormValue("default_stop_pct")); raw != "" {
-		pct, err := strconv.ParseFloat(raw, 64)
-		if err != nil {
-			c.redirectSettings(w, r, "저장 안 됨 — 손절폭이 숫자가 아니다: "+raw)
-			return
-		}
-		next.DefaultStopPct = pct
+	stopFraction, err := parseStopPercent(r.PostFormValue("default_stop_percent"))
+	if err != nil {
+		c.redirectSettings(w, r, fmt.Sprintf(
+			"저장 안 됨 — 합성 손절폭은 2%%~20%% 범위에서 0.5%% 단위로 입력해야 한다: %v", err))
+		return
 	}
+	next.DefaultStopPct = stopFraction
 
 	// Turning enabled on is deliberately NOT behind a typed phrase: the user
 	// rejected that friction (사용자 결정 2026-07-27 — review.md). §0.7 is still

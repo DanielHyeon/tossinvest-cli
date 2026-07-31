@@ -1,0 +1,273 @@
+{
+  "file": "internal/console/settings.go",
+  "source_sha256": "4751dc7b16b4cd1cd885c5518b90d6939937074c83f428431b3504a6d4e3fe22",
+  "package": "console",
+  "function": "handleSettingsSave",
+  "receiver": "Console",
+  "signature": "Console.handleSettingsSave(params=2, results=0)",
+  "start": {
+    "line": 196,
+    "column": 1
+  },
+  "end": {
+    "line": 231,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 203,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 217,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 228,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 15
+      },
+      "text": "c.opts.Settings.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 3
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 86
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 19
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 19
+      },
+      "text": "splitSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 32
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 19
+      },
+      "text": "splitSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 32
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 23
+      },
+      "text": "parseStopPercent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 40
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 3
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 28
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 12
+      },
+      "text": "c.opts.Settings.Save"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 3
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 50
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 2
+      },
+      "text": "c.redirectSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 41
+      },
+      "text": "effectNotice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 54
+      },
+      "text": "c.engineRunning"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

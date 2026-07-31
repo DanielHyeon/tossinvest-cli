@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-038",
+  "title": "Restore truthful adoption management controls",
+  "feature": "FEAT-TOS-005",
+  "intent": "active",
+  "openspec": {
+    "change_id": "fix-adoption-console-truth",
+    "path": "openspec/changes/fix-adoption-console-truth"
+  },
+  "acceptance": [
+    "The positions screen reads the same journal file that an engine launched with the active config directory writes",
+    "A stale unrelated journal cannot make managed holdings appear unknown or trigger a policy_id SQL error",
+    "The adoption synthetic-stop percentage can be entered and verified without relying on script execution forbidden by the console CSP",
+    "Saved stop percentages remain within the existing 2% through 20% console band and reach the next engine start unchanged",
+    "No database schema, existing managed position baseline, operating toggle, engine process, soak process, or LIVE order is changed by the console fix"
+  ]
+}

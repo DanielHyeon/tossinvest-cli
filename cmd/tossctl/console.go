@@ -58,7 +58,6 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/localupdate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
@@ -226,7 +225,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		return err
 	}
 
-	journalPath, err := journal.DefaultPath()
+	journalPath, err := consoleJournalPath(root)
 	if err != nil {
 		// Not fatal. The dashboard's journal half reports "배선되지 않았다" and the
 		// verification console — which is what this command is for — is unaffected.

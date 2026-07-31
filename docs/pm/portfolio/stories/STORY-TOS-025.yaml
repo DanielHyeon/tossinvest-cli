@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "console-adoption-controls",
-    "path": "openspec/changes/console-adoption-controls"
+    "path": "openspec/changes/archive/2026-07-31-console-adoption-controls"
   },
   "acceptance": [
     "A clearly named top-level menu opens the existing external-position automatic-management settings",

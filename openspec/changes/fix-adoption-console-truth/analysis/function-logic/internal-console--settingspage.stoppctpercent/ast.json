@@ -1,0 +1,39 @@
+{
+  "file": "internal/console/settings.go",
+  "source_sha256": "4751dc7b16b4cd1cd885c5518b90d6939937074c83f428431b3504a6d4e3fe22",
+  "package": "console",
+  "function": "StopPctPercent",
+  "receiver": "settingsPage",
+  "signature": "settingsPage.StopPctPercent(params=0, results=1)",
+  "start": {
+    "line": 125,
+    "column": 1
+  },
+  "end": {
+    "line": 127,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 9
+      },
+      "text": "p.StopPctSlider"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
