@@ -195,7 +195,7 @@ func TestOrdersJoinExitEvidenceOnlyByAttemptIntentLineage(t *testing.T) {
 	}
 	execRaw(t, path, `
 		INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,broker_order_id,fingerprint,recorded_at)
-		VALUES ('exit-attempt-a043','exit-intent-a043','PLACE','RECORDED',1,'broker-exit-a043','fp','2026-07-27T00:59:41Z');`)
+		VALUES ('exit-attempt-a043','exit-intent-a043','PLACE','CONFIRMED',1,'broker-exit-a043','fp','2026-07-27T00:59:41Z');`)
 
 	linked := livePlainOrder("broker-exit-a043", "005930")
 	linked.OrderedAt = "2026-07-27T00:59:41Z"

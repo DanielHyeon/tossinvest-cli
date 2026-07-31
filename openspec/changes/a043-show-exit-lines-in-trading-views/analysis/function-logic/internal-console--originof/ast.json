@@ -1,15 +1,15 @@
 {
   "file": "internal/console/orders.go",
-  "source_sha256": "a7d47301a66728373ff71cb4e3e89fd8facd99d3c4c1e8a4428ac1f992dfe914",
+  "source_sha256": "e51624ca6ca79a4e36a1b0888f1269f660d39f558ab41455f1328e7b74692d0e",
   "package": "console",
   "function": "originOf",
   "signature": "originOf(params=4, results=1)",
   "start": {
-    "line": 743,
+    "line": 737,
     "column": 1
   },
   "end": {
-    "line": 751,
+    "line": 748,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 744,
+        "line": 738,
         "column": 2
       }
     },
@@ -25,12 +25,34 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 747,
+        "line": 741,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 744,
         "column": 2
       }
     }
   ],
   "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 739,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 742,
+        "column": 3
+      }
+    },
     {
       "kind": "return",
       "at": {
@@ -41,14 +63,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 748,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 750,
+        "line": 747,
         "column": 2
       }
     }
@@ -57,7 +72,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 744,
+        "line": 738,
         "column": 6
       },
       "text": "jv.Readable"

@@ -27,3 +27,6 @@
 | B23 | unsafe or duplicate evidence | ambiguity/cycle tests | old fuzzy result | yes |
 | B24 | select generic ambiguity reason | duplicate event test | old event choice | yes |
 | B25 | attach the sole event/attempt | direct and amend tests | old N+1 lookup | yes |
+| B26 | unsafe or duplicate evidence | confirmed-state and wide-lineage tests | incomplete evidence was accepted | yes |
+| B27 | generic ambiguity fallback | duplicate event/attempt tests | multiple candidates were selected | yes |
+| B28 | attach sole canonical evidence | market collision/direct/amend tests | market absent from identity | yes |

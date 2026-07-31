@@ -10,7 +10,7 @@
 |---|---|---|---|
 | `choice` | server-defined query link values; unknown values normalize to all | `filterChoiceFrom` / filter helpers | invalid choice never reaches broker and excludes nothing unexpectedly |
 | broker reading | each OPEN/CLOSED/conditional list independently measured or failed | `OrdersReader` cache | partial failure never becomes zero or a combined total |
-| journal order evidence | id+resolved account+market-local trading day maps through exact attempt/intent lineage | read-only journal query | invalid identity/unreadable journal => unknown; absent event => `근거 미연결` |
+| journal order evidence | id+resolved account+canonical market+market-local day, after filter | read-only journal query | invalid identity/unreadable journal => unknown; absent event => `근거 미연결` |
 
 ## Branches and early returns
 
@@ -19,6 +19,7 @@
 | B1-B3 | OPEN is known; iterate rows and remember pending IDs | append composite-key evidence; count every OPEN row | none | order list + linked exit fixture |
 | B4-B6 | CLOSED is known; iterate and skip IDs already in OPEN | append composite-key evidence | none | partial-filled duplicate test |
 | B7-B8 | conditional list is known; use its own id/time only | append watching rows; never guess triggered-order day | none | conditional origin tests |
+| B9-B11 | query and attach evidence after `filterRows` | mutate only filtered view rows | journal errors yield unknown | filtered >256 hidden-row test |
 
 ## Calls and live bindings
 
@@ -33,7 +34,7 @@
 ## State mutations and fallbacks
 
 - Broker cache is the only external read and retains its existing TTL/hold behavior.
-- Journal query is read-only, limited to visible composite identities, and follows only validated attempt/intent references; symbol/price are never fuzzy join keys.
+- Journal query is read-only, runs after local filtering, and is limited to rendered composite identities; symbol/price are never fuzzy join keys.
 - No state mutation or order call is introduced.
 
 ## Safety conclusion

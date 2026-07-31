@@ -8,26 +8,24 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| one broker reading | visible open/closed/conditional rows | orders cache | omit invalid identity and deduplicate exact composite |
+| filtered rendered rows | only rows in `v.Rows` | local filter result | omit invalid identity and deduplicate id+account+market+day |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | invalid/already seen key | local set only | skip | visible-scope tests |
-| B2 | open rows | append exact scopes | continue | orders tests |
-| B3 | closed rows | append exact scopes | continue | orders tests |
-| B4 | conditional rows | append own-id scope only | continue | conditional tests |
+| B1 | iterate rendered rows | local set only | continue | filtered visible evidence test |
+| B2 | invalid/already seen key | none | skip | invalid identity/duplicate tests |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `evidenceKey` | derive exact identity | invalid rows omitted | AST + orders tests |
+| none | keys were derived while preserving raw broker identity | invalid rows omitted | AST + orders tests |
 
 ## State mutations and fallbacks
 
-- Builds a bounded request only from rows already returned for this screen.
+- Builds a bounded request only after local links have selected the rendered rows.
 
 ## Safety conclusion
 

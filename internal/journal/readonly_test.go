@@ -262,7 +262,7 @@ func insertAttemptWithBrokerOrder(t *testing.T, j *Journal, attemptID, intentID,
 	if _, err := j.db.ExecContext(context.Background(),
 		`INSERT INTO mutation_attempts
 		   (id, intent_id, kind, state, attempt_no, broker_order_id, fingerprint, recorded_at)
-		 VALUES (?, ?, 'PLACE', 'RECORDED', 1, ?, 'fp', '2026-03-30T00:30:00Z')`,
+		 VALUES (?, ?, 'PLACE', 'CONFIRMED', 1, ?, 'fp', '2026-03-30T00:30:00Z')`,
 		attemptID, intentID, brokerOrderID); err != nil {
 		t.Fatalf("insert attempt %s: %v", attemptID, err)
 	}

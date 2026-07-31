@@ -15,6 +15,12 @@
 
 ## Verification evidence
 
+> Correction (2026-08-01): the earlier GREEN statement and approval below were
+> recorded before exact-commit independent review. Review of `6bebbe2` blocked on
+> missing market identity, overly broad attempt-state attribution, final-only SQL
+> bounding, and pre-filter evidence scopes. They are superseded by this correction;
+> task 3.2 remains unchecked until the next exact-commit review.
+
 - OpenSpec strict validation: pass.
 - Mutation capability: none by contract.
 - Dependency baseline: implementation starts from `70aabdc`, after a041/a042 were
@@ -23,9 +29,17 @@
   attributing its prerequisite snapshots to this UI change.
 - RED: complete/stale/unknown/1-share positions, exact/unlinked same-symbol order,
   forbidden controls, and POST 405 fixtures failed before the view wiring.
-- GREEN: `go test ./internal/operatorview ./internal/journal ./internal/console`, focused
-  trading-view tests, strict OpenSpec validation, and Function Logic Map validation pass.
+- The pre-review GREEN list is historical evidence for the first implementation,
+  not approval of the current exact commit. Current hardening verification is
+  recorded only after all focused/full/race/vet/strict/SDD commands complete.
+- Hardening GREEN (2026-08-01): `make test`, `make vet`, focused
+  `go test -race ./internal/journal ./internal/operatorview ./internal/console ./cmd/tossctl`,
+  strict OpenSpec validation, Function Logic Map validation, `make sdd-sync`, and
+  `make sdd-check` pass. The 1,000-parent adversarial lineage fixture completes
+  within its two-second context and returns one fail-closed result without recursion fan-out.
 
 ## Verdict
 
-a042 이후 구현을 승인한다. canonical DTO, no-recompute/no-fuzzy-link와 input-free 렌더 검증이 gate 조건이다.
+독립 재리뷰 대기. canonical DTO, account+market+market-local-day identity,
+CONFIRMED PLACE/AMEND evidence, bounded lineage, no-recompute/no-fuzzy-link와
+input-free 렌더 검증이 승인 조건이다.

@@ -18,6 +18,7 @@ package console
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -25,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
 )
 
@@ -604,6 +606,53 @@ func TestTheOriginColumnTellsAnEngineOrderFromAnyOther(t *testing.T) {
 	}
 }
 
+func TestInvalidEvidenceIdentityKeepsOriginUnknown(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	seedEngineJournal(t, path, ordersJournalFixture)
+	badTime := livePlainOrder("bad-time", "005930")
+	badTime.OrderedAt = "not-a-time"
+	badMarket := livePlainOrder("bad-market", "005930")
+	badMarket.Market = "UNKNOWN"
+	reader := &countingOrders{lists: OrdersReading{Open: []OrderRecord{badTime, badMarket}}}
+	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
+	h.authenticate(t)
+	view := h.Console.orders(context.Background(), orderFilterChoice{})
+	if !view.Journal.Readable() {
+		t.Fatalf("journal unexpectedly unreadable: %+v", view.Journal)
+	}
+	for _, row := range view.Rows {
+		if row.Origin != originUnknown {
+			t.Errorf("invalid identity row %s origin=%q, want unknown", row.ID, row.Origin)
+		}
+	}
+}
+
+func TestEvidenceQueryUsesOnlyRowsRemainingAfterFilter(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	seedEngineJournal(t, path, ordersJournalFixture+`
+INSERT INTO positions(id,account_ref,market,symbol,instance_seq,entry_decision_id,state,quantity,avg_price,opened_at)
+VALUES ('filtered-position','123-45-678901','kr','005930',1,'d-filter','OPEN','1','70000','2026-07-27T00:20:00Z');
+INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+VALUES ('filtered-position','LEGACY','intent-1','2026-07-27T00:30:00Z');`)
+	closed := make([]OrderRecord, journal.MaxBrokerOrderEvidenceScopes+1)
+	for i := range closed {
+		closed[i] = filledPlainOrder(fmt.Sprintf("hidden-%03d", i), "AAPL")
+	}
+	reader := &countingOrders{lists: OrdersReading{
+		Open: []OrderRecord{livePlainOrder("engine-order", "005930")}, Closed: closed,
+	}}
+	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
+	h.authenticate(t)
+	view := h.Console.orders(context.Background(), orderFilterChoice{State: filterStateLive})
+	if !view.Journal.Readable() || len(view.Rows) != 1 || view.Rows[0].ID != "engine-order" ||
+		view.Rows[0].Origin != originEngine || !view.Rows[0].ExitEvidence {
+		t.Fatalf("filtered visible evidence = journal=%+v rows=%+v", view.Journal, view.Rows)
+	}
+	if view.Total != len(closed)+1 || view.ClosedCount.Value() != fmt.Sprintf("%d건", len(closed)) {
+		t.Fatalf("filter changed counts: total=%d closed=%s", view.Total, view.ClosedCount.Value())
+	}
+}
+
 // ordersJournalFixture records one attempt the broker acked with the order id the
 // screen will see.
 const ordersJournalFixture = `
@@ -613,7 +662,7 @@ VALUES ('intent-1','2026-07-27T00:30:00Z','kr','2026-07-27','123-45-678901','005
         'DAY','10',NULL,'KRW','engine','fp-1','');
 INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, broker_order_id,
                                fingerprint, recorded_at)
-VALUES ('a-1','intent-1','PLACE','RECORDED',1,'engine-order','fp-1','2026-07-27T00:30:00Z');
+VALUES ('a-1','intent-1','PLACE','CONFIRMED',1,'engine-order','fp-1','2026-07-27T00:30:00Z');
 `
 
 // TestAWatchingConditionalIsNeverLabelledOtherByAJoinThatCannotSucceed.
@@ -691,7 +740,7 @@ VALUES ('intent-2','2026-07-27T00:20:00Z','kr','2026-07-27','123-45-678901','005
         'DAY','10','70000','KRW','engine','fp-2','');
 INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, broker_order_id,
                                fingerprint, recorded_at)
-VALUES ('a-2','intent-2','PLACE','RECORDED',1,'co-engine','fp-2','2026-07-27T00:20:00Z');
+VALUES ('a-2','intent-2','PLACE','CONFIRMED',1,'co-engine','fp-2','2026-07-27T00:20:00Z');
 `
 
 // TestASideFilterNeverHidesAWatchingConditional.

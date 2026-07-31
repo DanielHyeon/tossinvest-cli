@@ -1,15 +1,15 @@
 {
   "file": "internal/console/orders_test.go",
-  "source_sha256": "27203c2b5608502c94bf3c83710cf4212d4e704188bc85349e50ad62cd80f553",
+  "source_sha256": "bd80f76ac176820808fbe91763659334584c16fd3d560623b49985c6e9fa687f",
   "package": "console",
   "function": "newOrdersHarness",
   "signature": "newOrdersHarness(params=3, results=1)",
   "start": {
-    "line": 104,
+    "line": 106,
     "column": 1
   },
   "end": {
-    "line": 120,
+    "line": 122,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 106,
+        "line": 108,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 114,
+        "line": 116,
         "column": 3
       }
     }
@@ -34,7 +34,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 119,
+        "line": 121,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 105,
+        "line": 107,
         "column": 2
       },
       "text": "t.Helper"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 109,
+        "line": 111,
         "column": 9
       },
       "text": "newFakeClock"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 111,
+        "line": 113,
         "column": 15
       },
       "text": "newHarness"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 115,
+        "line": 117,
         "column": 4
       },
       "text": "f"
@@ -77,49 +77,49 @@
     {
       "kind": "=",
       "at": {
-        "line": 107,
+        "line": 109,
         "column": 3
       }
     },
     {
       "kind": ":=",
-      "at": {
-        "line": 109,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 110,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
       "at": {
         "line": 111,
         "column": 2
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
         "line": 112,
-        "column": 3
+        "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
         "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 114,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 117,
+        "line": 115,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 119,
         "column": 3
       }
     }

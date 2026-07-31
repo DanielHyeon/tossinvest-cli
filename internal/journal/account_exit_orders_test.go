@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 )
@@ -32,8 +34,8 @@ func TestReadOnlyLinksBrokerOrdersToExitSnapshotsOnlyThroughTheAttemptIntent(t *
 	insertAttemptWithBrokerOrder(t, j, "other-attempt-view", "other-intent-view", "same-symbol-same-time")
 
 	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(),
-		[]BrokerOrderScope{{BrokerOrderID: "broker-exit-view", AccountRef: "acct-1", TradingDay: "2026-03-30"},
-			{BrokerOrderID: "same-symbol-same-time", AccountRef: "acct-1", TradingDay: "2026-03-30"}})
+		[]BrokerOrderScope{{BrokerOrderID: "broker-exit-view", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"},
+			{BrokerOrderID: "same-symbol-same-time", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,6 +56,124 @@ func TestReadOnlyLinksBrokerOrdersToExitSnapshotsOnlyThroughTheAttemptIntent(t *
 	}
 }
 
+func TestBrokerOrderExitLinksScopesCollidingIDsByMarket(t *testing.T) {
+	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
+	insertPosition(t, j, "market-position", nil)
+	if _, err := j.db.ExecContext(context.Background(), `
+		INSERT INTO intents(id,created_at,market,trading_day,account_ref,symbol,side,order_type,
+		 time_in_force,quantity,price,currency,source,fingerprint,notes)
+		VALUES ('market-us','2026-03-30T00:00:00Z','us','2026-03-30','acct-1','AAPL','SELL','MARKET','DAY','1',NULL,'USD','exit-policy','fp-us',''),
+		       ('market-kr','2026-03-30T00:00:00Z','kr','2026-03-30','acct-1','005930','SELL','MARKET','DAY','1',NULL,'KRW','exit-policy','fp-kr','');
+		INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,broker_order_id,fingerprint,recorded_at)
+		VALUES ('market-us-a','market-us','PLACE','CONFIRMED',1,'SAME-ID','fp','2026-03-30T00:00:00Z'),
+		       ('market-kr-a','market-kr','PLACE','CONFIRMED',1,'SAME-ID','fp','2026-03-30T00:00:00Z');
+		INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+		VALUES ('market-position','US_EXIT','market-us','2026-03-30T00:00:00Z'),
+		       ('market-position','KR_EXIT','market-kr','2026-03-30T00:00:01Z')`); err != nil {
+		t.Fatal(err)
+	}
+	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(), []BrokerOrderScope{
+		{BrokerOrderID: "SAME-ID", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"},
+		{BrokerOrderID: "SAME-ID", AccountRef: "acct-1", Market: "kr", TradingDay: "2026-03-30"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(links) != 2 || links[0].IntentID != "market-us" || links[0].Event.Action != "US_EXIT" ||
+		links[1].IntentID != "market-kr" || links[1].Event.Action != "KR_EXIT" {
+		t.Fatalf("market collision linked across scope: %+v", links)
+	}
+}
+
+func TestBrokerOrderExitLinksAttributesOnlyConfirmedPlaceAttempts(t *testing.T) {
+	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
+	for _, id := range []string{"kind-cancel", "kind-amend", "state-recorded", "state-failed"} {
+		insertIntent(t, j, id)
+	}
+	if _, err := j.db.ExecContext(context.Background(), `
+		INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,broker_order_id,fingerprint,recorded_at)
+		VALUES ('kind-cancel-a','kind-cancel','CANCEL','CONFIRMED',1,'CANCEL-ONLY','fp','2026-03-30T00:00:00Z'),
+		       ('kind-amend-a','kind-amend','AMEND','CONFIRMED',1,'AMEND-ONLY','fp','2026-03-30T00:00:00Z'),
+		       ('state-recorded-a','state-recorded','PLACE','RECORDED',1,'RECORDED-ONLY','fp','2026-03-30T00:00:00Z'),
+		       ('state-failed-a','state-failed','PLACE','FAILED_CONFIRMED',1,'FAILED-ONLY','fp','2026-03-30T00:00:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	var scopes []BrokerOrderScope
+	for _, id := range []string{"CANCEL-ONLY", "AMEND-ONLY", "RECORDED-ONLY", "FAILED-ONLY"} {
+		scopes = append(scopes, BrokerOrderScope{BrokerOrderID: id, AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"})
+	}
+	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(), scopes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, link := range links {
+		if link.Engine || link.Event.ID != 0 {
+			t.Errorf("non-confirmed PLACE attributed as engine: %+v", link)
+		}
+	}
+}
+
+func TestBrokerOrderExitLinksRefusesIncompleteAmendEvidence(t *testing.T) {
+	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
+	insertPosition(t, j, "incomplete-position", nil)
+	insertIntent(t, j, "incomplete-root")
+	insertIntent(t, j, "incomplete-amend")
+	insertAttemptWithBrokerOrder(t, j, "incomplete-root-a", "incomplete-root", "I-ROOT")
+	if _, err := j.db.ExecContext(context.Background(), `
+		INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,target_order_id,broker_order_id,fingerprint,recorded_at)
+		VALUES ('incomplete-amend-a','incomplete-amend','AMEND','RECORDED',1,'I-ROOT','I-CHILD','fp','2026-03-30T00:01:00Z');
+		INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+		VALUES ('incomplete-position','EXIT','incomplete-root','2026-03-30T00:00:00Z');
+		INSERT INTO lineage_edges(parent_order_id,child_order_id,relation,parent_filled_quantity,requested_quantity,intent_id,attempt_id,created_at)
+		VALUES ('I-ROOT','I-CHILD','replaces','0','1','incomplete-amend','incomplete-amend-a','2026-03-30T00:01:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(),
+		[]BrokerOrderScope{{BrokerOrderID: "I-CHILD", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(links) != 1 || !links[0].Ambiguous || links[0].Event.ID != 0 || links[0].UnknownReason != "lineage_scope_mismatch" {
+		t.Fatalf("incomplete AMEND lineage accepted: %+v", links)
+	}
+}
+
+func TestBrokerOrderExitLinksDoesNotExpandWideBranchingLineage(t *testing.T) {
+	j := openTestJournalAt(t, filepath.Join(t.TempDir(), DBFileName))
+	tx, err := j.db.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 1000; i++ {
+		intent, attempt, parent := fmt.Sprintf("wide-i-%d", i), fmt.Sprintf("wide-a-%d", i), fmt.Sprintf("WIDE-P-%d", i)
+		if _, err := tx.Exec(`INSERT INTO intents(id,created_at,market,trading_day,account_ref,symbol,side,order_type,time_in_force,quantity,price,currency,source,fingerprint,notes)
+			VALUES (?,'2026-03-30T00:00:00Z','us','2026-03-30','acct-1','AAPL','SELL','MARKET','DAY','1',NULL,'USD','test',?,'')`, intent, intent); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := tx.Exec(`INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,target_order_id,broker_order_id,fingerprint,recorded_at)
+			VALUES (?,?,'AMEND','CONFIRMED',1,?,'WIDE-CHILD',?,'2026-03-30T00:00:00Z')`, attempt, intent, parent, attempt); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := tx.Exec(`INSERT INTO lineage_edges(parent_order_id,child_order_id,relation,parent_filled_quantity,requested_quantity,intent_id,attempt_id,created_at)
+			VALUES (?,'WIDE-CHILD','replaces','0','1',?,?,'2026-03-30T00:00:00Z')`, parent, intent, attempt); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(ctx,
+		[]BrokerOrderScope{{BrokerOrderID: "WIDE-CHILD", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(links) != 1 || !links[0].Ambiguous || links[0].UnknownReason != "lineage_ambiguous" {
+		t.Fatalf("wide branching did not stop before recursion: %+v", links)
+	}
+}
+
 func TestReadOnlyMarksDuplicateExitEvidenceAmbiguous(t *testing.T) {
 	path := filepath.Join(t.TempDir(), DBFileName)
 	j := openTestJournalAt(t, path)
@@ -67,7 +187,7 @@ func TestReadOnlyMarksDuplicateExitEvidenceAmbiguous(t *testing.T) {
 		t.Fatal(err)
 	}
 	links, err := openTestReadOnly(t, path).BrokerOrderExitLinks(context.Background(),
-		[]BrokerOrderScope{{BrokerOrderID: "broker-ambiguous", AccountRef: "acct-1", TradingDay: "2026-03-30"}})
+		[]BrokerOrderScope{{BrokerOrderID: "broker-ambiguous", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,8 +222,8 @@ func TestBrokerOrderExitLinksScopesCollidingIDsByAccountAndTradingDay(t *testing
 
 	ro := openTestReadOnly(t, j.Path())
 	links, err := ro.BrokerOrderExitLinks(context.Background(), []BrokerOrderScope{
-		{BrokerOrderID: "COLLIDE-1", AccountRef: "acct-1", TradingDay: "2026-03-30"},
-		{BrokerOrderID: "COLLIDE-1", AccountRef: "acct-1", TradingDay: "2026-03-31"},
+		{BrokerOrderID: "COLLIDE-1", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"},
+		{BrokerOrderID: "COLLIDE-1", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-31"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -128,21 +248,31 @@ func TestBrokerOrderExitLinksFollowsValidatedAmendDescendants(t *testing.T) {
 	}
 	insertIntent(t, j, "exit-intent-amend")
 	insertAttemptWithBrokerOrder(t, j, "exit-attempt-amend", "exit-intent-amend", "O-1")
-	insertIntent(t, j, "amend-intent")
-	if _, err := j.db.ExecContext(context.Background(), `
-		INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,target_order_id,broker_order_id,fingerprint,recorded_at)
-		VALUES ('amend-attempt','amend-intent','AMEND','RECORDED',1,'O-1','O-2','fp','2026-03-30T00:31:00Z');
-		INSERT INTO lineage_edges(parent_order_id,child_order_id,relation,parent_filled_quantity,
-		 requested_quantity,intent_id,attempt_id,created_at)
-		VALUES ('O-1','O-2','replaces','0','10','amend-intent','amend-attempt','2026-03-30T00:31:00Z')`); err != nil {
-		t.Fatal(err)
-	}
-	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(),
-		[]BrokerOrderScope{{BrokerOrderID: "O-2", AccountRef: "acct-1", TradingDay: "2026-03-30"}})
+	amendIntent := testIntent()
+	amendIntent.ID, amendIntent.Fingerprint = "amend-intent", "fp-amend"
+	amend, err := j.Prepare(context.Background(), PrepareRequest{Intent: amendIntent, Kind: KindAmend,
+		AttemptID: "amend-attempt", TargetOrderID: "O-1"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(links) != 1 || links[0].Event.Evaluation.Effective.Snapshot == nil ||
+	if err := amend.MarkDispatchStarted(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := amend.MarkAcked(context.Background(), "O-2"); err != nil {
+		t.Fatal(err)
+	}
+	if err := amend.ResolveConfirmedWithLineage(context.Background(), LineageEdge{
+		ParentOrderID: "O-1", ChildOrderID: "O-2", Relation: RelationReplaces,
+		ParentFilledQuantity: "0", RequestedQuantity: "10",
+	}, "", "production lifecycle fixture"); err != nil {
+		t.Fatal(err)
+	}
+	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(),
+		[]BrokerOrderScope{{BrokerOrderID: "O-2", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(links) != 1 || !links[0].Engine || links[0].Event.Evaluation.Effective.Snapshot == nil ||
 		links[0].Event.Evaluation.Effective.Snapshot.Line.DecisionID != snapshot.DecisionID {
 		t.Fatalf("amend descendant evidence = %+v", links)
 	}
@@ -157,11 +287,11 @@ func TestBrokerOrderExitLinksFailsClosedForCycleBranchAndCrossAccountEdge(t *tes
 	insertPosition(t, j, "lineage-position", nil)
 	if _, err := j.db.ExecContext(context.Background(), `
 		INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,target_order_id,broker_order_id,fingerprint,recorded_at)
-		VALUES ('a-root-a','i-root-a','PLACE','RECORDED',1,'','ROOT-A','fp','2026-03-30T00:00:00Z'),
-		       ('a-root-b','i-root-b','PLACE','RECORDED',1,'','ROOT-B','fp','2026-03-30T00:00:00Z'),
-		       ('a-amend-a','i-amend-a','AMEND','RECORDED',1,'ROOT-A','CHILD','fp','2026-03-30T00:01:00Z'),
-		       ('a-amend-b','i-amend-b','AMEND','RECORDED',1,'ROOT-B','CHILD','fp','2026-03-30T00:01:00Z'),
-		       ('a-cycle','i-cycle','AMEND','RECORDED',1,'CHILD','ROOT-A','fp','2026-03-30T00:02:00Z');
+		VALUES ('a-root-a','i-root-a','PLACE','CONFIRMED',1,'','ROOT-A','fp','2026-03-30T00:00:00Z'),
+		       ('a-root-b','i-root-b','PLACE','CONFIRMED',1,'','ROOT-B','fp','2026-03-30T00:00:00Z'),
+		       ('a-amend-a','i-amend-a','AMEND','CONFIRMED',1,'ROOT-A','CHILD','fp','2026-03-30T00:01:00Z'),
+		       ('a-amend-b','i-amend-b','AMEND','CONFIRMED',1,'ROOT-B','CHILD','fp','2026-03-30T00:01:00Z'),
+		       ('a-cycle','i-cycle','AMEND','CONFIRMED',1,'CHILD','ROOT-A','fp','2026-03-30T00:02:00Z');
 		INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
 		VALUES ('lineage-position','LEGACY_A','i-root-a','2026-03-30T00:00:00Z'),
 		       ('lineage-position','LEGACY_B','i-root-b','2026-03-30T00:00:01Z');
@@ -172,7 +302,7 @@ func TestBrokerOrderExitLinksFailsClosedForCycleBranchAndCrossAccountEdge(t *tes
 		t.Fatal(err)
 	}
 	links, err := openTestReadOnly(t, path).BrokerOrderExitLinks(context.Background(),
-		[]BrokerOrderScope{{BrokerOrderID: "CHILD", AccountRef: "acct-1", TradingDay: "2026-03-30"}})
+		[]BrokerOrderScope{{BrokerOrderID: "CHILD", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,8 +322,8 @@ func TestBrokerOrderExitLinksFailsClosedForCrossAccountLineageEdge(t *testing.T)
 		       ('cross-amend-intent','2026-03-30T00:01:00Z','us','2026-03-30','acct-2','AAPL',
 		 'SELL','MARKET','DAY','1',NULL,'USD','exit-policy','fp-amend','');
 		INSERT INTO mutation_attempts(id,intent_id,kind,state,attempt_no,target_order_id,broker_order_id,fingerprint,recorded_at)
-		VALUES ('cross-root-attempt','cross-root-intent','PLACE','RECORDED',1,'','CROSS-ROOT','fp','2026-03-30T00:00:00Z'),
-		       ('cross-amend-attempt','cross-amend-intent','AMEND','RECORDED',1,'CROSS-ROOT','CROSS-CHILD','fp','2026-03-30T00:01:00Z');
+		VALUES ('cross-root-attempt','cross-root-intent','PLACE','CONFIRMED',1,'','CROSS-ROOT','fp','2026-03-30T00:00:00Z'),
+		       ('cross-amend-attempt','cross-amend-intent','AMEND','CONFIRMED',1,'CROSS-ROOT','CROSS-CHILD','fp','2026-03-30T00:01:00Z');
 		INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
 		VALUES ('cross-account-position','LEGACY','cross-root-intent','2026-03-30T00:00:00Z');
 		INSERT INTO lineage_edges(parent_order_id,child_order_id,relation,parent_filled_quantity,requested_quantity,intent_id,attempt_id,created_at)
@@ -201,7 +331,7 @@ func TestBrokerOrderExitLinksFailsClosedForCrossAccountLineageEdge(t *testing.T)
 		t.Fatal(err)
 	}
 	links, err := openTestReadOnly(t, j.Path()).BrokerOrderExitLinks(context.Background(),
-		[]BrokerOrderScope{{BrokerOrderID: "CROSS-CHILD", AccountRef: "acct-1", TradingDay: "2026-03-30"}})
+		[]BrokerOrderScope{{BrokerOrderID: "CROSS-CHILD", AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,9 +350,14 @@ func TestBrokerOrderExitLinksSkipsEmptyAndBoundsScopeBeforeSQL(t *testing.T) {
 	if links, err := ro.BrokerOrderExitLinks(context.Background(), nil); err != nil || len(links) != 0 {
 		t.Fatalf("empty scope queried missing schema: links=%v err=%v", links, err)
 	}
+	if _, err := ro.BrokerOrderExitLinks(context.Background(), []BrokerOrderScope{{
+		BrokerOrderID: "x", AccountRef: "acct", Market: "crypto", TradingDay: "2026-03-30",
+	}}); !errors.Is(err, ErrBrokerOrderEvidenceScope) {
+		t.Fatalf("invalid market scope error = %v", err)
+	}
 	tooMany := make([]BrokerOrderScope, MaxBrokerOrderEvidenceScopes+1)
 	for i := range tooMany {
-		tooMany[i] = BrokerOrderScope{BrokerOrderID: "x", AccountRef: "acct", TradingDay: "2026-03-30"}
+		tooMany[i] = BrokerOrderScope{BrokerOrderID: "x", AccountRef: "acct", Market: "us", TradingDay: "2026-03-30"}
 	}
 	if _, err := ro.BrokerOrderExitLinks(context.Background(), tooMany); !errors.Is(err, ErrBrokerOrderEvidenceScope) {
 		t.Fatalf("oversized scope error = %v", err)

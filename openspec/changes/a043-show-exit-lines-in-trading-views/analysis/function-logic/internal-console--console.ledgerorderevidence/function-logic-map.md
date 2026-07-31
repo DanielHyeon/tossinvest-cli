@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| visible scopes | exact composite tuples, possibly empty | broker reading | empty skips evidence SQL; failure marks journal unreadable |
+| filtered visible scopes | id+account+market+market-day tuples, possibly empty | rendered rows | empty skips evidence SQL; failure marks journal unreadable |
 
 ## Branches and early returns
 

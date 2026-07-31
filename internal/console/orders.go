@@ -403,6 +403,9 @@ type orderRow struct {
 	ExitLine      operatorview.ExitLineView
 	ExitAttemptID string
 	ExitIntentID  string
+
+	EvidenceKey      orderEvidenceKey
+	EvidenceKeyValid bool
 }
 
 // OriginText is the label for the origin column.
@@ -631,7 +634,7 @@ func sideLabel(side string) string {
 // the origin and the evidence labels fall back to unknown when either read
 // fails.
 type orderEvidenceKey struct {
-	ID, AccountRef, TradingDay string
+	ID, AccountRef, Market, TradingDay string
 }
 
 func evidenceKey(id, accountRef, market, rawAt string) (orderEvidenceKey, bool) {
@@ -651,30 +654,20 @@ func evidenceKey(id, accountRef, market, rawAt string) (orderEvidenceKey, bool) 
 	if err != nil {
 		return orderEvidenceKey{}, false
 	}
-	return orderEvidenceKey{ID: id, AccountRef: accountRef, TradingDay: day}, true
+	return orderEvidenceKey{ID: id, AccountRef: accountRef, Market: string(m), TradingDay: day}, true
 }
 
-func visibleOrderEvidenceScopes(lists OrdersReading) []journal.BrokerOrderScope {
+func visibleOrderEvidenceScopes(rows []orderRow) []journal.BrokerOrderScope {
 	seen := map[orderEvidenceKey]bool{}
 	var scopes []journal.BrokerOrderScope
-	add := func(key orderEvidenceKey, ok bool) {
-		if !ok || seen[key] {
-			return
+	for _, row := range rows {
+		key := row.EvidenceKey
+		if !row.EvidenceKeyValid || seen[key] {
+			continue
 		}
 		seen[key] = true
 		scopes = append(scopes, journal.BrokerOrderScope{BrokerOrderID: key.ID,
-			AccountRef: key.AccountRef, TradingDay: key.TradingDay})
-	}
-	for _, rec := range lists.Open {
-		add(evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt))
-	}
-	for _, rec := range lists.Closed {
-		add(evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt))
-	}
-	for _, rec := range lists.Conditional {
-		// A triggered order has its own creation instant. The conditional's
-		// CreatedAt must never be guessed as the child's trading day.
-		add(evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.CreatedAt))
+			AccountRef: key.AccountRef, Market: key.Market, TradingDay: key.TradingDay})
 	}
 	return scopes
 }
@@ -701,7 +694,8 @@ func (c *Console) ledgerOrderEvidence(ctx context.Context,
 	engineIDs := make(map[orderEvidenceKey]bool, len(links))
 	byOrder := make(map[orderEvidenceKey]journal.BrokerOrderExitLink, len(links))
 	for _, link := range links {
-		key := orderEvidenceKey{ID: link.BrokerOrderID, AccountRef: link.AccountRef, TradingDay: link.TradingDay}
+		key := orderEvidenceKey{ID: link.BrokerOrderID, AccountRef: link.AccountRef,
+			Market: link.Market, TradingDay: link.TradingDay}
 		engineIDs[key] = link.Engine
 		if link.Event.ID != 0 || link.Ambiguous {
 			byOrder[key] = link
@@ -742,6 +736,9 @@ func attachOrderExitEvidence(row *orderRow, link journal.BrokerOrderExitLink, li
 // originOf decides one plain order's origin from the ledger's answer.
 func originOf(key orderEvidenceKey, valid bool, engineIDs map[orderEvidenceKey]bool, jv journalView) orderOrigin {
 	if !jv.Readable() {
+		return originUnknown
+	}
+	if !valid {
 		return originUnknown
 	}
 	if valid && engineIDs[key] {
@@ -932,9 +929,6 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	v.Broker = c.ordersCache.get(ctx, now, hold, holdReason)
 
 	lists := v.Broker.Lists
-	scopes := visibleOrderEvidenceScopes(lists)
-	engineIDs, exitLinks, jv := c.ledgerOrderEvidence(ctx, scopes)
-	v.Journal = jv
 	v.Open = listUnmeasured(v.Broker, lists.OpenError)
 	v.Closed = listUnmeasured(v.Broker, lists.ClosedError)
 	v.Conditional = listUnmeasured(v.Broker, lists.ConditionalError)
@@ -950,9 +944,8 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	if v.Open.Known() {
 		for _, rec := range lists.Open {
 			key, valid := evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt)
-			row := rowFromOrder(rec, originOf(key, valid, engineIDs, jv), true)
-			link, linked := exitLinks[key]
-			attachOrderExitEvidence(&row, link, linked)
+			row := rowFromOrder(rec, originUnknown, true)
+			row.EvidenceKey, row.EvidenceKeyValid = key, valid
 			all = append(all, row)
 			if id := strings.TrimSpace(rec.ID); id != "" {
 				pending[id] = true
@@ -967,9 +960,8 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 				continue
 			}
 			key, valid := evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.OrderedAt)
-			row := rowFromOrder(rec, originOf(key, valid, engineIDs, jv), false)
-			link, linked := exitLinks[key]
-			attachOrderExitEvidence(&row, link, linked)
+			row := rowFromOrder(rec, originUnknown, false)
+			row.EvidenceKey, row.EvidenceKeyValid = key, valid
 			all = append(all, row)
 			closedCount++
 		}
@@ -978,9 +970,8 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	if v.Conditional.Known() {
 		for _, rec := range lists.Conditional {
 			key, valid := evidenceKey(rec.ID, lists.AccountRef, rec.Market, rec.CreatedAt)
-			row := rowFromConditional(rec, conditionalOriginOf(key, valid, engineIDs, jv))
-			link, linked := exitLinks[key]
-			attachOrderExitEvidence(&row, link, linked)
+			row := rowFromConditional(rec, originUnknown)
+			row.EvidenceKey, row.EvidenceKeyValid = key, valid
 			all = append(all, row)
 			conditionalLive++
 		}
@@ -1002,6 +993,19 @@ func (c *Console) orders(ctx context.Context, choice orderFilterChoice) ordersVi
 	v.Filtered = choice.Applied()
 	v.Rows = filterRows(all, choice)
 	v.Shown = len(v.Rows)
+	scopes := visibleOrderEvidenceScopes(v.Rows)
+	engineIDs, exitLinks, jv := c.ledgerOrderEvidence(ctx, scopes)
+	v.Journal = jv
+	for i := range v.Rows {
+		row := &v.Rows[i]
+		if row.Conditional {
+			row.Origin = conditionalOriginOf(row.EvidenceKey, row.EvidenceKeyValid, engineIDs, jv)
+		} else {
+			row.Origin = originOf(row.EvidenceKey, row.EvidenceKeyValid, engineIDs, jv)
+		}
+		link, linked := exitLinks[row.EvidenceKey]
+		attachOrderExitEvidence(row, link, linked)
+	}
 	v.Filters = filterGroups(choice)
 	return v
 }

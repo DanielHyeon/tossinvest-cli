@@ -1,15 +1,15 @@
 {
   "file": "internal/console/orders.go",
-  "source_sha256": "a7d47301a66728373ff71cb4e3e89fd8facd99d3c4c1e8a4428ac1f992dfe914",
+  "source_sha256": "e51624ca6ca79a4e36a1b0888f1269f660d39f558ab41455f1328e7b74692d0e",
   "package": "console",
   "function": "evidenceKey",
   "signature": "evidenceKey(params=4, results=2)",
   "start": {
-    "line": 637,
+    "line": 640,
     "column": 1
   },
   "end": {
-    "line": 655,
+    "line": 658,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 639,
+        "line": 642,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 643,
+        "line": 646,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 647,
+        "line": 650,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 651,
+        "line": 654,
         "column": 2
       }
     }
@@ -50,35 +50,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 640,
+        "line": 643,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 644,
+        "line": 647,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 648,
+        "line": 651,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 652,
+        "line": 655,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 654,
+        "line": 657,
         "column": 2
       }
     }
@@ -87,7 +87,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 638,
+        "line": 641,
         "column": 19
       },
       "text": "strings.TrimSpace"
@@ -95,7 +95,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 638,
+        "line": 641,
         "column": 42
       },
       "text": "strings.TrimSpace"
@@ -103,7 +103,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 642,
+        "line": 645,
         "column": 13
       },
       "text": "time.Parse"
@@ -111,7 +111,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 642,
+        "line": 645,
         "column": 38
       },
       "text": "strings.TrimSpace"
@@ -119,7 +119,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 646,
+        "line": 649,
         "column": 12
       },
       "text": "marketclock.ParseMarket"
@@ -127,38 +127,46 @@
     {
       "kind": "call",
       "at": {
-        "line": 650,
+        "line": 653,
         "column": 14
       },
       "text": "m.TradingDay"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 657,
+        "column": 66
+      },
+      "text": "string"
     }
   ],
   "assignments": [
     {
       "kind": "=",
       "at": {
-        "line": 638,
+        "line": 641,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 642,
+        "line": 645,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 646,
+        "line": 649,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 650,
+        "line": 653,
         "column": 2
       }
     }

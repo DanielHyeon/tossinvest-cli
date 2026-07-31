@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| composite key, validity, scoped engine set, journal state | exact account/day identity | bounded journal result | unreadable/invalid is unknown or other, never engine |
+| composite key, validity, scoped engine set, journal state | exact account/market/day identity | bounded journal result | unreadable or invalid is always unknown |
 
 ## Branches and early returns
 
@@ -16,6 +16,7 @@
 |---|---|---|---|---|
 | B1 | journal unreadable | none | unknown | unreadable ledger test |
 | B2 | valid scoped engine hit | none | engine | origin distinction test |
+| B3 | exact confirmed PLACE hit | none | engine, otherwise other | confirmed-state tests |
 
 ## Calls and live bindings
 

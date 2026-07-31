@@ -12,5 +12,6 @@
 | B8 | every conditional row remains visible | existing conditional tests | existing | yes |
 | B9 | only explicit triggered/conditional IDs are considered | existing conditional tests + exact lineage fixture | yes | yes |
 | B10 | exact conditional candidate link stops the candidate scan | exact-id lineage behavior covered by journal unit tests; console unlinked fixture covers miss | yes | yes |
+| B11 | post-filter plain/conditional attribution | filtered visible evidence tests | pre-filter scope overflow | yes |
 
 The new leaf `attachOrderExitEvidence` covers linked, ambiguous, corrupt/legacy, and absent evidence. `TestOrdersJoinExitEvidenceOnlyByAttemptIntentLineage` supplies the positive exact lineage and same-symbol/time negative case; journal read-model tests cover ambiguity.
