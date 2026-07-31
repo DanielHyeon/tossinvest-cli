@@ -85,3 +85,12 @@ format and whitespace checks all passed on the exact reviewed commit.
   excludes already-integrated a041/a042 logic from this change's Function Logic Map audit.
 - Focused candidate/markout/console/CLI tests, focused vet, strict OpenSpec validation,
   whitespace validation and index synchronization passed on the dependency-integrated tree.
+
+## Main integration gate · 2026-08-01
+
+- Integrated HEAD before this evidence commit: `cf4228a`.
+- `make sdd-sync`, `make sdd-check`, focused post-cherry-pick tests and
+  `make gate CHANGE=a046-approve-candidate-veto-thresholds` passed on the main
+  integration branch.
+- Numeric activation evidence remains absent, so runtime behavior stays
+  `unapproved / OFF`; this gate does not authorize an operational toggle.
