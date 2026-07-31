@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -12,23 +15,105 @@ import (
 )
 
 type stubScheduleCalendar struct {
+	mu       sync.Mutex
 	response official.MarketCalendarResponse
+	err      error
 	country  string
 	date     string
+	calls    int
 }
 
 func (s *stubScheduleCalendar) TypedMarketCalendar(_ context.Context, country, date string) (official.MarketCalendarResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.country, s.date = country, date
-	return s.response, nil
+	s.calls++
+	return s.response, s.err
+}
+
+func (s *stubScheduleCalendar) observation() (country, date string, calls int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.country, s.date, s.calls
 }
 
 type scheduleCalendarBroker struct {
-	verifylive.Broker
+	*official.Client
 	calendar *stubScheduleCalendar
 }
 
 func (b scheduleCalendarBroker) TypedMarketCalendar(ctx context.Context, country, date string) (official.MarketCalendarResponse, error) {
 	return b.calendar.TypedMarketCalendar(ctx, country, date)
+}
+
+// brokerWithoutCalendar is intentionally only the verification surface. It
+// proves the calendar adapter cannot widen a broker that lacks the reviewed
+// typed official read.
+type brokerWithoutCalendar struct{ verifylive.Broker }
+
+func TestConsoleBrokerTypedMarketCalendarReusesResolutionAndKeepsExactAccountRef(t *testing.T) {
+	calendar := &stubScheduleCalendar{response: productionKRCalendar()}
+	built := 0
+	previous := verifyBrokerFactory
+	verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+		built++
+		return scheduleCalendarBroker{calendar: calendar}, "  123-45-678901  ", nil
+	}
+	t.Cleanup(func() { verifyBrokerFactory = previous })
+
+	shared := newConsoleBroker(&rootOptions{})
+	for i := 0; i < 2; i++ {
+		if _, err := shared.TypedMarketCalendar(context.Background(), "KR", "2026-08-01"); err != nil {
+			t.Fatalf("TypedMarketCalendar call %d: %v", i+1, err)
+		}
+	}
+	if built != 1 {
+		t.Fatalf("calendar adapter built the shared broker %d times, want 1", built)
+	}
+	_, accountRef, err := shared.resolve()
+	if err != nil {
+		t.Fatalf("resolve cached broker: %v", err)
+	}
+	if accountRef != "123-45-678901" {
+		t.Errorf("cached accountRef = %q, want the trimmed exact broker reference", accountRef)
+	}
+	country, date, calls := calendar.observation()
+	if country != "KR" || date != "2026-08-01" || calls != 2 {
+		t.Errorf("calendar delegation = country %q date %q calls %d", country, date, calls)
+	}
+}
+
+func TestConsoleBrokerTypedMarketCalendarFailsClosed(t *testing.T) {
+	t.Run("resolver error", func(t *testing.T) {
+		want := errors.New("account resolution unavailable")
+		previous := verifyBrokerFactory
+		verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+			return nil, "", want
+		}
+		t.Cleanup(func() { verifyBrokerFactory = previous })
+
+		_, err := newConsoleBroker(&rootOptions{}).TypedMarketCalendar(
+			context.Background(), "KR", "2026-08-01",
+		)
+		if !errors.Is(err, want) {
+			t.Fatalf("TypedMarketCalendar error = %v, want resolver error", err)
+		}
+	})
+
+	t.Run("broker lacks typed calendar", func(t *testing.T) {
+		previous := verifyBrokerFactory
+		verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+			return brokerWithoutCalendar{}, "123-45-678901", nil
+		}
+		t.Cleanup(func() { verifyBrokerFactory = previous })
+
+		_, err := newConsoleBroker(&rootOptions{}).TypedMarketCalendar(
+			context.Background(), "KR", "2026-08-01",
+		)
+		if err == nil || !strings.Contains(err.Error(), "has no typed official calendar read") {
+			t.Fatalf("TypedMarketCalendar error = %v, want fail-closed capability error", err)
+		}
+	})
 }
 
 func TestConsoleMarketScheduleSeamReadsClosedDefaults(t *testing.T) {
@@ -67,8 +152,9 @@ func TestConsoleMarketScheduleSeamDoesNotActivateApprovedDesiredState(t *testing
 	if reading.CalendarSource != scheduler.CalendarSourceOfficial || reading.CalendarVersion == "" || reading.CalendarFetchedAt.IsZero() {
 		t.Fatalf("authoritative calendar provenance missing: %+v", reading)
 	}
-	if calendar.country != "KR" || calendar.date != "2026-08-01" {
-		t.Fatalf("calendar request = %s %s", calendar.country, calendar.date)
+	country, date, _ := calendar.observation()
+	if country != "KR" || date != "2026-08-01" {
+		t.Fatalf("calendar request = %s %s", country, date)
 	}
 }
 

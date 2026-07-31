@@ -1,7 +1,6 @@
 {
   "file": "cmd/tossctl/console.go",
   "source_sha256": "916e7da72ada601bb8194d5b81905180ec7032f385254f89ec9eb69e3a334670",
-  "revision": "base",
   "package": "main",
   "function": "resolve",
   "receiver": "consoleBroker",
@@ -115,5 +114,6 @@
       },
       "text": "c.mu.Unlock"
     }
-  ]
+  ],
+  "revision": "base"
 }

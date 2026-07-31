@@ -1,0 +1,279 @@
+{
+  "file": "cmd/tossctl/marketschedule_test.go",
+  "source_sha256": "b7833e89f50a330b8751f1047cd75d340c7d2900dd3b363f115bf88ce6274cc3",
+  "package": "main",
+  "function": "TestConsoleMarketScheduleSeamDoesNotActivateApprovedDesiredState",
+  "signature": "TestConsoleMarketScheduleSeamDoesNotActivateApprovedDesiredState(params=1, results=0)",
+  "start": {
+    "line": 130,
+    "column": 1
+  },
+  "end": {
+    "line": 159,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 144,
+        "column": 34
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 9
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 34
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 12
+      },
+      "text": "Save"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 12
+      },
+      "text": "scheduler.NewDesiredStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 38
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 90
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 46
+      },
+      "text": "productionKRCalendar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 12
+      },
+      "text": "consoleMarketScheduleSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 41
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 18
+      },
+      "text": "reader.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 30
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 100
+      },
+      "text": "reading.CalendarFetchedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 22
+      },
+      "text": "calendar.observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 141,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -2,6 +2,6 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | resolver error closes provenance | console broker/full tests | existing | yes |
-| B2 | non-calendar test broker cannot be treated as provenance source | fail-closed adapter contract | new seam | yes |
-| success | shared broker's typed calendar is called with KR/exact date | `TestConsoleMarketScheduleSeamDoesNotActivateApprovedDesiredState` | provenance absent | yes |
+| B1 | resolver error closes provenance before type assertion or calendar call | `TestConsoleBrokerTypedMarketCalendarFailsClosed/resolver_error` | branch previously unasserted | yes |
+| B2 | broker without typed calendar capability is rejected | `TestConsoleBrokerTypedMarketCalendarFailsClosed/broker_lacks_typed_calendar` | branch previously unasserted | yes |
+| success | shared adapter delegates twice while factory runs once and cached exact reference survives | `TestConsoleBrokerTypedMarketCalendarReusesResolutionAndKeepsExactAccountRef` | cross-change tuple contract broke compilation | yes |
