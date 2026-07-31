@@ -1,0 +1,149 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "3ed2e562f756e72abfcb7c820fcec4bec46d2bb95e0fc1d378ff8dbd4a6663cd",
+  "package": "engine",
+  "function": "judgeRatchet",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.judgeRatchet(params=5, results=1)",
+  "start": {
+    "line": 690,
+    "column": 1
+  },
+  "end": {
+    "line": 724,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 707,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 715,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 709,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 720,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 723,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 692,
+        "column": 19
+      },
+      "text": "exitpolicy.EvaluateRatchetSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 693,
+        "column": 12
+      },
+      "text": "o.snapshotContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 702,
+        "column": 21
+      },
+      "text": "exitpolicy.Level"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 703,
+        "column": 21
+      },
+      "text": "exitpolicy.Action"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 708,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 711,
+        "column": 2
+      },
+      "text": "o.clearRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 13
+      },
+      "text": "snapshot.ChangedFromState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 714,
+        "column": 3
+      },
+      "text": "exitpolicy.Level"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 723,
+        "column": 9
+      },
+      "text": "o.record"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 692,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 713,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

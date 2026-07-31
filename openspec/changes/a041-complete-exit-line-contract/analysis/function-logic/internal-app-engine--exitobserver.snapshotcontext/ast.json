@@ -1,0 +1,111 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "3ed2e562f756e72abfcb7c820fcec4bec46d2bb95e0fc1d378ff8dbd4a6663cd",
+  "package": "engine",
+  "function": "snapshotContext",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.snapshotContext(params=2, results=1)",
+  "start": {
+    "line": 778,
+    "column": 1
+  },
+  "end": {
+    "line": 787,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 783,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 17
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 3
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 3
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 27
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 27
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 27
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 71
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 779,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

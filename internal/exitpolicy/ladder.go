@@ -128,8 +128,10 @@ func (r Rung) Validate() error {
 
 // LadderPolicy is an immutable rung set.
 type LadderPolicy struct {
-	PolicyID string
-	Rungs    []Rung
+	PolicyID      string
+	PolicyVersion string
+	PolicyDigest  string
+	Rungs         []Rung
 	// FinalTakeFull makes the last rung liquidate the remainder rather than take
 	// its own partial (profit_ladder.py:159).
 	FinalTakeFull bool
@@ -146,7 +148,7 @@ type LadderPolicy struct {
 // these only in the conservative direction until a tracer produces evidence.
 func DefaultLadderPolicy() LadderPolicy {
 	return LadderPolicy{
-		PolicyID: "default_v1",
+		PolicyID: "default_v1", PolicyVersion: DefaultPolicyVersion,
 		Rungs: []Rung{
 			{TargetPct: "1.5", StopPct: "0", PartialRatio: "0"},
 			{TargetPct: "2.5", StopPct: "1.0", PartialRatio: "0.25"},
@@ -200,7 +202,8 @@ func (p LadderPolicy) Validate() error {
 			return refusal("runner trail percent", "runner trail percent must be in (0, 100)")
 		}
 	}
-	return nil
+	_, err := p.Identity()
+	return err
 }
 
 // LadderState is the per-position state, the columns of `exit_states` that the
@@ -212,7 +215,9 @@ func (p LadderPolicy) Validate() error {
 // at **execution** time, in the fill transaction's apply hook, and an evaluation
 // copies them through untouched.
 type LadderState struct {
-	PolicyID string
+	PolicyID      string
+	PolicyVersion string
+	PolicyDigest  string
 	// ActivatedRung is the highest rung reached, or NoRung.
 	ActivatedRung int
 	// TakenRatioTotal is the cumulative taken fraction of the initial quantity.
@@ -227,7 +232,11 @@ type LadderState struct {
 
 // LadderInput is one observation and the state it is judged against.
 type LadderInput struct {
-	EntryPrice    string
+	EntryPrice string
+	// InitialStop is the frozen t0 stop included in an ExitLineSnapshot. Legacy
+	// direct evaluator callers may leave it empty because ladder arithmetic uses
+	// Baseline; snapshot callers treat empty as the t0 baseline.
+	InitialStop   string
 	ObservedPrice string
 	// HighWater is the watermark as it stood before this observation.
 	HighWater string
@@ -304,6 +313,18 @@ func EvaluateLadder(in LadderInput) (LadderTransition, error) {
 		// against another would compare a percent to the wrong table.
 		return LadderTransition{}, refusal("ladder policy", fmt.Sprintf(
 			"ladder state/policy mismatch: state=%s policy=%s", in.State.PolicyID, in.Policy.PolicyID))
+	}
+	identity, err := in.Policy.Identity()
+	if err != nil {
+		return LadderTransition{}, err
+	}
+	if in.State.PolicyVersion != "" && in.State.PolicyVersion != identity.Version {
+		return LadderTransition{}, refusal("ladder policy", fmt.Sprintf(
+			"ladder state/policy version mismatch: state=%s policy=%s", in.State.PolicyVersion, identity.Version))
+	}
+	if in.State.PolicyDigest != "" && in.State.PolicyDigest != identity.Digest {
+		return LadderTransition{}, fmt.Errorf("%w: ladder state digest %s does not match policy %s",
+			ErrPolicyIdentityConflict, in.State.PolicyDigest, identity.Digest)
 	}
 	entry, err := positive("entry price", in.EntryPrice)
 	if err != nil {

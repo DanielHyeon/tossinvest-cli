@@ -1,0 +1,152 @@
+{
+  "file": "internal/exitpolicy/common_policy.go",
+  "source_sha256": "e3e38657c7103d0e9f842c986bf82f4e20c5c37c328fce10cd435bc0234c0de7",
+  "package": "exitpolicy",
+  "function": "CommonLadderForPosition",
+  "signature": "CommonLadderForPosition(params=2, results=2)",
+  "start": {
+    "line": 101,
+    "column": 1
+  },
+  "end": {
+    "line": 119,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 16
+      },
+      "text": "CommonPolicyByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 77
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 20
+      },
+      "text": "policy.Ladder.Identity"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 108,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 110,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 116,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

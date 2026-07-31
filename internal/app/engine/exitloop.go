@@ -73,7 +73,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math/big"
 	"sort"
 	"strconv"
 	"strings"
@@ -690,16 +689,20 @@ func (o *ExitObserver) breakEven(m managed) (string, error) {
 
 func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, price, breakEven string,
 	cycle *ExitCycle) error {
-	decision, err := exitpolicy.EvaluateRatchet(exitpolicy.RatchetInput{
-		Entry:           m.state.EntryPrice,
-		InitialStop:     m.state.InitialStop,
-		ObservedPrice:   price,
-		HighWater:       m.state.HighWater,
-		Baseline:        m.state.Baseline,
-		RealBreakeven:   breakEven,
-		TakenRatioTotal: m.state.TakenRatioTotal,
-		PendingAction:   exitpolicy.Action(m.state.PendingAction),
-		Config:          &o.ratchet,
+	snapshot, err := exitpolicy.EvaluateRatchetSnapshot(exitpolicy.RatchetSnapshotInput{
+		Context: o.snapshotContext(m, price),
+		Input: exitpolicy.RatchetInput{
+			Entry:           m.state.EntryPrice,
+			InitialStop:     m.state.InitialStop,
+			ObservedPrice:   price,
+			HighWater:       m.state.HighWater,
+			Baseline:        m.state.Baseline,
+			RealBreakeven:   breakEven,
+			TakenRatioTotal: m.state.TakenRatioTotal,
+			Level:           exitpolicy.Level(m.state.RatchetLevel),
+			PendingAction:   exitpolicy.Action(m.state.PendingAction),
+			Config:          &o.ratchet,
+		},
 	})
 	if err != nil {
 		o.alertRefused(ctx, m, err)
@@ -707,7 +710,9 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, price, break
 	}
 	o.clearRefused(m.position.ID)
 
-	if !decision.Changed(m.state.HighWater, exitpolicy.Level(m.state.RatchetLevel)) {
+	snapshot = snapshot.ChangedFromState(m.state.HighWater, m.state.Baseline,
+		exitpolicy.Level(m.state.RatchetLevel), exitpolicy.NoRung)
+	if !snapshot.Changed {
 		// exit_events is append-only and the loop runs every five seconds. A
 		// judgement that moved nothing is not a judgement worth a row; the
 		// evaluator computes the condition (issues.md, task 0.1) so this does not
@@ -715,14 +720,7 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, price, break
 		return nil
 	}
 
-	return o.record(ctx, m, journal.ExitJudgement{
-		PositionID:    m.position.ID,
-		ObservedPrice: price,
-		HighWater:     decision.HighWater,
-		Baseline:      decision.Baseline,
-		RatchetLevel:  string(decision.Level),
-		ActiveRung:    exitpolicy.NoRung,
-	}, decision.Proposal, decision.CancelPendingFirst, cycle)
+	return o.record(ctx, m, snapshot, cycle)
 }
 
 func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakEven string,
@@ -742,22 +740,26 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakE
 			pendingRung = idx
 		}
 	}
-	transition, err := exitpolicy.EvaluateLadder(exitpolicy.LadderInput{
-		EntryPrice:    m.state.EntryPrice,
-		ObservedPrice: price,
-		HighWater:     m.state.HighWater,
-		Baseline:      m.state.Baseline,
-		State: exitpolicy.LadderState{
-			// The journal snapshot selects the immutable registry policy above,
-			// so the evaluator's identity check catches a mismatched state/table.
-			PolicyID:        ladder.PolicyID,
-			ActivatedRung:   m.state.ActiveRung,
-			TakenRatioTotal: m.state.TakenRatioTotal,
-			Completed:       m.state.Completed,
-			PendingAction:   exitpolicy.Action(m.state.PendingAction),
-			PendingRung:     pendingRung,
+	snapshot, err := exitpolicy.EvaluateLadderSnapshot(exitpolicy.LadderSnapshotInput{
+		Context: o.snapshotContext(m, price),
+		Input: exitpolicy.LadderInput{
+			EntryPrice:    m.state.EntryPrice,
+			InitialStop:   m.state.InitialStop,
+			ObservedPrice: price,
+			HighWater:     m.state.HighWater,
+			Baseline:      m.state.Baseline,
+			State: exitpolicy.LadderState{
+				// The journal snapshot selects the immutable registry policy above,
+				// so the evaluator's identity check catches a mismatched state/table.
+				PolicyID:        ladder.PolicyID,
+				ActivatedRung:   m.state.ActiveRung,
+				TakenRatioTotal: m.state.TakenRatioTotal,
+				Completed:       m.state.Completed,
+				PendingAction:   exitpolicy.Action(m.state.PendingAction),
+				PendingRung:     pendingRung,
+			},
+			Policy: ladder,
 		},
-		Policy: ladder,
 	})
 	if err != nil {
 		o.alertRefused(ctx, m, err)
@@ -765,16 +767,23 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, price, breakE
 	}
 	o.clearRefused(m.position.ID)
 
-	if !transition.Changed(m.state.HighWater) {
+	snapshot = snapshot.ChangedFromState(m.state.HighWater, m.state.Baseline,
+		exitpolicy.Level(m.state.RatchetLevel), m.state.ActiveRung)
+	if !snapshot.Changed {
 		return nil
 	}
-	return o.record(ctx, m, journal.ExitJudgement{
-		PositionID:    m.position.ID,
-		ObservedPrice: price,
-		HighWater:     transition.HighWater,
-		Baseline:      transition.Baseline,
-		ActiveRung:    transition.NextState.ActivatedRung,
-	}, transition.Proposal, transition.CancelPendingFirst, cycle)
+	return o.record(ctx, m, snapshot, cycle)
+}
+
+func (o *ExitObserver) snapshotContext(m managed, price string) exitpolicy.SnapshotContext {
+	observation := fmt.Sprintf("%s|%s|%s|%s|%d|%s|%s", o.opts.AccountRef,
+		strings.ToLower(strings.TrimSpace(m.position.Market)),
+		strings.ToUpper(strings.TrimSpace(m.position.Symbol)), m.position.ID,
+		m.position.InstanceSeq, o.clk.Now().UTC().Format(time.RFC3339Nano), strings.TrimSpace(price))
+	return exitpolicy.SnapshotContext{
+		PositionID: m.position.ID, PositionGeneration: m.position.InstanceSeq,
+		ObservationID: observation, RemainingQuantity: m.position.Quantity,
+	}
 }
 
 // checkLadderPolicyStillFits is defence in depth after policy-ID resolution: an
@@ -831,23 +840,15 @@ func (o *ExitObserver) ladderFor(m managed) (exitpolicy.LadderPolicy, error) {
 // arms the proposal, then the intent is minted, attached and submitted. Reversed
 // — submit first, record after — a crash in between leaves an order the ledger
 // cannot explain and the next observation proposes the same level again.
-func (o *ExitObserver) record(ctx context.Context, m managed, judgement journal.ExitJudgement,
-	proposal exitpolicy.Proposal, cancelFirst bool, cycle *ExitCycle) error {
-	quantity := ""
-	orderable := !proposal.Zero() && proposal.Action.Orderable()
-	if orderable {
-		var err error
-		quantity, err = proposalQuantity(m.position.Quantity, proposal.Ratio)
-		if err != nil {
-			o.alertRefused(ctx, m, err)
-			return nil
-		}
-		if isZeroQuantity(quantity) {
-			// A ratio of a remainder that rounds to nothing. Arming the level
-			// against an order that cannot exist would suppress every proposal
-			// after it; the state advance below still happens.
-			orderable = false
-		}
+func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolicy.ExitLineSnapshot,
+	cycle *ExitCycle) error {
+	proposal := snapshot.ExecutableProposal()
+	quantity := snapshot.ProjectedQuantity
+	orderable := snapshot.Orderable && !proposal.Zero()
+	judgement := journal.ExitJudgement{
+		PositionID: m.position.ID, ObservedPrice: snapshot.ObservedPrice,
+		HighWater: snapshot.HighWater, Baseline: snapshot.CurrentProtection,
+		RatchetLevel: string(snapshot.RatchetLevel), ActiveRung: snapshot.ActiveRung,
 	}
 
 	// Clearing the symbol comes *before* the arming, not after it, and the reason
@@ -866,8 +867,8 @@ func (o *ExitObserver) record(ctx context.Context, m managed, judgement journal.
 	// and the baseline still advance, and only the proposal is withheld. §0.3 is
 	// why the withholding is noticed rather than silent — noteDelay is what turns
 	// a delayed liquidation into an alert once it passes its bound.
-	if orderable && (cancelFirst || isFullExit(proposal)) {
-		cleared, err := o.clearTheSymbol(ctx, m, cancelFirst)
+	if orderable && (snapshot.CancelPendingFirst || isFullExit(proposal)) {
+		cleared, err := o.clearTheSymbol(ctx, m, snapshot.CancelPendingFirst)
 		if err != nil {
 			return err
 		}
@@ -1322,26 +1323,7 @@ func symbolsOf(states []managed) []string {
 // more than the policy asked for would take protection the position was meant to
 // keep, and the last unit belongs to the full liquidation that eventually comes.
 func proposalQuantity(remaining, ratio string) (string, error) {
-	held, ok := new(big.Rat).SetString(strings.TrimSpace(remaining))
-	if !ok {
-		return "", fmt.Errorf("%q is not a quantity", remaining)
-	}
-	share := big.NewRat(1, 1)
-	if r := strings.TrimSpace(ratio); r != "" {
-		share, ok = new(big.Rat).SetString(r)
-		if !ok {
-			return "", fmt.Errorf("%q is not a ratio", ratio)
-		}
-	}
-	if share.Cmp(big.NewRat(1, 1)) > 0 {
-		share = big.NewRat(1, 1)
-	}
-	product := new(big.Rat).Mul(held, share)
-	units := new(big.Int).Quo(product.Num(), product.Denom())
-	if units.Sign() < 0 {
-		units.SetInt64(0)
-	}
-	return units.String(), nil
+	return exitpolicy.ProjectWholeShares(remaining, ratio)
 }
 
 func isZeroQuantity(q string) bool {

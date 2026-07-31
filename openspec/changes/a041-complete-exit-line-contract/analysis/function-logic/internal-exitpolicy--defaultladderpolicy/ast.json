@@ -1,0 +1,29 @@
+{
+  "file": "internal/exitpolicy/ladder.go",
+  "source_sha256": "ee9c91aa8a5d8f51fbb0143e1083f45dc27d3ff889acc662c0886a7e0f2e5526",
+  "package": "exitpolicy",
+  "function": "DefaultLadderPolicy",
+  "signature": "DefaultLadderPolicy(params=0, results=1)",
+  "start": {
+    "line": 149,
+    "column": 1
+  },
+  "end": {
+    "line": 160,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

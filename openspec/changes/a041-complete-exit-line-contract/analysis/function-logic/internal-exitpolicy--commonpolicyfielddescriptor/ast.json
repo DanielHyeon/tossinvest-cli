@@ -1,0 +1,93 @@
+{
+  "file": "internal/exitpolicy/common_policy.go",
+  "source_sha256": "e3e38657c7103d0e9f842c986bf82f4e20c5c37c328fce10cd435bc0234c0de7",
+  "package": "exitpolicy",
+  "function": "CommonPolicyFieldDescriptor",
+  "signature": "CommonPolicyFieldDescriptor(params=0, results=1)",
+  "start": {
+    "line": 181,
+    "column": 1
+  },
+  "end": {
+    "line": 199,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 14
+      },
+      "text": "RegisteredCommonPolicyDescriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 43
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 13
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 185,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

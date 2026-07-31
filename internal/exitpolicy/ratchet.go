@@ -260,6 +260,9 @@ type RatchetInput struct {
 	// TakenRatioTotal is the cumulative taken fraction of the initial quantity.
 	// "" reads as "0".
 	TakenRatioTotal string
+	// Level is the persisted level before this observation. Empty is accepted by
+	// legacy direct callers and derived from the previous high-water.
+	Level Level
 	// PendingAction is the outstanding proposal's action, empty when none.
 	PendingAction Action
 	// Config is nil for the default table.
