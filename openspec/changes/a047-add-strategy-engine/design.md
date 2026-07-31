@@ -12,7 +12,7 @@ engine runtime에는 entry loop가 없고 Tracer는 production에서 호출되�
 
 1. lane는 순수 `Evaluate(ApprovedCandidate) EntryDecision`을 반환하고 broker/journal을 직접 받지 않는다.
 2. orchestrator만 RiskIntent→Guardian→durable attempt→official gateway를 수행한다.
-3. 첫 lane는 StockOS에서 검증된 하나의 정책만 이식하고 모든 상수에 출처·시장·검증 상태를 붙인다.
+3. 첫 lane는 StockOS `parker_vwap_trend_v1`의 KRX conservative profile을 `krx_parker_vwap_conservative_v1`로 순수 이식한다. source는 StockOS commit `d75113d3c338148606d86c8aedbbeb7ed446c0b8`, 관련 source-set SHA-256은 `09260ac29e50ed4d2a43d0e274f9a17465e00ee36fb61d759127f158985c23bd`다. StockOS가 KOSPI/KOSDAQ tick rule에 calibration됐다는 source 주석에 따라 KRX regular-session, closed 5-minute bars만 허용하고 US/장전·장후는 지원하지 않는다.
 4. lane desired state와 effective state를 분리한다. OFF는 신규 entry만 차단하고 exit loop에 전달되지 않는다.
 5. 자동 재시작은 운영자가 승인한 desired state와 유효 gate/protection을 모두 재확인한다.
 6. UI 소유 카테고리는 `strategy-runtime`이다. `전략 파라미터`, `lane 상태`, `자동 기동`, `LIVE 주문 승인`을 별도 section과 별도 save/confirm action으로 분리하며 `한 번에 모두 활성화` control을 금지한다.
@@ -26,6 +26,16 @@ engine runtime에는 entry loop가 없고 Tracer는 production에서 호출되�
 10. orchestrator는 durable dispatch 직전에 manifest 전 필드를 다시 검증하고 decision/attempt에 digest를
     기록한다. mismatch, expiry, kill switch, reconcile degradation 또는 high-risk config 변경은 entry만
     OFF로 만들며 reduce-only exit/reconcile에는 전달하지 않는다.
+11. 첫 lane의 immutable constants는 `min_vwap_slope_pct=0.08`, `ema_touch_tolerance_pct=0.25`,
+    `min_forward_space_pct=1.2`, `min_expected_rr=1.5`, `tangled_band_pct=0.35`,
+    `max_band_expansion_rate=1.8`, `hard_stop_pct=0.7`, `partial_take_profit_at_r=3.0`,
+    `skip_open_minutes=10`, `max_signal_age_seconds=15`, `max_entry_price_drift_pct=0.20`,
+    `symbol_state_stale_seconds=30`이다. gate 순서는 profile/state → session → closed-bar integrity →
+    symbol state → no existing position → nonzero volume → indicator completeness → VWAP above/slope →
+    EMA9 bullish pullback → LVN forward space → untangled/band expansion → RR → HVN ceiling → age/drift다.
+12. source parity는 StockOS golden fixtures를 Go fixture로 번역해 accept/refusal reason, entry, 0.7% stop,
+    3R target과 expected RR이 일치하도록 검증한다. source digest나 constants 변경은 새 lane version이며
+    기존 manifest를 무효화한다. UI는 이 값을 직접 입력받지 않고 fixed server preset/provenance만 보여준다.
 
 ## Risks / Trade-offs
 
@@ -41,4 +51,4 @@ lane interface와 dormant runtime을 배포하고 전체 gate 후 운영자가 L
 
 ## Open Questions
 
-첫 lane의 정확한 StockOS source policy와 적용 시장은 proposal-freeze에서 하나로 고정한다.
+없음. 첫 lane source/market/constants는 위 결정으로 고정됐으며 수익성 승인을 의미하지 않는다.

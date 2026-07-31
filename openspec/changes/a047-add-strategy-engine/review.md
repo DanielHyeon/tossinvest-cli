@@ -5,7 +5,7 @@
 
 ## Security decision
 
-pure lane/orchestrator와 immutable activation-manifest 기반 default-OFF 구현만 승인한다. exact StockOS source policy/market/constants golden fixture와 a045/a046 선행 gate 없이는 exposure-raising dispatch를 연결하지 않는다.
+pure lane/orchestrator와 immutable activation-manifest 기반 default-OFF 구현만 승인한다. exact source는 StockOS commit `d75113d3`, source-set digest `09260ac…`, KRX `parker_vwap_trend_v1` conservative profile로 고정했다. a045/a046 선행 gate 없이는 exposure-raising dispatch를 연결하지 않는다.
 
 ## Findings and decisions
 
@@ -17,8 +17,8 @@ pure lane/orchestrator와 immutable activation-manifest 기반 default-OFF 구�
 ## Verification evidence
 
 - OpenSpec strict validation: pass.
-- Exact source lane and external prerequisites: not yet frozen; activation remains blocked.
+- Exact source lane: frozen. External a045 attestation and a046 numeric evidence remain absent; activation remains blocked.
 
 ## Verdict
 
-구조와 dormant/default-OFF scaffold는 승인한다. 첫 lane provenance 동결 전 runtime implementation/gate 완료를 주장하지 않는다.
+구조, frozen pure lane와 dormant/default-OFF scaffold는 승인한다. a045/a046 evidence 전 exposure-raising runtime implementation/activation 완료를 주장하지 않는다.
