@@ -53,7 +53,7 @@
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [implemented] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [implemented] → `a042-persist-exit-line-snapshots`
-    - STORY-TOS-a043 — Show exit-line truth in positions and orders [in_progress] → `a043-show-exit-lines-in-trading-views`
+    - STORY-TOS-a043 — Show exit-line truth in positions and orders [implemented] → `a043-show-exit-lines-in-trading-views`
     - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [in_progress] → `a044-manage-position-exit-policies`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [in_progress] → `a051-add-httpapi-daemon`

@@ -12,4 +12,4 @@
 ## 3. 검증
 
 - [x] 3.1 CSP, 360px 반응형 overflow, 접근성, `/positions`·`/orders` POST 405와 form/input/textarea/select/button/contenteditable 부재 DOM 테스트 및 console focused/full test를 통과한다.
-- [ ] 3.2 UI 경량 독립 리뷰와 `make gate CHANGE=a043-show-exit-lines-in-trading-views`를 통과한다.
+- [x] 3.2 UI 경량 독립 리뷰와 `make gate CHANGE=a043-show-exit-lines-in-trading-views`를 통과한다.
