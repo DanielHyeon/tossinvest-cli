@@ -13,15 +13,17 @@
 1. `/api/v1` adapter는 console과 같은 domain/query seams를 사용하고 journal/broker를 직접 중복 조립하지 않는다.
 2. SSE event ID는 process epoch와 epoch-local monotonic sequence를 포함한다. 재시작 또는 unknown
    `Last-Event-ID`는 새 epoch의 full snapshot으로 수렴한다.
-3. 기존 token/session mode는 유지한다. 명시적으로 설정한 no-token mode는 loopback/configured VPN CIDR의
-   read-only routes만 연다. VPN native write는 enrolled mTLS identity 또는 local human approval channel이
-   발급한 one-time nonce를 actor/method/resource/canonical body digest/expiry에 묶어 서명한 60초 단기
-   capability가 있을 때만 제한 route를 연다. nonce는 한 번 사용되면 즉시 폐기한다.
+3. 기존 console의 token/session mode는 그대로 유지한다. a051 daemon의 기본 no-token mode는
+   loopback/configured VPN CIDR의 read-only routes만 연다. 제한 write를 별도로 켠 daemon은 local human
+   approval channel이 발급한 one-time nonce를 actor/client/method/resource/canonical body digest/
+   idempotency key/`If-Match`/audience/expiry에 묶어 서명한 최대 60초 capability만 인증 수단으로 받는다.
+   nonce는 한 번 사용되면 즉시 폐기한다.
 4. write canonical origin은 scheme+host+effective port만 비교하고 path/query는 무시한다.
-5. browser write는 session+CSRF+origin, native write는 mTLS/서명 capability를 요구한다. 둘 다
-   `actor/client + method + resource + canonical body digest + idempotency key` scope, `If-Match`, audit와
-   narrow commander를 사용한다. 동일 key의 다른 body는 409다. LIVE/gate/kill-switch/protection 약화와
-   activation-manifest write는 route 자체를 제공하지 않는다.
+5. shared mutation guard는 다른 private 서비스가 사용할 browser session+CSRF+origin 및 enrolled mTLS
+   identity 검증도 보존하지만, a051 daemon wiring과 OpenAPI는 signed capability mode만 노출한다. daemon
+   write는 `actor/client + method + resource + canonical body digest + idempotency key` scope, `If-Match`,
+   audit와 narrow commander를 사용한다. 동일 key의 다른 body는 409다. LIVE/gate/kill-switch/protection
+   약화와 activation-manifest write는 route 자체를 제공하지 않는다.
 6. optimization resource는 a050 `OptimizationCategory`와 `OptimizationFieldDescriptor`를 공통 DTO로 사용한다. 웹 HTML과 모바일 API가 category 이름·기본값·설명을 별도 상수로 복제하지 않는다.
 7. category 목록은 `overview`, `exit-protection`, `position-management`, `candidate-filters`, `strategy-runtime`, `performance-history` 고정 순서이며 응답은 default state/value, desired/effective, constraint, apply timing, help와 provenance를 포함한다.
 8. 기본 운영 한도는 SSE client 32, client queue 64 event, heartbeat 15초, queue-full 즉시 disconnect,

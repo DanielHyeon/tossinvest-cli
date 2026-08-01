@@ -1,0 +1,109 @@
+{
+  "file": "internal/console/remote.go",
+  "source_sha256": "ce051cccd219a445543d05624bd5c3394522ed7ee686b6a840a790cd430ca658",
+  "package": "console",
+  "function": "sameOriginForMutation",
+  "receiver": "remoteRuntime",
+  "signature": "remoteRuntime.sameOriginForMutation(params=1, results=1)",
+  "start": {
+    "line": 238,
+    "column": 1
+  },
+  "end": {
+    "line": 246,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 242,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 31
+      },
+      "text": "http.CanonicalHeaderKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 32
+      },
+      "text": "http.CanonicalHeaderKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 10
+      },
+      "text": "rr.sameOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 19
+      },
+      "text": "networkboundary.ParseOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 23
+      },
+      "text": "networkboundary.OriginMatches"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

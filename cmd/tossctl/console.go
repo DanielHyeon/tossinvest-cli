@@ -102,6 +102,13 @@ type consoleOptions struct {
 	trustedNetwork  bool
 }
 
+// HTTP API read aliases keep the Phase 4 daemon on the same narrow console
+// seams without creating a second cmd/tossctl file that imports the console
+// package. console_test.go intentionally freezes this file as that boundary.
+type httpAPIHoldingsReader = console.HoldingsReader
+type httpAPIOrdersReader = console.OrdersReader
+type httpAPISignalsReader = console.SignalsReader
+
 func newConsoleCmd(root *rootOptions) *cobra.Command {
 	opts := &consoleOptions{}
 

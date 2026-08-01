@@ -1,0 +1,78 @@
+{
+  "file": "internal/console/remote.go",
+  "source_sha256": "ce051cccd219a445543d05624bd5c3394522ed7ee686b6a840a790cd430ca658",
+  "package": "console",
+  "function": "loadRemoteCertificate",
+  "signature": "loadRemoteCertificate(params=3, results=2)",
+  "start": {
+    "line": 193,
+    "column": 1
+  },
+  "end": {
+    "line": 199,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 22
+      },
+      "text": "networkboundary.LoadServerCertificate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 85
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 29
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

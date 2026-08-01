@@ -25,7 +25,7 @@ ENV XDG_CONFIG_HOME=/var/lib/tossos/config \
     TOSSOS_CONTAINER=1
 
 USER 10001:10001
-EXPOSE 37085
+EXPOSE 37085 37086
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget --no-check-certificate -qO- https://127.0.0.1:37085/healthz | grep -qx ok
 
