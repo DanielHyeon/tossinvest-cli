@@ -1,15 +1,15 @@
 {
   "file": "internal/protection/domain.go",
-  "source_sha256": "209d44fb12978d7db3451d1939d5148239d547cf0053032da0ddd0e10c1da615",
+  "source_sha256": "21221c23326f498456dd7fc3432a0dd094ad0012c2562e223a0ec819b86a7aa0",
   "package": "protection",
   "function": "decideFlatten",
   "signature": "decideFlatten(params=8, results=2)",
   "start": {
-    "line": 409,
+    "line": 483,
     "column": 1
   },
   "end": {
-    "line": 414,
+    "line": 488,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 2
       }
     }
@@ -26,14 +26,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 411,
+        "line": 485,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 413,
+        "line": 487,
         "column": 2
       }
     }
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 5
       },
       "text": "start.IsZero"
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 23
       },
       "text": "deadline.IsZero"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 44
       },
       "text": "decisionAt.IsZero"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 67
       },
       "text": "start.After"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 92
       },
       "text": "deadline.Sub"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 131
       },
       "text": "decisionAt.Before"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 159
       },
       "text": "decisionAt.After"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 189
       },
       "text": "target.Scope.Validate"
@@ -106,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 304
       },
       "text": "cancel.At.IsZero"
@@ -114,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 326
       },
       "text": "sellable.At.IsZero"
@@ -122,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 350
       },
       "text": "cancel.At.Before"
@@ -130,7 +130,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 377
       },
       "text": "sellable.At.Before"
@@ -138,7 +138,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 410
       },
       "text": "decisionAt.Before"
@@ -146,7 +146,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 444
       },
       "text": "cancel.At.After"
@@ -154,7 +154,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 473
       },
       "text": "sellable.At.After"
@@ -162,7 +162,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 505
       },
       "text": "cancel.Scope.equal"
@@ -170,7 +170,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 484,
         "column": 542
       },
       "text": "sellable.Scope.equal"

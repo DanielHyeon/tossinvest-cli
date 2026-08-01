@@ -1,16 +1,16 @@
 {
   "file": "internal/protection/domain.go",
-  "source_sha256": "209d44fb12978d7db3451d1939d5148239d547cf0053032da0ddd0e10c1da615",
+  "source_sha256": "21221c23326f498456dd7fc3432a0dd094ad0012c2562e223a0ec819b86a7aa0",
   "package": "protection",
   "function": "Validate",
   "receiver": "Saga",
   "signature": "Saga.Validate(params=0, results=1)",
   "start": {
-    "line": 197,
+    "line": 256,
     "column": 1
   },
   "end": {
-    "line": 216,
+    "line": 275,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "switch",
       "at": {
-        "line": 198,
+        "line": 257,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "case",
       "at": {
-        "line": 199,
+        "line": 258,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "case",
       "at": {
-        "line": 201,
+        "line": 260,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "case",
       "at": {
-        "line": 203,
+        "line": 262,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "case",
       "at": {
-        "line": 205,
+        "line": 264,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "case",
       "at": {
-        "line": 207,
+        "line": 266,
         "column": 2
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "case",
       "at": {
-        "line": 209,
+        "line": 268,
         "column": 2
       }
     },
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 212,
+        "line": 271,
         "column": 2
       }
     }
@@ -83,56 +83,56 @@
     {
       "kind": "return",
       "at": {
-        "line": 200,
+        "line": 259,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 202,
+        "line": 261,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 204,
+        "line": 263,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 206,
+        "line": 265,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 208,
+        "line": 267,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 210,
+        "line": 269,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 213,
+        "line": 272,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 215,
+        "line": 274,
         "column": 2
       }
     }
@@ -141,7 +141,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 258,
         "column": 29
       },
       "text": "strings.TrimSpace"
@@ -149,7 +149,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 258,
         "column": 92
       },
       "text": "strings.TrimSpace"
@@ -157,7 +157,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 258,
         "column": 157
       },
       "text": "strings.TrimSpace"
@@ -165,7 +165,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 259,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -173,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 201,
+        "line": 260,
         "column": 85
       },
       "text": "strings.TrimSpace"
@@ -181,7 +181,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 202,
+        "line": 261,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -189,7 +189,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 263,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -197,7 +197,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 264,
         "column": 51
       },
       "text": "strings.TrimSpace"
@@ -205,7 +205,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 265,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -213,7 +213,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 207,
+        "line": 266,
         "column": 8
       },
       "text": "validState"
@@ -221,7 +221,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 267,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -229,7 +229,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
+        "line": 268,
         "column": 7
       },
       "text": "s.UpdatedAt.IsZero"
@@ -237,7 +237,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 269,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -245,7 +245,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 212,
+        "line": 271,
         "column": 12
       },
       "text": "s.validateStateFields"
@@ -255,7 +255,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 212,
+        "line": 271,
         "column": 5
       }
     }

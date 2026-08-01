@@ -4,11 +4,13 @@ Date: 2026-07-31
 
 ## Approved boundary
 
-This implementation stops before external capability attestation. It adds a strict parser,
-pure state/reconciliation decisions, an additive repository schema, and a gateway interface
-whose only implementation is test code. It does not import the package from `cmd/` or
-`internal/app`, does not add an official client adapter, and does not change the shipped
-`execgw.ProfileProtection = ProtectionUnwired` constant.
+This implementation now contains the complete testable protection core: signed capability
+verification, durable create/replace/cancel attempts, response-loss recovery, reconciliation,
+the typed a041 protection-line bridge, cancel-first flatten authorization, and an official-only
+adapter. It still has no production activation capability: `Activation` has no exported minter,
+`cmd/` and `internal/app` do not construct the controller or adapter, and the shipped
+`execgw.ProfileProtection = ProtectionUnwired` constant is unchanged. Consequently no code in
+the shipped application can dispatch these broker mutations.
 
 ## CodeGraph hard evidence
 
@@ -23,14 +25,16 @@ The worktree index was refreshed with `make sdd-sync` before editing.
   by the engine interlock, and gates `Gateway.checkProtection` before exposure-raising broker
   dispatch. It was not edited. The new dormant static test also requires it to remain
   `UNWIRED` and rejects any `cmd/` or `internal/app/` import of `internal/protection`.
-- Existing conditional mutations are the concrete methods in
-  `internal/official/conditional_writes.go` and the gated service in
-  `internal/trading/conditional.go`. Neither package was edited or imported by the dormant
-  protection package.
-- Existing reservations are the entry-exposure ledger in `internal/journal/reservations.go`,
-  checked at `internal/execgw/gateway.go:checkReservation`. Existing flatten and reconciliation
-  paths are also outside this diff. The new sell-claim, discrepancy, and flatten-decision code
-  is pure classification only and cannot dispatch a mutation.
+- Existing conditional mutations remain the concrete official methods in
+  `internal/official/conditional_writes.go`. The new `internal/protectionofficial` adapter calls
+  only that official client, requires exact integer/capability/readback identity, scans bounded
+  OPEN+CLOSED pages for recovery, and treats cancel disappearance or unknown lifecycle as
+  `IN_DOUBT`. It imports neither WTS/hybrid transports nor `internal/trading`.
+- The new protection attempt journal is additive v13 and is written before dispatch. Protection
+  quantity converges from holding minus the single open-sell/local claim and refuses oversell.
+  Cancel-first flatten issues only an exact-scope, exact-broker, exact-quantity, two-second,
+  one-shot authorization after terminal non-triggered cancel and authoritative sellable reads.
+  The authorization itself has no sell method and the dormant application has no consumer.
 
 ## Go AST / Function Logic Map decision
 
@@ -80,8 +84,9 @@ observation ordering and identity, and overflow-safe maximum-int64 sell claims.
 
 ## Intentionally incomplete
 
-External evidence production, real official gateway calls, sell-reservation integration,
-engine/a041 wiring, operational reconciliation/flatten, `ProtectionReady=WIRED`, console
-activation, and all LIVE handoff work remain blocked by the review's human-attestation gate.
-Trusted signer, signature format, and trust-root lifecycle are also unspecified. File ownership,
-permissions, and hashes establish local integrity only; they do not establish issuer authenticity.
+Production policy/trust-root/envelope provisioning, an exported activation minter, app/cmd
+construction, an execution-gateway readiness flip, a runtime toggle, and all LIVE handoff work
+remain intentionally absent. Signed readiness can be evaluated but cannot activate the controller.
+The console therefore defaults to `OFF / 지원 확인 전 사용 불가`; it accepts no free symbol,
+trigger, quantity, reason, or typed confirmation, and weakening is limited to a server-issued
+opaque capability plus checkbox and three-second delay.

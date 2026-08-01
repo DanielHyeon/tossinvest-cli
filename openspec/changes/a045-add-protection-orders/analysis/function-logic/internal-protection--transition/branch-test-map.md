@@ -29,3 +29,14 @@
 | B1+ | Input/time/event guards and monotonic replace are followed by output invariant validation. | every allowed transition, forbidden transition, state-specific stale fields, output validation, replace/trigger crash windows. | yes: invalid output was returned | pass |
 | B25 | registration/replace result carries a different attempt ID | lineage table | mismatch not checked | pass after remediation |
 | B26 | trigger/close observation carries a different broker ID | lineage table | mismatch ignored | pass after remediation |
+| B27 | ACTIVE cancellation requires exact broker identity | controller cancel suite | cancel state absent | pass |
+| B28 | cancellation attempt identity is recorded | controller cancel suite | cancel lineage absent | pass |
+| B29 | CANCELLING closes with matching attempt/broker | controller cancel suite | completion absent | pass |
+| B30 | IN_DOUBT may recover ACTIVE from evidence | response-loss recovery suite | recovery absent | pass |
+| B31 | recovered ACTIVE carries broker identity | response-loss recovery suite | recovery absent | pass |
+| B32 | recovered ACTIVE carries trigger and quantity | response-loss recovery suite | validation absent | pass |
+| B33 | IN_DOUBT may recover TRIGGERED | reconciliation suite | recovery absent | pass |
+| B34 | recovered TRIGGERED carries broker identity | reconciliation suite | validation absent | pass |
+| B35 | IN_DOUBT may recover CLOSED | reconciliation suite | recovery absent | pass |
+| B36 | recovered CLOSED carries broker identity | reconciliation suite | validation absent | pass |
+| B37 | all new outputs pass state validation | `TestTransitionValidatesItsOutput` | invalid output escaped | pass |

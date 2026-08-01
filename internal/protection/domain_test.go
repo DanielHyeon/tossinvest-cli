@@ -322,7 +322,7 @@ func TestTransitionValidatesItsOutput(t *testing.T) {
 }
 
 func TestCanonicalBodyIsStableAndMarketSingleOnly(t *testing.T) {
-	body := ConditionalBody{SerializerVersion: SerializerVersion, ClientOrderID: "protect:p-1:1", AccountRef: "acct-1", Market: "KR", Symbol: "005930", Side: "SELL", ConditionalType: "SINGLE", OrderType: "MARKET", TriggerSource: "LAST_TRADE", Trigger: 70000, Quantity: 1}
+	body := ConditionalBody{SerializerVersion: SerializerVersion, ClientOrderID: "protect:p-1:1", AccountRef: "acct-1", Market: "KR", Symbol: "005930", Side: "SELL", ConditionalType: "SINGLE", OrderType: "MARKET", TriggerSource: "LAST_TRADE", Trigger: 70000, Quantity: 1, ExpireDate: "2026-08-08"}
 	one, err := body.CanonicalJSON()
 	if err != nil {
 		t.Fatal(err)
@@ -633,8 +633,7 @@ func TestRepositoryStaleRetryCannotMasqueradeAsDifferentEventKind(t *testing.T) 
 	}
 }
 
-// Compile-time only: production defines a contract, while every implementation
-// in this change remains in a _test.go file.
+// Compile-time contract check for broker-neutral fakes.
 var _ Gateway = (*fakeGateway)(nil)
 
 type fakeGateway struct{}

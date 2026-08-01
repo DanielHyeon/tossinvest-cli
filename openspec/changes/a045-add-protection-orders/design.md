@@ -88,7 +88,10 @@ schema와 official client를 dormant 상태로 배포한 뒤 전체 gate 완료 
 
 ## Open Questions
 
-실제 profile claim과 evidence digest는 사람 attestation 전에는 채울 수 없다. 그 전 구현 허용 범위는 strict schema/parser, dormant domain, fake official gateway와 `UNWIRED/OFF` 경로뿐이며 실제 conditional mutation과 WIRED 전환은 금지한다.
+실제 profile claim과 evidence digest는 사람 attestation 전에는 채울 수 없다. 따라서
+official-only adapter와 mutation controller는 독립 테스트가 가능한 dormant 코드로만 포함하며,
+exported activation minter·production provisioning·app/cmd construction·`ProtectionReady=WIRED`
+전환은 금지한다. shipped binary에서 해당 mutation 경로는 도달 불가능해야 한다.
 
 signer/signature/trust-root 형식과 회전·폐기 semantics는 Decisions 12-15로 동결했다. 다만 실제
 production keyset과 사람 검증 evidence는 아직 배포되지 않았다. trust root 또는 서명 envelope가

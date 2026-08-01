@@ -11,7 +11,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 )
 
-func TestProtectionRemainsUnwiredAndPackageHasNoMutationAdapter(t *testing.T) {
+func TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport(t *testing.T) {
 	if execgw.ProfileProtection != execgw.ProtectionUnwired {
 		t.Fatalf("ProfileProtection = %q, want UNWIRED", execgw.ProfileProtection)
 	}
@@ -39,7 +39,8 @@ func TestProtectionRemainsUnwiredAndPackageHasNoMutationAdapter(t *testing.T) {
 		}
 	}
 
-	// No shipped package may wire the dormant package into an engine or command.
+	// No shipped engine or command may activate the otherwise testable official
+	// adapter. The controller's opaque activation has no exported minter.
 	for _, dir := range []string{filepath.Join(root, "cmd"), filepath.Join(root, "internal", "app")} {
 		err := filepath.WalkDir(dir, func(path string, d os.DirEntry, walkErr error) error {
 			if walkErr != nil {
@@ -82,6 +83,33 @@ func TestNoPaperShadowOrCanaryProtectionPath(t *testing.T) {
 		for _, forbidden := range []string{"paper", "shadow", "canary"} {
 			if strings.Contains(strings.ToLower(string(src)), forbidden) {
 				t.Errorf("%s contains forbidden protection path %q", path, forbidden)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestOfficialProtectionAdapterHasNoPaperShadowCanaryOrFallbackTransport(t *testing.T) {
+	root := moduleRoot(t)
+	packageDir := filepath.Join(root, "internal", "protectionofficial")
+	err := filepath.WalkDir(packageDir, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		src, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		lower := strings.ToLower(string(src))
+		for _, forbidden := range []string{"paper", "shadow", "canary", "/internal/wts", "/internal/hybrid", "/internal/trading"} {
+			if strings.Contains(lower, forbidden) {
+				t.Errorf("%s contains forbidden adapter path %q", path, forbidden)
 			}
 		}
 		return nil

@@ -1,16 +1,16 @@
 {
   "file": "internal/protection/domain.go",
-  "source_sha256": "209d44fb12978d7db3451d1939d5148239d547cf0053032da0ddd0e10c1da615",
+  "source_sha256": "21221c23326f498456dd7fc3432a0dd094ad0012c2562e223a0ec819b86a7aa0",
   "package": "protection",
   "function": "Consume",
   "receiver": "FlattenAuthorization",
   "signature": "FlattenAuthorization.Consume(params=2, results=1)",
   "start": {
-    "line": 390,
+    "line": 464,
     "column": 1
   },
   "end": {
-    "line": 403,
+    "line": 477,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 392,
+        "line": 466,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 396,
+        "line": 470,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 399,
+        "line": 473,
         "column": 2
       }
     }
@@ -43,28 +43,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 393,
+        "line": 467,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 397,
+        "line": 471,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 400,
+        "line": 474,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 402,
+        "line": 476,
         "column": 2
       }
     }
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 395,
+        "line": 469,
         "column": 16
       },
       "text": "permit.clock"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 396,
+        "line": 470,
         "column": 5
       },
       "text": "decisionAt.IsZero"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 396,
+        "line": 470,
         "column": 28
       },
       "text": "decisionAt.Before"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 396,
+        "line": 470,
         "column": 66
       },
       "text": "decisionAt.After"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 399,
+        "line": 473,
         "column": 6
       },
       "text": "permit.consumed.CompareAndSwap"
@@ -115,14 +115,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 391,
+        "line": 465,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 395,
+        "line": 469,
         "column": 2
       }
     }

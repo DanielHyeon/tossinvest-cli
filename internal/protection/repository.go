@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
-const SchemaVersion = 2
+const SchemaVersion = 3
 
 const schemaDDL = `
 CREATE TABLE IF NOT EXISTS protection_sagas (
@@ -37,7 +38,57 @@ CREATE TABLE IF NOT EXISTS protection_sagas (
 );
 CREATE INDEX IF NOT EXISTS protection_sagas_account_symbol
   ON protection_sagas(account_ref, symbol, state);
+CREATE UNIQUE INDEX IF NOT EXISTS protection_sagas_live_claim
+  ON protection_sagas(account_ref,profile,market,symbol)
+  WHERE state NOT IN ('TRIGGERED','CLOSED');
+CREATE TABLE IF NOT EXISTS protection_mutation_attempts (
+  attempt_id TEXT PRIMARY KEY,
+  saga_id TEXT NOT NULL REFERENCES protection_sagas(saga_id),
+  generation INTEGER NOT NULL CHECK (generation >= 1),
+  kind TEXT NOT NULL CHECK (kind IN ('CREATE','REPLACE','CANCEL')),
+  state TEXT NOT NULL CHECK (state IN ('PLANNED','DISPATCHED','ACKNOWLEDGED','IN_DOUBT','CLOSED')),
+  serializer_version INTEGER NOT NULL,
+  canonical_body TEXT NOT NULL,
+  target_broker_id TEXT NOT NULL DEFAULT '',
+  result_broker_id TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS protection_attempts_saga
+  ON protection_mutation_attempts(saga_id, generation, created_at);
 `
+
+type MutationKind string
+
+const (
+	MutationCreate  MutationKind = "CREATE"
+	MutationReplace MutationKind = "REPLACE"
+	MutationCancel  MutationKind = "CANCEL"
+)
+
+type MutationState string
+
+const (
+	MutationPlanned      MutationState = "PLANNED"
+	MutationDispatched   MutationState = "DISPATCHED"
+	MutationAcknowledged MutationState = "ACKNOWLEDGED"
+	MutationInDoubt      MutationState = "IN_DOUBT"
+	MutationClosed       MutationState = "CLOSED"
+)
+
+type MutationAttempt struct {
+	ID                string
+	SagaID            string
+	Generation        int64
+	Kind              MutationKind
+	State             MutationState
+	SerializerVersion int
+	CanonicalBody     string
+	TargetBrokerID    string
+	ResultBrokerID    string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+}
 
 type Repository struct{ db *sql.DB }
 
@@ -136,6 +187,102 @@ func (r *Repository) Get(ctx context.Context, id string) (Saga, error) {
 	return stored.Saga, err
 }
 
+func (r *Repository) recordAttempt(ctx context.Context, attempt MutationAttempt) error {
+	if err := attempt.validate(); err != nil {
+		return err
+	}
+	_, err := r.db.ExecContext(ctx, `INSERT INTO protection_mutation_attempts
+ (attempt_id,saga_id,generation,kind,state,serializer_version,canonical_body,target_broker_id,result_broker_id,created_at,updated_at)
+ VALUES (?,?,?,?,?,?,?,?,?,?,?)`, attempt.ID, attempt.SagaID, attempt.Generation, attempt.Kind, attempt.State,
+		attempt.SerializerVersion, attempt.CanonicalBody, attempt.TargetBrokerID, attempt.ResultBrokerID,
+		attempt.CreatedAt.UTC().Format(time.RFC3339Nano), attempt.UpdatedAt.UTC().Format(time.RFC3339Nano))
+	if err != nil {
+		return fmt.Errorf("protection: record mutation attempt %s: %w", attempt.ID, err)
+	}
+	return nil
+}
+
+func (r *Repository) markAttempt(ctx context.Context, id string, from, to MutationState, at time.Time, resultBrokerID string) error {
+	if id == "" || !validMutationState(from) || !validMutationState(to) || at.IsZero() || !validMutationStep(from, to) {
+		return fmt.Errorf("protection: invalid mutation attempt transition %s -> %s", from, to)
+	}
+	result, err := r.db.ExecContext(ctx, `UPDATE protection_mutation_attempts
+ SET state=?,result_broker_id=?,updated_at=? WHERE attempt_id=? AND state=?`,
+		to, resultBrokerID, at.UTC().Format(time.RFC3339Nano), id, from)
+	if err != nil {
+		return fmt.Errorf("protection: mark mutation attempt %s: %w", id, err)
+	}
+	n, err := result.RowsAffected()
+	if err != nil || n != 1 {
+		return fmt.Errorf("%w: mutation attempt %s state %s", ErrConcurrentUpdate, id, from)
+	}
+	return nil
+}
+
+func (r *Repository) Attempts(ctx context.Context, sagaID string) ([]MutationAttempt, error) {
+	rows, err := r.db.QueryContext(ctx, `SELECT attempt_id,saga_id,generation,kind,state,serializer_version,
+ canonical_body,target_broker_id,result_broker_id,created_at,updated_at
+	FROM protection_mutation_attempts WHERE saga_id=? ORDER BY rowid`, sagaID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []MutationAttempt
+	for rows.Next() {
+		var a MutationAttempt
+		var created, updated string
+		if err := rows.Scan(&a.ID, &a.SagaID, &a.Generation, &a.Kind, &a.State, &a.SerializerVersion,
+			&a.CanonicalBody, &a.TargetBrokerID, &a.ResultBrokerID, &created, &updated); err != nil {
+			return nil, err
+		}
+		a.CreatedAt, err = time.Parse(time.RFC3339Nano, created)
+		if err != nil {
+			return nil, err
+		}
+		a.UpdatedAt, err = time.Parse(time.RFC3339Nano, updated)
+		if err != nil {
+			return nil, err
+		}
+		if err := a.validate(); err != nil {
+			return nil, err
+		}
+		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
+func (a MutationAttempt) validate() error {
+	if strings.TrimSpace(a.ID) == "" || strings.TrimSpace(a.SagaID) == "" || a.Generation < 1 || !validMutationKind(a.Kind) || !validMutationState(a.State) || a.SerializerVersion != SerializerVersion || strings.TrimSpace(a.CanonicalBody) == "" || a.CreatedAt.IsZero() || a.UpdatedAt.Before(a.CreatedAt) {
+		return fmt.Errorf("protection: invalid mutation attempt")
+	}
+	if a.Kind == MutationCreate && a.TargetBrokerID != "" {
+		return fmt.Errorf("protection: create attempt carries target broker id")
+	}
+	if a.Kind != MutationCreate && strings.TrimSpace(a.TargetBrokerID) == "" {
+		return fmt.Errorf("protection: %s attempt lacks target broker id", a.Kind)
+	}
+	return nil
+}
+
+func validMutationKind(kind MutationKind) bool {
+	return kind == MutationCreate || kind == MutationReplace || kind == MutationCancel
+}
+
+func validMutationState(state MutationState) bool {
+	switch state {
+	case MutationPlanned, MutationDispatched, MutationAcknowledged, MutationInDoubt, MutationClosed:
+		return true
+	default:
+		return false
+	}
+}
+
+func validMutationStep(from, to MutationState) bool {
+	return (from == MutationPlanned && to == MutationDispatched) ||
+		(from == MutationDispatched && (to == MutationAcknowledged || to == MutationInDoubt || to == MutationClosed)) ||
+		(from == MutationInDoubt && (to == MutationAcknowledged || to == MutationClosed))
+}
+
 type storedSaga struct {
 	Saga
 	lastEventKind        EventKind
@@ -169,6 +316,51 @@ func (r *Repository) BeginReplace(ctx context.Context, id string, expectedRevisi
 
 func (r *Repository) MarkReplaceActive(ctx context.Context, id string, expectedRevision int64, at time.Time, attemptID, brokerID string) (Saga, error) {
 	return r.apply(ctx, id, expectedRevision, Event{Kind: EventReplaceActive, At: at, AttemptID: attemptID, BrokerID: brokerID})
+}
+
+func (r *Repository) BeginCancel(ctx context.Context, id string, expectedRevision int64, at time.Time, attemptID, brokerID string) (Saga, error) {
+	return r.apply(ctx, id, expectedRevision, Event{Kind: EventBeginCancel, At: at, AttemptID: attemptID, BrokerID: brokerID})
+}
+
+func (r *Repository) MarkCancelClosed(ctx context.Context, id string, expectedRevision int64, at time.Time, attemptID, brokerID string) (Saga, error) {
+	return r.apply(ctx, id, expectedRevision, Event{Kind: EventCancelClosed, At: at, AttemptID: attemptID, BrokerID: brokerID})
+}
+
+func (r *Repository) RecoverActive(ctx context.Context, id string, expectedRevision int64, at time.Time, brokerID string, trigger, quantity int64) (Saga, error) {
+	return r.apply(ctx, id, expectedRevision, Event{Kind: EventRecoveryActive, At: at, BrokerID: brokerID, Trigger: trigger, Quantity: quantity})
+}
+
+func (r *Repository) RecoverTriggered(ctx context.Context, id string, expectedRevision int64, at time.Time, brokerID string) (Saga, error) {
+	return r.apply(ctx, id, expectedRevision, Event{Kind: EventRecoveryTriggered, At: at, BrokerID: brokerID})
+}
+
+func (r *Repository) RecoverClosed(ctx context.Context, id string, expectedRevision int64, at time.Time, brokerID string) (Saga, error) {
+	return r.apply(ctx, id, expectedRevision, Event{Kind: EventRecoveryClosed, At: at, BrokerID: brokerID})
+}
+
+func (r *Repository) List(ctx context.Context, scope Scope) ([]Saga, error) {
+	if err := scope.Validate(); err != nil {
+		return nil, err
+	}
+	rows, err := r.db.QueryContext(ctx, `SELECT
+ saga_id,account_ref,profile,market,symbol,generation,revision,state,trigger,quantity,
+ pending_trigger,pending_quantity,client_order_id,attempt_id,broker_id,previous_broker_id,reconcile_reason,updated_at,
+ last_event_kind,last_event_fingerprint
+ FROM protection_sagas WHERE account_ref=? AND profile=? AND market=? AND symbol=? ORDER BY generation,saga_id`,
+		scope.AccountRef, scope.Profile, scope.Market, scope.Symbol)
+	if err != nil {
+		return nil, fmt.Errorf("protection: list sagas: %w", err)
+	}
+	defer rows.Close()
+	var out []Saga
+	for rows.Next() {
+		stored, scanErr := scanStoredSaga(rows)
+		if scanErr != nil {
+			return nil, scanErr
+		}
+		out = append(out, stored.Saga)
+	}
+	return out, rows.Err()
 }
 
 func (r *Repository) MarkTriggerObserved(ctx context.Context, id string, expectedRevision int64, at time.Time, brokerID string) (Saga, error) {
@@ -260,6 +452,16 @@ func exactEventResult(stored storedSaga, event Event) bool {
 		return saga.State == StateReplacing && saga.AttemptID == event.AttemptID && saga.PendingTrigger == event.Trigger && saga.PendingQuantity == quantity && saga.PreviousBrokerID == saga.BrokerID
 	case EventReplaceActive:
 		return saga.State == StateActive && saga.AttemptID == event.AttemptID && saga.BrokerID == event.BrokerID
+	case EventBeginCancel:
+		return saga.State == StateCancelling && saga.AttemptID == event.AttemptID && saga.BrokerID == event.BrokerID
+	case EventCancelClosed:
+		return saga.State == StateClosed && saga.AttemptID == event.AttemptID && saga.BrokerID == event.BrokerID
+	case EventRecoveryActive:
+		return saga.State == StateActive && saga.BrokerID == event.BrokerID && saga.Trigger == event.Trigger && saga.Quantity == event.Quantity
+	case EventRecoveryTriggered:
+		return saga.State == StateTriggered && saga.BrokerID == event.BrokerID
+	case EventRecoveryClosed:
+		return saga.State == StateClosed && saga.BrokerID == event.BrokerID
 	case EventTriggerObserved:
 		return saga.State == StateTriggered && saga.BrokerID == event.BrokerID
 	case EventClose:
@@ -318,7 +520,7 @@ func scanStoredSaga(row rowScanner) (storedSaga, error) {
 
 func validEventKind(kind EventKind) bool {
 	switch kind {
-	case EventBeginRegistration, EventRegistrationActive, EventMutationUnknown, EventBeginReplace, EventReplaceActive, EventTriggerObserved, EventClose, EventDiscrepancy:
+	case EventBeginRegistration, EventRegistrationActive, EventMutationUnknown, EventBeginReplace, EventReplaceActive, EventBeginCancel, EventCancelClosed, EventRecoveryActive, EventRecoveryTriggered, EventRecoveryClosed, EventTriggerObserved, EventClose, EventDiscrepancy:
 		return true
 	default:
 		return false

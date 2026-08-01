@@ -137,6 +137,27 @@ runtime provisioning is absent and the system remains `UNWIRED/OFF`; this task d
 LIVE toggle, broker mutation or `ProtectionReady=WIRED`. Independent Manager security review of the
 exact implementation commit is still required before a045 integration.
 
+## Full dormant core implementation candidate · 2026-08-01
+
+The candidate now adds the official-only adapter and complete controller behavior behind an
+unmintable `Activation`. Create/replace/cancel attempts are durable before dispatch; response loss,
+missing identity, unknown lifecycle, cancel disappearance, mismatched readback, pagination overflow,
+and deadline misses all latch entry closed and return `IN_DOUBT`. Recovery reads bounded OPEN and
+CLOSED official pages and correlates exact broker/client identity. The a041 bridge accepts only its
+typed immutable snapshot and one-way trigger movement. Flatten remains cancel-first and yields only
+a two-second exact-scope one-shot authorization after authoritative sellable quantity.
+
+The StockOS-style `exit-protection` lane console is status-first and defaults to OFF/UNWIRED. It has
+no text, number, textarea, select, contenteditable, free symbol/trigger/quantity/reason, typed
+confirmation, LIVE toggle, or enable-all control. The only submitted values are hidden CSRF/opaque
+server capabilities and the required weakening checkbox; the server enforces the three-second delay.
+
+This is an implementation candidate awaiting independent review and final gate, not self-approval.
+No production constructor/minter/provisioning/app wiring was added, no toggle was changed, and no
+LIVE order was sent. A later operational change must separately provision signed evidence, preserve
+OFF by default, pass the full gate, record explicit operator approval, and prove recovery/rollback
+readiness before any activation.
+
 ## Dependency-integrated dormant rebase · 2026-08-01
 
 - Integration base: `70aabdc9936de08df458da13203437ba7d2dd572` (a041/a042 complete).

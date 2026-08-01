@@ -26,6 +26,7 @@ type apiConditionalCondition struct {
 // pointer so a JSON null (SINGLE) stays nil rather than a zero-value leg.
 type apiConditionalOrder struct {
 	ConditionalOrderID string                   `json:"conditionalOrderId"`
+	ClientOrderID      string                   `json:"clientOrderId"`
 	Type               string                   `json:"type"`
 	Status             string                   `json:"status"`
 	Symbol             string                   `json:"symbol"`
@@ -101,8 +102,9 @@ func (c *Client) ConditionalOrders(ctx context.Context, status, symbol, cursor s
 // It is additive: ConditionalOrders, ConditionalOrder and the two adapters are
 // untouched, and this reads the same endpoint through the same getAcct path.
 type RawConditionalOrder struct {
-	ID     string
-	Symbol string
+	ID            string
+	ClientOrderID string
+	Symbol        string
 	// Market is the payload's own "KR"/"US" — unlike the plain order endpoint,
 	// this one carries it, so nothing is derived here.
 	Market string

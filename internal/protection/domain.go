@@ -58,6 +58,7 @@ const (
 	StateRegistering State = "REGISTERING"
 	StateActive      State = "ACTIVE"
 	StateReplacing   State = "REPLACING"
+	StateCancelling  State = "CANCELLING"
 	StateTriggered   State = "TRIGGERED"
 	StateClosed      State = "CLOSED"
 	StateReconcile   State = "RECONCILE"
@@ -93,6 +94,11 @@ const (
 	EventMutationUnknown    EventKind = "MUTATION_UNKNOWN"
 	EventBeginReplace       EventKind = "BEGIN_REPLACE"
 	EventReplaceActive      EventKind = "REPLACE_ACTIVE"
+	EventBeginCancel        EventKind = "BEGIN_CANCEL"
+	EventCancelClosed       EventKind = "CANCEL_CLOSED"
+	EventRecoveryActive     EventKind = "RECOVERY_ACTIVE"
+	EventRecoveryTriggered  EventKind = "RECOVERY_TRIGGERED"
+	EventRecoveryClosed     EventKind = "RECOVERY_CLOSED"
 	EventTriggerObserved    EventKind = "TRIGGER_OBSERVED"
 	EventClose              EventKind = "CLOSE"
 	EventDiscrepancy        EventKind = "DISCREPANCY"
@@ -130,7 +136,7 @@ func Transition(in Saga, event Event) (Saga, error) {
 		}
 		out.State, out.BrokerID = StateActive, event.BrokerID
 	case EventMutationUnknown:
-		if (in.State != StateRegistering && in.State != StateReplacing) || event.AttemptID != in.AttemptID || event.BrokerID != "" {
+		if (in.State != StateRegistering && in.State != StateReplacing && in.State != StateCancelling) || event.AttemptID != in.AttemptID || event.BrokerID != "" {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		out.State = StateInDoubt
@@ -165,6 +171,59 @@ func Transition(in Saga, event Event) (Saga, error) {
 		out.PendingTrigger = 0
 		out.PendingQuantity = 0
 		out.Generation++
+	case EventBeginCancel:
+		if (in.State != StateActive && in.State != StateReconcile) || strings.TrimSpace(event.AttemptID) == "" || event.AttemptID == in.AttemptID || event.BrokerID != in.BrokerID || event.BrokerID == "" {
+			return in, invalidTransition(in.State, event.Kind)
+		}
+		out.State = StateCancelling
+		out.AttemptID = event.AttemptID
+		out.ReconcileReason = ""
+		out.PendingTrigger = 0
+		out.PendingQuantity = 0
+	case EventCancelClosed:
+		if in.State != StateCancelling || event.AttemptID != in.AttemptID || event.BrokerID != in.BrokerID {
+			return in, invalidTransition(in.State, event.Kind)
+		}
+		out.State = StateClosed
+	case EventRecoveryActive:
+		if (in.State != StateRegistering && in.State != StateReplacing && in.State != StateInDoubt && in.State != StateReconcile) || strings.TrimSpace(event.BrokerID) == "" || event.Trigger < 1 || event.Quantity < 1 {
+			return in, invalidTransition(in.State, event.Kind)
+		}
+		expectedTrigger, expectedQuantity := in.Trigger, in.Quantity
+		if in.PendingTrigger > 0 {
+			expectedTrigger, expectedQuantity = in.PendingTrigger, in.PendingQuantity
+		}
+		if event.Trigger != expectedTrigger || event.Quantity != expectedQuantity {
+			return in, invalidTransition(in.State, event.Kind)
+		}
+		if in.State == StateReplacing || (in.PendingTrigger > 0 && event.BrokerID != in.BrokerID) {
+			out.Generation++
+		}
+		out.State = StateActive
+		out.BrokerID = event.BrokerID
+		out.Trigger = expectedTrigger
+		out.Quantity = expectedQuantity
+		out.PendingTrigger = 0
+		out.PendingQuantity = 0
+		out.ReconcileReason = ""
+	case EventRecoveryTriggered:
+		if in.State == StateClosed || strings.TrimSpace(event.BrokerID) == "" {
+			return in, invalidTransition(in.State, event.Kind)
+		}
+		out.State = StateTriggered
+		out.BrokerID = event.BrokerID
+		out.PendingTrigger = 0
+		out.PendingQuantity = 0
+		out.ReconcileReason = ""
+	case EventRecoveryClosed:
+		if in.State == StateClosed || strings.TrimSpace(event.BrokerID) == "" {
+			return in, invalidTransition(in.State, event.Kind)
+		}
+		out.State = StateClosed
+		out.BrokerID = event.BrokerID
+		out.PendingTrigger = 0
+		out.PendingQuantity = 0
+		out.ReconcileReason = ""
 	case EventTriggerObserved:
 		if in.State != StateActive || event.BrokerID != in.BrokerID || event.AttemptID != "" {
 			return in, invalidTransition(in.State, event.Kind)
@@ -235,6 +294,10 @@ func (s Saga) validateStateFields() error {
 		if !nonempty(s.AttemptID) || !nonempty(s.BrokerID) || !nonempty(s.PreviousBrokerID) || s.PreviousBrokerID != s.BrokerID || s.ReconcileReason != "" || s.PendingTrigger < s.Trigger || s.PendingQuantity < 1 {
 			return fmt.Errorf("%w: REPLACING fields are inconsistent", ErrInvalidSaga)
 		}
+	case StateCancelling:
+		if !nonempty(s.AttemptID) || !nonempty(s.BrokerID) || s.ReconcileReason != "" || !noPending {
+			return fmt.Errorf("%w: CANCELLING fields are inconsistent", ErrInvalidSaga)
+		}
 	case StateTriggered:
 		if !nonempty(s.BrokerID) || s.ReconcileReason != "" || !noPending {
 			return fmt.Errorf("%w: TRIGGERED fields are inconsistent", ErrInvalidSaga)
@@ -257,7 +320,7 @@ func (s Saga) validateStateFields() error {
 
 func validState(state State) bool {
 	switch state {
-	case StatePlanned, StateRegistering, StateActive, StateReplacing, StateTriggered, StateClosed, StateReconcile, StateInDoubt:
+	case StatePlanned, StateRegistering, StateActive, StateReplacing, StateCancelling, StateTriggered, StateClosed, StateReconcile, StateInDoubt:
 		return true
 	default:
 		return false
@@ -320,13 +383,22 @@ type ConditionalBody struct {
 	TriggerSource     string `json:"trigger_source"`
 	Trigger           int64  `json:"trigger"`
 	Quantity          int64  `json:"quantity"`
+	ExpireDate        string `json:"expire_date"`
 }
 
 func (b ConditionalBody) CanonicalJSON() ([]byte, error) {
-	if b.SerializerVersion != SerializerVersion || strings.TrimSpace(b.ClientOrderID) == "" || strings.TrimSpace(b.AccountRef) == "" || strings.TrimSpace(b.Symbol) == "" || (b.Market != "KR" && b.Market != "US") || b.Side != "SELL" || b.ConditionalType != "SINGLE" || b.OrderType != "MARKET" || b.TriggerSource != "LAST_TRADE" || b.Trigger < 1 || b.Quantity < 1 {
+	if b.SerializerVersion != SerializerVersion || strings.TrimSpace(b.ClientOrderID) == "" || strings.TrimSpace(b.AccountRef) == "" || strings.TrimSpace(b.Symbol) == "" || (b.Market != "KR" && b.Market != "US") || b.Side != "SELL" || b.ConditionalType != "SINGLE" || b.OrderType != "MARKET" || b.TriggerSource != "LAST_TRADE" || b.Trigger < 1 || b.Quantity < 1 || !validExpireDate(b.ExpireDate) {
 		return nil, ErrInvalidBody
 	}
 	return json.Marshal(b)
+}
+
+func validExpireDate(value string) bool {
+	if len(value) != len("2006-01-02") {
+		return false
+	}
+	parsed, err := time.Parse("2006-01-02", value)
+	return err == nil && parsed.Format("2006-01-02") == value
 }
 
 // Gateway is intentionally only a contract. The dormant change has no
@@ -340,11 +412,13 @@ type Gateway interface {
 }
 
 type BrokerProtection struct {
-	Scope    Scope
-	ID       string
-	Quantity int64
-	Trigger  int64
-	Terminal bool
+	Scope         Scope
+	ID            string
+	ClientOrderID string
+	Quantity      int64
+	Trigger       int64
+	Terminal      bool
+	Triggered     bool
 }
 
 type CancelObservation struct {

@@ -15,3 +15,8 @@
 | B11 | close exact broker | close lineage test | empty broker wildcard | exact only |
 | B12 | discrepancy exact reason | event-specific suite | partial result match | exact only |
 | B13 | unsupported event kind | private invariant/default test | generic public event | false |
+| B14 | cancel result state matches exactly | controller/repository cancel suite | cancel lineage absent | pass |
+| B15 | cancel attempt ID matches exactly | controller/repository cancel suite | cancel lineage absent | pass |
+| B16 | recovered ACTIVE matches broker/trigger/quantity | response-loss recovery suite | recovery lineage absent | pass |
+| B17 | recovered TRIGGERED matches broker identity | reconciliation suite | recovery lineage absent | pass |
+| B18 | recovered CLOSED matches broker identity | reconciliation suite | recovery lineage absent | pass |
