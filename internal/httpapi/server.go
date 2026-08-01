@@ -3,6 +3,7 @@ package httpapi
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -25,14 +26,41 @@ func LimitRequestBody(next http.Handler) http.Handler {
 		next = http.NotFoundHandler()
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Preserve the standard no-body sentinel. Read and stream routes use its
-		// identity to reject actual bodies, and wrapping it would turn every
-		// legitimate GET/HEAD into BODY_NOT_SUPPORTED.
-		if r.Body != nil && r.Body != http.NoBody {
+		// HTTP/2 may represent a bodyless END_STREAM request with a non-NoBody
+		// EOF reader. ContentLength is the protocol-neutral inbound signal:
+		// zero is known empty; unknown (-1) and declared (>0) stay bounded.
+		if requestHasBody(r) {
 			r.Body = http.MaxBytesReader(w, r.Body, MaxRequestBodyBytes)
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// requestHasBody classifies a server-parsed request as declared or unknown-length.
+// A positive or malformed Content-Length preserved by an HTTP/2 parser remains
+// fail-closed even when net/http normalizes the ContentLength field to zero.
+func requestHasBody(request *http.Request) bool {
+	if request == nil {
+		return false
+	}
+	if request.ContentLength != 0 {
+		return true
+	}
+	for _, raw := range request.Header.Values("Content-Length") {
+		for _, part := range strings.Split(raw, ",") {
+			value := strings.TrimSpace(part)
+			for _, digit := range value {
+				if digit < '0' || digit > '9' {
+					return true
+				}
+			}
+			length, err := strconv.ParseUint(value, 10, 64)
+			if err != nil || length != 0 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // NewServer pins the resource limits that are part of the public daemon

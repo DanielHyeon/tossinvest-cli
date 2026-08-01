@@ -76,7 +76,7 @@ func (r *router) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 		r.writeError(w, request, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "읽기 resource는 GET 또는 HEAD만 허용합니다.", nil)
 		return
 	}
-	if request.Body != nil && request.Body != http.NoBody {
+	if requestHasBody(request) {
 		r.writeError(w, request, http.StatusBadRequest, "BODY_NOT_SUPPORTED", "읽기 resource는 request body를 받지 않습니다.", []ErrorDetail{{
 			Field: "body", Code: "UNEXPECTED_VALUE", Message: "request body를 제거하세요.",
 		}})
@@ -157,7 +157,7 @@ func (r *router) serveStream(w http.ResponseWriter, request *http.Request) {
 		r.writeError(w, request, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "stream은 GET 또는 HEAD만 허용합니다.", nil)
 		return
 	}
-	if request.Body != nil && request.Body != http.NoBody {
+	if requestHasBody(request) {
 		r.writeError(w, request, http.StatusBadRequest, "BODY_NOT_SUPPORTED", "stream은 request body를 받지 않습니다.", nil)
 		return
 	}

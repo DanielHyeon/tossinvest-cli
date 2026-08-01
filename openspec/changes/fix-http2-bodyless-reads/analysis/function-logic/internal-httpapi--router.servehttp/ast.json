@@ -1,0 +1,303 @@
+{
+  "file": "internal/httpapi/router.go",
+  "source_sha256": "89a50af9872f605a1e85dcd4fbf30f967313ca8eb79678491ea26fa23b23476e",
+  "package": "httpapi",
+  "function": "ServeHTTP",
+  "receiver": "router",
+  "signature": "router.ServeHTTP(params=2, results=0)",
+  "start": {
+    "line": 51,
+    "column": 1
+  },
+  "end": {
+    "line": 98,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 66,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 77,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 83,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 2
+      },
+      "text": "setResponseHeaders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 4
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 4
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 4
+      },
+      "text": "r.writeError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 3
+      },
+      "text": "mutation.ServeHTTP"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 3
+      },
+      "text": "r.serveStream"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 21
+      },
+      "text": "readResourceForPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 3
+      },
+      "text": "r.writeError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 3
+      },
+      "text": "r.writeError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 5
+      },
+      "text": "requestHasBody"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 3
+      },
+      "text": "r.writeError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 3
+      },
+      "text": "r.writeError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 15
+      },
+      "text": "r.read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 3
+      },
+      "text": "r.writeError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 2
+      },
+      "text": "r.writeEnvelope"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

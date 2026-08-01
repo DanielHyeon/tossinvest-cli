@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-HTTP2-BODYLESS",
+  "title": "Accept bodyless HTTP/2 API reads",
+  "feature": "FEAT-TOS-012",
+  "intent": "active",
+  "openspec": {
+    "change_id": "fix-http2-bodyless-reads",
+    "path": "openspec/changes/fix-http2-bodyless-reads"
+  },
+  "acceptance": [
+    "Bodyless HTTP/2 GET, HEAD and SSE requests reach their read handlers",
+    "Known-length, unknown-length and malformed declared bodies remain fail-closed",
+    "HTTP/1.1 behavior, mutation limits and LIVE approval invariants remain unchanged",
+    "Actual TLS HTTP/2 regression tests and deployment canaries pass"
+  ]
+}

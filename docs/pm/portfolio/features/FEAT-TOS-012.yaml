@@ -3,5 +3,5 @@
   "title": "Mobile and service API",
   "epic": "EPIC-TOS-003",
   "intent": "active",
-  "stories": ["STORY-TOS-a051"]
+  "stories": ["STORY-TOS-a051", "STORY-TOS-HTTP2-BODYLESS"]
 }

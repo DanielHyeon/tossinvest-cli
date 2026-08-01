@@ -1,0 +1,3 @@
+schema: spec-driven
+created: 2026-08-01
+goal: Accept bodyless HTTP/2 operator API reads without weakening body rejection

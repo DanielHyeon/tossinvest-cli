@@ -1,0 +1,102 @@
+{
+  "file": "internal/httpapi/server.go",
+  "source_sha256": "0ad94a5eb58f2659d5282d0ac709bfb8ad7ff81c51363c54c873f4f37f424e06",
+  "package": "httpapi",
+  "function": "LimitRequestBody",
+  "signature": "LimitRequestBody(params=1, results=1)",
+  "start": {
+    "line": 24,
+    "column": 1
+  },
+  "end": {
+    "line": 37,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 10
+      },
+      "text": "http.NotFoundHandler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 9
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 6
+      },
+      "text": "requestHasBody"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 13
+      },
+      "text": "http.MaxBytesReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 3
+      },
+      "text": "next.ServeHTTP"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 26,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 33,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,162 @@
+{
+  "file": "internal/httpapi/server.go",
+  "source_sha256": "0ad94a5eb58f2659d5282d0ac709bfb8ad7ff81c51363c54c873f4f37f424e06",
+  "package": "httpapi",
+  "function": "requestHasBody",
+  "signature": "requestHasBody(params=1, results=1)",
+  "start": {
+    "line": 42,
+    "column": 1
+  },
+  "end": {
+    "line": 64,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 52,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 5
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 58,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 47,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 59,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 22
+      },
+      "text": "request.Header.Values"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 24
+      },
+      "text": "strings.Split"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 13
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 19
+      },
+      "text": "strconv.ParseUint"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 57,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

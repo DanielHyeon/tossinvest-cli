@@ -41,6 +41,7 @@
 | `automate-soak-openapi-onboarding` | STORY-TOS-037 | archived |
 | `fix-adoption-console-truth` | STORY-TOS-038 | archived |
 | `streamline-trading-views` | STORY-TOS-039 | archived |
+| `fix-http2-bodyless-reads` | STORY-TOS-HTTP2-BODYLESS | in_progress |
 | `a040-adopt-stockos-openspec-naming` | STORY-TOS-a040 | implemented |
 | `a041-complete-exit-line-contract` | STORY-TOS-a041 | archived |
 | `a042-persist-exit-line-snapshots` | STORY-TOS-a042 | archived |
