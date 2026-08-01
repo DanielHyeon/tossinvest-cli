@@ -52,4 +52,4 @@
 | `a048-add-market-aware-scheduler` | STORY-TOS-a048 | implemented |
 | `a049-add-lane-performance` | STORY-TOS-a049 | implemented |
 | `a050-add-strategy-optimization` | STORY-TOS-a050 | implemented |
-| `a051-add-httpapi-daemon` | STORY-TOS-a051 | in_progress |
+| `a051-add-httpapi-daemon` | STORY-TOS-a051 | implemented |

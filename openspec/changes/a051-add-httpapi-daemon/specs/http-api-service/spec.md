@@ -42,8 +42,8 @@ public bind 또는 신뢰하지 않은 forwarded origin은 fail-closed로 거부
 - **WHEN** service가 private boundary 없이 wildcard public interface에 bind되도록 설정된다
 - **THEN** startup을 거부하고 수정 방법을 기록한다
 
-### Requirement: 제한 API 쓰기는 신원·감사·동시성 계약을 유지한다
-mutation endpoint는 browser session+CSRF+origin 또는 mTLS identity/서명된 단기 capability를 요구해야 한다 (SHALL). `actor/client + method + resource + canonical body digest + idempotency key` scope, `If-Match`, audit와 narrow command service를 적용해야 한다 (SHALL). signed capability는 local human channel의 one-time nonce와 60초 expiry에 묶여야 한다 (SHALL).
+### Requirement: 제한 API 쓰기는 capability-only 신원·감사·동시성 계약을 유지한다
+a051 daemon의 mutation endpoint는 local human approval channel이 발급한 signed capability만 인증 수단으로 요구해야 한다 (SHALL). shared mutation guard가 지원하는 browser session+CSRF+origin 및 enrolled mTLS identity는 이 daemon에 wiring하거나 OpenAPI 인증 수단으로 광고해서는 안 된다 (MUST NOT). `actor/client + method + resource + canonical body digest + idempotency key` scope, `If-Match`, audit와 narrow command service를 적용해야 한다 (SHALL). signed capability는 one-time nonce와 최대 60초 expiry 및 canonical HTTPS audience에 묶여야 한다 (SHALL).
 LIVE/gate/kill-switch/protection 약화와 activation-manifest mutation endpoint를 제공해서는 안 된다 (MUST NOT).
 
 #### Scenario: stale settings write
@@ -61,6 +61,10 @@ LIVE/gate/kill-switch/protection 약화와 activation-manifest mutation endpoint
 #### Scenario: native capability 재사용
 - **WHEN** 이미 소비했거나 60초가 지난 signed capability를 다시 제출한다
 - **THEN** 인증을 거부하고 mutation과 audit commit을 만들지 않는다
+
+#### Scenario: daemon에 wiring하지 않은 인증 mode
+- **WHEN** client가 signed capability 없이 browser session/CSRF 또는 client certificate만 제시한다
+- **THEN** a051 daemon은 mutation identity를 인정하지 않고 401을 반환하며 command를 실행하지 않는다
 
 ### Requirement: SSE와 HTTP resource는 정량 한도를 가진다
 daemon은 기본 최대 SSE client 32, client당 queue 64 event, heartbeat 15초와 queue-full disconnect를 강제해야 한다 (SHALL). request body 256 KiB와 header/read timeout 5초도 강제해야 한다 (SHALL).

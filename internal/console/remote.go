@@ -3,7 +3,6 @@ package console
 import (
 	"crypto/sha256"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary"
 )
 
 const (
@@ -190,24 +191,10 @@ func parseRemotePublicURL(raw string) (*url.URL, error) {
 }
 
 func loadRemoteCertificate(certFile, keyFile, host string) (tls.Certificate, error) {
-	certificate, err := tls.LoadX509KeyPair(certFile, keyFile)
+	certificate, err := networkboundary.LoadServerCertificate(certFile, keyFile, host, time.Now())
 	if err != nil {
-		return tls.Certificate{}, fmt.Errorf("console: loading TLS certificate: %w", err)
+		return tls.Certificate{}, fmt.Errorf("console: %w", err)
 	}
-	if len(certificate.Certificate) == 0 {
-		return tls.Certificate{}, fmt.Errorf("console: TLS certificate chain is empty")
-	}
-	// tls.LoadX509KeyPair already proved that the private key matches. Parse the
-	// leaf directly for the hostname check without building a trust chain: a
-	// private VPN may legitimately use its own CA.
-	parsed, err := x509.ParseCertificate(certificate.Certificate[0])
-	if err != nil {
-		return tls.Certificate{}, fmt.Errorf("console: parsing TLS certificate: %w", err)
-	}
-	if err := parsed.VerifyHostname(host); err != nil {
-		return tls.Certificate{}, fmt.Errorf("console: TLS certificate does not cover public host %q: %w", host, err)
-	}
-	certificate.Leaf = parsed
 	return certificate, nil
 }
 
@@ -240,28 +227,12 @@ func (rr *remoteRuntime) peerAllowed(peer netip.Addr) bool {
 }
 
 func (rr *remoteRuntime) sameOrigin(r *http.Request) bool {
-	originValues, originPresent := r.Header[http.CanonicalHeaderKey("Origin")]
-	if originPresent {
-		if len(originValues) != 1 {
-			return false
-		}
-		origin := strings.TrimSpace(originValues[0])
-		return origin != "" && origin == rr.origin
-	}
-
-	refererValues, refererPresent := r.Header[http.CanonicalHeaderKey("Referer")]
-	if !refererPresent || len(refererValues) != 1 {
+	expected, err := networkboundary.ParseOrigin(rr.origin)
+	if err != nil {
 		return false
 	}
-	referer := strings.TrimSpace(refererValues[0])
-	if referer == "" {
-		return false
-	}
-	u, err := url.Parse(referer)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return false
-	}
-	return u.Scheme+"://"+u.Host == rr.origin
+	matches, present := networkboundary.ExplicitOriginMatches(r, expected)
+	return present && matches
 }
 
 func (rr *remoteRuntime) sameOriginForMutation(r *http.Request) bool {
@@ -270,7 +241,8 @@ func (rr *remoteRuntime) sameOriginForMutation(r *http.Request) bool {
 	if originPresent || refererPresent {
 		return rr.sameOrigin(r)
 	}
-	return r.TLS != nil && "https://"+r.Host == rr.origin
+	expected, err := networkboundary.ParseOrigin(rr.origin)
+	return err == nil && networkboundary.OriginMatches(r, expected, nil)
 }
 
 func (rr *remoteRuntime) security(next http.Handler) http.Handler {

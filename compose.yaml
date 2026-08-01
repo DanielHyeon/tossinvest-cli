@@ -21,6 +21,8 @@ services:
       - --bind
       - 0.0.0.0
       - --allowed-cidr
+      - 127.0.0.0/8
+      - --allowed-cidr
       - ${TOSSOS_CONTAINER_CIDR:-172.30.85.0/24}
       - --allowed-cidr
       - ${TOSSOS_VPN_CIDR:?set the VPN client CIDR}
@@ -79,6 +81,84 @@ services:
         max-file: "3"
     networks:
       - tossos
+
+  httpapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tossos:local
+    user: "${TOSSOS_UID:?set a non-root host uid}:${TOSSOS_GID:?set a non-root host gid}"
+    environment:
+      TOSSOS_DATA_DIR: /var/lib/tossos/data
+      TOSSOS_API_PUBLIC_URL: ${TOSSOS_API_PUBLIC_URL:?set the canonical private API HTTPS URL}
+    command:
+      - --config-dir
+      - /var/lib/tossos/config
+      - --session-file
+      - /run/tossos/session.json
+      - httpapi
+      - --port
+      - "37086"
+      - --bind
+      - ${TOSSOS_HTTPAPI_CONTAINER_IP:-172.30.85.86}
+      - --allowed-cidr
+      - 127.0.0.0/8
+      - --allowed-cidr
+      - ${TOSSOS_CONTAINER_CIDR:-172.30.85.0/24}
+      - --allowed-cidr
+      - ${TOSSOS_VPN_CIDR:?set the VPN client CIDR}
+      - --public-url
+      - ${TOSSOS_API_PUBLIC_URL:?set the canonical private API HTTPS URL}
+      - --tls-cert
+      - /run/tossos/tls.crt
+      - --tls-key
+      - /run/tossos/tls.key
+    ports:
+      - "${TOSSOS_VPN_BIND_IP:?set the host VPN IP}:${TOSSOS_API_PORT:-37086}:37086"
+    volumes:
+      - type: bind
+        source: ${TOSSOS_CONFIG_DIR:?set the host config directory}
+        target: /var/lib/tossos/config
+      - type: bind
+        source: ${TOSSOS_DATA_DIR:?set the host data directory}
+        target: /var/lib/tossos/data
+    secrets:
+      - source: broker-session
+        target: /run/tossos/session.json
+      - source: tls-cert
+        target: /run/tossos/tls.crt
+      - source: tls-key
+        target: /run/tossos/tls.key
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m
+      - /run/tossos:rw,noexec,nosuid,nodev,size=1m,uid=${TOSSOS_UID:?set a non-root host uid},gid=${TOSSOS_GID:?set a non-root host gid},mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    pids_limit: 128
+    mem_limit: 384m
+    cpus: 0.75
+    restart: unless-stopped
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'api_host=$${TOSSOS_API_PUBLIC_URL#https://}; wget --header="Host: $$api_host" --no-check-certificate -qO- https://${TOSSOS_HTTPAPI_CONTAINER_IP:-172.30.85.86}:37086/api/v1/engine >/dev/null'
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      tossos:
+        ipv4_address: ${TOSSOS_HTTPAPI_CONTAINER_IP:-172.30.85.86}
 
 secrets:
   broker-session:

@@ -2,6 +2,15 @@
 
 운영 측면의 가이드 — API 회귀 감시 cron 설정, 알림 채널 등.
 
+## Private operator API daemon
+
+모바일/VPN용 JSON과 SSE는 console과 별도 `httpapi` service가 제공한다. 구성, 고정
+resource, 무입력 UX 계약, signed capability와 API-only rollback 절차는
+[Private operator HTTP API](httpapi.md)를 따른다. Compose publish는
+`${TOSSOS_VPN_BIND_IP}:${TOSSOS_API_PORT}:37086`이고 공용/LAN interface 사용은
+금지한다. 이 service는 engine autostart를 호출하지 않으며 배포 과정도 운영 toggle을
+바꾸지 않는다.
+
 ## VPN 원격 콘솔
 
 기본 `tossctl console`은 계속 `127.0.0.1` HTTP와 터미널에 출력된 session URL만

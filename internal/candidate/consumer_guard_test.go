@@ -69,6 +69,7 @@ var verdictSymbols = map[string]bool{
 var verdictReaders = map[string]string{
 	"cmd/tossctl/candidate.go":                     "renders the scan report's veto block",
 	"cmd/tossctl/console.go":                       "wires the /signals seam to candidate.Assess",
+	"cmd/tossctl/httpapi_reader.go":                "projects the same read-only assessed verdict for the private operator API",
 	"internal/console/signals.go":                  "renders the /signals screen",
 	"cmd/tossctl/candidate_test.go":                "asserts the scan report",
 	"cmd/tossctl/candidate_review_test.go":         "asserts the report's notes and reducer use",

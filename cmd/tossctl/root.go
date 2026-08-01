@@ -178,6 +178,11 @@ func newRootCmd() *cobra.Command {
 		// interlock clause 6 is an unmet constant until protective orders land —
 		// and nothing existing changes.
 		newEngineCmd(opts),
+		// httpapi is the private, versioned operator read service. It owns no
+		// engine lifecycle or order path and never participates in console
+		// autostart; mutations, when explicitly configured, are restricted to
+		// the optimization command boundary.
+		newHTTPAPICmd(opts),
 		// candidate is the read-only discovery surface (change add-candidate-discovery,
 		// tasks 5.1–5.4): one scan, and the loop that repeats it while enforcing
 		// retention and the free-space floor. It places nothing — the package behind

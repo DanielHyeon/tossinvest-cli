@@ -17,7 +17,7 @@
 - `/api/v1/stream` SSE와 schema/sequence/reconnect 계약을 추가한다.
 - local/VPN read-only REST/SSE는 애플리케이션 토큰을 요구하지 않되 private bind와 TLS termination을 요구한다.
 - 쓰기 origin은 `scheme + host + port`만 비교하고 path는 비교하지 않는다.
-- browser write는 기존 session+CSRF+origin을 유지하고 VPN native write는 mTLS identity 또는 서명된 단기 capability, idempotency, `If-Match`와 audit를 요구한다.
+- a051 daemon의 제한 write는 local human approval channel이 발급한 서명 단기 capability만 인증 수단으로 사용하고 idempotency, `If-Match`와 audit를 요구한다. shared mutation guard의 browser session+CSRF+origin 및 enrolled mTLS 지원은 재사용 가능한 기반 기능이지만 이 daemon에는 wiring하지 않는다.
 - LIVE/gate/kill-switch/protection 약화/activation-manifest mutation은 remote API에 제공하지 않는다.
 - optimization API는 a050과 동일한 여섯 category ID·순서, field 설명, 기본 상태/값, desired/effective 값, 제약, 적용 시점과 provenance를 반환해 모바일에서도 웹과 같은 의미를 사용한다.
 - **비목표**: 공용 인터넷 노출, 사용자 계정 시스템, 모바일 앱 자체 구현.

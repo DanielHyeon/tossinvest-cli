@@ -56,7 +56,7 @@
     - STORY-TOS-a043 — Show exit-line truth in positions and orders [implemented] → `a043-show-exit-lines-in-trading-views`
     - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [implemented] → `a044-manage-position-exit-policies`
   - FEAT-TOS-012 — Mobile and service API [active]
-    - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [in_progress] → `a051-add-httpapi-daemon`
+    - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [implemented] → `a051-add-httpapi-daemon`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
     - STORY-TOS-027 — Add candidate discovery [implemented] → `add-candidate-discovery`

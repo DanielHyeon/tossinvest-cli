@@ -18,6 +18,7 @@ func TestA047ShipsNoRuntimeOrderOrExitWiring(t *testing.T) {
 		"internal/strategydispatch/adapters.go": true,
 		"internal/strategydispatch/dispatch.go": true,
 		"internal/console/strategy_runtime.go":  true,
+		"internal/httpapi/read.go":              true,
 	}
 	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
@@ -46,7 +47,7 @@ func TestA047ShipsNoRuntimeOrderOrExitWiring(t *testing.T) {
 				if !allowedDormantContracts[rel] {
 					t.Errorf("a047 dormant engine is runtime-wired by %s", rel)
 				}
-				if rel == "internal/console/strategy_runtime.go" {
+				if rel == "internal/console/strategy_runtime.go" || rel == "internal/httpapi/read.go" {
 					assertConsoleOnlyCallsDormantDescriptor(t, file)
 				}
 			}

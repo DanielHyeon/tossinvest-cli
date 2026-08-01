@@ -1,0 +1,3181 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TossOS Private Operator API",
+    "version": "1.0.0",
+    "description": "Private loopback/VPN operator read API. Read resources require no application token only after the daemon validates its private network and TLS boundary. This API never exposes LIVE, gate, kill-switch, protection-weakening, or activation-manifest mutations.",
+    "contact": {
+      "name": "TossOS maintainers"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://tossos.private",
+      "description": "Configured private VPN or loopback TLS endpoint"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Status",
+      "description": "Read-only current operator state"
+    },
+    {
+      "name": "Optimization",
+      "description": "Server-owned finite optimization descriptors and lifecycle"
+    },
+    {
+      "name": "Stream",
+      "description": "Epoch and sequence based server-sent events"
+    }
+  ],
+  "paths": {
+    "/api/v1/engine": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Read engine status",
+        "description": "Returns the advisory engine marker projection without engine control authority. Request bodies and query parameters are rejected.",
+        "operationId": "getEngine",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Current engine status",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/NoSniff"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/NoReferrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeBase"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Engine"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "current": {
+                    "$ref": "#/components/examples/EngineResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to this fixed read."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted."
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable",
+            "description": "The engine projection is unavailable."
+          }
+        }
+      }
+    },
+    "/api/v1/positions": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "List current positions",
+        "description": "Returns the complete server-bounded current snapshot. Every row includes the canonical fail-closed a043 exit-line projection; client filtering and pagination are intentionally unavailable.",
+        "operationId": "getPositions",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Current bounded position snapshot",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/NoSniff"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/NoReferrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeBase"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Positions"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "emptySnapshot": {
+                    "$ref": "#/components/examples/PositionsResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to this fixed read."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted."
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable",
+            "description": "One or more bounded position reads are unavailable."
+          }
+        }
+      }
+    },
+    "/api/v1/orders": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "List current orders",
+        "description": "Returns the complete server-owned bounded current order snapshot. exitLine is reserved and null in a051; canonical a043 exit evidence is exposed by positions. Client filtering and pagination are intentionally unavailable.",
+        "operationId": "getOrders",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Current bounded order snapshot",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/NoSniff"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/NoReferrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeBase"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Orders"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "emptySnapshot": {
+                    "$ref": "#/components/examples/OrdersResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to this fixed read."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted."
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable",
+            "description": "One or more bounded order reads are unavailable."
+          }
+        }
+      }
+    },
+    "/api/v1/candidates": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "List current candidates",
+        "description": "Returns the complete current candidate verdict snapshot and persisted evidence identities. Client-defined search, filters, and pagination are intentionally rejected.",
+        "operationId": "getCandidates",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Current bounded candidate snapshot",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/NoSniff"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/NoReferrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeBase"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Candidates"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "emptySnapshot": {
+                    "$ref": "#/components/examples/CandidatesResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to this fixed read."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted."
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable",
+            "description": "The candidate projection is unavailable."
+          }
+        }
+      }
+    },
+    "/api/v1/performance": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Read deterministic performance",
+        "description": "Returns the server-owned fixed query projection from the read-only performance database. Client-defined dates, ranges, filters, and pagination are intentionally rejected.",
+        "operationId": "getPerformance",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Fixed-query deterministic performance snapshot",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/NoSniff"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/NoReferrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeBase"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Performance"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "emptySnapshot": {
+                    "$ref": "#/components/examples/PerformanceResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to this fixed read."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted."
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable",
+            "description": "The deterministic performance projection is unavailable."
+          }
+        }
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "List settings state",
+        "description": "Returns the complete server-owned default, desired, and effective settings snapshot. This resource has no write action, filters, or pagination.",
+        "operationId": "getSettings",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Settings desired and effective state",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/NoSniff"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/NoReferrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeBase"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Settings"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "emptySnapshot": {
+                    "$ref": "#/components/examples/SettingsResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to this fixed read."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted."
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable",
+            "description": "The settings projection is unavailable."
+          }
+        }
+      }
+    },
+    "/api/v1/optimization": {
+      "get": {
+        "tags": [
+          "Optimization"
+        ],
+        "summary": "Read optimization registry",
+        "description": "Returns the complete six-category a050 registry, owner descriptors, desired/effective state, evidence, bounded history, and bounded audit. The server fixes category order and available choices.",
+        "operationId": "getOptimization",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Canonical optimization registry and owner descriptors",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/NoSniff"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/NoReferrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeBase"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Optimization"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to this fixed read."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted."
+          },
+          "503": {
+            "description": "The optimization registry is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unavailable": {
+                    "$ref": "#/components/examples/ReadErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stream": {
+      "get": {
+        "tags": [
+          "Stream"
+        ],
+        "summary": "Stream operator snapshots",
+        "description": "Event IDs are process epoch plus monotonic sequence. Unknown epoch or a gap starts with a full snapshot. Heartbeats occur every 15 seconds; a full 64-event client queue disconnects only that client.",
+        "operationId": "streamSnapshots",
+        "security": [],
+        "parameters": [
+          {
+            "name": "Last-Event-ID",
+            "in": "header",
+            "required": false,
+            "description": "Last process-epoch and sequence pair. Omit it for a full snapshot.",
+            "example": "process-a:12",
+            "schema": {
+              "type": "string",
+              "maxLength": 160
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent event stream",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/StreamCacheControl"
+              },
+              "Connection": {
+                "$ref": "#/components/headers/KeepAlive"
+              },
+              "X-Accel-Buffering": {
+                "$ref": "#/components/headers/NoProxyBuffering"
+              }
+            },
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamEventText"
+                },
+                "example": "id: process-a:13\nevent: full\ndata: {}\n\n"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to the fixed stream."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted."
+          },
+          "503": {
+            "description": "The stream is unavailable or the 32-client limit is full.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/StreamRetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unavailable": {
+                    "$ref": "#/components/examples/ReadErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/optimization/previews": {
+      "post": {
+        "tags": [
+          "Optimization"
+        ],
+        "summary": "Create a finite optimization preview",
+        "description": "The deployed daemon requires one signed one-time capability. The body accepts one to 16 exact server-registered key and option-ID pairs, never free-form values.",
+        "operationId": "createOptimizationPreview",
+        "security": [
+          {
+            "signedCapability": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Single actor-and-client-scoped key. Reuse with the same canonical body replays the stored response; reuse with another body returns 409.",
+            "example": "idem-0123456789abcdef",
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Single exact quoted current settings version. A stale value returns 412 and the current ETag.",
+            "example": "\"7\"",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\\"[0-9]+\\\"$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Finite exit-protection selection bound to the current settings version.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptimizationPreviewRequest"
+              },
+              "examples": {
+                "singleSelection": {
+                  "$ref": "#/components/examples/OptimizationPreviewRequest"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Preview created",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/VersionETag"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/MutationBadRequest",
+            "description": "The JSON, idempotency key, or finite selection is invalid."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "Mutation identity is missing, invalid, expired, or already consumed."
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "The private boundary, canonical origin, or exact capability authority was refused."
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict",
+            "description": "The idempotency key conflicts with another body or request in progress."
+          },
+          "412": {
+            "$ref": "#/components/responses/PreconditionFailed",
+            "description": "If-Match does not identify the current settings version."
+          },
+          "413": {
+            "$ref": "#/components/responses/ContentTooLarge",
+            "description": "The request body exceeds 256 KiB."
+          },
+          "415": {
+            "$ref": "#/components/responses/JSONRequired",
+            "description": "Content-Type is not application/json with at most UTF-8 charset."
+          },
+          "428": {
+            "$ref": "#/components/responses/PreconditionRequired",
+            "description": "A single valid If-Match header is required."
+          },
+          "503": {
+            "$ref": "#/components/responses/CommandUnavailable",
+            "description": "The durable audit ledger or command service is unavailable."
+          }
+        }
+      }
+    },
+    "/api/v1/optimization/applications": {
+      "post": {
+        "tags": [
+          "Optimization"
+        ],
+        "summary": "Apply an approved optimization preview",
+        "description": "Consumes one exact approved preview capability with actor-scoped idempotency and compare-and-swap. a051 ships an empty remote-application transition registry, so current contextual protection changes remain local-human-only and this route cannot change LIVE or protection authority.",
+        "operationId": "applyOptimizationPreview",
+        "security": [
+          {
+            "signedCapability": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Single actor-and-client-scoped key. Reuse with the same canonical body replays the stored response; reuse with another body returns 409.",
+            "example": "idem-0123456789abcdef",
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Single exact quoted current settings version. A stale value returns 412 and the current ETag.",
+            "example": "\"7\"",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\\"[0-9]+\\\"$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Exact approved preview capability and explicit confirmation.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptimizationApplyRequest"
+              },
+              "examples": {
+                "confirmed": {
+                  "$ref": "#/components/examples/OptimizationApplyRequest"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Application committed",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/VersionETag"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/MutationBadRequest",
+            "description": "The JSON, idempotency key, capability, or confirmation is invalid."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized",
+            "description": "Mutation identity is missing, invalid, expired, or already consumed."
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "The private boundary, canonical origin, or exact capability authority was refused."
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict",
+            "description": "The idempotency key conflicts with another body or request in progress."
+          },
+          "412": {
+            "$ref": "#/components/responses/PreconditionFailed",
+            "description": "If-Match does not identify the current settings version."
+          },
+          "413": {
+            "$ref": "#/components/responses/ContentTooLarge",
+            "description": "The request body exceeds 256 KiB."
+          },
+          "415": {
+            "$ref": "#/components/responses/JSONRequired",
+            "description": "Content-Type is not application/json with at most UTF-8 charset."
+          },
+          "428": {
+            "$ref": "#/components/responses/PreconditionRequired",
+            "description": "A single valid If-Match header is required."
+          },
+          "503": {
+            "$ref": "#/components/responses/CommandUnavailable",
+            "description": "The durable audit ledger or command service is unavailable."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "signedCapability": {
+        "type": "http",
+        "scheme": "TossOS-Capability",
+        "description": "Authorization: TossOS-Capability <signed-token>. The Ed25519-signed token has a maximum 60-second lifetime, is bound to actor, client, canonical HTTPS audience, method, resource, canonical body digest, idempotency key, and If-Match, and its nonce is consumed once."
+      }
+    },
+    "headers": {
+      "NoStore": {
+        "description": "Prevents storage of the private operator snapshot.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "no-store"
+          ]
+        }
+      },
+      "NoSniff": {
+        "description": "Disables response MIME sniffing.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "nosniff"
+          ]
+        }
+      },
+      "NoReferrer": {
+        "description": "Suppresses referrer data from the private operator API.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "no-referrer"
+          ]
+        }
+      },
+      "StreamCacheControl": {
+        "description": "Prevents SSE caching and proxy transformation.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "no-cache, no-transform"
+          ]
+        }
+      },
+      "KeepAlive": {
+        "description": "Keeps the SSE transport connection open.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "keep-alive"
+          ]
+        }
+      },
+      "NoProxyBuffering": {
+        "description": "Disables reverse-proxy buffering for this event stream.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "no"
+          ]
+        }
+      },
+      "StreamRetryAfter": {
+        "description": "Seconds to wait before retrying after the 32-client limit is reached.",
+        "schema": {
+          "type": "integer",
+          "enum": [
+            15
+          ]
+        },
+        "example": 15
+      },
+      "VersionETag": {
+        "description": "Quoted settings version returned by the committed mutation result.",
+        "schema": {
+          "type": "string",
+          "pattern": "^\\\"[0-9]+\\\"$"
+        },
+        "example": "\"7\""
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Single actor-and-client-scoped key. Reuse with the same canonical body replays the stored response; reuse with another body returns 409.",
+        "example": "idem-0123456789abcdef",
+        "schema": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128
+        }
+      },
+      "IfMatch": {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "description": "Single exact quoted current settings version. A stale value returns 412 and the current ETag.",
+        "example": "\"7\"",
+        "schema": {
+          "type": "string",
+          "pattern": "^\\\"[0-9]+\\\"$"
+        }
+      }
+    },
+    "responses": {
+      "Engine": {
+        "description": "Current engine status",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EnvelopeBase"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Engine"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Positions": {
+        "description": "Current bounded position snapshot",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EnvelopeBase"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Positions"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Orders": {
+        "description": "Current bounded order snapshot",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EnvelopeBase"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Orders"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Candidates": {
+        "description": "Current bounded candidate snapshot",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EnvelopeBase"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Candidates"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Performance": {
+        "description": "Fixed-query deterministic performance snapshot",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EnvelopeBase"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Performance"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Settings": {
+        "description": "Settings desired and effective state",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EnvelopeBase"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Settings"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Optimization": {
+        "description": "Canonical optimization registry and owner descriptors",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EnvelopeBase"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Optimization"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Malformed request or unsupported query",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "MutationBadRequest": {
+        "description": "Mutation JSON, idempotency key, or finite command is invalid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid mutation identity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Identity has no authority for the exact mutation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Idempotency key or lifecycle state conflict",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "PreconditionFailed": {
+        "description": "If-Match settings version is stale",
+        "headers": {
+          "ETag": {
+            "$ref": "#/components/headers/VersionETag"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "ContentTooLarge": {
+        "description": "Request body exceeds the enforced 256 KiB maximum",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "JSONRequired": {
+        "description": "Mutation requires application/json with no parameter other than optional UTF-8 charset",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "PreconditionRequired": {
+        "description": "A single syntactically valid If-Match header is required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "MethodNotAllowed": {
+        "description": "Method is not available on this resource",
+        "headers": {
+          "Allow": {
+            "description": "Allowed methods",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unavailable": {
+        "description": "Read model is unavailable without exposing internal paths or errors",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "CommandUnavailable": {
+        "description": "Durable audit ledger or narrow optimization command is unavailable",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "EngineResponse": {
+        "summary": "Fail-closed unknown engine marker",
+        "value": {
+          "schemaVersion": "tossos.operator-api/v1",
+          "resource": "engine",
+          "generatedAt": "2026-08-01T00:00:00Z",
+          "data": {
+            "status": "stopped",
+            "running": false,
+            "pid": 0,
+            "startedAt": null,
+            "refreshedAt": null,
+            "buildAt": null,
+            "stale": false,
+            "source": "engine-marker"
+          }
+        }
+      },
+      "PositionsResponse": {
+        "summary": "Empty bounded position snapshot",
+        "value": {
+          "schemaVersion": "tossos.operator-api/v1",
+          "resource": "positions",
+          "generatedAt": "2026-08-01T00:00:00Z",
+          "data": {
+            "observedAt": "2026-08-01T00:00:00Z",
+            "stale": false,
+            "source": "official+journal-read-only",
+            "items": []
+          }
+        }
+      },
+      "OrdersResponse": {
+        "summary": "Empty bounded order snapshot",
+        "value": {
+          "schemaVersion": "tossos.operator-api/v1",
+          "resource": "orders",
+          "generatedAt": "2026-08-01T00:00:00Z",
+          "data": {
+            "observedAt": "2026-08-01T00:00:00Z",
+            "stale": false,
+            "source": "official-bounded",
+            "items": []
+          }
+        }
+      },
+      "CandidatesResponse": {
+        "summary": "Empty candidate snapshot",
+        "value": {
+          "schemaVersion": "tossos.operator-api/v1",
+          "resource": "candidates",
+          "generatedAt": "2026-08-01T00:00:00Z",
+          "data": {
+            "observedAt": "2026-08-01T00:00:00Z",
+            "stale": false,
+            "source": "candidate-service",
+            "items": []
+          }
+        }
+      },
+      "PerformanceResponse": {
+        "summary": "Fixed-query performance snapshot without aggregates",
+        "value": {
+          "schemaVersion": "tossos.operator-api/v1",
+          "resource": "performance",
+          "generatedAt": "2026-08-01T00:00:00Z",
+          "data": {
+            "query": {
+              "asOf": "2026-08-01T00:00:00Z",
+              "periodDays": 30,
+              "market": "all markets",
+              "lane": "all lanes",
+              "completeOnly": true,
+              "minimumSample": 20
+            },
+            "newestSourceAt": null,
+            "aggregates": [],
+            "states": {
+              "complete": 0,
+              "linkMissing": 0,
+              "notMeasured": 0,
+              "insufficientSample": 0
+            }
+          }
+        }
+      },
+      "SettingsResponse": {
+        "summary": "Settings snapshot before stored overrides",
+        "value": {
+          "schemaVersion": "tossos.operator-api/v1",
+          "resource": "settings",
+          "generatedAt": "2026-08-01T00:00:00Z",
+          "data": {
+            "version": 0,
+            "effectiveVersion": 0,
+            "items": []
+          }
+        }
+      },
+      "ReadErrorResponse": {
+        "summary": "Read model unavailable",
+        "value": {
+          "schemaVersion": "tossos.operator-api.error/v1",
+          "error": {
+            "code": "RESOURCE_UNAVAILABLE",
+            "message": "현재 resource를 안전하게 읽을 수 없습니다.",
+            "details": [],
+            "requestId": "req_0123456789abcdef01234567",
+            "timestamp": "2026-08-01T00:00:00Z",
+            "documentation": "/docs/api/openapi-v1.json#resource_unavailable"
+          }
+        }
+      },
+      "OptimizationPreviewRequest": {
+        "summary": "One exact preset selection",
+        "value": {
+          "category": "exit-protection",
+          "baseVersion": 7,
+          "changes": [
+            {
+              "key": "contextualExitPolicy",
+              "optionId": "current"
+            }
+          ]
+        }
+      },
+      "OptimizationApplyRequest": {
+        "summary": "Explicitly confirmed approved preview",
+        "value": {
+          "capability": "preview-capability-0123456789abcdef",
+          "confirmed": true
+        }
+      }
+    },
+    "schemas": {
+      "EnvelopeBase": {
+        "type": "object",
+        "description": "Stable metadata shared by every successful JSON resource envelope.",
+        "required": [
+          "schemaVersion",
+          "resource",
+          "generatedAt",
+          "data"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "enum": [
+              "tossos.operator-api/v1"
+            ],
+            "example": "tossos.operator-api/v1"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GenericEnvelope": {
+        "type": "object",
+        "description": "Successful mutation envelope whose data shape is owned by the narrow optimization commander.",
+        "required": [
+          "schemaVersion",
+          "resource",
+          "data"
+        ],
+        "example": {
+          "schemaVersion": "tossos.operator-api/v1",
+          "resource": "optimization-preview",
+          "data": {}
+        },
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "enum": [
+              "tossos.operator-api/v1"
+            ]
+          },
+          "resource": {
+            "type": "string",
+            "enum": [
+              "optimization-preview",
+              "optimization-application"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Stable fail-closed error envelope with an actionable code, request identity, and documentation anchor.",
+        "required": [
+          "schemaVersion",
+          "error"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "enum": [
+              "tossos.operator-api.error/v1"
+            ],
+            "example": "tossos.operator-api.error/v1"
+          },
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message",
+              "details",
+              "requestId",
+              "timestamp",
+              "documentation"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "field",
+                    "code",
+                    "message"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "documentation": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "StreamEventText": {
+        "type": "string",
+        "description": "SSE wire representation with process-epoch sequence ID, event type, and JSON data lines.",
+        "example": "id: process-a:13\nevent: full\ndata: {}\n\n"
+      },
+      "Engine": {
+        "type": "object",
+        "description": "Read-only advisory engine marker projection; it grants no engine-control authority.",
+        "required": [
+          "status",
+          "running",
+          "pid",
+          "startedAt",
+          "refreshedAt",
+          "buildAt",
+          "stale",
+          "source"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "stopped",
+              "unknown"
+            ],
+            "example": "unknown"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "pid": {
+            "type": "integer"
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "refreshedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "buildAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      },
+      "ExitLine": {
+        "type": "object",
+        "description": "Canonical fail-closed a043 exit and protection projection attached to a position or linked order.",
+        "required": [
+          "status",
+          "statusText",
+          "reason",
+          "entryPrice",
+          "initialStop",
+          "currentProtection",
+          "nextTarget",
+          "nextProtection",
+          "projectedQuantity",
+          "observedPrice",
+          "highWater",
+          "stage",
+          "actionText",
+          "policy",
+          "decisionId",
+          "snapshotId",
+          "observationId",
+          "observationSource",
+          "evaluatedAt",
+          "effectiveSource",
+          "positionGeneration",
+          "oneShare",
+          "oneShareText",
+          "finalExitText"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "stale",
+              "unknown"
+            ],
+            "example": "unknown"
+          },
+          "statusText": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "entryPrice": {
+            "type": "string"
+          },
+          "initialStop": {
+            "type": "string"
+          },
+          "currentProtection": {
+            "type": "string"
+          },
+          "nextTarget": {
+            "type": "string"
+          },
+          "nextProtection": {
+            "type": "string"
+          },
+          "projectedQuantity": {
+            "type": "string"
+          },
+          "observedPrice": {
+            "type": "string"
+          },
+          "highWater": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "actionText": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "decisionId": {
+            "type": "string"
+          },
+          "snapshotId": {
+            "type": "string"
+          },
+          "observationId": {
+            "type": "string"
+          },
+          "observationSource": {
+            "type": "string"
+          },
+          "evaluatedAt": {
+            "type": "string"
+          },
+          "effectiveSource": {
+            "type": "string"
+          },
+          "positionGeneration": {
+            "type": "string"
+          },
+          "oneShare": {
+            "type": "boolean"
+          },
+          "oneShareText": {
+            "type": "string"
+          },
+          "finalExitText": {
+            "type": "string"
+          }
+        }
+      },
+      "Position": {
+        "type": "object",
+        "description": "Current broker and journal position joined to its exit-line evidence.",
+        "required": [
+          "accountLabel",
+          "positionId",
+          "market",
+          "symbol",
+          "name",
+          "quantity",
+          "averagePrice",
+          "lastPrice",
+          "marketValue",
+          "unrealizedPnl",
+          "profitRate",
+          "inBroker",
+          "inJournal",
+          "eligible",
+          "managementStatus",
+          "exitLine"
+        ],
+        "properties": {
+          "accountLabel": {
+            "type": "string",
+            "description": "Transport-safe masked account label; never a raw account reference.",
+            "example": "account-1"
+          },
+          "positionId": {
+            "type": "string"
+          },
+          "market": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "averagePrice": {
+            "type": "string"
+          },
+          "lastPrice": {
+            "type": "string"
+          },
+          "marketValue": {
+            "type": "string"
+          },
+          "unrealizedPnl": {
+            "type": "string"
+          },
+          "profitRate": {
+            "type": "string"
+          },
+          "inBroker": {
+            "type": "boolean"
+          },
+          "inJournal": {
+            "type": "boolean"
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "managementStatus": {
+            "type": "string"
+          },
+          "exitLine": {
+            "$ref": "#/components/schemas/ExitLine"
+          }
+        }
+      },
+      "Positions": {
+        "type": "object",
+        "description": "Complete server-bounded position snapshot returned without client pagination.",
+        "required": [
+          "observedAt",
+          "stale",
+          "source",
+          "items"
+        ],
+        "properties": {
+          "observedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "stale": {
+            "type": "boolean",
+            "example": true
+          },
+          "source": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/Position"
+            }
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "description": "Current bounded order projection; exitLine is reserved and null in a051.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "accountLabel",
+          "market",
+          "symbol",
+          "side",
+          "kind",
+          "status",
+          "currency",
+          "quantity",
+          "price",
+          "filledQuantity",
+          "averageFilledPrice",
+          "orderedAt",
+          "canceledAt",
+          "origin",
+          "exitLine"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "order-1"
+          },
+          "accountLabel": {
+            "type": "string",
+            "description": "Masked account label."
+          },
+          "market": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "filledQuantity": {
+            "type": "string"
+          },
+          "averageFilledPrice": {
+            "type": "string"
+          },
+          "orderedAt": {
+            "type": "string"
+          },
+          "canceledAt": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "exitLine": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ExitLine"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Orders": {
+        "type": "object",
+        "description": "Complete server-bounded order snapshot returned without client pagination.",
+        "additionalProperties": false,
+        "required": [
+          "observedAt",
+          "stale",
+          "source",
+          "items"
+        ],
+        "properties": {
+          "observedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "stale": {
+            "type": "boolean",
+            "example": true
+          },
+          "source": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          }
+        }
+      },
+      "Candidate": {
+        "type": "object",
+        "description": "Current candidate verdict and its persisted evidence identity.",
+        "additionalProperties": false,
+        "required": [
+          "market",
+          "symbol",
+          "name",
+          "verdict",
+          "reasonCodes",
+          "rank",
+          "firstSeenAt",
+          "lastObservedAt",
+          "evidenceDigest",
+          "thresholdVersion"
+        ],
+        "properties": {
+          "market": {
+            "type": "string",
+            "example": "KR"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "string"
+          },
+          "reasonCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "firstSeenAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastObservedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "evidenceDigest": {
+            "type": "string"
+          },
+          "thresholdVersion": {
+            "type": "string"
+          }
+        }
+      },
+      "Candidates": {
+        "type": "object",
+        "description": "Complete server-owned candidate snapshot returned without search or client filters.",
+        "additionalProperties": false,
+        "required": [
+          "observedAt",
+          "stale",
+          "source",
+          "items"
+        ],
+        "properties": {
+          "observedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "stale": {
+            "type": "boolean",
+            "example": true
+          },
+          "source": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            }
+          }
+        }
+      },
+      "PerformanceQuery": {
+        "type": "object",
+        "description": "Server-owned deterministic query echoed with the performance result.",
+        "additionalProperties": false,
+        "required": [
+          "asOf",
+          "periodDays",
+          "market",
+          "lane",
+          "completeOnly",
+          "minimumSample"
+        ],
+        "properties": {
+          "asOf": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodDays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90,
+            "example": 30
+          },
+          "market": {
+            "type": "string"
+          },
+          "lane": {
+            "type": "string"
+          },
+          "completeOnly": {
+            "type": "boolean"
+          },
+          "minimumSample": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "PerformanceMetric": {
+        "type": "object",
+        "description": "One deterministic performance metric with sample state and provenance.",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "label",
+          "help",
+          "unit",
+          "value",
+          "samples",
+          "status",
+          "provenance"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "readOnly": true,
+            "example": "netPnl"
+          },
+          "label": {
+            "type": "string"
+          },
+          "help": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "samples": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "link_missing",
+              "not_measured",
+              "insufficient_sample"
+            ]
+          },
+          "provenance": {
+            "type": "string"
+          }
+        }
+      },
+      "PerformanceAggregate": {
+        "type": "object",
+        "description": "Policy and lane performance aggregate with explicit observation provenance.",
+        "additionalProperties": false,
+        "required": [
+          "market",
+          "laneId",
+          "laneVersion",
+          "policyId",
+          "policyVersion",
+          "samples",
+          "status",
+          "netPnl",
+          "averageR",
+          "winRate",
+          "profitFactor",
+          "maxDrawdown",
+          "slippagePct",
+          "mfePct",
+          "maePct",
+          "markout5Pct",
+          "markout15Pct",
+          "markout30Pct",
+          "semanticsVersion",
+          "observationProvenance",
+          "metrics"
+        ],
+        "properties": {
+          "market": {
+            "type": "string",
+            "example": "KR"
+          },
+          "laneId": {
+            "type": "string"
+          },
+          "laneVersion": {
+            "type": "string"
+          },
+          "policyId": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "samples": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string"
+          },
+          "netPnl": {
+            "type": "string"
+          },
+          "averageR": {
+            "type": "string"
+          },
+          "winRate": {
+            "type": "string"
+          },
+          "profitFactor": {
+            "type": "string"
+          },
+          "maxDrawdown": {
+            "type": "string"
+          },
+          "slippagePct": {
+            "type": "string"
+          },
+          "mfePct": {
+            "type": "string"
+          },
+          "maePct": {
+            "type": "string"
+          },
+          "markout5Pct": {
+            "type": "string"
+          },
+          "markout15Pct": {
+            "type": "string"
+          },
+          "markout30Pct": {
+            "type": "string"
+          },
+          "semanticsVersion": {
+            "type": "string"
+          },
+          "observationProvenance": {
+            "type": "string"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceMetric"
+            }
+          }
+        }
+      },
+      "Performance": {
+        "type": "object",
+        "description": "Fixed-query performance result, bounded aggregates, and completeness counts.",
+        "additionalProperties": false,
+        "required": [
+          "query",
+          "newestSourceAt",
+          "aggregates",
+          "states"
+        ],
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/PerformanceQuery"
+          },
+          "newestSourceAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "aggregates": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/PerformanceAggregate"
+            }
+          },
+          "states": {
+            "type": "object",
+            "description": "Counts grouped by deterministic measurement state.",
+            "example": {
+              "complete": 0,
+              "linkMissing": 0,
+              "notMeasured": 0,
+              "insufficientSample": 0
+            },
+            "additionalProperties": false,
+            "required": [
+              "complete",
+              "linkMissing",
+              "notMeasured",
+              "insufficientSample"
+            ],
+            "properties": {
+              "complete": {
+                "type": "integer"
+              },
+              "linkMissing": {
+                "type": "integer"
+              },
+              "notMeasured": {
+                "type": "integer"
+              },
+              "insufficientSample": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "SettingState": {
+        "type": "object",
+        "description": "Finite setting value or an explicit unavailable state; unapproved never implies numeric zero.",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "optionId",
+          "value",
+          "display"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "value",
+              "unapproved",
+              "not-applicable",
+              "invalid"
+            ],
+            "example": "unapproved"
+          },
+          "optionId": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "display": {
+            "type": "string"
+          }
+        }
+      },
+      "Provenance": {
+        "type": "object",
+        "description": "Owning change, versioned policy, and evidence digests for a setting.",
+        "additionalProperties": false,
+        "required": [
+          "ownerChange",
+          "policyId",
+          "policyVersion",
+          "policyDigest",
+          "evidenceDigest"
+        ],
+        "properties": {
+          "ownerChange": {
+            "type": "string",
+            "example": "a050-add-optimization-surface"
+          },
+          "policyId": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "policyDigest": {
+            "type": "string"
+          },
+          "evidenceDigest": {
+            "type": "string"
+          }
+        }
+      },
+      "Setting": {
+        "type": "object",
+        "description": "Server-owned setting descriptor with default, desired, effective, safety, and provenance state.",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "label",
+          "description",
+          "unit",
+          "default",
+          "desired",
+          "effective",
+          "applyTiming",
+          "safetyDirection",
+          "provenance"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "readOnly": true,
+            "example": "contextualExitPolicy"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "default": {
+            "$ref": "#/components/schemas/SettingState"
+          },
+          "desired": {
+            "$ref": "#/components/schemas/SettingState"
+          },
+          "effective": {
+            "$ref": "#/components/schemas/SettingState"
+          },
+          "applyTiming": {
+            "type": "string"
+          },
+          "safetyDirection": {
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "description": "Complete settings snapshot with desired and effective version counters.",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "effectiveVersion",
+          "items"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 7
+          },
+          "effectiveVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Setting"
+            }
+          }
+        }
+      },
+      "OptimizationCategory": {
+        "type": "object",
+        "description": "One entry in the fixed six-category optimization menu, returned in registry order.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "purpose",
+          "readOnly"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "overview",
+              "exit-protection",
+              "position-management",
+              "candidate-filters",
+              "strategy-runtime",
+              "performance-history"
+            ],
+            "example": "overview"
+          },
+          "label": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "readOnly": {
+            "type": "boolean"
+          }
+        }
+      },
+      "OptimizationChoice": {
+        "type": "object",
+        "description": "Server-registered finite option rendered as a tile, select entry, chip, or discrete step.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "description",
+          "value",
+          "recommended"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "current"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "recommended": {
+            "type": "boolean"
+          }
+        }
+      },
+      "OptimizationField": {
+        "type": "object",
+        "description": "Finite optimization field descriptor shared with the HTML console registry.",
+        "additionalProperties": false,
+        "required": [
+          "category",
+          "key",
+          "label",
+          "description",
+          "type",
+          "unit",
+          "control",
+          "default",
+          "desired",
+          "effective",
+          "choices",
+          "applyTiming",
+          "safetyDirection",
+          "owner",
+          "provenance",
+          "configurationError"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "example": "exit-protection"
+          },
+          "key": {
+            "type": "string",
+            "readOnly": true
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "boolean",
+              "decimal",
+              "integer",
+              "enum",
+              "symbol-list"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "control": {
+            "type": "string",
+            "enum": [
+              "radio-tile",
+              "select",
+              "chip",
+              "toggle",
+              "discrete-step",
+              "row-action",
+              "read-only"
+            ]
+          },
+          "default": {
+            "$ref": "#/components/schemas/SettingState"
+          },
+          "desired": {
+            "$ref": "#/components/schemas/SettingState"
+          },
+          "effective": {
+            "$ref": "#/components/schemas/SettingState"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptimizationChoice"
+            }
+          },
+          "applyTiming": {
+            "type": "string"
+          },
+          "safetyDirection": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "configurationError": {
+            "type": "string"
+          }
+        }
+      },
+      "PositionManagementDescriptor": {
+        "type": "object",
+        "description": "Position-management defaults and the exact 2% through 20% stop chips in 0.5% steps.",
+        "additionalProperties": false,
+        "required": [
+          "category",
+          "positionSection",
+          "autoAdoptionSection",
+          "autoEnabledDefault",
+          "autoEnabledDesired",
+          "autoEnabledEffective",
+          "stopDefault",
+          "stopDesired",
+          "stopEffective",
+          "stopOptions",
+          "includeDefault",
+          "excludeDefault",
+          "excludePrecedence",
+          "applyTiming",
+          "provenance",
+          "oneShareBehavior"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "position-management"
+            ],
+            "example": "position-management"
+          },
+          "positionSection": {
+            "type": "string"
+          },
+          "autoAdoptionSection": {
+            "type": "string"
+          },
+          "autoEnabledDefault": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          },
+          "autoEnabledDesired": {
+            "type": "boolean"
+          },
+          "autoEnabledEffective": {
+            "type": "boolean"
+          },
+          "stopDefault": {
+            "type": "string",
+            "enum": [
+              "5%"
+            ]
+          },
+          "stopDesired": {
+            "type": "string"
+          },
+          "stopEffective": {
+            "type": "string"
+          },
+          "stopOptions": {
+            "type": "array",
+            "minItems": 37,
+            "maxItems": 37,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "label",
+                "decimal"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "decimal": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "includeDefault": {
+            "type": "array",
+            "maxItems": 0,
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludeDefault": {
+            "type": "array",
+            "maxItems": 0,
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludePrecedence": {
+            "type": "string",
+            "enum": [
+              "exclude 우선"
+            ]
+          },
+          "applyTiming": {
+            "type": "string"
+          },
+          "provenance": {
+            "type": "string"
+          },
+          "oneShareBehavior": {
+            "type": "string"
+          }
+        }
+      },
+      "CandidateFilterDescriptor": {
+        "type": "object",
+        "description": "Read-only candidate threshold descriptor that stays unapproved until evidence is accepted.",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "category",
+          "label",
+          "help",
+          "market",
+          "session",
+          "defaultState",
+          "desiredState",
+          "effectiveState",
+          "desiredValue",
+          "effectiveValue",
+          "unit",
+          "validRange",
+          "direction",
+          "sampleState",
+          "evidenceState",
+          "applyTiming",
+          "readOnly",
+          "casRequired",
+          "provenance",
+          "legacyValue",
+          "missingEvidence",
+          "previewContract"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "readOnly": true,
+            "example": "minimumLiquidity"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "candidate-filters"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "help": {
+            "type": "string"
+          },
+          "market": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "defaultState": {
+            "type": "string",
+            "enum": [
+              "unapproved"
+            ]
+          },
+          "desiredState": {
+            "type": "string",
+            "enum": [
+              "unapproved"
+            ]
+          },
+          "effectiveState": {
+            "type": "string",
+            "enum": [
+              "unapproved"
+            ]
+          },
+          "desiredValue": {
+            "type": "string",
+            "maxLength": 0
+          },
+          "effectiveValue": {
+            "type": "string",
+            "maxLength": 0
+          },
+          "unit": {
+            "type": "string"
+          },
+          "validRange": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "sampleState": {
+            "type": "string"
+          },
+          "evidenceState": {
+            "type": "string"
+          },
+          "applyTiming": {
+            "type": "string"
+          },
+          "readOnly": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "casRequired": {
+            "type": "boolean"
+          },
+          "provenance": {
+            "type": "string"
+          },
+          "legacyValue": {
+            "type": "string"
+          },
+          "missingEvidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "previewContract": {
+            "type": "string"
+          }
+        }
+      },
+      "CandidateFilterMarket": {
+        "type": "object",
+        "description": "Server-owned candidate filter descriptors for one market and session.",
+        "additionalProperties": false,
+        "required": [
+          "market",
+          "session",
+          "filters"
+        ],
+        "properties": {
+          "market": {
+            "type": "string",
+            "example": "KR"
+          },
+          "session": {
+            "type": "string"
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CandidateFilterDescriptor"
+            }
+          }
+        }
+      },
+      "RuntimeDescriptor": {
+        "type": "object",
+        "description": "Fixed four-section strategy runtime registry with sixteen fields and nine blockers.",
+        "additionalProperties": false,
+        "required": [
+          "category",
+          "sections",
+          "fields",
+          "blockers"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "strategy-runtime"
+            ],
+            "example": "strategy-runtime"
+          },
+          "sections": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "label",
+                "actionOwner"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "actionOwner": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "fields": {
+            "type": "array",
+            "minItems": 16,
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "label",
+                "help",
+                "default",
+                "desired",
+                "effective",
+                "unit",
+                "range",
+                "provenance",
+                "applyTiming"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "help": {
+                  "type": "string"
+                },
+                "default": {
+                  "type": "string"
+                },
+                "desired": {
+                  "type": "string"
+                },
+                "effective": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "range": {
+                  "type": "string"
+                },
+                "provenance": {
+                  "type": "string"
+                },
+                "applyTiming": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "blockers": {
+            "type": "array",
+            "minItems": 9,
+            "maxItems": 9,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "label",
+                "desired",
+                "effective",
+                "freshness",
+                "reason"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "desired": {
+                  "type": "string"
+                },
+                "effective": {
+                  "type": "string"
+                },
+                "freshness": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "OptimizationEvidence": {
+        "type": "object",
+        "description": "Completeness and freshness state for the evidence backing optimization values.",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "digest",
+          "observedAt",
+          "missing"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "insufficient",
+              "unavailable",
+              "stale"
+            ],
+            "example": "insufficient"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "observedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "OptimizationSnapshot": {
+        "type": "object",
+        "description": "Bounded optimization history snapshot with desired/effective digests and audit identity.",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "effectiveVersion",
+          "desired",
+          "effective",
+          "settingsDigest",
+          "evidenceDigest",
+          "activationManifestDigest",
+          "effectiveEntry",
+          "restartRequired",
+          "actor",
+          "reason",
+          "auditId",
+          "createdAt"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "example": 7
+          },
+          "effectiveVersion": {
+            "type": "integer"
+          },
+          "desired": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "effective": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "settingsDigest": {
+            "type": "string"
+          },
+          "evidenceDigest": {
+            "type": "string"
+          },
+          "activationManifestDigest": {
+            "type": "string"
+          },
+          "effectiveEntry": {
+            "type": "boolean"
+          },
+          "restartRequired": {
+            "type": "boolean"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "auditId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "OptimizationAuditEvent": {
+        "type": "object",
+        "description": "Immutable audit event for one finite optimization option transition.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "auditId",
+          "version",
+          "candidateId",
+          "key",
+          "beforeOptionId",
+          "afterOptionId",
+          "actor",
+          "reason",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 42
+          },
+          "auditId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "candidateId": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string",
+            "readOnly": true
+          },
+          "beforeOptionId": {
+            "type": "string"
+          },
+          "afterOptionId": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Optimization": {
+        "type": "object",
+        "description": "Complete fixed-category optimization registry, evidence, bounded history, and bounded audit.",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "effectiveVersion",
+          "settingsDigest",
+          "categories",
+          "fields",
+          "positionManagement",
+          "candidateFilters",
+          "strategyRuntime",
+          "evidence",
+          "history",
+          "audit"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 7
+          },
+          "effectiveVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "settingsDigest": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": {
+              "$ref": "#/components/schemas/OptimizationCategory"
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptimizationField"
+            }
+          },
+          "positionManagement": {
+            "$ref": "#/components/schemas/PositionManagementDescriptor"
+          },
+          "candidateFilters": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/CandidateFilterMarket"
+            }
+          },
+          "strategyRuntime": {
+            "$ref": "#/components/schemas/RuntimeDescriptor"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/OptimizationEvidence"
+          },
+          "history": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/OptimizationSnapshot"
+            }
+          },
+          "audit": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/OptimizationAuditEvent"
+            }
+          }
+        }
+      },
+      "OptimizationPreviewRequest": {
+        "type": "object",
+        "description": "One to sixteen exact server-registered exit-protection selections for a current base version.",
+        "additionalProperties": false,
+        "required": [
+          "category",
+          "baseVersion",
+          "changes"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "exit-protection"
+            ],
+            "example": "exit-protection"
+          },
+          "baseVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "changes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "optionId"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "optionId": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "OptimizationApplyRequest": {
+        "type": "object",
+        "description": "Exact approved preview capability plus explicit confirmation.",
+        "additionalProperties": false,
+        "required": [
+          "capability",
+          "confirmed"
+        ],
+        "properties": {
+          "capability": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 8192
+          },
+          "confirmed": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      }
+    }
+  }
+}
