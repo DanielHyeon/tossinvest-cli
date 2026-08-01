@@ -90,6 +90,8 @@ var readOnlyColumns = []struct {
 	{table: "exit_events", column: "recomputed_snapshot_json"},
 	{table: "exit_events", column: "effective_snapshot_json"},
 	{table: "exit_events", column: "effective_source"},
+	{table: "exit_states", column: "policy_version"},
+	{table: "trade_outcomes", column: "cost_total"},
 }
 
 // ReadOnlyOptions configures OpenReadOnly.

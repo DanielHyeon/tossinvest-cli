@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 14
+const SchemaVersion = 15
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -84,6 +84,10 @@ var migrations = []migration{
 	// decision/attempt/execution provenance without changing RiskIntent or any
 	// released canonical preimage bytes.
 	{Version: 14, SQL: schemaV14},
+	// schemaV15 lives in trade_outcomes.go. It adds the exact total transaction
+	// cost already deducted from a frozen outcome's P&L as nullable evidence;
+	// historical rows remain NULL and are never backfilled by the migration.
+	{Version: 15, SQL: schemaV15},
 }
 
 // schemaV1 is the initial schema.
