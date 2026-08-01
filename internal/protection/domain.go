@@ -420,11 +420,31 @@ type BrokerTarget struct {
 	ClientOrderID string
 	Trigger       int64
 	Quantity      int64
+	ExpireDate    string
+	Retired       []RetiredBrokerTarget
+}
+
+// RetiredBrokerTarget is a durable, exact predecessor created by an
+// acknowledged replace chain. It is the only historical row a broker adapter
+// may ignore while resolving the current conditional order.
+type RetiredBrokerTarget struct {
+	BrokerID      string
+	ClientOrderID string
+	Trigger       int64
+	Quantity      int64
+	ExpireDate    string
 }
 
 func (t BrokerTarget) Validate() error {
 	if t.Scope.Validate() != nil || strings.TrimSpace(t.BrokerID) == "" || strings.TrimSpace(t.ClientOrderID) == "" || t.Trigger < 1 || t.Quantity < 1 {
 		return ErrInvalidSaga
+	}
+	seen := map[string]bool{t.BrokerID: true}
+	for _, retired := range t.Retired {
+		if strings.TrimSpace(retired.BrokerID) == "" || retired.ClientOrderID != t.ClientOrderID || retired.Trigger < 1 || retired.Quantity < 1 || !validExpireDate(retired.ExpireDate) || seen[retired.BrokerID] {
+			return ErrInvalidSaga
+		}
+		seen[retired.BrokerID] = true
 	}
 	return nil
 }

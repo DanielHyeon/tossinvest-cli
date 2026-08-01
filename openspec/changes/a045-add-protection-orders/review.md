@@ -191,6 +191,29 @@ plus equality between the target scope and immutable gateway scope; it is never 
 This remediation does not add a production activation minter, app/cmd construction, toggle, or free
 UI input, and does not authorize broker execution. It remains pending independent re-review and gate.
 
+## Restart inventory and replace-lineage BLOCK remediation · 2026-08-01
+
+The public controller constructor now always starts with entry closed. An empty local repository is
+not proof of an empty broker account; only a bounded authoritative OPEN+CLOSED inventory read can
+open the latch. Empty inventory reconciliation is covered explicitly, while broker read failure,
+timeout, ambiguous identity, any non-ACTIVE durable saga, and any orphan keep it closed.
+
+CREATE and REPLACE canonical bodies plus acknowledged target/result broker IDs now form the durable
+identity chain. Recovery of a response-lost replacement selects the unique non-terminal row matching
+the pending canonical body, records its result ID before activating the saga, and thereafter walks
+the acknowledged chain from the current result to its predecessors. A historical row is ignored
+only when its broker ID, client ID, trigger, quantity, expiry, shape, terminal state, and untriggered
+state all exactly match that chain. Missing links, cycles, duplicate current/retired rows, unrelated
+same-client rows, identity mismatch, and orphan live rows fail closed as `IN_DOUBT`.
+
+The official cancel fallback applies the same typed predecessor list across bounded OPEN+CLOSED
+pages; it never treats a client ID match alone as the current order. Tests cover two successive
+replacements, restart recovery and reconciliation with old CLOSED plus new OPEN rows, response loss,
+repeated terminal cancel observation, and unrelated historical identity. Focused repeated tests,
+focused race tests, the full Go suite, `go vet`, whitespace checks, and Function Logic Map validation
+pass. This remains a remediation candidate awaiting independent re-review; OFF/UNWIRED and the
+input-free StockOS-style console are unchanged.
+
 ## Dependency-integrated dormant rebase · 2026-08-01
 
 - Integration base: `70aabdc9936de08df458da13203437ba7d2dd572` (a041/a042 complete).

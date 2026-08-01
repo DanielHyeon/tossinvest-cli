@@ -1,6 +1,6 @@
 {
   "file": "internal/protection/domain.go",
-  "source_sha256": "817e586e3f64262874b25007fe7743693f6de47905f7f3f637f45d23cc4809cc",
+  "source_sha256": "f9011d567103c4dd5d0b3958fca59f456ee706b4b547d233c5f39949db4afd37",
   "package": "protection",
   "function": "Transition",
   "signature": "Transition(params=2, results=2)",

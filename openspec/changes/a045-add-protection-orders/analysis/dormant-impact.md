@@ -97,3 +97,13 @@ all other states and all recovery/I/O errors keep the latch closed. Broker calls
 one-/two-second operation budgets, and cancel/recovery compare a typed durable target rather than an
 identifier alone. These runtime contracts remain dormant because the shipped application still has
 no activation construction path.
+
+The subsequent restart-inventory review removes the remaining empty-repository exception: every new
+controller instance starts closed, including a zero-row database, until a bounded complete broker
+inventory read proves no orphan and exact coverage for all durable ACTIVE sagas. Replacement history
+is no longer correlated by client ID alone. Canonical durable mutation bodies and acknowledged
+target/result IDs form a checked acyclic chain; only exact terminal, untriggered predecessors from
+that chain may be filtered from recovery, reconciliation, or cancel fallback. The response-loss path
+durably acknowledges the recovered result ID before activating the saga, so repeated restart and
+cancel operations reconstruct the same identity without memory-only state. No UI, app wiring,
+activation capability, execution profile, or broker transport boundary changed.

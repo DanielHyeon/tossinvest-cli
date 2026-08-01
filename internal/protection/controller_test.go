@@ -23,6 +23,7 @@ type controllerGateway struct {
 	cancelDelay time.Duration
 	createWait  bool
 	listWait    bool
+	listErr     error
 	cancelWait  bool
 	createCalls int
 	createDL    time.Time
@@ -98,6 +99,9 @@ func (g *controllerGateway) List(ctx context.Context, scope Scope) ([]BrokerProt
 		<-ctx.Done()
 		return nil, ctx.Err()
 	}
+	if g.listErr != nil {
+		return nil, g.listErr
+	}
 	if scope != g.scope {
 		return nil, ErrMixedScope
 	}
@@ -129,6 +133,25 @@ func controllerHarness(t *testing.T) (*Controller, *Repository, *controllerGatew
 		t.Fatal(err)
 	}
 	return c, repo, gw, &clock
+}
+
+func TestNewControllerNeverOpensUntilBoundedAuthoritativeInventoryIsClean(t *testing.T) {
+	c, _, gw, _ := controllerHarness(t)
+	if c.EntryAllowed() {
+		t.Fatal("empty local repository opened before broker inventory proof")
+	}
+	if _, err := c.Reconcile(context.Background()); err != nil || !c.EntryAllowed() {
+		t.Fatalf("clean reconcile err=%v entry=%v", err, c.EntryAllowed())
+	}
+	if gw.listDL.IsZero() {
+		t.Fatal("startup clean proof used an unbounded broker list")
+	}
+
+	c2, _, gw2, _ := controllerHarness(t)
+	gw2.listErr = errors.New("broker unavailable")
+	if _, err := c2.Reconcile(context.Background()); err == nil || c2.EntryAllowed() {
+		t.Fatalf("unavailable reconcile err=%v entry=%v", err, c2.EntryAllowed())
+	}
 }
 
 func TestControllerPersistsCreateBeforeDispatchAndArmsWithinDeadline(t *testing.T) {
@@ -335,11 +358,56 @@ func TestReplaceResponseLossRecoversOnlyTheExactNewIdentity(t *testing.T) {
 	}
 	stored, _ := repo.Get(ctx, active.ID)
 	gw.replaceErr = nil
-	gw.broker = []BrokerProtection{{Scope: gw.scope, ID: "broker-replaced", ClientOrderID: stored.ClientOrderID,
-		Quantity: 1, Trigger: 71000, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"}}
+	gw.broker = []BrokerProtection{
+		{Scope: gw.scope, ID: active.BrokerID, ClientOrderID: stored.ClientOrderID, Quantity: 1, Trigger: 70000,
+			Terminal: true, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"},
+		{Scope: gw.scope, ID: "broker-replaced", ClientOrderID: stored.ClientOrderID,
+			Quantity: 1, Trigger: 71000, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"},
+	}
 	recovered, err := c.Recover(ctx, stored.ID)
 	if err != nil || recovered.State != StateActive || recovered.BrokerID != "broker-replaced" || recovered.Trigger != 71000 || !c.EntryAllowed() {
 		t.Fatalf("recovered=%+v err=%v entry=%v", recovered, err, c.EntryAllowed())
+	}
+	restarted, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "response-loss-restart" })
+	if again, restartErr := restarted.Recover(ctx, stored.ID); restartErr != nil || again.BrokerID != "broker-replaced" || !restarted.EntryAllowed() {
+		t.Fatalf("restart recovered=%+v err=%v entry=%v", again, restartErr, restarted.EntryAllowed())
+	}
+}
+
+func TestRestartRecoverAndReconcileIgnoreOnlyExactRetiredReplaceLineage(t *testing.T) {
+	c, repo, gw, clock := controllerHarness(t)
+	ctx := context.Background()
+	fillAt := *clock
+	saga, _ := c.PlanFill(ctx, Fill{At: fillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+	one, _ := c.Register(ctx, saga.ID, "create", "2026-08-08", fillAt)
+	two, _ := c.Replace(ctx, one.ID, "replace-1", 71000, 1, "2026-08-08")
+	three, _ := c.Replace(ctx, two.ID, "replace-2", 72000, 1, "2026-08-08")
+	gw.broker = []BrokerProtection{
+		{Scope: gw.scope, ID: one.BrokerID, ClientOrderID: three.ClientOrderID, Quantity: 1, Trigger: 70000, Terminal: true, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"},
+		{Scope: gw.scope, ID: two.BrokerID, ClientOrderID: three.ClientOrderID, Quantity: 1, Trigger: 71000, Terminal: true, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"},
+		{Scope: gw.scope, ID: three.BrokerID, ClientOrderID: three.ClientOrderID, Quantity: 1, Trigger: 72000, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"},
+	}
+
+	restarted, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart" })
+	if _, err := restarted.Recover(ctx, three.ID); err != nil || !restarted.EntryAllowed() {
+		t.Fatalf("recover err=%v entry=%v", err, restarted.EntryAllowed())
+	}
+	restarted2, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart-2" })
+	if discrepancies, err := restarted2.Reconcile(ctx); err != nil || len(discrepancies) != 0 || !restarted2.EntryAllowed() {
+		t.Fatalf("reconcile discrepancies=%+v err=%v entry=%v", discrepancies, err, restarted2.EntryAllowed())
+	}
+
+	gw.broker[0].Trigger = 69999
+	restarted3, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart-3" })
+	if _, err := restarted3.Recover(ctx, three.ID); !errors.Is(err, ErrMutationInDoubt) || restarted3.EntryAllowed() {
+		t.Fatalf("mismatched retired err=%v entry=%v", err, restarted3.EntryAllowed())
+	}
+	gw.broker[0].Trigger = 70000
+	gw.broker = append(gw.broker, BrokerProtection{Scope: gw.scope, ID: "unrelated", ClientOrderID: three.ClientOrderID,
+		Quantity: 1, Trigger: 70000, Terminal: true, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"})
+	restarted4, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart-4" })
+	if _, err := restarted4.Recover(ctx, three.ID); !errors.Is(err, ErrMutationInDoubt) || restarted4.EntryAllowed() {
+		t.Fatalf("unrelated retired err=%v entry=%v", err, restarted4.EntryAllowed())
 	}
 }
 

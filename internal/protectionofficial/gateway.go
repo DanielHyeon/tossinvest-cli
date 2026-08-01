@@ -95,6 +95,11 @@ func (g *Gateway) Cancel(ctx context.Context, target protection.BrokerTarget) (p
 		return g.cancelObservation(target, raw)
 	}
 	var found *protection.CancelObservation
+	retired := make(map[string]protection.RetiredBrokerTarget, len(target.Retired))
+	seenRetired := make(map[string]bool, len(target.Retired))
+	for _, old := range target.Retired {
+		retired[old.BrokerID] = old
+	}
 	for _, group := range []string{"OPEN", "CLOSED"} {
 		cursor := ""
 		for page := 0; page < 10; page++ {
@@ -103,12 +108,24 @@ func (g *Gateway) Cancel(ctx context.Context, target protection.BrokerTarget) (p
 				return protection.CancelObservation{}, fmt.Errorf("%w: post-cancel %s read: %v", ErrAmbiguousConditional, group, listErr)
 			}
 			for _, item := range result.Orders {
-				if item.ID == target.BrokerID || item.ClientOrderID == target.ClientOrderID {
+				if item.ID == target.BrokerID {
 					observation, observationErr := g.cancelObservation(target, item)
 					if observationErr != nil || found != nil {
 						return protection.CancelObservation{}, ErrAmbiguousConditional
 					}
 					found = &observation
+					continue
+				}
+				if old, ok := retired[item.ID]; ok {
+					parsed, adaptErr := g.adapt(item)
+					if adaptErr != nil || seenRetired[item.ID] || !matchesRetired(target.Scope, old, parsed) {
+						return protection.CancelObservation{}, ErrAmbiguousConditional
+					}
+					seenRetired[item.ID] = true
+					continue
+				}
+				if item.ClientOrderID == target.ClientOrderID {
+					return protection.CancelObservation{}, ErrAmbiguousConditional
 				}
 			}
 			if !result.HasNext || result.NextCursor == "" {
@@ -248,7 +265,14 @@ func (g *Gateway) cancelObservation(target protection.BrokerTarget, raw official
 func matchesTarget(target protection.BrokerTarget, actual protection.BrokerProtection) bool {
 	return target.Scope == actual.Scope && target.BrokerID == actual.ID && target.ClientOrderID == actual.ClientOrderID &&
 		target.Trigger == actual.Trigger && target.Quantity == actual.Quantity && actual.OrderSide == "SELL" &&
-		actual.OrderType == "MARKET" && actual.ConditionType == "STOP"
+		actual.OrderType == "MARKET" && actual.ConditionType == "STOP" &&
+		(target.ExpireDate == "" || target.ExpireDate == actual.ExpireDate)
+}
+
+func matchesRetired(scope protection.Scope, target protection.RetiredBrokerTarget, actual protection.BrokerProtection) bool {
+	return actual.Terminal && !actual.Triggered && scope == actual.Scope && target.BrokerID == actual.ID &&
+		target.ClientOrderID == actual.ClientOrderID && target.Trigger == actual.Trigger && target.Quantity == actual.Quantity &&
+		target.ExpireDate == actual.ExpireDate && actual.OrderSide == "SELL" && actual.OrderType == "MARKET" && actual.ConditionType == "STOP"
 }
 
 func validExpireDate(value string) bool {

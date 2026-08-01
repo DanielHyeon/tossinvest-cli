@@ -1,7 +1,9 @@
 package protection
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -105,14 +107,10 @@ func NewController(repository *Repository, gateway ExecutionGateway, activation 
 		return nil, errors.New("protection: clock and identity source are required")
 	}
 	c := &Controller{repository: repository, gateway: gateway, scope: activation.scope, now: now, newID: newID, confirmed: make(map[string]activeConfirmation)}
-	// A restarted process has no in-memory proof that any durable ACTIVE row is
-	// still exact at the broker. Only an empty scope starts open; every persisted
-	// saga requires explicit recovery/reconciliation first.
-	rows, err := repository.List(context.Background(), activation.scope)
-	if err != nil {
-		return nil, fmt.Errorf("protection: inspect durable sagas at startup: %w", err)
-	}
-	c.entryOpen.Store(len(rows) == 0)
+	// Construction never proves broker inventory. Even an empty local database
+	// may coexist with an orphaned broker order, so only a bounded authoritative
+	// reconciliation/recovery may open this latch.
+	c.entryOpen.Store(false)
 	return c, nil
 }
 
@@ -327,7 +325,26 @@ func (c *Controller) Reconcile(ctx context.Context) ([]Discrepancy, error) {
 	if brokerCtx.Err() != nil {
 		return nil, ErrMutationInDoubt
 	}
-	discrepancies, err := Compare(c.scope, local, broker)
+	filtered := broker
+	matchedBySaga := make(map[string]BrokerProtection)
+	for _, saga := range local {
+		if saga.State != StateActive {
+			continue
+		}
+		expected, expectationErr := c.brokerExpectation(ctx, saga)
+		if expectationErr != nil {
+			_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, c.now(), "RECONCILE_DURABLE_LINEAGE_INVALID")
+			return nil, ErrMutationInDoubt
+		}
+		matched, next, selectErr := selectExpectedBroker(c.scope, saga.ClientOrderID, expected, filtered)
+		if selectErr != nil || matched.Terminal || matched.Triggered {
+			_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, c.now(), "RECONCILE_IDENTITY_MISMATCH")
+			return nil, ErrMutationInDoubt
+		}
+		matchedBySaga[saga.ID] = matched
+		filtered = next
+	}
+	discrepancies, err := Compare(c.scope, local, filtered)
 	if err != nil {
 		c.entryOpen.Store(false)
 		return nil, err
@@ -337,7 +354,7 @@ func (c *Controller) Reconcile(ctx context.Context) ([]Discrepancy, error) {
 			if saga.State != StateActive {
 				continue
 			}
-			matched, ok := exactBrokerForSaga(saga, broker)
+			matched, ok := matchedBySaga[saga.ID]
 			if !ok {
 				_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, c.now(), "RECONCILE_IDENTITY_MISMATCH")
 				return nil, ErrMutationInDoubt
@@ -385,28 +402,33 @@ func (c *Controller) Recover(ctx context.Context, sagaID string) (Saga, error) {
 	if brokerCtx.Err() != nil {
 		return Saga{}, ErrMutationInDoubt
 	}
-	var matched *BrokerProtection
-	for i := range broker {
-		candidate := &broker[i]
-		if (saga.BrokerID != "" && candidate.ID == saga.BrokerID) || candidate.ClientOrderID == saga.ClientOrderID {
-			if matched != nil {
-				c.entryOpen.Store(false)
-				return Saga{}, ErrDuplicateBrokerID
-			}
-			matched = candidate
-		}
+	expected, err := c.brokerExpectation(ctx, saga)
+	if err != nil {
+		return Saga{}, fmt.Errorf("%w: durable lineage: %v", ErrMutationInDoubt, err)
 	}
+	matched, filtered, selectErr := selectExpectedBroker(c.scope, saga.ClientOrderID, expected, broker)
 	now := c.now()
-	if matched == nil {
-		_, markErr := c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, string(DiscrepancyMissing))
+	if selectErr != nil {
+		reason := "RECOVERY_IDENTITY_MISMATCH"
+		if errors.Is(selectErr, ErrProtectionGone) {
+			reason = string(DiscrepancyMissing)
+		}
+		_, markErr := c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, reason)
 		if markErr != nil {
 			return Saga{}, fmt.Errorf("%w: missing protection and discrepancy write failed: %v", ErrMutationInDoubt, markErr)
 		}
-		return Saga{}, ErrProtectionGone
-	}
-	if !exactBrokerIdentity(saga, *matched) {
-		_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, "RECOVERY_IDENTITY_MISMATCH")
+		if errors.Is(selectErr, ErrProtectionGone) {
+			return Saga{}, ErrProtectionGone
+		}
 		return Saga{}, ErrMutationInDoubt
+	}
+	// Recovery observed the whole bounded inventory. Any unrelated non-terminal
+	// row is an orphan and therefore prevents the entry latch from reopening.
+	for _, candidate := range filtered {
+		if candidate.ID != matched.ID && !candidate.Terminal {
+			_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, "RECOVERY_ORPHAN")
+			return Saga{}, ErrMutationInDoubt
+		}
 	}
 	if matched.Triggered {
 		c.entryOpen.Store(false)
@@ -419,15 +441,16 @@ func (c *Controller) Recover(ctx context.Context, sagaID string) (Saga, error) {
 		}
 		return Saga{}, ErrProtectionGone
 	}
-	if !exactBrokerResult(saga, *matched) {
-		_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, "RECOVERY_IDENTITY_MISMATCH")
-		return Saga{}, ErrMutationInDoubt
-	}
 	if saga.State == StateActive {
 		if err := c.confirmActive(ctx, saga); err != nil {
 			return Saga{}, err
 		}
 		return saga, nil
+	}
+	if expected.pending != nil {
+		if err := c.repository.markAttempt(ctx, expected.pending.ID, MutationInDoubt, MutationAcknowledged, now, matched.ID); err != nil {
+			return Saga{}, fmt.Errorf("%w: persist recovered broker identity: %v", ErrMutationInDoubt, err)
+		}
 	}
 	active, err := c.repository.RecoverActive(ctx, saga.ID, saga.Revision, now, matched.ID, matched.Trigger, matched.Quantity)
 	if err != nil {
@@ -446,6 +469,10 @@ func (c *Controller) AuthorizeFlatten(ctx context.Context, sagaID, attemptID str
 	saga, err := c.repository.Get(ctx, sagaID)
 	if err != nil {
 		return FlattenAuthorization{}, err
+	}
+	target, err := c.brokerTargetForSaga(ctx, saga)
+	if err != nil {
+		return FlattenAuthorization{}, fmt.Errorf("%w: cancel target lineage: %v", ErrMutationInDoubt, err)
 	}
 	now := c.now()
 	canonical := `{"broker_id":` + strconv.Quote(saga.BrokerID) + `}`
@@ -471,7 +498,6 @@ func (c *Controller) AuthorizeFlatten(ctx context.Context, sagaID, attemptID str
 		return FlattenAuthorization{}, ErrMutationInDoubt
 	}
 	defer cancelBroker()
-	target := brokerTargetForSaga(saga)
 	cancel, callErr := c.gateway.Cancel(brokerCtx, target)
 	if callErr != nil || brokerCtx.Err() != nil || !cancel.Terminal || cancel.Triggered || cancel.Scope != c.scope || cancel.BrokerID != saga.BrokerID || cancel.ClientOrderID != saga.ClientOrderID {
 		c.entryOpen.Store(false)
@@ -551,24 +577,199 @@ func (c *Controller) refreshEntryLatch(ctx context.Context) error {
 	return nil
 }
 
-func brokerTargetForSaga(saga Saga) BrokerTarget {
-	return BrokerTarget{Scope: Scope{AccountRef: saga.AccountRef, Profile: saga.Profile, Market: saga.Market, Symbol: saga.Symbol},
-		BrokerID: saga.BrokerID, ClientOrderID: saga.ClientOrderID, Trigger: saga.Trigger, Quantity: saga.Quantity}
+type brokerExpectation struct {
+	id      string
+	body    ConditionalBody
+	retired []RetiredBrokerTarget
+	pending *MutationAttempt
 }
 
-func exactBrokerForSaga(saga Saga, broker []BrokerProtection) (BrokerProtection, bool) {
-	var matched BrokerProtection
-	count := 0
-	for _, candidate := range broker {
-		if candidate.ID == saga.BrokerID || candidate.ClientOrderID == saga.ClientOrderID {
-			if !exactBrokerResult(saga, candidate) {
-				return BrokerProtection{}, false
+func (c *Controller) brokerTargetForSaga(ctx context.Context, saga Saga) (BrokerTarget, error) {
+	expected, err := c.brokerExpectation(ctx, saga)
+	if err != nil || expected.id == "" {
+		return BrokerTarget{}, ErrInvalidSaga
+	}
+	return BrokerTarget{Scope: c.scope, BrokerID: expected.id, ClientOrderID: saga.ClientOrderID,
+		Trigger: expected.body.Trigger, Quantity: expected.body.Quantity, ExpireDate: expected.body.ExpireDate,
+		Retired: expected.retired}, nil
+}
+
+// brokerExpectation reconstructs the current identity and its exact retired
+// predecessors exclusively from durable acknowledged mutation attempts. An
+// in-doubt create/replace supplies an exact body but never invents its result ID.
+func (c *Controller) brokerExpectation(ctx context.Context, saga Saga) (brokerExpectation, error) {
+	attempts, err := c.repository.Attempts(ctx, saga.ID)
+	if err != nil {
+		return brokerExpectation{}, err
+	}
+	type acknowledged struct {
+		target string
+		body   ConditionalBody
+		kind   MutationKind
+		gen    int64
+	}
+	byResult := make(map[string]acknowledged)
+	var pending *MutationAttempt
+	for i := range attempts {
+		a := &attempts[i]
+		if a.Kind != MutationCreate && a.Kind != MutationReplace {
+			continue
+		}
+		body, bodyErr := attemptConditionalBody(*a, saga)
+		if bodyErr != nil {
+			return brokerExpectation{}, bodyErr
+		}
+		if a.State == MutationAcknowledged {
+			if a.ResultBrokerID == "" {
+				return brokerExpectation{}, ErrInvalidSaga
 			}
-			matched = candidate
-			count++
+			if _, duplicate := byResult[a.ResultBrokerID]; duplicate {
+				return brokerExpectation{}, ErrDuplicateBrokerID
+			}
+			byResult[a.ResultBrokerID] = acknowledged{target: a.TargetBrokerID, body: body, kind: a.Kind, gen: a.Generation}
+		}
+		if a.ID == saga.AttemptID && a.State == MutationInDoubt {
+			copy := *a
+			pending = &copy
 		}
 	}
-	return matched, count == 1
+
+	expected := brokerExpectation{id: saga.BrokerID, pending: pending}
+	if pending != nil && (pending.Kind == MutationCreate || pending.Kind == MutationReplace) {
+		body, bodyErr := attemptConditionalBody(*pending, saga)
+		if bodyErr != nil {
+			return brokerExpectation{}, bodyErr
+		}
+		expected.id = ""
+		expected.body = body
+		if pending.Kind == MutationReplace && pending.TargetBrokerID != saga.BrokerID {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+		if pending.Kind == MutationCreate && (pending.Generation != 1 || saga.Generation != 1 || saga.BrokerID != "") {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+		if pending.Kind == MutationReplace && (pending.Generation != saga.Generation || saga.PreviousBrokerID != pending.TargetBrokerID) {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+	} else {
+		current, ok := byResult[saga.BrokerID]
+		if !ok {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+		expected.body = current.body
+		if current.body.Trigger != saga.Trigger || current.body.Quantity != saga.Quantity {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+	}
+
+	chainID := saga.BrokerID
+	chainGeneration := saga.Generation
+	if pending != nil && pending.Kind == MutationReplace {
+		chainID = pending.TargetBrokerID
+	} else if pending != nil && pending.Kind == MutationCreate {
+		chainGeneration = 0
+	}
+	seen := make(map[string]bool)
+	for chainID != "" {
+		if seen[chainID] {
+			return brokerExpectation{}, ErrDuplicateBrokerID
+		}
+		seen[chainID] = true
+		current, ok := byResult[chainID]
+		if !ok {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+		if chainGeneration == 1 {
+			if current.kind != MutationCreate || current.gen != 1 || current.target != "" {
+				return brokerExpectation{}, ErrInvalidSaga
+			}
+		} else if current.kind != MutationReplace || current.gen != chainGeneration-1 || current.target == "" {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+		retireCurrent := expected.id == "" || chainID != expected.id
+		if retireCurrent {
+			expected.retired = append(expected.retired, RetiredBrokerTarget{BrokerID: chainID,
+				ClientOrderID: saga.ClientOrderID, Trigger: current.body.Trigger, Quantity: current.body.Quantity,
+				ExpireDate: current.body.ExpireDate})
+		}
+		if expected.id != "" && chainID == expected.id && saga.Generation > 1 && saga.PreviousBrokerID != current.target {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+		chainID = current.target
+		chainGeneration--
+	}
+	if chainGeneration != 0 || len(seen) != len(byResult) {
+		return brokerExpectation{}, ErrInvalidSaga
+	}
+	return expected, nil
+}
+
+func attemptConditionalBody(attempt MutationAttempt, saga Saga) (ConditionalBody, error) {
+	if attempt.SerializerVersion != SerializerVersion {
+		return ConditionalBody{}, ErrInvalidBody
+	}
+	decoder := json.NewDecoder(bytes.NewBufferString(attempt.CanonicalBody))
+	decoder.DisallowUnknownFields()
+	var body ConditionalBody
+	if err := decoder.Decode(&body); err != nil || decoder.More() {
+		return ConditionalBody{}, ErrInvalidBody
+	}
+	canonical, err := body.CanonicalJSON()
+	if err != nil || string(canonical) != attempt.CanonicalBody || body.ClientOrderID != saga.ClientOrderID ||
+		body.AccountRef != saga.AccountRef || body.Market != string(saga.Market) || body.Symbol != saga.Symbol {
+		return ConditionalBody{}, ErrInvalidBody
+	}
+	return body, nil
+}
+
+func exactExpectedBroker(scope Scope, clientID string, expected brokerExpectation, broker BrokerProtection) bool {
+	idMatches := expected.id == "" || broker.ID == expected.id
+	return broker.ID != "" && idMatches && broker.Scope.equal(scope) && broker.ClientOrderID == clientID &&
+		broker.Trigger == expected.body.Trigger && broker.Quantity == expected.body.Quantity &&
+		broker.ExpireDate == expected.body.ExpireDate && broker.OrderSide == "SELL" && broker.OrderType == "MARKET" &&
+		broker.ConditionType == "STOP"
+}
+
+func exactRetiredBroker(scope Scope, expected RetiredBrokerTarget, broker BrokerProtection) bool {
+	return broker.Terminal && !broker.Triggered && broker.Scope.equal(scope) && broker.ID == expected.BrokerID &&
+		broker.ClientOrderID == expected.ClientOrderID && broker.Trigger == expected.Trigger && broker.Quantity == expected.Quantity &&
+		broker.ExpireDate == expected.ExpireDate && broker.OrderSide == "SELL" && broker.OrderType == "MARKET" && broker.ConditionType == "STOP"
+}
+
+func selectExpectedBroker(scope Scope, clientID string, expected brokerExpectation, broker []BrokerProtection) (BrokerProtection, []BrokerProtection, error) {
+	retired := make(map[string]RetiredBrokerTarget, len(expected.retired))
+	for _, item := range expected.retired {
+		retired[item.BrokerID] = item
+	}
+	filtered := make([]BrokerProtection, 0, len(broker))
+	var matched *BrokerProtection
+	for i := range broker {
+		candidate := broker[i]
+		if old, ok := retired[candidate.ID]; ok {
+			if !exactRetiredBroker(scope, old, candidate) {
+				return BrokerProtection{}, nil, ErrMutationInDoubt
+			}
+			continue
+		}
+		filtered = append(filtered, candidate)
+		isCurrent := (expected.id != "" && candidate.ID == expected.id) ||
+			(expected.id == "" && candidate.ClientOrderID == clientID && candidate.Trigger == expected.body.Trigger && candidate.Quantity == expected.body.Quantity)
+		if isCurrent {
+			if matched != nil || !exactExpectedBroker(scope, clientID, expected, candidate) {
+				return BrokerProtection{}, nil, ErrDuplicateBrokerID
+			}
+			copy := candidate
+			matched = &copy
+			continue
+		}
+		if candidate.ClientOrderID == clientID {
+			return BrokerProtection{}, nil, ErrMutationInDoubt
+		}
+	}
+	if matched == nil {
+		return BrokerProtection{}, filtered, ErrProtectionGone
+	}
+	return *matched, filtered, nil
 }
 
 func boundedBrokerContext(parent context.Context, duration time.Duration) (context.Context, context.CancelFunc, error) {

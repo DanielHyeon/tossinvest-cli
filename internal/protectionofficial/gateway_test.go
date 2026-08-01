@@ -203,6 +203,35 @@ func TestGatewayCancelRejectsWrongOrDuplicateTerminalIdentity(t *testing.T) {
 	})
 }
 
+func TestGatewayCancelFallbackIgnoresOnlyAttestedRetiredReplaceRows(t *testing.T) {
+	target := protection.BrokerTarget{Scope: gatewayScope(), BrokerID: "co-current", ClientOrderID: "client-1", Trigger: 72000, Quantity: 1,
+		Retired: []protection.RetiredBrokerTarget{
+			{BrokerID: "co-old-1", ClientOrderID: "client-1", Trigger: 70000, Quantity: 1, ExpireDate: "2026-08-08"},
+			{BrokerID: "co-old-2", ClientOrderID: "client-1", Trigger: 71000, Quantity: 1, ExpireDate: "2026-08-08"},
+		}}
+	current := rawConditional("co-current", "client-1", "CANCELLED")
+	current.TriggerPrice = "72000"
+	old1 := rawConditional("co-old-1", "client-1", "COMPLETED")
+	old2 := rawConditional("co-old-2", "client-1", "EXPIRED")
+	old2.TriggerPrice = "71000"
+	client := &fakeClient{readErr: errors.New("gone"), pages: map[string]official.RawConditionalOrderList{
+		"OPEN:": {}, "CLOSED:": {Orders: []official.RawConditionalOrder{old1, current, old2}},
+	}}
+	gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
+	got, err := gateway.Cancel(context.Background(), target)
+	if err != nil || got.BrokerID != "co-current" || !got.Terminal || got.Triggered {
+		t.Fatalf("cancel=%+v err=%v", got, err)
+	}
+	got, err = gateway.Cancel(context.Background(), target)
+	if err != nil || got.BrokerID != "co-current" || !got.Terminal || got.Triggered {
+		t.Fatalf("repeated cancel=%+v err=%v", got, err)
+	}
+	client.pages["CLOSED:"].Orders[0].TriggerPrice = "69999"
+	if _, err := gateway.Cancel(context.Background(), target); !errors.Is(err, ErrAmbiguousConditional) {
+		t.Fatalf("mismatched retired cancel=%v", err)
+	}
+}
+
 func TestGatewayListIsBoundedAndRejectsMixedScope(t *testing.T) {
 	client := &fakeClient{pages: map[string]official.RawConditionalOrderList{
 		"OPEN:": {Orders: []official.RawConditionalOrder{rawConditional("co-1", "client-1", "WATCHING")}},
