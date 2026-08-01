@@ -1,0 +1,56 @@
+{
+  "file": "cmd/tossctl/marketschedule_test.go",
+  "source_sha256": "b7833e89f50a330b8751f1047cd75d340c7d2900dd3b363f115bf88ce6274cc3",
+  "package": "main",
+  "function": "observation",
+  "receiver": "stubScheduleCalendar",
+  "signature": "stubScheduleCalendar.observation(params=0, results=3)",
+  "start": {
+    "line": 34,
+    "column": 1
+  },
+  "end": {
+    "line": 38,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 2
+      },
+      "text": "s.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 8
+      },
+      "text": "s.mu.Unlock"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 36,
+        "column": 2
+      },
+      "text": "s.mu.Unlock"
+    }
+  ]
+}

@@ -30,9 +30,13 @@ package journal
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
+	"time"
 
+	marketclock "github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 )
 
@@ -54,6 +58,50 @@ type AccountExitEvent struct {
 	Symbol string
 	Market string
 }
+
+// BrokerOrderExitLink is the exact read-only lineage from a broker order to the
+// exit judgement that proposed its intent. AttemptID/AttemptNo are carried so a
+// transport can disclose the join rather than merely claim that it happened.
+// Ambiguous links deliberately carry no Event.
+type BrokerOrderExitLink struct {
+	BrokerOrderID string
+	AccountRef    string
+	Market        string
+	TradingDay    string
+	Engine        bool
+	AttemptID     string
+	AttemptNo     int
+	IntentID      string
+	Event         ExitEvent
+	Ambiguous     bool
+	UnknownReason string
+}
+
+// BrokerOrderScope is the minimum canonical identity needed to ask whether a
+// visible broker order belongs to one journal exit. Broker order numbers alone
+// are not assumed globally unique across accounts or trading days.
+type BrokerOrderScope struct {
+	BrokerOrderID string `json:"broker_order_id"`
+	AccountRef    string `json:"account_ref"`
+	Market        string `json:"market"`
+	TradingDay    string `json:"trading_day"`
+}
+
+const (
+	MaxBrokerOrderEvidenceScopes = 256
+	maxBrokerOrderLineageDepth   = 32
+	maxEvidenceRowsPerNode       = 8
+)
+
+var ErrBrokerOrderEvidenceScope = errors.New("journal: broker-order evidence scope is invalid or too large")
+
+// schemaV11 is intentionally index-only. It changes no historical row and
+// supports the console's bounded event-to-intent evidence join.
+const schemaV11 = `
+CREATE INDEX idx_exit_events_proposed_intent
+ON exit_events(proposed_intent_id)
+WHERE proposed_intent_id IS NOT NULL;
+`
 
 // TradeTrip is one frozen round trip plus the two joined facts the frozen row
 // does not hold.
@@ -253,50 +301,232 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 	return out, nil
 }
 
-// BrokerOrderIDs returns every broker order id this engine's own mutation
-// attempts recorded, sorted and de-duplicated (change console-orders-screen,
-// task 2.1).
+// BrokerOrderExitLinks connects only the requested visible broker orders to
+// persisted exit snapshots through explicit journal references:
 //
-// # What it answers and what it deliberately does not
+//	broker order id -> mutation attempt -> intent id -> exit event
 //
-// The orders screen asks one question of the ledger: was this order number one
-// the engine caused to exist? mutation_attempts.broker_order_id is the whole
-// answer — it is written when the broker acks a PLACE, a CANCEL or an AMEND, so
-// an id in this set is an id some attempt of this engine's produced. An id that
-// is not in it is either somebody's manual order or an attempt the broker never
-// acked, and the screen says "그 밖" rather than naming a person.
-//
-// It is NOT scoped by account, unlike every other read in this file. The other
-// four project an account's positions and their history, where mixing two
-// accounts would be a wrong screen; this one compares against order numbers the
-// broker issued, which are the broker's own identifiers. Scoping would mean
-// joining through intents.account_ref, and a spelling difference between that
-// column and the account the console is looking at would silently drop rows —
-// which on this screen renders as "the engine placed none of these".
-//
-// The empty id is excluded rather than returned. broker_order_id defaults to ”
-// for an attempt that never got an ack, and an empty entry would match every
-// order whose id the payload omitted.
-func (r *ReadOnly) BrokerOrderIDs(ctx context.Context) ([]string, error) {
-	rows, err := r.db.QueryContext(ctx,
-		`SELECT DISTINCT broker_order_id FROM mutation_attempts
-		  WHERE broker_order_id <> ''
-		  ORDER BY broker_order_id`)
+// Account/day are mandatory query predicates. A validated AMEND edge may carry
+// the evidence from an ancestor order to its replacement descendant. Cycle,
+// branching, excessive depth, duplicate event, or row-bound evidence is never
+// guessed through. The one recursive set query contains every event column, so
+// it neither materializes all exit_events nor performs an event-per-row N+1.
+func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context,
+	scopes []BrokerOrderScope,
+) ([]BrokerOrderExitLink, error) {
+	if len(scopes) == 0 {
+		return nil, nil
+	}
+	if len(scopes) > MaxBrokerOrderEvidenceScopes {
+		return nil, fmt.Errorf("%w: %d scopes exceeds %d", ErrBrokerOrderEvidenceScope,
+			len(scopes), MaxBrokerOrderEvidenceScopes)
+	}
+	clean := make([]BrokerOrderScope, len(scopes))
+	for i, scope := range scopes {
+		market, marketErr := marketclock.ParseMarket(scope.Market)
+		if marketErr != nil {
+			return nil, fmt.Errorf("%w: scope %d market: %v", ErrBrokerOrderEvidenceScope, i, marketErr)
+		}
+		clean[i] = BrokerOrderScope{BrokerOrderID: scope.BrokerOrderID,
+			AccountRef: strings.TrimSpace(scope.AccountRef), Market: string(market),
+			TradingDay: strings.TrimSpace(scope.TradingDay)}
+		if len(clean[i].BrokerOrderID) == 0 || clean[i].AccountRef == "" {
+			return nil, fmt.Errorf("%w: scope %d has no broker order or account", ErrBrokerOrderEvidenceScope, i)
+		}
+		if _, err := time.Parse("2006-01-02", clean[i].TradingDay); err != nil {
+			return nil, fmt.Errorf("%w: scope %d trading day: %v", ErrBrokerOrderEvidenceScope, i, err)
+		}
+	}
+	rawScopes, err := json.Marshal(clean)
 	if err != nil {
-		return nil, fmt.Errorf("journal: listing the broker order ids in %s: %w", r.path, err)
+		return nil, fmt.Errorf("journal: encoding broker-order evidence scope: %w", err)
+	}
+	rowLimit := len(clean)*(maxBrokerOrderLineageDepth+1)*maxEvidenceRowsPerNode + 1
+	rows, err := r.db.QueryContext(ctx, `
+		WITH RECURSIVE
+		requested(request_index, order_id, account_ref, market, trading_day) AS (
+			SELECT CAST(key AS INTEGER), json_extract(value,'$.broker_order_id'),
+			       trim(json_extract(value,'$.account_ref')), trim(json_extract(value,'$.market')),
+			       trim(json_extract(value,'$.trading_day'))
+			  FROM json_each(?)
+		),
+		ancestors(request_index, requested_id, account_ref, market, trading_day,
+		          current_id, depth, path, cycle) AS (
+			SELECT request_index, order_id, account_ref, market, trading_day, order_id, 0,
+			       json_array(order_id), 0 FROM requested
+			UNION ALL
+			SELECT x.request_index, x.requested_id, x.account_ref, x.market, x.trading_day,
+			       l.parent_order_id, x.depth+1, json_insert(x.path,'$[#]',l.parent_order_id),
+			       EXISTS(SELECT 1 FROM json_each(x.path) seen
+			               WHERE seen.value=l.parent_order_id)
+			  FROM ancestors x
+			  JOIN lineage_edges l ON l.id=(
+			       SELECT min(sl.id) FROM lineage_edges sl
+			       JOIN mutation_attempts sa ON sa.id=sl.attempt_id AND sa.intent_id=sl.intent_id
+			            AND sa.kind='AMEND' AND sa.state='CONFIRMED'
+			            AND sa.target_order_id=sl.parent_order_id AND sa.broker_order_id=sl.child_order_id
+			       JOIN intents si ON si.id=sl.intent_id AND si.account_ref=x.account_ref
+			            AND si.market=x.market AND si.trading_day=x.trading_day
+			       WHERE sl.child_order_id=x.current_id AND sl.relation='replaces'
+			       HAVING count(*)=1)
+			 WHERE x.cycle=0 AND x.depth < ?
+		)
+		SELECT x.request_index, x.requested_id, x.account_ref, x.market, x.trading_day,
+		       x.current_id, x.depth, x.cycle,
+		       (SELECT count(*) FROM lineage_edges bl
+		         JOIN mutation_attempts ba ON ba.id=bl.attempt_id AND ba.intent_id=bl.intent_id
+		              AND ba.kind='AMEND' AND ba.state='CONFIRMED' AND ba.target_order_id=bl.parent_order_id
+		              AND ba.broker_order_id=bl.child_order_id
+		         JOIN intents bi ON bi.id=bl.intent_id AND bi.account_ref=x.account_ref
+		              AND bi.market=x.market AND bi.trading_day=x.trading_day
+		        WHERE bl.child_order_id=x.current_id AND bl.relation='replaces') AS parent_count,
+		       (SELECT count(*) FROM lineage_edges tl
+		         WHERE tl.child_order_id=x.current_id AND tl.relation='replaces') AS total_parent_count,
+		       EXISTS(SELECT 1 FROM mutation_attempts oa JOIN intents oi ON oi.id=oa.intent_id
+		               WHERE oa.broker_order_id=x.current_id AND oa.kind='PLACE' AND oa.state='CONFIRMED'
+		                 AND oi.account_ref=x.account_ref AND oi.market=x.market
+		                 AND oi.trading_day=x.trading_day) AS engine,
+		       (SELECT count(*) FROM mutation_attempts pa JOIN intents pi ON pi.id=pa.intent_id
+		         WHERE pa.broker_order_id=x.current_id AND pa.kind='PLACE' AND pa.state='CONFIRMED'
+		           AND pi.account_ref=x.account_ref AND pi.market=x.market
+		           AND pi.trading_day=x.trading_day) AS place_count,
+		       a.id, a.attempt_no, i.id,
+		       (SELECT count(*) FROM exit_events ce WHERE ce.proposed_intent_id=i.id) AS event_count,
+		       e.id, e.position_id, coalesce(e.observed_price,''), coalesce(e.high_water,''),
+		       coalesce(e.baseline_after,''), coalesce(e.level_after,''), coalesce(e.action,''),
+		       coalesce(e.proposed_intent_id,''), e.created_at, e.position_generation, e.policy_id,
+		       e.policy_version, e.policy_digest, e.snapshot_id, e.decision_id, e.observation_id,
+		       e.next_target, e.next_protection, e.observation_source, e.observed_at,
+		       e.projected_quantity, e.proposal_ratio, e.state_only, e.suppressed_reason,
+		       e.saved_snapshot_json, e.recomputed_snapshot_json, e.effective_snapshot_json,
+		       e.effective_source, e.arm_suppressed_reason
+		  FROM ancestors x
+		  LEFT JOIN mutation_attempts a ON a.id=(
+		       SELECT min(pa.id) FROM mutation_attempts pa JOIN intents pi ON pi.id=pa.intent_id
+		       WHERE pa.broker_order_id=x.current_id AND pa.kind='PLACE' AND pa.state='CONFIRMED'
+		         AND pi.account_ref=x.account_ref AND pi.market=x.market AND pi.trading_day=x.trading_day
+		       HAVING count(*)=1)
+		  LEFT JOIN intents i ON i.id=a.intent_id AND i.account_ref=x.account_ref
+		       AND i.market=x.market AND i.trading_day=x.trading_day
+		  LEFT JOIN exit_events e ON e.id=(
+		       SELECT min(ee.id) FROM exit_events ee WHERE ee.proposed_intent_id=i.id HAVING count(*)=1)
+		 ORDER BY x.request_index, x.depth
+		 LIMIT ?`, string(rawScopes), maxBrokerOrderLineageDepth, rowLimit)
+	if err != nil {
+		return nil, fmt.Errorf("journal: linking scoped broker orders to exit evidence in %s: %w", r.path, err)
 	}
 	defer rows.Close()
 
-	var out []string
-	for rows.Next() {
-		var id string
-		if err := rows.Scan(&id); err != nil {
-			return nil, fmt.Errorf("journal: reading a broker order id: %w", err)
+	type aggregate struct {
+		unsafeReason string
+		events       map[int64]ExitEvent
+		attemptSet   map[string]bool
+		attempts     map[int64]struct {
+			id string
+			no int
+			in string
 		}
-		out = append(out, id)
+	}
+	out := make([]BrokerOrderExitLink, len(clean))
+	aggregates := make([]aggregate, len(clean))
+	for i, scope := range clean {
+		out[i] = BrokerOrderExitLink{BrokerOrderID: scope.BrokerOrderID, AccountRef: scope.AccountRef,
+			Market: scope.Market, TradingDay: scope.TradingDay, UnknownReason: "exit_evidence_unlinked"}
+		aggregates[i].events = map[int64]ExitEvent{}
+		aggregates[i].attemptSet = map[string]bool{}
+		aggregates[i].attempts = map[int64]struct {
+			id string
+			no int
+			in string
+		}{}
+	}
+	rowCount := 0
+	for rows.Next() {
+		rowCount++
+		if rowCount >= rowLimit {
+			return nil, fmt.Errorf("%w: evidence row bound %d reached", ErrBrokerOrderEvidenceScope, rowLimit-1)
+		}
+		var requestIndex, depth, cycle, parentCount, totalParentCount, engine, placeCount, eventCount int
+		var requestedID, accountRef, market, tradingDay, currentID string
+		var attemptID, intentID sql.NullString
+		var attemptNo sql.NullInt64
+		var eventID sql.NullInt64
+		var eventPosition, observedPrice, highWater, baselineAfter, levelAfter sql.NullString
+		var action, proposedIntent, createdAt sql.NullString
+		var evidence exitEventEvidence
+		if err := rows.Scan(&requestIndex, &requestedID, &accountRef, &market, &tradingDay,
+			&currentID, &depth, &cycle, &parentCount, &totalParentCount, &engine, &placeCount,
+			&attemptID, &attemptNo, &intentID, &eventCount, &eventID, &eventPosition, &observedPrice,
+			&highWater, &baselineAfter, &levelAfter, &action, &proposedIntent, &createdAt,
+			&evidence.Generation, &evidence.PolicyID, &evidence.PolicyVersion, &evidence.PolicyDigest,
+			&evidence.SnapshotID, &evidence.DecisionID, &evidence.ObservationID,
+			&evidence.NextTarget, &evidence.NextProtection, &evidence.ObservationSource,
+			&evidence.ObservedAt, &evidence.ProjectedQuantity, &evidence.ProposalRatio,
+			&evidence.StateOnly, &evidence.SuppressedReason, &evidence.SavedJSON,
+			&evidence.RecomputedJSON, &evidence.EffectiveJSON, &evidence.EffectiveSource,
+			&evidence.ArmSuppressedReason); err != nil {
+			return nil, fmt.Errorf("journal: reading scoped broker-order exit evidence: %w", err)
+		}
+		if requestIndex < 0 || requestIndex >= len(out) || requestedID != out[requestIndex].BrokerOrderID ||
+			accountRef != out[requestIndex].AccountRef || market != out[requestIndex].Market ||
+			tradingDay != out[requestIndex].TradingDay {
+			return nil, fmt.Errorf("journal: scoped broker-order evidence returned an invalid request identity")
+		}
+		if engine != 0 {
+			out[requestIndex].Engine = true
+		}
+		switch {
+		case cycle != 0:
+			aggregates[requestIndex].unsafeReason = "lineage_cycle"
+		case parentCount > 1 && aggregates[requestIndex].unsafeReason == "":
+			aggregates[requestIndex].unsafeReason = "lineage_ambiguous"
+		case totalParentCount > parentCount && aggregates[requestIndex].unsafeReason == "":
+			aggregates[requestIndex].unsafeReason = "lineage_scope_mismatch"
+		case depth >= maxBrokerOrderLineageDepth && totalParentCount > 0 && aggregates[requestIndex].unsafeReason == "":
+			aggregates[requestIndex].unsafeReason = "lineage_depth_exceeded"
+		case placeCount > 1 && aggregates[requestIndex].unsafeReason == "":
+			aggregates[requestIndex].unsafeReason = "ambiguous_exit_evidence"
+		case eventCount > 1 && aggregates[requestIndex].unsafeReason == "":
+			aggregates[requestIndex].unsafeReason = "ambiguous_exit_evidence"
+		}
+		if !eventID.Valid {
+			continue
+		}
+		event := ExitEvent{ID: eventID.Int64, PositionID: eventPosition.String,
+			ObservedPrice: observedPrice.String, HighWater: highWater.String,
+			BaselineAfter: baselineAfter.String, LevelAfter: levelAfter.String, Action: action.String,
+			ProposedIntentID: proposedIntent.String, CreatedAt: createdAt.String}
+		if err := hydrateExitEventEvidence(&event, evidence); err != nil {
+			event.Evaluation = ExitEvaluation{}
+			event.Evaluation.Effective.UnknownReason = "invalid_event_evidence"
+		}
+		aggregates[requestIndex].events[event.ID] = event
+		aggregates[requestIndex].attemptSet[attemptID.String+"\x00"+intentID.String] = true
+		aggregates[requestIndex].attempts[event.ID] = struct {
+			id string
+			no int
+			in string
+		}{id: attemptID.String, no: int(attemptNo.Int64), in: intentID.String}
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("journal: listing the broker order ids in %s: %w", r.path, err)
+		return nil, fmt.Errorf("journal: reading scoped broker-order exit evidence: %w", err)
+	}
+	for i := range out {
+		agg := aggregates[i]
+		if agg.unsafeReason != "" || len(agg.events) > 1 || len(agg.attemptSet) > 1 {
+			out[i].Ambiguous = true
+			out[i].UnknownReason = agg.unsafeReason
+			if out[i].UnknownReason == "" {
+				out[i].UnknownReason = "ambiguous_exit_evidence"
+			}
+			continue
+		}
+		for id, event := range agg.events {
+			attempt := agg.attempts[id]
+			out[i].Event, out[i].AttemptID, out[i].AttemptNo, out[i].IntentID =
+				event, attempt.id, attempt.no, attempt.in
+			out[i].UnknownReason = event.Evaluation.Effective.UnknownReason
+		}
 	}
 	return out, nil
 }

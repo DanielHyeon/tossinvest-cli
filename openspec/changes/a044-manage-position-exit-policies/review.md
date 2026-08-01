@@ -13,7 +13,12 @@
 ## Verification evidence
 
 - OpenSpec strict validation: pass.
-- Journal migration v11 reserved; downgrade는 backup restore/reconcile 절차를 따른다.
+- a043의 index-only journal v11을 보존하고 a044의 additive lifecycle schema는 v12로 예약했다.
+  v11→v12 upgrade, 실패 transaction의 table/user_version rollback, backup restore, migration commit 직후
+  SIGKILL 재개를 독립 테스트하며 downgrade는 backup restore/reconcile 절차를 따른다.
+- Exact SHA `56dec959f0fcd6e5f66da970ddc90ffc76d78d68`에서 독립 유지보수·보안 재검토를
+  CLEAN으로 통과했다. generation/version CAS, one-time capability, private endpoint 파일 방어,
+  3초 danger delay, input-free UI와 LIVE/broker mutation 불변을 재확인했다.
 
 ## Verdict
 

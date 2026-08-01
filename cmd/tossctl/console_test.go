@@ -31,9 +31,11 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/scheduler"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
@@ -368,7 +370,9 @@ func TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingEl
 	src := readSource(t, "console.go")
 	for _, want := range []string{
 		"consoleJournalPath(root)",
-		"JournalPath:  journalPath",
+		"positionpolicyrpc.Dial(ctx, descriptorPath)",
+		"JournalPath:      journalPath",
+		"PositionPolicies: positionPolicyCommander",
 		"verifyRunLockPath(verifyRecord)",
 	} {
 		if !strings.Contains(src, want) {
@@ -378,6 +382,22 @@ func TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingEl
 	if strings.Contains(src, "journal.Open(") {
 		t.Error("console.go opens the journal writable for the console; the dashboard opens it read-only " +
 			"itself, and this path would create and migrate it")
+	}
+}
+
+func TestConsolePolicyWiringCannotOpenOrMigrateTheTradingJournal(t *testing.T) {
+	src := readSource(t, "console.go")
+	for _, forbidden := range []string{
+		"NewPositionPolicyCommandService", "journal.Open(", "ApplyPositionPolicy(",
+	} {
+		if strings.Contains(src, forbidden) {
+			t.Errorf("console process contains forbidden journal command capability %q", forbidden)
+		}
+	}
+	for _, required := range []string{"positionpolicyrpc.DescriptorPath", "positionpolicyrpc.Dial"} {
+		if !strings.Contains(src, required) {
+			t.Errorf("console process lacks narrow engine client %q", required)
+		}
 	}
 }
 
@@ -833,12 +853,23 @@ var consoleBrokerBuildSites = map[string]string{
 // the shape a per-seam test cannot see and this one is for.
 //
 // The runtime half opens every read screen the console serves, twice each and then
-// both at once, against a factory that counts. The static half binds it to the
+// all at once, against a factory that counts. The static half binds it to the
 // wiring: runConsole builds one shared resolver and hands it to every seam, and
 // nothing else in console.go builds a client except the sites argued for in
 // consoleBrokerBuildSites.
 func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 	srv := newVerifyServer(t)
+	root := &rootOptions{configDir: t.TempDir()}
+	if err := scheduler.NewDesiredStore(filepath.Join(root.configDir, scheduler.DesiredFileName)).Save(
+		context.Background(), scheduler.DesiredState{
+			Version: scheduler.SchedulerVersion,
+			Market:  scheduler.MarketScopeKR,
+			Session: scheduler.SessionRegular,
+		},
+	); err != nil {
+		t.Fatalf("save market schedule desired state: %v", err)
+	}
+	calendar := &stubScheduleCalendar{response: productionKRCalendar()}
 	var (
 		mu    sync.Mutex
 		built int
@@ -850,13 +881,13 @@ func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 		mu.Lock()
 		built++
 		mu.Unlock()
-		return official.New(
+		return scheduleCalendarBroker{Client: official.New(
 			official.Credentials{APIKey: "k", SecretKey: "s"},
 			filepath.Join(t.TempDir(), "token.json"),
 			official.WithBaseURL(srv.URL),
 			official.WithHTTPClient(srv.Client()),
 			official.WithAccountSeq(7),
-		), "123-45-678901", nil
+		), calendar: calendar}, "123-45-678901", nil
 	}
 	t.Cleanup(func() { verifyBrokerFactory = previous })
 
@@ -866,23 +897,36 @@ func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 		return built
 	}
 
-	// The seams as runConsole wires them: one resolver, built once at startup,
-	// every screen opened off it afterwards.
-	shared := newConsoleBroker(&rootOptions{})
-	positions, orders := newConsoleHoldings(shared), consoleOrdersSeam(shared)
-	screens := []struct {
+	type readScreen struct {
 		name string
 		open func() error
-	}{
-		{"/dashboard 포지션", func() error {
-			_, err := positions.Holdings(context.Background(), "")
-			return err
-		}},
-		{"/orders", func() error {
-			_, err := orders.Orders(context.Background())
-			return err
-		}},
 	}
+	// The seams as runConsole wires them: one resolver, built once at startup,
+	// every screen opened off it afterwards. Constructing the slice from the
+	// resolver also keeps the serial and concurrent halves on the same screen set.
+	readScreens := func(shared *consoleBroker) []readScreen {
+		positions, orders := newConsoleHoldings(shared), consoleOrdersSeam(shared)
+		marketSchedule := consoleMarketScheduleSeam(root, shared)
+		marketSchedule.now = func() time.Time {
+			return time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+		}
+		return []readScreen{
+			{"/dashboard 포지션", func() error {
+				_, err := positions.Holdings(context.Background(), "")
+				return err
+			}},
+			{"/orders", func() error {
+				_, err := orders.Orders(context.Background())
+				return err
+			}},
+			{"/optimization/market-schedule", func() error {
+				_, err := marketSchedule.Read(context.Background())
+				return err
+			}},
+		}
+	}
+	shared := newConsoleBroker(root)
+	screens := readScreens(shared)
 	for round := 0; round < 2; round++ {
 		for _, screen := range screens {
 			if err := screen.open(); err != nil {
@@ -899,26 +943,20 @@ func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 	// And two screens opened in the same second are still one resolution: the
 	// build is serialised rather than raced, which is the case a warm cache hides.
 	before := resolutions()
-	cold := newConsoleBroker(&rootOptions{})
-	coldPositions, coldOrders := newConsoleHoldings(cold), consoleOrdersSeam(cold)
+	coldScreens := readScreens(newConsoleBroker(root))
 	var wg sync.WaitGroup
-	errs := make([]error, len(screens))
-	for i := range screens {
+	errs := make([]error, len(coldScreens))
+	for i := range coldScreens {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			switch i {
-			case 0:
-				_, errs[i] = coldPositions.Holdings(context.Background(), "")
-			default:
-				_, errs[i] = coldOrders.Orders(context.Background())
-			}
+			errs[i] = coldScreens[i].open()
 		}(i)
 	}
 	wg.Wait()
 	for i, err := range errs {
 		if err != nil {
-			t.Fatalf("opening %s concurrently: %v", screens[i].name, err)
+			t.Fatalf("opening %s concurrently: %v", coldScreens[i].name, err)
 		}
 	}
 	if got := resolutions() - before; got != 1 {
@@ -974,10 +1012,17 @@ func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 
 	// And runConsole builds ONE resolver and hands it to every read seam.
 	var (
-		holder    string
-		builds    int
-		seamArgs  = map[string]string{}
-		seamNames = []string{"newConsoleHoldings", "consoleOrdersSeam"}
+		holder   string
+		builds   int
+		seamArgs = map[string]string{}
+		seams    = []struct {
+			name      string
+			sharedArg int
+		}{
+			{name: "newConsoleHoldings", sharedArg: 0},
+			{name: "consoleOrdersSeam", sharedArg: 0},
+			{name: "consoleMarketScheduleSeam", sharedArg: 1},
+		}
 	)
 	for _, decl := range file.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
@@ -1003,12 +1048,12 @@ func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 				}
 			case *ast.CallExpr:
 				ident, ok := node.Fun.(*ast.Ident)
-				if !ok || len(node.Args) != 1 {
+				if !ok {
 					return true
 				}
-				for _, seam := range seamNames {
-					if ident.Name == seam {
-						seamArgs[seam] = types.ExprString(node.Args[0])
+				for _, seam := range seams {
+					if ident.Name == seam.name && seam.sharedArg < len(node.Args) {
+						seamArgs[seam.name] = types.ExprString(node.Args[seam.sharedArg])
 					}
 				}
 			}
@@ -1019,16 +1064,16 @@ func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 		t.Fatalf("runConsole builds %d shared resolvers, want exactly 1; a second one is a "+
 			"second account resolution wearing the shared resolver's name", builds)
 	}
-	for _, seam := range seamNames {
-		got, wired := seamArgs[seam]
+	for _, seam := range seams {
+		got, wired := seamArgs[seam.name]
 		if !wired {
 			t.Errorf("runConsole no longer wires %s; the guard is not reading the console's "+
-				"read seams", seam)
+				"read seams", seam.name)
 			continue
 		}
 		if got != holder {
 			t.Errorf("runConsole hands %s %q while the shared resolver is %q; a seam with its "+
-				"own resolver resolves the account a second time", seam, got, holder)
+				"own resolver resolves the account a second time", seam.name, got, holder)
 		}
 	}
 }

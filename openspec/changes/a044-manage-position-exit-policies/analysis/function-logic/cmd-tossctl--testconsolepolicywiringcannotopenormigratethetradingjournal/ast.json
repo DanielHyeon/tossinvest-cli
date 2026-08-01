@@ -1,0 +1,103 @@
+{
+  "file": "cmd/tossctl/console_test.go",
+  "source_sha256": "18fc698c32f9264c182c12c6404c5d5fe321764e643422cff35698e3b6f88d14",
+  "package": "main",
+  "function": "TestConsolePolicyWiringCannotOpenOrMigrateTheTradingJournal",
+  "signature": "TestConsolePolicyWiringCannotOpenOrMigrateTheTradingJournal(params=1, results=0)",
+  "start": {
+    "line": 388,
+    "column": 1
+  },
+  "end": {
+    "line": 402,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 390,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 393,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 398,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 9
+      },
+      "text": "readSource"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 394,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

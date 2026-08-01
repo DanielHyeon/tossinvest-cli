@@ -1,0 +1,335 @@
+{
+  "file": "internal/console/position_policy.go",
+  "source_sha256": "fabb2773d2086a58f5b2e5dc7823b2f802d3b3933b60321d118eb44d17f1171a",
+  "package": "console",
+  "function": "handlePositionManagement",
+  "receiver": "Console",
+  "signature": "Console.handlePositionManagement(params=2, results=0)",
+  "start": {
+    "line": 82,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 108,
+        "column": 10
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 101,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 105,
+        "column": 4
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 11
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 11
+      },
+      "text": "r.URL.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 52
+      },
+      "text": "positionpolicy.Descriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 3
+      },
+      "text": "c.render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 17
+      },
+      "text": "c.opts.PositionPolicies.List"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 46
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 18
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 3
+      },
+      "text": "c.render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 18
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 38
+      },
+      "text": "c.policyAction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 27
+      },
+      "text": "exitpolicy.RegisteredCommonPolicies"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 19
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 39
+      },
+      "text": "c.policyAction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 7
+      },
+      "text": "state.ExternalLifecycleEligible"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 19
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 39
+      },
+      "text": "c.policyAction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 62
+      },
+      "text": "state.ExternalLifecycleEligible"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 18
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 38
+      },
+      "text": "c.policyAction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 100,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 102,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 106,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 109,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

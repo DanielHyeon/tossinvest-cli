@@ -20,7 +20,7 @@ func TestMigrationV9ToV10IsAdditiveNullableAndPreservesRows(t *testing.T) {
 	}
 
 	j := openTestJournalAt(t, path)
-	if version, err := j.SchemaVersion(context.Background()); err != nil || version != 10 {
+	if version, err := j.SchemaVersion(context.Background()); err != nil || version != SchemaVersion {
 		t.Fatalf("schema version = %d, err=%v", version, err)
 	}
 	if after := countRows(t, j.db, v8AllTables); !sameCounts(before, after) {
@@ -110,7 +110,7 @@ func TestFailedV10MigrationRollsBackDDLMetadataAndUserVersion(t *testing.T) {
 	// head build can migrate it forward without losing the v9 rows.
 	restoreBackup(t, backups[0], path)
 	restored := openTestJournalAt(t, path)
-	if version, versionErr := restored.SchemaVersion(context.Background()); versionErr != nil || version != 10 {
+	if version, versionErr := restored.SchemaVersion(context.Background()); versionErr != nil || version != SchemaVersion {
 		t.Fatalf("restored version = %d, err=%v", version, versionErr)
 	}
 	if got := countRows(t, restored.db, v8AllTables); !sameCounts(got, before) {

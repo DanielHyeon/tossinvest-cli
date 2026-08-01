@@ -101,7 +101,11 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"operating_modes",
 		"position_adjustments",
 		"position_adoptions",
+		"position_policy_events",
+		"position_policy_lifecycles",
 		"positions",
+		"protection_mutation_attempts",
+		"protection_sagas",
 		"reconcile_states",
 		"risk_reservations",
 		"schema_meta",
@@ -219,6 +223,16 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"positions": {
 			"account_ref", "adoption_id", "avg_price", "closed_at", "entry_decision_id",
 			"id", "instance_seq", "market", "opened_at", "quantity", "state", "symbol",
+		},
+		"protection_sagas": {
+			"account_ref", "attempt_id", "broker_id", "client_order_id", "generation",
+			"last_event_fingerprint", "last_event_kind", "market", "pending_quantity",
+			"pending_trigger", "previous_broker_id", "profile", "quantity", "reconcile_reason",
+			"revision", "saga_id", "state", "symbol", "trigger", "updated_at",
+		},
+		"protection_mutation_attempts": {
+			"attempt_id", "canonical_body", "created_at", "generation", "kind", "result_broker_id",
+			"saga_id", "serializer_version", "state", "target_broker_id", "updated_at",
 		},
 	}
 	for table, want := range wantColumns {
@@ -500,6 +514,7 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_attempts_state",
 		"idx_attempts_intent",
 		"idx_attempts_broker_order",
+		"idx_exit_events_proposed_intent",
 		"idx_transitions_attempt",
 		"idx_lineage_child",
 		"idx_lineage_parent",

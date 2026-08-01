@@ -126,6 +126,9 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		// 2.1). It is a SELECT DISTINCT over one column of mutation_attempts and
 		// it reaches the same mode=ro connection every other read here does.
 		"BrokerOrderIDs": true,
+		// a043's deterministic broker-order -> attempt -> exit-intent read. It is
+		// another SELECT-only projection on the same query-only connection.
+		"BrokerOrderExitLinks": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {
@@ -259,40 +262,9 @@ func insertAttemptWithBrokerOrder(t *testing.T, j *Journal, attemptID, intentID,
 	if _, err := j.db.ExecContext(context.Background(),
 		`INSERT INTO mutation_attempts
 		   (id, intent_id, kind, state, attempt_no, broker_order_id, fingerprint, recorded_at)
-		 VALUES (?, ?, 'PLACE', 'RECORDED', 1, ?, 'fp', '2026-03-30T00:30:00Z')`,
+		 VALUES (?, ?, 'PLACE', 'CONFIRMED', 1, ?, 'fp', '2026-03-30T00:30:00Z')`,
 		attemptID, intentID, brokerOrderID); err != nil {
 		t.Fatalf("insert attempt %s: %v", attemptID, err)
-	}
-}
-
-// TestTheLedgerCanSayWhichBrokerOrdersTheEngineIssued.
-//
-// The orders screen has to distinguish an order the engine placed from one a
-// person placed in the app, and the only record of the first is
-// mutation_attempts.broker_order_id — the id the broker handed back when it
-// acked. Without this read the screen either omits the column or invents it, and
-// an invented "manual" label on an engine order is an operator concluding the
-// engine is idle while it is trading.
-func TestTheLedgerCanSayWhichBrokerOrdersTheEngineIssued(t *testing.T) {
-	path := filepath.Join(t.TempDir(), DBFileName)
-	j := openTestJournalAt(t, path)
-	insertIntent(t, j, "intent-1")
-	insertAttemptWithBrokerOrder(t, j, "a-1", "intent-1", "ord-b")
-	insertAttemptWithBrokerOrder(t, j, "a-2", "intent-1", "ord-a")
-	// A retry of the same order: the id is recorded twice and the screen must
-	// not see it twice.
-	insertAttemptWithBrokerOrder(t, j, "a-3", "intent-1", "ord-a")
-	// An attempt the broker never acked. There is no order to attribute, and an
-	// empty id matching an order with no id would attribute every one of them.
-	insertAttemptWithBrokerOrder(t, j, "a-4", "intent-1", "")
-
-	got, err := openTestReadOnly(t, path).BrokerOrderIDs(context.Background())
-	if err != nil {
-		t.Fatalf("BrokerOrderIDs: %v", err)
-	}
-	want := []string{"ord-a", "ord-b"}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("BrokerOrderIDs = %v, want %v (sorted, de-duplicated, and no empty id)", got, want)
 	}
 }
 

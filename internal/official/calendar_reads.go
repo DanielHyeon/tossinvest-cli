@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // MarketCalendar fetches trading-hours calendar info for a market.
@@ -24,6 +25,9 @@ func (c *Client) MarketCalendar(ctx context.Context, country, date string) (map[
 	if country != "KR" && country != "US" {
 		return nil, fmt.Errorf("market calendar country must be KR or US, got %q", country)
 	}
+	if err := validateMarketCalendarDate(date); err != nil {
+		return nil, err
+	}
 	q := url.Values{}
 	if date != "" {
 		q.Set("date", date)
@@ -33,4 +37,18 @@ func (c *Client) MarketCalendar(ctx context.Context, country, date string) (map[
 		return nil, err
 	}
 	return out, nil
+}
+
+func validateMarketCalendarDate(date string) error {
+	if date == "" {
+		return nil
+	}
+	if len(date) != len("2006-01-02") || date[4] != '-' || date[7] != '-' {
+		return fmt.Errorf("market calendar date must be exact YYYY-MM-DD, got %q", date)
+	}
+	parsed, err := time.Parse("2006-01-02", date)
+	if err != nil || parsed.Format("2006-01-02") != date {
+		return fmt.Errorf("market calendar date must be exact YYYY-MM-DD, got %q", date)
+	}
+	return nil
 }

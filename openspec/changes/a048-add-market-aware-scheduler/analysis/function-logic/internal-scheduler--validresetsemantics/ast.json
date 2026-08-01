@@ -1,0 +1,54 @@
+{
+  "file": "internal/scheduler/budget.go",
+  "source_sha256": "9569cfb6db93df7ec359e92ebafcd7e258b9686c60fb8a7a996e98d998b6ab97",
+  "package": "scheduler",
+  "function": "validResetSemantics",
+  "signature": "validResetSemantics(params=1, results=1)",
+  "start": {
+    "line": 481,
+    "column": 1
+  },
+  "end": {
+    "line": 485,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 483,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 22
+      },
+      "text": "official.ParseRateBudgetReset"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 484,
+        "column": 67
+      },
+      "text": "reset.Equal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 482,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

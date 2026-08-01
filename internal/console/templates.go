@@ -8,6 +8,10 @@ package console
 // fetched — a font, a framework, an icon set — would be a request this page
 // cannot make (there is nothing to make it to) and a dependency on somebody
 // else's server for a screen that authorises live orders.
+//
+// The dark semantic status colours follow the StockOS lane-console palette.
+// They are intentionally separate from the light colours: both must keep normal
+// text at WCAG AA contrast against their respective section backgrounds.
 
 const pageTemplates = `
 {{define "style"}}
@@ -99,6 +103,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   section { background: #1d1d22; border-color: #33333a; }
   pre { background: #111116; } th, td { border-color: #2a2a30; }
   .notice { background: #2e2510; } .danger { background: #2e1414; }
+  .ok { color: #22c55e; } .bad { color: #f43f5e; }
   button.secondary { color: #e6e6e0; }
   input[type=text] { background: #111116; color: #e6e6e0; border-color: #44444c; }
   .submetric, .row-details summary, .explain summary { color: #aaa9a0; }
@@ -132,6 +137,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
     <a href="/history" {{if eq .Nav "history"}}class="on" aria-current="page"{{end}}>거래 이력</a>
     <a href="/settings#adoption" {{if eq .Nav "settings"}}class="on" aria-current="page"{{end}}>외부 종목 자동관리</a>
     <a href="/optimization" {{if eq .Nav "optimization"}}class="on" aria-current="page"{{end}}>최적화</a>
+	<a href="/position-management" {{if eq .Nav "position-management"}}class="on" aria-current="page"{{end}}>포지션 정책</a>
     <a href="/verify" {{if eq .Nav "verify"}}class="on" aria-current="page"{{end}}>검증</a>
     <a href="/report" {{if eq .Nav "report"}}class="on" aria-current="page"{{end}}>리포트</a>
   </nav>

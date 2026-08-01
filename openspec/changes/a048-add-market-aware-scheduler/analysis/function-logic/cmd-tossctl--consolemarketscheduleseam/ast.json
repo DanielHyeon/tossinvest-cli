@@ -1,0 +1,132 @@
+{
+  "file": "cmd/tossctl/marketschedule.go",
+  "source_sha256": "0712b0540dddca242c03e5e425c3b8422c1c37dc4187f708159b7621d04a8fc7",
+  "package": "main",
+  "function": "consoleMarketScheduleSeam",
+  "signature": "consoleMarketScheduleSeam(params=2, results=1)",
+  "start": {
+    "line": 40,
+    "column": 1
+  },
+  "end": {
+    "line": 52,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 51,
+        "column": 49
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 21
+      },
+      "text": "configFilePath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 45
+      },
+      "text": "scheduler.NewDesiredStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 3
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 17
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 56
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 56
+      },
+      "text": "time.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 47,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

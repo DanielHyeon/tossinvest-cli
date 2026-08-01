@@ -44,12 +44,12 @@
 | `a040-adopt-stockos-openspec-naming` | STORY-TOS-a040 | implemented |
 | `a041-complete-exit-line-contract` | STORY-TOS-a041 | implemented |
 | `a042-persist-exit-line-snapshots` | STORY-TOS-a042 | implemented |
-| `a043-show-exit-lines-in-trading-views` | STORY-TOS-a043 | in_progress |
-| `a044-manage-position-exit-policies` | STORY-TOS-a044 | in_progress |
-| `a045-add-protection-orders` | STORY-TOS-a045 | in_progress |
+| `a043-show-exit-lines-in-trading-views` | STORY-TOS-a043 | implemented |
+| `a044-manage-position-exit-policies` | STORY-TOS-a044 | implemented |
+| `a045-add-protection-orders` | STORY-TOS-a045 | implemented |
 | `a046-approve-candidate-veto-thresholds` | STORY-TOS-a046 | implemented |
 | `a047-add-strategy-engine` | STORY-TOS-a047 | in_progress |
-| `a048-add-market-aware-scheduler` | STORY-TOS-a048 | in_progress |
+| `a048-add-market-aware-scheduler` | STORY-TOS-a048 | implemented |
 | `a049-add-lane-performance` | STORY-TOS-a049 | in_progress |
 | `a050-add-strategy-optimization` | STORY-TOS-a050 | in_progress |
 | `a051-add-httpapi-daemon` | STORY-TOS-a051 | in_progress |

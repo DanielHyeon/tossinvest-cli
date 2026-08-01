@@ -9,12 +9,103 @@
 2. 화면은 a041/a042 snapshot을 재계산하지 않고 decision ID로만 order를 연결한다. symbol/time 근사 join은 금지한다.
 3. StockOS의 contextual navigation을 참고하되 거래 화면은 read-only이며 입력 control을 0개로 유지한다.
 4. 360px, keyboard/ARIA, CSP, stale/unknown/1주/broker-only order를 증거로 남긴다.
+5. 구현 중 schema를 재확인한 결과 `mutation_attempts.decision_id`는 Guardian 결정 FK이고 exit-line
+   decision이 아니었다. 따라서 deterministic join은 `broker_order_id → attempt.intent_id →
+   exit_event.proposed_intent_id`로 고정하고, 연결된 event의 exit decision/snapshot을 표시한다.
 
 ## Verification evidence
 
+> Correction (2026-08-01): the earlier GREEN statement and approval below were
+> recorded before exact-commit independent review. Review of `6bebbe2` blocked on
+> missing market identity, overly broad attempt-state attribution, final-only SQL
+> bounding, and pre-filter evidence scopes. They are superseded by this correction;
+> task 3.2 remains unchecked until the next exact-commit review.
+
+> Correction (2026-08-01, second exact-commit review): review of `21d5a3b`
+> remained BLOCKED because broker order ids were trimmed, OPEN/CLOSED overlap used
+> a trimmed bare id, delimiter-encoded recursive paths could corrupt opaque ids,
+> and cycle/depth coverage did not isolate those branches. The hardening GREEN
+> entry below remains historical command evidence for `21d5a3b`, not approval.
+> Task 3.2 and the gate remain unchecked pending review of the next exact commit.
+
+> Correction (2026-08-01, UI exact-commit review): review of `53e9057`
+> confirmed the opaque identity, bounded lineage, read-only/CSP/mobile contracts,
+> but remained BLOCKED on dark-mode status contrast and an overstated B11 branch
+> PASS. The remediation adopts StockOS dark semantic colours with measured WCAG
+> AA contrast and records B11 as a structurally unreachable defense branch rather
+> than claiming a nonexistent oversized-row test. Task 3.2 and the gate remain
+> unchecked pending exact-commit re-review.
+
+> Correction (2026-08-01, UI evidence re-review): review of `28e079a`
+> accepted the dark contrast and B11 structural evidence, but found that the new
+> WCAG helper map called an unexecuted luminance-swap defense GREEN and that the
+> pre-existing media-boundary guards could be read as observed REDs. The branch
+> maps now label those conditions as unexecuted reviewed defenses; no code or UI
+> behavior changed. Task 3.2 and the gate remain pending one exact-commit review.
+
 - OpenSpec strict validation: pass.
 - Mutation capability: none by contract.
+- Dependency baseline: implementation starts from `70aabdc`, after a041/a042 were
+  integrated and gated. `base-commit.txt` was advanced from the portfolio-planning
+  commit so a043's Function Logic Map and diff gate measure this change rather than
+  attributing its prerequisite snapshots to this UI change.
+- RED: complete/stale/unknown/1-share positions, exact/unlinked same-symbol order,
+  forbidden controls, and POST 405 fixtures failed before the view wiring.
+- The pre-review GREEN list is historical evidence for the first implementation,
+  not approval of the current exact commit. Current hardening verification is
+  recorded only after all focused/full/race/vet/strict/SDD commands complete.
+- Hardening GREEN (2026-08-01): `make test`, `make vet`, focused
+  `go test -race ./internal/journal ./internal/operatorview ./internal/console ./cmd/tossctl`,
+  strict OpenSpec validation, Function Logic Map validation, `make sdd-sync`, and
+  `make sdd-check` pass. The 1,000-parent adversarial lineage fixture completes
+  within its two-second context and returns one fail-closed result without recursion fan-out.
+- Second-review RED (2026-08-01): focused tests reproduced `" O-1 "` collapsing
+  into `"O-1"`, market/day/invalid-time reuse being hidden by the OPEN set, and
+  a valid `PREFIX|ROOT → ROOT` lineage being misclassified as a cycle. The prior
+  combined branch fixture did not reach a pure single-parent cycle; no pure
+  depth-over-32 fixture existed.
+- Second-review GREEN (2026-08-01): broker ids remain byte-exact (only `len==0`
+  is empty); OPEN/CLOSED overlap uses account + canonical market + market-local
+  day + opaque id with a tagged raw fallback; recursive visited state is a JSON
+  array with exact `json_each` equality. Exact depth 32 stays linked and depth 33
+  fails closed. Focused tests, `make test`, `make vet`, Function Logic Map
+  validation, and serial focused race for all broker-order lineage plus changed
+  console identity/filter tests pass. Strict OpenSpec validation, `make sdd-sync`,
+  and `make sdd-check` also pass. A broad journal+console race run hit the
+  repository test binary's 10-minute timeout under concurrent race load and is
+  explicitly not counted as PASS evidence.
+- UI-review remediation GREEN (2026-08-01): the primary dark media block now
+  scopes StockOS semantic green `#22c55e` and red `#f43f5e`; a WCAG
+  relative-luminance regression test measures both against `#1d1d22` and
+  requires at least 4.5:1. B11 now explicitly records its one-row-per-depth
+  structural maximum (`scope_count × 33`) and the wider defense sentinel
+  (`scope_count × 33 × 8 + 1`) without claiming the unreachable branch ran.
+  Focused normal and serial race tests, full `make test`, `make vet`, strict
+  OpenSpec validation, Function Logic Map validation, and `git diff --check`
+  pass. Exact-commit independent re-review is still required before task 3.2.
 
 ## Verdict
 
-a042 이후 구현을 승인한다. canonical DTO, no-recompute/no-fuzzy-link와 input-free 렌더 검증이 gate 조건이다.
+독립 exact-HEAD 재리뷰 `adaecf9fda78c986a9d0047ec9e1818215c05a79`에서
+CLEAN 판정을 받았다. canonical DTO, account+market+market-local-day identity,
+opaque broker id, CONFIRMED PLACE/AMEND evidence, collision-free bounded lineage,
+no-recompute/no-fuzzy-link, input-free 렌더, StockOS dark semantic palette의 WCAG
+AA 대비와 정직한 branch evidence를 확인했다. 완료 gate 실행을 승인한다.
+
+## Dependency-integrated base verification · 2026-08-01
+
+- Main integration base: `7cbb36e7984659b3b4a8c5dcc3605567dd477ba5`
+  (a041/a042/a046 complete).
+- The a043 commits replayed without conflict; the base marker now excludes the
+  already-integrated a046 candidate/markout work from a043's logic-map diff.
+- Focused operatorview/journal/console/CLI tests and Function Logic Map validation
+  pass on the combined tree. No LIVE mutation or operating toggle was invoked.
+
+## Main integration gate · 2026-08-01
+
+- Integrated HEAD before this evidence commit: `5e2689f`.
+- `make sdd-sync`, focused operatorview/journal/console/CLI tests, and
+  `make gate CHANGE=a043-show-exit-lines-in-trading-views` passed on the main
+  integration branch after the base-marker correction.
+- The views remain read-only and input-free; this gate invoked no order mutation
+  and changed no operating toggle.

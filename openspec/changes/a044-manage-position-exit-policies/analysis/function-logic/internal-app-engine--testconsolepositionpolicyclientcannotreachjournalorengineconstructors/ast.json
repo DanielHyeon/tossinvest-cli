@@ -1,0 +1,86 @@
+{
+  "file": "internal/app/engine/deps_test.go",
+  "source_sha256": "84cb69b63237c5b707c147a45fd250c8f94c665c2c460b697eb90cbc726c40d3",
+  "package": "engine_test",
+  "function": "TestConsolePositionPolicyClientCannotReachJournalOrEngineConstructors",
+  "signature": "TestConsolePositionPolicyClientCannotReachJournalOrEngineConstructors(params=1, results=0)",
+  "start": {
+    "line": 58,
+    "column": 1
+  },
+  "end": {
+    "line": 73,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 10
+      },
+      "text": "transitiveInternalDeps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 17
+      },
+      "text": "sortedKeys"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

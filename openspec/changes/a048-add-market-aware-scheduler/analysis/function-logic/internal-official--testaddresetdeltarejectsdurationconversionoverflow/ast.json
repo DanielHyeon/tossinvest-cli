@@ -1,0 +1,86 @@
+{
+  "file": "internal/official/ratebudget_test.go",
+  "source_sha256": "4e11df190acb64b2b1dd1e7a9ae8fcf5c59afd9505dd831779a5e82b30b7fdc9",
+  "package": "official",
+  "function": "TestAddResetDeltaRejectsDurationConversionOverflow",
+  "signature": "TestAddResetDeltaRejectsDurationConversionOverflow(params=1, results=0)",
+  "start": {
+    "line": 244,
+    "column": 1
+  },
+  "end": {
+    "line": 249,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 24
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 31
+      },
+      "text": "time.Duration"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 18
+      },
+      "text": "addResetDelta"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 73
+      },
+      "text": "reset.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

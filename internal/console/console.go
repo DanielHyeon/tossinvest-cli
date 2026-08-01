@@ -224,6 +224,10 @@ type Options struct {
 	// ExitPolicies is the optimization page's load/save-only config seam. It
 	// carries no broker, gate, trading-toggle, or journal authority.
 	ExitPolicies ExitPolicySettings
+	// MarketSchedule is a read-only projection of scheduler desired/effective
+	// state and its calendar provenance. Its single method returns plain display
+	// data; it cannot edit configuration, start the engine, or reach a broker.
+	MarketSchedule MarketScheduleReader
 
 	// Orders is the read-only view of the account's order record the orders
 	// screen reads (orders.go). It declares one method, behind which the caller
@@ -288,6 +292,15 @@ type Options struct {
 	// capability, and a gate save must not silently approve reboot starts.
 	EngineBoot EngineBootSettings
 
+	// PositionPolicies is an engine-owned local command capability. It exposes
+	// no journal handle, SQL, broker, config, or operating toggle.
+	PositionPolicies PositionPolicyCommander
+
+	// Protections is an engine-owned capability. Nil is the shipped default and
+	// renders OFF/UNWIRED read-only state. The console never receives a broker,
+	// journal handle, activation toggle, symbol field, or numeric trigger input.
+	Protections ProtectionCommander
+
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
 	// The console shows whether the engine is running and can start and stop the
@@ -326,6 +339,9 @@ type Console struct {
 	// approval path with extra steps.
 	session string
 	csrf    string
+	// policySeal signs opaque, version-bound policy action tokens. It is random
+	// per process and cannot be supplied through Options.
+	policySeal []byte
 
 	// startedWith is the fingerprint of the binary this process was loaded from,
 	// taken once. Everything after compares against it: a console that has been
@@ -395,13 +411,14 @@ func New(o Options) (*Console, error) {
 		return nil, err
 	}
 	c := &Console{
-		opts:     o,
-		now:      now,
-		out:      o.Out,
-		remote:   remote,
-		session:  newToken(32),
-		csrf:     newToken(16),
-		relaunch: make(chan int, 1),
+		opts:       o,
+		now:        now,
+		out:        o.Out,
+		remote:     remote,
+		session:    newToken(32),
+		csrf:       newToken(16),
+		policySeal: []byte(newToken(32)),
+		relaunch:   make(chan int, 1),
 	}
 	if c.out == nil {
 		c.out = io.Discard
@@ -687,7 +704,7 @@ func (c *Console) routes() http.Handler {
 	// readings and neither is behind `mutating`: there is nothing on them to
 	// submit, which is what static_test.go's two route tests assert from opposite
 	// directions.
-	mux.HandleFunc("/positions", c.session0(c.handlePositions))
+	mux.HandleFunc("/positions", c.session0(c.readOnly(c.handlePositions)))
 	mux.HandleFunc("/history", c.session0(c.handleHistory))
 	mux.HandleFunc("/settings", c.session0(c.handleSettings))
 	mux.HandleFunc("/settings/save", c.session0(c.mutating(c.handleSettingsSave)))
@@ -712,8 +729,18 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/settings/system-update/download",
 		c.session0(c.mutating(c.handleSystemUpdateDownload)))
 	mux.HandleFunc("/optimization", c.session0(c.handleOptimization))
+	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
 	mux.HandleFunc("/optimization/exit-policy",
 		c.session0(c.mutating(c.handleOptimizationSave)))
+	mux.HandleFunc("/optimization/exit-protection/preview",
+		c.session0(c.mutating(c.handleProtectionPreview, 4096)))
+	mux.HandleFunc("/optimization/exit-protection/apply",
+		c.session0(c.mutating(c.handleProtectionApply, 4096)))
+	mux.HandleFunc("/position-management", c.session0(c.readOnly(c.handlePositionManagement)))
+	mux.HandleFunc("/position-management/preview",
+		c.session0(c.mutating(c.handlePositionPolicyPreview, 4096)))
+	mux.HandleFunc("/position-management/apply",
+		c.session0(c.mutating(c.handlePositionPolicyApply, 4096)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.startExclusive(c.handleStart))))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))

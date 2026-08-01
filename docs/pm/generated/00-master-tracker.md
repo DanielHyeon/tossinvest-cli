@@ -35,7 +35,7 @@
     - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [implemented] → `interlock-gates-entry-not-exit`
     - STORY-TOS-016 — Wire the production risk Guardian [implemented] → `wire-production-risk-guardian`
     - STORY-TOS-017 — Prime engine account sequence safely [implemented] → `prime-engine-account-seq`
-    - STORY-TOS-a045 — Add broker-resident protection orders [in_progress] → `a045-add-protection-orders`
+    - STORY-TOS-a045 — Add broker-resident protection orders [implemented] → `a045-add-protection-orders`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
@@ -53,8 +53,8 @@
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [implemented] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [implemented] → `a042-persist-exit-line-snapshots`
-    - STORY-TOS-a043 — Show exit-line truth in positions and orders [in_progress] → `a043-show-exit-lines-in-trading-views`
-    - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [in_progress] → `a044-manage-position-exit-policies`
+    - STORY-TOS-a043 — Show exit-line truth in positions and orders [implemented] → `a043-show-exit-lines-in-trading-views`
+    - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [implemented] → `a044-manage-position-exit-policies`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [in_progress] → `a051-add-httpapi-daemon`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
@@ -66,7 +66,7 @@
     - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [implemented] → `a046-approve-candidate-veto-thresholds`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
     - STORY-TOS-a047 — Add the strategy entry engine [in_progress] → `a047-add-strategy-engine`
-    - STORY-TOS-a048 — Add market-aware strategy scheduling [in_progress] → `a048-add-market-aware-scheduler`
+    - STORY-TOS-a048 — Add market-aware strategy scheduling [implemented] → `a048-add-market-aware-scheduler`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
     - STORY-TOS-a049 — Add deterministic lane performance attribution [in_progress] → `a049-add-lane-performance`
     - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [in_progress] → `a050-add-strategy-optimization`

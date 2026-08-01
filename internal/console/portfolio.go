@@ -69,6 +69,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
 )
 
 // exitEventWindow bounds the judgement stream on the history screen. The record
@@ -260,6 +261,10 @@ type positionRow struct {
 	Excluded bool
 	HasExit  bool
 	Exit     journal.ExitState
+	// ExitLine is the canonical, fail-closed operator projection of Exit's
+	// persisted snapshot. The HTML template never reads actionable raw snapshot
+	// values directly, so stale evidence cannot leak a price into the page.
+	ExitLine operatorview.ExitLineView
 }
 
 // Basis names the record that justifies the exit baseline, for the operator who

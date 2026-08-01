@@ -272,10 +272,9 @@ func (h *dashboardHarness) page(t *testing.T, path string) string {
 
 // TestThePositionsScreenShowsTheExitLineOfAManagedPosition.
 //
-// Spec scenario "엔진 관리 포지션의 exit 라인 표시": every one of the seven values
-// the requirement enumerates has to be on the row, because the whole point of the
-// screen is that the operator can see what is protecting the position without
-// reading a database.
+// A pre-a042 exit state has no persisted snapshot identity. The trading view
+// must keep the management verdict while refusing to expose its legacy raw
+// columns as a current, actionable line.
 func TestThePositionsScreenShowsTheExitLineOfAManagedPosition(t *testing.T) {
 	h := newDashboardHarness(t)
 	seedJournal(t, h.journal)
@@ -283,24 +282,20 @@ func TestThePositionsScreenShowsTheExitLineOfAManagedPosition(t *testing.T) {
 
 	page := h.page(t, "/positions")
 	for _, want := range []string{
-		"005930",    // the symbol
-		"70000",     // t0 entry price
-		"68000",     // initial stop
-		"69500",     // the ratchet baseline
-		"74000",     // the watermark
-		"HALF_RISK", // the ratchet level
-		"0.25",      // the cumulative partial take-profit
-		"intent-77", // the pending exit proposal
+		"005930",
 		"엔진 관리",
+		"근거 없음",
+		"이전 원장에는 exit snapshot 근거가 없다",
 	} {
 		if !strings.Contains(page, want) {
 			t.Errorf("the positions screen does not show %q", want)
 		}
 	}
-	// A ratchet position has no ladder rung, and the column says so rather than
-	// printing a -1 out of the database.
-	if !strings.Contains(page, "ladder rung") {
-		t.Error("the exit line does not name the ladder rung at all")
+	row := rowFor(t, page, "005930")
+	for _, staleRaw := range []string{"69500", "74000", "HALF_RISK", "intent-77"} {
+		if strings.Contains(row, staleRaw) {
+			t.Errorf("legacy row exposes raw actionable value %q", staleRaw)
+		}
 	}
 }
 
@@ -372,7 +367,7 @@ func TestThePositionsScreenRendersWithEitherSourceMissing(t *testing.T) {
 		if !strings.Contains(page, "브로커 조회가 배선되지 않았다") {
 			t.Error("an unwired broker is not reported")
 		}
-		if !strings.Contains(page, "005930") || !strings.Contains(page, "HALF_RISK") {
+		if !strings.Contains(page, "005930") || !strings.Contains(page, "근거 없음") {
 			t.Error("the journal side did not render without a broker")
 		}
 	})
@@ -387,7 +382,7 @@ func TestThePositionsScreenRendersWithEitherSourceMissing(t *testing.T) {
 		if !strings.Contains(page, "브로커 조회 실패") || !strings.Contains(page, "429") {
 			t.Error("a broker failure is not reported honestly")
 		}
-		if !strings.Contains(page, "HALF_RISK") {
+		if !strings.Contains(page, "근거 없음") {
 			t.Error("a broker failure took the journal side of the screen down with it")
 		}
 	})
@@ -635,7 +630,7 @@ func TestAVerificationInProgressSuspendsTheRefresh(t *testing.T) {
 		if !strings.Contains(page, "검증 중 — 데이터 없음") {
 			t.Error("a cold cache during a verification is not reported honestly")
 		}
-		if !strings.Contains(page, "HALF_RISK") {
+		if !strings.Contains(page, "근거 없음") {
 			t.Error("the journal side stopped rendering during a verification")
 		}
 	})
@@ -884,9 +879,10 @@ func TestAnAdoptedHoldingRendersAsManagedWithItsBasis(t *testing.T) {
 	if !strings.Contains(row, "엔진 관리") {
 		t.Errorf("the adopted holding is not labelled as managed:\n%s", row)
 	}
-	// The exit line is the adoption's synthetic t0, not an entry decision's.
-	if !strings.Contains(page, "124925") {
-		t.Error("the adopted position's synthetic stop does not appear on the exit line")
+	// This fixture predates persisted snapshots, so its raw synthetic stop must
+	// not be promoted to an actionable line.
+	if strings.Contains(row, "124925") || !strings.Contains(row, "근거 없음") {
+		t.Error("the adopted legacy position is not fail-closed")
 	}
 }
 

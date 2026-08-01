@@ -1,0 +1,101 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "b7da68c09ce4dca7189aa406601f01666b7026c1decfb8dfdcbf2b6dc3817b04",
+  "package": "main",
+  "function": "TypedMarketCalendar",
+  "receiver": "consoleBroker",
+  "signature": "consoleBroker.TypedMarketCalendar(params=3, results=2)",
+  "start": {
+    "line": 701,
+    "column": 1
+  },
+  "end": {
+    "line": 711,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 703,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 707,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 704,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 708,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 710,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 702,
+        "column": 20
+      },
+      "text": "c.resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 708,
+        "column": 45
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 710,
+        "column": 9
+      },
+      "text": "reader.TypedMarketCalendar"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 702,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 706,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

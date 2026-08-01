@@ -22,7 +22,7 @@ func TestPositionsReadsOnlyTheSelectedJournal(t *testing.T) {
 	})
 	h.authenticate(t)
 	page := h.page(t, "/positions")
-	for _, want := range []string{"005930", "68000", "69500"} {
+	for _, want := range []string{"005930", "pos-managed", "이전 원장에는 exit snapshot 근거가 없다"} {
 		if !strings.Contains(page, want) {
 			t.Fatalf("positions page did not read selected profile marker %q", want)
 		}
@@ -60,7 +60,7 @@ func TestPositionsPreservesTheExactSelectedJournalPath(t *testing.T) {
 	})
 	h.authenticate(t)
 	page := h.page(t, "/positions")
-	for _, want := range []string{"005930", "68000", "69500"} {
+	for _, want := range []string{"005930", "pos-managed", "이전 원장에는 exit snapshot 근거가 없다"} {
 		if !strings.Contains(page, want) {
 			t.Fatalf("positions page changed the selected journal path; marker %q is absent", want)
 		}

@@ -1,9 +1,13 @@
 package console
 
 import (
+	"math"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -29,24 +33,24 @@ func TestPositionsControlsWorkUnderTheDeployedCSPWithoutScript(t *testing.T) {
 			t.Errorf("positions contains a CSP-incompatible %s", name)
 		}
 	}
-	for _, want := range []string{
-		`action="/settings/include"`,
-		`action="/settings/exclude"`,
-		`name="csrf" value="` + h.csrf + `"`,
-		`aria-label="000660 관리 편입 예약"`,
-		`aria-label="000660 자동관리 제외"`,
-		`>관리 편입 예약</button>`,
-		`>자동관리 제외</button>`,
-		"계좌·주문은 변경하지 않으며",
-	} {
-		if !strings.Contains(page, want) {
-			t.Errorf("positions is missing CSP-safe control contract %q", want)
+	for _, path := range []string{"/positions", "/orders"} {
+		response := h.post(t, path, url.Values{})
+		if response.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("POST %s = %d, want 405", path, response.StatusCode)
 		}
 	}
-	if strings.Contains(page, "편입 버튼은 없다") {
-		t.Error("positions still claims there is no adoption button")
+	for _, path := range []string{"/positions", "/orders"} {
+		page := body(t, h.get(t, path))
+		lower := strings.ToLower(page)
+		for _, forbidden := range []string{"<form", "<input", "<textarea", "<select", "<button", "contenteditable"} {
+			if strings.Contains(lower, forbidden) {
+				t.Errorf("%s contains forbidden input surface %q", path, forbidden)
+			}
+		}
 	}
-
+	if !strings.Contains(page, `/optimization?category=position-management`) {
+		t.Error("positions lacks the canonical position-management context link")
+	}
 }
 
 func TestRemoteTradingViewsKeepTheDenyByDefaultCSP(t *testing.T) {
@@ -86,16 +90,18 @@ func TestManagedPositionPrimaryRowShowsTheProtectionDecision(t *testing.T) {
 		"평가손익",
 		"수익률",
 		"진입가",
-		"70000",
 		"현재 보호선",
-		"69500",
-		"최초 손절",
-		"68000",
-		"익절 진행",
-		"0.25",
+		"근거 없음",
+		"다음 익절",
+		"예상 수량",
 	} {
 		if !strings.Contains(row, want) {
 			t.Errorf("managed position primary row is missing %q", want)
+		}
+	}
+	for _, raw := range []string{"69500", "HALF_RISK", "intent-77"} {
+		if strings.Contains(row, raw) {
+			t.Errorf("managed legacy row exposes raw exit value %q", raw)
 		}
 	}
 	if !strings.Contains(page, `<caption>보유 종목과 보호 상태</caption>`) ||
@@ -154,6 +160,63 @@ func TestTradingViewsCarryWholePageResponsiveAndFocusContracts(t *testing.T) {
 			t.Errorf("responsive/accessibility contract missing %q", want)
 		}
 	}
+}
+
+func TestTradingViewsDarkSemanticStatusColorsMeetWCAGAA(t *testing.T) {
+	const darkSection = "#1d1d22"
+	darkStart := strings.Index(pageTemplates, "@media (prefers-color-scheme: dark) {")
+	if darkStart < 0 {
+		t.Fatal("dark semantic media block is missing")
+	}
+	darkEnd := strings.Index(pageTemplates[darkStart+1:], "@media (prefers-color-scheme: dark)")
+	if darkEnd < 0 {
+		t.Fatal("dark responsive media block is missing")
+	}
+	darkCSS := pageTemplates[darkStart : darkStart+1+darkEnd]
+	for name, contract := range map[string]struct {
+		selector string
+		token    string
+	}{
+		"fresh status":          {selector: ".ok { color: #22c55e; }", token: "#22c55e"},
+		"stale or error status": {selector: ".bad { color: #f43f5e; }", token: "#f43f5e"},
+	} {
+		if !strings.Contains(darkCSS, contract.selector) {
+			t.Errorf("dark semantic CSS is missing %s contract %q", name, contract.selector)
+		}
+		if ratio := wcagContrastRatio(t, contract.token, darkSection); ratio < 4.5 {
+			t.Errorf("%s token %s contrast on %s = %.2f:1, want at least 4.5:1", name, contract.token, darkSection, ratio)
+		}
+	}
+}
+
+func wcagContrastRatio(t *testing.T, foreground, background string) float64 {
+	t.Helper()
+	light, dark := relativeLuminance(t, foreground), relativeLuminance(t, background)
+	if light < dark {
+		light, dark = dark, light
+	}
+	return (light + 0.05) / (dark + 0.05)
+}
+
+func relativeLuminance(t *testing.T, raw string) float64 {
+	t.Helper()
+	if len(raw) != 7 || raw[0] != '#' {
+		t.Fatalf("invalid six-digit CSS color %q", raw)
+	}
+	channels := make([]float64, 3)
+	for index := range channels {
+		value, err := strconv.ParseUint(raw[1+index*2:3+index*2], 16, 8)
+		if err != nil {
+			t.Fatalf("invalid CSS color %q: %v", raw, err)
+		}
+		channel := float64(value) / 255
+		if channel <= 0.04045 {
+			channels[index] = channel / 12.92
+		} else {
+			channels[index] = math.Pow((channel+0.055)/1.055, 2.4)
+		}
+	}
+	return 0.2126*channels[0] + 0.7152*channels[1] + 0.0722*channels[2]
 }
 
 // TestRenderTradingViewFixtures writes only the deterministic fake broker and

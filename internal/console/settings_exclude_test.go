@@ -18,8 +18,8 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 )
 
-// TestExcludingASymbolFromThePositionsScreen: the row's control adds the symbol
-// to the exclude list — idempotently — and touches nothing else in the block.
+// TestExcludingASymbolThroughTheSettingsEndpoint: the guarded endpoint remains
+// idempotent while the positions trading view contains no mutation control.
 //
 // "Touches nothing else" is the whole reason this is not the full form: the
 // save the operator used to have to make was a read-modify-write through a
@@ -33,8 +33,9 @@ func TestExcludingASymbolFromThePositionsScreen(t *testing.T) {
 	seedJournal(t, h.journal)
 	h.authenticate(t)
 
-	if page := h.page(t, "/positions"); !strings.Contains(page, `action="/settings/exclude"`) {
-		t.Fatal("the positions screen offers no exclusion control for an unmanaged holding")
+	if page := h.page(t, "/positions"); strings.Contains(page, `action="/settings/exclude"`) ||
+		!strings.Contains(page, `href="/optimization?category=position-management"`) {
+		t.Fatal("the positions screen must route management to the canonical surface without a form")
 	}
 
 	for i := 0; i < 2; i++ {
@@ -200,8 +201,8 @@ func TestTheExclusionAnswerDefersToTheEngineRestart(t *testing.T) {
 	}
 }
 
-// TestTheReleaseHintOnlyAppearsWhereTheControlIs (adversarial review A2): a row
-// told to "release the exclusion on the right" must have something on the right.
+// The read-only trading view must not retain a direction to a removed row
+// control.
 func TestTheReleaseHintOnlyAppearsWhereTheControlIs(t *testing.T) {
 	seam := &fakeSettings{block: config.Adoption{
 		ExcludeSymbols: []string{"000660", "035420", "005930", "005380"},
@@ -211,16 +212,12 @@ func TestTheReleaseHintOnlyAppearsWhereTheControlIs(t *testing.T) {
 	h.authenticate(t)
 
 	page := h.page(t, "/positions")
-	hints := strings.Count(page, "편입하려면")
-	controls := strings.Count(page, `action="/settings/exclude"`)
-	if hints > controls {
-		t.Errorf("%d row(s) are told to release an exclusion but only %d carry the control",
-			hints, controls)
+	if strings.Contains(page, "편입하려면") || strings.Contains(page, `action="/settings/exclude"`) {
+		t.Error("the input-free view retains an obsolete release instruction or control")
 	}
 }
 
-// TestAnExcludedRowIsLabelledAndOffersRelease: the click has to be visible in
-// the row, or the operator cannot tell it worked.
+// TestAnExcludedRowIsLabelledWithoutEmbeddingAReleaseControl.
 func TestAnExcludedRowIsLabelledAndOffersRelease(t *testing.T) {
 	seam := &fakeSettings{block: config.Adoption{ExcludeSymbols: []string{"000660"}}}
 	h := settingsHarness(t, seam)
@@ -233,8 +230,10 @@ func TestAnExcludedRowIsLabelledAndOffersRelease(t *testing.T) {
 		t.Errorf("an excluded row is not labelled 관리 제외:\n%s", row)
 	case strings.Contains(row, "관리 외(미편입)"):
 		t.Errorf("an excluded row still reads as merely undesignated:\n%s", row)
-	case !strings.Contains(row, `action="/settings/exclude"`):
-		t.Errorf("an excluded row offers no release:\n%s", row)
+	case !strings.Contains(row, "자동관리 제외 정책 적용 중"):
+		t.Errorf("an excluded row does not explain the applied policy:\n%s", row)
+	case strings.Contains(row, `action="/settings/exclude"`):
+		t.Errorf("an excluded row embeds a settings mutation control:\n%s", row)
 	case strings.Contains(row, `action="/settings/include"`):
 		t.Errorf("an excluded row still offers designation; the engine would ignore it:\n%s", row)
 	}
@@ -269,11 +268,7 @@ func TestAnUnreadableJournalStaysUnknownEvenWhenExcluded(t *testing.T) {
 	}
 }
 
-// TestTheExcludeControlOnlyRendersOnUnmanagedKnownRows (design D5).
-//
-// On a managed position the click would do nothing at all — judgeHoldings
-// returns at ExitEligible() before it ever consults the exclude list. A control
-// that cannot have an effect is worse than no control.
+// The positions trading view embeds no exclusion control on any row.
 func TestTheExcludeControlOnlyRendersOnUnmanagedKnownRows(t *testing.T) {
 	seam := &fakeSettings{block: config.Adoption{DefaultStopPct: 0.05}}
 	h := settingsHarness(t, seam)
@@ -284,13 +279,12 @@ func TestTheExcludeControlOnlyRendersOnUnmanagedKnownRows(t *testing.T) {
 	if managed := rowFor(t, page, "005930"); strings.Contains(managed, `action="/settings/exclude"`) {
 		t.Errorf("a managed row offers an exclusion that cannot take effect:\n%s", managed)
 	}
-	if unmanaged := rowFor(t, page, "000660"); !strings.Contains(unmanaged, `action="/settings/exclude"`) {
-		t.Errorf("an unmanaged row offers no exclusion:\n%s", unmanaged)
+	if unmanaged := rowFor(t, page, "000660"); strings.Contains(unmanaged, `action="/settings/exclude"`) {
+		t.Errorf("an unmanaged row embeds an exclusion control:\n%s", unmanaged)
 	}
 }
 
-// TestTheExcludeControlAsksForNoTyping: the CSP-safe explicit action stays one
-// click and asks for no script or text entry anywhere on the screen.
+// TestThePositionsViewAsksForNoTypingOrClickMutation.
 func TestTheExcludeControlAsksForNoTyping(t *testing.T) {
 	seam := &fakeSettings{block: config.Adoption{DefaultStopPct: 0.05}}
 	h := settingsHarness(t, seam)
@@ -301,12 +295,12 @@ func TestTheExcludeControlAsksForNoTyping(t *testing.T) {
 	switch {
 	case strings.Contains(page, "confirm("):
 		t.Error("the controls still depend on a CSP-blocked confirmation handler")
-	case !strings.Contains(page, `>자동관리 제외</button>`):
-		t.Error("the screen has no explicit one-click exclusion action")
+	case strings.Contains(page, "<button") || strings.Contains(page, "<form"):
+		t.Error("the trading view embeds a mutation control")
 	case strings.Contains(page, "prompt("):
 		t.Error("the positions screen asks the operator to type something")
-	case strings.Contains(page, `type="text"`):
-		t.Error("the positions screen grew a text field; the one-click path must stay one click")
+	case strings.Contains(page, "<input") || strings.Contains(page, "<textarea") || strings.Contains(page, "<select"):
+		t.Error("the positions screen grew an input field")
 	}
 }
 

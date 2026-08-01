@@ -1,0 +1,84 @@
+{
+  "file": "internal/console/orders.go",
+  "source_sha256": "4d80478264e74d1e179d3924bebe2b05944ecf3b8275898f50451789c445ea9e",
+  "package": "console",
+  "function": "originOf",
+  "signature": "originOf(params=4, results=1)",
+  "start": {
+    "line": 764,
+    "column": 1
+  },
+  "end": {
+    "line": 775,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 765,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 768,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 771,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 766,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 769,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 772,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 774,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 765,
+        "column": 6
+      },
+      "text": "jv.Readable"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

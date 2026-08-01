@@ -12,7 +12,7 @@ const ordersTemplates = `
 {{define "orders"}}{{template "head" .}}
 <h1>주문</h1>
 <p class="muted page-intro">활성 상태와 최근 주문을 한 화면에서 확인한다. 읽기 전용 — 이 화면에서 주문을 내거나 정정·취소할 수 없다.
-{{.Snap.NowText}} 기준.</p>
+{{.Snap.NowText}} 기준. 보호 정책은 <a href="/optimization?category=exit-protection">exit 보호 최적화</a>에서 확인한다.</p>
 
 {{template "journalstate" .Snap.Journal}}
 {{template "ordercounts" .Snap}}
@@ -140,6 +140,20 @@ const ordersTemplates = `
           {{if .Detail}}<span class="submetric">{{.Detail}}</span>{{end}}
           <details class="row-details"><summary>주문 추적 정보</summary><div class="detail-grid">
             <span>주문번호 <code>{{.ID}}</code></span><span>평균체결가 <strong>{{.AvgPrice}}</strong></span>
+            {{if .ExitEvidence}}
+            <span>exit 근거 <strong class="status-pill {{if .ExitLine.Fresh}}ok{{else}}bad{{end}}">{{.ExitLine.StatusText}}</strong></span>
+            {{if .ExitLine.Reason}}<span class="bad">{{.ExitLine.Reason}}</span>{{end}}
+            <span>판단 <strong>{{.ExitLine.ActionText}}</strong> · 단계 <strong>{{.ExitLine.Stage}}</strong></span>
+            <span>관측가 <strong>{{.ExitLine.ObservedPrice}}</strong> · 현재 보호선 <strong>{{.ExitLine.CurrentProtection}}</strong></span>
+            <span>다음 익절 <strong>{{.ExitLine.NextTarget}}</strong> · 다음 보호선 <strong>{{.ExitLine.NextProtection}}</strong></span>
+            <span>예상 수량 <strong>{{.ExitLine.ProjectedQuantity}}</strong> · 평가 시각 {{.ExitLine.EvaluatedAt}}</span>
+            <span>decision <code>{{.ExitLine.DecisionID}}</code> · snapshot <code>{{.ExitLine.SnapshotID}}</code></span>
+            <span>attempt <code>{{.ExitAttemptID}}</code> · intent <code>{{.ExitIntentID}}</code></span>
+            <span>observation <code>{{.ExitLine.ObservationID}}</code> · {{.ExitLine.ObservationSource}}</span>
+            <span>정책 {{.ExitLine.Policy}} · 유효 근거 {{.ExitLine.EffectiveSource}}</span>
+            {{else}}
+            <span class="muted"><strong>근거 미연결</strong> — 명시적 주문 시도 lineage가 없어 심볼·가격·시각으로 추측하지 않는다.</span>
+            {{end}}
           </div></details>
         </td>
         <td data-label="수량"><strong>{{.Quantity}}</strong></td>

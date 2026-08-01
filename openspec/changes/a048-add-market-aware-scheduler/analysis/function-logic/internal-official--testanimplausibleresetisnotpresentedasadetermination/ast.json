@@ -1,0 +1,104 @@
+{
+  "file": "internal/official/ratebudget_test.go",
+  "source_sha256": "5273c1a6923613a5a51b8594457538e98d54763e984c2cb9808f6102ddead888",
+  "revision": "base",
+  "package": "official",
+  "function": "TestAnImplausibleResetIsNotPresentedAsADetermination",
+  "signature": "TestAnImplausibleResetIsNotPresentedAsADetermination(params=1, results=0)",
+  "start": {
+    "line": 188,
+    "column": 1
+  },
+  "end": {
+    "line": 209,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 10
+      },
+      "text": "readRateBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 45
+      },
+      "text": "header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

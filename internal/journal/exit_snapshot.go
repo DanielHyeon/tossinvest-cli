@@ -295,8 +295,12 @@ func scanExitEvent(row rowScanner, event *ExitEvent) error {
 		&evidence.ObservedAt, &evidence.ProjectedQuantity, &evidence.ProposalRatio,
 		&evidence.StateOnly, &evidence.SuppressedReason, &evidence.SavedJSON,
 		&evidence.RecomputedJSON, &evidence.EffectiveJSON, &evidence.EffectiveSource,
-		&evidence.ArmSuppressedReason); err != nil {
+		&evidence.ArmSuppressedReason, &event.LifecycleGeneration); err != nil {
 		return err
+	}
+	if event.LifecycleGeneration < 1 {
+		return fmt.Errorf("%w: invalid event lifecycle generation %d", ErrExitSnapshotCorrupt,
+			event.LifecycleGeneration)
 	}
 	return hydrateExitEventEvidence(event, evidence)
 }
@@ -531,7 +535,7 @@ func scanExitStateResult(row rowScanner) (ExitStateResult, error) {
 		&s.PendingAction, &s.PendingLevel, &s.PendingIntentID, &done, &s.UpdatedAt,
 		&status, &version, &digest, &snapshotID, &decisionID, &observationID, &generation,
 		&nextTarget, &nextProtection, &source, &observedAt, &action, &ratio, &projected,
-		&stateOnly, &suppressed, &effectiveJSON)
+		&stateOnly, &suppressed, &effectiveJSON, &s.LifecycleGeneration)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ExitStateResult{}, ErrExitStateNotFound
 	}
@@ -543,6 +547,10 @@ func scanExitStateResult(row rowScanner) (ExitStateResult, error) {
 		s.ActiveRung = int(rung.Int64)
 	}
 	s.Completed = done != 0
+	if s.LifecycleGeneration < 1 {
+		return ExitStateResult{}, fmt.Errorf("%w: invalid exit lifecycle generation %d", ErrExitSnapshotCorrupt,
+			s.LifecycleGeneration)
+	}
 	s.PositionGeneration = -1
 	if policyID.Valid {
 		s.PolicyID = policyID.String
@@ -651,7 +659,8 @@ func legacyPolicyIdentity(state ExitState, adopted bool) (exitpolicy.PolicyIdent
 
 func (j *Journal) OpenExitStateResults(ctx context.Context, accountRef string) ([]ExitStateResult, error) {
 	rows, err := j.db.QueryContext(ctx, exitStateSelect+` e JOIN positions p ON p.id=e.position_id
-		WHERE p.account_ref=? AND e.completed=0 ORDER BY p.market,p.symbol,p.instance_seq`, strings.TrimSpace(accountRef))
+		WHERE p.account_ref=? AND e.completed=0`+currentManagedExitLifecycle+`
+		ORDER BY p.market,p.symbol,p.instance_seq`, strings.TrimSpace(accountRef))
 	if err != nil {
 		return nil, fmt.Errorf("journal: listing exit state results: %w", err)
 	}

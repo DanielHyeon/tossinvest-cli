@@ -51,6 +51,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/position"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
@@ -80,6 +81,11 @@ var ErrExitStateExists = errors.New("journal: the position already has an exit s
 // policy judges nothing further; re-opening one would resurrect a protection
 // decision the position has already been closed out of.
 var ErrExitStateCompleted = errors.New("journal: the exit state is completed")
+
+// ErrExitLifecycleStale refuses a judgement produced by a released or older
+// operator-managed generation. It is a quarantine outcome: nothing is retried
+// or rebound onto the current generation.
+var ErrExitLifecycleStale = errors.New("journal: exit lifecycle generation is stale or released")
 
 // ExitStateSeed is what opening an exit state needs. Everything else in the row
 // is derived from it by internal/exitpolicy, so the two systems cannot disagree
@@ -239,6 +245,10 @@ func seedPolicyIdentity(kind, policyID string, adopted bool,
 // write access to what has been sold.
 type ExitJudgement struct {
 	PositionID string
+	// LifecycleGeneration is copied from the exact ExitState observed by the
+	// engine. Zero is accepted only for legacy in-process callers and resolves to
+	// the current generation; production always supplies a positive value.
+	LifecycleGeneration int64
 	// Snapshot is the exact a041 value consumed by the execution path. A zero
 	// value is accepted only by the pre-a042 compatibility path and never
 	// overwrites a previously evaluated v10 snapshot.
@@ -414,6 +424,28 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 	if current.Completed {
 		return fmt.Errorf("%w: %s", ErrExitStateCompleted, id)
 	}
+	expectedLifecycle := judgement.LifecycleGeneration
+	if expectedLifecycle == 0 {
+		expectedLifecycle = current.LifecycleGeneration
+	}
+	if expectedLifecycle != current.LifecycleGeneration {
+		return fmt.Errorf("%w: judgement generation %d, current exit generation %d",
+			ErrExitLifecycleStale, expectedLifecycle, current.LifecycleGeneration)
+	}
+	var lifecycleGeneration int64
+	var lifecycleStatus positionpolicy.Status
+	err = tx.QueryRowContext(ctx, `SELECT adoption_generation,status
+		FROM position_policy_lifecycles WHERE position_id=?
+		ORDER BY adoption_generation DESC LIMIT 1`, id).Scan(&lifecycleGeneration, &lifecycleStatus)
+	if errors.Is(err, sql.ErrNoRows) {
+		lifecycleGeneration, lifecycleStatus = 1, positionpolicy.StatusManaged
+	} else if err != nil {
+		return fmt.Errorf("journal: reading exit lifecycle of %s: %w", id, err)
+	}
+	if lifecycleStatus != positionpolicy.StatusManaged || lifecycleGeneration != expectedLifecycle {
+		return fmt.Errorf("%w: lifecycle generation %d is %s; judgement holds generation %d",
+			ErrExitLifecycleStale, lifecycleGeneration, lifecycleStatus, expectedLifecycle)
+	}
 	if recomputed != nil && recomputed.Line.PositionGeneration != current.PositionGeneration {
 		return fmt.Errorf("%w: snapshot generation %d does not match position generation %d",
 			ErrInvalidRequest, recomputed.Line.PositionGeneration, current.PositionGeneration)
@@ -571,14 +603,15 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 // exitProgress is the part of the row this file may read: everything except the
 // four the apply point owns.
 type exitProgress struct {
-	PolicyKind         string
-	PositionGeneration int64
-	Baseline           string
-	HighWater          string
-	RatchetLevel       string
-	ActiveRung         int
-	Completed          bool
-	Effective          *StoredExitSnapshot
+	PolicyKind          string
+	PositionGeneration  int64
+	LifecycleGeneration int64
+	Baseline            string
+	HighWater           string
+	RatchetLevel        string
+	ActiveRung          int
+	Completed           bool
+	Effective           *StoredExitSnapshot
 }
 
 func scanExitProgress(ctx context.Context, tx *sql.Tx, positionID string) (exitProgress, error) {
@@ -589,10 +622,11 @@ func scanExitProgress(ctx context.Context, tx *sql.Tx, positionID string) (exitP
 		effective sql.NullString
 	)
 	err := tx.QueryRowContext(ctx, `
-		SELECT e.policy_kind, p.instance_seq, e.baseline_price, e.high_water, e.ratchet_level,
+		SELECT e.policy_kind, p.instance_seq, coalesce(e.lifecycle_generation,1),
+		       e.baseline_price, e.high_water, e.ratchet_level,
 		       e.active_rung, e.completed, e.effective_snapshot_json
 		  FROM exit_states e JOIN positions p ON p.id=e.position_id WHERE e.position_id = ?`, positionID).
-		Scan(&out.PolicyKind, &out.PositionGeneration, &out.Baseline, &out.HighWater,
+		Scan(&out.PolicyKind, &out.PositionGeneration, &out.LifecycleGeneration, &out.Baseline, &out.HighWater,
 			&out.RatchetLevel, &rung, &done, &effective)
 	if errors.Is(err, sql.ErrNoRows) {
 		return exitProgress{}, fmt.Errorf("%w: position %s", ErrExitStateNotFound, positionID)
@@ -670,6 +704,7 @@ func levelAfter(ratchetLevel string, rung int) string {
 // "what did it order".
 const (
 	ExitEventOpened            = "OPENED"
+	ExitEventReadopted         = "READOPTED"
 	ExitEventProposalRefused   = "PROPOSAL_REFUSED"
 	ExitEventProposalCancelled = "PROPOSAL_CANCELLED"
 	ExitEventProposalFilled    = "PROPOSAL_FILLED"
@@ -702,6 +737,11 @@ type exitEventRow struct {
 }
 
 func appendExitEventTx(ctx context.Context, tx *sql.Tx, row exitEventRow) error {
+	var lifecycleGeneration int64
+	if err := tx.QueryRowContext(ctx, `SELECT coalesce(lifecycle_generation,1)
+		FROM exit_states WHERE position_id=?`, row.PositionID).Scan(&lifecycleGeneration); err != nil {
+		return fmt.Errorf("journal: binding exit event to lifecycle of %s: %w", row.PositionID, err)
+	}
 	var savedJSON, recomputedJSON, effectiveJSON any
 	var generation, policyID, policyVersion, policyDigest, snapshotID, decisionID, observationID any
 	var nextTarget, nextProtection, source, observedAt, projected, ratio, stateOnly, suppressed, effectiveSource any
@@ -742,15 +782,15 @@ func appendExitEventTx(ctx context.Context, tx *sql.Tx, row exitEventRow) error 
 		   next_target, next_protection, observation_source, observed_at, projected_quantity,
 		   proposal_ratio, state_only, suppressed_reason, saved_snapshot_json,
 		   recomputed_snapshot_json, effective_snapshot_json, effective_source,
-		   arm_suppressed_reason)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		   arm_suppressed_reason,lifecycle_generation)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		row.PositionID, nullableString(row.ObservedPrice), nullableString(row.HighWater),
 		nullableString(row.BaselineAfter), nullableString(row.LevelAfter),
 		nullableString(row.Action), nullableString(row.ProposedIntentID), row.CreatedAt,
 		generation, policyID, policyVersion, policyDigest, snapshotID, decisionID, observationID,
 		nextTarget, nextProtection, source, observedAt, projected, ratio, stateOnly, suppressed,
 		savedJSON, recomputedJSON, effectiveJSON, effectiveSource,
-		nullableString(row.ArmSuppressedReason))
+		nullableString(row.ArmSuppressedReason), lifecycleGeneration)
 	if err != nil {
 		return fmt.Errorf("journal: recording the exit judgement of %s: %w", row.PositionID, err)
 	}
@@ -769,6 +809,7 @@ type ExitEvent struct {
 	ProposedIntentID    string
 	CreatedAt           string
 	ArmSuppressedReason string
+	LifecycleGeneration int64
 	Evaluation          ExitEvaluation
 }
 
@@ -783,7 +824,7 @@ func (j *Journal) ExitEvents(ctx context.Context, positionID string) ([]ExitEven
 		       next_target, next_protection, observation_source, observed_at, projected_quantity,
 		       proposal_ratio, state_only, suppressed_reason, saved_snapshot_json,
 		       recomputed_snapshot_json, effective_snapshot_json, effective_source,
-		       arm_suppressed_reason
+		       arm_suppressed_reason,coalesce(lifecycle_generation,1)
 		  FROM exit_events WHERE position_id = ? ORDER BY id`, id)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading the exit history of %s: %w", id, err)
@@ -897,16 +938,24 @@ func markExitCompletedTx(ctx context.Context, tx *ApplyTx, positionID string) er
 // exist separately because *ApplyTx deliberately does not expose its *sql.Tx —
 // the whole point of the handle is that a hook cannot reach past it.
 func appendExitEventFromHook(ctx context.Context, tx *ApplyTx, row exitEventRow) error {
-	_, err := tx.Exec(ctx, `
+	result, err := tx.Exec(ctx, `
 		INSERT INTO exit_events
 		  (position_id, observed_price, high_water, baseline_after, level_after,
-		   action, proposed_intent_id, created_at)
-		VALUES (?,?,?,?,?,?,?,?)`,
+		   action, proposed_intent_id, created_at, lifecycle_generation)
+		SELECT ?,?,?,?,?,?,?,?,coalesce(lifecycle_generation,1)
+		  FROM exit_states WHERE position_id=?`,
 		row.PositionID, nullableString(row.ObservedPrice), nullableString(row.HighWater),
 		nullableString(row.BaselineAfter), nullableString(row.LevelAfter),
-		nullableString(row.Action), nullableString(row.ProposedIntentID), row.CreatedAt)
+		nullableString(row.Action), nullableString(row.ProposedIntentID), row.CreatedAt, row.PositionID)
 	if err != nil {
 		return fmt.Errorf("journal: recording the exit judgement of %s: %w", row.PositionID, err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("journal: confirming the exit event of %s: %w", row.PositionID, err)
+	}
+	if affected != 1 {
+		return fmt.Errorf("%w: position %s", ErrExitStateNotFound, row.PositionID)
 	}
 	return nil
 }

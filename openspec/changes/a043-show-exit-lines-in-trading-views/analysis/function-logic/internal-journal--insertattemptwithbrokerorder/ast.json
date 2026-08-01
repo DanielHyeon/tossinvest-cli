@@ -1,0 +1,71 @@
+{
+  "file": "internal/journal/readonly_test.go",
+  "source_sha256": "d36d0754d4ca61e67904385f5bbb99d0c723c33175e6b57817da799c4e22804a",
+  "package": "journal",
+  "function": "insertAttemptWithBrokerOrder",
+  "signature": "insertAttemptWithBrokerOrder(params=5, results=0)",
+  "start": {
+    "line": 260,
+    "column": 1
+  },
+  "end": {
+    "line": 269,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 15
+      },
+      "text": "j.db.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 262,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

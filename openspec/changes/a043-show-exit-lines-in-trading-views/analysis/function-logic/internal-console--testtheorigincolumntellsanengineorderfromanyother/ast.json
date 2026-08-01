@@ -1,0 +1,240 @@
+{
+  "file": "internal/console/orders_test.go",
+  "source_sha256": "1a61549e5b71b16d605b9f9dfe8f9f07dca34bf997b6648a85a6c7adeeaf89ae",
+  "package": "console",
+  "function": "TestTheOriginColumnTellsAnEngineOrderFromAnyOther",
+  "signature": "TestTheOriginColumnTellsAnEngineOrderFromAnyOther(params=1, results=0)",
+  "start": {
+    "line": 576,
+    "column": 1
+  },
+  "end": {
+    "line": 602,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 591,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 592,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 597,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 598,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 577,
+        "column": 9
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 578,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 579,
+        "column": 2
+      },
+      "text": "seedEngineJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 582,
+        "column": 25
+      },
+      "text": "livePlainOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 583,
+        "column": 25
+      },
+      "text": "filledPlainOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 585,
+        "column": 7
+      },
+      "text": "newOrdersHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 586,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 587,
+        "column": 2
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 589,
+        "column": 10
+      },
+      "text": "h.Console.orders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 589,
+        "column": 27
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 593,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 596,
+        "column": 10
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 596,
+        "column": 18
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 577,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 578,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 581,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 585,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 585,
+        "column": 54
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 589,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 590,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 592,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 596,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

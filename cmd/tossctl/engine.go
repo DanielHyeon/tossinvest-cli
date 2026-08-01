@@ -247,6 +247,15 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	if err != nil {
 		return err
 	}
+	policyCommands, err := engine.NewPositionPolicyCommandService(ectx, clk)
+	if err != nil {
+		return err
+	}
+	policyControl, err := engine.StartPositionPolicyCommandServer(dir, policyCommands)
+	if err != nil {
+		return err
+	}
+	defer policyControl.Close()
 	fmt.Fprintf(out, "account          %s\nloops            %s\n",
 		ectx.Automation.MaskedAccount(), strings.Join(rt.LoopNames(), ", "))
 	fmt.Fprintf(out, "stop             SIGINT/SIGTERM — 루프 완주 후 journal 정합 close. 두 번째 시그널은 즉시 종료\n\n")

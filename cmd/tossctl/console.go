@@ -60,6 +60,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/localupdate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/version"
@@ -311,6 +312,24 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		fmt.Fprintln(cmd.ErrOrStderr(), engineBootNote)
 	}
 
+	// The console receives only an authenticated loopback client. The running
+	// engine owns the server and its already-open journal; this process cannot
+	// create, migrate, or directly write that journal through this seam.
+	var positionPolicyCommander console.PositionPolicyCommander
+	if engineDir != "" {
+		descriptorPath := positionpolicyrpc.DescriptorPath(engineDir)
+		if _, statErr := os.Stat(descriptorPath); statErr == nil {
+			client, dialErr := positionpolicyrpc.Dial(ctx, descriptorPath)
+			if dialErr != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 control plane에 연결할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", dialErr)
+			} else {
+				positionPolicyCommander = client
+			}
+		} else if !errors.Is(statErr, os.ErrNotExist) {
+			fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 endpoint를 확인할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", statErr)
+		}
+	}
+
 	serveErr := console.ListenAndServe(ctx, console.Options{
 		Port:                    opts.port,
 		Remote:                  remote,
@@ -336,11 +355,16 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Holdings: newConsoleHoldings(reads),
 		// The orders screen's read (change console-orders-screen). One method,
 		// behind which this file makes the three calls a refresh costs.
-		Orders:       consoleOrdersSeam(reads),
-		JournalPath:  journalPath,
-		RunLockPath:  verifyRunLockPath(verifyRecord),
-		Settings:     consoleSettingsSeam(root),
-		ExitPolicies: consoleExitPolicySettingsSeam(root),
+		Orders:           consoleOrdersSeam(reads),
+		JournalPath:      journalPath,
+		RunLockPath:      verifyRunLockPath(verifyRecord),
+		Settings:         consoleSettingsSeam(root),
+		ExitPolicies:     consoleExitPolicySettingsSeam(root),
+		PositionPolicies: positionPolicyCommander,
+
+		// The market schedule is a read-only projection. Keep it in its own
+		// capability block so the older dashboard source contract remains stable.
+		MarketSchedule: consoleMarketScheduleView{reader: consoleMarketScheduleSeam(root, reads)},
 
 		// The overview's read-only view of the Guardian's ceilings (change
 		// console-operator-overview). Five numbers and a currency: this seam
@@ -654,8 +678,9 @@ func (s consoleGateLimits) GateLimits() (console.GateLimits, error) {
 type consoleBroker struct {
 	root *rootOptions
 
-	mu     sync.Mutex
-	client verifylive.Broker
+	mu         sync.Mutex
+	client     verifylive.Broker
+	accountRef string
 }
 
 // newConsoleBroker holds the console's live client, and builds nothing yet.
@@ -679,19 +704,50 @@ func newConsoleBroker(root *rootOptions) *consoleBroker {
 // when the console started may be there after `tossctl openapi login`, and what
 // stops a failing build from being retried on every render is the console's own
 // cache (holdings.go bounds attempts by the TTL, not by successes).
-func (c *consoleBroker) resolve() (verifylive.Broker, error) {
+func (c *consoleBroker) resolve() (verifylive.Broker, string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.client != nil {
-		return c.client, nil
+		return c.client, c.accountRef, nil
 	}
-	broker, _, err := verifyBrokerFactory(c.root)
+	broker, accountRef, err := verifyBrokerFactory(c.root)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	c.client = broker
-	return c.client, nil
+	c.client, c.accountRef = broker, strings.TrimSpace(accountRef)
+	return c.client, c.accountRef, nil
 }
+
+func (c *consoleBroker) TypedMarketCalendar(ctx context.Context, country, date string) (official.MarketCalendarResponse, error) {
+	broker, _, err := c.resolve()
+	if err != nil {
+		return official.MarketCalendarResponse{}, err
+	}
+	reader, ok := broker.(typedMarketCalendarReader)
+	if !ok {
+		return official.MarketCalendarResponse{}, fmt.Errorf("console: this build's broker (%T) has no typed official calendar read", broker)
+	}
+	return reader.TypedMarketCalendar(ctx, country, date)
+}
+
+type consoleMarketScheduleView struct{ reader *consoleMarketScheduleReader }
+
+func (v consoleMarketScheduleView) Read(ctx context.Context) (console.MarketScheduleReading, error) {
+	status, err := v.reader.Read(ctx)
+	if err != nil {
+		return console.MarketScheduleReading{}, err
+	}
+	return console.MarketScheduleReading{
+		SchedulerDesired: status.SchedulerDesired, AutoStartDesired: status.AutoStartDesired,
+		SchedulerEffective: status.SchedulerEffective, AutoStartEffective: status.AutoStartEffective,
+		Market: status.Market, Session: status.Session, ApplyTiming: status.ApplyTiming,
+		CalendarSource: status.CalendarSource, CalendarVersion: status.CalendarVersion,
+		CalendarFetchedAt: status.CalendarFetchedAt, DecisionReason: status.DecisionReason,
+		NextTransition: status.NextTransition,
+	}, nil
+}
+
+var _ console.MarketScheduleReader = consoleMarketScheduleView{}
 
 // newConsoleHoldings builds the console's holdings reader.
 //
@@ -716,7 +772,7 @@ type lazyHoldings struct {
 // client's PlaceOrder / CancelOrder / ModifyOrder are not reachable from the value
 // that crosses into internal/console.
 func (l *lazyHoldings) Holdings(ctx context.Context, symbol string) ([]domain.Position, error) {
-	broker, err := l.shared.resolve()
+	broker, _, err := l.shared.resolve()
 	if err != nil {
 		return nil, err
 	}
@@ -806,7 +862,7 @@ type lazyOrders struct {
 // An error is returned only when there is no reading at all to describe — no
 // credentials, or a client that does not have these reads.
 func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) {
-	broker, err := l.shared.resolve()
+	broker, accountRef, err := l.shared.resolve()
 	if err != nil {
 		return console.OrdersReading{}, err
 	}
@@ -820,6 +876,7 @@ func (l *lazyOrders) Orders(ctx context.Context) (console.OrdersReading, error) 
 	plain, conditional := reads.OrdersRaw, reads.ConditionalOrdersRaw
 
 	var out console.OrdersReading
+	out.AccountRef = accountRef
 
 	// The live half. status=OPEN and nothing else: the broker returns every
 	// pending order for it, so this list cannot be short and the count taken from

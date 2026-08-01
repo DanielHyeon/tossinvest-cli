@@ -1,0 +1,119 @@
+{
+  "file": "internal/app/engine/deps_test.go",
+  "source_sha256": "21de5a203f6d47277c9d028807c7a064d897373bfd6bde1c7983c1fcad79e7b8",
+  "package": "engine_test",
+  "function": "TestEngineDependencyGraphExcludesWTSMutators",
+  "signature": "TestEngineDependencyGraphExcludesWTSMutators(params=1, results=0)",
+  "start": {
+    "line": 28,
+    "column": 1
+  },
+  "end": {
+    "line": 56,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 10
+      },
+      "text": "transitiveInternalDeps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 90
+      },
+      "text": "sortedKeys"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 91
+      },
+      "text": "sortedKeys"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

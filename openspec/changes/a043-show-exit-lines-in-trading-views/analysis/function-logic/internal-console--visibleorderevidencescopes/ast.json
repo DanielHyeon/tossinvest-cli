@@ -1,0 +1,84 @@
+{
+  "file": "internal/console/orders.go",
+  "source_sha256": "4d80478264e74d1e179d3924bebe2b05944ecf3b8275898f50451789c445ea9e",
+  "package": "console",
+  "function": "visibleOrderEvidenceScopes",
+  "signature": "visibleOrderEvidenceScopes(params=1, results=1)",
+  "start": {
+    "line": 687,
+    "column": 1
+  },
+  "end": {
+    "line": 700,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 690,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 692,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 699,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 696,
+        "column": 12
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 688,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 691,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 695,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 696,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,183 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "5ffd8c3f69c28d85f58b14f83988b801d8b8089c95d3bd34c33113cd2cb6ba25",
+  "package": "console",
+  "function": "render",
+  "receiver": "Console",
+  "signature": "Console.render(params=3, results=0)",
+  "start": {
+    "line": 377,
+    "column": 1
+  },
+  "end": {
+    "line": 390,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 379,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 381,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 379,
+        "column": 12
+      },
+      "text": "pages.ExecuteTemplate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 3
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 49
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 2
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 2
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 2
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 2
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 2
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 2
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 2
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 2
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 2
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 2
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 2
+      },
+      "text": "w.WriteHeader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 9
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 17
+      },
+      "text": "buf.Bytes"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 379,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

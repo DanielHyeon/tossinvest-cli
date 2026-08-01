@@ -18,6 +18,7 @@ package console
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -25,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
 )
 
@@ -103,6 +105,9 @@ type ordersHarness struct {
 
 func newOrdersHarness(t *testing.T, reader *countingOrders, tweak ...func(*Options)) *ordersHarness {
 	t.Helper()
+	if reader.lists.AccountRef == "" {
+		reader.lists.AccountRef = "123-45-678901"
+	}
 	clk := newFakeClock()
 	oh := &ordersHarness{reader: reader, clock: clk}
 	oh.harness = newHarness(t, func(o *Options) {
@@ -538,6 +543,42 @@ func TestAnOrderInBothGroupsIsOneRowAndIsCountedOnce(t *testing.T) {
 	}
 }
 
+func TestOpenClosedDedupeUsesExactScopedOrderIdentity(t *testing.T) {
+	baseOpen := livePlainOrder("REUSED", "005930")
+	baseClosed := filledPlainOrder("REUSED", "005930")
+	baseClosed.Market = baseOpen.Market
+	baseClosed.OrderedAt = baseOpen.OrderedAt
+
+	tests := []struct {
+		name   string
+		open   OrderRecord
+		closed OrderRecord
+		want   int
+	}{
+		{name: "the exact scoped identity overlaps", open: baseOpen, closed: baseClosed, want: 1},
+		{name: "opaque whitespace is part of the id", open: func() OrderRecord { r := baseOpen; r.ID = " REUSED "; return r }(), closed: baseClosed, want: 2},
+		{name: "the same id in another market is distinct", open: baseOpen, closed: func() OrderRecord { r := baseClosed; r.Market = "US"; return r }(), want: 2},
+		{name: "the same id on another market-local day is distinct", open: baseOpen, closed: func() OrderRecord { r := baseClosed; r.OrderedAt = "2026-07-28T00:30:00Z"; return r }(), want: 2},
+		{name: "equal invalid identities use a stable fallback", open: func() OrderRecord { r := baseOpen; r.OrderedAt = "not-a-time"; return r }(), closed: func() OrderRecord { r := baseClosed; r.OrderedAt = "not-a-time"; return r }(), want: 1},
+		{name: "different invalid timestamps do not collide", open: func() OrderRecord { r := baseOpen; r.OrderedAt = "bad-one"; return r }(), closed: func() OrderRecord { r := baseClosed; r.OrderedAt = "bad-two"; return r }(), want: 2},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := &countingOrders{lists: OrdersReading{AccountRef: "acct-1",
+				Open: []OrderRecord{tc.open}, Closed: []OrderRecord{tc.closed}}}
+			h := newOrdersHarness(t, reader)
+			view := h.Console.orders(context.Background(), orderFilterChoice{})
+			if view.Total != tc.want {
+				t.Fatalf("rows=%d want=%d: %+v", view.Total, tc.want, view.Rows)
+			}
+			wantClosed := tc.want - 1
+			if view.ClosedCount.Value() != fmt.Sprintf("%d건", wantClosed) {
+				t.Fatalf("closed count=%q want=%d건", view.ClosedCount.Value(), wantClosed)
+			}
+		})
+	}
+}
+
 // TestTheOriginColumnSaysUnknownWhenTheLedgerCouldNotBeRead.
 //
 // Reading an unreadable ledger as "somebody placed these by hand" makes a working
@@ -601,6 +642,89 @@ func TestTheOriginColumnTellsAnEngineOrderFromAnyOther(t *testing.T) {
 	}
 }
 
+func TestOpaqueBrokerOrderIDsKeepDistinctOriginAndExitEvidence(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	seedEngineJournal(t, path, `
+INSERT INTO intents (id, created_at, market, trading_day, account_ref, symbol, side, order_type,
+                     time_in_force, quantity, price, currency, source, fingerprint, notes)
+VALUES ('opaque-intent','2026-07-27T00:30:00Z','kr','2026-07-27','acct-1','005930','SELL','MARKET',
+        'DAY','1',NULL,'KRW','engine','opaque-fp','');
+INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, broker_order_id,
+                               fingerprint, recorded_at)
+VALUES ('opaque-attempt','opaque-intent','PLACE','CONFIRMED',1,' O-1 ','opaque-fp','2026-07-27T00:30:00Z');
+INSERT INTO positions(id,account_ref,market,symbol,instance_seq,entry_decision_id,state,quantity,avg_price,opened_at)
+VALUES ('opaque-position','acct-1','kr','005930',1,'opaque-decision','OPEN','1','70000','2026-07-27T00:20:00Z');
+INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+VALUES ('opaque-position','OPAQUE_EXIT','opaque-intent','2026-07-27T00:30:00Z');`)
+	live := livePlainOrder(" O-1 ", "005930")
+	closed := filledPlainOrder("O-1", "005930")
+	closed.Market, closed.OrderedAt = live.Market, live.OrderedAt
+	reader := &countingOrders{lists: OrdersReading{AccountRef: "acct-1",
+		Open: []OrderRecord{live}, Closed: []OrderRecord{closed}}}
+	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
+	view := h.Console.orders(context.Background(), orderFilterChoice{})
+	if len(view.Rows) != 2 || view.Total != 2 || view.ClosedCount.Value() != "1건" {
+		t.Fatalf("opaque IDs were deduplicated: total=%d closed=%s rows=%+v", view.Total, view.ClosedCount.Value(), view.Rows)
+	}
+	got := make(map[string]orderRow, len(view.Rows))
+	for _, row := range view.Rows {
+		got[row.ID] = row
+	}
+	if got[" O-1 "].Origin != originEngine || !got[" O-1 "].ExitEvidence || got[" O-1 "].ExitIntentID != "opaque-intent" {
+		t.Fatalf("spaced engine ID lost exact origin/evidence: %+v", got[" O-1 "])
+	}
+	if got["O-1"].Origin != originOther || got["O-1"].ExitEvidence {
+		t.Fatalf("plain ID inherited spaced ID evidence: %+v", got["O-1"])
+	}
+}
+
+func TestInvalidEvidenceIdentityKeepsOriginUnknown(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	seedEngineJournal(t, path, ordersJournalFixture)
+	badTime := livePlainOrder("bad-time", "005930")
+	badTime.OrderedAt = "not-a-time"
+	badMarket := livePlainOrder("bad-market", "005930")
+	badMarket.Market = "UNKNOWN"
+	reader := &countingOrders{lists: OrdersReading{Open: []OrderRecord{badTime, badMarket}}}
+	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
+	h.authenticate(t)
+	view := h.Console.orders(context.Background(), orderFilterChoice{})
+	if !view.Journal.Readable() {
+		t.Fatalf("journal unexpectedly unreadable: %+v", view.Journal)
+	}
+	for _, row := range view.Rows {
+		if row.Origin != originUnknown {
+			t.Errorf("invalid identity row %s origin=%q, want unknown", row.ID, row.Origin)
+		}
+	}
+}
+
+func TestEvidenceQueryUsesOnlyRowsRemainingAfterFilter(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	seedEngineJournal(t, path, ordersJournalFixture+`
+INSERT INTO positions(id,account_ref,market,symbol,instance_seq,entry_decision_id,state,quantity,avg_price,opened_at)
+VALUES ('filtered-position','123-45-678901','kr','005930',1,'d-filter','OPEN','1','70000','2026-07-27T00:20:00Z');
+INSERT INTO exit_events(position_id,action,proposed_intent_id,created_at)
+VALUES ('filtered-position','LEGACY','intent-1','2026-07-27T00:30:00Z');`)
+	closed := make([]OrderRecord, journal.MaxBrokerOrderEvidenceScopes+1)
+	for i := range closed {
+		closed[i] = filledPlainOrder(fmt.Sprintf("hidden-%03d", i), "AAPL")
+	}
+	reader := &countingOrders{lists: OrdersReading{
+		Open: []OrderRecord{livePlainOrder("engine-order", "005930")}, Closed: closed,
+	}}
+	h := newOrdersHarness(t, reader, func(o *Options) { o.JournalPath = path })
+	h.authenticate(t)
+	view := h.Console.orders(context.Background(), orderFilterChoice{State: filterStateLive})
+	if !view.Journal.Readable() || len(view.Rows) != 1 || view.Rows[0].ID != "engine-order" ||
+		view.Rows[0].Origin != originEngine || !view.Rows[0].ExitEvidence {
+		t.Fatalf("filtered visible evidence = journal=%+v rows=%+v", view.Journal, view.Rows)
+	}
+	if view.Total != len(closed)+1 || view.ClosedCount.Value() != fmt.Sprintf("%d건", len(closed)) {
+		t.Fatalf("filter changed counts: total=%d closed=%s", view.Total, view.ClosedCount.Value())
+	}
+}
+
 // ordersJournalFixture records one attempt the broker acked with the order id the
 // screen will see.
 const ordersJournalFixture = `
@@ -610,7 +734,7 @@ VALUES ('intent-1','2026-07-27T00:30:00Z','kr','2026-07-27','123-45-678901','005
         'DAY','10',NULL,'KRW','engine','fp-1','');
 INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, broker_order_id,
                                fingerprint, recorded_at)
-VALUES ('a-1','intent-1','PLACE','RECORDED',1,'engine-order','fp-1','2026-07-27T00:30:00Z');
+VALUES ('a-1','intent-1','PLACE','CONFIRMED',1,'engine-order','fp-1','2026-07-27T00:30:00Z');
 `
 
 // TestAWatchingConditionalIsNeverLabelledOtherByAJoinThatCannotSucceed.
@@ -688,7 +812,7 @@ VALUES ('intent-2','2026-07-27T00:20:00Z','kr','2026-07-27','123-45-678901','005
         'DAY','10','70000','KRW','engine','fp-2','');
 INSERT INTO mutation_attempts (id, intent_id, kind, state, attempt_no, broker_order_id,
                                fingerprint, recorded_at)
-VALUES ('a-2','intent-2','PLACE','RECORDED',1,'co-engine','fp-2','2026-07-27T00:20:00Z');
+VALUES ('a-2','intent-2','PLACE','CONFIRMED',1,'co-engine','fp-2','2026-07-27T00:20:00Z');
 `
 
 // TestASideFilterNeverHidesAWatchingConditional.
