@@ -1,0 +1,198 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "111f3202b7dcc261dbabcf73500d421d4fa95fc9e353e46427fc3b6b38d9af34",
+  "package": "main",
+  "function": "engineRuntime",
+  "signature": "engineRuntime(params=3, results=2)",
+  "start": {
+    "line": 319,
+    "column": 1
+  },
+  "end": {
+    "line": 384,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 341,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 346,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 322,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 331,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 342,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 347,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 359,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 19
+      },
+      "text": "engineFillDetector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 17
+      },
+      "text": "ectx.ReconcileDriver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 18
+      },
+      "text": "ectx.SnapshotCollector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 19
+      },
+      "text": "ectx.ExitObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 14
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 19
+      },
+      "text": "ectx.Recovery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 350,
+        "column": 9
+      },
+      "text": "engine.NewRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 358,
+        "column": 15
+      },
+      "text": "recovery.Run"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 325,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 334,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 358,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

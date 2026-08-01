@@ -81,6 +81,7 @@ package risk
 // 내림)은 TestRiskBasedQuantityFloorsExactlyOnce가 그대로 지킨다.
 
 import (
+	"errors"
 	"math/big"
 	"strings"
 	"testing"
@@ -88,6 +89,54 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
+
+func TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps(t *testing.T) {
+	tests := []struct {
+		name   string
+		policy Policy
+		entry  string
+		stop   string
+		want   string
+	}{
+		{name: "risk budget", policy: func() Policy {
+			p := DefaultPolicy()
+			p.RiskBudget = krw("2500")
+			p.MaxOrderQuantity = "1000"
+			return p
+		}(), entry: "100", stop: "90", want: "250"},
+		{name: "default quantity cap", policy: DefaultPolicy(), entry: "100", stop: "99", want: "100"},
+		{name: "notional floor", policy: func() Policy {
+			p := DefaultPolicy()
+			p.MaxOrderQuantity = "1000"
+			p.MaxOrderNotional = krw("1000")
+			return p
+		}(), entry: "101", stop: "100", want: "9"},
+		{name: "exact notional boundary", policy: func() Policy {
+			p := DefaultPolicy()
+			p.MaxOrderQuantity = "1000"
+			p.MaxOrderNotional = krw("1000")
+			return p
+		}(), entry: "100", stop: "99", want: "10"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := StrategyEntryQuantity(tc.policy, tc.entry, tc.stop)
+			if err != nil || got != tc.want {
+				t.Fatalf("quantity=%q err=%v want=%q", got, err, tc.want)
+			}
+		})
+	}
+}
+
+func TestStrategyEntryQuantityRefusesZeroCapacity(t *testing.T) {
+	policy := DefaultPolicy()
+	policy.MaxOrderNotional = krw("1")
+	for _, tc := range []struct{ entry, stop string }{{"100", "99"}, {"100", "100"}} {
+		if got, err := StrategyEntryQuantity(policy, tc.entry, tc.stop); got != "" || !errors.Is(err, ErrStrategyQuantityZero) {
+			t.Fatalf("entry/stop=%s/%s quantity=%q err=%v", tc.entry, tc.stop, got, err)
+		}
+	}
+}
 
 // --- No Stop = No Trade -------------------------------------------------------
 

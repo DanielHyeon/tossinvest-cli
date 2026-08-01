@@ -1,0 +1,62 @@
+{
+  "file": "internal/execgw/riskguardian.go",
+  "source_sha256": "7113aec89f5f3c0783a79dca482c33b4574fb759738566fd4d520e71d0487290",
+  "package": "execgw",
+  "function": "LimitsDigest",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.LimitsDigest(params=0, results=1)",
+  "start": {
+    "line": 318,
+    "column": 1
+  },
+  "end": {
+    "line": 321,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 9
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 23
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 21
+      },
+      "text": "hex.EncodeToString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

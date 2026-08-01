@@ -1,0 +1,240 @@
+{
+  "file": "internal/risk/contract_test.go",
+  "source_sha256": "475246355e43ebca733779fda47fb29373c7e632db8e4d3c4be38e8b43a0e67f",
+  "package": "risk",
+  "function": "TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps",
+  "signature": "TestStrategyEntryQuantityUsesExactMinimumOfGuardianCaps(params=1, results=0)",
+  "start": {
+    "line": 93,
+    "column": 1
+  },
+  "end": {
+    "line": 129,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 124,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 112,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 33
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 9
+      },
+      "text": "DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 19
+      },
+      "text": "krw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 42
+      },
+      "text": "DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 36
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 9
+      },
+      "text": "DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 25
+      },
+      "text": "krw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 45
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 9
+      },
+      "text": "DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 25
+      },
+      "text": "krw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 16
+      },
+      "text": "StrategyEntryQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 103,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 104,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 110,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 111,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 116,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

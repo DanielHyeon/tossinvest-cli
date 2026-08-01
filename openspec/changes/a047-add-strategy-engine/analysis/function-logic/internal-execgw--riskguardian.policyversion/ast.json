@@ -1,0 +1,30 @@
+{
+  "file": "internal/execgw/riskguardian.go",
+  "source_sha256": "7113aec89f5f3c0783a79dca482c33b4574fb759738566fd4d520e71d0487290",
+  "package": "execgw",
+  "function": "PolicyVersion",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.PolicyVersion(params=0, results=1)",
+  "start": {
+    "line": 316,
+    "column": 1
+  },
+  "end": {
+    "line": 316,
+    "column": 73
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 316,
+        "column": 49
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

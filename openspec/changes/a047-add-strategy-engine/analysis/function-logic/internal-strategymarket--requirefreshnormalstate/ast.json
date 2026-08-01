@@ -1,0 +1,202 @@
+{
+  "file": "internal/strategymarket/bars.go",
+  "source_sha256": "a6f17d0cc8ede1b51d2e96344d124675d9022ed730142c50b9d06a6cc5cd9269",
+  "package": "strategymarket",
+  "function": "RequireFreshNormalState",
+  "signature": "RequireFreshNormalState(params=5, results=2)",
+  "start": {
+    "line": 314,
+    "column": 1
+  },
+  "end": {
+    "line": 337,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 315,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 327,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 316,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 321,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 328,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 22
+      },
+      "text": "now.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 85
+      },
+      "text": "ErrSymbolStateNotConfigured.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 18
+      },
+      "text": "source.ReadSymbolState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 50
+      },
+      "text": "reading.ObservedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 85
+      },
+      "text": "fmt.Sprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 9
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 9
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 23
+      },
+      "text": "reading.ObservedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 79
+      },
+      "text": "age.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 81
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 15
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 15
+      },
+      "text": "reading.ObservedAt.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

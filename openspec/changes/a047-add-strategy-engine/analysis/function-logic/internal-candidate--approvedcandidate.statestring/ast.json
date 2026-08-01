@@ -1,0 +1,39 @@
+{
+  "file": "internal/candidate/thresholdset.go",
+  "source_sha256": "f310d55ea542d6faea7581438c7742969523050c2ccf51d9b27663fa28c76223",
+  "package": "candidate",
+  "function": "StateString",
+  "receiver": "ApprovedCandidate",
+  "signature": "ApprovedCandidate.StateString(params=0, results=1)",
+  "start": {
+    "line": 573,
+    "column": 1
+  },
+  "end": {
+    "line": 573,
+    "column": 88
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 573,
+        "column": 64
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 71
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

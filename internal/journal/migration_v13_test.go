@@ -19,7 +19,7 @@ func TestMigrationV12ToV13IsAdditiveAndPreservesExistingRows(t *testing.T) {
 	}
 
 	j := openTestJournalAt(t, path)
-	if version, err := j.SchemaVersion(context.Background()); err != nil || version != 13 {
+	if version, err := j.SchemaVersion(context.Background()); err != nil || version != SchemaVersion {
 		t.Fatalf("schema version=%d err=%v", version, err)
 	}
 	if after := countRows(t, j.db, v8AllTables); !sameCounts(before, after) {

@@ -1,0 +1,30 @@
+{
+  "file": "internal/candidate/thresholdset.go",
+  "source_sha256": "f310d55ea542d6faea7581438c7742969523050c2ccf51d9b27663fa28c76223",
+  "package": "candidate",
+  "function": "MarketString",
+  "receiver": "ApprovedCandidate",
+  "signature": "ApprovedCandidate.MarketString(params=0, results=1)",
+  "start": {
+    "line": 570,
+    "column": 1
+  },
+  "end": {
+    "line": 570,
+    "column": 85
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 570,
+        "column": 64
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

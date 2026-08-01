@@ -1,0 +1,126 @@
+{
+  "file": "internal/strategy/approved.go",
+  "source_sha256": "5b75a4f6ee8c291226abcd4afb1becd7fcc26ea73dd8b90b9f0f675d13aafdfb",
+  "package": "strategy",
+  "function": "SealApproved",
+  "signature": "SealApproved(params=1, results=1)",
+  "start": {
+    "line": 20,
+    "column": 1
+  },
+  "end": {
+    "line": 22,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 33
+      },
+      "text": "value.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 56
+      },
+      "text": "value.MarketString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 86
+      },
+      "text": "value.SymbolString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 115
+      },
+      "text": "value.StateString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 153
+      },
+      "text": "value.CandidateLifeIDString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 202
+      },
+      "text": "value.ThresholdVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 239
+      },
+      "text": "value.SetDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 274
+      },
+      "text": "value.EvidenceDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 317
+      },
+      "text": "value.FirstSeenUnixNano"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 362
+      },
+      "text": "value.LastSeenUnixNano"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 408
+      },
+      "text": "value.ValidUntilUnixNano"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 456
+      },
+      "text": "value.ApprovedAtUnixNano"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

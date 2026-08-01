@@ -42,6 +42,9 @@ package execgw
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -54,6 +57,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine"
 )
 
 // evaluateChain is risk.Evaluate, reached through a variable.
@@ -119,6 +123,9 @@ type Issued struct {
 	// Version is the reservation ledger version after the commit, usable as the
 	// next observed version without a re-read.
 	Version int64
+	// StrategyReceipt is non-zero only for the dormant strategy issuance path.
+	// It is committed in the same transaction as Decision and Reservations.
+	StrategyReceipt journal.StrategyPlanReceipt
 }
 
 // ExposureSnapshot is the reservation side of one collection: what the broker
@@ -157,6 +164,9 @@ type EntryIssuance struct {
 	// Collect refreshes the reservation snapshot on every attempt, including the
 	// first. Required.
 	Collect CollectExposure
+	// strategyPlan is set only by IssueStrategyEntry after opaque-decision
+	// validation and Guardian-owned sizing. Ordinary callers cannot attach one.
+	strategyPlan *journal.StrategyPlanRequest
 }
 
 // ReductionIssuance is one exit the Guardian judges: a reduce-only sell.
@@ -303,6 +313,74 @@ func (g *RiskGuardian) ExposureLimits() Limits { return g.limits }
 // AccountRef is the account this Guardian authorises for.
 func (g *RiskGuardian) AccountRef() string { return g.accountRef }
 
+func (g *RiskGuardian) PolicyVersion() string { return g.policyVersion }
+
+func (g *RiskGuardian) LimitsDigest() string {
+	sum := sha256.Sum256([]byte(g.limitsJSON))
+	return "sha256:" + hex.EncodeToString(sum[:])
+}
+
+type StrategyEntryIssuance struct {
+	Decision                 strategyengine.Decision
+	Account                  risk.AccountState
+	Collect                  CollectExposure
+	AttemptID                string
+	ActivationManifestDigest string
+	SettingsDigest           string
+	ExpectedPolicyVersion    string
+	ExpectedLimitsDigest     string
+}
+
+// IssueStrategyEntry is the dormant strategy-only issuance door. Quantity is
+// derived from the Guardian-owned policy, never from a caller or UI setting.
+func (g *RiskGuardian) IssueStrategyEntry(ctx context.Context, request StrategyEntryIssuance) (Issued, error) {
+	if !request.Decision.Valid() {
+		return Issued{}, errors.New("execgw: strategy decision is invalid")
+	}
+	if request.ExpectedPolicyVersion != g.policyVersion || request.ExpectedLimitsDigest != g.LimitsDigest() {
+		return Issued{}, errors.New("execgw: strategy Guardian snapshot mismatch")
+	}
+	record := request.Decision.Record()
+	quantity, err := risk.StrategyEntryQuantity(g.policy, record.EntryPrice, record.StopPrice)
+	if err != nil {
+		return Issued{}, fmt.Errorf("execgw: sizing strategy entry: %w", err)
+	}
+	lineage, err := strategyDecisionLineage(record, quantity, g.policyVersion, request.SettingsDigest, request.ActivationManifestDigest)
+	if err != nil {
+		return Issued{}, err
+	}
+	plan := journal.StrategyPlanRequest{
+		Lineage: lineage, AttemptID: request.AttemptID,
+		ActivationManifestDigest: request.ActivationManifestDigest, Revision: 1,
+	}
+	return g.IssueEntry(ctx, EntryIssuance{
+		Intent: risk.Intent{
+			AccountRef: g.accountRef, Market: costs.MarketKR, Symbol: record.Symbol, Side: risk.SideBuy,
+			Quantity: quantity, LimitPrice: record.EntryPrice, StopPrice: record.StopPrice, TargetPrice: record.TargetPrice,
+		},
+		Account: request.Account, Collect: request.Collect, strategyPlan: &plan,
+	})
+}
+
+func strategyDecisionLineage(record strategyengine.DecisionRecord, quantity, policyVersion, settingsDigest, activationManifestDigest string) (journal.StrategyDecisionLineage, error) {
+	payload, err := json.Marshal(record)
+	if err != nil {
+		return journal.StrategyDecisionLineage{}, fmt.Errorf("execgw: encoding strategy decision: %w", err)
+	}
+	payloadHash := sha256.Sum256(payload)
+	return journal.StrategyDecisionLineage{
+		DecisionIdentity: record.Identity, CandidateLifeID: record.CandidateLifeID,
+		Market: record.Market, Symbol: record.Symbol, ThresholdVersion: record.ThresholdVersion,
+		ThresholdSetDigest: record.ThresholdSetDigest, EvidenceDigest: record.EvidenceDigest,
+		LaneID: record.LaneID, LaneVersion: record.LaneVersion, LaneSourceDigest: record.SourceDigest,
+		LaneConstantsDigest: record.ConstantsDigest, EntryPrice: record.EntryPrice, StopPrice: record.StopPrice,
+		TargetPrice: record.TargetPrice, Quantity: quantity, PolicyVersion: policyVersion,
+		SettingsDigest: settingsDigest, DecisionPayload: string(payload),
+		DecisionPayloadDigest:    "sha256:" + hex.EncodeToString(payloadHash[:]),
+		ActivationManifestDigest: activationManifestDigest,
+	}, nil
+}
+
 // Authorize satisfies the Guardian interface and refuses both classes.
 //
 // AuthorizationRequest is the draft shape from before an issuer existed: it
@@ -388,42 +466,60 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 	reservationID := "res-" + decision.ID
 	currency := exposure.Currency
 
-	out, err := g.journal.RecordDecisionAndReserveWithRecollection(ctx,
-		func(ctx context.Context, attempt int) (journal.IssueRequest, error) {
-			snapshot, err := req.Collect(ctx, attempt)
-			if err != nil {
-				return journal.IssueRequest{}, err
-			}
-			usage, err := exposureUsage(snapshot.OpenExposure, currency)
-			if err != nil {
-				return journal.IssueRequest{}, err
-			}
-			return journal.IssueRequest{
-				Decision: decision,
-				Reserve: journal.ReserveRequest{
-					SnapshotAsOf:    snapshot.AsOf,
-					ObservedVersion: snapshot.Version,
-					SnapshotUsage: []journal.AggregateAmount{
-						{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: currency},
-					},
-					Limits: []journal.AggregateAmount{
-						{
-							Kind:     journal.ReservationKindOpenExposure,
-							Amount:   g.policy.MaxOpenExposure.Amount,
-							Currency: currency,
-						},
-					},
-					Reservations: []journal.ReservationRequest{
-						{
-							ID:       reservationID,
-							Kind:     journal.ReservationKindOpenExposure,
-							Amount:   exposure.Amount,
-							Currency: currency,
-						},
+	collectIssue := func(ctx context.Context, attempt int) (journal.IssueRequest, error) {
+		snapshot, err := req.Collect(ctx, attempt)
+		if err != nil {
+			return journal.IssueRequest{}, err
+		}
+		usage, err := exposureUsage(snapshot.OpenExposure, currency)
+		if err != nil {
+			return journal.IssueRequest{}, err
+		}
+		return journal.IssueRequest{
+			Decision: decision,
+			Reserve: journal.ReserveRequest{
+				SnapshotAsOf:    snapshot.AsOf,
+				ObservedVersion: snapshot.Version,
+				SnapshotUsage: []journal.AggregateAmount{
+					{Kind: journal.ReservationKindOpenExposure, Amount: usage, Currency: currency},
+				},
+				Limits: []journal.AggregateAmount{
+					{
+						Kind:     journal.ReservationKindOpenExposure,
+						Amount:   g.policy.MaxOpenExposure.Amount,
+						Currency: currency,
 					},
 				},
-			}, nil
-		}, g.recollect)
+				Reservations: []journal.ReservationRequest{
+					{
+						ID:       reservationID,
+						Kind:     journal.ReservationKindOpenExposure,
+						Amount:   exposure.Amount,
+						Currency: currency,
+					},
+				},
+			},
+		}, nil
+	}
+	var out journal.IssueResult
+	var strategyReceipt journal.StrategyPlanReceipt
+	if req.strategyPlan == nil {
+		out, err = g.journal.RecordDecisionAndReserveWithRecollection(ctx, collectIssue, g.recollect)
+	} else {
+		strategyOut, strategyErr := g.journal.RecordStrategyDecisionAndReserveWithRecollection(ctx,
+			func(ctx context.Context, attempt int) (journal.StrategyIssueRequest, error) {
+				issue, collectErr := collectIssue(ctx, attempt)
+				if collectErr != nil {
+					return journal.StrategyIssueRequest{}, collectErr
+				}
+				return journal.StrategyIssueRequest{Issue: issue, Plan: *req.strategyPlan}, nil
+			}, g.recollect)
+		if strategyErr == nil {
+			out = strategyOut.Issue
+			strategyReceipt = strategyOut.Receipt
+		}
+		err = strategyErr
+	}
 	if err != nil {
 		refusal := issuanceRefusal(err)
 		// The chain allowed and the ledger did not. Recording this as a chain
@@ -447,10 +543,11 @@ func (g *RiskGuardian) IssueEntry(ctx context.Context, req EntryIssuance) (Issue
 	g.observeEntry(issued)
 
 	return Issued{
-		Decision:     GuardianDecision{ID: out.Decision.ID, Generation: out.Decision.Generation},
-		ExpiresAt:    out.Decision.ExpiresAt,
-		Reservations: out.Reservations,
-		Version:      out.Version,
+		Decision:        GuardianDecision{ID: out.Decision.ID, Generation: out.Decision.Generation},
+		ExpiresAt:       out.Decision.ExpiresAt,
+		Reservations:    out.Reservations,
+		Version:         out.Version,
+		StrategyReceipt: strategyReceipt,
 	}, nil
 }
 

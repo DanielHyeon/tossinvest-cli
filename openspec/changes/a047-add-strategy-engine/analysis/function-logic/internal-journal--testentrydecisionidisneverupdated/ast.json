@@ -1,0 +1,150 @@
+{
+  "file": "internal/journal/adoption_static_test.go",
+  "source_sha256": "8e7b77ba2b27c52d6babaad76ace15efde8da7ff4dd6b5a8a7518d6869b1a61d",
+  "package": "journal",
+  "function": "TestEntryDecisionIDIsNeverUpdated",
+  "signature": "TestEntryDecisionIDIsNeverUpdated(params=1, results=0)",
+  "start": {
+    "line": 151,
+    "column": 1
+  },
+  "end": {
+    "line": 171,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 156,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 160,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 26
+      },
+      "text": "productionSources"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 4
+      },
+      "text": "exactEntryDecisionID.MatchString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 24
+      },
+      "text": "updateStatements"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 7
+      },
+      "text": "exactEntryDecisionID.MatchString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 12
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 158,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
