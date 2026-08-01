@@ -14,4 +14,4 @@
 - [x] 3.1 lane/policy performance query와 `performance-history` read-only view를 구현하고 metric help/unit/sample/period/provenance를 제공한다.
 - [x] 3.2 최근 30일/all markets/all lanes/complete lineage only 조회 기본값과 link_missing/not_measured/insufficient_sample 설명을 fixture로 고정한다.
 - [x] 3.3 mutation control·capability 부재, 모바일·접근성, pruning, migration/full test·vet·validate와 독립 리뷰를 통과한다.
-- [ ] 3.4 `make gate CHANGE=a049-add-lane-performance`을 통과한다.
+- [x] 3.4 `make gate CHANGE=a049-add-lane-performance`을 통과한다.
