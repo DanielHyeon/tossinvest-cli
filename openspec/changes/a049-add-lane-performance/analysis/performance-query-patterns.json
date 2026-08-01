@@ -1,0 +1,47 @@
+{
+  "queries": [
+    {
+      "id": "recent_observation_count_and_prune",
+      "type": "SELECT",
+      "table": "price_observations",
+      "description": "30-day range count and deterministic 90-day retention selection",
+      "where_conditions": [{"column": "observed_at", "operator": ">=", "selectivity": 0.30}],
+      "join_conditions": [],
+      "order_by": [{"column": "observed_at", "direction": "ASC"}, {"column": "id", "direction": "ASC"}],
+      "group_by": [],
+      "frequency": 100,
+      "avg_execution_time_ms": 50
+    },
+    {
+      "id": "position_markout_window",
+      "type": "SELECT",
+      "table": "price_observations",
+      "description": "Existing observations for one exact position ordered by instant",
+      "where_conditions": [
+        {"column": "position_id", "operator": "=", "selectivity": 0.999},
+        {"column": "observed_at", "operator": "BETWEEN", "selectivity": 0.05}
+      ],
+      "join_conditions": [],
+      "order_by": [{"column": "observed_at", "direction": "ASC"}, {"column": "id", "direction": "ASC"}],
+      "group_by": [],
+      "frequency": 500,
+      "avg_execution_time_ms": 5
+    },
+    {
+      "id": "default_performance_dashboard",
+      "type": "SELECT",
+      "table": "performance_trades",
+      "description": "Fixed recent-30-day complete-lineage dashboard",
+      "where_conditions": [
+        {"column": "closed_at", "operator": ">=", "selectivity": 0.30},
+        {"column": "lineage_status", "operator": "=", "selectivity": 0.80}
+      ],
+      "join_conditions": [],
+      "order_by": [{"column": "closed_at", "direction": "ASC"}],
+      "group_by": ["lane_id", "lane_version", "policy_id", "policy_version"],
+      "frequency": 50,
+      "avg_execution_time_ms": 100
+    }
+  ]
+}
+

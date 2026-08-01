@@ -228,6 +228,10 @@ type Options struct {
 	// state and its calendar provenance. Its single method returns plain display
 	// data; it cannot edit configuration, start the engine, or reach a broker.
 	MarketSchedule MarketScheduleReader
+	// Performance is the derived performance.db read model. Its interface has one
+	// query method and exposes no collector, pruning, journal, broker, config, or
+	// operating-control capability.
+	Performance PerformanceReader
 
 	// Orders is the read-only view of the account's order record the orders
 	// screen reads (orders.go). It declares one method, behind which the caller
@@ -724,6 +728,7 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/settings/system-update/download",
 		c.session0(c.mutating(c.handleSystemUpdateDownload)))
 	mux.HandleFunc("/optimization", c.session0(c.handleOptimization))
+	mux.HandleFunc("/performance-history", c.session0(c.handlePerformanceHistory))
 	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
 	mux.HandleFunc("/optimization/exit-policy",
 		c.session0(c.mutating(c.handleOptimizationSave)))

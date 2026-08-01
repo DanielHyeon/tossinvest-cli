@@ -94,6 +94,77 @@ trading toggle, 편입 목록은 변경하지 않는다.</p>
 {{template "foot" .}}
 {{end}}
 
+{{define "performance-history"}}
+{{template "head" .}}
+<p><a href="/optimization">최적화</a> / <code>performance-history</code></p>
+<h1>레인 성과 · 읽기 전용</h1>
+<p class="page-intro muted">StockOS lane-console 정보 구조처럼 필터 상태, 결과, 근거와 누락 이유를 한 화면에 둡니다.
+이 화면은 기존 journal·position 관측에서 만든 파생 결과만 읽으며 주문, 설정 저장, lane 토글 또는 LIVE 승인을 제공하지 않습니다.</p>
+
+<section aria-labelledby="performance-filter-title">
+  <h2 id="performance-filter-title">서버 조회 기본값</h2>
+  <div class="filter-bar" aria-label="고정된 성과 조회 범위" aria-readonly="true">
+    <span class="status-pill">최근 {{.View.Query.PeriodDays}}일</span>
+    <span class="status-pill">전체 시장</span>
+    <span class="status-pill">전체 lane</span>
+    <span class="status-pill">complete lineage only</span>
+  </div>
+  <p class="muted">화면 필터일 뿐 거래 정책 기본값이 아닙니다. 입력하거나 저장할 값이 없습니다.</p>
+</section>
+
+{{if .Unwired}}
+<p class="notice"><strong>performance.db 조회 seam 미배선</strong> — 성과를 0으로 꾸미지 않습니다.</p>
+{{else if .LoadErr}}
+<p class="danger">성과를 읽지 못했습니다. 값은 변경되지 않았습니다: <code>{{.LoadErr}}</code></p>
+{{else}}
+<section aria-labelledby="performance-state-title">
+  <h2 id="performance-state-title">측정 상태</h2>
+  <dl>
+    <dt><code>complete</code></dt><dd>{{.View.States.Complete}}건 · 전체 식별자 chain 확인</dd>
+    <dt><code>link_missing</code></dt><dd>{{.View.States.LinkMissing}}건 · {{.View.Explanation "link_missing"}}</dd>
+    <dt><code>not_measured</code></dt><dd>{{.View.States.NotMeasured}}개 거래 · {{.View.Explanation "not_measured"}}</dd>
+    <dt><code>insufficient_sample</code></dt><dd>{{.View.States.InsufficientSample}}개 묶음 · {{.View.Explanation "insufficient_sample"}}</dd>
+  </dl>
+</section>
+
+{{if .View.Aggregates}}
+{{range .View.Aggregates}}
+<section aria-labelledby="lane-{{.LaneID}}-{{.PolicyID}}">
+  <h2 id="lane-{{.LaneID}}-{{.PolicyID}}"><code>{{.LaneID}}</code> · <code>{{.PolicyID}}</code></h2>
+  {{if eq .Status "insufficient_sample"}}
+  <p class="notice"><strong>insufficient_sample · 추천 근거로 사용 불가</strong></p>
+  {{else}}<p class="ok"><strong>complete</strong></p>{{end}}
+  <dl>
+    <dt>시장 / 표본 / 기간</dt><dd>{{.Market}} / {{.Samples}}건 / 최근 {{$.View.Query.PeriodDays}}일</dd>
+    <dt>lane provenance</dt><dd><code>{{.LaneID}}@{{.LaneVersion}}</code></dd>
+    <dt>policy provenance</dt><dd><code>{{.PolicyID}}@{{.PolicyVersion}}</code></dd>
+    <dt>query semantics</dt><dd><code>{{.SemanticsVersion}}</code></dd>
+    <dt>observation source</dt><dd>{{if .ObservationProvenance}}<code>{{.ObservationProvenance}}</code>{{else}}<code>not_measured</code>{{end}}</dd>
+  </dl>
+  <table class="data-table">
+    <caption>지표 정의와 표본</caption>
+    <thead><tr><th scope="col">지표</th><th scope="col">값</th><th scope="col">단위</th><th scope="col">표본</th><th scope="col">기간</th><th scope="col">provenance</th><th scope="col">쉬운 정의</th></tr></thead>
+    <tbody>{{range .Metrics}}
+      <tr>
+        <th scope="row" data-label="지표">{{.Label}}</th>
+        <td data-label="값">{{if eq .Status "not_measured"}}<code>not_measured</code>{{else}}<strong>{{.Value}}</strong>{{end}}</td>
+        <td data-label="단위">{{.Unit}}</td>
+        <td data-label="표본">{{.Samples}}건</td>
+        <td data-label="기간">최근 {{$.View.Query.PeriodDays}}일</td>
+        <td data-label="provenance"><code>{{.Provenance}}</code></td>
+        <td data-label="쉬운 정의">{{.Help}}</td>
+      </tr>
+    {{end}}</tbody>
+  </table>
+</section>
+{{end}}
+{{else}}
+<p class="notice">고정 조회 범위에 complete lineage 거래가 없습니다. 빈 결과는 성과 0이 아닙니다.</p>
+{{end}}
+{{end}}
+{{template "foot" .}}
+{{end}}
+
 {{define "market-schedule"}}
 {{template "head" .}}
 <p><a href="/optimization">최적화</a> / <code>strategy-runtime</code></p>
