@@ -68,6 +68,18 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 )
 
+// schemaV15 records the exact total transaction cost already deducted from the
+// frozen P&L. It is intentionally nullable with no default and no UPDATE:
+// historical rows did not measure this value and must remain distinguishable
+// from a genuinely cost-free trade. The trigger freezes every authority byte
+// while leaving the documented retention DELETE path available.
+const schemaV15 = `
+ALTER TABLE trade_outcomes ADD COLUMN cost_total TEXT;
+CREATE TRIGGER trade_outcomes_no_update
+BEFORE UPDATE ON trade_outcomes
+BEGIN SELECT RAISE(ABORT,'trade outcome is immutable'); END;
+`
+
 // ErrTradeOutcomeExists means the position already has a frozen outcome. It is
 // what makes a backfill unable to rewrite history.
 var ErrTradeOutcomeExists = errors.New("journal: the position already has a frozen trade outcome")
@@ -87,6 +99,10 @@ type TradeOutcome struct {
 	// InitialRisk and InitialQuantity are the frozen denominator's two factors.
 	InitialRisk     string
 	InitialQuantity string
+	// CostTotal is nil for historical rows that predate schema v15. A newly
+	// frozen or backfilled row always stores buyCost.Total + sellCost.Total,
+	// exactly the amount already deducted from RealizedPnLAfterCosts.
+	CostTotal *string
 	// HeldSeconds is opened_at → closed_at, or 0 when either is unknown.
 	HeldSeconds int64
 	// ExitRatchetLevel is the level reached under RATCHET; ExitRung the rung
@@ -118,12 +134,13 @@ func freezeTradeOutcomeTx(ctx context.Context, tx *ApplyTx, positionID string, m
 	_, err := tx.Exec(ctx, `
 		INSERT INTO trade_outcomes
 		  (position_id, realized_pnl_after_costs, realized_r, initial_risk,
-		   initial_quantity, held_seconds, exit_ratchet_level, exit_rung, closed_at)
-		VALUES (?,?,?,?,?,?,?,?,?)`,
+		   initial_quantity, held_seconds, exit_ratchet_level, exit_rung, closed_at,
+		   cost_total)
+		VALUES (?,?,?,?,?,?,?,?,?,?)`,
 		outcome.PositionID, outcome.RealizedPnLAfterCosts, outcome.RealizedR,
 		outcome.InitialRisk, outcome.InitialQuantity, outcome.HeldSeconds,
 		nullableString(outcome.ExitRatchetLevel), nullableRung(outcome.ExitRung),
-		outcome.ClosedAt)
+		outcome.ClosedAt, outcome.CostTotal)
 	return err == nil
 }
 
@@ -207,6 +224,7 @@ func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID s
 	pnl := new(big.Rat).Sub(sell.notional, buy.notional)
 	pnl.Sub(pnl, ratOf(buyCost.Total))
 	pnl.Sub(pnl, ratOf(sellCost.Total))
+	totalCost := ratText(new(big.Rat).Add(ratOf(buyCost.Total), ratOf(sellCost.Total)))
 
 	// 실현 R = pnl ÷ (초기 위험 × 초기 수량). Both factors are frozen: the risk at
 	// t0 and the quantity the position was opened with, neither of which a
@@ -223,6 +241,7 @@ func computeTradeOutcome(ctx context.Context, r tradeOutcomeReader, positionID s
 		RealizedR:             realizedR,
 		InitialRisk:           risk,
 		InitialQuantity:       ratText(buy.quantity),
+		CostTotal:             &totalCost,
 		HeldSeconds:           heldSeconds(openedAt, closedAt),
 		ExitRatchetLevel:      level,
 		ExitRung:              rung,
@@ -660,7 +679,7 @@ func (j *Journal) TradeOutcomeOf(ctx context.Context, positionID string) (TradeO
 	rows, err := j.db.QueryContext(ctx, `
 		SELECT position_id, realized_pnl_after_costs, realized_r, initial_risk,
 		       initial_quantity, coalesce(held_seconds, 0), coalesce(exit_ratchet_level, ''),
-		       exit_rung, closed_at
+		       exit_rung, closed_at, cost_total
 		  FROM trade_outcomes WHERE position_id = ?`, strings.TrimSpace(positionID))
 	if err != nil {
 		return TradeOutcome{}, fmt.Errorf("journal: reading the outcome of %s: %w", positionID, err)
@@ -677,7 +696,7 @@ func (j *Journal) TradeOutcomes(ctx context.Context, accountRef string) ([]Trade
 	rows, err := j.db.QueryContext(ctx, `
 		SELECT o.position_id, o.realized_pnl_after_costs, o.realized_r, o.initial_risk,
 		       o.initial_quantity, coalesce(o.held_seconds, 0),
-		       coalesce(o.exit_ratchet_level, ''), o.exit_rung, o.closed_at
+		       coalesce(o.exit_ratchet_level, ''), o.exit_rung, o.closed_at, o.cost_total
 		  FROM trade_outcomes o
 		  JOIN positions p ON p.id = o.position_id
 		 WHERE p.account_ref = ?
@@ -705,15 +724,19 @@ func scanTradeOutcome(rows *sql.Rows) (TradeOutcome, error) {
 	var (
 		o    TradeOutcome
 		rung sql.NullInt64
+		cost sql.NullString
 	)
 	if err := rows.Scan(&o.PositionID, &o.RealizedPnLAfterCosts, &o.RealizedR,
 		&o.InitialRisk, &o.InitialQuantity, &o.HeldSeconds, &o.ExitRatchetLevel,
-		&rung, &o.ClosedAt); err != nil {
+		&rung, &o.ClosedAt, &cost); err != nil {
 		return TradeOutcome{}, fmt.Errorf("journal: reading a trade outcome: %w", err)
 	}
 	o.ExitRung = -1
 	if rung.Valid {
 		o.ExitRung = int(rung.Int64)
+	}
+	if cost.Valid {
+		o.CostTotal = &cost.String
 	}
 	return o, nil
 }
@@ -746,12 +769,13 @@ func (j *Journal) BackfillTradeOutcome(ctx context.Context, positionID string,
 	if _, err := j.db.ExecContext(ctx, `
 		INSERT INTO trade_outcomes
 		  (position_id, realized_pnl_after_costs, realized_r, initial_risk,
-		   initial_quantity, held_seconds, exit_ratchet_level, exit_rung, closed_at)
-		VALUES (?,?,?,?,?,?,?,?,?)`,
+		   initial_quantity, held_seconds, exit_ratchet_level, exit_rung, closed_at,
+		   cost_total)
+		VALUES (?,?,?,?,?,?,?,?,?,?)`,
 		outcome.PositionID, outcome.RealizedPnLAfterCosts, outcome.RealizedR,
 		outcome.InitialRisk, outcome.InitialQuantity, outcome.HeldSeconds,
 		nullableString(outcome.ExitRatchetLevel), nullableRung(outcome.ExitRung),
-		outcome.ClosedAt); err != nil {
+		outcome.ClosedAt, outcome.CostTotal); err != nil {
 		if isUniqueViolation(err) {
 			return TradeOutcome{}, fmt.Errorf("%w: %s", ErrTradeOutcomeExists, id)
 		}

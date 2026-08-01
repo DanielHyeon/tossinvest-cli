@@ -1,0 +1,118 @@
+{
+  "schema_overview": {
+    "total_tables": 5,
+    "total_columns": 38,
+    "tables_with_primary_keys": 4,
+    "total_foreign_keys": 0,
+    "total_indexes": 5
+  },
+  "normalization_analysis": {
+    "total_issues": 3,
+    "by_severity": {
+      "high": 0,
+      "medium": 3,
+      "low": 0,
+      "warning": 0
+    },
+    "issues": [
+      {
+        "table": "performance_trades",
+        "issue_type": "3NF_VIOLATION",
+        "severity": "MEDIUM",
+        "description": "Columns ['lane_id', 'lane_version'] may have transitive dependency through 'lane_id'",
+        "suggestion": "Consider creating separate 'lane' table with these columns",
+        "columns_affected": [
+          "lane_id",
+          "lane_version",
+          "lane_id"
+        ]
+      },
+      {
+        "table": "performance_trades",
+        "issue_type": "3NF_VIOLATION",
+        "severity": "MEDIUM",
+        "description": "Columns ['decision_id', 'decision_at', 'decision_price'] may have transitive dependency through 'decision_id'",
+        "suggestion": "Consider creating separate 'decision' table with these columns",
+        "columns_affected": [
+          "decision_id",
+          "decision_at",
+          "decision_price",
+          "decision_id"
+        ]
+      },
+      {
+        "table": "performance_trades",
+        "issue_type": "3NF_VIOLATION",
+        "severity": "MEDIUM",
+        "description": "Columns ['policy_id', 'policy_version'] may have transitive dependency through 'policy_id'",
+        "suggestion": "Consider creating separate 'policy' table with these columns",
+        "columns_affected": [
+          "policy_id",
+          "policy_version",
+          "policy_id"
+        ]
+      }
+    ]
+  },
+  "data_type_analysis": {
+    "total_issues": 0,
+    "issues": []
+  },
+  "constraint_analysis": {
+    "total_issues": 3,
+    "by_severity": {
+      "high": 1,
+      "medium": 0,
+      "low": 2
+    },
+    "issues": [
+      {
+        "table": "performance_trades",
+        "issue_type": "MISSING_CHECK_CONSTRAINT",
+        "severity": "LOW",
+        "description": "Column 'quantity' should validate positive values",
+        "suggestion": "Add CHECK constraint: quantity > 0",
+        "columns_affected": [
+          "quantity"
+        ]
+      },
+      {
+        "table": "price_observations",
+        "issue_type": "MISSING_CHECK_CONSTRAINT",
+        "severity": "LOW",
+        "description": "Column 'price' should validate positive values",
+        "suggestion": "Add CHECK constraint: price > 0",
+        "columns_affected": [
+          "price"
+        ]
+      },
+      {
+        "table": "metric_observations",
+        "issue_type": "MISSING_PRIMARY_KEY",
+        "severity": "HIGH",
+        "description": "Table has no primary key defined",
+        "suggestion": "Add a primary key column (e.g., 'id' with auto-increment)",
+        "columns_affected": []
+      }
+    ]
+  },
+  "naming_analysis": {
+    "total_issues": 1,
+    "issues": [
+      {
+        "table": "maintenance_state",
+        "column": null,
+        "issue": "Table name should be plural",
+        "current_name": "maintenance_state",
+        "suggested_name": "maintenance_states"
+      }
+    ]
+  },
+  "missing_indexes": [],
+  "recommendations": [
+    "Address 1 high-severity issues immediately",
+    "Add primary keys to tables: metric_observations",
+    "Review 3 normalization issues for schema optimization"
+  ],
+  "mermaid_erd": "erDiagram\n    PERFORMANCE_TRADES {\n        TEXT id \"PK\"\n        TEXT candidate_life_id\n        TEXT threshold_version\n        TEXT threshold_set_digest\n        TEXT evidence_digest\n        TEXT lane_id\n        TEXT lane_version\n        TEXT decision_id\n        TEXT attempt_id\n        TEXT order_id\n        TEXT fill_id\n        TEXT position_id \"NOT NULL UNIQUE\"\n        TEXT close_id\n        TEXT policy_id\n        TEXT policy_version\n        TEXT lineage_status \"NOT NULL\"\n        TEXT market \"NOT NULL\"\n        TEXT side \"NOT NULL\"\n        TEXT decision_at\n        TEXT decision_price\n        TEXT entry_at \"NOT NULL\"\n        TEXT entry_price \"NOT NULL\"\n        TEXT quantity \"NOT NULL\"\n        TEXT cost_total \"NOT NULL\"\n        TEXT realized_pnl_after_costs \"NOT NULL\"\n        TEXT realized_r \"NOT NULL\"\n        TEXT closed_at \"NOT NULL\"\n    }\n    PRICE_OBSERVATIONS {\n        TEXT id \"PK\"\n        TEXT position_id \"NOT NULL\"\n        TEXT observed_at \"NOT NULL\"\n        TEXT price \"NOT NULL\"\n        TEXT source \"NOT NULL\"\n        TEXT source_version \"NOT NULL\"\n    }\n    MEASUREMENT_SNAPSHOTS {\n        INTEGER id \"PK\"\n        TEXT trade_id \"NOT NULL\"\n    }\n    METRIC_OBSERVATIONS {\n        INTEGER snapshot_id \"NOT NULL\"\n    }\n    MAINTENANCE_STATE {\n        TEXT key \"PK\"\n        TEXT value \"NOT NULL\"\n    }"
+}

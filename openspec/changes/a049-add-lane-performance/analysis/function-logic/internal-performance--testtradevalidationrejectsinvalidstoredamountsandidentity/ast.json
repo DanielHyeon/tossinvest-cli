@@ -1,0 +1,152 @@
+{
+  "file": "internal/performance/model_test.go",
+  "source_sha256": "c61c0f902ca1d266bd32f09ee70ba1c1b30f65ab49b6a364f2240c5e43239740",
+  "package": "performance",
+  "function": "TestTradeValidationRejectsInvalidStoredAmountsAndIdentity",
+  "signature": "TestTradeValidationRejectsInvalidStoredAmountsAndIdentity(params=1, results=0)",
+  "start": {
+    "line": 124,
+    "column": 1
+  },
+  "end": {
+    "line": 145,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 140,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 8
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 13
+      },
+      "text": "measuredTrade"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 4
+      },
+      "text": "test.mutate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 14
+      },
+      "text": "trade.validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 130,
+        "column": 57
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 131,
+        "column": 59
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 60
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 133,
+        "column": 56
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 134,
+        "column": 62
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 140,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

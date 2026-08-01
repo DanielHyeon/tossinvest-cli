@@ -1,0 +1,101 @@
+{
+  "file": "internal/risk/contract_test.go",
+  "source_sha256": "475246355e43ebca733779fda47fb29373c7e632db8e4d3c4be38e8b43a0e67f",
+  "package": "risk",
+  "function": "TestStrategyEntryQuantityRefusesZeroCapacity",
+  "signature": "TestStrategyEntryQuantityRefusesZeroCapacity(params=1, results=0)",
+  "start": {
+    "line": 131,
+    "column": 1
+  },
+  "end": {
+    "line": 139,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 12
+      },
+      "text": "DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 28
+      },
+      "text": "krw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 18
+      },
+      "text": "StrategyEntryQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 82
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

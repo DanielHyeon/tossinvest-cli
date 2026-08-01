@@ -1,0 +1,46 @@
+{
+  "queries": [
+    {
+      "id": "bounded_retention_prune",
+      "type": "SELECT",
+      "table": "price_observations",
+      "description": "Deterministic 90-day retention selection limited to 500 rows per transaction",
+      "where_conditions": [{"column": "observed_at", "operator": "<", "selectivity": 0.10}],
+      "join_conditions": [],
+      "order_by": [{"column": "observed_at", "direction": "ASC"}, {"column": "id", "direction": "ASC"}],
+      "group_by": [],
+      "frequency": 1,
+      "avg_execution_time_ms": 100
+    },
+    {
+      "id": "position_markout_window",
+      "type": "SELECT",
+      "table": "price_observations",
+      "description": "Existing observations for one exact position ordered by instant",
+      "where_conditions": [
+        {"column": "position_id", "operator": "=", "selectivity": 0.999},
+        {"column": "observed_at", "operator": "BETWEEN", "selectivity": 0.05}
+      ],
+      "join_conditions": [],
+      "order_by": [{"column": "observed_at", "direction": "ASC"}, {"column": "id", "direction": "ASC"}],
+      "group_by": [],
+      "frequency": 500,
+      "avg_execution_time_ms": 5
+    },
+    {
+      "id": "default_performance_dashboard",
+      "type": "SELECT",
+      "table": "performance_trades",
+      "description": "Fixed recent-30-day complete-lineage dashboard, bounded to 10001 sentinel trades before indexed latest-snapshot joins",
+      "where_conditions": [
+        {"column": "closed_at", "operator": ">=", "selectivity": 0.30},
+        {"column": "lineage_status", "operator": "=", "selectivity": 0.80}
+      ],
+      "join_conditions": [],
+      "order_by": [{"column": "closed_at", "direction": "ASC"}],
+      "group_by": [],
+      "frequency": 50,
+      "avg_execution_time_ms": 100
+    }
+  ]
+}

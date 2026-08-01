@@ -1,0 +1,110 @@
+{
+  "file": "internal/candidate/approved_consumer_guard_test.go",
+  "source_sha256": "25ee877ae8cfbfe45dc3c887fd7f713bbff22fd1d851a40b151fbe42ba8e7cca",
+  "package": "candidate",
+  "function": "TestApprovedCandidateTaintRejectsAuthorityInterface",
+  "signature": "TestApprovedCandidateTaintRejectsAuthorityInterface(params=1, results=0)",
+  "start": {
+    "line": 163,
+    "column": 1
+  },
+  "end": {
+    "line": 174,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 17
+      },
+      "text": "parser.ParseFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 34
+      },
+      "text": "token.NewFileSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 14
+      },
+      "text": "authorityInterfaceDeclarations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 6
+      },
+      "text": "findingContains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 52
+      },
+      "text": "findingContains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

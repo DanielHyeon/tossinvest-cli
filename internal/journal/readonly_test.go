@@ -129,6 +129,9 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		// a043's deterministic broker-order -> attempt -> exit-intent read. It is
 		// another SELECT-only projection on the same query-only connection.
 		"BrokerOrderExitLinks": true,
+		// a049's exact, account-scoped SELECT over frozen outcomes and a047
+		// lineage. Missing lineage remains nullable; this method has no writer.
+		"ClosedStrategyTradeSources": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {
@@ -191,6 +194,18 @@ func TestOpenReadOnlyDistinguishesTheTwoSchemaDirections(t *testing.T) {
 			t.Errorf("the refusal does not name a missing table: %v", err)
 		}
 	})
+}
+
+func TestOpenReadOnlyRejectsV14BeforeNullableCostEvidence(t *testing.T) {
+	path := filepath.Join(t.TempDir(), DBFileName)
+	v14 := openJournalAtSchema(t, path, 14)
+	if err := v14.Close(); err != nil {
+		t.Fatal(err)
+	}
+	_, err := OpenReadOnly(context.Background(), ReadOnlyOptions{Path: path})
+	if !errors.Is(err, ErrSchemaTooOld) || !strings.Contains(err.Error(), "trade_outcomes.cost_total") {
+		t.Fatalf("OpenReadOnly against v14=%v, want typed missing-cost prerequisite", err)
+	}
 }
 
 // TestOpenReadOnlyDoesNotMigrate.

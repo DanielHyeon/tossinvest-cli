@@ -1,0 +1,29 @@
+# Branch Test Map: `auditApprovedCandidateBoundaries`
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | exact AST `range` at source line 188: `for _, rel := range files {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B2 | exact AST `if` at source line 189: `if strings.HasSuffix(rel, "_test.go") {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B3 | exact AST `if` at source line 194: `if err != nil {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B4 | exact AST `if` at source line 202: `if importsCandidate && candidatePkg == "." {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B5 | exact AST `else` at source line 204: `} else if namesApprovedCandidateSymbol(parsed, candidatePkg) {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B6 | exact AST `if` at source line 204: `} else if namesApprovedCandidateSymbol(parsed, candidatePkg) {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B7 | exact AST `range` at source line 207: `for _, spec := range parsed.Imports {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B8 | exact AST `if` at source line 209: `if path == module {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B9 | exact AST `else` at source line 211: `} else if strings.HasPrefix(path, module+"/") {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B10 | exact AST `if` at source line 211: `} else if strings.HasPrefix(path, module+"/") {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B11 | exact AST `range` at source line 216: `for _, record := range parsedFiles {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B12 | exact AST `if` at source line 217: `if namesApprovedCandidateAccessor(record.file) {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B13 | exact AST `range` at source line 222: `for packageRel := range directReaders {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B14 | exact AST `range` at source line 226: `for packageRel := range allPackages {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B15 | exact AST `if` at source line 227: `if directReaders[packageRel] {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B16 | exact AST `if` at source line 235: `if reachesReader {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B17 | exact AST `range` at source line 242: `for packageRel := range directReaders {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B18 | exact AST `if` at source line 244: `if !allowed {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B19 | exact AST `if` at source line 246: `if len(accessorFiles[packageRel]) != 0 {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B20 | exact AST `if` at source line 252: `if allowed && strings.TrimSpace(reason) == "" {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B21 | exact AST `range` at source line 258: `for packageRel := range approvedCandidateBoundaries {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B22 | exact AST `if` at source line 259: `if !directReaders[packageRel] {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B23 | exact AST `range` at source line 263: `for packageRel := range tainted {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B24 | exact AST `if` at source line 266: `if bad {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B25 | exact AST `if` at source line 268: `if len(taintedFrom[packageRel]) != 0 {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |

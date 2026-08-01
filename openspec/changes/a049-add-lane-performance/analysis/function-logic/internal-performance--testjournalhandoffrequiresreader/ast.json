@@ -1,0 +1,109 @@
+{
+  "file": "internal/performance/lineage_reader_test.go",
+  "source_sha256": "b0fc5fc14a8afab4ce69a6b895b3bf35507b431dfc2a0a227f3dff43763c0ad9",
+  "package": "performance",
+  "function": "TestJournalHandoffRequiresReader",
+  "signature": "TestJournalHandoffRequiresReader(params=1, results=0)",
+  "start": {
+    "line": 64,
+    "column": 1
+  },
+  "end": {
+    "line": 72,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 11
+      },
+      "text": "openTestStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 8
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 15
+      },
+      "text": "store.CollectClosedStrategyTrades"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 49
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 60
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 10
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

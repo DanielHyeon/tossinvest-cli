@@ -48,8 +48,8 @@
 | `a044-manage-position-exit-policies` | STORY-TOS-a044 | implemented |
 | `a045-add-protection-orders` | STORY-TOS-a045 | implemented |
 | `a046-approve-candidate-veto-thresholds` | STORY-TOS-a046 | implemented |
-| `a047-add-strategy-engine` | STORY-TOS-a047 | in_progress |
+| `a047-add-strategy-engine` | STORY-TOS-a047 | implemented |
 | `a048-add-market-aware-scheduler` | STORY-TOS-a048 | implemented |
-| `a049-add-lane-performance` | STORY-TOS-a049 | in_progress |
+| `a049-add-lane-performance` | STORY-TOS-a049 | implemented |
 | `a050-add-strategy-optimization` | STORY-TOS-a050 | in_progress |
 | `a051-add-httpapi-daemon` | STORY-TOS-a051 | in_progress |

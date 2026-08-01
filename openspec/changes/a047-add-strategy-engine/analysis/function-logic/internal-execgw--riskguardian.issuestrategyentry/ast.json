@@ -1,0 +1,193 @@
+{
+  "file": "internal/execgw/riskguardian.go",
+  "source_sha256": "7113aec89f5f3c0783a79dca482c33b4574fb759738566fd4d520e71d0487290",
+  "package": "execgw",
+  "function": "IssueStrategyEntry",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.IssueStrategyEntry(params=2, results=2)",
+  "start": {
+    "line": 336,
+    "column": 1
+  },
+  "end": {
+    "line": 363,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 340,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 349,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 338,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 341,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 346,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 350,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 6
+      },
+      "text": "request.Decision.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 20
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 89
+      },
+      "text": "g.LimitsDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 20
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 343,
+        "column": 12
+      },
+      "text": "request.Decision.Record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 19
+      },
+      "text": "risk.StrategyEntryQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 18
+      },
+      "text": "strategyDecisionLineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 356,
+        "column": 9
+      },
+      "text": "g.IssueEntry"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 343,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 344,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 348,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 352,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -966,6 +966,13 @@ var consoleCapabilities = map[string]capability{
 	// The scheduler screen receives display data only. Read has no parameter
 	// carrying a symbol, time, holiday override, or operating command.
 	"MarketSchedule": {Methods: []string{"Read"}},
+	// Derived lane-performance data only. Dashboard takes a fixed typed query and
+	// returns plain values; no Store, collector, journal, broker, config, or
+	// operating-control handle crosses this seam.
+	"Performance": {Methods: []string{"Dashboard"}},
+	// Dormant strategy runtime display data only. Read accepts no operating
+	// command and cannot mint lane activation or account authority.
+	"StrategyRuntime": {Methods: []string{"Read"}},
 	// The common exit-policy editor carries only the typed policy ID block. It
 	// cannot reach broker, journal, automation gate, or trading toggles.
 	"ExitPolicies": {Methods: []string{"Load", "Save"}},

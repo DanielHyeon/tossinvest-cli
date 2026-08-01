@@ -1,0 +1,69 @@
+{
+  "tables": {
+    "performance_trades": {
+      "row_count_estimate": 100000,
+      "columns": {
+        "id": {"type": "TEXT", "nullable": false, "unique": true, "cardinality_estimate": 100000},
+        "position_id": {"type": "TEXT", "nullable": false, "unique": true, "cardinality_estimate": 100000},
+        "closed_at": {"type": "TEXT", "nullable": false, "cardinality_estimate": 95000},
+        "lineage_status": {"type": "TEXT", "nullable": false, "cardinality_estimate": 2},
+        "market": {"type": "TEXT", "nullable": false, "cardinality_estimate": 10000},
+        "lane_id": {"type": "TEXT", "nullable": true, "cardinality_estimate": 32},
+        "lane_version": {"type": "TEXT", "nullable": true, "cardinality_estimate": 128},
+        "policy_id": {"type": "TEXT", "nullable": true, "cardinality_estimate": 32},
+        "policy_version": {"type": "TEXT", "nullable": true, "cardinality_estimate": 128}
+      },
+      "primary_key": ["id"],
+      "unique_constraints": [["position_id"]],
+      "indexes": [
+        {"name": "idx_performance_trades_window", "columns": ["closed_at", "lineage_status", "market", "lane_id", "lane_version", "policy_id", "policy_version"]},
+        {"name": "idx_performance_trades_lane", "columns": ["lane_id", "lane_version", "policy_id", "policy_version", "closed_at"]}
+      ]
+    },
+    "price_observations": {
+      "row_count_estimate": 1000000,
+      "columns": {
+        "id": {"type": "TEXT", "nullable": false, "unique": true, "cardinality_estimate": 1000000},
+        "position_id": {"type": "TEXT", "nullable": false, "cardinality_estimate": 100000},
+        "observed_at": {"type": "TEXT", "nullable": false, "cardinality_estimate": 1000000}
+      },
+      "primary_key": ["id"],
+      "indexes": [
+        {"name": "idx_price_observations_position_at", "columns": ["position_id", "observed_at", "id"]},
+        {"name": "idx_price_observations_at", "columns": ["observed_at", "id"]}
+      ]
+    },
+    "measurement_snapshots": {
+      "row_count_estimate": 100000,
+      "columns": {
+        "id": {"type": "INTEGER", "nullable": false, "unique": true, "cardinality_estimate": 100000},
+        "trade_id": {"type": "TEXT", "nullable": false, "foreign_key": "performance_trades.id", "cardinality_estimate": 100000},
+        "calculated_at": {"type": "TEXT", "nullable": false, "cardinality_estimate": 100000},
+        "semantics_version": {"type": "TEXT", "nullable": false, "cardinality_estimate": 4}
+      },
+      "primary_key": ["id"],
+      "unique_constraints": [["trade_id", "calculated_at", "semantics_version"]],
+      "indexes": [
+        {"name": "idx_measurement_snapshots_trade", "columns": ["trade_id", "id"]}
+      ]
+    },
+    "metric_observations": {
+      "row_count_estimate": 600000,
+      "columns": {
+        "snapshot_id": {"type": "INTEGER", "nullable": false, "foreign_key": "measurement_snapshots.id", "cardinality_estimate": 100000},
+        "metric_key": {"type": "TEXT", "nullable": false, "cardinality_estimate": 6}
+      },
+      "primary_key": ["snapshot_id", "metric_key"],
+      "indexes": []
+    },
+    "maintenance_state": {
+      "row_count_estimate": 1,
+      "columns": {
+        "key": {"type": "TEXT", "nullable": false, "unique": true, "cardinality_estimate": 1},
+        "value": {"type": "TEXT", "nullable": false, "cardinality_estimate": 1}
+      },
+      "primary_key": ["key"],
+      "indexes": []
+    }
+  }
+}

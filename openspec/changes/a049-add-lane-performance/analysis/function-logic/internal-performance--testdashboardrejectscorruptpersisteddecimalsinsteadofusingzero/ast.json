@@ -1,0 +1,319 @@
+{
+  "file": "internal/performance/store_test.go",
+  "source_sha256": "8b0f9e8b29132afca62a728fb4474c833ea9a7b5edab0578ce51dc7d029a4e52",
+  "package": "performance",
+  "function": "TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero",
+  "signature": "TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero(params=1, results=0)",
+  "start": {
+    "line": 120,
+    "column": 1
+  },
+  "end": {
+    "line": 160,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 126,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 136,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 154,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 17
+      },
+      "text": "store.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 17
+      },
+      "text": "store.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 17
+      },
+      "text": "store.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 13
+      },
+      "text": "openTestStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 11
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 13
+      },
+      "text": "measuredTrade"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 27
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 21
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 17
+      },
+      "text": "store.Collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 31
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 64
+      },
+      "text": "trade.EntryAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 4
+      },
+      "text": "test.corrupt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 17
+      },
+      "text": "store.Dashboard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 33
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 55
+      },
+      "text": "DefaultQuery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 23
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 131,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 136,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 146,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 147,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

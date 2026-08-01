@@ -110,6 +110,10 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"risk_reservations",
 		"schema_meta",
 		"spent_nonces",
+		"strategy_attempt_lineage",
+		"strategy_attempt_refusals",
+		"strategy_decision_lineage",
+		"strategy_execution_lineage",
 		"trade_outcomes",
 	}
 	rows, err := j.db.QueryContext(ctx,

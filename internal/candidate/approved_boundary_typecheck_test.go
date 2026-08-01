@@ -36,6 +36,9 @@ func syntheticCandidatePackage(path string) *types.Package {
 		result := types.Typ[types.String]
 		if name == "Valid" {
 			result = types.Typ[types.Bool]
+		} else if name == "FirstSeenUnixNano" || name == "LastSeenUnixNano" ||
+			name == "ValidUntilUnixNano" || name == "ApprovedAtUnixNano" {
+			result = types.Typ[types.Int64]
 		}
 		receiver := types.NewVar(token.NoPos, pkg, "approved", approved)
 		signature := types.NewSignatureType(
@@ -212,6 +215,17 @@ func typeCheckPureApprovedCandidateBoundary(
 	files []*ast.File,
 ) []string {
 	candidatePath := module + "/internal/candidate"
+	sealedSnapshotBoundary := false
+	if packageRel == "internal/strategy" {
+		for _, file := range files {
+			ast.Inspect(file, func(node ast.Node) bool {
+				if spec, ok := node.(*ast.TypeSpec); ok && spec.Name.Name == "ApprovedSnapshot" {
+					sealedSnapshotBoundary = true
+				}
+				return true
+			})
+		}
+	}
 	var findings []string
 	for _, file := range files {
 		for _, spec := range file.Imports {
@@ -268,7 +282,10 @@ func typeCheckPureApprovedCandidateBoundary(
 						"type "+value.Name.Name, object.Type(), candidatePath)
 				}
 			case *ast.FuncDecl:
-				if value.Recv != nil {
+				if sealedSnapshotBoundary && !allowedApprovedSnapshotDeclaration(value) {
+					findings = append(findings, packageRel+" pure boundary forbids laundering declaration "+value.Name.Name)
+				}
+				if value.Recv != nil && !approvedSnapshotMethod(value) {
 					findings = append(findings, packageRel+" pure boundary forbids method declaration "+value.Name.Name)
 				}
 				if value.Name.Name == "init" {
@@ -353,4 +370,44 @@ func typeCheckPureApprovedCandidateBoundary(
 		})
 	}
 	return findings
+}
+
+func approvedSnapshotMethod(function *ast.FuncDecl) bool {
+	wantResults := map[string]string{
+		"Valid":              "bool",
+		"Market":             "string",
+		"Symbol":             "string",
+		"State":              "string",
+		"CandidateLifeID":    "string",
+		"ThresholdVersion":   "string",
+		"SetDigest":          "string",
+		"EvidenceDigest":     "string",
+		"FirstSeenUnixNano":  "int64",
+		"LastSeenUnixNano":   "int64",
+		"ValidUntilUnixNano": "int64",
+		"ApprovedAtUnixNano": "int64",
+	}
+	if function == nil || function.Recv == nil || len(function.Recv.List) != 1 {
+		return false
+	}
+	receiver, ok := function.Recv.List[0].Type.(*ast.Ident)
+	if !ok || receiver.Name != "ApprovedSnapshot" {
+		return false
+	}
+	want, allowed := wantResults[function.Name.Name]
+	if !allowed || function.Type.Params.NumFields() != 0 || function.Type.Results == nil || function.Type.Results.NumFields() != 1 {
+		return false
+	}
+	result, ok := function.Type.Results.List[0].Type.(*ast.Ident)
+	return ok && result.Name == want
+}
+
+func allowedApprovedSnapshotDeclaration(function *ast.FuncDecl) bool {
+	if function == nil {
+		return false
+	}
+	if function.Recv != nil {
+		return approvedSnapshotMethod(function)
+	}
+	return function.Name.Name == "SealApproved"
 }

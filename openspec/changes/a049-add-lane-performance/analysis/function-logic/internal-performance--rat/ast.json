@@ -1,0 +1,70 @@
+{
+  "file": "internal/performance/model.go",
+  "source_sha256": "66348c2d859796bdc5807e330efc7b983bbff0e7d3fd623d39db41c465f2a0d4",
+  "package": "performance",
+  "function": "rat",
+  "signature": "rat(params=1, results=2)",
+  "start": {
+    "line": 372,
+    "column": 1
+  },
+  "end": {
+    "line": 378,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 375,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 377,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 16
+      },
+      "text": "decimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 373,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

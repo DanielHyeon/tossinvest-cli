@@ -43,10 +43,13 @@ package risk
 // the cost arithmetic in rationals end to end.
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
 )
+
+var ErrStrategyQuantityZero = errors.New("risk: strategy sizing permits fewer than one unit")
 
 // RewardRisk returns (target − entry) / (entry − stop) exactly.
 //
@@ -116,6 +119,54 @@ func RiskBasedQuantity(riskBudget, entryPrice, stopPrice string) (string, error)
 	// because the quotient cannot be negative.
 	floored := new(big.Int).Quo(quotient.Num(), quotient.Denom())
 	return floored.String(), nil
+}
+
+// StrategyEntryQuantity is the Guardian-owned conservative sizing rule. It
+// takes the minimum of risk budget, per-order quantity and per-order notional
+// capacity, all with exact rational arithmetic and one final whole-unit floor.
+func StrategyEntryQuantity(policy Policy, entryPrice, stopPrice string) (string, error) {
+	if err := policy.Validate(); err != nil {
+		return "", err
+	}
+	if policy.RiskBudget.Currency != policy.MaxOrderNotional.Currency {
+		return "", fmt.Errorf("risk: strategy sizing currency mismatch")
+	}
+	riskRaw, err := RiskBasedQuantity(policy.RiskBudget.Amount, entryPrice, stopPrice)
+	if err != nil {
+		return "", err
+	}
+	riskCap, err := parseWholeNumber("risk-based quantity", riskRaw)
+	if err != nil {
+		return "", err
+	}
+	quantityCap, err := parseWholeNumber("maximum order quantity", policy.MaxOrderQuantity)
+	if err != nil {
+		return "", err
+	}
+	entry, err := parseDecimal("entry price", entryPrice)
+	if err != nil {
+		return "", err
+	}
+	notional, err := parseDecimal("maximum order notional", policy.MaxOrderNotional.Amount)
+	if err != nil {
+		return "", err
+	}
+	if entry.Sign() <= 0 || notional.Sign() <= 0 {
+		return "", ErrStrategyQuantityZero
+	}
+	notionalRatio := new(big.Rat).Quo(notional, entry)
+	notionalCap := new(big.Int).Quo(notionalRatio.Num(), notionalRatio.Denom())
+	capacity := new(big.Int).Set(riskCap)
+	if quantityCap.Cmp(capacity) < 0 {
+		capacity.Set(quantityCap)
+	}
+	if notionalCap.Cmp(capacity) < 0 {
+		capacity.Set(notionalCap)
+	}
+	if capacity.Sign() <= 0 {
+		return "", ErrStrategyQuantityZero
+	}
+	return capacity.String(), nil
 }
 
 // --- chain steps ------------------------------------------------------------

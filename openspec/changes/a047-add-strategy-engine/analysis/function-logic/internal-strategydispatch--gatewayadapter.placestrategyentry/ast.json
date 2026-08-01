@@ -1,0 +1,200 @@
+{
+  "file": "internal/strategydispatch/adapters.go",
+  "source_sha256": "832513612040b9cd568628f7e702024a23951574cfca0e2810f515461c5d53e8",
+  "package": "strategydispatch",
+  "function": "PlaceStrategyEntry",
+  "receiver": "GatewayAdapter",
+  "signature": "GatewayAdapter.PlaceStrategyEntry(params=2, results=2)",
+  "start": {
+    "line": 92,
+    "column": 1
+  },
+  "end": {
+    "line": 117,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 110,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 26
+      },
+      "text": "plan.Decision.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 28
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 12
+      },
+      "text": "plan.Decision.Record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 19
+      },
+      "text": "exactFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 16
+      },
+      "text": "exactFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 17
+      },
+      "text": "orderintent.NormalizePlace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 18
+      },
+      "text": "a.Gateway.Place"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

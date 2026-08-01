@@ -1,0 +1,328 @@
+{
+  "file": "internal/journal/trade_outcomes_test.go",
+  "source_sha256": "cbd539d47024cf89c59d18b54a014449c9b080a1cfa54eeed9e8f43449f2c2c3",
+  "package": "journal",
+  "function": "TestABackfillRecoversTheGapAndRefusesToRewriteIt",
+  "signature": "TestABackfillRecoversTheGapAndRefusesToRewriteIt(params=1, results=0)",
+  "start": {
+    "line": 233,
+    "column": 1
+  },
+  "end": {
+    "line": 262,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 256,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 259,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 7
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 12
+      },
+      "text": "j.SetApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 8
+      },
+      "text": "roundTrip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 17
+      },
+      "text": "j.BackfillTradeOutcome"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 49
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 22
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 22
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 39
+      },
+      "text": "ratOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 55
+      },
+      "text": "ratOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 5
+      },
+      "text": "Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 5
+      },
+      "text": "ratOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 75
+      },
+      "text": "ratText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 12
+      },
+      "text": "outcomeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 15
+      },
+      "text": "j.BackfillTradeOutcome"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 47
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 71
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 235,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 259,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

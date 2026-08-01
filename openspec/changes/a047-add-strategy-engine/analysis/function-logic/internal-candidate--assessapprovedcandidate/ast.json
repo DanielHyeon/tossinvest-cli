@@ -1,0 +1,356 @@
+{
+  "file": "internal/candidate/thresholdset.go",
+  "source_sha256": "f310d55ea542d6faea7581438c7742969523050c2ccf51d9b27663fa28c76223",
+  "package": "candidate",
+  "function": "AssessApprovedCandidate",
+  "signature": "AssessApprovedCandidate(params=2, results=2)",
+  "start": {
+    "line": 596,
+    "column": 1
+  },
+  "end": {
+    "line": 639,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 597,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 602,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 605,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 612,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 619,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 623,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 627,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 598,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 603,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 609,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 613,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 620,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 624,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 628,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 631,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 601,
+        "column": 17
+      },
+      "text": "candidateLifeID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 78
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 605,
+        "column": 45
+      },
+      "text": "input.Candidate.LastSeenAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 606,
+        "column": 3
+      },
+      "text": "input.Candidate.LastSeenAt.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 607,
+        "column": 4
+      },
+      "text": "input.Candidate.CooledAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 607,
+        "column": 41
+      },
+      "text": "input.At.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 608,
+        "column": 3
+      },
+      "text": "input.At.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 609,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 613,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 614,
+        "column": 4
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 617,
+        "column": 21
+      },
+      "text": "set.VetoThresholds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 618,
+        "column": 11
+      },
+      "text": "AssessChase"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 619,
+        "column": 15
+      },
+      "text": "chase.Raised"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 619,
+        "column": 31
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 620,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 623,
+        "column": 19
+      },
+      "text": "chase.NotMeasured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 623,
+        "column": 40
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 624,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 627,
+        "column": 6
+      },
+      "text": "chase.Passed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 31
+      },
+      "text": "newApprovalError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 634,
+        "column": 15
+      },
+      "text": "input.Candidate.LastSeenAt.Add"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 601,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 617,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 618,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 619,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 623,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

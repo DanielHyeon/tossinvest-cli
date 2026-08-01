@@ -1,0 +1,29 @@
+{
+  "file": "internal/strategymarket/bars.go",
+  "source_sha256": "a6f17d0cc8ede1b51d2e96344d124675d9022ed730142c50b9d06a6cc5cd9269",
+  "package": "strategymarket",
+  "function": "AggregateClosedKRXFiveMinute",
+  "signature": "AggregateClosedKRXFiveMinute(params=2, results=2)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 109,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

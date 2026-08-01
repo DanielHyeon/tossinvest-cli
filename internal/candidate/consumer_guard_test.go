@@ -77,6 +77,8 @@ var verdictReaders = map[string]string{
 	"internal/console/signals_test.go":             "asserts the /signals screen",
 	"internal/console/signals_newlylisted_test.go": "asserts the new-entrant marker",
 	"internal/console/tally_alarm_test.go":         "asserts the tally alarm on the page",
+	"internal/strategy/approved.go":                "a047 value-only handoff into a pure lane; it has no order authority",
+	"internal/strategyengine/lane_test.go":         "asserts a synthetic approved-candidate lane contract without production authority",
 }
 
 // orderVerbs are the package selectors that can submit, amend, cancel or liquidate,
