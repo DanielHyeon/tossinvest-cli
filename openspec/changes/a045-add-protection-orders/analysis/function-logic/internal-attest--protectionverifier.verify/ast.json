@@ -1,15 +1,16 @@
 {
-  "file": "internal/attest/protection_matrix.go",
-  "source_sha256": "23d068481c3879fc87a61ea4c17eb259f3d2631e0e4ec9ed63cc803359de9f57",
+  "file": "internal/attest/protection_signature.go",
+  "source_sha256": "30d0c8f2119cde55cb478155209dd57a65843485a04359512c3e16d228c96cd1",
   "package": "attest",
-  "function": "LoadProtectionCapability",
-  "signature": "LoadProtectionCapability(params=4, results=2)",
+  "function": "Verify",
+  "receiver": "ProtectionVerifier",
+  "signature": "ProtectionVerifier.Verify(params=2, results=2)",
   "start": {
-    "line": 296,
+    "line": 100,
     "column": 1
   },
   "end": {
-    "line": 302,
+    "line": 106,
     "column": 2
   },
   "branches": [
@@ -17,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 298,
+        "line": 102,
         "column": 2
       }
     }
@@ -26,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 299,
+        "line": 103,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 301,
+        "line": 105,
         "column": 2
       }
     }
@@ -42,25 +43,25 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 101,
         "column": 17
       },
-      "text": "ParseProtectionCapability"
+      "text": "v.parse"
     },
     {
       "kind": "call",
       "at": {
-        "line": 301,
+        "line": 105,
         "column": 9
       },
-      "text": "VerifyProtectionCapability"
+      "text": "v.verifyParsed"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 297,
+        "line": 101,
         "column": 2
       }
     }

@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1+ | B1 version mismatch; B2 invalid time window; B3 expired; B4 evidence metadata invalid; B5 no rows; B6 row invalid/duplicate; else valid structure. | No mutation. Existing gap: no canonical capability digest binding. | Typed refusal or validated result | See branch map |
+| B1+ | version mismatch, invalid/non-UTC time window, invalid/unsorted evidence, no rows, invalid/unsorted/duplicate rows, marshal or digest mismatch. | No mutation; canonical digest binds the semantic matrix. | Typed refusal or validated result | See branch map |
 
 ## Calls and live bindings
 
@@ -24,7 +24,7 @@
 
 ## State mutations and fallbacks
 
-- No mutation. Existing gap: no canonical capability digest binding.
+- No mutation or fallback; only one sorted UTC canonical semantic form is accepted.
 
 ## Safety conclusion
 

@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1+ | B1 invalid input/time; B2 each state/event guard; B3 weaker/invalid replace; B4 unknown mutation → IN_DOUBT; B5 output currently returned without revalidation. | Copies input then changes state-specific fields. Existing flaw: stale fields can make an invalid output. | Typed refusal or validated result | See branch map |
+| B1+ | invalid input/time; each state/event guard; attempt-bound registration/replace responses; broker-bound trigger/close; weaker replace; unknown mutation; output validation | copies stored input and changes state-owned fields only | typed refusal or validated result | lineage and transition tables |
 
 ## Calls and live bindings
 
@@ -24,9 +24,9 @@
 
 ## State mutations and fallbacks
 
-- Copies input then changes state-specific fields. Existing flaw: stale fields can make an invalid output.
+- Pure copy transition. Response events must prove the stored attempt/broker identity they answer.
 
 ## Safety conclusion
 
-- Safe edit boundary: Clear/set state-owned fields deliberately and validate the output before return.
+- Safe edit boundary: reject mismatched or irrelevant lineage fields before state mutation; retain output validation.
 - High-risk impact: yes; dormant logic only, no broker mutation or WIRED binding.

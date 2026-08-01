@@ -1,0 +1,184 @@
+{
+  "file": "internal/attest/protection_signature.go",
+  "source_sha256": "30d0c8f2119cde55cb478155209dd57a65843485a04359512c3e16d228c96cd1",
+  "package": "attest",
+  "function": "loadProtectionTrustRoot",
+  "signature": "loadProtectionTrustRoot(params=2, results=2)",
+  "start": {
+    "line": 267,
+    "column": 1
+  },
+  "end": {
+    "line": 286,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 276,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 270,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 273,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 277,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 280,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 283,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 15
+      },
+      "text": "readProtectionArtifact"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 5
+      },
+      "text": "protectionDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 33
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 12
+      },
+      "text": "decodeCanonicalProtectionJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 33
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 12
+      },
+      "text": "root.validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 33
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 276,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 279,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

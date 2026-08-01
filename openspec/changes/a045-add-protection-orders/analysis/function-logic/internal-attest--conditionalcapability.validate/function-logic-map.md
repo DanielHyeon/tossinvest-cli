@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1+ | B1 identity invalid; B2 unsupported enum/type; B3 unsafe quantity; B4 missing persistence/reservation/idempotency/replace guarantee; else valid. | No mutation. Existing gap: digit-stripping accepts arbitrary surrounding characters. | Typed refusal or validated result | See branch map |
+| B1+ | B1 identity invalid; B2 unsupported enum/type; B3 unsafe quantity; B4 missing persistence/reservation/idempotency/replace guarantee; else valid. | No mutation; account identity delegates to digits-only canonical grammar. | Typed refusal or validated result | See branch map |
 
 ## Calls and live bindings
 
@@ -24,7 +24,7 @@
 
 ## State mutations and fallbacks
 
-- No mutation. Existing gap: digit-stripping accepts arbitrary surrounding characters.
+- No mutation or fallback; account aliases and unsafe claims are rejected.
 
 ## Safety conclusion
 

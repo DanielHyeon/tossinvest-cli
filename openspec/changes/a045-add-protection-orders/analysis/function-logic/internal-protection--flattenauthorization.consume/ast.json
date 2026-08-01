@@ -1,0 +1,132 @@
+{
+  "file": "internal/protection/domain.go",
+  "source_sha256": "209d44fb12978d7db3451d1939d5148239d547cf0053032da0ddd0e10c1da615",
+  "package": "protection",
+  "function": "Consume",
+  "receiver": "FlattenAuthorization",
+  "signature": "FlattenAuthorization.Consume(params=2, results=1)",
+  "start": {
+    "line": 390,
+    "column": 1
+  },
+  "end": {
+    "line": 403,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 392,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 396,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 393,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 397,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 400,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 395,
+        "column": 16
+      },
+      "text": "permit.clock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 5
+      },
+      "text": "decisionAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 28
+      },
+      "text": "decisionAt.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 66
+      },
+      "text": "decisionAt.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 6
+      },
+      "text": "permit.consumed.CompareAndSwap"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 391,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 395,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

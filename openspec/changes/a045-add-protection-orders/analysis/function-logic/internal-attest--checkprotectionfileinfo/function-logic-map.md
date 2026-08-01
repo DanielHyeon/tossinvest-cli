@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1+ | B1 non-regular/symlink → refuse; B2 mode !=0600 → refuse; B3 owner unavailable/mismatch → refuse; B4 otherwise accept. | No mutation. Existing gap: link count and direct-parent security are outside this function. | Typed refusal or validated result | See branch map |
+| B1+ | B1 non-regular/symlink → refuse; B2 mode !=0600 → refuse; B3 owner unavailable/mismatch → refuse; B4 otherwise accept. | No mutation; link count and parent checks are enforced by the enclosing artifact reader. | Typed refusal or validated result | See branch map |
 
 ## Calls and live bindings
 
@@ -24,7 +24,7 @@
 
 ## State mutations and fallbacks
 
-- No mutation. Existing gap: link count and direct-parent security are outside this function.
+- No mutation or fallback; enclosing pre/post artifact checks provide link and parent mediation.
 
 ## Safety conclusion
 

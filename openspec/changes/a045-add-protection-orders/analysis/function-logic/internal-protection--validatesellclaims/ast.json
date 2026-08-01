@@ -1,15 +1,15 @@
 {
   "file": "internal/protection/domain.go",
-  "source_sha256": "e8129f75d86c839fc65e088d4b6ed8faab1e068f52f4c3e8f83395f55cd32a13",
+  "source_sha256": "209d44fb12978d7db3451d1939d5148239d547cf0053032da0ddd0e10c1da615",
   "package": "protection",
   "function": "ValidateSellClaims",
   "signature": "ValidateSellClaims(params=2, results=1)",
   "start": {
-    "line": 272,
+    "line": 273,
     "column": 1
   },
   "end": {
-    "line": 284,
+    "line": 285,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 273,
+        "line": 274,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 277,
+        "line": 278,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 278,
+        "line": 279,
         "column": 3
       }
     }
@@ -42,21 +42,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 274,
+        "line": 275,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 279,
+        "line": 280,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 283,
+        "line": 284,
         "column": 2
       }
     }
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 274,
+        "line": 275,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 279,
+        "line": 280,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -83,14 +83,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 276,
+        "line": 277,
         "column": 2
       }
     },
     {
       "kind": "-=",
       "at": {
-        "line": 281,
+        "line": 282,
         "column": 3
       }
     }

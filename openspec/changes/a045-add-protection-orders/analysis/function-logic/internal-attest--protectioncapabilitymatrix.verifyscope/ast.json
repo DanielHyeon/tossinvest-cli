@@ -1,16 +1,16 @@
 {
   "file": "internal/attest/protection_matrix.go",
-  "source_sha256": "23d068481c3879fc87a61ea4c17eb259f3d2631e0e4ec9ed63cc803359de9f57",
+  "source_sha256": "be6b21e921a73c372622e7efa8aa85f35e222eca83f81e415ec815c188d94f0a",
   "package": "attest",
   "function": "verifyScope",
   "receiver": "ProtectionCapabilityMatrix",
-  "signature": "ProtectionCapabilityMatrix.verifyScope(params=1, results=1)",
+  "signature": "ProtectionCapabilityMatrix.verifyScope(params=1, results=2)",
   "start": {
-    "line": 547,
+    "line": 498,
     "column": 1
   },
   "end": {
-    "line": 574,
+    "line": 525,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 549,
+        "line": 500,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 553,
+        "line": 504,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 556,
+        "line": 507,
         "column": 3
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 561,
+        "line": 512,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 564,
+        "line": 515,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "range",
       "at": {
-        "line": 567,
+        "line": 518,
         "column": 2
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 569,
+        "line": 520,
         "column": 3
       }
     }
@@ -75,35 +75,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 550,
+        "line": 501,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 562,
+        "line": 513,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 565,
+        "line": 516,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 570,
+        "line": 521,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 573,
+        "line": 524,
         "column": 2
       }
     }
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 548,
+        "line": 499,
         "column": 23
       },
       "text": "canonicalProtectionAccount"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 549,
+        "line": 500,
         "column": 59
       },
       "text": "strings.TrimSpace"
@@ -128,15 +128,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 550,
-        "column": 10
+        "line": 501,
+        "column": 35
       },
       "text": "fmt.Errorf"
     },
     {
       "kind": "call",
       "at": {
-        "line": 555,
+        "line": 506,
         "column": 17
       },
       "text": "canonicalProtectionAccount"
@@ -144,15 +144,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 562,
-        "column": 10
+        "line": 513,
+        "column": 35
       },
       "text": "fmt.Errorf"
     },
     {
       "kind": "call",
       "at": {
-        "line": 564,
+        "line": 515,
         "column": 5
       },
       "text": "len"
@@ -160,16 +160,16 @@
     {
       "kind": "call",
       "at": {
-        "line": 565,
-        "column": 10
+        "line": 516,
+        "column": 35
       },
       "text": "fmt.Errorf"
     },
     {
       "kind": "call",
       "at": {
-        "line": 570,
-        "column": 11
+        "line": 521,
+        "column": 36
       },
       "text": "fmt.Errorf"
     }
@@ -178,35 +178,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 548,
+        "line": 499,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 554,
+        "line": 505,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 555,
+        "line": 506,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 557,
+        "line": 508,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 568,
+        "line": 519,
         "column": 3
       }
     }
