@@ -17,7 +17,21 @@ pure lane/orchestrator와 immutable activation-manifest 기반 default-OFF 구�
 ## Verification evidence
 
 - OpenSpec strict validation: pass.
-- Exact source lane: frozen. External a045 attestation and a046 numeric evidence remain absent; activation remains blocked.
+- Source commit/digest/constants contract is frozen, but the sorted path/blob manifest that reproduces `09260ac…` is unavailable. The verifier therefore returns `not_configured`; protection activation evidence also remains absent and effective entry is OFF.
+
+## 2026-08-01 dormant implementation evidence
+
+- Pre-Edit Gate: journal/Guardian/gateway/runtime baselines and callers were mapped before edits. Released Guardian, gateway, engine run/submit and `RiskIntent.Canonical()` production functions were not changed.
+- ApprovedCandidate crosses only `internal/strategy`'s value-only, type-checked boundary. The Parker evaluator has no broker, journal, config, clock or callback dependency.
+- Activation comparison covers all 32 binding fields, expiry/attestation expiry, revocation, generation and decision-to-dispatch revalidation. No exported installer/minter or runtime wiring exists.
+- Blocker paths call Guardian, durable-attempt and gateway zero times. The only successful orchestration fixture uses typed test spies and checks durable plan before the official-only gateway seam plus duplicate identity refusal.
+- Journal v14 is additive and immutable. v13→v14 rollback/backup, SIGKILL recovery, restart durability and legacy `RiskIntent` canonical-byte compatibility are green.
+- `/strategy-runtime` is authenticated GET/HEAD-only and contains no form, input, textarea, select, button, contenteditable, arbitrary symbol/reason or combined enable action.
+- Full `go test ./...`, focused race (strategy/market/official/console and exact journal v14), `go vet ./...`, Windows amd64 build, strict OpenSpec, PM, logic-map and `make validate` passed.
+
+### Dormant handoff
+
+Production can construct only an empty activation repository. A later separately reviewed change must provide the authentic sorted StockOS source manifest, signed activation provisioning and exact a045/a046/a048/a050 bindings before any runtime loop is considered. This change provides no LIVE approval, paper/shadow/canary order path, operational toggle or command wiring; existing exit/reconcile/protection supervision is untouched.
 
 ## Verdict
 

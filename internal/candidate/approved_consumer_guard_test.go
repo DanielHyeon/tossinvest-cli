@@ -36,7 +36,9 @@ var approvedCandidateAccessors = map[string]bool{
 // Intentionally empty in a046: there is no production ApprovedCandidate reader.
 // a047 must add its pure strategy package and a non-empty reason in the same diff
 // that adds the first reader. Stale permissions fail below.
-var approvedCandidateBoundaries = map[string]string{}
+var approvedCandidateBoundaries = map[string]string{
+	"internal/strategy": "a047 value-only immutable handoff; no authority, clock, callback, or mutable input",
+}
 
 // a046 intentionally defines no authority-bridge exemption. If a047 introduces
 // a typed Guardian/decision bridge, it must replace the unconditional rejection

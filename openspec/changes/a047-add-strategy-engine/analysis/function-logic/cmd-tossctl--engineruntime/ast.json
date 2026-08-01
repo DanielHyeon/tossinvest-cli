@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "580df224549eb55c10e8144e24fb513b26af9c195f451d344b708384aaba13cd",
+  "source_sha256": "111f3202b7dcc261dbabcf73500d421d4fa95fc9e353e46427fc3b6b38d9af34",
   "package": "main",
   "function": "engineRuntime",
   "signature": "engineRuntime(params=3, results=2)",
   "start": {
-    "line": 310,
+    "line": 319,
     "column": 1
   },
   "end": {
-    "line": 375,
+    "line": 384,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 312,
+        "line": 321,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 321,
+        "line": 330,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 332,
+        "line": 341,
         "column": 2
       }
     },
@@ -41,19 +41,12 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 337,
+        "line": 346,
         "column": 2
       }
     }
   ],
   "returns": [
-    {
-      "kind": "return",
-      "at": {
-        "line": 313,
-        "column": 3
-      }
-    },
     {
       "kind": "return",
       "at": {
@@ -64,28 +57,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 333,
+        "line": 331,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 338,
+        "line": 342,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 341,
-        "column": 2
+        "line": 347,
+        "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
         "line": 350,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 359,
         "column": 4
       }
     }
@@ -94,7 +94,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 311,
+        "line": 320,
         "column": 19
       },
       "text": "engineFillDetector"
@@ -102,7 +102,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 316,
+        "line": 325,
         "column": 17
       },
       "text": "ectx.ReconcileDriver"
@@ -110,7 +110,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 317,
+        "line": 326,
         "column": 18
       },
       "text": "ectx.SnapshotCollector"
@@ -118,7 +118,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 325,
+        "line": 334,
         "column": 19
       },
       "text": "ectx.ExitObserver"
@@ -126,7 +126,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 336,
         "column": 14
       },
       "text": "costs.DefaultModel"
@@ -134,7 +134,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 336,
+        "line": 345,
         "column": 19
       },
       "text": "ectx.Recovery"
@@ -142,7 +142,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 341,
+        "line": 350,
         "column": 9
       },
       "text": "engine.NewRuntime"
@@ -150,7 +150,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 349,
+        "line": 358,
         "column": 15
       },
       "text": "recovery.Run"
@@ -160,14 +160,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 311,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 316,
+        "line": 320,
         "column": 2
       }
     },
@@ -181,14 +174,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 336,
+        "line": 334,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 349,
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 358,
         "column": 4
       }
     }

@@ -965,7 +965,8 @@ var consoleCapabilities = map[string]capability{
 	"EngineBoot": {Methods: []string{"Load", "Save"}},
 	// The scheduler screen receives display data only. Read has no parameter
 	// carrying a symbol, time, holiday override, or operating command.
-	"MarketSchedule": {Methods: []string{"Read"}},
+	"MarketSchedule":  {Methods: []string{"Read"}},
+	"StrategyRuntime": {Methods: []string{"Read"}},
 	// The common exit-policy editor carries only the typed policy ID block. It
 	// cannot reach broker, journal, automation gate, or trading toggles.
 	"ExitPolicies": {Methods: []string{"Load", "Save"}},

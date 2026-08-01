@@ -188,4 +188,32 @@ trading toggle, 편입 목록은 변경하지 않는다.</p>
 </section>
 {{template "foot" .}}
 {{end}}
+
+{{define "strategy-runtime"}}
+{{template "head" .}}
+<p><a href="/optimization">최적화</a> / <code>strategy-runtime</code></p>
+<h1>한국 주식 전략 lane</h1>
+<p class="muted">StockOS Parker VWAP conservative v1을 옮기는 읽기 전용 상태 카드다. 서버 고정 preset만 보여주며 이 화면에는 입력·저장·활성화·LIVE action이 없다.</p>
+{{if .LoadErr}}<p class="danger" role="alert">상태를 읽지 못해 신규 진입 OFF를 표시한다.</p>{{end}}
+{{if .Unwired}}<p class="notice">strategy-runtime seam 미배선 — dormant 기본값만 표시한다.</p>{{end}}
+<section aria-labelledby="strategy-parameters"><h2 id="strategy-parameters">전략 파라미터 · 읽기 전용</h2>
+<table><tr><th>항목</th><th>기본값</th><th>Desired</th><th>Effective</th><th>단위·범위</th><th>출처</th><th>적용 시점</th></tr>
+<tr><th>최소 VWAP 기울기</th><td>0.08</td><td>0.08</td><td>미구성</td><td>% · 0 이상</td><td rowspan="11"><code>d75113d3</code><br><code>09260ac…</code><br>manifest 미재현</td><td>bar 평가 시</td></tr>
+<tr><th>EMA9 접촉 허용</th><td>0.25</td><td>0.25</td><td>미구성</td><td>% · 0 이상</td><td>bar 평가 시</td></tr>
+<tr><th>최소 LVN 전방 공간</th><td>1.2</td><td>1.2</td><td>미구성</td><td>% · 0 이상</td><td>bar 평가 시</td></tr>
+<tr><th>최소 기대 RR</th><td>1.5</td><td>1.5</td><td>미구성</td><td>R · 0 이상</td><td>bar 평가 시</td></tr>
+<tr><th>얽힘 band</th><td>0.35</td><td>0.35</td><td>미구성</td><td>% · 0 이상</td><td>bar 평가 시</td></tr>
+<tr><th>최대 band 확장률</th><td>1.8</td><td>1.8</td><td>미구성</td><td>배 · 0 이상</td><td>bar 평가 시</td></tr>
+<tr><th>하드 스톱</th><td>0.7</td><td>0.7</td><td>미구성</td><td>% · 고정</td><td>결정 생성 시</td></tr>
+<tr><th>목표</th><td>3.0</td><td>3.0</td><td>미구성</td><td>R · 고정</td><td>결정 생성 시</td></tr>
+<tr><th>시초 제외</th><td>10</td><td>10</td><td>미구성</td><td>분 · 고정</td><td>세션 평가 시</td></tr>
+<tr><th>최대 신호 나이</th><td>15</td><td>15</td><td>미구성</td><td>초 · 0~15</td><td>결정 생성 시</td></tr>
+<tr><th>최대 진입 괴리</th><td>0.20</td><td>0.20</td><td>미구성</td><td>% · 0~0.20</td><td>dispatch 전</td></tr></table>
+<p>각 값은 서버 소유 fixed preset이다. source manifest가 <code>09260ac…</code>를 재현하기 전에는 effective 값이 아니다.</p></section>
+<section aria-labelledby="lane-state"><h2 id="lane-state">lane 상태</h2><table><tr><th>항목</th><th>기본값</th><th>Desired</th><th>Effective</th></tr><tr><th>krx_parker_vwap_conservative_v1</th><td>OFF</td><td>{{.LaneDesired}}</td><td><strong>{{.LaneEffective}}</strong></td></tr></table></section>
+<section aria-labelledby="autostart-state"><h2 id="autostart-state">자동 기동</h2><table><tr><th>기본값</th><th>Desired</th><th>Effective</th></tr><tr><td>OFF</td><td>{{.AutoStartDesired}}</td><td>{{.AutoStartEffective}}</td></tr></table><p>다음 엔진 기동 시 별도 activation을 다시 검증한다.</p></section>
+<section aria-labelledby="live-state"><h2 id="live-state">LIVE 주문 승인</h2><table><tr><th>권한</th><th>Desired</th><th>Effective</th></tr><tr><th>Automation gate</th><td>{{.GateDesired}}</td><td>{{.GateEffective}}</td></tr><tr><th>LIVE approval</th><td>{{.LiveDesired}}</td><td>{{.LiveEffective}}</td></tr></table><p>lane·자동 기동·gate·LIVE는 서로 다른 권한이다. 일괄 활성화는 없다.</p></section>
+<section aria-labelledby="strategy-blockers"><h2 id="strategy-blockers">Activation blockers</h2><table><tr><th>a045 브로커 보호 상태</th><td>{{.Protection}}</td></tr><tr><th>a046 후보 provenance</th><td>{{.Candidate}}</td></tr><tr><th>a048 scheduler/calendar claim</th><td>{{.Scheduler}}</td></tr><tr><th>StockOS source manifest</th><td>{{.SourceManifest}}</td></tr><tr><th>첫 refusal</th><td><code>{{.Reason}}</code></td></tr></table><p><strong>신규 entry가 OFF여도 exit·reconcile·보호 감독은 계속된다.</strong></p></section>
+{{template "foot" .}}
+{{end}}
 `

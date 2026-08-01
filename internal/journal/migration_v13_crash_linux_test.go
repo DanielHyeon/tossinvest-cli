@@ -15,7 +15,7 @@ const crashModeMigrationV13AfterCommit = "migration_v13_after_commit"
 func TestMigrationV13CommitAndUserVersionSurviveSIGKILL(t *testing.T) {
 	if os.Getenv(crashEnvMode) == crashModeMigrationV13AfterCommit {
 		j := openCrashChildJournal()
-		if version, err := j.SchemaVersion(context.Background()); err != nil || version != 13 {
+		if version, err := j.SchemaVersion(context.Background()); err != nil || version != SchemaVersion {
 			t.Fatalf("child schema version=%d err=%v", version, err)
 		}
 		kill()
@@ -39,7 +39,7 @@ func TestMigrationV13CommitAndUserVersionSurviveSIGKILL(t *testing.T) {
 	}
 	defer raw.Close()
 	var version int
-	if err := raw.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != 13 {
+	if err := raw.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != SchemaVersion {
 		t.Fatalf("raw user_version=%d err=%v", version, err)
 	}
 	for _, name := range []string{"protection_sagas", "protection_mutation_attempts", "idx_protection_sagas_live_claim"} {

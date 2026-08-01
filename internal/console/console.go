@@ -228,6 +228,10 @@ type Options struct {
 	// state and its calendar provenance. Its single method returns plain display
 	// data; it cannot edit configuration, start the engine, or reach a broker.
 	MarketSchedule MarketScheduleReader
+	// StrategyRuntime is the a047 read-only dormant lane projection. It carries
+	// display booleans/enums only and cannot edit a lane, start the engine, mint
+	// an activation, or reach an account.
+	StrategyRuntime StrategyRuntimeReader
 
 	// Orders is the read-only view of the account's order record the orders
 	// screen reads (orders.go). It declares one method, behind which the caller
@@ -730,6 +734,7 @@ func (c *Console) routes() http.Handler {
 		c.session0(c.mutating(c.handleSystemUpdateDownload)))
 	mux.HandleFunc("/optimization", c.session0(c.handleOptimization))
 	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
+	mux.HandleFunc("/strategy-runtime", c.session0(c.handleStrategyRuntime))
 	mux.HandleFunc("/optimization/exit-policy",
 		c.session0(c.mutating(c.handleOptimizationSave)))
 	mux.HandleFunc("/optimization/exit-protection/preview",
