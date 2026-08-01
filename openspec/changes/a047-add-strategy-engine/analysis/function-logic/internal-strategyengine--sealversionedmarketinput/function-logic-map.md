@@ -20,7 +20,7 @@
 | B1 | provenance/version/time mismatch | none | provenance error | laundering table |
 | B2 | trading session missing or too short for frozen buffer | none | calendar error | regular/early/short-session table |
 | B3 | required or optional decimal invalid | exact parsing only | decimal error | indicator table |
-| Success | all evidence exact | derive cutoff, copy UTC values into opaque bundle | valid immutable bundle | golden lane test |
+| Success | all evidence exact | derive cutoff, copy UTC values into opaque bundle | valid immutable bundle | synthetic derivation plus translated StockOS final-bar/indicator parity tests |
 
 ## Calls and live bindings
 

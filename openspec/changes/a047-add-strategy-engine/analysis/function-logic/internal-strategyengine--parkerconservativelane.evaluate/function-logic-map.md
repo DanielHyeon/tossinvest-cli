@@ -22,7 +22,7 @@
 | B4 | malformed bar/indicator | exact local parsing only | invalid-bar/indicator refusal | malformed input tests |
 | B5 | source gates 8a-8f fail | exact local arithmetic only | VWAP/slope/EMA9/LVN/tangled/expansion refusal | frozen gate table |
 | B6 | RR→HVN→age→drift fails | exact local arithmetic only | first matching refusal | derived-boundary tests |
-| B7 | every gate passes | none outside returned value | opaque Decision | golden parity test |
+| B7 | every gate passes | none outside returned value | opaque Decision | synthetic derivation plus translated StockOS final-bar/indicator parity tests |
 
 ## Calls and live bindings
 

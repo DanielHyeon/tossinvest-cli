@@ -20,9 +20,9 @@
 | B1 | provenance mismatch | none | error | zero/forged and identity tests |
 | B2 | clock/session/freshness mismatch or caller-selected cutoff | none | error | session/cutoff/age/candidate tests |
 | B3 | decimal/optional evidence invalid | exact parse only | error | gate tests |
-| B4 | recomputed prices/RR/drift/HVN/reasons differ | exact arithmetic only | error | golden parity test |
+| B4 | recomputed prices/RR/drift/HVN/reasons differ | exact arithmetic only | error | synthetic derivation plus translated StockOS final-bar/indicator parity tests |
 | B5 | identity differs | SHA only | error | decision identity validation |
-| B6 | all equal | none | valid opaque Decision | golden test |
+| B6 | all equal | none | valid opaque Decision | synthetic derivation and exact binding tests |
 
 ## Calls and live bindings
 
