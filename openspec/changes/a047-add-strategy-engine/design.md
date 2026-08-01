@@ -29,11 +29,15 @@ engine runtime에는 entry loop가 없고 Tracer는 production에서 호출되�
 11. 첫 lane의 immutable constants는 `min_vwap_slope_pct=0.08`, `ema_touch_tolerance_pct=0.25`,
     `min_forward_space_pct=1.2`, `min_expected_rr=1.5`, `tangled_band_pct=0.35`,
     `max_band_expansion_rate=1.8`, `hard_stop_pct=0.7`, `partial_take_profit_at_r=3.0`,
-    `skip_open_minutes=10`, `max_signal_age_seconds=15`, `max_entry_price_drift_pct=0.20`,
-    `symbol_state_stale_seconds=30`이다. gate 순서는 profile/state → session → closed-bar integrity →
+    `skip_open_minutes=10`, `no_entry_after_buffer_minutes=45`, `max_signal_age_seconds=15`, `max_entry_price_drift_pct=0.20`,
+    `symbol_state_stale_seconds=30`이다. KRX open은 source와 동일하게 `09:00 KST`로 봉인하고 임의 이동을 거부한다.
+    session 상수는 source와 동일한 시가 동시호가 `08:30..09:00`(`open-30m..open`),
+    종가 동시호가 `close-10m..close`, 시간외 `15:40 KST`(`open+400m`)이며, session refusal 순서는
+    non-trading → open auction → close auction → after-hours → opening skip → cutoff다. gate 순서는 profile/state → session → closed-bar integrity →
     symbol state → no existing position → nonzero volume → indicator completeness → VWAP above/slope →
     EMA9 bullish pullback → LVN forward space → untangled/band expansion → RR → HVN ceiling → age/drift다.
-12. source parity는 StockOS golden fixtures를 Go fixture로 번역해 accept/refusal reason, entry, 0.7% stop,
+12. source parity는 StockOS fixture를 Go fixture로 번역해 regular/early-close와 auction/after-hours refusal reason,
+    accept, entry, 0.7% stop,
     3R target과 expected RR이 일치하도록 검증한다. source digest나 constants 변경은 새 lane version이며
     기존 manifest를 무효화한다. UI는 이 값을 직접 입력받지 않고 fixed server preset/provenance만 보여준다.
 13. official candle endpoint의 `1m` decimal strings를 exact decimal로 보존한 뒤 KST 정규장 경계에서

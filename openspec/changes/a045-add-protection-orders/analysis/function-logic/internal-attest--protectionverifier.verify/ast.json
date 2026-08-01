@@ -1,0 +1,71 @@
+{
+  "file": "internal/attest/protection_signature.go",
+  "source_sha256": "30d0c8f2119cde55cb478155209dd57a65843485a04359512c3e16d228c96cd1",
+  "package": "attest",
+  "function": "Verify",
+  "receiver": "ProtectionVerifier",
+  "signature": "ProtectionVerifier.Verify(params=2, results=2)",
+  "start": {
+    "line": 100,
+    "column": 1
+  },
+  "end": {
+    "line": 106,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 17
+      },
+      "text": "v.parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 9
+      },
+      "text": "v.verifyParsed"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

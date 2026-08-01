@@ -344,6 +344,16 @@ func TestAssessApprovedCandidateFailsClosed(t *testing.T) {
 	invalidLife.Candidate.Symbol = ""
 	zeroFirstSeen := pass
 	zeroFirstSeen.Candidate.FirstSeenAt = time.Time{}
+	cooled := pass
+	cooled.Candidate.State = StateCooled
+	expired := pass
+	expired.Candidate.State = StateExpired
+	stale := pass
+	stale.Candidate.LastSeenAt = stale.At.Add(-DefaultStalenessTTL - time.Nanosecond)
+	exactlyExpired := pass
+	exactlyExpired.Candidate.LastSeenAt = exactlyExpired.At.Add(-DefaultStalenessTTL)
+	recrossed := pass
+	recrossed.Candidate.CooledAt = recrossed.Candidate.FirstSeenAt.Add(time.Second)
 
 	for _, tc := range []struct {
 		name       string
@@ -356,6 +366,11 @@ func TestAssessApprovedCandidateFailsClosed(t *testing.T) {
 		{name: "wrong market", input: wrongMarket, set: set, wantKind: ApprovalScopeMismatch},
 		{name: "invalid candidate life", input: invalidLife, set: set, wantKind: ApprovalInvalidCandidateLife},
 		{name: "zero first seen", input: zeroFirstSeen, set: set, wantKind: ApprovalInvalidCandidateLife},
+		{name: "cooled candidate", input: cooled, set: set, wantKind: ApprovalInvalidCandidateLife},
+		{name: "expired candidate", input: expired, set: set, wantKind: ApprovalInvalidCandidateLife},
+		{name: "stale active candidate", input: stale, set: set, wantKind: ApprovalInvalidCandidateLife},
+		{name: "active candidate at exclusive validity boundary", input: exactlyExpired, set: set, wantKind: ApprovalInvalidCandidateLife},
+		{name: "active candidate carrying old cooled-at", input: recrossed, set: set, wantKind: ApprovalInvalidCandidateLife},
 		{name: "dangerous", input: dangerous, set: set, wantKind: ApprovalVetoRaised,
 			wantVetoes: []VetoCode{VetoNearHigh}},
 		{name: "unmeasured", input: unmeasured, set: set, wantKind: ApprovalVetoUnmeasured,
@@ -393,6 +408,10 @@ func TestAssessApprovedCandidateReturnsPassWithImmutableProvenance(t *testing.T)
 	if got.Key() != input.Candidate.Key || !got.FirstSeenAt().Equal(input.Candidate.FirstSeenAt) {
 		t.Fatalf("approved life = (%+v, %v), want (%+v, %v)",
 			got.Key(), got.FirstSeenAt(), input.Candidate.Key, input.Candidate.FirstSeenAt)
+	}
+	if got.State() != StateActive || !got.LastSeenAt().Equal(input.Candidate.LastSeenAt) ||
+		!got.ValidUntil().Equal(input.Candidate.LastSeenAt.Add(DefaultStalenessTTL)) {
+		t.Fatalf("approved current-life proof = state:%q last:%v until:%v", got.State(), got.LastSeenAt(), got.ValidUntil())
 	}
 	if got.ThresholdVersion() != set.Version() || got.SetDigest() != set.SetDigest() ||
 		got.EvidenceDigest() != set.EvidenceDigest() || !got.ApprovedAt().Equal(set.ApprovedAt()) {

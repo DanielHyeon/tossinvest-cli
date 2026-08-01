@@ -28,15 +28,25 @@ var approvedCandidateSymbols = map[string]bool{
 // internal/exitpolicy, so a repository-wide spelling scan would manufacture a
 // security permission for an unrelated safety package.
 var approvedCandidateAccessors = map[string]bool{
-	"Valid": true, "Key": true, "FirstSeenAt": true, "Chase": true,
+	"Valid": true, "Key": true, "State": true, "FirstSeenAt": true, "LastSeenAt": true, "ValidUntil": true, "Chase": true,
 	"CandidateLifeID": true, "ThresholdVersion": true, "SetDigest": true,
 	"EvidenceDigest": true, "ApprovedAt": true,
+	"MarketString": true, "SymbolString": true, "StateString": true, "CandidateLifeIDString": true,
+	"FirstSeenUnixNano": true, "LastSeenUnixNano": true, "ValidUntilUnixNano": true, "ApprovedAtUnixNano": true,
 }
 
 // Intentionally empty in a046: there is no production ApprovedCandidate reader.
 // a047 must add its pure strategy package and a non-empty reason in the same diff
 // that adds the first reader. Stale permissions fail below.
-var approvedCandidateBoundaries = map[string]string{}
+var approvedCandidateBoundaries = map[string]string{
+	"internal/strategy": "a047 value-only immutable handoff; no authority, clock, callback, or mutable input",
+}
+
+// strategyengine is the audited sanitizing boundary: it accepts the sealed
+// ApprovedSnapshot and emits an opaque Decision whose fields cannot be minted
+// by downstream packages. The engine itself remains tainted and is audited;
+// imports of its opaque result do not inherit candidate authority.
+var approvedCandidateSanitizers = map[string]bool{"internal/strategyengine": true}
 
 // a046 intentionally defines no authority-bridge exemption. If a047 introduces
 // a typed Guardian/decision bridge, it must replace the unconditional rejection
@@ -119,6 +129,50 @@ func pureApprovedCandidateBoundaryViolations(packageRel, module string, fset *to
 	return typeCheckPureApprovedCandidateBoundary(packageRel, module, fset, files)
 }
 
+var authorityMethodNames = map[string]bool{
+	"Amend": true, "Authorize": true, "Cancel": true, "Dispatch": true,
+	"Execute": true, "Place": true, "Plan": true, "RecordAttempt": true,
+	"Submit": true,
+}
+
+func authorityInterfaceDeclarations(packageRel string, files []*ast.File) []string {
+	var findings []string
+	for _, file := range files {
+		ast.Inspect(file, func(node ast.Node) bool {
+			typeSpec, ok := node.(*ast.TypeSpec)
+			if !ok {
+				return true
+			}
+			contract, ok := typeSpec.Type.(*ast.InterfaceType)
+			if !ok {
+				return true
+			}
+			for _, field := range contract.Methods.List {
+				for _, name := range field.Names {
+					if authorityMethodNames[name.Name] {
+						findings = append(findings, packageRel+" approved-candidate taint forbids authority interface "+typeSpec.Name.Name+"."+name.Name)
+					}
+				}
+			}
+			return true
+		})
+	}
+	return findings
+}
+
+func TestApprovedCandidateTaintRejectsAuthorityInterface(t *testing.T) {
+	parsed, err := parser.ParseFile(token.NewFileSet(), "fixture.go", `package lane
+type Gateway interface { Place() error }
+type Reader interface { ReadSymbolState() error }`, parser.SkipObjectResolution)
+	if err != nil {
+		t.Fatal(err)
+	}
+	findings := authorityInterfaceDeclarations("internal/lane", []*ast.File{parsed})
+	if !findingContains(findings, "Gateway.Place") || findingContains(findings, "Reader.ReadSymbolState") {
+		t.Fatalf("authority findings=%v", findings)
+	}
+}
+
 func auditApprovedCandidateBoundaries(root, module string, files []string) ([]string, error) {
 	type productionFile struct {
 		rel, packageRel string
@@ -173,8 +227,10 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 		if directReaders[packageRel] {
 			continue
 		}
-		path, reachesReader := transitiveDependency(imports, packageRel, func(dependency string) bool {
+		path, reachesReader := transitiveDependencyWithStop(imports, packageRel, func(dependency string) bool {
 			return directReaders[dependency]
+		}, func(dependency string) bool {
+			return dependency != packageRel && approvedCandidateSanitizers[dependency]
 		})
 		if reachesReader {
 			tainted[packageRel] = true
@@ -205,6 +261,7 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 		}
 	}
 	for packageRel := range tainted {
+		findings = append(findings, authorityInterfaceDeclarations(packageRel, filesByPackage[packageRel])...)
 		path, bad := transitiveAuthorityDependency(imports, packageRel)
 		if bad {
 			detail := ""
@@ -216,6 +273,34 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 		}
 	}
 	return findings, nil
+}
+
+func transitiveDependencyWithStop(graph map[string][]string, start string, matches, stop func(string) bool) ([]string, bool) {
+	type node struct {
+		name string
+		path []string
+	}
+	queue := []node{{name: start, path: []string{start}}}
+	seen := map[string]bool{}
+	for len(queue) != 0 {
+		current := queue[0]
+		queue = queue[1:]
+		if seen[current.name] {
+			continue
+		}
+		seen[current.name] = true
+		if matches(current.name) {
+			return current.path, true
+		}
+		if stop(current.name) {
+			continue
+		}
+		for _, dependency := range graph[current.name] {
+			path := append(append([]string(nil), current.path...), dependency)
+			queue = append(queue, node{name: dependency, path: path})
+		}
+	}
+	return nil, false
 }
 
 func TestApprovedCandidateGuardRejectsAliasedErrNilOrderConsumer(t *testing.T) {

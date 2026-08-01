@@ -1,0 +1,93 @@
+{
+  "file": "internal/journal/decision.go",
+  "source_sha256": "9f46b4ed60fe74fb5cc69381e15d916a032bf05a9f7b6a27ec65262718667e6f",
+  "package": "journal",
+  "function": "RecordDecision",
+  "receiver": "Journal",
+  "signature": "Journal.RecordDecision(params=2, results=2)",
+  "start": {
+    "line": 275,
+    "column": 1
+  },
+  "end": {
+    "line": 284,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 278,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 281,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 14
+      },
+      "text": "req.build"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 12
+      },
+      "text": "insertDecisionRow"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 276,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

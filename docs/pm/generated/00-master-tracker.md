@@ -35,7 +35,7 @@
     - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [implemented] → `interlock-gates-entry-not-exit`
     - STORY-TOS-016 — Wire the production risk Guardian [implemented] → `wire-production-risk-guardian`
     - STORY-TOS-017 — Prime engine account sequence safely [implemented] → `prime-engine-account-seq`
-    - STORY-TOS-a045 — Add broker-resident protection orders [in_progress] → `a045-add-protection-orders`
+    - STORY-TOS-a045 — Add broker-resident protection orders [implemented] → `a045-add-protection-orders`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
@@ -65,7 +65,7 @@
     - STORY-TOS-030 — Refine extended-shadow bands [implemented] → `refine-extended-shadow-bands`
     - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [implemented] → `a046-approve-candidate-veto-thresholds`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
-    - STORY-TOS-a047 — Add the strategy entry engine [in_progress] → `a047-add-strategy-engine`
+    - STORY-TOS-a047 — Add the strategy entry engine [implemented] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [implemented] → `a048-add-market-aware-scheduler`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
     - STORY-TOS-a049 — Add deterministic lane performance attribution [in_progress] → `a049-add-lane-performance`

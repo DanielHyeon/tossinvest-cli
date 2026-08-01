@@ -232,6 +232,10 @@ type Options struct {
 	// query method and exposes no collector, pruning, journal, broker, config, or
 	// operating-control capability.
 	Performance PerformanceReader
+	// StrategyRuntime is the a047 read-only dormant lane projection. It carries
+	// display booleans/enums only and cannot edit a lane, start the engine, mint
+	// an activation, or reach an account.
+	StrategyRuntime StrategyRuntimeReader
 
 	// Orders is the read-only view of the account's order record the orders
 	// screen reads (orders.go). It declares one method, behind which the caller
@@ -299,6 +303,11 @@ type Options struct {
 	// PositionPolicies is an engine-owned local command capability. It exposes
 	// no journal handle, SQL, broker, config, or operating toggle.
 	PositionPolicies PositionPolicyCommander
+
+	// Protections is an engine-owned capability. Nil is the shipped default and
+	// renders OFF/UNWIRED read-only state. The console never receives a broker,
+	// journal handle, activation toggle, symbol field, or numeric trigger input.
+	Protections ProtectionCommander
 
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
@@ -730,8 +739,13 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/optimization", c.session0(c.handleOptimization))
 	mux.HandleFunc("/performance-history", c.session0(c.handlePerformanceHistory))
 	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
+	mux.HandleFunc("/strategy-runtime", c.session0(c.handleStrategyRuntime))
 	mux.HandleFunc("/optimization/exit-policy",
 		c.session0(c.mutating(c.handleOptimizationSave)))
+	mux.HandleFunc("/optimization/exit-protection/preview",
+		c.session0(c.mutating(c.handleProtectionPreview, 4096)))
+	mux.HandleFunc("/optimization/exit-protection/apply",
+		c.session0(c.mutating(c.handleProtectionApply, 4096)))
 	mux.HandleFunc("/position-management", c.session0(c.readOnly(c.handlePositionManagement)))
 	mux.HandleFunc("/position-management/preview",
 		c.session0(c.mutating(c.handlePositionPolicyPreview, 4096)))

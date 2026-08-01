@@ -1,0 +1,216 @@
+{
+  "file": "internal/strategydispatch/adapters.go",
+  "source_sha256": "832513612040b9cd568628f7e702024a23951574cfca0e2810f515461c5d53e8",
+  "package": "strategydispatch",
+  "function": "IssueAndPlan",
+  "receiver": "GuardianAdapter",
+  "signature": "GuardianAdapter.IssueAndPlan(params=2, results=3)",
+  "start": {
+    "line": 29,
+    "column": 1
+  },
+  "end": {
+    "line": 66,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 35,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 39,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 47,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 39
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 35
+      },
+      "text": "a.Guardian.AccountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 97
+      },
+      "text": "a.Guardian.PolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 43
+      },
+      "text": "a.Guardian.LimitsDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 39
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 18
+      },
+      "text": "a.Account.ReadStrategyAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 17
+      },
+      "text": "a.Guardian.IssueStrategyEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 31
+      },
+      "text": "request.Decision.Record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 39
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 13
+      },
+      "text": "uint64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

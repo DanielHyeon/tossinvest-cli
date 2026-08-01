@@ -1,0 +1,129 @@
+{
+  "file": "internal/candidate/approved_boundary_typecheck_test.go",
+  "source_sha256": "dd7abfb1c95ac32ed97e26c683db6b1f7d5c085b3a00dada44125b8a35cc8659",
+  "package": "candidate",
+  "function": "approvedSnapshotMethod",
+  "signature": "approvedSnapshotMethod(params=1, results=1)",
+  "start": {
+    "line": 375,
+    "column": 1
+  },
+  "end": {
+    "line": 403,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 390,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 394,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 391,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 395,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 399,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 48
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 17
+      },
+      "text": "function.Type.Params.NumFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 90
+      },
+      "text": "function.Type.Results.NumFields"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 376,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 401,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,39 @@
+{
+  "file": "internal/candidate/approved_consumer_guard_test.go",
+  "source_sha256": "29dd1fb53c9f1989bb270964a867a4c7b38f0ad3b86a889393abefc0018fc946",
+  "package": "candidate",
+  "function": "pureApprovedCandidateBoundaryViolations",
+  "signature": "pureApprovedCandidateBoundaryViolations(params=4, results=1)",
+  "start": {
+    "line": 118,
+    "column": 1
+  },
+  "end": {
+    "line": 120,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 9
+      },
+      "text": "typeCheckPureApprovedCandidateBoundary"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

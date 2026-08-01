@@ -543,7 +543,10 @@ func newApprovalError(kind ApprovalErrorKind, detail string, vetoes []VetoCode) 
 type ApprovedCandidate struct {
 	valid            bool
 	key              Key
+	state            State
 	firstSeenAt      time.Time
+	lastSeenAt       time.Time
+	validUntil       time.Time
 	chase            Chase
 	candidateLifeID  CandidateLifeID
 	thresholdVersion string
@@ -554,13 +557,24 @@ type ApprovedCandidate struct {
 
 func (c ApprovedCandidate) Valid() bool                      { return c.valid }
 func (c ApprovedCandidate) Key() Key                         { return c.key }
+func (c ApprovedCandidate) State() State                     { return c.state }
 func (c ApprovedCandidate) FirstSeenAt() time.Time           { return c.firstSeenAt }
+func (c ApprovedCandidate) LastSeenAt() time.Time            { return c.lastSeenAt }
+func (c ApprovedCandidate) ValidUntil() time.Time            { return c.validUntil }
 func (c ApprovedCandidate) Chase() Chase                     { return c.chase }
 func (c ApprovedCandidate) CandidateLifeID() CandidateLifeID { return c.candidateLifeID }
 func (c ApprovedCandidate) ThresholdVersion() string         { return c.thresholdVersion }
 func (c ApprovedCandidate) SetDigest() string                { return c.setDigest }
 func (c ApprovedCandidate) EvidenceDigest() string           { return c.evidenceDigest }
 func (c ApprovedCandidate) ApprovedAt() time.Time            { return c.approvedAt }
+func (c ApprovedCandidate) MarketString() string             { return c.key.Market }
+func (c ApprovedCandidate) SymbolString() string             { return c.key.Symbol }
+func (c ApprovedCandidate) CandidateLifeIDString() string    { return c.candidateLifeID.String() }
+func (c ApprovedCandidate) StateString() string              { return string(c.state) }
+func (c ApprovedCandidate) FirstSeenUnixNano() int64         { return c.firstSeenAt.UTC().UnixNano() }
+func (c ApprovedCandidate) LastSeenUnixNano() int64          { return c.lastSeenAt.UTC().UnixNano() }
+func (c ApprovedCandidate) ValidUntilUnixNano() int64        { return c.validUntil.UTC().UnixNano() }
+func (c ApprovedCandidate) ApprovedAtUnixNano() int64        { return c.approvedAt.UTC().UnixNano() }
 
 func candidateLifeID(candidate Candidate) (CandidateLifeID, error) {
 	market := strings.ToUpper(strings.TrimSpace(candidate.Market))
@@ -588,6 +602,13 @@ func AssessApprovedCandidate(input VetoInputs, set ThresholdSet) (ApprovedCandid
 	if err != nil {
 		return ApprovedCandidate{}, newApprovalError(ApprovalInvalidCandidateLife, err.Error(), nil)
 	}
+	if input.Candidate.State != StateActive || input.Candidate.LastSeenAt.IsZero() ||
+		input.Candidate.LastSeenAt.Before(input.Candidate.FirstSeenAt) ||
+		!input.Candidate.CooledAt.IsZero() || input.At.Before(input.Candidate.LastSeenAt) ||
+		input.At.Sub(input.Candidate.LastSeenAt) >= DefaultStalenessTTL {
+		return ApprovedCandidate{}, newApprovalError(ApprovalInvalidCandidateLife,
+			"candidate is not a current active life", nil)
+	}
 	if input.Candidate.Market != set.scope.Market {
 		return ApprovedCandidate{}, newApprovalError(ApprovalScopeMismatch,
 			fmt.Sprintf("candidate market %q does not match threshold market %q",
@@ -608,8 +629,10 @@ func AssessApprovedCandidate(input VetoInputs, set ThresholdSet) (ApprovedCandid
 			"chase verdict did not establish measured-and-clear", nil)
 	}
 	return ApprovedCandidate{
-		valid: true, key: input.Candidate.Key, firstSeenAt: input.Candidate.FirstSeenAt,
-		chase: chase, candidateLifeID: lifeID,
+		valid: true, key: input.Candidate.Key, state: input.Candidate.State,
+		firstSeenAt: input.Candidate.FirstSeenAt, lastSeenAt: input.Candidate.LastSeenAt,
+		validUntil: input.Candidate.LastSeenAt.Add(DefaultStalenessTTL),
+		chase:      chase, candidateLifeID: lifeID,
 		thresholdVersion: set.version, setDigest: set.setDigest,
 		evidenceDigest: set.evidenceDigest, approvedAt: set.approvedAt,
 	}, nil

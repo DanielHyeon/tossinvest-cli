@@ -15,7 +15,7 @@ const crashModeMigrationV12AfterCommit = "migration_v12_after_commit"
 func TestMigrationV12CommitAndUserVersionSurviveSIGKILL(t *testing.T) {
 	if os.Getenv(crashEnvMode) == crashModeMigrationV12AfterCommit {
 		j := openCrashChildJournal()
-		if version, err := j.SchemaVersion(context.Background()); err != nil || version != 12 {
+		if version, err := j.SchemaVersion(context.Background()); err != nil || version != SchemaVersion {
 			t.Fatalf("child schema version=%d err=%v", version, err)
 		}
 		kill()
@@ -39,10 +39,10 @@ func TestMigrationV12CommitAndUserVersionSurviveSIGKILL(t *testing.T) {
 		t.Fatal(err)
 	}
 	var version int
-	if err := raw.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != 12 {
+	if err := raw.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != SchemaVersion {
 		t.Fatalf("raw user_version after crash=%d err=%v", version, err)
 	}
-	for _, name := range []string{"idx_exit_events_proposed_intent", "position_policy_lifecycles", "position_policy_events"} {
+	for _, name := range []string{"idx_exit_events_proposed_intent", "position_policy_lifecycles", "position_policy_events", "protection_sagas"} {
 		var count int
 		if err := raw.QueryRow(`SELECT count(*) FROM sqlite_master WHERE name=?`, name).Scan(&count); err != nil || count != 1 {
 			t.Fatalf("raw artifact %s count=%d err=%v", name, count, err)

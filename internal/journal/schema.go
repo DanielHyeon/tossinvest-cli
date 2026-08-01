@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 12
+const SchemaVersion = 14
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -76,6 +76,14 @@ var migrations = []migration{
 	// schemaV12 lives in position_policy.go beside the generation-scoped CAS
 	// repository. It only adds tables; existing exit snapshots are never rebound.
 	{Version: 12, SQL: schemaV12},
+	// schemaV13 lives in protection_orders.go. It adds the broker-resident
+	// protection saga and its append-only mutation-attempt history. No existing
+	// exit snapshot or position-policy generation is rebound by this step.
+	{Version: 13, SQL: schemaV13},
+	// schemaV14 lives in strategy_lineage.go. It adds immutable strategy
+	// decision/attempt/execution provenance without changing RiskIntent or any
+	// released canonical preimage bytes.
+	{Version: 14, SQL: schemaV14},
 }
 
 // schemaV1 is the initial schema.

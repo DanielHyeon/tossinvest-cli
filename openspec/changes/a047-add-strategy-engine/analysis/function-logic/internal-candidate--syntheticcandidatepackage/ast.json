@@ -1,0 +1,372 @@
+{
+  "file": "internal/candidate/approved_boundary_typecheck_test.go",
+  "source_sha256": "dd7abfb1c95ac32ed97e26c683db6b1f7d5c085b3a00dada44125b8a35cc8659",
+  "package": "candidate",
+  "function": "syntheticCandidatePackage",
+  "signature": "syntheticCandidatePackage(params=1, results=1)",
+  "start": {
+    "line": 30,
+    "column": 1
+  },
+  "end": {
+    "line": 67,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "else",
+      "at": {
+        "line": 39,
+        "column": 10
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 9
+      },
+      "text": "types.NewPackage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 18
+      },
+      "text": "types.NewTypeName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 14
+      },
+      "text": "types.NewNamed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 43
+      },
+      "text": "types.NewStruct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 2
+      },
+      "text": "Insert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 2
+      },
+      "text": "pkg.Scope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 15
+      },
+      "text": "types.NewVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 16
+      },
+      "text": "types.NewSignatureType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 4
+      },
+      "text": "types.NewTuple"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 4
+      },
+      "text": "types.NewTuple"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 19
+      },
+      "text": "types.NewVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 3
+      },
+      "text": "approved.AddMethod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 22
+      },
+      "text": "types.NewFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 24
+      },
+      "text": "types.NewArray"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 27
+      },
+      "text": "types.NewSignatureType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 18
+      },
+      "text": "types.NewTuple"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "types.NewTuple"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 18
+      },
+      "text": "types.NewVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 2
+      },
+      "text": "Insert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 2
+      },
+      "text": "pkg.Scope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 21
+      },
+      "text": "types.NewFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 16
+      },
+      "text": "types.NewTypeName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 21
+      },
+      "text": "types.NewInterfaceType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 2
+      },
+      "text": "sourceInterface.Complete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 2
+      },
+      "text": "types.NewNamed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 2
+      },
+      "text": "Insert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 2
+      },
+      "text": "pkg.Scope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 2
+      },
+      "text": "pkg.MarkComplete"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 38,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 41,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -13,10 +13,15 @@ strategy lane는 ApprovedCandidate와 versioned market inputs를 받아 EntryDec
 
 ### Requirement: 첫 lane는 frozen KRX Parker VWAP conservative v1이다
 첫 lane는 StockOS commit `d75113d3c338148606d86c8aedbbeb7ed446c0b8`와 source-set digest `09260ac29e50ed4d2a43d0e274f9a17465e00ee36fb61d759127f158985c23bd`의 `parker_vwap_trend_v1` conservative gate를 KRX regular-session closed 5-minute input에만 적용해야 한다 (SHALL). server-owned immutable constants와 gate order를 바꾸려면 새 lane version과 activation manifest 승인이 필요하다 (SHALL).
+KRX open은 `09:00 KST`로 봉인하고 session open/close/evaluation은 같은 KST 거래일이어야 하며, caller가 이동한 session window를 받아서는 안 된다 (MUST NOT).
 
-#### Scenario: StockOS golden accept
+#### Scenario: StockOS translated accept arithmetic
 - **WHEN** frozen fixture가 VWAP above/slope, EMA9 bullish pullback, LVN forward space, untangled/band/RR, age/drift를 모두 통과한다
 - **THEN** `krx_parker_vwap_conservative_v1`은 source와 같은 entry, 0.7% stop, 3R target, expected RR와 accept provenance를 반환한다
+
+#### Scenario: StockOS 세션 refusal 패리티
+- **WHEN** frozen KRX calendar가 non-trading, 시가 동시호가, 종가 동시호가, 시간외, 시초 제외 또는 close-minus-45m cutoff를 나타낸다
+- **THEN** lane은 source 순서와 같은 typed refusal reason을 반환하고 EntryDecision과 broker call은 0건이다
 
 #### Scenario: 지원하지 않는 시장
 - **WHEN** US 또는 pre/after-market candidate가 첫 lane를 요청한다

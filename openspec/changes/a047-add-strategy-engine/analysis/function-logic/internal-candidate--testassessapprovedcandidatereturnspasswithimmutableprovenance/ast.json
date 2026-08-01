@@ -1,0 +1,467 @@
+{
+  "file": "internal/candidate/thresholdset_test.go",
+  "source_sha256": "9503d2dc7135c1e1544264586888b5e892a49714e125aeb5cf17e35de98b1d6b",
+  "package": "candidate",
+  "function": "TestAssessApprovedCandidateReturnsPassWithImmutableProvenance",
+  "signature": "TestAssessApprovedCandidateReturnsPassWithImmutableProvenance(params=1, results=0)",
+  "start": {
+    "line": 398,
+    "column": 1
+  },
+  "end": {
+    "line": 429,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 405,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 412,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 416,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 423,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 425,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 9
+      },
+      "text": "loadSyntheticThresholdSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 400,
+        "column": 11
+      },
+      "text": "passingApprovedInputs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 400,
+        "column": 33
+      },
+      "text": "aCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 401,
+        "column": 14
+      },
+      "text": "AssessApprovedCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 6
+      },
+      "text": "got.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 22
+      },
+      "text": "Passed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 22
+      },
+      "text": "got.Chase"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 406,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 5
+      },
+      "text": "got.Key"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 42
+      },
+      "text": "Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 42
+      },
+      "text": "got.FirstSeenAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 4
+      },
+      "text": "got.Key"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 15
+      },
+      "text": "got.FirstSeenAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 5
+      },
+      "text": "got.State"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 36
+      },
+      "text": "Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 36
+      },
+      "text": "got.LastSeenAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 4
+      },
+      "text": "Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 4
+      },
+      "text": "got.ValidUntil"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 27
+      },
+      "text": "input.Candidate.LastSeenAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 71
+      },
+      "text": "got.State"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 84
+      },
+      "text": "got.LastSeenAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 102
+      },
+      "text": "got.ValidUntil"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 5
+      },
+      "text": "got.ThresholdVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 31
+      },
+      "text": "set.Version"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 48
+      },
+      "text": "got.SetDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 67
+      },
+      "text": "set.SetDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 3
+      },
+      "text": "got.EvidenceDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 27
+      },
+      "text": "set.EvidenceDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 52
+      },
+      "text": "Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 52
+      },
+      "text": "got.ApprovedAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 75
+      },
+      "text": "set.ApprovedAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 418,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 4
+      },
+      "text": "got.ThresholdVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 28
+      },
+      "text": "got.SetDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 45
+      },
+      "text": "got.EvidenceDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 67
+      },
+      "text": "got.ApprovedAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 9
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 21
+      },
+      "text": "typ.NumField"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 12
+      },
+      "text": "typ.Field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 6
+      },
+      "text": "field.IsExported"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 426,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 400,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 401,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 422,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 424,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

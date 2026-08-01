@@ -1,0 +1,31 @@
+{
+  "file": "internal/execgw/riskguardian.go",
+  "source_sha256": "eaf04835c46dc068d0d7b36aade58d3dc023cba292676dc2e709b38315619514",
+  "package": "execgw",
+  "function": "AccountRef",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.AccountRef(params=0, results=1)",
+  "start": {
+    "line": 314,
+    "column": 1
+  },
+  "end": {
+    "line": 314,
+    "column": 67
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 314,
+        "column": 46
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

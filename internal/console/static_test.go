@@ -381,16 +381,18 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		// validation and no audit line — the console path is the one that has all
 		// three. A forged request that turned the gate on would be exactly the act
 		// this list exists to keep behind the token.
-		"/settings/trading":                true,
-		"/settings/gate":                   true,
-		"/settings/autostart":              true,
-		"/settings/system-update/download": true,
-		"/settings/system-update/install":  true,
-		"/optimization/exit-policy":        true,
-		"/position-management/preview":     true,
-		"/position-management/apply":       true,
-		"/openapi/login/save":              true,
-		"/logout":                          true,
+		"/settings/trading":                     true,
+		"/settings/gate":                        true,
+		"/settings/autostart":                   true,
+		"/settings/system-update/download":      true,
+		"/settings/system-update/install":       true,
+		"/optimization/exit-policy":             true,
+		"/optimization/exit-protection/preview": true,
+		"/optimization/exit-protection/apply":   true,
+		"/position-management/preview":          true,
+		"/position-management/apply":            true,
+		"/openapi/login/save":                   true,
+		"/logout":                               true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {
@@ -968,6 +970,9 @@ var consoleCapabilities = map[string]capability{
 	// returns plain values; no Store, collector, journal, broker, config, or
 	// operating-control handle crosses this seam.
 	"Performance": {Methods: []string{"Dashboard"}},
+	// Dormant strategy runtime display data only. Read accepts no operating
+	// command and cannot mint lane activation or account authority.
+	"StrategyRuntime": {Methods: []string{"Read"}},
 	// The common exit-policy editor carries only the typed policy ID block. It
 	// cannot reach broker, journal, automation gate, or trading toggles.
 	"ExitPolicies": {Methods: []string{"Load", "Save"}},
@@ -980,6 +985,18 @@ var consoleCapabilities = map[string]capability{
 			"PositionPolicies":        "the engine-owned position policy command capability; it cannot place orders or flip operating toggles",
 			"PositionPolicyCommander": "the exact three-method local command seam, carrying only generation/version-bound domain messages",
 			"Apply":                   "commits one already-previewed position policy lifecycle CAS; it has no broker or config capability",
+		},
+	},
+	// Broker protection is exposed only as an engine-owned current-row command
+	// capability. The browser submits opaque selection/preview capabilities and
+	// one checkbox; it never sends a symbol, trigger, quantity, reason, toggle,
+	// journal handle, or broker client.
+	"Protections": {
+		Methods: []string{"List", "Preview", "Apply"},
+		VerbExemptions: map[string]string{
+			"Protections":         "the engine-owned protection status/current-row command capability; no broker or operating toggle is exposed",
+			"ProtectionCommander": "the exact three-method opaque capability seam",
+			"Apply":               "consumes one server-previewed current-row capability after the engine-enforced delay",
 		},
 	},
 	// The Guardian limits are a read, and they are a seam of their own rather
