@@ -1,0 +1,78 @@
+{
+  "file": "cmd/tossctl/optimization.go",
+  "source_sha256": "368821e925b07ec11de166a4289ada21c137e14d2e191ac4f44bcea574410ed8",
+  "package": "main",
+  "function": "openConsolePerformanceCapabilities",
+  "signature": "openConsolePerformanceCapabilities(params=2, results=2)",
+  "start": {
+    "line": 28,
+    "column": 1
+  },
+  "end": {
+    "line": 38,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 16
+      },
+      "text": "performance.OpenReadOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 41
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 16
+      },
+      "text": "optimizationevidence.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

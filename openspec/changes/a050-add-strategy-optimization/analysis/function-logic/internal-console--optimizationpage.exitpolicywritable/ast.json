@@ -1,0 +1,69 @@
+{
+  "file": "internal/console/optimization_view.go",
+  "source_sha256": "69787d685c771aaa4e03b74229d22c1eed8e7b5ca37728fc8fa7e6e7e2b7d6a7",
+  "package": "console",
+  "function": "ExitPolicyWritable",
+  "receiver": "optimizationPage",
+  "signature": "optimizationPage.ExitPolicyWritable(params=0, results=1)",
+  "start": {
+    "line": 98,
+    "column": 1
+  },
+  "end": {
+    "line": 108,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

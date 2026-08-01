@@ -10,7 +10,7 @@ import (
 func TestOptimizationCandidateFiltersRenderDormantReadOnlyEvidenceState(t *testing.T) {
 	h := newDashboardHarness(t, func(*Options) {})
 	h.authenticate(t)
-	page := h.page(t, "/optimization")
+	page := h.page(t, "/optimization?category=candidate-filters")
 	for _, want := range []string{
 		`id="candidate-filters"`, "후보 필터", "KR", "US", "regular", "seen_late",
 		"extended", "near_high", "미승인", "passed 구조적 0", "verdict 비활성",
@@ -39,7 +39,7 @@ func TestOptimizationCandidateFiltersRenderDormantReadOnlyEvidenceState(t *testi
 func TestCandidateFilterCardsContainExactMarketMetricMatrix(t *testing.T) {
 	h := newDashboardHarness(t, func(*Options) {})
 	h.authenticate(t)
-	section := candidateFilterNode(t, h.page(t, "/optimization"))
+	section := candidateFilterNode(t, h.page(t, "/optimization?category=candidate-filters"))
 	for _, market := range []string{"KR", "US"} {
 		articles := nodesByAttribute(section, "article", "id", "candidate-filters-"+market)
 		if len(articles) != 1 {
@@ -60,7 +60,7 @@ func TestCandidateFilterCardsContainExactMarketMetricMatrix(t *testing.T) {
 func TestCandidateFilterCardsRemainMobileAndAccessibilityFriendly(t *testing.T) {
 	h := newDashboardHarness(t, func(*Options) {})
 	h.authenticate(t)
-	page := h.page(t, "/optimization")
+	page := h.page(t, "/optimization?category=candidate-filters")
 	section := candidateFilterNode(t, page)
 	if len(nodesByName(section, "table")) != 0 {
 		t.Fatal("candidate filter cards use a wide table instead of wrapping definition lists")

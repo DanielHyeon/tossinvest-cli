@@ -1,0 +1,46 @@
+{
+  "file": "internal/performance/readonly.go",
+  "source_sha256": "92e0ce6928e0f68130ae85c8f1bb08d6172984d3a0adfbc04db303de8f5b4444",
+  "package": "performance",
+  "function": "Path",
+  "receiver": "ReadOnly",
+  "signature": "ReadOnly.Path(params=0, results=1)",
+  "start": {
+    "line": 166,
+    "column": 1
+  },
+  "end": {
+    "line": 171,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

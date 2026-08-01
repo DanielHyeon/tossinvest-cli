@@ -65,6 +65,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net"
 	"net/http"
 	"net/netip"
@@ -224,6 +225,10 @@ type Options struct {
 	// ExitPolicies is the optimization page's load/save-only config seam. It
 	// carries no broker, gate, trading-toggle, or journal authority.
 	ExitPolicies ExitPolicySettings
+	// Optimization is the narrow, durable settings lifecycle command service.
+	// Its interface has no journal, broker, lane, gate, kill-switch, or LIVE
+	// mutation method; nil leaves every lifecycle control read-only.
+	Optimization OptimizationCommander
 	// MarketSchedule is a read-only projection of scheduler desired/effective
 	// state and its calendar provenance. Its single method returns plain display
 	// data; it cannot edit configuration, start the engine, or reach a broker.
@@ -741,7 +746,7 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
 	mux.HandleFunc("/strategy-runtime", c.session0(c.handleStrategyRuntime))
 	mux.HandleFunc("/optimization/exit-policy",
-		c.session0(c.mutating(c.handleOptimizationSave)))
+		c.session0(c.mutating(c.handleOptimizationSave, 4096)))
 	mux.HandleFunc("/optimization/exit-protection/preview",
 		c.session0(c.mutating(c.handleProtectionPreview, 4096)))
 	mux.HandleFunc("/optimization/exit-protection/apply",
@@ -851,6 +856,12 @@ func (c *Console) mutating(next http.HandlerFunc, bodyLimits ...int64) http.Hand
 		if c.remote != nil && !c.remote.sameOriginForMutation(r) {
 			c.refuse(w, http.StatusForbidden, "요청 출처가 일치하지 않는다",
 				"원격 쓰기 요청은 설정된 HTTPS 주소에서 시작되어야 한다. 아무것도 전송되지 않았다.")
+			return
+		}
+		mediaType, _, mediaErr := mime.ParseMediaType(r.Header.Get("Content-Type"))
+		if mediaErr != nil || mediaType != "application/x-www-form-urlencoded" {
+			c.refuse(w, http.StatusBadRequest, "폼 형식이 허용되지 않는다",
+				"상태 변경은 콘솔이 그린 URL-encoded 폼으로만 제출할 수 있다. 아무것도 전송되지 않았다.")
 			return
 		}
 		if len(bodyLimits) > 0 && bodyLimits[0] > 0 {

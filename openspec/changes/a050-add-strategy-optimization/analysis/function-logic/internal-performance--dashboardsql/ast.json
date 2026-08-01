@@ -1,0 +1,61 @@
+{
+  "file": "internal/performance/query.go",
+  "source_sha256": "f4409ea80ec02d852593d09328d7f0d7054674c6133f5a4e25d2649385de5f7e",
+  "package": "performance",
+  "function": "dashboardSQL",
+  "signature": "dashboardSQL(params=2, results=2)",
+  "start": {
+    "line": 274,
+    "column": 1
+  },
+  "end": {
+    "line": 301,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 21
+      },
+      "text": "dashboardTradePredicate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 275,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 276,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

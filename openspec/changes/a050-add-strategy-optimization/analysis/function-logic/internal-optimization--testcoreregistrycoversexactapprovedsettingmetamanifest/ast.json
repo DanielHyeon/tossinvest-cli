@@ -1,0 +1,102 @@
+{
+  "file": "internal/optimization/registry_test.go",
+  "source_sha256": "77d0d6ad7c3c01f303e24480944c81c85ddd98a768b250f4588ed1849893714f",
+  "package": "optimization_test",
+  "function": "TestCoreRegistryCoversExactApprovedSettingmetaManifest",
+  "signature": "TestCoreRegistryCoversExactApprovedSettingmetaManifest(params=1, results=0)",
+  "start": {
+    "line": 165,
+    "column": 1
+  },
+  "end": {
+    "line": 176,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 19
+      },
+      "text": "optimization.CoreRegistry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 45
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 12
+      },
+      "text": "registry.All"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
