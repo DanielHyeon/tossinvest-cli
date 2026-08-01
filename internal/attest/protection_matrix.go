@@ -174,131 +174,71 @@ type ProtectionScope struct {
 
 type fileIdentity struct{ UID uint32 }
 
-// ParsedProtectionCapability has passed strict JSON and local file-integrity
-// checks, but is deliberately not an authorization result. External evidence
-// bytes and the requested runtime scope have not yet been verified.
-type ParsedProtectionCapability struct{ matrix ProtectionCapabilityMatrix }
+// parsedProtectionCapability has passed strict JSON, pinned trust-root,
+// filesystem and Ed25519 signature checks, but is deliberately not an
+// authorization result. Key-time, external evidence bytes and the requested
+// runtime scope have not yet been verified.
+type parsedProtectionCapability struct {
+	matrix           ProtectionCapabilityMatrix
+	envelope         protectionSignedEnvelope
+	policyGeneration uint64
+	rootDigest       string
+	verifier         *ProtectionVerifier
+}
 
 // VerifiedProtectionCapability is only constructed after external evidence
 // bytes, time bounds, and exact runtime scope have all been checked.
-type VerifiedProtectionCapability struct{ matrix ProtectionCapabilityMatrix }
-
-func (v VerifiedProtectionCapability) Matrix() ProtectionCapabilityMatrix {
-	m := v.matrix
-	m.Evidence = append([]ProtectionEvidence(nil), m.Evidence...)
-	m.Capabilities = append([]ConditionalCapability(nil), m.Capabilities...)
-	return m
+type VerifiedProtectionCapability struct {
+	scope      ProtectionScope
+	capability ConditionalCapability
 }
 
-func ParseProtectionCapability(path string) (ParsedProtectionCapability, error) {
-	uid := os.Geteuid()
-	if uid < 0 {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: current owner cannot be determined", ErrProtectionFile)
-	}
-	return parseProtectionCapability(path, fileIdentity{UID: uint32(uid)})
+func (v VerifiedProtectionCapability) Scope() ProtectionScope {
+	scope := v.scope
+	scope.Tools = cloneProtectionTools(v.scope.Tools)
+	return scope
 }
 
-func parseProtectionCapability(path string, owner fileIdentity) (ParsedProtectionCapability, error) {
-	if filepath.Base(path) != ProtectionFileName {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: basename must be %s", ErrProtectionFile, ProtectionFileName)
-	}
-	parent := filepath.Dir(path)
-	parentInfo, err := os.Lstat(parent)
-	if err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: inspecting parent %s: %v", ErrProtectionFile, parent, err)
-	}
-	if err := checkProtectionParentInfo(parentInfo, owner); err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: parent %s: %v", ErrProtectionFile, parent, err)
-	}
-	before, err := os.Lstat(path)
-	if err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: inspecting %s: %v", ErrProtectionFile, path, err)
-	}
-	if err := checkProtectionFileInfo(before, owner); err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: %s: %v", ErrProtectionFile, path, err)
-	}
+func (v VerifiedProtectionCapability) Capability() ConditionalCapability {
+	return v.capability
+}
 
-	f, err := os.Open(path)
-	if err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: opening %s: %v", ErrProtectionFile, path, err)
+func cloneProtectionTools(in map[ProtectionTool]ToolBuild) map[ProtectionTool]ToolBuild {
+	if in == nil {
+		return nil
 	}
-	defer f.Close()
-	after, err := f.Stat()
-	if err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: stat opened %s: %v", ErrProtectionFile, path, err)
+	out := make(map[ProtectionTool]ToolBuild, len(in))
+	for key, value := range in {
+		out[key] = value
 	}
-	if !os.SameFile(before, after) {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: %s changed while it was opened", ErrProtectionFile, path)
-	}
-	if err := checkProtectionFileInfo(after, owner); err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: opened %s: %v", ErrProtectionFile, path, err)
-	}
-
-	data, err := io.ReadAll(io.LimitReader(f, maxProtectionFileSize+1))
-	if err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: reading %s: %v", ErrProtectionFile, path, err)
-	}
-	if len(data) > maxProtectionFileSize {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: %s exceeds %d bytes", ErrProtectionFile, path, maxProtectionFileSize)
-	}
-	openedAfterRead, err := f.Stat()
-	if err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: restat opened %s: %v", ErrProtectionFile, path, err)
-	}
-	pathAfterRead, err := os.Lstat(path)
-	if err != nil || !sameProtectionSnapshot(after, openedAfterRead) || !sameProtectionSnapshot(after, pathAfterRead) {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: %s changed while it was read", ErrProtectionFile, path)
-	}
-	if err := checkProtectionFileInfo(openedAfterRead, owner); err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: restat opened %s: %v", ErrProtectionFile, path, err)
-	}
-	if err := checkProtectionFileInfo(pathAfterRead, owner); err != nil {
-		return ParsedProtectionCapability{}, fmt.Errorf("%w: restat %s: %v", ErrProtectionFile, path, err)
-	}
-	m, err := decodeProtectionMatrix(data)
-	if err != nil {
-		return ParsedProtectionCapability{}, err
-	}
-	if err := m.validate(); err != nil {
-		return ParsedProtectionCapability{}, err
-	}
-	return ParsedProtectionCapability{matrix: m}, nil
+	return out
 }
 
 func sameProtectionSnapshot(before, after os.FileInfo) bool {
 	return os.SameFile(before, after) && before.Size() == after.Size() && before.ModTime().Equal(after.ModTime()) && before.Mode() == after.Mode()
 }
 
-// VerifyProtectionCapability requires independent evidence bytes. A parsed
-// matrix alone can never be promoted to a verified capability.
-func VerifyProtectionCapability(parsed ParsedProtectionCapability, now time.Time, scope ProtectionScope, evidence map[string][]byte) (VerifiedProtectionCapability, error) {
+func verifyProtectionMatrix(parsed parsedProtectionCapability, scope ProtectionScope, evidence map[string][]byte) (ConditionalCapability, error) {
 	m := parsed.matrix
 	if m.FormatVersion == 0 {
-		return VerifiedProtectionCapability{}, fmt.Errorf("%w: empty parsed capability", ErrProtectionInvalid)
+		return ConditionalCapability{}, fmt.Errorf("%w: empty parsed capability", ErrProtectionInvalid)
 	}
-	if m.IssuedAt.After(now) {
-		return VerifiedProtectionCapability{}, fmt.Errorf("%w: issued_at is in the future", ErrProtectionInvalid)
-	}
-	if !now.Before(m.ExpiresAt) {
-		return VerifiedProtectionCapability{}, fmt.Errorf("%w: expired at %s", ErrProtectionExpired, m.ExpiresAt.UTC().Format(time.RFC3339))
-	}
-	if err := m.verifyScope(scope); err != nil {
-		return VerifiedProtectionCapability{}, err
+	matched, err := m.verifyScope(scope)
+	if err != nil {
+		return ConditionalCapability{}, err
 	}
 	if err := verifyProtectionEvidenceBytes(m.Evidence, evidence); err != nil {
-		return VerifiedProtectionCapability{}, err
+		return ConditionalCapability{}, err
 	}
-	return VerifiedProtectionCapability{matrix: m}, nil
+	return matched, nil
 }
 
-// LoadProtectionCapability is a convenience wrapper which preserves the hard
-// Parse/Verify boundary by requiring the caller to provide evidence bytes.
-func LoadProtectionCapability(path string, now time.Time, scope ProtectionScope, evidence map[string][]byte) (VerifiedProtectionCapability, error) {
-	parsed, err := ParseProtectionCapability(path)
-	if err != nil {
-		return VerifiedProtectionCapability{}, err
-	}
-	return VerifyProtectionCapability(parsed, now, scope, evidence)
+func verifiedProtectionCapability(scope ProtectionScope, matched ConditionalCapability) VerifiedProtectionCapability {
+	return VerifiedProtectionCapability{scope: ProtectionScope{
+		AccountRef: scope.AccountRef, Profile: scope.Profile, Market: scope.Market, Session: scope.Session,
+		ConditionalType: scope.ConditionalType, OrderType: scope.OrderType, TriggerSource: scope.TriggerSource,
+		Quantity: scope.Quantity, Tools: cloneProtectionTools(scope.Tools),
+	}, capability: matched}
 }
 
 func checkProtectionFileInfo(info os.FileInfo, owner fileIdentity) error {
@@ -398,6 +338,9 @@ func (m ProtectionCapabilityMatrix) validate() error {
 	if m.IssuedAt.IsZero() || m.ExpiresAt.IsZero() || !m.ExpiresAt.After(m.IssuedAt) {
 		return fmt.Errorf("%w: invalid issued/expiry window", ErrProtectionInvalid)
 	}
+	if m.IssuedAt.Location() != time.UTC || m.ExpiresAt.Location() != time.UTC {
+		return fmt.Errorf("%w: issued/expiry timestamps must use exact UTC", ErrProtectionInvalid)
+	}
 	if err := validateProtectionEvidence(m.Evidence, m.CapabilityDigest); err != nil {
 		return err
 	}
@@ -405,16 +348,18 @@ func (m ProtectionCapabilityMatrix) validate() error {
 		return fmt.Errorf("%w: no capability rows", ErrProtectionInvalid)
 	}
 	seen := map[string]bool{}
+	previousKey := ""
 	for i, c := range m.Capabilities {
 		if err := c.validate(); err != nil {
 			return fmt.Errorf("%w: capability[%d]: %v", ErrProtectionInvalid, i, err)
 		}
 		account, _ := canonicalProtectionAccount(c.AccountRef)
-		key := strings.Join([]string{account, c.Profile, string(c.Market), string(c.Session), string(c.ConditionalType), string(c.OrderType), string(c.Trigger.Source)}, "\x00")
-		if seen[key] {
-			return fmt.Errorf("%w: duplicate capability row %d", ErrProtectionInvalid, i)
+		key := protectionCapabilitySortKey(account, c)
+		if seen[key] || (i > 0 && key <= previousKey) {
+			return fmt.Errorf("%w: duplicate or unsorted capability row %d", ErrProtectionInvalid, i)
 		}
 		seen[key] = true
+		previousKey = key
 	}
 	canonical, err := canonicalProtectionMatrix(m)
 	if err != nil {
@@ -424,6 +369,10 @@ func (m ProtectionCapabilityMatrix) validate() error {
 		return fmt.Errorf("%w: capability_digest does not bind canonical matrix", ErrProtectionInvalid)
 	}
 	return nil
+}
+
+func protectionCapabilitySortKey(account string, c ConditionalCapability) string {
+	return strings.Join([]string{account, c.Profile, string(c.Market), string(c.Session), string(c.ConditionalType), string(c.OrderType), string(c.Trigger.Source)}, "\x00")
 }
 
 func canonicalProtectionMatrix(m ProtectionCapabilityMatrix) ([]byte, error) {
@@ -451,8 +400,9 @@ func canonicalProtectionMatrix(m ProtectionCapabilityMatrix) ([]byte, error) {
 func validateProtectionEvidence(evidence []ProtectionEvidence, capabilityDigest string) error {
 	want := map[ProtectionTool]bool{ToolVerifyExecutionCapability: true, ToolVerifyObservesTrigger: true}
 	seen := map[ProtectionTool]bool{}
+	previous := ProtectionTool("")
 	for i, e := range evidence {
-		if !want[e.Tool] || seen[e.Tool] {
+		if !want[e.Tool] || seen[e.Tool] || (i > 0 && e.Tool <= previous) {
 			return fmt.Errorf("%w: evidence[%d] has unknown or duplicate tool %q", ErrProtectionInvalid, i, e.Tool)
 		}
 		if e.Version == "" || e.Version != strings.TrimSpace(e.Version) || !validSHA256(e.Build) || !validSHA256(e.Digest) || e.CapabilityDigest != capabilityDigest {
@@ -462,6 +412,7 @@ func validateProtectionEvidence(evidence []ProtectionEvidence, capabilityDigest 
 			return fmt.Errorf("%w: evidence[%d] source %q is not the exact tool evidence basename", ErrProtectionInvalid, i, e.Source)
 		}
 		seen[e.Tool] = true
+		previous = e.Tool
 	}
 	for tool := range want {
 		if !seen[tool] {
@@ -544,10 +495,10 @@ func (c ConditionalCapability) validate() error {
 	return nil
 }
 
-func (m ProtectionCapabilityMatrix) verifyScope(scope ProtectionScope) error {
+func (m ProtectionCapabilityMatrix) verifyScope(scope ProtectionScope) (ConditionalCapability, error) {
 	scopeAccount, err := canonicalProtectionAccount(scope.AccountRef)
 	if err != nil || scope.Profile == "" || scope.Profile != strings.TrimSpace(scope.Profile) {
-		return fmt.Errorf("%w: malformed runtime account/profile", ErrProtectionScope)
+		return ConditionalCapability{}, fmt.Errorf("%w: malformed runtime account/profile", ErrProtectionScope)
 	}
 	var matched *ConditionalCapability
 	for i := range m.Capabilities {
@@ -559,43 +510,33 @@ func (m ProtectionCapabilityMatrix) verifyScope(scope ProtectionScope) error {
 		}
 	}
 	if matched == nil {
-		return fmt.Errorf("%w: account/profile/market/session/type/trigger/quantity did not match", ErrProtectionScope)
+		return ConditionalCapability{}, fmt.Errorf("%w: account/profile/market/session/type/trigger/quantity did not match", ErrProtectionScope)
 	}
 	if len(scope.Tools) != 2 {
-		return fmt.Errorf("%w: both verifier tool builds are required", ErrProtectionScope)
+		return ConditionalCapability{}, fmt.Errorf("%w: both verifier tool builds are required", ErrProtectionScope)
 	}
 	for _, e := range m.Evidence {
 		want, ok := scope.Tools[e.Tool]
 		if !ok || want.Version != e.Version || want.Build != e.Build {
-			return fmt.Errorf("%w: %s tool/build mismatch", ErrProtectionScope, e.Tool)
+			return ConditionalCapability{}, fmt.Errorf("%w: %s tool/build mismatch", ErrProtectionScope, e.Tool)
 		}
 	}
-	return nil
+	return *matched, nil
 }
 
-// canonicalProtectionAccount accepts only the deliberately narrow protection
-// account grammar: 8-14 digits, optionally grouped by single hyphens. It does
-// not inherit the legacy attestation parser's arbitrary-character removal.
+// canonicalProtectionAccount accepts one semantic spelling: 8-14 ASCII digits
+// with no separators. It never normalizes aliases.
 func canonicalProtectionAccount(ref string) (string, error) {
 	if ref == "" || ref != strings.TrimSpace(ref) {
 		return "", errors.New("empty or padded account reference")
 	}
-	digits := make([]byte, 0, len(ref))
-	previousHyphen := false
+	if len(ref) < 8 || len(ref) > 14 {
+		return "", errors.New("account digit count outside 8-14")
+	}
 	for i := 0; i < len(ref); i++ {
-		ch := ref[i]
-		switch {
-		case ch >= '0' && ch <= '9':
-			digits = append(digits, ch)
-			previousHyphen = false
-		case ch == '-' && i > 0 && i < len(ref)-1 && !previousHyphen:
-			previousHyphen = true
-		default:
+		if ref[i] < '0' || ref[i] > '9' {
 			return "", errors.New("invalid account character or separator")
 		}
 	}
-	if len(digits) < 8 || len(digits) > 14 {
-		return "", errors.New("account digit count outside 8-14")
-	}
-	return string(digits), nil
+	return ref, nil
 }

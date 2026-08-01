@@ -10,21 +10,22 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
 const SerializerVersion = 1
 
 var (
-	ErrInvalidSaga       = errors.New("protection: invalid saga")
-	ErrInvalidTransition = errors.New("protection: invalid saga transition")
-	ErrWeakerProtection  = errors.New("protection: replacement would weaken protection")
-	ErrOversell          = errors.New("protection: sell claims exceed the holding")
-	ErrInvalidBody       = errors.New("protection: invalid conditional body")
-	ErrConcurrentUpdate  = errors.New("protection: concurrent saga update")
-	ErrImmutableIdentity = errors.New("protection: immutable saga identity changed")
-	ErrMixedScope        = errors.New("protection: mixed reconciliation scope")
-	ErrDuplicateBrokerID = errors.New("protection: duplicate broker identity")
+	ErrInvalidSaga          = errors.New("protection: invalid saga")
+	ErrInvalidTransition    = errors.New("protection: invalid saga transition")
+	ErrWeakerProtection     = errors.New("protection: replacement would weaken protection")
+	ErrOversell             = errors.New("protection: sell claims exceed the holding")
+	ErrInvalidBody          = errors.New("protection: invalid conditional body")
+	ErrConcurrentUpdate     = errors.New("protection: concurrent saga update")
+	ErrMixedScope           = errors.New("protection: mixed reconciliation scope")
+	ErrDuplicateBrokerID    = errors.New("protection: duplicate broker identity")
+	ErrFlattenAuthorization = errors.New("protection: flatten authorization is absent, expired, mismatched, or spent")
 )
 
 type Market string
@@ -119,23 +120,23 @@ func Transition(in Saga, event Event) (Saga, error) {
 
 	switch event.Kind {
 	case EventBeginRegistration:
-		if in.State != StatePlanned || strings.TrimSpace(event.AttemptID) == "" {
+		if in.State != StatePlanned || strings.TrimSpace(event.AttemptID) == "" || event.BrokerID != "" {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		out.State, out.AttemptID = StateRegistering, event.AttemptID
 	case EventRegistrationActive:
-		if in.State != StateRegistering || strings.TrimSpace(event.BrokerID) == "" {
+		if in.State != StateRegistering || event.AttemptID != in.AttemptID || strings.TrimSpace(event.BrokerID) == "" {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		out.State, out.BrokerID = StateActive, event.BrokerID
 	case EventMutationUnknown:
-		if in.State != StateRegistering && in.State != StateReplacing {
+		if (in.State != StateRegistering && in.State != StateReplacing) || event.AttemptID != in.AttemptID || event.BrokerID != "" {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		out.State = StateInDoubt
 		out.ReconcileReason = "MUTATION_RESULT_UNKNOWN"
 	case EventBeginReplace:
-		if in.State != StateActive || strings.TrimSpace(event.AttemptID) == "" {
+		if in.State != StateActive || strings.TrimSpace(event.AttemptID) == "" || event.AttemptID == in.AttemptID || event.BrokerID != "" {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		if event.Trigger < in.Trigger {
@@ -154,7 +155,7 @@ func Transition(in Saga, event Event) (Saga, error) {
 		out.PendingTrigger = event.Trigger
 		out.PendingQuantity = quantity
 	case EventReplaceActive:
-		if in.State != StateReplacing || strings.TrimSpace(event.BrokerID) == "" {
+		if in.State != StateReplacing || event.AttemptID != in.AttemptID || strings.TrimSpace(event.BrokerID) == "" {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		out.State = StateActive
@@ -165,12 +166,12 @@ func Transition(in Saga, event Event) (Saga, error) {
 		out.PendingQuantity = 0
 		out.Generation++
 	case EventTriggerObserved:
-		if in.State != StateActive {
+		if in.State != StateActive || event.BrokerID != in.BrokerID || event.AttemptID != "" {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		out.State = StateTriggered
 	case EventClose:
-		if in.State != StateTriggered && in.State != StateReconcile {
+		if (in.State != StateTriggered && in.State != StateReconcile) || event.BrokerID != in.BrokerID || event.AttemptID != "" {
 			return in, invalidTransition(in.State, event.Kind)
 		}
 		out.State = StateClosed
@@ -373,9 +374,41 @@ type FlattenScope struct {
 	BrokerID string
 }
 
-func DecideFlatten(start, deadline time.Time, target FlattenScope, cancel CancelObservation, sellable SellableObservation, required int64) FlattenDecision {
-	if start.IsZero() || deadline.IsZero() || start.After(deadline) || deadline.Sub(start) > 2*time.Second || target.Scope.Validate() != nil || target.BrokerID == "" || required < 1 || !cancel.Terminal || cancel.Triggered || cancel.At.IsZero() || sellable.At.IsZero() || cancel.At.Before(start) || sellable.At.Before(cancel.At) || cancel.At.After(deadline) || sellable.At.After(deadline) || !cancel.Scope.equal(target.Scope) || !sellable.Scope.equal(target.Scope) || cancel.BrokerID != target.BrokerID || sellable.BrokerID != target.BrokerID || sellable.Quantity < required {
-		return FlattenInDoubt
+type flattenPermit struct {
+	consumed  atomic.Bool
+	issuedAt  time.Time
+	expiresAt time.Time
+	target    FlattenScope
+	required  int64
+	clock     func() time.Time
+}
+
+// FlattenAuthorization is opaque and copy-safe: every copy shares the same
+// one-shot consumption state. It carries no broker mutation method.
+type FlattenAuthorization struct{ permit *flattenPermit }
+
+func (a FlattenAuthorization) Consume(target FlattenScope, required int64) error {
+	permit := a.permit
+	if permit == nil || permit.clock == nil || target != permit.target || required != permit.required {
+		return ErrFlattenAuthorization
 	}
-	return FlattenAllowed
+	decisionAt := permit.clock()
+	if decisionAt.IsZero() || decisionAt.Before(permit.issuedAt) || decisionAt.After(permit.expiresAt) {
+		return ErrFlattenAuthorization
+	}
+	if !permit.consumed.CompareAndSwap(false, true) {
+		return ErrFlattenAuthorization
+	}
+	return nil
+}
+
+func DecideFlatten(start, deadline time.Time, target FlattenScope, cancel CancelObservation, sellable SellableObservation, required int64) (FlattenDecision, FlattenAuthorization) {
+	return decideFlatten(start, deadline, time.Now(), target, cancel, sellable, required, time.Now)
+}
+
+func decideFlatten(start, deadline, decisionAt time.Time, target FlattenScope, cancel CancelObservation, sellable SellableObservation, required int64, clock func() time.Time) (FlattenDecision, FlattenAuthorization) {
+	if start.IsZero() || deadline.IsZero() || decisionAt.IsZero() || start.After(deadline) || deadline.Sub(start) > 2*time.Second || decisionAt.Before(start) || decisionAt.After(deadline) || target.Scope.Validate() != nil || target.BrokerID == "" || required < 1 || !cancel.Terminal || cancel.Triggered || cancel.At.IsZero() || sellable.At.IsZero() || cancel.At.Before(start) || sellable.At.Before(cancel.At) || decisionAt.Before(sellable.At) || cancel.At.After(deadline) || sellable.At.After(deadline) || !cancel.Scope.equal(target.Scope) || !sellable.Scope.equal(target.Scope) || cancel.BrokerID != target.BrokerID || sellable.BrokerID != target.BrokerID || sellable.Quantity < required {
+		return FlattenInDoubt, FlattenAuthorization{}
+	}
+	return FlattenAllowed, FlattenAuthorization{permit: &flattenPermit{issuedAt: decisionAt, expiresAt: deadline, target: target, required: required, clock: clock}}
 }

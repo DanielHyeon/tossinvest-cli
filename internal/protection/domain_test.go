@@ -3,6 +3,8 @@ package protection
 import (
 	"context"
 	"errors"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -22,7 +24,7 @@ func TestSagaRegistrationCrashWindowsAreFailClosed(t *testing.T) {
 	if err != nil || s.State != StateRegistering || s.AttemptID != "a-1" {
 		t.Fatalf("begin = %+v, %v", s, err)
 	}
-	s, err = Transition(s, Event{Kind: EventMutationUnknown, At: now.Add(2 * time.Millisecond)})
+	s, err = Transition(s, Event{Kind: EventMutationUnknown, At: now.Add(2 * time.Millisecond), AttemptID: "a-1"})
 	if err != nil || s.State != StateInDoubt {
 		t.Fatalf("unknown = %+v, %v", s, err)
 	}
@@ -31,9 +33,30 @@ func TestSagaRegistrationCrashWindowsAreFailClosed(t *testing.T) {
 	}
 }
 
-func TestSagaActiveReplaceIsMonotonicAndKeepsBothIDs(t *testing.T) {
+func TestTransitionBindsMutationAttemptAndBrokerLineage(t *testing.T) {
+	registering, err := Transition(planned(), Event{Kind: EventBeginRegistration, At: now.Add(time.Millisecond), AttemptID: "a-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Transition(registering, Event{Kind: EventRegistrationActive, At: now.Add(2 * time.Millisecond), AttemptID: "a-forged", BrokerID: "b-forged"}); !errors.Is(err, ErrInvalidTransition) {
+		t.Fatalf("forged registration lineage = %v", err)
+	}
+	active, err := Transition(registering, Event{Kind: EventRegistrationActive, At: now.Add(2 * time.Millisecond), AttemptID: "a-1", BrokerID: "b-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Transition(active, Event{Kind: EventTriggerObserved, At: now.Add(3 * time.Millisecond), BrokerID: "b-2"}); !errors.Is(err, ErrInvalidTransition) {
+		t.Fatalf("forged trigger lineage = %v", err)
+	}
+	triggered, err := Transition(active, Event{Kind: EventTriggerObserved, At: now.Add(3 * time.Millisecond), BrokerID: "b-1"})
+	if err != nil || triggered.State != StateTriggered || triggered.BrokerID != "b-1" {
+		t.Fatalf("valid trigger lineage = %+v, %v", triggered, err)
+	}
+}
+
+func TestSaga_ActiveReplace_MonotonicAndKeepsBothIDs(t *testing.T) {
 	s, _ := Transition(planned(), Event{Kind: EventBeginRegistration, At: now, AttemptID: "a-1"})
-	s, _ = Transition(s, Event{Kind: EventRegistrationActive, At: now.Add(time.Millisecond), BrokerID: "old"})
+	s, _ = Transition(s, Event{Kind: EventRegistrationActive, At: now.Add(time.Millisecond), AttemptID: "a-1", BrokerID: "old"})
 	if _, err := Transition(s, Event{Kind: EventBeginReplace, At: now.Add(2 * time.Millisecond), Trigger: 69999, AttemptID: "a-2"}); !errors.Is(err, ErrWeakerProtection) {
 		t.Fatalf("weaker replace = %v", err)
 	}
@@ -41,7 +64,7 @@ func TestSagaActiveReplaceIsMonotonicAndKeepsBothIDs(t *testing.T) {
 	if err != nil || s.State != StateReplacing || s.PreviousBrokerID != "old" {
 		t.Fatalf("replace begin = %+v, %v", s, err)
 	}
-	s, err = Transition(s, Event{Kind: EventReplaceActive, At: now.Add(4 * time.Millisecond), BrokerID: "new"})
+	s, err = Transition(s, Event{Kind: EventReplaceActive, At: now.Add(4 * time.Millisecond), AttemptID: "a-3", BrokerID: "new"})
 	if err != nil || s.State != StateActive || s.BrokerID != "new" || s.PreviousBrokerID != "old" || s.Generation != 2 {
 		t.Fatalf("replace active = %+v, %v", s, err)
 	}
@@ -178,8 +201,36 @@ func TestFlattenDecisionRequiresTerminalCancelAndFreshSellableSnapshot(t *testin
 	scope := Scope{AccountRef: "acct-1", Profile: "prod-kr", Market: MarketKR, Symbol: "005930"}
 	target := FlattenScope{Scope: scope, BrokerID: "b-1"}
 	deadline := now.Add(2 * time.Second)
-	if got := DecideFlatten(now, deadline, target, CancelObservation{Scope: scope, BrokerID: "b-1", Terminal: true, At: now.Add(time.Second)}, SellableObservation{Scope: scope, BrokerID: "b-1", Quantity: 3, At: deadline}, 3); got != FlattenAllowed {
+	decisionAt := deadline
+	got, permit := decideFlatten(now, deadline, decisionAt, target, CancelObservation{Scope: scope, BrokerID: "b-1", Terminal: true, At: now.Add(time.Second)}, SellableObservation{Scope: scope, BrokerID: "b-1", Quantity: 3, At: deadline}, 3, func() time.Time { return deadline })
+	if got != FlattenAllowed {
 		t.Fatalf("decision = %s, want allowed", got)
+	}
+	permitCopy := permit
+	if err := permit.Consume(target, 3); err != nil {
+		t.Fatalf("consume exact permit: %v", err)
+	}
+	if err := permitCopy.Consume(target, 3); !errors.Is(err, ErrFlattenAuthorization) {
+		t.Fatalf("copied permit replay = %v", err)
+	}
+	for _, tc := range []struct {
+		name     string
+		target   FlattenScope
+		quantity int64
+	}{
+		{"wrong account", FlattenScope{Scope: Scope{AccountRef: "acct-2", Profile: "prod-kr", Market: MarketKR, Symbol: "005930"}, BrokerID: "b-1"}, 3},
+		{"wrong broker", FlattenScope{Scope: scope, BrokerID: "b-2"}, 3},
+		{"wrong quantity", target, 2},
+	} {
+		t.Run("permit "+tc.name, func(t *testing.T) {
+			_, scopedPermit := decideFlatten(now, deadline, deadline, target,
+				CancelObservation{Scope: scope, BrokerID: "b-1", Terminal: true, At: now.Add(time.Second)},
+				SellableObservation{Scope: scope, BrokerID: "b-1", Quantity: 3, At: deadline}, 3,
+				func() time.Time { return deadline })
+			if err := scopedPermit.Consume(tc.target, tc.quantity); !errors.Is(err, ErrFlattenAuthorization) {
+				t.Fatalf("consume = %v, want ErrFlattenAuthorization", err)
+			}
+		})
 	}
 	for _, tc := range []struct {
 		name string
@@ -195,13 +246,40 @@ func TestFlattenDecisionRequiresTerminalCancelAndFreshSellableSnapshot(t *testin
 		{"wrong broker", CancelObservation{Scope: scope, BrokerID: "other", Terminal: true, At: now.Add(time.Second)}, SellableObservation{Scope: scope, BrokerID: "b-1", Quantity: 3, At: deadline}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := DecideFlatten(now, deadline, target, tc.c, tc.s, 3); got != FlattenInDoubt {
+			if got, _ := decideFlatten(now, deadline, deadline, target, tc.c, tc.s, 3, func() time.Time { return deadline }); got != FlattenInDoubt {
 				t.Fatalf("decision = %s, want in doubt", got)
 			}
 		})
 	}
-	if got := DecideFlatten(now, deadline.Add(time.Nanosecond), target, CancelObservation{Scope: scope, BrokerID: "b-1", Terminal: true, At: now.Add(time.Second)}, SellableObservation{Scope: scope, BrokerID: "b-1", Quantity: 3, At: deadline}, 3); got != FlattenInDoubt {
+	if got, _ := decideFlatten(now, deadline.Add(time.Nanosecond), deadline, target, CancelObservation{Scope: scope, BrokerID: "b-1", Terminal: true, At: now.Add(time.Second)}, SellableObservation{Scope: scope, BrokerID: "b-1", Quantity: 3, At: deadline}, 3, func() time.Time { return deadline }); got != FlattenInDoubt {
 		t.Fatalf("window beyond two seconds = %s", got)
+	}
+	for _, tc := range []struct {
+		name       string
+		decisionAt time.Time
+		cancelAt   time.Time
+		sellableAt time.Time
+	}{
+		{"decision after deadline", deadline.Add(time.Nanosecond), now.Add(time.Second), deadline},
+		{"decision clock rollback", now.Add(time.Second), now.Add(1500 * time.Millisecond), now.Add(1600 * time.Millisecond)},
+		{"cancel before start", deadline, now.Add(-time.Nanosecond), deadline},
+		{"sellable after decision", now.Add(1500 * time.Millisecond), now.Add(time.Second), now.Add(1600 * time.Millisecond)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, _ := decideFlatten(now, deadline, tc.decisionAt, target,
+				CancelObservation{Scope: scope, BrokerID: "b-1", Terminal: true, At: tc.cancelAt},
+				SellableObservation{Scope: scope, BrokerID: "b-1", Quantity: 3, At: tc.sellableAt}, 3,
+				func() time.Time { return tc.decisionAt })
+			if got != FlattenInDoubt {
+				t.Fatalf("decision = %s", got)
+			}
+		})
+	}
+	_, expired := decideFlatten(now, deadline, deadline, target,
+		CancelObservation{Scope: scope, BrokerID: "b-1", Terminal: true, At: now.Add(time.Second)},
+		SellableObservation{Scope: scope, BrokerID: "b-1", Quantity: 3, At: deadline}, 3, func() time.Time { return now.Add(time.Hour) })
+	if err := expired.Consume(target, 3); !errors.Is(err, ErrFlattenAuthorization) {
+		t.Fatalf("one-hour replay = %v", err)
 	}
 }
 
@@ -236,7 +314,7 @@ func TestSagaValidateEnforcesStateSpecificFields(t *testing.T) {
 func TestTransitionValidatesItsOutput(t *testing.T) {
 	s := planned()
 	s, _ = Transition(s, Event{Kind: EventBeginRegistration, At: now.Add(time.Millisecond), AttemptID: "a-1"})
-	s, _ = Transition(s, Event{Kind: EventRegistrationActive, At: now.Add(2 * time.Millisecond), BrokerID: "b-1"})
+	s, _ = Transition(s, Event{Kind: EventRegistrationActive, At: now.Add(2 * time.Millisecond), AttemptID: "a-1", BrokerID: "b-1"})
 	s, _ = Transition(s, Event{Kind: EventBeginReplace, At: now.Add(3 * time.Millisecond), AttemptID: "a-2", Trigger: 71000})
 	if _, err := Transition(s, Event{Kind: EventTriggerObserved, At: now.Add(4 * time.Millisecond)}); !errors.Is(err, ErrInvalidTransition) {
 		t.Fatalf("replace trigger produced invalid state: %v", err)
@@ -274,19 +352,76 @@ func TestRepositoryRoundTripAndOptimisticGeneration(t *testing.T) {
 	if err != nil || got.ID != s.ID || got.State != StatePlanned {
 		t.Fatalf("Get = %+v, %v", got, err)
 	}
-	updated, err := Transition(s, Event{Kind: EventBeginRegistration, At: now.Add(time.Second), AttemptID: "a-1"})
+	updated, err := repo.BeginRegistration(ctx, s.ID, s.Revision, now.Add(time.Second), "a-1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Update(ctx, s.Revision, updated); err != nil {
-		t.Fatal(err)
+	if updated.State != StateRegistering || updated.AttemptID != "a-1" {
+		t.Fatalf("updated = %+v", updated)
 	}
-	if err := repo.Update(ctx, s.Revision, updated); !errors.Is(err, ErrConcurrentUpdate) {
-		t.Fatalf("stale update = %v", err)
+	retried, err := repo.BeginRegistration(ctx, s.ID, s.Revision, now.Add(time.Second), "a-1")
+	if err != nil || retried.Revision != updated.Revision {
+		t.Fatalf("idempotent retry = %+v, %v", retried, err)
 	}
 }
 
-func TestRepositoryRejectsIdentityMutationAndStateJump(t *testing.T) {
+func TestRepositoryMigratesV1RowsBeforeEventIdentityUse(t *testing.T) {
+	db := openTestDB(t)
+	if _, err := db.Exec(legacyProtectionSchema()); err != nil {
+		t.Fatal(err)
+	}
+	repo, err := NewRepository(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	s := planned()
+	if err := repo.Insert(ctx, s); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repo.BeginRegistration(ctx, s.ID, s.Revision, now.Add(time.Second), "a-1"); err != nil {
+		t.Fatalf("apply after v1 migration: %v", err)
+	}
+}
+
+func TestRepositoryRejectsUnverifiableV1EventLineage(t *testing.T) {
+	cases := []struct {
+		name   string
+		mutate func(*Saga)
+	}{
+		{"active revision one", func(s *Saga) { s.State, s.AttemptID, s.BrokerID = StateActive, "a-legacy", "b-legacy" }},
+		{"registering revision one", func(s *Saga) { s.State, s.AttemptID = StateRegistering, "a-legacy" }},
+		{"planned revision greater than one", func(s *Saga) { s.Revision = 2 }},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			db := openTestDB(t)
+			if _, err := db.Exec(legacyProtectionSchema()); err != nil {
+				t.Fatal(err)
+			}
+			s := planned()
+			tc.mutate(&s)
+			if err := s.Validate(); err != nil {
+				t.Fatalf("legacy fixture invalid: %v", err)
+			}
+			if _, err := db.Exec(`INSERT INTO protection_sagas (
+ saga_id,account_ref,profile,market,symbol,generation,revision,state,trigger,quantity,
+ pending_trigger,pending_quantity,client_order_id,attempt_id,broker_id,previous_broker_id,reconcile_reason,updated_at
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, sagaValues(s)...); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := NewRepository(db); err == nil {
+				t.Fatal("unverifiable legacy lineage was accepted")
+			}
+		})
+	}
+}
+
+func legacyProtectionSchema() string {
+	return strings.Replace(schemaDDL, ",\n  last_event_kind TEXT NOT NULL DEFAULT '',\n  last_event_fingerprint TEXT NOT NULL DEFAULT ''", "", 1)
+}
+
+func TestRepositoryRejectsNonPlannedInsertAndForgedLineage(t *testing.T) {
 	db := openTestDB(t)
 	repo, err := NewRepository(db)
 	if err != nil {
@@ -297,25 +432,204 @@ func TestRepositoryRejectsIdentityMutationAndStateJump(t *testing.T) {
 	if err := repo.Insert(ctx, s); err != nil {
 		t.Fatal(err)
 	}
-	mutated, _ := Transition(s, Event{Kind: EventBeginRegistration, At: now.Add(time.Second), AttemptID: "a-1"})
-	mutated.AccountRef = "acct-2"
-	if err := repo.Update(ctx, s.Revision, mutated); !errors.Is(err, ErrImmutableIdentity) {
-		t.Fatalf("identity mutation = %v", err)
+	registering, _ := Transition(s, Event{Kind: EventBeginRegistration, At: now.Add(time.Second), AttemptID: "a-1"})
+	registering.ID = "p-registering"
+	registering.ClientOrderID = "protect:p-registering:1"
+	if err := repo.Insert(ctx, registering); !errors.Is(err, ErrInvalidTransition) {
+		t.Fatalf("REGISTERING insert = %v", err)
 	}
-	jump := s
-	jump.State, jump.AttemptID, jump.BrokerID, jump.UpdatedAt = StateActive, "a-1", "b-1", now.Add(time.Second)
-	if err := repo.Update(ctx, s.Revision, jump); !errors.Is(err, ErrInvalidTransition) {
-		t.Fatalf("state jump = %v", err)
+	registered, err := repo.BeginRegistration(ctx, s.ID, s.Revision, now.Add(time.Second), "a-1")
+	if err != nil {
+		t.Fatal(err)
 	}
-	changed, _ := Transition(s, Event{Kind: EventBeginRegistration, At: now.Add(time.Second), AttemptID: "a-1"})
-	changed.Trigger++
-	if err := repo.Update(ctx, s.Revision, changed); !errors.Is(err, ErrInvalidTransition) {
-		t.Fatalf("trigger changed outside replacement = %v", err)
+	if _, err := repo.MarkRegistrationActive(ctx, s.ID, registered.Revision, now.Add(2*time.Second), "a-forged", "b-forged"); !errors.Is(err, ErrInvalidTransition) {
+		t.Fatalf("forged registration result = %v", err)
 	}
-	changed, _ = Transition(s, Event{Kind: EventBeginRegistration, At: now.Add(time.Second), AttemptID: "a-1"})
-	changed.Revision++
-	if err := repo.Update(ctx, s.Revision, changed); !errors.Is(err, ErrConcurrentUpdate) {
-		t.Fatalf("input revision mismatch = %v", err)
+}
+
+func TestRepositoryEventSpecificMethodsPreserveLineage(t *testing.T) {
+	db := openTestDB(t)
+	repo, err := NewRepository(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	s := planned()
+	if err := repo.Insert(ctx, s); err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.BeginRegistration(ctx, s.ID, s.Revision, now.Add(time.Second), "a-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.MarkRegistrationActive(ctx, s.ID, s.Revision, now.Add(2*time.Second), "a-1", "b-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.BeginReplace(ctx, s.ID, s.Revision, now.Add(3*time.Second), "a-2", 71000, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.MarkReplaceActive(ctx, s.ID, s.Revision, now.Add(4*time.Second), "a-2", "b-2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.MarkTriggerObserved(ctx, s.ID, s.Revision, now.Add(5*time.Second), "b-2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.Close(ctx, s.ID, s.Revision, now.Add(6*time.Second), "b-2")
+	if err != nil || s.State != StateClosed || s.Revision != 7 {
+		t.Fatalf("closed saga = %+v, %v", s, err)
+	}
+
+	unknown := planned()
+	unknown.ID, unknown.ClientOrderID = "p-unknown", "protect:p-unknown:1"
+	if err := repo.Insert(ctx, unknown); err != nil {
+		t.Fatal(err)
+	}
+	unknown, err = repo.BeginRegistration(ctx, unknown.ID, unknown.Revision, now.Add(time.Second), "a-u")
+	if err != nil {
+		t.Fatal(err)
+	}
+	unknown, err = repo.MarkMutationUnknown(ctx, unknown.ID, unknown.Revision, now.Add(2*time.Second), "a-u")
+	if err != nil || unknown.State != StateInDoubt {
+		t.Fatalf("unknown saga = %+v, %v", unknown, err)
+	}
+	unknown, err = repo.MarkDiscrepancy(ctx, unknown.ID, unknown.Revision, now.Add(3*time.Second), "MANUAL_RECONCILE")
+	if err != nil || unknown.State != StateReconcile {
+		t.Fatalf("reconcile saga = %+v, %v", unknown, err)
+	}
+}
+
+func TestRepositoryCASUsesRealConcurrentConnections(t *testing.T) {
+	dbA, dbB := openConcurrentTestDBs(t)
+	repoA, err := NewRepository(dbA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repoB, err := NewRepository(dbB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if err := repoA.Insert(ctx, planned()); err != nil {
+		t.Fatal(err)
+	}
+	start := make(chan struct{})
+	results := make(chan error, 2)
+	var wg sync.WaitGroup
+	for index, attemptID := range []string{"a-1", "a-2"} {
+		attemptID, repo := attemptID, repoA
+		if index == 1 {
+			repo = repoB
+		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			_, applyErr := repo.BeginRegistration(ctx, "p-1", 1, now.Add(time.Second), attemptID)
+			results <- applyErr
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(results)
+	var succeeded, conflicted int
+	for result := range results {
+		switch {
+		case result == nil:
+			succeeded++
+		case errors.Is(result, ErrConcurrentUpdate):
+			conflicted++
+		default:
+			t.Fatalf("unexpected concurrent result: %v", result)
+		}
+	}
+	if succeeded != 1 || conflicted != 1 {
+		t.Fatalf("success=%d conflict=%d", succeeded, conflicted)
+	}
+	got, err := repoA.Get(ctx, "p-1")
+	if err != nil || got.Revision != 2 || (got.AttemptID != "a-1" && got.AttemptID != "a-2") {
+		t.Fatalf("stored = %+v, %v", got, err)
+	}
+}
+
+func TestRepositoryConcurrentSameEventIsIdempotent(t *testing.T) {
+	dbA, dbB := openConcurrentTestDBs(t)
+	repoA, err := NewRepository(dbA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repoB, err := NewRepository(dbB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if err := repoA.Insert(ctx, planned()); err != nil {
+		t.Fatal(err)
+	}
+	start := make(chan struct{})
+	results := make(chan error, 2)
+	var wg sync.WaitGroup
+	for i := 0; i < 2; i++ {
+		repo := repoA
+		if i == 1 {
+			repo = repoB
+		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			_, applyErr := repo.BeginRegistration(ctx, "p-1", 1, now.Add(time.Second), "a-1")
+			results <- applyErr
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(results)
+	for result := range results {
+		if result != nil {
+			t.Fatalf("idempotent concurrent result: %v", result)
+		}
+	}
+	got, err := repoA.Get(ctx, "p-1")
+	if err != nil || got.Revision != 2 || got.AttemptID != "a-1" {
+		t.Fatalf("stored = %+v, %v", got, err)
+	}
+}
+
+func TestRepositoryStaleRetryCannotMasqueradeAsDifferentEventKind(t *testing.T) {
+	db := openTestDB(t)
+	repo, err := NewRepository(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	s := planned()
+	if err := repo.Insert(ctx, s); err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.BeginRegistration(ctx, s.ID, s.Revision, now.Add(time.Second), "a-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.MarkRegistrationActive(ctx, s.ID, s.Revision, now.Add(2*time.Second), "a-1", "b-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err = repo.BeginReplace(ctx, s.ID, s.Revision, now.Add(3*time.Second), "a-2", 71000, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	beforeReplaceActiveRevision := s.Revision
+	replaceActiveAt := now.Add(4 * time.Second)
+	s, err = repo.MarkReplaceActive(ctx, s.ID, s.Revision, replaceActiveAt, "a-2", "b-2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repo.MarkRegistrationActive(ctx, s.ID, beforeReplaceActiveRevision, replaceActiveAt, "a-2", "b-2"); !errors.Is(err, ErrConcurrentUpdate) {
+		t.Fatalf("cross-event stale retry = %v, want ErrConcurrentUpdate", err)
 	}
 }
 

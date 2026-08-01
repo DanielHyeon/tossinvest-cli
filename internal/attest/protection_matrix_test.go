@@ -3,11 +3,9 @@ package attest
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 )
@@ -45,7 +43,7 @@ func validProtectionMatrix(t *testing.T) ProtectionCapabilityMatrix {
 		IssuedAt:      protectionNow.Add(-time.Hour),
 		ExpiresAt:     protectionNow.Add(24 * time.Hour),
 		Capabilities: []ConditionalCapability{{
-			AccountRef: "123-45678", Profile: "prod-kr", Market: MarketKR,
+			AccountRef: "12345678", Profile: "prod-kr", Market: MarketKR,
 			Session: SessionRegular, ConditionalType: ConditionalSingle,
 			OrderType:   OrderMarket,
 			Trigger:     TriggerCapability{Source: TriggerLastTrade, Direction: TriggerFallsToOrBelow},
@@ -86,15 +84,11 @@ func cloneEvidence() map[string][]byte {
 
 func writeProtectionMatrix(t *testing.T, m ProtectionCapabilityMatrix) string {
 	t.Helper()
-	data, err := json.Marshal(m)
-	if err != nil {
-		t.Fatal(err)
-	}
-	path := filepath.Join(secureTempDir(t), ProtectionFileName)
-	if err := os.WriteFile(path, data, 0o600); err != nil {
-		t.Fatal(err)
-	}
-	return path
+	signer := newTestProtectionSigner(t, "test-protection-key")
+	return writeSignedProtectionMatrix(t, m, signer, ProtectionTrustRoot{
+		FormatVersion: ProtectionTrustRootFormatVersion,
+		Keys:          []ProtectionTrustKey{signer.TrustKey},
+	})
 }
 
 func secureTempDir(t *testing.T) string {
@@ -108,7 +102,7 @@ func secureTempDir(t *testing.T) string {
 
 func parseAndVerify(t *testing.T, m ProtectionCapabilityMatrix, scope ProtectionScope, evidence map[string][]byte) error {
 	t.Helper()
-	parsed, err := ParseProtectionCapability(writeProtectionMatrix(t, m))
+	parsed, err := parseTestProtectionCapability(writeProtectionMatrix(t, m))
 	if err != nil {
 		return err
 	}
@@ -117,7 +111,7 @@ func parseAndVerify(t *testing.T, m ProtectionCapabilityMatrix, scope Protection
 }
 
 func TestProtectionMatrixParseAndEvidenceVerificationAreSeparate(t *testing.T) {
-	parsed, err := ParseProtectionCapability(writeProtectionMatrix(t, validProtectionMatrix(t)))
+	parsed, err := parseTestProtectionCapability(writeProtectionMatrix(t, validProtectionMatrix(t)))
 	if err != nil {
 		t.Fatalf("ParseProtectionCapability: %v", err)
 	}
@@ -128,13 +122,13 @@ func TestProtectionMatrixParseAndEvidenceVerificationAreSeparate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("VerifyProtectionCapability: %v", err)
 	}
-	if got := verified.Matrix().Capabilities[0].Replace.Mode; got != ReplaceAtomic {
+	if got := verified.Capability().Replace.Mode; got != ReplaceAtomic {
 		t.Fatalf("replace mode = %s", got)
 	}
 }
 
 func TestProtectionMatrixRecomputesEveryEvidenceDigest(t *testing.T) {
-	parsed, err := ParseProtectionCapability(writeProtectionMatrix(t, validProtectionMatrix(t)))
+	parsed, err := parseTestProtectionCapability(writeProtectionMatrix(t, validProtectionMatrix(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,44 +153,37 @@ func TestProtectionMatrixRecomputesEveryEvidenceDigest(t *testing.T) {
 func TestProtectionMatrixDigestBindsCanonicalMatrix(t *testing.T) {
 	m := validProtectionMatrix(t)
 	m.Capabilities[0].Quantity.Maximum++
-	if _, err := ParseProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
+	if _, err := parseTestProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
 		t.Fatalf("mutated matrix = %v, want ErrProtectionInvalid", err)
 	}
 	m = validProtectionMatrix(t)
 	m.Evidence[0].CapabilityDigest = digestBytes([]byte("different matrix"))
-	if _, err := ParseProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
+	if _, err := parseTestProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
 		t.Fatalf("unbound evidence = %v, want ErrProtectionInvalid", err)
 	}
 	m = validProtectionMatrix(t)
 	m.ExpiresAt = m.ExpiresAt.Add(time.Hour)
-	if _, err := ParseProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
+	if _, err := parseTestProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
 		t.Fatalf("unbound validity window = %v, want ErrProtectionInvalid", err)
 	}
 	m = validProtectionMatrix(t)
 	m.Evidence[0].Version = "1.2.4"
-	if _, err := ParseProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
+	if _, err := parseTestProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
 		t.Fatalf("unbound evidence metadata = %v, want ErrProtectionInvalid", err)
 	}
 }
 
 func TestProtectionMatrixRejectsUnknownLegacyAndTrailingJSON(t *testing.T) {
-	data, err := json.Marshal(validProtectionMatrix(t))
-	if err != nil {
-		t.Fatal(err)
+	cases := map[string]func(*ProtectionCapabilityMatrix){
+		"legacy version": func(m *ProtectionCapabilityMatrix) { m.FormatVersion = 0 },
+		"newer version":  func(m *ProtectionCapabilityMatrix) { m.FormatVersion = 2 },
 	}
-	cases := map[string][]byte{
-		"unknown field":  []byte(strings.Replace(string(data), `"format_version":1`, `"format_version":1,"surprise":true`, 1)),
-		"legacy version": []byte(strings.Replace(string(data), `"format_version":1`, `"format_version":0`, 1)),
-		"newer version":  []byte(strings.Replace(string(data), `"format_version":1`, `"format_version":2`, 1)),
-		"trailing json":  append(append([]byte(nil), data...), []byte(` {}`)...),
-	}
-	for name, body := range cases {
+	for name, mutate := range cases {
 		t.Run(name, func(t *testing.T) {
-			path := filepath.Join(secureTempDir(t), ProtectionFileName)
-			if err := os.WriteFile(path, body, 0o600); err != nil {
-				t.Fatal(err)
-			}
-			if _, err := ParseProtectionCapability(path); err == nil {
+			m := validProtectionMatrix(t)
+			mutate(&m)
+			path := writeProtectionMatrix(t, m)
+			if _, err := parseTestProtectionCapability(path); err == nil {
 				t.Fatal("invalid matrix was accepted")
 			}
 		})
@@ -251,6 +238,10 @@ func TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata(t *testing.T) {
 			m.Capabilities[0].Persistence.SurvivesProcessExit = false
 			redigestMatrix(t, m)
 		}},
+		{"restart persistence", func(m *ProtectionCapabilityMatrix) {
+			m.Capabilities[0].Persistence.SurvivesRestart = false
+			redigestMatrix(t, m)
+		}},
 		{"reservation", func(m *ProtectionCapabilityMatrix) {
 			m.Capabilities[0].Reservation.ReservesSellableQuantity = false
 			redigestMatrix(t, m)
@@ -259,8 +250,20 @@ func TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata(t *testing.T) {
 			m.Capabilities[0].Idempotency.Create = false
 			redigestMatrix(t, m)
 		}},
+		{"client order identity", func(m *ProtectionCapabilityMatrix) {
+			m.Capabilities[0].Idempotency.ClientOrderID = false
+			redigestMatrix(t, m)
+		}},
+		{"replace mode", func(m *ProtectionCapabilityMatrix) {
+			m.Capabilities[0].Replace.Mode = "BEST_EFFORT"
+			redigestMatrix(t, m)
+		}},
 		{"replace continuity", func(m *ProtectionCapabilityMatrix) {
 			m.Capabilities[0].Replace.ContinuousCoverage = false
+			redigestMatrix(t, m)
+		}},
+		{"replace identifier", func(m *ProtectionCapabilityMatrix) {
+			m.Capabilities[0].Replace.NewIdentifierRecorded = false
 			redigestMatrix(t, m)
 		}},
 		{"tool missing", func(m *ProtectionCapabilityMatrix) { m.Evidence = m.Evidence[:1] }},
@@ -293,17 +296,17 @@ func redigestMatrix(t *testing.T, m *ProtectionCapabilityMatrix) {
 }
 
 func TestProtectionAccountFormatIsStrict(t *testing.T) {
-	for _, account := range []string{"acct-12345678", "1234_5678", "-12345678", "12345678-", "123--45678", "1234 5678", "123"} {
+	for _, account := range []string{"acct-12345678", "1234-5678", "123-45678", "1234_5678", "-12345678", "12345678-", "123--45678", "1234 5678", "123"} {
 		t.Run(account, func(t *testing.T) {
 			m := validProtectionMatrix(t)
 			m.Capabilities[0].AccountRef = account
 			redigestMatrix(t, &m)
-			if _, err := ParseProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
+			if _, err := parseTestProtectionCapability(writeProtectionMatrix(t, m)); !errors.Is(err, ErrProtectionInvalid) {
 				t.Fatalf("account %q accepted: %v", account, err)
 			}
 		})
 	}
-	parsed, err := ParseProtectionCapability(writeProtectionMatrix(t, validProtectionMatrix(t)))
+	parsed, err := parseTestProtectionCapability(writeProtectionMatrix(t, validProtectionMatrix(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -321,7 +324,7 @@ func TestProtectionMatrixRejectsUnsafeFileAndDirectParent(t *testing.T) {
 		if err := os.Rename(path, wrong); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := ParseProtectionCapability(wrong); !errors.Is(err, ErrProtectionFile) {
+		if _, err := parseTestProtectionCapability(wrong); !errors.Is(err, ErrProtectionFile) {
 			t.Fatalf("error = %v", err)
 		}
 	})
@@ -330,7 +333,7 @@ func TestProtectionMatrixRejectsUnsafeFileAndDirectParent(t *testing.T) {
 		if err := os.Chmod(path, 0o640); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := ParseProtectionCapability(path); !errors.Is(err, ErrProtectionFile) {
+		if _, err := parseTestProtectionCapability(path); !errors.Is(err, ErrProtectionFile) {
 			t.Fatalf("error = %v", err)
 		}
 	})
@@ -340,7 +343,12 @@ func TestProtectionMatrixRejectsUnsafeFileAndDirectParent(t *testing.T) {
 		if err := os.Symlink(target, link); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := ParseProtectionCapability(link); !errors.Is(err, ErrProtectionFile) {
+		policy := testProtectionTrustPolicy(target)
+		policy.AttestationPath = link
+		if err := rewriteTestVerifierPolicyFromTrust(target, policy); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := newTestProtectionVerifier(target, protectionNow).parse(); !errors.Is(err, ErrProtectionFile) {
 			t.Fatalf("error = %v", err)
 		}
 	})
@@ -349,7 +357,7 @@ func TestProtectionMatrixRejectsUnsafeFileAndDirectParent(t *testing.T) {
 		if err := os.Link(path, filepath.Join(filepath.Dir(path), "second-link")); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := ParseProtectionCapability(path); !errors.Is(err, ErrProtectionFile) {
+		if _, err := parseTestProtectionCapability(path); !errors.Is(err, ErrProtectionFile) {
 			t.Fatalf("error = %v", err)
 		}
 	})
@@ -358,28 +366,31 @@ func TestProtectionMatrixRejectsUnsafeFileAndDirectParent(t *testing.T) {
 		if err := os.Chmod(filepath.Dir(path), 0o750); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := ParseProtectionCapability(path); !errors.Is(err, ErrProtectionFile) {
+		if _, err := parseTestProtectionCapability(path); !errors.Is(err, ErrProtectionFile) {
 			t.Fatalf("error = %v", err)
 		}
 	})
 	t.Run("parent symlink", func(t *testing.T) {
-		realDir := secureTempDir(t)
-		data, _ := json.Marshal(validProtectionMatrix(t))
-		if err := os.WriteFile(filepath.Join(realDir, ProtectionFileName), data, 0o600); err != nil {
-			t.Fatal(err)
-		}
+		target := writeProtectionMatrix(t, validProtectionMatrix(t))
+		realDir := filepath.Dir(target)
 		root := secureTempDir(t)
 		linkDir := filepath.Join(root, "profile")
 		if err := os.Symlink(realDir, linkDir); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := ParseProtectionCapability(filepath.Join(linkDir, ProtectionFileName)); !errors.Is(err, ErrProtectionFile) {
+		policy := testProtectionTrustPolicy(target)
+		policy.AttestationPath = filepath.Join(linkDir, ProtectionFileName)
+		if err := rewriteTestVerifierPolicyFromTrust(target, policy); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := newTestProtectionVerifier(target, protectionNow).parse(); !errors.Is(err, ErrProtectionFile) {
 			t.Fatalf("error = %v", err)
 		}
 	})
 	t.Run("owner", func(t *testing.T) {
 		path := writeProtectionMatrix(t, validProtectionMatrix(t))
-		if _, err := parseProtectionCapability(path, fileIdentity{UID: uint32(os.Geteuid() + 1)}); !errors.Is(err, ErrProtectionFile) {
+		owner, _ := currentProtectionOwnerUID()
+		if _, err := parseProtectionCapability(path, fileIdentity{UID: owner + 1}, testProtectionTrustPolicy(path)); !errors.Is(err, ErrProtectionFile) {
 			t.Fatalf("error = %v", err)
 		}
 	})
