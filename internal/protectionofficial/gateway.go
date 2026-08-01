@@ -84,13 +84,15 @@ func (g *Gateway) Cancel(ctx context.Context, target protection.BrokerTarget) (p
 	if target.Validate() != nil || target.Scope != g.scope {
 		return protection.CancelObservation{}, ErrAmbiguousConditional
 	}
-	// When detail is available, bind the mutation to the exact durable current
-	// identity before issuing DELETE. In particular, expiry is not a wildcard.
-	if raw, readErr := g.client.ConditionalOrderRaw(ctx, target.BrokerID); readErr == nil {
-		parsed, adaptErr := g.adapt(raw)
-		if adaptErr != nil || !matchesTarget(target, parsed) {
-			return protection.CancelObservation{}, ErrAmbiguousConditional
-		}
+	// Bind the mutation to the exact durable current identity before issuing
+	// DELETE. Unavailable detail is ambiguity, and expiry is not a wildcard.
+	raw, readErr := g.client.ConditionalOrderRaw(ctx, target.BrokerID)
+	if readErr != nil {
+		return protection.CancelObservation{}, fmt.Errorf("%w: cancel preflight: %v", ErrAmbiguousConditional, readErr)
+	}
+	parsed, adaptErr := g.adapt(raw)
+	if adaptErr != nil || !matchesTarget(target, parsed) {
+		return protection.CancelObservation{}, ErrAmbiguousConditional
 	}
 	if err := g.client.CancelConditionalOrder(ctx, target.BrokerID); err != nil {
 		return protection.CancelObservation{}, err

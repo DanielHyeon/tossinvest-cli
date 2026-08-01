@@ -12,14 +12,16 @@ import (
 )
 
 type fakeClient struct {
-	created   official.ConditionalCreateBody
-	modified  official.ConditionalModifyBody
-	raw       map[string]official.RawConditionalOrder
-	pages     map[string]official.RawConditionalOrderList
-	cancel    string
-	sellable  string
-	readErr   error
-	createRef *domain.ConditionalOrderRef
+	created      official.ConditionalCreateBody
+	modified     official.ConditionalModifyBody
+	raw          map[string]official.RawConditionalOrder
+	pages        map[string]official.RawConditionalOrderList
+	cancel       string
+	sellable     string
+	readErr      error
+	readErrAfter int
+	readCalls    int
+	createRef    *domain.ConditionalOrderRef
 }
 
 func (f *fakeClient) CreateConditionalOrder(_ context.Context, body official.ConditionalCreateBody) (domain.ConditionalOrderRef, error) {
@@ -41,7 +43,8 @@ func (f *fakeClient) CancelConditionalOrder(_ context.Context, id string) error 
 }
 
 func (f *fakeClient) ConditionalOrderRaw(_ context.Context, id string) (official.RawConditionalOrder, error) {
-	if f.readErr != nil {
+	f.readCalls++
+	if f.readErr != nil && (f.readErrAfter == 0 || f.readCalls > f.readErrAfter) {
 		return official.RawConditionalOrder{}, f.readErr
 	}
 	raw, ok := f.raw[id]
@@ -148,20 +151,55 @@ func TestGatewayCreateRejectsMismatchedMutationReceiptBeforeReadback(t *testing.
 	}
 }
 
-func TestGatewayCancelDisappearanceIsInDoubtInsteadOfAssumedCancelled(t *testing.T) {
-	client := &fakeClient{readErr: errors.New("404"), pages: map[string]official.RawConditionalOrderList{}}
+func TestGatewayCancelPreflightFailureNeverDispatchesDelete(t *testing.T) {
+	ambiguous := rawConditional("co-1", "client-1", "UNKNOWN")
+	mismatch := rawConditional("co-1", "client-1", "WATCHING")
+	mismatch.ExpireDate = "2026-08-09"
+	for _, tc := range []struct {
+		name string
+		raw  *official.RawConditionalOrder
+		err  error
+	}{
+		{name: "404", err: errors.New("404")},
+		{name: "timeout", err: context.DeadlineExceeded},
+		{name: "transport error", err: errors.New("transport")},
+		{name: "ambiguous lifecycle", raw: &ambiguous},
+		{name: "identity mismatch", raw: &mismatch},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			client := &fakeClient{raw: map[string]official.RawConditionalOrder{}}
+			if tc.raw != nil {
+				client.raw["co-1"] = *tc.raw
+			}
+			client.readErr = tc.err
+			gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
+			if _, err := gateway.Cancel(context.Background(), protection.BrokerTarget{Scope: gatewayScope(), BrokerID: "co-1", ClientOrderID: "client-1", Trigger: 70000, Quantity: 1, ExpireDate: "2026-08-08"}); !errors.Is(err, ErrAmbiguousConditional) {
+				t.Fatalf("cancel preflight=%v", err)
+			}
+			if client.cancel != "" {
+				t.Fatalf("preflight failure dispatched cancel target=%q", client.cancel)
+			}
+		})
+	}
+}
+
+func TestGatewayCancelPostDeleteDisappearanceRemainsInDoubt(t *testing.T) {
+	active := rawConditional("co-1", "client-1", "WATCHING")
+	client := &fakeClient{raw: map[string]official.RawConditionalOrder{"co-1": active}, readErr: errors.New("404"), readErrAfter: 1,
+		pages: map[string]official.RawConditionalOrderList{}}
 	gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
 	if _, err := gateway.Cancel(context.Background(), protection.BrokerTarget{Scope: gatewayScope(), BrokerID: "co-1", ClientOrderID: "client-1", Trigger: 70000, Quantity: 1, ExpireDate: "2026-08-08"}); !errors.Is(err, ErrAmbiguousConditional) {
-		t.Fatalf("cancel disappearance=%v", err)
+		t.Fatalf("post-delete disappearance=%v", err)
 	}
 	if client.cancel != "co-1" {
-		t.Fatalf("cancel target=%q", client.cancel)
+		t.Fatalf("verified cancel target=%q", client.cancel)
 	}
 }
 
 func TestGatewayCancelNeedsTerminalNonTriggeredObservationAndExactSellable(t *testing.T) {
 	closed := rawConditional("co-1", "client-1", "CANCELLED")
-	client := &fakeClient{readErr: errors.New("gone"), sellable: "1", pages: map[string]official.RawConditionalOrderList{
+	active := rawConditional("co-1", "client-1", "WATCHING")
+	client := &fakeClient{raw: map[string]official.RawConditionalOrder{"co-1": active}, readErr: errors.New("gone"), readErrAfter: 1, sellable: "1", pages: map[string]official.RawConditionalOrderList{
 		"OPEN:": {}, "CLOSED:": {Orders: []official.RawConditionalOrder{closed}},
 	}}
 	gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
@@ -193,7 +231,8 @@ func TestGatewayCancelRejectsWrongOrDuplicateTerminalIdentity(t *testing.T) {
 	t.Run("duplicate client identity", func(t *testing.T) {
 		one := rawConditional("co-1", "client-1", "CANCELLED")
 		two := rawConditional("co-other", "client-1", "CANCELLED")
-		client := &fakeClient{readErr: errors.New("gone"), pages: map[string]official.RawConditionalOrderList{
+		active := rawConditional("co-1", "client-1", "WATCHING")
+		client := &fakeClient{raw: map[string]official.RawConditionalOrder{"co-1": active}, readErr: errors.New("gone"), readErrAfter: 1, pages: map[string]official.RawConditionalOrderList{
 			"OPEN:": {}, "CLOSED:": {Orders: []official.RawConditionalOrder{one, two}},
 		}}
 		gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
@@ -231,10 +270,12 @@ func TestGatewayCancelFallbackIgnoresOnlyAttestedRetiredReplaceRows(t *testing.T
 		}}
 	current := rawConditional("co-current", "client-1", "CANCELLED")
 	current.TriggerPrice = "72000"
+	activeCurrent := rawConditional("co-current", "client-1", "WATCHING")
+	activeCurrent.TriggerPrice = "72000"
 	old1 := rawConditional("co-old-1", "client-1", "COMPLETED")
 	old2 := rawConditional("co-old-2", "client-1", "EXPIRED")
 	old2.TriggerPrice = "71000"
-	client := &fakeClient{readErr: errors.New("gone"), pages: map[string]official.RawConditionalOrderList{
+	client := &fakeClient{raw: map[string]official.RawConditionalOrder{"co-current": activeCurrent}, readErr: errors.New("gone"), readErrAfter: 1, pages: map[string]official.RawConditionalOrderList{
 		"OPEN:": {}, "CLOSED:": {Orders: []official.RawConditionalOrder{old1, current, old2}},
 	}}
 	gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
@@ -242,10 +283,12 @@ func TestGatewayCancelFallbackIgnoresOnlyAttestedRetiredReplaceRows(t *testing.T
 	if err != nil || got.BrokerID != "co-current" || !got.Terminal || got.Triggered {
 		t.Fatalf("cancel=%+v err=%v", got, err)
 	}
+	client.readCalls = 0
 	got, err = gateway.Cancel(context.Background(), target)
 	if err != nil || got.BrokerID != "co-current" || !got.Terminal || got.Triggered {
 		t.Fatalf("repeated cancel=%+v err=%v", got, err)
 	}
+	client.readCalls = 0
 	client.pages["CLOSED:"].Orders[0].TriggerPrice = "69999"
 	if _, err := gateway.Cancel(context.Background(), target); !errors.Is(err, ErrAmbiguousConditional) {
 		t.Fatalf("mismatched retired cancel=%v", err)

@@ -648,6 +648,66 @@ func TestControllerArmAndFlattenDeadlineFailuresStayFailClosed(t *testing.T) {
 	})
 }
 
+func TestRegisterUsesPersistedFillTimeInsteadOfCallerDeadlineAuthority(t *testing.T) {
+	t.Run("delayed caller cannot restart arm clock", func(t *testing.T) {
+		c, _, gw, clock := controllerHarness(t)
+		ctx := context.Background()
+		durableFillAt := *clock
+		saga, _ := c.PlanFill(ctx, Fill{At: durableFillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+		*clock = clock.Add(1500 * time.Millisecond)
+		if _, err := c.Register(ctx, saga.ID, "delayed", "2026-08-08", *clock); !errors.Is(err, ErrProtectionGap) || c.EntryAllowed() {
+			t.Fatalf("delayed register err=%v entry=%v", err, c.EntryAllowed())
+		}
+		if gw.createCalls != 0 {
+			t.Fatalf("delayed caller dispatched create calls=%d", gw.createCalls)
+		}
+	})
+
+	t.Run("nearby caller timestamp must exactly match durable fill", func(t *testing.T) {
+		c, _, gw, clock := controllerHarness(t)
+		ctx := context.Background()
+		durableFillAt := *clock
+		saga, _ := c.PlanFill(ctx, Fill{At: durableFillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+		*clock = clock.Add(100 * time.Millisecond)
+		if _, err := c.Register(ctx, saga.ID, "shifted", "2026-08-08", durableFillAt.Add(100*time.Millisecond)); !errors.Is(err, ErrProtectionGap) || c.EntryAllowed() {
+			t.Fatalf("shifted register err=%v entry=%v", err, c.EntryAllowed())
+		}
+		if gw.createCalls != 0 {
+			t.Fatalf("shifted caller dispatched create calls=%d", gw.createCalls)
+		}
+	})
+}
+
+func TestFlattenUsesInternalStartAndSharedAbsoluteTwoSecondDeadline(t *testing.T) {
+	t.Run("future caller cannot extend deadline", func(t *testing.T) {
+		c, _, gw, clock := controllerHarness(t)
+		ctx := context.Background()
+		fillAt := *clock
+		saga, _ := c.PlanFill(ctx, Fill{At: fillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+		active, _ := c.Register(ctx, saga.ID, "create", "2026-08-08", fillAt)
+		gw.cancelDelay = 2100 * time.Millisecond
+		if _, err := c.AuthorizeFlatten(ctx, active.ID, "cancel", clock.Add(time.Second), 1); !errors.Is(err, ErrMutationInDoubt) || c.EntryAllowed() {
+			t.Fatalf("future start err=%v entry=%v", err, c.EntryAllowed())
+		}
+	})
+
+	t.Run("past caller cannot shorten internal operation budget", func(t *testing.T) {
+		c, _, gw, clock := controllerHarness(t)
+		ctx := context.Background()
+		fillAt := *clock
+		saga, _ := c.PlanFill(ctx, Fill{At: fillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+		active, _ := c.Register(ctx, saga.ID, "create", "2026-08-08", fillAt)
+		gw.cancelDelay = 500 * time.Millisecond
+		wallStart := time.Now()
+		if _, err := c.AuthorizeFlatten(ctx, active.ID, "cancel", clock.Add(-24*time.Hour), 1); err != nil {
+			t.Fatalf("past start err=%v", err)
+		}
+		if gw.cancelDL.IsZero() || gw.cancelDL.After(wallStart.Add(2100*time.Millisecond)) {
+			t.Fatalf("cancel broker call deadline=%v wall_start=%v", gw.cancelDL, wallStart)
+		}
+	})
+}
+
 func TestDesiredProtectionQuantityConvergesOneShareAndRejectsOversell(t *testing.T) {
 	if got, err := DesiredProtectionQuantity(1, 0, 0); err != nil || got != 1 {
 		t.Fatalf("one share=%d err=%v", got, err)

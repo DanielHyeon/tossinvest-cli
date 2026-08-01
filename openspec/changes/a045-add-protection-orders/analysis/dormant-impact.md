@@ -117,3 +117,13 @@ now mandatory in the current broker target and every create/replace response, ca
 reconciliation comparison. The official cancel adapter performs an exact detail check before DELETE
 when detail is available. These changes remain confined to the dormant packages and evidence; no UI,
 runtime wiring, approval surface, or official execution profile changed.
+
+The SLA-authority follow-up keeps no caller-controlled clock at a safety boundary. Registration
+compares the compatibility fill argument to the durable PLANNED saga timestamp and computes arm and
+ACTIVE deadlines only from that persisted value. Flatten captures its own operation start and shares
+one absolute two-second context across cancel and sellable reads. The official adapter also promotes
+exact current detail from best-effort to a mandatory pre-DELETE condition: any unavailable,
+ambiguous, or mismatched preflight produces zero cancel calls, while post-delete disappearance still
+fails closed. No schema expansion was required because PLANNED `UpdatedAt` is written with the fill
+and is not mutated until registration begins. No app, UI, toggle, profile, or activation wiring was
+changed.

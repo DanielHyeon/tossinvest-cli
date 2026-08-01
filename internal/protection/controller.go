@@ -154,8 +154,9 @@ func (c *Controller) Register(ctx context.Context, sagaID, attemptID, expireDate
 	if err != nil {
 		return Saga{}, err
 	}
+	durableFillAt := saga.UpdatedAt
 	now := c.now()
-	if now.Before(fillAt) || now.Sub(fillAt) > RegistrationArmDeadline {
+	if !fillAt.Equal(durableFillAt) || now.Before(durableFillAt) || now.Sub(durableFillAt) > RegistrationArmDeadline {
 		c.entryOpen.Store(false)
 		_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, "PROTECTION_GAP_ARM_DEADLINE")
 		return Saga{}, ErrProtectionGap
@@ -183,7 +184,7 @@ func (c *Controller) Register(ctx context.Context, sagaID, attemptID, expireDate
 	if err := c.repository.markAttempt(ctx, attemptID, MutationPlanned, MutationDispatched, now, ""); err != nil {
 		return Saga{}, err
 	}
-	brokerCtx, cancel, err := boundedBrokerContext(ctx, fillAt.Add(RegistrationActiveDeadline).Sub(c.now()))
+	brokerCtx, cancel, err := boundedBrokerContext(ctx, durableFillAt.Add(RegistrationActiveDeadline).Sub(c.now()))
 	if err != nil {
 		at := c.now()
 		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, at, "")
@@ -208,7 +209,7 @@ func (c *Controller) Register(ctx context.Context, sagaID, attemptID, expireDate
 		c.entryOpen.Store(false)
 		return Saga{}, err
 	}
-	if EvaluateArm(fillAt, now, settledAt) != ArmActive {
+	if EvaluateArm(durableFillAt, now, settledAt) != ArmActive {
 		c.entryOpen.Store(false)
 		_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, settledAt, "PROTECTION_GAP_ACTIVE_DEADLINE")
 		return Saga{}, ErrProtectionGap
@@ -472,10 +473,11 @@ func (c *Controller) Recover(ctx context.Context, sagaID string) (Saga, error) {
 	return active, nil
 }
 
-func (c *Controller) AuthorizeFlatten(ctx context.Context, sagaID, attemptID string, start time.Time, required int64) (FlattenAuthorization, error) {
+func (c *Controller) AuthorizeFlatten(ctx context.Context, sagaID, attemptID string, _ time.Time, required int64) (FlattenAuthorization, error) {
 	c.opMu.Lock()
 	defer c.opMu.Unlock()
 	c.closeEntry(sagaID)
+	operationStart := c.now()
 	saga, err := c.repository.Get(ctx, sagaID)
 	if err != nil {
 		return FlattenAuthorization{}, err
@@ -500,7 +502,7 @@ func (c *Controller) AuthorizeFlatten(ctx context.Context, sagaID, attemptID str
 	if err := c.repository.markAttempt(ctx, attemptID, MutationPlanned, MutationDispatched, now, ""); err != nil {
 		return FlattenAuthorization{}, err
 	}
-	brokerCtx, cancelBroker, deadlineErr := boundedBrokerContext(ctx, start.Add(2*time.Second).Sub(c.now()))
+	brokerCtx, cancelBroker, deadlineErr := boundedBrokerContext(ctx, operationStart.Add(2*time.Second).Sub(c.now()))
 	if deadlineErr != nil {
 		at := c.now()
 		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, at, saga.BrokerID)
@@ -518,8 +520,8 @@ func (c *Controller) AuthorizeFlatten(ctx context.Context, sagaID, attemptID str
 	}
 	sellable, err := c.gateway.Sellable(brokerCtx, c.scope, saga.BrokerID)
 	decisionAt := c.now()
-	deadline := start.Add(2 * time.Second)
-	decision, authorization := decideFlatten(start, deadline, decisionAt,
+	deadline := operationStart.Add(2 * time.Second)
+	decision, authorization := decideFlatten(operationStart, deadline, decisionAt,
 		FlattenScope{Scope: c.scope, BrokerID: saga.BrokerID}, cancel, sellable, required, c.now)
 	if err != nil || brokerCtx.Err() != nil || decision != FlattenAllowed {
 		c.entryOpen.Store(false)

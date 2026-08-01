@@ -241,6 +241,27 @@ This follow-up changes no UI, activation minter, app construction, execution pro
 transport boundary. The controller still starts closed and all broker reads remain bounded. It is a
 review candidate, not LIVE/WIRED approval.
 
+## Durable SLA clock and mandatory cancel preflight BLOCK remediation · 2026-08-01
+
+Registration no longer derives its one-second arm or two-second ACTIVE deadline from caller time.
+The PLANNED saga's persisted `UpdatedAt` is the durable fill timestamp before registration begins;
+the retained compatibility argument must match it exactly, and every deadline/EvaluateArm decision
+uses the persisted value. A delayed caller cannot pass `now` to restart either SLA, while a nearby
+but non-identical timestamp is also rejected before broker dispatch.
+
+Flatten timing now starts from the controller's internal clock at operation entry. The legacy caller
+argument is ignored, and one absolute internal `start + 2s` deadline clamps the shared cancel and
+sellable context as well as the final decision. Future caller time cannot extend a slow operation;
+past caller time cannot force a false early deadline. Tests verify both cases and an actual broker
+context deadline no later than the internal two-second budget.
+
+Official cancel now requires a successful exact `ConditionalOrderRaw` preflight before DELETE.
+404, timeout, transport error, unknown lifecycle, body/identity mismatch, and expiry mismatch all
+return ambiguous with zero cancel calls. After a successful preflight, DELETE still requires the
+existing authoritative terminal non-triggered observation; post-delete disappearance remains
+`IN_DOUBT` rather than assumed cancelled. These changes retain constructor-closed behavior, bounded
+recovery, exact mutation lineage, OFF/UNWIRED, and the input-free StockOS-style console.
+
 ## Dependency-integrated dormant rebase · 2026-08-01
 
 - Integration base: `70aabdc9936de08df458da13203437ba7d2dd572` (a041/a042 complete).
