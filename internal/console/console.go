@@ -296,6 +296,11 @@ type Options struct {
 	// no journal handle, SQL, broker, config, or operating toggle.
 	PositionPolicies PositionPolicyCommander
 
+	// Protections is an engine-owned capability. Nil is the shipped default and
+	// renders OFF/UNWIRED read-only state. The console never receives a broker,
+	// journal handle, activation toggle, symbol field, or numeric trigger input.
+	Protections ProtectionCommander
+
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
 	// The console shows whether the engine is running and can start and stop the
@@ -727,6 +732,10 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
 	mux.HandleFunc("/optimization/exit-policy",
 		c.session0(c.mutating(c.handleOptimizationSave)))
+	mux.HandleFunc("/optimization/exit-protection/preview",
+		c.session0(c.mutating(c.handleProtectionPreview, 4096)))
+	mux.HandleFunc("/optimization/exit-protection/apply",
+		c.session0(c.mutating(c.handleProtectionApply, 4096)))
 	mux.HandleFunc("/position-management", c.session0(c.readOnly(c.handlePositionManagement)))
 	mux.HandleFunc("/position-management/preview",
 		c.session0(c.mutating(c.handlePositionPolicyPreview, 4096)))

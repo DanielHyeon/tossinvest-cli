@@ -8,6 +8,9 @@ const optimizationTemplates = `
 이 화면은 <code>engine.exit_policy.common_policy</code> ID 하나만 저장하며 주문, automation gate,
 trading toggle, 편입 목록은 변경하지 않는다.</p>
 <p><a href="/strategy-runtime/market-schedule">strategy-runtime &gt; 시장·일정 보기</a></p>
+<nav class="filter-bar" aria-label="최적화 화면">
+  <a href="#candidate-filters">상태·안전</a><a href="#exit-protection">청산/보호</a><a href="#application-scope">성과·근거</a>
+</nav>
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
 {{if .LoadErr}}<p class="danger">설정을 읽을 수 없다: <code>{{.LoadErr}}</code></p>{{end}}
 
@@ -49,6 +52,37 @@ trading toggle, 편입 목록은 변경하지 않는다.</p>
   {{end}}
 </section>
 
+<section id="exit-protection" aria-labelledby="exit-protection-title">
+  <h2 id="exit-protection-title">청산/보호 · 브로커 상주 보호</h2>
+  <p class="muted">현재 공통 보호선과 브로커에 남아 있는 보호주문을 함께 읽는다. 이 화면에는 종목·가격·수량·사유 입력란과 LIVE 전체 활성화가 없다.</p>
+  {{if .ProtectionLoadErr}}<p class="danger" role="alert">보호 상태를 읽지 못했다: {{.ProtectionLoadErr}}</p>{{end}}
+  {{if not .ProtectionWired}}
+  <div class="detail-grid" aria-readonly="true">
+    <div><strong>브로커 보호주문</strong><p class="muted">엔진이 꺼져도 손절이 남는 기능이다.</p></div>
+    <dl><dt>Capability</dt><dd>지원 확인 전 사용 불가</dd><dt>Activation</dt><dd>OFF</dd>
+      <dt>Desired</dt><dd>OFF</dd><dt>Effective</dt><dd>UNWIRED</dd><dt>적용 시점</dt><dd>운영자 별도 승인 후 다음 엔진 기동</dd>
+      <dt>Provenance</dt><dd>signed attestation 및 engine command seam 없음</dd></dl>
+  </div>
+  {{end}}
+  {{range .Protections}}
+  <article class="detail-grid" aria-label="{{.Symbol}} 브로커 보호 상태">
+    <div><strong>{{.Symbol}}</strong><p class="muted">{{.Explanation}}</p></div>
+    <dl><dt>Capability</dt><dd>{{.Capability}}</dd><dt>Activation</dt><dd>{{.Activation}}</dd>
+      <dt>Desired / Effective</dt><dd>{{.Desired}} / <strong>{{.Effective}}</strong></dd>
+      <dt>Effective trigger</dt><dd>{{.EffectiveTrigger}}</dd><dt>보호 수량</dt><dd>{{.ProtectedQuantity}}</dd>
+      <dt>Broker ID</dt><dd><code>{{.BrokerID}}</code></dd><dt>Updated at</dt><dd>{{.UpdatedAt}}</dd>
+      <dt>Reconcile</dt><dd>{{.ReconcileReason}}</dd><dt>적용 시점</dt><dd>{{.ApplyTiming}}</dd>
+      <dt>Provenance</dt><dd>{{.Provenance}}</dd></dl>
+    {{if .WeakeningActionToken}}
+    <form method="post" action="/optimization/exit-protection/preview">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="action_token" value="{{.WeakeningActionToken}}">
+      <button type="submit" class="secondary">{{.WeakeningAction}}</button>
+    </form>
+    {{end}}
+  </article>
+  {{end}}
+</section>
+
 {{if .Current.Rejected}}<p class="danger">현재 설정은 엔진이 거부한다: {{.Current.Rejected}}</p>{{end}}
 {{if eq .Current.CommonPolicy ""}}
 <p class="notice"><strong>아직 공통 정책을 승인하지 않았다.</strong> 기존 RATCHET 동작이 유지된다.</p>
@@ -84,13 +118,30 @@ trading toggle, 편입 목록은 변경하지 않는다.</p>
   {{else}}<p class="notice">정책 저장 seam이 배선되지 않아 조회만 가능하다.</p>{{end}}
 </form>
 
-<section>
+<section id="application-scope">
   <h2>적용 범위</h2>
   <p>저장은 <strong>다음 엔진 기동</strong>부터 새로 관리되는 자체 진입과 외부 매수 편입분에 적용된다.
   <strong>기존 포지션</strong>은 exit state에 저장된 정책을 계속 사용하며 자동 변경되지 않는다.
   외부 매수는 편입 관측가를 entry/high-water t0로 사용하므로 과거 수익 때문에 즉시 익절하지 않는다.</p>
   {{if .EngineRunning}}<p class="notice">현재 엔진이 실행 중이다. 반영하려면 사람이 엔진을 재기동해야 한다.</p>{{end}}
 </section>
+{{template "foot" .}}
+{{end}}
+
+{{define "protection-preview"}}
+{{template "head" .}}
+<p><a href="/optimization?category=exit-protection">최적화 · 청산/보호</a></p>
+<h1>보호 약화 확인</h1>
+<p class="danger" role="alert"><strong>브로커 보호가 약해질 수 있다.</strong> preview 뒤 최소 3초 동안 영향 범위를 확인한다.</p>
+<dl><dt>종목</dt><dd>{{.Preview.Symbol}}</dd><dt>Before</dt><dd>{{.Preview.Before}}</dd><dt>After</dt><dd>{{.Preview.After}}</dd>
+  <dt>영향 포지션</dt><dd>{{.Preview.AffectedPositions}}</dd><dt>영향 수량</dt><dd>{{.Preview.AffectedQuantity}}</dd>
+  <dt>보호 공백 가능성</dt><dd>{{.Preview.CoverageGap}}</dd><dt>적용 시점</dt><dd>{{.Preview.ApplyTiming}}</dd></dl>
+<form method="post" action="/optimization/exit-protection/apply">
+  <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="capability" value="{{.Preview.Capability}}">
+  <label><input type="checkbox" name="confirm" value="yes" required> 위 before/after와 보호 공백 가능성을 확인했다.</label>
+  <p><button type="submit">3초 후 현재 행에만 적용</button></p>
+</form>
+<p><a href="/optimization?category=exit-protection">취소하고 현재 상태 다시 보기</a></p>
 {{template "foot" .}}
 {{end}}
 
