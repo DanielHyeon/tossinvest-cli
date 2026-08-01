@@ -105,6 +105,7 @@ fieldset.setting-row legend { font-weight: 700; padding: 0 0.35rem; }
 .choice-tile h3 { margin: 0; } .choice-action { display: block; margin-top: 0.7rem; }
 .choice-action button, .sticky-save button, .confirm-check { min-height: 44px; }
 .table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+.table-scroll:focus-visible { outline: 3px solid #2878d0; outline-offset: 2px; }
 .table-scroll table { min-width: 36rem; }
 .history-panel summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
 .sticky-save { position: sticky; bottom: 0.5rem; box-shadow: 0 -5px 20px rgba(0,0,0,0.12); }
@@ -221,7 +222,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 {{end}}
 
 {{define "refuse"}}<!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><title>거부됨 — tossctl console</title>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="same-origin"><title>거부됨 — tossctl console</title>
 <style>{{template "style"}}</style></head><body><main>
 <h1>{{.Title}}</h1>
 <p class="danger">{{.Detail}}</p>

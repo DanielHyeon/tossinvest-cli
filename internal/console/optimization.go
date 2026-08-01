@@ -78,7 +78,7 @@ func (c *Console) handleOptimizationSave(w http.ResponseWriter, r *http.Request)
 			Capability: strings.TrimSpace(r.PostFormValue("capability")), Confirmed: r.PostFormValue("confirm") == "yes",
 		})
 		if err != nil {
-			c.writeOptimizationError(w, err)
+			c.writeOptimizationApplyError(w, r, strings.TrimSpace(r.PostFormValue("capability")), err)
 			return
 		}
 		notice := fmt.Sprintf("적용됨 — desired v%d / effective v%d · audit %s. LIVE·lane·gate·기존 포지션은 그대로다.",
@@ -99,8 +99,7 @@ func (c *Console) handleOptimizationSave(w http.ResponseWriter, r *http.Request)
 			c.writeOptimizationError(w, err)
 			return
 		}
-		c.render(w, "optimization-preview", optimizationPreviewPage{Nav: "optimization", CSRF: c.csrf,
-			Preview: preview, WaitSecs: waitSeconds(preview)})
+		c.renderOptimizationPreview(w, preview)
 	default:
 		base, err := strconv.ParseUint(r.PostFormValue("base_version"), 10, 64)
 		category, known := strategyopt.ParseCategory(r.PostFormValue("category"))
@@ -118,8 +117,7 @@ func (c *Console) handleOptimizationSave(w http.ResponseWriter, r *http.Request)
 			c.writeOptimizationError(w, err)
 			return
 		}
-		c.render(w, "optimization-preview", optimizationPreviewPage{Nav: "optimization", CSRF: c.csrf,
-			Preview: preview, WaitSecs: waitSeconds(preview)})
+		c.renderOptimizationPreview(w, preview)
 	}
 }
 

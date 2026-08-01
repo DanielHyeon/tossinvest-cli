@@ -51,6 +51,9 @@ var pageFuncs = template.FuncMap{
 	// if a catalogue step ever loses its label.
 	"stepLabel": verifylive.StepLabel,
 	"verdict":   verifylive.VerdictLabel,
+	"optimizationPreviewScript": func() template.JS {
+		return template.JS(optimizationPreviewScript) // #nosec G203 -- static, source-controlled script.
+	},
 }
 
 // pages is the whole template set. The dashboard screens live in their own const
@@ -371,7 +374,13 @@ func (c *Console) handleReportJSON(w http.ResponseWriter, r *http.Request) {
 
 // --- rendering ----------------------------------------------------------------
 
+const consoleHTMLCSP = "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
+
 func (c *Console) render(w http.ResponseWriter, name string, data any) {
+	c.renderHTML(w, http.StatusOK, name, data, consoleHTMLCSP)
+}
+
+func (c *Console) renderHTML(w http.ResponseWriter, status int, name string, data any, csp string) {
 	var buf bytes.Buffer
 	if err := pages.ExecuteTemplate(&buf, name, data); err != nil {
 		http.Error(w, "console: rendering "+name+": "+err.Error(), http.StatusInternalServerError)
@@ -381,20 +390,15 @@ func (c *Console) render(w http.ResponseWriter, name string, data any) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Referrer-Policy", "same-origin")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Security-Policy", csp)
+	w.WriteHeader(status)
 	_, _ = w.Write(buf.Bytes())
 }
 
 // refuse is every "no" this console says, in one shape: a status, a reason, and
 // the sentence that matters — that nothing was sent.
 func (c *Console) refuse(w http.ResponseWriter, status int, title, detail string) {
-	var buf bytes.Buffer
-	_ = pages.ExecuteTemplate(&buf, "refuse", struct{ Title, Detail string }{title, detail})
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_, _ = w.Write(buf.Bytes())
+	c.renderHTML(w, status, "refuse", struct{ Title, Detail string }{title, detail}, consoleHTMLCSP)
 }
 
 // urlQueryEscape keeps the notice readable in the address bar without pulling in

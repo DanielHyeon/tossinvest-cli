@@ -1,16 +1,16 @@
 {
   "file": "internal/console/optimization.go",
-  "source_sha256": "1e0134d86c6b5b4187ed7e564e6bdf64ec86d04d139f956e03a55cd6b75bae95",
+  "source_sha256": "5e9f8731eb1b9f4ccea9b67fb42d8e44dcfc7bf00212ff03dcf6c8d4dbc04ba8",
   "package": "console",
   "function": "redirectOptimization",
   "receiver": "Console",
   "signature": "Console.redirectOptimization(params=4, results=0)",
   "start": {
-    "line": 126,
+    "line": 124,
     "column": 1
   },
   "end": {
-    "line": 129,
+    "line": 127,
     "column": 2
   },
   "branches": null,
@@ -19,7 +19,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 127,
+        "line": 125,
         "column": 45
       },
       "text": "url.QueryEscape"
@@ -27,7 +27,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 127,
+        "line": 125,
         "column": 61
       },
       "text": "string"
@@ -35,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 127,
+        "line": 125,
         "column": 94
       },
       "text": "url.QueryEscape"
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 128,
+        "line": 126,
         "column": 2
       },
       "text": "http.Redirect"
@@ -53,7 +53,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 127,
+        "line": 125,
         "column": 2
       }
     }

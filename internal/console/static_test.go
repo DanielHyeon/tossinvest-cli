@@ -972,10 +972,10 @@ var consoleCapabilities = map[string]capability{
 	// dependency closure expose no journal, broker, order, lane, gate, kill
 	// switch or LIVE action.
 	"Optimization": {
-		Methods: []string{"Read", "Preview", "PreviewRollback", "Apply"},
+		Methods: []string{"Read", "Preview", "PreviewRollback", "Apply", "RecoverConflict"},
 		VerbExemptions: map[string]string{
 			"Optimization":          "the settings lifecycle capability; it cannot reach account or operating authority",
-			"OptimizationCommander": "the exact four-method settings lifecycle seam",
+			"OptimizationCommander": "the exact settings lifecycle and read-only conflict recovery seam",
 			"Apply":                 "commits one capability-bound settings CAS and append-only audit; no account mutation is in its type closure",
 		},
 	},

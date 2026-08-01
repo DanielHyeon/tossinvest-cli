@@ -175,6 +175,17 @@ type ApplyResult struct {
 	Replayed bool
 }
 
+// ConflictView is a read-only recovery projection for a stale apply. It keeps
+// the immutable attempted candidate beside the latest snapshot so a transport
+// can offer an explicit new preview without retrying the stale command.
+type ConflictView struct {
+	BaseVersion uint64
+	Category    Category
+	Attempted   []OptionChange
+	Latest      Snapshot
+	Registry    Registry
+}
+
 type AuditEvent struct {
 	ID             int64
 	AuditID        string
@@ -204,4 +215,5 @@ type Commander interface {
 	Preview(context.Context, PreviewRequest) (Preview, error)
 	PreviewRollback(context.Context, RollbackPreviewRequest) (Preview, error)
 	Apply(context.Context, ApplyRequest) (ApplyResult, error)
+	RecoverConflict(context.Context, string) (ConflictView, error)
 }

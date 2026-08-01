@@ -75,6 +75,10 @@ func (f *fakeOptimizationCommander) Apply(_ context.Context, req strategyopt.App
 	return strategyopt.ApplyResult{Snapshot: f.view.Snapshot}, nil
 }
 
+func (f *fakeOptimizationCommander) RecoverConflict(context.Context, string) (strategyopt.ConflictView, error) {
+	return strategyopt.ConflictView{}, strategyopt.ErrCapabilityInvalid
+}
+
 func TestOptimizationShowsExactlySixCategoriesAndThreeOwnerPolicies(t *testing.T) {
 	legacy := &fakeExitPolicySettings{}
 	commander := newFakeOptimizationCommander(t)

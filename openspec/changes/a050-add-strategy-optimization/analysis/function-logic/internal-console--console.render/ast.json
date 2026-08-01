@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "b886a27d176fc79badd0ed420d996ed3be0f4122c6e31157c83001b8392c395d",
+  "package": "console",
+  "function": "render",
+  "receiver": "Console",
+  "signature": "Console.render(params=3, results=0)",
+  "start": {
+    "line": 379,
+    "column": 1
+  },
+  "end": {
+    "line": 381,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 2
+      },
+      "text": "c.renderHTML"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

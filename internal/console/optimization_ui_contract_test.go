@@ -121,6 +121,9 @@ func (failedOptimizationCommander) PreviewRollback(context.Context, strategyopt.
 func (failedOptimizationCommander) Apply(context.Context, strategyopt.ApplyRequest) (strategyopt.ApplyResult, error) {
 	return strategyopt.ApplyResult{}, strategyopt.ErrInsufficientEvidence
 }
+func (failedOptimizationCommander) RecoverConflict(context.Context, string) (strategyopt.ConflictView, error) {
+	return strategyopt.ConflictView{}, strategyopt.ErrInsufficientEvidence
+}
 
 func TestOptimizationLoadingModelIsServerBlockingAndReadFailureIsFailClosed(t *testing.T) {
 	// The console is server rendered: it has no asynchronous client loading state

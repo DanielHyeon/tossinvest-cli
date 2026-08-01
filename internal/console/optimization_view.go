@@ -2,9 +2,12 @@ package console
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
@@ -20,6 +23,7 @@ type OptimizationCommander interface {
 	Preview(context.Context, strategyopt.PreviewRequest) (strategyopt.Preview, error)
 	PreviewRollback(context.Context, strategyopt.RollbackPreviewRequest) (strategyopt.Preview, error)
 	Apply(context.Context, strategyopt.ApplyRequest) (strategyopt.ApplyResult, error)
+	RecoverConflict(context.Context, string) (strategyopt.ConflictView, error)
 }
 
 // ExitPolicySettings remains a read-only compatibility projection until the
@@ -85,12 +89,91 @@ func (p optimizationPage) PerformanceHistory() bool {
 }
 
 type optimizationPreviewPage struct {
-	Nav, CSRF string
-	Preview   strategyopt.Preview
-	WaitSecs  int
+	Nav, CSRF          string
+	Preview            strategyopt.Preview
+	WaitSecs           int
+	Waiting            bool
+	NotBeforeUnixMilli int64
 }
 
 func (optimizationPreviewPage) Refresh() bool { return false }
+
+const optimizationPreviewScript = `(function(){
+"use strict";
+var root=document.querySelector("[data-risk-preview]");
+if(!root){return;}
+var button=root.querySelector("[data-risk-submit]");
+var live=root.querySelector("[data-risk-countdown]");
+var deadline=Number(root.getAttribute("data-not-before-ms"));
+function tick(){
+  var remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));
+  if(remaining===0){button.disabled=false;live.textContent="승인 가능";return;}
+  button.disabled=true;live.textContent=remaining+"초 남음";
+  window.setTimeout(tick,250);
+}
+tick();
+}());`
+
+var optimizationPreviewCSP = func() string {
+	digest := sha256.Sum256([]byte(optimizationPreviewScript))
+	return consoleHTMLCSP + "; script-src 'sha256-" + base64.StdEncoding.EncodeToString(digest[:]) + "'"
+}()
+
+func (c *Console) previewPage(preview strategyopt.Preview) optimizationPreviewPage {
+	remaining := preview.NotBefore.Sub(c.now())
+	waiting := preview.RiskConfirmationRequired && remaining > 0
+	waitSecs := 0
+	if waiting {
+		waitSecs = int((remaining + time.Second - 1) / time.Second)
+	}
+	return optimizationPreviewPage{Nav: "optimization", CSRF: c.csrf, Preview: preview,
+		WaitSecs: waitSecs, Waiting: waiting, NotBeforeUnixMilli: preview.NotBefore.UnixMilli()}
+}
+
+func (c *Console) renderOptimizationPreview(w http.ResponseWriter, preview strategyopt.Preview) {
+	c.renderHTML(w, http.StatusOK, "optimization-preview", c.previewPage(preview), optimizationPreviewCSP)
+}
+
+type optimizationConflictRow struct {
+	Key, Attempted, LatestDesired, LatestEffective string
+}
+
+type optimizationConflictPage struct {
+	Nav, CSRF                     string
+	Category                      strategyopt.Category
+	BaseVersion, LatestVersion    uint64
+	Rows                          []optimizationConflictRow
+	CanRepreview                  bool
+	RepreviewKey, RepreviewOption string
+}
+
+func (optimizationConflictPage) Refresh() bool { return false }
+
+func newOptimizationConflictPage(csrf string, conflict strategyopt.ConflictView) optimizationConflictPage {
+	page := optimizationConflictPage{Nav: "optimization", CSRF: csrf, Category: conflict.Category,
+		BaseVersion: conflict.BaseVersion, LatestVersion: conflict.Latest.Version}
+	for _, change := range conflict.Attempted {
+		field, ok := conflict.Registry.Field(change.Key)
+		if !ok {
+			continue
+		}
+		page.Rows = append(page.Rows, optimizationConflictRow{Key: change.Key,
+			Attempted:       displayOption(change.AfterOptionID, field.Descriptor.Default, field.Descriptor.Options),
+			LatestDesired:   displayOption(conflict.Latest.Desired[change.Key], field.Descriptor.Default, field.Descriptor.Options),
+			LatestEffective: displayOption(conflict.Latest.Effective[change.Key], field.Descriptor.Effective, field.Descriptor.Options)})
+	}
+	if len(conflict.Attempted) == 1 {
+		attempted := conflict.Attempted[0]
+		field, ok := conflict.Registry.Field(attempted.Key)
+		page.CanRepreview = ok && attempted.AfterOptionID != "" &&
+			field.Descriptor.ValidateOption(attempted.AfterOptionID) == nil &&
+			conflict.Latest.Desired[attempted.Key] != attempted.AfterOptionID
+		if page.CanRepreview {
+			page.RepreviewKey, page.RepreviewOption = attempted.Key, attempted.AfterOptionID
+		}
+	}
+	return page
+}
 
 func optimizationCategoryViews(selected strategyopt.Category, writable bool) []optimizationCategoryView {
 	views := make([]optimizationCategoryView, 0, len(strategyopt.Categories()))
@@ -170,13 +253,6 @@ func displaySafety(s settingmeta.SafetyDirection) string {
 		settingmeta.SafetySaferWhenHigher: "값이 높을수록 보수적", settingmeta.SafetySaferWhenLower: "값이 낮을수록 보수적",
 		settingmeta.SafetyNeutral: "중립", settingmeta.SafetyContextual: "상황별 위험 확인 필요"}[s]
 }
-func waitSeconds(preview strategyopt.Preview) int {
-	if preview.RiskConfirmationRequired {
-		return 3
-	}
-	return 0
-}
-
 func (c *Console) writeOptimizationError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, strategyopt.ErrVersionConflict):
@@ -194,4 +270,18 @@ func (c *Console) writeOptimizationError(w http.ResponseWriter, err error) {
 	default:
 		c.refuse(w, http.StatusBadRequest, "최적화 요청 거부", err.Error()+" 아무것도 변경되지 않았다.")
 	}
+}
+
+func (c *Console) writeOptimizationApplyError(w http.ResponseWriter, r *http.Request, capability string, err error) {
+	if !errors.Is(err, strategyopt.ErrVersionConflict) {
+		c.writeOptimizationError(w, err)
+		return
+	}
+	conflict, recoveryErr := c.opts.Optimization.RecoverConflict(r.Context(), capability)
+	if recoveryErr != nil {
+		c.writeOptimizationError(w, err)
+		return
+	}
+	c.renderHTML(w, http.StatusPreconditionFailed, "optimization-conflict",
+		newOptimizationConflictPage(c.csrf, conflict), consoleHTMLCSP)
 }

@@ -1,6 +1,6 @@
 {
   "file": "internal/console/optimization.go",
-  "source_sha256": "1e0134d86c6b5b4187ed7e564e6bdf64ec86d04d139f956e03a55cd6b75bae95",
+  "source_sha256": "5e9f8731eb1b9f4ccea9b67fb42d8e44dcfc7bf00212ff03dcf6c8d4dbc04ba8",
   "package": "console",
   "function": "handleOptimization",
   "receiver": "Console",

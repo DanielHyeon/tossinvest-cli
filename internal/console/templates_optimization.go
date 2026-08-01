@@ -202,18 +202,44 @@ const optimizationTemplates = `
     <dt>effective entry</dt><dd>{{if .Preview.EffectiveEntryAfterApply}}유지{{else}}OFF · manifest 재승인 필요{{end}}</dd>
   </dl>
 </section>
-<section class="sticky-save" aria-labelledby="preview-approval-title">
+<section class="sticky-save" aria-labelledby="preview-approval-title" {{if .Preview.RiskConfirmationRequired}}data-risk-preview data-not-before-ms="{{.NotBeforeUnixMilli}}"{{end}}>
   <h2 id="preview-approval-title">명시적 승인</h2>
   {{if .Preview.RiskConfirmationRequired}}
-  <p class="danger">보호 또는 위험 계약에 영향을 줄 수 있어 <strong>{{.WaitSecs}}초</strong> 확인 대기가 적용됩니다. typed phrase나 자유 reason 입력은 없습니다.</p>
+  <p class="danger">보호 또는 위험 계약에 영향을 줄 수 있어 3초 확인 대기가 적용됩니다. typed phrase나 자유 reason 입력은 없습니다.</p>
+  <p class="notice" role="status" aria-live="polite" data-risk-countdown>{{if .Waiting}}{{.WaitSecs}}초 남음{{else}}승인 가능{{end}}</p>
   {{end}}
   <form method="post" action="/optimization/exit-policy">
     <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="action" value="apply">
     <input type="hidden" name="capability" value="{{.Preview.Capability}}">
     {{if .Preview.RiskConfirmationRequired}}<label class="confirm-check"><input type="checkbox" name="confirm" value="yes" required> before/after, 기존 포지션 불변, LIVE 권한 분리를 확인했습니다.</label>
     {{else}}<input type="hidden" name="confirm" value="yes">{{end}}
-    <div class="actions"><a class="button-link secondary-link" href="/optimization?category={{.Preview.Category}}">취소</a><button type="submit">이 changed subset 승인·적용</button></div>
+    <div class="actions"><a class="button-link secondary-link" href="/optimization?category={{.Preview.Category}}">취소</a><button type="submit" {{if .Preview.RiskConfirmationRequired}}data-risk-submit {{if .Waiting}}disabled{{end}}{{end}}>이 changed subset 승인·적용</button></div>
   </form>
+</section>
+{{if .Preview.RiskConfirmationRequired}}<script>{{optimizationPreviewScript}}</script>{{end}}
+{{template "foot" .}}
+{{end}}
+
+{{define "optimization-conflict"}}
+{{template "head" .}}
+<p><a href="/optimization?category={{.Category}}">최적화 / {{.Category}}</a></p>
+<h1>설정 version 충돌</h1>
+<p class="danger" role="alert">base v{{.BaseVersion}} 승인 중 latest v{{.LatestVersion}}을 확인했습니다. stale draft를 자동 retry하지 않았습니다.</p>
+<section aria-labelledby="optimization-conflict-diff">
+  <h2 id="optimization-conflict-diff">Attempted → latest field diff</h2>
+  <p>시도한 draft는 비교용으로만 읽기 전용으로 보존했습니다. 최신 desired/effective를 확인한 뒤 명시적으로 돌아가거나 새 preview를 만드세요.</p>
+  <div class="table-scroll" role="region" aria-label="충돌한 설정 비교" tabindex="0"><table>
+    <tr><th>Key</th><th>Attempted</th><th>Latest desired</th><th>Latest effective</th></tr>
+    {{range .Rows}}<tr><td><code>{{.Key}}</code></td><td>{{.Attempted}}</td><td>{{.LatestDesired}}</td><td>{{.LatestEffective}}</td></tr>{{end}}
+  </table></div>
+  <div class="actions conflict-actions">
+    <a class="button-link secondary-link" href="/optimization?category={{.Category}}">최신값으로 돌아가기</a>
+    {{if .CanRepreview}}<form method="post" action="/optimization/exit-policy">
+      <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="base_version" value="{{.LatestVersion}}">
+      <input type="hidden" name="category" value="{{.Category}}"><input type="hidden" name="setting_key" value="{{.RepreviewKey}}">
+      <input type="hidden" name="option_id" value="{{.RepreviewOption}}"><button type="submit">보존한 draft로 새 preview</button>
+    </form>{{end}}
+  </div>
 </section>
 {{template "foot" .}}
 {{end}}

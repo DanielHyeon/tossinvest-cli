@@ -469,6 +469,47 @@ func (s *Store) Apply(ctx context.Context, req ApplyRequest) (ApplyResult, error
 	return ApplyResult{Snapshot: cloneSnapshot(next)}, nil
 }
 
+func (s *Store) RecoverConflict(ctx context.Context, capability string) (ConflictView, error) {
+	token := strings.TrimSpace(capability)
+	if token == "" {
+		return ConflictView{}, ErrCapabilityInvalid
+	}
+	var baseVersion uint64
+	var categoryRaw, reasonRaw, changesJSON string
+	err := s.db.QueryRowContext(ctx, `SELECT base_version,category,reason,changes_json
+		FROM optimization_candidates WHERE capability_hash=?`, hashCapability(token)).
+		Scan(&baseVersion, &categoryRaw, &reasonRaw, &changesJSON)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ConflictView{}, ErrCapabilityInvalid
+	}
+	if err != nil {
+		return ConflictView{}, err
+	}
+	category, known := ParseCategory(categoryRaw)
+	if !known {
+		return ConflictView{}, ErrCapabilityInvalid
+	}
+	var attempted []OptionChange
+	if err := json.Unmarshal([]byte(changesJSON), &attempted); err != nil || len(attempted) == 0 {
+		return ConflictView{}, ErrCapabilityInvalid
+	}
+	for _, change := range attempted {
+		field, ok := s.registry.Field(change.Key)
+		rollbackToUnapproved := change.AfterOptionID == "" && ReasonCode(reasonRaw) == ReasonRollback &&
+			ok && field.Descriptor.Default.Kind != settingmeta.StateValue
+		if !ok || field.Category != category || change.Category != category ||
+			(field.Descriptor.ValidateOption(change.AfterOptionID) != nil && !rollbackToUnapproved) {
+			return ConflictView{}, ErrCapabilityInvalid
+		}
+	}
+	latest, err := s.currentSnapshot(ctx, s.db)
+	if err != nil {
+		return ConflictView{}, err
+	}
+	return ConflictView{BaseVersion: baseVersion, Category: category,
+		Attempted: append([]OptionChange(nil), attempted...), Latest: latest, Registry: s.registry}, nil
+}
+
 func insertSnapshot(ctx context.Context, exec interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 }, snapshot Snapshot) error {
