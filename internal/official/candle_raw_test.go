@@ -24,11 +24,29 @@ func TestRawMinuteCandlesPreservesOfficialDecimalAndTimestampStrings(t *testing.
 	}))
 	defer srv.Close()
 	client := New(Credentials{APIKey: "k", SecretKey: "s"}, filepath.Join(t.TempDir(), "token.json"), WithBaseURL(srv.URL), WithHTTPClient(srv.Client()))
-	got, err := client.RawMinuteCandles(context.Background(), "005930", 5, "", true)
+	got, err := client.RawMinuteCandles(context.Background(), "KR", "005930", 5, "", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got.Candles) != 1 || got.Candles[0].Open != "100.0100" || got.Candles[0].Volume != "0.100" || got.Candles[0].Timestamp != "2026-07-31T09:00:00+09:00" || got.NextBefore != "cursor" {
+	candles := got.Candles()
+	if !got.Valid() || got.Market() != "KR" || got.Symbol() != "005930" || got.Interval() != RawCandleIntervalOneMinute ||
+		got.Adjusted() || got.Source() != RawCandleSourceOfficialOpenAPI || len(candles) != 1 ||
+		candles[0].Open != "100.0100" || candles[0].Volume != "0.100" ||
+		candles[0].Timestamp != "2026-07-31T09:00:00+09:00" || got.NextBefore() != "cursor" {
 		t.Fatalf("raw=%+v", got)
+	}
+	candles[0].Open = "forged"
+	if got.Candles()[0].Open != "100.0100" {
+		t.Fatal("caller mutated opaque official page through candle slice")
+	}
+	if (RawMinutePage{}).Valid() {
+		t.Fatal("zero official page accepted")
+	}
+}
+
+func TestRawMinuteCandlesRejectsUnsupportedMarketAndAdjustedStrategyReadRemainsExplicit(t *testing.T) {
+	client := &Client{}
+	if _, err := client.RawMinuteCandles(context.Background(), "US", "AAPL", 5, "", false); err == nil {
+		t.Fatal("non-KRX raw strategy market accepted")
 	}
 }

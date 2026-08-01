@@ -1,0 +1,78 @@
+{
+  "file": "internal/journal/strategy_lineage.go",
+  "source_sha256": "c784ce6db095de16eb2878bacd8a767018d694df99b65ab3d380eab30061a78b",
+  "package": "journal",
+  "function": "verifyStrategyReceiptBindingTx",
+  "signature": "verifyStrategyReceiptBindingTx(params=3, results=3)",
+  "start": {
+    "line": 581,
+    "column": 1
+  },
+  "end": {
+    "line": 591,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 586,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 588,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 590,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 584,
+        "column": 9
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 584,
+        "column": 9
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 588,
+        "column": 17
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 584,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

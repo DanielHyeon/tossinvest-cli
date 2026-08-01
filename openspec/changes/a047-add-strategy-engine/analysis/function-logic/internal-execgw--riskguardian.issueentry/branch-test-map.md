@@ -12,4 +12,10 @@
 | B8 | stale/concurrent/recollection failure leaves no spendable decision | reservation, issuance, and `TestConcurrentIssuancesCannotExceedTheAggregateLimit` | baseline | baseline |
 | B9 | typed issuance-stage refusal receives the ledger reason code | entry observation/issuance refusal tests | baseline | baseline |
 | Success | decision and reservation commit together | `TestTheGuardianIssuesTheDecisionAndItsReservationTogether`, `TestTheGuardiansOwnIssuanceSubmits` | baseline | baseline |
-| A047 | manifest/protection/scheduler/provenance refusal calls Guardian zero times | a047 orchestrator spy tests (to add in RED) | pending | no |
+| A047-1 | ordinary caller cannot attach a strategy plan | compile/API surface inspection | public draft existed | pass |
+| A047-2 | strategy issuance commits decision/reservation/lineage/start together | journal strategy atomic/rollback tests | split draft | pass |
+| A047-3 | strategy receipt returns canonical quantity/client id | strategy adapter integration | post-commit lookup draft | pass |
+| B10 | collection error propagates without partial issuance | issuance/recollection tests | baseline | pass |
+| B11 | private strategy plan selects atomic v14 path | production strategy issuance tests | split draft | pass |
+| B12 | strategy recollection success returns exact receipt | production atomic success | missing | pass |
+| B13 | post-commit issued observation cannot roll back authority | observation/Guardian suite | baseline | pass |

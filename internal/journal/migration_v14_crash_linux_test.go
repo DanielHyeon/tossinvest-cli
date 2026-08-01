@@ -39,7 +39,7 @@ func TestMigrationV14CommitAndUserVersionSurviveSIGKILL(t *testing.T) {
 	if err := raw.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != 14 {
 		t.Fatalf("version=%d err=%v", version, err)
 	}
-	for _, name := range []string{"strategy_decision_lineage", "strategy_attempt_lineage", "strategy_execution_lineage"} {
+	for _, name := range []string{"strategy_decision_lineage", "strategy_attempt_lineage", "strategy_execution_lineage", "strategy_attempt_refusals", "idx_strategy_execution_reverse"} {
 		var count int
 		if err := raw.QueryRow(`SELECT count(*) FROM sqlite_master WHERE name=?`, name).Scan(&count); err != nil || count != 1 {
 			t.Fatalf("artifact %s count=%d err=%v", name, count, err)

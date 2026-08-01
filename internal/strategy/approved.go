@@ -9,18 +9,27 @@ import "github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 // ApprovedCandidate is opaque outside this package. It can only wrap the exact
 // immutable candidate.ApprovedCandidate value; a zero or refused candidate
 // remains refused when a lane reads it.
-type ApprovedCandidate struct {
-	value candidate.ApprovedCandidate
+type ApprovedSnapshot struct {
+	valid                                                                               bool
+	market, symbol, state, candidateLifeID, thresholdVersion, setDigest, evidenceDigest string
+	firstSeenUnixNano, lastSeenUnixNano, validUntilUnixNano, approvedAtUnixNano         int64
 }
 
 // FromApproved is the only candidate-reading handoff. It performs no work and
 // grants no execution authority.
-func FromApproved(value candidate.ApprovedCandidate) ApprovedCandidate {
-	return ApprovedCandidate{value: value}
+func SealApproved(value candidate.ApprovedCandidate) ApprovedSnapshot {
+	return ApprovedSnapshot{valid: value.Valid(), market: value.MarketString(), symbol: value.SymbolString(), state: value.StateString(), candidateLifeID: value.CandidateLifeIDString(), thresholdVersion: value.ThresholdVersion(), setDigest: value.SetDigest(), evidenceDigest: value.EvidenceDigest(), firstSeenUnixNano: value.FirstSeenUnixNano(), lastSeenUnixNano: value.LastSeenUnixNano(), validUntilUnixNano: value.ValidUntilUnixNano(), approvedAtUnixNano: value.ApprovedAtUnixNano()}
 }
 
-// Value returns the immutable verdict so a downstream pure lane can read its
-// scalar provenance. It does not turn the verdict into an order capability.
-func Value(value ApprovedCandidate) candidate.ApprovedCandidate {
-	return value.value
-}
+func (s ApprovedSnapshot) Valid() bool               { return s.valid }
+func (s ApprovedSnapshot) Market() string            { return s.market }
+func (s ApprovedSnapshot) Symbol() string            { return s.symbol }
+func (s ApprovedSnapshot) State() string             { return s.state }
+func (s ApprovedSnapshot) CandidateLifeID() string   { return s.candidateLifeID }
+func (s ApprovedSnapshot) ThresholdVersion() string  { return s.thresholdVersion }
+func (s ApprovedSnapshot) SetDigest() string         { return s.setDigest }
+func (s ApprovedSnapshot) EvidenceDigest() string    { return s.evidenceDigest }
+func (s ApprovedSnapshot) FirstSeenUnixNano() int64  { return s.firstSeenUnixNano }
+func (s ApprovedSnapshot) LastSeenUnixNano() int64   { return s.lastSeenUnixNano }
+func (s ApprovedSnapshot) ValidUntilUnixNano() int64 { return s.validUntilUnixNano }
+func (s ApprovedSnapshot) ApprovedAtUnixNano() int64 { return s.approvedAtUnixNano }

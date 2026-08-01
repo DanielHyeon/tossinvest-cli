@@ -22,6 +22,8 @@
 | B4 | exposure arithmetic refuses | refusal observation | chain refusal | risk arithmetic tests |
 | B5 | collection/usage/reservation issuance fails | at most issuance-refused observation; transaction rolls back decision/reservation | issuance refusal | reservation/recollection tests |
 | B6 | atomic decision+reservation commits | post-commit issued observation | immutable decision reference and reservations | `TestTheGuardianIssuesTheDecisionAndItsReservationTogether` |
+| B7 | private strategy plan absent | ordinary atomic issuance | normal issued result | existing Guardian suite |
+| B8 | private strategy plan present | decision+reservation+strategy lineage+attempt+DISPATCH_START in one transaction | issued result with exact receipt | strategy issuance integration |
 
 ## Calls and live bindings
 
@@ -30,6 +32,7 @@
 | `scopedIntent` | bind account/market/symbol and validate exact risk intent | fail closed | CodeGraph + AST |
 | `evaluateChain` / `EntryExposureValue` | Guardian-only risk judgement and exact exposure | evaluated once before issuance | CodeGraph + AST |
 | `RecordDecisionAndReserveWithRecollection` | atomic durable authority and aggregate hold | bounded recollection; no orphan decision on failure | CodeGraph + AST |
+| `RecordStrategyDecisionAndReserveWithRecollection` | atomic strategy authority, hold, lineage and planned attempt | same bounded recollection; no public plan surface | AST + journal tests |
 | `observeEntry` / `escalateFor` | preserve refusal/issued provenance and tighten mode | observation does not delay issuance; escalation never converts refusal to allow | CodeGraph + AST |
 
 ## State mutations and fallbacks
@@ -37,11 +40,11 @@
 - Refused chain: no decision/reservation row; an observation records the refusal.
 - Issuance failure: decision and reservation roll back together.
 - Success: the issued observation is recorded only after commit.
-- a047 must add provenance upstream/downstream without reimplementing this chain.
+- a047 adds a private strategy-plan branch; ordinary issuance remains unchanged.
+- Strategy issuance returns canonical quantity/client-order-id in the same committed receipt, so no post-commit lookup can strand a plan.
 
 ## Safety conclusion
 
-- Safe edit boundary: preferably unchanged; strategy orchestration supplies a
-  canonical intent and separately binds lane/manifest provenance to its durable
-  attempt. Any direct edit requires reservation race regression.
+- Safe edit boundary: the new branch is reachable only from `IssueStrategyEntry`
+  through the unexported `strategyPlan` field and reuses the same risk chain.
 - High-risk impact: yes.

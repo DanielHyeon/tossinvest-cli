@@ -1,0 +1,31 @@
+{
+  "file": "internal/candidate/thresholdset.go",
+  "source_sha256": "39dc200f29f5964b3e1372b2b8d5809888a42fdd1bea1862d3fa3393738e134c",
+  "package": "candidate",
+  "function": "FirstSeenAt",
+  "receiver": "ApprovedCandidate",
+  "signature": "ApprovedCandidate.FirstSeenAt(params=0, results=1)",
+  "start": {
+    "line": 557,
+    "column": 1
+  },
+  "end": {
+    "line": 557,
+    "column": 86
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 557,
+        "column": 64
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

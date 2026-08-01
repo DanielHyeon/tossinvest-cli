@@ -7,7 +7,7 @@ const optimizationTemplates = `
 <p class="muted">StockOS의 공통 정책 세 가지를 TossOS의 decimal exit evaluator로 적용한다.
 이 화면은 <code>engine.exit_policy.common_policy</code> ID 하나만 저장하며 주문, automation gate,
 trading toggle, 편입 목록은 변경하지 않는다.</p>
-<p><a href="/strategy-runtime/market-schedule">strategy-runtime &gt; 시장·일정 보기</a></p>
+<p><a href="/strategy-runtime">strategy-runtime 상태</a> · <a href="/strategy-runtime/market-schedule">시장·일정</a></p>
 <nav class="filter-bar" aria-label="최적화 화면">
   <a href="#candidate-filters">상태·안전</a><a href="#exit-protection">청산/보호</a><a href="#application-scope">성과·근거</a>
 </nav>
@@ -191,29 +191,122 @@ trading toggle, 편입 목록은 변경하지 않는다.</p>
 
 {{define "strategy-runtime"}}
 {{template "head" .}}
-<p><a href="/optimization">최적화</a> / <code>strategy-runtime</code></p>
+<p><a href="/optimization">최적화</a> / <code>strategy-runtime</code> / <a href="/strategy-runtime/market-schedule">시장·일정</a></p>
 <h1>한국 주식 전략 lane</h1>
-<p class="muted">StockOS Parker VWAP conservative v1을 옮기는 읽기 전용 상태 카드다. 서버 고정 preset만 보여주며 이 화면에는 입력·저장·활성화·LIVE action이 없다.</p>
+<p class="muted page-intro">StockOS Parker VWAP conservative v1을 옮기는 읽기 전용 상태 카드다. 서버가 관측한 저장값과 적용값만 보여주며 이 화면에는 입력·저장·활성화·LIVE action이 없다.</p>
 {{if .LoadErr}}<p class="danger" role="alert">상태를 읽지 못해 신규 진입 OFF를 표시한다.</p>{{end}}
 {{if .Unwired}}<p class="notice">strategy-runtime seam 미배선 — dormant 기본값만 표시한다.</p>{{end}}
-<section aria-labelledby="strategy-parameters"><h2 id="strategy-parameters">전략 파라미터 · 읽기 전용</h2>
-<table><tr><th>항목</th><th>기본값</th><th>Desired</th><th>Effective</th><th>단위·범위</th><th>출처</th><th>적용 시점</th></tr>
-<tr><th>최소 VWAP 기울기</th><td>0.08</td><td>0.08</td><td>미구성</td><td>% · 0 이상</td><td rowspan="11"><code>d75113d3</code><br><code>09260ac…</code><br>manifest 미재현</td><td>bar 평가 시</td></tr>
-<tr><th>EMA9 접촉 허용</th><td>0.25</td><td>0.25</td><td>미구성</td><td>% · 0 이상</td><td>bar 평가 시</td></tr>
-<tr><th>최소 LVN 전방 공간</th><td>1.2</td><td>1.2</td><td>미구성</td><td>% · 0 이상</td><td>bar 평가 시</td></tr>
-<tr><th>최소 기대 RR</th><td>1.5</td><td>1.5</td><td>미구성</td><td>R · 0 이상</td><td>bar 평가 시</td></tr>
-<tr><th>얽힘 band</th><td>0.35</td><td>0.35</td><td>미구성</td><td>% · 0 이상</td><td>bar 평가 시</td></tr>
-<tr><th>최대 band 확장률</th><td>1.8</td><td>1.8</td><td>미구성</td><td>배 · 0 이상</td><td>bar 평가 시</td></tr>
-<tr><th>하드 스톱</th><td>0.7</td><td>0.7</td><td>미구성</td><td>% · 고정</td><td>결정 생성 시</td></tr>
-<tr><th>목표</th><td>3.0</td><td>3.0</td><td>미구성</td><td>R · 고정</td><td>결정 생성 시</td></tr>
-<tr><th>시초 제외</th><td>10</td><td>10</td><td>미구성</td><td>분 · 고정</td><td>세션 평가 시</td></tr>
-<tr><th>최대 신호 나이</th><td>15</td><td>15</td><td>미구성</td><td>초 · 0~15</td><td>결정 생성 시</td></tr>
-<tr><th>최대 진입 괴리</th><td>0.20</td><td>0.20</td><td>미구성</td><td>% · 0~0.20</td><td>dispatch 전</td></tr></table>
-<p>각 값은 서버 소유 fixed preset이다. source manifest가 <code>09260ac…</code>를 재현하기 전에는 effective 값이 아니다.</p></section>
-<section aria-labelledby="lane-state"><h2 id="lane-state">lane 상태</h2><table><tr><th>항목</th><th>기본값</th><th>Desired</th><th>Effective</th></tr><tr><th>krx_parker_vwap_conservative_v1</th><td>OFF</td><td>{{.LaneDesired}}</td><td><strong>{{.LaneEffective}}</strong></td></tr></table></section>
-<section aria-labelledby="autostart-state"><h2 id="autostart-state">자동 기동</h2><table><tr><th>기본값</th><th>Desired</th><th>Effective</th></tr><tr><td>OFF</td><td>{{.AutoStartDesired}}</td><td>{{.AutoStartEffective}}</td></tr></table><p>다음 엔진 기동 시 별도 activation을 다시 검증한다.</p></section>
-<section aria-labelledby="live-state"><h2 id="live-state">LIVE 주문 승인</h2><table><tr><th>권한</th><th>Desired</th><th>Effective</th></tr><tr><th>Automation gate</th><td>{{.GateDesired}}</td><td>{{.GateEffective}}</td></tr><tr><th>LIVE approval</th><td>{{.LiveDesired}}</td><td>{{.LiveEffective}}</td></tr></table><p>lane·자동 기동·gate·LIVE는 서로 다른 권한이다. 일괄 활성화는 없다.</p></section>
-<section aria-labelledby="strategy-blockers"><h2 id="strategy-blockers">Activation blockers</h2><table><tr><th>a045 브로커 보호 상태</th><td>{{.Protection}}</td></tr><tr><th>a046 후보 provenance</th><td>{{.Candidate}}</td></tr><tr><th>a048 scheduler/calendar claim</th><td>{{.Scheduler}}</td></tr><tr><th>StockOS source manifest</th><td>{{.SourceManifest}}</td></tr><tr><th>첫 refusal</th><td><code>{{.Reason}}</code></td></tr></table><p><strong>신규 entry가 OFF여도 exit·reconcile·보호 감독은 계속된다.</strong></p></section>
+<nav class="filter-bar" aria-label="전략 런타임 화면">
+  <a href="#strategy-observation">관측 상태</a><a href="#strategy-parameters">파라미터</a><a href="#lane-state">lane</a>
+  <a href="#autostart-state">자동 기동</a><a href="#live-state">승인·진입</a><a href="#strategy-blockers">blockers</a>
+</nav>
+
+<section id="strategy-observation" aria-labelledby="strategy-observation-title">
+  <h2 id="strategy-observation-title">관측 상태</h2>
+  <dl>
+    <dt>Generated at</dt><dd>{{.GeneratedAt}}</dd>
+    <dt>Observed at</dt><dd>{{.ObservedAt}}</dd>
+    <dt>Freshness</dt><dd><span class="status-pill {{.Freshness.Class}}" data-testid="runtime-freshness">{{.Freshness.Value}}</span></dd>
+  </dl>
+  <p><a href="/strategy-runtime">상태 새로고침</a> · GET으로 다시 읽기만 하며 설정이나 주문을 보내지 않는다.</p>
+</section>
+
+<section id="strategy-parameters" aria-labelledby="strategy-parameters-title">
+  <h2 id="strategy-parameters-title">{{.ParameterSection}} · 읽기 전용</h2>
+  <p class="muted">각 카드는 서버 소유 descriptor의 help·기본값·저장값·적용값·provenance를 그대로 표시한다.</p>
+  {{range .Fields}}
+  <article class="detail-grid" aria-labelledby="strategy-field-{{.Key}}" aria-readonly="true">
+    <div>
+      <h3 id="strategy-field-{{.Key}}">{{.Label}}</h3>
+      <p class="muted">{{.Help}}</p>
+      <code>{{.Key}}</code>
+    </div>
+    <dl>
+      <dt>기본값</dt><dd>{{.Default}}</dd>
+      <dt>Desired · 저장값</dt><dd>{{.Desired}}</dd>
+      <dt>Effective · 적용값</dt><dd><span class="status-pill muted">{{.Effective}}</span></dd>
+      <dt>단위 / 범위</dt><dd>{{.Unit}} / {{.Range}}</dd>
+      <dt>적용 시점</dt><dd>{{.ApplyTiming}}</dd>
+      <dt>Provenance</dt><dd><code>{{.Provenance}}</code></dd>
+    </dl>
+  </article>
+  {{end}}
+</section>
+
+<section id="lane-state" aria-labelledby="lane-state-title">
+  <h2 id="lane-state-title">{{.LaneSection}}</h2>
+  <article class="detail-grid" aria-readonly="true">
+    <div><h3>krx_parker_vwap_conservative_v1</h3><p class="muted">lane 권한은 자동 기동·gate·LIVE 승인과 별도다.</p></div>
+    <dl>
+      <dt>기본값</dt><dd><span class="status-pill {{.Lane.Default.Class}}">{{.Lane.Default.Value}}</span></dd>
+      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.Lane.Desired.Class}}">{{.Lane.Desired.Value}}</span></dd>
+      <dt>Effective · 적용값</dt><dd><span class="status-pill {{.Lane.Effective.Class}}" data-testid="lane-effective">{{.Lane.Effective.Value}}</span></dd>
+      <dt>Reason</dt><dd><code>{{.Lane.Reason}}</code></dd>
+    </dl>
+  </article>
+</section>
+
+<section id="autostart-state" aria-labelledby="autostart-state-title">
+  <h2 id="autostart-state-title">{{.AutoStartSection}}</h2>
+  <article class="detail-grid" aria-readonly="true">
+    <div><h3>엔진 기동 시 자동 시작</h3><p class="muted">다음 엔진 기동 시 별도 activation manifest를 다시 검증한다.</p></div>
+    <dl>
+      <dt>기본값</dt><dd><span class="status-pill {{.AutoStart.Default.Class}}">{{.AutoStart.Default.Value}}</span></dd>
+      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.AutoStart.Desired.Class}}">{{.AutoStart.Desired.Value}}</span></dd>
+      <dt>Effective · 적용값</dt><dd><span class="status-pill {{.AutoStart.Effective.Class}}" data-testid="autostart-effective">{{.AutoStart.Effective.Value}}</span></dd>
+      <dt>Reason</dt><dd><code>{{.AutoStart.Reason}}</code></dd>
+    </dl>
+  </article>
+</section>
+
+<section id="live-state" aria-labelledby="live-state-title">
+  <h2 id="live-state-title">{{.LiveSection}}</h2>
+  <p class="muted">Automation gate와 LIVE 승인은 독립 권한이다. 일괄 활성화는 없다.</p>
+  <article class="detail-grid" aria-labelledby="gate-approval-title" aria-readonly="true">
+    <div><h3 id="gate-approval-title">Automation gate</h3><p class="muted">프로그램 주문 gate의 서버 권위 상태다.</p></div>
+    <dl>
+      <dt>기본값</dt><dd><span class="status-pill {{.GateApproval.Default.Class}}">{{.GateApproval.Default.Value}}</span></dd>
+      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.GateApproval.Desired.Class}}">{{.GateApproval.Desired.Value}}</span></dd>
+      <dt>Effective · 적용값</dt><dd><span class="status-pill {{.GateApproval.Effective.Class}}" data-testid="gate-effective">{{.GateApproval.Effective.Value}}</span></dd>
+      <dt>Reason</dt><dd><code>{{.GateApproval.Reason}}</code></dd>
+    </dl>
+  </article>
+  <article class="detail-grid" aria-labelledby="live-approval-title" aria-readonly="true">
+    <div><h3 id="live-approval-title">LIVE approval</h3><p class="muted">사람이 승인한 LIVE 주문 권한의 서버 권위 상태다.</p></div>
+    <dl>
+      <dt>기본값</dt><dd><span class="status-pill {{.LiveApproval.Default.Class}}">{{.LiveApproval.Default.Value}}</span></dd>
+      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.LiveApproval.Desired.Class}}">{{.LiveApproval.Desired.Value}}</span></dd>
+      <dt>Effective · 적용값</dt><dd><span class="status-pill {{.LiveApproval.Effective.Class}}" data-testid="live-effective">{{.LiveApproval.Effective.Value}}</span></dd>
+      <dt>Reason</dt><dd><code>{{.LiveApproval.Reason}}</code></dd>
+    </dl>
+  </article>
+  <article class="detail-grid" aria-labelledby="entry-capability-title" aria-readonly="true">
+    <div><h3 id="entry-capability-title">Entry capability</h3><p class="muted">authority가 확정한 신규 진입 결과다. 이 화면은 blocker를 다시 계산하지 않는다.</p></div>
+    <dl>
+      <dt>기본값</dt><dd><span class="status-pill {{.EntryDefault.Class}}">{{.EntryDefault.Value}}</span></dd>
+      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.EntryDesired.Class}}">{{.EntryDesired.Value}}</span></dd>
+      <dt>Effective</dt><dd><span class="status-pill {{.EntryEffective.Class}}" data-testid="entry-effective">{{.EntryEffective.Value}}</span></dd>
+      <dt>첫 refusal</dt><dd><code>{{.FirstRefusal}}</code></dd>
+    </dl>
+  </article>
+</section>
+
+<section id="strategy-blockers" aria-labelledby="strategy-blockers-title">
+  <h2 id="strategy-blockers-title">Activation blockers</h2>
+  <p class="muted">authority가 제공한 순서대로 첫 거부 근거와 freshness를 확인한다.</p>
+  {{range .Blockers}}
+  <article class="detail-grid" aria-labelledby="strategy-blocker-{{.Key}}" aria-readonly="true">
+    <div><h3 id="strategy-blocker-{{.Key}}">{{.Label}}</h3><code>{{.Key}}</code></div>
+    <dl>
+      <dt>Desired</dt><dd><span class="status-pill {{.Desired.Class}}">{{.Desired.Value}}</span></dd>
+      <dt>Effective</dt><dd><span class="status-pill {{.Effective.Class}}">{{.Effective.Value}}</span></dd>
+      <dt>Freshness</dt><dd><span class="status-pill {{.Freshness.Class}}">{{.Freshness.Value}}</span></dd>
+      <dt>Reason</dt><dd><code>{{.Reason}}</code></dd>
+    </dl>
+  </article>
+  {{end}}
+  <p><strong>신규 entry가 OFF여도 exit·reconcile·보호 감독은 계속된다.</strong></p>
+</section>
 {{template "foot" .}}
 {{end}}
 `

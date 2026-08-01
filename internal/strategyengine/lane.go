@@ -5,116 +5,289 @@ import (
 	"encoding/hex"
 	"math/big"
 	"strings"
+	"time"
 
-	"github.com/JungHoonGhae/tossinvest-cli/internal/strategy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategymarket"
 )
 
 type ParkerConservativeLane struct{}
 
-func (ParkerConservativeLane) Evaluate(in LaneInput) EntryDecision {
-	approved := strategy.Value(in.Approved)
-	base := EntryDecision{Reason: RefusalCandidate, LaneID: LaneID, LaneVersion: LaneVersion, SourceCommit: SourceCommit, SourceSetDigest: FrozenSourceSetDigest, ConstantsDigest: constantsDigest()}
-	if !approved.Valid() {
-		return base
+func (ParkerConservativeLane) Evaluate(in LaneInput) Evaluation {
+	refuse := func(reason Refusal) Evaluation {
+		return Evaluation{Reason: reason, SourceReason: sourceRefusalReason(reason)}
 	}
-	key := approved.Key()
-	base.CandidateLifeID = approved.CandidateLifeID().String()
-	base.ThresholdVersion, base.ThresholdSetDigest, base.EvidenceDigest = approved.ThresholdVersion(), approved.SetDigest(), approved.EvidenceDigest()
-	base.Market, base.Symbol = key.Market, key.Symbol
-	if in.Market != "KR" || in.Session != "regular" || key.Market != "KR" {
-		base.Reason = RefusalUnsupportedScope
-		return base
+	refuseAs := func(reason Refusal, sourceReason string) Evaluation {
+		return Evaluation{Reason: reason, SourceReason: sourceReason}
 	}
-	if !in.SourceVerified {
-		base.Reason = RefusalSource
-		return base
+	if !in.Approved.Valid() {
+		return refuse(RefusalCandidate)
 	}
-	if !in.RegularSession {
-		base.Reason = RefusalSession
-		return base
+	if in.Approved.Market() != "KR" || in.Approved.Symbol() == "" {
+		return refuse(RefusalUnsupportedScope)
 	}
-	if !in.BarsClosedContiguous {
-		base.Reason = RefusalBarIntegrity
-		return base
+	if !in.Source.Valid() {
+		return refuse(RefusalSource)
 	}
-	if !in.SymbolStateNormal {
-		base.Reason = RefusalSymbolState
-		return base
+	market := in.Market
+	if !market.valid || market.market != in.Approved.Market() || market.symbol != in.Approved.Symbol() {
+		return refuse(RefusalIndicator)
 	}
-	if !in.NoExistingPosition {
-		base.Reason = RefusalExistingPosition
-		return base
+	evaluatedAt := market.evaluatedAt.UTC()
+	approvedAt := time.Unix(0, in.Approved.ApprovedAtUnixNano()).UTC()
+	lastSeenAt := time.Unix(0, in.Approved.LastSeenUnixNano()).UTC()
+	validUntil := time.Unix(0, in.Approved.ValidUntilUnixNano()).UTC()
+	if in.Approved.State() != "active" || approvedAt.After(evaluatedAt) ||
+		evaluatedAt.Before(lastSeenAt) || !evaluatedAt.Before(validUntil) {
+		return refuse(RefusalCandidate)
 	}
-	volume, vok := decimal(in.Volume)
-	if !vok || volume.Sign() <= 0 {
-		base.Reason = RefusalZeroVolume
-		return base
+	if !market.tradingDay {
+		return refuseAs(RefusalSession, SourceRejectNonTradingDay)
 	}
-	price, pok := decimal(in.Price)
-	vwap, wok := decimal(in.VWAP)
-	slope, sok := decimal(in.VWAPSlopePct)
-	ema9, e9ok := decimal(in.EMA9)
-	ema20, e20ok := decimal(in.EMA20)
-	lvn, lok := decimal(in.LVNForwardSpacePct)
-	expansion, exok := decimal(in.BandExpansionRate)
-	rr, rrok := decimal(in.ExpectedRR)
-	drift, dok := decimal(in.EntryPriceDriftPct)
-	if !(pok && wok && sok && e9ok && e20ok && lok && exok && rrok && dok) {
-		base.Reason = RefusalIndicator
-		return base
+	if evaluatedAt.Before(market.sessionOpenAt) || evaluatedAt.After(market.sessionCloseAt) {
+		return refuseAs(RefusalSession, SourceRejectAfterHours)
 	}
-	if price.Cmp(vwap) <= 0 {
-		base.Reason = RefusalVWAPAbove
-		return base
+	if evaluatedAt.Before(market.sessionOpenAt.Add(10 * time.Minute)) {
+		return refuseAs(RefusalSession, SourceRejectOpeningWindow)
+	}
+	if evaluatedAt.After(market.noEntryAfter) {
+		return refuseAs(RefusalSession, SourceRejectAfterEntryCutoff)
+	}
+	if !in.Bar.Valid() || in.Bar.Market() != market.market || in.Bar.Symbol() != market.symbol ||
+		in.Bar.Source() != string(strategymarket.SourceOfficialOpenAPI) || in.Bar.Adjusted() {
+		return refuse(RefusalBarIntegrity)
+	}
+	if in.Bar.ClosedAt().After(evaluatedAt) || in.Bar.ClosedAt().After(market.sessionCloseAt) {
+		return refuse(RefusalSession)
+	}
+	if !in.State.Valid() || in.State.Market() != "KR" || in.State.Symbol() != in.Approved.Symbol() {
+		return refuse(RefusalSymbolState)
+	}
+	if !in.Position.Valid() || in.Position.Market() != "KR" || in.Position.Symbol() != in.Approved.Symbol() {
+		return refuse(RefusalExistingPosition)
+	}
+
+	open, openOK := positive(in.Bar.Open())
+	high, highOK := positive(in.Bar.High())
+	low, lowOK := positive(in.Bar.Low())
+	closePrice, closeOK := positive(in.Bar.Close())
+	volume, volumeOK := nonnegative(in.Bar.Volume())
+	if !(openOK && highOK && lowOK && closeOK && volumeOK) ||
+		high.Cmp(low) < 0 || high.Cmp(open) < 0 || high.Cmp(closePrice) < 0 ||
+		low.Cmp(open) > 0 || low.Cmp(closePrice) > 0 {
+		return refuse(RefusalInvalidBar)
+	}
+	if volume.Sign() == 0 {
+		return refuse(RefusalIlliquidBar)
+	}
+
+	vwap, vwapOK := positive(market.vwap)
+	slope, slopeOK := decimal(market.vwapSlopePct)
+	ema9, ema9OK := positive(market.ema9)
+	lvn, lvnOK := decimal(market.lvnForwardSpacePct)
+	tangled, tangledOK := nonnegative(market.tangledScorePct)
+	if !(vwapOK && slopeOK && ema9OK && lvnOK && tangledOK) {
+		return refuse(RefusalIndicator)
+	}
+	if closePrice.Cmp(vwap) <= 0 {
+		return refuse(RefusalVWAPAbove)
 	}
 	if slope.Cmp(rat("0.08")) < 0 {
-		base.Reason = RefusalVWAPSlope
-		return base
+		return refuse(RefusalVWAPSlope)
 	}
-	if ema9.Cmp(ema20) <= 0 || absDiffPct(price, ema9).Cmp(rat("0.25")) > 0 {
-		base.Reason = RefusalEMA9Pullback
-		return base
+	touchCeiling := new(big.Rat).Mul(ema9, rat("1.0025"))
+	if closePrice.Cmp(ema9) <= 0 || low.Cmp(touchCeiling) > 0 {
+		return refuse(RefusalEMA9Pullback)
+	}
+	if closePrice.Cmp(open) <= 0 {
+		return refuse(RefusalFakeBreakout)
 	}
 	if lvn.Cmp(rat("1.2")) < 0 {
-		base.Reason = RefusalLVNSpace
-		return base
+		return refuse(RefusalLVNSpace)
 	}
-	if !in.Untangled {
-		base.Reason = RefusalTangledBand
-		return base
+	if tangled.Cmp(rat("0.35")) < 0 {
+		return refuse(RefusalTangledBand)
 	}
-	if expansion.Cmp(rat("1.8")) > 0 {
-		base.Reason = RefusalBandExpansion
-		return base
+	if market.bandExpansionRate != "" {
+		expansion, ok := decimal(market.bandExpansionRate)
+		if !ok {
+			return refuse(RefusalIndicator)
+		}
+		if expansion.Cmp(rat("1.8")) > 0 {
+			return refuse(RefusalBandExpansion)
+		}
 	}
-	if rr.Cmp(rat("1.5")) < 0 {
-		base.Reason = RefusalRR
-		return base
+
+	stop := new(big.Rat).Mul(closePrice, rat("0.993"))
+	risk := new(big.Rat).Sub(closePrice, stop)
+	forwardDistance := new(big.Rat).Quo(new(big.Rat).Mul(closePrice, lvn), rat("100"))
+	expectedRR := new(big.Rat).Quo(forwardDistance, risk)
+	if expectedRR.Cmp(rat("1.5")) < 0 {
+		return refuse(RefusalRR)
 	}
-	if !in.HVNCeilingClear {
-		base.Reason = RefusalHVNCeiling
-		return base
+	if market.hvnAboveDistancePct != "" {
+		hvnDistance, ok := decimal(market.hvnAboveDistancePct)
+		if !ok {
+			return refuse(RefusalIndicator)
+		}
+		if hvnDistance.Cmp(lvn) < 0 {
+			return refuse(RefusalHVNCeiling)
+		}
 	}
-	if in.SignalAgeSeconds < 0 || in.SignalAgeSeconds > 15 {
-		base.Reason = RefusalAge
-		return base
+	age := evaluatedAt.Sub(in.Bar.ClosedAt().UTC())
+	if age < 0 || age > 15*time.Second {
+		return refuse(RefusalAge)
 	}
-	if drift.Sign() < 0 || drift.Cmp(rat("0.20")) > 0 {
-		base.Reason = RefusalDrift
-		return base
+	currentPrice := new(big.Rat).Set(closePrice)
+	if market.currentPrice != "" {
+		live, ok := decimal(market.currentPrice)
+		if !ok || live.Sign() <= 0 {
+			return refuse(RefusalDrift)
+		}
+		currentPrice = live
 	}
-	stop := new(big.Rat).Mul(price, rat("0.993"))
-	target := new(big.Rat).Mul(price, rat("1.021"))
-	base.Accepted, base.Reason = true, RefusalNone
-	base.EntryPrice, base.StopPrice, base.TargetPrice, base.ExpectedRR = decimalString(price), decimalString(stop), decimalString(target), decimalString(rr)
-	payload := strings.Join([]string{"strategy-decision:v1", base.CandidateLifeID, LaneID, LaneVersion, base.EntryPrice, base.StopPrice, base.TargetPrice}, "\x00")
-	sum := sha256.Sum256([]byte(payload))
-	base.Identity = "strategy-decision:v1:sha256:" + hex.EncodeToString(sum[:])
-	return base
+	drift := new(big.Rat).Sub(currentPrice, closePrice)
+	if drift.Sign() < 0 {
+		drift.Neg(drift)
+	}
+	drift.Quo(drift, closePrice)
+	drift.Mul(drift, rat("100"))
+	if drift.Cmp(rat("0.20")) > 0 {
+		return refuse(RefusalDrift)
+	}
+
+	target := new(big.Rat).Add(closePrice, new(big.Rat).Mul(risk, rat("3.0")))
+	expansion := market.bandExpansionRate
+	hvnDistance := market.hvnAboveDistancePct
+	record := DecisionRecord{
+		CandidateLifeID:     in.Approved.CandidateLifeID(),
+		CandidateState:      in.Approved.State(),
+		CandidateFirstSeen:  in.Approved.FirstSeenUnixNano(),
+		CandidateLastSeen:   in.Approved.LastSeenUnixNano(),
+		CandidateValidUntil: in.Approved.ValidUntilUnixNano(),
+		CandidateApprovedAt: in.Approved.ApprovedAtUnixNano(),
+		Market:              "KR",
+		Symbol:              in.Approved.Symbol(),
+		LaneID:              LaneID,
+		LaneVersion:         LaneVersion,
+		SourceCommit:        SourceCommit,
+		SourceDigest:        in.Source.Digest(),
+		ConstantsDigest:     constantsDigest(),
+		ThresholdVersion:    in.Approved.ThresholdVersion(),
+		ThresholdSetDigest:  in.Approved.SetDigest(),
+		EvidenceDigest:      in.Approved.EvidenceDigest(),
+		MarketInputVersion:  market.version,
+		CalendarSource:      market.calendarSource,
+		CalendarVersion:     market.calendarVersion,
+		ConfigSource:        market.configSource,
+		ConfigVersion:       market.configVersion,
+		IndicatorSource:     market.indicatorSource,
+		IndicatorVersion:    market.indicatorVersion,
+		IndicatorComputedAt: market.indicatorComputedAt.UnixNano(),
+		TradingDay:          market.tradingDay,
+		SessionOpenAt:       market.sessionOpenAt.UnixNano(),
+		SessionCloseAt:      market.sessionCloseAt.UnixNano(),
+		NoEntryAfter:        market.noEntryAfter.UnixNano(),
+		BarSource:           in.Bar.Source(),
+		BarAdjusted:         in.Bar.Adjusted(),
+		BarOpenAt:           in.Bar.OpenAt().UTC().UnixNano(),
+		BarClosedAt:         in.Bar.ClosedAt().UTC().UnixNano(),
+		EvaluatedAt:         evaluatedAt.UnixNano(),
+		ExpiresAt:           in.Bar.ClosedAt().UTC().Add(15*time.Second + time.Nanosecond).UnixNano(),
+		Open:                decimalString(open),
+		High:                decimalString(high),
+		Low:                 decimalString(low),
+		Close:               decimalString(closePrice),
+		Volume:              in.Bar.Volume(),
+		Currency:            in.Bar.Currency(),
+		VWAP:                decimalString(vwap),
+		VWAPSlopePct:        decimalString(slope),
+		EMA9:                decimalString(ema9),
+		LVNSpacePct:         decimalString(lvn),
+		TangledPct:          decimalString(tangled),
+		Expansion:           expansion,
+		HVNAboveDistancePct: hvnDistance,
+		StateSource:         in.State.Authority(),
+		StateAt:             in.State.ObservedAt().UTC().UnixNano(),
+		PositionSource:      in.Position.Authority(),
+		PositionAt:          in.Position.ObservedAt().UTC().UnixNano(),
+		EntryPrice:          decimalString(closePrice),
+		LivePrice:           decimalString(currentPrice),
+		LivePriceObserved:   market.currentPrice != "",
+		EntryPriceDriftPct:  roundedDecimalString(drift),
+		StopPrice:           decimalString(stop),
+		TargetPrice:         decimalString(target),
+		ExpectedRR:          roundedDecimalString(expectedRR),
+		AcceptReasons: [7]string{
+			"VWAP_ABOVE", "VWAP_SLOPE_UP", "EMA9_PULLBACK_CONFIRMED",
+			"VOLUME_PROFILE_SPACE_OK", "RR_GE_2", "NOT_TANGLED", "NOT_AFTER_ENTRY_CUTOFF",
+		},
+	}
+	identity, err := decisionIdentity(record)
+	if err != nil {
+		return refuse(RefusalDecision)
+	}
+	record.Identity = identity
+	decision, err := mintDecision(record)
+	if err != nil {
+		return refuse(RefusalDecision)
+	}
+	return Evaluation{Decision: decision, Reason: RefusalNone}
+}
+
+func sourceRefusalReason(reason Refusal) string {
+	switch reason {
+	case RefusalCandidate, RefusalSource:
+		return SourceRejectProfileDisabled
+	case RefusalUnsupportedScope:
+		return SourceRejectScopeFrozen
+	case RefusalBarIntegrity, RefusalSession:
+		return SourceRejectBarNotClosed
+	case RefusalSymbolState:
+		return SourceRejectSymbolStateStale
+	case RefusalExistingPosition:
+		return SourceRejectPositionAlreadyOpen
+	case RefusalIlliquidBar:
+		return SourceRejectIlliquidBar
+	case RefusalInvalidBar, RefusalIndicator, RefusalDecision:
+		return SourceRejectIndicatorUnavailable
+	case RefusalVWAPAbove:
+		return SourceRejectVWAPBelow
+	case RefusalVWAPSlope:
+		return SourceRejectVWAPSlopeDown
+	case RefusalEMA9Pullback:
+		return SourceRejectEMA9PullbackMissing
+	case RefusalFakeBreakout:
+		return SourceRejectFakeBreakout
+	case RefusalLVNSpace, RefusalHVNCeiling:
+		return SourceRejectHVNBlock
+	case RefusalTangledBand:
+		return SourceRejectTangled
+	case RefusalBandExpansion:
+		return SourceRejectVolatilityExpansion
+	case RefusalRR:
+		return SourceRejectRRTooLow
+	case RefusalAge:
+		return SourceRejectStaleSignal
+	case RefusalDrift:
+		return SourceRejectPriceDrift
+	default:
+		return ""
+	}
 }
 
 func constantsDigest() string {
-	payload := "min_vwap_slope_pct=0.08\nema_touch_tolerance_pct=0.25\nmin_forward_space_pct=1.2\nmin_expected_rr=1.5\ntangled_band_pct=0.35\nmax_band_expansion_rate=1.8\nhard_stop_pct=0.7\npartial_take_profit_at_r=3.0\nskip_open_minutes=10\nmax_signal_age_seconds=15\nmax_entry_price_drift_pct=0.20\nsymbol_state_stale_seconds=30\n"
+	payload := "min_vwap_slope_pct=0.08\n" +
+		"ema_touch_tolerance_pct=0.25\n" +
+		"min_forward_space_pct=1.2\n" +
+		"min_expected_rr=1.5\n" +
+		"tangled_band_pct=0.35\n" +
+		"max_band_expansion_rate=1.8\n" +
+		"hard_stop_pct=0.7\n" +
+		"partial_take_profit_at_r=3.0\n" +
+		"skip_open_minutes=10\n" +
+		"max_signal_age_seconds=15\n" +
+		"max_entry_price_drift_pct=0.20\n" +
+		"symbol_state_stale_seconds=30\n"
 	sum := sha256.Sum256([]byte(payload))
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
@@ -123,27 +296,35 @@ func decimal(raw string) (*big.Rat, bool) {
 	if strings.TrimSpace(raw) != raw || raw == "" || strings.ContainsAny(raw, "eE/") {
 		return nil, false
 	}
-	v, ok := new(big.Rat).SetString(raw)
-	return v, ok
+	value, ok := new(big.Rat).SetString(raw)
+	return value, ok
 }
-func rat(raw string) *big.Rat { v, _ := new(big.Rat).SetString(raw); return v }
-func absDiffPct(a, b *big.Rat) *big.Rat {
-	d := new(big.Rat).Sub(a, b)
-	if d.Sign() < 0 {
-		d.Neg(d)
-	}
-	return d.Mul(d, big.NewRat(100, 1)).Quo(d, b)
+
+func positive(raw string) (*big.Rat, bool) {
+	value, ok := decimal(raw)
+	return value, ok && value.Sign() > 0
 }
-func decimalString(v *big.Rat) string {
-	numerator := new(big.Int).Set(v.Num())
-	denominator := new(big.Int).Set(v.Denom())
+
+func nonnegative(raw string) (*big.Rat, bool) {
+	value, ok := decimal(raw)
+	return value, ok && value.Sign() >= 0
+}
+
+func rat(raw string) *big.Rat {
+	value, _ := new(big.Rat).SetString(raw)
+	return value
+}
+
+func decimalString(value *big.Rat) string {
+	numerator := new(big.Int).Set(value.Num())
+	denominator := new(big.Int).Set(value.Denom())
 	two, five := big.NewInt(2), big.NewInt(5)
-	zero, remainder := big.NewInt(0), new(big.Int)
+	remainder := new(big.Int)
 	twos, fives := 0, 0
 	for {
 		quotient := new(big.Int)
 		quotient.QuoRem(denominator, two, remainder)
-		if remainder.Cmp(zero) != 0 {
+		if remainder.Sign() != 0 {
 			break
 		}
 		denominator = quotient
@@ -152,14 +333,14 @@ func decimalString(v *big.Rat) string {
 	for {
 		quotient := new(big.Int)
 		quotient.QuoRem(denominator, five, remainder)
-		if remainder.Cmp(zero) != 0 {
+		if remainder.Sign() != 0 {
 			break
 		}
 		denominator = quotient
 		fives++
 	}
 	if denominator.Cmp(big.NewInt(1)) != 0 {
-		return v.RatString()
+		return value.RatString()
 	}
 	scale := max(twos, fives)
 	numerator.Mul(numerator, new(big.Int).Exp(two, big.NewInt(int64(scale-twos)), nil))
@@ -182,5 +363,18 @@ func decimalString(v *big.Rat) string {
 	if negative && out != "0" {
 		out = "-" + out
 	}
+	return out
+}
+
+func roundedDecimalString(value *big.Rat) string {
+	if value == nil {
+		return ""
+	}
+	if exact := decimalString(value); !strings.Contains(exact, "/") {
+		return exact
+	}
+	out := value.FloatString(28)
+	out = strings.TrimRight(out, "0")
+	out = strings.TrimSuffix(out, ".")
 	return out
 }

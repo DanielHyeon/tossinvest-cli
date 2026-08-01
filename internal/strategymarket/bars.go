@@ -11,8 +11,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
 type Refusal string
@@ -28,6 +26,19 @@ const (
 	RefusalStateUnavailable      Refusal = "symbol_state_unavailable"
 	RefusalStateStale            Refusal = "symbol_state_stale"
 	RefusalStateBlocked          Refusal = "symbol_state_blocked"
+	RefusalIdentity              Refusal = "request_identity_mismatch"
+	RefusalAdjusted              Refusal = "adjusted_candles_forbidden"
+	RefusalSource                Refusal = "source_unavailable_or_untrusted"
+	RefusalInterval              Refusal = "interval_mismatch"
+)
+
+type MarketSource string
+
+const (
+	IntervalOneMinute                      = "1m"
+	SourceOfficialOpenAPI     MarketSource = "official-open-api"
+	SourceOfficialSymbolState MarketSource = "official-symbol-state"
+	SourceOfficialPosition    MarketSource = "official-position"
 )
 
 type IntegrityError struct {
@@ -39,26 +50,97 @@ func (e *IntegrityError) Error() string {
 	return "strategy market: " + string(e.Kind) + ": " + e.Detail
 }
 
-type FiveMinuteBar struct {
-	OpenAt, ClosedAt                         time.Time
-	Open, High, Low, Close, Volume, Currency string
+type RawMinuteCandle struct {
+	Timestamp string
+	Open      string
+	High      string
+	Low       string
+	Close     string
+	Volume    string
+	Currency  string
 }
+
+// OfficialMinutePage is an opaque adapter product. Production construction is
+// statically restricted to internal/strategycandle; its scalar constructor is
+// exported solely because Go has no friend-package visibility.
+type OfficialMinutePage struct {
+	market, symbol, interval string
+	adjusted                 bool
+	source                   MarketSource
+	candles                  []RawMinuteCandle
+	valid                    bool
+}
+
+func SealAdaptedOfficialMinutePage(market, symbol, interval string, adjusted bool, source MarketSource, candles []RawMinuteCandle) OfficialMinutePage {
+	copyCandles := make([]RawMinuteCandle, len(candles))
+	copy(copyCandles, candles)
+	return OfficialMinutePage{market: market, symbol: symbol, interval: interval, adjusted: adjusted, source: source, candles: copyCandles, valid: true}
+}
+
+type VerifiedBar struct {
+	market, symbol, source         string
+	adjusted                       bool
+	openAt, closedAt               time.Time
+	open, high, low, close, volume string
+	currency                       string
+	valid                          bool
+}
+
+func (b VerifiedBar) Valid() bool         { return b.valid }
+func (b VerifiedBar) Market() string      { return b.market }
+func (b VerifiedBar) Symbol() string      { return b.symbol }
+func (b VerifiedBar) Source() string      { return b.source }
+func (b VerifiedBar) Adjusted() bool      { return b.adjusted }
+func (b VerifiedBar) OpenAt() time.Time   { return b.openAt }
+func (b VerifiedBar) ClosedAt() time.Time { return b.closedAt }
+func (b VerifiedBar) Open() string        { return b.open }
+func (b VerifiedBar) High() string        { return b.high }
+func (b VerifiedBar) Low() string         { return b.low }
+func (b VerifiedBar) Close() string       { return b.close }
+func (b VerifiedBar) Volume() string      { return b.volume }
+func (b VerifiedBar) Currency() string    { return b.currency }
 
 var offsetTimestamp = regexp.MustCompile(`(?:Z|[+-][0-9]{2}:[0-9]{2})$`)
 
-func AggregateClosedKRXFiveMinute(raw []official.RawMinuteCandle, now time.Time) (FiveMinuteBar, error) {
+// AggregateClosedKRXFiveMinute no longer accepts caller-asserted raw bytes as
+// verified strategy data. Use the official-page adapter boundary instead.
+func AggregateClosedKRXFiveMinute(_ []RawMinuteCandle, _ time.Time) (VerifiedBar, error) {
+	return VerifiedBar{}, &IntegrityError{Kind: RefusalSource, Detail: "opaque official page required"}
+}
+
+func SealOfficialClosedKRXFiveMinute(page OfficialMinutePage, now time.Time) (VerifiedBar, error) {
+	return SealOfficialClosedKRXFiveMinuteFor(page.market, page.symbol, page, now)
+}
+
+func SealOfficialClosedKRXFiveMinuteFor(market, symbol string, page OfficialMinutePage, now time.Time) (VerifiedBar, error) {
+	switch {
+	case !page.valid:
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalSource, Detail: "sealed adapter page required"}
+	case market != "KR" || symbol == "" || page.market != market || page.symbol != symbol:
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalIdentity, Detail: "exact KRX request identity required"}
+	case page.interval != IntervalOneMinute:
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalInterval, Detail: page.interval}
+	case page.adjusted:
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalAdjusted, Detail: "unadjusted official candles required"}
+	case page.source != SourceOfficialOpenAPI:
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalSource, Detail: string(page.source)}
+	}
+	return aggregateClosedKRXFiveMinute(market, symbol, string(page.source), page.adjusted, page.candles, now)
+}
+
+func aggregateClosedKRXFiveMinute(market, symbol, source string, adjusted bool, raw []RawMinuteCandle, now time.Time) (VerifiedBar, error) {
 	if len(raw) != 5 {
-		return FiveMinuteBar{}, &IntegrityError{Kind: RefusalIncompleteBucket, Detail: "exactly five minutes required"}
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalIncompleteBucket, Detail: "exactly five minutes required"}
 	}
 	if now.IsZero() {
-		return FiveMinuteBar{}, &IntegrityError{Kind: RefusalOpenBucket, Detail: "injected now required"}
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalOpenBucket, Detail: "injected now required"}
 	}
 	seoul, err := time.LoadLocation("Asia/Seoul")
 	if err != nil {
-		return FiveMinuteBar{}, err
+		return VerifiedBar{}, err
 	}
 	type parsedMinute struct {
-		candle official.RawMinuteCandle
+		candle RawMinuteCandle
 		local  time.Time
 		values [5]*big.Rat
 	}
@@ -66,29 +148,29 @@ func AggregateClosedKRXFiveMinute(raw []official.RawMinuteCandle, now time.Time)
 	currency := ""
 	for _, candle := range raw {
 		if !offsetTimestamp.MatchString(candle.Timestamp) {
-			return FiveMinuteBar{}, &IntegrityError{Kind: RefusalNaiveTimestamp, Detail: "RFC3339 offset required"}
+			return VerifiedBar{}, &IntegrityError{Kind: RefusalNaiveTimestamp, Detail: "RFC3339 offset required"}
 		}
 		parsed, parseErr := time.Parse(time.RFC3339, candle.Timestamp)
 		if parseErr != nil {
-			return FiveMinuteBar{}, &IntegrityError{Kind: RefusalNaiveTimestamp, Detail: "invalid RFC3339 timestamp"}
+			return VerifiedBar{}, &IntegrityError{Kind: RefusalNaiveTimestamp, Detail: "invalid RFC3339 timestamp"}
 		}
 		local := parsed.In(seoul)
 		minuteOfDay := local.Hour()*60 + local.Minute()
 		if local.Second() != 0 || local.Nanosecond() != 0 || minuteOfDay < 9*60 || minuteOfDay >= 15*60+30 {
-			return FiveMinuteBar{}, &IntegrityError{Kind: RefusalOutsideRegularSession, Detail: candle.Timestamp}
+			return VerifiedBar{}, &IntegrityError{Kind: RefusalOutsideRegularSession, Detail: candle.Timestamp}
 		}
 		if currency == "" {
 			currency = candle.Currency
 		}
 		if candle.Currency != "KRW" || candle.Currency != currency {
-			return FiveMinuteBar{}, &IntegrityError{Kind: RefusalCurrency, Detail: "KRW required"}
+			return VerifiedBar{}, &IntegrityError{Kind: RefusalCurrency, Detail: "KRW required"}
 		}
 		parsedMinute := parsedMinute{candle: candle, local: local}
 		fields := []string{candle.Open, candle.High, candle.Low, candle.Close, candle.Volume}
 		for j, field := range fields {
 			v, ok := exactDecimal(field)
 			if !ok || v.Sign() < 0 {
-				return FiveMinuteBar{}, &IntegrityError{Kind: RefusalInvalidDecimal, Detail: field}
+				return VerifiedBar{}, &IntegrityError{Kind: RefusalInvalidDecimal, Detail: field}
 			}
 			parsedMinute.values[j] = v
 		}
@@ -97,16 +179,16 @@ func AggregateClosedKRXFiveMinute(raw []official.RawMinuteCandle, now time.Time)
 	sort.Slice(minutes, func(i, j int) bool { return minutes[i].local.Before(minutes[j].local) })
 	startMinute := minutes[0].local.Hour()*60 + minutes[0].local.Minute()
 	if (startMinute-9*60)%5 != 0 {
-		return FiveMinuteBar{}, &IntegrityError{Kind: RefusalIncompleteBucket, Detail: "not aligned to KRX five-minute boundary"}
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalIncompleteBucket, Detail: "not aligned to KRX five-minute boundary"}
 	}
 	for i := 1; i < 5; i++ {
 		if !minutes[i].local.Equal(minutes[0].local.Add(time.Duration(i) * time.Minute)) {
-			return FiveMinuteBar{}, &IntegrityError{Kind: RefusalMinuteGap, Detail: "minutes are not contiguous"}
+			return VerifiedBar{}, &IntegrityError{Kind: RefusalMinuteGap, Detail: "minutes are not contiguous"}
 		}
 	}
 	closedAt := minutes[0].local.Add(5 * time.Minute)
 	if now.Before(closedAt) {
-		return FiveMinuteBar{}, &IntegrityError{Kind: RefusalOpenBucket, Detail: "bucket is not closed"}
+		return VerifiedBar{}, &IntegrityError{Kind: RefusalOpenBucket, Detail: "bucket is not closed"}
 	}
 	high := new(big.Rat).Set(minutes[0].values[1])
 	low := new(big.Rat).Set(minutes[0].values[2])
@@ -120,7 +202,21 @@ func AggregateClosedKRXFiveMinute(raw []official.RawMinuteCandle, now time.Time)
 		}
 		volume.Add(volume, minutes[i].values[4])
 	}
-	return FiveMinuteBar{OpenAt: minutes[0].local, ClosedAt: closedAt, Open: decimalString(minutes[0].values[0]), High: decimalString(high), Low: decimalString(low), Close: decimalString(minutes[4].values[3]), Volume: decimalString(volume), Currency: currency}, nil
+	return VerifiedBar{
+		market:   market,
+		symbol:   symbol,
+		source:   source,
+		adjusted: adjusted,
+		openAt:   minutes[0].local,
+		closedAt: closedAt,
+		open:     decimalString(minutes[0].values[0]),
+		high:     decimalString(high),
+		low:      decimalString(low),
+		close:    decimalString(minutes[4].values[3]),
+		volume:   decimalString(volume),
+		currency: currency,
+		valid:    true,
+	}, nil
 }
 
 func exactDecimal(raw string) (*big.Rat, bool) {
@@ -191,30 +287,96 @@ const (
 )
 
 type StateReading struct {
+	Market     string
+	Symbol     string
 	State      SymbolState
 	ObservedAt time.Time
-	Authority  string
+	Source     MarketSource
 }
+type FreshNormalState struct {
+	market, symbol, authority string
+	observedAt                time.Time
+	valid                     bool
+}
+
+func (s FreshNormalState) Valid() bool           { return s.valid }
+func (s FreshNormalState) Market() string        { return s.market }
+func (s FreshNormalState) Symbol() string        { return s.symbol }
+func (s FreshNormalState) ObservedAt() time.Time { return s.observedAt }
+func (s FreshNormalState) Authority() string     { return s.authority }
+
 type SymbolStateSource interface {
 	ReadSymbolState(context.Context, string, string) (StateReading, error)
 }
 
 var ErrSymbolStateNotConfigured = errors.New("strategy symbol state: authority not configured")
 
-func RequireFreshNormalState(ctx context.Context, source SymbolStateSource, market, symbol string, now time.Time) (StateReading, error) {
+func RequireFreshNormalState(ctx context.Context, source SymbolStateSource, market, symbol string, now time.Time) (FreshNormalState, error) {
 	if source == nil || now.IsZero() {
-		return StateReading{}, &IntegrityError{Kind: RefusalStateUnavailable, Detail: ErrSymbolStateNotConfigured.Error()}
+		return FreshNormalState{}, &IntegrityError{Kind: RefusalStateUnavailable, Detail: ErrSymbolStateNotConfigured.Error()}
 	}
 	reading, err := source.ReadSymbolState(ctx, market, symbol)
-	if err != nil || reading.Authority == "" || reading.ObservedAt.IsZero() {
-		return StateReading{}, &IntegrityError{Kind: RefusalStateUnavailable, Detail: fmt.Sprint(err)}
+	if err != nil || reading.Market != market || reading.Symbol != symbol ||
+		reading.Source != SourceOfficialSymbolState || reading.ObservedAt.IsZero() {
+		return FreshNormalState{}, &IntegrityError{Kind: RefusalStateUnavailable, Detail: fmt.Sprint(err)}
 	}
 	age := now.UTC().Sub(reading.ObservedAt.UTC())
 	if age < 0 || age > 30*time.Second {
-		return StateReading{}, &IntegrityError{Kind: RefusalStateStale, Detail: age.String()}
+		return FreshNormalState{}, &IntegrityError{Kind: RefusalStateStale, Detail: age.String()}
 	}
 	if reading.State != StateNormal {
-		return StateReading{}, &IntegrityError{Kind: RefusalStateBlocked, Detail: string(reading.State)}
+		return FreshNormalState{}, &IntegrityError{Kind: RefusalStateBlocked, Detail: string(reading.State)}
 	}
-	return reading, nil
+	return FreshNormalState{
+		market:     market,
+		symbol:     symbol,
+		authority:  string(reading.Source),
+		observedAt: reading.ObservedAt.UTC(),
+		valid:      true,
+	}, nil
+}
+
+type PositionReading struct {
+	Market     string
+	Symbol     string
+	Quantity   string
+	OpenOrders int
+	ObservedAt time.Time
+	Source     MarketSource
+}
+
+type NoPositionProof struct {
+	market, symbol, authority string
+	observedAt                time.Time
+	valid                     bool
+}
+
+func (p NoPositionProof) Valid() bool           { return p.valid }
+func (p NoPositionProof) Market() string        { return p.market }
+func (p NoPositionProof) Symbol() string        { return p.symbol }
+func (p NoPositionProof) Authority() string     { return p.authority }
+func (p NoPositionProof) ObservedAt() time.Time { return p.observedAt }
+
+type PositionSource interface {
+	ReadPosition(context.Context, string, string) (PositionReading, error)
+}
+
+func RequireNoPosition(ctx context.Context, source PositionSource, market, symbol string, now time.Time) (NoPositionProof, error) {
+	if source == nil || now.IsZero() || strings.TrimSpace(market) == "" || strings.TrimSpace(symbol) == "" {
+		return NoPositionProof{}, &IntegrityError{Kind: RefusalStateUnavailable, Detail: "position authority not configured"}
+	}
+	reading, err := source.ReadPosition(ctx, market, symbol)
+	if err != nil || reading.Market != market || reading.Symbol != symbol ||
+		reading.Source != SourceOfficialPosition || reading.ObservedAt.IsZero() {
+		return NoPositionProof{}, &IntegrityError{Kind: RefusalStateUnavailable, Detail: fmt.Sprint(err)}
+	}
+	age := now.UTC().Sub(reading.ObservedAt.UTC())
+	quantity, validQuantity := exactDecimal(reading.Quantity)
+	if age < 0 || age > 30*time.Second {
+		return NoPositionProof{}, &IntegrityError{Kind: RefusalStateStale, Detail: age.String()}
+	}
+	if !validQuantity || decimalString(quantity) != reading.Quantity || quantity.Sign() != 0 || reading.OpenOrders != 0 {
+		return NoPositionProof{}, &IntegrityError{Kind: RefusalStateBlocked, Detail: "position or open order exists"}
+	}
+	return NoPositionProof{market: market, symbol: symbol, authority: string(reading.Source), observedAt: reading.ObservedAt.UTC(), valid: true}, nil
 }

@@ -1,0 +1,47 @@
+{
+  "file": "internal/candidate/thresholdset.go",
+  "source_sha256": "f310d55ea542d6faea7581438c7742969523050c2ccf51d9b27663fa28c76223",
+  "package": "candidate",
+  "function": "FirstSeenUnixNano",
+  "receiver": "ApprovedCandidate",
+  "signature": "ApprovedCandidate.FirstSeenUnixNano(params=0, results=1)",
+  "start": {
+    "line": 574,
+    "column": 1
+  },
+  "end": {
+    "line": 574,
+    "column": 103
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 574,
+        "column": 64
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 71
+      },
+      "text": "UnixNano"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 71
+      },
+      "text": "c.firstSeenAt.UTC"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

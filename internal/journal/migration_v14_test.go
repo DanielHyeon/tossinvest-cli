@@ -34,7 +34,7 @@ func TestMigrationV13ToV14IsAdditiveAndPreservesLegacyRiskIntentBytes(t *testing
 	if err != nil || canonicalAfter != canonicalBefore {
 		t.Fatalf("RiskIntent canonical changed: before=%q after=%q err=%v", canonicalBefore, canonicalAfter, err)
 	}
-	for _, name := range []string{"strategy_decision_lineage", "strategy_attempt_lineage", "strategy_execution_lineage", "strategy_decision_lineage_no_update"} {
+	for _, name := range []string{"strategy_decision_lineage", "strategy_attempt_lineage", "strategy_execution_lineage", "strategy_attempt_refusals", "idx_strategy_execution_reverse", "strategy_decision_lineage_no_update"} {
 		var count int
 		if err := j.db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE name=?`, name).Scan(&count); err != nil || count != 1 {
 			t.Fatalf("artifact %s count=%d err=%v", name, count, err)

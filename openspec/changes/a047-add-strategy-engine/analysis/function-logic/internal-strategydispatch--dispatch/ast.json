@@ -1,0 +1,70 @@
+{
+  "file": "internal/strategydispatch/dispatch.go",
+  "source_sha256": "43b611261cd8e13ced3490f883c9d1201e1fcf4a128faf3bde39c5d7f27d58eb",
+  "package": "strategydispatch",
+  "function": "Dispatch",
+  "signature": "Dispatch(params=3, results=1)",
+  "start": {
+    "line": 251,
+    "column": 1
+  },
+  "end": {
+    "line": 256,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 253,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 6
+      },
+      "text": "decision.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 9
+      },
+      "text": "dispatchValidated"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 42
+      },
+      "text": "decision.Record"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
