@@ -14,6 +14,7 @@ import (
 // apiConditionalCondition mirrors ConditionalOrderCondition (nullable numeric
 // fields arrive as "" when JSON null).
 type apiConditionalCondition struct {
+	OrderSide        string `json:"orderSide"`
 	Type             string `json:"type"`
 	Status           string `json:"status"`
 	TriggerPrice     string `json:"triggerPrice"`
@@ -114,6 +115,7 @@ type RawConditionalOrder struct {
 	Status string
 	// OrderType is the order this conditional would place ("LIMIT" | "MARKET").
 	OrderType string
+	OrderSide string
 	// Quantity, TriggerPrice, TargetProfitRate and OrderPrice are the payload's
 	// strings, untouched. Empty means the broker sent no value.
 	Quantity         string

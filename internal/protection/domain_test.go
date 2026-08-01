@@ -644,10 +644,10 @@ func (*fakeGateway) Create(context.Context, ConditionalBody) (BrokerProtection, 
 func (*fakeGateway) Replace(context.Context, string, ConditionalBody) (BrokerProtection, error) {
 	return BrokerProtection{}, nil
 }
-func (*fakeGateway) Cancel(context.Context, string) (CancelObservation, error) {
+func (*fakeGateway) Cancel(context.Context, BrokerTarget) (CancelObservation, error) {
 	return CancelObservation{}, nil
 }
-func (*fakeGateway) Get(context.Context, string) (BrokerProtection, error) {
+func (*fakeGateway) Get(context.Context, BrokerTarget) (BrokerProtection, error) {
 	return BrokerProtection{}, nil
 }
 func (*fakeGateway) List(context.Context, Scope) ([]BrokerProtection, error) { return nil, nil }

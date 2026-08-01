@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -16,7 +17,10 @@ var (
 	ErrProtectionInactive = errors.New("protection: activation is OFF")
 	ErrProtectionGap      = errors.New("protection: broker protection did not become ACTIVE inside the deadline")
 	ErrMutationInDoubt    = errors.New("protection: broker mutation result is in doubt")
+	ErrProtectionGone     = errors.New("protection: broker protection disappeared or closed without a trigger")
 )
+
+const brokerRecoveryDeadline = 2 * time.Second
 
 type Readiness string
 
@@ -83,6 +87,14 @@ type Controller struct {
 	now        func() time.Time
 	newID      func() string
 	entryOpen  atomic.Bool
+	opMu       sync.Mutex
+	confirmed  map[string]activeConfirmation
+}
+
+type activeConfirmation struct {
+	revision   int64
+	generation int64
+	brokerID   string
 }
 
 func NewController(repository *Repository, gateway ExecutionGateway, activation Activation, now func() time.Time, newID func() string) (*Controller, error) {
@@ -92,8 +104,15 @@ func NewController(repository *Repository, gateway ExecutionGateway, activation 
 	if now == nil || newID == nil {
 		return nil, errors.New("protection: clock and identity source are required")
 	}
-	c := &Controller{repository: repository, gateway: gateway, scope: activation.scope, now: now, newID: newID}
-	c.entryOpen.Store(true)
+	c := &Controller{repository: repository, gateway: gateway, scope: activation.scope, now: now, newID: newID, confirmed: make(map[string]activeConfirmation)}
+	// A restarted process has no in-memory proof that any durable ACTIVE row is
+	// still exact at the broker. Only an empty scope starts open; every persisted
+	// saga requires explicit recovery/reconciliation first.
+	rows, err := repository.List(context.Background(), activation.scope)
+	if err != nil {
+		return nil, fmt.Errorf("protection: inspect durable sagas at startup: %w", err)
+	}
+	c.entryOpen.Store(len(rows) == 0)
 	return c, nil
 }
 
@@ -107,7 +126,13 @@ type Fill struct {
 }
 
 func (c *Controller) PlanFill(ctx context.Context, fill Fill) (Saga, error) {
-	if c == nil || fill.At.IsZero() || fill.Quantity < 1 || fill.Trigger < 1 || !validExpireDate(fill.ExpireDate) {
+	if c == nil {
+		return Saga{}, ErrProtectionInactive
+	}
+	c.opMu.Lock()
+	defer c.opMu.Unlock()
+	c.closeEntry("")
+	if fill.At.IsZero() || fill.Quantity < 1 || fill.Trigger < 1 || !validExpireDate(fill.ExpireDate) {
 		return Saga{}, ErrInvalidSaga
 	}
 	id := c.newID()
@@ -124,6 +149,9 @@ func (c *Controller) PlanFill(ctx context.Context, fill Fill) (Saga, error) {
 }
 
 func (c *Controller) Register(ctx context.Context, sagaID, attemptID, expireDate string, fillAt time.Time) (Saga, error) {
+	c.opMu.Lock()
+	defer c.opMu.Unlock()
+	c.closeEntry(sagaID)
 	saga, err := c.repository.Get(ctx, sagaID)
 	if err != nil {
 		return Saga{}, err
@@ -133,6 +161,9 @@ func (c *Controller) Register(ctx context.Context, sagaID, attemptID, expireDate
 		c.entryOpen.Store(false)
 		_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, "PROTECTION_GAP_ARM_DEADLINE")
 		return Saga{}, ErrProtectionGap
+	}
+	if saga.State != StatePlanned {
+		return Saga{}, fmt.Errorf("%w: registration requires PLANNED", ErrInvalidTransition)
 	}
 	body := bodyForSaga(saga, expireDate)
 	canonical, err := body.CanonicalJSON()
@@ -154,9 +185,17 @@ func (c *Controller) Register(ctx context.Context, sagaID, attemptID, expireDate
 	if err := c.repository.markAttempt(ctx, attemptID, MutationPlanned, MutationDispatched, now, ""); err != nil {
 		return Saga{}, err
 	}
-	broker, callErr := c.gateway.Create(ctx, body)
+	brokerCtx, cancel, err := boundedBrokerContext(ctx, fillAt.Add(RegistrationActiveDeadline).Sub(c.now()))
+	if err != nil {
+		at := c.now()
+		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, at, "")
+		_, _ = c.repository.MarkMutationUnknown(ctx, saga.ID, saga.Revision, at, attemptID)
+		return Saga{}, ErrProtectionGap
+	}
+	defer cancel()
+	broker, callErr := c.gateway.Create(brokerCtx, body)
 	settledAt := c.now()
-	if callErr != nil || !exactBrokerResult(saga, broker) {
+	if callErr != nil || brokerCtx.Err() != nil || !exactBrokerResult(saga, broker) {
 		c.entryOpen.Store(false)
 		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, settledAt, broker.ID)
 		_, _ = c.repository.MarkMutationUnknown(ctx, saga.ID, saga.Revision, settledAt, attemptID)
@@ -176,10 +215,16 @@ func (c *Controller) Register(ctx context.Context, sagaID, attemptID, expireDate
 		_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, settledAt, "PROTECTION_GAP_ACTIVE_DEADLINE")
 		return Saga{}, ErrProtectionGap
 	}
+	if err := c.confirmActive(ctx, saga); err != nil {
+		return Saga{}, err
+	}
 	return saga, nil
 }
 
 func (c *Controller) Replace(ctx context.Context, sagaID, attemptID string, trigger, quantity int64, expireDate string) (Saga, error) {
+	c.opMu.Lock()
+	defer c.opMu.Unlock()
+	c.closeEntry(sagaID)
 	saga, err := c.repository.Get(ctx, sagaID)
 	if err != nil {
 		return Saga{}, err
@@ -211,9 +256,14 @@ func (c *Controller) Replace(ctx context.Context, sagaID, attemptID string, trig
 	if err := c.repository.markAttempt(ctx, attemptID, MutationPlanned, MutationDispatched, now, ""); err != nil {
 		return Saga{}, err
 	}
-	broker, callErr := c.gateway.Replace(ctx, saga.BrokerID, body)
+	brokerCtx, cancel, err := boundedBrokerContext(ctx, brokerRecoveryDeadline)
+	if err != nil {
+		return Saga{}, ErrMutationInDoubt
+	}
+	defer cancel()
+	broker, callErr := c.gateway.Replace(brokerCtx, saga.BrokerID, body)
 	settledAt := c.now()
-	if callErr != nil || !exactPendingBrokerResult(saga, broker) {
+	if callErr != nil || brokerCtx.Err() != nil || !exactPendingBrokerResult(saga, broker) {
 		c.entryOpen.Store(false)
 		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, settledAt, broker.ID)
 		_, _ = c.repository.MarkMutationUnknown(ctx, saga.ID, saga.Revision, settledAt, attemptID)
@@ -223,7 +273,14 @@ func (c *Controller) Replace(ctx context.Context, sagaID, attemptID string, trig
 		c.entryOpen.Store(false)
 		return Saga{}, err
 	}
-	return c.repository.MarkReplaceActive(ctx, saga.ID, saga.Revision, settledAt, attemptID, broker.ID)
+	active, err := c.repository.MarkReplaceActive(ctx, saga.ID, saga.Revision, settledAt, attemptID, broker.ID)
+	if err != nil {
+		return Saga{}, err
+	}
+	if err := c.confirmActive(ctx, active); err != nil {
+		return Saga{}, err
+	}
+	return active, nil
 }
 
 // ReplaceFromExitSnapshot is the typed a041 bridge. The broker trigger comes
@@ -249,15 +306,26 @@ func TriggerFromExitSnapshot(snapshot exitpolicy.ExitLineSnapshot) (int64, error
 }
 
 func (c *Controller) Reconcile(ctx context.Context) ([]Discrepancy, error) {
+	c.opMu.Lock()
+	defer c.opMu.Unlock()
+	c.closeEntry("")
 	local, err := c.repository.List(ctx, c.scope)
 	if err != nil {
 		c.entryOpen.Store(false)
 		return nil, err
 	}
-	broker, err := c.gateway.List(ctx, c.scope)
+	brokerCtx, cancel, deadlineErr := boundedBrokerContext(ctx, brokerRecoveryDeadline)
+	if deadlineErr != nil {
+		return nil, ErrMutationInDoubt
+	}
+	defer cancel()
+	broker, err := c.gateway.List(brokerCtx, c.scope)
 	if err != nil {
 		c.entryOpen.Store(false)
 		return nil, err
+	}
+	if brokerCtx.Err() != nil {
+		return nil, ErrMutationInDoubt
 	}
 	discrepancies, err := Compare(c.scope, local, broker)
 	if err != nil {
@@ -265,6 +333,20 @@ func (c *Controller) Reconcile(ctx context.Context) ([]Discrepancy, error) {
 		return nil, err
 	}
 	if len(discrepancies) == 0 {
+		for _, saga := range local {
+			if saga.State != StateActive {
+				continue
+			}
+			matched, ok := exactBrokerForSaga(saga, broker)
+			if !ok {
+				_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, c.now(), "RECONCILE_IDENTITY_MISMATCH")
+				return nil, ErrMutationInDoubt
+			}
+			c.confirmed[saga.ID] = activeConfirmation{revision: saga.Revision, generation: saga.Generation, brokerID: matched.ID}
+		}
+		if err := c.refreshEntryLatch(ctx); err != nil {
+			return nil, err
+		}
 		return nil, nil
 	}
 	c.entryOpen.Store(false)
@@ -283,14 +365,25 @@ func (c *Controller) Reconcile(ctx context.Context) ([]Discrepancy, error) {
 }
 
 func (c *Controller) Recover(ctx context.Context, sagaID string) (Saga, error) {
+	c.opMu.Lock()
+	defer c.opMu.Unlock()
+	c.closeEntry(sagaID)
 	saga, err := c.repository.Get(ctx, sagaID)
 	if err != nil {
 		return Saga{}, err
 	}
-	broker, err := c.gateway.List(ctx, c.scope)
+	brokerCtx, cancel, deadlineErr := boundedBrokerContext(ctx, brokerRecoveryDeadline)
+	if deadlineErr != nil {
+		return Saga{}, ErrMutationInDoubt
+	}
+	defer cancel()
+	broker, err := c.gateway.List(brokerCtx, c.scope)
 	if err != nil {
 		c.entryOpen.Store(false)
-		return Saga{}, err
+		return Saga{}, fmt.Errorf("%w: recovery list: %v", ErrMutationInDoubt, err)
+	}
+	if brokerCtx.Err() != nil {
+		return Saga{}, ErrMutationInDoubt
 	}
 	var matched *BrokerProtection
 	for i := range broker {
@@ -305,20 +398,51 @@ func (c *Controller) Recover(ctx context.Context, sagaID string) (Saga, error) {
 	}
 	now := c.now()
 	if matched == nil {
-		c.entryOpen.Store(false)
-		return c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, string(DiscrepancyMissing))
+		_, markErr := c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, string(DiscrepancyMissing))
+		if markErr != nil {
+			return Saga{}, fmt.Errorf("%w: missing protection and discrepancy write failed: %v", ErrMutationInDoubt, markErr)
+		}
+		return Saga{}, ErrProtectionGone
+	}
+	if !exactBrokerIdentity(saga, *matched) {
+		_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, "RECOVERY_IDENTITY_MISMATCH")
+		return Saga{}, ErrMutationInDoubt
 	}
 	if matched.Triggered {
 		c.entryOpen.Store(false)
 		return c.repository.RecoverTriggered(ctx, saga.ID, saga.Revision, now, matched.ID)
 	}
 	if matched.Terminal {
-		return c.repository.RecoverClosed(ctx, saga.ID, saga.Revision, now, matched.ID)
+		_, markErr := c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, "TERMINAL_WITHOUT_TRIGGER")
+		if markErr != nil {
+			return Saga{}, fmt.Errorf("%w: terminal protection and discrepancy write failed: %v", ErrMutationInDoubt, markErr)
+		}
+		return Saga{}, ErrProtectionGone
 	}
-	return c.repository.RecoverActive(ctx, saga.ID, saga.Revision, now, matched.ID, matched.Trigger, matched.Quantity)
+	if !exactBrokerResult(saga, *matched) {
+		_, _ = c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, "RECOVERY_IDENTITY_MISMATCH")
+		return Saga{}, ErrMutationInDoubt
+	}
+	if saga.State == StateActive {
+		if err := c.confirmActive(ctx, saga); err != nil {
+			return Saga{}, err
+		}
+		return saga, nil
+	}
+	active, err := c.repository.RecoverActive(ctx, saga.ID, saga.Revision, now, matched.ID, matched.Trigger, matched.Quantity)
+	if err != nil {
+		return Saga{}, err
+	}
+	if err := c.confirmActive(ctx, active); err != nil {
+		return Saga{}, err
+	}
+	return active, nil
 }
 
 func (c *Controller) AuthorizeFlatten(ctx context.Context, sagaID, attemptID string, start time.Time, required int64) (FlattenAuthorization, error) {
+	c.opMu.Lock()
+	defer c.opMu.Unlock()
+	c.closeEntry(sagaID)
 	saga, err := c.repository.Get(ctx, sagaID)
 	if err != nil {
 		return FlattenAuthorization{}, err
@@ -339,20 +463,29 @@ func (c *Controller) AuthorizeFlatten(ctx context.Context, sagaID, attemptID str
 	if err := c.repository.markAttempt(ctx, attemptID, MutationPlanned, MutationDispatched, now, ""); err != nil {
 		return FlattenAuthorization{}, err
 	}
-	cancel, callErr := c.gateway.Cancel(ctx, saga.BrokerID)
-	if callErr != nil || !cancel.Terminal || cancel.Triggered {
+	brokerCtx, cancelBroker, deadlineErr := boundedBrokerContext(ctx, start.Add(2*time.Second).Sub(c.now()))
+	if deadlineErr != nil {
+		at := c.now()
+		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, at, saga.BrokerID)
+		_, _ = c.repository.MarkMutationUnknown(ctx, saga.ID, saga.Revision, at, attemptID)
+		return FlattenAuthorization{}, ErrMutationInDoubt
+	}
+	defer cancelBroker()
+	target := brokerTargetForSaga(saga)
+	cancel, callErr := c.gateway.Cancel(brokerCtx, target)
+	if callErr != nil || brokerCtx.Err() != nil || !cancel.Terminal || cancel.Triggered || cancel.Scope != c.scope || cancel.BrokerID != saga.BrokerID || cancel.ClientOrderID != saga.ClientOrderID {
 		c.entryOpen.Store(false)
 		at := c.now()
 		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, at, saga.BrokerID)
 		_, _ = c.repository.MarkMutationUnknown(ctx, saga.ID, saga.Revision, at, attemptID)
 		return FlattenAuthorization{}, ErrMutationInDoubt
 	}
-	sellable, err := c.gateway.Sellable(ctx, c.scope, saga.BrokerID)
+	sellable, err := c.gateway.Sellable(brokerCtx, c.scope, saga.BrokerID)
 	decisionAt := c.now()
 	deadline := start.Add(2 * time.Second)
 	decision, authorization := decideFlatten(start, deadline, decisionAt,
 		FlattenScope{Scope: c.scope, BrokerID: saga.BrokerID}, cancel, sellable, required, c.now)
-	if err != nil || decision != FlattenAllowed {
+	if err != nil || brokerCtx.Err() != nil || decision != FlattenAllowed {
 		c.entryOpen.Store(false)
 		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, decisionAt, saga.BrokerID)
 		_, _ = c.repository.MarkMutationUnknown(ctx, saga.ID, saga.Revision, decisionAt, attemptID)
@@ -383,15 +516,90 @@ func bodyForSaga(saga Saga, expireDate string) ConditionalBody {
 	}
 }
 
+func (c *Controller) closeEntry(sagaID string) {
+	c.entryOpen.Store(false)
+	if sagaID == "" {
+		clear(c.confirmed)
+		return
+	}
+	delete(c.confirmed, sagaID)
+}
+
+func (c *Controller) confirmActive(ctx context.Context, saga Saga) error {
+	if saga.State != StateActive || saga.BrokerID == "" {
+		c.entryOpen.Store(false)
+		return ErrMutationInDoubt
+	}
+	c.confirmed[saga.ID] = activeConfirmation{revision: saga.Revision, generation: saga.Generation, brokerID: saga.BrokerID}
+	return c.refreshEntryLatch(ctx)
+}
+
+func (c *Controller) refreshEntryLatch(ctx context.Context) error {
+	rows, err := c.repository.List(ctx, c.scope)
+	if err != nil {
+		c.entryOpen.Store(false)
+		return fmt.Errorf("protection: refresh entry latch: %w", err)
+	}
+	for _, saga := range rows {
+		confirmed, ok := c.confirmed[saga.ID]
+		if !ok || saga.State != StateActive || confirmed.revision != saga.Revision || confirmed.generation != saga.Generation || confirmed.brokerID != saga.BrokerID {
+			c.entryOpen.Store(false)
+			return nil
+		}
+	}
+	c.entryOpen.Store(true)
+	return nil
+}
+
+func brokerTargetForSaga(saga Saga) BrokerTarget {
+	return BrokerTarget{Scope: Scope{AccountRef: saga.AccountRef, Profile: saga.Profile, Market: saga.Market, Symbol: saga.Symbol},
+		BrokerID: saga.BrokerID, ClientOrderID: saga.ClientOrderID, Trigger: saga.Trigger, Quantity: saga.Quantity}
+}
+
+func exactBrokerForSaga(saga Saga, broker []BrokerProtection) (BrokerProtection, bool) {
+	var matched BrokerProtection
+	count := 0
+	for _, candidate := range broker {
+		if candidate.ID == saga.BrokerID || candidate.ClientOrderID == saga.ClientOrderID {
+			if !exactBrokerResult(saga, candidate) {
+				return BrokerProtection{}, false
+			}
+			matched = candidate
+			count++
+		}
+	}
+	return matched, count == 1
+}
+
+func boundedBrokerContext(parent context.Context, duration time.Duration) (context.Context, context.CancelFunc, error) {
+	if parent == nil || duration <= 0 {
+		return nil, nil, ErrMutationInDoubt
+	}
+	ctx, cancel := context.WithTimeout(parent, duration)
+	return ctx, cancel, nil
+}
+
 func exactBrokerResult(saga Saga, broker BrokerProtection) bool {
-	return broker.ID != "" && !broker.Terminal && !broker.Triggered && broker.Scope.equal(Scope{
+	return !broker.Terminal && !broker.Triggered && exactBrokerIdentity(saga, broker)
+}
+
+func exactBrokerIdentity(saga Saga, broker BrokerProtection) bool {
+	expectedTrigger, expectedQuantity := saga.Trigger, saga.Quantity
+	idMatches := saga.BrokerID == "" || broker.ID == saga.BrokerID
+	if saga.PendingTrigger > 0 {
+		expectedTrigger, expectedQuantity = saga.PendingTrigger, saga.PendingQuantity
+		idMatches = true
+	}
+	return broker.ID != "" && idMatches && broker.Scope.equal(Scope{
 		AccountRef: saga.AccountRef, Profile: saga.Profile, Market: saga.Market, Symbol: saga.Symbol,
-	}) && broker.Quantity == saga.Quantity && broker.Trigger == saga.Trigger &&
-		broker.ClientOrderID == saga.ClientOrderID
+	}) && broker.Quantity == expectedQuantity && broker.Trigger == expectedTrigger &&
+		broker.ClientOrderID == saga.ClientOrderID && broker.OrderSide == "SELL" && broker.OrderType == "MARKET" &&
+		broker.ConditionType == "STOP" && validExpireDate(broker.ExpireDate)
 }
 
 func exactPendingBrokerResult(saga Saga, broker BrokerProtection) bool {
 	copy := saga
 	copy.Trigger, copy.Quantity = saga.PendingTrigger, saga.PendingQuantity
+	copy.BrokerID = ""
 	return exactBrokerResult(copy, broker)
 }

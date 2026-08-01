@@ -90,3 +90,10 @@ remain intentionally absent. Signed readiness can be evaluated but cannot activa
 The console therefore defaults to `OFF / 지원 확인 전 사용 불가`; it accepts no free symbol,
 trigger, quantity, reason, or typed confirmation, and weakening is limited to a server-issued
 opaque capability plus checkbox and three-second delay.
+
+After the `4679fe2` independent review, restart trust was tightened further: durable rows never open
+entry by themselves. A current controller instance must exactly re-confirm every ACTIVE broker row;
+all other states and all recovery/I/O errors keep the latch closed. Broker calls now carry bounded
+one-/two-second operation budgets, and cancel/recovery compare a typed durable target rather than an
+identifier alone. These runtime contracts remain dormant because the shipped application still has
+no activation construction path.

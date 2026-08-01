@@ -53,7 +53,10 @@ func (g *Gateway) Create(ctx context.Context, body protection.ConditionalBody) (
 	if err != nil {
 		return protection.BrokerProtection{}, err
 	}
-	return g.confirm(ctx, ref.ID, body.ClientOrderID)
+	if ref.ID == "" || ref.ClientOrderID != body.ClientOrderID {
+		return protection.BrokerProtection{}, ErrAmbiguousConditional
+	}
+	return g.confirmBody(ctx, ref.ID, body)
 }
 
 func (g *Gateway) Replace(ctx context.Context, id string, body protection.ConditionalBody) (protection.BrokerProtection, error) {
@@ -71,23 +74,27 @@ func (g *Gateway) Replace(ctx context.Context, id string, body protection.Condit
 	if err != nil {
 		return protection.BrokerProtection{}, err
 	}
-	return g.confirm(ctx, ref.ID, body.ClientOrderID)
+	if ref.ID == "" || (ref.ClientOrderID != "" && ref.ClientOrderID != body.ClientOrderID) {
+		return protection.BrokerProtection{}, ErrAmbiguousConditional
+	}
+	return g.confirmBody(ctx, ref.ID, body)
 }
 
-func (g *Gateway) Cancel(ctx context.Context, id string) (protection.CancelObservation, error) {
-	if strings.TrimSpace(id) == "" {
+func (g *Gateway) Cancel(ctx context.Context, target protection.BrokerTarget) (protection.CancelObservation, error) {
+	if target.Validate() != nil || target.Scope != g.scope {
 		return protection.CancelObservation{}, ErrAmbiguousConditional
 	}
-	if err := g.client.CancelConditionalOrder(ctx, id); err != nil {
+	if err := g.client.CancelConditionalOrder(ctx, target.BrokerID); err != nil {
 		return protection.CancelObservation{}, err
 	}
 	// A successful DELETE alone is not terminal evidence: the measured API also
 	// drops an order that raced to trigger. Require an authoritative read/list
 	// state and fail closed when the identifier simply disappears.
-	raw, err := g.client.ConditionalOrderRaw(ctx, id)
+	raw, err := g.client.ConditionalOrderRaw(ctx, target.BrokerID)
 	if err == nil {
-		return cancelObservation(g.scope, raw, g.now()), nil
+		return g.cancelObservation(target, raw)
 	}
+	var found *protection.CancelObservation
 	for _, group := range []string{"OPEN", "CLOSED"} {
 		cursor := ""
 		for page := 0; page < 10; page++ {
@@ -96,8 +103,12 @@ func (g *Gateway) Cancel(ctx context.Context, id string) (protection.CancelObser
 				return protection.CancelObservation{}, fmt.Errorf("%w: post-cancel %s read: %v", ErrAmbiguousConditional, group, listErr)
 			}
 			for _, item := range result.Orders {
-				if item.ID == id {
-					return cancelObservation(g.scope, item, g.now()), nil
+				if item.ID == target.BrokerID || item.ClientOrderID == target.ClientOrderID {
+					observation, observationErr := g.cancelObservation(target, item)
+					if observationErr != nil || found != nil {
+						return protection.CancelObservation{}, ErrAmbiguousConditional
+					}
+					found = &observation
 				}
 			}
 			if !result.HasNext || result.NextCursor == "" {
@@ -106,11 +117,25 @@ func (g *Gateway) Cancel(ctx context.Context, id string) (protection.CancelObser
 			cursor = result.NextCursor
 		}
 	}
-	return protection.CancelObservation{}, fmt.Errorf("%w: %s disappeared after cancel", ErrAmbiguousConditional, id)
+	if found != nil {
+		return *found, nil
+	}
+	return protection.CancelObservation{}, fmt.Errorf("%w: %s disappeared after cancel", ErrAmbiguousConditional, target.BrokerID)
 }
 
-func (g *Gateway) Get(ctx context.Context, id string) (protection.BrokerProtection, error) {
-	return g.confirm(ctx, id, "")
+func (g *Gateway) Get(ctx context.Context, target protection.BrokerTarget) (protection.BrokerProtection, error) {
+	if target.Validate() != nil || target.Scope != g.scope {
+		return protection.BrokerProtection{}, ErrAmbiguousConditional
+	}
+	raw, err := g.client.ConditionalOrderRaw(ctx, target.BrokerID)
+	if err != nil {
+		return protection.BrokerProtection{}, err
+	}
+	parsed, err := g.adapt(raw)
+	if err != nil || !matchesTarget(target, parsed) {
+		return protection.BrokerProtection{}, ErrAmbiguousConditional
+	}
+	return parsed, nil
 }
 
 func (g *Gateway) List(ctx context.Context, scope protection.Scope) ([]protection.BrokerProtection, error) {
@@ -171,7 +196,7 @@ func (g *Gateway) validateBody(body protection.ConditionalBody) error {
 	return nil
 }
 
-func (g *Gateway) confirm(ctx context.Context, id, clientOrderID string) (protection.BrokerProtection, error) {
+func (g *Gateway) confirmBody(ctx context.Context, id string, body protection.ConditionalBody) (protection.BrokerProtection, error) {
 	if strings.TrimSpace(id) == "" {
 		return protection.BrokerProtection{}, ErrAmbiguousConditional
 	}
@@ -179,7 +204,10 @@ func (g *Gateway) confirm(ctx context.Context, id, clientOrderID string) (protec
 	if err != nil {
 		return protection.BrokerProtection{}, err
 	}
-	if clientOrderID != "" && raw.ClientOrderID != clientOrderID {
+	if raw.ID != id || raw.ClientOrderID != body.ClientOrderID || raw.Symbol != body.Symbol || raw.Market != body.Market ||
+		raw.Type != body.ConditionalType || raw.OrderType != body.OrderType || raw.OrderSide != body.Side ||
+		raw.ConditionType != "STOP" || raw.Quantity != strconv.FormatInt(body.Quantity, 10) ||
+		raw.TriggerPrice != strconv.FormatInt(body.Trigger, 10) || raw.ExpireDate != body.ExpireDate {
 		return protection.BrokerProtection{}, ErrAmbiguousConditional
 	}
 	return g.adapt(raw)
@@ -194,7 +222,7 @@ func (g *Gateway) adapt(raw official.RawConditionalOrder) (protection.BrokerProt
 	if err != nil {
 		return protection.BrokerProtection{}, err
 	}
-	if raw.Symbol != g.scope.Symbol || raw.Market != string(g.scope.Market) || raw.Type != "SINGLE" || raw.OrderType != "MARKET" || raw.ConditionType != "STOP" {
+	if raw.ID == "" || raw.ClientOrderID == "" || raw.Symbol != g.scope.Symbol || raw.Market != string(g.scope.Market) || raw.Type != "SINGLE" || raw.OrderType != "MARKET" || raw.OrderSide != "SELL" || raw.ConditionType != "STOP" || !validExpireDate(raw.ExpireDate) {
 		return protection.BrokerProtection{}, ErrAmbiguousConditional
 	}
 	status := strings.ToUpper(strings.TrimSpace(raw.Status))
@@ -204,14 +232,28 @@ func (g *Gateway) adapt(raw official.RawConditionalOrder) (protection.BrokerProt
 		return protection.BrokerProtection{}, err
 	}
 	return protection.BrokerProtection{Scope: g.scope, ID: raw.ID, ClientOrderID: raw.ClientOrderID,
-		Quantity: quantity, Trigger: trigger, Terminal: terminal, Triggered: triggered}, nil
+		Quantity: quantity, Trigger: trigger, Terminal: terminal, Triggered: triggered,
+		OrderSide: raw.OrderSide, OrderType: raw.OrderType, ConditionType: raw.ConditionType, ExpireDate: raw.ExpireDate}, nil
 }
 
-func cancelObservation(scope protection.Scope, raw official.RawConditionalOrder, at time.Time) protection.CancelObservation {
-	status := strings.ToUpper(strings.TrimSpace(raw.Status))
-	triggered := strings.TrimSpace(raw.TriggeredOrderID) != ""
-	terminal, _ := lifecycle(status, triggered)
-	return protection.CancelObservation{Scope: scope, BrokerID: raw.ID, Terminal: terminal, Triggered: triggered, At: at}
+func (g *Gateway) cancelObservation(target protection.BrokerTarget, raw official.RawConditionalOrder) (protection.CancelObservation, error) {
+	parsed, err := g.adapt(raw)
+	if err != nil || !matchesTarget(target, parsed) {
+		return protection.CancelObservation{}, ErrAmbiguousConditional
+	}
+	return protection.CancelObservation{Scope: parsed.Scope, BrokerID: parsed.ID, ClientOrderID: parsed.ClientOrderID,
+		Terminal: parsed.Terminal, Triggered: parsed.Triggered, At: g.now()}, nil
+}
+
+func matchesTarget(target protection.BrokerTarget, actual protection.BrokerProtection) bool {
+	return target.Scope == actual.Scope && target.BrokerID == actual.ID && target.ClientOrderID == actual.ClientOrderID &&
+		target.Trigger == actual.Trigger && target.Quantity == actual.Quantity && actual.OrderSide == "SELL" &&
+		actual.OrderType == "MARKET" && actual.ConditionType == "STOP"
+}
+
+func validExpireDate(value string) bool {
+	parsed, err := time.Parse("2006-01-02", value)
+	return err == nil && parsed.Format("2006-01-02") == value
 }
 
 func lifecycle(status string, triggered bool) (bool, error) {

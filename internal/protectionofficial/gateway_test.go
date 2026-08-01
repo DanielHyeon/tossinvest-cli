@@ -12,17 +12,21 @@ import (
 )
 
 type fakeClient struct {
-	created  official.ConditionalCreateBody
-	modified official.ConditionalModifyBody
-	raw      map[string]official.RawConditionalOrder
-	pages    map[string]official.RawConditionalOrderList
-	cancel   string
-	sellable string
-	readErr  error
+	created   official.ConditionalCreateBody
+	modified  official.ConditionalModifyBody
+	raw       map[string]official.RawConditionalOrder
+	pages     map[string]official.RawConditionalOrderList
+	cancel    string
+	sellable  string
+	readErr   error
+	createRef *domain.ConditionalOrderRef
 }
 
 func (f *fakeClient) CreateConditionalOrder(_ context.Context, body official.ConditionalCreateBody) (domain.ConditionalOrderRef, error) {
 	f.created = body
+	if f.createRef != nil {
+		return *f.createRef, nil
+	}
 	return domain.ConditionalOrderRef{ID: "co-1", ClientOrderID: body.ClientOrderID}, nil
 }
 
@@ -64,7 +68,7 @@ func gatewayScope() protection.Scope {
 func rawConditional(id, clientID, status string) official.RawConditionalOrder {
 	return official.RawConditionalOrder{
 		ID: id, ClientOrderID: clientID, Symbol: "005930", Market: "KR", Type: "SINGLE", Status: status,
-		OrderType: "MARKET", Quantity: "1", TriggerPrice: "70000", ConditionType: "STOP",
+		OrderType: "MARKET", OrderSide: "SELL", Quantity: "1", TriggerPrice: "70000", ConditionType: "STOP", ExpireDate: "2026-08-08",
 	}
 }
 
@@ -108,6 +112,22 @@ func TestGatewayRejectsLossyOrMismatchedReadback(t *testing.T) {
 			v.Type = "OCO"
 			return v
 		}(),
+		"wrong-id": rawConditional("other-id", "client-1", "WATCHING"),
+		"wrong-side": func() official.RawConditionalOrder {
+			v := rawConditional("co-1", "client-1", "WATCHING")
+			v.OrderSide = "BUY"
+			return v
+		}(),
+		"wrong-condition": func() official.RawConditionalOrder {
+			v := rawConditional("co-1", "client-1", "WATCHING")
+			v.ConditionType = "PROFIT_RATE"
+			return v
+		}(),
+		"wrong-expiry": func() official.RawConditionalOrder {
+			v := rawConditional("co-1", "client-1", "WATCHING")
+			v.ExpireDate = "2026-08-09"
+			return v
+		}(),
 		"unknown-status": rawConditional("co-1", "client-1", "UNKNOWN"),
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -120,10 +140,18 @@ func TestGatewayRejectsLossyOrMismatchedReadback(t *testing.T) {
 	}
 }
 
+func TestGatewayCreateRejectsMismatchedMutationReceiptBeforeReadback(t *testing.T) {
+	client := &fakeClient{createRef: &domain.ConditionalOrderRef{ID: "co-1", ClientOrderID: "other-client"}}
+	gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
+	if _, err := gateway.Create(context.Background(), conditionalBody()); !errors.Is(err, ErrAmbiguousConditional) {
+		t.Fatalf("mismatched receipt=%v", err)
+	}
+}
+
 func TestGatewayCancelDisappearanceIsInDoubtInsteadOfAssumedCancelled(t *testing.T) {
 	client := &fakeClient{readErr: errors.New("404"), pages: map[string]official.RawConditionalOrderList{}}
 	gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
-	if _, err := gateway.Cancel(context.Background(), "co-1"); !errors.Is(err, ErrAmbiguousConditional) {
+	if _, err := gateway.Cancel(context.Background(), protection.BrokerTarget{Scope: gatewayScope(), BrokerID: "co-1", ClientOrderID: "client-1", Trigger: 70000, Quantity: 1}); !errors.Is(err, ErrAmbiguousConditional) {
 		t.Fatalf("cancel disappearance=%v", err)
 	}
 	if client.cancel != "co-1" {
@@ -137,7 +165,7 @@ func TestGatewayCancelNeedsTerminalNonTriggeredObservationAndExactSellable(t *te
 		"OPEN:": {}, "CLOSED:": {Orders: []official.RawConditionalOrder{closed}},
 	}}
 	gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
-	cancel, err := gateway.Cancel(context.Background(), "co-1")
+	cancel, err := gateway.Cancel(context.Background(), protection.BrokerTarget{Scope: gatewayScope(), BrokerID: "co-1", ClientOrderID: "client-1", Trigger: 70000, Quantity: 1})
 	if err != nil || !cancel.Terminal || cancel.Triggered {
 		t.Fatalf("cancel=%+v err=%v", cancel, err)
 	}
@@ -149,6 +177,30 @@ func TestGatewayCancelNeedsTerminalNonTriggeredObservationAndExactSellable(t *te
 	if _, err := gateway.Sellable(context.Background(), gatewayScope(), "co-1"); !errors.Is(err, ErrAmbiguousConditional) {
 		t.Fatalf("lossy sellable=%v", err)
 	}
+}
+
+func TestGatewayCancelRejectsWrongOrDuplicateTerminalIdentity(t *testing.T) {
+	target := protection.BrokerTarget{Scope: gatewayScope(), BrokerID: "co-1", ClientOrderID: "client-1", Trigger: 70000, Quantity: 1}
+	t.Run("wrong side", func(t *testing.T) {
+		raw := rawConditional("co-1", "client-1", "CANCELLED")
+		raw.OrderSide = "BUY"
+		client := &fakeClient{raw: map[string]official.RawConditionalOrder{"co-1": raw}}
+		gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
+		if _, err := gateway.Cancel(context.Background(), target); !errors.Is(err, ErrAmbiguousConditional) {
+			t.Fatalf("wrong-side cancel=%v", err)
+		}
+	})
+	t.Run("duplicate client identity", func(t *testing.T) {
+		one := rawConditional("co-1", "client-1", "CANCELLED")
+		two := rawConditional("co-other", "client-1", "CANCELLED")
+		client := &fakeClient{readErr: errors.New("gone"), pages: map[string]official.RawConditionalOrderList{
+			"OPEN:": {}, "CLOSED:": {Orders: []official.RawConditionalOrder{one, two}},
+		}}
+		gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
+		if _, err := gateway.Cancel(context.Background(), target); !errors.Is(err, ErrAmbiguousConditional) {
+			t.Fatalf("duplicate cancel=%v", err)
+		}
+	})
 }
 
 func TestGatewayListIsBoundedAndRejectsMixedScope(t *testing.T) {
@@ -177,7 +229,7 @@ func TestGatewayTriggeredOrderIsTerminalForReconciliation(t *testing.T) {
 	raw.TriggeredOrderID = "plain-sell-1"
 	client := &fakeClient{raw: map[string]official.RawConditionalOrder{raw.ID: raw}}
 	gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
-	got, err := gateway.Get(context.Background(), raw.ID)
+	got, err := gateway.Get(context.Background(), protection.BrokerTarget{Scope: gatewayScope(), BrokerID: raw.ID, ClientOrderID: raw.ClientOrderID, Trigger: 70000, Quantity: 1})
 	if err != nil || !got.Triggered || !got.Terminal {
 		t.Fatalf("triggered=%+v err=%v", got, err)
 	}

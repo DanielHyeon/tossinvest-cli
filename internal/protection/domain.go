@@ -406,9 +406,27 @@ func validExpireDate(value string) bool {
 type Gateway interface {
 	Create(context.Context, ConditionalBody) (BrokerProtection, error)
 	Replace(context.Context, string, ConditionalBody) (BrokerProtection, error)
-	Cancel(context.Context, string) (CancelObservation, error)
-	Get(context.Context, string) (BrokerProtection, error)
+	Cancel(context.Context, BrokerTarget) (CancelObservation, error)
+	Get(context.Context, BrokerTarget) (BrokerProtection, error)
 	List(context.Context, Scope) ([]BrokerProtection, error)
+}
+
+// BrokerTarget is the exact durable identity expected at an account-scoped
+// broker read/cancel boundary. An ID alone is insufficient because a stale or
+// cross-scope row must never authorize cancel or flatten.
+type BrokerTarget struct {
+	Scope         Scope
+	BrokerID      string
+	ClientOrderID string
+	Trigger       int64
+	Quantity      int64
+}
+
+func (t BrokerTarget) Validate() error {
+	if t.Scope.Validate() != nil || strings.TrimSpace(t.BrokerID) == "" || strings.TrimSpace(t.ClientOrderID) == "" || t.Trigger < 1 || t.Quantity < 1 {
+		return ErrInvalidSaga
+	}
+	return nil
 }
 
 type BrokerProtection struct {
@@ -419,14 +437,19 @@ type BrokerProtection struct {
 	Trigger       int64
 	Terminal      bool
 	Triggered     bool
+	OrderSide     string
+	OrderType     string
+	ConditionType string
+	ExpireDate    string
 }
 
 type CancelObservation struct {
-	Scope     Scope
-	BrokerID  string
-	Terminal  bool
-	Triggered bool
-	At        time.Time
+	Scope         Scope
+	BrokerID      string
+	ClientOrderID string
+	Terminal      bool
+	Triggered     bool
+	At            time.Time
 }
 
 type SellableObservation struct {

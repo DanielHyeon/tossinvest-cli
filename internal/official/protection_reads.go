@@ -50,6 +50,7 @@ func adaptProtectionConditional(o apiConditionalOrder) RawConditionalOrder {
 	return RawConditionalOrder{
 		ID: o.ConditionalOrderID, ClientOrderID: o.ClientOrderID, Symbol: o.Symbol, Market: o.Market,
 		Type: o.Type, Status: o.Status, OrderType: o.OrderType, Quantity: o.Quantity,
+		OrderSide:    o.First.OrderSide,
 		TriggerPrice: o.First.TriggerPrice, TargetProfitRate: o.First.TargetProfitRate,
 		OrderPrice: o.First.OrderPrice, ConditionType: o.First.Type,
 		TriggeredOrderID: o.First.TriggeredOrderID, ExpireDate: o.ExpireDate, CreatedAt: o.CreatedAt,

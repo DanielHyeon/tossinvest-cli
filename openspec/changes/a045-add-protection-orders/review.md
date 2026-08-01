@@ -158,6 +158,39 @@ LIVE order was sent. A later operational change must separately provision signed
 OFF by default, pass the full gate, record explicit operator approval, and prove recovery/rollback
 readiness before any activation.
 
+## Independent review BLOCK remediation candidate · 2026-08-01
+
+Review of `4679fe2` found that a fresh controller trusted durable ACTIVE rows before a current broker
+read, some error paths could leave the entry latch open, broker calls inherited potentially unbounded
+contexts, and create/cancel/recovery identity checks were not exact enough. RED tests now cover
+restart, concurrent registration, missing and terminal-without-trigger recovery, body and database
+errors, blocked create/list/cancel calls, exact mutation receipt/readback, duplicate client identity,
+and cancel-first authorization under race.
+
+The controller now starts closed whenever any saga exists and opens only when every scoped saga is
+ACTIVE and has an exact broker confirmation from this controller instance. Every fill/register/
+replace/reconcile/recover/flatten operation closes the latch before validation or I/O; error,
+timeout, unknown, terminal-without-trigger, disappearance, and failed durable recovery paths keep it
+closed. Terminal-without-trigger and disappearance are typed `ErrProtectionGone` and are durably
+projected to RECONCILE where the prior state permits it. CLOSED/other non-ACTIVE rows never satisfy
+the latch.
+
+Register carries the remaining two-second ACTIVE budget after the one-second arm admission check;
+replace/reconcile/recover use a two-second broker context, and cancel plus sellable observation share
+the flatten operation's original two-second budget. Parent cancellation/deadlines propagate and a
+callee returning after cancellation is still treated as `IN_DOUBT`.
+
+The official adapter requires the mutation receipt client identity, requested broker ID equal to the
+detail row ID, and exact client ID, account-scoped gateway binding, profile/market/symbol scope,
+SELL/SINGLE/MARKET/STOP shape, integer trigger/quantity and expiry on create/replace confirmation.
+Cancel and recovery use an exact durable `BrokerTarget`; a mismatched or duplicate broker/client row,
+unknown lifecycle, missing row, or 404 stays ambiguous. The official detail schema does not expose an
+account-ref field, so account identity is established by the pre-bound account-scoped official client
+plus equality between the target scope and immutable gateway scope; it is never inferred from symbol.
+
+This remediation does not add a production activation minter, app/cmd construction, toggle, or free
+UI input, and does not authorize broker execution. It remains pending independent re-review and gate.
+
 ## Dependency-integrated dormant rebase · 2026-08-01
 
 - Integration base: `70aabdc9936de08df458da13203437ba7d2dd572` (a041/a042 complete).
