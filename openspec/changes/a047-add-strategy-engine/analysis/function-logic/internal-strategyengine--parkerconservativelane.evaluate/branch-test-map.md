@@ -18,7 +18,7 @@
 | B13 | bar/evaluation clock guard | session/age boundaries | yes | yes |
 | B14 | state proof guard | zero proofs | yes | yes |
 | B15 | position proof guard | zero proofs | yes | yes |
-| B16 | bar decimal guard | golden/integrity tests | existing | yes |
+| B16 | bar decimal guard | synthetic derivation/integrity tests | existing | yes |
 | B17 | indicator decimal guard | sealer laundering tests | yes | yes |
 | B18 | VWAP gate | frozen gate table | yes | yes |
 | B19 | slope gate | frozen gate table | yes | yes |
@@ -33,9 +33,9 @@
 | B28 | age gate | nanosecond age table | yes | yes |
 | B29 | optional live-price fallback | frozen gate table | yes | yes |
 | B30 | drift gate | frozen gate table | yes | yes |
-| B31 | decision identity/mint | golden Valid assertion | existing | yes |
-| B32 | nonpositive observed live price maps to source drift refusal | `TestParkerFrozenGateBoundariesAndRefusalOrder/nonpositive_live_price_is_drift_refusal` | yes | yes |
+| B31 | decision identity/mint | synthetic and translated parity Valid assertions | existing | yes |
+| B32 | nonpositive observed live price maps to source drift refusal | `TestParkerFrozenGateBoundaries/nonpositive_live_price_is_drift_refusal` | yes | yes |
 | B33 | negative live-entry delta is normalized with absolute value | negative exact/+1 boundary rows | missing | pass |
-| B34 | derived drift above 0.20 percent is refused | `TestParkerFrozenGateBoundariesAndRefusalOrder/drift_above_limit` | yes | yes |
-| B35 | decision identity construction fails closed | golden decision identity contract | existing | yes |
-| B36 | final decision mint validation fails closed | golden Valid assertion plus forged/zero proof refusals | existing | yes |
+| B34 | derived drift above 0.20 percent is refused | `TestParkerFrozenGateBoundaries/drift_above_limit` | yes | yes |
+| B35 | decision identity construction fails closed | canonical decision identity contract | existing | yes |
+| B36 | final decision mint validation fails closed | synthetic/translated Valid assertions plus forged/zero proof refusals | existing | yes |

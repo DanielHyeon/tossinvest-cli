@@ -3,7 +3,7 @@
 | Branch | Scenario | Test | RED | GREEN |
 |---|---|---|---|---|
 | B1 | activation mismatch precedes operational blockers | initial gate precedence table | missing | pass |
-| B2 | decision/order activation mismatch | 60/60 decision table + settings cases | existing partial | pass |
+| B2 | decision/order activation mismatch | 60/60 decision table + direct settings-digest/order-type/currency zero-call rows | existing partial | pass |
 | B3 | ordered operational switch | initial gate table | missing | pass |
 | B4 | lane desired/effective OFF | initial gate table | missing | pass |
 | B5 | kill switch | initial gate table | missing | pass |
