@@ -9,7 +9,7 @@
 ## 2. Strategy domain과 orchestration
 
 - [x] 2.1 `internal/strategy`의 EntryLane, ApprovedCandidate와 EntryDecision 계약을 구현한다.
-- [x] 2.2 `krx_parker_vwap_conservative_v1`을 frozen gate order/constant와 Go golden fixture로 순수 이식하고 broker/journal dependency를 금지한다.
+- [x] 2.2 `krx_parker_vwap_conservative_v1`을 frozen gate order/constant와 translated StockOS fixture로 순수 이식하고 broker/journal dependency를 금지한다.
 - [x] 2.3 orchestrator에 RiskIntent→Guardian→durable attempt→official gateway 경로를 연결한다.
 - [x] 2.4 immutable activation manifest repository/validator와 submit-time digest 기록을 구현한다.
 - [x] 2.5 official 1m decimal을 KST 정규장 closed contiguous 5m bar로 exact 집계하고 incomplete/gap/장외/naive/stale input을 거부한다. authoritative symbol-state source가 없거나 stale이면 OFF를 유지한다.

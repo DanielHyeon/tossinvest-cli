@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | accessor called | none | version string | adapter binding tests |
+| B1 | branchless happy-path sentinel (AST has no conditional); accessor called | none | version string | direct strategy snapshot mismatch/success tests |
 
 ## Calls and live bindings
 

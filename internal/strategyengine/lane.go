@@ -43,7 +43,13 @@ func (ParkerConservativeLane) Evaluate(in LaneInput) Evaluation {
 	if !market.tradingDay {
 		return refuseAs(RefusalSession, SourceRejectNonTradingDay)
 	}
-	if evaluatedAt.Before(market.sessionOpenAt) || evaluatedAt.After(market.sessionCloseAt) {
+	if !evaluatedAt.Before(market.sessionOpenAt.Add(-openAuctionDuration)) && evaluatedAt.Before(market.sessionOpenAt) {
+		return refuseAs(RefusalSession, SourceRejectOpenAuction)
+	}
+	if !evaluatedAt.Before(market.sessionCloseAt.Add(-closeAuctionDuration)) && evaluatedAt.Before(market.sessionCloseAt) {
+		return refuseAs(RefusalSession, SourceRejectCloseAuction)
+	}
+	if !evaluatedAt.Before(market.sessionOpenAt.Add(afterHoursFromOpen)) {
 		return refuseAs(RefusalSession, SourceRejectAfterHours)
 	}
 	if evaluatedAt.Before(market.sessionOpenAt.Add(10 * time.Minute)) {
@@ -284,6 +290,9 @@ func constantsDigest() string {
 		"max_band_expansion_rate=1.8\n" +
 		"hard_stop_pct=0.7\n" +
 		"partial_take_profit_at_r=3.0\n" +
+		"open_auction_minutes=30\n" +
+		"close_auction_minutes=10\n" +
+		"after_hours_from_open_minutes=400\n" +
 		"skip_open_minutes=10\n" +
 		"no_entry_after_buffer_minutes=45\n" +
 		"max_signal_age_seconds=15\n" +

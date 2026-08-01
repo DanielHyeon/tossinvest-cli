@@ -14,7 +14,12 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | follows the complete AST branch list in `ast.json`; detects order-capable interface declarations in transitive candidate consumers | test-local collections only | deterministic finding/result | `TestApprovedCandidateTaintRejectsAuthorityInterface` |
+| B1 | exact AST `range` at source line 140: `for _, file := range files {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 143: `if !ok {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 147: `if !ok {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `range` at source line 150: `for _, field := range contract.Methods.List {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `range` at source line 151: `for _, name := range field.Names {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `if` at source line 152: `if authorityMethodNames[name.Name] {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

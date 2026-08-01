@@ -15,10 +15,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | gateway/decision/order invalid | no call | error | adapter tests |
-| B2 | quantity/price lossy or noncanonical | no call | error | exactFloat table |
-| B3 | order normalization rejects | no call | error | orderintent suite |
-| Success | exact normalized intent | one `execgw.Gateway.Place` call | preserve actual Outcome/error | compile assertion/integration |
+| B1 | exact AST `if` at source line 93: `if a.Gateway == nil \|\| !plan.Decision.Valid() \|\| plan.Order.OrderType != "LIMIT" \|\| plan.Order.Currency != "KRW" {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 98: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 102: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 109: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

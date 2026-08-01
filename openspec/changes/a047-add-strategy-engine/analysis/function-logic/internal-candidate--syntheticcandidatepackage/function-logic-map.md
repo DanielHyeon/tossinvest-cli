@@ -14,7 +14,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | follows the complete AST branch list in `ast.json`; constructs the closed synthetic candidate type used by the pure-boundary type checker | test-local collections only | deterministic finding/result | `TestApprovedCandidateConsumersStayInsidePureBoundaries` |
+| B1 | exact AST `range` at source line 35: `for name := range approvedCandidateAccessors {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 37: `if name == "Valid" {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `else` at source line 39: `} else if name == "FirstSeenUnixNano" \|\| name == "LastSeenUnixNano" \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 39: `} else if name == "FirstSeenUnixNano" \|\| name == "LastSeenUnixNano" \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

@@ -15,8 +15,14 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | child mode | opens all migrations through current `SchemaVersion`; intentional SIGKILL | process death | same named subprocess test |
-| B2 | parent mode | seeds v12 rows, launches child, reads raw artifacts | pass/fail assertions | `TestMigrationV13CommitAndUserVersionSurviveSIGKILL` |
+| B1 | exact AST `if` at source line 16: `if os.Getenv(crashEnvMode) == crashModeMigrationV13AfterCommit {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 18: `if version, err := j.SchemaVersion(context.Background()); err != nil \|\| version != SchemaVersion {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 29: `if err := old.Close(); err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 37: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 42: `if err := raw.QueryRow("PRAGMA user_version").Scan(&version); err != nil \|\| version != SchemaVersion {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `range` at source line 45: `for _, name := range []string{"protection_sagas", "protection_mutation_attempts", "idx_protection_sagas_live_claim"} {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B7 | exact AST `if` at source line 47: `if err := raw.QueryRow(`SELECT count(*) FROM sqlite_master WHERE name=?`, name).Scan(&count); err != nil \|\| count != 1 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B8 | exact AST `if` at source line 53: `if after := countRows(t, reopened.db, v8AllTables); !sameCounts(before, after) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

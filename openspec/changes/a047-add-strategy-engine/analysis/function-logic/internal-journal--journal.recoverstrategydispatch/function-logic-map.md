@@ -15,11 +15,21 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | 0 attempt | durable REFUSED reason/revision | typed recovery error | zero test |
-| B2 | >1 attempt | durable IN_DOUBT if planned | ambiguity error | cardinality test |
-| B3 | exactly one CONFIRMED + broker id | DISPATCHED + links | nil | confirmed test |
-| B4 | exactly one NOT_DISPATCHED/FAILED_CONFIRMED | durable REFUSED | recovery error | terminal table |
-| B5 | RECORDED/DISPATCH_STARTED/ACKED/IN_DOUBT/UNRESOLVED or malformed confirmed | durable/current IN_DOUBT | recovery error | state table |
+| B1 | exact AST `if` at source line 569: `if receipt.AccountRef != accountRef \|\| (receipt.State != "PLANNED" && receipt.State != "IN_DOUBT") {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 573: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `for` at source line 579: `for rows.Next() {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 581: `if err := rows.Scan(&value.id, &value.state, &value.broker); err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 586: `if err := rows.Err(); err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `if` at source line 589: `if len(attempts) == 0 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B7 | exact AST `if` at source line 591: `if stateErr := j.RecordStrategyRefusal(ctx, receipt, "no_mutation_attempt"); stateErr != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B8 | exact AST `if` at source line 596: `if len(attempts) > 1 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B9 | exact AST `if` at source line 598: `if receipt.State == "PLANNED" {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B10 | exact AST `if` at source line 599: `if stateErr := j.RecordStrategyInDoubt(ctx, receipt, "ambiguous_mutation_attempts"); stateErr != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B11 | exact AST `if` at source line 606: `if confirmed {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B12 | exact AST `if` at source line 609: `if attempts[0].state == string(StateNotDispatched) \|\| attempts[0].state == string(StateFailedConfirmed) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B13 | exact AST `if` at source line 611: `if stateErr := j.RecordStrategyRefusal(ctx, receipt, "mutation_attempt_refused"); stateErr != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B14 | exact AST `if` at source line 616: `if receipt.State == "PLANNED" {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B15 | exact AST `if` at source line 617: `if stateErr := j.RecordStrategyInDoubt(ctx, receipt, "mutation_attempt_requires_recovery"); stateErr != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

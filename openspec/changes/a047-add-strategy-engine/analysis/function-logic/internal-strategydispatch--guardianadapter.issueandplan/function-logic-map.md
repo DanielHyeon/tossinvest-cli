@@ -16,10 +16,11 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | adapter/binding/account read invalid | no issuance/gateway | error | adapter tests |
-| B2 | Guardian issuance fails | atomic rollback | error | Guardian/journal tests |
-| B3 | receipt binding incomplete/divergent | plan remains recoverable by deterministic id/startup enum | error | binding tests |
-| Success | exact receipt | build immutable plan/receipt from committed result | return | integration test |
+| B1 | exact AST `if` at source line 30: `if a == nil \|\| a.Guardian == nil \|\| a.Journal == nil \|\| a.Account == nil \|\| a.Collect == nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 33: `if request.Binding.AccountRef != a.Guardian.AccountRef() \|\| request.Binding.GuardianVersion != a.Guardian.PolicyVersion() \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 38: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 46: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 50: `if receipt.AttemptID != request.AttemptID \|\| receipt.AccountRef != request.Binding.AccountRef \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

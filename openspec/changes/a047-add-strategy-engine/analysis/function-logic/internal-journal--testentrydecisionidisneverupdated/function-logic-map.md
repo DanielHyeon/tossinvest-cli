@@ -15,9 +15,11 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | production INSERT names exact guarded token | local count | continue | positive control |
-| B2 | UPDATE names exact guarded token | test error | fail | static invariant |
-| B3 | no inserter found | test fatal | fail | positive control |
+| B1 | exact AST `range` at source line 155: `for name, text := range productionSources(t) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 156: `if strings.Contains(text, "INSERT INTO positions") &&` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `range` at source line 160: `for _, stmt := range updateStatements(text) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 161: `if exactEntryDecisionID.MatchString(stmt) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 168: `if inserters == 0 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

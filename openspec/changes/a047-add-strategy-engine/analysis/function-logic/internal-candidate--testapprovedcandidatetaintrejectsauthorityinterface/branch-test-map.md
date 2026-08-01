@@ -2,5 +2,5 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | AST branch B1: proves an authority-bearing tainted consumer is rejected | `TestApprovedCandidateTaintRejectsAuthorityInterface` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B2 | AST branch B2: proves an authority-bearing tainted consumer is rejected | `TestApprovedCandidateTaintRejectsAuthorityInterface` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
+| B1 | exact AST `if` at source line 167: `if err != nil {` | `TestApprovedCandidateTaintRejectsAuthorityInterface` | not independently measured | source test passes; branch-side coverage not claimed |
+| B2 | exact AST `if` at source line 171: `if !findingContains(findings, "Gateway.Place") \|\| findingContains(findings, "Reader.ReadSymbolState") {` | `TestApprovedCandidateTaintRejectsAuthorityInterface` | not independently measured | source test passes; branch-side coverage not claimed |

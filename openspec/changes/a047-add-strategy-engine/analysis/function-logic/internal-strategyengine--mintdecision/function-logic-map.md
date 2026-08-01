@@ -19,10 +19,16 @@
 |---|---|---|---|---|
 | B1 | provenance mismatch | none | error | zero/forged and identity tests |
 | B2 | clock/session/freshness mismatch or caller-selected cutoff | none | error | session/cutoff/age/candidate tests |
-| B3 | decimal/optional evidence invalid | exact parse only | error | gate tests |
-| B4 | recomputed prices/RR/drift/HVN/reasons differ | exact arithmetic only | error | synthetic derivation plus translated StockOS final-bar/indicator parity tests |
-| B5 | identity differs | SHA only | error | decision identity validation |
-| B6 | all equal | none | valid opaque Decision | synthetic derivation and exact binding tests |
+| B3-B4 | required positive evidence iteration/validation fails | exact parse only | error | first/last forged positive fields |
+| B5 | tangled evidence malformed or below threshold | exact parse only | error | direct forged tangled row |
+| B6-B8 | optional expansion/HVN iteration, presence, or parsing fails | exact parse only | error | first/second forged optional fields plus absent success |
+| B9 | live-entry delta is negative | normalize local rational to absolute value | continue | direct negative-drift valid remint |
+| B10 | recomputed close/stop/target/RR/drift differs | exact arithmetic only | error | direct forged derived-price row |
+| B11 | unobserved live price differs from close | none | error | direct forged and valid fallback rows |
+| B12-B13 | HVN is present and below LVN forward space | exact parse/compare only | error | direct forged HVN plus absent success |
+| B14 | ordered accept reasons differ | none | error | direct forged reason-order row |
+| B15 | canonical identity calculation fails or differs | SHA only | error | direct forged identity row |
+| Success | all bindings equal | none | valid opaque Decision | base remint and negative/optional success tests |
 
 ## Calls and live bindings
 

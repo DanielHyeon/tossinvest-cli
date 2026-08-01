@@ -14,7 +14,13 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | follows the complete AST branch list in `ast.json`; verifies approved identity, current-life proof, threshold provenance, and private fields | test-local collections only | deterministic finding/result | `TestAssessApprovedCandidateReturnsPassWithImmutableProvenance` |
+| B1 | exact AST `if` at source line 402: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 405: `if !got.Valid() \|\| !got.Chase().Passed() {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 408: `if got.Key() != input.Candidate.Key \|\| !got.FirstSeenAt().Equal(input.Candidate.FirstSeenAt) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 412: `if got.State() != StateActive \|\| !got.LastSeenAt().Equal(input.Candidate.LastSeenAt) \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 416: `if got.ThresholdVersion() != set.Version() \|\| got.SetDigest() != set.SetDigest() \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `range` at source line 423: `for index := range typ.NumField() {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B7 | exact AST `if` at source line 425: `if field.IsExported() {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

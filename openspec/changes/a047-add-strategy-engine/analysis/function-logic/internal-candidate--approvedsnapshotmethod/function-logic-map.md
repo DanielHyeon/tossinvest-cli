@@ -14,7 +14,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | follows the complete AST branch list in `ast.json`; allows only the exact immutable ApprovedSnapshot accessor name and scalar result contracts | test-local collections only | deterministic finding/result | `TestApprovedCandidateConsumersStayInsidePureBoundaries` |
+| B1 | invalid receiver declaration shape | none | false | pure-boundary audit |
+| B2 | receiver type is not `ApprovedSnapshot` | none | false | pure-boundary audit |
+| B3 | name/signature falls outside the closed accessor contract | none | false | pure-boundary audit |
+| Scenario | all declaration checks pass | none | true | pure-boundary audit |
 
 ## Calls and live bindings
 

@@ -16,11 +16,11 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 | --- | --- | --- | --- | --- |
-| B1 | fill detector construction fails | none | error; no other loop is built | engine assembly refusal tests |
-| B2 | reconcile driver construction fails | none | error; runtime is absent | engine assembly tests |
-| B3 | exit observer construction fails | none | error; runtime is absent | exit wiring tests |
-| B4 | recovery construction fails | none | error; no loop starts | recovery assembly tests |
-| B5 | all components valid | constructs exactly reconcile, exit and filldetect loop descriptors | `engine.NewRuntime(...)` result | `TestAssembleEngineWiresOneProductionGuardianToTheEngineJournalAndExitObserver` and runtime loop-name tests |
+| B1 | `engineFillDetector(ectx, clk, nil)` returns error | none | error; no other component is built | structural-unreachability test; a direct branch test requires a production detector error path or seam |
+| B2 | `ectx.ReconcileDriver(...)` returns error | detector allocated only; no loop starts | error; runtime is absent | direct B2 constructor test |
+| B3 | `ectx.ExitObserver(...)` returns error | detector and reconcile driver allocated only; no loop starts | error; runtime is absent | direct B3 constructor test |
+| B4 | `ectx.Recovery(...)` returns error | detector, reconcile driver and exit observer allocated only; no loop starts | error; runtime is absent | direct B4 constructor test |
+| Scenario | all four constructor checks pass | constructs exactly reconcile, exit and filldetect loop descriptors; recovery constructor latches entry closed | `engine.NewRuntime(...)` result | direct success construction plus `TestTheLoopSetIsTheSpecifiedThree` |
 
 ## Calls and live bindings
 

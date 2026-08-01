@@ -15,13 +15,17 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | policy invalid/currency mismatch | none | validation error | policy contract tests |
-| B2 | risk quantity or caps cannot parse | none | exact parse error | risk sizing tests |
-| B3 | entry/notional non-positive | none | `ErrStrategyQuantityZero` | zero-capacity test |
-| B4 | risk cap is minimum | none | whole quantity | exact-minimum table |
-| B5 | max quantity is minimum | none | whole quantity | default-cap row |
-| B6 | notional floor is minimum | none | whole quantity | notional/boundary rows |
-| B7 | final capacity zero | none | `ErrStrategyQuantityZero` | zero-capacity test |
+| B1 | exact AST `if` at source line 128: `if err := policy.Validate(); err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 131: `if policy.RiskBudget.Currency != policy.MaxOrderNotional.Currency {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 135: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 139: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 143: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `if` at source line 147: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B7 | exact AST `if` at source line 151: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B8 | exact AST `if` at source line 154: `if entry.Sign() <= 0 \|\| notional.Sign() <= 0 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B9 | exact AST `if` at source line 160: `if quantityCap.Cmp(capacity) < 0 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B10 | exact AST `if` at source line 163: `if notionalCap.Cmp(capacity) < 0 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B11 | exact AST `if` at source line 166: `if capacity.Sign() <= 0 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

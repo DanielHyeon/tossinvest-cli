@@ -15,11 +15,16 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | receipt/ref invalid | none | error | terminal CAS tests |
-| B2 | exact PLANNED or IN_DOUBT CAS succeeds | state revision increments | continue | direct/recovery tests |
-| B3 | CAS misses but exact prior DISPATCHED exists | no state mutation | idempotent continuation | retry test |
-| B4 | stale/different binding or execution ref collision | rollback | error | collision/CAS tests |
-| Success | links exact | append MUTATION_ATTEMPT and BROKER_ORDER, commit | nil | recovery trace tests |
+| B1 | exact AST `if` at source line 498: `if j == nil \|\| j.db == nil \|\| receipt.AttemptID == "" \|\| receipt.AccountRef != accountRef \|\| receipt.DecisionIdentity == "" \|\| receipt.RiskIntentID == "" \|\| receipt.ClientOrderID == "" \|\| receipt.Quantity == "" \|\| receipt.Revision < 1 \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 503: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 508: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 511: `if storedState != "DISPATCHED" \|\| storedRevision != receipt.Revision+1 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 512: `if storedState != receipt.State \|\| storedRevision != receipt.Revision {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `if` at source line 516: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B7 | exact AST `if` at source line 520: `if rows != 1 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B8 | exact AST `range` at source line 525: `for _, link := range [][2]string{{"MUTATION_ATTEMPT", mutationAttemptID}, {"BROKER_ORDER", brokerOrderID}} {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B9 | exact AST `if` at source line 527: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B10 | exact AST `if` at source line 531: `if err := tx.QueryRowContext(ctx, `SELECT attempt_id FROM strategy_execution_lineage WHERE account_ref=? AND kind=? AND external_ref=?`, accountRef, link[0], link[1]).Scan(&gotAttempt); err != nil \|\| gotAttempt != receipt.AttemptID {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

@@ -14,7 +14,11 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | follows the complete AST branch list in `ast.json`; table-tests invalid set, candidate life, current-life expiry, scope, and veto refusals | test-local collections only | deterministic finding/result | `TestAssessApprovedCandidateFailsClosed` |
+| B1 | exact AST `range` at source line 358: `for _, tc := range []struct {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 381: `if got != (ApprovedCandidate{}) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 385: `if !errors.As(err, &approvalErr) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 388: `if approvalErr.Kind() != tc.wantKind {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 391: `if !reflect.DeepEqual(approvalErr.Vetoes(), tc.wantVetoes) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

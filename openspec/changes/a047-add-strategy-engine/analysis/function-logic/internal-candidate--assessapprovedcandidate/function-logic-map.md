@@ -21,8 +21,10 @@
 | B2 | candidate identity invalid | none | `ApprovalInvalidCandidateLife` | invalid-life rows |
 | B3 | state/timestamps/current-life invalid | none | `ApprovalInvalidCandidateLife` | cooled, expired, stale, exact-expiry, re-cross rows |
 | B4 | market differs from threshold scope | none | `ApprovalScopeMismatch` | wrong-market row |
-| B5 | chase veto raised/unmeasured | local threshold copy only | typed veto refusal | dangerous/unmeasured rows |
-| B6 | all checks pass | none outside returned value | immutable `ApprovedCandidate` with life proof | provenance pass test |
+| B5 | chase has raised vetoes | local threshold copy only | typed veto refusal | dangerous row |
+| B6 | chase has unmeasured vetoes | local threshold copy only | typed unmeasured refusal | unmeasured row |
+| B7 | chase is not a full pass | none | fail-closed veto refusal | fail-closed invariant rows |
+| Scenario | all checks pass | none outside returned value | immutable `ApprovedCandidate` with life proof | provenance pass test |
 
 ## Calls and live bindings
 

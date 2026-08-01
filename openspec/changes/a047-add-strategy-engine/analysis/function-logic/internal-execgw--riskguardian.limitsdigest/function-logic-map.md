@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | accessor called | local hash only | lowercase hex digest | adapter binding tests |
+| B1 | branchless happy-path sentinel (AST has no conditional); accessor called | local hash only | `sha256:` plus lowercase hex digest | direct strategy snapshot mismatch/success tests |
 
 ## Calls and live bindings
 

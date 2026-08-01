@@ -16,10 +16,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Test |
 |---|---|---|---|---|
-| B1 | scalar whitespace | local copy only | trimmed copy | binding tests |
-| B2 | zero created time | local copy only | injected UTC time | issuance tests |
-| B3 | supplied created time | local copy only | UTC copy | replay tests |
-| B4 | payload whitespace/noncanonical | payload unchanged | verifier rejects | strict payload table |
+| B1 | `value.CreatedAt.IsZero()` after all named scalar fields are trimmed | local copy only | injected caller-supplied time | production issuance tests |
+| B2 | lineage creation time is nonzero | local copy only | UTC-normalized time | exact plan/idempotency tests |
+| Invariant | payload bytes may be whitespace/noncanonical | payload remains unchanged | later verifier rejects | strict payload table |
 
 ## Calls and live bindings
 

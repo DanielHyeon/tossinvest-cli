@@ -16,9 +16,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 | --- | --- | --- | --- | --- |
-| B1 | optional fail-closed preflight is wired | installs `CheckPlace` callback | later refusal or continue | gateway preflight tests |
-| B2 | decision/key/intent/gate/reservation check in `submit` refuses | durable refusal/attempt behavior owned by `submit` | `RejectedError`; official calls zero | decision, mode, protection, reservation tests |
-| B3 | checks pass | journal arms attempt, then official `Place` executes once using journal-derived key | confirmed/failed/in-doubt outcome | gateway round-trip and in-doubt tests |
+| B1 | `g.preflight != nil` | installs `CheckPlace` callback on the local plan | continue to common plan construction | symbol/protection preflight tests |
+| Scenario | `g.preflight == nil` | leaves the local callback nil | continue to common plan construction | ordinary `Gateway.Place` tests |
+| Scenario | plan is complete | delegates once to `g.submit`; all later checks and broker outcomes belong to that callee | `Outcome` or error from `submit` | gateway round-trip and in-doubt tests |
 
 ## Calls and live bindings
 

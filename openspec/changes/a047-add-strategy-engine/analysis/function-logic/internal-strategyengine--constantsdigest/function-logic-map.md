@@ -8,7 +8,7 @@
 
 | Input/state | Range | Source of truth | Failure behavior |
 |---|---|---|---|
-| constants | exact ordered StockOS conservative v1 key/value lines, including 45m cutoff buffer | frozen source commit | any change produces a different digest and invalidates manifest equality |
+| constants | exact ordered StockOS conservative v1 key/value lines, including 30m/10m auctions, 400m after-hours offset and 45m cutoff buffer | frozen source commit | any change produces a different digest and invalidates manifest equality |
 
 ## Branches and early returns
 

@@ -2,8 +2,8 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | AST branch B1: computes a cycle-safe dependency path while honoring explicit sanitizer stops | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B2 | AST branch B2: computes a cycle-safe dependency path while honoring explicit sanitizer stops | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B3 | AST branch B3: computes a cycle-safe dependency path while honoring explicit sanitizer stops | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B4 | AST branch B4: computes a cycle-safe dependency path while honoring explicit sanitizer stops | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B5 | AST branch B5: computes a cycle-safe dependency path while honoring explicit sanitizer stops | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
+| B1 | exact AST `for` at source line 285: `for len(queue) != 0 {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B2 | exact AST `if` at source line 288: `if seen[current.name] {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B3 | exact AST `if` at source line 292: `if matches(current.name) {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B4 | exact AST `if` at source line 295: `if stop(current.name) {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B5 | exact AST `range` at source line 298: `for _, dependency := range graph[current.name] {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |

@@ -16,10 +16,15 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 | --- | --- | --- | --- | --- |
-| B1 | each settings/limits/trading/autostart seam is present | performs read and records wired/value/error fields | continues rendering all sections | settings seam tests |
-| B2 | seam absent or read fails | no write; marks unwired or load error | continues rendering | nil/error seam tests |
-| B3 | updater/stager seams present | reads candidate/receipt state only | continues rendering | system update view tests |
-| B4 | page assembled | template render | HTTP response | console settings page tests |
+| B1 | exact AST `if` at source line 147: `if c.opts.Settings != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 150: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 155: `if c.opts.Limits != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 158: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 163: `if c.opts.TradingPolicy != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `if` at source line 166: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B7 | exact AST `if` at source line 175: `if c.opts.EngineBoot != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B8 | exact AST `if` at source line 178: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B9 | exact AST `if` at source line 184: `if c.opts.SystemUpdater != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

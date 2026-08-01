@@ -14,7 +14,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | follows the complete AST branch list in `ast.json`; allows only SealApproved and audited ApprovedSnapshot methods | test-local collections only | deterministic finding/result | `TestApprovedCandidateConsumersStayInsidePureBoundaries` |
+| B1 | function declaration is nil | none | false | pure-boundary audit |
+| B2 | declaration has a receiver | none | result of exact ApprovedSnapshot-method allowlist | pure-boundary audit |
+| Scenario | receiverless declaration | none | true only for `SealApproved` | pure-boundary audit |
 
 ## Calls and live bindings
 

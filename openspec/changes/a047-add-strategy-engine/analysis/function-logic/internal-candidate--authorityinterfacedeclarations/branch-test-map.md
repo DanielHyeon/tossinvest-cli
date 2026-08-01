@@ -2,9 +2,9 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | AST branch B1: detects order-capable interface declarations in transitive candidate consumers | `TestApprovedCandidateTaintRejectsAuthorityInterface` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B2 | AST branch B2: detects order-capable interface declarations in transitive candidate consumers | `TestApprovedCandidateTaintRejectsAuthorityInterface` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B3 | AST branch B3: detects order-capable interface declarations in transitive candidate consumers | `TestApprovedCandidateTaintRejectsAuthorityInterface` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B4 | AST branch B4: detects order-capable interface declarations in transitive candidate consumers | `TestApprovedCandidateTaintRejectsAuthorityInterface` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B5 | AST branch B5: detects order-capable interface declarations in transitive candidate consumers | `TestApprovedCandidateTaintRejectsAuthorityInterface` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B6 | AST branch B6: detects order-capable interface declarations in transitive candidate consumers | `TestApprovedCandidateTaintRejectsAuthorityInterface` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
+| B1 | exact AST `range` at source line 140: `for _, file := range files {` | `TestApprovedCandidateTaintRejectsAuthorityInterface` | not independently measured | source test passes; branch-side coverage not claimed |
+| B2 | exact AST `if` at source line 143: `if !ok {` | `TestApprovedCandidateTaintRejectsAuthorityInterface` | not independently measured | source test passes; branch-side coverage not claimed |
+| B3 | exact AST `if` at source line 147: `if !ok {` | `TestApprovedCandidateTaintRejectsAuthorityInterface` | not independently measured | source test passes; branch-side coverage not claimed |
+| B4 | exact AST `range` at source line 150: `for _, field := range contract.Methods.List {` | `TestApprovedCandidateTaintRejectsAuthorityInterface` | not independently measured | source test passes; branch-side coverage not claimed |
+| B5 | exact AST `range` at source line 151: `for _, name := range field.Names {` | `TestApprovedCandidateTaintRejectsAuthorityInterface` | not independently measured | source test passes; branch-side coverage not claimed |
+| B6 | exact AST `if` at source line 152: `if authorityMethodNames[name.Name] {` | `TestApprovedCandidateTaintRejectsAuthorityInterface` | not independently measured | source test passes; branch-side coverage not claimed |

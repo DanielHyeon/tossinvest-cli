@@ -17,11 +17,14 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Test |
 |---|---|---|---|---|
-| B1 | RiskIntent hash/type invalid | none | risk binding error | issuance binding tests |
-| B2 | JSON unknown/trailing/noncanonical or digest mismatch | none | payload error | strict payload table |
-| B3 | full-record identity mismatch | none | identity error | non-denormalized field mutation |
-| B4 | any denormalized/risk field mismatch | none | exact binding error | exhaustive mutation table |
-| Success | all exact | none | nil | production issuance success |
+| B1 | exact AST `if` at source line 737: `if journalHash := HashPreimage(decision.RiskPreimage); journalHash != decision.RiskHash {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 741: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 745: `if !ok {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 751: `if err := decoder.Decode(&signalRecord); err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 754: `if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `if` at source line 758: `if err != nil \|\| string(canonicalPayload) != lineage.DecisionPayload {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B7 | exact AST `if` at source line 766: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B8 | exact AST `if` at source line 771: `if lineage.DecisionPayloadDigest != wantPayloadDigest \|\| signalRecord.Identity != wantIdentity \|\| signalRecord.Identity != lineage.DecisionIdentity \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

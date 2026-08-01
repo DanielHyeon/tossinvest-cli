@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyengine/runtime_descriptor.go",
-  "source_sha256": "2ef3fd22295a5fb2075f47058cd1d81b0e4b56c1e9da987db6dc5e41049f1ce7",
+  "source_sha256": "48f3608f5ff0c220b6623cbf568b735d890af29362ad31a0a1ee15992fe07b19",
   "package": "strategyengine",
   "function": "DormantRuntimeDescriptor",
   "signature": "DormantRuntimeDescriptor(params=0, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 121,
+    "line": 124,
     "column": 2
   },
   "branches": null,
@@ -123,6 +123,30 @@
       "kind": "call",
       "at": {
         "line": 107,
+        "column": 4
+      },
+      "text": "field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 4
+      },
+      "text": "field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 4
+      },
+      "text": "field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
         "column": 4
       },
       "text": "field"

@@ -2,4 +2,4 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | AST branch B1: aggregates dependency, type, and AST violations for approved-candidate consumers | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
+| B1 | branchless happy-path sentinel (AST has no conditional): aggregates dependency, type and AST violation slices | `TestApprovedCandidateConsumersStayInsidePureBoundaries`, synthetic taint rejection test | existing guard baseline | pass |

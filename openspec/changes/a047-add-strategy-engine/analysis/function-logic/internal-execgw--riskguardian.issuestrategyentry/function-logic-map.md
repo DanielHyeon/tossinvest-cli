@@ -16,11 +16,11 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | opaque decision invalid | none | error | invalid decision adapter tests |
-| B2 | policy or limits digest differs | none | error | Guardian binding tests |
-| B3 | exact sizing yields error/zero | none | wrapped sizing error | risk sizing tests |
-| B4 | record encoding fails | none | error | structurally unreachable for scalar record |
-| Success | complete exact lineage built | delegates to `IssueEntry` atomic strategy branch | issued decision/reservation/receipt | strategy issuance integration |
+| B1 | `!request.Decision.Valid()` | none; collector and journal untouched | invalid-decision error | direct zero-value decision test |
+| B2 | expected policy version or limits digest differs | none | Guardian snapshot mismatch | authentic direct test blocked until activation has a verified source manifest |
+| B3 | Guardian-owned exact sizing returns error | none | wrapped sizing error | pure sizing tests only; direct method branch remains activation-gated |
+| B4 | full `DecisionRecord` JSON encoding returns error | none | encoding error | no authentic direct call while source manifest is unavailable; current scalar schema makes the path unreachable but does not justify claiming branch execution |
+| Scenario | complete exact lineage built | delegates to `IssueEntry` with private atomic strategy plan | issued decision/reservation/receipt | callee integration exists; direct authentic method success is activation-gated |
 
 ## Calls and live bindings
 

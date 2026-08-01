@@ -16,14 +16,20 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 | --- | --- | --- | --- | --- |
-| B1 | collector missing | none | error | Guardian refusal tests |
-| B2 | scope invalid or side is not BUY | none | error | scoped intent and reduction/entry separation tests |
-| B3 | pure risk chain refuses | refusal observation; optional mode escalation | joined chain/escalation error | escalation and observation tests |
-| B4 | exposure arithmetic refuses | refusal observation | chain refusal | risk arithmetic tests |
-| B5 | collection/usage/reservation issuance fails | at most issuance-refused observation; transaction rolls back decision/reservation | issuance refusal | reservation/recollection tests |
-| B6 | atomic decision+reservation commits | post-commit issued observation | immutable decision reference and reservations | `TestTheGuardianIssuesTheDecisionAndItsReservationTogether` |
-| B7 | private strategy plan absent | ordinary atomic issuance | normal issued result | existing Guardian suite |
-| B8 | private strategy plan present | decision+reservation+strategy lineage+attempt+DISPATCH_START in one transaction | issued result with exact receipt | strategy issuance integration |
+| B1 | `req.Collect == nil` | none | missing-collector error | `TestRiskGuardianIssueEntryRejectsMissingCollectorBeforeIssuingAuthority` |
+| B2 | `g.scopedIntent(req.Intent)` returns error | none | scoped-intent error | cross-account/invalid intent tests |
+| B3 | scoped intent side is not BUY | none | entry-only side error | entry/reduction separation tests |
+| B4 | `evaluateChain(in)` refuses | refusal observation and optional mode escalation | joined chain/escalation error | chain refusal and escalation tests |
+| B5 | `risk.EntryExposureValue(in)` refuses | refusal observation | chain refusal | invalid exposure tests |
+| B6 | `req.Collect` returns error | transaction never starts for that attempt | collector error | recollection tests |
+| B7 | `exposureUsage` rejects snapshot values/currency | transaction never starts for that attempt | usage error | mixed-currency tests |
+| B8 | `req.strategyPlan == nil` | ordinary `RecordDecisionAndReserveWithRecollection` | ordinary issue result/error | existing Guardian issuance suite |
+| B9 | `req.strategyPlan != nil` | strategy `RecordStrategyDecisionAndReserveWithRecollection` | strategy issue result/error | activation-gated direct coverage |
+| B10 | strategy callback's `collectIssue` fails | no strategy transaction starts | callback error | activation-gated direct coverage |
+| B11 | strategy recollection succeeds | copies exact issue and receipt | continue to shared error/success handling | activation-gated direct coverage |
+| B12 | selected recollection path returns error | refusal observation only when typed issuance-stage refusal | stable refusal error | ordinary refusal suite; strategy half activation-gated |
+| B13 | refusal is typed `*IssueRefusal` at issuance stage | copies stable reason and observes row | return refusal | issuance reason/observation tests |
+| Scenario | selected recollection path succeeds | post-commit issued observation; no rollback coupling | immutable decision reference, reservations and optional strategy receipt | ordinary Guardian success; strategy direct success activation-gated |
 
 ## Calls and live bindings
 

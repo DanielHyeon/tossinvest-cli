@@ -3,14 +3,14 @@
 | Branch | Scenario | Test | RED | GREEN |
 |---|---|---|---|---|
 | B1 | caller provenance/version laundering | `TestVersionedMarketInputRejectsCallerProvenanceLaundering` | existing | existing |
-| B2 | regular close derives 14:45 exact cutoff | `TestVersionedMarketInputDerivesFrozenEntryCutoff` | arbitrary 15:20 accepted | pass |
-| B3 | early close derives close-minus-45m | `TestVersionedMarketInputDerivesFrozenEntryCutoff` | caller-authored cutoff | pass |
-| B4 | session no longer than 45m refuses | `TestVersionedMarketInputRejectsSessionShorterThanFrozenBuffer` | not covered | pass |
-| B5 | opening/cutoff inclusive edges | `TestParkerSessionUsesInjectedEvaluationTimeAndInclusiveCutoff` | wrong 15:20 fixture | pass |
-| B6 | required/optional decimal validation | frozen gate and laundering tables | existing | existing |
-| B7 | LVN decimal invalid | laundering/decimal tests | existing | existing |
-| B8 | tangled decimal invalid | laundering/decimal tests | existing | existing |
-| B9 | optional current price present | live-price boundary table | existing | existing |
-| B10 | current price decimal invalid | nonpositive/invalid live-price rows | existing | existing |
-| B11 | optional expansion/HVN iteration | optional gate table | existing | existing |
-| B12 | present optional decimal invalid | optional decimal tests | existing | existing |
+| B2 | trading-day calendar missing/too short, shifted from 09:00 KST, or crosses KST day; valid regular/early close derive close-minus-45m | cutoff derivation, short-session and pinned-KRX-day tests | caller-authored window/cutoff | pass |
+| B3 | iterate both required decimals | malformed VWAP and EMA9 rows | missing | pass |
+| B4 | required decimal is nonpositive or malformed | malformed required-decimal table | missing malformed rows | pass |
+| B5 | slope decimal malformed | malformed slope row | missing | pass |
+| B6 | LVN decimal malformed | malformed LVN row | missing | pass |
+| B7 | tangled score negative/malformed | negative tangled row | missing | pass |
+| B8 | current price optional presence/absence | present baseline plus optional-absent success | indirect only | pass |
+| B9 | present current price malformed | malformed current-price row | nonpositive lane refusal did not cover parse failure | pass |
+| B10 | iterate both optional expansion/HVN decimals | first/second optional malformed rows | missing | pass |
+| B11 | optional expansion/HVN presence/absence | present baseline plus optional-absent success | indirect only | pass |
+| B12 | present optional decimal malformed | malformed expansion and HVN rows | missing | pass |

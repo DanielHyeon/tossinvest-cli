@@ -14,7 +14,8 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | follows the complete AST branch list in `ast.json`; proves an authority-bearing tainted consumer is rejected | test-local collections only | deterministic finding/result | `TestApprovedCandidateTaintRejectsAuthorityInterface` |
+| B1 | exact AST `if` at source line 167: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 171: `if !findingContains(findings, "Gateway.Place") \|\| findingContains(findings, "Reader.ReadSymbolState") {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

@@ -2,5 +2,4 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | pure boundary accessor/type allowlist | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | yes | yes |
-| B2 | state/last-seen/valid-until copied | `TestParkerRequiresApprovalActivatedAndCandidateCurrentlyActive` | yes | yes |
+| B1 | branchless happy-path sentinel (AST has no conditional): copies only opaque candidate accessors into a value-only snapshot, preserving zero/refused values as invalid | `TestApprovedCandidateConsumersStayInsidePureBoundaries`, Parker current-life tests | yes | yes |

@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | unconditional value accessor | none | returns a copy of the sealed field | immutable provenance test |
+| B1 | branchless happy-path sentinel (AST has no conditional); unconditional value accessor | none | returns a copy of the sealed field | immutable provenance test |
 
 ## Calls and live bindings
 

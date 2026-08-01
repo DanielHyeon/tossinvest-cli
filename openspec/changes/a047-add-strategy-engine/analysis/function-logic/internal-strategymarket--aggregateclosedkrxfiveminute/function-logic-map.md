@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | every invocation | none | `RefusalSource` requiring opaque official page | raw API refusal test / replacement API tests |
+| B1 | branchless happy-path sentinel (AST has no conditional); every invocation | none | `RefusalSource` requiring opaque official page | `TestLegacyRawSliceCannotMintVerifiedBar` |
 
 ## Calls and live bindings
 

@@ -2,4 +2,4 @@
 
 | Branch | Scenario | Test | RED | GREEN |
 |---|---|---|---|---|
-| B1 | cutoff buffer participates in digest and record binding | translated parity + descriptor/constants tests | omitted 45m source constant | pass |
+| B1 | branchless happy-path sentinel (AST has no conditional): auction windows, after-hours offset and cutoff buffer participate in digest/record binding | translated session parity + descriptor/constants tests | incomplete source constants | pass |

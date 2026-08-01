@@ -14,8 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | zero/refused value | none | invalid scalar snapshot | candidate boundary tests |
-| B2 | approved value | scalar copies only | snapshot preserves identity, thresholds and current-life proof | lane fixture/current-life tests |
+| B1 | branchless happy-path sentinel (AST has no conditional); any approved or zero input | scalar copies only | snapshot mirrors validity, identity, thresholds and current-life proof exactly | candidate boundary and lane current-life tests |
 
 ## Calls and live bindings
 

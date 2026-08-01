@@ -17,7 +17,7 @@
 | --- | --- | --- | --- | --- |
 | B1 | `req.build()` rejects any invariant | none | zero decision + validation error | `TestRecordDecisionRefusals` and class/preimage tests |
 | B2 | insert fails, including duplicate nonce/ID | database rejects row | zero decision + wrapped DB error | nonce/durability tests |
-| B3 | build and insert succeed | one durable decision row | canonical `Decision` | `TestRecordAndLookupDecision` |
+| Scenario | build and insert succeed | one durable decision row | canonical `Decision` | `TestRecordAndLookupDecision` |
 
 ## Calls and live bindings
 

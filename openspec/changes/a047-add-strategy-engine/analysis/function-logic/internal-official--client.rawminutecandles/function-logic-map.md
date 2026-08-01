@@ -16,11 +16,12 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | nil client | none | error | nil boundary |
-| B2 | unsupported/non-canonical identity | none | error before HTTP | unsupported market test |
-| B3 | optional count/before present | query only | continue | query assertions |
-| B4 | official read fails | token/HTTP read only | propagated error | client transport suite |
-| B5 | official read succeeds | none | lossless page with identity/interval/adjusted/source | preservation test |
+| B1 | exact AST `if` at source line 48: `if c == nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 51: `if market != "KR" \|\| !krxRawCandleSymbol.MatchString(symbol) {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 57: `if count > 0 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 60: `if before != "" {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 65: `if err := c.get(ctx, "/api/v1/candles", q, &raw); err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `range` at source line 74: `for _, candle := range raw.Candles {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

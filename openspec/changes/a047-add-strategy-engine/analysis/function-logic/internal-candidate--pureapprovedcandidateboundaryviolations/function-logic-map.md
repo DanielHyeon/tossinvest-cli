@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | follows the complete AST branch list in `ast.json`; aggregates dependency, type, and AST violations for approved-candidate consumers | test-local collections only | deterministic finding/result | `TestApprovedCandidateConsumersStayInsidePureBoundaries` |
+| B1 | branchless happy-path sentinel (AST has no conditional); concatenate dependency/type/AST findings | test-local result slice only | deterministic finding list | pure-boundary and synthetic taint tests |
 
 ## Calls and live bindings
 

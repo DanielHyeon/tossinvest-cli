@@ -16,11 +16,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | source/request absent | none | unavailable | proof test |
-| B2 | error/identity/source/time absent | one read only | unavailable | wrong-symbol/caller-source rows |
-| B3 | stale/future | exact local time | stale | stale row |
-| B4 | quantity invalid/nonzero or orders exist | exact decimal parse | blocked | exposure rows |
-| B5 | valid zero exposure | none | opaque proof | pass row |
+| B1 | exact AST `if` at source line 365: `if source == nil \|\| now.IsZero() \|\| strings.TrimSpace(market) == "" \|\| strings.TrimSpace(symbol) == "" {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 369: `if err != nil \|\| reading.Market != market \|\| reading.Symbol != symbol \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 375: `if age < 0 \|\| age > 30*time.Second {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 378: `if !validQuantity \|\| decimalString(quantity) != reading.Quantity \|\| quantity.Sign() != 0 \|\| reading.OpenOrders != 0 {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

@@ -2,7 +2,7 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | AST branch B1: constructs the closed synthetic candidate type used by the pure-boundary type checker | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B2 | AST branch B2: constructs the closed synthetic candidate type used by the pure-boundary type checker | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B3 | AST branch B3: constructs the closed synthetic candidate type used by the pure-boundary type checker | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
-| B4 | AST branch B4: constructs the closed synthetic candidate type used by the pure-boundary type checker | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | existing guard baseline / a047 RED where current-life accessors were absent | yes |
+| B1 | exact AST `range` at source line 35: `for name := range approvedCandidateAccessors {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B2 | exact AST `if` at source line 37: `if name == "Valid" {` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B3 | exact AST `else` at source line 39: `} else if name == "FirstSeenUnixNano" \|\| name == "LastSeenUnixNano" \|\|` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |
+| B4 | exact AST `if` at source line 39: `} else if name == "FirstSeenUnixNano" \|\| name == "LastSeenUnixNano" \|\|` | `TestApprovedCandidateConsumersStayInsidePureBoundaries` | not independently measured | source test passes; branch-side coverage not claimed |

@@ -2,7 +2,6 @@
 
 | Branch | Scenario | Test | RED | GREEN |
 |---|---|---|---|---|
-| B1 | identifier whitespace is normalized | existing plan binding tests | existing | existing |
-| B2 | zero timestamp uses journal time | production issuance test | existing | existing |
-| B3 | supplied timestamp is UTC | replay tests | existing | existing |
-| B4 | payload leading/trailing whitespace is not silently rewritten | `TestStrategyProductionIssuanceRejectsNonCanonicalDecisionPayload` | payload was trimmed and accepted | pass |
+| B1 | zero lineage `CreatedAt` is replaced with caller-supplied journal time after scalar trimming | production issuance success/binding tests | existing | pass |
+| B2 | nonzero lineage `CreatedAt` is normalized to UTC after scalar trimming | exact plan/idempotency tests | existing | pass |
+| Invariant | `DecisionPayload` is deliberately not trimmed; leading/trailing bytes remain for strict verifier refusal | `TestStrategyProductionIssuanceRejectsNonCanonicalDecisionPayload` | payload was trimmed and accepted | pass |

@@ -109,23 +109,40 @@ func gateForRecord(binding ManifestBinding, record strategyengine.DecisionRecord
 }
 
 type gateStore struct {
-	mu       sync.RWMutex
-	snapshot GateSnapshot
+	mu              sync.RWMutex
+	snapshot        GateSnapshot
+	readErr         error
+	leaseBeforeErr  error
+	leaseSnapshot   func(GateSnapshot) GateSnapshot
+	leaseAfterError error
 }
 
 func (g *gateStore) ReadGate(context.Context) (GateSnapshot, error) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
+	if g.readErr != nil {
+		return GateSnapshot{}, g.readErr
+	}
 	return g.snapshot, nil
 }
 
 func (g *gateStore) WithLease(_ context.Context, revision uint64, fn func(GateSnapshot) error) error {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
+	if g.leaseBeforeErr != nil {
+		return g.leaseBeforeErr
+	}
 	if g.snapshot.Revision != revision {
 		return &Error{Reason: ReasonTOCTOU}
 	}
-	return fn(g.snapshot)
+	snapshot := g.snapshot
+	if g.leaseSnapshot != nil {
+		snapshot = g.leaseSnapshot(snapshot)
+	}
+	if err := fn(snapshot); err != nil {
+		return err
+	}
+	return g.leaseAfterError
 }
 
 func (g *gateStore) mutate(fn func(*GateSnapshot)) {
@@ -135,10 +152,15 @@ func (g *gateStore) mutate(fn func(*GateSnapshot)) {
 }
 
 type issuerSpy struct {
-	issue            func()
-	issued           int
-	refused, inDoubt int
-	dispatched       int
+	issue                         func()
+	plan                          func(*AtomicPlan)
+	issueErr                      error
+	refusalErr, inDoubtErr        error
+	dispatchedErr                 error
+	issued, refused, inDoubt      int
+	dispatched                    int
+	refusalReason, inDoubtReason  Reason
+	dispatchedAttemptID, brokerID string
 }
 
 func (s *issuerSpy) IssueAndPlan(_ context.Context, request IssueRequest) (AtomicPlan, PlanReceipt, error) {
@@ -156,20 +178,27 @@ func (s *issuerSpy) IssueAndPlan(_ context.Context, request IssueRequest) (Atomi
 	if receipt.DecisionIdentity == "" {
 		receipt.DecisionIdentity = "strategy-decision:v1:sha256:fixture"
 	}
-	return AtomicPlan{AttemptID: request.AttemptID, Decision: request.Decision, ManifestDigest: request.ManifestDigest}, receipt, nil
+	plan := AtomicPlan{AttemptID: request.AttemptID, Decision: request.Decision, ManifestDigest: request.ManifestDigest}
+	if s.plan != nil {
+		s.plan(&plan)
+	}
+	return plan, receipt, s.issueErr
 }
 
-func (s *issuerSpy) RecordStrategyRefusal(context.Context, PlanReceipt, Reason) error {
+func (s *issuerSpy) RecordStrategyRefusal(_ context.Context, _ PlanReceipt, reason Reason) error {
 	s.refused++
-	return nil
+	s.refusalReason = reason
+	return s.refusalErr
 }
-func (s *issuerSpy) RecordStrategyInDoubt(context.Context, PlanReceipt, Reason) error {
+func (s *issuerSpy) RecordStrategyInDoubt(_ context.Context, _ PlanReceipt, reason Reason) error {
 	s.inDoubt++
-	return nil
+	s.inDoubtReason = reason
+	return s.inDoubtErr
 }
-func (s *issuerSpy) RecordStrategyDispatched(context.Context, PlanReceipt, string, string) error {
+func (s *issuerSpy) RecordStrategyDispatched(_ context.Context, _ PlanReceipt, attemptID, brokerID string) error {
 	s.dispatched++
-	return nil
+	s.dispatchedAttemptID, s.brokerID = attemptID, brokerID
+	return s.dispatchedErr
 }
 
 type gatewaySpy struct {
@@ -183,11 +212,107 @@ func (s *gatewaySpy) PlaceStrategyEntry(context.Context, AtomicPlan) (execgw.Out
 	return s.out, s.err
 }
 
+type dispatchFixture struct {
+	now      time.Time
+	record   strategyengine.DecisionRecord
+	binding  ManifestBinding
+	gates    *gateStore
+	manifest *ManifestRepository
+	issuer   *issuerSpy
+	gateway  *gatewaySpy
+	nowFn    func() time.Time
+}
+
+func newDispatchFixture() *dispatchFixture {
+	now := time.Date(2026, 8, 1, 1, 0, 0, 0, time.UTC)
+	record := decisionRecordFixture(now)
+	binding := bindingForRecord(now, record)
+	return &dispatchFixture{
+		now: now, record: record, binding: binding,
+		gates: &gateStore{snapshot: gateForRecord(binding, record)}, manifest: installedRepository(binding),
+		issuer: &issuerSpy{}, gateway: &gatewaySpy{}, nowFn: func() time.Time { return now },
+	}
+}
+
+func (f *dispatchFixture) dependencies() Dependencies {
+	return Dependencies{Gates: f.gates, Manifest: f.manifest, Issuer: f.issuer, Gateway: f.gateway, Now: f.nowFn}
+}
+
+func (f *dispatchFixture) run() error {
+	return dispatchValidated(context.Background(), strategyengine.Decision{}, f.record, f.dependencies())
+}
+
+func requireDispatchReason(t *testing.T, err error, want Reason) *Error {
+	t.Helper()
+	var typed *Error
+	if !errors.As(err, &typed) || typed.Reason != want {
+		t.Fatalf("err=%v reason=%v want=%s", err, typed, want)
+	}
+	return typed
+}
+
 func TestDispatchRejectsOpaqueZeroDecisionBeforeAuthority(t *testing.T) {
 	err := Dispatch(context.Background(), strategyengine.Decision{}, Dependencies{})
 	var typed *Error
 	if !errors.As(err, &typed) || typed.Reason != ReasonDecisionInvalid {
 		t.Fatalf("err=%v", err)
+	}
+}
+
+func TestPostValidationDispatchRejectsEveryMissingDependencyBeforeAuthority(t *testing.T) {
+	for _, missing := range []string{"gates", "manifest", "issuer", "gateway", "clock"} {
+		t.Run(missing, func(t *testing.T) {
+			fixture := newDispatchFixture()
+			deps := fixture.dependencies()
+			switch missing {
+			case "gates":
+				deps.Gates = nil
+			case "manifest":
+				deps.Manifest = nil
+			case "issuer":
+				deps.Issuer = nil
+			case "gateway":
+				deps.Gateway = nil
+			case "clock":
+				deps.Now = nil
+			}
+			err := dispatchValidated(context.Background(), strategyengine.Decision{}, fixture.record, deps)
+			requireDispatchReason(t, err, ReasonActivation)
+			if fixture.issuer.issued != 0 || fixture.gateway.calls != 0 {
+				t.Fatalf("authority reached issuer=%+v gateway=%+v", fixture.issuer, fixture.gateway)
+			}
+		})
+	}
+}
+
+func TestPostValidationDispatchPrePlanFailuresAreExactAndCallOfficialGatewayZeroTimes(t *testing.T) {
+	sentinel := errors.New("injected authority failure")
+	tests := []struct {
+		name      string
+		want      Reason
+		wantIssue int
+		setup     func(*dispatchFixture)
+	}{
+		{name: "zero clock", want: ReasonDecisionStale, setup: func(f *dispatchFixture) { f.nowFn = func() time.Time { return time.Time{} } }},
+		{name: "exact decision expiry", want: ReasonDecisionStale, setup: func(f *dispatchFixture) { f.nowFn = func() time.Time { return time.Unix(0, f.record.ExpiresAt) } }},
+		{name: "gate read error", want: ReasonGate, setup: func(f *dispatchFixture) { f.gates.readErr = sentinel }},
+		{name: "initial gate refusal", want: ReasonLaneOff, setup: func(f *dispatchFixture) { f.gates.snapshot.LaneDesired = false }},
+		{name: "manifest verification error", want: ReasonActivation, setup: func(f *dispatchFixture) { f.manifest = NewDormantManifestRepository() }},
+		{name: "atomic issue and plan error", want: ReasonGuardian, wantIssue: 1, setup: func(f *dispatchFixture) { f.issuer.issueErr = sentinel }},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fixture := newDispatchFixture()
+			tc.setup(fixture)
+			err := fixture.run()
+			typed := requireDispatchReason(t, err, tc.want)
+			if fixture.issuer.issued != tc.wantIssue || fixture.issuer.refused != 0 || fixture.issuer.inDoubt != 0 || fixture.issuer.dispatched != 0 || fixture.gateway.calls != 0 {
+				t.Fatalf("unexpected calls issuer=%+v gateway=%+v", fixture.issuer, fixture.gateway)
+			}
+			if (tc.name == "gate read error" || tc.name == "atomic issue and plan error") && !errors.Is(typed, sentinel) {
+				t.Fatalf("cause=%v does not retain injected error", typed.Cause)
+			}
+		})
 	}
 }
 
@@ -204,7 +329,8 @@ func TestPostValidationDispatchCorePlansOnceAndPersistsExactOfficialOutcomeWithS
 	err := dispatchValidated(context.Background(), strategyengine.Decision{}, record, Dependencies{
 		Gates: gates, Manifest: installedRepository(binding), Issuer: issuer, Gateway: gateway, Now: func() time.Time { return now },
 	})
-	if err != nil || issuer.issued != 1 || issuer.dispatched != 1 || issuer.refused != 0 || issuer.inDoubt != 0 || gateway.calls != 1 {
+	if err != nil || issuer.issued != 1 || issuer.dispatched != 1 || issuer.refused != 0 || issuer.inDoubt != 0 ||
+		issuer.dispatchedAttemptID != "mutation-1" || issuer.brokerID != "broker-1" || gateway.calls != 1 {
 		t.Fatalf("err=%v issuer=%+v gateway=%+v", err, issuer, gateway)
 	}
 }
@@ -232,7 +358,11 @@ func TestPostValidationDispatchCoreRefusesEveryInitialGateBeforeIssuerWithStable
 		{name: "currency mismatch", mutate: func(v *GateSnapshot) { v.Order.Currency = "USD" }, want: ReasonActivation},
 		{name: "lane precedes kill", mutate: func(v *GateSnapshot) { v.LaneDesired = false; v.KillSwitch = true }, want: ReasonLaneOff},
 		{name: "kill precedes protection", mutate: func(v *GateSnapshot) { v.KillSwitch = true; v.ProtectionWired = false }, want: ReasonKillSwitch},
-		{name: "protection precedes later blockers", mutate: func(v *GateSnapshot) { v.ProtectionWired = false; v.ReconcileHealthy = false; v.LiveApproved = false }, want: ReasonProtection},
+		{name: "protection precedes reconcile", mutate: func(v *GateSnapshot) { v.ProtectionWired = false; v.ReconcileHealthy = false }, want: ReasonProtection},
+		{name: "reconcile precedes scheduler", mutate: func(v *GateSnapshot) { v.ReconcileHealthy = false; v.SchedulerValid = false }, want: ReasonReconcile},
+		{name: "scheduler precedes autostart", mutate: func(v *GateSnapshot) { v.SchedulerValid = false; v.AutoStart = false }, want: ReasonScheduler},
+		{name: "autostart precedes gate", mutate: func(v *GateSnapshot) { v.AutoStart = false; v.GateOpen = false }, want: ReasonAutoStart},
+		{name: "gate precedes live", mutate: func(v *GateSnapshot) { v.GateOpen = false; v.LiveApproved = false }, want: ReasonGate},
 		{name: "activation precedes lane", mutate: func(v *GateSnapshot) { v.Binding.LaneVersion = "other"; v.LaneDesired = false }, want: ReasonActivation},
 	}
 	for _, tc := range tests {
@@ -290,6 +420,188 @@ func TestValidatedDispatchExpiryReachedDuringPlanningRefusesAtExactBoundary(t *t
 	var typed *Error
 	if !errors.As(err, &typed) || typed.Reason != ReasonTOCTOU || issuer.refused != 1 || gateway.calls != 0 {
 		t.Fatalf("err=%v calls=%d issuer=%+v gateway=%+v", err, calls, issuer, gateway)
+	}
+}
+
+func TestValidatedDispatchPostPlanAuthorityChangesPersistTOCTOUAndCallOfficialGatewayZeroTimes(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup func(*dispatchFixture)
+	}{
+		{
+			name: "leased binding differs from planned binding",
+			setup: func(f *dispatchFixture) {
+				f.gates.leaseSnapshot = func(snapshot GateSnapshot) GateSnapshot {
+					snapshot.Binding.AccountRef = "other-account"
+					return snapshot
+				}
+			},
+		},
+		{
+			name: "leased blocker changes",
+			setup: func(f *dispatchFixture) {
+				f.gates.leaseSnapshot = func(snapshot GateSnapshot) GateSnapshot {
+					snapshot.KillSwitch = true
+					return snapshot
+				}
+			},
+		},
+		{
+			name: "planned manifest digest differs from leased activation",
+			setup: func(f *dispatchFixture) {
+				f.issuer.plan = func(plan *AtomicPlan) { plan.ManifestDigest = "sha256:other" }
+			},
+		},
+		{
+			name: "manifest is revoked after durable plan",
+			setup: func(f *dispatchFixture) {
+				f.issuer.issue = func() {
+					f.manifest.mu.Lock()
+					f.manifest.current.revoked = true
+					f.manifest.mu.Unlock()
+				}
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fixture := newDispatchFixture()
+			tc.setup(fixture)
+			err := fixture.run()
+			requireDispatchReason(t, err, ReasonTOCTOU)
+			if fixture.issuer.issued != 1 || fixture.issuer.refused != 1 || fixture.issuer.refusalReason != ReasonTOCTOU || fixture.issuer.inDoubt != 0 || fixture.issuer.dispatched != 0 || fixture.gateway.calls != 0 {
+				t.Fatalf("unexpected calls issuer=%+v gateway=%+v", fixture.issuer, fixture.gateway)
+			}
+		})
+	}
+}
+
+func TestValidatedDispatchSuccessfulLeaseOutcomePersistenceBranches(t *testing.T) {
+	persistErr := errors.New("injected journal persistence failure")
+	tests := []struct {
+		name           string
+		outcome        execgw.Outcome
+		configure      func(*issuerSpy)
+		wantReason     Reason
+		wantRefused    int
+		wantInDoubt    int
+		wantDispatched int
+		wantPersistErr bool
+	}{
+		{
+			name: "confirmed dispatch persistence fails", outcome: execgw.Outcome{AttemptID: "mutation-1", BrokerOrderID: "broker-1", State: journal.StateConfirmed},
+			configure: func(issuer *issuerSpy) { issuer.dispatchedErr = persistErr }, wantReason: ReasonPlan, wantDispatched: 1, wantPersistErr: true,
+		},
+		{
+			name: "definitive refusal persists", outcome: execgw.Outcome{State: journal.StateNotDispatched},
+			wantReason: ReasonGateway, wantRefused: 1,
+		},
+		{
+			name: "definitive refusal persistence fails", outcome: execgw.Outcome{State: journal.StateNotDispatched},
+			configure: func(issuer *issuerSpy) { issuer.refusalErr = persistErr }, wantReason: ReasonPlan, wantRefused: 1, wantPersistErr: true,
+		},
+		{
+			name: "ambiguous malformed success persists in doubt", outcome: execgw.Outcome{AttemptID: "mutation-1", State: journal.StateConfirmed},
+			wantReason: ReasonGateway, wantInDoubt: 1,
+		},
+		{
+			name: "ambiguous malformed success persistence fails", outcome: execgw.Outcome{AttemptID: "mutation-1", State: journal.StateConfirmed},
+			configure: func(issuer *issuerSpy) { issuer.inDoubtErr = persistErr }, wantReason: ReasonPlan, wantInDoubt: 1, wantPersistErr: true,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fixture := newDispatchFixture()
+			fixture.gateway.out = tc.outcome
+			if tc.configure != nil {
+				tc.configure(fixture.issuer)
+			}
+			err := fixture.run()
+			requireDispatchReason(t, err, tc.wantReason)
+			if tc.wantPersistErr && !errors.Is(err, persistErr) {
+				t.Fatalf("err=%v does not retain persistence failure", err)
+			}
+			if fixture.gateway.calls != 1 || fixture.issuer.refused != tc.wantRefused || fixture.issuer.inDoubt != tc.wantInDoubt || fixture.issuer.dispatched != tc.wantDispatched {
+				t.Fatalf("unexpected calls issuer=%+v gateway=%+v", fixture.issuer, fixture.gateway)
+			}
+		})
+	}
+}
+
+func TestValidatedDispatchLeaseAndPostCallErrorsPersistExactTerminalState(t *testing.T) {
+	callErr := errors.New("injected lease or official call failure")
+	persistErr := errors.New("injected journal persistence failure")
+	tests := []struct {
+		name           string
+		setup          func(*dispatchFixture)
+		wantReason     Reason
+		wantRefused    int
+		wantInDoubt    int
+		wantDispatched int
+		wantGateway    int
+	}{
+		{
+			name:       "lease rejected before callback and TOCTOU refusal persistence fails",
+			setup:      func(f *dispatchFixture) { f.gates.leaseBeforeErr = callErr; f.issuer.refusalErr = persistErr },
+			wantReason: ReasonPlan, wantRefused: 1,
+		},
+		{
+			name: "post-call definitive refusal persistence fails",
+			setup: func(f *dispatchFixture) {
+				f.gateway.out = execgw.Outcome{AttemptID: "mutation-1", State: journal.StateFailedConfirmed}
+				f.gateway.err = callErr
+				f.issuer.refusalErr = persistErr
+			},
+			wantReason: ReasonPlan, wantRefused: 1, wantGateway: 1,
+		},
+		{
+			name: "post-call ambiguous outcome persistence fails",
+			setup: func(f *dispatchFixture) {
+				f.gateway.out = execgw.Outcome{AttemptID: "mutation-1", State: journal.StateDispatchStarted}
+				f.gateway.err = callErr
+				f.issuer.inDoubtErr = persistErr
+			},
+			wantReason: ReasonPlan, wantInDoubt: 1, wantGateway: 1,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fixture := newDispatchFixture()
+			tc.setup(fixture)
+			err := fixture.run()
+			requireDispatchReason(t, err, tc.wantReason)
+			if !errors.Is(err, callErr) || !errors.Is(err, persistErr) {
+				t.Fatalf("joined error lost cause: %v", err)
+			}
+			if fixture.gateway.calls != tc.wantGateway || fixture.issuer.refused != tc.wantRefused || fixture.issuer.inDoubt != tc.wantInDoubt || fixture.issuer.dispatched != tc.wantDispatched {
+				t.Fatalf("unexpected calls issuer=%+v gateway=%+v", fixture.issuer, fixture.gateway)
+			}
+		})
+	}
+}
+
+func TestValidatedDispatchPostCallDefinitiveRefusalPersistsAndReturnsGatewayCause(t *testing.T) {
+	callErr := errors.New("injected confirmed broker refusal")
+	fixture := newDispatchFixture()
+	fixture.gateway.out = execgw.Outcome{AttemptID: "mutation-1", State: journal.StateFailedConfirmed}
+	fixture.gateway.err = callErr
+
+	err := fixture.run()
+	requireDispatchReason(t, err, ReasonGateway)
+	if !errors.Is(err, callErr) || fixture.gateway.calls != 1 || fixture.issuer.refused != 1 || fixture.issuer.refusalReason != ReasonGateway || fixture.issuer.inDoubt != 0 || fixture.issuer.dispatched != 0 {
+		t.Fatalf("unexpected result err=%v issuer=%+v gateway=%+v", err, fixture.issuer, fixture.gateway)
+	}
+}
+
+func TestPostCallErrorCannotReachStructurallyUnreachableDispatchedPersistenceBranch(t *testing.T) {
+	fixture := newDispatchFixture()
+	fixture.gateway.out = execgw.Outcome{AttemptID: "mutation-1", BrokerOrderID: "broker-1", State: journal.StateConfirmed}
+	fixture.gates.leaseAfterError = errors.New("injected post-callback lease failure")
+
+	err := fixture.run()
+	requireDispatchReason(t, err, ReasonGateway)
+	if fixture.gateway.calls != 1 || fixture.issuer.dispatched != 0 || fixture.issuer.inDoubt != 1 || fixture.issuer.refused != 0 {
+		t.Fatalf("post-call error must classify IN_DOUBT, issuer=%+v gateway=%+v", fixture.issuer, fixture.gateway)
 	}
 }
 
@@ -383,18 +695,23 @@ func TestManifestLeaseBlocksRevocationAcrossCallback(t *testing.T) {
 		})
 	}()
 	<-entered
+	if repo.mu.TryLock() {
+		repo.mu.Unlock()
+		t.Fatal("manifest write lock acquired while verified callback held its read lease")
+	}
+	writerStarted := make(chan struct{})
 	mutated := make(chan struct{})
 	go func() {
+		close(writerStarted)
 		repo.mu.Lock()
 		repo.current.revoked = true
 		repo.mu.Unlock()
 		close(mutated)
 	}()
-	select {
-	case <-mutated:
-		t.Fatal("manifest changed while read lease was held")
-	case <-time.After(25 * time.Millisecond):
-	}
+	// Start the competing writer before release. The TryLock assertion above is
+	// the deterministic proof that the callback owns the read lease; this
+	// barrier only orders release before the writer-completion assertion below.
+	<-writerStarted
 	close(release)
 	if err := <-done; err != nil {
 		t.Fatal(err)

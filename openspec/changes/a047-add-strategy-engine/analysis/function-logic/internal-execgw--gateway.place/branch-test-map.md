@@ -2,7 +2,7 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 | --- | --- | --- | --- | --- |
-| B1 | preflight rejects unsupported/unprotected entry | `internal/execgw` preflight and protection tests | baseline | baseline |
-| B2 | missing/tampered/expired/spent decision, tightened mode, or bad reservation refuses before official call | decision, modegate, reservation-gate, protection tests | baseline | baseline |
-| B3 | exact journal-derived key/body submits once; ambiguous result becomes in-doubt | gateway, roundtrip, replay and indoubt tests | baseline | baseline |
+| B1 | optional preflight exists, so `Place` attaches its `CheckPlace` callback to the mutation plan | `TestGatewayAsksTheSymbolQuestion`, protection preflight tests | baseline | baseline |
+| Scenario | no preflight is configured; the plan leaves its callback nil | ordinary `Gateway.Place` decision/round-trip tests | baseline | baseline |
+| Scenario | decision, mode, reservation, journal, official-call and in-doubt behavior belongs to `g.submit`; none is an AST branch in `Gateway.Place` | decision, modegate, reservation-gate, roundtrip and in-doubt suites; see `Gateway.submit` maps | baseline | baseline |
 | A047 | strategy has no alternate submitter/import path | dormant wiring and official adapter static tests | missing | pass |

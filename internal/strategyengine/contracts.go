@@ -23,6 +23,9 @@ const (
 	IndicatorSource       = "stockos-parker-vwap"
 	IndicatorVersion      = SourceCommit
 	noEntryAfterBuffer    = 45 * time.Minute
+	openAuctionDuration   = 30 * time.Minute
+	closeAuctionDuration  = 10 * time.Minute
+	afterHoursFromOpen    = 6*time.Hour + 40*time.Minute
 )
 
 type Refusal string
@@ -57,6 +60,8 @@ const (
 	SourceRejectProfileDisabled      = "REJECT_PROFILE_DISABLED"
 	SourceRejectScopeFrozen          = "REJECT_SCOPE_FROZEN"
 	SourceRejectNonTradingDay        = "REJECT_NON_TRADING_DAY"
+	SourceRejectOpenAuction          = "REJECT_OPEN_AUCTION_WINDOW"
+	SourceRejectCloseAuction         = "REJECT_CLOSE_AUCTION_WINDOW"
 	SourceRejectAfterHours           = "REJECT_AFTER_HOURS"
 	SourceRejectOpeningWindow        = "REJECT_OPENING_WINDOW"
 	SourceRejectAfterEntryCutoff     = "REJECT_AFTER_ENTRY_CUTOFF"
@@ -188,8 +193,15 @@ func SealVersionedMarketInput(fields MarketInputFields) (VersionedMarketInput, e
 		return VersionedMarketInput{}, fmt.Errorf("strategy market input: provenance mismatch")
 	}
 	noEntryAfter := fields.SessionCloseAt.Add(-noEntryAfterBuffer)
+	kst := time.FixedZone("KST", 9*60*60)
+	openKST := fields.SessionOpenAt.In(kst)
+	closeKST := fields.SessionCloseAt.In(kst)
+	evaluatedKST := fields.EvaluatedAt.In(kst)
 	if fields.TradingDay && (fields.SessionOpenAt.IsZero() || fields.SessionCloseAt.IsZero() ||
-		!fields.SessionOpenAt.Before(noEntryAfter)) {
+		!fields.SessionOpenAt.Before(noEntryAfter) || openKST.Hour() != 9 || openKST.Minute() != 0 ||
+		openKST.Second() != 0 || openKST.Nanosecond() != 0 || openKST.Year() != closeKST.Year() ||
+		openKST.YearDay() != closeKST.YearDay() || openKST.Year() != evaluatedKST.Year() ||
+		openKST.YearDay() != evaluatedKST.YearDay()) {
 		return VersionedMarketInput{}, fmt.Errorf("strategy market input: invalid calendar window")
 	}
 	for _, raw := range []string{fields.VWAP, fields.EMA9} {

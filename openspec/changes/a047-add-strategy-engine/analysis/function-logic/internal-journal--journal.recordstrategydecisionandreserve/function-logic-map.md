@@ -16,11 +16,22 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | journal/request/lineage invalid | none | error | binding tests |
-| B2 | RiskIntent, canonical full DecisionRecord identity/payload, or denormalized lineage disagree | none | exact binding error | exhaustive payload/lineage tests |
-| B3 | reservation precheck/insert fails | transaction rollback | issuance error | rollback test |
-| B4 | decision/lineage/attempt/start collision | transaction rollback | typed collision | collision tests |
-| Success | all exact inserts succeed | one commit across five authorities | issue result + complete receipt | atomic/restart tests |
+| B1 | Journal or database is nil | none | journal-required error | direct test missing |
+| B2 | `request.Issue.build()` fails | none | build error | invalid request/callee tests |
+| B3 | built decision class/preimage kind is not canonical exposure-raising RiskIntent | none | canonical-RiskIntent error | risk-binding refusal tests |
+| B4 | `plan.CreatedAt.IsZero()` | local plan time becomes journal UTC now | continue | production issuance success |
+| B5 | supplied creation time is nonzero | local plan time becomes UTC | continue | direct test missing |
+| B6 | complete lineage, manifest, attempt or revision binding fails | none | complete-exact-binding error | exhaustive binding tests |
+| B7 | `verifyStrategyRiskBinding` fails | none | exact risk/payload binding error | exhaustive projection/identity/payload tests |
+| B8 | transaction begin fails | none | database error | injected begin failure missing |
+| B9 | reservation precheck fails | transaction rollback | reservation error | reservation refusal suite |
+| B10 | decision insert fails | transaction rollback | insert error | isolated direct test missing |
+| B11 | reservation row insertion fails | transaction rollback | reserve error | rollback/callee tests |
+| B12 | exact strategy decision insert fails | transaction rollback | collision/insert error | collision helper and projection tests |
+| B13 | exact strategy attempt insert fails | transaction rollback | collision/insert error | production rollback trigger test |
+| B14 | exact `DISPATCH_START` insert fails | transaction rollback | collision/insert error | exact execution helper tests; direct function isolation missing |
+| B15 | commit fails | transaction rollback attempt | wrapped commit error | injected commit failure missing |
+| Scenario | all exact inserts and commit succeed | one commit across decision, reservation, decision lineage, attempt and start event | issue result + complete receipt | production atomic success/restart tests |
 
 ## Calls and live bindings
 

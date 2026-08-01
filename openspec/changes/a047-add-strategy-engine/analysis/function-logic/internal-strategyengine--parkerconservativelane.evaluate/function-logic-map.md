@@ -16,13 +16,15 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | approval/scope/source invalid | none | candidate/scope/source refusal | zero/forged proof tests |
-| B2 | candidate future/stale or calendar session invalid | none | candidate/session refusal | activation/current-life/session boundary tests |
-| B3 | bar/state/position invalid | none | integrity/state/position refusal | proof table |
-| B4 | malformed bar/indicator | exact local parsing only | invalid-bar/indicator refusal | malformed input tests |
-| B5 | source gates 8a-8f fail | exact local arithmetic only | VWAP/slope/EMA9/LVN/tangled/expansion refusal | frozen gate table |
-| B6 | RR→HVN→age→drift fails | exact local arithmetic only | first matching refusal | derived-boundary tests |
-| B7 | every gate passes | none outside returned value | opaque Decision | synthetic derivation plus translated StockOS final-bar/indicator parity tests |
+| B1-B5 | approval/scope/source/market/candidate-life invalid | none | candidate/scope/source/indicator refusal | zero/forged and current-life tests |
+| B6-B11 | nontrading → open auction → close auction → after-hours → opening skip → cutoff | exact injected times only | exact StockOS source reason | translated regular/early-close and half-open boundary tables |
+| B12-B15 | bar clock/state/position proof invalid | none | integrity/session/state/position refusal | zero proof and future-close tests |
+| B16-B18 | OHLCV or indicator evidence invalid | exact local parsing only | invalid-bar/illiquid/indicator refusal | opaque-bar invariant, zero-volume, forged indicator tests |
+| B19-B27 | VWAP→slope→EMA9→bullish→LVN→tangled→optional expansion gates | exact local arithmetic only | first matching source refusal | frozen thresholds, EMA exact edge, fake-breakout precedence |
+| B28-B32 | RR→optional HVN→age fails | exact local arithmetic only | first matching refusal | structural RR floor, HVN, nanosecond age tests |
+| B33-B36 | live price presence/parse/absolute drift | exact local arithmetic only | drift refusal | missing/malformed/nonpositive/positive-negative edge tests |
+| B37-B38 | canonical identity and final mint | pure JSON/SHA and exact revalidation | decision refusal | fixed-schema identity invariant and direct mint mutation table |
+| Success | every gate passes | none outside returned value | opaque Decision | synthetic derivation plus translated StockOS final-bar/indicator arithmetic |
 
 ## Calls and live bindings
 

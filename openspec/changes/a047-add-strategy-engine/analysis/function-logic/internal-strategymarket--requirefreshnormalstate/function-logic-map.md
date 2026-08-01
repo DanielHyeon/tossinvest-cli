@@ -16,11 +16,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | source/clock absent | none | unavailable | proof test |
-| B2 | error/identity/source/timestamp invalid | one read only | unavailable | wrong-symbol/caller-source rows |
-| B3 | age outside 0..30s | none | stale | stale row |
-| B4 | state non-NORMAL | none | blocked | HALT row |
-| B5 | valid | none | opaque proof | pass row |
+| B1 | exact AST `if` at source line 315: `if source == nil \|\| now.IsZero() {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 319: `if err != nil \|\| reading.Market != market \|\| reading.Symbol != symbol \|\|` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 324: `if age < 0 \|\| age > 30*time.Second {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 327: `if reading.State != StateNormal {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 

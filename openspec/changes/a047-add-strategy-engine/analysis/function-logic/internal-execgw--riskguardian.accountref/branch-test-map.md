@@ -2,4 +2,4 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | constructed Guardian returns exact account | Guardian constructor/adapter tests | missing accessor | pass |
+| B1 | branchless happy-path sentinel (AST has no conditional): returns the constructor-frozen account exactly | `TestAssembleEngineWiresOneProductionGuardianToTheEngineJournalAndExitObserver`, `TestRiskGuardianIssueStrategyEntryDirectSuccessDelegatesOnlyToAtomicJournalIssuance` | missing accessor | pass |

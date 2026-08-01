@@ -9,7 +9,7 @@
 | Input/state | Range | Source of truth | Failure behavior |
 |---|---|---|---|
 | provenance | exact market/calendar/frozen config/indicator versions | trusted adapters + frozen constants | refuse zero bundle |
-| session | trading-day open/close with more than 45m duration | official calendar | refuse zero bundle |
+| session | same-KST-day `09:00` open and authoritative close with more than 45m duration | official calendar | refuse zero bundle |
 | entry cutoff | derived internally as `sessionClose - 45m`; no caller field | StockOS frozen config | caller cannot select cutoff |
 | indicators | canonical required/optional decimals at one evaluation instant | sealed indicator snapshot | refuse zero bundle |
 
@@ -18,8 +18,13 @@
 | Branch | Condition | Mutation/side effect | Return/error | Test |
 |---|---|---|---|---|
 | B1 | provenance/version/time mismatch | none | provenance error | laundering table |
-| B2 | trading session missing or too short for frozen buffer | none | calendar error | regular/early/short-session table |
-| B3 | required or optional decimal invalid | exact parsing only | decimal error | indicator table |
+| B2 | trading session missing/too short, shifted from fixed 09:00 KST, or crosses KST day | none | calendar error | regular/early/short/shifted-day table |
+| B3-B4 | required VWAP/EMA9 iteration or validation fails | exact parsing only | required-decimal error | both required malformed rows |
+| B5 | slope decimal invalid | exact parsing only | slope-decimal error | malformed slope row |
+| B6 | LVN decimal invalid | exact parsing only | LVN-decimal error | malformed LVN row |
+| B7 | tangled score negative or invalid | exact parsing only | tangled-decimal error | negative tangled row |
+| B8-B9 | optional current price is present and invalid | exact parsing only | live-price-decimal error | present/absent and malformed rows |
+| B10-B12 | optional expansion/HVN iteration, presence, or validation fails | exact parsing only | optional-decimal error | both optional malformed plus absent rows |
 | Success | all evidence exact | derive cutoff, copy UTC values into opaque bundle | valid immutable bundle | synthetic derivation plus translated StockOS final-bar/indicator parity tests |
 
 ## Calls and live bindings

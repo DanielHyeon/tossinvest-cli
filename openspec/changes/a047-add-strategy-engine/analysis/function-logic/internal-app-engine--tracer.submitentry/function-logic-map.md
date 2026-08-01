@@ -16,11 +16,12 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 | --- | --- | --- | --- | --- |
-| B1 | market parsing fails | none | tracer refusal | tracer validation tests |
-| B2 | Guardian issuance fails | Guardian owns any refusal observation | tracer refusal; gateway zero calls | tracer issuer tests |
-| B3 | quantity or limit conversion fails | durable Guardian decision may exist but no broker call | tracer refusal | numeric validation/submit tests |
-| B4 | gateway outcome is not confirmed | records outcome IDs; gateway owns durable state | tracer refusal with detail | tracer non-confirmation tests |
-| B5 | confirmed | records exact intent/order IDs | nil | `runTracerWithFills` path |
+| B1 | exact AST `if` at source line 409: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B2 | exact AST `if` at source line 430: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B3 | exact AST `if` at source line 435: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B4 | exact AST `if` at source line 439: `if err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B5 | exact AST `if` at source line 451: `if out.State != journal.StateConfirmed {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
+| B6 | exact AST `if` at source line 453: `if detail == "" && err != nil {` | source-bound local control flow | branch-specific return/continue behavior | see exact evidence row in `branch-test-map.md` |
 
 ## Calls and live bindings
 
