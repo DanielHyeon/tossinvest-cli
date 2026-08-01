@@ -3,6 +3,7 @@ package protectionofficial
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -293,6 +294,93 @@ func TestGatewayCancelFallbackIgnoresOnlyAttestedRetiredReplaceRows(t *testing.T
 	if _, err := gateway.Cancel(context.Background(), target); !errors.Is(err, ErrAmbiguousConditional) {
 		t.Fatalf("mismatched retired cancel=%v", err)
 	}
+}
+
+func TestGatewayCancelFallbackRequiresCompleteOpenAndClosedScans(t *testing.T) {
+	target := protection.BrokerTarget{Scope: gatewayScope(), BrokerID: "co-1", ClientOrderID: "client-1", Trigger: 70000, Quantity: 1, ExpireDate: "2026-08-08"}
+	active := rawConditional("co-1", "client-1", "WATCHING")
+	closed := rawConditional("co-1", "client-1", "CANCELLED")
+	clientFor := func(pages map[string]official.RawConditionalOrderList) *fakeClient {
+		return &fakeClient{raw: map[string]official.RawConditionalOrder{"co-1": active}, readErr: errors.New("post-delete detail unavailable"), readErrAfter: 1, pages: pages}
+	}
+	assertAmbiguous := func(t *testing.T, pages map[string]official.RawConditionalOrderList) {
+		t.Helper()
+		client := clientFor(pages)
+		gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
+		if _, err := gateway.Cancel(context.Background(), target); !errors.Is(err, ErrAmbiguousConditional) {
+			t.Fatalf("cancel fallback err=%v", err)
+		}
+		if client.cancel != "co-1" {
+			t.Fatalf("preflight-verified delete target=%q", client.cancel)
+		}
+	}
+
+	t.Run("target early but duplicate could exist on page eleven", func(t *testing.T) {
+		pages := map[string]official.RawConditionalOrderList{"CLOSED:": {}}
+		cursor := ""
+		for page := 0; page < 10; page++ {
+			next := fmt.Sprintf("cursor-%d", page+1)
+			orders := []official.RawConditionalOrder(nil)
+			if page == 0 {
+				orders = []official.RawConditionalOrder{closed}
+			}
+			pages["OPEN:"+cursor] = official.RawConditionalOrderList{Orders: orders, HasNext: true, NextCursor: next}
+			cursor = next
+		}
+		pages["OPEN:"+cursor] = official.RawConditionalOrderList{Orders: []official.RawConditionalOrder{closed}}
+		assertAmbiguous(t, pages)
+	})
+
+	t.Run("has next with empty cursor", func(t *testing.T) {
+		assertAmbiguous(t, map[string]official.RawConditionalOrderList{
+			"OPEN:":   {},
+			"CLOSED:": {Orders: []official.RawConditionalOrder{closed}, HasNext: true},
+		})
+	})
+
+	t.Run("repeated cursor", func(t *testing.T) {
+		assertAmbiguous(t, map[string]official.RawConditionalOrderList{
+			"OPEN:":     {Orders: []official.RawConditionalOrder{closed}, HasNext: true, NextCursor: "same"},
+			"OPEN:same": {HasNext: true, NextCursor: "same"},
+			"CLOSED:":   {},
+		})
+	})
+
+	t.Run("cursor cycle", func(t *testing.T) {
+		assertAmbiguous(t, map[string]official.RawConditionalOrderList{
+			"OPEN:":   {Orders: []official.RawConditionalOrder{closed}, HasNext: true, NextCursor: "a"},
+			"OPEN:a":  {HasNext: true, NextCursor: "b"},
+			"OPEN:b":  {HasNext: true, NextCursor: "a"},
+			"CLOSED:": {},
+		})
+	})
+
+	t.Run("open complete closed incomplete", func(t *testing.T) {
+		assertAmbiguous(t, map[string]official.RawConditionalOrderList{
+			"OPEN:":              {},
+			"CLOSED:":            {Orders: []official.RawConditionalOrder{closed}, HasNext: true, NextCursor: "missing-end"},
+			"CLOSED:missing-end": {HasNext: true, NextCursor: "missing-end"},
+		})
+	})
+
+	t.Run("open incomplete closed complete", func(t *testing.T) {
+		assertAmbiguous(t, map[string]official.RawConditionalOrderList{
+			"OPEN:":   {HasNext: true},
+			"CLOSED:": {Orders: []official.RawConditionalOrder{closed}},
+		})
+	})
+
+	t.Run("both scans complete", func(t *testing.T) {
+		client := clientFor(map[string]official.RawConditionalOrderList{
+			"OPEN:":   {},
+			"CLOSED:": {Orders: []official.RawConditionalOrder{closed}},
+		})
+		gateway, _ := New(client, gatewayScope(), func() time.Time { return gatewayNow })
+		got, err := gateway.Cancel(context.Background(), target)
+		if err != nil || got.BrokerID != "co-1" || !got.Terminal || got.Triggered {
+			t.Fatalf("complete cancel=%+v err=%v", got, err)
+		}
+	})
 }
 
 func TestGatewayListIsBoundedAndRejectsMixedScope(t *testing.T) {

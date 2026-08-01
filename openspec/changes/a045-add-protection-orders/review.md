@@ -262,6 +262,22 @@ existing authoritative terminal non-triggered observation; post-delete disappear
 `IN_DOUBT` rather than assumed cancelled. These changes retain constructor-closed behavior, bounded
 recovery, exact mutation lineage, OFF/UNWIRED, and the input-free StockOS-style console.
 
+## Complete lifecycle pagination BLOCK remediation · 2026-08-01
+
+Post-delete cancel fallback now requires independent authoritative completion of both OPEN and CLOSED
+conditional-order scans before a terminal observation can authorize flatten. Finding the exact target
+early is not sufficient. Each lifecycle tracks visited cursors and accepts only an explicit terminal
+page with `HasNext=false` and an empty next cursor. Ten-page exhaustion, `HasNext=true` with an empty
+cursor, repeated/non-progressing cursor, cursor cycle, contradictory pagination metadata, or any list
+error returns ambiguous even when an exact terminal target was already found.
+
+RED/GREEN coverage places the target on the first page with a possible duplicate on page eleven,
+exercises empty, repeated, and cyclic cursors, proves OPEN-complete/CLOSED-incomplete and the inverse
+both fail, and retains an exact success case only when both lifecycle scans terminate completely.
+Controller cancel errors still produce no flatten authorization. Mandatory exact preflight,
+post-delete disappearance handling, internal deadlines, durable mutation lineage, OFF/UNWIRED, and
+the input-free console remain unchanged.
+
 ## Dependency-integrated dormant rebase · 2026-08-01
 
 - Integration base: `70aabdc9936de08df458da13203437ba7d2dd572` (a041/a042 complete).

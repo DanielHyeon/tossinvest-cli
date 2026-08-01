@@ -112,7 +112,13 @@ func (g *Gateway) Cancel(ctx context.Context, target protection.BrokerTarget) (p
 	}
 	for _, group := range []string{"OPEN", "CLOSED"} {
 		cursor := ""
+		complete := false
+		seenCursors := make(map[string]bool, 10)
 		for page := 0; page < 10; page++ {
+			if seenCursors[cursor] {
+				return protection.CancelObservation{}, fmt.Errorf("%w: post-cancel %s cursor cycle", ErrAmbiguousConditional, group)
+			}
+			seenCursors[cursor] = true
 			result, listErr := g.client.ProtectionConditionalOrdersRaw(ctx, group, g.scope.Symbol, cursor, 100)
 			if listErr != nil {
 				return protection.CancelObservation{}, fmt.Errorf("%w: post-cancel %s read: %v", ErrAmbiguousConditional, group, listErr)
@@ -138,10 +144,20 @@ func (g *Gateway) Cancel(ctx context.Context, target protection.BrokerTarget) (p
 					return protection.CancelObservation{}, ErrAmbiguousConditional
 				}
 			}
-			if !result.HasNext || result.NextCursor == "" {
+			if !result.HasNext {
+				if result.NextCursor != "" {
+					return protection.CancelObservation{}, fmt.Errorf("%w: post-cancel %s contradictory pagination", ErrAmbiguousConditional, group)
+				}
+				complete = true
 				break
 			}
+			if result.NextCursor == "" || result.NextCursor == cursor || seenCursors[result.NextCursor] {
+				return protection.CancelObservation{}, fmt.Errorf("%w: post-cancel %s non-progressing cursor", ErrAmbiguousConditional, group)
+			}
 			cursor = result.NextCursor
+		}
+		if !complete {
+			return protection.CancelObservation{}, fmt.Errorf("%w: post-cancel %s pagination exceeded 10 pages", ErrAmbiguousConditional, group)
 		}
 	}
 	if found != nil {

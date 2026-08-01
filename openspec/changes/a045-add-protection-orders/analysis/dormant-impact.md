@@ -127,3 +127,10 @@ ambiguous, or mismatched preflight produces zero cancel calls, while post-delete
 fails closed. No schema expansion was required because PLANNED `UpdatedAt` is written with the fill
 and is not mutated until registration begins. No app, UI, toggle, profile, or activation wiring was
 changed.
+
+The pagination-completeness follow-up makes the post-delete fallback authoritative only after both
+OPEN and CLOSED scans independently reach a consistent terminal page. Target discovery never
+short-circuits completeness. Page-limit exhaustion, empty or non-progressing next cursors, cursor
+cycles, contradictory pagination metadata, and partial lifecycle scans remain ambiguous and cannot
+produce a flatten permit. This is confined to the dormant official adapter and its evidence; broker
+preflight, post-delete terminal checks, deadlines, UI, toggles, wiring, and readiness remain unchanged.
