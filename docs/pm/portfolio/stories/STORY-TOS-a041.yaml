@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a041-complete-exit-line-contract",
-    "path": "openspec/changes/a041-complete-exit-line-contract"
+    "path": "openspec/changes/archive/2026-08-01-a041-complete-exit-line-contract"
   },
   "acceptance": [
     "One authoritative snapshot explains entry, initial stop, active protection, next target, next protection and expected exit quantity",

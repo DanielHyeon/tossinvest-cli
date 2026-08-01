@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a051-add-httpapi-daemon",
-    "path": "openspec/changes/a051-add-httpapi-daemon"
+    "path": "openspec/changes/archive/2026-08-01-a051-add-httpapi-daemon"
   },
   "acceptance": [
     "Versioned REST and SSE contracts expose engine, positions, orders, candidates, performance, settings and optimization",

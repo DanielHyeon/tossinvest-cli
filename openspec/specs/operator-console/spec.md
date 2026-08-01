@@ -219,3 +219,244 @@ before account queries run.
 #### Scenario: selected v8 journal lacks policy identity
 - **WHEN** the selected journal has the v8 tables but lacks `exit_states.policy_id`
 - **THEN** the console renders the too-old migration guidance before any positions query and never exposes a raw `no such column: policy_id` error
+
+### Requirement: positions는 현재와 다음 exit 동작을 함께 표시한다
+콘솔은 `/positions`에서 entry, initial stop, current protection, next target, next protection, rung, projected exit quantity와 evaluated-at을 권위 snapshot 그대로 표시해야 한다 (SHALL).
+
+#### Scenario: 관리 중 포지션
+- **WHEN** 완전한 exit snapshot이 있는 포지션을 조회한다
+- **THEN** 운영자는 현재 보호와 다음 가격 도달 시 기준선·수량 동작을 한 화면에서 읽을 수 있다
+
+#### Scenario: 1주 포지션
+- **WHEN** 보유 수량이 1주이고 다음 rung이 partial이다
+- **THEN** 화면은 `중간 매도 없음 · 보호선 승격`과 최종/손절 시 1주 전량을 표시한다
+
+#### Scenario: stale snapshot
+- **WHEN** snapshot이 stale 또는 일부 unknown이다
+- **THEN** 값은 0이 아니라 `—`와 stale/unknown 사유로 표시된다
+
+### Requirement: orders는 exit 주문 근거를 결정적으로 연결한다
+콘솔은 broker order의 명시적 mutation-attempt intent lineage로 exit event의 decision ID와 기준선 snapshot을 연결하고 trigger line, observation, policy, rung과 reason을 표시해야 한다 (SHALL).
+
+#### Scenario: 연결된 손절 주문
+- **WHEN** broker order의 mutation attempt intent가 protection breach exit event를 참조한다
+- **THEN** 주문 상세는 당시 현재가와 보호선, 전량 사유를 표시한다
+
+#### Scenario: 연결 식별자 부재
+- **WHEN** broker order에 결정적 snapshot 링크가 없다
+- **THEN** 화면은 근거 미연결로 표시하고 symbol/time으로 추정하지 않는다
+
+### Requirement: 거래 화면과 설정 화면의 역할은 분리된다
+`/positions`와 `/orders`는 exit 상태를 읽기 전용으로 설명해야 하며 (SHALL), 정책 설정 control을 복제해서는 안 된다 (MUST NOT). 설정이 필요한 문맥에는 a050의 canonical category deep link를 제공해야 한다 (SHALL).
+
+#### Scenario: positions에서 종목 정책 확인
+- **WHEN** 운영자가 포지션의 정책을 변경하려 한다
+- **THEN** 화면은 `/optimization?category=position-management` 링크를 제공하고 현재 표 안에서 즉시 변경하지 않는다
+
+#### Scenario: orders에서 보호주문 확인
+- **WHEN** 운영자가 exit 주문의 보호 설정을 확인하려 한다
+- **THEN** 화면은 `/optimization?category=exit-protection` 링크를 제공한다
+
+#### Scenario: 입력 없는 거래 화면
+- **WHEN** 운영자가 `/positions` 또는 `/orders`를 연다
+- **THEN** 화면에는 form/input/textarea/select/button/contenteditable이 없고 해당 경로의 POST는 405로 거부된다
+
+### Requirement: 종목별 정책 쓰기는 명확한 범위와 결과를 표시한다
+콘솔은 a050의 `position-management` 카테고리에서 override/release/re-adopt 전 대상 계좌·시장·종목·현재 정책·기본 정책·실효 정책·다음 정책·적용 generation과 적용 시점/restart 필요 여부를 표시해야 한다 (SHALL).
+
+#### Scenario: 정책 승인 화면
+- **WHEN** 운영자가 종목 정책 변경을 연다
+- **THEN** 기존 포지션 재해석 여부와 LIVE toggle이 바뀌지 않음을 승인 전에 표시한다
+
+#### Scenario: version conflict
+- **WHEN** write가 412로 거부된다
+- **THEN** 현재 version을 다시 불러오도록 안내하고 자동 재시도하지 않는다
+
+### Requirement: 종목 관리 설정은 기본값과 동작을 가까이 설명한다
+`position-management`는 `종목별 정책`과 `외부 매수 자동편입`을 구분하고 모든 설정에 label, 쉬운 설명, 기본값, desired/effective 값, 단위·범위와 적용 시점을 표시해야 한다 (SHALL).
+
+#### Scenario: 초기 자동편입 설정
+- **WHEN** 저장 설정이 없는 새 설치가 화면을 연다
+- **THEN** 자동편입 OFF, 합성 손절폭 5%, 허용범위 2~20%와 0.5% 조정 단위, 빈 include/exclude 및 exclude 우선을 표시한다
+
+#### Scenario: 종목별 정책 미지정
+- **WHEN** 한 종목에 override가 없다
+- **THEN** 기본값과 실효값은 `공통 정책 상속`으로 표시되고 특정 preset을 복제 저장하지 않는다
+
+#### Scenario: 1주 외부 보유
+- **WHEN** 자동편입 preview 대상 보유가 1주다
+- **THEN** `중간 익절 없음 · 보호선 승격 · 최종/손절 시 1주 전량` 설명을 표시한다
+
+#### Scenario: release 요청
+- **WHEN** 운영자가 자동관리 해제를 선택한다
+- **THEN** 일반 설정 저장과 분리된 danger confirmation에서 보호 공백과 active exit 충돌 여부를 설명하고 3초 대기·명시 checkbox/button을 제공하되 문구 입력을 요구하지 않는다
+
+#### Scenario: 입력 없는 정책 제어
+- **WHEN** 운영자가 종목별 정책 또는 자동편입을 변경한다
+- **THEN** server preset·OFF/ON·0.5% stop option·현재 보유 행 action·server reason만 선택할 수 있고 자유 text/number/symbol/reason 입력이나 typed confirmation은 없다
+
+### Requirement: 브로커 보호 설정과 상태는 한 카테고리에서 설명된다
+콘솔은 a050의 `exit-protection` 카테고리에서 capability, activation, current effective trigger, protected quantity, broker identifier, updated-at과 reconcile reason을 표시해야 한다 (SHALL). 각 항목은 label, 쉬운 설명, 기본값, desired/effective 값, 적용 시점과 provenance를 가져야 한다 (SHALL).
+
+#### Scenario: attestation 미완료
+- **WHEN** 현재 시장의 조건주문 capability가 확인되지 않았다
+- **THEN** 화면은 `OFF / 지원 확인 전 사용 불가`를 기본·실효 상태로 표시하고 주문 유형이나 trigger 기본값을 임의 생성하지 않는다
+
+#### Scenario: capability 확인 완료
+- **WHEN** SINGLE+MARKET capability가 attested됐다
+- **THEN** 지원 유형과 근거를 표시하되 activation 기본값은 OFF이고 운영자 승인 전 자동 활성화하지 않는다
+
+#### Scenario: 활성 보호주문
+- **WHEN** protection saga가 ACTIVE다
+- **THEN** effective trigger, 수량, broker ID, 마지막 확인 시각과 다음 reconcile 설명을 한 section에서 읽을 수 있다
+
+### Requirement: 보호 약화는 강화와 구분해 확인한다
+콘솔은 trigger 하향, 보호 해제 또는 수량 감소처럼 보호를 약화하는 변경을 분류하고 before/after, 영향 포지션·수량, 보호 공백 가능성과 적용 시점을 표시한 뒤 3초 지연 확인을 요구해야 한다 (SHALL).
+
+#### Scenario: trigger 하향 요청
+- **WHEN** 운영자가 ACTIVE trigger보다 낮은 값을 preview한다
+- **THEN** 위험 확인을 표시하더라도 domain contract에 따라 apply는 거부되고 현재 보호를 유지한다
+
+#### Scenario: 보호 강화
+- **WHEN** 새 trigger가 더 안전한 방향이고 모든 capability가 유효하다
+- **THEN** 변경 범위와 적용 시점을 표시하되 약화 전용 경고 문구를 사용하지 않는다
+
+### Requirement: 후보 필터는 판정 의미와 근거를 함께 표시한다
+콘솔은 a050의 `candidate-filters` 카테고리에서 `seen_late`, `extended`, `near_high`를 시장·세션별로 구분하고 각 필터의 쉬운 설명, 판정 방향, 단위, 기본 상태, desired/effective 값, 범위, 표본과 evidence provenance를 표시해야 한다 (SHALL).
+
+#### Scenario: 최초 미승인 상태
+- **WHEN** 승인된 threshold set이 없다
+- **THEN** 화면은 `미승인 · passed 구조적 0 · verdict 비활성`을 표시하고 숫자 0을 기본 threshold처럼 보여주지 않는다
+
+#### Scenario: evidence 불완전
+- **WHEN** sample count 또는 evidence digest가 누락됐다
+- **THEN** 관련 입력은 read-only이고 누락 항목과 승인에 필요한 다음 행동을 설명한다
+
+#### Scenario: 승인된 시장별 값
+- **WHEN** KR regular-session threshold set이 승인됐다
+- **THEN** 각 metric의 값·단위·방향·표본·version을 표시하고 US에는 같은 값을 기본값으로 복제하지 않는다
+
+### Requirement: threshold 승인은 변경 영향 preview를 선행한다
+콘솔은 threshold apply 전에 before/after, 대상 시장·세션, 예상 verdict count 변화, evidence version과 적용 시점을 preview해야 한다 (SHALL).
+
+#### Scenario: 승인 preview
+- **WHEN** 운영자가 완전한 threshold set을 승인하려 한다
+- **THEN** 후보 판정만 활성화되고 주문·RiskIntent·LIVE 상태는 바뀌지 않음을 확인 전에 설명한다
+
+### Requirement: 전략 설정과 실행 권한은 분리해 표시된다
+콘솔은 a050의 `strategy-runtime` 카테고리에서 전략 파라미터, lane desired/effective 상태, 자동 기동과 LIVE 주문 승인을 별도 section과 별도 action으로 제공해야 하며 (SHALL), 이를 한 번에 활성화하는 control을 제공해서는 안 된다 (MUST NOT).
+
+#### Scenario: 새 설치
+- **WHEN** lane 설정이 처음 표시된다
+- **THEN** lane desired와 auto-start 기본값은 OFF이고 LIVE 주문은 별도 미승인 상태다
+
+#### Scenario: 전략 설정 저장
+- **WHEN** 운영자가 lane 파라미터만 저장한다
+- **THEN** lane, auto-start와 LIVE approval 상태는 바뀌지 않고 적용 시점과 restart 필요 여부를 설명한다
+
+#### Scenario: lane ON 요청
+- **WHEN** 운영자가 lane desired state를 ON으로 바꾼다
+- **THEN** Guardian, protection, reconciliation과 LIVE approval 결과에 따라 effective 상태와 첫 refusal reason을 별도로 표시한다
+
+### Requirement: 확정되지 않은 lane 값은 기본값으로 꾸미지 않는다
+모든 lane field는 label, 쉬운 설명, default, desired/effective, 단위·범위, source/version과 적용 시점을 가져야 한다 (SHALL). proposal-freeze가 끝나지 않은 field는 `미구성 / 읽기 전용`이어야 한다 (MUST).
+
+#### Scenario: 첫 lane 미동결
+- **WHEN** StockOS source policy·시장·상수가 아직 동결되지 않았다
+- **THEN** UI는 숫자 0이나 추정값을 표시하지 않고 미구성 사유와 선행 문서를 안내한다
+
+#### Scenario: a047 dormant 상태 card
+- **WHEN** a045 protection, a046 provenance, a048 scheduler/calendar 또는 source manifest가 미완성이다
+- **THEN** UI는 blocker별 desired/effective를 읽기 전용으로 보여주고 값 입력·일괄 활성화·LIVE action을 제공하지 않는다
+
+### Requirement: 시장 스케줄은 desired와 effective를 구분해 설명한다
+콘솔은 a050의 `strategy-runtime > 시장·일정` section에서 scheduler와 auto-start의 desired/effective 상태, 시장·세션 범위, calendar version/updated-at, 다음 전환 시각과 typed decision reason을 표시해야 한다 (SHALL).
+시장·세션 범위와 운영 reason은 server-defined option으로만 선택해야 하며 (SHALL), 임의 문자열·시간·휴장일 입력 control을 제공해서는 안 된다 (MUST NOT).
+시장 선택지는 `none`, `KR`, `US`만 제공해야 하며 (SHALL), 정확한 per-market calendar/activation binding이 없는 결합 시장을 광고해서는 안 된다 (MUST NOT).
+
+#### Scenario: 새 설치
+- **WHEN** scheduler 저장값이 없다
+- **THEN** scheduler OFF, auto-start OFF, 선택 시장 없음, 정규장만 허용을 기본값과 쉬운 설명으로 표시한다
+
+#### Scenario: 장 닫힘
+- **WHEN** desired는 ON이지만 시장이 휴장이다
+- **THEN** effective는 WAIT_MARKET이고 다음 세션과 함께 exit/reconcile은 계속됨을 설명한다
+
+#### Scenario: API 예산 대기
+- **WHEN** scheduler decision이 BUDGET_DEFERRED다
+- **THEN** 사용자 OFF와 구분된 대기 사유 및 safety budget을 침범하지 않는다는 설명을 표시한다
+
+### Requirement: exchange calendar는 운영 근거로 읽기 전용이다
+calendar version, source와 updated-at은 표시해야 하지만 (SHALL), 최초 범위에서 사용자가 임의 휴장일을 입력하는 control을 제공해서는 안 된다 (MUST NOT).
+
+#### Scenario: stale calendar
+- **WHEN** calendar freshness gate가 실패한다
+- **THEN** entry effective 상태는 fail-closed이고 stale reason과 갱신 방법을 표시한다
+
+### Requirement: 성과와 이력은 읽기 전용 카테고리에서 설명된다
+콘솔은 a050의 `performance-history` 카테고리에서 lane/policy 성과와 설정 변경 이력을 읽기 전용으로 제공하고 각 metric의 쉬운 정의, 단위, 기간, 표본 수와 provenance를 표시해야 한다 (SHALL).
+
+#### Scenario: 최초 조회
+- **WHEN** 운영자가 별도 filter 저장 없이 카테고리를 연다
+- **THEN** 최근 30일, 전체 시장, 전체 lane, 완전한 lineage만 포함하는 조회 기본값을 표시한다
+
+#### Scenario: 누락 결과
+- **WHEN** 한 거래의 결정적 lineage 또는 markout이 없다
+- **THEN** 0으로 표시하지 않고 각각 `link_missing` 또는 `not_measured` 설명을 표시한다
+
+#### Scenario: 표본 부족
+- **WHEN** 선택 구간의 표본이 승인 최소치 미만이다
+- **THEN** 관측값과 표본은 보여주되 `insufficient_sample · 추천 근거로 사용 불가`를 표시한다
+
+### Requirement: 성과 화면은 거래나 설정 권한을 갖지 않는다
+`performance-history`는 주문, lane toggle, LIVE approval 또는 설정 apply control을 제공해서는 안 된다 (MUST NOT).
+
+#### Scenario: 성과 비교
+- **WHEN** 운영자가 lane 두 개를 비교한다
+- **THEN** 비교 결과만 표시하고 더 좋은 lane를 자동 활성화하거나 저장하지 않는다
+
+### Requirement: optimization 화면은 근거와 변경 수명주기를 표시한다
+콘솔은 parameter registry, current/effective version, lane performance evidence, candidate diff, apply history와 rollback 동작을 표시해야 한다 (SHALL).
+
+#### Scenario: 추천 불가
+- **WHEN** 필수 성과 근거가 부족하다
+- **THEN** 화면은 구체적인 누락 사유를 표시하고 apply control을 활성화하지 않는다
+
+#### Scenario: 적용 승인
+- **WHEN** 운영자가 preview와 version을 확인하고 apply한다
+- **THEN** 결과 version과 restart 필요 여부를 표시하며 LIVE toggle은 별도 상태로 남는다
+
+### Requirement: optimization 설정은 카테고리와 설명으로 탐색된다
+콘솔은 `overview`, `exit-protection`, `position-management`, `candidate-filters`, `strategy-runtime`, `performance-history` 여섯 category를 고정 순서로 제공해야 하며 (SHALL), 모든 설정에 한국어 설명, parameter key, 단위, registry 기본값, desired/effective 값, 범위와 적용 시점을 표시해야 한다 (SHALL).
+
+#### Scenario: 기본값과 현재값 구분
+- **WHEN** 운영자가 설정 가능한 field를 연다
+- **THEN** placeholder가 아닌 별도 label로 기본값·현재 desired·현재 effective와 적용 시점을 구분해 표시한다
+
+#### Scenario: 모바일 category 탐색
+- **WHEN** 360px viewport에서 optimization을 연다
+- **THEN** 동일한 여섯 category와 deep link를 사용할 수 있고 페이지 전체의 수평 overflow 없이 설정과 설명을 읽을 수 있다
+
+#### Scenario: category-scoped save
+- **WHEN** 두 category에 미저장 draft가 있고 한 category에서 저장한다
+- **THEN** 해당 category changed subset만 preview/apply하며 다른 draft와 LIVE 상태를 변경하지 않는다
+
+### Requirement: 위험 설정은 before/after 확인을 요구한다
+손절폭 확대, 보호 약화, lane 또는 LIVE 권한 변화는 일반 설정 저장과 구분해야 하며 (SHALL), before/after·적용 대상·restart 여부를 표시한 명시적 확인 없이는 적용해서는 안 된다 (MUST NOT).
+
+콘솔은 StockOS lane-console의 화면 단위 navigation·partial save·effective mismatch 패턴을 따라야
+하며 (SHALL), 운영자에게 자유 텍스트·숫자·symbol·확인 문구 입력을 요구해서는 안 된다 (MUST NOT).
+모든 변경은 preset/radio/select/chip/toggle/discrete step과 server-defined reason code로 수행해야 한다
+(SHALL).
+
+#### Scenario: LIVE 보호 약화
+- **WHEN** LIVE 상태에서 draft가 허용 손실폭이나 유예를 확대한다
+- **THEN** 3초 대기, 확인 checkbox와 별도 위험 승인 전에는 저장 control이 활성화되지 않는다
+
+#### Scenario: 입력 없는 위험 확인
+- **WHEN** 위험 확대 candidate를 확인한다
+- **THEN** 3초 대기, 영향 범위 확인 checkbox와 승인 button을 제공하되 typed phrase나 자유 reason 입력은 요구하지 않는다
+
+#### Scenario: 자유 입력 control 회귀
+- **WHEN** optimization HTML과 handler contract를 검사한다
+- **THEN** text, textarea, number, contenteditable control이 0개이고 제출값은 registry option ID에 한정된다

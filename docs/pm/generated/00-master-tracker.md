@@ -35,7 +35,7 @@
     - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [implemented] → `interlock-gates-entry-not-exit`
     - STORY-TOS-016 — Wire the production risk Guardian [implemented] → `wire-production-risk-guardian`
     - STORY-TOS-017 — Prime engine account sequence safely [implemented] → `prime-engine-account-seq`
-    - STORY-TOS-a045 — Add broker-resident protection orders [implemented] → `a045-add-protection-orders`
+    - STORY-TOS-a045 — Add broker-resident protection orders [archived] → `a045-add-protection-orders`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
@@ -51,22 +51,22 @@
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
     - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
-    - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [implemented] → `a041-complete-exit-line-contract`
-    - STORY-TOS-a042 — Persist and recover exit-line snapshots [implemented] → `a042-persist-exit-line-snapshots`
-    - STORY-TOS-a043 — Show exit-line truth in positions and orders [implemented] → `a043-show-exit-lines-in-trading-views`
-    - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [implemented] → `a044-manage-position-exit-policies`
+    - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
+    - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
+    - STORY-TOS-a043 — Show exit-line truth in positions and orders [archived] → `a043-show-exit-lines-in-trading-views`
+    - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [archived] → `a044-manage-position-exit-policies`
   - FEAT-TOS-012 — Mobile and service API [active]
-    - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [implemented] → `a051-add-httpapi-daemon`
+    - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
     - STORY-TOS-027 — Add candidate discovery [implemented] → `add-candidate-discovery`
     - STORY-TOS-028 — Fix chase-veto measurement [implemented] → `fix-chase-veto-measurement`
     - STORY-TOS-029 — Retire the gainers candidate source [implemented] → `retire-gainers-source`
     - STORY-TOS-030 — Refine extended-shadow bands [implemented] → `refine-extended-shadow-bands`
-    - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [implemented] → `a046-approve-candidate-veto-thresholds`
+    - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [archived] → `a046-approve-candidate-veto-thresholds`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
-    - STORY-TOS-a047 — Add the strategy entry engine [implemented] → `a047-add-strategy-engine`
-    - STORY-TOS-a048 — Add market-aware strategy scheduling [implemented] → `a048-add-market-aware-scheduler`
+    - STORY-TOS-a047 — Add the strategy entry engine [archived] → `a047-add-strategy-engine`
+    - STORY-TOS-a048 — Add market-aware strategy scheduling [archived] → `a048-add-market-aware-scheduler`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
-    - STORY-TOS-a049 — Add deterministic lane performance attribution [implemented] → `a049-add-lane-performance`
-    - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [implemented] → `a050-add-strategy-optimization`
+    - STORY-TOS-a049 — Add deterministic lane performance attribution [archived] → `a049-add-lane-performance`
+    - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [archived] → `a050-add-strategy-optimization`

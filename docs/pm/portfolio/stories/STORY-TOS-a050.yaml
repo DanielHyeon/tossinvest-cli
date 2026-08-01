@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a050-add-strategy-optimization",
-    "path": "openspec/changes/a050-add-strategy-optimization"
+    "path": "openspec/changes/archive/2026-08-01-a050-add-strategy-optimization"
   },
   "acceptance": [
     "Optimization exposes a parameter registry, settings snapshots, preview, apply, history and rollback",

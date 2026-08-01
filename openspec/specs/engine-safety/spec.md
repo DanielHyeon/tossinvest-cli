@@ -2,9 +2,7 @@
 
 ## Purpose
 엔진 배선 안전(official-only)·ExecutionGateway 봉인·결정 계약(safety class·preimage·nonce)·기동 인터록·flatten saga·알림·audit 요구사항.
-
 ## Requirements
-
 ### Requirement: 엔진 배선의 구조적 official-only
 엔진 프로필(`internal/app` engine wiring)은 공식 Open API 브로커를 **직접** 구성해야 하며(SHALL), hybrid 클라이언트·WTS mutator 타입은 엔진 의존 그래프에 존재해서는 안 된다(SHALL NOT — 정적 import 테스트로 검증). 엔진 프로필은 사용자 config의 `OpenAPI.Enabled/Prefer`를 무시하고, 유효한 공식 자격증명이 없으면 기동을 거부한다(SHALL). place/cancel/amend/조건주문 전 mutation matrix에서 WTS 호출 0회를 spy 테스트로 증명한다(SHALL).
 
@@ -202,3 +200,34 @@ one-shot nonce 저장소는 journal 기반이어야 한다(SHALL). 프로세스 
 #### Scenario: 검증 실행 중 기동 시도
 - **WHEN** verify runlock이 신선한 상태에서 `engine run`을 실행하면
 - **THEN** 기동이 거부되고 검증 종료 후 재시도가 안내된다
+
+### Requirement: ProtectionReady는 attestation 범위에서만 WIRED다
+엔진은 현재 계좌·profile·시장·주문유형·수량·세션·trigger source와 atomic/continuous replace semantics가 strict versioned attestation과 일치하고 protection saga가 배선된 경우에만 exposure-raising mutation을 허용해야 한다 (SHALL). attestation은 tool/build와 evidence digest에 묶이고 legacy/unknown field, 만료, 경로·소유자·권한 불일치는 fail-closed해야 한다 (SHALL).
+
+#### Scenario: 미검증 시장
+- **WHEN** KR capability만 attested된 상태에서 US 자동 진입을 시도한다
+- **THEN** entry는 protection_unwired로 거부되고 기존 US 보유의 reduce-only exit는 계속된다
+
+#### Scenario: 유효 capability
+- **WHEN** 현재 profile이 attestation과 일치하고 Guardian/gate가 유효하다
+- **THEN** protection readiness clause는 충족되지만 운영자가 승인하지 않은 lane는 여전히 OFF다
+
+### Requirement: 자동 진입은 모든 안전 권한의 교집합이다
+엔진은 automation gate, operating mode, lane state, Guardian, reconciliation health와 ProtectionReady가 모두 허용할 때만 strategy entry를 제출해야 한다 (SHALL).
+이 조건들은 동일한 immutable activation manifest에 version/digest/expiry로 결합돼야 하며 (SHALL), durable dispatch 직전에 전부 재검증되지 않으면 신규 진입을 제출해서는 안 된다 (MUST NOT).
+
+#### Scenario: protection 미배선
+- **WHEN** 다른 조건이 허용돼도 ProtectionReady가 UNWIRED다
+- **THEN** buy는 거부되고 reduce-only exit는 계속된다
+
+#### Scenario: kill switch
+- **WHEN** kill switch가 활성화된다
+- **THEN** 신규 entry를 즉시 중지하고 기존 보호·청산 감독은 유지한다
+
+#### Scenario: 승인 manifest 불일치
+- **WHEN** decision 뒤 dispatch 전에 threshold, settings, attestation, Guardian, scheduler 또는 build digest가 바뀐다
+- **THEN** 신규 attempt는 제출되지 않고 effective entry는 OFF와 구체적 refusal reason을 기록한다
+
+#### Scenario: manifest 만료 뒤 재시작
+- **WHEN** 저장된 desired state는 ON이지만 activation manifest가 만료됐다
+- **THEN** 재시작은 승인 상태를 재구성하지 않고 entry OFF를 유지하며 exit/reconcile은 계속한다

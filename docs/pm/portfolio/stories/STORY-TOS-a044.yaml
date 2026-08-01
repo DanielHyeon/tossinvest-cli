@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a044-manage-position-exit-policies",
-    "path": "openspec/changes/a044-manage-position-exit-policies"
+    "path": "openspec/changes/archive/2026-08-01-a044-manage-position-exit-policies"
   },
   "acceptance": [
     "Operators can preview and approve a per-position policy override with optimistic concurrency",

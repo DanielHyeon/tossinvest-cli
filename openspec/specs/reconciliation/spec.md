@@ -2,9 +2,7 @@
 
 ## Purpose
 토스 계좌를 최종 권위로 하는 로컬 상태 대사 계약(스냅샷 순서·허용 오차·안정화), 재시작 복구 시퀀스, 불일치 시 진입 차단·청산 유지 요구사항을 정의한다.
-
 ## Requirements
-
 ### Requirement: Reconciliation 계약
 
 로컬 상태와 토스 계좌의 대사는 명시된 계약을 따라야 한다(SHALL): 스냅샷은 (미체결 목록 pagination 완주 → 보유 → 잔고) 고정 순서로 구성하고 as-of 시각을 기록하며, 부분 실패한 스냅샷은 폐기한다(SHALL). 비교 키는 계좌·심볼·lineage 해소 후 현재 주문번호. 수량 허용 오차 0, 평균단가는 decimal 문자열 비교 + 문서화된 epsilon(진입 차단 판정에서 제외). 안정화는 최소 간격(기본 2초)을 둔 연속 2회 동일 스냅샷으로 판정한다(SHALL). 로컬 intent와 매칭되지 않는 브로커 주문·포지션은 external provenance로 분류한다. 충돌 시 토스 계좌가 항상 우선한다(SHALL).
@@ -54,3 +52,18 @@
 #### Scenario: 영구 차단의 운영자 해제
 - **WHEN** 영구 불일치로 승격된 뒤 재조회가 일치하면
 - **THEN** 자동 해제되지 않고 운영자 확인을 요구한다
+
+### Requirement: 보호주문 불일치는 신규 진입을 차단하고 수렴한다
+reconciliation은 broker conditional orders와 local protection saga를 비교하고 missing, duplicate, orphan, quantity mismatch를 typed discrepancy로 격리해야 한다 (SHALL).
+
+#### Scenario: broker orphan
+- **WHEN** 계좌에 local saga가 모르는 활성 조건주문이 있다
+- **THEN** 자동 취소하거나 귀속을 추정하지 않고 RECONCILE로 격리하며 신규 진입을 차단한다
+
+#### Scenario: flatten
+- **WHEN** 운영자가 포지션 전량 flatten을 승인한다
+- **THEN** 2초 안에 관련 보호주문의 terminal cancel과 broker sellable quantity를 확인한 경우에만 기존 reduce-only liquidation을 실행한다
+
+#### Scenario: flatten cancel이 모호함
+- **WHEN** cancel 응답이 유실되거나 trigger 경합으로 2초 안에 terminal 상태를 확인할 수 없다
+- **THEN** saga를 `IN_DOUBT`로 격리하고 신규 exposure를 차단하며 최우선 reconcile과 사람 emergency action을 요구하고 oversell 가능한 blind liquidation을 제출하지 않는다

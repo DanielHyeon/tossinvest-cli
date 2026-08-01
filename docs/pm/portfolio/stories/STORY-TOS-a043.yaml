@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a043-show-exit-lines-in-trading-views",
-    "path": "openspec/changes/a043-show-exit-lines-in-trading-views"
+    "path": "openspec/changes/archive/2026-08-01-a043-show-exit-lines-in-trading-views"
   },
   "acceptance": [
     "Positions shows initial stop, active protection, next target, next protection, rung and expected exit quantity from the authoritative snapshot",

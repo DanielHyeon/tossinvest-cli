@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a047-add-strategy-engine",
-    "path": "openspec/changes/a047-add-strategy-engine"
+    "path": "openspec/changes/archive/2026-08-01-a047-add-strategy-engine"
   },
   "acceptance": [
     "Approved candidates flow through a lane decision, RiskIntent, Guardian, durable intent and the official Open API gateway",

@@ -2,9 +2,7 @@
 
 ## Purpose
 포지션 투영(체결+조정 이벤트)·상태기계 전이표·조정 compare-and-append·체결 반영 원자성(apply hook)·provenance lineage·원장 스키마 확장 규칙.
-
 ## Requirements
-
 ### Requirement: Position 투영과 단일 권위
 
 Position은 journal의 체결 이벤트와 조정 이벤트의 **투영**이며(SHALL) 직접 변이 API를 노출하지 않는다(SHALL NOT). 투영은 심볼·시장 단위 집계, position-instance 식별자(CLOSED 후 재진입은 새 인스턴스), 평균단가, 수량을 산출하고, 엔진 발 포지션은 진입 결정 참조(`entry_decision_id`)를 가진다(SHALL — 설정 후 인스턴스 수명 동안 변경·NULL화되지 않으며(SHALL NOT), 외부·수동 취득 포지션은 NULL로 남는다). 외부 취득 포지션의 편입은 `positions.adoption_id`(additive v7, `position_adoptions` 단방향 참조 — 편입 행의 심볼·수량 필드는 편입 시점 스냅샷이고 권위는 positions 투영이다)로 기록되며 **set-once**다(SHALL — 전용 tx API로만 기입하고 그 외 UPDATE의 언급은 정적 스캔이 거부한다). exit 정책 대상 자격은 `entry_decision_id 또는 adoption_id`가 설정된 포지션이며(SHALL — 자격 판정은 단일 술어 함수로 모은다), reconcile fold의 "entry 결정 상속 금지" 가드는 자격 술어가 아닌 `entry_decision_id` 명시 비교로 좁혀 유지한다(SHALL — 편입 포지션에 fold가 착지하는 것은 정상 재대사 경로다). adoption_id 부여는 수량·평균단가를 변경하지 않는다(SHALL NOT). 방향은 intent side에서 재도출한다(SHALL — 이 change의 범위에서 모든 로컬 체결은 intent가 있는 주문에서 온다; 발동 주문의 방향 출처는 보호주문 도입 change가 정의한다). 포지션 진실은 하나이므로 reconciliation의 로컬 상태는 이 투영을 소비한다(SHALL — reconciliation delta). decimal 문자열 산술을 사용한다(SHALL NOT float 누적 — 편입 원가(cost_basis)는 브로커 원문 decimal 문자열을 보존하며, 편입 관측가는 엔진 공통 가격 경로를 따른다 `[기존 제약 — 가격 경로 float64]`).
@@ -67,3 +65,42 @@ reconciliation이 보고한 차이는 append-only 조정 이벤트로 보정되�
 - **WHEN** v7이 적용된 journal을 v6 바이너리가 열면
 - **THEN** ErrSchemaTooNew로 거부되고 어떤 쓰기도 일어나지 않는다
 
+### Requirement: exit snapshot 핵심 상태는 원자적으로 영속된다
+journal은 policy ID/version/digest, snapshot/decision/observation ID, baseline, high-water, active rung, next target/protection, last observation source·time을 포지션 generation에 귀속해 저장해야 한다 (SHALL).
+
+#### Scenario: 평가 commit 뒤 재시작
+- **WHEN** 보호선 승격 transaction이 commit된 직후 프로세스가 종료된다
+- **THEN** 재시작은 승격된 기준선과 동일한 policy/rung/high-water를 회수한다
+
+#### Scenario: 평가 commit 전 crash
+- **WHEN** snapshot transaction이 commit되기 전에 프로세스가 종료된다
+- **THEN** journal은 부분 필드가 섞인 snapshot을 노출하지 않고 이전 완전 상태를 유지한다
+
+### Requirement: migration은 additive이고 legacy를 추정하지 않는다
+새 snapshot column은 nullable additive migration이어야 하며 (SHALL), legacy NULL을 0 또는 임의 정책값으로 backfill해서는 안 된다 (MUST NOT).
+
+#### Scenario: legacy row 조회
+- **WHEN** 새 column이 NULL인 기존 exit row를 읽는다
+- **THEN** 결정적으로 복원 가능한 값만 파생하고 나머지는 unknown으로 표시한다
+
+### Requirement: 화면용 snapshot은 저장값과 실효값의 근거를 구분한다
+journal read model은 저장값, 현재 재계산값과 최종 실효값을 구분하고 각 값의 policy version, source, observed-at과 stale/unknown reason을 제공해야 한다 (SHALL).
+
+#### Scenario: 저장값이 더 안전함
+- **WHEN** 저장 protection이 현재 재계산 후보보다 높다
+- **THEN** read model은 두 값을 모두 보존하고 effective source가 saved-monotone임을 표시한다
+
+#### Scenario: 근거가 불완전함
+- **WHEN** legacy row에서 다음 target을 결정적으로 복원할 수 없다
+- **THEN** read model은 제품 기본값이나 0을 넣지 않고 unknown reason을 반환한다
+
+### Requirement: 정책 lifecycle은 generation에 귀속된다
+journal은 override, release와 re-adopt event를 position/adoption generation에 귀속하고 과거 generation의 상태를 새 lifecycle에 적용해서는 안 된다 (MUST NOT).
+
+#### Scenario: 늦게 도착한 과거 event
+- **WHEN** release 후 새 generation이 열린 뒤 과거 generation의 event가 도착한다
+- **THEN** event를 격리하고 새 exit state를 변경하지 않는다
+
+#### Scenario: 같은 종목의 새 포지션
+- **WHEN** 과거 position generation이 격리된 뒤 동일 symbol의 새 position identity가 열린다
+- **THEN** 과거 격리는 새 lifecycle로 전파되지 않고 새 generation은 독립 상태로 시작한다

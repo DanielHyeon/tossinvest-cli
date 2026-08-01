@@ -2,9 +2,7 @@
 
 ## Purpose
 거래 비용 모델(구조·검증 게이트·MAX_RATE)·성과 원시 지표(동결 기록·실현 R)·분석 경로 격리 요구사항.
-
 ## Requirements
-
 ### Requirement: 거래 비용 모델
 KRW·USD 거래의 수수료·거래세·환전 비용은 순수 함수 비용 모델로 계산되어야 한다(SHALL — StockOS `costs.py`의 **구조**(시장별 수수료 bps·거래세 bps·실질 본전 산식)와 **검증 게이트**(비수치·NaN·음수·상한 `MAX_RATE=0.05` 초과 거부)를 이식하되, KIS 수치·`KIS_*` 명명은 이식하지 않는다(SHALL NOT). override는 설정 주입 방식으로 재구현하고 test_costs(4)·test_costs_env_override(16)는 **검증 게이트·주입 구조**에 대해 이식한다(수치 단언은 Toss 보수값으로 재작성). 수치는 2b 실측으로 채우며, 실측 전에는 상한 이내의 과대 추정 보수값을 "미검증" provenance와 함께 사용한다(SHALL — 진입 측 보수 방향; 상한이 실질 본전 기준선의 폭주를 막는다). Guardian의 현금·비용 검증, exit 정책의 실질 본전, 성과의 비용 차감이 같은 모델을 사용한다(SHALL — 이중 정의 금지). 비용 모델은 청산 게이트로 적용되지 않는다(SHALL NOT — §0.3).
 
@@ -41,3 +39,14 @@ KRW·USD 거래의 수수료·거래세·환전 비용은 순수 함수 비용 �
 #### Scenario: 혼합 계좌의 성과 집계
 - **WHEN** 엔진 진입 3건과 편입 2건이 완결된 계좌의 집계를 조회하면
 - **THEN** 실측 R 집계(n=3)와 합성 R 집계(n=2)가 구분 표기된다
+
+### Requirement: 기존 outcome 집계는 lane와 policy version으로 분해 가능하다
+trade analytics는 기존 전체 승률·PF·MDD·R을 보존하면서 결정적 lineage가 있는 결과를 lane/version과 policy/version으로 필터·집계할 수 있어야 한다 (SHALL).
+
+#### Scenario: 전체 집계 보존
+- **WHEN** lane performance 기능을 활성화한 뒤 동일 outcome 집합을 전체 집계한다
+- **THEN** 기존 portfolio aggregate 결과는 변경되지 않는다
+
+#### Scenario: 표본 부족
+- **WHEN** 한 lane의 유효 closed trade가 최소 표본에 못 미친다
+- **THEN** 관측값과 표본 수는 표시하되 추천 가능 상태로 해석하지 않는다

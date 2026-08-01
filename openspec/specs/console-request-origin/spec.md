@@ -4,9 +4,7 @@
 
 원격 콘솔 상태 변경 요청의 canonical HTTPS origin 판정, 명시적 헤더 우선순위,
 privacy-header 환경의 direct TLS+Host fallback, 그리고 기존 독립 안전 gate 보존 계약.
-
 ## Requirements
-
 ### Requirement: 콘솔 상태 변경은 canonical request origin 증거를 가져야 한다
 
 원격 콘솔의 상태 변경 POST는 configured canonical HTTPS origin과 일치하는 요청에서만 handler에 도달해야 한다(SHALL).
@@ -109,3 +107,18 @@ or handler order.
 
 - **WHEN** Chrome DevTools가 deny-by-default CSP 아래에서 선택적 well-known endpoint 연결을 시도한다
 - **THEN** CSP는 완화되지 않으며 해당 브라우저 진단은 콘솔 폼 기능과 독립적으로 차단될 수 있다
+
+### Requirement: write origin identity는 scheme host port다
+브라우저·API write guard는 configured HTTPS origin과 요청 시작점을 scheme, canonical host와 effective port로 비교해야 하며 path, query 또는 fragment를 비교해서는 안 된다 (MUST NOT).
+
+#### Scenario: 다른 하위 경로
+- **WHEN** configured origin이 `https://127.0.0.1:37085`이고 `/positions`에서 `/api/v1/settings`로 쓴다
+- **THEN** scheme·host·port가 같으므로 origin 검사를 통과한다
+
+#### Scenario: 다른 port
+- **WHEN** 요청 origin이 `https://127.0.0.1:37086`이다
+- **THEN** path가 같아도 origin 불일치로 거부한다
+
+#### Scenario: forwarded HTTPS
+- **WHEN** 신뢰된 proxy가 canonical HTTPS host/port를 전달한다
+- **THEN** allowlisted proxy에서 온 헤더만 사용해 origin을 구성한다

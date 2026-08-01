@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a049-add-lane-performance",
-    "path": "openspec/changes/a049-add-lane-performance"
+    "path": "openspec/changes/archive/2026-08-01-a049-add-lane-performance"
   },
   "acceptance": [
     "Candidate, lane, decision, order, fill and close are attributed only through deterministic identifiers",

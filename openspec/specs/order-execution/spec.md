@@ -2,9 +2,7 @@
 
 ## Purpose
 엔진 주문 실행의 상태 모델·journal 내구성·멱등성(멱등 재생 포함)·재시도·위험 예약·RECONCILE·fail-closed 요구사항.
-
 ## Requirements
-
 ### Requirement: Intent-Mutation-주문 분리 모델
 주문 실행 모델은 세 노드를 분리해야 한다(SHALL): 불변 OrderIntent(의도), MutationAttempt(PLACE/CANCEL/AMEND 시도 — 각각 독립 수명주기), 브로커 주문 노드(주문번호 단위). 토스 공식 API의 cancel/modify는 새 주문번호를 발급하므로, 주문 노드 간 관계는 lineage edge(`replaces`, 원주문 체결수량, 요청 잔여수량, 새 주문번호)로 기록해야 한다(SHALL). 엔진 경로의 lineage 기록은 journal DB 안에서 트랜잭션으로 수행한다(SHALL).
 
@@ -215,3 +213,25 @@ RECONCILE 중 신규 진입과 수량 확대는 금지되고(SHALL NOT), 위험 
 #### Scenario: 동일 관측 반복
 - **WHEN** 이미 반영된 것과 동일한 스냅샷이 다시 관측되면
 - **THEN** 정정 이벤트가 중복 삽입되지 않는다
+
+### Requirement: 조건주문 mutation은 durable execution contract를 따른다
+조건주문 create/replace/cancel은 canonical body, serializer version, client order identity, mutation attempt와 broker identifier를 submit 전에 영속해야 한다 (SHALL).
+
+#### Scenario: create 응답 유실
+- **WHEN** broker가 create를 처리했으나 응답이 유실된다
+- **THEN** attempt는 IN_DOUBT로 남고 attested idempotency/reconciliation 절차 외 재제출을 금지한다
+
+#### Scenario: replace가 새 ID를 반환
+- **WHEN** 보호 정정이 새 conditional ID를 만든다
+- **THEN** old/new identifier와 유효성 전환을 한 saga generation에 기록한다
+
+### Requirement: strategy provenance는 주문까지 끊기지 않는다
+entry decision, RiskIntent, mutation attempt, broker order와 fill은 candidate-life ID, threshold set/evidence digest와 lane ID/version을 결정적으로 연결해야 한다 (SHALL). 전략 provenance가 없는 legacy RiskIntent의 canonical bytes는 바뀌어서는 안 된다 (MUST NOT).
+
+#### Scenario: 정상 체결
+- **WHEN** strategy order가 체결된다
+- **THEN** fill과 열린 position에서 원 candidate와 lane version을 역추적할 수 있다
+
+#### Scenario: 재시작 중 중복 decision
+- **WHEN** 같은 canonical decision이 재시작 뒤 다시 계산된다
+- **THEN** deterministic identity와 duplicate guard가 두 번째 LIVE order를 차단한다
