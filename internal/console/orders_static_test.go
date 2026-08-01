@@ -197,6 +197,9 @@ func TestTheSeamsWithVerbExemptionsAreEnumeratedAndArgued(t *testing.T) {
 		"PositionPolicies": {
 			"PositionPolicies": true, "PositionPolicyCommander": true, "Apply": true,
 		},
+		"Optimization": {
+			"Optimization": true, "OptimizationCommander": true, "Apply": true,
+		},
 	}
 
 	for field, cap := range consoleCapabilities {

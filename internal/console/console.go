@@ -224,6 +224,10 @@ type Options struct {
 	// ExitPolicies is the optimization page's load/save-only config seam. It
 	// carries no broker, gate, trading-toggle, or journal authority.
 	ExitPolicies ExitPolicySettings
+	// Optimization is the narrow, durable settings lifecycle command service.
+	// Its interface has no journal, broker, lane, gate, kill-switch, or LIVE
+	// mutation method; nil leaves every lifecycle control read-only.
+	Optimization OptimizationCommander
 	// MarketSchedule is a read-only projection of scheduler desired/effective
 	// state and its calendar provenance. Its single method returns plain display
 	// data; it cannot edit configuration, start the engine, or reach a broker.

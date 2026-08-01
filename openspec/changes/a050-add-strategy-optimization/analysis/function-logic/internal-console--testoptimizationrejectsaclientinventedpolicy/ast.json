@@ -1,0 +1,114 @@
+{
+  "file": "internal/console/optimization_test.go",
+  "source_sha256": "0f9c9d433d370bb053d878c7a1b3ee1a0f46a5b99728aa96cf13311fdeab0505",
+  "package": "console",
+  "function": "TestOptimizationRejectsAClientInventedPolicy",
+  "signature": "TestOptimizationRejectsAClientInventedPolicy(params=1, results=0)",
+  "start": {
+    "line": 86,
+    "column": 1
+  },
+  "end": {
+    "line": 101,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 15
+      },
+      "text": "newFakeOptimizationCommander"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 7
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 10
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

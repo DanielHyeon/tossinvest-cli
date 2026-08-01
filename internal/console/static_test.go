@@ -967,6 +967,18 @@ var consoleCapabilities = map[string]capability{
 	// The common exit-policy editor carries only the typed policy ID block. It
 	// cannot reach broker, journal, automation gate, or trading toggles.
 	"ExitPolicies": {Methods: []string{"Load", "Save"}},
+	// The a050 lifecycle is a separate control-plane capability. It can create
+	// immutable settings candidates and CAS versions, but its messages and
+	// dependency closure expose no journal, broker, order, lane, gate, kill
+	// switch or LIVE action.
+	"Optimization": {
+		Methods: []string{"Read", "Preview", "PreviewRollback", "Apply"},
+		VerbExemptions: map[string]string{
+			"Optimization":          "the settings lifecycle capability; it cannot reach account or operating authority",
+			"OptimizationCommander": "the exact four-method settings lifecycle seam",
+			"Apply":                 "commits one capability-bound settings CAS and append-only audit; no account mutation is in its type closure",
+		},
+	},
 	// Generation-scoped policy writes are a deliberately narrow engine-owned
 	// command capability. Its messages contain no broker, SQL, config, toggle or
 	// arbitrary user text; the console can only submit an opaque server action.
