@@ -37,9 +37,12 @@
       "row_count_estimate": 100000,
       "columns": {
         "id": {"type": "INTEGER", "nullable": false, "unique": true, "cardinality_estimate": 100000},
-        "trade_id": {"type": "TEXT", "nullable": false, "foreign_key": "performance_trades.id", "cardinality_estimate": 100000}
+        "trade_id": {"type": "TEXT", "nullable": false, "foreign_key": "performance_trades.id", "cardinality_estimate": 100000},
+        "calculated_at": {"type": "TEXT", "nullable": false, "cardinality_estimate": 100000},
+        "semantics_version": {"type": "TEXT", "nullable": false, "cardinality_estimate": 4}
       },
       "primary_key": ["id"],
+      "unique_constraints": [["trade_id", "calculated_at", "semantics_version"]],
       "indexes": [
         {"name": "idx_measurement_snapshots_trade", "columns": ["trade_id", "id"]}
       ]

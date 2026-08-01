@@ -3,6 +3,7 @@ package performance
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -68,8 +69,145 @@ func TestCollectAppendsExistingObservationsAndLatestMeasurement(t *testing.T) {
 	if observations != 3 || snapshots != 1 {
 		t.Fatalf("rows observations=%d snapshots=%d", observations, snapshots)
 	}
-	if _, err := store.Collect(ctx, trade, rows, at.Add(2*time.Hour)); err == nil {
-		t.Fatal("duplicate immutable trade/observation IDs were accepted")
+	if _, err := store.Collect(ctx, trade, rows, at.Add(2*time.Hour)); err != nil {
+		t.Fatalf("same immutable trade/observation bytes with a new snapshot were not appendable: %v", err)
+	}
+}
+
+func TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "performance.db")
+	store, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	at := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+	trade := measuredTrade(at)
+	rows := []Observation{{ID: "replay-5", PositionID: trade.Lineage.PositionID, At: at.Add(5 * time.Minute), Price: "105", Source: "cache", SourceVersion: "v1"}}
+	calculatedAt := at.Add(time.Hour)
+	if _, err := store.Collect(ctx, trade, rows, calculatedAt); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Collect(ctx, trade, rows, calculatedAt); err != nil {
+		t.Fatalf("in-process exact replay: %v", err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+	store, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	if _, err := store.Collect(ctx, trade, rows, calculatedAt); err != nil {
+		t.Fatalf("restart exact replay: %v", err)
+	}
+
+	start := make(chan struct{})
+	errs := make(chan error, 2)
+	for i := 0; i < 2; i++ {
+		go func() {
+			<-start
+			_, err := store.Collect(ctx, trade, rows, calculatedAt)
+			errs <- err
+		}()
+	}
+	close(start)
+	for i := 0; i < 2; i++ {
+		if err := <-errs; err != nil {
+			t.Fatalf("concurrent exact replay: %v", err)
+		}
+	}
+	for table, want := range map[string]int{"performance_trades": 1, "price_observations": 1, "measurement_snapshots": 1, "metric_observations": 6} {
+		var got int
+		if err := store.db.QueryRow(`SELECT count(*) FROM ` + table).Scan(&got); err != nil || got != want {
+			t.Fatalf("%s rows=%d want=%d err=%v", table, got, want, err)
+		}
+	}
+}
+
+func TestCollectDivergentReplayFailsClosed(t *testing.T) {
+	ctx := context.Background()
+	store := openTestStore(t)
+	at := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+	trade := measuredTrade(at)
+	rows := []Observation{{ID: "immutable-5", PositionID: trade.Lineage.PositionID, At: at.Add(5 * time.Minute), Price: "105", Source: "cache", SourceVersion: "v1"}}
+	calculatedAt := at.Add(time.Hour)
+	if _, err := store.Collect(ctx, trade, rows, calculatedAt); err != nil {
+		t.Fatal(err)
+	}
+
+	changedTrade := trade
+	changedTrade.RealizedPnLAfterCosts = "81"
+	if _, err := store.Collect(ctx, changedTrade, rows, calculatedAt); !errors.Is(err, ErrImmutableConflict) {
+		t.Fatalf("trade divergence error=%v", err)
+	}
+	changedObservation := append([]Observation(nil), rows...)
+	changedObservation[0].Price = "106"
+	if _, err := store.Collect(ctx, trade, changedObservation, calculatedAt); !errors.Is(err, ErrImmutableConflict) {
+		t.Fatalf("observation divergence error=%v", err)
+	}
+	if _, err := store.Collect(ctx, trade, nil, calculatedAt); !errors.Is(err, ErrImmutableConflict) {
+		t.Fatalf("snapshot divergence error=%v", err)
+	}
+}
+
+func TestConcurrentDivergentSnapshotsLeaveOneCompleteImmutableCollection(t *testing.T) {
+	ctx := context.Background()
+	store := openTestStore(t)
+	at := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+	trade := measuredTrade(at)
+	calculatedAt := at.Add(time.Hour)
+	rows := [][]Observation{
+		{{ID: "concurrent-a", PositionID: trade.Lineage.PositionID, At: at.Add(5 * time.Minute), Price: "105", Source: "cache", SourceVersion: "v1"}},
+		{{ID: "concurrent-b", PositionID: trade.Lineage.PositionID, At: at.Add(5 * time.Minute), Price: "106", Source: "cache", SourceVersion: "v1"}},
+	}
+	start := make(chan struct{})
+	errs := make(chan error, len(rows))
+	for _, observations := range rows {
+		observations := observations
+		go func() {
+			<-start
+			_, err := store.Collect(ctx, trade, observations, calculatedAt)
+			errs <- err
+		}()
+	}
+	close(start)
+	var succeeded, conflicted int
+	for range rows {
+		err := <-errs
+		switch {
+		case err == nil:
+			succeeded++
+		case errors.Is(err, ErrImmutableConflict):
+			conflicted++
+		default:
+			t.Fatalf("unexpected concurrent error: %v", err)
+		}
+	}
+	if succeeded != 1 || conflicted != 1 {
+		t.Fatalf("concurrent divergent results success=%d conflict=%d", succeeded, conflicted)
+	}
+	for table, want := range map[string]int{"performance_trades": 1, "price_observations": 1, "measurement_snapshots": 1, "metric_observations": 6} {
+		var got int
+		if err := store.db.QueryRow(`SELECT count(*) FROM ` + table).Scan(&got); err != nil || got != want {
+			t.Fatalf("%s rows=%d want=%d err=%v", table, got, want, err)
+		}
+	}
+}
+
+func TestObservationCompareAndAppendReplayAndDivergence(t *testing.T) {
+	store := openTestStore(t)
+	row := Observation{ID: "observation-1", PositionID: "position-1", At: time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC), Price: "100", Source: "cache", SourceVersion: "v1"}
+	if err := store.AppendObservations(context.Background(), []Observation{row}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.AppendObservations(context.Background(), []Observation{row}); err != nil {
+		t.Fatalf("exact replay: %v", err)
+	}
+	row.SourceVersion = "v2"
+	if err := store.AppendObservations(context.Background(), []Observation{row}); !errors.Is(err, ErrImmutableConflict) {
+		t.Fatalf("divergent replay error=%v", err)
 	}
 }
 
@@ -117,7 +255,7 @@ func TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates(t *testing.T
 	if got.Aggregates[0].Metrics[0].Provenance != "journal-outcome@"+SemanticsVersion {
 		t.Fatalf("outcome provenance = %+v", got.Aggregates[0].Metrics[0])
 	}
-	if got.States.LinkMissing != 1 || got.States.NotMeasured == 0 || got.States.InsufficientSample != 1 {
+	if got.States.Complete != 3 || got.States.LinkMissing != 0 || got.States.NotMeasured == 0 || got.States.InsufficientSample != 1 {
 		t.Fatalf("states = %+v", got.States)
 	}
 	for _, code := range []Status{StatusLinkMissing, StatusNotMeasured, StatusInsufficientSample} {
@@ -137,20 +275,61 @@ func TestPruneIsDueEvery24HoursAndDeletesAtMost500RowsPerTransaction(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	if first.Deleted != MaxPruneRows || first.Deleted > 500 || (!raceEnabled && first.LockDuration >= 100*time.Millisecond) {
+	if first.Deleted != 1200 || first.MaxBatchDeleted > MaxPruneRows || first.Transactions != 3 || first.BacklogRemaining ||
+		(!raceEnabled && first.MaxBatchLockDuration >= 100*time.Millisecond) {
 		t.Fatalf("first prune = %+v", first)
 	}
 	second, err := store.PruneDue(ctx, now.Add(23*time.Hour))
 	if err != nil || second.Deleted != 0 || !second.Skipped {
 		t.Fatalf("23h prune = %+v err=%v", second, err)
 	}
+	insertObservationFixture(t, store.db, 501, now.Add(-91*24*time.Hour))
 	third, err := store.PruneDue(ctx, now.Add(24*time.Hour))
-	if err != nil || third.Deleted != MaxPruneRows {
+	if err != nil || third.Deleted != 501 || third.Transactions != 2 {
 		t.Fatalf("24h prune = %+v err=%v", third, err)
 	}
 }
 
-func TestConcurrentObservationIDsAreCompareAndAppend(t *testing.T) {
+func TestPruneKeepsCadenceDueUntilBoundedBacklogDrainsDespiteContinuedInflux(t *testing.T) {
+	ctx := context.Background()
+	store := openTestStore(t)
+	now := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+	insertObservationFixture(t, store.db, MaxPruneRows*MaxPruneBatchesPerRun+100, now.Add(-91*24*time.Hour))
+
+	first, err := store.PruneDue(ctx, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !first.BacklogRemaining || first.Transactions != MaxPruneBatchesPerRun || first.Deleted != MaxPruneRows*MaxPruneBatchesPerRun {
+		t.Fatalf("bounded first run = %+v", first)
+	}
+	var cadenceRows int
+	if err := store.db.QueryRow(`SELECT count(*) FROM maintenance_state WHERE key='last_pruned_at'`).Scan(&cadenceRows); err != nil || cadenceRows != 0 {
+		t.Fatalf("unfinished backlog locked cadence rows=%d err=%v", cadenceRows, err)
+	}
+	insertObservationFixtureFrom(t, store.db, "influx", 75, now.Add(-92*24*time.Hour))
+	second, err := store.PruneDue(ctx, now.Add(time.Minute))
+	if err != nil || second.Skipped || second.BacklogRemaining || second.Deleted != 175 {
+		t.Fatalf("immediate reschedule = %+v err=%v", second, err)
+	}
+	third, err := store.PruneDue(ctx, now.Add(2*time.Minute))
+	if err != nil || !third.Skipped {
+		t.Fatalf("drained cadence = %+v err=%v", third, err)
+	}
+	late := Observation{
+		ID: "late-overdue", PositionID: "position-late", At: now.Add(-91 * 24 * time.Hour),
+		Price: "100", Source: "late-backfill", SourceVersion: "v1",
+	}
+	if err := store.AppendObservations(ctx, []Observation{late}); err != nil {
+		t.Fatal(err)
+	}
+	fourth, err := store.PruneDue(ctx, now.Add(3*time.Minute))
+	if err != nil || fourth.Skipped || fourth.Deleted != 1 || fourth.BacklogRemaining {
+		t.Fatalf("late overdue append did not immediately reschedule prune = %+v err=%v", fourth, err)
+	}
+}
+
+func TestConcurrentObservationIDsAreIdempotentCompareAndAppend(t *testing.T) {
 	store := openTestStore(t)
 	at := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
 	row := Observation{ID: "same-id", PositionID: "position-1", At: at, Price: "100", Source: "existing", SourceVersion: "v1"}
@@ -168,20 +347,28 @@ func TestConcurrentObservationIDsAreCompareAndAppend(t *testing.T) {
 	close(start)
 	wg.Wait()
 	close(errs)
-	var succeeded, refused int
+	var succeeded int
 	for err := range errs {
 		if err == nil {
 			succeeded++
 		} else {
-			refused++
+			t.Errorf("exact concurrent append: %v", err)
 		}
 	}
-	if succeeded != 1 || refused != 1 {
-		t.Fatalf("concurrent append succeeded=%d refused=%d", succeeded, refused)
+	if succeeded != 2 {
+		t.Fatalf("concurrent exact append succeeded=%d", succeeded)
+	}
+	var count int
+	if err := store.db.QueryRow(`SELECT count(*) FROM price_observations WHERE id=?`, row.ID).Scan(&count); err != nil || count != 1 {
+		t.Fatalf("immutable observation rows=%d err=%v", count, err)
 	}
 }
 
 func insertObservationFixture(t *testing.T, db *sql.DB, count int, at time.Time) {
+	insertObservationFixtureFrom(t, db, "fixture", count, at)
+}
+
+func insertObservationFixtureFrom(t *testing.T, db *sql.DB, prefix string, count int, at time.Time) {
 	t.Helper()
 	tx, err := db.Begin()
 	if err != nil {
@@ -193,7 +380,7 @@ func insertObservationFixture(t *testing.T, db *sql.DB, count int, at time.Time)
 		t.Fatal(err)
 	}
 	for i := 0; i < count; i++ {
-		if _, err := stmt.Exec(fmt.Sprintf("fixture-%09d", i), "position-fixture", at.Add(time.Duration(i)*time.Second).Format(time.RFC3339Nano), "100", "fixture", "v1"); err != nil {
+		if _, err := stmt.Exec(fmt.Sprintf("%s-%09d", prefix, i), "position-fixture", at.Add(time.Duration(i)*time.Second).Format(time.RFC3339Nano), "100", "fixture", "v1"); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -2,9 +2,10 @@
 
 ## Implemented in this worktree
 
-- Isolated, rebuildable `performance.db` schema v1 with atomic migration, private files, append-only trade/observation/measurement writes, 90-day retention, 24-hour cadence, and bounded 500-row prune transactions.
+- Isolated, rebuildable `performance.db` schema v1 with phase-SIGKILL-proven atomic migration, private files, exact compare-and-append trade/observation/measurement writes, 90-day retention, 24-hour cadence after backlog drain, and bounded 500-row prune transactions (four transactions/run before immediate reschedule).
 - Exact typed lineage model with distinct `complete` and `link_missing` states. No symbol/time approximation API exists.
-- Existing-observation-only 5/15/30 minute markout, slippage, MFE/MAE, cost-adjusted lane/policy aggregates, metric definitions/units/sample/period/source/version, and explicit `not_measured`/`insufficient_sample` states.
+- Existing-observation-only BUY/SELL-consistent 5/15/30 minute gross/cost markout, slippage, MFE/MAE, cost-adjusted lane/policy aggregates, exact observation source/time/version provenance, metric definitions/units/sample/period/source/version, and explicit `not_measured`/`insufficient_sample` states.
+- Actual Dashboard SQL is bounded to 90 days and 10,000 trades, resolves latest snapshots only inside the filtered CTE, applies identical state-count filters, and is EXPLAIN/p95 tested with 1,000,000 raw rows.
 - Session-gated `/performance-history` UI with fixed server query defaults and no form, input, button, arbitrary text/number entry, mutation seam, order capability, lane toggle, or LIVE approval capability.
 - Legacy portfolio aggregate JSON byte regression and dependency-closure checks.
 

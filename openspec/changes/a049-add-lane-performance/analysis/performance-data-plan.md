@@ -28,13 +28,13 @@ candidate → lane provenance → decision → attempt → opaque broker order
 
 | Query | Index | Reason |
 |---|---|---|
-| Recent 30-day raw count / 90-day prune | `idx_price_observations_at(observed_at,id)` | covering range scan and deterministic 500-row prune order |
+| 90-day bounded raw prune | `idx_price_observations_at(observed_at,id)` | covering range scan and deterministic 500-row transaction order |
 | One position's 5/15/30 markout and MFE/MAE | `idx_price_observations_position_at(position_id,observed_at,id)` | exact position equality followed by time range/order |
 | Default 30-day complete-lineage dashboard | `idx_performance_trades_window(closed_at,lineage_status,market,lane_id,...)` | bounded close window is always present; remaining fixed/default filters are covered |
 | Lane/policy drilldown | `idx_performance_trades_lane(lane_id,lane_version,policy_id,policy_version,closed_at)` | equality on immutable versions followed by close range |
-| Latest append-only measurement | `idx_measurement_snapshots_trade(trade_id,id)` | max append identity per trade without updating a prior snapshot |
+| Exact replay / latest append-only measurement | `UNIQUE(trade_id,calculated_at,semantics_version)` plus `idx_measurement_snapshots_trade(trade_id,id)` | compare-and-append identity and highest append identity per already-filtered trade without updating a prior snapshot |
 
-The test suite verifies the real SQLite plan contains `USING COVERING INDEX idx_price_observations_at` and executes 25 30-day queries against 1,000,000 on-disk raw rows; p95 must remain at or below 250ms.
+The prune suite verifies deterministic bounded deletes. Dashboard performance is measured through the actual joined read path described below, not a raw-row COUNT proxy.
 
 ### Automated schema/index review
 
@@ -43,19 +43,21 @@ The database-designer analyzers were run against the checked-in DDL and the thre
 - The DDL parser reports no foreign keys and misses the composite primary key on `metric_observations`, although the production `schemaV1` has both `REFERENCES` clauses and `PRIMARY KEY(snapshot_id, metric_key)`. This is a parser limitation, not an accepted production gap.
 - The reported lane/version, decision fields, and policy/version 3NF issues are deliberate immutable provenance snapshots in a rebuildable cross-database read model. Normalizing them into local authority tables would create a second source of truth and complicate deterministic replay.
 - Positive `entry_price`, `quantity`, observation `price`, non-negative costs, side, lineage status, metric key, and metric status are enforced by typed Go validation and/or production SQLite `CHECK` constraints. Decimal strings remain `TEXT` so SQLite floating-point coercion cannot silently change accounting values.
-- The index optimizer proposed four indexes. Three are exact-prefix or exact-column duplicates of `idx_price_observations_at`, `idx_price_observations_position_at`, and `idx_performance_trades_window`; adding them would only increase append cost. The fourth `(position_id,observed_at)` is a strict prefix of the existing covering `(position_id,observed_at,id)` index. All four are rejected as redundant. The real SQLite `EXPLAIN QUERY PLAN` and 1M-row p95 test are authoritative verification.
+- The index optimizer proposed four indexes. Three are exact-prefix or exact-column duplicates of `idx_price_observations_at`, `idx_price_observations_position_at`, and `idx_performance_trades_window`; adding them would only increase append cost. The fourth `(position_id,observed_at)` is a strict prefix of the existing covering `(position_id,observed_at,id)` index. All four are rejected as redundant. The authoritative test runs the actual bounded Dashboard SQL—not a COUNT proxy—against a database containing 1,000,000 raw rows, asserts both the trade-window and per-filtered-trade latest-snapshot indexes in `EXPLAIN QUERY PLAN`, refuses global snapshot/raw scans, and measures p95 <=250ms.
+- The generic schema analyzer reports the deliberate denormalized lane/decision/policy columns as 3NF candidates. They remain embedded because this is a rebuildable immutable read model keyed by exact source versions; normalizing them would add joins without creating new authority. Its composite-primary-key parser also reports `metric_observations` as missing a key even though the DDL and runtime schema define `PRIMARY KEY(snapshot_id,metric_key)`. Exact rational quantity/price positivity is enforced before every public append; SQLite TEXT is retained to avoid lossy REAL checks.
 
 ## Retention, migration, and recovery
 
 - Raw derived observations: 90 days.
-- Prune cadence: once per 24 hours; one `BEGIN IMMEDIATE` transaction deletes no more than 500 rows and records cadence atomically. The test also enforces the 100ms writer-lock target on a 500-row batch.
-- Derived schema v1 creation and `user_version` update share one transaction. A failed migration leaves version 0 and no partial tables. A SIGKILL test proves committed schema/observation recovery.
+- Prune cadence: once per 24 hours after the cutoff backlog is drained. Each `BEGIN IMMEDIATE` transaction deletes no more than 500 rows; a run performs at most four transactions and reports remaining backlog for immediate reschedule. `last_pruned_at` is written only in the transaction that proves no expired row remains. A later append older than that completed cutoff clears the marker in its compare-and-append transaction, so sustained backfill cannot lock cleanup out for 24 hours. Tests enforce the per-transaction 100ms writer-lock target.
+- Derived schema v1 creation and `user_version` update share one transaction. A failed migration leaves version 0 and no partial tables. Subprocess SIGKILL hooks after DDL and after version assignment prove all-or-none migration; append hooks after trade, observation and snapshot phases prove all-or-none collection.
 - Derived DB rollback is stop collector → preserve/move file for diagnosis → rebuild from authoritative evidence. It never rolls journal or audit rows back.
 - Journal schema wiring is deliberately deferred until a045's v13 and a047 provenance schema are integrated. No placeholder v14/v15 is reserved here. The integration must allocate the actual next version and implement the exact adapter before task 2.1 is complete.
 
 ## Consistency, security, and monitoring
 
-- Duplicate immutable IDs fail instead of overwriting; two concurrent appends yield one success and one refusal.
+- Exact immutable replay is an idempotent skip. A duplicate identity with divergent canonical bytes fails closed with `ErrImmutableConflict`; restart and concurrent tests prove one complete collection, no overwrite, and no partial observation/snapshot rows.
+- Dashboard periods are bounded to 90 days and the filtered CTE is bounded to 10,001 sentinel trades. More than 10,000 fails closed instead of silently truncating or allocating unbounded memory. The latest-snapshot lookup is correlated only over that filtered set.
 - DB/WAL/SHM are chmod 0600 and the directory 0700.
 - Decimal source values are stored as text; metrics use `big.Rat` and versioned `lane-performance/v1` semantics.
 - Monitor: database bytes, raw row count/age, last prune timestamp, prune duration/deleted rows, dashboard p50/p95, `link_missing` and `not_measured` rates, and migration/crash reopen failures.

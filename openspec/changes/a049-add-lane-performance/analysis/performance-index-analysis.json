@@ -4,40 +4,11 @@
     "query_patterns_analyzed": 3,
     "existing_indexes": 5,
     "total_recommendations": 4,
-    "high_priority_recommendations": 4,
+    "high_priority_recommendations": 3,
     "redundancy_issues_found": 0
   },
   "index_recommendations": {
     "high_priority": [
-      {
-        "recommendation_id": "bab3a008",
-        "table": "price_observations",
-        "recommended_index": {
-          "name": "idx_price_observations_covering_observed_at_id",
-          "table": "price_observations",
-          "columns": [
-            "observed_at",
-            "id"
-          ],
-          "unique": false,
-          "index_type": "btree",
-          "partial_condition": null,
-          "include_columns": [],
-          "size_estimate": null
-        },
-        "reason": "Covering index for WHERE + ORDER BY optimization",
-        "query_patterns_helped": [
-          "recent_observation_count_and_prune"
-        ],
-        "estimated_benefit": "High (eliminates table lookups for SELECT)",
-        "estimated_overhead": "High (covering index with 2 columns)",
-        "priority": 1,
-        "sql_statement": "CREATE INDEX idx_price_observations_covering_observed_at_id ON price_observations (observed_at, id);",
-        "selectivity_analysis": {
-          "main_columns_selectivity": 1.0,
-          "covering_benefit": "Eliminates table lookup for SELECT queries"
-        }
-      },
       {
         "recommendation_id": "d8059cbb",
         "table": "price_observations",
@@ -136,7 +107,37 @@
         }
       }
     ],
-    "medium_priority": [],
+    "medium_priority": [
+      {
+        "recommendation_id": "bab3a008",
+        "table": "price_observations",
+        "recommended_index": {
+          "name": "idx_price_observations_covering_observed_at_id",
+          "table": "price_observations",
+          "columns": [
+            "observed_at",
+            "id"
+          ],
+          "unique": false,
+          "index_type": "btree",
+          "partial_condition": null,
+          "include_columns": [],
+          "size_estimate": null
+        },
+        "reason": "Covering index for WHERE + ORDER BY optimization",
+        "query_patterns_helped": [
+          "bounded_retention_prune"
+        ],
+        "estimated_benefit": "High (eliminates table lookups for SELECT)",
+        "estimated_overhead": "High (covering index with 2 columns)",
+        "priority": 3,
+        "sql_statement": "CREATE INDEX idx_price_observations_covering_observed_at_id ON price_observations (observed_at, id);",
+        "selectivity_analysis": {
+          "main_columns_selectivity": 1.0,
+          "covering_benefit": "Eliminates table lookup for SELECT queries"
+        }
+      }
+    ],
     "low_priority": []
   },
   "redundancy_analysis": [],
@@ -169,10 +170,10 @@
   },
   "sql_statements": {
     "create_indexes": [
-      "CREATE INDEX idx_price_observations_covering_observed_at_id ON price_observations (observed_at, id);",
       "CREATE INDEX idx_price_observations_position_id_observed_at ON price_observations (position_id, observed_at);",
       "CREATE INDEX idx_price_observations_covering_position_id_observed_at_id ON price_observations (position_id, observed_at, id);",
-      "CREATE INDEX idx_performance_trades_closed_at_lineage_status ON performance_trades (closed_at, lineage_status);"
+      "CREATE INDEX idx_performance_trades_closed_at_lineage_status ON performance_trades (closed_at, lineage_status);",
+      "CREATE INDEX idx_price_observations_covering_observed_at_id ON price_observations (observed_at, id);"
     ],
     "drop_redundant": []
   },
@@ -181,8 +182,8 @@
       "queries_improved": 3,
       "high_impact_queries": 2,
       "benefit_distribution": {
-        "High (eliminates table lookups for SELECT)": 2,
         "Very High": 1,
+        "High (eliminates table lookups for SELECT)": 2,
         "Medium": 1
       }
     },

@@ -71,6 +71,40 @@ func TestMeasureReusesInclusiveMarkoutToleranceAndKeepsMissingStates(t *testing.
 	}
 }
 
+func TestMeasureSideAdjustsBuyAndSellMarkoutsWithCostsAndProvenance(t *testing.T) {
+	at := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+	trade := measuredTrade(at)
+	trade.Side = SideSell
+	trade.DecisionPrice = "101"
+	observations := []Observation{
+		{ID: "sell-5", PositionID: trade.Lineage.PositionID, At: at.Add(5 * time.Minute), Price: "95", Source: "position-cache", SourceVersion: "v7"},
+		{ID: "sell-15", PositionID: trade.Lineage.PositionID, At: at.Add(15 * time.Minute), Price: "110", Source: "position-cache", SourceVersion: "v7"},
+		{ID: "sell-30", PositionID: trade.Lineage.PositionID, At: at.Add(30 * time.Minute), Price: "90", Source: "position-cache", SourceVersion: "v7"},
+	}
+
+	got := Measure(trade, observations, at.Add(time.Hour))
+	wants := map[int]struct{ gross, after, id string }{
+		5:  {gross: "5", after: "4.8", id: "sell-5"},
+		15: {gross: "-10", after: "-10.2", id: "sell-15"},
+		30: {gross: "10", after: "9.8", id: "sell-30"},
+	}
+	for minutes, want := range wants {
+		metric := got.Markout(minutes)
+		if metric.Status != StatusComplete || metric.GrossPct != want.gross ||
+			metric.CostAdjustedPct != want.after || metric.ObservationID != want.id ||
+			metric.Source != "position-cache" || metric.SourceVersion != "v7" {
+			t.Errorf("SELL %dm markout = %+v, want %+v", minutes, metric, want)
+		}
+	}
+	if got.Slippage.Value != "0.990099009901" || got.Slippage.Source != "journal-decision-entry" {
+		t.Fatalf("SELL slippage = %+v", got.Slippage)
+	}
+	if got.MFE.Value != "10" || got.MFE.ObservationID != "sell-30" || got.MFE.Source != "position-cache" ||
+		got.MAE.Value != "-10" || got.MAE.ObservationID != "sell-15" || got.MAE.SourceVersion != "v7" {
+		t.Fatalf("SELL MFE/MAE = %+v/%+v", got.MFE, got.MAE)
+	}
+}
+
 func TestMeasureNeverUsesAnotherPositionOrInventsLineage(t *testing.T) {
 	at := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
 	trade := measuredTrade(at)

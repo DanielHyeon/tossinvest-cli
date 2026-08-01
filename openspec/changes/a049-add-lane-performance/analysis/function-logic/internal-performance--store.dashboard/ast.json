@@ -1,0 +1,253 @@
+{
+  "file": "internal/performance/query.go",
+  "source_sha256": "f7f28b21f874e685a2db73fb63e483ef6be01e57baa08213e1048ef8a80550ed",
+  "package": "performance",
+  "function": "Dashboard",
+  "receiver": "Store",
+  "signature": "Store.Dashboard(params=2, results=2)",
+  "start": {
+    "line": 110,
+    "column": 1
+  },
+  "end": {
+    "line": 143,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 136,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 119,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 16
+      },
+      "text": "normalizeDashboardQuery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 11
+      },
+      "text": "AddDate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 11
+      },
+      "text": "query.AsOf.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 17
+      },
+      "text": "s.queryTrades"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 20
+      },
+      "text": "aggregateTrades"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 21
+      },
+      "text": "dashboardTradePredicate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 12
+      },
+      "text": "s.db.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 27
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 124,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 128,
+        "column": 5
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 137,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

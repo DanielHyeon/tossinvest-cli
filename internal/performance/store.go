@@ -16,13 +16,18 @@ import (
 )
 
 const (
-	SchemaVersion = 1
-	RawRetention  = 90 * 24 * time.Hour
-	PruneCadence  = 24 * time.Hour
-	MaxPruneRows  = 500
+	SchemaVersion         = 1
+	RawRetention          = 90 * 24 * time.Hour
+	PruneCadence          = 24 * time.Hour
+	MaxPruneRows          = 500
+	MaxPruneBatchesPerRun = 4
 )
 
-var ErrSchemaTooNew = errors.New("performance: database schema is newer than this build")
+var (
+	ErrSchemaTooNew      = errors.New("performance: database schema is newer than this build")
+	ErrImmutableConflict = errors.New("performance: immutable identity has divergent bytes")
+	transactionPhaseHook = func(string) {}
+)
 
 type Store struct {
 	db   *sql.DB
@@ -106,9 +111,11 @@ func (s *Store) migrate(ctx context.Context, schema string, targetVersion int) e
 	if _, err := tx.ExecContext(ctx, schema); err != nil {
 		return fmt.Errorf("performance: applying schema v1: %w", err)
 	}
+	transactionPhaseHook("migration_after_schema")
 	if _, err := tx.ExecContext(ctx, "PRAGMA user_version = "+strconv.Itoa(targetVersion)); err != nil {
 		return fmt.Errorf("performance: recording schema v1: %w", err)
 	}
+	transactionPhaseHook("migration_after_version")
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("performance: committing schema v1: %w", err)
 	}
@@ -119,9 +126,16 @@ func (s *Store) AppendTrade(ctx context.Context, trade Trade) error {
 	if err := trade.validate(); err != nil {
 		return err
 	}
-	_, err := s.db.ExecContext(ctx, insertTradeSQL, tradeArgs(trade)...)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("performance: appending trade %s: %w", trade.ID, err)
+		return fmt.Errorf("performance: starting trade append: %w", err)
+	}
+	defer tx.Rollback()
+	if err := compareAndAppendTrade(ctx, tx, trade); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("performance: committing trade append: %w", err)
 	}
 	return nil
 }
@@ -135,6 +149,7 @@ func (s *Store) AppendObservations(ctx context.Context, observations []Observati
 	if err := appendObservations(ctx, tx, observations); err != nil {
 		return err
 	}
+	transactionPhaseHook("observations_after_rows")
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("performance: committing observations: %w", err)
 	}
@@ -149,6 +164,12 @@ func (s *Store) Collect(ctx context.Context, trade Trade, observations []Observa
 		if err := observation.validate(); err != nil {
 			return Snapshot{}, err
 		}
+		if observation.PositionID != trade.Lineage.PositionID {
+			return Snapshot{}, fmt.Errorf("performance: observation %s position does not match trade", observation.ID)
+		}
+	}
+	if calculatedAt.IsZero() {
+		return Snapshot{}, errors.New("performance: calculated-at is required")
 	}
 	snapshot := Measure(trade, observations, calculatedAt)
 	tx, err := s.db.BeginTx(ctx, nil)
@@ -156,15 +177,18 @@ func (s *Store) Collect(ctx context.Context, trade Trade, observations []Observa
 		return Snapshot{}, fmt.Errorf("performance: starting collection: %w", err)
 	}
 	defer tx.Rollback()
-	if _, err := tx.ExecContext(ctx, insertTradeSQL, tradeArgs(trade)...); err != nil {
-		return Snapshot{}, fmt.Errorf("performance: appending trade %s: %w", trade.ID, err)
+	if err := compareAndAppendTrade(ctx, tx, trade); err != nil {
+		return Snapshot{}, err
 	}
+	transactionPhaseHook("collect_after_trade")
 	if err := appendObservations(ctx, tx, observations); err != nil {
 		return Snapshot{}, err
 	}
+	transactionPhaseHook("collect_after_observations")
 	if err := appendSnapshot(ctx, tx, trade.ID, snapshot); err != nil {
 		return Snapshot{}, err
 	}
+	transactionPhaseHook("collect_after_snapshot")
 	if err := tx.Commit(); err != nil {
 		return Snapshot{}, fmt.Errorf("performance: committing collection: %w", err)
 	}
@@ -176,118 +200,283 @@ func appendObservations(ctx context.Context, tx *sql.Tx, observations []Observat
 		if err := observation.validate(); err != nil {
 			return err
 		}
+		wanted := []any{observation.ID, observation.PositionID, timestamp(observation.At),
+			strings.TrimSpace(observation.Price), strings.TrimSpace(observation.Source), strings.TrimSpace(observation.SourceVersion)}
+		equal, exists, err := immutableRowEqual(ctx, tx,
+			`SELECT id,position_id,observed_at,price,source,source_version FROM price_observations WHERE id=?`,
+			[]any{observation.ID}, wanted)
+		if err != nil {
+			return fmt.Errorf("performance: reading observation %s: %w", observation.ID, err)
+		}
+		if exists {
+			if !equal {
+				return fmt.Errorf("%w: observation %s", ErrImmutableConflict, observation.ID)
+			}
+			continue
+		}
 		if _, err := tx.ExecContext(ctx, `INSERT INTO price_observations
-			(id, position_id, observed_at, price, source, source_version) VALUES (?,?,?,?,?,?)`,
-			observation.ID, observation.PositionID, timestamp(observation.At),
-			strings.TrimSpace(observation.Price), observation.Source, observation.SourceVersion); err != nil {
+			(id, position_id, observed_at, price, source, source_version) VALUES (?,?,?,?,?,?)`, wanted...); err != nil {
 			return fmt.Errorf("performance: appending observation %s: %w", observation.ID, err)
+		}
+		// A late backfill older than the most recently completed cutoff makes
+		// retention due again immediately. Keeping this in the append transaction
+		// prevents a successful prune marker from hiding newly arrived backlog for
+		// another 24 hours.
+		if _, err := tx.ExecContext(ctx, `DELETE FROM maintenance_state
+			WHERE key='last_pruned_at' AND value > ?`, timestamp(observation.At.UTC().Add(RawRetention))); err != nil {
+			return fmt.Errorf("performance: rescheduling retention for observation %s: %w", observation.ID, err)
 		}
 	}
 	return nil
 }
 
 func appendSnapshot(ctx context.Context, tx *sql.Tx, tradeID string, snapshot Snapshot) error {
+	records, err := snapshotMetricRecords(snapshot)
+	if err != nil {
+		return err
+	}
+	var snapshotID int64
+	var persistedStatus string
+	err = tx.QueryRowContext(ctx, `SELECT id,lineage_status FROM measurement_snapshots
+		WHERE trade_id=? AND calculated_at=? AND semantics_version=?`,
+		tradeID, timestamp(snapshot.CalculatedAt), snapshot.SemanticsVersion).Scan(&snapshotID, &persistedStatus)
+	if err == nil {
+		if persistedStatus != string(snapshot.LineageStatus) {
+			return fmt.Errorf("%w: measurement snapshot %s@%s", ErrImmutableConflict, tradeID, timestamp(snapshot.CalculatedAt))
+		}
+		return compareSnapshotMetrics(ctx, tx, snapshotID, records)
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("performance: reading measurement snapshot: %w", err)
+	}
 	result, err := tx.ExecContext(ctx, `INSERT INTO measurement_snapshots
 		(trade_id, calculated_at, semantics_version, lineage_status) VALUES (?,?,?,?)`,
 		tradeID, timestamp(snapshot.CalculatedAt), snapshot.SemanticsVersion, snapshot.LineageStatus)
 	if err != nil {
 		return fmt.Errorf("performance: appending measurement snapshot: %w", err)
 	}
-	snapshotID, err := result.LastInsertId()
+	snapshotID, err = result.LastInsertId()
 	if err != nil {
 		return fmt.Errorf("performance: reading measurement identity: %w", err)
 	}
-	for _, metric := range snapshot.Markouts {
-		if _, err := tx.ExecContext(ctx, insertMetricSQL, snapshotID, "markout_"+strconv.Itoa(metric.Minutes),
-			metric.Status, nil, nullable(metric.GrossPct), nullable(metric.CostAdjustedPct),
-			nullable(metric.ObservationID), nullableTime(metric.ObservedAt), nullable(metric.Source), nullable(metric.SourceVersion)); err != nil {
-			return fmt.Errorf("performance: appending %dm markout: %w", metric.Minutes, err)
-		}
-	}
-	for key, metric := range map[string]Metric{"slippage": snapshot.Slippage, "mfe": snapshot.MFE, "mae": snapshot.MAE} {
-		if _, err := tx.ExecContext(ctx, insertMetricSQL, snapshotID, key, metric.Status,
-			nullable(metric.Value), nil, nil, nullable(metric.ObservationID), nullableTime(metric.ObservedAt),
-			nullable(metric.Source), nullable(metric.SourceVersion)); err != nil {
-			return fmt.Errorf("performance: appending %s metric: %w", key, err)
+	for _, record := range records {
+		if _, err := tx.ExecContext(ctx, insertMetricSQL, append([]any{snapshotID}, record.values()...)...); err != nil {
+			return fmt.Errorf("performance: appending %s metric: %w", record.key, err)
 		}
 	}
 	return nil
 }
 
+func compareAndAppendTrade(ctx context.Context, tx *sql.Tx, trade Trade) error {
+	wanted := tradeArgs(trade)
+	equal, exists, err := immutableRowEqual(ctx, tx, `SELECT
+		id, candidate_life_id, threshold_version, threshold_set_digest, evidence_digest,
+		lane_id, lane_version, decision_id, attempt_id, order_id, fill_id, position_id,
+		close_id, policy_id, policy_version, lineage_status, market, side, decision_at,
+		decision_price, entry_at, entry_price, quantity, cost_total,
+		realized_pnl_after_costs, realized_r, closed_at
+		FROM performance_trades WHERE id=?`, []any{trade.ID}, wanted)
+	if err != nil {
+		return fmt.Errorf("performance: reading trade %s: %w", trade.ID, err)
+	}
+	if exists {
+		if !equal {
+			return fmt.Errorf("%w: trade %s", ErrImmutableConflict, trade.ID)
+		}
+		return nil
+	}
+	if _, err := tx.ExecContext(ctx, insertTradeSQL, wanted...); err != nil {
+		return fmt.Errorf("performance: appending trade %s: %w", trade.ID, err)
+	}
+	return nil
+}
+
+func immutableRowEqual(ctx context.Context, tx *sql.Tx, query string, args, wanted []any) (bool, bool, error) {
+	persisted := make([]sql.NullString, len(wanted))
+	targets := make([]any, len(persisted))
+	for i := range persisted {
+		targets[i] = &persisted[i]
+	}
+	err := tx.QueryRowContext(ctx, query, args...).Scan(targets...)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, false, nil
+	}
+	if err != nil {
+		return false, false, err
+	}
+	for i, value := range wanted {
+		if value == nil {
+			if persisted[i].Valid {
+				return false, true, nil
+			}
+			continue
+		}
+		if !persisted[i].Valid || persisted[i].String != fmt.Sprint(value) {
+			return false, true, nil
+		}
+	}
+	return true, true, nil
+}
+
+type snapshotMetricRecord struct {
+	key, value, gross, costAdjusted, observationID, observedAt, source, sourceVersion string
+	status                                                                            Status
+}
+
+func (r snapshotMetricRecord) values() []any {
+	return []any{r.key, r.status, nullable(r.value), nullable(r.gross), nullable(r.costAdjusted),
+		nullable(r.observationID), nullable(r.observedAt), nullable(r.source), nullable(r.sourceVersion)}
+}
+
+func snapshotMetricRecords(snapshot Snapshot) ([]snapshotMetricRecord, error) {
+	if snapshot.CalculatedAt.IsZero() || snapshot.SemanticsVersion == "" {
+		return nil, errors.New("performance: snapshot identity is incomplete")
+	}
+	markouts := make(map[int]MarkoutMetric, len(snapshot.Markouts))
+	for _, metric := range snapshot.Markouts {
+		if _, exists := markouts[metric.Minutes]; exists {
+			return nil, fmt.Errorf("performance: duplicate %dm markout", metric.Minutes)
+		}
+		markouts[metric.Minutes] = metric
+	}
+	records := make([]snapshotMetricRecord, 0, 6)
+	for _, minutes := range []int{5, 15, 30} {
+		metric, exists := markouts[minutes]
+		if !exists {
+			return nil, fmt.Errorf("performance: missing %dm markout", minutes)
+		}
+		records = append(records, snapshotMetricRecord{
+			key: "markout_" + strconv.Itoa(minutes), status: metric.Status,
+			gross: metric.GrossPct, costAdjusted: metric.CostAdjustedPct,
+			observationID: metric.ObservationID, observedAt: nullableTimestamp(metric.ObservedAt),
+			source: metric.Source, sourceVersion: metric.SourceVersion,
+		})
+	}
+	for _, item := range []struct {
+		key    string
+		metric Metric
+	}{{"slippage", snapshot.Slippage}, {"mfe", snapshot.MFE}, {"mae", snapshot.MAE}} {
+		records = append(records, snapshotMetricRecord{
+			key: item.key, status: item.metric.Status, value: item.metric.Value,
+			observationID: item.metric.ObservationID, observedAt: nullableTimestamp(item.metric.ObservedAt),
+			source: item.metric.Source, sourceVersion: item.metric.SourceVersion,
+		})
+	}
+	return records, nil
+}
+
+func compareSnapshotMetrics(ctx context.Context, tx *sql.Tx, snapshotID int64, records []snapshotMetricRecord) error {
+	var count int
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM metric_observations WHERE snapshot_id=?`, snapshotID).Scan(&count); err != nil {
+		return fmt.Errorf("performance: counting measurement metrics: %w", err)
+	}
+	if count != len(records) {
+		return fmt.Errorf("%w: measurement snapshot %d metric count", ErrImmutableConflict, snapshotID)
+	}
+	for _, record := range records {
+		equal, exists, err := immutableRowEqual(ctx, tx, `SELECT
+			metric_key,status,value,gross_value,cost_adjusted_value,observation_id,observed_at,source,source_version
+			FROM metric_observations WHERE snapshot_id=? AND metric_key=?`,
+			[]any{snapshotID, record.key}, record.values())
+		if err != nil {
+			return fmt.Errorf("performance: reading %s metric: %w", record.key, err)
+		}
+		if !exists || !equal {
+			return fmt.Errorf("%w: measurement snapshot %d metric %s", ErrImmutableConflict, snapshotID, record.key)
+		}
+	}
+	return nil
+}
+
+func nullableTimestamp(value time.Time) string {
+	if value.IsZero() {
+		return ""
+	}
+	return timestamp(value)
+}
+
 type PruneResult struct {
-	Deleted      int
-	Skipped      bool
-	LockDuration time.Duration
+	Deleted              int
+	Skipped              bool
+	Transactions         int
+	MaxBatchDeleted      int
+	MaxBatchLockDuration time.Duration
+	BacklogRemaining     bool
 }
 
 func (s *Store) PruneDue(ctx context.Context, now time.Time) (PruneResult, error) {
-	started := time.Now()
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return PruneResult{}, fmt.Errorf("performance: starting prune: %w", err)
-	}
-	defer tx.Rollback()
-	var lastRaw sql.NullString
-	if err := tx.QueryRowContext(ctx, `SELECT value FROM maintenance_state WHERE key='last_pruned_at'`).Scan(&lastRaw); err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return PruneResult{}, fmt.Errorf("performance: reading prune cadence: %w", err)
-	}
-	if lastRaw.Valid {
-		last, err := time.Parse(time.RFC3339Nano, lastRaw.String)
+	var out PruneResult
+	cutoff := timestamp(now.UTC().Add(-RawRetention))
+	for batch := 0; batch < MaxPruneBatchesPerRun; batch++ {
+		tx, err := s.db.BeginTx(ctx, nil)
 		if err != nil {
-			return PruneResult{}, fmt.Errorf("performance: invalid last prune instant: %w", err)
+			return PruneResult{}, fmt.Errorf("performance: starting prune: %w", err)
 		}
-		if now.UTC().Before(last.Add(PruneCadence)) {
-			if err := tx.Commit(); err != nil {
-				return PruneResult{}, err
+		batchStarted := time.Now()
+		if batch == 0 {
+			var lastRaw sql.NullString
+			if err := tx.QueryRowContext(ctx, `SELECT value FROM maintenance_state WHERE key='last_pruned_at'`).Scan(&lastRaw); err != nil && !errors.Is(err, sql.ErrNoRows) {
+				_ = tx.Rollback()
+				return PruneResult{}, fmt.Errorf("performance: reading prune cadence: %w", err)
 			}
-			return PruneResult{Skipped: true, LockDuration: time.Since(started)}, nil
+			if lastRaw.Valid {
+				last, err := time.Parse(time.RFC3339Nano, lastRaw.String)
+				if err != nil {
+					_ = tx.Rollback()
+					return PruneResult{}, fmt.Errorf("performance: invalid last prune instant: %w", err)
+				}
+				if now.UTC().Before(last.Add(PruneCadence)) {
+					if err := tx.Commit(); err != nil {
+						return PruneResult{}, fmt.Errorf("performance: committing cadence read: %w", err)
+					}
+					out.Skipped = true
+					out.MaxBatchLockDuration = time.Since(batchStarted)
+					return out, nil
+				}
+			}
+		}
+		result, err := tx.ExecContext(ctx, `DELETE FROM price_observations WHERE id IN (
+			SELECT id FROM price_observations WHERE observed_at < ? ORDER BY observed_at, id LIMIT ?
+		)`, cutoff, MaxPruneRows)
+		if err != nil {
+			_ = tx.Rollback()
+			return PruneResult{}, fmt.Errorf("performance: pruning observations: %w", err)
+		}
+		deleted, err := result.RowsAffected()
+		if err != nil {
+			_ = tx.Rollback()
+			return PruneResult{}, fmt.Errorf("performance: reading pruned row count: %w", err)
+		}
+		var backlog bool
+		if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM price_observations WHERE observed_at < ? LIMIT 1)`, cutoff).Scan(&backlog); err != nil {
+			_ = tx.Rollback()
+			return PruneResult{}, fmt.Errorf("performance: checking prune backlog: %w", err)
+		}
+		if !backlog {
+			if _, err := tx.ExecContext(ctx, `INSERT INTO maintenance_state(key,value) VALUES('last_pruned_at',?)
+				ON CONFLICT(key) DO UPDATE SET value=excluded.value`, timestamp(now)); err != nil {
+				_ = tx.Rollback()
+				return PruneResult{}, fmt.Errorf("performance: recording prune cadence: %w", err)
+			}
+		}
+		if err := tx.Commit(); err != nil {
+			return PruneResult{}, fmt.Errorf("performance: committing prune: %w", err)
+		}
+		duration := time.Since(batchStarted)
+		out.Transactions++
+		out.Deleted += int(deleted)
+		if int(deleted) > out.MaxBatchDeleted {
+			out.MaxBatchDeleted = int(deleted)
+		}
+		if duration > out.MaxBatchLockDuration {
+			out.MaxBatchLockDuration = duration
+		}
+		out.BacklogRemaining = backlog
+		if !backlog {
+			return out, nil
 		}
 	}
-	result, err := tx.ExecContext(ctx, `DELETE FROM price_observations WHERE id IN (
-		SELECT id FROM price_observations WHERE observed_at < ? ORDER BY observed_at, id LIMIT 500
-	)`, timestamp(now.UTC().Add(-RawRetention)))
-	if err != nil {
-		return PruneResult{}, fmt.Errorf("performance: pruning observations: %w", err)
-	}
-	deleted, err := result.RowsAffected()
-	if err != nil {
-		return PruneResult{}, fmt.Errorf("performance: reading pruned row count: %w", err)
-	}
-	if _, err := tx.ExecContext(ctx, `INSERT INTO maintenance_state(key,value) VALUES('last_pruned_at',?)
-		ON CONFLICT(key) DO UPDATE SET value=excluded.value`, timestamp(now)); err != nil {
-		return PruneResult{}, fmt.Errorf("performance: recording prune cadence: %w", err)
-	}
-	if err := tx.Commit(); err != nil {
-		return PruneResult{}, fmt.Errorf("performance: committing prune: %w", err)
-	}
-	return PruneResult{Deleted: int(deleted), LockDuration: time.Since(started)}, nil
-}
-
-func (s *Store) RecentObservationCount(ctx context.Context, since time.Time) (int, error) {
-	var count int
-	err := s.db.QueryRowContext(ctx, `SELECT count(*) FROM price_observations WHERE observed_at >= ?`, timestamp(since)).Scan(&count)
-	if err != nil {
-		return 0, fmt.Errorf("performance: counting recent observations: %w", err)
-	}
-	return count, nil
-}
-
-func (s *Store) RecentObservationQueryPlan(ctx context.Context, since time.Time) (string, error) {
-	rows, err := s.db.QueryContext(ctx, `EXPLAIN QUERY PLAN SELECT count(*) FROM price_observations WHERE observed_at >= ?`, timestamp(since))
-	if err != nil {
-		return "", err
-	}
-	defer rows.Close()
-	var lines []string
-	for rows.Next() {
-		var id, parent, unused int
-		var detail string
-		if err := rows.Scan(&id, &parent, &unused, &detail); err != nil {
-			return "", err
-		}
-		lines = append(lines, detail)
-	}
-	return strings.Join(lines, "\n"), rows.Err()
+	return out, nil
 }
 
 func tradeArgs(trade Trade) []any {
@@ -381,7 +570,8 @@ CREATE TABLE measurement_snapshots (
 	trade_id TEXT NOT NULL REFERENCES performance_trades(id),
 	calculated_at TEXT NOT NULL,
 	semantics_version TEXT NOT NULL,
-	lineage_status TEXT NOT NULL CHECK(lineage_status IN ('complete','link_missing'))
+	lineage_status TEXT NOT NULL CHECK(lineage_status IN ('complete','link_missing')),
+	UNIQUE(trade_id, calculated_at, semantics_version)
 ) STRICT;
 CREATE INDEX idx_measurement_snapshots_trade ON measurement_snapshots(trade_id, id);
 

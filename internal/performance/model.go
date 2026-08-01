@@ -164,10 +164,13 @@ func Measure(trade Trade, observations []Observation, calculatedAt time.Time) Sn
 	for _, measured := range report.Measurements {
 		metric := MarkoutMetric{Minutes: measured.Minutes, Status: StatusNotMeasured}
 		if measured.Status == markout.StatusMeasured {
-			metric.Status = StatusComplete
-			metric.GrossPct = measured.ReturnPct
-			if costOK {
-				metric.CostAdjustedPct = ratText(new(big.Rat).Sub(rat(measured.ReturnPct), costPct))
+			gross, sideOK := sideAdjustedPct(trade.Side, measured.ReturnPct)
+			if sideOK {
+				metric.Status = StatusComplete
+				metric.GrossPct = ratText(gross)
+				if costOK {
+					metric.CostAdjustedPct = ratText(new(big.Rat).Sub(gross, costPct))
+				}
 			}
 			if measured.ObservedAt != nil {
 				for _, row := range filtered {
@@ -194,6 +197,21 @@ func Measure(trade Trade, observations []Observation, calculatedAt time.Time) Sn
 		snapshot.MAE = excursionMetric(adverse, adverseRow, trade.EntryAt)
 	}
 	return snapshot
+}
+
+func sideAdjustedPct(side Side, longReturnPct string) (*big.Rat, bool) {
+	value, ok := decimal(longReturnPct)
+	if !ok {
+		return nil, false
+	}
+	switch side {
+	case SideBuy:
+		return value, true
+	case SideSell:
+		return new(big.Rat).Neg(value), true
+	default:
+		return nil, false
+	}
 }
 
 func (t Trade) validate() error {

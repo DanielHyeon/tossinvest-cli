@@ -46,7 +46,8 @@ CREATE TABLE measurement_snapshots (
   trade_id TEXT NOT NULL REFERENCES performance_trades(id),
   calculated_at TEXT NOT NULL,
   semantics_version TEXT NOT NULL,
-  lineage_status TEXT NOT NULL
+  lineage_status TEXT NOT NULL,
+  UNIQUE (trade_id, calculated_at, semantics_version)
 );
 CREATE INDEX idx_measurement_snapshots_trade ON measurement_snapshots(trade_id, id);
 
@@ -68,4 +69,3 @@ CREATE TABLE maintenance_state (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
-

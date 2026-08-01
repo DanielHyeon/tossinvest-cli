@@ -11,9 +11,16 @@ import (
 )
 
 const (
-	AllMarkets           = "all markets"
-	AllLanes             = "all lanes"
-	DefaultMinimumSample = 20
+	AllMarkets             = "all markets"
+	AllLanes               = "all lanes"
+	DefaultMinimumSample   = 20
+	MaxDashboardPeriodDays = 90
+	MaxDashboardTrades     = 10_000
+)
+
+var (
+	ErrDashboardPeriod   = fmt.Errorf("performance: dashboard period exceeds %d days", MaxDashboardPeriodDays)
+	ErrDashboardRowLimit = fmt.Errorf("performance: dashboard exceeds %d trades", MaxDashboardTrades)
 )
 
 type Query struct {
@@ -101,20 +108,9 @@ type queryTrade struct {
 }
 
 func (s *Store) Dashboard(ctx context.Context, query Query) (DashboardView, error) {
-	if query.AsOf.IsZero() {
-		return DashboardView{}, fmt.Errorf("performance: query as-of is required")
-	}
-	if query.PeriodDays <= 0 {
-		query.PeriodDays = 30
-	}
-	if query.MinimumSample <= 0 {
-		query.MinimumSample = DefaultMinimumSample
-	}
-	if query.Market == "" {
-		query.Market = AllMarkets
-	}
-	if query.Lane == "" {
-		query.Lane = AllLanes
+	query, err := normalizeDashboardQuery(query)
+	if err != nil {
+		return DashboardView{}, err
 	}
 	view := DashboardView{Query: query}
 	start := query.AsOf.UTC().AddDate(0, 0, -query.PeriodDays)
@@ -128,9 +124,10 @@ func (s *Store) Dashboard(ctx context.Context, query Query) (DashboardView, erro
 			view.States.InsufficientSample++
 		}
 	}
+	predicate, args := dashboardTradePredicate("t", query, start)
 	if err := s.db.QueryRowContext(ctx, `SELECT
-		coalesce(sum(lineage_status='complete'),0), coalesce(sum(lineage_status='link_missing'),0)
-		FROM performance_trades WHERE closed_at >= ? AND closed_at <= ?`, timestamp(start), timestamp(query.AsOf)).
+		coalesce(sum(t.lineage_status='complete'),0), coalesce(sum(t.lineage_status='link_missing'),0)
+		FROM performance_trades t WHERE `+predicate, args...).
 		Scan(&view.States.Complete, &view.States.LinkMissing); err != nil {
 		return DashboardView{}, fmt.Errorf("performance: counting lineage states: %w", err)
 	}
@@ -146,33 +143,7 @@ func (s *Store) Dashboard(ctx context.Context, query Query) (DashboardView, erro
 }
 
 func (s *Store) queryTrades(ctx context.Context, query Query, start time.Time) ([]queryTrade, error) {
-	statement := `WITH latest AS (
-		SELECT trade_id, max(id) AS snapshot_id FROM measurement_snapshots GROUP BY trade_id
-	)
-	SELECT t.id, t.market, coalesce(t.lane_id,''), coalesce(t.lane_version,''),
-	       coalesce(t.policy_id,''), coalesce(t.policy_version,''),
-	       t.realized_pnl_after_costs, t.realized_r, t.closed_at,
-	       s.id, coalesce(s.semantics_version,''), m.metric_key, m.status,
-	       coalesce(m.value,''), coalesce(m.cost_adjusted_value,''),
-	       coalesce(m.source,''), coalesce(m.source_version,'')
-	  FROM performance_trades t
-	  LEFT JOIN latest l ON l.trade_id=t.id
-	  LEFT JOIN measurement_snapshots s ON s.id=l.snapshot_id
-	  LEFT JOIN metric_observations m ON m.snapshot_id=s.id
-	 WHERE t.closed_at >= ? AND t.closed_at <= ?`
-	args := []any{timestamp(start), timestamp(query.AsOf)}
-	if query.CompleteOnly {
-		statement += ` AND t.lineage_status='complete'`
-	}
-	if query.Market != AllMarkets {
-		statement += ` AND t.market=?`
-		args = append(args, strings.ToLower(query.Market))
-	}
-	if query.Lane != AllLanes {
-		statement += ` AND t.lane_id=?`
-		args = append(args, query.Lane)
-	}
-	statement += ` ORDER BY t.closed_at, t.id, m.metric_key`
+	statement, args := dashboardSQL(query, start)
 	rows, err := s.db.QueryContext(ctx, statement, args...)
 	if err != nil {
 		return nil, fmt.Errorf("performance: querying dashboard: %w", err)
@@ -197,6 +168,9 @@ func (s *Store) queryTrades(ctx context.Context, query Query, start time.Time) (
 			current = &trade
 			byID[trade.ID] = current
 			order = append(order, trade.ID)
+			if len(order) > MaxDashboardTrades {
+				return nil, ErrDashboardRowLimit
+			}
 		}
 		if metricKey.Valid {
 			metricValue := value.String
@@ -218,6 +192,103 @@ func (s *Store) queryTrades(ctx context.Context, query Query, start time.Time) (
 		out = append(out, *byID[id])
 	}
 	return out, nil
+}
+
+func normalizeDashboardQuery(query Query) (Query, error) {
+	if query.AsOf.IsZero() {
+		return Query{}, fmt.Errorf("performance: query as-of is required")
+	}
+	if query.PeriodDays <= 0 {
+		query.PeriodDays = 30
+	}
+	if query.PeriodDays > MaxDashboardPeriodDays {
+		return Query{}, ErrDashboardPeriod
+	}
+	if query.MinimumSample <= 0 {
+		query.MinimumSample = DefaultMinimumSample
+	}
+	query.Market = strings.TrimSpace(query.Market)
+	if query.Market == "" {
+		query.Market = AllMarkets
+	}
+	query.Lane = strings.TrimSpace(query.Lane)
+	if query.Lane == "" {
+		query.Lane = AllLanes
+	}
+	return query, nil
+}
+
+func dashboardTradePredicate(alias string, query Query, start time.Time) (string, []any) {
+	prefix := alias + "."
+	predicates := []string{prefix + "closed_at >= ?", prefix + "closed_at <= ?"}
+	args := []any{timestamp(start), timestamp(query.AsOf)}
+	if query.CompleteOnly {
+		predicates = append(predicates, prefix+"lineage_status='complete'")
+	}
+	if query.Market != AllMarkets {
+		predicates = append(predicates, prefix+"market=?")
+		args = append(args, strings.ToLower(query.Market))
+	}
+	if query.Lane != AllLanes {
+		predicates = append(predicates, prefix+"lane_id=?")
+		args = append(args, query.Lane)
+	}
+	return strings.Join(predicates, " AND "), args
+}
+
+func dashboardSQL(query Query, start time.Time) (string, []any) {
+	predicate, args := dashboardTradePredicate("t", query, start)
+	args = append(args, MaxDashboardTrades+1)
+	return `WITH filtered AS (
+		SELECT t.id, t.market, t.lane_id, t.lane_version, t.policy_id, t.policy_version,
+		       t.realized_pnl_after_costs, t.realized_r, t.closed_at
+		  FROM performance_trades t
+		 WHERE ` + predicate + `
+		 ORDER BY t.closed_at, t.id
+		 LIMIT ?
+	), latest AS (
+		SELECT f.id AS trade_id,
+		       (SELECT ms.id FROM measurement_snapshots ms
+		         WHERE ms.trade_id=f.id ORDER BY ms.id DESC LIMIT 1) AS snapshot_id
+		  FROM filtered f
+	)
+	SELECT t.id, t.market, coalesce(t.lane_id,''), coalesce(t.lane_version,''),
+	       coalesce(t.policy_id,''), coalesce(t.policy_version,''),
+	       t.realized_pnl_after_costs, t.realized_r, t.closed_at,
+	       s.id, coalesce(s.semantics_version,''), m.metric_key, m.status,
+	       coalesce(m.value,''), coalesce(m.cost_adjusted_value,''),
+	       coalesce(m.source,''), coalesce(m.source_version,'')
+	  FROM filtered t
+	  LEFT JOIN latest l ON l.trade_id=t.id
+	  LEFT JOIN measurement_snapshots s ON s.id=l.snapshot_id
+	  LEFT JOIN metric_observations m ON m.snapshot_id=s.id
+	 ORDER BY t.closed_at, t.id, m.metric_key`, args
+}
+
+func (s *Store) DashboardQueryPlan(ctx context.Context, query Query) (string, error) {
+	query, err := normalizeDashboardQuery(query)
+	if err != nil {
+		return "", err
+	}
+	statement, args := dashboardSQL(query, query.AsOf.UTC().AddDate(0, 0, -query.PeriodDays))
+	rows, err := s.db.QueryContext(ctx, "EXPLAIN QUERY PLAN "+statement, args...)
+	if err != nil {
+		return "", fmt.Errorf("performance: explaining dashboard: %w", err)
+	}
+	defer rows.Close()
+	var lines []string
+	for rows.Next() {
+		var id, parent, unused int
+		var detail string
+		if err := rows.Scan(&id, &parent, &unused, &detail); err != nil {
+			return "", fmt.Errorf("performance: reading dashboard plan: %w", err)
+		}
+		lines = append(lines, detail)
+	}
+	if err := rows.Err(); err != nil {
+		return "", fmt.Errorf("performance: iterating dashboard plan: %w", err)
+	}
+	return strings.Join(lines, "\n"), nil
 }
 
 func aggregateTrades(trades []queryTrade, minimum int) []Aggregate {
