@@ -68,5 +68,5 @@
     - STORY-TOS-a047 — Add the strategy entry engine [implemented] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [implemented] → `a048-add-market-aware-scheduler`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
-    - STORY-TOS-a049 — Add deterministic lane performance attribution [in_progress] → `a049-add-lane-performance`
+    - STORY-TOS-a049 — Add deterministic lane performance attribution [implemented] → `a049-add-lane-performance`
     - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [in_progress] → `a050-add-strategy-optimization`
