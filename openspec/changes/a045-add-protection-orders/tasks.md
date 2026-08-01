@@ -22,4 +22,4 @@
 - [x] 4.2 protection 약화 before/after·영향범위·3초 지연 확인, 강화/약화 분류와 모바일·접근성·CSP RED 테스트를 통과한다.
 - [x] 4.3 fault-injection/race/restart/full test·vet·validate와 security/adversarial review를 통과한다.
 - [x] 4.4 paper/shadow/canary 경로가 없고 기본 운영 토글 OFF임을 정적으로 검증한다.
-- [ ] 4.5 `make gate CHANGE=a045-add-protection-orders` 후 운영자의 별도 LIVE 승인 절차를 문서화한다.
+- [x] 4.5 `make gate CHANGE=a045-add-protection-orders` 후 운영자의 별도 LIVE 승인 절차를 문서화한다.
