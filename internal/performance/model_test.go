@@ -12,7 +12,8 @@ func completeLineage() Lineage {
 		ThresholdSetDigest: "set-digest-1",
 		EvidenceDigest:     "evidence-digest-1",
 		LaneID:             "krx_parker_vwap_conservative_v1", LaneVersion: "lane/v1",
-		DecisionID: "decision-1", AttemptID: "attempt-1", OrderID: "opaque-order-1",
+		DecisionID: "decision-1", RiskIntentID: "risk-intent-1",
+		AttemptID: "strategy-attempt-1", MutationAttemptID: "mutation-attempt-1", OrderID: "opaque-order-1",
 		FillID: "fill-1", PositionID: "position-1", CloseID: "position-1",
 		PolicyID: "COMMON_LADDER_BALANCED", PolicyVersion: "policy/v1",
 	}
@@ -141,6 +142,37 @@ func TestTradeValidationRejectsInvalidStoredAmountsAndIdentity(t *testing.T) {
 				t.Fatal("invalid trade passed validation")
 			}
 		})
+	}
+}
+
+func TestUnknownCostKeepsGrossButMarksCostAdjustedMarkoutNotMeasured(t *testing.T) {
+	at := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+	trade := measuredTrade(at)
+	trade.CostTotal = ""
+	if err := trade.validate(); err != nil {
+		t.Fatalf("legacy NULL cost should be accepted as unmeasured: %v", err)
+	}
+	observations := []Observation{{
+		ID: "cost-unknown-5", PositionID: trade.Lineage.PositionID, At: at.Add(5 * time.Minute),
+		Price: "105", Source: "existing-position", SourceVersion: "v1",
+	}}
+	unknown := Measure(trade, observations, at.Add(time.Hour)).Markout(5)
+	if unknown.Status != StatusNotMeasured || unknown.GrossPct != "5" || unknown.CostAdjustedPct != "" ||
+		unknown.ObservationID != "cost-unknown-5" {
+		t.Fatalf("unknown-cost markout = %+v", unknown)
+	}
+
+	trade.CostTotal = "0"
+	zero := Measure(trade, observations, at.Add(time.Hour)).Markout(5)
+	if zero.Status != StatusComplete || zero.GrossPct != "5" || zero.CostAdjustedPct != "5" {
+		t.Fatalf("measured zero cost must differ from unknown cost: %+v", zero)
+	}
+
+	for _, invalid := range []string{"broken", "-0.01"} {
+		trade.CostTotal = invalid
+		if err := trade.validate(); err == nil {
+			t.Errorf("invalid measured cost %q passed validation", invalid)
+		}
 	}
 }
 

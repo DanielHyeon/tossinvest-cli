@@ -53,7 +53,11 @@ func TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric(t *t
 		reader.query.Lane != performance.AllLanes || !reader.query.CompleteOnly {
 		t.Fatalf("reader calls=%d query=%+v", reader.calls, reader.query)
 	}
-	for _, forbidden := range []string{"<input", "<button", "<form", "<textarea", "contenteditable", "type=number"} {
+	for _, forbidden := range []string{
+		"<input", "<button", "<form", "<textarea", "<select", "contenteditable", "type=number",
+		`method="post"`, "action=", "hx-post", "data-method", "/order/place", "lane-toggle",
+		"live-approval", "settings/apply",
+	} {
 		if strings.Contains(strings.ToLower(page), forbidden) {
 			t.Errorf("performance page contains input/mutation control %q", forbidden)
 		}

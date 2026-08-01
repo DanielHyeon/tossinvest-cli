@@ -74,6 +74,91 @@ func TestCollectAppendsExistingObservationsAndLatestMeasurement(t *testing.T) {
 	}
 }
 
+func TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero(t *testing.T) {
+	store := openTestStore(t)
+	at := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+	trade := measuredTrade(at)
+	trade.CostTotal = ""
+	if _, err := store.Collect(context.Background(), trade, []Observation{{
+		ID: "unknown-cost-5", PositionID: trade.Lineage.PositionID, At: at.Add(5 * time.Minute),
+		Price: "105", Source: "existing-position", SourceVersion: "v1",
+	}}, at.Add(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	var cost sql.NullString
+	if err := store.db.QueryRow(`SELECT cost_total FROM performance_trades WHERE id=?`, trade.ID).Scan(&cost); err != nil {
+		t.Fatal(err)
+	}
+	if cost.Valid {
+		t.Fatalf("unknown cost persisted as authoritative bytes %q", cost.String)
+	}
+	var status string
+	var gross, adjusted sql.NullString
+	if err := store.db.QueryRow(`SELECT status,gross_value,cost_adjusted_value
+		FROM metric_observations WHERE metric_key='markout_5'`).Scan(&status, &gross, &adjusted); err != nil {
+		t.Fatal(err)
+	}
+	if status != string(StatusNotMeasured) || gross.String != "5" || adjusted.Valid {
+		t.Fatalf("persisted unknown-cost metric status=%q gross=%+v adjusted=%+v", status, gross, adjusted)
+	}
+	query := DefaultQuery(at.Add(time.Hour))
+	query.MinimumSample = 1
+	view, err := store.Dashboard(context.Background(), query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if view.States.NotMeasured == 0 || len(view.Aggregates) != 1 {
+		t.Fatalf("unknown cost was not surfaced as missing measurement: %+v", view)
+	}
+	for _, metric := range view.Aggregates[0].Metrics {
+		if metric.Key == "markout_5" && (metric.Status != StatusNotMeasured || metric.Value != "") {
+			t.Fatalf("unknown-cost dashboard metric = %+v", metric)
+		}
+	}
+}
+
+func TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		corrupt func(*testing.T, *Store)
+	}{
+		{name: "outcome pnl", corrupt: func(t *testing.T, store *Store) {
+			if _, err := store.db.Exec(`UPDATE performance_trades SET realized_pnl_after_costs='broken'`); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{name: "outcome r", corrupt: func(t *testing.T, store *Store) {
+			if _, err := store.db.Exec(`UPDATE performance_trades SET realized_r='broken'`); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{name: "complete metric", corrupt: func(t *testing.T, store *Store) {
+			if _, err := store.db.Exec(`UPDATE metric_observations SET value='broken'
+				WHERE metric_key='slippage' AND status='complete'`); err != nil {
+				t.Fatal(err)
+			}
+		}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			store := openTestStore(t)
+			now := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+			trade := measuredTrade(now.Add(-time.Hour))
+			trade.ClosedAt = now.Add(-time.Minute)
+			if _, err := store.Collect(context.Background(), trade, []Observation{{
+				ID: "corrupt-5", PositionID: trade.Lineage.PositionID, At: trade.EntryAt.Add(5 * time.Minute),
+				Price: "105", Source: "existing-position", SourceVersion: "v1",
+			}}, now); err != nil {
+				t.Fatal(err)
+			}
+			test.corrupt(t, store)
+			if _, err := store.Dashboard(context.Background(), DefaultQuery(now)); err == nil ||
+				!strings.Contains(err.Error(), "invalid persisted decimal") {
+				t.Fatalf("Dashboard corrupt value error = %v", err)
+			}
+		})
+	}
+}
+
 func TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), "performance.db")

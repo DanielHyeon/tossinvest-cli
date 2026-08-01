@@ -43,7 +43,8 @@ func openWithSchema(path, schema string, targetVersion int) (*Store, error) {
 	if strings.TrimSpace(path) == "" || path == "." {
 		return nil, errors.New("performance: database path is required")
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, fmt.Errorf("performance: creating data directory: %w", err)
 	}
 	q := url.Values{}
@@ -69,7 +70,13 @@ func openWithSchema(path, schema string, targetVersion int) (*Store, error) {
 	}
 	for _, name := range []string{path, path + "-wal", path + "-shm"} {
 		if _, err := os.Stat(name); err == nil {
-			_ = os.Chmod(name, 0o600)
+			if err := os.Chmod(name, 0o600); err != nil {
+				db.Close()
+				return nil, fmt.Errorf("performance: securing %s: %w", filepath.Base(name), err)
+			}
+		} else if !errors.Is(err, os.ErrNotExist) {
+			db.Close()
+			return nil, fmt.Errorf("performance: checking %s: %w", filepath.Base(name), err)
 		}
 	}
 	return store, nil
@@ -271,7 +278,7 @@ func compareAndAppendTrade(ctx context.Context, tx *sql.Tx, trade Trade) error {
 	wanted := tradeArgs(trade)
 	equal, exists, err := immutableRowEqual(ctx, tx, `SELECT
 		id, candidate_life_id, threshold_version, threshold_set_digest, evidence_digest,
-		lane_id, lane_version, decision_id, attempt_id, order_id, fill_id, position_id,
+		lane_id, lane_version, decision_id, risk_intent_id, attempt_id, mutation_attempt_id, order_id, fill_id, position_id,
 		close_id, policy_id, policy_version, lineage_status, market, side, decision_at,
 		decision_price, entry_at, entry_price, quantity, cost_total,
 		realized_pnl_after_costs, realized_r, closed_at
@@ -483,9 +490,9 @@ func tradeArgs(trade Trade) []any {
 	l := trade.Lineage
 	return []any{
 		trade.ID, nullable(l.CandidateLifeID), nullable(l.ThresholdVersion), nullable(l.ThresholdSetDigest), nullable(l.EvidenceDigest),
-		nullable(l.LaneID), nullable(l.LaneVersion), nullable(l.DecisionID), nullable(l.AttemptID), nullable(l.OrderID), nullable(l.FillID),
+		nullable(l.LaneID), nullable(l.LaneVersion), nullable(l.DecisionID), nullable(l.RiskIntentID), nullable(l.AttemptID), nullable(l.MutationAttemptID), nullable(l.OrderID), nullable(l.FillID),
 		l.PositionID, nullable(l.CloseID), nullable(l.PolicyID), nullable(l.PolicyVersion), l.Status(), strings.ToLower(strings.TrimSpace(trade.Market)), trade.Side,
-		nullableTime(trade.DecisionAt), nullable(trade.DecisionPrice), timestamp(trade.EntryAt), trade.EntryPrice, trade.Quantity, trade.CostTotal,
+		nullableTime(trade.DecisionAt), nullable(trade.DecisionPrice), timestamp(trade.EntryAt), trade.EntryPrice, trade.Quantity, nullable(trade.CostTotal),
 		trade.RealizedPnLAfterCosts, trade.RealizedR, timestamp(trade.ClosedAt),
 	}
 }
@@ -508,11 +515,11 @@ func timestamp(value time.Time) string { return value.UTC().Format("2006-01-02T1
 
 const insertTradeSQL = `INSERT INTO performance_trades (
 	id, candidate_life_id, threshold_version, threshold_set_digest, evidence_digest,
-	lane_id, lane_version, decision_id, attempt_id, order_id, fill_id, position_id,
+	lane_id, lane_version, decision_id, risk_intent_id, attempt_id, mutation_attempt_id, order_id, fill_id, position_id,
 	close_id, policy_id, policy_version, lineage_status, market, side, decision_at,
 	decision_price, entry_at, entry_price, quantity, cost_total,
 	realized_pnl_after_costs, realized_r, closed_at
-) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
 
 const insertMetricSQL = `INSERT INTO metric_observations (
 	snapshot_id, metric_key, status, value, gross_value, cost_adjusted_value,
@@ -529,7 +536,9 @@ CREATE TABLE performance_trades (
 	lane_id TEXT,
 	lane_version TEXT,
 	decision_id TEXT,
+	risk_intent_id TEXT,
 	attempt_id TEXT,
+	mutation_attempt_id TEXT,
 	order_id TEXT,
 	fill_id TEXT,
 	position_id TEXT NOT NULL UNIQUE,
@@ -544,7 +553,7 @@ CREATE TABLE performance_trades (
 	entry_at TEXT NOT NULL,
 	entry_price TEXT NOT NULL,
 	quantity TEXT NOT NULL,
-	cost_total TEXT NOT NULL,
+	cost_total TEXT,
 	realized_pnl_after_costs TEXT NOT NULL,
 	realized_r TEXT NOT NULL,
 	closed_at TEXT NOT NULL
@@ -553,6 +562,11 @@ CREATE INDEX idx_performance_trades_window
 	ON performance_trades(closed_at, lineage_status, market, lane_id, lane_version, policy_id, policy_version);
 CREATE INDEX idx_performance_trades_lane
 	ON performance_trades(lane_id, lane_version, policy_id, policy_version, closed_at);
+
+CREATE TABLE performance_scope (
+	singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
+	account_ref TEXT NOT NULL
+) STRICT;
 
 CREATE TABLE price_observations (
 	id TEXT PRIMARY KEY,

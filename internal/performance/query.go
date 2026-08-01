@@ -118,7 +118,10 @@ func (s *Store) Dashboard(ctx context.Context, query Query) (DashboardView, erro
 	if err != nil {
 		return DashboardView{}, err
 	}
-	view.Aggregates = aggregateTrades(trades, query.MinimumSample)
+	view.Aggregates, err = aggregateTrades(trades, query.MinimumSample)
+	if err != nil {
+		return DashboardView{}, err
+	}
 	for _, aggregate := range view.Aggregates {
 		if aggregate.Status == StatusInsufficientSample {
 			view.States.InsufficientSample++
@@ -291,7 +294,7 @@ func (s *Store) DashboardQueryPlan(ctx context.Context, query Query) (string, er
 	return strings.Join(lines, "\n"), nil
 }
 
-func aggregateTrades(trades []queryTrade, minimum int) []Aggregate {
+func aggregateTrades(trades []queryTrade, minimum int) ([]Aggregate, error) {
 	type bucket struct{ rows []queryTrade }
 	buckets := make(map[string]*bucket)
 	var keys []string
@@ -322,7 +325,10 @@ func aggregateTrades(trades []queryTrade, minimum int) []Aggregate {
 		sources := make(map[string]bool)
 		metricSources := make(map[string]map[string]bool)
 		for _, row := range rows {
-			pnl := rat(row.PnL)
+			pnl, err := rat(row.PnL)
+			if err != nil {
+				return nil, fmt.Errorf("performance: trade %s realized PnL: %w", row.ID, err)
+			}
 			if pnl.Sign() > 0 {
 				wins++
 				profit.Add(profit, pnl)
@@ -337,14 +343,24 @@ func aggregateTrades(trades []queryTrade, minimum int) []Aggregate {
 			if fall.Cmp(drawdown) > 0 {
 				drawdown.Set(fall)
 			}
-			sumR.Add(sumR, rat(row.RealizedR))
+			realizedR, err := rat(row.RealizedR)
+			if err != nil {
+				return nil, fmt.Errorf("performance: trade %s realized R: %w", row.ID, err)
+			}
+			sumR.Add(sumR, realizedR)
 			for _, metric := range []string{"slippage", "mfe", "mae", "markout_5", "markout_15", "markout_30"} {
 				if row.Statuses[metric] == StatusComplete && row.Metrics[metric] != "" {
+					value, err := rat(row.Metrics[metric])
+					if err != nil {
+						return nil, fmt.Errorf("performance: trade %s metric %s: %w", row.ID, metric, err)
+					}
 					if metricSums[metric] == nil {
 						metricSums[metric] = new(big.Rat)
 					}
-					metricSums[metric].Add(metricSums[metric], rat(row.Metrics[metric]))
+					metricSums[metric].Add(metricSums[metric], value)
 					metricCounts[metric]++
+				} else if row.Statuses[metric] == StatusComplete {
+					return nil, fmt.Errorf("performance: trade %s metric %s: invalid persisted decimal %q", row.ID, metric, row.Metrics[metric])
 				}
 				if row.Sources[metric] != "" {
 					sources[row.Sources[metric]] = true
@@ -416,5 +432,5 @@ func aggregateTrades(trades []queryTrade, minimum int) []Aggregate {
 		}
 		out = append(out, agg)
 	}
-	return out
+	return out, nil
 }

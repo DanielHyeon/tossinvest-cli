@@ -43,20 +43,25 @@ type Lineage struct {
 	EvidenceDigest     string
 	LaneID             string
 	LaneVersion        string
-	DecisionID         string
-	AttemptID          string
-	OrderID            string
-	FillID             string
-	PositionID         string
-	CloseID            string
-	PolicyID           string
-	PolicyVersion      string
+	// DecisionID and AttemptID are the strategy decision identity and strategy
+	// attempt. The distinct Guardian RiskIntent and concrete mutation attempt
+	// stay separate so an adapter cannot launder one authority ID into another.
+	DecisionID        string
+	RiskIntentID      string
+	AttemptID         string
+	MutationAttemptID string
+	OrderID           string
+	FillID            string
+	PositionID        string
+	CloseID           string
+	PolicyID          string
+	PolicyVersion     string
 }
 
 func (l Lineage) Status() Status {
 	for _, value := range []string{
 		l.CandidateLifeID, l.ThresholdVersion, l.ThresholdSetDigest, l.EvidenceDigest,
-		l.LaneID, l.LaneVersion, l.DecisionID, l.AttemptID, l.OrderID, l.FillID,
+		l.LaneID, l.LaneVersion, l.DecisionID, l.RiskIntentID, l.AttemptID, l.MutationAttemptID, l.OrderID, l.FillID,
 		l.PositionID, l.CloseID, l.PolicyID, l.PolicyVersion,
 	} {
 		if strings.TrimSpace(value) == "" {
@@ -166,9 +171,9 @@ func Measure(trade Trade, observations []Observation, calculatedAt time.Time) Sn
 		if measured.Status == markout.StatusMeasured {
 			gross, sideOK := sideAdjustedPct(trade.Side, measured.ReturnPct)
 			if sideOK {
-				metric.Status = StatusComplete
 				metric.GrossPct = ratText(gross)
 				if costOK {
+					metric.Status = StatusComplete
 					metric.CostAdjustedPct = ratText(new(big.Rat).Sub(gross, costPct))
 				}
 			}
@@ -237,8 +242,10 @@ func (t Trade) validate() error {
 			return fmt.Errorf("performance: %s %q is not a positive decimal", name, value)
 		}
 	}
-	if cost, ok := decimal(t.CostTotal); !ok || cost.Sign() < 0 {
-		return fmt.Errorf("performance: cost total %q is not a non-negative decimal", t.CostTotal)
+	if strings.TrimSpace(t.CostTotal) != "" {
+		if cost, ok := decimal(t.CostTotal); !ok || cost.Sign() < 0 {
+			return fmt.Errorf("performance: cost total %q is not a non-negative decimal", t.CostTotal)
+		}
 	}
 	if strings.TrimSpace(t.DecisionPrice) != "" {
 		if decision, ok := decimal(t.DecisionPrice); !ok || decision.Sign() <= 0 {
@@ -362,12 +369,12 @@ func positiveDecimal(value string) (*big.Rat, bool) {
 	return parsed, ok && parsed.Sign() > 0
 }
 
-func rat(value string) *big.Rat {
-	parsed, _ := decimal(value)
-	if parsed == nil {
-		return new(big.Rat)
+func rat(value string) (*big.Rat, error) {
+	parsed, ok := decimal(value)
+	if !ok {
+		return nil, fmt.Errorf("performance: invalid persisted decimal %q", value)
 	}
-	return parsed
+	return parsed, nil
 }
 
 func ratText(value *big.Rat) string {
