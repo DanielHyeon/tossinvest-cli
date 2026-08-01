@@ -38,6 +38,12 @@ pure lane/orchestrator와 immutable activation-manifest 기반 default-OFF 구�
 
 The first exact-SHA review found six integration blockers: arbitrary cutoff laundering, missing dispatch blocker evidence, semantically inaccurate branch maps, mutable attempt authority columns, partial decision-payload binding, and timestamp-sensitive execution-link replay. Each now has a structural fix plus RED→GREEN coverage as recorded above. Test-only authority minters were not added.
 
+The final independent reviews pinned clean implementation SHA `91c8b06dc2f9c5e1fe34ccbf17012c366ce425ae` against base `da05adbf77fc0319115edd73db16ab04338249f3`:
+
+- Security: CLEAN FOR DORMANT INTEGRATION; 0 current blockers and no LIVE approval.
+- Test architecture: CLEAN FOR DORMANT INTEGRATION; 0 critical issues/warnings, semantic maps and focused race suites green.
+- Backend/maintainability: CLEAN; 0 current backend blockers, journal/migration/session/runtime invariants green.
+
 The dormant build still intentionally leaves these activation-only blockers for a separately reviewed wiring change: semantic provisioning of the manifest, exact final-call manifest/attestation expiry recheck, a sealed single-journal/account Guardian+gateway bundle, structural restriction to the concrete official gateway, removal/sealing of direct Guardian strategy issuance, stronger indirect-import/composite-literal guards, and an authoritative calendar/config adapter. Before activation it must also remove/rewrite dead dispatch B25/B26, add authentic valid-Decision coverage for `IssueStrategyEntry` B2–B4/success and private `IssueEntry` strategy B9–B12, and inject journal begin/commit plus isolated decision/reservation/lineage/dispatch-start persistence failures currently marked partial/unverified in the exact maps. `engineRuntime` B1 is structurally unreachable while the production hint input is hardcoded nil. None of these paths is reachable in a047 because source proof, manifest installation, protection wiring, runtime entry loop, and production dispatch construction remain absent; test-only authority minters are expressly forbidden.
 
 ### Dormant handoff
@@ -46,4 +52,4 @@ Production can construct only an empty activation repository. A later separately
 
 ## Verdict
 
-첫 리뷰 blocker 수정 후 exact-SHA 재검토와 gate를 요구한다. a045/a046 evidence 전 exposure-raising runtime implementation/activation 완료를 주장하지 않는다.
+Exact implementation SHA `91c8b06dc2f9c5e1fe34ccbf17012c366ce425ae`를 dormant integration으로 승인한다. 이 판정은 LIVE, paper, shadow, canary, runtime wiring 또는 운영 토글 승인이 아니다. a045/a046/a048/a050 및 authentic source/manifest evidence 전 exposure-raising runtime implementation/activation 완료를 주장하지 않는다.
