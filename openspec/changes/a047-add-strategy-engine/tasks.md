@@ -24,4 +24,4 @@
 ## 4. 검증과 LIVE 인계
 
 - [x] 4.1 race/restart/full test·vet·validate와 security/adversarial review를 통과한다.
-- [ ] 4.2 `make gate CHANGE=a047-add-strategy-engine`을 통과하고 activation blockers와 dormant 인계 절차를 기록한다. 이 change에서 LIVE 승인이나 운영 토글을 실행하지 않는다.
+- [x] 4.2 `make gate CHANGE=a047-add-strategy-engine`을 통과하고 activation blockers와 dormant 인계 절차를 기록한다. 이 change에서 LIVE 승인이나 운영 토글을 실행하지 않는다.
