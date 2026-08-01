@@ -191,7 +191,10 @@ func TestDispatchRejectsOpaqueZeroDecisionBeforeAuthority(t *testing.T) {
 	}
 }
 
-func TestValidatedDispatchPlansOnceAndPersistsExactOfficialOutcome(t *testing.T) {
+// This is a package-private post-validation state-machine test with spies. It
+// is not evidence of a production-positive Dispatch path: a047 deliberately
+// ships without the authentic source manifest or an activation installer.
+func TestPostValidationDispatchCorePlansOnceAndPersistsExactOfficialOutcomeWithSpies(t *testing.T) {
 	now := time.Date(2026, 8, 1, 1, 0, 0, 0, time.UTC)
 	record := decisionRecordFixture(now)
 	binding := bindingForRecord(now, record)
@@ -203,6 +206,47 @@ func TestValidatedDispatchPlansOnceAndPersistsExactOfficialOutcome(t *testing.T)
 	})
 	if err != nil || issuer.issued != 1 || issuer.dispatched != 1 || issuer.refused != 0 || issuer.inDoubt != 0 || gateway.calls != 1 {
 		t.Fatalf("err=%v issuer=%+v gateway=%+v", err, issuer, gateway)
+	}
+}
+
+func TestPostValidationDispatchCoreRefusesEveryInitialGateBeforeIssuerWithStablePrecedence(t *testing.T) {
+	now := time.Date(2026, 8, 1, 1, 0, 0, 0, time.UTC)
+	record := decisionRecordFixture(now)
+	binding := bindingForRecord(now, record)
+	tests := []struct {
+		name   string
+		mutate func(*GateSnapshot)
+		want   Reason
+	}{
+		{name: "lane desired off", mutate: func(v *GateSnapshot) { v.LaneDesired = false }, want: ReasonLaneOff},
+		{name: "lane effective off", mutate: func(v *GateSnapshot) { v.LaneEffective = false }, want: ReasonLaneOff},
+		{name: "kill switch", mutate: func(v *GateSnapshot) { v.KillSwitch = true }, want: ReasonKillSwitch},
+		{name: "protection unwired", mutate: func(v *GateSnapshot) { v.ProtectionWired = false }, want: ReasonProtection},
+		{name: "reconciliation unhealthy", mutate: func(v *GateSnapshot) { v.ReconcileHealthy = false }, want: ReasonReconcile},
+		{name: "scheduler invalid", mutate: func(v *GateSnapshot) { v.SchedulerValid = false }, want: ReasonScheduler},
+		{name: "autostart off", mutate: func(v *GateSnapshot) { v.AutoStart = false }, want: ReasonAutoStart},
+		{name: "gate closed", mutate: func(v *GateSnapshot) { v.GateOpen = false }, want: ReasonGate},
+		{name: "live unapproved", mutate: func(v *GateSnapshot) { v.LiveApproved = false }, want: ReasonLive},
+		{name: "lane precedes kill", mutate: func(v *GateSnapshot) { v.LaneDesired = false; v.KillSwitch = true }, want: ReasonLaneOff},
+		{name: "kill precedes protection", mutate: func(v *GateSnapshot) { v.KillSwitch = true; v.ProtectionWired = false }, want: ReasonKillSwitch},
+		{name: "protection precedes later blockers", mutate: func(v *GateSnapshot) { v.ProtectionWired = false; v.ReconcileHealthy = false; v.LiveApproved = false }, want: ReasonProtection},
+		{name: "activation precedes lane", mutate: func(v *GateSnapshot) { v.Binding.LaneVersion = "other"; v.LaneDesired = false }, want: ReasonActivation},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gate := gateForRecord(binding, record)
+			tc.mutate(&gate)
+			issuer := &issuerSpy{}
+			gateway := &gatewaySpy{}
+			err := dispatchValidated(context.Background(), strategyengine.Decision{}, record, Dependencies{
+				Gates: &gateStore{snapshot: gate}, Manifest: installedRepository(binding), Issuer: issuer,
+				Gateway: gateway, Now: func() time.Time { return now },
+			})
+			var typed *Error
+			if !errors.As(err, &typed) || typed.Reason != tc.want || issuer.issued != 0 || issuer.refused != 0 || issuer.inDoubt != 0 || issuer.dispatched != 0 || gateway.calls != 0 {
+				t.Fatalf("err=%v issuer=%+v gateway=%+v want=%s", err, issuer, gateway, tc.want)
+			}
+		})
 	}
 }
 

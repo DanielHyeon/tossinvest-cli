@@ -24,10 +24,18 @@ pure lane/orchestrator와 immutable activation-manifest 기반 default-OFF 구�
 - Pre-Edit Gate: journal/Guardian/gateway/runtime baselines and callers were mapped before edits. Released Guardian, gateway, engine run/submit and `RiskIntent.Canonical()` production functions were not changed.
 - ApprovedCandidate crosses only `internal/strategy`'s value-only, type-checked boundary. The Parker evaluator has no broker, journal, config, clock or callback dependency.
 - Activation comparison covers all 32 binding fields, expiry/attestation expiry, revocation, generation and decision-to-dispatch revalidation. No exported installer/minter or runtime wiring exists.
-- Blocker paths call Guardian, durable-attempt and gateway zero times. The only successful orchestration fixture uses typed test spies and checks durable plan before the official-only gateway seam plus duplicate identity refusal.
-- Journal v14 is additive and immutable. v13→v14 rollback/backup, SIGKILL recovery, restart durability and legacy `RiskIntent` canonical-byte compatibility are green.
-- `/strategy-runtime` is authenticated GET/HEAD-only and contains no form, input, textarea, select, button, contenteditable, arbitrary symbol/reason or combined enable action.
-- Full `go test ./...`, focused race (strategy/market/official/console and exact journal v14), `go vet ./...`, Windows amd64 build, strict OpenSpec, PM, logic-map and `make validate` passed.
+- Every initial activation/lane/kill/protection/reconcile/scheduler/autostart/gate/LIVE blocker and simultaneous-failure precedence is table-tested with issuer and gateway calls fixed at zero. The positive fixture is explicitly limited to the package-private post-validation core with spies; production-positive `Dispatch` remains intentionally impossible without authentic source/activation authority.
+- StockOS `tests/test_parker_vwap_pv2.py::TestEvaluateHappyPath::test_enter_long_full_pipeline` is translated as algorithm-parity evidence: entry `100.5`, stop `99.7965`, target `102.6105`, RR `2.8571428571428571428571428571`. The separate synthetic fixture is no longer described as source-golden or activation evidence.
+- Frozen session cutoff is server-derived as `session close - 45m` (regular close `15:30 → 14:45`, early close included), participates in the constants digest, and is shown as a read-only runtime card. No caller/UI cutoff input exists.
+- Journal v14 is additive and transition-guarded: receipt/authority columns are immutable, only sanctioned state+revision CAS is accepted, the complete canonical 60-field decision payload/identity is bound to denormalized lineage, and delayed execution-link replay preserves the first timestamp. v13→v14 rollback/backup, SIGKILL recovery, restart durability and legacy `RiskIntent` canonical-byte compatibility are green.
+- `/strategy-runtime` is authenticated GET/HEAD-only and contains no form, input, textarea, select, button, contenteditable, arbitrary symbol/reason or combined enable action. The StockOS-style cards expose fixed server provenance/defaults without asking the operator to type values.
+- Verification passed: full `go test ./...`; uncached full journal; focused race for strategyengine/strategydispatch/console and strategy/migration journal paths; `go vet ./...`; Windows amd64 CGO-free build; strict OpenSpec; semantic Function/Branch maps; `git diff --check`.
+
+## Independent review findings resolved
+
+The first exact-SHA review found six integration blockers: arbitrary cutoff laundering, missing dispatch blocker evidence, semantically inaccurate branch maps, mutable attempt authority columns, partial decision-payload binding, and timestamp-sensitive execution-link replay. Each now has a structural fix plus RED→GREEN coverage as recorded above. Test-only authority minters were not added.
+
+The dormant build still intentionally leaves these activation-only blockers for a separately reviewed wiring change: semantic provisioning of the manifest, exact final-call manifest/attestation expiry recheck, a sealed single-journal/account Guardian+gateway bundle, structural restriction to the concrete official gateway, removal/sealing of direct Guardian strategy issuance, stronger indirect-import/composite-literal guards, and an authoritative calendar/config adapter. None is reachable in a047 because source proof, manifest installation, protection wiring, runtime entry loop, and production dispatch construction remain absent.
 
 ### Dormant handoff
 
@@ -35,4 +43,4 @@ Production can construct only an empty activation repository. A later separately
 
 ## Verdict
 
-구조, frozen pure lane와 dormant/default-OFF scaffold는 승인한다. a045/a046 evidence 전 exposure-raising runtime implementation/activation 완료를 주장하지 않는다.
+첫 리뷰 blocker 수정 후 exact-SHA 재검토와 gate를 요구한다. a045/a046 evidence 전 exposure-raising runtime implementation/activation 완료를 주장하지 않는다.

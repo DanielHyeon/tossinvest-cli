@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 )
@@ -71,6 +72,19 @@ CREATE TABLE strategy_attempt_refusals(
 ) STRICT;
 CREATE TRIGGER strategy_decision_lineage_no_update BEFORE UPDATE ON strategy_decision_lineage BEGIN SELECT RAISE(ABORT,'strategy decision lineage is immutable');END;
 CREATE TRIGGER strategy_decision_lineage_no_delete BEFORE DELETE ON strategy_decision_lineage BEGIN SELECT RAISE(ABORT,'strategy decision lineage is immutable');END;
+CREATE TRIGGER strategy_attempt_lineage_update_guard BEFORE UPDATE ON strategy_attempt_lineage
+WHEN NEW.attempt_id IS NOT OLD.attempt_id
+ OR NEW.account_ref IS NOT OLD.account_ref
+ OR NEW.entry_decision_identity IS NOT OLD.entry_decision_identity
+ OR NEW.risk_intent_id IS NOT OLD.risk_intent_id
+ OR NEW.guardian_decision_id IS NOT OLD.guardian_decision_id
+ OR NEW.activation_manifest_digest IS NOT OLD.activation_manifest_digest
+ OR NEW.client_order_id IS NOT OLD.client_order_id
+ OR NEW.created_at IS NOT OLD.created_at
+ OR NEW.revision IS NOT OLD.revision + 1
+ OR NOT ((OLD.state='PLANNED' AND NEW.state IN('REFUSED','DISPATCHED','IN_DOUBT'))
+      OR (OLD.state='IN_DOUBT' AND NEW.state IN('REFUSED','DISPATCHED')))
+BEGIN SELECT RAISE(ABORT,'strategy attempt lineage transition is invalid');END;
 CREATE TRIGGER strategy_attempt_lineage_no_delete BEFORE DELETE ON strategy_attempt_lineage BEGIN SELECT RAISE(ABORT,'strategy attempt lineage is immutable');END;
 CREATE TRIGGER strategy_execution_lineage_no_update BEFORE UPDATE ON strategy_execution_lineage BEGIN SELECT RAISE(ABORT,'strategy execution lineage is append-only');END;
 CREATE TRIGGER strategy_execution_lineage_no_delete BEFORE DELETE ON strategy_execution_lineage BEGIN SELECT RAISE(ABORT,'strategy execution lineage is append-only');END;
@@ -165,6 +179,72 @@ type StrategyTrace struct {
 	AttemptID          string
 	ExecutionKind      string
 	ExternalRef        string
+}
+
+// strategyDecisionPayload mirrors the wire-only DecisionRecord without
+// importing the dormant strategy package into the journal runtime boundary.
+// A reflection test pins this schema field-for-field to DecisionRecord.
+type strategyDecisionPayload struct {
+	CandidateLifeID     string
+	CandidateState      string
+	CandidateFirstSeen  int64
+	CandidateLastSeen   int64
+	CandidateValidUntil int64
+	CandidateApprovedAt int64
+	Market              string
+	Symbol              string
+	LaneID              string
+	LaneVersion         string
+	SourceCommit        string
+	SourceDigest        string
+	ConstantsDigest     string
+	ThresholdVersion    string
+	ThresholdSetDigest  string
+	EvidenceDigest      string
+	MarketInputVersion  string
+	CalendarSource      string
+	CalendarVersion     string
+	ConfigSource        string
+	ConfigVersion       string
+	IndicatorSource     string
+	IndicatorVersion    string
+	IndicatorComputedAt int64
+	TradingDay          bool
+	SessionOpenAt       int64
+	SessionCloseAt      int64
+	NoEntryAfter        int64
+	BarSource           string
+	BarAdjusted         bool
+	BarOpenAt           int64
+	BarClosedAt         int64
+	EvaluatedAt         int64
+	ExpiresAt           int64
+	Open                string
+	High                string
+	Low                 string
+	Close               string
+	Volume              string
+	Currency            string
+	VWAP                string
+	VWAPSlopePct        string
+	EMA9                string
+	LVNSpacePct         string
+	TangledPct          string
+	Expansion           string
+	HVNAboveDistancePct string
+	StateSource         string
+	StateAt             int64
+	PositionSource      string
+	PositionAt          int64
+	EntryPrice          string
+	LivePrice           string
+	LivePriceObserved   bool
+	EntryPriceDriftPct  string
+	StopPrice           string
+	TargetPrice         string
+	ExpectedRR          string
+	AcceptReasons       [7]string
+	Identity            string
 }
 
 // planStrategyEntryForTest exercises exact replay/collision behavior without
@@ -607,8 +687,14 @@ func (j *Journal) AppendStrategyExecutionLink(ctx context.Context, accountRef, a
 	if err := tx.QueryRowContext(ctx, `SELECT account_ref FROM strategy_attempt_lineage WHERE attempt_id=?`, attemptID).Scan(&storedAccount); err != nil || storedAccount != accountRef {
 		return errors.New("journal strategy execution: account/attempt mismatch")
 	}
-	if _, err := insertExactStrategyExecution(ctx, tx, accountRef, attemptID, kind, externalRef, j.clk.Now().UTC()); err != nil {
+	_, err = tx.ExecContext(ctx, `INSERT OR IGNORE INTO strategy_execution_lineage(account_ref,attempt_id,kind,external_ref,recorded_at) VALUES(?,?,?,?,?)`,
+		accountRef, attemptID, kind, externalRef, j.clk.Now().UTC().Format(time.RFC3339Nano))
+	if err != nil {
 		return err
+	}
+	var gotAttempt string
+	if err := tx.QueryRowContext(ctx, `SELECT attempt_id FROM strategy_execution_lineage WHERE account_ref=? AND kind=? AND external_ref=?`, accountRef, kind, externalRef).Scan(&gotAttempt); err != nil || gotAttempt != attemptID {
+		return &StrategyCollisionError{Stage: "execution link"}
 	}
 	return tx.Commit()
 }
@@ -659,21 +745,35 @@ func verifyStrategyRiskBinding(decision Decision, lineage StrategyDecisionLineag
 	if !ok {
 		return errors.New("journal strategy issuance: preimage is not RiskIntent")
 	}
-	var signalRecord struct {
-		Identity    string
-		Market      string
-		Symbol      string
-		EntryPrice  string
-		StopPrice   string
-		TargetPrice string
-	}
-	if err := json.Unmarshal([]byte(lineage.DecisionPayload), &signalRecord); err != nil {
+	decoder := json.NewDecoder(strings.NewReader(lineage.DecisionPayload))
+	decoder.DisallowUnknownFields()
+	var signalRecord strategyDecisionPayload
+	if err := decoder.Decode(&signalRecord); err != nil {
 		return fmt.Errorf("journal strategy issuance: decoding decision payload: %w", err)
+	}
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		return errors.New("journal strategy issuance: decision payload has trailing data")
+	}
+	canonicalPayload, err := json.Marshal(signalRecord)
+	if err != nil || string(canonicalPayload) != lineage.DecisionPayload {
+		return errors.New("journal strategy issuance: decision payload is not canonical")
 	}
 	payloadHash := sha256.Sum256([]byte(lineage.DecisionPayload))
 	wantPayloadDigest := "sha256:" + hex.EncodeToString(payloadHash[:])
-	if lineage.DecisionPayloadDigest != wantPayloadDigest || signalRecord.Identity != lineage.DecisionIdentity ||
-		!strings.EqualFold(riskRecord.Market, lineage.Market) || !strings.EqualFold(signalRecord.Market, lineage.Market) ||
+	identityRecord := signalRecord
+	identityRecord.Identity = ""
+	identityPayload, err := json.Marshal(identityRecord)
+	if err != nil {
+		return errors.New("journal strategy issuance: decision identity encoding failed")
+	}
+	identityHash := sha256.Sum256(identityPayload)
+	wantIdentity := "strategy-decision:v1:sha256:" + hex.EncodeToString(identityHash[:])
+	if lineage.DecisionPayloadDigest != wantPayloadDigest || signalRecord.Identity != wantIdentity || signalRecord.Identity != lineage.DecisionIdentity ||
+		signalRecord.CandidateLifeID != lineage.CandidateLifeID || signalRecord.Market != lineage.Market ||
+		signalRecord.ThresholdVersion != lineage.ThresholdVersion || signalRecord.ThresholdSetDigest != lineage.ThresholdSetDigest ||
+		signalRecord.EvidenceDigest != lineage.EvidenceDigest || signalRecord.LaneID != lineage.LaneID ||
+		signalRecord.LaneVersion != lineage.LaneVersion || signalRecord.SourceDigest != lineage.LaneSourceDigest ||
+		signalRecord.ConstantsDigest != lineage.LaneConstantsDigest || !strings.EqualFold(riskRecord.Market, lineage.Market) ||
 		riskRecord.Symbol != lineage.Symbol || signalRecord.Symbol != lineage.Symbol ||
 		riskRecord.Quantity != lineage.Quantity || riskRecord.EntryPrice != lineage.EntryPrice || signalRecord.EntryPrice != lineage.EntryPrice ||
 		riskRecord.StopPrice != lineage.StopPrice || signalRecord.StopPrice != lineage.StopPrice ||
@@ -702,7 +802,6 @@ func normalizeStrategyDecision(value StrategyDecisionLineage, now time.Time) Str
 	value.Quantity = strings.TrimSpace(value.Quantity)
 	value.PolicyVersion = strings.TrimSpace(value.PolicyVersion)
 	value.SettingsDigest = strings.TrimSpace(value.SettingsDigest)
-	value.DecisionPayload = strings.TrimSpace(value.DecisionPayload)
 	value.DecisionPayloadDigest = strings.TrimSpace(value.DecisionPayloadDigest)
 	value.ActivationManifestDigest = strings.TrimSpace(value.ActivationManifestDigest)
 	if value.CreatedAt.IsZero() {

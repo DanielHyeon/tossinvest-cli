@@ -9,7 +9,7 @@
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
 | provenance | exact lane/source/config/calendar/indicator/bar/candidate bindings | lane-created record | error |
-| clocks | candidate `[last,validUntil)`, signal `[close,close+15s+1ns)`, fresh state/position | injected evaluation | error |
+| clocks | candidate `[last,validUntil)`, signal `[close,close+15s+1ns)`, fresh state/position, cutoff exactly `session close - 45m` | injected evaluation + frozen StockOS config | error |
 | arithmetic | stop 0.7%, target 3R, RR and drift recomputed from raw observations | frozen Parker constants | error |
 | identity | SHA-256 of full record excluding identity field | canonical JSON | error |
 
@@ -18,7 +18,7 @@
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | provenance mismatch | none | error | zero/forged and identity tests |
-| B2 | clock/session/freshness mismatch | none | error | session/age/candidate tests |
+| B2 | clock/session/freshness mismatch or caller-selected cutoff | none | error | session/cutoff/age/candidate tests |
 | B3 | decimal/optional evidence invalid | exact parse only | error | gate tests |
 | B4 | recomputed prices/RR/drift/HVN/reasons differ | exact arithmetic only | error | golden parity test |
 | B5 | identity differs | SHA only | error | decision identity validation |

@@ -285,6 +285,7 @@ func constantsDigest() string {
 		"hard_stop_pct=0.7\n" +
 		"partial_take_profit_at_r=3.0\n" +
 		"skip_open_minutes=10\n" +
+		"no_entry_after_buffer_minutes=45\n" +
 		"max_signal_age_seconds=15\n" +
 		"max_entry_price_drift_pct=0.20\n" +
 		"symbol_state_stale_seconds=30\n"

@@ -113,7 +113,7 @@ func mintDecision(record DecisionRecord) (Decision, error) {
 		record.ExpiresAt != record.BarClosedAt+int64(15*time.Second+time.Nanosecond) ||
 		record.EvaluatedAt >= record.ExpiresAt || record.Currency != "KRW" || record.StateSource != "official-symbol-state" ||
 		record.SessionOpenAt <= 0 || record.SessionCloseAt <= record.SessionOpenAt ||
-		record.NoEntryAfter <= record.SessionOpenAt || record.NoEntryAfter > record.SessionCloseAt ||
+		record.NoEntryAfter != record.SessionCloseAt-int64(noEntryAfterBuffer) || record.NoEntryAfter <= record.SessionOpenAt ||
 		record.EvaluatedAt < record.SessionOpenAt+int64(10*time.Minute) || record.EvaluatedAt > record.NoEntryAfter ||
 		record.StateAt <= 0 || record.EvaluatedAt-record.StateAt < 0 || record.EvaluatedAt-record.StateAt > int64(30*1e9) ||
 		record.PositionSource != "official-position" || record.PositionAt <= 0 || record.EvaluatedAt-record.PositionAt < 0 ||

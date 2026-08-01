@@ -16,15 +16,21 @@ import (
 var laneEvidence = []byte("synthetic a047 lane contract fixture; never activation evidence")
 
 func approvedFixture(t *testing.T, evaluatedAt, approvedAt, lastSeenAt time.Time) strategy.ApprovedSnapshot {
+	return approvedFixtureForMarket(t, evaluatedAt, approvedAt, lastSeenAt, candidate.MarketKR)
+}
+
+func approvedFixtureForMarket(t *testing.T, evaluatedAt, approvedAt, lastSeenAt time.Time, market string) strategy.ApprovedSnapshot {
 	t.Helper()
 	evidenceDigest := candidate.DigestEvidence(laneEvidence)
-	document := fmt.Sprintf(`{"version":"candidate-veto-test","market":"KR","session":"regular","metrics":[{"key":"seen_late","definition":"first-sighting rank percentile","value":"80"},{"key":"extended","definition":"gain from stored first price","value":"50"},{"key":"near_high","definition":"distance below intraday high","value":"2"}],"sample_window":{"from":"2026-07-01T00:00:00Z","to":"2026-07-31T00:00:00Z"},"sample_count":100,"missing_rate":"0.1","evidence_digest":%q}`, evidenceDigest)
-	scope := candidate.ThresholdScope{Market: candidate.MarketKR, Session: candidate.SessionRegular}
+	sampleFrom := evaluatedAt.Add(-31 * 24 * time.Hour).UTC().Format(time.RFC3339)
+	sampleTo := evaluatedAt.Add(-24 * time.Hour).UTC().Format(time.RFC3339)
+	document := fmt.Sprintf(`{"version":"candidate-veto-test","market":%q,"session":"regular","metrics":[{"key":"seen_late","definition":"first-sighting rank percentile","value":"80"},{"key":"extended","definition":"gain from stored first price","value":"50"},{"key":"near_high","definition":"distance below intraday high","value":"2"}],"sample_window":{"from":%q,"to":%q},"sample_count":100,"missing_rate":"0.1","evidence_digest":%q}`, market, sampleFrom, sampleTo, evidenceDigest)
+	scope := candidate.ThresholdScope{Market: market, Session: candidate.SessionRegular}
 	setDigest, err := candidate.DigestThresholdSetDocument(strings.NewReader(document), scope)
 	if err != nil {
 		t.Fatal(err)
 	}
-	activationJSON := fmt.Sprintf(`{"version":"candidate-veto-test","market":"KR","session":"regular","set_digest":%q,"evidence_digest":%q,"approved_at":%q,"approved_by":"synthetic-test-not-approval"}`, setDigest, evidenceDigest, approvedAt.UTC().Format(time.RFC3339Nano))
+	activationJSON := fmt.Sprintf(`{"version":"candidate-veto-test","market":%q,"session":"regular","set_digest":%q,"evidence_digest":%q,"approved_at":%q,"approved_by":"synthetic-test-not-approval"}`, market, setDigest, evidenceDigest, approvedAt.UTC().Format(time.RFC3339Nano))
 	activation, err := candidate.LoadActivationRecord(strings.NewReader(activationJSON))
 	if err != nil {
 		t.Fatal(err)
@@ -37,7 +43,7 @@ func approvedFixture(t *testing.T, evaluatedAt, approvedAt, lastSeenAt time.Time
 	assessedAt := lastSeenAt.Add(time.Minute)
 	approved, err := candidate.AssessApprovedCandidate(candidate.VetoInputs{
 		Candidate: candidate.Candidate{
-			Key: candidate.Key{Market: "KR", Symbol: "005930"}, State: candidate.StateActive,
+			Key: candidate.Key{Market: market, Symbol: "005930"}, State: candidate.StateActive,
 			FirstSeenAt: firstSeenAt, LastSeenAt: lastSeenAt,
 		},
 		Sighting:  candidate.Sighting{Measured: true, Rank: 90, RankTotal: 100},
@@ -64,10 +70,15 @@ func (s normalStateSource) ReadPosition(_ context.Context, market, symbol string
 func verifiedBarFixture(t *testing.T, hour, minute int, mutate func([]strategymarket.RawMinuteCandle)) strategymarket.VerifiedBar {
 	t.Helper()
 	zone := time.FixedZone("KST", 9*60*60)
+	return verifiedBarFixtureAt(t, time.Date(2026, 7, 31, hour, minute, 0, 0, zone), mutate)
+}
+
+func verifiedBarFixtureAt(t *testing.T, start time.Time, mutate func([]strategymarket.RawMinuteCandle)) strategymarket.VerifiedBar {
+	t.Helper()
 	rows := make([]strategymarket.RawMinuteCandle, 5)
 	for index := range rows {
 		rows[index] = strategymarket.RawMinuteCandle{
-			Timestamp: time.Date(2026, 7, 31, hour, minute+index, 0, 0, zone).Format(time.RFC3339),
+			Timestamp: start.Add(time.Duration(index) * time.Minute).Format(time.RFC3339),
 			Open:      "100", High: "101", Low: "99.9", Close: "100.1", Volume: "200", Currency: "KRW",
 		}
 	}
@@ -75,7 +86,7 @@ func verifiedBarFixture(t *testing.T, hour, minute int, mutate func([]strategyma
 		mutate(rows)
 	}
 	page := strategymarket.SealAdaptedOfficialMinutePage("KR", "005930", strategymarket.IntervalOneMinute, false, strategymarket.SourceOfficialOpenAPI, rows)
-	bar, err := strategymarket.SealOfficialClosedKRXFiveMinute(page, time.Date(2026, 7, 31, hour, minute+5, 0, 0, zone))
+	bar, err := strategymarket.SealOfficialClosedKRXFiveMinute(page, start.Add(5*time.Minute))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,15 +95,15 @@ func verifiedBarFixture(t *testing.T, hour, minute int, mutate func([]strategyma
 
 func marketFields(bar strategymarket.VerifiedBar, evaluatedAt time.Time) MarketInputFields {
 	zone := time.FixedZone("KST", 9*60*60)
+	day := bar.ClosedAt().In(zone)
 	return MarketInputFields{
 		Version: MarketInputVersion, Market: "KR", Symbol: "005930",
-		CalendarSource: CalendarSource, CalendarVersion: "krx-calendar:2026-07-31",
+		CalendarSource: CalendarSource, CalendarVersion: "krx-calendar:" + day.Format("2006-01-02"),
 		ConfigSource: ConfigSource, ConfigVersion: ConfigVersion,
 		IndicatorSource: IndicatorSource, IndicatorVersion: IndicatorVersion,
 		EvaluatedAt: evaluatedAt, IndicatorComputedAt: evaluatedAt, TradingDay: true,
-		SessionOpenAt:  time.Date(2026, 7, 31, 9, 0, 0, 0, zone),
-		SessionCloseAt: time.Date(2026, 7, 31, 15, 30, 0, 0, zone),
-		NoEntryAfter:   time.Date(2026, 7, 31, 15, 20, 0, 0, zone),
+		SessionOpenAt:  time.Date(day.Year(), day.Month(), day.Day(), 9, 0, 0, 0, zone),
+		SessionCloseAt: time.Date(day.Year(), day.Month(), day.Day(), 15, 30, 0, 0, zone),
 		VWAP:           "100", VWAPSlopePct: "0.08", EMA9: "100",
 		LVNForwardSpacePct: "1.2", TangledScorePct: "0.35",
 		BandExpansionRate: "1.8", HVNAboveDistancePct: "1.2", CurrentPrice: "100.3002",
@@ -132,7 +143,9 @@ func passingLaneInput(t *testing.T) LaneInput {
 	return laneInputAt(t, bar, bar.ClosedAt(), nil)
 }
 
-func TestParkerConservativeLaneGoldenContractFixture(t *testing.T) {
+// Synthetic accept/derivation unit fixture only. The same-package SourceProof
+// does not constitute activation evidence or a translated StockOS golden case.
+func TestParkerSyntheticAcceptAndDerivedEvidence(t *testing.T) {
 	got := (ParkerConservativeLane{}).Evaluate(passingLaneInput(t))
 	if !got.Decision.Valid() || got.Reason != RefusalNone {
 		t.Fatalf("decision=%+v", got)
@@ -150,7 +163,45 @@ func TestParkerConservativeLaneGoldenContractFixture(t *testing.T) {
 	}
 }
 
-func TestParkerFrozenGateBoundariesAndRefusalOrder(t *testing.T) {
+// Translated from StockOS d75113d3:
+// tests/test_parker_vwap_pv2.py::TestEvaluateHappyPath::test_enter_long_full_pipeline
+// (`make_bars`, `make_indicators_pass`) with the conservative overrides pinned
+// by tests/test_parker_vwap_risk_tier_parity.py. The private SourceProof makes
+// this algorithm-parity evidence only; production source activation remains unavailable.
+func TestParkerTranslatedStockOSHappyPathParity(t *testing.T) {
+	zone := time.FixedZone("KST", 9*60*60)
+	bar := verifiedBarFixtureAt(t, time.Date(2026, 5, 5, 11, 55, 0, 0, zone), func(rows []strategymarket.RawMinuteCandle) {
+		for index := range rows {
+			rows[index].Open = "99.7"
+			rows[index].High = "101.0"
+			rows[index].Low = "99.5"
+			rows[index].Close = "100.5"
+			rows[index].Volume = "2000"
+		}
+	})
+	evaluatedAt := time.Date(2026, 5, 5, 12, 0, 5, 0, zone)
+	input := laneInputAt(t, bar, evaluatedAt, func(v *MarketInputFields) {
+		v.VWAP = "99.5"
+		v.VWAPSlopePct = "0.10"
+		v.EMA9 = "99.5"
+		v.LVNForwardSpacePct = "2.0"
+		v.TangledScorePct = "2.0"
+		v.BandExpansionRate = "1.0"
+		v.HVNAboveDistancePct = "5.0"
+		v.CurrentPrice = "100.5"
+	})
+	got := (ParkerConservativeLane{}).Evaluate(input)
+	if !got.Decision.Valid() || got.Reason != RefusalNone {
+		t.Fatalf("translated StockOS case=%+v", got)
+	}
+	record := got.Decision.Record()
+	if record.EntryPrice != "100.5" || record.StopPrice != "99.7965" || record.TargetPrice != "102.6105" ||
+		record.ExpectedRR != "2.8571428571428571428571428571" || record.LivePrice != "100.5" || record.EntryPriceDriftPct != "0" {
+		t.Fatalf("translated derived values=%+v", record)
+	}
+}
+
+func TestParkerFrozenGateBoundaries(t *testing.T) {
 	tests := []struct {
 		name   string
 		mutate func(*MarketInputFields)
@@ -168,6 +219,8 @@ func TestParkerFrozenGateBoundariesAndRefusalOrder(t *testing.T) {
 		{"HVN below forward space", func(v *MarketInputFields) { v.HVNAboveDistancePct = "1.199" }, RefusalHVNCeiling},
 		{"HVN exact forward space", func(v *MarketInputFields) { v.HVNAboveDistancePct = "1.2" }, RefusalNone},
 		{"drift above limit", func(v *MarketInputFields) { v.CurrentPrice = "100.300201" }, RefusalDrift},
+		{"negative drift exact limit", func(v *MarketInputFields) { v.CurrentPrice = "99.8998" }, RefusalNone},
+		{"negative drift above limit", func(v *MarketInputFields) { v.CurrentPrice = "99.899799" }, RefusalDrift},
 		{"nonpositive live price is drift refusal", func(v *MarketInputFields) { v.CurrentPrice = "0" }, RefusalDrift},
 		{"missing live price falls back to close", func(v *MarketInputFields) { v.CurrentPrice = "" }, RefusalNone},
 	}
@@ -188,10 +241,52 @@ func TestParkerFrozenGateBoundariesAndRefusalOrder(t *testing.T) {
 		})
 	}
 	marketType := reflect.TypeOf(MarketInputFields{})
-	for _, forbidden := range []string{"EMA20", "ExpectedRR", "HVNCeilingPrice", "SignalAgeSeconds", "EntryPriceDriftPct"} {
+	for _, forbidden := range []string{"EMA20", "ExpectedRR", "HVNCeilingPrice", "SignalAgeSeconds", "EntryPriceDriftPct", "NoEntryAfter"} {
 		if _, present := marketType.FieldByName(forbidden); present {
 			t.Errorf("caller-asserted field %s remains public", forbidden)
 		}
+	}
+}
+
+func TestParkerFrozenRefusalPrecedence(t *testing.T) {
+	baseBar := verifiedBarFixture(t, 9, 10, nil)
+	tests := []struct {
+		name   string
+		age    time.Duration
+		mutate func(*MarketInputFields)
+		want   Refusal
+	}{
+		{name: "vwap before slope", mutate: func(v *MarketInputFields) { v.VWAP = "100.1"; v.VWAPSlopePct = "0" }, want: RefusalVWAPAbove},
+		{name: "slope before ema", mutate: func(v *MarketInputFields) { v.VWAPSlopePct = "0"; v.EMA9 = "100.2" }, want: RefusalVWAPSlope},
+		{name: "ema before lvn", mutate: func(v *MarketInputFields) { v.EMA9 = "100.2"; v.LVNForwardSpacePct = "1" }, want: RefusalEMA9Pullback},
+		{name: "lvn before tangled", mutate: func(v *MarketInputFields) { v.LVNForwardSpacePct = "1"; v.TangledScorePct = "0" }, want: RefusalLVNSpace},
+		{name: "tangled before expansion", mutate: func(v *MarketInputFields) { v.TangledScorePct = "0"; v.BandExpansionRate = "2" }, want: RefusalTangledBand},
+		{name: "expansion before hvn", mutate: func(v *MarketInputFields) { v.BandExpansionRate = "2"; v.HVNAboveDistancePct = "1" }, want: RefusalBandExpansion},
+		{name: "hvn before age", age: 16 * time.Second, mutate: func(v *MarketInputFields) { v.HVNAboveDistancePct = "1" }, want: RefusalHVNCeiling},
+		{name: "age before drift", age: 16 * time.Second, mutate: func(v *MarketInputFields) { v.CurrentPrice = "101" }, want: RefusalAge},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			input := laneInputAt(t, baseBar, baseBar.ClosedAt().Add(tc.age), tc.mutate)
+			if got := (ParkerConservativeLane{}).Evaluate(input); got.Reason != tc.want {
+				t.Fatalf("reason=%s want=%s", got.Reason, tc.want)
+			}
+		})
+	}
+}
+
+func TestParkerConservativeRRFloorIsDominatedByFrozenLVNGate(t *testing.T) {
+	input := passingLaneInput(t)
+	got := (ParkerConservativeLane{}).Evaluate(input)
+	if !got.Decision.Valid() || got.Decision.Record().LVNSpacePct != "1.2" || got.Decision.Record().ExpectedRR != "1.7142857142857142857142857143" {
+		t.Fatalf("frozen minimum LVN did not imply RR above 1.5: %+v", got)
+	}
+}
+
+func TestParkerFrozenConstantsDigestIncludesSessionCutoffBuffer(t *testing.T) {
+	const want = "sha256:380be99ebf55b38b5a7f3570aeb485bfc6ae74d699cec8eafc5f72c0172fc748"
+	if got := constantsDigest(); got != want {
+		t.Fatalf("constants digest=%s want=%s", got, want)
 	}
 }
 
@@ -207,14 +302,45 @@ func TestParkerSessionUsesInjectedEvaluationTimeAndInclusiveCutoff(t *testing.T)
 	if got := (ParkerConservativeLane{}).Evaluate(atBoundary); got.Reason != RefusalNone {
 		t.Fatalf("09:10 exact reason=%s", got.Reason)
 	}
-	cutoffBar := verifiedBarFixture(t, 15, 15, nil)
-	cutoff := laneInputAt(t, cutoffBar, time.Date(2026, 7, 31, 15, 20, 0, 0, zone), nil)
+	cutoffBar := verifiedBarFixture(t, 14, 40, nil)
+	cutoff := laneInputAt(t, cutoffBar, time.Date(2026, 7, 31, 14, 45, 0, 0, zone), nil)
 	if got := (ParkerConservativeLane{}).Evaluate(cutoff); got.Reason != RefusalNone {
 		t.Fatalf("cutoff exact reason=%s", got.Reason)
 	}
-	after := laneInputAt(t, cutoffBar, time.Date(2026, 7, 31, 15, 20, 0, 1, zone), nil)
+	after := laneInputAt(t, cutoffBar, time.Date(2026, 7, 31, 14, 45, 0, 1, zone), nil)
 	if got := (ParkerConservativeLane{}).Evaluate(after); got.Reason != RefusalSession {
 		t.Fatalf("cutoff plus 1ns reason=%s", got.Reason)
+	}
+}
+
+func TestVersionedMarketInputDerivesFrozenEntryCutoff(t *testing.T) {
+	zone := time.FixedZone("KST", 9*60*60)
+	bar := verifiedBarFixture(t, 9, 10, nil)
+	for _, tc := range []struct {
+		name  string
+		close time.Time
+		want  time.Time
+	}{
+		{name: "regular close", close: time.Date(2026, 7, 31, 15, 30, 0, 0, zone), want: time.Date(2026, 7, 31, 14, 45, 0, 0, zone)},
+		{name: "early close", close: time.Date(2026, 7, 31, 12, 30, 0, 0, zone), want: time.Date(2026, 7, 31, 11, 45, 0, 0, zone)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			fields := marketFields(bar, bar.ClosedAt())
+			fields.SessionCloseAt = tc.close
+			sealed, err := SealVersionedMarketInput(fields)
+			if err != nil || !sealed.noEntryAfter.Equal(tc.want) {
+				t.Fatalf("cutoff=%s err=%v want=%s", sealed.noEntryAfter, err, tc.want)
+			}
+		})
+	}
+}
+
+func TestVersionedMarketInputRejectsSessionShorterThanFrozenBuffer(t *testing.T) {
+	bar := verifiedBarFixture(t, 9, 10, nil)
+	fields := marketFields(bar, bar.ClosedAt())
+	fields.SessionCloseAt = fields.SessionOpenAt.Add(noEntryAfterBuffer)
+	if sealed, err := SealVersionedMarketInput(fields); err == nil || sealed.valid {
+		t.Fatalf("short frozen session accepted: %+v", sealed)
 	}
 }
 
@@ -259,6 +385,16 @@ func TestParkerRequiresApprovalActivatedAndCandidateCurrentlyActive(t *testing.T
 				t.Fatalf("reason=%s want=%s", got.Reason, test.want)
 			}
 		})
+	}
+}
+
+func TestParkerRejectsApprovedUnsupportedMarketBeforeSource(t *testing.T) {
+	input := passingLaneInput(t)
+	evaluatedAt := input.Market.evaluatedAt
+	input.Approved = approvedFixtureForMarket(t, evaluatedAt, evaluatedAt.Add(-time.Minute), evaluatedAt.Add(-5*time.Minute), candidate.MarketUS)
+	input.Source = SourceProof{}
+	if got := (ParkerConservativeLane{}).Evaluate(input); got.Reason != RefusalUnsupportedScope {
+		t.Fatalf("reason=%s", got.Reason)
 	}
 }
 

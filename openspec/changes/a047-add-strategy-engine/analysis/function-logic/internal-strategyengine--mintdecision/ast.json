@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyengine/decision.go",
-  "source_sha256": "c181c60aebe555fdfff6b6cb4dc3f420dadf6dd52e0bc2b57d65bcaba1d24728",
+  "source_sha256": "169ee8283ed897074e9e7382b5330d6120ec499ece91679b5242336a185200bd",
   "package": "strategyengine",
   "function": "mintDecision",
   "signature": "mintDecision(params=1, results=2)",
@@ -291,6 +291,14 @@
       "at": {
         "line": 113,
         "column": 42
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 48
       },
       "text": "int64"
     },

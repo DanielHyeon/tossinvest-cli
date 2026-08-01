@@ -2,13 +2,14 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | positive exact confirmed path | `TestValidatedDispatchPlansOnceAndPersistsExactOfficialOutcome` | stale tests could not mint opaque decision | pass via private seam |
+| B1 | post-validation core exact confirmed path with spies | `TestPostValidationDispatchCorePlansOnceAndPersistsExactOfficialOutcomeWithSpies` | stale tests could not mint opaque decision | pass via private seam; not production-positive evidence |
 | B2 | plan-time gate mutation | `TestValidatedDispatchPlanTimeGateChangeRefusesBeforeOfficialCall` | TOCTOU window | pass |
 | B3 | exact expiry reached during plan | expiry boundary test | only initial expiry check | pass |
 | B4 | empty attempt/definitive/ambiguous outcomes | `TestOfficialOutcomeDispositionPreservesAttemptEvidence` | string-only result | pass |
 | B5 | manifest lease blocks revocation | manifest lease test | validation/call race | pass |
 | Security | every ManifestBinding field mismatch | `TestManifestVerificationRejectsMismatchInEveryField` | deleted activation coverage | pass, 32/32 |
 | Security | every DecisionRecord field mismatch | `TestDecisionBindingRejectsMismatchInEveryDecisionRecordField` | partial gate binding | pass, 60/60 |
+| Security | every initial blocker and simultaneous-failure precedence refuses before issuer/gateway | `TestPostValidationDispatchCoreRefusesEveryInitialGateBeforeIssuerWithStablePrecedence` | branches untested | pass |
 | B6 | atomic issuer failure | issuer/journal tests | missing | pass |
 | B7 | gate lease sees revision/binding drift | TOCTOU test | race window | pass |
 | B8 | gate predicates change under lease | TOCTOU test | race window | pass |

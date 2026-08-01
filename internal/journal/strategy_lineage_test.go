@@ -4,14 +4,42 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine"
 )
+
+func strategyDecisionRecordFixture(t *testing.T, suffix string) (strategyengine.DecisionRecord, string, string) {
+	t.Helper()
+	record := strategyengine.DecisionRecord{
+		CandidateLifeID: "candidate-life:v1:sha256:" + strings.Repeat("a", 64),
+		Market:          "KR", Symbol: "005930", LaneID: "krx_parker_vwap_conservative_v1", LaneVersion: "1",
+		SourceDigest: strings.Repeat("d", 64), ConstantsDigest: "sha256:" + strings.Repeat("e", 64),
+		ThresholdVersion: "threshold-v1", ThresholdSetDigest: "sha256:" + strings.Repeat("b", 64),
+		EvidenceDigest: "sha256:" + strings.Repeat("c", 64), CalendarVersion: "calendar-" + suffix,
+		EntryPrice: "100.1", StopPrice: "99.3993", TargetPrice: "102.2021",
+	}
+	identityInput, err := json.Marshal(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	identityHash := sha256.Sum256(identityInput)
+	record.Identity = "strategy-decision:v1:sha256:" + hex.EncodeToString(identityHash[:])
+	payload, err := json.Marshal(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	payloadHash := sha256.Sum256(payload)
+	return record, string(payload), "sha256:" + hex.EncodeToString(payloadHash[:])
+}
 
 func strategyPlanFixture(t *testing.T, suffix, account string) StrategyAtomicPlan {
 	t.Helper()
@@ -21,24 +49,35 @@ func strategyPlanFixture(t *testing.T, suffix, account string) StrategyAtomicPla
 		Preimage:   RiskIntent{AccountRef: account, Market: "KR", Symbol: "005930", Side: "BUY", Quantity: "1", EntryPrice: "100.1", StopPrice: "99.3993", TargetPrice: "102.2021", PolicyVersion: "strategy/v1"},
 		LimitsJSON: `{"max_quantity":"1"}`, Nonce: "nonce-" + suffix, IssuedAt: issued, ExpiresAt: issued.Add(time.Minute),
 	}
-	identity := "strategy-decision:v1:sha256:" + strings.Repeat(suffix, 64)
-	payload := `{"Identity":"` + identity + `","Market":"KR","Symbol":"005930","EntryPrice":"100.1","StopPrice":"99.3993","TargetPrice":"102.2021"}`
-	payloadHash := sha256.Sum256([]byte(payload))
+	record, payload, payloadDigest := strategyDecisionRecordFixture(t, suffix)
 	return StrategyAtomicPlan{
 		RiskDecision: request,
 		Lineage: StrategyDecisionLineage{
-			DecisionIdentity: identity, CandidateLifeID: "candidate-life:v1:sha256:" + strings.Repeat("a", 64),
+			DecisionIdentity: record.Identity, CandidateLifeID: record.CandidateLifeID,
 			Market: "KR", Symbol: "005930", ThresholdVersion: "threshold-v1",
 			ThresholdSetDigest: "sha256:" + strings.Repeat("b", 64), EvidenceDigest: "sha256:" + strings.Repeat("c", 64),
 			LaneID: "krx_parker_vwap_conservative_v1", LaneVersion: "1",
 			LaneSourceDigest: strings.Repeat("d", 64), LaneConstantsDigest: "sha256:" + strings.Repeat("e", 64),
 			EntryPrice: "100.1", StopPrice: "99.3993", TargetPrice: "102.2021", Quantity: "1", PolicyVersion: "strategy/v1", SettingsDigest: "sha256:" + strings.Repeat("9", 64),
-			DecisionPayload: payload, DecisionPayloadDigest: "sha256:" + hex.EncodeToString(payloadHash[:]), ActivationManifestDigest: "sha256:" + strings.Repeat("f", 64),
+			DecisionPayload: payload, DecisionPayloadDigest: payloadDigest, ActivationManifestDigest: "sha256:" + strings.Repeat("f", 64),
 			CreatedAt: issued,
 		},
 		AttemptID: "attempt-" + suffix, GuardianDecisionID: "guardian-" + suffix,
 		ActivationManifestDigest: "sha256:" + strings.Repeat("f", 64),
 		Revision:                 1, CreatedAt: issued, ClientOrderID: DeriveClientOrderID(request.ID, 0),
+	}
+}
+
+func TestStrategyDecisionPayloadSchemaMatchesDecisionRecordExactly(t *testing.T) {
+	want := reflect.TypeFor[strategyengine.DecisionRecord]()
+	got := reflect.TypeFor[strategyDecisionPayload]()
+	if got.NumField() != want.NumField() {
+		t.Fatalf("payload fields=%d DecisionRecord fields=%d", got.NumField(), want.NumField())
+	}
+	for index := range want.NumField() {
+		if got.Field(index).Name != want.Field(index).Name || got.Field(index).Type != want.Field(index).Type || got.Field(index).Tag != want.Field(index).Tag {
+			t.Fatalf("field %d payload=%s/%s/%q DecisionRecord=%s/%s/%q", index, got.Field(index).Name, got.Field(index).Type, got.Field(index).Tag, want.Field(index).Name, want.Field(index).Type, want.Field(index).Tag)
+		}
 	}
 }
 
@@ -166,6 +205,152 @@ func TestStrategyProductionIssuanceCommitsAuthorityReservationAndLineageTogether
 		if err := j.db.QueryRow("SELECT count(*) FROM " + table).Scan(&got); err != nil || got != want {
 			t.Fatalf("%s count=%d err=%v", table, got, err)
 		}
+	}
+}
+
+func rehashStrategyPayload(t *testing.T, request *StrategyIssueRequest) {
+	t.Helper()
+	hash := sha256.Sum256([]byte(request.Plan.Lineage.DecisionPayload))
+	request.Plan.Lineage.DecisionPayloadDigest = "sha256:" + hex.EncodeToString(hash[:])
+}
+
+func TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*StrategyDecisionLineage)
+	}{
+		{name: "decision identity", mutate: func(v *StrategyDecisionLineage) { v.DecisionIdentity += "-other" }},
+		{name: "candidate life", mutate: func(v *StrategyDecisionLineage) { v.CandidateLifeID += "-other" }},
+		{name: "market", mutate: func(v *StrategyDecisionLineage) { v.Market = "US" }},
+		{name: "symbol", mutate: func(v *StrategyDecisionLineage) { v.Symbol = "000660" }},
+		{name: "threshold version", mutate: func(v *StrategyDecisionLineage) { v.ThresholdVersion += "-other" }},
+		{name: "threshold digest", mutate: func(v *StrategyDecisionLineage) { v.ThresholdSetDigest += "-other" }},
+		{name: "evidence digest", mutate: func(v *StrategyDecisionLineage) { v.EvidenceDigest += "-other" }},
+		{name: "lane id", mutate: func(v *StrategyDecisionLineage) { v.LaneID += "-other" }},
+		{name: "lane version", mutate: func(v *StrategyDecisionLineage) { v.LaneVersion += "-other" }},
+		{name: "source digest", mutate: func(v *StrategyDecisionLineage) { v.LaneSourceDigest += "-other" }},
+		{name: "constants digest", mutate: func(v *StrategyDecisionLineage) { v.LaneConstantsDigest += "-other" }},
+		{name: "entry price", mutate: func(v *StrategyDecisionLineage) { v.EntryPrice = "100.2" }},
+		{name: "stop price", mutate: func(v *StrategyDecisionLineage) { v.StopPrice = "99" }},
+		{name: "target price", mutate: func(v *StrategyDecisionLineage) { v.TargetPrice = "103" }},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			j, _ := openReservationJournal(t)
+			request := strategyIssueFixture(t, j, "projection", "acct-1")
+			tc.mutate(&request.Plan.Lineage)
+			if _, err := j.RecordStrategyDecisionAndReserve(context.Background(), request); err == nil || !strings.Contains(err.Error(), "exact binding mismatch") {
+				t.Fatalf("divergent projection accepted: err=%v", err)
+			}
+			var count int
+			if err := j.db.QueryRow(`SELECT count(*) FROM decisions`).Scan(&count); err != nil || count != 0 {
+				t.Fatalf("partial authority count=%d err=%v", count, err)
+			}
+		})
+	}
+}
+
+func TestStrategyProductionIssuanceBindsFullDecisionRecordIdentity(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	request := strategyIssueFixture(t, j, "full-record", "acct-1")
+	var record strategyengine.DecisionRecord
+	if err := json.Unmarshal([]byte(request.Plan.Lineage.DecisionPayload), &record); err != nil {
+		t.Fatal(err)
+	}
+	record.CalendarVersion += "-forged"
+	payload, err := json.Marshal(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Plan.Lineage.DecisionPayload = string(payload)
+	rehashStrategyPayload(t, &request)
+	if _, err := j.RecordStrategyDecisionAndReserve(context.Background(), request); err == nil || !strings.Contains(err.Error(), "exact binding mismatch") {
+		t.Fatalf("full-record mutation accepted: %v", err)
+	}
+}
+
+func TestStrategyProductionIssuanceRejectsNonCanonicalDecisionPayload(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		mutate func(string) string
+	}{
+		{name: "leading whitespace", mutate: func(raw string) string { return " " + raw }},
+		{name: "unknown field", mutate: func(raw string) string { return strings.TrimSuffix(raw, "}") + `,"Unknown":true}` }},
+		{name: "trailing value", mutate: func(raw string) string { return raw + `{}` }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			j, _ := openReservationJournal(t)
+			request := strategyIssueFixture(t, j, "canonical", "acct-1")
+			request.Plan.Lineage.DecisionPayload = tc.mutate(request.Plan.Lineage.DecisionPayload)
+			rehashStrategyPayload(t, &request)
+			if _, err := j.RecordStrategyDecisionAndReserve(context.Background(), request); err == nil {
+				t.Fatal("noncanonical payload accepted")
+			}
+		})
+	}
+}
+
+func TestStrategyAttemptLineageAllowsOnlySanctionedStateCAS(t *testing.T) {
+	j := openTestJournalAt(t, filepath.Join(t.TempDir(), "journal.db"))
+	plan := strategyPlanFixture(t, "immutable", "acct-1")
+	if _, err := j.planStrategyEntryForTest(context.Background(), plan); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct{ column, value string }{
+		{column: "attempt_id", value: "'other-attempt'"},
+		{column: "account_ref", value: "'other-account'"},
+		{column: "entry_decision_identity", value: "'other-decision'"},
+		{column: "risk_intent_id", value: "'other-risk'"},
+		{column: "guardian_decision_id", value: "'other-guardian'"},
+		{column: "activation_manifest_digest", value: "'other-manifest'"},
+		{column: "client_order_id", value: "'other-client'"},
+		{column: "created_at", value: "'other-time'"},
+	} {
+		t.Run(tc.column, func(t *testing.T) {
+			query := `UPDATE strategy_attempt_lineage SET ` + tc.column + `=` + tc.value + ` WHERE attempt_id=?`
+			if _, err := j.db.Exec(query, plan.AttemptID); err == nil {
+				t.Fatalf("immutable column %s changed", tc.column)
+			}
+		})
+	}
+	for _, query := range []string{
+		`UPDATE strategy_attempt_lineage SET revision=revision+1 WHERE attempt_id=?`,
+		`UPDATE strategy_attempt_lineage SET state='DISPATCHED' WHERE attempt_id=?`,
+		`UPDATE strategy_attempt_lineage SET state='PLANNED',revision=revision+1 WHERE attempt_id=?`,
+	} {
+		if _, err := j.db.Exec(query, plan.AttemptID); err == nil {
+			t.Fatalf("invalid transition accepted: %s", query)
+		}
+	}
+	if _, err := j.db.Exec(`UPDATE strategy_attempt_lineage SET state='IN_DOUBT',revision=revision+1 WHERE attempt_id=?`, plan.AttemptID); err != nil {
+		t.Fatalf("sanctioned CAS rejected: %v", err)
+	}
+	if _, err := j.db.Exec(`UPDATE strategy_attempt_lineage SET state='DISPATCHED',revision=revision+1 WHERE attempt_id=?`, plan.AttemptID); err != nil {
+		t.Fatalf("sanctioned recovery CAS rejected: %v", err)
+	}
+}
+
+func TestStrategyExecutionLinkReplayPreservesFirstTimestamp(t *testing.T) {
+	j, fake := openReservationJournal(t)
+	plan := strategyPlanFixture(t, "link-replay", "acct-1")
+	if _, err := j.planStrategyEntryForTest(context.Background(), plan); err != nil {
+		t.Fatal(err)
+	}
+	if err := j.AppendStrategyExecutionLink(context.Background(), "acct-1", plan.AttemptID, "FILL", "fill-1"); err != nil {
+		t.Fatal(err)
+	}
+	var first string
+	if err := j.db.QueryRow(`SELECT recorded_at FROM strategy_execution_lineage WHERE account_ref='acct-1' AND kind='FILL' AND external_ref='fill-1'`).Scan(&first); err != nil {
+		t.Fatal(err)
+	}
+	fake.Advance(time.Hour)
+	if err := j.AppendStrategyExecutionLink(context.Background(), "acct-1", plan.AttemptID, "FILL", "fill-1"); err != nil {
+		t.Fatalf("exact replay: %v", err)
+	}
+	var count int
+	var replayed string
+	if err := j.db.QueryRow(`SELECT count(*),min(recorded_at) FROM strategy_execution_lineage WHERE account_ref='acct-1' AND kind='FILL' AND external_ref='fill-1'`).Scan(&count, &replayed); err != nil || count != 1 || replayed != first {
+		t.Fatalf("count=%d first=%s replayed=%s err=%v", count, first, replayed, err)
 	}
 }
 

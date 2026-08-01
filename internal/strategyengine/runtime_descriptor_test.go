@@ -17,10 +17,10 @@ func TestDormantRuntimeDescriptorSeparatesSectionsAndNeverPretendsActivation(t *
 		}
 	}
 
-	wantFields := [12]string{
+	wantFields := [13]string{
 		"min_vwap_slope_pct", "ema_touch_tolerance_pct", "min_forward_space_pct", "min_expected_rr",
 		"tangled_band_pct", "max_band_expansion_rate", "hard_stop_pct", "partial_take_profit_at_r",
-		"skip_open_minutes", "max_signal_age_seconds", "max_entry_price_drift_pct", "symbol_state_stale_seconds",
+		"skip_open_minutes", "no_entry_after_buffer_minutes", "max_signal_age_seconds", "max_entry_price_drift_pct", "symbol_state_stale_seconds",
 	}
 	for i, field := range d.Fields {
 		if field.Key != wantFields[i] || field.Label == "" || field.Help == "" || field.Default == "" ||

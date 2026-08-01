@@ -12,4 +12,4 @@
 | B8 | engine boot load error renders independently | autostart error-seam tests | baseline | baseline |
 | B9 | updater present adds inspect/receipt state without a write | system update view tests | baseline | baseline |
 | Render | escaped page renders successfully | settings handler/template tests | baseline | baseline |
-| A047 | fixed lane/constants/provenance and blockers render `not_configured/OFF` with no input/textarea/contenteditable/free form | a047 DOM/static tests (to add in RED) | pending | no |
+| A047 | fixed lane/constants/provenance and blockers render `not_configured/OFF` with no input/textarea/contenteditable/free form | strategy-runtime DOM/static tests | missing | pass |

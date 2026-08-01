@@ -4,7 +4,7 @@
 |---|---|---|---|---|
 | B1 | provenance/opaque proof refusal | `TestParkerRejectsZeroAndForgedProofsWithoutPanic` | yes | yes |
 | B2 | candidate/session/age clocks | candidate, session and signal-age boundary tests | yes | yes |
-| B3 | derived prices/RR/drift and ordered reasons | `TestParkerConservativeLaneGoldenContractFixture` | yes | yes |
+| B3 | derived prices/RR/drift and ordered reasons | synthetic derivation + translated StockOS parity tests | yes | pass |
 | B4 | HVN and optional evidence | frozen gate table | yes | yes |
 | B5 | canonical identity | golden decision Valid assertion | existing | yes |
 | B6 | candidate identity/provenance | candidate boundary tests | yes | yes |
@@ -17,3 +17,4 @@
 | B13 | HVN presence | HVN table | yes | yes |
 | B14 | HVN distance | HVN table | yes | yes |
 | B15 | reason order/identity | golden reasons and Valid assertion | yes | yes |
+| B16 | cutoff differs from frozen close-minus-45m rule | regular/early-close cutoff derivation tests | arbitrary 15:20 accepted | pass |

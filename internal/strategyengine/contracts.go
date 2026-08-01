@@ -22,6 +22,7 @@ const (
 	ConfigVersion         = "parker-vwap-conservative:v1"
 	IndicatorSource       = "stockos-parker-vwap"
 	IndicatorVersion      = SourceCommit
+	noEntryAfterBuffer    = 45 * time.Minute
 )
 
 type Refusal string
@@ -152,7 +153,6 @@ type MarketInputFields struct {
 	EvaluatedAt, IndicatorComputedAt       time.Time
 	TradingDay                             bool
 	SessionOpenAt, SessionCloseAt          time.Time
-	NoEntryAfter                           time.Time
 	VWAP, VWAPSlopePct, EMA9               string
 	LVNForwardSpacePct, TangledScorePct    string
 	BandExpansionRate, HVNAboveDistancePct string
@@ -187,9 +187,9 @@ func SealVersionedMarketInput(fields MarketInputFields) (VersionedMarketInput, e
 		!fields.IndicatorComputedAt.Equal(fields.EvaluatedAt) {
 		return VersionedMarketInput{}, fmt.Errorf("strategy market input: provenance mismatch")
 	}
+	noEntryAfter := fields.SessionCloseAt.Add(-noEntryAfterBuffer)
 	if fields.TradingDay && (fields.SessionOpenAt.IsZero() || fields.SessionCloseAt.IsZero() ||
-		fields.NoEntryAfter.IsZero() || !fields.SessionOpenAt.Before(fields.NoEntryAfter) ||
-		fields.NoEntryAfter.After(fields.SessionCloseAt)) {
+		!fields.SessionOpenAt.Before(noEntryAfter)) {
 		return VersionedMarketInput{}, fmt.Errorf("strategy market input: invalid calendar window")
 	}
 	for _, raw := range []string{fields.VWAP, fields.EMA9} {
@@ -225,7 +225,7 @@ func SealVersionedMarketInput(fields MarketInputFields) (VersionedMarketInput, e
 		indicatorSource: fields.IndicatorSource, indicatorVersion: fields.IndicatorVersion,
 		evaluatedAt: fields.EvaluatedAt.UTC(), indicatorComputedAt: fields.IndicatorComputedAt.UTC(),
 		tradingDay: fields.TradingDay, sessionOpenAt: fields.SessionOpenAt.UTC(),
-		sessionCloseAt: fields.SessionCloseAt.UTC(), noEntryAfter: fields.NoEntryAfter.UTC(),
+		sessionCloseAt: fields.SessionCloseAt.UTC(), noEntryAfter: noEntryAfter.UTC(),
 		vwap: fields.VWAP, vwapSlopePct: fields.VWAPSlopePct, ema9: fields.EMA9,
 		lvnForwardSpacePct: fields.LVNForwardSpacePct, tangledScorePct: fields.TangledScorePct,
 		bandExpansionRate: fields.BandExpansionRate, hvnAboveDistancePct: fields.HVNAboveDistancePct,

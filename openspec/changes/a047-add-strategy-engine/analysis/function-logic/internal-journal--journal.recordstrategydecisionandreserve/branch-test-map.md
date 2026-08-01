@@ -17,3 +17,5 @@
 | B13 | commit failure propagates | journal durability suite | baseline | pass |
 | B14 | success returns reservation result | production atomic success | missing | pass |
 | B15 | success returns canonical strategy receipt | production atomic success | missing | pass |
+| B16 | every denormalized DecisionRecord lineage field matches canonical payload | exhaustive lineage mutation table | payload subset accepted divergence | pass |
+| B17 | unknown/trailing/noncanonical payload and full-record identity mutation fail | strict payload table | partial decode accepted divergence | pass |

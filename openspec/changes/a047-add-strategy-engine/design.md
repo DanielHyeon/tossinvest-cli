@@ -29,7 +29,7 @@ engine runtime에는 entry loop가 없고 Tracer는 production에서 호출되�
 11. 첫 lane의 immutable constants는 `min_vwap_slope_pct=0.08`, `ema_touch_tolerance_pct=0.25`,
     `min_forward_space_pct=1.2`, `min_expected_rr=1.5`, `tangled_band_pct=0.35`,
     `max_band_expansion_rate=1.8`, `hard_stop_pct=0.7`, `partial_take_profit_at_r=3.0`,
-    `skip_open_minutes=10`, `max_signal_age_seconds=15`, `max_entry_price_drift_pct=0.20`,
+    `skip_open_minutes=10`, `no_entry_after_buffer_minutes=45`, `max_signal_age_seconds=15`, `max_entry_price_drift_pct=0.20`,
     `symbol_state_stale_seconds=30`이다. gate 순서는 profile/state → session → closed-bar integrity →
     symbol state → no existing position → nonzero volume → indicator completeness → VWAP above/slope →
     EMA9 bullish pullback → LVN forward space → untangled/band expansion → RR → HVN ceiling → age/drift다.

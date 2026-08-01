@@ -2,9 +2,12 @@ package journal
 
 import (
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 )
+
+var exactEntryDecisionID = regexp.MustCompile(`\bentry_decision_id\b`)
 
 // adoption_static_test.go is the layout half of "adoption_id is set once"
 // (change adopt-external-positions task 1.2; position-ledger: 전용 tx API로만
@@ -151,11 +154,11 @@ func TestEntryDecisionIDIsNeverUpdated(t *testing.T) {
 	inserters := 0
 	for name, text := range productionSources(t) {
 		if strings.Contains(text, "INSERT INTO positions") &&
-			strings.Contains(text, "entry_decision_id") {
+			exactEntryDecisionID.MatchString(text) {
 			inserters++
 		}
 		for _, stmt := range updateStatements(text) {
-			if strings.Contains(stmt, "entry_decision_id") {
+			if exactEntryDecisionID.MatchString(stmt) {
 				t.Errorf("%s contains an UPDATE naming entry_decision_id:\n\t%s\n"+
 					"that column is set by the INSERT that opens the instance and never moved again",
 					name, strings.TrimSpace(stmt))

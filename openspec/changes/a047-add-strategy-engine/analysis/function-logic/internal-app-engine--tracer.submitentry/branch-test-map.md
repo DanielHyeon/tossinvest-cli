@@ -9,4 +9,4 @@
 | B5 | failed/in-doubt/non-confirmed gateway outcome is not success | tracer outcome tests | baseline | baseline |
 | B6 | missing outcome detail falls back to the gateway error without treating it as success | tracer failed-outcome tests | baseline | baseline |
 | Confirmed | confirmed entry records exact IDs | `runTracerWithFills`-based tracer tests | baseline | baseline |
-| A047 | strategy orchestrator revalidates manifest immediately before Guardian and again before durable dispatch without using tracer | a047 TOCTOU tests (to add in RED) | pending | no |
+| A047 | strategy orchestrator revalidates manifest around planning/dispatch without using tracer | dispatch TOCTOU/lease tests + dormant wiring guard | missing | pass |
