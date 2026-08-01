@@ -1,0 +1,10 @@
+# Branch Test Map: `TestCollectAppendsExistingObservationsAndLatestMeasurement`
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | base-revision `if` at line 56: `if err != nil {`; hunk adjacency requires base evidence | `TestCollectAppendsExistingObservationsAndLatestMeasurement` (this regression test) | existing regression branch | package-targeted regression PASS before integration; rerun by gate |
+| B2 | base-revision `if` at line 59: `if got.Markout(30).GrossPct != "7" {`; hunk adjacency requires base evidence | `TestCollectAppendsExistingObservationsAndLatestMeasurement` (this regression test) | existing regression branch | package-targeted regression PASS before integration; rerun by gate |
+| B3 | base-revision `if` at line 63: `if err := store.db.QueryRow(\`SELECT count(*) FROM price_observations\`).Scan(&observations); err != nil {`; hunk adjacency requires base evidence | `TestCollectAppendsExistingObservationsAndLatestMeasurement` (this regression test) | existing regression branch | package-targeted regression PASS before integration; rerun by gate |
+| B4 | base-revision `if` at line 66: `if err := store.db.QueryRow(\`SELECT count(*) FROM measurement_snapshots\`).Scan(&snapshots); err != nil {`; hunk adjacency requires base evidence | `TestCollectAppendsExistingObservationsAndLatestMeasurement` (this regression test) | existing regression branch | package-targeted regression PASS before integration; rerun by gate |
+| B5 | base-revision `if` at line 69: `if observations != 3 \|\| snapshots != 1 {`; hunk adjacency requires base evidence | `TestCollectAppendsExistingObservationsAndLatestMeasurement` (this regression test) | existing regression branch | package-targeted regression PASS before integration; rerun by gate |
+| B6 | base-revision `if` at line 72: `if _, err := store.Collect(ctx, trade, rows, at.Add(2*time.Hour)); err != nil {`; hunk adjacency requires base evidence | `TestCollectAppendsExistingObservationsAndLatestMeasurement` (this regression test) | existing regression branch | package-targeted regression PASS before integration; rerun by gate |

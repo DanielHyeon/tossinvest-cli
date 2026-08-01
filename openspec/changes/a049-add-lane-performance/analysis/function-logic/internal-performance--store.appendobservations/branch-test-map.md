@@ -1,0 +1,7 @@
+# Branch Test Map: `Store.AppendObservations`
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | `if` at line 152: `if err != nil {`; invariant: missing/corrupt/alternate path is explicit | `TestStoreSchemaIsSeparateAppendOnlyAndVersioned`, `TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency`, `TestCollectDivergentReplayFailsClosed`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B2 | `if` at line 156: `if err := appendObservations(ctx, tx, observations); err != nil {`; invariant: missing/corrupt/alternate path is explicit | `TestStoreSchemaIsSeparateAppendOnlyAndVersioned`, `TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency`, `TestCollectDivergentReplayFailsClosed`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B3 | `if` at line 160: `if err := tx.Commit(); err != nil {`; invariant: missing/corrupt/alternate path is explicit | `TestStoreSchemaIsSeparateAppendOnlyAndVersioned`, `TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency`, `TestCollectDivergentReplayFailsClosed`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |

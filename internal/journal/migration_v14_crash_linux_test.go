@@ -14,7 +14,7 @@ const crashModeMigrationV14AfterCommit = "migration_v14_after_commit"
 
 func TestMigrationV14CommitAndUserVersionSurviveSIGKILL(t *testing.T) {
 	if os.Getenv(crashEnvMode) == crashModeMigrationV14AfterCommit {
-		j := openCrashChildJournal()
+		j := openCrashChildJournalAtVersion(14)
 		if version, err := j.SchemaVersion(context.Background()); err != nil || version != 14 {
 			t.Fatalf("child version=%d err=%v", version, err)
 		}
@@ -45,9 +45,24 @@ func TestMigrationV14CommitAndUserVersionSurviveSIGKILL(t *testing.T) {
 			t.Fatalf("artifact %s count=%d err=%v", name, count, err)
 		}
 	}
-	reopened := openTestJournalAt(t, path)
+	reopened := openJournalAtSchema(t, path, 14)
 	defer reopened.Close()
 	if after := countRows(t, reopened.db, v8AllTables); !sameCounts(before, after) {
 		t.Fatalf("rows changed before=%v after=%v", before, after)
 	}
+}
+
+func openCrashChildJournalAtVersion(version int) *Journal {
+	path := os.Getenv(crashEnvPath)
+	if path == "" {
+		os.Exit(2)
+	}
+	j, err := Open(context.Background(), Options{
+		Path: path, FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt}),
+		migrationOverride: &migrationPlan{steps: migrationsThrough(version), target: version},
+	})
+	if err != nil {
+		os.Exit(2)
+	}
+	return j
 }

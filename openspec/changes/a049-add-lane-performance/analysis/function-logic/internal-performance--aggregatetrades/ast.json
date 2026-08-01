@@ -1,0 +1,1403 @@
+{
+  "file": "internal/performance/query.go",
+  "source_sha256": "49cb750ac14da1cb6253223cb2bb196986cad9d526dfceeedd747c45f672090f",
+  "package": "performance",
+  "function": "aggregateTrades",
+  "signature": "aggregateTrades(params=2, results=2)",
+  "start": {
+    "line": 297,
+    "column": 1
+  },
+  "end": {
+    "line": 436,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 303,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 317,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 327,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 329,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 332,
+        "column": 4
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "else",
+      "at": {
+        "line": 335,
+        "column": 11
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 335,
+        "column": 11
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 339,
+        "column": 4
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 343,
+        "column": 4
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 347,
+        "column": 4
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "range",
+      "at": {
+        "line": 351,
+        "column": 4
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 352,
+        "column": 5
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "else",
+      "at": {
+        "line": 362,
+        "column": 12
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 354,
+        "column": 6
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 357,
+        "column": 6
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 362,
+        "column": 12
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "if",
+      "at": {
+        "line": 365,
+        "column": 5
+      }
+    },
+    {
+      "id": "B20",
+      "kind": "if",
+      "at": {
+        "line": 367,
+        "column": 6
+      }
+    },
+    {
+      "id": "B21",
+      "kind": "if",
+      "at": {
+        "line": 376,
+        "column": 3
+      }
+    },
+    {
+      "id": "B22",
+      "kind": "if",
+      "at": {
+        "line": 381,
+        "column": 4
+      }
+    },
+    {
+      "id": "B23",
+      "kind": "range",
+      "at": {
+        "line": 389,
+        "column": 3
+      }
+    },
+    {
+      "id": "B24",
+      "kind": "range",
+      "at": {
+        "line": 396,
+        "column": 4
+      }
+    },
+    {
+      "id": "B25",
+      "kind": "if",
+      "at": {
+        "line": 400,
+        "column": 4
+      }
+    },
+    {
+      "id": "B26",
+      "kind": "switch",
+      "at": {
+        "line": 401,
+        "column": 5
+      }
+    },
+    {
+      "id": "B27",
+      "kind": "case",
+      "at": {
+        "line": 402,
+        "column": 5
+      }
+    },
+    {
+      "id": "B28",
+      "kind": "case",
+      "at": {
+        "line": 404,
+        "column": 5
+      }
+    },
+    {
+      "id": "B29",
+      "kind": "if",
+      "at": {
+        "line": 412,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 330,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 348,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 355,
+        "column": 7
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 363,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 382,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 384,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 403,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 405,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 408,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 415,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 10
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 11
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 23
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 2
+      },
+      "text": "sort.Strings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 30
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 75
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 30
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 44
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 58
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 72
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 21
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 35
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 17
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 19
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 14
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 20
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 16
+      },
+      "text": "rat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 17
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 7
+      },
+      "text": "pnl.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 5
+      },
+      "text": "profit.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 14
+      },
+      "text": "pnl.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 5
+      },
+      "text": "loss.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 4
+      },
+      "text": "net.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 7
+      },
+      "text": "net.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 5
+      },
+      "text": "peak.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 12
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 12
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 343,
+        "column": 7
+      },
+      "text": "fall.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 5
+      },
+      "text": "drawdown.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 22
+      },
+      "text": "rat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 17
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 350,
+        "column": 4
+      },
+      "text": "sumR.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
+        "column": 20
+      },
+      "text": "rat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 19
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 358,
+        "column": 28
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 6
+      },
+      "text": "metricSums.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 31
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 30
+      },
+      "text": "ratText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 44
+      },
+      "text": "ratText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 52
+      },
+      "text": "Quo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 52
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 75
+      },
+      "text": "big.NewRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 86
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 92
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 17
+      },
+      "text": "ratText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 25
+      },
+      "text": "SetFrac64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 25
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 48
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 61
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 67
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 376,
+        "column": 6
+      },
+      "text": "loss.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 23
+      },
+      "text": "ratText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 31
+      },
+      "text": "Quo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 31
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 379,
+        "column": 21
+      },
+      "text": "ratText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 11
+      },
+      "text": "ratText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 19
+      },
+      "text": "Quo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 19
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 53
+      },
+      "text": "big.NewRat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 64
+      },
+      "text": "int64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 45
+      },
+      "text": "average"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 66
+      },
+      "text": "average"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 82
+      },
+      "text": "average"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 57
+      },
+      "text": "average"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 79
+      },
+      "text": "average"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 102
+      },
+      "text": "average"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 17
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 3
+      },
+      "text": "sort.Strings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 31
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 4
+      },
+      "text": "sort.Strings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 400,
+        "column": 7
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 11
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 51
+      },
+      "text": "provenance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 141
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 136
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 114
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 170
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 148
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 426,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 431,
+        "column": 4
+      },
+      "text": "metric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 302,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 304,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 305,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 312,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 313,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 314,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 318,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 320,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 321,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 322,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 323,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 324,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 326,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 328,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 333,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 342,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 346,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 353,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 358,
+        "column": 7
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 361,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 366,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 368,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 370,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 374,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 375,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 377,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 379,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 386,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 387,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 390,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 393,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 394,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 397,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 410,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 411,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 413,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 420,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 433,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

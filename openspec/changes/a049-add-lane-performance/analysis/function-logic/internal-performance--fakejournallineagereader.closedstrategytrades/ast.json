@@ -1,0 +1,70 @@
+{
+  "file": "internal/performance/lineage_reader_test.go",
+  "source_sha256": "b0fc5fc14a8afab4ce69a6b895b3bf35507b431dfc2a0a227f3dff43763c0ad9",
+  "package": "performance",
+  "function": "ClosedStrategyTrades",
+  "receiver": "fakeJournalLineageReader",
+  "signature": "fakeJournalLineageReader.ClosedStrategyTrades(params=2, results=2)",
+  "start": {
+    "line": 16,
+    "column": 1
+  },
+  "end": {
+    "line": 22,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 19,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 16
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "++",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

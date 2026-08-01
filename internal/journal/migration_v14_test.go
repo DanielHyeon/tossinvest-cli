@@ -22,7 +22,9 @@ func TestMigrationV13ToV14IsAdditiveAndPreservesLegacyRiskIntentBytes(t *testing
 	if err := old.Close(); err != nil {
 		t.Fatal(err)
 	}
-	j := openTestJournalAt(t, path)
+	// Historical transition test: stop at v14 so a later additive migration
+	// cannot silently turn this into a different transition.
+	j := openJournalAtSchema(t, path, 14)
 	defer j.Close()
 	if version, err := j.SchemaVersion(context.Background()); err != nil || version != 14 {
 		t.Fatalf("version=%d err=%v", version, err)

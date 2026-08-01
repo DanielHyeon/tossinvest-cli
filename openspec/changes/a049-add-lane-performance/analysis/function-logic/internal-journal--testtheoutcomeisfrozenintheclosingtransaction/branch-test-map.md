@@ -1,0 +1,11 @@
+# Branch Test Map: `TestTheOutcomeIsFrozenInTheClosingTransaction`
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | `if` at line 76: `if got.InitialQuantity != "10" {`; invariant: missing/corrupt/alternate path is explicit | `TestTheOutcomeIsFrozenInTheClosingTransaction` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B2 | `if` at line 79: `if got.InitialRisk != "2000" {`; invariant: missing/corrupt/alternate path is explicit | `TestTheOutcomeIsFrozenInTheClosingTransaction` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B3 | `if` at line 82: `if got.ClosedAt == "" {`; invariant: missing/corrupt/alternate path is explicit | `TestTheOutcomeIsFrozenInTheClosingTransaction` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B4 | `if` at line 88: `if !strings.HasPrefix(got.RealizedPnLAfterCosts, "1") {`; invariant: missing/corrupt/alternate path is explicit | `TestTheOutcomeIsFrozenInTheClosingTransaction` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B5 | `if` at line 93: `if net >= gross {`; invariant: missing/corrupt/alternate path is explicit | `TestTheOutcomeIsFrozenInTheClosingTransaction` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B6 | `if` at line 97: `if got.CostTotal == nil {`; invariant: missing/corrupt/alternate path is explicit | `TestTheOutcomeIsFrozenInTheClosingTransaction` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B7 | `if` at line 101: `if ratOf(*got.CostTotal).Cmp(wantCost) != 0 {`; invariant: missing/corrupt/alternate path is explicit | `TestTheOutcomeIsFrozenInTheClosingTransaction` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |

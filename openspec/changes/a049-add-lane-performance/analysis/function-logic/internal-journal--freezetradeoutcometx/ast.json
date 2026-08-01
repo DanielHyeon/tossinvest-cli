@@ -1,0 +1,93 @@
+{
+  "file": "internal/journal/trade_outcomes.go",
+  "source_sha256": "15afdf037fcc104768b6a14a4d99b916f6b277639bbfb394f2437c7f527adec6",
+  "package": "journal",
+  "function": "freezeTradeOutcomeTx",
+  "signature": "freezeTradeOutcomeTx(params=4, results=1)",
+  "start": {
+    "line": 129,
+    "column": 1
+  },
+  "end": {
+    "line": 145,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 17
+      },
+      "text": "computeTradeOutcome"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 12
+      },
+      "text": "tx.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 3
+      },
+      "text": "nullableString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 45
+      },
+      "text": "nullableRung"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

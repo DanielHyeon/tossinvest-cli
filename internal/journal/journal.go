@@ -55,6 +55,11 @@ type Options struct {
 	// and neither can be expressed with the released migration list. Nil in
 	// production, where defaultMigrationPlan applies.
 	migrationOverride *migrationPlan
+
+	// migrationHook is a same-package crash-test seam. Production never assigns
+	// it. A hook can terminate the test process at an exact transaction boundary
+	// without changing migration SQL or introducing a runtime code path.
+	migrationHook func(stage string, version int)
 }
 
 // Journal is an open journal database.
@@ -81,6 +86,10 @@ type Journal struct {
 	// exitWriteHook is a same-package test seam for transaction fault injection.
 	// Production never assigns it.
 	exitWriteHook func(stage string) error
+
+	// migrationHook is copied from Options only for same-package crash tests.
+	// It is nil/no-op in production and is unrelated to order/fill/close paths.
+	migrationHook func(stage string, version int)
 }
 
 // Open resolves the path, verifies the filesystem, creates the data directory if
@@ -141,7 +150,7 @@ func Open(ctx context.Context, opts Options) (*Journal, error) {
 		return nil, fmt.Errorf("journal: connecting to %s: %w", path, err)
 	}
 
-	j := &Journal{db: db, path: path, clk: clk, fs: fs}
+	j := &Journal{db: db, path: path, clk: clk, fs: fs, migrationHook: opts.migrationHook}
 	// Corruption is checked before the schema is touched: a migration against a
 	// damaged file would write on top of the damage. A corrupt journal means we
 	// cannot say what the engine did last, so startup is refused rather than
@@ -288,9 +297,15 @@ func (j *Journal) applyMigration(ctx context.Context, m migration) error {
 		 ON CONFLICT(key) DO UPDATE SET value = excluded.value`, now); err != nil {
 		return fmt.Errorf("journal: recording migrated_at: %w", err)
 	}
+	if j.migrationHook != nil {
+		j.migrationHook("before_version", m.Version)
+	}
 	// PRAGMA user_version does not accept a bound parameter.
 	if _, err := tx.ExecContext(ctx, "PRAGMA user_version = "+strconv.Itoa(m.Version)); err != nil {
 		return fmt.Errorf("journal: setting schema version %d: %w", m.Version, err)
+	}
+	if j.migrationHook != nil {
+		j.migrationHook("after_version", m.Version)
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("journal: committing migration %d: %w", m.Version, err)

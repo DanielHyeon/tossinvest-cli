@@ -6,6 +6,7 @@ package journal
 import (
 	"context"
 	"errors"
+	"math/big"
 	"strings"
 	"testing"
 	"time"
@@ -92,6 +93,13 @@ func TestTheOutcomeIsFrozenInTheClosingTransaction(t *testing.T) {
 	if net >= gross {
 		t.Errorf("pnl = %s, which is not below the %v gross; the costs were not deducted",
 			got.RealizedPnLAfterCosts, gross)
+	}
+	if got.CostTotal == nil {
+		t.Fatal("a newly frozen v15 outcome must carry the exact measured cost total")
+	}
+	wantCost := new(big.Rat).Sub(ratOf("20000"), ratOf(got.RealizedPnLAfterCosts))
+	if ratOf(*got.CostTotal).Cmp(wantCost) != 0 {
+		t.Errorf("cost_total=%s want gross-pnl=%s", *got.CostTotal, ratText(wantCost))
 	}
 }
 
@@ -236,6 +244,17 @@ func TestABackfillRecoversTheGapAndRefusesToRewriteIt(t *testing.T) {
 	}
 	if filled.InitialQuantity != "10" {
 		t.Errorf("backfilled = %+v, want the same numbers the close would have frozen", filled)
+	}
+	if filled.CostTotal == nil {
+		t.Fatal("a v15 backfill must persist its exact measured cost total")
+	}
+	wantBackfillCost := new(big.Rat).Sub(ratOf("20000"), ratOf(filled.RealizedPnLAfterCosts))
+	if ratOf(*filled.CostTotal).Cmp(wantBackfillCost) != 0 {
+		t.Fatalf("backfill cost_total=%s want gross-pnl=%s", *filled.CostTotal, ratText(wantBackfillCost))
+	}
+	stored := outcomeOf(t, j, id)
+	if stored.CostTotal == nil || *stored.CostTotal != *filled.CostTotal {
+		t.Fatalf("stored cost=%v backfill cost=%v", stored.CostTotal, filled.CostTotal)
 	}
 	if _, err := j.BackfillTradeOutcome(ctx, id, costs.DefaultModel()); !errors.Is(err, ErrTradeOutcomeExists) {
 		t.Fatalf("err = %v, want ErrTradeOutcomeExists — a frozen row is not rewritten", err)

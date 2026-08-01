@@ -1,0 +1,29 @@
+{
+  "file": "internal/performance/model_test.go",
+  "source_sha256": "de16432f8876751c6c97a0b3b8bea8e682ea2b12f4983a0f57b6a5d28ba387af",
+  "package": "performance",
+  "function": "completeLineage",
+  "signature": "completeLineage(params=0, results=1)",
+  "start": {
+    "line": 8,
+    "column": 1
+  },
+  "end": {
+    "line": 20,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 9,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,110 @@
+{
+  "file": "internal/performance/lineage_reader.go",
+  "source_sha256": "35ec9afac066649dd7183ea0911fce998881368e48b568fe1c00d85967643495",
+  "package": "performance",
+  "function": "validate",
+  "receiver": "ClosedTradeWindow",
+  "signature": "ClosedTradeWindow.validate(params=0, results=1)",
+  "start": {
+    "line": 30,
+    "column": 1
+  },
+  "end": {
+    "line": 38,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 35,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 5
+      },
+      "text": "w.ClosedAfter.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 31
+      },
+      "text": "w.ClosedAtOrBefore.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 63
+      },
+      "text": "w.ClosedAfter.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 10
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
