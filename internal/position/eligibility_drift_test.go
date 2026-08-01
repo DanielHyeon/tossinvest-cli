@@ -40,6 +40,11 @@ var eligibilitySpellers = map[string]string{
 	"internal/journal/position_projection.go": "the projection: the select list and Adopted(), " +
 		"which reports which record justifies the position rather than whether one does",
 	"internal/journal/exit_state.go": "the opening transaction's re-read, which calls the predicate",
+	"internal/journal/position_policy.go": "the lifecycle projection reads both provenance IDs, " +
+		"calls the shared predicate for generic exit eligibility, and separately classifies typed " +
+		"external-adoption lifecycle authority",
+	"internal/journal/apply_hook.go": "the re-adopt reset reads adoption_id only to pin the " +
+		"adopted policy identity; lifecycle eligibility was already enforced by the command and journal boundaries",
 	"internal/journal/position_adjustments.go": "the INSERT that folds an external holding in with " +
 		"entry_decision_id NULL",
 	"internal/journal/core_domain.go":     "the DDL",

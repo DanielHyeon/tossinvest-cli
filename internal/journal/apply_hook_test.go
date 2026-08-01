@@ -522,8 +522,11 @@ func TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook(t *testing.T) {
 	t.Parallel()
 
 	// core_domain.go declares the columns (the DDL); apply_hook.go is the only
-	// code that reads or writes them. Nothing else may name them.
-	allowed := map[string]bool{"core_domain.go": true, "apply_hook.go": true}
+	// writer. position_policy.go may read pending_action for the management list,
+	// but the UPDATE scan below still rejects any writer outside apply_hook.go.
+	allowedReaders := map[string]bool{
+		"core_domain.go": true, "apply_hook.go": true, "position_policy.go": true,
+	}
 
 	entries, err := os.ReadDir(".")
 	if err != nil {
@@ -544,12 +547,19 @@ func TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook(t *testing.T) {
 		for _, column := range guardedColumns {
 			mentions := strings.Contains(text, column)
 			switch {
-			case mentions && !allowed[name]:
+			case mentions && !allowedReaders[name]:
 				t.Errorf("%s names exit_states.%s: that column moves only at the atomic apply "+
 					"point (apply_hook.go), and a second writer would make "+
 					"\"taken_ratio·pending 해소는 여기서만\" false", name, column)
 			case mentions && name == "apply_hook.go":
 				writer = true
+			}
+			for _, stmt := range updateStatements(text) {
+				if strings.Contains(stmt, column) && name != "apply_hook.go" {
+					t.Errorf("%s contains an UPDATE naming exit_states.%s:\n\t%s\n"+
+						"the guarded column may only move in apply_hook.go",
+						name, column, strings.TrimSpace(stmt))
+				}
 			}
 		}
 	}

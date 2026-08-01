@@ -370,7 +370,9 @@ func TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingEl
 	src := readSource(t, "console.go")
 	for _, want := range []string{
 		"consoleJournalPath(root)",
-		"JournalPath:  journalPath",
+		"positionpolicyrpc.Dial(ctx, descriptorPath)",
+		"JournalPath:      journalPath",
+		"PositionPolicies: positionPolicyCommander",
 		"verifyRunLockPath(verifyRecord)",
 	} {
 		if !strings.Contains(src, want) {
@@ -380,6 +382,22 @@ func TestTheConsoleReadsTheJournalPathAndTheRunLockFromTheSamePlacesEverythingEl
 	if strings.Contains(src, "journal.Open(") {
 		t.Error("console.go opens the journal writable for the console; the dashboard opens it read-only " +
 			"itself, and this path would create and migrate it")
+	}
+}
+
+func TestConsolePolicyWiringCannotOpenOrMigrateTheTradingJournal(t *testing.T) {
+	src := readSource(t, "console.go")
+	for _, forbidden := range []string{
+		"NewPositionPolicyCommandService", "journal.Open(", "ApplyPositionPolicy(",
+	} {
+		if strings.Contains(src, forbidden) {
+			t.Errorf("console process contains forbidden journal command capability %q", forbidden)
+		}
+	}
+	for _, required := range []string{"positionpolicyrpc.DescriptorPath", "positionpolicyrpc.Dial"} {
+		if !strings.Contains(src, required) {
+			t.Errorf("console process lacks narrow engine client %q", required)
+		}
 	}
 }
 

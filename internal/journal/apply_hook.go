@@ -89,6 +89,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
@@ -509,6 +510,9 @@ type ExitState struct {
 	PositionID string
 	PolicyKind string
 	PolicyID   string
+	// LifecycleGeneration scopes operator release/re-adopt independently from
+	// PositionGeneration, which identifies the broker position instance.
+	LifecycleGeneration int64
 	// PolicyIdentity is populated by new state creation and by the engine's
 	// runtime compatibility resolver. Rows read from the pre-a042 schema leave
 	// it zero rather than inventing a version or digest from today's registry.
@@ -551,7 +555,20 @@ const exitStateSelect = `SELECT position_id, policy_kind, policy_id, entry_price
 	completed, updated_at, snapshot_status, policy_version, policy_digest, snapshot_id,
 	decision_id, observation_id, position_generation, next_target, next_protection,
 	last_observation_source, last_observed_at, snapshot_action, snapshot_ratio,
-	projected_quantity, state_only, suppressed_reason, effective_snapshot_json FROM exit_states`
+	projected_quantity, state_only, suppressed_reason, effective_snapshot_json,
+	coalesce(lifecycle_generation,1) FROM exit_states`
+
+const currentManagedExitLifecycle = ` AND (
+	NOT EXISTS (SELECT 1 FROM position_policy_lifecycles any_l WHERE any_l.position_id=e.position_id)
+	OR EXISTS (
+		SELECT 1 FROM position_policy_lifecycles current_l
+		 WHERE current_l.position_id=e.position_id
+		   AND current_l.status='MANAGED'
+		   AND current_l.adoption_generation=coalesce(e.lifecycle_generation,1)
+		   AND NOT EXISTS (
+			SELECT 1 FROM position_policy_lifecycles newer_l
+			 WHERE newer_l.position_id=current_l.position_id
+			   AND newer_l.adoption_generation>current_l.adoption_generation)))`
 
 func scanExitState(row rowScanner) (ExitState, error) {
 	result, err := scanExitStateResult(row)
@@ -577,7 +594,7 @@ func (j *Journal) OpenExitStates(ctx context.Context, accountRef string) ([]Exit
 	account := strings.TrimSpace(accountRef)
 	rows, err := j.db.QueryContext(ctx, exitStateSelect+` e
 		  JOIN positions p ON p.id = e.position_id
-		 WHERE p.account_ref = ? AND e.completed = 0
+		 WHERE p.account_ref = ? AND e.completed = 0`+currentManagedExitLifecycle+`
 		 ORDER BY p.market, p.symbol, p.instance_seq`, account)
 	if err != nil {
 		return nil, fmt.Errorf("journal: listing the exit states of %s: %w", account, err)
@@ -629,6 +646,59 @@ func armExitProposalTx(ctx context.Context, tx *sql.Tx, positionID string,
 		return fmt.Errorf("journal: arming the proposal of %s: %w", positionID, err)
 	}
 	return nil
+}
+
+// resetExitStateForReadoptTx is the only reset writer for the four guarded
+// execution-time columns. The caller already holds the lifecycle transaction,
+// so the fresh t0 state and its generation become visible together or not at
+// all. No old watermark, rung, taken ratio, proposal, or evaluated snapshot is
+// carried into the new lifecycle.
+func resetExitStateForReadoptTx(ctx context.Context, tx *sql.Tx, positionID string,
+	generation int64, observation positionpolicy.ReAdoptionObservation, now string) error {
+	open, err := exitpolicy.OpenRatchetState(observation.ObservedPrice, observation.SyntheticStop)
+	if err != nil {
+		return fmt.Errorf("%w: invalid re-adopt observation: %v", ErrInvalidRequest, err)
+	}
+	var adoptionID sql.NullString
+	var positionGeneration int64
+	if err := tx.QueryRowContext(ctx, `SELECT adoption_id,instance_seq FROM positions WHERE id=?`,
+		positionID).Scan(&adoptionID, &positionGeneration); err != nil {
+		return fmt.Errorf("journal: reading re-adopt eligibility of %s: %w", positionID, err)
+	}
+	policyID := strings.TrimSpace(observation.PolicyID)
+	kind := policyKindForID(policyID)
+	identity, err := seedPolicyIdentity(kind, policyID, strings.TrimSpace(adoptionID.String) != "",
+		exitpolicy.PolicyIdentity{})
+	if err != nil {
+		return err
+	}
+	result, err := tx.ExecContext(ctx, `UPDATE exit_states SET
+		policy_kind=?,policy_id=?,entry_price=?,initial_stop=?,initial_risk=?,
+		baseline_price=?,high_water=?,ratchet_level=?,active_rung=NULL,taken_ratio_total='0',
+		pending_action=NULL,pending_level=NULL,pending_intent_id=NULL,completed=0,updated_at=?,
+		snapshot_status=?,policy_version=?,policy_digest=?,snapshot_id=NULL,decision_id=NULL,
+		observation_id=NULL,position_generation=?,next_target=NULL,next_protection=NULL,
+		last_observation_source=NULL,last_observed_at=NULL,snapshot_action=NULL,snapshot_ratio=NULL,
+		projected_quantity=NULL,state_only=NULL,suppressed_reason=NULL,effective_snapshot_json=NULL,
+		lifecycle_generation=? WHERE position_id=? AND completed=0`,
+		kind, nullableString(identity.ID), observation.ObservedPrice, observation.SyntheticStop,
+		open.InitialRisk, open.Baseline, open.HighWater, string(open.Level), now, SnapshotStatusSeed,
+		identity.Version, identity.Digest, positionGeneration, generation, positionID)
+	if err != nil {
+		return fmt.Errorf("journal: resetting exit state for re-adopt of %s: %w", positionID, err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected != 1 {
+		return fmt.Errorf("%w: position %s has no open exit state to re-adopt", ErrExitStateNotFound, positionID)
+	}
+	return appendExitEventTx(ctx, tx, exitEventRow{
+		PositionID: positionID, ObservedPrice: observation.ObservedPrice,
+		HighWater: open.HighWater, BaselineAfter: open.Baseline, LevelAfter: string(open.Level),
+		Action: ExitEventReadopted, CreatedAt: now,
+	})
 }
 
 // AttachExitIntent records which intent carries an already-armed proposal.

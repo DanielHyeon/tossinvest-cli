@@ -387,6 +387,8 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/settings/system-update/download": true,
 		"/settings/system-update/install":  true,
 		"/optimization/exit-policy":        true,
+		"/position-management/preview":     true,
+		"/position-management/apply":       true,
 		"/openapi/login/save":              true,
 		"/logout":                          true,
 	}
@@ -965,6 +967,17 @@ var consoleCapabilities = map[string]capability{
 	// The common exit-policy editor carries only the typed policy ID block. It
 	// cannot reach broker, journal, automation gate, or trading toggles.
 	"ExitPolicies": {Methods: []string{"Load", "Save"}},
+	// Generation-scoped policy writes are a deliberately narrow engine-owned
+	// command capability. Its messages contain no broker, SQL, config, toggle or
+	// arbitrary user text; the console can only submit an opaque server action.
+	"PositionPolicies": {
+		Methods: []string{"List", "Preview", "Apply"},
+		VerbExemptions: map[string]string{
+			"PositionPolicies":        "the engine-owned position policy command capability; it cannot place orders or flip operating toggles",
+			"PositionPolicyCommander": "the exact three-method local command seam, carrying only generation/version-bound domain messages",
+			"Apply":                   "commits one already-previewed position policy lifecycle CAS; it has no broker or config capability",
+		},
+	},
 	// The Guardian limits are a read, and they are a seam of their own rather
 	// than a third method on Settings: that one writes the adoption block, and a
 	// screen that only wants to display a ceiling must not gain the ability to

@@ -22,7 +22,8 @@ func TestMigrationV10ToV11AddsIntentIndexAndPreservesRows(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 11)
+	defer j.Close()
 	if version, err := j.SchemaVersion(context.Background()); err != nil || version != 11 {
 		t.Fatalf("schema version = %d, err=%v", version, err)
 	}
@@ -80,7 +81,8 @@ func TestFailedV11MigrationRollsBackIndexAndVersion(t *testing.T) {
 		t.Fatalf("backups=%v", backups)
 	}
 	restoreBackup(t, backups[0], path)
-	restored := openTestJournalAt(t, path)
+	restored := openJournalAtSchema(t, path, 11)
+	defer restored.Close()
 	if version, versionErr := restored.SchemaVersion(context.Background()); versionErr != nil || version != 11 {
 		t.Fatalf("restored version=%d err=%v", version, versionErr)
 	}

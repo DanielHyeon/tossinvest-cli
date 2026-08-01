@@ -1,0 +1,155 @@
+{
+  "file": "internal/app/engine/position_policy_command.go",
+  "source_sha256": "131359f964fa8395705e96abd70e52c48c051f58defff7e3ecb647cd2cbb44f2",
+  "package": "engine",
+  "function": "Preview",
+  "receiver": "PositionPolicyCommandService",
+  "signature": "PositionPolicyCommandService.Preview(params=2, results=2)",
+  "start": {
+    "line": 95,
+    "column": 1
+  },
+  "end": {
+    "line": 112,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 2
+      },
+      "text": "s.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 8
+      },
+      "text": "s.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 19
+      },
+      "text": "s.prepare"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 18
+      },
+      "text": "s.j.PreviewPositionPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 16
+      },
+      "text": "s.issueCapability"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 97,
+        "column": 2
+      },
+      "text": "s.mu.Unlock"
+    }
+  ]
+}

@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 11
+const SchemaVersion = 12
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -73,6 +73,9 @@ var migrations = []migration{
 	{Version: 10, SQL: schemaV10},
 	// schemaV11 lives in account_views.go beside the bounded evidence query.
 	{Version: 11, SQL: schemaV11},
+	// schemaV12 lives in position_policy.go beside the generation-scoped CAS
+	// repository. It only adds tables; existing exit snapshots are never rebound.
+	{Version: 12, SQL: schemaV12},
 }
 
 // schemaV1 is the initial schema.

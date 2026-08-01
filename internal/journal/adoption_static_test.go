@@ -42,6 +42,8 @@ var adoptionIDReaders = map[string]bool{
 	"trade_outcomes.go":      true, // the adopted-position freeze branch
 	"provenance.go":          true, // the ADOPTION lineage arm
 	"trade_analytics.go":     true, // the split-by-source join
+	"apply_hook.go":          true, // re-adopt eligibility/readopt reset source read
+	"position_policy.go":     true, // management-list eligibility projection
 }
 
 // productionSources returns every non-test .go file in this package, with its

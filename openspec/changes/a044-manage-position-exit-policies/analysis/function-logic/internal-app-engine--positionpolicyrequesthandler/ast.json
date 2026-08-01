@@ -1,0 +1,347 @@
+{
+  "file": "internal/app/engine/position_policy_transport.go",
+  "source_sha256": "57fee28edc05bd1e53b775940fd1ec4def8d3d1d4e94a3fb69a53d6faad98efd",
+  "package": "engine",
+  "function": "positionPolicyRequestHandler",
+  "signature": "positionPolicyRequestHandler(params=1, results=1)",
+  "start": {
+    "line": 163,
+    "column": 1
+  },
+  "end": {
+    "line": 204,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 166,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 188,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 173,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 183,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 24
+      },
+      "text": "mime.ParseMediaType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 44
+      },
+      "text": "r.Header.Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 16
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 27
+      },
+      "text": "io.LimitReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 14
+      },
+      "text": "json.NewDecoder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 30
+      },
+      "text": "bytes.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 3
+      },
+      "text": "decoder.DisallowUnknownFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 13
+      },
+      "text": "decoder.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 13
+      },
+      "text": "decoder.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 41
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 18
+      },
+      "text": "call"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 23
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 4
+      },
+      "text": "writePositionPolicyRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 3
+      },
+      "text": "writeRPCJSON"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 186,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

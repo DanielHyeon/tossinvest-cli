@@ -292,6 +292,10 @@ type Options struct {
 	// capability, and a gate save must not silently approve reboot starts.
 	EngineBoot EngineBootSettings
 
+	// PositionPolicies is an engine-owned local command capability. It exposes
+	// no journal handle, SQL, broker, config, or operating toggle.
+	PositionPolicies PositionPolicyCommander
+
 	// --- the engine (change add-engine-runtime, task 2.1) ---
 	//
 	// The console shows whether the engine is running and can start and stop the
@@ -330,6 +334,9 @@ type Console struct {
 	// approval path with extra steps.
 	session string
 	csrf    string
+	// policySeal signs opaque, version-bound policy action tokens. It is random
+	// per process and cannot be supplied through Options.
+	policySeal []byte
 
 	// startedWith is the fingerprint of the binary this process was loaded from,
 	// taken once. Everything after compares against it: a console that has been
@@ -399,13 +406,14 @@ func New(o Options) (*Console, error) {
 		return nil, err
 	}
 	c := &Console{
-		opts:     o,
-		now:      now,
-		out:      o.Out,
-		remote:   remote,
-		session:  newToken(32),
-		csrf:     newToken(16),
-		relaunch: make(chan int, 1),
+		opts:       o,
+		now:        now,
+		out:        o.Out,
+		remote:     remote,
+		session:    newToken(32),
+		csrf:       newToken(16),
+		policySeal: []byte(newToken(32)),
+		relaunch:   make(chan int, 1),
 	}
 	if c.out == nil {
 		c.out = io.Discard
@@ -719,6 +727,11 @@ func (c *Console) routes() http.Handler {
 	mux.HandleFunc("/strategy-runtime/market-schedule", c.session0(c.handleMarketSchedule))
 	mux.HandleFunc("/optimization/exit-policy",
 		c.session0(c.mutating(c.handleOptimizationSave)))
+	mux.HandleFunc("/position-management", c.session0(c.readOnly(c.handlePositionManagement)))
+	mux.HandleFunc("/position-management/preview",
+		c.session0(c.mutating(c.handlePositionPolicyPreview, 4096)))
+	mux.HandleFunc("/position-management/apply",
+		c.session0(c.mutating(c.handlePositionPolicyApply, 4096)))
 	mux.HandleFunc("/verify", c.session0(c.handleVerify))
 	mux.HandleFunc("/verify/start", c.session0(c.mutating(c.startExclusive(c.handleStart))))
 	mux.HandleFunc("/verify/approve", c.session0(c.mutating(c.handleApprove)))

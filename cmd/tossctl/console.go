@@ -60,6 +60,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/handoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/localupdate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/version"
@@ -311,6 +312,24 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		fmt.Fprintln(cmd.ErrOrStderr(), engineBootNote)
 	}
 
+	// The console receives only an authenticated loopback client. The running
+	// engine owns the server and its already-open journal; this process cannot
+	// create, migrate, or directly write that journal through this seam.
+	var positionPolicyCommander console.PositionPolicyCommander
+	if engineDir != "" {
+		descriptorPath := positionpolicyrpc.DescriptorPath(engineDir)
+		if _, statErr := os.Stat(descriptorPath); statErr == nil {
+			client, dialErr := positionpolicyrpc.Dial(ctx, descriptorPath)
+			if dialErr != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 control plane에 연결할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", dialErr)
+			} else {
+				positionPolicyCommander = client
+			}
+		} else if !errors.Is(statErr, os.ErrNotExist) {
+			fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 endpoint를 확인할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", statErr)
+		}
+	}
+
 	serveErr := console.ListenAndServe(ctx, console.Options{
 		Port:                    opts.port,
 		Remote:                  remote,
@@ -336,11 +355,12 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Holdings: newConsoleHoldings(reads),
 		// The orders screen's read (change console-orders-screen). One method,
 		// behind which this file makes the three calls a refresh costs.
-		Orders:       consoleOrdersSeam(reads),
-		JournalPath:  journalPath,
-		RunLockPath:  verifyRunLockPath(verifyRecord),
-		Settings:     consoleSettingsSeam(root),
-		ExitPolicies: consoleExitPolicySettingsSeam(root),
+		Orders:           consoleOrdersSeam(reads),
+		JournalPath:      journalPath,
+		RunLockPath:      verifyRunLockPath(verifyRecord),
+		Settings:         consoleSettingsSeam(root),
+		ExitPolicies:     consoleExitPolicySettingsSeam(root),
+		PositionPolicies: positionPolicyCommander,
 
 		// The market schedule is a read-only projection. Keep it in its own
 		// capability block so the older dashboard source contract remains stable.

@@ -101,6 +101,8 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"operating_modes",
 		"position_adjustments",
 		"position_adoptions",
+		"position_policy_events",
+		"position_policy_lifecycles",
 		"positions",
 		"reconcile_states",
 		"risk_reservations",

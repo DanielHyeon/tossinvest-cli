@@ -1,0 +1,93 @@
+{
+  "file": "internal/journal/exit_snapshot.go",
+  "source_sha256": "c825a3aebe46797d2c7a96ddbd63e124e8c65c0dd4eee99406c82a454e0f50bb",
+  "package": "journal",
+  "function": "scanExitEvent",
+  "signature": "scanExitEvent(params=2, results=1)",
+  "start": {
+    "line": 288,
+    "column": 1
+  },
+  "end": {
+    "line": 306,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 299,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 302,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 12
+      },
+      "text": "row.Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 9
+      },
+      "text": "hydrateExitEventEvidence"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

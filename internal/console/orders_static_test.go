@@ -130,11 +130,12 @@ func TestTheRouteTableJudgementStillCatchesAnActingRouteThatIsNotOnTheAllowlist(
 
 // TestTradingViewsAreRegisteredReadOnlyAndNothingElseIs.
 //
-// The exception is worth exactly one route. This is what fails if a second one is
-// quietly wrapped in `reading` to borrow it, and what fails if /orders loses the
-// wrapper and starts serving POSTs.
+// The allowlist is exact. This fails if another route quietly borrows the
+// wrapper, or if any named account read loses it and starts serving POSTs.
 func TestTheOrdersRouteIsRegisteredReadOnlyAndNothingElseIs(t *testing.T) {
-	found := map[string]bool{"/orders": false, "/positions": false}
+	found := map[string]bool{
+		"/orders": false, "/positions": false, "/position-management": false,
+	}
 	for _, r := range registeredRoutes(t) {
 		if _, tradingView := found[r.Path]; tradingView {
 			found[r.Path] = true
@@ -142,10 +143,10 @@ func TestTheOrdersRouteIsRegisteredReadOnlyAndNothingElseIs(t *testing.T) {
 				t.Errorf("%s is registered without the readOnly wrapper", r.Path)
 			}
 			if r.CSRFGated {
-				t.Error("/orders is behind the CSRF gate; it is a reading and nobody could open it")
+				t.Errorf("%s is behind the CSRF gate; it is a reading", r.Path)
 			}
 			if !r.Session {
-				t.Error("/orders is registered without session0")
+				t.Errorf("%s is registered without session0", r.Path)
 			}
 			continue
 		}
@@ -193,6 +194,9 @@ func TestTheSeamsWithVerbExemptionsAreEnumeratedAndArgued(t *testing.T) {
 		"AcquireUpdateEngineLock":   {"AcquireUpdateEngineLock": true},
 		"CheckUpdateVerifyActivity": {"CheckUpdateVerifyActivity": true},
 		"SystemUpdater":             {"SystemUpdater": true, "Install": true},
+		"PositionPolicies": {
+			"PositionPolicies": true, "PositionPolicyCommander": true, "Apply": true,
+		},
 	}
 
 	for field, cap := range consoleCapabilities {

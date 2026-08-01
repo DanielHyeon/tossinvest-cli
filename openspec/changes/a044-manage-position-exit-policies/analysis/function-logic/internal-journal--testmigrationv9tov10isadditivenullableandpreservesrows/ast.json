@@ -1,0 +1,287 @@
+{
+  "file": "internal/journal/migration_v10_test.go",
+  "source_sha256": "69d5bc8e81501830bfb9124b81736ff4ab853e664e34b112b17ab5da2cf0d5ae",
+  "package": "journal",
+  "function": "TestMigrationV9ToV10IsAdditiveNullableAndPreservesRows",
+  "signature": "TestMigrationV9ToV10IsAdditiveNullableAndPreservesRows(params=1, results=0)",
+  "start": {
+    "line": 13,
+    "column": 1
+  },
+  "end": {
+    "line": 52,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 43,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 24
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 9
+      },
+      "text": "openJournalAtSchema"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 2
+      },
+      "text": "seedV8Rows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 12
+      },
+      "text": "countRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 12
+      },
+      "text": "old.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 7
+      },
+      "text": "openTestJournalAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 21
+      },
+      "text": "j.SchemaVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 37
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 14
+      },
+      "text": "countRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 48
+      },
+      "text": "sameCounts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 14
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 14
+      },
+      "text": "j.db.QueryRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 18,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 23,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 26,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

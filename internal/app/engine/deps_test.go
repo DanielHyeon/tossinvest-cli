@@ -55,6 +55,23 @@ func TestEngineDependencyGraphExcludesWTSMutators(t *testing.T) {
 	}
 }
 
+func TestConsolePositionPolicyClientCannotReachJournalOrEngineConstructors(t *testing.T) {
+	t.Parallel()
+	deps := transitiveInternalDeps(t, modulePath+"internal/positionpolicyrpc")
+	forbidden := []string{
+		modulePath + "internal/journal",
+		modulePath + "internal/app/engine",
+		modulePath + "internal/config",
+		modulePath + "internal/official",
+	}
+	for _, dependency := range forbidden {
+		if deps[dependency] {
+			t.Errorf("console RPC client transitively reaches forbidden capability %s: %v",
+				dependency, sortedKeys(deps))
+		}
+	}
+}
+
 // transitiveInternalDeps returns every in-module package reachable from pkg by
 // production (non-test) imports. It parses imports directly rather than shelling
 // out to `go list` so the test needs no toolchain subprocess and no module

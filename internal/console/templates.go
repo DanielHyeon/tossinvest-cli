@@ -137,6 +137,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
     <a href="/history" {{if eq .Nav "history"}}class="on" aria-current="page"{{end}}>거래 이력</a>
     <a href="/settings#adoption" {{if eq .Nav "settings"}}class="on" aria-current="page"{{end}}>외부 종목 자동관리</a>
     <a href="/optimization" {{if eq .Nav "optimization"}}class="on" aria-current="page"{{end}}>최적화</a>
+	<a href="/position-management" {{if eq .Nav "position-management"}}class="on" aria-current="page"{{end}}>포지션 정책</a>
     <a href="/verify" {{if eq .Nav "verify"}}class="on" aria-current="page"{{end}}>검증</a>
     <a href="/report" {{if eq .Nav "report"}}class="on" aria-current="page"{{end}}>리포트</a>
   </nav>

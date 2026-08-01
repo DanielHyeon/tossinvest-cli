@@ -58,20 +58,17 @@ var pageFuncs = template.FuncMap{
 // "foot" and the one stylesheet rather than growing a second look. The overview
 // joins the same chain and reuses "journalstate" from the portfolio set, so the
 // four journal failures are worded once for every screen that can hit them.
-var pages = template.Must(template.Must(
-	template.Must(
-		template.Must(
-			template.Must(
-				template.Must(
-					template.Must(
-						template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates)).
-							Parse(portfolioTemplates)).
-						Parse(settingsTemplates)).
-					Parse(overviewTemplates)).
-				Parse(ordersTemplates)).
-			Parse(signalsTemplates)).
-		Parse(optimizationTemplates)).
-	Parse(openAPIOnboardingTemplates))
+var pages = func() *template.Template {
+	t := template.Must(template.New("console").Funcs(pageFuncs).Parse(pageTemplates))
+	for _, source := range []string{
+		portfolioTemplates, settingsTemplates, overviewTemplates, ordersTemplates,
+		signalsTemplates, optimizationTemplates, openAPIOnboardingTemplates,
+		positionPolicyTemplates,
+	} {
+		t = template.Must(t.Parse(source))
+	}
+	return t
+}()
 
 // --- dashboard --------------------------------------------------------------
 
