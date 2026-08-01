@@ -1,16 +1,16 @@
 {
   "file": "internal/performance/store.go",
-  "source_sha256": "a098bd0b95369be196270276cc3815655813feb7568db333665b65d580809887",
+  "source_sha256": "13da763c639fdf210d06d71a0bcf4dfb9ab5a4e98f97114ab8b4b6f8a7df637b",
   "package": "performance",
   "function": "AppendTrade",
   "receiver": "Store",
   "signature": "Store.AppendTrade(params=2, results=1)",
   "start": {
-    "line": 125,
+    "line": 132,
     "column": 1
   },
   "end": {
-    "line": 141,
+    "line": 148,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 126,
+        "line": 133,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 130,
+        "line": 137,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 134,
+        "line": 141,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 137,
+        "line": 144,
         "column": 2
       }
     }
@@ -51,21 +51,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 127,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 131,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 135,
+        "line": 134,
         "column": 3
       }
     },
@@ -79,7 +65,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 140,
+        "line": 142,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 145,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 147,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 126,
+        "line": 133,
         "column": 12
       },
       "text": "trade.validate"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 129,
+        "line": 136,
         "column": 13
       },
       "text": "s.db.BeginTx"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 131,
+        "line": 138,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 133,
+        "line": 140,
         "column": 8
       },
       "text": "tx.Rollback"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 134,
+        "line": 141,
         "column": 12
       },
       "text": "compareAndAppendTrade"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 137,
+        "line": 144,
         "column": 12
       },
       "text": "tx.Commit"
@@ -136,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 138,
+        "line": 145,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -146,28 +146,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 126,
+        "line": 133,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 129,
+        "line": 136,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 134,
+        "line": 141,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 137,
+        "line": 144,
         "column": 5
       }
     }
@@ -177,7 +177,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 133,
+        "line": 140,
         "column": 2
       },
       "text": "tx.Rollback"

@@ -16,10 +16,12 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | reader nil | none | error | handoff test |
-| B2 | reader error | none | wrapped error | handoff error test |
-| B3 | trade exact replay | no duplicate rows | snapshot included in result | restart/replay test |
-| B4 | trade divergence/append failure | prior per-trade commits remain; current transaction rolls back | partial result + error | replay divergence test |
+| B1 | AST `if` at line 50: `if reader == nil {` | derived-store transaction(s) only after account/window/source validation | explicit success/error/continue path; no invented fallback | `TestJournalHandoffConsumesOneExactLineageReadAndCallerOwnedObservations`, `TestJournalHandoffValidatesAccountAndWindowBeforeReading`, `TestJournalHandoffReaderErrorWritesNothing`, `TestJournalHandoffStoreBindsOneServerSelectedAccount` |
+| B2 | AST `if` at line 53: `if err := window.validate(); err != nil {` | derived-store transaction(s) only after account/window/source validation | explicit success/error/continue path; no invented fallback | `TestJournalHandoffConsumesOneExactLineageReadAndCallerOwnedObservations`, `TestJournalHandoffValidatesAccountAndWindowBeforeReading`, `TestJournalHandoffReaderErrorWritesNothing`, `TestJournalHandoffStoreBindsOneServerSelectedAccount` |
+| B3 | AST `if` at line 57: `if err != nil {` | derived-store transaction(s) only after account/window/source validation | explicit success/error/continue path; no invented fallback | `TestJournalHandoffConsumesOneExactLineageReadAndCallerOwnedObservations`, `TestJournalHandoffValidatesAccountAndWindowBeforeReading`, `TestJournalHandoffReaderErrorWritesNothing`, `TestJournalHandoffStoreBindsOneServerSelectedAccount` |
+| B4 | AST `if` at line 60: `if err := s.bindJournalAccount(ctx, window.AccountRef); err != nil {` | derived-store transaction(s) only after account/window/source validation | explicit success/error/continue path; no invented fallback | `TestJournalHandoffConsumesOneExactLineageReadAndCallerOwnedObservations`, `TestJournalHandoffValidatesAccountAndWindowBeforeReading`, `TestJournalHandoffReaderErrorWritesNothing`, `TestJournalHandoffStoreBindsOneServerSelectedAccount` |
+| B5 | AST `range` at line 64: `for _, trade := range trades {` | derived-store transaction(s) only after account/window/source validation | explicit success/error/continue path; no invented fallback | `TestJournalHandoffConsumesOneExactLineageReadAndCallerOwnedObservations`, `TestJournalHandoffValidatesAccountAndWindowBeforeReading`, `TestJournalHandoffReaderErrorWritesNothing`, `TestJournalHandoffStoreBindsOneServerSelectedAccount` |
+| B6 | AST `if` at line 66: `if err != nil {` | derived-store transaction(s) only after account/window/source validation | explicit success/error/continue path; no invented fallback | `TestJournalHandoffConsumesOneExactLineageReadAndCallerOwnedObservations`, `TestJournalHandoffValidatesAccountAndWindowBeforeReading`, `TestJournalHandoffReaderErrorWritesNothing`, `TestJournalHandoffStoreBindsOneServerSelectedAccount` |
 
 ## Calls and live bindings
 

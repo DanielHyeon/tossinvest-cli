@@ -1,16 +1,16 @@
 {
   "file": "internal/performance/lineage_reader.go",
-  "source_sha256": "0d3a98b5b314926b144288569ec36f34558324829ada101dc47bbcd02da38fe4",
+  "source_sha256": "35ec9afac066649dd7183ea0911fce998881368e48b568fe1c00d85967643495",
   "package": "performance",
   "function": "CollectClosedStrategyTrades",
   "receiver": "Store",
   "signature": "Store.CollectClosedStrategyTrades(params=5, results=2)",
   "start": {
-    "line": 27,
+    "line": 43,
     "column": 1
   },
   "end": {
-    "line": 50,
+    "line": 72,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 34,
+        "line": 50,
         "column": 2
       }
     },
@@ -26,15 +26,15 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 38,
+        "line": 53,
         "column": 2
       }
     },
     {
       "id": "B3",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 42,
+        "line": 57,
         "column": 2
       }
     },
@@ -42,7 +42,23 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 44,
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 66,
         "column": 3
       }
     }
@@ -51,28 +67,42 @@
     {
       "kind": "return",
       "at": {
-        "line": 35,
+        "line": 51,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 39,
+        "line": 54,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 45,
+        "line": 58,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 49,
+        "line": 71,
         "column": 2
       }
     }
@@ -81,7 +111,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 35,
+        "line": 51,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -89,7 +119,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 37,
+        "line": 53,
+        "column": 12
+      },
+      "text": "window.validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
         "column": 17
       },
       "text": "reader.ClosedStrategyTrades"
@@ -97,7 +135,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 39,
+        "line": 58,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -105,7 +143,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 41,
+        "line": 60,
+        "column": 12
+      },
+      "text": "s.bindJournalAccount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
         "column": 15
       },
       "text": "make"
@@ -113,7 +159,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 41,
+        "line": 63,
         "column": 35
       },
       "text": "len"
@@ -121,7 +167,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 43,
+        "line": 65,
         "column": 20
       },
       "text": "s.Collect"
@@ -129,7 +175,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 47,
+        "line": 69,
         "column": 15
       },
       "text": "append"
@@ -139,28 +185,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 37,
+        "line": 53,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 41,
+        "line": 60,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 43,
+        "line": 65,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 47,
+        "line": 69,
         "column": 3
       }
     }

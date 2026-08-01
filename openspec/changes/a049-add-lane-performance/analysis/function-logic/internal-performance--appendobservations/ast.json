@@ -1,15 +1,15 @@
 {
   "file": "internal/performance/store.go",
-  "source_sha256": "a098bd0b95369be196270276cc3815655813feb7568db333665b65d580809887",
+  "source_sha256": "13da763c639fdf210d06d71a0bcf4dfb9ab5a4e98f97114ab8b4b6f8a7df637b",
   "package": "performance",
   "function": "appendObservations",
   "signature": "appendObservations(params=3, results=1)",
   "start": {
-    "line": 198,
+    "line": 205,
     "column": 1
   },
   "end": {
-    "line": 231,
+    "line": 238,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 199,
+        "line": 206,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 200,
+        "line": 207,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 208,
+        "line": 215,
         "column": 3
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 211,
+        "line": 218,
         "column": 3
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 212,
+        "line": 219,
         "column": 4
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 217,
+        "line": 224,
         "column": 3
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 225,
+        "line": 232,
         "column": 3
       }
     }
@@ -74,42 +74,42 @@
     {
       "kind": "return",
       "at": {
-        "line": 201,
+        "line": 208,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 209,
+        "line": 216,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 213,
+        "line": 220,
         "column": 5
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 219,
+        "line": 226,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 227,
+        "line": 234,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 230,
+        "line": 237,
         "column": 2
       }
     }
@@ -118,7 +118,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 207,
         "column": 13
       },
       "text": "observation.validate"
@@ -126,7 +126,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 203,
+        "line": 210,
         "column": 59
       },
       "text": "timestamp"
@@ -134,7 +134,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 211,
         "column": 4
       },
       "text": "strings.TrimSpace"
@@ -142,7 +142,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 211,
         "column": 42
       },
       "text": "strings.TrimSpace"
@@ -150,7 +150,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 211,
         "column": 81
       },
       "text": "strings.TrimSpace"
@@ -158,7 +158,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 212,
         "column": 25
       },
       "text": "immutableRowEqual"
@@ -166,7 +166,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
+        "line": 216,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -174,7 +174,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 213,
+        "line": 220,
         "column": 12
       },
       "text": "fmt.Errorf"
@@ -182,7 +182,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 217,
+        "line": 224,
         "column": 16
       },
       "text": "tx.ExecContext"
@@ -190,7 +190,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 219,
+        "line": 226,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -198,7 +198,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 225,
+        "line": 232,
         "column": 16
       },
       "text": "tx.ExecContext"
@@ -206,7 +206,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 226,
+        "line": 233,
         "column": 47
       },
       "text": "timestamp"
@@ -214,7 +214,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 226,
+        "line": 233,
         "column": 57
       },
       "text": "Add"
@@ -222,7 +222,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 226,
+        "line": 233,
         "column": 57
       },
       "text": "observation.At.UTC"
@@ -230,7 +230,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 227,
+        "line": 234,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -240,35 +240,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 200,
+        "line": 207,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 203,
+        "line": 210,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 205,
+        "line": 212,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 217,
+        "line": 224,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 225,
+        "line": 232,
         "column": 6
       }
     }

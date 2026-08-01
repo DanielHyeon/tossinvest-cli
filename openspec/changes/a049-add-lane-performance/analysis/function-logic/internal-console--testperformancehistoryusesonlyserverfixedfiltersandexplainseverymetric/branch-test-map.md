@@ -1,0 +1,9 @@
+# Branch Test Map: `TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric`
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | `range` at line 41: `for _, want := range []string{`; invariant: missing/corrupt/alternate path is explicit | `TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B2 | `if` at line 48: `if !strings.Contains(page, want) {`; invariant: missing/corrupt/alternate path is explicit | `TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B3 | `if` at line 52: `if reader.calls != 1 \|\| reader.query.PeriodDays != 30 \|\| reader.query.Market != performance.AllMarkets \|\|`; invariant: missing/corrupt/alternate path is explicit | `TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B4 | `range` at line 56: `for _, forbidden := range []string{`; invariant: missing/corrupt/alternate path is explicit | `TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B5 | `if` at line 61: `if strings.Contains(strings.ToLower(page), forbidden) {`; invariant: missing/corrupt/alternate path is explicit | `TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric` (this regression test) | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |

@@ -1,16 +1,16 @@
 {
   "file": "internal/performance/store.go",
-  "source_sha256": "a098bd0b95369be196270276cc3815655813feb7568db333665b65d580809887",
+  "source_sha256": "13da763c639fdf210d06d71a0bcf4dfb9ab5a4e98f97114ab8b4b6f8a7df637b",
   "package": "performance",
   "function": "AppendObservations",
   "receiver": "Store",
   "signature": "Store.AppendObservations(params=2, results=1)",
   "start": {
-    "line": 143,
+    "line": 150,
     "column": 1
   },
   "end": {
-    "line": 157,
+    "line": 164,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 145,
+        "line": 152,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 149,
+        "line": 156,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 153,
+        "line": 160,
         "column": 2
       }
     }
@@ -43,28 +43,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 146,
+        "line": 153,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 150,
+        "line": 157,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 154,
+        "line": 161,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 156,
+        "line": 163,
         "column": 2
       }
     }
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 144,
+        "line": 151,
         "column": 13
       },
       "text": "s.db.BeginTx"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 146,
+        "line": 153,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 148,
+        "line": 155,
         "column": 8
       },
       "text": "tx.Rollback"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 149,
+        "line": 156,
         "column": 12
       },
       "text": "appendObservations"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 152,
+        "line": 159,
         "column": 2
       },
       "text": "transactionPhaseHook"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 153,
+        "line": 160,
         "column": 12
       },
       "text": "tx.Commit"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 154,
+        "line": 161,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -131,21 +131,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 144,
+        "line": 151,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 149,
+        "line": 156,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 153,
+        "line": 160,
         "column": 5
       }
     }
@@ -155,7 +155,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 148,
+        "line": 155,
         "column": 2
       },
       "text": "tx.Rollback"

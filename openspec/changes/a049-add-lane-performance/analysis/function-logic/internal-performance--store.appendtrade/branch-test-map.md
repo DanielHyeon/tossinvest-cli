@@ -2,8 +2,7 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | invalid trade refused | validation suite | existing | yes |
-| B2 | new row appends | collect/store tests | existing | yes |
-| B3 | exact replay skips | restart/concurrent replay test | yes | yes |
-| B4 | divergence fails closed | divergent replay test | yes | yes |
-| B5 | crash/commit publishes none or whole | phase SIGKILL test | yes | yes |
+| B1 | `if` at line 133: `if err := trade.validate(); err != nil {`; invariant: missing/corrupt/alternate path is explicit | `TestStoreSchemaIsSeparateAppendOnlyAndVersioned`, `TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency`, `TestCollectDivergentReplayFailsClosed`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B2 | `if` at line 137: `if err != nil {`; invariant: missing/corrupt/alternate path is explicit | `TestStoreSchemaIsSeparateAppendOnlyAndVersioned`, `TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency`, `TestCollectDivergentReplayFailsClosed`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B3 | `if` at line 141: `if err := compareAndAppendTrade(ctx, tx, trade); err != nil {`; invariant: missing/corrupt/alternate path is explicit | `TestStoreSchemaIsSeparateAppendOnlyAndVersioned`, `TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency`, `TestCollectDivergentReplayFailsClosed`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B4 | `if` at line 144: `if err := tx.Commit(); err != nil {`; invariant: missing/corrupt/alternate path is explicit | `TestStoreSchemaIsSeparateAppendOnlyAndVersioned`, `TestCollectExactReplayIsIdempotentAcrossRestartAndConcurrency`, `TestCollectDivergentReplayFailsClosed`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |

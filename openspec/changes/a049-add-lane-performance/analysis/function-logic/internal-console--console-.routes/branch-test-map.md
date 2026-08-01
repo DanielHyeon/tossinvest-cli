@@ -2,6 +2,5 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | token-authenticated remote registers login/logout; trusted-network mode does not require application login | `TestRemoteLoginIssuesADistinctBoundSecureSession`; `TestTrustedNetworkConsoleNeedsNoApplicationSession` | no — unchanged existing branch | yes |
-| B2 | non-nil remote returns the security-wrapped complete mux | `TestRemotePeerHostOriginAndCSRFAreIndependentGates`; `TestRemoteResponsesHaveSecurityHeadersAndHealthIsMinimal` | no — unchanged existing branch | yes |
-| fallthrough | local mux keeps session gates and the new performance path stays method-read-only | `TestEveryRouteRefusesARequestWithoutTheSessionToken`; `TestPerformanceHistoryIsMethodReadOnlyMobileAccessibleAndCSPCompatible` | yes — performance route absent before implementation | yes |
+| B1 | `if` at line 697: `fmt.Fprintf(c.out, " %s %s (%s) — %s\n", a.Kind, a.ID, a.Symbol, why)`; invariant: missing/corrupt/alternate path is explicit | `TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric`, `TestPerformanceHistoryIsMethodReadOnlyMobileAccessibleAndCSPCompatible` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |
+| B2 | `if` at line 772: `// The operator overview (change console-operator-overview). It registers`; invariant: missing/corrupt/alternate path is explicit | `TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric`, `TestPerformanceHistoryIsMethodReadOnlyMobileAccessibleAndCSPCompatible` | not separately captured for this evidence refresh | package-targeted regression PASS before integration; rerun by gate |

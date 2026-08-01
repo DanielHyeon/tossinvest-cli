@@ -1,0 +1,118 @@
+{
+  "file": "internal/journal/migration_v14_crash_linux_test.go",
+  "source_sha256": "9f9b83aad56af6da4210ed53f21799714c510c48f1df730941a098cfaa4a1dfd",
+  "package": "journal",
+  "function": "openCrashChildJournalAtVersion",
+  "signature": "openCrashChildJournalAtVersion(params=1, results=1)",
+  "start": {
+    "line": 55,
+    "column": 1
+  },
+  "end": {
+    "line": 68,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 10
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 3
+      },
+      "text": "os.Exit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 12
+      },
+      "text": "Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 17
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 25
+      },
+      "text": "FixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 44
+      },
+      "text": "migrationsThrough"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 3
+      },
+      "text": "os.Exit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

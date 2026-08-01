@@ -15,14 +15,15 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | normalization/period validation fails | none | error | dashboard bounds test |
-| B2 | bounded trade query fails or exceeds sentinel | none | error | row-bound test |
-| B3 | iterate aggregates | none | continue | dashboard aggregate tests |
-| B4 | aggregate below minimum | increments insufficient count | continue | insufficient-sample test |
-| B5 | filtered state SQL fails | none | wrapped error | DB error contract |
-| B6 | iterate filtered trades | none | continue | missing-state tests |
-| B7 | iterate six metric statuses | none | continue | missing-state tests |
-| B8 | first metric is not complete | increments not-measured trade count | break to next trade | missing-state tests |
+| B1 | AST `if` at line 112: `if err != nil {` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
+| B2 | AST `if` at line 118: `if err != nil {` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
+| B3 | AST `if` at line 122: `if err != nil {` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
+| B4 | AST `range` at line 125: `for _, aggregate := range view.Aggregates {` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
+| B5 | AST `if` at line 126: `if aggregate.Status == StatusInsufficientSample {` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
+| B6 | AST `if` at line 131: `if err := s.db.QueryRowContext(ctx, \`SELECT` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
+| B7 | AST `range` at line 137: `for _, trade := range trades {` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
+| B8 | AST `range` at line 138: `for _, key := range []string{"markout_5", "markout_15", "markout_30", "slippage", "mfe", "mae"} {` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
+| B9 | AST `if` at line 139: `if trade.Statuses[key] != StatusComplete {` | read-only query and local view counters only | explicit success/error/continue path; no invented fallback | `TestDashboardUsesFixedCompleteLineageFilterAndFirstClassStates`, `TestDashboardRejectsCorruptPersistedDecimalsInsteadOfUsingZero`, `TestCollectPersistsUnknownCostAsSQLNullWithoutInventingZero` |
 
 ## Calls and live bindings
 

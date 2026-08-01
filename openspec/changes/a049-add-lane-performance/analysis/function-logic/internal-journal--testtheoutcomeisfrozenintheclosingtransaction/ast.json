@@ -1,0 +1,298 @@
+{
+  "file": "internal/journal/trade_outcomes_test.go",
+  "source_sha256": "cbd539d47024cf89c59d18b54a014449c9b080a1cfa54eeed9e8f43449f2c2c3",
+  "package": "journal",
+  "function": "TestTheOutcomeIsFrozenInTheClosingTransaction",
+  "signature": "TestTheOutcomeIsFrozenInTheClosingTransaction(params=1, results=0)",
+  "start": {
+    "line": 71,
+    "column": 1
+  },
+  "end": {
+    "line": 104,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 7
+      },
+      "text": "outcomeFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 8
+      },
+      "text": "roundTrip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 9
+      },
+      "text": "outcomeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 6
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 14
+      },
+      "text": "Float64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 14
+      },
+      "text": "ratOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 12
+      },
+      "text": "Float64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 12
+      },
+      "text": "ratOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 14
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 14
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 31
+      },
+      "text": "ratOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 47
+      },
+      "text": "ratOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 5
+      },
+      "text": "Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 5
+      },
+      "text": "ratOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 63
+      },
+      "text": "ratText"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,148 @@
+{
+  "file": "internal/performance/lineage_reader_test.go",
+  "source_sha256": "b0fc5fc14a8afab4ce69a6b895b3bf35507b431dfc2a0a227f3dff43763c0ad9",
+  "package": "performance",
+  "function": "TestJournalHandoffValidatesAccountAndWindowBeforeReading",
+  "signature": "TestJournalHandoffValidatesAccountAndWindowBeforeReading(params=1, results=0)",
+  "start": {
+    "line": 45,
+    "column": 1
+  },
+  "end": {
+    "line": 62,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 58,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 11
+      },
+      "text": "openTestStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 8
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 39
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 44
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 39
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 16
+      },
+      "text": "store.CollectClosedStrategyTrades"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 50
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

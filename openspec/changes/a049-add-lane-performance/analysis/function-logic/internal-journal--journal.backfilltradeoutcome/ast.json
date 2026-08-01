@@ -1,0 +1,240 @@
+{
+  "file": "internal/journal/trade_outcomes.go",
+  "source_sha256": "15afdf037fcc104768b6a14a4d99b916f6b277639bbfb394f2437c7f527adec6",
+  "package": "journal",
+  "function": "BackfillTradeOutcome",
+  "receiver": "Journal",
+  "signature": "Journal.BackfillTradeOutcome(params=3, results=2)",
+  "start": {
+    "line": 755,
+    "column": 1
+  },
+  "end": {
+    "line": 785,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 758,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 760,
+        "column": 9
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 760,
+        "column": 9
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 765,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 769,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 779,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 759,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 761,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 766,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 780,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 782,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 784,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 8
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 758,
+        "column": 15
+      },
+      "text": "j.TradeOutcomeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 759,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 760,
+        "column": 13
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 17
+      },
+      "text": "computeTradeOutcome"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 769,
+        "column": 15
+      },
+      "text": "j.db.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 3
+      },
+      "text": "nullableString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 45
+      },
+      "text": "nullableRung"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 6
+      },
+      "text": "isUniqueViolation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 27
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 757,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 758,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 764,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 769,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

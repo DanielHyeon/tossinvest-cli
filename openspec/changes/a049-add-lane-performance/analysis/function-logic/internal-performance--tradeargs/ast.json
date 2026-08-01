@@ -1,0 +1,222 @@
+{
+  "file": "internal/performance/store.go",
+  "source_sha256": "13da763c639fdf210d06d71a0bcf4dfb9ab5a4e98f97114ab8b4b6f8a7df637b",
+  "package": "performance",
+  "function": "tradeArgs",
+  "signature": "tradeArgs(params=1, results=1)",
+  "start": {
+    "line": 489,
+    "column": 1
+  },
+  "end": {
+    "line": 498,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 13
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 42
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 72
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 104
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 3
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 23
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 48
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 72
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 98
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 121
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 152
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 173
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 17
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 38
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 60
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 87
+      },
+      "text": "l.Status"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 99
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 115
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 3
+      },
+      "text": "nullableTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 35
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 66
+      },
+      "text": "timestamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 126
+      },
+      "text": "nullable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 49
+      },
+      "text": "timestamp"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

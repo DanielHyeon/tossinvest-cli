@@ -1,0 +1,178 @@
+{
+  "file": "internal/performance/lineage_reader_test.go",
+  "source_sha256": "b0fc5fc14a8afab4ce69a6b895b3bf35507b431dfc2a0a227f3dff43763c0ad9",
+  "package": "performance",
+  "function": "TestJournalHandoffConsumesOneExactLineageReadAndCallerOwnedObservations",
+  "signature": "TestJournalHandoffConsumesOneExactLineageReadAndCallerOwnedObservations(params=1, results=0)",
+  "start": {
+    "line": 24,
+    "column": 1
+  },
+  "end": {
+    "line": 43,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 11
+      },
+      "text": "openTestStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 8
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 11
+      },
+      "text": "measuredTrade"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 51
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 14
+      },
+      "text": "store.CollectClosedStrategyTrades"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 48
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 38
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 15
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 26
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 43
+      },
+      "text": "got.Markout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

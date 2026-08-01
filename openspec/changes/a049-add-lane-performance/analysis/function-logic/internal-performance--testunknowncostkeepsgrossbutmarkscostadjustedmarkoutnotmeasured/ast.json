@@ -1,0 +1,254 @@
+{
+  "file": "internal/performance/model_test.go",
+  "source_sha256": "de16432f8876751c6c97a0b3b8bea8e682ea2b12f4983a0f57b6a5d28ba387af",
+  "package": "performance",
+  "function": "TestUnknownCostKeepsGrossButMarksCostAdjustedMarkoutNotMeasured",
+  "signature": "TestUnknownCostKeepsGrossButMarksCostAdjustedMarkoutNotMeasured(params=1, results=0)",
+  "start": {
+    "line": 148,
+    "column": 1
+  },
+  "end": {
+    "line": 177,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 173,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 8
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 11
+      },
+      "text": "measuredTrade"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 12
+      },
+      "text": "trade.validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 67
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 13
+      },
+      "text": "Markout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 13
+      },
+      "text": "Measure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 42
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 10
+      },
+      "text": "Markout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 10
+      },
+      "text": "Measure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 39
+      },
+      "text": "at.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 13
+      },
+      "text": "trade.validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 172,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 173,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

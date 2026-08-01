@@ -1,6 +1,6 @@
 {
   "file": "internal/performance/query.go",
-  "source_sha256": "f7f28b21f874e685a2db73fb63e483ef6be01e57baa08213e1048ef8a80550ed",
+  "source_sha256": "49cb750ac14da1cb6253223cb2bb196986cad9d526dfceeedd747c45f672090f",
   "package": "performance",
   "function": "Dashboard",
   "receiver": "Store",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 143,
+    "line": 146,
     "column": 2
   },
   "branches": [
@@ -32,7 +32,7 @@
     },
     {
       "id": "B3",
-      "kind": "range",
+      "kind": "if",
       "at": {
         "line": 122,
         "column": 2
@@ -40,25 +40,25 @@
     },
     {
       "id": "B4",
-      "kind": "if",
+      "kind": "range",
       "at": {
-        "line": 123,
-        "column": 3
+        "line": 125,
+        "column": 2
       }
     },
     {
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 128,
-        "column": 2
+        "line": 126,
+        "column": 3
       }
     },
     {
       "id": "B6",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 134,
+        "line": 131,
         "column": 2
       }
     },
@@ -66,15 +66,23 @@
       "id": "B7",
       "kind": "range",
       "at": {
-        "line": 135,
-        "column": 3
+        "line": 137,
+        "column": 2
       }
     },
     {
       "id": "B8",
+      "kind": "range",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
       "kind": "if",
       "at": {
-        "line": 136,
+        "line": 139,
         "column": 4
       }
     }
@@ -97,14 +105,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 132,
+        "line": 123,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 142,
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 145,
         "column": 2
       }
     }
@@ -146,14 +161,14 @@
       "kind": "call",
       "at": {
         "line": 121,
-        "column": 20
+        "column": 25
       },
       "text": "aggregateTrades"
     },
     {
       "kind": "call",
       "at": {
-        "line": 127,
+        "line": 130,
         "column": 21
       },
       "text": "dashboardTradePredicate"
@@ -161,7 +176,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 128,
+        "line": 131,
         "column": 12
       },
       "text": "Scan"
@@ -169,7 +184,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 128,
+        "line": 131,
         "column": 12
       },
       "text": "s.db.QueryRowContext"
@@ -177,7 +192,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 132,
+        "line": 135,
         "column": 27
       },
       "text": "fmt.Errorf"
@@ -222,28 +237,28 @@
     {
       "kind": "++",
       "at": {
-        "line": 124,
+        "line": 127,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 127,
+        "line": 130,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 128,
+        "line": 131,
         "column": 5
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 137,
+        "line": 140,
         "column": 5
       }
     }
