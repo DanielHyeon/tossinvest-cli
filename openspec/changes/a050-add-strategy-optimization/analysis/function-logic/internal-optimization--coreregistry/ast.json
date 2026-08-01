@@ -1,0 +1,61 @@
+{
+  "file": "internal/optimization/providers.go",
+  "source_sha256": "d91e386364b84f145f749d83575bc15daa697dfc9010f1b548e13e4651364cfe",
+  "package": "optimization",
+  "function": "CoreRegistry",
+  "signature": "CoreRegistry(params=1, results=2)",
+  "start": {
+    "line": 13,
+    "column": 1
+  },
+  "end": {
+    "line": 22,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 16
+      },
+      "text": "exitpolicy.CommonPolicyFieldDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 9
+      },
+      "text": "BuildRequiredRegistry"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

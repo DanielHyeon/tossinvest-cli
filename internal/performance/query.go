@@ -79,9 +79,10 @@ type MetricSummary struct {
 }
 
 type DashboardView struct {
-	Query      Query
-	Aggregates []Aggregate
-	States     StateCounts
+	Query          Query
+	NewestSourceAt time.Time
+	Aggregates     []Aggregate
+	States         StateCounts
 }
 
 func (d DashboardView) Explanation(status Status) string {
@@ -105,6 +106,7 @@ type queryTrade struct {
 	Metrics                                                  map[string]string
 	Statuses                                                 map[string]Status
 	Sources                                                  map[string]string
+	NewestSourceAt                                           time.Time
 }
 
 func (s *Store) Dashboard(ctx context.Context, query Query) (DashboardView, error) {
@@ -121,6 +123,11 @@ func (s *Store) Dashboard(ctx context.Context, query Query) (DashboardView, erro
 	view.Aggregates, err = aggregateTrades(trades, query.MinimumSample)
 	if err != nil {
 		return DashboardView{}, err
+	}
+	for _, trade := range trades {
+		if trade.NewestSourceAt.After(view.NewestSourceAt) {
+			view.NewestSourceAt = trade.NewestSourceAt
+		}
 	}
 	for _, aggregate := range view.Aggregates {
 		if aggregate.Status == StatusInsufficientSample {
@@ -156,13 +163,18 @@ func (s *Store) queryTrades(ctx context.Context, query Query, start time.Time) (
 	var order []string
 	for rows.Next() {
 		var trade queryTrade
-		var metricKey, metricStatus, value, costAdjusted, source, sourceVersion sql.NullString
+		var metricKey, metricStatus, value, costAdjusted, source, sourceVersion, metricObservedAt sql.NullString
 		if err := rows.Scan(&trade.ID, &trade.Market, &trade.LaneID, &trade.LaneVersion,
 			&trade.PolicyID, &trade.PolicyVersion, &trade.PnL, &trade.RealizedR, &trade.ClosedAt,
 			&trade.SnapshotID, &trade.Semantics, &metricKey, &metricStatus, &value, &costAdjusted,
-			&source, &sourceVersion); err != nil {
+			&metricObservedAt, &source, &sourceVersion); err != nil {
 			return nil, fmt.Errorf("performance: reading dashboard row: %w", err)
 		}
+		newest, err := newestDashboardSourceTime(trade.ClosedAt, metricObservedAt.String)
+		if err != nil {
+			return nil, fmt.Errorf("performance: trade %s source timestamp: %w", trade.ID, err)
+		}
+		trade.NewestSourceAt = newest
 		current := byID[trade.ID]
 		if current == nil {
 			trade.Metrics = make(map[string]string)
@@ -174,6 +186,9 @@ func (s *Store) queryTrades(ctx context.Context, query Query, start time.Time) (
 			if len(order) > MaxDashboardTrades {
 				return nil, ErrDashboardRowLimit
 			}
+		}
+		if trade.NewestSourceAt.After(current.NewestSourceAt) {
+			current.NewestSourceAt = trade.NewestSourceAt
 		}
 		if metricKey.Valid {
 			metricValue := value.String
@@ -195,6 +210,23 @@ func (s *Store) queryTrades(ctx context.Context, query Query, start time.Time) (
 		out = append(out, *byID[id])
 	}
 	return out, nil
+}
+
+func newestDashboardSourceTime(values ...string) (time.Time, error) {
+	var newest time.Time
+	for _, raw := range values {
+		if strings.TrimSpace(raw) == "" {
+			continue
+		}
+		parsed, err := time.Parse(time.RFC3339Nano, raw)
+		if err != nil {
+			return time.Time{}, fmt.Errorf("invalid persisted timestamp %q: %w", raw, err)
+		}
+		if parsed.After(newest) {
+			newest = parsed.UTC()
+		}
+	}
+	return newest, nil
 }
 
 func normalizeDashboardQuery(query Query) (Query, error) {
@@ -260,7 +292,7 @@ func dashboardSQL(query Query, start time.Time) (string, []any) {
 	       t.realized_pnl_after_costs, t.realized_r, t.closed_at,
 	       s.id, coalesce(s.semantics_version,''), m.metric_key, m.status,
 	       coalesce(m.value,''), coalesce(m.cost_adjusted_value,''),
-	       coalesce(m.source,''), coalesce(m.source_version,'')
+	       m.observed_at, coalesce(m.source,''), coalesce(m.source_version,'')
 	  FROM filtered t
 	  LEFT JOIN latest l ON l.trade_id=t.id
 	  LEFT JOIN measurement_snapshots s ON s.id=l.snapshot_id

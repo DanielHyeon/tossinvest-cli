@@ -13,6 +13,11 @@
 | B9 | journal path available | `TestConsoleOptimizationCommanderUsesSeparatePrivateControlStore` | new seam absent | yes |
 | B10 | optimization store open fails | fail-closed warning contract | new seam absent | yes |
 | B11 | optimization store opens | `TestConsoleOptimizationCommanderUsesSeparatePrivateControlStore` | new seam absent | yes |
+| I1 | performance DB opens and one read source is wired to both console dashboard and optimization evidence | `TestConsolePerformanceCapabilitiesOpenOneProfileDatabaseForBothReadSeams`, `TestRunConsoleWiresAndClosesPerformanceWithoutJournalCollection` | `Options.Performance` absent and evidence hard-coded nil | yes |
+| I2 | performance DB open fails with no partial read capability | `TestConsolePerformanceCapabilitiesFailWithoutPartialReadAuthority` | no production performance open existed | yes |
+| I3 | opened performance DB is closed with the console lifecycle | `TestConsolePerformanceCapabilitiesOpenOneProfileDatabaseForBothReadSeams`, `TestRunConsoleWiresAndClosesPerformanceWithoutJournalCollection` | no production performance handle existed | yes |
+| B35 | position-policy descriptor stat failure remains a warning/read-only fallback | existing position-policy wiring tests | historical behavior | yes |
+| B36 | console server/shutdown result preserves existing error precedence | existing finish-console tests | historical behavior | yes |
 | B12 | engine marker resolves | engine runtime tests | historical behavior | yes |
 | B13 | engine marker unavailable | engine runtime tests | historical behavior | yes |
 | B14 | container disables self-update | system-update wiring tests | historical behavior | yes |

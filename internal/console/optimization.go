@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mime"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -183,6 +184,11 @@ func (c *Console) handleProtectionApply(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *Console) handleOptimizationSave(w http.ResponseWriter, r *http.Request) {
+	if err := validateOptimizationForm(r); err != nil {
+		c.refuse(w, http.StatusBadRequest, "최적화 요청 필드 거부",
+			err.Error()+" 서버가 그린 단일 값 필드만 제출하라. 아무것도 변경되지 않았다.")
+		return
+	}
 	if c.opts.Optimization == nil {
 		c.refuse(w, http.StatusNotImplemented, "최적화 command seam 미배선",
 			"canonical control service가 없어 조회만 가능하다. legacy config seam으로 우회하지 않았다.")
@@ -235,6 +241,52 @@ func (c *Console) handleOptimizationSave(w http.ResponseWriter, r *http.Request)
 		}
 		c.renderOptimizationPreview(w, preview)
 	}
+}
+
+func validateOptimizationForm(r *http.Request) error {
+	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil || mediaType != "application/x-www-form-urlencoded" {
+		return errors.New("application/x-www-form-urlencoded 형식만 허용된다")
+	}
+	actionValues := r.PostForm["action"]
+	if len(actionValues) > 1 {
+		return errors.New("action 필드가 중복되었다")
+	}
+	action := ""
+	if len(actionValues) == 1 {
+		action = actionValues[0]
+	}
+	required := map[string]bool{"csrf": true}
+	switch action {
+	case "":
+		for _, key := range []string{"base_version", "category", "setting_key", "option_id"} {
+			required[key] = true
+		}
+	case "apply":
+		for _, key := range []string{"action", "capability", "confirm"} {
+			required[key] = true
+		}
+	case "rollback-preview":
+		for _, key := range []string{"action", "base_version", "target_version", "category"} {
+			required[key] = true
+		}
+	default:
+		return fmt.Errorf("알 수 없는 action %q", action)
+	}
+	for key, values := range r.PostForm {
+		if !required[key] {
+			return fmt.Errorf("예상하지 않은 %q 필드다", key)
+		}
+		if len(values) != 1 {
+			return fmt.Errorf("%q 필드는 정확히 한 값이어야 한다", key)
+		}
+	}
+	for key := range required {
+		if len(r.PostForm[key]) != 1 {
+			return fmt.Errorf("%q 필드는 정확히 한 값이 필요하다", key)
+		}
+	}
+	return nil
 }
 
 func (c *Console) redirectOptimization(w http.ResponseWriter, r *http.Request, category strategyopt.Category, notice string) {

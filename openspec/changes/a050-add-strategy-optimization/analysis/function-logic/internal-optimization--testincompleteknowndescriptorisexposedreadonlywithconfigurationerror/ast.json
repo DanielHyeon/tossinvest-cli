@@ -1,0 +1,185 @@
+{
+  "file": "internal/optimization/registry_test.go",
+  "source_sha256": "77d0d6ad7c3c01f303e24480944c81c85ddd98a768b250f4588ed1849893714f",
+  "package": "optimization_test",
+  "function": "TestIncompleteKnownDescriptorIsExposedReadOnlyWithConfigurationError",
+  "signature": "TestIncompleteKnownDescriptorIsExposedReadOnlyWithConfigurationError(params=1, results=0)",
+  "start": {
+    "line": 178,
+    "column": 1
+  },
+  "end": {
+    "line": 202,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 12
+      },
+      "text": "descriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 19
+      },
+      "text": "optimization.BuildRegistry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 46
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 15
+      },
+      "text": "registry.Field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 3
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 15
+      },
+      "text": "optimization.BuildRegistry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 42
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

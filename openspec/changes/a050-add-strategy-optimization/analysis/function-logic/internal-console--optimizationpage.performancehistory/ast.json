@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/optimization_view.go",
+  "source_sha256": "50980f2c6899b07c5a1d2b51b8d56c733cad12cc905adb7c8a87137379d638c5",
+  "package": "console",
+  "function": "PerformanceHistory",
+  "receiver": "optimizationPage",
+  "signature": "optimizationPage.PerformanceHistory(params=0, results=1)",
+  "start": {
+    "line": 90,
+    "column": 1
+  },
+  "end": {
+    "line": 92,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

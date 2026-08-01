@@ -235,8 +235,16 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		journalPath = ""
 	}
 	var optimizationCommander *optimization.Store
+	var performanceCapabilities consolePerformanceCapabilities
 	if journalPath != "" {
-		optimizationCommander, err = newConsoleOptimizationCommander(ctx, journalPath)
+		performanceCapabilities, err = openConsolePerformanceCapabilities(filepath.Dir(journalPath), time.Now)
+		if err != nil {
+			fmt.Fprintf(cmd.ErrOrStderr(), "성과 DB를 열 수 없다 (%v). 성과·최적화 evidence는 unavailable/read-only로 뜬다.\n", err)
+			performanceCapabilities = consolePerformanceCapabilities{}
+		} else {
+			defer performanceCapabilities.Close()
+		}
+		optimizationCommander, err = newConsoleOptimizationCommander(ctx, journalPath, performanceCapabilities.Evidence)
 		if err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "최적화 control plane을 열 수 없다 (%v). 최적화 화면은 조회 전용으로 뜬다.\n", err)
 			optimizationCommander = nil
@@ -373,6 +381,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		ExitPolicies:     consoleExitPolicySettingsSeam(root),
 		Optimization:     optimizationCommander,
 		PositionPolicies: positionPolicyCommander,
+		Performance:      performanceCapabilities.Performance,
 
 		// The market schedule is a read-only projection. Keep it in its own
 		// capability block so the older dashboard source contract remains stable.

@@ -1,0 +1,189 @@
+{
+  "file": "cmd/tossctl/optimization_test.go",
+  "source_sha256": "5080e4304e72346d8d8e464697b382a649655e1f75ff965f16caf12e86746212",
+  "package": "main",
+  "function": "TestConsoleOptimizationCommanderUsesPerformanceEvidenceProvider",
+  "signature": "TestConsoleOptimizationCommanderUsesPerformanceEvidenceProvider(params=1, results=0)",
+  "start": {
+    "line": 56,
+    "column": 1
+  },
+  "end": {
+    "line": 74,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 9
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 77
+      },
+      "text": "strings.Repeat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 15
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 20
+      },
+      "text": "newConsoleOptimizationCommander"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 52
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 74
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 8
+      },
+      "text": "commander.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 15
+      },
+      "text": "commander.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 30
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 4
+      },
+      "text": "view.Evidence.ObservedAt.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 65,
+        "column": 2
+      },
+      "text": "commander.Close"
+    }
+  ]
+}

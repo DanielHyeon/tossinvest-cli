@@ -1,6 +1,9 @@
 package console
 
 import (
+	"bytes"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -97,5 +100,93 @@ func TestOptimizationRejectsAClientInventedPolicy(t *testing.T) {
 	})
 	if resp.StatusCode != http.StatusBadRequest || seam.saves != 0 || commander.previews != 0 {
 		t.Fatalf("response=%d legacy saves=%d previews=%d", resp.StatusCode, seam.saves, commander.previews)
+	}
+}
+
+func TestOptimizationRequestBodyIsBounded(t *testing.T) {
+	commander := newFakeOptimizationCommander(t)
+	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
+	h.authenticate(t)
+	body := "csrf=" + url.QueryEscape(h.csrf) + "&base_version=12&category=exit-protection" +
+		"&setting_key=exit.common-policy&option_id=" + strings.Repeat("x", 4096)
+	req, err := http.NewRequest(http.MethodPost, h.srv.URL+"/optimization/exit-policy", strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := h.client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
+	if resp.StatusCode != http.StatusRequestEntityTooLarge || commander.previews != 0 || commander.applies != 0 {
+		t.Fatalf("status=%d previews=%d applies=%d, want 413 before commander", resp.StatusCode, commander.previews, commander.applies)
+	}
+}
+
+func TestOptimizationRejectsUnexpectedAndDuplicateFields(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		form url.Values
+	}{
+		{name: "unexpected", form: url.Values{
+			"csrf": {"placeholder"}, "base_version": {"12"}, "category": {"exit-protection"},
+			"setting_key": {"exit.common-policy"}, "option_id": {exitpolicy.CommonLadderBalanced},
+			"invented": {"ignored-before-a050"},
+		}},
+		{name: "duplicate", form: url.Values{
+			"csrf": {"placeholder"}, "base_version": {"12", "13"}, "category": {"exit-protection"},
+			"setting_key": {"exit.common-policy"}, "option_id": {exitpolicy.CommonLadderBalanced},
+		}},
+		{name: "missing required", form: url.Values{
+			"csrf": {"placeholder"}, "base_version": {"12"}, "category": {"exit-protection"},
+			"setting_key": {"exit.common-policy"},
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			commander := newFakeOptimizationCommander(t)
+			h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
+			h.authenticate(t)
+			tc.form.Set("csrf", h.csrf)
+			resp := h.post(t, "/optimization/exit-policy", tc.form)
+			if resp.StatusCode != http.StatusBadRequest || commander.previews != 0 || commander.applies != 0 {
+				t.Fatalf("status=%d previews=%d applies=%d, want 400 before commander", resp.StatusCode, commander.previews, commander.applies)
+			}
+		})
+	}
+}
+
+func TestOptimizationRejectsMultipartBeforeReadingPollutedValues(t *testing.T) {
+	commander := newFakeOptimizationCommander(t)
+	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
+	h.authenticate(t)
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	for key, value := range map[string]string{
+		"csrf": h.csrf, "base_version": "12", "category": "exit-protection",
+		"setting_key": "exit.common-policy", "option_id": exitpolicy.CommonLadderBalanced,
+		"invented": "must-not-bypass-validation",
+	} {
+		if err := writer.WriteField(key, value); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	req, err := http.NewRequest(http.MethodPost, h.srv.URL+"/optimization/exit-policy", &body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	resp, err := h.client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
+	if resp.StatusCode != http.StatusBadRequest || commander.previews != 0 || commander.applies != 0 {
+		t.Fatalf("status=%d previews=%d applies=%d, want 400 before commander", resp.StatusCode, commander.previews, commander.applies)
 	}
 }

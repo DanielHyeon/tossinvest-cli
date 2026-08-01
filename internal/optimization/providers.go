@@ -12,7 +12,10 @@ import (
 // this function never invents a label, default, range, or option for them.
 func CoreRegistry(ctx context.Context) (Registry, error) {
 	descriptor := exitpolicy.CommonPolicyFieldDescriptor()
-	return BuildRegistry(ctx, ProviderBinding{
+	required := []FieldRequirement{{
+		Key: "exit.common-policy", Owner: "a041-complete-exit-line-contract", Category: CategoryExitProtection,
+	}}
+	return BuildRequiredRegistry(ctx, required, ProviderBinding{
 		Category: CategoryExitProtection,
 		Provider: coreProvider{owner: descriptor.Provenance.OwnerChange, fields: []settingmeta.FieldDescriptor{descriptor}},
 	})

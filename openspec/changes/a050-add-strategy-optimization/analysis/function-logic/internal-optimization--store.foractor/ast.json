@@ -1,0 +1,71 @@
+{
+  "file": "internal/optimization/store.go",
+  "source_sha256": "f7fa68011683167b468386a871aa300b4b99ffe4e1bd408f6bce8cfcb3c0d720",
+  "package": "optimization",
+  "function": "ForActor",
+  "receiver": "Store",
+  "signature": "Store.ForActor(params=1, results=2)",
+  "start": {
+    "line": 679,
+    "column": 1
+  },
+  "end": {
+    "line": 685,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 681,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 682,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 684,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 680,
+        "column": 10
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 682,
+        "column": 15
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 680,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,16 +1,16 @@
 {
   "file": "internal/console/optimization.go",
-  "source_sha256": "602b94569b5abacd207c8706daa761a844070515dc97ee6645f7cef40a69772a",
+  "source_sha256": "35578b3d9770fd0ba8884abc70293f175a16d8fc798622fc6a971974dba0f0ac",
   "package": "console",
   "function": "handleOptimizationSave",
   "receiver": "Console",
   "signature": "Console.handleOptimizationSave(params=2, results=0)",
   "start": {
-    "line": 185,
+    "line": 186,
     "column": 1
   },
   "end": {
-    "line": 238,
+    "line": 244,
     "column": 2
   },
   "branches": [
@@ -18,79 +18,87 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 186,
+        "line": 187,
         "column": 2
       }
     },
     {
       "id": "B2",
-      "kind": "switch",
-      "at": {
-        "line": 191,
-        "column": 2
-      }
-    },
-    {
-      "id": "B3",
-      "kind": "case",
+      "kind": "if",
       "at": {
         "line": 192,
         "column": 2
       }
     },
     {
-      "id": "B4",
-      "kind": "if",
+      "id": "B3",
+      "kind": "switch",
       "at": {
-        "line": 196,
-        "column": 3
-      }
-    },
-    {
-      "id": "B5",
-      "kind": "case",
-      "at": {
-        "line": 203,
+        "line": 197,
         "column": 2
       }
     },
     {
-      "id": "B6",
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
       "kind": "if",
       "at": {
-        "line": 207,
+        "line": 202,
         "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 209,
+        "column": 2
       }
     },
     {
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 214,
+        "line": 213,
         "column": 3
       }
     },
     {
       "id": "B8",
-      "kind": "case",
+      "kind": "if",
       "at": {
-        "line": 219,
-        "column": 2
+        "line": 220,
+        "column": 3
       }
     },
     {
       "id": "B9",
-      "kind": "if",
+      "kind": "case",
       "at": {
-        "line": 224,
-        "column": 3
+        "line": 225,
+        "column": 2
       }
     },
     {
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 232,
+        "line": 230,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 238,
         "column": 3
       }
     }
@@ -99,42 +107,49 @@
     {
       "kind": "return",
       "at": {
-        "line": 189,
+        "line": 190,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 198,
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 204,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 209,
+        "line": 215,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 216,
+        "line": 222,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 226,
+        "line": 232,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 234,
+        "line": 240,
         "column": 4
       }
     }
@@ -144,6 +159,14 @@
       "kind": "call",
       "at": {
         "line": 187,
+        "column": 12
+      },
+      "text": "validateOptimizationForm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
         "column": 3
       },
       "text": "c.refuse"
@@ -151,7 +174,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 191,
+        "line": 189,
+        "column": 4
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
         "column": 9
       },
       "text": "r.PostFormValue"
@@ -159,7 +198,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 193,
+        "line": 199,
         "column": 18
       },
       "text": "c.opts.Optimization.Apply"
@@ -167,7 +206,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 193,
+        "line": 199,
         "column": 44
       },
       "text": "r.Context"
@@ -175,7 +214,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 194,
+        "line": 200,
         "column": 16
       },
       "text": "strings.TrimSpace"
@@ -183,40 +222,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 194,
+        "line": 200,
         "column": 34
-      },
-      "text": "r.PostFormValue"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 194,
-        "column": 77
-      },
-      "text": "r.PostFormValue"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 197,
-        "column": 4
-      },
-      "text": "c.writeOptimizationApplyError"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 197,
-        "column": 40
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 197,
-        "column": 58
       },
       "text": "r.PostFormValue"
     },
@@ -224,6 +231,38 @@
       "kind": "call",
       "at": {
         "line": 200,
+        "column": 77
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 4
+      },
+      "text": "c.writeOptimizationApplyError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 40
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 58
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
         "column": 13
       },
       "text": "fmt.Sprintf"
@@ -231,7 +270,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 202,
+        "line": 208,
         "column": 3
       },
       "text": "c.redirectOptimization"
@@ -239,7 +278,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 210,
         "column": 20
       },
       "text": "strconv.ParseUint"
@@ -247,7 +286,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 210,
         "column": 38
       },
       "text": "r.PostFormValue"
@@ -255,7 +294,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 211,
         "column": 24
       },
       "text": "strconv.ParseUint"
@@ -263,7 +302,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 211,
         "column": 42
       },
       "text": "r.PostFormValue"
@@ -271,7 +310,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 212,
         "column": 22
       },
       "text": "strategyopt.ParseCategory"
@@ -279,7 +318,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 212,
         "column": 48
       },
       "text": "r.PostFormValue"
@@ -287,7 +326,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 214,
         "column": 4
       },
       "text": "c.writeOptimizationError"
@@ -295,7 +334,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 211,
+        "line": 217,
         "column": 19
       },
       "text": "c.opts.Optimization.PreviewRollback"
@@ -303,7 +342,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 211,
+        "line": 217,
         "column": 55
       },
       "text": "r.Context"
@@ -311,7 +350,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 215,
+        "line": 221,
         "column": 4
       },
       "text": "c.writeOptimizationError"
@@ -319,7 +358,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 218,
+        "line": 224,
         "column": 3
       },
       "text": "c.renderOptimizationPreview"
@@ -327,7 +366,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 220,
+        "line": 226,
         "column": 16
       },
       "text": "strconv.ParseUint"
@@ -335,7 +374,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 220,
+        "line": 226,
         "column": 34
       },
       "text": "r.PostFormValue"
@@ -343,7 +382,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 221,
+        "line": 227,
         "column": 22
       },
       "text": "strategyopt.ParseCategory"
@@ -351,7 +390,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 221,
+        "line": 227,
         "column": 48
       },
       "text": "r.PostFormValue"
@@ -359,7 +398,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 222,
+        "line": 228,
         "column": 10
       },
       "text": "strings.TrimSpace"
@@ -367,7 +406,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 222,
+        "line": 228,
         "column": 28
       },
       "text": "r.PostFormValue"
@@ -375,7 +414,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 229,
         "column": 15
       },
       "text": "strings.TrimSpace"
@@ -383,7 +422,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 229,
         "column": 33
       },
       "text": "r.PostFormValue"
@@ -391,7 +430,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 225,
+        "line": 231,
         "column": 4
       },
       "text": "c.writeOptimizationError"
@@ -399,7 +438,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 228,
+        "line": 234,
         "column": 19
       },
       "text": "c.opts.Optimization.Preview"
@@ -407,7 +446,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 228,
+        "line": 234,
         "column": 47
       },
       "text": "r.Context"
@@ -415,7 +454,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 233,
+        "line": 239,
         "column": 4
       },
       "text": "c.writeOptimizationError"
@@ -423,7 +462,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 236,
+        "line": 242,
         "column": 3
       },
       "text": "c.renderOptimizationPreview"
@@ -433,28 +472,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 193,
-        "column": 3
+        "line": 187,
+        "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 200,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 204,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 205,
+        "line": 199,
         "column": 3
       }
     },
@@ -468,6 +493,13 @@
     {
       "kind": ":=",
       "at": {
+        "line": 210,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
         "line": 211,
         "column": 3
       }
@@ -475,28 +507,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 220,
+        "line": 212,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 221,
+        "line": 217,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 222,
+        "line": 226,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 223,
+        "line": 227,
         "column": 3
       }
     },
@@ -504,6 +536,20 @@
       "kind": ":=",
       "at": {
         "line": 228,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 234,
         "column": 3
       }
     }

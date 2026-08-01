@@ -1,0 +1,124 @@
+{
+  "file": "internal/console/optimization_test.go",
+  "source_sha256": "c35c59edae5857c497245b59beeb9bbc2fd909bed7e0cfcfc524b01e71562e6a",
+  "package": "console",
+  "function": "TestOptimizationRejectsUnexpectedAndDuplicateFields",
+  "signature": "TestOptimizationRejectsUnexpectedAndDuplicateFields(params=1, results=0)",
+  "start": {
+    "line": 128,
+    "column": 1
+  },
+  "end": {
+    "line": 158,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 153,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 17
+      },
+      "text": "newFakeOptimizationCommander"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 9
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 4
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 4
+      },
+      "text": "tc.form.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 12
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 148,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 149,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 149,
+        "column": 57
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

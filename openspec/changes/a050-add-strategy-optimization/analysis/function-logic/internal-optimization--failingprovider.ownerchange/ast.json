@@ -1,0 +1,30 @@
+{
+  "file": "internal/optimization/registry_test.go",
+  "source_sha256": "77d0d6ad7c3c01f303e24480944c81c85ddd98a768b250f4588ed1849893714f",
+  "package": "optimization_test",
+  "function": "OwnerChange",
+  "receiver": "failingProvider",
+  "signature": "failingProvider.OwnerChange(params=0, results=1)",
+  "start": {
+    "line": 15,
+    "column": 1
+  },
+  "end": {
+    "line": 15,
+    "column": 65
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 15,
+        "column": 49
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

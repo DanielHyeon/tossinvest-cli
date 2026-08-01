@@ -50,6 +50,7 @@ type optimizationCategoryView struct {
 type optimizationFieldView struct {
 	Key, Label, Description, Unit, Default, Desired, Effective    string
 	ApplyTiming, Safety, Owner, PolicyID, PolicyVersion, Evidence string
+	ConfigurationError                                            string
 	Control                                                       settingmeta.ControlKind
 	Options                                                       []settingmeta.Option
 }
@@ -91,6 +92,21 @@ func (p optimizationPage) PerformanceHistory() bool {
 	return p.Selected == strategyopt.CategoryPerformanceHistory
 }
 
+// ExitPolicyWritable keeps the only a050 mutation surface fail-closed. The
+// preset catalogue remains useful as read-only reference material when the
+// owner descriptor is absent or invalid, but it must not produce a preview.
+func (p optimizationPage) ExitPolicyWritable() bool {
+	if !p.LifecycleReady {
+		return false
+	}
+	for _, field := range p.Fields {
+		if field.Key == "exit.common-policy" {
+			return field.ConfigurationError == "" && field.Control != settingmeta.ControlReadOnly
+		}
+	}
+	return false
+}
+
 type optimizationPreviewPage struct {
 	Nav, CSRF          string
 	Preview            strategyopt.Preview
@@ -106,14 +122,18 @@ const optimizationPreviewScript = `(function(){
 var root=document.querySelector("[data-risk-preview]");
 if(!root){return;}
 var button=root.querySelector("[data-risk-submit]");
+var confirmation=root.querySelector("[data-risk-confirm]");
 var live=root.querySelector("[data-risk-countdown]");
 var deadline=Number(root.getAttribute("data-not-before-ms"));
 function tick(){
   var remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));
-  if(remaining===0){button.disabled=false;live.textContent="승인 가능";return;}
-  button.disabled=true;live.textContent=remaining+"초 남음";
+  var confirmed=!confirmation||confirmation.checked;
+  button.disabled=remaining!==0||!confirmed;
+  if(remaining===0){live.textContent=confirmed?"승인 가능":"확인 항목을 선택하세요";return;}
+  live.textContent=remaining+"초 남음";
   window.setTimeout(tick,250);
 }
+if(confirmation){confirmation.addEventListener("change",tick);}
 tick();
 }());`
 
@@ -199,7 +219,8 @@ func optimizationCategoryViews(selected strategyopt.Category, writable bool) []o
 		case strategyopt.CategoryStrategyRuntime:
 			view.Status = "a047 owner descriptor 미통합 · OFF/read-only"
 		case strategyopt.CategoryPerformanceHistory:
-			view.Status = "a049 provider 미통합 · unavailable"
+			view.Available = true
+			view.Status = "a049 결정적 성과 · 읽기 전용 (근거 상태는 본문 참조)"
 		}
 		views = append(views, view)
 	}
@@ -216,7 +237,8 @@ func optimizationFieldViews(fields []strategyopt.RegisteredField, snapshot strat
 			Effective:   displayOption(snapshot.Effective[d.Key], d.Effective, d.Options),
 			ApplyTiming: displayApplyTiming(d.ApplyTiming), Safety: displaySafety(d.SafetyDirection),
 			Owner: d.Provenance.OwnerChange, PolicyID: d.Provenance.PolicyID, PolicyVersion: d.Provenance.PolicyVersion,
-			Evidence: d.Provenance.EvidenceDigest, Control: d.Control, Options: append([]settingmeta.Option(nil), d.Options...)})
+			Evidence: d.Provenance.EvidenceDigest, ConfigurationError: registered.ConfigurationError,
+			Control: d.Control, Options: append([]settingmeta.Option(nil), d.Options...)})
 	}
 	return out
 }

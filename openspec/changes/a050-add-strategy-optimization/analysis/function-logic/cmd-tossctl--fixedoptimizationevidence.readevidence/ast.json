@@ -1,0 +1,30 @@
+{
+  "file": "cmd/tossctl/optimization_test.go",
+  "source_sha256": "5080e4304e72346d8d8e464697b382a649655e1f75ff965f16caf12e86746212",
+  "package": "main",
+  "function": "ReadEvidence",
+  "receiver": "fixedOptimizationEvidence",
+  "signature": "fixedOptimizationEvidence.ReadEvidence(params=1, results=2)",
+  "start": {
+    "line": 52,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

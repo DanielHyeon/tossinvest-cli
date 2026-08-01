@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	strategyopt "github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta"
 	"golang.org/x/net/html"
 )
 
@@ -95,7 +96,8 @@ func TestOptimizationCategoryOrderMobileTouchFocusAndCSP(t *testing.T) {
 	}
 	for _, contract := range []string{
 		`name="viewport"`, "@media (max-width: 720px)", ".optimization-shell", "grid-template-columns: 1fr",
-		"min-height: 44px", "overflow-x: auto", "a:focus-visible", "aria-label=\"최적화 카테고리\"",
+		"@media (max-width: 420px)", "min-height: 44px", "max-width: 100%", "overflow-x: auto",
+		"a:focus-visible", "button:focus-visible", "aria-label=\"최적화 카테고리\"",
 	} {
 		if !strings.Contains(page, contract) {
 			t.Errorf("responsive/a11y contract lacks %q", contract)
@@ -104,6 +106,94 @@ func TestOptimizationCategoryOrderMobileTouchFocusAndCSP(t *testing.T) {
 	wantCSP := "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
 	if got := resp.Header.Get("Content-Security-Policy"); got != wantCSP {
 		t.Errorf("CSP=%q, want %q", got, wantCSP)
+	}
+}
+
+func TestOptimizationUsesOnePresetPreviewFlowWithoutClientDraft(t *testing.T) {
+	commander := newFakeOptimizationCommander(t)
+	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
+	h.authenticate(t)
+	page := h.page(t, "/optimization?category=exit-protection")
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := len(nodesByName(doc, "form")); got != 3 {
+		t.Fatalf("preset preview forms=%d, want exactly 3 server-defined choices", got)
+	}
+	if got := len(nodesByName(doc, "button")); got != 3 {
+		t.Fatalf("preset preview buttons=%d, want exactly 3", got)
+	}
+	for _, forbidden := range []string{"select", "textarea", "script"} {
+		if got := len(nodesByName(doc, forbidden)); got != 0 {
+			t.Errorf("preset page has %d <%s> elements", got, forbidden)
+		}
+	}
+	for _, marker := range []string{
+		`aria-label="익절 보호 설정 적용 순서"`, "1 · preset 선택", "2 · before/after 확인",
+		"3 · 3초 확인 후 적용", `data-lifecycle-state="ready"`, `data-evidence-state="unavailable"`,
+		`href="/optimization?category=position-management"`, `href="/optimization?category=candidate-filters"`,
+		`href="/optimization?category=strategy-runtime"`, `href="/optimization?category=performance-history"`,
+	} {
+		if !strings.Contains(page, marker) {
+			t.Errorf("minimal preset flow lacks %q", marker)
+		}
+	}
+	for _, inventedState := range []string{"localStorage", "sessionStorage", "data-dirty", "미저장 변경", "초기화"} {
+		if strings.Contains(page, inventedState) {
+			t.Errorf("single-field screen invented client draft state %q", inventedState)
+		}
+	}
+}
+
+func TestOptimizationConfigurationErrorIsReadOnlyAndSuppressesPresetControls(t *testing.T) {
+	commander := newFakeOptimizationCommander(t)
+	field, ok := commander.view.Registry.Field("exit.common-policy")
+	if !ok {
+		t.Fatal("core registry lacks exit.common-policy")
+	}
+	field.Descriptor.Description = ""
+	registry, err := strategyopt.BuildRegistry(context.Background(), strategyopt.ProviderBinding{
+		Category: strategyopt.CategoryExitProtection,
+		Provider: strategyopt.StaticProvider{Owner: field.Descriptor.Provenance.OwnerChange,
+			Fields: []settingmeta.FieldDescriptor{field.Descriptor}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	commander.view.Registry = registry
+	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
+	h.authenticate(t)
+	page := h.page(t, "/optimization?category=exit-protection")
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, marker := range []string{"설정 오류 · 읽기 전용", "owner descriptor를 바로잡기 전", "읽기 전용 · owner descriptor 확인 필요"} {
+		if !strings.Contains(page, marker) {
+			t.Errorf("configuration error UI lacks %q", marker)
+		}
+	}
+	if got := len(nodesByAttribute(doc, "fieldset", "aria-readonly", "true")); got != 1 {
+		t.Errorf("read-only error fieldsets=%d, want 1", got)
+	}
+	for _, element := range []string{"form", "input", "button", "select", "textarea"} {
+		if got := len(nodesByName(doc, element)); got != 0 {
+			t.Errorf("configuration error page exposes %d <%s> mutation controls", got, element)
+		}
+	}
+}
+
+func TestOptimizationStaleEvidenceIsExplicitAndFailClosed(t *testing.T) {
+	commander := newFakeOptimizationCommander(t)
+	commander.view.Evidence = strategyopt.Evidence{Status: strategyopt.EvidenceStale, Missing: []string{"a049-window-expired"}}
+	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
+	h.authenticate(t)
+	page := h.page(t, "/optimization")
+	for _, marker := range []string{`data-evidence-state="stale"`, "오래됨 · 근거 추천 중지", "근거 기반 추천 candidate를 만들지 않습니다", "a049-window-expired"} {
+		if !strings.Contains(page, marker) {
+			t.Errorf("stale evidence state lacks %q", marker)
+		}
 	}
 }
 

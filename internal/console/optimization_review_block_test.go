@@ -91,7 +91,8 @@ func TestRiskPreviewWaitsThreeSecondsAndAppliesSameCapabilityExactlyOnce(t *test
 	previewPage := body(t, previewResponse)
 	for _, marker := range []string{
 		`data-not-before-ms="1785574803000"`, `aria-live="polite"`, `3초 남음`,
-		`data-risk-submit disabled`, `window.setTimeout`, `button.disabled=false`,
+		`data-risk-submit disabled`, `data-risk-confirm`, `window.setTimeout`,
+		`button.disabled=remaining!==0||!confirmed`, `confirmation.addEventListener("change",tick)`,
 	} {
 		if !strings.Contains(previewPage, marker) {
 			t.Errorf("t0 preview lacks %q", marker)
@@ -100,6 +101,36 @@ func TestRiskPreviewWaitsThreeSecondsAndAppliesSameCapabilityExactlyOnce(t *test
 	previewDocument, err := html.Parse(strings.NewReader(previewPage))
 	if err != nil {
 		t.Fatal(err)
+	}
+	if got := len(nodesByAttribute(previewDocument, "section", "aria-readonly", "true")); got != 1 {
+		t.Fatalf("read-only before/after review sections=%d, want 1", got)
+	}
+	if got := len(nodesByAttribute(previewDocument, "section", "data-risk-preview", "")); got != 1 {
+		t.Fatalf("sticky approval blocks=%d, want 1", got)
+	}
+	checkboxes := 0
+	walkHTML(previewDocument, func(node *html.Node) {
+		if node.Type != html.ElementNode {
+			return
+		}
+		if node.Data == "textarea" || node.Data == "select" {
+			t.Errorf("risk preview exposes forbidden <%s>", node.Data)
+		}
+		if _, found := htmlAttribute(node, "contenteditable"); found {
+			t.Errorf("risk preview exposes contenteditable on <%s>", node.Data)
+		}
+		if node.Data == "input" {
+			kind, _ := htmlAttribute(node, "type")
+			if kind == "checkbox" {
+				checkboxes++
+			} else if kind != "hidden" {
+				t.Errorf("risk preview exposes arbitrary input type %q", kind)
+			}
+		}
+	})
+	if checkboxes != 1 || len(nodesByName(previewDocument, "button")) != 1 {
+		t.Fatalf("risk confirmation controls: checkboxes=%d buttons=%d, want 1 each",
+			checkboxes, len(nodesByName(previewDocument, "button")))
 	}
 	scripts := nodesByName(previewDocument, "script")
 	if len(scripts) != 1 || scripts[0].FirstChild == nil {

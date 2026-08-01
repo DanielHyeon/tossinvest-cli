@@ -1,0 +1,62 @@
+{
+  "file": "internal/optimization/store.go",
+  "source_sha256": "2df616b3e9573b6b8a769e241a23ea8c0587d2b88eeac9c5533ab38a1f408825",
+  "revision": "base",
+  "package": "optimization",
+  "function": "hashCapability",
+  "signature": "hashCapability(params=1, results=1)",
+  "start": {
+    "line": 858,
+    "column": 1
+  },
+  "end": {
+    "line": 861,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 860,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 859,
+        "column": 9
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 859,
+        "column": 23
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 860,
+        "column": 9
+      },
+      "text": "hex.EncodeToString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 859,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

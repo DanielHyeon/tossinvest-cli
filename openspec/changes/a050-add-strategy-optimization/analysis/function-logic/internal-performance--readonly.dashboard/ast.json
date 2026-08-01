@@ -1,0 +1,224 @@
+{
+  "file": "internal/performance/readonly.go",
+  "source_sha256": "92e0ce6928e0f68130ae85c8f1bb08d6172984d3a0adfbc04db303de8f5b4444",
+  "package": "performance",
+  "function": "Dashboard",
+  "receiver": "ReadOnly",
+  "signature": "ReadOnly.Dashboard(params=2, results=2)",
+  "start": {
+    "line": 129,
+    "column": 1
+  },
+  "end": {
+    "line": 154,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 131,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 136,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 145,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 151,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 153,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 27
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 2
+      },
+      "text": "r.mu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 8
+      },
+      "text": "r.mu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 27
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 23
+      },
+      "text": "openImmutablePerformanceDB"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 20
+      },
+      "text": "Dashboard"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 14
+      },
+      "text": "db.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 12
+      },
+      "text": "unchangedImmutablePerformanceDB"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 134,
+        "column": 2
+      },
+      "text": "r.mu.RUnlock"
+    }
+  ]
+}

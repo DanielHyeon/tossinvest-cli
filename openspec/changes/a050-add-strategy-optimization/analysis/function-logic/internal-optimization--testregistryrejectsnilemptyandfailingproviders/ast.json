@@ -1,0 +1,110 @@
+{
+  "file": "internal/optimization/registry_test.go",
+  "source_sha256": "77d0d6ad7c3c01f303e24480944c81c85ddd98a768b250f4588ed1849893714f",
+  "package": "optimization_test",
+  "function": "TestRegistryRejectsNilEmptyAndFailingProviders",
+  "signature": "TestRegistryRejectsNilEmptyAndFailingProviders(params=1, results=0)",
+  "start": {
+    "line": 94,
+    "column": 1
+  },
+  "end": {
+    "line": 116,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 95
+      },
+      "text": "descriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 80
+      },
+      "text": "descriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 17
+      },
+      "text": "optimization.BuildRegistry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 63
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

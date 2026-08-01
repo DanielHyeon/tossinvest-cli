@@ -2,6 +2,6 @@
 
 | Rule | Location | Message |
 |---|---|---|
-| go-panic | `internal/console/console.go:939` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
+| go-panic | `internal/console/console.go:949` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
 
 > Findings are review candidates, not automatic defect verdicts.

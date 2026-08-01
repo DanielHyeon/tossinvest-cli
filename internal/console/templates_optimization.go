@@ -5,19 +5,23 @@ const optimizationTemplates = `
 {{template "head" .}}
 <div class="optimization-title">
   <div>
+    <p class="eyebrow">Optimization lifecycle</p>
     <h1>전략 최적화</h1>
-    <p class="muted">설정과 LIVE 권한을 분리한 versioned lifecycle입니다. 임의 숫자·문자·종목을 입력하지 않고 owner가 제공한 선택지만 검토합니다.</p>
+    <p class="muted">서버가 정한 preset 하나를 골라 before/after를 검토한 뒤 적용합니다. 설정과 LIVE 권한은 항상 분리됩니다.</p>
   </div>
-  <dl class="status-strip" aria-label="최적화 최상위 상태">
-    <div><dt>Desired</dt><dd><strong>v{{.Snapshot.Version}}</strong></dd></div>
-    <div><dt>Effective</dt><dd><strong>v{{.Snapshot.EffectiveVersion}}</strong></dd></div>
-    <div><dt>LIVE 권한</dt><dd><strong class="bad">별도 · 변경 안 함</strong></dd></div>
-    <div><dt>재시작</dt><dd>{{if .Snapshot.RestartRequired}}필요{{else}}불필요{{end}}</dd></div>
+  <dl class="status-strip" aria-label="최적화 최상위 상태" {{if .LifecycleErr}}data-lifecycle-state="error"{{else if not .LifecycleReady}}data-lifecycle-state="unavailable"{{else}}data-lifecycle-state="ready"{{end}}>
+    <div><dt>Desired</dt><dd><strong>{{if .LifecycleReady}}v{{.Snapshot.Version}}{{else}}확인 불가{{end}}</strong></dd></div>
+    <div><dt>Effective</dt><dd><strong>{{if .LifecycleReady}}v{{.Snapshot.EffectiveVersion}}{{else}}확인 불가{{end}}</strong>{{if .LifecycleReady}}<small>{{if eq .Snapshot.Version .Snapshot.EffectiveVersion}}desired와 일치{{else}}desired와 불일치{{end}}</small>{{end}}</dd></div>
+    <div data-evidence-state="{{.Evidence.Status}}"><dt>성과 근거</dt><dd><strong>{{if not .LifecycleReady}}확인 불가{{else if eq .Evidence.Status "complete"}}완료{{else if eq .Evidence.Status "insufficient"}}부족 · 추천 불가{{else if eq .Evidence.Status "stale"}}오래됨 · 근거 추천 중지{{else}}사용 불가 · 추천 없음{{end}}</strong></dd></div>
+    <div><dt>Effective entry</dt><dd><strong>{{if and .LifecycleReady .Snapshot.EffectiveEntry}}ON{{else}}OFF{{end}}</strong><small>{{if and .LifecycleReady .Snapshot.EffectiveEntry}}현재 manifest 승인됨{{else}}manifest 재승인 전 진입 없음{{end}}</small></dd></div>
+    <div><dt>LIVE 권한</dt><dd><strong>별도 · 변경 안 함</strong></dd></div>
+    <div><dt>재시작</dt><dd>{{if not .LifecycleReady}}확인 불가{{else if .Snapshot.RestartRequired}}필요{{else}}불필요{{end}}</dd></div>
   </dl>
 </div>
 {{if .Notice}}<p class="notice" role="status">{{.Notice}}</p>{{end}}
 {{if .Warning}}<p class="notice" role="alert">{{.Warning}}</p>{{end}}
 {{if .LifecycleErr}}<p class="danger" role="alert">lifecycle을 읽지 못했습니다: <code>{{.LifecycleErr}}</code>. 마지막 값을 현재값처럼 사용하지 않고 모든 변경을 닫았습니다.</p>{{end}}
+{{if and .LifecycleReady (ne .Evidence.Status "complete")}}<p class="notice evidence-banner" role="status"><strong>성과 근거 {{.Evidence.Status}}</strong> · 근거 기반 추천 candidate를 만들지 않습니다.{{range .Evidence.Missing}} <code>{{.}}</code>{{end}}</p>{{end}}
 <nav class="filter-bar" aria-label="최적화 관련 읽기 전용 화면">
   <a href="/strategy-runtime">전략 lane</a>
   <a href="/strategy-runtime/market-schedule">시장·일정</a>
@@ -59,14 +63,21 @@ const optimizationTemplates = `
 
   {{if .ExitProtection}}
     <section id="exit-protection" aria-labelledby="exit-protection-title">
+      <p class="section-kicker">현재 변경 가능 항목 1개 · <code>exit.common-policy</code></p>
       <h2 id="exit-protection-title">청산/보호 · 익절 정책</h2>
       <p>신규 관리 포지션에만 적용할 공통 정책입니다. 기존 포지션 snapshot과 LIVE/lane 상태는 자동으로 재결합하지 않습니다.</p>
+      <ol class="optimization-steps" aria-label="익절 보호 설정 적용 순서">
+        <li><strong>1 · preset 선택</strong><span>서버가 제공한 세 정책 중 하나만 선택</span></li>
+        <li><strong>2 · before/after 확인</strong><span>별도 읽기 전용 preview에서 영향 범위 검토</span></li>
+        <li><strong>3 · 3초 확인 후 적용</strong><span>체크박스와 승인 버튼으로 명시적 적용</span></li>
+      </ol>
       {{if .LegacyLoadErr}}<p class="danger">legacy effective config를 읽지 못했습니다: <code>{{.LegacyLoadErr}}</code></p>{{end}}
       {{if eq .Snapshot.Version 0}}<p class="notice">lifecycle command seam 미배선 · 조회만 가능합니다.</p>{{end}}
       {{range .Fields}}
-      <fieldset class="setting-row">
+      <fieldset class="setting-row{{if .ConfigurationError}} setting-error{{end}}" {{if .ConfigurationError}}aria-readonly="true"{{end}}>
         <legend>{{.Label}} <code>{{.Key}}</code></legend>
         <p>{{.Description}}</p>
+        {{if .ConfigurationError}}<p class="danger configuration-error" role="alert"><strong>설정 오류 · 읽기 전용</strong><br>{{.ConfigurationError}} owner descriptor를 바로잡기 전에는 preset preview와 apply를 제공하지 않습니다.</p>{{end}}
         <dl class="setting-values">
           <div><dt>기본값</dt><dd>{{.Default}}</dd></div>
           <div><dt>Desired</dt><dd><strong>{{.Desired}}</strong></dd></div>
@@ -96,15 +107,16 @@ const optimizationTemplates = `
           {{if eq .ID "COMMON_LADDER_HYBRID_50"}}<p>약 50%를 남기고 T4부터 high-water -6.5% 보호를 사용합니다.</p>
           {{else if eq .ID "COMMON_LADDER_RUNNER"}}<p><strong>고정 목표 없음</strong>으로 표시하며 999% sentinel을 입력값으로 노출하지 않습니다.</p>
           {{else}}<p>T4에서 잔량을 전량익절하는 균형형입니다.</p>{{end}}
-          {{if $.LifecycleReady}}
+          {{if $.ExitPolicyWritable}}
           <form method="post" action="/optimization/exit-policy" class="choice-action">
             <input type="hidden" name="csrf" value="{{$.CSRF}}">
             <input type="hidden" name="base_version" value="{{$.Snapshot.Version}}">
             <input type="hidden" name="category" value="exit-protection">
             <input type="hidden" name="setting_key" value="exit.common-policy">
             <input type="hidden" name="option_id" value="{{.ID}}">
-            <button type="submit" {{if .Selected}}disabled{{end}}>{{if .Selected}}선택됨{{else}}이 preset 미리보기{{end}}</button>
+            <button type="submit" {{if .Selected}}disabled aria-disabled="true"{{end}}>{{if .Selected}}현재 desired · 선택됨{{else}}이 preset 선택 · 미리보기{{end}}</button>
           </form>
+          {{else}}<p class="muted preset-readonly" role="status">읽기 전용 · owner descriptor 확인 필요</p>
           {{end}}
         </article>
       {{end}}
@@ -220,9 +232,10 @@ const optimizationTemplates = `
 {{define "optimization-preview"}}
 {{template "head" .}}
 <p><a href="/optimization?category={{.Preview.Category}}">최적화 / {{.Preview.Category}}</a></p>
+<p class="eyebrow">2단계 · 읽기 전용 검토</p>
 <h1>설정 변경 미리보기</h1>
 <p class="notice"><strong>아직 적용되지 않았습니다.</strong> before/after, 적용 시점과 권한 불변을 확인하세요.</p>
-<section aria-labelledby="preview-diff-title">
+<section class="preview-review" aria-labelledby="preview-diff-title" aria-readonly="true">
   <h2 id="preview-diff-title">Changed subset · {{len .Preview.Changes}}개</h2>
   <div class="table-scroll" role="region" aria-label="설정 변경 before after" tabindex="0"><table>
     <tr><th>Key</th><th>Before</th><th>After</th><th>적용</th><th>안전 방향</th></tr>
@@ -238,17 +251,18 @@ const optimizationTemplates = `
   </dl>
 </section>
 <section class="sticky-save" aria-labelledby="preview-approval-title" {{if .Preview.RiskConfirmationRequired}}data-risk-preview data-not-before-ms="{{.NotBeforeUnixMilli}}"{{end}}>
-  <h2 id="preview-approval-title">명시적 승인</h2>
+  <p class="section-kicker">3단계 · 최종 확인</p>
+  <h2 id="preview-approval-title">이 변경만 승인·적용</h2>
   {{if .Preview.RiskConfirmationRequired}}
-  <p class="danger">보호 또는 위험 계약에 영향을 줄 수 있어 3초 확인 대기가 적용됩니다. typed phrase나 자유 reason 입력은 없습니다.</p>
+  <p class="danger">보호 또는 위험 계약에 영향을 줄 수 있어 3초 확인 대기가 적용됩니다. 문구나 사유를 직접 입력하지 않습니다.</p>
   <p class="notice" role="status" aria-live="polite" data-risk-countdown>{{if .Waiting}}{{.WaitSecs}}초 남음{{else}}승인 가능{{end}}</p>
   {{end}}
   <form method="post" action="/optimization/exit-policy">
     <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="action" value="apply">
     <input type="hidden" name="capability" value="{{.Preview.Capability}}">
-    {{if .Preview.RiskConfirmationRequired}}<label class="confirm-check"><input type="checkbox" name="confirm" value="yes" required> before/after, 기존 포지션 불변, LIVE 권한 분리를 확인했습니다.</label>
+    {{if .Preview.RiskConfirmationRequired}}<label class="confirm-check"><input type="checkbox" name="confirm" value="yes" required data-risk-confirm> before/after, 기존 포지션 불변, LIVE 권한 분리를 확인했습니다.</label>
     {{else}}<input type="hidden" name="confirm" value="yes">{{end}}
-    <div class="actions"><a class="button-link secondary-link" href="/optimization?category={{.Preview.Category}}">취소</a><button type="submit" {{if .Preview.RiskConfirmationRequired}}data-risk-submit {{if .Waiting}}disabled{{end}}{{end}}>이 changed subset 승인·적용</button></div>
+    <div class="actions approval-actions"><a class="button-link secondary-link" href="/optimization?category={{.Preview.Category}}">취소</a><button type="submit" {{if .Preview.RiskConfirmationRequired}}data-risk-submit disabled{{end}}>이 changed subset 승인·적용</button></div>
   </form>
 </section>
 {{if .Preview.RiskConfirmationRequired}}<script>{{optimizationPreviewScript}}</script>{{end}}
