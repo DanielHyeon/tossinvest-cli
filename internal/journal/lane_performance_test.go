@@ -219,4 +219,10 @@ func TestClosedStrategyTradeSourcesRejectsInvalidWindowAndPersistedData(t *testi
 	if err == nil || !strings.Contains(err.Error(), "opened_at") {
 		t.Fatalf("invalid persisted time err=%v", err)
 	}
+	if _, err := j.db.Exec(`UPDATE positions SET opened_at='2026-03-30T01:00:00Z', entry_decision_id=NULL WHERE id='invalid-time'`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ro.ClosedStrategyTradeSources(context.Background(), "acct-1", closed.Add(-time.Hour), closed); err == nil {
+		t.Fatal("an outcome with no exact risk decision was silently omitted instead of rejected")
+	}
 }

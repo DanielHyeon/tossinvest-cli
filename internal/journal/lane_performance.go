@@ -162,8 +162,8 @@ SELECT o.position_id, p.market, p.symbol,
 	   x.quantity, x.policy_version, x.risk_intent_id, x.created_at
   FROM trade_outcomes o
   JOIN positions p ON p.id=o.position_id
-  JOIN decisions risk ON risk.id=p.entry_decision_id AND risk.account_ref=p.account_ref
-  JOIN exit_states es ON es.position_id=p.id
+	LEFT JOIN decisions risk ON risk.id=p.entry_decision_id AND risk.account_ref=p.account_ref
+	LEFT JOIN exit_states es ON es.position_id=p.id
   LEFT JOIN exact_lineage x
     ON x.account_ref=p.account_ref
    AND x.position_id=o.position_id
