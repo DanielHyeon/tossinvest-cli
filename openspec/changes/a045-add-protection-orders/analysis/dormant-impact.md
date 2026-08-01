@@ -107,3 +107,13 @@ that chain may be filtered from recovery, reconciliation, or cancel fallback. Th
 durably acknowledges the recovered result ID before activating the saga, so repeated restart and
 cancel operations reconstruct the same identity without memory-only state. No UI, app wiring,
 activation capability, execution profile, or broker transport boundary changed.
+
+The final crash-window follow-up treats mutation-attempt and saga writes as two independently
+durable commits. DISPATCHED/IN_DOUBT uses only a unique canonical inventory match; ACKNOWLEDGED uses
+its persisted result ID; both paths complete the saga without relying on process memory. PLANNED is
+not considered dispatched, and ambiguous cardinality stays closed. Recovered unknown results are
+acknowledged before saga activation so another SIGKILL is idempotently recoverable. Exact expiry is
+now mandatory in the current broker target and every create/replace response, cancel, recovery, and
+reconciliation comparison. The official cancel adapter performs an exact detail check before DELETE
+when detail is available. These changes remain confined to the dormant packages and evidence; no UI,
+runtime wiring, approval surface, or official execution profile changed.

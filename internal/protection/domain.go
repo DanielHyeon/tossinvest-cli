@@ -436,7 +436,7 @@ type RetiredBrokerTarget struct {
 }
 
 func (t BrokerTarget) Validate() error {
-	if t.Scope.Validate() != nil || strings.TrimSpace(t.BrokerID) == "" || strings.TrimSpace(t.ClientOrderID) == "" || t.Trigger < 1 || t.Quantity < 1 {
+	if t.Scope.Validate() != nil || strings.TrimSpace(t.BrokerID) == "" || strings.TrimSpace(t.ClientOrderID) == "" || t.Trigger < 1 || t.Quantity < 1 || !validExpireDate(t.ExpireDate) {
 		return ErrInvalidSaga
 	}
 	seen := map[string]bool{t.BrokerID: true}

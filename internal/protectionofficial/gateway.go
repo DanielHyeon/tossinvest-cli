@@ -84,6 +84,14 @@ func (g *Gateway) Cancel(ctx context.Context, target protection.BrokerTarget) (p
 	if target.Validate() != nil || target.Scope != g.scope {
 		return protection.CancelObservation{}, ErrAmbiguousConditional
 	}
+	// When detail is available, bind the mutation to the exact durable current
+	// identity before issuing DELETE. In particular, expiry is not a wildcard.
+	if raw, readErr := g.client.ConditionalOrderRaw(ctx, target.BrokerID); readErr == nil {
+		parsed, adaptErr := g.adapt(raw)
+		if adaptErr != nil || !matchesTarget(target, parsed) {
+			return protection.CancelObservation{}, ErrAmbiguousConditional
+		}
+	}
 	if err := g.client.CancelConditionalOrder(ctx, target.BrokerID); err != nil {
 		return protection.CancelObservation{}, err
 	}
@@ -265,8 +273,7 @@ func (g *Gateway) cancelObservation(target protection.BrokerTarget, raw official
 func matchesTarget(target protection.BrokerTarget, actual protection.BrokerProtection) bool {
 	return target.Scope == actual.Scope && target.BrokerID == actual.ID && target.ClientOrderID == actual.ClientOrderID &&
 		target.Trigger == actual.Trigger && target.Quantity == actual.Quantity && actual.OrderSide == "SELL" &&
-		actual.OrderType == "MARKET" && actual.ConditionType == "STOP" &&
-		(target.ExpireDate == "" || target.ExpireDate == actual.ExpireDate)
+		actual.OrderType == "MARKET" && actual.ConditionType == "STOP" && target.ExpireDate == actual.ExpireDate
 }
 
 func matchesRetired(scope protection.Scope, target protection.RetiredBrokerTarget, actual protection.BrokerProtection) bool {

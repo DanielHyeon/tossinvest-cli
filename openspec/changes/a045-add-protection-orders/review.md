@@ -214,6 +214,33 @@ focused race tests, the full Go suite, `go vet`, whitespace checks, and Function
 pass. This remains a remediation candidate awaiting independent re-review; OFF/UNWIRED and the
 input-free StockOS-style console are unchanged.
 
+## Mutation commit-window and exact-expiry BLOCK remediation · 2026-08-01
+
+Recovery now interprets the saga's durable CREATE/REPLACE attempt across every pre-commit state.
+PLANNED is never claimed as broker-dispatched. DISPATCHED and IN_DOUBT treat the result as unknown
+and require exactly one bounded inventory row matching the canonical request identity; zero or two
+or more candidates remain `IN_DOUBT`. ACKNOWLEDGED requires its durable result broker ID and resumes
+the interrupted saga commit against that exact row. For replacement, the acknowledged new result is
+the current generation and the target plus its checked predecessors are retired; generation gaps,
+forks, target mismatch, body mismatch, and result mismatch fail closed.
+
+When recovery uniquely resolves an unknown dispatch, it writes DISPATCHED/IN_DOUBT to ACKNOWLEDGED
+with the selected result ID before applying ACTIVE to the saga. A second crash in that interval is
+therefore handled by the ACK path. RED/GREEN tests cover CREATE and a repeated REPLACE chain at both
+DISPATCHED-to-ACK and ACK-to-saga-commit windows, followed by a fresh restart reconciliation. They
+also prove PLANNED cannot claim a coincidental row and unknown inventory cardinality 0/2 cannot open
+entry.
+
+Expiry is now part of the mandatory current `BrokerTarget`, not an optional comparison. Empty or
+non-canonical target expiry is rejected; official target matching has no empty-expiry wildcard.
+Create and replace response confirmation, cancel identity, restart recovery, and reconciliation all
+require the exact canonical expiry. The detail-available cancel path verifies that identity before
+issuing DELETE. Expiry mismatch tests cover response confirmation, Get/Cancel, and restart inventory.
+
+This follow-up changes no UI, activation minter, app construction, execution profile, toggle, or
+transport boundary. The controller still starts closed and all broker reads remain bounded. It is a
+review candidate, not LIVE/WIRED approval.
+
 ## Dependency-integrated dormant rebase · 2026-08-01
 
 - Integration base: `70aabdc9936de08df458da13203437ba7d2dd572` (a041/a042 complete).

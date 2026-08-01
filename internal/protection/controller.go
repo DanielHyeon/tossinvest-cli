@@ -193,7 +193,7 @@ func (c *Controller) Register(ctx context.Context, sagaID, attemptID, expireDate
 	defer cancel()
 	broker, callErr := c.gateway.Create(brokerCtx, body)
 	settledAt := c.now()
-	if callErr != nil || brokerCtx.Err() != nil || !exactBrokerResult(saga, broker) {
+	if callErr != nil || brokerCtx.Err() != nil || !exactBrokerBodyResult(c.scope, body, broker) {
 		c.entryOpen.Store(false)
 		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, settledAt, broker.ID)
 		_, _ = c.repository.MarkMutationUnknown(ctx, saga.ID, saga.Revision, settledAt, attemptID)
@@ -261,7 +261,7 @@ func (c *Controller) Replace(ctx context.Context, sagaID, attemptID string, trig
 	defer cancel()
 	broker, callErr := c.gateway.Replace(brokerCtx, saga.BrokerID, body)
 	settledAt := c.now()
-	if callErr != nil || brokerCtx.Err() != nil || !exactPendingBrokerResult(saga, broker) {
+	if callErr != nil || brokerCtx.Err() != nil || !exactBrokerBodyResult(c.scope, body, broker) {
 		c.entryOpen.Store(false)
 		_ = c.repository.markAttempt(ctx, attemptID, MutationDispatched, MutationInDoubt, settledAt, broker.ID)
 		_, _ = c.repository.MarkMutationUnknown(ctx, saga.ID, saga.Revision, settledAt, attemptID)
@@ -410,14 +410,15 @@ func (c *Controller) Recover(ctx context.Context, sagaID string) (Saga, error) {
 	now := c.now()
 	if selectErr != nil {
 		reason := "RECOVERY_IDENTITY_MISMATCH"
-		if errors.Is(selectErr, ErrProtectionGone) {
+		unknownDispatch := expected.pending != nil && (expected.pending.State == MutationDispatched || expected.pending.State == MutationInDoubt)
+		if errors.Is(selectErr, ErrProtectionGone) && !unknownDispatch {
 			reason = string(DiscrepancyMissing)
 		}
 		_, markErr := c.repository.MarkDiscrepancy(ctx, saga.ID, saga.Revision, now, reason)
 		if markErr != nil {
 			return Saga{}, fmt.Errorf("%w: missing protection and discrepancy write failed: %v", ErrMutationInDoubt, markErr)
 		}
-		if errors.Is(selectErr, ErrProtectionGone) {
+		if errors.Is(selectErr, ErrProtectionGone) && !unknownDispatch {
 			return Saga{}, ErrProtectionGone
 		}
 		return Saga{}, ErrMutationInDoubt
@@ -448,8 +449,17 @@ func (c *Controller) Recover(ctx context.Context, sagaID string) (Saga, error) {
 		return saga, nil
 	}
 	if expected.pending != nil {
-		if err := c.repository.markAttempt(ctx, expected.pending.ID, MutationInDoubt, MutationAcknowledged, now, matched.ID); err != nil {
-			return Saga{}, fmt.Errorf("%w: persist recovered broker identity: %v", ErrMutationInDoubt, err)
+		switch expected.pending.State {
+		case MutationDispatched, MutationInDoubt:
+			if err := c.repository.markAttempt(ctx, expected.pending.ID, expected.pending.State, MutationAcknowledged, now, matched.ID); err != nil {
+				return Saga{}, fmt.Errorf("%w: persist recovered broker identity: %v", ErrMutationInDoubt, err)
+			}
+		case MutationAcknowledged:
+			if expected.pending.ResultBrokerID != matched.ID {
+				return Saga{}, ErrMutationInDoubt
+			}
+		default:
+			return Saga{}, ErrMutationInDoubt
 		}
 	}
 	active, err := c.repository.RecoverActive(ctx, saga.ID, saga.Revision, now, matched.ID, matched.Trigger, matched.Quantity)
@@ -595,8 +605,10 @@ func (c *Controller) brokerTargetForSaga(ctx context.Context, saga Saga) (Broker
 }
 
 // brokerExpectation reconstructs the current identity and its exact retired
-// predecessors exclusively from durable acknowledged mutation attempts. An
-// in-doubt create/replace supplies an exact body but never invents its result ID.
+// predecessors exclusively from durable mutation attempts. A DISPATCHED or
+// IN_DOUBT request supplies an exact body but no trusted result ID; an
+// ACKNOWLEDGED request supplies the durable result ID even when the subsequent
+// saga commit was interrupted.
 func (c *Controller) brokerExpectation(ctx context.Context, saga Saga) (brokerExpectation, error) {
 	attempts, err := c.repository.Attempts(ctx, saga.ID)
 	if err != nil {
@@ -609,7 +621,7 @@ func (c *Controller) brokerExpectation(ctx context.Context, saga Saga) (brokerEx
 		gen    int64
 	}
 	byResult := make(map[string]acknowledged)
-	var pending *MutationAttempt
+	var sagaAttempt *MutationAttempt
 	for i := range attempts {
 		a := &attempts[i]
 		if a.Kind != MutationCreate && a.Kind != MutationReplace {
@@ -628,28 +640,58 @@ func (c *Controller) brokerExpectation(ctx context.Context, saga Saga) (brokerEx
 			}
 			byResult[a.ResultBrokerID] = acknowledged{target: a.TargetBrokerID, body: body, kind: a.Kind, gen: a.Generation}
 		}
-		if a.ID == saga.AttemptID && a.State == MutationInDoubt {
+		if a.ID == saga.AttemptID {
 			copy := *a
-			pending = &copy
+			sagaAttempt = &copy
 		}
 	}
 
-	expected := brokerExpectation{id: saga.BrokerID, pending: pending}
-	if pending != nil && (pending.Kind == MutationCreate || pending.Kind == MutationReplace) {
-		body, bodyErr := attemptConditionalBody(*pending, saga)
+	recoveringAttempt := sagaAttempt != nil && ((sagaAttempt.Kind == MutationCreate && saga.BrokerID == "" &&
+		(saga.State == StateRegistering || saga.State == StateInDoubt || saga.State == StateReconcile)) ||
+		(sagaAttempt.Kind == MutationReplace && saga.PendingTrigger > 0 &&
+			(saga.State == StateReplacing || saga.State == StateInDoubt || saga.State == StateReconcile)))
+	expected := brokerExpectation{id: saga.BrokerID}
+	chainID := saga.BrokerID
+	chainGeneration := saga.Generation
+	if recoveringAttempt {
+		if sagaAttempt.State == MutationPlanned || (sagaAttempt.State != MutationDispatched && sagaAttempt.State != MutationInDoubt && sagaAttempt.State != MutationAcknowledged) {
+			return brokerExpectation{}, ErrInvalidSaga
+		}
+		body, bodyErr := attemptConditionalBody(*sagaAttempt, saga)
 		if bodyErr != nil {
 			return brokerExpectation{}, bodyErr
 		}
-		expected.id = ""
+		expected.pending = sagaAttempt
 		expected.body = body
-		if pending.Kind == MutationReplace && pending.TargetBrokerID != saga.BrokerID {
+		if sagaAttempt.State == MutationAcknowledged {
+			if sagaAttempt.ResultBrokerID == "" {
+				return brokerExpectation{}, ErrInvalidSaga
+			}
+			expected.id = sagaAttempt.ResultBrokerID
+		} else {
+			expected.id = ""
+		}
+		if sagaAttempt.Kind == MutationCreate && (sagaAttempt.Generation != 1 || saga.Generation != 1 || saga.BrokerID != "" ||
+			body.Trigger != saga.Trigger || body.Quantity != saga.Quantity) {
 			return brokerExpectation{}, ErrInvalidSaga
 		}
-		if pending.Kind == MutationCreate && (pending.Generation != 1 || saga.Generation != 1 || saga.BrokerID != "") {
+		if sagaAttempt.Kind == MutationCreate {
+			if expected.id == "" {
+				chainID, chainGeneration = "", 0
+			} else {
+				chainID, chainGeneration = expected.id, 1
+			}
+		}
+		if sagaAttempt.Kind == MutationReplace && (sagaAttempt.Generation != saga.Generation || sagaAttempt.TargetBrokerID != saga.BrokerID ||
+			saga.PreviousBrokerID != sagaAttempt.TargetBrokerID || body.Trigger != saga.PendingTrigger || body.Quantity != saga.PendingQuantity) {
 			return brokerExpectation{}, ErrInvalidSaga
 		}
-		if pending.Kind == MutationReplace && (pending.Generation != saga.Generation || saga.PreviousBrokerID != pending.TargetBrokerID) {
-			return brokerExpectation{}, ErrInvalidSaga
+		if sagaAttempt.Kind == MutationReplace {
+			if expected.id == "" {
+				chainID, chainGeneration = sagaAttempt.TargetBrokerID, saga.Generation
+			} else {
+				chainID, chainGeneration = expected.id, saga.Generation+1
+			}
 		}
 	} else {
 		current, ok := byResult[saga.BrokerID]
@@ -662,13 +704,6 @@ func (c *Controller) brokerExpectation(ctx context.Context, saga Saga) (brokerEx
 		}
 	}
 
-	chainID := saga.BrokerID
-	chainGeneration := saga.Generation
-	if pending != nil && pending.Kind == MutationReplace {
-		chainID = pending.TargetBrokerID
-	} else if pending != nil && pending.Kind == MutationCreate {
-		chainGeneration = 0
-	}
 	seen := make(map[string]bool)
 	for chainID != "" {
 		if seen[chainID] {
@@ -780,27 +815,8 @@ func boundedBrokerContext(parent context.Context, duration time.Duration) (conte
 	return ctx, cancel, nil
 }
 
-func exactBrokerResult(saga Saga, broker BrokerProtection) bool {
-	return !broker.Terminal && !broker.Triggered && exactBrokerIdentity(saga, broker)
-}
-
-func exactBrokerIdentity(saga Saga, broker BrokerProtection) bool {
-	expectedTrigger, expectedQuantity := saga.Trigger, saga.Quantity
-	idMatches := saga.BrokerID == "" || broker.ID == saga.BrokerID
-	if saga.PendingTrigger > 0 {
-		expectedTrigger, expectedQuantity = saga.PendingTrigger, saga.PendingQuantity
-		idMatches = true
-	}
-	return broker.ID != "" && idMatches && broker.Scope.equal(Scope{
-		AccountRef: saga.AccountRef, Profile: saga.Profile, Market: saga.Market, Symbol: saga.Symbol,
-	}) && broker.Quantity == expectedQuantity && broker.Trigger == expectedTrigger &&
-		broker.ClientOrderID == saga.ClientOrderID && broker.OrderSide == "SELL" && broker.OrderType == "MARKET" &&
-		broker.ConditionType == "STOP" && validExpireDate(broker.ExpireDate)
-}
-
-func exactPendingBrokerResult(saga Saga, broker BrokerProtection) bool {
-	copy := saga
-	copy.Trigger, copy.Quantity = saga.PendingTrigger, saga.PendingQuantity
-	copy.BrokerID = ""
-	return exactBrokerResult(copy, broker)
+func exactBrokerBodyResult(scope Scope, body ConditionalBody, broker BrokerProtection) bool {
+	return !broker.Terminal && !broker.Triggered && broker.ID != "" && broker.Scope.equal(scope) &&
+		broker.ClientOrderID == body.ClientOrderID && broker.Trigger == body.Trigger && broker.Quantity == body.Quantity &&
+		broker.ExpireDate == body.ExpireDate && broker.OrderSide == "SELL" && broker.OrderType == "MARKET" && broker.ConditionType == "STOP"
 }

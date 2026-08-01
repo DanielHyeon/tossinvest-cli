@@ -12,23 +12,25 @@ import (
 )
 
 type controllerGateway struct {
-	mu          sync.Mutex
-	scope       Scope
-	clock       *time.Time
-	createErr   error
-	replaceErr  error
-	cancelErr   error
-	broker      []BrokerProtection
-	createDelay time.Duration
-	cancelDelay time.Duration
-	createWait  bool
-	listWait    bool
-	listErr     error
-	cancelWait  bool
-	createCalls int
-	createDL    time.Time
-	listDL      time.Time
-	cancelDL    time.Time
+	mu                    sync.Mutex
+	scope                 Scope
+	clock                 *time.Time
+	createErr             error
+	replaceErr            error
+	cancelErr             error
+	createExpiryOverride  string
+	replaceExpiryOverride string
+	broker                []BrokerProtection
+	createDelay           time.Duration
+	cancelDelay           time.Duration
+	createWait            bool
+	listWait              bool
+	listErr               error
+	cancelWait            bool
+	createCalls           int
+	createDL              time.Time
+	listDL                time.Time
+	cancelDL              time.Time
 }
 
 func (g *controllerGateway) Create(ctx context.Context, body ConditionalBody) (BrokerProtection, error) {
@@ -45,6 +47,9 @@ func (g *controllerGateway) Create(ctx context.Context, body ConditionalBody) (B
 		return BrokerProtection{}, g.createErr
 	}
 	b := BrokerProtection{Scope: g.scope, ID: "broker-create", ClientOrderID: body.ClientOrderID, Quantity: body.Quantity, Trigger: body.Trigger, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: body.ExpireDate}
+	if g.createExpiryOverride != "" {
+		b.ExpireDate = g.createExpiryOverride
+	}
 	g.broker = []BrokerProtection{b}
 	return b, nil
 }
@@ -56,6 +61,9 @@ func (g *controllerGateway) Replace(_ context.Context, id string, body Condition
 		return BrokerProtection{}, g.replaceErr
 	}
 	b := BrokerProtection{Scope: g.scope, ID: id + "-replacement", ClientOrderID: body.ClientOrderID, Quantity: body.Quantity, Trigger: body.Trigger, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: body.ExpireDate}
+	if g.replaceExpiryOverride != "" {
+		b.ExpireDate = g.replaceExpiryOverride
+	}
 	g.broker = []BrokerProtection{b}
 	return b, nil
 }
@@ -133,6 +141,69 @@ func controllerHarness(t *testing.T) (*Controller, *Repository, *controllerGatew
 		t.Fatal(err)
 	}
 	return c, repo, gw, &clock
+}
+
+func stageCreateCrash(t *testing.T, c *Controller, repo *Repository, clock *time.Time, state MutationState) Saga {
+	t.Helper()
+	ctx := context.Background()
+	fillAt := *clock
+	saga, err := c.PlanFill(ctx, Fill{At: fillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := bodyForSaga(saga, "2026-08-08")
+	canonical, _ := body.CanonicalJSON()
+	at := fillAt.Add(100 * time.Millisecond)
+	*clock = at
+	if err := repo.recordAttempt(ctx, MutationAttempt{ID: "crash-create", SagaID: saga.ID, Generation: saga.Generation,
+		Kind: MutationCreate, State: MutationPlanned, SerializerVersion: SerializerVersion, CanonicalBody: string(canonical), CreatedAt: at, UpdatedAt: at}); err != nil {
+		t.Fatal(err)
+	}
+	registering, err := repo.BeginRegistration(ctx, saga.ID, saga.Revision, at, "crash-create")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state == MutationDispatched || state == MutationAcknowledged {
+		if err := repo.markAttempt(ctx, "crash-create", MutationPlanned, MutationDispatched, at, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if state == MutationAcknowledged {
+		if err := repo.markAttempt(ctx, "crash-create", MutationDispatched, MutationAcknowledged, at, "broker-crash-create"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return registering
+}
+
+func stageReplaceCrash(t *testing.T, repo *Repository, active Saga, clock *time.Time, state MutationState) Saga {
+	t.Helper()
+	ctx := context.Background()
+	body := bodyForSaga(active, "2026-08-08")
+	body.Trigger = 72000
+	canonical, _ := body.CanonicalJSON()
+	at := clock.Add(100 * time.Millisecond)
+	*clock = at
+	if err := repo.recordAttempt(ctx, MutationAttempt{ID: "crash-replace", SagaID: active.ID, Generation: active.Generation,
+		Kind: MutationReplace, State: MutationPlanned, SerializerVersion: SerializerVersion, CanonicalBody: string(canonical),
+		TargetBrokerID: active.BrokerID, CreatedAt: at, UpdatedAt: at}); err != nil {
+		t.Fatal(err)
+	}
+	replacing, err := repo.BeginReplace(ctx, active.ID, active.Revision, at, "crash-replace", 72000, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state == MutationDispatched || state == MutationAcknowledged {
+		if err := repo.markAttempt(ctx, "crash-replace", MutationPlanned, MutationDispatched, at, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if state == MutationAcknowledged {
+		if err := repo.markAttempt(ctx, "crash-replace", MutationDispatched, MutationAcknowledged, at, "broker-crash-replace"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return replacing
 }
 
 func TestNewControllerNeverOpensUntilBoundedAuthoritativeInventoryIsClean(t *testing.T) {
@@ -372,6 +443,120 @@ func TestReplaceResponseLossRecoversOnlyTheExactNewIdentity(t *testing.T) {
 	if again, restartErr := restarted.Recover(ctx, stored.ID); restartErr != nil || again.BrokerID != "broker-replaced" || !restarted.EntryAllowed() {
 		t.Fatalf("restart recovered=%+v err=%v entry=%v", again, restartErr, restarted.EntryAllowed())
 	}
+}
+
+func TestCrashWindowsRecoverDurableCreateAndRepeatedReplaceIdentity(t *testing.T) {
+	for _, attemptState := range []MutationState{MutationDispatched, MutationAcknowledged} {
+		t.Run("create-"+string(attemptState), func(t *testing.T) {
+			c, repo, gw, clock := controllerHarness(t)
+			registering := stageCreateCrash(t, c, repo, clock, attemptState)
+			gw.broker = []BrokerProtection{{Scope: gw.scope, ID: "broker-crash-create", ClientOrderID: registering.ClientOrderID,
+				Quantity: 1, Trigger: 70000, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"}}
+			restarted, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart" })
+			active, err := restarted.Recover(context.Background(), registering.ID)
+			if err != nil || active.State != StateActive || active.BrokerID != "broker-crash-create" || !restarted.EntryAllowed() {
+				t.Fatalf("recover=%+v err=%v entry=%v", active, err, restarted.EntryAllowed())
+			}
+			attempts, _ := repo.Attempts(context.Background(), registering.ID)
+			if attempts[0].State != MutationAcknowledged || attempts[0].ResultBrokerID != "broker-crash-create" {
+				t.Fatalf("attempt=%+v", attempts[0])
+			}
+			restartedAgain, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart-again" })
+			if discrepancies, reconcileErr := restartedAgain.Reconcile(context.Background()); reconcileErr != nil || len(discrepancies) != 0 || !restartedAgain.EntryAllowed() {
+				t.Fatalf("reconcile=%+v err=%v entry=%v", discrepancies, reconcileErr, restartedAgain.EntryAllowed())
+			}
+		})
+
+		t.Run("replace-"+string(attemptState), func(t *testing.T) {
+			c, repo, gw, clock := controllerHarness(t)
+			ctx := context.Background()
+			fillAt := *clock
+			saga, _ := c.PlanFill(ctx, Fill{At: fillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+			one, _ := c.Register(ctx, saga.ID, "create", "2026-08-08", fillAt)
+			two, _ := c.Replace(ctx, one.ID, "replace-one", 71000, 1, "2026-08-08")
+			replacing := stageReplaceCrash(t, repo, two, clock, attemptState)
+			gw.broker = []BrokerProtection{
+				{Scope: gw.scope, ID: one.BrokerID, ClientOrderID: replacing.ClientOrderID, Quantity: 1, Trigger: 70000, Terminal: true, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"},
+				{Scope: gw.scope, ID: two.BrokerID, ClientOrderID: replacing.ClientOrderID, Quantity: 1, Trigger: 71000, Terminal: true, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"},
+				{Scope: gw.scope, ID: "broker-crash-replace", ClientOrderID: replacing.ClientOrderID, Quantity: 1, Trigger: 72000, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"},
+			}
+			restarted, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart" })
+			active, err := restarted.Recover(ctx, replacing.ID)
+			if err != nil || active.State != StateActive || active.Generation != 3 || active.BrokerID != "broker-crash-replace" || !restarted.EntryAllowed() {
+				t.Fatalf("recover=%+v err=%v entry=%v", active, err, restarted.EntryAllowed())
+			}
+			restartedAgain, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart-again" })
+			if discrepancies, reconcileErr := restartedAgain.Reconcile(ctx); reconcileErr != nil || len(discrepancies) != 0 || !restartedAgain.EntryAllowed() {
+				t.Fatalf("reconcile=%+v err=%v entry=%v", discrepancies, reconcileErr, restartedAgain.EntryAllowed())
+			}
+		})
+	}
+}
+
+func TestCrashWindowUnknownDispatchRequiresExactlyOneCanonicalBrokerRow(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		state MutationState
+		count int
+	}{
+		{name: "planned is never claimed", state: MutationPlanned, count: 1},
+		{name: "dispatched missing", state: MutationDispatched, count: 0},
+		{name: "dispatched duplicate", state: MutationDispatched, count: 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, repo, gw, clock := controllerHarness(t)
+			registering := stageCreateCrash(t, c, repo, clock, tc.state)
+			for i := 0; i < tc.count; i++ {
+				gw.broker = append(gw.broker, BrokerProtection{Scope: gw.scope, ID: fmt.Sprintf("broker-candidate-%d", i), ClientOrderID: registering.ClientOrderID,
+					Quantity: 1, Trigger: 70000, OrderSide: "SELL", OrderType: "MARKET", ConditionType: "STOP", ExpireDate: "2026-08-08"})
+			}
+			restarted, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "restart" })
+			if _, err := restarted.Recover(context.Background(), registering.ID); !errors.Is(err, ErrMutationInDoubt) || restarted.EntryAllowed() {
+				t.Fatalf("recover err=%v entry=%v", err, restarted.EntryAllowed())
+			}
+		})
+	}
+}
+
+func TestExpiryIsExactAcrossCreateRecoverAndReconcile(t *testing.T) {
+	t.Run("create response mismatch", func(t *testing.T) {
+		c, _, gw, clock := controllerHarness(t)
+		gw.createExpiryOverride = "2026-08-09"
+		fillAt := *clock
+		saga, _ := c.PlanFill(context.Background(), Fill{At: fillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+		if _, err := c.Register(context.Background(), saga.ID, "create", "2026-08-08", fillAt); !errors.Is(err, ErrMutationInDoubt) || c.EntryAllowed() {
+			t.Fatalf("register err=%v entry=%v", err, c.EntryAllowed())
+		}
+	})
+
+	t.Run("replace response mismatch", func(t *testing.T) {
+		c, _, gw, clock := controllerHarness(t)
+		ctx := context.Background()
+		fillAt := *clock
+		saga, _ := c.PlanFill(ctx, Fill{At: fillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+		active, _ := c.Register(ctx, saga.ID, "create", "2026-08-08", fillAt)
+		gw.replaceExpiryOverride = "2026-08-09"
+		if _, err := c.Replace(ctx, active.ID, "replace", 71000, 1, "2026-08-08"); !errors.Is(err, ErrMutationInDoubt) || c.EntryAllowed() {
+			t.Fatalf("replace err=%v entry=%v", err, c.EntryAllowed())
+		}
+	})
+
+	t.Run("restart inventory mismatch", func(t *testing.T) {
+		c, repo, gw, clock := controllerHarness(t)
+		ctx := context.Background()
+		fillAt := *clock
+		saga, _ := c.PlanFill(ctx, Fill{At: fillAt, Quantity: 1, Trigger: 70000, ExpireDate: "2026-08-08"})
+		active, _ := c.Register(ctx, saga.ID, "create", "2026-08-08", fillAt)
+		gw.broker[0].ExpireDate = "2026-08-09"
+		reconcileRestart, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "reconcile" })
+		if _, err := reconcileRestart.Reconcile(ctx); !errors.Is(err, ErrMutationInDoubt) || reconcileRestart.EntryAllowed() {
+			t.Fatalf("reconcile err=%v entry=%v", err, reconcileRestart.EntryAllowed())
+		}
+		recoverRestart, _ := NewController(repo, gw, Activation{ready: true, scope: gw.scope}, func() time.Time { return *clock }, func() string { return "recover" })
+		if _, err := recoverRestart.Recover(ctx, active.ID); !errors.Is(err, ErrMutationInDoubt) || recoverRestart.EntryAllowed() {
+			t.Fatalf("recover err=%v entry=%v", err, recoverRestart.EntryAllowed())
+		}
+	})
 }
 
 func TestRestartRecoverAndReconcileIgnoreOnlyExactRetiredReplaceLineage(t *testing.T) {
