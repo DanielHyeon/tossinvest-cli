@@ -5,7 +5,7 @@
 
 ## 2. Persistence와 집계
 
-- [ ] 2.1 nullable lineage와 append-only observation schema를 구현한다.
+- [x] 2.1 nullable lineage와 append-only observation schema를 구현한다.
 - [x] 2.2 5/15/30분 markout, slippage, MFE/MAE와 cost-adjusted lane aggregate를 구현한다.
 - [x] 2.3 기존 portfolio 승률·PF·MDD·R 결과가 동일함을 회귀 테스트로 고정한다.
 
@@ -13,5 +13,5 @@
 
 - [x] 3.1 lane/policy performance query와 `performance-history` read-only view를 구현하고 metric help/unit/sample/period/provenance를 제공한다.
 - [x] 3.2 최근 30일/all markets/all lanes/complete lineage only 조회 기본값과 link_missing/not_measured/insufficient_sample 설명을 fixture로 고정한다.
-- [ ] 3.3 mutation control·capability 부재, 모바일·접근성, pruning, migration/full test·vet·validate와 독립 리뷰를 통과한다.
+- [x] 3.3 mutation control·capability 부재, 모바일·접근성, pruning, migration/full test·vet·validate와 독립 리뷰를 통과한다.
 - [ ] 3.4 `make gate CHANGE=a049-add-lane-performance`을 통과한다.
