@@ -1,0 +1,420 @@
+{
+  "file": "internal/journal/migration_v12_crash_linux_test.go",
+  "source_sha256": "67a63bfaa74d614c2e31a8d4176425e6a4059ba985506f4748c13e638d690ee3",
+  "package": "journal",
+  "function": "TestMigrationV12CommitAndUserVersionSurviveSIGKILL",
+  "signature": "TestMigrationV12CommitAndUserVersionSurviveSIGKILL(params=1, results=0)",
+  "start": {
+    "line": 15,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 16,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 18,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 5
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 8
+      },
+      "text": "openCrashChildJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 22
+      },
+      "text": "j.SchemaVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 38
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 3
+      },
+      "text": "kill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 24
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 9
+      },
+      "text": "openJournalAtSchema"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 2
+      },
+      "text": "seedV8Rows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 12
+      },
+      "text": "countRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 12
+      },
+      "text": "old.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 2
+      },
+      "text": "runCrashChild"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 2
+      },
+      "text": "assertCrashJournalArtifacts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 14
+      },
+      "text": "sql.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 12
+      },
+      "text": "raw.QueryRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 13
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 13
+      },
+      "text": "raw.QueryRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 12
+      },
+      "text": "raw.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 14
+      },
+      "text": "openTestJournalAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 14
+      },
+      "text": "countRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 55
+      },
+      "text": "sameCounts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 18,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

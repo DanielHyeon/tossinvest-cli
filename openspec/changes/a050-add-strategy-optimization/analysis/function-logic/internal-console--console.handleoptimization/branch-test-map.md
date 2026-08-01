@@ -13,3 +13,6 @@
 | B9 | lifecycle read succeeds | `TestOptimizationShowsExactlySixCategoriesAndThreeOwnerPolicies` | lifecycle view absent | yes |
 | B10 | each registered owner option is rendered | exact policy tests | owner cards absent | yes |
 | B11 | desired missing uses legacy display fallback | optimization view tests | fallback unspecified | yes |
+| B12 | protection commander is present | `TestExitProtectionCurrentRowUsesOnlyOpaqueActionAndCheckbox` | protection rows absent | yes |
+| B13 | protection list fails | protection error projection test | error could be hidden | yes |
+| B14 | protection list succeeds | `TestExitProtectionCurrentRowUsesOnlyOpaqueActionAndCheckbox` | opaque action absent | yes |

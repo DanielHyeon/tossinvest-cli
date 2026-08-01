@@ -69,6 +69,9 @@ type optimizationPage struct {
 	LegacyLoadErr                  string
 	EngineRunning                  bool
 	Policies                       []optimizationPolicyView
+	ProtectionWired                bool
+	ProtectionLoadErr              string
+	Protections                    []ProtectionStatus
 }
 
 func (p optimizationPage) Overview() bool { return p.Selected == strategyopt.CategoryOverview }

@@ -18,7 +18,7 @@ func TestMigrationV11ToV12IsAdditiveAndPreservesExistingRows(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	j := openTestJournalAt(t, path)
+	j := openJournalAtSchema(t, path, 12)
 	if version, err := j.SchemaVersion(context.Background()); err != nil || version != 12 {
 		t.Fatalf("schema version=%d err=%v", version, err)
 	}
@@ -94,7 +94,7 @@ func TestFailedV12MigrationRollsBackTablesAndUserVersion(t *testing.T) {
 	assertBackupAtVersion(t, backups[0], 11, before, "position_policy_lifecycles")
 
 	restoreBackup(t, backups[0], path)
-	restored := openTestJournalAt(t, path)
+	restored := openJournalAtSchema(t, path, 12)
 	if version, versionErr := restored.SchemaVersion(context.Background()); versionErr != nil || version != 12 {
 		t.Fatalf("restored version=%d err=%v", version, versionErr)
 	}

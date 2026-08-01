@@ -35,7 +35,7 @@
     - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [implemented] → `interlock-gates-entry-not-exit`
     - STORY-TOS-016 — Wire the production risk Guardian [implemented] → `wire-production-risk-guardian`
     - STORY-TOS-017 — Prime engine account sequence safely [implemented] → `prime-engine-account-seq`
-    - STORY-TOS-a045 — Add broker-resident protection orders [in_progress] → `a045-add-protection-orders`
+    - STORY-TOS-a045 — Add broker-resident protection orders [implemented] → `a045-add-protection-orders`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`

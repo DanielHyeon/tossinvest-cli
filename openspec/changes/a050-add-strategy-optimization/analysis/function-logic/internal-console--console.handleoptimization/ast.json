@@ -1,16 +1,16 @@
 {
   "file": "internal/console/optimization.go",
-  "source_sha256": "5e9f8731eb1b9f4ccea9b67fb42d8e44dcfc7bf00212ff03dcf6c8d4dbc04ba8",
+  "source_sha256": "602b94569b5abacd207c8706daa761a844070515dc97ee6645f7cef40a69772a",
   "package": "console",
   "function": "handleOptimization",
   "receiver": "Console",
   "signature": "Console.handleOptimization(params=2, results=0)",
   "start": {
-    "line": 16,
+    "line": 64,
     "column": 1
   },
   "end": {
-    "line": 67,
+    "line": 124,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 17,
+        "line": 65,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 24,
+        "line": 72,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 31,
+        "line": 79,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 36,
+        "line": 84,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 38,
+        "line": 86,
         "column": 3
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "else",
       "at": {
-        "line": 40,
+        "line": 88,
         "column": 10
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 44,
+        "line": 92,
         "column": 2
       }
     },
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 46,
+        "line": 94,
         "column": 3
       }
     },
@@ -82,7 +82,7 @@
       "id": "B9",
       "kind": "else",
       "at": {
-        "line": 48,
+        "line": 96,
         "column": 10
       }
     },
@@ -90,7 +90,7 @@
       "id": "B10",
       "kind": "range",
       "at": {
-        "line": 57,
+        "line": 105,
         "column": 2
       }
     },
@@ -98,8 +98,32 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 59,
+        "line": 107,
         "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 3
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "else",
+      "at": {
+        "line": 119,
+        "column": 10
       }
     }
   ],
@@ -107,7 +131,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 21,
+        "line": 69,
         "column": 3
       }
     }
@@ -116,7 +140,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 18,
+        "line": 66,
         "column": 3
       },
       "text": "Set"
@@ -124,7 +148,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 18,
+        "line": 66,
         "column": 3
       },
       "text": "w.Header"
@@ -132,7 +156,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 19,
+        "line": 67,
         "column": 3
       },
       "text": "c.refuse"
@@ -140,7 +164,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 23,
+        "line": 71,
         "column": 21
       },
       "text": "strategyopt.ParseCategory"
@@ -148,7 +172,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 23,
+        "line": 71,
         "column": 47
       },
       "text": "strings.TrimSpace"
@@ -156,7 +180,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 23,
+        "line": 71,
         "column": 65
       },
       "text": "Get"
@@ -164,7 +188,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 23,
+        "line": 71,
         "column": 65
       },
       "text": "r.URL.Query"
@@ -172,7 +196,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 24,
+        "line": 72,
         "column": 5
       },
       "text": "strings.TrimSpace"
@@ -180,7 +204,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 24,
+        "line": 72,
         "column": 23
       },
       "text": "Get"
@@ -188,7 +212,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 24,
+        "line": 72,
         "column": 23
       },
       "text": "r.URL.Query"
@@ -196,7 +220,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 28,
+        "line": 76,
         "column": 46
       },
       "text": "Get"
@@ -204,7 +228,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 28,
+        "line": 76,
         "column": 46
       },
       "text": "r.URL.Query"
@@ -212,7 +236,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 29,
+        "line": 77,
         "column": 38
       },
       "text": "c.engineRunning"
@@ -220,7 +244,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 34,
+        "line": 82,
         "column": 20
       },
       "text": "optimizationCategoryViews"
@@ -228,7 +252,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 37,
+        "line": 85,
         "column": 17
       },
       "text": "c.opts.ExitPolicies.Load"
@@ -236,7 +260,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 39,
+        "line": 87,
         "column": 25
       },
       "text": "err.Error"
@@ -244,7 +268,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 45,
+        "line": 93,
         "column": 16
       },
       "text": "c.opts.Optimization.Read"
@@ -252,7 +276,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 45,
+        "line": 93,
         "column": 41
       },
       "text": "r.Context"
@@ -260,7 +284,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 47,
+        "line": 95,
         "column": 24
       },
       "text": "err.Error"
@@ -268,7 +292,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 54,
+        "line": 102,
         "column": 18
       },
       "text": "optimizationFieldViews"
@@ -276,7 +300,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 54,
+        "line": 102,
         "column": 41
       },
       "text": "view.Registry.Fields"
@@ -284,7 +308,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 57,
+        "line": 105,
         "column": 25
       },
       "text": "exitpolicy.RegisteredCommonPolicies"
@@ -292,7 +316,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 62,
+        "line": 110,
         "column": 19
       },
       "text": "append"
@@ -300,7 +324,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 66,
+        "line": 116,
+        "column": 23
+      },
+      "text": "c.opts.Protections.List"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 47
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 29
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
         "column": 2
       },
       "text": "c.render"
@@ -310,134 +358,162 @@
     {
       "kind": ":=",
       "at": {
-        "line": 23,
+        "line": 71,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 25,
+        "line": 73,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 27,
+        "line": 75,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 32,
+        "line": 80,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 34,
+        "line": 82,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 37,
+        "line": 85,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 39,
+        "line": 87,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 41,
+        "line": 89,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 45,
+        "line": 93,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 47,
+        "line": 95,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 49,
+        "line": 97,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 50,
+        "line": 98,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 51,
+        "line": 99,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 52,
+        "line": 100,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 53,
+        "line": 101,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 54,
+        "line": 102,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 58,
+        "line": 106,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 60,
+        "line": 108,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 62,
+        "line": 110,
         "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 115,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 118,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 120,
+        "column": 4
       }
     }
   ],

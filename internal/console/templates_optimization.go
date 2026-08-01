@@ -53,8 +53,8 @@ const optimizationTemplates = `
   {{end}}
 
   {{if .ExitProtection}}
-    <section aria-labelledby="exit-protection-title">
-      <h2 id="exit-protection-title">익절·보호</h2>
+    <section id="exit-protection" aria-labelledby="exit-protection-title">
+      <h2 id="exit-protection-title">청산/보호 · 익절 정책</h2>
       <p>신규 관리 포지션에만 적용할 공통 정책입니다. 기존 포지션 snapshot과 LIVE/lane 상태는 자동으로 재결합하지 않습니다.</p>
       {{if .LegacyLoadErr}}<p class="danger">legacy effective config를 읽지 못했습니다: <code>{{.LegacyLoadErr}}</code></p>{{end}}
       {{if eq .Snapshot.Version 0}}<p class="notice">lifecycle command seam 미배선 · 조회만 가능합니다.</p>{{end}}
@@ -105,10 +105,36 @@ const optimizationTemplates = `
       {{end}}
       </div>
 
-      <aside class="notice" aria-label="브로커 보호 capability">
-        <strong>a045 브로커 보호: 미검증/사용 불가</strong>
-        <p>보호 capability owner provider가 통합되기 전에는 주문 유형·기본값·활성화 버튼을 만들지 않습니다. 준비 이후에도 기본은 OFF입니다.</p>
-      </aside>
+      <section aria-labelledby="broker-protection-title">
+        <h3 id="broker-protection-title">브로커 상주 보호</h3>
+        <p class="muted">현재 공통 보호선과 브로커에 남아 있는 보호주문을 함께 읽습니다. 종목·가격·수량·사유 입력과 LIVE 전체 활성화는 없습니다.</p>
+        {{if .ProtectionLoadErr}}<p class="danger" role="alert">보호 상태를 읽지 못했습니다: {{.ProtectionLoadErr}}</p>{{end}}
+        {{if not .ProtectionWired}}
+        <div class="detail-grid" aria-readonly="true">
+          <div><strong>a045 브로커 보호: 미검증/사용 불가</strong><p class="muted">엔진이 꺼져도 손절이 남는 기능입니다.</p></div>
+          <dl><dt>Capability</dt><dd>지원 확인 전 사용 불가</dd><dt>Activation</dt><dd>OFF</dd>
+            <dt>Desired</dt><dd>OFF</dd><dt>Effective</dt><dd>UNWIRED</dd><dt>적용 시점</dt><dd>운영자 별도 승인 후 다음 엔진 기동</dd>
+            <dt>Provenance</dt><dd>signed attestation 및 engine command seam 없음</dd></dl>
+        </div>
+        {{end}}
+        {{range .Protections}}
+        <article class="detail-grid" aria-label="{{.Symbol}} 브로커 보호 상태">
+          <div><strong>{{.Symbol}}</strong><p class="muted">{{.Explanation}}</p></div>
+          <dl><dt>Capability</dt><dd>{{.Capability}}</dd><dt>Activation</dt><dd>{{.Activation}}</dd>
+            <dt>Desired / Effective</dt><dd>{{.Desired}} / <strong>{{.Effective}}</strong></dd>
+            <dt>Effective trigger</dt><dd>{{.EffectiveTrigger}}</dd><dt>보호 수량</dt><dd>{{.ProtectedQuantity}}</dd>
+            <dt>Broker ID</dt><dd><code>{{.BrokerID}}</code></dd><dt>Updated at</dt><dd>{{.UpdatedAt}}</dd>
+            <dt>Reconcile</dt><dd>{{.ReconcileReason}}</dd><dt>적용 시점</dt><dd>{{.ApplyTiming}}</dd>
+            <dt>Provenance</dt><dd>{{.Provenance}}</dd></dl>
+          {{if .WeakeningActionToken}}
+          <form method="post" action="/optimization/exit-protection/preview">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="action_token" value="{{.WeakeningActionToken}}">
+            <button type="submit" class="secondary">{{.WeakeningAction}}</button>
+          </form>
+          {{end}}
+        </article>
+        {{end}}
+      </section>
       {{if .History}}
       <details class="history-panel">
         <summary>이 카테고리 rollback 후보 보기</summary>
@@ -241,6 +267,23 @@ const optimizationTemplates = `
     </form>{{end}}
   </div>
 </section>
+{{template "foot" .}}
+{{end}}
+
+{{define "protection-preview"}}
+{{template "head" .}}
+<p><a href="/optimization?category=exit-protection">최적화 · 청산/보호</a></p>
+<h1>보호 약화 확인</h1>
+<p class="danger" role="alert"><strong>브로커 보호가 약해질 수 있다.</strong> preview 뒤 최소 3초 동안 영향 범위를 확인한다.</p>
+<dl><dt>종목</dt><dd>{{.Preview.Symbol}}</dd><dt>Before</dt><dd>{{.Preview.Before}}</dd><dt>After</dt><dd>{{.Preview.After}}</dd>
+  <dt>영향 포지션</dt><dd>{{.Preview.AffectedPositions}}</dd><dt>영향 수량</dt><dd>{{.Preview.AffectedQuantity}}</dd>
+  <dt>보호 공백 가능성</dt><dd>{{.Preview.CoverageGap}}</dd><dt>적용 시점</dt><dd>{{.Preview.ApplyTiming}}</dd></dl>
+<form method="post" action="/optimization/exit-protection/apply">
+  <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="capability" value="{{.Preview.Capability}}">
+  <label><input type="checkbox" name="confirm" value="yes" required> 위 before/after와 보호 공백 가능성을 확인했다.</label>
+  <p><button type="submit">3초 후 현재 행에만 적용</button></p>
+</form>
+<p><a href="/optimization?category=exit-protection">취소하고 현재 상태 다시 보기</a></p>
 {{template "foot" .}}
 {{end}}
 
