@@ -58,4 +58,4 @@
 | `a052-reconcile-aware-position-management` | STORY-TOS-a052 | archived |
 | `a053-restore-visible-exit-line-references` | STORY-TOS-a053 | archived |
 | `a054-console-status-shell` | STORY-TOS-a054 | archived |
-| `a055-console-settings-cadence` | STORY-TOS-a055 | implemented |
+| `a055-console-settings-cadence` | STORY-TOS-a055 | archived |

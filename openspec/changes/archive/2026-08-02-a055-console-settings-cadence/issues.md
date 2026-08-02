@@ -45,6 +45,31 @@ openspec/changes/*/specs/operator-console/spec.md` → 0건). MODIFIED는 요구
 
 이 change 단독으로 결정하지 않는다 — 다른 change 6~9건의 계약에 영향을 준다.
 
+### 결정 (2026-08-02, 아카이브 시점)
+
+**이 change를 먼저 아카이브한다.** 근거는 주장이 아니라 diff다.
+
+아카이브 직전에 이 delta의 `편입 설정 화면` MODIFIED 블록(53줄)을 당시 본문 블록(43줄)과
+줄 단위로 비교했다. 차이는 전부 **이 change가 의도한 것**이었다.
+
+- 상단 메뉴 `"외부 종목 자동관리"` → `"설정"` + 상시 하위 화면. nav를 12개에서 6개로
+  줄이면서 그 메뉴 자체가 없어졌으므로, 이 문장이 바뀌는 것은 손실이 아니라 승계다.
+- `/settings#adoption` 리다이렉트 요구와 그 Scenario 추가.
+- inline event handler 금지(SHALL NOT)와 그 Scenario 추가 — I2의 결론.
+
+**본문에서 사라진 문장은 없다.** 즉 이 delta의 base는 실제로 현재 본문이었고, I1이 경고한
+"오래된 MODIFIED가 본문을 되돌리는" 사고는 이 change에는 해당하지 않는다.
+
+미아카이브 3건(`console-excludes-in-one-click`, `console-sets-guardian-limits`,
+`size-us-guardian-tier`)은 **여전히 stale이다.** 순서를 바꿔도 그건 해결되지 않는다 —
+그 셋은 이 change 이전에도 이미 본문보다 오래됐고, 어느 쪽을 먼저 아카이브하든 rebase가
+필요하다. 이 change를 먼저 아카이브해서 늘어나는 부채는 rebase 대상이 이 change의 결과로
+바뀐다는 것뿐이고, 반대로 미루면 **배포된 동작을 본문이 설명하지 못하는 상태**가 이어진다
+(a055는 컨테이너로 배포 완료). 그래서 먼저 아카이브한다.
+
+**남은 일 (이 change 범위 밖):** 위 3건의 MODIFIED 블록을 현재 본문 기준으로 rebase하거나
+폐기한다. `콘솔 안전 불변식`의 미아카이브 MODIFY 6건도 같은 정리가 필요하다.
+
 ## I2. 죽어 있는 인라인 확인 대화
 
 **분류**: safe local (이 change의 범위 안에서 처리)
