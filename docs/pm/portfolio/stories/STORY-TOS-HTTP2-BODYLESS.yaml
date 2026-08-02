@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "fix-http2-bodyless-reads",
-    "path": "openspec/changes/fix-http2-bodyless-reads"
+    "path": "openspec/changes/archive/2026-08-02-fix-http2-bodyless-reads"
   },
   "acceptance": [
     "Bodyless HTTP/2 GET, HEAD and SSE requests reach their read handlers",

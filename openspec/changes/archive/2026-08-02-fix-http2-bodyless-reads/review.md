@@ -13,4 +13,8 @@
 - Security notes accepted: preserved positive/malformed headers and signed-zero syntax are rejected before read/SSE handler dispatch
 - Verification: full repository tests, `internal/httpapi` race, vet, Windows cross-build/test compile, logic-map and strict OpenSpec validation pass
 - Residual: raw malformed-frame tests rely on Go `net/http` protocol enforcement; no custom proxy/parser hop exists
-- Status: implementation and independent reviews complete; CI/deploy gates pending
+- CI: origin/main commit `32fbb7af46489412d95413e9f9bc05768ae5bd69`, GitHub Actions run `30725043818` passed
+- Deployment: Compose `tossos` and `httpapi` rebuilt and healthy; certificate-verified HTTP/2 negotiated as version 2
+- Canary: engine/positions/orders/candidates/settings/optimization returned 200 twice; console health returned 200; mutation absence returned 405
+- Degraded dependency parity: performance and SSE returned stable 503 under both HTTP/1.1 and HTTP/2 because the pre-existing `performance.db` is absent; neither returned `BODY_NOT_SUPPORTED`
+- Status: implementation, independent reviews, CI, deployment and protocol-parity canary complete

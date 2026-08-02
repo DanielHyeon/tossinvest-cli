@@ -57,7 +57,7 @@
     - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [archived] → `a044-manage-position-exit-policies`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
-    - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [in_progress] → `fix-http2-bodyless-reads`
+    - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
     - STORY-TOS-027 — Add candidate discovery [implemented] → `add-candidate-discovery`

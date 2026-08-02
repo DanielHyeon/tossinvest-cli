@@ -4,15 +4,18 @@
 TBD - created by archiving change a051-add-httpapi-daemon. Update Purpose after archive.
 ## Requirements
 ### Requirement: 서비스는 versioned REST와 SSE를 제공한다
-daemon은 `/api/v1` 아래 engine, positions, orders, candidates, performance, settings, optimization resource와 `/api/v1/stream` SSE를 안정된 JSON schema로 제공해야 한다 (SHALL).
+The daemon SHALL provide engine, positions, orders, candidates, performance, settings,
+optimization resources and SSE under `/api/v1` with a stable JSON schema. It SHALL accept
+bodyless HTTP/1.1 and HTTP/2 GET/HEAD requests equally, and SHALL fail closed when a read or
+stream request carries a declared or unknown-length body.
 
-#### Scenario: positions 조회
-- **WHEN** VPN 모바일 클라이언트가 `/api/v1/positions`를 조회한다
-- **THEN** schema version과 a043 exit-line fields를 포함한 JSON을 반환한다
+#### Scenario: body 없는 HTTP/2 조회
+- **WHEN** VPN 모바일 클라이언트가 body 없는 HTTP/2 GET 또는 HEAD로 고정 resource를 조회한다
+- **THEN** body가 있다고 오판하지 않고 HTTP/1.1과 같은 resource 결과를 반환한다
 
-#### Scenario: SSE 재연결
-- **WHEN** stream 연결이 끊긴 뒤 클라이언트가 재연결한다
-- **THEN** 같은 process epoch의 연속 event면 다음 sequence를 받고, epoch mismatch·gap·재시작이면 새 epoch의 full snapshot으로 최신 상태에 수렴한다
+#### Scenario: HTTP/2 body 거부
+- **WHEN** HTTP/2 read 또는 stream 요청이 declared 또는 unknown-length body를 전송한다
+- **THEN** stable `BODY_NOT_SUPPORTED` 오류를 반환하고 resource/stream handler를 실행하지 않는다
 
 ### Requirement: optimization API는 웹과 같은 메뉴·기본값·설명을 제공한다
 optimization resource는 a050과 동일한 여섯 category ID와 순서, 각 field의 label, description, type, unit, default state/value, desired/effective 값, range/choices, owner, apply timing, safety direction과 provenance를 반환해야 한다 (SHALL).

@@ -10,5 +10,5 @@
 
 ## 3. 배포 검증
 
-- [ ] 3.1 main push CI를 통과한다.
-- [ ] 3.2 Compose 재배포 후 TLS HTTP/2 REST/SSE 카나리를 통과한다.
+- [x] 3.1 main push CI를 통과한다.
+- [x] 3.2 Compose 재배포 후 TLS HTTP/2 REST/SSE protocol-parity 카나리를 통과한다.
