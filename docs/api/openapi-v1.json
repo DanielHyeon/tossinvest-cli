@@ -1664,6 +1664,29 @@
           "label": {"type": "string", "example": "원장 기록 · 실효 미확인"}
         }
       },
+	  "ExitLineReference": {
+		"type": "object",
+		"description": "Non-actionable legacy or adoption context. Prices are persisted facts only; a plan contains no synthesized prices.",
+		"additionalProperties": false,
+		"required": [
+		  "kind", "label", "effectiveKnown", "market", "currency", "entryPrice",
+		  "initialStop", "baseline", "highWater", "stopPercent", "basis", "reason"
+		],
+		"properties": {
+		  "kind": {"type": "string", "enum": ["LEGACY_RAW", "ADOPTION_PLAN", "GENERATION_MISMATCH", "RUNTIME_UNKNOWN", "LIFECYCLE_UNKNOWN"]},
+		  "label": {"type": "string"},
+		  "effectiveKnown": {"type": "boolean", "enum": [false]},
+		  "market": {"type": "string"},
+		  "currency": {"type": "string", "enum": ["KRW", "USD", "—"]},
+		  "entryPrice": {"type": "string"},
+		  "initialStop": {"type": "string"},
+		  "baseline": {"type": "string"},
+		  "highWater": {"type": "string"},
+		  "stopPercent": {"type": "string"},
+		  "basis": {"type": "string"},
+		  "reason": {"type": "string"}
+		}
+	  },
       "Position": {
         "type": "object",
         "description": "Current broker and journal position joined to its exit-line evidence.",
@@ -1693,6 +1716,7 @@
           "designationKnown",
           "coveringBlock",
           "exitLine",
+		  "exitLineReference",
           "storedExitEvidence"
         ],
         "properties": {
@@ -1778,6 +1802,12 @@
           "exitLine": {
             "$ref": "#/components/schemas/ExitLine"
           },
+		  "exitLineReference": {
+			"anyOf": [
+			  {"$ref": "#/components/schemas/ExitLineReference"},
+			  {"type": "null"}
+			]
+		  },
           "storedExitEvidence": {
             "anyOf": [
               {"$ref": "#/components/schemas/StoredExitEvidence"},

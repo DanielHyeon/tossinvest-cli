@@ -102,6 +102,7 @@ type Position struct {
 	DesignationKnown   bool                `json:"designationKnown"`
 	CoveringBlock      *ReconcileBlock     `json:"coveringBlock"`
 	ExitLine           ExitLine            `json:"exitLine"`
+	ExitLineReference  *ExitLineReference  `json:"exitLineReference"`
 	StoredExitEvidence *StoredExitEvidence `json:"storedExitEvidence"`
 }
 
@@ -132,6 +133,24 @@ type StoredExitEvidence struct {
 	HighWater      string `json:"highWater"`
 	EffectiveKnown bool   `json:"effectiveKnown"`
 	Label          string `json:"label"`
+}
+
+// ExitLineReference is read-only, non-actionable display context. It never
+// transports account identity or a command/capability, and EffectiveKnown is
+// false because canonical actionable truth remains exclusively in ExitLine.
+type ExitLineReference struct {
+	Kind           string `json:"kind"`
+	Label          string `json:"label"`
+	EffectiveKnown bool   `json:"effectiveKnown"`
+	Market         string `json:"market"`
+	Currency       string `json:"currency"`
+	EntryPrice     string `json:"entryPrice"`
+	InitialStop    string `json:"initialStop"`
+	Baseline       string `json:"baseline"`
+	HighWater      string `json:"highWater"`
+	StopPercent    string `json:"stopPercent"`
+	Basis          string `json:"basis"`
+	Reason         string `json:"reason"`
 }
 
 // ExitLine is a JSON spelling of operatorview.ExitLineView. The values are

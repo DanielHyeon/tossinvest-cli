@@ -66,6 +66,7 @@ form { display: inline; }
 .status-pill { display: inline-block; border: 1px solid currentColor; border-radius: 999px; padding: 0.05rem 0.5rem; }
 .metric { display: block; font-size: 1rem; font-weight: 700; }
 .submetric { display: block; margin-top: 0.15rem; color: #6a6a62; font-size: 0.82rem; }
+.exit-line-stack { font-variant-numeric: tabular-nums; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: flex-start; }
 .actions form { display: block; }
 .actions button { padding: 0.32rem 0.65rem; font-size: 0.86rem; }

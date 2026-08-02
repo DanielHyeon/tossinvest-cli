@@ -138,6 +138,7 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 				applyReleasedExitTruth(&projected, stored)
 			}
 			applyManagementProjection(&projected, lifecycleKnown, managed, released, runtime)
+			applyExitLineReference(&projected, &stored, state, lifecycleKnown, runtime)
 		} else {
 			why := "position is not present in the read-only journal"
 			if !journalReadable {
@@ -145,6 +146,7 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 			}
 			projected.ExitLine = httpapi.ExitLineFrom(operatorview.BuildExitLine(operatorview.Source{UnknownReason: why}))
 			applyManagementProjection(&projected, journalReadable, false, false, runtime)
+			applyExitLineReference(&projected, nil, positionpolicy.State{}, false, runtime)
 		}
 		items = append(items, projected)
 	}
@@ -163,6 +165,7 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 			applyReleasedExitTruth(&projected, stored)
 		}
 		applyManagementProjection(&projected, lifecycleKnown, managed, released, runtime)
+		applyExitLineReference(&projected, &stored, state, lifecycleKnown, runtime)
 		items = append(items, projected)
 	}
 	return httpapi.PositionsResource{ObservedAt: pointerTo(now), Source: "official+journal-read-only", Items: items}, nil

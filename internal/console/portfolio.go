@@ -255,6 +255,12 @@ type positionRow struct {
 	// those immutable ids while removing the position from exit management.
 	LifecycleKnown  bool
 	LifecycleStatus positionpolicy.Status
+	// LifecycleProofRequired distinguishes an unwired legacy console from a
+	// lifecycle lookup that was attempted but could not verify this position.
+	LifecycleProofRequired bool
+	// LifecycleGeneration binds visible exit evidence to the authoritative
+	// release/re-adopt generation. A mismatch suppresses every stored price.
+	LifecycleGeneration int64
 	// Adopted reports which record makes the row eligible. It is display only:
 	// the verdict is Eligible, and this says why.
 	Adopted bool
@@ -271,6 +277,9 @@ type positionRow struct {
 	// persisted snapshot. The HTML template never reads actionable raw snapshot
 	// values directly, so stale evidence cannot leak a price into the page.
 	ExitLine operatorview.ExitLineView
+	// ExitReference explains legacy raw facts or a running adoption percentage
+	// without promoting either to an actionable current protection line.
+	ExitReference operatorview.ExitLineReferenceView
 	// StoredExit is seed/state evidence from the journal when no canonical
 	// evaluated snapshot exists. It is deliberately a separate display model:
 	// these values explain what was persisted at t0, but are never promoted to
@@ -392,7 +401,9 @@ func (r positionRow) Reason() string {
 // line, the journal half, or a row-specific reason. A row whose only story is a
 // page-global state renders no second line at all — the notice above the table
 // is that story, told once.
-func (r positionRow) HasDetail() bool { return r.HasExit || r.InJournal || r.Reason() != "" }
+func (r positionRow) HasDetail() bool {
+	return r.HasExit || r.HasExitReference() || r.InJournal || r.Reason() != ""
+}
 
 // BrokerMissing reports a projection row the account does not confirm.
 func (r positionRow) BrokerMissing() bool { return r.InJournal && !r.InBroker }
