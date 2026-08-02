@@ -1,6 +1,6 @@
 {
   "file": "internal/console/settings_limits.go",
-  "source_sha256": "774a87a4ab738bc9ee968c2448c12727c2332651b4931ab2ea687a56191c3d34",
+  "source_sha256": "237b0e978827c1f64bf9bbc5e749e9588f21a875d969c385211dad6d06b2238a",
   "package": "console",
   "function": "LimitTierCards",
   "receiver": "settingsPage",

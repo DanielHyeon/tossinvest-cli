@@ -1,16 +1,16 @@
 {
   "file": "internal/console/portfolio_pages.go",
-  "source_sha256": "1b853d97900369149f409d3f90a6b7ff7edff22bb6168f55c081bbde8b76f4b2",
+  "source_sha256": "21fe80b047a15e3c4b88f251de575141cdfcb6f66ab2b4766e56cd8db5439a47",
   "package": "console",
   "function": "BrokerState",
   "receiver": "positionsPage",
   "signature": "positionsPage.BrokerState(params=0, results=1)",
   "start": {
-    "line": 44,
+    "line": 47,
     "column": 1
   },
   "end": {
-    "line": 46,
+    "line": 49,
     "column": 2
   },
   "branches": null,
@@ -18,7 +18,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 45,
+        "line": 48,
         "column": 2
       }
     }

@@ -1,6 +1,6 @@
 {
   "file": "internal/console/console.go",
-  "source_sha256": "81e89f9836212de30d8c95095e3c9934f7db3c57d8142033a0e275a54260f609",
+  "source_sha256": "feefa13a08f52634932d7398cd83e50cf6a2d248366237912092c29778eb70e5",
   "package": "console",
   "function": "routes",
   "receiver": "Console",

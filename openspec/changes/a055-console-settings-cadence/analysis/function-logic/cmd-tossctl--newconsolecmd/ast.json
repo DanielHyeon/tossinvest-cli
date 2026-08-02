@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/console.go",
-  "source_sha256": "6adb2afe5ccda41a5d69dce83d2ef337656b717b14d5f121f5eb70fa26021e7f",
+  "source_sha256": "73506c342360f2a52158de57a7e9d8e35e0d265c8f77a8fdb6b731f7feadd95b",
   "package": "main",
   "function": "newConsoleCmd",
   "signature": "newConsoleCmd(params=1, results=1)",

@@ -1,6 +1,6 @@
 {
   "file": "internal/console/remote_test.go",
-  "source_sha256": "1b51daa21287399cebc33b7f8f201d337a14f978d764ebbc1c9a0efa41c28cbb",
+  "source_sha256": "04f8df28e5566102e694fd29ef26c856f4163f46c9973bf4ab564a0c9266fb0f",
   "package": "console",
   "function": "TestRemotePeerHostOriginAndCSRFAreIndependentGates",
   "signature": "TestRemotePeerHostOriginAndCSRFAreIndependentGates(params=1, results=0)",

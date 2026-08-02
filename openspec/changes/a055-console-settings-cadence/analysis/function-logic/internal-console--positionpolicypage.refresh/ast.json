@@ -1,16 +1,16 @@
 {
   "file": "internal/console/position_policy.go",
-  "source_sha256": "fabb2773d2086a58f5b2e5dc7823b2f802d3b3933b60321d118eb44d17f1171a",
+  "source_sha256": "59fb703897da414eb1fea3497ef6a4871a9a9dc4b32cbd89dd043599c154a27d",
   "package": "console",
   "function": "Refresh",
   "receiver": "positionPolicyPage",
   "signature": "positionPolicyPage.Refresh(params=0, results=1)",
   "start": {
-    "line": 51,
+    "line": 62,
     "column": 1
   },
   "end": {
-    "line": 51,
+    "line": 62,
     "column": 58
   },
   "branches": null,
@@ -18,7 +18,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 51,
+        "line": 62,
         "column": 44
       }
     }

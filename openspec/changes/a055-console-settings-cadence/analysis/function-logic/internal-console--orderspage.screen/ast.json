@@ -1,6 +1,6 @@
 {
   "file": "internal/console/orders_page.go",
-  "source_sha256": "6430b10edfa1565587e8c46f1ce36e6a66138d849b64a0d166fb99e780f269d8",
+  "source_sha256": "79f39ecb4428e958fd87ad41043ecbacde3cbdeb6b2553b237a5532f640291ed",
   "package": "console",
   "function": "Screen",
   "receiver": "ordersPage",

@@ -1,16 +1,16 @@
 {
   "file": "internal/console/portfolio_pages.go",
-  "source_sha256": "1b853d97900369149f409d3f90a6b7ff7edff22bb6168f55c081bbde8b76f4b2",
+  "source_sha256": "21fe80b047a15e3c4b88f251de575141cdfcb6f66ab2b4766e56cd8db5439a47",
   "package": "console",
   "function": "handlePositions",
   "receiver": "Console",
   "signature": "Console.handlePositions(params=2, results=0)",
   "start": {
-    "line": 55,
+    "line": 58,
     "column": 1
   },
   "end": {
-    "line": 77,
+    "line": 123,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 66,
+        "line": 73,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 67,
+        "line": 79,
         "column": 3
       }
     },
@@ -34,7 +34,79 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 70,
+        "line": 81,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 90,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "range",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 4
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 5
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "else",
+      "at": {
+        "line": 106,
+        "column": 12
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 116,
         "column": 4
       }
     }
@@ -44,7 +116,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 56,
+        "line": 59,
         "column": 10
       },
       "text": "c.positions"
@@ -52,7 +124,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 56,
+        "line": 59,
         "column": 22
       },
       "text": "r.Context"
@@ -60,7 +132,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 58,
+        "line": 61,
         "column": 11
       },
       "text": "c.chromeFor"
@@ -68,7 +140,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 58,
+        "line": 61,
         "column": 57
       },
       "text": "snap.Holdings.freshness"
@@ -76,7 +148,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 64,
+        "line": 67,
         "column": 17
       },
       "text": "explainFrom"
@@ -84,23 +156,63 @@
     {
       "kind": "call",
       "at": {
-        "line": 65,
-        "column": 2
+        "line": 78,
+        "column": 16
       },
-      "text": "attachPositionExitLines"
+      "text": "c.opts.PositionPolicies.Runtime"
     },
     {
       "kind": "call",
       "at": {
-        "line": 65,
-        "column": 42
+        "line": 78,
+        "column": 48
       },
-      "text": "c.now"
+      "text": "r.Context"
     },
     {
       "kind": "call",
       "at": {
-        "line": 67,
+        "line": 79,
+        "column": 21
+      },
+      "text": "c.opts.PositionPolicies.List"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 50
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 17
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 55
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 16
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
         "column": 23
       },
       "text": "c.opts.Settings.Load"
@@ -108,7 +220,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 71,
+        "line": 91,
         "column": 36
       },
       "text": "block.Included"
@@ -116,7 +228,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 72,
+        "line": 92,
         "column": 34
       },
       "text": "block.Excludes"
@@ -124,7 +236,63 @@
     {
       "kind": "call",
       "at": {
-        "line": 76,
+        "line": 103,
+        "column": 29
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 21
+      },
+      "text": "positionpolicy.ProjectManagement"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 14
+      },
+      "text": "row.Managed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 27
+      },
+      "text": "newReconcileBlockView"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 72
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 2
+      },
+      "text": "attachPositionExitLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 42
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
         "column": 2
       },
       "text": "c.render"
@@ -134,21 +302,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 56,
+        "line": 59,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 57,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 61,
+        "line": 60,
         "column": 2
       }
     },
@@ -160,23 +321,142 @@
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
         "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 78,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 79,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 71,
+        "line": 80,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 82,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 91,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 72,
+        "line": 92,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 102,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 105,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 108,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 109,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 112,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
         "column": 5
       }
     }

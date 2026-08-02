@@ -1,6 +1,6 @@
 {
   "file": "internal/console/settings_test.go",
-  "source_sha256": "3994dcbf494dd35b802dee2f8073b22c2d5af495c10f010cd5d24e515e224fa6",
+  "source_sha256": "ac539a28a06ada6c7b03e1814905f96d29d963ef36a3d680b57d7dfae199134d",
   "package": "console",
   "function": "TestTheStopFractionIsASlider",
   "signature": "TestTheStopFractionIsASlider(params=1, results=0)",

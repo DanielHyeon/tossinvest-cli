@@ -2,7 +2,7 @@
 
 - Source: `internal/console/restart_test.go`
 - AST evidence: `ast.json` (revision: current)
-- Change: a055-console-settings-cadence · category: carry
+- Change: a055-console-settings-cadence · category: test
 - Risk scan: `risk-pattern-report.md`
 
 ## Inputs and invariants
@@ -13,16 +13,16 @@
 
 ## Branches and early returns
 
-a055 did not edit this function. It appears here because a055's base commit (b331f664) predates a054's implementation, which is still uncommitted, so the diff against that base carries a054's functions too. The Function Logic Map of record for this function is a054's, in `openspec/changes/archive/2026-08-02-a054-console-status-shell/analysis/function-logic/`. Its current bytes hash to exactly what a054 recorded, which is how this classification was made rather than asserted.
+A test, re-pointed at the tab that owns the section it is about. No assertion was weakened; where a055's contract replaced an inherited one, the replacement is argued in the test's own comment.
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if at line 295 | none by this change | unchanged behaviour | `TestTheNavigationSaysWhatEachScreenAnswers`, `TestNoScreenIsReachableOnlyFromInsideAnother`, `TestTheFourSettingsTabsAreRegisteredGetRoutes`, `TestEachSettingControlAppearsOnExactlyOneTab`, `TestEveryCardEitherSavesOrSaysWhyNot`, `TestASaveResultComesBackToTheFormThatCausedIt`, `TestNoWarningIsHiddenInsideADisclosure`, `TestAReloadingScreenFoldsWithTheURLAndOffersNoOtherWay` |
-| B2 | if at line 300 | none by this change | unchanged behaviour | `TestTheNavigationSaysWhatEachScreenAnswers`, `TestNoScreenIsReachableOnlyFromInsideAnother`, `TestTheFourSettingsTabsAreRegisteredGetRoutes`, `TestEachSettingControlAppearsOnExactlyOneTab`, `TestEveryCardEitherSavesOrSaysWhyNot`, `TestASaveResultComesBackToTheFormThatCausedIt`, `TestNoWarningIsHiddenInsideADisclosure`, `TestAReloadingScreenFoldsWithTheURLAndOffersNoOtherWay` |
-| B3 | if at line 303 | none by this change | unchanged behaviour | `TestTheNavigationSaysWhatEachScreenAnswers`, `TestNoScreenIsReachableOnlyFromInsideAnother`, `TestTheFourSettingsTabsAreRegisteredGetRoutes`, `TestEachSettingControlAppearsOnExactlyOneTab`, `TestEveryCardEitherSavesOrSaysWhyNot`, `TestASaveResultComesBackToTheFormThatCausedIt`, `TestNoWarningIsHiddenInsideADisclosure`, `TestAReloadingScreenFoldsWithTheURLAndOffersNoOtherWay` |
-| B4 | if at line 307 | none by this change | unchanged behaviour | `TestTheNavigationSaysWhatEachScreenAnswers`, `TestNoScreenIsReachableOnlyFromInsideAnother`, `TestTheFourSettingsTabsAreRegisteredGetRoutes`, `TestEachSettingControlAppearsOnExactlyOneTab`, `TestEveryCardEitherSavesOrSaysWhyNot`, `TestASaveResultComesBackToTheFormThatCausedIt`, `TestNoWarningIsHiddenInsideADisclosure`, `TestAReloadingScreenFoldsWithTheURLAndOffersNoOtherWay` |
-| B5 | if at line 315 | none by this change | unchanged behaviour | `TestTheNavigationSaysWhatEachScreenAnswers`, `TestNoScreenIsReachableOnlyFromInsideAnother`, `TestTheFourSettingsTabsAreRegisteredGetRoutes`, `TestEachSettingControlAppearsOnExactlyOneTab`, `TestEveryCardEitherSavesOrSaysWhyNot`, `TestASaveResultComesBackToTheFormThatCausedIt`, `TestNoWarningIsHiddenInsideADisclosure`, `TestAReloadingScreenFoldsWithTheURLAndOffersNoOtherWay` |
-| B6 | if at line 318 | none by this change | unchanged behaviour | `TestTheNavigationSaysWhatEachScreenAnswers`, `TestNoScreenIsReachableOnlyFromInsideAnother`, `TestTheFourSettingsTabsAreRegisteredGetRoutes`, `TestEachSettingControlAppearsOnExactlyOneTab`, `TestEveryCardEitherSavesOrSaysWhyNot`, `TestASaveResultComesBackToTheFormThatCausedIt`, `TestNoWarningIsHiddenInsideADisclosure`, `TestAReloadingScreenFoldsWithTheURLAndOffersNoOtherWay` |
+| B1 | if at line 295 | none; test code | unchanged behaviour | `TestTheHandoffIsMintedByOneConsoleAndSpentByTheNext` (this function is the test) |
+| B2 | if at line 300 | none; test code | unchanged behaviour | `TestTheHandoffIsMintedByOneConsoleAndSpentByTheNext` (this function is the test) |
+| B3 | if at line 303 | none; test code | unchanged behaviour | `TestTheHandoffIsMintedByOneConsoleAndSpentByTheNext` (this function is the test) |
+| B4 | if at line 307 | none; test code | unchanged behaviour | `TestTheHandoffIsMintedByOneConsoleAndSpentByTheNext` (this function is the test) |
+| B5 | if at line 315 | none; test code | unchanged behaviour | `TestTheHandoffIsMintedByOneConsoleAndSpentByTheNext` (this function is the test) |
+| B6 | if at line 318 | none; test code | unchanged behaviour | `TestTheHandoffIsMintedByOneConsoleAndSpentByTheNext` (this function is the test) |
 
 ## Calls and live bindings
 
@@ -32,7 +32,7 @@ a055 did not edit this function. It appears here because a055's base commit (b33
 
 ## State mutations and fallbacks
 
-- None by this change.
+- None; test code.
 - No new broker call, no new config key, no new audit record, no new POST route.
 
 ## Safety conclusion

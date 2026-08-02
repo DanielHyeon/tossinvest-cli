@@ -1,6 +1,6 @@
 {
   "file": "internal/console/settings.go",
-  "source_sha256": "24a5b1756ba31a64349754ed78d7947ba25299f302a4212710a718cc60d1d46c",
+  "source_sha256": "85c2a2e5c62377e5ceae67a2f83b74b1d56313f11bc91723fab65bde067ced2a",
   "package": "console",
   "function": "redirectSettings",
   "receiver": "Console",
