@@ -17,9 +17,12 @@ package console
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 )
 
 type positionsPage struct {
@@ -38,7 +41,24 @@ func (positionsPage) RefreshSeconds() int { return int(holdingsTTL / time.Second
 
 func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 	page := positionsPage{Nav: "positions", Snap: c.positions(r.Context())}
-	attachPositionExitLines(page.Snap.Rows, c.now())
+	var (
+		runtime          positionpolicy.ManagementRuntime
+		runtimeAttempted bool
+		policyByID       map[string]positionpolicy.State
+	)
+	if c.opts.PositionPolicies != nil {
+		runtimeAttempted = true
+		// A read failure intentionally leaves EffectiveKnown false. Desired config
+		// below remains useful display context, but is never substituted for the
+		// running engine snapshot.
+		runtime, _ = c.opts.PositionPolicies.Runtime(r.Context())
+		if states, err := c.opts.PositionPolicies.List(r.Context()); err == nil {
+			policyByID = make(map[string]positionpolicy.State, len(states))
+			for _, state := range states {
+				policyByID[strings.TrimSpace(state.PositionID)] = state
+			}
+		}
+	}
 	if c.opts.Settings != nil {
 		if block, _, err := c.opts.Settings.Load(); err == nil {
 			// One Load stamps both lists: two reads could return two different
@@ -49,6 +69,30 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	if runtimeAttempted {
+		for i := range page.Snap.Rows {
+			row := &page.Snap.Rows[i]
+			journalKnown := row.JournalReadable
+			released := false
+			if row.InJournal {
+				state, ok := policyByID[strings.TrimSpace(row.PositionID)]
+				if !ok {
+					journalKnown = false
+				} else {
+					row.LifecycleKnown, row.LifecycleStatus = true, state.Status
+					released = state.Status == positionpolicy.StatusReleased && state.Version > 0
+				}
+			}
+			row.Management = positionpolicy.ProjectManagement(positionpolicy.ManagementInput{
+				Market: row.Market, Symbol: row.Symbol, JournalKnown: journalKnown,
+				Managed: row.Managed(), Released: released, Runtime: runtime,
+			})
+			if row.Management.Block != nil {
+				row.ManagementBlock = newReconcileBlockView(*row.Management.Block, c.now())
+			}
+		}
+	}
+	attachPositionExitLines(page.Snap.Rows, c.now())
 	c.render(w, "positions", page)
 }
 
@@ -59,6 +103,20 @@ func attachPositionExitLines(rows []positionRow, asOf time.Time) {
 	for i := range rows {
 		row := &rows[i]
 		if !row.HasExit {
+			continue
+		}
+		if row.LifecycleKnown && row.LifecycleStatus == positionpolicy.StatusReleased {
+			if hasStoredExitEvidence(row.Exit) {
+				row.StoredExit = storedExitEvidenceView{
+					Present: true, EntryPrice: storedExitValue(row.Exit.EntryPrice),
+					InitialStop: storedExitValue(row.Exit.InitialStop),
+					Baseline:    storedExitValue(row.Exit.Baseline),
+					HighWater:   storedExitValue(row.Exit.HighWater),
+				}
+			}
+			row.ExitLine = operatorview.BuildExitLine(operatorview.Source{
+				UnknownReason: "operator_released_lifecycle",
+			})
 			continue
 		}
 		snapshot := row.Exit.Snapshot.WithFreshness(asOf, holdingsTTL)
@@ -72,9 +130,28 @@ func attachPositionExitLines(rows []positionRow, asOf time.Time) {
 			source.Snapshot = &snapshot.Snapshot.Line
 			source.ObservationSource = snapshot.Snapshot.ObservationSource
 			source.ObservedAt = snapshot.Snapshot.ObservedAt
+		} else if hasStoredExitEvidence(row.Exit) {
+			row.StoredExit = storedExitEvidenceView{
+				Present: true, EntryPrice: storedExitValue(row.Exit.EntryPrice),
+				InitialStop: storedExitValue(row.Exit.InitialStop),
+				Baseline:    storedExitValue(row.Exit.Baseline),
+				HighWater:   storedExitValue(row.Exit.HighWater),
+			}
 		}
 		row.ExitLine = operatorview.BuildExitLine(source)
 	}
+}
+
+func hasStoredExitEvidence(state journal.ExitState) bool {
+	return strings.TrimSpace(state.EntryPrice) != "" || strings.TrimSpace(state.InitialStop) != "" ||
+		strings.TrimSpace(state.Baseline) != "" || strings.TrimSpace(state.HighWater) != ""
+}
+
+func storedExitValue(value string) string {
+	if value = strings.TrimSpace(value); value != "" {
+		return value
+	}
+	return "—"
 }
 
 type historyPage struct {

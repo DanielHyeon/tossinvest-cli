@@ -1,0 +1,587 @@
+{
+  "file": "internal/console/position_policy.go",
+  "source_sha256": "59fb703897da414eb1fea3497ef6a4871a9a9dc4b32cbd89dd043599c154a27d",
+  "package": "console",
+  "function": "handlePositionManagement",
+  "receiver": "Console",
+  "signature": "Console.handlePositionManagement(params=2, results=0)",
+  "start": {
+    "line": 195,
+    "column": 1
+  },
+  "end": {
+    "line": 254,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 202,
+        "column": 9
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 202,
+        "column": 9
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "else",
+      "at": {
+        "line": 204,
+        "column": 9
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "else",
+      "at": {
+        "line": 215,
+        "column": 9
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "range",
+      "at": {
+        "line": 218,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "range",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 236,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 239,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "else",
+      "at": {
+        "line": 248,
+        "column": 10
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "range",
+      "at": {
+        "line": 241,
+        "column": 4
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 4
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 248,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 226,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 11
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 11
+      },
+      "text": "r.URL.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 52
+      },
+      "text": "positionpolicy.Descriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 37
+      },
+      "text": "c.opts.Settings.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 21
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 18
+      },
+      "text": "desiredAdoptionSettingsDisplay"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 3
+      },
+      "text": "c.render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 25
+      },
+      "text": "c.opts.PositionPolicies.Runtime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 57
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 21
+      },
+      "text": "runtimeErr.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 20
+      },
+      "text": "adoptionSettingsDisplay"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 18
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 38
+      },
+      "text": "newReconcileBlockView"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 67
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 17
+      },
+      "text": "c.opts.PositionPolicies.List"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 46
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 18
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 3
+      },
+      "text": "c.render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 17
+      },
+      "text": "positionpolicy.ProjectManagement"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 16
+      },
+      "text": "newReconcileBlockView"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 57
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 18
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 38
+      },
+      "text": "c.policyAction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 27
+      },
+      "text": "exitpolicy.RegisteredCommonPolicies"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 19
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 39
+      },
+      "text": "c.policyAction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 7
+      },
+      "text": "state.ExternalLifecycleEligible"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 19
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 39
+      },
+      "text": "c.policyAction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 62
+      },
+      "text": "state.ExternalLifecycleEligible"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 18
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 38
+      },
+      "text": "c.policyAction"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 201,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 202,
+        "column": 12
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 206,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 214,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 216,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 217,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 219,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 224,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 235,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 237,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 240,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 242,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 246,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 249,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 251,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

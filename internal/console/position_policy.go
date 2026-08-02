@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 )
@@ -22,6 +23,7 @@ const positionPolicyTokenTTL = 5 * time.Minute
 // The engine implementation owns serialization and the writable journal.
 type PositionPolicyCommander interface {
 	List(context.Context) ([]positionpolicy.State, error)
+	Runtime(context.Context) (positionpolicy.ManagementRuntime, error)
 	Preview(context.Context, positionpolicy.Request) (positionpolicy.Preview, error)
 	Apply(context.Context, positionpolicy.ApplyRequest) (positionpolicy.State, error)
 }
@@ -34,21 +36,132 @@ type policyActionView struct {
 }
 
 type policyRowView struct {
-	State   positionpolicy.State
-	Actions []policyActionView
+	State      positionpolicy.State
+	Management positionpolicy.ManagementProjection
+	Block      reconcileBlockView
+	Actions    []policyActionView
 }
 
 type positionPolicyPage struct {
-	Nav        string
-	CSRF       string
-	Notice     string
-	Wired      bool
-	LoadErr    string
-	Descriptor positionpolicy.ManagementDescriptor
-	Rows       []policyRowView
+	Nav            string
+	CSRF           string
+	Notice         string
+	Wired          bool
+	LoadErr        string
+	Descriptor     positionpolicy.ManagementDescriptor
+	Desired        adoptionSettingsView
+	Effective      adoptionSettingsView
+	DesiredVerdict string
+	DesiredErr     string
+	RuntimeErr     string
+	BlockSource    string
+	Blocks         []reconcileBlockView
+	Rows           []policyRowView
 }
 
 func (positionPolicyPage) Refresh() bool { return false }
+
+type adoptionSettingsView struct {
+	Known          bool
+	Enabled        bool
+	DefaultStopPct float64
+	IncludeSymbols []string
+	ExcludeSymbols []string
+}
+
+func (v adoptionSettingsView) EnabledText() string {
+	if !v.Known {
+		return "알 수 없음"
+	}
+	if v.Enabled {
+		return "ON"
+	}
+	return "OFF"
+}
+
+func (v adoptionSettingsView) StopText() string {
+	if !v.Known {
+		return "알 수 없음"
+	}
+	if v.DefaultStopPct == 0 {
+		return "미설정"
+	}
+	return fractionPercentText(v.DefaultStopPct) + "%"
+}
+
+func (v adoptionSettingsView) IncludesText() string {
+	if !v.Known {
+		return "알 수 없음"
+	}
+	if len(v.IncludeSymbols) == 0 {
+		return "없음"
+	}
+	return strings.Join(v.IncludeSymbols, ", ")
+}
+
+func (v adoptionSettingsView) ExcludesText() string {
+	if !v.Known {
+		return "알 수 없음"
+	}
+	if len(v.ExcludeSymbols) == 0 {
+		return "없음"
+	}
+	return strings.Join(v.ExcludeSymbols, ", ")
+}
+
+func adoptionSettingsDisplay(settings positionpolicy.AdoptionSettings, known bool) adoptionSettingsView {
+	return adoptionSettingsView{
+		Known: known, Enabled: settings.Enabled, DefaultStopPct: settings.DefaultStopPct,
+		IncludeSymbols: append([]string(nil), settings.IncludeSymbols...),
+		ExcludeSymbols: append([]string(nil), settings.ExcludeSymbols...),
+	}
+}
+
+func desiredAdoptionSettingsDisplay(settings config.Adoption) adoptionSettingsView {
+	return adoptionSettingsDisplay(positionpolicy.NewAdoptionSettings(settings.Enabled,
+		settings.DefaultStopPct, settings.IncludeSymbols, settings.ExcludeSymbols, ""), true)
+}
+
+type reconcileBlockView struct {
+	Present   bool
+	Scope     string
+	Target    string
+	Reason    string
+	Detail    string
+	StartedAt string
+	Age       string
+	Permanent bool
+}
+
+func newReconcileBlockView(block positionpolicy.ReconcileBlock, now time.Time) reconcileBlockView {
+	target := "계좌 전체"
+	switch block.Scope {
+	case positionpolicy.ScopeMarket:
+		target = strings.ToUpper(strings.TrimSpace(block.Market)) + " 시장"
+	case positionpolicy.ScopeSymbol:
+		target = strings.ToUpper(strings.TrimSpace(block.Market)) + " · " + strings.ToUpper(strings.TrimSpace(block.Symbol))
+	}
+	started := "알 수 없음"
+	age := "경과 시간 알 수 없음"
+	if !block.StartedAt.IsZero() {
+		started = block.StartedAt.UTC().Format("2006-01-02 15:04:05Z")
+		d := now.Sub(block.StartedAt)
+		if d < 0 {
+			d = 0
+		}
+		switch {
+		case d < time.Minute:
+			age = "1분 미만"
+		case d < 24*time.Hour:
+			age = fmt.Sprintf("%d시간 %d분", int(d/time.Hour), int(d%time.Hour/time.Minute))
+		default:
+			age = fmt.Sprintf("%d일 %d시간", int(d/(24*time.Hour)), int(d%(24*time.Hour)/time.Hour))
+		}
+	}
+	return reconcileBlockView{Present: true, Scope: string(block.Scope), Target: target,
+		Reason: strings.TrimSpace(block.Reason), Detail: strings.TrimSpace(block.Detail),
+		StartedAt: started, Age: age, Permanent: block.Permanent}
+}
 
 type positionPolicyPreviewPage struct {
 	Nav      string
@@ -84,9 +197,27 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 		Nav: "position-management", CSRF: c.csrf, Wired: c.opts.PositionPolicies != nil,
 		Notice: r.URL.Query().Get("notice"), Descriptor: positionpolicy.Descriptor(),
 	}
+	if c.opts.Settings == nil {
+		page.DesiredErr = "설정 read seam 미배선"
+	} else if desired, verdict, err := c.opts.Settings.Load(); err != nil {
+		page.DesiredErr = err.Error()
+	} else {
+		page.Desired = desiredAdoptionSettingsDisplay(desired)
+		page.DesiredVerdict = verdict
+	}
 	if c.opts.PositionPolicies == nil {
 		c.render(w, "position-policy", page)
 		return
+	}
+	runtime, runtimeErr := c.opts.PositionPolicies.Runtime(r.Context())
+	if runtimeErr != nil {
+		page.RuntimeErr = runtimeErr.Error()
+	} else {
+		page.Effective = adoptionSettingsDisplay(runtime.Effective, runtime.EffectiveKnown)
+		page.BlockSource = runtime.BlockSource
+		for _, block := range runtime.Blocks {
+			page.Blocks = append(page.Blocks, newReconcileBlockView(block, c.now()))
+		}
 	}
 	states, err := c.opts.PositionPolicies.List(r.Context())
 	if err != nil {
@@ -95,7 +226,16 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	for _, state := range states {
-		row := policyRowView{State: state}
+		management := positionpolicy.ProjectManagement(positionpolicy.ManagementInput{
+			Market: state.Market, Symbol: state.Symbol, JournalKnown: true,
+			Managed:  state.Status == positionpolicy.StatusManaged && state.ExitEligible,
+			Released: state.Status == positionpolicy.StatusReleased && state.Version > 0,
+			Runtime:  runtime,
+		})
+		row := policyRowView{State: state, Management: management}
+		if management.Block != nil {
+			row.Block = newReconcileBlockView(*management.Block, c.now())
+		}
 		if state.Status == positionpolicy.StatusManaged {
 			row.Actions = append(row.Actions, c.policyAction(state, positionpolicy.ActionInherit, "", "공통 정책 상속", false))
 			for _, policy := range exitpolicy.RegisteredCommonPolicies() {

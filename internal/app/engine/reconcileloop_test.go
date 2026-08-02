@@ -174,10 +174,19 @@ func newDriverHarness(t *testing.T, mutate func(*engine.ReconcileDriverOptions))
 
 // holds puts a holding in the account and a price on the tape.
 func (h *driverHarness) holds(symbol, quantity, costBasis string, last float64) {
+	h.holdsMarket("kr", symbol, quantity, costBasis, last, "KRW")
+}
+
+func (h *driverHarness) holdsMarket(market, symbol, quantity, costBasis string, last float64,
+	currency string) {
 	h.holdings.items = append(h.holdings.items, reconcile.RawHolding{
-		Symbol: symbol, Market: "kr", Quantity: quantity, AveragePrice: costBasis,
+		Symbol: symbol, Market: market, Quantity: quantity, AveragePrice: costBasis,
 	})
 	h.prices.last[symbol] = last
+	if h.prices.currencies == nil {
+		h.prices.currencies = map[string]string{}
+	}
+	h.prices.currencies[symbol] = currency
 }
 
 // cycle runs one pass, advancing the fake clock through the stabilisation wait.
@@ -206,8 +215,12 @@ func waitForSleeper(t *testing.T, clk *clock.Fake) {
 }
 
 func (h *driverHarness) position(symbol string) journal.Position {
+	return h.positionMarket("kr", symbol)
+}
+
+func (h *driverHarness) positionMarket(market, symbol string) journal.Position {
 	h.t.Helper()
-	p, err := h.journal.CurrentPosition(context.Background(), reconcileAccount, "kr", symbol)
+	p, err := h.journal.CurrentPosition(context.Background(), reconcileAccount, market, symbol)
 	if err != nil {
 		h.t.Fatalf("CurrentPosition(%s): %v", symbol, err)
 	}

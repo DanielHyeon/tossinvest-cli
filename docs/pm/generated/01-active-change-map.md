@@ -54,3 +54,4 @@
 | `a049-add-lane-performance` | STORY-TOS-a049 | archived |
 | `a050-add-strategy-optimization` | STORY-TOS-a050 | archived |
 | `a051-add-httpapi-daemon` | STORY-TOS-a051 | archived |
+| `a052-reconcile-aware-position-management` | STORY-TOS-a052 | archived |

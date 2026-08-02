@@ -349,7 +349,12 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 			if dialErr != nil {
 				fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 control plane에 연결할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", dialErr)
 			} else {
-				positionPolicyCommander = client
+				positionPolicyCommander = &consolePositionPolicyCommander{
+					lifecycle: client,
+					runtime: positionPolicyRuntimeDescriptorReader{
+						descriptorPath: positionpolicyrpc.RuntimeDescriptorPath(engineDir),
+					},
+				}
 			}
 		} else if !errors.Is(statErr, os.ErrNotExist) {
 			fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 endpoint를 확인할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", statErr)

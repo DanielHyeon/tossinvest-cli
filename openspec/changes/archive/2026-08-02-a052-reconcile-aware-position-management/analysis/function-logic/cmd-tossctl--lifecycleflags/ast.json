@@ -1,0 +1,45 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "77b6f1f5aab4f5a0cbb85e0990b3d88c9dd8815330936753c8d23cf70cda07ef",
+  "package": "main",
+  "function": "lifecycleFlags",
+  "signature": "lifecycleFlags(params=2, results=2)",
+  "start": {
+    "line": 182,
+    "column": 1
+  },
+  "end": {
+    "line": 188,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 184,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

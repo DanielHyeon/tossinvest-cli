@@ -1,0 +1,39 @@
+{
+  "file": "internal/app/engine/reconcileloop_test.go",
+  "source_sha256": "f7244f04d716230ddc2536f8e219958c52b86a6b899cf6f4df45fa09962f961e",
+  "package": "engine_test",
+  "function": "position",
+  "receiver": "driverHarness",
+  "signature": "driverHarness.position(params=1, results=1)",
+  "start": {
+    "line": 217,
+    "column": 1
+  },
+  "end": {
+    "line": 219,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 9
+      },
+      "text": "h.positionMarket"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

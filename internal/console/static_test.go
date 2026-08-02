@@ -990,12 +990,13 @@ var consoleCapabilities = map[string]capability{
 	},
 	// Generation-scoped policy writes are a deliberately narrow engine-owned
 	// command capability. Its messages contain no broker, SQL, config, toggle or
-	// arbitrary user text; the console can only submit an opaque server action.
+	// arbitrary user text; Runtime is an additive read-only startup/tracker
+	// projection and the console can only submit an opaque server action.
 	"PositionPolicies": {
-		Methods: []string{"List", "Preview", "Apply"},
+		Methods: []string{"List", "Runtime", "Preview", "Apply"},
 		VerbExemptions: map[string]string{
 			"PositionPolicies":        "the engine-owned position policy command capability; it cannot place orders or flip operating toggles",
-			"PositionPolicyCommander": "the exact three-method local command seam, carrying only generation/version-bound domain messages",
+			"PositionPolicyCommander": "the narrow lifecycle command plus read-only management runtime seam",
 			"Apply":                   "commits one already-previewed position policy lifecycle CAS; it has no broker or config capability",
 		},
 	},

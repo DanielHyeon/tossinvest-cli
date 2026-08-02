@@ -1,0 +1,204 @@
+{
+  "file": "internal/httpapi/model_openapi_test.go",
+  "source_sha256": "6f24992ae728ff1d843819fe8b33f9c72a23b8c233411351d5a0af90da4f92b5",
+  "package": "httpapi",
+  "function": "TestEveryOpenAPILocalReferenceResolves",
+  "signature": "TestEveryOpenAPILocalReferenceResolves(params=1, results=0)",
+  "start": {
+    "line": 64,
+    "column": 1
+  },
+  "end": {
+    "line": 93,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "type-switch",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 77,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 78,
+        "column": 5
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 80,
+        "column": 6
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "range",
+      "at": {
+        "line": 87,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 14
+      },
+      "text": "os.ReadFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 12
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 17
+      },
+      "text": "localReferenceExists"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 7
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 5
+      },
+      "text": "walk"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 5
+      },
+      "text": "walk"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 2
+      },
+      "text": "walk"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 10
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 79,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

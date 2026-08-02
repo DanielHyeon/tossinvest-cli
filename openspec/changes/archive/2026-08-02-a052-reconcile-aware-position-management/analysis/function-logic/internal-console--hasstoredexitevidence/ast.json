@@ -1,0 +1,62 @@
+{
+  "file": "internal/console/portfolio_pages.go",
+  "source_sha256": "d502d974600ed7b8279430f801527cfe789bc9d36947f6ce679856953295844b",
+  "package": "console",
+  "function": "hasStoredExitEvidence",
+  "signature": "hasStoredExitEvidence(params=1, results=1)",
+  "start": {
+    "line": 145,
+    "column": 1
+  },
+  "end": {
+    "line": 148,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 54
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 3
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 46
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

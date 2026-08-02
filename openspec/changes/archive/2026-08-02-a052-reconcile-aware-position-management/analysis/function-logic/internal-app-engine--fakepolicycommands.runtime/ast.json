@@ -1,0 +1,64 @@
+{
+  "file": "internal/app/engine/position_policy_transport_test.go",
+  "source_sha256": "79f9816ae28b5a2ec0fb75c239c019be19ccb933c47c9a75da4957f412232cec",
+  "package": "engine",
+  "function": "Runtime",
+  "receiver": "fakePolicyCommands",
+  "signature": "fakePolicyCommands.Runtime(params=1, results=2)",
+  "start": {
+    "line": 29,
+    "column": 1
+  },
+  "end": {
+    "line": 34,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 8
+      },
+      "text": "f.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "++",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 31,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    }
+  ]
+}

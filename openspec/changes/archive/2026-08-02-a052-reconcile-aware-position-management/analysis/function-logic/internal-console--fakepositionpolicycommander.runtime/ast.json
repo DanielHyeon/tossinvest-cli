@@ -1,0 +1,56 @@
+{
+  "file": "internal/console/position_policy_test.go",
+  "source_sha256": "c5ad77b135bb7372e0fbbab61eacfc0cd6f16f468dc99a7d9964376bd3adc7a2",
+  "package": "console",
+  "function": "Runtime",
+  "receiver": "fakePositionPolicyCommander",
+  "signature": "fakePositionPolicyCommander.Runtime(params=1, results=2)",
+  "start": {
+    "line": 29,
+    "column": 1
+  },
+  "end": {
+    "line": 33,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 8
+      },
+      "text": "f.mu.Unlock"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 31,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    }
+  ]
+}

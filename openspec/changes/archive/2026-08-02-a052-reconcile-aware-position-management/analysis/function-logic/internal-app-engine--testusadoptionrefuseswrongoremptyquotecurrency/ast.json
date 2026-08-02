@@ -1,0 +1,148 @@
+{
+  "file": "internal/app/engine/adoption_include_test.go",
+  "source_sha256": "56eaa974ab62ae4bab4b907cc50d8e85e507c7e6dd10f70f4f15195c6315bf55",
+  "package": "engine_test",
+  "function": "TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency",
+  "signature": "TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency(params=1, results=0)",
+  "start": {
+    "line": 90,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 9
+      },
+      "text": "newDriverHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 18
+      },
+      "text": "includeOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 4
+      },
+      "text": "h.holdsMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 13
+      },
+      "text": "h.cycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 9
+      },
+      "text": "h.positionMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 7
+      },
+      "text": "p.Adopted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 94,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

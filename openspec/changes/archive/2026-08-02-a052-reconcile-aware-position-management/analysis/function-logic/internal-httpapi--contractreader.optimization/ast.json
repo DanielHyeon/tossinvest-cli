@@ -1,0 +1,63 @@
+{
+  "file": "internal/httpapi/router_contract_test.go",
+  "source_sha256": "da4a6ccefc22ed0f83a5eaaacf53103303bf0e8c7ec677c2dc9b216da645c853",
+  "package": "httpapi",
+  "function": "Optimization",
+  "receiver": "contractReader",
+  "signature": "contractReader.Optimization(params=1, results=2)",
+  "start": {
+    "line": 50,
+    "column": 1
+  },
+  "end": {
+    "line": 57,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 19
+      },
+      "text": "optimization.CoreRegistry"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

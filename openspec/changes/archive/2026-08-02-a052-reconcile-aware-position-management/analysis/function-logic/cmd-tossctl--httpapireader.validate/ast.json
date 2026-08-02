@@ -1,0 +1,55 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "77b6f1f5aab4f5a0cbb85e0990b3d88c9dd8815330936753c8d23cf70cda07ef",
+  "package": "main",
+  "function": "validate",
+  "receiver": "httpAPIReader",
+  "signature": "httpAPIReader.validate(params=0, results=1)",
+  "start": {
+    "line": 478,
+    "column": 1
+  },
+  "end": {
+    "line": 484,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 479,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 481,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 483,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

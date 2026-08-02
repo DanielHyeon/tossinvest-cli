@@ -1,0 +1,118 @@
+{
+  "file": "internal/app/engine/position_policy_command.go",
+  "source_sha256": "39a7904e0fb8f87b7a03741eea23a4b13b311cbdbf1634b8a0c247f5737c83a9",
+  "package": "engine",
+  "function": "Runtime",
+  "receiver": "PositionPolicyCommandService",
+  "signature": "PositionPolicyCommandService.Runtime(params=1, results=2)",
+  "start": {
+    "line": 100,
+    "column": 1
+  },
+  "end": {
+    "line": 118,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 110,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 14
+      },
+      "text": "positionpolicy.NewAdoptionSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 24
+      },
+      "text": "s.blocks.Blocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 43
+      },
+      "text": "positionpolicy.NewReconcileBlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 4
+      },
+      "text": "positionPolicyReconcileScope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 4
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

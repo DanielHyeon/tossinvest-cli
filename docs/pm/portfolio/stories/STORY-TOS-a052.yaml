@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a052",
+  "title": "Explain reconcile-blocked position adoption",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a052-reconcile-aware-position-management",
+    "path": "openspec/changes/archive/2026-08-02-a052-reconcile-aware-position-management"
+  },
+  "acceptance": [
+    "Position management shows the saved adoption desired and effective values instead of registry defaults",
+    "Positions without entry or adoption provenance distinguish an eligible adoption reservation from a reconcile-blocked adoption",
+    "A permanent quantity-mismatch reconcile block is visible with its scope, age and sanitized reason without adding a recovery mutation surface",
+    "Positions and position management use the same provenance, eligibility, adoption designation and reconcile-block facts",
+    "Raw journal exit evidence is distinguished from an actionable persisted effective snapshot, and no LIVE order, reconcile state or operating toggle is changed"
+  ]
+}

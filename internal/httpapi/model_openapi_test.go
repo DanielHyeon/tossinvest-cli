@@ -92,6 +92,58 @@ func TestEveryOpenAPILocalReferenceResolves(t *testing.T) {
 	walk(document)
 }
 
+func TestOpenAPIDocumentsReconcileAwareReadModelsWithoutResolutionAuthority(t *testing.T) {
+	raw, err := os.ReadFile("../../docs/api/openapi-v1.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document struct {
+		Paths      map[string]json.RawMessage `json:"paths"`
+		Components struct {
+			Schemas map[string]struct {
+				Required   []string                   `json:"required"`
+				Properties map[string]json.RawMessage `json:"properties"`
+			} `json:"schemas"`
+		} `json:"components"`
+	}
+	if err := json.Unmarshal(raw, &document); err != nil {
+		t.Fatal(err)
+	}
+	position := document.Components.Schemas["Position"]
+	for _, name := range []string{"adoptionStatus", "statusKnown", "adoptionLabel", "adoptionReason", "included",
+		"excluded", "candidate", "designationKnown", "coveringBlock", "storedExitEvidence"} {
+		if _, ok := position.Properties[name]; !ok {
+			t.Errorf("Position schema lacks %q", name)
+		}
+	}
+	management := document.Components.Schemas["PositionManagementDescriptor"]
+	for _, name := range []string{"desired", "effective", "effectiveKnown", "blockSource"} {
+		if _, ok := management.Properties[name]; !ok {
+			t.Errorf("PositionManagementDescriptor schema lacks %q", name)
+		}
+	}
+	if _, ok := document.Components.Schemas["AdoptionSettings"]; !ok {
+		t.Error("OpenAPI lacks AdoptionSettings")
+	}
+	for path := range document.Paths {
+		if strings.Contains(strings.ToLower(path), "reconcile") {
+			t.Errorf("OpenAPI exposes reconcile authority at %q", path)
+		}
+	}
+	for _, schema := range []string{"ReconcileBlock", "StoredExitEvidence"} {
+		body, ok := document.Components.Schemas[schema]
+		if !ok {
+			t.Errorf("OpenAPI lacks %s", schema)
+			continue
+		}
+		for _, forbidden := range []string{"accountRef", "capability", "token", "command"} {
+			if _, leaked := body.Properties[forbidden]; leaked {
+				t.Errorf("%s exposes forbidden property %s", schema, forbidden)
+			}
+		}
+	}
+}
+
 func localReferenceExists(document map[string]any, ref string) bool {
 	if !strings.HasPrefix(ref, "#/") {
 		return false

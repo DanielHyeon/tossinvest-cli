@@ -1,0 +1,140 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "77b6f1f5aab4f5a0cbb85e0990b3d88c9dd8815330936753c8d23cf70cda07ef",
+  "package": "main",
+  "function": "reconcileBlockFrom",
+  "signature": "reconcileBlockFrom(params=1, results=1)",
+  "start": {
+    "line": 220,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 221,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 222,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 40
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 56
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 11
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 27
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 69
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 85
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 6
+      },
+      "text": "value.StartedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 9
+      },
+      "text": "value.StartedAt.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 228,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

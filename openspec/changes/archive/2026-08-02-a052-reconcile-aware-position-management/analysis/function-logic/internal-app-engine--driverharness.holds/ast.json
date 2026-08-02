@@ -1,0 +1,31 @@
+{
+  "file": "internal/app/engine/reconcileloop_test.go",
+  "source_sha256": "f7244f04d716230ddc2536f8e219958c52b86a6b899cf6f4df45fa09962f961e",
+  "package": "engine_test",
+  "function": "holds",
+  "receiver": "driverHarness",
+  "signature": "driverHarness.holds(params=4, results=0)",
+  "start": {
+    "line": 176,
+    "column": 1
+  },
+  "end": {
+    "line": 178,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 2
+      },
+      "text": "h.holdsMarket"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

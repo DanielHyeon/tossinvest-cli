@@ -55,6 +55,7 @@
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
     - STORY-TOS-a043 — Show exit-line truth in positions and orders [archived] → `a043-show-exit-lines-in-trading-views`
     - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [archived] → `a044-manage-position-exit-policies`
+    - STORY-TOS-a052 — Explain reconcile-blocked position adoption [archived] → `a052-reconcile-aware-position-management`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

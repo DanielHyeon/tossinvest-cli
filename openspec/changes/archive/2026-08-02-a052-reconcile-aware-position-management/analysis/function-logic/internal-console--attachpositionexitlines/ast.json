@@ -1,0 +1,254 @@
+{
+  "file": "internal/console/portfolio_pages.go",
+  "source_sha256": "d502d974600ed7b8279430f801527cfe789bc9d36947f6ce679856953295844b",
+  "package": "console",
+  "function": "attachPositionExitLines",
+  "signature": "attachPositionExitLines(params=2, results=0)",
+  "start": {
+    "line": 102,
+    "column": 1
+  },
+  "end": {
+    "line": 143,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 105,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 109,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "else",
+      "at": {
+        "line": 133,
+        "column": 10
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 10
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 7
+      },
+      "text": "hasStoredExitEvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 33
+      },
+      "text": "storedExitValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 19
+      },
+      "text": "storedExitValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 19
+      },
+      "text": "storedExitValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 19
+      },
+      "text": "storedExitValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 19
+      },
+      "text": "operatorview.BuildExitLine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 15
+      },
+      "text": "row.Exit.Snapshot.WithFreshness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 13
+      },
+      "text": "hasStoredExitEvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 32
+      },
+      "text": "storedExitValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 18
+      },
+      "text": "storedExitValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 18
+      },
+      "text": "storedExitValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 18
+      },
+      "text": "storedExitValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 18
+      },
+      "text": "operatorview.BuildExitLine"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 110,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 130,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 131,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 134,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -292,9 +292,15 @@ func TestThePositionsScreenShowsTheExitLineOfAManagedPosition(t *testing.T) {
 		}
 	}
 	row := rowFor(t, page, "005930")
-	for _, staleRaw := range []string{"69500", "74000", "HALF_RISK", "intent-77"} {
+	for _, staleRaw := range []string{"HALF_RISK", "intent-77"} {
 		if strings.Contains(row, staleRaw) {
 			t.Errorf("legacy row exposes raw actionable value %q", staleRaw)
+		}
+	}
+	for _, evidence := range []string{"원장 기록 · 실효 미확인", "원장 기준선 <strong>69500</strong>",
+		"원장 high-water <strong>74000</strong>", "현재 보호선 <strong>—</strong>", "다음 익절 <strong>—</strong>"} {
+		if !strings.Contains(row, evidence) {
+			t.Errorf("legacy row does not separate stored evidence %q", evidence)
 		}
 	}
 }
@@ -881,7 +887,10 @@ func TestAnAdoptedHoldingRendersAsManagedWithItsBasis(t *testing.T) {
 	}
 	// This fixture predates persisted snapshots, so its raw synthetic stop must
 	// not be promoted to an actionable line.
-	if strings.Contains(row, "124925") || !strings.Contains(row, "근거 없음") {
+	if !strings.Contains(row, "원장 기록 · 실효 미확인") ||
+		!strings.Contains(row, "최초 손절 <strong>124925</strong>") ||
+		!strings.Contains(row, "현재 보호선 <strong>—</strong>") ||
+		!strings.Contains(row, "다음 익절 <strong>—</strong>") || !strings.Contains(row, "근거 없음") {
 		t.Error("the adopted legacy position is not fail-closed")
 	}
 }

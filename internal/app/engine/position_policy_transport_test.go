@@ -16,11 +16,21 @@ import (
 )
 
 type fakePolicyCommands struct {
-	mu      sync.Mutex
-	state   positionpolicy.State
-	applies int
-	issued  bool
-	used    bool
+	mu           sync.Mutex
+	state        positionpolicy.State
+	runtime      positionpolicy.ManagementRuntime
+	runtimeCalls int
+	runtimeErr   error
+	applies      int
+	issued       bool
+	used         bool
+}
+
+func (f *fakePolicyCommands) Runtime(context.Context) (positionpolicy.ManagementRuntime, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.runtimeCalls++
+	return f.runtime, f.runtimeErr
 }
 
 func privateEngineTestDir(t *testing.T) string {
@@ -143,6 +153,37 @@ func TestEngineOwnsAuthenticatedPositionPolicyControlEndpoint(t *testing.T) {
 	}
 	if entries, err := os.ReadDir(dir); err != nil || len(entries) != 0 {
 		t.Fatalf("control plane created non-endpoint state: entries=%v err=%v", entries, err)
+	}
+}
+
+func TestPositionPolicyCommandEndpointDoesNotExposeRuntime(t *testing.T) {
+	dir := privateEngineTestDir(t)
+	commands := &fakePolicyCommands{}
+	server, err := StartPositionPolicyCommandServer(dir, commands)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer server.Close()
+	body, err := os.ReadFile(positionpolicyrpc.DescriptorPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var descriptor positionpolicyrpc.Descriptor
+	if err := json.Unmarshal(body, &descriptor); err != nil {
+		t.Fatal(err)
+	}
+	req, err := http.NewRequest(http.MethodGet, "http://"+descriptor.Address+"/v1/runtime", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer "+descriptor.Token)
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if response.StatusCode != http.StatusNotFound || commands.runtimeCalls != 0 {
+		t.Fatalf("runtime route status=%d calls=%d", response.StatusCode, commands.runtimeCalls)
 	}
 }
 

@@ -1,0 +1,203 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "77b6f1f5aab4f5a0cbb85e0990b3d88c9dd8815330936753c8d23cf70cda07ef",
+  "package": "main",
+  "function": "applyStoredPosition",
+  "signature": "applyStoredPosition(params=3, results=0)",
+  "start": {
+    "line": 241,
+    "column": 1
+  },
+  "end": {
+    "line": 268,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 247,
+        "column": 9
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 255,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 259,
+        "column": 10
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 259,
+        "column": 10
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 17
+      },
+      "text": "stored.Position.ExitEligible"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 11
+      },
+      "text": "stored.Exit.Snapshot.WithFreshness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 13
+      },
+      "text": "hasStoredExitEvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 17
+      },
+      "text": "httpapi.ExitLineFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 38
+      },
+      "text": "operatorview.BuildExitLine"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 246,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 248,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 253,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 254,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 256,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 257,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 258,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 260,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

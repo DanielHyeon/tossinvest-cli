@@ -1,0 +1,60 @@
+{
+  "file": "internal/console/position_policy.go",
+  "source_sha256": "59fb703897da414eb1fea3497ef6a4871a9a9dc4b32cbd89dd043599c154a27d",
+  "package": "console",
+  "function": "adoptionSettingsDisplay",
+  "signature": "adoptionSettingsDisplay(params=2, results=1)",
+  "start": {
+    "line": 112,
+    "column": 1
+  },
+  "end": {
+    "line": 118,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 19
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 26
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 19
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 26
+      }
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -12,7 +12,41 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
+
+type fakePositionPolicyBlocks struct{ blocks []reconcile.Block }
+
+func (f fakePositionPolicyBlocks) Blocks() []reconcile.Block {
+	return append([]reconcile.Block(nil), f.blocks...)
+}
+
+func TestPositionPolicyRuntimeReturnsStartupEffectiveAndSanitizedBlocks(t *testing.T) {
+	started := time.Date(2026, 7, 31, 12, 0, 0, 0, time.UTC)
+	service := &PositionPolicyCommandService{
+		adoption: config.Adoption{Enabled: true, DefaultStopPct: .03,
+			IncludeSymbols: []string{"AAPL"}, ExcludeSymbols: []string{"TSLA"}},
+		blocks: fakePositionPolicyBlocks{blocks: []reconcile.Block{{
+			Scope: reconcile.ScopeAccount, Account: "raw-account-ref-must-not-cross-rpc",
+			Reason: "RECONCILE_PERMANENT", Detail: " qty\n mismatch ", Since: started,
+			Permanent: true,
+		}}},
+	}
+	got, err := service.Runtime(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.EffectiveKnown || !got.Effective.Enabled || got.Effective.DefaultStopPct != .03 ||
+		len(got.Effective.IncludeSymbols) != 1 || got.Effective.IncludeSymbols[0] != "AAPL" ||
+		got.BlockSource != positionpolicy.AdoptionBlockingTrackerProjection || len(got.Blocks) != 1 {
+		t.Fatalf("runtime=%+v", got)
+	}
+	block := got.Blocks[0]
+	if block.Scope != positionpolicy.ScopeAccount || block.Reason != "RECONCILE_PERMANENT" ||
+		block.Detail != "qty mismatch" || !block.StartedAt.Equal(started) || !block.Permanent {
+		t.Fatalf("block=%+v", block)
+	}
+}
 
 func TestPositionPolicyCommandServiceRequiresEngineOwnedJournal(t *testing.T) {
 	if _, err := NewPositionPolicyCommandService(nil, clock.System()); err == nil {

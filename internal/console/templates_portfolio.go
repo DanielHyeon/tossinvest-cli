@@ -110,8 +110,14 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       </th>
       <td data-label="관리"><strong class="status-pill">{{.Label}}</strong>
         {{if .Managed}}<span class="submetric">자격 근거 {{.Basis}}</span>{{end}}
-        {{if .Designated}}<span class="submetric ok">편입 예약됨 · 아직 보호 미적용</span>{{end}}
-        {{if and .InBroker (not .Managed) (not .Unknown) .Excluded}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
+        {{if .HasManagementProjection}}<span class="submetric">상태 <code>{{.Management.Status}}</code> · 이유 <code>{{.Management.Reason}}</code></span>
+          {{if .ManagementBlocked}}<span class="submetric danger">{{.ManagementBlock.Target}} · {{.ManagementBlock.Reason}}{{if .ManagementBlock.Detail}} · {{.ManagementBlock.Detail}}{{end}} · {{.ManagementBlock.Age}}{{if .ManagementBlock.Permanent}} · 영구 차단{{end}}</span>{{end}}
+          {{if .ManagementPending}}<span class="submetric ok">편입 예약됨 · 아직 보호 미적용</span>{{end}}
+          {{if .ManagementExcluded}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
+        {{else}}
+          {{if .Designated}}<span class="submetric ok">편입 예약됨 · 아직 보호 미적용</span>{{end}}
+          {{if and .InBroker (not .Managed) (not .Unknown) .Excluded}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
+        {{end}}
       </td>
       <td data-label="손익" class="{{if .Gain}}ok{{else}}bad{{end}}">
         <span class="metric">평가손익 {{.PnL}}</span><span class="submetric">수익률 {{.Rate}}</span>
@@ -130,6 +136,8 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         {{if .ExitLine.Reason}}<span class="submetric bad">{{.ExitLine.Reason}}</span>{{end}}
         {{if .ExitLine.OneShare}}<span class="submetric ok">{{.ExitLine.OneShareText}}</span><span class="submetric">{{.ExitLine.FinalExitText}}</span>{{end}}
         {{else}}<span class="metric muted">보호선 —</span>{{if .Reason}}<span class="submetric">보호 근거 없음</span>{{end}}{{end}}
+        {{if .HasStoredExitEvidence}}<span class="submetric notice"><strong>원장 기록 · 실효 미확인</strong></span>
+        <span class="submetric">원장 기준선 <strong>{{.StoredExit.Baseline}}</strong> · 최초 손절 <strong>{{.StoredExit.InitialStop}}</strong> (실효 미확인)</span>{{end}}
         {{if .HasDetail}}
         <details class="row-details"><summary>보호 근거와 원장 상세</summary><div class="detail-grid">
           <span>수량 <strong>{{.Qty}}</strong></span><span>평가금액 <strong>{{.Value}}</strong></span>
@@ -140,6 +148,9 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
           <span>decision <code>{{.ExitLine.DecisionID}}</code></span><span>snapshot <code>{{.ExitLine.SnapshotID}}</code></span>
           <span>observation <code>{{.ExitLine.ObservationID}}</code> · {{.ExitLine.ObservationSource}}</span>
           <span>평가 시각 {{.ExitLine.EvaluatedAt}} · 유효 근거 {{.ExitLine.EffectiveSource}}</span>{{end}}
+          {{if .HasStoredExitEvidence}}<span class="notice"><strong>원장 기록 · 실효 미확인</strong></span>
+          <span>t0 진입가 <strong>{{.StoredExit.EntryPrice}}</strong> · 최초 손절 <strong>{{.StoredExit.InitialStop}}</strong></span>
+          <span>원장 기준선 <strong>{{.StoredExit.Baseline}}</strong> · 원장 high-water <strong>{{.StoredExit.HighWater}}</strong></span>{{end}}
           {{if .BrokerMissing}}<span class="bad">브로커 보유에 없다.</span>
           <span>원장은 {{.State}} 상태 수량 {{.JournalQuantity}}로 보고 있다.</span>
           {{else if .InJournal}}<span>원장 수량 {{.JournalQuantity}} · 원장 평단 {{.JournalAvgPrice}}</span>
@@ -153,7 +164,8 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   </table>
   <details class="explain"><summary>관리 상태와 데이터 기준</summary><p class="muted"><strong>관리 외(미편입)</strong>은 엔진의 exit 정책 대상이 아니라는 뜻이다 — 손절·익절이
   자동으로 걸려 있지 않다. <strong>관리 편입</strong>으로 예약한 보유는 편입 예약 상태다 — 실제 손절·익절은 엔진이
-  가동되어 대사 루프가 편입을 완료한 뒤부터 걸린다. 관리 중인 행의 <strong>자격 근거</strong>는 그 보호가 어디서 왔는지를 말한다:
+  가동되어 대사 루프가 편입을 완료한 뒤부터 걸린다. <strong>대사 차단으로 대기</strong>는 시장 미지원이 아니라
+  실행 중 엔진의 대사 tracker가 해당 후보의 편입을 보류한다는 뜻이다. 관리 중인 행의 <strong>자격 근거</strong>는 그 보호가 어디서 왔는지를 말한다:
   <em>진입 결정</em>은 엔진이 직접 진입한 포지션, <em>편입 기록</em>은 사용자가 수동 매수한 보유를 엔진이
   편입한 것이다. 편입 자체는 엔진의 대사 루프가 수행하며 이 화면의 기능이 아니다 — 이 화면은 읽기 전용이다.
   관련 설정은 <a href="/optimization?category=position-management">포지션 관리 최적화</a>에서 확인한다.</p>

@@ -1,0 +1,248 @@
+{
+  "file": "internal/app/engine/adoption_include_test.go",
+  "source_sha256": "56eaa974ab62ae4bab4b907cc50d8e85e507c7e6dd10f70f4f15195c6315bf55",
+  "package": "engine_test",
+  "function": "TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile",
+  "signature": "TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile(params=1, results=0)",
+  "start": {
+    "line": 109,
+    "column": 1
+  },
+  "end": {
+    "line": 140,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 121,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 7
+      },
+      "text": "newDriverHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 16
+      },
+      "text": "includeOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 15
+      },
+      "text": "h.tracker.Observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 33
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 3
+      },
+      "text": "h.clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 17
+      },
+      "text": "h.tracker.EntryAllowed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 2
+      },
+      "text": "h.holdsMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 11
+      },
+      "text": "h.cycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 7
+      },
+      "text": "h.positionMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 5
+      },
+      "text": "p.Adopted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 111,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 113,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 113,
+        "column": 48
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

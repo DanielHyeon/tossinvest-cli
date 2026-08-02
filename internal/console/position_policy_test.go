@@ -20,8 +20,16 @@ type fakePositionPolicyCommander struct {
 	applies       int
 	previewError  error
 	applyError    error
+	runtime       positionpolicy.ManagementRuntime
+	runtimeError  error
 	previewAfter  positionpolicy.State
 	previewAction positionpolicy.Action
+}
+
+func (f *fakePositionPolicyCommander) Runtime(context.Context) (positionpolicy.ManagementRuntime, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.runtime, f.runtimeError
 }
 
 func (f *fakePositionPolicyCommander) List(context.Context) ([]positionpolicy.State, error) {
@@ -286,7 +294,7 @@ func TestPositionManagementDoesNotOfferReadoptForIneligibleHolding(t *testing.T)
 	if strings.Contains(page, "새 generation 재편입") {
 		t.Fatal("ineligible holding was offered re-adopt")
 	}
-	if !strings.Contains(page, "편입 불가") {
+	if !strings.Contains(page, "관리 외(운영자 해제)") || !strings.Contains(page, "OPERATOR_RELEASED") {
 		t.Fatal("ineligible holding lacks clear status")
 	}
 }

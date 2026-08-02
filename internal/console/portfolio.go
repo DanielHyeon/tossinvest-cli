@@ -70,6 +70,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 )
 
 // exitEventWindow bounds the judgement stream on the history screen. The record
@@ -249,6 +250,11 @@ type positionRow struct {
 	JournalQuantity string
 	JournalAvgPrice string
 	Eligible        bool
+	// LifecycleKnown/Status is the authoritative position-policy lifecycle.
+	// Adoption/entry provenance alone is insufficient because RELEASED keeps
+	// those immutable ids while removing the position from exit management.
+	LifecycleKnown  bool
+	LifecycleStatus positionpolicy.Status
 	// Adopted reports which record makes the row eligible. It is display only:
 	// the verdict is Eligible, and this says why.
 	Adopted bool
@@ -265,6 +271,38 @@ type positionRow struct {
 	// persisted snapshot. The HTML template never reads actionable raw snapshot
 	// values directly, so stale evidence cannot leak a price into the page.
 	ExitLine operatorview.ExitLineView
+	// StoredExit is seed/state evidence from the journal when no canonical
+	// evaluated snapshot exists. It is deliberately a separate display model:
+	// these values explain what was persisted at t0, but are never promoted to
+	// ExitLine's actionable current protection or next target.
+	StoredExit storedExitEvidenceView
+	// Management is the shared a052 adoption/reconcile projection. Its zero
+	// value means the runtime seam was not wired at all (legacy console); a
+	// projected UNKNOWN is non-zero and remains explicitly unknown.
+	Management      positionpolicy.ManagementProjection
+	ManagementBlock reconcileBlockView
+}
+
+type storedExitEvidenceView struct {
+	Present     bool
+	EntryPrice  string
+	InitialStop string
+	Baseline    string
+	HighWater   string
+}
+
+func (r positionRow) HasStoredExitEvidence() bool { return r.StoredExit.Present }
+func (r positionRow) HasManagementProjection() bool {
+	return r.Management.Status != ""
+}
+func (r positionRow) ManagementBlocked() bool {
+	return r.Management.Status == positionpolicy.ManagementStatusReconcileBlocked
+}
+func (r positionRow) ManagementPending() bool {
+	return r.Management.Status == positionpolicy.ManagementStatusAdoptionPending
+}
+func (r positionRow) ManagementExcluded() bool {
+	return r.Management.Status == positionpolicy.ManagementStatusExcluded
 }
 
 // Basis names the record that justifies the exit baseline, for the operator who
@@ -281,7 +319,12 @@ func (r positionRow) Basis() string {
 }
 
 // Managed reports that the engine's exit policy owns this position.
-func (r positionRow) Managed() bool { return r.InJournal && r.Eligible }
+func (r positionRow) Managed() bool {
+	if r.LifecycleKnown {
+		return r.InJournal && r.Eligible && r.LifecycleStatus == positionpolicy.StatusManaged
+	}
+	return r.InJournal && r.Eligible
+}
 
 // Unknown reports a holding whose management could not be determined, because
 // the journal did not answer. It is deliberately not folded into "unmanaged": a
@@ -304,6 +347,9 @@ func (r positionRow) Unknown() bool { return !r.JournalReadable && !r.InJournal 
 // will not adopt, and a label that said 관리 편입 there would be the screen
 // predicting the opposite of what happens.
 func (r positionRow) Label() string {
+	if r.HasManagementProjection() {
+		return r.Management.Label
+	}
 	switch {
 	case r.Unknown():
 		return "관리 여부 불명"

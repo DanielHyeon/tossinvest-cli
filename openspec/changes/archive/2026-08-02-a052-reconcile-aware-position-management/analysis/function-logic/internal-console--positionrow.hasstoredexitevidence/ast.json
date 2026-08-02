@@ -1,0 +1,30 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "45ec7558d9b82fa753792d1af12c8c8682f9c4d8dccfe58a55ad1d14d135e057",
+  "package": "console",
+  "function": "HasStoredExitEvidence",
+  "receiver": "positionRow",
+  "signature": "positionRow.HasStoredExitEvidence(params=0, results=1)",
+  "start": {
+    "line": 294,
+    "column": 1
+  },
+  "end": {
+    "line": 294,
+    "column": 82
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 53
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

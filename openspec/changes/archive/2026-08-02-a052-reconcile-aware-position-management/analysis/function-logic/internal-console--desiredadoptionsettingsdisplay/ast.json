@@ -1,0 +1,46 @@
+{
+  "file": "internal/console/position_policy.go",
+  "source_sha256": "59fb703897da414eb1fea3497ef6a4871a9a9dc4b32cbd89dd043599c154a27d",
+  "package": "console",
+  "function": "desiredAdoptionSettingsDisplay",
+  "signature": "desiredAdoptionSettingsDisplay(params=1, results=1)",
+  "start": {
+    "line": 120,
+    "column": 1
+  },
+  "end": {
+    "line": 123,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 9
+      },
+      "text": "adoptionSettingsDisplay"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 33
+      },
+      "text": "positionpolicy.NewAdoptionSettings"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

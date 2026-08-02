@@ -1,0 +1,39 @@
+{
+  "file": "internal/journal/position_policy.go",
+  "source_sha256": "d50e9063ddde45715c63e1a7dc578133272abf656df0d63822de40e1e41cecee",
+  "package": "journal",
+  "function": "PositionPolicies",
+  "receiver": "Journal",
+  "signature": "Journal.PositionPolicies(params=1, results=2)",
+  "start": {
+    "line": 70,
+    "column": 1
+  },
+  "end": {
+    "line": 72,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 9
+      },
+      "text": "queryPositionPolicies"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
