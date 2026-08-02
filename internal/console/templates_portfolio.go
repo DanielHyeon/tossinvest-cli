@@ -108,6 +108,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         <strong class="status-pill muted">보호 근거 없음</strong>
         {{end}}
         {{if or .ManagementExcluded (and .InBroker (not .Managed) (not .Unknown) .Excluded (not .HasManagementProjection))}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
+        {{if .PendingDesignation}}<span class="submetric notice">편입 예약 · 실행 미확인</span>{{end}}
       </span>
     </th>
     <td data-label="수량" class="number-cell"><strong>{{.Qty}}</strong></td>

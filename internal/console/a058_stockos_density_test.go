@@ -3,6 +3,9 @@ package console
 import (
 	"strings"
 	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 )
 
 func TestA058HoldingsUseStockOSDensityAndExplicitGrid(t *testing.T) {
@@ -64,5 +67,37 @@ func TestA058VerboseExitReasonIsOnlyInDetails(t *testing.T) {
 		if !strings.Contains(primary, want) {
 			t.Errorf("primary row lost concise safety fact %q: %s", want, primary)
 		}
+	}
+}
+
+func TestA058PendingDesignationKeepsConciseSafetyVerdictVisible(t *testing.T) {
+	h := newDashboardHarness(t, func(o *Options) {
+		o.PositionPolicies = nil
+		o.Settings = &fakeSettings{block: config.Adoption{IncludeSymbols: []string{"A058PENDING"}}}
+	})
+	h.holdings.rows = append(h.holdings.rows, domain.Position{
+		MarketType: "US", Symbol: "A058PENDING", Quantity: 1,
+		AveragePrice: 200, CurrentPrice: 201, MarketValue: 201,
+	})
+	seedJournal(t, h.journal)
+	execRaw(t, h.journal, `INSERT INTO positions(id,account_ref,market,symbol,instance_seq,state,quantity,avg_price,opened_at)
+		VALUES ('pos-a058-pending','123-45-678901','us','A058PENDING',1,'OPEN','1','200','2026-08-03T00:00:00Z');`)
+	h.authenticate(t)
+	row := positionHTMLRow(t, h.page(t, "/positions"), "A058PENDING")
+
+	detailAt := strings.Index(row, `<details class="row-details">`)
+	if detailAt < 0 {
+		t.Fatal("pending designation has no native details disclosure")
+	}
+	primary, detail := row[:detailAt], row[detailAt:]
+	if !strings.Contains(primary, "편입 예약 · 실행 미확인") {
+		t.Fatalf("pending designation lost its concise unfolded safety verdict: %s", primary)
+	}
+	const verbose = "편입 예약됨 · 실행 상태 미확인 · 아직 보호 미적용"
+	if strings.Contains(primary, verbose) {
+		t.Fatalf("verbose pending explanation expands the primary row: %s", primary)
+	}
+	if !strings.Contains(detail, verbose) {
+		t.Fatalf("pending details lost the full protection warning: %s", detail)
 	}
 }
