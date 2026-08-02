@@ -69,12 +69,20 @@ form { display: inline; }
 .data-table caption { text-align: left; font-weight: 700; font-size: 1.05rem; padding: 0 0 0.65rem; }
 .data-table th, .data-table td { padding: 0.75rem 0.65rem; overflow-wrap: anywhere; }
 .data-table tbody tr:last-child > * { border-bottom: 0; }
-.position-row > :nth-child(1) { width: 15%; }
-.position-row > :nth-child(2) { width: 16%; }
-.position-row > :nth-child(3) { width: 14%; }
-.position-row > :nth-child(4) { width: 16%; }
-.position-row > :nth-child(5) { width: 23%; }
-.position-row > :nth-child(6) { width: 16%; }
+.position-row > :nth-child(1) { width: 18%; }
+.position-row > :nth-child(2) { width: 7%; }
+.position-row > :nth-child(3) { width: 11%; }
+.position-row > :nth-child(4) { width: 11%; }
+.position-row > :nth-child(5) { width: 25%; }
+.position-row > :nth-child(6) { width: 13%; }
+.position-row > :nth-child(7) { width: 15%; }
+.holding-name { display: block; margin-bottom: 0.12rem; font-weight: 700; }
+.holding-status { margin-top: 0.45rem; }
+.number-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.line-item { display: grid; grid-template-columns: minmax(4.2rem, auto) minmax(0, 1fr);
+  gap: 0.45rem; margin-top: 0.14rem; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.line-item > span { color: #6a6a62; }
+.line-item > strong { text-align: right; overflow-wrap: anywhere; }
 /* One status primitive. .state-badge said the same thing under a second name
    and was used twice; this one was used eight times and is asserted by an
    existing test, so the merge keeps the common name (change a054). */
@@ -88,7 +96,8 @@ form { display: inline; }
 .actions button { padding: 0.32rem 0.65rem; font-size: 0.86rem; }
 .row-details, .explain { margin-top: 0.45rem; }
 .row-details summary, .explain summary { color: #4e4e48; cursor: pointer; font-weight: 600; }
-.detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem 0.9rem; margin-top: 0.5rem; }
+.row-details summary { min-height: 44px; display: flex; align-items: center; }
+.detail-grid { display: grid; grid-template-columns: 1fr; gap: 0.25rem 0.9rem; margin-top: 0.5rem; }
 .detail-grid span { min-width: 0; }
 .filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; align-items: center; }
 .filter-group { display: flex; flex-wrap: wrap; gap: 0.35rem 0.7rem; align-items: center; }
@@ -218,8 +227,11 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   .data-table td, .data-table th[scope="row"] { display: grid; grid-template-columns: minmax(7rem, 40%) minmax(0, 1fr);
     gap: 0.75rem; width: 100%; padding: 0.55rem 0; border-bottom: 1px solid #ecece6; }
   .data-table td::before, .data-table th[scope="row"]::before { content: attr(data-label); color: #6a6a62;
-    font-weight: 500; }
+    font-weight: 500; grid-column: 1; }
+  .data-table td > *, .data-table th[scope="row"] > * { grid-column: 2; min-width: 0; }
   .data-table tr > :last-child { border-bottom: 0; }
+  .number-cell { text-align: left; white-space: normal; }
+  .line-item > strong { text-align: left; }
   .actions { min-width: 0; }
   .optimization-title { display: block; }
   .status-strip { width: 100%; }

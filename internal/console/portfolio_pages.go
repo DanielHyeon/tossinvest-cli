@@ -16,6 +16,7 @@ package console
 // history screen renders frozen values and stays manual.
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -65,6 +66,20 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 	// Same reason as the orders screen: a reloading screen cannot keep a native
 	// fold open (change a055 §6, explain.go).
 	page.Explain = explainFrom(r)
+	c.decoratePositionRows(r.Context(), page.Snap.Rows, c.now())
+	c.render(w, "positions", page)
+}
+
+// decoratePositionRows attaches the desired/effective/lifecycle and persisted
+// exit evidence that both holdings screens render. Keeping this at one boundary
+// is what prevents /dashboard and /positions from giving the same holding two
+// different management or protection answers.
+//
+// The helper mutates request-local display rows only. Runtime/settings failures
+// remain unknown, and attachPositionExitLines continues to suppress stale or
+// mismatched actionable values. No broker call, journal write, order, or config
+// save is available from this path.
+func (c *Console) decoratePositionRows(ctx context.Context, rows []positionRow, asOf time.Time) {
 	var (
 		runtime          positionpolicy.ManagementRuntime
 		runtimeAttempted bool
@@ -75,8 +90,8 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 		// A read failure intentionally leaves EffectiveKnown false. Desired config
 		// below remains useful display context, but is never substituted for the
 		// running engine snapshot.
-		runtime, _ = c.opts.PositionPolicies.Runtime(r.Context())
-		if states, err := c.opts.PositionPolicies.List(r.Context()); err == nil {
+		runtime, _ = c.opts.PositionPolicies.Runtime(ctx)
+		if states, err := c.opts.PositionPolicies.List(ctx); err == nil {
 			policyByID = make(map[string]positionpolicy.State, len(states))
 			for _, state := range states {
 				policyByID[strings.TrimSpace(state.PositionID)] = state
@@ -87,15 +102,15 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 		if block, _, err := c.opts.Settings.Load(); err == nil {
 			// One Load stamps both lists: two reads could return two different
 			// snapshots and draw a row that is on neither or on both.
-			for i := range page.Snap.Rows {
-				page.Snap.Rows[i].Designated = block.Included(page.Snap.Rows[i].Symbol)
-				page.Snap.Rows[i].Excluded = block.Excludes(page.Snap.Rows[i].Symbol)
+			for i := range rows {
+				rows[i].Designated = block.Included(rows[i].Symbol)
+				rows[i].Excluded = block.Excludes(rows[i].Symbol)
 			}
 		}
 	}
 	if runtimeAttempted {
-		for i := range page.Snap.Rows {
-			row := &page.Snap.Rows[i]
+		for i := range rows {
+			row := &rows[i]
 			journalKnown := row.JournalReadable
 			released := false
 			if row.InJournal {
@@ -114,12 +129,11 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 				Managed: row.Managed(), Released: released, Runtime: runtime,
 			})
 			if row.Management.Block != nil {
-				row.ManagementBlock = newReconcileBlockView(*row.Management.Block, c.now())
+				row.ManagementBlock = newReconcileBlockView(*row.Management.Block, asOf)
 			}
 		}
 	}
-	attachPositionExitLines(page.Snap.Rows, c.now(), runtime)
-	c.render(w, "positions", page)
+	attachPositionExitLines(rows, asOf, runtime)
 }
 
 // attachPositionExitLines selects the already-persisted effective snapshot for

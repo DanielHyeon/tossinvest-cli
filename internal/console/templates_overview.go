@@ -79,6 +79,19 @@ const overviewTemplates = `
       {{- else}} <span class="ok">잔여물 없음</span>{{end}}</span>{{end}}</dd></div>
 </dl>
 
+{{/* The concrete holdings scan comes before operational diagnostics (a057). */}}
+<section class="overview-holdings" aria-labelledby="overview-holdings-heading">
+  <h2 id="overview-holdings-heading">보유 종목</h2>
+  {{if .Snap.Account.Rows}}
+  {{if .Snap.Account.AnyJournalAbsent}}<p class="notice"><strong>엔진 원장에 포지션이 없는 보유가 있다</strong> — 엔진이 진입한 포지션이 아니므로 손절·익절 라인도 없다.</p>{{end}}
+  {{template "holdingstable" .Snap.Account}}
+  <p class="muted">세부 관리 근거와 원장 식별자는 각 종목의 <strong>상세 보기</strong>에서 확인한다.
+  보유 캐시는 <a href="/positions">포지션</a> 화면이 갱신하며, 이 대시보드는 추가 브로커 호출 없이 같은 값을 읽는다.</p>
+  {{else}}
+  <p class="muted">표시할 보유가 없다. 캐시가 아직 비었다면 <a href="/positions">포지션 화면</a>을 한 번 열어 갱신할 수 있다.</p>
+  {{end}}
+</section>
+
 {{/* --- 엔진 --- */}}
 <section>
   <h2>엔진</h2>

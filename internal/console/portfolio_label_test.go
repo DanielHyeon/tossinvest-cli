@@ -1,10 +1,11 @@
 package console
 
-// portfolio_label_test.go pins the status column after the 2026-07-27 UX
-// decision (console-adoption-controls, 포지션 가시성 delta): the column header
-// says 관리 편입, and an unmanaged row's one label follows its setting — 관리
-// 외(미편입) before designation, 관리 편입 after. The latter is a designation,
-// not protection, so the 편입 예약됨 note stays beside it.
+// portfolio_label_test.go pins the status presentation after the 2026-07-27 UX
+// decision (console-adoption-controls, 포지션 가시성 delta). The compact
+// holdings table keeps the adoption state beside the instrument instead of in
+// a dedicated column, and an unmanaged row's one label follows its setting —
+// 관리 외(미편입) before designation, 관리 편입 after. The latter is a
+// designation, not protection, so the 편입 예약됨 note stays beside it.
 
 import (
 	"net/url"
@@ -14,8 +15,9 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 )
 
-// TestTheStatusColumnHeaderSaysAdoption: the header is 관리 편입, in those
-// words — the old 관리 header is gone.
+// TestTheStatusColumnHeaderSaysAdoption preserves the adoption status while the
+// compact seven-column table moves it under 종목 and dedicates 라인 to the five
+// canonical exit references.
 func TestTheStatusColumnHeaderSaysAdoption(t *testing.T) {
 	seam := &fakeSettings{block: config.Adoption{DefaultStopPct: 0.05}}
 	h := settingsHarness(t, seam)
@@ -23,11 +25,17 @@ func TestTheStatusColumnHeaderSaysAdoption(t *testing.T) {
 	h.authenticate(t)
 
 	page := h.page(t, "/positions")
-	if !strings.Contains(page, `<th scope="col">관리 편입</th>`) {
-		t.Error("the status column header does not say 관리 편입")
+	for _, header := range []string{`<th scope="col">종목</th>`, `<th scope="col">라인</th>`} {
+		if !strings.Contains(page, header) {
+			t.Errorf("the compact holdings table is missing %s", header)
+		}
 	}
-	if strings.Contains(page, `<th scope="col">관리</th>`) {
-		t.Error("the old 관리 column header is still rendered")
+	if strings.Contains(page, `<th scope="col">관리 편입</th>`) {
+		t.Error("adoption status still consumes a dedicated table column")
+	}
+	row := rowFor(t, page, "000660")
+	if !strings.Contains(row, "관리 외(미편입)") {
+		t.Errorf("the compact instrument cell lost the adoption status:\n%s", row)
 	}
 }
 

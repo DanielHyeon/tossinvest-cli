@@ -1,0 +1,637 @@
+{
+  "file": "internal/console/overview.go",
+  "source_sha256": "202505dbe12574e24960746df1d450ada672b37c7c4b17fb4e961a3a374fcc92",
+  "package": "console",
+  "function": "accountPanelFrom",
+  "receiver": "Console",
+  "signature": "Console.accountPanelFrom(params=4, results=1)",
+  "start": {
+    "line": 653,
+    "column": 1
+  },
+  "end": {
+    "line": 741,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 661,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 662,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 669,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 671,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 682,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 683,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "switch",
+      "at": {
+        "line": 689,
+        "column": 4
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 690,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 692,
+        "column": 4
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 694,
+        "column": 4
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 699,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 708,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "else",
+      "at": {
+        "line": 711,
+        "column": 10
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 720,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "range",
+      "at": {
+        "line": 722,
+        "column": 3
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 723,
+        "column": 4
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 728,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 740,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 655,
+        "column": 10
+      },
+      "text": "c.holdings.peek"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 658,
+        "column": 10
+      },
+      "text": "joinPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 658,
+        "column": 41
+      },
+      "text": "jv.Readable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 659,
+        "column": 2
+      },
+      "text": "c.decoratePositionRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 667,
+        "column": 12
+      },
+      "text": "brokerReadable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 671,
+        "column": 7
+      },
+      "text": "usable.Known"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 673,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 683,
+        "column": 23
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 690,
+        "column": 9
+      },
+      "text": "r.Unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 692,
+        "column": 9
+      },
+      "text": "r.Managed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 701,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 704,
+        "column": 15
+      },
+      "text": "measured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 704,
+        "column": 24
+      },
+      "text": "decimalText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 705,
+        "column": 13
+      },
+      "text": "measured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 705,
+        "column": 22
+      },
+      "text": "decimalText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 707,
+        "column": 17
+      },
+      "text": "measured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 707,
+        "column": 26
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 18
+      },
+      "text": "unmeasuredFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 710,
+        "column": 20
+      },
+      "text": "unmeasuredFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 712,
+        "column": 18
+      },
+      "text": "measured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 712,
+        "column": 27
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 20
+      },
+      "text": "measured"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 29
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 715,
+        "column": 19
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 720,
+        "column": 5
+      },
+      "text": "usable.Known"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 723,
+        "column": 22
+      },
+      "text": "overviewMatchesMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 726,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 726,
+        "column": 26
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 728,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 729,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 733,
+        "column": 17
+      },
+      "text": "unmeasuredBecause"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 734,
+        "column": 6
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 734,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 734,
+        "column": 50
+      },
+      "text": "overviewOtherSymbols"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 655,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 656,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 658,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 660,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 663,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 667,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 670,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 672,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 673,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 686,
+        "column": 4
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 687,
+        "column": 4
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 688,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 691,
+        "column": 5
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 693,
+        "column": 5
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 695,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 700,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 701,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 704,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 705,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 706,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 707,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 709,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 710,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 712,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 713,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 715,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 726,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 729,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
