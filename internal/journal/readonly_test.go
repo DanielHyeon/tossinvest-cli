@@ -120,6 +120,9 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		"SchemaVersion":     true,
 		"AccountRefs":       true,
 		"LivePositionExits": true,
+		// a052's authoritative lifecycle join. This shares the exact SELECT used
+		// by the engine-owned journal and exposes no preview/apply method.
+		"PositionPolicies":  true,
 		"AccountExitEvents": true,
 		"AccountTradeTrips": true,
 		// The orders screen's origin join (change console-orders-screen, task

@@ -133,6 +133,8 @@ func TestForbiddenRemoteCapabilitiesHaveNoReachableRoute(t *testing.T) {
 		"/api/v1/kill-switch",
 		"/api/v1/protection",
 		"/api/v1/activation-manifest",
+		"/api/v1/reconcile",
+		"/api/v1/reconcile/resolve",
 		"/api/v1/optimization/rollback-previews",
 	} {
 		for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete} {

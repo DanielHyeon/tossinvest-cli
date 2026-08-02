@@ -17,9 +17,12 @@ package console
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
@@ -62,7 +65,24 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 	// Same reason as the orders screen: a reloading screen cannot keep a native
 	// fold open (change a055 §6, explain.go).
 	page.Explain = explainFrom(r)
-	attachPositionExitLines(page.Snap.Rows, c.now())
+	var (
+		runtime          positionpolicy.ManagementRuntime
+		runtimeAttempted bool
+		policyByID       map[string]positionpolicy.State
+	)
+	if c.opts.PositionPolicies != nil {
+		runtimeAttempted = true
+		// A read failure intentionally leaves EffectiveKnown false. Desired config
+		// below remains useful display context, but is never substituted for the
+		// running engine snapshot.
+		runtime, _ = c.opts.PositionPolicies.Runtime(r.Context())
+		if states, err := c.opts.PositionPolicies.List(r.Context()); err == nil {
+			policyByID = make(map[string]positionpolicy.State, len(states))
+			for _, state := range states {
+				policyByID[strings.TrimSpace(state.PositionID)] = state
+			}
+		}
+	}
 	if c.opts.Settings != nil {
 		if block, _, err := c.opts.Settings.Load(); err == nil {
 			// One Load stamps both lists: two reads could return two different
@@ -73,16 +93,85 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	if runtimeAttempted {
+		for i := range page.Snap.Rows {
+			row := &page.Snap.Rows[i]
+			journalKnown := row.JournalReadable
+			released := false
+			if row.InJournal {
+				row.LifecycleProofRequired = true
+				state, ok := policyByID[strings.TrimSpace(row.PositionID)]
+				if !ok {
+					journalKnown = false
+				} else {
+					row.LifecycleKnown, row.LifecycleStatus = true, state.Status
+					row.LifecycleGeneration = state.AdoptionGeneration
+					released = state.Status == positionpolicy.StatusReleased && state.Version > 0
+				}
+			}
+			row.Management = positionpolicy.ProjectManagement(positionpolicy.ManagementInput{
+				Market: row.Market, Symbol: row.Symbol, JournalKnown: journalKnown,
+				Managed: row.Managed(), Released: released, Runtime: runtime,
+			})
+			if row.Management.Block != nil {
+				row.ManagementBlock = newReconcileBlockView(*row.Management.Block, c.now())
+			}
+		}
+	}
+	attachPositionExitLines(page.Snap.Rows, c.now(), runtime)
 	c.render(w, "positions", page)
 }
 
 // attachPositionExitLines selects the already-persisted effective snapshot for
 // display. Freshness is evaluated at the screen boundary; no exit value is
 // recomputed here or in the template.
-func attachPositionExitLines(rows []positionRow, asOf time.Time) {
+func attachPositionExitLines(rows []positionRow, asOf time.Time, runtime positionpolicy.ManagementRuntime) {
 	for i := range rows {
 		row := &rows[i]
+		referenceStatus := row.Management.Status
+		if referenceStatus == "" && row.PendingDesignation() {
+			// The desired include list proves only that this holding is awaiting
+			// management. If the engine-owned commander is unavailable, keep the
+			// effective state explicitly unknown; never promote desired defaults.
+			referenceStatus = positionpolicy.ManagementStatusUnknown
+		}
 		if !row.HasExit {
+			row.ExitReference = operatorview.BuildExitLineReference(operatorview.ExitLineReferenceSource{
+				Market: row.Market, ManagementStatus: string(referenceStatus),
+				EffectiveSettingsKnown: runtime.EffectiveKnown,
+				EffectiveStopPct:       runtime.Effective.DefaultStopPct,
+			})
+			continue
+		}
+		raw := storedExitReference(row.Exit)
+		if row.LifecycleKnown && row.Exit.LifecycleGeneration > 0 && row.LifecycleGeneration > 0 &&
+			row.Exit.LifecycleGeneration != row.LifecycleGeneration {
+			row.StoredExit = storedExitEvidenceView{}
+			row.ExitLine = operatorview.BuildExitLine(operatorview.Source{
+				UnknownReason: "lifecycle_generation_mismatch",
+			})
+			row.ExitReference = operatorview.BuildExitLineReference(operatorview.ExitLineReferenceSource{
+				Market: row.Market, EvidencePresent: true,
+				EvidenceLifecycleGeneration: row.Exit.LifecycleGeneration, Raw: raw,
+				LifecycleKnown: true, LifecycleProofRequired: row.LifecycleProofRequired,
+				CurrentLifecycleGeneration: row.LifecycleGeneration,
+			})
+			continue
+		}
+		if row.LifecycleKnown && row.LifecycleStatus == positionpolicy.StatusReleased {
+			row.ExitLine = operatorview.BuildExitLine(operatorview.Source{
+				UnknownReason: "operator_released_lifecycle",
+			})
+			row.ExitReference = operatorview.BuildExitLineReference(operatorview.ExitLineReferenceSource{
+				Market: row.Market, EvidencePresent: true,
+				EvidenceLifecycleGeneration: row.Exit.LifecycleGeneration, Raw: raw,
+				LifecycleKnown: row.LifecycleKnown, LifecycleProofRequired: row.LifecycleProofRequired,
+				CurrentLifecycleGeneration: row.LifecycleGeneration,
+				Released:                   true, UnknownReason: row.Exit.Snapshot.UnknownReason,
+			})
+			if row.ExitReference.LegacyRaw() {
+				row.StoredExit = storedExitEvidence(row.Exit)
+			}
 			continue
 		}
 		snapshot := row.Exit.Snapshot.WithFreshness(asOf, holdingsTTL)
@@ -98,7 +187,38 @@ func attachPositionExitLines(rows []positionRow, asOf time.Time) {
 			source.ObservedAt = snapshot.Snapshot.ObservedAt
 		}
 		row.ExitLine = operatorview.BuildExitLine(source)
+		row.ExitReference = operatorview.BuildExitLineReference(operatorview.ExitLineReferenceSource{
+			Market: row.Market, CanonicalSnapshotPresent: snapshot.Snapshot != nil,
+			CanonicalSnapshotStale: snapshot.Stale, EvidencePresent: true,
+			EvidenceLifecycleGeneration: row.Exit.LifecycleGeneration, Raw: raw,
+			LifecycleKnown: row.LifecycleKnown, LifecycleProofRequired: row.LifecycleProofRequired,
+			CurrentLifecycleGeneration: row.LifecycleGeneration,
+			ManagementStatus:           string(referenceStatus), EffectiveSettingsKnown: runtime.EffectiveKnown,
+			EffectiveStopPct: runtime.Effective.DefaultStopPct, UnknownReason: snapshot.UnknownReason,
+		})
+		if row.ExitReference.LifecycleUnknown() {
+			row.StoredExit = storedExitEvidenceView{}
+			row.ExitLine = operatorview.BuildExitLine(operatorview.Source{
+				UnknownReason: "lifecycle_generation_unverified",
+			})
+			continue
+		}
+		if row.ExitReference.LegacyRaw() {
+			row.StoredExit = storedExitEvidence(row.Exit)
+		}
 	}
+}
+
+func hasStoredExitEvidence(state journal.ExitState) bool {
+	return strings.TrimSpace(state.EntryPrice) != "" || strings.TrimSpace(state.InitialStop) != "" ||
+		strings.TrimSpace(state.Baseline) != "" || strings.TrimSpace(state.HighWater) != ""
+}
+
+func storedExitValue(value string) string {
+	if value = strings.TrimSpace(value); value != "" {
+		return value
+	}
+	return "—"
 }
 
 type historyPage struct {

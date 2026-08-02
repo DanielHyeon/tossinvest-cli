@@ -1612,6 +1612,81 @@
           }
         }
       },
+      "ReconcileBlock": {
+        "type": "object",
+        "description": "Sanitized runtime block covering this adoption candidate. This is evidence only and carries no resolution capability.",
+        "additionalProperties": false,
+        "required": [
+          "scope",
+          "market",
+          "symbol",
+          "reason",
+          "startedAt"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": ["ACCOUNT", "MARKET", "SYMBOL"]
+          },
+          "market": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      },
+      "StoredExitEvidence": {
+        "type": "object",
+        "description": "Raw journal facts that are not an actionable effective exit line.",
+        "additionalProperties": false,
+        "required": [
+          "entryPrice",
+          "initialStop",
+          "baseline",
+          "highWater",
+          "effectiveKnown",
+          "label"
+        ],
+        "properties": {
+          "entryPrice": {"type": "string"},
+          "initialStop": {"type": "string"},
+          "baseline": {"type": "string"},
+          "highWater": {"type": "string"},
+          "effectiveKnown": {"type": "boolean", "enum": [false]},
+          "label": {"type": "string", "example": "원장 기록 · 실효 미확인"}
+        }
+      },
+	  "ExitLineReference": {
+		"type": "object",
+		"description": "Non-actionable legacy or adoption context. Prices are persisted facts only; a plan contains no synthesized prices.",
+		"additionalProperties": false,
+		"required": [
+		  "kind", "label", "effectiveKnown", "market", "currency", "entryPrice",
+		  "initialStop", "baseline", "highWater", "stopPercent", "basis", "reason"
+		],
+		"properties": {
+		  "kind": {"type": "string", "enum": ["LEGACY_RAW", "ADOPTION_PLAN", "GENERATION_MISMATCH", "RUNTIME_UNKNOWN", "LIFECYCLE_UNKNOWN"]},
+		  "label": {"type": "string"},
+		  "effectiveKnown": {"type": "boolean", "enum": [false]},
+		  "market": {"type": "string"},
+		  "currency": {"type": "string", "enum": ["KRW", "USD", "—"]},
+		  "entryPrice": {"type": "string"},
+		  "initialStop": {"type": "string"},
+		  "baseline": {"type": "string"},
+		  "highWater": {"type": "string"},
+		  "stopPercent": {"type": "string"},
+		  "basis": {"type": "string"},
+		  "reason": {"type": "string"}
+		}
+	  },
       "Position": {
         "type": "object",
         "description": "Current broker and journal position joined to its exit-line evidence.",
@@ -1631,7 +1706,18 @@
           "inJournal",
           "eligible",
           "managementStatus",
-          "exitLine"
+          "adoptionStatus",
+          "statusKnown",
+          "adoptionLabel",
+          "adoptionReason",
+          "included",
+          "excluded",
+          "candidate",
+          "designationKnown",
+          "coveringBlock",
+          "exitLine",
+		  "exitLineReference",
+          "storedExitEvidence"
         ],
         "properties": {
           "accountLabel": {
@@ -1681,8 +1767,52 @@
           "managementStatus": {
             "type": "string"
           },
+          "adoptionStatus": {
+            "type": "string",
+            "enum": ["UNKNOWN", "MANAGED", "EXCLUDED", "RECONCILE_BLOCKED", "ADOPTION_PENDING", "UNMANAGED"]
+          },
+          "statusKnown": {
+            "type": "boolean"
+          },
+          "adoptionLabel": {
+            "type": "string"
+          },
+          "adoptionReason": {
+            "type": "string",
+            "description": "Stable sanitized reason code from the shared position-management projector."
+          },
+          "included": {
+            "type": "boolean"
+          },
+          "excluded": {
+            "type": "boolean"
+          },
+          "candidate": {
+            "type": "boolean"
+          },
+          "designationKnown": {
+            "type": "boolean"
+          },
+          "coveringBlock": {
+            "anyOf": [
+              {"$ref": "#/components/schemas/ReconcileBlock"},
+              {"type": "null"}
+            ]
+          },
           "exitLine": {
             "$ref": "#/components/schemas/ExitLine"
+          },
+		  "exitLineReference": {
+			"anyOf": [
+			  {"$ref": "#/components/schemas/ExitLineReference"},
+			  {"type": "null"}
+			]
+		  },
+          "storedExitEvidence": {
+            "anyOf": [
+              {"$ref": "#/components/schemas/StoredExitEvidence"},
+              {"type": "null"}
+            ]
           }
         }
       },
@@ -2476,6 +2606,19 @@
           }
         }
       },
+      "AdoptionSettings": {
+        "type": "object",
+        "description": "Actual desired or running-engine effective external-position adoption settings.",
+        "additionalProperties": false,
+        "required": ["enabled", "defaultStopPct", "includeSymbols", "excludeSymbols", "rejected"],
+        "properties": {
+          "enabled": {"type": "boolean"},
+          "defaultStopPct": {"type": "number", "minimum": 0},
+          "includeSymbols": {"type": "array", "items": {"type": "string"}},
+          "excludeSymbols": {"type": "array", "items": {"type": "string"}},
+          "rejected": {"type": "string"}
+        }
+      },
       "PositionManagementDescriptor": {
         "type": "object",
         "description": "Position-management defaults and the exact 2% through 20% stop chips in 0.5% steps.",
@@ -2496,7 +2639,11 @@
           "excludePrecedence",
           "applyTiming",
           "provenance",
-          "oneShareBehavior"
+          "oneShareBehavior",
+          "desired",
+          "effective",
+          "effectiveKnown",
+          "blockSource"
         ],
         "properties": {
           "category": {
@@ -2560,6 +2707,22 @@
                 }
               }
             }
+          },
+          "desired": {
+            "$ref": "#/components/schemas/AdoptionSettings"
+          },
+          "effective": {
+            "anyOf": [
+              {"$ref": "#/components/schemas/AdoptionSettings"},
+              {"type": "null"}
+            ]
+          },
+          "effectiveKnown": {
+            "type": "boolean"
+          },
+          "blockSource": {
+            "type": "string",
+            "description": "Identifies the engine adoption-blocking runtime projection, not all journal causes."
           },
           "includeDefault": {
             "type": "array",

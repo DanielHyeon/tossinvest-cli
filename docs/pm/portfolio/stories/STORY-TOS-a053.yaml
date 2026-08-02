@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a053",
+  "title": "Restore visible exit-line references across markets",
+  "feature": "FEAT-TOS-009",
+  "intent": "completed",
+  "openspec": {
+    "change_id": "a053-restore-visible-exit-line-references",
+    "path": "openspec/changes/archive/2026-08-02-a053-restore-visible-exit-line-references"
+  },
+  "acceptance": [
+    "Managed legacy KR and US positions show stored baseline and initial stop prominently when no canonical effective snapshot exists",
+    "Stored legacy values remain explicitly non-effective and never populate actionable exitLine fields or order authority",
+    "KR and US adoption-pending or reconcile-blocked positions show that price lines are not yet established together with the effective initial-stop percentage when known",
+    "Fresh and stale canonical snapshot behavior remains unchanged",
+    "The positions screen remains read-only, responsive and free of visible input controls"
+  ]
+}

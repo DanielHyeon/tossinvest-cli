@@ -1,0 +1,154 @@
+{
+  "file": "cmd/tossctl/httpapi_reader_test.go",
+  "source_sha256": "4cbfb6161ad1308e30b2237d89a2e93155411856dd641c10b8756146b0e6b260",
+  "package": "main",
+  "function": "TestHTTPAPIReleasedLifecycleSuppressesCanonicalExitAndWinsPriority",
+  "signature": "TestHTTPAPIReleasedLifecycleSuppressesCanonicalExitAndWinsPriority(params=1, results=0)",
+  "start": {
+    "line": 142,
+    "column": 1
+  },
+  "end": {
+    "line": 171,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 54
+      },
+      "text": "now.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 2
+      },
+      "text": "applyStoredPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 23
+      },
+      "text": "lifecycleFlags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 2
+      },
+      "text": "applyReleasedExitTruth"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 14
+      },
+      "text": "positionpolicy.NewAdoptionSettings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 2
+      },
+      "text": "applyManagementProjection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 162,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

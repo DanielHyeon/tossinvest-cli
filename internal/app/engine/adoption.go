@@ -190,8 +190,8 @@ func (d *ReconcileDriver) adopt(ctx context.Context, candidates []candidate,
 		bound = DefaultAdoptionPriceStaleness
 	}
 	for _, c := range candidates {
-		symbol := strings.ToUpper(strings.TrimSpace(c.position.Symbol))
-		observed, ok := quotes[symbol]
+		key := adoptionQuoteKey(c.position.Market, c.position.Symbol)
+		observed, ok := quotes[key]
 		if !ok {
 			// The read answered for other symbols and not this one. There is no
 			// t0 to freeze, so the holding waits for the next cycle.
@@ -220,15 +220,21 @@ func (d *ReconcileDriver) adopt(ctx context.Context, candidates []candidate,
 // observeCandidates is the one batched price read.
 func (d *ReconcileDriver) observeCandidates(ctx context.Context, candidates []candidate) (
 	map[string]string, time.Time, error) {
-	seen := map[string]bool{}
+	marketsBySymbol := map[string]map[string]struct{}{}
 	symbols := make([]string, 0, len(candidates))
 	for _, c := range candidates {
 		symbol := strings.ToUpper(strings.TrimSpace(c.position.Symbol))
-		if seen[symbol] {
+		market := strings.ToLower(strings.TrimSpace(c.position.Market))
+		if symbol == "" || market == "" {
 			continue
 		}
-		seen[symbol] = true
-		symbols = append(symbols, symbol)
+		markets := marketsBySymbol[symbol]
+		if markets == nil {
+			markets = map[string]struct{}{}
+			marketsBySymbol[symbol] = markets
+			symbols = append(symbols, symbol)
+		}
+		markets[market] = struct{}{}
 	}
 	sort.Strings(symbols)
 
@@ -265,9 +271,40 @@ func (d *ReconcileDriver) observeCandidates(ctx context.Context, candidates []ca
 			// zero would freeze a synthetic stop of zero.
 			continue
 		}
-		out[strings.ToUpper(strings.TrimSpace(q.Symbol))] = decimalOf(q.Last)
+		symbol := strings.ToUpper(strings.TrimSpace(q.Symbol))
+		markets := marketsBySymbol[symbol]
+		if len(markets) != 1 {
+			// A symbol-only quote cannot prove which candidate market it belongs
+			// to when the same symbol is present in more than one market.
+			continue
+		}
+		market := ""
+		for candidateMarket := range markets {
+			market = candidateMarket
+		}
+		expectedCurrency, ok := adoptionCurrency(market)
+		if !ok || !strings.EqualFold(strings.TrimSpace(q.Currency), expectedCurrency) {
+			continue
+		}
+		out[adoptionQuoteKey(market, symbol)] = decimalOf(q.Last)
 	}
 	return out, readAt, nil
+}
+
+func adoptionQuoteKey(market, symbol string) string {
+	return strings.ToLower(strings.TrimSpace(market)) + "\x00" +
+		strings.ToUpper(strings.TrimSpace(symbol))
+}
+
+func adoptionCurrency(market string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(market)) {
+	case "kr":
+		return "KRW", true
+	case "us":
+		return "USD", true
+	default:
+		return "", false
+	}
 }
 
 // adoptOne persists one adoption and opens its exit state.

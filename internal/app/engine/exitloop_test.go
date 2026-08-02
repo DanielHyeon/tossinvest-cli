@@ -40,10 +40,11 @@ const exitAccount = "acct-exit"
 // --- fakes --------------------------------------------------------------------
 
 type fakePrices struct {
-	last  map[string]float64
-	err   error
-	calls int
-	asked [][]string
+	last       map[string]float64
+	currencies map[string]string
+	err        error
+	calls      int
+	asked      [][]string
 }
 
 func (f *fakePrices) Prices(_ context.Context, symbols []string) ([]domain.Quote, error) {
@@ -55,7 +56,11 @@ func (f *fakePrices) Prices(_ context.Context, symbols []string) ([]domain.Quote
 	out := make([]domain.Quote, 0, len(symbols))
 	for _, s := range symbols {
 		if v, ok := f.last[s]; ok {
-			out = append(out, domain.Quote{Symbol: s, Last: v})
+			currency := "KRW"
+			if configured, ok := f.currencies[s]; ok {
+				currency = configured
+			}
+			out = append(out, domain.Quote{Symbol: s, Last: v, Currency: currency})
 		}
 	}
 	return out, nil

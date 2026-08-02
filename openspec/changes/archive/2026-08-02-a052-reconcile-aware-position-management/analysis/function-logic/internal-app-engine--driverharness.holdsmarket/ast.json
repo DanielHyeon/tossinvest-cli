@@ -1,0 +1,69 @@
+{
+  "file": "internal/app/engine/reconcileloop_test.go",
+  "source_sha256": "f7244f04d716230ddc2536f8e219958c52b86a6b899cf6f4df45fa09962f961e",
+  "package": "engine_test",
+  "function": "holdsMarket",
+  "receiver": "driverHarness",
+  "signature": "driverHarness.holdsMarket(params=6, results=0)",
+  "start": {
+    "line": 180,
+    "column": 1
+  },
+  "end": {
+    "line": 190,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 21
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

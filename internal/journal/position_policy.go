@@ -68,7 +68,21 @@ func (j *Journal) PositionPolicy(ctx context.Context, positionID string) (positi
 
 // PositionPolicies lists one current row per live projected position.
 func (j *Journal) PositionPolicies(ctx context.Context) ([]positionpolicy.State, error) {
-	rows, err := j.db.QueryContext(ctx, positionPolicySelect+` WHERE p.state <> 'CLOSED'
+	return queryPositionPolicies(ctx, j.db)
+}
+
+// PositionPolicies exposes the same lifecycle SELECT through the compile-time
+// read-only handle used by API processes. It cannot preview or apply a command.
+func (r *ReadOnly) PositionPolicies(ctx context.Context) ([]positionpolicy.State, error) {
+	return queryPositionPolicies(ctx, r.db)
+}
+
+type positionPolicyQueryer interface {
+	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
+}
+
+func queryPositionPolicies(ctx context.Context, queryer positionPolicyQueryer) ([]positionpolicy.State, error) {
+	rows, err := queryer.QueryContext(ctx, positionPolicySelect+` WHERE p.state <> 'CLOSED'
 		ORDER BY p.account_ref,p.market,p.symbol,p.instance_seq`)
 	if err != nil {
 		return nil, fmt.Errorf("journal: listing position policy scopes: %w", err)

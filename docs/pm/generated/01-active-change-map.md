@@ -41,6 +41,7 @@
 | `automate-soak-openapi-onboarding` | STORY-TOS-037 | archived |
 | `fix-adoption-console-truth` | STORY-TOS-038 | archived |
 | `streamline-trading-views` | STORY-TOS-039 | archived |
+| `fix-container-entrypoint-permission` | STORY-TOS-CONTAINER-MODE | archived |
 | `fix-http2-bodyless-reads` | STORY-TOS-HTTP2-BODYLESS | archived |
 | `a040-adopt-stockos-openspec-naming` | STORY-TOS-a040 | implemented |
 | `a041-complete-exit-line-contract` | STORY-TOS-a041 | archived |
@@ -54,5 +55,7 @@
 | `a049-add-lane-performance` | STORY-TOS-a049 | archived |
 | `a050-add-strategy-optimization` | STORY-TOS-a050 | archived |
 | `a051-add-httpapi-daemon` | STORY-TOS-a051 | archived |
+| `a052-reconcile-aware-position-management` | STORY-TOS-a052 | archived |
+| `a053-restore-visible-exit-line-references` | STORY-TOS-a053 | archived |
 | `a054-console-status-shell` | STORY-TOS-a054 | archived |
 | `a055-console-settings-cadence` | STORY-TOS-a055 | implemented |

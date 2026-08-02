@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
@@ -31,7 +32,16 @@ type Reader interface {
 	Candidates(context.Context) (CandidatesResource, error)
 	Performance(context.Context) (performance.DashboardView, error)
 	Settings(context.Context) (SettingsResource, error)
-	Optimization(context.Context) (optimization.View, error)
+	Optimization(context.Context) (OptimizationRead, error)
+}
+
+// OptimizationRead joins the optimization store's base view to the separately
+// sourced position-management desired/effective state. Keeping the join as data
+// prevents the transport router from receiving a config writer or engine
+// command capability.
+type OptimizationRead struct {
+	Core               optimization.View
+	PositionManagement PositionManagementActual
 }
 
 type PerformanceResource struct {
@@ -211,13 +221,14 @@ type OptimizationAuditEvent struct {
 	CreatedAt      time.Time               `json:"createdAt"`
 }
 
-func OptimizationFrom(view optimization.View) OptimizationResource {
+func OptimizationFrom(reading OptimizationRead) OptimizationResource {
+	view := reading.Core
 	out := OptimizationResource{
 		Version: view.Snapshot.Version, EffectiveVersion: view.Snapshot.EffectiveVersion,
 		SettingsDigest:     view.Snapshot.SettingsDigest,
 		Categories:         make([]OptimizationCategory, 0, len(optimization.Categories())),
 		Fields:             make([]OptimizationField, 0, len(view.Registry.All())),
-		PositionManagement: positionManagementFrom(positionpolicy.Descriptor()),
+		PositionManagement: positionManagementFrom(positionpolicy.Descriptor(), reading.PositionManagement),
 		CandidateFilters:   candidateFiltersFrom(candidate.CandidateFilterMarkets()),
 		StrategyRuntime:    runtimeDescriptorFrom(strategyengine.DormantRuntimeDescriptor()),
 		Evidence: OptimizationEvidence{Status: view.Evidence.Status, Digest: view.Evidence.Digest,
@@ -314,33 +325,63 @@ type StopOption struct {
 }
 
 type PositionManagementDescriptor struct {
-	Category             string       `json:"category"`
-	PositionSection      string       `json:"positionSection"`
-	AutoAdoptionSection  string       `json:"autoAdoptionSection"`
-	AutoEnabledDefault   bool         `json:"autoEnabledDefault"`
-	AutoEnabledDesired   bool         `json:"autoEnabledDesired"`
-	AutoEnabledEffective bool         `json:"autoEnabledEffective"`
-	StopDefault          string       `json:"stopDefault"`
-	StopDesired          string       `json:"stopDesired"`
-	StopEffective        string       `json:"stopEffective"`
-	StopOptions          []StopOption `json:"stopOptions"`
-	IncludeDefault       []string     `json:"includeDefault"`
-	ExcludeDefault       []string     `json:"excludeDefault"`
-	ExcludePrecedence    string       `json:"excludePrecedence"`
-	ApplyTiming          string       `json:"applyTiming"`
-	Provenance           string       `json:"provenance"`
-	OneShareBehavior     string       `json:"oneShareBehavior"`
+	Category             string            `json:"category"`
+	PositionSection      string            `json:"positionSection"`
+	AutoAdoptionSection  string            `json:"autoAdoptionSection"`
+	AutoEnabledDefault   bool              `json:"autoEnabledDefault"`
+	AutoEnabledDesired   bool              `json:"autoEnabledDesired"`
+	AutoEnabledEffective bool              `json:"autoEnabledEffective"`
+	StopDefault          string            `json:"stopDefault"`
+	StopDesired          string            `json:"stopDesired"`
+	StopEffective        string            `json:"stopEffective"`
+	StopOptions          []StopOption      `json:"stopOptions"`
+	IncludeDefault       []string          `json:"includeDefault"`
+	ExcludeDefault       []string          `json:"excludeDefault"`
+	ExcludePrecedence    string            `json:"excludePrecedence"`
+	ApplyTiming          string            `json:"applyTiming"`
+	Provenance           string            `json:"provenance"`
+	OneShareBehavior     string            `json:"oneShareBehavior"`
+	Desired              AdoptionSettings  `json:"desired"`
+	Effective            *AdoptionSettings `json:"effective"`
+	EffectiveKnown       bool              `json:"effectiveKnown"`
+	BlockSource          string            `json:"blockSource"`
 }
 
-func positionManagementFrom(value positionpolicy.ManagementDescriptor) PositionManagementDescriptor {
+// AdoptionSettings is the transport spelling of the config/runtime adoption
+// block. Effective remains nil when EffectiveKnown is false, so a registry
+// default cannot masquerade as a running engine fact.
+type AdoptionSettings struct {
+	Enabled        bool     `json:"enabled"`
+	DefaultStopPct float64  `json:"defaultStopPct"`
+	IncludeSymbols []string `json:"includeSymbols"`
+	ExcludeSymbols []string `json:"excludeSymbols"`
+	Rejected       string   `json:"rejected"`
+}
+
+type PositionManagementActual struct {
+	Desired        AdoptionSettings
+	Effective      *AdoptionSettings
+	EffectiveKnown bool
+	BlockSource    string
+}
+
+func positionManagementFrom(value positionpolicy.ManagementDescriptor, actual PositionManagementActual) PositionManagementDescriptor {
 	out := PositionManagementDescriptor{Category: value.Category, PositionSection: value.PositionSection,
 		AutoAdoptionSection: value.AutoAdoptionSection, AutoEnabledDefault: value.AutoEnabledDefault,
-		AutoEnabledDesired: value.AutoEnabledDesired, AutoEnabledEffective: value.AutoEnabledEffective,
-		StopDefault: value.StopDefault, StopDesired: value.StopDesired, StopEffective: value.StopEffective,
+		AutoEnabledDesired: actual.Desired.Enabled,
+		StopDefault:        value.StopDefault, StopDesired: adoptionStopText(actual.Desired.DefaultStopPct),
+		StopEffective:  "알 수 없음",
 		StopOptions:    make([]StopOption, 0, len(value.StopOptions)),
 		IncludeDefault: append([]string(nil), value.IncludeDefault...), ExcludeDefault: append([]string(nil), value.ExcludeDefault...),
 		ExcludePrecedence: value.ExcludePrecedence, ApplyTiming: value.ApplyTiming, Provenance: value.Provenance,
-		OneShareBehavior: value.OneShareBehavior}
+		OneShareBehavior: value.OneShareBehavior, Desired: normaliseAdoptionSettings(actual.Desired),
+		EffectiveKnown: actual.EffectiveKnown, BlockSource: actual.BlockSource}
+	if actual.EffectiveKnown && actual.Effective != nil {
+		effective := normaliseAdoptionSettings(*actual.Effective)
+		out.Effective = &effective
+		out.AutoEnabledEffective = effective.Enabled
+		out.StopEffective = adoptionStopText(effective.DefaultStopPct)
+	}
 	for _, option := range value.StopOptions {
 		out.StopOptions = append(out.StopOptions, StopOption{ID: option.ID, Label: option.Label, Decimal: option.Decimal})
 	}
@@ -351,6 +392,25 @@ func positionManagementFrom(value positionpolicy.ManagementDescriptor) PositionM
 		out.ExcludeDefault = []string{}
 	}
 	return out
+}
+
+func adoptionStopText(value float64) string {
+	if value <= 0 {
+		return "미설정"
+	}
+	return strconv.FormatFloat(value*100, 'f', -1, 64) + "%"
+}
+
+func normaliseAdoptionSettings(value AdoptionSettings) AdoptionSettings {
+	value.IncludeSymbols = append([]string(nil), value.IncludeSymbols...)
+	value.ExcludeSymbols = append([]string(nil), value.ExcludeSymbols...)
+	if value.IncludeSymbols == nil {
+		value.IncludeSymbols = []string{}
+	}
+	if value.ExcludeSymbols == nil {
+		value.ExcludeSymbols = []string{}
+	}
+	return value
 }
 
 type CandidateFilterMarket struct {

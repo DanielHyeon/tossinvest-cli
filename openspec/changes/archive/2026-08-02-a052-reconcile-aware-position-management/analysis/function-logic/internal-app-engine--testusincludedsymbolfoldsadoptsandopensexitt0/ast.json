@@ -1,0 +1,233 @@
+{
+  "file": "internal/app/engine/adoption_include_test.go",
+  "source_sha256": "56eaa974ab62ae4bab4b907cc50d8e85e507c7e6dd10f70f4f15195c6315bf55",
+  "package": "engine_test",
+  "function": "TestUSIncludedSymbolFoldsAdoptsAndOpensExitT0",
+  "signature": "TestUSIncludedSymbolFoldsAdoptsAndOpensExitT0(params=1, results=0)",
+  "start": {
+    "line": 63,
+    "column": 1
+  },
+  "end": {
+    "line": 88,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 7
+      },
+      "text": "newDriverHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 16
+      },
+      "text": "includeOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 2
+      },
+      "text": "h.holdsMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 11
+      },
+      "text": "h.cycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 7
+      },
+      "text": "h.positionMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 29
+      },
+      "text": "positionpolicy.ClassifyProvenance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 6
+      },
+      "text": "p.Adopted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 22
+      },
+      "text": "p.ExitEligible"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 19
+      },
+      "text": "h.journal.AdoptionOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 40
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 20
+      },
+      "text": "h.journal.ExitState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 40
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,258 @@
+{
+  "file": "internal/app/engine/position_policy_transport_test.go",
+  "source_sha256": "79f9816ae28b5a2ec0fb75c239c019be19ccb933c47c9a75da4957f412232cec",
+  "package": "engine",
+  "function": "TestPositionPolicyCommandEndpointDoesNotExposeRuntime",
+  "signature": "TestPositionPolicyCommandEndpointDoesNotExposeRuntime(params=1, results=0)",
+  "start": {
+    "line": 159,
+    "column": 1
+  },
+  "end": {
+    "line": 188,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 9
+      },
+      "text": "privateEngineTestDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 17
+      },
+      "text": "StartPositionPolicyCommandServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 8
+      },
+      "text": "server.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 15
+      },
+      "text": "os.ReadFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 27
+      },
+      "text": "positionpolicyrpc.DescriptorPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 12
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 14
+      },
+      "text": "http.NewRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 2
+      },
+      "text": "req.Header.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 19
+      },
+      "text": "http.DefaultClient.Do"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 2
+      },
+      "text": "response.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 162,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 172,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 166,
+        "column": 2
+      },
+      "text": "server.Close"
+    }
+  ]
+}

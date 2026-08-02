@@ -1,0 +1,46 @@
+{
+  "file": "internal/app/engine/position_policy_command_test.go",
+  "source_sha256": "39c02c9a39f3b79a5cddc98eddbd3e07b84d92da8986219f941f5b685956463c",
+  "package": "engine",
+  "function": "Blocks",
+  "receiver": "fakePositionPolicyBlocks",
+  "signature": "fakePositionPolicyBlocks.Blocks(params=0, results=1)",
+  "start": {
+    "line": 20,
+    "column": 1
+  },
+  "end": {
+    "line": 22,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 16
+      }
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

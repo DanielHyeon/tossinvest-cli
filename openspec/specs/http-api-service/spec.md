@@ -78,3 +78,62 @@ daemon은 기본 최대 SSE client 32, client당 queue 64 event, heartbeat 15초
 #### Scenario: 느린 SSE client
 - **WHEN** 한 client의 queue가 64 event를 넘는다
 - **THEN** 다른 client나 producer를 막지 않고 해당 client만 끊으며 재연결 시 full snapshot으로 수렴한다
+
+### Requirement: positions와 optimization API는 웹과 같은 adoption/reconcile 사실을 사용한다
+`/api/v1/positions`와 `/api/v1/optimization`은 웹 position-management와 동일한 registry default, config desired, running-engine effective, candidate와 adoption-blocking tracker projector를 사용해야 한다 (SHALL). block DTO는 모든 journal cause가 아니라 adoption driver와 같은 runtime projection임을 source로 명시해야 한다 (SHALL). read API는 reconcile resolution capability 또는 mutation route를 노출해서는 안 된다 (MUST NOT).
+
+positions item은 stable `adoptionStatus` enum(`UNKNOWN`, `MANAGED`, `EXCLUDED`, `RECONCILE_BLOCKED`, `ADOPTION_PENDING`, `UNMANAGED`), `statusKnown`, `adoptionLabel`, typed/sanitized `adoptionReason`, `included`, `excluded`, `candidate`, `designationKnown`과 nullable covering block(scope/market/symbol/reason/startedAt)을 반환해야 한다 (SHALL). optimization position-management는 desired/effective adoption blocks와 `effectiveKnown`을 반환해야 한다 (SHALL).
+
+#### Scenario: 미국 include 보유분이 영구 차단으로 대기한다
+- **WHEN** 미국 보유분이 include됐고 account-wide permanent quantity-mismatch block이 active다
+- **THEN** positions API는 eligible false, candidate true, adoptionStatus `RECONCILE_BLOCKED` 및 sanitized block reason을 반환하고 optimization API는 actual desired/effective adoption 값을 반환한다
+
+#### Scenario: managed와 exclude가 함께 있다
+- **WHEN** managed position의 symbol이 exclude에도 있다
+- **THEN** positions API의 adoptionStatus는 `MANAGED`이고 included/excluded 사실은 별도 boolean으로 보존된다
+
+#### Scenario: released lifecycle은 raw adoption eligibility보다 우선한다
+- **WHEN** journal position에는 adoption ID가 남아 있지만 authoritative lifecycle은 `RELEASED`다
+- **THEN** positions API는 `UNMANAGED`, `OPERATOR_RELEASED`를 반환하고 `MANAGED`, `ADOPTION_PENDING`, `RECONCILE_BLOCKED`로 오표시하지 않는다
+
+#### Scenario: API sidecar는 별도 network namespace에서 runtime을 읽는다
+- **WHEN** console/engine과 HTTP API가 Compose의 서로 다른 network namespace에서 같은 private engine directory를 mount한다
+- **THEN** HTTP API는 command loopback이 아니라 authenticated runtime-only Unix endpoint로 effective와 block projection을 읽고 Preview/Apply 권한을 얻지 않는다
+
+#### Scenario: engine runtime을 읽지 못한다
+- **WHEN** config desired는 읽히지만 engine control plane이 unavailable이다
+- **THEN** optimization API는 effectiveKnown false를 반환하고 registry 기본값을 effective로 위장하지 않으며, non-managed positions item은 statusKnown/designationKnown false와 typed runtime-unavailable reason을 반환한다
+
+#### Scenario: read API의 mutation 표면은 그대로다
+- **WHEN** a052가 배포된다
+- **THEN** HTTP API mutation allowlist에는 기존 optimization preview/application만 남고 reconcile 해제 endpoint는 없다
+
+#### Scenario: raw exit evidence와 effective line
+- **WHEN** legacy exit state에 raw t0/baseline은 있지만 canonical effective snapshot이 없다
+- **THEN** positions API의 exitLine actionable 가격은 unknown을 유지하고 storedExitEvidence는 raw 값과 effectiveKnown false를 반환한다
+
+### Requirement: 컨테이너 entrypoint mode는 checkout filesystem과 독립적이다
+배포 image는 source checkout이나 Git executable bit에 의존하지 않고 entrypoint를 실행 가능한 mode로 설치해야 한다 (SHALL). non-root runtime identity는 Compose 재생성 후 entrypoint를 실행할 수 있어야 한다 (SHALL).
+
+#### Scenario: NTFS checkout에서 image 재빌드
+- **WHEN** entrypoint source가 `0644`인 checkout에서 image를 재빌드한다
+- **THEN** image의 `/usr/local/bin/tossos-entrypoint`는 `0755`이고 service는 exit 126 없이 healthcheck까지 기동한다
+
+### Requirement: positions API는 비실효 기준선 참조를 별도 계약으로 제공한다
+`GET /api/v1/positions`는 actionable `exitLine`과 별도로 nullable `exitLineReference`를 제공해야 한다 (SHALL). reference는 `LEGACY_RAW`, `ADOPTION_PLAN` 또는 generation/runtime/lifecycle unknown 상태를 typed kind로 표시하고 항상 `effectiveKnown=false`여야 한다 (SHALL). lifecycle generation이 다르거나 lifecycle을 검증할 수 없으면 이전 가격이나 identity를 반환해서는 안 된다 (MUST NOT).
+
+#### Scenario: legacy raw evidence
+- **WHEN** KR 또는 US 포지션에 same-generation raw exit state만 있다
+- **THEN** `exitLine`의 current/next 가격은 `—`이고 `exitLineReference`와 호환 `storedExitEvidence`에 non-effective 원장 근거가 반환된다
+
+#### Scenario: US adoption plan
+- **WHEN** US candidate가 pending 또는 reconcile-blocked이고 running effective stop percentage가 알려져 있다
+- **THEN** `exitLineReference.kind=ADOPTION_PLAN`, stop percentage와 가격 미확정 설명을 반환하며 계산된 가격은 반환하지 않는다
+
+#### Scenario: generation mismatch
+- **WHEN** current lifecycle generation이 stored exit generation과 다르다
+- **THEN** `exitLine`, `storedExitEvidence`, `exitLineReference` 어디에도 과거 가격이나 snapshot identity가 없다
+
+#### Scenario: corrupt 또는 lifecycle-unverified evidence
+- **WHEN** raw exit tuple의 snapshot 상태가 partial/invalid/corrupt이거나 요구된 lifecycle lookup이 현재 generation을 증명하지 못한다
+- **THEN** API는 raw 가격을 반환하지 않고 typed unknown reason만 제공한다

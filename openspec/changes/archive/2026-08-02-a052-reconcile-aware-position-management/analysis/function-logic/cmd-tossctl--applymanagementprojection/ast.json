@@ -1,0 +1,149 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "77b6f1f5aab4f5a0cbb85e0990b3d88c9dd8815330936753c8d23cf70cda07ef",
+  "package": "main",
+  "function": "applyManagementProjection",
+  "signature": "applyManagementProjection(params=5, results=0)",
+  "start": {
+    "line": 190,
+    "column": 1
+  },
+  "end": {
+    "line": 205,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 16
+      },
+      "text": "positionpolicy.ProjectManagement"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 23
+      },
+      "text": "httpapi.AdoptionStatus"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 23
+      },
+      "text": "httpapi.AdoptionReason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 25
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 41
+      },
+      "text": "strings.ReplaceAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 60
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 22
+      },
+      "text": "reconcileBlockFrom"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 203,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

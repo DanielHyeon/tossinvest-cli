@@ -47,12 +47,13 @@ func (r contractReader) Settings(context.Context) (SettingsResource, error) {
 	return SettingsResource{Version: 7, Items: []Setting{{Key: "engine.autostart", Desired: State{Kind: "value", Value: "OFF"}, Effective: State{Kind: "value", Value: "OFF"}}}}, r.err
 }
 
-func (r contractReader) Optimization(ctx context.Context) (optimization.View, error) {
+func (r contractReader) Optimization(ctx context.Context) (OptimizationRead, error) {
 	registry, err := optimization.CoreRegistry(ctx)
 	if err != nil {
-		return optimization.View{}, err
+		return OptimizationRead{}, err
 	}
-	return optimization.View{Registry: registry, Snapshot: optimization.Snapshot{Version: 3, EffectiveVersion: 3}}, r.err
+	return OptimizationRead{Core: optimization.View{Registry: registry,
+		Snapshot: optimization.Snapshot{Version: 3, EffectiveVersion: 3}}}, r.err
 }
 
 func TestVersionedReadResourcesUseOneStableEnvelope(t *testing.T) {
@@ -109,6 +110,41 @@ func TestPositionsExposeA043ExitLineWithCamelCaseFields(t *testing.T) {
 	}
 }
 
+func TestPositionsExposeReconcileAwareAdoptionFactsWithoutAccountIdentity(t *testing.T) {
+	startedAt := time.Date(2026, 8, 1, 1, 2, 3, 0, time.UTC)
+	value := Position{
+		Market: "US", Symbol: "AAPL", Eligible: false,
+		AdoptionStatus: "RECONCILE_BLOCKED", StatusKnown: true,
+		AdoptionLabel: "조정 확인 대기", AdoptionReason: "RECONCILE_BLOCK_ACTIVE",
+		Included: true, Excluded: false, Candidate: true, DesignationKnown: true,
+		CoveringBlock: &ReconcileBlock{Scope: "ACCOUNT", Market: "", Symbol: "",
+			Reason: "QUANTITY_MISMATCH", StartedAt: &startedAt},
+		StoredExitEvidence: &StoredExitEvidence{EntryPrice: "200", InitialStop: "190",
+			Baseline: "190", HighWater: "205", EffectiveKnown: false, Label: "원장 기록 · 실효 미확인"},
+	}
+	body, err := json.Marshal(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(body)
+	for _, want := range []string{
+		`"adoptionStatus":"RECONCILE_BLOCKED"`, `"statusKnown":true`,
+		`"adoptionLabel":"조정 확인 대기"`, `"adoptionReason":"RECONCILE_BLOCK_ACTIVE"`,
+		`"included":true`, `"excluded":false`, `"candidate":true`, `"designationKnown":true`,
+		`"coveringBlock":{"scope":"ACCOUNT"`, `"reason":"QUANTITY_MISMATCH"`,
+		`"storedExitEvidence":{"entryPrice":"200"`, `"effectiveKnown":false`,
+	} {
+		if !strings.Contains(text, want) {
+			t.Errorf("position JSON lacks %s: %s", want, text)
+		}
+	}
+	for _, forbidden := range []string{"accountRef", "capability", "token", "command"} {
+		if strings.Contains(strings.ToLower(text), strings.ToLower(forbidden)) {
+			t.Errorf("position JSON leaked forbidden field %q: %s", forbidden, text)
+		}
+	}
+}
+
 func TestOptimizationUsesCanonicalCategoryOrderAndOwnerDescriptors(t *testing.T) {
 	view, err := contractReader{}.Optimization(context.Background())
 	if err != nil {
@@ -136,6 +172,39 @@ func TestOptimizationUsesCanonicalCategoryOrderAndOwnerDescriptors(t *testing.T)
 	}
 	if len(resource.Fields) != 1 || resource.Fields[0].Key != "exit.common-policy" || resource.Fields[0].Owner != "a041-complete-exit-line-contract" {
 		t.Fatalf("a050 registry field drift: %+v", resource.Fields)
+	}
+}
+
+func TestOptimizationKeepsDesiredAndUnavailableEffectiveAdoptionDistinct(t *testing.T) {
+	view, err := contractReader{}.Optimization(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	view.PositionManagement = PositionManagementActual{
+		Desired: AdoptionSettings{Enabled: true, DefaultStopPct: 0.03,
+			IncludeSymbols: []string{"AAPL"}, ExcludeSymbols: []string{"TSLA"}},
+		EffectiveKnown: false,
+	}
+	resource := OptimizationFrom(view)
+	management := resource.PositionManagement
+	if !management.Desired.Enabled || management.Desired.DefaultStopPct != 0.03 ||
+		!reflect.DeepEqual(management.Desired.IncludeSymbols, []string{"AAPL"}) ||
+		!reflect.DeepEqual(management.Desired.ExcludeSymbols, []string{"TSLA"}) {
+		t.Fatalf("desired adoption drift: %+v", management.Desired)
+	}
+	if management.EffectiveKnown || management.Effective != nil {
+		t.Fatalf("unavailable runtime was laundered into effective: %+v", management)
+	}
+	if !management.AutoEnabledDesired || management.StopDesired != "3%" ||
+		management.AutoEnabledEffective || management.StopEffective != "알 수 없음" {
+		t.Fatalf("legacy adoption summary contradicts actual knownness: %+v", management)
+	}
+	effective := AdoptionSettings{Enabled: false, DefaultStopPct: .05}
+	view.PositionManagement.EffectiveKnown = true
+	view.PositionManagement.Effective = &effective
+	management = OptimizationFrom(view).PositionManagement
+	if management.AutoEnabledEffective || management.StopEffective != "5%" || management.Effective == nil {
+		t.Fatalf("legacy effective summary contradicts runtime: %+v", management)
 	}
 }
 

@@ -77,22 +77,80 @@ type PositionsResource struct {
 }
 
 type Position struct {
-	AccountLabel     string   `json:"accountLabel"`
-	PositionID       string   `json:"positionId"`
-	Market           string   `json:"market"`
-	Symbol           string   `json:"symbol"`
-	Name             string   `json:"name"`
-	Quantity         string   `json:"quantity"`
-	AveragePrice     string   `json:"averagePrice"`
-	LastPrice        string   `json:"lastPrice"`
-	MarketValue      string   `json:"marketValue"`
-	UnrealizedPnL    string   `json:"unrealizedPnl"`
-	ProfitRate       string   `json:"profitRate"`
-	InBroker         bool     `json:"inBroker"`
-	InJournal        bool     `json:"inJournal"`
-	Eligible         bool     `json:"eligible"`
-	ManagementStatus string   `json:"managementStatus"`
-	ExitLine         ExitLine `json:"exitLine"`
+	AccountLabel       string              `json:"accountLabel"`
+	PositionID         string              `json:"positionId"`
+	Market             string              `json:"market"`
+	Symbol             string              `json:"symbol"`
+	Name               string              `json:"name"`
+	Quantity           string              `json:"quantity"`
+	AveragePrice       string              `json:"averagePrice"`
+	LastPrice          string              `json:"lastPrice"`
+	MarketValue        string              `json:"marketValue"`
+	UnrealizedPnL      string              `json:"unrealizedPnl"`
+	ProfitRate         string              `json:"profitRate"`
+	InBroker           bool                `json:"inBroker"`
+	InJournal          bool                `json:"inJournal"`
+	Eligible           bool                `json:"eligible"`
+	ManagementStatus   string              `json:"managementStatus"`
+	AdoptionStatus     AdoptionStatus      `json:"adoptionStatus"`
+	StatusKnown        bool                `json:"statusKnown"`
+	AdoptionLabel      string              `json:"adoptionLabel"`
+	AdoptionReason     AdoptionReason      `json:"adoptionReason"`
+	Included           bool                `json:"included"`
+	Excluded           bool                `json:"excluded"`
+	Candidate          bool                `json:"candidate"`
+	DesignationKnown   bool                `json:"designationKnown"`
+	CoveringBlock      *ReconcileBlock     `json:"coveringBlock"`
+	ExitLine           ExitLine            `json:"exitLine"`
+	ExitLineReference  *ExitLineReference  `json:"exitLineReference"`
+	StoredExitEvidence *StoredExitEvidence `json:"storedExitEvidence"`
+}
+
+// AdoptionStatus and AdoptionReason are named transport scalars. They preserve
+// the positionpolicy projector's stable values without exposing a callable
+// engine or reconcile capability through the HTTP contract.
+type AdoptionStatus string
+type AdoptionReason string
+
+// ReconcileBlock is intentionally narrower than positionpolicy.ReconcileBlock:
+// account identity, free-form detail, permanence implementation details and
+// command authority never cross the public read boundary.
+type ReconcileBlock struct {
+	Scope     string     `json:"scope"`
+	Market    string     `json:"market"`
+	Symbol    string     `json:"symbol"`
+	Reason    string     `json:"reason"`
+	StartedAt *time.Time `json:"startedAt"`
+}
+
+// StoredExitEvidence reports raw ledger facts separately from the actionable
+// effective ExitLine. It must never be interpreted as current protection when
+// EffectiveKnown is false.
+type StoredExitEvidence struct {
+	EntryPrice     string `json:"entryPrice"`
+	InitialStop    string `json:"initialStop"`
+	Baseline       string `json:"baseline"`
+	HighWater      string `json:"highWater"`
+	EffectiveKnown bool   `json:"effectiveKnown"`
+	Label          string `json:"label"`
+}
+
+// ExitLineReference is read-only, non-actionable display context. It never
+// transports account identity or a command/capability, and EffectiveKnown is
+// false because canonical actionable truth remains exclusively in ExitLine.
+type ExitLineReference struct {
+	Kind           string `json:"kind"`
+	Label          string `json:"label"`
+	EffectiveKnown bool   `json:"effectiveKnown"`
+	Market         string `json:"market"`
+	Currency       string `json:"currency"`
+	EntryPrice     string `json:"entryPrice"`
+	InitialStop    string `json:"initialStop"`
+	Baseline       string `json:"baseline"`
+	HighWater      string `json:"highWater"`
+	StopPercent    string `json:"stopPercent"`
+	Basis          string `json:"basis"`
+	Reason         string `json:"reason"`
 }
 
 // ExitLine is a JSON spelling of operatorview.ExitLineView. The values are

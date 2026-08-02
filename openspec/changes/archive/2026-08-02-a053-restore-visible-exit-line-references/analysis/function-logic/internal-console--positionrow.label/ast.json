@@ -1,0 +1,208 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "ff85a86e289e43f91b5e9f26b005fe5a4f31be5bec3f5b60dd4c5808ef048835",
+  "package": "console",
+  "function": "Label",
+  "receiver": "positionRow",
+  "signature": "positionRow.Label(params=0, results=1)",
+  "start": {
+    "line": 365,
+    "column": 1
+  },
+  "end": {
+    "line": 387,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 366,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 369,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 370,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 372,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 376,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 378,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 382,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 367,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 371,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 373,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 375,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 377,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 379,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 381,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 383,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 366,
+        "column": 5
+      },
+      "text": "r.HasManagementProjection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 370,
+        "column": 7
+      },
+      "text": "r.Unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 8
+      },
+      "text": "r.Managed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 376,
+        "column": 7
+      },
+      "text": "r.PendingDesignation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 8
+      },
+      "text": "r.Managed"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

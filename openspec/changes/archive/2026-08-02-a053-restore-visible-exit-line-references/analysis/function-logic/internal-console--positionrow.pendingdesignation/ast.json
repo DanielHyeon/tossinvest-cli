@@ -1,0 +1,55 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "ff85a86e289e43f91b5e9f26b005fe5a4f31be5bec3f5b60dd4c5808ef048835",
+  "package": "console",
+  "function": "PendingDesignation",
+  "receiver": "positionRow",
+  "signature": "positionRow.PendingDesignation(params=0, results=1)",
+  "start": {
+    "line": 307,
+    "column": 1
+  },
+  "end": {
+    "line": 311,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 24
+      },
+      "text": "r.Managed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 4
+      },
+      "text": "r.Unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 51
+      },
+      "text": "r.HasManagementProjection"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

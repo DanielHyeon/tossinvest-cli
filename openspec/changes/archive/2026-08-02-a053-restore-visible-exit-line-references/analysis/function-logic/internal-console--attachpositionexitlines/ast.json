@@ -1,0 +1,387 @@
+{
+  "file": "internal/console/portfolio_pages.go",
+  "source_sha256": "a280c1a29c8b544339cd4e3a7f224bb0dffa833b7ef73ea38b63e7caef25777f",
+  "package": "console",
+  "function": "attachPositionExitLines",
+  "signature": "attachPositionExitLines(params=3, results=0)",
+  "start": {
+    "line": 104,
+    "column": 1
+  },
+  "end": {
+    "line": 186,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 148,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 175,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 182,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 31
+      },
+      "text": "row.PendingDesignation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 24
+      },
+      "text": "operatorview.BuildExitLineReference"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 43
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 10
+      },
+      "text": "storedExitReference"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 19
+      },
+      "text": "operatorview.BuildExitLine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 24
+      },
+      "text": "operatorview.BuildExitLineReference"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 19
+      },
+      "text": "operatorview.BuildExitLine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 24
+      },
+      "text": "operatorview.BuildExitLineReference"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 7
+      },
+      "text": "row.ExitReference.LegacyRaw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 22
+      },
+      "text": "storedExitEvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 15
+      },
+      "text": "row.Exit.Snapshot.WithFreshness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 18
+      },
+      "text": "operatorview.BuildExitLine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 23
+      },
+      "text": "operatorview.BuildExitLineReference"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 32
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 6
+      },
+      "text": "row.ExitReference.LifecycleUnknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 19
+      },
+      "text": "operatorview.BuildExitLine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 6
+      },
+      "text": "row.ExitReference.LegacyRaw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 21
+      },
+      "text": "storedExitEvidence"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 112,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 115,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 125,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 126,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 129,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 138,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 141,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 149,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 153,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 161,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 162,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 163,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 165,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 166,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 176,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 177,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 183,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

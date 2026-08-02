@@ -609,3 +609,107 @@ calendar version, source와 updated-at은 표시해야 하지만 (SHALL), 최초
 - **WHEN** 요약 영역이 있는 개요를 열면
 - **THEN** 브로커 호출 수는 요약 도입 전과 같다
 
+### Requirement: 포지션 관리는 실제 adoption desired/effective를 구분한다
+`/position-management`는 registry 기본값, config file의 desired adoption 값, running engine이 시작 때 로드한 effective 값을 별도 label로 표시해야 한다 (SHALL). engine runtime을 읽지 못한 경우 effective를 기본값이나 desired로 대체해서는 안 된다 (MUST NOT).
+
+#### Scenario: 저장 설정과 실행 설정이 다르다
+- **WHEN** config desired는 ON·3%이고 running engine effective는 OFF·5%다
+- **THEN** 화면은 두 값을 각각 표시하고 어느 하나를 다른 값으로 덮지 않는다
+
+#### Scenario: engine control plane을 읽지 못한다
+- **WHEN** config desired는 읽히지만 running engine runtime은 unavailable이다
+- **THEN** desired는 표시하고 effective는 `알 수 없음`으로 표시한다
+
+### Requirement: 편입 보조 상태는 candidate와 reconcile 차단을 함께 설명한다
+`/positions`와 `/position-management`는 기존 관리 판정 라벨 옆에 stable adoption status를 표시해야 한다 (SHALL). projector는 running effective settings가 known일 때 `candidate=(globalEnabled || included) && !excluded`를 계산하되 `journal unknown > already managed > operator released > excluded > candidate and covering reconcile block > candidate pending > unselected` 순서로 평가해야 한다 (SHALL). runtime unavailable인 non-managed 행은 desired를 effective로 위장하지 않고 `UNKNOWN`과 runtime unavailable 이유를 표시해야 한다 (SHALL). 미국 시장이라는 이유만으로 `편입 불가`라고 단정해서는 안 된다 (MUST NOT).
+
+#### Scenario: include된 미국 보유분이 account-wide 차단을 만난다
+- **WHEN** 미국 보유분에 adoption include가 있고 entry/adoption record는 아직 없으며 account-wide quantity-mismatch block이 active다
+- **THEN** 두 화면은 기존 `관리 편입` 판정과 `대사 차단으로 대기` 보조 상태, block 사유를 표시하고 미국 시장 미지원으로 설명하지 않는다
+
+#### Scenario: managed와 exclude가 함께 있다
+- **WHEN** 이미 entry/adoption 근거로 managed인 symbol이 장래 candidate exclude에도 있다
+- **THEN** 현재 보호 상태는 `MANAGED`로 유지되고 exclude가 기존 관리 lifecycle을 해제한 것으로 표시되지 않는다
+
+#### Scenario: 미지정 행과 account block이 함께 있다
+- **WHEN** global adoption이 OFF이고 include되지 않은 미편입 symbol에 account-wide block이 존재한다
+- **THEN** 행은 `UNMANAGED`이며 candidate가 아니므로 `RECONCILE_BLOCKED`로 표시되지 않는다
+
+#### Scenario: include와 exclude가 함께 있다
+- **WHEN** 미편입 symbol이 include와 exclude에 모두 있다
+- **THEN** candidate는 false이고 `EXCLUDED`가 표시된다
+
+#### Scenario: runtime은 unavailable이고 desired만 include다
+- **WHEN** journal은 readable이고 미편입 symbol이 desired config include에 있으나 running engine runtime을 읽지 못한다
+- **THEN** desired include 사실은 설정 요약에 보존되지만 행의 effective status는 `UNKNOWN`이며 `ADOPTION_PENDING`으로 승격되지 않는다
+
+#### Scenario: 운영자가 external lifecycle을 release했다
+- **WHEN** adoption ID는 남아 있지만 authoritative position-policy lifecycle이 `RELEASED`다
+- **THEN** 두 화면은 `UNMANAGED`, `OPERATOR_RELEASED`, `관리 외(운영자 해제)`를 표시하고 candidate 또는 account block보다 release를 우선한다
+
+### Requirement: 저장 exit 근거와 실효 보호선을 구분한다
+canonical persisted effective snapshot이 없는 exit state는 현재 실효 보호선이나 다음 익절 가격을 만들어 내서는 안 된다 (MUST NOT). 다만 journal에 저장된 t0 entry, initial stop, baseline과 high-water는 `원장 기록 · 실효 미확인` 증거로 별도 표시해야 하며 (SHALL), actionable effective line과 동일한 필드/라벨로 표시해서는 안 된다 (MUST NOT).
+
+#### Scenario: legacy seed-only exit state
+- **WHEN** exit state에 entry/initial-stop/baseline은 있으나 canonical effective snapshot이 없다
+- **THEN** 화면은 current protection과 next target을 `—`로 유지하고 저장된 가격들을 `원장 기록 · 실효 미확인` 상세로 표시한다
+
+#### Scenario: canonical effective snapshot이 있다
+- **WHEN** exit state에 유효한 canonical effective snapshot이 있다
+- **THEN** 기존 operatorview freshness와 effective-source 판정을 그대로 사용해 실효 보호선과 다음 익절을 표시한다
+
+### Requirement: a052 운영 상태 표면은 읽기 전용이다
+a052는 reconcile preview/apply route, capability, free-text field 또는 journal mutation을 console에 추가해서는 안 된다 (MUST NOT). 기존 position-policy lifecycle mutation surface와 a052 runtime read endpoint는 별도 권한으로 유지해야 한다 (SHALL). Compose sidecar용 shared Unix endpoint는 authenticated GET runtime만 제공하고 lifecycle Preview/Apply를 제공해서는 안 된다 (MUST NOT).
+
+#### Scenario: 정적 route와 HTML 검사
+- **WHEN** a052 route table과 `/positions`, `/position-management` HTML을 검사한다
+- **THEN** reconcile resolution POST route와 text/textarea/number/contenteditable 입력이 없고 shared runtime surface에는 authenticated GET 외의 command가 없다
+
+### Requirement: positions는 모든 시장에서 기준선 근거 상태를 직접 설명한다
+`/positions`는 시장과 무관하게 실효 snapshot, 저장 원장 근거, 미생성 상태를 서로 다른 라벨로 표시해야 한다 (SHALL). 저장 원장 근거는 표의 주 정보로 읽을 수 있어야 하지만 actionable `ExitLine` 가격으로 복사되어서는 안 된다 (MUST NOT).
+
+#### Scenario: KR legacy managed position
+- **WHEN** KR 관리 포지션에 baseline과 initial stop은 있으나 canonical effective snapshot이 없다
+- **THEN** 표는 `원장 기준선 · 실효 미확인`, 저장 baseline과 최초 손절을 접지 않은 상태에서 표시하고 current effective/next target을 만들지 않는다
+
+#### Scenario: US legacy managed position
+- **WHEN** US 관리 포지션에 같은 legacy 원장 근거가 있다
+- **THEN** KR과 동일한 증거 상태와 필드를 표시하며 시장별로 숨기거나 다른 가격을 계산하지 않는다
+
+#### Scenario: stale canonical snapshot
+- **WHEN** canonical snapshot이 stale이다
+- **THEN** 기존 `오래된 평가`와 사유를 유지하고 actionable 및 raw 가격을 표의 주 기준선으로 표시하지 않는다
+
+#### Scenario: 다른 lifecycle generation의 저장 근거
+- **WHEN** 현재 position-policy generation과 exit state 또는 snapshot generation이 다르다
+- **THEN** 과거 가격과 snapshot identity를 모두 숨기고 세대 불일치 사유를 표시한다
+
+#### Scenario: 손상되었거나 검증되지 않은 저장 근거
+- **WHEN** snapshot 상태가 partial/invalid/corrupt이거나 시도된 lifecycle lookup이 현재 generation을 확인하지 못한다
+- **THEN** 저장 가격을 숨기고 손상 또는 관리 세대 확인 불가 사유를 표시한다
+
+### Requirement: 미편입 후보는 기준선이 아직 없는 이유와 정책 폭을 표시한다
+KR 또는 US 포지션이 `ADOPTION_PENDING` 또는 `RECONCILE_BLOCKED`이고 exit state가 없으면 `/positions`는 `기준선 미생성`과 편입 후 생성된다는 설명을 표시해야 한다 (SHALL). running effective adoption 설정을 아는 경우 최초 손절폭을 percentage로 표시해야 하며 (SHALL), broker average/current price에서 보호 가격을 계산해서는 안 된다 (MUST NOT).
+
+#### Scenario: reconcile-blocked US candidate
+- **WHEN** include된 US 보유분은 effective initial stop 3%를 사용하지만 account reconcile block 때문에 아직 편입되지 않았다
+- **THEN** 행은 `기준선 미생성`, `편입 후 확정`, `effective 최초 손절폭 3%`를 표시하고 숫자 가격선은 만들지 않는다
+
+#### Scenario: pending KR candidate
+- **WHEN** KR 보유분이 편입 후보이고 runtime effective 설정을 읽을 수 있다
+- **THEN** US와 동일한 미생성 설명과 effective percentage를 표시한다
+
+#### Scenario: runtime unavailable
+- **WHEN** desired include에 지정된 KR 또는 US 보유분이 있지만 candidate 여부나 effective stop percentage를 증명할 runtime commander를 읽지 못한다
+- **THEN** 화면은 편입 요청 저장과 실행 상태 미확인을 구분하고, desired/default 값을 대신 사용하지 않으며 기준선/percentage를 `알 수 없음`으로 유지한다
+
+#### Scenario: managed 또는 released 상태와 desired include가 충돌한다
+- **WHEN** 이미 엔진이 관리 중이거나 운영자가 해제한 종목이 desired include 목록에도 남아 있다
+- **THEN** 현재 lifecycle 상태가 편입 예약보다 우선하며 해당 행을 `편입 예약됨` 또는 runtime-unknown candidate로 표시하지 않는다
+
+### Requirement: 기준선 복원 화면은 입력과 mutation을 추가하지 않는다
+`/positions`는 form, visible input, button, contenteditable 또는 reconcile/order mutation route를 추가해서는 안 된다 (MUST NOT).
+
+#### Scenario: read-only responsive view
+- **WHEN** 375px viewport와 정적 route 계약을 검사한다
+- **THEN** 세 증거 상태는 읽을 수 있고 visible input이나 POST capability는 없다

@@ -1,0 +1,126 @@
+{
+  "file": "internal/httpapi/contract_static_server_test.go",
+  "source_sha256": "adabf5a0395187ba9d0fc5098fe74519d545c7a6dc0e7c68431ea8666853b70b",
+  "package": "httpapi",
+  "function": "TestForbiddenRemoteCapabilitiesHaveNoReachableRoute",
+  "signature": "TestForbiddenRemoteCapabilitiesHaveNoReachableRoute(params=1, results=0)",
+  "start": {
+    "line": 125,
+    "column": 1
+  },
+  "end": {
+    "line": 148,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 143,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 17
+      },
+      "text": "NewRouter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 16
+      },
+      "text": "httptest.NewRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 4
+      },
+      "text": "router.ServeHTTP"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 31
+      },
+      "text": "httptest.NewRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 65
+      },
+      "text": "strings.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 141,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

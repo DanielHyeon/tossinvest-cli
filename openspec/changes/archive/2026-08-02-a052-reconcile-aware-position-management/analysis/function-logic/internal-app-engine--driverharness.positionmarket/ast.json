@@ -1,0 +1,80 @@
+{
+  "file": "internal/app/engine/reconcileloop_test.go",
+  "source_sha256": "f7244f04d716230ddc2536f8e219958c52b86a6b899cf6f4df45fa09962f961e",
+  "package": "engine_test",
+  "function": "positionMarket",
+  "receiver": "driverHarness",
+  "signature": "driverHarness.positionMarket(params=2, results=1)",
+  "start": {
+    "line": 221,
+    "column": 1
+  },
+  "end": {
+    "line": 228,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 2
+      },
+      "text": "h.t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 12
+      },
+      "text": "h.journal.CurrentPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 38
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 3
+      },
+      "text": "h.t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

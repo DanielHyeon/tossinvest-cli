@@ -1,0 +1,163 @@
+{
+  "file": "internal/console/portfolio.go",
+  "source_sha256": "ff85a86e289e43f91b5e9f26b005fe5a4f31be5bec3f5b60dd4c5808ef048835",
+  "package": "console",
+  "function": "Reason",
+  "receiver": "positionRow",
+  "signature": "positionRow.Reason(params=0, results=1)",
+  "start": {
+    "line": 394,
+    "column": 1
+  },
+  "end": {
+    "line": 413,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 395,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 396,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 401,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 397,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 399,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 402,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 405,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 408,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 411,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 7
+      },
+      "text": "r.Unknown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 7
+      },
+      "text": "r.ManagementPending"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 30
+      },
+      "text": "r.ManagementBlocked"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 401,
+        "column": 7
+      },
+      "text": "r.PendingDesignation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 29
+      },
+      "text": "r.Basis"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

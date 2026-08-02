@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/httpapi"
@@ -18,11 +19,17 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/performance"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 )
 
 const httpAPIPositionFreshness = 30 * time.Second
 
 type httpAPIAccountRef func() (string, error)
+type httpAPIAdoptionSettingsRead func() (config.Adoption, string, error)
+
+type httpAPIManagementRuntimeReader interface {
+	Runtime(context.Context) (positionpolicy.ManagementRuntime, error)
+}
 
 // httpAPIReader is the production adapter for the seven transport reads. Every
 // field is a narrow read interface or SELECT-only handle; the API package never
@@ -44,6 +51,8 @@ type httpAPIReader struct {
 	// without ever widening the daemon to a journal writer.
 	performanceSource performance.JournalLineageReader
 	optimization      *optimization.Store
+	adoptionDesired   httpAPIAdoptionSettingsRead
+	managementRuntime httpAPIManagementRuntimeReader
 	positionsCache    httpAPITimedReadCache[httpapi.PositionsResource]
 	ordersCache       httpAPITimedReadCache[httpapi.OrdersResource]
 }
@@ -93,17 +102,26 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 	}
 
 	journalRows := []journal.PositionExit{}
+	policyByPosition := map[string]positionpolicy.State{}
 	journalReadable := r.journal != nil && r.journalErr == nil
 	if journalReadable {
 		journalRows, err = r.journal.LivePositionExits(ctx, accountRef)
 		if err != nil {
 			return httpapi.PositionsResource{}, err
 		}
+		policyStates, policyErr := r.journal.PositionPolicies(ctx)
+		if policyErr != nil {
+			return httpapi.PositionsResource{}, policyErr
+		}
+		for _, state := range policyStates {
+			policyByPosition[strings.TrimSpace(state.PositionID)] = state
+		}
 	}
 	byKey := make(map[string]journal.PositionExit, len(journalRows))
 	for _, row := range journalRows {
 		byKey[positionKey(row.Position.Market, row.Position.Symbol)] = row
 	}
+	runtime := r.readManagementRuntime(ctx)
 
 	now := r.clockNow()
 	items := make([]httpapi.Position, 0, len(brokerRows)+len(journalRows))
@@ -114,14 +132,21 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 		projected := positionFromBroker(attest.Mask(accountRef), broker)
 		if stored, ok := byKey[key]; ok {
 			applyStoredPosition(&projected, stored, now)
+			state, lifecycleKnown := policyByPosition[strings.TrimSpace(stored.Position.ID)]
+			managed, released := lifecycleFlags(state, lifecycleKnown)
+			if released {
+				applyReleasedExitTruth(&projected, stored)
+			}
+			applyManagementProjection(&projected, lifecycleKnown, managed, released, runtime)
+			applyExitLineReference(&projected, &stored, state, lifecycleKnown, runtime)
 		} else {
-			projected.ManagementStatus = "unmanaged"
 			why := "position is not present in the read-only journal"
 			if !journalReadable {
-				projected.ManagementStatus = "unknown"
 				why = "read-only journal is unavailable"
 			}
 			projected.ExitLine = httpapi.ExitLineFrom(operatorview.BuildExitLine(operatorview.Source{UnknownReason: why}))
+			applyManagementProjection(&projected, journalReadable, false, false, runtime)
+			applyExitLineReference(&projected, nil, positionpolicy.State{}, false, runtime)
 		}
 		items = append(items, projected)
 	}
@@ -132,11 +157,81 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 		projected := httpapi.Position{AccountLabel: attest.Mask(accountRef), PositionID: stored.Position.ID,
 			Market: strings.ToUpper(stored.Position.Market), Symbol: stored.Position.Symbol,
 			Quantity: stored.Position.Quantity, AveragePrice: stored.Position.AvgPrice, InJournal: true,
-			Eligible: stored.Position.ExitEligible(), ManagementStatus: "journal-only"}
+			Eligible: stored.Position.ExitEligible()}
 		applyStoredPosition(&projected, stored, now)
+		state, lifecycleKnown := policyByPosition[strings.TrimSpace(stored.Position.ID)]
+		managed, released := lifecycleFlags(state, lifecycleKnown)
+		if released {
+			applyReleasedExitTruth(&projected, stored)
+		}
+		applyManagementProjection(&projected, lifecycleKnown, managed, released, runtime)
+		applyExitLineReference(&projected, &stored, state, lifecycleKnown, runtime)
 		items = append(items, projected)
 	}
 	return httpapi.PositionsResource{ObservedAt: pointerTo(now), Source: "official+journal-read-only", Items: items}, nil
+}
+
+func (r *httpAPIReader) readManagementRuntime(ctx context.Context) positionpolicy.ManagementRuntime {
+	if r == nil || r.managementRuntime == nil {
+		return positionpolicy.ManagementRuntime{}
+	}
+	runtime, err := r.managementRuntime.Runtime(ctx)
+	if err != nil {
+		return positionpolicy.ManagementRuntime{}
+	}
+	return runtime
+}
+
+func lifecycleFlags(state positionpolicy.State, known bool) (managed, released bool) {
+	if !known {
+		return false, false
+	}
+	return state.Status == positionpolicy.StatusManaged && state.ExitEligible,
+		state.Status == positionpolicy.StatusReleased && state.Version > 0
+}
+
+func applyManagementProjection(out *httpapi.Position, journalKnown, managed, released bool,
+	runtime positionpolicy.ManagementRuntime) {
+	projection := positionpolicy.ProjectManagement(positionpolicy.ManagementInput{
+		Market: out.Market, Symbol: out.Symbol, JournalKnown: journalKnown,
+		Managed: managed, Released: released, Runtime: runtime,
+	})
+	out.AdoptionStatus = httpapi.AdoptionStatus(projection.Status)
+	out.StatusKnown = projection.StatusKnown
+	out.AdoptionLabel = projection.Label
+	out.AdoptionReason = httpapi.AdoptionReason(projection.Reason)
+	out.Included, out.Excluded, out.Candidate = projection.Included, projection.Excluded, projection.Candidate
+	out.DesignationKnown = projection.DesignationKnown
+	out.Eligible = projection.Status == positionpolicy.ManagementStatusManaged
+	out.ManagementStatus = strings.ToLower(strings.ReplaceAll(string(projection.Status), "_", "-"))
+	out.CoveringBlock = reconcileBlockFrom(projection.Block)
+}
+
+func applyReleasedExitTruth(out *httpapi.Position, stored journal.PositionExit) {
+	out.ExitLine = httpapi.ExitLineFrom(operatorview.BuildExitLine(operatorview.Source{
+		UnknownReason: "operator_released_lifecycle",
+	}))
+	if hasStoredExitEvidence(stored.Exit) {
+		out.StoredExitEvidence = &httpapi.StoredExitEvidence{
+			EntryPrice: stored.Exit.EntryPrice, InitialStop: stored.Exit.InitialStop,
+			Baseline: stored.Exit.Baseline, HighWater: stored.Exit.HighWater,
+			EffectiveKnown: false, Label: "원장 기록 · 실효 미확인",
+		}
+	}
+}
+
+func reconcileBlockFrom(value *positionpolicy.ReconcileBlock) *httpapi.ReconcileBlock {
+	if value == nil {
+		return nil
+	}
+	out := &httpapi.ReconcileBlock{Scope: strings.ToUpper(string(value.Scope)),
+		Market: strings.ToUpper(strings.TrimSpace(value.Market)), Symbol: strings.ToUpper(strings.TrimSpace(value.Symbol)),
+		Reason: value.Reason}
+	if !value.StartedAt.IsZero() {
+		at := value.StartedAt.UTC()
+		out.StartedAt = &at
+	}
+	return out
 }
 
 func positionFromBroker(accountLabel string, value domain.Position) httpapi.Position {
@@ -164,9 +259,20 @@ func applyStoredPosition(out *httpapi.Position, stored journal.PositionExit, asO
 			source.Snapshot = &view.Snapshot.Line
 			source.ObservationSource = view.Snapshot.ObservationSource
 			source.ObservedAt = view.Snapshot.ObservedAt
+		} else if hasStoredExitEvidence(stored.Exit) {
+			out.StoredExitEvidence = &httpapi.StoredExitEvidence{
+				EntryPrice: stored.Exit.EntryPrice, InitialStop: stored.Exit.InitialStop,
+				Baseline: stored.Exit.Baseline, HighWater: stored.Exit.HighWater,
+				EffectiveKnown: false, Label: "원장 기록 · 실효 미확인",
+			}
 		}
 	}
 	out.ExitLine = httpapi.ExitLineFrom(operatorview.BuildExitLine(source))
+}
+
+func hasStoredExitEvidence(state journal.ExitState) bool {
+	return strings.TrimSpace(state.EntryPrice) != "" || strings.TrimSpace(state.InitialStop) != "" ||
+		strings.TrimSpace(state.Baseline) != "" || strings.TrimSpace(state.HighWater) != ""
 }
 
 func positionMarket(value domain.Position) string {
@@ -284,11 +390,37 @@ func (r *httpAPIReader) Settings(ctx context.Context) (httpapi.SettingsResource,
 	return httpapi.SettingsResource{Version: projection.Version, EffectiveVersion: projection.EffectiveVersion, Items: items}, nil
 }
 
-func (r *httpAPIReader) Optimization(ctx context.Context) (optimization.View, error) {
+func (r *httpAPIReader) Optimization(ctx context.Context) (httpapi.OptimizationRead, error) {
 	if r == nil || r.optimization == nil {
-		return optimization.View{}, errors.New("httpapi: optimization read is unavailable")
+		return httpapi.OptimizationRead{}, errors.New("httpapi: optimization read is unavailable")
 	}
-	return r.optimization.Read(ctx)
+	base, err := r.optimization.Read(ctx)
+	if err != nil {
+		return httpapi.OptimizationRead{}, err
+	}
+	if r.adoptionDesired == nil {
+		return httpapi.OptimizationRead{}, errors.New("httpapi: desired adoption settings are unavailable")
+	}
+	desired, rejected, err := r.adoptionDesired()
+	if err != nil {
+		return httpapi.OptimizationRead{}, err
+	}
+	desiredSettings := positionpolicy.NewAdoptionSettings(desired.Enabled, desired.DefaultStopPct,
+		desired.IncludeSymbols, desired.ExcludeSymbols, rejected)
+	runtime := r.readManagementRuntime(ctx)
+	actual := httpapi.PositionManagementActual{Desired: adoptionSettingsFrom(desiredSettings),
+		EffectiveKnown: runtime.EffectiveKnown, BlockSource: runtime.BlockSource}
+	if runtime.EffectiveKnown {
+		effective := adoptionSettingsFrom(runtime.Effective)
+		actual.Effective = &effective
+	}
+	return httpapi.OptimizationRead{Core: base, PositionManagement: actual}, nil
+}
+
+func adoptionSettingsFrom(value positionpolicy.AdoptionSettings) httpapi.AdoptionSettings {
+	return httpapi.AdoptionSettings{Enabled: value.Enabled, DefaultStopPct: value.DefaultStopPct,
+		IncludeSymbols: append([]string(nil), value.IncludeSymbols...),
+		ExcludeSymbols: append([]string(nil), value.ExcludeSymbols...), Rejected: value.Rejected}
 }
 
 func (r *httpAPIReader) Snapshot(ctx context.Context) ([]byte, error) {
@@ -347,7 +479,8 @@ func pointerTo(value time.Time) *time.Time {
 }
 
 func (r *httpAPIReader) validate() error {
-	if r == nil || r.holdings == nil || r.orders == nil || r.signals == nil || r.accountRef == nil || r.optimization == nil {
+	if r == nil || r.holdings == nil || r.orders == nil || r.signals == nil || r.accountRef == nil ||
+		r.optimization == nil || r.adoptionDesired == nil {
 		return fmt.Errorf("httpapi: incomplete production read adapter")
 	}
 	return nil

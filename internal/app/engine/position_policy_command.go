@@ -19,6 +19,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
 
 const (
@@ -35,6 +36,10 @@ const (
 
 type positionPolicyPrices interface {
 	Prices(context.Context, []string) ([]domain.Quote, error)
+}
+
+type positionPolicyBlockReader interface {
+	Blocks() []reconcile.Block
 }
 
 type positionPolicyRepository interface {
@@ -54,6 +59,7 @@ type PositionPolicyCommandService struct {
 	prices       positionPolicyPrices
 	retrier      *execgw.Retrier
 	adoption     config.Adoption
+	blocks       positionPolicyBlockReader
 	commonPolicy string
 	clk          clock.Clock
 	instanceID   string
@@ -82,8 +88,46 @@ func NewPositionPolicyCommandService(ectx *Context, clk clock.Clock) (*PositionP
 	return &PositionPolicyCommandService{
 		j: ectx.Journal, prices: ectx.Official, retrier: ectx.Retrier,
 		adoption:     ectx.Config.Engine.Adoption,
+		blocks:       ectx.Reconcile,
 		commonPolicy: strings.TrimSpace(ectx.Config.Engine.ExitPolicy.CommonPolicy), clk: clk,
 	}, nil
+}
+
+// Runtime returns the engine instance's immutable startup adoption settings
+// and the same active tracker projection that gates external adoption. It is a
+// read-only snapshot and deliberately carries no account identifier or release
+// capability.
+func (s *PositionPolicyCommandService) Runtime(context.Context) (positionpolicy.ManagementRuntime, error) {
+	runtime := positionpolicy.ManagementRuntime{
+		Effective: positionpolicy.NewAdoptionSettings(s.adoption.Enabled,
+			s.adoption.DefaultStopPct, s.adoption.IncludeSymbols, s.adoption.ExcludeSymbols,
+			s.adoption.Rejected),
+		EffectiveKnown: true,
+		BlockSource:    positionpolicy.AdoptionBlockingTrackerProjection,
+		Blocks:         []positionpolicy.ReconcileBlock{},
+	}
+	if s.blocks == nil {
+		return runtime, nil
+	}
+	for _, block := range s.blocks.Blocks() {
+		runtime.Blocks = append(runtime.Blocks, positionpolicy.NewReconcileBlock(
+			positionPolicyReconcileScope(block.Scope), block.Market, block.Symbol,
+			string(block.Reason), block.Detail, block.Since, block.Permanent))
+	}
+	return runtime, nil
+}
+
+func positionPolicyReconcileScope(scope reconcile.Scope) positionpolicy.ReconcileScope {
+	switch scope {
+	case reconcile.ScopeAccount:
+		return positionpolicy.ScopeAccount
+	case reconcile.ScopeMarket:
+		return positionpolicy.ScopeMarket
+	case reconcile.ScopeSymbol:
+		return positionpolicy.ScopeSymbol
+	default:
+		return positionpolicy.ReconcileScope(scope)
+	}
 }
 
 func (s *PositionPolicyCommandService) List(ctx context.Context) ([]positionpolicy.State, error) {

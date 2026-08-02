@@ -26,6 +26,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta"
 	"github.com/spf13/cobra"
 )
@@ -541,6 +542,7 @@ func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() tim
 	resources.optimization = store
 
 	shared := newConsoleBroker(root)
+	adoptionSettings := newAdoptionSettingsSeam(root)
 	reader := &httpAPIReader{
 		now: now, holdings: newConsoleHoldings(shared), orders: consoleOrdersSeam(shared),
 		signals: consoleSignalsSeam(root), journal: journalReader, journalErr: journalErr,
@@ -551,8 +553,14 @@ func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() tim
 			return accountRef, err
 		},
 	}
+	if adoptionSettings != nil {
+		reader.adoptionDesired = adoptionSettings.Load
+	}
 	if dir, err := engineJournalDir(root); err == nil {
 		reader.engineMarker = enginelock.MarkerPath(dir)
+		reader.managementRuntime = positionPolicyRuntimeDescriptorReader{
+			descriptorPath: positionpolicyrpc.RuntimeDescriptorPath(dir),
+		}
 	}
 	if journalReader != nil {
 		reader.performanceSource = performancejournal.New(journalReader)

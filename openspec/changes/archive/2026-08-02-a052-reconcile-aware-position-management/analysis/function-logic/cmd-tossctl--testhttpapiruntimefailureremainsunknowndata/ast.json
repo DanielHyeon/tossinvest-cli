@@ -1,0 +1,109 @@
+{
+  "file": "cmd/tossctl/httpapi_reader_test.go",
+  "source_sha256": "4cbfb6161ad1308e30b2237d89a2e93155411856dd641c10b8756146b0e6b260",
+  "package": "main",
+  "function": "TestHTTPAPIRuntimeFailureRemainsUnknownData",
+  "signature": "TestHTTPAPIRuntimeFailureRemainsUnknownData(params=1, results=0)",
+  "start": {
+    "line": 128,
+    "column": 1
+  },
+  "end": {
+    "line": 140,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 83
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 13
+      },
+      "text": "reader.readManagementRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 42
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 2
+      },
+      "text": "applyManagementProjection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

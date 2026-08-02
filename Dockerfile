@@ -18,7 +18,7 @@ RUN apk add --no-cache ca-certificates \
     && chown -R 10001:10001 /var/lib/tossos
 
 COPY --from=build /out/tossctl /usr/local/bin/tossctl
-COPY deploy/container-entrypoint.sh /usr/local/bin/tossos-entrypoint
+COPY --chmod=0755 deploy/container-entrypoint.sh /usr/local/bin/tossos-entrypoint
 
 ENV XDG_CONFIG_HOME=/var/lib/tossos/config \
     XDG_DATA_HOME=/var/lib/tossos/data \

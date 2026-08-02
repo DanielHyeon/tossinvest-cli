@@ -1,0 +1,70 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "77b6f1f5aab4f5a0cbb85e0990b3d88c9dd8815330936753c8d23cf70cda07ef",
+  "package": "main",
+  "function": "applyReleasedExitTruth",
+  "signature": "applyReleasedExitTruth(params=2, results=0)",
+  "start": {
+    "line": 207,
+    "column": 1
+  },
+  "end": {
+    "line": 218,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 17
+      },
+      "text": "httpapi.ExitLineFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 38
+      },
+      "text": "operatorview.BuildExitLine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 5
+      },
+      "text": "hasStoredExitEvidence"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 212,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

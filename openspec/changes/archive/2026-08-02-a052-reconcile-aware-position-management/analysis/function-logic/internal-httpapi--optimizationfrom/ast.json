@@ -1,0 +1,467 @@
+{
+  "file": "internal/httpapi/read.go",
+  "source_sha256": "da982e15670bb72db81e25fa48408a17598ccd2ee63b3ccd7d24c0436619dcc9",
+  "package": "httpapi",
+  "function": "OptimizationFrom",
+  "signature": "OptimizationFrom(params=1, results=1)",
+  "start": {
+    "line": 224,
+    "column": 1
+  },
+  "end": {
+    "line": 276,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 260,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 275,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 23
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 55
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 59
+      },
+      "text": "optimization.Categories"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 23
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 52
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 56
+      },
+      "text": "view.Registry.All"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 23
+      },
+      "text": "positionManagementFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 46
+      },
+      "text": "positionpolicy.Descriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 23
+      },
+      "text": "candidateFiltersFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 44
+      },
+      "text": "candidate.CandidateFilterMarkets"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 23
+      },
+      "text": "runtimeDescriptorFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 45
+      },
+      "text": "strategyengine.DormantRuntimeDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 20
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 44
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 46
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 6
+      },
+      "text": "view.Evidence.ObservedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 9
+      },
+      "text": "view.Evidence.ObservedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 27
+      },
+      "text": "optimization.Categories"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 68
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 29
+      },
+      "text": "view.Registry.All"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 40
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 15
+      },
+      "text": "stateFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 15
+      },
+      "text": "stateForOption"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 15
+      },
+      "text": "stateForOption"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 15
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 45
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 16
+      },
+      "text": "provenanceFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 16
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 17
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 37
+      },
+      "text": "optimizationSnapshotFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 37
+      },
+      "text": "event.CreatedAt.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 240,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 243,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 244,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 247,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 251,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 261,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 264,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 270,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

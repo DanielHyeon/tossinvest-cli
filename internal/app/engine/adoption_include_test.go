@@ -25,7 +25,9 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
 
@@ -55,6 +57,85 @@ func TestAnIncludedSymbolIsAdoptedWithTheSwitchOff(t *testing.T) {
 	}
 	if cycle.Unmanaged != 1 {
 		t.Errorf("unmanaged = %d, want 1: the undesignated holding is still a finding", cycle.Unmanaged)
+	}
+}
+
+func TestUSIncludedSymbolFoldsAdoptsAndOpensExitT0(t *testing.T) {
+	h := newDriverHarness(t, func(o *engine.ReconcileDriverOptions) {
+		o.Adoption = includeOnly("AAPL")
+	})
+	h.holdsMarket("us", "AAPL", "2", "180.0000", 200, "USD")
+
+	cycle := h.cycle()
+	if cycle.Err != nil || cycle.Folded != 1 || cycle.Adopted != 1 || cycle.Unmanaged != 0 {
+		t.Fatalf("cycle=%+v", cycle)
+	}
+	p := h.positionMarket("us", "AAPL")
+	provenance, eligibility := positionpolicy.ClassifyProvenance(p.EntryDecisionID, p.AdoptionID)
+	if !p.Adopted() || !p.ExitEligible() || provenance != positionpolicy.ProvenanceExternalAdoption ||
+		eligibility != positionpolicy.EligibilityExternalLifecycle {
+		t.Fatalf("position=%+v provenance=%s eligibility=%s", p, provenance, eligibility)
+	}
+	adoption, err := h.journal.AdoptionOf(t.Context(), p.ID)
+	if err != nil || adoption.ObservedPrice != "200" || adoption.SyntheticStop != "190" {
+		t.Fatalf("adoption=%+v err=%v", adoption, err)
+	}
+	exitState, err := h.journal.ExitState(t.Context(), p.ID)
+	if err != nil || exitState.EntryPrice != "200" || exitState.HighWater != "200" ||
+		exitState.InitialStop != "190" || exitState.Baseline != "190" {
+		t.Fatalf("exit state=%+v err=%v", exitState, err)
+	}
+}
+
+func TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency(t *testing.T) {
+	for _, currency := range []string{"KRW", ""} {
+		t.Run("currency="+currency, func(t *testing.T) {
+			h := newDriverHarness(t, func(o *engine.ReconcileDriverOptions) {
+				o.Adoption = includeOnly("AAPL")
+			})
+			h.holdsMarket("us", "AAPL", "2", "180", 200, currency)
+			cycle := h.cycle()
+			if cycle.Adopted != 0 || cycle.Deferred != 1 {
+				t.Fatalf("cycle=%+v", cycle)
+			}
+			p := h.positionMarket("us", "AAPL")
+			if p.Adopted() {
+				t.Fatalf("wrong-currency quote was persisted: %+v", p)
+			}
+		})
+	}
+}
+
+func TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile(t *testing.T) {
+	h := newDriverHarness(t, func(o *engine.ReconcileDriverOptions) {
+		o.Adoption = includeOnly("AAPL")
+	})
+	for i := 0; i < reconcile.DefaultMaxFailures; i++ {
+		out, err := h.tracker.Observe(t.Context(), reconcile.Diff{
+			AccountRef: reconcileAccount,
+			Quantities: []reconcile.QuantityMismatch{{Symbol: "OTHER", Local: "1", Broker: "2"}},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if i+1 == reconcile.DefaultMaxFailures && !out.Permanent {
+			t.Fatalf("final outcome=%+v", out)
+		}
+		h.clk.Advance(reconcile.DefaultReconcileInterval)
+	}
+	if rejected := h.tracker.EntryAllowed("us", "AAPL"); rejected == nil ||
+		rejected.Reason != execgw.ReasonReconcilePermanent {
+		t.Fatalf("precondition block=%v", rejected)
+	}
+	h.holdsMarket("us", "AAPL", "2", "180", 200, "USD")
+
+	cycle := h.cycle()
+	if cycle.Folded != 1 || cycle.Adopted != 0 || cycle.Unmanaged != 0 || h.prices.calls != 0 {
+		t.Fatalf("cycle=%+v price calls=%d", cycle, h.prices.calls)
+	}
+	p := h.positionMarket("us", "AAPL")
+	if p.Adopted() {
+		t.Fatalf("blocked position adopted=%+v", p)
 	}
 }
 

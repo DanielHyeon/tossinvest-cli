@@ -70,6 +70,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 )
 
 // exitEventWindow bounds the judgement stream on the history screen. The record
@@ -249,6 +250,17 @@ type positionRow struct {
 	JournalQuantity string
 	JournalAvgPrice string
 	Eligible        bool
+	// LifecycleKnown/Status is the authoritative position-policy lifecycle.
+	// Adoption/entry provenance alone is insufficient because RELEASED keeps
+	// those immutable ids while removing the position from exit management.
+	LifecycleKnown  bool
+	LifecycleStatus positionpolicy.Status
+	// LifecycleProofRequired distinguishes an unwired legacy console from a
+	// lifecycle lookup that was attempted but could not verify this position.
+	LifecycleProofRequired bool
+	// LifecycleGeneration binds visible exit evidence to the authoritative
+	// release/re-adopt generation. A mismatch suppresses every stored price.
+	LifecycleGeneration int64
 	// Adopted reports which record makes the row eligible. It is display only:
 	// the verdict is Eligible, and this says why.
 	Adopted bool
@@ -265,6 +277,46 @@ type positionRow struct {
 	// persisted snapshot. The HTML template never reads actionable raw snapshot
 	// values directly, so stale evidence cannot leak a price into the page.
 	ExitLine operatorview.ExitLineView
+	// ExitReference explains legacy raw facts or a running adoption percentage
+	// without promoting either to an actionable current protection line.
+	ExitReference operatorview.ExitLineReferenceView
+	// StoredExit is seed/state evidence from the journal when no canonical
+	// evaluated snapshot exists. It is deliberately a separate display model:
+	// these values explain what was persisted at t0, but are never promoted to
+	// ExitLine's actionable current protection or next target.
+	StoredExit storedExitEvidenceView
+	// Management is the shared a052 adoption/reconcile projection. Its zero
+	// value means the runtime seam was not wired at all (legacy console); a
+	// projected UNKNOWN is non-zero and remains explicitly unknown.
+	Management      positionpolicy.ManagementProjection
+	ManagementBlock reconcileBlockView
+}
+
+type storedExitEvidenceView struct {
+	Present     bool
+	EntryPrice  string
+	InitialStop string
+	Baseline    string
+	HighWater   string
+}
+
+func (r positionRow) HasStoredExitEvidence() bool { return r.StoredExit.Present }
+func (r positionRow) HasManagementProjection() bool {
+	return r.Management.Status != ""
+}
+func (r positionRow) PendingDesignation() bool {
+	return r.InBroker && !r.Managed() &&
+		(!r.LifecycleKnown || r.LifecycleStatus != positionpolicy.StatusReleased) &&
+		!r.Unknown() && r.Designated && !r.Excluded && !r.HasManagementProjection()
+}
+func (r positionRow) ManagementBlocked() bool {
+	return r.Management.Status == positionpolicy.ManagementStatusReconcileBlocked
+}
+func (r positionRow) ManagementPending() bool {
+	return r.Management.Status == positionpolicy.ManagementStatusAdoptionPending
+}
+func (r positionRow) ManagementExcluded() bool {
+	return r.Management.Status == positionpolicy.ManagementStatusExcluded
 }
 
 // Basis names the record that justifies the exit baseline, for the operator who
@@ -281,7 +333,12 @@ func (r positionRow) Basis() string {
 }
 
 // Managed reports that the engine's exit policy owns this position.
-func (r positionRow) Managed() bool { return r.InJournal && r.Eligible }
+func (r positionRow) Managed() bool {
+	if r.LifecycleKnown {
+		return r.InJournal && r.Eligible && r.LifecycleStatus == positionpolicy.StatusManaged
+	}
+	return r.InJournal && r.Eligible
+}
 
 // Unknown reports a holding whose management could not be determined, because
 // the journal did not answer. It is deliberately not folded into "unmanaged": a
@@ -299,17 +356,24 @@ func (r positionRow) Unknown() bool { return !r.JournalReadable && !r.InJournal 
 // because a console that could not open the ledger has not observed anything to
 // promote.
 //
-// Exclusion is judged before designation because the engine judges it first
-// (adoption.go: exclude가 항상 우선). A row on both lists is a row the engine
-// will not adopt, and a label that said 관리 편입 there would be the screen
-// predicting the opposite of what happens.
+// A known RELEASED lifecycle is judged before desired lists because an
+// operator release remains authoritative even if stale desired configuration
+// still names the symbol. Exclusion is then judged before designation because
+// the engine judges it first (adoption.go: exclude가 항상 우선). A row on both
+// lists is a row the engine will not adopt, and a label that said 관리 편입 there
+// would be the screen predicting the opposite of what happens.
 func (r positionRow) Label() string {
+	if r.HasManagementProjection() {
+		return r.Management.Label
+	}
 	switch {
 	case r.Unknown():
 		return "관리 여부 불명"
+	case r.LifecycleKnown && r.LifecycleStatus == positionpolicy.StatusReleased:
+		return "관리 외(운영자 해제)"
 	case !r.Managed() && r.Excluded:
 		return "관리 제외"
-	case !r.Managed() && r.Designated:
+	case r.PendingDesignation():
 		return "관리 편입"
 	case !r.Managed():
 		return "관리 외(미편입)"
@@ -331,6 +395,12 @@ func (r positionRow) Reason() string {
 	switch {
 	case r.Unknown(), !r.InJournal:
 		return ""
+	case r.ManagementPending(), r.ManagementBlocked():
+		return "편입 대사가 아직 완료되지 않았다. 보호·익절 기준선은 엔진이 편입을 완료하고 " +
+			"유효 근거를 저장한 뒤 적용된다."
+	case r.PendingDesignation():
+		return "편입 요청은 저장됐지만 실행 중 엔진 반영 여부를 확인할 수 없다. 보호·익절 기준선은 " +
+			"엔진이 편입을 완료하고 유효 근거를 저장한 뒤 표시된다."
 	case !r.Eligible:
 		return "진입 결정(entry decision)도 편입 기록(adoption)도 없는 포지션이다. exit 정책은 그중 하나의 " +
 			"손절가를 기준선으로 삼는데 둘 다 없으므로 대상이 아니다."
@@ -346,7 +416,9 @@ func (r positionRow) Reason() string {
 // line, the journal half, or a row-specific reason. A row whose only story is a
 // page-global state renders no second line at all — the notice above the table
 // is that story, told once.
-func (r positionRow) HasDetail() bool { return r.HasExit || r.InJournal || r.Reason() != "" }
+func (r positionRow) HasDetail() bool {
+	return r.HasExit || r.HasExitReference() || r.InJournal || r.Reason() != ""
+}
 
 // BrokerMissing reports a projection row the account does not confirm.
 func (r positionRow) BrokerMissing() bool { return r.InJournal && !r.InBroker }

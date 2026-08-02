@@ -99,10 +99,15 @@ func TestManagedPositionPrimaryRowShowsTheProtectionDecision(t *testing.T) {
 			t.Errorf("managed position primary row is missing %q", want)
 		}
 	}
-	for _, raw := range []string{"69500", "HALF_RISK", "intent-77"} {
+	for _, raw := range []string{"HALF_RISK", "intent-77"} {
 		if strings.Contains(row, raw) {
 			t.Errorf("managed legacy row exposes raw exit value %q", raw)
 		}
+	}
+	if !strings.Contains(row, "원장 기준선 <strong>69500</strong>") ||
+		!strings.Contains(row, "현재 보호선 <strong>—</strong>") ||
+		!strings.Contains(row, "다음 익절 <strong>—</strong>") {
+		t.Error("managed legacy row does not distinguish stored evidence from actionable prices")
 	}
 	if !strings.Contains(page, `<caption>보유 종목과 보호 상태</caption>`) ||
 		!strings.Contains(page, `scope="col"`) || !strings.Contains(page, `scope="row"`) {

@@ -1,0 +1,62 @@
+{
+  "file": "internal/app/engine/adoption.go",
+  "source_sha256": "15dd1bbcc11bae65a224734d02d174315b8ef60c299ba11b3f72e4fbc354ea3e",
+  "package": "engine",
+  "function": "adoptionQuoteKey",
+  "signature": "adoptionQuoteKey(params=2, results=1)",
+  "start": {
+    "line": 294,
+    "column": 1
+  },
+  "end": {
+    "line": 297,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 295,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 9
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 25
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 3
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

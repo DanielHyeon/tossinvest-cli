@@ -168,6 +168,19 @@ func TestPositionPolicyReleaseAndReadoptCreateFreshGeneration(t *testing.T) {
 	}
 }
 
+func TestReadOnlyPositionPoliciesPreservesReleasedLifecycle(t *testing.T) {
+	j := openTestJournal(t)
+	seedPolicyPosition(t, j, false)
+	if _, err := j.ApplyPositionPolicy(context.Background(), policyRequest(positionpolicy.ActionRelease, 0)); err != nil {
+		t.Fatal(err)
+	}
+	states, err := openTestReadOnly(t, j.Path()).PositionPolicies(context.Background())
+	if err != nil || len(states) != 1 || states[0].PositionID != "p-policy" ||
+		states[0].Status != positionpolicy.StatusReleased {
+		t.Fatalf("read-only states=%+v err=%v", states, err)
+	}
+}
+
 func TestPositionPolicyReleaseRemovesExactGenerationFromWorkingSet(t *testing.T) {
 	j := openTestJournal(t)
 	seedPolicyPosition(t, j, false)
