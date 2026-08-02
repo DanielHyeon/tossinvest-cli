@@ -77,43 +77,49 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 {{define "holdingstable"}}
 <table class="data-table positions-table">
   <caption>보유 종목과 보호 상태</caption>
+  <colgroup>
+    <col class="position-col-instrument">
+    <col class="position-col-quantity">
+    <col class="position-col-average">
+    <col class="position-col-current">
+    <col class="position-col-lines">
+    <col class="position-col-value">
+    <col class="position-col-pnl">
+  </colgroup>
   <thead><tr>
-    <th scope="col">종목</th><th scope="col">수량</th><th scope="col">평균가</th>
-    <th scope="col">현재가</th><th scope="col">라인</th><th scope="col">총금액</th>
-    <th scope="col">미실현 PnL</th>
+    <th scope="col">종목</th><th class="number-column" scope="col">수량</th><th class="number-column" scope="col">평균가</th>
+    <th class="number-column" scope="col">현재가</th><th scope="col">라인</th><th class="number-column" scope="col">총금액</th>
+    <th class="number-column" scope="col">미실현 PnL</th>
   </tr></thead>
   <tbody>
   {{range .Rows}}
   <tr class="position-row" data-symbol="{{.Symbol}}">
     <th scope="row" data-label="종목">
-      <span class="holding-name">{{if .Name}}{{.Name}}{{else}}{{.Symbol}}{{end}}</span>
-      <code>{{.Symbol}}</code>
+      <span class="holding-name"><code>{{.Symbol}}</code>{{if .Name}} · {{.Name}}{{end}}</span>
       <span class="submetric">{{.MarketLabel}} · {{.CurrencyLabel}}</span>
-      <strong class="status-pill holding-status">{{.Label}}</strong>
-      {{if .ManagementBlocked}}<span class="submetric bad">{{.ManagementBlock.Target}} · {{.ManagementBlock.Reason}}{{if .ManagementBlock.Detail}} · {{.ManagementBlock.Detail}}{{end}} · {{.ManagementBlock.Age}}{{if .ManagementBlock.Permanent}} · 영구 차단{{end}}</span>{{end}}
-      {{if .ManagementPending}}<span class="submetric notice">편입 예약됨 · 아직 보호 미적용</span>{{end}}
-      {{if .PendingDesignation}}<span class="submetric notice">편입 예약됨 · 실행 상태 미확인 · 아직 보호 미적용</span>{{end}}
-      {{if .ManagementExcluded}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
-      {{if and .InBroker (not .Managed) (not .Unknown) .Excluded (not .HasManagementProjection)}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
+      <span class="holding-verdicts">
+        <strong class="status-pill holding-status">{{.Label}}</strong>
+        {{if .HasExitReference}}
+        <strong class="status-pill {{if .ExitReference.GenerationMismatch}}bad{{else}}notice{{end}}">{{.ExitReference.Label}}</strong>
+        {{if .HasExit}}<span class="submetric {{if .ExitLine.Fresh}}ok{{else}}bad{{end}}">실효 판정 · {{.ExitLine.StatusText}}</span>{{end}}
+        {{else if .HasExit}}
+        <strong class="status-pill {{if .ExitLine.Fresh}}ok{{else if .ExitLine.Stale}}bad{{else}}notice{{end}}">{{.ExitLine.StatusText}}</strong>
+        {{else}}
+        <strong class="status-pill muted">보호 근거 없음</strong>
+        {{end}}
+        {{if or .ManagementExcluded (and .InBroker (not .Managed) (not .Unknown) .Excluded (not .HasManagementProjection))}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
+        {{if .PendingDesignation}}<span class="submetric notice">편입 예약 · 실행 미확인</span>{{end}}
+      </span>
     </th>
     <td data-label="수량" class="number-cell"><strong>{{.Qty}}</strong></td>
     <td data-label="평균가" class="number-cell"><strong>{{.Avg}}</strong></td>
     <td data-label="현재가" class="number-cell"><strong>{{.Last}}</strong></td>
     <td data-label="라인" class="exit-line-stack">
-      {{if .HasExitReference}}
-      <strong class="status-pill {{if .ExitReference.GenerationMismatch}}bad{{else}}notice{{end}}">{{.ExitReference.Label}}</strong>
-      {{if .HasExit}}<span class="submetric {{if .ExitLine.Fresh}}ok{{else}}bad{{end}}">실효 판정 · {{.ExitLine.StatusText}}</span>{{end}}
-      {{else if .HasExit}}
-      <strong class="status-pill {{if .ExitLine.Fresh}}ok{{else if .ExitLine.Stale}}bad{{else}}notice{{end}}">{{.ExitLine.StatusText}}</strong>
-      {{else}}
-      <strong class="status-pill muted">보호 근거 없음</strong>
-      {{end}}
       <span class="line-item"><span>익절</span><strong>{{if .HasExit}}{{.ExitLine.NextTarget}}{{else}}—{{end}}</strong></span>
       <span class="line-item"><span>손절</span><strong>{{if .HasExit}}{{.ExitLine.InitialStop}}{{else}}—{{end}}</strong></span>
       <span class="line-item"><span>추적 회수</span><strong>{{if .HasExit}}{{.ExitLine.NextProtection}}{{else}}—{{end}}</strong></span>
       <span class="line-item"><span>기준</span><strong>{{if .HasExit}}{{.ExitLine.CurrentProtection}}{{else}}—{{end}}</strong></span>
       <span class="line-item"><span>고점</span><strong>{{if .HasExit}}{{.ExitLine.HighWater}}{{else}}—{{end}}</strong></span>
-      {{if .ExitLine.Reason}}<span class="submetric bad">{{.ExitLine.Reason}}</span>{{else if .Reason}}<span class="submetric">{{.Reason}}</span>{{end}}
     </td>
     <td data-label="총금액" class="number-cell"><strong>{{.Value}}</strong></td>
     <td data-label="미실현 PnL" class="number-cell {{if .Gain}}ok{{else}}bad{{end}}">
@@ -123,6 +129,12 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         <span>평가손익 <strong>{{.PnL}}</strong> · 수익률 <strong>{{.Rate}}</strong></span>
         {{if .Managed}}<span>자격 근거 {{.Basis}}</span>{{end}}
         {{if .HasManagementProjection}}<span>관리 상태 <code>{{.Management.Status}}</code> · 이유 <code>{{.Management.Reason}}</code></span>{{end}}
+        {{if .ManagementBlocked}}<span class="bad">대사 차단 {{.ManagementBlock.Target}} · {{.ManagementBlock.Reason}}{{if .ManagementBlock.Detail}} · {{.ManagementBlock.Detail}}{{end}} · {{.ManagementBlock.Age}}{{if .ManagementBlock.Permanent}} · 영구 차단{{end}}</span>{{end}}
+        {{if .ManagementPending}}<span class="notice">편입 예약됨 · 아직 보호 미적용</span>{{end}}
+        {{if .PendingDesignation}}<span class="notice">편입 예약됨 · 실행 상태 미확인 · 아직 보호 미적용</span>{{end}}
+        {{if .ManagementExcluded}}<span>자동관리 제외 정책 적용 중</span>{{end}}
+        {{if and .InBroker (not .Managed) (not .Unknown) .Excluded (not .HasManagementProjection)}}<span>자동관리 제외 정책 적용 중</span>{{end}}
+        {{if .ExitLine.Reason}}<span class="bad">{{.ExitLine.Reason}}</span>{{end}}
         {{if .Reason}}<span>{{.Reason}}</span>{{end}}
         {{if .HasExit}}<span>진입가 <strong>{{.ExitLine.EntryPrice}}</strong> · 관측가 <strong>{{.ExitLine.ObservedPrice}}</strong></span>
         <span>현재 보호선 <strong>{{.ExitLine.CurrentProtection}}</strong> · 다음 익절 <strong>{{.ExitLine.NextTarget}}</strong></span>
