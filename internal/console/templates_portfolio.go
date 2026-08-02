@@ -116,7 +116,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
           {{if .ManagementPending}}<span class="submetric ok">편입 예약됨 · 아직 보호 미적용</span>{{end}}
           {{if .ManagementExcluded}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
         {{else}}
-          {{if .Designated}}<span class="submetric ok">편입 예약됨 · 실행 상태 미확인 · 아직 보호 미적용</span>{{end}}
+          {{if .PendingDesignation}}<span class="submetric ok">편입 예약됨 · 실행 상태 미확인 · 아직 보호 미적용</span>{{end}}
           {{if and .InBroker (not .Managed) (not .Unknown) .Excluded}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
         {{end}}
       </td>

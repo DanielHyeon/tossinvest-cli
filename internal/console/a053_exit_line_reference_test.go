@@ -180,6 +180,131 @@ func TestPositionsShowRuntimeUnknownWhenCommanderUnavailableButDesiredIncludesUS
 	}
 }
 
+func TestManagedDesignatedRowDoesNotShowPendingFallback(t *testing.T) {
+	h := newDashboardHarness(t, func(o *Options) {
+		o.PositionPolicies = nil
+		o.Settings = &fakeSettings{block: config.Adoption{IncludeSymbols: []string{"A053MANAGED"}}}
+	})
+	h.holdings.rows = append(h.holdings.rows, domain.Position{MarketType: "KR", Symbol: "A053MANAGED",
+		Quantity: 2, AveragePrice: 4095, CurrentPrice: 4135, MarketValue: 8270})
+	seedJournal(t, h.journal)
+	execRaw(t, h.journal, `
+		INSERT INTO positions(id,account_ref,market,symbol,instance_seq,adoption_id,state,quantity,avg_price,opened_at)
+		VALUES ('pos-a053-managed','123-45-678901','kr','A053MANAGED',1,'adopt-a053-managed','OPEN','2','4095','2026-08-01T00:00:00Z');
+		INSERT INTO exit_states(position_id,policy_kind,entry_price,initial_stop,initial_risk,baseline_price,
+		 high_water,ratchet_level,taken_ratio_total,completed,updated_at,lifecycle_generation)
+		VALUES ('pos-a053-managed','LADDER','4095','3890.25','204.75','3890.25',
+		 '4135','NONE','0',0,'2026-08-01T00:01:00Z',1);`)
+	h.authenticate(t)
+	row := positionHTMLRow(t, h.page(t, "/positions"), "A053MANAGED")
+	for _, want := range []string{"엔진 관리", "자격 근거 편입 기록", "저장된 원장 기준선 · 현재 실효 미확인"} {
+		if !strings.Contains(row, want) {
+			t.Errorf("managed designated row lacks %q: %s", want, row)
+		}
+	}
+	for _, forbidden := range []string{"편입 예약됨", "실행 상태 미확인", "아직 보호 미적용",
+		"편입 요청은 저장됐지만", "기준선·정책 폭 알 수 없음"} {
+		if strings.Contains(row, forbidden) {
+			t.Errorf("managed designated row contains pending fallback %q: %s", forbidden, row)
+		}
+	}
+}
+
+func TestReleasedDesignatedRowDoesNotShowPendingFallback(t *testing.T) {
+	state := managedPolicyState()
+	state.PositionID, state.Market, state.Symbol = "pos-a053-released", "us", "A053RELEASED"
+	state.Status = positionpolicy.StatusReleased
+	state.ExitEligible = false
+	h := newDashboardHarness(t, func(o *Options) {
+		o.PositionPolicies = &fakePositionPolicyCommander{
+			state:        state,
+			runtimeError: errors.New("engine socket unavailable"),
+		}
+		o.Settings = &fakeSettings{block: config.Adoption{IncludeSymbols: []string{"A053RELEASED"}}}
+	})
+	h.holdings.rows = append(h.holdings.rows, domain.Position{MarketType: "US", Symbol: "A053RELEASED",
+		Quantity: 1, AveragePrice: 200, CurrentPrice: 201, MarketValue: 201})
+	seedJournal(t, h.journal)
+	execRaw(t, h.journal, `INSERT INTO positions(id,account_ref,market,symbol,instance_seq,adoption_id,state,quantity,avg_price,opened_at)
+		VALUES ('pos-a053-released','123-45-678901','us','A053RELEASED',1,'adopt-a053-released','OPEN','1','200','2026-08-01T00:00:00Z');`)
+	h.authenticate(t)
+	row := positionHTMLRow(t, h.page(t, "/positions"), "A053RELEASED")
+	for _, want := range []string{"US", "USD", "관리 외(운영자 해제)", "OPERATOR_RELEASED"} {
+		if !strings.Contains(row, want) {
+			t.Errorf("released designated row lacks %q: %s", want, row)
+		}
+	}
+	for _, forbidden := range []string{"관리 편입", "편입 예약됨", "실행 상태 미확인", "아직 보호 미적용",
+		"편입 요청은 저장됐지만", "RUNTIME_UNKNOWN", "ADOPTION_PENDING", "기준선·정책 폭 알 수 없음"} {
+		if strings.Contains(row, forbidden) {
+			t.Errorf("released designated row contains pending fallback %q: %s", forbidden, row)
+		}
+	}
+}
+
+func TestPendingDesignationTruthTable(t *testing.T) {
+	base := positionRow{
+		InBroker:        true,
+		JournalReadable: true,
+		Designated:      true,
+	}
+	tests := []struct {
+		name      string
+		mutate    func(*positionRow)
+		want      bool
+		wantLabel string
+	}{
+		{name: "desired only", want: true, wantLabel: "관리 편입"},
+		{name: "managed", mutate: func(row *positionRow) {
+			row.InJournal, row.Eligible = true, true
+			row.LifecycleKnown, row.LifecycleStatus = true, positionpolicy.StatusManaged
+		}, wantLabel: "엔진 관리(대기)"},
+		{name: "managed active exit", mutate: func(row *positionRow) {
+			row.InJournal, row.Eligible, row.HasExit = true, true, true
+			row.LifecycleKnown, row.LifecycleStatus = true, positionpolicy.StatusManaged
+		}, wantLabel: "엔진 관리"},
+		{name: "managed completed exit", mutate: func(row *positionRow) {
+			row.InJournal, row.Eligible, row.HasExit = true, true, true
+			row.LifecycleKnown, row.LifecycleStatus = true, positionpolicy.StatusManaged
+			row.Exit.Completed = true
+		}, wantLabel: "관리 종료"},
+		{name: "operator released", mutate: func(row *positionRow) {
+			row.InJournal = true
+			row.LifecycleKnown, row.LifecycleStatus = true, positionpolicy.StatusReleased
+		}, wantLabel: "관리 외(운영자 해제)"},
+		{name: "excluded", mutate: func(row *positionRow) {
+			row.Excluded = true
+		}, wantLabel: "관리 제외"},
+		{name: "journal unknown", mutate: func(row *positionRow) {
+			row.JournalReadable = false
+		}, wantLabel: "관리 여부 불명"},
+		{name: "broker absent", mutate: func(row *positionRow) {
+			row.InBroker = false
+		}, wantLabel: "관리 외(미편입)"},
+		{name: "typed projection", mutate: func(row *positionRow) {
+			row.Management = positionpolicy.ManagementProjection{
+				Status: positionpolicy.ManagementStatusUnknown,
+				Label:  "관리 여부 불명",
+			}
+		}, wantLabel: "관리 여부 불명"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			row := base
+			if tc.mutate != nil {
+				tc.mutate(&row)
+			}
+			if got := row.PendingDesignation(); got != tc.want {
+				t.Fatalf("PendingDesignation() = %v, want %v", got, tc.want)
+			}
+			if got := row.Label(); got != tc.wantLabel {
+				t.Fatalf("Label() = %q, want %q", got, tc.wantLabel)
+			}
+		})
+	}
+}
+
 func TestPositionsSuppressCorruptAndLifecycleUnverifiedRawEvidence(t *testing.T) {
 	for _, tc := range []struct {
 		name      string

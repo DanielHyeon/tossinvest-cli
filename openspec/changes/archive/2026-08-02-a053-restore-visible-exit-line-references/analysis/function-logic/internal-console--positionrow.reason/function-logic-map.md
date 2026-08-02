@@ -19,7 +19,7 @@
 | B1 | `switch` | selects the first authoritative explanation | none | all row-state cases |
 | B2 | journal unknown or position not in journal | none | empty; page-global notice owns the explanation | unknown/broker-only tests |
 | B3 | typed management projection is adoption-pending or reconcile-blocked | none | reconciliation is pending/blocked and protection is not yet effective | US pending/blocked tests |
-| B4 | desired-designated, not excluded, and management projection unavailable | none | stored request plus engine-reflection-unknown explanation | unavailable-commander US test |
+| B4 | shared pending-designation predicate is true | none | stored request plus engine-reflection-unknown explanation | unavailable-commander and managed/designated collision tests |
 | B5 | position is not exit-eligible | none | no entry/adoption basis explanation | unmanaged tests |
 | B6 | eligible but exit state absent | none | observation-pending explanation | managed pending tests |
 | B7 | no row-specific absence reason | none | empty | managed exit tests |
@@ -30,12 +30,13 @@
 |---|---|---|---|
 | `Unknown` | preserve page-global journal failure wording | pure predicate | AST + portfolio tests |
 | `HasManagementProjection` | distinguish engine-owned state from desired-only fallback | pure predicate | a052/a053 tests |
+| `PendingDesignation` | exclude managed, released, unknown, excluded, broker-missing, or projected rows from desired-only copy | pure predicate | post-deploy collision regression + released truth table |
 | `Basis` | explain the qualifying journal record | pure display projection | portfolio tests |
 
 ## State mutations and fallbacks
 
 - Pure string projection; no state mutation, I/O, price arithmetic, or command capability.
-- Exclusion remains stronger than designation, and desired designation never becomes an effective/protected claim.
+- Known release and exclusion remain stronger than designation, and desired designation never becomes an effective/protected claim.
 
 ## Safety conclusion
 

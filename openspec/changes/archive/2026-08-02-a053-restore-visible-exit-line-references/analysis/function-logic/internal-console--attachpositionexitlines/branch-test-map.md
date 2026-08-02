@@ -3,7 +3,7 @@
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
 | B1 | empty and mixed rows | console focused/full suite | pre-existing | yes |
-| B2 | desired-designated US row with commander unavailable | `TestPositionsShowRuntimeUnknownWhenCommanderUnavailableButDesiredIncludesUS` | yes | yes |
+| B2 | desired-only US row with commander unavailable versus already-managed or operator-released designated rows | unavailable-commander test, `TestManagedDesignatedRowDoesNotShowPendingFallback`, and `TestReleasedDesignatedRowDoesNotShowPendingFallback` | yes | yes |
 | B3 | no exit + pending/blocked/unmanaged/runtime unknown | candidate/runtime matrix | yes | yes |
 | B4 | cross-lifecycle raw/canonical evidence | `TestPositionsSuppressCrossLifecycleExitEvidence` | yes | yes |
 | B5 | released lifecycle with raw/canonical evidence | released trading-view regressions | pre-existing | yes |

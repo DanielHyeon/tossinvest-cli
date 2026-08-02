@@ -38,6 +38,10 @@ KR 또는 US 포지션이 `ADOPTION_PENDING` 또는 `RECONCILE_BLOCKED`이고 ex
 - **WHEN** desired include에 지정된 KR 또는 US 보유분이 있지만 candidate 여부나 effective stop percentage를 증명할 runtime commander를 읽지 못한다
 - **THEN** 화면은 편입 요청 저장과 실행 상태 미확인을 구분하고, desired/default 값을 대신 사용하지 않으며 기준선/percentage를 `알 수 없음`으로 유지한다
 
+#### Scenario: managed 또는 released 상태와 desired include가 충돌한다
+- **WHEN** 이미 엔진이 관리 중이거나 운영자가 해제한 종목이 desired include 목록에도 남아 있다
+- **THEN** 현재 lifecycle 상태가 편입 예약보다 우선하며 해당 행을 `편입 예약됨` 또는 runtime-unknown candidate로 표시하지 않는다
+
 ### Requirement: 기준선 복원 화면은 입력과 mutation을 추가하지 않는다
 `/positions`는 form, visible input, button, contenteditable 또는 reconcile/order mutation route를 추가해서는 안 된다 (MUST NOT).
 

@@ -105,7 +105,7 @@ func attachPositionExitLines(rows []positionRow, asOf time.Time, runtime positio
 	for i := range rows {
 		row := &rows[i]
 		referenceStatus := row.Management.Status
-		if referenceStatus == "" && row.Designated && !row.Excluded {
+		if referenceStatus == "" && row.PendingDesignation() {
 			// The desired include list proves only that this holding is awaiting
 			// management. If the engine-owned commander is unavailable, keep the
 			// effective state explicitly unknown; never promote desired defaults.

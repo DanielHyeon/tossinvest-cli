@@ -1,6 +1,6 @@
 {
   "file": "internal/console/portfolio_pages.go",
-  "source_sha256": "22c988dd6e435516eea35ad1a14a995c9abeaade9014c6e0fe910d9a3e01200a",
+  "source_sha256": "a280c1a29c8b544339cd4e3a7f224bb0dffa833b7ef73ea38b63e7caef25777f",
   "package": "console",
   "function": "attachPositionExitLines",
   "signature": "attachPositionExitLines(params=3, results=0)",
@@ -88,6 +88,14 @@
   ],
   "returns": null,
   "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 31
+      },
+      "text": "row.PendingDesignation"
+    },
     {
       "kind": "call",
       "at": {

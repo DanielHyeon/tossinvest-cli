@@ -15,3 +15,5 @@
 - [x] 3.1 Run focused normal/race tests, full test/vet/validate, mutation-surface checks, and independent security/test/UI review.
 - [x] 3.2 Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a053-restore-visible-exit-line-references`; archive the change and update PM trackers.
 - [x] 3.3 Commit in the worktree, compare against main, integrate/push remote main, rebuild Docker services, and verify HTTPS HTTP/2 KR/US `/positions` plus API canaries.
+- [x] 3.4 Fix the post-deploy managed/designated copy collision, rerun independent UI review, redeploy, and verify no managed row is described as pending adoption.
+- [x] 3.5 Preserve known `RELEASED` lifecycle precedence over stale desired include state, cover the complete pending-designation truth table, and rerun independent logic/security/UI review.

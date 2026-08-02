@@ -304,6 +304,11 @@ func (r positionRow) HasStoredExitEvidence() bool { return r.StoredExit.Present 
 func (r positionRow) HasManagementProjection() bool {
 	return r.Management.Status != ""
 }
+func (r positionRow) PendingDesignation() bool {
+	return r.InBroker && !r.Managed() &&
+		(!r.LifecycleKnown || r.LifecycleStatus != positionpolicy.StatusReleased) &&
+		!r.Unknown() && r.Designated && !r.Excluded && !r.HasManagementProjection()
+}
 func (r positionRow) ManagementBlocked() bool {
 	return r.Management.Status == positionpolicy.ManagementStatusReconcileBlocked
 }
@@ -351,10 +356,12 @@ func (r positionRow) Unknown() bool { return !r.JournalReadable && !r.InJournal 
 // because a console that could not open the ledger has not observed anything to
 // promote.
 //
-// Exclusion is judged before designation because the engine judges it first
-// (adoption.go: exclude가 항상 우선). A row on both lists is a row the engine
-// will not adopt, and a label that said 관리 편입 there would be the screen
-// predicting the opposite of what happens.
+// A known RELEASED lifecycle is judged before desired lists because an
+// operator release remains authoritative even if stale desired configuration
+// still names the symbol. Exclusion is then judged before designation because
+// the engine judges it first (adoption.go: exclude가 항상 우선). A row on both
+// lists is a row the engine will not adopt, and a label that said 관리 편입 there
+// would be the screen predicting the opposite of what happens.
 func (r positionRow) Label() string {
 	if r.HasManagementProjection() {
 		return r.Management.Label
@@ -362,9 +369,11 @@ func (r positionRow) Label() string {
 	switch {
 	case r.Unknown():
 		return "관리 여부 불명"
+	case r.LifecycleKnown && r.LifecycleStatus == positionpolicy.StatusReleased:
+		return "관리 외(운영자 해제)"
 	case !r.Managed() && r.Excluded:
 		return "관리 제외"
-	case !r.Managed() && r.Designated:
+	case r.PendingDesignation():
 		return "관리 편입"
 	case !r.Managed():
 		return "관리 외(미편입)"
@@ -389,7 +398,7 @@ func (r positionRow) Reason() string {
 	case r.ManagementPending(), r.ManagementBlocked():
 		return "편입 대사가 아직 완료되지 않았다. 보호·익절 기준선은 엔진이 편입을 완료하고 " +
 			"유효 근거를 저장한 뒤 적용된다."
-	case r.Designated && !r.Excluded && !r.HasManagementProjection():
+	case r.PendingDesignation():
 		return "편입 요청은 저장됐지만 실행 중 엔진 반영 여부를 확인할 수 없다. 보호·익절 기준선은 " +
 			"엔진이 편입을 완료하고 유효 근거를 저장한 뒤 표시된다."
 	case !r.Eligible:

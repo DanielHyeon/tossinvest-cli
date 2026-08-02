@@ -18,7 +18,7 @@
 | Branch | AST kind/location | Condition/control path | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
 | B1 | `range` line 103 | each position row | local row projection | continues | empty/mixed rows |
-| B2 | `if` line 108 | management projection absent but row is desired-designated and not excluded | normalizes reference status to unknown, never pending | continues | unavailable-commander US test |
+| B2 | `if` line 108 | shared pending-designation predicate is true: broker holding is unmanaged, non-released, known, desired-designated, non-excluded, and management projection is absent | normalizes reference status to unknown, never pending | continues | unavailable-commander US plus managed/released/designated collision tests |
 | B3 | `if` line 114 | no exit state | projects effective-known candidate or typed unknown only | continues | KR/US candidate/runtime tests |
 | B4 | `if` line 123 | lifecycle generation differs | clears raw/actionable values and emits mismatch reference | continues | generation mismatch test |
 | B5 | `if` line 137 | released lifecycle | suppresses actionable line; only validated raw stays historical | continues | released tests |
@@ -34,6 +34,7 @@
 | `ExitSnapshotView.WithFreshness` | classify canonical evidence | pure clock comparison | journal tests |
 | `operatorview.BuildExitLine` | canonical actionable projection | stale/unknown fail closed | operatorview tests |
 | `operatorview.BuildExitLineReference` | non-effective raw/plan projection | mismatch/unknown returns no prices | a053 tests |
+| `positionRow.PendingDesignation` | keep desired-only fallback identical in status, reason, and reference projections | pure predicate; managed/released/unknown/excluded rows are false | post-deploy collision regression + released truth table |
 | `hasStoredExitEvidence` | detect exact persisted raw strings | no recomputation | current AST |
 
 ## State mutations and fallbacks
