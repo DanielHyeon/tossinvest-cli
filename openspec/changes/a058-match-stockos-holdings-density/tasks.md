@@ -13,8 +13,8 @@
 
 ## 3. Verification and Delivery
 
-- [ ] 3.1 Run focused console tests, OpenSpec strict validation, `make sdd-sync`, and `make sdd-check`
-- [ ] 3.2 Run independent design/code/security review and `make gate CHANGE=a058-match-stockos-holdings-density`
-- [ ] 3.3 Browser-verify dashboard/positions desktop column metrics, row density, 375 px overflow, and details behavior
-- [ ] 3.4 Commit the worktree, merge to local main, push origin main, deploy, and verify the deployed routes
-- [ ] 3.5 Archive the OpenSpec change, refresh PM trackers/memory, and push the archive commit
+- [x] 3.1 Run focused console tests, OpenSpec strict validation, `make sdd-sync`, and `make sdd-check`
+- [x] 3.2 Run independent design/code/security review and `make gate CHANGE=a058-match-stockos-holdings-density`
+- [x] 3.3 Browser-verify dashboard/positions desktop column metrics, row density, 375 px overflow, and details behavior
+- [x] 3.4 Commit the worktree, merge to local main, push origin main, deploy, and verify the deployed routes
+- [x] 3.5 Archive the OpenSpec change, refresh PM trackers/memory, and push the archive commit
