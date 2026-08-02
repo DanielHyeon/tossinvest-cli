@@ -73,7 +73,7 @@ form { display: inline; }
 .positions-table thead { font-size: 10px; line-height: 15px; }
 .positions-table th, .positions-table td { padding: 8px 12px; }
 .positions-table .number-column { text-align: right; font-variant-numeric: tabular-nums; }
-.positions-table .line-column { text-align: right; }
+.positions-table thead th:nth-child(5) { text-align: right; }
 .position-col-instrument { width: 31%; }
 .position-col-quantity { width: 6%; }
 .position-col-average, .position-col-current { width: 11%; }

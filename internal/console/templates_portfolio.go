@@ -88,7 +88,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   </colgroup>
   <thead><tr>
     <th scope="col">종목</th><th class="number-column" scope="col">수량</th><th class="number-column" scope="col">평균가</th>
-    <th class="number-column" scope="col">현재가</th><th class="line-column" scope="col">라인</th><th class="number-column" scope="col">총금액</th>
+    <th class="number-column" scope="col">현재가</th><th scope="col">라인</th><th class="number-column" scope="col">총금액</th>
     <th class="number-column" scope="col">미실현 PnL</th>
   </tr></thead>
   <tbody>
@@ -107,6 +107,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
         {{else}}
         <strong class="status-pill muted">보호 근거 없음</strong>
         {{end}}
+        {{if or .ManagementExcluded (and .InBroker (not .Managed) (not .Unknown) .Excluded (not .HasManagementProjection))}}<span class="submetric">자동관리 제외 정책 적용 중</span>{{end}}
       </span>
     </th>
     <td data-label="수량" class="number-cell"><strong>{{.Qty}}</strong></td>
