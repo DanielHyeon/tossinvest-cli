@@ -69,28 +69,36 @@ form { display: inline; }
 .data-table caption { text-align: left; font-weight: 700; font-size: 1.05rem; padding: 0 0 0.65rem; }
 .data-table th, .data-table td { padding: 0.75rem 0.65rem; overflow-wrap: anywhere; }
 .data-table tbody tr:last-child > * { border-bottom: 0; }
-.position-row > :nth-child(1) { width: 18%; }
-.position-row > :nth-child(2) { width: 7%; }
-.position-row > :nth-child(3) { width: 11%; }
-.position-row > :nth-child(4) { width: 11%; }
-.position-row > :nth-child(5) { width: 25%; }
-.position-row > :nth-child(6) { width: 13%; }
-.position-row > :nth-child(7) { width: 15%; }
+.positions-table { font-size: 12px; line-height: 18px; }
+.positions-table thead { font-size: 10px; line-height: 15px; }
+.positions-table th, .positions-table td { padding: 8px 12px; }
+.positions-table .number-column { text-align: right; font-variant-numeric: tabular-nums; }
+.positions-table .line-column { text-align: right; }
+.position-col-instrument { width: 31%; }
+.position-col-quantity { width: 6%; }
+.position-col-average, .position-col-current { width: 11%; }
+.position-col-lines { width: 18%; }
+.position-col-value { width: 12%; }
+.position-col-pnl { width: 11%; }
 .holding-name { display: block; margin-bottom: 0.12rem; font-weight: 700; }
-.holding-status { margin-top: 0.45rem; }
+.holding-name code { font-size: inherit; font-weight: 500; }
+.holding-verdicts { display: flex; flex-wrap: wrap; gap: 3px 5px; align-items: center; margin-top: 4px; }
+.holding-verdicts .submetric { display: inline; margin-top: 0; }
 .number-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.line-item { display: grid; grid-template-columns: minmax(4.2rem, auto) minmax(0, 1fr);
-  gap: 0.45rem; margin-top: 0.14rem; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
-.line-item > span { color: #6a6a62; }
-.line-item > strong { text-align: right; overflow-wrap: anywhere; }
+.line-item { display: flex; justify-content: flex-end; align-items: baseline;
+  gap: 5px; margin-top: 2px; font-size: 12px; line-height: 15px; font-variant-numeric: tabular-nums; }
+.line-item > span { color: #6a6a62; font-size: 10px; line-height: 12.5px; }
+.line-item > strong { font-size: 11px; line-height: 13.75px; text-align: right; overflow-wrap: normal; }
 /* One status primitive. .state-badge said the same thing under a second name
    and was used twice; this one was used eight times and is asserted by an
    existing test, so the merge keeps the common name (change a054). */
 .status-pill { display: inline-block; border: 1px solid currentColor; border-radius: 999px;
   padding: 0.08rem 0.55rem; font-size: 0.86rem; }
+.positions-table .status-pill { padding: 1px 6px; font-size: 11px; line-height: 15px; }
+.positions-table .submetric { font-size: 11px; line-height: 15px; }
 .metric { display: block; font-size: 1rem; font-weight: 700; }
 .submetric { display: block; margin-top: 0.15rem; color: #6a6a62; font-size: 0.82rem; }
-.exit-line-stack { font-variant-numeric: tabular-nums; }
+.exit-line-stack { text-align: right; font-variant-numeric: tabular-nums; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: flex-start; }
 .actions form { display: block; }
 .actions button { padding: 0.32rem 0.65rem; font-size: 0.86rem; }
@@ -231,6 +239,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   .data-table td > *, .data-table th[scope="row"] > * { grid-column: 2; min-width: 0; }
   .data-table tr > :last-child { border-bottom: 0; }
   .number-cell { text-align: left; white-space: normal; }
+  .line-item { justify-content: flex-start; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
   .line-item > strong { text-align: left; }
   .actions { min-width: 0; }
   .optimization-title { display: block; }
