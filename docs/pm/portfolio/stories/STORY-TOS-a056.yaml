@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a056",
+  "title": "Keep an advisory marker from refusing an engine start",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a056-autostart-survives-container-recreate",
+    "path": "openspec/changes/a056-autostart-survives-container-recreate"
+  },
+  "acceptance": [
+    "A fresh engine marker whose PID no longer exists does not refuse a start; the start proceeds and the flock remains the exclusion",
+    "An engine start is refused when an engine process is actually observed, and the guidance still names that process",
+    "A process enumeration failure keeps the existing refusal rather than being read as absence",
+    "No code path refuses a start on marker freshness alone",
+    "The stale window, the marker refresh period and the journal flock are unchanged"
+  ]
+}

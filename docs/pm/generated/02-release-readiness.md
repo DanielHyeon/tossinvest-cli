@@ -59,3 +59,4 @@
 | STORY-TOS-a053 | 5 |
 | STORY-TOS-a054 | 6 |
 | STORY-TOS-a055 | 6 |
+| STORY-TOS-a056 | 5 |
