@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a057",
+  "title": "Make holdings readable at a glance on dashboard and positions",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a057-simplify-portfolio-views",
+    "path": "openspec/changes/archive/2026-08-02-a057-simplify-portfolio-views"
+  },
+  "acceptance": [
+    "Dashboard and positions show the same read-only holding projection rather than two policy interpretations",
+    "Each primary holding row shows name, symbol, quantity, average price, current price, take-profit, stop, trailing recovery, baseline, high-water, market value and unrealized PnL",
+    "Management provenance, journal identities, snapshot identities and diagnostic reasons are hidden under an accessible per-row disclosure without concealing stale or unavailable evidence",
+    "KR and US holdings use the same information hierarchy while preserving their own currencies and market labels",
+    "The views remain input-free, script-free, keyboard accessible and readable without horizontal page overflow at 375 CSS pixels"
+  ]
+}

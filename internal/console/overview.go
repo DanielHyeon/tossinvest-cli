@@ -302,6 +302,11 @@ type accountPanel struct {
 	// Journal is the ledger state behind the managed/unmanaged split.
 	Journal journalView
 	Markets []accountMarketRow
+	// Rows is the same joined and enriched read-only projection rendered by the
+	// positions screen. It is retained from the aggregation pass so the overview
+	// neither joins twice nor refreshes the broker cache.
+	Rows             []positionRow
+	AnyJournalAbsent bool
 }
 
 // accountMarketRow is one market's holdings. Each cell is its own reading, so
@@ -513,7 +518,7 @@ func (c *Console) overview(ctx context.Context) overviewView {
 
 	live, trips, events, jv := c.overviewLedger(ctx)
 	v.Journal = jv
-	v.Account = c.accountPanelFrom(now, live, jv)
+	v.Account = c.accountPanelFrom(ctx, now, live, jv)
 	v.Today = todayPanelFrom(now, trips, jv)
 	v.Recent = recentPanelFrom(events, jv)
 
@@ -645,12 +650,20 @@ func overviewOtherSymbols(pairs []string) string {
 }
 
 // accountPanelFrom builds the holdings panel from the cache and the ledger.
-func (c *Console) accountPanelFrom(now time.Time, live []journal.PositionExit,
+func (c *Console) accountPanelFrom(ctx context.Context, now time.Time, live []journal.PositionExit,
 	jv journalView) accountPanel {
 	snap := c.holdings.peek(now)
 	panel := accountPanel{Broker: snap, Journal: jv}
 
 	rows := joinPositions(snap.Rows, live, jv.Readable())
+	c.decoratePositionRows(ctx, rows, now)
+	panel.Rows = rows
+	for _, row := range rows {
+		if row.JournalReadable && !row.InJournal {
+			panel.AnyJournalAbsent = true
+			break
+		}
+	}
 	usable := brokerReadable(snap)
 
 	for _, m := range overviewMarkets {
