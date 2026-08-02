@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a058-match-stockos-holdings-density",
-    "path": "openspec/changes/a058-match-stockos-holdings-density"
+    "path": "openspec/changes/archive/2026-08-02-a058-match-stockos-holdings-density"
   },
   "acceptance": [
     "Dashboard and positions retain exactly seven primary holdings columns in the StockOS order",
