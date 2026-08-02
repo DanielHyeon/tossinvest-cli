@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a057-simplify-portfolio-views",
-    "path": "openspec/changes/a057-simplify-portfolio-views"
+    "path": "openspec/changes/archive/2026-08-02-a057-simplify-portfolio-views"
   },
   "acceptance": [
     "Dashboard and positions show the same read-only holding projection rather than two policy interpretations",

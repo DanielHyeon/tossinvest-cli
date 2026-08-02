@@ -87,3 +87,20 @@ P0/P1; deployed 375 px density/overflow remains a canary item.
 - Worktree note: Go 1.25 resolves VCS metadata from `/tmp` for linked worktrees;
   the full gate therefore uses `GOFLAGS=-buildvcs=false`. The same nested real
   binary tests pass with that VCS-stamping-only override.
+
+## Deployed browser canary
+
+Main commit `f700fd70` was rebuilt and deployed through the existing hardened
+Docker Compose project. Both `tossos` and `httpapi` reported healthy.
+
+Chromium verified `/dashboard` and `/positions` at 1440×1000 and 375×812:
+
+- document `scrollWidth` equaled viewport width (1440 and 375 respectively);
+- all seven requested headers rendered in both screens;
+- four deployed holding rows each rendered exactly five line items;
+- there were no visible inputs, forms, textareas, selects, or scripts;
+- the first native disclosure opened successfully in all four runs;
+- KR and US rows shared the same hierarchy and US rendered `US · USD`.
+
+Visual review of the four full-page screenshots confirmed the mobile label/value
+flow and readable single-column disclosure. No deployment or UI blocker remains.

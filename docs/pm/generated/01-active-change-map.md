@@ -60,4 +60,4 @@
 | `a054-console-status-shell` | STORY-TOS-a054 | archived |
 | `a055-console-settings-cadence` | STORY-TOS-a055 | archived |
 | `a056-autostart-survives-container-recreate` | STORY-TOS-a056 | in_progress |
-| `a057-simplify-portfolio-views` | STORY-TOS-a057 | implemented |
+| `a057-simplify-portfolio-views` | STORY-TOS-a057 | archived |

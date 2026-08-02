@@ -49,7 +49,7 @@
     - STORY-TOS-039 — Streamline trading views and remove CSP-blocked controls [archived] → `streamline-trading-views`
     - STORY-TOS-a054 — Give every console screen one status strip and one name [archived] → `a054-console-status-shell`
     - STORY-TOS-a055 — Group settings by reversibility and cadence, not by feature name [archived] → `a055-console-settings-cadence`
-    - STORY-TOS-a057 — Make holdings readable at a glance on dashboard and positions [implemented] → `a057-simplify-portfolio-views`
+    - STORY-TOS-a057 — Make holdings readable at a glance on dashboard and positions [archived] → `a057-simplify-portfolio-views`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
