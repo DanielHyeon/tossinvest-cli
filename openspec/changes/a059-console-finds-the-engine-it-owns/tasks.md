@@ -43,15 +43,26 @@
 - [x] 5.1 변이 검증: 패턴을 원래 값으로 되돌리면 2.1이 RED가 되는지 확인하고 되돌린다.
 - [x] 5.2 변이 검증: 소유 판정을 건너뛰면 2.3/2.5가 RED가 되는지 확인하고 되돌린다.
 - [x] 5.3 변이 검증: 패턴에서 토큰 경계를 빼면 2.2가 RED가 되는지 확인하고 되돌린다.
-- [ ] 5.4 컨테이너 실측 (휴장 시간, 사람 승인): 정지 버튼이 도는 엔진을 실제로 세우고,
-      이어서 기동이 다시 뜨는지 확인한다. journal 정합 close와 포지션 무손상을 확인한다.
-- [ ] 5.5 컨테이너 실측: a056의 거부 분기가 이제 도달하는지 — 엔진이 도는 중 기동을
-      요청하면 프로세스를 안내하며 거부하는지 확인한다.
-- [ ] 5.6 `make test`, `make vet`, `make validate`, `make sdd-sync`, `make sdd-check`.
-- [ ] 5.7 `make gate CHANGE=a059-console-finds-the-engine-it-owns`.
+- [x] 5.4 컨테이너 실측 (2026-08-03 07:45~07:46 KST, KR·US 휴장, 사람 승인). 콘솔
+      `/verify-console`의 [엔진 정지] → 도는 엔진 pid 16을 실제로 찾아 SIGTERM을 보내고
+      루프 완주까지 기다렸다. 응답은 `"16를 종료시켰지만 활성 마커가 아직 신선하다
+      (22:43:35Z) — 최대 5m0s 뒤 사라진다"`. a059 이전 같은 조건의 응답은
+      `"실행 중인 엔진을 찾지 못했다."`였고 엔진은 계속 돌았다. 엔진 로그에
+      `"the runtime was cancelled; every loop was drained and the journal can be closed"`.
+      이어 [엔진 시작] → 3.0초(= `engineStartProbe`) 뒤 pid 110으로 재기동.
+      journal.db md5 `d1102d49…` 시험 전후 동일, `/positions` 5행 전후 동일, 두 서비스
+      healthy, 엔진 정지 구간 32초(대부분 명령 간 지연).
+- [x] 5.5 컨테이너 실측 (2026-08-03 07:46 KST). 엔진이 pid 110으로 도는 중 [엔진 시작]을
+      다시 눌렀다 → 4.5ms 만에 거부, 응답은 `"엔진이 기동을 거부했다: 엔진이 이미 실행
+      중이다 (pid 110, 마지막 갱신 2026-08-02T22:45:54Z)"`. 엔진은 여전히 하나뿐이다.
+      **a056의 거부 분기가 컨테이너에서 처음으로 도달했다** — a056 `issues.md` I2가
+      "도달 불가"로 기록한 그 분기다. a059 이전에는 두 번째 프로세스가 spawn되어 flock에서
+      죽었고, 운영자는 pid도 갱신 시각도 보지 못했다.
+- [x] 5.6 `make test`, `make vet`, `make validate`, `make sdd-sync`, `make sdd-check`.
+- [x] 5.7 `make gate CHANGE=a059-console-finds-the-engine-it-owns`.
 
 ## 6. 리뷰와 기록
 
-- [ ] 6.1 독립 리뷰를 받고 `review.md`에 기록한다.
-- [ ] 6.2 발견 사항을 `issues.md`에 남긴다.
-- [ ] 6.3 PM story/tracker 동기화.
+- [x] 6.1 독립 리뷰를 받고 `review.md`에 기록한다.
+- [x] 6.2 발견 사항을 `issues.md`에 남긴다.
+- [x] 6.3 PM story/tracker 동기화.

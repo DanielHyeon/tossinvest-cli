@@ -96,6 +96,44 @@
 (tasks 1.1). 엔진 기동·종료 경로이므로 면제하지 않았다. 편집 후 AST와 세 branch map을
 갱신했고, 신규 leaf 함수와 테스트 함수 19건은 생성 산출물로 채웠다. 대상 22건.
 
-## 컨테이너 실측
+## 컨테이너 실측 (2026-08-03 07:45~07:46 KST, KR·US 휴장, 사람 승인)
 
-tasks 5.4/5.5 — 아래 "실측" 절 참조.
+프로덕션 컨테이너, 배포 이미지 `67a95f6df589`. 콘솔 `/verify-console`의 실제 버튼을
+눌렀다 — 시뮬레이션이 아니다.
+
+```
+22:45:09Z  사전    엔진 pid 16 / journal.db md5 d1102d49… / /positions 5행
+           대조    pgrep -f 'tossctl engine run'         → exit 1   (결함 그대로)
+                   pgrep -af 'tossctl( .*)? engine run'  → 16       (고친 패턴)
+
+22:45:20Z  [엔진 정지]  http 303
+           "16를 종료시켰지만 활성 마커가 아직 신선하다 (22:43:35Z) — 최대 5m0s 뒤 사라진다"
+           engine.log: "the runtime was cancelled; every loop was drained and
+                        the journal can be closed"
+           → 엔진 부재 확인
+
+22:45:52Z  [엔진 시작]  http 303, 3.006s (= engineStartProbe)
+           "엔진을 시작했다 — 로그 /var/lib/tossos/config/engine.log"
+           → pid 110
+
+22:46:07Z  [엔진 시작] 다시  http 303, 0.005s
+           "엔진이 기동을 거부했다: 엔진이 이미 실행 중이다
+            (pid 110, 마지막 갱신 2026-08-02T22:45:54Z)"
+           → 엔진은 여전히 하나
+
+사후       journal.db md5 d1102d49… (동일) / /positions 5행 (동일)
+           두 서비스 healthy / gate_enabled=true gate_verified=true
+           entry_permitted=false / reconcile·exit 루프 재가동
+```
+
+세 줄 모두 a059 이전에는 다른 답을 냈다.
+
+| 동작 | a059 이전 | 실측 |
+|---|---|---|
+| 정지 | `"실행 중인 엔진을 찾지 못했다."` — 엔진은 계속 돈다 | pid 16을 찾아 세웠다 |
+| 기동 | 정상 | 정상 (변화 없음) |
+| 중복 기동 | 두 번째 프로세스 spawn → flock에서 사망, 운영자는 pid도 시각도 못 봄 | 4.5ms 만에 pid·갱신 시각을 안내하며 거부 |
+
+세 번째 줄이 a056 `issues.md` I2가 "컨테이너에서 도달 불가"로 기록한 분기다. 이제 도달한다.
+
+엔진 정지 구간은 32초였고 대부분 명령 사이의 지연이다. 두 시장 모두 휴장이었다.
