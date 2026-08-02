@@ -3,7 +3,7 @@ package console
 const positionPolicyTemplates = `
 {{define "position-policy"}}
 {{template "head" .}}
-<h1>포지션 관리</h1>
+<h1>포지션 정책 <span class="muted">관리 상태</span></h1>
 <p class="muted page-intro">StockOS lane console처럼 범위·현재값·실효값·적용 시점을 한 화면에서 확인한다.
 직접 입력은 없고 서버가 제공한 현재 행 action과 preset만 선택한다.</p>
 {{if .Notice}}<p class="notice" role="status">{{.Notice}}</p>{{end}}

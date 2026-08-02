@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/overview.go",
+  "source_sha256": "e41f6c2c15bdb728efd4148fefcfab1d81e2440da9524641e242a99f6fdbebf1",
+  "package": "console",
+  "function": "Refresh",
+  "receiver": "overviewPage",
+  "signature": "overviewPage.Refresh(params=0, results=1)",
+  "start": {
+    "line": 1146,
+    "column": 1
+  },
+  "end": {
+    "line": 1146,
+    "column": 57
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1146,
+        "column": 44
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

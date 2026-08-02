@@ -12,6 +12,8 @@ package console
 import (
 	"net/http"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
 // registerOrders puts the orders screen on the mux.
@@ -30,21 +32,45 @@ func (c *Console) registerOrders(mux *http.ServeMux) {
 
 // handleOrders renders the screen.
 func (c *Console) handleOrders(w http.ResponseWriter, r *http.Request) {
-	c.render(w, "orders", ordersPage{
-		Nav:  "orders",
-		Snap: c.orders(r.Context(), filterChoiceFrom(r)),
-	})
+	snap := c.orders(r.Context(), filterChoiceFrom(r))
+	page := ordersPage{
+		chrome: c.chromeFor("orders", verifylive.MarketKR, snap.Broker.freshness()),
+		Snap:   snap,
+	}
+	page.Refresh = true
+	// This screen reloads itself, so a native <details> would close on the next
+	// tick. The folds are URL-driven instead (change a055 §6, explain.go).
+	page.Explain = explainFrom(r)
+	c.render(w, "orders", page)
 }
 
 type ordersPage struct {
-	Nav  string
+	chrome
 	Snap ordersView
 }
 
-// Refresh and RefreshSeconds: the screen reloads itself at the orders cache TTL,
-// derived from the constant rather than written again (positionsPage's
-// precedent). A period shorter than the TTL would be a reload that costs broker
-// calls faster than the budget allows; a period equal to it holds one open tab to
-// the three calls per TTL the spec fixes for this screen.
-func (ordersPage) Refresh() bool       { return true }
+// ordersScreen is the orders view plus this screen's fold state.
+//
+// The "ordercounts" and "ordertable" sub-templates are invoked with the view as
+// their dot, so `$` inside them is the view and not the page — and both hold a
+// disclosure that has to be URL-driven on a screen that reloads itself. Embedding
+// keeps every existing `.Rows`, `.OpenLive`, `.Broker` reference working and adds
+// the one field (change a055 §6).
+type ordersScreen struct {
+	ordersView
+	Explain explainState
+}
+
+// Screen is what those two sub-templates are given.
+func (p ordersPage) Screen() ordersScreen {
+	return ordersScreen{ordersView: p.Snap, Explain: p.Explain}
+}
+
+// RefreshSeconds is the reload period: the orders cache TTL, derived from the
+// constant rather than written again (positionsPage's precedent). A period
+// shorter than the TTL would be a reload that costs broker calls faster than the
+// budget allows; a period equal to it holds one open tab to the three calls per
+// TTL the spec fixes for this screen.
+//
+// Refresh is the embedded chrome's field, set by the handler above.
 func (ordersPage) RefreshSeconds() int { return int(ordersTTL / time.Second) }

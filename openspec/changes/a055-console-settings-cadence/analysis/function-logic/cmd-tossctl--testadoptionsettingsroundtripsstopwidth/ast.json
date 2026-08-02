@@ -1,0 +1,483 @@
+{
+  "file": "cmd/tossctl/adoptionsettings_stop_percent_test.go",
+  "source_sha256": "35e007b1f8593c985c1506141cf9857582eaafc03d3d0fbe1e62a73f735279fd",
+  "package": "main",
+  "function": "TestAdoptionSettingsRoundTripsStopWidth",
+  "signature": "TestAdoptionSettingsRoundTripsStopWidth(params=1, results=0)",
+  "start": {
+    "line": 19,
+    "column": 1
+  },
+  "end": {
+    "line": 80,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 33,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 12
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 2
+      },
+      "text": "t.Setenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 30
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 12
+      },
+      "text": "os.WriteFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 25
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 63
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 10
+      },
+      "text": "newAdoptionSettingsSeam"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 14
+      },
+      "text": "console.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 9
+      },
+      "text": "httptest.NewServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 28
+      },
+      "text": "app.Handler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 8
+      },
+      "text": "srv.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 14
+      },
+      "text": "cookiejar.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 16
+      },
+      "text": "client.Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 52
+      },
+      "text": "app.SessionToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 2
+      },
+      "text": "login.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 19
+      },
+      "text": "client.Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 15
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 2
+      },
+      "text": "settings.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 11
+      },
+      "text": "FindSubmatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 11
+      },
+      "text": "regexp.MustCompile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 19
+      },
+      "text": "client.PostForm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 28
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 2
+      },
+      "text": "response.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 25
+      },
+      "text": "seam.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 20,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 22,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 40,
+        "column": 2
+      },
+      "text": "srv.Close"
+    }
+  ],
+  "revision": "current"
+}

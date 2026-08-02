@@ -56,7 +56,8 @@ type optimizationFieldView struct {
 }
 
 type optimizationPage struct {
-	Nav, CSRF, Notice, Warning     string
+	chrome
+	CSRF, Notice, Warning          string
 	Selected                       strategyopt.Category
 	Categories                     []optimizationCategoryView
 	LifecycleWired, LifecycleReady bool
@@ -108,14 +109,13 @@ func (p optimizationPage) ExitPolicyWritable() bool {
 }
 
 type optimizationPreviewPage struct {
-	Nav, CSRF          string
+	chrome
+	CSRF               string
 	Preview            strategyopt.Preview
 	WaitSecs           int
 	Waiting            bool
 	NotBeforeUnixMilli int64
 }
-
-func (optimizationPreviewPage) Refresh() bool { return false }
 
 const optimizationPreviewScript = `(function(){
 "use strict";
@@ -149,7 +149,7 @@ func (c *Console) previewPage(preview strategyopt.Preview) optimizationPreviewPa
 	if waiting {
 		waitSecs = int((remaining + time.Second - 1) / time.Second)
 	}
-	return optimizationPreviewPage{Nav: "optimization", CSRF: c.csrf, Preview: preview,
+	return optimizationPreviewPage{chrome: c.chromeOnRequest("optimization"), CSRF: c.csrf, Preview: preview,
 		WaitSecs: waitSecs, Waiting: waiting, NotBeforeUnixMilli: preview.NotBefore.UnixMilli()}
 }
 
@@ -162,7 +162,8 @@ type optimizationConflictRow struct {
 }
 
 type optimizationConflictPage struct {
-	Nav, CSRF                     string
+	chrome
+	CSRF                          string
 	Category                      strategyopt.Category
 	BaseVersion, LatestVersion    uint64
 	Rows                          []optimizationConflictRow
@@ -170,10 +171,8 @@ type optimizationConflictPage struct {
 	RepreviewKey, RepreviewOption string
 }
 
-func (optimizationConflictPage) Refresh() bool { return false }
-
-func newOptimizationConflictPage(csrf string, conflict strategyopt.ConflictView) optimizationConflictPage {
-	page := optimizationConflictPage{Nav: "optimization", CSRF: csrf, Category: conflict.Category,
+func (c *Console) newOptimizationConflictPage(csrf string, conflict strategyopt.ConflictView) optimizationConflictPage {
+	page := optimizationConflictPage{chrome: c.chromeOnRequest("optimization"), CSRF: csrf, Category: conflict.Category,
 		BaseVersion: conflict.BaseVersion, LatestVersion: conflict.Latest.Version}
 	for _, change := range conflict.Attempted {
 		field, ok := conflict.Registry.Field(change.Key)
@@ -308,5 +307,5 @@ func (c *Console) writeOptimizationApplyError(w http.ResponseWriter, r *http.Req
 		return
 	}
 	c.renderHTML(w, http.StatusPreconditionFailed, "optimization-conflict",
-		newOptimizationConflictPage(c.csrf, conflict), consoleHTMLCSP)
+		c.newOptimizationConflictPage(c.csrf, conflict), consoleHTMLCSP)
 }

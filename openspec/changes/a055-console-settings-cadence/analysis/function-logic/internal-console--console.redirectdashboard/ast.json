@@ -1,0 +1,72 @@
+{
+  "file": "internal/console/restart.go",
+  "source_sha256": "df4def84dcf2d488d3b27a25c633946ad8223de5a299e88124d673dc0d3c9554",
+  "package": "console",
+  "function": "redirectDashboard",
+  "receiver": "Console",
+  "signature": "Console.redirectDashboard(params=3, results=0)",
+  "start": {
+    "line": 324,
+    "column": 1
+  },
+  "end": {
+    "line": 330,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 326,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 26
+      },
+      "text": "urlQueryEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 2
+      },
+      "text": "http.Redirect"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 325,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 327,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

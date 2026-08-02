@@ -76,12 +76,11 @@ var pages = func() *template.Template {
 // --- dashboard --------------------------------------------------------------
 
 type dashboardPage struct {
-	Nav     string
-	CSRF    string
-	Refresh bool
-	Notice  string
-	Snap    snapshot
-	Run     *runView
+	chrome
+	CSRF   string
+	Notice string
+	Snap   snapshot
+	Run    *runView
 	// CanRestart and CanRestartSoak report that the caller wired the seam. A
 	// button for something this build cannot do would be a button that answers
 	// with an apology.
@@ -94,14 +93,22 @@ type dashboardPage struct {
 // The positions screen carries its own, slower period (portfolio_pages.go).
 func (dashboardPage) RefreshSeconds() int { return 2 }
 
-func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
+// redirectRoot answers the root path, which is no longer a screen.
+//
+// It is also the mux catch-all, so the 404 every unserved path gets is here.
+func (c *Console) redirectRoot(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		c.refuse(w, http.StatusNotFound, "그런 경로는 없다",
 			"이 콘솔의 화면은 개요·검증 콘솔·포지션·주문·발굴 신호·거래 이력·편입 설정·검증·리포트 아홉뿐이다.")
 		return
 	}
+	// 303 and not 404: the root is what every printed session link points at.
+	http.Redirect(w, r, pathOverview, http.StatusSeeOther)
+}
+
+func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	page := dashboardPage{
-		Nav:            "verify-console",
+		chrome:         c.chromeOnRequest("verify-console"),
 		CSRF:           c.csrf,
 		Notice:         r.URL.Query().Get("notice"),
 		Snap:           c.snapshot(),
@@ -119,7 +126,7 @@ func (c *Console) handleDashboard(w http.ResponseWriter, r *http.Request) {
 // --- verify -----------------------------------------------------------------
 
 type verifyPage struct {
-	Nav      string
+	chrome
 	CSRF     string
 	Market   string
 	Snap     snapshot
@@ -128,7 +135,6 @@ type verifyPage struct {
 	Prompt   string
 	Spent    bool
 	Notice   string
-	Refresh  bool
 	Resuming bool
 	// CanRestart reports that the restart button is wired, so the page can offer
 	// the process boundary rather than describe it as a chore.
@@ -172,7 +178,7 @@ func (c *Console) renderVerify(w http.ResponseWriter, market, notice string) {
 
 	snap := c.snapshotFor(market)
 	page := verifyPage{
-		Nav:        "verify",
+		chrome:     c.chromeFor("verify", snap.Market, onRequest()),
 		CSRF:       c.csrf,
 		Market:     snap.Market,
 		Snap:       snap,
@@ -334,16 +340,15 @@ func (c *Console) redirectVerify(w http.ResponseWriter, r *http.Request, notice 
 // --- report -----------------------------------------------------------------
 
 type reportPage struct {
-	Nav     string
-	Refresh bool
-	Snap    snapshot
-	Text    string
-	Error   string
+	chrome
+	Snap  snapshot
+	Text  string
+	Error string
 }
 
 func (c *Console) handleReport(w http.ResponseWriter, r *http.Request) {
 	market := marketOf(r)
-	page := reportPage{Nav: "report", Snap: c.snapshotFor(market)}
+	page := reportPage{chrome: c.chromeFor("report", market, onRequest()), Snap: c.snapshotFor(market)}
 	rep, err := c.report(market)
 	if err != nil {
 		page.Error = err.Error()

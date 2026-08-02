@@ -1,0 +1,171 @@
+{
+  "file": "internal/console/settings_limits_test.go",
+  "source_sha256": "e126aac7adf9f7cee9f20750c0363ca58969cc2128f94a16fddb4b34998ac7be",
+  "package": "console",
+  "function": "TestTheScreenNamesTheMatchingTier",
+  "signature": "TestTheScreenNamesTheMatchingTier(params=1, results=0)",
+  "start": {
+    "line": 235,
+    "column": 1
+  },
+  "end": {
+    "line": 252,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 11
+      },
+      "text": "tierLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 7
+      },
+      "text": "limitsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 16
+      },
+      "text": "limitSection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 32
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 64
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 16
+      },
+      "text": "limitSection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 32
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 64
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 236,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 237,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 244,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

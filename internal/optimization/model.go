@@ -30,12 +30,12 @@ type CategoryDescriptor struct {
 }
 
 var categories = []CategoryDescriptor{
-	{CategoryOverview, "개요", "설정 상태와 분리된 운영 권한 상태를 한눈에 확인합니다.", true},
-	{CategoryExitProtection, "익절·보호", "신규 관리 포지션에 적용할 익절·보호 정책을 검토합니다.", false},
-	{CategoryPositionManagement, "종목별 관리", "현재 포지션의 상속·override와 lifecycle을 확인합니다.", false},
-	{CategoryCandidateFilters, "후보 필터", "승인된 threshold와 성과 근거의 준비 상태를 확인합니다.", false},
-	{CategoryStrategyRuntime, "전략·실행", "시장·일정과 lane 실행 상태를 서로 분리해 확인합니다.", false},
-	{CategoryPerformanceHistory, "성과·이력", "결정적 성과, 설정 이력과 rollback 후보를 검토합니다.", true},
+	{CategoryOverview, "개요", "설정 상태와 분리된 운영 권한 상태를 한눈에 확인한다.", true},
+	{CategoryExitProtection, "익절·보호", "신규 관리 포지션에 적용할 익절·보호 정책을 검토한다.", false},
+	{CategoryPositionManagement, "종목별 관리", "현재 포지션의 상속·override와 lifecycle을 확인한다.", false},
+	{CategoryCandidateFilters, "후보 필터", "승인된 threshold와 성과 근거의 준비 상태를 확인한다.", false},
+	{CategoryStrategyRuntime, "전략·실행", "시장·일정과 lane 실행 상태를 서로 분리해 확인한다.", false},
+	{CategoryPerformanceHistory, "성과·이력", "결정적 성과, 설정 이력과 rollback 후보를 검토한다.", true},
 }
 
 func Categories() []CategoryDescriptor {

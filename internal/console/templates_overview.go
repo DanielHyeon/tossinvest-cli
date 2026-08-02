@@ -33,12 +33,51 @@ const overviewTemplates = `
 <p class="muted">지금 계좌가 어떤 상태인지를 한 화면에 모은 <strong>읽기 전용</strong> 화면이다.
 누를 것이 없다 — 주문·정정·취소는 물론 어떤 설정 변경 폼도 이 화면에는 없다.
 <strong>브로커를 호출하지 않는다</strong>: 보유 수치는 <a href="/positions">포지션</a> 화면이 채운 캐시를
-갱신 없이 읽기만 한다. 검증 승인은 <a href="/">검증 콘솔</a>에 그대로 있다.
+갱신 없이 읽기만 한다. 검증 승인은 <a href="/verify-console">검증 콘솔</a>에 그대로 있다.
 <span class="muted">기준 시각 {{.Snap.NowText}} · {{.RefreshSeconds}}초마다 자동 재로드</span></p>
 
 {{/* 원장 상태는 화면 전체에 한 번. 계좌·오늘·최근 세 패널이 같은 핸들 하나로 읽으므로
      같은 사실을 세 번 적을 이유가 없고, 세 번 적으면 서로 다른 답이 나올 자리가 생긴다. */}}
 {{template "journalstate" .Snap.Journal}}
+
+{{/*
+  상단 요약 (change a054). "지금 무엇이 잘못됐는가"를 세로 스크롤 없이 답한다.
+
+  각 칸은 아래 상세 섹션이 **이미 계산한 값을 그대로 옮긴다** — 여기서 다시 세거나 더하지
+  않는다. 같은 사실을 두 번 계산하면 두 답이 갈라질 자리가 생기고, 갈라지는 순간 운영자는
+  어느 쪽을 믿을지 매번 판단해야 한다. 시장 합계도 만들지 않는다: KR은 KRW, US는 USD다.
+
+  읽지 못한 칸은 0이 아니라 "미측정 + 사유"다. 0은 "재봤고 없었다"는 뜻이고 미측정은 다른
+  사실이며, 둘을 같은 글자로 쓰면 빈 계좌와 읽히지 않는 계좌가 구분되지 않는다.
+*/}}
+<dl class="console-summary" aria-label="개요 요약">
+  <div><dt><a href="/verify-console">엔진</a></dt>
+    <dd>{{if not .Snap.Engine.Wired}}<span class="muted">미배선</span>
+      {{- else if .Snap.Engine.Running}}<span class="ok">실행 중</span>
+      {{- else}}<span class="muted">정지</span>{{end}}</dd></div>
+
+  <div><dt><a href="/positions">계좌 보유</a></dt>
+    <dd>{{range .Snap.Account.Markets}}<span class="summary-line">{{.Market}}
+      {{- if .Blocked}} {{template "unmeasured" .Unreadable}}
+      {{- else if .Empty}} <span class="muted">보유 없음</span>
+      {{- else}} {{template "cell" .Value}} <span class="muted">{{.Currency}}</span>{{end}}</span>{{end}}</dd></div>
+
+  <div><dt><a href="/history">오늘 실현손익</a></dt>
+    <dd>{{range .Snap.Today.Markets}}<span class="summary-line">{{.Market}}
+      {{- if .Blocked}} {{template "unmeasured" .Unreadable}}
+      {{- else if .NoTrades}} <span class="muted">거래 없음</span>
+      {{- else}} {{template "cell" .PnL}} <span class="muted">{{.Currency}}</span>{{end}}</span>{{end}}</dd></div>
+
+  <div><dt><a href="/orders">미체결</a></dt>
+    <dd>{{with .Snap.Open.Count}}{{if .Known}}{{.Value}}건{{else}}{{template "unmeasured" .}}{{end}}{{end}}
+      {{- if .Snap.Open.VerifyHeld}}<small class="muted">검증 중 — 갱신 보류</small>{{end}}</dd></div>
+
+  <div><dt><a href="/verify-console">안전</a></dt>
+    <dd>{{range .Snap.Safety.Markets}}<span class="summary-line">{{.Market}}
+      {{- if not .Present}} <span class="muted">기록 없음</span>
+      {{- else if .Leftovers}} <span class="bad">잔여물</span>
+      {{- else}} <span class="ok">잔여물 없음</span>{{end}}</span>{{end}}</dd></div>
+</dl>
 
 {{/* --- 엔진 --- */}}
 <section>
@@ -60,7 +99,7 @@ const overviewTemplates = `
   {{else}}
   <p class="muted"><strong>기동 거부 사유 없음.</strong> 사유는 이 콘솔 프로세스에서 [엔진 시작]·[엔진 정지]를
   누른 경우에만 남는다 — 방금 연 화면에 사유가 없는 것이 정상이고, 어딘가에 저장된 사유를 찾을 필요는 없다.
-  엔진 기동/정지는 <a href="/">검증 콘솔</a>에 있다.</p>
+  엔진 기동/정지는 <a href="/verify-console">검증 콘솔</a>에 있다.</p>
   {{end}}
   {{end}}
 </section>
@@ -70,7 +109,7 @@ const overviewTemplates = `
   <h2>계좌 보유 <span class="muted">시장별</span></h2>
   <p class="muted">시장을 가로지르는 합계는 만들지 않는다 — KR 행은 KRW, US 행은 USD이고 둘을 더한 숫자는
   아무 뜻도 없다.</p>
-  <table>
+  <div class="table-scroll" role="region" aria-label="계좌 보유 시장별" tabindex="0"><table>
     <tr><th>시장</th><th>평가금액</th><th>평가손익</th><th>보유 종목</th><th>엔진 관리</th><th>관리 외</th></tr>
     {{range .Snap.Account.Markets}}
     <tr>
@@ -91,7 +130,7 @@ const overviewTemplates = `
       {{end}}
     </tr>
     {{end}}
-  </table>
+  </table></div>
   {{with .Snap.Account.Broker}}
   {{if .Present}}
   <p class="muted">브로커 보유 캐시 <strong>{{.TakenAt}}</strong> ({{.AgeSeconds}}초 전).
@@ -113,7 +152,7 @@ const overviewTemplates = `
   <p class="muted">원장에 <strong>동결된</strong> 실현손익만 쓴다 — 체결에서 재계산하지 않는다.
   경계는 시장마다 다르다: 원장의 청산 시각은 UTC이고 UTC 자정은 KST 09:00, 즉 KR 장 시작 한 시간 뒤에
   떨어진다. 각 행이 어느 자정을 썼는지 아래에 적는다.</p>
-  <table>
+  <div class="table-scroll" role="region" aria-label="오늘 시장별 현지 자정 기준" tabindex="0"><table>
     <tr><th>시장</th><th>실현손익</th><th>왕복</th><th>승</th><th>패</th></tr>
     {{range .Snap.Today.Markets}}
     <tr>
@@ -132,7 +171,7 @@ const overviewTemplates = `
       {{end}}
     </tr>
     {{end}}
-  </table>
+  </table></div>
 </section>
 
 {{/* --- 미체결 ---
@@ -165,7 +204,7 @@ const overviewTemplates = `
 {{/* --- 안전 --- */}}
 <section>
   <h2>안전 <span class="muted">검증 상태 · 잔여물 · Guardian 한도</span></h2>
-  <table>
+  <div class="table-scroll" role="region" aria-label="안전 검증 상태 · 잔여물 · Guardian 한도" tabindex="0"><table>
     <tr><th>시장</th><th>검증 진행</th><th>기록</th></tr>
     {{range .Snap.Safety.Markets}}
     <tr>
@@ -175,7 +214,7 @@ const overviewTemplates = `
       <td><code>{{if .Record}}{{.Record}}{{else}}(경로 미지정){{end}}</code></td>
     </tr>
     {{end}}
-  </table>
+  </table></div>
 
   {{$any := false}}
   {{range .Snap.Safety.Markets}}{{if .Leftovers}}{{$any = true}}
@@ -204,10 +243,10 @@ const overviewTemplates = `
   말하는 바이고, 이것은 파일을 아무도 읽지 못했다는 뜻이다.</p>
   {{end}}
   {{if .Err}}<p class="danger">한도를 읽지 못했다: <code>{{.Err}}</code></p>{{end}}
-  <table>
+  <div class="table-scroll" role="region" aria-label="Guardian 한도" tabindex="0"><table>
     <tr><th>한도</th><th>설정값</th></tr>
     {{range .Limits}}<tr><td>{{.Label}}</td><td>{{template "cell" .Value}}</td></tr>{{end}}
-  </table>
+  </table></div>
 
   <h2>오늘 소진분</h2>
   {{range .Axes}}
@@ -215,13 +254,13 @@ const overviewTemplates = `
   {{if .Structural}}
   <p class="notice">{{.Structural}}</p>
   {{else}}
-  <table>
+  <div class="table-scroll" role="region" aria-label="오늘 소진분" tabindex="0"><table>
     <tr><th>시장</th><th>소진</th></tr>
     {{range .Rows}}
     <tr><td><strong>{{.Market}}</strong></td>
       <td>{{template "cell" .Consumed}}{{if .Note}}<br><span class="muted">{{.Note}}</span>{{end}}</td></tr>
     {{end}}
-  </table>
+  </table></div>
   {{end}}
   {{end}}
   <p class="muted">산출되는 축은 <strong>하나뿐</strong>이다 — 원장에 동결된 오늘 실현손익 대 일일 손실
@@ -237,13 +276,13 @@ const overviewTemplates = `
   {{if .Blocked}}
   <p class="notice">{{template "unmeasured" .Unreadable}}</p>
   {{else if .Events}}
-  <table>
+  <div class="table-scroll" role="region" aria-label="최근 exit 판정" tabindex="0"><table>
     <tr><th>시각</th><th>심볼</th><th>관측가</th><th>워터마크</th><th>기준선</th><th>단계</th><th>발의</th></tr>
     {{range .Events}}
     <tr><td>{{.At}}</td><td><code>{{.Symbol}}</code></td><td>{{.Observed}}</td>
       <td>{{.HighWater}}</td><td>{{.Baseline}}</td><td>{{.Level}}</td><td>{{.Proposal}}</td></tr>
     {{end}}
-  </table>
+  </table></div>
   <p class="muted">전체 스트림은 <a href="/history">거래 이력</a>에 있다.</p>
   {{else}}
   <p class="muted">exit 판정 기록 없음 — 원장은 읽혔고, 판정이 하나도 없다.</p>

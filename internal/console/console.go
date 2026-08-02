@@ -712,14 +712,39 @@ func (c *Console) routes() http.Handler {
 		mux.HandleFunc("/login", c.handleRemoteLogin)
 		mux.HandleFunc("/logout", c.session0(c.mutating(c.handleRemoteLogout)))
 	}
-	mux.HandleFunc("/", c.session0(c.handleDashboard))
+	// The root is a redirect, not a screen (change a054). It stays registered
+	// rather than 404ing because bookmarks and every session link this console
+	// has ever printed to a terminal point at it, and because session0 has to
+	// keep running here: the ?session= and ?handoff= exchanges both happen on
+	// this path, before any handler sees the request.
+	//
+	// "/" is also the mux's catch-all, so redirectRoot owns the 404 for every
+	// path this console does not serve.
+	mux.HandleFunc("/", c.session0(c.redirectRoot))
+	// The verification console, at a path that names it. It answered on "/"
+	// while calling itself 대시보드 and being labelled 검증 콘솔 in the
+	// navigation — one screen, three names.
+	mux.HandleFunc("/verify-console", c.session0(c.handleDashboard))
 	// The two dashboard screens (change add-operator-dashboard). Both are GET
 	// readings and neither is behind `mutating`: there is nothing on them to
 	// submit, which is what static_test.go's two route tests assert from opposite
 	// directions.
 	mux.HandleFunc("/positions", c.session0(c.readOnly(c.handlePositions)))
 	mux.HandleFunc("/history", c.session0(c.handleHistory))
+	// The settings screen is four sub-screens now, classified by whether a change
+	// can be undone and how often it is made (change a055). All four are GET, none
+	// is behind `mutating`, and the POST routes below are unchanged: this change
+	// moves where a form is RENDERED and not where it is submitted.
+	//
+	// The tab is passed as a string literal rather than a named constant on
+	// purpose. static_test.go's opaqueHandler refuses a handler argument that is
+	// an identifier — it cannot tell `tabDaily` from a *http.ServeMux — and a
+	// registration it cannot read is a registration every route guard skips.
 	mux.HandleFunc("/settings", c.session0(c.handleSettings))
+	mux.HandleFunc("/settings/standing", c.session0(c.handleSettingsTab("standing")))
+	mux.HandleFunc("/settings/daily", c.session0(c.handleSettingsTab("daily")))
+	mux.HandleFunc("/settings/strategy", c.session0(c.handleSettingsTab("strategy")))
+	mux.HandleFunc("/settings/tools", c.session0(c.handleSettingsTab("tools")))
 	mux.HandleFunc("/settings/save", c.session0(c.mutating(c.handleSettingsSave)))
 	mux.HandleFunc("/settings/include", c.session0(c.mutating(c.handleSettingsInclude)))
 	mux.HandleFunc("/settings/exclude", c.session0(c.mutating(c.handleSettingsExclude)))

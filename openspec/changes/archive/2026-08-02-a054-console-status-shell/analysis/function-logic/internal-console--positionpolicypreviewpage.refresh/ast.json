@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/position_policy.go",
+  "source_sha256": "fabb2773d2086a58f5b2e5dc7823b2f802d3b3933b60321d118eb44d17f1171a",
+  "package": "console",
+  "function": "Refresh",
+  "receiver": "positionPolicyPreviewPage",
+  "signature": "positionPolicyPreviewPage.Refresh(params=0, results=1)",
+  "start": {
+    "line": 62,
+    "column": 1
+  },
+  "end": {
+    "line": 62,
+    "column": 65
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 62,
+        "column": 51
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

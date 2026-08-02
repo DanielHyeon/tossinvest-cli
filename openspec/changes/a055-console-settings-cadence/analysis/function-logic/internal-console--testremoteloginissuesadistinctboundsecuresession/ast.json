@@ -1,0 +1,219 @@
+{
+  "file": "internal/console/remote_test.go",
+  "source_sha256": "1b51daa21287399cebc33b7f8f201d337a14f978d764ebbc1c9a0efa41c28cbb",
+  "package": "console",
+  "function": "TestRemoteLoginIssuesADistinctBoundSecureSession",
+  "signature": "TestRemoteLoginIssuesADistinctBoundSecureSession(params=1, results=0)",
+  "start": {
+    "line": 317,
+    "column": 1
+  },
+  "end": {
+    "line": 340,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 326,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 332,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 9
+      },
+      "text": "newRemoteTestRig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 12
+      },
+      "text": "remoteLogin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 8
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 2
+      },
+      "text": "ok.AddCookie"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 15
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 12
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 2
+      },
+      "text": "replay.AddCookie"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 15
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 332,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 335,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 337,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

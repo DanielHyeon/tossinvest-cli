@@ -1,0 +1,86 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "ebe8745ba69a6c96632fa01018747460fef6c52a5acc441f04eb3bb0d05c22c9",
+  "package": "console",
+  "function": "handleSignals",
+  "receiver": "Console",
+  "signature": "Console.handleSignals(params=2, results=0)",
+  "start": {
+    "line": 1045,
+    "column": 1
+  },
+  "end": {
+    "line": 1053,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1046,
+        "column": 10
+      },
+      "text": "c.signals"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1046,
+        "column": 20
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1048,
+        "column": 11
+      },
+      "text": "c.chromeFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1048,
+        "column": 55
+      },
+      "text": "snap.freshness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1052,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1046,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1047,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1051,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

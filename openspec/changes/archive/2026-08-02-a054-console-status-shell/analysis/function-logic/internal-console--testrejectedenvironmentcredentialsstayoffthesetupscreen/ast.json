@@ -1,0 +1,193 @@
+{
+  "file": "internal/console/openapi_onboarding_test.go",
+  "source_sha256": "03eccd291c4fa0f602fff5c99ae77432b99b76c833e337cd327cdddeb3b6b72c",
+  "package": "console",
+  "function": "TestRejectedEnvironmentCredentialsStayOffTheSetupScreen",
+  "signature": "TestRejectedEnvironmentCredentialsStayOffTheSetupScreen(params=1, results=0)",
+  "start": {
+    "line": 204,
+    "column": 1
+  },
+  "end": {
+    "line": 229,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 208,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 213,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 7
+      },
+      "text": "newTLSHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 11
+      },
+      "text": "credentialCheck"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 10
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 10
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 56
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 207,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 211,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 212,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

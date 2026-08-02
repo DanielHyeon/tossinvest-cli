@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/orders_page.go",
+  "source_sha256": "ceed8a3562757575f9a3191e0ed03e181edc08372298dff3661b6e54742e5b25",
+  "package": "console",
+  "function": "Refresh",
+  "receiver": "ordersPage",
+  "signature": "ordersPage.Refresh(params=0, results=1)",
+  "start": {
+    "line": 49,
+    "column": 1
+  },
+  "end": {
+    "line": 49,
+    "column": 55
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 49,
+        "column": 42
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

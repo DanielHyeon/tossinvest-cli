@@ -1,0 +1,485 @@
+{
+  "file": "internal/console/restart_test.go",
+  "source_sha256": "e260d7d2d7de2565b91d1db73ef07435360ca6f73340dfd823e08ae76dd957a7",
+  "package": "console",
+  "function": "TestAWrongOrExpiredHandoffIsRefusedAndGrantsNothing",
+  "signature": "TestAWrongOrExpiredHandoffIsRefusedAndGrantsNothing(params=1, results=0)",
+  "start": {
+    "line": 324,
+    "column": 1
+  },
+  "end": {
+    "line": 373,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 331,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 335,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 348,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 354,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 363,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 366,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 369,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 345,
+        "column": 31
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 9
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 12
+      },
+      "text": "handoff.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 24
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 8
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 11
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 16
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 12
+      },
+      "text": "WithTTL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 12
+      },
+      "text": "handoff.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 24
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 12
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 343,
+        "column": 8
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 347,
+        "column": 17
+      },
+      "text": "store.Mint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 11
+      },
+      "text": "clock.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
+        "column": 11
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 359,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 12
+      },
+      "text": "handoff.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 24
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 8
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 17
+      },
+      "text": "store.Mint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 28
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 28
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 366,
+        "column": 14
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 367,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 369,
+        "column": 14
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 370,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 325,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 328,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 329,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 329,
+        "column": 41
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 330,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 335,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 341,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 342,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 343,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 344,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 345,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 347,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 351,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 353,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 360,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 361,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 361,
+        "column": 41
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 362,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 366,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 369,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

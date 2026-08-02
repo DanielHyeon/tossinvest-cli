@@ -167,6 +167,12 @@ type tierCard struct {
 	config.GuardianTier
 	// Recommended marks the default tier.
 	Recommended bool
+	// Preview is what clicking this card would change, measured against the file
+	// as it stands (change a055 §4). This is the one settings card where the
+	// server knows BOTH sides before the click — the tier's values are fixed and
+	// the current values are in the file — so it is the one card that can show
+	// 현재 → 변경 rather than 현재 alone.
+	Preview tierPreview
 }
 
 // LimitTierCards is what the template ranges over.
@@ -174,7 +180,9 @@ func (p settingsPage) LimitTierCards() []tierCard {
 	recommended := config.DefaultGuardianTierID()
 	out := make([]tierCard, 0, len(config.GuardianTiers()))
 	for _, tier := range config.GuardianTiers() {
-		out = append(out, tierCard{GuardianTier: tier, Recommended: tier.ID == recommended})
+		card := tierCard{GuardianTier: tier, Recommended: tier.ID == recommended}
+		card.Preview = card.previewAgainst(p.Gate.Limits(), p.Gate.LimitsSet(), p.EngineRunning)
+		out = append(out, card)
 	}
 	return out
 }

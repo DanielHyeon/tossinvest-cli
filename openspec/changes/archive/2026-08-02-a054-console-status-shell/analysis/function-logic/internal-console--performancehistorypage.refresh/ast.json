@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/performance_history.go",
+  "source_sha256": "a27456e99feec19694705383e03bff64479df3ddf6dad23a60544742d294a01b",
+  "package": "console",
+  "function": "Refresh",
+  "receiver": "performanceHistoryPage",
+  "signature": "performanceHistoryPage.Refresh(params=0, results=1)",
+  "start": {
+    "line": 24,
+    "column": 1
+  },
+  "end": {
+    "line": 24,
+    "column": 62
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 24,
+        "column": 48
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

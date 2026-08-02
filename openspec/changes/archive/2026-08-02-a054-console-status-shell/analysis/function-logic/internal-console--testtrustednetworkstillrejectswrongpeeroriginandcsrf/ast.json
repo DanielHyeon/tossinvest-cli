@@ -1,0 +1,194 @@
+{
+  "file": "internal/console/remote_test.go",
+  "source_sha256": "1b51daa21287399cebc33b7f8f201d337a14f978d764ebbc1c9a0efa41c28cbb",
+  "package": "console",
+  "function": "TestTrustedNetworkStillRejectsWrongPeerOriginAndCSRF",
+  "signature": "TestTrustedNetworkStillRejectsWrongPeerOriginAndCSRF(params=1, results=0)",
+  "start": {
+    "line": 203,
+    "column": 1
+  },
+  "end": {
+    "line": 234,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 9
+      },
+      "text": "newTrustedNetworkTestRig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 13
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 12
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 17
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 2
+      },
+      "text": "crossOrigin.Header.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 12
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 12
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 2
+      },
+      "text": "noCSRF.Header.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 12
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 207,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 231,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

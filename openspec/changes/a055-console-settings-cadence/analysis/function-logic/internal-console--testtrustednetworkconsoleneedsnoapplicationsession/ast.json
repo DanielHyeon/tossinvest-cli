@@ -1,0 +1,266 @@
+{
+  "file": "internal/console/remote_test.go",
+  "source_sha256": "1b51daa21287399cebc33b7f8f201d337a14f978d764ebbc1c9a0efa41c28cbb",
+  "package": "console",
+  "function": "TestTrustedNetworkConsoleNeedsNoApplicationSession",
+  "signature": "TestTrustedNetworkConsoleNeedsNoApplicationSession(params=1, results=0)",
+  "start": {
+    "line": 177,
+    "column": 1
+  },
+  "end": {
+    "line": 201,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 188,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 9
+      },
+      "text": "newTrustedNetworkTestRig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 13
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 14
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 69
+      },
+      "text": "response.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 17
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 17
+      },
+      "text": "response.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 25
+      },
+      "text": "Cookies"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 25
+      },
+      "text": "response.Result"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 12
+      },
+      "text": "rig.console.URL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 11
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 19
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 22
+      },
+      "text": "loginResponse.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 184,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,242 @@
+{
+  "file": "internal/console/remote_csp_test.go",
+  "source_sha256": "b4a870f316ae898d728b28b87ddef5288f132e41fb75226bdbda3eabf7d00439",
+  "package": "console",
+  "function": "TestRemoteSettingsCSPRemainsScriptFree",
+  "signature": "TestRemoteSettingsCSPRemainsScriptFree(params=1, results=0)",
+  "start": {
+    "line": 11,
+    "column": 1
+  },
+  "end": {
+    "line": 36,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 27,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 12,
+        "column": 9
+      },
+      "text": "newRemoteTestRig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 12
+      },
+      "text": "remoteLogin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 13
+      },
+      "text": "remoteRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 2
+      },
+      "text": "request.AddCookie"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 14
+      },
+      "text": "serveRemote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 67
+      },
+      "text": "response.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 12
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 12
+      },
+      "text": "response.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 10
+      },
+      "text": "response.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 12,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 13,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 22,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

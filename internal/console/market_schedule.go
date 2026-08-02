@@ -29,7 +29,7 @@ type MarketScheduleReader interface {
 }
 
 type marketSchedulePage struct {
-	Nav                string
+	chrome
 	Unwired            bool
 	LoadErr            bool
 	SchedulerDesired   string
@@ -61,7 +61,8 @@ func (c *Console) handleMarketSchedule(w http.ResponseWriter, r *http.Request) {
 		ApplyTiming: "다음 엔진 기동", CalendarSource: "없음", CalendarVersion: "없음",
 		DecisionReason: "NOT_ACTIVATED",
 	}
-	page := marketSchedulePage{Nav: "optimization", Unwired: c.opts.MarketSchedule == nil}
+	// "optimization-sub" names no navigation item: see strategy_runtime.go.
+	page := marketSchedulePage{chrome: c.chromeOnRequest("optimization-sub"), Unwired: c.opts.MarketSchedule == nil}
 	if c.opts.MarketSchedule != nil {
 		value, err := c.opts.MarketSchedule.Read(r.Context())
 		if err != nil {

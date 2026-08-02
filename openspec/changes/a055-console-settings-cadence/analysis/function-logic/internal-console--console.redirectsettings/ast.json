@@ -1,0 +1,87 @@
+{
+  "file": "internal/console/settings.go",
+  "source_sha256": "24a5b1756ba31a64349754ed78d7947ba25299f302a4212710a718cc60d1d46c",
+  "package": "console",
+  "function": "redirectSettings",
+  "receiver": "Console",
+  "signature": "Console.redirectSettings(params=3, results=0)",
+  "start": {
+    "line": 416,
+    "column": 1
+  },
+  "end": {
+    "line": 423,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 419,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 12
+      },
+      "text": "settingsOriginFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 418,
+        "column": 38
+      },
+      "text": "urlQueryEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 24
+      },
+      "text": "urlQueryEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 2
+      },
+      "text": "http.Redirect"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 417,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 418,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 420,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

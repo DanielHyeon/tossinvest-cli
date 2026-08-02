@@ -65,15 +65,16 @@ type runtimeBlockerView struct {
 }
 
 type strategyRuntimePage struct {
-	Nav, ParameterSection, LaneSection, AutoStartSection, LiveSection string
-	LoadErr, Unwired                                                  bool
-	GeneratedAt, ObservedAt                                           string
-	Freshness                                                         runtimeStateView
-	Fields                                                            []runtimeFieldView
-	Lane, AutoStart, GateApproval, LiveApproval                       runtimeControlView
-	EntryDefault, EntryDesired, EntryEffective                        runtimeStateView
-	FirstRefusal                                                      string
-	Blockers                                                          []runtimeBlockerView
+	chrome
+	ParameterSection, LaneSection, AutoStartSection, LiveSection string
+	LoadErr, Unwired                                             bool
+	GeneratedAt, ObservedAt                                      string
+	Freshness                                                    runtimeStateView
+	Fields                                                       []runtimeFieldView
+	Lane, AutoStart, GateApproval, LiveApproval                  runtimeControlView
+	EntryDefault, EntryDesired, EntryEffective                   runtimeStateView
+	FirstRefusal                                                 string
+	Blockers                                                     []runtimeBlockerView
 }
 
 func (strategyRuntimePage) Refresh() bool { return false }
@@ -86,7 +87,11 @@ func (c *Console) handleStrategyRuntime(w http.ResponseWriter, r *http.Request) 
 	}
 
 	reading := dormantStrategyRuntimeReading(time.Now())
-	page := strategyRuntimePage{Nav: "optimization", Unwired: c.opts.StrategyRuntime == nil}
+	// The nav key names no navigation item on purpose. This screen is reached
+	// from the optimization screen's own sidebar and has no top-level entry, so
+	// marking 최적화 as aria-current="page" would tell a screen reader it is on a
+	// page it is not on. a055 gives these screens entries of their own.
+	page := strategyRuntimePage{chrome: c.chromeOnRequest("optimization-sub"), Unwired: c.opts.StrategyRuntime == nil}
 	if c.opts.StrategyRuntime != nil {
 		value, err := c.opts.StrategyRuntime.Read(r.Context())
 		if err != nil || !validStrategyRuntimeReading(value) {

@@ -1,0 +1,102 @@
+{
+  "file": "internal/console/settings_test.go",
+  "source_sha256": "3994dcbf494dd35b802dee2f8073b22c2d5af495c10f010cd5d24e515e224fa6",
+  "package": "console",
+  "function": "TestTheSettingsScreenShowsTheRawBlockAndTheVerdict",
+  "signature": "TestTheSettingsScreenShowsTheRawBlockAndTheVerdict(params=1, results=0)",
+  "start": {
+    "line": 95,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 7
+      },
+      "text": "settingsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 10
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

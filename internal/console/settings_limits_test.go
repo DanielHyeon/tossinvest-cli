@@ -131,7 +131,7 @@ func TestApplyingAPresetWritesAllFiveAtOnce(t *testing.T) {
 func TestThePresetControlsAskForNoTyping(t *testing.T) {
 	h := limitsHarness(t, &fakeLimits{})
 	h.authenticate(t)
-	page := h.page(t, "/settings")
+	page := h.page(t, pathSettingsDaily)
 
 	start := strings.Index(page, `action="/settings/limits/preset"`)
 	if start < 0 {
@@ -147,8 +147,23 @@ func TestThePresetControlsAskForNoTyping(t *testing.T) {
 			t.Errorf("the preset form contains %s; applying a preset must be one click", forbidden)
 		}
 	}
-	if !strings.Contains(form, "onsubmit=\"return confirm(") {
-		t.Error("the preset form has no confirmation dialog")
+	// It used to demand `onsubmit="return confirm(…)"` here, and that assertion was
+	// pinning something that had never once run: the deployed CSP is
+	// default-src 'none' with no script-src, so an inline handler is blocked. The
+	// operator has always experienced this button as recording five values with no
+	// confirmation at all. What replaces it is server-rendered and therefore
+	// actually visible — 현재 → 변경 for each of the five, before the click
+	// (change a055, issues.md I2).
+	if strings.Contains(form, "onsubmit=") {
+		t.Error("the preset form still carries an inline handler; under this CSP it cannot run, " +
+			"which makes it the appearance of a confirmation rather than one")
+	}
+	if !strings.Contains(form, `class="card-preview"`) {
+		t.Error("the preset form shows no 적용 후 preview; the click writes five values and the " +
+			"operator has to be able to read which five before pressing")
+	}
+	if !strings.Contains(form, "data-limit-axis=") {
+		t.Error("the preview does not say which way each ceiling moves")
 	}
 }
 
@@ -157,7 +172,7 @@ func TestThePresetControlsAskForNoTyping(t *testing.T) {
 func TestEveryRegisteredTierIsOfferedWithItsNumbers(t *testing.T) {
 	h := limitsHarness(t, &fakeLimits{})
 	h.authenticate(t)
-	page := h.page(t, "/settings")
+	page := h.page(t, pathSettingsDaily)
 
 	for _, tier := range config.GuardianTiers() {
 		if !strings.Contains(page, `value="`+tier.ID+`"`) {
@@ -182,7 +197,7 @@ func TestEveryRegisteredTierIsOfferedWithItsNumbers(t *testing.T) {
 func TestUnsetLimitsRenderAsUnsetAndNotAsTheDefault(t *testing.T) {
 	h := limitsHarness(t, &fakeLimits{})
 	h.authenticate(t)
-	page := h.page(t, "/settings")
+	page := h.page(t, pathSettingsDaily)
 
 	// Scoped to the current-values table on purpose: the preset cards DO show the
 	// default tier's numbers, because the operator has to see what a click will
@@ -208,7 +223,7 @@ func TestAPartialBlockSaysTheInterlockRefusesIt(t *testing.T) {
 	h := limitsHarness(t, seam)
 	h.authenticate(t)
 
-	section := limitSection(t, h.page(t, "/settings"))
+	section := limitSection(t, h.page(t, pathSettingsDaily))
 	for _, want := range []string{"기동", "거부", "프리셋"} {
 		if !strings.Contains(section, want) {
 			t.Errorf("a partially configured gate does not say %q", want)
@@ -226,12 +241,12 @@ func TestTheScreenNamesTheMatchingTier(t *testing.T) {
 	}}
 	h := limitsHarness(t, seam)
 	h.authenticate(t)
-	if section := limitSection(t, h.page(t, "/settings")); !strings.Contains(section, "us-smoke") {
+	if section := limitSection(t, h.page(t, pathSettingsDaily)); !strings.Contains(section, "us-smoke") {
 		t.Error("the screen does not name the tier the file currently spells")
 	}
 
 	seam.gate.MaxDailyLossAmount = 7
-	if section := limitSection(t, h.page(t, "/settings")); !strings.Contains(section, "사용자 지정값") {
+	if section := limitSection(t, h.page(t, pathSettingsDaily)); !strings.Contains(section, "사용자 지정값") {
 		t.Error("a block matching no tier is not reported as a custom one")
 	}
 }
@@ -326,7 +341,7 @@ func TestTheAdvancedFormSavesIndividualValues(t *testing.T) {
 func TestTheAdvancedFormIsInsideAFold(t *testing.T) {
 	h := limitsHarness(t, &fakeLimits{})
 	h.authenticate(t)
-	section := limitSection(t, h.page(t, "/settings"))
+	section := limitSection(t, h.page(t, pathSettingsDaily))
 
 	form := strings.Index(section, `action="/settings/limits"`)
 	if form < 0 {
@@ -351,7 +366,7 @@ func TestTheAdvancedFormIsInsideAFold(t *testing.T) {
 func TestTheAdvancedFormShowsNoZeroForAnUnsetLimit(t *testing.T) {
 	h := limitsHarness(t, &fakeLimits{})
 	h.authenticate(t)
-	section := limitSection(t, h.page(t, "/settings"))
+	section := limitSection(t, h.page(t, pathSettingsDaily))
 
 	for _, field := range []string{
 		"max_order_quantity", "max_order_notional", "max_total_exposure",
@@ -377,7 +392,7 @@ func TestTheAdvancedFormRendersNumbersTheOperatorCanRead(t *testing.T) {
 	}}
 	h := limitsHarness(t, seam)
 	h.authenticate(t)
-	section := limitSection(t, h.page(t, "/settings"))
+	section := limitSection(t, h.page(t, pathSettingsDaily))
 
 	if strings.Contains(section, "e+0") {
 		t.Error("the screen renders a limit in exponent notation")
@@ -501,7 +516,7 @@ func TestWithoutASeamTheLimitEditorRefusesRatherThanPretends(t *testing.T) {
 	h := limitsHarness(t, nil)
 	h.authenticate(t)
 
-	page := h.page(t, "/settings")
+	page := h.page(t, pathSettingsDaily)
 	if strings.Contains(page, `action="/settings/limits/preset"`) {
 		t.Error("the preset controls render without a seam to save through")
 	}
@@ -518,11 +533,13 @@ func TestAnUnreadableConfigDoesNotHideTheRestOfTheScreen(t *testing.T) {
 	h := limitsHarness(t, &fakeLimits{loadErr: errors.New("permission denied")})
 	h.authenticate(t)
 
-	page := h.page(t, "/settings")
+	page := h.page(t, pathSettingsDaily)
 	if !strings.Contains(page, "permission denied") {
 		t.Error("the read failure is not reported")
 	}
-	if !strings.Contains(page, "편입 설정") {
+	// The adoption card is on 상시 since a055, and the isolation claim is the same
+	// one: a limit read failure must not take another card's section down with it.
+	if !strings.Contains(h.page(t, pathSettingsStanding), "편입 규칙") {
 		t.Error("a limit read failure took the adoption section down with it")
 	}
 }
@@ -532,7 +549,7 @@ func TestAnUnreadableConfigDoesNotHideTheRestOfTheScreen(t *testing.T) {
 func TestTheGateStateIsShownButNotOffered(t *testing.T) {
 	h := limitsHarness(t, &fakeLimits{gate: config.AutomationGate{Enabled: true}})
 	h.authenticate(t)
-	page := h.page(t, "/settings")
+	page := h.page(t, pathSettingsDaily)
 
 	if !strings.Contains(page, "automation gate") || !strings.Contains(page, "콘솔에서 편집할 수 없다") {
 		t.Error("the screen no longer says the gate itself is not editable here")
@@ -549,7 +566,7 @@ func TestTheGateStateIsShownButNotOffered(t *testing.T) {
 // part.
 func limitSection(t *testing.T, page string) string {
 	t.Helper()
-	start := strings.Index(page, `id="guardian-limits"`)
+	start := strings.Index(page, `id="limits"`)
 	if start < 0 {
 		t.Fatal("the settings screen has no Guardian-limit section")
 	}

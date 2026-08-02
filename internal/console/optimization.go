@@ -74,7 +74,7 @@ func (c *Console) handleOptimization(w http.ResponseWriter, r *http.Request) {
 		known = true
 	}
 	page := optimizationPage{
-		Nav: "optimization", CSRF: c.csrf, Notice: r.URL.Query().Get("notice"),
+		chrome: c.chromeOnRequest("optimization"), CSRF: c.csrf, Notice: r.URL.Query().Get("notice"),
 		Selected: selected, EngineRunning: c.engineRunning(), LifecycleWired: c.opts.Optimization != nil,
 	}
 	if !known {
@@ -125,12 +125,10 @@ func (c *Console) handleOptimization(w http.ResponseWriter, r *http.Request) {
 }
 
 type protectionPreviewPage struct {
-	Nav     string
+	chrome
 	CSRF    string
 	Preview ProtectionPreview
 }
-
-func (protectionPreviewPage) Refresh() bool { return false }
 
 func (c *Console) handleProtectionPreview(w http.ResponseWriter, r *http.Request) {
 	if c.opts.Protections == nil {
@@ -151,7 +149,8 @@ func (c *Console) handleProtectionPreview(w http.ResponseWriter, r *http.Request
 		c.refuse(w, http.StatusForbidden, "보호 약화 capability 거부", "server-defined 약화 preview가 아니다.")
 		return
 	}
-	c.render(w, "protection-preview", protectionPreviewPage{Nav: "optimization", CSRF: c.csrf, Preview: preview})
+	c.render(w, "protection-preview", protectionPreviewPage{
+		chrome: c.chromeOnRequest("optimization"), CSRF: c.csrf, Preview: preview})
 }
 
 func (c *Console) handleProtectionApply(w http.ResponseWriter, r *http.Request) {

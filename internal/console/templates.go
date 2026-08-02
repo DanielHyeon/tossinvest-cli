@@ -21,23 +21,35 @@ body {
   margin: 0; padding: 0 1rem 4rem;
   font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
   background: #fbfbfa; color: #1c1c1a;
+  /* This console prints filesystem paths, record ids and hashes in ordinary
+     prose, not only inside <code>. At 375px an unbroken path is wider than the
+     screen and pushes the whole document sideways — measured, on the
+     verification console (change a054, task 4.7). anywhere rather than
+     break-word because it also shrinks the intrinsic minimum, which is what
+     the grid columns below are sized against. */
+  overflow-wrap: anywhere;
 }
 main, header > div { max-width: 72rem; margin: 0 auto; min-width: 0; }
 header { border-bottom: 1px solid #dcdcd6; margin-bottom: 1.5rem; }
 header > div { display: flex; gap: 1rem; align-items: baseline; padding: 0.9rem 0; }
 header strong { font-size: 0.95rem; letter-spacing: 0.02em; }
-nav { display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; min-width: 0; }
-nav a { color: #3a3a35; text-decoration: none; }
+nav { display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem; min-width: 0; }
+/* min-height 44px: the navigation is the most-tapped thing on the screen and a
+   text link with no padding is a 20px target (a054 §4 touch floor). */
+nav a { color: #3a3a35; text-decoration: none; display: flex; flex-direction: column;
+  justify-content: center; min-height: 44px; padding: 0.2rem 0; min-width: 0; }
+nav a small { color: #6a6a62; font-size: 0.74rem; line-height: 1.25; font-weight: 400; }
 nav a.on { font-weight: 600; text-decoration: underline; }
-h1 { font-size: 1.35rem; margin: 1.4rem 0 0.4rem; }
-h2 { font-size: 1.05rem; margin: 1.6rem 0 0.4rem; }
+h1 { font-size: 1.75rem; font-weight: 700; margin: 1.4rem 0 0.4rem; }
+h2 { font-size: 1.25rem; font-weight: 700; margin: 1.6rem 0 0.4rem; }
+h3 { font-size: 1.0625rem; margin: 1.1rem 0 0.3rem; }
 section { border: 1px solid #dcdcd6; border-radius: 6px; padding: 0.9rem 1.1rem; margin: 1rem 0; background: #fff; }
 pre { overflow-x: auto; padding: 0.8rem; background: #f4f4f0; border-radius: 4px;
       font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
 th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid #ececE6; vertical-align: top; }
 code { overflow-wrap: anywhere; }
-dl { display: grid; grid-template-columns: 12rem 1fr; gap: 0.25rem 1rem; margin: 0.4rem 0; }
+dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.25rem 1rem; margin: 0.4rem 0; }
 dt { color: #6a6a62; } dd { margin: 0; }
 .notice { border-left: 3px solid #b07000; background: #fff6e5; padding: 0.7rem 0.9rem; border-radius: 4px; }
 .danger { border-left: 3px solid #a01818; background: #fdeeee; padding: 0.7rem 0.9rem; border-radius: 4px; }
@@ -63,7 +75,11 @@ form { display: inline; }
 .position-row > :nth-child(4) { width: 16%; }
 .position-row > :nth-child(5) { width: 23%; }
 .position-row > :nth-child(6) { width: 16%; }
-.status-pill { display: inline-block; border: 1px solid currentColor; border-radius: 999px; padding: 0.05rem 0.5rem; }
+/* One status primitive. .state-badge said the same thing under a second name
+   and was used twice; this one was used eight times and is asserted by an
+   existing test, so the merge keeps the common name (change a054). */
+.status-pill { display: inline-block; border: 1px solid currentColor; border-radius: 999px;
+  padding: 0.08rem 0.55rem; font-size: 0.86rem; }
 .metric { display: block; font-size: 1rem; font-weight: 700; }
 .submetric { display: block; margin-top: 0.15rem; color: #6a6a62; font-size: 0.82rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: flex-start; }
@@ -91,6 +107,54 @@ form { display: inline; }
 .status-strip[data-lifecycle-state=error], .status-strip [data-evidence-state=stale],
 .status-strip [data-evidence-state=insufficient] { border-color: #a56500; }
 .status-strip[data-lifecycle-state=unavailable], .status-strip [data-evidence-state=unavailable] { border-color: #77776f; }
+/* .console-status is the shell's strip: the same four facts, same place, every
+   screen. auto-fit rather than a column count, so it reflows at any width
+   without a second breakpoint to keep in step with the first. */
+.console-status, .console-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0; max-width: 72rem; margin: 0 auto 0.9rem; border: 1px solid #dcdcd6; border-radius: 6px;
+  overflow: hidden; background: #fff; }
+.console-status > div, .console-summary > div { min-width: 0; padding: 0.5rem 0.75rem;
+  border-left: 1px solid #ecece6; }
+.console-status > div:first-child, .console-summary > div:first-child { border-left: 0; }
+.console-status dt, .console-summary dt { color: #6a6a62; font-size: 0.75rem; }
+.console-status dd, .console-summary dd { font-size: 0.92rem; overflow-wrap: anywhere; }
+.console-status dd small, .console-summary dd small { display: block; margin-top: 0.1rem;
+  color: #6a6a62; font-size: 0.74rem; }
+/* The overview summary sits above the detail sections it points at, so it is
+   a little louder than the shell strip and each market gets its own line. */
+.console-summary { margin-bottom: 1.4rem; }
+.console-summary dd { font-size: 1rem; font-weight: 600; }
+.console-summary .summary-line { display: block; font-weight: 400; }
+.console-summary .summary-line + .summary-line { margin-top: 0.15rem; }
+/* Tone is never the only carrier: every toned cell also renders the word, so a
+   reader who cannot see the colour reads the same verdict. */
+.console-status [data-data-tone=ok] { color: #1a6b2a; }
+.console-status [data-data-tone=warn], .console-status [data-engine-state=stopped] { color: #8a5000; }
+.console-status [data-data-tone=stale] { color: #a01818; }
+.console-approval { max-width: 72rem; margin: 0 auto 0.9rem; }
+/* --- the settings tabs and the card standard (change a055) ------------------ */
+.settings-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.9rem 0 1.1rem; }
+.settings-tabs a { min-height: 44px; display: inline-flex; align-items: center; padding: 0.4rem 1rem;
+  border: 1px solid #dcdcd6; border-radius: 999px; background: #fff; color: #3a3a35; text-decoration: none; }
+.settings-tabs a.on { border-color: #2878d0; font-weight: 700; color: #1c1c1a; }
+.settings-state { margin-bottom: 1.4rem; }
+.settings-state [data-state-tone=ok] { color: #1a6b2a; }
+.settings-state [data-state-tone=warn] { color: #8a5000; }
+/* 현재값 and 적용 후 are the same grid so the eye compares them row for row. */
+.card-current, .card-preview { grid-template-columns: minmax(8rem, 14rem) 1fr; }
+.card-preview { border-left: 3px solid #2878d0; padding: 0.6rem 0 0.6rem 0.8rem; margin: 0.7rem 0; }
+.card-preview dt { color: #4e4e48; font-weight: 600; }
+.tier-card { border: 1px solid #dcdcd6; border-radius: 6px; padding: 0.7rem 0.9rem; margin: 0.7rem 0; }
+.tier-card form { display: block; }
+[data-limit-axis=강화] { color: #1a6b2a; }
+[data-limit-axis=완화] { color: #8a5000; }
+[data-limit-axis="통화 변경"], [data-limit-axis="최초 설정"] { color: #4e4e48; }
+.entry-list { grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 0.9rem 1rem; }
+.entry-list dt a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; }
+/* A URL-driven disclosure. It gets no native toggle on purpose — see explain.go. */
+.explain-link { margin: 0.5rem 0; }
+.explain-link > a { font-weight: 600; color: #4e4e48; }
+.explain-link > div { margin-top: 0.4rem; }
 .optimization-shell { display: grid; grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
 .optimization-nav { position: sticky; top: 0.75rem; display: grid; gap: 0.35rem; }
 .optimization-nav a { min-height: 56px; display: flex; flex-direction: column; justify-content: center; padding: 0.55rem 0.75rem;
@@ -106,8 +170,6 @@ form { display: inline; }
 .category-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
 .category-summary article { border-top: 1px solid #ecece6; padding-top: 0.4rem; }
 .category-summary h3 { margin-bottom: 0.1rem; }
-.state-badge { display: inline-flex; align-items: center; border: 1px solid currentColor; border-radius: 999px;
-  padding: 0.1rem 0.55rem; font-size: 0.8rem; }
 fieldset.setting-row { border: 1px solid #dcdcd6; border-radius: 6px; margin: 1rem 0; padding: 0.85rem 1rem; }
 fieldset.setting-row legend { font-weight: 700; padding: 0 0.35rem; }
 fieldset.setting-error { border-color: #b42318; }
@@ -184,13 +246,29 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   .secondary-link { background: transparent; color: #e6e6e0; }
   input[type=text] { background: #111116; color: #e6e6e0; border-color: #44444c; }
   .submetric, .row-details summary, .explain summary { color: #aaa9a0; }
-  .status-strip, .optimization-nav a, fieldset.setting-row, .choice-tile, .optimization-steps li { border-color: #33333a; }
+  .status-strip, .console-status, .console-summary, .optimization-nav a, fieldset.setting-row, .choice-tile, .optimization-steps li { border-color: #33333a; }
+  .console-status, .console-summary { background: #1d1d22; }
+  .console-status > div, .console-summary > div { border-color: #2a2a30; }
+  .console-status dt, .console-status dd small, .console-summary dt { color: #aaa9a0; }
+  .console-status [data-data-tone=ok] { color: #4ade80; }
+  .console-status [data-data-tone=warn], .console-status [data-engine-state=stopped] { color: #fbbf24; }
+  .console-status [data-data-tone=stale] { color: #fca5a5; }
   fieldset.setting-error { border-color: #f43f5e; }
   .optimization-nav a { background: #1d1d22; }
   .status-strip > div, .category-summary article, .setting-values > div { border-color: #2a2a30; }
   .optimization-nav small { color: #aaa9a0; }
   .eyebrow, .section-kicker, .status-strip dd small, .optimization-steps span { color: #aaa9a0; }
   .choice-tile[data-selected=true] { border-color: #22c55e; box-shadow: inset 0 0 0 1px #22c55e; }
+  nav a small { color: #aaa9a0; }
+  .settings-tabs a, .tier-card { background: #1d1d22; border-color: #33333a; color: #c8c8c0; }
+  .settings-tabs a.on { border-color: #60a5fa; color: #e6e6e0; }
+  .settings-state [data-state-tone=ok] { color: #4ade80; }
+  .settings-state [data-state-tone=warn] { color: #fbbf24; }
+  .card-preview { border-color: #60a5fa; } .card-preview dt { color: #c8c8c0; }
+  [data-limit-axis=강화] { color: #4ade80; }
+  [data-limit-axis=완화] { color: #fbbf24; }
+  [data-limit-axis="통화 변경"], [data-limit-axis="최초 설정"] { color: #c8c8c0; }
+  .explain-link > a { color: #c8c8c0; }
 }
 @media (prefers-color-scheme: dark) and (max-width: 720px) { .data-table tr { border-color: #33333a; } }
 {{end}}
@@ -206,29 +284,69 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 </head><body>
 <header><div>
   <strong>tossctl console</strong>
-  <nav>
-    {{/*
-      Two screens, two names. The root is the verification console — soak,
-      attestation, binary provenance, the approval window — and /dashboard is the
-      overview of the account. Both were labelled 대시보드 until change
-      console-operator-overview, which is one name for two different questions.
-    */}}
-    <a href="/dashboard" {{if eq .Nav "overview"}}class="on" aria-current="page"{{end}}>개요</a>
-    <a href="/" {{if eq .Nav "verify-console"}}class="on" aria-current="page"{{end}}>검증 콘솔</a>
-    <a href="/positions" {{if eq .Nav "positions"}}class="on" aria-current="page"{{end}}>포지션</a>
-    <a href="/orders" {{if eq .Nav "orders"}}class="on" aria-current="page"{{end}}>주문</a>
-    <a href="/signals" {{if eq .Nav "signals"}}class="on" aria-current="page"{{end}}>발굴 신호</a>
-    <a href="/history" {{if eq .Nav "history"}}class="on" aria-current="page"{{end}}>거래 이력</a>
-    <a href="/settings#adoption" {{if eq .Nav "settings"}}class="on" aria-current="page"{{end}}>외부 종목 자동관리</a>
-    <a href="/optimization" {{if eq .Nav "optimization"}}class="on" aria-current="page"{{end}}>최적화</a>
-	<a href="/performance-history" {{if eq .Nav "performance-history"}}class="on" aria-current="page"{{end}}>성과 이력</a>
-	<a href="/position-management" {{if eq .Nav "position-management"}}class="on" aria-current="page"{{end}}>포지션 정책</a>
-    <a href="/verify" {{if eq .Nav "verify"}}class="on" aria-current="page"{{end}}>검증</a>
-    <a href="/report" {{if eq .Nav "report"}}class="on" aria-current="page"{{end}}>리포트</a>
+  {{/*
+    Six items, in the order the engine actually works: 발굴 → 발주 → 보유 → 종결,
+    then the settings that govern all four (change a055 §7). An order that can be
+    learned is an order nobody has to remember.
+
+    Twelve items were not a menu, they were a list of every screen that had ever
+    been built, and two of the labels named a SECTION of a screen rather than the
+    screen — "외부 종목 자동관리" pointed at /settings#adoption, so the Guardian
+    limits, the operating toggles and the system update on the same screen were
+    reachable from the navigation only by accident.
+
+    Each item carries the question its screen answers. The labels alone do not
+    separate 검증 콘솔 from 검증, 거래 이력 from 성과 이력, or 포지션 from
+    포지션 정책 — the six screens that left the bar keep their routes and gain
+    explicit entry points under 설정, which is the opposite of being hidden: none
+    of them had a navigation entry of its own before.
+  */}}
+  <nav aria-label="주요 화면">
+    <a href="/dashboard" {{if eq .Nav "overview"}}class="on" aria-current="page"{{end}}>개요<small>지금 무엇이 참인가</small></a>
+    <a href="/signals" {{if eq .Nav "signals"}}class="on" aria-current="page"{{end}}>신호<small>후보와 차단 사유</small></a>
+    <a href="/orders" {{if eq .Nav "orders"}}class="on" aria-current="page"{{end}}>주문<small>대기와 종결</small></a>
+    <a href="/positions" {{if eq .Nav "positions"}}class="on" aria-current="page"{{end}}>포지션<small>보유와 보호</small></a>
+    <a href="/history" {{if eq .Nav "history"}}class="on" aria-current="page"{{end}}>이력<small>왕복과 성과</small></a>
+    <a href="/settings/daily" {{if eq .Nav "settings"}}class="on" aria-current="page"{{end}}>설정<small>상시 · 당일 · 전략 · 도구</small></a>
   </nav>
   <span class="muted" style="margin-left:auto">127.0.0.1 전용 · 승인 외 읽기 전용</span>
-</div></header>
+</div>
+{{template "statusstrip" .}}
+</header>
 <main>
+{{end}}
+
+{{/*
+  "statusstrip" is the shell's four facts, in the same place on every screen.
+
+  It is given the whole page rather than .Status because the reload cell reads
+  .Refresh and .RefreshSeconds directly. Copying the period into the strip would
+  make it a second statement of one fact, and the two would disagree the first
+  time a screen changed its period — which is exactly the failure the strip
+  exists to stop the rest of the console from having.
+*/}}
+{{define "statusstrip"}}
+<dl class="console-status" aria-label="콘솔 상태">
+  <div><dt>엔진</dt>
+    <dd data-engine-state="{{.Status.EngineState}}">{{.Status.EngineText}}{{if .Status.EngineNote}}<small>{{.Status.EngineNote}}</small>{{end}}</dd></div>
+  {{/*
+    The open/closed decision is made here and not in Go. That is the whole point:
+    the market-hours reading is advisory, the console never consults it before
+    doing anything, and static_test.go keeps it that way by refusing any Go file
+    that touches .Outside. A template is markup, so this is a render.
+  */}}
+  <div><dt>시장 세션</dt>
+    <dd data-session-state="{{if .Status.Session.Outside}}closed{{else}}open{{end}}">{{.Status.Session.Label}}<small>advisory — 요일과 시각만 읽는다. 휴장일은 모르며 이 값으로 막는 것은 없다</small></dd></div>
+  <div><dt>데이터 시각</dt>
+    <dd data-data-mode="{{.Status.DataMode}}" data-data-tone="{{.Status.DataTone}}">{{.Status.DataText}}{{if eq .Status.DataTone "warn"}} <span class="status-pill">주의</span>{{else if eq .Status.DataTone "stale"}} <span class="status-pill">경고</span>{{end}}{{if .Status.DataNote}}<small>{{.Status.DataNote}}</small>{{end}}</dd></div>
+  <div><dt>자동 재로드</dt>
+    <dd data-reload="{{if .Refresh}}on{{else}}off{{end}}">{{if .Refresh}}{{.RefreshSeconds}}초마다{{else}}걸려 있지 않음<small>이 화면은 스스로 갱신하지 않는다</small>{{end}}</dd></div>
+</dl>
+{{if .Status.PendingApproval}}
+<p class="notice console-approval" data-pending-approval="true"><strong>승인을 기다리는 검증 run이 있다.</strong>
+승인 창은 짧고 지나가면 그 시장 창을 다시 기다려야 한다 —
+<a href="{{.Status.PendingHref}}">검증 콘솔에서 승인</a>. 승인은 그 화면에서 한다.</p>
+{{end}}
 {{end}}
 
 {{define "foot"}}
@@ -307,7 +425,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 
 {{define "dashboard"}}
 {{template "head" .}}
-<h1>대시보드</h1>
+<h1>검증 콘솔</h1>
 <p class="muted">이 화면은 로컬 파일만 읽는다. 네트워크 호출도, 설정 변경도 하지 않는다.
 계좌 보유·exit 라인은 <a href="/positions">포지션</a>, 완결 거래는 <a href="/history">거래 이력</a>에 있다.</p>
 {{if .Notice}}<p class="notice">{{.Notice}}</p>{{end}}
@@ -401,13 +519,13 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
     <dt>attest 가능</dt><dd>{{if .Ready}}<span class="ok">예</span>{{else}}<span class="bad">아니오</span>{{end}}</dd>
   </dl>
   {{if .Reasons}}<ul>{{range .Reasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
-  <table>
+  <div class="table-scroll" role="region" aria-label="soak (조회 전용 서베이)" tabindex="0"><table>
     <tr><th>날짜</th><th>사이클</th><th>인증 성공</th><th>인증 실패</th><th>판정</th></tr>
     {{range .Days}}
     <tr><td>{{.Date}}</td><td>{{.Cycles}}</td><td>{{.CredentialOK}}</td><td>{{.AuthFailures}}</td>
         <td>{{if .Pass}}<span class="ok">pass</span>{{else}}<span class="bad">fail</span>{{end}}</td></tr>
     {{end}}
-  </table>
+  </table></div>
   {{else}}
   <p class="muted">아직 기록이 없다. <code>tossctl soak run</code>으로 시작하라. ({{.Record}})</p>
   {{end}}
@@ -446,10 +564,10 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
     <dt>완료 / 전체</dt><dd>{{.Done}} / {{.Total}} 단계</dd>
   </dl>
   {{if .Steps}}
-  <table>
+  <div class="table-scroll" role="region" aria-label="실계좌 검증 진행" tabindex="0"><table>
     <tr><th>단계</th><th>이름</th><th>판정</th><th>사유</th></tr>
     {{range .Steps}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}
-  </table>
+  </table></div>
   {{end}}
   {{if .AwaitingRestart}}
   <p class="notice"><code>{{.AwaitingRestart}}</code> ({{stepLabel .AwaitingRestart}}) 단계는 <strong>새 프로세스</strong>를 기다린다 — 위의 [콘솔 재시작] 뒤 이어하기.</p>
@@ -466,7 +584,7 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
 
 {{define "verify"}}
 {{template "head" .}}
-<h1>실계좌 검증 <span class="muted">{{.Market}} 시장</span></h1>
+<h1>검증 <span class="muted">실계좌 · {{.Market}} 시장</span></h1>
 <p class="muted">검증 능력은 계좌와 <strong>시장</strong>의 속성이다 — 아래 모든 것은 {{.Market}} 기록만 읽는다.
 한 시장의 판정은 다른 시장의 단계를 완료로 만들지 않는다.
 {{if .Snap.IsUS}}<a href="/verify?market=KR">KR 검증으로</a>{{else}}<a href="/verify?market=US">US 검증으로</a>{{end}}
@@ -528,10 +646,10 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   <h2>결과</h2>
   {{if .Err}}<p class="danger">{{.Err}}</p>{{end}}
   {{if .Summary.Outcomes}}
-  <table>
+  <div class="table-scroll" role="region" aria-label="결과" tabindex="0"><table>
     <tr><th>단계</th><th>이름</th><th>판정</th><th>사유</th></tr>
     {{range .Summary.Outcomes}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}
-  </table>
+  </table></div>
   {{end}}
   {{if .Summary.Halt}}<p class="notice">중단: {{.Summary.Halt}}</p>{{end}}
   {{if .Summary.Outstanding}}
@@ -593,11 +711,11 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   <p>재측정 대상은 <strong>{{.RedoCount}}개</strong>다 — 마지막 판정이 <code>fail</code>·<code>skipped</code>인
   단계, 그리고 <strong>통과했지만 그 통과가 만든 조건주문이 사라져 아래 단계들이 측정할 수 없게 된 단계</strong>다.
   이어하기는 이 단계들을 건너뛴다(판정이 이미 terminal이므로). 재측정은 이 단계들만 다시 시도한다.</p>
-  <table>
+  <div class="table-scroll" role="region" aria-label="재측정" tabindex="0"><table>
     <tr><th>단계</th><th>이름</th><th>마지막 판정</th><th>사유</th></tr>
     {{$redo := .Redo}}
     {{range .Steps}}{{if inRedo $redo .Step}}<tr><td><code>{{.Step}}</code></td><td>{{stepLabel .Step}}</td><td>{{verdict .Verdict}}</td><td>{{.Reason}}</td></tr>{{end}}{{end}}
-  </table>
+  </table></div>
   <p class="muted">대상: {{.RedoList}}</p>
   <p class="notice"><code>deferred</code>·<code>refused</code> 단계는 대상이 아니다. <code>pass</code>도
   대상이 아니다 — 이미 측정된 속성을 위해 실주문을 다시 내지 않는다. 단 하나의 예외는

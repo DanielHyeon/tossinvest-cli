@@ -1,0 +1,110 @@
+{
+  "file": "internal/console/optimization_view.go",
+  "source_sha256": "bbd7089082aaffc1af5dd3702731d9dcd6ffa0680de8815b3acbc60563525d23",
+  "package": "console",
+  "function": "previewPage",
+  "receiver": "Console",
+  "signature": "Console.previewPage(params=1, results=1)",
+  "start": {
+    "line": 145,
+    "column": 1
+  },
+  "end": {
+    "line": 154,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 15
+      },
+      "text": "preview.NotBefore.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 37
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 14
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 41
+      },
+      "text": "c.chromeOnRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 61
+      },
+      "text": "preview.NotBefore.UnixMilli"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 150,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

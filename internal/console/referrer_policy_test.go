@@ -16,7 +16,7 @@ func TestConsoleDocumentsUseSameOriginReferrerPolicy(t *testing.T) {
 		{
 			name:     "shared head",
 			template: "head",
-			data:     dashboardPage{Nav: "overview"},
+			data:     dashboardPage{chrome: chrome{Nav: "overview"}},
 		},
 		{
 			name:     "restart interstitial",

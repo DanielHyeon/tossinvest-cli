@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/optimization.go",
+  "source_sha256": "35578b3d9770fd0ba8884abc70293f175a16d8fc798622fc6a971974dba0f0ac",
+  "package": "console",
+  "function": "Refresh",
+  "receiver": "protectionPreviewPage",
+  "signature": "protectionPreviewPage.Refresh(params=0, results=1)",
+  "start": {
+    "line": 133,
+    "column": 1
+  },
+  "end": {
+    "line": 133,
+    "column": 61
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 133,
+        "column": 47
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

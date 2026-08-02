@@ -190,7 +190,7 @@ func TestOptimizationStaleEvidenceIsExplicitAndFailClosed(t *testing.T) {
 	h := newDashboardHarness(t, func(options *Options) { options.Optimization = commander })
 	h.authenticate(t)
 	page := h.page(t, "/optimization")
-	for _, marker := range []string{`data-evidence-state="stale"`, "오래됨 · 근거 추천 중지", "근거 기반 추천 candidate를 만들지 않습니다", "a049-window-expired"} {
+	for _, marker := range []string{`data-evidence-state="stale"`, "오래됨 · 근거 추천 중지", "근거 기반 추천 candidate를 만들지 않는다", "a049-window-expired"} {
 		if !strings.Contains(page, marker) {
 			t.Errorf("stale evidence state lacks %q", marker)
 		}
@@ -222,7 +222,7 @@ func TestOptimizationLoadingModelIsServerBlockingAndReadFailureIsFailClosed(t *t
 	h := newDashboardHarness(t, func(options *Options) { options.Optimization = failedOptimizationCommander{} })
 	h.authenticate(t)
 	page := h.page(t, "/optimization?category=exit-protection")
-	for _, want := range []string{"lifecycle을 읽지 못했습니다", "모든 변경을 닫았습니다", "미검증/사용 불가"} {
+	for _, want := range []string{"lifecycle을 읽지 못했다", "모든 변경을 닫았다", "미검증/사용 불가"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("fail-closed page lacks %q", want)
 		}

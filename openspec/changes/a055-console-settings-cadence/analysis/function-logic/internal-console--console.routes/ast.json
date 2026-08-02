@@ -1,0 +1,1072 @@
+{
+  "file": "internal/console/console.go",
+  "source_sha256": "81e89f9836212de30d8c95095e3c9934f7db3c57d8142033a0e275a54260f609",
+  "package": "console",
+  "function": "routes",
+  "receiver": "Console",
+  "signature": "Console.routes(params=0, results=1)",
+  "start": {
+    "line": 708,
+    "column": 1
+  },
+  "end": {
+    "line": 820,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 711,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 816,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 817,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 819,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 9
+      },
+      "text": "http.NewServeMux"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 710,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 712,
+        "column": 3
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 3
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 29
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 40
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 723,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 723,
+        "column": 22
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 727,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 727,
+        "column": 36
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 732,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 732,
+        "column": 31
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 732,
+        "column": 42
+      },
+      "text": "c.readOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 733,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 733,
+        "column": 29
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 743,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 743,
+        "column": 30
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 39
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 50
+      },
+      "text": "c.handleSettingsTab"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 745,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 745,
+        "column": 36
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 745,
+        "column": 47
+      },
+      "text": "c.handleSettingsTab"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 39
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 50
+      },
+      "text": "c.handleSettingsTab"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 747,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 747,
+        "column": 36
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 747,
+        "column": 47
+      },
+      "text": "c.handleSettingsTab"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 35
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 46
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 749,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 749,
+        "column": 38
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 749,
+        "column": 49
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 38
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 750,
+        "column": 49
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 754,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 754,
+        "column": 37
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 754,
+        "column": 48
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 755,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 755,
+        "column": 44
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 755,
+        "column": 55
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 756,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 756,
+        "column": 38
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 756,
+        "column": 49
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 35
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 46
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 763,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 14
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 25
+      },
+      "text": "c.startExclusive"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 765,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 14
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 767,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 14
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 769,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 769,
+        "column": 34
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 41
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 771,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 771,
+        "column": 54
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 38
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 773,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 774,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 774,
+        "column": 14
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 775,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 776,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 776,
+        "column": 14
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 14
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 41
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 52
+      },
+      "text": "c.readOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 780,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 14
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 14
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 28
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 785,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 785,
+        "column": 34
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 785,
+        "column": 45
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 785,
+        "column": 56
+      },
+      "text": "c.startExclusive"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 786,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 786,
+        "column": 36
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 786,
+        "column": 47
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 787,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 787,
+        "column": 34
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 787,
+        "column": 45
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 788,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 788,
+        "column": 29
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 788,
+        "column": 40
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 789,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 789,
+        "column": 34
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 789,
+        "column": 45
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 35
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 46
+      },
+      "text": "c.credentialHTTPS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 791,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 3
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 14
+      },
+      "text": "c.credentialHTTPS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 32
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 798,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 798,
+        "column": 34
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 798,
+        "column": 45
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 798,
+        "column": 56
+      },
+      "text": "c.startExclusive"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 799,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 799,
+        "column": 33
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 799,
+        "column": 44
+      },
+      "text": "c.mutating"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 28
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 801,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 801,
+        "column": 33
+      },
+      "text": "c.session0"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 805,
+        "column": 2
+      },
+      "text": "c.registerOverview"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 810,
+        "column": 2
+      },
+      "text": "c.registerOrders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 815,
+        "column": 2
+      },
+      "text": "c.registerSignals"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 817,
+        "column": 10
+      },
+      "text": "c.remote.security"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 709,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

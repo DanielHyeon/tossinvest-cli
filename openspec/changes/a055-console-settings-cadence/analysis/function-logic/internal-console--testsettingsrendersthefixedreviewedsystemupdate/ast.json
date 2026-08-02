@@ -1,0 +1,150 @@
+{
+  "file": "internal/console/system_update_test.go",
+  "source_sha256": "0dd96e890ea64b1da9c0a6c7af59ef447c4ba20653a106e23b3e4bd2560de079",
+  "package": "console",
+  "function": "TestSettingsRendersTheFixedReviewedSystemUpdate",
+  "signature": "TestSettingsRendersTheFixedReviewedSystemUpdate(params=1, results=0)",
+  "start": {
+    "line": 147,
+    "column": 1
+  },
+  "end": {
+    "line": 167,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 38
+      },
+      "text": "validUpdateView"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 7
+      },
+      "text": "updateHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 10
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 18
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 46
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

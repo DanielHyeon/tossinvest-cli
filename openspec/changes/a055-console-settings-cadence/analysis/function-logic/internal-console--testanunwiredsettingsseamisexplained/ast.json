@@ -1,0 +1,87 @@
+{
+  "file": "internal/console/settings_test.go",
+  "source_sha256": "3994dcbf494dd35b802dee2f8073b22c2d5af495c10f010cd5d24e515e224fa6",
+  "package": "console",
+  "function": "TestAnUnwiredSettingsSeamIsExplained",
+  "signature": "TestAnUnwiredSettingsSeamIsExplained(params=1, results=0)",
+  "start": {
+    "line": 116,
+    "column": 1
+  },
+  "end": {
+    "line": 122,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 7
+      },
+      "text": "settingsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 13
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 47
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

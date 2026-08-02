@@ -39,7 +39,7 @@ type policyRowView struct {
 }
 
 type positionPolicyPage struct {
-	Nav        string
+	chrome
 	CSRF       string
 	Notice     string
 	Wired      bool
@@ -48,10 +48,8 @@ type positionPolicyPage struct {
 	Rows       []policyRowView
 }
 
-func (positionPolicyPage) Refresh() bool { return false }
-
 type positionPolicyPreviewPage struct {
-	Nav      string
+	chrome
 	CSRF     string
 	Preview  positionpolicy.Preview
 	Token    string
@@ -59,7 +57,6 @@ type positionPolicyPreviewPage struct {
 	WaitSecs int
 }
 
-func (positionPolicyPreviewPage) Refresh() bool { return false }
 func (p positionPolicyPreviewPage) Release() bool {
 	return p.Preview.Action == positionpolicy.ActionRelease
 }
@@ -81,7 +78,7 @@ type policyTokenPayload struct {
 
 func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Request) {
 	page := positionPolicyPage{
-		Nav: "position-management", CSRF: c.csrf, Wired: c.opts.PositionPolicies != nil,
+		chrome: c.chromeOnRequest("position-management"), CSRF: c.csrf, Wired: c.opts.PositionPolicies != nil,
 		Notice: r.URL.Query().Get("notice"), Descriptor: positionpolicy.Descriptor(),
 	}
 	if c.opts.PositionPolicies == nil {
@@ -160,7 +157,7 @@ func (c *Console) handlePositionPolicyPreview(w http.ResponseWriter, r *http.Req
 		wait = 3
 	}
 	c.render(w, "position-policy-preview", positionPolicyPreviewPage{
-		Nav: "position-management", CSRF: c.csrf, Preview: preview, Token: preview.Capability,
+		chrome: c.chromeOnRequest("position-management"), CSRF: c.csrf, Preview: preview, Token: preview.Capability,
 		Danger: danger, WaitSecs: wait,
 	})
 }

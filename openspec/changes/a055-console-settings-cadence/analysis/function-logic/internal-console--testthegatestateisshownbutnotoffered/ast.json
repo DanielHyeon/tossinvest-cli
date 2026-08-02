@@ -1,0 +1,135 @@
+{
+  "file": "internal/console/settings_limits_test.go",
+  "source_sha256": "e126aac7adf9f7cee9f20750c0363ca58969cc2128f94a16fddb4b34998ac7be",
+  "package": "console",
+  "function": "TestTheGateStateIsShownButNotOffered",
+  "signature": "TestTheGateStateIsShownButNotOffered(params=1, results=0)",
+  "start": {
+    "line": 549,
+    "column": 1
+  },
+  "end": {
+    "line": 562,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 554,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 557,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 558,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 550,
+        "column": 7
+      },
+      "text": "limitsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 551,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 10
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 52
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 555,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 558,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 558,
+        "column": 23
+      },
+      "text": "limitSection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 559,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 550,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

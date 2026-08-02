@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a055",
+  "title": "Group settings by reversibility and cadence, not by feature name",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a055-console-settings-cadence",
+    "path": "openspec/changes/a055-console-settings-cadence"
+  },
+  "acceptance": [
+    "Top navigation follows the operating pipeline in six items, each carrying a one-line description, and no screen is reachable only from inside another screen",
+    "Settings is four sub-routes classified by reversibility and cadence: standing, daily, strategy, tools",
+    "Every settings form shows current to next value, what applies when, and a named reason when its save control is unavailable",
+    "Save results are reported next to the form that produced them rather than as one page-level line",
+    "Loosening a Guardian limit is visually distinguished from tightening it, without adding typed confirmation",
+    "Rationale and provenance collapse into disclosure elements whose open state survives auto-reload, while safety statements never collapse"
+  ]
+}

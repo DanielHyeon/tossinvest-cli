@@ -66,12 +66,19 @@ func TestExternalPositionAutomaticManagementHasADiscoverableMenu(t *testing.T) {
 	h := settingsHarness(t, &fakeSettings{})
 	h.authenticate(t)
 
-	page := h.page(t, "/settings")
+	// The label used to be "외부 종목 자동관리" pointing at /settings#adoption. That
+	// named a SECTION of a screen and not the screen, so the Guardian limits, the
+	// operating toggles and the system update on the same page were reachable from
+	// the navigation only by accident (change a055). The menu is 설정 now, and
+	// adoption is the first card of its 상시 tab — irreversible, touched less than
+	// weekly, which is exactly what that tab is for.
+	page := h.page(t, pathSettingsStanding)
 	for _, want := range []string{
-		`href="/settings#adoption"`,
-		">외부 종목 자동관리</a>",
-		`<section id="adoption">`,
-		"<h1>외부 종목 자동관리 설정</h1>",
+		`href="/settings/daily"`,
+		">설정<small>",
+		`<a href="/settings/standing"`,
+		`id="adoption" data-settings-card="adoption"`,
+		`<h1>설정 <span class="muted">상시</span></h1>`,
 		"수동 매수",
 		"기존 공통 익절·보호선·손익 극대화 정책",
 		"저장 자체는 편입이나 주문을 실행하지 않는다",
@@ -94,7 +101,7 @@ func TestTheSettingsScreenShowsTheRawBlockAndTheVerdict(t *testing.T) {
 	h := settingsHarness(t, seam)
 	h.authenticate(t)
 
-	page := h.page(t, "/settings")
+	page := h.page(t, pathSettingsStanding)
 	for _, want := range []string{
 		"엔진이 거부한다", "stop fraction out of band", "005930", "000660",
 		"다음 엔진 기동부터 반영", "상시 규칙", "편입 해제 기능은 존재하지 않는다",
@@ -109,7 +116,7 @@ func TestTheSettingsScreenShowsTheRawBlockAndTheVerdict(t *testing.T) {
 func TestAnUnwiredSettingsSeamIsExplained(t *testing.T) {
 	h := settingsHarness(t, nil)
 	h.authenticate(t)
-	if page := h.page(t, "/settings"); !strings.Contains(page, "배선되지 않았다") {
+	if page := h.page(t, pathSettingsStanding); !strings.Contains(page, "배선되지 않았다") {
 		t.Error("an unwired seam must be explained, not rendered as an empty form")
 	}
 }
@@ -266,7 +273,7 @@ func TestTheStopFractionIsASlider(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			h := settingsHarness(t, &fakeSettings{block: config.Adoption{DefaultStopPct: tc.fraction}})
 			h.authenticate(t)
-			page := h.page(t, "/settings")
+			page := h.page(t, pathSettingsStanding)
 			for _, want := range []string{
 				`type="number"`, `name="default_stop_percent"`, `min="2"`, `max="20"`,
 				`step="0.5"`, `value="` + tc.wantValue + `"`, tc.wantLabel,

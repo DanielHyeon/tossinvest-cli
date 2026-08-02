@@ -1,0 +1,110 @@
+{
+  "file": "internal/console/settings_limits_test.go",
+  "source_sha256": "e126aac7adf9f7cee9f20750c0363ca58969cc2128f94a16fddb4b34998ac7be",
+  "package": "console",
+  "function": "TestTheAdvancedFormShowsNoZeroForAnUnsetLimit",
+  "signature": "TestTheAdvancedFormShowsNoZeroForAnUnsetLimit(params=1, results=0)",
+  "start": {
+    "line": 366,
+    "column": 1
+  },
+  "end": {
+    "line": 380,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 371,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 376,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 367,
+        "column": 7
+      },
+      "text": "limitsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 369,
+        "column": 13
+      },
+      "text": "limitSection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 369,
+        "column": 29
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 376,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 367,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 369,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 375,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

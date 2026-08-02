@@ -55,9 +55,12 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 <p class="notice"><strong>검증 중 — 갱신 보류.</strong> {{.HeldReason}}. 아래 브로커 수치는 캐시된
 {{.TakenAt}} 시점 값이다({{.AgeSeconds}}초 전).</p>
 {{else if .Present}}
-<details class="explain"><summary>데이터 기준 · {{.TakenAt}} ({{.AgeSeconds}}초 전)</summary><p class="muted">브로커 보유 캐시 <strong>{{.TakenAt}}</strong> ({{.AgeSeconds}}초 전).
+<div class="explain-link" data-explain="holdings-basis">
+<a href="{{.Explain.Href "holdings-basis"}}">데이터 기준 · {{.TakenAt}} ({{.AgeSeconds}}초 전) {{.Explain.Toggle "holdings-basis"}}</a>
+{{if .Explain.Is "holdings-basis"}}<div><p class="muted">브로커 보유 캐시 <strong>{{.TakenAt}}</strong> ({{.AgeSeconds}}초 전).
 갱신은 화면을 열 때만 일어나고 1회 갱신 = holdings 1콜이다 — 백그라운드 폴러는 없다.
-현재가는 holdings 응답의 lastPrice이며 종목별 시세를 따로 조회하지 않는다.</p></details>
+현재가는 holdings 응답의 lastPrice이며 종목별 시세를 따로 조회하지 않는다.</p></div>{{end}}
+</div>
 {{else}}
 <p class="notice"><strong>브로커 보유를 아직 읽지 못했다.</strong></p>
 {{end}}
@@ -78,7 +81,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 <p class="notice"><strong>관리 포지션 없음.</strong> 원장은 정상적으로 읽혔고, 엔진이 관리 중인 미청산
 포지션이 하나도 없다. 아래 보유가 있다면 전부 엔진 밖에서 생긴 것이다.</p>
 {{end}}
-{{template "brokerstate" .Holdings}}
+{{template "brokerstate" $.BrokerState}}
 
 {{if .Rows}}
 <section>
@@ -151,13 +154,24 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
     {{end}}
     </tbody>
   </table>
-  <details class="explain"><summary>관리 상태와 데이터 기준</summary><p class="muted"><strong>관리 외(미편입)</strong>은 엔진의 exit 정책 대상이 아니라는 뜻이다 — 손절·익절이
+  {{/*
+    The label's meaning is not an explanation, it is what is true of those rows
+    right now: 관리 외 means no stop and no take-profit is attached. That half
+    stays visible under the rule 지금 무엇이 참인가 → 항상 보인다. Where the
+    protection came from, and the boundary about what this screen does not do,
+    are provenance — those fold (change a055 §5).
+  */}}
+  <p class="muted"><strong>관리 외(미편입)</strong>은 엔진의 exit 정책 대상이 아니라는 뜻이다 — 손절·익절이
   자동으로 걸려 있지 않다. <strong>관리 편입</strong>으로 예약한 보유는 편입 예약 상태다 — 실제 손절·익절은 엔진이
-  가동되어 대사 루프가 편입을 완료한 뒤부터 걸린다. 관리 중인 행의 <strong>자격 근거</strong>는 그 보호가 어디서 왔는지를 말한다:
+  가동되어 대사 루프가 편입을 완료한 뒤부터 걸린다.</p>
+  <div class="explain-link" data-explain="management-basis">
+  <a href="{{$.Explain.Href "management-basis"}}">자격 근거는 어디서 오는가 {{$.Explain.Toggle "management-basis"}}</a>
+  {{if $.Explain.Is "management-basis"}}<div><p class="muted">관리 중인 행의 <strong>자격 근거</strong>는 그 보호가 어디서 왔는지를 말한다:
   <em>진입 결정</em>은 엔진이 직접 진입한 포지션, <em>편입 기록</em>은 사용자가 수동 매수한 보유를 엔진이
   편입한 것이다. 편입 자체는 엔진의 대사 루프가 수행하며 이 화면의 기능이 아니다 — 이 화면은 읽기 전용이다.
   관련 설정은 <a href="/optimization?category=position-management">포지션 관리 최적화</a>에서 확인한다.</p>
-  </details>
+  </div>{{end}}
+  </div>
 </section>
 {{else}}
 <section>
@@ -172,7 +186,13 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 
 {{define "history"}}
 {{template "head" .}}
-<h1>거래 이력</h1>
+<h1>이력 <span class="muted">거래 왕복</span></h1>
+{{/*
+  성과 이력's entry point (change a055 §7). It has a route of its own and had no
+  navigation entry at all: it was reachable only from inside the optimization
+  screen, which is a screen nobody opens looking for realised performance.
+*/}}
+<p><a href="/performance-history">성과 이력 — 레인별 성과와 파라미터 version 이력</a></p>
 <p class="muted">원장에 <strong>동결된 값</strong>만 표시한다. 실현손익·실현 R·초기 수량·보유 시간·도달 exit
 단계는 청산 트랜잭션에서 얼어붙은 값 그대로이고, 심볼(positions)과 진입가(exit_states)만 조인해서 붙인다.
 청산가는 스키마에 없으므로 표시하지 않으며 체결에서 재계산하지도 않는다 — 재계산한 값은 옆에 있는 동결 R과
@@ -184,7 +204,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 <section>
   <h2>완결 왕복 거래</h2>
   {{if .Trips}}
-  <table>
+  <div class="table-scroll" role="region" aria-label="완결 왕복 거래" tabindex="0"><table>
     <tr>
       {{if .Multi}}<th>계좌</th>{{end}}
       <th>청산 시각</th><th>심볼</th><th>진입가</th><th>실현손익(비용 차감)</th><th>실현 R</th>
@@ -203,7 +223,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td>{{.Stage}}</td>
     </tr>
     {{end}}
-  </table>
+  </table></div>
   {{else if .Journal.Readable}}
   <p class="muted">완결 거래 없음 — 아직 왕복이 끝난 포지션이 없다.</p>
   {{end}}
@@ -217,7 +237,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   {{if .Events}}
   <p class="muted">엔진이 내린 exit 판정 기록이다(시간순). 성과 행이 없는 종결도 여기에는 흔적이 남는다.</p>
   {{if .Truncated}}<p class="notice">최근 기록만 표시한다 — 창을 넘는 오래된 판정은 생략되었다.</p>{{end}}
-  <table>
+  <div class="table-scroll" role="region" aria-label="exit 이벤트" tabindex="0"><table>
     <tr>
       {{if .Multi}}<th>계좌</th>{{end}}
       <th>시각</th><th>심볼</th><th>관측가</th><th>워터마크</th><th>기준선</th><th>단계</th><th>발의</th>
@@ -229,7 +249,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td>{{.HighWater}}</td><td>{{.Baseline}}</td><td>{{.Level}}</td><td>{{.Proposal}}</td>
     </tr>
     {{end}}
-  </table>
+  </table></div>
   {{else if .Journal.Readable}}
   <p class="muted">exit 판정 기록 없음.</p>
   {{end}}

@@ -1,0 +1,94 @@
+{
+  "file": "internal/console/orders_page.go",
+  "source_sha256": "5698bbfc9638b395fa0aa0dadcba5dedad829248bfb868e56178abf76168a31c",
+  "package": "console",
+  "function": "handleOrders",
+  "receiver": "Console",
+  "signature": "Console.handleOrders(params=2, results=0)",
+  "start": {
+    "line": 34,
+    "column": 1
+  },
+  "end": {
+    "line": 42,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 10
+      },
+      "text": "c.orders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 19
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 32
+      },
+      "text": "filterChoiceFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 11
+      },
+      "text": "c.chromeFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 54
+      },
+      "text": "snap.Broker.freshness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

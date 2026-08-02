@@ -54,6 +54,10 @@ func (acceptingRemoteHandoff) Consume(token string, _ time.Time) error {
 	return nil
 }
 
+// These tests fetch a screen, not the root. The root became a 303 to the
+// overview in change a054, and a request that always redirects can no longer
+// tell an authorised session (200) apart from an unauthorised one (303 to
+// /login) — which is the entire distinction every assertion below is making.
 func newRemoteTestRig(t *testing.T, mutate ...func(*RemoteAccess)) remoteTestRig {
 	t.Helper()
 	cert, key := writeRemoteTestCertificate(t, "console.vpn.test")
@@ -172,7 +176,7 @@ func newTrustedNetworkTestRig(t *testing.T) remoteTestRig {
 
 func TestTrustedNetworkConsoleNeedsNoApplicationSession(t *testing.T) {
 	rig := newTrustedNetworkTestRig(t)
-	request := remoteRequest(http.MethodGet, "/", "10.8.0.42:4321", "mobile", nil)
+	request := remoteRequest(http.MethodGet, pathOverview, "10.8.0.42:4321", "mobile", nil)
 	response := serveRemote(rig.console, request)
 	if response.Code != http.StatusOK {
 		t.Fatalf("trusted dashboard status = %d, body=%s", response.Code, response.Body.String())
@@ -199,7 +203,7 @@ func TestTrustedNetworkConsoleNeedsNoApplicationSession(t *testing.T) {
 func TestTrustedNetworkStillRejectsWrongPeerOriginAndCSRF(t *testing.T) {
 	rig := newTrustedNetworkTestRig(t)
 
-	outside := remoteRequest(http.MethodGet, "/", "192.168.1.20:4321", "mobile", nil)
+	outside := remoteRequest(http.MethodGet, pathOverview, "192.168.1.20:4321", "mobile", nil)
 	if got := serveRemote(rig.console, outside).Code; got != http.StatusForbidden {
 		t.Fatalf("outside peer status = %d, want 403", got)
 	}
@@ -323,12 +327,12 @@ func TestRemoteLoginIssuesADistinctBoundSecureSession(t *testing.T) {
 		t.Fatalf("login audit = %+v", *rig.audits)
 	}
 
-	ok := remoteRequest(http.MethodGet, "/", "10.8.0.9:44001", "mobile-a", nil)
+	ok := remoteRequest(http.MethodGet, pathOverview, "10.8.0.9:44001", "mobile-a", nil)
 	ok.AddCookie(cookie)
 	if status := serveRemote(rig.console, ok).Code; status != http.StatusOK {
 		t.Fatalf("bound session status = %d, want 200", status)
 	}
-	replay := remoteRequest(http.MethodGet, "/", "10.8.0.9:44002", "mobile-b", nil)
+	replay := remoteRequest(http.MethodGet, pathOverview, "10.8.0.9:44002", "mobile-b", nil)
 	replay.AddCookie(cookie)
 	if status := serveRemote(rig.console, replay).Code; status != http.StatusSeeOther {
 		t.Fatalf("different User-Agent status = %d, want login redirect", status)
@@ -339,7 +343,7 @@ func TestRemoteSessionExpiresAndLogoutRevokesIt(t *testing.T) {
 	rig := newRemoteTestRig(t)
 	cookie := remoteLogin(t, rig.console, "10.8.0.10:44000", "mobile")
 	*rig.now = rig.now.Add(remoteSessionIdleTTL + time.Second)
-	expired := remoteRequest(http.MethodGet, "/", "10.8.0.10:44001", "mobile", nil)
+	expired := remoteRequest(http.MethodGet, pathOverview, "10.8.0.10:44001", "mobile", nil)
 	expired.AddCookie(cookie)
 	if status := serveRemote(rig.console, expired).Code; status != http.StatusSeeOther {
 		t.Fatalf("expired session status = %d, want login redirect", status)
@@ -353,7 +357,7 @@ func TestRemoteSessionExpiresAndLogoutRevokesIt(t *testing.T) {
 	if status := serveRemote(rig.console, logout).Code; status != http.StatusSeeOther {
 		t.Fatalf("logout status = %d", status)
 	}
-	after := remoteRequest(http.MethodGet, "/", "10.8.0.10:44004", "mobile", nil)
+	after := remoteRequest(http.MethodGet, pathOverview, "10.8.0.10:44004", "mobile", nil)
 	after.AddCookie(cookie)
 	if status := serveRemote(rig.console, after).Code; status != http.StatusSeeOther {
 		t.Fatalf("revoked session status = %d", status)
@@ -365,14 +369,14 @@ func TestRemoteSessionHasAnAbsoluteExpiryDespiteActivity(t *testing.T) {
 	cookie := remoteLogin(t, rig.console, "10.8.0.10:44000", "mobile")
 	for i := 0; i < 16; i++ {
 		*rig.now = rig.now.Add(29 * time.Minute)
-		active := remoteRequest(http.MethodGet, "/", "10.8.0.10:44001", "mobile", nil)
+		active := remoteRequest(http.MethodGet, pathOverview, "10.8.0.10:44001", "mobile", nil)
 		active.AddCookie(cookie)
 		if status := serveRemote(rig.console, active).Code; status != http.StatusOK {
 			t.Fatalf("active session expired at step %d with status %d", i+1, status)
 		}
 	}
 	*rig.now = rig.now.Add(17 * time.Minute)
-	expired := remoteRequest(http.MethodGet, "/", "10.8.0.10:44002", "mobile", nil)
+	expired := remoteRequest(http.MethodGet, pathOverview, "10.8.0.10:44002", "mobile", nil)
 	expired.AddCookie(cookie)
 	if status := serveRemote(rig.console, expired).Code; status != http.StatusSeeOther {
 		t.Fatalf("absolute-expired session status = %d, want login redirect", status)
@@ -416,13 +420,13 @@ func TestRemotePeerHostOriginAndCSRFAreIndependentGates(t *testing.T) {
 	rig := newRemoteTestRig(t)
 	cookie := remoteLogin(t, rig.console, "10.8.0.12:44000", "mobile")
 
-	outside := remoteRequest(http.MethodGet, "/", "203.0.113.9:44000", "mobile", nil)
+	outside := remoteRequest(http.MethodGet, pathOverview, "203.0.113.9:44000", "mobile", nil)
 	outside.Header.Set("X-Forwarded-For", "10.8.0.12")
 	if status := serveRemote(rig.console, outside).Code; status != http.StatusForbidden {
 		t.Fatalf("outside peer status = %d", status)
 	}
 
-	badHost := remoteRequest(http.MethodGet, "/", "10.8.0.12:44001", "mobile", nil)
+	badHost := remoteRequest(http.MethodGet, pathOverview, "10.8.0.12:44001", "mobile", nil)
 	badHost.Host = "attacker.invalid"
 	badHost.AddCookie(cookie)
 	if status := serveRemote(rig.console, badHost).Code; status != http.StatusForbidden {

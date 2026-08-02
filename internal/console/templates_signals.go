@@ -27,7 +27,7 @@ package console
 
 const signalsTemplates = `
 {{define "signals"}}{{template "head" .}}
-<h1>발굴 신호</h1>
+<h1>신호 <span class="muted">발굴 후보</span></h1>
 <p class="muted">순위 원천이 시간에 걸쳐 무엇을 말했는지, 그리고 <strong>무엇을 확인하지
 못했는지</strong>를 본다. 읽기 전용 — 이 화면은 주문을 내지 않고, 원천을 부르지도 않는다
 (저장소 읽기뿐이다). {{.Snap.NowText}} 기준.</p>
@@ -100,7 +100,7 @@ const signalsTemplates = `
 것이다.</p>
 {{end}}
 {{if .Missing}}
-<table>
+<div class="table-scroll" role="region" aria-label="원천" tabindex="0"><table>
   <thead><tr><th>빠진 원천</th><th>사유</th><th>rate limit</th></tr></thead>
   <tbody>
   {{range .Missing}}
@@ -111,7 +111,7 @@ const signalsTemplates = `
     </tr>
   {{end}}
   </tbody>
-</table>
+</table></div>
 <p class="muted">공식 랭킹에는 WTS 우회가 없다(D14) — 429 한 번이면 그 원천이 통째로
 사라진다. 결손율이 미문서화 RANKING 한도의 유일한 측정값이다.</p>
 {{else if .Unnamed}}
@@ -149,14 +149,14 @@ const signalsTemplates = `
 <p class="bad">{{.}}</p>
 {{end}}
 {{end}}
-<table>
+<div class="table-scroll" role="region" aria-label="추격 veto 사유별 후보 수" tabindex="0"><table>
   <thead><tr><th>사유 코드</th><th>위험</th><th>미측정</th></tr></thead>
   <tbody>
   {{range .Codes}}
     <tr><td><code>{{.Code}}</code></td><td>{{.Raised}}</td><td>{{.Unmeasured}}</td></tr>
   {{end}}
   </tbody>
-</table>
+</table></div>
 {{if .Reasons}}
 <p class="muted">미측정 입력:
 {{range $i, $r := .Reasons}}{{if $i}} · {{end}}<code>{{$r.Reason}}</code> {{$r.Count}}{{end}}
@@ -214,7 +214,7 @@ const signalsTemplates = `
 <h3>최초 관측 — 원천별</h3>
 <p class="muted">seen_late가 어느 원천의 읽기를 거부하고 있는지. 후보 한 건은 최초
 관측을 하나만 가지므로 분모는 후보 수다.</p>
-<table>
+<div class="table-scroll" role="region" aria-label="최초 관측 — 원천별" tabindex="0"><table>
   <thead><tr><th>원천</th><th>측정 / 보유</th><th>거부 사유</th></tr></thead>
   <tbody>
   {{range .Sightings}}
@@ -225,7 +225,7 @@ const signalsTemplates = `
     </tr>
   {{end}}
   </tbody>
-</table>
+</table></div>
 {{end}}
 {{end}}
 
@@ -236,7 +236,7 @@ const signalsTemplates = `
 {{define "signalstable"}}
 <h3>후보 목록</h3>
 {{if .Rows}}
-<table>
+<div class="table-scroll" role="region" aria-label="후보 목록" tabindex="0"><table>
   <thead><tr>
     <th>종목</th><th>상태</th><th>최초 발견(UTC)</th><th>판정</th>
     <th>seen_late</th><th>extended</th><th>near_high</th>
@@ -261,7 +261,7 @@ const signalsTemplates = `
     </tr>
   {{end}}
   </tbody>
-</table>
+</table></div>
 <p class="muted"><strong>미측정은 통과가 아니다</strong>(D10). veto 칸이 "미측정"인 행은
 그 사유를 확인한 적이 없다는 뜻이고, 상세조회는 초당 5회·종목당 1회이므로 그것이
 평시다 — 예외가 아니다. "측정·안전"은 실제로 재고 위험하지 않았다는 뜻이며, 두 상태는

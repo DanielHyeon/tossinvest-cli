@@ -220,7 +220,7 @@ func TestRejectedEnvironmentCredentialsStayOffTheSetupScreen(t *testing.T) {
 	if restarts != 0 {
 		t.Fatalf("restart called %d time(s)", restarts)
 	}
-	if resp.Request.URL.Path != "/" {
+	if resp.Request.URL.Path != pathVerifyConsole {
 		t.Fatalf("environment-managed rejection opened %q", resp.Request.URL.Path)
 	}
 	if !strings.Contains(page, "TOSSCTL_OPENAPI_KEY") || !strings.Contains(page, "컨테이너를 다시 생성") {

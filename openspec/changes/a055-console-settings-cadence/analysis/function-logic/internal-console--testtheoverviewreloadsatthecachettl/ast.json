@@ -1,0 +1,165 @@
+{
+  "file": "internal/console/overview_test.go",
+  "source_sha256": "ef62fd660a1c2ff4273ed9f1d56b217c3c4532403ec40f2f0de20f9221cb80f1",
+  "package": "console",
+  "function": "TestTheOverviewReloadsAtTheCacheTTL",
+  "signature": "TestTheOverviewReloadsAtTheCacheTTL(params=1, results=0)",
+  "start": {
+    "line": 1072,
+    "column": 1
+  },
+  "end": {
+    "line": 1091,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1074,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1085,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1088,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1073,
+        "column": 10
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1074,
+        "column": 12
+      },
+      "text": "RefreshSeconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1075,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1082,
+        "column": 7
+      },
+      "text": "newOverviewHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1083,
+        "column": 2
+      },
+      "text": "seedJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1084,
+        "column": 14
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1085,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1086,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1088,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1088,
+        "column": 45
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1089,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1073,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1074,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1082,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1084,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

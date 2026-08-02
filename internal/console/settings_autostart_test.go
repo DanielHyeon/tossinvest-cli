@@ -39,7 +39,7 @@ func TestAutostartScreenRendersStateAndMeaning(t *testing.T) {
 	h := newDashboardHarness(t, func(o *Options) { o.EngineBoot = a })
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/settings"))
+	page := body(t, h.get(t, pathSettingsStanding))
 	for _, want := range []string{
 		`action="/settings/autostart"`,
 		`name="enabled" checked`,
@@ -183,7 +183,7 @@ func TestAutostartUnwiredAndLoadErrorAreExplicit(t *testing.T) {
 	t.Run("unwired", func(t *testing.T) {
 		h := newDashboardHarness(t)
 		h.authenticate(t)
-		page := body(t, h.get(t, "/settings"))
+		page := body(t, h.get(t, pathSettingsStanding))
 		if !strings.Contains(page, "엔진 자동 시작 저장이 배선되지 않았다") {
 			t.Fatalf("unwired section disappeared:\n%s", page)
 		}
@@ -196,7 +196,7 @@ func TestAutostartUnwiredAndLoadErrorAreExplicit(t *testing.T) {
 			o.EngineBoot = &fakeAutostart{loadErr: errors.New("bad config")}
 		})
 		h.authenticate(t)
-		page := body(t, h.get(t, "/settings"))
+		page := body(t, h.get(t, pathSettingsStanding))
 		if !strings.Contains(page, "bad config") {
 			t.Fatalf("load error is absent:\n%s", page)
 		}

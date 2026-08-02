@@ -1,0 +1,178 @@
+{
+  "file": "internal/console/optimization_view.go",
+  "source_sha256": "69787d685c771aaa4e03b74229d22c1eed8e7b5ca37728fc8fa7e6e7e2b7d6a7",
+  "package": "console",
+  "function": "newOptimizationConflictPage",
+  "signature": "newOptimizationConflictPage(params=2, results=1)",
+  "start": {
+    "line": 175,
+    "column": 1
+  },
+  "end": {
+    "line": 199,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 180,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 16
+      },
+      "text": "conflict.Registry.Field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 21
+      },
+      "text": "displayOption"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 21
+      },
+      "text": "displayOption"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 21
+      },
+      "text": "displayOption"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 16
+      },
+      "text": "conflict.Registry.Field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 4
+      },
+      "text": "field.Descriptor.ValidateOption"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 183,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 189,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 195,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -324,7 +324,11 @@ func (rr *remoteRuntime) loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	rr.clearFailures(peer)
 	rr.issueSession(w, r, peer)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	// The overview, because a login lands on the account rather than on the
+	// verification surface. The root would work too — it redirects here — but a
+	// login that costs a second round trip for no reason is a login that looks
+	// slow on the one screen an operator judges the console by.
+	http.Redirect(w, r, pathOverview, http.StatusSeeOther)
 }
 
 func (rr *remoteRuntime) rateLimited(peer netip.Addr) (time.Duration, bool, bool) {

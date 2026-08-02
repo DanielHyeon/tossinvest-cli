@@ -148,7 +148,7 @@ func TestSettingsRendersTheFixedReviewedSystemUpdate(t *testing.T) {
 	updater := &fakeSystemUpdater{view: validUpdateView()}
 	h := updateHarness(t, updater)
 	h.authenticate(t)
-	page := body(t, h.get(t, "/settings"))
+	page := body(t, h.get(t, pathSettingsTools))
 	for _, want := range []string{
 		"시스템 업데이트",
 		"/home/daniel/.local/bin/tossctl",

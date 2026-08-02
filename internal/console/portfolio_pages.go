@@ -20,24 +20,48 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
 type positionsPage struct {
-	Nav  string
+	chrome
 	Snap positionsView
 }
 
-// Refresh is what the head template reads: the positions screen asks the
-// browser to reload, at the period RefreshSeconds names.
-func (positionsPage) Refresh() bool { return true }
+// brokerStateView is the broker-cache banner's data plus this screen's fold
+// state.
+//
+// The "brokerstate" template is invoked with the holdings snapshot as its dot,
+// so `$` inside it is that snapshot and not the page — and the fold in it needs
+// the page's explain state. Embedding keeps every existing `.Wired`, `.Held`,
+// `.TakenAt` reference working and adds the one field.
+type brokerStateView struct {
+	holdingsSnapshot
+	Explain explainState
+}
+
+// BrokerState is what the banner template is given.
+func (p positionsPage) BrokerState() brokerStateView {
+	return brokerStateView{holdingsSnapshot: p.Snap.Holdings, Explain: p.Explain}
+}
 
 // RefreshSeconds is the reload period: exactly the holdings cache TTL, derived
 // from it so the two cannot drift apart — a period under the TTL would be a
 // reload that costs broker calls faster than the budget the spec fixes.
+//
+// Refresh is the embedded chrome's field, set by the handler below.
 func (positionsPage) RefreshSeconds() int { return int(holdingsTTL / time.Second) }
 
 func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
-	page := positionsPage{Nav: "positions", Snap: c.positions(r.Context())}
+	snap := c.positions(r.Context())
+	page := positionsPage{
+		chrome: c.chromeFor("positions", verifylive.MarketKR, snap.Holdings.freshness()),
+		Snap:   snap,
+	}
+	page.Refresh = true
+	// Same reason as the orders screen: a reloading screen cannot keep a native
+	// fold open (change a055 §6, explain.go).
+	page.Explain = explainFrom(r)
 	attachPositionExitLines(page.Snap.Rows, c.now())
 	if c.opts.Settings != nil {
 		if block, _, err := c.opts.Settings.Load(); err == nil {
@@ -78,12 +102,13 @@ func attachPositionExitLines(rows []positionRow, asOf time.Time) {
 }
 
 type historyPage struct {
-	Nav  string
+	chrome
 	Snap historyView
 }
 
-func (historyPage) Refresh() bool { return false }
-
 func (c *Console) handleHistory(w http.ResponseWriter, r *http.Request) {
-	c.render(w, "history", historyPage{Nav: "history", Snap: c.history(r.Context())})
+	c.render(w, "history", historyPage{
+		chrome: c.chromeOnRequest("history"),
+		Snap:   c.history(r.Context()),
+	})
 }

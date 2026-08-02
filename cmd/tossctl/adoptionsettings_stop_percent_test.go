@@ -49,7 +49,9 @@ func TestAdoptionSettingsRoundTripsStopWidth(t *testing.T) {
 	}
 	login.Body.Close()
 
-	settings, err := client.Get(srv.URL + "/settings")
+	// The adoption form is on the 상시 tab since change a055; /settings itself is
+	// a redirect to the daily tab now.
+	settings, err := client.Get(srv.URL + "/settings/standing")
 	if err != nil {
 		t.Fatalf("GET settings: %v", err)
 	}

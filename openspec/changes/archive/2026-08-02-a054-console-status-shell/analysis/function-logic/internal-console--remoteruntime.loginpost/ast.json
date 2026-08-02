@@ -1,0 +1,421 @@
+{
+  "file": "internal/console/remote.go",
+  "source_sha256": "b299982dea6427da142f842d86efa55ff90a72b929bb529a1779ab7275011f07",
+  "package": "console",
+  "function": "loginPost",
+  "receiver": "remoteRuntime",
+  "signature": "remoteRuntime.loginPost(params=2, results=0)",
+  "start": {
+    "line": 290,
+    "column": 1
+  },
+  "end": {
+    "line": 332,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 296,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 298,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 299,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 312,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 314,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 293,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 301,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 305,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 310,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 316,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 319,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 323,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 6
+      },
+      "text": "rr.sameOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 3
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 13
+      },
+      "text": "rr.peer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 36
+      },
+      "text": "rr.rateLimited"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 33
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 46
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 50
+      },
+      "text": "retry.Round"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 14
+      },
+      "text": "rr.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 81
+      },
+      "text": "peer.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 5
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 3
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 11
+      },
+      "text": "http.MaxBytesReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 12
+      },
+      "text": "r.ParseForm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 3
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 6
+      },
+      "text": "tokenEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 17
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 3
+      },
+      "text": "rr.recordFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 13
+      },
+      "text": "rr.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 80
+      },
+      "text": "peer.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 4
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 3
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 12
+      },
+      "text": "rr.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 73
+      },
+      "text": "peer.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 3
+      },
+      "text": "http.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 2
+      },
+      "text": "rr.clearFailures"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 2
+      },
+      "text": "rr.issueSession"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 2
+      },
+      "text": "http.Redirect"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 295,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 296,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 299,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 308,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 314,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 321,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

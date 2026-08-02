@@ -1,0 +1,174 @@
+{
+  "file": "internal/console/settings_test.go",
+  "source_sha256": "3994dcbf494dd35b802dee2f8073b22c2d5af495c10f010cd5d24e515e224fa6",
+  "package": "console",
+  "function": "TestTheStopFractionIsASlider",
+  "signature": "TestTheStopFractionIsASlider(params=1, results=0)",
+  "start": {
+    "line": 260,
+    "column": 1
+  },
+  "end": {
+    "line": 295,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 277,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 5
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 285,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 286,
+        "column": 5
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 9
+      },
+      "text": "settingsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 4
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 12
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 9
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 6
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 8
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 6
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 14
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 274,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 276,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

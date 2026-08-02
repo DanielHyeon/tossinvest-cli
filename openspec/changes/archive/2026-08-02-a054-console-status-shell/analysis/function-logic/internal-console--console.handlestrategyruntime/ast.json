@@ -1,0 +1,196 @@
+{
+  "file": "internal/console/strategy_runtime.go",
+  "source_sha256": "2e9f5f39abed48d179280099ee385830f3b5c1d7b7e7285738b575f4ac262b96",
+  "package": "console",
+  "function": "handleStrategyRuntime",
+  "receiver": "Console",
+  "signature": "Console.handleStrategyRuntime(params=2, results=0)",
+  "start": {
+    "line": 82,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "else",
+      "at": {
+        "line": 100,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 13
+      },
+      "text": "dormantStrategyRuntimeReading"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 43
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 38
+      },
+      "text": "c.chromeOnRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 17
+      },
+      "text": "c.opts.StrategyRuntime.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 45
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 21
+      },
+      "text": "validStrategyRuntimeReading"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 2
+      },
+      "text": "page.project"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 98,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 99,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 101,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

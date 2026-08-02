@@ -1134,16 +1134,20 @@ func ratText(r *big.Rat) string {
 // --- the page -----------------------------------------------------------------------
 
 type overviewPage struct {
-	Nav  string
+	chrome
 	Snap overviewView
 }
 
-// Refresh and RefreshSeconds: the screen reloads itself at the holdings cache
-// TTL, derived from the constant rather than written again (positionsPage's
-// precedent). Here every reload costs zero broker calls, so the TTL is a
-// freshness bound rather than a budget one — but a second period to keep in step
-// with the first is worth avoiding either way.
-func (overviewPage) Refresh() bool       { return true }
+// RefreshSeconds is the reload period: the holdings cache TTL, derived from the
+// constant rather than written again (positionsPage's precedent). Here every
+// reload costs zero broker calls, so the TTL is a freshness bound rather than a
+// budget one — but a second period to keep in step with the first is worth
+// avoiding either way.
+//
+// Refresh itself is now a field on the embedded chrome, set by the handler. It
+// used to be a method returning true, which read as a property of the type; a
+// screen cannot have both without one silently shadowing the other, and one
+// mechanism for "does this reload" is the point of the shared shell.
 func (overviewPage) RefreshSeconds() int { return int(holdingsTTL / time.Second) }
 
 // registerOverview puts the overview screen on the mux.
@@ -1159,5 +1163,19 @@ func (c *Console) registerOverview(mux *http.ServeMux) {
 // handleOverview renders the screen. GET, inside the session gate and outside
 // the CSRF gate — there is nothing here to submit.
 func (c *Console) handleOverview(w http.ResponseWriter, r *http.Request) {
-	c.render(w, "overview", overviewPage{Nav: "overview", Snap: c.overview(r.Context())})
+	snap := c.overview(r.Context())
+
+	// A second peek, not a second reading: peek makes no broker call and takes
+	// only the cache's mutex, so this costs what a map lookup costs. The panels
+	// above already read it; what the strip needs is the instant, and threading
+	// that up through five panel builders would be a wider change than the fact
+	// is worth.
+	fresh := c.holdings.peek(c.now()).freshness()
+	if snap.VerifyRunning {
+		fresh.Hold = "갱신 보류 — " + snap.VerifyNote
+	}
+
+	page := overviewPage{chrome: c.chromeFor("overview", verifylive.MarketKR, fresh), Snap: snap}
+	page.Refresh = true
+	c.render(w, "overview", page)
 }

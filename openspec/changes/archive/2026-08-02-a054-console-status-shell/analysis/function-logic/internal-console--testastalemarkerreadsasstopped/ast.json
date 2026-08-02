@@ -1,0 +1,111 @@
+{
+  "file": "internal/console/engineproc_test.go",
+  "source_sha256": "3a58bfb67872b1a1ea87c8ce0cae82890f06d91618546d4aaed3fcf79ee233d1",
+  "package": "console",
+  "function": "TestAStaleMarkerReadsAsStopped",
+  "signature": "TestAStaleMarkerReadsAsStopped(params=1, results=0)",
+  "start": {
+    "line": 106,
+    "column": 1
+  },
+  "end": {
+    "line": 115,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 7
+      },
+      "text": "newEngineHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 2
+      },
+      "text": "holdEngineMarker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 32
+      },
+      "text": "engineNow.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 10
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 18
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

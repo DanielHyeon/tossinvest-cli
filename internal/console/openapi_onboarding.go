@@ -37,12 +37,10 @@ type CheckOpenAPICredentials func(context.Context) OpenAPICredentialCheck
 type SaveOpenAPICredentials func(context.Context, string, string) OpenAPICredentialCheck
 
 type openAPISetupPage struct {
-	Nav     string
+	chrome
 	CSRF    string
 	Message string
 }
-
-func (openAPISetupPage) Refresh() bool { return false }
 
 // credentialHTTPS is deliberately narrower than remote.security: the legacy
 // loopback console may remain HTTP for non-secret operations, but key/secret
@@ -103,7 +101,7 @@ func (c *Console) handleOpenAPILoginSave(w http.ResponseWriter, r *http.Request)
 
 func (c *Console) renderOpenAPISetup(w http.ResponseWriter, message string) {
 	c.render(w, "openapi-login", openAPISetupPage{
-		Nav:     "verify-console",
+		chrome:  c.chromeOnRequest("verify-console"),
 		CSRF:    c.csrf,
 		Message: message,
 	})

@@ -146,9 +146,9 @@ const restartRefreshDelay = 3
 // process binds the same port.
 func restartTarget(token string) string {
 	if token == "" {
-		return "/"
+		return pathVerifyConsole
 	}
-	return "/?handoff=" + urlQueryEscape(token)
+	return pathVerifyConsole + "?handoff=" + urlQueryEscape(token)
 }
 
 // mintHandoff produces the token, or explains why the browser will have to be
@@ -317,8 +317,12 @@ func (c *Console) restartSoakLocked(w http.ResponseWriter, r *http.Request) {
 	c.redirectDashboard(w, r, note)
 }
 
+// redirectDashboard sends a restart or soak-restart result back to the screen
+// whose button produced it. That screen is the verification console: reading
+// the outcome of a button somewhere the button is not is how an operator ends
+// up pressing it twice.
 func (c *Console) redirectDashboard(w http.ResponseWriter, r *http.Request, notice string) {
-	target := "/"
+	target := pathVerifyConsole
 	if strings.TrimSpace(notice) != "" {
 		target += "?notice=" + urlQueryEscape(notice)
 	}

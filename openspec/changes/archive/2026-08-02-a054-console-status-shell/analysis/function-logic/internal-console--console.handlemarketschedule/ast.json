@@ -1,0 +1,322 @@
+{
+  "file": "internal/console/market_schedule.go",
+  "source_sha256": "b53784994a8c90c4794c644594ad91c528f9ae34d15d2d3323d8c7bd06179370",
+  "package": "console",
+  "function": "handleMarketSchedule",
+  "receiver": "Console",
+  "signature": "Console.handleMarketSchedule(params=2, results=0)",
+  "start": {
+    "line": 52,
+    "column": 1
+  },
+  "end": {
+    "line": 86,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "else",
+      "at": {
+        "line": 70,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 57,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 3
+      },
+      "text": "Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 3
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 37
+      },
+      "text": "c.chromeOnRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 17
+      },
+      "text": "c.opts.MarketSchedule.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 44
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 26
+      },
+      "text": "onOff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 26
+      },
+      "text": "onOff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 28
+      },
+      "text": "effectiveState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 28
+      },
+      "text": "onOff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 16
+      },
+      "text": "scheduleMarketLabel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 17
+      },
+      "text": "sessionLabel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 21
+      },
+      "text": "applyTiming"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 70
+      },
+      "text": "calendarProvenance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 24
+      },
+      "text": "typedDecisionReason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 24
+      },
+      "text": "formatScheduleTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 22
+      },
+      "text": "decisionHelp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 69,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 71,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

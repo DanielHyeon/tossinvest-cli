@@ -1,0 +1,187 @@
+{
+  "file": "internal/console/portfolio_pages.go",
+  "source_sha256": "1b853d97900369149f409d3f90a6b7ff7edff22bb6168f55c081bbde8b76f4b2",
+  "package": "console",
+  "function": "handlePositions",
+  "receiver": "Console",
+  "signature": "Console.handlePositions(params=2, results=0)",
+  "start": {
+    "line": 55,
+    "column": 1
+  },
+  "end": {
+    "line": 77,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 70,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 10
+      },
+      "text": "c.positions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 22
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 11
+      },
+      "text": "c.chromeFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 57
+      },
+      "text": "snap.Holdings.freshness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 17
+      },
+      "text": "explainFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 2
+      },
+      "text": "attachPositionExitLines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 42
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 23
+      },
+      "text": "c.opts.Settings.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 36
+      },
+      "text": "block.Included"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 34
+      },
+      "text": "block.Excludes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 71,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 72,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

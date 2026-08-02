@@ -1,0 +1,220 @@
+{
+  "file": "internal/console/settings_autostart_test.go",
+  "source_sha256": "4147bea89484e636a8521dfa2a7d8d127c9d686677f7ddd3b4cfe79657c21b12",
+  "package": "console",
+  "function": "TestAutostartUnwiredAndLoadErrorAreExplicit",
+  "signature": "TestAutostartUnwiredAndLoadErrorAreExplicit(params=1, results=0)",
+  "start": {
+    "line": 182,
+    "column": 1
+  },
+  "end": {
+    "line": 204,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 8
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 3
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 11
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 19
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 8
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 43
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 3
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 11
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 19
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 184,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 186,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 196,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

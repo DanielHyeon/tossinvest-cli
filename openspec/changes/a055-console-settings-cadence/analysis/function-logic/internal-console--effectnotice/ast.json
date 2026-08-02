@@ -1,0 +1,46 @@
+{
+  "file": "internal/console/settings.go",
+  "source_sha256": "4751dc7b16b4cd1cd885c5518b90d6939937074c83f428431b3504a6d4e3fe22",
+  "package": "console",
+  "function": "effectNotice",
+  "signature": "effectNotice(params=1, results=1)",
+  "start": {
+    "line": 383,
+    "column": 1
+  },
+  "end": {
+    "line": 388,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

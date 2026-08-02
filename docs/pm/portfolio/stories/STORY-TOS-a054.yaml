@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a054",
+  "title": "Give every console screen one status strip and one name",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a054-console-status-shell",
+    "path": "openspec/changes/archive/2026-08-02-a054-console-status-shell"
+  },
+  "acceptance": [
+    "Every console screen renders the same status strip: engine state, market session advisory, data freshness with the recorded time, and the reload period actually in force",
+    "Freshness is stated only where a time was recorded; a screen without a recorded time says so instead of inventing one",
+    "The root path answers with the account overview and the verification console keeps its controls at a path of its own",
+    "Restart handoff and remote login land on a path that exists after the root path moves",
+    "Every screen renders at 375 CSS pixels without horizontal overflow, and heading levels are distinguishable by size",
+    "The overview answers 'is anything wrong right now' from a summary strip above the tables, each cell linking to the screen that owns the detail"
+  ]
+}

@@ -41,9 +41,21 @@ type AdoptionSettings interface {
 const defaultStopPct = 0.05
 
 type settingsPage struct {
-	Nav    string
+	chrome
+	// Tab is which of the four sub-screens this render is, and Tabs is the bar.
+	// The classification is by reversibility and frequency, not by feature name
+	// (change a055) — see settings_tabs.go.
+	Tab  string
+	Tabs []settingsTab
+	// Entries are the links out of 전략 and 도구, each carrying the target's own
+	// current line.
+	Entries []entryPoint
+
 	CSRF   string
 	Notice string
+	// NoticeForm names the card the notice belongs beside. A save answer at the
+	// top of a screen with eight forms on it does not say which one saved.
+	NoticeForm string
 	// Wired reports the seam was injected; without it the screen explains and
 	// the forms are not rendered.
 	Wired bool
@@ -137,11 +149,20 @@ func (c *Console) engineRunning() bool {
 	return fresh
 }
 
-func (c *Console) handleSettings(w http.ResponseWriter, r *http.Request) {
+// settingsView reads everything the settings screen shows, for whichever tab is
+// about to render it.
+//
+// All four tabs read the same things. Splitting the reads per tab would mean
+// four places to keep in step with a new seam, and the reads are file stats and
+// a config parse — the expensive screens in this console are the ones that call
+// the broker, and this is not one of them (a054 pinned that at zero).
+func (c *Console) settingsView(r *http.Request) settingsPage {
 	page := settingsPage{
-		Nav:           "settings",
+		chrome:        c.chromeOnRequest("settings"),
+		Tabs:          settingsTabs,
 		CSRF:          c.csrf,
 		Notice:        r.URL.Query().Get("notice"),
+		NoticeForm:    strings.TrimSpace(r.URL.Query().Get("form")),
 		EngineRunning: c.engineRunning(),
 	}
 	if c.opts.Settings != nil {
@@ -189,7 +210,7 @@ func (c *Console) handleSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	page.ReleaseDownloadWired =
 		c.opts.ReleaseDownloader != nil && c.opts.ReleaseCandidateStager != nil
-	c.render(w, "settings", page)
+	return page
 }
 
 // handleSettingsSave is the whole form: enabled, fraction, both lists.
@@ -387,8 +408,18 @@ func effectNotice(running bool) string {
 	return "다음 엔진 기동부터 반영된다."
 }
 
+// redirectSettings sends a save's answer back to the card that caused it.
+//
+// The tab and the card come from the route that is answering, not from the
+// notice text: the route knows which form it is and the sentence does not, and a
+// sentence-matching rule would go quietly wrong the first time one was reworded.
 func (c *Console) redirectSettings(w http.ResponseWriter, r *http.Request, notice string) {
-	http.Redirect(w, r, "/settings?notice="+urlQueryEscape(notice), http.StatusSeeOther)
+	origin := settingsOriginFor(r.URL.Path)
+	target := origin.Tab + "?notice=" + urlQueryEscape(notice)
+	if origin.Form != "" {
+		target += "&form=" + urlQueryEscape(origin.Form) + "#" + origin.Form
+	}
+	http.Redirect(w, r, target, http.StatusSeeOther)
 }
 
 // splitSymbols parses a comma/whitespace separated list; normalisation proper

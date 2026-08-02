@@ -1,0 +1,149 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "5db37a746051189c09ffa2d2f62c6f34b3680e89e7dc9bd806acfa6c76fefc87",
+  "package": "console",
+  "function": "handleReport",
+  "receiver": "Console",
+  "signature": "Console.handleReport(params=2, results=0)",
+  "start": {
+    "line": 349,
+    "column": 1
+  },
+  "end": {
+    "line": 361,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 353,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 355,
+        "column": 9
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 350,
+        "column": 12
+      },
+      "text": "marketOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 29
+      },
+      "text": "c.chromeFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 59
+      },
+      "text": "onRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 79
+      },
+      "text": "c.snapshotFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 14
+      },
+      "text": "c.report"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 16
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 357,
+        "column": 3
+      },
+      "text": "rep.WriteText"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 358,
+        "column": 15
+      },
+      "text": "buf.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 351,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 352,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 354,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 358,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

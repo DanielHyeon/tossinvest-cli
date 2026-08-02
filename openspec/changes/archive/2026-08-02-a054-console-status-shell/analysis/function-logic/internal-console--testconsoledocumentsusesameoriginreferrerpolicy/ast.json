@@ -1,0 +1,205 @@
+{
+  "file": "internal/console/referrer_policy_test.go",
+  "source_sha256": "a455894c7aa24f1557d0f99d671332edba43ede538123d2cb0b0c23bfbc88f0b",
+  "package": "console",
+  "function": "TestConsoleDocumentsUseSameOriginReferrerPolicy",
+  "signature": "TestConsoleDocumentsUseSameOriginReferrerPolicy(params=1, results=0)",
+  "start": {
+    "line": 10,
+    "column": 1
+  },
+  "end": {
+    "line": 47,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 33,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 42,
+        "column": 11
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 11
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 9
+      },
+      "text": "httptest.NewRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 4
+      },
+      "text": "render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 53
+      },
+      "text": "w.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 14
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 14
+      },
+      "text": "w.Header"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 15
+      },
+      "text": "w.Body.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 33
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 14
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 11,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

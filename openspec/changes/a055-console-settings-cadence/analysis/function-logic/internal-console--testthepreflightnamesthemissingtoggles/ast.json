@@ -1,0 +1,111 @@
+{
+  "file": "internal/console/settings_operating_test.go",
+  "source_sha256": "1722b5a8bec8da7c8320e946db6fb8649284a97617fb4517c9d49b7f9c61cd4e",
+  "package": "console",
+  "function": "TestThePreflightNamesTheMissingToggles",
+  "signature": "TestThePreflightNamesTheMissingToggles(params=1, results=0)",
+  "start": {
+    "line": 226,
+    "column": 1
+  },
+  "end": {
+    "line": 236,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 232,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 13
+      },
+      "text": "operatingHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 33
+      },
+      "text": "fullLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 10
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 18
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

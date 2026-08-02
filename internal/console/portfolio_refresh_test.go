@@ -118,8 +118,8 @@ func TestTheVerificationScreensKeepTheirTwoSecondReload(t *testing.T) {
 		name string
 		page any
 	}{
-		{"verify", verifyPage{Nav: "verify", Refresh: true}},
-		{"dashboard", dashboardPage{Nav: "dashboard", Refresh: true}},
+		{"verify", verifyPage{chrome: chrome{Nav: "verify", Refresh: true}}},
+		{"dashboard", dashboardPage{chrome: chrome{Nav: "verify-console", Refresh: true}}},
 	} {
 		var buf bytes.Buffer
 		if err := pages.ExecuteTemplate(&buf, "head", tc.page); err != nil {

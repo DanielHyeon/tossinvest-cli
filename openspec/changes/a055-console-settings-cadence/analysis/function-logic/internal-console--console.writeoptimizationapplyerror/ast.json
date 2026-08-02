@@ -1,0 +1,120 @@
+{
+  "file": "internal/console/optimization_view.go",
+  "source_sha256": "bbd7089082aaffc1af5dd3702731d9dcd6ffa0680de8815b3acbc60563525d23",
+  "package": "console",
+  "function": "writeOptimizationApplyError",
+  "receiver": "Console",
+  "signature": "Console.writeOptimizationApplyError(params=4, results=0)",
+  "start": {
+    "line": 299,
+    "column": 1
+  },
+  "end": {
+    "line": 311,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 302,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 3
+      },
+      "text": "c.writeOptimizationError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 27
+      },
+      "text": "c.opts.Optimization.RecoverConflict"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 63
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 3
+      },
+      "text": "c.writeOptimizationError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 2
+      },
+      "text": "c.renderHTML"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 3
+      },
+      "text": "c.newOptimizationConflictPage"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,31 @@
+{
+  "file": "internal/console/signals.go",
+  "source_sha256": "387d50d011c3f06cb148c3fc94b9b8bdc67014c20ba64cc0fd45f4745f9151e7",
+  "package": "console",
+  "function": "Refresh",
+  "receiver": "signalsPage",
+  "signature": "signalsPage.Refresh(params=0, results=1)",
+  "start": {
+    "line": 1019,
+    "column": 1
+  },
+  "end": {
+    "line": 1019,
+    "column": 50
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1019,
+        "column": 37
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -216,7 +216,7 @@ func TestActualApplyCASConflictRendersInputFreeRecoveryWithoutRetry(t *testing.T
 	}
 	page := assertOptimizationResponseSecurity(t, conflict, normal)
 	for _, marker := range []string{
-		"자동 retry하지 않았습니다", "읽기 전용으로 보존", "Attempted", "Latest desired", "Latest effective",
+		"자동 retry하지 않았다", "읽기 전용으로 보존", "Attempted", "Latest desired", "Latest effective",
 		"v1", "v2", exitpolicy.CommonLadderRunner, exitpolicy.CommonLadderBalanced,
 		"최신값으로 돌아가기", "보존한 draft로 새 preview",
 	} {

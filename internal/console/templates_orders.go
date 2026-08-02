@@ -15,7 +15,7 @@ const ordersTemplates = `
 {{.Snap.NowText}} 기준. 보호 정책은 <a href="/optimization?category=exit-protection">exit 보호 최적화</a>에서 확인한다.</p>
 
 {{template "journalstate" .Snap.Journal}}
-{{template "ordercounts" .Snap}}
+{{template "ordercounts" .Screen}}
 {{template "orderfilters" .Snap}}
 {{template "ordertable" .Snap}}
 
@@ -50,18 +50,29 @@ const ordersTemplates = `
       {{if .Live.Code}}({{.Live.Code}}){{end}}</span> — {{.Live.Why}}{{end}}</dd>
   </dl>
   {{template "orderbroker" .}}
-  <details class="explain"><summary>집계 기준</summary><p class="muted">미체결 조회는 브로커의 <code>status=OPEN</code> 그룹이다 — 대기 주문을
-  <strong>전량</strong> 돌려주는 호출이므로 이 건수는 하한이 아니라 숫자다. 페이지 경계에 걸려
-  잘릴 수 있는 조회로 미체결을 세면 101번째의 살아 있는 주문이 표에서도 집계에서도 사라진다.</p></details>
+  {{/*
+    A link and not a <details>: this screen reloads itself, and a native fold
+    would open on click and close on the next tick. The one that persists is the
+    one the address bar carries (change a055 §6).
+  */}}
+  <div class="explain-link" data-explain="open-basis">
+    <a href="{{$.Explain.Href "open-basis"}}">집계 기준 {{$.Explain.Toggle "open-basis"}}</a>
+    {{if $.Explain.Is "open-basis"}}<div><p class="muted">미체결 조회는 브로커의 <code>status=OPEN</code> 그룹이다 — 대기 주문을
+    <strong>전량</strong> 돌려주는 호출이므로 이 건수는 하한이 아니라 숫자다. 페이지 경계에 걸려
+    잘릴 수 있는 조회로 미체결을 세면 101번째의 살아 있는 주문이 표에서도 집계에서도 사라진다.</p></div>{{end}}
+  </div>
 
   <dl>
     <dt>종결 주문 <span class="muted">CLOSED 그룹 한 페이지</span></dt>
     <dd>{{if .ClosedCount.Known}}{{.ClosedCount.Value}}{{else}}<span class="muted">미측정
       ({{.ClosedCount.Code}})</span> — {{.ClosedCount.Why}}{{end}}</dd>
   </dl>
-  <details class="explain"><summary>종결 목록 기준</summary><p class="muted">종결 목록은 따로 부른다. <strong>취소·거부된 주문은 체결이 되지 않으므로
-  왕복 기록에 영영 나타나지 않는다</strong> — 거래 이력 화면이 대신하지 못하는 정보다.
-  이 목록은 페이지네이션되므로 건수가 "N건 이상"일 수 있다.</p></details>
+  <div class="explain-link" data-explain="closed-basis">
+    <a href="{{$.Explain.Href "closed-basis"}}">종결 목록 기준 {{$.Explain.Toggle "closed-basis"}}</a>
+    {{if $.Explain.Is "closed-basis"}}<div><p class="muted">종결 목록은 따로 부른다. <strong>취소·거부된 주문은 체결이 되지 않으므로
+    왕복 기록에 영영 나타나지 않는다</strong> — 거래 이력 화면이 대신하지 못하는 정보다.
+    이 목록은 페이지네이션되므로 건수가 "N건 이상"일 수 있다.</p></div>{{end}}
+  </div>
 
   {{if .Truncated}}
   <p class="notice"><strong>페이지가 잘렸다.</strong> 브로커가 다음 페이지가 있다고 답했으므로

@@ -1,0 +1,55 @@
+{
+  "file": "internal/console/restart.go",
+  "source_sha256": "df4def84dcf2d488d3b27a25c633946ad8223de5a299e88124d673dc0d3c9554",
+  "package": "console",
+  "function": "restartTarget",
+  "signature": "restartTarget(params=1, results=1)",
+  "start": {
+    "line": 147,
+    "column": 1
+  },
+  "end": {
+    "line": 152,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 149,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 43
+      },
+      "text": "urlQueryEscape"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

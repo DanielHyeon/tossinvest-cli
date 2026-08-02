@@ -1,0 +1,40 @@
+{
+  "file": "internal/console/openapi_onboarding.go",
+  "source_sha256": "f4f47993e6702867268ede36e1a2ea4d67584a2e7bdcac8ba291ae94ce69657f",
+  "package": "console",
+  "function": "renderOpenAPISetup",
+  "receiver": "Console",
+  "signature": "Console.renderOpenAPISetup(params=2, results=0)",
+  "start": {
+    "line": 102,
+    "column": 1
+  },
+  "end": {
+    "line": 108,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 2
+      },
+      "text": "c.render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 12
+      },
+      "text": "c.chromeOnRequest"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

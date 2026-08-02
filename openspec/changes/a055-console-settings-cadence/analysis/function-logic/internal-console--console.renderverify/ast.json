@@ -1,0 +1,200 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "5db37a746051189c09ffa2d2f62c6f34b3680e89e7dc9bd806acfa6c76fefc87",
+  "package": "console",
+  "function": "renderVerify",
+  "receiver": "Console",
+  "signature": "Console.renderVerify(params=3, results=0)",
+  "start": {
+    "line": 175,
+    "column": 1
+  },
+  "end": {
+    "line": 209,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 199,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 2
+      },
+      "text": "verifylive.WriteSteps"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 10
+      },
+      "text": "c.snapshotFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 15
+      },
+      "text": "c.chromeFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 50
+      },
+      "text": "onRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 15
+      },
+      "text": "steps.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 2
+      },
+      "text": "c.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 2
+      },
+      "text": "c.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 12
+      },
+      "text": "c.currentRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 8
+      },
+      "text": "run.snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 18
+      },
+      "text": "v.Batch.Summary"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 202,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 206,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

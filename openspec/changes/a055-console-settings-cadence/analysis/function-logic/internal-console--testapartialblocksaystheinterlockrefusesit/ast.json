@@ -1,0 +1,110 @@
+{
+  "file": "internal/console/settings_limits_test.go",
+  "source_sha256": "e126aac7adf9f7cee9f20750c0363ca58969cc2128f94a16fddb4b34998ac7be",
+  "package": "console",
+  "function": "TestAPartialBlockSaysTheInterlockRefusesIt",
+  "signature": "TestAPartialBlockSaysTheInterlockRefusesIt(params=1, results=0)",
+  "start": {
+    "line": 219,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 228,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 7
+      },
+      "text": "limitsHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 13
+      },
+      "text": "limitSection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 29
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 220,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

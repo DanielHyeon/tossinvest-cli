@@ -1,0 +1,249 @@
+{
+  "file": "internal/console/position_policy.go",
+  "source_sha256": "bfbd2a2c280e5c4fc14ced9ff285531b7da8a4877ab222fc473d1839bd8cbd1a",
+  "package": "console",
+  "function": "handlePositionPolicyPreview",
+  "receiver": "Console",
+  "signature": "Console.handlePositionPolicyPreview(params=2, results=0)",
+  "start": {
+    "line": 134,
+    "column": 1
+  },
+  "end": {
+    "line": 163,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 137,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 142,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 152,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 18
+      },
+      "text": "c.verifyPositionPolicyToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 46
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 67
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 9
+      },
+      "text": "payload.request"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 25
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 18
+      },
+      "text": "c.opts.PositionPolicies.Preview"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 50
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 3
+      },
+      "text": "c.writePositionPolicyError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 2
+      },
+      "text": "c.render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 11
+      },
+      "text": "c.chromeOnRequest"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 157,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

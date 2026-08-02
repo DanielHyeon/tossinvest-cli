@@ -135,7 +135,7 @@ func TestTheScreenRendersTheFourTogglesAndTheirState(t *testing.T) {
 	h, _, _ := operatingHarness(t, fullLimits(), config.Trading{Place: true, Sell: true})
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/settings"))
+	page := body(t, h.get(t, pathSettingsDaily))
 	for _, key := range []string{"place", "sell", "cancel", "allow_live_order_actions"} {
 		if !strings.Contains(page, `name="`+key+`"`) {
 			t.Errorf("the screen has no %s toggle:\n%s", key, page)
@@ -151,7 +151,10 @@ func TestTheScreenRendersTheFourTogglesAndTheirState(t *testing.T) {
 	if !strings.Contains(page, `action="/settings/trading"`) {
 		t.Error("the policy form has no action")
 	}
-	if !strings.Contains(page, `action="/settings/gate"`) {
+	// The gate switch is on 상시 now — irreversible, approved by a person — and the
+	// four toggles are on 당일. That they are on different tabs is the change; that
+	// both still exist and still post to the same two routes is what this asserts.
+	if standing := body(t, h.get(t, pathSettingsStanding)); !strings.Contains(standing, `action="/settings/gate"`) {
 		t.Error("the gate form has no action")
 	}
 }
@@ -211,7 +214,7 @@ func TestThePreflightRendersWhatItCannotJudge(t *testing.T) {
 	h, _, _ := operatingHarness(t, fullLimits(), fullPolicy())
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/settings"))
+	page := body(t, h.get(t, pathSettingsStanding))
 	if !strings.Contains(page, "판정 불가") {
 		t.Errorf("the pre-flight does not mark the clauses it cannot judge:\n%s", page)
 	}
@@ -224,7 +227,7 @@ func TestThePreflightNamesTheMissingToggles(t *testing.T) {
 	h, _, _ := operatingHarness(t, fullLimits(), config.Trading{Sell: true})
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/settings"))
+	page := body(t, h.get(t, pathSettingsStanding))
 	for _, want := range []string{"trading.place", "trading.cancel", "지금 켜면 기동이 거부된다"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("the pre-flight does not say %q:\n%s", want, page)
@@ -236,7 +239,7 @@ func TestThePreflightNamesUnsetLimits(t *testing.T) {
 	h, _, _ := operatingHarness(t, config.AutomationGate{}, fullPolicy())
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/settings"))
+	page := body(t, h.get(t, pathSettingsStanding))
 	if !strings.Contains(page, "지금 켜면 기동이 거부된다") {
 		t.Errorf("an empty limit block does not block the pre-flight:\n%s", page)
 	}
@@ -256,7 +259,7 @@ func TestTheGateSectionSaysWhatStarts(t *testing.T) {
 	})
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/settings"))
+	page := body(t, h.get(t, pathSettingsStanding))
 	for _, want := range []string{
 		"대사·exit 관측",        // the loops
 		"되돌릴 수 없다",          // adoption is irreversible
@@ -277,8 +280,8 @@ func TestTheGateSectionAsksForNoTypedConfirmation(t *testing.T) {
 	h, _, _ := operatingHarness(t, fullLimits(), fullPolicy())
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/settings"))
-	gate := page[strings.Index(page, `id="operating"`):]
+	page := body(t, h.get(t, pathSettingsStanding))
+	gate := page[strings.Index(page, `id="gate"`):]
 	for _, forbidden := range []string{`type="text"`, `type="password"`, "<textarea"} {
 		if strings.Contains(gate, forbidden) {
 			t.Errorf("the operating section has a %s input; approval here is a button, not a "+
@@ -299,14 +302,15 @@ func TestAnUnwiredSeamExplainsRatherThanDisappearing(t *testing.T) {
 	})
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/settings"))
-	if !strings.Contains(page, "거래 정책 저장이 배선되지 않았다") {
-		t.Errorf("an unwired policy seam says nothing:\n%s", page)
+	daily := body(t, h.get(t, pathSettingsDaily))
+	if !strings.Contains(daily, "거래 정책 저장이 배선되지 않았다") {
+		t.Errorf("an unwired policy seam says nothing:\n%s", daily)
 	}
-	if !strings.Contains(page, "게이트 저장이 배선되지 않았다") {
-		t.Errorf("an unwired gate seam says nothing:\n%s", page)
+	standing := body(t, h.get(t, pathSettingsStanding))
+	if !strings.Contains(standing, "게이트 저장이 배선되지 않았다") {
+		t.Errorf("an unwired gate seam says nothing:\n%s", standing)
 	}
-	if strings.Contains(page, `action="/settings/gate"`) {
+	if strings.Contains(standing, `action="/settings/gate"`) {
 		t.Error("the gate form is drawn with no seam behind it")
 	}
 }

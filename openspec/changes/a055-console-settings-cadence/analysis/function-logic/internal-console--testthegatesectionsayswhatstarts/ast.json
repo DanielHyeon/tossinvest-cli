@@ -1,0 +1,147 @@
+{
+  "file": "internal/console/settings_operating_test.go",
+  "source_sha256": "1722b5a8bec8da7c8320e946db6fb8649284a97617fb4517c9d49b7f9c61cd4e",
+  "package": "console",
+  "function": "TestTheGateSectionSaysWhatStarts",
+  "signature": "TestTheGateSectionSaysWhatStarts(params=1, results=0)",
+  "start": {
+    "line": 251,
+    "column": 1
+  },
+  "end": {
+    "line": 275,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 271,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 7
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 32
+      },
+      "text": "fullLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 41
+      },
+      "text": "fullPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 10
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 18
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 253,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 256,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 257,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

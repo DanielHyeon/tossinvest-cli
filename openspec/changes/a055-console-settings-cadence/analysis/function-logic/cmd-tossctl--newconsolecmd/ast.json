@@ -1,0 +1,197 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "6adb2afe5ccda41a5d69dce83d2ef337656b717b14d5f121f5eb70fa26021e7f",
+  "package": "main",
+  "function": "newConsoleCmd",
+  "signature": "newConsoleCmd(params=1, results=1)",
+  "start": {
+    "line": 112,
+    "column": 1
+  },
+  "end": {
+    "line": 200,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 11
+      },
+      "text": "runConsole"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 2
+      },
+      "text": "IntVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 2
+      },
+      "text": "StringSliceVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

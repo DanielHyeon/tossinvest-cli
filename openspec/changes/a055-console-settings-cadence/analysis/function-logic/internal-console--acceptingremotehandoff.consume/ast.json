@@ -1,0 +1,56 @@
+{
+  "file": "internal/console/remote_test.go",
+  "source_sha256": "59cd8a87850a2ff42bbd73fdcb364d61c9d1a8b2119071f5ca50eb478e73f263",
+  "package": "console",
+  "function": "Consume",
+  "receiver": "acceptingRemoteHandoff",
+  "signature": "acceptingRemoteHandoff.Consume(params=2, results=1)",
+  "start": {
+    "line": 50,
+    "column": 1
+  },
+  "end": {
+    "line": 55,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 10
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

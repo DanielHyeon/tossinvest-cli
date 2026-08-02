@@ -71,6 +71,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 )
 
 // --- the seam -------------------------------------------------------------------
@@ -1007,16 +1008,17 @@ func signalsVerdictRank(v signalsVerdict) int {
 // --- the page -----------------------------------------------------------------------
 
 type signalsPage struct {
-	Nav  string
+	chrome
 	Snap signalsView
 }
 
-// Refresh and RefreshSeconds: the screen reloads at discovery's own tick, derived
-// from the contract constant rather than written again. Every reload costs zero
-// broker calls and zero source reads — it is a read of the discovery store — so
-// the period is a freshness bound rather than a budget one, and matching the tick
+// RefreshSeconds is the reload period: discovery's own tick, derived from the
+// contract constant rather than written again. Every reload costs zero broker
+// calls and zero source reads — it is a read of the discovery store — so the
+// period is a freshness bound rather than a budget one, and matching the tick
 // keeps the page from showing the same pass twice or skipping one.
-func (signalsPage) Refresh() bool { return true }
+//
+// Refresh is the embedded chrome's field, set by the handler below.
 func (signalsPage) RefreshSeconds() int {
 	return int(candidate.DefaultWatchInterval / time.Second)
 }
@@ -1041,5 +1043,11 @@ func (c *Console) registerSignals(mux *http.ServeMux) {
 // handleSignals renders the screen. GET, inside the session gate and outside the
 // CSRF gate — there is nothing here to submit.
 func (c *Console) handleSignals(w http.ResponseWriter, r *http.Request) {
-	c.render(w, "signals", signalsPage{Nav: "signals", Snap: c.signals(r.Context())})
+	snap := c.signals(r.Context())
+	page := signalsPage{
+		chrome: c.chromeFor("signals", verifylive.MarketKR, snap.freshness()),
+		Snap:   snap,
+	}
+	page.Refresh = true
+	c.render(w, "signals", page)
 }

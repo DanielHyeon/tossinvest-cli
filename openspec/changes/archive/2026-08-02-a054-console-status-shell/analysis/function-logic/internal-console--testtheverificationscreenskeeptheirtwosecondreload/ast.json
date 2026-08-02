@@ -1,0 +1,96 @@
+{
+  "file": "internal/console/portfolio_refresh_test.go",
+  "source_sha256": "6ef7211c18597bd8148e097e22f887f46536bfa75f14442c953bfdf3b934e845",
+  "package": "console",
+  "function": "TestTheVerificationScreensKeepTheirTwoSecondReload",
+  "signature": "TestTheVerificationScreensKeepTheirTwoSecondReload(params=1, results=0)",
+  "start": {
+    "line": 116,
+    "column": 1
+  },
+  "end": {
+    "line": 133,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 125,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 13
+      },
+      "text": "pages.ExecuteTemplate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 24
+      },
+      "text": "buf.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

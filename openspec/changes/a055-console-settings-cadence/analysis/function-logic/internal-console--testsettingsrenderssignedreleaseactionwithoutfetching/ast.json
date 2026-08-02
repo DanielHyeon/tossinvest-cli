@@ -1,0 +1,149 @@
+{
+  "file": "internal/console/signed_release_test.go",
+  "source_sha256": "09d66e091ef28f41197fa3552895ba4267a0bd65c8a21a3d1e95b9cd3fe54296",
+  "package": "console",
+  "function": "TestSettingsRendersSignedReleaseActionWithoutFetching",
+  "signature": "TestSettingsRendersSignedReleaseActionWithoutFetching(params=1, results=0)",
+  "start": {
+    "line": 26,
+    "column": 1
+  },
+  "end": {
+    "line": 44,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 38
+      },
+      "text": "validUpdateView"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 48
+      },
+      "text": "validSignedRelease"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 7
+      },
+      "text": "signedReleaseHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 10
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 18
+      },
+      "text": "h.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

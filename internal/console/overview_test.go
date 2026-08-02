@@ -18,6 +18,7 @@ package console
 import (
 	"context"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -1073,13 +1074,19 @@ func TestTheOverviewReloadsAtTheCacheTTL(t *testing.T) {
 	if got := (overviewPage{}).RefreshSeconds(); got != want {
 		t.Errorf("the overview reloads every %ds, want %ds derived from holdingsTTL", got, want)
 	}
-	if !(overviewPage{}).Refresh() {
-		t.Error("the overview does not reload; the head template writes no meta refresh")
-	}
+	// Refresh used to be a method on this type and is now a field on the embedded
+	// chrome, set by the handler (change a054). The type can no longer answer
+	// "does this screen reload" on its own, and the render below is the stronger
+	// question anyway: a handler that forgets to set it produces exactly this
+	// failure, which the method form could not have caught.
 	h := newOverviewHarness(t)
 	seedJournal(t, h.journal)
-	if !strings.Contains(h.page(t, "/dashboard"), `http-equiv="refresh"`) {
+	rendered := h.page(t, "/dashboard")
+	if !strings.Contains(rendered, `http-equiv="refresh"`) {
 		t.Error("the rendered page carries no meta refresh")
+	}
+	if !strings.Contains(rendered, `content="`+strconv.Itoa(want)+`"`) {
+		t.Errorf("the rendered meta refresh is not %ds", want)
 	}
 }
 
@@ -1107,23 +1114,33 @@ func TestTheOverviewHasNoFormAndNoConfirmationInput(t *testing.T) {
 	}
 }
 
-// TestTheRootScreenIsUnchangedAndTheTwoScreensAreNamedApart (tasks 4.1, 5.3).
+// TestTheTwoScreensAreNamedApartAndNeitherIsTheOther (tasks 4.1, 5.3; moved by
+// a054).
 //
-// A tab watching an approval window must not be moved to another screen, and two
-// screens answering different questions must not share a name: "이 빌드를 믿어도
-// 되나" is the verification console's question and "계좌가 지금 어떤가" is the
-// overview's.
-func TestTheRootScreenIsUnchangedAndTheTwoScreensAreNamedApart(t *testing.T) {
+// Two screens answering different questions must not share a name: "이 빌드를
+// 믿어도 되나" is the verification console's question and "계좌가 지금 어떤가" is
+// the overview's.
+//
+// This test used to also assert that the verification console stayed on the root
+// path, under the heading "a tab watching an approval window must not be moved to
+// another screen". a054 moved it, and the guard that claim was really making is
+// kept below rather than dropped: a tab left on the old root DOES now land
+// somewhere else, and what makes that safe is that the shared status strip
+// surfaces a waiting approval — with a link to the screen that can take it — from
+// wherever the operator ends up. Three windows were lost in one day to controls
+// not being where the operator was looking (M11, M18); a redirect that hid one
+// would be repeating that, and this is the assertion that stops it.
+func TestTheTwoScreensAreNamedApartAndNeitherIsTheOther(t *testing.T) {
 	h := newOverviewHarness(t)
 	seedJournal(t, h.journal)
 
-	resp := h.get(t, "/")
+	resp := h.get(t, pathVerifyConsole)
 	if resp.StatusCode != 200 {
-		t.Fatalf("GET / = %d, want 200 — the verification console must not have moved", resp.StatusCode)
+		t.Fatalf("GET %s = %d, want 200", pathVerifyConsole, resp.StatusCode)
 	}
 	root := body(t, resp)
 	if !strings.Contains(root, "실계좌 검증 진행") {
-		t.Error("/ no longer renders the verification console")
+		t.Errorf("%s no longer renders the verification console", pathVerifyConsole)
 	}
 	if !strings.Contains(root, ">검증 콘솔<") || !strings.Contains(root, ">개요<") {
 		t.Error("the navigation does not name the two screens apart")
@@ -1135,6 +1152,17 @@ func TestTheRootScreenIsUnchangedAndTheTwoScreensAreNamedApart(t *testing.T) {
 	}
 	if strings.Contains(overview, "실계좌 검증 진행") {
 		t.Error("/dashboard has become a second copy of the verification console")
+	}
+
+	// A tab left on the old root follows the redirect to a different screen. It
+	// must still be told an approval is waiting, and how to reach it.
+	h.startAndWait(t)
+	landed := body(t, h.get(t, "/"))
+	if !strings.Contains(landed, `data-pending-approval="true"`) {
+		t.Error("a tab redirected off the old root is not told an approval is waiting")
+	}
+	if !strings.Contains(landed, `<a href="`+pathVerifyConsole+`">`) {
+		t.Error("the waiting approval is announced with no way to reach it")
 	}
 }
 

@@ -1,0 +1,125 @@
+{
+  "file": "internal/console/overview.go",
+  "source_sha256": "661da4c99e8c09feef77c645b752a92b753c25a6ffed86dd890ca35069db0e0b",
+  "package": "console",
+  "function": "handleOverview",
+  "receiver": "Console",
+  "signature": "Console.handleOverview(params=2, results=0)",
+  "start": {
+    "line": 1165,
+    "column": 1
+  },
+  "end": {
+    "line": 1181,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1174,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1166,
+        "column": 10
+      },
+      "text": "c.overview"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1166,
+        "column": 21
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1173,
+        "column": 11
+      },
+      "text": "freshness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1173,
+        "column": 11
+      },
+      "text": "c.holdings.peek"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1173,
+        "column": 27
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1178,
+        "column": 31
+      },
+      "text": "c.chromeFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1180,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1166,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1173,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1175,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1178,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1179,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

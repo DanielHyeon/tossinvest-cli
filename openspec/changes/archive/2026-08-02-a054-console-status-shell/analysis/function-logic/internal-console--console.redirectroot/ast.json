@@ -1,0 +1,57 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "5db37a746051189c09ffa2d2f62c6f34b3680e89e7dc9bd806acfa6c76fefc87",
+  "package": "console",
+  "function": "redirectRoot",
+  "receiver": "Console",
+  "signature": "Console.redirectRoot(params=2, results=0)",
+  "start": {
+    "line": 99,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 2
+      },
+      "text": "http.Redirect"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

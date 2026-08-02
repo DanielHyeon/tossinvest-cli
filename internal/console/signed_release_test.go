@@ -28,7 +28,7 @@ func TestSettingsRendersSignedReleaseActionWithoutFetching(t *testing.T) {
 	downloader := &fakeReleaseDownloader{release: validSignedRelease()}
 	h := signedReleaseHarness(t, updater, downloader)
 	h.authenticate(t)
-	page := body(t, h.get(t, "/settings"))
+	page := body(t, h.get(t, pathSettingsTools))
 	for _, want := range []string{
 		`action="/settings/system-update/download"`,
 		"서명된 최신 릴리스 확인·다운로드",

@@ -15,13 +15,11 @@ type PerformanceReader interface {
 }
 
 type performanceHistoryPage struct {
-	Nav     string
+	chrome
 	Unwired bool
 	LoadErr string
 	View    performance.DashboardView
 }
-
-func (performanceHistoryPage) Refresh() bool { return false }
 
 func (c *Console) handlePerformanceHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
@@ -30,7 +28,7 @@ func (c *Console) handlePerformanceHistory(w http.ResponseWriter, r *http.Reques
 			"성과 이력은 조회만 한다. 주문·설정·lane·LIVE 승인을 변경하지 않는다.")
 		return
 	}
-	page := performanceHistoryPage{Nav: "performance-history", Unwired: c.opts.Performance == nil}
+	page := performanceHistoryPage{chrome: c.chromeOnRequest("performance-history"), Unwired: c.opts.Performance == nil}
 	if c.opts.Performance != nil {
 		view, err := c.opts.Performance.Dashboard(r.Context(), performance.DefaultQuery(c.now()))
 		if err != nil {

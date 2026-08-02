@@ -54,3 +54,5 @@
 | `a049-add-lane-performance` | STORY-TOS-a049 | archived |
 | `a050-add-strategy-optimization` | STORY-TOS-a050 | archived |
 | `a051-add-httpapi-daemon` | STORY-TOS-a051 | archived |
+| `a054-console-status-shell` | STORY-TOS-a054 | archived |
+| `a055-console-settings-cadence` | STORY-TOS-a055 | implemented |

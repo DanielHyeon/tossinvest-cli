@@ -203,7 +203,7 @@ func TestARestartWithNoWiringSaysSoInsteadOfPretending(t *testing.T) {
 	h.noRelaunch(t)
 
 	// And the dashboard does not draw a button for something this build cannot do.
-	if page := body(t, h.get(t, "/")); strings.Contains(page, `action="/restart"`) {
+	if page := body(t, h.get(t, pathVerifyConsole)); strings.Contains(page, `action="/restart"`) {
 		t.Error("the dashboard offers a restart button with no restart wiring behind it")
 	}
 }
@@ -296,12 +296,12 @@ func TestTheHandoffIsMintedByOneConsoleAndSpentByTheNext(t *testing.T) {
 		t.Fatal("the two consoles minted the same session token; they are not independent processes")
 	}
 
-	got := successor.get(t, "/?handoff="+token)
+	got := successor.get(t, pathVerifyConsole+"?handoff="+token)
 	if got.StatusCode != http.StatusOK {
 		t.Fatalf("the handoff was refused with %d: %s", got.StatusCode, body(t, got))
 	}
-	if page := body(t, got); !strings.Contains(page, "대시보드") {
-		t.Errorf("the handoff did not land on the dashboard:\n%s", page)
+	if page := body(t, got); !strings.Contains(page, "검증 콘솔") {
+		t.Errorf("the handoff did not land on the verification console:\n%s", page)
 	}
 	// The session really is granted: a later request works without the token.
 	if second := successor.get(t, "/verify"); second.StatusCode != http.StatusOK {
@@ -311,7 +311,7 @@ func TestTheHandoffIsMintedByOneConsoleAndSpentByTheNext(t *testing.T) {
 	// And it is spent. A third console — a second restart's worth of browser — is
 	// refused the same string.
 	third := newHarness(t, func(o *Options) { o.Handoff = store })
-	replay := third.get(t, "/?handoff="+token)
+	replay := third.get(t, pathVerifyConsole+"?handoff="+token)
 	if replay.StatusCode != http.StatusForbidden {
 		t.Fatalf("replaying the handoff gave %d, want 403", replay.StatusCode)
 	}
@@ -327,12 +327,12 @@ func TestAWrongOrExpiredHandoffIsRefusedAndGrantsNothing(t *testing.T) {
 	t.Run("a token nobody minted", func(t *testing.T) {
 		store := handoff.New(filepath.Join(dir, "a.json"))
 		h := newHarness(t, func(o *Options) { o.Handoff = store })
-		resp := h.get(t, "/?handoff=MADE-UP")
+		resp := h.get(t, pathVerifyConsole+"?handoff=MADE-UP")
 		if resp.StatusCode != http.StatusForbidden {
 			t.Fatalf("status %d, want 403", resp.StatusCode)
 		}
 		// Nothing was granted: the dashboard is still shut.
-		if follow := h.get(t, "/"); follow.StatusCode != http.StatusForbidden {
+		if follow := h.get(t, pathVerifyConsole); follow.StatusCode != http.StatusForbidden {
 			t.Errorf("a refused handoff still opened the console: %d", follow.StatusCode)
 		}
 	})
@@ -350,7 +350,7 @@ func TestAWrongOrExpiredHandoffIsRefusedAndGrantsNothing(t *testing.T) {
 		}
 		clock = clock.Add(time.Minute)
 
-		resp := h.get(t, "/?handoff="+token)
+		resp := h.get(t, pathVerifyConsole+"?handoff="+token)
 		if resp.StatusCode != http.StatusForbidden {
 			t.Fatalf("an expired handoff gave %d, want 403", resp.StatusCode)
 		}
@@ -366,7 +366,7 @@ func TestAWrongOrExpiredHandoffIsRefusedAndGrantsNothing(t *testing.T) {
 		if resp := h.get(t, "/?handoff=WRONG"); resp.StatusCode != http.StatusForbidden {
 			t.Fatalf("a wrong guess gave %d, want 403", resp.StatusCode)
 		}
-		if resp := h.get(t, "/?handoff="+token); resp.StatusCode != http.StatusForbidden {
+		if resp := h.get(t, pathVerifyConsole+"?handoff="+token); resp.StatusCode != http.StatusForbidden {
 			t.Fatalf("the real token survived a wrong guess (%d); the guess must spend it", resp.StatusCode)
 		}
 	})
@@ -391,7 +391,7 @@ func TestTheHandoffTokenLeavesTheAddressBar(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Mint: %v", err)
 	}
-	resp := h.get(t, "/?handoff="+token)
+	resp := h.get(t, pathVerifyConsole+"?handoff="+token)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("status %d", resp.StatusCode)
 	}
@@ -459,7 +459,7 @@ func TestTheDashboardWarnsWhenAProcessIsOlderThanTheInstalledBinary(t *testing.T
 			o.Binary = func() (binstamp.Stamp, error) { return at(0), nil }
 		})
 		h.authenticate(t)
-		if page := body(t, h.get(t, "/")); strings.Contains(page, "설치된 바이너리보다 오래되었다") {
+		if page := body(t, h.get(t, pathVerifyConsole)); strings.Contains(page, "설치된 바이너리보다 오래되었다") {
 			t.Errorf("a current console warned about itself:\n%s", page)
 		}
 	})
@@ -472,7 +472,7 @@ func TestTheDashboardWarnsWhenAProcessIsOlderThanTheInstalledBinary(t *testing.T
 		reading = at(5) // reinstalled while the console was running
 		h.authenticate(t)
 
-		page := body(t, h.get(t, "/"))
+		page := body(t, h.get(t, pathVerifyConsole))
 		if !strings.Contains(page, "이 콘솔은 설치된 바이너리보다 오래되었다") {
 			t.Errorf("a stale console did not say so:\n%s", page)
 		}
@@ -483,7 +483,7 @@ func TestTheDashboardWarnsWhenAProcessIsOlderThanTheInstalledBinary(t *testing.T
 			o.Binary = func() (binstamp.Stamp, error) { return binstamp.Stamp{}, errors.New("no /proc") }
 		})
 		h.authenticate(t)
-		if page := body(t, h.get(t, "/")); strings.Contains(page, "오래되었다") {
+		if page := body(t, h.get(t, pathVerifyConsole)); strings.Contains(page, "오래되었다") {
 			t.Errorf("an unanswerable question became a warning:\n%s", page)
 		}
 	})

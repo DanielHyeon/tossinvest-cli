@@ -135,7 +135,8 @@ paste the link anywhere else.
   overview    /dashboard — engine state, holdings, today's realised P&L, the
               leftovers and the Guardian limits, gathered per market. Read-only:
               no form, and it makes no broker call of its own
-  console     / — soak progress, attestation state, verification progress
+  console     /verify-console — soak progress, attestation state, verification
+              progress. / redirects to the overview
   positions   what the account holds, joined to the engine's exit lines
   history     completed round trips and the exit judgement stream
   signals     /signals — what the discovery sources have been saying over time,

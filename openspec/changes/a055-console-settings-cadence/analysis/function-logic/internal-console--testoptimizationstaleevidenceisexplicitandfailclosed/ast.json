@@ -1,0 +1,124 @@
+{
+  "file": "internal/console/optimization_ui_contract_test.go",
+  "source_sha256": "433d8f179ebb7a95d3fadebfd7141b054b131e813d0f7e201849566570c5d6d1",
+  "package": "console",
+  "function": "TestOptimizationStaleEvidenceIsExplicitAndFailClosed",
+  "signature": "TestOptimizationStaleEvidenceIsExplicitAndFailClosed(params=1, results=0)",
+  "start": {
+    "line": 187,
+    "column": 1
+  },
+  "end": {
+    "line": 198,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 15
+      },
+      "text": "newFakeOptimizationCommander"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 7
+      },
+      "text": "newDashboardHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 10
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 190,
+        "column": 55
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

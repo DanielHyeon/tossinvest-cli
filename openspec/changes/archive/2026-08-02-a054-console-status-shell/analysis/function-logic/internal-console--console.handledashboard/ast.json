@@ -1,0 +1,125 @@
+{
+  "file": "internal/console/pages.go",
+  "source_sha256": "5db37a746051189c09ffa2d2f62c6f34b3680e89e7dc9bd806acfa6c76fefc87",
+  "package": "console",
+  "function": "handleDashboard",
+  "receiver": "Console",
+  "signature": "Console.handleDashboard(params=2, results=0)",
+  "start": {
+    "line": 109,
+    "column": 1
+  },
+  "end": {
+    "line": 124,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 19
+      },
+      "text": "c.chromeOnRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 19
+      },
+      "text": "Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 19
+      },
+      "text": "r.URL.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 19
+      },
+      "text": "c.snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 12
+      },
+      "text": "c.currentRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 8
+      },
+      "text": "run.snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 120,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 121,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

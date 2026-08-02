@@ -633,7 +633,7 @@ func TestARestartedConsoleLabelsItselfAResume(t *testing.T) {
 		}
 	}
 
-	dash := body(t, restarted.get(t, "/"))
+	dash := body(t, restarted.get(t, pathVerifyConsole))
 	if !strings.Contains(dash, "새 프로세스") {
 		t.Errorf("the dashboard does not report the awaiting-restart state:\n%s", truncateForLog(dash))
 	}
@@ -648,7 +648,7 @@ func TestTheDashboardReportsAnUnstartedMachineWithoutFailing(t *testing.T) {
 	h := newHarness(t)
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	for _, want := range []string{"soak", "attestation", "tossctl soak run"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("the dashboard does not mention %q on a machine with no records", want)

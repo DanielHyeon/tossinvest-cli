@@ -82,7 +82,7 @@ func TestTheDashboardShowsWhetherTheEngineIsRunning(t *testing.T) {
 	h := newEngineHarness(t)
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	if !strings.Contains(page, "엔진 런타임") {
 		t.Fatal("the dashboard has no engine section")
 	}
@@ -91,7 +91,7 @@ func TestTheDashboardShowsWhetherTheEngineIsRunning(t *testing.T) {
 	}
 
 	holdEngineMarker(t, h.marker, engineNow)
-	page = body(t, h.get(t, "/"))
+	page = body(t, h.get(t, pathVerifyConsole))
 	if !strings.Contains(page, engineRunningMark) {
 		t.Errorf("a fresh marker is not reported as a running engine:\n%s", page)
 	}
@@ -108,7 +108,7 @@ func TestAStaleMarkerReadsAsStopped(t *testing.T) {
 	h.authenticate(t)
 	holdEngineMarker(t, h.marker, engineNow.Add(-2*enginelock.StaleAfter))
 
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	if strings.Contains(page, engineRunningMark) {
 		t.Errorf("a stale marker still reads as a running engine:\n%s", page)
 	}
@@ -120,7 +120,7 @@ func TestTheEngineSectionSaysWhenItIsUnwired(t *testing.T) {
 	h := newHarness(t) // no EngineMarker, no seams
 	h.authenticate(t)
 
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	if !strings.Contains(page, "엔진 상태 배선이 없다") {
 		t.Errorf("an unwired console does not say so:\n%s", page)
 	}
@@ -154,7 +154,7 @@ func TestARefusedStartShowsTheEnginesOwnReason(t *testing.T) {
 		t.Fatalf("the start seam was called %d times", h.starts)
 	}
 
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	if !strings.Contains(page, "기동 인터록 미충족") {
 		t.Errorf("the dashboard does not show the engine's refusal:\n%s", page)
 	}
@@ -300,7 +300,7 @@ func TestStoppingGoesThroughTheSignalDiscipline(t *testing.T) {
 	if h.stops != 1 {
 		t.Fatalf("the stop seam was called %d times", h.stops)
 	}
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	if !strings.Contains(page, "SIGTERM") {
 		t.Errorf("the stop's answer did not reach the dashboard:\n%s", page)
 	}
@@ -317,7 +317,7 @@ func TestAFailedStopIsReportedAndNothingIsClaimed(t *testing.T) {
 	if resp := h.post(t, "/engine/stop", url.Values{"csrf": {h.csrf}}); resp.StatusCode != http.StatusOK {
 		t.Fatalf("POST /engine/stop returned %d", resp.StatusCode)
 	}
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	if !strings.Contains(page, "엔진 정지 실패") {
 		t.Errorf("a failed stop was not reported:\n%s", page)
 	}
@@ -334,7 +334,7 @@ func TestAnUnwiredButtonSaysSoRatherThanPretending(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("POST /engine/start returned %d", resp.StatusCode)
 	}
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	if !strings.Contains(page, "엔진 기동/정지 배선이 없다") {
 		t.Errorf("an unwired start did not say so:\n%s", page)
 	}
@@ -353,7 +353,7 @@ func TestTheStaleEngineBinaryIsWarnedAbout(t *testing.T) {
 	h.authenticate(t)
 	holdEngineMarker(t, h.marker, engineNow)
 
-	page := body(t, h.get(t, "/"))
+	page := body(t, h.get(t, pathVerifyConsole))
 	if !strings.Contains(page, "실행 중인 엔진은 설치된 바이너리보다 오래되었다") {
 		t.Errorf("a running engine on a different build is not warned about:\n%s", page)
 	}
