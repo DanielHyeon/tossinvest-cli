@@ -1,0 +1,63 @@
+{
+  "file": "cmd/tossctl/engineproc_test.go",
+  "source_sha256": "621143ef0f25c784b259af52ebf03ba600d88e4c3734c913bed4d780219335a9",
+  "package": "main",
+  "function": "TestUnparsableProcessLinesAreDropped",
+  "signature": "TestUnparsableProcessLinesAreDropped(params=1, results=0)",
+  "start": {
+    "line": 504,
+    "column": 1
+  },
+  "end": {
+    "line": 518,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 514,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 505,
+        "column": 9
+      },
+      "text": "enginePIDsForJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 505,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

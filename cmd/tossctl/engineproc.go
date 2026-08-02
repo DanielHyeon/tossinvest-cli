@@ -13,6 +13,13 @@ package main
 // there should be, so the autostart script and this file use the same pgrep
 // pattern — asserted by a drift test, exactly as the soak's is.
 //
+// The shared half stops at the pattern. pgrep answers "which processes look like an
+// engine"; only this file goes on to ask "which of them is mine", by resolving each
+// candidate's --config-dir to a journal directory and comparing it with this
+// console's own (change a059). A shell cannot do that resolution without
+// reimplementing it, and a reimplementation that drifts is the bug this whole
+// arrangement exists to prevent.
+//
 // # What is different, and it matters
 //
 // The soak is structurally incapable of mutating an account. The engine is not:
@@ -22,6 +29,11 @@ package main
 //	the start is not blind    it waits briefly and reports the engine's own
 //	                          refusal, because "I pressed start and nothing
 //	                          happened" is the answer an operator gets otherwise
+//	the signal is aimed       at this profile's engine and no other. A host shares
+//	                          its PID namespace with its containers, so a widened
+//	                          pattern can see an engine holding the exit loops for
+//	                          somebody else's journal, and SIGTERM is not a signal
+//	                          to send on a guess (change a059)
 //	the marker is consulted   but it does not decide. A fresh advisory marker
 //	                          supplies the PID and refresh time that make a refusal
 //	                          readable; what makes it a refusal is an observed
@@ -41,6 +53,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -53,13 +66,35 @@ import (
 // engineLogName is where a detached engine's output goes, beside its journal.
 const engineLogName = "engine.log"
 
-// engineProcessPattern is how a running engine is recognised.
+// engineProcessPattern is how an engine *candidate* is recognised: the extended
+// regular expression both this binary and the autostart script hand to `pgrep -f`.
 //
-// It is the autostart script's pattern, unchanged. A process one of them can see
-// and the other cannot is a bug that only appears at three in the morning —
-// engineproc_test.go asserts the two agree, the way soakproc_test.go does for the
-// survey.
-const engineProcessPattern = "tossctl engine run"
+// It is a regular expression rather than the literal "tossctl engine run" it used
+// to be, because that literal never matched an engine this console started
+// (change a059). engineArgs puts the console's own --config-dir and --session-file
+// in front of the subcommand, so the command line is
+//
+//	/usr/local/bin/tossctl --config-dir … --session-file … engine run
+//
+// and the words are not adjacent. Measured in production on 2026-08-03: pgrep found
+// nothing while the engine ran as pid 16, so the stop button answered "실행 중인
+// 엔진을 찾지 못했다" about a process it had started itself.
+//
+// The leading space before `engine run` is load-bearing: it makes `engine` a whole
+// argv token, so a path like /srv/myengine runtime is not an engine. There is no
+// `$` anchor, because `tossctl engine run --config-dir X` is a command a person can
+// type and an anchor would silently miss it — which is the shape of the bug above.
+//
+// It selects candidates. It does not establish ownership: this pattern matches every
+// profile's engine, and enginePIDsForJournal decides which of them is ours (a059
+// design D2). A process one of the two halves can see and the other cannot is a bug
+// that only appears at three in the morning — engineproc_test.go asserts the script
+// and this constant agree, the way soakproc_test.go does for the survey.
+const engineProcessPattern = `tossctl( .*)? engine run`
+
+// engineProcessMatcher is engineProcessPattern compiled once, so ownership can be
+// judged from a command line without another trip through pgrep.
+var engineProcessMatcher = regexp.MustCompile(engineProcessPattern)
 
 // engineRestartCap is how many times the autostart script restarts a crashing
 // engine before it gives up.
@@ -99,7 +134,13 @@ const engineLogTail = 4096
 // whole thing without a process table, a signal or a fork — there is no flag and
 // no environment variable that reaches them.
 var (
+	// engineFindProcesses lists the pids of engines running against journalDir.
 	engineFindProcesses = pgrepEngine
+	// engineListProcesses is the raw enumeration underneath it: one `pid command`
+	// line per candidate. It is a seam of its own so a test can exercise the
+	// pattern, the parsing and the ownership judgement together — everything except
+	// the process table (change a059).
+	engineListProcesses = pgrepEngineLines
 	engineSignalProcess = terminatePID
 	engineProcessAlive  = pidAlive
 	engineSpawnDetached = spawnDetachedEngine
@@ -144,8 +185,10 @@ func startEngine(root *rootOptions) (string, error) {
 	}
 
 	// One enumeration, read by both guards below. Counting twice invites two
-	// different answers inside a single decision.
-	pids, findErr := engineFindProcesses()
+	// different answers inside a single decision. It is scoped to this profile's
+	// journal, so another profile's engine is not a reason to refuse this one
+	// (change a059) — they hold different flocks and are different instances.
+	pids, findErr := engineFindProcesses(dir)
 	observed := findErr == nil && len(pids) > 0
 
 	// Advisory, and only to give a better answer than "the engine refused because
@@ -185,7 +228,15 @@ func startEngine(root *rootOptions) (string, error) {
 
 // stopEngine is the console's StopEngine seam: the signal discipline, not a kill.
 func stopEngine(root *rootOptions) (string, error) {
-	pids, err := engineFindProcesses()
+	// The journal directory comes first because it is what decides *whose* engine
+	// each candidate is, and there is no signalling anything without that (change
+	// a059). It used to be resolved at the bottom, for the marker sentence only,
+	// with its error discarded.
+	dir, err := engineJournalDir(root)
+	if err != nil {
+		return "", err
+	}
+	pids, err := engineFindProcesses(dir)
 	if err != nil {
 		return "", err
 	}
@@ -207,12 +258,10 @@ func stopEngine(root *rootOptions) (string, error) {
 			return "", err
 		}
 	}
-	if dir, derr := engineJournalDir(root); derr == nil {
-		if status := enginelock.Read(enginelock.MarkerPath(dir), time.Now()); status.Running {
-			return fmt.Sprintf("%s를 종료시켰지만 활성 마커가 아직 신선하다 (%s) — 최대 %s 뒤 사라진다",
-				joinPIDs(stopped), status.Marker.StartedAt.UTC().Format(time.RFC3339),
-				enginelock.StaleAfter), nil
-		}
+	if status := enginelock.Read(enginelock.MarkerPath(dir), time.Now()); status.Running {
+		return fmt.Sprintf("%s를 종료시켰지만 활성 마커가 아직 신선하다 (%s) — 최대 %s 뒤 사라진다",
+			joinPIDs(stopped), status.Marker.StartedAt.UTC().Format(time.RFC3339),
+			enginelock.StaleAfter), nil
 	}
 	return fmt.Sprintf("%s에 종료 시그널을 보내 루프 완주·journal 정합 close까지 기다렸다",
 		joinPIDs(stopped)), nil
@@ -252,25 +301,110 @@ func engineArgs(root *rootOptions) []string {
 
 // --- the real implementations -------------------------------------------------
 
-// pgrepEngine finds running engines the way the autostart script does.
-func pgrepEngine() ([]int, error) {
-	out, err := exec.Command("pgrep", "-f", engineProcessPattern).Output()
+// pgrepEngine finds the engines running against journalDir.
+//
+// Two steps, and they are different questions. pgrep answers "which processes look
+// like an engine", which is all a shell can ask and all the autostart script does
+// ask. This then answers "which of those is mine", which it can only do because it
+// has the command lines and the same directory resolution the console itself uses.
+func pgrepEngine(journalDir string) ([]int, error) {
+	lines, err := engineListProcesses()
+	if err != nil {
+		return nil, err
+	}
+	// A failure to resolve the default is not fatal here: it only means a flag-free
+	// engine cannot be proven to be ours, and enginePIDsForJournal drops what it
+	// cannot prove.
+	fallback, _ := engineJournalDir(nil)
+	return enginePIDsForJournal(lines, journalDir, fallback), nil
+}
+
+// pgrepEngineLines enumerates engine candidates the way the autostart script does,
+// with `-a` so each pid arrives with the command line that has to be judged.
+func pgrepEngineLines() ([]string, error) {
+	out, err := exec.Command("pgrep", "-a", "-f", engineProcessPattern).Output()
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
 			return nil, nil // pgrep's "nothing matched"
 		}
+		// Every other failure — pgrep missing, -a unsupported, permission denied —
+		// is an enumeration that did not happen. It is not an absence, and a056
+		// keeps its refusal on it.
 		return nil, fmt.Errorf("실행 중인 엔진을 찾을 수 없다 (pgrep): %w", err)
 	}
+	return strings.Split(strings.TrimSpace(string(out)), "\n"), nil
+}
+
+// enginePIDsForJournal keeps the pids whose command line proves they are running
+// against journalDir (change a059).
+//
+// Ownership is the journal directory, not the flag string: engine-safety defines an
+// instance by the flock on that directory, and a console told the default path
+// explicitly is the same instance as an autostart that left the flag off. Resolving
+// both sides through engineJournalDir is what makes those two agree.
+//
+// Everything unprovable is dropped — an unparsable line, a pid with no command line
+// behind it, a directory that cannot be resolved. The list being built is a list of
+// processes to send SIGTERM to, so "I could not tell" has to mean "not mine".
+func enginePIDsForJournal(lines []string, journalDir, defaultDir string) []int {
+	if strings.TrimSpace(journalDir) == "" {
+		return nil
+	}
+	want := filepath.Clean(journalDir)
+
 	var pids []int
-	for _, line := range strings.Fields(string(out)) {
-		pid, convErr := strconv.Atoi(line)
-		if convErr != nil || pid <= 0 {
+	for _, line := range lines {
+		pid, command, ok := splitProcessLine(line)
+		if !ok || !engineProcessMatcher.MatchString(command) {
+			continue
+		}
+		dir := engineCommandConfigDir(command)
+		if dir == "" {
+			dir = defaultDir
+		}
+		if strings.TrimSpace(dir) == "" || filepath.Clean(dir) != want {
 			continue
 		}
 		pids = append(pids, pid)
 	}
-	return pids, nil
+	return pids
+}
+
+// splitProcessLine reads one `pgrep -a` line: the pid, then the command line.
+//
+// A line with no command line after the pid fails here rather than yielding a pid
+// nobody can vouch for.
+func splitProcessLine(line string) (int, string, bool) {
+	number, command, found := strings.Cut(strings.TrimSpace(line), " ")
+	if !found {
+		return 0, "", false
+	}
+	pid, err := strconv.Atoi(number)
+	if err != nil || pid <= 0 {
+		return 0, "", false
+	}
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return 0, "", false
+	}
+	return pid, command, true
+}
+
+// engineCommandConfigDir pulls --config-dir out of a command line, in both the
+// spellings cobra accepts. An empty result means the process did not name one and
+// is therefore using the default.
+func engineCommandConfigDir(command string) string {
+	fields := strings.Fields(command)
+	for i, field := range fields {
+		switch {
+		case field == "--config-dir" && i+1 < len(fields):
+			return fields[i+1]
+		case strings.HasPrefix(field, "--config-dir="):
+			return strings.TrimPrefix(field, "--config-dir=")
+		}
+	}
+	return ""
 }
 
 // spawnDetachedEngine starts `tossctl engine run` so it outlives this process,

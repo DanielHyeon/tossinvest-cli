@@ -1,0 +1,110 @@
+{
+  "file": "cmd/tossctl/engineproc_test.go",
+  "source_sha256": "621143ef0f25c784b259af52ebf03ba600d88e4c3734c913bed4d780219335a9",
+  "package": "main",
+  "function": "TestTheProcessPatternMatchesWhatTheConsoleSpawns",
+  "signature": "TestTheProcessPatternMatchesWhatTheConsoleSpawns(params=1, results=0)",
+  "start": {
+    "line": 644,
+    "column": 1
+  },
+  "end": {
+    "line": 667,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 646,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 649,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 662,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 645,
+        "column": 18
+      },
+      "text": "regexp.Compile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 647,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 661,
+        "column": 42
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 661,
+        "column": 55
+      },
+      "text": "engineArgs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 662,
+        "column": 7
+      },
+      "text": "pattern.MatchString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 663,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 645,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 661,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

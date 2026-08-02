@@ -1,0 +1,78 @@
+{
+  "file": "cmd/tossctl/engineproc_test.go",
+  "source_sha256": "621143ef0f25c784b259af52ebf03ba600d88e4c3734c913bed4d780219335a9",
+  "package": "main",
+  "function": "TestTheDefaultProfileMatchesAnEngineStartedWithoutFlags",
+  "signature": "TestTheDefaultProfileMatchesAnEngineStartedWithoutFlags(params=1, results=0)",
+  "start": {
+    "line": 481,
+    "column": 1
+  },
+  "end": {
+    "line": 499,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 485,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 495,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 13
+      },
+      "text": "enginePIDsForJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 65
+      },
+      "text": "pidsEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 483,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 495,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

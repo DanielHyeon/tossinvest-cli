@@ -61,3 +61,4 @@
 | `a055-console-settings-cadence` | STORY-TOS-a055 | archived |
 | `a056-autostart-survives-container-recreate` | STORY-TOS-a056 | implemented |
 | `a057-simplify-portfolio-views` | STORY-TOS-a057 | archived |
+| `a059-console-finds-the-engine-it-owns` | STORY-TOS-a059 | in_progress |

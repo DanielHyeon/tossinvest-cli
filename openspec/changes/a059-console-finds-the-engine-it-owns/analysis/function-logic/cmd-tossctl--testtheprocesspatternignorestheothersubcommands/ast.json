@@ -1,0 +1,71 @@
+{
+  "file": "cmd/tossctl/engineproc_test.go",
+  "source_sha256": "621143ef0f25c784b259af52ebf03ba600d88e4c3734c913bed4d780219335a9",
+  "package": "main",
+  "function": "TestTheProcessPatternIgnoresTheOtherSubcommands",
+  "signature": "TestTheProcessPatternIgnoresTheOtherSubcommands(params=1, results=0)",
+  "start": {
+    "line": 676,
+    "column": 1
+  },
+  "end": {
+    "line": 692,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 678,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 688,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 677,
+        "column": 13
+      },
+      "text": "regexp.MustCompile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 688,
+        "column": 6
+      },
+      "text": "pattern.MatchString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 689,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 677,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

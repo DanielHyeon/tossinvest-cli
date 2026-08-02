@@ -1,0 +1,130 @@
+{
+  "file": "cmd/tossctl/engineproc.go",
+  "source_sha256": "d1465018ec7804a769b0bf4fae2bee53fffa5b877878120c379feb441c7bb847",
+  "package": "main",
+  "function": "splitProcessLine",
+  "signature": "splitProcessLine(params=1, results=3)",
+  "start": {
+    "line": 378,
+    "column": 1
+  },
+  "end": {
+    "line": 392,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 381,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 389,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 391,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 379,
+        "column": 28
+      },
+      "text": "strings.Cut"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 379,
+        "column": 40
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 14
+      },
+      "text": "strconv.Atoi"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 12
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 379,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

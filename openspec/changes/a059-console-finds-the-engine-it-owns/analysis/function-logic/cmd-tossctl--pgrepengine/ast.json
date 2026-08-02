@@ -1,0 +1,85 @@
+{
+  "file": "cmd/tossctl/engineproc.go",
+  "source_sha256": "d1465018ec7804a769b0bf4fae2bee53fffa5b877878120c379feb441c7bb847",
+  "package": "main",
+  "function": "pgrepEngine",
+  "signature": "pgrepEngine(params=1, results=2)",
+  "start": {
+    "line": 310,
+    "column": 1
+  },
+  "end": {
+    "line": 320,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 312,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 313,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 16
+      },
+      "text": "engineListProcesses"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 17
+      },
+      "text": "engineJournalDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 9
+      },
+      "text": "enginePIDsForJournal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

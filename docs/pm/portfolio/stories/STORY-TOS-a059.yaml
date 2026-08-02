@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a059",
+  "title": "Let the console find exactly the engine it owns",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a059-console-finds-the-engine-it-owns",
+    "path": "openspec/changes/a059-console-finds-the-engine-it-owns"
+  },
+  "acceptance": [
+    "An engine spawned by the console with --config-dir and --session-file is found by the console's own process lookup",
+    "The stop button signals that engine and reports what it stopped, instead of answering that nothing is running",
+    "An engine belonging to a different journal directory is never signalled by this console",
+    "The lookup still ignores every other tossctl command line — console, httpapi, soak",
+    "A lookup failure is still not read as an absence, and the journal flock remains the exclusion"
+  ]
+}

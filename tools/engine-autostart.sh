@@ -25,9 +25,9 @@
 # 새벽 세 시에만 나타난다. cmd/tossctl/engineproc_test.go 의 drift 테스트가 두 값을
 # 대조한다 — soak-autostart.sh 와 soakProcessPattern 이 이미 쓰는 선례 그대로다.
 #
-#   engineProcessPattern = "tossctl engine run"   → ENGINE_PATTERN
-#   engineRestartCap     = 5                      → RESTART_CAP
-#   enginelock.StaleAfter = 5m                    → MARKER_STALE_MINUTES
+#   engineProcessPattern  = "tossctl( .*)? engine run"  → ENGINE_PATTERN
+#   engineRestartCap      = 5                           → RESTART_CAP
+#   enginelock.StaleAfter = 5m                          → MARKER_STALE_MINUTES
 #
 # ---------------------------------------------------------------------------
 #  설치 방법 (게이트 ON 승인 시에만)
@@ -44,8 +44,16 @@ set -eu
 
 # --- Go 상수와 대조되는 값 (drift 테스트가 지킨다) ---------------------------
 
-# ENGINE_PATTERN: pgrep -f 로 실행 중인 엔진을 찾는 패턴.
-ENGINE_PATTERN="tossctl engine run"
+# ENGINE_PATTERN: pgrep -f 로 실행 중인 엔진 **후보**를 찾는 확장 정규식.
+#
+# 후보다. 소유 판정은 Go 쪽에만 있다 (change a059, design D4). 콘솔은 명령줄에서
+# --config-dir 를 되뽑아 journal 디렉터리가 자기 것과 같은 프로세스만 자기 엔진으로
+# 인정하지만, 이 스크립트는 그러지 않는다 — 셸에서 그 판정을 재구현하면 Go와 어긋날 수
+# 있고, 어긋난 두 반쪽이야말로 a059이 고친 종류의 버그다.
+#
+# 이 스크립트는 플래그 없이 기본 프로필만 띄우므로, 다른 프로필의 엔진을 보고 물러서는
+# 오탐은 "기동하지 않는다" 하나로 끝난다 — 보수적인 방향이다.
+ENGINE_PATTERN="tossctl( .*)? engine run"
 
 # RESTART_CAP: 크래시 재시작 상한. 넘으면 멈추고 로그에 사유를 남긴다 —
 # 무한 재시작은 아무도 모르는 채로 디스크를 로그로 채우는 방법이다.

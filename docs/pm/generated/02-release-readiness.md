@@ -61,3 +61,4 @@
 | STORY-TOS-a055 | 6 |
 | STORY-TOS-a056 | 5 |
 | STORY-TOS-a057 | 5 |
+| STORY-TOS-a059 | 5 |

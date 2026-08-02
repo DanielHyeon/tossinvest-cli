@@ -1,0 +1,164 @@
+{
+  "file": "cmd/tossctl/engineproc_test.go",
+  "source_sha256": "621143ef0f25c784b259af52ebf03ba600d88e4c3734c913bed4d780219335a9",
+  "package": "main",
+  "function": "TestStoppingFindsTheEngineTheConsoleStarted",
+  "signature": "TestStoppingFindsTheEngineTheConsoleStarted(params=1, results=0)",
+  "start": {
+    "line": 552,
+    "column": 1
+  },
+  "end": {
+    "line": 570,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 560,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 563,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 567,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 9
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 556,
+        "column": 2
+      },
+      "text": "f.install"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 2
+      },
+      "text": "realLookup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 45
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 58
+      },
+      "text": "engineArgs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 559,
+        "column": 15
+      },
+      "text": "stopEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 563,
+        "column": 6
+      },
+      "text": "pidsEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 564,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 567,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 568,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 553,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 554,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 555,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 559,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
