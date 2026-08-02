@@ -386,6 +386,12 @@ func (r positionRow) Reason() string {
 	switch {
 	case r.Unknown(), !r.InJournal:
 		return ""
+	case r.ManagementPending(), r.ManagementBlocked():
+		return "편입 대사가 아직 완료되지 않았다. 보호·익절 기준선은 엔진이 편입을 완료하고 " +
+			"유효 근거를 저장한 뒤 적용된다."
+	case r.Designated && !r.Excluded && !r.HasManagementProjection():
+		return "편입 요청은 저장됐지만 실행 중 엔진 반영 여부를 확인할 수 없다. 보호·익절 기준선은 " +
+			"엔진이 편입을 완료하고 유효 근거를 저장한 뒤 표시된다."
 	case !r.Eligible:
 		return "진입 결정(entry decision)도 편입 기록(adoption)도 없는 포지션이다. exit 정책은 그중 하나의 " +
 			"손절가를 기준선으로 삼는데 둘 다 없으므로 대상이 아니다."

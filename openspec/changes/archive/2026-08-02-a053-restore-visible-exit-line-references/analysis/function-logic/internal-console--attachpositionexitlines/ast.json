@@ -1,6 +1,6 @@
 {
   "file": "internal/console/portfolio_pages.go",
-  "source_sha256": "98653c4f27dfaaa41f129cd89a6f0765ae66f67e6461d1aa05d73262b923aa2c",
+  "source_sha256": "22c988dd6e435516eea35ad1a14a995c9abeaade9014c6e0fe910d9a3e01200a",
   "package": "console",
   "function": "attachPositionExitLines",
   "signature": "attachPositionExitLines(params=3, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 179,
+    "line": 186,
     "column": 2
   },
   "branches": [
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 107,
+        "line": 108,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 116,
+        "line": 114,
         "column": 3
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 130,
+        "line": 123,
         "column": 3
       }
     },
@@ -49,23 +49,23 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 141,
-        "column": 4
+        "line": 137,
+        "column": 3
       }
     },
     {
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 153,
-        "column": 3
+        "line": 148,
+        "column": 4
       }
     },
     {
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 168,
+        "line": 160,
         "column": 3
       }
     },
@@ -76,6 +76,14 @@
         "line": 175,
         "column": 3
       }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 182,
+        "column": 3
+      }
     }
   ],
   "returns": null,
@@ -83,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 108,
+        "line": 115,
         "column": 24
       },
       "text": "operatorview.BuildExitLineReference"
@@ -91,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 109,
+        "line": 116,
         "column": 43
       },
       "text": "string"
@@ -99,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 115,
+        "line": 122,
         "column": 10
       },
       "text": "storedExitReference"
@@ -107,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 119,
+        "line": 126,
         "column": 19
       },
       "text": "operatorview.BuildExitLine"
@@ -115,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 122,
+        "line": 129,
         "column": 24
       },
       "text": "operatorview.BuildExitLineReference"
@@ -123,23 +131,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 131,
+        "line": 138,
         "column": 19
       },
       "text": "operatorview.BuildExitLine"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 134,
-        "column": 24
-      },
-      "text": "operatorview.BuildExitLineReference"
     },
     {
       "kind": "call",
       "at": {
         "line": 141,
+        "column": 24
+      },
+      "text": "operatorview.BuildExitLineReference"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
         "column": 7
       },
       "text": "row.ExitReference.LegacyRaw"
@@ -147,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 142,
+        "line": 149,
         "column": 22
       },
       "text": "storedExitEvidence"
@@ -155,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 146,
+        "line": 153,
         "column": 15
       },
       "text": "row.Exit.Snapshot.WithFreshness"
@@ -163,7 +171,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 158,
+        "line": 165,
         "column": 18
       },
       "text": "operatorview.BuildExitLine"
@@ -171,7 +179,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 159,
+        "line": 166,
         "column": 23
       },
       "text": "operatorview.BuildExitLineReference"
@@ -179,7 +187,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 165,
+        "line": 172,
         "column": 32
       },
       "text": "string"
@@ -187,7 +195,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 175,
         "column": 6
       },
       "text": "row.ExitReference.LifecycleUnknown"
@@ -195,7 +203,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 170,
+        "line": 177,
         "column": 19
       },
       "text": "operatorview.BuildExitLine"
@@ -203,7 +211,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 175,
+        "line": 182,
         "column": 6
       },
       "text": "row.ExitReference.LegacyRaw"
@@ -211,7 +219,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 176,
+        "line": 183,
         "column": 21
       },
       "text": "storedExitEvidence"
@@ -226,128 +234,142 @@
       }
     },
     {
-      "kind": "=",
-      "at": {
-        "line": 108,
-        "column": 4
-      }
-    },
-    {
       "kind": ":=",
       "at": {
-        "line": 115,
+        "line": 107,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 118,
+        "line": 112,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 119,
+        "line": 115,
         "column": 4
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
         "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 125,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 131,
+        "line": 126,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 134,
+        "line": 129,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 142,
+        "line": 138,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 141,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 149,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 146,
+        "line": 153,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 147,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
         "line": 154,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 155,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 156,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 158,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 159,
+        "line": 161,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 162,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 163,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 165,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 169,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 170,
-        "column": 4
+        "line": 166,
+        "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
         "line": 176,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 177,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 183,
         "column": 4
       }
     }

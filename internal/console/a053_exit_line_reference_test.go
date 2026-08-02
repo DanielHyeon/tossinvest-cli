@@ -76,12 +76,14 @@ func TestUSPendingAndBlockedShowEffectiveStopPlanWithoutPrice(t *testing.T) {
 			h.authenticate(t)
 			row := positionHTMLRow(t, h.page(t, "/positions"), "AAPL")
 			for _, want := range []string{"US", "USD", tc.status, "기준선 미생성 · 엔진 보호 미적용",
-				"현재 실행 중 엔진 정책: 최초 손절폭 <strong>3%</strong>", "가격은 편입 시 확정"} {
+				"현재 실행 중 엔진 정책: 최초 손절폭 <strong>3%</strong>", "가격은 편입 시 확정",
+				"편입 대사가 아직 완료되지 않았다"} {
 				if !strings.Contains(row, want) {
 					t.Errorf("row lacks %q: %s", want, row)
 				}
 			}
-			for _, synthetic := range []string{"194", "194.97", "187", "187.23", "7%"} {
+			for _, synthetic := range []string{"194", "194.97", "187", "187.23", "7%",
+				"진입 결정(entry decision)도 편입 기록(adoption)도 없는 포지션"} {
 				if strings.Contains(row, synthetic) {
 					t.Errorf("row contains desired/synthetic value %q: %s", synthetic, row)
 				}
@@ -148,6 +150,33 @@ func TestPositionsShowRuntimeUnknownWithoutDesiredFallback(t *testing.T) {
 	}
 	if strings.Contains(row, "7%") {
 		t.Fatalf("desired stop percentage leaked into runtime-unknown row: %s", row)
+	}
+}
+
+func TestPositionsShowRuntimeUnknownWhenCommanderUnavailableButDesiredIncludesUS(t *testing.T) {
+	h := newDashboardHarness(t, func(o *Options) {
+		o.PositionPolicies = nil
+		o.Settings = &fakeSettings{block: config.Adoption{DefaultStopPct: .07, IncludeSymbols: []string{"A053USOFFLINE"}}}
+	})
+	h.holdings.rows = append(h.holdings.rows, domain.Position{MarketType: "US", Symbol: "A053USOFFLINE",
+		Quantity: 1, AveragePrice: 200, CurrentPrice: 201, MarketValue: 201})
+	seedJournal(t, h.journal)
+	execRaw(t, h.journal, `INSERT INTO positions(id,account_ref,market,symbol,instance_seq,state,quantity,avg_price,opened_at)
+		VALUES ('pos-a053-us-offline','123-45-678901','us','A053USOFFLINE',1,'OPEN','1','200','2026-08-01T00:00:00Z');`)
+	h.authenticate(t)
+	row := positionHTMLRow(t, h.page(t, "/positions"), "A053USOFFLINE")
+	for _, want := range []string{"US", "USD", "편입 예약됨 · 실행 상태 미확인 · 아직 보호 미적용", "기준선·정책 폭 알 수 없음",
+		"실행 중 엔진 설정 또는 관리 상태를 확인할 수 없음", "손절 <strong>—</strong>",
+		"기준 <strong>—</strong>", "익절 <strong>—</strong>",
+		"편입 요청은 저장됐지만 실행 중 엔진 반영 여부를 확인할 수 없다"} {
+		if !strings.Contains(row, want) {
+			t.Errorf("offline commander row lacks %q: %s", want, row)
+		}
+	}
+	for _, forbidden := range []string{"7%", "194", "194.97", "187", "187.23", "보호 근거 없음", "미국 시장 미지원", "편입 불가"} {
+		if strings.Contains(row, forbidden) {
+			t.Errorf("offline commander row contains desired/synthetic/unsupported value %q: %s", forbidden, row)
+		}
 	}
 }
 

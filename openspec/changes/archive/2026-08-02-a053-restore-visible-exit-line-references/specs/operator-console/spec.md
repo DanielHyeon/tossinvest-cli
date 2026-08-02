@@ -35,8 +35,8 @@ KR 또는 US 포지션이 `ADOPTION_PENDING` 또는 `RECONCILE_BLOCKED`이고 ex
 - **THEN** US와 동일한 미생성 설명과 effective percentage를 표시한다
 
 #### Scenario: runtime unavailable
-- **WHEN** candidate 여부나 effective stop percentage를 증명할 runtime을 읽지 못한다
-- **THEN** 화면은 desired/default 값을 대신 사용하지 않고 기준선/percentage를 `알 수 없음`으로 유지한다
+- **WHEN** desired include에 지정된 KR 또는 US 보유분이 있지만 candidate 여부나 effective stop percentage를 증명할 runtime commander를 읽지 못한다
+- **THEN** 화면은 편입 요청 저장과 실행 상태 미확인을 구분하고, desired/default 값을 대신 사용하지 않으며 기준선/percentage를 `알 수 없음`으로 유지한다
 
 ### Requirement: 기준선 복원 화면은 입력과 mutation을 추가하지 않는다
 `/positions`는 form, visible input, button, contenteditable 또는 reconcile/order mutation route를 추가해서는 안 된다 (MUST NOT).

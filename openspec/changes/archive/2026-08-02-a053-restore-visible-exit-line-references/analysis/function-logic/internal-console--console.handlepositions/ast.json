@@ -1,6 +1,6 @@
 {
   "file": "internal/console/portfolio_pages.go",
-  "source_sha256": "98653c4f27dfaaa41f129cd89a6f0765ae66f67e6461d1aa05d73262b923aa2c",
+  "source_sha256": "22c988dd6e435516eea35ad1a14a995c9abeaade9014c6e0fe910d9a3e01200a",
   "package": "console",
   "function": "handlePositions",
   "receiver": "Console",

@@ -104,9 +104,16 @@ func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 func attachPositionExitLines(rows []positionRow, asOf time.Time, runtime positionpolicy.ManagementRuntime) {
 	for i := range rows {
 		row := &rows[i]
+		referenceStatus := row.Management.Status
+		if referenceStatus == "" && row.Designated && !row.Excluded {
+			// The desired include list proves only that this holding is awaiting
+			// management. If the engine-owned commander is unavailable, keep the
+			// effective state explicitly unknown; never promote desired defaults.
+			referenceStatus = positionpolicy.ManagementStatusUnknown
+		}
 		if !row.HasExit {
 			row.ExitReference = operatorview.BuildExitLineReference(operatorview.ExitLineReferenceSource{
-				Market: row.Market, ManagementStatus: string(row.Management.Status),
+				Market: row.Market, ManagementStatus: string(referenceStatus),
 				EffectiveSettingsKnown: runtime.EffectiveKnown,
 				EffectiveStopPct:       runtime.Effective.DefaultStopPct,
 			})
@@ -162,7 +169,7 @@ func attachPositionExitLines(rows []positionRow, asOf time.Time, runtime positio
 			EvidenceLifecycleGeneration: row.Exit.LifecycleGeneration, Raw: raw,
 			LifecycleKnown: row.LifecycleKnown, LifecycleProofRequired: row.LifecycleProofRequired,
 			CurrentLifecycleGeneration: row.LifecycleGeneration,
-			ManagementStatus:           string(row.Management.Status), EffectiveSettingsKnown: runtime.EffectiveKnown,
+			ManagementStatus:           string(referenceStatus), EffectiveSettingsKnown: runtime.EffectiveKnown,
 			EffectiveStopPct: runtime.Effective.DefaultStopPct, UnknownReason: snapshot.UnknownReason,
 		})
 		if row.ExitReference.LifecycleUnknown() {

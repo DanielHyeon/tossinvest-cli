@@ -22,6 +22,9 @@
 5. `make sdd-sync` completed. `make sdd-check` passed after installing the repository-declared `typedb-driver` into `.sdd/.venv` with `make sdd-infra`.
 6. Function Logic Map checker, strict OpenSpec validation, PM tracker check, JSON validation, and `git diff --check` passed.
 7. Final independent verdicts: Security P0/P1/P2 = 0/0/0 approved; Test/Maintainability approved; StockOS-informed UI/UX approved.
+8. Deployment canary reproduced a production-composition gap: the HTTP API normalized an unavailable runtime to `RUNTIME_UNKNOWN`, while the console's absent combined commander left the row status empty. A RED fixture now covers `PositionPolicies=nil` plus a desired-included US holding; the console normalizes only that non-excluded desired row to typed unknown without using the desired percentage.
+9. A follow-up UI review removed the contradictory legacy detail text from both typed pending/blocked and commander-unavailable desired rows. The page now distinguishes a stored inclusion request, runtime reflection, and effective protection.
+10. Docker services were rebuilt from the integrated local `main`. HTTPS HTTP/2 canaries returned 200 for `/positions`, `/position-management`, and `/api/v1/positions`; two KR rows exposed validated `LEGACY_RAW` KRW references, two US rows exposed price-free `RUNTIME_UNKNOWN` USD references, unsupported-US phrases were absent, and `/positions` contained no form/input/select/textarea/button/contenteditable surface.
 
 ## Verdict
 

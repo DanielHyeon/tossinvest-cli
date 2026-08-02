@@ -2,10 +2,10 @@
   "id": "STORY-TOS-a053",
   "title": "Restore visible exit-line references across markets",
   "feature": "FEAT-TOS-009",
-  "intent": "active",
+  "intent": "completed",
   "openspec": {
     "change_id": "a053-restore-visible-exit-line-references",
-    "path": "openspec/changes/a053-restore-visible-exit-line-references"
+    "path": "openspec/changes/archive/2026-08-02-a053-restore-visible-exit-line-references"
   },
   "acceptance": [
     "Managed legacy KR and US positions show stored baseline and initial stop prominently when no canonical effective snapshot exists",

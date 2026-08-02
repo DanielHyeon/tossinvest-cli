@@ -1,16 +1,16 @@
 {
   "file": "internal/console/portfolio.go",
-  "source_sha256": "61736d1bce7e67eab63fb6469db3c4e2babf3be8ea4faa2dadfa1f68bee47eec",
+  "source_sha256": "5a69aaaea93c1833f0d0f0edf55390a0054d87232128c80262fdf6e726216426",
   "package": "console",
   "function": "HasDetail",
   "receiver": "positionRow",
   "signature": "positionRow.HasDetail(params=0, results=1)",
   "start": {
-    "line": 404,
+    "line": 410,
     "column": 1
   },
   "end": {
-    "line": 406,
+    "line": 412,
     "column": 2
   },
   "branches": null,
@@ -18,7 +18,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 405,
+        "line": 411,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 405,
+        "line": 411,
         "column": 22
       },
       "text": "r.HasExitReference"
@@ -35,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 405,
+        "line": 411,
         "column": 61
       },
       "text": "r.Reason"

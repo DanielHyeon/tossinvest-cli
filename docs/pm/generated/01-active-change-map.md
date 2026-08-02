@@ -56,4 +56,4 @@
 | `a050-add-strategy-optimization` | STORY-TOS-a050 | archived |
 | `a051-add-httpapi-daemon` | STORY-TOS-a051 | archived |
 | `a052-reconcile-aware-position-management` | STORY-TOS-a052 | archived |
-| `a053-restore-visible-exit-line-references` | STORY-TOS-a053 | in_progress |
+| `a053-restore-visible-exit-line-references` | STORY-TOS-a053 | archived |
