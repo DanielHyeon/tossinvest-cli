@@ -77,6 +77,10 @@ docker compose up -d
 docker compose ps
 ```
 
+이미지는 host filesystem이나 Git checkout의 mode 보존 여부와 무관하게 entrypoint를
+`0755`로 복사해야 한다. NTFS checkout에서도 재빌드한 container가 exit 126으로
+재시작하지 않아야 한다.
+
 Compose의 host publish는
 `${TOSSOS_VPN_BIND_IP}:${TOSSOS_CONSOLE_PORT}:37085`이며 bind IP가 없으면
 `docker compose config`부터 실패한다. `.env`에 `0.0.0.0`이나 LAN/public interface

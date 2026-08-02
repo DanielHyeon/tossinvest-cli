@@ -1,0 +1,15 @@
+{
+  "id": "STORY-TOS-CONTAINER-MODE",
+  "title": "Pin the container entrypoint executable mode",
+  "feature": "FEAT-TOS-012",
+  "intent": "active",
+  "openspec": {
+    "change_id": "fix-container-entrypoint-permission",
+    "path": "openspec/changes/archive/2026-08-02-fix-container-entrypoint-permission"
+  },
+  "acceptance": [
+    "A source checkout with a non-executable entrypoint still produces an image with a 0755 entrypoint",
+    "The non-root runtime identity can execute the entrypoint without gaining write, setuid or setgid permission",
+    "Both Compose services become healthy after recreation and HTTPS HTTP/2 canaries pass"
+  ]
+}
