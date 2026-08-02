@@ -85,11 +85,12 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
     <col class="position-col-lines">
     <col class="position-col-value">
     <col class="position-col-pnl">
+    <col class="position-col-detail">
   </colgroup>
   <thead><tr>
     <th scope="col">종목</th><th class="number-column" scope="col">수량</th><th class="number-column" scope="col">평균가</th>
     <th class="number-column" scope="col">현재가</th><th scope="col">라인</th><th class="number-column" scope="col">총금액</th>
-    <th class="number-column" scope="col">미실현 PnL</th>
+    <th class="number-column" scope="col">미실현 PnL</th><th scope="col">상세</th>
   </tr></thead>
   <tbody>
   {{range .Rows}}
@@ -124,6 +125,8 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
     <td data-label="총금액" class="number-cell"><strong>{{.Value}}</strong></td>
     <td data-label="미실현 PnL" class="number-cell {{if .Gain}}ok{{else}}bad{{end}}">
       <strong>{{.PnL}}</strong><span class="submetric">{{.Rate}}</span>
+    </td>
+    <td data-label="상세" class="detail-cell">
       {{if .HasDetail}}
       <details class="row-details"><summary>상세 보기</summary><div class="detail-grid">
         <span>평가손익 <strong>{{.PnL}}</strong> · 수익률 <strong>{{.Rate}}</strong></span>

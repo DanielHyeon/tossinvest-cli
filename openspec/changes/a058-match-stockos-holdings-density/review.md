@@ -62,3 +62,43 @@ Status: approved for implementation.
 Independent review status: approved — security and maintainability reviewers
 reported P0/P1/P2/P3 = 0/0/0/0 after the excluded and pending primary-verdict
 regressions were corrected.
+
+## Trailing detail popup follow-up — 2026-08-03
+
+### Decisions
+
+- Move the disclosure from the PnL cell into a narrow final `상세` column.
+- Change the line stack to `space-between` so labels start beside the current-price
+  column while prices retain a stable right numeric axis.
+- Render the native details disclosure as a centered, content-sized, non-modal
+  popup. Keep it input-free and script-free, cap its height to the viewport, and
+  keep a sticky 44 px summary available as the close action.
+- Scope every open-state rule through `.detail-cell`; order trace disclosures must
+  remain ordinary inline details.
+
+### Independent review
+
+- Security initially found a P1 click-through risk in a modal-looking backdrop.
+  The backdrop was removed and the contract made explicitly non-modal. Final
+  security result: P0/P1/P2/P3 = 0/0/0/0.
+- UX initially found a 34 px open close target and a forced 672 px popup height.
+  The target is now 44 px and the popup uses content height with only a max-height.
+  Long desktop detail measures 610.14 px; short IONQ/TSLA detail measures 339.14 px.
+- Test review found popup selectors leaked to `/orders`; all new selectors are now
+  scoped to `.detail-cell`. The order disclosure regression and full console suite pass.
+- Nonblocking follow-up: independent non-modal `details` can be opened concurrently.
+  Exclusive grouping can be considered with a future markup-contract revision.
+
+### Browser and automated evidence
+
+- Both `/positions` and `/dashboard`: eight headers/cells, final `상세` column,
+  24 px current-value to first-line-label gap, 95.75 px row height closed/open.
+- 375 px: document scroll width 375 px, row height 596.44 px closed/open, popup
+  within viewport, 44 px sticky close action, no console/page error.
+- 375×400: popup content scrolls to the end while the sticky close action remains visible.
+- Holdings rows contain no script or input; actionable lines still use the unchanged
+  fail-closed `HasExit`/`ExitLine` projection.
+- Focused a057/a058 tests, full `internal/console`, race, vet, operatorview,
+  positionpolicy, OpenSpec strict validation, and `git diff --check` pass.
+
+Independent review status: approved; no P0/P1 deployment blockers.
