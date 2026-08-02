@@ -146,10 +146,23 @@ func TestARefusedStartReportsTheEnginesOwnLog(t *testing.T) {
 	}
 }
 
-// TestStartingIsRefusedWhileTheMarkerIsFresh. Advisory, and only so the answer is
-// "already running" rather than a spawned process that immediately loses the race
-// for the flock.
-func TestStartingIsRefusedWhileTheMarkerIsFresh(t *testing.T) {
+// TestAGhostMarkerDoesNotRefuseAStart (change a056).
+//
+// This replaces TestStartingIsRefusedWhileTheMarkerIsFresh, which pinned this
+// exact cell — fresh marker, no observable process — as a refusal. Its stated
+// reason was that "already running" is a better answer than a spawned process
+// that immediately loses the race for the flock.
+//
+// That reason only pays when an engine really is alive and pgrep cannot see it,
+// and there the flock still kills the second runtime — what is lost is the
+// quality of a sentence. What was on the other side of the trade got measured on
+// 2026-08-02: a container recreate left the old engine's marker 29 seconds old,
+// the new console refused its own autostart against a PID that had died with the
+// previous namespace, and the engine stayed down for eight minutes with five
+// OPEN positions and four active exit policies unwatched.
+//
+// A marker is a file. A file is not a running engine.
+func TestAGhostMarkerDoesNotRefuseAStart(t *testing.T) {
 	dir := t.TempDir()
 	release, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
 	if err != nil {
@@ -157,15 +170,142 @@ func TestStartingIsRefusedWhileTheMarkerIsFresh(t *testing.T) {
 	}
 	t.Cleanup(release)
 
+	// The marker is fresh and names a PID; pgrep sees nothing, which is what a
+	// recreated container looks like from inside.
 	f := &engineFakes{}
 	f.install(t)
 
-	if _, err := startEngine(&rootOptions{configDir: dir}); err == nil {
-		t.Fatal("a second engine was started while the marker was fresh")
+	if _, err := startEngine(&rootOptions{configDir: dir}); err != nil {
+		t.Fatalf("a ghost marker refused the start: %v", err)
+	}
+	if len(f.spawned) != 1 {
+		t.Errorf("spawned %d engines, want one", len(f.spawned))
+	}
+}
+
+// TestAFreshMarkerWithALiveProcessStillRefuses (change a056).
+//
+// The refusal did not go away, it acquired a witness. The marker keeps supplying
+// the sentence, because it carries the PID and the refresh time and a flock
+// failure carries neither.
+func TestAFreshMarkerWithALiveProcessStillRefuses(t *testing.T) {
+	dir := t.TempDir()
+	release, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
+	if err != nil {
+		t.Fatalf("enginelock.Hold: %v", err)
+	}
+	t.Cleanup(release)
+
+	f := &engineFakes{found: []int{4242}}
+	f.install(t)
+
+	_, err = startEngine(&rootOptions{configDir: dir})
+	if err == nil {
+		t.Fatal("a second engine was started while a process was observed")
+	}
+	if !strings.Contains(err.Error(), "이미 실행 중") {
+		t.Errorf("the refusal stopped naming the running instance: %v", err)
+	}
+	if !strings.Contains(err.Error(), "마지막 갱신") {
+		t.Errorf("the refusal lost the marker's timestamp, which is the whole reason "+
+			"the marker is still consulted: %v", err)
 	}
 	if len(f.spawned) != 0 {
 		t.Errorf("a process was spawned anyway: %v", f.spawned)
 	}
+}
+
+// TestEnumerationFailureKeepsTheRefusal (change a056).
+//
+// pgrep failing is not pgrep finding nothing. An absence you cannot demonstrate
+// is not an absence, so the fresh marker keeps its refusal — a wrongly refused
+// start costs one more click, a wrongly allowed one spends the flock as its only
+// remaining guard.
+func TestEnumerationFailureKeepsTheRefusal(t *testing.T) {
+	dir := t.TempDir()
+	release, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
+	if err != nil {
+		t.Fatalf("enginelock.Hold: %v", err)
+	}
+	t.Cleanup(release)
+
+	f := &engineFakes{findErr: errors.New("pgrep unavailable")}
+	f.install(t)
+
+	if _, err := startEngine(&rootOptions{configDir: dir}); err == nil {
+		t.Fatal("an unprovable absence was read as an absence")
+	}
+	if len(f.spawned) != 0 {
+		t.Errorf("a process was spawned anyway: %v", f.spawned)
+	}
+}
+
+// TestMarkerRefusesStartOnlyWithCorroboration is the rule as a truth table
+// (change a056). Six cells, and only the middle row moved.
+func TestMarkerRefusesStartOnlyWithCorroboration(t *testing.T) {
+	for _, tc := range []struct {
+		name                            string
+		fresh, observed, enumerationErr bool
+		want                            bool
+	}{
+		{"fresh marker corroborated by a process", true, true, false, true},
+		{"fresh marker, nothing observed — ghost", true, false, false, false},
+		{"fresh marker, enumeration failed", true, false, true, true},
+		{"no marker, process observed", false, true, false, false},
+		{"no marker, nothing observed", false, false, false, false},
+		{"no marker, enumeration failed", false, false, true, false},
+	} {
+		got := markerRefusesStart(tc.fresh, tc.observed, tc.enumerationErr)
+		if got != tc.want {
+			t.Errorf("%s: markerRefusesStart(%v,%v,%v) = %v, want %v",
+				tc.name, tc.fresh, tc.observed, tc.enumerationErr, got, tc.want)
+		}
+	}
+}
+
+// TestNoPathRefusesOnMarkerFreshnessAlone (change a056) reads the source rather
+// than the behaviour, because the failure mode is a future edit that reorders the
+// two checks back — and a reorder can keep every behavioural test above passing
+// while restoring the outage. The rule is structural: inside the start path, the
+// marker's freshness must never be the sole condition on a refusing branch.
+//
+// It is scoped to startEngine on purpose. The first draft banned the expression
+// shape anywhere in the file and immediately flagged stopEngine, which reads the
+// same marker to *report* — "signalled them, but the marker is still fresh, it
+// clears within StaleAfter". That is the advisory signal used exactly as intended:
+// naming a state, not deciding one. The rule being pinned here is about refusals,
+// not about reading the marker.
+func TestNoPathRefusesOnMarkerFreshnessAlone(t *testing.T) {
+	source, err := os.ReadFile("engineproc.go")
+	if err != nil {
+		t.Fatalf("read engineproc.go: %v", err)
+	}
+	body := functionBody(t, string(source), "func startEngine(")
+
+	if strings.Contains(body, "status.Running {") {
+		t.Error("startEngine refuses on marker freshness alone again. The marker is an " +
+			"advisory signal — engine-safety says 배타는 flock이 담당한다 — and a file " +
+			"outliving its process is exactly what a container recreate produces")
+	}
+	if !strings.Contains(body, "markerRefusesStart(") {
+		t.Error("the named rule is gone from startEngine; whatever replaced it is not the " +
+			"one a056 argued")
+	}
+}
+
+// functionBody returns the source of one top-level function, from its signature
+// to the next top-level declaration.
+func functionBody(t *testing.T, source, signature string) string {
+	t.Helper()
+	i := strings.Index(source, signature)
+	if i < 0 {
+		t.Fatalf("no function starting %q", signature)
+	}
+	rest := source[i+len(signature):]
+	if j := strings.Index(rest, "\nfunc "); j >= 0 {
+		return rest[:j]
+	}
+	return rest
 }
 
 // TestAStaleMarkerDoesNotBlockAStart. A crashed engine costs one refused start at

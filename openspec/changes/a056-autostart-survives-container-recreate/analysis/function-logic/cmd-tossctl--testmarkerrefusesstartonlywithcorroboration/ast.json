@@ -1,0 +1,64 @@
+{
+  "file": "cmd/tossctl/engineproc_test.go",
+  "source_sha256": "05d0d8b2e89a2337cd893ff0ae9065399f5de954cfc7947348a8b5edf24a599f",
+  "package": "main",
+  "function": "TestMarkerRefusesStartOnlyWithCorroboration",
+  "signature": "TestMarkerRefusesStartOnlyWithCorroboration(params=1, results=0)",
+  "start": {
+    "line": 245,
+    "column": 1
+  },
+  "end": {
+    "line": 264,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 259,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 10
+      },
+      "text": "markerRefusesStart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -22,11 +22,14 @@ package main
 //	the start is not blind    it waits briefly and reports the engine's own
 //	                          refusal, because "I pressed start and nothing
 //	                          happened" is the answer an operator gets otherwise
-//	the marker is consulted   a fresh advisory marker means an engine is already
-//	                          running and nothing is spawned. The *exclusion* is
-//	                          still the engine's own flock — this check exists so
-//	                          the console can say "already running" instead of
-//	                          spawning a process that immediately refuses
+//	the marker is consulted   but it does not decide. A fresh advisory marker
+//	                          supplies the PID and refresh time that make a refusal
+//	                          readable; what makes it a refusal is an observed
+//	                          process. The *exclusion* is the engine's own flock.
+//	                          A marker outlives its process — a container recreate,
+//	                          a SIGKILL and a reboot all leave the file behind —
+//	                          so letting it refuse on its own is how an engine
+//	                          stays down while the file says it is up (change a056)
 //
 // Nothing here holds a broker, a credential or a token. It signals a process and
 // spawns `tossctl engine run`, which does its own gate check, its own interlock
@@ -107,6 +110,23 @@ var (
 // directory so an isolated --config-dir profile keeps its own.
 func engineLogPath(dir string) string { return filepath.Join(dir, engineLogName) }
 
+// markerRefusesStart decides whether a fresh advisory marker may refuse a start
+// (change a056).
+//
+// It may only when something else agrees with it: either a process was actually
+// observed, or the enumeration failed and absence therefore cannot be claimed.
+// A fresh marker on its own proves nothing — a container recreate, a SIGKILL and
+// a host reboot all delete the process and leave the file, and engine-safety
+// already says this signal is advisory and that 배타는 flock이 담당한다.
+//
+// It is a named function rather than an inline condition so that the reason
+// survives the next edit: the shape this replaces was two sequential `return`s
+// where the advisory one came first and the process check below it was
+// unreachable.
+func markerRefusesStart(markerFresh, processObserved, enumerationFailed bool) bool {
+	return markerFresh && (processObserved || enumerationFailed)
+}
+
 // startEngine is the console's StartEngine seam.
 //
 // It returns one line describing what happened, which the dashboard prints. On a
@@ -123,13 +143,22 @@ func startEngine(root *rootOptions) (string, error) {
 		return "", err
 	}
 
+	// One enumeration, read by both guards below. Counting twice invites two
+	// different answers inside a single decision.
+	pids, findErr := engineFindProcesses()
+	observed := findErr == nil && len(pids) > 0
+
 	// Advisory, and only to give a better answer than "the engine refused because
-	// it could not take the lock". The exclusion is the engine's own flock.
-	if status := enginelock.Read(enginelock.MarkerPath(dir), time.Now()); status.Running {
+	// it could not take the lock": the marker carries the PID and the refresh time,
+	// which a flock failure does not. The exclusion is the engine's own flock, so
+	// this may name a running instance but may not by itself refuse one
+	// (change a056 — see markerRefusesStart).
+	if status := enginelock.Read(enginelock.MarkerPath(dir), time.Now()); markerRefusesStart(
+		status.Running, observed, findErr != nil) {
 		return "", fmt.Errorf("엔진이 이미 실행 중이다 (pid %d, 마지막 갱신 %s)",
 			status.Marker.PID, status.RefreshedAt.UTC().Format(time.RFC3339))
 	}
-	if pids, perr := engineFindProcesses(); perr == nil && len(pids) > 0 {
+	if observed {
 		return "", fmt.Errorf("엔진 프로세스가 이미 있다 (%s)", joinPIDs(pids))
 	}
 

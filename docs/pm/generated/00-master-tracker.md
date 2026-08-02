@@ -36,7 +36,7 @@
     - STORY-TOS-016 — Wire the production risk Guardian [implemented] → `wire-production-risk-guardian`
     - STORY-TOS-017 — Prime engine account sequence safely [implemented] → `prime-engine-account-seq`
     - STORY-TOS-a045 — Add broker-resident protection orders [archived] → `a045-add-protection-orders`
-    - STORY-TOS-a056 — Keep an advisory marker from refusing an engine start [in_progress] → `a056-autostart-survives-container-recreate`
+    - STORY-TOS-a056 — Keep an advisory marker from refusing an engine start [implemented] → `a056-autostart-survives-container-recreate`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`

@@ -1,0 +1,39 @@
+{
+  "file": "cmd/tossctl/engineproc.go",
+  "source_sha256": "9c4fc6a797c51446edb2f93c72982ebcc800be28bf96c4578b1b7efa0daa331f",
+  "package": "main",
+  "function": "engineLogPath",
+  "signature": "engineLogPath(params=1, results=1)",
+  "start": {
+    "line": 108,
+    "column": 1
+  },
+  "end": {
+    "line": 108,
+    "column": 83
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 41
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 48
+      },
+      "text": "filepath.Join"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}
