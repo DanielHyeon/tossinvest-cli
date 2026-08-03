@@ -3,6 +3,7 @@ package performance
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -49,7 +50,8 @@ func TestStoreRefusesANewerDerivedSchema(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := db.Exec("PRAGMA user_version = 2"); err != nil {
+	tooNew := SchemaVersion + 1
+	if _, err := db.Exec(fmt.Sprintf("PRAGMA user_version = %d", tooNew)); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.Close(); err != nil {
@@ -64,7 +66,7 @@ func TestStoreRefusesANewerDerivedSchema(t *testing.T) {
 	}
 	defer raw.Close()
 	var version int
-	if err := raw.QueryRowContext(context.Background(), "PRAGMA user_version").Scan(&version); err != nil || version != 2 {
+	if err := raw.QueryRowContext(context.Background(), "PRAGMA user_version").Scan(&version); err != nil || version != tooNew {
 		t.Fatalf("newer version changed to %d err=%v", version, err)
 	}
 }

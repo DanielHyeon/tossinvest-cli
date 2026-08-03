@@ -20,6 +20,7 @@ var (
 	ErrBasisConservation    = errors.New("performance: entry basis does not equal allocated plus residual basis")
 	ErrPolicyMismatch       = errors.New("performance: fill cost policy differs from authoritative position policy")
 	ErrLineageConflict      = errors.New("performance: fill lineage differs from authoritative attribution scope")
+	ErrDuplicateAttribution = errors.New("performance: duplicate attribution key")
 )
 
 type FillKind string
@@ -198,6 +199,9 @@ type Attribution struct {
 	LineageStatus       Status
 	MissingLineage      []string
 	MissingMeasurements []string
+	// ObservedLineage preserves exact identifiers supplied by a source even
+	// when missing legs/fills prevent a numeric attribution projection.
+	ObservedLineage     []CompositeLineage
 	CostPolicy          CostPolicy
 	EntryFills          []CompositeLineage
 	AcquiredQuantity    string
@@ -826,6 +830,7 @@ func cloneAttribution(input Attribution) Attribution {
 	out := input
 	out.MissingLineage = append([]string(nil), input.MissingLineage...)
 	out.MissingMeasurements = append([]string(nil), input.MissingMeasurements...)
+	out.ObservedLineage = append([]CompositeLineage(nil), input.ObservedLineage...)
 	out.EntryFills = append([]CompositeLineage(nil), input.EntryFills...)
 	out.CloseLegs = make([]CloseLegAttribution, len(input.CloseLegs))
 	for index, leg := range input.CloseLegs {

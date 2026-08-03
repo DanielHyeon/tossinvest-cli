@@ -153,6 +153,64 @@ func (r *ReadOnly) Dashboard(ctx context.Context, query Query) (DashboardView, e
 	return view, nil
 }
 
+// AttributionRows reads the exact persisted attribution generation through the
+// same immutable, query-only snapshot discipline as Dashboard.
+func (r *ReadOnly) AttributionRows(ctx context.Context, accountRef string, query AttributionQuery, limit int) ([]Attribution, error) {
+	if r == nil {
+		return nil, errors.New("performance: read-only database is not open")
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if r.closed {
+		return nil, errors.New("performance: read-only database is closed")
+	}
+	db, identity, err := openImmutablePerformanceDB(r.path)
+	if err != nil {
+		return nil, err
+	}
+	rows, queryErr := queryAttributionRows(ctx, db, accountRef, query, limit)
+	closeErr := db.Close()
+	if queryErr != nil {
+		return nil, queryErr
+	}
+	if closeErr != nil {
+		return nil, closeErr
+	}
+	if err := unchangedImmutablePerformanceDB(r.path, identity); err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+// AttributionEvidence returns the canonical rebuild source through an
+// immutable, query-only snapshot.
+func (r *ReadOnly) AttributionEvidence(ctx context.Context, accountRef string) (AttributionRebuild, error) {
+	if r == nil {
+		return AttributionRebuild{}, errors.New("performance: read-only database is not open")
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if r.closed {
+		return AttributionRebuild{}, errors.New("performance: read-only database is closed")
+	}
+	db, identity, err := openImmutablePerformanceDB(r.path)
+	if err != nil {
+		return AttributionRebuild{}, err
+	}
+	evidence, queryErr := queryAttributionEvidence(ctx, db, accountRef)
+	closeErr := db.Close()
+	if queryErr != nil {
+		return AttributionRebuild{}, queryErr
+	}
+	if closeErr != nil {
+		return AttributionRebuild{}, closeErr
+	}
+	if err := unchangedImmutablePerformanceDB(r.path, identity); err != nil {
+		return AttributionRebuild{}, err
+	}
+	return evidence, nil
+}
+
 func (r *ReadOnly) Close() error {
 	if r == nil {
 		return nil
