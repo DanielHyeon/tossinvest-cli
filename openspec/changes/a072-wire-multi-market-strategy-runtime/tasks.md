@@ -8,7 +8,7 @@
 ## 2. RED concurrent runtime and lease tests
 
 - [x] 2.1 Add RED coordinator tests proving KR and US workers start together, KR wait/close/refusal cannot pause eligible US work, US evidence/budget failure cannot pause KR, and no combined market authority is accepted
-- [ ] 2.2 Add RED strategy tests for approved-candidate to router/lane/campaign/leg lineage, typed router/lane refusal, unsupported bindings and static absence of broker/journal/operating writers from pure router and lane dependencies
+- [x] 2.2 Add RED strategy tests for approved-candidate to router/lane/campaign/leg lineage, typed router/lane refusal, unsupported bindings and static absence of broker/journal/operating writers from pure router and lane dependencies
 - [x] 2.3 Add RED durable dispatch-lease state-machine tests for `ISSUED→CLAIMED→SUBMITTING→SUBMITTED|AMBIGUOUS|REFUSED`, every claim/validation terminal consumption, authority A→B→A non-revival, exact missing/changed/expired/stale/cross-market `REFUSED + RELEASED`, and consumed-lease replay refusal that releases only any retry-attempt reservation while preserving the original terminal disposition; all pre-transport cases have zero broker requests and terminal states have zero outgoing transitions
 - [x] 2.4 Add isolated-core RED owner-epoch/fencing and revision-CAS contract tests proving stale owners cannot claim, restart increments the epoch/token, and every pure transition declares expected/next revision
 - [x] 2.5 Add RED restart/outcome-classification tests proving CLAIMED pre-transport crash is `REFUSED + RELEASED`, exact acceptance is `SUBMITTED + TRANSFERRED`, definitive rejection or authoritative no-accept/no-fill is `REFUSED + RELEASED`, only durable transport uncertainty is `AMBIGUOUS + HELD`, no path submits twice, and broker resubmit requires a071-attested exact identity/query/dedup/idempotency
@@ -22,7 +22,7 @@
 ## 3. Concurrent runtime implementation
 
 - [x] 3.1 Implement a pure supervised coordinator state with independent KR/US calendar/activation/evidence/budget bindings, bounded restart latch and typed first refusal
-- [ ] 3.2 Connect approved candidates through the market/horizon router and pure lane evaluation, preserving market, candidate/evidence, router/lane/version and campaign/leg lineage before any Guardian or broker capability is available
+- [x] 3.2 Connect approved candidates through the market/horizon router and pure lane evaluation, preserving market, candidate/evidence, router/lane/version and campaign/leg lineage before any Guardian or broker capability is available
 - [x] 3.3 Implement the irreversible durable dispatch lease state machine and outcome/disposition transaction that binds every safety generation, owner epoch/fencing token, risk reservation and attempt lineage; every pre-transport validation failure is exact `REFUSED + RELEASED`, and A→B→A cannot revive a lease
 - [ ] 3.4 Implement one fenced central dispatch owner that reloads current durable authority immediately before the official Gateway call and rejects missing, changed, expired, replayed, stale-owner or cross-market leases before broker transport
 - [x] 3.5 Implement isolated `SUBMITTING` recovery classification with exact broker identity/query: definitive rejection/no-accept/no-fill atomically becomes `REFUSED + RELEASED`, acceptance becomes `SUBMITTED + TRANSFERRED`, only durable uncertainty becomes `AMBIGUOUS + HELD`, and same-operation-key retry requires current attested idempotency/dedup capability

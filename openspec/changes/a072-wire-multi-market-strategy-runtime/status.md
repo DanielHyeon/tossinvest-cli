@@ -14,6 +14,8 @@
 - Identity: common canonical UTF-8 boundary, maximum 256 bytes, no whitespace/control; post-mint reseal cannot bypass it
 - Fallback: newer fenced safety-only owner, frozen RTO ≤60 seconds, no entry/lease issuance
 - Authority: package-private constructors; no broker/live transport, journal/gateway writer, toggle or approval
+- Pure strategy composition: GREEN (`internal/strategyflow`), paired KR/US continuation/reversal/weekly
+  bindings, all `OFF/UNOBSERVED`, sealed candidate→router→lane→campaign/leg/risk lineage
 - Remaining: production coordinator/lineage persistence/Gateway CAS integration, full safety-loop fault injection, repository gates and final independent review
 
 No market was activated, no lease reached a broker, and no live order or operating setting changed.

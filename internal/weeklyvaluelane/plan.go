@@ -104,6 +104,7 @@ func PlannedLegQuantity(plan CampaignPlan, progress LegProgress, qFinal uint64) 
 }
 
 func (p CampaignPlan) Market() Market         { return p.market }
+func (p CampaignPlan) AccountRef() string     { return p.accountRef }
 func (p CampaignPlan) CampaignID() string     { return p.campaignID }
 func (p CampaignPlan) LegCeilings() [7]uint64 { return p.legCeilings }
 func (p CampaignPlan) FX() *FrozenFX          { return cloneFX(p.fx) }

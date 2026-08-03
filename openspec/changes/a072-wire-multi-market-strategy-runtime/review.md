@@ -38,6 +38,13 @@
   whitespace or control characters); recomputing a seal cannot legitimize a noncanonical identity.
 - Central fallback requires a newer owner fence and frozen RTO at most 60 seconds; it has no entry or lease
   issuance. Failure remains critical while broker protection is preserved.
+- The new pure `strategyflow` composition binds KR and US continuation, reversal and weekly evaluators in
+  one paired `OFF/UNOBSERVED` registry. Approved-candidate scope, router evidence/config, selected lane,
+  existing-owner campaign and accepted campaign/leg/risk lineage are exact and sealed; substitution,
+  unsupported binding, native lane refusal and incomplete lineage fail closed before Guardian.
+- `strategyflow` production dependencies are statically denied access to journal, Gateway, trading,
+  configuration, engine and operating writer packages. Its public production path fixes the real router and
+  real lane registry; evaluator substitution exists only as a package-private test seam.
 
 ## Verification
 
@@ -49,6 +56,11 @@
 - Statement coverage: 89.1%.
 - Static/external-package tests prove no broker/live transport, engine/journal/gateway/scheduler writer,
   toggle/approval path or public authority constructor exists.
+- `go test ./internal/strategyflow ./internal/strategyrouter ./internal/continuationlane ./internal/reversallane ./internal/weeklyvaluelane ./internal/strategydispatch -count=1`: PASS.
+- Normal and `tossos_testseams` tagged tests across `strategyflow`, `strategyrouter`, `continuationlane`, `reversallane` and `weeklyvaluelane`: PASS.
+- `go test -tags tossos_testseams ./internal/strategyflow -run TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators -count=1`: PASS; production `Evaluate` used the real sealed router and all six concrete KR/US continuation, reversal and weekly evaluators, preserving distinct candidate/router/lane evidence plus exact router/lane releases.
+- `go test -race -tags tossos_testseams ./internal/strategyflow ./internal/strategyrouter ./internal/continuationlane ./internal/reversallane ./internal/weeklyvaluelane -count=1`: PASS.
+- `go vet -tags tossos_testseams ./internal/strategyflow ./internal/strategyrouter ./internal/continuationlane ./internal/reversallane ./internal/weeklyvaluelane`: PASS.
 - Production assembly, official Gateway CAS and full safety-loop integration remain pending by design.
 
 ## Verdict
