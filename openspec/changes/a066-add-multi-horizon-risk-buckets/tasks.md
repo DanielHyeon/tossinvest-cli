@@ -2,16 +2,16 @@
 
 - [ ] 1.1 Run `make sdd-sync`, record CodeGraph definitions/callers/callees/impact for Guardian evaluation/issuance, reservation transactions, Gateway revalidation, fill apply and mode/loss locks, and pin the current change base commit.
 - [ ] 1.2 Complete Go AST artifacts, Function Logic Maps, Branch Test Maps and risk-pattern reports for every existing Guardian, reservation, Gateway and fill function before editing it, including all fail-closed and risk-reducing bypass branches.
-- [ ] 1.3 Freeze horizon/market/strategy/sector/symbol key ordering, canonical q_candidate/q_final fields, monetary reserve formula, prospective/actual owner lifecycle, protection/sell-clean release, held-to-filled transitions and refusal codes as executable tables.
+- [x] 1.3 Freeze horizon/market/strategy/sector/symbol key ordering, canonical q_candidate/q_final fields, monetary reserve formula, prospective/actual owner lifecycle, protection/sell-clean release, held-to-filled transitions and refusal codes as executable tables.
 
 ## 2. RED Contract Tests
 
-- [ ] 2.1 Add failing pure calculator/property tests proving `0 <= q_final <= q_candidate` and `q_final <= existing Guardian cap` across horizon, market, strategy, sector and symbol monetary boundaries.
-- [ ] 2.2 Add failing monetary reservation tests for worst executable price, nonlinear/minimum fees, FX rate/haircut >= 1, minor-unit ceil, same-currency identity, stale/missing provenance and decimal overflow.
+- [x] 2.1 Add failing pure calculator/property tests proving `0 <= q_final <= q_candidate` and `q_final <= existing Guardian cap` across horizon, market, strategy, sector and symbol monetary boundaries.
+- [x] 2.2 Add failing monetary reservation tests for worst executable price, nonlinear/minimum fees, FX rate/haircut >= 1, minor-unit ceil, same-currency identity, stale/missing provenance and decimal overflow.
 - [ ] 2.3 Add failing reservation tests for concurrent prospective-generation ownership, atomic all-bucket acquisition, q_final-before-decision ordering, partial rollback prevention and same-owner scale-in.
 - [ ] 2.4 Add failing held/filled accounting tests for partial, replacement and predecessor-late fill; require per-fill proportional HELD transfer versus actual price/fee/FX exposure, `filled=max(transfer,actual)`, all-bucket overage, duplicate/retry idempotence, crash atomicity, cancel/expiry, restart replay, orphan reservation and snapshot drift.
 - [ ] 2.5 Add failing safety tests proving cap overage or unknown actual price/fee/FX never drops/truncates/rolls back a fill or Position, latches every applicable bucket/owner with `RISK_OVERAGE` or `UNKNOWN_ACTUAL_RISK`, and blocks new exposure only.
-- [ ] 2.6 Add failing owner-release tests proving CLOSED alone is insufficient until reconciliation, prior protection order/saga, sell/reduce-only claim/mutation and unresolved fill evidence are all clean.
+- [x] 2.6 Add failing owner-release tests proving CLOSED alone is insufficient until reconciliation, prior protection order/saga, sell/reduce-only claim/mutation and unresolved fill evidence are all clean.
 - [ ] 2.7 Add failing safety tests proving horizon/market loss locks and all bucket failures block exposure-raising only and cannot delay stop, emergency exit, reconciliation or fill detection.
 
 ## 3. Additive Journal Schema
@@ -22,11 +22,11 @@
 
 ## 4. Risk Bucket Core
 
-- [ ] 4.1 Implement typed horizon/market/strategy/sector/symbol bucket keys, normalized acquisition order and versioned monetary policy snapshots with explicit unknown states.
-- [ ] 4.2 Implement the exact conservative monetary reserve function and maximum-integer cap search over worst price, fees, FX haircut and minor-unit ceil.
-- [ ] 4.3 Implement q_final as the minimum of q_candidate, existing Guardian and every monetary bucket cap with typed zero-quantity refusals and complete preimage.
-- [ ] 4.4 Implement tx-scoped monetary usage accounting for every applicable bucket: proportional HELD transfer, persisted actual price/fee/FX exposure, `filled=max(transfer,actual)`, monotonic actual-evidence completion, and durable all-bucket overage/unknown latches without rejecting authoritative fills.
-- [ ] 4.5 Implement prospective-to-actual unique ownership binding and idempotent release only after CLOSED, broker-zero reconciliation and prior protection/sell claim cleanliness.
+- [x] 4.1 Implement typed horizon/market/strategy/sector/symbol bucket keys, normalized acquisition order and versioned monetary policy snapshots with explicit unknown states.
+- [x] 4.2 Implement the exact conservative monetary reserve function and maximum-integer cap search over worst price, fees, FX haircut and minor-unit ceil.
+- [x] 4.3 Implement q_final as the minimum of q_candidate, existing Guardian and every monetary bucket cap with typed zero-quantity refusals and complete preimage.
+- [x] 4.4 Implement tx-scoped monetary usage accounting for every applicable bucket: proportional HELD transfer, persisted actual price/fee/FX exposure, `filled=max(transfer,actual)`, monotonic actual-evidence completion, and durable all-bucket overage/unknown latches without rejecting authoritative fills.
+- [x] 4.5 Implement prospective-to-actual unique ownership binding and idempotent release only after CLOSED, broker-zero reconciliation and prior protection/sell claim cleanliness.
 
 ## 5. Guardian and Gateway Integration
 
