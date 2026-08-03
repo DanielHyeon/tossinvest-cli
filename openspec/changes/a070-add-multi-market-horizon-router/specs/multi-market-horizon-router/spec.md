@@ -53,4 +53,3 @@ Broker, journal writer, campaign/owner state, activation manifest와 운영 토�
 #### Scenario: 정상 routing decision
 - **WHEN** candidate scope, owner snapshot, horizon, calendar, activation, evidence와 lane eligibility가 모두 유효하다
 - **THEN** account, market, canonical symbol, position generation, horizon, owning lane ID/version과 input digests를 가진 하나의 routing decision만 반환되고 외부 mutation은 0건이다
-

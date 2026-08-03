@@ -1,8 +1,8 @@
 # StockOS → TossOS KR/US Multi-Market Strategy Gap Analysis
 
-Date: 2026-08-03  
-Feature: `FEAT-TOS-013`  
-Status: OpenSpec proposal-freeze input  
+Date: 2026-08-03
+Feature: `FEAT-TOS-013`
+Status: OpenSpec proposal-freeze input
 Source input: user-provided StockOS strategy discussion (`pasted-text.txt`, 3,041 lines) plus the current TossOS code, specs, tests, and read-only local runtime observations
 
 ## Executive Finding
