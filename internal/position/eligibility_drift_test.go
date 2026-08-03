@@ -56,6 +56,12 @@ var eligibilitySpellers = map[string]string{
 	"internal/journal/lane_performance.go": "the read-only performance lineage query joins the persisted " +
 		"entry decision identifier to prove an exact strategy chain; it excludes adopted positions in SQL " +
 		"and never decides whether an exit policy may manage a position",
+	"internal/journal/position_campaign.go": "the campaign replay query joins strategy_decision_lineage by " +
+		"entry_decision_identity to preserve exact strategy ownership; it does not inspect position provenance " +
+		"or decide exit eligibility",
+	"internal/journal/strategy_evidence.go": "the dormant evidence read boundary selects " +
+		"entry_decision_identity only as the immutable strategy decision key; it never reads a Position or " +
+		"decides whether exit management is allowed",
 	"internal/reconcile/external.go": "the fold guard, deliberately narrowed to an explicit " +
 		"entry_decision_id comparison (adopt-external-positions design A1): a fold landing on an " +
 		"adopted position is the ordinary re-reconciliation path and must not be refused",
