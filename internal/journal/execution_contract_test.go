@@ -514,9 +514,13 @@ func TestPartialIndexPredicates(t *testing.T) {
 			"UNIQUE", "mutation_attempts", "account_ref", "client_order_id",
 			"WHERE client_order_id IS NOT NULL",
 		},
-		"idx_reconcile_active": {
+		"idx_reconcile_active_legacy_symbol": {
 			"UNIQUE", "reconcile_states", "account_ref", "symbol",
-			"WHERE released_at IS NULL",
+			"WHERE released_at IS NULL AND symbol IS NOT NULL AND scope_market IS NULL",
+		},
+		"idx_reconcile_active_market_symbol": {
+			"UNIQUE", "reconcile_states", "account_ref", "symbol", "scope_market",
+			"WHERE released_at IS NULL AND symbol IS NOT NULL AND scope_market IS NOT NULL",
 		},
 		"idx_reconcile_active_account_wide": {
 			"UNIQUE", "reconcile_states", "account_ref",

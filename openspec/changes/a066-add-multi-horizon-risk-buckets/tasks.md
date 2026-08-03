@@ -26,7 +26,7 @@
 - [x] 4.2 Implement the exact conservative monetary reserve function and maximum-integer cap search over worst price, fees, FX haircut and minor-unit ceil.
 - [x] 4.3 Implement q_final as the minimum of q_candidate, existing Guardian and every monetary bucket cap with typed zero-quantity refusals and complete preimage.
 - [x] 4.4 Implement tx-scoped monetary usage accounting for every applicable bucket: proportional HELD transfer, persisted actual price/fee/FX exposure, `filled=max(transfer,actual)`, monotonic actual-evidence completion, and durable all-bucket overage/unknown latches without rejecting authoritative fills. (Pure transition plus owner-wide multi-decision authoritative journal accounting are GREEN; production actual-evidence authority remains part of later integration.)
-- [ ] 4.5 Implement prospective-to-actual unique ownership binding and idempotent release only after CLOSED, broker-zero reconciliation and prior protection/sell claim cleanliness. (Pure transition is GREEN; authoritative journal bind/release adapter remains pending.)
+- [ ] 4.5 Implement prospective-to-actual unique ownership binding and idempotent release only after CLOSED, broker-zero reconciliation and prior protection/sell claim cleanliness. (Journal lifecycle hardening is independently CLEAN, but official broker-zero capability deliberately has no production mint/caller until an immutable official holdings adapter lands.)
 
 ## 5. Guardian and Gateway Integration
 

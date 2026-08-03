@@ -2,7 +2,7 @@
 
 - Updated: 2026-08-04
 - Overall: IN PROGRESS
-- Current wave: Wave 1D owner-wide multi-decision authoritative journal fill accounting GREEN; owner lifecycle/runtime integration pending
+- Current wave: Wave 1E v24 owner-lifecycle hardening GREEN and independently CLEAN; official holdings mint pending
 - Runtime authority: dormant; no Guardian/Gateway/engine/broker/toggle integration
 
 ## Completed in Wave 1B checkpoint
@@ -78,6 +78,35 @@
   latching every owner decision in scope.
 - No schema/version change, runtime toggle, Gateway, broker or live-order path was added in Wave 1D.
 
+## Completed in Wave 1E checkpoint
+
+- KR and US owners use the same journal-derived prospective→actual generation contract. Binding runs
+  after Position and campaign projection in the authoritative fill transaction and is set-once.
+- Missing/ambiguous/stale bind authority latches only new exposure and never turns a semantic a066
+  gap into a dropped fill. Explicit lifecycle calls return typed blockers with zero writes.
+- Release derives CLOSED/zero, exact latest generation and entry decision, released legacy and a066
+  HELD state, terminal entry/SELL mutations, absent campaign claims, clean exact-generation protection,
+  resolved actual fills/latches and an exact structured official broker-zero observation in one transaction.
+- Additive v24 preserves v23 unchanged and records official source, canonical zero quantity, broker-as-of,
+  capability/build/source versions and payload digest by exact account/market/symbol/actual generation.
+  `ADJUSTMENT_APPLIED` also requires the exact zero adjustment and a later official zero recheck.
+- Scalar observation plans were removed. The recorder consumes only an opaque sealed capability, and this
+  change intentionally ships no production mint or call site because no immutable official holdings response
+  authority exists yet. Unsealed, arbitrary and post-seal-mutated caller data is rejected before a transaction.
+- Release seals campaign/Position versions, observation ID/digest, predecessor sequence/state digest,
+  immutable `OWNER_RELEASED` event and receipt. Retry recomputes all facts; missing/divergent receipt,
+  event or post-release state drift is refused instead of returning early as already released.
+- A released predecessor's full `RecordFill` remains authoritative, creates durable ORPHAN_FILL and
+  market-scoped symbol RECONCILE evidence even before a new owner exists. The journal admission gate runs
+  before both first-owner INSERT and reuse; a US late fill blocks US but not the same account/symbol in KR.
+- v24 replaces the legacy symbol-wide active index with separate global-NULL and exact-market unique
+  indexes plus overlap triggers. Reconcile entry/read/release carries a validated KR/US scope: global NULL
+  blocks both entries, KR and US exact rows coexist, and a market release can clear neither its peer nor the
+  global row. Reverse-order coverage starts with KR active, records a US late fill, and proves independent
+  latches, admissions, replay and release.
+- Mutation cleanliness is allowlist-based; unknown attempt kind/state blocks. No runtime toggle, Gateway,
+  broker transport or live-order path was added.
+
 ## Completed in Wave 1A
 
 - Exact account-base-minor reservation using worst executable price, official frozen fresh FX,
@@ -131,11 +160,23 @@
 | Wave 1D ambiguity/non-drop and broker-ID collision tests | PASS |
 | Wave 1D focused journal+riskbucket race | PASS |
 | Wave 1D journal+riskbucket vet / diff check | PASS |
+| Wave 1E owner lifecycle RED compile | PASS: missing bind/release symbols observed |
+| Wave 1E focused KR/US bind/release/restart/race/late-fill tests | PASS |
+| v23→v24 preservation / legacy reconcile remains observation-unknown | PASS |
+| broken v24 tables+columns+version atomic rollback | PASS |
+| v23 build opening v24 | PASS: `ErrSchemaTooNew` |
+| Wave 1E structured zero/receipt/late-RecordFill focused tests | PASS |
+| arbitrary/unsealed/mutated official-zero capability | PASS: zero observation writes |
+| late fill before any reopened owner / first admission / KR-US isolation | PASS |
+| Wave 1E focused `-race` plus `go vet ./internal/journal` | PASS |
+| Wave 1E full `go test ./internal/journal -count=1` | PASS (159.365s) |
+| Wave 1E scoped-reconcile full journal rerun | PASS (163.752s) |
+| Wave 1E scoped-reconcile focused `-race` | PASS (20.447s) |
+| Wave 1E scoped-reconcile vet / strict OpenSpec / diff check | PASS |
+| Wave 1E independent final re-review | CLEAN: 0 Critical/Warning; focused x10 and race x2 PASS |
 
 ## Pending integration
 
-- Authoritative prospective-to-actual owner binding and clean owner release after
-  reconciliation/protection/sell evidence is complete.
 - Atomic integration with the actual GuardianDecision writer (the new journal decision is a dormant
   sidecar and does not claim Guardian authority).
 - Guardian/Gateway/entry-loss-lock integration and zero exposure-raising broker request spies.

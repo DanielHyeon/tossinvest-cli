@@ -18,6 +18,7 @@ import (
 
 var (
 	ErrRiskBucketOwnerConflict    = errors.New("journal: risk bucket owner conflict")
+	ErrRiskBucketEntryBlocked     = errors.New("journal: risk bucket entry blocked")
 	ErrRiskBucketSnapshotMismatch = errors.New("journal: risk bucket snapshot mismatch")
 	ErrRiskBucketReplayMismatch   = errors.New("journal: risk bucket replay mismatch")
 	ErrRiskBucketStateUnknown     = errors.New("journal: risk bucket state unknown")
@@ -112,6 +113,9 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 	}
 	if reservationAccount != plan.Owner.Key.AccountID || reservationState != ReservationHeld {
 		return RiskBucketAdmissionReceipt{}, fmt.Errorf("%w: existing reservation binding", ErrRiskBucketSnapshotMismatch)
+	}
+	if err := ensureRiskBucketEntryScopeClean(ctx, tx, plan.Owner.Key); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
 	}
 
 	ownerReused := false
@@ -241,6 +245,28 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 	return riskBucketReceipt(plan, decision, ownerReused, false), nil
 }
 
+func ensureRiskBucketEntryScopeClean(ctx context.Context, tx *sql.Tx, key riskbucket.OwnerKey) error {
+	var ownerLatches, scopeLatches, activeReconciles int
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_owners WHERE account_ref=? AND market=?
+		AND symbol=? AND released_at IS NULL AND (risk_overage_latched=1 OR unknown_actual_latched=1)`,
+		key.AccountID, string(key.Market), key.Symbol).Scan(&ownerLatches); err != nil {
+		return err
+	}
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=?
+		AND market=? AND symbol=?`, key.AccountID, string(key.Market), key.Symbol).Scan(&scopeLatches); err != nil {
+		return err
+	}
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM reconcile_states WHERE account_ref=? AND released_at IS NULL
+		AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?)`,
+		key.AccountID, key.Symbol, string(key.Market)).Scan(&activeReconciles); err != nil {
+		return err
+	}
+	if ownerLatches != 0 || scopeLatches != 0 || activeReconciles != 0 {
+		return ErrRiskBucketEntryBlocked
+	}
+	return nil
+}
+
 func validateRiskBucketAdmission(plan RiskBucketAdmissionPlan, decision riskbucket.AdmissionDecision) error {
 	if plan.TransactionID == "" || plan.DecisionID == "" || plan.ExistingReservationID == "" || plan.CreatedAt.IsZero() || len(decision.Caps) != len(riskbucket.RequiredDimensionOrder()) || len(plan.Snapshots) != len(decision.Caps) {
 		return fmt.Errorf("%w: incomplete admission identity", ErrRiskBucketSnapshotMismatch)
@@ -351,10 +377,21 @@ type riskBucketQueryer interface {
 }
 
 func loadRiskBucketState(ctx context.Context, q riskBucketQueryer, key riskbucket.OwnerKey) (RiskBucketState, string, error) {
+	return loadRiskBucketStateLifecycle(ctx, q, key, false)
+}
+
+func loadReleasedRiskBucketState(ctx context.Context, q riskBucketQueryer, key riskbucket.OwnerKey) (RiskBucketState, string, error) {
+	return loadRiskBucketStateLifecycle(ctx, q, key, true)
+}
+
+func loadRiskBucketStateLifecycle(ctx context.Context, q riskBucketQueryer, key riskbucket.OwnerKey, includeReleased bool) (RiskBucketState, string, error) {
 	var lane, campaign string
 	var actual sql.NullString
 	var ownerOverage, ownerUnknown int
-	err := q.QueryRowContext(ctx, `SELECT lane_id,campaign_id,actual_generation,risk_overage_latched,unknown_actual_latched FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=? AND released_at IS NULL`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&lane, &campaign, &actual, &ownerOverage, &ownerUnknown)
+	err := q.QueryRowContext(ctx, `SELECT lane_id,campaign_id,actual_generation,risk_overage_latched,unknown_actual_latched
+		FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=?
+		AND (?=1 OR released_at IS NULL)`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration, boolInt(includeReleased)).
+		Scan(&lane, &campaign, &actual, &ownerOverage, &ownerUnknown)
 	if errors.Is(err, sql.ErrNoRows) {
 		return RiskBucketState{}, "", ErrRiskBucketStateUnknown
 	}

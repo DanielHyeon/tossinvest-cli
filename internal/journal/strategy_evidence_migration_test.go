@@ -12,7 +12,8 @@ import (
 )
 
 func TestMigrationV21AddsOnlyNullableConsumedSnapshotReference(t *testing.T) {
-	j := openTestJournal(t)
+	j := openJournalAtSchema(t, filepath.Join(t.TempDir(), "journal.db"), 21)
+	defer j.Close()
 	if version, err := j.SchemaVersion(context.Background()); err != nil || version != 21 {
 		t.Fatalf("schema version=%d err=%v", version, err)
 	}

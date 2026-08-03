@@ -1,7 +1,7 @@
 # Review — a066-add-multi-horizon-risk-buckets
 
 - Date: 2026-08-04
-- Stage: Wave 1D owner-wide multi-decision journal accounting GREEN; runtime integration pending
+- Stage: Wave 1E v24 owner-lifecycle BLOCK fixes GREEN; independent re-review CLEAN
 - Voices: Manager scope/safety review, independent adversarial risk review, final semantic re-review
 
 ## Findings and disposition
@@ -21,7 +21,7 @@
 
 - Strict OpenSpec validation: PASS.
 - Proposal-level semantic re-review: PASS. The first implementation review returned request-changes;
-  all six findings below now have focused regression coverage and await independent re-review.
+  all six findings below now have focused regression coverage and independent re-review is CLEAN.
 - Property/crash tasks cover partial fills, replacements, predecessor late fills, retries and atomic replay.
 
 ## Wave 1A implementation evidence
@@ -182,3 +182,56 @@ exposure-raising quantity and must never delay fill, reconciliation, protection 
   registered owner decision in matching scope while preserving the fill ledger.
 - Actual-evidence completion and release APIs remain package-private. No schema migration/version,
   runtime toggle, Gateway, broker or live-order behavior changed in this checkpoint.
+
+## Wave 1E authoritative owner lifecycle checkpoint — v24 hardening
+
+- `runApplyHooks` now derives and binds the a066 owner only after successful PositionCampaign apply,
+  inside the existing authoritative fill transaction. KR and US use one contract with exact market
+  identity; no sequential "KR first, US later" dependency was introduced.
+- Generation, CLOSED/zero, entry decision, campaign/claim, HELD/order, protection saga/attempt,
+  BUY/SELL mutation, fill actual/latch and reconciliation facts are read from journal rows. Callers
+  cannot authorize lifecycle changes with booleans, enums, generations or attestations.
+- Broker-zero authority is no longer freeform reconcile evidence. Additive v24 preserves released v23
+  and stores one structured official observation keyed by exact account/market/symbol/actual generation,
+  with fixed official source, canonical zero, broker-as-of, capability/build/source versions and payload
+  digest. The reconcile release stores that observation ID and digest. Operator-only evidence is invalid.
+- The prior scalar recorder was itself an authority fabrication seam. It is removed: the journal recorder
+  accepts only an opaque sealed capability whose exact scope/time/provenance/payload are seal-bound. There is
+  no production constructor or call site in this change; official zero therefore remains structurally
+  unreachable until an immutable official holdings adapter owns the mint path.
+- `ADJUSTMENT_APPLIED` binds the exact append-only zero adjustment digest and additionally requires a
+  later fresh official zero recheck; adjustment alone never authorizes release.
+- Dirty or stale release returns a typed blocking field and performs zero writes. Clean release writes
+  one append-only event plus immutable receipt binding owner/generation, campaign/Position versions,
+  observation, predecessor sequence/digest and release time. Retry validates and recomputes every seal;
+  there is no early AlreadyReleased return for a missing/divergent event, receipt or current state.
+- Semantic bind gaps latch future entry without returning an error to the fill path. Replay drift is
+  not silently resealed. A full late `RecordFill` for the released predecessor writes ORPHAN_FILL plus
+  market-scoped symbol reconcile evidence with or without a reopened owner. The admission gate precedes
+  owner lookup/INSERT, so first fresh admission is refused; exact market scope prevents US evidence from
+  contaminating the same account/symbol in KR.
+- Function Logic Maps are current for `Journal.runApplyHooks`, `CommitRiskBucketAdmission` and the
+  active-only `loadRiskBucketState` wrapper. New lifecycle/receipt helpers are leaf implementations.
+- Focused owner/migration tests, focused race, journal vet and full journal unit suite pass. Task 4.5
+  remains unchecked until independent re-review. No runtime toggle, order dispatch, stop or emergency-exit
+  path was added or delayed.
+
+### Wave 1E follow-up — scoped reconciliation isolation
+
+- Reviewer BLOCK accepted: retaining `idx_reconcile_active(account_ref,symbol)` made `scope_market`
+  decorative and prevented simultaneous KR/US guards. v24 now drops it, preserves the account-wide index,
+  and creates exact global-NULL and `(account_ref,symbol,scope_market)` active indexes.
+- Insert/update overlap triggers preserve legacy NULL as global authority in both directions. API entry also
+  searches global-or-exact while release selects exact only, so a KR release cannot release US or global.
+- Late-fill insertion now blocks only global NULL or the same exact market. A reverse-order regression seeds
+  KR first, creates US from the released-owner late fill, rejects same-market duplication, and proves KR/US
+  admission and release isolation.
+- `ReconcileState`, enter requests and single/atomic release requests carry normalized KR/US scope. Active
+  reads expose it, IDs bind it, batch dedup includes it, and invalid/account-wide market combinations fail
+  closed before a transaction.
+- Verification: focused tests PASS; full `go test ./internal/journal -count=1` PASS (163.752s); focused race
+  PASS (20.447s); `go vet ./internal/journal`, strict OpenSpec validation and `git diff --check` PASS.
+- Final independent re-review: CLEAN with zero Critical/Warning findings. Ten focused repetitions and two
+  focused race repetitions passed in addition to the stable full-journal run; the reviewer confirmed exact
+  KR/US coexistence and release isolation, legacy-global precedence, migration rollback and the deliberately
+  unreachable production official-zero mint.

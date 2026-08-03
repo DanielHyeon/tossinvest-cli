@@ -281,6 +281,9 @@ func (j *Journal) runApplyHooks(ctx context.Context, tx *sql.Tx, fill AppliedFil
 			return fmt.Errorf("journal: applying the campaign lineage for the fill of %s: %w",
 				fill.OrderID, err)
 		}
+		if err := j.applyRiskBucketOwnerBindingInTx(ctx, tx, fill); err != nil {
+			return fmt.Errorf("journal: binding the risk owner for the fill of %s: %w", fill.OrderID, err)
+		}
 	}
 	if hooks.Exit != nil {
 		if err := hooks.Exit(ctx, handle, fill); err != nil {

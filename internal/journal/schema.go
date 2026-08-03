@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 23
+const SchemaVersion = 24
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -128,6 +128,10 @@ var migrations = []migration{
 	// table or row is dropped, and the old shape remains queryable and immutable.
 	// Older binaries refuse user_version 23 instead of reading the new shapes.
 	{Version: 23, SQL: schemaV23},
+	// schemaV24 lives in risk_bucket_owner.go. Released v23 remains unchanged;
+	// this additive step records structured official broker-zero observations,
+	// binds reconcile releases to them and seals owner-release replay receipts.
+	{Version: 24, SQL: schemaV24},
 }
 
 // schemaV1 is the initial schema.

@@ -31,7 +31,8 @@ func TestMigrationV22AddsOnlyAuthoritativeRiskBucketJournalState(t *testing.T) {
 }
 
 func TestMigrationV23AddsScopedFillTablesAndPreservesReleasedV22LegacyShapes(t *testing.T) {
-	j := openTestJournal(t)
+	j := openJournalAtSchema(t, filepath.Join(t.TempDir(), "journal.db"), 23)
+	defer j.Close()
 	if version, err := j.SchemaVersion(context.Background()); err != nil || version != 23 {
 		t.Fatalf("schema version=%d err=%v", version, err)
 	}
@@ -47,6 +48,158 @@ func TestMigrationV23AddsScopedFillTablesAndPreservesReleasedV22LegacyShapes(t *
 		if err := j.db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&count); err != nil || count != 1 {
 			t.Fatalf("v23 table %s count=%d err=%v", table, count, err)
 		}
+	}
+}
+
+func TestMigrationV24AddsOfficialZeroAuthorityAndReleaseReceiptsWithoutRewritingV23(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	old := openJournalAtSchema(t, path, 23)
+	if _, err := old.db.Exec(`INSERT INTO reconcile_states(id,account_ref,symbol,cause,evidence,entered_at,released_at,release_cause)
+		VALUES('legacy-v23-reconcile','acct-v23','AAPL','QUANTITY_MISMATCH','legacy freeform evidence',
+		'2026-03-30T00:00:00Z','2026-03-30T00:01:00Z','RECHECK_MATCHED')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := old.db.Exec(`INSERT INTO reconcile_states(id,account_ref,symbol,cause,evidence,entered_at,released_at,release_cause)
+		VALUES('legacy-v23-active','acct-v23','MSFT','QUANTITY_MISMATCH','legacy active global scope',
+		'2026-03-30T00:02:00Z',NULL,NULL)`); err != nil {
+		t.Fatal(err)
+	}
+	if err := old.Close(); err != nil {
+		t.Fatal(err)
+	}
+	current, err := Open(context.Background(), Options{Path: path, Clock: clock.NewFake(migrationTestInstant), FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer current.Close()
+	if version, err := current.SchemaVersion(context.Background()); err != nil || version != 24 {
+		t.Fatalf("schema version=%d err=%v", version, err)
+	}
+	for _, table := range []string{"risk_bucket_broker_zero_observations", "risk_bucket_owner_release_receipts"} {
+		var count int
+		if err := current.db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&count); err != nil || count != 1 {
+			t.Fatalf("v24 table %s count=%d err=%v", table, count, err)
+		}
+	}
+	for _, column := range []string{"broker_zero_observation_id", "broker_zero_observation_digest", "scope_market"} {
+		var count int
+		if err := current.db.QueryRow(`SELECT count(*) FROM pragma_table_info('reconcile_states') WHERE name=?`, column).Scan(&count); err != nil || count != 1 {
+			t.Fatalf("v24 reconcile column %s count=%d err=%v", column, count, err)
+		}
+	}
+	var linkedID, linkedDigest sql.NullString
+	if err := current.db.QueryRow(`SELECT broker_zero_observation_id,broker_zero_observation_digest FROM reconcile_states WHERE id='legacy-v23-reconcile'`).Scan(&linkedID, &linkedDigest); err != nil {
+		t.Fatal(err)
+	}
+	if linkedID.Valid || linkedDigest.Valid {
+		t.Fatalf("v24 migration invented authority for v23 row id=%v digest=%v", linkedID, linkedDigest)
+	}
+	var scopeMarket sql.NullString
+	if err := current.db.QueryRow(`SELECT scope_market FROM reconcile_states WHERE id='legacy-v23-reconcile'`).Scan(&scopeMarket); err != nil || scopeMarket.Valid {
+		t.Fatalf("v24 migration invented market scope=%v err=%v", scopeMarket, err)
+	}
+	for name, want := range map[string]int{
+		"idx_reconcile_active":               0,
+		"idx_reconcile_active_account_wide":  1,
+		"idx_reconcile_active_legacy_symbol": 1,
+		"idx_reconcile_active_market_symbol": 1,
+	} {
+		var count int
+		if err := current.db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='index' AND name=?`, name).Scan(&count); err != nil || count != want {
+			t.Fatalf("v24 index %s count=%d want=%d err=%v", name, count, want, err)
+		}
+	}
+	if err := current.db.QueryRow(`SELECT scope_market FROM reconcile_states WHERE id='legacy-v23-active'`).Scan(&scopeMarket); err != nil || scopeMarket.Valid {
+		t.Fatalf("v24 active legacy row lost global NULL scope=%v err=%v", scopeMarket, err)
+	}
+	if _, err := current.db.Exec(`INSERT INTO reconcile_states(id,account_ref,symbol,cause,evidence,entered_at,scope_market)
+		VALUES('market-overlaps-global','acct-v23','MSFT','QUANTITY_MISMATCH','US overlap','2026-03-30T00:03:00Z','US')`); err == nil {
+		t.Fatal("v24 accepted exact-market row overlapping migrated global active row")
+	}
+	for _, market := range []string{"KR", "US"} {
+		if _, err := current.db.Exec(`INSERT INTO reconcile_states(id,account_ref,symbol,cause,evidence,entered_at,scope_market)
+			VALUES(?,?,?,?,?,'2026-03-30T00:04:00Z',?)`, "exact-"+market, "acct-exact", "AAPL",
+			ReconcileCauseQuantityMismatch, market+" exact", market); err != nil {
+			t.Fatalf("v24 exact %s insert: %v", market, err)
+		}
+	}
+	if _, err := current.db.Exec(`INSERT INTO reconcile_states(id,account_ref,symbol,cause,evidence,entered_at)
+		VALUES('global-overlaps-exact','acct-exact','AAPL','QUANTITY_MISMATCH','global overlap','2026-03-30T00:05:00Z')`); err == nil {
+		t.Fatal("v24 accepted global row overlapping active exact-market rows")
+	}
+	var triggers int
+	if err := current.db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='trigger' AND name IN (
+		'risk_bucket_broker_zero_observations_no_update','risk_bucket_broker_zero_observations_no_delete',
+		'risk_bucket_owner_release_receipts_no_update','risk_bucket_owner_release_receipts_no_delete')`).Scan(&triggers); err != nil || triggers != 4 {
+		t.Fatalf("v24 immutable triggers=%d err=%v", triggers, err)
+	}
+	var scopeTriggers int
+	if err := current.db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='trigger' AND name IN (
+		'reconcile_active_scope_no_overlap_before_insert','reconcile_active_scope_no_overlap_before_update')`).Scan(&scopeTriggers); err != nil || scopeTriggers != 2 {
+		t.Fatalf("v24 reconcile overlap triggers=%d err=%v", scopeTriggers, err)
+	}
+	if _, err := current.db.Exec(`UPDATE reconcile_states SET evidence='still legacy' WHERE id='legacy-v23-reconcile'`); err != nil {
+		t.Fatalf("v24 additive columns unexpectedly rewrote legacy reconcile row: %v", err)
+	}
+}
+
+func TestMigrationV24FailureRollsBackTablesColumnsAndVersion(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	old := openJournalAtSchema(t, path, 23)
+	if err := old.Close(); err != nil {
+		t.Fatal(err)
+	}
+	broken := append(migrationsThrough(23), migration{Version: 24, SQL: schemaV24 + `INSERT INTO absent_table(x) VALUES(1);`})
+	_, err := Open(context.Background(), Options{Path: path, Clock: clock.NewFake(migrationTestInstant), FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt}), migrationOverride: &migrationPlan{steps: broken, target: 24}})
+	if err == nil {
+		t.Fatal("broken v24 migration succeeded")
+	}
+	raw, openErr := sql.Open("sqlite", "file:"+path+"?mode=ro")
+	if openErr != nil {
+		t.Fatal(openErr)
+	}
+	defer raw.Close()
+	var version int
+	if err := raw.QueryRow(`PRAGMA user_version`).Scan(&version); err != nil || version != 23 {
+		t.Fatalf("version after v24 rollback=%d err=%v", version, err)
+	}
+	for _, table := range []string{"risk_bucket_broker_zero_observations", "risk_bucket_owner_release_receipts"} {
+		var count int
+		if err := raw.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&count); err != nil || count != 0 {
+			t.Fatalf("rolled-back v24 table %s count=%d err=%v", table, count, err)
+		}
+	}
+	for _, column := range []string{"broker_zero_observation_id", "broker_zero_observation_digest", "scope_market"} {
+		var count int
+		if err := raw.QueryRow(`SELECT count(*) FROM pragma_table_info('reconcile_states') WHERE name=?`, column).Scan(&count); err != nil || count != 0 {
+			t.Fatalf("rolled-back v24 column %s count=%d err=%v", column, count, err)
+		}
+	}
+	for name, want := range map[string]int{
+		"idx_reconcile_active":               1,
+		"idx_reconcile_active_legacy_symbol": 0,
+		"idx_reconcile_active_market_symbol": 0,
+	} {
+		var count int
+		if err := raw.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='index' AND name=?`, name).Scan(&count); err != nil || count != want {
+			t.Fatalf("rolled-back v24 index %s count=%d want=%d err=%v", name, count, want, err)
+		}
+	}
+	var scopeTriggers int
+	if err := raw.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'reconcile_active_scope_no_overlap_%'`).Scan(&scopeTriggers); err != nil || scopeTriggers != 0 {
+		t.Fatalf("rolled-back v24 reconcile triggers=%d err=%v", scopeTriggers, err)
+	}
+}
+
+func TestReleasedV23BuildRefusesV24Journal(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	current := openTestJournalAt(t, path)
+	if err := current.Close(); err != nil {
+		t.Fatal(err)
+	}
+	_, err := Open(context.Background(), Options{Path: path, Clock: clock.NewFake(migrationTestInstant), FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt}), migrationOverride: &migrationPlan{steps: migrationsThrough(23), target: 23}})
+	if !errors.Is(err, ErrSchemaTooNew) {
+		t.Fatalf("v23 build open error=%v", err)
 	}
 }
 
@@ -107,7 +260,7 @@ func TestMigrationV22ToV23PreservesLegacyRowsWithoutPromotingThemToAuthority(t *
 		t.Fatal(err)
 	}
 
-	current, err := Open(context.Background(), Options{Path: path, Clock: clock.NewFake(migrationTestInstant), FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt})})
+	current, err := Open(context.Background(), Options{Path: path, Clock: clock.NewFake(migrationTestInstant), FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt}), migrationOverride: &migrationPlan{steps: migrationsThrough(23), target: 23}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +356,7 @@ func TestMigrationV23FailureRollsBackRenamesTablesAndVersion(t *testing.T) {
 
 func TestReleasedV22BuildRefusesV23Journal(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "journal.db")
-	current := openTestJournalAt(t, path)
+	current := openJournalAtSchema(t, path, 23)
 	if err := current.Close(); err != nil {
 		t.Fatal(err)
 	}
