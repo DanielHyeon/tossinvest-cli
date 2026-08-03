@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a061-show-history-instrument-names",
-    "path": "openspec/changes/a061-show-history-instrument-names"
+    "path": "openspec/changes/archive/2026-08-03-a061-show-history-instrument-names"
   },
   "acceptance": [
     "Completed trips and exit events show symbol and instrument name together for KR and US",
