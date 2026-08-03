@@ -1,11 +1,11 @@
 {
-  "id": "STORY-TOS-a061",
+  "id": "STORY-TOS-a062",
   "title": "Keep external orders out of engine-owned reconciliation",
   "feature": "FEAT-TOS-005",
   "intent": "active",
   "openspec": {
-    "change_id": "a061-reconcile-owned-orders",
-    "path": "openspec/changes/a061-reconcile-owned-orders"
+    "change_id": "a062-reconcile-owned-orders",
+    "path": "openspec/changes/a062-reconcile-owned-orders"
   },
   "acceptance": [
     "A broker order with no confirmed local mutation attempt or lineage is never treated as an engine-owned open order",

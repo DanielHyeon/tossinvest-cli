@@ -1,6 +1,6 @@
 ## 1. Contract and Evidence
 
-- [x] 1.1 Reserve `STORY-TOS-a061`, create the OpenSpec proposal/design/spec deltas, capture the base commit, and pass strict validation
+- [x] 1.1 Reserve `STORY-TOS-a062`, create the OpenSpec proposal/design/spec deltas, capture the base commit, and pass strict validation
 - [x] 1.2 Record live read-only reproduction evidence and the external-order ownership root cause without secrets or account identifiers
 - [x] 1.3 Create Function Logic Maps and Branch Test Maps for every edited existing function before implementation
 

@@ -57,7 +57,7 @@
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
     - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
-    - STORY-TOS-a061 — Keep external orders out of engine-owned reconciliation [in_progress] → `a061-reconcile-owned-orders`
+    - STORY-TOS-a062 — Keep external orders out of engine-owned reconciliation [in_progress] → `a062-reconcile-owned-orders`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
