@@ -227,6 +227,10 @@ const (
 	// would otherwise be reserving against, and a limit that could refuse a
 	// liquidation is a trap (§0.3).
 	ReasonGuardianReservationMissing ReasonCode = "guardian_reservation_missing"
+	// ReasonGuardianRiskBucketMismatch: a q_final-marked entry no longer has the
+	// exact owner, aggregate HELD reservation and five monetary HELD
+	// reservations committed with its GuardianDecision.
+	ReasonGuardianRiskBucketMismatch ReasonCode = "guardian_risk_bucket_mismatch"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was

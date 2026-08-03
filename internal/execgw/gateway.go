@@ -576,6 +576,13 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 		if _, rejected := g.checkProtection(dctx, plan, protectionCheckpoint); rejected != nil {
 			return notSent(rejected)
 		}
+		// q_final authority is mutable only toward safety (reservation release,
+		// owner release or integrity failure). Re-read it at the last possible
+		// point, after the fresh decision/protection checks and before any send
+		// tracker or broker call exists.
+		if rejected := g.checkReservation(dctx, fresh); rejected != nil {
+			return notSent(rejected)
+		}
 		// The tracker is what separates "provably never sent" from "may have
 		// executed"; without it a connection error would have to be treated as
 		// ambiguous every time.
@@ -723,15 +730,12 @@ func (g *Gateway) checkEntry(plan mutationPlan) *RejectedError {
 // checks together are what make the statement true rather than intended: one
 // removes the state, the other refuses it.
 //
-// # Why it is not repeated immediately before the broker call
+// # Why it is repeated immediately before the broker call
 //
-// The last-moment re-verification exists for the things that can change under a
-// held decision: the row (tamper) and the clock (expiry). A HELD reservation is
-// released by the attempt settling — this attempt, which has not dispatched — or
-// by the lapse sweep, which releases holds whose decision has expired; and an
-// expired decision is refused by the re-read `checkDecision` in that same
-// window. So there is no interleaving that turns a HELD reservation into a
-// released one while the decision it belongs to is still submittable.
+// Both the aggregate hold and q_final owner/bucket authority may be released by
+// an operator or another safety path after the initial check. submit therefore
+// calls this function again inside DispatchVerified, after the fresh
+// decision/protection checks and before send tracking or plan.call exists.
 //
 // # Failing closed on a read error
 //
@@ -750,6 +754,16 @@ func (g *Gateway) checkReservation(ctx context.Context, dec journal.Decision) *R
 	}
 	for _, reservation := range reservations {
 		if reservation.Held() {
+			_, err := g.journal.RevalidateQFinalAdmission(ctx, dec.ID)
+			if err != nil {
+				if errors.Is(err, journal.ErrDecisionNotFound) {
+					return reject(ReasonGuardianMissing,
+						"decision %s was revoked before its reservation authority could be revalidated", short(dec.ID))
+				}
+				return reject(ReasonGuardianRiskBucketMismatch,
+					"decision %s carries q_final authority that no longer has an exact active owner, aggregate hold and five monetary holds: %v",
+					short(dec.ID), err)
+			}
 			return nil
 		}
 	}

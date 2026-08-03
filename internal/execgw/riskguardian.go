@@ -126,6 +126,9 @@ type Issued struct {
 	// StrategyReceipt is non-zero only for the dormant strategy issuance path.
 	// It is committed in the same transaction as Decision and Reservations.
 	StrategyReceipt journal.StrategyPlanReceipt
+	// RiskBucketReceipt is non-zero only for the dormant market-generic q_final
+	// path. It is committed with Decision and Reservations in one transaction.
+	RiskBucketReceipt journal.RiskBucketAdmissionReceipt
 }
 
 // ExposureSnapshot is the reservation side of one collection: what the broker

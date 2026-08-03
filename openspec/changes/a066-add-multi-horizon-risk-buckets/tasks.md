@@ -30,10 +30,10 @@
 
 ## 5. Guardian and Gateway Integration
 
-- [ ] 5.1 Split Guardian evaluation into mutation-free precheck/cap calculation and a final issuance step that occurs only after q_final is known.
-- [ ] 5.2 Extend the final transaction to commit the q_final GuardianDecision, existing reservation, all monetary bucket reservations and lane owner atomically, rolling everything back on any conflict.
-- [ ] 5.3 Extend Guardian provenance and stable reason codes with q_candidate, q_final, binding monetary cap, price/fee/FX digest, bucket versions and owner identity.
-- [ ] 5.4 Extend Gateway pre-submit revalidation to require decision quantity equals q_final plus every HELD monetary reservation and matching prospective/actual owner before any broker request.
+- [x] 5.1 Split Guardian evaluation into mutation-free precheck/cap calculation and a final issuance step that occurs only after q_final is known. (The market-generic dormant seam is GREEN; the sealed a072 strategyflow bridge remains pending and the legacy KR Parker seam is intentionally unchanged.)
+- [x] 5.2 Extend the final transaction to commit the q_final GuardianDecision, existing reservation, all monetary bucket reservations and lane owner atomically, rolling everything back on any conflict. (The new q_final journal API owns this one transaction; no LIVE caller exists.)
+- [x] 5.3 Extend Guardian provenance and stable reason codes with q_candidate, q_final, binding monetary cap, price/fee/FX digest, bucket versions and owner identity. (Admission preimage/state rows retain the exact evidence; Gateway adds `guardian_risk_bucket_mismatch`.)
+- [x] 5.4 Extend Gateway pre-submit revalidation to require decision quantity equals q_final plus every HELD monetary reservation and matching prospective/actual owner before any broker request. (Checked both before dispatch and immediately before the broker closure; risk-reducing paths bypass it.)
 - [ ] 5.5 Implement short/medium and market-specific entry loss locks through an entry-only port, with durable conservative activation and human-approved audited relaxation.
 - [ ] 5.6 Add KR/US concurrent integration tests proving independent market buckets, shared strategy caps, one symbol/one owner, monetary scale-in aggregation and failure isolation without requiring an operating toggle.
 - [ ] 5.7 Add partial/replacement/predecessor-late-fill crash and retry integration tests proving Position, watermark, proportional transfer, filled max and every bucket overage/latch commit exactly once while risk-reducing paths remain available.

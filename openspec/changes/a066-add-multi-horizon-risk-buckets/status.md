@@ -3,7 +3,7 @@
 - Updated: 2026-08-04
 - Overall: IN PROGRESS
 - Current wave: Wave 1E v24 owner-lifecycle hardening GREEN and independently CLEAN; official holdings mint pending
-- Runtime authority: dormant; no Guardian/Gateway/engine/broker/toggle integration
+- Runtime authority: dormant q_final Guardian/Gateway seam only; no sealed strategyflow/engine/broker/toggle activation
 
 ## Completed in Wave 1B checkpoint
 
@@ -174,13 +174,24 @@
 | Wave 1E scoped-reconcile focused `-race` | PASS (20.447s) |
 | Wave 1E scoped-reconcile vet / strict OpenSpec / diff check | PASS |
 | Wave 1E independent final re-review | CLEAN: 0 Critical/Warning; focused x10 and race x2 PASS |
+| q_final Guardian/Journal focused tests | PASS: KR cap/atomicity, owner rollback, stale/mutated evidence, US currency refusal |
+| Full `go test ./internal/execgw -count=1` after q_final wiring | PASS (32.705s) |
+| q_final focused execgw/journal `-race` | PASS (15.520s / 7.158s) |
+| q_final `go vet ./internal/execgw ./internal/journal` | PASS |
+| q_final strict OpenSpec validation / diff check | PASS |
 
 ## Pending integration
 
-- Atomic integration with the actual GuardianDecision writer (the new journal decision is a dormant
-  sidecar and does not claim Guardian authority).
-- Guardian/Gateway/entry-loss-lock integration and zero exposure-raising broker request spies.
+- Sealed a072 strategyflow-to-q_final production bridge; the legacy Parker adapter remains KR-only.
+- Entry-loss-lock integration and broader zero exposure-raising broker request spies.
 - KR/US concurrent runtime integration and independent lane-operation tests.
 - Full repository validation, independent implementation review and `make gate`.
 
 No existing runtime function, live order path or operating toggle is activated by Wave 1B.
+# q_final Guardian/Gateway checkpoint (2026-08-04)
+
+- Added a dormant market-generic `QFinalEntryIssuance` seam. Its precheck is mutation-free, overwrites caller-supplied Guardian cap and evaluation time, calculates exact `q_final`, and returns an opaque precheck.
+- Added one journal transaction for the q_final GuardianDecision, aggregate HELD reservation, five monetary HELD reservations and exact lane/campaign owner. Owner, snapshot or bucket conflict rolls every new row back.
+- Added immutable q_final policy marking plus read-only Gateway revalidation of exact decision quantity, active owner, aggregate hold, five exact dimensions and current risk state digest. The same check runs again immediately before broker transport.
+- KR/KRW is GREEN. Market/currency pairs are exact. A KRW Guardian cannot safely evaluate raw US/USD existing caps, so US returns typed `CURRENCY_UNRESOLVED`, q_final 0 and zero collection/broker calls until a072 supplies the sealed converted-cap/official-FX bridge.
+- The legacy `strategyengine.Decision` remains KR/KRW-only and was not weakened. No runtime lane, automation toggle, approval or LIVE order was activated.
