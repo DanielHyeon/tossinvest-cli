@@ -37,7 +37,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
+	marketclock "github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
@@ -52,6 +54,39 @@ const quantityRoundTripEpsilon = 1e-9
 // attention and still never blocks an entry.
 const DefaultPriceEpsilon = 1e-6
 
+// OrderIdentity is the canonical scope of one opaque broker order id. OrderID
+// remains byte-preserving; the other components use the journal's comparison
+// vocabulary so the same opaque id can safely recur in another account, market,
+// trading day, symbol, or side.
+type OrderIdentity struct {
+	AccountRef string
+	Market     string
+	TradingDay string
+	Symbol     string
+	Side       string
+	OrderID    string
+}
+
+func (i OrderIdentity) canonical() OrderIdentity {
+	i.AccountRef = strings.TrimSpace(i.AccountRef)
+	i.Market = strings.ToLower(strings.TrimSpace(i.Market))
+	i.TradingDay = strings.TrimSpace(i.TradingDay)
+	i.Symbol = strings.ToUpper(strings.TrimSpace(i.Symbol))
+	i.Side = strings.ToUpper(strings.TrimSpace(i.Side))
+	return i
+}
+
+func (i OrderIdentity) less(other OrderIdentity) bool {
+	a := [...]string{i.AccountRef, i.Market, i.TradingDay, i.Symbol, i.Side, i.OrderID}
+	b := [...]string{other.AccountRef, other.Market, other.TradingDay, other.Symbol, other.Side, other.OrderID}
+	for n := range a {
+		if a[n] != b[n] {
+			return a[n] < b[n]
+		}
+	}
+	return false
+}
+
 // LocalOrder is an order the engine believes is live at the broker.
 type LocalOrder struct {
 	// OrderID is the *current* order number, after lineage resolution.
@@ -59,8 +94,19 @@ type LocalOrder struct {
 	// OriginalOrderID is what the engine originally recorded, when an amendment
 	// moved it.
 	OriginalOrderID string
+	AccountRef      string
 	Symbol          string
 	Market          string
+	TradingDay      string
+	Side            string
+}
+
+// Identity returns the complete comparison identity carried by this order.
+func (o LocalOrder) Identity() OrderIdentity {
+	return OrderIdentity{
+		AccountRef: o.AccountRef, Market: o.Market, TradingDay: o.TradingDay,
+		Symbol: o.Symbol, Side: o.Side, OrderID: o.OrderID,
+	}.canonical()
 }
 
 // LocalState is what the engine believes.
@@ -71,7 +117,14 @@ type LocalState struct {
 	// that symbol.
 	Positions map[string]string
 	// OpenOrders is keyed by the lineage-resolved current order id.
+	//
+	// Deprecated as comparison authority: it is retained for API compatibility
+	// with callers that construct LocalState values directly. ScopedOpenOrders
+	// preserves distinct owners when an opaque id is reused.
 	OpenOrders map[string]LocalOrder
+	// ScopedOpenOrders is keyed by the complete canonical order identity. A
+	// non-nil map is authoritative, including when it is empty.
+	ScopedOpenOrders map[OrderIdentity]LocalOrder
 }
 
 // PositionProjection is the projection half of the journal, as this package
@@ -156,9 +209,10 @@ func LocalStateFromJournal(ctx context.Context, j *journal.Journal, accountRef s
 	}
 
 	state := LocalState{
-		AccountRef: accountRef,
-		Positions:  positions,
-		OpenOrders: make(map[string]LocalOrder, len(tracked)),
+		AccountRef:       accountRef,
+		Positions:        positions,
+		OpenOrders:       make(map[string]LocalOrder, len(tracked)),
+		ScopedOpenOrders: make(map[OrderIdentity]LocalOrder, len(tracked)),
 	}
 	for _, t := range tracked {
 		current, err := j.ResolveCurrentOrderIDScoped(ctx, t.OrderID, journal.OrderLineageScope{
@@ -173,12 +227,17 @@ func LocalStateFromJournal(ctx context.Context, j *journal.Journal, accountRef s
 			// record of what replaced what is itself wrong.
 			return LocalState{}, err
 		}
-		state.OpenOrders[current] = LocalOrder{
+		order := LocalOrder{
 			OrderID:         current,
 			OriginalOrderID: t.OrderID,
+			AccountRef:      strings.TrimSpace(t.AccountRef),
 			Symbol:          strings.ToUpper(strings.TrimSpace(t.Symbol)),
 			Market:          strings.ToLower(strings.TrimSpace(t.Market)),
+			TradingDay:      strings.TrimSpace(t.TradingDay),
+			Side:            strings.ToUpper(strings.TrimSpace(t.Side)),
 		}
+		state.ScopedOpenOrders[order.Identity()] = order
+		state.OpenOrders[current] = order
 	}
 	return state, nil
 }
@@ -361,30 +420,136 @@ func (c Comparer) Compare(snap Snapshot, local LocalState) Diff {
 	}
 
 	// --- open orders --------------------------------------------------------
-	brokerOrders := make(map[string]BrokerOrder, len(snap.OpenOrders))
-	for _, o := range snap.OpenOrders {
-		brokerOrders[strings.TrimSpace(o.OrderID)] = o
-		if _, known := local.OpenOrders[strings.TrimSpace(o.OrderID)]; !known {
+	localOrders := localOrdersForComparison(local)
+	brokerCandidates := make([][]int, len(snap.OpenOrders))
+	localCandidateCount := make([]int, len(localOrders))
+	for brokerIndex, order := range snap.OpenOrders {
+		for localIndex, localOrder := range localOrders {
+			brokerIdentity := brokerOrderIdentityForLocal(order, snap.AccountRef, localOrder.Identity())
+			if !identitiesCompatible(localOrder.Identity(), brokerIdentity) {
+				continue
+			}
+			brokerCandidates[brokerIndex] = append(brokerCandidates[brokerIndex], localIndex)
+			localCandidateCount[localIndex]++
+		}
+	}
+
+	// A match is accepted only when the available evidence identifies exactly
+	// one local and that local identifies exactly one broker row. This rejects
+	// both scoped-id reuse and duplicate broker rows without guessing a pairing.
+	matchedBroker := make([]bool, len(snap.OpenOrders))
+	matchedLocal := make([]bool, len(localOrders))
+	for brokerIndex, candidates := range brokerCandidates {
+		if len(candidates) != 1 {
+			continue
+		}
+		localIndex := candidates[0]
+		if localCandidateCount[localIndex] != 1 {
+			continue
+		}
+		matchedBroker[brokerIndex] = true
+		matchedLocal[localIndex] = true
+	}
+
+	for index, order := range snap.OpenOrders {
+		if !matchedBroker[index] {
 			diff.ExternalOrd = append(diff.ExternalOrd, ExternalOrder{
-				BrokerOrder: o, Provenance: ProvenanceExternal,
+				BrokerOrder: order, Provenance: ProvenanceExternal,
 			})
 		}
 	}
 
 	missing := make([]LocalOrder, 0)
-	for id, order := range local.OpenOrders {
-		if _, present := brokerOrders[id]; !present {
+	for index, order := range localOrders {
+		if !matchedLocal[index] {
 			missing = append(missing, order)
 		}
 	}
-	sort.Slice(missing, func(i, j int) bool { return missing[i].OrderID < missing[j].OrderID })
+	sort.Slice(missing, func(i, j int) bool { return missing[i].Identity().less(missing[j].Identity()) })
 	if len(missing) > 0 {
 		diff.MissingOrders = missing
 	}
 	sort.Slice(diff.ExternalOrd, func(i, j int) bool {
-		return diff.ExternalOrd[i].OrderID < diff.ExternalOrd[j].OrderID
+		return brokerOrderIdentity(diff.ExternalOrd[i].BrokerOrder, snap.AccountRef).less(
+			brokerOrderIdentity(diff.ExternalOrd[j].BrokerOrder, snap.AccountRef))
 	})
 	return diff
+}
+
+func localOrdersForComparison(local LocalState) []LocalOrder {
+	if local.ScopedOpenOrders != nil {
+		orders := make([]LocalOrder, 0, len(local.ScopedOpenOrders))
+		for identity, order := range local.ScopedOpenOrders {
+			identity = identity.canonical()
+			order.AccountRef = identity.AccountRef
+			order.Market = identity.Market
+			order.TradingDay = identity.TradingDay
+			order.Symbol = identity.Symbol
+			order.Side = identity.Side
+			order.OrderID = identity.OrderID
+			orders = append(orders, order)
+		}
+		sort.Slice(orders, func(i, j int) bool { return orders[i].Identity().less(orders[j].Identity()) })
+		return orders
+	}
+
+	orders := make([]LocalOrder, 0, len(local.OpenOrders))
+	for key, order := range local.OpenOrders {
+		if order.OrderID == "" {
+			order.OrderID = key
+		}
+		orders = append(orders, order)
+	}
+	sort.Slice(orders, func(i, j int) bool { return orders[i].Identity().less(orders[j].Identity()) })
+	return orders
+}
+
+func brokerOrderIdentity(order BrokerOrder, snapshotAccount string) OrderIdentity {
+	account := order.AccountRef
+	if strings.TrimSpace(account) == "" {
+		account = snapshotAccount
+	}
+	return OrderIdentity{
+		AccountRef: account, Market: order.Market, TradingDay: order.TradingDay,
+		Symbol: order.Symbol, Side: order.Side, OrderID: order.OrderID,
+	}.canonical()
+}
+
+func brokerOrderIdentityForLocal(order BrokerOrder, snapshotAccount string, local OrderIdentity) OrderIdentity {
+	identity := brokerOrderIdentity(order, snapshotAccount)
+	if strings.TrimSpace(order.Market) != "" || strings.TrimSpace(order.OrderDate) != "" ||
+		strings.TrimSpace(order.OrderedAt) == "" || local.Market == "" {
+		return identity
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, strings.TrimSpace(order.OrderedAt))
+	if err != nil {
+		return identity
+	}
+	market, err := marketclock.ParseMarket(local.Market)
+	if err != nil {
+		return identity
+	}
+	day, err := market.TradingDay(parsed)
+	if err != nil {
+		return identity
+	}
+	identity.TradingDay = day
+	return identity
+}
+
+func identitiesCompatible(local, broker OrderIdentity) bool {
+	if local.OrderID != broker.OrderID {
+		return false
+	}
+	return identityEvidenceEqual(local.AccountRef, broker.AccountRef) &&
+		identityEvidenceEqual(local.Market, broker.Market) &&
+		identityEvidenceEqual(local.TradingDay, broker.TradingDay) &&
+		identityEvidenceEqual(local.Symbol, broker.Symbol) &&
+		identityEvidenceEqual(local.Side, broker.Side)
+}
+
+func identityEvidenceEqual(local, broker string) bool {
+	return local == "" || broker == "" || local == broker
 }
 
 // ComparePositionPrices compares an engine-side average price against the
@@ -478,10 +643,15 @@ func parseBrokerOrder(raw json.RawMessage) (BrokerOrder, error) {
 		return BrokerOrder{}, fmt.Errorf("an open order has no orderId")
 	}
 	order := BrokerOrder{
-		OrderID: strings.TrimSpace(payload.OrderID),
-		Symbol:  strings.ToUpper(strings.TrimSpace(payload.Symbol)),
-		Side:    strings.ToUpper(strings.TrimSpace(payload.Side)),
-		Status:  strings.ToUpper(strings.TrimSpace(payload.Status)),
+		OrderID:    payload.OrderID,
+		AccountRef: strings.TrimSpace(payload.AccountRef),
+		Market:     strings.ToLower(strings.TrimSpace(payload.Market)),
+		TradingDay: brokerPayloadTradingDay(payload),
+		Symbol:     strings.ToUpper(strings.TrimSpace(payload.Symbol)),
+		Side:       strings.ToUpper(strings.TrimSpace(payload.Side)),
+		Status:     strings.ToUpper(strings.TrimSpace(payload.Status)),
+		OrderDate:  payload.OrderDate,
+		OrderedAt:  payload.OrderedAt,
 	}
 	order.Quantity = derefDecimal(payload.Quantity)
 	order.Price = derefDecimal(payload.Price)
@@ -489,6 +659,32 @@ func parseBrokerOrder(raw json.RawMessage) (BrokerOrder, error) {
 		order.FilledQuantity = derefDecimal(payload.Execution.FilledQuantity)
 	}
 	return order, nil
+}
+
+func brokerPayloadTradingDay(payload officialOrder) string {
+	if day := strings.TrimSpace(payload.OrderDate); day != "" {
+		return day
+	}
+	orderedAt := strings.TrimSpace(payload.OrderedAt)
+	if orderedAt == "" {
+		return ""
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, orderedAt)
+	if err == nil && strings.TrimSpace(payload.Market) != "" {
+		market, marketErr := marketclock.ParseMarket(payload.Market)
+		if marketErr == nil {
+			if day, dayErr := market.TradingDay(parsed); dayErr == nil {
+				return day
+			}
+		}
+	}
+	// The official order contract exposes orderedAt even when it does not expose
+	// a market. Preserve its calendar component as partial evidence; the matcher
+	// will not invent a missing market and will fail closed if the date conflicts.
+	if len(orderedAt) >= len("2006-01-02") {
+		return orderedAt[:len("2006-01-02")]
+	}
+	return orderedAt
 }
 
 func derefDecimal(s *string) string {

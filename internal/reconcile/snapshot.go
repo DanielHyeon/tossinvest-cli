@@ -93,12 +93,19 @@ type BuyingPowerReader interface {
 // that judgement is a mismatch nobody can explain later.
 type BrokerOrder struct {
 	OrderID        string
+	AccountRef     string
+	Market         string
+	TradingDay     string
 	Symbol         string
 	Side           string
 	Status         string
 	Quantity       string
 	FilledQuantity string
 	Price          string
+	// OrderedAt preserves the official payload evidence verbatim. TradingDay is
+	// the canonical date used for identity matching when that evidence exists.
+	OrderDate string
+	OrderedAt string
 }
 
 // Holding is one account position.
@@ -156,10 +163,14 @@ func (s Snapshot) Digest() string {
 	b.WriteString("account=" + s.AccountRef + "\n")
 
 	orders := append([]BrokerOrder(nil), s.OpenOrders...)
-	sort.Slice(orders, func(i, j int) bool { return orders[i].OrderID < orders[j].OrderID })
+	sort.Slice(orders, func(i, j int) bool {
+		return brokerOrderIdentity(orders[i], s.AccountRef).less(brokerOrderIdentity(orders[j], s.AccountRef))
+	})
 	for _, o := range orders {
-		fmt.Fprintf(&b, "order\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-			o.OrderID, o.Symbol, o.Side, o.Status,
+		identity := brokerOrderIdentity(o, s.AccountRef)
+		fmt.Fprintf(&b, "order\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+			identity.AccountRef, identity.Market, identity.TradingDay, identity.Symbol,
+			identity.Side, identity.OrderID, o.Status, o.OrderedAt,
 			canonicalDecimal(o.Quantity), canonicalDecimal(o.FilledQuantity),
 			canonicalDecimal(o.Price))
 	}
@@ -425,13 +436,17 @@ func (s *Stabiliser) Last() (Snapshot, bool) { return s.last, s.lastSeen }
 // officialOrder is the subset of the broker's order payload a snapshot keeps.
 // Decimal fields stay strings on purpose (see BrokerOrder).
 type officialOrder struct {
-	OrderID   string  `json:"orderId"`
-	Symbol    string  `json:"symbol"`
-	Side      string  `json:"side"`
-	Status    string  `json:"status"`
-	Quantity  *string `json:"quantity"`
-	Price     *string `json:"price"`
-	Execution *struct {
+	OrderID    string  `json:"orderId"`
+	AccountRef string  `json:"accountRef"`
+	Market     string  `json:"market"`
+	OrderDate  string  `json:"orderDate"`
+	OrderedAt  string  `json:"orderedAt"`
+	Symbol     string  `json:"symbol"`
+	Side       string  `json:"side"`
+	Status     string  `json:"status"`
+	Quantity   *string `json:"quantity"`
+	Price      *string `json:"price"`
+	Execution  *struct {
 		FilledQuantity *string `json:"filledQuantity"`
 	} `json:"execution"`
 }
