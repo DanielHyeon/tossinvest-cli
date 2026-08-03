@@ -102,7 +102,35 @@ map을 **편집 전에** 작성했다 (tasks 1.1). 편집 후 AST를 갱신했�
 (`engineCommandConfigDir` — 이름이 바뀌어 사라짐, `soakLogPath` — 주변 편집에 밀림)은
 base revision 증거다.
 
-## 컨테이너 실측
+## 컨테이너 실측 (2026-08-03 09:24~09:27 KST, KRX 장중, 사람 승인)
 
-tasks 5.7 — **아직 하지 않았다.** 배포가 엔진을 재시작하는데 지금은 KRX 장중이다.
-측정 항목과 조건은 tasks.md에 적어 두었고, 배포는 사람 승인 아래 폐장 후에 한다.
+폐장 후로 미루자고 제안했으나 운영자가 "배포 하세요"로 진행을 지시했다. 창을 줄이려고
+이미지를 먼저 빌드·검증하고 롤백 태그(`tossos:rollback-pre-a060`)를 찍은 뒤 배포했다.
+
+```
+00:24:38Z  docker compose up -d
+00:24:50Z  두 서비스 healthy, 엔진 pid 16 재기동          — 총 12초
+           journal.db md5 d1102d49… 배포 전후 동일
+
+00:26:00Z  [soak 재시작]  http 303, 0.083s
+           → config/capability-soak.jsonl 생성 (배포 전에는 없던 파일)
+           → soak.log의 "no Open API credentials" 멎음
+           → pid 107, argv에 --config-dir·--session-file 포함
+
+00:26:33Z  [soak 재시작] 다시  http 303, 0.187s
+           → pid 107을 찾아 SIGINT, pid 146으로 재기동
+           → `ps | grep -c "soak run"` = 1  (중복 아님)
+
+00:27:08Z  측정 종료 — 서베이를 SIGINT로 정지시켜 측정 전 상태로 복귀
+           기록에 2 사이클(3137B), 콘솔이 그것을 읽는다
+```
+
+배포 전 같은 버튼은 자격증명 오류만 남기고 아무것도 만들지 못했다. 세 항목 모두
+뒤집혔다.
+
+### 실측이 새로 보여 준 것 — 429
+
+서베이가 뜨자마자 `GET /api/v1/orders`가 **429(rate limited)**로 거부됐다(두 기동 모두).
+서베이는 설계대로 15초 뒤 재시도해 사이클을 완주했지만, 이것은 장중에 엔진과 서베이가
+같은 계좌 rate budget을 나눠 쓴다는 실측 증거다. 배포 전에는 서베이가 뜨지도 못했으므로
+관측될 수 없던 사실이다. `issues.md` I6.

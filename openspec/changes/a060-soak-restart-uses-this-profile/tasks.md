@@ -50,13 +50,16 @@
 - [x] 5.4 a059 회귀: 엔진 쪽 테스트 전부 green (공유 헬퍼 추출이 동작을 바꾸지 않았음).
 - [x] 5.5 `make test`, `make vet`, `make validate`, `make sdd-sync`, `make sdd-check`.
 - [x] 5.6 `make gate CHANGE=a060-soak-restart-uses-this-profile`.
-- [x] 5.7 컨테이너 실측 조건을 고정했다 — **측정은 배포 후 사람 승인 아래 수행한다.**
-      배포가 엔진을 재시작하므로 KRX 폐장(15:30 KST) 이후로 미룬다. 측정 항목:
-      ① [soak 재시작] 버튼 뒤 `config/capability-soak.jsonl`이 생기는가,
-      ② `config/soak.log`에서 "no Open API credentials"가 멎는가,
-      ③ 두 번째 누름이 도는 서베이를 찾아 SIGINT하고 재기동하는가.
-      배포 전 관측(2026-08-03, 읽기 전용)은 `review.md`에 기록했다 — 현재 이 버튼은
-      100% 실패한다.
+- [x] 5.7 컨테이너 실측 (2026-08-03 09:24~09:27 KST, **KRX 장중**, 사람 승인
+      "배포 하세요"). 배포는 12초(00:24:38→00:24:50 UTC)만에 끝났고 엔진은 그 안에
+      돌아왔다. journal.db md5 `d1102d49…` 배포 전후 동일.
+      ① `config/capability-soak.jsonl`이 **생겼다** — 배포 전에는 없던 파일이다.
+      ② `soak.log`의 "no Open API credentials"가 **멎었다**. 대신 서베이가 실제로 돌며
+      API를 읽는다.
+      ③ 두 번째 누름이 도는 서베이(pid 107)를 찾아 SIGINT하고 pid 146으로 재기동했다 —
+      `ps | grep -c soak run` = 1, 중복되지 않았다.
+      측정 후 서베이는 SIGINT로 정지시켜 측정 전 상태로 되돌렸다(`issues.md` I6).
+      2 사이클이 기록에 남았고 콘솔이 그것을 읽는다 — "아직 기록이 없다"가 사라졌다.
 
 ## 6. 리뷰와 기록
 
