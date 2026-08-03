@@ -463,6 +463,77 @@ func TestStartupPrunesSpentNoncesOnce(t *testing.T) {
 	}
 }
 
+func TestStartupSweepsExpiredUnconsumedReservationsBeforeTrading(t *testing.T) {
+	dir := isolate(t)
+	writeEngineConfig(t, dir)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	srv, _ := engineStub(t, "123-45")
+
+	reservationID := seedExpiredUnconsumedReservation(t, dir)
+	eng, err := startEngine(t, dir, srv)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	reservation, err := eng.Journal.LookupReservation(context.Background(), reservationID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reservation.Held() || reservation.ReleaseReason != journal.ReleaseReasonExpiredUnconsumed {
+		t.Fatalf("startup reservation = %+v, want expired-unconsumed release before engine decisions", reservation)
+	}
+}
+
+func seedExpiredUnconsumedReservation(t *testing.T, dir string) string {
+	t.Helper()
+	ctx := context.Background()
+	issued := time.Now().UTC().Add(-time.Hour)
+	j, err := journal.Open(ctx, journal.Options{
+		Path:     filepath.Join(dir, journal.DBFileName),
+		Clock:    clock.NewFake(issued),
+		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = j.Close() }()
+	const accountRef = "123-45"
+	decision, err := j.RecordDecision(ctx, journal.DecisionRequest{
+		ID: "startup-reservation-decision", AccountRef: accountRef,
+		SafetyClass: journal.SafetyClassExposureRaising, Kind: journal.KindPlace,
+		Preimage: journal.RiskIntent{
+			AccountRef: accountRef, Market: "kr", Symbol: "005930", Side: "BUY",
+			Quantity: "1", EntryPrice: "70000", StopPrice: "65000", TargetPrice: "75000",
+			PolicyVersion: "startup-sweep-test",
+		},
+		LimitsJSON: `{"open_exposure":"1000000"}`, Nonce: "startup-reservation-nonce",
+		IssuedAt: issued, ExpiresAt: issued.Add(time.Minute),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	version, err := j.ReservationVersion(ctx, accountRef)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const reservationID = "startup-expired-reservation"
+	if _, err := j.Reserve(ctx, journal.ReserveRequest{
+		DecisionID: decision.ID, AccountRef: accountRef, SnapshotAsOf: issued,
+		ObservedVersion: version, Staleness: time.Minute,
+		SnapshotUsage: []journal.AggregateAmount{{
+			Kind: journal.ReservationKindOpenExposure, Amount: "0", Currency: "KRW",
+		}},
+		Limits: []journal.AggregateAmount{{
+			Kind: journal.ReservationKindOpenExposure, Amount: "1000000", Currency: "KRW",
+		}},
+		Reservations: []journal.ReservationRequest{{
+			ID: reservationID, Kind: journal.ReservationKindOpenExposure, Amount: "70000", Currency: "KRW",
+		}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	return reservationID
+}
+
 // seedSpentNonce writes one consumed decision into the journal the engine will
 // later open, stamped at the given instant.
 //
@@ -590,10 +661,9 @@ func TestStartupRebuildsTheReconcileProjection(t *testing.T) {
 	if rejected == nil {
 		t.Fatal("a restart must not clear an active account-wide RECONCILE state")
 	}
-	// The gate's latch reason comes from the row's cause (ReconcileReasonFor), so
-	// a QUANTITY_MISMATCH row restores as a mismatch block; the tracker is the
-	// side that knows an account-wide row is its permanent promotion.
-	if rejected.Reason != execgw.ReasonReconcileMismatch {
+	// The per-entry durable refresh projects the tracker's full scope semantics:
+	// an account-wide QUANTITY_MISMATCH row is its permanent promotion.
+	if rejected.Reason != execgw.ReasonReconcilePermanent {
 		t.Errorf("entry refused for %q, want the reconcile block restored from the journal", rejected.Reason)
 	}
 	if !strings.Contains(rejected.Detail, "disagree") {

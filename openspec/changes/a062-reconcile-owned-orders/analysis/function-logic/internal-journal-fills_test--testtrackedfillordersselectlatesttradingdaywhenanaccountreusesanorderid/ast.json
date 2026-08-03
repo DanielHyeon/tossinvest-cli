@@ -1,0 +1,433 @@
+{
+  "file": "internal/journal/fills_test.go",
+  "source_sha256": "5da6390852646dcea50c6546b6f28e0c82f15f832d8953cb57aad12da363499a",
+  "package": "journal",
+  "function": "TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID",
+  "signature": "TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID(params=1, results=0)",
+  "start": {
+    "line": 568,
+    "column": 1
+  },
+  "end": {
+    "line": 628,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 580,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 583,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 586,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 589,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 597,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 603,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 606,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 612,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 615,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 622,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 625,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 569,
+        "column": 7
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 572,
+        "column": 19
+      },
+      "text": "j.Prepare"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 581,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 583,
+        "column": 13
+      },
+      "text": "attempt.MarkDispatchStarted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 584,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 586,
+        "column": 13
+      },
+      "text": "attempt.MarkAcked"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 587,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 589,
+        "column": 13
+      },
+      "text": "attempt.Settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 590,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 593,
+        "column": 2
+      },
+      "text": "confirm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 594,
+        "column": 11
+      },
+      "text": "observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 597,
+        "column": 15
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 600,
+        "column": 2
+      },
+      "text": "confirm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 602,
+        "column": 18
+      },
+      "text": "j.TrackedFillOrders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 604,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 606,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 607,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 609,
+        "column": 13
+      },
+      "text": "observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 611,
+        "column": 14
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 613,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 616,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 618,
+        "column": 17
+      },
+      "text": "j.LookupFillScoped"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 623,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 626,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 569,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 570,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 571,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 572,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 583,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 586,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 589,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 594,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 595,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 596,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 597,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 602,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 609,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 610,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 611,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 618,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

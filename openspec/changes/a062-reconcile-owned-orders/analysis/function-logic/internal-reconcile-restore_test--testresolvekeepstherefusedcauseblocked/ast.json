@@ -1,0 +1,294 @@
+{
+  "file": "internal/reconcile/restore_test.go",
+  "source_sha256": "06075e0e4501b78ee04e55e617309bf70a7b1a025c31d7a496cd9396161bc2ab",
+  "package": "reconcile_test",
+  "function": "TestResolveKeepsTheRefusedCauseBlocked",
+  "signature": "TestResolveKeepsTheRefusedCauseBlocked(params=1, results=0)",
+  "start": {
+    "line": 529,
+    "column": 1
+  },
+  "end": {
+    "line": 559,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 533,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 541,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 547,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 550,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 553,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 556,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 530,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 531,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 532,
+        "column": 7
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 533,
+        "column": 18
+      },
+      "text": "j.EnterReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 537,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 539,
+        "column": 10
+      },
+      "text": "noStaleGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 540,
+        "column": 13
+      },
+      "text": "trackerOn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 541,
+        "column": 12
+      },
+      "text": "tracker.Restore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 542,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 547,
+        "column": 12
+      },
+      "text": "tracker.Resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 548,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 550,
+        "column": 15
+      },
+      "text": "tracker.Blocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 550,
+        "column": 33
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 551,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 5
+      },
+      "text": "gate.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 556,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 530,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 531,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 532,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 533,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 539,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 540,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 541,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 544,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 545,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 547,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 550,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

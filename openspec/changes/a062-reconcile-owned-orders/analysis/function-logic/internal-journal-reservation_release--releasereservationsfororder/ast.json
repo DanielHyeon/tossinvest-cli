@@ -1,0 +1,71 @@
+{
+  "file": "internal/journal/reservation_release.go",
+  "source_sha256": "d61f428958e0ac5ba535af8148bdcb40d25f2c1893be6feb8f95b1e9af7b2ff2",
+  "package": "journal",
+  "function": "releaseReservationsForOrder",
+  "signature": "releaseReservationsForOrder(params=7, results=2)",
+  "start": {
+    "line": 144,
+    "column": 1
+  },
+  "end": {
+    "line": 155,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 22
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 9
+      },
+      "text": "releaseWhere"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 29
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

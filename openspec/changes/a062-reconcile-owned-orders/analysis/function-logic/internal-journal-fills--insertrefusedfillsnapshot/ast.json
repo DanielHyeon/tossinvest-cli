@@ -1,0 +1,125 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
+  "package": "journal",
+  "function": "insertRefusedFillSnapshot",
+  "signature": "insertRefusedFillSnapshot(params=6, results=1)",
+  "start": {
+    "line": 783,
+    "column": 1
+  },
+  "end": {
+    "line": 807,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 785,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 786,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 794,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 796,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 806,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 785,
+        "column": 5
+      },
+      "text": "scope.complete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 786,
+        "column": 16
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 793,
+        "column": 15
+      },
+      "text": "orZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 796,
+        "column": 10
+      },
+      "text": "mirrorScopedFillSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 798,
+        "column": 12
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 805,
+        "column": 14
+      },
+      "text": "orZero"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 786,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 798,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

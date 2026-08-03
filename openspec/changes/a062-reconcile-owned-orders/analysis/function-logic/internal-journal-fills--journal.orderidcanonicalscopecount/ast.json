@@ -1,0 +1,80 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
+  "package": "journal",
+  "function": "orderIDCanonicalScopeCount",
+  "receiver": "Journal",
+  "signature": "Journal.orderIDCanonicalScopeCount(params=2, results=2)",
+  "start": {
+    "line": 1365,
+    "column": 1
+  },
+  "end": {
+    "line": 1374,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1370,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1371,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1373,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1367,
+        "column": 9
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1367,
+        "column": 9
+      },
+      "text": "j.db.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1371,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1367,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,387 @@
+{
+  "file": "internal/app/engine/reconcileloop.go",
+  "source_sha256": "accaa4c5f6645d8af7be3f1cbcd9ec61a7efc9f1f022be26b39b53789d867763",
+  "package": "engine",
+  "function": "RunOnce",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.RunOnce(params=1, results=1)",
+  "start": {
+    "line": 383,
+    "column": 1
+  },
+  "end": {
+    "line": 434,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 416,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 417,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 425,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 426,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 388,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 395,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 420,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 429,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 433,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 17
+      },
+      "text": "d.note"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 18
+      },
+      "text": "d.stabilise"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 16
+      },
+      "text": "reconcile.LocalStateFromJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 394,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 10
+      },
+      "text": "Compare"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 17
+      },
+      "text": "d.ingest.IngestExternalPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 17
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 20
+      },
+      "text": "d.opts.Converge.ConvergeQuantities"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 20
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 12
+      },
+      "text": "d.opts.Tracker.Refresh"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 18
+      },
+      "text": "d.opts.Tracker.Observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 18
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 22
+      },
+      "text": "d.opts.Tracker.Blocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 2
+      },
+      "text": "d.judgeHoldings"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 386,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 390,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 392,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 394,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 403,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 405,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 409,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 411,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 413,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 414,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 416,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 418,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 422,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 423,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 427,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "revision": "current"
+}

@@ -1,0 +1,87 @@
+{
+  "file": "internal/journal/reservation_sweep_test.go",
+  "source_sha256": "dcfcc7de8f1e832e67d19949578ce40bf3d79d549ad6f99de6f5a714cfcd011e",
+  "package": "journal",
+  "function": "insertTerminalFillSnapshot",
+  "signature": "insertTerminalFillSnapshot(params=8, results=0)",
+  "start": {
+    "line": 120,
+    "column": 1
+  },
+  "end": {
+    "line": 131,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 17
+      },
+      "text": "evidenceTimeAfterOwners"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 15
+      },
+      "text": "j.db.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

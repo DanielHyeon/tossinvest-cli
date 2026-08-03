@@ -1,0 +1,350 @@
+{
+  "file": "internal/reconcile/restore_test.go",
+  "source_sha256": "06075e0e4501b78ee04e55e617309bf70a7b1a025c31d7a496cd9396161bc2ab",
+  "package": "reconcile_test",
+  "function": "TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails",
+  "signature": "TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails(params=1, results=0)",
+  "start": {
+    "line": 424,
+    "column": 1
+  },
+  "end": {
+    "line": 472,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 425,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 437,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 445,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 455,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 458,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 461,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 464,
+        "column": 4
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 467,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 37
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 11
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 435,
+        "column": 11
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 9
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 20
+      },
+      "text": "j.EnterReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 12
+      },
+      "text": "noStaleGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 15
+      },
+      "text": "trackerOn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 14
+      },
+      "text": "tracker.Restore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 4
+      },
+      "text": "tracker.AdjustmentApplied"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 16
+      },
+      "text": "tracker.Observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 456,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 7
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 17
+      },
+      "text": "tracker.Blocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 35
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 462,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 7
+      },
+      "text": "gate.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 7
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 434,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 435,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 436,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 437,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 443,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 444,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 445,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 448,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 451,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 454,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 461,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

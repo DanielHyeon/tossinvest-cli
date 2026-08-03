@@ -1,0 +1,172 @@
+{
+  "file": "internal/filldetect/detect_test.go",
+  "source_sha256": "7fe5825a894d212e278325c39d6b369d975ef46f006b913627daa8c7264e2e26",
+  "package": "filldetect_test",
+  "function": "TestPollRejectsTrackedReadFromAnotherCanonicalScope",
+  "signature": "TestPollRejectsTrackedReadFromAnotherCanonicalScope(params=1, results=0)",
+  "start": {
+    "line": 464,
+    "column": 1
+  },
+  "end": {
+    "line": 482,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 479,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 37
+      },
+      "text": "rawOrders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 18
+      },
+      "text": "newDetector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 33
+      },
+      "text": "newPager"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 42
+      },
+      "text": "page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 15
+      },
+      "text": "d.PollOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 26
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 4
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 21
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 12
+      },
+      "text": "ledger.appliedSnapshots"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 39
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 465,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 474,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 479,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -85,6 +85,68 @@ func TestWhyDoesThisPositionExist(t *testing.T) {
 	}
 }
 
+func TestPreOwnerAndNonConfirmedFillsAreNotPositionProvenance(t *testing.T) {
+	j := projectingJournal(t)
+	ctx := context.Background()
+	if _, err := j.db.ExecContext(ctx, `INSERT INTO fill_events
+		(order_id, account_ref, symbol, market, trading_day, side, delta_quantity,
+		 cumulative_quantity, average_price, broker_visible_at, committed_at)
+		VALUES ('o-real','acct-1','005930','kr','2026-03-30','BUY','7','7','60000','',
+		        '2026-03-29T20:00:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	real := place(t, j, order{
+		intentID: "i-real", attemptID: "a-real", orderID: "o-real", decisionID: "d-real",
+	})
+	if _, err := j.RecordFill(ctx, terminalFill(real, "10", "70000")); err != nil {
+		t.Fatal(err)
+	}
+	position := currentPosition(t, j, real)
+	failed := insertNonConfirmedFillAttempt(t, j, "failed", "o-failed", "d-real")
+	if _, err := j.RecordFill(ctx, terminalFill(failed, "4", "99000")); err != nil {
+		t.Fatal(err)
+	}
+
+	chain, err := j.PositionProvenance(ctx, position.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fills []ProvenanceStep
+	for _, step := range chain.Steps {
+		if step.Kind == ProvenanceFill {
+			fills = append(fills, step)
+		}
+	}
+	if len(fills) != 1 || fills[0].Ref != "o-real" {
+		t.Fatalf("fill provenance=%+v, want only the post-owner confirmed fill", fills)
+	}
+}
+
+func insertNonConfirmedFillAttempt(t *testing.T, j *Journal, id, orderID, decisionID string) order {
+	t.Helper()
+	o := (order{
+		intentID: "i-" + id, attemptID: "a-" + id, orderID: orderID,
+		decisionID: decisionID, side: "SELL", quantity: "4",
+	}).withDefaults()
+	if _, err := j.db.Exec(`INSERT INTO intents
+		(id, created_at, market, trading_day, account_ref, symbol, side, order_type,
+		 quantity, price, currency, source, fingerprint)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, o.intentID, "2026-03-30T00:30:00Z", o.market,
+		o.tradingDay, o.account, o.symbol, o.side, "LIMIT", o.quantity, "70000", "KRW",
+		"engine/test", "fp-"+o.intentID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.Exec(`INSERT INTO mutation_attempts
+		(id, intent_id, kind, state, attempt_no, broker_order_id, fingerprint,
+		 recorded_at, decision_id)
+		VALUES (?,?,?,?,?,?,?,?,NULLIF(?,''))`, o.attemptID, o.intentID, "PLACE",
+		string(StateFailedConfirmed), 1, o.orderID, "fp-"+o.intentID,
+		"2026-03-30T00:30:00Z", decisionID); err != nil {
+		t.Fatal(err)
+	}
+	return o
+}
+
 // TestTheProvenanceChainReachesTheClose walks the whole thing: entry, an
 // adjustment, an exit judgement, the liquidation it proposed, and the close.
 //
@@ -269,6 +331,49 @@ func TestAnotherDecisionsFillsAreNotThisPositionsProvenance(t *testing.T) {
 		if step.Ref == "d-2" || step.Ref == "i-2" || step.Ref == "a-2" || step.Ref == "o-2" {
 			t.Fatalf("the chain picked up %s %q from another decision", step.Kind, step.Ref)
 		}
+	}
+}
+
+func TestReusedOrderIDDoesNotAttachPriorDayFillToNewPositionProvenance(t *testing.T) {
+	j := projectingJournal(t)
+	ctx := context.Background()
+
+	first := place(t, j, order{
+		intentID: "i-day-1", attemptID: "a-day-1", orderID: "reused-order",
+		decisionID: "d-day-1", tradingDay: "2026-03-30", quantity: "10",
+	})
+	if _, err := j.RecordFill(ctx, terminalFill(first, "10", "70000")); err != nil {
+		t.Fatal(err)
+	}
+	exit := place(t, j, order{
+		intentID: "i-exit-1", attemptID: "a-exit-1", orderID: "exit-day-1",
+		decisionID: "d-exit-1", tradingDay: "2026-03-30", side: "SELL", quantity: "10",
+	})
+	if _, err := j.RecordFill(ctx, terminalFill(exit, "10", "71000")); err != nil {
+		t.Fatal(err)
+	}
+
+	second := place(t, j, order{
+		intentID: "i-day-2", attemptID: "a-day-2", orderID: "reused-order",
+		decisionID: "d-day-2", tradingDay: "2026-03-31", quantity: "2",
+	})
+	if _, err := j.RecordFill(ctx, terminalFill(second, "2", "72000")); err != nil {
+		t.Fatal(err)
+	}
+	position := currentPosition(t, j, second)
+	chain, err := j.PositionProvenance(ctx, position.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fills []ProvenanceStep
+	for _, step := range chain.Steps {
+		if step.Kind == ProvenanceFill {
+			fills = append(fills, step)
+		}
+	}
+	if len(fills) != 1 || !strings.Contains(fills[0].Detail, "filled 2 ") {
+		t.Fatalf("new position fills=%+v, want only the reused id's later-day fill", fills)
 	}
 }
 

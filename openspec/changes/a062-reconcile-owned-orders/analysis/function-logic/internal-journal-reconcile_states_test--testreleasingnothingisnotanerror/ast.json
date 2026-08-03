@@ -1,0 +1,95 @@
+{
+  "file": "internal/journal/reconcile_states_test.go",
+  "source_sha256": "12519fb8036edffb6c1ef72e44c253b66c643e353fa9caec6c2e36860741c29f",
+  "package": "journal",
+  "function": "TestReleasingNothingIsNotAnError",
+  "signature": "TestReleasingNothingIsNotAnError(params=1, results=0)",
+  "start": {
+    "line": 279,
+    "column": 1
+  },
+  "end": {
+    "line": 291,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 10
+      },
+      "text": "openReservationJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 22
+      },
+      "text": "j.ReleaseReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 41
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

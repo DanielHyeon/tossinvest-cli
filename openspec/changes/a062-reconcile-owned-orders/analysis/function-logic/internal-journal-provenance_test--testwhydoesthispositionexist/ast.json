@@ -1,0 +1,305 @@
+{
+  "file": "internal/journal/provenance_test.go",
+  "source_sha256": "3a77145080d4963658125cee4e7ae33db9f1c6c76d329aa893f589748775f301",
+  "package": "journal",
+  "function": "TestWhyDoesThisPositionExist",
+  "signature": "TestWhyDoesThisPositionExist(params=1, results=0)",
+  "start": {
+    "line": 42,
+    "column": 1
+  },
+  "end": {
+    "line": 86,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 7
+      },
+      "text": "projectingJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 7
+      },
+      "text": "place"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 15
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 33
+      },
+      "text": "terminalFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 14
+      },
+      "text": "currentPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 16
+      },
+      "text": "j.PositionProvenance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 3
+      },
+      "text": "stepOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 6
+      },
+      "text": "sort.SliceIsSorted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 14
+      },
+      "text": "stepOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 13
+      },
+      "text": "stepOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 47,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

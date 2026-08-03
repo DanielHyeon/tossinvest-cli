@@ -1,0 +1,30 @@
+{
+  "file": "internal/filldetect/detect_test.go",
+  "source_sha256": "7fe5825a894d212e278325c39d6b369d975ef46f006b913627daa8c7264e2e26",
+  "package": "filldetect_test",
+  "function": "newLedger",
+  "signature": "newLedger(params=1, results=1)",
+  "start": {
+    "line": 186,
+    "column": 1
+  },
+  "end": {
+    "line": 188,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

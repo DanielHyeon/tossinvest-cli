@@ -1,0 +1,184 @@
+{
+  "file": "internal/journal/fills_test.go",
+  "source_sha256": "5da6390852646dcea50c6546b6f28e0c82f15f832d8953cb57aad12da363499a",
+  "package": "journal",
+  "function": "TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays",
+  "signature": "TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays(params=1, results=0)",
+  "start": {
+    "line": 1412,
+    "column": 1
+  },
+  "end": {
+    "line": 1434,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1427,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1431,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1413,
+        "column": 7
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1414,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1420,
+        "column": 2
+      },
+      "text": "recordConfirmedReplacement"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1421,
+        "column": 2
+      },
+      "text": "recordConfirmedReplacement"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1422,
+        "column": 12
+      },
+      "text": "observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1427,
+        "column": 15
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1428,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1431,
+        "column": 15
+      },
+      "text": "j.TrackedFillOrders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1431,
+        "column": 52
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1432,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1413,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1414,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1415,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1418,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1419,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1422,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1426,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1427,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1431,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

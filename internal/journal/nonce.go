@@ -142,10 +142,11 @@ var ErrRetentionTooShort = errors.New("journal: nonce retention is shorter than 
 // how many it removed.
 //
 // It refuses, and deletes nothing, when retention is shorter than the longest
-// TTL any decision on disk was issued with. That is the invariant made
-// executable: a decision whose consumption record has been pruned is a decision
-// that can be spent again, and "the caller passes a sensible retention" is not a
-// property anything checks at 3am.
+// TTL any decision on disk was issued with. It also preserves every nonce whose
+// decision still owns a HELD reservation: that consumption record is the proof
+// that a request may have left the process, so deleting it would let a later
+// startup misclassify the hold as expired-unconsumed and release risk headroom.
+// These are executable invariants rather than caller conventions.
 func (j *Journal) PruneSpentNonces(ctx context.Context, now time.Time, retention time.Duration) (int, error) {
 	if retention <= 0 {
 		return 0, fmt.Errorf("%w: retention must be positive", ErrRetentionTooShort)
@@ -159,7 +160,15 @@ func (j *Journal) PruneSpentNonces(ctx context.Context, now time.Time, retention
 			retention, longest)
 	}
 	cutoff := formatJournalTime(now.Add(-retention))
-	res, err := j.db.ExecContext(ctx, "DELETE FROM spent_nonces WHERE consumed_at < ?", cutoff)
+	res, err := j.db.ExecContext(ctx, `
+		DELETE FROM spent_nonces
+		 WHERE consumed_at < ?
+		   AND nonce NOT IN (
+		     SELECT d.nonce
+		       FROM decisions d
+		       JOIN risk_reservations r ON r.decision_id = d.id
+		      WHERE r.state = ?
+		   )`, cutoff, ReservationHeld)
 	if err != nil {
 		return 0, fmt.Errorf("journal: pruning spent nonces: %w", err)
 	}

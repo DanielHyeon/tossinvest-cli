@@ -50,6 +50,26 @@ func TestSnapshotCarriesTheFilledAmount(t *testing.T) {
 	}
 }
 
+func TestSnapshotCarriesCanonicalBrokerOrderScope(t *testing.T) {
+	snap := pollOne(t, rawOrder{
+		id: "o-scope", symbol: "AAPL", orderedAt: "2026-03-30T09:30:00-04:00",
+	})
+	if snap.AccountRef != "acct-test" || snap.Market != "us" ||
+		snap.TradingDay != "2026-03-30" || snap.Side != "BUY" {
+		t.Fatalf("broker scope = account %q market %q day %q side %q, want acct-test/us/2026-03-30/BUY",
+			snap.AccountRef, snap.Market, snap.TradingDay, snap.Side)
+	}
+}
+
+func TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset(t *testing.T) {
+	snap := pollOne(t, rawOrder{
+		id: "o-us-boundary", symbol: "AAPL", orderedAt: "2026-03-31T00:30:00+09:00",
+	})
+	if snap.TradingDay != "2026-03-30" {
+		t.Fatalf("US trading day = %q, want New York date 2026-03-30", snap.TradingDay)
+	}
+}
+
 // TestFilledAmountKeepsItsDecimalString: the amount is compared byte-for-byte
 // against the stored previous value, so a float round trip would manufacture
 // corrections out of nothing.
@@ -114,7 +134,10 @@ func TestBlankPayloadIdFallsBackToTheTrackedId(t *testing.T) {
 		"o-tracked": rawOrder{id: "  ", status: "CLOSED", quantity: "4", filled: "4"}.json(),
 	}}
 	tracked := fakeTracked{orders: []filldetect.TrackedOrder{
-		{OrderID: "o-tracked", Symbol: "AAPL", Market: "us"},
+		{
+			OrderID: "o-tracked", AccountRef: "acct-test", Symbol: "AAPL",
+			Market: "us", TradingDay: "2026-03-30", Side: "BUY",
+		},
 	}}
 	d, _, ledger := newDetector(t, newPager(page("")), reader, &fakePositions{}, tracked, nil)
 	if _, err := d.PollOnce(context.Background()); err != nil {

@@ -255,3 +255,24 @@ func TestPruneRemovesRecordsOlderThanTheRetention(t *testing.T) {
 			removed, spentNonceCount(t, j))
 	}
 }
+
+func TestPrunePreservesSpentNonceWhileItsReservationIsHeld(t *testing.T) {
+	j, fake := openReservationJournal(t)
+	ctx := context.Background()
+	decision := recordEntryDecision(t, j, "decision-held-nonce", "acct-1")
+	if _, err := j.Reserve(ctx, exposureReserve(j, decision.ID, "acct-1", "100", "0", "10000",
+		mustVersion(t, j, "acct-1"))); err != nil {
+		t.Fatal(err)
+	}
+	spendNonce(t, j, decision, "attempt-held-nonce")
+
+	fake.Advance(90 * 24 * time.Hour)
+	removed, err := j.PruneSpentNonces(ctx, fake.Now(), 30*24*time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if removed != 0 || spentNonceCount(t, j) != 1 {
+		t.Fatalf("removed=%d spent=%d, want held reservation consumption evidence preserved",
+			removed, spentNonceCount(t, j))
+	}
+}

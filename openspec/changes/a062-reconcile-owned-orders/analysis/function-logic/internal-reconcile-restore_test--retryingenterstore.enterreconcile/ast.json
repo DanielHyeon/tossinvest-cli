@@ -1,0 +1,79 @@
+{
+  "file": "internal/reconcile/restore_test.go",
+  "source_sha256": "06075e0e4501b78ee04e55e617309bf70a7b1a025c31d7a496cd9396161bc2ab",
+  "package": "reconcile_test",
+  "function": "EnterReconcile",
+  "receiver": "retryingEnterStore",
+  "signature": "retryingEnterStore.EnterReconcile(params=2, results=3)",
+  "start": {
+    "line": 81,
+    "column": 1
+  },
+  "end": {
+    "line": 89,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 43
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 9
+      },
+      "text": "s.ReconcileStore.EnterReconcile"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "++",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "kind": "--",
+      "at": {
+        "line": 85,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

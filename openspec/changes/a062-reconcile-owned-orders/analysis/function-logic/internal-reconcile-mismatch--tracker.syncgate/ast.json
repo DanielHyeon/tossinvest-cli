@@ -1,0 +1,253 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "a0ffbb279e773f7648b0a844e4bb783fdd671125003f4eb8619a827ed0688b9f",
+  "package": "reconcile",
+  "function": "syncGate",
+  "receiver": "Tracker",
+  "signature": "Tracker.syncGate(params=1, results=0)",
+  "start": {
+    "line": 878,
+    "column": 1
+  },
+  "end": {
+    "line": 923,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 879,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 883,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 884,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 894,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 895,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 901,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 902,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 908,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "range",
+      "at": {
+        "line": 913,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 917,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "else",
+      "at": {
+        "line": 919,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 880,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 893,
+        "column": 15
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 893,
+        "column": 37
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 898,
+        "column": 13
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 898,
+        "column": 47
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 899,
+        "column": 3
+      },
+      "text": "t.Gate.BlockSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 901,
+        "column": 27
+      },
+      "text": "t.Gate.SymbolBlocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 902,
+        "column": 7
+      },
+      "text": "isReconcileReason"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 908,
+        "column": 17
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 908,
+        "column": 54
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 909,
+        "column": 4
+      },
+      "text": "t.Gate.ClearSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 918,
+        "column": 4
+      },
+      "text": "t.Gate.Block"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 920,
+        "column": 4
+      },
+      "text": "t.Gate.Clear"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 882,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 885,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 893,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 898,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 917,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,39 @@
+{
+  "file": "internal/journal/reservation_sweep_test.go",
+  "source_sha256": "dcfcc7de8f1e832e67d19949578ce40bf3d79d549ad6f99de6f5a714cfcd011e",
+  "package": "journal",
+  "function": "insertScopedFillSnapshot",
+  "signature": "insertScopedFillSnapshot(params=10, results=0)",
+  "start": {
+    "line": 133,
+    "column": 1
+  },
+  "end": {
+    "line": 138,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 2
+      },
+      "text": "insertScopedFillSnapshotAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 25
+      },
+      "text": "evidenceTimeAfterOwners"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

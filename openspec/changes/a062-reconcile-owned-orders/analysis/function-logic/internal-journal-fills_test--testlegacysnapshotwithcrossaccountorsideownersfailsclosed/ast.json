@@ -1,0 +1,233 @@
+{
+  "file": "internal/journal/fills_test.go",
+  "source_sha256": "5da6390852646dcea50c6546b6f28e0c82f15f832d8953cb57aad12da363499a",
+  "package": "journal",
+  "function": "TestLegacySnapshotWithCrossAccountOrSideOwnersFailsClosed",
+  "signature": "TestLegacySnapshotWithCrossAccountOrSideOwnersFailsClosed(params=1, results=0)",
+  "start": {
+    "line": 1436,
+    "column": 1
+  },
+  "end": {
+    "line": 1475,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 1437,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1460,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1463,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1467,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1470,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1448,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1449,
+        "column": 9
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1450,
+        "column": 11
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1454,
+        "column": 4
+      },
+      "text": "recordConfirmedFillOrderScope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1456,
+        "column": 4
+      },
+      "text": "recordConfirmedFillOrderScope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1458,
+        "column": 14
+      },
+      "text": "observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1460,
+        "column": 17
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1461,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1463,
+        "column": 17
+      },
+      "text": "j.TrackedFillOrders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1463,
+        "column": 54
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1464,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1466,
+        "column": 16
+      },
+      "text": "j.NetPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1468,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1471,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1449,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1450,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1451,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1458,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1459,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1460,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1463,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1466,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

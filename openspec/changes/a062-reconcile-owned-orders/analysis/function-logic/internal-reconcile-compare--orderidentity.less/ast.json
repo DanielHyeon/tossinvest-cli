@@ -1,0 +1,70 @@
+{
+  "file": "internal/reconcile/compare.go",
+  "source_sha256": "36ce21d173549fe4b957c6132a56993887fb62dfe3acaa7c9afd39a6e61154b2",
+  "package": "reconcile",
+  "function": "less",
+  "receiver": "OrderIdentity",
+  "signature": "OrderIdentity.less(params=1, results=1)",
+  "start": {
+    "line": 79,
+    "column": 1
+  },
+  "end": {
+    "line": 88,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 84,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

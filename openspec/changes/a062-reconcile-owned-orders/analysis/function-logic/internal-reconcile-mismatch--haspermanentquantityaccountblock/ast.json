@@ -1,0 +1,54 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "a0ffbb279e773f7648b0a844e4bb783fdd671125003f4eb8619a827ed0688b9f",
+  "package": "reconcile",
+  "function": "hasPermanentQuantityAccountBlock",
+  "signature": "hasPermanentQuantityAccountBlock(params=1, results=1)",
+  "start": {
+    "line": 819,
+    "column": 1
+  },
+  "end": {
+    "line": 827,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 820,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 821,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 823,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 826,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

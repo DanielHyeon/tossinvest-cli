@@ -1,0 +1,87 @@
+{
+  "file": "internal/reconcile/compare.go",
+  "source_sha256": "36ce21d173549fe4b957c6132a56993887fb62dfe3acaa7c9afd39a6e61154b2",
+  "package": "reconcile",
+  "function": "identitiesCompatible",
+  "signature": "identitiesCompatible(params=2, results=1)",
+  "start": {
+    "line": 540,
+    "column": 1
+  },
+  "end": {
+    "line": 549,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 541,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 542,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 544,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 544,
+        "column": 9
+      },
+      "text": "identityEvidenceEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 545,
+        "column": 3
+      },
+      "text": "identityEvidenceEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 546,
+        "column": 3
+      },
+      "text": "identityEvidenceEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 547,
+        "column": 3
+      },
+      "text": "identityEvidenceEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 548,
+        "column": 3
+      },
+      "text": "identityEvidenceEqual"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,361 @@
+{
+  "file": "internal/app/engine/exit_e2e_test.go",
+  "source_sha256": "8cc6877572d4602364bcaf443e33aff26036804732de2e6fc0ace8a60aecdc2d",
+  "package": "engine_test",
+  "function": "entry",
+  "receiver": "e2eStack",
+  "signature": "e2eStack.entry(params=4, results=1)",
+  "start": {
+    "line": 266,
+    "column": 1
+  },
+  "end": {
+    "line": 323,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 322,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 2
+      },
+      "text": "s.t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 17
+      },
+      "text": "execgw.EncodeLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 16
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 48
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 21
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 67
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 22
+      },
+      "text": "execgw.Bound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 3
+      },
+      "text": "s.t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 15
+      },
+      "text": "s.engine.Journal.RecordDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 13
+      },
+      "text": "s.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 37
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 37
+      },
+      "text": "s.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 3
+      },
+      "text": "s.t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 18
+      },
+      "text": "s.engine.Journal.Prepare"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 18
+      },
+      "text": "journal.DeriveClientOrderID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 3
+      },
+      "text": "s.t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 12
+      },
+      "text": "attempt.MarkDispatchStarted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 3
+      },
+      "text": "s.t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 12
+      },
+      "text": "attempt.MarkAcked"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 3
+      },
+      "text": "s.t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 12
+      },
+      "text": "attempt.Settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 3
+      },
+      "text": "s.t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 2
+      },
+      "text": "s.fill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 12
+      },
+      "text": "s.engine.Journal.CurrentPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 3
+      },
+      "text": "s.t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 278,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 292,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 307,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 310,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 313,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

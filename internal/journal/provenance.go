@@ -134,7 +134,7 @@ func (j *Journal) PositionProvenance(ctx context.Context, positionID string) (Po
 	id := strings.TrimSpace(positionID)
 	chain := PositionProvenance{PositionID: id}
 
-	rows, err := j.db.QueryContext(ctx, provenanceQuery, id)
+	rows, err := j.db.QueryContext(ctx, allFillEventsCTE+provenanceQuery, id)
 	if err != nil {
 		return PositionProvenance{}, fmt.Errorf("journal: reading the provenance of %s: %w", id, err)
 	}
@@ -204,11 +204,23 @@ func orNone(s string) string {
 // each so the UNION arms cannot drift from one another; DISTINCT appears where a
 // retry can name one intent or one broker order twice, because a chain that
 // lists the same order three times is a chain that reads like three orders.
-const provenanceQuery = `
-WITH pos AS (
+const provenanceQuery = `,
+pos AS (
 	SELECT id, entry_decision_id, adoption_id, state, quantity, avg_price,
 	       coalesce(opened_at, '') AS opened_at, coalesce(closed_at, '') AS closed_at
 	  FROM positions WHERE id = ?
+),
+confirmed_order_owner AS (
+	SELECT a.broker_order_id, MIN(a.intent_id) intent_id,
+	       TRIM(i.account_ref) account_ref, LOWER(TRIM(i.market)) market,
+	       TRIM(i.trading_day) trading_day, UPPER(TRIM(i.symbol)) symbol,
+	       UPPER(TRIM(i.side)) side, MIN(a.settled_at) ownership_at
+	  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+	 WHERE a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')
+	   AND a.broker_order_id <> ''
+	 GROUP BY a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+	          TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
+	HAVING COUNT(DISTINCT a.intent_id) = 1
 ),
 entry_attempt AS (
 	SELECT a.id, a.intent_id, a.kind, a.state, a.broker_order_id, a.recorded_at
@@ -216,7 +228,13 @@ entry_attempt AS (
 	  JOIN pos ON a.decision_id = pos.entry_decision_id
 ),
 entry_intent AS (SELECT DISTINCT intent_id FROM entry_attempt WHERE intent_id <> ''),
-entry_order  AS (SELECT DISTINCT broker_order_id FROM entry_attempt WHERE broker_order_id <> ''),
+entry_order AS (
+	SELECT DISTINCT o.broker_order_id, o.account_ref, o.market, o.trading_day,
+	       o.symbol, o.side, o.ownership_at
+	  FROM entry_attempt a JOIN confirmed_order_owner o
+	    ON o.broker_order_id = a.broker_order_id AND o.intent_id = a.intent_id
+	 WHERE a.state = 'CONFIRMED'
+),
 exit_intent AS (
 	SELECT DISTINCT e.proposed_intent_id AS intent_id
 	  FROM exit_events e JOIN pos ON e.position_id = pos.id
@@ -226,7 +244,13 @@ exit_attempt AS (
 	SELECT a.id, a.intent_id, a.kind, a.state, a.broker_order_id, a.recorded_at
 	  FROM mutation_attempts a JOIN exit_intent x ON a.intent_id = x.intent_id
 ),
-exit_order AS (SELECT DISTINCT broker_order_id FROM exit_attempt WHERE broker_order_id <> '')
+exit_order AS (
+	SELECT DISTINCT o.broker_order_id, o.account_ref, o.market, o.trading_day,
+	       o.symbol, o.side, o.ownership_at
+	  FROM exit_attempt a JOIN confirmed_order_owner o
+	    ON o.broker_order_id = a.broker_order_id AND o.intent_id = a.intent_id
+	 WHERE a.state = 'CONFIRMED'
+)
 
 SELECT 0, 'ADOPTION', ad.observed_at, ad.id, ad.observed_price, ad.synthetic_stop,
        coalesce(ad.cost_basis, '')
@@ -242,7 +266,12 @@ SELECT 3, 'ATTEMPT', a.recorded_at, a.id, a.kind, a.state, a.broker_order_id
   FROM entry_attempt a
 UNION ALL
 SELECT 4, 'FILL', f.committed_at, f.order_id, f.delta_quantity, f.cumulative_quantity, f.average_price
-  FROM entry_order o JOIN fill_events f ON f.order_id = o.broker_order_id
+  FROM entry_order o
+  JOIN all_fill_events f ON f.order_id = o.broker_order_id
+	AND o.ownership_at < f.committed_at
+	AND TRIM(f.account_ref) = o.account_ref AND LOWER(TRIM(f.market)) = o.market
+	AND TRIM(f.trading_day) = o.trading_day AND UPPER(TRIM(f.symbol)) = o.symbol
+	AND UPPER(TRIM(f.side)) = o.side
 UNION ALL
 SELECT 5, 'POSITION', pos.opened_at, pos.id, pos.state, pos.quantity, pos.avg_price
   FROM pos WHERE pos.opened_at <> ''
@@ -262,7 +291,12 @@ SELECT 9, 'EXIT_ATTEMPT', a.recorded_at, a.id, a.kind, a.state, a.broker_order_i
 UNION ALL
 SELECT 10, 'EXIT_FILL', f.committed_at, f.order_id, f.delta_quantity, f.cumulative_quantity,
        f.average_price
-  FROM exit_order o JOIN fill_events f ON f.order_id = o.broker_order_id
+  FROM exit_order o
+  JOIN all_fill_events f ON f.order_id = o.broker_order_id
+	AND o.ownership_at < f.committed_at
+	AND TRIM(f.account_ref) = o.account_ref AND LOWER(TRIM(f.market)) = o.market
+	AND TRIM(f.trading_day) = o.trading_day AND UPPER(TRIM(f.symbol)) = o.symbol
+	AND UPPER(TRIM(f.side)) = o.side
 UNION ALL
 SELECT 11, 'CLOSE', pos.closed_at, pos.id, pos.state, pos.quantity, ''
   FROM pos WHERE pos.closed_at <> ''

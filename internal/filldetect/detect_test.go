@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
@@ -144,8 +145,16 @@ func (p *fakePositions) sweepCount() int {
 // fakeTracked names the orders that must be followed by id even once they have
 // left the open list.
 type fakeTracked struct {
-	orders []filldetect.TrackedOrder
-	err    error
+	accountRef string
+	orders     []filldetect.TrackedOrder
+	err        error
+}
+
+func (t fakeTracked) SelectedAccountRef() string {
+	if t.accountRef == "" {
+		return "acct-test"
+	}
+	return t.accountRef
 }
 
 func (t fakeTracked) TrackedOrders(context.Context) ([]filldetect.TrackedOrder, error) {
@@ -160,13 +169,22 @@ func (t fakeTracked) TrackedOrders(context.Context) ([]filldetect.TrackedOrder, 
 type fakeLedger struct {
 	mu       sync.Mutex
 	clk      clock.Clock
-	seen     map[string]float64
+	seen     map[fakeSnapshotKey]float64
 	applied  []filldetect.Snapshot
 	failOnce error
 }
 
+type fakeSnapshotKey struct {
+	accountRef string
+	market     string
+	tradingDay string
+	symbol     string
+	side       string
+	orderID    string
+}
+
 func newLedger(clk clock.Clock) *fakeLedger {
-	return &fakeLedger{clk: clk, seen: map[string]float64{}}
+	return &fakeLedger{clk: clk, seen: map[fakeSnapshotKey]float64{}}
 }
 
 func (l *fakeLedger) Apply(_ context.Context, snap filldetect.Snapshot) (filldetect.Applied, error) {
@@ -178,7 +196,15 @@ func (l *fakeLedger) Apply(_ context.Context, snap filldetect.Snapshot) (filldet
 		return filldetect.Applied{}, err
 	}
 	l.applied = append(l.applied, snap)
-	prev := l.seen[snap.OrderID]
+	key := fakeSnapshotKey{
+		accountRef: strings.TrimSpace(snap.AccountRef),
+		market:     strings.ToLower(strings.TrimSpace(snap.Market)),
+		tradingDay: strings.TrimSpace(snap.TradingDay),
+		symbol:     strings.ToUpper(strings.TrimSpace(snap.Symbol)),
+		side:       strings.ToUpper(strings.TrimSpace(snap.Side)),
+		orderID:    snap.OrderID,
+	}
+	prev := l.seen[key]
 	delta := snap.FilledQuantity - prev
 	if delta < 0 {
 		return filldetect.Applied{
@@ -186,7 +212,7 @@ func (l *fakeLedger) Apply(_ context.Context, snap filldetect.Snapshot) (filldet
 			Reason: execgw.ReasonBrokerStateUnknown,
 		}, nil
 	}
-	l.seen[snap.OrderID] = snap.FilledQuantity
+	l.seen[key] = snap.FilledQuantity
 	return filldetect.Applied{
 		OrderID:     snap.OrderID,
 		Delta:       delta,
@@ -220,6 +246,9 @@ type rawOrder struct {
 	rawAmount string
 	filledAt  string
 	canceled  string
+	orderedAt string
+	side      string
+	currency  string
 }
 
 func (o rawOrder) json() json.RawMessage {
@@ -232,13 +261,23 @@ func (o rawOrder) json() json.RawMessage {
 	if o.symbol == "" {
 		o.symbol = "AAPL"
 	}
+	if o.orderedAt == "" {
+		o.orderedAt = "2026-03-30T09:30:00-04:00"
+	}
+	if o.side == "" {
+		o.side = "BUY"
+	}
+	if o.currency == "" {
+		o.currency = "USD"
+	}
 	fields := []string{
 		`"orderId":` + quote(o.id),
 		`"symbol":` + quote(o.symbol),
-		`"side":"BUY"`,
+		`"side":` + quote(o.side),
 		`"status":` + quote(o.status),
 		`"quantity":` + quote(o.quantity),
-		`"currency":"USD"`,
+		`"currency":` + quote(o.currency),
+		`"orderedAt":` + quote(o.orderedAt),
 	}
 	if o.canceled != "" {
 		fields = append(fields, `"canceledAt":`+quote(o.canceled))
@@ -339,8 +378,8 @@ func TestPollReadsTrackedOrdersThatLeftTheOpenList(t *testing.T) {
 		"o-gone": rawOrder{id: "o-gone", status: "CLOSED", quantity: "10", filled: "10"}.json(),
 	}}
 	tracked := fakeTracked{orders: []filldetect.TrackedOrder{
-		{OrderID: "o-gone", Symbol: "AAPL", Market: "us"},
-		{OrderID: "o-open", Symbol: "AAPL", Market: "us"},
+		{OrderID: "o-gone", AccountRef: "acct-test", Symbol: "AAPL", Market: "us", TradingDay: "2026-03-30", Side: "BUY"},
+		{OrderID: "o-open", AccountRef: "acct-test", Symbol: "AAPL", Market: "us", TradingDay: "2026-03-30", Side: "BUY"},
 	}}
 	pager := newPager(page("", rawOrder{id: "o-open", filled: "1"}))
 
@@ -359,6 +398,113 @@ func TestPollReadsTrackedOrdersThatLeftTheOpenList(t *testing.T) {
 	ids := ledger.appliedIDs()
 	if len(ids) != 2 {
 		t.Fatalf("applied = %v, want the open order and the tracked one", ids)
+	}
+}
+
+func TestPollSeparatesReusedOrderIDsByCanonicalScope(t *testing.T) {
+	reader := &fakeOrderReader{orders: rawOrders(rawOrder{
+		id: "o-reused", symbol: "005930", status: "CLOSED", filled: "3",
+		currency: "KRW", side: "SELL", orderedAt: "2026-03-31T09:30:00+09:00",
+	})}
+	tracked := fakeTracked{orders: []filldetect.TrackedOrder{
+		{OrderID: "o-reused", AccountRef: "acct-test", Symbol: "AAPL", Market: "us", TradingDay: "2026-03-30", Side: "BUY"},
+		{
+			OrderID: "o-reused", AccountRef: "acct-test", Symbol: "005930", Market: "kr", TradingDay: "2026-03-31", Side: "SELL",
+			Lineage: brokerstate.Lineage{SuccessorOrderID: "o-replacement"},
+		},
+	}}
+	pager := newPager(page("", rawOrder{id: "o-reused", symbol: "AAPL"}))
+
+	d, _, ledger := newDetector(t, pager, reader, &fakePositions{}, tracked, nil)
+	cycle, err := d.PollOnce(context.Background())
+	if err != nil {
+		t.Fatalf("PollOnce: %v", err)
+	}
+
+	if got := reader.readIDs(); len(got) != 1 || got[0] != "o-reused" {
+		t.Fatalf("single-order reads = %v, want the reused id's other canonical scope", got)
+	}
+	if cycle.TrackedReads != 1 {
+		t.Fatalf("TrackedReads = %d, want 1", cycle.TrackedReads)
+	}
+	snaps := ledger.appliedSnapshots()
+	if len(snaps) != 2 {
+		t.Fatalf("applied snapshots = %+v, want both canonical scopes", snaps)
+	}
+	if snaps[0].Derived.State != brokerstate.StateOpenUnfilled {
+		t.Fatalf("US open state = %s, want lineage-free OPEN_UNFILLED", snaps[0].Derived.State)
+	}
+	if snaps[1].Derived.State != brokerstate.StateReplaced ||
+		snaps[1].Derived.SuccessorOrderID != "o-replacement" {
+		t.Fatalf("KR tracked state = %+v, want its own replacement lineage", snaps[1].Derived)
+	}
+}
+
+func TestPollRejectsIncompleteOpenScopeForATrackedOrder(t *testing.T) {
+	openWithoutTradingDay := json.RawMessage(`{
+		"orderId":"o-ambiguous","symbol":"AAPL","side":"BUY","status":"OPEN",
+		"quantity":"10","currency":"USD","execution":{"filledQuantity":"0"}
+	}`)
+	pager := newPager(execgw.OrderPage{Orders: []json.RawMessage{openWithoutTradingDay}})
+	tracked := fakeTracked{orders: []filldetect.TrackedOrder{{
+		OrderID: "o-ambiguous", AccountRef: "acct-test", Symbol: "AAPL",
+		Market: "us", TradingDay: "2026-03-30", Side: "BUY",
+	}}}
+
+	d, _, ledger := newDetector(t, pager, &fakeOrderReader{}, &fakePositions{}, tracked, nil)
+	if _, err := d.PollOnce(context.Background()); err == nil ||
+		!strings.Contains(err.Error(), "incomplete canonical scope") {
+		t.Fatalf("PollOnce error = %v, want fail-closed incomplete canonical scope", err)
+	}
+	if got := ledger.appliedSnapshots(); len(got) != 0 {
+		t.Fatalf("applied snapshots = %+v, want none from an ambiguous broker payload", got)
+	}
+}
+
+func TestPollRejectsTrackedReadFromAnotherCanonicalScope(t *testing.T) {
+	reader := &fakeOrderReader{orders: rawOrders(rawOrder{
+		id: "o-reused", symbol: "MSFT", side: "SELL",
+		orderedAt: "2026-03-31T09:30:00-04:00",
+	})}
+	tracked := fakeTracked{orders: []filldetect.TrackedOrder{{
+		OrderID: "o-reused", AccountRef: "acct-test", Symbol: "AAPL",
+		Market: "us", TradingDay: "2026-03-30", Side: "BUY",
+	}}}
+
+	d, _, ledger := newDetector(t, newPager(page("")), reader, &fakePositions{}, tracked, nil)
+	if _, err := d.PollOnce(context.Background()); err == nil ||
+		!strings.Contains(err.Error(), "does not match requested scope") {
+		t.Fatalf("PollOnce error = %v, want fail-closed scope mismatch", err)
+	}
+	if got := ledger.appliedSnapshots(); len(got) != 0 {
+		t.Fatalf("applied snapshots = %+v, want none from another canonical scope", got)
+	}
+}
+
+func TestPollRejectsDuplicateTrackedCanonicalIdentity(t *testing.T) {
+	tracked := fakeTracked{orders: []filldetect.TrackedOrder{
+		{
+			OrderID: "o-duplicate", AccountRef: "acct-test", Symbol: "AAPL",
+			Market: "us", TradingDay: "2026-03-30", Side: "BUY",
+		},
+		{
+			OrderID: "o-duplicate", AccountRef: "acct-test", Symbol: "AAPL",
+			Market: "us", TradingDay: "2026-03-30", Side: "BUY",
+			Lineage: brokerstate.Lineage{SuccessorOrderID: "other-owner-child"},
+		},
+	}}
+	reader := &fakeOrderReader{}
+
+	d, _, ledger := newDetector(t, newPager(page("")), reader, &fakePositions{}, tracked, nil)
+	if _, err := d.PollOnce(context.Background()); err == nil ||
+		!strings.Contains(err.Error(), "duplicate tracked order in canonical scope") {
+		t.Fatalf("PollOnce error = %v, want duplicate canonical identity rejection", err)
+	}
+	if got := reader.readIDs(); len(got) != 0 {
+		t.Fatalf("single-order reads = %v, want none after ownership ambiguity", got)
+	}
+	if got := ledger.appliedSnapshots(); len(got) != 0 {
+		t.Fatalf("applied snapshots = %+v, want none after ownership ambiguity", got)
 	}
 }
 
@@ -702,9 +848,11 @@ func TestDetectionNeedsNoWTSSession(t *testing.T) {
 		Orders:    newPager(page("")),
 		Order:     &fakeOrderReader{orders: map[string]json.RawMessage{"o-1": filled.json()}},
 		Positions: &fakePositions{},
-		Tracked:   fakeTracked{orders: []filldetect.TrackedOrder{{OrderID: "o-1", Symbol: "AAPL"}}},
-		Ledger:    newLedger(clk),
-		Clock:     clk,
+		Tracked: fakeTracked{orders: []filldetect.TrackedOrder{{
+			OrderID: "o-1", AccountRef: "acct-test", Symbol: "AAPL", Market: "us", TradingDay: "2026-03-30", Side: "BUY",
+		}}},
+		Ledger: newLedger(clk),
+		Clock:  clk,
 	}
 	cycle, err := d.PollOnce(context.Background())
 	if err != nil {

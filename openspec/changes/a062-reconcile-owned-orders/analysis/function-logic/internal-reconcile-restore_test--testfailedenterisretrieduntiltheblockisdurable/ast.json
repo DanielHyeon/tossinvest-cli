@@ -1,0 +1,389 @@
+{
+  "file": "internal/reconcile/restore_test.go",
+  "source_sha256": "06075e0e4501b78ee04e55e617309bf70a7b1a025c31d7a496cd9396161bc2ab",
+  "package": "reconcile_test",
+  "function": "TestFailedEnterIsRetriedUntilTheBlockIsDurable",
+  "signature": "TestFailedEnterIsRetriedUntilTheBlockIsDurable(params=1, results=0)",
+  "start": {
+    "line": 627,
+    "column": 1
+  },
+  "end": {
+    "line": 664,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 637,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 640,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 643,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 648,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 651,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 655,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 658,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 661,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 629,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 630,
+        "column": 7
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 632,
+        "column": 10
+      },
+      "text": "noStaleGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 633,
+        "column": 13
+      },
+      "text": "trackerOn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 635,
+        "column": 10
+      },
+      "text": "mismatchDiff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 637,
+        "column": 15
+      },
+      "text": "tracker.Observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 638,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 5
+      },
+      "text": "gate.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 48
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 52
+      },
+      "text": "tracker.Blocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 641,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 643,
+        "column": 20
+      },
+      "text": "j.ActiveReconcileStates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 643,
+        "column": 64
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 644,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 647,
+        "column": 2
+      },
+      "text": "clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 648,
+        "column": 15
+      },
+      "text": "tracker.Observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 649,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 652,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 654,
+        "column": 17
+      },
+      "text": "j.ActiveReconcileStates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 656,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 658,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 659,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 661,
+        "column": 5
+      },
+      "text": "gate.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 661,
+        "column": 48
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 661,
+        "column": 52
+      },
+      "text": "tracker.Blocks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 662,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 628,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 629,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 630,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 631,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 632,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 633,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 634,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 635,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 637,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 643,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 648,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 654,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

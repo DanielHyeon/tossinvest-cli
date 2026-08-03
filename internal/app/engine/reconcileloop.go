@@ -173,7 +173,8 @@ type ReconcileCycle struct {
 	// Closed counts managed positions found to have gone to zero outside the
 	// engine.
 	Closed int
-	// Blocked and Released are the tracker's verdict.
+	// Blocked is the number of blocks active after the observation. Released is
+	// the number durably released by this cycle.
 	Blocked  int
 	Released int
 	// Unmanaged counts holdings confirmed to be outside exit management, and
@@ -288,7 +289,7 @@ func NewReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver, error) {
 	case strings.TrimSpace(opts.AccountRef) == "":
 		return nil, fmt.Errorf("%w: the loop is scoped to one account; none was named",
 			ErrReconcileDriverUnavailable)
-	case opts.Adoption.Enabled && opts.Prices == nil:
+	case (opts.Adoption.Enabled || len(opts.Adoption.IncludeSymbols) > 0) && opts.Prices == nil:
 		return nil, fmt.Errorf("%w: adoption is on and there is no price read; the synthetic t0 is "+
 			"an observation and cannot be invented", ErrReconcileDriverUnavailable)
 	}
@@ -412,12 +413,21 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 	cycle.Converged = len(converged.Converged)
 	cycle.Closed = converged.Closed
 
-	outcome, err := d.opts.Tracker.Observe(ctx, diff)
-	if err != nil && cycle.Err == nil {
-		cycle.Err = err
+	if err := d.opts.Tracker.Refresh(ctx); err != nil {
+		if cycle.Err == nil {
+			cycle.Err = err
+		}
+		return cycle
 	}
-	cycle.Blocked = len(outcome.Added)
+	outcome, err := d.opts.Tracker.Observe(ctx, diff)
+	cycle.Blocked = len(d.opts.Tracker.Blocks())
 	cycle.Released = len(outcome.Cleared)
+	if err != nil {
+		if cycle.Err == nil {
+			cycle.Err = err
+		}
+		return cycle
+	}
 
 	d.judgeHoldings(ctx, snapshot, &cycle)
 	return cycle

@@ -1,0 +1,248 @@
+{
+  "file": "internal/reconcile/restore_test.go",
+  "source_sha256": "06075e0e4501b78ee04e55e617309bf70a7b1a025c31d7a496cd9396161bc2ab",
+  "package": "reconcile_test",
+  "function": "TestSuccessfulForeignCauseResolutionClearsItsSymbolGate",
+  "signature": "TestSuccessfulForeignCauseResolutionClearsItsSymbolGate(params=1, results=0)",
+  "start": {
+    "line": 682,
+    "column": 1
+  },
+  "end": {
+    "line": 707,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 686,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 694,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 697,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 701,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 704,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 683,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 684,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 685,
+        "column": 7
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 686,
+        "column": 18
+      },
+      "text": "j.EnterReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 690,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 692,
+        "column": 10
+      },
+      "text": "noStaleGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 693,
+        "column": 13
+      },
+      "text": "trackerOn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 694,
+        "column": 12
+      },
+      "text": "tracker.Restore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 695,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 697,
+        "column": 5
+      },
+      "text": "gate.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 698,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 701,
+        "column": 12
+      },
+      "text": "tracker.Resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 702,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 704,
+        "column": 17
+      },
+      "text": "gate.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 705,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 683,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 684,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 685,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 686,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 692,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 693,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 694,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 701,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 704,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,40 @@
+{
+  "file": "internal/filldetect/ledger.go",
+  "source_sha256": "75966bf1507d412f48b88efddab42f045fff31f45c76bc9cf43dfc0a634242c4",
+  "package": "filldetect",
+  "function": "SelectedAccountRef",
+  "receiver": "JournalTracked",
+  "signature": "JournalTracked.SelectedAccountRef(params=0, results=1)",
+  "start": {
+    "line": 122,
+    "column": 1
+  },
+  "end": {
+    "line": 122,
+    "column": 95
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 122,
+        "column": 55
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 62
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

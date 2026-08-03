@@ -106,9 +106,12 @@ func ProjectPosition(ctx context.Context, tx *ApplyTx, fill AppliedFill) error {
 
 // fillOrigin is what the ledger knows about the order behind a fill.
 type fillOrigin struct {
+	IntentID   string
 	AccountRef string
 	Market     string
 	Symbol     string
+	TradingDay string
+	Side       string
 	Role       position.Role
 	// DecisionID is the decision that authorised the attempt, empty when the
 	// attempt predates the decision contract or carried none.
@@ -129,44 +132,97 @@ type fillOrigin struct {
 // an external order and it is not an error.
 func resolveFillOrigin(ctx context.Context, tx *ApplyTx, fill AppliedFill) (fillOrigin, bool, error) {
 	rows, err := tx.Query(ctx, `
-		SELECT i.account_ref, i.market, i.symbol, i.side, coalesce(a.decision_id, '')
+		SELECT i.id, i.account_ref, i.market, i.symbol, i.trading_day, i.side,
+		       coalesce(a.decision_id, '')
 		  FROM mutation_attempts a
 		  JOIN intents i ON i.id = a.intent_id
-		 WHERE a.broker_order_id = ?
-		 ORDER BY a.recorded_at DESC, a.rowid DESC
-		 LIMIT 1`, fill.OrderID)
+		 WHERE a.broker_order_id = ? AND a.state = ?
+		   AND a.kind IN ('PLACE','AMEND') AND a.settled_at < ?
+		 ORDER BY a.recorded_at DESC, a.rowid DESC`, fill.OrderID, string(StateConfirmed), fill.CommittedAt)
 	if err != nil {
 		return fillOrigin{}, false, fmt.Errorf(
 			"journal: resolving the intent behind order %s: %w", fill.OrderID, err)
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		if err := rows.Err(); err != nil {
+	type candidate struct {
+		intentID string
+		origin   fillOrigin
+		side     string
+	}
+	var candidates []candidate
+	for rows.Next() {
+		var item candidate
+		if err := rows.Scan(&item.intentID, &item.origin.AccountRef, &item.origin.Market,
+			&item.origin.Symbol, &item.origin.TradingDay, &item.side, &item.origin.DecisionID); err != nil {
 			return fillOrigin{}, false, fmt.Errorf(
 				"journal: resolving the intent behind order %s: %w", fill.OrderID, err)
 		}
-		return fillOrigin{}, false, nil
+		candidates = append(candidates, item)
 	}
-	var origin fillOrigin
-	var side string
-	if err := rows.Scan(&origin.AccountRef, &origin.Market, &origin.Symbol, &side,
-		&origin.DecisionID); err != nil {
+	if err := rows.Err(); err != nil {
 		return fillOrigin{}, false, fmt.Errorf(
 			"journal: resolving the intent behind order %s: %w", fill.OrderID, err)
 	}
 	rows.Close()
+	if len(candidates) == 0 {
+		return fillOrigin{}, false, nil
+	}
+
+	expectedAccount := strings.TrimSpace(firstNonEmpty(fill.AccountRef, candidates[0].origin.AccountRef))
+	expectedMarket := normaliseMarket(firstNonEmpty(fill.Market, candidates[0].origin.Market))
+	expectedSymbol := normaliseSymbol(firstNonEmpty(fill.Symbol, candidates[0].origin.Symbol))
+	expectedDay := strings.TrimSpace(firstNonEmpty(fill.TradingDay, candidates[0].origin.TradingDay))
+	expectedSide := strings.ToUpper(strings.TrimSpace(firstNonEmpty(fill.Side, candidates[0].side)))
+	strictBrokerScope := strings.TrimSpace(fill.AccountRef) != ""
+	conflict := strictBrokerScope && (strings.TrimSpace(fill.Market) == "" ||
+		strings.TrimSpace(fill.Symbol) == "" || strings.TrimSpace(fill.TradingDay) == "" ||
+		strings.TrimSpace(fill.Side) == "")
+	var matches []candidate
+	for _, item := range candidates {
+		if strings.TrimSpace(item.origin.AccountRef) == expectedAccount &&
+			normaliseMarket(item.origin.Market) == expectedMarket &&
+			normaliseSymbol(item.origin.Symbol) == expectedSymbol &&
+			strings.TrimSpace(item.origin.TradingDay) == expectedDay &&
+			strings.ToUpper(strings.TrimSpace(item.side)) == expectedSide {
+			matches = append(matches, item)
+		}
+	}
+	if len(matches) == 0 || (!strictBrokerScope && len(matches) != len(candidates)) {
+		conflict = true
+	}
+	if len(matches) > 0 {
+		intentID := matches[0].intentID
+		for _, item := range matches[1:] {
+			conflict = conflict || item.intentID != intentID
+		}
+	}
+	if conflict {
+		evidence := fmt.Sprintf(
+			"confirmed ownership for broker order %s conflicts with observed account/market/day/symbol/side %s/%s/%s/%s/%s",
+			fill.OrderID, expectedAccount, expectedMarket, expectedDay, expectedSymbol, expectedSide)
+		if err := enterReconcileScopeInTx(ctx, tx, expectedAccount, "",
+			ReconcileCauseIdentifierConflict, evidence, fill.CommittedAt); err != nil {
+			return fillOrigin{}, false, err
+		}
+		return fillOrigin{}, false, nil
+	}
+
+	origin := matches[0].origin
+	side := matches[0].side
+	origin.IntentID = matches[0].intentID
+	origin.Side = side
 
 	origin.Role, err = position.RoleForSide(side)
 	if err != nil {
 		return fillOrigin{}, false, fmt.Errorf(
 			"journal: the direction of order %s: %w", fill.OrderID, err)
 	}
-	origin.Market = normaliseMarket(firstNonEmpty(origin.Market, fill.Market))
-	origin.Symbol = normaliseSymbol(firstNonEmpty(origin.Symbol, fill.Symbol))
-	origin.AccountRef = strings.TrimSpace(firstNonEmpty(origin.AccountRef, fill.AccountRef))
+	origin.Market = expectedMarket
+	origin.Symbol = expectedSymbol
+	origin.AccountRef = expectedAccount
 
-	origin.HasSuccessor, err = hasReplaceSuccessor(ctx, tx, fill.OrderID)
+	origin.HasSuccessor, err = hasReplaceSuccessor(ctx, tx, fill.OrderID, origin.IntentID)
 	if err != nil {
 		return fillOrigin{}, false, err
 	}
@@ -175,10 +231,16 @@ func resolveFillOrigin(ctx context.Context, tx *ApplyTx, fill AppliedFill) (fill
 
 // hasReplaceSuccessor reports whether an amendment created a child that carries
 // this order's remainder. It is the lineage dimension of the transition table.
-func hasReplaceSuccessor(ctx context.Context, tx *ApplyTx, orderID string) (bool, error) {
+func hasReplaceSuccessor(ctx context.Context, tx *ApplyTx, orderID, intentID string) (bool, error) {
 	rows, err := tx.Query(ctx,
-		`SELECT 1 FROM lineage_edges WHERE parent_order_id = ? AND relation = ? LIMIT 1`,
-		strings.TrimSpace(orderID), RelationReplaces)
+		`SELECT 1 FROM scoped_lineage_edges
+		  WHERE parent_order_id = ? AND intent_id = ? AND relation = ?
+		 UNION
+		 SELECT 1 FROM lineage_edges
+		  WHERE parent_order_id = ? AND intent_id = ? AND relation = ?
+		 LIMIT 1`,
+		orderID, strings.TrimSpace(intentID), RelationReplaces,
+		strings.TrimSpace(orderID), strings.TrimSpace(intentID), RelationReplaces)
 	if err != nil {
 		return false, fmt.Errorf("journal: reading the lineage of %s: %w", orderID, err)
 	}
@@ -312,20 +374,29 @@ func enterReconcileInTx(ctx context.Context, tx *ApplyTx, origin fillOrigin,
 		"position projection refused transition %s (%s): %s [order %s, delta %s, cumulative %s]",
 		outcome.Row, outcome.Refusal, outcome.Reason, fill.OrderID, fill.Delta, fill.CumulativeQuantity)
 
+	return enterReconcileScopeInTx(ctx, tx, origin.AccountRef, origin.Symbol, cause, evidence, fill.CommittedAt)
+}
+
+func enterReconcileScopeInTx(ctx context.Context, tx *ApplyTx, accountRef, symbol, cause, evidence,
+	enteredAt string,
+) error {
+	accountRef = strings.TrimSpace(accountRef)
+	symbol = normaliseSymbol(symbol)
 	rows, err := tx.Query(ctx,
 		`SELECT 1 FROM reconcile_states
-		  WHERE account_ref = ? AND symbol = ? AND released_at IS NULL LIMIT 1`,
-		origin.AccountRef, origin.Symbol)
+		  WHERE account_ref = ? AND ((? = '' AND symbol IS NULL) OR symbol = ?)
+		    AND released_at IS NULL LIMIT 1`,
+		accountRef, symbol, symbol)
 	if err != nil {
 		return fmt.Errorf("journal: reading the RECONCILE state of %s/%s: %w",
-			origin.AccountRef, origin.Symbol, err)
+			accountRef, symbol, err)
 	}
 	active := rows.Next()
 	scanErr := rows.Err()
 	rows.Close()
 	if scanErr != nil {
 		return fmt.Errorf("journal: reading the RECONCILE state of %s/%s: %w",
-			origin.AccountRef, origin.Symbol, scanErr)
+			accountRef, symbol, scanErr)
 	}
 	if active {
 		// Already blocked for this symbol. Re-entering would either fail the
@@ -338,10 +409,10 @@ func enterReconcileInTx(ctx context.Context, tx *ApplyTx, origin fillOrigin,
 		INSERT INTO reconcile_states
 		  (id, account_ref, symbol, cause, evidence, entered_at, released_at, release_cause)
 		VALUES (?,?,?,?,?,?,NULL,NULL)`,
-		reconcileStateID(origin.AccountRef, origin.Symbol, cause, fill.CommittedAt),
-		origin.AccountRef, origin.Symbol, cause, evidence, fill.CommittedAt); err != nil {
+		reconcileStateID(accountRef, symbol, cause, enteredAt),
+		accountRef, nullableString(symbol), cause, evidence, enteredAt); err != nil {
 		return fmt.Errorf("journal: entering RECONCILE for %s/%s: %w",
-			origin.AccountRef, origin.Symbol, err)
+			accountRef, symbol, err)
 	}
 	return nil
 }

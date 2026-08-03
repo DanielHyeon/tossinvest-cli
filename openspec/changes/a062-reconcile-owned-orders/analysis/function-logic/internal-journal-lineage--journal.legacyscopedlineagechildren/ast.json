@@ -1,0 +1,40 @@
+{
+  "file": "internal/journal/lineage.go",
+  "source_sha256": "73943302679524a29931771062a92c6140e53ffd5724c54620eab50f1740508a",
+  "package": "journal",
+  "function": "legacyScopedLineageChildren",
+  "receiver": "Journal",
+  "signature": "Journal.legacyScopedLineageChildren(params=3, results=2)",
+  "start": {
+    "line": 398,
+    "column": 1
+  },
+  "end": {
+    "line": 417,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 9
+      },
+      "text": "j.queryScopedLineageChildren"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

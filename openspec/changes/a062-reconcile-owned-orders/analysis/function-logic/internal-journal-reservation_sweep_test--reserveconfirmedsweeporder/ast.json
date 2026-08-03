@@ -1,0 +1,119 @@
+{
+  "file": "internal/journal/reservation_sweep_test.go",
+  "source_sha256": "dcfcc7de8f1e832e67d19949578ce40bf3d79d549ad6f99de6f5a714cfcd011e",
+  "package": "journal",
+  "function": "reserveConfirmedSweepOrder",
+  "signature": "reserveConfirmedSweepOrder(params=6, results=1)",
+  "start": {
+    "line": 171,
+    "column": 1
+  },
+  "end": {
+    "line": 181,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 9
+      },
+      "text": "recordEntryDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 14
+      },
+      "text": "j.Reserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 24
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 46
+      },
+      "text": "exposureReserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 44
+      },
+      "text": "mustVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 2
+      },
+      "text": "confirmAttempt"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 174,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

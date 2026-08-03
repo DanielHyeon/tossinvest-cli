@@ -1,0 +1,63 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "45414562be8a352d2183fb2dfc0985154e0eea5ce781e167eb6800841c495451",
+  "package": "main",
+  "function": "newEngineCmd",
+  "signature": "newEngineCmd(params=1, results=1)",
+  "start": {
+    "line": 112,
+    "column": 1
+  },
+  "end": {
+    "line": 119,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 2
+      },
+      "text": "cmd.AddCommand"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 17
+      },
+      "text": "newEngineRunCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 40
+      },
+      "text": "newEngineReconcileResolveCmd"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

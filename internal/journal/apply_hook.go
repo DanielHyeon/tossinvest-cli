@@ -118,6 +118,8 @@ type AppliedFill struct {
 	AccountRef string
 	Symbol     string
 	Market     string
+	TradingDay string
+	Side       string
 	// State is the caller's derived broker state, and Terminal its verdict that
 	// the order can no longer change.
 	State    string

@@ -43,11 +43,36 @@ func newJournalDetector(t *testing.T, clk *clock.Fake, pager *fakePager, gate *e
 		Orders:    pager,
 		Order:     &fakeOrderReader{},
 		Positions: &fakePositions{},
-		Tracked:   filldetect.JournalTracked{Journal: j},
-		Ledger:    filldetect.JournalLedger{Journal: j},
+		Tracked:   filldetect.JournalTracked{Journal: j, AccountRef: "acct-1"},
+		Ledger:    filldetect.JournalLedger{Journal: j, AccountRef: "acct-1"},
 		Clock:     clk,
 		Gate:      gate,
 	}, j
+}
+
+func recordConfirmedLedgerOrder(t *testing.T, j *journal.Journal, orderID string) {
+	t.Helper()
+	ctx := context.Background()
+	attempt, err := j.Prepare(ctx, journal.PrepareRequest{
+		Intent: journal.Intent{
+			ID: "intent-" + orderID, Market: "us", TradingDay: "2026-03-30", AccountRef: "acct-1",
+			Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "10",
+			Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-" + orderID,
+		},
+		Kind: journal.KindPlace, AttemptID: "attempt-" + orderID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkDispatchStarted(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkAcked(ctx, orderID); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.Settle(ctx, journal.StateConfirmed, journal.ReasonBrokerAcknowledged, "acked"); err != nil {
+		t.Fatal(err)
+	}
 }
 
 // TestTheSameSnapshotFromPollAndSSERefetchAppliesOnce is the spec scenario
@@ -255,11 +280,12 @@ func TestTerminalOrdersLeaveTheTrackedSet(t *testing.T) {
 	pager := newPager(page("", rawOrder{id: "o-1", quantity: "10", filled: "4"}))
 	d, j := newJournalDetector(t, clk, pager, nil, path)
 	ctx := context.Background()
+	recordConfirmedLedgerOrder(t, j, "o-1")
 
 	if _, err := d.PollOnce(ctx); err != nil {
 		t.Fatalf("poll 1: %v", err)
 	}
-	tracked, err := filldetect.JournalTracked{Journal: j}.TrackedOrders(ctx)
+	tracked, err := filldetect.JournalTracked{Journal: j, AccountRef: "acct-1"}.TrackedOrders(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,12 +309,47 @@ func TestTerminalOrdersLeaveTheTrackedSet(t *testing.T) {
 	if cycle.TrackedReads != 1 || cycle.Fills != 1 {
 		t.Fatalf("cycle = %+v, want one tracked read producing the final fill", cycle)
 	}
-
-	tracked, err = filldetect.JournalTracked{Journal: j}.TrackedOrders(ctx)
+	tracked, err = filldetect.JournalTracked{Journal: j, AccountRef: "acct-1"}.TrackedOrders(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(tracked) != 0 {
 		t.Fatalf("tracked after the order filled = %+v, want none", tracked)
+	}
+}
+
+func TestJournalTrackedPreservesCanonicalOrderScope(t *testing.T) {
+	clk := clock.NewFake(pollStart)
+	j := openLedgerJournal(t, clk, filepath.Join(t.TempDir(), "journal.db"))
+	recordConfirmedLedgerOrder(t, j, "o-scoped")
+
+	source := filldetect.JournalTracked{Journal: j, AccountRef: "acct-1"}
+	if got := source.SelectedAccountRef(); got != "acct-1" {
+		t.Fatalf("selected account = %q, want acct-1", got)
+	}
+	tracked, err := source.TrackedOrders(context.Background())
+	if err != nil {
+		t.Fatalf("TrackedOrders: %v", err)
+	}
+	if len(tracked) != 1 {
+		t.Fatalf("tracked = %+v, want one order", tracked)
+	}
+	got := tracked[0]
+	if got.OrderID != "o-scoped" || got.AccountRef != "acct-1" || got.Market != "us" ||
+		got.TradingDay != "2026-03-30" || got.Symbol != "AAPL" || got.Side != "BUY" {
+		t.Fatalf("tracked canonical scope = %+v, want acct-1/us/2026-03-30/AAPL/BUY/o-scoped", got)
+	}
+}
+
+func TestJournalLedgerRejectsSnapshotFromAnotherAccount(t *testing.T) {
+	clk := clock.NewFake(pollStart)
+	j := openLedgerJournal(t, clk, filepath.Join(t.TempDir(), "journal.db"))
+	ledger := filldetect.JournalLedger{Journal: j, AccountRef: "acct-1"}
+	_, err := ledger.Apply(context.Background(), filldetect.Snapshot{
+		OrderID: "o-cross-account", AccountRef: "acct-2", Market: "us",
+		TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+	})
+	if err == nil || !strings.Contains(err.Error(), "ledger account") {
+		t.Fatalf("Apply error = %v, want account-scope rejection", err)
 	}
 }

@@ -1,0 +1,149 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
+  "package": "journal",
+  "function": "lookupFillSnapshotScoped",
+  "signature": "lookupFillSnapshotScoped(params=3, results=2)",
+  "start": {
+    "line": 961,
+    "column": 1
+  },
+  "end": {
+    "line": 982,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 964,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 972,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 965,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 973,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 978,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 963,
+        "column": 10
+      },
+      "text": "canonicalFillSnapshotScope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 964,
+        "column": 6
+      },
+      "text": "scope.complete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 965,
+        "column": 10
+      },
+      "text": "scanFillSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 965,
+        "column": 27
+      },
+      "text": "q.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 968,
+        "column": 14
+      },
+      "text": "scanFillSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 968,
+        "column": 31
+      },
+      "text": "q.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 972,
+        "column": 20
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 978,
+        "column": 9
+      },
+      "text": "scanFillSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 978,
+        "column": 26
+      },
+      "text": "q.QueryRowContext"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 963,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 968,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,0 +1,47 @@
+{
+  "file": "internal/filldetect/detect_test.go",
+  "source_sha256": "7fe5825a894d212e278325c39d6b369d975ef46f006b913627daa8c7264e2e26",
+  "package": "filldetect_test",
+  "function": "SelectedAccountRef",
+  "receiver": "fakeTracked",
+  "signature": "fakeTracked.SelectedAccountRef(params=0, results=1)",
+  "start": {
+    "line": 153,
+    "column": 1
+  },
+  "end": {
+    "line": 158,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 155,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 157,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}
