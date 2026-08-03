@@ -82,9 +82,9 @@ func BuildExitLine(source Source) ExitLineView {
 	view.ObservationID = dashIfEmpty(line.ObservationID)
 	view.PositionGeneration = generationText(line.PositionGeneration)
 
-	if strings.TrimSpace(source.StaleReason) != "" {
-		view.Status, view.StatusText = "stale", "오래된 평가"
-		view.Reason = reasonText(source.StaleReason)
+	if reason := strings.TrimSpace(source.StaleReason); reason != "" {
+		view.Status, view.StatusText = "stale", staleStatusText(reason)
+		view.Reason = reasonText(reason)
 		return view
 	}
 
@@ -197,6 +197,10 @@ func percentText(ratio string) string {
 
 func reasonText(reason string) string {
 	switch strings.TrimSpace(reason) {
+	case "engine_not_running":
+		return "엔진이 실행 중이 아니어서 보호선이 갱신되지 않는다"
+	case "snapshot_quarantined":
+		return "이 포지션은 지금 exit 판정 대상이 아니다 — 저장된 보호선이 갱신되지 않는다"
 	case "observation_older_than_limit":
 		return "평가 시각이 표시 허용 범위를 지났다"
 	case "observation_in_future":

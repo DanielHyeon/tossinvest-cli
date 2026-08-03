@@ -273,6 +273,11 @@ type positionRow struct {
 	Excluded bool
 	HasExit  bool
 	Exit     journal.ExitState
+	// Quarantine is the unreleased exit-snapshot quarantine on this position's
+	// current generation. Non-nil means the engine is judging nothing here: the
+	// observation loop refuses the position outright, so whatever the last
+	// judgement left behind is no longer being maintained by anybody.
+	Quarantine *journal.ExitSnapshotQuarantine
 	// ExitLine is the canonical, fail-closed operator projection of Exit's
 	// persisted snapshot. The HTML template never reads actionable raw snapshot
 	// values directly, so stale evidence cannot leak a price into the page.
@@ -598,6 +603,7 @@ func joinPositions(broker []domain.Position, managed []journal.PositionExit,
 		row.Adopted = m.Position.Adopted()
 		row.HasExit = m.HasExit
 		row.Exit = m.Exit
+		row.Quarantine = m.Quarantine
 	}
 
 	sort.SliceStable(rows, func(i, j int) bool {

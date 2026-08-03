@@ -36,7 +36,13 @@ type policyActionView struct {
 }
 
 type policyRowView struct {
-	State      positionpolicy.State
+	State positionpolicy.State
+	// Name is the stock's name, taken from the holdings the console has already
+	// read. It is on the view and not on positionpolicy.State because the journal
+	// stores no name: a display string on the lifecycle domain type would be
+	// populated on some paths and empty on others, and the engine would have a
+	// field it must never trust.
+	Name       string
 	Management positionpolicy.ManagementProjection
 	Block      reconcileBlockView
 	Actions    []policyActionView
@@ -227,6 +233,7 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 		c.render(w, "position-policy", page)
 		return
 	}
+	names := c.holdingNames(c.now())
 	for _, state := range states {
 		management := positionpolicy.ProjectManagement(positionpolicy.ManagementInput{
 			Market: state.Market, Symbol: state.Symbol, JournalKnown: true,
@@ -234,7 +241,8 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 			Released: state.Status == positionpolicy.StatusReleased && state.Version > 0,
 			Runtime:  runtime,
 		})
-		row := policyRowView{State: state, Management: management}
+		row := policyRowView{State: state, Management: management,
+			Name: names[symbolKey(state.Market, state.Symbol)]}
 		if management.Block != nil {
 			row.Block = newReconcileBlockView(*management.Block, c.now())
 		}

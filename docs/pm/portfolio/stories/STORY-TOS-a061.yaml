@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a061",
+  "title": "Make the trading screens show the protection line and the stock name they already hold",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a061-screens-show-what-they-already-know",
+    "path": "openspec/changes/a061-screens-show-what-they-already-know"
+  },
+  "acceptance": [
+    "A managed position whose stored effective snapshot has not changed for hours still renders 익절/손절/추적 회수/기준/고점 while an engine is running against this console's journal",
+    "A stopped engine blanks the same five values and says the engine is not running, rather than saying the evaluation is old",
+    "A position under an active exit-snapshot quarantine blanks them and says the position is not being judged, on every screen that draws a protection line",
+    "A console with no engine marker keeps the previous observation-age behaviour unchanged",
+    "/position-management shows the stock name for KR and US rows from the holdings the console has already read, and makes no broker call to do it"
+  ]
+}

@@ -133,13 +133,14 @@ func (c *Console) decoratePositionRows(ctx context.Context, rows []positionRow, 
 			}
 		}
 	}
-	attachPositionExitLines(rows, asOf, runtime)
+	attachPositionExitLines(rows, asOf, runtime, c.protectionLiveness(asOf))
 }
 
 // attachPositionExitLines selects the already-persisted effective snapshot for
 // display. Freshness is evaluated at the screen boundary; no exit value is
 // recomputed here or in the template.
-func attachPositionExitLines(rows []positionRow, asOf time.Time, runtime positionpolicy.ManagementRuntime) {
+func attachPositionExitLines(rows []positionRow, asOf time.Time, runtime positionpolicy.ManagementRuntime,
+	live protectionLiveness) {
 	for i := range rows {
 		row := &rows[i]
 		referenceStatus := row.Management.Status
@@ -188,7 +189,19 @@ func attachPositionExitLines(rows []positionRow, asOf time.Time, runtime positio
 			}
 			continue
 		}
-		snapshot := row.Exit.Snapshot.WithFreshness(asOf, holdingsTTL)
+		snapshot := exitFreshness(row.Exit.Snapshot, asOf, live)
+		if row.Quarantined() {
+			// The exit loop refuses a quarantined position outright
+			// (ErrExitSnapshotQuarantined), so nothing is maintaining this line
+			// no matter how healthy the engine or the evidence looks. This
+			// overrides the freshness verdict rather than joining it: an
+			// operator whose stop is not being evaluated needs that sentence,
+			// not a remark about the evaluation's age.
+			snapshot.Stale, snapshot.StaleReason = true, "snapshot_quarantined"
+			if snapshot.Snapshot == nil {
+				snapshot.UnknownReason = "snapshot_quarantined"
+			}
+		}
 		source := operatorview.Source{
 			UnknownReason:     snapshot.UnknownReason,
 			StaleReason:       snapshot.StaleReason,

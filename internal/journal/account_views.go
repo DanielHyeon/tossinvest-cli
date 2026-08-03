@@ -50,6 +50,17 @@ type PositionExit struct {
 	Position Position
 	Exit     ExitState
 	HasExit  bool
+	// Quarantine is the unreleased exit-snapshot quarantine on *this* position's
+	// current generation, when there is one. It travels with the row because the
+	// engine skips a quarantined position entirely — the exit loop refuses it
+	// with ErrExitSnapshotQuarantined and judges nothing — so a reader that shows
+	// this row's protection line without it would be asserting protection the
+	// engine is not providing.
+	//
+	// Correlating it here rather than in each reader is the point: a second place
+	// that decides which quarantine belongs to which generation is a second place
+	// that can get it wrong.
+	Quarantine *ExitSnapshotQuarantine
 }
 
 // AccountExitEvent is one exit judgement with the symbol it was made about.
@@ -173,6 +184,10 @@ func (r *ReadOnly) LivePositionExits(ctx context.Context, accountRef string) ([]
 	if err != nil {
 		return nil, err
 	}
+	quarantines, err := r.accountActiveQuarantines(ctx, account)
+	if err != nil {
+		return nil, err
+	}
 
 	rows, err := r.db.QueryContext(ctx, positionSelect+`
 		 WHERE account_ref = ? AND state <> ?
@@ -189,6 +204,10 @@ func (r *ReadOnly) LivePositionExits(ctx context.Context, accountRef string) ([]
 			return nil, err
 		}
 		pe := PositionExit{Position: p, Exit: ExitState{ActiveRung: exitpolicy.NoRung}}
+		if q, ok := quarantines[p.ID]; ok {
+			held := q
+			pe.Quarantine = &held
+		}
 		if state, ok := states[p.ID]; ok {
 			if state.SnapshotStatus == "" && state.PolicyIdentity.ID == "" {
 				identity, identityErr := legacyPolicyIdentity(state, p.Adopted())
@@ -204,6 +223,43 @@ func (r *ReadOnly) LivePositionExits(ctx context.Context, accountRef string) ([]
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("journal: listing the live positions of %s: %w", account, err)
+	}
+	return out, nil
+}
+
+// accountActiveQuarantines reads the unreleased exit-snapshot quarantines of one
+// account, keyed by position id.
+//
+// The generation predicate is the whole correctness of this read. The active
+// index is on (position_id, position_generation), so a position that was
+// released and re-adopted keeps its old instance's quarantine row on disk
+// forever — unreleased, because nothing releases the quarantine of a generation
+// that no longer exists. The engine asks about the current generation only
+// (exitloop.go: ActiveExitSnapshotQuarantine(ctx, p.ID, p.InstanceSeq)) and so
+// does this: joining on p.instance_seq is what keeps a dead generation from
+// closing a live position's protection line.
+func (r *ReadOnly) accountActiveQuarantines(ctx context.Context, accountRef string) (map[string]ExitSnapshotQuarantine, error) {
+	rows, err := r.db.QueryContext(ctx, `SELECT q.position_id,q.position_generation,q.quarantine_version,
+		 q.reason,q.evidence,q.quarantined_at
+		 FROM exit_snapshot_quarantines q JOIN positions p ON p.id = q.position_id
+		 WHERE p.account_ref = ? AND q.released_at IS NULL AND q.position_generation = p.instance_seq`,
+		accountRef)
+	if err != nil {
+		return nil, fmt.Errorf("journal: listing the exit snapshot quarantines of %s: %w", accountRef, err)
+	}
+	defer rows.Close()
+
+	out := map[string]ExitSnapshotQuarantine{}
+	for rows.Next() {
+		var q ExitSnapshotQuarantine
+		if err := rows.Scan(&q.PositionID, &q.PositionGeneration, &q.Version, &q.Reason,
+			&q.Evidence, &q.QuarantinedAt); err != nil {
+			return nil, fmt.Errorf("journal: reading an exit snapshot quarantine: %w", err)
+		}
+		out[q.PositionID] = q
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: listing the exit snapshot quarantines of %s: %w", accountRef, err)
 	}
 	return out, nil
 }

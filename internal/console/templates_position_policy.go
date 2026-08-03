@@ -46,7 +46,7 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <table class="data-table"><caption>현재 포지션 policy scope</caption><thead><tr>
 <th>계좌·종목</th><th>generation</th><th>현재 상태</th><th>desired/effective</th><th>현재 행 action</th>
 </tr></thead><tbody>{{range .Rows}}<tr>
-<th scope="row" data-label="계좌·종목"><code>{{.State.AccountRef}}</code><span class="submetric">{{.State.Market}} · {{.State.Symbol}}</span></th>
+<th scope="row" data-label="계좌·종목"><code>{{.State.AccountRef}}</code><span class="submetric">{{.State.Market}} · {{.State.Symbol}}{{if .Name}} · {{.Name}}{{end}}</span></th>
 <td data-label="generation">{{.State.AdoptionGeneration}} <span class="submetric">version {{.State.Version}}</span></td>
 <td data-label="현재 상태"><span class="status-pill">{{.Management.Label}}</span>
 <span class="submetric">status <code>{{.Management.Status}}</code> · reason <code>{{.Management.Reason}}</code></span>
