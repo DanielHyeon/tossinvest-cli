@@ -1,8 +1,8 @@
 # Review — a070-add-multi-market-horizon-router
 
 - Date: 2026-08-03
-- Stage: proposal freeze; implementation not started
-- Voices: Manager architecture/safety review, independent architecture/test review, round-2 adversarial review
+- Stage: core implementation complete; a067–a069/a066 runtime integration and root gate pending
+- Voices: Manager architecture/safety review, independent architecture/test review, round-2 authority-boundary review
 
 ## Findings and disposition
 
@@ -14,14 +14,31 @@
   both OFF; a verified single-market state may migrate only that market while its peer remains OFF.
 - Official exchange calendars and IANA zones define independent sessions; market failure and retry state
   do not cross-contaminate.
+- **Resolved blocker:** routing now requires an exact sealed market record/revision in READY state. A caller
+  cannot turn an OFF durable market ON by submitting an ON candidate.
+- **Resolved blocker:** quota freshness is checked with the authority's trusted clock, not caller-provided
+  observation time; backdating cannot revive a stale physical quota snapshot.
+- **Resolved blocker:** owner snapshots, ON market records and physical quota snapshots have package-private
+  attestation constructors. External callers can inspect values but cannot mint a valid seal. The only public
+  market constructor creates a sealed OFF/UNOBSERVED record.
+- Rollback accepts OFF targets only. It cannot replay a historical ON activation as fresh authority.
+- Inactive same-key owner rows do not compete. Any row from another account/market/symbol/generation corrupts
+  the bounded snapshot even when inactive; more than one active same-key row is reconstruction mismatch.
 
 ## Verification
 
 - Strict OpenSpec validation: PASS.
-- Cross-horizon ownership, shared-quota exhaustion, concurrent CAS, rollback and crash migration are RED tasks.
+- `go test ./internal/strategyrouter -count=1`: PASS.
+- `go test -race ./internal/strategyrouter -count=1`: PASS.
+- `go vet ./internal/strategyrouter`: PASS.
+- `FuzzOwnerKeyNeverIncludesHorizon` and `FuzzLegacyMigrationRetryConverges` (3s each): PASS.
+- Cross-horizon ownership, durable OFF binding, shared-quota exhaustion/backdating, concurrent CAS,
+  OFF-only rollback and crash migration tests: PASS.
+- External-package forgery and exported authority-constructor checks: PASS.
 - No combined KR+US approval or automatic activation is introduced.
 
 ## Verdict
 
-Proposal freeze approved. KR and US routing implementation proceeds in the same wave with independent
-activation and shared account-wide mutation authority.
+Core pure/sealed-port implementation approved for integration review. KR and US ship in the same release,
+remain independently OFF/UNOBSERVED by default, and share one physical quota authority. Runtime wiring,
+broader safety-loop regressions and the repository SDD/gate remain intentionally pending at root integration.
