@@ -94,6 +94,11 @@ const (
 // ErrFillNotFound means no snapshot has been recorded for that order.
 var ErrFillNotFound = errors.New("journal: no fill snapshot for that order")
 
+// ErrFillScopeAmbiguous means an order id names more than one canonical
+// snapshot. Callers must use LookupFillScoped instead of guessing which account
+// session the broker's opaque identifier refers to.
+var ErrFillScopeAmbiguous = errors.New("journal: fill snapshot order id is ambiguous across scopes")
+
 // ErrTrackedFillIdentityConflict means a confirmed local order cannot be bound
 // to one account/market/symbol identity. It is returned only after the journal
 // has durably entered an account-wide IDENTIFIER_CONFLICT state.
@@ -202,6 +207,41 @@ type FillSnapshotRecord struct {
 	Detail          string
 }
 
+// FillSnapshotScope is the canonical identity of one cumulative broker-order
+// sequence. Broker order ids are opaque and may be reused, so OrderID alone is
+// deliberately not sufficient for a scoped lookup.
+type FillSnapshotScope struct {
+	OrderID    string
+	AccountRef string
+	Market     string
+	TradingDay string
+	Symbol     string
+	Side       string
+}
+
+func canonicalFillSnapshotScope(scope FillSnapshotScope) FillSnapshotScope {
+	return FillSnapshotScope{
+		OrderID:    scope.OrderID,
+		AccountRef: strings.TrimSpace(scope.AccountRef),
+		Market:     normaliseMarket(scope.Market),
+		TradingDay: strings.TrimSpace(scope.TradingDay),
+		Symbol:     normaliseSymbol(scope.Symbol),
+		Side:       strings.ToUpper(strings.TrimSpace(scope.Side)),
+	}
+}
+
+func fillSnapshotScopeOf(obs FillObservation) FillSnapshotScope {
+	return canonicalFillSnapshotScope(FillSnapshotScope{
+		OrderID: obs.OrderID, AccountRef: obs.AccountRef, Market: obs.Market,
+		TradingDay: obs.TradingDay, Symbol: obs.Symbol, Side: obs.Side,
+	})
+}
+
+func (scope FillSnapshotScope) complete() bool {
+	return scope.OrderID != "" && scope.AccountRef != "" && scope.Market != "" &&
+		scope.TradingDay != "" && scope.Symbol != "" && scope.Side != ""
+}
+
 // ExecutionCorrection is one recorded restatement of an already-observed
 // execution: same cumulative quantity, a different average price or amount.
 //
@@ -281,7 +321,8 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	}
 	defer tx.Rollback()
 
-	prev, err := scanFillSnapshot(tx.QueryRowContext(ctx, fillSelect+" WHERE order_id = ?", orderID))
+	scope := fillSnapshotScopeOf(obs)
+	prev, err := lookupFillSnapshotScoped(ctx, tx, scope)
 	switch {
 	case err == nil:
 	case errors.Is(err, ErrFillNotFound):
@@ -290,10 +331,6 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		return res, err
 	}
 	hadPrev := prev.OrderID != ""
-	if hadPrev && fillSnapshotScopeChanged(prev, obs) {
-		prev = FillSnapshotRecord{}
-		hadPrev = false
-	}
 
 	prevFilled := 0.0
 	if hadPrev {
@@ -308,7 +345,7 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		// The refusal itself is durable — an operator has to be able to see what
 		// was rejected — but the snapshot is not advanced, so the next consistent
 		// observation still measures its delta from the last trusted quantity.
-		if err := markFillRefused(ctx, tx, orderID, obs, refusal, now, hadPrev); err != nil {
+		if err := markFillRefused(ctx, tx, scope, obs, refusal, now, hadPrev); err != nil {
 			return res, err
 		}
 		// Nothing is released on a refusal — that is the point. A snapshot the
@@ -353,26 +390,7 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	// 4. Advance. The average price is *replaced*, never accumulated: it is a
 	//    property of the whole filled quantity, so adding one in would double
 	//    count the fills that produced it. The amount follows the same rule.
-	if _, err := tx.ExecContext(ctx,
-		`INSERT INTO fill_snapshots
-		   (order_id, account_ref, symbol, market, trading_day, side,
-		    state, terminal, fail_closed, quantity, filled_quantity,
-		    average_price, filled_amount, broker_visible_at, observed_at, committed_at,
-		    reason_code, detail)
-		 VALUES (?,?,?,?,?,?,?,?,0,?,?,?,?,?,?,?,'','')
-		 ON CONFLICT(order_id) DO UPDATE SET
-		    account_ref = excluded.account_ref, symbol = excluded.symbol, market = excluded.market,
-		    trading_day = excluded.trading_day, side = excluded.side, state = excluded.state,
-		    terminal = excluded.terminal, fail_closed = 0, quantity = excluded.quantity,
-		    filled_quantity = excluded.filled_quantity, average_price = excluded.average_price,
-		    filled_amount = excluded.filled_amount,
-		    broker_visible_at = excluded.broker_visible_at, observed_at = excluded.observed_at,
-		    committed_at = excluded.committed_at, reason_code = '', detail = ''`,
-		orderID, strings.TrimSpace(obs.AccountRef), obs.Symbol, obs.Market,
-		strings.TrimSpace(obs.TradingDay), strings.ToUpper(strings.TrimSpace(obs.Side)),
-		obs.State, boolToInt(obs.Terminal),
-		orZero(obs.Quantity), orZero(obs.FilledQuantity), obs.AveragePrice, obs.FilledAmount,
-		obs.BrokerVisibleAt, obs.ObservedAt, now); err != nil {
+	if err := upsertFillSnapshot(ctx, tx, scope, obs, now); err != nil {
 		return res, fmt.Errorf("journal: recording the fill snapshot of %s: %w", orderID, err)
 	}
 
@@ -519,31 +537,155 @@ func classifyFillRefusal(obs FillObservation, prev FillSnapshotRecord, hadPrev b
 // markFillRefused records the refusal without letting it move the trusted
 // quantity. A first-ever observation that fails closed still gets a row, so the
 // order is visible to the operator rather than invisible until it behaves.
-func markFillRefused(ctx context.Context, tx *sql.Tx, orderID string, obs FillObservation,
+func markFillRefused(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope, obs FillObservation,
 	refusal *fillRefusal, now string, hadPrev bool) error {
+	orderID := scope.OrderID
 	if hadPrev {
-		if _, err := tx.ExecContext(ctx,
-			`UPDATE fill_snapshots
-			    SET fail_closed = 1, reason_code = ?, detail = ?, observed_at = ?, committed_at = ?
-			  WHERE order_id = ?`,
-			refusal.reason, refusal.detail, obs.ObservedAt, now, orderID); err != nil {
+		if err := updateFillSnapshotRefusal(ctx, tx, scope, refusal, obs.ObservedAt, now); err != nil {
 			return fmt.Errorf("journal: recording the refused snapshot of %s: %w", orderID, err)
 		}
 		return nil
 	}
-	if _, err := tx.ExecContext(ctx,
-		`INSERT INTO fill_snapshots
-		   (order_id, account_ref, symbol, market, trading_day, side,
-		    state, terminal, fail_closed, quantity, filled_quantity,
-		    average_price, broker_visible_at, observed_at, committed_at, reason_code, detail)
-		 VALUES (?,?,?,?,?,?,?,0,1,?,'0','','',?,?,?,?)`,
-		orderID, strings.TrimSpace(obs.AccountRef), obs.Symbol, obs.Market,
-		strings.TrimSpace(obs.TradingDay), strings.ToUpper(strings.TrimSpace(obs.Side)),
-		obs.State, orZero(obs.Quantity),
-		obs.ObservedAt, now, refusal.reason, refusal.detail); err != nil {
+	refused := obs
+	refused.Terminal = false
+	refused.FilledQuantity = "0"
+	refused.AveragePrice = ""
+	refused.FilledAmount = ""
+	if err := insertRefusedFillSnapshot(ctx, tx, scope, refused, refusal, now); err != nil {
 		return fmt.Errorf("journal: recording the refused snapshot of %s: %w", orderID, err)
 	}
 	return nil
+}
+
+func upsertFillSnapshot(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope,
+	obs FillObservation, now string) error {
+	if scope.complete() {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO scoped_fill_snapshots
+			  (order_id, account_ref, market, trading_day, symbol, side,
+			   state, terminal, fail_closed, quantity, filled_quantity,
+			   average_price, filled_amount, broker_visible_at, observed_at, committed_at,
+			   reason_code, detail)
+			VALUES (?,?,?,?,?,?,?, ?,0,?,?,?,?,?,?,?,'','')
+			ON CONFLICT(account_ref, market, trading_day, symbol, side, order_id) DO UPDATE SET
+			  state = excluded.state, terminal = excluded.terminal, fail_closed = 0,
+			  quantity = excluded.quantity, filled_quantity = excluded.filled_quantity,
+			  average_price = excluded.average_price, filled_amount = excluded.filled_amount,
+			  broker_visible_at = excluded.broker_visible_at,
+			  observed_at = excluded.observed_at, committed_at = excluded.committed_at,
+			  reason_code = '', detail = ''`,
+			scope.OrderID, scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol, scope.Side,
+			obs.State, boolToInt(obs.Terminal), orZero(obs.Quantity), orZero(obs.FilledQuantity),
+			obs.AveragePrice, obs.FilledAmount, obs.BrokerVisibleAt, obs.ObservedAt, now); err != nil {
+			return err
+		}
+		return mirrorScopedFillSnapshot(ctx, tx, scope, obs, now, false, "", "")
+	}
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO fill_snapshots
+		  (order_id, account_ref, symbol, market, trading_day, side,
+		   state, terminal, fail_closed, quantity, filled_quantity,
+		   average_price, filled_amount, broker_visible_at, observed_at, committed_at,
+		   reason_code, detail)
+		VALUES (?,?,?,?,?,?,?,?,0,?,?,?,?,?,?,?,'','')
+		ON CONFLICT(order_id) DO UPDATE SET
+		  account_ref = excluded.account_ref, symbol = excluded.symbol, market = excluded.market,
+		  trading_day = excluded.trading_day, side = excluded.side, state = excluded.state,
+		  terminal = excluded.terminal, fail_closed = 0, quantity = excluded.quantity,
+		  filled_quantity = excluded.filled_quantity, average_price = excluded.average_price,
+		  filled_amount = excluded.filled_amount,
+		  broker_visible_at = excluded.broker_visible_at, observed_at = excluded.observed_at,
+		  committed_at = excluded.committed_at, reason_code = '', detail = ''`,
+		scope.OrderID, scope.AccountRef, scope.Symbol, scope.Market, scope.TradingDay, scope.Side,
+		obs.State, boolToInt(obs.Terminal), orZero(obs.Quantity), orZero(obs.FilledQuantity),
+		obs.AveragePrice, obs.FilledAmount, obs.BrokerVisibleAt, obs.ObservedAt, now)
+	return err
+}
+
+// mirrorScopedFillSnapshot preserves the released order-id keyed compatibility
+// row when it is absent or already names this exact scope. It never overwrites a
+// different scope; the complete durable history lives in scoped_fill_snapshots.
+func mirrorScopedFillSnapshot(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope,
+	obs FillObservation, now string, failClosed bool, reason, detail string) error {
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO fill_snapshots
+		  (order_id, account_ref, symbol, market, trading_day, side,
+		   state, terminal, fail_closed, quantity, filled_quantity,
+		   average_price, filled_amount, broker_visible_at, observed_at, committed_at,
+		   reason_code, detail)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+		ON CONFLICT(order_id) DO UPDATE SET
+		  state = excluded.state, terminal = excluded.terminal,
+		  fail_closed = excluded.fail_closed, quantity = excluded.quantity,
+		  filled_quantity = excluded.filled_quantity, average_price = excluded.average_price,
+		  filled_amount = excluded.filled_amount,
+		  broker_visible_at = excluded.broker_visible_at, observed_at = excluded.observed_at,
+		  committed_at = excluded.committed_at,
+		  reason_code = excluded.reason_code, detail = excluded.detail
+		WHERE TRIM(fill_snapshots.account_ref) = excluded.account_ref
+		  AND LOWER(TRIM(fill_snapshots.market)) = excluded.market
+		  AND TRIM(fill_snapshots.trading_day) = excluded.trading_day
+		  AND UPPER(TRIM(fill_snapshots.symbol)) = excluded.symbol
+		  AND UPPER(TRIM(fill_snapshots.side)) = excluded.side`,
+		scope.OrderID, scope.AccountRef, scope.Symbol, scope.Market, scope.TradingDay, scope.Side,
+		obs.State, boolToInt(obs.Terminal), boolToInt(failClosed), orZero(obs.Quantity),
+		orZero(obs.FilledQuantity), obs.AveragePrice, obs.FilledAmount, obs.BrokerVisibleAt,
+		obs.ObservedAt, now, reason, detail)
+	return err
+}
+
+func insertRefusedFillSnapshot(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope,
+	obs FillObservation, refusal *fillRefusal, now string) error {
+	if scope.complete() {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO scoped_fill_snapshots
+			  (order_id, account_ref, market, trading_day, symbol, side, state, terminal,
+			   fail_closed, quantity, filled_quantity, average_price, filled_amount,
+			   broker_visible_at, observed_at, committed_at, reason_code, detail)
+			VALUES (?,?,?,?,?,?,?,0,1,?,'0','','','',?,?,?,?)`,
+			scope.OrderID, scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol, scope.Side,
+			obs.State, orZero(obs.Quantity), obs.ObservedAt, now, refusal.reason, refusal.detail); err != nil {
+			return err
+		}
+		return mirrorScopedFillSnapshot(ctx, tx, scope, obs, now, true, refusal.reason, refusal.detail)
+	}
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO fill_snapshots
+		  (order_id, account_ref, symbol, market, trading_day, side,
+		   state, terminal, fail_closed, quantity, filled_quantity,
+		   average_price, broker_visible_at, observed_at, committed_at, reason_code, detail)
+		VALUES (?,?,?,?,?,?,?,0,1,?,'0','','',?,?,?,?)`,
+		scope.OrderID, scope.AccountRef, scope.Symbol, scope.Market, scope.TradingDay, scope.Side,
+		obs.State, orZero(obs.Quantity), obs.ObservedAt, now, refusal.reason, refusal.detail)
+	return err
+}
+
+func updateFillSnapshotRefusal(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope,
+	refusal *fillRefusal, observedAt, now string) error {
+	if scope.complete() {
+		if _, err := tx.ExecContext(ctx, `
+			UPDATE scoped_fill_snapshots
+			   SET fail_closed = 1, reason_code = ?, detail = ?, observed_at = ?, committed_at = ?
+			 WHERE account_ref = ? AND market = ? AND trading_day = ? AND symbol = ?
+			   AND side = ? AND order_id = ?`,
+			refusal.reason, refusal.detail, observedAt, now, scope.AccountRef, scope.Market,
+			scope.TradingDay, scope.Symbol, scope.Side, scope.OrderID); err != nil {
+			return err
+		}
+		_, err := tx.ExecContext(ctx, `
+			UPDATE fill_snapshots
+			   SET fail_closed = 1, reason_code = ?, detail = ?, observed_at = ?, committed_at = ?
+			 WHERE order_id = ? AND TRIM(account_ref) = ? AND LOWER(TRIM(market)) = ?
+			   AND TRIM(trading_day) = ? AND UPPER(TRIM(symbol)) = ? AND UPPER(TRIM(side)) = ?`,
+			refusal.reason, refusal.detail, observedAt, now, scope.OrderID, scope.AccountRef,
+			scope.Market, scope.TradingDay, scope.Symbol, scope.Side)
+		return err
+	}
+	_, err := tx.ExecContext(ctx, `
+		UPDATE fill_snapshots
+		   SET fail_closed = 1, reason_code = ?, detail = ?, observed_at = ?, committed_at = ?
+		 WHERE order_id = ?`, refusal.reason, refusal.detail, observedAt, now, scope.OrderID)
+	return err
 }
 
 // sameSnapshot reports whether an observation says exactly what the stored row
@@ -565,29 +707,28 @@ func sameSnapshot(obs FillObservation, prev FillSnapshotRecord) bool {
 		!prev.FailClosed
 }
 
-func fillSnapshotScopeChanged(prev FillSnapshotRecord, obs FillObservation) bool {
-	account := strings.TrimSpace(obs.AccountRef)
-	day := strings.TrimSpace(obs.TradingDay)
-	if account == "" || day == "" {
-		return false
-	}
-	if strings.TrimSpace(prev.AccountRef) == "" || strings.TrimSpace(prev.TradingDay) == "" {
-		// Historical v15 rows have no scope. A nonterminal row is conservatively
-		// treated as this live order; a terminal row may safely start the newly
-		// confirmed trading-day sequence.
-		return prev.Terminal
-	}
-	return strings.TrimSpace(prev.AccountRef) != account ||
-		normaliseMarket(prev.Market) != normaliseMarket(obs.Market) ||
-		strings.TrimSpace(prev.TradingDay) != day ||
-		normaliseSymbol(prev.Symbol) != normaliseSymbol(obs.Symbol) ||
-		!strings.EqualFold(strings.TrimSpace(prev.Side), strings.TrimSpace(obs.Side))
-}
+const fillSnapshotColumns = `order_id, account_ref, symbol, market, trading_day, side,
+	state, terminal, fail_closed, quantity, filled_quantity, average_price, filled_amount,
+	broker_visible_at, observed_at, committed_at, reason_code, detail`
 
-const fillSelect = `SELECT order_id, account_ref, symbol, market, trading_day, side,
-	state, terminal, fail_closed, quantity,
-	filled_quantity, average_price, filled_amount, broker_visible_at, observed_at, committed_at,
-	reason_code, detail FROM fill_snapshots`
+const fillSelect = `SELECT ` + fillSnapshotColumns + ` FROM fill_snapshots`
+
+const scopedFillSelect = `SELECT ` + fillSnapshotColumns + ` FROM scoped_fill_snapshots`
+
+const allFillSnapshotsCTE = `WITH all_fill_snapshots AS (
+	SELECT ` + fillSnapshotColumns + ` FROM scoped_fill_snapshots
+	UNION ALL
+	SELECT ` + fillSnapshotColumns + ` FROM fill_snapshots legacy
+	 WHERE NOT EXISTS (
+		SELECT 1 FROM scoped_fill_snapshots scoped
+		 WHERE scoped.order_id = legacy.order_id
+		   AND scoped.account_ref = TRIM(legacy.account_ref)
+		   AND scoped.market = LOWER(TRIM(legacy.market))
+		   AND scoped.trading_day = TRIM(legacy.trading_day)
+		   AND scoped.symbol = UPPER(TRIM(legacy.symbol))
+		   AND scoped.side = UPPER(TRIM(legacy.side))
+	)
+)`
 
 func scanFillSnapshot(row rowScanner) (FillSnapshotRecord, error) {
 	var (
@@ -609,12 +750,69 @@ func scanFillSnapshot(row rowScanner) (FillSnapshotRecord, error) {
 	return rec, nil
 }
 
-// LookupFill returns the stored snapshot of one order.
+type queryRower interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+func lookupFillSnapshotScoped(ctx context.Context, q queryRower,
+	scope FillSnapshotScope) (FillSnapshotRecord, error) {
+	scope = canonicalFillSnapshotScope(scope)
+	if !scope.complete() {
+		return scanFillSnapshot(q.QueryRowContext(ctx, fillSelect+`
+			WHERE order_id = ? AND TRIM(account_ref) = '' AND TRIM(trading_day) = ''`, scope.OrderID))
+	}
+	rec, err := scanFillSnapshot(q.QueryRowContext(ctx, scopedFillSelect+`
+		WHERE account_ref = ? AND market = ? AND trading_day = ? AND symbol = ? AND side = ?
+		  AND order_id = ?`, scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol,
+		scope.Side, scope.OrderID))
+	if err == nil || !errors.Is(err, ErrFillNotFound) {
+		return rec, err
+	}
+	// A v16 build may already have written one fully scoped row into the released
+	// order-id keyed table. Match every dimension; a v15 blank row is evidence,
+	// never a wildcard for this API.
+	return scanFillSnapshot(q.QueryRowContext(ctx, fillSelect+`
+		WHERE order_id = ? AND TRIM(account_ref) = ? AND LOWER(TRIM(market)) = ?
+		  AND TRIM(trading_day) = ? AND UPPER(TRIM(symbol)) = ? AND UPPER(TRIM(side)) = ?`,
+		scope.OrderID, scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol, scope.Side))
+}
+
+// LookupFillScoped returns exactly one canonical cumulative sequence. It never
+// attributes a v15 blank-scope row to a later scoped order.
+func (j *Journal) LookupFillScoped(ctx context.Context, scope FillSnapshotScope) (FillSnapshotRecord, error) {
+	return lookupFillSnapshotScoped(ctx, j.db, scope)
+}
+
+// LookupFill returns the stored snapshot of one order when the id is globally
+// unambiguous. Reused ids fail closed; callers that have canonical identity must
+// use LookupFillScoped.
 //
 // The identifier is used as given: the rows are keyed by what the broker sent,
 // so normalising the lookup would miss them.
 func (j *Journal) LookupFill(ctx context.Context, orderID string) (FillSnapshotRecord, error) {
-	return scanFillSnapshot(j.db.QueryRowContext(ctx, fillSelect+" WHERE order_id = ?", orderID))
+	rows, err := j.db.QueryContext(ctx, allFillSnapshotsCTE+`
+		SELECT `+fillSnapshotColumns+` FROM all_fill_snapshots WHERE order_id = ? LIMIT 2`, orderID)
+	if err != nil {
+		return FillSnapshotRecord{}, fmt.Errorf("journal: reading a fill snapshot: %w", err)
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		if err := rows.Err(); err != nil {
+			return FillSnapshotRecord{}, fmt.Errorf("journal: reading a fill snapshot: %w", err)
+		}
+		return FillSnapshotRecord{}, ErrFillNotFound
+	}
+	rec, err := scanFillSnapshot(rows)
+	if err != nil {
+		return FillSnapshotRecord{}, err
+	}
+	if rows.Next() {
+		return FillSnapshotRecord{}, fmt.Errorf("%w: order %s", ErrFillScopeAmbiguous, orderID)
+	}
+	if err := rows.Err(); err != nil {
+		return FillSnapshotRecord{}, fmt.Errorf("journal: reading a fill snapshot: %w", err)
+	}
+	return rec, nil
 }
 
 // FillEvents returns the appended fills of one order, oldest first.
@@ -750,7 +948,7 @@ func (j *Journal) ExecutionCorrections(ctx context.Context, orderID string) ([]E
 // reconciliation comparison.
 func (j *Journal) FilledQuantities(ctx context.Context) (map[string]string, error) {
 	rows, err := j.db.QueryContext(ctx,
-		`SELECT symbol, filled_quantity FROM fill_snapshots WHERE fail_closed = 0`)
+		allFillSnapshotsCTE+` SELECT symbol, filled_quantity FROM all_fill_snapshots WHERE fail_closed = 0`)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading filled quantities: %w", err)
 	}
@@ -790,12 +988,31 @@ func (j *Journal) FilledQuantities(ctx context.Context) (map[string]string, erro
 // definition of an external order, and the reconciliation classifies it as such
 // rather than folding it into the engine's own belief.
 func (j *Journal) NetPositions(ctx context.Context) (map[string]string, error) {
-	rows, err := j.db.QueryContext(ctx, `
+	rows, err := j.db.QueryContext(ctx, allFillSnapshotsCTE+`
 		SELECT f.symbol, i.side, f.filled_quantity
-		  FROM fill_snapshots f
+		  FROM all_fill_snapshots f
 		  JOIN mutation_attempts a ON a.broker_order_id = f.order_id AND a.state = ?
 		  JOIN intents i ON i.id = a.intent_id
-		 WHERE f.fail_closed = 0`, string(StateConfirmed))
+		 WHERE f.fail_closed = 0
+		   AND ((TRIM(f.account_ref) = TRIM(i.account_ref)
+		         AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
+		         AND TRIM(f.trading_day) = TRIM(i.trading_day)
+		         AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
+		         AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side)))
+		        OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = ''
+		            AND UPPER(TRIM(f.market)) = UPPER(TRIM(i.market))
+		            AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
+		            AND (TRIM(f.side) = '' OR UPPER(TRIM(f.side)) = UPPER(TRIM(i.side)))
+		            AND NOT EXISTS (
+		              SELECT 1
+		                FROM mutation_attempts reused_attempt
+		                JOIN intents reused_intent ON reused_intent.id = reused_attempt.intent_id
+		               WHERE reused_attempt.state = ?
+		                 AND reused_attempt.broker_order_id = f.order_id
+		                 AND reused_intent.account_ref = i.account_ref
+		                 AND UPPER(TRIM(reused_intent.market)) = UPPER(TRIM(i.market))
+		                 AND TRIM(reused_intent.trading_day) <> TRIM(i.trading_day))))`,
+		string(StateConfirmed), string(StateConfirmed))
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading net positions: %w", err)
 	}
@@ -845,8 +1062,8 @@ func (j *Journal) TrackedFillOrders(ctx context.Context, accountRefs ...string) 
 			return nil, err
 		}
 	}
-	rows, err := j.db.QueryContext(ctx, `
-		WITH all_confirmed_orders AS (
+	rows, err := j.db.QueryContext(ctx, allFillSnapshotsCTE+`,
+		all_confirmed_orders AS (
 			SELECT a.broker_order_id AS order_id, i.id AS intent_id, i.account_ref,
 			       i.symbol, i.market, i.trading_day, i.side
 			  FROM mutation_attempts a
@@ -890,7 +1107,7 @@ func (j *Journal) TrackedFillOrders(ctx context.Context, accountRefs ...string) 
 			   AND TRIM(a.account_ref) = TRIM(i.account_ref)
 		)
 		SELECT f.order_id, c.intent_id, c.account_ref, c.symbol, c.market, c.trading_day, c.side
-		  FROM fill_snapshots f
+		  FROM all_fill_snapshots f
 		  JOIN confirmed_orders c ON c.order_id = f.order_id
 		 WHERE f.terminal = 0
 		   AND ((TRIM(f.account_ref) = TRIM(c.account_ref)
@@ -907,7 +1124,7 @@ func (j *Journal) TrackedFillOrders(ctx context.Context, accountRefs ...string) 
 		   AND (TRIM(f.side) = '' OR UPPER(TRIM(f.side)) = UPPER(TRIM(c.side)))
 		UNION
 		SELECT f.order_id, l.intent_id, l.account_ref, l.symbol, l.market, l.trading_day, l.side
-		  FROM fill_snapshots f
+		  FROM all_fill_snapshots f
 		  JOIN valid_lineage l
 		    ON l.parent_order_id = f.order_id OR l.child_order_id = f.order_id
 		  JOIN confirmed_orders c
@@ -935,7 +1152,7 @@ func (j *Journal) TrackedFillOrders(ctx context.Context, accountRefs ...string) 
 		SELECT c.order_id, c.intent_id, c.account_ref, c.symbol, c.market, c.trading_day, c.side
 		  FROM confirmed_orders c
 		 WHERE NOT EXISTS (
-			SELECT 1 FROM fill_snapshots f
+			SELECT 1 FROM all_fill_snapshots f
 			 WHERE f.order_id = c.order_id
 			   AND ((TRIM(f.account_ref) = TRIM(c.account_ref)
 			         AND TRIM(f.trading_day) = TRIM(c.trading_day))
@@ -992,8 +1209,8 @@ func (j *Journal) TrackedFillOrders(ctx context.Context, accountRefs ...string) 
 
 func (j *Journal) guardTrackedFillIdentity(ctx context.Context, accountRef string) error {
 	var orderID, symbol, market, detail string
-	err := j.db.QueryRowContext(ctx, `
-		WITH all_confirmed_orders AS (
+	err := j.db.QueryRowContext(ctx, allFillSnapshotsCTE+`,
+		all_confirmed_orders AS (
 			SELECT a.broker_order_id AS order_id, i.id AS intent_id, i.account_ref,
 			       i.symbol, i.market, i.trading_day, i.side
 			  FROM mutation_attempts a
@@ -1029,18 +1246,18 @@ func (j *Journal) guardTrackedFillIdentity(ctx context.Context, accountRef strin
 		SELECT c.order_id, c.symbol, c.market, 'order id is confirmed for more than one intent in the same canonical scope'
 		  FROM all_confirmed_orders c
 		 WHERE c.account_ref = ?
-		   AND EXISTS (SELECT 1 FROM all_confirmed_orders other
-		                WHERE other.order_id = c.order_id
-		                  AND other.account_ref = c.account_ref
-		                  AND UPPER(TRIM(other.market)) = UPPER(TRIM(c.market))
-		                  AND TRIM(other.trading_day) = TRIM(c.trading_day)
-		                  AND (UPPER(TRIM(other.symbol)) <> UPPER(TRIM(c.symbol))
-		                       OR UPPER(TRIM(other.side)) <> UPPER(TRIM(c.side))
-		                       OR other.intent_id <> c.intent_id))
+			   AND EXISTS (SELECT 1 FROM all_confirmed_orders other
+			                WHERE other.order_id = c.order_id
+			                  AND other.account_ref = c.account_ref
+			                  AND UPPER(TRIM(other.market)) = UPPER(TRIM(c.market))
+			                  AND TRIM(other.trading_day) = TRIM(c.trading_day)
+			                  AND UPPER(TRIM(other.symbol)) = UPPER(TRIM(c.symbol))
+			                  AND UPPER(TRIM(other.side)) = UPPER(TRIM(c.side))
+			                  AND other.intent_id <> c.intent_id)
 		UNION
 		SELECT f.order_id, c.symbol, c.market, 'broker snapshot symbol or market contradicts the confirmed intent'
 		  FROM all_confirmed_orders c
-		  JOIN fill_snapshots f ON f.order_id = c.order_id
+		  JOIN all_fill_snapshots f ON f.order_id = c.order_id
 		 WHERE c.account_ref = ?
 		   AND ((TRIM(f.account_ref) = TRIM(c.account_ref)
 		         AND TRIM(f.trading_day) = TRIM(c.trading_day))
@@ -1051,12 +1268,20 @@ func (j *Journal) guardTrackedFillIdentity(ctx context.Context, accountRef strin
 		                 AND reused.account_ref = c.account_ref
 		                 AND UPPER(TRIM(reused.market)) = UPPER(TRIM(c.market))
 		                 AND TRIM(reused.trading_day) <> TRIM(c.trading_day))))
-		   AND (UPPER(TRIM(f.symbol)) <> UPPER(TRIM(c.symbol))
-		        OR UPPER(TRIM(f.market)) <> UPPER(TRIM(c.market))
-		        OR (TRIM(f.side) <> '' AND UPPER(TRIM(f.side)) <> UPPER(TRIM(c.side))))
-		UNION
+			   AND (UPPER(TRIM(f.symbol)) <> UPPER(TRIM(c.symbol))
+			        OR UPPER(TRIM(f.market)) <> UPPER(TRIM(c.market))
+			        OR (TRIM(f.side) <> '' AND UPPER(TRIM(f.side)) <> UPPER(TRIM(c.side))))
+			   AND NOT EXISTS (
+			     SELECT 1 FROM all_confirmed_orders matching
+			      WHERE matching.order_id = f.order_id
+			        AND TRIM(matching.account_ref) = TRIM(f.account_ref)
+			        AND UPPER(TRIM(matching.market)) = UPPER(TRIM(f.market))
+			        AND TRIM(matching.trading_day) = TRIM(f.trading_day)
+			        AND UPPER(TRIM(matching.symbol)) = UPPER(TRIM(f.symbol))
+			        AND (TRIM(f.side) = '' OR UPPER(TRIM(matching.side)) = UPPER(TRIM(f.side))))
+			UNION
 		SELECT f.order_id, l.symbol, l.market, 'lineage endpoint identity is ambiguous or contradicts its intent'
-		  FROM fill_snapshots f
+		  FROM all_fill_snapshots f
 		  JOIN valid_lineage l ON l.parent_order_id = f.order_id OR l.child_order_id = f.order_id
 		 WHERE l.account_ref = ?
 		   AND EXISTS (SELECT 1 FROM all_confirmed_orders selected
@@ -1073,9 +1298,17 @@ func (j *Journal) guardTrackedFillIdentity(ctx context.Context, accountRef strin
 		                 AND UPPER(TRIM(reused.market)) = UPPER(TRIM(l.market))
 		                 AND TRIM(reused.trading_day) <> TRIM(l.trading_day)
 		                 AND (reused.order_id = l.parent_order_id OR reused.order_id = l.child_order_id))))
-		   AND (UPPER(TRIM(f.symbol)) <> UPPER(TRIM(l.symbol))
-		        OR UPPER(TRIM(f.market)) <> UPPER(TRIM(l.market))
-		        OR (TRIM(f.side) <> '' AND UPPER(TRIM(f.side)) <> UPPER(TRIM(l.side))))
+			   AND (UPPER(TRIM(f.symbol)) <> UPPER(TRIM(l.symbol))
+			        OR UPPER(TRIM(f.market)) <> UPPER(TRIM(l.market))
+			        OR (TRIM(f.side) <> '' AND UPPER(TRIM(f.side)) <> UPPER(TRIM(l.side))))
+			   AND NOT EXISTS (
+			     SELECT 1 FROM valid_lineage matching
+			      WHERE (matching.parent_order_id = f.order_id OR matching.child_order_id = f.order_id)
+			        AND TRIM(matching.account_ref) = TRIM(f.account_ref)
+			        AND UPPER(TRIM(matching.market)) = UPPER(TRIM(f.market))
+			        AND TRIM(matching.trading_day) = TRIM(f.trading_day)
+			        AND UPPER(TRIM(matching.symbol)) = UPPER(TRIM(f.symbol))
+			        AND (TRIM(f.side) = '' OR UPPER(TRIM(matching.side)) = UPPER(TRIM(f.side))))
 		LIMIT 1`, string(StateConfirmed),
 		RelationReplaces, string(KindAmend), string(StateConfirmed),
 		RelationReplaces, string(KindAmend), string(StateConfirmed),
@@ -1136,8 +1369,8 @@ type LiveOrder struct {
 // modify with a new order number, and cancelling the superseded one cancels
 // nothing.
 func (j *Journal) LiveOrdersForSymbol(ctx context.Context, accountRef, market, symbol string) ([]LiveOrder, error) {
-	rows, err := j.db.QueryContext(ctx, `
-		WITH confirmed_orders AS (
+	rows, err := j.db.QueryContext(ctx, allFillSnapshotsCTE+`,
+		confirmed_orders AS (
 			SELECT a.broker_order_id AS order_id, a.recorded_at, a.rowid AS attempt_rowid,
 			       i.id AS intent_id, i.account_ref, i.market, i.trading_day,
 			       i.symbol, i.side, i.quantity, coalesce(i.price, '') AS price, i.currency
@@ -1157,7 +1390,7 @@ func (j *Journal) LiveOrdersForSymbol(ctx context.Context, accountRef, market, s
 		       c.symbol, c.side, c.quantity, c.price, c.currency
 		  FROM selected_orders c
 		 WHERE NOT EXISTS (
-		   SELECT 1 FROM fill_snapshots f
+		   SELECT 1 FROM all_fill_snapshots f
 		    WHERE f.order_id = c.order_id AND f.terminal = 1
 		      AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(c.symbol))
 		      AND UPPER(TRIM(f.market)) = UPPER(TRIM(c.market))
@@ -1321,4 +1554,37 @@ CREATE INDEX idx_scoped_lineage_parent
 	ON scoped_lineage_edges(account_ref, market, trading_day, symbol, side, parent_order_id);
 CREATE INDEX idx_scoped_lineage_child
 	ON scoped_lineage_edges(account_ref, market, trading_day, symbol, side, child_order_id);
+`
+
+// schemaV17 fixes the storage key without rewriting or replacing the released
+// v2 table. That table remains the compatibility surface for v15 blank-scope
+// evidence and for foreign keys created by schema v5. New fully scoped rows can
+// coexist here even when a broker reuses the same opaque order id.
+const schemaV17 = `
+CREATE TABLE scoped_fill_snapshots (
+	order_id          TEXT NOT NULL,
+	account_ref       TEXT NOT NULL,
+	market            TEXT NOT NULL,
+	trading_day       TEXT NOT NULL,
+	symbol            TEXT NOT NULL,
+	side              TEXT NOT NULL,
+	state             TEXT NOT NULL DEFAULT '',
+	terminal          INTEGER NOT NULL DEFAULT 0,
+	fail_closed       INTEGER NOT NULL DEFAULT 0,
+	quantity          TEXT NOT NULL DEFAULT '0',
+	filled_quantity   TEXT NOT NULL DEFAULT '0',
+	average_price     TEXT NOT NULL DEFAULT '',
+	filled_amount     TEXT NOT NULL DEFAULT '',
+	broker_visible_at TEXT NOT NULL DEFAULT '',
+	observed_at       TEXT NOT NULL DEFAULT '',
+	committed_at      TEXT NOT NULL,
+	reason_code       TEXT NOT NULL DEFAULT '',
+	detail            TEXT NOT NULL DEFAULT '',
+	PRIMARY KEY (account_ref, market, trading_day, symbol, side, order_id)
+) STRICT;
+
+CREATE INDEX idx_scoped_fill_snapshots_order
+	ON scoped_fill_snapshots(order_id);
+CREATE INDEX idx_scoped_fill_snapshots_symbol
+	ON scoped_fill_snapshots(account_ref, market, trading_day, symbol, terminal);
 `

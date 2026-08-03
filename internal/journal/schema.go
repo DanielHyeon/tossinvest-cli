@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 16
+const SchemaVersion = 17
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -93,6 +93,11 @@ var migrations = []migration{
 	// pair reused in another account, market, or trading day cannot inherit the
 	// prior order's terminal state or successor.
 	{Version: 16, SQL: schemaV16},
+	// schemaV17 lives in fills.go. SQLite cannot add columns to an existing
+	// primary key, so the released order-id-keyed table remains the immutable
+	// legacy surface while new canonical snapshots use an additive companion
+	// table with the complete scope as its primary key.
+	{Version: 17, SQL: schemaV17},
 }
 
 // schemaV1 is the initial schema.

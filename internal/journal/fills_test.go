@@ -537,12 +537,269 @@ func TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID(t *
 	if res.FailClosed || res.Delta != "1" {
 		t.Fatalf("new trading-day cumulative sequence = %+v, want fresh delta 1", res)
 	}
-	stored, err := j.LookupFill(ctx, "reused-by-day")
+	stored, err := j.LookupFillScoped(ctx, FillSnapshotScope{
+		OrderID: "reused-by-day", AccountRef: "acct-1", Market: "us",
+		TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if stored.TradingDay != "2026-03-30" || stored.Symbol != "AAPL" {
 		t.Fatalf("stored snapshot = %+v, want current trading-day scope", stored)
+	}
+}
+
+func TestRecordFillKeepsReusedOrderIDSnapshotsInTheirCanonicalScopes(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+
+	prior := observation("canonically-reused", "7")
+	prior.AccountRef, prior.TradingDay = "acct-1", "2026-03-29"
+	prior.Symbol, prior.Side, prior.Terminal, prior.State = "MSFT", "SELL", true, "FILLED"
+	current := observation("canonically-reused", "2")
+	current.AccountRef, current.TradingDay = "acct-2", "2026-03-30"
+	current.Symbol, current.Side = "AAPL", "BUY"
+
+	if res, err := j.RecordFill(ctx, prior); err != nil || res.Delta != "7" {
+		t.Fatalf("RecordFill(prior) = %+v, %v", res, err)
+	}
+	if res, err := j.RecordFill(ctx, current); err != nil || res.Delta != "2" || res.FailClosed {
+		t.Fatalf("RecordFill(current) = %+v, %v; want an independent cumulative sequence", res, err)
+	}
+
+	assertScoped := func(scope FillSnapshotScope, wantQuantity string, wantTerminal bool) {
+		t.Helper()
+		got, err := j.LookupFillScoped(ctx, scope)
+		if err != nil {
+			t.Fatalf("LookupFillScoped(%+v): %v", scope, err)
+		}
+		if got.FilledQuantity != wantQuantity || got.Terminal != wantTerminal {
+			t.Fatalf("LookupFillScoped(%+v) = %+v, want quantity=%s terminal=%v",
+				scope, got, wantQuantity, wantTerminal)
+		}
+	}
+	assertScoped(FillSnapshotScope{
+		OrderID: "canonically-reused", AccountRef: "acct-1", Market: "us",
+		TradingDay: "2026-03-29", Symbol: "MSFT", Side: "SELL",
+	}, "7", true)
+	assertScoped(FillSnapshotScope{
+		OrderID: "canonically-reused", AccountRef: "acct-2", Market: "us",
+		TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+	}, "2", false)
+
+	if _, err := j.LookupFill(ctx, "canonically-reused"); !errors.Is(err, ErrFillScopeAmbiguous) {
+		t.Fatalf("LookupFill(unscoped) error = %v, want ErrFillScopeAmbiguous", err)
+	}
+}
+
+func TestScopedTerminalStateDoesNotHideAnotherAccountsLiveReusedOrder(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	recordConfirmedFillOrder(t, j, "acct-one-intent", "acct-one-attempt", "live-reused")
+	attempt, err := j.Prepare(ctx, PrepareRequest{
+		Intent: Intent{
+			ID: "acct-two-intent", Market: "us", TradingDay: "2026-03-30", AccountRef: "acct-2",
+			Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "10",
+			Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-acct-two",
+		},
+		Kind: KindPlace, AttemptID: "acct-two-attempt",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkDispatchStarted(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkAcked(ctx, "live-reused"); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+		t.Fatal(err)
+	}
+
+	acctOne := observation("live-reused", "10")
+	acctOne.Terminal, acctOne.State = true, "FILLED"
+	if _, err := j.RecordFill(ctx, acctOne); err != nil {
+		t.Fatal(err)
+	}
+	acctTwo := observation("live-reused", "1")
+	acctTwo.AccountRef = "acct-2"
+	if _, err := j.RecordFill(ctx, acctTwo); err != nil {
+		t.Fatal(err)
+	}
+
+	trackedOne, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(trackedOne) != 0 {
+		t.Fatalf("acct-1 tracked = %+v, want terminal scope omitted", trackedOne)
+	}
+	trackedTwo, err := j.TrackedFillOrders(ctx, "acct-2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(trackedTwo) != 1 || trackedTwo[0].IntentID != "acct-two-intent" {
+		t.Fatalf("acct-2 tracked = %+v, want its independent live scope", trackedTwo)
+	}
+	liveTwo, err := j.LiveOrdersForSymbol(ctx, "acct-2", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(liveTwo) != 1 || liveTwo[0].IntentID != "acct-two-intent" {
+		t.Fatalf("acct-2 live = %+v, want its independent live scope", liveTwo)
+	}
+}
+
+func TestDirectLegacyBlankSnapshotIsNotAWildcardAcrossReusedDays(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	confirm := func(intentID, attemptID, day string) {
+		attempt, err := j.Prepare(ctx, PrepareRequest{
+			Intent: Intent{
+				ID: intentID, Market: "us", TradingDay: day, AccountRef: "acct-1",
+				Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "10",
+				Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
+			},
+			Kind: KindPlace, AttemptID: attemptID,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkDispatchStarted(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkAcked(ctx, "legacy-direct-reused"); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	confirm("legacy-direct-old", "legacy-direct-old-attempt", "2026-03-29")
+	confirm("legacy-direct-new", "legacy-direct-new-attempt", "2026-03-30")
+	legacy := observation("legacy-direct-reused", "3")
+	legacy.AccountRef, legacy.TradingDay, legacy.Side = "", "", ""
+	if _, err := j.RecordFill(ctx, legacy); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, day := range []string{"2026-03-29", "2026-03-30"} {
+		_, err := j.LookupFillScoped(ctx, FillSnapshotScope{
+			OrderID: "legacy-direct-reused", AccountRef: "acct-1", Market: "us",
+			TradingDay: day, Symbol: "AAPL", Side: "BUY",
+		})
+		if !errors.Is(err, ErrFillNotFound) {
+			t.Fatalf("legacy blank snapshot bound to %s: %v", day, err)
+		}
+	}
+	legacyStored, err := j.LookupFill(ctx, "legacy-direct-reused")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if legacyStored.AccountRef != "" || legacyStored.TradingDay != "" {
+		t.Fatalf("legacy snapshot was rewritten into a scope: %+v", legacyStored)
+	}
+}
+
+func TestNetPositionsJoinsReusedOrderIDOnlyWithinCanonicalScope(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	confirm := func(intentID, attemptID, account, symbol, side string) {
+		attempt, err := j.Prepare(ctx, PrepareRequest{
+			Intent: Intent{
+				ID: intentID, Market: "us", TradingDay: "2026-03-30", AccountRef: account,
+				Symbol: symbol, Side: side, OrderType: "LIMIT", Quantity: "10",
+				Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
+			},
+			Kind: KindPlace, AttemptID: attemptID,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkDispatchStarted(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkAcked(ctx, "net-reused"); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	confirm("net-buy", "net-buy-attempt", "acct-1", "AAPL", "BUY")
+	confirm("net-sell", "net-sell-attempt", "acct-2", "MSFT", "SELL")
+	buy := observation("net-reused", "3")
+	if _, err := j.RecordFill(ctx, buy); err != nil {
+		t.Fatal(err)
+	}
+	sell := observation("net-reused", "2")
+	sell.AccountRef, sell.Symbol, sell.Side = "acct-2", "MSFT", "SELL"
+	if _, err := j.RecordFill(ctx, sell); err != nil {
+		t.Fatal(err)
+	}
+
+	net, err := j.NetPositions(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if net["AAPL"] != "3" || net["MSFT"] != "-2" {
+		t.Fatalf("NetPositions = %+v, want only exact scoped joins AAPL=3 MSFT=-2", net)
+	}
+}
+
+func TestTrackedAndLiveOrdersAllowReusedIDInDifferentSymbolAndSideScopes(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	confirm := func(intentID, attemptID, symbol, side string) {
+		attempt, err := j.Prepare(ctx, PrepareRequest{
+			Intent: Intent{
+				ID: intentID, Market: "us", TradingDay: "2026-03-30", AccountRef: "acct-1",
+				Symbol: symbol, Side: side, OrderType: "LIMIT", Quantity: "10",
+				Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
+			},
+			Kind: KindPlace, AttemptID: attemptID,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkDispatchStarted(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkAcked(ctx, "symbol-side-reused"); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	confirm("reused-aapl-buy", "reused-aapl-buy-attempt", "AAPL", "BUY")
+	confirm("reused-msft-sell", "reused-msft-sell-attempt", "MSFT", "SELL")
+	buy := observation("symbol-side-reused", "1")
+	if _, err := j.RecordFill(ctx, buy); err != nil {
+		t.Fatal(err)
+	}
+	sell := observation("symbol-side-reused", "2")
+	sell.Symbol, sell.Side = "MSFT", "SELL"
+	if _, err := j.RecordFill(ctx, sell); err != nil {
+		t.Fatal(err)
+	}
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tracked) != 2 {
+		t.Fatalf("tracked = %+v, want both distinct symbol/side scopes", tracked)
+	}
+	for _, symbol := range []string{"AAPL", "MSFT"} {
+		live, err := j.LiveOrdersForSymbol(ctx, "acct-1", "us", symbol)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(live) != 1 || live[0].Symbol != symbol {
+			t.Fatalf("live %s = %+v, want its exact reused-id scope", symbol, live)
+		}
 	}
 }
 

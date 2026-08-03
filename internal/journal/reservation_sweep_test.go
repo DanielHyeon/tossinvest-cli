@@ -268,6 +268,41 @@ func TestOrphanSweepKeepsCollidingIntentReservationsHeld(t *testing.T) {
 	}
 }
 
+func TestOrphanSweepDoesNotReleaseReservationBoundToAnotherDecision(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	const orderID = "decision-bound-order"
+
+	reservedDecision := recordEntryDecision(t, j, "d-reserved", "acct-1")
+	out, err := j.Reserve(ctx, exposureReserve(j, reservedDecision.ID, "acct-1",
+		"100", "0", "10000", mustVersion(t, j, "acct-1")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	otherDecision := recordEntryDecision(t, j, "d-confirmed-other", "acct-1")
+	confirmAttempt(t, j, otherDecision, "attempt-confirmed-other", orderID)
+	// Model damaged/legacy binding evidence: the reservation points at the
+	// confirmed attempt, but its immutable decision identity is different. The
+	// startup sweep must require both bindings and leave the hold intact.
+	if _, err := j.db.ExecContext(ctx,
+		`UPDATE risk_reservations SET attempt_id = ? WHERE id = ?`,
+		"attempt-confirmed-other", out.Reservations[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	insertTerminalFillSnapshot(t, j, orderID, "acct-1", "kr", "2026-03-30", "005930", "BUY")
+
+	sweep, err := j.SweepReservations(ctx)
+	if err != nil {
+		t.Fatalf("SweepReservations: %v", err)
+	}
+	if len(sweep.Released) != 0 {
+		t.Fatalf("another decision's terminal attempt released %+v", sweep.Released)
+	}
+	if !reservationState(t, j, out.Reservations[0].ID).Held() {
+		t.Fatal("reservation was released without matching its decision identity")
+	}
+}
+
 // TestOrphanSweepDoesNotReleaseAFailClosedObservation keeps the assumed-expiry
 // case out of the startup path too: a snapshot the derivation could not explain
 // is not terminal, so the sweep must leave its hold alone.
