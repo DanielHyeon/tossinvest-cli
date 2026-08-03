@@ -214,9 +214,14 @@ func ptrFX(value FrozenFX) *FrozenFX { return &value }
 
 func validContext(plan CampaignPlan, ordinal int) EvaluationContext {
 	evaluated := time.Date(2026, 8, 4, 0, 0, 3, 0, time.UTC)
+	terms, err := NewExecutionTermsPreimage(plan, "110", "130")
+	if err != nil {
+		panic(err)
+	}
 	return EvaluationContext{Enabled: true, CandidateID: "candidate", Plan: plan, Leg: LegProgress{Ordinal: ordinal},
 		Cap:  mustRiskCapNoTest(plan, ordinal, evaluated),
-		Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: StopCandidate{PriceMinor: "95", Valid: true, Source: "risk", Policy: "stop-v1", Digest: "stop-digest", ObservedAt: evaluated}}
+		Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: StopCandidate{PriceMinor: "95", Valid: true, Source: "risk", Policy: "stop-v1", Digest: "stop-digest", ObservedAt: evaluated},
+		ExecutionTerms: terms}
 }
 
 func mustRiskCapNoTest(plan CampaignPlan, ordinal int, evaluated time.Time) RiskCap {

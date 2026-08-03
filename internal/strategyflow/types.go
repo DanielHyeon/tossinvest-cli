@@ -8,6 +8,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"hash"
+	"math/big"
+	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reversallane"
@@ -27,14 +29,15 @@ const RuntimeUnobserved RuntimeState = "UNOBSERVED"
 type RefusalCode string
 
 const (
-	RefusalNone               RefusalCode = ""
-	RefusalInvalidCandidate   RefusalCode = "INVALID_APPROVED_CANDIDATE"
-	RefusalInvalidScope       RefusalCode = "INVALID_ROUTE_SCOPE"
-	RefusalRouter             RefusalCode = "ROUTER_REFUSAL"
-	RefusalUnsupportedBinding RefusalCode = "UNSUPPORTED_LANE_BINDING"
-	RefusalLane               RefusalCode = "LANE_REFUSAL"
-	RefusalLineageMismatch    RefusalCode = "LINEAGE_MISMATCH"
-	RefusalLineageIncomplete  RefusalCode = "LINEAGE_INCOMPLETE"
+	RefusalNone                  RefusalCode = ""
+	RefusalInvalidCandidate      RefusalCode = "INVALID_APPROVED_CANDIDATE"
+	RefusalInvalidScope          RefusalCode = "INVALID_ROUTE_SCOPE"
+	RefusalRouter                RefusalCode = "ROUTER_REFUSAL"
+	RefusalUnsupportedBinding    RefusalCode = "UNSUPPORTED_LANE_BINDING"
+	RefusalLane                  RefusalCode = "LANE_REFUSAL"
+	RefusalLineageMismatch       RefusalCode = "LINEAGE_MISMATCH"
+	RefusalLineageIncomplete     RefusalCode = "LINEAGE_INCOMPLETE"
+	RefusalExecutionTermsInvalid RefusalCode = "EXECUTION_TERMS_INVALID"
 )
 
 type Descriptor struct {
@@ -90,11 +93,81 @@ type Result struct {
 	Code                    RefusalCode
 	NativeCode              string
 	Quantity                uint64
+	ExecutionTerms          ExecutionTerms
 	Lineage                 Lineage
 	CommonSafetyIndependent bool
 	GuardianCalls           uint64
 	BrokerCalls             uint64
 	Mutations               uint64
+}
+
+// ExecutionTerms is a sealed accepted value. It binds the exact validated
+// prices and quantity to one accepted campaign leg and lineage identity.
+type ExecutionTerms struct {
+	AccountRef         string
+	Market             strategyrouter.Market
+	Symbol             string
+	CampaignID         string
+	LegOrdinal         int
+	Quantity           uint64
+	EntryPriceMinor    string
+	EffectiveStopMinor string
+	TargetPriceMinor   string
+	LineageIdentity    string
+	Identity           string
+}
+
+func (terms ExecutionTerms) Valid() bool {
+	if terms.Identity == "" || !validExecutionTermsFields(terms) {
+		return false
+	}
+	want := terms.Identity
+	terms.Identity = ""
+	return want == executionTermsIdentity(terms)
+}
+
+func sealExecutionTerms(lineage Lineage, quantity uint64, entryPriceMinor, effectiveStopMinor, targetPriceMinor string) (ExecutionTerms, bool) {
+	terms := ExecutionTerms{AccountRef: lineage.AccountRef, Market: lineage.Market, Symbol: lineage.Symbol, CampaignID: lineage.CampaignID,
+		LegOrdinal: lineage.LegOrdinal, Quantity: quantity, EntryPriceMinor: entryPriceMinor, EffectiveStopMinor: effectiveStopMinor,
+		TargetPriceMinor: targetPriceMinor, LineageIdentity: lineage.Identity}
+	if !lineage.Complete || !lineage.Valid() || !validExecutionTermsFields(terms) {
+		return ExecutionTerms{}, false
+	}
+	terms.Identity = executionTermsIdentity(terms)
+	return terms, true
+}
+
+func validExecutionTermsFields(terms ExecutionTerms) bool {
+	entry, entryOK := canonicalExecutionMinor(terms.EntryPriceMinor)
+	stop, stopOK := canonicalExecutionMinor(terms.EffectiveStopMinor)
+	target, targetOK := canonicalExecutionMinor(terms.TargetPriceMinor)
+	return terms.AccountRef != "" && (terms.Market == strategyrouter.MarketKR || terms.Market == strategyrouter.MarketUS) &&
+		terms.Symbol != "" && terms.Symbol == strings.ToUpper(strings.TrimSpace(terms.Symbol)) && terms.CampaignID != "" &&
+		terms.LegOrdinal > 0 && terms.Quantity > 0 && terms.LineageIdentity != "" && entryOK && stopOK && targetOK &&
+		stop.Cmp(entry) < 0 && entry.Cmp(target) < 0
+}
+
+func canonicalExecutionMinor(raw string) (*big.Int, bool) {
+	if raw == "" || strings.TrimSpace(raw) != raw {
+		return nil, false
+	}
+	value, ok := new(big.Int).SetString(raw, 10)
+	return value, ok && value.Sign() > 0 && value.String() == raw
+}
+
+func executionTermsIdentity(terms ExecutionTerms) string {
+	h := sha256.New()
+	writeLineageString(h, terms.AccountRef)
+	writeLineageString(h, string(terms.Market))
+	writeLineageString(h, terms.Symbol)
+	writeLineageString(h, terms.CampaignID)
+	writeLineageUint64(h, uint64(terms.LegOrdinal))
+	writeLineageUint64(h, terms.Quantity)
+	writeLineageString(h, terms.EntryPriceMinor)
+	writeLineageString(h, terms.EffectiveStopMinor)
+	writeLineageString(h, terms.TargetPriceMinor)
+	writeLineageString(h, terms.LineageIdentity)
+	return "strategy-execution-terms:v1:sha256:" + hex.EncodeToString(h.Sum(nil))
 }
 
 type laneKind uint8

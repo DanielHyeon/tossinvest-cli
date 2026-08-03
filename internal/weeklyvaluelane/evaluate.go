@@ -87,7 +87,9 @@ type Outcome struct {
 	Code                  RefusalCode
 	InvalidationCode      string
 	Quantity              uint64
+	EntryPriceMinor       string
 	EffectiveStopMinor    string
+	TargetPriceMinor      string
 	Lineage               ResultLineage
 	CommonExitIndependent bool
 	ExitDecisionCreated   bool
@@ -184,6 +186,12 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	if stopCode != "" {
 		return refuse(stopCode)
 	}
+	if _, entryOK := canonicalPositiveMinor(request.EntryPriceMinor); !entryOK {
+		return refuse(RefusalExecutionTermsInvalid)
+	}
+	if _, targetOK := canonicalPositiveMinor(request.StagedTargetMinor); !targetOK {
+		return refuse(RefusalExecutionTermsInvalid)
+	}
 	entryPrice, entryOK := parseUnsigned(request.EntryPriceMinor)
 	stopPrice, stopOK := parseUnsigned(effectiveStop)
 	maxDistance, maxOK := parseUnsigned(request.Cap.maxStopDistanceMinor)
@@ -201,10 +209,25 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	if !rr.Accepted {
 		return refuse(rr.Code)
 	}
+	entryPrice, entryTermsOK := canonicalPositiveMinor(request.EntryPriceMinor)
+	stopPrice, stopTermsOK := canonicalPositiveMinor(effectiveStop)
+	targetPrice, targetTermsOK := canonicalPositiveMinor(rr.TargetMinor)
+	if !entryTermsOK || !stopTermsOK || !targetTermsOK || stopPrice.Cmp(entryPrice) >= 0 || entryPrice.Cmp(targetPrice) >= 0 {
+		return refuse(RefusalExecutionTermsInvalid)
+	}
 	if code := AdmitRisk(request.Plan, request.Risk, request.Cap); code != "" {
 		return refuse(code)
 	}
-	return Outcome{Kind: OutcomeDecision, Quantity: quantity, EffectiveStopMinor: effectiveStop, Lineage: lineage, CommonExitIndependent: true}
+	return Outcome{Kind: OutcomeDecision, Quantity: quantity, EntryPriceMinor: entryPrice.String(), EffectiveStopMinor: stopPrice.String(),
+		TargetPriceMinor: targetPrice.String(), Lineage: lineage, CommonExitIndependent: true}
+}
+
+func canonicalPositiveMinor(raw string) (*big.Int, bool) {
+	if raw == "" || strings.TrimSpace(raw) != raw {
+		return nil, false
+	}
+	value, ok := parseUnsigned(raw)
+	return value, ok && value.Sign() > 0 && value.String() == raw
 }
 
 func effectiveStop(saved string, candidate StopCandidate, evaluatedAt time.Time) (string, RefusalCode) {

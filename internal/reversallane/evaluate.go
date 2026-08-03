@@ -67,12 +67,17 @@ func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Du
 	if riskRefusal := AdmitRisk(context.Plan, context.Risk, context.Cap); riskRefusal != "" {
 		return refuse(riskRefusal)
 	}
+	entryPrice, effectiveStop, targetPrice, termsOK := validatedExecutionTerms(context.Plan, context.ExecutionTerms, context.StopCandidate.PriceMinor)
+	if !termsOK {
+		return refuse(RefusalExecutionTermsInvalid)
+	}
 	lineage = decisionLineage(context, envelope, structure, laneID)
 	action := "ADD"
 	if context.Leg.Ordinal == 1 {
 		action = "ENTRY"
 	}
-	return EvaluationResult{Kind: OutcomeDecision, Action: action, Quantity: quantity, Lineage: lineage, CommonExitIndependent: true}
+	return EvaluationResult{Kind: OutcomeDecision, Action: action, Quantity: quantity, EntryPriceMinor: entryPrice, EffectiveStopMinor: effectiveStop,
+		TargetPriceMinor: targetPrice, Lineage: lineage, CommonExitIndependent: true}
 }
 
 func validateStop(saved string, candidate StopCandidate, evaluatedAt time.Time) RefusalCode {

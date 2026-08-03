@@ -133,6 +133,7 @@ type EvaluationContext struct {
 	Risk                    RiskState
 	SavedEffectiveStopMinor string
 	StopCandidate           StopCandidate
+	ExecutionTerms          ExecutionTermsPreimage
 	Invalidation            Invalidation
 }
 
@@ -170,7 +171,9 @@ type Outcome struct {
 	Code                  RefusalCode
 	InvalidationCode      string
 	Quantity              uint64
+	EntryPriceMinor       string
 	EffectiveStopMinor    string
+	TargetPriceMinor      string
 	Lineage               ResultLineage
 	CommonExitIndependent bool
 	ExitDecisionCreated   bool
@@ -216,7 +219,6 @@ func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal Signa
 		outcome.Code = RefusalStopInvalid
 		return outcome
 	}
-	outcome.EffectiveStopMinor = effectiveStop
 	if context.Leg.Ordinal < 1 || context.Leg.Ordinal > 3 || context.Leg.FilledQuantity > context.Plan.LegCeilings[context.Leg.Ordinal-1] {
 		outcome.Code = RefusalPlanInvalid
 		return outcome
@@ -271,9 +273,17 @@ func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal Signa
 		outcome.Code = RefusalRiskBudgetExceeded
 		return outcome
 	}
+	entryPrice, effectiveStop, targetPrice, termsOK := validatedExecutionTerms(context.Plan, context.ExecutionTerms, effectiveStop)
+	if !termsOK {
+		outcome.Code = RefusalExecutionTermsInvalid
+		return outcome
+	}
 	outcome.Kind = OutcomeDecision
 	outcome.Code = RefusalNone
 	outcome.Quantity = quantity
+	outcome.EntryPriceMinor = entryPrice
+	outcome.EffectiveStopMinor = effectiveStop
+	outcome.TargetPriceMinor = targetPrice
 	return outcome
 }
 

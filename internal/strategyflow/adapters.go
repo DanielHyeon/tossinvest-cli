@@ -32,7 +32,8 @@ func evaluateContinuationUS(input LaneInput) laneEvaluation {
 func fromContinuation(outcome continuationlane.Outcome) laneEvaluation {
 	lineage := outcome.Lineage
 	return laneEvaluation{accepted: outcome.Kind == continuationlane.OutcomeDecision && outcome.Code == continuationlane.RefusalNone,
-		nativeCode: string(outcome.Code), quantity: outcome.Quantity, lineage: laneLineage{
+		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entryPriceMinor: outcome.EntryPriceMinor,
+		effectiveStopMinor: outcome.EffectiveStopMinor, targetPriceMinor: outcome.TargetPriceMinor, lineage: laneLineage{
 			AccountRef: lineage.AccountRef, Market: strategyrouter.Market(lineage.Market), Symbol: lineage.Symbol,
 			PositionGeneration: uint64(lineage.PositionGeneration), LaneID: lineage.LaneID, LaneVersion: lineage.LaneVersion,
 			CandidateID: lineage.CandidateID, EvidenceDigest: lineage.EvidenceDigest, ConfigDigest: lineage.ConfigDigest,
@@ -54,7 +55,8 @@ func evaluateReversalUS(input LaneInput) laneEvaluation {
 func fromReversal(outcome reversallane.EvaluationResult, envelope reversallane.CommonEnvelope) laneEvaluation {
 	lineage := outcome.Lineage
 	return laneEvaluation{accepted: outcome.Kind == reversallane.OutcomeDecision && outcome.Code == "",
-		nativeCode: string(outcome.Code), quantity: outcome.Quantity, lineage: laneLineage{
+		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entryPriceMinor: outcome.EntryPriceMinor,
+		effectiveStopMinor: outcome.EffectiveStopMinor, targetPriceMinor: outcome.TargetPriceMinor, lineage: laneLineage{
 			AccountRef: envelope.AccountRef, Market: strategyrouter.Market(lineage.Market), Symbol: envelope.Symbol,
 			PositionGeneration: lineage.PositionGeneration, LaneID: lineage.LaneID, LaneVersion: lineage.LaneVersion,
 			CandidateID: lineage.CandidateID, EvidenceDigest: lineage.MetricEvidenceDigest, ConfigDigest: lineage.ConfigDigest,
@@ -74,7 +76,8 @@ func evaluateWeeklyUS(input LaneInput) laneEvaluation {
 func fromWeekly(outcome weeklyvaluelane.Outcome, request weeklyvaluelane.EvaluationRequest) laneEvaluation {
 	lineage := outcome.Lineage
 	return laneEvaluation{accepted: outcome.Kind == weeklyvaluelane.OutcomeDecision && outcome.Code == "",
-		nativeCode: string(outcome.Code), quantity: outcome.Quantity, lineage: laneLineage{
+		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entryPriceMinor: outcome.EntryPriceMinor,
+		effectiveStopMinor: outcome.EffectiveStopMinor, targetPriceMinor: outcome.TargetPriceMinor, lineage: laneLineage{
 			AccountRef: request.Plan.AccountRef(), Market: strategyrouter.Market(lineage.Market), Symbol: lineage.Symbol,
 			PositionGeneration: lineage.PositionGeneration, LaneID: lineage.LaneID, LaneVersion: lineage.LaneVersion,
 			CandidateID: lineage.CandidateID, EvidenceDigest: lineage.EvidenceDigest, ConfigDigest: lineage.ConfigDigest,

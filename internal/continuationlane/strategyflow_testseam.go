@@ -60,6 +60,10 @@ func strategyflowContext(market Market, laneID, symbol, candidateID, configDiges
 	if err != nil {
 		return EvaluationContext{}, err
 	}
+	terms, err := NewExecutionTermsPreimage(plan, "110", "130")
+	if err != nil {
+		return EvaluationContext{}, err
+	}
 	return EvaluationContext{Enabled: true, CandidateID: candidateID, Plan: plan, Leg: LegProgress{Ordinal: 1}, Cap: cap,
-		Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: stop}, nil
+		Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: stop, ExecutionTerms: terms}, nil
 }

@@ -49,10 +49,13 @@ type registryKey struct {
 }
 
 type laneEvaluation struct {
-	accepted   bool
-	nativeCode string
-	quantity   uint64
-	lineage    laneLineage
+	accepted           bool
+	nativeCode         string
+	quantity           uint64
+	entryPriceMinor    string
+	effectiveStopMinor string
+	targetPriceMinor   string
+	lineage            laneLineage
 }
 
 type laneLineage struct {

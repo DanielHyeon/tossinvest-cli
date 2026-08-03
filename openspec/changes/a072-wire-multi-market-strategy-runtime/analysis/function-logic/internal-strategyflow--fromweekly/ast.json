@@ -1,0 +1,70 @@
+{
+  "file": "internal/strategyflow/adapters.go",
+  "source_sha256": "0d82d1a1c60884fc061596e9d00caaab78197c67a228053a3d0258faf11b8881",
+  "package": "strategyflow",
+  "function": "fromWeekly",
+  "signature": "fromWeekly(params=2, results=1)",
+  "start": {
+    "line": 76,
+    "column": 1
+  },
+  "end": {
+    "line": 87,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 15
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 16
+      },
+      "text": "request.Plan.AccountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 51
+      },
+      "text": "strategyrouter.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 22
+      },
+      "text": "weeklyRiskBudgetDigest"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

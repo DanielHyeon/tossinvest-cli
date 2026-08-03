@@ -1,0 +1,62 @@
+{
+  "file": "internal/strategyflow/adapters.go",
+  "source_sha256": "0d82d1a1c60884fc061596e9d00caaab78197c67a228053a3d0258faf11b8881",
+  "package": "strategyflow",
+  "function": "fromContinuation",
+  "signature": "fromContinuation(params=1, results=1)",
+  "start": {
+    "line": 32,
+    "column": 1
+  },
+  "end": {
+    "line": 43,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 15
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 44
+      },
+      "text": "strategyrouter.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 24
+      },
+      "text": "uint64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

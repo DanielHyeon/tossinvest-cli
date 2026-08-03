@@ -1,0 +1,78 @@
+{
+  "file": "internal/strategyflow/flow_test.go",
+  "source_sha256": "5b415fdb57ea45913ed0a971f1fe7fe8f75119d0d2cbe75cb01aa3f2b9ef133f",
+  "package": "strategyflow",
+  "function": "acceptedEvaluation",
+  "signature": "acceptedEvaluation(params=3, results=1)",
+  "start": {
+    "line": 249,
+    "column": 1
+  },
+  "end": {
+    "line": 257,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 80
+      },
+      "text": "approved.CandidateLifeID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 19
+      },
+      "text": "approved.EvidenceDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 29
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 45
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 31
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 47
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -94,8 +94,17 @@ func evaluateWith(request Request, route func(strategyrouter.RouteRequest) strat
 		return result
 	}
 	lineage.Complete = true
+	completeLineage := sealLineage(lineage)
+	terms, ok := sealExecutionTerms(completeLineage, evaluated.quantity, evaluated.entryPriceMinor, evaluated.effectiveStopMinor, evaluated.targetPriceMinor)
+	if !ok {
+		lineage.Complete = false
+		result.Code = RefusalExecutionTermsInvalid
+		result.Lineage = sealLineage(lineage)
+		return result
+	}
 	result.Quantity = evaluated.quantity
-	result.Lineage = sealLineage(lineage)
+	result.ExecutionTerms = terms
+	result.Lineage = completeLineage
 	return result
 }
 

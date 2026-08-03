@@ -247,7 +247,7 @@ func routeDecision(descriptor Descriptor, key strategyrouter.OwnerKey, approved 
 }
 
 func acceptedEvaluation(descriptor Descriptor, key strategyrouter.OwnerKey, approved strategy.ApprovedSnapshot) laneEvaluation {
-	return laneEvaluation{accepted: true, quantity: 1, lineage: laneLineage{
+	return laneEvaluation{accepted: true, quantity: 1, entryPriceMinor: "100", effectiveStopMinor: "95", targetPriceMinor: "120", lineage: laneLineage{
 		AccountRef: key.AccountRef, Market: descriptor.Market, Symbol: key.Symbol, PositionGeneration: key.PositionGeneration,
 		LaneID: descriptor.LaneID, LaneVersion: descriptor.LaneVersion, CandidateID: approved.CandidateLifeID(),
 		EvidenceDigest: approved.EvidenceDigest(), ConfigDigest: "config-" + descriptor.LaneID,

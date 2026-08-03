@@ -37,25 +37,26 @@ type Descriptor struct {
 type RefusalCode string
 
 const (
-	RefusalDisabled           RefusalCode = "LANE_DISABLED"
-	RefusalStrictSchema       RefusalCode = "STRICT_SCHEMA_INVALID"
-	RefusalScopeMismatch      RefusalCode = "EVIDENCE_SCOPE_MISMATCH"
-	RefusalUnitInvalid        RefusalCode = "EVIDENCE_UNIT_INVALID"
-	RefusalConfigMismatch     RefusalCode = "EVIDENCE_CONFIG_MISMATCH"
-	RefusalTimestampInvalid   RefusalCode = "EVIDENCE_TIMESTAMP_INVALID"
-	RefusalEvidenceStale      RefusalCode = "EVIDENCE_STALE"
-	RefusalArithmeticInvalid  RefusalCode = "ARITHMETIC_INVALID"
-	RefusalThresholdNotMet    RefusalCode = "REVERSAL_THRESHOLD_NOT_MET"
-	RefusalStructuralMissing  RefusalCode = "STRUCTURAL_EVIDENCE_MISSING"
-	RefusalStructuralOrder    RefusalCode = "STRUCTURAL_ORDER_INVALID"
-	RefusalStructuralStale    RefusalCode = "STRUCTURAL_EVIDENCE_STALE"
-	RefusalPlanInvalid        RefusalCode = "CAMPAIGN_PLAN_INVALID"
-	RefusalLegTerminal        RefusalCode = "CAMPAIGN_LEG_TERMINAL"
-	RefusalCapInvalid         RefusalCode = "A066_CAP_INVALID"
-	RefusalRiskBudgetExceeded RefusalCode = "CAMPAIGN_RISK_BUDGET_EXCEEDED"
-	RefusalRiskLatched        RefusalCode = "CAMPAIGN_RISK_LATCHED"
-	RefusalStopRetreat        RefusalCode = "EFFECTIVE_STOP_RETREAT"
-	RefusalInvalidated        RefusalCode = "REVERSAL_INVALIDATED"
+	RefusalDisabled              RefusalCode = "LANE_DISABLED"
+	RefusalStrictSchema          RefusalCode = "STRICT_SCHEMA_INVALID"
+	RefusalScopeMismatch         RefusalCode = "EVIDENCE_SCOPE_MISMATCH"
+	RefusalUnitInvalid           RefusalCode = "EVIDENCE_UNIT_INVALID"
+	RefusalConfigMismatch        RefusalCode = "EVIDENCE_CONFIG_MISMATCH"
+	RefusalTimestampInvalid      RefusalCode = "EVIDENCE_TIMESTAMP_INVALID"
+	RefusalEvidenceStale         RefusalCode = "EVIDENCE_STALE"
+	RefusalArithmeticInvalid     RefusalCode = "ARITHMETIC_INVALID"
+	RefusalThresholdNotMet       RefusalCode = "REVERSAL_THRESHOLD_NOT_MET"
+	RefusalStructuralMissing     RefusalCode = "STRUCTURAL_EVIDENCE_MISSING"
+	RefusalStructuralOrder       RefusalCode = "STRUCTURAL_ORDER_INVALID"
+	RefusalStructuralStale       RefusalCode = "STRUCTURAL_EVIDENCE_STALE"
+	RefusalPlanInvalid           RefusalCode = "CAMPAIGN_PLAN_INVALID"
+	RefusalLegTerminal           RefusalCode = "CAMPAIGN_LEG_TERMINAL"
+	RefusalCapInvalid            RefusalCode = "A066_CAP_INVALID"
+	RefusalRiskBudgetExceeded    RefusalCode = "CAMPAIGN_RISK_BUDGET_EXCEEDED"
+	RefusalRiskLatched           RefusalCode = "CAMPAIGN_RISK_LATCHED"
+	RefusalStopRetreat           RefusalCode = "EFFECTIVE_STOP_RETREAT"
+	RefusalExecutionTermsInvalid RefusalCode = "EXECUTION_TERMS_INVALID"
+	RefusalInvalidated           RefusalCode = "REVERSAL_INVALIDATED"
 )
 
 var ErrStrictSchema = errors.New("reversal lane: strict schema invalid")
@@ -204,6 +205,7 @@ type EvaluationContext struct {
 	Risk                    RiskState
 	SavedEffectiveStopMinor string
 	StopCandidate           StopCandidate
+	ExecutionTerms          ExecutionTermsPreimage
 	Invalidation            Invalidation
 	PriceDeclined           bool
 }
@@ -253,6 +255,9 @@ type EvaluationResult struct {
 	Code                  RefusalCode
 	Action                string
 	Quantity              uint64
+	EntryPriceMinor       string
+	EffectiveStopMinor    string
+	TargetPriceMinor      string
 	Lineage               DecisionLineage
 	CommonExitIndependent bool
 	ExitDecisionCreated   bool

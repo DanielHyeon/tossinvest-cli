@@ -523,7 +523,12 @@ func validContext(plan CampaignPlan) EvaluationContext {
 	if err != nil {
 		panic(err)
 	}
-	return EvaluationContext{Enabled: true, CandidateID: "candidate", Plan: plan, Leg: LegProgress{Ordinal: 1}, Cap: validRiskCap(plan), Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: stop}
+	terms, err := NewExecutionTermsPreimage(plan, "110", "130")
+	if err != nil {
+		panic(err)
+	}
+	return EvaluationContext{Enabled: true, CandidateID: "candidate", Plan: plan, Leg: LegProgress{Ordinal: 1}, Cap: validRiskCap(plan), Risk: NewRiskState(plan),
+		SavedEffectiveStopMinor: "90", StopCandidate: stop, ExecutionTerms: terms}
 }
 
 func mustStopCandidate(t *testing.T, price, observedAt, freshUntil string) StopCandidate {
