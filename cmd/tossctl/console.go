@@ -68,6 +68,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// These aliases keep every cmd/tossctl dependency on internal/console in this
+// integration file. Helper files can implement the narrow seam without creating
+// a second package boundary, which TestOnlyConsoleGoReachesTheConsolePackage
+// deliberately forbids.
+type consoleInstrumentNameReader = console.InstrumentNameReader
+type consoleInstrumentRef = console.InstrumentRef
+type consoleInstrumentName = console.InstrumentName
+
 // consoleProbeSymbolKR is the KR symbol the buy-side probes are placed against.
 //
 // It is `verify run --symbol`'s default, restated rather than shared because
@@ -319,12 +327,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		}
 	}
 
-	// The console's one live client, shared by every seam below that reads through
-	// it. Building it resolves the account against the Open API, and that read is
-	// the call which came back 429 three times on 2026-07-26 and cost a
-	// verification run three steps (measurements.md M4) — so it happens once per
-	// console process, not once per screen the operator opens. It is still lazy:
-	// nothing is built until a screen asks.
+	// The console's one live client is shared by every seam below. Whichever live
+	// screen opens first lazily resolves the account and caches that exact official
+	// client, so history's /stocks read and every account-scoped screen reuse one
+	// OAuth token manager and one account resolution per console process.
 	reads := newConsoleBroker(root)
 	engineBoot := consoleEngineBootSeam(root)
 	var engineBootLoad func() (bool, error)
@@ -381,10 +387,11 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 			return strictVerifyActivity(verifyRunLockPath(verifyRecord), time.Now().UTC())
 		},
 
-		// The dashboard's three seams (change add-operator-dashboard). The console
+		// The dashboard's narrow read seams (change add-operator-dashboard). The console
 		// reads the journal itself — read-only, per request — and is handed a
 		// broker that can do exactly one thing.
-		Holdings: newConsoleHoldings(reads),
+		Holdings:        newConsoleHoldings(reads),
+		InstrumentNames: newConsoleInstrumentNames(reads),
 		// The orders screen's read (change console-orders-screen). One method,
 		// behind which this file makes the three calls a refresh costs.
 		Orders:           consoleOrdersSeam(reads),
@@ -697,12 +704,12 @@ func (s consoleGateLimits) GateLimits() (console.GateLimits, error) {
 
 // consoleBroker is the live client every read seam on this console shares.
 //
-// Building that client resolves the account against the Open API: one
-// /api/v1/accounts read inside buildVerifyBroker, which is the call that came back
-// 429 three times on 2026-07-26 and cost a verification run three steps
-// (measurements.md M4). Each seam used to build its own, so a session that opened
-// the positions screen and then /orders paid for that resolution twice — per
-// process, not per refresh, but twice. This type is where the "once" lives.
+// The client is built lazily on the first live-data screen. That build resolves
+// the account once and the resulting official client is then reused by history,
+// positions, orders, and the remaining read seams. Each seam used to build its
+// own client, so positions followed by /orders paid for the rate-limited account
+// read twice. This type is where both the client identity and that resolution
+// "once" live.
 //
 // It widens nothing. A seam is handed this resolver and nothing else, and what
 // crosses into internal/console is still one bound method value per screen; the
@@ -712,20 +719,37 @@ func (s consoleGateLimits) GateLimits() (console.GateLimits, error) {
 type consoleBroker struct {
 	root *rootOptions
 
-	mu         sync.Mutex
+	gateOnce   sync.Once
+	gate       chan struct{}
 	client     verifylive.Broker
 	accountRef string
+	build      func(context.Context, *rootOptions) (verifylive.Broker, string, error)
 }
 
 // newConsoleBroker holds the console's live client, and builds nothing yet.
 //
-// Lazily because that build resolves the account, and doing it at `tossctl
-// console` startup would make a screen the operator may never open into a
-// precondition for the console coming up at all. The first render pays for it; a
-// failure is a sentence on the page.
+// Lazily because client construction reads credentials and account resolution
+// makes a network request. Neither should be a precondition for the console coming
+// up when the operator may never open a live-data screen. The first relevant
+// render pays that cost; a failure is a sentence on the page.
 func newConsoleBroker(root *rootOptions) *consoleBroker {
-	return &consoleBroker{root: root}
+	return &consoleBroker{root: root, build: buildConsoleAccountBroker}
 }
+
+func (c *consoleBroker) lock(ctx context.Context) error {
+	c.gateOnce.Do(func() {
+		c.gate = make(chan struct{}, 1)
+		c.gate <- struct{}{}
+	})
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-c.gate:
+		return nil
+	}
+}
+
+func (c *consoleBroker) unlock() { c.gate <- struct{}{} }
 
 // resolve returns the console's live client, building it on the first call.
 //
@@ -739,8 +763,10 @@ func newConsoleBroker(root *rootOptions) *consoleBroker {
 // stops a failing build from being retried on every render is the console's own
 // cache (holdings.go bounds attempts by the TTL, not by successes).
 func (c *consoleBroker) resolve() (verifylive.Broker, string, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	if err := c.lock(context.Background()); err != nil {
+		return nil, "", err
+	}
+	defer c.unlock()
 	if c.client != nil {
 		return c.client, c.accountRef, nil
 	}
@@ -750,6 +776,28 @@ func (c *consoleBroker) resolve() (verifylive.Broker, string, error) {
 	}
 	c.client, c.accountRef = broker, strings.TrimSpace(accountRef)
 	return c.client, c.accountRef, nil
+}
+
+func (c *consoleBroker) instrumentMetadata(ctx context.Context) (consoleInstrumentMetadata, error) {
+	if err := c.lock(ctx); err != nil {
+		return nil, err
+	}
+	defer c.unlock()
+	if c.client == nil {
+		if c.build == nil {
+			return nil, fmt.Errorf("console: context-aware broker builder is not configured")
+		}
+		broker, accountRef, err := c.build(ctx, c.root)
+		if err != nil {
+			return nil, err
+		}
+		c.client, c.accountRef = broker, strings.TrimSpace(accountRef)
+	}
+	reader, ok := c.client.(consoleInstrumentMetadata)
+	if !ok {
+		return nil, fmt.Errorf("console: this build's broker (%T) has no official stock metadata read", c.client)
+	}
+	return reader, nil
 }
 
 func (c *consoleBroker) TypedMarketCalendar(ctx context.Context, country, date string) (official.MarketCalendarResponse, error) {
@@ -1108,6 +1156,16 @@ func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 		if err != nil {
 			return empty, nil, err
 		}
+		releaseIntent, err := holdVerifyRateBudgetIntent(ctx, out, root)
+		if err != nil {
+			return empty, nil, err
+		}
+		defer releaseIntent()
+		budgetLease, err := acquireVerifyRateBudget(ctx, out, root)
+		if err != nil {
+			return empty, nil, err
+		}
+		defer budgetLease.Release()
 		broker, accountRef, err := verifyBrokerFactory(root)
 		if err != nil {
 			return empty, nil, err
@@ -1141,8 +1199,6 @@ func consoleVerifyStarter(root *rootOptions) console.StartVerify {
 		}
 
 		fmt.Fprintf(out, "evidence record  %s\n", recordPath)
-		releaseLock := holdVerifyRunLock(ctx, out, recordPath)
-		defer releaseLock()
 
 		summary, runErr := runner.Run(ctx)
 		if runErr != nil && (errors.Is(runErr, context.Canceled) || errors.Is(runErr, context.DeadlineExceeded)) {

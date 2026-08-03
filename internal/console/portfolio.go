@@ -621,6 +621,8 @@ type historyView struct {
 	Trips    []tripRow
 	Events   []eventRow
 	Accounts []string
+	// NameNotice explains only metadata enrichment; it never changes Journal.
+	NameNotice string
 	// Truncated reports that the judgement stream was windowed.
 	Truncated bool
 }
@@ -637,6 +639,7 @@ type tripRow struct {
 	AccountRef string
 	Symbol     string
 	Market     string
+	Name       string
 	// EntryPrice is exit_states.entry_price, frozen at t0. Empty renders "—".
 	EntryPrice string
 	PnL        string
@@ -663,6 +666,8 @@ func (r tripRow) Entry() string {
 type eventRow struct {
 	AccountRef string
 	Symbol     string
+	Market     string
+	Name       string
 	At         string
 	Observed   string
 	HighWater  string
@@ -736,6 +741,7 @@ func (c *Console) history(ctx context.Context) historyView {
 			v.Events = append(v.Events, eventRow{
 				AccountRef: masked,
 				Symbol:     e.Symbol,
+				Market:     e.Market,
 				At:         e.Event.CreatedAt,
 				Observed:   dashIfEmpty(e.Event.ObservedPrice),
 				HighWater:  dashIfEmpty(e.Event.HighWater),
@@ -752,6 +758,15 @@ func (c *Console) history(ctx context.Context) historyView {
 
 	sort.SliceStable(v.Trips, func(i, j int) bool { return v.Trips[i].ClosedAt < v.Trips[j].ClosedAt })
 	sort.SliceStable(v.Events, func(i, j int) bool { return v.Events[i].At < v.Events[j].At })
+	hold, why := c.verifyHold(c.now())
+	names, notice := c.instrumentNames.get(ctx, c.opts.InstrumentNames, historyInstrumentRefs(v), c.now(), hold, why)
+	v.NameNotice = notice
+	for i := range v.Trips {
+		v.Trips[i].Name = names[symbolKey(v.Trips[i].Market, v.Trips[i].Symbol)]
+	}
+	for i := range v.Events {
+		v.Events[i].Name = names[symbolKey(v.Events[i].Market, v.Events[i].Symbol)]
+	}
 	return v
 }
 

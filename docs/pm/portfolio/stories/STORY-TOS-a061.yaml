@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a061",
+  "title": "Show instrument codes and names together in trade history",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a061-show-history-instrument-names",
+    "path": "openspec/changes/a061-show-history-instrument-names"
+  },
+  "acceptance": [
+    "Completed trips and exit events show symbol and instrument name together for KR and US",
+    "Historical names come from one bounded official batch metadata seam rather than current holdings or per-row quote calls",
+    "Missing or failed metadata preserves authoritative symbols and every frozen journal value",
+    "Market collisions, unsafe names, live-verification holds and non-read HTTP methods cannot mislabel rows or spend unbounded API budget",
+    "The history view remains session-gated, input-free, script-free and read-only"
+  ]
+}
