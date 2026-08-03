@@ -23,10 +23,22 @@
   bounded queues. Market faults irreversibly disable only that in-memory child and emit immutable fault
   evidence. Production now assembles the single outer `strategy-entry` loop, but its no-argument constructor
   hard-codes both markets OFF with nil cycles and exposes no trigger/config/activation/Gateway authority.
-- Sealed bridge audit: production entry/stop/target, five authoritative bucket snapshots/policies,
-  prospective owner generation, real exposure collection, frozen official FX and a converted US Guardian cap
-  are absent. No strategyflow→q_final constructor was added; US and KR production entry remain closed.
-- Remaining: authority-complete lane input/q_final adapters, durable market fault/recovery integration,
+- Sealed bridge audit: exact entry/stop/target contracts now exist, but their production authority loaders,
+  five authoritative bucket snapshot/policy loaders, prospective owner generation, real exposure collection,
+  frozen official FX mint and converted US Guardian cap are absent. No strategyflow→q_final constructor was
+  added; US and KR production entry remain closed.
+- Read-only snapshot authority: one market-scoped contract now seals exactly five ordered bucket/policy
+  provenances and their matching immutable journal references for both KR and US. It rejects stale,
+  missing, duplicate, tampered, currency-mismatched and cross-market input. Its source is package-private
+  and its production constructor remains unavailable, so this adds no runtime authority or mutation.
+- Six-lane execution authority: KR and US continuation, reversal and weekly-value results now carry opaque
+  exact entry/stop/target provenance, currency/scale/unit and policy lineage. Weekly RR and reversal/saved-stop
+  authority are sealed; a public scalar cannot retreat an existing stop. Final adversarial re-review is CLEAN.
+- FX/q_final authority: official evidence remains opaque through Guardian issuance and is revalidated at the
+  Guardian clock. Client configuration is immutable after construction and origin validation plus the FX GET
+  are atomic. Production identity/haircut loaders remain deliberately absent, so neither market gains entry.
+- Remaining: package-owned production snapshot and FX loaders, authority-complete lane input/q_final adapters,
+  durable market fault/recovery integration,
   official Gateway lease CAS, full safety-loop fault injection, repository gates and final independent review
 
 No market was activated, no lease reached a broker, and no live order or operating setting changed.

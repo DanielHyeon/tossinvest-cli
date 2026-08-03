@@ -64,6 +64,31 @@
   policies/snapshots or prospective owner mapping, the legacy exposure collector is not a production
   multi-market authority, and official FX validity is not preserved into a frozen cap. A bridge was therefore
   not created; the exact blockers and implementation order are recorded in the pre-edit analysis.
+- Wave B adversarial FX review initially BLOCKed four authority gaps: configured official clients could mint
+  from arbitrary endpoints/transports, opaque evidence was discarded into caller-forgeable FX DTOs, KR
+  identity freshness was caller-selected, and haircut values/digests were caller-minted. The remediation
+  seals configuration before `New` returns and removes authority eligibility after any constructor-time
+  endpoint or HTTP-client override. officialfx.Evidence now remains opaque through q_final precheck and
+  final issuance; riskbucket.BindFXAuthority alone derives the arithmetic DTO at the Guardian clock and
+  caller-provided FX fields are overwritten.
+- Re-review then BLOCKed a retained-Option TOCTOU between origin validation and the HTTP read. The final
+  boundary makes post-construction endpoint, transport and account option replay a mutex-protected no-op,
+  and performs official-origin validation plus token/data GET under one read lock. Configured, custom and
+  non-comparable transports cannot mint authority or trigger an interface-comparison panic. Independent
+  re-review is CLEAN.
+- Same-currency identity now requires a private sealed, 256-byte-bounded snapshot capability with a maximum
+  five-minute window. Cross-currency evidence requires a separate private sealed haircut-policy capability;
+  its multiplier is exact-decimal canonicalized before the policy digest and full evidence seal are made.
+  No production policy/snapshot loader exists, so both public zero values fail closed and neither KR nor US
+  FX authority can currently be minted by production callers.
+- Exact execution terms for all six KR/US lanes now seal entry, stop and target price provenance, currency,
+  minor scale, unit version and policy lineage. Weekly value additionally seals its complete RR preimage;
+  reversal stop evidence is private and freshness-bounded.
+- Independent execution-term review found two successive saved-stop weaknesses: caller-forgeable provenance,
+  followed by a public scalar that could suppress the sealed saved-stop branch and retreat to the candidate
+  stop. Both continuation and weekly value now choose the saved stop directly from private sealed authority;
+  public scalar deletion, lowering or substitution cannot weaken it, and scalar-without-authority fails
+  closed. Final independent re-review is CLEAN.
 
 ## Verification
 
@@ -86,9 +111,14 @@
 - `go test ./internal/app/engine -count=1`: PASS; full package race PASS (396.594s); vet PASS.
 - KR/US supervisor independent re-review after three Critical fixes: CLEAN.
 - Dormant `cmd/tossctl` production assembly focused/race/vet and independent review: PASS/CLEAN.
+- Wave B FX focused tests, affected-package race tests and vet for official, officialfx, riskbucket and
+  execgw: PASS. No journal, broker, activation or LIVE mutation was added.
+- Six-lane execution-term normal/tagged/race/tagged-race tests and vet: PASS. Saved-stop adversarial
+  regressions and final independent review: PASS/CLEAN.
 
 ## Verdict
 
-Isolated core approved for production-integration review. KR and US remain independently OFF until human
-activation and every current lease authority are valid. This core has no transport dependency and grants no
-lane, automation, toggle or LIVE approval authority.
+Isolated core approved for the next production-integration review checkpoint. Production snapshot/FX loaders,
+prospective-owner atomic admission, current account exposure, official Gateway lease CAS and protection
+assembly remain pending. KR and US remain independently OFF until human activation and every current lease
+authority are valid. The completed core grants no lane, automation, toggle or LIVE approval authority.

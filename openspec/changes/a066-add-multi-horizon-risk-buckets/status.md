@@ -5,6 +5,32 @@
 - Current wave: Wave 1E v24 owner-lifecycle hardening GREEN and independently CLEAN; official holdings mint pending
 - Runtime authority: dormant q_final Guardian/Gateway seam only; no sealed strategyflow/engine/broker/toggle activation
 
+## Read-only KR/US snapshot-authority checkpoint
+
+- A pure `riskbucket` service contract now validates one exact sealed bundle containing the five
+  horizon/market/strategy/sector/symbol snapshots, their policy provenance and immutable matching
+  journal references for either KR/KRW or US/USD.
+- Scope, policy and snapshot freshness, currency pairing, missing/duplicate dimensions, monetary or
+  reference tampering, and KR/US cross-reuse all fail closed before a bundle is returned.
+- The source interface and material constructors are package-private, returned entries are value
+  copies, and the bundle has a canonical SHA-256 seal. Caller-provided authority strings cannot mint
+  a production source.
+- No production loader exists yet, so the public constructor returns
+  `ErrRiskSnapshotAuthorityUnavailable`. This checkpoint performs no journal, broker, activation or
+  runtime mutation and does not enable live entry.
+
+## Sealed KR/US FX-authority checkpoint
+
+- `officialfx.Evidence` remains opaque from the official read through q_final precheck and final
+  issuance. Guardian time revalidates it and `riskbucket.BindFXAuthority` alone derives the exact
+  arithmetic DTO; caller-provided public FX fields are never monetary authority.
+- The official client configuration is sealed before `New` returns. Retained option closures cannot
+  change its endpoint, transport or account selection, and official-origin validation plus the FX GET
+  execute inside one read-lock boundary. Configured, custom and non-comparable transports fail closed.
+- Same-currency identity and cross-currency haircut policy are private sealed capabilities with bounded
+  identities and freshness. No production snapshot/policy loader exists, so both KR and US production
+  FX minting remain unavailable and q_final entry remains closed.
+
 ## Completed in Wave 1B checkpoint
 
 - Released schema 21→22 remains byte-for-byte immutable for policy/snapshot provenance, final
@@ -179,10 +205,16 @@
 | q_final focused execgw/journal `-race` | PASS (15.520s / 7.158s) |
 | q_final `go vet ./internal/execgw ./internal/journal` | PASS |
 | q_final strict OpenSpec validation / diff check | PASS |
+| Read-only KR/US snapshot authority RED compile | PASS: missing authority service and sealed bundle symbols observed |
+| Read-only KR/US snapshot authority focused/race/vet | PASS |
+| Sealed FX authority affected-package tests/race/vet | PASS |
+| FX authority independent adversarial re-review | CLEAN after opaque q_final and Option-replay/TOCTOU hardening |
 
 ## Pending integration
 
-- Sealed a072 strategyflow-to-q_final production bridge; the legacy Parker adapter remains KR-only.
+- Package-owned production snapshot loader and sealed a072 strategyflow-to-q_final bridge; the
+  legacy Parker adapter remains KR-only.
+- Package-owned official FX identity/haircut loaders; public zero values remain unavailable by design.
 - Entry-loss-lock integration and broader zero exposure-raising broker request spies.
 - KR/US concurrent runtime integration and independent lane-operation tests.
 - Full repository validation, independent implementation review and `make gate`.
