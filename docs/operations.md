@@ -123,11 +123,84 @@ Compose의 host publish는
 - broker session secret은 host에서 `tossctl auth login`으로 사람이 갱신한 뒤
   container를 재생성한다. container 안에서 QR 인증을 자동화하지 않는다.
 - container에서는 콘솔의 self-update를 운영 절차로 사용하지 않는다.
-  `docker compose build` 또는 서명·검증된 image pull 후
-  `docker compose up -d`로 교체한다.
-- rollback은 이전 image tag로 `docker compose up -d`하거나 remote flag를 제거한
-  native loopback 실행으로 돌아간다. rollback도 automation gate를 켜거나 engine을
-  시작하지 않는다.
+  `tossos:local` 같은 tag는 개발 build에만 사용하며 deployment identity로 기록하지 않는다.
+- release 교체는 아래 dormant preflight가 만든 exact digest plan을 사람이 별도로 승인한 뒤에만
+  수행한다. 이 저장소의 guard는 계획 값만 만들며 Docker 명령을 실행하지 않는다.
+- rollback도 automation gate를 켜거나 engine을 시작하지 않으며, mutable 이전 tag나 blanket
+  Compose down/up을 사용하지 않는다.
+
+### Dormant digest-pinned deployment preflight
+
+이 절차는 activation과 분리된 read-only 증거 수집이다. 현재 구현인 `internal/deployguard`는
+plain evidence를 검증하고 다음 한 단계의 action **값**만 반환한다. Docker/process 실행기,
+engine control, config/journal/protection writer와 broker capability를 갖지 않는다. 따라서 이
+preflight를 통과해도 실제 교체 승인이나 시장 activation 권한은 생기지 않는다.
+
+첫 service를 건드리기 전에 한 preimage에 아래 항목을 모두 동결한다.
+
+- service별 current/target image는 `sha256:<64 lowercase hex>` exact digest여야 한다. 실제
+  release override의 `image`도 `registry/repository@sha256:<64 lowercase hex>` 형식이어야 하며
+  `tossos:local`, `:latest`, 버전 tag만 있는 값은 거부한다.
+- `docker compose config`로 render한 결과의 SHA-256, config, activation, KR/US lane,
+  autostart, automation, LIVE approval, protection과 journal read snapshot의 SHA-256을 각각
+  기록한다. 시크릿 **값**은 해시 입력이나 preimage에 넣지 않고 environment key set만 정렬해
+  기록한다.
+- service별 environment key set, bind/volume source·target·`ro|rw` mode와 filesystem/volume
+  identity digest를 기록한다. config/data/journal volume을 새로 만들거나 바꿔 끼우지 않는다.
+- current data/journal schema version, target image readable/writable range, 예상 post-replace
+  version, rollback image readable/writable range를 기록한다. target이 current를 읽지 못하거나
+  post version을 쓰지 못하거나 rollback image가 post version을 읽고 쓴다는 증거가 없으면
+  첫 replace action은 0개다.
+- console/API/인증 Unix projection을 포함한 service별 baseline health evidence digest와 UTC
+  관측 시각을 기록한다. baseline은 healthy이고 preimage capture 5분 이내여야 한다. KR과 US는
+  lane/activation/entry `OFF`, autostart/automation `OFF`, LIVE `UNAPPROVED`, first refusal
+  `NOT_CONFIGURED`여야 한다.
+
+증거 수집에 사용할 수 있는 read-only 명령 예시는 다음과 같다. 출력에는 host 경로와 환경
+구성이 포함될 수 있으므로 repository 밖의 `0700` 운영 디렉터리에 저장하고 커밋하지 않는다.
+
+```bash
+docker compose config --format json
+docker compose images --format json
+docker image inspect --format '{{json .RepoDigests}}' <current-or-target-image>
+sha256sum <rendered-compose> <sanitized-config-snapshot> <activation-snapshot> <protection-snapshot>
+```
+
+`docker compose build`, `pull`, `up`, `stop`, `down`은 read-only preflight가 아니므로 위 단계에
+포함하지 않는다. 현재 `compose.yaml`의 `tossos:local`은 개발 기본값이고 immutable release
+preflight가 의도적으로 거부한다.
+
+교체 순서는 release-pinned `httpapi` → `tossos`이고 한 번에 service 하나만 처리한다. 각
+replace, compatibility read와 rollback health bound는 양수이며 최대 5분이다. 한 단계가 exact
+running image digest, schema, health evidence, config/activation/lane/autostart/automation/LIVE/
+protection/journal digest, environment keys와 mounts를 모두 재증명해야 다음 service action이
+나온다. action에는 UTC issued-at과 `issued-at + timeout`인 deadline이 함께 봉인된다. 관측은
+그 시간창 안에 있어야 하고 trusted receipt time이 deadline을 지난 경우 typed timeout 결과가
+아니면 거부한다. 값 하나라도 drift하면 healthy로 판정하지 않는다.
+
+각 관측의 evidence digest는 임의 식별자가 아니다. action ID/kind/window, service, exact running
+image, replace outcome/timeout, health와 observed-at, schema, 보존 state digest 전체, environment
+keys와 mount identity의 canonical encoding을 SHA-256으로 다시 계산해 일치해야 한다. 다른 action
+증거를 재사용하거나 digest 계산 뒤 필드를 바꾼 결과는 상태 머신을 전진시키지 않는다.
+Recovery의 entry 값도 가드가 의도한 `OFF`가 아니라 관측 사실이다. KR/US entry가 모두 완전하고
+같을 때만 그 `ON|OFF`를 기록하며, 시장 또는 보존 증거가 누락되거나 서로 다르면 `UNKNOWN`을
+기록한다. 가드는 recovery를 만들기 위해 entry를 변경하지 않는다.
+
+Replace 결과는 `NOT_APPLIED`와 `APPLIED`를 구분한다. `APPLIED` 뒤 health/schema/state 검사가
+실패하면 현재 service를 포함해 실제 교체된 subset 전체를 역순으로 compatibility-read한 뒤
+exact current image digest로 rollback한다. `NOT_APPLIED`면 그 service는 subset에 넣지 않는다.
+아직 교체하지 않은 service에는 action이 나오지 않는다.
+
+각 rollback 직전 실제 running image digest와 current schema를 다시 읽는다. rollback image가
+그 schema를 읽고 쓸 수 없으면 해당 service에는 destructive rollback action을 내지 않고 새
+image를 유지한다. 결과는 typed `ROLLBACK_INCOMPATIBLE`, entry effective `OFF`, retained exact
+target digest로 기록한다. 여기서 `OFF`는 가드가 만든 값이 아니라 완전한 보존 증거에서 관측되고
+preimage와 일치한 값이다. 이후 나머지 이전 subset만 계속 역순 검토한다. compatibility read가
+unhealthy, timeout 또는 보존 증거 불일치이면 그 관측은 schema authority가 아니므로
+`ROLLBACK_COMPATIBILITY_FAILED`로 남기고 해당 service의 destructive rollback action을 내지
+않는다. rollback 자체가 timeout이면 `ROLLBACK_FAILED` recovery로 중단한다. 어떤 recovery도 autostart,
+automation, lane, LIVE approval, protection, journal 또는 volume을 수정해 OFF를 만드는 방식이
+아니다. preimage의 기존 OFF/미승인 상태를 그대로 보존하고 증명하는 것이다.
 
 인터넷 router port-forward, `0.0.0.0:37085` host publish, public cloud security
 group 개방은 이 명세 밖이며 금지한다. 다중 사용자가 필요하면 trusted-network

@@ -86,6 +86,11 @@ bind하고 `${TOSSOS_VPN_BIND_IP}:${TOSSOS_API_PORT}:37086`에만 publish된다.
 bind는 시작 단계에서 거부된다. console service와 engine lifecycle은 그대로 유지된다.
 API만 회수할 때:
 
+전체 Compose release replacement는 [Operations의 dormant digest-pinned deployment
+preflight](operations.md#dormant-digest-pinned-deployment-preflight)를 먼저 통과해야 한다.
+`httpapi` → `tossos` frozen order, exact image/schema/state preimage와 부분 rollback 규칙을
+우회해 이 절의 단일-service 회수 명령을 release upgrade로 사용해서는 안 된다.
+
 healthcheck는 container private IP로 연결하되 `TOSSOS_API_PUBLIC_URL`의 canonical
 Host를 전송하므로 TLS/origin boundary를 우회하지 않는다. 실제 client는 private CA를
 신뢰하고 public URL의 SAN과 유효기간을 검증해야 하며 `--no-check-certificate`를 사용하지 않는다.

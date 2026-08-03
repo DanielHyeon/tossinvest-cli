@@ -2,7 +2,7 @@
 
 - Updated: 2026-08-04
 - Overall: IN PROGRESS
-- Current wave: shared KR/US operational projection, Unix read transport, console and private REST/SSE/OpenAPI GREEN
+- Current wave: shared KR/US projection plus pure immutable deployment guard GREEN; actual deployment remains pending
 - Runtime authority: read-only and dormant by default; no lane, activation, Guardian, Gateway, broker or operating-toggle writer
 
 ## Completed in the operational projection wave
@@ -33,14 +33,37 @@
 | Four affected package race tests | PASS |
 | Four affected package vet | PASS |
 | OpenAPI and strategy-runtime contract tests | PASS |
+| Deployment-guard package tests (`-count=1`, `-count=25`) | PASS |
+| Deployment-guard race tests and vet | PASS |
+| Existing Compose/API separation static test | PASS |
 | Strict OpenSpec validation | PASS |
 | `git diff --check` | PASS |
+
+## Completed in the deployment-guard wave
+
+- `internal/deployguard` freezes exact `httpapi` → `tossos` current/target image digests, rendered
+  Compose/config/activation/lane/autostart/automation/LIVE/protection/journal digests, canonical environment
+  keys and mount identities, schema ranges, recent healthy baseline and exact dormant KR/US truth.
+- Mutable image tags, missing services/evidence, reordered manifests or incompatible schema ranges produce no
+  first replacement action. Rendered release images must match the frozen exact immutable targets.
+- Each plain action carries an exact service/image, UTC issued-at/deadline and a positive timeout no greater
+  than five minutes. Canonical observation SHA-256 binds that action window to image, schema, health and all
+  preservation evidence; stale, future, replayed or post-seal-mutated observations cannot advance.
+- Applied failures and timeouts reverse only the replaced subset, including the current applied attempt.
+  Unhealthy/timed-out compatibility reads emit no destructive rollback; incompatible rollback retains the
+  exact new digest with proven entry OFF. Drift recovery reports observed common `ON|OFF`, or `UNKNOWN` when
+  KR/US or preservation evidence is incomplete/different; it never invents OFF. Rollback timeout becomes
+  typed recovery.
+- The package returns data only and has no Docker/process/engine/broker/config/journal/protection writer.
+  Compose and operations documentation keep `tossos:local` development-only and require a separate
+  digest-pinned release override.
 
 ## Pending
 
 - Pre/post logic-map completion across the performance and Compose scopes (tasks 1.1, 1.2 and 5.1).
 - Lane-performance lineage, fill/close accounting and conservation (tasks 2.5, 2.6 and 3.5).
-- Compose immutable preimage, replacement and partial rollback guards (tasks 4.2, 4.4 and 4.5).
-- Repository-wide gates, independent final implementation review and dormant deployment (tasks 5 and 6).
+- Repository-wide gates and final independent implementation review (tasks 5.1–5.3).
+- Actual immutable preimage collection/verification and dormant replacement/post-deploy checks (tasks 5.4
+  and 6). No Docker or Compose mutation was run in this wave.
 
 No market was activated, no entry runtime was started, and no LIVE order or operating setting changed.

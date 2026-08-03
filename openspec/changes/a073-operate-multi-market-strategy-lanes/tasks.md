@@ -24,10 +24,10 @@
 ## 4. Integration and deployment guards
 
 - [x] 4.1 Add an integrated engine-runtime/Unix/console/API fixture proving simultaneous KR/US snapshots, partial-market failure isolation, reconnect/full-snapshot convergence and exact console/API parity
-- [ ] 4.2 Add Compose preimage tests requiring exact current/target image digests, rendered Compose/config/activation/protection digests, environment key set, volume/mount identity, schema versions/compatibility ranges and baseline health; mutable tags or incomplete preimages must fail before replacement
+- [x] 4.2 Add Compose preimage tests requiring exact current/target image digests, rendered Compose/config/activation/protection digests, environment key set, volume/mount identity, schema versions/compatibility ranges and baseline health; mutable tags or incomplete preimages must fail before replacement
 - [x] 4.3 Add dormant health checks for console/API schema, authenticated Unix projection connectivity and KR/US OFF/not-configured truth without starting entry runtime or contacting a broker mutation endpoint
-- [ ] 4.4 Add deployment regression tests proving one-service-at-a-time replacement honors frozen order and ≤5 minute per-service timeout, cannot change autostart/automation/lane/LIVE/protection state, and cannot create an order/audit mutation
-- [ ] 4.5 Add partial-failure rollback tests proving only the replaced subset rolls back in reverse order to exact preimage digests, untouched services/config/volumes/journal/protection stay unchanged, and incompatible rollback keeps the new service with entry OFF and safety continuity
+- [x] 4.4 Add deployment regression tests proving one-service-at-a-time replacement honors frozen order and ≤5 minute per-service timeout, cannot change autostart/automation/lane/LIVE/protection state, and cannot create an order/audit mutation
+- [x] 4.5 Add partial-failure rollback tests proving only the replaced subset rolls back in reverse order to exact preimage digests, untouched services/config/volumes/journal/protection stay unchanged, and incompatible rollback keeps the new service with entry OFF and safety continuity
 
 ## 5. VERIFY and release gates
 

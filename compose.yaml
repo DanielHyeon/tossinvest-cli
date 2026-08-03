@@ -3,6 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # Development/build tag only. It is deliberately mutable and therefore is
+    # never a valid deployment preimage. A dormant release must render a
+    # separate override with an exact repository@sha256:<64-hex> image and pass
+    # the a073 deployguard before any service replacement is authorized.
     image: tossos:local
     user: "${TOSSOS_UID:?set a non-root host uid}:${TOSSOS_GID:?set a non-root host gid}"
     environment:
@@ -86,6 +90,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # Development/build tag only; see the immutable release boundary above.
     image: tossos:local
     user: "${TOSSOS_UID:?set a non-root host uid}:${TOSSOS_GID:?set a non-root host gid}"
     environment:
