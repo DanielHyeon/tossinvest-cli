@@ -1,0 +1,204 @@
+{
+  "file": "internal/journal/nonce_test.go",
+  "source_sha256": "84f12358991f53b64e3f9dbebef2730533e6375e8ea55289c80b9cdfeb35487f",
+  "package": "journal",
+  "function": "TestPrunePreservesSpentNonceWhileItsReservationIsHeld",
+  "signature": "TestPrunePreservesSpentNonceWhileItsReservationIsHeld(params=1, results=0)",
+  "start": {
+    "line": 259,
+    "column": 1
+  },
+  "end": {
+    "line": 278,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 13
+      },
+      "text": "openReservationJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 14
+      },
+      "text": "recordEntryDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 15
+      },
+      "text": "j.Reserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 30
+      },
+      "text": "exposureReserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 3
+      },
+      "text": "mustVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 2
+      },
+      "text": "spendNonce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 2
+      },
+      "text": "fake.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 18
+      },
+      "text": "j.PruneSpentNonces"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 42
+      },
+      "text": "fake.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 21
+      },
+      "text": "spentNonceCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 13
+      },
+      "text": "spentNonceCount"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 260,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 263,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

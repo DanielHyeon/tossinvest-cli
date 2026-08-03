@@ -185,9 +185,11 @@ type Detector struct {
 // There is no per-fill identifier in this API (design D4), so a "fill" is never an
 // event we receive — it is the difference between two of these.
 type Snapshot struct {
-	OrderID string
-	Symbol  string
-	Market  string
+	OrderID    string
+	Symbol     string
+	Market     string
+	TradingDay string
+	Side       string
 	// Derived is the priority-table verdict on the payload.
 	Derived brokerstate.Derived
 	// RawStatus, Canceled and CanceledAt are the derivation's inputs, kept on the
@@ -380,8 +382,10 @@ func (d *Detector) collect(ctx context.Context, cfg Config, started time.Time, c
 			return nil, fmt.Errorf("filldetect: reading an order from the open list: %w", err)
 		}
 		snap.Derived = brokerstate.Derive(viewOf(snap, lineage[snap.OrderID]))
-		if m := market[snap.OrderID]; m != "" {
-			snap.Market = m
+		if snap.Market == "" {
+			if m := market[snap.OrderID]; m != "" {
+				snap.Market = m
+			}
 		}
 		seen[snap.OrderID] = true
 		snaps = append(snaps, snap)
@@ -409,7 +413,9 @@ func (d *Detector) collect(ctx context.Context, cfg Config, started time.Time, c
 		if snap.Symbol == "" {
 			snap.Symbol = t.Symbol
 		}
-		snap.Market = t.Market
+		if snap.Market == "" {
+			snap.Market = t.Market
+		}
 		snap.Derived = brokerstate.Derive(viewOf(snap, t.Lineage))
 		snaps = append(snaps, snap)
 	}

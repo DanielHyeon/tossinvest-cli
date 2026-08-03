@@ -220,6 +220,7 @@ type rawOrder struct {
 	rawAmount string
 	filledAt  string
 	canceled  string
+	orderedAt string
 }
 
 func (o rawOrder) json() json.RawMessage {
@@ -232,6 +233,9 @@ func (o rawOrder) json() json.RawMessage {
 	if o.symbol == "" {
 		o.symbol = "AAPL"
 	}
+	if o.orderedAt == "" {
+		o.orderedAt = "2026-03-30T09:30:00-04:00"
+	}
 	fields := []string{
 		`"orderId":` + quote(o.id),
 		`"symbol":` + quote(o.symbol),
@@ -239,6 +243,7 @@ func (o rawOrder) json() json.RawMessage {
 		`"status":` + quote(o.status),
 		`"quantity":` + quote(o.quantity),
 		`"currency":"USD"`,
+		`"orderedAt":` + quote(o.orderedAt),
 	}
 	if o.canceled != "" {
 		fields = append(fields, `"canceledAt":`+quote(o.canceled))

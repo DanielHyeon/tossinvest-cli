@@ -1,0 +1,55 @@
+{
+  "file": "internal/filldetect/ledger_test.go",
+  "source_sha256": "3fa79a4b73613bae1f9ee086608012e2dca32a6f85b5b9128b916016fdfe571a",
+  "package": "filldetect_test",
+  "function": "newJournalDetector",
+  "signature": "newJournalDetector(params=5, results=2)",
+  "start": {
+    "line": 38,
+    "column": 1
+  },
+  "end": {
+    "line": 51,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 7
+      },
+      "text": "openLedgerJournal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -29,6 +29,7 @@ import (
 func applyHookFixture(t *testing.T) *Journal {
 	t.Helper()
 	j := openTestJournal(t)
+	recordConfirmedFillOrder(t, j, "intent-1", "attempt-1", "o-1")
 	insertPosition(t, j, "p-1", nil)
 	insertExitState(t, j, "p-1")
 	return j
@@ -196,9 +197,9 @@ func TestAFailingApplyHookRollsBackTheFill(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(tracked) != 0 {
-		t.Errorf("tracked orders = %+v; a first observation that rolled back leaves no "+
-			"snapshot row, and the detector re-offers the order from its open-order read", tracked)
+	if len(tracked) != 1 || tracked[0].OrderID != "o-1" {
+		t.Errorf("tracked orders = %+v; a confirmed first observation that rolled back must "+
+			"remain scheduled for a tracked-id re-read", tracked)
 	}
 }
 

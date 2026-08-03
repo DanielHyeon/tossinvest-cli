@@ -296,6 +296,106 @@ func (j *Journal) ReleaseReconcile(ctx context.Context, req ReleaseReconcileRequ
 	return active, true, nil
 }
 
+// ReleaseReconciles closes every requested scope in one transaction.
+//
+// Operator recovery must not release an account-wide guard and then fail while
+// releasing a symbol guard: that partial commit would reduce protection even
+// though the command reports failure. This batch form first proves that every
+// active scope exists and is owned by the expected cause, then updates all rows
+// and commits once. Any mismatch or storage error rolls the whole batch back.
+func (j *Journal) ReleaseReconciles(ctx context.Context,
+	reqs []ReleaseReconcileRequest,
+) ([]ReconcileState, error) {
+	if len(reqs) == 0 {
+		return nil, nil
+	}
+	type normalizedRelease struct {
+		account  string
+		symbol   string
+		cause    string
+		evidence string
+		expect   string
+	}
+	normalized := make([]normalizedRelease, 0, len(reqs))
+	seen := make(map[string]struct{}, len(reqs))
+	for _, req := range reqs {
+		item := normalizedRelease{
+			account:  strings.TrimSpace(req.AccountRef),
+			symbol:   strings.ToUpper(strings.TrimSpace(req.Symbol)),
+			cause:    strings.TrimSpace(req.Cause),
+			evidence: strings.TrimSpace(req.Evidence),
+			expect:   strings.TrimSpace(req.ExpectCause),
+		}
+		switch {
+		case item.account == "":
+			return nil, fmt.Errorf("%w: a RECONCILE release is scoped to an account; none was named", ErrInvalidRequest)
+		case !ValidReconcileReleaseCause(item.cause):
+			return nil, fmt.Errorf("%w: RECONCILE release cause %q is not one this build writes", ErrInvalidRequest, req.Cause)
+		case item.evidence == "":
+			return nil, fmt.Errorf("%w: releasing a RECONCILE state requires the evidence that it is over", ErrInvalidRequest)
+		case item.expect == "" || !ValidReconcileCause(item.expect):
+			return nil, fmt.Errorf("%w: an atomic RECONCILE release requires a valid expected cause", ErrInvalidRequest)
+		}
+		key := item.account + "\x00" + item.symbol
+		if _, duplicate := seen[key]; duplicate {
+			return nil, fmt.Errorf("%w: duplicate RECONCILE release scope %s/%s", ErrInvalidRequest, item.account, symbolLabel(item.symbol))
+		}
+		seen[key] = struct{}{}
+		normalized = append(normalized, item)
+	}
+
+	tx, err := j.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("journal: starting the atomic RECONCILE release: %w", err)
+	}
+	defer tx.Rollback()
+
+	released := make([]ReconcileState, 0, len(normalized))
+	for _, req := range normalized {
+		active, err := scanReconcileState(tx.QueryRowContext(ctx,
+			reconcileSelect+activeScopeWhere(req.symbol), scopeArgs(req.account, req.symbol)...))
+		if errors.Is(err, ErrReconcileStateNotFound) {
+			return nil, fmt.Errorf("journal: atomic RECONCILE release scope %s/%s is not active",
+				req.account, symbolLabel(req.symbol))
+		}
+		if err != nil {
+			return nil, err
+		}
+		if active.Cause != req.expect {
+			return nil, fmt.Errorf(
+				"journal: atomic RECONCILE release scope %s/%s is owned by %s, not %s",
+				req.account, symbolLabel(req.symbol), active.Cause, req.expect)
+		}
+		released = append(released, active)
+	}
+
+	now := j.clk.Now().UTC()
+	nowText := formatJournalTime(now)
+	for i, active := range released {
+		req := normalized[i]
+		result, err := tx.ExecContext(ctx,
+			`UPDATE reconcile_states SET released_at = ?, release_cause = ?, evidence = ?
+			 WHERE id = ? AND released_at IS NULL`,
+			nowText, req.cause, active.Evidence+" | released: "+req.evidence, active.ID)
+		if err != nil {
+			return nil, fmt.Errorf("journal: releasing RECONCILE state %s in atomic batch: %w", active.ID, err)
+		}
+		if changed, err := result.RowsAffected(); err != nil || changed != 1 {
+			if err != nil {
+				return nil, fmt.Errorf("journal: verifying atomic release of %s: %w", active.ID, err)
+			}
+			return nil, fmt.Errorf("journal: atomic release of %s updated %d rows, want one", active.ID, changed)
+		}
+		released[i].ReleasedAt = now
+		released[i].ReleaseCause = req.cause
+		released[i].Evidence = active.Evidence + " | released: " + req.evidence
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("journal: committing the atomic RECONCILE release: %w", err)
+	}
+	return released, nil
+}
+
 // ActiveReconcileStates returns every state still blocking, oldest first. It is
 // what the in-memory projections are rebuilt from at startup.
 func (j *Journal) ActiveReconcileStates(ctx context.Context) ([]ReconcileState, error) {

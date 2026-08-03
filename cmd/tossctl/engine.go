@@ -114,7 +114,7 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 		Use:   "engine",
 		Short: "Run the automated trading engine",
 	}
-	cmd.AddCommand(newEngineRunCmd(root))
+	cmd.AddCommand(newEngineRunCmd(root), newEngineReconcileResolveCmd(root))
 	return cmd
 }
 
@@ -410,11 +410,15 @@ func engineFillDetector(ectx *engine.Context, clk clock.Clock,
 		Order:     orders,
 		Positions: sweep,
 		Balance:   sweep,
-		Tracked:   filldetect.JournalTracked{Journal: ectx.Journal},
-		Ledger:    filldetect.JournalLedger{Journal: ectx.Journal},
-		Gate:      ectx.Entry,
-		Clock:     clk,
-		Config:    filldetect.Config{Currencies: ectx.SnapshotCurrencies()},
+		Tracked: filldetect.JournalTracked{
+			Journal: ectx.Journal, AccountRef: ectx.AccountRef,
+		},
+		Ledger: filldetect.JournalLedger{
+			Journal: ectx.Journal, AccountRef: ectx.AccountRef, Refresh: ectx.Reconcile.Refresh,
+		},
+		Gate:   ectx.Entry,
+		Clock:  clk,
+		Config: filldetect.Config{Currencies: ectx.SnapshotCurrencies()},
 	}, nil
 }
 

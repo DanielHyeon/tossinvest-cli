@@ -50,6 +50,25 @@ func TestSnapshotCarriesTheFilledAmount(t *testing.T) {
 	}
 }
 
+func TestSnapshotCarriesCanonicalBrokerOrderScope(t *testing.T) {
+	snap := pollOne(t, rawOrder{
+		id: "o-scope", symbol: "AAPL", orderedAt: "2026-03-30T09:30:00-04:00",
+	})
+	if snap.Market != "us" || snap.TradingDay != "2026-03-30" || snap.Side != "BUY" {
+		t.Fatalf("broker scope = market %q day %q side %q, want us/2026-03-30/BUY",
+			snap.Market, snap.TradingDay, snap.Side)
+	}
+}
+
+func TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset(t *testing.T) {
+	snap := pollOne(t, rawOrder{
+		id: "o-us-boundary", symbol: "AAPL", orderedAt: "2026-03-31T00:30:00+09:00",
+	})
+	if snap.TradingDay != "2026-03-30" {
+		t.Fatalf("US trading day = %q, want New York date 2026-03-30", snap.TradingDay)
+	}
+}
+
 // TestFilledAmountKeepsItsDecimalString: the amount is compared byte-for-byte
 // against the stored previous value, so a float round trip would manufacture
 // corrections out of nothing.

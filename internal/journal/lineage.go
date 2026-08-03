@@ -48,6 +48,42 @@ type LineageEdge struct {
 	CreatedAt string
 }
 
+// OrderLineageScope is the canonical local ownership identity used while
+// following broker replacement ids. Broker order ids are not globally unique,
+// so a resolver that carries only the id can cross accounts or trading days.
+//
+// Every field is required. Market, symbol and side are compared
+// case-insensitively after trimming; account and trading day are compared as
+// trimmed exact values. The broker order id itself remains opaque.
+type OrderLineageScope struct {
+	AccountRef string
+	Market     string
+	TradingDay string
+	Symbol     string
+	Side       string
+}
+
+func (s OrderLineageScope) canonical() (OrderLineageScope, error) {
+	s.AccountRef = strings.TrimSpace(s.AccountRef)
+	s.Market = normaliseMarket(s.Market)
+	s.TradingDay = strings.TrimSpace(s.TradingDay)
+	s.Symbol = normaliseSymbol(s.Symbol)
+	s.Side = strings.ToUpper(strings.TrimSpace(s.Side))
+	switch {
+	case s.AccountRef == "":
+		return OrderLineageScope{}, fmt.Errorf("%w: a lineage scope needs an account ref", ErrInvalidRequest)
+	case s.Market != "kr" && s.Market != "us":
+		return OrderLineageScope{}, fmt.Errorf("%w: a lineage scope needs a supported market", ErrInvalidRequest)
+	case s.TradingDay == "":
+		return OrderLineageScope{}, fmt.Errorf("%w: a lineage scope needs a trading day", ErrInvalidRequest)
+	case s.Symbol == "":
+		return OrderLineageScope{}, fmt.Errorf("%w: a lineage scope needs a symbol", ErrInvalidRequest)
+	case s.Side != "BUY" && s.Side != "SELL":
+		return OrderLineageScope{}, fmt.Errorf("%w: a lineage scope needs a BUY or SELL side", ErrInvalidRequest)
+	}
+	return s, nil
+}
+
 func (e LineageEdge) validate() error {
 	switch {
 	case strings.TrimSpace(e.ParentOrderID) == "":
@@ -154,6 +190,43 @@ func (a *Attempt) resolveWithLineage(ctx context.Context, edge LineageEdge, reas
 			edge.ParentOrderID, edge.ChildOrderID, err)
 	}
 
+	// The legacy table's global parent/child uniqueness cannot represent a
+	// broker reusing the same pair in another account or trading session. Keep
+	// writing it for compatibility, and write the canonical owner beside it in
+	// the additive v16 table. This insert is in the same transaction as the
+	// confirmation: a confirmed replacement without scoped ownership evidence
+	// is not a state we may publish.
+	scoped, err := tx.ExecContext(ctx, `
+		INSERT INTO scoped_lineage_edges
+		       (parent_order_id, child_order_id, relation, parent_filled_quantity,
+		        requested_quantity, account_ref, market, trading_day, symbol, side,
+		        intent_id, attempt_id, created_at)
+		SELECT ?, ?, ?, ?, ?, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+		       TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side)),
+		       i.id, a.id, ?
+		  FROM mutation_attempts a
+		  JOIN intents i ON i.id = a.intent_id
+		 WHERE a.id = ? AND a.intent_id = ?
+		   AND TRIM(a.account_ref) = TRIM(i.account_ref)
+		ON CONFLICT(parent_order_id, child_order_id, relation, account_ref, market,
+		            trading_day, symbol, side, intent_id, attempt_id) DO NOTHING`,
+		edge.ParentOrderID, edge.ChildOrderID, edge.Relation,
+		strings.TrimSpace(edge.ParentFilledQuantity), strings.TrimSpace(edge.RequestedQuantity),
+		now, a.id, a.intentID)
+	if err != nil {
+		return fmt.Errorf("journal: recording scoped lineage %s->%s: %w",
+			edge.ParentOrderID, edge.ChildOrderID, err)
+	}
+	affected, err = scoped.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("journal: recording scoped lineage %s->%s: %w",
+			edge.ParentOrderID, edge.ChildOrderID, err)
+	}
+	if affected != 1 {
+		return fmt.Errorf("%w: lineage %s->%s has no unique local intent ownership",
+			ErrInvalidRequest, edge.ParentOrderID, edge.ChildOrderID)
+	}
+
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("journal: committing the confirmation and lineage of %s: %w", a.id, err)
 	}
@@ -222,4 +295,168 @@ func (j *Journal) ResolveCurrentOrderID(ctx context.Context, orderID string) (st
 		seen[next] = true
 		current = next
 	}
+}
+
+// ResolveCurrentOrderIDScoped follows only replacement edges proven by one
+// confirmed local AMEND in the supplied canonical ownership scope.
+//
+// An edge is evidence only when its lineage intent and attempt agree, the
+// attempt names the edge's exact parent and child, and account/market/trading
+// day/symbol/side all match. Edges from another account or session are ignored,
+// even when the broker reused the same parent id and inserted that edge first.
+// More than one valid child in the same scope is an identity conflict: choosing
+// either would silently invent which broker order still carries exposure.
+//
+// As with ResolveCurrentOrderID, an id with no valid successor resolves to
+// itself and a cycle is refused.
+func (j *Journal) ResolveCurrentOrderIDScoped(ctx context.Context, orderID string, scope OrderLineageScope) (string, error) {
+	if strings.TrimSpace(orderID) == "" {
+		return "", fmt.Errorf("%w: no order id", ErrInvalidRequest)
+	}
+	canonical, err := scope.canonical()
+	if err != nil {
+		return "", err
+	}
+
+	current := orderID
+	seen := map[string]bool{current: true}
+	for {
+		children, err := j.scopedLineageChildren(ctx, current, canonical)
+		if err != nil {
+			return "", err
+		}
+		switch len(children) {
+		case 0:
+			return current, nil
+		case 1:
+			// Continue below.
+		default:
+			return "", j.recordScopedLineageConflict(ctx, current, children, canonical)
+		}
+
+		next := children[0]
+		if seen[next] {
+			return "", fmt.Errorf("%w: %s leads back to %s", ErrLineageCycle, orderID, next)
+		}
+		seen[next] = true
+		current = next
+	}
+}
+
+func (j *Journal) scopedLineageChildren(ctx context.Context, parentOrderID string, scope OrderLineageScope) ([]string, error) {
+	current, err := j.scopedLineageChildrenV16(ctx, parentOrderID, scope)
+	if err != nil {
+		return nil, err
+	}
+	legacy, err := j.legacyScopedLineageChildren(ctx, parentOrderID, scope)
+	if err != nil {
+		return nil, err
+	}
+
+	// A database may contain a pre-v16 legacy child and a different child
+	// recorded after migration. Merge both evidence sources and deduplicate the
+	// ordinary dual-write copy; otherwise preferring v16 outright would hide a
+	// genuine same-scope branch.
+	children := make([]string, 0, 2)
+	seen := make(map[string]bool, len(current)+len(legacy))
+	for _, child := range append(current, legacy...) {
+		if seen[child] {
+			continue
+		}
+		seen[child] = true
+		children = append(children, child)
+		if len(children) == 2 {
+			break
+		}
+	}
+	return children, nil
+}
+
+func (j *Journal) scopedLineageChildrenV16(ctx context.Context, parentOrderID string, scope OrderLineageScope) ([]string, error) {
+	return j.queryScopedLineageChildren(ctx, "v16", `
+		SELECT DISTINCT s.child_order_id
+		  FROM scoped_lineage_edges s
+		  JOIN mutation_attempts a
+		    ON a.id = s.attempt_id AND a.intent_id = s.intent_id
+		  JOIN intents i ON i.id = s.intent_id
+		 WHERE s.parent_order_id = ? AND s.relation = ?
+		   AND a.kind = ? AND a.state = ?
+		   AND a.target_order_id = s.parent_order_id
+		   AND a.broker_order_id = s.child_order_id
+		   AND TRIM(a.account_ref) = TRIM(i.account_ref)
+		   AND s.account_ref = ? AND s.market = ? AND s.trading_day = ?
+		   AND s.symbol = ? AND s.side = ?
+		   AND s.account_ref = TRIM(i.account_ref)
+		   AND s.market = LOWER(TRIM(i.market))
+		   AND s.trading_day = TRIM(i.trading_day)
+		   AND s.symbol = UPPER(TRIM(i.symbol))
+		   AND s.side = UPPER(TRIM(i.side))
+		 ORDER BY s.child_order_id
+		 LIMIT 2`, parentOrderID, scope)
+}
+
+func (j *Journal) legacyScopedLineageChildren(ctx context.Context, parentOrderID string, scope OrderLineageScope) ([]string, error) {
+	return j.queryScopedLineageChildren(ctx, "legacy", `
+		SELECT DISTINCT l.child_order_id
+		  FROM lineage_edges l
+		  JOIN mutation_attempts a
+		    ON a.id = l.attempt_id AND a.intent_id = l.intent_id
+		  JOIN intents i ON i.id = l.intent_id
+		 WHERE l.parent_order_id = ? AND l.relation = ?
+		   AND a.kind = ? AND a.state = ?
+		   AND a.target_order_id = l.parent_order_id
+		   AND a.broker_order_id = l.child_order_id
+		   AND TRIM(a.account_ref) = TRIM(i.account_ref)
+		   AND TRIM(i.account_ref) = ?
+		   AND LOWER(TRIM(i.market)) = ?
+		   AND TRIM(i.trading_day) = ?
+		   AND UPPER(TRIM(i.symbol)) = ?
+		   AND UPPER(TRIM(i.side)) = ?
+		 ORDER BY l.child_order_id
+		 LIMIT 2`, parentOrderID, scope)
+}
+
+func (j *Journal) queryScopedLineageChildren(ctx context.Context, source, query, parentOrderID string, scope OrderLineageScope) ([]string, error) {
+	rows, err := j.db.QueryContext(ctx, query,
+		parentOrderID, RelationReplaces, string(KindAmend), string(StateConfirmed),
+		scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol, scope.Side)
+	if err != nil {
+		return nil, fmt.Errorf("journal: reading %s scoped lineage of %s: %w", source, parentOrderID, err)
+	}
+	defer rows.Close()
+
+	children := make([]string, 0, 2)
+	for rows.Next() {
+		var child string
+		if err := rows.Scan(&child); err != nil {
+			return nil, fmt.Errorf("journal: reading %s scoped lineage of %s: %w", source, parentOrderID, err)
+		}
+		children = append(children, child)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: reading %s scoped lineage of %s: %w", source, parentOrderID, err)
+	}
+	return children, nil
+}
+
+func (j *Journal) recordScopedLineageConflict(ctx context.Context, parentOrderID string, children []string, scope OrderLineageScope) error {
+	conflict := fmt.Errorf(
+		"%w: order %s has multiple confirmed replacement successors in %s/%s/%s/%s/%s",
+		ErrTrackedFillIdentityConflict, parentOrderID, scope.AccountRef, scope.Market,
+		scope.TradingDay, scope.Symbol, scope.Side)
+	evidence := fmt.Sprintf(
+		"broker order %s has multiple confirmed local replacement successors %q in canonical scope %s/%s/%s/%s/%s",
+		parentOrderID, children, scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol, scope.Side)
+	state, _, err := j.EnterReconcile(ctx, EnterReconcileRequest{
+		AccountRef: scope.AccountRef,
+		Cause:      ReconcileCauseIdentifierConflict,
+		Evidence:   evidence,
+	})
+	if err != nil {
+		return fmt.Errorf("%w; recording the durable identifier conflict: %v", conflict, err)
+	}
+	if state.Cause != ReconcileCauseIdentifierConflict {
+		return fmt.Errorf("%w; account already has active RECONCILE cause %s", conflict, state.Cause)
+	}
+	return conflict
 }

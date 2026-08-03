@@ -223,6 +223,9 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 	if err := tracker.Restore(ctx); err != nil {
 		return engineWiring{}, fmt.Errorf("engine: restoring the RECONCILE projection: %w", err)
 	}
+	entry.SetAuthorityRefresh(func() error {
+		return tracker.Refresh(context.Background())
+	})
 
 	resolver := &execgw.Resolver{
 		Journal: in.journal,

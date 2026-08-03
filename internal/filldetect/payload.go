@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 )
 
 // ErrMalformedOrder means a broker order payload could not be read.
@@ -30,9 +32,11 @@ var ErrMalformedOrder = errors.New("filldetect: malformed broker order payload")
 type officialOrder struct {
 	OrderID    string  `json:"orderId"`
 	Symbol     string  `json:"symbol"`
+	Side       string  `json:"side"`
 	Status     string  `json:"status"`
 	Quantity   *string `json:"quantity"`
 	Currency   string  `json:"currency"`
+	OrderedAt  *string `json:"orderedAt"`
 	CanceledAt *string `json:"canceledAt"`
 	Execution  *struct {
 		FilledQuantity     *string `json:"filledQuantity"`
@@ -95,11 +99,15 @@ func parseSnapshot(raw []byte, observedAt, fallbackVisible time.Time) (Snapshot,
 		filledAt = parseTime(payload.Execution.FilledAt)
 	}
 
+	market := fillMarketFromCurrency(payload.Currency)
 	snap := Snapshot{
 		// The identifier is opaque (openapi contracts no shape for `orderId`),
 		// so it is carried as received; the caller judges emptiness itself.
 		OrderID:         payload.OrderID,
 		Symbol:          strings.ToUpper(strings.TrimSpace(payload.Symbol)),
+		Market:          market,
+		TradingDay:      snapshotTradingDay(payload.OrderedAt, market),
+		Side:            strings.ToUpper(strings.TrimSpace(payload.Side)),
 		RawStatus:       payload.Status,
 		Quantity:        quantity,
 		FilledQuantity:  filled,
@@ -120,6 +128,38 @@ func parseSnapshot(raw []byte, observedAt, fallbackVisible time.Time) (Snapshot,
 		snap.CanceledAt = parseTime(payload.CanceledAt)
 	}
 	return snap, nil
+}
+
+func fillMarketFromCurrency(currency string) string {
+	switch strings.ToUpper(strings.TrimSpace(currency)) {
+	case "KRW":
+		return "kr"
+	case "USD":
+		return "us"
+	default:
+		return ""
+	}
+}
+
+func snapshotTradingDay(raw *string, marketName string) string {
+	trimmed := trimPtr(raw)
+	if trimmed == "" {
+		return ""
+	}
+	market, err := clock.ParseMarket(marketName)
+	if err != nil {
+		return ""
+	}
+	for _, layout := range timeLayouts {
+		if ts, err := time.Parse(layout, trimmed); err == nil {
+			day, dayErr := market.TradingDay(ts)
+			if dayErr == nil {
+				return day
+			}
+			return ""
+		}
+	}
+	return ""
 }
 
 func unwrapResult(data []byte) []byte {

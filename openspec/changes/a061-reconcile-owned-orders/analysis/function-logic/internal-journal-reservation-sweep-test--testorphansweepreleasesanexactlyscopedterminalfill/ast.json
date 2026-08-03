@@ -1,0 +1,158 @@
+{
+  "file": "internal/journal/reservation_sweep_test.go",
+  "source_sha256": "489ced650b9f96b30419ecc9c21f7911145af1a973372a7f167edb61cfcbdcab",
+  "package": "journal",
+  "function": "TestOrphanSweepReleasesAnExactlyScopedTerminalFill",
+  "signature": "TestOrphanSweepReleasesAnExactlyScopedTerminalFill(params=1, results=0)",
+  "start": {
+    "line": 184,
+    "column": 1
+  },
+  "end": {
+    "line": 201,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 10
+      },
+      "text": "openReservationJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 19
+      },
+      "text": "reserveConfirmedSweepOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 2
+      },
+      "text": "insertTerminalFillSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 16
+      },
+      "text": "j.SweepReservations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 36
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 5
+      },
+      "text": "Held"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 5
+      },
+      "text": "reservationState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -141,13 +141,17 @@ func releaseReservationsForAttempt(ctx context.Context, tx *sql.Tx, attemptID, r
 // The identifier is compared byte-for-byte: `orderId` is an opaque token
 // (openapi contracts no shape for it), so the join is on what the broker sent
 // and nothing is trimmed or folded on the way in.
-func releaseReservationsForOrder(ctx context.Context, tx *sql.Tx, orderID, reason, detail, now string) ([]ReservationRelease, error) {
-	if orderID == "" {
+func releaseReservationsForOrder(ctx context.Context, tx *sql.Tx, orderID, intentID, reason, detail,
+	now string,
+) ([]ReservationRelease, error) {
+	if orderID == "" || strings.TrimSpace(intentID) == "" {
 		return nil, nil
 	}
 	return releaseWhere(ctx, tx, reason, detail, now,
-		`state = ? AND attempt_id IN (SELECT id FROM mutation_attempts WHERE broker_order_id = ?)`,
-		ReservationHeld, orderID)
+		`state = ? AND attempt_id IN (
+			SELECT id FROM mutation_attempts WHERE broker_order_id = ? AND intent_id = ?
+		)`,
+		ReservationHeld, orderID, strings.TrimSpace(intentID))
 }
 
 // releaseWhere is the single UPDATE every automatic release goes through. It
@@ -500,8 +504,12 @@ func (j *Journal) SweepReservations(ctx context.Context) (ReservationSweep, erro
 // "Already over" is read from the same two sources the live path uses and from
 // nothing else: an attempt state that releases (NOT_DISPATCHED,
 // FAILED_CONFIRMED), or a fill snapshot the caller derived as terminal without
-// failing closed. A snapshot that failed closed is not terminal, which is what
-// keeps the assumed-expiry case out of this sweep as well.
+// failing closed. A terminal snapshot releases only the reservation whose
+// confirmed attempt and intent match its complete canonical scope, and only
+// when that scope has one intent owner. Missing scope or ambiguous ownership
+// stays held; ambiguity also enters the existing IDENTIFIER_CONFLICT contract.
+// A snapshot that failed closed is not terminal, which is what keeps the
+// assumed-expiry case out of this sweep as well.
 func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]ReservationRelease, error) {
 	byAttemptState, err := releaseWhere(ctx, tx, ReleaseReasonBrokerTerminal,
 		"recovered at startup: the attempt was already in a terminal state that releases", nowText,
@@ -511,15 +519,85 @@ func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]
 		return nil, err
 	}
 
-	byOrderState, err := releaseWhere(ctx, tx, ReleaseReasonBrokerTerminal,
-		"recovered at startup: the order was already observed in a derived terminal state", nowText,
-		`state = ? AND attempt_id IN (
-		   SELECT a.id FROM mutation_attempts a
-		   JOIN fill_snapshots f ON f.order_id = a.broker_order_id
-		   WHERE f.terminal = 1 AND f.fail_closed = 0)`,
-		ReservationHeld)
+	type terminalCandidate struct {
+		reservationID string
+		accountRef    string
+		orderID       string
+		market        string
+		tradingDay    string
+		symbol        string
+		side          string
+		intentOwners  int
+	}
+	rows, err := tx.QueryContext(ctx, `
+		SELECT r.id, i.account_ref, f.order_id, i.market, i.trading_day, i.symbol, i.side,
+		       (SELECT count(DISTINCT owner_intent.id)
+		          FROM mutation_attempts owner_attempt
+		          JOIN intents owner_intent ON owner_intent.id = owner_attempt.intent_id
+		         WHERE owner_attempt.state = ?
+		           AND owner_attempt.broker_order_id = f.order_id
+		           AND TRIM(owner_intent.account_ref) = TRIM(f.account_ref)
+		           AND LOWER(TRIM(owner_intent.market)) = LOWER(TRIM(f.market))
+		           AND TRIM(owner_intent.trading_day) = TRIM(f.trading_day)
+		           AND UPPER(TRIM(owner_intent.symbol)) = UPPER(TRIM(f.symbol))
+		           AND UPPER(TRIM(owner_intent.side)) = UPPER(TRIM(f.side)))
+		  FROM risk_reservations r
+		  JOIN mutation_attempts a ON a.id = r.attempt_id
+		  JOIN intents i ON i.id = a.intent_id
+		  JOIN fill_snapshots f ON f.order_id = a.broker_order_id
+		 WHERE r.state = ? AND a.state = ?
+		   AND f.terminal = 1 AND f.fail_closed = 0
+		   AND r.decision_id = a.decision_id
+		   AND TRIM(r.account_ref) = TRIM(i.account_ref)
+		   AND TRIM(f.account_ref) = TRIM(i.account_ref)
+		   AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
+		   AND TRIM(f.trading_day) = TRIM(i.trading_day)
+		   AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
+		   AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side))
+		 ORDER BY r.id`,
+		string(StateConfirmed), ReservationHeld, string(StateConfirmed))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("journal: finding exactly scoped terminal reservations: %w", err)
+	}
+	var candidates []terminalCandidate
+	for rows.Next() {
+		var candidate terminalCandidate
+		if err := rows.Scan(&candidate.reservationID, &candidate.accountRef, &candidate.orderID,
+			&candidate.market, &candidate.tradingDay, &candidate.symbol, &candidate.side,
+			&candidate.intentOwners); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("journal: finding exactly scoped terminal reservations: %w", err)
+		}
+		candidates = append(candidates, candidate)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, fmt.Errorf("journal: finding exactly scoped terminal reservations: %w", err)
+	}
+	rows.Close()
+
+	var byOrderState []ReservationRelease
+	applyTx := &ApplyTx{tx: tx, now: nowText}
+	defer applyTx.invalidate()
+	for _, candidate := range candidates {
+		if candidate.intentOwners != 1 {
+			evidence := fmt.Sprintf(
+				"startup reservation sweep found order %s owned by %d intents in canonical scope %s/%s/%s/%s/%s; reservations remain held",
+				candidate.orderID, candidate.intentOwners, candidate.accountRef, candidate.market,
+				candidate.tradingDay, candidate.symbol, candidate.side)
+			if err := enterReconcileScopeInTx(ctx, applyTx, candidate.accountRef, "",
+				ReconcileCauseIdentifierConflict, evidence, nowText); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		released, err := releaseWhere(ctx, tx, ReleaseReasonBrokerTerminal,
+			"recovered at startup: the order was already observed in a derived terminal state",
+			nowText, "id = ? AND state = ?", candidate.reservationID, ReservationHeld)
+		if err != nil {
+			return nil, err
+		}
+		byOrderState = append(byOrderState, released...)
 	}
 	return append(byAttemptState, byOrderState...), nil
 }

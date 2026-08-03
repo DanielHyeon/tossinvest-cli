@@ -94,6 +94,11 @@ const (
 // ErrFillNotFound means no snapshot has been recorded for that order.
 var ErrFillNotFound = errors.New("journal: no fill snapshot for that order")
 
+// ErrTrackedFillIdentityConflict means a confirmed local order cannot be bound
+// to one account/market/symbol identity. It is returned only after the journal
+// has durably entered an account-wide IDENTIFIER_CONFLICT state.
+var ErrTrackedFillIdentityConflict = errors.New("journal: tracked fill order identity conflict")
+
 // FillObservation is one cumulative snapshot offered to the ledger.
 //
 // Quantities and the average price are decimal strings for the same reason the
@@ -103,6 +108,10 @@ type FillObservation struct {
 	OrderID string
 	Symbol  string
 	Market  string
+	// TradingDay and Side are broker evidence used with account/market to scope
+	// order ids that may be reused by another session.
+	TradingDay string
+	Side       string
 	// State is the caller's derived broker state (internal/brokerstate).
 	State string
 	// Terminal reports that the order can no longer change at the broker.
@@ -174,8 +183,11 @@ type FillResult struct {
 // FillSnapshotRecord is a stored snapshot.
 type FillSnapshotRecord struct {
 	OrderID         string
+	AccountRef      string
 	Symbol          string
 	Market          string
+	TradingDay      string
+	Side            string
 	State           string
 	Terminal        bool
 	FailClosed      bool
@@ -226,9 +238,13 @@ type FillEvent struct {
 
 // TrackedFillOrder is an order the detector must keep reading.
 type TrackedFillOrder struct {
-	OrderID string
-	Symbol  string
-	Market  string
+	OrderID    string
+	IntentID   string
+	AccountRef string
+	Symbol     string
+	Market     string
+	TradingDay string
+	Side       string
 	// SuccessorOrderID is the order an amendment created to carry this order's
 	// remainder, empty when there is none.
 	SuccessorOrderID string
@@ -274,6 +290,10 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		return res, err
 	}
 	hadPrev := prev.OrderID != ""
+	if hadPrev && fillSnapshotScopeChanged(prev, obs) {
+		prev = FillSnapshotRecord{}
+		hadPrev = false
+	}
 
 	prevFilled := 0.0
 	if hadPrev {
@@ -335,18 +355,22 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	//    count the fills that produced it. The amount follows the same rule.
 	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO fill_snapshots
-		   (order_id, symbol, market, state, terminal, fail_closed, quantity, filled_quantity,
+		   (order_id, account_ref, symbol, market, trading_day, side,
+		    state, terminal, fail_closed, quantity, filled_quantity,
 		    average_price, filled_amount, broker_visible_at, observed_at, committed_at,
 		    reason_code, detail)
-		 VALUES (?,?,?,?,?,0,?,?,?,?,?,?,?,'','')
+		 VALUES (?,?,?,?,?,?,?,?,0,?,?,?,?,?,?,?,'','')
 		 ON CONFLICT(order_id) DO UPDATE SET
-		    symbol = excluded.symbol, market = excluded.market, state = excluded.state,
+		    account_ref = excluded.account_ref, symbol = excluded.symbol, market = excluded.market,
+		    trading_day = excluded.trading_day, side = excluded.side, state = excluded.state,
 		    terminal = excluded.terminal, fail_closed = 0, quantity = excluded.quantity,
 		    filled_quantity = excluded.filled_quantity, average_price = excluded.average_price,
 		    filled_amount = excluded.filled_amount,
 		    broker_visible_at = excluded.broker_visible_at, observed_at = excluded.observed_at,
 		    committed_at = excluded.committed_at, reason_code = '', detail = ''`,
-		orderID, obs.Symbol, obs.Market, obs.State, boolToInt(obs.Terminal),
+		orderID, strings.TrimSpace(obs.AccountRef), obs.Symbol, obs.Market,
+		strings.TrimSpace(obs.TradingDay), strings.ToUpper(strings.TrimSpace(obs.Side)),
+		obs.State, boolToInt(obs.Terminal),
 		orZero(obs.Quantity), orZero(obs.FilledQuantity), obs.AveragePrice, obs.FilledAmount,
 		obs.BrokerVisibleAt, obs.ObservedAt, now); err != nil {
 		return res, fmt.Errorf("journal: recording the fill snapshot of %s: %w", orderID, err)
@@ -381,13 +405,43 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		res.Delta = decimalString(delta)
 		res.DeltaQuantity = delta
 	}
+	applied := AppliedFill{
+		OrderID:                orderID,
+		AccountRef:             obs.AccountRef,
+		Symbol:                 obs.Symbol,
+		Market:                 obs.Market,
+		TradingDay:             obs.TradingDay,
+		Side:                   obs.Side,
+		State:                  obs.State,
+		Terminal:               obs.Terminal,
+		Delta:                  res.Delta,
+		CumulativeQuantity:     orZero(obs.FilledQuantity),
+		AveragePrice:           obs.AveragePrice,
+		FilledAmount:           obs.FilledAmount,
+		OrderedQuantity:        obs.Quantity,
+		PrevCumulativeQuantity: prev.FilledQuantity,
+		PrevAveragePrice:       prev.AveragePrice,
+		Corrected:              res.Corrected,
+		BrokerVisibleAt:        obs.BrokerVisibleAt,
+		CommittedAt:            now,
+	}
+	// Resolve ownership before any local reservation or domain state can move.
+	// A broker-only order remains an observation, while a colliding confirmed id
+	// durably raises IDENTIFIER_CONFLICT inside this same transaction.
+	ownershipHandle := &ApplyTx{tx: tx, now: now}
+	ownedOrigin, locallyOwned, err := resolveFillOrigin(ctx, ownershipHandle, applied)
+	ownershipHandle.invalidate()
+	if err != nil {
+		return res, err
+	}
 
 	// 5. A *derived* terminal state frees the decision's holds, in this same
 	//    transaction (design D5). The verdict is the caller's derivation
 	//    (internal/brokerstate), never a guess made here: this branch is
 	//    unreachable for a fail-closed observation, which returned above.
-	if obs.Terminal {
-		released, err := releaseReservationsForOrder(ctx, tx, orderID, ReleaseReasonBrokerTerminal,
+	if obs.Terminal && locallyOwned {
+		released, err := releaseReservationsForOrder(ctx, tx, orderID, ownedOrigin.IntentID,
+			ReleaseReasonBrokerTerminal,
 			fmt.Sprintf("order %s derived terminal as %s", orderID, obs.State), now)
 		if err != nil {
 			return res, err
@@ -401,29 +455,10 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	//    A hook error aborts everything above: the deferred rollback leaves the
 	//    snapshot un-advanced, and the next observation measures its delta from
 	//    the last quantity the projection actually saw.
-	if err := j.runApplyHooks(ctx, tx, AppliedFill{
-		OrderID:            orderID,
-		AccountRef:         obs.AccountRef,
-		Symbol:             obs.Symbol,
-		Market:             obs.Market,
-		State:              obs.State,
-		Terminal:           obs.Terminal,
-		Delta:              res.Delta,
-		CumulativeQuantity: orZero(obs.FilledQuantity),
-		AveragePrice:       obs.AveragePrice,
-		FilledAmount:       obs.FilledAmount,
-		OrderedQuantity:    obs.Quantity,
-		// `prev` is the row this transaction has just overwritten. It is read
-		// here and nowhere else because this is the last scope in which it
-		// exists (add-core-domain task 6.1: the projection's cost basis is the
-		// change in the order's `filled × average`, which needs both ends).
-		PrevCumulativeQuantity: prev.FilledQuantity,
-		PrevAveragePrice:       prev.AveragePrice,
-		Corrected:              res.Corrected,
-		BrokerVisibleAt:        obs.BrokerVisibleAt,
-		CommittedAt:            now,
-	}); err != nil {
-		return res, err
+	if locallyOwned {
+		if err := j.runApplyHooks(ctx, tx, applied); err != nil {
+			return res, err
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -498,10 +533,13 @@ func markFillRefused(ctx context.Context, tx *sql.Tx, orderID string, obs FillOb
 	}
 	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO fill_snapshots
-		   (order_id, symbol, market, state, terminal, fail_closed, quantity, filled_quantity,
+		   (order_id, account_ref, symbol, market, trading_day, side,
+		    state, terminal, fail_closed, quantity, filled_quantity,
 		    average_price, broker_visible_at, observed_at, committed_at, reason_code, detail)
-		 VALUES (?,?,?,?,0,1,?,'0','','',?,?,?,?)`,
-		orderID, obs.Symbol, obs.Market, obs.State, orZero(obs.Quantity),
+		 VALUES (?,?,?,?,?,?,?,0,1,?,'0','','',?,?,?,?)`,
+		orderID, strings.TrimSpace(obs.AccountRef), obs.Symbol, obs.Market,
+		strings.TrimSpace(obs.TradingDay), strings.ToUpper(strings.TrimSpace(obs.Side)),
+		obs.State, orZero(obs.Quantity),
 		obs.ObservedAt, now, refusal.reason, refusal.detail); err != nil {
 		return fmt.Errorf("journal: recording the refused snapshot of %s: %w", orderID, err)
 	}
@@ -513,6 +551,9 @@ func markFillRefused(ctx context.Context, tx *sql.Tx, orderID string, obs FillOb
 // on purpose: when we looked does not change what is true.
 func sameSnapshot(obs FillObservation, prev FillSnapshotRecord) bool {
 	return orZero(obs.FilledQuantity) == orZero(prev.FilledQuantity) &&
+		strings.TrimSpace(obs.AccountRef) == strings.TrimSpace(prev.AccountRef) &&
+		strings.TrimSpace(obs.TradingDay) == strings.TrimSpace(prev.TradingDay) &&
+		strings.EqualFold(strings.TrimSpace(obs.Side), strings.TrimSpace(prev.Side)) &&
 		obs.AveragePrice == prev.AveragePrice &&
 		// The amount is part of "what the broker says" for the same reason the
 		// average is: leave it out and an amount-only correction takes the
@@ -524,7 +565,27 @@ func sameSnapshot(obs FillObservation, prev FillSnapshotRecord) bool {
 		!prev.FailClosed
 }
 
-const fillSelect = `SELECT order_id, symbol, market, state, terminal, fail_closed, quantity,
+func fillSnapshotScopeChanged(prev FillSnapshotRecord, obs FillObservation) bool {
+	account := strings.TrimSpace(obs.AccountRef)
+	day := strings.TrimSpace(obs.TradingDay)
+	if account == "" || day == "" {
+		return false
+	}
+	if strings.TrimSpace(prev.AccountRef) == "" || strings.TrimSpace(prev.TradingDay) == "" {
+		// Historical v15 rows have no scope. A nonterminal row is conservatively
+		// treated as this live order; a terminal row may safely start the newly
+		// confirmed trading-day sequence.
+		return prev.Terminal
+	}
+	return strings.TrimSpace(prev.AccountRef) != account ||
+		normaliseMarket(prev.Market) != normaliseMarket(obs.Market) ||
+		strings.TrimSpace(prev.TradingDay) != day ||
+		normaliseSymbol(prev.Symbol) != normaliseSymbol(obs.Symbol) ||
+		!strings.EqualFold(strings.TrimSpace(prev.Side), strings.TrimSpace(obs.Side))
+}
+
+const fillSelect = `SELECT order_id, account_ref, symbol, market, trading_day, side,
+	state, terminal, fail_closed, quantity,
 	filled_quantity, average_price, filled_amount, broker_visible_at, observed_at, committed_at,
 	reason_code, detail FROM fill_snapshots`
 
@@ -533,7 +594,8 @@ func scanFillSnapshot(row rowScanner) (FillSnapshotRecord, error) {
 		rec                  FillSnapshotRecord
 		terminal, failClosed int
 	)
-	err := row.Scan(&rec.OrderID, &rec.Symbol, &rec.Market, &rec.State, &terminal, &failClosed,
+	err := row.Scan(&rec.OrderID, &rec.AccountRef, &rec.Symbol, &rec.Market, &rec.TradingDay,
+		&rec.Side, &rec.State, &terminal, &failClosed,
 		&rec.Quantity, &rec.FilledQuantity, &rec.AveragePrice, &rec.FilledAmount,
 		&rec.BrokerVisibleAt, &rec.ObservedAt, &rec.CommittedAt, &rec.ReasonCode, &rec.Detail)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -765,23 +827,129 @@ func (j *Journal) NetPositions(ctx context.Context) (map[string]string, error) {
 	return out, nil
 }
 
-// TrackedFillOrders returns every order the detector must keep reading: the
-// snapshots that have not reached a terminal state, plus the orders confirmed
-// attempts named that have not been observed yet.
+// TrackedFillOrders returns every locally owned order the detector must keep
+// reading: non-terminal snapshots backed by a confirmed attempt or replacement
+// lineage, plus the orders confirmed attempts named that have not been observed
+// yet. A broker snapshot alone is an external observation, not ownership proof.
 //
 // The second half matters more than it looks: an order that is acknowledged and
 // then fills entirely before the first poll would otherwise never appear in the
 // open list *or* in the snapshot table, and would be tracked by nothing.
-func (j *Journal) TrackedFillOrders(ctx context.Context) ([]TrackedFillOrder, error) {
+func (j *Journal) TrackedFillOrders(ctx context.Context, accountRefs ...string) ([]TrackedFillOrder, error) {
+	accountRef := ""
+	if len(accountRefs) > 0 {
+		accountRef = strings.TrimSpace(accountRefs[0])
+	}
+	if accountRef != "" {
+		if err := j.guardTrackedFillIdentity(ctx, accountRef); err != nil {
+			return nil, err
+		}
+	}
 	rows, err := j.db.QueryContext(ctx, `
-		SELECT order_id, symbol, market FROM fill_snapshots WHERE terminal = 0
+		WITH all_confirmed_orders AS (
+			SELECT a.broker_order_id AS order_id, i.id AS intent_id, i.account_ref,
+			       i.symbol, i.market, i.trading_day, i.side
+			  FROM mutation_attempts a
+			  JOIN intents i ON i.id = a.intent_id
+			 WHERE a.state = ? AND a.broker_order_id <> ''
+		), confirmed_orders AS (
+			SELECT c.order_id, c.intent_id, c.account_ref, c.symbol, c.market, c.trading_day, c.side
+			  FROM all_confirmed_orders c
+			 WHERE (? = '' OR c.account_ref = ?)
+			   AND NOT EXISTS (
+				SELECT 1 FROM all_confirmed_orders newer
+				 WHERE newer.order_id = c.order_id AND newer.account_ref = c.account_ref
+				   AND UPPER(TRIM(newer.market)) = UPPER(TRIM(c.market))
+				   AND TRIM(newer.trading_day) > TRIM(c.trading_day)
+			   )
+		), valid_lineage AS (
+			SELECT s.parent_order_id, s.child_order_id, s.intent_id, s.attempt_id,
+			       s.account_ref, s.symbol, s.market, s.trading_day, s.side
+			  FROM scoped_lineage_edges s
+			  JOIN mutation_attempts a ON a.id = s.attempt_id AND a.intent_id = s.intent_id
+			  JOIN intents i ON i.id = s.intent_id
+			 WHERE s.relation = ? AND a.kind = ? AND a.state = ?
+			   AND a.target_order_id = s.parent_order_id
+			   AND a.broker_order_id = s.child_order_id
+			   AND TRIM(a.account_ref) = TRIM(i.account_ref)
+			   AND s.account_ref = TRIM(i.account_ref)
+			   AND s.market = LOWER(TRIM(i.market))
+			   AND s.trading_day = TRIM(i.trading_day)
+			   AND s.symbol = UPPER(TRIM(i.symbol))
+			   AND s.side = UPPER(TRIM(i.side))
+			UNION
+			SELECT l.parent_order_id, l.child_order_id, l.intent_id, l.attempt_id,
+			       TRIM(i.account_ref), UPPER(TRIM(i.symbol)), LOWER(TRIM(i.market)),
+			       TRIM(i.trading_day), UPPER(TRIM(i.side))
+			  FROM lineage_edges l
+			  JOIN mutation_attempts a ON a.id = l.attempt_id AND a.intent_id = l.intent_id
+			  JOIN intents i ON i.id = l.intent_id
+			 WHERE l.relation = ? AND a.kind = ? AND a.state = ?
+			   AND a.target_order_id = l.parent_order_id
+			   AND a.broker_order_id = l.child_order_id
+			   AND TRIM(a.account_ref) = TRIM(i.account_ref)
+		)
+		SELECT f.order_id, c.intent_id, c.account_ref, c.symbol, c.market, c.trading_day, c.side
+		  FROM fill_snapshots f
+		  JOIN confirmed_orders c ON c.order_id = f.order_id
+		 WHERE f.terminal = 0
+		   AND ((TRIM(f.account_ref) = TRIM(c.account_ref)
+		         AND TRIM(f.trading_day) = TRIM(c.trading_day))
+		        OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = ''
+		            AND NOT EXISTS (
+		              SELECT 1 FROM all_confirmed_orders reused
+		               WHERE reused.order_id = c.order_id
+		                 AND reused.account_ref = c.account_ref
+		                 AND UPPER(TRIM(reused.market)) = UPPER(TRIM(c.market))
+		                 AND TRIM(reused.trading_day) <> TRIM(c.trading_day))))
+		   AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(c.symbol))
+		   AND UPPER(TRIM(f.market)) = UPPER(TRIM(c.market))
+		   AND (TRIM(f.side) = '' OR UPPER(TRIM(f.side)) = UPPER(TRIM(c.side)))
 		UNION
-		SELECT a.broker_order_id, i.symbol, i.market
-		  FROM mutation_attempts a
-		  JOIN intents i ON i.id = a.intent_id
-		 WHERE a.state = ? AND a.broker_order_id <> ''
-		   AND a.broker_order_id NOT IN (SELECT order_id FROM fill_snapshots WHERE terminal = 1)
-		ORDER BY 1`, string(StateConfirmed))
+		SELECT f.order_id, l.intent_id, l.account_ref, l.symbol, l.market, l.trading_day, l.side
+		  FROM fill_snapshots f
+		  JOIN valid_lineage l
+		    ON l.parent_order_id = f.order_id OR l.child_order_id = f.order_id
+		  JOIN confirmed_orders c
+		    ON (c.order_id = l.parent_order_id OR c.order_id = l.child_order_id)
+		   AND c.account_ref = l.account_ref
+		   AND UPPER(TRIM(c.market)) = UPPER(TRIM(l.market))
+		   AND TRIM(c.trading_day) = TRIM(l.trading_day)
+		   AND UPPER(TRIM(c.symbol)) = UPPER(TRIM(l.symbol))
+		   AND UPPER(TRIM(c.side)) = UPPER(TRIM(l.side))
+		 WHERE f.terminal = 0
+		   AND ((TRIM(f.account_ref) = TRIM(l.account_ref)
+		         AND TRIM(f.trading_day) = TRIM(l.trading_day))
+		        OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = ''
+		            AND NOT EXISTS (
+		              SELECT 1 FROM all_confirmed_orders reused
+		               WHERE reused.account_ref = l.account_ref
+		                 AND UPPER(TRIM(reused.market)) = UPPER(TRIM(l.market))
+		                 AND TRIM(reused.trading_day) <> TRIM(l.trading_day)
+		                 AND (reused.order_id = l.parent_order_id
+		                      OR reused.order_id = l.child_order_id))))
+		   AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(l.symbol))
+		   AND UPPER(TRIM(f.market)) = UPPER(TRIM(l.market))
+		   AND (TRIM(f.side) = '' OR UPPER(TRIM(f.side)) = UPPER(TRIM(l.side)))
+		UNION
+		SELECT c.order_id, c.intent_id, c.account_ref, c.symbol, c.market, c.trading_day, c.side
+		  FROM confirmed_orders c
+		 WHERE NOT EXISTS (
+			SELECT 1 FROM fill_snapshots f
+			 WHERE f.order_id = c.order_id
+			   AND ((TRIM(f.account_ref) = TRIM(c.account_ref)
+			         AND TRIM(f.trading_day) = TRIM(c.trading_day))
+			        OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = ''
+			            AND NOT EXISTS (
+			              SELECT 1 FROM all_confirmed_orders reused
+			               WHERE reused.order_id = c.order_id
+			                 AND reused.account_ref = c.account_ref
+			                 AND UPPER(TRIM(reused.market)) = UPPER(TRIM(c.market))
+			                 AND TRIM(reused.trading_day) <> TRIM(c.trading_day))))
+		 )
+		ORDER BY 1`, string(StateConfirmed), accountRef, accountRef,
+		RelationReplaces, string(KindAmend), string(StateConfirmed),
+		RelationReplaces, string(KindAmend), string(StateConfirmed))
 	if err != nil {
 		return nil, fmt.Errorf("journal: listing tracked fill orders: %w", err)
 	}
@@ -790,7 +958,8 @@ func (j *Journal) TrackedFillOrders(ctx context.Context) ([]TrackedFillOrder, er
 	var out []TrackedFillOrder
 	for rows.Next() {
 		var t TrackedFillOrder
-		if err := rows.Scan(&t.OrderID, &t.Symbol, &t.Market); err != nil {
+		if err := rows.Scan(&t.OrderID, &t.IntentID, &t.AccountRef, &t.Symbol, &t.Market,
+			&t.TradingDay, &t.Side); err != nil {
 			return nil, fmt.Errorf("journal: listing tracked fill orders: %w", err)
 		}
 		out = append(out, t)
@@ -799,22 +968,136 @@ func (j *Journal) TrackedFillOrders(ctx context.Context) ([]TrackedFillOrder, er
 		return nil, fmt.Errorf("journal: listing tracked fill orders: %w", err)
 	}
 
-	// Lineage is a second read rather than a join: LineageChildren is already the
-	// tested reader of that table, and the tracked set is small (one entry per
-	// live order) so the extra queries are not a budget concern.
+	// Lineage is a second read rather than a join. The tracked set is small (one
+	// entry per live order), and carrying the canonical ownership scope into the
+	// resolver is what prevents a reused broker id from following another
+	// account's or trading day's replacement chain.
 	for i := range out {
-		children, err := j.LineageChildren(ctx, out[i].OrderID)
+		current, err := j.ResolveCurrentOrderIDScoped(ctx, out[i].OrderID, OrderLineageScope{
+			AccountRef: out[i].AccountRef,
+			Market:     out[i].Market,
+			TradingDay: out[i].TradingDay,
+			Symbol:     out[i].Symbol,
+			Side:       out[i].Side,
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, edge := range children {
-			if edge.Relation == RelationReplaces {
-				out[i].SuccessorOrderID = edge.ChildOrderID
-				break
-			}
+		if current != out[i].OrderID {
+			out[i].SuccessorOrderID = current
 		}
 	}
 	return out, nil
+}
+
+func (j *Journal) guardTrackedFillIdentity(ctx context.Context, accountRef string) error {
+	var orderID, symbol, market, detail string
+	err := j.db.QueryRowContext(ctx, `
+		WITH all_confirmed_orders AS (
+			SELECT a.broker_order_id AS order_id, i.id AS intent_id, i.account_ref,
+			       i.symbol, i.market, i.trading_day, i.side
+			  FROM mutation_attempts a
+			  JOIN intents i ON i.id = a.intent_id
+			 WHERE a.state = ? AND a.broker_order_id <> ''
+		), valid_lineage AS (
+			SELECT s.parent_order_id, s.child_order_id, s.intent_id,
+			       s.account_ref, s.symbol, s.market, s.trading_day, s.side
+			  FROM scoped_lineage_edges s
+			  JOIN mutation_attempts a ON a.id = s.attempt_id AND a.intent_id = s.intent_id
+			  JOIN intents i ON i.id = s.intent_id
+			 WHERE s.relation = ? AND a.kind = ? AND a.state = ?
+			   AND a.target_order_id = s.parent_order_id
+			   AND a.broker_order_id = s.child_order_id
+			   AND TRIM(a.account_ref) = TRIM(i.account_ref)
+			   AND s.account_ref = TRIM(i.account_ref)
+			   AND s.market = LOWER(TRIM(i.market))
+			   AND s.trading_day = TRIM(i.trading_day)
+			   AND s.symbol = UPPER(TRIM(i.symbol))
+			   AND s.side = UPPER(TRIM(i.side))
+			UNION
+			SELECT l.parent_order_id, l.child_order_id, l.intent_id,
+			       TRIM(i.account_ref), UPPER(TRIM(i.symbol)), LOWER(TRIM(i.market)),
+			       TRIM(i.trading_day), UPPER(TRIM(i.side))
+			  FROM lineage_edges l
+			  JOIN mutation_attempts a ON a.id = l.attempt_id AND a.intent_id = l.intent_id
+			  JOIN intents i ON i.id = l.intent_id
+			 WHERE l.relation = ? AND a.kind = ? AND a.state = ?
+			   AND a.target_order_id = l.parent_order_id
+			   AND a.broker_order_id = l.child_order_id
+			   AND TRIM(a.account_ref) = TRIM(i.account_ref)
+		)
+		SELECT c.order_id, c.symbol, c.market, 'order id is confirmed for more than one intent in the same canonical scope'
+		  FROM all_confirmed_orders c
+		 WHERE c.account_ref = ?
+		   AND EXISTS (SELECT 1 FROM all_confirmed_orders other
+		                WHERE other.order_id = c.order_id
+		                  AND other.account_ref = c.account_ref
+		                  AND UPPER(TRIM(other.market)) = UPPER(TRIM(c.market))
+		                  AND TRIM(other.trading_day) = TRIM(c.trading_day)
+		                  AND (UPPER(TRIM(other.symbol)) <> UPPER(TRIM(c.symbol))
+		                       OR UPPER(TRIM(other.side)) <> UPPER(TRIM(c.side))
+		                       OR other.intent_id <> c.intent_id))
+		UNION
+		SELECT f.order_id, c.symbol, c.market, 'broker snapshot symbol or market contradicts the confirmed intent'
+		  FROM all_confirmed_orders c
+		  JOIN fill_snapshots f ON f.order_id = c.order_id
+		 WHERE c.account_ref = ?
+		   AND ((TRIM(f.account_ref) = TRIM(c.account_ref)
+		         AND TRIM(f.trading_day) = TRIM(c.trading_day))
+		        OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND f.terminal = 0
+		            AND NOT EXISTS (
+		              SELECT 1 FROM all_confirmed_orders reused
+		               WHERE reused.order_id = c.order_id
+		                 AND reused.account_ref = c.account_ref
+		                 AND UPPER(TRIM(reused.market)) = UPPER(TRIM(c.market))
+		                 AND TRIM(reused.trading_day) <> TRIM(c.trading_day))))
+		   AND (UPPER(TRIM(f.symbol)) <> UPPER(TRIM(c.symbol))
+		        OR UPPER(TRIM(f.market)) <> UPPER(TRIM(c.market))
+		        OR (TRIM(f.side) <> '' AND UPPER(TRIM(f.side)) <> UPPER(TRIM(c.side))))
+		UNION
+		SELECT f.order_id, l.symbol, l.market, 'lineage endpoint identity is ambiguous or contradicts its intent'
+		  FROM fill_snapshots f
+		  JOIN valid_lineage l ON l.parent_order_id = f.order_id OR l.child_order_id = f.order_id
+		 WHERE l.account_ref = ?
+		   AND EXISTS (SELECT 1 FROM all_confirmed_orders selected
+		                WHERE selected.account_ref = l.account_ref
+		                  AND UPPER(TRIM(selected.market)) = UPPER(TRIM(l.market))
+		                  AND TRIM(selected.trading_day) = TRIM(l.trading_day)
+		                  AND (selected.order_id = l.parent_order_id OR selected.order_id = l.child_order_id))
+		   AND ((TRIM(f.account_ref) = TRIM(l.account_ref)
+		         AND TRIM(f.trading_day) = TRIM(l.trading_day))
+		        OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND f.terminal = 0
+		            AND NOT EXISTS (
+		              SELECT 1 FROM all_confirmed_orders reused
+		               WHERE reused.account_ref = l.account_ref
+		                 AND UPPER(TRIM(reused.market)) = UPPER(TRIM(l.market))
+		                 AND TRIM(reused.trading_day) <> TRIM(l.trading_day)
+		                 AND (reused.order_id = l.parent_order_id OR reused.order_id = l.child_order_id))))
+		   AND (UPPER(TRIM(f.symbol)) <> UPPER(TRIM(l.symbol))
+		        OR UPPER(TRIM(f.market)) <> UPPER(TRIM(l.market))
+		        OR (TRIM(f.side) <> '' AND UPPER(TRIM(f.side)) <> UPPER(TRIM(l.side))))
+		LIMIT 1`, string(StateConfirmed),
+		RelationReplaces, string(KindAmend), string(StateConfirmed),
+		RelationReplaces, string(KindAmend), string(StateConfirmed),
+		accountRef, accountRef, accountRef).
+		Scan(&orderID, &symbol, &market, &detail)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("journal: checking tracked fill ownership for account %s: %w", accountRef, err)
+	}
+	evidence := fmt.Sprintf("%s: order %s, expected %s/%s", detail, orderID,
+		normaliseMarket(market), normaliseSymbol(symbol))
+	if _, _, enterErr := j.EnterReconcile(ctx, EnterReconcileRequest{
+		AccountRef: accountRef,
+		Cause:      ReconcileCauseIdentifierConflict,
+		Evidence:   evidence,
+	}); enterErr != nil {
+		return fmt.Errorf("%w: %s; durable fail-closed record failed: %v",
+			ErrTrackedFillIdentityConflict, evidence, enterErr)
+	}
+	return fmt.Errorf("%w: %s", ErrTrackedFillIdentityConflict, evidence)
 }
 
 // LiveOrder is one order the engine believes is still working at the broker,
@@ -827,14 +1110,16 @@ func (j *Journal) TrackedFillOrders(ctx context.Context) ([]TrackedFillOrder, er
 // recorded here rather than papered over.
 type LiveOrder struct {
 	// OrderID is the lineage-resolved current order number.
-	OrderID  string
-	IntentID string
-	Market   string
-	Symbol   string
-	Side     string
-	Quantity string
-	Price    string
-	Currency string
+	OrderID    string
+	IntentID   string
+	AccountRef string
+	Market     string
+	TradingDay string
+	Symbol     string
+	Side       string
+	Quantity   string
+	Price      string
+	Currency   string
 }
 
 // LiveOrdersForSymbol lists the working orders of one symbol on one account.
@@ -852,14 +1137,42 @@ type LiveOrder struct {
 // nothing.
 func (j *Journal) LiveOrdersForSymbol(ctx context.Context, accountRef, market, symbol string) ([]LiveOrder, error) {
 	rows, err := j.db.QueryContext(ctx, `
-		SELECT a.broker_order_id, i.id, i.market, i.symbol, i.side,
-		       i.quantity, coalesce(i.price, ''), i.currency
-		  FROM mutation_attempts a
-		  JOIN intents i ON i.id = a.intent_id
-		 WHERE a.state = ? AND a.broker_order_id <> ''
-		   AND i.account_ref = ? AND i.market = ? AND i.symbol = ?
-		   AND a.broker_order_id NOT IN (SELECT order_id FROM fill_snapshots WHERE terminal = 1)
-		 ORDER BY a.recorded_at, a.rowid`,
+		WITH confirmed_orders AS (
+			SELECT a.broker_order_id AS order_id, a.recorded_at, a.rowid AS attempt_rowid,
+			       i.id AS intent_id, i.account_ref, i.market, i.trading_day,
+			       i.symbol, i.side, i.quantity, coalesce(i.price, '') AS price, i.currency
+			  FROM mutation_attempts a
+			  JOIN intents i ON i.id = a.intent_id
+			 WHERE a.state = ? AND a.broker_order_id <> ''
+		), selected_orders AS (
+			SELECT c.* FROM confirmed_orders c
+			 WHERE c.account_ref = ? AND c.market = ? AND c.symbol = ?
+			   AND NOT EXISTS (
+			     SELECT 1 FROM confirmed_orders newer
+			      WHERE newer.order_id = c.order_id AND newer.account_ref = c.account_ref
+			        AND UPPER(TRIM(newer.market)) = UPPER(TRIM(c.market))
+			        AND TRIM(newer.trading_day) > TRIM(c.trading_day))
+		)
+		SELECT c.order_id, c.intent_id, c.account_ref, c.market, c.trading_day,
+		       c.symbol, c.side, c.quantity, c.price, c.currency
+		  FROM selected_orders c
+		 WHERE NOT EXISTS (
+		   SELECT 1 FROM fill_snapshots f
+		    WHERE f.order_id = c.order_id AND f.terminal = 1
+		      AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(c.symbol))
+		      AND UPPER(TRIM(f.market)) = UPPER(TRIM(c.market))
+		      AND (TRIM(f.side) = '' OR UPPER(TRIM(f.side)) = UPPER(TRIM(c.side)))
+		      AND ((TRIM(f.account_ref) = TRIM(c.account_ref)
+		            AND TRIM(f.trading_day) = TRIM(c.trading_day))
+		           OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = ''
+		               AND NOT EXISTS (
+		                 SELECT 1 FROM confirmed_orders reused
+		                  WHERE reused.order_id = c.order_id
+		                    AND reused.account_ref = c.account_ref
+		                    AND UPPER(TRIM(reused.market)) = UPPER(TRIM(c.market))
+		                    AND TRIM(reused.trading_day) <> TRIM(c.trading_day))))
+		 )
+		 ORDER BY c.recorded_at, c.attempt_rowid`,
 		string(StateConfirmed), strings.TrimSpace(accountRef),
 		normaliseMarket(market), normaliseSymbol(symbol))
 	if err != nil {
@@ -870,7 +1183,8 @@ func (j *Journal) LiveOrdersForSymbol(ctx context.Context, accountRef, market, s
 	var out []LiveOrder
 	for rows.Next() {
 		var o LiveOrder
-		if err := rows.Scan(&o.OrderID, &o.IntentID, &o.Market, &o.Symbol, &o.Side,
+		if err := rows.Scan(&o.OrderID, &o.IntentID, &o.AccountRef, &o.Market, &o.TradingDay,
+			&o.Symbol, &o.Side,
 			&o.Quantity, &o.Price, &o.Currency); err != nil {
 			return nil, fmt.Errorf("journal: listing the working orders of %s: %w", symbol, err)
 		}
@@ -881,7 +1195,13 @@ func (j *Journal) LiveOrdersForSymbol(ctx context.Context, accountRef, market, s
 	}
 
 	for i := range out {
-		current, err := j.ResolveCurrentOrderID(ctx, out[i].OrderID)
+		current, err := j.ResolveCurrentOrderIDScoped(ctx, out[i].OrderID, OrderLineageScope{
+			AccountRef: out[i].AccountRef,
+			Market:     out[i].Market,
+			TradingDay: out[i].TradingDay,
+			Symbol:     out[i].Symbol,
+			Side:       out[i].Side,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -970,4 +1290,35 @@ CREATE TABLE fill_events (
 
 CREATE INDEX idx_fill_events_order  ON fill_events(order_id, id);
 CREATE INDEX idx_fill_events_symbol ON fill_events(symbol, id);
+`
+
+const schemaV16 = `
+ALTER TABLE fill_snapshots ADD COLUMN account_ref TEXT NOT NULL DEFAULT '';
+ALTER TABLE fill_snapshots ADD COLUMN trading_day TEXT NOT NULL DEFAULT '';
+ALTER TABLE fill_snapshots ADD COLUMN side TEXT NOT NULL DEFAULT '';
+CREATE INDEX idx_fill_snapshots_scope
+    ON fill_snapshots(account_ref, market, trading_day, order_id);
+
+CREATE TABLE scoped_lineage_edges (
+	id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+	parent_order_id        TEXT NOT NULL,
+	child_order_id         TEXT NOT NULL,
+	relation               TEXT NOT NULL,
+	parent_filled_quantity TEXT NOT NULL,
+	requested_quantity     TEXT NOT NULL,
+	account_ref            TEXT NOT NULL,
+	market                 TEXT NOT NULL,
+	trading_day            TEXT NOT NULL,
+	symbol                 TEXT NOT NULL,
+	side                   TEXT NOT NULL,
+	intent_id              TEXT NOT NULL REFERENCES intents(id),
+	attempt_id             TEXT NOT NULL REFERENCES mutation_attempts(id),
+	created_at             TEXT NOT NULL,
+	UNIQUE(parent_order_id, child_order_id, relation, account_ref, market,
+	       trading_day, symbol, side, intent_id, attempt_id)
+) STRICT;
+CREATE INDEX idx_scoped_lineage_parent
+	ON scoped_lineage_edges(account_ref, market, trading_day, symbol, side, parent_order_id);
+CREATE INDEX idx_scoped_lineage_child
+	ON scoped_lineage_edges(account_ref, market, trading_day, symbol, side, child_order_id);
 `

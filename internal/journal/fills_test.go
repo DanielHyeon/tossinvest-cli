@@ -2,6 +2,7 @@ package journal
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"testing"
 )
@@ -17,13 +18,41 @@ import (
 func observation(orderID, filled string) FillObservation {
 	return FillObservation{
 		OrderID:        orderID,
+		AccountRef:     "acct-1",
 		Symbol:         "AAPL",
 		Market:         "us",
+		TradingDay:     "2026-03-30",
+		Side:           "BUY",
 		State:          "OPEN_PARTIALLY_FILLED",
 		Quantity:       "10",
 		FilledQuantity: filled,
 		AveragePrice:   "213.4",
 		ObservedAt:     "2026-03-30T00:30:00Z",
+	}
+}
+
+func recordConfirmedFillOrder(t *testing.T, j *Journal, intentID, attemptID, orderID string) {
+	t.Helper()
+	ctx := context.Background()
+	attempt, err := j.Prepare(ctx, PrepareRequest{
+		Intent: Intent{
+			ID: intentID, Market: "us", TradingDay: "2026-03-30", AccountRef: "acct-1",
+			Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "10",
+			Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
+		},
+		Kind: KindPlace, AttemptID: attemptID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkDispatchStarted(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkAcked(ctx, orderID); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -351,10 +380,12 @@ func TestTrackedFillOrders(t *testing.T) {
 	j := openTestJournal(t)
 	ctx := context.Background()
 
+	recordConfirmedFillOrder(t, j, "intent-open", "attempt-open", "o-open")
 	live := observation("o-open", "2")
 	if _, err := j.RecordFill(ctx, live); err != nil {
 		t.Fatal(err)
 	}
+	recordConfirmedFillOrder(t, j, "intent-done", "attempt-done", "o-done")
 	done := observation("o-done", "10")
 	done.Terminal = true
 	done.State = "FILLED"
@@ -371,6 +402,284 @@ func TestTrackedFillOrders(t *testing.T) {
 	}
 	if tracked[0].Symbol != "AAPL" || tracked[0].Market != "us" {
 		t.Fatalf("tracked order lost its identity: %+v", tracked[0])
+	}
+}
+
+// TestTrackedFillOrdersExcludeExternalSnapshots pins the ownership boundary:
+// storing a broker observation is evidence that the order existed, not evidence
+// that this engine submitted it.
+func TestTrackedFillOrdersExcludeExternalSnapshots(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+
+	if _, err := j.RecordFill(ctx, observation("external-open", "0")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.LookupFill(ctx, "external-open"); err != nil {
+		t.Fatalf("external observation must remain durably readable: %v", err)
+	}
+
+	tracked, err := j.TrackedFillOrders(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tracked) != 0 {
+		t.Fatalf("tracked = %+v, want no locally owned order", tracked)
+	}
+}
+
+func TestTrackedFillOrdersRejectSnapshotIdentityMismatch(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	recordConfirmedFillOrder(t, j, "intent-owned", "attempt-owned", "shared-order")
+	mismatched := observation("shared-order", "0")
+	mismatched.Symbol = "MSFT"
+	if _, err := j.RecordFill(ctx, mismatched); err != nil {
+		t.Fatal(err)
+	}
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if !errors.Is(err, ErrTrackedFillIdentityConflict) || tracked != nil {
+		t.Fatalf("tracked = %+v err = %v, want a durable identity-conflict refusal", tracked, err)
+	}
+	active, err := j.ActiveReconcileStates(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(active) != 1 || active[0].Cause != ReconcileCauseIdentifierConflict || active[0].Symbol != "" {
+		t.Fatalf("active reconcile states = %+v, want account-wide identifier conflict", active)
+	}
+}
+
+func TestTrackedFillOrdersScopeReusedOrderIDsByAccount(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	recordConfirmedFillOrder(t, j, "intent-one", "attempt-one", "account-scoped-id")
+	attempt, err := j.Prepare(ctx, PrepareRequest{
+		Intent: Intent{
+			ID: "intent-two", Market: "us", TradingDay: "2026-03-30", AccountRef: "acct-2",
+			Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "10",
+			Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-two",
+		},
+		Kind: KindPlace, AttemptID: "attempt-two",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkDispatchStarted(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkAcked(ctx, "account-scoped-id"); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, account := range []string{"acct-1", "acct-2"} {
+		tracked, err := j.TrackedFillOrders(ctx, account)
+		if err != nil {
+			t.Fatalf("account %s: %v", account, err)
+		}
+		if len(tracked) != 1 || tracked[0].OrderID != "account-scoped-id" {
+			t.Fatalf("account %s tracked=%+v, want its scoped order", account, tracked)
+		}
+	}
+}
+
+func TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	confirm := func(intentID, attemptID, day, symbol string) {
+		attempt, err := j.Prepare(ctx, PrepareRequest{
+			Intent: Intent{
+				ID: intentID, Market: "us", TradingDay: day, AccountRef: "acct-1",
+				Symbol: symbol, Side: "BUY", OrderType: "LIMIT", Quantity: "1",
+				Price: "100", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
+			},
+			Kind: KindPlace, AttemptID: attemptID,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkDispatchStarted(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkAcked(ctx, "reused-by-day"); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	confirm("old-day", "old-attempt", "2026-03-29", "MSFT")
+	prior := observation("reused-by-day", "1")
+	prior.AccountRef, prior.TradingDay, prior.Side = "acct-1", "2026-03-29", "BUY"
+	prior.Symbol, prior.Market, prior.Terminal, prior.State = "MSFT", "us", true, "FILLED"
+	if _, err := j.RecordFill(ctx, prior); err != nil {
+		t.Fatal(err)
+	}
+	confirm("new-day", "new-attempt", "2026-03-30", "AAPL")
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tracked) != 1 || tracked[0].OrderID != "reused-by-day" || tracked[0].Symbol != "AAPL" {
+		t.Fatalf("tracked = %+v, want only the latest trading-day identity", tracked)
+	}
+	current := observation("reused-by-day", "1")
+	current.AccountRef, current.TradingDay, current.Side = "acct-1", "2026-03-30", "BUY"
+	res, err := j.RecordFill(ctx, current)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.FailClosed || res.Delta != "1" {
+		t.Fatalf("new trading-day cumulative sequence = %+v, want fresh delta 1", res)
+	}
+	stored, err := j.LookupFill(ctx, "reused-by-day")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.TradingDay != "2026-03-30" || stored.Symbol != "AAPL" {
+		t.Fatalf("stored snapshot = %+v, want current trading-day scope", stored)
+	}
+}
+
+func TestLiveOrdersForSymbolKeepsAReusedCurrentDayOrderAfterThePriorDayTerminal(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	confirm := func(intentID, attemptID, day string) {
+		attempt, err := j.Prepare(ctx, PrepareRequest{
+			Intent: Intent{
+				ID: intentID, Market: "us", TradingDay: day, AccountRef: "acct-1",
+				Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "1",
+				Price: "100", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
+			},
+			Kind: KindPlace, AttemptID: attemptID,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkDispatchStarted(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkAcked(ctx, "reused-live-order"); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	confirm("prior-day-intent", "prior-day-attempt", "2026-03-29")
+	prior := observation("reused-live-order", "1")
+	prior.TradingDay, prior.Terminal, prior.State = "2026-03-29", true, "FILLED"
+	if _, err := j.RecordFill(ctx, prior); err != nil {
+		t.Fatal(err)
+	}
+	confirm("current-day-intent", "current-day-attempt", "2026-03-30")
+
+	live, err := j.LiveOrdersForSymbol(ctx, "acct-1", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(live) != 1 || live[0].OrderID != "reused-live-order" ||
+		live[0].IntentID != "current-day-intent" || live[0].TradingDay != "2026-03-30" {
+		t.Fatalf("live orders = %+v, want the current-day reused order", live)
+	}
+}
+
+func TestLiveOrdersForSymbolUsesLegacyTerminalOnlyWithinItsMarket(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	confirm := func(intentID, attemptID, market, day, symbol, currency string) {
+		attempt, err := j.Prepare(ctx, PrepareRequest{
+			Intent: Intent{
+				ID: intentID, Market: market, TradingDay: day, AccountRef: "acct-1",
+				Symbol: symbol, Side: "BUY", OrderType: "LIMIT", Quantity: "1",
+				Price: "100", Currency: currency, Source: "engine", Fingerprint: "fp-" + intentID,
+			},
+			Kind: KindPlace, AttemptID: attemptID,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkDispatchStarted(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkAcked(ctx, "legacy-cross-market-id"); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	confirm("us-legacy-intent", "us-legacy-attempt", "us", "2026-03-30", "AAPL", "USD")
+	terminal := observation("legacy-cross-market-id", "1")
+	terminal.AccountRef, terminal.TradingDay = "", ""
+	terminal.Symbol, terminal.Market, terminal.Terminal, terminal.State = "AAPL", "us", true, "FILLED"
+	if _, err := j.RecordFill(ctx, terminal); err != nil {
+		t.Fatal(err)
+	}
+	confirm("kr-reused-intent", "kr-reused-attempt", "kr", "2026-03-31", "005930", "KRW")
+
+	live, err := j.LiveOrdersForSymbol(ctx, "acct-1", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(live) != 0 {
+		t.Fatalf("US live orders = %+v, want legacy US terminal to remain authoritative despite KR id reuse", live)
+	}
+}
+
+func TestOrderIDLatestDayPartitionKeepsBothMarketsInTheSameAccount(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	confirm := func(intentID, attemptID, market, day, symbol, currency string) {
+		attempt, err := j.Prepare(ctx, PrepareRequest{
+			Intent: Intent{
+				ID: intentID, Market: market, TradingDay: day, AccountRef: "acct-1",
+				Symbol: symbol, Side: "BUY", OrderType: "LIMIT", Quantity: "1",
+				Price: "100", Currency: currency, Source: "engine", Fingerprint: "fp-" + intentID,
+			},
+			Kind: KindPlace, AttemptID: attemptID,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkDispatchStarted(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkAcked(ctx, "cross-market-id"); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	confirm("us-intent", "us-attempt", "us", "2026-03-30", "AAPL", "USD")
+	confirm("kr-intent", "kr-attempt", "kr", "2026-03-31", "005930", "KRW")
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	markets := map[string]bool{}
+	for _, order := range tracked {
+		markets[order.Market] = true
+	}
+	if len(tracked) != 2 || !markets["us"] || !markets["kr"] {
+		t.Fatalf("tracked orders = %+v, want both market-scoped identities", tracked)
+	}
+	live, err := j.LiveOrdersForSymbol(ctx, "acct-1", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(live) != 1 || live[0].IntentID != "us-intent" {
+		t.Fatalf("US live orders = %+v, want the US order despite the later KR day", live)
 	}
 }
 
@@ -420,17 +729,31 @@ func TestTrackedFillOrdersCarryLineage(t *testing.T) {
 	j := openTestJournal(t)
 	ctx := context.Background()
 
+	recordConfirmedFillOrder(t, j, "intent-parent", "attempt-parent", "parent-1")
 	if _, err := j.RecordFill(ctx, observation("parent-1", "2")); err != nil {
 		t.Fatal(err)
 	}
-	insertIntent(t, j, "intent-1")
-	insertAttempt(t, j, "attempt-1", "intent-1")
-	if _, err := j.db.ExecContext(ctx,
-		`INSERT INTO lineage_edges
-		   (parent_order_id, child_order_id, relation, parent_filled_quantity,
-		    requested_quantity, intent_id, attempt_id, created_at)
-		 VALUES ('parent-1','child-1','replaces','2','8','intent-1','attempt-1',
-		         '2026-03-30T00:30:00Z')`); err != nil {
+	amend, err := j.Prepare(ctx, PrepareRequest{
+		Intent: Intent{
+			ID: "intent-child", Market: "us", TradingDay: "2026-03-30", AccountRef: "acct-1",
+			Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "8",
+			Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-intent-child",
+		},
+		Kind: KindAmend, AttemptID: "attempt-child", TargetOrderID: "parent-1",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := amend.MarkDispatchStarted(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := amend.MarkAcked(ctx, "child-1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := amend.ResolveConfirmedWithLineage(ctx, LineageEdge{
+		ParentOrderID: "parent-1", ChildOrderID: "child-1",
+		ParentFilledQuantity: "2", RequestedQuantity: "8",
+	}, ReasonResolvedFound, "amended"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -438,17 +761,177 @@ func TestTrackedFillOrdersCarryLineage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var found bool
+	var foundParent, foundChild bool
 	for _, tr := range tracked {
 		if tr.OrderID == "parent-1" {
-			found = true
+			foundParent = true
 			if tr.SuccessorOrderID != "child-1" {
 				t.Fatalf("successor = %q, want child-1", tr.SuccessorOrderID)
 			}
 		}
+		foundChild = foundChild || tr.OrderID == "child-1"
 	}
-	if !found {
-		t.Fatalf("tracked = %+v, want parent-1", tracked)
+	if !foundParent || !foundChild {
+		t.Fatalf("tracked = %+v, want live parent and confirmed unseen child", tracked)
+	}
+
+	done := observation("child-1", "8")
+	done.Terminal = true
+	done.State = "FILLED"
+	if _, err := j.RecordFill(ctx, done); err != nil {
+		t.Fatal(err)
+	}
+	tracked, err = j.TrackedFillOrders(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tr := range tracked {
+		if tr.OrderID == "child-1" {
+			t.Fatalf("terminal successor remained tracked: %+v", tracked)
+		}
+	}
+}
+
+func TestTrackedFillOrdersScopeReusedLineageEndpointByAccount(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	recordConfirmedFillOrder(t, j, "intent-parent", "attempt-parent", "reused-parent")
+	recordConfirmedFillOrder(t, j, "intent-child", "attempt-child", "owned-child")
+	if _, err := j.RecordFill(ctx, observation("reused-parent", "1")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.ExecContext(ctx,
+		`INSERT INTO lineage_edges
+		   (parent_order_id, child_order_id, relation, parent_filled_quantity,
+		    requested_quantity, intent_id, attempt_id, created_at)
+		 VALUES ('reused-parent','owned-child','replaces','1','9','intent-parent','attempt-parent',
+		         '2026-03-30T00:30:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	attempt, err := j.Prepare(ctx, PrepareRequest{
+		Intent: Intent{
+			ID: "other-parent-intent", Market: "us", TradingDay: "2026-03-30", AccountRef: "acct-2",
+			Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "10",
+			Price: "200", Currency: "USD", Source: "engine", Fingerprint: "other-parent-fp",
+		},
+		Kind: KindPlace, AttemptID: "other-parent-attempt",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkDispatchStarted(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.MarkAcked(ctx, "reused-parent"); err != nil {
+		t.Fatal(err)
+	}
+	if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+		t.Fatal(err)
+	}
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var parent, child bool
+	for _, order := range tracked {
+		parent = parent || order.OrderID == "reused-parent"
+		child = child || order.OrderID == "owned-child"
+	}
+	if !parent || !child {
+		t.Fatalf("selected account lineage was lost because another account reused an id: %+v", tracked)
+	}
+	if active, err := j.ActiveReconcileStates(ctx); err != nil || len(active) != 0 {
+		t.Fatalf("cross-account scope raised a false durable conflict: states=%+v err=%v", active, err)
+	}
+}
+
+func TestTrackedFillOrdersRejectMalformedLegacyLineageOwnership(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	recordConfirmedFillOrder(t, j, "owned-intent", "owned-place-attempt", "owned-parent")
+	external := observation("external-child", "0")
+	if _, err := j.RecordFill(ctx, external); err != nil {
+		t.Fatal(err)
+	}
+	// A pre-v16/corrupt edge tied to a PLACE attempt is not amendment ownership:
+	// the attempt names neither parent as its target nor child as its broker id.
+	if _, err := j.db.ExecContext(ctx, `
+		INSERT INTO lineage_edges
+		  (parent_order_id, child_order_id, relation, parent_filled_quantity,
+		   requested_quantity, intent_id, attempt_id, created_at)
+		VALUES ('owned-parent','external-child','replaces','0','10',
+		        'owned-intent','owned-place-attempt','2026-03-30T00:30:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tracked) != 1 || tracked[0].OrderID != "owned-parent" || tracked[0].SuccessorOrderID != "" {
+		t.Fatalf("tracked = %+v, want only the confirmed parent without malformed successor", tracked)
+	}
+}
+
+func TestTrackedFillOrdersUseScopedLineageWhenTheSamePairIsReused(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	other := OrderLineageScope{
+		AccountRef: "acct-2", Market: "us", TradingDay: "2026-03-29", Symbol: "AAPL", Side: "BUY",
+	}
+	selected := other
+	selected.AccountRef, selected.TradingDay = "acct-1", "2026-03-30"
+	recordConfirmedReplacement(t, j, other, "reused-parent", "reused-child", "tracked-other")
+	recordConfirmedReplacement(t, j, selected, "reused-parent", "reused-child", "tracked-selected")
+	parent := observation("reused-parent", "0")
+	parent.AccountRef, parent.TradingDay = selected.AccountRef, selected.TradingDay
+	if _, err := j.RecordFill(ctx, parent); err != nil {
+		t.Fatal(err)
+	}
+
+	tracked, err := j.TrackedFillOrders(ctx, selected.AccountRef)
+	if err != nil {
+		t.Fatal(err)
+	}
+	foundParent := false
+	for _, order := range tracked {
+		if order.OrderID == "reused-parent" {
+			foundParent = true
+			if order.SuccessorOrderID != "reused-child" || order.TradingDay != selected.TradingDay {
+				t.Fatalf("selected parent = %+v, want scoped successor on %s", order, selected.TradingDay)
+			}
+		}
+	}
+	if !foundParent {
+		t.Fatalf("tracked = %+v, want lineage-owned parent from scoped v16 evidence", tracked)
+	}
+}
+
+func TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	oldScope := OrderLineageScope{
+		AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-29", Symbol: "AAPL", Side: "BUY",
+	}
+	newScope := oldScope
+	newScope.TradingDay = "2026-03-30"
+	recordConfirmedReplacement(t, j, oldScope, "reused-legacy-parent", "reused-legacy-child", "legacy-old")
+	recordConfirmedReplacement(t, j, newScope, "reused-legacy-parent", "reused-legacy-child", "legacy-new")
+	legacy := observation("reused-legacy-parent", "0")
+	legacy.AccountRef, legacy.TradingDay = "", ""
+	if _, err := j.RecordFill(ctx, legacy); err != nil {
+		t.Fatal(err)
+	}
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, order := range tracked {
+		if order.OrderID == "reused-legacy-parent" {
+			t.Fatalf("legacy parent snapshot was attributed across reused lineage days: %+v", tracked)
+		}
 	}
 }
 

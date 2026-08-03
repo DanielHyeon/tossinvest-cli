@@ -116,6 +116,30 @@ func containsCause(causes []string, want string) bool {
 	return false
 }
 
+func insertTerminalFillSnapshot(t *testing.T, j *Journal, orderID, account, market, day, symbol, side string) {
+	t.Helper()
+	if _, err := j.db.ExecContext(context.Background(), `
+		INSERT INTO fill_snapshots
+		  (order_id, account_ref, symbol, market, trading_day, side, state,
+		   terminal, fail_closed, quantity, filled_quantity, committed_at)
+		VALUES (?, ?, ?, ?, ?, ?, 'FILLED', 1, 0, '10', '10', ?)`,
+		orderID, account, symbol, market, day, side, j.nowString()); err != nil {
+		t.Fatalf("insert terminal fill snapshot %s: %v", orderID, err)
+	}
+}
+
+func reserveConfirmedSweepOrder(t *testing.T, j *Journal, decisionID, account, attemptID, orderID string) string {
+	t.Helper()
+	dec := recordEntryDecision(t, j, decisionID, account)
+	out, err := j.Reserve(context.Background(), exposureReserve(
+		j, dec.ID, account, "100", "0", "10000", mustVersion(t, j, account)))
+	if err != nil {
+		t.Fatalf("Reserve(%s): %v", decisionID, err)
+	}
+	confirmAttempt(t, j, dec, attemptID, orderID)
+	return out.Reservations[0].ID
+}
+
 // TestStartupSweepRecoversAnOrphanedTerminalHold models a row from before the
 // release rode in the terminal transaction: the attempt is terminal, the hold
 // is not. Nothing in the live path can produce it now, and a hold nothing will
@@ -154,6 +178,93 @@ func TestStartupSweepRecoversAnOrphanedTerminalHold(t *testing.T) {
 	}
 	if reservationState(t, j, out.Reservations[0].ID).Held() {
 		t.Fatal("the orphaned hold survived the sweep")
+	}
+}
+
+func TestOrphanSweepReleasesAnExactlyScopedTerminalFill(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	const orderID = "exact-scope-order"
+	reservationID := reserveConfirmedSweepOrder(
+		t, j, "d-exact-scope", "acct-1", "attempt-exact-scope", orderID)
+	insertTerminalFillSnapshot(t, j, orderID, "acct-1", "kr", "2026-03-30", "005930", "BUY")
+
+	sweep, err := j.SweepReservations(context.Background())
+	if err != nil {
+		t.Fatalf("SweepReservations: %v", err)
+	}
+	if len(sweep.Released) != 1 || sweep.Released[0].ReservationID != reservationID {
+		t.Fatalf("exactly scoped terminal fill released %+v, want reservation %s", sweep.Released, reservationID)
+	}
+	if reservationState(t, j, reservationID).Held() {
+		t.Fatal("the exactly scoped terminal fill left its reservation held")
+	}
+}
+
+func TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope(t *testing.T) {
+	tests := []struct {
+		name    string
+		account string
+		market  string
+		day     string
+		symbol  string
+		side    string
+	}{
+		{name: "account", account: "acct-2", market: "kr", day: "2026-03-30", symbol: "005930", side: "BUY"},
+		{name: "market", account: "acct-1", market: "us", day: "2026-03-30", symbol: "005930", side: "BUY"},
+		{name: "trading day", account: "acct-1", market: "kr", day: "2026-03-31", symbol: "005930", side: "BUY"},
+		{name: "symbol", account: "acct-1", market: "kr", day: "2026-03-30", symbol: "000660", side: "BUY"},
+		{name: "side", account: "acct-1", market: "kr", day: "2026-03-30", symbol: "005930", side: "SELL"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			j, _ := openReservationJournal(t)
+			const orderID = "reused-scope-order"
+			reservationID := reserveConfirmedSweepOrder(
+				t, j, "d-scope", "acct-1", "attempt-scope", orderID)
+			insertTerminalFillSnapshot(t, j, orderID, tt.account, tt.market, tt.day, tt.symbol, tt.side)
+
+			sweep, err := j.SweepReservations(context.Background())
+			if err != nil {
+				t.Fatalf("SweepReservations: %v", err)
+			}
+			if len(sweep.Released) != 0 {
+				t.Fatalf("terminal snapshot from another %s released %+v", tt.name, sweep.Released)
+			}
+			if !reservationState(t, j, reservationID).Held() {
+				t.Fatalf("terminal snapshot from another %s released reservation %s", tt.name, reservationID)
+			}
+		})
+	}
+}
+
+func TestOrphanSweepKeepsCollidingIntentReservationsHeld(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	const orderID = "colliding-scope-order"
+	first := reserveConfirmedSweepOrder(
+		t, j, "d-colliding-one", "acct-1", "attempt-colliding-one", orderID)
+	second := reserveConfirmedSweepOrder(
+		t, j, "d-colliding-two", "acct-1", "attempt-colliding-two", orderID)
+	insertTerminalFillSnapshot(t, j, orderID, "acct-1", "kr", "2026-03-30", "005930", "BUY")
+
+	sweep, err := j.SweepReservations(context.Background())
+	if err != nil {
+		t.Fatalf("SweepReservations: %v", err)
+	}
+	if len(sweep.Released) != 0 {
+		t.Fatalf("ambiguous terminal order released local risk headroom: %+v", sweep.Released)
+	}
+	for _, reservationID := range []string{first, second} {
+		if !reservationState(t, j, reservationID).Held() {
+			t.Fatalf("ambiguous terminal order released reservation %s", reservationID)
+		}
+	}
+	active, err := j.ActiveReconcileStates(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(active) != 1 || active[0].AccountRef != "acct-1" || active[0].Symbol != "" ||
+		active[0].Cause != ReconcileCauseIdentifierConflict {
+		t.Fatalf("active reconcile states = %+v, want account-wide identifier conflict", active)
 	}
 }
 

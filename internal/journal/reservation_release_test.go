@@ -188,6 +188,52 @@ func TestDerivedTerminalFillReleasesTheHold(t *testing.T) {
 	}
 }
 
+func TestCollidingTerminalFillKeepsEveryReservationHeld(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	first := recordEntryDecision(t, j, "d-collision-one", "acct-1")
+	firstOut, err := j.Reserve(ctx, exposureReserve(j, first.ID, "acct-1", "100", "0", "10000",
+		mustVersion(t, j, "acct-1")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	confirmAttempt(t, j, first, "attempt-collision-one", "account-scoped-order")
+
+	second := recordEntryDecision(t, j, "d-collision-two", "acct-1")
+	secondOut, err := j.Reserve(ctx, exposureReserve(j, second.ID, "acct-1", "100", "0", "10000",
+		mustVersion(t, j, "acct-1")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	confirmAttempt(t, j, second, "attempt-collision-two", "account-scoped-order")
+
+	res, err := j.RecordFill(ctx, FillObservation{
+		OrderID: "account-scoped-order", AccountRef: "acct-1", Symbol: "005930", Market: "kr",
+		TradingDay: "2026-03-30", Side: "BUY",
+		State: "FILLED", Terminal: true, Quantity: "10", FilledQuantity: "10",
+		AveragePrice: "70000", ObservedAt: j.nowString(),
+	})
+	if err != nil {
+		t.Fatalf("RecordFill: %v", err)
+	}
+	if len(res.ReleasedReservations) != 0 {
+		t.Fatalf("colliding terminal observation released local risk headroom: %+v", res.ReleasedReservations)
+	}
+	for _, id := range []string{firstOut.Reservations[0].ID, secondOut.Reservations[0].ID} {
+		if !reservationState(t, j, id).Held() {
+			t.Fatalf("reservation %s was released by an ambiguous broker order id", id)
+		}
+	}
+	active, err := j.ActiveReconcileStates(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(active) != 1 || active[0].AccountRef != "acct-1" ||
+		active[0].Cause != ReconcileCauseIdentifierConflict {
+		t.Fatalf("active reconcile states = %+v, want account-wide identity conflict", active)
+	}
+}
+
 // TestUnknownBrokerStateKeepsTheReservationHeld is the "만료 추정 해제 금지"
 // case the task names: CLOSED, nothing filled, no cancellation. That is what an
 // expiry would look like — and the broker's status vocabulary for an expiry is

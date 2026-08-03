@@ -150,7 +150,7 @@ func LocalStateFromJournal(ctx context.Context, j *journal.Journal, accountRef s
 	if err != nil {
 		return LocalState{}, err
 	}
-	tracked, err := j.TrackedFillOrders(ctx)
+	tracked, err := j.TrackedFillOrders(ctx, accountRef)
 	if err != nil {
 		return LocalState{}, err
 	}
@@ -161,7 +161,13 @@ func LocalStateFromJournal(ctx context.Context, j *journal.Journal, accountRef s
 		OpenOrders: make(map[string]LocalOrder, len(tracked)),
 	}
 	for _, t := range tracked {
-		current, err := j.ResolveCurrentOrderID(ctx, t.OrderID)
+		current, err := j.ResolveCurrentOrderIDScoped(ctx, t.OrderID, journal.OrderLineageScope{
+			AccountRef: t.AccountRef,
+			Market:     t.Market,
+			TradingDay: t.TradingDay,
+			Symbol:     t.Symbol,
+			Side:       t.Side,
+		})
 		if err != nil {
 			// A broken lineage chain is not something to reconcile around: the
 			// record of what replaced what is itself wrong.

@@ -93,6 +93,15 @@ func (f *fakeBalance) BuyingPower(context.Context, string) (float64, error) {
 	return 1_000_000, nil
 }
 
+type refusingReconcileRelease struct {
+	reconcile.ReconcileStore
+}
+
+func (s *refusingReconcileRelease) ReleaseReconcile(context.Context,
+	journal.ReleaseReconcileRequest) (journal.ReconcileState, bool, error) {
+	return journal.ReconcileState{}, false, nil
+}
+
 // --- harness ------------------------------------------------------------------
 
 type driverHarness struct {
@@ -353,10 +362,6 @@ func TestAdoptionIsSilentUnderReconcile(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("EnterReconcile: %v", err)
 	}
-	if err := h.tracker.Restore(context.Background()); err != nil {
-		t.Fatalf("Restore: %v", err)
-	}
-
 	cycle := h.cycle()
 	if cycle.Adopted != 0 {
 		t.Errorf("adopted = %d under RECONCILE; adopting into a disagreement freezes a t0 against "+
@@ -368,6 +373,78 @@ func TestAdoptionIsSilentUnderReconcile(t *testing.T) {
 	}
 	if got := h.alerts.count(obs.EventExitPositionUnmanaged); got != 0 {
 		t.Errorf("unmanaged alerts = %d, want 0 during a transition state", got)
+	}
+}
+
+func TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead(t *testing.T) {
+	h := newDriverHarness(t, nil)
+	h.holds("005930", "10", "55000", 70000)
+	if _, _, err := h.journal.EnterReconcile(context.Background(), journal.EnterReconcileRequest{
+		AccountRef: reconcileAccount, Symbol: "005930",
+		Cause: journal.ReconcileCauseIdentifierConflict, Evidence: "identifier conflict",
+	}); err != nil {
+		t.Fatalf("EnterReconcile: %v", err)
+	}
+	cycle := h.cycle()
+	if cycle.Err != nil {
+		t.Fatalf("cycle: %v", cycle.Err)
+	}
+	if cycle.Blocked != 1 {
+		t.Fatalf("blocked = %d, want the one active durable block (not only new additions)", cycle.Blocked)
+	}
+	if cycle.Adopted != 0 || h.prices.calls != 0 {
+		t.Fatalf("adopted = %d, price reads = %d under identifier conflict", cycle.Adopted, h.prices.calls)
+	}
+}
+
+func TestTrackerReleaseFailureStopsBeforePriceAndAdoption(t *testing.T) {
+	h := newDriverHarness(t, nil)
+	h.holds("005930", "10", "55000", 70000)
+	if _, _, err := h.journal.EnterReconcile(context.Background(), journal.EnterReconcileRequest{
+		AccountRef: reconcileAccount, Symbol: "005930",
+		Cause: journal.ReconcileCauseQuantityMismatch, Evidence: "quantity differs",
+	}); err != nil {
+		t.Fatalf("EnterReconcile: %v", err)
+	}
+	if err := h.tracker.Restore(context.Background()); err != nil {
+		t.Fatalf("Restore: %v", err)
+	}
+	h.tracker.Journal = &refusingReconcileRelease{ReconcileStore: h.journal}
+	h.tracker.AdjustmentApplied("005930")
+
+	cycle := h.cycle()
+	if cycle.Err == nil {
+		t.Fatal("cycle must fail when the durable release is refused")
+	}
+	if cycle.Blocked != 1 || cycle.Released != 0 {
+		t.Fatalf("cycle = %+v, want the active block preserved and no visible release", cycle)
+	}
+	if cycle.Adopted != 0 || cycle.Unmanaged != 0 || h.prices.calls != 0 {
+		t.Fatalf("cycle continued after tracker failure: adopted=%d unmanaged=%d prices=%d",
+			cycle.Adopted, cycle.Unmanaged, h.prices.calls)
+	}
+}
+
+func TestIncludeOnlyAdoptionRequiresAPriceReader(t *testing.T) {
+	clk := clock.NewFake(reconcileLoopNow)
+	j, err := journal.Open(context.Background(), journal.Options{
+		Path:     filepath.Join(t.TempDir(), "journal.db"),
+		Clock:    clk,
+		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+	})
+	if err != nil {
+		t.Fatalf("journal.Open: %v", err)
+	}
+	t.Cleanup(func() { _ = j.Close() })
+
+	_, err = engine.NewReconcileDriver(engine.ReconcileDriverOptions{
+		Journal: j, Collector: &reconcile.Collector{}, Tracker: &reconcile.Tracker{},
+		Ingest: &reconcile.Ingestor{}, Converge: &reconcile.Converger{},
+		AccountRef: reconcileAccount,
+		Adoption:   config.Adoption{IncludeSymbols: []string{"005930"}, DefaultStopPct: 0.05},
+	})
+	if !errors.Is(err, engine.ErrReconcileDriverUnavailable) {
+		t.Fatalf("NewReconcileDriver include-only without prices = %v, want unavailable", err)
 	}
 }
 

@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 15
+const SchemaVersion = 16
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -88,6 +88,11 @@ var migrations = []migration{
 	// cost already deducted from a frozen outcome's P&L as nullable evidence;
 	// historical rows remain NULL and are never backfilled by the migration.
 	{Version: 15, SQL: schemaV15},
+	// schemaV16 lives in fills.go. It binds cumulative snapshots and replacement
+	// lineage to the minimum broker-order scope so an order id or parent/child
+	// pair reused in another account, market, or trading day cannot inherit the
+	// prior order's terminal state or successor.
+	{Version: 16, SQL: schemaV16},
 }
 
 // schemaV1 is the initial schema.

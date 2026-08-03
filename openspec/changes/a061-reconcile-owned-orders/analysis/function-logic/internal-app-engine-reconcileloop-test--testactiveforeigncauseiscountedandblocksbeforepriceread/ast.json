@@ -1,0 +1,150 @@
+{
+  "file": "internal/app/engine/reconcileloop_test.go",
+  "source_sha256": "feb0b59737a7c47e4ead572b77c9f2b591273fa6bd61744850a60c87830d6342",
+  "package": "engine_test",
+  "function": "TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead",
+  "signature": "TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead(params=1, results=0)",
+  "start": {
+    "line": 379,
+    "column": 1
+  },
+  "end": {
+    "line": 398,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 382,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 392,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 395,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 7
+      },
+      "text": "newDriverHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 2
+      },
+      "text": "h.holds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 18
+      },
+      "text": "h.journal.EnterReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 43
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 11
+      },
+      "text": "h.cycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 382,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}
