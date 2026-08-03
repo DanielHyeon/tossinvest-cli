@@ -47,3 +47,14 @@ Final decision: ACCEPT, P0=0, P1=0.
 
 - The direct-owner precedence, same-second future-owner, duplicate-owner, CANCEL non-owner, external baseline reset, late replacement-parent fill, provenance/outcome, reconcile lineage, tracer, and exit E2E regressions pass.
 - The uncached related-package suite and focused race suite pass with no failing command and no missing P0/P1 test.
+
+## Delivery and live verification — 2026-08-03
+
+Decision: ACCEPT.
+
+- The feature was merged to local `main`, pushed to `origin/main`, built into the local container image, and deployed with both HTTPS services healthy.
+- No live order command, broker mutation route, or operating-toggle change was invoked during deployment or recovery.
+- With the engine stopped and its lock held exclusively, `engine reconcile-resolve` released the obsolete quantity-mismatch blocks only after three stable official snapshots and a clean blocking diff; the engine was then restarted.
+- The first post-restart reconcile cycle reported `blocked=0` and adopted three external holdings: one KR and two US. Subsequent cycles remained clean with no new adoption block.
+- The live `/positions` response shows every holding as `MANAGED` with adoption evidence. Fresh canonical evaluations render take-profit, initial stop, recovery, active baseline, and high-water values; evaluations outside the display freshness bound retain the existing fail-closed `—` presentation and stale warning.
+- Read-only browser rendering at the desktop viewport confirmed the compact table columns remain aligned, `상세 보기` stays in the final column, and no row displays the former reconcile-blocked or adoption-pending verdict.
