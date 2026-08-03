@@ -1,0 +1,46 @@
+{
+  "file": "internal/official/market_reads.go",
+  "source_sha256": "f37cca77676664d67ecb024f2bf9c80f9bd02261e9986be5940b33e7b10268d2",
+  "package": "official",
+  "function": "adaptExchangeRate",
+  "signature": "adaptExchangeRate(params=1, results=1)",
+  "start": {
+    "line": 90,
+    "column": 1
+  },
+  "end": {
+    "line": 103,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 18
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 18
+      },
+      "text": "parseDecimal"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
