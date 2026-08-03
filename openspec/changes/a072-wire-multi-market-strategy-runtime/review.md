@@ -45,6 +45,17 @@
 - `strategyflow` production dependencies are statically denied access to journal, Gateway, trading,
   configuration, engine and operating writer packages. Its public production path fixes the real router and
   real lane registry; evaluator substitution exists only as a package-private test seam.
+- Independent v25 review initially BLOCKed caller-created authority, shadow reservation disposition,
+  caller-string broker outcome and restart discovery gaps. The checkpoint was reduced to an unissuable
+  durable schema: all public mutation methods return `ErrStrategyDispatchDormant`, future raw rows are
+  constrained to an actual q_final decision, aggregate HELD plus exactly five monetary HELD reservations,
+  exact active owner/scope/current fence, and broker order identity is account-wide unique. Cold restart
+  discovery is read-only. Re-review is CLEAN for this dormant scope only.
+- Independent supervisor review initially BLOCKed bool-only recovery, shutdown/enqueue loss and unbounded
+  mutation callbacks. Recovery/mutation callbacks were removed; shutdown and enqueue now share one mutex
+  barrier and drain both queues. Only evaluation-only callbacks can cross a watchdog, at most one per market;
+  the market becomes irreversibly disabled and late results have no action path. Re-review is CLEAN, while
+  durable fault persistence and production Runtime wiring remain explicitly pending.
 
 ## Verification
 
@@ -62,6 +73,10 @@
 - `go test -race -tags tossos_testseams ./internal/strategyflow ./internal/strategyrouter ./internal/continuationlane ./internal/reversallane ./internal/weeklyvaluelane -count=1`: PASS.
 - `go vet -tags tossos_testseams ./internal/strategyflow ./internal/strategyrouter ./internal/continuationlane ./internal/reversallane ./internal/weeklyvaluelane`: PASS.
 - Production assembly, official Gateway CAS and full safety-loop integration remain pending by design.
+- `go test ./internal/journal -count=1`: PASS on the integrated stable tree (180.938s).
+- v25 focused/race/vet/diff checks and independent dormant-scope re-review: PASS/CLEAN.
+- `go test ./internal/app/engine -count=1`: PASS; full package race PASS (396.594s); vet PASS.
+- KR/US supervisor independent re-review after three Critical fixes: CLEAN.
 
 ## Verdict
 

@@ -16,6 +16,12 @@
 - Authority: package-private constructors; no broker/live transport, journal/gateway writer, toggle or approval
 - Pure strategy composition: GREEN (`internal/strategyflow`), paired KR/US continuation/reversal/weekly
   bindings, all `OFF/UNOBSERVED`, sealed candidate→router→lane→campaign/leg/risk lineage
+- Durable journal checkpoint: additive v25 preserves v24 and records the central owner fence,
+  per-market KR/US authority shape, q_final-bound lease shape and cold-restart discovery. Every
+  authority-bearing mutation is deliberately `ErrStrategyDispatchDormant`; no production mint exists.
+- Engine supervisor checkpoint: paired KR/US evaluation children start behind one barrier with independent
+  bounded queues. Market faults irreversibly disable only that in-memory child and emit immutable fault
+  evidence; no durable recovery/activation callback or production Runtime wiring exists yet.
 - Remaining: production coordinator/lineage persistence/Gateway CAS integration, full safety-loop fault injection, repository gates and final independent review
 
 No market was activated, no lease reached a broker, and no live order or operating setting changed.
