@@ -1,7 +1,7 @@
 # Review — a064-add-multi-market-strategy-evidence
 
 - Date: 2026-08-03
-- Stage: proposal freeze; production implementation not started
+- Stage: proposal freeze plus Wave 1A evidence-core implementation; runtime/journal integration remains pending
 - Voices: Manager scope/safety review, independent data/engineering/security review, final semantic re-review
 
 ## Findings and disposition
@@ -22,7 +22,71 @@
 - Final independent semantic re-review: PASS, no open blocker.
 - KR/US failure scopes remain independent; no broker, LIVE approval or operating-toggle authority added.
 
+## Wave 1A implementation evidence
+
+- Scope is limited to the new `internal/strategyevidence` package. No existing Go function was edited,
+  so the existing-function AST, Function Logic Map and Branch Test Map requirement is not applicable to
+  this slice. Candidate, journal, engine, official-client and console integration remain untouched here.
+- The pinned change base is recorded in `base-commit.txt`. `make sdd-sync` completed the CodeGraph sync
+  for eight changed files; the subsequent advisory CodeGraphContext update stalled and was interrupted
+  instead of waiting for its five-minute timeout. `codegraph status .` then reported the index up to date.
+- CodeGraph inspection located the candidate read boundary at `internal/candidate.Store.Candidates`, its
+  two direct callers, and a broad impact surface (218 symbols), supporting the decision to keep this slice
+  behind new ports. Existing SQLite lifecycle patterns use `modernc.org/sqlite`; evidence persistence has
+  its own connection, schema version and file path.
+- RED was captured as an undefined-contract compile failure before the package types existed. GREEN:
+  `go test ./internal/strategyevidence`, `go test -race ./internal/strategyevidence`, and
+  `go vet ./internal/strategyevidence` pass.
+- The schema analyzer reported parser false positives for the inline composite key/foreign keys. Runtime
+  PRAGMA tests prove `snapshot_items` has a two-column primary key and both declared foreign keys.
+- Independent review found wall-clock use in conflict quarantine. `Options.Clock` now defaults to
+  `clock.System()` and a fake-clock test pins the persisted nanosecond timestamp. A second boundary review
+  found RFC3339Nano TEXT ordering ambiguity; storage now uses fixed-width UTC nanoseconds with exact and
+  minus-one-nanosecond dual-cutoff tests.
+- Static inspection finds no `net/http`, external HTTP URL literal, broker, order, runtime toggle, journal
+  dependency or credential field in the model/store/projection path. Source access is an injected transport port only;
+  invalid/unverified policy and unavailable KRX contracts make zero transport calls.
+- Remaining unchecked tasks are intentional: journal snapshot lineage, runtime candidate/strategy wiring,
+  repository-wide gates and final independent implementation review remain outside this source-adapter slice.
+
+## Wave 1B official-source and trust-boundary evidence
+
+- Frozen contract metadata and synthetic official-schema fixtures are under
+  `internal/strategyevidence/testdata`. SEC is pinned to the documented submissions endpoint and declared
+  company/email identification with the official 10 requests/second ceiling. OpenDART is pinned to disclosure
+  list API `2019001`, page size at most 100 and a separate credential-provider boundary. KRX remains
+  `SOURCE_UNAVAILABLE` and cannot construct an adapter.
+- Deployment policies are minted from authority-specific endpoint/method/schema allowlists and sealed over
+  every runtime bound. Post-mint endpoint, method, schema, identity, page/byte/concurrency, deadline, rate,
+  retry or Retry-After mutation fails before transport. Calls and active concurrency share one injected budget
+  across adapter instances.
+- Follow-up independent review added request identity itself to the immutable seal preimage and pins OpenDART
+  to the exact `credential-provider` identity. A post-mint replacement with another syntactically valid SEC
+  company/email identity or alternate OpenDART identity now returns `SOURCE_DISABLED` with zero transport calls.
+- SEC additional-file pagination and OpenDART total-page/count metadata must complete consistently inside one
+  operation deadline and aggregate byte budget. Transport receives the remaining byte ceiling before body read.
+  Auth failure, schema/duplicate-key drift, partial pages, budget exhaustion and exhausted retries return typed
+  errors and never call the immutable batch sink.
+- Independent-review regressions are covered: `Store.Append` stamps `ingested_at` from its trusted clock;
+  snapshots bind issuer identity plus mapping version; same digest with changed provenance conflicts; conflict
+  quarantine stores only a redacted marker; canonical JSON rejects duplicate keys and normalizes equivalent
+  numeric forms; secret-like payload fields and typed-field mismatches are rejected; empty authority priority
+  fails closed. Credentials are closure-backed so ordinary and Go-syntax formatting cannot reveal raw values.
+- Financial-number canonicalization is exact decimal string arithmetic rather than fixed-precision floating
+  point. It preserves distinctions beyond 256 bits, normalizes equivalent coefficient/exponent forms, treats
+  negative zero as zero, and rejects number tokens over 1,024 bytes or normalized decimal exponents outside
+  ±1,000,000 before expensive expansion.
+- RED was captured first as undefined official adapter/mint/batch contracts, followed by failing adversarial
+  trust-boundary tests. GREEN: `go test -race ./internal/strategyevidence` and
+  `go vet ./internal/strategyevidence` pass. Static scan finds no concrete credential value, `net/http`, broker,
+  order, journal import, WTS fallback or operating-toggle call in the package.
+- Official references: SEC EDGAR API documentation
+  (`https://www.sec.gov/search-filings/edgar-application-programming-interfaces`), SEC fair-access FAQ
+  (`https://www.sec.gov/about/webmaster-frequently-asked-questions`), and OpenDART disclosure-list guide
+  (`https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019001`).
+
 ## Verdict
 
-Proposal freeze approved for RED implementation. Source credentials and numeric production budgets remain
-deployment inputs; their absence keeps the affected source disabled and is not an inferred approval.
+The evidence core and bounded official SEC/OpenDART source adapters are ready for integration review but do
+not complete a064. Journal snapshot lineage, dormant consumer wiring and repository-wide gates remain open.
+Credentials and numeric production budgets remain deployment inputs; absence keeps the affected source disabled.
