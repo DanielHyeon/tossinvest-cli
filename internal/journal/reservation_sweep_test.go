@@ -128,6 +128,23 @@ func insertTerminalFillSnapshot(t *testing.T, j *Journal, orderID, account, mark
 	}
 }
 
+func insertScopedFillSnapshot(t *testing.T, j *Journal, orderID, account, market, day, symbol, side string,
+	terminal, failClosed bool,
+) {
+	t.Helper()
+	if _, err := j.db.ExecContext(context.Background(), `
+		INSERT INTO scoped_fill_snapshots
+		  (order_id, account_ref, market, trading_day, symbol, side, state,
+		   terminal, fail_closed, quantity, filled_quantity, committed_at, reason_code, detail)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '10', ?, ?, ?, ?)`,
+		orderID, account, market, day, symbol, side, "TEST", boolToInt(terminal), boolToInt(failClosed),
+		map[bool]string{true: "0", false: "10"}[failClosed], j.nowString(),
+		map[bool]string{true: "UNKNOWN_BROKER_STATE", false: ""}[failClosed],
+		map[bool]string{true: "scoped broker state is unknown", false: ""}[failClosed]); err != nil {
+		t.Fatalf("insert scoped fill snapshot %s/%s: %v", account, orderID, err)
+	}
+}
+
 func reserveConfirmedSweepOrder(t *testing.T, j *Journal, decisionID, account, attemptID, orderID string) string {
 	t.Helper()
 	dec := recordEntryDecision(t, j, decisionID, account)
@@ -198,6 +215,67 @@ func TestOrphanSweepReleasesAnExactlyScopedTerminalFill(t *testing.T) {
 	if reservationState(t, j, reservationID).Held() {
 		t.Fatal("the exactly scoped terminal fill left its reservation held")
 	}
+}
+
+func TestOrphanSweepUsesScopedTerminalWhenLegacyMirrorBelongsToAnotherScope(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	const orderID = "scoped-only-terminal-order"
+	reservationID := reserveConfirmedSweepOrder(
+		t, j, "d-scoped-only", "acct-1", "attempt-scoped-only", orderID)
+	insertTerminalFillSnapshot(t, j, orderID, "acct-2", "kr", "2026-03-30", "005930", "BUY")
+	insertScopedFillSnapshot(t, j, orderID, "acct-1", "kr", "2026-03-30", "005930", "BUY", true, false)
+
+	sweep, err := j.SweepReservations(context.Background())
+	if err != nil {
+		t.Fatalf("SweepReservations: %v", err)
+	}
+	if len(sweep.Released) != 1 || sweep.Released[0].ReservationID != reservationID {
+		t.Fatalf("scoped terminal released %+v, want reservation %s", sweep.Released, reservationID)
+	}
+}
+
+func TestReservationsAwaitingOperatorUsesOnlyExactScopedFailClosedSnapshot(t *testing.T) {
+	t.Run("scoped failure is visible when another scope owns the mirror", func(t *testing.T) {
+		j, _ := openReservationJournal(t)
+		const orderID = "scoped-only-failure-order"
+		reservationID := reserveConfirmedSweepOrder(
+			t, j, "d-scoped-failure", "acct-1", "attempt-scoped-failure", orderID)
+		insertTerminalFillSnapshot(t, j, orderID, "acct-2", "kr", "2026-03-30", "005930", "BUY")
+		insertScopedFillSnapshot(t, j, orderID, "acct-1", "kr", "2026-03-30", "005930", "BUY", false, true)
+
+		alerts, err := j.ReservationsAwaitingOperator(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(alerts) != 1 || alerts[0].Reservation.ID != reservationID ||
+			alerts[0].Cause != AlertCauseBrokerStateUnknown {
+			t.Fatalf("operator alerts = %+v, want exact scoped fail-closed hold", alerts)
+		}
+	})
+
+	t.Run("another scope failure cannot label a healthy scoped hold", func(t *testing.T) {
+		j, _ := openReservationJournal(t)
+		const orderID = "other-scope-failure-order"
+		reserveConfirmedSweepOrder(t, j, "d-healthy-scope", "acct-1", "attempt-healthy-scope", orderID)
+		if _, err := j.db.ExecContext(context.Background(), `
+			INSERT INTO fill_snapshots
+			  (order_id, account_ref, symbol, market, trading_day, side, state,
+			   terminal, fail_closed, quantity, filled_quantity, committed_at, reason_code, detail)
+			VALUES (?, 'acct-2', '005930', 'kr', '2026-03-30', 'BUY',
+			        'UNKNOWN_BROKER_STATE', 0, 1, '10', '0', ?, 'unknown', 'other scope')`,
+			orderID, j.nowString()); err != nil {
+			t.Fatal(err)
+		}
+		insertScopedFillSnapshot(t, j, orderID, "acct-1", "kr", "2026-03-30", "005930", "BUY", false, false)
+
+		alerts, err := j.ReservationsAwaitingOperator(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(alerts) != 0 {
+			t.Fatalf("another scope fail-closed row produced false alerts: %+v", alerts)
+		}
+	})
 }
 
 func TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope(t *testing.T) {
@@ -319,6 +397,7 @@ func TestOrphanSweepDoesNotReleaseAFailClosedObservation(t *testing.T) {
 	confirmAttempt(t, j, dec, "attempt-orphan-unknown", "order-orphan-1")
 	if _, err := j.RecordFill(ctx, FillObservation{
 		OrderID: "order-orphan-1", Symbol: "005930", Market: "kr",
+		AccountRef: "acct-1", TradingDay: "2026-03-30", Side: "BUY",
 		State: "UNKNOWN_BROKER_STATE", Terminal: false, FailClosed: true,
 		Reason: "closed_without_fill_or_cancel", Detail: "closed with nothing filled and no cancellation",
 		Quantity: "10", FilledQuantity: "0", ObservedAt: j.nowString(),

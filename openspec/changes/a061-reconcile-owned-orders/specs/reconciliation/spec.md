@@ -8,6 +8,18 @@ An order classified as external because no local intent, confirmed mutation atte
 - **WHEN** reconciliation runs after a previously stored external open-order observation disappears from the broker open list
 - **THEN** the corrected local state contains no such open order, the diff contains no missing order for it, and the tracker failure counter does not increase because of it
 
+### Requirement: Open-order comparison preserves canonical identity
+
+Local reconstruction and authoritative broker comparison SHALL preserve account, market, market-local trading day, symbol, side, and opaque order identifier as one canonical identity. A broker order that shares only the opaque identifier MUST NOT satisfy a locally owned order in another scope. If broker evidence omits a field needed to distinguish multiple local candidates, the comparison MUST remain blocking instead of declaring a clean account.
+
+#### Scenario: Same identifier appears in another canonical scope
+- **WHEN** a locally owned order is absent but the broker snapshot contains the same opaque identifier with a different market, trading day, symbol, or side
+- **THEN** reconciliation reports the local order as missing and the broker order as external or conflicting, and operator recovery refuses release
+
+#### Scenario: Broker scope is insufficient for reused local identifiers
+- **WHEN** more than one local canonical order shares one opaque identifier and the broker payload cannot distinguish their required scope
+- **THEN** the comparison cannot match either by identifier alone and remains blocking for operator investigation
+
 ### Requirement: Reconcile release is durable before it is visible
 
 The tracker SHALL preserve an existing block and its entry-gate projection until the corresponding journal release commits. If persistence fails, the current reconciliation cycle MUST stop before automatic adoption. Permanent release SHALL require explicit operator identity, explanatory evidence, engine exclusion, and a fresh stable authoritative comparison with no blocking diff.

@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "1a9973b325d8be62dd5d0cdebe10988ac90c6e2114d5f2e1f0b545482b141a65",
+  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
   "package": "journal",
   "function": "guardTrackedFillIdentity",
   "receiver": "Journal",
   "signature": "Journal.guardTrackedFillIdentity(params=2, results=1)",
   "start": {
-    "line": 993,
+    "line": 1210,
     "column": 1
   },
   "end": {
-    "line": 1101,
+    "line": 1334,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 1084,
+        "line": 1317,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 1087,
+        "line": 1320,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 1092,
+        "line": 1325,
         "column": 2
       }
     }
@@ -43,28 +43,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 1085,
+        "line": 1318,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1088,
+        "line": 1321,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1097,
+        "line": 1330,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1100,
+        "line": 1333,
         "column": 2
       }
     }
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 995,
+        "line": 1212,
         "column": 9
       },
       "text": "Scan"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 995,
+        "line": 1212,
         "column": 9
       },
       "text": "j.db.QueryRowContext"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1079,
+        "line": 1312,
         "column": 13
       },
       "text": "string"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1080,
+        "line": 1313,
         "column": 21
       },
       "text": "string"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1080,
+        "line": 1313,
         "column": 40
       },
       "text": "string"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1081,
+        "line": 1314,
         "column": 21
       },
       "text": "string"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1081,
+        "line": 1314,
         "column": 40
       },
       "text": "string"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1084,
+        "line": 1317,
         "column": 5
       },
       "text": "errors.Is"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1088,
+        "line": 1321,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1090,
+        "line": 1323,
         "column": 14
       },
       "text": "fmt.Sprintf"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1091,
+        "line": 1324,
         "column": 3
       },
       "text": "normaliseMarket"
@@ -161,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1091,
+        "line": 1324,
         "column": 28
       },
       "text": "normaliseSymbol"
@@ -169,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1092,
+        "line": 1325,
         "column": 23
       },
       "text": "j.EnterReconcile"
@@ -177,7 +177,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1097,
+        "line": 1330,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -185,7 +185,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1100,
+        "line": 1333,
         "column": 9
       },
       "text": "fmt.Errorf"
@@ -195,21 +195,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 995,
+        "line": 1212,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1090,
+        "line": 1323,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1092,
+        "line": 1325,
         "column": 5
       }
     }

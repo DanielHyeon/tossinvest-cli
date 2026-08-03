@@ -1,10 +1,10 @@
 # Risk Pattern Report: `Detector.collect`
 
 Source: `internal/filldetect/detect.go`  
-AST source SHA-256: `b8e7aeaf3f2b1823793934701f01fe04bb47bc8c7ecdf300b5b41111ae88ebe9`
+AST source SHA-256: `5441296826821097f82da79215934616d295c31644f24c8c4126d5778594fb2b`
 
-- Risk class: journal/reconciliation ownership, persistence ordering, or verification helper.
+- Risk class: journal/reconciliation ownership, persistence ordering, migration, or test support.
 - Live broker mutation introduced: none.
-- Primary hazards reviewed: identifier reuse, cross-account/market/day leakage, legacy empty-scope ambiguity, non-atomic release, stale runtime projection, and reservation/nonce evidence loss.
-- Controls: canonical scoped evidence, confirmed AMEND lineage validation, durable fail-closed conflict, transaction boundaries, engine lock, stable official snapshots, and targeted plus race/full-suite tests.
-- Residual risk: broker evidence can still disagree legitimately; the system retains the reconciliation block for explicit operator review instead of guessing.
+- Reviewed hazards: cross-scope identifier reuse, legacy wildcard attribution, false-clean comparison, stale gate projection, early reservation release, and nonce evidence loss.
+- Controls: composite scoped storage, exact confirmed ownership/lineage, fail-closed ambiguity, transactions/engine lock, three stable official snapshots, and focused/full/race tests.
+- Residual mismatch remains operator-blocking rather than guessed away.

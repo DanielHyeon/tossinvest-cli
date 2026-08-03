@@ -197,3 +197,28 @@ func TestCompleteBrokerScopeSelectsExactlyOneReusedIdentity(t *testing.T) {
 		t.Fatalf("missing market = %q, want kr", got)
 	}
 }
+
+func TestOlderNonterminalReusedTradingDayCannotDisappearFromLocalComparison(t *testing.T) {
+	j := openJournal(t)
+	confirmScopedOrder(t, j, "intent-old-day", "attempt-old-day", "acct-7", "us", "2026-03-29", "AAPL", "BUY", "active-reused-id")
+	confirmScopedOrder(t, j, "intent-new-day", "attempt-new-day", "acct-7", "us", "2026-03-30", "AAPL", "BUY", "active-reused-id")
+
+	local, err := reconcile.LocalStateFromJournal(context.Background(), j, "acct-7")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(local.ScopedOpenOrders) != 2 {
+		t.Fatalf("scoped local orders = %+v, want both active trading-day identities", local.ScopedOpenOrders)
+	}
+	diff := reconcile.Comparer{}.Compare(reconcile.Snapshot{
+		AccountRef: "acct-7",
+		OpenOrders: []reconcile.BrokerOrder{{
+			OrderID: "active-reused-id", AccountRef: "acct-7", Market: "us",
+			TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY", Quantity: "1",
+		}},
+	}, local)
+	if !diff.BlocksEntry() || len(diff.MissingOrders) != 1 ||
+		diff.MissingOrders[0].TradingDay != "2026-03-29" {
+		t.Fatalf("diff = %+v, want older active canonical order reported missing", diff)
+	}
+}

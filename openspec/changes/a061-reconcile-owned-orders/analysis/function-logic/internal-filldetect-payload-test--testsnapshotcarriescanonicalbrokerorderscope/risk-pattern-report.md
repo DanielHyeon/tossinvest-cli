@@ -1,10 +1,10 @@
 # Risk Pattern Report: `TestSnapshotCarriesCanonicalBrokerOrderScope`
 
 Source: `internal/filldetect/payload_test.go`  
-AST source SHA-256: `efd2573ee79ff75e82219f73f6fdc135d5491b408ab180b28237e4b710d9061c`
+AST source SHA-256: `2a3179003b761f34a7ba63d94ba7f3c439689cc48bb00c04a23837a23f97fa9a`
 
-- Risk class: journal/reconciliation ownership, persistence ordering, or verification helper.
+- Risk class: journal/reconciliation ownership, persistence ordering, migration, or test support.
 - Live broker mutation introduced: none.
-- Primary hazards reviewed: identifier reuse, cross-account/market/day leakage, legacy empty-scope ambiguity, non-atomic release, stale runtime projection, and reservation/nonce evidence loss.
-- Controls: canonical scoped evidence, confirmed AMEND lineage validation, durable fail-closed conflict, transaction boundaries, engine lock, stable official snapshots, and targeted plus race/full-suite tests.
-- Residual risk: broker evidence can still disagree legitimately; the system retains the reconciliation block for explicit operator review instead of guessing.
+- Reviewed hazards: cross-scope identifier reuse, legacy wildcard attribution, false-clean comparison, stale gate projection, early reservation release, and nonce evidence loss.
+- Controls: composite scoped storage, exact confirmed ownership/lineage, fail-closed ambiguity, transactions/engine lock, three stable official snapshots, and focused/full/race tests.
+- Residual mismatch remains operator-blocking rather than guessed away.

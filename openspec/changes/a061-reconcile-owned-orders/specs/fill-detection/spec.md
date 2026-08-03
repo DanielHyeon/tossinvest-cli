@@ -31,3 +31,7 @@ The durable tracked-order source SHALL return a non-terminal fill snapshot only 
 #### Scenario: Legacy empty-scope evidence meets reused identifiers
 - **WHEN** a schema-v15 fill snapshot has no account or trading-day scope and its order or lineage endpoint is reused on another trading day in the same account and market
 - **THEN** the snapshot is not attributed to either reused tracked lineage scope, while a terminal snapshot in another market remains authoritative only for its matching market
+
+#### Scenario: Two canonical orders share one opaque identifier
+- **WHEN** two engine-owned orders in different canonical market, trading-day, symbol, or side scopes share the same broker order identifier
+- **THEN** their cumulative snapshots coexist durably and the detector polls, derives lineage, and applies each scope independently without overwriting or skipping either order

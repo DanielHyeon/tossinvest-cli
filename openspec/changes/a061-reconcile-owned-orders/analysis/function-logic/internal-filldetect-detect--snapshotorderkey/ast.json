@@ -1,0 +1,118 @@
+{
+  "file": "internal/filldetect/detect.go",
+  "source_sha256": "5441296826821097f82da79215934616d295c31644f24c8c4126d5778594fb2b",
+  "package": "filldetect",
+  "function": "snapshotOrderKey",
+  "signature": "snapshotOrderKey(params=1, results=2)",
+  "start": {
+    "line": 496,
+    "column": 1
+  },
+  "end": {
+    "line": 508,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 507,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 15
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 15
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 15
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 15
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 502,
+        "column": 15
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 502,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 505,
+        "column": 14
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 497,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 505,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

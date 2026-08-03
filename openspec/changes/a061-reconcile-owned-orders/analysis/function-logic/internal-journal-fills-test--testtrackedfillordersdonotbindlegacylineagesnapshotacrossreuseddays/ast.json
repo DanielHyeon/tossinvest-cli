@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/fills_test.go",
-  "source_sha256": "2004cd42dcb970e432f53ccef544de09a592485a848c3bf492015b5a4c67fbbb",
+  "source_sha256": "e322e6a62817b22a0ed66fb2c17067e2d8707c87e0ae69c648fa3bfc7c766c56",
   "package": "journal",
   "function": "TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays",
   "signature": "TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays(params=1, results=0)",
   "start": {
-    "line": 911,
+    "line": 1168,
     "column": 1
   },
   "end": {
-    "line": 936,
+    "line": 1193,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 923,
+        "line": 1180,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 928,
+        "line": 1185,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 931,
+        "line": 1188,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 932,
+        "line": 1189,
         "column": 3
       }
     }
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 912,
+        "line": 1169,
         "column": 7
       },
       "text": "openTestJournal"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 913,
+        "line": 1170,
         "column": 9
       },
       "text": "context.Background"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 919,
+        "line": 1176,
         "column": 2
       },
       "text": "recordConfirmedReplacement"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 920,
+        "line": 1177,
         "column": 2
       },
       "text": "recordConfirmedReplacement"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 921,
+        "line": 1178,
         "column": 12
       },
       "text": "observation"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 923,
+        "line": 1180,
         "column": 15
       },
       "text": "j.RecordFill"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 924,
+        "line": 1181,
         "column": 3
       },
       "text": "t.Fatal"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 927,
+        "line": 1184,
         "column": 18
       },
       "text": "j.TrackedFillOrders"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 929,
+        "line": 1186,
         "column": 3
       },
       "text": "t.Fatal"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 933,
+        "line": 1190,
         "column": 4
       },
       "text": "t.Fatalf"
@@ -133,63 +133,63 @@
     {
       "kind": ":=",
       "at": {
-        "line": 912,
+        "line": 1169,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 913,
+        "line": 1170,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 914,
+        "line": 1171,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 917,
+        "line": 1174,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 918,
+        "line": 1175,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 921,
+        "line": 1178,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 922,
+        "line": 1179,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 923,
+        "line": 1180,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 927,
+        "line": 1184,
         "column": 2
       }
     }

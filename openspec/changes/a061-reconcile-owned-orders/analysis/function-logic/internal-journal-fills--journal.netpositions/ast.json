@@ -1,0 +1,343 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
+  "package": "journal",
+  "function": "NetPositions",
+  "receiver": "Journal",
+  "signature": "Journal.NetPositions(params=1, results=2)",
+  "start": {
+    "line": 990,
+    "column": 1
+  },
+  "end": {
+    "line": 1045,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1016,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 1022,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1024,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1028,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1031,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1036,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 1041,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1017,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1025,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1037,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1044,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 991,
+        "column": 15
+      },
+      "text": "j.db.QueryContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1015,
+        "column": 3
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1015,
+        "column": 27
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1017,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1019,
+        "column": 8
+      },
+      "text": "rows.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1022,
+        "column": 6
+      },
+      "text": "rows.Next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1024,
+        "column": 13
+      },
+      "text": "rows.Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1025,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1027,
+        "column": 14
+      },
+      "text": "strconv.ParseFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1027,
+        "column": 33
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1027,
+        "column": 51
+      },
+      "text": "orZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1031,
+        "column": 6
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1031,
+        "column": 24
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1034,
+        "column": 10
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1034,
+        "column": 26
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1036,
+        "column": 12
+      },
+      "text": "rows.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1037,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1040,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1040,
+        "column": 33
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1042,
+        "column": 17
+      },
+      "text": "decimalString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 991,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1021,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1024,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1027,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1032,
+        "column": 4
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 1034,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1036,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1040,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1042,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1019,
+        "column": 2
+      },
+      "text": "rows.Close"
+    }
+  ],
+  "revision": "current"
+}

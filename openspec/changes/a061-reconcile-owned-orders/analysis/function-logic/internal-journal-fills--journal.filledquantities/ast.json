@@ -1,0 +1,296 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
+  "package": "journal",
+  "function": "FilledQuantities",
+  "receiver": "Journal",
+  "signature": "Journal.FilledQuantities(params=1, results=2)",
+  "start": {
+    "line": 949,
+    "column": 1
+  },
+  "end": {
+    "line": 977,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 952,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 958,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 960,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 964,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 969,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 973,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 953,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 961,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 970,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 976,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 950,
+        "column": 15
+      },
+      "text": "j.db.QueryContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 953,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 955,
+        "column": 8
+      },
+      "text": "rows.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 958,
+        "column": 6
+      },
+      "text": "rows.Next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 960,
+        "column": 13
+      },
+      "text": "rows.Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 961,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 963,
+        "column": 13
+      },
+      "text": "strconv.ParseFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 963,
+        "column": 32
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 963,
+        "column": 50
+      },
+      "text": "orZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 967,
+        "column": 10
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 967,
+        "column": 26
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 969,
+        "column": 12
+      },
+      "text": "rows.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 970,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 972,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 972,
+        "column": 33
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 974,
+        "column": 17
+      },
+      "text": "decimalString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 950,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 957,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 960,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 963,
+        "column": 3
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 967,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 969,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 972,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 974,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 955,
+        "column": 2
+      },
+      "text": "rows.Close"
+    }
+  ],
+  "revision": "current"
+}

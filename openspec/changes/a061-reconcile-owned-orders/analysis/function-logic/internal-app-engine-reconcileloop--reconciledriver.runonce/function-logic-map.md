@@ -7,45 +7,45 @@ Source SHA-256: `accaa4c5f6645d8af7be3f1cbcd9ec61a7efc9f1f022be26b39b53789d86776
 
 ## Inputs and invariants
 
-- Inputs are the parameters represented by `ReconcileDriver.RunOnce(params=1, results=1)` and any receiver state.
-- Opaque broker identifiers remain byte-preserving; account, market, trading-day, symbol, and side comparisons use the canonical scope defined by the change.
-- Broker mutation is outside this function-map change; reconciliation and journal ambiguity fail closed.
+- Inputs are the parameters in `ReconcileDriver.RunOnce(params=1, results=1)` and receiver state.
+- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
+- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | if | internal/app/engine/reconcileloop.go:387 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B2 | if | internal/app/engine/reconcileloop.go:393 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B3 | if | internal/app/engine/reconcileloop.go:404 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B4 | if | internal/app/engine/reconcileloop.go:410 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B5 | if | internal/app/engine/reconcileloop.go:416 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B6 | if | internal/app/engine/reconcileloop.go:417 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B7 | if | internal/app/engine/reconcileloop.go:425 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B8 | if | internal/app/engine/reconcileloop.go:426 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
+| B1 | if | internal/app/engine/reconcileloop.go:387 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B2 | if | internal/app/engine/reconcileloop.go:393 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B3 | if | internal/app/engine/reconcileloop.go:404 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B4 | if | internal/app/engine/reconcileloop.go:410 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B5 | if | internal/app/engine/reconcileloop.go:416 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B6 | if | internal/app/engine/reconcileloop.go:417 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B7 | if | internal/app/engine/reconcileloop.go:425 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B8 | if | internal/app/engine/reconcileloop.go:426 | Preserve the explicit condition, early return, and fail-closed error behavior. |
 
 ## Calls and live bindings
 
-- `d.note`: errors and returned state remain governed by the function's explicit branches.
-- `d.stabilise`: errors and returned state remain governed by the function's explicit branches.
-- `reconcile.LocalStateFromJournal`: errors and returned state remain governed by the function's explicit branches.
-- `fmt.Errorf`: errors and returned state remain governed by the function's explicit branches.
-- `Compare`: errors and returned state remain governed by the function's explicit branches.
-- `d.ingest.IngestExternalPositions`: errors and returned state remain governed by the function's explicit branches.
-- `len`: errors and returned state remain governed by the function's explicit branches.
-- `d.opts.Converge.ConvergeQuantities`: errors and returned state remain governed by the function's explicit branches.
-- `d.opts.Tracker.Refresh`: errors and returned state remain governed by the function's explicit branches.
-- `d.opts.Tracker.Observe`: errors and returned state remain governed by the function's explicit branches.
-- `d.opts.Tracker.Blocks`: errors and returned state remain governed by the function's explicit branches.
-- `d.judgeHoldings`: errors and returned state remain governed by the function's explicit branches.
-- Runtime configuration and official-read bindings are passed by callers; this function does not broaden live-trading authority.
+- `d.note`: returned errors and state follow the mapped branches.
+- `d.stabilise`: returned errors and state follow the mapped branches.
+- `reconcile.LocalStateFromJournal`: returned errors and state follow the mapped branches.
+- `fmt.Errorf`: returned errors and state follow the mapped branches.
+- `Compare`: returned errors and state follow the mapped branches.
+- `d.ingest.IngestExternalPositions`: returned errors and state follow the mapped branches.
+- `len`: returned errors and state follow the mapped branches.
+- `d.opts.Converge.ConvergeQuantities`: returned errors and state follow the mapped branches.
+- `d.opts.Tracker.Refresh`: returned errors and state follow the mapped branches.
+- `d.opts.Tracker.Observe`: returned errors and state follow the mapped branches.
+- `d.opts.Tracker.Blocks`: returned errors and state follow the mapped branches.
+- `d.judgeHoldings`: returned errors and state follow the mapped branches.
+- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- 18 assignment point(s) are AST-bound; durable writes and in-memory publication occur only through the calls and successful paths listed above.
-- Errors propagate without synthesizing ownership, clearing a durable block, or releasing held reservations early.
-- Migration fallback accepts legacy empty scope only where the surrounding canonical evidence proves an unambiguous owner.
+- The AST contains 18 assignment point(s); durable writes precede release visibility.
+- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
+- Errors propagate without projection, adoption, reservation release, or recovery success claims.
 
 ## Safety conclusion
 
-The current AST, every branch ID, and the regression/full-suite verification are bound to this source hash. Ambiguity remains durable and fail-closed, while external broker observations cannot become engine-owned without positive local evidence.
+Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.

@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/schema_test.go",
-  "source_sha256": "9d6a1364f76a4dc3c6e9854066182ca18e59be53458d64e42f13a9e74df95d7b",
+  "source_sha256": "5e56ff9da74a1775d91251b7360bbf9bddecbcdd2ee5c7f2063ab3d9213cb396",
   "package": "journal",
   "function": "TestSchemaTablesAndColumns",
   "signature": "TestSchemaTablesAndColumns(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 256,
+    "line": 263,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 122,
+        "line": 123,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "for",
       "at": {
-        "line": 126,
+        "line": 127,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 128,
+        "line": 129,
         "column": 3
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 133,
+        "line": 134,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 137,
+        "line": 138,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "range",
       "at": {
-        "line": 249,
+        "line": 256,
         "column": 2
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 252,
+        "line": 259,
         "column": 3
       }
     }
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 120,
+        "line": 121,
         "column": 15
       },
       "text": "j.db.QueryContext"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 123,
+        "line": 124,
         "column": 3
       },
       "text": "t.Fatal"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 126,
+        "line": 127,
         "column": 6
       },
       "text": "rows.Next"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 128,
+        "line": 129,
         "column": 13
       },
       "text": "rows.Scan"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 129,
+        "line": 130,
         "column": 4
       },
       "text": "t.Fatal"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 131,
+        "line": 132,
         "column": 15
       },
       "text": "append"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 133,
+        "line": 134,
         "column": 12
       },
       "text": "rows.Err"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 134,
+        "line": 135,
         "column": 3
       },
       "text": "t.Fatal"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 136,
+        "line": 137,
         "column": 2
       },
       "text": "rows.Close"
@@ -163,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 137,
+        "line": 138,
         "column": 5
       },
       "text": "strings.Join"
@@ -171,7 +171,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 137,
+        "line": 138,
         "column": 37
       },
       "text": "strings.Join"
@@ -179,7 +179,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 138,
+        "line": 139,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -187,7 +187,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 250,
+        "line": 257,
         "column": 10
       },
       "text": "tableColumns"
@@ -195,7 +195,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 251,
+        "line": 258,
         "column": 3
       },
       "text": "sort.Strings"
@@ -203,7 +203,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 252,
+        "line": 259,
         "column": 6
       },
       "text": "strings.Join"
@@ -211,7 +211,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 252,
+        "line": 259,
         "column": 32
       },
       "text": "strings.Join"
@@ -219,7 +219,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 253,
+        "line": 260,
         "column": 4
       },
       "text": "t.Errorf"
@@ -250,42 +250,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 120,
+        "line": 121,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 128,
+        "line": 129,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 131,
+        "line": 132,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 133,
+        "line": 134,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 141,
+        "line": 142,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 250,
+        "line": 257,
         "column": 3
       }
     }

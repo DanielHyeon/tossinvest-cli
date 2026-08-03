@@ -1,0 +1,39 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
+  "package": "journal",
+  "function": "fillSnapshotScopeOf",
+  "signature": "fillSnapshotScopeOf(params=1, results=1)",
+  "start": {
+    "line": 233,
+    "column": 1
+  },
+  "end": {
+    "line": 238,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 9
+      },
+      "text": "canonicalFillSnapshotScope"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

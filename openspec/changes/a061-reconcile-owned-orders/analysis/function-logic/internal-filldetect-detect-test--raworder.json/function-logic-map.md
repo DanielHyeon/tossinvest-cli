@@ -3,44 +3,46 @@
 Source: `internal/filldetect/detect_test.go`  
 Function: `rawOrder.json`  
 Signature: `rawOrder.json(params=0, results=1)`  
-Source SHA-256: `ebc9d90930d66137b55d15c99aee9d721ccf01eaa5d516b3b00755ae963be6fc`
+Source SHA-256: `7fe5825a894d212e278325c39d6b369d975ef46f006b913627daa8c7264e2e26`
 
 ## Inputs and invariants
 
-- Inputs are the parameters represented by `rawOrder.json(params=0, results=1)` and any receiver state.
-- Opaque broker identifiers remain byte-preserving; account, market, trading-day, symbol, and side comparisons use the canonical scope defined by the change.
-- Broker mutation is outside this function-map change; reconciliation and journal ambiguity fail closed.
+- Inputs are the parameters in `rawOrder.json(params=0, results=1)` and receiver state.
+- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
+- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | if | internal/filldetect/detect_test.go:227 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B2 | if | internal/filldetect/detect_test.go:230 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B3 | if | internal/filldetect/detect_test.go:233 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B4 | if | internal/filldetect/detect_test.go:236 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B5 | if | internal/filldetect/detect_test.go:248 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B6 | if | internal/filldetect/detect_test.go:252 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B7 | switch | internal/filldetect/detect_test.go:255 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B8 | case | internal/filldetect/detect_test.go:256 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B9 | case | internal/filldetect/detect_test.go:258 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B10 | if | internal/filldetect/detect_test.go:261 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
+| B1 | if | internal/filldetect/detect_test.go:255 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B2 | if | internal/filldetect/detect_test.go:258 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B3 | if | internal/filldetect/detect_test.go:261 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B4 | if | internal/filldetect/detect_test.go:264 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B5 | if | internal/filldetect/detect_test.go:267 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B6 | if | internal/filldetect/detect_test.go:270 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B7 | if | internal/filldetect/detect_test.go:282 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B8 | if | internal/filldetect/detect_test.go:286 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B9 | switch | internal/filldetect/detect_test.go:289 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B10 | case | internal/filldetect/detect_test.go:290 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B11 | case | internal/filldetect/detect_test.go:292 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B12 | if | internal/filldetect/detect_test.go:295 | Preserve the explicit condition, early return, and fail-closed error behavior. |
 
 ## Calls and live bindings
 
-- `quote`: errors and returned state remain governed by the function's explicit branches.
-- `append`: errors and returned state remain governed by the function's explicit branches.
-- `orZero`: errors and returned state remain governed by the function's explicit branches.
-- `strings.Join`: errors and returned state remain governed by the function's explicit branches.
-- `json.RawMessage`: errors and returned state remain governed by the function's explicit branches.
-- Runtime configuration and official-read bindings are passed by callers; this function does not broaden live-trading authority.
+- `quote`: returned errors and state follow the mapped branches.
+- `append`: returned errors and state follow the mapped branches.
+- `orZero`: returned errors and state follow the mapped branches.
+- `strings.Join`: returned errors and state follow the mapped branches.
+- `json.RawMessage`: returned errors and state follow the mapped branches.
+- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- 12 assignment point(s) are AST-bound; durable writes and in-memory publication occur only through the calls and successful paths listed above.
-- Errors propagate without synthesizing ownership, clearing a durable block, or releasing held reservations early.
-- Migration fallback accepts legacy empty scope only where the surrounding canonical evidence proves an unambiguous owner.
+- The AST contains 14 assignment point(s); durable writes precede release visibility.
+- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
+- Errors propagate without projection, adoption, reservation release, or recovery success claims.
 
 ## Safety conclusion
 
-The current AST, every branch ID, and the regression/full-suite verification are bound to this source hash. Ambiguity remains durable and fail-closed, while external broker observations cannot become engine-owned without positive local evidence.
+Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.

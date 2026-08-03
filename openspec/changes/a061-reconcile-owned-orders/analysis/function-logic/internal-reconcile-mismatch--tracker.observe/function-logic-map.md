@@ -7,68 +7,68 @@ Source SHA-256: `a0ffbb279e773f7648b0a844e4bb783fdd671125003f4eb8619a827ed0688b9
 
 ## Inputs and invariants
 
-- Inputs are the parameters represented by `Tracker.Observe(params=2, results=2)` and any receiver state.
-- Opaque broker identifiers remain byte-preserving; account, market, trading-day, symbol, and side comparisons use the canonical scope defined by the change.
-- Broker mutation is outside this function-map change; reconciliation and journal ambiguity fail closed.
+- Inputs are the parameters in `Tracker.Observe(params=2, results=2)` and receiver state.
+- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
+- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | if | internal/reconcile/mismatch.go:366 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B2 | if | internal/reconcile/mismatch.go:373 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B3 | else | internal/reconcile/mismatch.go:396 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B4 | range | internal/reconcile/mismatch.go:380 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B5 | if | internal/reconcile/mismatch.go:381 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B6 | if | internal/reconcile/mismatch.go:388 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B7 | range | internal/reconcile/mismatch.go:398 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B8 | if | internal/reconcile/mismatch.go:399 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B9 | if | internal/reconcile/mismatch.go:405 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B10 | if | internal/reconcile/mismatch.go:418 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B11 | range | internal/reconcile/mismatch.go:440 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B12 | range | internal/reconcile/mismatch.go:443 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B13 | if | internal/reconcile/mismatch.go:444 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B14 | range | internal/reconcile/mismatch.go:449 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B15 | range | internal/reconcile/mismatch.go:453 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B16 | range | internal/reconcile/mismatch.go:456 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B17 | if | internal/reconcile/mismatch.go:462 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B18 | else | internal/reconcile/mismatch.go:475 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B19 | range | internal/reconcile/mismatch.go:467 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B20 | if | internal/reconcile/mismatch.go:468 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
+| B1 | if | internal/reconcile/mismatch.go:366 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B2 | if | internal/reconcile/mismatch.go:373 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B3 | else | internal/reconcile/mismatch.go:396 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B4 | range | internal/reconcile/mismatch.go:380 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B5 | if | internal/reconcile/mismatch.go:381 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B6 | if | internal/reconcile/mismatch.go:388 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B7 | range | internal/reconcile/mismatch.go:398 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B8 | if | internal/reconcile/mismatch.go:399 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B9 | if | internal/reconcile/mismatch.go:405 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B10 | if | internal/reconcile/mismatch.go:418 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B11 | range | internal/reconcile/mismatch.go:440 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B12 | range | internal/reconcile/mismatch.go:443 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B13 | if | internal/reconcile/mismatch.go:444 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B14 | range | internal/reconcile/mismatch.go:449 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B15 | range | internal/reconcile/mismatch.go:453 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B16 | range | internal/reconcile/mismatch.go:456 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B17 | if | internal/reconcile/mismatch.go:462 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B18 | else | internal/reconcile/mismatch.go:475 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B19 | range | internal/reconcile/mismatch.go:467 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B20 | if | internal/reconcile/mismatch.go:468 | Preserve the explicit condition, early return, and fail-closed error behavior. |
 
 ## Calls and live bindings
 
-- `Now`: errors and returned state remain governed by the function's explicit branches.
-- `t.clock`: errors and returned state remain governed by the function's explicit branches.
-- `t.interval`: errors and returned state remain governed by the function's explicit branches.
-- `t.maxFailures`: errors and returned state remain governed by the function's explicit branches.
-- `t.mu.Lock`: errors and returned state remain governed by the function's explicit branches.
-- `diff.BlocksEntry`: errors and returned state remain governed by the function's explicit branches.
-- `strings.ToUpper`: errors and returned state remain governed by the function's explicit branches.
-- `strings.TrimSpace`: errors and returned state remain governed by the function's explicit branches.
-- `append`: errors and returned state remain governed by the function's explicit branches.
-- `blocksFor`: errors and returned state remain governed by the function's explicit branches.
-- `block.Key`: errors and returned state remain governed by the function's explicit branches.
-- `fmt.Sprintf`: errors and returned state remain governed by the function's explicit branches.
-- `permanent.Key`: errors and returned state remain governed by the function's explicit branches.
-- `sortBlocks`: errors and returned state remain governed by the function's explicit branches.
-- `t.syncGate`: errors and returned state remain governed by the function's explicit branches.
-- `t.snapshotBlocks`: errors and returned state remain governed by the function's explicit branches.
-- `make`: errors and returned state remain governed by the function's explicit branches.
-- `len`: errors and returned state remain governed by the function's explicit branches.
-- `t.persist`: errors and returned state remain governed by the function's explicit branches.
-- `delete`: errors and returned state remain governed by the function's explicit branches.
-- `hasPermanentQuantityAccountBlock`: errors and returned state remain governed by the function's explicit branches.
-- `now.Add`: errors and returned state remain governed by the function's explicit branches.
-- `t.mu.Unlock`: errors and returned state remain governed by the function's explicit branches.
-- Runtime configuration and official-read bindings are passed by callers; this function does not broaden live-trading authority.
+- `Now`: returned errors and state follow the mapped branches.
+- `t.clock`: returned errors and state follow the mapped branches.
+- `t.interval`: returned errors and state follow the mapped branches.
+- `t.maxFailures`: returned errors and state follow the mapped branches.
+- `t.mu.Lock`: returned errors and state follow the mapped branches.
+- `diff.BlocksEntry`: returned errors and state follow the mapped branches.
+- `strings.ToUpper`: returned errors and state follow the mapped branches.
+- `strings.TrimSpace`: returned errors and state follow the mapped branches.
+- `append`: returned errors and state follow the mapped branches.
+- `blocksFor`: returned errors and state follow the mapped branches.
+- `block.Key`: returned errors and state follow the mapped branches.
+- `fmt.Sprintf`: returned errors and state follow the mapped branches.
+- `permanent.Key`: returned errors and state follow the mapped branches.
+- `sortBlocks`: returned errors and state follow the mapped branches.
+- `t.syncGate`: returned errors and state follow the mapped branches.
+- `t.snapshotBlocks`: returned errors and state follow the mapped branches.
+- `make`: returned errors and state follow the mapped branches.
+- `len`: returned errors and state follow the mapped branches.
+- `t.persist`: returned errors and state follow the mapped branches.
+- `delete`: returned errors and state follow the mapped branches.
+- `hasPermanentQuantityAccountBlock`: returned errors and state follow the mapped branches.
+- `now.Add`: returned errors and state follow the mapped branches.
+- `t.mu.Unlock`: returned errors and state follow the mapped branches.
+- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- 39 assignment point(s) are AST-bound; durable writes and in-memory publication occur only through the calls and successful paths listed above.
-- Errors propagate without synthesizing ownership, clearing a durable block, or releasing held reservations early.
-- Migration fallback accepts legacy empty scope only where the surrounding canonical evidence proves an unambiguous owner.
+- The AST contains 39 assignment point(s); durable writes precede release visibility.
+- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
+- Errors propagate without projection, adoption, reservation release, or recovery success claims.
 
 ## Safety conclusion
 
-The current AST, every branch ID, and the regression/full-suite verification are bound to this source hash. Ambiguity remains durable and fail-closed, while external broker observations cannot become engine-owned without positive local evidence.
+Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.

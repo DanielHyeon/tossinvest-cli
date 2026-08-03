@@ -3,87 +3,84 @@
 Source: `internal/journal/fills.go`  
 Function: `Journal.RecordFill`  
 Signature: `Journal.RecordFill(params=2, results=2)`  
-Source SHA-256: `1a9973b325d8be62dd5d0cdebe10988ac90c6e2114d5f2e1f0b545482b141a65`
+Source SHA-256: `8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a`
 
 ## Inputs and invariants
 
-- Inputs are the parameters represented by `Journal.RecordFill(params=2, results=2)` and any receiver state.
-- Opaque broker identifiers remain byte-preserving; account, market, trading-day, symbol, and side comparisons use the canonical scope defined by the change.
-- Broker mutation is outside this function-map change; reconciliation and journal ambiguity fail closed.
+- Inputs are the parameters in `Journal.RecordFill(params=2, results=2)` and receiver state.
+- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
+- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | if | internal/journal/fills.go:259 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B2 | if | internal/journal/fills.go:263 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B3 | if | internal/journal/fills.go:267 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B4 | if | internal/journal/fills.go:279 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B5 | switch | internal/journal/fills.go:285 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B6 | case | internal/journal/fills.go:286 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B7 | case | internal/journal/fills.go:287 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B8 | case | internal/journal/fills.go:289 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B9 | if | internal/journal/fills.go:293 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B10 | if | internal/journal/fills.go:299 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B11 | if | internal/journal/fills.go:304 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B12 | if | internal/journal/fills.go:311 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B13 | if | internal/journal/fills.go:320 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B14 | if | internal/journal/fills.go:324 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B15 | if | internal/journal/fills.go:332 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B16 | if | internal/journal/fills.go:339 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B17 | if | internal/journal/fills.go:340 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B18 | if | internal/journal/fills.go:356 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B19 | if | internal/journal/fills.go:379 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B20 | if | internal/journal/fills.go:380 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B21 | if | internal/journal/fills.go:395 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B22 | if | internal/journal/fills.go:396 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B23 | if | internal/journal/fills.go:434 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B24 | if | internal/journal/fills.go:442 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B25 | if | internal/journal/fills.go:446 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B26 | if | internal/journal/fills.go:458 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B27 | if | internal/journal/fills.go:459 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
-| B28 | if | internal/journal/fills.go:464 | Preserve the explicit condition, early return, and fail-closed error behavior at this branch. |
+| B1 | if | internal/journal/fills.go:299 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B2 | if | internal/journal/fills.go:303 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B3 | if | internal/journal/fills.go:307 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B4 | if | internal/journal/fills.go:319 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B5 | switch | internal/journal/fills.go:326 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B6 | case | internal/journal/fills.go:327 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B7 | case | internal/journal/fills.go:328 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B8 | case | internal/journal/fills.go:330 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B9 | if | internal/journal/fills.go:336 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B10 | if | internal/journal/fills.go:341 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B11 | if | internal/journal/fills.go:348 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B12 | if | internal/journal/fills.go:357 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B13 | if | internal/journal/fills.go:361 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B14 | if | internal/journal/fills.go:369 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B15 | if | internal/journal/fills.go:376 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B16 | if | internal/journal/fills.go:377 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B17 | if | internal/journal/fills.go:393 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B18 | if | internal/journal/fills.go:397 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B19 | if | internal/journal/fills.go:398 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B20 | if | internal/journal/fills.go:413 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B21 | if | internal/journal/fills.go:414 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B22 | if | internal/journal/fills.go:452 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B23 | if | internal/journal/fills.go:460 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B24 | if | internal/journal/fills.go:464 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B25 | if | internal/journal/fills.go:476 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B26 | if | internal/journal/fills.go:477 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B27 | if | internal/journal/fills.go:482 | Preserve the explicit condition, early return, and fail-closed error behavior. |
 
 ## Calls and live bindings
 
-- `strings.TrimSpace`: errors and returned state remain governed by the function's explicit branches.
-- `fmt.Errorf`: errors and returned state remain governed by the function's explicit branches.
-- `strconv.ParseFloat`: errors and returned state remain governed by the function's explicit branches.
-- `orZero`: errors and returned state remain governed by the function's explicit branches.
-- `math.IsNaN`: errors and returned state remain governed by the function's explicit branches.
-- `math.IsInf`: errors and returned state remain governed by the function's explicit branches.
-- `j.nowString`: errors and returned state remain governed by the function's explicit branches.
-- `j.db.BeginTx`: errors and returned state remain governed by the function's explicit branches.
-- `tx.Rollback`: errors and returned state remain governed by the function's explicit branches.
-- `scanFillSnapshot`: errors and returned state remain governed by the function's explicit branches.
-- `tx.QueryRowContext`: errors and returned state remain governed by the function's explicit branches.
-- `errors.Is`: errors and returned state remain governed by the function's explicit branches.
-- `fillSnapshotScopeChanged`: errors and returned state remain governed by the function's explicit branches.
-- `classifyFillRefusal`: errors and returned state remain governed by the function's explicit branches.
-- `markFillRefused`: errors and returned state remain governed by the function's explicit branches.
-- `alertsForOrder`: errors and returned state remain governed by the function's explicit branches.
-- `tx.Commit`: errors and returned state remain governed by the function's explicit branches.
-- `nearlyZero`: errors and returned state remain governed by the function's explicit branches.
-- `sameSnapshot`: errors and returned state remain governed by the function's explicit branches.
-- `tx.ExecContext`: errors and returned state remain governed by the function's explicit branches.
-- `strings.ToUpper`: errors and returned state remain governed by the function's explicit branches.
-- `boolToInt`: errors and returned state remain governed by the function's explicit branches.
-- `recordExecutionCorrection`: errors and returned state remain governed by the function's explicit branches.
-- `firstNonEmpty`: errors and returned state remain governed by the function's explicit branches.
-- `decimalString`: errors and returned state remain governed by the function's explicit branches.
-- `resolveFillOrigin`: errors and returned state remain governed by the function's explicit branches.
-- `ownershipHandle.invalidate`: errors and returned state remain governed by the function's explicit branches.
-- `releaseReservationsForOrder`: errors and returned state remain governed by the function's explicit branches.
-- `fmt.Sprintf`: errors and returned state remain governed by the function's explicit branches.
-- `j.runApplyHooks`: errors and returned state remain governed by the function's explicit branches.
-- Runtime configuration and official-read bindings are passed by callers; this function does not broaden live-trading authority.
+- `strings.TrimSpace`: returned errors and state follow the mapped branches.
+- `fmt.Errorf`: returned errors and state follow the mapped branches.
+- `strconv.ParseFloat`: returned errors and state follow the mapped branches.
+- `orZero`: returned errors and state follow the mapped branches.
+- `math.IsNaN`: returned errors and state follow the mapped branches.
+- `math.IsInf`: returned errors and state follow the mapped branches.
+- `j.nowString`: returned errors and state follow the mapped branches.
+- `j.db.BeginTx`: returned errors and state follow the mapped branches.
+- `tx.Rollback`: returned errors and state follow the mapped branches.
+- `fillSnapshotScopeOf`: returned errors and state follow the mapped branches.
+- `lookupFillSnapshotScoped`: returned errors and state follow the mapped branches.
+- `errors.Is`: returned errors and state follow the mapped branches.
+- `classifyFillRefusal`: returned errors and state follow the mapped branches.
+- `markFillRefused`: returned errors and state follow the mapped branches.
+- `alertsForOrder`: returned errors and state follow the mapped branches.
+- `tx.Commit`: returned errors and state follow the mapped branches.
+- `nearlyZero`: returned errors and state follow the mapped branches.
+- `sameSnapshot`: returned errors and state follow the mapped branches.
+- `upsertFillSnapshot`: returned errors and state follow the mapped branches.
+- `recordExecutionCorrection`: returned errors and state follow the mapped branches.
+- `firstNonEmpty`: returned errors and state follow the mapped branches.
+- `tx.ExecContext`: returned errors and state follow the mapped branches.
+- `decimalString`: returned errors and state follow the mapped branches.
+- `resolveFillOrigin`: returned errors and state follow the mapped branches.
+- `ownershipHandle.invalidate`: returned errors and state follow the mapped branches.
+- `releaseReservationsForOrder`: returned errors and state follow the mapped branches.
+- `fmt.Sprintf`: returned errors and state follow the mapped branches.
+- `j.runApplyHooks`: returned errors and state follow the mapped branches.
+- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- 40 assignment point(s) are AST-bound; durable writes and in-memory publication occur only through the calls and successful paths listed above.
-- Errors propagate without synthesizing ownership, clearing a durable block, or releasing held reservations early.
-- Migration fallback accepts legacy empty scope only where the surrounding canonical evidence proves an unambiguous owner.
+- The AST contains 39 assignment point(s); durable writes precede release visibility.
+- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
+- Errors propagate without projection, adoption, reservation release, or recovery success claims.
 
 ## Safety conclusion
 
-The current AST, every branch ID, and the regression/full-suite verification are bound to this source hash. Ambiguity remains durable and fail-closed, while external broker observations cannot become engine-owned without positive local evidence.
+Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.

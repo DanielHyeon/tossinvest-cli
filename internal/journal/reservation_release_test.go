@@ -171,7 +171,8 @@ func TestDerivedTerminalFillReleasesTheHold(t *testing.T) {
 	_ = attempt
 
 	res, err := j.RecordFill(ctx, FillObservation{
-		OrderID: "order-fill-1", Symbol: "005930", Market: "kr",
+		OrderID: "order-fill-1", AccountRef: "acct-1", Symbol: "005930", Market: "kr",
+		TradingDay: "2026-03-30", Side: "BUY",
 		State: "FILLED", Terminal: true,
 		Quantity: "10", FilledQuantity: "10", AveragePrice: "70000",
 		ObservedAt: j.nowString(),
@@ -254,7 +255,8 @@ func TestUnknownBrokerStateKeepsTheReservationHeld(t *testing.T) {
 	// What internal/brokerstate produces for that combination: not terminal,
 	// fail-closed, with the reason naming the ambiguity.
 	res, err := j.RecordFill(ctx, FillObservation{
-		OrderID: "order-unknown-1", Symbol: "005930", Market: "kr",
+		OrderID: "order-unknown-1", AccountRef: "acct-1", Symbol: "005930", Market: "kr",
+		TradingDay: "2026-03-30", Side: "BUY",
 		State: "UNKNOWN_BROKER_STATE", Terminal: false, FailClosed: true,
 		Reason:   "closed_without_fill_or_cancel",
 		Detail:   "closed with no fill, no cancellation timestamp and no successor",
@@ -287,6 +289,42 @@ func TestUnknownBrokerStateKeepsTheReservationHeld(t *testing.T) {
 	}
 	if len(awaiting) != 1 || awaiting[0].Cause != AlertCauseBrokerStateUnknown {
 		t.Fatalf("want one UNKNOWN_BROKER_STATE alert, got %+v", awaiting)
+	}
+}
+
+func TestFailClosedObservationAlertsOnlyItsCanonicalReservationScope(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	const orderID = "reused-fail-closed-order"
+	reservations := map[string]string{}
+	for _, account := range []string{"acct-1", "acct-2"} {
+		decision := recordEntryDecision(t, j, "d-alert-"+account, account)
+		out, err := j.Reserve(ctx, exposureReserve(j, decision.ID, account,
+			"100", "0", "10000", mustVersion(t, j, account)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		confirmAttempt(t, j, decision, "attempt-alert-"+account, orderID)
+		reservations[account] = out.Reservations[0].ID
+	}
+
+	res, err := j.RecordFill(ctx, FillObservation{
+		OrderID: orderID, AccountRef: "acct-1", Market: "kr", TradingDay: "2026-03-30",
+		Symbol: "005930", Side: "BUY", State: "UNKNOWN_BROKER_STATE", FailClosed: true,
+		Reason: "closed_without_fill_or_cancel", Detail: "canonical scope is ambiguous at the broker",
+		Quantity: "10", FilledQuantity: "0", ObservedAt: j.nowString(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.ReservationAlerts) != 1 ||
+		res.ReservationAlerts[0].Reservation.ID != reservations["acct-1"] {
+		t.Fatalf("reservation alerts = %+v, want only acct-1 scope", res.ReservationAlerts)
+	}
+	for _, id := range reservations {
+		if !reservationState(t, j, id).Held() {
+			t.Fatalf("fail-closed observation released reservation %s", id)
+		}
 	}
 }
 

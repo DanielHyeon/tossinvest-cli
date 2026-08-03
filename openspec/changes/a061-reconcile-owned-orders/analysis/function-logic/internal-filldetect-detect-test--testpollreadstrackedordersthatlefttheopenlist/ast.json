@@ -1,0 +1,218 @@
+{
+  "file": "internal/filldetect/detect_test.go",
+  "source_sha256": "7fe5825a894d212e278325c39d6b369d975ef46f006b913627daa8c7264e2e26",
+  "package": "filldetect_test",
+  "function": "TestPollReadsTrackedOrdersThatLeftTheOpenList",
+  "signature": "TestPollReadsTrackedOrdersThatLeftTheOpenList(params=1, results=0)",
+  "start": {
+    "line": 376,
+    "column": 1
+  },
+  "end": {
+    "line": 402,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 392,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 395,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 13
+      },
+      "text": "json"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 11
+      },
+      "text": "newPager"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 20
+      },
+      "text": "page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 18
+      },
+      "text": "newDetector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 16
+      },
+      "text": "d.PollOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 27
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 12
+      },
+      "text": "reader.readIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 30
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 9
+      },
+      "text": "ledger.appliedIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 400,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 377,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 386,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 392,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

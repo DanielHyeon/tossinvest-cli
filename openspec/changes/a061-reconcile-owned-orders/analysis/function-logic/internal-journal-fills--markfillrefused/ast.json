@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "1a9973b325d8be62dd5d0cdebe10988ac90c6e2114d5f2e1f0b545482b141a65",
+  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
   "package": "journal",
   "function": "markFillRefused",
   "signature": "markFillRefused(params=7, results=1)",
   "start": {
-    "line": 522,
+    "line": 540,
     "column": 1
   },
   "end": {
-    "line": 547,
+    "line": 558,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 524,
+        "line": 543,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 525,
+        "line": 544,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 534,
+        "line": 554,
         "column": 2
       }
     }
@@ -42,28 +42,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 530,
+        "line": 545,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 532,
+        "line": 547,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 544,
+        "line": 555,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 546,
+        "line": 557,
         "column": 2
       }
     }
@@ -72,15 +72,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 525,
-        "column": 16
+        "line": 544,
+        "column": 13
       },
-      "text": "tx.ExecContext"
+      "text": "updateFillSnapshotRefusal"
     },
     {
       "kind": "call",
       "at": {
-        "line": 530,
+        "line": 545,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -88,55 +88,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 534,
-        "column": 15
-      },
-      "text": "tx.ExecContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 540,
+        "line": 554,
         "column": 12
       },
-      "text": "strings.TrimSpace"
+      "text": "insertRefusedFillSnapshot"
     },
     {
       "kind": "call",
       "at": {
-        "line": 541,
-        "column": 3
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 541,
-        "column": 38
-      },
-      "text": "strings.ToUpper"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 541,
-        "column": 54
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 542,
-        "column": 14
-      },
-      "text": "orZero"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 544,
+        "line": 555,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -146,14 +106,56 @@
     {
       "kind": ":=",
       "at": {
-        "line": 525,
+        "line": 542,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 544,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 534,
+        "line": 549,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 550,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 551,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 553,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 554,
         "column": 5
       }
     }

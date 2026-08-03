@@ -216,15 +216,25 @@ func validReleaseReason(reason string) bool {
 // alertsForOrder reports the holds an order's fail-closed observation left
 // standing, so the caller can raise the operator alert at the moment the
 // ambiguity was observed rather than on the next sweep.
-func alertsForOrder(ctx context.Context, tx *sql.Tx, orderID, cause, detail string) ([]ReservationAlert, error) {
-	if orderID == "" {
+func alertsForOrder(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope, cause, detail string) ([]ReservationAlert, error) {
+	scope = canonicalFillSnapshotScope(scope)
+	if !scope.complete() {
 		return nil, nil
 	}
-	rows, err := tx.QueryContext(ctx, reservationSelect+
-		` WHERE state = ? AND attempt_id IN (SELECT id FROM mutation_attempts WHERE broker_order_id = ?)`,
-		ReservationHeld, orderID)
+	rows, err := tx.QueryContext(ctx, `
+		SELECT r.id, r.decision_id, r.attempt_id, r.account_ref, r.kind, r.amount,
+		       r.currency, r.trading_day, r.snapshot_as_of, r.state, r.released_at, r.release_reason
+		  FROM risk_reservations r
+		  JOIN mutation_attempts a ON a.id = r.attempt_id
+		  JOIN intents i ON i.id = a.intent_id
+		 WHERE r.state = ? AND r.decision_id = a.decision_id
+		   AND a.broker_order_id = ?
+		   AND TRIM(i.account_ref) = ? AND LOWER(TRIM(i.market)) = ?
+		   AND TRIM(i.trading_day) = ? AND UPPER(TRIM(i.symbol)) = ? AND UPPER(TRIM(i.side)) = ?`,
+		ReservationHeld, scope.OrderID, scope.AccountRef, scope.Market,
+		scope.TradingDay, scope.Symbol, scope.Side)
 	if err != nil {
-		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", orderID, err)
+		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", scope.OrderID, err)
 	}
 	defer rows.Close()
 
@@ -242,7 +252,7 @@ func alertsForOrder(ctx context.Context, tx *sql.Tx, orderID, cause, detail stri
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", orderID, err)
+		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", scope.OrderID, err)
 	}
 	return out, nil
 }
@@ -529,7 +539,7 @@ func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]
 		side          string
 		intentOwners  int
 	}
-	rows, err := tx.QueryContext(ctx, `
+	rows, err := tx.QueryContext(ctx, allFillSnapshotsCTE+`
 		SELECT r.id, i.account_ref, f.order_id, i.market, i.trading_day, i.symbol, i.side,
 		       (SELECT count(DISTINCT owner_intent.id)
 		          FROM mutation_attempts owner_attempt
@@ -544,7 +554,7 @@ func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]
 		  FROM risk_reservations r
 		  JOIN mutation_attempts a ON a.id = r.attempt_id
 		  JOIN intents i ON i.id = a.intent_id
-		  JOIN fill_snapshots f ON f.order_id = a.broker_order_id
+		  JOIN all_fill_snapshots f ON f.order_id = a.broker_order_id
 		 WHERE r.state = ? AND a.state = ?
 		   AND f.terminal = 1 AND f.fail_closed = 0
 		   AND r.decision_id = a.decision_id
@@ -719,13 +729,21 @@ func (j *Journal) OperatorReleaseReservation(ctx context.Context, req OperatorRe
 //     case the derivation refuses to read as an expiry).
 func (j *Journal) ReservationsAwaitingOperator(ctx context.Context) ([]ReservationAlert, error) {
 	rows, err := j.db.QueryContext(ctx,
-		`SELECT r.id, r.decision_id, r.attempt_id, r.account_ref, r.kind, r.amount,
+		allFillSnapshotsCTE+` SELECT r.id, r.decision_id, r.attempt_id, r.account_ref, r.kind, r.amount,
 		        r.currency, r.trading_day, r.snapshot_as_of, r.state, r.released_at,
 		        r.release_reason, a.state, f.fail_closed, f.reason_code, f.detail
 		 FROM risk_reservations r
 		 JOIN mutation_attempts a ON a.id = r.attempt_id
-		 LEFT JOIN fill_snapshots f ON f.order_id = a.broker_order_id
+		 JOIN intents i ON i.id = a.intent_id
+		 LEFT JOIN all_fill_snapshots f
+		   ON f.order_id = a.broker_order_id
+		  AND TRIM(f.account_ref) = TRIM(i.account_ref)
+		  AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
+		  AND TRIM(f.trading_day) = TRIM(i.trading_day)
+		  AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
+		  AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side))
 		 WHERE r.state = ? AND (a.state = ? OR f.fail_closed = 1)
+		   AND r.decision_id = a.decision_id
 		 ORDER BY r.rowid`,
 		ReservationHeld, string(StateUnresolvedInDoubt))
 	if err != nil {

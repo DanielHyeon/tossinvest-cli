@@ -1,0 +1,40 @@
+{
+  "file": "internal/filldetect/detect.go",
+  "source_sha256": "5441296826821097f82da79215934616d295c31644f24c8c4126d5778594fb2b",
+  "package": "filldetect",
+  "function": "String",
+  "receiver": "canonicalOrderKey",
+  "signature": "canonicalOrderKey.String(params=0, results=1)",
+  "start": {
+    "line": 469,
+    "column": 1
+  },
+  "end": {
+    "line": 472,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 470,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

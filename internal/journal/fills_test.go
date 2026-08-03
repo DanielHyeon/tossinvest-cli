@@ -549,6 +549,102 @@ func TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID(t *
 	}
 }
 
+func TestTrackedAndLiveOrdersKeepTwoNonterminalReusedTradingDays(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	confirm := func(intentID, attemptID, day string) {
+		attempt, err := j.Prepare(ctx, PrepareRequest{
+			Intent: Intent{
+				ID: intentID, Market: "us", TradingDay: day, AccountRef: "acct-1",
+				Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "1",
+				Price: "100", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
+			},
+			Kind: KindPlace, AttemptID: attemptID,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkDispatchStarted(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.MarkAcked(ctx, "active-reused-day-id"); err != nil {
+			t.Fatal(err)
+		}
+		if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	confirm("active-old-day", "active-old-attempt", "2026-03-29")
+	confirm("active-new-day", "active-new-attempt", "2026-03-30")
+	for _, day := range []string{"2026-03-29", "2026-03-30"} {
+		obs := observation("active-reused-day-id", "0")
+		obs.TradingDay = day
+		if _, err := j.RecordFill(ctx, obs); err != nil {
+			t.Fatalf("RecordFill(%s): %v", day, err)
+		}
+	}
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	days := map[string]bool{}
+	for _, order := range tracked {
+		if order.OrderID == "active-reused-day-id" {
+			days[order.TradingDay] = true
+		}
+	}
+	if len(days) != 2 || !days["2026-03-29"] || !days["2026-03-30"] {
+		t.Fatalf("tracked reused days = %+v (all=%+v), want both nonterminal scopes", days, tracked)
+	}
+
+	live, err := j.LiveOrdersForSymbol(ctx, "acct-1", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	liveDays := map[string]bool{}
+	for _, order := range live {
+		if order.OrderID == "active-reused-day-id" {
+			liveDays[order.TradingDay] = true
+		}
+	}
+	if len(liveDays) != 2 {
+		t.Fatalf("live reused days = %+v (all=%+v), want both nonterminal scopes", liveDays, live)
+	}
+}
+
+func TestRecordFillRejectsPartialScopeWithoutOverwritingOrRepeatingDelta(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	trusted := observation("partial-scope-reused-id", "3")
+	if _, err := j.RecordFill(ctx, trusted); err != nil {
+		t.Fatal(err)
+	}
+	partial := trusted
+	partial.TradingDay = ""
+	partial.FilledQuantity = "5"
+	for attempt := 1; attempt <= 2; attempt++ {
+		if _, err := j.RecordFill(ctx, partial); !errors.Is(err, ErrInvalidRequest) {
+			t.Fatalf("partial observation %d error = %v, want ErrInvalidRequest", attempt, err)
+		}
+	}
+	stored, err := j.LookupFillScoped(ctx, fillSnapshotScopeOf(trusted))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.FilledQuantity != "3" || stored.TradingDay != trusted.TradingDay {
+		t.Fatalf("trusted scoped snapshot was overwritten: %+v", stored)
+	}
+	var events int
+	if err := j.db.QueryRowContext(ctx,
+		`SELECT count(*) FROM fill_events WHERE order_id = ?`, trusted.OrderID).Scan(&events); err != nil {
+		t.Fatal(err)
+	}
+	if events != 1 {
+		t.Fatalf("fill events = %d, want one trusted delta and no repeated partial delta", events)
+	}
+}
+
 func TestRecordFillKeepsReusedOrderIDSnapshotsInTheirCanonicalScopes(t *testing.T) {
 	j := openTestJournal(t)
 	ctx := context.Background()

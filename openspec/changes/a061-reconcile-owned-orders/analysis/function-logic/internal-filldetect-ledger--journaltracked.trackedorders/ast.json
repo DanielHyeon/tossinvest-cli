@@ -1,16 +1,16 @@
 {
   "file": "internal/filldetect/ledger.go",
-  "source_sha256": "59f7c08036ddcbab21f9b9e938856c39bec98b2f38c64b39ba9ce334986547db",
+  "source_sha256": "75966bf1507d412f48b88efddab42f045fff31f45c76bc9cf43dfc0a634242c4",
   "package": "filldetect",
   "function": "TrackedOrders",
   "receiver": "JournalTracked",
   "signature": "JournalTracked.TrackedOrders(params=1, results=2)",
   "start": {
-    "line": 107,
+    "line": 125,
     "column": 1
   },
   "end": {
-    "line": 128,
+    "line": 149,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 108,
+        "line": 126,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 111,
+        "line": 129,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 115,
+        "line": 133,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 119,
+        "line": 137,
         "column": 2
       }
     }
@@ -51,28 +51,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 109,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 112,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 116,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
         "line": 127,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 130,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 134,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
         "column": 2
       }
     }
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 109,
+        "line": 127,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 111,
+        "line": 129,
         "column": 5
       },
       "text": "strings.TrimSpace"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 130,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 114,
+        "line": 132,
         "column": 15
       },
       "text": "t.Journal.TrackedFillOrders"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 118,
+        "line": 136,
         "column": 9
       },
       "text": "make"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 118,
+        "line": 136,
         "column": 33
       },
       "text": "len"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 120,
+        "line": 138,
         "column": 9
       },
       "text": "append"
@@ -139,21 +139,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 114,
+        "line": 132,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 118,
+        "line": 136,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 120,
+        "line": 138,
         "column": 3
       }
     }

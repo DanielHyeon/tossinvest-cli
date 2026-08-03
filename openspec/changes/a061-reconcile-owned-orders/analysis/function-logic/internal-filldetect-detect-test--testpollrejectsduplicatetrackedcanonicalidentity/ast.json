@@ -1,0 +1,203 @@
+{
+  "file": "internal/filldetect/detect_test.go",
+  "source_sha256": "7fe5825a894d212e278325c39d6b369d975ef46f006b913627daa8c7264e2e26",
+  "package": "filldetect_test",
+  "function": "TestPollRejectsDuplicateTrackedCanonicalIdentity",
+  "signature": "TestPollRejectsDuplicateTrackedCanonicalIdentity(params=1, results=0)",
+  "start": {
+    "line": 484,
+    "column": 1
+  },
+  "end": {
+    "line": 509,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 503,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 506,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 18
+      },
+      "text": "newDetector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 33
+      },
+      "text": "newPager"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 42
+      },
+      "text": "page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 15
+      },
+      "text": "d.PollOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 26
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 4
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 21
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 503,
+        "column": 12
+      },
+      "text": "reader.readIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 503,
+        "column": 30
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 504,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 12
+      },
+      "text": "ledger.appliedSnapshots"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 506,
+        "column": 39
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 485,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 499,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 503,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 506,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

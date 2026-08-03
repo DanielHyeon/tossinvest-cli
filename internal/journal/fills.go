@@ -242,6 +242,14 @@ func (scope FillSnapshotScope) complete() bool {
 		scope.TradingDay != "" && scope.Symbol != "" && scope.Side != ""
 }
 
+// legacyUnscoped is the only incomplete identity accepted for a new journal
+// observation. Schema-v15 snapshots carried symbol and market, but had no
+// account, trading-day, or side columns. A partially populated v16 identity is
+// neither that legacy shape nor a canonical key and cannot be made idempotent.
+func (scope FillSnapshotScope) legacyUnscoped() bool {
+	return scope.OrderID != "" && scope.AccountRef == "" && scope.TradingDay == "" && scope.Side == ""
+}
+
 // ExecutionCorrection is one recorded restatement of an already-observed
 // execution: same cumulative quantity, a different average price or amount.
 //
@@ -299,6 +307,12 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	if strings.TrimSpace(obs.OrderID) == "" {
 		return FillResult{}, fmt.Errorf("%w: a fill snapshot needs an order id", ErrInvalidRequest)
 	}
+	scope := fillSnapshotScopeOf(obs)
+	if !scope.complete() && !scope.legacyUnscoped() {
+		return FillResult{}, fmt.Errorf(
+			"%w: fill snapshot %q has a partial canonical scope; account, market, trading day, symbol, and side must be complete together",
+			ErrInvalidRequest, obs.OrderID)
+	}
 	filled, err := strconv.ParseFloat(strings.TrimSpace(orZero(obs.FilledQuantity)), 64)
 	if err != nil {
 		return FillResult{}, fmt.Errorf("%w: filled quantity %q is not a decimal",
@@ -321,7 +335,6 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	}
 	defer tx.Rollback()
 
-	scope := fillSnapshotScopeOf(obs)
 	prev, err := lookupFillSnapshotScoped(ctx, tx, scope)
 	switch {
 	case err == nil:
@@ -353,7 +366,7 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		// what an expiry would look like, [미측정 — 2b 2.1]) leaves the hold
 		// standing, and the operator is told which holds it is standing on
 		// (design D5: 만료 추정으로 해제하지 않는다).
-		alerts, err := alertsForOrder(ctx, tx, orderID, ReasonFillStateUnknown, refusal.detail)
+		alerts, err := alertsForOrder(ctx, tx, scope, ReasonFillStateUnknown, refusal.detail)
 		if err != nil {
 			return res, err
 		}
@@ -1073,12 +1086,6 @@ func (j *Journal) TrackedFillOrders(ctx context.Context, accountRefs ...string) 
 			SELECT c.order_id, c.intent_id, c.account_ref, c.symbol, c.market, c.trading_day, c.side
 			  FROM all_confirmed_orders c
 			 WHERE (? = '' OR c.account_ref = ?)
-			   AND NOT EXISTS (
-				SELECT 1 FROM all_confirmed_orders newer
-				 WHERE newer.order_id = c.order_id AND newer.account_ref = c.account_ref
-				   AND UPPER(TRIM(newer.market)) = UPPER(TRIM(c.market))
-				   AND TRIM(newer.trading_day) > TRIM(c.trading_day)
-			   )
 		), valid_lineage AS (
 			SELECT s.parent_order_id, s.child_order_id, s.intent_id, s.attempt_id,
 			       s.account_ref, s.symbol, s.market, s.trading_day, s.side
@@ -1380,11 +1387,6 @@ func (j *Journal) LiveOrdersForSymbol(ctx context.Context, accountRef, market, s
 		), selected_orders AS (
 			SELECT c.* FROM confirmed_orders c
 			 WHERE c.account_ref = ? AND c.market = ? AND c.symbol = ?
-			   AND NOT EXISTS (
-			     SELECT 1 FROM confirmed_orders newer
-			      WHERE newer.order_id = c.order_id AND newer.account_ref = c.account_ref
-			        AND UPPER(TRIM(newer.market)) = UPPER(TRIM(c.market))
-			        AND TRIM(newer.trading_day) > TRIM(c.trading_day))
 		)
 		SELECT c.order_id, c.intent_id, c.account_ref, c.market, c.trading_day,
 		       c.symbol, c.side, c.quantity, c.price, c.currency

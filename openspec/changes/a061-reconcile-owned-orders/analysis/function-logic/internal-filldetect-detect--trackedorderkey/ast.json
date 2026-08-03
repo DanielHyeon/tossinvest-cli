@@ -1,0 +1,158 @@
+{
+  "file": "internal/filldetect/detect.go",
+  "source_sha256": "5441296826821097f82da79215934616d295c31644f24c8c4126d5778594fb2b",
+  "package": "filldetect",
+  "function": "trackedOrderKey",
+  "signature": "trackedOrderKey(params=2, results=2)",
+  "start": {
+    "line": 474,
+    "column": 1
+  },
+  "end": {
+    "line": 494,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 483,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 488,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 485,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 489,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 493,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 15
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 15
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 15
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 15
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 15
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 485,
+        "column": 31
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 489,
+        "column": 31
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

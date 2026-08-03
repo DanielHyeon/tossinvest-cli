@@ -33,4 +33,10 @@ Decision: ACCEPT, P0=0, P1=0.
 
 ### Test — 2026-08-03
 
-Pending independent final test verdict and repository-wide delivery gates.
+Initial decision: REJECT, P0=0, P1=1, P2=3.
+
+- P1: snapshot persistence, detector deduplication/lineage, and reconciliation comparison still collapsed canonical identities back to `order_id`; a different-scope broker order could make recovery falsely clean.
+- Required remediation: composite durable snapshot identity, canonical detector keys, canonical local/broker comparison, and an end-to-end reused-identifier regression.
+- P2 follow-ups requested: direct legacy non-lineage reuse, decision-bound reservation negative coverage, and production recovery integration coverage.
+
+Final verdict is pending remediation, repeated focused/race tests, and repository-wide delivery gates.

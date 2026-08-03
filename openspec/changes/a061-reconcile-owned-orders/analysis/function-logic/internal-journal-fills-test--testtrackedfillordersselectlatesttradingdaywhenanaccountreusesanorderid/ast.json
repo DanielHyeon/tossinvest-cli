@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/fills_test.go",
-  "source_sha256": "2004cd42dcb970e432f53ccef544de09a592485a848c3bf492015b5a4c67fbbb",
+  "source_sha256": "e322e6a62817b22a0ed66fb2c17067e2d8707c87e0ae69c648fa3bfc7c766c56",
   "package": "journal",
   "function": "TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID",
   "signature": "TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 547,
+    "line": 550,
     "column": 2
   },
   "branches": [
@@ -89,7 +89,7 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 541,
+        "line": 544,
         "column": 2
       }
     },
@@ -97,7 +97,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 544,
+        "line": 547,
         "column": 2
       }
     }
@@ -294,12 +294,12 @@
         "line": 540,
         "column": 17
       },
-      "text": "j.LookupFill"
+      "text": "j.LookupFillScoped"
     },
     {
       "kind": "call",
       "at": {
-        "line": 542,
+        "line": 545,
         "column": 3
       },
       "text": "t.Fatal"
@@ -307,7 +307,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 545,
+        "line": 548,
         "column": 3
       },
       "text": "t.Fatalf"

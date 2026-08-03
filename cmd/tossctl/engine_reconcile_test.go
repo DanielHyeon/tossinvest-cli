@@ -5,10 +5,12 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
 
@@ -313,5 +315,93 @@ func TestEngineReconcileResolveDoesNotReportSuccessWhenPersistenceFails(t *testi
 	}
 	if strings.Contains(output, "released") {
 		t.Fatalf("output = %q, must not claim release before durable persistence", output)
+	}
+}
+
+func TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), journal.DBFileName)
+	open := func() *journal.Journal {
+		j, err := journal.Open(ctx, journal.Options{
+			Path: path,
+			FSProber: journal.FixedFSProber(journal.FSInfo{
+				Name: "ext4", Magic: journal.MagicExt,
+			}),
+		})
+		if err != nil {
+			t.Fatalf("open journal: %v", err)
+		}
+		return j
+	}
+
+	j := open()
+	for _, symbol := range []string{"AAPL", "MSFT"} {
+		if _, entered, err := j.EnterReconcile(ctx, journal.EnterReconcileRequest{
+			AccountRef: "acct-7", Symbol: symbol,
+			Cause:    journal.ReconcileCauseQuantityMismatch,
+			Evidence: "pre-fix external order was attributed as engine-owned",
+		}); err != nil || !entered {
+			t.Fatalf("enter reconcile %s: entered=%v err=%v", symbol, entered, err)
+		}
+	}
+	tracker := &reconcile.Tracker{Journal: j, AccountRef: "acct-7"}
+	if err := tracker.Restore(ctx); err != nil {
+		t.Fatalf("restore tracker: %v", err)
+	}
+
+	snapshots := stableReconcileResolveSnapshots()
+	next := 0
+	runtime := reconcileResolveRuntime{
+		accountRef: "acct-7",
+		collect: func(context.Context) (reconcile.Snapshot, error) {
+			snapshot := snapshots[next]
+			next++
+			return snapshot, nil
+		},
+		localState: func(ctx context.Context, accountRef string) (reconcile.LocalState, error) {
+			return reconcile.LocalStateFromJournal(ctx, j, accountRef)
+		},
+		compare: reconcile.Comparer{}.Compare,
+		validate: func() error {
+			blocks := tracker.Blocks()
+			if len(blocks) != 2 {
+				return errors.New("expected both durable quantity mismatch blocks")
+			}
+			for _, block := range blocks {
+				if block.Cause != journal.ReconcileCauseQuantityMismatch {
+					return errors.New("unexpected non-quantity reconcile cause")
+				}
+			}
+			return nil
+		},
+		resolve: tracker.Resolve,
+		close:   j.Close,
+	}
+	released := false
+	output, err := executeReconcileResolve(t, reconcileResolveDeps{
+		journalDir: func(*rootOptions) (string, error) { return filepath.Dir(path), nil },
+		acquire: func(string) (reconcileResolveLock, error) {
+			return &reconcileResolveTestLock{path: path + ".lock", released: &released}, nil
+		},
+		build: func(context.Context, *rootOptions) (reconcileResolveRuntime, error) {
+			return runtime, nil
+		},
+		sleep: func(context.Context, time.Duration) error { return nil },
+	}, "--confirm", "--operator", "ops-1", "--note", "fresh official snapshots agree")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if !released || !strings.Contains(output, "released") {
+		t.Fatalf("release acknowledgement: lock=%v output=%q", released, output)
+	}
+
+	check := open()
+	defer check.Close()
+	active, err := check.ActiveReconcileStates(ctx)
+	if err != nil {
+		t.Fatalf("read active reconcile states: %v", err)
+	}
+	if len(active) != 0 {
+		t.Fatalf("active states after atomic CLI release = %+v, want none", active)
 	}
 }

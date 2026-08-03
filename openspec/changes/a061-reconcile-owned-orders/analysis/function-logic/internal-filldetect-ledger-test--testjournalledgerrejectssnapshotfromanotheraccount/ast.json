@@ -1,0 +1,133 @@
+{
+  "file": "internal/filldetect/ledger_test.go",
+  "source_sha256": "bec446ca895a16f15bd76144da044c9308c3d8d5f71e2959e04fc83b77fa78bb",
+  "package": "filldetect_test",
+  "function": "TestJournalLedgerRejectsSnapshotFromAnotherAccount",
+  "signature": "TestJournalLedgerRejectsSnapshotFromAnotherAccount(params=1, results=0)",
+  "start": {
+    "line": 344,
+    "column": 1
+  },
+  "end": {
+    "line": 355,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 352,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 7
+      },
+      "text": "openLedgerJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 33
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 47
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 12
+      },
+      "text": "ledger.Apply"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 25
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 20
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 37
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 346,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 347,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 348,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

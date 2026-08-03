@@ -1,0 +1,348 @@
+{
+  "file": "internal/journal/fills_test.go",
+  "source_sha256": "e322e6a62817b22a0ed66fb2c17067e2d8707c87e0ae69c648fa3bfc7c766c56",
+  "package": "journal",
+  "function": "TestNetPositionsJoinsReusedOrderIDOnlyWithinCanonicalScope",
+  "signature": "TestNetPositionsJoinsReusedOrderIDOnlyWithinCanonicalScope(params=1, results=0)",
+  "start": {
+    "line": 705,
+    "column": 1
+  },
+  "end": {
+    "line": 749,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 717,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 720,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 723,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 726,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 733,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 738,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 743,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 746,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 706,
+        "column": 7
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 707,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 709,
+        "column": 19
+      },
+      "text": "j.Prepare"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 718,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 720,
+        "column": 13
+      },
+      "text": "attempt.MarkDispatchStarted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 721,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 723,
+        "column": 13
+      },
+      "text": "attempt.MarkAcked"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 724,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 726,
+        "column": 13
+      },
+      "text": "attempt.Settle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 727,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 730,
+        "column": 2
+      },
+      "text": "confirm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 731,
+        "column": 2
+      },
+      "text": "confirm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 732,
+        "column": 9
+      },
+      "text": "observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 733,
+        "column": 15
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 734,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 736,
+        "column": 10
+      },
+      "text": "observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 738,
+        "column": 15
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 739,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 742,
+        "column": 14
+      },
+      "text": "j.NetPositions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 744,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 747,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 706,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 707,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 708,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 709,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 720,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 723,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 726,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 732,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 733,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 736,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 737,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 738,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 742,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "1a9973b325d8be62dd5d0cdebe10988ac90c6e2114d5f2e1f0b545482b141a65",
+  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
   "package": "journal",
   "function": "sameSnapshot",
   "signature": "sameSnapshot(params=2, results=1)",
   "start": {
-    "line": 552,
+    "line": 694,
     "column": 1
   },
   "end": {
-    "line": 566,
+    "line": 708,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 553,
+        "line": 695,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 553,
+        "line": 695,
         "column": 9
       },
       "text": "orZero"
@@ -34,7 +34,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 553,
+        "line": 695,
         "column": 39
       },
       "text": "orZero"
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 554,
+        "line": 696,
         "column": 3
       },
       "text": "strings.TrimSpace"
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 554,
+        "line": 696,
         "column": 40
       },
       "text": "strings.TrimSpace"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 555,
+        "line": 697,
         "column": 3
       },
       "text": "strings.TrimSpace"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 555,
+        "line": 697,
         "column": 40
       },
       "text": "strings.TrimSpace"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 556,
+        "line": 698,
         "column": 3
       },
       "text": "strings.EqualFold"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 556,
+        "line": 698,
         "column": 21
       },
       "text": "strings.TrimSpace"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 556,
+        "line": 698,
         "column": 50
       },
       "text": "strings.TrimSpace"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 564,
+        "line": 706,
         "column": 3
       },
       "text": "orZero"
@@ -106,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 564,
+        "line": 706,
         "column": 27
       },
       "text": "orZero"

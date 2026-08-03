@@ -1,15 +1,15 @@
 {
   "file": "internal/reconcile/compare.go",
-  "source_sha256": "3dabc46253e922cfeb82603773013e9b81cc3b5a4fa9086873a48833e58036f7",
+  "source_sha256": "36ce21d173549fe4b957c6132a56993887fb62dfe3acaa7c9afd39a6e61154b2",
   "package": "reconcile",
   "function": "LocalStateFromJournal",
   "signature": "LocalStateFromJournal(params=3, results=2)",
   "start": {
-    "line": 145,
+    "line": 198,
     "column": 1
   },
   "end": {
-    "line": 184,
+    "line": 243,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 146,
+        "line": 199,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 150,
+        "line": 203,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 154,
+        "line": 207,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 163,
+        "line": 217,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 171,
+        "line": 225,
         "column": 3
       }
     }
@@ -58,35 +58,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 147,
+        "line": 200,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 151,
+        "line": 204,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 155,
+        "line": 208,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 174,
+        "line": 228,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 183,
+        "line": 242,
         "column": 2
       }
     }
@@ -95,7 +95,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 147,
+        "line": 200,
         "column": 24
       },
       "text": "fmt.Errorf"
@@ -103,7 +103,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 149,
+        "line": 202,
         "column": 20
       },
       "text": "HeldBySymbol"
@@ -111,7 +111,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 153,
+        "line": 206,
         "column": 18
       },
       "text": "j.TrackedFillOrders"
@@ -119,23 +119,39 @@
     {
       "kind": "call",
       "at": {
-        "line": 161,
-        "column": 15
+        "line": 214,
+        "column": 21
       },
       "text": "make"
     },
     {
       "kind": "call",
       "at": {
-        "line": 161,
-        "column": 43
+        "line": 214,
+        "column": 49
       },
       "text": "len"
     },
     {
       "kind": "call",
       "at": {
-        "line": 164,
+        "line": 215,
+        "column": 21
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 56
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
         "column": 19
       },
       "text": "j.ResolveCurrentOrderIDScoped"
@@ -143,7 +159,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 233,
+        "column": 21
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
         "column": 21
       },
       "text": "strings.ToUpper"
@@ -151,7 +175,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 234,
         "column": 37
       },
       "text": "strings.TrimSpace"
@@ -159,7 +183,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 180,
+        "line": 235,
         "column": 21
       },
       "text": "strings.ToLower"
@@ -167,45 +191,91 @@
     {
       "kind": "call",
       "at": {
-        "line": 180,
+        "line": 235,
         "column": 37
       },
       "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 21
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 21
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 37
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 26
+      },
+      "text": "order.Identity"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 149,
+        "line": 202,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 153,
+        "line": 206,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 158,
+        "line": 211,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 164,
+        "line": 218,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 230,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 176,
+        "line": 239,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 240,
         "column": 3
       }
     }

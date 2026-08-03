@@ -1,15 +1,15 @@
 {
   "file": "internal/filldetect/payload_test.go",
-  "source_sha256": "efd2573ee79ff75e82219f73f6fdc135d5491b408ab180b28237e4b710d9061c",
+  "source_sha256": "2a3179003b761f34a7ba63d94ba7f3c439689cc48bb00c04a23837a23f97fa9a",
   "package": "filldetect_test",
   "function": "TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset",
   "signature": "TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset(params=1, results=0)",
   "start": {
-    "line": 63,
+    "line": 64,
     "column": 1
   },
   "end": {
-    "line": 70,
+    "line": 71,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 67,
+        "line": 68,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 64,
+        "line": 65,
         "column": 10
       },
       "text": "pollOne"
@@ -35,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 68,
+        "line": 69,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -45,7 +45,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 64,
+        "line": 65,
         "column": 2
       }
     }

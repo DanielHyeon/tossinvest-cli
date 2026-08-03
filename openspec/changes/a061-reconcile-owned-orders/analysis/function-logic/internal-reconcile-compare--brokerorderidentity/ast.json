@@ -1,0 +1,71 @@
+{
+  "file": "internal/reconcile/compare.go",
+  "source_sha256": "36ce21d173549fe4b957c6132a56993887fb62dfe3acaa7c9afd39a6e61154b2",
+  "package": "reconcile",
+  "function": "brokerOrderIdentity",
+  "signature": "brokerOrderIdentity(params=2, results=1)",
+  "start": {
+    "line": 507,
+    "column": 1
+  },
+  "end": {
+    "line": 516,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 509,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 512,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 9
+      },
+      "text": "canonical"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 508,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 510,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}
