@@ -2,7 +2,7 @@
 
 - Updated: 2026-08-04
 - Overall: IN PROGRESS
-- Current wave: shared KR/US projection plus pure immutable deployment guard GREEN; actual deployment remains pending
+- Current wave: shared KR/US projection, pure lane-performance attribution and immutable deployment guard GREEN
 - Runtime authority: read-only and dormant by default; no lane, activation, Guardian, Gateway, broker or operating-toggle writer
 
 ## Completed in the operational projection wave
@@ -36,6 +36,8 @@
 | Deployment-guard package tests (`-count=1`, `-count=25`) | PASS |
 | Deployment-guard race tests and vet | PASS |
 | Existing Compose/API separation static test | PASS |
+| Full performance package tests and race tests | PASS |
+| Performance package vet | PASS |
 | Strict OpenSpec validation | PASS |
 | `git diff --check` | PASS |
 
@@ -58,10 +60,28 @@
   Compose and operations documentation keep `tossos:local` development-only and require a separate
   digest-pinned release override.
 
+## Completed in the lane-performance wave
+
+- A new immutable derived view inside the already isolated `internal/performance` package consumes only
+  caller-supplied authoritative position/cost-policy evidence and signed fill deltas. Existing
+  `performance.db`, 90-day retention and bounded 500-row pruning remain unchanged.
+- Attribution requires exact market, candidate, lane/version, campaign/leg, decision/attempt, order/fill,
+  position/close/close-leg and policy/version lineage. Ticker is display-only; ticker-only queries require a
+  market, and cross-lane/campaign/market corrections are refused.
+- Event and fill replay is idempotent only for byte-equivalent evidence. Corrections are input-order
+  independent, cite the exact original composite fill and cannot cumulatively reverse more quantity or money
+  than that fill.
+- Partial entry and staged close projection proves acquired = closed + authoritative residual quantity and
+  total basis = allocated close basis + residual basis. Open positions and missing lineage/measurements remain
+  `link_missing` or `not_measured`, never numeric zero.
+- Source and reporting gross-to-net PnL retain entry/exit fee, tax, persisted FX cost, FX source/rate/as-of,
+  quote currency and authoritative rounding policy/version. Missing fee/FX evidence does not invoke a current
+  rate or an implicit same-currency rate of one.
+
 ## Pending
 
-- Pre/post logic-map completion across the performance and Compose scopes (tasks 1.1, 1.2 and 5.1).
-- Lane-performance lineage, fill/close accounting and conservation (tasks 2.5, 2.6 and 3.5).
+- Remaining repository-wide pre/post logic-map completion (tasks 1.1, 1.2 and 5.1); the new performance
+  leaf has its hard map and changes no existing function body.
 - Repository-wide gates and final independent implementation review (tasks 5.1–5.3).
 - Actual immutable preimage collection/verification and dormant replacement/post-deploy checks (tasks 5.4
   and 6). No Docker or Compose mutation was run in this wave.

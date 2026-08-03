@@ -34,6 +34,12 @@
   no-follow plus same-file descriptor checks, constant-time bearer comparison and a `Read`-only client type.
 - Integrated partial-failure and reconnect tests preserve the unaffected market byte-for-value and replace a
   prior partial state with one complete fresh snapshot; no zero/current/cross-market fallback exists.
+- The new performance view is an immutable leaf over supplied authoritative evidence. Exact market/lane/
+  version/campaign/leg and decision-to-close identity prevents same-ticker or cross-scope laundering; exact
+  replays deduplicate while divergent replay and correction overrun fail closed.
+- Partial entries, staged closes and corrections conserve quantity and authoritative cost basis. Source and
+  reporting PnL expose fee/tax/FX provenance and policy-versioned rounding; missing close, fee or persisted FX
+  evidence is `not_measured`, including source==reporting currency, rather than an invented zero/rate-one.
 
 ## Design and DX disposition
 
@@ -55,7 +61,14 @@ typed refusal without requiring journal joins.
 - Legacy single-market console coverage was replaced by paired authority-projection, invalid/read-error
   fail-closed, authenticated GET/HEAD, no-input/no-mutation, responsive/CSP, partial-market and real Unix
   console/API/SSE convergence tests.
-- Full performance/repository gates, real Compose preimage verification and final implementation review remain pending.
+- Full repository gates, real Compose preimage verification and final implementation review remain pending.
+
+## Lane-performance verification
+
+- `go test -count=1 ./internal/performance`: PASS, including the existing million-row bounded query fixture.
+- `go test -race -count=1 ./internal/performance` and `go vet ./internal/performance`: PASS.
+- The implementation adds new performance-only leaf functions and tests; it does not change the existing DB
+  schema, pruning functions, journal adapter, execution path or any operating authority.
 
 ## Deployment-guard verification
 
@@ -70,6 +83,7 @@ typed refusal without requiring journal joins.
 
 ## Verdict
 
-The read-only operational projection and pure deployment-guard waves are ready for the remaining repository
-gates. This is not a release or deployment verdict: performance, actual immutable preimage verification and
-dormant deployment tasks remain open. Market activation remains an explicit later human decision.
+The read-only operational projection, lane-performance and pure deployment-guard waves are ready for the
+remaining repository gates. This is not a release or deployment verdict: actual immutable preimage
+verification and dormant deployment tasks remain open. Market activation remains an explicit later human
+decision.

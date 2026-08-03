@@ -10,8 +10,8 @@
 - [x] 2.2 Add RED console tests proving KR and US render independently, one unavailable market remains typed unknown without zero/default/cross-market fallback, dormant blockers remain visible, and no new order/gate/LIVE/activation/protection mutation control exists
 - [x] 2.3 Add RED private API/OpenAPI/SSE tests proving schema parity with console, partial-market envelopes, stable unknown semantics, body/method guards and absence of new mutation routes
 - [x] 2.4 Add RED runtime-only Unix transport tests proving the sidecar can read the shared projection across Compose namespaces but cannot obtain preview/apply, activation, order or protection mutation authority
-- [ ] 2.5 Add RED lane-performance tests requiring market, lane/version, campaign/leg and full decision-to-close identifiers, rejecting symbol/time or same-ticker cross-market attribution, deduplicating fill deltas/corrections, and preserving `link_missing`/`not_measured`
-- [ ] 2.6 Add RED quantity and accounting conservation tests for partial entry fills, staged closes, residual open quantity, authoritative cost-basis allocation, entry/exit fees, taxes, FX source/rate/as-of, rounding and gross-to-net PnL; prove missing fee/FX is never coerced to zero
+- [x] 2.5 Add RED lane-performance tests requiring market, lane/version, campaign/leg and full decision-to-close identifiers, rejecting symbol/time or same-ticker cross-market attribution, deduplicating fill deltas/corrections, and preserving `link_missing`/`not_measured`
+- [x] 2.6 Add RED quantity and accounting conservation tests for partial entry fills, staged closes, residual open quantity, authoritative cost-basis allocation, entry/exit fees, taxes, FX source/rate/as-of, rounding and gross-to-net PnL; prove missing fee/FX is never coerced to zero
 
 ## 3. Read-only operational projection implementation
 
@@ -19,7 +19,7 @@
 - [x] 3.2 Extend the authenticated runtime-only Unix endpoint and reader for the projection with strict schema/unknown-field validation, bounded reads and independent market error envelopes
 - [x] 3.3 Adapt the console strategy-runtime view to the shared projection, preserving authenticated GET-only behavior, OFF/unobserved blocker honesty, responsive rendering and zero free-input/mutation surface
 - [x] 3.4 Adapt private REST/SSE/OpenAPI models to the same projection and golden field registry without duplicating defaults, labels, refusal mapping or effective-state calculations
-- [ ] 3.5 Extend performance attribution and queries with market/lane/version/campaign/leg composite lineage, fill/close-leg deltas, authoritative cost policy/version and quantity/fee/FX/PnL conservation while retaining the isolated derived store, bounded pruning and read-only authority
+- [x] 3.5 Extend performance attribution and queries with market/lane/version/campaign/leg composite lineage, fill/close-leg deltas, authoritative cost policy/version and quantity/fee/FX/PnL conservation while retaining the isolated derived store, bounded pruning and read-only authority
 
 ## 4. Integration and deployment guards
 
