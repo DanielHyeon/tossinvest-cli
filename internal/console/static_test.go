@@ -959,10 +959,11 @@ var consoleCapabilities = map[string]capability{
 	"Out": {},
 
 	// Interface seams: exactly these methods each, and no embedding.
-	"Handoff":    {Methods: []string{"Mint", "Consume"}},
-	"Holdings":   {Methods: []string{"Holdings"}},
-	"Settings":   {Methods: []string{"Load", "Save"}},
-	"EngineBoot": {Methods: []string{"Load", "Save"}},
+	"Handoff":         {Methods: []string{"Mint", "Consume"}},
+	"Holdings":        {Methods: []string{"Holdings"}},
+	"InstrumentNames": {Methods: []string{"Names"}},
+	"Settings":        {Methods: []string{"Load", "Save"}},
+	"EngineBoot":      {Methods: []string{"Load", "Save"}},
 	// The scheduler screen receives display data only. Read has no parameter
 	// carrying a symbol, time, holiday override, or operating command.
 	"MarketSchedule": {Methods: []string{"Read"}},

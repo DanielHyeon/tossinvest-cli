@@ -1,0 +1,19 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "c9af165523c08a4feca6ad645c0e4e1323cc882ee71ec84df73cedb201e474f9",
+  "revision": "base",
+  "package": "main",
+  "function": "verifyRunLockPath",
+  "signature": "verifyRunLockPath(params=1, results=1)",
+  "start": {"line": 693, "column": 1},
+  "end": {"line": 695, "column": 2},
+  "branches": null,
+  "returns": [{"kind": "return", "at": {"line": 694, "column": 2}}],
+  "calls": [
+    {"kind": "call", "at": {"line": 694, "column": 9}, "text": "filepath.Join"},
+    {"kind": "call", "at": {"line": 694, "column": 23}, "text": "filepath.Dir"}
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

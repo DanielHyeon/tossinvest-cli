@@ -1,0 +1,186 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "24bb4847a5dd78a341d3299efbb8c4bd284f484022f9fb0408fee5d8b0a5dc97",
+  "package": "main",
+  "function": "instrumentMetadata",
+  "receiver": "consoleBroker",
+  "signature": "consoleBroker.instrumentMetadata(params=1, results=2)",
+  "start": {
+    "line": 781,
+    "column": 1
+  },
+  "end": {
+    "line": 801,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 782,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 786,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 787,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 791,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 797,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 783,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 788,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 792,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 798,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 800,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 782,
+        "column": 12
+      },
+      "text": "c.lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 785,
+        "column": 8
+      },
+      "text": "c.unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 788,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 30
+      },
+      "text": "c.build"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 794,
+        "column": 36
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 798,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 782,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 790,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 794,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 796,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 785,
+        "column": 2
+      },
+      "text": "c.unlock"
+    }
+  ]
+}

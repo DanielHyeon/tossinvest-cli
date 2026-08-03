@@ -826,8 +826,10 @@ func TestTheOrdersSeamCarriesEachListsOutcomeSeparately(t *testing.T) {
 	}
 }
 
-// consoleBrokerBuildSites are the functions in console.go that may build a live
-// client of their own, each with the argument for why its resolution is separate.
+// consoleBrokerBuildSites are the functions in console.go that call the
+// account-resolving verifyBrokerFactory, each with the argument for why that
+// resolution is separate. Public-only construction stays inside the one shared
+// consoleBroker and is guarded by the seam table below plus the A060 identity test.
 //
 // Every entry costs one more /api/v1/accounts read per console process — the read
 // that came back 429 three times on 2026-07-26 and cost a verification run three
@@ -1020,6 +1022,7 @@ func TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce(t *testing.T) {
 			sharedArg int
 		}{
 			{name: "newConsoleHoldings", sharedArg: 0},
+			{name: "newConsoleInstrumentNames", sharedArg: 0},
 			{name: "consoleOrdersSeam", sharedArg: 0},
 			{name: "consoleMarketScheduleSeam", sharedArg: 1},
 		}

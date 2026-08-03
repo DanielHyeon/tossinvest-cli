@@ -1,0 +1,87 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "24bb4847a5dd78a341d3299efbb8c4bd284f484022f9fb0408fee5d8b0a5dc97",
+  "package": "main",
+  "function": "lock",
+  "receiver": "consoleBroker",
+  "signature": "consoleBroker.lock(params=1, results=1)",
+  "start": {
+    "line": 739,
+    "column": 1
+  },
+  "end": {
+    "line": 750,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "select",
+      "at": {
+        "line": 744,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 746,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 748,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 740,
+        "column": 2
+      },
+      "text": "c.gateOnce.Do"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 741,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 745,
+        "column": 9
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 746,
+        "column": 10
+      },
+      "text": "ctx.Err"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 741,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

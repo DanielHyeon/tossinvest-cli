@@ -64,6 +64,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/output"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/ratebudget"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/tui"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
@@ -311,6 +312,16 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 				"Starting over silently would place live orders for measurements already made",
 			recordPath, steps)
 	}
+	releaseIntent, err := holdVerifyRateBudgetIntent(ctx, out, root)
+	if err != nil {
+		return err
+	}
+	defer releaseIntent()
+	budgetLease, err := acquireVerifyRateBudget(ctx, out, root)
+	if err != nil {
+		return err
+	}
+	defer budgetLease.Release()
 
 	broker, accountRef, err := verifyBrokerFactory(root)
 	if err != nil {
@@ -360,8 +371,6 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	}
 
 	fmt.Fprintf(out, "evidence record  %s\n", recordPath)
-	releaseLock := holdVerifyRunLock(ctx, out, recordPath)
-	defer releaseLock()
 
 	summary, runErr := runner.Run(ctx)
 	writeVerifySummary(out, recordPath, summary)
@@ -534,27 +543,14 @@ Nothing off that list is ever sent, and the targets come from this tool's own re
 
 func runVerifyAbort(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) error {
 	out := cmd.OutOrStdout()
-	recordPath, prior, err := loadVerifyRecord(root, opts)
-	if err != nil {
-		return err
-	}
-	targets := verifylive.AbortTargets(prior)
-	fmt.Fprintf(out, "evidence record  %s\n", recordPath)
-	if len(targets) == 0 {
-		fmt.Fprintln(out, "이 도구의 기록에 살아 있는 객체가 없다 — 끝낼 사슬이 없다.")
-		return nil
-	}
-	fmt.Fprintf(out, "\n끝낼 대상 %d건:\n", len(targets))
-	for _, a := range targets {
-		held := ""
-		if a.HeldUntil != "" {
-			held = fmt.Sprintf(" — %s의 판정을 기다리며 붙잡혀 있다", a.HeldUntil)
-		}
-		fmt.Fprintf(out, "  %s %s (%s)%s\n", a.Kind, a.ID, a.Symbol, held)
-	}
 	// --list is the read-only half, and it is listed first because "what would this
 	// cancel" has to be answerable without credentials or a network call.
 	if opts.list {
+		recordPath, prior, err := loadVerifyRecord(root, opts)
+		if err != nil {
+			return err
+		}
+		writeVerifyAbortTargets(out, recordPath, verifylive.AbortTargets(prior))
 		fmt.Fprintln(out, "\n--list: 아무것도 전송되지 않았다.")
 		return nil
 	}
@@ -565,6 +561,37 @@ func runVerifyAbort(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) 
 	}
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
 	defer stop()
+	executionLock, err := acquireVerifyExecutionLock(root)
+	if err != nil {
+		return err
+	}
+	defer executionLock.Release()
+	fmt.Fprintf(out, "execution lock   %s (engine · update · verification exclusion)\n",
+		executionLock.Path())
+
+	releaseIntent, err := holdVerifyRateBudgetIntent(ctx, out, root)
+	if err != nil {
+		return err
+	}
+	defer releaseIntent()
+	budgetLease, err := acquireVerifyRateBudget(ctx, out, root)
+	if err != nil {
+		return err
+	}
+	defer budgetLease.Release()
+
+	// Admission can wait for one bounded metadata read. Read the record only after
+	// exclusivity so the cancellation plan cannot omit an artifact appended while
+	// this command was waiting.
+	recordPath, prior, err := loadVerifyRecord(root, opts)
+	if err != nil {
+		return err
+	}
+	targets := verifylive.AbortTargets(prior)
+	writeVerifyAbortTargets(out, recordPath, targets)
+	if len(targets) == 0 {
+		return nil
+	}
 
 	broker, accountRef, err := verifyBrokerFactory(root)
 	if err != nil {
@@ -601,6 +628,22 @@ func runVerifyAbort(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) 
 		return nil
 	}
 	return abortErr
+}
+
+func writeVerifyAbortTargets(out io.Writer, recordPath string, targets []verifylive.Artifact) {
+	fmt.Fprintf(out, "evidence record  %s\n", recordPath)
+	if len(targets) == 0 {
+		fmt.Fprintln(out, "이 도구의 기록에 살아 있는 객체가 없다 — 끝낼 사슬이 없다.")
+		return
+	}
+	fmt.Fprintf(out, "\n끝낼 대상 %d건:\n", len(targets))
+	for _, a := range targets {
+		held := ""
+		if a.HeldUntil != "" {
+			held = fmt.Sprintf(" — %s의 판정을 기다리며 붙잡혀 있다", a.HeldUntil)
+		}
+		fmt.Fprintf(out, "  %s %s (%s)%s\n", a.Kind, a.ID, a.Symbol, held)
+	}
 }
 
 // --- status and report ----------------------------------------------------------
@@ -692,6 +735,46 @@ func resolveVerifyRecordFor(root *rootOptions, override, market string) (string,
 // sits in the data directory with everything else this change writes.
 func verifyRunLockPath(recordPath string) string {
 	return filepath.Join(filepath.Dir(recordPath), runlock.FileName)
+}
+
+func verifyRateBudgetPath(root *rootOptions) (string, error) {
+	dir, err := engineJournalDir(root)
+	if err != nil {
+		return "", fmt.Errorf("verify: resolving the Open API rate-budget directory: %w", err)
+	}
+	return filepath.Join(dir, ratebudget.FileName), nil
+}
+
+func acquireVerifyRateBudget(ctx context.Context, out io.Writer, root *rootOptions) (*ratebudget.Lease, error) {
+	path, err := verifyRateBudgetPath(root)
+	if err != nil {
+		return nil, err
+	}
+	lease, err := ratebudget.Acquire(ctx, path)
+	if err != nil {
+		return nil, fmt.Errorf("verify: reserving the Open API rate budget: %w", err)
+	}
+	fmt.Fprintf(out, "rate budget lock %s (verification excludes optional metadata reads)\n", lease.Path())
+	return lease, nil
+}
+
+// holdVerifyRateBudgetIntent gives supervised verification priority over
+// optional metadata before it waits for the kernel lease. The execution flock is
+// already held by every caller, so this profile marker has exactly one owner and
+// its remove-on-release semantics cannot erase another live operation's intent.
+func holdVerifyRateBudgetIntent(ctx context.Context, out io.Writer, root *rootOptions) (func(), error) {
+	budgetPath, err := verifyRateBudgetPath(root)
+	if err != nil {
+		return nil, err
+	}
+	profileRecord := filepath.Join(filepath.Dir(budgetPath), verifylive.FileName)
+	path := verifyRunLockPath(profileRecord)
+	release, err := runlock.Hold(ctx, path)
+	if err != nil {
+		return nil, fmt.Errorf("verify: publishing the Open API rate-budget intent: %w", err)
+	}
+	fmt.Fprintf(out, "soak pause       %s (required admission intent; optional metadata yields while verification starts)\n", path)
+	return release, nil
 }
 
 // holdVerifyRunLock marks the account as busy for the duration of a verification.
