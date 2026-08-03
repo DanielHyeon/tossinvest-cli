@@ -21,6 +21,27 @@ type boundaryProvider struct {
 	calls    int
 }
 
+func TestNonIntegralOrUnsafeProtectionQuantityStopsBeforeProviderAndBroker(t *testing.T) {
+	for _, quantity := range []float64{1.5} {
+		broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "unexpected"}}
+		provider := &boundaryProvider{snapshot: protectionreadiness.DefaultSnapshot()}
+		adapter, err := protection.NewReadinessAdapter(provider, "acct-7", "production")
+		if err != nil {
+			t.Fatal(err)
+		}
+		gw, j, clk := newGatewayWithReadiness(t, broker, adapter)
+		intent := placeIntent()
+		intent.Quantity = quantity
+		_, _ = gw.Place(context.Background(), execgw.PlaceRequest{Intent: intent, Decision: entryDecision(t, j, clk, intent, testLimits())})
+		if provider.calls != 0 {
+			t.Fatalf("quantity %v reached readiness provider calls=%d", quantity, provider.calls)
+		}
+		if places, _, _ := broker.totals(); places != 0 {
+			t.Fatalf("quantity %v reached broker calls=%d", quantity, places)
+		}
+	}
+}
+
 func (provider *boundaryProvider) Current(context.Context) (protectionreadiness.ReadinessSnapshot, error) {
 	provider.calls++
 	return provider.snapshot, provider.err

@@ -1,1 +1,632 @@
-{"file":"internal/protection/dormant_test.go","source_sha256":"053d7c32b538db07b2783fcedaf4aba10aa9a69b03c0527e0d5c5b4931a4b25c","package":"protection_test","function":"TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport","signature":"TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport(params=1, results=0)","start":{"line":14,"column":1},"end":{"line":80,"column":2},"branches":[{"id":"B1"},{"id":"B2"},{"id":"B3"},{"id":"B4"},{"id":"B5"},{"id":"B6"},{"id":"B7"},{"id":"B8"},{"id":"B9"},{"id":"B10"},{"id":"B11"},{"id":"B12"},{"id":"B13"},{"id":"B14"},{"id":"B15"},{"id":"B16"},{"id":"B17"}]}
+{
+  "file": "internal/protection/dormant_test.go",
+  "source_sha256": "0f715a4e134e7477c6ca042152def330ad9255a8e2b74570a38847bb4ad10640",
+  "package": "protection_test",
+  "function": "TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport",
+  "signature": "TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport(params=1, results=0)",
+  "start": {
+    "line": 14,
+    "column": 1
+  },
+  "end": {
+    "line": 88,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 26,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 34,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 4
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "range",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 4
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 4
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 54,
+        "column": 4
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "range",
+      "at": {
+        "line": 57,
+        "column": 4
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 5
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 62,
+        "column": 6
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "range",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 3
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "range",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B20",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 48,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 51,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 10
+      },
+      "text": "moduleRoot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 16
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 18
+      },
+      "text": "os.ReadDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 6
+      },
+      "text": "entry.IsDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 24
+      },
+      "text": "strings.HasSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 42
+      },
+      "text": "entry.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 66
+      },
+      "text": "strings.HasSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 84
+      },
+      "text": "entry.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 11
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 37
+      },
+      "text": "entry.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 16
+      },
+      "text": "parser.ParseFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 33
+      },
+      "text": "token.NewFileSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 12
+      },
+      "text": "strings.Trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 29
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 77
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 56
+      },
+      "text": "entry.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 31
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 59
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 10
+      },
+      "text": "filepath.WalkDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 7
+      },
+      "text": "d.IsDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 21
+      },
+      "text": "strings.HasSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 55
+      },
+      "text": "strings.HasSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 22
+      },
+      "text": "parser.ParseFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 39
+      },
+      "text": "token.NewFileSet"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 13
+      },
+      "text": "strings.Trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 16
+      },
+      "text": "filepath.Rel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 18
+      },
+      "text": "filepath.ToSlash"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 7
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 24
+      },
+      "text": "os.ReadFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 36
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 20,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 53,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 61,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

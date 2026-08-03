@@ -456,13 +456,15 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 
 	// --- 3. the gateway -----------------------------------------------------
 	wiring, err := buildGateway(ctx, gatewayInputs{
-		journal:    jrn,
-		trading:    path.Trading,
-		official:   off,
-		accountRef: accountRef,
-		clock:      clk,
-		logger:     opts.Logger,
-		publisher:  opts.Publisher,
+		journal:     jrn,
+		trading:     path.Trading,
+		official:    off,
+		accountRef:  accountRef,
+		clock:       clk,
+		configDir:   paths.ConfigDir,
+		manifestPin: protectionManifestPin(opts),
+		logger:      opts.Logger,
+		publisher:   opts.Publisher,
 
 		protectionOverride: opts.protectionOverride,
 	})
@@ -548,12 +550,15 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 // Close releases what the engine profile owns. It is safe on a nil context and
 // safe to call twice.
 func (c *Context) Close() error {
-	if c == nil || c.Journal == nil {
+	if c == nil {
 		return nil
 	}
 	j := c.Journal
 	c.Journal = nil
-	return j.Close()
+	if j != nil {
+		return j.Close()
+	}
+	return nil
 }
 
 // spentNonceRetention is how long a nonce consumption record is kept.

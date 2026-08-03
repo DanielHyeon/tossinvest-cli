@@ -1,0 +1,233 @@
+{
+  "file": "internal/protection/readiness_adapter_test.go",
+  "source_sha256": "5bb01c42670517355a9684e7be85225d6ec96b46e94a337293707383513df5c5",
+  "package": "protection",
+  "function": "TestReadinessAdapterFailsClosedForMissingProviderAndDefaultSnapshot",
+  "signature": "TestReadinessAdapterFailsClosedForMissingProviderAndDefaultSnapshot(params=1, results=0)",
+  "start": {
+    "line": 23,
+    "column": 1
+  },
+  "end": {
+    "line": 45,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 15
+      },
+      "text": "NewReadinessAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 47
+      },
+      "text": "protectionreadiness.DefaultSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 18
+      },
+      "text": "NewReadinessAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 25
+      },
+      "text": "adapter.Check"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 39
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 85
+      },
+      "text": "checkpoint.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 17
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 18
+      },
+      "text": "adapter.Check"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 42,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

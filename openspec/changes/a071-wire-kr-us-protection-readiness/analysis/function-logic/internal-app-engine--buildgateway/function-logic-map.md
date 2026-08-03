@@ -8,25 +8,30 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| function inputs | typed values | buildGateway | fail closed or test failure |
+| journal/trading/official/account/clock/config/pin | exact existing engine dependencies | `gatewayInputs` | typed startup failure, owned journal closed by caller |
+| protection assemblies | exact KR and US, both `Wired=false` until committed-fill lifecycle exists | `productionProtectionAssemblies` | readiness remains UNWIRED |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | mapped AST control flow | bounded to function | typed return | affected regression |
+| B1 | projection or reconciliation restore fails | no protection/broker mutation | typed startup error | engine regression |
+| B2 | manifest missing/invalid or lifecycle unwired | read-only provider/adapter assembled | Gateway starts, exposure remains refused | paired UNWIRED test |
+| B3 | read-only adapter/Gateway construction fails | no official protection adapter exists | typed startup error | engine regression |
+| B4 | normal construction | safety loops and execution Gateway assembled | `engineWiring` without protection mutation authority | storage-failure assembly test |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| mapped dependencies | preserve function contract | caller handles error | CodeGraph + AST |
+| `NewProductionProvider`, `NewPairedReadinessAdapter` | publish exact read-only KR/US refusals | fail closed; no controller/gateway factory | CodeGraph + AST |
+| `execgw.New` | construct sole normal-order mutation path | caller handles error | CodeGraph + AST |
 
 ## State mutations and fallbacks
 
-- No authority broadening; current behavior is covered by focused tests.
+- No official protection gateway, controller, protection DB, or arbitrary factory is constructed.
 
 ## Safety conclusion
 
-- Safe edit boundary: buildGateway only.
-- High-risk impact: reviewed and regression-tested.
+- Safe edit boundary: read-only readiness can refuse entries but cannot create protection authority.
+- High-risk impact: yes; production authority deliberately reduced to UNWIRED.

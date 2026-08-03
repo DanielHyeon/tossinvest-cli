@@ -1,7 +1,7 @@
 # Review — a071-wire-kr-us-protection-readiness
 
 - Date: 2026-08-04
-- Stage: decision-boundary integration complete; production controller/supervisor transport wiring still pending
+- Stage: independent security review BLOCK; production remains read-only `UNWIRED`, task 3.5 reopened
 - Voices: Manager safety review, independent operations/security review, authority-boundary self-review
 
 ## Findings and disposition
@@ -53,6 +53,28 @@
   are never adopted, canceled or guessed, and a conflicting re-observation preserves the first evidence.
 - The KR and US position maps share only a canonical container seal. A KR recovery latch does not alter US ACTIVE
   state, and exact fill/exit handling remains immediate in both markets.
+- KR and US are assembled concurrently from one paired manifest into two exact market contracts. Neither market's
+  readiness is a prerequisite for constructing or verifying the other; a market-local artifact drift closes only
+  that market, while corrupt shared policy/state/trusted-time inputs close both.
+- **Security review C1/C2/M7 disposition:** the repository has no production caller from a journal-committed fill
+  into an exact journal-derived stop/expiry and durable protection Plan/Register lifecycle. Therefore both KR/US
+  production assemblies now claim `Wired=false`; engine construction contains no official protection gateway,
+  controller minter, arbitrary `GatewayFactory`, or protection DB. Exact activation/dispatch revalidation cannot be
+  inferred or defaulted; task 3.5 remains open until the complete fill lifecycle is independently verified.
+- **Security review H3 disposition:** cached verdicts are re-evaluated per market at attestation expiry, key
+  revocation and key overlap boundaries with exact instant fail-close, even when only the peer market fingerprint
+  changed. Revalidation reads both verdicts from the original sealed snapshot before resealing the result.
+- **Security review H4 disposition:** an owner-only cross-process flock serializes load/assess/store. File existence
+  is not bootstrap authority: an exact marker is written and fsynced only after valid state is loaded or durably
+  stored. Empty lock plus absent state is first bootstrap; marker plus absent state is corruption. A peer's newer
+  serial invalidates stale in-process cache before any decision is returned.
+- **Security review H5 disposition:** production has no protection SQLite startup dependency. A colliding/failing
+  `protection.db` path cannot stop journal, Gateway, exit/fill/reconcile safety runtime assembly; entry remains
+  closed. Manifest contracts are built locally and atomically published only after both markets validate, so a
+  malformed second market cannot leak a partial contract that fails engine construction.
+- **Security review M6 disposition:** manifest, attestation, evidence and state reads walk every absolute parent
+  component from a pinned root dirfd using `openat(O_NOFOLLOW)` and validate the final owner-only directory by
+  `fstat`; file reads use the same parent fd and descriptor `fstat` before/after reading.
 
 ## Verification
 
@@ -87,7 +109,7 @@
 
 ## Verdict
 
-The isolated cores and Gateway decision boundary are approved for the next integration review. KR and US ship in
-the same release and default independently to `UNWIRED`. Actual signed evidence and production supervisor/official
-gateway wiring remain task 3.5 and require a separate human-approved workflow; this wave creates no lane,
-activation, automation or LIVE authority and makes no official order call.
+The isolated cores and Gateway decision boundary remain available for review, but production supervisor/official
+gateway assembly is intentionally withdrawn pending the complete journal-committed fill lifecycle. KR and US remain
+concurrent read-only lanes and default independently to `UNWIRED`. This change creates no lane, activation,
+automation or LIVE authority and makes no official order call. Task 3.5 and final approval remain blocked.

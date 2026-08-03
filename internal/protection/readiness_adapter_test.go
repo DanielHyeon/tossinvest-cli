@@ -30,7 +30,7 @@ func TestReadinessAdapterFailsClosedForMissingProviderAndDefaultSnapshot(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	checkpoint, refusal := adapter.Check(context.Background(), "us", now, Checkpoint{})
+	checkpoint, refusal := adapter.Check(context.Background(), ReadinessRequest{Market: "us", OrderType: "LIMIT", Quantity: 1}, now, Checkpoint{})
 	if refusal == nil || refusal.Code != protectionreadiness.RefusalMissingEvidence || checkpoint.Valid() {
 		t.Fatalf("default snapshot admitted checkpoint=%+v refusal=%+v", checkpoint, refusal)
 	}
@@ -39,7 +39,7 @@ func TestReadinessAdapterFailsClosedForMissingProviderAndDefaultSnapshot(t *test
 	}
 
 	provider.err = errors.New("read failed")
-	if _, refusal = adapter.Check(context.Background(), "kr", now, Checkpoint{}); refusal == nil || refusal.Code != RefusalProviderUnavailable {
+	if _, refusal = adapter.Check(context.Background(), ReadinessRequest{Market: "kr", OrderType: "LIMIT", Quantity: 1}, now, Checkpoint{}); refusal == nil || refusal.Code != RefusalProviderUnavailable {
 		t.Fatalf("provider failure=%+v", refusal)
 	}
 }
@@ -50,7 +50,7 @@ func TestReadinessAdapterRejectsInvalidMarketWithoutCallingProvider(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, refusal := adapter.Check(context.Background(), "cn", time.Now(), Checkpoint{}); refusal == nil || refusal.Code != protectionreadiness.RefusalInvalid {
+	if _, refusal := adapter.Check(context.Background(), ReadinessRequest{Market: "cn", OrderType: "LIMIT", Quantity: 1}, time.Now(), Checkpoint{}); refusal == nil || refusal.Code != protectionreadiness.RefusalInvalid {
 		t.Fatalf("invalid market refusal=%+v", refusal)
 	}
 	if provider.calls != 0 {

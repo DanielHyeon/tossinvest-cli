@@ -66,6 +66,14 @@ func readinessSnapshotSeal(snapshot ReadinessSnapshot) [32]byte {
 		writeString(hash, string(verdict.Code))
 		writeString(hash, verdict.Provenance.AccountID)
 		writeString(hash, verdict.Provenance.ProfileID)
+		writeString(hash, verdict.Provenance.OrderType)
+		writeString(hash, verdict.Provenance.SessionScope)
+		writeUint64(hash, verdict.Provenance.QuantityMin)
+		writeUint64(hash, verdict.Provenance.QuantityMax)
+		writeString(hash, verdict.Provenance.TriggerSource)
+		writeString(hash, verdict.Provenance.ReplaceSemantics)
+		writeString(hash, verdict.Provenance.BrokerCapabilityDigest)
+		writeString(hash, verdict.Provenance.ToolDigest)
 		writeString(hash, verdict.Provenance.KeyID)
 		writeUint64(hash, verdict.Provenance.Serial)
 		writeString(hash, verdict.Provenance.BodyDigest)
@@ -128,6 +136,10 @@ func Assess(input assessmentInput) AssessmentResult {
 			if code == RefusalNone {
 				verdict.State = Wired
 				verdict.Provenance = Provenance{AccountID: verified.body.AccountID, ProfileID: verified.body.ProfileID,
+					OrderType: verified.body.OrderType, SessionScope: verified.body.SessionScope,
+					QuantityMin: verified.body.QuantityMin, QuantityMax: verified.body.QuantityMax,
+					TriggerSource: verified.body.TriggerSource, ReplaceSemantics: verified.body.ReplaceSemantics,
+					BrokerCapabilityDigest: brokerCapabilityDigest(verified.body.Broker), ToolDigest: verified.body.ToolDigest,
 					KeyID: verified.body.KeyID, Serial: verified.body.Serial, BodyDigest: verified.bodyDigest, BuildDigest: verified.body.BuildDigest,
 					EvidenceDigest: verified.body.EvidenceDigest, SupervisorDigest: marketInput.Supervisor.ComponentDigest,
 					IssuedAt: verified.issuedAt, ExpiresAt: verified.expiresAt}

@@ -49,6 +49,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/protection"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
@@ -71,11 +72,13 @@ const replayTimeout = 15 * time.Second
 // gatewayInputs are what the gateway is built from. Everything here already
 // exists by the time it is called: the account is resolved, the journal is open.
 type gatewayInputs struct {
-	journal    *journal.Journal
-	trading    *trading.Service
-	official   *official.Client
-	accountRef string
-	clock      clock.Clock
+	journal     *journal.Journal
+	trading     *trading.Service
+	official    *official.Client
+	accountRef  string
+	clock       clock.Clock
+	configDir   string
+	manifestPin string
 	// logger and publisher are the alert path's two halves. Both may be nil; see
 	// newNotifier for what a nil publisher costs.
 	logger    *obs.Logger
@@ -232,9 +235,16 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		Gate:    entry,
 	}
 
-	readiness, err := protection.DefaultReadinessAdapter(in.accountRef, "production")
+	buildDigest, toolDigest := productionProtectionDigests()
+	assemblies := productionProtectionAssemblies(buildDigest)
+	provider := protectionreadiness.NewProductionProvider(protectionreadiness.ProductionConfig{
+		ConfigDir: in.configDir, AccountID: in.accountRef, ProfileID: "production",
+		BuildDigest: buildDigest, ToolDigest: toolDigest, ManifestDigest: in.manifestPin,
+		Now: in.clock.Now, SupervisorAssemblies: assemblies,
+	})
+	readiness, err := protection.NewPairedReadinessAdapter(provider, in.accountRef, "production", provider.RuntimeContracts())
 	if err != nil {
-		return engineWiring{}, fmt.Errorf("engine: constructing the default protection readiness adapter: %w", err)
+		return engineWiring{}, fmt.Errorf("engine: constructing the paired read-only protection readiness adapter: %w", err)
 	}
 	gateway, err := execgw.New(execgw.Options{
 		Journal:    in.journal,

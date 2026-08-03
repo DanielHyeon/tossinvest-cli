@@ -83,7 +83,8 @@ type runtimeScope struct {
 	Market           Market
 	OrderType        string
 	SessionScope     string
-	Quantity         uint64
+	QuantityMin      uint64
+	QuantityMax      uint64
 	TriggerSource    string
 	ReplaceSemantics string
 	Broker           brokerCapability
@@ -93,16 +94,45 @@ type runtimeScope struct {
 }
 
 type Provenance struct {
-	AccountID        string
-	ProfileID        string
-	KeyID            string
-	Serial           uint64
-	BodyDigest       string
-	BuildDigest      string
-	EvidenceDigest   string
-	SupervisorDigest string
-	IssuedAt         time.Time
-	ExpiresAt        time.Time
+	AccountID              string
+	ProfileID              string
+	OrderType              string
+	SessionScope           string
+	QuantityMin            uint64
+	QuantityMax            uint64
+	TriggerSource          string
+	ReplaceSemantics       string
+	BrokerCapabilityDigest string
+	ToolDigest             string
+	KeyID                  string
+	Serial                 uint64
+	BodyDigest             string
+	BuildDigest            string
+	EvidenceDigest         string
+	SupervisorDigest       string
+	IssuedAt               time.Time
+	ExpiresAt              time.Time
+}
+
+func brokerCapabilityDigest(capability brokerCapability) string {
+	digest := hashStrings(
+		boolString(capability.ClientOperationKeyForwarded),
+		boolString(capability.ClientOperationKeyEchoed),
+		capability.ExactLookupField,
+		capability.IdentityUniquenessScope,
+		boolString(capability.PendingStatusQuery),
+		boolString(capability.TerminalStatusQuery),
+		boolString(capability.CancelResultQuery),
+		capability.DuplicateSubmitBehavior,
+	)
+	return hexBytes(digest[:])
+}
+
+func boolString(value bool) string {
+	if value {
+		return "true"
+	}
+	return "false"
 }
 
 type Verdict struct {

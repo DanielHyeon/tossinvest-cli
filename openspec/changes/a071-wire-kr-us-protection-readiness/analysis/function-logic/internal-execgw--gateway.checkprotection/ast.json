@@ -1,1 +1,186 @@
-{"file":"internal/execgw/protection.go","source_sha256":"d8ba8c3931f5d41a71dcf96ed94bbcd7bf03f06fb256899f70104f73d41d4406","package":"execgw","function":"checkProtection","receiver":"Gateway","signature":"Gateway.checkProtection(params=3, results=2)","start":{"line":87,"column":1},"end":{"line":102,"column":2},"branches":[{"id":"B1"},{"id":"B2"},{"id":"B3"},{"id":"B4"}]}
+{
+  "file": "internal/execgw/protection.go",
+  "source_sha256": "71e4923e1301555808b3c65b437d1d20906f9d633d8eef52ac676a1433cd8267",
+  "package": "execgw",
+  "function": "checkProtection",
+  "receiver": "Gateway",
+  "signature": "Gateway.checkProtection(params=3, results=2)",
+  "start": {
+    "line": 89,
+    "column": 1
+  },
+  "end": {
+    "line": 110,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 10
+      },
+      "text": "g.protectionCheckForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 34
+      },
+      "text": "protectionNotWired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 18
+      },
+      "text": "canonicalProtectionQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 34
+      },
+      "text": "protectionNotWired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 25
+      },
+      "text": "g.protectionReadiness.Check"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 5
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 34
+      },
+      "text": "protectionNotWired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 59
+      },
+      "text": "refusal.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

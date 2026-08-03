@@ -2,6 +2,8 @@ package execgw
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/protection"
 )
@@ -94,9 +96,28 @@ func (g *Gateway) checkProtection(ctx context.Context, plan mutationPlan, previo
 	if g.protectionReadiness == nil {
 		return protectionCheckpoint{}, protectionNotWired(plan, "market readiness provider is missing")
 	}
-	checkpoint, refusal := g.protectionReadiness.Check(ctx, plan.market, g.clk.Now(), previous.adapter)
+	quantity, ok := canonicalProtectionQuantity(plan.quantity)
+	if !ok {
+		return protectionCheckpoint{}, protectionNotWired(plan, "protection readiness requires a canonical positive integral quantity")
+	}
+	checkpoint, refusal := g.protectionReadiness.Check(ctx, protection.ReadinessRequest{
+		Market: plan.market, OrderType: plan.orderType, Quantity: quantity,
+	}, g.clk.Now(), previous.adapter)
 	if refusal != nil {
 		return protectionCheckpoint{}, protectionNotWired(plan, refusal.Error())
 	}
 	return protectionCheckpoint{adapter: checkpoint}, nil
+}
+
+func canonicalProtectionQuantity(value float64) (uint64, bool) {
+	const maximumExactlyRepresentableInteger = uint64(1<<53 - 1)
+	canonical := decimalString(value)
+	if canonical == "" || strings.ContainsAny(canonical, ".eE-+") {
+		return 0, false
+	}
+	quantity, err := strconv.ParseUint(canonical, 10, 64)
+	if err != nil || quantity == 0 || quantity > maximumExactlyRepresentableInteger || float64(quantity) != value {
+		return 0, false
+	}
+	return quantity, true
 }

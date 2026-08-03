@@ -50,8 +50,8 @@ func TestExactScopeMatrixFailsClosed(t *testing.T) {
 		{"market", func(scope *runtimeScope) { scope.Market = MarketUS }},
 		{"order type", func(scope *runtimeScope) { scope.OrderType = "TRAILING_STOP" }},
 		{"session", func(scope *runtimeScope) { scope.SessionScope = "EXTENDED" }},
-		{"quantity low", func(scope *runtimeScope) { scope.Quantity = 0 }},
-		{"quantity high", func(scope *runtimeScope) { scope.Quantity = 101 }},
+		{"quantity min", func(scope *runtimeScope) { scope.QuantityMin = 2 }},
+		{"quantity max", func(scope *runtimeScope) { scope.QuantityMax = 101 }},
 		{"trigger", func(scope *runtimeScope) { scope.TriggerSource = "MID" }},
 		{"replace", func(scope *runtimeScope) { scope.ReplaceSemantics = ReplaceContinuousCoverage }},
 		{"tool digest", func(scope *runtimeScope) { scope.ToolDigest = digestOf("other-tool") }},
@@ -286,7 +286,7 @@ func (fixture readinessFixture) marketInputForBody(t *testing.T, body attestatio
 		t.Fatal(err)
 	}
 	scope := runtimeScope{AccountID: body.AccountID, ProfileID: body.ProfileID, Market: body.Market, OrderType: body.OrderType, SessionScope: body.SessionScope,
-		Quantity: 50, TriggerSource: body.TriggerSource, ReplaceSemantics: body.ReplaceSemantics, Broker: body.Broker,
+		QuantityMin: body.QuantityMin, QuantityMax: body.QuantityMax, TriggerSource: body.TriggerSource, ReplaceSemantics: body.ReplaceSemantics, Broker: body.Broker,
 		ToolDigest: body.ToolDigest, BuildDigest: body.BuildDigest, EvidenceDigest: body.EvidenceDigest}
 	supervisor, err := newSupervisorBinding(supervisorBindingInput{AccountID: body.AccountID, ProfileID: body.ProfileID, Market: body.Market, BuildDigest: body.BuildDigest, ComponentDigest: digestOf("supervisor-" + string(body.Market)), Wired: true})
 	if err != nil {

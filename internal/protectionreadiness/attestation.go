@@ -125,7 +125,7 @@ func validAttestationFields(body attestationBody) bool {
 
 func scopeMatches(body attestationBody, scope runtimeScope) bool {
 	return body.AccountID == scope.AccountID && body.ProfileID == scope.ProfileID && body.Market == scope.Market && body.OrderType == scope.OrderType &&
-		body.SessionScope == scope.SessionScope && scope.Quantity >= body.QuantityMin && scope.Quantity <= body.QuantityMax && body.TriggerSource == scope.TriggerSource &&
+		body.SessionScope == scope.SessionScope && body.QuantityMin == scope.QuantityMin && body.QuantityMax == scope.QuantityMax && body.TriggerSource == scope.TriggerSource &&
 		body.ReplaceSemantics == scope.ReplaceSemantics && body.Broker == scope.Broker && body.ToolDigest == scope.ToolDigest && body.BuildDigest == scope.BuildDigest &&
 		body.EvidenceDigest == scope.EvidenceDigest
 }

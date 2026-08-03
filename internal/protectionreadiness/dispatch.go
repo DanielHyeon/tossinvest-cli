@@ -8,9 +8,16 @@ import (
 // DispatchScope is the immutable broker scope an exposure-raising mutation must
 // match immediately before transport dispatch.
 type DispatchScope struct {
-	AccountID string
-	ProfileID string
-	Market    Market
+	AccountID              string
+	ProfileID              string
+	Market                 Market
+	OrderType              string
+	Quantity               uint64
+	SessionScope           string
+	TriggerSource          string
+	ReplaceSemantics       string
+	BrokerCapabilityDigest string
+	ToolDigest             string
 }
 
 // DispatchDecision is a read-only, market-scoped view of one sealed snapshot.
@@ -58,6 +65,12 @@ func (snapshot ReadinessSnapshot) Dispatch(scope DispatchScope, now time.Time) D
 	}
 	provenance := verdict.Provenance
 	if provenance.AccountID != scope.AccountID || provenance.ProfileID != scope.ProfileID || provenance.Serial == 0 ||
+		provenance.OrderType != scope.OrderType || provenance.SessionScope != scope.SessionScope ||
+		scope.Quantity < provenance.QuantityMin || scope.Quantity > provenance.QuantityMax ||
+		provenance.TriggerSource != scope.TriggerSource || provenance.ReplaceSemantics != scope.ReplaceSemantics ||
+		provenance.BrokerCapabilityDigest != scope.BrokerCapabilityDigest || provenance.ToolDigest != scope.ToolDigest ||
+		provenance.QuantityMin == 0 || provenance.QuantityMax < provenance.QuantityMin ||
+		!validDigest(provenance.BrokerCapabilityDigest) || !validDigest(provenance.ToolDigest) ||
 		!validDigest(provenance.BodyDigest) || !validDigest(provenance.BuildDigest) || !validDigest(provenance.EvidenceDigest) || !validDigest(provenance.SupervisorDigest) {
 		decision.Code = RefusalScopeMismatch
 		return decision
@@ -83,7 +96,12 @@ func marketSnapshotID(release string, verdict Verdict) string {
 
 func marketVerdictSeal(release string, verdict Verdict) [32]byte {
 	return hashStrings(release, string(verdict.Market), string(verdict.State), string(verdict.Code),
-		verdict.Provenance.AccountID, verdict.Provenance.ProfileID, verdict.Provenance.KeyID,
+		verdict.Provenance.AccountID, verdict.Provenance.ProfileID,
+		verdict.Provenance.OrderType, verdict.Provenance.SessionScope,
+		stringUint(verdict.Provenance.QuantityMin), stringUint(verdict.Provenance.QuantityMax),
+		verdict.Provenance.TriggerSource, verdict.Provenance.ReplaceSemantics,
+		verdict.Provenance.BrokerCapabilityDigest, verdict.Provenance.ToolDigest,
+		verdict.Provenance.KeyID,
 		stringUint(verdict.Provenance.Serial), verdict.Provenance.BodyDigest, verdict.Provenance.BuildDigest,
 		verdict.Provenance.EvidenceDigest, verdict.Provenance.SupervisorDigest,
 		formatTime(verdict.Provenance.IssuedAt), formatTime(verdict.Provenance.ExpiresAt))
@@ -117,6 +135,6 @@ func (defaultProvider) Current(context.Context) (ReadinessSnapshot, error) {
 	return DefaultSnapshot(), nil
 }
 
-// DefaultProvider is the only shipped provider assembly in this wave. Both
-// markets are independently UNWIRED.
+// DefaultProvider is the fail-closed provider used when no pinned production
+// manifest is installed. Both markets are independently UNWIRED.
 func DefaultProvider() SnapshotProvider { return defaultProvider{} }
