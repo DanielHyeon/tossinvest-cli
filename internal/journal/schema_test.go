@@ -82,6 +82,10 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 	wantTables := []string{
 		"alert_outbox",
 		"attempt_transitions",
+		"campaign_commands",
+		"campaign_events",
+		"campaign_legs",
+		"campaign_order_watermarks",
 		"decisions",
 		// Schema v8 (add-net-rr-measurement, design D1): the entry verdict
 		// observation. Analysis-only and self-contained — it is in this list
@@ -102,8 +106,11 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"operating_modes",
 		"position_adjustments",
 		"position_adoptions",
+		"position_campaign_claims",
+		"position_campaigns",
 		"position_policy_events",
 		"position_policy_lifecycles",
+		"position_projection_versions",
 		"positions",
 		"protection_mutation_attempts",
 		"protection_sagas",
@@ -142,6 +149,43 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 	}
 
 	wantColumns := map[string][]string{
+		"position_campaigns": {
+			"account_ref", "actual_position_generation", "created_at", "decision_id",
+			"effective_stop", "entry_blocked", "evidence_digest", "expected_position_generation",
+			"expected_position_version", "id", "lane_id", "lane_version", "market",
+			"prospective_token", "state", "stop_candidate", "stop_candidate_observed_at",
+			"stop_candidate_policy", "stop_candidate_source", "stop_candidate_valid", "stop_observed_at",
+			"stop_policy", "stop_selected_from", "stop_source", "symbol", "updated_at", "version",
+		},
+		"position_campaign_claims": {
+			"account_ref", "actual_position_generation", "campaign_id", "created_at", "market",
+			"position_generation", "position_version", "prospective_token", "symbol", "updated_at", "version",
+		},
+		"position_projection_versions": {
+			"account_ref", "generation", "market", "position_id", "state", "symbol", "updated_at", "version",
+		},
+		"campaign_legs": {
+			"campaign_id", "created_at", "filled_quantity", "intent_id", "plan_id", "requested_quantity",
+			"residual_quantity", "sequence", "state", "updated_at", "version",
+		},
+		"campaign_order_watermarks": {
+			"account_ref", "attempt_id", "campaign_id", "carry_baseline", "created_at", "cumulative_filled", "decision_id",
+			"intent_id", "last_observation_id", "leg_sequence", "lineage_ambiguous", "market", "order_id",
+			"predecessor_order_id", "remaining_quantity", "requested_cap", "side", "symbol", "terminal", "trading_day", "updated_at",
+		},
+		"campaign_commands": {
+			"campaign_id", "command_key", "command_kind", "recorded_at", "request_digest",
+			"result_error", "result_sequence", "result_version",
+		},
+		"campaign_events": {
+			"attempt_id", "campaign_id", "campaign_state", "campaign_version", "carry_baseline",
+			"command_key", "command_kind", "cumulative_quantity", "delta_quantity", "effective_stop",
+			"entry_blocked", "event_kind", "expected_position_generation", "intent_id", "leg_filled_quantity",
+			"leg_requested_quantity", "leg_residual_quantity", "leg_sequence", "leg_state", "order_id",
+			"order_lineage_ambiguous", "order_remaining_quantity", "order_terminal", "plan_id", "position_generation", "predecessor_order_id", "projection_digest", "prospective_token",
+			"recorded_at", "request_digest", "requested_cap", "sequence", "stop_observed_at",
+			"stop_policy", "stop_source",
+		},
 		"intents": {
 			"account_ref", "created_at", "currency", "fingerprint", "id", "market",
 			"notes", "order_type", "price", "quantity", "side", "source", "symbol",
@@ -539,6 +583,11 @@ func TestSchemaIndexes(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
+		"idx_campaign_order_identity",
+		"idx_campaign_order_one_successor",
+		"idx_campaign_order_scope_identity",
+		"idx_position_campaign_active_scope",
+		"idx_position_campaign_scope",
 		"idx_intents_fingerprint",
 		"idx_intents_symbol_day",
 		"idx_attempts_state",

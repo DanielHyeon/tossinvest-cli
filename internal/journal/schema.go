@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 19
+const SchemaVersion = 20
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -109,6 +109,10 @@ var migrations = []migration{
 	// before the observation; append-only fill rows remain unchanged. Runtime
 	// readers no longer guess that blank evidence belongs to a later reused id.
 	{Version: 19, SQL: schemaV19},
+	// schemaV20 lives in position_campaign.go. It adds strategy-neutral campaign,
+	// ordered leg, per-order watermark and prospective-generation CAS records.
+	// Existing Position rows remain campaign-unknown and are never backfilled.
+	{Version: 20, SQL: schemaV20},
 }
 
 // schemaV1 is the initial schema.

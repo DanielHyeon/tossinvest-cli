@@ -244,6 +244,52 @@ func TestAFailingExitHookRollsBackTheProjectionToo(t *testing.T) {
 	}
 }
 
+func TestCampaignHookRunsBetweenProjectionAndExitAndRollsBackAtomically(t *testing.T) {
+	j := applyHookFixture(t)
+	ctx := context.Background()
+	boom := errors.New("campaign watermark fault")
+	var order []string
+	if err := j.SetApplyHooks(ApplyHooks{
+		Project: func(ctx context.Context, tx *ApplyTx, _ AppliedFill) error {
+			order = append(order, "project")
+			_, err := tx.Exec(ctx, "UPDATE positions SET quantity='4' WHERE id='p-1'")
+			return err
+		},
+		Campaign: func(ctx context.Context, tx *ApplyTx, _ AppliedFill) error {
+			order = append(order, "campaign")
+			if _, err := tx.Exec(ctx, "UPDATE positions SET avg_price='123' WHERE id='p-1'"); err != nil {
+				return err
+			}
+			return boom
+		},
+		Exit: func(context.Context, *ApplyTx, AppliedFill) error {
+			order = append(order, "exit")
+			return nil
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if !j.CampaignApplierBound() {
+		t.Fatal("campaign hook must report bound after explicit test wiring")
+	}
+	if _, err := j.RecordFill(ctx, observation("o-1", "4")); !errors.Is(err, boom) {
+		t.Fatalf("RecordFill err=%v, want campaign fault", err)
+	}
+	if got := strings.Join(order, ","); got != "project,campaign" {
+		t.Fatalf("hook order=%q, want project,campaign and no exit", got)
+	}
+	var quantity, avg string
+	if err := j.db.QueryRowContext(ctx, "SELECT quantity,avg_price FROM positions WHERE id='p-1'").Scan(&quantity, &avg); err != nil {
+		t.Fatal(err)
+	}
+	if quantity != "10" || avg != "70000" {
+		t.Fatalf("failed campaign hook survived rollback: quantity=%s avg=%s", quantity, avg)
+	}
+	if _, err := j.LookupFill(ctx, "o-1"); !errors.Is(err, ErrFillNotFound) {
+		t.Fatalf("fill snapshot survived campaign rollback: %v", err)
+	}
+}
+
 // TestApplyHooksSkipRefusedAndNoOpSnapshots: nothing was applied, so there is
 // nothing to apply. A hook firing on a fail-closed snapshot would be projecting
 // a fill the ledger just declined to believe.

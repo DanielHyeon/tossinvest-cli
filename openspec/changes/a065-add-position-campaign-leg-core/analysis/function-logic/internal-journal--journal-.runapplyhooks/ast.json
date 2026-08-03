@@ -1,0 +1,233 @@
+{
+  "file": "internal/journal/apply_hook.go",
+  "source_sha256": "9ca0ed1a9e0817fe74c4a933c167cbedd946b5e7670590d2bef695a02c3f6d27",
+  "package": "journal",
+  "function": "runApplyHooks",
+  "receiver": "Journal",
+  "signature": "Journal.runApplyHooks(params=3, results=1)",
+  "start": {
+    "line": 263,
+    "column": 1
+  },
+  "end": {
+    "line": 292,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 275,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 280,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 286,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 268,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 276,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 281,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 287,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 2
+      },
+      "text": "j.applyMu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 2
+      },
+      "text": "j.applyMu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 8
+      },
+      "text": "handle.invalidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 13
+      },
+      "text": "hooks.Project"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 13
+      },
+      "text": "hooks.Campaign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 13
+      },
+      "text": "hooks.Exit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 275,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 286,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 272,
+        "column": 2
+      },
+      "text": "handle.invalidate"
+    }
+  ]
+}
