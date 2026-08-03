@@ -1,0 +1,30 @@
+{
+  "file": "internal/weeklyvaluelane/plan.go",
+  "source_sha256": "d0efe681ac0b13afa75ea398f5bda7ddaa91da75e427c9ebd45fcacca2e192ac",
+  "package": "weeklyvaluelane",
+  "function": "AccountRef",
+  "receiver": "CampaignPlan",
+  "signature": "CampaignPlan.AccountRef(params=0, results=1)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 70
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 107,
+        "column": 49
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

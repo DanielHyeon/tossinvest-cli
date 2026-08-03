@@ -1,0 +1,31 @@
+{
+  "file": "internal/weeklyvaluelane/plan.go",
+  "source_sha256": "8b6918579e9144f6be2e209e6dc8ad55989010ff980c09bc683908b7ae5004d6",
+  "revision": "base",
+  "package": "weeklyvaluelane",
+  "function": "Market",
+  "receiver": "CampaignPlan",
+  "signature": "CampaignPlan.Market(params=0, results=1)",
+  "start": {
+    "line": 106,
+    "column": 1
+  },
+  "end": {
+    "line": 106,
+    "column": 66
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 106,
+        "column": 49
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
