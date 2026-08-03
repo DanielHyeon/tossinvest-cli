@@ -1,6 +1,6 @@
 {
   "file": "internal/continuationlane/allocation_risk_test.go",
-  "source_sha256": "8dfeebe670ecd90c6b526f61a2e32975817b51910faa0de6d19a3ac762fe5731",
+  "source_sha256": "a61222af6ec0de94234f1172779f3fe16cc15afa05ad6535483f4bd99ab27505",
   "package": "continuationlane",
   "function": "validKREvaluation",
   "signature": "validKREvaluation(params=4, results=1)",
@@ -68,7 +68,7 @@
       "kind": "call",
       "at": {
         "line": 547,
-        "column": 63
+        "column": 62
       },
       "text": "mintSavedStopProvenance"
     }

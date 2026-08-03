@@ -1,15 +1,15 @@
 {
   "file": "internal/continuationlane/execution_terms.go",
-  "source_sha256": "ea0d8465d28d08f995ec84e3f471983f4223a760f3f62d74580a2d9c4392c988",
+  "source_sha256": "8bff9cc8f3021971f876e0d9a1e993b88d7d042c4e582b2adf1b5ea07c65b290",
   "package": "continuationlane",
   "function": "validatedExecutionTerms",
   "signature": "validatedExecutionTerms(params=5, results=5)",
   "start": {
-    "line": 52,
+    "line": 58,
     "column": 1
   },
   "end": {
-    "line": 63,
+    "line": 69,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 53,
+        "line": 59,
         "column": 2
       }
     },
@@ -25,19 +25,12 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 59,
+        "line": 65,
         "column": 2
       }
     }
   ],
   "returns": [
-    {
-      "kind": "return",
-      "at": {
-        "line": 54,
-        "column": 3
-      }
-    },
     {
       "kind": "return",
       "at": {
@@ -48,7 +41,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 62,
+        "line": 66,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
         "column": 2
       }
     }
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 53,
+        "line": 59,
         "column": 6
       },
       "text": "value.valid"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 56,
+        "line": 62,
         "column": 20
       },
       "text": "canonicalPositiveMinor"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 57,
+        "line": 63,
         "column": 23
       },
       "text": "canonicalPositiveMinor"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 58,
+        "line": 64,
         "column": 22
       },
       "text": "canonicalPositiveMinor"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 59,
+        "line": 65,
         "column": 41
       },
       "text": "stopValue.Cmp"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 59,
+        "line": 65,
         "column": 70
       },
       "text": "entry.Cmp"
@@ -107,21 +107,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 56,
+        "line": 62,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 57,
+        "line": 63,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 58,
+        "line": 64,
         "column": 2
       }
     }

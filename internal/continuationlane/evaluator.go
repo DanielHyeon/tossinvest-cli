@@ -134,7 +134,7 @@ type EvaluationContext struct {
 	SavedEffectiveStopMinor string
 	StopCandidate           StopCandidate
 	ExecutionTerms          ExecutionTermsPreimage
-	SavedStopProvenance     PriceProvenance
+	savedStopAuthority      savedStopAuthority
 	Invalidation            Invalidation
 }
 
@@ -278,7 +278,7 @@ func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal Signa
 		outcome.Code = RefusalRiskBudgetExceeded
 		return outcome
 	}
-	stopAuthority, stopAuthorityOK := stopProvenance(context.Plan, envelope, context.StopCandidate, effectiveStop, context.SavedStopProvenance)
+	stopAuthority, stopAuthorityOK := stopProvenance(context.Plan, envelope, context.StopCandidate, effectiveStop, context.savedStopAuthority)
 	entryAuthority, stopAuthority, targetAuthority, policyDigest, termsOK := validatedExecutionTerms(context.Plan, envelope, context.ExecutionTerms, effectiveStop, stopAuthority)
 	if !stopAuthorityOK || !termsOK {
 		outcome.Code = RefusalExecutionTermsInvalid

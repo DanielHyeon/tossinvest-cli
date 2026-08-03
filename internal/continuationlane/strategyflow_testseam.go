@@ -19,7 +19,7 @@ func StrategyflowKRFixture(candidateID, evidenceDigest string) (KREvaluationRequ
 	if err != nil {
 		return KREvaluationRequest{}, err
 	}
-	context.ExecutionTerms, context.SavedStopProvenance = terms, mintSavedStopProvenance(context.Plan, evidence.Envelope, context.SavedEffectiveStopMinor)
+	context.ExecutionTerms, context.savedStopAuthority = terms, mintSavedStopProvenance(context.Plan, evidence.Envelope, context.SavedEffectiveStopMinor)
 	return KREvaluationRequest{Context: context, Evidence: evidence, Config: config}, nil
 }
 
@@ -41,7 +41,7 @@ func StrategyflowUSFixture(candidateID, evidenceDigest string) (USEvaluationRequ
 	if err != nil {
 		return USEvaluationRequest{}, err
 	}
-	context.ExecutionTerms, context.SavedStopProvenance = terms, mintSavedStopProvenance(context.Plan, evidence.Envelope, context.SavedEffectiveStopMinor)
+	context.ExecutionTerms, context.savedStopAuthority = terms, mintSavedStopProvenance(context.Plan, evidence.Envelope, context.SavedEffectiveStopMinor)
 	return USEvaluationRequest{Context: context, Evidence: evidence, Config: config}, nil
 }
 

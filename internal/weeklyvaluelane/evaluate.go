@@ -56,6 +56,7 @@ type EvaluationRequest struct {
 	EntryCostsMinor, EstimatedExitCostsLeviesMinor string
 	MinimumRRPPM                                   uint64
 	executionTerms                                 ExecutionTermsPreimage
+	savedStopAuthority                             savedStopAuthority
 	authorization                                  evaluationAuthorization
 }
 
@@ -194,6 +195,10 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	if stopCode != "" {
 		return refuse(stopCode)
 	}
+	useSavedStop := effectiveStop != request.StopCandidate.PriceMinor
+	if useSavedStop && !request.savedStopAuthority.valid(request.Plan, request.Evidence, effectiveStop) {
+		return refuse(RefusalExecutionTermsInvalid)
+	}
 	if _, entryOK := canonicalPositiveMinor(request.EntryPriceMinor); !entryOK {
 		return refuse(RefusalExecutionTermsInvalid)
 	}
@@ -234,6 +239,9 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	asOf := request.Evidence.AsOf.UTC().Format(time.RFC3339Nano)
 	entryProvenance := PriceProvenance{entryPrice.String(), string(request.Evidence.Source) + ":" + request.Evidence.FilingID, request.Evidence.SchemaVersion, request.Evidence.EvidenceDigest, asOf, request.Plan.quoteCurrency, "minor-v1", scale}
 	stopProvenance := PriceProvenance{stopPrice.String(), request.StopCandidate.Source, request.StopCandidate.Version, request.StopCandidate.Digest, request.StopCandidate.ObservedAt.UTC().Format(time.RFC3339Nano), request.Plan.quoteCurrency, "minor-v1", scale}
+	if useSavedStop {
+		stopProvenance = request.savedStopAuthority.provenance
+	}
 	targetProvenance := PriceProvenance{targetPrice.String(), "weekly-rr-capped-target", "rr-policy-v1", policy.Identity, request.Evidence.EvaluatedAt.UTC().Format(time.RFC3339Nano), request.Plan.quoteCurrency, "minor-v1", scale}
 	return Outcome{Kind: OutcomeDecision, Quantity: quantity, EntryPriceMinor: entryPrice.String(), EffectiveStopMinor: stopPrice.String(), TargetPriceMinor: targetPrice.String(),
 		EntryProvenance: entryProvenance, StopProvenance: stopProvenance, TargetProvenance: targetProvenance, ExecutionPolicy: policy, Lineage: lineage, CommonExitIndependent: true}

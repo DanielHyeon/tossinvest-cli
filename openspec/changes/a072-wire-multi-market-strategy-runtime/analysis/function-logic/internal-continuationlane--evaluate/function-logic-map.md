@@ -9,11 +9,11 @@ Consumes sealed plan/evidence/cap/risk state and explicit caller-provided entry/
 
 ## Branches and early returns
 
-B1-B19 cover plan, invalidation, OFF, scope, signal, stop, leg, latch, cap, arithmetic and risk budget refusals. A new execution-term branch must require canonical `stop < entry < target` before decision.
+B1-B19 cover plan, invalidation, OFF, scope, signal, stop, leg, latch, cap, arithmetic and risk budget refusals. B20 requires sealed exact execution terms and canonical `stop < entry < target` before decision; forged saved-stop provenance therefore cannot reach an accepted outcome.
 
 ## Calls and live bindings
 
-Pure stop composition, allocation and risk arithmetic only.
+Pure stop composition, private saved-stop authority validation, allocation and risk arithmetic only.
 
 ## State mutations and fallbacks
 

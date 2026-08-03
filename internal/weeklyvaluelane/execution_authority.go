@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type PriceProvenance struct {
@@ -22,6 +23,12 @@ type ExecutionTermsPreimage struct {
 	seal                                                                   [32]byte
 }
 
+type savedStopAuthority struct {
+	provenance                 PriceProvenance
+	planDigest, evidenceDigest string
+	seal                       [32]byte
+}
+
 func mintExecutionTermsPreimage(plan CampaignPlan, evidence DisclosureEvidence, entry, staged, entryCosts, exitCosts string, minimumRR uint64) ExecutionTermsPreimage {
 	if !plan.valid() || evidence.seal == ([32]byte{}) || evidence.seal != evidenceSnapshotSeal(evidence) {
 		return ExecutionTermsPreimage{}
@@ -35,6 +42,27 @@ func (v ExecutionTermsPreimage) valid(plan CampaignPlan, evidence DisclosureEvid
 }
 func weeklyExecutionPreimageSeal(v ExecutionTermsPreimage) [32]byte {
 	return sha256.Sum256([]byte(strings.Join([]string{"weekly-rr-preimage:v1", v.planDigest, v.evidenceDigest, v.entry, v.staged, v.fair, v.entryCosts, v.exitCosts, strconv.FormatUint(v.minimumRR, 10)}, "\x00")))
+}
+
+func mintSavedStopAuthority(plan CampaignPlan, evidence DisclosureEvidence, price string) savedStopAuthority {
+	scale, ok := weeklyScale(plan.quoteCurrency)
+	if !plan.valid() || !ok || price == "" || evidence.seal == ([32]byte{}) || evidence.seal != evidenceSnapshotSeal(evidence) {
+		return savedStopAuthority{}
+	}
+	v := savedStopAuthority{planDigest: plan.digest, evidenceDigest: evidence.EvidenceDigest,
+		provenance: PriceProvenance{price, "saved-effective-stop", "stop-state-v1", plan.digest, evidence.EvaluatedAt.UTC().Format(time.RFC3339Nano), plan.quoteCurrency, "minor-v1", scale}}
+	v.seal = weeklySavedStopSeal(v)
+	return v
+}
+
+func (v savedStopAuthority) valid(plan CampaignPlan, evidence DisclosureEvidence, price string) bool {
+	return plan.valid() && v.planDigest == plan.digest && v.evidenceDigest == evidence.EvidenceDigest && v.provenance.PriceMinor == price &&
+		v.seal != ([32]byte{}) && v.seal == weeklySavedStopSeal(v)
+}
+
+func weeklySavedStopSeal(v savedStopAuthority) [32]byte {
+	return sha256.Sum256([]byte(strings.Join([]string{"weekly-saved-stop:v1", v.planDigest, v.evidenceDigest, v.provenance.PriceMinor,
+		v.provenance.Source, v.provenance.Version, v.provenance.Digest, v.provenance.AsOf, v.provenance.Currency, strconv.Itoa(v.provenance.MinorScale), v.provenance.UnitVersion}, "\x00")))
 }
 
 func executionPolicy(v ExecutionTermsPreimage, lineage ResultLineage) RRExecutionPolicy {

@@ -47,3 +47,19 @@ func TestWeeklyRRPolicyIdentityBindsFullPreimage(t *testing.T) {
 		t.Fatalf("full RR preimage missing: %+v", second.ExecutionPolicy)
 	}
 }
+
+func TestWeeklySavedStopNeverInheritsCandidateProvenance(t *testing.T) {
+	evidence := mustKREvidence(t)
+	plan := mustPlan(t, MarketKR, KRWeeklyLaneID, "KRW", "KRW", nil, 14, "1000")
+	request := validEvaluation(t, plan, evidence, validKRConfig())
+	request.SavedEffectiveStopMinor = "95"
+	request.savedStopAuthority = savedStopAuthority{provenance: PriceProvenance{PriceMinor: "95", Source: "caller", Version: "forged", Digest: "forged"}}
+	if forged := EvaluateKR(request); forged.Code != RefusalExecutionTermsInvalid || forged.Quantity != 0 {
+		t.Fatalf("caller-forged saved stop authority accepted: %+v", forged)
+	}
+	request.savedStopAuthority = mintSavedStopAuthority(plan, evidence, "95")
+	got := EvaluateKR(request)
+	if got.Kind != OutcomeDecision || got.EffectiveStopMinor != "95" || got.StopProvenance.PriceMinor != "95" || got.StopProvenance.Source == request.StopCandidate.Source {
+		t.Fatalf("saved stop inherited candidate provenance: %+v", got)
+	}
+}

@@ -1,0 +1,84 @@
+{
+  "file": "internal/continuationlane/execution_terms.go",
+  "source_sha256": "8bff9cc8f3021971f876e0d9a1e993b88d7d042c4e582b2adf1b5ea07c65b290",
+  "package": "continuationlane",
+  "function": "mintSavedStopProvenance",
+  "signature": "mintSavedStopProvenance(params=3, results=1)",
+  "start": {
+    "line": 83,
+    "column": 1
+  },
+  "end": {
+    "line": 93,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 15
+      },
+      "text": "currencyMinorScale"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 15
+      },
+      "text": "savedStopAuthoritySeal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

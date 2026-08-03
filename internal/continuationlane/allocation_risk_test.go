@@ -68,7 +68,7 @@ func TestScaleInStopNeverRetreatsAndInvalidStopRefuses(t *testing.T) {
 	evidence, config := validKRFixture()
 	request := validKREvaluation(t, plan, evidence, config)
 	request.Context.SavedEffectiveStopMinor = "100"
-	request.Context.SavedStopProvenance = mintSavedStopProvenance(plan, evidence.Envelope, "100")
+	request.Context.savedStopAuthority = mintSavedStopProvenance(plan, evidence.Envelope, "100")
 	request.Context.StopCandidate = mustStopCandidate(t, "90", "2026-08-04T00:00:02Z", "2026-08-04T00:01:00Z")
 	got := EvaluateKR(request)
 	if got.Kind != OutcomeDecision || got.EffectiveStopMinor != "100" {
@@ -544,7 +544,7 @@ func validKREvaluation(t *testing.T, plan CampaignPlan, evidence KREvidence, con
 	if err != nil {
 		t.Fatal(err)
 	}
-	context.ExecutionTerms, context.SavedStopProvenance = terms, mintSavedStopProvenance(plan, evidence.Envelope, context.SavedEffectiveStopMinor)
+	context.ExecutionTerms, context.savedStopAuthority = terms, mintSavedStopProvenance(plan, evidence.Envelope, context.SavedEffectiveStopMinor)
 	return KREvaluationRequest{Context: context, Evidence: evidence, Config: config}
 }
 
@@ -555,7 +555,7 @@ func validUSEvaluation(t *testing.T, plan CampaignPlan, evidence USEvidence, con
 	if err != nil {
 		t.Fatal(err)
 	}
-	context.ExecutionTerms, context.SavedStopProvenance = terms, mintSavedStopProvenance(plan, evidence.Envelope, context.SavedEffectiveStopMinor)
+	context.ExecutionTerms, context.savedStopAuthority = terms, mintSavedStopProvenance(plan, evidence.Envelope, context.SavedEffectiveStopMinor)
 	return USEvaluationRequest{Context: context, Evidence: evidence, Config: config}
 }
 

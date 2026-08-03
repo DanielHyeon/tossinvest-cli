@@ -44,3 +44,14 @@ func TestContinuationExecutionTermsConstructorRejectsEstimatedOrNonCanonicalValu
 		}
 	}
 }
+
+func TestCallerForgedSavedStopProvenanceFailsClosed(t *testing.T) {
+	plan := mustPlan(t, MarketKR, KRContinuationLaneID, "KRW", "KRW", nil, 14, "1000")
+	evidence, config := validKRFixture()
+	request := validKREvaluation(t, plan, evidence, config)
+	request.Context.SavedEffectiveStopMinor = "100"
+	request.Context.savedStopAuthority = savedStopAuthority{provenance: PriceProvenance{PriceMinor: "100", Source: "caller", Version: "forged", Digest: "forged", AsOf: evidence.Envelope.EffectiveAt, Currency: "KRW", MinorScale: 0, UnitVersion: "minor-v1"}}
+	if got := EvaluateKR(request); got.Code != RefusalExecutionTermsInvalid || got.Quantity != 0 {
+		t.Fatalf("caller forged saved stop authority: %+v", got)
+	}
+}

@@ -1,6 +1,6 @@
 {
   "file": "internal/weeklyvaluelane/evaluate_registry_test.go",
-  "source_sha256": "948c9219b068fe545e9b449ee2a891c9bd611c6130e7cad1cda010500f7e75c4",
+  "source_sha256": "c8d616806df8b2fd08f76ee78242dc48d1ec617de372058692272c81a6645ac6",
   "package": "weeklyvaluelane",
   "function": "validEvaluation",
   "signature": "validEvaluation(params=4, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 88,
+    "line": 89,
     "column": 2
   },
   "branches": [
@@ -26,7 +26,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 87,
+        "line": 88,
         "column": 2
       }
     }
@@ -159,6 +159,14 @@
         "column": 27
       },
       "text": "mintExecutionTermsPreimage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 31
+      },
+      "text": "mintSavedStopAuthority"
     }
   ],
   "assignments": [
@@ -208,6 +216,13 @@
       "kind": "=",
       "at": {
         "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 87,
         "column": 2
       }
     }

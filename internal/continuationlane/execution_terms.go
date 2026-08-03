@@ -22,6 +22,12 @@ type ExecutionTermsPreimage struct {
 	seal                                 [32]byte
 }
 
+type savedStopAuthority struct {
+	provenance                 PriceProvenance
+	planDigest, evidenceDigest string
+	seal                       [32]byte
+}
+
 func mintExecutionTermsPreimage(plan CampaignPlan, envelope EvidenceEnvelope, entryPriceMinor, targetPriceMinor string) (ExecutionTermsPreimage, error) {
 	entry, entryOK := canonicalPositiveMinor(entryPriceMinor)
 	target, targetOK := canonicalPositiveMinor(targetPriceMinor)
@@ -62,7 +68,7 @@ func validatedExecutionTerms(plan CampaignPlan, envelope EvidenceEnvelope, value
 	return value.entry, stop, value.target, value.identity, true
 }
 
-func stopProvenance(plan CampaignPlan, envelope EvidenceEnvelope, candidate StopCandidate, effective string, saved PriceProvenance) (PriceProvenance, bool) {
+func stopProvenance(plan CampaignPlan, envelope EvidenceEnvelope, candidate StopCandidate, effective string, saved savedStopAuthority) (PriceProvenance, bool) {
 	if effective == candidate.PriceMinor {
 		scale, ok := currencyMinorScale(plan.QuoteCurrency)
 		if !ok {
@@ -71,16 +77,29 @@ func stopProvenance(plan CampaignPlan, envelope EvidenceEnvelope, candidate Stop
 		return PriceProvenance{PriceMinor: effective, Source: candidate.Source, Version: candidate.Version, Digest: candidate.Digest,
 			AsOf: candidate.ObservedAt, Currency: plan.QuoteCurrency, MinorScale: scale, UnitVersion: "minor-v1"}, true
 	}
-	return saved, saved.PriceMinor == effective && saved.Digest != ""
+	return saved.provenance, saved.valid(plan, envelope, effective)
 }
 
-func mintSavedStopProvenance(plan CampaignPlan, envelope EvidenceEnvelope, price string) PriceProvenance {
+func mintSavedStopProvenance(plan CampaignPlan, envelope EvidenceEnvelope, price string) savedStopAuthority {
 	scale, ok := currencyMinorScale(plan.QuoteCurrency)
 	if !ok {
-		return PriceProvenance{}
+		return savedStopAuthority{}
 	}
-	return PriceProvenance{PriceMinor: price, Source: "saved-effective-stop", Version: "stop-state-v1", Digest: plan.RiskBudgetDigest,
-		AsOf: envelope.EffectiveAt, Currency: plan.QuoteCurrency, MinorScale: scale, UnitVersion: "minor-v1"}
+	value := savedStopAuthority{planDigest: plan.RiskBudgetDigest, evidenceDigest: envelope.SourceDigest,
+		provenance: PriceProvenance{PriceMinor: price, Source: "saved-effective-stop", Version: "stop-state-v1", Digest: plan.RiskBudgetDigest,
+			AsOf: envelope.EffectiveAt, Currency: plan.QuoteCurrency, MinorScale: scale, UnitVersion: "minor-v1"}}
+	value.seal = savedStopAuthoritySeal(value)
+	return value
+}
+
+func (value savedStopAuthority) valid(plan CampaignPlan, envelope EvidenceEnvelope, price string) bool {
+	return validatePlan(plan) && value.planDigest == plan.RiskBudgetDigest && value.evidenceDigest == envelope.SourceDigest &&
+		value.provenance.PriceMinor == price && value.seal != ([32]byte{}) && value.seal == savedStopAuthoritySeal(value)
+}
+
+func savedStopAuthoritySeal(value savedStopAuthority) [32]byte {
+	return sha256.Sum256([]byte(strings.Join([]string{"continuation-saved-stop:v1", value.planDigest, value.evidenceDigest,
+		provenanceIdentity("saved-stop", value.provenance)}, "\x00")))
 }
 
 func currencyMinorScale(currency string) (int, bool) {
