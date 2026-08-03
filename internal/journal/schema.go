@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 24
+const SchemaVersion = 25
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -132,6 +132,10 @@ var migrations = []migration{
 	// this additive step records structured official broker-zero observations,
 	// binds reconcile releases to them and seals owner-release replay receipts.
 	{Version: 24, SQL: schemaV24},
+	// schemaV25 lives in strategy_dispatch_runtime_v25.sql. It adds the dormant
+	// central-owner fence, independent KR/US authority snapshots and irreversible
+	// lease/outcome CAS journal. Released v24 rows are not rewritten.
+	{Version: 25, SQL: schemaV25},
 }
 
 // schemaV1 is the initial schema.

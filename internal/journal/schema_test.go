@@ -142,6 +142,11 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"strategy_attempt_lineage",
 		"strategy_attempt_refusals",
 		"strategy_decision_lineage",
+		"strategy_dispatch_leases",
+		"strategy_dispatch_market_authorities",
+		"strategy_dispatch_outcomes",
+		"strategy_dispatch_owner_current",
+		"strategy_dispatch_owner_epochs",
 		"strategy_execution_lineage",
 		"trade_outcomes",
 	}
@@ -304,6 +309,30 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"observation_id", "position_id", "position_version", "predecessor_event_sequence",
 			"predecessor_state_digest", "prospective_generation", "reconcile_state_id", "release_digest",
 			"release_event_id", "release_payload", "released_at", "symbol",
+		},
+		"strategy_dispatch_owner_epochs": {
+			"acquired_at", "fencing_token", "owner_epoch", "owner_instance",
+		},
+		"strategy_dispatch_owner_current": {
+			"acquired_at", "fencing_token", "owner_epoch", "owner_instance", "owner_key", "revision",
+		},
+		"strategy_dispatch_market_authorities": {
+			"account_ref", "activation_digest", "activation_generation", "authority_id", "build_digest",
+			"calendar_generation", "guardian_digest", "guardian_generation", "market", "protection_digest",
+			"protection_generation", "protection_serial", "reconciliation_generation", "record_digest", "revision",
+			"risk_policy_digest", "risk_policy_generation", "symbol", "updated_at",
+		},
+		"strategy_dispatch_leases": {
+			"account_ref", "authority_digest", "authority_revision", "broker_order_id", "campaign_id", "candidate_id",
+			"created_at", "disposition", "evidence_digest", "expires_at", "fencing_token", "guardian_decision_id",
+			"issued_at", "lane_id", "lane_version", "lease_digest", "lease_id", "leg_id", "market", "operation_id",
+			"outcome_code", "outcome_observed_at", "owner_epoch", "query_digest", "refusal_code", "revision",
+			"risk_reservation_id", "router_id", "router_version", "state", "symbol", "transport_started_at", "updated_at",
+		},
+		"strategy_dispatch_outcomes": {
+			"broker_order_id", "expected_revision", "from_disposition", "from_state", "lease_id", "next_revision",
+			"observed_at", "operation_identity", "outcome_id", "query_digest", "record_digest", "to_disposition",
+			"to_state", "transition_code",
 		},
 		"execution_corrections": {
 			"account_ref", "cumulative_qty", "id", "new_avg_price",
@@ -596,7 +625,7 @@ func TestLineageEdgeUniqueness(t *testing.T) {
 func TestSchemaIndexes(t *testing.T) {
 	j := openTestJournal(t)
 	rows, err := j.db.QueryContext(context.Background(),
-		`SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%' ORDER BY name`)
+		`SELECT name FROM sqlite_master WHERE type='index' AND (name LIKE 'idx_%' OR name LIKE 'uq_%') ORDER BY name`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -653,6 +682,12 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_reconcile_active_legacy_symbol",
 		"idx_reconcile_active_market_symbol",
 		"idx_corrections_order",
+		"idx_strategy_dispatch_authority_market",
+		"idx_strategy_dispatch_lease_market_state",
+		"idx_strategy_dispatch_lease_owner",
+		"idx_strategy_dispatch_lease_recovery",
+		"idx_strategy_dispatch_outcome_lease",
+		"uq_strategy_dispatch_account_broker_order",
 	} {
 		if !got[want] {
 			t.Errorf("missing index %s (have %v)", want, keysOf(got))
