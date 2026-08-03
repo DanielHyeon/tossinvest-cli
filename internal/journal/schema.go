@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 21
+const SchemaVersion = 22
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -117,6 +117,11 @@ var migrations = []migration{
 	// digest of an immutable evidence.db snapshot consumed by a strategy decision.
 	// Historical decisions remain evidence-snapshot-unknown and are never backfilled.
 	{Version: 21, SQL: schemaV21},
+	// schemaV22 lives in risk_bucket.go. It is an additive, authoritative
+	// journal for multi-horizon bucket admission and fill reconciliation. Legacy
+	// reservations deliberately remain bucket-state-unknown; this migration does
+	// not invent policy, snapshot, ownership, or valuation provenance.
+	{Version: 22, SQL: schemaV22},
 }
 
 // schemaV1 is the initial schema.

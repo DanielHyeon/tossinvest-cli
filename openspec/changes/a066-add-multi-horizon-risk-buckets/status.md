@@ -1,9 +1,32 @@
 # Status — a066-add-multi-horizon-risk-buckets
 
-- Updated: 2026-08-03
+- Updated: 2026-08-04
 - Overall: IN PROGRESS
-- Current wave: Wave 1A pure risk core + independent-review hardening GREEN
-- Runtime authority: dormant; no journal/Guardian/Gateway/engine integration
+- Current wave: Wave 1B additive journal admission and replay primitives GREEN; fill/runtime integration pending
+- Runtime authority: dormant; no Guardian/Gateway/engine/broker/toggle integration
+
+## Completed in Wave 1B checkpoint
+
+- Additive schema 21→22 for immutable policy/snapshot provenance, final admission decisions,
+  prospective/actual owners, five bucket reservations, order/fill/allocation records, events, state
+  digests and conservative scope latches. The migration performs no legacy backfill.
+- Journal-owned admission recalculation and one atomic transaction for `q_final`, the pre-existing
+  HELD Guardian reservation reference, one owner and all five HELD bucket reservations.
+- Database-enforced one-owner-per-account/market/symbol arbitration across concurrent journal
+  processes, exact digest idempotence and stable mismatch on divergent transaction replay.
+- Read/replay projection of owner and HELD/FILLED usage with a persisted state digest. Missing
+  legacy state returns `ErrRiskBucketStateUnknown`; drift returns `ErrRiskBucketReplayMismatch`
+  and is never silently repaired or deleted.
+- Independent source-review hardening rejects immutable key/digest collisions, requires exact
+  prospective identity for owner reuse, and gives same-owner scale-in a monotonic sequence plus a
+  canonical aggregate replay digest independent of timestamp text ordering.
+- Admission receipts contain exactly five unique reservation IDs; scale-in is restricted to the
+  owner's exact existing five bucket keys and policy versions.
+- Owner market/symbol must equal the corresponding bucket values, and snapshot references must
+  exactly match the sealed policy/snapshot evidence consumed by admission; tampering produces zero
+  writes and a stable snapshot mismatch.
+- Idempotence hashes the canonical ordered full consumed bucket bindings, so equal caps cannot hide
+  changed limit/FILLED/HELD values or different authority evidence on retry.
 
 ## Completed in Wave 1A
 
@@ -38,14 +61,21 @@
 | `git diff --check` | PASS |
 | CodeGraph sync/status | PASS: 1,368 files / 23,745 nodes / 77,709 edges |
 | CodeGraphContext advisory update | INCOMPLETE: stalled after DB load; terminated |
+| Wave 1B focused journal tests | PASS |
+| Wave 1B focused journal race | PASS |
+| `go vet ./internal/journal` | PASS |
+| Strict OpenSpec validation | PASS |
+| Full `go test ./internal/journal` | INCOMPLETE: no-output timeout at 240 seconds; focused suites remain GREEN |
 
-## Pending Wave 1B
+## Pending Wave 1B integration
 
-- Journal migration, replay and authoritative transaction primitives.
-- Atomic q_final GuardianDecision + owner + all-bucket HELD commit and conflict rollback.
+- Authoritative fill/cancel/expiry and clean owner-release journal transactions, including
+  replacement/predecessor-late fill and late actual-evidence completion.
+- Atomic integration with the actual GuardianDecision writer (the new journal decision is a dormant
+  sidecar and does not claim Guardian authority).
 - Guardian/Gateway/entry-loss-lock integration and zero exposure-raising broker request spies.
 - KR/US concurrent runtime integration, cancel/expiry, restart/orphan/snapshot-drift and risk-reducing
   bypass tests.
 - Full repository validation, independent implementation review and `make gate`.
 
-No existing runtime function, live order path or operating toggle is activated by Wave 1A.
+No existing runtime function, live order path or operating toggle is activated by Wave 1B.

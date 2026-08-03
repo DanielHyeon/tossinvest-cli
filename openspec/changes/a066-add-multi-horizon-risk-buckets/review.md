@@ -75,6 +75,50 @@ Guardian/Gateway wiring, KR/US concurrent runtime integration, cancel/expiry/res
 entry-only loss-lock and risk-reducing bypass tests. No live order, operating toggle or automation
 activation was performed. Independent implementation review and the full a066 gate remain pending.
 
+## Wave 1B journal checkpoint
+
+- Schema v22 is additive. Immutable authority policy/snapshot rows retain explicit worst-price,
+  fee and FX source/version/digest/freshness fields; v21 history remains bucket-state-unknown.
+- `CommitRiskBucketAdmission` reruns the pure calculator inside the journal boundary, checks exact
+  snapshot key/version/digest bindings and the referenced HELD legacy reservation, then commits the
+  final quantity, owner, five reservations, event and replay digest in one SQLite transaction.
+- RED was the expected compile failure for the absent v22 symbols and admission API. GREEN covers
+  migration rollback, no-backfill, exact retry, partial-write rollback, two-process owner races,
+  orphan references, snapshot-version drift and stable state-digest mismatch without repair.
+- No existing function body changed. The only existing-code edit is the declarative schema version
+  and appended migration entry, so a pre-edit Function Logic Map was not applicable.
+- This checkpoint does not implement authoritative fill/release transactions or actual
+  Guardian/Gateway integration. Tasks 2.4, 2.5, 5.x and the full gate remain pending.
+
+### Independent source-review hardening
+
+- Immutable policy/snapshot inserts now re-read and compare a full-record digest. A reused primary
+  key, snapshot ID or unique digest with different amount/provenance fails the entire transaction;
+  `INSERT OR IGNORE` can no longer bless mismatched authority evidence.
+- Active-owner reuse now requires exact prospective generation, lane and campaign identity, matching
+  the pure owner contract. Same lane/campaign with a different prospective token is a conflict.
+- Same-owner scale-in receives a transaction-scoped monotonic owner sequence. Commit and replay share
+  one DB-derived canonical preimage over ordered decisions and reservations, snapshot IDs, owner and
+  scope latches, HELD/FILLED/overage/state fields; aggregate quantity and monetary usage are exact and
+  bounded. RFC3339 text ordering is not used for authority.
+- Added regressions for immutable collisions, prospective-token conflict, two-step scale-in,
+  reservation deletion, snapshot rebinding and field tamper. Every mismatch remains fail-closed and
+  leaves persisted evidence untouched.
+- Admission receipts are pinned to exactly five unique reservation IDs. Scale-in is allowed only for
+  the exact same five bucket keys and policy versions; a strategy/key/version change requires a new
+  owner lifecycle and is rejected before any decision row is inserted.
+- Owner identity is now cross-bound to the authoritative market and symbol buckets. A KR owner with
+  a US market bucket, or any owner/symbol-bucket mismatch, is rejected before the transaction begins.
+- `BucketSnapshot.BoundEvidence` returns value copies of the already sealed private provenance only;
+  it cannot construct or mutate an authority seal. Journal validation uses it to require exact
+  policy/snapshot source, version, digest, observed/fresh times and bound amounts before writing.
+- The idempotence preimage includes the canonical ordered full consumed bucket bindings, not merely
+  their computed availability/caps. A retry that preserves `available` and `q_final` while changing
+  limit/FILLED/HELD or sealed evidence is a divergent replay, never an idempotent success.
+- Focused tests and their race run, journal vet, strict OpenSpec validation and diff whitespace check
+  pass. The single full journal run produced no output before its explicit 240-second timeout, so it
+  is recorded as incomplete rather than reported as passing.
+
 ## Verdict
 
 Proposal freeze remains approved. Wave 1A pure core is GREEN, but the change is not production-ready
