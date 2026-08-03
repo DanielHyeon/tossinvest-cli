@@ -1,0 +1,37 @@
+{
+  "file": "internal/official/client.go",
+  "source_sha256": "e6b78b0fa5da7b15eb952b18bc82189a79e371751c3df71ae19150420323e564",
+  "package": "official",
+  "function": "newOfficialHTTPClient",
+  "signature": "newOfficialHTTPClient(params=0, results=1)",
+  "start": {
+    "line": 96,
+    "column": 1
+  },
+  "end": {
+    "line": 107,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

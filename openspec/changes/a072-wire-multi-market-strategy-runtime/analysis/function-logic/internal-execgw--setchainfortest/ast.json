@@ -1,0 +1,52 @@
+{
+  "file": "internal/execgw/export_test.go",
+  "source_sha256": "8b5509d88647b868f9b8a2c747dbeb76d6de0a68c6d7594a0a2ec5b6b141557c",
+  "package": "execgw",
+  "function": "SetChainForTest",
+  "signature": "SetChainForTest(params=1, results=1)",
+  "start": {
+    "line": 23,
+    "column": 1
+  },
+  "end": {
+    "line": 27,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 26,
+        "column": 18
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

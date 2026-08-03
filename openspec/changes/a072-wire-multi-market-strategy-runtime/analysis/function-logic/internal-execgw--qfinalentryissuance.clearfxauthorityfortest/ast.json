@@ -1,0 +1,37 @@
+{
+  "file": "internal/execgw/export_test.go",
+  "source_sha256": "5c9ed94e624e4eefac952125ee6a9589e5d2071933efe283548ab68a5ab1e0ba",
+  "package": "execgw",
+  "function": "ClearFXAuthorityForTest",
+  "receiver": "QFinalEntryIssuance",
+  "signature": "QFinalEntryIssuance.ClearFXAuthorityForTest(params=0, results=0)",
+  "start": {
+    "line": 38,
+    "column": 1
+  },
+  "end": {
+    "line": 41,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

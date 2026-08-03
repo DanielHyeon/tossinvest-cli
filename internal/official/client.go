@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,6 +25,11 @@ type Client struct {
 	base string
 	hc   *http.Client
 	tm   *tokenManager
+	// authorityOrigin remains true only for the constructor-owned production
+	// endpoint and HTTP transport. Options may customize ordinary API reads, but
+	// an overridden transport can never attest official monetary authority.
+	authorityOrigin    bool
+	authorityTransport http.RoundTripper
 	// mu serializes unresolved account discovery and validates later public
 	// discovery against an implicit selection. accountsLocked requires it and
 	// may perform the /accounts HTTP request while held.
@@ -45,6 +51,7 @@ type Option func(*Client)
 func WithBaseURL(u string) Option {
 	return func(c *Client) {
 		c.base = strings.TrimRight(u, "/")
+		c.authorityOrigin = false
 	}
 }
 
@@ -52,6 +59,7 @@ func WithBaseURL(u string) Option {
 func WithHTTPClient(hc *http.Client) Option {
 	return func(c *Client) {
 		c.hc = hc
+		c.authorityOrigin = false
 	}
 }
 
@@ -69,9 +77,12 @@ func WithAccountSeq(seq int) Option {
 // New constructs a Client. cacheFile is the path for the on-disk token cache.
 // Options are applied after defaults, so WithBaseURL/WithHTTPClient override them.
 func New(creds Credentials, cacheFile string, opts ...Option) *Client {
+	hc := newOfficialHTTPClient()
 	c := &Client{
-		base: defaultBaseURL,
-		hc:   &http.Client{Timeout: defaultTimeout},
+		base:               defaultBaseURL,
+		hc:                 hc,
+		authorityOrigin:    true,
+		authorityTransport: hc.Transport,
 	}
 	for _, o := range opts {
 		o(c)
@@ -80,6 +91,38 @@ func New(creds Credentials, cacheFile string, opts ...Option) *Client {
 	// /oauth2/token and data paths without TLS cert mismatches.
 	c.tm = newTokenManager(creds, c.base, cacheFile, c.hc)
 	return c
+}
+
+func newOfficialHTTPClient() *http.Client {
+	transport := &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: time.Second,
+	}
+	return &http.Client{Timeout: defaultTimeout, Transport: transport}
+}
+
+// AuthorityOrigin is an opaque proof that a Client retained the constructor-
+// owned production endpoint and transport. Its fields are private so callers
+// cannot promote a configured test/proxy client into monetary authority.
+type AuthorityOrigin struct {
+	production bool
+}
+
+func (o AuthorityOrigin) Valid() bool { return o.production }
+
+// AuthorityOrigin returns no capability after any endpoint or HTTP-client
+// override, even when the configured value happens to resemble the default.
+func (c *Client) AuthorityOrigin() (AuthorityOrigin, bool) {
+	if c == nil || !c.authorityOrigin || c.base != defaultBaseURL || c.hc == nil ||
+		c.authorityTransport == nil || c.hc.Transport != c.authorityTransport {
+		return AuthorityOrigin{}, false
+	}
+	return AuthorityOrigin{production: true}, true
 }
 
 // BaseURL returns the base URL this client targets.

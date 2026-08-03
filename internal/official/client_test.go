@@ -77,6 +77,21 @@ func TestClientBaseURL(t *testing.T) {
 	}
 }
 
+func TestAuthorityOriginRejectsConfiguredTransport(t *testing.T) {
+	plain := New(Credentials{APIKey: "k", SecretKey: "s"}, filepath.Join(t.TempDir(), "plain.json"))
+	if origin, ok := plain.AuthorityOrigin(); !ok || !origin.Valid() || plain.hc.Transport == nil || plain.hc.Transport == http.DefaultTransport {
+		t.Fatal("default official client did not retain authority origin")
+	}
+	for _, configured := range []*Client{
+		New(Credentials{APIKey: "k", SecretKey: "s"}, filepath.Join(t.TempDir(), "base.json"), WithBaseURL(defaultBaseURL)),
+		New(Credentials{APIKey: "k", SecretKey: "s"}, filepath.Join(t.TempDir(), "http.json"), WithHTTPClient(http.DefaultClient)),
+	} {
+		if origin, ok := configured.AuthorityOrigin(); ok || origin.Valid() {
+			t.Fatalf("configured client retained authority origin: ok=%v origin=%+v", ok, origin)
+		}
+	}
+}
+
 func TestClientDefaultBaseURL(t *testing.T) {
 	c := New(Credentials{APIKey: "k", SecretKey: "s"}, "/tmp/cache.json")
 	if got := c.BaseURL(); got != "https://openapi.tossinvest.com" {

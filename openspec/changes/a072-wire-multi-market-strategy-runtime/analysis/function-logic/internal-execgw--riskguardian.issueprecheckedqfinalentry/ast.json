@@ -1,0 +1,393 @@
+{
+  "file": "internal/execgw/riskguardian_qfinal.go",
+  "source_sha256": "a511d1fe79e51762df5ae83bed646fa0183daa2c300b89bdf268ad92564b785f",
+  "package": "execgw",
+  "function": "IssuePrecheckedQFinalEntry",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.IssuePrecheckedQFinalEntry(params=2, results=2)",
+  "start": {
+    "line": 166,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 207,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 211,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 173,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 204,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 208,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 212,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 214,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 225,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 20
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 9
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 9
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 24
+      },
+      "text": "journal.QFinalPolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 7
+      },
+      "text": "g.newID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 38
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 36
+      },
+      "text": "g.newID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 73
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 17
+      },
+      "text": "qFinalPolicyAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 20
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 20
+      },
+      "text": "precheck.request.Collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 24
+      },
+      "text": "risk.EntryExposureValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 41
+      },
+      "text": "chainRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 17
+      },
+      "text": "exposureUsage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 14
+      },
+      "text": "g.journal.RecordQFinalDecisionAndReserveWithRecollection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 20
+      },
+      "text": "issuanceRefusal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 206,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 210,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

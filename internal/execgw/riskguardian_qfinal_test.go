@@ -3,6 +3,7 @@ package execgw_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -79,6 +80,24 @@ func TestQFinalPrecheckRejectsCrossedMarketCurrencyPairs(t *testing.T) {
 	}
 }
 
+func TestQFinalPrecheckRejectsCallerConstructedFXEvidenceWithoutOpaqueAuthority(t *testing.T) {
+	rig := newGuardian(t, nil)
+	request := qFinalKRRequest(t, rig, "forged-fx", 10)
+	request.ClearFXAuthorityForTest()
+	request.Admission.Admission.Policy.FX = riskbucket.FXEvidence{
+		RateQuoteToBase: "1", Haircut: "1",
+		Evidence: riskbucket.Evidence{
+			Source: "official-fx", Version: "caller-v1", Digest: "sha256:" + strings.Repeat("a", 64),
+			Official: true, Frozen: true, ObservedAt: fixedNow.Add(-time.Second), FreshUntil: fixedNow.Add(time.Minute),
+		},
+	}
+	_, err := rig.guardian.PrecheckQFinalEntry(request)
+	var refused *execgw.QFinalRefusal
+	if !errors.As(err, &refused) || refused.Code != riskbucket.RefusalCurrencyUnresolved || refused.Field != "official_fx" {
+		t.Fatalf("refusal=%+v err=%v", refused, err)
+	}
+}
+
 func TestQFinalPrecheckSealsValidSameQFinalEvidenceSubstitution(t *testing.T) {
 	rig := newGuardian(t, func(options *execgw.RiskGuardianOptions) {
 		options.NewID = fixedIDs("qfinal-mutated", "qfinal-mutated-nonce")
@@ -112,6 +131,8 @@ func TestQFinalPrecheckSealsValidSameQFinalEvidenceSubstitution(t *testing.T) {
 	if substituted := riskbucket.CalculateAdmission(request.Admission.Admission); substituted.Refusal != nil || substituted.QFinal != precheck.QFinal() {
 		t.Fatalf("substitute was not a valid same-q_final authority: %+v", substituted)
 	}
+	request.ClearFXAuthorityForTest()
+	request.Admission.Admission.Policy.FX = riskbucket.FXEvidence{}
 	issued, err := rig.guardian.IssuePrecheckedQFinalEntry(context.Background(), precheck)
 	if err != nil {
 		t.Fatal(err)
@@ -268,7 +289,7 @@ func qFinalKRRequest(t *testing.T, rig *guardianRig, suffix string, candidate ui
 		buckets = append(buckets, riskbucket.BucketSnapshot{Key: key, LimitMinor: binding.LimitMinor, FilledMinor: binding.FilledMinor, HeldMinor: binding.HeldMinor, SnapshotVersion: binding.SnapshotVersion, PolicyProvenance: policyProvenance, SnapshotProvenance: snapshotProvenance})
 		references = append(references, journal.RiskBucketSnapshotReference{Key: key, SnapshotID: "snapshot-" + suffix + "-" + string(dimension), SnapshotDigest: snapshotEvidence.Digest, SnapshotVersion: binding.SnapshotVersion, PolicyDigest: policyEvidence.Digest, ObservedAt: policyEvidence.ObservedAt, FreshUntil: policyEvidence.FreshUntil})
 	}
-	return execgw.QFinalEntryIssuance{
+	request := execgw.QFinalEntryIssuance{
 		Market: "KR", Currency: "KRW", Symbol: "005930", QCandidate: candidate,
 		EntryPrice: "70000", StopPrice: "69000", TargetPrice: "72000", Account: guardianAccount(), Collect: rig.collect,
 		Admission: journal.RiskBucketAdmissionPlan{
@@ -279,4 +300,6 @@ func qFinalKRRequest(t *testing.T, rig *guardianRig, suffix string, candidate ui
 		},
 		ExpectedPolicyVersion: rig.guardian.PolicyVersion(), ExpectedLimitsDigest: rig.guardian.LimitsDigest(),
 	}
+	request.SetFXAuthorityForTest(policy.FX)
+	return request
 }

@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/officialfx"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 )
-
-const officialFXAuthoritySource = "official-fx"
 
 // QFinalRefusal is a stable refusal from the market-generic q_final seam.
 // QFinal is always zero: a refusal is never an order intent.
@@ -44,8 +44,13 @@ type QFinalEntryIssuance struct {
 	Account                  risk.AccountState
 	Collect                  CollectExposure
 	Admission                journal.RiskBucketAdmissionPlan
-	ExpectedPolicyVersion    string
-	ExpectedLimitsDigest     string
+	// FXAuthority is opaque and must remain attached through final issuance.
+	// Caller-created riskbucket.FXEvidence in Admission is always overwritten.
+	FXAuthority           officialfx.Evidence
+	ExpectedPolicyVersion string
+	ExpectedLimitsDigest  string
+	testFXAuthority       riskbucket.FXEvidence
+	testFXAuthoritySet    bool
 }
 
 // QFinalEntryPrecheck is opaque. Callers can inspect the result but cannot
@@ -115,9 +120,11 @@ func (g *RiskGuardian) PrecheckQFinalEntry(request QFinalEntryIssuance) (QFinalE
 	if policy.AccountCurrency != limitCurrency || policy.QuoteCurrency != exactCurrency {
 		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "reserve_currency", "reserve policy does not match Guardian/market currency", nil)
 	}
-	if bucketMarket == riskbucket.MarketUS && policy.AccountCurrency != policy.QuoteCurrency && policy.FX.Source != officialFXAuthoritySource {
-		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "official_fx", "fresh official US FX authority is unresolved", nil)
+	policy, err = qFinalPolicyAt(request, g.clk.Now().UTC(), policy)
+	if err != nil {
+		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "official_fx", "sealed current FX authority is unresolved", err)
 	}
+	admission.Admission.Policy = policy
 	guardianCapRaw, err := risk.StrategyEntryQuantity(g.policy, request.EntryPrice, request.StopPrice)
 	if err != nil {
 		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalExistingGuardianCap, "q_existing_guardian", err.Error(), err)
@@ -182,6 +189,11 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 	// q_final from this time and refuses before inserting the decision if it no
 	// longer exactly matches the sealed quantity.
 	admission.Admission.Policy.EvaluatedAt = now
+	policy, err := qFinalPolicyAt(precheck.request, now, admission.Admission.Policy)
+	if err != nil {
+		return Issued{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "official_fx", "sealed current FX authority expired or changed", err)
+	}
+	admission.Admission.Policy = policy
 	admission.DecisionID = decision.ID
 	admission.ExistingReservationID = reservationID
 	admission.CreatedAt = now
@@ -217,6 +229,18 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 		ExpiresAt: out.Issue.Decision.ExpiresAt, Reservations: out.Issue.Reservations,
 		Version: out.Issue.Version, RiskBucketReceipt: out.Admission,
 	}, nil
+}
+
+func qFinalPolicyAt(request QFinalEntryIssuance, at time.Time, policy riskbucket.ReservePolicy) (riskbucket.ReservePolicy, error) {
+	if request.testFXAuthoritySet {
+		policy.EvaluatedAt = at
+		policy.FX = request.testFXAuthority
+		if _, err := riskbucket.ReservationMinor(1, policy); err != nil {
+			return riskbucket.ReservePolicy{}, err
+		}
+		return policy, nil
+	}
+	return riskbucket.BindFXAuthority(policy, request.FXAuthority, at)
 }
 
 func (g *RiskGuardian) IssueQFinalEntry(ctx context.Context, request QFinalEntryIssuance) (Issued, error) {
