@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-a073",
+  "title": "Operate and deploy the concurrent KR and US lanes",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a073-operate-multi-market-strategy-lanes",
+    "path": "openspec/changes/a073-operate-multi-market-strategy-lanes"
+  },
+  "acceptance": [
+    "Console and private API show independent KR and US lane, evidence, campaign, risk, scheduler and first-refusal state",
+    "Lane lineage and performance remain attributable by market, lane, version and campaign without symbol-time guessing",
+    "Deployment builds and replaces the Compose services without enabling autostart, automation, lane or live approval settings",
+    "Post-deploy health and dormant runtime checks pass before any human-approved operating activation"
+  ]
+}

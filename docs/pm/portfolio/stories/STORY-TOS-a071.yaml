@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-a071",
+  "title": "Wire attested broker protection for KR and US entry",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a071-wire-kr-us-protection-readiness",
+    "path": "openspec/changes/a071-wire-kr-us-protection-readiness"
+  },
+  "acceptance": [
+    "ProtectionReady becomes WIRED only for the exact KR and US broker behaviors covered by a current signed attestation",
+    "A protected position survives engine process loss according to the verified broker-side contract",
+    "Registration, replacement, cancellation, restart recovery and reconciliation are idempotent and fail closed",
+    "No operating toggle is flipped and no live order is used without separate human approval"
+  ]
+}

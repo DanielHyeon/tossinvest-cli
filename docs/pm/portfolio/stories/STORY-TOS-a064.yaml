@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a064",
+  "title": "Establish authoritative KR and US strategy evidence",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a064-add-multi-market-strategy-evidence",
+    "path": "openspec/changes/a064-add-multi-market-strategy-evidence"
+  },
+  "acceptance": [
+    "KR and US evidence use market-specific source, clock, currency and confidence contracts without pretending one market's unavailable facts exist in the other",
+    "Fatal tradability and disclosure risks are separated from lane-specific scoring and missing or conflicting required evidence fails closed",
+    "Point-in-time evidence applies source_available_at/evaluation_at and ingested_at/cutoff independently and preserves immutable revisions without placing orders",
+    "Append-only evidence.db owns payloads while the trading journal stores consumed snapshot ID and digest only",
+    "Unconfigured source policy makes zero calls and KRX remains SOURCE_UNAVAILABLE until an official programmatic contract is evidenced"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a066",
+  "title": "Cap multi-horizon risk and enforce single-lane ownership",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a066-add-multi-horizon-risk-buckets",
+    "path": "openspec/changes/a066-add-multi-horizon-risk-buckets"
+  },
+  "acceptance": [
+    "Canonical q_final is never greater than q_candidate and all monetary bucket calculations fail closed",
+    "Short and medium horizon, market, strategy, sector and symbol limits reserve worst executable price plus fees and FX haircut and cannot be bypassed by scale-in",
+    "One symbol has one owning lane and conflicting lane decisions cannot create a second campaign",
+    "GuardianDecision is issued only after q_final and all monetary reservations are fixed atomically",
+    "Every fill transaction records proportional HELD transfer versus actual price, fee and FX exposure, uses the larger filled amount, and preserves Position while RISK_OVERAGE or UNKNOWN_ACTUAL_RISK blocks only new exposure across all applicable buckets",
+    "Prior generation ownership is not released until protection and sell claims are clean, while entry loss locks never delay stop, emergency exit, reconciliation or fill detection"
+  ]
+}

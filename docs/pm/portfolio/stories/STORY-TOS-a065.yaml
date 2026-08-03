@@ -1,0 +1,19 @@
+{
+  "id": "STORY-TOS-a065",
+  "title": "Add the strategy-neutral position campaign and leg core",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a065-add-position-campaign-leg-core",
+    "path": "openspec/changes/a065-add-position-campaign-leg-core"
+  },
+  "acceptance": [
+    "The core persists campaign ownership and ordered legs without embedding 8:4:2, 2:4:8 or seven-leg strategy constants",
+    "Campaign creation reserves a unique prospective position generation with CAS and first fill binds it set-once to the actual successor generation",
+    "Leg planning and broker-order-specific fill watermarks are idempotent across retries, amendments, replacements, partial fills and process restarts",
+    "A replaced or cancelled predecessor late fill advances its immutable watermark and Position exactly once, recalculates replacement remaining and leg aggregates, and blocks new exposure in RECONCILE without dropping over-cap or ambiguous fills",
+    "Campaign and Leg transitions follow a complete versioned state table including terminal and RECONCILE recovery behavior",
+    "EXIT FIRST and non-retreating effective stops are structural invariants",
+    "Offline reconstruction from journal evidence is available before any production entry caller exists"
+  ]
+}

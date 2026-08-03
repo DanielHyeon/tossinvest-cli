@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a070",
+  "title": "Route candidates across markets, horizons and owning lanes",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a070-add-multi-market-horizon-router",
+    "path": "openspec/changes/a070-add-multi-market-horizon-router"
+  },
+  "acceptance": [
+    "KR and US calendars, IANA time zones, DST and regular-session scopes are evaluated independently without a combined activation manifest",
+    "The router uses account, market, symbol and position generation as the owner key, queries active owners across every horizon and never uses horizon to create a second owner",
+    "Market and horizon are anti-replay admission subscopes of one shared physical endpoint and reset-generation quota authority, so scope cannot multiply capacity or consume safety reserves",
+    "Per-market scheduler revisions, locks and activation bindings support independent CAS and fail-closed legacy migration with no synthesized authority",
+    "A market or lane can remain disabled without preventing the other market's eligible evaluation"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "FEAT-TOS-013",
+  "title": "Concurrent KR and US multi-horizon strategy lanes",
+  "epic": "EPIC-TOS-004",
+  "intent": "active",
+  "stories": [
+    "STORY-TOS-a064",
+    "STORY-TOS-a065",
+    "STORY-TOS-a066",
+    "STORY-TOS-a067",
+    "STORY-TOS-a068",
+    "STORY-TOS-a069",
+    "STORY-TOS-a070",
+    "STORY-TOS-a071",
+    "STORY-TOS-a072",
+    "STORY-TOS-a073"
+  ]
+}
