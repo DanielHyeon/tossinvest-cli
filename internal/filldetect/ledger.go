@@ -37,6 +37,19 @@ func (l JournalLedger) Apply(ctx context.Context, snap Snapshot) (Applied, error
 	if l.Journal == nil {
 		return Applied{}, fmt.Errorf("filldetect: the ledger has no journal")
 	}
+	selectedAccount := strings.TrimSpace(l.AccountRef)
+	observedAccount := strings.TrimSpace(snap.AccountRef)
+	if selectedAccount == "" {
+		return Applied{}, fmt.Errorf("filldetect: the ledger has no selected account")
+	}
+	if observedAccount == "" {
+		return Applied{}, fmt.Errorf("filldetect: snapshot %q has no account scope", snap.OrderID)
+	}
+	if observedAccount != selectedAccount {
+		return Applied{}, fmt.Errorf(
+			"filldetect: snapshot %q belongs to account %q, ledger account is %q",
+			snap.OrderID, observedAccount, selectedAccount)
+	}
 
 	obs := journal.FillObservation{
 		OrderID:        snap.OrderID,
@@ -53,7 +66,7 @@ func (l JournalLedger) Apply(ctx context.Context, snap Snapshot) (Applied, error
 		FilledQuantity: decimalString(snap.FilledQuantity),
 		AveragePrice:   snap.AveragePrice,
 		FilledAmount:   snap.FilledAmount,
-		AccountRef:     strings.TrimSpace(l.AccountRef),
+		AccountRef:     observedAccount,
 		ObservedAt:     journal.RFC3339(snap.ObservedAt),
 	}
 	// Only a timestamp the *broker* supplied is passed through. The detector's
@@ -103,6 +116,11 @@ type JournalTracked struct {
 	AccountRef string
 }
 
+// SelectedAccountRef returns the account this adapter asks the journal to
+// project. The broker's order JSON carries no account field, so the detector
+// uses this value as that part of every canonical order identity.
+func (t JournalTracked) SelectedAccountRef() string { return strings.TrimSpace(t.AccountRef) }
+
 // TrackedOrders lists what the next cycle must read by id.
 func (t JournalTracked) TrackedOrders(ctx context.Context) ([]TrackedOrder, error) {
 	if t.Journal == nil {
@@ -118,10 +136,13 @@ func (t JournalTracked) TrackedOrders(ctx context.Context) ([]TrackedOrder, erro
 	out := make([]TrackedOrder, 0, len(rows))
 	for _, row := range rows {
 		out = append(out, TrackedOrder{
-			OrderID: row.OrderID,
-			Symbol:  row.Symbol,
-			Market:  row.Market,
-			Lineage: brokerstate.Lineage{SuccessorOrderID: row.SuccessorOrderID},
+			OrderID:    row.OrderID,
+			AccountRef: row.AccountRef,
+			Symbol:     row.Symbol,
+			Market:     row.Market,
+			TradingDay: row.TradingDay,
+			Side:       row.Side,
+			Lineage:    brokerstate.Lineage{SuccessorOrderID: row.SuccessorOrderID},
 		})
 	}
 	return out, nil

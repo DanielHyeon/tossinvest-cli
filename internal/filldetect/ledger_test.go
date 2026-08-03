@@ -317,3 +317,39 @@ func TestTerminalOrdersLeaveTheTrackedSet(t *testing.T) {
 		t.Fatalf("tracked after the order filled = %+v, want none", tracked)
 	}
 }
+
+func TestJournalTrackedPreservesCanonicalOrderScope(t *testing.T) {
+	clk := clock.NewFake(pollStart)
+	j := openLedgerJournal(t, clk, filepath.Join(t.TempDir(), "journal.db"))
+	recordConfirmedLedgerOrder(t, j, "o-scoped")
+
+	source := filldetect.JournalTracked{Journal: j, AccountRef: "acct-1"}
+	if got := source.SelectedAccountRef(); got != "acct-1" {
+		t.Fatalf("selected account = %q, want acct-1", got)
+	}
+	tracked, err := source.TrackedOrders(context.Background())
+	if err != nil {
+		t.Fatalf("TrackedOrders: %v", err)
+	}
+	if len(tracked) != 1 {
+		t.Fatalf("tracked = %+v, want one order", tracked)
+	}
+	got := tracked[0]
+	if got.OrderID != "o-scoped" || got.AccountRef != "acct-1" || got.Market != "us" ||
+		got.TradingDay != "2026-03-30" || got.Symbol != "AAPL" || got.Side != "BUY" {
+		t.Fatalf("tracked canonical scope = %+v, want acct-1/us/2026-03-30/AAPL/BUY/o-scoped", got)
+	}
+}
+
+func TestJournalLedgerRejectsSnapshotFromAnotherAccount(t *testing.T) {
+	clk := clock.NewFake(pollStart)
+	j := openLedgerJournal(t, clk, filepath.Join(t.TempDir(), "journal.db"))
+	ledger := filldetect.JournalLedger{Journal: j, AccountRef: "acct-1"}
+	_, err := ledger.Apply(context.Background(), filldetect.Snapshot{
+		OrderID: "o-cross-account", AccountRef: "acct-2", Market: "us",
+		TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+	})
+	if err == nil || !strings.Contains(err.Error(), "ledger account") {
+		t.Fatalf("Apply error = %v, want account-scope rejection", err)
+	}
+}

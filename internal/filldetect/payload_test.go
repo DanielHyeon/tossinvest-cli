@@ -54,9 +54,10 @@ func TestSnapshotCarriesCanonicalBrokerOrderScope(t *testing.T) {
 	snap := pollOne(t, rawOrder{
 		id: "o-scope", symbol: "AAPL", orderedAt: "2026-03-30T09:30:00-04:00",
 	})
-	if snap.Market != "us" || snap.TradingDay != "2026-03-30" || snap.Side != "BUY" {
-		t.Fatalf("broker scope = market %q day %q side %q, want us/2026-03-30/BUY",
-			snap.Market, snap.TradingDay, snap.Side)
+	if snap.AccountRef != "acct-test" || snap.Market != "us" ||
+		snap.TradingDay != "2026-03-30" || snap.Side != "BUY" {
+		t.Fatalf("broker scope = account %q market %q day %q side %q, want acct-test/us/2026-03-30/BUY",
+			snap.AccountRef, snap.Market, snap.TradingDay, snap.Side)
 	}
 }
 
@@ -133,7 +134,10 @@ func TestBlankPayloadIdFallsBackToTheTrackedId(t *testing.T) {
 		"o-tracked": rawOrder{id: "  ", status: "CLOSED", quantity: "4", filled: "4"}.json(),
 	}}
 	tracked := fakeTracked{orders: []filldetect.TrackedOrder{
-		{OrderID: "o-tracked", Symbol: "AAPL", Market: "us"},
+		{
+			OrderID: "o-tracked", AccountRef: "acct-test", Symbol: "AAPL",
+			Market: "us", TradingDay: "2026-03-30", Side: "BUY",
+		},
 	}}
 	d, _, ledger := newDetector(t, newPager(page("")), reader, &fakePositions{}, tracked, nil)
 	if _, err := d.PollOnce(context.Background()); err != nil {
