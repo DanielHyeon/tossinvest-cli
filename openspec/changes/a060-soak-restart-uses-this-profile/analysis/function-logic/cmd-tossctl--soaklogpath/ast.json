@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/soakproc.go",
-  "source_sha256": "1b05cdf555c79bd2b65ad9f747af6dc1d258dabd4d809a1f21970a0642b6f4e3",
+  "source_sha256": "f19676003e6169c3081d66b2d2050a8c20a7b35d444844b7bc61468c266cc0bd",
   "package": "main",
   "function": "soakLogPath",
   "signature": "soakLogPath(params=1, results=1)",
   "start": {
-    "line": 78,
+    "line": 99,
     "column": 1
   },
   "end": {
-    "line": 80,
+    "line": 101,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 79,
+        "line": 100,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 79,
+        "line": 100,
         "column": 9
       },
       "text": "filepath.Join"
@@ -34,7 +34,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 79,
+        "line": 100,
         "column": 23
       },
       "text": "filepath.Dir"
@@ -42,6 +42,5 @@
   ],
   "assignments": null,
   "go_statements": null,
-  "defers": null,
-  "revision": "base"
+  "defers": null
 }

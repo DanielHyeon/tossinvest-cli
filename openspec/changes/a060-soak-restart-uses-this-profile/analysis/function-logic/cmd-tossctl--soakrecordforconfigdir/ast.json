@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/soakproc.go",
-  "source_sha256": "bdea9a099729426219d1d1a5e6a9f5204c7e26462c72c96218bdf0de26a4a38d",
+  "source_sha256": "f19676003e6169c3081d66b2d2050a8c20a7b35d444844b7bc61468c266cc0bd",
   "package": "main",
   "function": "soakRecordForConfigDir",
   "signature": "soakRecordForConfigDir(params=1, results=1)",
   "start": {
-    "line": 130,
+    "line": 129,
     "column": 1
   },
   "end": {
-    "line": 136,
+    "line": 135,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 132,
+        "line": 131,
         "column": 2
       }
     }
@@ -26,14 +26,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 133,
+        "line": 132,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 135,
+        "line": 134,
         "column": 2
       }
     }
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 131,
+        "line": 130,
         "column": 15
       },
       "text": "resolveSoakRecord"
@@ -52,7 +52,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 131,
+        "line": 130,
         "column": 2
       }
     }

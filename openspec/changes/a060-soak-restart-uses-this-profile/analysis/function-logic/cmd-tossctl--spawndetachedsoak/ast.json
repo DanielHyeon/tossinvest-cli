@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/soakproc.go",
-  "source_sha256": "bdea9a099729426219d1d1a5e6a9f5204c7e26462c72c96218bdf0de26a4a38d",
+  "source_sha256": "f19676003e6169c3081d66b2d2050a8c20a7b35d444844b7bc61468c266cc0bd",
   "package": "main",
   "function": "spawnDetachedSoak",
   "signature": "spawnDetachedSoak(params=3, results=1)",
   "start": {
-    "line": 283,
+    "line": 284,
     "column": 1
   },
   "end": {
-    "line": 306,
+    "line": 307,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 284,
+        "line": 285,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 288,
+        "line": 289,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 299,
+        "line": 300,
         "column": 2
       }
     }
@@ -42,28 +42,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 285,
+        "line": 286,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 289,
+        "line": 290,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 300,
+        "line": 301,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 305,
+        "line": 306,
         "column": 2
       }
     }
@@ -72,7 +72,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 284,
+        "line": 285,
         "column": 12
       },
       "text": "os.MkdirAll"
@@ -80,7 +80,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 284,
+        "line": 285,
         "column": 24
       },
       "text": "filepath.Dir"
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 285,
+        "line": 286,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 285,
+        "line": 286,
         "column": 74
       },
       "text": "filepath.Dir"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 287,
+        "line": 288,
         "column": 18
       },
       "text": "os.OpenFile"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 289,
+        "line": 290,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 291,
+        "line": 292,
         "column": 8
       },
       "text": "logFile.Close"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 293,
+        "line": 294,
         "column": 9
       },
       "text": "exec.Command"
@@ -136,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 298,
         "column": 2
       },
       "text": "detachProcess"
@@ -144,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 299,
+        "line": 300,
         "column": 12
       },
       "text": "cmd.Start"
@@ -152,7 +152,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 301,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -160,7 +160,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 301,
         "column": 80
       },
       "text": "strings.Join"
@@ -168,14 +168,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 304,
+        "line": 305,
         "column": 5
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 304,
+        "line": 305,
         "column": 18
       },
       "text": "cmd.Wait"
@@ -185,26 +185,19 @@
     {
       "kind": ":=",
       "at": {
-        "line": 284,
+        "line": 285,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 287,
+        "line": 288,
         "column": 2
       }
     },
     {
       "kind": ":=",
-      "at": {
-        "line": 293,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
       "at": {
         "line": 294,
         "column": 2
@@ -225,16 +218,23 @@
       }
     },
     {
+      "kind": "=",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    },
+    {
       "kind": ":=",
       "at": {
-        "line": 299,
+        "line": 300,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 304,
+        "line": 305,
         "column": 14
       }
     }
@@ -243,7 +243,7 @@
     {
       "kind": "go",
       "at": {
-        "line": 304,
+        "line": 305,
         "column": 2
       }
     }
@@ -252,7 +252,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 291,
+        "line": 292,
         "column": 2
       },
       "text": "logFile.Close"
