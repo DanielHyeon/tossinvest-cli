@@ -422,7 +422,8 @@ func rebindRiskBucket(t *testing.T, plan *RiskBucketAdmissionPlan, index int, ke
 		t.Fatal(err)
 	}
 	binding := riskbucket.BucketSnapshotBinding{Key: key, LimitMinor: bucket.LimitMinor, FilledMinor: bucket.FilledMinor, HeldMinor: bucket.HeldMinor, SnapshotVersion: bucket.SnapshotVersion}
-	snapshot, err := riskbucket.NewSnapshotProvenance(binding, riskbucket.Evidence{Source: riskbucket.RiskSnapshotAuthoritySource, Version: bucket.SnapshotVersion, Digest: "snapshot-rebound", Official: true, Frozen: true, ObservedAt: now.Add(-time.Minute), FreshUntil: now.Add(time.Minute)})
+	snapshotDigest := "snapshot-rebound-" + plan.Snapshots[index].SnapshotID + "-" + string(key.Dimension) + "-" + key.Value
+	snapshot, err := riskbucket.NewSnapshotProvenance(binding, riskbucket.Evidence{Source: riskbucket.RiskSnapshotAuthoritySource, Version: bucket.SnapshotVersion, Digest: snapshotDigest, Official: true, Frozen: true, ObservedAt: now.Add(-time.Minute), FreshUntil: now.Add(time.Minute)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -432,5 +433,5 @@ func rebindRiskBucket(t *testing.T, plan *RiskBucketAdmissionPlan, index int, ke
 	plan.Admission.Buckets[index] = bucket
 	plan.Snapshots[index].Key = key
 	plan.Snapshots[index].PolicyDigest = "policy-rebound"
-	plan.Snapshots[index].SnapshotDigest = "snapshot-rebound"
+	plan.Snapshots[index].SnapshotDigest = snapshotDigest
 }

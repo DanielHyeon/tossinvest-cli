@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 22
+const SchemaVersion = 23
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -122,6 +122,12 @@ var migrations = []migration{
 	// reservations deliberately remain bucket-state-unknown; this migration does
 	// not invent policy, snapshot, ownership, or valuation provenance.
 	{Version: 22, SQL: schemaV22},
+	// schemaV23 preserves the released v22 order/fill tables under explicit
+	// legacy names and creates the scoped authoritative Wave 1C companions.
+	// This is the explicit compatibility-rebuild exception to rule 3: no legacy
+	// table or row is dropped, and the old shape remains queryable and immutable.
+	// Older binaries refuse user_version 23 instead of reading the new shapes.
+	{Version: 23, SQL: schemaV23},
 }
 
 // schemaV1 is the initial schema.

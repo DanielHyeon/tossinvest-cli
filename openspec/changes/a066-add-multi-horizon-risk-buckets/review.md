@@ -1,7 +1,7 @@
 # Review — a066-add-multi-horizon-risk-buckets
 
-- Date: 2026-08-03
-- Stage: Wave 1A pure risk core hardening GREEN; journal/runtime integration pending
+- Date: 2026-08-04
+- Stage: Wave 1C single-decision journal accounting GREEN; runtime and aggregate integration pending
 - Voices: Manager scope/safety review, independent adversarial risk review, final semantic re-review
 
 ## Findings and disposition
@@ -124,3 +124,40 @@ activation was performed. Independent implementation review and the full a066 ga
 Proposal freeze remains approved. Wave 1A pure core is GREEN, but the change is not production-ready
 until Wave 1B integration and the full gate complete. Missing official FX evidence yields zero
 exposure-raising quantity and must never delay fill, reconciliation, protection or reduce-only exit.
+
+## Wave 1C authoritative fill checkpoint
+
+- The only existing fill-path body edit is a tx-scoped a066 sidecar call in `Journal.RecordFill`.
+  It executes before the existing Position/campaign/exit hooks and therefore shares their commit or
+  rollback boundary.
+- Focused RED-to-GREEN coverage proves partial/replacement/predecessor-late fills, duplicate actual
+  completion, cancel/expiry release, outer-hook rollback, restart, orphan mapping, state drift and
+  risk-reducing bypass. Unknown or over-limit actual exposure preserves the authoritative fill and
+  latches all five buckets plus the owner.
+- Review findings resolved in this wave: monetary aggregation uses bounded 256-bit arithmetic;
+  actual/release commands require exact owner, decision, account, market and order identity; active
+  registered orders prevent later scale-in admission; and a replaced predecessor cannot release the
+  HELD reservation already handed to its successor.
+- Follow-up adversarial findings resolved: a predecessor must be the exact ACTIVE decision order and
+  its transition must affect exactly one row; terminal or already-REPLACED parents cannot seed another
+  child. Release replay requires the original reason. Order/fill digests use canonical required-order
+  slices with marshal errors propagated, and policy/currency authority is derived from all five sealed
+  persisted policies rather than caller-controlled strings.
+- Ambiguous/corrupt sidecar state has an explicit non-drop path: every applicable reservation and owner
+  is conservatively latched and `FILL_UNACCOUNTED` is appended while the authoritative fill and Position
+  commit. Database transport errors remain outer-transaction failures.
+- Post-review CRITICAL — Wave 1C had changed the already released v22 table shapes in place. Resolved by
+  restoring `schemaV22` exactly to commit `4aee6853`, incrementing `SchemaVersion` to 23 and preserving
+  legacy order/fill/allocation rows in immutable `_v22` tables. They are not auto-promoted because v22
+  lacks the scoped identity and evidence required by the new authority model. Migration failure rolls
+  back every rename and `user_version`; an older v22 build refuses the v23 journal.
+- Post-review authority boundary — caller-created `Official/Frozen` flags and CANCEL/EXPIRY enums are not
+  production capabilities. Actual completion and release methods are package-private, have a static
+  zero-production-caller guard and remain pending official sealed evidence plus journal-derived cancel,
+  expiry, broker-zero and clean lifecycle validation.
+- Final independent review found the registered order quantity was caller-supplied even after broker-order
+  authority had been confirmed. Registration now derives the exact confirmed intent quantity in the same
+  transaction and refuses a missing, ambiguous, non-integral or divergent quantity before writing an order.
+- Remaining limitation: the journal adapter deliberately rejects owners with multiple final
+  decisions rather than guessing an aggregate binding. That aggregate model, actual owner binding,
+  clean owner release and Guardian/Gateway runtime wiring remain required before production use.

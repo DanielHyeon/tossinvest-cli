@@ -2,14 +2,15 @@
 
 - Updated: 2026-08-04
 - Overall: IN PROGRESS
-- Current wave: Wave 1B additive journal admission and replay primitives GREEN; fill/runtime integration pending
+- Current wave: Wave 1C single-decision authoritative journal fill accounting GREEN; multi-decision owner/runtime integration pending
 - Runtime authority: dormant; no Guardian/Gateway/engine/broker/toggle integration
 
 ## Completed in Wave 1B checkpoint
 
-- Additive schema 21→22 for immutable policy/snapshot provenance, final admission decisions,
-  prospective/actual owners, five bucket reservations, order/fill/allocation records, events, state
-  digests and conservative scope latches. The migration performs no legacy backfill.
+- Released schema 21→22 remains byte-for-byte immutable for policy/snapshot provenance, final
+  admission decisions, owners, reservations and its original order/fill evidence. Wave 1C adds a
+  separate atomic 22→23 transition: released order/fill/allocation tables are retained under `_v22`
+  legacy names and new scoped tables are created without auto-promoting legacy rows.
 - Journal-owned admission recalculation and one atomic transaction for `q_final`, the pre-existing
   HELD Guardian reservation reference, one owner and all five HELD bucket reservations.
 - Database-enforced one-owner-per-account/market/symbol arbitration across concurrent journal
@@ -27,6 +28,37 @@
   writes and a stable snapshot mismatch.
 - Idempotence hashes the canonical ordered full consumed bucket bindings, so equal caps cannot hide
   changed limit/FILLED/HELD values or different authority evidence on retry.
+
+## Completed in Wave 1C checkpoint
+
+- A confirmed official BUY order can be registered against its exact risk decision, owner and five
+  reservations. Broker order IDs are scoped by account and market, so equal KR/US IDs cannot cross
+  release or actual-evidence boundaries.
+- `Journal.RecordFill` applies the a066 sidecar inside the same `BEGIN IMMEDIATE` transaction as its
+  authoritative fill snapshot, Position and existing campaign/exit hooks. A later hook failure rolls
+  back both projections; semantic a066 drift preserves the fill and Position and latches new entry.
+- Partial fills transfer proportional HELD in every bucket. Monotonic actual evidence completes
+  usage as `filled=max(transfer,actual)`; missing actual price/fee/FX latches
+  `UNKNOWN_ACTUAL_RISK` without rejecting the fill.
+- Replacement ownership is handed to the successor reservation. A replaced predecessor cannot be
+  released independently; predecessor-late or post-cancel/expiry fills remain authoritative and
+  latch overage when released HELD is insufficient.
+- Duplicate/retry, restart replay, orphan mapping, snapshot drift and crash atomicity have focused
+  coverage. All monetary sums use bounded exact 256-bit integers rather than SQLite integer casts.
+- SELL/risk-reducing fills bypass entry accounting. Single-decision owners are supported; owners with
+  multiple final decisions fail closed at order registration until aggregate order binding lands.
+- Order replay seals are canonical ordered DTOs, never JSON encodings of struct-keyed maps. The
+  reservation-policy seal and quote/base currencies are derived from the five persisted authority
+  policies; caller strings cannot become authority. Order quantity must equal the one exact confirmed
+  intent quantity. US coverage pins USD/KRW while KR remains isolated.
+- Ambiguous or corrupt sidecar reconstruction is classified separately from database transport
+  failure. It preserves the broker fill and Position, latches every applicable reservation and owner,
+  and records `FILL_UNACCOUNTED`; genuine storage failures still roll back the outer transaction.
+- v22→v23 preservation, failed-migration rollback and older-v22-build refusal are step-pinned. The
+  original v22 SQL matches commit `4aee6853`; a v22 binary sees v23 as `ErrSchemaTooNew`.
+- Actual-evidence completion and cancel/expiry release remain package-private test seams with zero
+  non-test callers. They cannot become production authority until official sealed fill evidence and
+  journal-derived confirmed cancellation/expiry, broker-zero and clean lifecycle adapters land.
 
 ## Completed in Wave 1A
 
@@ -66,16 +98,26 @@
 | `go vet ./internal/journal` | PASS |
 | Strict OpenSpec validation | PASS |
 | Full `go test ./internal/journal` | INCOMPLETE: no-output timeout at 240 seconds; focused suites remain GREEN |
+| Wave 1C focused journal tests | PASS (including canonical replay, replacement/release and ambiguous non-drop regressions) |
+| Wave 1C focused journal race | PASS (54.071s) |
+| Wave 1C existing fill/apply-hook regressions | PASS |
+| Wave 1C journal+riskbucket vet | PASS |
+| Wave 1C strict OpenSpec validation / diff check | PASS |
+| v22 SQL versus released `4aee6853` | PASS: exact diff |
+| v22→v23 row preservation / no auto-promotion | PASS |
+| broken v23 rename+version atomic rollback | PASS |
+| v22 build opening v23 | PASS: `ErrSchemaTooNew` |
+| v22→v23 pre-migration backup | PASS: self-contained v22 copy with exact legacy rows |
+| v23 hardened focused journal race | PASS (34.960s) |
 
-## Pending Wave 1B integration
+## Pending integration
 
-- Authoritative fill/cancel/expiry and clean owner-release journal transactions, including
-  replacement/predecessor-late fill and late actual-evidence completion.
+- Multi-decision aggregate order registration and authoritative prospective-to-actual owner binding,
+  plus clean owner release after reconciliation/protection/sell evidence is complete.
 - Atomic integration with the actual GuardianDecision writer (the new journal decision is a dormant
   sidecar and does not claim Guardian authority).
 - Guardian/Gateway/entry-loss-lock integration and zero exposure-raising broker request spies.
-- KR/US concurrent runtime integration, cancel/expiry, restart/orphan/snapshot-drift and risk-reducing
-  bypass tests.
+- KR/US concurrent runtime integration and independent lane-operation tests.
 - Full repository validation, independent implementation review and `make gate`.
 
 No existing runtime function, live order path or operating toggle is activated by Wave 1B.
