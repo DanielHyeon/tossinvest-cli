@@ -66,7 +66,7 @@ var pages = func() *template.Template {
 	for _, source := range []string{
 		portfolioTemplates, settingsTemplates, overviewTemplates, ordersTemplates,
 		signalsTemplates, optimizationTemplates, openAPIOnboardingTemplates,
-		positionPolicyTemplates,
+		positionPolicyTemplates, exitQuarantineTemplates,
 	} {
 		t = template.Must(t.Parse(source))
 	}

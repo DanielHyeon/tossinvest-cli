@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a063",
+  "title": "Let an operator lift an exit-snapshot quarantine without rebuilding the baseline",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a063-operator-can-lift-a-quarantine",
+    "path": "openspec/changes/a063-operator-can-lift-a-quarantine"
+  },
+  "acceptance": [
+    "A position whose exit snapshot generation is quarantined can be returned to judgement by an operator from the console, keeping the stored entry, initial stop and high-water exactly as they are",
+    "The release is a compare-and-swap on the exact quarantine version the operator was shown, and a stale version is refused without writing",
+    "The release records the actor, the released quarantine's reason and the server-composed evidence; the operator is never asked to type a confirmation phrase",
+    "Releasing does not change the position lifecycle: no new adoption generation, no new observation t0, no exit_states write",
+    "A quarantine whose underlying cause still holds is re-created by the very next observation, so a release can retry a judgement but cannot suppress one",
+    "Nothing releases a quarantine automatically; AUTHORITATIVE_RECONCILE stays unwired"
+  ]
+}

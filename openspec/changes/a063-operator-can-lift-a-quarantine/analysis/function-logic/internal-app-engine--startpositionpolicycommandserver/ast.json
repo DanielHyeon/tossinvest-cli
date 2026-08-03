@@ -1,0 +1,798 @@
+{
+  "file": "internal/app/engine/position_policy_transport.go",
+  "source_sha256": "86ce7506b54a3f292f56a4106dc3200328594515aa9e490187c04a7a73eb02e6",
+  "package": "engine",
+  "function": "StartPositionPolicyCommandServer",
+  "signature": "StartPositionPolicyCommandServer(params=2, results=2)",
+  "start": {
+    "line": 43,
+    "column": 1
+  },
+  "end": {
+    "line": 136,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "else",
+      "at": {
+        "line": 61,
+        "column": 9
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 58,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 3
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 59,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 94,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 101,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 106,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 130,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidateEngineDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 16
+      },
+      "text": "positionpolicyrpc.ControlDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 12
+      },
+      "text": "os.Mkdir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidateControlDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 8
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 8
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 19
+      },
+      "text": "net.Listen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 3
+      },
+      "text": "cleanupControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 16
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 15
+      },
+      "text": "rand.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 3
+      },
+      "text": "listener.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 3
+      },
+      "text": "cleanupControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 11
+      },
+      "text": "base64.RawURLEncoding.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 9
+      },
+      "text": "http.NewServeMux"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 35
+      },
+      "text": "positionpolicyrpc.DescriptorPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 31
+      },
+      "text": "server.auth"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 3
+      },
+      "text": "writeRPCJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 34
+      },
+      "text": "server.auth"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 18
+      },
+      "text": "commands.List"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 32
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 4
+      },
+      "text": "writePositionPolicyRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 3
+      },
+      "text": "writeRPCJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 32
+      },
+      "text": "server.auth"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 3
+      },
+      "text": "positionPolicyRequestHandler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 30
+      },
+      "text": "server.auth"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 3
+      },
+      "text": "positionPolicyRequestHandler"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 3
+      },
+      "text": "registerExitQuarantineRoutes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 12
+      },
+      "text": "String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 12
+      },
+      "text": "listener.Addr"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 57
+      },
+      "text": "os.Getpid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 12
+      },
+      "text": "writePositionPolicyDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 3
+      },
+      "text": "listener.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 3
+      },
+      "text": "cleanupControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 7
+      },
+      "text": "server.server.Serve"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 57,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 62,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 66,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 72,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 127,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 133,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    }
+  ],
+  "defers": null
+}

@@ -56,7 +56,7 @@
 - [x] 6.4 `TestEveryCapabilityTheConsoleReceivesIsEnumeratedAndDeclaresNothingButReads`
       green 유지 — 주입 seam이 늘지 않았다.
 - [x] 6.5 `make test`, `make vet`, `make validate`, `make sdd-sync`, `make sdd-check`.
-- [ ] 6.6 `make gate CHANGE=a061-screens-show-what-they-already-know`.
+- [x] 6.6 `make gate CHANGE=a061-screens-show-what-they-already-know`.
 - [ ] 6.7 사람 승인 후 컨테이너 실측 — 다섯 값이 나오는지, 466100이 `판정 격리`로
       나오는지, `/position-management`에 한글 종목명이 나오는지.
 

@@ -9,6 +9,7 @@ const positionPolicyTemplates = `
 {{if .Notice}}<p class="notice" role="status">{{.Notice}}</p>{{end}}
 {{if .LoadErr}}<p class="danger" role="alert">불러오기 실패: <code>{{.LoadErr}}</code></p>{{end}}
 {{if not .Wired}}<p class="notice">engine-owned PositionPolicyCommander가 배선되지 않아 조회만 가능하다.</p>{{end}}
+{{if .QuarantineErr}}<p class="notice" role="status">판정 격리 상태를 읽지 못했다: <code>{{.QuarantineErr}}</code>. 격리된 포지션이 있어도 이 화면에 표시되지 않는다.</p>{{end}}
 
 <section aria-labelledby="auto-adoption-heading">
 <h2 id="auto-adoption-heading">{{.Descriptor.AutoAdoptionSection}}</h2>
@@ -52,11 +53,16 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 <span class="submetric">status <code>{{.Management.Status}}</code> · reason <code>{{.Management.Reason}}</code></span>
 <span class="submetric">policy lifecycle {{.State.Status}} · provenance {{.State.Provenance}} · eligibility {{.State.Eligibility}}</span>
 {{if .Block.Present}}<span class="submetric danger">대사 차단 · {{.Block.Target}} · {{.Block.Reason}}{{if .Block.Detail}} · {{.Block.Detail}}{{end}} · {{.Block.Age}}{{if .Block.Permanent}} · 영구 차단{{end}}</span>{{end}}
-{{if .State.HasPendingExit}}<span class="submetric danger">active exit 있음</span>{{end}}</td>
+{{if .State.HasPendingExit}}<span class="submetric danger">active exit 있음</span>{{end}}
+{{if .Quarantine.Present}}<span class="submetric danger">판정 격리 v{{.Quarantine.Version}} · {{.Quarantine.ReasonText}} · {{.Quarantine.Age}} 경과 · 유지 보호선 {{.Quarantine.ProtectionText}}</span>
+<span class="submetric danger">이 포지션은 지금 exit 판정 대상이 아니다 — 손절도 평가되지 않는다</span>{{end}}</td>
 <td data-label="desired/effective"><strong>{{.State.DesiredLabel}}</strong><span class="submetric">effective {{.State.EffectiveLabel}}</span></td>
 <td data-label="현재 행 action"><div class="actions">{{range .Actions}}<form method="post" action="/position-management/preview">
 <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="action_token" value="{{.Token}}">
-<button type="submit" {{if .Danger}}class="secondary"{{end}} aria-label="{{.Label}} preview">{{.Label}}</button></form>{{end}}</div></td>
+<button type="submit" {{if .Danger}}class="secondary"{{end}} aria-label="{{.Label}} preview">{{.Label}}</button></form>{{end}}
+{{if and .Quarantine.Present .Quarantine.Token}}<form method="post" action="/position-management/quarantine/preview">
+<input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="quarantine_token" value="{{.Quarantine.Token}}">
+<button type="submit" class="secondary" aria-label="판정 격리 해제 preview">판정 격리 해제</button></form>{{end}}</div></td>
 </tr>{{end}}</tbody></table>
 {{else}}<p class="notice">관리할 현재 포지션 행이 없다.</p>{{end}}
 </section>

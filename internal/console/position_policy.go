@@ -14,6 +14,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 )
 
@@ -46,6 +47,11 @@ type policyRowView struct {
 	Management positionpolicy.ManagementProjection
 	Block      reconcileBlockView
 	Actions    []policyActionView
+	// Quarantine is the active exit-snapshot quarantine of this generation, if
+	// any (change a063). It is independent of the lifecycle actions above: a
+	// quarantine can land on any managed position regardless of provenance, and
+	// lifting one changes no lifecycle field.
+	Quarantine quarantineBadgeView
 }
 
 type positionPolicyPage struct {
@@ -63,6 +69,9 @@ type positionPolicyPage struct {
 	BlockSource    string
 	Blocks         []reconcileBlockView
 	Rows           []policyRowView
+	// QuarantineErr explains why the quarantine column is blank. It is a
+	// secondary read: failing it must not stop the screen from drawing.
+	QuarantineErr string
 }
 
 // No Refresh method: chrome carries Refresh as a field and this screen leaves it
@@ -234,6 +243,19 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	names := c.holdingNames(c.now())
+	// Secondary read (change a063): a console talking to an engine that predates
+	// the capability, or an engine that cannot answer right now, still draws the
+	// whole screen. Only the quarantine column goes unknown.
+	quarantines := map[string]exitquarantine.Row{}
+	if commander, ok := c.exitQuarantines(); ok {
+		rows, quarantineErr := commander.Quarantines(r.Context())
+		if quarantineErr != nil {
+			page.QuarantineErr = quarantineErr.Error()
+		}
+		for _, row := range rows {
+			quarantines[row.PositionID] = row
+		}
+	}
 	for _, state := range states {
 		management := positionpolicy.ProjectManagement(positionpolicy.ManagementInput{
 			Market: state.Market, Symbol: state.Symbol, JournalKnown: true,
@@ -245,6 +267,16 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 			Name: names[symbolKey(state.Market, state.Symbol)]}
 		if management.Block != nil {
 			row.Block = newReconcileBlockView(*management.Block, c.now())
+		}
+		// Keyed by position alone, on purpose. The generation rule lives in one
+		// place — the ledger read, which joins q.position_generation against
+		// p.instance_seq — and State.AdoptionGeneration is a different number:
+		// it comes from position_policy_lifecycles and defaults to 1 for every
+		// position that has never had a lifecycle command, whatever instance the
+		// position is on. Comparing the two here would silently hide the
+		// quarantine of any re-adopted position.
+		if quarantine, ok := quarantines[state.PositionID]; ok {
+			row.Quarantine = c.newQuarantineBadge(quarantine, c.now())
 		}
 		if state.Status == positionpolicy.StatusManaged {
 			row.Actions = append(row.Actions, c.policyAction(state, positionpolicy.ActionInherit, "", "공통 정책 상속", false))

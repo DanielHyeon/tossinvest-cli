@@ -391,8 +391,14 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/optimization/exit-protection/apply":   true,
 		"/position-management/preview":          true,
 		"/position-management/apply":            true,
-		"/openapi/login/save":                   true,
-		"/logout":                               true,
+		// The quarantine release (a063). It writes released_at on a ledger row and
+		// puts a position back under automated judgement, so a forged request
+		// would be an act in exactly the sense this list means — even though the
+		// act is "resume judging" rather than "stop judging".
+		"/position-management/quarantine/preview": true,
+		"/position-management/quarantine/apply":   true,
+		"/openapi/login/save":                     true,
+		"/logout":                                 true,
 	}
 	seen := map[string]bool{}
 	for _, r := range registeredRoutes(t) {

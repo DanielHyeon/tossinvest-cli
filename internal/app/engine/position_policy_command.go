@@ -64,6 +64,11 @@ type PositionPolicyCommandService struct {
 	clk          clock.Clock
 	instanceID   string
 	capabilities []positionPolicyCapability
+	// quarantineGrants is change a063's separate capability store. Its zero value
+	// is the whole of its initialisation, which is why the constructor below is
+	// untouched. See exit_quarantine_command.go for why it is not shared with
+	// capabilities above.
+	quarantineGrants []exitQuarantineCapability
 }
 
 type positionPolicyCapability struct {
