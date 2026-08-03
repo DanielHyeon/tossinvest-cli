@@ -24,7 +24,7 @@ Continuation evaluator는 시장별 strict versioned input schema와 exact integ
 공통 envelope는 schema version, market, symbol, source record/digest, `effective_at`, `observed_at`,
 `ingested_at`, `evaluated_at`, `fresh_until`, metric units, threshold set과 config digest를 요구해야 하고
 (SHALL), `effective_at <= observed_at <= ingested_at <= evaluated_at <= fresh_until`을 만족하지 않거나
-unknown field, unit, digest 또는 overflow가 있으면 typed refusal이어야 한다 (SHALL).
+unknown field, 중복 JSON object key, unit, digest 또는 overflow가 있으면 typed refusal이어야 한다 (SHALL).
 KR flow schema는 signed `net_flow_notional_minor`, positive `turnover_notional_minor`와
 `flow_pressure_ppm = trunc_toward_zero(net_flow_notional_minor * 1_000_000 /
 turnover_notional_minor)`를 사용해야 한다 (SHALL). US participation schema는 non-negative
@@ -46,6 +46,10 @@ Evaluator는 versioned config에 저장된 integer ppm thresholds와 정의된 i
 #### Scenario: freshness와 시각 순서 위반
 - **WHEN** evidence가 `evaluated_at > fresh_until`이거나 timestamp ordering을 위반한다
 - **THEN** 해당 시장 lane만 typed stale/invalid refusal을 반환하고 peer market 평가는 계속된다
+
+#### Scenario: duplicate JSON key
+- **WHEN** KR 또는 US evidence의 top-level이나 nested object에 같은 key가 두 번 나타난다
+- **THEN** 마지막 값으로 덮어쓰지 않고 strict decoder가 입력 전체를 거부한다
 
 ### Requirement: continuation progression은 immutable 8:4:2 planned allocation을 따른다
 Continuation campaign은 immutable campaign risk budget과 planned quantity `Q`에서 세 leg ceiling을 계산해야 한다 (SHALL).
@@ -73,6 +77,20 @@ valuation currency로 환산한 뒤 minor-unit ceil해야 하며 (SHALL), 다른
 막지 않고 `CAMPAIGN_RISK_OVERAGE`나 unknown-risk latch를 영속해 모든 후속
 exposure-raising leg를 차단해야 한다 (SHALL). Overage를 unused planned quantity로
 상쇄해서는 안 된다 (MUST NOT).
+A066 cap seal은 exact immutable campaign-plan digest, plan policy digest와 proposed reservation
+quantity를 포함해야 하며 (SHALL), policy가 다르거나 같은 market/policy의 다른 campaign plan에서
+replay해서는 안 된다 (MUST NOT).
+Fill/cancel risk event는 exact plan/risk state, campaign ID, leg ordinal, order reference, source digest와
+RFC3339Nano observation time에 결속되어야 한다 (SHALL). 이 scope가 불일치하거나 provenance가
+비어 있으면 held/filled accounting을 변경하지 않고 non-applied evidence와 unknown-risk latch를
+남겨야 한다 (SHALL). FillID/CancelID가 없으면 full non-ID preimage digest를 synthetic identity로
+사용해 exact raw retry만 idempotent하게 처리하고 다른 raw preimage를 합쳐서는 안 된다 (MUST NOT).
+Campaign ID, order reference와 source digest는 각각 최대 256 bytes여야 한다 (SHALL).
+Quantity가 0인 FillRiskEvent는 positive fill로 적용하거나 held를 release하거나 filled risk를
+증가시켜서는 안 되며 (MUST NOT), non-applied evidence와 unknown-risk latch를 남겨야 한다 (SHALL).
+Stop candidate는 price/source/policy/version/digest/observed-at/fresh-until을 함께 봉인해야 하며
+(SHALL), `observed_at <= evaluated_at <= fresh_until`을 만족하는 경우에만 admission에 사용할 수
+있다 (SHALL). Cancelled 또는 expired leg는 모두 terminal이어야 한다 (SHALL).
 
 #### Scenario: floor와 마지막 remainder
 - **WHEN** immutable planned quantity Q로 8:4:2 plan을 만든다
@@ -89,6 +107,18 @@ exposure-raising leg를 차단해야 한다 (SHALL). Overage를 unused planned q
 #### Scenario: property와 replay 불변식
 - **WHEN** 임의 Q, partial fills, duplicate retry와 cancel/expiry sequence를 replay한다
 - **THEN** 모든 q_leg는 해당 planned ceiling과 a066 cap 이하이고 admitted filled/held/proposed monetary risk는 immutable campaign budget 이하이며 duplicate fill은 risk를 다시 늘리지 않고 zero-fill cancel/expiry는 미체결 conservative held만 release한다
+
+#### Scenario: foreign 또는 incomplete fill/cancel event
+- **WHEN** 다른 campaign ID, leg 99, empty order/source 또는 invalid observation time의 risk event가 도착한다
+- **THEN** 기존 held/filled 값은 그대로 유지되고 non-applied evidence와 unknown-risk latch만 남으며 exact raw retry만 duplicate다
+
+#### Scenario: fill risk accounting precondition failure
+- **WHEN** transferred reservation이 held보다 크거나 held/filled 값이 corrupt하거나 `filled + risk`가 overflow한다
+- **THEN** fill evidence와 unknown-risk latch는 보존되지만 held/filled는 둘 다 기존 값 그대로이며 부분 accounting update는 0건이다
+
+#### Scenario: zero quantity fill observation
+- **WHEN** FillRiskEvent quantity가 0이거나 기존 positive FillID와 zero-quantity raw event가 충돌한다
+- **THEN** positive fill application은 0건이고 held/filled는 불변이며 unknown-risk latch와 non-applied evidence가 보존된다
 
 #### Scenario: transferred reservation보다 낮은 actual risk
 - **WHEN** positive fill의 가격·stop·비용 산식값이 held에서 이전된 conservative reservation보다 낮다
@@ -109,6 +139,10 @@ exposure-raising leg를 차단해야 한다 (SHALL). Overage를 unused planned q
 #### Scenario: invalidation과 add가 동시에 성립한다
 - **WHEN** 같은 evaluation에서 continuation add 조건과 exit/structural invalidation이 함께 관측된다
 - **THEN** lane은 typed invalidation/refusal만 반환하고 신규 leg decision은 0건이며 공통 exit engine 권한은 계속된다
+
+#### Scenario: invalidation code가 비어 있다
+- **WHEN** structural 또는 exit invalidation flag가 true지만 typed invalidation code가 비어 있다
+- **THEN** lane은 invalidation을 합성하지 않고 typed invalidation-invalid refusal을 반환한다
 
 ### Requirement: continuation 결과는 시장별 lineage를 보존한다
 모든 continuation decision과 refusal은 market-scoped lineage를 보존해야 한다 (SHALL).
