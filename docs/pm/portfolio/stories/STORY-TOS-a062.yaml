@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a062-reconcile-owned-orders",
-    "path": "openspec/changes/a062-reconcile-owned-orders"
+    "path": "openspec/changes/archive/2026-08-03-a062-reconcile-owned-orders"
   },
   "acceptance": [
     "A broker order with no confirmed local mutation attempt or lineage is never treated as an engine-owned open order",

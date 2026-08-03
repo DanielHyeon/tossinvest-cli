@@ -65,4 +65,4 @@
 | `a059-console-finds-the-engine-it-owns` | STORY-TOS-a059 | implemented |
 | `a060-soak-restart-uses-this-profile` | STORY-TOS-a060 | implemented |
 | `a061-show-history-instrument-names` | STORY-TOS-a061 | archived |
-| `a062-reconcile-owned-orders` | STORY-TOS-a062 | implemented |
+| `a062-reconcile-owned-orders` | STORY-TOS-a062 | archived |
