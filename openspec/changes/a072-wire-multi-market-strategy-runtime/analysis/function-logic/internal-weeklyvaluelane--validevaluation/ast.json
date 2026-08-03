@@ -1,15 +1,15 @@
 {
   "file": "internal/weeklyvaluelane/evaluate_registry_test.go",
-  "source_sha256": "c8d616806df8b2fd08f76ee78242dc48d1ec617de372058692272c81a6645ac6",
+  "source_sha256": "e7cb157846fbe07d69c13e1c0d4d631ffedac26029ee0ce8a72a463162301009",
   "package": "weeklyvaluelane",
   "function": "validEvaluation",
   "signature": "validEvaluation(params=4, results=1)",
   "start": {
-    "line": 72,
+    "line": 73,
     "column": 1
   },
   "end": {
-    "line": 89,
+    "line": 90,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 77,
+        "line": 78,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 88,
+        "line": 89,
         "column": 2
       }
     }
@@ -35,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 73,
+        "line": 74,
         "column": 2
       },
       "text": "t.Helper"
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 76,
         "column": 10
       },
       "text": "validWeek"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 76,
         "column": 20
       },
       "text": "plan.Market"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 76,
         "column": 113
       },
       "text": "plan.Market"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 76,
+        "line": 77,
         "column": 19
       },
       "text": "ApplyReservation"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 76,
+        "line": 77,
         "column": 36
       },
       "text": "NewReservationState"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 76,
+        "line": 77,
         "column": 59
       },
       "text": "reserveCommand"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 76,
+        "line": 77,
         "column": 77
       },
       "text": "plan.CampaignID"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 78,
+        "line": 79,
         "column": 3
       },
       "text": "t.Fatal"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 80,
+        "line": 81,
         "column": 14
       },
       "text": "PlannedLegQuantity"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 82,
+        "line": 83,
         "column": 70
       },
       "text": "validCap"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 82,
+        "line": 83,
         "column": 114
       },
       "text": "NewRiskState"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 83,
+        "line": 84,
         "column": 20
       },
       "text": "mintStopCandidate"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 83,
+        "line": 84,
         "column": 200
       },
       "text": "evaluated.Add"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 85,
+        "line": 86,
         "column": 26
       },
       "text": "mintDormantEvaluationAuthorization"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 86,
+        "line": 87,
         "column": 27
       },
       "text": "mintExecutionTermsPreimage"
@@ -163,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 87,
+        "line": 88,
         "column": 31
       },
       "text": "mintSavedStopAuthority"
@@ -173,13 +173,6 @@
     {
       "kind": ":=",
       "at": {
-        "line": 74,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
         "line": 75,
         "column": 2
       }
@@ -194,7 +187,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 80,
+        "line": 77,
         "column": 2
       }
     },
@@ -206,9 +199,9 @@
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
-        "line": 85,
+        "line": 82,
         "column": 2
       }
     },
@@ -223,6 +216,13 @@
       "kind": "=",
       "at": {
         "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 88,
         "column": 2
       }
     }

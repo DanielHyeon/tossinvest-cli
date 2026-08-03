@@ -9,15 +9,15 @@ Consumes sealed plan/evidence/cap/risk state and explicit caller-provided entry/
 
 ## Branches and early returns
 
-B1-B19 cover plan, invalidation, OFF, scope, signal, stop, leg, latch, cap, arithmetic and risk budget refusals. B20 requires sealed exact execution terms and canonical `stop < entry < target` before decision; forged saved-stop provenance therefore cannot reach an accepted outcome.
+B1-B6 cover plan, invalidation, OFF, scope and signal refusals. B7 rejects a public saved-stop scalar without a valid private authority. B8-B20 cover stop, leg, latch, cap, arithmetic and risk budget refusals. B21 requires sealed exact execution terms and canonical `stop < entry < target` before decision. The selected saved price comes from private authority, so public scalar mutation cannot retreat it.
 
 ## Calls and live bindings
 
-Pure stop composition, private saved-stop authority validation, allocation and risk arithmetic only.
+Private saved-stop price selection, pure stop composition, allocation and risk arithmetic only.
 
 ## State mutations and fallbacks
 
-None. Accepted outcome preserves canonical terms; refusal returns no terms.
+None. Accepted outcome preserves canonical terms. A valid private saved authority overrides the public compatibility scalar; an absent authority permits only an empty public scalar.
 
 ## Safety conclusion
 

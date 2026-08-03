@@ -191,7 +191,11 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	if !request.Cap.validAt(request.Plan, request.Evidence.EvaluatedAt, quantity) {
 		return refuse(RefusalCapInvalid)
 	}
-	effectiveStop, stopCode := effectiveStop(request.SavedEffectiveStopMinor, request.StopCandidate, request.Evidence.EvaluatedAt)
+	savedStopMinor, savedStopOK := request.savedStopAuthority.effectivePrice(request.Plan, request.Evidence, request.SavedEffectiveStopMinor)
+	if !savedStopOK {
+		return refuse(RefusalExecutionTermsInvalid)
+	}
+	effectiveStop, stopCode := effectiveStop(savedStopMinor, request.StopCandidate, request.Evidence.EvaluatedAt)
 	if stopCode != "" {
 		return refuse(stopCode)
 	}

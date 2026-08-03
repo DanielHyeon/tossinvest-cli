@@ -55,3 +55,21 @@ func TestCallerForgedSavedStopProvenanceFailsClosed(t *testing.T) {
 		t.Fatalf("caller forged saved stop authority: %+v", got)
 	}
 }
+
+func TestPublicSavedStopScalarCannotRetreatSealedAuthority(t *testing.T) {
+	plan := mustPlan(t, MarketKR, KRContinuationLaneID, "KRW", "KRW", nil, 14, "1000")
+	evidence, config := validKRFixture()
+	base := validKREvaluation(t, plan, evidence, config)
+	base.Context.savedStopAuthority = mintSavedStopProvenance(plan, evidence.Envelope, "100")
+
+	for _, scalar := range []string{"", "95", "90"} {
+		t.Run("scalar_"+scalar, func(t *testing.T) {
+			request := base
+			request.Context.SavedEffectiveStopMinor = scalar
+			got := EvaluateKR(request)
+			if got.Kind != OutcomeDecision || got.EffectiveStopMinor != "100" || got.StopProvenance.PriceMinor != "100" {
+				t.Fatalf("public scalar retreated sealed stop: scalar=%q outcome=%+v", scalar, got)
+			}
+		})
+	}
+}

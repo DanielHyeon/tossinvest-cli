@@ -60,6 +60,14 @@ func (v savedStopAuthority) valid(plan CampaignPlan, evidence DisclosureEvidence
 		v.seal != ([32]byte{}) && v.seal == weeklySavedStopSeal(v)
 }
 
+func (v savedStopAuthority) effectivePrice(plan CampaignPlan, evidence DisclosureEvidence, publicScalar string) (string, bool) {
+	if v.seal == ([32]byte{}) {
+		return "", publicScalar == ""
+	}
+	price := v.provenance.PriceMinor
+	return price, v.valid(plan, evidence, price)
+}
+
 func weeklySavedStopSeal(v savedStopAuthority) [32]byte {
 	return sha256.Sum256([]byte(strings.Join([]string{"weekly-saved-stop:v1", v.planDigest, v.evidenceDigest, v.provenance.PriceMinor,
 		v.provenance.Source, v.provenance.Version, v.provenance.Digest, v.provenance.AsOf, v.provenance.Currency, strconv.Itoa(v.provenance.MinorScale), v.provenance.UnitVersion}, "\x00")))

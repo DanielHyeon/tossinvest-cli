@@ -63,3 +63,23 @@ func TestWeeklySavedStopNeverInheritsCandidateProvenance(t *testing.T) {
 		t.Fatalf("saved stop inherited candidate provenance: %+v", got)
 	}
 }
+
+func TestWeeklyPublicSavedStopScalarCannotRetreatSealedAuthority(t *testing.T) {
+	evidence := mustKREvidence(t)
+	plan := mustPlan(t, MarketKR, KRWeeklyLaneID, "KRW", "KRW", nil, 14, "1000")
+	base := validEvaluation(t, plan, evidence, validKRConfig())
+	base.EntryPriceMinor = "105"
+	base.executionTerms = mintExecutionTermsPreimage(plan, evidence, base.EntryPriceMinor, base.StagedTargetMinor, base.EntryCostsMinor, base.EstimatedExitCostsLeviesMinor, base.MinimumRRPPM)
+	base.savedStopAuthority = mintSavedStopAuthority(plan, evidence, "100")
+
+	for _, scalar := range []string{"", "90", "80"} {
+		t.Run("scalar_"+scalar, func(t *testing.T) {
+			request := base
+			request.SavedEffectiveStopMinor = scalar
+			got := EvaluateKR(request)
+			if got.Kind != OutcomeDecision || got.EffectiveStopMinor != "100" || got.StopProvenance.PriceMinor != "100" {
+				t.Fatalf("public scalar retreated sealed stop: scalar=%q outcome=%+v", scalar, got)
+			}
+		})
+	}
+}

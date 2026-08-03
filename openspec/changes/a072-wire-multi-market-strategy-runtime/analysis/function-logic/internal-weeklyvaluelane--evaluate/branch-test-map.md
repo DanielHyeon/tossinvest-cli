@@ -23,16 +23,17 @@
 | B19 | seven-leg plan exhausted | allocation tests |
 | B20 | zero quantity | allocation tests |
 | B21 | invalid A066 cap | cap tests |
-| B22 | invalid effective stop | stop tests |
-| B23 | saved stop selected without valid private authority | `TestWeeklySavedStopNeverInheritsCandidateProvenance` plus forged-authority subcase |
-| B24 | missing/noncanonical entry | exact terms tests |
-| B25 | missing/noncanonical staged target | `TestWeeklyMissingExplicitTargetFailsClosed` |
-| B26 | invalid entry/stop arithmetic | stop tests |
-| B27 | structural stop distance exceeded | stop cap tests |
-| B28 | RR refused | RR tests |
-| B29 | computed exact terms invalid | exact terms tests |
-| B30 | risk admission refusal | risk tests |
-| B31 | unsupported currency scale | execution authority tests |
-| B32 | saved stop replaces candidate provenance | `TestWeeklySavedStopNeverInheritsCandidateProvenance` |
+| B22 | public saved scalar has no valid private authority | forged-authority subcase in `TestWeeklySavedStopNeverInheritsCandidateProvenance` |
+| B23 | invalid effective stop | stop tests |
+| B24 | selected saved stop lacks valid private authority | `TestWeeklySavedStopNeverInheritsCandidateProvenance` |
+| B25 | missing/noncanonical entry | exact terms tests |
+| B26 | missing/noncanonical staged target | `TestWeeklyMissingExplicitTargetFailsClosed` |
+| B27 | invalid entry/stop arithmetic | stop tests |
+| B28 | structural stop distance exceeded | stop cap tests |
+| B29 | RR refused | RR tests |
+| B30 | computed exact terms invalid | exact terms tests |
+| B31 | risk admission refusal | risk tests |
+| B32 | unsupported currency scale | execution authority tests |
+| B33 | saved stop replaces candidate provenance | `TestWeeklySavedStopNeverInheritsCandidateProvenance` |
 
-Accepted KR/US tests assert the exact fair-value-capped target from `CalculateRR`.
+`TestWeeklyPublicSavedStopScalarCannotRetreatSealedAuthority` covers empty, candidate-equal and below-candidate scalar mutations while preserving sealed stop 100.

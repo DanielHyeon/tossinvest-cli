@@ -1,15 +1,15 @@
 {
   "file": "internal/weeklyvaluelane/evaluate.go",
-  "source_sha256": "3f0b572eecf7378425f7992673d1c825110448268af2ace1a084cc20ba99ebd8",
+  "source_sha256": "4ee36de3e40a8981c793aeb252757220f905548a2da41be27800c735ecaa077c",
   "package": "weeklyvaluelane",
   "function": "canonicalPositiveMinor",
   "signature": "canonicalPositiveMinor(params=1, results=2)",
   "start": {
-    "line": 250,
+    "line": 254,
     "column": 1
   },
   "end": {
-    "line": 256,
+    "line": 260,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 251,
+        "line": 255,
         "column": 2
       }
     }
@@ -26,14 +26,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 252,
+        "line": 256,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 255,
+        "line": 259,
         "column": 2
       }
     }
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 251,
+        "line": 255,
         "column": 18
       },
       "text": "strings.TrimSpace"
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 254,
+        "line": 258,
         "column": 15
       },
       "text": "parseUnsigned"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
+        "line": 259,
         "column": 22
       },
       "text": "value.Sign"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
+        "line": 259,
         "column": 42
       },
       "text": "value.String"
@@ -76,7 +76,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 254,
+        "line": 258,
         "column": 2
       }
     }

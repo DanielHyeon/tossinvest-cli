@@ -97,6 +97,14 @@ func (value savedStopAuthority) valid(plan CampaignPlan, envelope EvidenceEnvelo
 		value.provenance.PriceMinor == price && value.seal != ([32]byte{}) && value.seal == savedStopAuthoritySeal(value)
 }
 
+func (value savedStopAuthority) effectivePrice(plan CampaignPlan, envelope EvidenceEnvelope, publicScalar string) (string, bool) {
+	if value.seal == ([32]byte{}) {
+		return "", publicScalar == ""
+	}
+	price := value.provenance.PriceMinor
+	return price, value.valid(plan, envelope, price)
+}
+
 func savedStopAuthoritySeal(value savedStopAuthority) [32]byte {
 	return sha256.Sum256([]byte(strings.Join([]string{"continuation-saved-stop:v1", value.planDigest, value.evidenceDigest,
 		provenanceIdentity("saved-stop", value.provenance)}, "\x00")))

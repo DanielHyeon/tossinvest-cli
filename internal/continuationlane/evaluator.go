@@ -219,7 +219,12 @@ func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal Signa
 		outcome.Code = signal.Code
 		return outcome
 	}
-	effectiveStop, ok := composeStop(context.SavedEffectiveStopMinor, context.StopCandidate, envelope.EvaluatedAt)
+	savedStopMinor, savedStopOK := context.savedStopAuthority.effectivePrice(context.Plan, envelope, context.SavedEffectiveStopMinor)
+	if !savedStopOK {
+		outcome.Code = RefusalExecutionTermsInvalid
+		return outcome
+	}
+	effectiveStop, ok := composeStop(savedStopMinor, context.StopCandidate, envelope.EvaluatedAt)
 	if !ok {
 		outcome.Code = RefusalStopInvalid
 		return outcome

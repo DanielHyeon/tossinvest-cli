@@ -58,6 +58,7 @@ func TestStopCapInvalidationAndCommonExitAuthorityRemainSeparated(t *testing.T) 
 		t.Fatalf("stop retreated=%+v", got)
 	}
 	request.SavedEffectiveStopMinor = ""
+	request.savedStopAuthority = savedStopAuthority{}
 	if got := EvaluateKR(request); got.Code != RefusalStructuralStopCap {
 		t.Fatalf("wide stop narrowed/accepted=%+v", got)
 	}
