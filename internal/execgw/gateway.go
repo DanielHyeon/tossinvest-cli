@@ -47,6 +47,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/protection"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
@@ -84,19 +85,16 @@ type Options struct {
 	// string; tests inject a deterministic sequence.
 	NewID func() string
 
-	// ProtectionOverrideForTest replaces the build's ProfileProtection constant.
-	//
-	// It is exported only because the suites that need it are in other packages
-	// (internal/reconcile's gateway tests, internal/app/engine's tracer), and an
-	// export_test.go seam is visible only inside its own package. The guarantee it
-	// gives up — "no caller can spell this" — is restored by an assertion of the
-	// same class the repository already uses for the WTS mutators: no shipped file
-	// sets it, proved over the AST (protection_test.go).
-	//
-	// Setting it in non-test code is a way to claim broker-resident protective
-	// execution this build does not have. The name says so and the test enforces
-	// it; there is no other reason for this field to exist.
-	ProtectionOverrideForTest *ProtectionReadiness
+	// ProtectionReadiness is the sealed, market-scoped snapshot adapter checked
+	// for exposure-raising mutations. Supplying strings or booleans cannot mint a
+	// WIRED snapshot; nil fails closed in production. The engine supplies the
+	// paired-UNWIRED default in this wave.
+	ProtectionReadiness *protection.ReadinessAdapter
+
+	// These fields have no exported production setter. The test binary supplies
+	// them only through methods compiled in export_test.go.
+	forceReadinessAdapterForTest bool
+	protectionCheckForTest       func(context.Context, string, protectionCheckpoint) (protectionCheckpoint, *RejectedError)
 
 	// Replay resends the request body an IN_DOUBT attempt stored, so its
 	// identity can be recovered from the broker's idempotent answer (replay.go).
@@ -131,9 +129,9 @@ type Gateway struct {
 	replayCfg  ReplayConfig
 	attested   func(ctx context.Context) bool
 
-	// protectionOverride is Options.protectionOverride, carried so checkProtection
-	// can consult it. Nil in every built binary.
-	protectionOverride *ProtectionReadiness
+	protectionReadiness          *protection.ReadinessAdapter
+	forceReadinessAdapterForTest bool
+	protectionCheckForTest       func(context.Context, string, protectionCheckpoint) (protectionCheckpoint, *RejectedError)
 
 	// inflight holds the in-process claim on a symbol for the duration of a
 	// mutation, so two goroutines cannot both pass the journal's in-flight check.
@@ -151,6 +149,10 @@ func New(opts Options) (*Gateway, error) {
 	case strings.TrimSpace(opts.AccountRef) == "":
 		return nil, errors.New("execgw: an account reference is required")
 	}
+	protectionCheckForTest := opts.protectionCheckForTest
+	if protectionCheckForTest == nil && !opts.forceReadinessAdapterForTest {
+		protectionCheckForTest = defaultProtectionCheckForTest
+	}
 	g := &Gateway{
 		journal:    opts.Journal,
 		trading:    opts.Trading,
@@ -165,7 +167,9 @@ func New(opts Options) (*Gateway, error) {
 		replayCfg:  opts.ReplayConfig,
 		attested:   opts.Attested,
 
-		protectionOverride: opts.ProtectionOverrideForTest,
+		protectionReadiness:          opts.ProtectionReadiness,
+		forceReadinessAdapterForTest: opts.forceReadinessAdapterForTest,
+		protectionCheckForTest:       protectionCheckForTest,
 	}
 	if g.clk == nil {
 		g.clk = clock.System()
@@ -509,7 +513,8 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	//        because it is the cheaper answer and the one no configuration
 	//        changes: the operator who reads it needs a different change, not a
 	//        different setting.
-	if rejected := g.checkProtection(plan); rejected != nil {
+	protectionCheckpoint, rejected := g.checkProtection(ctx, plan, protectionCheckpoint{})
+	if rejected != nil {
 		return g.refuse(ctx, attempt, out, rejected)
 	}
 	//    2b. The entry gate, for mutations that add exposure. Exits are never
@@ -567,6 +572,9 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 		if fresh.ClientOrderID != prep.ClientOrderID {
 			return notSent(reject(ReasonGuardianKeyMismatch,
 				"the idempotency key recorded for this attempt is not the one the decision now carries"))
+		}
+		if _, rejected := g.checkProtection(dctx, plan, protectionCheckpoint); rejected != nil {
+			return notSent(rejected)
 		}
 		// The tracker is what separates "provably never sent" from "may have
 		// executed"; without it a connection error would have to be treated as

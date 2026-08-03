@@ -1,0 +1,1 @@
+{"file":"internal/app/engine/gateway.go","source_sha256":"54fead7f32a1fe92697d0bcf4b408814ad211bed87c79d9d3b662216a1d55b6a","package":"engine","function":"buildGateway","signature":"buildGateway(params=2, results=2)","start":{"line":192,"column":1},"end":{"line":296,"column":2},"branches":[{"id":"B1"},{"id":"B2"},{"id":"B3"},{"id":"B4"}]}

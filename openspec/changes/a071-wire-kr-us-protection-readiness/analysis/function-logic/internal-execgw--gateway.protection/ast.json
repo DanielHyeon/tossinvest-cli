@@ -1,0 +1,1 @@
+{"file":"internal/execgw/protection.go","source_sha256":"1d065ac0f4227ad107f7a93195a51420b12a794d9e3cdc8fddd9ca7d514727ae","package":"execgw","function":"protection","receiver":"Gateway","signature":"Gateway.protection(params=0, results=1)","start":{"line":95,"column":1},"end":{"line":100,"column":2},"branches":[{"id":"B1"}],"revision":"base"}

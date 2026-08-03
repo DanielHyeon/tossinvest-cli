@@ -19,6 +19,8 @@ type ReadinessSnapshot struct {
 	release string
 	kr      Verdict
 	us      Verdict
+	krSeal  [32]byte
+	usSeal  [32]byte
 	seal    [32]byte
 }
 
@@ -26,6 +28,8 @@ func DefaultSnapshot() ReadinessSnapshot {
 	snapshot := ReadinessSnapshot{release: ReadinessRelease,
 		kr: Verdict{Market: MarketKR, State: Unwired, Code: RefusalMissingEvidence},
 		us: Verdict{Market: MarketUS, State: Unwired, Code: RefusalMissingEvidence}}
+	snapshot.krSeal = marketVerdictSeal(snapshot.release, snapshot.kr)
+	snapshot.usSeal = marketVerdictSeal(snapshot.release, snapshot.us)
 	snapshot.seal = readinessSnapshotSeal(snapshot)
 	return snapshot
 }
@@ -54,15 +58,20 @@ func (snapshot ReadinessSnapshot) Release() string {
 func readinessSnapshotSeal(snapshot ReadinessSnapshot) [32]byte {
 	hash := sha256.New()
 	writeString(hash, snapshot.release)
+	_, _ = hash.Write(snapshot.krSeal[:])
+	_, _ = hash.Write(snapshot.usSeal[:])
 	for _, verdict := range []Verdict{snapshot.kr, snapshot.us} {
 		writeString(hash, string(verdict.Market))
 		writeString(hash, string(verdict.State))
 		writeString(hash, string(verdict.Code))
+		writeString(hash, verdict.Provenance.AccountID)
+		writeString(hash, verdict.Provenance.ProfileID)
 		writeString(hash, verdict.Provenance.KeyID)
 		writeUint64(hash, verdict.Provenance.Serial)
 		writeString(hash, verdict.Provenance.BodyDigest)
 		writeString(hash, verdict.Provenance.BuildDigest)
 		writeString(hash, verdict.Provenance.EvidenceDigest)
+		writeString(hash, verdict.Provenance.SupervisorDigest)
 		writeString(hash, formatTime(verdict.Provenance.IssuedAt))
 		writeString(hash, formatTime(verdict.Provenance.ExpiresAt))
 	}
@@ -118,8 +127,10 @@ func Assess(input assessmentInput) AssessmentResult {
 			verdict.Code = code
 			if code == RefusalNone {
 				verdict.State = Wired
-				verdict.Provenance = Provenance{KeyID: verified.body.KeyID, Serial: verified.body.Serial, BodyDigest: verified.bodyDigest, BuildDigest: verified.body.BuildDigest,
-					EvidenceDigest: verified.body.EvidenceDigest, IssuedAt: verified.issuedAt, ExpiresAt: verified.expiresAt}
+				verdict.Provenance = Provenance{AccountID: verified.body.AccountID, ProfileID: verified.body.ProfileID,
+					KeyID: verified.body.KeyID, Serial: verified.body.Serial, BodyDigest: verified.bodyDigest, BuildDigest: verified.body.BuildDigest,
+					EvidenceDigest: verified.body.EvidenceDigest, SupervisorDigest: marketInput.Supervisor.ComponentDigest,
+					IssuedAt: verified.issuedAt, ExpiresAt: verified.expiresAt}
 				scope := serialScope{AccountID: verified.body.AccountID, ProfileID: verified.body.ProfileID, Market: verified.body.Market}
 				result.NextState.Serials[scope] = verified.body.Serial
 			}
@@ -140,6 +151,8 @@ func Assess(input assessmentInput) AssessmentResult {
 		// corrupt anti-rollback state into something a caller could commit.
 		result.NextState = input.State
 	}
+	result.Snapshot.krSeal = marketVerdictSeal(result.Snapshot.release, result.Snapshot.kr)
+	result.Snapshot.usSeal = marketVerdictSeal(result.Snapshot.release, result.Snapshot.us)
 	result.Snapshot.seal = readinessSnapshotSeal(result.Snapshot)
 	return result
 }

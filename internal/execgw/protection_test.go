@@ -43,14 +43,12 @@ func newUnprotectedGateway(t *testing.T, broker trading.Broker) (
 	t.Helper()
 	clk := clock.NewFake(fixedNow)
 	j := openJournal(t, clk)
-	gw, err := execgw.New(execgw.Options{
-		Journal:                   j,
-		Trading:                   trading.NewService(openPolicy(), broker),
-		Clock:                     clk,
-		AccountRef:                "acct-7",
-		Source:                    "test",
-		ProtectionOverrideForTest: execgw.UnwiredProtectionForTest,
-	})
+	opts := execgw.Options{
+		Journal: j, Trading: trading.NewService(openPolicy(), broker), Clock: clk,
+		AccountRef: "acct-7", Source: "test",
+	}
+	opts.UseReadinessAdapterForTest()
+	gw, err := execgw.New(opts)
 	if err != nil {
 		t.Fatalf("execgw.New: %v", err)
 	}
@@ -117,35 +115,22 @@ func TestAReducingMutationIsAdmittedWhileProtectionIsUnwired(t *testing.T) {
 	}
 }
 
-// TestNoShippedFileClaimsProtection is the guarantee that replaces "the field is
-// unexported".
-//
-// 5.2 made the marker a constant with no config key and no Options knob, on the
-// grounds that any of those is a way to claim broker-resident protective
-// execution a build does not have. That property survived as long as the seam
-// could live in an export_test.go file — but the suites that need to place a buy
-// are in other packages (internal/reconcile's gateway tests,
-// internal/app/engine's tracer end-to-end), and an export_test.go declaration is
-// visible only inside its own package. So the override is exported, and the
-// property is restored the way this repository already restores it for the WTS
-// order mutators (internal/app/engine's deps_test.go): by proving over the AST
-// that no shipped file spells it.
-//
-// A production assignment to ProtectionOverrideForTest is a build telling the
-// gateway it can leave a stop at the broker. If this test goes red, that is what
-// happened.
+// TestNoShippedFileClaimsProtection locks out the retired public scalar forge.
+// A production caller may supply only the sealed adapter; no bool/string/enum
+// field on Options is accepted as execution authority.
 func TestNoShippedFileClaimsProtection(t *testing.T) {
 	t.Parallel()
 
-	// What is forbidden is *originating* a wired value, not carrying one.
-	//
-	// Forwarding matters: internal/app/engine has its own override and hands it
-	// to the gateway it builds, so that a test which satisfies the clause on the
-	// engine gets a gateway that agrees. That line is nil in every shipped binary
-	// and says nothing about this build. What no shipped file may do is produce
-	// the WIRED value in the first place — and there are exactly two spellings
-	// for that.
-	forbidden := []string{"WiredProtectionForTest", "ProtectionWired", "defaultProtection"}
+	optionsType := reflect.TypeOf(execgw.Options{})
+	for i := 0; i < optionsType.NumField(); i++ {
+		field := optionsType.Field(i)
+		if field.IsExported() && (field.Type == reflect.TypeOf(execgw.ProtectionReadiness("")) ||
+			field.Type == reflect.TypeOf((*execgw.ProtectionReadiness)(nil))) {
+			t.Errorf("exported Options.%s accepts scalar protection readiness", field.Name)
+		}
+	}
+
+	forbidden := []string{"ProtectionOverrideForTest", "WiredProtectionForTest", "UnwiredProtectionForTest"}
 
 	root := moduleRoot(t)
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -164,17 +149,12 @@ func TestNoShippedFileClaimsProtection(t *testing.T) {
 		if readErr != nil {
 			return readErr
 		}
-		for i, line := range strings.Split(string(src), "\n") {
-			code, _, _ := strings.Cut(line, "//")
-			for _, name := range forbidden {
-				if !isClaim(code, name) {
-					continue
-				}
-				rel, _ := filepath.Rel(root, path)
-				t.Errorf("%s:%d assigns %s in shipped code: a build that cannot leave a "+
-					"protective order at the broker must not be able to say that it can\n\t%s",
-					rel, i+1, name, strings.TrimSpace(line))
+		for _, name := range forbidden {
+			if !strings.Contains(string(src), name) {
+				continue
 			}
+			rel, _ := filepath.Rel(root, path)
+			t.Errorf("%s contains retired production protection forge %s", rel, name)
 		}
 		return nil
 	})
@@ -200,43 +180,6 @@ func moduleRoot(t *testing.T) string {
 		}
 		dir = parent
 	}
-}
-
-// isClaim reports that the line originates a WIRED readiness.
-//
-//	ProtectionWired ProtectionReadiness = "WIRED"          the const — fine
-//	var WiredProtectionForTest = &wiredForTest             its declaration — fine
-//	var wiredForTest = ProtectionWired                     its declaration — fine
-//	if g.protection() == ProtectionWired                   a comparison — fine
-//	ProtectionOverrideForTest: opts.protectionOverride     forwarding — fine
-//	opts.ProtectionOverrideForTest = WiredProtectionForTest  a claim — refused
-//	ready := ProtectionWired                               a claim — refused
-func isClaim(code, name string) bool {
-	trimmed := strings.TrimSpace(code)
-	switch {
-	case strings.HasPrefix(trimmed, name+" "):
-		return false // the const or field declaration
-	case strings.HasPrefix(trimmed, "var "+name+" "), strings.HasPrefix(trimmed, "var "+name+" ="):
-		return false // the value's own declaration
-	case strings.HasPrefix(trimmed, "var wiredForTest ="), strings.HasPrefix(trimmed, "var WiredProtectionForTest ="):
-		return false
-	}
-	at := strings.Index(trimmed, name)
-	if at < 0 {
-		return false
-	}
-	// A comparison reads the value; an assignment produces one. The distinction
-	// is the two characters in front of it.
-	before := strings.TrimRight(trimmed[:at], " \t")
-	switch {
-	case strings.HasSuffix(before, "=="), strings.HasSuffix(before, "!="):
-		return false
-	case strings.HasSuffix(before, "case"), strings.HasSuffix(before, "return"):
-		return false
-	case strings.HasSuffix(before, "="), strings.HasSuffix(before, ":="), strings.HasSuffix(before, ":"):
-		return true
-	}
-	return false
 }
 
 // TestTheBuildMarkerIsAConstant: the readiness this build reports is not a

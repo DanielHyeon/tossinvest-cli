@@ -1,7 +1,7 @@
 # Review — a071-wire-kr-us-protection-readiness
 
 - Date: 2026-08-04
-- Stage: isolated readiness and lifecycle cores complete; runtime/controller/gateway integration pending
+- Stage: decision-boundary integration complete; production controller/supervisor transport wiring still pending
 - Voices: Manager safety review, independent operations/security review, authority-boundary self-review
 
 ## Findings and disposition
@@ -28,6 +28,16 @@
 - A market becomes `WIRED` only when both attestation and an exact sealed supervisor binding validate. Snapshot
   fields and all authority-producing constructors are private; the only public constructor returns paired
   `UNWIRED` defaults.
+- **Resolved independent-review HIGH:** the public `Options.ProtectionOverrideForTest` scalar forge and exported
+  WIRED/UNWIRED test pointers were removed. `ProfileProtection` remains `UNWIRED` compatibility reporting only;
+  engine status overrides are never forwarded to Gateway execution authority. Static and reflection tests reject
+  any non-test declaration or exported scalar readiness field.
+- Gateway admission uses a market-scoped sealed adapter, and the exact checkpoint generation/identity is
+  revalidated immediately inside `DispatchVerified` before broker transport. Missing provider, attestation,
+  supervisor evidence, scope mismatch, expiry, corruption or drift refuses only the exposure-raising mutation in
+  that market; a peer-market seal remains independently usable.
+- Reduce-only SELL, CANCEL and exposure-reducing AMEND succeed without reading the readiness provider. Static
+  source isolation keeps stop, emergency liquidation, reconciliation and fill paths free of this dependency.
 - The dormant lifecycle core derives stable operation identity from exact account, position, market, generation,
   revision and operation kind. Submit recovery uses that exact key; cancel and replacement recovery use the exact
   broker order ID. A scoped `NOT_FOUND` result must repeat every identity field before a same-key retry is even
@@ -50,6 +60,14 @@
 - `go test ./internal/protectionreadiness -count=1`: PASS.
 - `go test -race ./internal/protectionreadiness -count=1`: PASS.
 - `go vet ./internal/protectionreadiness`: PASS.
+- Affected packages (`protectionreadiness`, `protection`, `execgw`, `reconcile`, `app/engine`) targeted and full
+  tests: PASS; `cmd/tossctl`: PASS.
+- Affected-package `go test -race`: PASS (`execgw` 264.135s, `reconcile` 101.866s, `app/engine` 288.622s).
+- Affected packages plus `cmd/tossctl` `go vet`: PASS; strict OpenSpec: PASS; `git diff --check`: PASS.
+- Post-edit Function Logic Maps are complete for every a071-owned changed function. The repository-wide checker
+  reports only concurrent a066/a073 worktree functions outside this wave.
+- `make sdd-sync` refreshed the CodeGraph fingerprint (11 changed files). Its advisory CodeGraphContext phase
+  stalled for more than two minutes and was interrupted as permitted; no runtime or broker state was touched.
 - `FuzzArbitraryAttestationNeverWires` and `FuzzSerialMustStrictlyIncrease` (3s each): PASS.
 - Statement coverage: 87.6%.
 - Static dependency/API tests exclude live transport, runtime mutation packages and exported trust/evidence/
@@ -69,6 +87,7 @@
 
 ## Verdict
 
-Isolated readiness and lifecycle cores approved for integration review. KR and US ship in the same release and default independently
-to `UNWIRED`. Actual signed evidence and production supervisor wiring still require the remaining integration
-work and a separate human-approved workflow; this core creates no lane, activation, automation or LIVE authority.
+The isolated cores and Gateway decision boundary are approved for the next integration review. KR and US ship in
+the same release and default independently to `UNWIRED`. Actual signed evidence and production supervisor/official
+gateway wiring remain task 3.5 and require a separate human-approved workflow; this wave creates no lane,
+activation, automation or LIVE authority and makes no official order call.

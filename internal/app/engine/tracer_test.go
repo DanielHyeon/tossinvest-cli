@@ -110,36 +110,20 @@ func TestTheSmallestValidParameterSetPasses(t *testing.T) {
 
 // --- the run ------------------------------------------------------------------------
 
-// TestTheTracerDrivesEntryRatchetAndExit is D8's slice: entry → ratchet
-// judgement → liquidation → CLOSED, through the real gateway and the real exit
-// loop, against the httptest broker.
-func TestTheTracerDrivesEntryRatchetAndExit(t *testing.T) {
+// TestScalarStartupReadinessCannotAuthorizeTheTracer proves that the legacy
+// engine status seam is reporting-only. Even when that test seam reports entry
+// permitted, the shipped Gateway still requires a sealed market snapshot.
+func TestScalarStartupReadinessCannotAuthorizeTheTracer(t *testing.T) {
 	s := newEntryCapableE2EStack(t)
 	s.broker.quote("005930", "70000")
 	tracer := newTracer(t, s, tracerParams())
 
-	ctx := context.Background()
-	// The run is driven one step at a time here, because the entry's *fill* is
-	// the fill detector's job and this build has no detector loop: the tracer
-	// submits and observes, the test supplies the broker's fills.
-	report, err := runTracerWithFills(t, s, tracer, ctx)
-	if err != nil {
-		t.Fatalf("tracer run: %v", err)
+	report, err := tracer.Run(context.Background())
+	if !errors.Is(err, engine.ErrTracerRefused) || !strings.Contains(strings.ToLower(err.Error()), "protection") {
+		t.Fatalf("tracer err = %v, want sealed protection-readiness refusal", err)
 	}
-	if report.EntryOrderID == "" {
-		t.Fatal("the run must name the order it opened with")
-	}
-	if !report.Closed {
-		t.Fatalf("the run did not close the position: %+v", report)
-	}
-	if report.Proposals == 0 {
-		t.Error("the exit policy, not the tracer, places every sell — and it placed none")
-	}
-	if report.Outcome == nil {
-		t.Fatal("a closed run freezes a trade outcome")
-	}
-	if report.Outcome.InitialQuantity != "1" {
-		t.Errorf("outcome = %+v, want the one unit the tracer bought", report.Outcome)
+	if report.EntryOrderID != "" || report.Closed || report.Outcome != nil {
+		t.Fatalf("refused tracer changed trade state: %+v", report)
 	}
 }
 

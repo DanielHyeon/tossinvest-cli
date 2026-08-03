@@ -1,0 +1,1 @@
+{"file":"internal/protectionreadiness/readiness.go","source_sha256":"767248c0b3fb55a4484799a008782cee1ba3aa977f786097e4ea0245ea665877","package":"protectionreadiness","function":"DefaultSnapshot","signature":"DefaultSnapshot(params=0, results=1)","start":{"line":27,"column":1},"end":{"line":35,"column":2},"branches":null}

@@ -39,8 +39,9 @@ func TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport(t *testing.T
 		}
 	}
 
-	// No shipped engine or command may activate the otherwise testable official
-	// adapter. The controller's opaque activation has no exported minter.
+	// No shipped engine or command may activate the protection controller. The
+	// one allowed import is engine/gateway.go's read-only readiness adapter; it
+	// carries the paired-UNWIRED default and has no broker transport or controller.
 	for _, dir := range []string{filepath.Join(root, "cmd"), filepath.Join(root, "internal", "app")} {
 		err := filepath.WalkDir(dir, func(path string, d os.DirEntry, walkErr error) error {
 			if walkErr != nil {
@@ -55,7 +56,19 @@ func TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport(t *testing.T
 			}
 			for _, imp := range file.Imports {
 				if strings.Contains(strings.Trim(imp.Path.Value, `"`), "/internal/protection") {
-					t.Errorf("%s wires the dormant protection package", path)
+					rel, _ := filepath.Rel(root, path)
+					if filepath.ToSlash(rel) != "internal/app/engine/gateway.go" {
+						t.Errorf("%s wires the dormant protection package", path)
+						continue
+					}
+					source, readErr := os.ReadFile(path)
+					if readErr != nil {
+						return readErr
+					}
+					text := string(source)
+					if !strings.Contains(text, "DefaultReadinessAdapter") || strings.Contains(text, "protection.Controller") || strings.Contains(text, "Activate") {
+						t.Errorf("%s imports protection for more than the dormant readiness adapter", path)
+					}
 				}
 			}
 			return nil

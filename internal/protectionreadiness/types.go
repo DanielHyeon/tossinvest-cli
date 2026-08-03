@@ -44,6 +44,8 @@ const (
 	RefusalBrokerCapabilityUnattested RefusalCode = "broker_identity_capability_unattested"
 	RefusalSupervisorUnwired          RefusalCode = "protection_supervisor_unwired"
 	RefusalStateCorrupt               RefusalCode = "attestation_state_corrupt"
+	RefusalProviderUnavailable        RefusalCode = "readiness_provider_unavailable"
+	RefusalSnapshotDrift              RefusalCode = "readiness_snapshot_drift"
 )
 
 const (
@@ -91,13 +93,16 @@ type runtimeScope struct {
 }
 
 type Provenance struct {
-	KeyID          string
-	Serial         uint64
-	BodyDigest     string
-	BuildDigest    string
-	EvidenceDigest string
-	IssuedAt       time.Time
-	ExpiresAt      time.Time
+	AccountID        string
+	ProfileID        string
+	KeyID            string
+	Serial           uint64
+	BodyDigest       string
+	BuildDigest      string
+	EvidenceDigest   string
+	SupervisorDigest string
+	IssuedAt         time.Time
+	ExpiresAt        time.Time
 }
 
 type Verdict struct {

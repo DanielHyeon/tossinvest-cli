@@ -1,0 +1,1 @@
+{"file":"internal/execgw/protection_test.go","source_sha256":"14894b5dae3d64fc2c12b8242f85410b611bb6b2dc90515ca67d9270eccb4def","package":"execgw_test","function":"newUnprotectedGateway","signature":"newUnprotectedGateway(params=2, results=3)","start":{"line":40,"column":1},"end":{"line":56,"column":2},"branches":[{"id":"B1"}]}

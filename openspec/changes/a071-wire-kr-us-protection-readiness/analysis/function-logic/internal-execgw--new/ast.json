@@ -1,0 +1,1 @@
+{"file":"internal/execgw/gateway.go","source_sha256":"722ab7df888e971005902e035982ab01d59472393f9a4651e25fd1ba94070890","package":"execgw","function":"New","signature":"New(params=1, results=2)","start":{"line":143,"column":1},"end":{"line":184,"column":2},"branches":[{"id":"B1"},{"id":"B2"},{"id":"B3"},{"id":"B4"},{"id":"B5"},{"id":"B6"},{"id":"B7"},{"id":"B8"}]}

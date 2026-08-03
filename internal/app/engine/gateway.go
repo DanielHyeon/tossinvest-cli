@@ -48,6 +48,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/protection"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
@@ -79,14 +80,9 @@ type gatewayInputs struct {
 	// newNotifier for what a nil publisher costs.
 	logger    *obs.Logger
 	publisher obs.Publisher
-	// protectionOverride is Options.protectionOverride, forwarded so the gateway
-	// this builds judges by the same readiness the interlock reported. Without
-	// the forward, a test that satisfies the clause on the engine would get an
-	// engine claiming EntryPermitted and a gateway that refuses every buy.
-	//
-	// Nil in every shipped binary — Options has no exported setter for it, and
-	// internal/execgw's protection_test.go proves nothing produces the wired
-	// value outside test files.
+	// protectionOverride is retained only for the engine startup-status test
+	// seam. It is never forwarded to the execution gateway: scalar status cannot
+	// authorize an exposure-raising mutation.
 	protectionOverride *ProtectionReadiness
 }
 
@@ -236,6 +232,10 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		Gate:    entry,
 	}
 
+	readiness, err := protection.DefaultReadinessAdapter(in.accountRef, "production")
+	if err != nil {
+		return engineWiring{}, fmt.Errorf("engine: constructing the default protection readiness adapter: %w", err)
+	}
 	gateway, err := execgw.New(execgw.Options{
 		Journal:    in.journal,
 		Trading:    in.trading,
@@ -244,9 +244,9 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		Source:     engineSource,
 		Entry:      entry,
 
-		ProtectionOverrideForTest: in.protectionOverride,
-		Preflight:                 &execgw.Preflight{Account: account, Clock: in.clock},
-		Orders:                    orders,
+		ProtectionReadiness: readiness,
+		Preflight:           &execgw.Preflight{Account: account, Clock: in.clock},
+		Orders:              orders,
 		Replay: execgw.HTTPReplay{
 			BaseURL: in.official.BaseURL(),
 			HTTP:    &http.Client{Timeout: replayTimeout},

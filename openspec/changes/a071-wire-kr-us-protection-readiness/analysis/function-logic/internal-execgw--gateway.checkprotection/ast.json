@@ -1,0 +1,1 @@
+{"file":"internal/execgw/protection.go","source_sha256":"d8ba8c3931f5d41a71dcf96ed94bbcd7bf03f06fb256899f70104f73d41d4406","package":"execgw","function":"checkProtection","receiver":"Gateway","signature":"Gateway.checkProtection(params=3, results=2)","start":{"line":87,"column":1},"end":{"line":102,"column":2},"branches":[{"id":"B1"},{"id":"B2"},{"id":"B3"},{"id":"B4"}]}
