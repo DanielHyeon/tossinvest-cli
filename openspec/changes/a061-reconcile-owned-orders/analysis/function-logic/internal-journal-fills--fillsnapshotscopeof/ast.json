@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
   "package": "journal",
   "function": "fillSnapshotScopeOf",
   "signature": "fillSnapshotScopeOf(params=1, results=1)",

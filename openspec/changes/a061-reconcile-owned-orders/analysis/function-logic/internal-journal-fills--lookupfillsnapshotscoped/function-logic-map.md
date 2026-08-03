@@ -1,38 +1,39 @@
 # Function Logic Map: `lookupFillSnapshotScoped`
 
-Source: `internal/journal/fills.go`  
-Function: `lookupFillSnapshotScoped`  
-Signature: `lookupFillSnapshotScoped(params=3, results=2)`  
-Source SHA-256: `8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a`
+Source: `internal/journal/fills.go`
+Function: `lookupFillSnapshotScoped`
+Signature: `lookupFillSnapshotScoped(params=3, results=2)`
+Source SHA-256: `000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0`
+Revision: `current`
 
 ## Inputs and invariants
 
-- Inputs are the parameters in `lookupFillSnapshotScoped(params=3, results=2)` and receiver state.
-- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
-- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
+- Inputs are `lookupFillSnapshotScoped(params=3, results=2)` parameters and receiver or package state.
+- Canonical identity is account, market, trading day, symbol, side, and opaque broker order id; ownership must be confirmed, unique, and strictly earlier than evidence.
+- External, partial, later-owner, or multi-intent evidence remains fail closed and cannot alter projection, P&L, provenance, reservations, or reconcile recovery.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | if | internal/journal/fills.go:760 | Preserve the explicit condition, early return, and fail-closed error behavior. |
-| B2 | if | internal/journal/fills.go:768 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B1 | if | internal/journal/fills.go:964 | Preserve the condition, error propagation, and fail-closed behavior. |
+| B2 | if | internal/journal/fills.go:972 | Preserve the condition, error propagation, and fail-closed behavior. |
 
 ## Calls and live bindings
 
-- `canonicalFillSnapshotScope`: returned errors and state follow the mapped branches.
-- `scope.complete`: returned errors and state follow the mapped branches.
-- `scanFillSnapshot`: returned errors and state follow the mapped branches.
-- `q.QueryRowContext`: returned errors and state follow the mapped branches.
-- `errors.Is`: returned errors and state follow the mapped branches.
-- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
+- `canonicalFillSnapshotScope`: errors and state follow mapped branches.
+- `scope.complete`: errors and state follow mapped branches.
+- `scanFillSnapshot`: errors and state follow mapped branches.
+- `q.QueryRowContext`: errors and state follow mapped branches.
+- `errors.Is`: errors and state follow mapped branches.
+- No live broker mutation, HTTP mutation, or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- The AST contains 2 assignment point(s); durable writes precede release visibility.
-- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
-- Errors propagate without projection, adoption, reservation release, or recovery success claims.
+- AST assignment points: 2; return points: 3; deferred operations: 0.
+- Schema-v19 binding is additive, confirmed, temporal, and unique-intent; runtime readers use exact durable scope.
+- Errors propagate without adoption, projection, reservation release, or recovery-success claims.
 
 ## Safety conclusion
 
-Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.
+The current source hash and every AST branch are bound to focused and full/race verification. Canonical temporal ownership prevents reused identifiers or external observations from contaminating local state.

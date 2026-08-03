@@ -85,6 +85,68 @@ func TestWhyDoesThisPositionExist(t *testing.T) {
 	}
 }
 
+func TestPreOwnerAndNonConfirmedFillsAreNotPositionProvenance(t *testing.T) {
+	j := projectingJournal(t)
+	ctx := context.Background()
+	if _, err := j.db.ExecContext(ctx, `INSERT INTO fill_events
+		(order_id, account_ref, symbol, market, trading_day, side, delta_quantity,
+		 cumulative_quantity, average_price, broker_visible_at, committed_at)
+		VALUES ('o-real','acct-1','005930','kr','2026-03-30','BUY','7','7','60000','',
+		        '2026-03-29T20:00:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	real := place(t, j, order{
+		intentID: "i-real", attemptID: "a-real", orderID: "o-real", decisionID: "d-real",
+	})
+	if _, err := j.RecordFill(ctx, terminalFill(real, "10", "70000")); err != nil {
+		t.Fatal(err)
+	}
+	position := currentPosition(t, j, real)
+	failed := insertNonConfirmedFillAttempt(t, j, "failed", "o-failed", "d-real")
+	if _, err := j.RecordFill(ctx, terminalFill(failed, "4", "99000")); err != nil {
+		t.Fatal(err)
+	}
+
+	chain, err := j.PositionProvenance(ctx, position.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fills []ProvenanceStep
+	for _, step := range chain.Steps {
+		if step.Kind == ProvenanceFill {
+			fills = append(fills, step)
+		}
+	}
+	if len(fills) != 1 || fills[0].Ref != "o-real" {
+		t.Fatalf("fill provenance=%+v, want only the post-owner confirmed fill", fills)
+	}
+}
+
+func insertNonConfirmedFillAttempt(t *testing.T, j *Journal, id, orderID, decisionID string) order {
+	t.Helper()
+	o := (order{
+		intentID: "i-" + id, attemptID: "a-" + id, orderID: orderID,
+		decisionID: decisionID, side: "SELL", quantity: "4",
+	}).withDefaults()
+	if _, err := j.db.Exec(`INSERT INTO intents
+		(id, created_at, market, trading_day, account_ref, symbol, side, order_type,
+		 quantity, price, currency, source, fingerprint)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, o.intentID, "2026-03-30T00:30:00Z", o.market,
+		o.tradingDay, o.account, o.symbol, o.side, "LIMIT", o.quantity, "70000", "KRW",
+		"engine/test", "fp-"+o.intentID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.Exec(`INSERT INTO mutation_attempts
+		(id, intent_id, kind, state, attempt_no, broker_order_id, fingerprint,
+		 recorded_at, decision_id)
+		VALUES (?,?,?,?,?,?,?,?,NULLIF(?,''))`, o.attemptID, o.intentID, "PLACE",
+		string(StateFailedConfirmed), 1, o.orderID, "fp-"+o.intentID,
+		"2026-03-30T00:30:00Z", decisionID); err != nil {
+		t.Fatal(err)
+	}
+	return o
+}
+
 // TestTheProvenanceChainReachesTheClose walks the whole thing: entry, an
 // adjustment, an exit judgement, the liquidation it proposed, and the close.
 //

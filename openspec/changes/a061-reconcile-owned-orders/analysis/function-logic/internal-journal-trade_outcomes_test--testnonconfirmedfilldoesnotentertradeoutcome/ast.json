@@ -1,0 +1,332 @@
+{
+  "file": "internal/journal/trade_outcomes_test.go",
+  "source_sha256": "1723845dbc5c11be31276e125b182a5f02a9401abb17356649aca0f50858ada2",
+  "package": "journal",
+  "function": "TestNonConfirmedFillDoesNotEnterTradeOutcome",
+  "signature": "TestNonConfirmedFillDoesNotEnterTradeOutcome(params=1, results=0)",
+  "start": {
+    "line": 106,
+    "column": 1
+  },
+  "end": {
+    "line": 141,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 16
+      },
+      "text": "outcomeFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 9
+      },
+      "text": "place"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 15
+      },
+      "text": "withFailed.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 42
+      },
+      "text": "terminalFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 7
+      },
+      "text": "currentPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 15
+      },
+      "text": "withFailed.OpenExitState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 12
+      },
+      "text": "insertNonConfirmedFillAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 15
+      },
+      "text": "withFailed.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 42
+      },
+      "text": "terminalFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 10
+      },
+      "text": "place"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 15
+      },
+      "text": "withFailed.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 42
+      },
+      "text": "terminalFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 11
+      },
+      "text": "outcomeFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 13
+      },
+      "text": "roundTrip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 15
+      },
+      "text": "outcomeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 47
+      },
+      "text": "outcomeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 113,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

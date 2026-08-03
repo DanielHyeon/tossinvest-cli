@@ -295,31 +295,32 @@ func roundTripLegs(ctx context.Context, r tradeOutcomeReader,
 	sell := tradeLeg{quantity: new(big.Rat), notional: new(big.Rat), priced: true}
 
 	var low sql.NullInt64
-	bound, err := r.Query(ctx, `
-		WITH order_scope_count AS (
-			SELECT broker_order_id, count(*) scope_count FROM (
-				SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
-				       TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
-				  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
-				 WHERE a.broker_order_id <> ''
-			) GROUP BY broker_order_id
+	bound, err := r.Query(ctx, allFillEventsCTE+`,
+		order_owner AS (
+			SELECT a.broker_order_id order_id, MIN(a.intent_id) intent_id,
+			       TRIM(i.account_ref) account_ref, LOWER(TRIM(i.market)) market,
+			       TRIM(i.trading_day) trading_day, UPPER(TRIM(i.symbol)) symbol,
+			       UPPER(TRIM(i.side)) side, MIN(a.settled_at) ownership_at
+			  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+			 WHERE a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')
+			   AND a.broker_order_id <> ''
+			 GROUP BY a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+			          TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
+			HAVING COUNT(DISTINCT a.intent_id) = 1
 		)
 		SELECT MIN(f.id)
-		  FROM fill_events f
+		  FROM all_fill_events f
 		  JOIN mutation_attempts a ON a.broker_order_id = f.order_id
 		  JOIN intents i ON i.id = a.intent_id
-		  JOIN order_scope_count c ON c.broker_order_id = a.broker_order_id
-		 WHERE a.decision_id = ? AND (
-			(TRIM(f.account_ref) = TRIM(i.account_ref)
-			 AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
-			 AND TRIM(f.trading_day) = TRIM(i.trading_day)
-			 AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
-			 AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side)))
-			OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND TRIM(f.side) = ''
-			    AND c.scope_count = 1
-			    AND (TRIM(f.market) = '' OR LOWER(TRIM(f.market)) = LOWER(TRIM(i.market)))
-			    AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol)))
-		 )`, decisionID)
+		  JOIN order_owner o ON o.order_id = a.broker_order_id AND o.intent_id = a.intent_id
+			 WHERE a.decision_id = ? AND a.state = 'CONFIRMED'
+			   AND a.kind IN ('PLACE','AMEND')
+			AND o.ownership_at < f.committed_at
+			AND TRIM(f.account_ref) = o.account_ref
+			 AND LOWER(TRIM(f.market)) = o.market
+			 AND TRIM(f.trading_day) = o.trading_day
+			 AND UPPER(TRIM(f.symbol)) = o.symbol
+			 AND UPPER(TRIM(f.side)) = o.side`, decisionID)
 	if err != nil {
 		return buy, sell, false
 	}
@@ -333,33 +334,30 @@ func roundTripLegs(ctx context.Context, r tradeOutcomeReader,
 		return buy, sell, false
 	}
 
-	// One row per fill event, attributed through its complete canonical scope.
-	// Legacy rows participate only when the order id has exactly one intent
-	// scope, so a reused id cannot move a later position's frozen P&L.
-	rows, err := r.Query(ctx, `
-		WITH order_owner AS (
-			SELECT DISTINCT a.broker_order_id order_id, TRIM(i.account_ref) account_ref,
+	// One row per fill event, attributed through a confirmed owner and its exact
+	// complete canonical scope. Blank legacy rows must first have been durably
+	// bound by schema v19; runtime P&L never guesses their owner.
+	rows, err := r.Query(ctx, allFillEventsCTE+`,
+		order_owner AS (
+			SELECT a.broker_order_id order_id, TRIM(i.account_ref) account_ref,
 			       LOWER(TRIM(i.market)) market, TRIM(i.trading_day) trading_day,
-			       UPPER(TRIM(i.symbol)) symbol, UPPER(TRIM(i.side)) side
+			       UPPER(TRIM(i.symbol)) symbol, UPPER(TRIM(i.side)) side,
+			       MIN(a.settled_at) ownership_at
 			  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
-			 WHERE a.broker_order_id <> ''
-		), order_scope_count AS (
-			SELECT order_id, count(*) scope_count FROM order_owner GROUP BY order_id
+			 WHERE a.broker_order_id <> '' AND a.state = 'CONFIRMED'
+			   AND a.kind IN ('PLACE','AMEND')
+			 GROUP BY a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+			          TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
+			HAVING COUNT(DISTINCT a.intent_id) = 1
 		), attributed AS (
 			SELECT DISTINCT f.id, f.order_id, o.account_ref, o.market, o.trading_day,
 			       o.symbol, o.side, f.cumulative_quantity, f.average_price
-			  FROM fill_events f
+			  FROM all_fill_events f
 			  JOIN order_owner o ON o.order_id = f.order_id
-			  JOIN order_scope_count c ON c.order_id = f.order_id
-			 WHERE (
-				(TRIM(f.account_ref) = o.account_ref AND LOWER(TRIM(f.market)) = o.market
+			 WHERE o.ownership_at < f.committed_at
+				 AND TRIM(f.account_ref) = o.account_ref AND LOWER(TRIM(f.market)) = o.market
 				 AND TRIM(f.trading_day) = o.trading_day AND UPPER(TRIM(f.symbol)) = o.symbol
-				 AND UPPER(TRIM(f.side)) = o.side)
-				OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND TRIM(f.side) = ''
-				    AND c.scope_count = 1
-				    AND (TRIM(f.market) = '' OR LOWER(TRIM(f.market)) = o.market)
-				    AND UPPER(TRIM(f.symbol)) = o.symbol)
-			 )
+				 AND UPPER(TRIM(f.side)) = o.side
 		)
 		SELECT order_id, account_ref, market, trading_day, symbol, side,
 		       cumulative_quantity, average_price
@@ -553,14 +551,28 @@ func adoptedBasis(ctx context.Context, r tradeOutcomeReader, positionID string) 
 func engineSellOrders(ctx context.Context, r tradeOutcomeReader,
 	positionID, account, market, symbol string) ([]FillSnapshotScope, bool) {
 	rows, err := r.Query(ctx, `
+		WITH unique_order_owner AS (
+			SELECT a.broker_order_id order_id, MIN(a.intent_id) intent_id,
+			       TRIM(i.account_ref) account_ref, LOWER(TRIM(i.market)) market,
+			       TRIM(i.trading_day) trading_day, UPPER(TRIM(i.symbol)) symbol,
+			       UPPER(TRIM(i.side)) side
+			  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+			 WHERE a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')
+			   AND a.broker_order_id <> ''
+			 GROUP BY a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+			          TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
+			HAVING COUNT(DISTINCT a.intent_id) = 1
+		)
 		SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
 		       TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
 		  FROM exit_events e
 		  JOIN mutation_attempts a ON a.intent_id = e.proposed_intent_id
 		  JOIN intents i ON i.id = a.intent_id
+		  JOIN unique_order_owner o ON o.order_id = a.broker_order_id AND o.intent_id = a.intent_id
 		 WHERE e.position_id = ?
 		   AND coalesce(e.proposed_intent_id, '') <> ''
 		   AND coalesce(a.broker_order_id, '') <> ''
+			   AND a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')
 		UNION
 		SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
 		       TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
@@ -568,12 +580,14 @@ func engineSellOrders(ctx context.Context, r tradeOutcomeReader,
 		  JOIN flatten_sagas g ON g.id = s.saga_id
 		  JOIN mutation_attempts a ON a.intent_id = s.intent_id
 		  JOIN intents i ON i.id = a.intent_id
+		  JOIN unique_order_owner o ON o.order_id = a.broker_order_id AND o.intent_id = a.intent_id
 		 WHERE g.account_ref = ?
 		   AND s.kind = ?
 		   AND upper(trim(s.symbol)) = ?
 		   AND (lower(trim(s.market)) = ? OR trim(s.market) = '')
 		   AND coalesce(s.intent_id, '') <> ''
-		   AND coalesce(a.broker_order_id, '') <> ''`,
+		   AND coalesce(a.broker_order_id, '') <> ''
+			   AND a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')`,
 		positionID, account, FlattenStepLiquidate, normaliseSymbol(symbol), normaliseMarket(market))
 	if err != nil {
 		return nil, false
@@ -613,32 +627,38 @@ func sumSellFills(ctx context.Context, r tradeOutcomeReader, orders []FillSnapsh
 	}
 	args = append(args, strings.TrimSpace(account), normaliseSymbol(symbol), normaliseMarket(market))
 
-	rows, err := r.Query(ctx, `
-		WITH requested(account_ref, market, trading_day, symbol, side, order_id) AS (
+	rows, err := r.Query(ctx, allFillEventsCTE+`,
+		requested(account_ref, market, trading_day, symbol, side, order_id) AS (
 			VALUES `+values+`
-		), order_owner AS (
-			SELECT DISTINCT a.broker_order_id order_id, TRIM(i.account_ref) account_ref,
-			       LOWER(TRIM(i.market)) market, TRIM(i.trading_day) trading_day,
-			       UPPER(TRIM(i.symbol)) symbol, UPPER(TRIM(i.side)) side
-			  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
-			 WHERE a.broker_order_id <> ''
-		), order_scope_count AS (
-			SELECT order_id, count(*) scope_count FROM order_owner GROUP BY order_id
 		)
 		SELECT f.order_id, q.account_ref, q.market, q.trading_day, q.symbol, q.side,
 		       f.cumulative_quantity, f.average_price
 		  FROM requested q
-		  JOIN order_scope_count c ON c.order_id = q.order_id
-		  JOIN fill_events f ON f.order_id = q.order_id AND (
-			(TRIM(f.account_ref) = q.account_ref AND LOWER(TRIM(f.market)) = q.market
+		  JOIN all_fill_events f ON f.order_id = q.order_id
+			AND TRIM(f.account_ref) = q.account_ref AND LOWER(TRIM(f.market)) = q.market
 			 AND TRIM(f.trading_day) = q.trading_day AND UPPER(TRIM(f.symbol)) = q.symbol
-			 AND UPPER(TRIM(f.side)) = q.side)
-			OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND TRIM(f.side) = ''
-			    AND c.scope_count = 1
-			    AND (TRIM(f.market) = '' OR LOWER(TRIM(f.market)) = q.market)
-			    AND UPPER(TRIM(f.symbol)) = q.symbol)
-		  )
-		 WHERE q.account_ref = ? AND q.symbol = ? AND q.market = ?
+			 AND UPPER(TRIM(f.side)) = q.side
+		 WHERE EXISTS (
+			SELECT 1 FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+			 WHERE a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')
+			   AND a.broker_order_id = q.order_id
+			   AND a.settled_at < f.committed_at
+			   AND TRIM(i.account_ref) = q.account_ref
+			   AND LOWER(TRIM(i.market)) = q.market
+			   AND TRIM(i.trading_day) = q.trading_day
+			   AND UPPER(TRIM(i.symbol)) = q.symbol
+			   AND UPPER(TRIM(i.side)) = q.side)
+		   AND 1 = (SELECT COUNT(DISTINCT owner.intent_id)
+			  FROM mutation_attempts owner JOIN intents owned_intent ON owned_intent.id = owner.intent_id
+			 WHERE owner.state = 'CONFIRMED' AND owner.kind IN ('PLACE','AMEND')
+			   AND owner.broker_order_id = q.order_id
+			   AND owner.settled_at < f.committed_at
+			   AND TRIM(owned_intent.account_ref) = q.account_ref
+			   AND LOWER(TRIM(owned_intent.market)) = q.market
+			   AND TRIM(owned_intent.trading_day) = q.trading_day
+			   AND UPPER(TRIM(owned_intent.symbol)) = q.symbol
+			   AND UPPER(TRIM(owned_intent.side)) = q.side)
+		   AND q.account_ref = ? AND q.symbol = ? AND q.market = ?
 		 ORDER BY q.account_ref, q.market, q.trading_day, q.symbol, q.side, q.order_id, f.id`,
 		args...)
 	if err != nil {

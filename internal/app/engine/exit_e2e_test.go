@@ -313,7 +313,7 @@ func (s *e2eStack) entry(symbol, quantity, limit, stop string) journal.Position 
 	if err := attempt.Settle(ctx, journal.StateConfirmed, "broker_accepted", ""); err != nil {
 		s.t.Fatalf("Settle: %v", err)
 	}
-	s.fill("BO-entry", symbol, quantity, quantity, limit, true)
+	s.fill("BO-entry", symbol, "BUY", quantity, quantity, limit, true)
 
 	p, err := s.engine.Journal.CurrentPosition(ctx, s.engine.AccountRef, "kr", symbol)
 	if err != nil {
@@ -324,14 +324,15 @@ func (s *e2eStack) entry(symbol, quantity, limit, stop string) journal.Position 
 
 // fill records one cumulative fill observation — the entry point the fill
 // detector calls, so the apply transaction is the production one.
-func (s *e2eStack) fill(orderID, symbol, ordered, filled, avg string, terminal bool) {
+func (s *e2eStack) fill(orderID, symbol, side, ordered, filled, avg string, terminal bool) {
 	s.t.Helper()
 	state := "OPEN_PARTIALLY_FILLED"
 	if terminal {
 		state = "CLOSED_FILLED"
 	}
 	if _, err := s.engine.Journal.RecordFill(context.Background(), journal.FillObservation{
-		OrderID: orderID, Symbol: symbol, Market: "kr", State: state, Terminal: terminal,
+		OrderID: orderID, AccountRef: s.engine.AccountRef, Symbol: symbol, Market: "kr",
+		TradingDay: "2026-03-30", Side: side, State: state, Terminal: terminal,
 		Quantity: ordered, FilledQuantity: filled, AveragePrice: avg,
 		ObservedAt: s.clk.Now().Format(time.RFC3339),
 	}); err != nil {
@@ -439,7 +440,7 @@ func TestTheWholeExitPathEndToEnd(t *testing.T) {
 	// 5. The partial fills. The apply hook moves taken_ratio_total and resolves
 	//    the proposal *in the fill's own transaction* — that is the whole point
 	//    of D7's atomic apply point.
-	s.fill(partialOrder, "005930", "4", "4", "72000", true)
+	s.fill(partialOrder, "005930", "SELL", "4", "4", "72000", true)
 	afterFill := s.state(p.ID)
 	if afterFill.TakenRatioTotal != "0.4" {
 		t.Fatalf("taken ratio = %s, want 0.4 of the initial quantity", afterFill.TakenRatioTotal)
@@ -475,7 +476,7 @@ func TestTheWholeExitPathEndToEnd(t *testing.T) {
 
 	// 8. It fills. The position closes, the exit state completes, and the loop's
 	//    working set empties.
-	s.fill(liquidation, "005930", "6", "6", "68900", true)
+	s.fill(liquidation, "005930", "SELL", "6", "6", "68900", true)
 	closed := s.position(p.ID)
 	if closed.State != journal.PositionClosed || closed.Quantity != "0" {
 		t.Fatalf("position = %+v, want CLOSED at zero", closed)
@@ -584,7 +585,7 @@ func TestACrashBetweenArmingAndFillingResumesWithoutASecondOrder(t *testing.T) {
 	}
 
 	// And the fill still lands on the proposal it answered.
-	restarted.fill(partialOrder, "005930", "4", "4", "72000", true)
+	restarted.fill(partialOrder, "005930", "SELL", "4", "4", "72000", true)
 	settled := restarted.state(p.ID)
 	if settled.Pending() {
 		t.Fatalf("state = %+v, want the proposal resolved by its own fill", settled)

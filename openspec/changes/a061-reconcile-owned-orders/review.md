@@ -19,17 +19,19 @@ Decision: ACCEPT with the following required implementation constraints.
 
 Decision: ACCEPT, P0=0, P1=0.
 
-- Confirmed AMEND lineage requires exact intent/attempt ownership, target-parent, broker-child, and canonical scope.
-- Malformed legacy edges and cross-account/market/day identifier reuse cannot promote external snapshots.
-- Ambiguity durably enters `IDENTIFIER_CONFLICT`; no projection, hook, early reservation release, live order, or toggle mutation is introduced.
+- Final re-review confirmed canonical direct PLACE/AMEND ownership takes precedence and lineage is only a same-scope fallback, so a parent PLACE plus parent→child AMEND is not counted as two owners.
+- CANCEL attempts never create fill ownership; owner evidence must be exact-scope, unique-intent, and strictly earlier than the observation.
+- The external cumulative 10 → parent PLACE → AMEND → late parent cumulative 12 regression projects and appends the full delta 12.
+- Focused race and full journal/engine tests passed; no projection, early reservation release, live order, toggle mutation, or authorization expansion is introduced.
 
 ### Maintainability — 2026-08-03
 
 Decision: ACCEPT, P0=0, P1=0.
 
-- Startup reservation recovery precedes nonce pruning and engine decisions; held reservations retain spent-nonce evidence.
-- Migration-shaped regressions exercise actual blank-scope rows for both tracked lineage and terminal live-order queries.
-- Non-blocking follow-up: extract the repeated canonical ownership SQL predicates into a repository query abstraction to reduce drift risk.
+- Direct-owner precedence is canonical-scope local, while duplicate direct owners and cross-scope ambiguity remain fail closed.
+- The late-parent regression pins baseline reset, full delta projection, and one exact scoped event.
+- Focused race and vet checks passed. Generated Function Logic Maps were regenerated afterward; logic-map and full diff checks pass.
+- Non-blocking follow-up: extract the repeated canonical temporal ownership SQL predicates into a repository query abstraction to reduce drift risk.
 
 ### Test — 2026-08-03
 
@@ -39,4 +41,9 @@ Initial decision: REJECT, P0=0, P1=1, P2=3.
 - Required remediation: composite durable snapshot identity, canonical detector keys, canonical local/broker comparison, and an end-to-end reused-identifier regression.
 - P2 follow-ups requested: direct legacy non-lineage reuse, decision-bound reservation negative coverage, and production recovery integration coverage.
 
-Final verdict is pending remediation, repeated focused/race tests, and repository-wide delivery gates.
+The canonical snapshot/detector/comparison remediation, legacy temporal binding, and decision-bound reservation negatives are implemented.
+
+Final decision: ACCEPT, P0=0, P1=0.
+
+- The direct-owner precedence, same-second future-owner, duplicate-owner, CANCEL non-owner, external baseline reset, late replacement-parent fill, provenance/outcome, reconcile lineage, tracer, and exit E2E regressions pass.
+- The uncached related-package suite and focused race suite pass with no failing command and no missing P0/P1 test.

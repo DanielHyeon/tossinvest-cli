@@ -1,45 +1,46 @@
 # Function Logic Map: `buildGateway`
 
-Source: `internal/app/engine/gateway.go`  
-Function: `buildGateway`  
-Signature: `buildGateway(params=2, results=2)`  
+Source: `internal/app/engine/gateway.go`
+Function: `buildGateway`
+Signature: `buildGateway(params=2, results=2)`
 Source SHA-256: `3dead101adcc3b89767975b14f72de7246909ac0ef3f909e3928ebed2637ee8b`
+Revision: `current`
 
 ## Inputs and invariants
 
-- Inputs are the parameters in `buildGateway(params=2, results=2)` and receiver state.
-- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
-- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
+- Inputs are `buildGateway(params=2, results=2)` parameters and receiver or package state.
+- Canonical identity is account, market, trading day, symbol, side, and opaque broker order id; ownership must be confirmed, unique, and strictly earlier than evidence.
+- External, partial, later-owner, or multi-intent evidence remains fail closed and cannot alter projection, P&L, provenance, reservations, or reconcile recovery.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | if | internal/app/engine/gateway.go:201 | Preserve the explicit condition, early return, and fail-closed error behavior. |
-| B2 | if | internal/app/engine/gateway.go:223 | Preserve the explicit condition, early return, and fail-closed error behavior. |
-| B3 | if | internal/app/engine/gateway.go:260 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B1 | if | internal/app/engine/gateway.go:201 | Preserve the condition, error propagation, and fail-closed behavior. |
+| B2 | if | internal/app/engine/gateway.go:223 | Preserve the condition, error propagation, and fail-closed behavior. |
+| B3 | if | internal/app/engine/gateway.go:260 | Preserve the condition, error propagation, and fail-closed behavior. |
 
 ## Calls and live bindings
 
-- `checkProjectionWired`: returned errors and state follow the mapped branches.
-- `execgw.NewEntryGate`: returned errors and state follow the mapped branches.
-- `tracker.Restore`: returned errors and state follow the mapped branches.
-- `fmt.Errorf`: returned errors and state follow the mapped branches.
-- `entry.SetAuthorityRefresh`: returned errors and state follow the mapped branches.
-- `tracker.Refresh`: returned errors and state follow the mapped branches.
-- `context.Background`: returned errors and state follow the mapped branches.
-- `execgw.New`: returned errors and state follow the mapped branches.
-- `in.official.BaseURL`: returned errors and state follow the mapped branches.
-- `newNotifier`: returned errors and state follow the mapped branches.
-- `newRetrier`: returned errors and state follow the mapped branches.
-- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
+- `checkProjectionWired`: errors and state follow mapped branches.
+- `execgw.NewEntryGate`: errors and state follow mapped branches.
+- `tracker.Restore`: errors and state follow mapped branches.
+- `fmt.Errorf`: errors and state follow mapped branches.
+- `entry.SetAuthorityRefresh`: errors and state follow mapped branches.
+- `tracker.Refresh`: errors and state follow mapped branches.
+- `context.Background`: errors and state follow mapped branches.
+- `execgw.New`: errors and state follow mapped branches.
+- `in.official.BaseURL`: errors and state follow mapped branches.
+- `newNotifier`: errors and state follow mapped branches.
+- `newRetrier`: errors and state follow mapped branches.
+- No live broker mutation, HTTP mutation, or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- The AST contains 13 assignment point(s); durable writes precede release visibility.
-- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
-- Errors propagate without projection, adoption, reservation release, or recovery success claims.
+- AST assignment points: 13; return points: 5; deferred operations: 0.
+- Schema-v19 binding is additive, confirmed, temporal, and unique-intent; runtime readers use exact durable scope.
+- Errors propagate without adoption, projection, reservation release, or recovery-success claims.
 
 ## Safety conclusion
 
-Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.
+The current source hash and every AST branch are bound to focused and full/race verification. Canonical temporal ownership prevents reused identifiers or external observations from contaminating local state.

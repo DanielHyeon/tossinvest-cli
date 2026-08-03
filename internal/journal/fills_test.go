@@ -3,6 +3,7 @@ package journal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -34,6 +35,16 @@ func observation(orderID, filled string) FillObservation {
 func TestFillEventsRequireCanonicalScopeWhenOrderIDIsReused(t *testing.T) {
 	j := openTestJournal(t)
 	ctx := context.Background()
+	firstScope := FillSnapshotScope{
+		OrderID: "reused-order", AccountRef: "acct-1", Market: "us",
+		TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+	}
+	secondScope := firstScope
+	secondScope.TradingDay = "2026-03-31"
+	recordConfirmedFillOrderScope(t, j, "reused-fill-first", "reused-fill-attempt-first",
+		"reused-order", firstScope)
+	recordConfirmedFillOrderScope(t, j, "reused-fill-second", "reused-fill-attempt-second",
+		"reused-order", secondScope)
 
 	first := observation("reused-order", "3")
 	if _, err := j.RecordFill(ctx, first); err != nil {
@@ -49,10 +60,7 @@ func TestFillEventsRequireCanonicalScopeWhenOrderIDIsReused(t *testing.T) {
 	if _, err := j.FillEvents(ctx, "reused-order"); !errors.Is(err, ErrFillScopeAmbiguous) {
 		t.Fatalf("FillEvents(order only) err=%v, want ErrFillScopeAmbiguous", err)
 	}
-	got, err := j.FillEventsScoped(ctx, FillSnapshotScope{
-		OrderID: "reused-order", AccountRef: "acct-1", Market: "us",
-		TradingDay: "2026-03-31", Symbol: "AAPL", Side: "BUY",
-	})
+	got, err := j.FillEventsScoped(ctx, secondScope)
 	if err != nil {
 		t.Fatalf("FillEventsScoped: %v", err)
 	}
@@ -61,13 +69,53 @@ func TestFillEventsRequireCanonicalScopeWhenOrderIDIsReused(t *testing.T) {
 	}
 }
 
+func TestFillEventsScopedRequiresPreexistingUniqueConfirmedOwner(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		ownerCount int
+		committed  string
+	}{
+		{name: "future owner in the same second", ownerCount: 1, committed: "2026-03-30T00:30:00Z"},
+		{name: "two owners", ownerCount: 2, committed: "2026-03-30T00:31:00Z"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			j := openTestJournal(t)
+			ctx := context.Background()
+			scope := FillSnapshotScope{OrderID: "scoped-owner-boundary", AccountRef: "acct-1",
+				Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY"}
+			if _, err := j.db.ExecContext(ctx, `INSERT INTO fill_events
+				(order_id, account_ref, symbol, market, trading_day, side, delta_quantity,
+				 cumulative_quantity, average_price, broker_visible_at, committed_at)
+				VALUES (?,?,?,?,?,?,?,?,?,?,?)`, scope.OrderID, scope.AccountRef, scope.Symbol,
+				scope.Market, scope.TradingDay, scope.Side, "1", "1", "200", "", tc.committed); err != nil {
+				t.Fatal(err)
+			}
+			for i := 0; i < tc.ownerCount; i++ {
+				recordConfirmedFillOrderScope(t, j, fmt.Sprintf("scoped-owner-%d", i),
+					fmt.Sprintf("scoped-owner-attempt-%d", i), scope.OrderID, scope)
+			}
+			events, err := j.FillEventsScoped(ctx, scope)
+			if err != nil || len(events) != 0 {
+				t.Fatalf("scoped events=%+v err=%v, want unsafe evidence excluded", events, err)
+			}
+		})
+	}
+}
+
 func recordConfirmedFillOrder(t *testing.T, j *Journal, intentID, attemptID, orderID string) {
+	recordConfirmedFillOrderScope(t, j, intentID, attemptID, orderID, FillSnapshotScope{
+		AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+	})
+}
+
+func recordConfirmedFillOrderScope(t *testing.T, j *Journal, intentID, attemptID, orderID string,
+	scope FillSnapshotScope) {
 	t.Helper()
 	ctx := context.Background()
 	attempt, err := j.Prepare(ctx, PrepareRequest{
 		Intent: Intent{
-			ID: intentID, Market: "us", TradingDay: "2026-03-30", AccountRef: "acct-1",
-			Symbol: "AAPL", Side: "BUY", OrderType: "LIMIT", Quantity: "10",
+			ID: intentID, Market: scope.Market, TradingDay: scope.TradingDay, AccountRef: scope.AccountRef,
+			Symbol: scope.Symbol, Side: scope.Side, OrderType: "LIMIT", Quantity: "10",
 			Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
 		},
 		Kind: KindPlace, AttemptID: attemptID,
@@ -1001,7 +1049,7 @@ func TestLiveOrdersForSymbolUsesLegacyTerminalOnlyWithinItsMarket(t *testing.T) 
 
 	confirm("us-legacy-intent", "us-legacy-attempt", "us", "2026-03-30", "AAPL", "USD")
 	terminal := observation("legacy-cross-market-id", "1")
-	terminal.AccountRef, terminal.TradingDay = "", ""
+	terminal.AccountRef, terminal.TradingDay, terminal.Side = "", "", ""
 	terminal.Symbol, terminal.Market, terminal.Terminal, terminal.State = "AAPL", "us", true, "FILLED"
 	if _, err := j.RecordFill(ctx, terminal); err != nil {
 		t.Fatal(err)
@@ -1014,6 +1062,76 @@ func TestLiveOrdersForSymbolUsesLegacyTerminalOnlyWithinItsMarket(t *testing.T) 
 	}
 	if len(live) != 0 {
 		t.Fatalf("US live orders = %+v, want legacy US terminal to remain authoritative despite KR id reuse", live)
+	}
+}
+
+func TestLegacySnapshotCannotTerminateOrOwnAFutureReusedOrder(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	if _, err := j.db.ExecContext(ctx, `INSERT INTO fill_snapshots
+		(order_id, account_ref, symbol, market, trading_day, side, state, terminal,
+		 filled_quantity, committed_at)
+		VALUES ('future-snapshot','','AAPL','us','','','FILLED',1,'1',
+		        '2026-03-29T20:00:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	recordConfirmedFillOrder(t, j, "future-intent", "future-attempt", "future-snapshot")
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tracked) != 1 || tracked[0].OrderID != "future-snapshot" {
+		t.Fatalf("tracked=%+v, want future order retained without inherited snapshot", tracked)
+	}
+	live, err := j.LiveOrdersForSymbol(ctx, "acct-1", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(live) != 1 || live[0].OrderID != "future-snapshot" {
+		t.Fatalf("live=%+v, want future order not hidden by old terminal", live)
+	}
+	net, err := j.NetPositions(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if net["AAPL"] != "" {
+		t.Fatalf("net=%+v, want old external snapshot excluded from future owner", net)
+	}
+}
+
+func TestScopedExternalSnapshotCannotTerminateOrOwnAFutureOrder(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	if _, err := j.db.ExecContext(ctx, `INSERT INTO scoped_fill_snapshots
+		(order_id, account_ref, symbol, market, trading_day, side, state, terminal,
+		 filled_quantity, committed_at)
+		VALUES ('future-scoped','acct-1','AAPL','us','2026-03-30','BUY','FILLED',1,'1',
+		        '2026-03-29T20:00:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+	recordConfirmedFillOrder(t, j, "future-scoped-intent", "future-scoped-attempt", "future-scoped")
+
+	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tracked) != 1 || tracked[0].OrderID != "future-scoped" {
+		t.Fatalf("tracked=%+v, want future order retained without inherited scoped snapshot", tracked)
+	}
+	live, err := j.LiveOrdersForSymbol(ctx, "acct-1", "us", "AAPL")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(live) != 1 || live[0].OrderID != "future-scoped" {
+		t.Fatalf("live=%+v, want future order not hidden by pre-owner scoped terminal", live)
+	}
+	net, err := j.NetPositions(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if net["AAPL"] != "" {
+		t.Fatalf("net=%+v, want pre-owner scoped snapshot excluded", net)
 	}
 }
 
@@ -1302,19 +1420,192 @@ func TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays(t *test
 	recordConfirmedReplacement(t, j, oldScope, "reused-legacy-parent", "reused-legacy-child", "legacy-old")
 	recordConfirmedReplacement(t, j, newScope, "reused-legacy-parent", "reused-legacy-child", "legacy-new")
 	legacy := observation("reused-legacy-parent", "0")
-	legacy.AccountRef, legacy.TradingDay = "", ""
+	// Reproduce a genuine pre-v16 row: those snapshots had market and symbol,
+	// but no account, trading day, or side. A half-populated v16 identity is now
+	// rejected because it cannot be made idempotent when order ids are reused.
+	legacy.AccountRef, legacy.TradingDay, legacy.Side = "", "", ""
 	if _, err := j.RecordFill(ctx, legacy); err != nil {
 		t.Fatal(err)
 	}
 
-	tracked, err := j.TrackedFillOrders(ctx, "acct-1")
+	if _, err := j.TrackedFillOrders(ctx, "acct-1"); !errors.Is(err, ErrTrackedFillIdentityConflict) {
+		t.Fatalf("TrackedFillOrders err=%v, want a durable ambiguity conflict", err)
+	}
+}
+
+func TestLegacySnapshotWithCrossAccountOrSideOwnersFailsClosed(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		second FillSnapshotScope
+	}{
+		{name: "account", second: FillSnapshotScope{
+			AccountRef: "acct-2", Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+		}},
+		{name: "side", second: FillSnapshotScope{
+			AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "SELL",
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			j := openTestJournal(t)
+			ctx := context.Background()
+			first := FillSnapshotScope{
+				AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+			}
+			recordConfirmedFillOrderScope(t, j, "legacy-owner-a", "legacy-attempt-a",
+				"legacy-ambiguous", first)
+			recordConfirmedFillOrderScope(t, j, "legacy-owner-b", "legacy-attempt-b",
+				"legacy-ambiguous", tc.second)
+			legacy := observation("legacy-ambiguous", "1")
+			legacy.AccountRef, legacy.TradingDay, legacy.Side = "", "", ""
+			if _, err := j.RecordFill(ctx, legacy); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := j.TrackedFillOrders(ctx, "acct-1"); !errors.Is(err, ErrTrackedFillIdentityConflict) {
+				t.Fatalf("TrackedFillOrders err=%v, want ambiguity conflict", err)
+			}
+			net, err := j.NetPositions(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if net["AAPL"] != "" {
+				t.Fatalf("net=%+v, want ambiguous legacy snapshot excluded", net)
+			}
+		})
+	}
+}
+
+func TestLiveOrdersForSymbolRejectsDuplicateCanonicalOwner(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	scope := FillSnapshotScope{
+		AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+	}
+	recordConfirmedFillOrderScope(t, j, "live-owner-a", "live-attempt-a", "live-ambiguous", scope)
+	recordConfirmedFillOrderScope(t, j, "live-owner-b", "live-attempt-b", "live-ambiguous", scope)
+
+	if _, err := j.LiveOrdersForSymbol(ctx, scope.AccountRef, scope.Market, scope.Symbol); !errors.Is(err, ErrTrackedFillIdentityConflict) {
+		t.Fatalf("LiveOrdersForSymbol err=%v, want durable identity conflict", err)
+	}
+}
+
+func TestConfirmedCancelDoesNotBecomeASecondOrderOwner(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	scope := FillSnapshotScope{
+		AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
+	}
+	recordConfirmedFillOrderScope(t, j, "place-owner", "place-owner-attempt", "cancelled-order", scope)
+	if _, err := j.RecordFill(ctx, observation("cancelled-order", "0")); err != nil {
+		t.Fatal(err)
+	}
+	cancel, err := j.Prepare(ctx, PrepareRequest{
+		Intent: Intent{ID: "cancel-intent", Market: scope.Market, TradingDay: scope.TradingDay,
+			AccountRef: scope.AccountRef, Symbol: scope.Symbol, Side: scope.Side, OrderType: "LIMIT",
+			Quantity: "10", Price: "200", Currency: "USD", Source: "engine", Fingerprint: "cancel-fp"},
+		Kind: KindCancel, AttemptID: "cancel-attempt", TargetOrderID: "cancelled-order",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, order := range tracked {
-		if order.OrderID == "reused-legacy-parent" {
-			t.Fatalf("legacy parent snapshot was attributed across reused lineage days: %+v", tracked)
-		}
+	if err := cancel.MarkDispatchStarted(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := cancel.MarkAcked(ctx, "cancelled-order"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cancel.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "cancel accepted"); err != nil {
+		t.Fatal(err)
+	}
+
+	live, err := j.LiveOrdersForSymbol(ctx, scope.AccountRef, scope.Market, scope.Symbol)
+	if err != nil {
+		t.Fatalf("confirmed CANCEL poisoned live ownership: %v", err)
+	}
+	if len(live) != 1 || live[0].IntentID != "place-owner" {
+		t.Fatalf("live=%+v, want only the PLACE owner", live)
+	}
+}
+
+func TestPostOwnerFillStartsANewCumulativeSequenceAfterExternalEvidence(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	scope := FillSnapshotScope{OrderID: "reused-external-scope", AccountRef: "acct-1", Market: "us",
+		TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY"}
+	if _, err := j.db.ExecContext(ctx, `INSERT INTO scoped_fill_snapshots
+		(account_ref, market, trading_day, symbol, side, order_id, state, terminal,
+		 fail_closed, quantity, filled_quantity, average_price, committed_at)
+		VALUES (?,?,?,?,?,?,'FILLED',1,0,'10','10','190','2026-03-30T00:30:00Z')`,
+		scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol, scope.Side, scope.OrderID); err != nil {
+		t.Fatal(err)
+	}
+	recordConfirmedFillOrderScope(t, j, "post-external-owner", "post-external-attempt", scope.OrderID, scope)
+	var projectedDelta string
+	if err := j.SetApplyHooks(ApplyHooks{
+		Project: func(_ context.Context, _ *ApplyTx, fill AppliedFill) error {
+			projectedDelta = fill.Delta
+			return nil
+		},
+		Exit: func(context.Context, *ApplyTx, AppliedFill) error { return nil },
+	}); err != nil {
+		t.Fatal(err)
+	}
+	obs := observation(scope.OrderID, "12")
+	obs.State, obs.Terminal = "FILLED", true
+	res, err := j.RecordFill(ctx, obs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Delta != "12" || projectedDelta != "12" {
+		t.Fatalf("result delta=%s projected=%s, want new owner sequence to start at 12",
+			res.Delta, projectedDelta)
+	}
+	events, err := j.FillEventsScoped(ctx, scope)
+	if err != nil || len(events) != 1 || events[0].DeltaQuantity != "12" {
+		t.Fatalf("post-owner events=%+v err=%v, want one full local cumulative delta", events, err)
+	}
+}
+
+func TestLateParentFillStartsANewSequenceAfterExternalEvidenceAndReplacement(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	scope := FillSnapshotScope{OrderID: "replaced-external-parent", AccountRef: "acct-1", Market: "us",
+		TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY"}
+	if _, err := j.db.ExecContext(ctx, `INSERT INTO scoped_fill_snapshots
+		(account_ref, market, trading_day, symbol, side, order_id, state, terminal,
+		 fail_closed, quantity, filled_quantity, average_price, committed_at)
+		VALUES (?,?,?,?,?,?,'FILLED',1,0,'10','10','190','2026-03-30T00:30:00Z')`,
+		scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol, scope.Side, scope.OrderID); err != nil {
+		t.Fatal(err)
+	}
+	recordConfirmedFillOrderScope(t, j, "replaced-parent-owner", "replaced-parent-attempt", scope.OrderID, scope)
+	recordConfirmedReplacement(t, j, OrderLineageScope{
+		AccountRef: scope.AccountRef, Market: scope.Market, TradingDay: scope.TradingDay,
+		Symbol: scope.Symbol, Side: scope.Side,
+	}, scope.OrderID, "replaced-external-child", "external-parent")
+
+	var projectedDelta string
+	if err := j.SetApplyHooks(ApplyHooks{
+		Project: func(_ context.Context, _ *ApplyTx, fill AppliedFill) error {
+			projectedDelta = fill.Delta
+			return nil
+		},
+		Exit: func(context.Context, *ApplyTx, AppliedFill) error { return nil },
+	}); err != nil {
+		t.Fatal(err)
+	}
+	obs := observation(scope.OrderID, "12")
+	obs.State, obs.Terminal = "FILLED", true
+	res, err := j.RecordFill(ctx, obs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Delta != "12" || projectedDelta != "12" {
+		t.Fatalf("result delta=%s projected=%s, want full parent cumulative after direct-owner precedence",
+			res.Delta, projectedDelta)
+	}
+	events, err := j.FillEventsScoped(ctx, scope)
+	if err != nil || len(events) != 1 || events[0].DeltaQuantity != "12" {
+		t.Fatalf("late parent events=%+v err=%v, want one full local cumulative delta", events, err)
 	}
 }
 

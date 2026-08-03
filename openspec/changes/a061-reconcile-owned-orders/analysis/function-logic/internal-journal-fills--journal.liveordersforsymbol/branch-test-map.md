@@ -4,11 +4,12 @@ Source: `internal/journal/fills.go`
 
 | Branch | Condition | Verification |
 | --- | --- | --- |
-| B1 | if at `internal/journal/fills.go:1411` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B2 | for at `internal/journal/fills.go:1417` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B3 | if at `internal/journal/fills.go:1419` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B4 | if at `internal/journal/fills.go:1426` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B5 | range at `internal/journal/fills.go:1430` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B6 | if at `internal/journal/fills.go:1438` | Focused regressions and the full/race suites verify this condition and its error path. |
+| B1 | if at `internal/journal/fills.go:1832` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B2 | if at `internal/journal/fills.go:1875` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B3 | for at `internal/journal/fills.go:1881` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B4 | if at `internal/journal/fills.go:1883` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B5 | if at `internal/journal/fills.go:1890` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B6 | range at `internal/journal/fills.go:1894` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B7 | if at `internal/journal/fills.go:1902` | Focused canonical/temporal ownership regressions plus full and race suites. |
 
-Coverage includes external-order exclusion, scoped snapshot coexistence, detector reuse, incomplete broker evidence, scoped lineage, durable reconcile authority, recovery refusal/release, reservation decision binding, and nonce retention.
+Coverage includes external exclusion, identifier reuse, partial-scope rejection, v19 migration, confirmed temporal ownership, reservation recovery, and operator-release refusal/success.

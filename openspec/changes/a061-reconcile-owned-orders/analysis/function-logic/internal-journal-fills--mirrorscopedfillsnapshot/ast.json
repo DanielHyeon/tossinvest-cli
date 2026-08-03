@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
   "package": "journal",
   "function": "mirrorScopedFillSnapshot",
   "signature": "mirrorScopedFillSnapshot(params=8, results=1)",
   "start": {
-    "line": 608,
+    "line": 754,
     "column": 1
   },
   "end": {
-    "line": 635,
+    "line": 781,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 634,
+        "line": 780,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 610,
+        "line": 756,
         "column": 12
       },
       "text": "tx.ExecContext"
@@ -34,7 +34,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 631,
+        "line": 777,
         "column": 14
       },
       "text": "boolToInt"
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 631,
+        "line": 777,
         "column": 39
       },
       "text": "boolToInt"
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 631,
+        "line": 777,
         "column": 62
       },
       "text": "orZero"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 632,
+        "line": 778,
         "column": 3
       },
       "text": "orZero"
@@ -68,7 +68,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 610,
+        "line": 756,
         "column": 2
       }
     }

@@ -121,6 +121,14 @@ func TestAmountOnlyCorrectionIsDetected(t *testing.T) {
 func TestExecutionCorrectionsRequireCanonicalScopeWhenOrderIDIsReused(t *testing.T) {
 	j := openTestJournal(t)
 	ctx := context.Background()
+	firstScope := FillSnapshotScope{OrderID: "reused-order", AccountRef: "acct-1", Market: "us",
+		TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY"}
+	secondScope := firstScope
+	secondScope.TradingDay = "2026-03-31"
+	recordConfirmedFillOrderScope(t, j, "reused-correction-first", "reused-correction-attempt-first",
+		"reused-order", firstScope)
+	recordConfirmedFillOrderScope(t, j, "reused-correction-second", "reused-correction-attempt-second",
+		"reused-order", secondScope)
 
 	first := correctionObservation("reused-order", "3", "213.4", "640.2")
 	if _, err := j.RecordFill(ctx, first); err != nil {
@@ -144,15 +152,45 @@ func TestExecutionCorrectionsRequireCanonicalScopeWhenOrderIDIsReused(t *testing
 	if _, err := j.ExecutionCorrections(ctx, "reused-order"); !errors.Is(err, ErrFillScopeAmbiguous) {
 		t.Fatalf("ExecutionCorrections(order only) err=%v, want ErrFillScopeAmbiguous", err)
 	}
-	got, err := j.ExecutionCorrectionsScoped(ctx, FillSnapshotScope{
-		OrderID: "reused-order", AccountRef: "acct-1", Market: "us",
-		TradingDay: "2026-03-31", Symbol: "AAPL", Side: "BUY",
-	})
+	got, err := j.ExecutionCorrectionsScoped(ctx, secondScope)
 	if err != nil {
 		t.Fatalf("ExecutionCorrectionsScoped: %v", err)
 	}
 	if len(got) != 1 || got[0].NewAveragePrice != "221" || got[0].TradingDay != "2026-03-31" {
 		t.Fatalf("scoped corrections=%+v, want only the later trading-day correction", got)
+	}
+}
+
+func TestExecutionCorrectionsScopedRequiresPreexistingUniqueConfirmedOwner(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		ownerCount int
+		observed   string
+	}{
+		{name: "future owner in the same second", ownerCount: 1, observed: "2026-03-30T00:30:00Z"},
+		{name: "two owners", ownerCount: 2, observed: "2026-03-30T00:31:00Z"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			j := openTestJournal(t)
+			ctx := context.Background()
+			scope := FillSnapshotScope{OrderID: "scoped-correction-boundary", AccountRef: "acct-1",
+				Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY"}
+			if _, err := j.db.ExecContext(ctx, `INSERT INTO scoped_execution_corrections
+				(id, account_ref, market, trading_day, symbol, side, order_id, new_avg_price,
+				 new_filled_amount, cumulative_qty, observed_at)
+				VALUES (?,?,?,?,?,?,?,?,?,?,?)`, "unsafe-correction", scope.AccountRef, scope.Market,
+				scope.TradingDay, scope.Symbol, scope.Side, scope.OrderID, "201", "", "1", tc.observed); err != nil {
+				t.Fatal(err)
+			}
+			for i := 0; i < tc.ownerCount; i++ {
+				recordConfirmedFillOrderScope(t, j, "scoped-correction-owner-"+string(rune('a'+i)),
+					"scoped-correction-attempt-"+string(rune('a'+i)), scope.OrderID, scope)
+			}
+			corrections, err := j.ExecutionCorrectionsScoped(ctx, scope)
+			if err != nil || len(corrections) != 0 {
+				t.Fatalf("scoped corrections=%+v err=%v, want unsafe evidence excluded", corrections, err)
+			}
+		})
 	}
 }
 

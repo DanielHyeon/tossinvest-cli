@@ -1,34 +1,35 @@
 # Function Logic Map: `hasPermanentQuantityAccountBlock`
 
-Source: `internal/reconcile/mismatch.go`  
-Function: `hasPermanentQuantityAccountBlock`  
-Signature: `hasPermanentQuantityAccountBlock(params=1, results=1)`  
+Source: `internal/reconcile/mismatch.go`
+Function: `hasPermanentQuantityAccountBlock`
+Signature: `hasPermanentQuantityAccountBlock(params=1, results=1)`
 Source SHA-256: `a0ffbb279e773f7648b0a844e4bb783fdd671125003f4eb8619a827ed0688b9f`
+Revision: `current`
 
 ## Inputs and invariants
 
-- Inputs are the parameters in `hasPermanentQuantityAccountBlock(params=1, results=1)` and receiver state.
-- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
-- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
+- Inputs are `hasPermanentQuantityAccountBlock(params=1, results=1)` parameters and receiver or package state.
+- Canonical identity is account, market, trading day, symbol, side, and opaque broker order id; ownership must be confirmed, unique, and strictly earlier than evidence.
+- External, partial, later-owner, or multi-intent evidence remains fail closed and cannot alter projection, P&L, provenance, reservations, or reconcile recovery.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | range | internal/reconcile/mismatch.go:820 | Preserve the explicit condition, early return, and fail-closed error behavior. |
-| B2 | if | internal/reconcile/mismatch.go:821 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B1 | range | internal/reconcile/mismatch.go:820 | Preserve the condition, error propagation, and fail-closed behavior. |
+| B2 | if | internal/reconcile/mismatch.go:821 | Preserve the condition, error propagation, and fail-closed behavior. |
 
 ## Calls and live bindings
 
-- No outbound call; behavior is local and deterministic.
-- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
+- No nested call is present; behavior is source-local and source-hash bound.
+- No live broker mutation, HTTP mutation, or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- The AST contains 0 assignment point(s); durable writes precede release visibility.
-- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
-- Errors propagate without projection, adoption, reservation release, or recovery success claims.
+- AST assignment points: 0; return points: 2; deferred operations: 0.
+- Schema-v19 binding is additive, confirmed, temporal, and unique-intent; runtime readers use exact durable scope.
+- Errors propagate without adoption, projection, reservation release, or recovery-success claims.
 
 ## Safety conclusion
 
-Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.
+The current source hash and every AST branch are bound to focused and full/race verification. Canonical temporal ownership prevents reused identifiers or external observations from contaminating local state.

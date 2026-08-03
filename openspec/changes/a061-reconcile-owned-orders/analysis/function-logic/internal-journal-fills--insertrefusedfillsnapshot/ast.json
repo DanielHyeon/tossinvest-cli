@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
   "package": "journal",
   "function": "insertRefusedFillSnapshot",
   "signature": "insertRefusedFillSnapshot(params=6, results=1)",
   "start": {
-    "line": 637,
+    "line": 783,
     "column": 1
   },
   "end": {
-    "line": 661,
+    "line": 807,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 639,
+        "line": 785,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 640,
+        "line": 786,
         "column": 3
       }
     }
@@ -34,21 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 648,
+        "line": 794,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 650,
+        "line": 796,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 660,
+        "line": 806,
         "column": 2
       }
     }
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 639,
+        "line": 785,
         "column": 5
       },
       "text": "scope.complete"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 640,
+        "line": 786,
         "column": 16
       },
       "text": "tx.ExecContext"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 647,
+        "line": 793,
         "column": 15
       },
       "text": "orZero"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 650,
+        "line": 796,
         "column": 10
       },
       "text": "mirrorScopedFillSnapshot"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 652,
+        "line": 798,
         "column": 12
       },
       "text": "tx.ExecContext"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 659,
+        "line": 805,
         "column": 14
       },
       "text": "orZero"
@@ -107,14 +107,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 640,
+        "line": 786,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 652,
+        "line": 798,
         "column": 2
       }
     }

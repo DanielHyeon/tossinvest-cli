@@ -137,7 +137,8 @@ func resolveFillOrigin(ctx context.Context, tx *ApplyTx, fill AppliedFill) (fill
 		  FROM mutation_attempts a
 		  JOIN intents i ON i.id = a.intent_id
 		 WHERE a.broker_order_id = ? AND a.state = ?
-		 ORDER BY a.recorded_at DESC, a.rowid DESC`, fill.OrderID, string(StateConfirmed))
+		   AND a.kind IN ('PLACE','AMEND') AND a.settled_at < ?
+		 ORDER BY a.recorded_at DESC, a.rowid DESC`, fill.OrderID, string(StateConfirmed), fill.CommittedAt)
 	if err != nil {
 		return fillOrigin{}, false, fmt.Errorf(
 			"journal: resolving the intent behind order %s: %w", fill.OrderID, err)

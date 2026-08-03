@@ -4,6 +4,6 @@ Source: `internal/journal/lineage.go`
 
 | Branch | Condition | Verification |
 | --- | --- | --- |
-| B1 | Happy path at `internal/journal/lineage.go:398` | Focused and repository suites verify the branchless contract. |
+| B1 | branchless happy path | Focused regression plus full and race suites. |
 
-Coverage includes external-order exclusion, scoped snapshot coexistence, detector reuse, incomplete broker evidence, scoped lineage, durable reconcile authority, recovery refusal/release, reservation decision binding, and nonce retention.
+Coverage includes external exclusion, identifier reuse, partial-scope rejection, v19 migration, confirmed temporal ownership, reservation recovery, and operator-release refusal/success.

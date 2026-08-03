@@ -1,46 +1,47 @@
 # Function Logic Map: `LocalStateFromJournal`
 
-Source: `internal/reconcile/compare.go`  
-Function: `LocalStateFromJournal`  
-Signature: `LocalStateFromJournal(params=3, results=2)`  
+Source: `internal/reconcile/compare.go`
+Function: `LocalStateFromJournal`
+Signature: `LocalStateFromJournal(params=3, results=2)`
 Source SHA-256: `36ce21d173549fe4b957c6132a56993887fb62dfe3acaa7c9afd39a6e61154b2`
+Revision: `current`
 
 ## Inputs and invariants
 
-- Inputs are the parameters in `LocalStateFromJournal(params=3, results=2)` and receiver state.
-- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
-- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
+- Inputs are `LocalStateFromJournal(params=3, results=2)` parameters and receiver or package state.
+- Canonical identity is account, market, trading day, symbol, side, and opaque broker order id; ownership must be confirmed, unique, and strictly earlier than evidence.
+- External, partial, later-owner, or multi-intent evidence remains fail closed and cannot alter projection, P&L, provenance, reservations, or reconcile recovery.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | if | internal/reconcile/compare.go:199 | Preserve the explicit condition, early return, and fail-closed error behavior. |
-| B2 | if | internal/reconcile/compare.go:203 | Preserve the explicit condition, early return, and fail-closed error behavior. |
-| B3 | if | internal/reconcile/compare.go:207 | Preserve the explicit condition, early return, and fail-closed error behavior. |
-| B4 | range | internal/reconcile/compare.go:217 | Preserve the explicit condition, early return, and fail-closed error behavior. |
-| B5 | if | internal/reconcile/compare.go:225 | Preserve the explicit condition, early return, and fail-closed error behavior. |
+| B1 | if | internal/reconcile/compare.go:199 | Preserve the condition, error propagation, and fail-closed behavior. |
+| B2 | if | internal/reconcile/compare.go:203 | Preserve the condition, error propagation, and fail-closed behavior. |
+| B3 | if | internal/reconcile/compare.go:207 | Preserve the condition, error propagation, and fail-closed behavior. |
+| B4 | range | internal/reconcile/compare.go:217 | Preserve the condition, error propagation, and fail-closed behavior. |
+| B5 | if | internal/reconcile/compare.go:225 | Preserve the condition, error propagation, and fail-closed behavior. |
 
 ## Calls and live bindings
 
-- `fmt.Errorf`: returned errors and state follow the mapped branches.
-- `HeldBySymbol`: returned errors and state follow the mapped branches.
-- `j.TrackedFillOrders`: returned errors and state follow the mapped branches.
-- `make`: returned errors and state follow the mapped branches.
-- `len`: returned errors and state follow the mapped branches.
-- `j.ResolveCurrentOrderIDScoped`: returned errors and state follow the mapped branches.
-- `strings.TrimSpace`: returned errors and state follow the mapped branches.
-- `strings.ToUpper`: returned errors and state follow the mapped branches.
-- `strings.ToLower`: returned errors and state follow the mapped branches.
-- `order.Identity`: returned errors and state follow the mapped branches.
-- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
+- `fmt.Errorf`: errors and state follow mapped branches.
+- `HeldBySymbol`: errors and state follow mapped branches.
+- `j.TrackedFillOrders`: errors and state follow mapped branches.
+- `make`: errors and state follow mapped branches.
+- `len`: errors and state follow mapped branches.
+- `j.ResolveCurrentOrderIDScoped`: errors and state follow mapped branches.
+- `strings.TrimSpace`: errors and state follow mapped branches.
+- `strings.ToUpper`: errors and state follow mapped branches.
+- `strings.ToLower`: errors and state follow mapped branches.
+- `order.Identity`: errors and state follow mapped branches.
+- No live broker mutation, HTTP mutation, or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- The AST contains 7 assignment point(s); durable writes precede release visibility.
-- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
-- Errors propagate without projection, adoption, reservation release, or recovery success claims.
+- AST assignment points: 7; return points: 5; deferred operations: 0.
+- Schema-v19 binding is additive, confirmed, temporal, and unique-intent; runtime readers use exact durable scope.
+- Errors propagate without adoption, projection, reservation release, or recovery-success claims.
 
 ## Safety conclusion
 
-Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.
+The current source hash and every AST branch are bound to focused and full/race verification. Canonical temporal ownership prevents reused identifiers or external observations from contaminating local state.

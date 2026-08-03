@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 18
+const SchemaVersion = 19
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -104,6 +104,11 @@ var migrations = []migration{
 	// constraint widened without a destructive rebuild, so it remains a legacy
 	// compatibility surface.
 	{Version: 18, SQL: schemaV18},
+	// schemaV19 lives in fills.go. It records an additive companion binding only
+	// for legacy events/corrections whose confirmed transition already settled
+	// before the observation; append-only fill rows remain unchanged. Runtime
+	// readers no longer guess that blank evidence belongs to a later reused id.
+	{Version: 19, SQL: schemaV19},
 }
 
 // schemaV1 is the initial schema.

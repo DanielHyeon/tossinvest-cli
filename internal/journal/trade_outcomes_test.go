@@ -103,6 +103,43 @@ func TestTheOutcomeIsFrozenInTheClosingTransaction(t *testing.T) {
 	}
 }
 
+func TestNonConfirmedFillDoesNotEnterTradeOutcome(t *testing.T) {
+	withFailed := outcomeFixture(t)
+	ctx := context.Background()
+	buy := place(t, withFailed, order{
+		intentID: "i-buy", attemptID: "a-buy", orderID: "o-buy",
+		decisionID: "d-buy", side: "BUY", quantity: "10",
+	})
+	if _, err := withFailed.RecordFill(ctx, terminalFill(buy, "10", "70000")); err != nil {
+		t.Fatal(err)
+	}
+	p := currentPosition(t, withFailed, buy)
+	if _, err := withFailed.OpenExitState(ctx, ExitStateSeed{
+		PositionID: p.ID, EntryPrice: "70000", InitialStop: "68000",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	failed := insertNonConfirmedFillAttempt(t, withFailed, "failed-outcome", "o-failed-outcome", "")
+	if _, err := withFailed.RecordFill(ctx, terminalFill(failed, "4", "99000")); err != nil {
+		t.Fatal(err)
+	}
+	sell := place(t, withFailed, order{
+		intentID: "i-sell", attemptID: "a-sell", orderID: "o-sell",
+		decisionID: "d-sell", side: "SELL", quantity: "10",
+	})
+	if _, err := withFailed.RecordFill(ctx, terminalFill(sell, "10", "72000")); err != nil {
+		t.Fatal(err)
+	}
+
+	clean := outcomeFixture(t)
+	cleanID := roundTrip(t, clean, "10", "70000", "72000")
+	got, want := outcomeOf(t, withFailed, p.ID), outcomeOf(t, clean, cleanID)
+	if got.RealizedPnLAfterCosts != want.RealizedPnLAfterCosts || got.RealizedR != want.RealizedR {
+		t.Fatalf("outcome with non-confirmed fill=%+v, want clean pnl=%s r=%s",
+			got, want.RealizedPnLAfterCosts, want.RealizedR)
+	}
+}
+
 // TestRealizedRIsNotThePriceR is the naming separation trade-analytics demands.
 // After a partial the two numbers differ, and the row must carry the realised
 // one: total, net of costs, over the frozen denominator.

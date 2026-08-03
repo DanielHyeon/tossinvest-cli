@@ -30,7 +30,7 @@
 ## 5. Verification and Delivery
 
 - [ ] 5.1 Run focused tests, race tests, full tests, vet, strict OpenSpec, PM, logic-map, SDD and `make gate` checks
-- [ ] 5.2 Obtain independent security, test, and maintainability review; resolve all P0/P1 findings
+- [x] 5.2 Obtain independent security, test, and maintainability review; resolve all P0/P1 findings
 - [ ] 5.3 Merge to local main, push remote main, build and deploy containers without invoking a live order command
 - [ ] 5.4 Stop the engine, run the verified operator release once, restart, and confirm KR/US holdings become managed with persisted exit lines
 - [ ] 5.5 Archive the change, update PM/memory, sync SDD indexes, commit, push, and recheck deployment health

@@ -2,6 +2,7 @@ package journal
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -118,18 +119,40 @@ func containsCause(causes []string, want string) bool {
 
 func insertTerminalFillSnapshot(t *testing.T, j *Journal, orderID, account, market, day, symbol, side string) {
 	t.Helper()
+	committedAt := evidenceTimeAfterOwners(t, j, orderID)
 	if _, err := j.db.ExecContext(context.Background(), `
 		INSERT INTO fill_snapshots
 		  (order_id, account_ref, symbol, market, trading_day, side, state,
 		   terminal, fail_closed, quantity, filled_quantity, committed_at)
 		VALUES (?, ?, ?, ?, ?, ?, 'FILLED', 1, 0, '10', '10', ?)`,
-		orderID, account, symbol, market, day, side, j.nowString()); err != nil {
+		orderID, account, symbol, market, day, side, committedAt); err != nil {
 		t.Fatalf("insert terminal fill snapshot %s: %v", orderID, err)
 	}
 }
 
 func insertScopedFillSnapshot(t *testing.T, j *Journal, orderID, account, market, day, symbol, side string,
 	terminal, failClosed bool,
+) {
+	insertScopedFillSnapshotAt(t, j, orderID, account, market, day, symbol, side,
+		terminal, failClosed, evidenceTimeAfterOwners(t, j, orderID))
+}
+
+func evidenceTimeAfterOwners(t *testing.T, j *Journal, orderID string) string {
+	t.Helper()
+	var latest sql.NullString
+	if err := j.db.QueryRow(`SELECT MAX(settled_at) FROM mutation_attempts
+		WHERE broker_order_id=? AND state='CONFIRMED' AND kind IN ('PLACE','AMEND')`, orderID).Scan(&latest); err != nil {
+		t.Fatal(err)
+	}
+	at, err := journalTimeStrictlyAfter(j.nowString(), latest.String)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return at
+}
+
+func insertScopedFillSnapshotAt(t *testing.T, j *Journal, orderID, account, market, day, symbol, side string,
+	terminal, failClosed bool, committedAt string,
 ) {
 	t.Helper()
 	if _, err := j.db.ExecContext(context.Background(), `
@@ -138,7 +161,7 @@ func insertScopedFillSnapshot(t *testing.T, j *Journal, orderID, account, market
 		   terminal, fail_closed, quantity, filled_quantity, committed_at, reason_code, detail)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '10', ?, ?, ?, ?)`,
 		orderID, account, market, day, symbol, side, "TEST", boolToInt(terminal), boolToInt(failClosed),
-		map[bool]string{true: "0", false: "10"}[failClosed], j.nowString(),
+		map[bool]string{true: "0", false: "10"}[failClosed], committedAt,
 		map[bool]string{true: "UNKNOWN_BROKER_STATE", false: ""}[failClosed],
 		map[bool]string{true: "scoped broker state is unknown", false: ""}[failClosed]); err != nil {
 		t.Fatalf("insert scoped fill snapshot %s/%s: %v", account, orderID, err)
@@ -214,6 +237,40 @@ func TestOrphanSweepReleasesAnExactlyScopedTerminalFill(t *testing.T) {
 	}
 	if reservationState(t, j, reservationID).Held() {
 		t.Fatal("the exactly scoped terminal fill left its reservation held")
+	}
+}
+
+func TestPreOwnerTerminalEvidenceCannotReleaseAFutureReservation(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	const orderID = "future-owned-terminal"
+	insertScopedFillSnapshotAt(t, j, orderID, "acct-1", "kr", "2026-03-30", "005930", "BUY",
+		true, false, "2026-03-30T00:30:00Z")
+	reservationID := reserveConfirmedSweepOrder(
+		t, j, "d-future-terminal", "acct-1", "attempt-future-terminal", orderID)
+
+	sweep, err := j.SweepReservations(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sweep.Released) != 0 || !reservationState(t, j, reservationID).Held() {
+		t.Fatalf("pre-owner terminal released a future reservation: %+v", sweep.Released)
+	}
+}
+
+func TestPreOwnerFailClosedEvidenceCannotAlertAFutureReservation(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	const orderID = "future-owned-fail-closed"
+	insertScopedFillSnapshotAt(t, j, orderID, "acct-1", "kr", "2026-03-30", "005930", "BUY",
+		false, true, "2026-03-30T00:30:00Z")
+	reserveConfirmedSweepOrder(
+		t, j, "d-future-failure", "acct-1", "attempt-future-failure", orderID)
+
+	alerts, err := j.ReservationsAwaitingOperator(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(alerts) != 0 {
+		t.Fatalf("pre-owner fail-closed evidence alerted a future reservation: %+v", alerts)
 	}
 }
 

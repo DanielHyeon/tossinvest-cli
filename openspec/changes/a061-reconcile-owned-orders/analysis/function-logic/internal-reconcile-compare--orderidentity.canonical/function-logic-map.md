@@ -1,35 +1,36 @@
 # Function Logic Map: `OrderIdentity.canonical`
 
-Source: `internal/reconcile/compare.go`  
-Function: `OrderIdentity.canonical`  
-Signature: `OrderIdentity.canonical(params=0, results=1)`  
+Source: `internal/reconcile/compare.go`
+Function: `OrderIdentity.canonical`
+Signature: `OrderIdentity.canonical(params=0, results=1)`
 Source SHA-256: `36ce21d173549fe4b957c6132a56993887fb62dfe3acaa7c9afd39a6e61154b2`
+Revision: `current`
 
 ## Inputs and invariants
 
-- Inputs are the parameters in `OrderIdentity.canonical(params=0, results=1)` and receiver state.
-- Canonical order identity is account/market/trading-day/symbol/side/opaque-order-id; no layer may collapse it back to order-id alone.
-- External broker evidence cannot become engine ownership, and ambiguity remains durable and fail closed.
+- Inputs are `OrderIdentity.canonical(params=0, results=1)` parameters and receiver or package state.
+- Canonical identity is account, market, trading day, symbol, side, and opaque broker order id; ownership must be confirmed, unique, and strictly earlier than evidence.
+- External, partial, later-owner, or multi-intent evidence remains fail closed and cannot alter projection, P&L, provenance, reservations, or reconcile recovery.
 
 ## Branches and early returns
 
 | ID | Kind | Location | Contract |
 | --- | --- | --- | --- |
-| B1 | happy path | internal/reconcile/compare.go:70 | Execute the function contract without an alternate branch. |
+| B1 | happy path | internal/reconcile/compare.go:70 | Preserve the source-bound happy path and propagated errors. |
 
 ## Calls and live bindings
 
-- `strings.TrimSpace`: returned errors and state follow the mapped branches.
-- `strings.ToLower`: returned errors and state follow the mapped branches.
-- `strings.ToUpper`: returned errors and state follow the mapped branches.
-- Official reads and runtime config stay caller-bound; no live broker mutation or operating-toggle authority is added.
+- `strings.TrimSpace`: errors and state follow mapped branches.
+- `strings.ToLower`: errors and state follow mapped branches.
+- `strings.ToUpper`: errors and state follow mapped branches.
+- No live broker mutation, HTTP mutation, or operating-toggle authority is added.
 
 ## State mutations and fallbacks
 
-- The AST contains 5 assignment point(s); durable writes precede release visibility.
-- Scoped v17 evidence is authoritative. Legacy empty-scope evidence is accepted only when uniquely attributable and never as a reuse wildcard.
-- Errors propagate without projection, adoption, reservation release, or recovery success claims.
+- AST assignment points: 5; return points: 1; deferred operations: 0.
+- Schema-v19 binding is additive, confirmed, temporal, and unique-intent; runtime readers use exact durable scope.
+- Errors propagate without adoption, projection, reservation release, or recovery-success claims.
 
 ## Safety conclusion
 
-Every AST branch is bound to this source hash and mapped to focused plus full/race verification. Composite snapshot identity, canonical detector matching, and bidirectional reconciliation matching prevent a reused opaque identifier from producing a false-clean recovery.
+The current source hash and every AST branch are bound to focused and full/race verification. Canonical temporal ownership prevents reused identifiers or external observations from contaminating local state.

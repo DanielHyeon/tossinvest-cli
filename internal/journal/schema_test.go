@@ -96,6 +96,7 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"flatten_sagas",
 		"flatten_steps",
 		"intents",
+		"legacy_fill_event_bindings",
 		"lineage_edges",
 		"mutation_attempts",
 		"operating_modes",
@@ -188,6 +189,10 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"account_ref", "average_price", "broker_visible_at", "committed_at",
 			"cumulative_quantity", "delta_quantity", "id", "market", "order_id", "side",
 			"symbol", "trading_day",
+		},
+		"legacy_fill_event_bindings": {
+			"account_ref", "fill_event_id", "market", "order_id", "side", "symbol",
+			"trading_day",
 		},
 		// Schema v4 (task 4.4): the flatten saga's durable plan.
 		"flatten_sagas": {
@@ -553,6 +558,7 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_fill_events_order",
 		"idx_fill_events_scope",
 		"idx_fill_events_symbol",
+		"idx_legacy_fill_event_bindings_order",
 		"idx_scoped_corrections_order",
 		// Schema v5: the decision contract's lookup paths — expiry sweeps,
 		// per-account reservation sums, the restart sweep for orphaned holds and

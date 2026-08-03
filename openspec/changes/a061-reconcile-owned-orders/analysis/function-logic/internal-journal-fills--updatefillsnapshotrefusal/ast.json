@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
   "package": "journal",
   "function": "updateFillSnapshotRefusal",
   "signature": "updateFillSnapshotRefusal(params=6, results=1)",
   "start": {
-    "line": 663,
+    "line": 809,
     "column": 1
   },
   "end": {
-    "line": 689,
+    "line": 835,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 665,
+        "line": 811,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 666,
+        "line": 812,
         "column": 3
       }
     }
@@ -34,21 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 673,
+        "line": 819,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 682,
+        "line": 828,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 688,
+        "line": 834,
         "column": 2
       }
     }
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 665,
+        "line": 811,
         "column": 5
       },
       "text": "scope.complete"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 666,
+        "line": 812,
         "column": 16
       },
       "text": "tx.ExecContext"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 675,
+        "line": 821,
         "column": 13
       },
       "text": "tx.ExecContext"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 684,
+        "line": 830,
         "column": 12
       },
       "text": "tx.ExecContext"
@@ -91,21 +91,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 666,
+        "line": 812,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 675,
+        "line": 821,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 684,
+        "line": 830,
         "column": 2
       }
     }

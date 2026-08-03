@@ -216,7 +216,8 @@ func validReleaseReason(reason string) bool {
 // alertsForOrder reports the holds an order's fail-closed observation left
 // standing, so the caller can raise the operator alert at the moment the
 // ambiguity was observed rather than on the next sweep.
-func alertsForOrder(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope, cause, detail string) ([]ReservationAlert, error) {
+func alertsForOrder(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope,
+	evidenceAt, cause, detail string) ([]ReservationAlert, error) {
 	scope = canonicalFillSnapshotScope(scope)
 	if !scope.complete() {
 		return nil, nil
@@ -228,10 +229,21 @@ func alertsForOrder(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope, ca
 		  JOIN mutation_attempts a ON a.id = r.attempt_id
 		  JOIN intents i ON i.id = a.intent_id
 		 WHERE r.state = ? AND r.decision_id = a.decision_id
+		   AND a.state = ? AND a.kind IN ('PLACE','AMEND') AND a.settled_at < ?
 		   AND a.broker_order_id = ?
 		   AND TRIM(i.account_ref) = ? AND LOWER(TRIM(i.market)) = ?
-		   AND TRIM(i.trading_day) = ? AND UPPER(TRIM(i.symbol)) = ? AND UPPER(TRIM(i.side)) = ?`,
-		ReservationHeld, scope.OrderID, scope.AccountRef, scope.Market,
+		   AND TRIM(i.trading_day) = ? AND UPPER(TRIM(i.symbol)) = ? AND UPPER(TRIM(i.side)) = ?
+		   AND 1 = (SELECT COUNT(DISTINCT owner.intent_id)
+			  FROM mutation_attempts owner JOIN intents owned ON owned.id = owner.intent_id
+			 WHERE owner.state = ? AND owner.kind IN ('PLACE','AMEND')
+			   AND owner.settled_at < ? AND owner.broker_order_id = ?
+			   AND TRIM(owned.account_ref) = ? AND LOWER(TRIM(owned.market)) = ?
+			   AND TRIM(owned.trading_day) = ? AND UPPER(TRIM(owned.symbol)) = ?
+			   AND UPPER(TRIM(owned.side)) = ?)`,
+		ReservationHeld, string(StateConfirmed), evidenceAt,
+		scope.OrderID, scope.AccountRef, scope.Market,
+		scope.TradingDay, scope.Symbol, scope.Side,
+		string(StateConfirmed), evidenceAt, scope.OrderID, scope.AccountRef, scope.Market,
 		scope.TradingDay, scope.Symbol, scope.Side)
 	if err != nil {
 		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", scope.OrderID, err)
@@ -544,7 +556,8 @@ func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]
 		       (SELECT count(DISTINCT owner_intent.id)
 		          FROM mutation_attempts owner_attempt
 		          JOIN intents owner_intent ON owner_intent.id = owner_attempt.intent_id
-		         WHERE owner_attempt.state = ?
+		         WHERE owner_attempt.state = ? AND owner_attempt.kind IN ('PLACE','AMEND')
+		           AND owner_attempt.settled_at < f.committed_at
 		           AND owner_attempt.broker_order_id = f.order_id
 		           AND TRIM(owner_intent.account_ref) = TRIM(f.account_ref)
 		           AND LOWER(TRIM(owner_intent.market)) = LOWER(TRIM(f.market))
@@ -555,7 +568,8 @@ func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]
 		  JOIN mutation_attempts a ON a.id = r.attempt_id
 		  JOIN intents i ON i.id = a.intent_id
 		  JOIN all_fill_snapshots f ON f.order_id = a.broker_order_id
-		 WHERE r.state = ? AND a.state = ?
+		 WHERE r.state = ? AND a.state = ? AND a.kind IN ('PLACE','AMEND')
+		   AND a.settled_at < f.committed_at
 		   AND f.terminal = 1 AND f.fail_closed = 0
 		   AND r.decision_id = a.decision_id
 		   AND TRIM(r.account_ref) = TRIM(i.account_ref)
@@ -737,11 +751,23 @@ func (j *Journal) ReservationsAwaitingOperator(ctx context.Context) ([]Reservati
 		 JOIN intents i ON i.id = a.intent_id
 		 LEFT JOIN all_fill_snapshots f
 		   ON f.order_id = a.broker_order_id
+			  AND a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')
+			  AND a.settled_at < f.committed_at
 		  AND TRIM(f.account_ref) = TRIM(i.account_ref)
 		  AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
 		  AND TRIM(f.trading_day) = TRIM(i.trading_day)
 		  AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
 		  AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side))
+		  AND 1 = (SELECT COUNT(DISTINCT owner.intent_id)
+		             FROM mutation_attempts owner JOIN intents owned ON owned.id = owner.intent_id
+			            WHERE owner.state = 'CONFIRMED' AND owner.kind IN ('PLACE','AMEND')
+			              AND owner.settled_at < f.committed_at
+		              AND owner.broker_order_id = f.order_id
+		              AND TRIM(owned.account_ref) = TRIM(f.account_ref)
+		              AND LOWER(TRIM(owned.market)) = LOWER(TRIM(f.market))
+		              AND TRIM(owned.trading_day) = TRIM(f.trading_day)
+		              AND UPPER(TRIM(owned.symbol)) = UPPER(TRIM(f.symbol))
+		              AND UPPER(TRIM(owned.side)) = UPPER(TRIM(f.side)))
 		 WHERE r.state = ? AND (a.state = ? OR f.fail_closed = 1)
 		   AND r.decision_id = a.decision_id
 		 ORDER BY r.rowid`,

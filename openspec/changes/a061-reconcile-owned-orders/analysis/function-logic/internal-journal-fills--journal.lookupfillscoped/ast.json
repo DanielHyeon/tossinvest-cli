@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "8ee09a6b042e305d9e8d913eb86beb14f874d034f8ad8974ca488f8080699e9a",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
   "package": "journal",
   "function": "LookupFillScoped",
   "receiver": "Journal",
   "signature": "Journal.LookupFillScoped(params=2, results=2)",
   "start": {
-    "line": 782,
+    "line": 986,
     "column": 1
   },
   "end": {
-    "line": 784,
+    "line": 988,
     "column": 2
   },
   "branches": null,
@@ -18,7 +18,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 783,
+        "line": 987,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 783,
+        "line": 987,
         "column": 9
       },
       "text": "lookupFillSnapshotScoped"

@@ -20,6 +20,10 @@ Local reconstruction and authoritative broker comparison SHALL preserve account,
 - **WHEN** more than one local canonical order shares one opaque identifier and the broker payload cannot distinguish their required scope
 - **THEN** the comparison cannot match either by identifier alone and remains blocking for operator investigation
 
+#### Scenario: Two reused canonical orders remain active across sessions
+- **WHEN** the same account and market have two non-terminal engine-owned orders on different trading days that share one opaque identifier
+- **THEN** local reconstruction retains both orders and reconciliation cannot discard the prior-session order merely because a newer scoped row exists
+
 ### Requirement: Reconcile release is durable before it is visible
 
 The tracker SHALL preserve an existing block and its entry-gate projection until the corresponding journal release commits. If persistence fails, the current reconciliation cycle MUST stop before automatic adoption. Permanent release SHALL require explicit operator identity, explanatory evidence, engine exclusion, and a fresh stable authoritative comparison with no blocking diff.

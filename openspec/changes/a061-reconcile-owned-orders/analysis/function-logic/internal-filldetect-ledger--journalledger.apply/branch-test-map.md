@@ -4,16 +4,16 @@ Source: `internal/filldetect/ledger.go`
 
 | Branch | Condition | Verification |
 | --- | --- | --- |
-| B1 | if at `internal/filldetect/ledger.go:37` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B2 | if at `internal/filldetect/ledger.go:42` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B3 | if at `internal/filldetect/ledger.go:45` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B4 | if at `internal/filldetect/ledger.go:48` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B5 | if at `internal/filldetect/ledger.go:76` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B6 | if at `internal/filldetect/ledger.go:81` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B7 | if at `internal/filldetect/ledger.go:84` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B8 | if at `internal/filldetect/ledger.go:85` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B9 | if at `internal/filldetect/ledger.go:97` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B10 | if at `internal/filldetect/ledger.go:102` | Focused regressions and the full/race suites verify this condition and its error path. |
-| B11 | if at `internal/filldetect/ledger.go:106` | Focused regressions and the full/race suites verify this condition and its error path. |
+| B1 | if at `internal/filldetect/ledger.go:37` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B2 | if at `internal/filldetect/ledger.go:42` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B3 | if at `internal/filldetect/ledger.go:45` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B4 | if at `internal/filldetect/ledger.go:48` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B5 | if at `internal/filldetect/ledger.go:76` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B6 | if at `internal/filldetect/ledger.go:81` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B7 | if at `internal/filldetect/ledger.go:84` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B8 | if at `internal/filldetect/ledger.go:85` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B9 | if at `internal/filldetect/ledger.go:97` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B10 | if at `internal/filldetect/ledger.go:102` | Focused canonical/temporal ownership regressions plus full and race suites. |
+| B11 | if at `internal/filldetect/ledger.go:106` | Focused canonical/temporal ownership regressions plus full and race suites. |
 
-Coverage includes external-order exclusion, scoped snapshot coexistence, detector reuse, incomplete broker evidence, scoped lineage, durable reconcile authority, recovery refusal/release, reservation decision binding, and nonce retention.
+Coverage includes external exclusion, identifier reuse, partial-scope rejection, v19 migration, confirmed temporal ownership, reservation recovery, and operator-release refusal/success.
