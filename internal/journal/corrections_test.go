@@ -12,6 +12,7 @@ package journal
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"testing"
 )
@@ -114,6 +115,44 @@ func TestAmountOnlyCorrectionIsDetected(t *testing.T) {
 	}
 	if stored.FilledAmount != "640.35" {
 		t.Errorf("stored filled amount = %q, want the corrected value", stored.FilledAmount)
+	}
+}
+
+func TestExecutionCorrectionsRequireCanonicalScopeWhenOrderIDIsReused(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+
+	first := correctionObservation("reused-order", "3", "213.4", "640.2")
+	if _, err := j.RecordFill(ctx, first); err != nil {
+		t.Fatal(err)
+	}
+	first.AveragePrice = "214.05"
+	if _, err := j.RecordFill(ctx, first); err != nil {
+		t.Fatal(err)
+	}
+
+	second := correctionObservation("reused-order", "2", "220", "440")
+	second.TradingDay = "2026-03-31"
+	if _, err := j.RecordFill(ctx, second); err != nil {
+		t.Fatal(err)
+	}
+	second.AveragePrice = "221"
+	if _, err := j.RecordFill(ctx, second); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := j.ExecutionCorrections(ctx, "reused-order"); !errors.Is(err, ErrFillScopeAmbiguous) {
+		t.Fatalf("ExecutionCorrections(order only) err=%v, want ErrFillScopeAmbiguous", err)
+	}
+	got, err := j.ExecutionCorrectionsScoped(ctx, FillSnapshotScope{
+		OrderID: "reused-order", AccountRef: "acct-1", Market: "us",
+		TradingDay: "2026-03-31", Symbol: "AAPL", Side: "BUY",
+	})
+	if err != nil {
+		t.Fatalf("ExecutionCorrectionsScoped: %v", err)
+	}
+	if len(got) != 1 || got[0].NewAveragePrice != "221" || got[0].TradingDay != "2026-03-31" {
+		t.Fatalf("scoped corrections=%+v, want only the later trading-day correction", got)
 	}
 }
 

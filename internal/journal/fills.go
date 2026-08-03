@@ -258,8 +258,12 @@ func (scope FillSnapshotScope) legacyUnscoped() bool {
 // the latest.
 type ExecutionCorrection struct {
 	ID         string
-	AccountRef string
 	OrderID    string
+	AccountRef string
+	Market     string
+	TradingDay string
+	Symbol     string
+	Side       string
 	// Prev* and New* are decimal strings; "" means the broker reported none.
 	PrevAveragePrice string
 	NewAveragePrice  string
@@ -275,8 +279,11 @@ type ExecutionCorrection struct {
 type FillEvent struct {
 	ID                 int64
 	OrderID            string
+	AccountRef         string
 	Symbol             string
 	Market             string
+	TradingDay         string
+	Side               string
 	DeltaQuantity      string
 	CumulativeQuantity string
 	AveragePrice       string
@@ -411,6 +418,10 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		if err := recordExecutionCorrection(ctx, tx, ExecutionCorrection{
 			AccountRef:         obs.AccountRef,
 			OrderID:            orderID,
+			Market:             scope.Market,
+			TradingDay:         scope.TradingDay,
+			Symbol:             scope.Symbol,
+			Side:               scope.Side,
 			PrevAveragePrice:   prev.AveragePrice,
 			NewAveragePrice:    obs.AveragePrice,
 			PrevFilledAmount:   prev.FilledAmount,
@@ -426,10 +437,11 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 	if delta > 0 {
 		if _, err := tx.ExecContext(ctx,
 			`INSERT INTO fill_events
-			   (order_id, symbol, market, delta_quantity, cumulative_quantity,
-			    average_price, broker_visible_at, committed_at)
-			 VALUES (?,?,?,?,?,?,?,?)`,
-			orderID, obs.Symbol, obs.Market, decimalString(delta), orZero(obs.FilledQuantity),
+			   (order_id, account_ref, symbol, market, trading_day, side,
+			    delta_quantity, cumulative_quantity, average_price, broker_visible_at, committed_at)
+			 VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+			orderID, scope.AccountRef, scope.Symbol, scope.Market, scope.TradingDay, scope.Side,
+			decimalString(delta), orZero(obs.FilledQuantity),
 			obs.AveragePrice, obs.BrokerVisibleAt, now); err != nil {
 			return res, fmt.Errorf("journal: appending the fill of %s: %w", orderID, err)
 		}
@@ -828,11 +840,20 @@ func (j *Journal) LookupFill(ctx context.Context, orderID string) (FillSnapshotR
 	return rec, nil
 }
 
-// FillEvents returns the appended fills of one order, oldest first.
+// FillEvents returns the appended fills of one globally unambiguous order id,
+// oldest first. A reused id fails closed; scope-aware consumers must use
+// FillEventsScoped.
 func (j *Journal) FillEvents(ctx context.Context, orderID string) ([]FillEvent, error) {
+	count, err := j.orderIDCanonicalScopeCount(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+	if count > 1 {
+		return nil, fmt.Errorf("%w: order %s", ErrFillScopeAmbiguous, orderID)
+	}
 	rows, err := j.db.QueryContext(ctx,
-		`SELECT id, order_id, symbol, market, delta_quantity, cumulative_quantity,
-		        average_price, broker_visible_at, committed_at
+		`SELECT id, order_id, account_ref, symbol, market, trading_day, side,
+		        delta_quantity, cumulative_quantity, average_price, broker_visible_at, committed_at
 		   FROM fill_events WHERE order_id = ? ORDER BY id`, orderID)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading the fills of %s: %w", orderID, err)
@@ -842,8 +863,58 @@ func (j *Journal) FillEvents(ctx context.Context, orderID string) ([]FillEvent, 
 	var out []FillEvent
 	for rows.Next() {
 		var e FillEvent
-		if err := rows.Scan(&e.ID, &e.OrderID, &e.Symbol, &e.Market, &e.DeltaQuantity,
+		if err := rows.Scan(&e.ID, &e.OrderID, &e.AccountRef, &e.Symbol, &e.Market,
+			&e.TradingDay, &e.Side, &e.DeltaQuantity,
 			&e.CumulativeQuantity, &e.AveragePrice, &e.BrokerVisibleAt, &e.CommittedAt); err != nil {
+			return nil, fmt.Errorf("journal: reading the fills of %s: %w", orderID, err)
+		}
+		out = append(out, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("journal: reading the fills of %s: %w", orderID, err)
+	}
+	return out, nil
+}
+
+// FillEventsScoped returns only events attributable to one canonical broker
+// order sequence. Legacy blank-scope events remain readable only when journal
+// evidence proves the order id has exactly this one canonical scope.
+func (j *Journal) FillEventsScoped(ctx context.Context, scope FillSnapshotScope) ([]FillEvent, error) {
+	scope = canonicalFillSnapshotScope(scope)
+	if !scope.complete() {
+		return nil, fmt.Errorf("%w: a scoped fill event lookup needs complete identity", ErrInvalidRequest)
+	}
+	uniqueLegacy, err := j.orderIDHasOnlyScope(ctx, scope)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := j.db.QueryContext(ctx, `
+		SELECT id, order_id, account_ref, symbol, market, trading_day, side,
+		       delta_quantity, cumulative_quantity, average_price, broker_visible_at, committed_at
+		  FROM fill_events
+		 WHERE order_id = ? AND (
+		       (TRIM(account_ref) = ? AND LOWER(TRIM(market)) = ? AND TRIM(trading_day) = ?
+		        AND UPPER(TRIM(symbol)) = ? AND UPPER(TRIM(side)) = ?)
+		       OR (TRIM(account_ref) = '' AND TRIM(trading_day) = '' AND TRIM(side) = ''
+		           AND ? AND (TRIM(market) = '' OR LOWER(TRIM(market)) = ?)
+		           AND UPPER(TRIM(symbol)) = ?)
+		 )
+		 ORDER BY id`, scope.OrderID, scope.AccountRef, scope.Market, scope.TradingDay,
+		scope.Symbol, scope.Side, uniqueLegacy, scope.Market, scope.Symbol)
+	if err != nil {
+		return nil, fmt.Errorf("journal: reading scoped fills of %s: %w", scope.OrderID, err)
+	}
+	defer rows.Close()
+	return scanFillEvents(rows, scope.OrderID)
+}
+
+func scanFillEvents(rows *sql.Rows, orderID string) ([]FillEvent, error) {
+	var out []FillEvent
+	for rows.Next() {
+		var e FillEvent
+		if err := rows.Scan(&e.ID, &e.OrderID, &e.AccountRef, &e.Symbol, &e.Market,
+			&e.TradingDay, &e.Side, &e.DeltaQuantity, &e.CumulativeQuantity,
+			&e.AveragePrice, &e.BrokerVisibleAt, &e.CommittedAt); err != nil {
 			return nil, fmt.Errorf("journal: reading the fills of %s: %w", orderID, err)
 		}
 		out = append(out, e)
@@ -879,26 +950,62 @@ func recordExecutionCorrection(ctx context.Context, tx *sql.Tx, c ExecutionCorre
 		// could not attribute it. The column is NOT NULL, not non-empty.
 		accountRef = derived
 	}
+	c.AccountRef = strings.TrimSpace(accountRef)
+	c.Market = normaliseMarket(c.Market)
+	c.TradingDay = strings.TrimSpace(c.TradingDay)
+	c.Symbol = normaliseSymbol(c.Symbol)
+	c.Side = strings.ToUpper(strings.TrimSpace(c.Side))
+	if canonicalFillSnapshotScope(FillSnapshotScope{
+		OrderID: c.OrderID, AccountRef: c.AccountRef, Market: c.Market,
+		TradingDay: c.TradingDay, Symbol: c.Symbol, Side: c.Side,
+	}).complete() {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO scoped_execution_corrections
+			  (id, account_ref, market, trading_day, symbol, side, order_id,
+			   prev_avg_price, new_avg_price, prev_filled_amount, new_filled_amount,
+			   cumulative_qty, observed_at)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+			ON CONFLICT DO NOTHING`,
+			correctionID(c), c.AccountRef, c.Market, c.TradingDay, c.Symbol, c.Side, c.OrderID,
+			c.PrevAveragePrice, c.NewAveragePrice, c.PrevFilledAmount, c.NewFilledAmount,
+			c.CumulativeQuantity, c.ObservedAt); err != nil {
+			return fmt.Errorf("journal: recording the scoped execution correction of %s: %w",
+				c.OrderID, err)
+		}
+	}
+	// Preserve the released order-id-only table for older readers. Its global
+	// UNIQUE may absorb a later reused-id correction; the scoped companion above
+	// remains the canonical audit record.
 	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO execution_corrections
 		   (id, account_ref, order_id, prev_avg_price, new_avg_price,
 		    prev_filled_amount, new_filled_amount, cumulative_qty, observed_at)
 		 VALUES (?,?,?,?,?,?,?,?,?)
 		 ON CONFLICT DO NOTHING`,
-		correctionID(c), accountRef, c.OrderID, c.PrevAveragePrice, c.NewAveragePrice,
+		legacyCorrectionID(c), accountRef, c.OrderID, c.PrevAveragePrice, c.NewAveragePrice,
 		c.PrevFilledAmount, c.NewFilledAmount, c.CumulativeQuantity, c.ObservedAt); err != nil {
 		return fmt.Errorf("journal: recording the execution correction of %s: %w", c.OrderID, err)
 	}
 	return nil
 }
 
-// correctionID hashes exactly D9's UNIQUE key. Nothing else may enter it: adding
-// a timestamp or the previous values would mint a fresh id for a replay and
-// leave the UNIQUE as the only defence.
+// correctionID hashes the canonical scope plus D9's correction identity. A
+// timestamp or previous values must not enter it: either would mint a fresh id
+// for a replay. legacyCorrectionID preserves the released v5 key for the
+// compatibility mirror.
 func correctionID(c ExecutionCorrection) string {
 	h := sha256.New()
-	for _, part := range []string{c.OrderID, c.CumulativeQuantity, c.NewAveragePrice, c.NewFilledAmount} {
+	for _, part := range []string{c.AccountRef, c.Market, c.TradingDay, c.Symbol, c.Side,
+		c.OrderID, c.CumulativeQuantity, c.NewAveragePrice, c.NewFilledAmount} {
 		// The length prefix keeps ("ab","c") and ("a","bc") different keys.
+		fmt.Fprintf(h, "%d:%s|", len(part), part)
+	}
+	return "corr-" + hex.EncodeToString(h.Sum(nil))[:32]
+}
+
+func legacyCorrectionID(c ExecutionCorrection) string {
+	h := sha256.New()
+	for _, part := range []string{c.OrderID, c.CumulativeQuantity, c.NewAveragePrice, c.NewFilledAmount} {
 		fmt.Fprintf(h, "%d:%s|", len(part), part)
 	}
 	return "corr-" + hex.EncodeToString(h.Sum(nil))[:32]
@@ -925,25 +1032,98 @@ func accountRefForOrder(ctx context.Context, tx *sql.Tx, orderID string) (string
 	return ref, nil
 }
 
-// ExecutionCorrections returns the recorded restatements of one order, oldest
-// first.
+// ExecutionCorrections returns restatements for one globally unambiguous order
+// id. Reused identifiers fail closed; scope-aware consumers must use
+// ExecutionCorrectionsScoped.
 func (j *Journal) ExecutionCorrections(ctx context.Context, orderID string) ([]ExecutionCorrection, error) {
+	count, err := j.orderIDCanonicalScopeCount(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+	if count > 1 {
+		return nil, fmt.Errorf("%w: order %s", ErrFillScopeAmbiguous, orderID)
+	}
 	rows, err := j.db.QueryContext(ctx, `
-		SELECT id, account_ref, order_id, prev_avg_price, new_avg_price,
-		       prev_filled_amount, new_filled_amount, cumulative_qty, observed_at
-		  FROM execution_corrections WHERE order_id = ? ORDER BY observed_at, id`, orderID)
+		WITH all_corrections AS (
+			SELECT id, account_ref, market, trading_day, symbol, side, order_id,
+			       prev_avg_price, new_avg_price, prev_filled_amount, new_filled_amount,
+			       cumulative_qty, observed_at
+			  FROM scoped_execution_corrections
+			UNION ALL
+			SELECT id, account_ref, '', '', '', '', order_id,
+			       prev_avg_price, new_avg_price, prev_filled_amount, new_filled_amount,
+			       cumulative_qty, observed_at
+			  FROM execution_corrections legacy
+			 WHERE NOT EXISTS (
+				SELECT 1 FROM scoped_execution_corrections scoped
+				 WHERE scoped.order_id = legacy.order_id
+				   AND scoped.cumulative_qty = legacy.cumulative_qty
+				   AND scoped.new_avg_price = legacy.new_avg_price
+				   AND scoped.new_filled_amount = legacy.new_filled_amount)
+		)
+		SELECT id, account_ref, market, trading_day, symbol, side, order_id,
+		       prev_avg_price, new_avg_price, prev_filled_amount, new_filled_amount,
+		       cumulative_qty, observed_at
+		  FROM all_corrections WHERE order_id = ? ORDER BY observed_at, id`, orderID)
 	if err != nil {
 		return nil, fmt.Errorf("journal: reading the corrections of %s: %w", orderID, err)
 	}
 	defer rows.Close()
+	return scanExecutionCorrections(rows, orderID)
+}
 
+// ExecutionCorrectionsScoped returns only restatements for one canonical
+// broker-order sequence. A legacy row is accepted only when the order id has a
+// single canonical scope and that scope is the requested one.
+func (j *Journal) ExecutionCorrectionsScoped(ctx context.Context,
+	scope FillSnapshotScope) ([]ExecutionCorrection, error) {
+	scope = canonicalFillSnapshotScope(scope)
+	if !scope.complete() {
+		return nil, fmt.Errorf("%w: a scoped correction lookup needs complete identity", ErrInvalidRequest)
+	}
+	uniqueLegacy, err := j.orderIDHasOnlyScope(ctx, scope)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := j.db.QueryContext(ctx, `
+		WITH exact_corrections AS (
+			SELECT id, account_ref, market, trading_day, symbol, side, order_id,
+			       prev_avg_price, new_avg_price, prev_filled_amount, new_filled_amount,
+			       cumulative_qty, observed_at
+			  FROM scoped_execution_corrections
+			 WHERE account_ref = ? AND market = ? AND trading_day = ? AND symbol = ?
+			   AND side = ? AND order_id = ?
+		), safe_legacy AS (
+			SELECT id, account_ref, '', '', '', '', order_id,
+			       prev_avg_price, new_avg_price, prev_filled_amount, new_filled_amount,
+			       cumulative_qty, observed_at
+			  FROM execution_corrections legacy
+			 WHERE order_id = ? AND ? AND (TRIM(account_ref) = '' OR TRIM(account_ref) = ?)
+			   AND NOT EXISTS (
+				SELECT 1 FROM exact_corrections scoped
+				 WHERE scoped.cumulative_qty = legacy.cumulative_qty
+				   AND scoped.new_avg_price = legacy.new_avg_price
+				   AND scoped.new_filled_amount = legacy.new_filled_amount)
+		)
+		SELECT * FROM exact_corrections UNION ALL SELECT * FROM safe_legacy
+		ORDER BY observed_at, id`, scope.AccountRef, scope.Market, scope.TradingDay,
+		scope.Symbol, scope.Side, scope.OrderID, scope.OrderID, uniqueLegacy, scope.AccountRef)
+	if err != nil {
+		return nil, fmt.Errorf("journal: reading scoped corrections of %s: %w", scope.OrderID, err)
+	}
+	defer rows.Close()
+	return scanExecutionCorrections(rows, scope.OrderID)
+}
+
+func scanExecutionCorrections(rows *sql.Rows, orderID string) ([]ExecutionCorrection, error) {
 	var out []ExecutionCorrection
 	for rows.Next() {
 		var (
 			c                   ExecutionCorrection
 			prevAvg, prevAmount sql.NullString
 		)
-		if err := rows.Scan(&c.ID, &c.AccountRef, &c.OrderID, &prevAvg, &c.NewAveragePrice,
+		if err := rows.Scan(&c.ID, &c.AccountRef, &c.Market, &c.TradingDay, &c.Symbol,
+			&c.Side, &c.OrderID, &prevAvg, &c.NewAveragePrice,
 			&prevAmount, &c.NewFilledAmount, &c.CumulativeQuantity, &c.ObservedAt); err != nil {
 			return nil, fmt.Errorf("journal: reading the corrections of %s: %w", orderID, err)
 		}
@@ -956,6 +1136,61 @@ func (j *Journal) ExecutionCorrections(ctx context.Context, orderID string) ([]E
 	}
 	return out, nil
 }
+
+func (j *Journal) orderIDHasOnlyScope(ctx context.Context, scope FillSnapshotScope) (bool, error) {
+	count, err := j.orderIDCanonicalScopeCount(ctx, scope.OrderID)
+	if err != nil || count != 1 {
+		return false, err
+	}
+	var matched int
+	err = j.db.QueryRowContext(ctx, orderIDCanonicalScopesSQL+`
+		SELECT count(*) FROM canonical_scopes
+		 WHERE account_ref = ? AND market = ? AND trading_day = ? AND symbol = ? AND side = ?`,
+		scope.OrderID, scope.OrderID, scope.OrderID, scope.OrderID, scope.OrderID,
+		scope.AccountRef, scope.Market, scope.TradingDay, scope.Symbol, scope.Side).Scan(&matched)
+	if err != nil {
+		return false, fmt.Errorf("journal: matching the canonical scope of order %s: %w", scope.OrderID, err)
+	}
+	return matched == 1, nil
+}
+
+func (j *Journal) orderIDCanonicalScopeCount(ctx context.Context, orderID string) (int, error) {
+	var count int
+	err := j.db.QueryRowContext(ctx, orderIDCanonicalScopesSQL+`
+		SELECT count(*) FROM canonical_scopes`, orderID, orderID, orderID, orderID,
+		orderID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("journal: counting canonical scopes of order %s: %w", orderID, err)
+	}
+	return count, nil
+}
+
+const orderIDCanonicalScopesSQL = `
+	WITH canonical_scopes AS (
+		SELECT TRIM(i.account_ref) account_ref, LOWER(TRIM(i.market)) market,
+		       TRIM(i.trading_day) trading_day, UPPER(TRIM(i.symbol)) symbol,
+		       UPPER(TRIM(i.side)) side
+		  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+		 WHERE a.broker_order_id = ?
+		UNION
+		SELECT account_ref, market, trading_day, symbol, side
+		  FROM scoped_fill_snapshots WHERE order_id = ?
+		UNION
+		SELECT TRIM(account_ref), LOWER(TRIM(market)), TRIM(trading_day),
+		       UPPER(TRIM(symbol)), UPPER(TRIM(side))
+		  FROM fill_snapshots
+		 WHERE order_id = ? AND TRIM(account_ref) <> '' AND TRIM(market) <> ''
+		   AND TRIM(trading_day) <> '' AND TRIM(symbol) <> '' AND TRIM(side) <> ''
+		UNION
+		SELECT TRIM(account_ref), LOWER(TRIM(market)), TRIM(trading_day),
+		       UPPER(TRIM(symbol)), UPPER(TRIM(side))
+		  FROM fill_events
+		 WHERE order_id = ? AND TRIM(account_ref) <> '' AND TRIM(market) <> ''
+		   AND TRIM(trading_day) <> '' AND TRIM(symbol) <> '' AND TRIM(side) <> ''
+		UNION
+		SELECT account_ref, market, trading_day, symbol, side
+		  FROM scoped_execution_corrections WHERE order_id = ?
+	)`
 
 // FilledQuantities returns the cumulative filled quantity per symbol, for the
 // reconciliation comparison.
@@ -1589,4 +1824,39 @@ CREATE INDEX idx_scoped_fill_snapshots_order
 	ON scoped_fill_snapshots(order_id);
 CREATE INDEX idx_scoped_fill_snapshots_symbol
 	ON scoped_fill_snapshots(account_ref, market, trading_day, symbol, terminal);
+`
+
+// schemaV18 extends append-only fill events in place because they have no
+// released uniqueness constraint to widen. Corrections do, so fully scoped
+// corrections use a companion table and the v5 table stays untouched as the
+// legacy compatibility surface. Historical rows remain blank-scope evidence;
+// no migration guesses which reused broker-order instance produced them.
+const schemaV18 = `
+ALTER TABLE fill_events ADD COLUMN account_ref TEXT NOT NULL DEFAULT '';
+ALTER TABLE fill_events ADD COLUMN trading_day TEXT NOT NULL DEFAULT '';
+ALTER TABLE fill_events ADD COLUMN side TEXT NOT NULL DEFAULT '';
+CREATE INDEX idx_fill_events_scope
+	ON fill_events(account_ref, market, trading_day, symbol, side, order_id, id);
+
+CREATE TABLE scoped_execution_corrections (
+	id                 TEXT PRIMARY KEY,
+	account_ref        TEXT NOT NULL,
+	market             TEXT NOT NULL,
+	trading_day        TEXT NOT NULL,
+	symbol             TEXT NOT NULL,
+	side               TEXT NOT NULL,
+	order_id           TEXT NOT NULL,
+	prev_avg_price     TEXT,
+	new_avg_price      TEXT NOT NULL DEFAULT '',
+	prev_filled_amount TEXT,
+	new_filled_amount  TEXT NOT NULL DEFAULT '',
+	cumulative_qty     TEXT NOT NULL,
+	observed_at        TEXT NOT NULL,
+	UNIQUE(account_ref, market, trading_day, symbol, side, order_id,
+	       cumulative_qty, new_avg_price, new_filled_amount)
+) STRICT;
+
+CREATE INDEX idx_scoped_corrections_order
+	ON scoped_execution_corrections(account_ref, market, trading_day, symbol, side,
+	                                order_id, observed_at);
 `

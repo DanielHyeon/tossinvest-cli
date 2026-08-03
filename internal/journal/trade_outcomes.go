@@ -296,10 +296,30 @@ func roundTripLegs(ctx context.Context, r tradeOutcomeReader,
 
 	var low sql.NullInt64
 	bound, err := r.Query(ctx, `
+		WITH order_scope_count AS (
+			SELECT broker_order_id, count(*) scope_count FROM (
+				SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+				       TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
+				  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+				 WHERE a.broker_order_id <> ''
+			) GROUP BY broker_order_id
+		)
 		SELECT MIN(f.id)
 		  FROM fill_events f
 		  JOIN mutation_attempts a ON a.broker_order_id = f.order_id
-		 WHERE a.decision_id = ?`, decisionID)
+		  JOIN intents i ON i.id = a.intent_id
+		  JOIN order_scope_count c ON c.broker_order_id = a.broker_order_id
+		 WHERE a.decision_id = ? AND (
+			(TRIM(f.account_ref) = TRIM(i.account_ref)
+			 AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
+			 AND TRIM(f.trading_day) = TRIM(i.trading_day)
+			 AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
+			 AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side)))
+			OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND TRIM(f.side) = ''
+			    AND c.scope_count = 1
+			    AND (TRIM(f.market) = '' OR LOWER(TRIM(f.market)) = LOWER(TRIM(i.market)))
+			    AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol)))
+		 )`, decisionID)
 	if err != nil {
 		return buy, sell, false
 	}
@@ -313,18 +333,40 @@ func roundTripLegs(ctx context.Context, r tradeOutcomeReader,
 		return buy, sell, false
 	}
 
-	// One row per fill event. The attempt join can match more than one row when
-	// an order was amended, so the side is taken from the most recent attempt
-	// that named the order — the same rule exitContextForFill uses.
+	// One row per fill event, attributed through its complete canonical scope.
+	// Legacy rows participate only when the order id has exactly one intent
+	// scope, so a reused id cannot move a later position's frozen P&L.
 	rows, err := r.Query(ctx, `
-		SELECT f.order_id, f.cumulative_quantity, f.average_price,
-		       (SELECT i.side FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
-		         WHERE a.broker_order_id = f.order_id AND i.account_ref = ?
-		         ORDER BY a.recorded_at DESC, a.rowid DESC LIMIT 1)
-		  FROM fill_events f
-		 WHERE f.id >= ? AND f.symbol = ? AND (f.market = ? OR f.market = '')
-		 ORDER BY f.order_id, f.id`,
-		account, low.Int64, normaliseSymbol(symbol), normaliseMarket(market))
+		WITH order_owner AS (
+			SELECT DISTINCT a.broker_order_id order_id, TRIM(i.account_ref) account_ref,
+			       LOWER(TRIM(i.market)) market, TRIM(i.trading_day) trading_day,
+			       UPPER(TRIM(i.symbol)) symbol, UPPER(TRIM(i.side)) side
+			  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+			 WHERE a.broker_order_id <> ''
+		), order_scope_count AS (
+			SELECT order_id, count(*) scope_count FROM order_owner GROUP BY order_id
+		), attributed AS (
+			SELECT DISTINCT f.id, f.order_id, o.account_ref, o.market, o.trading_day,
+			       o.symbol, o.side, f.cumulative_quantity, f.average_price
+			  FROM fill_events f
+			  JOIN order_owner o ON o.order_id = f.order_id
+			  JOIN order_scope_count c ON c.order_id = f.order_id
+			 WHERE (
+				(TRIM(f.account_ref) = o.account_ref AND LOWER(TRIM(f.market)) = o.market
+				 AND TRIM(f.trading_day) = o.trading_day AND UPPER(TRIM(f.symbol)) = o.symbol
+				 AND UPPER(TRIM(f.side)) = o.side)
+				OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND TRIM(f.side) = ''
+				    AND c.scope_count = 1
+				    AND (TRIM(f.market) = '' OR LOWER(TRIM(f.market)) = o.market)
+				    AND UPPER(TRIM(f.symbol)) = o.symbol)
+			 )
+		)
+		SELECT order_id, account_ref, market, trading_day, symbol, side,
+		       cumulative_quantity, average_price
+		  FROM attributed
+		 WHERE id >= ? AND account_ref = ? AND symbol = ? AND market = ?
+		 ORDER BY account_ref, market, trading_day, symbol, side, order_id, id`,
+		low.Int64, strings.TrimSpace(account), normaliseSymbol(symbol), normaliseMarket(market))
 	if err != nil {
 		return buy, sell, false
 	}
@@ -336,23 +378,21 @@ func roundTripLegs(ctx context.Context, r tradeOutcomeReader,
 	)
 	for rows.Next() {
 		var (
-			orderID, cumulative, average string
-			side                         sql.NullString
+			orderID, eventAccount, eventMarket, tradingDay, eventSymbol string
+			side, cumulative, average                                   string
 		)
-		if err := rows.Scan(&orderID, &cumulative, &average, &side); err != nil {
+		if err := rows.Scan(&orderID, &eventAccount, &eventMarket, &tradingDay,
+			&eventSymbol, &side, &cumulative, &average); err != nil {
 			return buy, sell, false
 		}
-		if !side.Valid {
-			// A fill no local intent claims. It is somebody else's order on the
-			// same symbol; the projection ignored it and so does this.
-			continue
-		}
-		if orderID != currentOrder {
-			currentOrder, prev = orderID, new(big.Rat)
+		orderKey := strings.Join([]string{eventAccount, eventMarket, tradingDay,
+			eventSymbol, side, orderID}, "\x00")
+		if orderKey != currentOrder {
+			currentOrder, prev = orderKey, new(big.Rat)
 		}
 
 		leg := &buy
-		if strings.EqualFold(strings.TrimSpace(side.String), "SELL") {
+		if strings.EqualFold(strings.TrimSpace(side), "SELL") {
 			leg = &sell
 		}
 		filled, ok := new(big.Rat).SetString(orZero(cumulative))
@@ -511,19 +551,23 @@ func adoptedBasis(ctx context.Context, r tradeOutcomeReader, positionID string) 
 // engineSellOrders collects the broker orders this instance's sells were placed
 // under, per proposer, through declared reference columns only.
 func engineSellOrders(ctx context.Context, r tradeOutcomeReader,
-	positionID, account, market, symbol string) ([]string, bool) {
+	positionID, account, market, symbol string) ([]FillSnapshotScope, bool) {
 	rows, err := r.Query(ctx, `
-		SELECT DISTINCT a.broker_order_id
+		SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+		       TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
 		  FROM exit_events e
 		  JOIN mutation_attempts a ON a.intent_id = e.proposed_intent_id
+		  JOIN intents i ON i.id = a.intent_id
 		 WHERE e.position_id = ?
 		   AND coalesce(e.proposed_intent_id, '') <> ''
 		   AND coalesce(a.broker_order_id, '') <> ''
 		UNION
-		SELECT DISTINCT a.broker_order_id
+		SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+		       TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
 		  FROM flatten_steps s
 		  JOIN flatten_sagas g ON g.id = s.saga_id
 		  JOIN mutation_attempts a ON a.intent_id = s.intent_id
+		  JOIN intents i ON i.id = a.intent_id
 		 WHERE g.account_ref = ?
 		   AND s.kind = ?
 		   AND upper(trim(s.symbol)) = ?
@@ -536,13 +580,14 @@ func engineSellOrders(ctx context.Context, r tradeOutcomeReader,
 	}
 	defer rows.Close()
 
-	var out []string
+	var out []FillSnapshotScope
 	for rows.Next() {
-		var orderID string
-		if err := rows.Scan(&orderID); err != nil {
+		var scope FillSnapshotScope
+		if err := rows.Scan(&scope.OrderID, &scope.AccountRef, &scope.Market,
+			&scope.TradingDay, &scope.Symbol, &scope.Side); err != nil {
 			return nil, false
 		}
-		out = append(out, orderID)
+		out = append(out, scope)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, false
@@ -557,25 +602,45 @@ func engineSellOrders(ctx context.Context, r tradeOutcomeReader,
 // cumulative quantities, so an order's contribution is the change in
 // `cumulative × average`, and adding the cumulative values directly would count
 // every earlier observation again.
-func sumSellFills(ctx context.Context, r tradeOutcomeReader, orders []string,
+func sumSellFills(ctx context.Context, r tradeOutcomeReader, orders []FillSnapshotScope,
 	account, market, symbol string, sell *tradeLeg) bool {
-	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(orders)), ",")
-	args := make([]any, 0, len(orders)+3)
-	args = append(args, account)
-	for _, id := range orders {
-		args = append(args, id)
+	values := strings.TrimSuffix(strings.Repeat("(?,?,?,?,?,?),", len(orders)), ",")
+	args := make([]any, 0, len(orders)*6+3)
+	for _, scope := range orders {
+		scope = canonicalFillSnapshotScope(scope)
+		args = append(args, scope.AccountRef, scope.Market, scope.TradingDay,
+			scope.Symbol, scope.Side, scope.OrderID)
 	}
-	args = append(args, normaliseSymbol(symbol), normaliseMarket(market))
+	args = append(args, strings.TrimSpace(account), normaliseSymbol(symbol), normaliseMarket(market))
 
 	rows, err := r.Query(ctx, `
-		SELECT f.order_id, f.cumulative_quantity, f.average_price,
-		       (SELECT i.side FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
-		         WHERE a.broker_order_id = f.order_id AND i.account_ref = ?
-		         ORDER BY a.recorded_at DESC, a.rowid DESC LIMIT 1)
-		  FROM fill_events f
-		 WHERE f.order_id IN (`+placeholders+`)
-		   AND f.symbol = ? AND (f.market = ? OR f.market = '')
-		 ORDER BY f.order_id, f.id`, args...)
+		WITH requested(account_ref, market, trading_day, symbol, side, order_id) AS (
+			VALUES `+values+`
+		), order_owner AS (
+			SELECT DISTINCT a.broker_order_id order_id, TRIM(i.account_ref) account_ref,
+			       LOWER(TRIM(i.market)) market, TRIM(i.trading_day) trading_day,
+			       UPPER(TRIM(i.symbol)) symbol, UPPER(TRIM(i.side)) side
+			  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+			 WHERE a.broker_order_id <> ''
+		), order_scope_count AS (
+			SELECT order_id, count(*) scope_count FROM order_owner GROUP BY order_id
+		)
+		SELECT f.order_id, q.account_ref, q.market, q.trading_day, q.symbol, q.side,
+		       f.cumulative_quantity, f.average_price
+		  FROM requested q
+		  JOIN order_scope_count c ON c.order_id = q.order_id
+		  JOIN fill_events f ON f.order_id = q.order_id AND (
+			(TRIM(f.account_ref) = q.account_ref AND LOWER(TRIM(f.market)) = q.market
+			 AND TRIM(f.trading_day) = q.trading_day AND UPPER(TRIM(f.symbol)) = q.symbol
+			 AND UPPER(TRIM(f.side)) = q.side)
+			OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND TRIM(f.side) = ''
+			    AND c.scope_count = 1
+			    AND (TRIM(f.market) = '' OR LOWER(TRIM(f.market)) = q.market)
+			    AND UPPER(TRIM(f.symbol)) = q.symbol)
+		  )
+		 WHERE q.account_ref = ? AND q.symbol = ? AND q.market = ?
+		 ORDER BY q.account_ref, q.market, q.trading_day, q.symbol, q.side, q.order_id, f.id`,
+		args...)
 	if err != nil {
 		return false
 	}
@@ -592,25 +657,28 @@ func sumSellFills(ctx context.Context, r tradeOutcomeReader, orders []string,
 	)
 	for rows.Next() {
 		var (
-			orderID, cumulative, average string
-			side                         sql.NullString
+			orderID, eventAccount, eventMarket, tradingDay, eventSymbol string
+			side, cumulative, average                                   string
 		)
-		if err := rows.Scan(&orderID, &cumulative, &average, &side); err != nil {
+		if err := rows.Scan(&orderID, &eventAccount, &eventMarket, &tradingDay,
+			&eventSymbol, &side, &cumulative, &average); err != nil {
 			return false
 		}
-		if !side.Valid || !strings.EqualFold(strings.TrimSpace(side.String), "SELL") {
+		if !strings.EqualFold(strings.TrimSpace(side), "SELL") {
 			// A buy through one of these chains would be a scale-in the exit policy
 			// never proposes; it is not part of the disposal either way.
 			continue
 		}
-		if orderID != currentOrder {
-			currentOrder, prev = orderID, new(big.Rat)
+		orderKey := strings.Join([]string{eventAccount, eventMarket, tradingDay,
+			eventSymbol, side, orderID}, "\x00")
+		if orderKey != currentOrder {
+			currentOrder, prev = orderKey, new(big.Rat)
 		}
 		filled, ok := new(big.Rat).SetString(orZero(cumulative))
 		if !ok {
 			return false
 		}
-		perOrder[orderID] = filled
+		perOrder[orderKey] = filled
 		if strings.TrimSpace(average) == "" {
 			// An unpriced sell makes the disposal's proceeds unknown. Calling it
 			// zero would overstate the loss, which is the fail-open direction the

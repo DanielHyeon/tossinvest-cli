@@ -216,7 +216,13 @@ entry_attempt AS (
 	  JOIN pos ON a.decision_id = pos.entry_decision_id
 ),
 entry_intent AS (SELECT DISTINCT intent_id FROM entry_attempt WHERE intent_id <> ''),
-entry_order  AS (SELECT DISTINCT broker_order_id FROM entry_attempt WHERE broker_order_id <> ''),
+entry_order AS (
+	SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref) account_ref,
+	       LOWER(TRIM(i.market)) market, TRIM(i.trading_day) trading_day,
+	       UPPER(TRIM(i.symbol)) symbol, UPPER(TRIM(i.side)) side
+	  FROM entry_attempt a JOIN intents i ON i.id = a.intent_id
+	 WHERE a.broker_order_id <> ''
+),
 exit_intent AS (
 	SELECT DISTINCT e.proposed_intent_id AS intent_id
 	  FROM exit_events e JOIN pos ON e.position_id = pos.id
@@ -226,7 +232,21 @@ exit_attempt AS (
 	SELECT a.id, a.intent_id, a.kind, a.state, a.broker_order_id, a.recorded_at
 	  FROM mutation_attempts a JOIN exit_intent x ON a.intent_id = x.intent_id
 ),
-exit_order AS (SELECT DISTINCT broker_order_id FROM exit_attempt WHERE broker_order_id <> '')
+exit_order AS (
+	SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref) account_ref,
+	       LOWER(TRIM(i.market)) market, TRIM(i.trading_day) trading_day,
+	       UPPER(TRIM(i.symbol)) symbol, UPPER(TRIM(i.side)) side
+	  FROM exit_attempt a JOIN intents i ON i.id = a.intent_id
+	 WHERE a.broker_order_id <> ''
+),
+order_scope_count AS (
+	SELECT broker_order_id, count(*) scope_count FROM (
+		SELECT DISTINCT a.broker_order_id, TRIM(i.account_ref), LOWER(TRIM(i.market)),
+		       TRIM(i.trading_day), UPPER(TRIM(i.symbol)), UPPER(TRIM(i.side))
+		  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+		 WHERE a.broker_order_id <> ''
+	) GROUP BY broker_order_id
+)
 
 SELECT 0, 'ADOPTION', ad.observed_at, ad.id, ad.observed_price, ad.synthetic_stop,
        coalesce(ad.cost_basis, '')
@@ -242,7 +262,16 @@ SELECT 3, 'ATTEMPT', a.recorded_at, a.id, a.kind, a.state, a.broker_order_id
   FROM entry_attempt a
 UNION ALL
 SELECT 4, 'FILL', f.committed_at, f.order_id, f.delta_quantity, f.cumulative_quantity, f.average_price
-  FROM entry_order o JOIN fill_events f ON f.order_id = o.broker_order_id
+  FROM entry_order o
+  JOIN order_scope_count c ON c.broker_order_id = o.broker_order_id
+  JOIN fill_events f ON f.order_id = o.broker_order_id AND (
+	(TRIM(f.account_ref) = o.account_ref AND LOWER(TRIM(f.market)) = o.market
+	 AND TRIM(f.trading_day) = o.trading_day AND UPPER(TRIM(f.symbol)) = o.symbol
+	 AND UPPER(TRIM(f.side)) = o.side)
+	OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND TRIM(f.side) = ''
+	    AND c.scope_count = 1 AND (TRIM(f.market) = '' OR LOWER(TRIM(f.market)) = o.market)
+	    AND UPPER(TRIM(f.symbol)) = o.symbol)
+  )
 UNION ALL
 SELECT 5, 'POSITION', pos.opened_at, pos.id, pos.state, pos.quantity, pos.avg_price
   FROM pos WHERE pos.opened_at <> ''
@@ -262,7 +291,16 @@ SELECT 9, 'EXIT_ATTEMPT', a.recorded_at, a.id, a.kind, a.state, a.broker_order_i
 UNION ALL
 SELECT 10, 'EXIT_FILL', f.committed_at, f.order_id, f.delta_quantity, f.cumulative_quantity,
        f.average_price
-  FROM exit_order o JOIN fill_events f ON f.order_id = o.broker_order_id
+  FROM exit_order o
+  JOIN order_scope_count c ON c.broker_order_id = o.broker_order_id
+  JOIN fill_events f ON f.order_id = o.broker_order_id AND (
+	(TRIM(f.account_ref) = o.account_ref AND LOWER(TRIM(f.market)) = o.market
+	 AND TRIM(f.trading_day) = o.trading_day AND UPPER(TRIM(f.symbol)) = o.symbol
+	 AND UPPER(TRIM(f.side)) = o.side)
+	OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = '' AND TRIM(f.side) = ''
+	    AND c.scope_count = 1 AND (TRIM(f.market) = '' OR LOWER(TRIM(f.market)) = o.market)
+	    AND UPPER(TRIM(f.symbol)) = o.symbol)
+  )
 UNION ALL
 SELECT 11, 'CLOSE', pos.closed_at, pos.id, pos.state, pos.quantity, ''
   FROM pos WHERE pos.closed_at <> ''

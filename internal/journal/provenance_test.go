@@ -272,6 +272,49 @@ func TestAnotherDecisionsFillsAreNotThisPositionsProvenance(t *testing.T) {
 	}
 }
 
+func TestReusedOrderIDDoesNotAttachPriorDayFillToNewPositionProvenance(t *testing.T) {
+	j := projectingJournal(t)
+	ctx := context.Background()
+
+	first := place(t, j, order{
+		intentID: "i-day-1", attemptID: "a-day-1", orderID: "reused-order",
+		decisionID: "d-day-1", tradingDay: "2026-03-30", quantity: "10",
+	})
+	if _, err := j.RecordFill(ctx, terminalFill(first, "10", "70000")); err != nil {
+		t.Fatal(err)
+	}
+	exit := place(t, j, order{
+		intentID: "i-exit-1", attemptID: "a-exit-1", orderID: "exit-day-1",
+		decisionID: "d-exit-1", tradingDay: "2026-03-30", side: "SELL", quantity: "10",
+	})
+	if _, err := j.RecordFill(ctx, terminalFill(exit, "10", "71000")); err != nil {
+		t.Fatal(err)
+	}
+
+	second := place(t, j, order{
+		intentID: "i-day-2", attemptID: "a-day-2", orderID: "reused-order",
+		decisionID: "d-day-2", tradingDay: "2026-03-31", quantity: "2",
+	})
+	if _, err := j.RecordFill(ctx, terminalFill(second, "2", "72000")); err != nil {
+		t.Fatal(err)
+	}
+	position := currentPosition(t, j, second)
+	chain, err := j.PositionProvenance(ctx, position.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fills []ProvenanceStep
+	for _, step := range chain.Steps {
+		if step.Kind == ProvenanceFill {
+			fills = append(fills, step)
+		}
+	}
+	if len(fills) != 1 || !strings.Contains(fills[0].Detail, "filled 2 ") {
+		t.Fatalf("new position fills=%+v, want only the reused id's later-day fill", fills)
+	}
+}
+
 // TestProvenanceOfNothingIsNotFound: a chain with no rows is a position that
 // does not exist, and saying so is different from returning an empty answer a
 // caller reads as "no reason".

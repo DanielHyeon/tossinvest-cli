@@ -109,6 +109,7 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"reconcile_states",
 		"risk_reservations",
 		"schema_meta",
+		"scoped_execution_corrections",
 		"scoped_fill_snapshots",
 		"scoped_lineage_edges",
 		"spent_nonces",
@@ -184,8 +185,9 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"trading_day",
 		},
 		"fill_events": {
-			"average_price", "broker_visible_at", "committed_at", "cumulative_quantity",
-			"delta_quantity", "id", "market", "order_id", "symbol",
+			"account_ref", "average_price", "broker_visible_at", "committed_at",
+			"cumulative_quantity", "delta_quantity", "id", "market", "order_id", "side",
+			"symbol", "trading_day",
 		},
 		// Schema v4 (task 4.4): the flatten saga's durable plan.
 		"flatten_sagas": {
@@ -228,6 +230,11 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"account_ref", "cumulative_qty", "id", "new_avg_price",
 			"new_filled_amount", "observed_at", "order_id", "prev_avg_price",
 			"prev_filled_amount",
+		},
+		"scoped_execution_corrections": {
+			"account_ref", "cumulative_qty", "id", "market", "new_avg_price",
+			"new_filled_amount", "observed_at", "order_id", "prev_avg_price",
+			"prev_filled_amount", "side", "symbol", "trading_day",
 		},
 		// Schema v7 (adopt-external-positions design A1): the adoption record and
 		// the one nullable column that points at it. `adoption_id` is listed here
@@ -544,7 +551,9 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_scoped_fill_snapshots_order",
 		"idx_scoped_fill_snapshots_symbol",
 		"idx_fill_events_order",
+		"idx_fill_events_scope",
 		"idx_fill_events_symbol",
+		"idx_scoped_corrections_order",
 		// Schema v5: the decision contract's lookup paths — expiry sweeps,
 		// per-account reservation sums, the restart sweep for orphaned holds and
 		// the correction history of one order.

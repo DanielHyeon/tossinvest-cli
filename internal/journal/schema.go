@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 17
+const SchemaVersion = 18
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -98,6 +98,12 @@ var migrations = []migration{
 	// legacy surface while new canonical snapshots use an additive companion
 	// table with the complete scope as its primary key.
 	{Version: 17, SQL: schemaV17},
+	// schemaV18 lives in fills.go. It gives append-only fill events the same
+	// canonical identity as their snapshots and adds a scoped correction table;
+	// the released order-id-only correction table cannot have its global UNIQUE
+	// constraint widened without a destructive rebuild, so it remains a legacy
+	// compatibility surface.
+	{Version: 18, SQL: schemaV18},
 }
 
 // schemaV1 is the initial schema.

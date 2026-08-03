@@ -31,6 +31,36 @@ func observation(orderID, filled string) FillObservation {
 	}
 }
 
+func TestFillEventsRequireCanonicalScopeWhenOrderIDIsReused(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+
+	first := observation("reused-order", "3")
+	if _, err := j.RecordFill(ctx, first); err != nil {
+		t.Fatal(err)
+	}
+	second := observation("reused-order", "2")
+	second.TradingDay = "2026-03-31"
+	second.AveragePrice = "220"
+	if _, err := j.RecordFill(ctx, second); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := j.FillEvents(ctx, "reused-order"); !errors.Is(err, ErrFillScopeAmbiguous) {
+		t.Fatalf("FillEvents(order only) err=%v, want ErrFillScopeAmbiguous", err)
+	}
+	got, err := j.FillEventsScoped(ctx, FillSnapshotScope{
+		OrderID: "reused-order", AccountRef: "acct-1", Market: "us",
+		TradingDay: "2026-03-31", Symbol: "AAPL", Side: "BUY",
+	})
+	if err != nil {
+		t.Fatalf("FillEventsScoped: %v", err)
+	}
+	if len(got) != 1 || got[0].CumulativeQuantity != "2" || got[0].TradingDay != "2026-03-31" {
+		t.Fatalf("scoped fills=%+v, want only the later trading-day event", got)
+	}
+}
+
 func recordConfirmedFillOrder(t *testing.T, j *Journal, intentID, attemptID, orderID string) {
 	t.Helper()
 	ctx := context.Background()

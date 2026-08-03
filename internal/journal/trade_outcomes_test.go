@@ -197,6 +197,62 @@ func TestTheReachedExitStageIsCopiedAtTheClose(t *testing.T) {
 	}
 }
 
+func TestReusedOrderIDDoesNotContaminateLaterDayTradeOutcome(t *testing.T) {
+	withHistory := outcomeFixture(t)
+	ctx := context.Background()
+
+	firstBuy := place(t, withHistory, order{
+		intentID: "i-buy-1", attemptID: "a-buy-1", orderID: "reused-entry",
+		decisionID: "d-buy-1", tradingDay: "2026-03-30", quantity: "10",
+	})
+	if _, err := withHistory.RecordFill(ctx, terminalFill(firstBuy, "10", "70000")); err != nil {
+		t.Fatal(err)
+	}
+	firstPosition := currentPosition(t, withHistory, firstBuy)
+	if _, err := withHistory.OpenExitState(ctx, ExitStateSeed{
+		PositionID: firstPosition.ID, EntryPrice: "70000", InitialStop: "68000",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	firstSell := place(t, withHistory, order{
+		intentID: "i-sell-1", attemptID: "a-sell-1", orderID: "exit-day-1",
+		decisionID: "d-sell-1", tradingDay: "2026-03-30", side: "SELL", quantity: "10",
+	})
+	if _, err := withHistory.RecordFill(ctx, terminalFill(firstSell, "10", "71000")); err != nil {
+		t.Fatal(err)
+	}
+
+	secondBuy := place(t, withHistory, order{
+		intentID: "i-buy-2", attemptID: "a-buy-2", orderID: "reused-entry",
+		decisionID: "d-buy-2", tradingDay: "2026-03-31", quantity: "2",
+	})
+	if _, err := withHistory.RecordFill(ctx, terminalFill(secondBuy, "2", "72000")); err != nil {
+		t.Fatal(err)
+	}
+	secondPosition := currentPosition(t, withHistory, secondBuy)
+	if _, err := withHistory.OpenExitState(ctx, ExitStateSeed{
+		PositionID: secondPosition.ID, EntryPrice: "72000", InitialStop: "70000",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	secondSell := place(t, withHistory, order{
+		intentID: "i-sell-2", attemptID: "a-sell-2", orderID: "exit-day-2",
+		decisionID: "d-sell-2", tradingDay: "2026-03-31", side: "SELL", quantity: "2",
+	})
+	if _, err := withHistory.RecordFill(ctx, terminalFill(secondSell, "2", "73000")); err != nil {
+		t.Fatal(err)
+	}
+	got := outcomeOf(t, withHistory, secondPosition.ID)
+
+	isolated := outcomeFixture(t)
+	wantID := roundTrip(t, isolated, "2", "72000", "73000")
+	want := outcomeOf(t, isolated, wantID)
+	if got.RealizedPnLAfterCosts != want.RealizedPnLAfterCosts ||
+		got.InitialQuantity != want.InitialQuantity {
+		t.Fatalf("later-day outcome=%+v, want isolated later-day outcome=%+v", got, want)
+	}
+}
+
 // TestAnAnalyticsFailureDoesNotRollBackTheClose is the isolation requirement.
 // A journal with no cost model cannot price the round trip; the position must
 // close anyway.
