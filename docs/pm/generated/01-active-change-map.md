@@ -63,7 +63,7 @@
 | `a057-simplify-portfolio-views` | STORY-TOS-a057 | archived |
 | `a058-match-stockos-holdings-density` | STORY-TOS-a058 | archived |
 | `a059-console-finds-the-engine-it-owns` | STORY-TOS-a059 | implemented |
-| `a060-soak-restart-uses-this-profile` | STORY-TOS-a060 | implemented |
+| `a060-soak-restart-uses-this-profile` | STORY-TOS-a060 | archived |
 | `a061-show-history-instrument-names` | STORY-TOS-a061 | archived |
 | `a062-reconcile-owned-orders` | STORY-TOS-a062 | archived |
 | `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | in_progress |

@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a060-soak-restart-uses-this-profile",
-    "path": "openspec/changes/a060-soak-restart-uses-this-profile"
+    "path": "openspec/changes/archive/2026-08-03-a060-soak-restart-uses-this-profile"
   },
   "acceptance": [
     "A soak spawned by the console inherits the console's --config-dir and --session-file, so it reads the credentials and writes the record the console is showing",
