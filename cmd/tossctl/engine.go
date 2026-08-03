@@ -300,7 +300,8 @@ func engineVerifyLockPath(root *rootOptions) (string, error) {
 
 // --- the loop set ------------------------------------------------------------------
 
-// engineRuntime assembles the three loops and the supervisor over them.
+// engineRuntime assembles the three safety loops, one inert strategy-entry
+// outer loop, and the existing all-or-nothing supervisor over them.
 //
 // # Why the fill detector is built here and not in internal/app/engine
 //
@@ -351,6 +352,10 @@ func engineRuntime(ectx *engine.Context, clk clock.Clock, logger *obs.Logger) (*
 	if err != nil {
 		return nil, err
 	}
+	strategyEntry, err := engineDormantStrategyEntry()
+	if err != nil {
+		return nil, err
+	}
 
 	return engine.NewRuntime(engine.RuntimeOptions{
 		AccountRef: ectx.AccountRef,
@@ -384,8 +389,16 @@ func engineRuntime(ectx *engine.Context, clk clock.Clock, logger *obs.Logger) (*
 				Health:  detectorHealth{detector: detector},
 				Trigger: journal.ModeTriggerFillDetectionFailure,
 			},
+			strategyEntry.SupervisedLoop(),
 		},
 	})
+}
+
+// engineDormantStrategyEntry has deliberately no inputs. Existing settings,
+// activation, Gateway, journal writers and LIVE approval therefore cannot turn
+// either market ON through production assembly in this checkpoint.
+func engineDormantStrategyEntry() (*engine.StrategyEntrySupervisor, error) {
+	return engine.NewDormantStrategyEntrySupervisor()
 }
 
 // engineFillDetector builds the polling detector.

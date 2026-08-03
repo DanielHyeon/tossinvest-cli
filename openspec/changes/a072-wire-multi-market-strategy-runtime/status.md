@@ -21,7 +21,12 @@
   authority-bearing mutation is deliberately `ErrStrategyDispatchDormant`; no production mint exists.
 - Engine supervisor checkpoint: paired KR/US evaluation children start behind one barrier with independent
   bounded queues. Market faults irreversibly disable only that in-memory child and emit immutable fault
-  evidence; no durable recovery/activation callback or production Runtime wiring exists yet.
-- Remaining: production coordinator/lineage persistence/Gateway CAS integration, full safety-loop fault injection, repository gates and final independent review
+  evidence. Production now assembles the single outer `strategy-entry` loop, but its no-argument constructor
+  hard-codes both markets OFF with nil cycles and exposes no trigger/config/activation/Gateway authority.
+- Sealed bridge audit: production entry/stop/target, five authoritative bucket snapshots/policies,
+  prospective owner generation, real exposure collection, frozen official FX and a converted US Guardian cap
+  are absent. No strategyflow→q_final constructor was added; US and KR production entry remain closed.
+- Remaining: authority-complete lane input/q_final adapters, durable market fault/recovery integration,
+  official Gateway lease CAS, full safety-loop fault injection, repository gates and final independent review
 
 No market was activated, no lease reached a broker, and no live order or operating setting changed.

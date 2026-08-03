@@ -56,6 +56,14 @@
   barrier and drain both queues. Only evaluation-only callbacks can cross a watchdog, at most one per market;
   the market becomes irreversibly disabled and late results have no action path. Re-review is CLEAN, while
   durable fault persistence and production Runtime wiring remain explicitly pending.
+- The dormant production assembly adds the single supervisor loop after reconcile/exit/filldetect without
+  changing their construction or Runtime supervision. Its helper has zero inputs, fixes KR/US OFF with nil
+  cycles and has no production Trigger caller. Independent review is CLEAN for this inert scope.
+- The strategyflow→q_final bridge audit found no authority-complete construction path. In particular, lane
+  lineage lacks executable entry/stop/target prices, no production loader can seal all five risk-bucket
+  policies/snapshots or prospective owner mapping, the legacy exposure collector is not a production
+  multi-market authority, and official FX validity is not preserved into a frozen cap. A bridge was therefore
+  not created; the exact blockers and implementation order are recorded in the pre-edit analysis.
 
 ## Verification
 
@@ -77,6 +85,7 @@
 - v25 focused/race/vet/diff checks and independent dormant-scope re-review: PASS/CLEAN.
 - `go test ./internal/app/engine -count=1`: PASS; full package race PASS (396.594s); vet PASS.
 - KR/US supervisor independent re-review after three Critical fixes: CLEAN.
+- Dormant `cmd/tossctl` production assembly focused/race/vet and independent review: PASS/CLEAN.
 
 ## Verdict
 

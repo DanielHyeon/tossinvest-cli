@@ -1,0 +1,236 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "c71a918570e494e0d22faa0fd15363b24beb6eb88509dd388cb6bd0e42a3ff83",
+  "package": "main",
+  "function": "engineRuntime",
+  "signature": "engineRuntime(params=3, results=2)",
+  "start": {
+    "line": 325,
+    "column": 1
+  },
+  "end": {
+    "line": 395,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 327,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 336,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 347,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 352,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 328,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 337,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 348,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 353,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 357,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 360,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 369,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 19
+      },
+      "text": "engineFillDetector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 17
+      },
+      "text": "ectx.ReconcileDriver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 18
+      },
+      "text": "ectx.SnapshotCollector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 19
+      },
+      "text": "ectx.ExitObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 14
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 19
+      },
+      "text": "ectx.Recovery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 24
+      },
+      "text": "engineDormantStrategyEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 9
+      },
+      "text": "engine.NewRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 15
+      },
+      "text": "recovery.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 4
+      },
+      "text": "strategyEntry.SupervisedLoop"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 326,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 340,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 351,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 355,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 368,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
