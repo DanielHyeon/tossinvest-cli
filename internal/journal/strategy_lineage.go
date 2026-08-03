@@ -100,27 +100,29 @@ func (e *StrategyCollisionError) Error() string {
 }
 
 type StrategyDecisionLineage struct {
-	DecisionIdentity         string
-	CandidateLifeID          string
-	Market                   string
-	Symbol                   string
-	ThresholdVersion         string
-	ThresholdSetDigest       string
-	EvidenceDigest           string
-	LaneID                   string
-	LaneVersion              string
-	LaneSourceDigest         string
-	LaneConstantsDigest      string
-	EntryPrice               string
-	StopPrice                string
-	TargetPrice              string
-	Quantity                 string
-	PolicyVersion            string
-	SettingsDigest           string
-	DecisionPayload          string
-	DecisionPayloadDigest    string
-	ActivationManifestDigest string
-	CreatedAt                time.Time
+	DecisionIdentity               string
+	CandidateLifeID                string
+	Market                         string
+	Symbol                         string
+	ThresholdVersion               string
+	ThresholdSetDigest             string
+	EvidenceDigest                 string
+	ConsumedEvidenceSnapshotID     string
+	ConsumedEvidenceSnapshotDigest string
+	LaneID                         string
+	LaneVersion                    string
+	LaneSourceDigest               string
+	LaneConstantsDigest            string
+	EntryPrice                     string
+	StopPrice                      string
+	TargetPrice                    string
+	Quantity                       string
+	PolicyVersion                  string
+	SettingsDigest                 string
+	DecisionPayload                string
+	DecisionPayloadDigest          string
+	ActivationManifestDigest       string
+	CreatedAt                      time.Time
 }
 
 type StrategyAtomicPlan struct {
@@ -417,10 +419,13 @@ func insertExactRiskDecision(ctx context.Context, tx *sql.Tx, decision Decision)
 }
 
 func insertExactStrategyDecision(ctx context.Context, tx *sql.Tx, lineage StrategyDecisionLineage) (int, error) {
+	if !validConsumedEvidenceReference(lineage.ConsumedEvidenceSnapshotID, lineage.ConsumedEvidenceSnapshotDigest) {
+		return 0, errors.New("journal strategy plan: consumed evidence snapshot reference is invalid")
+	}
 	created := lineage.CreatedAt.Format(time.RFC3339Nano)
-	result, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO strategy_decision_lineage(entry_decision_identity,candidate_life_id,market,symbol,threshold_version,threshold_set_digest,evidence_digest,lane_id,lane_version,lane_source_digest,lane_constants_digest,entry_price,stop_price,target_price,quantity,policy_version,settings_digest,decision_payload,decision_payload_digest,activation_manifest_digest,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+	result, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO strategy_decision_lineage(entry_decision_identity,candidate_life_id,market,symbol,threshold_version,threshold_set_digest,evidence_digest,consumed_evidence_snapshot_id,consumed_evidence_snapshot_digest,lane_id,lane_version,lane_source_digest,lane_constants_digest,entry_price,stop_price,target_price,quantity,policy_version,settings_digest,decision_payload,decision_payload_digest,activation_manifest_digest,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		lineage.DecisionIdentity, lineage.CandidateLifeID, lineage.Market, lineage.Symbol, lineage.ThresholdVersion,
-		lineage.ThresholdSetDigest, lineage.EvidenceDigest, lineage.LaneID, lineage.LaneVersion, lineage.LaneSourceDigest,
+		lineage.ThresholdSetDigest, lineage.EvidenceDigest, nullableString(lineage.ConsumedEvidenceSnapshotID), nullableString(lineage.ConsumedEvidenceSnapshotDigest), lineage.LaneID, lineage.LaneVersion, lineage.LaneSourceDigest,
 		lineage.LaneConstantsDigest, lineage.EntryPrice, lineage.StopPrice, lineage.TargetPrice, lineage.Quantity, lineage.PolicyVersion, lineage.SettingsDigest, lineage.DecisionPayload, lineage.DecisionPayloadDigest,
 		lineage.ActivationManifestDigest, created)
 	if err != nil {
@@ -428,13 +433,14 @@ func insertExactStrategyDecision(ctx context.Context, tx *sql.Tx, lineage Strate
 	}
 	var got StrategyDecisionLineage
 	var gotCreated string
-	err = tx.QueryRowContext(ctx, `SELECT candidate_life_id,market,symbol,threshold_version,threshold_set_digest,evidence_digest,lane_id,lane_version,lane_source_digest,lane_constants_digest,entry_price,stop_price,target_price,quantity,policy_version,settings_digest,decision_payload,decision_payload_digest,activation_manifest_digest,created_at FROM strategy_decision_lineage WHERE entry_decision_identity=?`, lineage.DecisionIdentity).
+	err = tx.QueryRowContext(ctx, `SELECT candidate_life_id,market,symbol,threshold_version,threshold_set_digest,evidence_digest,COALESCE(consumed_evidence_snapshot_id,''),COALESCE(consumed_evidence_snapshot_digest,''),lane_id,lane_version,lane_source_digest,lane_constants_digest,entry_price,stop_price,target_price,quantity,policy_version,settings_digest,decision_payload,decision_payload_digest,activation_manifest_digest,created_at FROM strategy_decision_lineage WHERE entry_decision_identity=?`, lineage.DecisionIdentity).
 		Scan(&got.CandidateLifeID, &got.Market, &got.Symbol, &got.ThresholdVersion, &got.ThresholdSetDigest,
-			&got.EvidenceDigest, &got.LaneID, &got.LaneVersion, &got.LaneSourceDigest, &got.LaneConstantsDigest,
+			&got.EvidenceDigest, &got.ConsumedEvidenceSnapshotID, &got.ConsumedEvidenceSnapshotDigest, &got.LaneID, &got.LaneVersion, &got.LaneSourceDigest, &got.LaneConstantsDigest,
 			&got.EntryPrice, &got.StopPrice, &got.TargetPrice, &got.Quantity, &got.PolicyVersion, &got.SettingsDigest, &got.DecisionPayload, &got.DecisionPayloadDigest, &got.ActivationManifestDigest, &gotCreated)
 	if err != nil || got.CandidateLifeID != lineage.CandidateLifeID || got.Market != lineage.Market ||
 		got.Symbol != lineage.Symbol || got.ThresholdVersion != lineage.ThresholdVersion ||
 		got.ThresholdSetDigest != lineage.ThresholdSetDigest || got.EvidenceDigest != lineage.EvidenceDigest ||
+		got.ConsumedEvidenceSnapshotID != lineage.ConsumedEvidenceSnapshotID || got.ConsumedEvidenceSnapshotDigest != lineage.ConsumedEvidenceSnapshotDigest ||
 		got.LaneID != lineage.LaneID || got.LaneVersion != lineage.LaneVersion ||
 		got.LaneSourceDigest != lineage.LaneSourceDigest || got.LaneConstantsDigest != lineage.LaneConstantsDigest ||
 		got.EntryPrice != lineage.EntryPrice || got.StopPrice != lineage.StopPrice || got.TargetPrice != lineage.TargetPrice ||

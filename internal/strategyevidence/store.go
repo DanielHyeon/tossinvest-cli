@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -360,18 +361,31 @@ func (s *Store) SealSnapshot(ctx context.Context, query SnapshotQuery) (Snapshot
 func snapshotDigest(query SnapshotQuery, items []Envelope) string {
 	hash := sha256.New()
 	for _, value := range []string{string(query.Market), query.Symbol, query.IssuerIdentity, query.IssuerMappingVersion, stamp(query.EvaluationAt), stamp(query.IngestionCutoff)} {
-		_, _ = hash.Write([]byte(value))
-		_, _ = hash.Write([]byte{0})
+		writeSnapshotDigestField(hash, value)
 	}
 	ordered := cloneEnvelopes(items)
 	sort.Slice(ordered, func(i, j int) bool { return ordered[i].Header().EvidenceID < ordered[j].Header().EvidenceID })
 	for _, item := range ordered {
-		_, _ = hash.Write([]byte(item.Header().EvidenceID))
-		_, _ = hash.Write([]byte{0})
-		_, _ = hash.Write([]byte(item.PayloadDigest()))
-		_, _ = hash.Write([]byte{'\n'})
+		header := item.Header()
+		for _, value := range []string{
+			header.EvidenceID, string(header.Market), header.Symbol, header.IssuerIdentity,
+			header.IssuerMappingVersion, string(header.Kind), header.SchemaVersion, string(header.Authority),
+			header.SourceRecordID, header.RevisionIdentity, header.SupersedesRevisionIdentity,
+			header.MarketEffectiveDate, stamp(header.SourceEventAt), stamp(header.SourceAvailableAt),
+			stamp(header.ObservedAt), stamp(header.IngestedAt), header.Currency, header.Unit,
+			string(header.Availability), string(header.Confidence), item.PayloadDigest(),
+		} {
+			writeSnapshotDigestField(hash, value)
+		}
 	}
 	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func writeSnapshotDigestField(destination interface{ Write([]byte) (int, error) }, value string) {
+	var length [8]byte
+	binary.BigEndian.PutUint64(length[:], uint64(len(value)))
+	_, _ = destination.Write(length[:])
+	_, _ = destination.Write([]byte(value))
 }
 
 func cloneEnvelopes(items []Envelope) []Envelope {

@@ -10,13 +10,13 @@
 - [x] 2.2 Add failing point-in-time repository tests for `source_available_at <= evaluation_at` and `ingested_at <= ingestion_cutoff`, future-data exclusion, append-only correction lineage, idempotent same-digest ingestion, same-identity digest-conflict quarantine and deterministic snapshot digests.
 - [x] 2.3 Add failing projection tests for fatal-veto/scoring separation and missing, stale, conflicting, ambiguous, identity-mismatched and currency-unresolved required evidence.
 - [x] 2.4 Add failing source-policy/adapter tests for any incomplete deployment policy yielding 0 calls, KRX contract-unavailable 0 calls, absolute windows, page/bytes/concurrency/deadline/retry/Retry-After bounds, schema drift, credential redaction and forbidden fallback.
-- [ ] 2.5 Add failing storage-boundary tests proving evidence payload/revisions exist only in evidence.db while the trading journal stores consumed snapshot ID/digest only.
+- [x] 2.5 Add failing storage-boundary tests proving evidence payload/revisions exist only in evidence.db while the trading journal stores consumed snapshot ID/digest only.
 
 ## 3. Evidence Model and Persistence
 
 - [x] 3.1 Implement typed `EvidenceEnvelope`, market clocks, source/revision identities, availability/confidence states and canonical payload encoding without cross-market field synthesis.
 - [x] 3.2 Add the independent append-only evidence.db schema with unique `(authority, source_record_id, revision_identity)`, digest-conflict quarantine, supersedes lineage and schema-too-new tests without payload tables in the trading journal.
-- [ ] 3.3 Add only nullable consumed snapshot ID/digest lineage to the trading journal and test that source payload, revision and credential columns/tables are absent.
+- [x] 3.3 Add only nullable consumed snapshot ID/digest lineage to the trading journal and test that source payload, revision and credential columns/tables are absent.
 - [x] 3.4 Implement idempotent append and explicit as-of snapshot reads requiring evaluation_at and ingestion_cutoff and enforcing both source-availability and ingestion cutoffs.
 
 ## 4. Official Source Adapters
@@ -29,12 +29,12 @@
 ## 5. Projection Integration
 
 - [x] 5.1 Implement deterministic `FatalAssessment` and lane evidence projection ports over one as-of snapshot, with versioned freshness and source-priority policies.
-- [ ] 5.2 Connect candidate/strategy read boundaries to immutable evidence snapshot IDs in dormant/shadow mode and persist only consumed snapshot ID/digest lineage; do not connect Guardian, dispatch, broker mutation or operating toggles.
-- [ ] 5.3 Add replay and integration tests proving KR and US evidence are evaluated independently, official source failure in one market does not invent facts in the other, and future revisions do not change historical results.
+- [x] 5.2 Connect candidate/strategy read boundaries to immutable evidence snapshot IDs in dormant/shadow mode and persist only consumed snapshot ID/digest lineage; do not connect Guardian, dispatch, broker mutation or operating toggles.
+- [x] 5.3 Add replay and integration tests proving KR and US evidence are evaluated independently, official source failure in one market does not invent facts in the other, and future revisions do not change historical results.
 
 ## 6. Verify and Gate
 
-- [ ] 6.1 Run focused race/unit/integration tests and property fixtures for canonical digest, dual-cutoff point-in-time replay, evidence.db isolation, source-policy zero-call behavior, rate budgets and fail-closed projections; record RED-to-GREEN evidence.
-- [ ] 6.2 Run static secret scans and a broker spy test proving all a064 paths create zero order intents, zero live broker requests and zero lane/automation toggle changes.
+- [x] 6.1 Run focused race/unit/integration tests and property fixtures for canonical digest, dual-cutoff point-in-time replay, evidence.db isolation, source-policy zero-call behavior, rate budgets and fail-closed projections; record RED-to-GREEN evidence.
+- [x] 6.2 Run static secret scans and a broker spy test proving all a064 paths create zero order intents, zero live broker requests and zero lane/automation toggle changes.
 - [ ] 6.3 Refresh all Function Logic Maps and Branch Test Maps after edits, then run `openspec validate a064-add-multi-market-strategy-evidence --strict --no-interactive`, `make sdd-check`, `make test`, `make vet` and `make validate`.
 - [ ] 6.4 Complete independent review, resolve findings and run `make gate CHANGE=a064-add-multi-market-strategy-evidence` without activating any live configuration.

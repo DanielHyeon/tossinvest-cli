@@ -299,6 +299,23 @@ func (r *ReadOnly) checkSchema(ctx context.Context) error {
 				ErrSchemaTooOld, r.version, strings.Join(missing, ", "))
 		}
 	}
+	if r.version >= 21 {
+		for _, required := range strategyEvidenceReadOnlyColumns {
+			var name string
+			err := r.db.QueryRowContext(ctx,
+				`SELECT name FROM pragma_table_info(?) WHERE name = ?`, required.table, required.column).Scan(&name)
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				missing = append(missing, required.table+"."+required.column)
+			case err != nil:
+				return fmt.Errorf("journal: inspecting the schema of %s: %w", r.path, err)
+			}
+		}
+		if len(missing) > 0 {
+			return fmt.Errorf("%w: version %d has no %s — start the engine once so it migrates",
+				ErrSchemaTooOld, r.version, strings.Join(missing, ", "))
+		}
+	}
 	return nil
 }
 

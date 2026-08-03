@@ -85,8 +85,48 @@
   (`https://www.sec.gov/about/webmaster-frequently-asked-questions`), and OpenDART disclosure-list guide
   (`https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019001`).
 
+## Wave 1C journal lineage and dormant-read evidence
+
+- Journal schema v21 adds exactly two nullable `TEXT` columns to `strategy_decision_lineage`: consumed
+  immutable snapshot ID and digest. Migration tests prove legacy v20 rows remain NULL, a failed migration
+  rolls back both columns and the version, and a damaged claimed-v21 schema is refused by `OpenReadOnly`.
+- Exact insert/replay checks bind both scalars into the immutable strategy decision. Partial, malformed,
+  whitespace-bearing or oversized references fail before SQL; changing either reference on an existing
+  decision is a collision. No payload, source response, revision or credential table/column was added.
+- `StrategyEvidenceReadBoundary` and `DormantSnapshotReadPort` are dormant SELECT-only capabilities.
+  The latter accepts only canonical `snapshot-<digest>` plus exact digest and market, reloads sealed rows,
+  recomputes the digest, and returns a clone. It has no fallback to current evidence or another market.
+- KR and US snapshots replay independently. A mismatched US reference does not gate a valid KR replay,
+  and a KR snapshot cannot be read through a US market key. This is data-plane consumption only: there is
+  no Guardian, dispatch, broker, apply-hook or operating-toggle integration.
+- Structural AST tests reject database write/transaction selectors, mutating SQL and imports of broker,
+  Guardian, dispatch, execution gateway, runtime or toggle packages in either read port. The journal
+  integration test additionally proves zero `intents`, `mutation_attempts` and `risk_reservations` after
+  the dormant read. Static scans found only deliberate prohibition words in comments/tests, no credential.
+- RED was captured as undefined v21 schema, lineage fields and read-port contracts. GREEN focused tests,
+  focused `-race`, full non-race package tests and vet pass; exact commands/results are recorded in
+  `analysis/journal-snapshot-verification.md`. Strict OpenSpec validation passes.
+- The full journal race suite made forward progress but exceeded the 10-minute timeout while preparing
+  SQLite schemas; it emitted no race detector report. Repository-wide gates and independent final review
+  therefore remain unchecked rather than being represented as complete.
+
+### Independent HIGH integrity review closure
+
+- RED proved the former snapshot digest accepted six direct evidence.db Header corruptions without error:
+  symbol, issuer, mapping version, cross-market scope, future market-effective date and future source/ingestion
+  cutoffs. The old item preimage contained only EvidenceID plus payload digest.
+- GREEN binds every normalized immutable `Header` field and the payload digest with length-prefix framing.
+  Replay also independently enforces exact market/symbol/issuer/mapping, source-event and source-availability
+  at or before evaluation, trusted ingestion at or before cutoff, and market-effective date at or before the
+  market-local evaluation day. All six corruption cases now return `ErrSnapshotUnavailable`.
+- A separate RED showed raw SQL could insert one half of the nullable journal snapshot pair and that an
+  unsupported lineage market could be returned. v21 now installs INSERT and UPDATE guards requiring either
+  two NULLs or an exact lowercase `snapshot-<64 hex>`/digest pair; the read boundary allows only `KR` and `US`.
+  Both RED cases are GREEN, including an UPDATE test with the older blanket immutability trigger removed.
+
 ## Verdict
 
-The evidence core and bounded official SEC/OpenDART source adapters are ready for integration review but do
-not complete a064. Journal snapshot lineage, dormant consumer wiring and repository-wide gates remain open.
-Credentials and numeric production budgets remain deployment inputs; absence keeps the affected source disabled.
+The evidence core, bounded official SEC/OpenDART adapters, snapshot-only journal lineage and dormant KR/US
+consumer boundary are ready for integration review but do not activate a strategy lane. Repository-wide gates
+and final independent review remain open. Credentials and numeric production budgets remain deployment inputs;
+absence keeps the affected source disabled.
