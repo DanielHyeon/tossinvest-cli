@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| none | returns an option closure | closure replaces base URL | no direct error | `TestAuthorityOriginRejectsConfiguredTransport` |
+| B1 | client configuration is already sealed | none | option replay is a no-op | replay/race tests |
 
 ## Calls and live bindings
 
@@ -24,7 +24,7 @@
 
 ## State mutations and fallbacks
 
-- Mutates only `Client.base`; hardening will also irreversibly mark the client origin overridden.
+- Before sealing, mutates `Client.base` and irreversibly clears authority under `configMu`; after sealing it cannot mutate.
 
 ## Safety conclusion
 

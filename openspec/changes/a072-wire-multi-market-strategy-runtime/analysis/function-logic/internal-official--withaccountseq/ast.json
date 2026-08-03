@@ -2,14 +2,14 @@
   "file": "internal/official/client.go",
   "source_sha256": "648f8eecab8415aa99d47f6607e78b30d17dad60ed978ba4330ad5358d74b117",
   "package": "official",
-  "function": "WithBaseURL",
-  "signature": "WithBaseURL(params=1, results=1)",
+  "function": "WithAccountSeq",
+  "signature": "WithAccountSeq(params=1, results=1)",
   "start": {
-    "line": 56,
+    "line": 85,
     "column": 1
   },
   "end": {
-    "line": 66,
+    "line": 95,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 60,
+        "line": 89,
         "column": 3
       }
     }
@@ -26,14 +26,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 57,
+        "line": 86,
         "column": 2
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 61,
+        "line": 90,
         "column": 4
       }
     }
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 58,
+        "line": 87,
         "column": 3
       },
       "text": "c.configMu.Lock"
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 59,
+        "line": 88,
         "column": 9
       },
       "text": "c.configMu.Unlock"
@@ -58,24 +58,25 @@
     {
       "kind": "call",
       "at": {
-        "line": 63,
-        "column": 12
+        "line": 92,
+        "column": 3
       },
-      "text": "strings.TrimRight"
+      "text": "c.accountSeq.Store"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 22
+      },
+      "text": "int64"
     }
   ],
   "assignments": [
     {
       "kind": "=",
       "at": {
-        "line": 63,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 64,
+        "line": 93,
         "column": 3
       }
     }
@@ -85,7 +86,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 59,
+        "line": 88,
         "column": 3
       },
       "text": "c.configMu.Unlock"

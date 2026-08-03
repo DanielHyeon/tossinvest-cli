@@ -14,20 +14,20 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | invalid request/origin/policy | none | fail closed | invalid/overridden origin tests |
-| B2 | official GET fails | read-only request only | wrapped error | source error tests |
+| B1 | invalid request scope or policy | none | ErrInvalidEvidence | invalid/policy tests |
+| B2 | authoritative read fails | read-only request at most | wrapped error | source/origin tests |
+| B3 | authoritative origin specifically unavailable | no HTTP transport invoked | ErrInvalidEvidence | configured zero-hit test |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| Client.AuthorityOrigin | prove default official endpoint and transport | no network | official client provenance |
-| Client.ExchangeRate | read official rate | context/error propagation | current source |
+| Client.AuthoritativeExchangeRate | prove sealed origin and read under one immutable boundary | no fallback; context/error propagation | official boundary tests |
 | sealOfficial | bind response plus sealed policy | pure validation | focused tests |
 
 ## State mutations and fallbacks
 
-- No mutation; override clients may perform ordinary reads but must fail before the GET in this authority path.
+- No mutation; configured clients fail before token/data transport, and no separate origin token can go stale before the GET.
 
 ## Safety conclusion
 

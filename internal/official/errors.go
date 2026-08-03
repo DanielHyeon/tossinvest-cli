@@ -9,11 +9,12 @@ import (
 
 // Sentinel errors returned by the official API client.
 var (
-	ErrTransport    = errors.New("official: transport error")
-	ErrAuth         = errors.New("official: authentication failed")
-	ErrIPNotAllowed = errors.New("official: IP not allowed")
-	ErrRateLimited  = errors.New("official: rate limited")
-	ErrServer       = errors.New("official: server error")
+	ErrTransport       = errors.New("official: transport error")
+	ErrAuth            = errors.New("official: authentication failed")
+	ErrIPNotAllowed    = errors.New("official: IP not allowed")
+	ErrRateLimited     = errors.New("official: rate limited")
+	ErrServer          = errors.New("official: server error")
+	ErrAuthorityOrigin = errors.New("official: authoritative origin unavailable")
 )
 
 // APIError represents a non-retryable 4xx error from the official API.

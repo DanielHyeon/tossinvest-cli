@@ -2,9 +2,11 @@ package official
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"sync"
 	"testing"
 )
 
@@ -89,6 +91,60 @@ func TestAuthorityOriginRejectsConfiguredTransport(t *testing.T) {
 		if origin, ok := configured.AuthorityOrigin(); ok || origin.Valid() {
 			t.Fatalf("configured client retained authority origin: ok=%v origin=%+v", ok, origin)
 		}
+	}
+}
+
+func TestClientConfigurationCannotBeMutatedByRetainedOptionPointer(t *testing.T) {
+	var retained *Client
+	client := New(Credentials{}, filepath.Join(t.TempDir(), "token.json"), Option(func(c *Client) {
+		retained = c
+	}))
+	if retained != client {
+		t.Fatal("custom option did not observe the constructed client")
+	}
+
+	attackerHTTP := &http.Client{Transport: http.DefaultTransport}
+	WithBaseURL("https://attacker.invalid")(retained)
+	WithHTTPClient(attackerHTTP)(retained)
+	WithAccountSeq(99)(retained)
+
+	if client.BaseURL() != defaultBaseURL || client.hc == attackerHTTP || client.accountSeq.Load() == 99 {
+		t.Fatalf("retained option pointer mutated sealed client: base=%q http=%p account=%d", client.BaseURL(), client.hc, client.accountSeq.Load())
+	}
+	if origin, ok := client.AuthorityOrigin(); !ok || !origin.Valid() {
+		t.Fatal("post-construction option replay revoked or replaced immutable official origin")
+	}
+}
+
+func TestClientConfigurationOptionReplayIsRaceFreeAndFailClosed(t *testing.T) {
+	var retained *Client
+	client := New(Credentials{}, filepath.Join(t.TempDir(), "token.json"), Option(func(c *Client) {
+		retained = c
+	}))
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+	for i := 0; i < 32; i++ {
+		wg.Add(2)
+		go func(index int) {
+			defer wg.Done()
+			<-start
+			WithBaseURL(fmt.Sprintf("https://attacker-%d.invalid", index))(retained)
+			WithHTTPClient(&http.Client{Transport: http.DefaultTransport})(retained)
+		}(i)
+		go func() {
+			defer wg.Done()
+			<-start
+			_, _ = client.AuthorityOrigin()
+			_ = client.BaseURL()
+		}()
+	}
+	close(start)
+	wg.Wait()
+	if client.BaseURL() != defaultBaseURL {
+		t.Fatalf("concurrent option replay changed sealed base: %q", client.BaseURL())
+	}
+	if origin, ok := client.AuthorityOrigin(); !ok || !origin.Valid() {
+		t.Fatal("concurrent option replay changed official authority")
 	}
 }
 

@@ -20,11 +20,11 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `newTokenManager` | bind credentials, endpoint and transport | no request until later call | CodeGraph + current source |
+| `newTokenManager` | bind credentials, endpoint and transport inside final configuration lock | no request until later call | CodeGraph + current source |
 
 ## State mutations and fallbacks
 
-- Initializes default endpoint/transport as authority-eligible; override options can only clear eligibility.
+- Initializes default endpoint/transport as authority-eligible, applies options, then atomically binds the token manager and seals all option state.
 
 ## Safety conclusion
 

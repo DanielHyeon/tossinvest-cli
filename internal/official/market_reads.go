@@ -63,6 +63,22 @@ func (c *Client) ExchangeRate(ctx context.Context, base, quote string) (domain.E
 	return adaptExchangeRate(raw), nil
 }
 
+// AuthoritativeExchangeRate validates the immutable production origin and
+// performs the HTTP read under one configuration boundary. It is the only FX
+// read suitable for minting monetary authority; configured clients fail before
+// token or data transport is invoked.
+func (c *Client) AuthoritativeExchangeRate(ctx context.Context, base, quote string) (domain.ExchangeRate, error) {
+	if c == nil {
+		return domain.ExchangeRate{}, ErrAuthorityOrigin
+	}
+	c.configMu.RLock()
+	defer c.configMu.RUnlock()
+	if !c.authorityOriginLocked() {
+		return domain.ExchangeRate{}, ErrAuthorityOrigin
+	}
+	return c.ExchangeRate(ctx, base, quote)
+}
+
 // adaptExchangeRate converts official ExchangeRateResponse to domain.ExchangeRate.
 //
 // Mapping rationale (cross-referenced with WTS exchange-rate feed):

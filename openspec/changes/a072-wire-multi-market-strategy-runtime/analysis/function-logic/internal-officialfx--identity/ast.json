@@ -1,15 +1,15 @@
 {
   "file": "internal/officialfx/evidence.go",
-  "source_sha256": "78f4bb4defb8b504ba8d75e6fd0a165ba57c9a42c4314d99040d56b5b7ab3cf5",
+  "source_sha256": "a93bb052294ee8dd0db70d33f73c5775770324c159b617235601477e9baa310d",
   "package": "officialfx",
   "function": "Identity",
   "signature": "Identity(params=1, results=2)",
   "start": {
-    "line": 142,
+    "line": 144,
     "column": 1
   },
   "end": {
-    "line": 157,
+    "line": 159,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 143,
+        "line": 145,
         "column": 2
       }
     }
@@ -26,14 +26,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 144,
+        "line": 146,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 156,
+        "line": 158,
         "column": 2
       }
     }
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 143,
+        "line": 145,
         "column": 6
       },
       "text": "snapshot.valid"
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 144,
+        "line": 146,
         "column": 22
       },
       "text": "fmt.Errorf"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 150,
+        "line": 152,
         "column": 17
       },
       "text": "snapshot.observedAt.Format"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 150,
+        "line": 152,
         "column": 78
       },
       "text": "snapshot.freshUntil.Format"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 154,
+        "line": 156,
         "column": 20
       },
       "text": "digestFor"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 155,
+        "line": 157,
         "column": 18
       },
       "text": "sealFor"
@@ -92,21 +92,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 146,
+        "line": 148,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 154,
+        "line": 156,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 155,
+        "line": 157,
         "column": 2
       }
     }

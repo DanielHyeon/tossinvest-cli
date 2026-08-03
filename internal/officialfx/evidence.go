@@ -124,14 +124,16 @@ type Evidence struct {
 // ReadOfficial is the only cross-currency mint. Configured endpoint or HTTP
 // clients may perform ordinary reads but cannot mint official authority.
 func ReadOfficial(ctx context.Context, client *official.Client, quoteCurrency, accountCurrency string, policy HaircutPolicy) (Evidence, error) {
-	origin, originOK := client.AuthorityOrigin()
-	if ctx == nil || client == nil || !originOK || !origin.Valid() || !canonicalCurrency(quoteCurrency) ||
+	if ctx == nil || client == nil || !canonicalCurrency(quoteCurrency) ||
 		!canonicalCurrency(accountCurrency) || quoteCurrency == accountCurrency || policy.seal == ([32]byte{}) ||
 		policy.seal != haircutPolicySeal(policy) {
 		return Evidence{}, fmt.Errorf("%w: request authority", ErrInvalidEvidence)
 	}
-	rate, err := client.ExchangeRate(ctx, quoteCurrency, accountCurrency)
+	rate, err := client.AuthoritativeExchangeRate(ctx, quoteCurrency, accountCurrency)
 	if err != nil {
+		if errors.Is(err, official.ErrAuthorityOrigin) {
+			return Evidence{}, fmt.Errorf("%w: official origin", ErrInvalidEvidence)
+		}
 		return Evidence{}, fmt.Errorf("officialfx: reading official exchange rate: %w", err)
 	}
 	return sealOfficial(rate, quoteCurrency, accountCurrency, policy)

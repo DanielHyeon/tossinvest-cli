@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| none | returns an option closure | closure replaces transport and marks override | no direct error | `TestAuthorityOriginRejectsConfiguredTransport` |
+| B1 | client configuration is already sealed | none | option replay is a no-op | replay/race tests |
 
 ## Calls and live bindings
 
@@ -24,7 +24,7 @@
 
 ## State mutations and fallbacks
 
-- Mutates `Client.hc`; hardening adds provenance state and does not alter request behavior.
+- Before sealing, mutates `Client.hc` and clears authority under `configMu`; after sealing it cannot replace the read transport.
 
 ## Safety conclusion
 

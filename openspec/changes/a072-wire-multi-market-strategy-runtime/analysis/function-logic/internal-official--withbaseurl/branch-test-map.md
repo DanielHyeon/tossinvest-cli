@@ -2,4 +2,4 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | configured base remains readable but cannot attest production origin | `official.TestAuthorityOriginRejectsConfiguredTransport` | yes (configured client could mint authority) | yes |
+| B1 | post-construction base option replay is locked and ignored | `TestClientConfigurationCannotBeMutatedByRetainedOptionPointer` | yes (base changed to attacker origin) | yes |
