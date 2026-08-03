@@ -1,0 +1,101 @@
+{
+  "file": "internal/continuationlane/allocation_risk_test.go",
+  "source_sha256": "8dfeebe670ecd90c6b526f61a2e32975817b51910faa0de6d19a3ac762fe5731",
+  "package": "continuationlane",
+  "function": "validUSEvaluation",
+  "signature": "validUSEvaluation(params=4, results=1)",
+  "start": {
+    "line": 551,
+    "column": 1
+  },
+  "end": {
+    "line": 560,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 555,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 559,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 13
+      },
+      "text": "validContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 16
+      },
+      "text": "mintExecutionTermsPreimage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 556,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 558,
+        "column": 63
+      },
+      "text": "mintSavedStopProvenance"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 553,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 554,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 558,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

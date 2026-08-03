@@ -72,10 +72,25 @@ func TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators(t *testing.
 			if result.Code != RefusalNone || result.Quantity == 0 || !result.Lineage.Complete || !result.Lineage.Valid() {
 				t.Fatalf("production flow refused: %+v", result)
 			}
-			if !result.ExecutionTerms.Valid() || result.ExecutionTerms.EntryPriceMinor != test.entry ||
-				result.ExecutionTerms.EffectiveStopMinor != test.stop || result.ExecutionTerms.TargetPriceMinor != test.target ||
-				result.ExecutionTerms.Quantity != result.Quantity || result.ExecutionTerms.LineageIdentity != result.Lineage.Identity {
+			if !result.ExecutionTerms.Valid() || result.ExecutionTerms.Entry().PriceMinor() != test.entry ||
+				result.ExecutionTerms.EffectiveStop().PriceMinor() != test.stop || result.ExecutionTerms.Target().PriceMinor() != test.target ||
+				result.ExecutionTerms.Quantity() != result.Quantity || result.ExecutionTerms.LineageIdentity() != result.Lineage.Identity {
 				t.Fatalf("production execution terms mismatch: %+v", result.ExecutionTerms)
+			}
+			currency, scale := map[strategyrouter.Market]string{strategyrouter.MarketKR: "KRW", strategyrouter.MarketUS: "USD"}[test.market], map[strategyrouter.Market]int{strategyrouter.MarketKR: 0, strategyrouter.MarketUS: 2}[test.market]
+			for _, provenance := range []PriceProvenance{result.ExecutionTerms.Entry(), result.ExecutionTerms.EffectiveStop(), result.ExecutionTerms.Target()} {
+				if provenance.Source() == "" || provenance.Version() == "" || provenance.Digest() == "" || provenance.AsOf() == "" || provenance.Currency() != currency || provenance.MinorScale() != scale || provenance.UnitVersion() != "minor-v1" {
+					t.Fatalf("incomplete price provenance: %+v", provenance)
+				}
+			}
+			if result.ExecutionTerms.Policy().Identity() == "" {
+				t.Fatal("missing execution policy identity")
+			}
+			if test.horizon == strategyrouter.HorizonWeekly {
+				policy := result.ExecutionTerms.Policy()
+				if policy.StagedTargetMinor() != "1300" || policy.FairValueMinor() != test.target || policy.EntryCostsMinor() != "1" || policy.ExitCostsMinor() != "1" || policy.MinimumRRPPM() != 1 || policy.DecisionDigest() == "" || policy.CalendarDigest() == "" || policy.CapSnapshotID() == "" || result.Lineage.ExecutionPolicyDigest != policy.Identity() {
+					t.Fatalf("weekly full RR preimage lost: %+v", policy)
+				}
 			}
 			if result.Lineage.Market != test.market || result.Lineage.RouterRelease != strategyrouter.RouterRelease ||
 				result.Lineage.Horizon != test.horizon || result.Lineage.LaneID != test.laneID || result.Lineage.LaneVersion != test.laneVersion ||

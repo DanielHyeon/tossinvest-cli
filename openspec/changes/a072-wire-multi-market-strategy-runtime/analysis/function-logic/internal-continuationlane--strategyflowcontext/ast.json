@@ -1,15 +1,15 @@
 {
   "file": "internal/continuationlane/strategyflow_testseam.go",
-  "source_sha256": "356f8b27dfd4893535efc84788579650bb2c367c9d1cb0044a6ec885aacf8ccb",
+  "source_sha256": "d6126a7c27e5bee2d05b24d29b44e4124e4c165caf506fc165859ffca42bcbac",
   "package": "continuationlane",
   "function": "strategyflowContext",
   "signature": "strategyflowContext(params=5, results=2)",
   "start": {
-    "line": 44,
+    "line": 54,
     "column": 1
   },
   "end": {
-    "line": 69,
+    "line": 75,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 49,
+        "line": 59,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 55,
+        "line": 65,
         "column": 2
       }
     },
@@ -33,15 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 60,
-        "column": 2
-      }
-    },
-    {
-      "id": "B4",
-      "kind": "if",
-      "at": {
-        "line": 64,
+        "line": 70,
         "column": 2
       }
     }
@@ -50,35 +42,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 50,
+        "line": 60,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 56,
+        "line": 66,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 61,
+        "line": 71,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 65,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 67,
+        "line": 73,
         "column": 2
       }
     }
@@ -87,7 +72,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 45,
+        "line": 55,
         "column": 15
       },
       "text": "BuildCampaignPlan"
@@ -95,7 +80,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 46,
+        "line": 56,
         "column": 29
       },
       "text": "string"
@@ -103,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 53,
+        "line": 63,
         "column": 14
       },
       "text": "newRiskCap"
@@ -111,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 58,
+        "line": 68,
         "column": 15
       },
       "text": "newStopCandidate"
@@ -119,15 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 63,
-        "column": 16
-      },
-      "text": "NewExecutionTermsPreimage"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 68,
+        "line": 74,
         "column": 9
       },
       "text": "NewRiskState"
@@ -137,28 +114,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 45,
+        "line": 55,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 52,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 53,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 58,
+        "line": 62,
         "column": 2
       }
     },
@@ -166,6 +129,13 @@
       "kind": ":=",
       "at": {
         "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 68,
         "column": 2
       }
     }

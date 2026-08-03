@@ -214,14 +214,29 @@ func ptrFX(value FrozenFX) *FrozenFX { return &value }
 
 func validContext(plan CampaignPlan, ordinal int) EvaluationContext {
 	evaluated := time.Date(2026, 8, 4, 0, 0, 3, 0, time.UTC)
-	terms, err := NewExecutionTermsPreimage(plan, "110", "130")
+	envelope := testEnvelopeForPlan(plan, evaluated)
+	terms, err := mintExecutionTermsPreimage(plan, envelope, "110", "130")
+	if err != nil {
+		panic(err)
+	}
+	stop, err := mintStopCandidate(plan, envelope, stopCandidateInput{PriceMinor: "95", Source: "risk", Policy: "stop-v1", Version: "v1", Digest: "stop-digest", ObservedAt: evaluated, FreshUntil: evaluated.Add(time.Minute)})
 	if err != nil {
 		panic(err)
 	}
 	return EvaluationContext{Enabled: true, CandidateID: "candidate", Plan: plan, Leg: LegProgress{Ordinal: ordinal},
 		Cap:  mustRiskCapNoTest(plan, ordinal, evaluated),
-		Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: StopCandidate{PriceMinor: "95", Valid: true, Source: "risk", Policy: "stop-v1", Digest: "stop-digest", ObservedAt: evaluated},
+		Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: stop,
 		ExecutionTerms: terms}
+}
+
+func testEnvelopeForPlan(plan CampaignPlan, evaluated time.Time) CommonEnvelope {
+	schema, record, digest, config := "kr-absorption-v1", "kr-record-1", "kr-source-digest", "kr-config-digest"
+	if plan.Market() == MarketUS {
+		schema, record, digest, config = "us-dislocation-v1", "us-record-1", "us-source-digest", "us-config-digest"
+	}
+	return CommonEnvelope{SchemaVersion: schema, Market: plan.Market(), AccountRef: plan.request.AccountRef, Symbol: plan.request.Symbol,
+		PositionGeneration: plan.PositionGeneration(), SourceRecordID: record, SourceDigest: digest, EffectiveAt: evaluated.Add(-3 * time.Second),
+		ObservedAt: evaluated.Add(-2 * time.Second), IngestedAt: evaluated.Add(-time.Second), EvaluatedAt: evaluated, FreshUntil: evaluated, ConfigDigest: config}
 }
 
 func mustRiskCapNoTest(plan CampaignPlan, ordinal int, evaluated time.Time) RiskCap {

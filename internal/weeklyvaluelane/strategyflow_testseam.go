@@ -74,6 +74,7 @@ func strategyflowEvaluation(candidateID string, evidence DisclosureEvidence, con
 		ReservationID: "reservation-1", Leg: LegProgress{Ordinal: 1}, Cap: cap, Risk: NewRiskState(plan), StopCandidate: stop,
 		EntryPriceMinor: "100", StagedTargetMinor: "1300", EntryCostsMinor: "1", EstimatedExitCostsLeviesMinor: "1", MinimumRRPPM: 1}
 	request.authorization = mintDormantEvaluationAuthorization(plan, evidence)
+	request.executionTerms = mintExecutionTermsPreimage(plan, evidence, request.EntryPriceMinor, request.StagedTargetMinor, request.EntryCostsMinor, request.EstimatedExitCostsLeviesMinor, request.MinimumRRPPM)
 	return request, nil
 }
 

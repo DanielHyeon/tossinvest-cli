@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyflow/production_integration_test.go",
-  "source_sha256": "88da446feeb0b665dcfe85458875e95a04108150dbd832f64f5ed41ec237b1e1",
+  "source_sha256": "74dbe9fdff5f234445c9d8b96918bb05a2ecf5f47c5e7e895bc19d4a0eccd288",
   "package": "strategyflow",
   "function": "TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators",
   "signature": "TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 97,
+    "line": 112,
     "column": 2
   },
   "branches": [
@@ -63,9 +63,9 @@
     },
     {
       "id": "B7",
-      "kind": "if",
+      "kind": "range",
       "at": {
-        "line": 80,
+        "line": 81,
         "column": 4
       }
     },
@@ -73,15 +73,55 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 88,
-        "column": 4
+        "line": 82,
+        "column": 5
       }
     },
     {
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 92,
+        "line": 86,
+        "column": 4
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 89,
+        "column": 4
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 5
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 95,
+        "column": 4
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 4
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 107,
         "column": 4
       }
     }
@@ -350,6 +390,70 @@
     {
       "kind": "call",
       "at": {
+        "line": 75,
+        "column": 41
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 41
+      },
+      "text": "result.ExecutionTerms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 5
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 5
+      },
+      "text": "result.ExecutionTerms.EffectiveStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 72
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 72
+      },
+      "text": "result.ExecutionTerms.Target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 5
+      },
+      "text": "result.ExecutionTerms.Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 60
+      },
+      "text": "result.ExecutionTerms.LineageIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
         "line": 78,
         "column": 5
       },
@@ -358,7 +462,207 @@
     {
       "kind": "call",
       "at": {
-        "line": 84,
+        "line": 81,
+        "column": 49
+      },
+      "text": "result.ExecutionTerms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 80
+      },
+      "text": "result.ExecutionTerms.EffectiveStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 119
+      },
+      "text": "result.ExecutionTerms.Target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 8
+      },
+      "text": "provenance.Source"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 37
+      },
+      "text": "provenance.Version"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 67
+      },
+      "text": "provenance.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 96
+      },
+      "text": "provenance.AsOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 123
+      },
+      "text": "provenance.Currency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 160
+      },
+      "text": "provenance.MinorScale"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 196
+      },
+      "text": "provenance.UnitVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 6
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 7
+      },
+      "text": "Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 7
+      },
+      "text": "result.ExecutionTerms.Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 15
+      },
+      "text": "result.ExecutionTerms.Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 8
+      },
+      "text": "policy.StagedTargetMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 48
+      },
+      "text": "policy.FairValueMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 90
+      },
+      "text": "policy.EntryCostsMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 125
+      },
+      "text": "policy.ExitCostsMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 159
+      },
+      "text": "policy.MinimumRRPPM"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 189
+      },
+      "text": "policy.DecisionDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 222
+      },
+      "text": "policy.CalendarDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 255
+      },
+      "text": "policy.CapSnapshotID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 327
+      },
+      "text": "policy.Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 6
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
         "column": 47
       },
       "text": "approved.EvidenceDigest"
@@ -366,7 +670,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 86,
+        "line": 101,
         "column": 5
       },
       "text": "t.Fatalf"
@@ -374,7 +678,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 89,
+        "line": 104,
         "column": 5
       },
       "text": "t.Fatalf"
@@ -382,7 +686,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 91,
+        "line": 106,
         "column": 18
       },
       "text": "descriptorByID"
@@ -390,7 +694,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 93,
+        "line": 108,
         "column": 5
       },
       "text": "t.Fatalf"
@@ -491,7 +795,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 91,
+        "line": 80,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
         "column": 4
       }
     }

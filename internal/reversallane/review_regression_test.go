@@ -77,12 +77,12 @@ func TestFirstEntryEstablishesStopAndLaterScaleInCannotRetreat(t *testing.T) {
 	if got := EvaluateKR(request); got.Kind != OutcomeDecision {
 		t.Fatalf("first-entry stop establishment refused=%+v", got)
 	}
-	request.Context.StopCandidate.ObservedAt = evidence.EvaluatedAt.Add(time.Nanosecond)
+	request.Context.StopCandidate.observedAt = evidence.EvaluatedAt.Add(time.Nanosecond)
 	if got := EvaluateKR(request); got.Code != RefusalStopRetreat {
 		t.Fatalf("future stop evidence accepted=%+v", got)
 	}
-	request.Context.StopCandidate.ObservedAt = evidence.EvaluatedAt
-	request.Context.StopCandidate.Policy = ""
+	request.Context.StopCandidate.observedAt = evidence.EvaluatedAt
+	request.Context.StopCandidate.policy = ""
 	if got := EvaluateKR(request); got.Code != RefusalStopRetreat {
 		t.Fatalf("unversioned stop accepted=%+v", got)
 	}

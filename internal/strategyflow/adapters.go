@@ -32,8 +32,8 @@ func evaluateContinuationUS(input LaneInput) laneEvaluation {
 func fromContinuation(outcome continuationlane.Outcome) laneEvaluation {
 	lineage := outcome.Lineage
 	return laneEvaluation{accepted: outcome.Kind == continuationlane.OutcomeDecision && outcome.Code == continuationlane.RefusalNone,
-		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entryPriceMinor: outcome.EntryPriceMinor,
-		effectiveStopMinor: outcome.EffectiveStopMinor, targetPriceMinor: outcome.TargetPriceMinor, lineage: laneLineage{
+		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entry: continuationPrice(outcome.EntryProvenance), stop: continuationPrice(outcome.StopProvenance),
+		target: continuationPrice(outcome.TargetProvenance), policy: ExecutionPolicy{identity: outcome.ExecutionPolicyDigest}, lineage: laneLineage{
 			AccountRef: lineage.AccountRef, Market: strategyrouter.Market(lineage.Market), Symbol: lineage.Symbol,
 			PositionGeneration: uint64(lineage.PositionGeneration), LaneID: lineage.LaneID, LaneVersion: lineage.LaneVersion,
 			CandidateID: lineage.CandidateID, EvidenceDigest: lineage.EvidenceDigest, ConfigDigest: lineage.ConfigDigest,
@@ -55,8 +55,8 @@ func evaluateReversalUS(input LaneInput) laneEvaluation {
 func fromReversal(outcome reversallane.EvaluationResult, envelope reversallane.CommonEnvelope) laneEvaluation {
 	lineage := outcome.Lineage
 	return laneEvaluation{accepted: outcome.Kind == reversallane.OutcomeDecision && outcome.Code == "",
-		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entryPriceMinor: outcome.EntryPriceMinor,
-		effectiveStopMinor: outcome.EffectiveStopMinor, targetPriceMinor: outcome.TargetPriceMinor, lineage: laneLineage{
+		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entry: reversalPrice(outcome.EntryProvenance), stop: reversalPrice(outcome.StopProvenance),
+		target: reversalPrice(outcome.TargetProvenance), policy: ExecutionPolicy{identity: outcome.ExecutionPolicyDigest}, lineage: laneLineage{
 			AccountRef: envelope.AccountRef, Market: strategyrouter.Market(lineage.Market), Symbol: envelope.Symbol,
 			PositionGeneration: lineage.PositionGeneration, LaneID: lineage.LaneID, LaneVersion: lineage.LaneVersion,
 			CandidateID: lineage.CandidateID, EvidenceDigest: lineage.MetricEvidenceDigest, ConfigDigest: lineage.ConfigDigest,
@@ -76,14 +76,27 @@ func evaluateWeeklyUS(input LaneInput) laneEvaluation {
 func fromWeekly(outcome weeklyvaluelane.Outcome, request weeklyvaluelane.EvaluationRequest) laneEvaluation {
 	lineage := outcome.Lineage
 	return laneEvaluation{accepted: outcome.Kind == weeklyvaluelane.OutcomeDecision && outcome.Code == "",
-		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entryPriceMinor: outcome.EntryPriceMinor,
-		effectiveStopMinor: outcome.EffectiveStopMinor, targetPriceMinor: outcome.TargetPriceMinor, lineage: laneLineage{
+		nativeCode: string(outcome.Code), quantity: outcome.Quantity, entry: weeklyPrice(outcome.EntryProvenance), stop: weeklyPrice(outcome.StopProvenance),
+		target: weeklyPrice(outcome.TargetProvenance), policy: weeklyPolicy(outcome.ExecutionPolicy), lineage: laneLineage{
 			AccountRef: request.Plan.AccountRef(), Market: strategyrouter.Market(lineage.Market), Symbol: lineage.Symbol,
 			PositionGeneration: lineage.PositionGeneration, LaneID: lineage.LaneID, LaneVersion: lineage.LaneVersion,
 			CandidateID: lineage.CandidateID, EvidenceDigest: lineage.EvidenceDigest, ConfigDigest: lineage.ConfigDigest,
 			CampaignID: lineage.CampaignID, LegOrdinal: lineage.PlannedLegOrdinal, PlannedCeiling: lineage.PlannedLegCeiling,
 			RiskBudgetDigest: weeklyRiskBudgetDigest(lineage.PlanDigest, lineage.RiskBudgetMinor),
 		}}
+}
+
+func continuationPrice(p continuationlane.PriceProvenance) PriceProvenance {
+	return PriceProvenance{priceMinor: p.PriceMinor, source: p.Source, version: p.Version, digest: p.Digest, asOf: p.AsOf, currency: p.Currency, minorScale: p.MinorScale, unitVersion: p.UnitVersion}
+}
+func reversalPrice(p reversallane.PriceProvenance) PriceProvenance {
+	return PriceProvenance{priceMinor: p.PriceMinor, source: p.Source, version: p.Version, digest: p.Digest, asOf: p.AsOf, currency: p.Currency, minorScale: p.MinorScale, unitVersion: p.UnitVersion}
+}
+func weeklyPrice(p weeklyvaluelane.PriceProvenance) PriceProvenance {
+	return PriceProvenance{priceMinor: p.PriceMinor, source: p.Source, version: p.Version, digest: p.Digest, asOf: p.AsOf, currency: p.Currency, minorScale: p.MinorScale, unitVersion: p.UnitVersion}
+}
+func weeklyPolicy(p weeklyvaluelane.RRExecutionPolicy) ExecutionPolicy {
+	return ExecutionPolicy{stagedTargetMinor: p.StagedTargetMinor, fairValueMinor: p.FairValueMinor, entryCostsMinor: p.EntryCostsMinor, exitCostsMinor: p.ExitCostsMinor, minimumRRPPM: p.MinimumRRPPM, decisionDigest: p.DecisionDigest, calendarDigest: p.CalendarDigest, capSnapshotID: p.CapSnapshotID, identity: p.Identity}
 }
 
 func weeklyRiskBudgetDigest(planDigest, riskBudgetMinor string) string {

@@ -1,15 +1,15 @@
 {
   "file": "internal/continuationlane/allocation_risk_test.go",
-  "source_sha256": "69afab8d8d3499efa34904264119728fc4df8cdd67d8413d1818af93c094c4d9",
+  "source_sha256": "8dfeebe670ecd90c6b526f61a2e32975817b51910faa0de6d19a3ac762fe5731",
   "package": "continuationlane",
   "function": "validContext",
   "signature": "validContext(params=1, results=1)",
   "start": {
-    "line": 521,
+    "line": 522,
     "column": 1
   },
   "end": {
-    "line": 532,
+    "line": 529,
     "column": 2
   },
   "branches": [
@@ -17,15 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 523,
-        "column": 2
-      }
-    },
-    {
-      "id": "B2",
-      "kind": "if",
-      "at": {
-        "line": 527,
+        "line": 524,
         "column": 2
       }
     }
@@ -34,7 +26,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 530,
+        "line": 527,
         "column": 2
       }
     }
@@ -43,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 522,
+        "line": 523,
         "column": 15
       },
       "text": "newStopCandidate"
@@ -51,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 524,
+        "line": 525,
         "column": 3
       },
       "text": "panic"
@@ -59,23 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 526,
-        "column": 16
-      },
-      "text": "NewExecutionTermsPreimage"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 528,
-        "column": 3
-      },
-      "text": "panic"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 530,
+        "line": 527,
         "column": 115
       },
       "text": "validRiskCap"
@@ -83,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 530,
+        "line": 527,
         "column": 141
       },
       "text": "NewRiskState"
@@ -93,14 +69,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 522,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 526,
+        "line": 523,
         "column": 2
       }
     }

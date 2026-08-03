@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyflow/adapters.go",
-  "source_sha256": "0d82d1a1c60884fc061596e9d00caaab78197c67a228053a3d0258faf11b8881",
+  "source_sha256": "9b69cc5801b0399183d700baabb9164d2db7d4e7c2ebe04dc841e945f4c806a3",
   "package": "strategyflow",
   "function": "fromContinuation",
   "signature": "fromContinuation(params=1, results=1)",
@@ -30,6 +30,30 @@
         "column": 15
       },
       "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 72
+      },
+      "text": "continuationPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 122
+      },
+      "text": "continuationPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 11
+      },
+      "text": "continuationPrice"
     },
     {
       "kind": "call",

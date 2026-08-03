@@ -55,6 +55,7 @@ type EvaluationRequest struct {
 	EntryPriceMinor, StagedTargetMinor             string
 	EntryCostsMinor, EstimatedExitCostsLeviesMinor string
 	MinimumRRPPM                                   uint64
+	executionTerms                                 ExecutionTermsPreimage
 	authorization                                  evaluationAuthorization
 }
 
@@ -90,6 +91,10 @@ type Outcome struct {
 	EntryPriceMinor       string
 	EffectiveStopMinor    string
 	TargetPriceMinor      string
+	EntryProvenance       PriceProvenance
+	StopProvenance        PriceProvenance
+	TargetProvenance      PriceProvenance
+	ExecutionPolicy       RRExecutionPolicy
 	Lineage               ResultLineage
 	CommonExitIndependent bool
 	ExitDecisionCreated   bool
@@ -148,6 +153,9 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 		outcome := refuse(evidenceResult.Code)
 		outcome.Lineage = lineage
 		return outcome
+	}
+	if !request.executionTerms.valid(request.Plan, request.Evidence, request) {
+		return refuse(RefusalExecutionTermsInvalid)
 	}
 	if request.Evidence.Symbol != request.Plan.symbol || request.Evidence.ModelConfigDigest != request.Plan.configDigest {
 		return refuse(RefusalConfigMismatch)
@@ -218,8 +226,17 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	if code := AdmitRisk(request.Plan, request.Risk, request.Cap); code != "" {
 		return refuse(code)
 	}
-	return Outcome{Kind: OutcomeDecision, Quantity: quantity, EntryPriceMinor: entryPrice.String(), EffectiveStopMinor: stopPrice.String(),
-		TargetPriceMinor: targetPrice.String(), Lineage: lineage, CommonExitIndependent: true}
+	policy := executionPolicy(request.executionTerms, lineage)
+	scale, scaleOK := weeklyScale(request.Plan.quoteCurrency)
+	if !scaleOK {
+		return refuse(RefusalExecutionTermsInvalid)
+	}
+	asOf := request.Evidence.AsOf.UTC().Format(time.RFC3339Nano)
+	entryProvenance := PriceProvenance{entryPrice.String(), string(request.Evidence.Source) + ":" + request.Evidence.FilingID, request.Evidence.SchemaVersion, request.Evidence.EvidenceDigest, asOf, request.Plan.quoteCurrency, "minor-v1", scale}
+	stopProvenance := PriceProvenance{stopPrice.String(), request.StopCandidate.Source, request.StopCandidate.Version, request.StopCandidate.Digest, request.StopCandidate.ObservedAt.UTC().Format(time.RFC3339Nano), request.Plan.quoteCurrency, "minor-v1", scale}
+	targetProvenance := PriceProvenance{targetPrice.String(), "weekly-rr-capped-target", "rr-policy-v1", policy.Identity, request.Evidence.EvaluatedAt.UTC().Format(time.RFC3339Nano), request.Plan.quoteCurrency, "minor-v1", scale}
+	return Outcome{Kind: OutcomeDecision, Quantity: quantity, EntryPriceMinor: entryPrice.String(), EffectiveStopMinor: stopPrice.String(), TargetPriceMinor: targetPrice.String(),
+		EntryProvenance: entryProvenance, StopProvenance: stopProvenance, TargetProvenance: targetProvenance, ExecutionPolicy: policy, Lineage: lineage, CommonExitIndependent: true}
 }
 
 func canonicalPositiveMinor(raw string) (*big.Int, bool) {

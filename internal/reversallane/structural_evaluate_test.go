@@ -135,11 +135,19 @@ func TestStopNeverRetreatsOnScaleIn(t *testing.T) {
 	evidence := mustKREvidence(t)
 	request := KREvaluationRequest{Context: validContext(plan, 2), Evidence: evidence, Config: validKRConfig(), Structure: validStructure(evidence.CommonEnvelope)}
 	request.Context.SavedEffectiveStopMinor = "100"
-	request.Context.StopCandidate = StopCandidate{PriceMinor: "99", Valid: true, Source: "structure", Policy: "stop-v1", Digest: "stop-digest", ObservedAt: evidence.EvaluatedAt}
+	stop, err := mintStopCandidate(plan, evidence.CommonEnvelope, stopCandidateInput{PriceMinor: "99", Source: "structure", Policy: "stop-v1", Version: "v1", Digest: "stop-digest", ObservedAt: evidence.EvaluatedAt, FreshUntil: evidence.EvaluatedAt.Add(time.Minute)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Context.StopCandidate = stop
 	if got := EvaluateKR(request); got.Kind != OutcomeRefusal || got.Code != RefusalStopRetreat {
 		t.Fatalf("retreating stop accepted=%+v", got)
 	}
-	request.Context.StopCandidate.PriceMinor = "100"
+	stop, err = mintStopCandidate(plan, evidence.CommonEnvelope, stopCandidateInput{PriceMinor: "100", Source: "structure", Policy: "stop-v1", Version: "v1", Digest: "stop-digest", ObservedAt: evidence.EvaluatedAt, FreshUntil: evidence.EvaluatedAt.Add(time.Minute)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Context.StopCandidate = stop
 	if got := EvaluateKR(request); got.Kind != OutcomeDecision {
 		t.Fatalf("equal stop boundary refused=%+v", got)
 	}

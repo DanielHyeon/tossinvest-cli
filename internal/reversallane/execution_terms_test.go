@@ -1,6 +1,9 @@
 package reversallane
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestKRAndUSAcceptedOutcomesPreserveExplicitExecutionTerms(t *testing.T) {
 	krPlan := mustPlan(t, MarketKR, KRReversalLaneID, 14, "1000", "KRW", "KRW", nil)
@@ -29,7 +32,7 @@ func TestReversalExecutionTermsMissingOrMutatedFailClosed(t *testing.T) {
 	}
 
 	request.Context = validContext(plan, 1)
-	request.Context.ExecutionTerms.EntryPriceMinor = "111"
+	request.Context.ExecutionTerms.entry.PriceMinor = "111"
 	if got := EvaluateKR(request); got.Code != RefusalExecutionTermsInvalid || got.Quantity != 0 {
 		t.Fatalf("mutated terms accepted: %+v", got)
 	}
@@ -38,8 +41,24 @@ func TestReversalExecutionTermsMissingOrMutatedFailClosed(t *testing.T) {
 func TestReversalExecutionTermsConstructorRejectsEstimatedOrNonCanonicalValues(t *testing.T) {
 	plan := mustPlan(t, MarketKR, KRReversalLaneID, 14, "1000", "KRW", "KRW", nil)
 	for _, prices := range [][2]string{{"", "130"}, {"110", ""}, {"0110", "130"}, {"110", "110"}, {"130", "120"}} {
-		if value, err := NewExecutionTermsPreimage(plan, prices[0], prices[1]); err == nil || value.valid(plan) {
+		envelope := mustKREvidence(t).CommonEnvelope
+		if value, err := mintExecutionTermsPreimage(plan, envelope, prices[0], prices[1]); err == nil || value.valid(plan, envelope) {
 			t.Fatalf("invalid explicit prices accepted: %q/%q", prices[0], prices[1])
 		}
+	}
+}
+
+func TestReversalStopRequiresFreshSealedAuthority(t *testing.T) {
+	plan := mustPlan(t, MarketKR, KRReversalLaneID, 14, "1000", "KRW", "KRW", nil)
+	evidence := mustKREvidence(t)
+	request := KREvaluationRequest{Context: validContext(plan, 1), Evidence: evidence, Config: validKRConfig()}
+	request.Context.StopCandidate.freshUntil = evidence.EvaluatedAt.Add(-time.Nanosecond)
+	if got := EvaluateKR(request); got.Code != RefusalStopRetreat || got.Quantity != 0 {
+		t.Fatalf("stale stop accepted: %+v", got)
+	}
+	request.Context = validContext(plan, 1)
+	request.Context.StopCandidate.seal = [32]byte{}
+	if got := EvaluateKR(request); got.Code != RefusalStopRetreat || got.Quantity != 0 {
+		t.Fatalf("caller-forged stop accepted: %+v", got)
 	}
 }

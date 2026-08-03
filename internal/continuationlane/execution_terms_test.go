@@ -29,7 +29,7 @@ func TestContinuationExecutionTermsMissingOrMutatedFailClosed(t *testing.T) {
 	}
 
 	request = validKREvaluation(t, plan, evidence, config)
-	request.Context.ExecutionTerms.TargetPriceMinor = "131"
+	request.Context.ExecutionTerms.target.PriceMinor = "131"
 	if got := EvaluateKR(request); got.Code != RefusalExecutionTermsInvalid || got.Quantity != 0 {
 		t.Fatalf("mutated terms accepted: %+v", got)
 	}
@@ -38,7 +38,8 @@ func TestContinuationExecutionTermsMissingOrMutatedFailClosed(t *testing.T) {
 func TestContinuationExecutionTermsConstructorRejectsEstimatedOrNonCanonicalValues(t *testing.T) {
 	plan := mustPlan(t, MarketKR, KRContinuationLaneID, "KRW", "KRW", nil, 14, "1000")
 	for _, prices := range [][2]string{{"", "130"}, {"110", ""}, {"0110", "130"}, {"110", "110"}, {"130", "120"}} {
-		if value, err := NewExecutionTermsPreimage(plan, prices[0], prices[1]); err == nil || value.valid(plan) {
+		evidence, _ := validKRFixture()
+		if value, err := mintExecutionTermsPreimage(plan, evidence.Envelope, prices[0], prices[1]); err == nil || value.valid(plan, evidence.Envelope) {
 			t.Fatalf("invalid explicit prices accepted: %q/%q", prices[0], prices[1])
 		}
 	}

@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyflow/flow.go",
-  "source_sha256": "be36879524559b9a265defb15d1bb978298bb070ad20035a0f7c01ff2ef530d3",
+  "source_sha256": "5608c16b2f0d72ff5b647f532c03121f86a1b524f60f2c97ef5644919d89c2bb",
   "package": "strategyflow",
   "function": "evaluateWith",
   "signature": "evaluateWith(params=3, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 109,
+    "line": 110,
     "column": 2
   },
   "branches": [
@@ -97,7 +97,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 90,
+        "line": 91,
         "column": 2
       }
     },
@@ -105,7 +105,7 @@
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 99,
+        "line": 100,
         "column": 2
       }
     }
@@ -184,21 +184,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 94,
+        "line": 95,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 103,
+        "line": 104,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 108,
+        "line": 109,
         "column": 2
       }
     }
@@ -367,7 +367,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 93,
+        "line": 94,
         "column": 20
       },
       "text": "sealLineage"
@@ -375,7 +375,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 97,
+        "line": 98,
         "column": 21
       },
       "text": "sealLineage"
@@ -383,7 +383,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 98,
+        "line": 99,
         "column": 15
       },
       "text": "sealExecutionTerms"
@@ -391,7 +391,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 102,
+        "line": 103,
         "column": 20
       },
       "text": "sealLineage"
@@ -688,8 +688,8 @@
     {
       "kind": "=",
       "at": {
-        "line": 92,
-        "column": 3
+        "line": 90,
+        "column": 2
       }
     },
     {
@@ -702,12 +702,12 @@
     {
       "kind": "=",
       "at": {
-        "line": 96,
-        "column": 2
+        "line": 94,
+        "column": 3
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
         "line": 97,
         "column": 2
@@ -721,10 +721,10 @@
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
-        "line": 100,
-        "column": 3
+        "line": 99,
+        "column": 2
       }
     },
     {
@@ -744,8 +744,8 @@
     {
       "kind": "=",
       "at": {
-        "line": 105,
-        "column": 2
+        "line": 103,
+        "column": 3
       }
     },
     {
@@ -759,6 +759,13 @@
       "kind": "=",
       "at": {
         "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 108,
         "column": 2
       }
     }

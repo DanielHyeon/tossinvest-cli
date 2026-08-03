@@ -85,6 +85,7 @@ type Lineage struct {
 	LegOrdinal              int
 	PlannedCeiling          uint64
 	RiskBudgetDigest        string
+	ExecutionPolicyDigest   string
 	Complete                bool
 	Identity                string
 }
@@ -101,50 +102,94 @@ type Result struct {
 	Mutations               uint64
 }
 
-// ExecutionTerms is a sealed accepted value. It binds the exact validated
-// prices and quantity to one accepted campaign leg and lineage identity.
-type ExecutionTerms struct {
-	AccountRef         string
-	Market             strategyrouter.Market
-	Symbol             string
-	CampaignID         string
-	LegOrdinal         int
-	Quantity           uint64
-	EntryPriceMinor    string
-	EffectiveStopMinor string
-	TargetPriceMinor   string
-	LineageIdentity    string
-	Identity           string
+type PriceProvenance struct {
+	priceMinor, source, version, digest, asOf, currency, unitVersion string
+	minorScale                                                       int
 }
 
+func (p PriceProvenance) PriceMinor() string  { return p.priceMinor }
+func (p PriceProvenance) Source() string      { return p.source }
+func (p PriceProvenance) Version() string     { return p.version }
+func (p PriceProvenance) Digest() string      { return p.digest }
+func (p PriceProvenance) AsOf() string        { return p.asOf }
+func (p PriceProvenance) Currency() string    { return p.currency }
+func (p PriceProvenance) MinorScale() int     { return p.minorScale }
+func (p PriceProvenance) UnitVersion() string { return p.unitVersion }
+
+type ExecutionPolicy struct {
+	stagedTargetMinor, fairValueMinor, entryCostsMinor, exitCostsMinor string
+	minimumRRPPM                                                       uint64
+	decisionDigest, calendarDigest, capSnapshotID, identity            string
+}
+
+func (p ExecutionPolicy) StagedTargetMinor() string { return p.stagedTargetMinor }
+func (p ExecutionPolicy) FairValueMinor() string    { return p.fairValueMinor }
+func (p ExecutionPolicy) EntryCostsMinor() string   { return p.entryCostsMinor }
+func (p ExecutionPolicy) ExitCostsMinor() string    { return p.exitCostsMinor }
+func (p ExecutionPolicy) MinimumRRPPM() uint64      { return p.minimumRRPPM }
+func (p ExecutionPolicy) DecisionDigest() string    { return p.decisionDigest }
+func (p ExecutionPolicy) CalendarDigest() string    { return p.calendarDigest }
+func (p ExecutionPolicy) CapSnapshotID() string     { return p.capSnapshotID }
+func (p ExecutionPolicy) Identity() string          { return p.identity }
+
+// ExecutionTerms is opaque outside this package. Callers can inspect copies
+// through getters but cannot mutate or recompute its unexported seal.
+type ExecutionTerms struct {
+	accountRef, symbol, campaignID, lineageIdentity string
+	market                                          strategyrouter.Market
+	legOrdinal                                      int
+	quantity                                        uint64
+	entry, stop, target                             PriceProvenance
+	policy                                          ExecutionPolicy
+	identity                                        string
+}
+
+func (terms ExecutionTerms) AccountRef() string             { return terms.accountRef }
+func (terms ExecutionTerms) Market() strategyrouter.Market  { return terms.market }
+func (terms ExecutionTerms) Symbol() string                 { return terms.symbol }
+func (terms ExecutionTerms) CampaignID() string             { return terms.campaignID }
+func (terms ExecutionTerms) LegOrdinal() int                { return terms.legOrdinal }
+func (terms ExecutionTerms) Quantity() uint64               { return terms.quantity }
+func (terms ExecutionTerms) Entry() PriceProvenance         { return terms.entry }
+func (terms ExecutionTerms) EffectiveStop() PriceProvenance { return terms.stop }
+func (terms ExecutionTerms) Target() PriceProvenance        { return terms.target }
+func (terms ExecutionTerms) Policy() ExecutionPolicy        { return terms.policy }
+func (terms ExecutionTerms) LineageIdentity() string        { return terms.lineageIdentity }
+func (terms ExecutionTerms) Identity() string               { return terms.identity }
+
 func (terms ExecutionTerms) Valid() bool {
-	if terms.Identity == "" || !validExecutionTermsFields(terms) {
+	if terms.identity == "" || !validExecutionTermsFields(terms) {
 		return false
 	}
-	want := terms.Identity
-	terms.Identity = ""
+	want := terms.identity
+	terms.identity = ""
 	return want == executionTermsIdentity(terms)
 }
 
-func sealExecutionTerms(lineage Lineage, quantity uint64, entryPriceMinor, effectiveStopMinor, targetPriceMinor string) (ExecutionTerms, bool) {
-	terms := ExecutionTerms{AccountRef: lineage.AccountRef, Market: lineage.Market, Symbol: lineage.Symbol, CampaignID: lineage.CampaignID,
-		LegOrdinal: lineage.LegOrdinal, Quantity: quantity, EntryPriceMinor: entryPriceMinor, EffectiveStopMinor: effectiveStopMinor,
-		TargetPriceMinor: targetPriceMinor, LineageIdentity: lineage.Identity}
+func sealExecutionTerms(lineage Lineage, evaluated laneEvaluation) (ExecutionTerms, bool) {
+	terms := ExecutionTerms{accountRef: lineage.AccountRef, market: lineage.Market, symbol: lineage.Symbol, campaignID: lineage.CampaignID,
+		legOrdinal: lineage.LegOrdinal, quantity: evaluated.quantity, entry: evaluated.entry, stop: evaluated.stop, target: evaluated.target,
+		policy: evaluated.policy, lineageIdentity: lineage.Identity}
 	if !lineage.Complete || !lineage.Valid() || !validExecutionTermsFields(terms) {
 		return ExecutionTerms{}, false
 	}
-	terms.Identity = executionTermsIdentity(terms)
+	terms.identity = executionTermsIdentity(terms)
 	return terms, true
 }
 
 func validExecutionTermsFields(terms ExecutionTerms) bool {
-	entry, entryOK := canonicalExecutionMinor(terms.EntryPriceMinor)
-	stop, stopOK := canonicalExecutionMinor(terms.EffectiveStopMinor)
-	target, targetOK := canonicalExecutionMinor(terms.TargetPriceMinor)
-	return terms.AccountRef != "" && (terms.Market == strategyrouter.MarketKR || terms.Market == strategyrouter.MarketUS) &&
-		terms.Symbol != "" && terms.Symbol == strings.ToUpper(strings.TrimSpace(terms.Symbol)) && terms.CampaignID != "" &&
-		terms.LegOrdinal > 0 && terms.Quantity > 0 && terms.LineageIdentity != "" && entryOK && stopOK && targetOK &&
+	entry, entryOK := canonicalExecutionMinor(terms.entry.priceMinor)
+	stop, stopOK := canonicalExecutionMinor(terms.stop.priceMinor)
+	target, targetOK := canonicalExecutionMinor(terms.target.priceMinor)
+	return terms.accountRef != "" && (terms.market == strategyrouter.MarketKR || terms.market == strategyrouter.MarketUS) &&
+		terms.symbol != "" && terms.symbol == strings.ToUpper(strings.TrimSpace(terms.symbol)) && terms.campaignID != "" &&
+		terms.legOrdinal > 0 && terms.quantity > 0 && terms.lineageIdentity != "" && terms.policy.identity != "" && validPriceProvenance(terms.entry) &&
+		validPriceProvenance(terms.stop) && validPriceProvenance(terms.target) && entryOK && stopOK && targetOK &&
 		stop.Cmp(entry) < 0 && entry.Cmp(target) < 0
+}
+
+func validPriceProvenance(p PriceProvenance) bool {
+	return p.source != "" && p.version != "" && p.digest != "" && p.asOf != "" && p.currency != "" && p.minorScale >= 0 && p.unitVersion != ""
 }
 
 func canonicalExecutionMinor(raw string) (*big.Int, bool) {
@@ -157,16 +202,24 @@ func canonicalExecutionMinor(raw string) (*big.Int, bool) {
 
 func executionTermsIdentity(terms ExecutionTerms) string {
 	h := sha256.New()
-	writeLineageString(h, terms.AccountRef)
-	writeLineageString(h, string(terms.Market))
-	writeLineageString(h, terms.Symbol)
-	writeLineageString(h, terms.CampaignID)
-	writeLineageUint64(h, uint64(terms.LegOrdinal))
-	writeLineageUint64(h, terms.Quantity)
-	writeLineageString(h, terms.EntryPriceMinor)
-	writeLineageString(h, terms.EffectiveStopMinor)
-	writeLineageString(h, terms.TargetPriceMinor)
-	writeLineageString(h, terms.LineageIdentity)
+	writeLineageString(h, terms.accountRef)
+	writeLineageString(h, string(terms.market))
+	writeLineageString(h, terms.symbol)
+	writeLineageString(h, terms.campaignID)
+	writeLineageUint64(h, uint64(terms.legOrdinal))
+	writeLineageUint64(h, terms.quantity)
+	for _, p := range []PriceProvenance{terms.entry, terms.stop, terms.target} {
+		writeLineageString(h, p.priceMinor)
+		writeLineageString(h, p.source)
+		writeLineageString(h, p.version)
+		writeLineageString(h, p.digest)
+		writeLineageString(h, p.asOf)
+		writeLineageString(h, p.currency)
+		writeLineageUint64(h, uint64(p.minorScale))
+		writeLineageString(h, p.unitVersion)
+	}
+	writeLineageString(h, terms.policy.identity)
+	writeLineageString(h, terms.lineageIdentity)
 	return "strategy-execution-terms:v1:sha256:" + hex.EncodeToString(h.Sum(nil))
 }
 
@@ -260,6 +313,7 @@ func lineageIdentity(lineage Lineage) string {
 	writeLineageUint64(h, uint64(lineage.LegOrdinal))
 	writeLineageUint64(h, lineage.PlannedCeiling)
 	writeLineageString(h, lineage.RiskBudgetDigest)
+	writeLineageString(h, lineage.ExecutionPolicyDigest)
 	if lineage.Complete {
 		writeLineageString(h, "1")
 	} else {

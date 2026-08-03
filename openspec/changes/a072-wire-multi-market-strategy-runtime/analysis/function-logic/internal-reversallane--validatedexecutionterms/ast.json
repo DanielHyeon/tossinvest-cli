@@ -1,0 +1,177 @@
+{
+  "file": "internal/reversallane/execution_terms.go",
+  "source_sha256": "934faf86d9d9dec1bb91cc2f59f518d8ada24301265dc3069208f3c8ae9f426d",
+  "package": "reversallane",
+  "function": "validatedExecutionTerms",
+  "signature": "validatedExecutionTerms(params=4, results=5)",
+  "start": {
+    "line": 67,
+    "column": 1
+  },
+  "end": {
+    "line": 80,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 6
+      },
+      "text": "value.valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 38
+      },
+      "text": "stop.valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 14
+      },
+      "text": "canonicalPositiveMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 19
+      },
+      "text": "canonicalPositiveMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 15
+      },
+      "text": "canonicalPositiveMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 12
+      },
+      "text": "stopValue.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 41
+      },
+      "text": "entry.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 14
+      },
+      "text": "reversalCurrencyScale"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 81
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 81
+      },
+      "text": "stop.observedAt.UTC"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

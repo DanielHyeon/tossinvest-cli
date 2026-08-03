@@ -15,6 +15,11 @@ func StrategyflowKRFixture(candidateID, evidenceDigest string) (KREvaluationRequ
 	if err != nil {
 		return KREvaluationRequest{}, err
 	}
+	terms, err := mintExecutionTermsPreimage(context.Plan, evidence.Envelope, "110", "130")
+	if err != nil {
+		return KREvaluationRequest{}, err
+	}
+	context.ExecutionTerms, context.SavedStopProvenance = terms, mintSavedStopProvenance(context.Plan, evidence.Envelope, context.SavedEffectiveStopMinor)
 	return KREvaluationRequest{Context: context, Evidence: evidence, Config: config}, nil
 }
 
@@ -32,6 +37,11 @@ func StrategyflowUSFixture(candidateID, evidenceDigest string) (USEvaluationRequ
 	if err != nil {
 		return USEvaluationRequest{}, err
 	}
+	terms, err := mintExecutionTermsPreimage(context.Plan, evidence.Envelope, "110", "130")
+	if err != nil {
+		return USEvaluationRequest{}, err
+	}
+	context.ExecutionTerms, context.SavedStopProvenance = terms, mintSavedStopProvenance(context.Plan, evidence.Envelope, context.SavedEffectiveStopMinor)
 	return USEvaluationRequest{Context: context, Evidence: evidence, Config: config}, nil
 }
 
@@ -60,10 +70,6 @@ func strategyflowContext(market Market, laneID, symbol, candidateID, configDiges
 	if err != nil {
 		return EvaluationContext{}, err
 	}
-	terms, err := NewExecutionTermsPreimage(plan, "110", "130")
-	if err != nil {
-		return EvaluationContext{}, err
-	}
 	return EvaluationContext{Enabled: true, CandidateID: candidateID, Plan: plan, Leg: LegProgress{Ordinal: 1}, Cap: cap,
-		Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: stop, ExecutionTerms: terms}, nil
+		Risk: NewRiskState(plan), SavedEffectiveStopMinor: "90", StopCandidate: stop}, nil
 }

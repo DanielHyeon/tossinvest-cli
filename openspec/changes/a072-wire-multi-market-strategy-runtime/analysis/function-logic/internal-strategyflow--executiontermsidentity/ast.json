@@ -1,0 +1,223 @@
+{
+  "file": "internal/strategyflow/types.go",
+  "source_sha256": "2d0fa4471aea708b80663feece1f92235e70b5d7fb99d287c5bbe99d3d0691e8",
+  "package": "strategyflow",
+  "function": "executionTermsIdentity",
+  "signature": "executionTermsIdentity(params=1, results=1)",
+  "start": {
+    "line": 203,
+    "column": 1
+  },
+  "end": {
+    "line": 224,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 7
+      },
+      "text": "sha256.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 2
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 2
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 24
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 2
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 2
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 2
+      },
+      "text": "writeLineageUint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 24
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 2
+      },
+      "text": "writeLineageUint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 3
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 3
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 3
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 3
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 3
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 3
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 3
+      },
+      "text": "writeLineageUint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 25
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 3
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 2
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 2
+      },
+      "text": "writeLineageString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 49
+      },
+      "text": "hex.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 68
+      },
+      "text": "h.Sum"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

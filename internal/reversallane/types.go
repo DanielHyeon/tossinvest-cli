@@ -163,12 +163,14 @@ type Invalidation struct {
 }
 
 type StopCandidate struct {
-	PriceMinor string
-	Valid      bool
-	Source     string
-	Policy     string
-	Digest     string
-	ObservedAt time.Time
+	priceMinor, source, policy, version, digest, planDigest, evidenceDigest string
+	observedAt, freshUntil                                                  time.Time
+	seal                                                                    [32]byte
+}
+
+type stopCandidateInput struct {
+	PriceMinor, Source, Policy, Version, Digest string
+	ObservedAt, FreshUntil                      time.Time
 }
 
 type LegProgress struct {
@@ -258,6 +260,10 @@ type EvaluationResult struct {
 	EntryPriceMinor       string
 	EffectiveStopMinor    string
 	TargetPriceMinor      string
+	EntryProvenance       PriceProvenance
+	StopProvenance        PriceProvenance
+	TargetProvenance      PriceProvenance
+	ExecutionPolicyDigest string
 	Lineage               DecisionLineage
 	CommonExitIndependent bool
 	ExitDecisionCreated   bool

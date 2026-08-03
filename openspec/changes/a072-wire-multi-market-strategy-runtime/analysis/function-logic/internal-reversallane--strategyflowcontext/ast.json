@@ -1,15 +1,15 @@
 {
   "file": "internal/reversallane/strategyflow_testseam.go",
-  "source_sha256": "a38bcb57db40bc70c44a385795f2d66ab5bbf2c06b0212efe31b5b9b018ea6f1",
+  "source_sha256": "2736df9a7073bca62431a7dcff26eb69a7be8ef3ec870aa0d09e902e7e99318b",
   "package": "reversallane",
   "function": "strategyflowContext",
   "signature": "strategyflowContext(params=6, results=2)",
   "start": {
-    "line": 54,
+    "line": 72,
     "column": 1
   },
   "end": {
-    "line": 76,
+    "line": 89,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 59,
+        "line": 77,
         "column": 2
       }
     },
@@ -25,15 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 66,
-        "column": 2
-      }
-    },
-    {
-      "id": "B3",
-      "kind": "if",
-      "at": {
-        "line": 70,
+        "line": 84,
         "column": 2
       }
     }
@@ -42,28 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 60,
+        "line": 78,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 67,
+        "line": 85,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 71,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 73,
+        "line": 87,
         "column": 2
       }
     }
@@ -72,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 56,
+        "line": 74,
         "column": 15
       },
       "text": "BuildCampaignPlan"
@@ -80,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 57,
+        "line": 75,
         "column": 29
       },
       "text": "string"
@@ -88,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 62,
+        "line": 80,
         "column": 14
       },
       "text": "PlannedLegQuantity"
@@ -96,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 63,
+        "line": 81,
         "column": 14
       },
       "text": "mintRiskCap"
@@ -104,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 65,
+        "line": 83,
         "column": 45
       },
       "text": "evaluatedAt.Add"
@@ -112,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 65,
+        "line": 83,
         "column": 88
       },
       "text": "evaluatedAt.Add"
@@ -120,15 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 69,
-        "column": 16
-      },
-      "text": "NewExecutionTermsPreimage"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 73,
+        "line": 87,
         "column": 126
       },
       "text": "NewRiskState"
@@ -138,35 +115,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 55,
+        "line": 73,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 56,
+        "line": 74,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 62,
+        "line": 80,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 63,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 69,
+        "line": 81,
         "column": 2
       }
     }

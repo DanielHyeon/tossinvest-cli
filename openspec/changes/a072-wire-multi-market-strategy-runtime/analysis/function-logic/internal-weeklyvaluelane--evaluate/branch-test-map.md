@@ -30,5 +30,7 @@
 | B26 | RR refused | RR tests |
 | B27 | computed exact terms invalid | exact terms tests |
 | B28 | risk admission refusal | risk tests |
+| B29 | unsupported currency scale | execution authority tests |
+| B30 | final exact provenance composition | six-lane integration test |
 
 Accepted KR/US tests assert the exact fair-value-capped target from `CalculateRR`.

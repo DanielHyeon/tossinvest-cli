@@ -134,6 +134,7 @@ type EvaluationContext struct {
 	SavedEffectiveStopMinor string
 	StopCandidate           StopCandidate
 	ExecutionTerms          ExecutionTermsPreimage
+	SavedStopProvenance     PriceProvenance
 	Invalidation            Invalidation
 }
 
@@ -174,6 +175,10 @@ type Outcome struct {
 	EntryPriceMinor       string
 	EffectiveStopMinor    string
 	TargetPriceMinor      string
+	EntryProvenance       PriceProvenance
+	StopProvenance        PriceProvenance
+	TargetProvenance      PriceProvenance
+	ExecutionPolicyDigest string
 	Lineage               ResultLineage
 	CommonExitIndependent bool
 	ExitDecisionCreated   bool
@@ -273,17 +278,19 @@ func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal Signa
 		outcome.Code = RefusalRiskBudgetExceeded
 		return outcome
 	}
-	entryPrice, effectiveStop, targetPrice, termsOK := validatedExecutionTerms(context.Plan, context.ExecutionTerms, effectiveStop)
-	if !termsOK {
+	stopAuthority, stopAuthorityOK := stopProvenance(context.Plan, envelope, context.StopCandidate, effectiveStop, context.SavedStopProvenance)
+	entryAuthority, stopAuthority, targetAuthority, policyDigest, termsOK := validatedExecutionTerms(context.Plan, envelope, context.ExecutionTerms, effectiveStop, stopAuthority)
+	if !stopAuthorityOK || !termsOK {
 		outcome.Code = RefusalExecutionTermsInvalid
 		return outcome
 	}
 	outcome.Kind = OutcomeDecision
 	outcome.Code = RefusalNone
 	outcome.Quantity = quantity
-	outcome.EntryPriceMinor = entryPrice
-	outcome.EffectiveStopMinor = effectiveStop
-	outcome.TargetPriceMinor = targetPrice
+	outcome.EntryPriceMinor = entryAuthority.PriceMinor
+	outcome.EffectiveStopMinor = stopAuthority.PriceMinor
+	outcome.TargetPriceMinor = targetAuthority.PriceMinor
+	outcome.EntryProvenance, outcome.StopProvenance, outcome.TargetProvenance, outcome.ExecutionPolicyDigest = entryAuthority, stopAuthority, targetAuthority, policyDigest
 	return outcome
 }
 

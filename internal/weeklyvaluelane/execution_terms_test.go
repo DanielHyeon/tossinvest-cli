@@ -30,3 +30,20 @@ func TestWeeklyMissingExplicitTargetFailsClosed(t *testing.T) {
 		t.Fatalf("missing target was estimated: %+v", got)
 	}
 }
+
+func TestWeeklyRRPolicyIdentityBindsFullPreimage(t *testing.T) {
+	evidence := mustKREvidence(t)
+	plan := mustPlan(t, MarketKR, KRWeeklyLaneID, "KRW", "KRW", nil, 14, "1000")
+	base := validEvaluation(t, plan, evidence, validKRConfig())
+	first := EvaluateKR(base)
+	changed := validEvaluation(t, plan, evidence, validKRConfig())
+	changed.EntryCostsMinor = "2"
+	changed.executionTerms = mintExecutionTermsPreimage(plan, evidence, changed.EntryPriceMinor, changed.StagedTargetMinor, changed.EntryCostsMinor, changed.EstimatedExitCostsLeviesMinor, changed.MinimumRRPPM)
+	second := EvaluateKR(changed)
+	if first.Kind != OutcomeDecision || second.Kind != OutcomeDecision || first.ExecutionPolicy.Identity == "" || first.ExecutionPolicy.Identity == second.ExecutionPolicy.Identity {
+		t.Fatalf("RR policy preimage did not change identity: first=%+v second=%+v", first.ExecutionPolicy, second.ExecutionPolicy)
+	}
+	if second.ExecutionPolicy.EntryCostsMinor != "2" || second.ExecutionPolicy.DecisionDigest == "" || second.ExecutionPolicy.CalendarDigest == "" || second.ExecutionPolicy.CapSnapshotID == "" {
+		t.Fatalf("full RR preimage missing: %+v", second.ExecutionPolicy)
+	}
+}

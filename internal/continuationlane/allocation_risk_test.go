@@ -68,6 +68,7 @@ func TestScaleInStopNeverRetreatsAndInvalidStopRefuses(t *testing.T) {
 	evidence, config := validKRFixture()
 	request := validKREvaluation(t, plan, evidence, config)
 	request.Context.SavedEffectiveStopMinor = "100"
+	request.Context.SavedStopProvenance = mintSavedStopProvenance(plan, evidence.Envelope, "100")
 	request.Context.StopCandidate = mustStopCandidate(t, "90", "2026-08-04T00:00:02Z", "2026-08-04T00:01:00Z")
 	got := EvaluateKR(request)
 	if got.Kind != OutcomeDecision || got.EffectiveStopMinor != "100" {
@@ -523,12 +524,8 @@ func validContext(plan CampaignPlan) EvaluationContext {
 	if err != nil {
 		panic(err)
 	}
-	terms, err := NewExecutionTermsPreimage(plan, "110", "130")
-	if err != nil {
-		panic(err)
-	}
 	return EvaluationContext{Enabled: true, CandidateID: "candidate", Plan: plan, Leg: LegProgress{Ordinal: 1}, Cap: validRiskCap(plan), Risk: NewRiskState(plan),
-		SavedEffectiveStopMinor: "90", StopCandidate: stop, ExecutionTerms: terms}
+		SavedEffectiveStopMinor: "90", StopCandidate: stop}
 }
 
 func mustStopCandidate(t *testing.T, price, observedAt, freshUntil string) StopCandidate {
@@ -542,12 +539,24 @@ func mustStopCandidate(t *testing.T, price, observedAt, freshUntil string) StopC
 
 func validKREvaluation(t *testing.T, plan CampaignPlan, evidence KREvidence, config KRFlowConfig) KREvaluationRequest {
 	t.Helper()
-	return KREvaluationRequest{Context: validContext(plan), Evidence: evidence, Config: config}
+	context := validContext(plan)
+	terms, err := mintExecutionTermsPreimage(plan, evidence.Envelope, "110", "130")
+	if err != nil {
+		t.Fatal(err)
+	}
+	context.ExecutionTerms, context.SavedStopProvenance = terms, mintSavedStopProvenance(plan, evidence.Envelope, context.SavedEffectiveStopMinor)
+	return KREvaluationRequest{Context: context, Evidence: evidence, Config: config}
 }
 
 func validUSEvaluation(t *testing.T, plan CampaignPlan, evidence USEvidence, config USParticipationConfig) USEvaluationRequest {
 	t.Helper()
-	return USEvaluationRequest{Context: validContext(plan), Evidence: evidence, Config: config}
+	context := validContext(plan)
+	terms, err := mintExecutionTermsPreimage(plan, evidence.Envelope, "110", "130")
+	if err != nil {
+		t.Fatal(err)
+	}
+	context.ExecutionTerms, context.SavedStopProvenance = terms, mintSavedStopProvenance(plan, evidence.Envelope, context.SavedEffectiveStopMinor)
+	return USEvaluationRequest{Context: context, Evidence: evidence, Config: config}
 }
 
 func validUSFX() FrozenFX {

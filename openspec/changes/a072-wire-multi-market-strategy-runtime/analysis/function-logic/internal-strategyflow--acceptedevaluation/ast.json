@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyflow/flow_test.go",
-  "source_sha256": "5b415fdb57ea45913ed0a971f1fe7fe8f75119d0d2cbe75cb01aa3f2b9ef133f",
+  "source_sha256": "8c59b3208e807bab9ea0341803832aa1f65f68755ee5de28db4435210cde78f7",
   "package": "strategyflow",
   "function": "acceptedEvaluation",
   "signature": "acceptedEvaluation(params=3, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 257,
+    "line": 260,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 250,
+        "line": 251,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 253,
         "column": 2
       }
     }
@@ -26,7 +33,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 252,
+        "line": 253,
+        "column": 60
+      },
+      "text": "price"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 89
+      },
+      "text": "price"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 118
+      },
+      "text": "price"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
         "column": 80
       },
       "text": "approved.CandidateLifeID"
@@ -34,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 253,
+        "line": 256,
         "column": 19
       },
       "text": "approved.EvidenceDigest"
@@ -42,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 254,
+        "line": 257,
         "column": 29
       },
       "text": "strings.ToLower"
@@ -50,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 254,
+        "line": 257,
         "column": 45
       },
       "text": "string"
@@ -58,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
+        "line": 258,
         "column": 31
       },
       "text": "strings.ToLower"
@@ -66,13 +97,21 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
+        "line": 258,
         "column": 47
       },
       "text": "string"
     }
   ],
-  "assignments": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    }
+  ],
   "go_statements": null,
   "defers": null
 }

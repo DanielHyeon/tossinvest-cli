@@ -83,5 +83,6 @@ func validEvaluation(t *testing.T, plan CampaignPlan, evidence DisclosureEvidenc
 		StopCandidate:   mintStopCandidate(stopCandidateInput{PriceMinor: "90", Version: "stop-v1", Source: "structure", Policy: "stop-policy-v1", Digest: "stop-digest", ObservedAt: evaluated, FreshUntil: evaluated.Add(time.Hour)}),
 		EntryPriceMinor: "100", StagedTargetMinor: "1300", EntryCostsMinor: "1", EstimatedExitCostsLeviesMinor: "1", MinimumRRPPM: 1}
 	request.authorization = mintDormantEvaluationAuthorization(plan, evidence)
+	request.executionTerms = mintExecutionTermsPreimage(plan, evidence, request.EntryPriceMinor, request.StagedTargetMinor, request.EntryCostsMinor, request.EstimatedExitCostsLeviesMinor, request.MinimumRRPPM)
 	return request
 }

@@ -1,6 +1,6 @@
 {
   "file": "internal/reversallane/allocation_risk_test.go",
-  "source_sha256": "ff35c1d26535417890ca1c8b74c20871902a7e47900a47599d0dc5fa7c444388",
+  "source_sha256": "2a0dd0ee9f6701c74e6b60a2a2161218048b688c64428982966c7d172083ee91",
   "package": "reversallane",
   "function": "validContext",
   "signature": "validContext(params=2, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 225,
+    "line": 230,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,15 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 218,
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 223,
         "column": 2
       }
     }
@@ -26,7 +34,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 221,
+        "line": 226,
         "column": 2
       }
     }
@@ -44,14 +52,22 @@
       "kind": "call",
       "at": {
         "line": 217,
-        "column": 16
+        "column": 14
       },
-      "text": "NewExecutionTermsPreimage"
+      "text": "testEnvelopeForPlan"
     },
     {
       "kind": "call",
       "at": {
-        "line": 219,
+        "line": 218,
+        "column": 16
+      },
+      "text": "mintExecutionTermsPreimage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
         "column": 3
       },
       "text": "panic"
@@ -60,6 +76,30 @@
       "kind": "call",
       "at": {
         "line": 222,
+        "column": 15
+      },
+      "text": "mintStopCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 194
+      },
+      "text": "evaluated.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 3
+      },
+      "text": "panic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
         "column": 9
       },
       "text": "mustRiskCapNoTest"
@@ -67,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 228,
         "column": 9
       },
       "text": "NewRiskState"
@@ -85,6 +125,20 @@
       "kind": ":=",
       "at": {
         "line": 217,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
         "column": 2
       }
     }

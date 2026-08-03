@@ -43,7 +43,7 @@ func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Du
 	if context.Risk.Latches[LatchCampaignRiskOverage] || context.Risk.Latches[LatchUnknownActualRisk] {
 		return refuse(RefusalRiskLatched)
 	}
-	if refusal := validateStop(context.SavedEffectiveStopMinor, context.StopCandidate, envelope.EvaluatedAt); refusal != "" {
+	if refusal := validateStop(context.Plan, envelope, context.SavedEffectiveStopMinor, context.StopCandidate); refusal != "" {
 		return refuse(refusal)
 	}
 	if context.Leg.Ordinal < 1 || context.Leg.Ordinal > 3 || context.Leg.Cancelled || context.Leg.Expired {
@@ -67,7 +67,7 @@ func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Du
 	if riskRefusal := AdmitRisk(context.Plan, context.Risk, context.Cap); riskRefusal != "" {
 		return refuse(riskRefusal)
 	}
-	entryPrice, effectiveStop, targetPrice, termsOK := validatedExecutionTerms(context.Plan, context.ExecutionTerms, context.StopCandidate.PriceMinor)
+	entryAuthority, stopAuthority, targetAuthority, policyDigest, termsOK := validatedExecutionTerms(context.Plan, envelope, context.ExecutionTerms, context.StopCandidate)
 	if !termsOK {
 		return refuse(RefusalExecutionTermsInvalid)
 	}
@@ -76,15 +76,16 @@ func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Du
 	if context.Leg.Ordinal == 1 {
 		action = "ENTRY"
 	}
-	return EvaluationResult{Kind: OutcomeDecision, Action: action, Quantity: quantity, EntryPriceMinor: entryPrice, EffectiveStopMinor: effectiveStop,
-		TargetPriceMinor: targetPrice, Lineage: lineage, CommonExitIndependent: true}
+	return EvaluationResult{Kind: OutcomeDecision, Action: action, Quantity: quantity, EntryPriceMinor: entryAuthority.PriceMinor, EffectiveStopMinor: stopAuthority.PriceMinor,
+		TargetPriceMinor: targetAuthority.PriceMinor, EntryProvenance: entryAuthority, StopProvenance: stopAuthority, TargetProvenance: targetAuthority,
+		ExecutionPolicyDigest: policyDigest, Lineage: lineage, CommonExitIndependent: true}
 }
 
-func validateStop(saved string, candidate StopCandidate, evaluatedAt time.Time) RefusalCode {
-	if !candidate.Valid || candidate.Source == "" || candidate.Policy == "" || candidate.Digest == "" || candidate.ObservedAt.IsZero() || candidate.ObservedAt.After(evaluatedAt) {
+func validateStop(plan CampaignPlan, envelope CommonEnvelope, saved string, candidate StopCandidate) RefusalCode {
+	if !candidate.valid(plan, envelope) {
 		return RefusalStopRetreat
 	}
-	candidateMinor, candidateOK := parseMinor(candidate.PriceMinor)
+	candidateMinor, candidateOK := parseMinor(candidate.priceMinor)
 	if !candidateOK {
 		return RefusalStopRetreat
 	}

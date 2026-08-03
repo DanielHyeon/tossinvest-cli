@@ -1,0 +1,138 @@
+{
+  "file": "internal/reversallane/evaluate.go",
+  "source_sha256": "37becdf61365356e4d3bd1f386d299dbc5bfc6ed6bf2c1e09cac1fea3cfb392f",
+  "package": "reversallane",
+  "function": "validateStop",
+  "signature": "validateStop(params=4, results=1)",
+  "start": {
+    "line": 84,
+    "column": 1
+  },
+  "end": {
+    "line": 100,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 97,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 6
+      },
+      "text": "candidate.valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 33
+      },
+      "text": "parseMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 25
+      },
+      "text": "parseMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 17
+      },
+      "text": "candidateMinor.Cmp"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

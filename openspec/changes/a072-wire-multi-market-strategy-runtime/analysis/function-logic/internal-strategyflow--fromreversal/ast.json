@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyflow/adapters.go",
-  "source_sha256": "0d82d1a1c60884fc061596e9d00caaab78197c67a228053a3d0258faf11b8881",
+  "source_sha256": "9b69cc5801b0399183d700baabb9164d2db7d4e7c2ebe04dc841e945f4c806a3",
   "package": "strategyflow",
   "function": "fromReversal",
   "signature": "fromReversal(params=2, results=1)",
@@ -30,6 +30,30 @@
         "column": 15
       },
       "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 72
+      },
+      "text": "reversalPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 118
+      },
+      "text": "reversalPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 11
+      },
+      "text": "reversalPrice"
     },
     {
       "kind": "call",

@@ -24,6 +24,15 @@ func StrategyflowKRFixture(candidateID, evidenceDigest string) (KREvaluationRequ
 	if err != nil {
 		return KREvaluationRequest{}, err
 	}
+	terms, err := mintExecutionTermsPreimage(context.Plan, evidence.CommonEnvelope, "110", "130")
+	if err != nil {
+		return KREvaluationRequest{}, err
+	}
+	stop, err := mintStopCandidate(context.Plan, evidence.CommonEnvelope, stopCandidateInput{PriceMinor: "95", Source: "risk", Policy: "stop-v1", Version: "v1", Digest: "stop-digest", ObservedAt: evidence.EvaluatedAt, FreshUntil: evidence.EvaluatedAt.Add(time.Minute)})
+	if err != nil {
+		return KREvaluationRequest{}, err
+	}
+	context.ExecutionTerms, context.StopCandidate = terms, stop
 	return KREvaluationRequest{Context: context, Evidence: evidence, Config: config}, nil
 }
 
@@ -48,6 +57,15 @@ func StrategyflowUSFixture(candidateID, evidenceDigest string) (USEvaluationRequ
 	if err != nil {
 		return USEvaluationRequest{}, err
 	}
+	terms, err := mintExecutionTermsPreimage(context.Plan, evidence.CommonEnvelope, "110", "130")
+	if err != nil {
+		return USEvaluationRequest{}, err
+	}
+	stop, err := mintStopCandidate(context.Plan, evidence.CommonEnvelope, stopCandidateInput{PriceMinor: "95", Source: "risk", Policy: "stop-v1", Version: "v1", Digest: "stop-digest", ObservedAt: evidence.EvaluatedAt, FreshUntil: evidence.EvaluatedAt.Add(time.Minute)})
+	if err != nil {
+		return USEvaluationRequest{}, err
+	}
+	context.ExecutionTerms, context.StopCandidate = terms, stop
 	return USEvaluationRequest{Context: context, Evidence: evidence, Config: config}, nil
 }
 
@@ -66,11 +84,6 @@ func strategyflowContext(market Market, laneID, symbol, candidateID, configDiges
 	if err != nil {
 		return EvaluationContext{}, err
 	}
-	terms, err := NewExecutionTermsPreimage(plan, "110", "130")
-	if err != nil {
-		return EvaluationContext{}, err
-	}
 	return EvaluationContext{Enabled: true, CandidateID: candidateID, Plan: plan, Leg: LegProgress{Ordinal: 1}, Cap: cap, Risk: NewRiskState(plan),
-		SavedEffectiveStopMinor: "90", StopCandidate: StopCandidate{PriceMinor: "95", Valid: true, Source: "risk", Policy: "stop-v1", Digest: "stop-digest", ObservedAt: evaluatedAt},
-		ExecutionTerms: terms}, nil
+		SavedEffectiveStopMinor: "90"}, nil
 }

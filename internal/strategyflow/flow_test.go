@@ -247,7 +247,10 @@ func routeDecision(descriptor Descriptor, key strategyrouter.OwnerKey, approved 
 }
 
 func acceptedEvaluation(descriptor Descriptor, key strategyrouter.OwnerKey, approved strategy.ApprovedSnapshot) laneEvaluation {
-	return laneEvaluation{accepted: true, quantity: 1, entryPriceMinor: "100", effectiveStopMinor: "95", targetPriceMinor: "120", lineage: laneLineage{
+	price := func(value, source string) PriceProvenance {
+		return PriceProvenance{priceMinor: value, source: source, version: "v1", digest: "digest-" + source, asOf: "2026-08-04T00:00:00Z", currency: map[strategyrouter.Market]string{strategyrouter.MarketKR: "KRW", strategyrouter.MarketUS: "USD"}[descriptor.Market], minorScale: map[strategyrouter.Market]int{strategyrouter.MarketKR: 0, strategyrouter.MarketUS: 2}[descriptor.Market], unitVersion: "minor-v1"}
+	}
+	return laneEvaluation{accepted: true, quantity: 1, entry: price("100", "entry"), stop: price("95", "stop"), target: price("120", "target"), policy: ExecutionPolicy{identity: "policy"}, lineage: laneLineage{
 		AccountRef: key.AccountRef, Market: descriptor.Market, Symbol: key.Symbol, PositionGeneration: key.PositionGeneration,
 		LaneID: descriptor.LaneID, LaneVersion: descriptor.LaneVersion, CandidateID: approved.CandidateLifeID(),
 		EvidenceDigest: approved.EvidenceDigest(), ConfigDigest: "config-" + descriptor.LaneID,

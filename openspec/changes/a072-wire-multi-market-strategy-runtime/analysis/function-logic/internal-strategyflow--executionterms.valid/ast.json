@@ -1,0 +1,78 @@
+{
+  "file": "internal/strategyflow/types.go",
+  "source_sha256": "2d0fa4471aea708b80663feece1f92235e70b5d7fb99d287c5bbe99d3d0691e8",
+  "package": "strategyflow",
+  "function": "Valid",
+  "receiver": "ExecutionTerms",
+  "signature": "ExecutionTerms.Valid(params=0, results=1)",
+  "start": {
+    "line": 160,
+    "column": 1
+  },
+  "end": {
+    "line": 167,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 162,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 30
+      },
+      "text": "validExecutionTermsFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 17
+      },
+      "text": "executionTermsIdentity"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

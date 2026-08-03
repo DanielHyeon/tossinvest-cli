@@ -14,9 +14,7 @@ func TestEvaluateSealsExactExecutionTerms(t *testing.T) {
 		t.Fatal(err)
 	}
 	evaluation := acceptedEvaluation(descriptor, key, approved)
-	evaluation.entryPriceMinor = "100"
-	evaluation.effectiveStopMinor = "95"
-	evaluation.targetPriceMinor = "120"
+	evaluation.entry.priceMinor, evaluation.stop.priceMinor, evaluation.target.priceMinor = "100", "95", "120"
 	decision := routeDecision(descriptor, key, approved)
 
 	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)},
@@ -28,9 +26,9 @@ func TestEvaluateSealsExactExecutionTerms(t *testing.T) {
 	if result.Code != RefusalNone || !result.ExecutionTerms.Valid() {
 		t.Fatalf("accepted terms were not sealed: %+v", result)
 	}
-	if result.ExecutionTerms.EntryPriceMinor != "100" || result.ExecutionTerms.EffectiveStopMinor != "95" ||
-		result.ExecutionTerms.TargetPriceMinor != "120" || result.ExecutionTerms.Quantity != result.Quantity ||
-		result.ExecutionTerms.LineageIdentity != result.Lineage.Identity {
+	if result.ExecutionTerms.Entry().PriceMinor() != "100" || result.ExecutionTerms.EffectiveStop().PriceMinor() != "95" ||
+		result.ExecutionTerms.Target().PriceMinor() != "120" || result.ExecutionTerms.Quantity() != result.Quantity ||
+		result.ExecutionTerms.LineageIdentity() != result.Lineage.Identity {
 		t.Fatalf("execution terms changed: %+v", result.ExecutionTerms)
 	}
 }
@@ -43,9 +41,7 @@ func TestEvaluateRejectsAcceptedLaneWithoutExactExecutionTerms(t *testing.T) {
 		t.Fatal(err)
 	}
 	evaluation := acceptedEvaluation(descriptor, key, approved)
-	evaluation.entryPriceMinor = "100"
-	evaluation.effectiveStopMinor = "95"
-	evaluation.targetPriceMinor = ""
+	evaluation.entry.priceMinor, evaluation.stop.priceMinor, evaluation.target.priceMinor = "100", "95", ""
 	decision := routeDecision(descriptor, key, approved)
 
 	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)},
@@ -61,7 +57,8 @@ func TestEvaluateRejectsAcceptedLaneWithoutExactExecutionTerms(t *testing.T) {
 
 func TestExecutionTermsDetectPostEvaluationMutation(t *testing.T) {
 	lineage := sealLineage(Lineage{AccountRef: "acct", Market: strategyrouter.MarketKR, Symbol: "005930", CampaignID: "campaign", LegOrdinal: 1, Complete: true})
-	terms, ok := sealExecutionTerms(lineage, 2, "100", "95", "120")
+	evaluation := laneEvaluation{quantity: 2, entry: PriceProvenance{priceMinor: "100", source: "entry", version: "v1", digest: "e", asOf: "2026", currency: "KRW", unitVersion: "minor-v1"}, stop: PriceProvenance{priceMinor: "95", source: "stop", version: "v1", digest: "s", asOf: "2026", currency: "KRW", unitVersion: "minor-v1"}, target: PriceProvenance{priceMinor: "120", source: "target", version: "v1", digest: "t", asOf: "2026", currency: "KRW", unitVersion: "minor-v1"}, policy: ExecutionPolicy{identity: "p"}}
+	terms, ok := sealExecutionTerms(lineage, evaluation)
 	if !ok || !terms.Valid() {
 		t.Fatalf("fixture terms invalid: %+v", terms)
 	}
@@ -70,17 +67,18 @@ func TestExecutionTermsDetectPostEvaluationMutation(t *testing.T) {
 		name string
 		edit func(*ExecutionTerms)
 	}{
-		{"account", func(v *ExecutionTerms) { v.AccountRef = "other" }},
-		{"market", func(v *ExecutionTerms) { v.Market = strategyrouter.MarketUS }},
-		{"symbol", func(v *ExecutionTerms) { v.Symbol = "AAPL" }},
-		{"campaign", func(v *ExecutionTerms) { v.CampaignID = "other" }},
-		{"leg", func(v *ExecutionTerms) { v.LegOrdinal++ }},
-		{"quantity", func(v *ExecutionTerms) { v.Quantity++ }},
-		{"entry", func(v *ExecutionTerms) { v.EntryPriceMinor = "101" }},
-		{"stop", func(v *ExecutionTerms) { v.EffectiveStopMinor = "96" }},
-		{"target", func(v *ExecutionTerms) { v.TargetPriceMinor = "121" }},
-		{"lineage", func(v *ExecutionTerms) { v.LineageIdentity = "forged" }},
-		{"identity", func(v *ExecutionTerms) { v.Identity = "forged" }},
+		{"account", func(v *ExecutionTerms) { v.accountRef = "other" }},
+		{"market", func(v *ExecutionTerms) { v.market = strategyrouter.MarketUS }},
+		{"symbol", func(v *ExecutionTerms) { v.symbol = "AAPL" }},
+		{"campaign", func(v *ExecutionTerms) { v.campaignID = "other" }},
+		{"leg", func(v *ExecutionTerms) { v.legOrdinal++ }},
+		{"quantity", func(v *ExecutionTerms) { v.quantity++ }},
+		{"entry", func(v *ExecutionTerms) { v.entry.priceMinor = "101" }},
+		{"stop", func(v *ExecutionTerms) { v.stop.priceMinor = "96" }},
+		{"target", func(v *ExecutionTerms) { v.target.priceMinor = "121" }},
+		{"lineage", func(v *ExecutionTerms) { v.lineageIdentity = "forged" }},
+		{"policy", func(v *ExecutionTerms) { v.policy.identity = "forged" }},
+		{"identity", func(v *ExecutionTerms) { v.identity = "forged" }},
 	}
 	for _, mutation := range mutations {
 		t.Run(mutation.name, func(t *testing.T) {
@@ -98,7 +96,8 @@ func TestSealExecutionTermsRejectsNonCanonicalOrUnorderedPrices(t *testing.T) {
 	for _, test := range []struct{ entry, stop, target string }{
 		{"", "95", "120"}, {"0100", "95", "120"}, {"100", "95", ""}, {"100", "100", "120"}, {"100", "101", "120"}, {"100", "95", "100"},
 	} {
-		if terms, ok := sealExecutionTerms(lineage, 1, test.entry, test.stop, test.target); ok || terms.Valid() {
+		evaluation := laneEvaluation{quantity: 1, entry: PriceProvenance{priceMinor: test.entry, source: "e", version: "v", digest: "d", asOf: "a", currency: "KRW", unitVersion: "u"}, stop: PriceProvenance{priceMinor: test.stop, source: "s", version: "v", digest: "d", asOf: "a", currency: "KRW", unitVersion: "u"}, target: PriceProvenance{priceMinor: test.target, source: "t", version: "v", digest: "d", asOf: "a", currency: "KRW", unitVersion: "u"}, policy: ExecutionPolicy{identity: "p"}}
+		if terms, ok := sealExecutionTerms(lineage, evaluation); ok || terms.Valid() {
 			t.Fatalf("invalid terms accepted: %+v", test)
 		}
 	}

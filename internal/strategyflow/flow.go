@@ -87,15 +87,16 @@ func evaluateWith(request Request, route func(strategyrouter.RouteRequest) strat
 	lineage.LegOrdinal = evaluated.lineage.LegOrdinal
 	lineage.PlannedCeiling = evaluated.lineage.PlannedCeiling
 	lineage.RiskBudgetDigest = evaluated.lineage.RiskBudgetDigest
+	lineage.ExecutionPolicyDigest = evaluated.policy.identity
 	if evaluated.quantity == 0 || evaluated.lineage.CampaignID == "" || evaluated.lineage.LegOrdinal < 1 ||
-		evaluated.lineage.PlannedCeiling == 0 || evaluated.lineage.RiskBudgetDigest == "" {
+		evaluated.lineage.PlannedCeiling == 0 || evaluated.lineage.RiskBudgetDigest == "" || evaluated.policy.identity == "" {
 		result.Code = RefusalLineageIncomplete
 		result.Lineage = sealLineage(lineage)
 		return result
 	}
 	lineage.Complete = true
 	completeLineage := sealLineage(lineage)
-	terms, ok := sealExecutionTerms(completeLineage, evaluated.quantity, evaluated.entryPriceMinor, evaluated.effectiveStopMinor, evaluated.targetPriceMinor)
+	terms, ok := sealExecutionTerms(completeLineage, evaluated)
 	if !ok {
 		lineage.Complete = false
 		result.Code = RefusalExecutionTermsInvalid
