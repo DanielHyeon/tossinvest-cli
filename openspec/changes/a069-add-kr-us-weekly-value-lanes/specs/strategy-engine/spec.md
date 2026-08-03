@@ -7,6 +7,9 @@ KR lane은 OpenDART, US lane은 SEC EDGAR에서 정규화된 point-in-time discl
 또는 enablement를 조건으로 사용해서는 안 된다 (MUST NOT). 각 lane은 순수 entry/add decision
 또는 typed invalidation/refusal만 반환하고 broker, journal writer, 운영 토글과 exit decision
 authority를 직접 소유해서는 안 된다 (MUST NOT).
+단순 caller boolean은 lane activation/evaluation authority가 아니며 (MUST NOT), a072 운영 adapter가
+도입되기 전에는 package 외부에서 mint할 수 없는 dormant sealed authorization이 없으면 항상
+`LANE_OFF`여야 한다 (SHALL).
 
 #### Scenario: 두 weekly lane의 동시 제공
 - **WHEN** change를 포함한 lane registry conformance를 검사한다
@@ -31,6 +34,9 @@ fresh_until`을 위반하거나 revision chain, currency/unit, diluted shares, d
 digest 또는 checked arithmetic이 누락·unknown·overflow이면 typed refusal이어야 한다 (SHALL).
 Evaluator는 later revision이나 future-ingested fact를 이전 cutoff에 사용하거나 float/local fallback으로
 fair value를 재구성해서는 안 된다 (MUST NOT).
+Strict decoder가 만든 evidence는 전체 immutable revision/PIT/dilution/financial/model preimage의
+private seal을 가져야 하고 (SHALL), caller literal 또는 decode 뒤 field mutation은 fail-closed
+`STRICT_SCHEMA_INVALID`여야 한다 (SHALL).
 
 #### Scenario: 미래 revision 누출
 - **WHEN** evaluation cutoff 뒤 ingested된 correction을 과거 campaign leg 평가에 사용하려 한다
@@ -56,6 +62,11 @@ stable identity와 allowance는 변하지 않아야 한다 (SHALL). 같은 canon
 영구 `CONSUMED`로 만들고 (SHALL), fill 0이 authoritative하게 증명된 cancel/expiry만 `RELEASED`로
 전환할 수 있다 (SHALL). Duplicate retry는 기존 reservation/result를 반환하고 새 leg나 새 weekly
 allowance를 만들 수 없다 (MUST NOT).
+Stable identity는 market/exchange prefix와 IANA-zone Monday `session_date`의 exact ISO year/week에서
+도출한 값과 byte-for-byte 같아야 하고 (SHALL), reservation CAS version과 count는
+`(campaign_id, market)` scope별로 독립이어야 한다 (SHALL). Reserve freshness는 command에 봉인된
+trusted `evaluated_at`을 기준으로 검사해야 하며 calendar 자신의 `observed_at`으로 대체해서는 안 된다
+(MUST NOT).
 
 #### Scenario: 같은 market week 동시 예약
 - **WHEN** 같은 campaign/week에 두 worker가 next leg를 동시에 예약한다
@@ -103,6 +114,12 @@ overflow·누락·FX provenance 불일치는 신규 admission을 typed refusal�
 이미 발생한 fill의 계산 불가 또는 actual budget 초과는 weekly fill/CONSUMED 처리를 막지
 않고 `CAMPAIGN_RISK_OVERAGE`나 unknown-risk latch로 모든 후속 신규 leg를 차단해야 한다
 (SHALL). Overage를 released/unused planned quantity로 상쇄해서는 안 된다 (MUST NOT).
+Positive fill의 reservation consume과 actual-risk transfer/latch는 하나의 pure aggregate transition만
+제공해야 하며 (SHALL), reservation-only API는 positive fill consume을 거부해 두 상태 사이 crash
+window를 만들 수 없어야 한다 (SHALL).
+Risk state의 plan digest, filled/held minor balances, latches와 applied-fill receipts는 private canonical
+seal로 결속해야 하며 (SHALL), caller field mutation이나 copied-map clear 뒤 admission/fill apply는
+fail-closed risk refusal이어야 한다 (SHALL). 외부에는 scalar/read-only 조회만 제공해야 한다 (SHALL).
 
 #### Scenario: 일곱 positive-fill leg 이후 요청
 - **WHEN** campaign에 일곱 distinct planned ordinal이 positive fill로 CONSUMED되었다
@@ -148,6 +165,8 @@ cost에 모두 사용해야 하며 (SHALL), 서로 다른 FX snapshot을 섞어�
 (MUST NOT), 필요한 structural stop이 a066 cap보다 넓으면 stop을 임의로 좁히지 말고 거부해야 한다
 (SHALL). Lane target/invalidation은 common stop, emergency exit, reconciliation, protection 또는
 공통 exit engine을 지연하거나 억제해서는 안 된다 (MUST NOT).
+Structural stop candidate는 version, source/policy digest, observed/fresh-until과 private seal을
+보존해야 하고 (SHALL), evaluation cutoff에서 stale하거나 변조된 후보는 거부해야 한다 (SHALL).
 
 #### Scenario: fair value가 staged target보다 낮다
 - **WHEN** staged target은 1200 minor units이고 fair value는 1100이다

@@ -1,0 +1,225 @@
+{
+  "file": "internal/weeklyvaluelane/evaluate.go",
+  "source_sha256": "1c19eba0315bb8cb4a2d8eaf543964a8746fbf47e968ab4106665d75b0261125",
+  "package": "weeklyvaluelane",
+  "function": "effectiveStop",
+  "signature": "effectiveStop(params=3, results=2)",
+  "start": {
+    "line": 210,
+    "column": 1
+  },
+  "end": {
+    "line": 230,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 213,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 217,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 220,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 224,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 227,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 77
+      },
+      "text": "stopCandidateSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 109
+      },
+      "text": "candidate.ObservedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 3
+      },
+      "text": "candidate.FreshUntil.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 36
+      },
+      "text": "evaluatedAt.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 80
+      },
+      "text": "evaluatedAt.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 33
+      },
+      "text": "parseUnsigned"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 21
+      },
+      "text": "candidatePrice.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 10
+      },
+      "text": "candidatePrice.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 25
+      },
+      "text": "parseUnsigned"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 17
+      },
+      "text": "savedPrice.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 5
+      },
+      "text": "savedPrice.Cmp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 10
+      },
+      "text": "savedPrice.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 9
+      },
+      "text": "candidatePrice.String"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
