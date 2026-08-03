@@ -36,7 +36,7 @@ func TestOpenAPIPathsMatchExactRuntimeSurface(t *testing.T) {
 	want := []string{
 		"/api/v1/candidates", "/api/v1/engine", "/api/v1/optimization", "/api/v1/optimization/applications",
 		"/api/v1/optimization/previews", "/api/v1/orders", "/api/v1/performance", "/api/v1/positions",
-		"/api/v1/settings", "/api/v1/stream",
+		"/api/v1/settings", "/api/v1/strategy-runtime", "/api/v1/stream",
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("OpenAPI paths=%#v want=%#v", got, want)
@@ -44,6 +44,55 @@ func TestOpenAPIPathsMatchExactRuntimeSurface(t *testing.T) {
 	for _, forbidden := range []string{"/api/v1/engine/live", "/api/v1/gate", "/api/v1/kill-switch", "/api/v1/protection", "/api/v1/activation-manifest", "/api/v1/optimization/rollback-previews"} {
 		if _, exists := document.Paths[forbidden]; exists {
 			t.Errorf("OpenAPI exposes forbidden route %q", forbidden)
+		}
+	}
+}
+
+func TestOpenAPIStrategyRuntimeIsStrictPairedReadOnlyProjection(t *testing.T) {
+	raw, err := os.ReadFile("../../docs/api/openapi-v1.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document struct {
+		Paths      map[string]map[string]json.RawMessage `json:"paths"`
+		Components struct {
+			Schemas map[string]struct {
+				AdditionalProperties *bool                      `json:"additionalProperties"`
+				Required             []string                   `json:"required"`
+				Properties           map[string]json.RawMessage `json:"properties"`
+			} `json:"schemas"`
+		} `json:"components"`
+	}
+	if err := json.Unmarshal(raw, &document); err != nil {
+		t.Fatal(err)
+	}
+	path := document.Paths["/api/v1/strategy-runtime"]
+	if _, ok := path["get"]; !ok || len(path) != 1 {
+		t.Fatalf("strategy-runtime methods=%v; want GET only", reflect.ValueOf(path).MapKeys())
+	}
+	for _, name := range []string{"StrategyRuntimeProjection", "StrategyRuntimeMarkets", "StrategyRuntimeMarket", "StrategyRuntimeLane", "StrategyRuntimeEvidence", "StrategyRuntimeCampaign", "StrategyRuntimeHorizonRisk", "StrategyRuntimeScheduler", "StrategyRuntimeActivation", "StrategyRuntimeProtection", "StrategyRuntimeReconciliation", "StrategyRuntimeMarketError"} {
+		schema, ok := document.Components.Schemas[name]
+		if !ok {
+			t.Errorf("OpenAPI lacks %s", name)
+			continue
+		}
+		if schema.AdditionalProperties == nil || *schema.AdditionalProperties {
+			t.Errorf("%s must reject unknown fields", name)
+		}
+		if len(schema.Required) == 0 {
+			t.Errorf("%s must declare required fields", name)
+		}
+	}
+	markets := document.Components.Schemas["StrategyRuntimeMarkets"]
+	for _, market := range []string{"KR", "US"} {
+		if _, ok := markets.Properties[market]; !ok {
+			t.Errorf("paired market schema lacks %s", market)
+		}
+	}
+	projection := document.Components.Schemas["StrategyRuntimeProjection"]
+	for _, field := range []string{"schemaVersion", "generatedAt", "markets"} {
+		if _, ok := projection.Properties[field]; !ok {
+			t.Errorf("projection lacks %s", field)
 		}
 	}
 }

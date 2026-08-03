@@ -408,121 +408,36 @@ const optimizationTemplates = `
 {{define "strategy-runtime"}}
 {{template "head" .}}
 <p><a href="/optimization">최적화</a> / <code>strategy-runtime</code> / <a href="/strategy-runtime/market-schedule">시장·일정</a></p>
-<h1>한국 주식 전략 lane</h1>
-<p class="muted page-intro">StockOS Parker VWAP conservative v1을 옮기는 읽기 전용 상태 카드다. 서버가 관측한 저장값과 적용값만 보여주며 이 화면에는 입력·저장·활성화·LIVE action이 없다.</p>
-{{if .LoadErr}}<p class="danger" role="alert">상태를 읽지 못해 신규 진입 OFF를 표시한다.</p>{{end}}
-{{if .Unwired}}<p class="notice">strategy-runtime seam 미배선 — dormant 기본값만 표시한다.</p>{{end}}
-<nav class="filter-bar" aria-label="전략 런타임 화면">
-  <a href="#strategy-observation">관측 상태</a><a href="#strategy-parameters">파라미터</a><a href="#lane-state">lane</a>
-  <a href="#autostart-state">자동 기동</a><a href="#live-state">승인·진입</a><a href="#strategy-blockers">blockers</a>
-</nav>
-
-<section id="strategy-observation" aria-labelledby="strategy-observation-title">
-  <h2 id="strategy-observation-title">관측 상태</h2>
+<h1>KR · US strategy runtime</h1>
+<p class="muted page-intro">서버 소유 market-keyed projection을 읽기만 한다. 입력·저장·활성화·LIVE·주문·보호 변경 기능은 없다.</p>
+{{if .LoadErr}}<p class="danger" role="alert">runtime projection을 읽지 못했다. 두 시장 모두 신규 진입 OFF와 typed unknown을 표시한다.</p>{{end}}
+{{if .Unwired}}<p class="notice">runtime endpoint 미기동 — KR과 US의 dormant OFF/UNOBSERVED/UNWIRED truth를 표시한다.</p>{{end}}
+<section aria-labelledby="strategy-runtime-contract"><h2 id="strategy-runtime-contract">Shared projection contract</h2>
+<dl><dt>Schema</dt><dd><code>{{.SchemaVersion}}</code></dd><dt>Generated at</dt><dd>{{.GeneratedAt}}</dd></dl>
+<p><a href="/strategy-runtime">상태 새로고침</a> · GET으로 다시 읽기만 하며 설정이나 주문을 보내지 않는다.</p>
+</section>
+{{range .Markets}}
+<article class="detail-grid" aria-readonly="true" data-market="{{.Market}}" data-market-status="{{.Status}}">
+  <div><h2>{{.Market}} strategy runtime</h2><span class="status-pill {{.StatusClass}}">{{.Status}}</span>{{if .ErrorCode}} <code>{{.ErrorCode}}</code>{{end}}</div>
   <dl>
-    <dt>Generated at</dt><dd>{{.GeneratedAt}}</dd>
-    <dt>Observed at</dt><dd>{{.ObservedAt}}</dd>
-    <dt>Freshness</dt><dd><span class="status-pill {{.Freshness.Class}}" data-testid="runtime-freshness">{{.Freshness.Value}}</span></dd>
+    <dt>Lane ID / version</dt><dd><code>{{.LaneID}}</code> / <code>{{.LaneVersion}}</code></dd>
+    <dt>Lane desired → effective</dt><dd><strong>{{.LaneDesired}} → {{.LaneEffective}}</strong></dd>
+    <dt>Evidence ID</dt><dd><code>{{.EvidenceID}}</code></dd><dt>Evidence digest</dt><dd><code>{{.EvidenceDigest}}</code></dd>
+    <dt>Evidence freshness</dt><dd>{{.EvidenceFreshness}}</dd>
+    <dt>Campaign / leg</dt><dd><code>{{.CampaignID}}</code> / <code>{{.LegID}}</code></dd>
+    <dt>Horizon risk</dt><dd><code>{{.RiskBucket}}</code> · <code>{{.RiskPolicyVersion}}</code> · {{.RiskStatus}}</dd>
+    <dt>Scheduler desired → effective</dt><dd>{{.SchedulerDesired}} → {{.SchedulerEffective}}</dd>
+    <dt>Calendar</dt><dd><code>{{.CalendarSource}}</code> · <code>{{.CalendarVersion}}</code> · {{.CalendarFreshness}}</dd>
+    <dt>Activation</dt><dd>{{.ActivationDesired}} → {{.ActivationEffective}} · {{.ActivationStatus}} · <code>{{.ActivationDigest}}</code></dd>
+    <dt>Protection readiness</dt><dd><strong>{{.ProtectionReadiness}}</strong> · <code>{{.ProtectionRefusal}}</code></dd>
+    <dt>Reconciliation</dt><dd>{{.ReconciliationStatus}} · <code>{{.ReconciliationRefusal}}</code></dd>
+    <dt>First typed refusal</dt><dd><code>{{.FirstRefusal}}</code></dd><dt>Observed at</dt><dd>{{.ObservedAt}}</dd>
   </dl>
-  <p><a href="/strategy-runtime">상태 새로고침</a> · GET으로 다시 읽기만 하며 설정이나 주문을 보내지 않는다.</p>
-</section>
-
-<section id="strategy-parameters" aria-labelledby="strategy-parameters-title">
-  <h2 id="strategy-parameters-title">{{.ParameterSection}} · 읽기 전용</h2>
-  <p class="muted">각 카드는 서버 소유 descriptor의 help·기본값·저장값·적용값·provenance를 그대로 표시한다.</p>
-  {{range .Fields}}
-  <article class="detail-grid" aria-labelledby="strategy-field-{{.Key}}" aria-readonly="true">
-    <div>
-      <h3 id="strategy-field-{{.Key}}">{{.Label}}</h3>
-      <p class="muted">{{.Help}}</p>
-      <code>{{.Key}}</code>
-    </div>
-    <dl>
-      <dt>기본값</dt><dd>{{.Default}}</dd>
-      <dt>Desired · 저장값</dt><dd>{{.Desired}}</dd>
-      <dt>Effective · 적용값</dt><dd><span class="status-pill muted">{{.Effective}}</span></dd>
-      <dt>단위 / 범위</dt><dd>{{.Unit}} / {{.Range}}</dd>
-      <dt>적용 시점</dt><dd>{{.ApplyTiming}}</dd>
-      <dt>Provenance</dt><dd><code>{{.Provenance}}</code></dd>
-    </dl>
-  </article>
-  {{end}}
-</section>
-
-<section id="lane-state" aria-labelledby="lane-state-title">
-  <h2 id="lane-state-title">{{.LaneSection}}</h2>
-  <article class="detail-grid" aria-readonly="true">
-    <div><h3>krx_parker_vwap_conservative_v1</h3><p class="muted">lane 권한은 자동 기동·gate·LIVE 승인과 별도다.</p></div>
-    <dl>
-      <dt>기본값</dt><dd><span class="status-pill {{.Lane.Default.Class}}">{{.Lane.Default.Value}}</span></dd>
-      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.Lane.Desired.Class}}">{{.Lane.Desired.Value}}</span></dd>
-      <dt>Effective · 적용값</dt><dd><span class="status-pill {{.Lane.Effective.Class}}" data-testid="lane-effective">{{.Lane.Effective.Value}}</span></dd>
-      <dt>Reason</dt><dd><code>{{.Lane.Reason}}</code></dd>
-    </dl>
-  </article>
-</section>
-
-<section id="autostart-state" aria-labelledby="autostart-state-title">
-  <h2 id="autostart-state-title">{{.AutoStartSection}}</h2>
-  <article class="detail-grid" aria-readonly="true">
-    <div><h3>엔진 기동 시 자동 시작</h3><p class="muted">다음 엔진 기동 시 별도 activation manifest를 다시 검증한다.</p></div>
-    <dl>
-      <dt>기본값</dt><dd><span class="status-pill {{.AutoStart.Default.Class}}">{{.AutoStart.Default.Value}}</span></dd>
-      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.AutoStart.Desired.Class}}">{{.AutoStart.Desired.Value}}</span></dd>
-      <dt>Effective · 적용값</dt><dd><span class="status-pill {{.AutoStart.Effective.Class}}" data-testid="autostart-effective">{{.AutoStart.Effective.Value}}</span></dd>
-      <dt>Reason</dt><dd><code>{{.AutoStart.Reason}}</code></dd>
-    </dl>
-  </article>
-</section>
-
-<section id="live-state" aria-labelledby="live-state-title">
-  <h2 id="live-state-title">{{.LiveSection}}</h2>
-  <p class="muted">Automation gate와 LIVE 승인은 독립 권한이다. 일괄 활성화는 없다.</p>
-  <article class="detail-grid" aria-labelledby="gate-approval-title" aria-readonly="true">
-    <div><h3 id="gate-approval-title">Automation gate</h3><p class="muted">프로그램 주문 gate의 서버 권위 상태다.</p></div>
-    <dl>
-      <dt>기본값</dt><dd><span class="status-pill {{.GateApproval.Default.Class}}">{{.GateApproval.Default.Value}}</span></dd>
-      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.GateApproval.Desired.Class}}">{{.GateApproval.Desired.Value}}</span></dd>
-      <dt>Effective · 적용값</dt><dd><span class="status-pill {{.GateApproval.Effective.Class}}" data-testid="gate-effective">{{.GateApproval.Effective.Value}}</span></dd>
-      <dt>Reason</dt><dd><code>{{.GateApproval.Reason}}</code></dd>
-    </dl>
-  </article>
-  <article class="detail-grid" aria-labelledby="live-approval-title" aria-readonly="true">
-    <div><h3 id="live-approval-title">LIVE approval</h3><p class="muted">사람이 승인한 LIVE 주문 권한의 서버 권위 상태다.</p></div>
-    <dl>
-      <dt>기본값</dt><dd><span class="status-pill {{.LiveApproval.Default.Class}}">{{.LiveApproval.Default.Value}}</span></dd>
-      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.LiveApproval.Desired.Class}}">{{.LiveApproval.Desired.Value}}</span></dd>
-      <dt>Effective · 적용값</dt><dd><span class="status-pill {{.LiveApproval.Effective.Class}}" data-testid="live-effective">{{.LiveApproval.Effective.Value}}</span></dd>
-      <dt>Reason</dt><dd><code>{{.LiveApproval.Reason}}</code></dd>
-    </dl>
-  </article>
-  <article class="detail-grid" aria-labelledby="entry-capability-title" aria-readonly="true">
-    <div><h3 id="entry-capability-title">Entry capability</h3><p class="muted">authority가 확정한 신규 진입 결과다. 이 화면은 blocker를 다시 계산하지 않는다.</p></div>
-    <dl>
-      <dt>기본값</dt><dd><span class="status-pill {{.EntryDefault.Class}}">{{.EntryDefault.Value}}</span></dd>
-      <dt>Desired · 저장값</dt><dd><span class="status-pill {{.EntryDesired.Class}}">{{.EntryDesired.Value}}</span></dd>
-      <dt>Effective</dt><dd><span class="status-pill {{.EntryEffective.Class}}" data-testid="entry-effective">{{.EntryEffective.Value}}</span></dd>
-      <dt>첫 refusal</dt><dd><code>{{.FirstRefusal}}</code></dd>
-    </dl>
-  </article>
-</section>
-
-<section id="strategy-blockers" aria-labelledby="strategy-blockers-title">
-  <h2 id="strategy-blockers-title">Activation blockers</h2>
-  <p class="muted">authority가 제공한 순서대로 첫 거부 근거와 freshness를 확인한다.</p>
-  {{range .Blockers}}
-  <article class="detail-grid" aria-labelledby="strategy-blocker-{{.Key}}" aria-readonly="true">
-    <div><h3 id="strategy-blocker-{{.Key}}">{{.Label}}</h3><code>{{.Key}}</code></div>
-    <dl>
-      <dt>Desired</dt><dd><span class="status-pill {{.Desired.Class}}">{{.Desired.Value}}</span></dd>
-      <dt>Effective</dt><dd><span class="status-pill {{.Effective.Class}}">{{.Effective.Value}}</span></dd>
-      <dt>Freshness</dt><dd><span class="status-pill {{.Freshness.Class}}">{{.Freshness.Value}}</span></dd>
-      <dt>Reason</dt><dd><code>{{.Reason}}</code></dd>
-    </dl>
-  </article>
-  {{end}}
-  <p><strong>신규 entry가 OFF여도 exit·reconcile·보호 감독은 계속된다.</strong></p>
-</section>
+</article>
+{{end}}
+<section aria-labelledby="projection-registry"><h2 id="projection-registry">Golden field registry</h2><p class="muted">Console, REST와 SSE가 공유하는 필드다.</p>
+<ul>{{range .Fields}}<li><code>{{.Key}}</code> · {{.Label}} · <code>{{.JSONPointer}}</code></li>{{end}}</ul></section>
+<p><strong>신규 entry가 OFF이거나 runtime이 unavailable이어도 exit·reconcile·보호 감독은 계속된다.</strong></p>
 {{template "foot" .}}
 {{end}}
 `

@@ -1,8 +1,8 @@
 # Review — a073-operate-multi-market-strategy-lanes
 
-- Date: 2026-08-03
-- Stage: proposal freeze; implementation/deployment not started
-- Voices: Manager scope review, independent operations/security/UI review, final semantic re-review
+- Date: 2026-08-04
+- Stage: shared operational projection wave implemented; performance, Compose and deployment waves pending
+- Voices: Manager scope review, independent operations/security/UI review, projection contract review
 
 ## Findings and disposition
 
@@ -16,6 +16,12 @@
 - Compose replacement pins image/schema/config/activation/protection/volume preimages, replaces one service
   at a time and reverse-rolls only the replaced subset. Incompatible rollback keeps entry OFF and forbids
   destructive downgrade.
+- The implemented shared model owns the exact paired KR/US shape and validation. Console, REST, SSE and the
+  authenticated Unix reader consume that model without recomputing readiness, effective state or refusal.
+- Unix transport review confirms a bounded strict decoder, exact private descriptor/socket permissions,
+  no-follow plus same-file descriptor checks, constant-time bearer comparison and a `Read`-only client type.
+- Integrated partial-failure and reconnect tests preserve the unaffected market byte-for-value and replace a
+  prior partial state with one complete fresh snapshot; no zero/current/cross-market fallback exists.
 
 ## Design and DX disposition
 
@@ -26,13 +32,21 @@ current and lineage-missing states are specified; mobile/accessibility and conso
 golden-contract patterns. Operator time-to-diagnosis improves because every blocked market exposes its first
 typed refusal without requiring journal joins.
 
-## Verification
+## Projection-wave verification
 
 - Strict OpenSpec validation: PASS.
-- Final independent operations/UI re-review: PASS, no open blocker.
-- Deployment tests are read-only/dormant and prohibit live orders or operating-toggle changes.
+- `go test -count=1 ./internal/strategyprojection ./internal/strategyprojectionrpc ./internal/console ./internal/httpapi`: PASS.
+- The same four-package command with `-race`: PASS.
+- `go vet` for the same four packages: PASS.
+- Targeted OpenAPI/strategy-runtime contract tests: PASS.
+- `git diff --check`: PASS.
+- Legacy single-market console coverage was replaced by paired authority-projection, invalid/read-error
+  fail-closed, authenticated GET/HEAD, no-input/no-mutation, responsive/CSP, partial-market and real Unix
+  console/API/SSE convergence tests.
+- Full performance/Compose/repository gates and final independent implementation review remain pending.
 
 ## Verdict
 
-Proposal freeze approved. Build/deploy authorization applies only to an OFF/unapproved dormant release;
-market activation remains an explicit later human decision.
+The read-only operational projection wave is ready for independent implementation review. This is not a
+release or deployment verdict: performance, Compose, repository gate and dormant deployment tasks remain
+open. Market activation remains an explicit later human decision.

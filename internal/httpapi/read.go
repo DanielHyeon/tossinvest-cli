@@ -14,7 +14,7 @@ import (
 )
 
 var readResourceNames = [...]string{
-	"engine", "positions", "orders", "candidates", "performance", "settings", "optimization",
+	"engine", "positions", "orders", "candidates", "performance", "settings", "optimization", "strategy-runtime",
 }
 
 func ReadResourceNames() []string {
