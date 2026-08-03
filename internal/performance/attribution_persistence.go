@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	MaxAttributionEvidenceRows = 1_000_000
-	MaxAttributionQueryRows    = 10_000
-	AttributionSemantics       = "lane-attribution/v1"
+	MaxAttributionEvidenceRows   = 1_000_000
+	MaxAttributionGenerationRows = 10_000
+	MaxAttributionQueryRows      = 10_000
+	AttributionSemantics         = "lane-attribution/v1"
 )
 
 // AttributionEvidenceWindow is the exact journal window used to rebuild one
@@ -214,6 +215,9 @@ func prepareAttributionRebuild(rebuild AttributionRebuild) ([]Attribution, []byt
 	}
 	for _, unavailable := range rebuild.Unavailable {
 		rows = append(rows, unavailable)
+	}
+	if len(rows) > MaxAttributionGenerationRows {
+		return nil, nil, "", errors.New("performance: attribution generation exceeds bounded maximum")
 	}
 	sort.SliceStable(rows, func(i, j int) bool { return attributionSortKey(rows[i]) < attributionSortKey(rows[j]) })
 	for index := 1; index < len(rows); index++ {
@@ -507,7 +511,7 @@ func validateAttributionGeneration(ctx context.Context, db attributionQueryer, a
 		return attributionHead{}, fmt.Errorf("performance: reading attribution rebuild head: %w", err)
 	}
 	if head.AccountRef != accountRef || head.SemanticsVersion != AttributionSemantics ||
-		head.RowCount < 0 || head.RowCount > MaxAttributionEvidenceRows ||
+		head.RowCount < 0 || head.RowCount > MaxAttributionGenerationRows ||
 		digestBytes([]byte(head.SourceJSON)) != head.SourceDigest {
 		return attributionHead{}, fmt.Errorf("%w: attribution head envelope", ErrImmutableConflict)
 	}
@@ -602,13 +606,13 @@ CREATE TABLE attribution_rebuilds (
 	semantics_version TEXT NOT NULL,
 	source_digest TEXT NOT NULL,
 	source_json TEXT NOT NULL,
-	row_count INTEGER NOT NULL CHECK(row_count >= 0 AND row_count <= 1000000)
+	row_count INTEGER NOT NULL CHECK(row_count >= 0 AND row_count <= 10000)
 ) STRICT;
 
 CREATE TABLE attribution_rows (
 	account_ref TEXT NOT NULL REFERENCES attribution_rebuilds(account_ref) ON DELETE CASCADE,
 	rebuild_id TEXT NOT NULL,
-	ordinal INTEGER NOT NULL CHECK(ordinal >= 0 AND ordinal < 1000000),
+	ordinal INTEGER NOT NULL CHECK(ordinal >= 0 AND ordinal < 10000),
 	market TEXT NOT NULL CHECK(market IN ('KR','US')),
 	ticker TEXT NOT NULL,
 	lane_id TEXT,

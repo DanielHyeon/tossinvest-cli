@@ -44,9 +44,10 @@ head →
 Queries bind exact `market+ticker` and optional lane/version/campaign/leg; ticker without market is refused. Before the
 bounded result query, the read snapshot scans the account generation and verifies head metadata, row count, contiguous
 ordinals, rebuild identity, every indexed shadow field, status, canonical JSON and envelope digest. This is intentionally
-O(account generation rows), up to the frozen 1,000,000-row evidence bound, so corruption cannot hide outside a 10,000-row
-result window. KR and US rows with the same ticker cannot collide. An attribution-specific maximum-generation performance
-gate remains required before release; integrity is not weakened to meet a latency target.
+O(account generation rows). Raw authoritative evidence is bounded at 1,000,000 records, while the projected account
+generation is independently capped at 10,000 rows so corruption cannot hide outside a result window and every integrity
+scan has a finite operational budget. KR and US rows with the same ticker cannot collide. The attribution-specific
+10,000-row performance gate must pass before release; integrity is not weakened to meet a latency target.
 
 Branch tests: complete persistence/reopen/read-only query, same replay, divergent replay, crash hook atomicity,
 same-ticker KR/US isolation, explicit missing states, maximum input/query bounds, and raw-observation prune preservation.

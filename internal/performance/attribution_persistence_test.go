@@ -4,12 +4,50 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"slices"
+	"sort"
 	"testing"
 	"time"
 )
+
+func TestMaximumAttributionGenerationIntegrityScanMeetsP95Target(t *testing.T) {
+	if testing.Short() {
+		t.Skip("maximum attribution generation performance gate")
+	}
+	if raceEnabled {
+		t.Skip("wall-clock p95 is verified by the non-instrumented suite")
+	}
+	store := openTestStore(t)
+	rows := make([]Attribution, MaxAttributionGenerationRows)
+	for index := range rows {
+		rows[index] = unavailableFixture("US", fmt.Sprintf("T%05d", index), fmt.Sprintf("position-%05d", index))
+	}
+	if err := store.PersistAttributionRebuild(context.Background(), AttributionRebuild{
+		ID: "maximum-generation", AccountRef: "acct-maximum", CalculatedAt: attributionAt, Unavailable: rows,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	durations := make([]time.Duration, 7)
+	for index := range durations {
+		started := time.Now()
+		got, err := store.AttributionRows(context.Background(), "acct-maximum", AttributionQuery{
+			Market: "US", Ticker: "T09999", IncludeLinkMissing: true,
+		}, 1)
+		if err != nil || len(got) != 1 || got[0].Key.PositionID != "position-09999" {
+			t.Fatalf("maximum generation query=%+v err=%v", got, err)
+		}
+		durations[index] = time.Since(started)
+	}
+	sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
+	p95 := durations[(len(durations)*95+99)/100-1]
+	t.Logf("10k-row attribution integrity scan p95=%s runs=%v", p95, durations)
+	if p95 > 2*time.Second {
+		t.Fatalf("10k-row attribution integrity scan p95=%s target<=2s runs=%v", p95, durations)
+	}
+}
 
 func TestPersistAttributionRebuildRejectsDuplicateUnavailableAttributionKey(t *testing.T) {
 	store := openTestStore(t)
