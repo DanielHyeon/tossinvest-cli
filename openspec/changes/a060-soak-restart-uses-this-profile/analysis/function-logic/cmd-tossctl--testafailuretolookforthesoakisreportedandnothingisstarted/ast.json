@@ -1,0 +1,125 @@
+{
+  "file": "cmd/tossctl/soakproc_test.go",
+  "source_sha256": "00ac2ead69b318471481df9c5f2b4d5680c7913b02c1f3e794592f7e08910900",
+  "package": "main",
+  "function": "TestAFailureToLookForTheSoakIsReportedAndNothingIsStarted",
+  "signature": "TestAFailureToLookForTheSoakIsReportedAndNothingIsStarted(params=1, results=0)",
+  "start": {
+    "line": 221,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 12
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 26
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 27
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 2
+      },
+      "text": "f.install"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 15
+      },
+      "text": "restartSoak"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

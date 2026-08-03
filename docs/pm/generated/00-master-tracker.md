@@ -52,6 +52,7 @@
     - STORY-TOS-a055 — Group settings by reversibility and cadence, not by feature name [archived] → `a055-console-settings-cadence`
     - STORY-TOS-a057 — Make holdings readable at a glance on dashboard and positions [archived] → `a057-simplify-portfolio-views`
     - STORY-TOS-a058 — Match StockOS holdings density and column alignment [archived] → `a058-match-stockos-holdings-density`
+    - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [implemented] → `a060-soak-restart-uses-this-profile`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`

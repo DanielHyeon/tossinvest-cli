@@ -1,0 +1,133 @@
+{
+  "file": "cmd/tossctl/soakproc.go",
+  "source_sha256": "bdea9a099729426219d1d1a5e6a9f5204c7e26462c72c96218bdf0de26a4a38d",
+  "package": "main",
+  "function": "pgrepSoakLines",
+  "signature": "pgrepSoakLines(params=0, results=2)",
+  "start": {
+    "line": 248,
+    "column": 1
+  },
+  "end": {
+    "line": 258,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 253,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 255,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 14
+      },
+      "text": "Output"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 14
+      },
+      "text": "exec.Command"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 6
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 34
+      },
+      "text": "exitErr.ExitCode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 9
+      },
+      "text": "strings.Split"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 23
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 41
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

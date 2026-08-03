@@ -63,3 +63,4 @@
 | `a057-simplify-portfolio-views` | STORY-TOS-a057 | archived |
 | `a058-match-stockos-holdings-density` | STORY-TOS-a058 | archived |
 | `a059-console-finds-the-engine-it-owns` | STORY-TOS-a059 | implemented |
+| `a060-soak-restart-uses-this-profile` | STORY-TOS-a060 | implemented |

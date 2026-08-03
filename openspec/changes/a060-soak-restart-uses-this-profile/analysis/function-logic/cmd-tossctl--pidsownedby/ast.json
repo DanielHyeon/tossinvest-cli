@@ -1,0 +1,171 @@
+{
+  "file": "cmd/tossctl/engineproc.go",
+  "source_sha256": "502362c0b925e09f57b5253ad92e1ce1bbcfe0d1f601869e76c44ff6f9d13439",
+  "package": "main",
+  "function": "pidsOwnedBy",
+  "signature": "pidsOwnedBy(params=4, results=1)",
+  "start": {
+    "line": 372,
+    "column": 1
+  },
+  "end": {
+    "line": 392,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 382,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 386,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 375,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 391,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 12
+      },
+      "text": "filepath.Clean"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 23
+      },
+      "text": "splitProcessLine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 14
+      },
+      "text": "matcher.MatchString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 12
+      },
+      "text": "resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 20
+      },
+      "text": "commandConfigDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 6
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 40
+      },
+      "text": "filepath.Clean"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 10
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 377,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 381,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 389,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

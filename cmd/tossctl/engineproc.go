@@ -344,26 +344,46 @@ func pgrepEngineLines() ([]string, error) {
 // explicitly is the same instance as an autostart that left the flag off. Resolving
 // both sides through engineJournalDir is what makes those two agree.
 //
-// Everything unprovable is dropped — an unparsable line, a pid with no command line
-// behind it, a directory that cannot be resolved. The list being built is a list of
-// processes to send SIGTERM to, so "I could not tell" has to mean "not mine".
+// The judgement itself is pidsOwnedBy, which the survey shares (change a060). This
+// is the engine's half of it: the engine's matcher, and the engine's answer to
+// "which resource does this command line own".
 func enginePIDsForJournal(lines []string, journalDir, defaultDir string) []int {
-	if strings.TrimSpace(journalDir) == "" {
+	return pidsOwnedBy(lines, engineProcessMatcher, journalDir, func(configDir string) string {
+		if strings.TrimSpace(configDir) == "" {
+			return defaultDir
+		}
+		return configDir
+	})
+}
+
+// pidsOwnedBy keeps the pids whose command line proves they own `want` (change a060).
+//
+// Both console-managed processes ask this question and neither may guess at it: the
+// answer decides who gets a signal. What differs between them is only the matcher
+// and what counts as the owned resource — the engine's journal directory, the
+// survey's record path — so resolve maps a command line's --config-dir to that
+// resource, using whichever function the console itself uses for its own. An empty
+// configDir means the process named no profile, and resolve answers with the
+// default one.
+//
+// Everything unprovable is dropped: an unparsable line, a pid with no command line
+// behind it, a resource that cannot be resolved. "I could not tell" has to mean
+// "not mine", because the list being built is a list of processes to signal.
+func pidsOwnedBy(lines []string, matcher *regexp.Regexp, want string,
+	resolve func(configDir string) string) []int {
+	if strings.TrimSpace(want) == "" {
 		return nil
 	}
-	want := filepath.Clean(journalDir)
+	target := filepath.Clean(want)
 
 	var pids []int
 	for _, line := range lines {
 		pid, command, ok := splitProcessLine(line)
-		if !ok || !engineProcessMatcher.MatchString(command) {
+		if !ok || !matcher.MatchString(command) {
 			continue
 		}
-		dir := engineCommandConfigDir(command)
-		if dir == "" {
-			dir = defaultDir
-		}
-		if strings.TrimSpace(dir) == "" || filepath.Clean(dir) != want {
+		owned := resolve(commandConfigDir(command))
+		if strings.TrimSpace(owned) == "" || filepath.Clean(owned) != target {
 			continue
 		}
 		pids = append(pids, pid)
@@ -391,10 +411,10 @@ func splitProcessLine(line string) (int, string, bool) {
 	return pid, command, true
 }
 
-// engineCommandConfigDir pulls --config-dir out of a command line, in both the
+// commandConfigDir pulls --config-dir out of a command line, in both the
 // spellings cobra accepts. An empty result means the process did not name one and
 // is therefore using the default.
-func engineCommandConfigDir(command string) string {
+func commandConfigDir(command string) string {
 	fields := strings.Fields(command)
 	for i, field := range fields {
 		switch {

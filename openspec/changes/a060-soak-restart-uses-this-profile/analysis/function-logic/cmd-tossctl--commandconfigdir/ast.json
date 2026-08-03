@@ -1,0 +1,117 @@
+{
+  "file": "cmd/tossctl/engineproc.go",
+  "source_sha256": "502362c0b925e09f57b5253ad92e1ce1bbcfe0d1f601869e76c44ff6f9d13439",
+  "package": "main",
+  "function": "commandConfigDir",
+  "signature": "commandConfigDir(params=1, results=1)",
+  "start": {
+    "line": 417,
+    "column": 1
+  },
+  "end": {
+    "line": 428,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 419,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 420,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 421,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 423,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 422,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 424,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 427,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 418,
+        "column": 12
+      },
+      "text": "strings.Fields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 41
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 8
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 11
+      },
+      "text": "strings.TrimPrefix"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 418,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

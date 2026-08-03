@@ -1,0 +1,70 @@
+{
+  "file": "cmd/tossctl/soakproc.go",
+  "source_sha256": "bdea9a099729426219d1d1a5e6a9f5204c7e26462c72c96218bdf0de26a4a38d",
+  "package": "main",
+  "function": "pgrepSoak",
+  "signature": "pgrepSoak(params=1, results=2)",
+  "start": {
+    "line": 238,
+    "column": 1
+  },
+  "end": {
+    "line": 244,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 241,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 16
+      },
+      "text": "soakListProcesses"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 9
+      },
+      "text": "pidsOwnedBy"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

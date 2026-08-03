@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a060",
+  "title": "Make the console's soak restart use the profile the console is on",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a060-soak-restart-uses-this-profile",
+    "path": "openspec/changes/a060-soak-restart-uses-this-profile"
+  },
+  "acceptance": [
+    "A soak spawned by the console inherits the console's --config-dir and --session-file, so it reads the credentials and writes the record the console is showing",
+    "The soak process pattern matches the command line the console actually spawns",
+    "The pattern still ignores every other tossctl command line, including the engine",
+    "A survey belonging to a different record is never signalled by this console",
+    "The autostart script and the Go constant still agree, and the drift test now also binds the pattern to the spawn path"
+  ]
+}

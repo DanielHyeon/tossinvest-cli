@@ -11,6 +11,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -83,6 +84,10 @@ type procFakes struct {
 	spawned  [][2]string
 	spawnErr error
 	slept    time.Duration
+	// spawnArgs is the argv each spawn was given, and findRecords is the record
+	// each lookup was asked about — the two things a060 is about.
+	spawnArgs   [][]string
+	findRecords []string
 }
 
 func (f *procFakes) install(t *testing.T) {
@@ -97,7 +102,10 @@ func (f *procFakes) install(t *testing.T) {
 			oldFind, oldSignal, oldAlive, oldSpawn, oldSleep
 	})
 
-	soakFindProcesses = func() ([]int, error) { return f.found, f.findErr }
+	soakFindProcesses = func(record string) ([]int, error) {
+		f.findRecords = append(f.findRecords, record)
+		return f.found, f.findErr
+	}
 	soakSignalProcess = func(pid int) error {
 		if f.signalErr != nil {
 			return f.signalErr
@@ -112,11 +120,12 @@ func (f *procFakes) install(t *testing.T) {
 		f.aliveFor[pid]--
 		return true
 	}
-	soakSpawnDetached = func(bin, log string) error {
+	soakSpawnDetached = func(bin, log string, args []string) error {
 		if f.spawnErr != nil {
 			return f.spawnErr
 		}
 		f.spawned = append(f.spawned, [2]string{bin, log})
+		f.spawnArgs = append(f.spawnArgs, args)
 		return nil
 	}
 	soakSleep = func(d time.Duration) { f.slept += d }
@@ -128,7 +137,7 @@ func TestRestartingTheSoakInterruptsItThenStartsItAgain(t *testing.T) {
 	f := &procFakes{found: []int{4242}, aliveFor: map[int]int{4242: 3}}
 	f.install(t)
 
-	note, err := restartSoak(record)
+	note, err := restartSoak(nil, record)
 	if err != nil {
 		t.Fatalf("restartSoak: %v", err)
 	}
@@ -157,7 +166,7 @@ func TestRestartingWithNothingRunningJustStartsOne(t *testing.T) {
 	f := &procFakes{}
 	f.install(t)
 
-	note, err := restartSoak(record)
+	note, err := restartSoak(nil, record)
 	if err != nil {
 		t.Fatalf("restartSoak: %v", err)
 	}
@@ -181,7 +190,7 @@ func TestASurveyThatWillNotStopBlocksTheRestart(t *testing.T) {
 	f := &procFakes{found: []int{7}, aliveFor: map[int]int{7: 1 << 30}}
 	f.install(t)
 
-	_, err := restartSoak(record)
+	_, err := restartSoak(nil, record)
 	if err == nil {
 		t.Fatal("a survey that ignored SIGINT did not block the restart")
 	}
@@ -200,7 +209,7 @@ func TestTheRestartNeverSignalsThisProcess(t *testing.T) {
 	f := &procFakes{found: []int{os.Getpid()}}
 	f.install(t)
 
-	if _, err := restartSoak(record); err != nil {
+	if _, err := restartSoak(nil, record); err != nil {
 		t.Fatalf("restartSoak: %v", err)
 	}
 	if len(f.signalled) != 0 {
@@ -214,7 +223,7 @@ func TestAFailureToLookForTheSoakIsReportedAndNothingIsStarted(t *testing.T) {
 	f := &procFakes{findErr: errors.New("pgrep: not found")}
 	f.install(t)
 
-	if _, err := restartSoak(record); err == nil {
+	if _, err := restartSoak(nil, record); err == nil {
 		t.Fatal("a failed search reported success")
 	}
 	if len(f.spawned) != 0 {
@@ -232,13 +241,159 @@ func TestTheLogSitsBesideTheRecord(t *testing.T) {
 	}
 }
 
-// TestTheProcessPatternMatchesTheAutostartScript.
+// TestTheSoakSpawnCarriesThisProfile (change a060).
 //
-// soak-autostart.sh and this file are two halves of one mechanism. A survey one of
-// them can see and the other cannot is a bug that only shows up at three in the
-// morning.
-func TestTheProcessPatternMatchesTheAutostartScript(t *testing.T) {
-	if soakProcessPattern != "tossctl soak run" {
-		t.Errorf("the pattern is %q; soak-autostart.sh greps for \"tossctl soak run\"", soakProcessPattern)
+// The console computes the record path, the log path and the credential location
+// from its own --config-dir, draws all three on the screen, and then used to spawn
+// `tossctl soak run` with no flags at all — a child on the default profile.
+//
+// Measured in production on 2026-08-03: /var/lib/tossos/config/soak.log is nothing
+// but "soak: no Open API credentials" repeated, while the credentials sit in
+// /var/lib/tossos/config/openapi-credentials.json. The button had never once
+// worked in the container.
+func TestTheSoakSpawnCarriesThisProfile(t *testing.T) {
+	record := filepath.Join(t.TempDir(), "capability-soak.jsonl")
+	f := &procFakes{}
+	f.install(t)
+
+	if _, err := restartSoak(&rootOptions{
+		configDir:   "/var/lib/tossos/config",
+		sessionFile: "/run/tossos/session.json",
+	}, record); err != nil {
+		t.Fatalf("restartSoak: %v", err)
+	}
+	if len(f.spawnArgs) != 1 {
+		t.Fatalf("spawned %d surveys, want one", len(f.spawnArgs))
+	}
+	args := strings.Join(f.spawnArgs[0], " ")
+	for _, want := range []string{
+		"--config-dir /var/lib/tossos/config",
+		"--session-file /run/tossos/session.json",
+		"soak run",
+	} {
+		if !strings.Contains(args, want) {
+			t.Errorf("the spawned survey did not inherit the profile: %q is missing from %q",
+				want, args)
+		}
+	}
+}
+
+// TestTheSoakPatternMatchesWhatTheConsoleSpawns (change a060) replaces
+// TestTheProcessPatternMatchesTheAutostartScript, which compared the constant with
+// a literal this test file wrote down itself:
+//
+//	if soakProcessPattern != "tossctl soak run" { … }
+//
+// tools/soak-autostart.sh is not in this repository — the installed copy lives at
+// ~/.local/share/tossos/bin/. So that assertion had no second half to check against
+// and could only ever report that somebody changed the value, never that the value
+// was right. The engine's pattern passed three tests of that family while being
+// wrong (a059).
+//
+// This binds the pattern to the thing it has to match: the command line soakArgs
+// builds. Break the spawn or break the pattern and one of them fails.
+func TestTheSoakPatternMatchesWhatTheConsoleSpawns(t *testing.T) {
+	pattern, err := regexp.Compile(soakProcessPattern)
+	if err != nil {
+		t.Fatalf("soakProcessPattern is not a valid expression: %v", err)
+	}
+	for _, tc := range []struct {
+		name string
+		root *rootOptions
+	}{
+		{"no flags — the installed autostart script's invocation", nil},
+		{"a container console", &rootOptions{
+			configDir:   "/var/lib/tossos/config",
+			sessionFile: "/run/tossos/session.json",
+		}},
+		{"config dir only", &rootOptions{configDir: "/var/lib/tossos/config"}},
+	} {
+		command := "/usr/local/bin/tossctl " + strings.Join(soakArgs(tc.root), " ")
+		if !pattern.MatchString(command) {
+			t.Errorf("%s: the console cannot find the survey it spawns\n  pattern: %s\n  command: %s",
+				tc.name, soakProcessPattern, command)
+		}
+	}
+}
+
+// TestTheSoakPatternIgnoresTheOtherSubcommands. restartSoak sends SIGINT to what
+// this matches, and the engine is the process that must never be in that list.
+func TestTheSoakPatternIgnoresTheOtherSubcommands(t *testing.T) {
+	pattern := regexp.MustCompile(soakProcessPattern)
+	for _, command := range []string{
+		"/usr/local/bin/tossctl --config-dir /var/lib/tossos/config --session-file " +
+			"/run/tossos/session.json engine run",
+		"/usr/local/bin/tossctl --config-dir /var/lib/tossos/config console --port 37085",
+		"/usr/local/bin/tossctl --config-dir /var/lib/tossos/config httpapi --port 37086",
+		"/usr/local/bin/tossctl --config-dir /srv/mysoak runtime console",
+	} {
+		if pattern.MatchString(command) {
+			t.Errorf("the soak pattern matches a command that is not a survey:\n  %s", command)
+		}
+	}
+}
+
+// TestOnlyThisRecordsSoakIsFound (change a060). Widening the pattern lets this
+// console see every profile's survey, and a host shares its PID namespace with its
+// containers. A survey's identity is the record it appends to — soakproc.go's own
+// header says two surveys on one record is the thing to avoid — so that is what
+// ownership is judged on.
+func TestOnlyThisRecordsSoakIsFound(t *testing.T) {
+	ours := "/var/lib/tossos/config/capability-soak.jsonl"
+	got := pidsOwnedBy([]string{
+		"31 /usr/local/bin/tossctl --config-dir /var/lib/tossos/config --session-file " +
+			"/run/tossos/session.json soak run",
+		"4242 /usr/local/bin/tossctl --config-dir /tmp/other-profile soak run",
+		"4243 /usr/local/bin/tossctl --config-dir=/var/lib/tossos/config soak run",
+		"4244 notapid",
+		"4245 /usr/local/bin/tossctl --config-dir /var/lib/tossos/config engine run",
+	}, soakProcessMatcher, ours, soakRecordForConfigDir)
+
+	if want := []int{31, 4243}; !pidsEqual(got, want) {
+		t.Errorf("pidsOwnedBy = %v, want %v — this console must find its own survey and "+
+			"only its own, and never the engine", got, want)
+	}
+}
+
+// TestTheRestartDoesNotSignalAnotherRecordsSoak runs the real discovery against two
+// surveys. Interrupting somebody else's survey costs them a cycle and their record
+// its continuity.
+func TestTheRestartDoesNotSignalAnotherRecordsSoak(t *testing.T) {
+	dir := t.TempDir()
+	record := filepath.Join(dir, "capability-soak.jsonl")
+	f := &procFakes{aliveFor: map[int]int{31: 1, 4242: 1}}
+	f.install(t)
+
+	prev := soakListProcesses
+	soakListProcesses = func() ([]string, error) {
+		return []string{
+			"31 /usr/local/bin/tossctl --config-dir " + dir + " soak run",
+			"4242 /usr/local/bin/tossctl --config-dir /tmp/other-profile soak run",
+		}, nil
+	}
+	prevFind := soakFindProcesses
+	soakFindProcesses = pgrepSoak
+	t.Cleanup(func() { soakListProcesses, soakFindProcesses = prev, prevFind })
+
+	if _, err := restartSoak(&rootOptions{configDir: dir}, record); err != nil {
+		t.Fatalf("restartSoak: %v", err)
+	}
+	if !pidsEqual(f.signalled, []int{31}) {
+		t.Fatalf("signalled %v, want [31] — 4242 appends to another record", f.signalled)
+	}
+}
+
+// TestTheRestartAsksAboutThisConsolesRecord pins the wiring the two tests above
+// rely on.
+func TestTheRestartAsksAboutThisConsolesRecord(t *testing.T) {
+	record := filepath.Join(t.TempDir(), "capability-soak.jsonl")
+	f := &procFakes{}
+	f.install(t)
+
+	if _, err := restartSoak(&rootOptions{configDir: filepath.Dir(record)}, record); err != nil {
+		t.Fatalf("restartSoak: %v", err)
+	}
+	if len(f.findRecords) != 1 || f.findRecords[0] != record {
+		t.Errorf("the lookup was asked about %v, want [%s]", f.findRecords, record)
 	}
 }

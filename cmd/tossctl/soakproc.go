@@ -35,6 +35,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -46,9 +47,26 @@ import (
 // soak-autostart.sh already uses, in the directory the record already lives in.
 const soakLogName = "soak.log"
 
-// soakProcessPattern is how a running survey is recognised. It is
-// soak-autostart.sh's pattern, unchanged.
-const soakProcessPattern = "tossctl soak run"
+// soakProcessPattern is how a survey *candidate* is recognised: the extended
+// regular expression handed to `pgrep -f`.
+//
+// It used to be the literal "tossctl soak run", which matched only because the
+// spawn below was broken in the mirror-image way (change a060): the console passed
+// no flags at all, so the child ran on the default profile and could not find the
+// credentials the console was looking at. Now that the child inherits the profile,
+// the words are no longer adjacent and the literal would find nothing — the same
+// failure a059 fixed for the engine, arrived at from the opposite direction.
+//
+// The leading space before `soak run` is load-bearing: it makes `soak` a whole argv
+// token, so a path like /srv/mysoak runtime is not a survey.
+//
+// It selects candidates and does not establish ownership; pidsOwnedBy decides which
+// survey is this console's, by the record it appends to (a060 design D2).
+const soakProcessPattern = `tossctl( .*)? soak run`
+
+// soakProcessMatcher is soakProcessPattern compiled once, for judging a command
+// line without another trip through pgrep.
+var soakProcessMatcher = regexp.MustCompile(soakProcessPattern)
 
 // soakStopTimeout bounds the wait for an interrupted survey to finish its cycle.
 //
@@ -61,8 +79,12 @@ const soakStopTimeout = 30 * time.Second
 // whole restart without a process table, a signal or a fork — there is no flag and
 // no environment variable that reaches them.
 var (
-	// soakFindProcesses lists the pids of running surveys.
+	// soakFindProcesses lists the pids of surveys appending to recordPath.
 	soakFindProcesses = pgrepSoak
+	// soakListProcesses is the raw enumeration underneath it: one `pid command`
+	// line per candidate, so a test can exercise the pattern, the parsing and the
+	// ownership judgement without a process table (change a060).
+	soakListProcesses = pgrepSoakLines
 	// soakSignalProcess asks one to stop.
 	soakSignalProcess = interruptPID
 	// soakProcessAlive reports that a pid is still there.
@@ -79,19 +101,56 @@ func soakLogPath(recordPath string) string {
 	return filepath.Join(filepath.Dir(recordPath), soakLogName)
 }
 
+// soakArgs is the command line a spawned survey gets: the subcommand plus the
+// profile flags the console itself was started with (change a060).
+//
+// This is engineArgs' shape, and it is here for engineArgs' reason: an isolated
+// profile has to stay isolated across the button. Without it the console drew the
+// record, the log and the credential location from its own --config-dir and then
+// started a child that read none of them.
+//
+// The record path is deliberately not passed. resolveSoakRecord derives it from
+// --config-dir on the child's side, so sending both would create two places for one
+// answer to come from. --record stays a CLI-only override.
+func soakArgs(root *rootOptions) []string {
+	args := []string{"soak", "run"}
+	if root != nil && strings.TrimSpace(root.sessionFile) != "" {
+		args = append([]string{"--session-file", root.sessionFile}, args...)
+	}
+	if root != nil && strings.TrimSpace(root.configDir) != "" {
+		args = append([]string{"--config-dir", root.configDir}, args...)
+	}
+	return args
+}
+
+// soakRecordForConfigDir answers "which record does a survey started with this
+// --config-dir append to", through the same function the console uses for its own.
+// An empty configDir is a survey that named no profile, and the answer is the
+// default record.
+func soakRecordForConfigDir(configDir string) string {
+	path, err := resolveSoakRecord(&rootOptions{configDir: configDir}, "")
+	if err != nil {
+		return ""
+	}
+	return path
+}
+
 // restartSoak is the console's RestartSoak seam.
 //
 // It returns one line describing what happened, which the dashboard prints
 // verbatim: the operator pressed a button on a process they cannot see, and the
 // answer has to say whether anything was actually stopped.
-func restartSoak(recordPath string, prepareSpawn ...func() error) (string, error) {
+func restartSoak(root *rootOptions, recordPath string, prepareSpawn ...func() error) (string, error) {
 	binary, err := binstamp.SelfPath()
 	if err != nil {
 		return "", err
 	}
 	logPath := soakLogPath(recordPath)
 
-	pids, err := soakFindProcesses()
+	// Scoped to this console's record: another profile's survey appends somewhere
+	// else and is a different instance, so it is neither ours to interrupt nor a
+	// reason not to start ours (change a060).
+	pids, err := soakFindProcesses(recordPath)
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +177,7 @@ func restartSoak(recordPath string, prepareSpawn ...func() error) (string, error
 			return "", fmt.Errorf("새 soak 시작 직전 token cache를 준비하지 못했다: %w", err)
 		}
 	}
-	if err := soakSpawnDetached(binary, logPath); err != nil {
+	if err := soakSpawnDetached(binary, logPath, soakArgs(root)); err != nil {
 		return "", err
 	}
 
@@ -176,8 +235,18 @@ func soakReExec() error {
 // pgrep rather than a /proc walk: the autostart script is the other half of this
 // mechanism and it uses pgrep, so a survey that one of them can see and the other
 // cannot would be a bug that only appears at three in the morning.
-func pgrepSoak() ([]int, error) {
-	out, err := exec.Command("pgrep", "-f", soakProcessPattern).Output()
+func pgrepSoak(recordPath string) ([]int, error) {
+	lines, err := soakListProcesses()
+	if err != nil {
+		return nil, err
+	}
+	return pidsOwnedBy(lines, soakProcessMatcher, recordPath, soakRecordForConfigDir), nil
+}
+
+// pgrepSoakLines enumerates survey candidates, with `-a` so each pid arrives with
+// the command line that has to be judged.
+func pgrepSoakLines() ([]string, error) {
+	out, err := exec.Command("pgrep", "-a", "-f", soakProcessPattern).Output()
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
@@ -185,16 +254,7 @@ func pgrepSoak() ([]int, error) {
 		}
 		return nil, fmt.Errorf("실행 중인 soak을 찾을 수 없다 (pgrep): %w", err)
 	}
-
-	var pids []int
-	for _, line := range strings.Fields(string(out)) {
-		pid, convErr := strconv.Atoi(line)
-		if convErr != nil || pid <= 0 {
-			continue
-		}
-		pids = append(pids, pid)
-	}
-	return pids, nil
+	return strings.Split(strings.TrimSpace(string(out)), "\n"), nil
 }
 
 func interruptPID(pid int) error {
@@ -220,7 +280,7 @@ func pidAlive(pid int) bool {
 // setsid is what soak-autostart.sh uses and it is what makes the survey survive the
 // console being closed: a new session means no controlling terminal, so the
 // operator's Ctrl-C reaches the console and not the survey behind it.
-func spawnDetachedSoak(binary, logPath string) error {
+func spawnDetachedSoak(binary, logPath string, args []string) error {
 	if err := os.MkdirAll(filepath.Dir(logPath), 0o700); err != nil {
 		return fmt.Errorf("로그 디렉터리를 만들 수 없다 (%s): %w", filepath.Dir(logPath), err)
 	}
@@ -230,14 +290,14 @@ func spawnDetachedSoak(binary, logPath string) error {
 	}
 	defer logFile.Close()
 
-	cmd := exec.Command(binary, "soak", "run")
+	cmd := exec.Command(binary, args...)
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
 	cmd.Stdin = nil
 	detachProcess(cmd)
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("soak을 다시 시작할 수 없다 (%s soak run): %w", binary, err)
+		return fmt.Errorf("soak을 다시 시작할 수 없다 (%s %s): %w", binary, strings.Join(args, " "), err)
 	}
 	// Nothing waits for it. It is meant to run for days, and the console that
 	// started it may itself be restarted in a minute.

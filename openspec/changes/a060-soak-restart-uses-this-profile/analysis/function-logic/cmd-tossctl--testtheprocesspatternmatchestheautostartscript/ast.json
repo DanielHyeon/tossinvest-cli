@@ -1,0 +1,40 @@
+{
+  "file": "cmd/tossctl/soakproc_test.go",
+  "source_sha256": "be7089f22e0ab70c68af3d92bf8ff222404bae857536aac7552b8325a63340d4",
+  "package": "main",
+  "function": "TestTheProcessPatternMatchesTheAutostartScript",
+  "signature": "TestTheProcessPatternMatchesTheAutostartScript(params=1, results=0)",
+  "start": {
+    "line": 240,
+    "column": 1
+  },
+  "end": {
+    "line": 244,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

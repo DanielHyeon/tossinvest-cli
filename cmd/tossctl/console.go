@@ -431,7 +431,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Relaunch: consoleRelaunch(out),
 		Handoff:  handoff.New(consoleHandoffPath(verifyRecord)),
 		RestartSoak: func() (string, error) {
-			return restartSoak(soakRecord, openAPISeam.PrepareSpawn)
+			return restartSoak(root, soakRecord, openAPISeam.PrepareSpawn)
 		},
 		CheckOpenAPI: func(ctx context.Context) console.OpenAPICredentialCheck {
 			return toConsoleOpenAPICredentialCheck(openAPISeam.Check(ctx))
