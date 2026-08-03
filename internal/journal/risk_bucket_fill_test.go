@@ -224,6 +224,13 @@ func TestRiskBucketOrphanReservationMappingLatchesWithoutDroppingAuthoritativeFi
 
 func TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppingFill(t *testing.T) {
 	j, key, decisionID, reserved := riskBucketFillFixture(t, "ambiguous-sidecar", "risk-ambiguous")
+	insertPosition(t, j, "risk-ambiguous-position", nil)
+	if err := j.SetApplyHooks(ApplyHooks{Project: func(ctx context.Context, tx *ApplyTx, fill AppliedFill) error {
+		_, err := tx.Exec(ctx, `UPDATE positions SET quantity=?,state='OPEN' WHERE id='risk-ambiguous-position'`, fill.CumulativeQuantity)
+		return err
+	}}); err != nil {
+		t.Fatal(err)
+	}
 	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-ambiguous", DecisionID: decisionID, OrderQuantity: 10, ReservedMinor: reserved, CreatedAt: riskFillNow}); err != nil {
 		t.Fatal(err)
 	}
@@ -249,6 +256,10 @@ func TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppi
 	if _, err := j.LookupFill(context.Background(), "risk-ambiguous"); err != nil {
 		t.Fatalf("authoritative fill missing: %v", err)
 	}
+	var positionQuantity string
+	if err := j.db.QueryRow(`SELECT quantity FROM positions WHERE id='risk-ambiguous-position'`).Scan(&positionQuantity); err != nil || positionQuantity != "1" {
+		t.Fatalf("authoritative position quantity=%q err=%v", positionQuantity, err)
+	}
 	var ownerLatched, reservationsLatched, unaccounted int
 	if err := j.db.QueryRow(`SELECT unknown_actual_latched FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=?`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&ownerLatched); err != nil {
 		t.Fatal(err)
@@ -264,6 +275,39 @@ func TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppi
 	}
 	if got := countRiskBucketRows(t, j, "risk_bucket_fills"); got != 0 {
 		t.Fatalf("ambiguous fill was falsely allocated: %d", got)
+	}
+}
+
+func TestRiskBucketOwnershipAmbiguityLatchesEveryOwnerDecisionWithoutDroppingFill(t *testing.T) {
+	j, key, decisionID, reserved := riskBucketFillFixture(t, "ownership-ambiguous", "risk-owner-ambiguous")
+	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-owner-ambiguous", DecisionID: decisionID, OrderQuantity: 10, ReservedMinor: reserved, CreatedAt: riskFillNow}); err != nil {
+		t.Fatal(err)
+	}
+	commitRiskBucketScaleIn(t, j, key, "ownership-ambiguous-second", "200", "50")
+	recordConfirmedFillOrder(t, j, "risk-owner-conflict-intent", "risk-owner-conflict-attempt", "risk-owner-ambiguous")
+
+	result, err := j.RecordFill(context.Background(), observation("risk-owner-ambiguous", "1"))
+	if err != nil || !result.Changed {
+		t.Fatalf("ambiguous ownership dropped fill result=%+v err=%v", result, err)
+	}
+	if _, err := j.LookupFill(context.Background(), "risk-owner-ambiguous"); err != nil {
+		t.Fatalf("authoritative fill missing: %v", err)
+	}
+	var ownerLatched, reservationsLatched, unaccounted int
+	if err := j.db.QueryRow(`SELECT unknown_actual_latched FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=?`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&ownerLatched); err != nil {
+		t.Fatal(err)
+	}
+	if err := j.db.QueryRow(`SELECT count(*) FROM risk_bucket_reservations WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=? AND unknown_actual_latched=1`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&reservationsLatched); err != nil {
+		t.Fatal(err)
+	}
+	if err := j.db.QueryRow(`SELECT count(*) FROM risk_bucket_events WHERE event_type='FILL_UNACCOUNTED'`).Scan(&unaccounted); err != nil {
+		t.Fatal(err)
+	}
+	if ownerLatched != 1 || reservationsLatched != 10 || unaccounted != 1 {
+		t.Fatalf("latches owner=%d reservations=%d unaccounted=%d", ownerLatched, reservationsLatched, unaccounted)
+	}
+	if got := countRiskBucketRows(t, j, "risk_bucket_fills"); got != 0 {
+		t.Fatalf("ambiguous ownership was falsely allocated: %d", got)
 	}
 }
 
@@ -388,29 +432,118 @@ func TestRiskBucketActualAndReleaseRequireExactOwnerDecisionScopeForCollidingOrd
 	}
 }
 
-func TestRiskBucketOrderRegistrationFailsClosedForSameOwnerMultiDecisionUntilAggregateAccounting(t *testing.T) {
-	j, key, firstDecision, reserved := riskBucketFillFixture(t, "multi-decision", "risk-multi")
-	seedExistingRiskReservation(t, j, "existing-fill-multi-second", "acct-1")
-	second := riskBucketAdmissionFixture(t, "fill-multi-second", "acct-1", "lane-short", "campaign-1", key.ProspectiveGeneration, "200", "50")
-	second.ExistingReservationID = "existing-fill-multi-second"
-	second.Owner.Key = key
-	second.Admission.Policy.QuoteCurrency = "USD"
-	second.Admission.Policy.AccountCurrency = "KRW"
-	rebindRiskBucket(t, &second, 1, riskbucket.BucketKey{Dimension: riskbucket.DimensionMarket, Value: "US", PolicyVersion: "policy-v1"})
-	rebindRiskBucket(t, &second, 4, riskbucket.BucketKey{Dimension: riskbucket.DimensionSymbol, Value: "AAPL", PolicyVersion: "policy-v1"})
-	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); err != nil {
+func TestRiskBucketOwnerAggregateAccountsTwoDecisionOrdersAcrossRestart(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	j := openTestJournalAt(t, path)
+	key, firstDecision, firstReserved := seedRiskBucketFillFixture(t, j, "multi-decision", "risk-multi-one")
+	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-multi-one", DecisionID: firstDecision, OrderQuantity: 10, ReservedMinor: firstReserved, CreatedAt: riskFillNow}); err != nil {
 		t.Fatal(err)
 	}
-	err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-multi", DecisionID: firstDecision, OrderQuantity: 10, ReservedMinor: reserved, ReservationPolicyDigest: "reservation-policy-v1", QuoteCurrency: "KRW", BaseCurrency: "KRW", CreatedAt: riskFillNow})
-	if !errors.Is(err, ErrRiskBucketReplayMismatch) {
-		t.Fatalf("multi-decision registration error=%v", err)
+	secondReceipt, secondReserved := commitRiskBucketScaleIn(t, j, key, "multi-second", "200", "50")
+	recordConfirmedFillOrder(t, j, "risk-multi-two-intent", "risk-multi-two-attempt", "risk-multi-two")
+	bindRiskOrderAttemptDecision(t, j, "risk-multi-two", secondReceipt.DecisionID)
+	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-multi-two", DecisionID: secondReceipt.DecisionID, OrderQuantity: 10, ReservedMinor: secondReserved, CreatedAt: riskFillNow.Add(time.Second)}); err != nil {
+		t.Fatal(err)
 	}
-	if got := countRiskBucketRows(t, j, "risk_bucket_orders"); got != 0 {
-		t.Fatalf("orders=%d", got)
+	if _, err := j.RecordFill(context.Background(), observation("risk-multi-one", "4")); err != nil {
+		t.Fatal(err)
+	}
+	secondFill := observation("risk-multi-two", "2")
+	if _, err := j.RecordFill(context.Background(), secondFill); err != nil {
+		t.Fatal(err)
+	}
+	state, err := j.ReadRiskBucketState(context.Background(), key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state.QFinal != 20 {
+		t.Fatalf("aggregate q_final=%d", state.QFinal)
+	}
+	assertRiskUsage(t, state, "70", "30", false, true)
+	for _, check := range []struct{ orderID, decisionID string }{{"risk-multi-one", firstDecision}, {"risk-multi-two", secondReceipt.DecisionID}} {
+		var own, cross int
+		if err := j.db.QueryRow(`SELECT count(*) FROM risk_bucket_fill_allocations a JOIN risk_bucket_fills f ON f.fill_id=a.fill_id JOIN risk_bucket_reservations r ON r.reservation_id=a.reservation_id WHERE f.order_id=? AND r.decision_id=?`, check.orderID, check.decisionID).Scan(&own); err != nil {
+			t.Fatal(err)
+		}
+		if err := j.db.QueryRow(`SELECT count(*) FROM risk_bucket_fill_allocations a JOIN risk_bucket_fills f ON f.fill_id=a.fill_id JOIN risk_bucket_reservations r ON r.reservation_id=a.reservation_id WHERE f.order_id=? AND r.decision_id<>?`, check.orderID, check.decisionID).Scan(&cross); err != nil {
+			t.Fatal(err)
+		}
+		if own != 5 || cross != 0 {
+			t.Fatalf("%s allocation own/cross=%d/%d", check.orderID, own, cross)
+		}
+	}
+	for _, check := range []struct{ decisionID, held, filled string }{
+		{firstDecision, "30", "20"},
+		{secondReceipt.DecisionID, "40", "10"},
+	} {
+		var matches int
+		if err := j.db.QueryRow(`SELECT count(*) FROM risk_bucket_reservations WHERE decision_id=? AND held_minor=? AND filled_minor=?`, check.decisionID, check.held, check.filled).Scan(&matches); err != nil {
+			t.Fatal(err)
+		}
+		if matches != 5 {
+			t.Fatalf("decision %s exact held/filled rows=%d", check.decisionID, matches)
+		}
+	}
+	if err := j.Close(); err != nil {
+		t.Fatal(err)
+	}
+	reopened, err := Open(context.Background(), Options{Path: path, Clock: clock.NewFake(riskFillNow), FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	if state, err := reopened.ReadRiskBucketState(context.Background(), key); err != nil || state.QFinal != 20 {
+		t.Fatalf("restart aggregate state=%+v err=%v", state, err)
+	}
+	for _, actual := range []RiskBucketActualFillPlan{
+		{Owner: key, DecisionID: firstDecision, OrderID: "risk-multi-one", CumulativeFill: 4, Actual: riskBucketActual("5", "1", "0"), ObservedAt: riskFillNow.Add(2 * time.Second)},
+		{Owner: key, DecisionID: secondReceipt.DecisionID, OrderID: "risk-multi-two", CumulativeFill: 2, Actual: riskBucketActual("5", "1", "0"), ObservedAt: riskFillNow.Add(3 * time.Second)},
+	} {
+		if result, err := reopened.completeRiskBucketFillActual(context.Background(), actual); err != nil || !result.ActualEvidenceCompleted {
+			t.Fatalf("actual completion=%+v err=%v", result, err)
+		}
+	}
+	state, err = reopened.ReadRiskBucketState(context.Background(), key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertRiskUsage(t, state, "70", "30", false, false)
+}
+
+func TestRiskBucketLateFillCannotConsumeSiblingDecisionHeld(t *testing.T) {
+	j, key, firstDecision, firstReserved := riskBucketFillFixture(t, "multi-late", "risk-multi-late-one")
+	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-multi-late-one", DecisionID: firstDecision, OrderQuantity: 10, ReservedMinor: firstReserved, CreatedAt: riskFillNow}); err != nil {
+		t.Fatal(err)
+	}
+	secondReceipt, secondReserved := commitRiskBucketScaleIn(t, j, key, "multi-late-second", "200", "50")
+	recordConfirmedFillOrder(t, j, "risk-multi-late-two-intent", "risk-multi-late-two-attempt", "risk-multi-late-two")
+	bindRiskOrderAttemptDecision(t, j, "risk-multi-late-two", secondReceipt.DecisionID)
+	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-multi-late-two", DecisionID: secondReceipt.DecisionID, OrderQuantity: 10, ReservedMinor: secondReserved, CreatedAt: riskFillNow.Add(time.Second)}); err != nil {
+		t.Fatal(err)
+	}
+	if result, err := j.releaseRiskBucketOrder(context.Background(), RiskBucketOrderRelease{Owner: key, DecisionID: firstDecision, OrderID: "risk-multi-late-one", Reason: RiskBucketReleaseCancel, ReleasedAt: riskFillNow.Add(2 * time.Second)}); err != nil || !result.Released {
+		t.Fatalf("first release=%+v err=%v", result, err)
+	}
+	if result, err := j.RecordFill(context.Background(), observation("risk-multi-late-one", "1")); err != nil || !result.Changed {
+		t.Fatalf("late fill=%+v err=%v", result, err)
+	}
+	state, err := j.ReadRiskBucketState(context.Background(), key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertRiskUsage(t, state, "50", "5", true, true)
+	for _, check := range []struct{ decisionID, held string }{{firstDecision, "0"}, {secondReceipt.DecisionID, "50"}} {
+		var matches int
+		if err := j.db.QueryRow(`SELECT count(*) FROM risk_bucket_reservations WHERE decision_id=? AND held_minor=?`, check.decisionID, check.held).Scan(&matches); err != nil {
+			t.Fatal(err)
+		}
+		if matches != 5 {
+			t.Fatalf("decision %s held %s rows=%d", check.decisionID, check.held, matches)
+		}
 	}
 }
 
-func TestRiskBucketScaleInAdmissionFailsClosedWhileOrderAccountingIsActive(t *testing.T) {
+func TestRiskBucketScaleInAdmissionWhileOrderActiveStillRejectsBucketDrift(t *testing.T) {
 	j, key, decisionID, reserved := riskBucketFillFixture(t, "active-scale", "risk-active-scale")
 	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-active-scale", DecisionID: decisionID, OrderQuantity: 10, ReservedMinor: reserved, ReservationPolicyDigest: "reservation-policy-v1", QuoteCurrency: "KRW", BaseCurrency: "KRW", CreatedAt: riskFillNow}); err != nil {
 		t.Fatal(err)
@@ -419,10 +552,13 @@ func TestRiskBucketScaleInAdmissionFailsClosedWhileOrderAccountingIsActive(t *te
 	second := riskBucketAdmissionFixture(t, "active-scale-second", "acct-1", "lane-short", "campaign-1", key.ProspectiveGeneration, "200", "50")
 	second.ExistingReservationID = "existing-active-scale-second"
 	second.Owner.Key = key
+	second.Admission.Policy.QuoteCurrency = "USD"
+	second.Admission.Policy.AccountCurrency = "KRW"
 	rebindRiskBucket(t, &second, 1, riskbucket.BucketKey{Dimension: riskbucket.DimensionMarket, Value: "US", PolicyVersion: "policy-v1"})
 	rebindRiskBucket(t, &second, 4, riskbucket.BucketKey{Dimension: riskbucket.DimensionSymbol, Value: "AAPL", PolicyVersion: "policy-v1"})
+	rebindRiskBucket(t, &second, 2, riskbucket.BucketKey{Dimension: riskbucket.DimensionStrategy, Value: "strategy-drift", PolicyVersion: "policy-v1"})
 	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); !errors.Is(err, ErrRiskBucketSnapshotMismatch) {
-		t.Fatalf("active scale-in error=%v", err)
+		t.Fatalf("active scale-in drift error=%v", err)
 	}
 	if got := countRiskBucketRows(t, j, "risk_bucket_final_decisions"); got != 1 {
 		t.Fatalf("decisions=%d", got)
@@ -456,6 +592,29 @@ func TestRiskBucketOrderRegistrationRejectsQuantityDivergentFromConfirmedIntent(
 		t.Fatalf("authority quantity error=%v", err)
 	}
 	if got := countRiskBucketRows(t, j, "risk_bucket_orders"); got != 0 {
+		t.Fatalf("orders=%d", got)
+	}
+}
+
+func TestRiskBucketOrderRegistrationRejectsBrokerOrderIDCollisionAcrossOwnerDecisions(t *testing.T) {
+	j, key, firstDecision, firstReserved := riskBucketFillFixture(t, "owner-order-collision", "risk-owner-order-collision")
+	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-owner-order-collision", DecisionID: firstDecision, OrderQuantity: 10, ReservedMinor: firstReserved, CreatedAt: riskFillNow}); err != nil {
+		t.Fatal(err)
+	}
+	secondReceipt, secondReserved := commitRiskBucketScaleIn(t, j, key, "owner-order-collision-second", "200", "50")
+	recordConfirmedFillOrder(t, j, "risk-owner-order-collision-second-intent", "risk-owner-order-collision-second-attempt", "risk-owner-order-collision")
+	var legacyDecisionID string
+	if err := j.db.QueryRow(`SELECT legacy.decision_id FROM risk_bucket_final_decisions d JOIN risk_reservations legacy ON legacy.id=d.existing_reservation_id WHERE d.decision_id=?`, secondReceipt.DecisionID).Scan(&legacyDecisionID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.Exec(`UPDATE mutation_attempts SET decision_id=? WHERE id='risk-owner-order-collision-second-attempt'`, legacyDecisionID); err != nil {
+		t.Fatal(err)
+	}
+	err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: "risk-owner-order-collision", DecisionID: secondReceipt.DecisionID, OrderQuantity: 10, ReservedMinor: secondReserved, CreatedAt: riskFillNow.Add(time.Second)})
+	if !errors.Is(err, ErrRiskBucketReplayMismatch) {
+		t.Fatalf("owner broker order collision error=%v", err)
+	}
+	if got := countRiskBucketRows(t, j, "risk_bucket_orders"); got != 1 {
 		t.Fatalf("orders=%d", got)
 	}
 }
@@ -563,6 +722,24 @@ func seedRiskBucketFillFixture(t *testing.T, j *Journal, suffix, orderID string)
 	recordConfirmedFillOrder(t, j, "risk-intent-"+suffix, "risk-attempt-"+suffix, orderID)
 	bindRiskOrderAttemptDecision(t, j, orderID, receipt.DecisionID)
 	return plan.Owner.Key, receipt.DecisionID, riskReservedMap("50")
+}
+
+func commitRiskBucketScaleIn(t *testing.T, j *Journal, key riskbucket.OwnerKey, suffix, limit, held string) (RiskBucketAdmissionReceipt, map[riskbucket.BucketKey]string) {
+	t.Helper()
+	existingID := "existing-fill-" + suffix
+	seedExistingRiskReservation(t, j, existingID, key.AccountID)
+	plan := riskBucketAdmissionFixture(t, "fill-"+suffix, key.AccountID, "lane-short", "campaign-1", key.ProspectiveGeneration, limit, held)
+	plan.ExistingReservationID = existingID
+	plan.Owner.Key = key
+	plan.Admission.Policy.QuoteCurrency = "USD"
+	plan.Admission.Policy.AccountCurrency = "KRW"
+	rebindRiskBucket(t, &plan, 1, riskbucket.BucketKey{Dimension: riskbucket.DimensionMarket, Value: string(key.Market), PolicyVersion: "policy-v1"})
+	rebindRiskBucket(t, &plan, 4, riskbucket.BucketKey{Dimension: riskbucket.DimensionSymbol, Value: key.Symbol, PolicyVersion: "policy-v1"})
+	receipt, err := j.CommitRiskBucketAdmission(context.Background(), plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return receipt, riskReservedFromPlan(plan, "50")
 }
 
 func bindRiskOrderAttemptDecision(t *testing.T, j *Journal, orderID, riskDecisionID string) {

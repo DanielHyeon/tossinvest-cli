@@ -81,13 +81,6 @@ func (j *Journal) RegisterRiskBucketOrder(ctx context.Context, plan RiskBucketOr
 	if confirmedAuthority != 1 || quantityErr != nil || confirmedOrderQuantity != plan.OrderQuantity {
 		return fmt.Errorf("%w: order lacks one exact confirmed authority", ErrRiskBucketReplayMismatch)
 	}
-	var decisionCount int
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_final_decisions WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=?`, account, market, symbol, prospective).Scan(&decisionCount); err != nil {
-		return err
-	}
-	if decisionCount != 1 {
-		return fmt.Errorf("%w: multi-decision owner fill aggregation is not active", ErrRiskBucketReplayMismatch)
-	}
 	authority, err := loadRiskBucketOrderAuthority(ctx, tx, plan.DecisionID)
 	if err != nil {
 		return err
@@ -109,6 +102,13 @@ func (j *Journal) RegisterRiskBucketOrder(ctx context.Context, plan RiskBucketOr
 		return tx.Commit()
 	} else if !errors.Is(err, sql.ErrNoRows) {
 		return err
+	}
+	var ownerOrderIDCollisions int
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_orders o JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE o.order_id=? AND o.order_key<>? AND d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=?`, plan.OrderID, orderKey, account, market, symbol, prospective).Scan(&ownerOrderIDCollisions); err != nil {
+		return err
+	}
+	if ownerOrderIDCollisions != 0 {
+		return fmt.Errorf("%w: broker order id already bound inside owner", ErrRiskBucketReplayMismatch)
 	}
 	if err := verifyRiskBucketStateDigest(ctx, tx, riskbucket.OwnerKey{AccountID: account, Market: riskbucket.Market(market), Symbol: symbol, ProspectiveGeneration: prospective}); err != nil {
 		return err
@@ -482,8 +482,8 @@ func riskBucketOrderPlanDigest(plan RiskBucketOrderPlan, bindings []riskBucketOr
 
 func riskBucketFillEventDigest(event riskbucket.FillEvent) (string, error) {
 	type reservation struct {
-		Key    riskbucket.BucketKey
-		Amount string
+		Key                riskbucket.BucketKey
+		Amount, TargetHeld string
 	}
 	ordered := make([]reservation, 0, len(riskbucket.RequiredDimensionOrder()))
 	for _, dimension := range riskbucket.RequiredDimensionOrder() {
@@ -493,7 +493,7 @@ func riskBucketFillEventDigest(event riskbucket.FillEvent) (string, error) {
 				if matched {
 					return "", fmt.Errorf("%w: duplicate fill reservation dimension", ErrRiskBucketReplayMismatch)
 				}
-				ordered = append(ordered, reservation{Key: key, Amount: amount})
+				ordered = append(ordered, reservation{Key: key, Amount: amount, TargetHeld: event.TargetHeldMinor[key]})
 				matched = true
 			}
 		}
@@ -502,11 +502,11 @@ func riskBucketFillEventDigest(event riskbucket.FillEvent) (string, error) {
 		}
 	}
 	return riskBucketRecordDigest(struct {
-		FillID, OrderID, ReservationPolicyDigest, QuoteCurrency, BaseCurrency string
-		OrderQuantity, NewCumulativeFill                                      uint64
-		Reservations                                                          []reservation
-		Actual                                                                *riskbucket.ActualFillEvidence
-	}{event.FillID, event.OrderID, event.ReservationPolicyDigest, event.QuoteCurrency, event.BaseCurrency, event.OrderQuantity, event.NewCumulativeFill, ordered, event.Actual})
+		FillID, OrderKey, OrderID, ReservationPolicyDigest, QuoteCurrency, BaseCurrency string
+		OrderQuantity, NewCumulativeFill                                                uint64
+		Reservations                                                                    []reservation
+		Actual                                                                          *riskbucket.ActualFillEvidence
+	}{event.FillID, event.OrderKey, event.OrderID, event.ReservationPolicyDigest, event.QuoteCurrency, event.BaseCurrency, event.OrderQuantity, event.NewCumulativeFill, ordered, event.Actual})
 }
 
 func riskBucketOrderForFill(ctx context.Context, tx *sql.Tx, fill AppliedFill) (riskBucketOrderRecord, bool, error) {
@@ -589,6 +589,36 @@ func subtractRiskMinorFloor(left, right string) (string, error) {
 	}
 	return a.String(), nil
 }
+
+func subtractRiskMinorExact(left, right string) (string, error) {
+	a, err := parseRiskMinor(left)
+	if err != nil {
+		return "", err
+	}
+	b, err := parseRiskMinor(right)
+	if err != nil {
+		return "", err
+	}
+	if a.Cmp(b) < 0 {
+		return "", fmt.Errorf("%w: aggregate target reservation underflow", ErrRiskBucketReplayMismatch)
+	}
+	return new(big.Int).Sub(a, b).String(), nil
+}
+
+func riskMinorMonotoneDelta(high, low string) (string, error) {
+	a, err := parseRiskMinor(high)
+	if err != nil {
+		return "", err
+	}
+	b, err := parseRiskMinor(low)
+	if err != nil {
+		return "", err
+	}
+	if a.Cmp(b) < 0 {
+		return "", fmt.Errorf("%w: non-monotone aggregate usage", ErrRiskBucketReplayMismatch)
+	}
+	return new(big.Int).Sub(a, b).String(), nil
+}
 func equalRiskMinorMap(a, b map[riskbucket.BucketKey]string) bool {
 	if len(a) != len(b) {
 		return false
@@ -656,31 +686,85 @@ func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBu
 	}
 	state.OwnerLatches[riskbucket.LatchRiskOverage] = ownerOverage != 0
 	state.OwnerLatches[riskbucket.LatchUnknownActualRisk] = ownerUnknown != 0
-	rows, err := tx.QueryContext(ctx, `SELECT r.bucket_dimension,r.bucket_value,r.policy_version,s.limit_minor,r.held_minor,r.filled_minor,r.overage_minor,r.risk_overage_latched,r.unknown_actual_latched FROM risk_bucket_reservations r JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id WHERE r.decision_id=?`, target.decisionID)
+	rows, err := tx.QueryContext(ctx, `SELECT r.decision_id,r.bucket_dimension,r.bucket_value,r.policy_version,s.limit_minor,r.held_minor,r.filled_minor,r.overage_minor,r.risk_overage_latched,r.unknown_actual_latched FROM risk_bucket_reservations r JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id JOIN risk_bucket_final_decisions d ON d.decision_id=r.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY d.owner_sequence,CASE r.bucket_dimension WHEN 'horizon' THEN 1 WHEN 'market' THEN 2 WHEN 'strategy' THEN 3 WHEN 'sector' THEN 4 WHEN 'symbol' THEN 5 ELSE 99 END`, target.account, target.market, target.symbol, target.prospective)
 	if err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
+	decisionBuckets := map[string]map[riskbucket.BucketKey]bool{}
 	for rows.Next() {
-		var d, v, pv, limit, held, filled, overage string
+		var decisionID, d, v, pv, limit, held, filled, overage string
 		var ol, ul int
-		if err := rows.Scan(&d, &v, &pv, &limit, &held, &filled, &overage, &ol, &ul); err != nil {
+		if err := rows.Scan(&decisionID, &d, &v, &pv, &limit, &held, &filled, &overage, &ol, &ul); err != nil {
 			rows.Close()
 			return state, riskbucket.FillEvent{}, err
 		}
 		key := riskbucket.BucketKey{Dimension: riskbucket.Dimension(d), Value: v, PolicyVersion: pv}
-		state.Buckets[key] = riskbucket.BucketUsage{LimitMinor: limit, HeldMinor: held, FilledMinor: filled, OverageMinor: overage, Latches: map[riskbucket.Latch]bool{riskbucket.LatchRiskOverage: ol != 0, riskbucket.LatchUnknownActualRisk: ul != 0}}
+		if !isRiskBucketDimension(key.Dimension) {
+			rows.Close()
+			return state, riskbucket.FillEvent{}, fmt.Errorf("%w: aggregate fill dimension", ErrRiskBucketReplayMismatch)
+		}
+		if decisionBuckets[decisionID] == nil {
+			decisionBuckets[decisionID] = map[riskbucket.BucketKey]bool{}
+		}
+		if decisionBuckets[decisionID][key] {
+			rows.Close()
+			return state, riskbucket.FillEvent{}, fmt.Errorf("%w: duplicate aggregate fill bucket", ErrRiskBucketReplayMismatch)
+		}
+		decisionBuckets[decisionID][key] = true
+		usage := state.Buckets[key]
+		if usage.LimitMinor == "" {
+			usage.LimitMinor = limit
+		} else {
+			currentLimit, currentErr := parseRiskMinor(usage.LimitMinor)
+			candidateLimit, candidateErr := parseRiskMinor(limit)
+			if currentErr != nil || candidateErr != nil {
+				rows.Close()
+				return state, riskbucket.FillEvent{}, fmt.Errorf("%w: aggregate fill limit", ErrRiskBucketReplayMismatch)
+			}
+			if candidateLimit.Cmp(currentLimit) < 0 {
+				usage.LimitMinor = candidateLimit.String()
+			}
+		}
+		var addErr error
+		usage.HeldMinor, addErr = addRiskMinor(usage.HeldMinor, held)
+		if addErr != nil {
+			rows.Close()
+			return state, riskbucket.FillEvent{}, addErr
+		}
+		usage.FilledMinor, addErr = addRiskMinor(usage.FilledMinor, filled)
+		if addErr != nil {
+			rows.Close()
+			return state, riskbucket.FillEvent{}, addErr
+		}
+		usage.OverageMinor, addErr = addRiskMinor(usage.OverageMinor, overage)
+		if addErr != nil {
+			rows.Close()
+			return state, riskbucket.FillEvent{}, addErr
+		}
+		if usage.Latches == nil {
+			usage.Latches = map[riskbucket.Latch]bool{}
+		}
+		usage.Latches[riskbucket.LatchRiskOverage] = usage.Latches[riskbucket.LatchRiskOverage] || ol != 0
+		usage.Latches[riskbucket.LatchUnknownActualRisk] = usage.Latches[riskbucket.LatchUnknownActualRisk] || ul != 0
+		state.Buckets[key] = usage
 	}
 	if err := rows.Close(); err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
-	if len(state.Buckets) != len(riskbucket.RequiredDimensionOrder()) {
+	for _, seen := range decisionBuckets {
+		if len(seen) != len(riskbucket.RequiredDimensionOrder()) {
+			return state, riskbucket.FillEvent{}, fmt.Errorf("%w: aggregate decision bucket count", ErrRiskBucketReplayMismatch)
+		}
+	}
+	if len(decisionBuckets) == 0 || len(state.Buckets) != len(riskbucket.RequiredDimensionOrder()) {
 		return state, riskbucket.FillEvent{}, fmt.Errorf("%w: fill bucket count", ErrRiskBucketReplayMismatch)
 	}
-	orders, err := tx.QueryContext(ctx, `SELECT order_key,order_id,order_quantity,cumulative_fill,quote_currency,base_currency,reservation_policy_digest FROM risk_bucket_orders WHERE decision_id=?`, target.decisionID)
+	orders, err := tx.QueryContext(ctx, `SELECT o.order_key,o.order_id,o.order_quantity,o.cumulative_fill,o.quote_currency,o.base_currency,o.reservation_policy_digest FROM risk_bucket_orders o JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY d.owner_sequence,o.order_key`, target.account, target.market, target.symbol, target.prospective)
 	if err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
 	orderKeys := map[string]string{}
+	brokerOrderIDs := map[string]string{}
 	for orders.Next() {
 		var orderKey, orderID, quote, base, digest string
 		var quantity, watermark uint64
@@ -697,13 +781,18 @@ func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBu
 		for key := range reserved {
 			transferred[key] = "0"
 		}
-		state.Orders[orderID] = riskbucket.OrderFillState{OrderQuantity: quantity, CumulativeFill: watermark, QuoteCurrency: quote, BaseCurrency: base, ReservedMinor: reserved, TransferredMinor: transferred, ReservationPolicyDigest: digest, Fills: map[string]riskbucket.FillRecord{}}
-		orderKeys[orderKey] = orderID
+		if previousKey := brokerOrderIDs[orderID]; previousKey != "" && previousKey != orderKey {
+			orders.Close()
+			return state, riskbucket.FillEvent{}, fmt.Errorf("%w: owner broker order id collision", ErrRiskBucketReplayMismatch)
+		}
+		brokerOrderIDs[orderID] = orderKey
+		state.Orders[orderKey] = riskbucket.OrderFillState{OrderQuantity: quantity, CumulativeFill: watermark, QuoteCurrency: quote, BaseCurrency: base, ReservedMinor: reserved, TransferredMinor: transferred, ReservationPolicyDigest: digest, Fills: map[string]riskbucket.FillRecord{}}
+		orderKeys[orderKey] = orderKey
 	}
 	if err := orders.Close(); err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
-	fills, err := tx.QueryContext(ctx, `SELECT f.fill_id,f.order_key,f.cumulative_fill,f.delta_quantity,CASE WHEN f.actual_known=1 OR EXISTS(SELECT 1 FROM risk_bucket_fill_actual_evidence a WHERE a.fill_id=f.fill_id) THEN 1 ELSE 0 END FROM risk_bucket_fills f WHERE f.order_key IN (SELECT order_key FROM risk_bucket_orders WHERE decision_id=?) ORDER BY f.order_key,f.cumulative_fill,f.fill_id`, target.decisionID)
+	fills, err := tx.QueryContext(ctx, `SELECT f.fill_id,f.order_key,f.cumulative_fill,f.delta_quantity,CASE WHEN f.actual_known=1 OR EXISTS(SELECT 1 FROM risk_bucket_fill_actual_evidence a WHERE a.fill_id=f.fill_id) THEN 1 ELSE 0 END FROM risk_bucket_fills f JOIN risk_bucket_orders o ON o.order_key=f.order_key JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY f.order_key,f.cumulative_fill,f.fill_id`, target.account, target.market, target.symbol, target.prospective)
 	if err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
@@ -715,8 +804,12 @@ func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBu
 			fills.Close()
 			return state, riskbucket.FillEvent{}, err
 		}
-		orderID := orderKeys[orderKey]
-		order := state.Orders[orderID]
+		orderIdentity := orderKeys[orderKey]
+		if orderIdentity == "" {
+			fills.Close()
+			return state, riskbucket.FillEvent{}, fmt.Errorf("%w: fill order key", ErrRiskBucketReplayMismatch)
+		}
+		order := state.Orders[orderIdentity]
 		record := riskbucket.FillRecord{CumulativeFill: cum, DeltaQuantity: delta, TransferMinor: map[riskbucket.BucketKey]string{}, FilledMinor: map[riskbucket.BucketKey]string{}, ActualKnown: actualKnown != 0}
 		alloc, err := tx.QueryContext(ctx, `SELECT r.bucket_dimension,r.bucket_value,r.policy_version,a.transfer_minor,a.filled_minor FROM risk_bucket_fill_allocations a JOIN risk_bucket_reservations r ON r.reservation_id=a.reservation_id WHERE a.fill_id=?`, fillID)
 		if err != nil {
@@ -746,13 +839,20 @@ func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBu
 			return state, riskbucket.FillEvent{}, err
 		}
 		order.Fills[fillID] = record
-		state.Orders[orderID] = order
+		state.Orders[orderIdentity] = order
 	}
 	if err := fills.Close(); err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
-	reserved := state.Orders[target.orderID].ReservedMinor
-	event := riskbucket.FillEvent{FillID: riskBucketFillID(target.orderKey, cumulative), OrderID: target.orderID, OrderQuantity: target.quantity, NewCumulativeFill: cumulative, ReservedMinor: reserved, ReservationPolicyDigest: target.policyDigest, QuoteCurrency: target.quote, BaseCurrency: target.base, Actual: actual}
+	reserved := state.Orders[target.orderKey].ReservedMinor
+	if len(reserved) != len(riskbucket.RequiredDimensionOrder()) {
+		return state, riskbucket.FillEvent{}, fmt.Errorf("%w: target order reservation", ErrRiskBucketReplayMismatch)
+	}
+	targetHeld, err := riskBucketOrderHeld(ctx, tx, target.orderKey)
+	if err != nil {
+		return state, riskbucket.FillEvent{}, err
+	}
+	event := riskbucket.FillEvent{FillID: riskBucketFillID(target.orderKey, cumulative), OrderKey: target.orderKey, OrderID: target.orderID, OrderQuantity: target.quantity, NewCumulativeFill: cumulative, ReservedMinor: reserved, TargetHeldMinor: targetHeld, ReservationPolicyDigest: target.policyDigest, QuoteCurrency: target.quote, BaseCurrency: target.base, Actual: actual}
 	return state, event, nil
 }
 
@@ -776,50 +876,117 @@ func riskBucketOrderReserved(ctx context.Context, tx *sql.Tx, orderKey string) (
 	return out, rows.Err()
 }
 
+func riskBucketOrderHeld(ctx context.Context, tx *sql.Tx, orderKey string) (map[riskbucket.BucketKey]string, error) {
+	rows, err := tx.QueryContext(ctx, `SELECT r.bucket_dimension,r.bucket_value,r.policy_version,r.held_minor FROM risk_bucket_order_reservations m JOIN risk_bucket_reservations r ON r.reservation_id=m.reservation_id WHERE m.order_key=?`, orderKey)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[riskbucket.BucketKey]string{}
+	for rows.Next() {
+		var d, v, pv, amount string
+		if err := rows.Scan(&d, &v, &pv, &amount); err != nil {
+			return nil, err
+		}
+		out[riskbucket.BucketKey{Dimension: riskbucket.Dimension(d), Value: v, PolicyVersion: pv}] = amount
+	}
+	if len(out) != len(riskbucket.RequiredDimensionOrder()) {
+		return nil, fmt.Errorf("%w: order held count", ErrRiskBucketReplayMismatch)
+	}
+	return out, rows.Err()
+}
+
 func persistRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, order riskBucketOrderRecord, event riskbucket.FillEvent, previous, next riskbucket.FillState, result riskbucket.FillResult, actual *riskbucket.ActualFillEvidence, observedAt string) error {
-	record := next.Orders[event.OrderID].Fills[event.FillID]
+	orderIdentity := event.OrderKey
+	if orderIdentity == "" {
+		orderIdentity = event.OrderID
+	}
+	record := next.Orders[orderIdentity].Fills[event.FillID]
 	if len(order.reservations) != len(riskbucket.RequiredDimensionOrder()) {
 		return fmt.Errorf("%w: fill reservation identity", ErrRiskBucketReplayMismatch)
 	}
-	for key := range next.Buckets {
-		if order.reservations[key] == "" {
+	type reservationUpdate struct {
+		reservationID, held, filled, overage string
+		overageLatch, unknownLatch           bool
+	}
+	updates := make(map[riskbucket.BucketKey]reservationUpdate, len(next.Buckets))
+	for key, usage := range next.Buckets {
+		reservationID := order.reservations[key]
+		previousUsage, ok := previous.Buckets[key]
+		if reservationID == "" || !ok {
 			return fmt.Errorf("%w: fill reservation identity", ErrRiskBucketReplayMismatch)
 		}
-	}
-	if result.ActualEvidenceCompleted {
-		digest, err := riskBucketRecordDigest(actual)
+		heldDelta, err := riskMinorMonotoneDelta(previousUsage.HeldMinor, usage.HeldMinor)
 		if err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, `INSERT INTO risk_bucket_fill_actual_evidence(fill_id,evidence_digest,quote_currency,base_currency,price_quote,fx_rate_quote_to_base,allocated_fee_base_minor,price_source,price_version,price_digest,price_observed_at,price_fresh_until,fx_source,fx_version,fx_digest,fx_observed_at,fx_fresh_until,evaluated_at,observed_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, event.FillID, digest, actual.QuoteCurrency, actual.BaseCurrency, actual.PriceQuote, actual.FXRateQuoteToBase, actual.AllocatedFeeBaseMinor, actual.Price.Source, actual.Price.Version, actual.Price.Digest, canonicalRiskTime(actual.Price.ObservedAt), canonicalRiskTime(actual.Price.FreshUntil), actual.FX.Source, actual.FX.Version, actual.FX.Digest, canonicalRiskTime(actual.FX.ObservedAt), canonicalRiskTime(actual.FX.FreshUntil), canonicalRiskTime(actual.EvaluatedAt), observedAt); err != nil {
+		filledDelta, err := riskMinorMonotoneDelta(usage.FilledMinor, previousUsage.FilledMinor)
+		if err != nil {
+			return err
+		}
+		overageDelta, err := riskMinorMonotoneDelta(usage.OverageMinor, previousUsage.OverageMinor)
+		if err != nil {
+			return err
+		}
+		var targetHeld, targetFilled, targetOverage string
+		if err := tx.QueryRowContext(ctx, `SELECT held_minor,filled_minor,overage_minor FROM risk_bucket_reservations WHERE reservation_id=?`, reservationID).Scan(&targetHeld, &targetFilled, &targetOverage); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return fmt.Errorf("%w: target fill reservation disappeared", ErrRiskBucketReplayMismatch)
+			}
+			return err
+		}
+		targetHeld, err = subtractRiskMinorExact(targetHeld, heldDelta)
+		if err != nil {
+			return err
+		}
+		targetFilled, err = addRiskMinor(targetFilled, filledDelta)
+		if err != nil {
+			return err
+		}
+		targetOverage, err = addRiskMinor(targetOverage, overageDelta)
+		if err != nil {
+			return err
+		}
+		updates[key] = reservationUpdate{reservationID: reservationID, held: targetHeld, filled: targetFilled, overage: targetOverage, overageLatch: usage.Latches[riskbucket.LatchRiskOverage], unknownLatch: usage.Latches[riskbucket.LatchUnknownActualRisk]}
+	}
+	var evidenceDigest, fillDigest string
+	var err error
+	if result.ActualEvidenceCompleted {
+		evidenceDigest, err = riskBucketRecordDigest(actual)
+		if err != nil {
 			return err
 		}
 	} else {
-		fillDigest, err := riskBucketRecordDigest(struct {
+		fillDigest, err = riskBucketRecordDigest(struct {
 			FillID, OrderKey string
 			Cumulative       uint64
 		}{event.FillID, order.orderKey, event.NewCumulativeFill})
 		if err != nil {
 			return err
 		}
+	}
+	if result.ActualEvidenceCompleted {
+		if _, err := tx.ExecContext(ctx, `INSERT INTO risk_bucket_fill_actual_evidence(fill_id,evidence_digest,quote_currency,base_currency,price_quote,fx_rate_quote_to_base,allocated_fee_base_minor,price_source,price_version,price_digest,price_observed_at,price_fresh_until,fx_source,fx_version,fx_digest,fx_observed_at,fx_fresh_until,evaluated_at,observed_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, event.FillID, evidenceDigest, actual.QuoteCurrency, actual.BaseCurrency, actual.PriceQuote, actual.FXRateQuoteToBase, actual.AllocatedFeeBaseMinor, actual.Price.Source, actual.Price.Version, actual.Price.Digest, canonicalRiskTime(actual.Price.ObservedAt), canonicalRiskTime(actual.Price.FreshUntil), actual.FX.Source, actual.FX.Version, actual.FX.Digest, canonicalRiskTime(actual.FX.ObservedAt), canonicalRiskTime(actual.FX.FreshUntil), canonicalRiskTime(actual.EvaluatedAt), observedAt); err != nil {
+			return err
+		}
+	} else {
 		if _, err := tx.ExecContext(ctx, `INSERT INTO risk_bucket_fills(fill_id,order_key,order_id,cumulative_fill,delta_quantity,actual_known,fill_digest,observed_at) VALUES(?,?,?,?,?,0,?,?)`, event.FillID, order.orderKey, order.orderID, event.NewCumulativeFill, result.DeltaQuantity, fillDigest, observedAt); err != nil {
 			return err
 		}
 	}
-	for key, usage := range next.Buckets {
-		reservationID := order.reservations[key]
-		if reservationID == "" {
-			return fmt.Errorf("%w: fill reservation identity", ErrRiskBucketReplayMismatch)
+	for key, update := range updates {
+		if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_reservations SET held_minor=?,filled_minor=?,overage_minor=?,state=CASE WHEN ?='0' THEN 'FILLED' ELSE state END,updated_at=? WHERE reservation_id=?`, update.held, update.filled, update.overage, update.held, observedAt, update.reservationID); err != nil {
+			return err
 		}
-		if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_reservations SET held_minor=?,filled_minor=?,overage_minor=?,risk_overage_latched=?,unknown_actual_latched=?,state=CASE WHEN ?='0' THEN 'FILLED' ELSE state END,updated_at=? WHERE reservation_id=?`, usage.HeldMinor, usage.FilledMinor, usage.OverageMinor, boolInt(usage.Latches[riskbucket.LatchRiskOverage]), boolInt(usage.Latches[riskbucket.LatchUnknownActualRisk]), usage.HeldMinor, observedAt, reservationID); err != nil {
+		if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_reservations SET risk_overage_latched=?,unknown_actual_latched=?,updated_at=? WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=? AND bucket_dimension=? AND bucket_value=? AND policy_version=?`, boolInt(update.overageLatch), boolInt(update.unknownLatch), observedAt, order.account, order.market, order.symbol, order.prospective, string(key.Dimension), key.Value, key.PolicyVersion); err != nil {
 			return err
 		}
 		if result.ActualEvidenceCompleted {
-			if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_fill_allocations SET filled_minor=? WHERE fill_id=? AND reservation_id=?`, record.FilledMinor[key], event.FillID, reservationID); err != nil {
+			if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_fill_allocations SET filled_minor=? WHERE fill_id=? AND reservation_id=?`, record.FilledMinor[key], event.FillID, update.reservationID); err != nil {
 				return err
 			}
 		} else {
-			if _, err := tx.ExecContext(ctx, `INSERT INTO risk_bucket_fill_allocations(fill_id,reservation_id,transfer_minor,filled_minor) VALUES(?,?,?,?)`, event.FillID, reservationID, record.TransferMinor[key], record.FilledMinor[key]); err != nil {
+			if _, err := tx.ExecContext(ctx, `INSERT INTO risk_bucket_fill_allocations(fill_id,reservation_id,transfer_minor,filled_minor) VALUES(?,?,?,?)`, event.FillID, update.reservationID, record.TransferMinor[key], record.FilledMinor[key]); err != nil {
 				return err
 			}
 		}
@@ -830,7 +997,6 @@ func persistRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, order risk
 	if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_owners SET risk_overage_latched=?,unknown_actual_latched=? WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=?`, boolInt(next.OwnerLatches[riskbucket.LatchRiskOverage]), boolInt(next.OwnerLatches[riskbucket.LatchUnknownActualRisk]), order.account, order.market, order.symbol, order.prospective); err != nil {
 		return err
 	}
-	_ = previous
 	return nil
 }
 

@@ -138,13 +138,6 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 		if err := verifyRiskBucketStateDigest(ctx, tx, plan.Owner.Key); err != nil {
 			return RiskBucketAdmissionReceipt{}, err
 		}
-		var activeOrders int
-		if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_orders o JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? AND o.state IN ('ACTIVE','REPLACED')`, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration).Scan(&activeOrders); err != nil {
-			return RiskBucketAdmissionReceipt{}, err
-		}
-		if activeOrders != 0 {
-			return RiskBucketAdmissionReceipt{}, fmt.Errorf("%w: scale-in while risk order accounting is active", ErrRiskBucketSnapshotMismatch)
-		}
 		rows, err := tx.QueryContext(ctx, `SELECT DISTINCT bucket_dimension,bucket_value,policy_version FROM risk_bucket_reservations WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=?`, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration)
 		if err != nil {
 			return RiskBucketAdmissionReceipt{}, err

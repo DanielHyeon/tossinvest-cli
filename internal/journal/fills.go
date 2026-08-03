@@ -527,6 +527,9 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		if err := j.applyRiskBucketFillInTx(ctx, tx, applied); err != nil {
 			return res, fmt.Errorf("journal: applying risk buckets for fill %s: %w", orderID, err)
 		}
+	} else if err := latchRiskBucketFillFailureForScope(ctx, tx, applied,
+		"confirmed fill ownership is ambiguous for a registered risk order"); err != nil {
+		return res, fmt.Errorf("journal: latching ambiguous risk ownership for fill %s: %w", orderID, err)
 	}
 
 	// 6. The atomic apply point (apply_hook.go, design D7). The injected

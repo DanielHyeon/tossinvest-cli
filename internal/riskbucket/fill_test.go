@@ -46,6 +46,33 @@ func TestApplyFillRetryIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestApplyFillUsesOrderKeyToKeepDecisionOrdersIndependent(t *testing.T) {
+	state, first := fillFixture("200", "100")
+	first.OrderKey = "decision-1/order"
+	first.OrderID = "broker-reused"
+	first.NewCumulativeFill = 2
+	next, result, err := ApplyFill(state, first)
+	if err != nil || result.DeltaQuantity != 2 {
+		t.Fatalf("first=%+v err=%v", result, err)
+	}
+	second := first
+	second.FillID = "fill-decision-2"
+	second.OrderKey = "decision-2/order"
+	second.NewCumulativeFill = 2
+	next, result, err = ApplyFill(next, second)
+	if err != nil || result.DeltaQuantity != 2 {
+		t.Fatalf("second=%+v err=%v", result, err)
+	}
+	if len(next.Orders) != 2 || next.Orders[first.OrderKey].CumulativeFill != 2 || next.Orders[second.OrderKey].CumulativeFill != 2 {
+		t.Fatalf("orders=%+v", next.Orders)
+	}
+	for key, usage := range next.Buckets {
+		if usage.HeldMinor != "60" || usage.FilledMinor != "40" {
+			t.Fatalf("%+v usage=%+v", key, usage)
+		}
+	}
+}
+
 func TestApplyFillUnknownActualLatchesThenCompletesMonotonically(t *testing.T) {
 	state, event := fillFixture("100", "50")
 	event.NewCumulativeFill = 4

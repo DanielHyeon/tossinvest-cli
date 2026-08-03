@@ -2,7 +2,7 @@
 
 - Updated: 2026-08-04
 - Overall: IN PROGRESS
-- Current wave: Wave 1C single-decision authoritative journal fill accounting GREEN; multi-decision owner/runtime integration pending
+- Current wave: Wave 1D owner-wide multi-decision authoritative journal fill accounting GREEN; owner lifecycle/runtime integration pending
 - Runtime authority: dormant; no Guardian/Gateway/engine/broker/toggle integration
 
 ## Completed in Wave 1B checkpoint
@@ -60,6 +60,24 @@
   non-test callers. They cannot become production authority until official sealed fill evidence and
   journal-derived confirmed cancellation/expiry, broker-zero and clean lifecycle adapters land.
 
+## Completed in Wave 1D checkpoint
+
+- Same-owner scale-in may append a second exact decision while an earlier decision order remains
+  active. Existing owner, bucket key/policy, state-digest and confirmed intent quantity/scope checks
+  remain fail closed.
+- Fill reconstruction is owner-wide across all decisions, orders, fills and allocations, while order
+  watermarks are keyed by immutable `order_key`. A broker order ID collision across decisions is
+  rejected before any second order is written.
+- Aggregate HELD/FILLED/overage deltas are computed with bounded exact arithmetic and applied only to
+  the target order's decision-specific reservation IDs. A late fill with insufficient target HELD
+  cannot consume another decision's HELD; it preserves the fill and latches overage instead.
+- UNKNOWN/overage latch state is propagated across every matching owner reservation. Actual evidence
+  clears UNKNOWN only after every owner order fill is resolved, including after restart.
+- Semantic order/ownership ambiguity preserves the authoritative fill. Risk-sidecar ambiguity also
+  preserves the Position hook commit, writes no false allocation and records `FILL_UNACCOUNTED` while
+  latching every owner decision in scope.
+- No schema/version change, runtime toggle, Gateway, broker or live-order path was added in Wave 1D.
+
 ## Completed in Wave 1A
 
 - Exact account-base-minor reservation using worst executable price, official frozen fresh FX,
@@ -109,11 +127,15 @@
 | v22 build opening v23 | PASS: `ErrSchemaTooNew` |
 | v22→v23 pre-migration backup | PASS: self-contained v22 copy with exact legacy rows |
 | v23 hardened focused journal race | PASS (34.960s) |
+| Wave 1D owner-wide two-decision/restart tests | PASS |
+| Wave 1D ambiguity/non-drop and broker-ID collision tests | PASS |
+| Wave 1D focused journal+riskbucket race | PASS |
+| Wave 1D journal+riskbucket vet / diff check | PASS |
 
 ## Pending integration
 
-- Multi-decision aggregate order registration and authoritative prospective-to-actual owner binding,
-  plus clean owner release after reconciliation/protection/sell evidence is complete.
+- Authoritative prospective-to-actual owner binding and clean owner release after
+  reconciliation/protection/sell evidence is complete.
 - Atomic integration with the actual GuardianDecision writer (the new journal decision is a dormant
   sidecar and does not claim Guardian authority).
 - Guardian/Gateway/entry-loss-lock integration and zero exposure-raising broker request spies.

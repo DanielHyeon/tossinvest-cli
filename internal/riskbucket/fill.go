@@ -73,10 +73,12 @@ type ActualFillEvidence struct {
 
 type FillEvent struct {
 	FillID                  string
+	OrderKey                string
 	OrderID                 string
 	OrderQuantity           uint64
 	NewCumulativeFill       uint64
 	ReservedMinor           map[BucketKey]string
+	TargetHeldMinor         map[BucketKey]string
 	ReservationPolicyDigest string
 	QuoteCurrency           string
 	BaseCurrency            string
@@ -102,7 +104,21 @@ func ApplyFill(state FillState, event FillEvent) (FillState, FillResult, error) 
 	if err := validateFillBuckets(next.Buckets, event.ReservedMinor); err != nil {
 		return unchanged, result, err
 	}
-	order, exists := next.Orders[event.OrderID]
+	if len(event.TargetHeldMinor) != 0 {
+		if len(event.TargetHeldMinor) != len(event.ReservedMinor) {
+			return unchanged, result, refusal(RefusalFillEvidenceInconsistent, "target_held_bucket_count", nil)
+		}
+		for key := range event.ReservedMinor {
+			if _, err := parseMinor(event.TargetHeldMinor[key], 0); err != nil {
+				return unchanged, result, refusal(RefusalFillEvidenceInconsistent, "target_held_usage", err)
+			}
+		}
+	}
+	orderIdentity := event.OrderID
+	if strings.TrimSpace(event.OrderKey) != "" {
+		orderIdentity = event.OrderKey
+	}
+	order, exists := next.Orders[orderIdentity]
 	if !exists {
 		order = OrderFillState{
 			OrderQuantity:           event.OrderQuantity,
@@ -165,7 +181,7 @@ func ApplyFill(state FillState, event FillEvent) (FillState, FillResult, error) 
 		record.ActualKnown = true
 		record.ActualEvidence = cloneActualFillEvidence(event.Actual)
 		order.Fills[event.FillID] = record
-		next.Orders[event.OrderID] = order
+		next.Orders[orderIdentity] = order
 		if err := recomputeOverageLatches(&next); err != nil {
 			return unchanged, FillResult{}, err
 		}
@@ -211,6 +227,17 @@ func ApplyFill(state FillState, event FillEvent) (FillState, FillResult, error) 
 			return unchanged, FillResult{}, refusal(RefusalFillEvidenceInconsistent, "filled_usage", err)
 		}
 		heldDeduction := new(big.Int).Set(transfer)
+		if len(event.TargetHeldMinor) != 0 {
+			targetHeld, targetErr := parseMinor(event.TargetHeldMinor[key], 0)
+			if targetErr != nil {
+				return unchanged, FillResult{}, refusal(RefusalFillEvidenceInconsistent, "target_held_usage", targetErr)
+			}
+			if heldDeduction.Cmp(targetHeld) > 0 {
+				heldDeduction.Set(targetHeld)
+				latchUsage(&usage, LatchRiskOverage)
+				next.OwnerLatches[LatchRiskOverage] = true
+			}
+		}
 		if heldDeduction.Cmp(held) > 0 {
 			heldDeduction.Set(held)
 			latchUsage(&usage, LatchRiskOverage)
@@ -237,7 +264,7 @@ func ApplyFill(state FillState, event FillEvent) (FillState, FillResult, error) 
 	}
 	order.CumulativeFill = event.NewCumulativeFill
 	order.Fills[event.FillID] = record
-	next.Orders[event.OrderID] = order
+	next.Orders[orderIdentity] = order
 	if err := recomputeOverageLatches(&next); err != nil {
 		return unchanged, FillResult{}, err
 	}

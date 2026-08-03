@@ -1,7 +1,7 @@
 # Review — a066-add-multi-horizon-risk-buckets
 
 - Date: 2026-08-04
-- Stage: Wave 1C single-decision journal accounting GREEN; runtime and aggregate integration pending
+- Stage: Wave 1D owner-wide multi-decision journal accounting GREEN; runtime integration pending
 - Voices: Manager scope/safety review, independent adversarial risk review, final semantic re-review
 
 ## Findings and disposition
@@ -158,6 +158,27 @@ exposure-raising quantity and must never delay fill, reconciliation, protection 
 - Final independent review found the registered order quantity was caller-supplied even after broker-order
   authority had been confirmed. Registration now derives the exact confirmed intent quantity in the same
   transaction and refuses a missing, ambiguous, non-integral or divergent quantity before writing an order.
-- Remaining limitation: the journal adapter deliberately rejects owners with multiple final
-  decisions rather than guessing an aggregate binding. That aggregate model, actual owner binding,
-  clean owner release and Guardian/Gateway runtime wiring remain required before production use.
+- Wave 1C limitation: the journal adapter deliberately rejected owners with multiple final
+  decisions rather than guessing an aggregate binding. Wave 1D resolves that aggregate model;
+  actual owner binding, clean owner release and Guardian/Gateway runtime wiring remain required
+  before production use.
+
+## Wave 1D owner-wide aggregate fill checkpoint
+
+- RED pinned the former active-order scale-in refusal: a second exact decision failed with
+  `scale-in while risk order accounting is active`. GREEN removes only that single-decision guard;
+  owner/key/policy drift still fails before a decision write.
+- Each confirmed order is bound to its exact decision and immutable internal `order_key`. Owner-wide
+  reconstruction includes every decision/order/fill/allocation, refuses a broker-ID collision and
+  applies aggregate monetary deltas only to the target order's five reservation IDs.
+- The pure fill transition accepts `OrderKey` and a target-decision HELD view. This prevents one
+  scale-in decision's late fill from consuming another decision's HELD; any deficiency becomes a
+  durable conservative overage latch without changing the authoritative fill watermark.
+- Two decision-specific partial fills produce exact aggregate HELD/FILLED values and zero
+  cross-decision allocations. Restart reconstruction is stable, and late actual completion clears
+  UNKNOWN only after all owner fills have authoritative evidence.
+- Corrupt sidecar identity still commits both authoritative fill and Position and latches all owner
+  reservations with `FILL_UNACCOUNTED`. A confirmed ownership conflict now also latches every
+  registered owner decision in matching scope while preserving the fill ledger.
+- Actual-evidence completion and release APIs remain package-private. No schema migration/version,
+  runtime toggle, Gateway, broker or live-order behavior changed in this checkpoint.
