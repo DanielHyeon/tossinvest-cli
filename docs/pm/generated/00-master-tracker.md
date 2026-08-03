@@ -65,6 +65,7 @@
     - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [archived] → `a044-manage-position-exit-policies`
     - STORY-TOS-a052 — Explain reconcile-blocked position adoption [archived] → `a052-reconcile-aware-position-management`
     - STORY-TOS-a053 — Restore visible exit-line references across markets [archived] → `a053-restore-visible-exit-line-references`
+    - STORY-TOS-a062 — Stop quarantining a ladder position for activating its first rung [implemented] → `a062-first-rung-keeps-its-judgement`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

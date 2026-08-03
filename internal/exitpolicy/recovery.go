@@ -221,11 +221,26 @@ func compareRecoveryDecimal(a, b string) (int, error) {
 	return ar.Cmp(br), nil
 }
 
+// compareRecoveryStage reports how far a is ahead of b along the policy's own
+// stage axis: negative when b leads, positive when a leads, zero when they are
+// level.
+//
+// It answers ordering only. Whether the two candidates are even the same thing
+// was settled by the caller, which has already required an identical position,
+// generation, policy id/version/digest, entry price and initial stop before
+// reaching here. That guarantee is what makes a one-sided rung comparable: a
+// ratchet policy never activates a rung and a ladder policy never uses a ratchet
+// level, so within one policy identity "b has no rung and a has rung 0" can only
+// mean the ladder has just activated its first one.
+//
+// This function used to refuse exactly that (change a062). NoRung is -1 and rung
+// indices start at 0, so the ordering below already places "not activated yet"
+// below every rung; the refusal was a duplicate of the caller's identity check
+// that fired on the one input it was not meant to catch. It quarantined a live
+// position at the moment it crossed its first take-profit line, which stopped
+// the engine judging that position at all — stop included.
 func compareRecoveryStage(a, b ExitLineSnapshot) (int, error) {
 	if a.ActiveRung != NoRung || b.ActiveRung != NoRung {
-		if a.ActiveRung == NoRung || b.ActiveRung == NoRung {
-			return 0, ErrRecoveryIdentity
-		}
 		switch {
 		case a.ActiveRung < b.ActiveRung:
 			return -1, nil
