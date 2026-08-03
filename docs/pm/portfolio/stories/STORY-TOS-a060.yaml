@@ -12,6 +12,6 @@
     "The soak process pattern matches the command line the console actually spawns",
     "The pattern still ignores every other tossctl command line, including the engine",
     "A survey belonging to a different record is never signalled by this console",
-    "The autostart script and the Go constant still agree, and the drift test now also binds the pattern to the spawn path"
+    "The process pattern is bound directly to the argv produced by the console spawn path, without depending on an external autostart script"
   ]
 }

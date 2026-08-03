@@ -54,6 +54,7 @@
     - STORY-TOS-a058 — Match StockOS holdings density and column alignment [archived] → `a058-match-stockos-holdings-density`
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [implemented] → `a060-soak-restart-uses-this-profile`
     - STORY-TOS-a061 — Show instrument codes and names together in trade history [archived] → `a061-show-history-instrument-names`
+    - STORY-TOS-a063 — Renew capability attestation from the console profile [in_progress] → `a063-align-attestation-renewal-profile`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`

@@ -66,3 +66,4 @@
 | `a060-soak-restart-uses-this-profile` | STORY-TOS-a060 | implemented |
 | `a061-show-history-instrument-names` | STORY-TOS-a061 | archived |
 | `a062-reconcile-owned-orders` | STORY-TOS-a062 | archived |
+| `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | in_progress |

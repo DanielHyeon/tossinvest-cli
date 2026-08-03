@@ -231,8 +231,8 @@ func TestAFailureToLookForTheSoakIsReportedAndNothingIsStarted(t *testing.T) {
 	}
 }
 
-// TestTheLogSitsBesideTheRecord, which is where soak-autostart.sh puts it and where
-// the operator is already looking.
+// TestTheLogSitsBesideTheRecord preserves the legacy soak-autostart.sh layout,
+// which is where the operator is already looking.
 func TestTheLogSitsBesideTheRecord(t *testing.T) {
 	got := soakLogPath("/home/x/.local/share/tossos/capability-soak.jsonl")
 	want := "/home/x/.local/share/tossos/soak.log"
@@ -284,11 +284,11 @@ func TestTheSoakSpawnCarriesThisProfile(t *testing.T) {
 //
 //	if soakProcessPattern != "tossctl soak run" { … }
 //
-// tools/soak-autostart.sh is not in this repository — the installed copy lives at
-// ~/.local/share/tossos/bin/. So that assertion had no second half to check against
-// and could only ever report that somebody changed the value, never that the value
-// was right. The engine's pattern passed three tests of that family while being
-// wrong (a059).
+// tools/soak-autostart.sh was never in this repository, and its installed copy was
+// retired on 2026-08-03 (a060 I3). So that assertion had no durable second half to
+// check against and could only ever report that somebody changed the value, never
+// that the value was right. The engine's pattern passed three tests of that family
+// while being wrong (a059).
 //
 // This binds the pattern to the thing it has to match: the command line soakArgs
 // builds. Break the spawn or break the pattern and one of them fails.
@@ -301,7 +301,7 @@ func TestTheSoakPatternMatchesWhatTheConsoleSpawns(t *testing.T) {
 		name string
 		root *rootOptions
 	}{
-		{"no flags — the installed autostart script's invocation", nil},
+		{"no flags — the default-profile invocation", nil},
 		{"a container console", &rootOptions{
 			configDir:   "/var/lib/tossos/config",
 			sessionFile: "/run/tossos/session.json",

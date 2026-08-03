@@ -66,3 +66,12 @@
 - [x] 6.1 독립 리뷰를 받고 `review.md`에 기록한다.
 - [x] 6.2 발견 사항을 `issues.md`에 남긴다.
 - [x] 6.3 PM story/tracker 동기화.
+- [x] 6.4 운영자 승인 후속 처분: 실행 중인 프로세스와 systemd·cron·shell rc·
+      `console-launch.sh`의 실행/등록 참조가 없음을 확인하고 만료된 저장소 밖
+      `~/.local/share/tossos/bin/soak-autostart.sh`를 제거한다. 런타임 코드는 바꾸지 않는다.
+- [x] 6.5 외부 스크립트 은퇴 뒤 계약을 문서·주석·PM acceptance에 일치시키고, 발견된
+      attestation 갱신 프로필 불일치는 `STORY-TOS-a063` /
+      `a063-align-attestation-renewal-profile`로 분리해 추적한다.
+- [x] 6.6 a060 런타임 구현이 이미 포함된 최신 `main`(a061/a062 통합 후)을 Function
+      Logic Map 비교 기준으로 재고정한다. 최종 후속은 문서와 주석만 바꾸므로 무관한 후속
+      Go 함수 변경을 a060 누락으로 계산하지 않는다.

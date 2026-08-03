@@ -5,13 +5,12 @@ package main
 //
 // # Why this exists and why it looks like a shell script
 //
-// The operator drives everything from the console now. The soak, though, is a
-// separate long-running process started by ~/.local/share/tossos/bin/
-// soak-autostart.sh, and until this existed the only way to bounce it was a
-// terminal. So this does exactly what that script does — pgrep for the survey,
-// signal it, start it again detached with its output appended to the same log —
-// because two mechanisms that both claim to manage the same process are one
-// mechanism more than there should be.
+// The operator drives everything from the console now. The soak is a separate
+// long-running process, and until this existed the only way to bounce it was a
+// terminal or an installed soak-autostart.sh. That one-shot external watcher was
+// retired on 2026-08-03 (a060 I3); this code keeps its useful process semantics —
+// find the survey, signal it, and start it detached with output beside the record —
+// without depending on that external artifact.
 //
 // # It cannot touch an account
 //
@@ -43,8 +42,8 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 )
 
-// soakLogName is where a detached survey's output goes. It is the name
-// soak-autostart.sh already uses, in the directory the record already lives in.
+// soakLogName is where a detached survey's output goes. It preserves the legacy
+// soak-autostart.sh layout: beside the record the operator is already inspecting.
 const soakLogName = "soak.log"
 
 // soakProcessPattern is how a survey *candidate* is recognised: the extended
@@ -230,11 +229,12 @@ func soakReExec() error {
 
 // --- the real implementations -------------------------------------------------
 
-// pgrepSoak finds running surveys the way soak-autostart.sh does.
+// pgrepSoak finds running surveys using the candidate enumeration inherited from
+// the retired soak-autostart.sh.
 //
-// pgrep rather than a /proc walk: the autostart script is the other half of this
-// mechanism and it uses pgrep, so a survey that one of them can see and the other
-// cannot would be a bug that only appears at three in the morning.
+// pgrep rather than a /proc walk preserves the proven enumeration behavior. The
+// current contract is internal: soakProcessPattern must match the argv built by
+// soakArgs, and pidsOwnedBy then narrows candidates to this record.
 func pgrepSoak(recordPath string) ([]int, error) {
 	lines, err := soakListProcesses()
 	if err != nil {
@@ -277,8 +277,9 @@ func pidAlive(pid int) bool {
 
 // spawnDetachedSoak starts `tossctl soak run` so it outlives this process.
 //
-// setsid is what soak-autostart.sh uses and it is what makes the survey survive the
-// console being closed: a new session means no controlling terminal, so the
+// setsid preserves the detached-session behavior formerly provided by
+// soak-autostart.sh. It makes the survey survive the console being closed: a new
+// session means no controlling terminal, so the
 // operator's Ctrl-C reaches the console and not the survey behind it.
 func spawnDetachedSoak(binary, logPath string, args []string) error {
 	if err := os.MkdirAll(filepath.Dir(logPath), 0o700); err != nil {
