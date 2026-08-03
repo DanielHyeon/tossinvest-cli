@@ -50,7 +50,7 @@ QFinalEntryIssuance <- [TEST-ONLY qFinalKRRequest]
 | `QCandidate` | `strategyflow.Result.Quantity` after `Code == RefusalNone`, complete valid lineage | No production caller transports it, but the value itself is present | present | present |
 | account / market / symbol | sealed `strategyflow.Lineage` | Values are present and integrity-checkable; no later durable authority generation is bound | partial | partial |
 | lane / campaign / leg | sealed `strategyflow.Lineage` | Present, but no v25 durable lease mint or current-authority revalidation exists | partial | partial |
-| owner prospective generation | `strategyflow.Lineage.PositionGeneration` is a router generation | `riskbucket.OwnerKey` requires a non-empty **prospective generation string**. No specified constructor or durable mapping binds the router generation to that identity | missing | missing |
+| owner prospective generation | `strategyflow.Lineage.PositionGeneration` is a router generation; a065 stores the actual authority in `position_campaigns.prospective_token` | `riskbucket.OwnerKey` requires that exact durable token. It must not be derived by stringifying or hashing the router generation | missing | missing |
 | entry price | weekly request contains `EntryPriceMinor`; continuation/reversal outputs do not | `strategyflow.Result` and `Lineage` contain no entry price. The tagged-union `LaneInput` payload is private and is not returned | missing | missing |
 | effective stop | continuation and weekly outcomes compute one; reversal validates a private candidate but returns none | `strategyflow.adapters.go` deliberately projects only quantity and lineage, discarding all effective stops | missing | missing |
 | target price | weekly request contains `StagedTargetMinor`; other result shapes expose none | No lane outcome or `strategyflow.Result` carries the target required by QFinal | missing | missing |
@@ -99,12 +99,38 @@ market-currency Guardians whose account-wide limits are themselves authoritative
 Guardian whose quantity/cash/notional calculations consume frozen official FX. The current API
 implements neither model for concurrent KR+US.
 
+## Prospective-token sequencing blocker
+
+The missing owner value is not a formatting problem. a065 defines the prospective token as a durable
+journal CAS authority minted while creating a `PositionCampaign`. `Journal.PositionCampaign` can read
+the token back, but the current creation transaction requires an already-persisted exposure-raising
+decision with immutable strategy lineage. Conversely, a066 q_final admission currently requires the
+prospective token and campaign identifier before it can atomically persist its Guardian decision and
+risk-bucket owner. The normal-build code has no transaction that resolves this ordering.
+
+```text
+CreatePositionCampaign
+  requires persisted exposure-raising decision + strategy lineage
+
+QFinal atomic issuance
+  requires campaign ID + a065 prospective token
+  creates the exposure-raising Guardian decision
+```
+
+Therefore the bridge must not invent a token from `Lineage.PositionGeneration`, candidate identity,
+symbol/time, or a caller-provided random string. The production integration needs one reviewed atomic
+ordering contract. The safe target is a journal-owned prepare/finalize protocol or one transaction that
+reserves the a065 prospective token and binds campaign/leg, q_final decision, five monetary reservations
+and a066 owner without exposing a reusable intermediate decision. Until that exists, both KR and US
+owner authority remain unresolved.
+
 ## Minimum authority-complete implementation sequence
 
 1. Define a sealed lane execution-term result that preserves the exact validated entry, effective
    stop and target preimages for all six KR/US bindings. Keep `strategyflow` pure and mutation-free.
-2. Define the durable prospective-generation mapping and bind it to router owner, lane, campaign and
-   market lineage. Do not stringify a generation without a specified identity contract.
+2. Resolve the a065/a066 transaction ordering so the journal-owned prospective token is reserved and
+   atomically bound to router owner, lane, campaign, q_final decision and market lineage. Do not derive
+   or stringify a token from router generation and do not expose a reusable intermediate decision.
 3. Implement a read-only authoritative risk snapshot service that returns exactly five versioned,
    frozen policy/snapshot attestations plus matching immutable journal references.
 4. Implement official price, fee and FX evidence adapters that preserve raw decimal strings,
