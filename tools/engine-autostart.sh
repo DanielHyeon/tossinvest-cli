@@ -22,8 +22,13 @@
 #
 # pgrep 패턴과 재시작 상한은 cmd/tossctl/engineproc.go 의 상수와 같아야 한다.
 # 한쪽만 바뀌면 콘솔이 보는 엔진과 이 스크립트가 보는 엔진이 달라지고, 그런 버그는
-# 새벽 세 시에만 나타난다. cmd/tossctl/engineproc_test.go 의 drift 테스트가 두 값을
-# 대조한다 — soak-autostart.sh 와 soakProcessPattern 이 이미 쓰는 선례 그대로다.
+# 새벽 세 시에만 나타난다. cmd/tossctl/engineproc_test.go 의 drift 테스트가 이 파일을
+# 실제로 읽어 두 값을 대조한다.
+#
+# soak 쪽에는 대조할 상대가 없다. 예전 soak-autostart.sh 는 저장소 밖 설치물이었고
+# 콘솔이 컨테이너로 옮겨가며 역할이 끝나 2026-08-03 에 제거했다(a060 issues I3).
+# 그래서 soakProcessPattern 은 스크립트가 아니라 spawn 이 만드는 argv 에 묶는다 —
+# 저장소에 없는 파일과 대조하는 테스트는 값이 틀려도 영원히 통과한다.
 #
 #   engineProcessPattern  = "tossctl( .*)? engine run"  → ENGINE_PATTERN
 #   engineRestartCap      = 5                           → RESTART_CAP
