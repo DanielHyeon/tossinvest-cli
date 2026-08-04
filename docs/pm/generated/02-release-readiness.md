@@ -64,9 +64,9 @@
 | STORY-TOS-a058 | 5 |
 | STORY-TOS-a059 | 5 |
 | STORY-TOS-a060 | 5 |
-| STORY-TOS-a061 | 5 |
-| STORY-TOS-a062 | 5 |
-| STORY-TOS-a063 | 6 |
+| STORY-TOS-a067 | 5 |
+| STORY-TOS-a068 | 5 |
+| STORY-TOS-a069 | 6 |
 | STORY-TOS-a064 | 8 |
 | STORY-TOS-a065 | 9 |
 | STORY-TOS-a066 | 8 |

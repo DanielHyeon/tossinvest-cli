@@ -1,13 +1,13 @@
 package main
 
 // exit_quarantine_commander.go extends the console's position-policy commander
-// with change a063's quarantine release, without widening
+// with change a069's quarantine release, without widening
 // positionPolicyLifecycleClient.
 //
 // The lifecycle client is an interface the policy tests fake in several places,
 // none of which is about quarantines; widening it would break all of them to
 // express a capability they do not have. Asserting for it instead means an
-// engine that predates a063 — or any fake that does not implement it — yields
+// engine that predates a069 — or any fake that does not implement it — yields
 // ErrUnwired, which the console draws as "no release button" rather than as a
 // failure.
 

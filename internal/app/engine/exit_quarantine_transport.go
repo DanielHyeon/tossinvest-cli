@@ -1,6 +1,6 @@
 package engine
 
-// exit_quarantine_transport.go carries change a063's three routes on the engine's
+// exit_quarantine_transport.go carries change a069's three routes on the engine's
 // existing authenticated loopback endpoint.
 //
 // They ride the same listener, the same bearer token and the same private
@@ -25,7 +25,7 @@ import (
 
 // exitQuarantineCommands is the optional capability StartPositionPolicyCommandServer
 // looks for. An engine build without it serves exactly the route set it served
-// before a063 — that is how §0.2 is satisfied at the transport layer.
+// before a069 — that is how §0.2 is satisfied at the transport layer.
 type exitQuarantineCommands interface {
 	Quarantines(context.Context) ([]exitquarantine.Row, error)
 	PreviewQuarantineRelease(context.Context, exitquarantine.Request) (exitquarantine.Preview, error)

@@ -53,7 +53,7 @@
     - STORY-TOS-a057 — Make holdings readable at a glance on dashboard and positions [archived] → `a057-simplify-portfolio-views`
     - STORY-TOS-a058 — Match StockOS holdings density and column alignment [archived] → `a058-match-stockos-holdings-density`
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [implemented] → `a060-soak-restart-uses-this-profile`
-    - STORY-TOS-a061 — Make the trading screens show the protection line and the stock name they already hold [in_progress] → `a061-screens-show-what-they-already-know`
+    - STORY-TOS-a067 — Make the trading screens show the protection line and the stock name they already hold [in_progress] → `a067-screens-show-what-they-already-know`
     - STORY-TOS-a065 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [in_progress] → `a065-alerts-turn-on-with-one-button`
     - STORY-TOS-a066 — Move the subscribe address to a phone by scanning it instead of typing it [in_progress] → `a066-the-subscribe-address-is-scannable`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
@@ -67,8 +67,8 @@
     - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [archived] → `a044-manage-position-exit-policies`
     - STORY-TOS-a052 — Explain reconcile-blocked position adoption [archived] → `a052-reconcile-aware-position-management`
     - STORY-TOS-a053 — Restore visible exit-line references across markets [archived] → `a053-restore-visible-exit-line-references`
-    - STORY-TOS-a062 — Stop quarantining a ladder position for activating its first rung [implemented] → `a062-first-rung-keeps-its-judgement`
-    - STORY-TOS-a063 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [in_progress] → `a063-operator-can-lift-a-quarantine`
+    - STORY-TOS-a068 — Stop quarantining a ladder position for activating its first rung [implemented] → `a068-first-rung-keeps-its-judgement`
+    - STORY-TOS-a069 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [in_progress] → `a069-operator-can-lift-a-quarantine`
     - STORY-TOS-a064 — Make the moment protection stops visible, and let critical alerts actually leave the machine [in_progress] → `a064-critical-events-reach-the-operator`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`

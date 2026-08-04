@@ -799,7 +799,7 @@ func (c *Console) routes() http.Handler {
 		c.session0(c.mutating(c.handlePositionPolicyPreview, 4096)))
 	mux.HandleFunc("/position-management/apply",
 		c.session0(c.mutating(c.handlePositionPolicyApply, 4096)))
-	// Change a063's quarantine release, under the same wrapping as the policy
+	// Change a069's quarantine release, under the same wrapping as the policy
 	// mutations above: a release writes to the ledger, so it is a POST behind
 	// session0+mutating, never a link.
 	mux.HandleFunc("/position-management/quarantine/preview",

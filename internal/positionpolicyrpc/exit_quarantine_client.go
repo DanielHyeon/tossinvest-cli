@@ -1,6 +1,6 @@
 package positionpolicyrpc
 
-// exit_quarantine_client.go is the console side of change a063's three routes.
+// exit_quarantine_client.go is the console side of change a069's three routes.
 //
 // It rides the same dialled Client — same socket, same bearer token, same
 // descriptor validation — and carries its own request helper for one reason: the
@@ -65,7 +65,7 @@ func (c *Client) callQuarantine(ctx context.Context, method, path string, input,
 	if response.StatusCode/100 != 2 {
 		var remote rpcError
 		if err := json.NewDecoder(limited).Decode(&remote); err != nil {
-			// An engine that predates a063 has no such route, so its mux answers
+			// An engine that predates a069 has no such route, so its mux answers
 			// with the catch-all rather than a coded error. Saying "unwired"
 			// here is what lets the console draw a screen instead of a 500.
 			if response.StatusCode == http.StatusNotFound {

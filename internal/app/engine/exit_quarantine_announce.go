@@ -24,7 +24,7 @@ package engine
 // position (o.refused), so a position already refused for some other reason
 // could be quarantined without producing a single line, ever. And it carries
 // none of the quarantine's identity, so nothing in it tells an operator that
-// this one needs a human to lift it (a063's release screen) rather than waiting
+// this one needs a human to lift it (a069's release screen) rather than waiting
 // for the next quote.
 //
 // # Why the latch is keyed on the version

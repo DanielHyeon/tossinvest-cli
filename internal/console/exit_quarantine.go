@@ -1,6 +1,6 @@
 package console
 
-// exit_quarantine.go is change a063's operator surface: lifting an exit snapshot
+// exit_quarantine.go is change a069's operator surface: lifting an exit snapshot
 // quarantine from the position-management screen.
 //
 // # What the operator is deciding
@@ -43,7 +43,7 @@ const exitQuarantineTokenTTL = 5 * time.Minute
 // ExitQuarantineCommander is the console's complete authority over quarantine
 // releases. It is discovered on the position-policy commander rather than
 // injected as a separate option: the engine serves both from one control plane,
-// and a console wired to an engine that predates a063 must degrade to "no
+// and a console wired to an engine that predates a069 must degrade to "no
 // button" rather than to a missing dependency.
 type ExitQuarantineCommander interface {
 	Quarantines(context.Context) ([]exitquarantine.Row, error)

@@ -233,7 +233,7 @@ func compareRecoveryDecimal(a, b string) (int, error) {
 // level, so within one policy identity "b has no rung and a has rung 0" can only
 // mean the ladder has just activated its first one.
 //
-// This function used to refuse exactly that (change a062). NoRung is -1 and rung
+// This function used to refuse exactly that (change a068). NoRung is -1 and rung
 // indices start at 0, so the ordering below already places "not activated yet"
 // below every rung; the refusal was a duplicate of the caller's identity check
 // that fired on the one input it was not meant to catch. It quarantined a live

@@ -35,7 +35,7 @@ for attempt := 1; attempt <= attempts; attempt++ {
 
 ## I3 — 조작된 격리는 원장으로 재현할 수 없지만, **어긋난 두 기록**은 재현된다
 
-a063 issues I4는 "조작한 판정을 `RecordExitJudgement`에 넣어 재격리를 보는 것은
+a069 issues I4는 "조작한 판정을 `RecordExitJudgement`에 넣어 재격리를 보는 것은
 불가능하다"고 기록했다. 여전히 맞다 — 저장된 snapshot을 손대면
 `ValidateRecoveryDerivation`이나 output digest가 먼저 corrupt로 걸러낸다.
 

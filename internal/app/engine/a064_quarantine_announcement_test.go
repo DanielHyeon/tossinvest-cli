@@ -130,7 +130,7 @@ func TestAnAmbiguousRecoveryQuarantineIsAnnouncedInTheSameCycle(t *testing.T) {
 	// untouched and still verifies against its own derivation; what changed is
 	// the column the *next* evaluation recomputes from. That is exactly what
 	// "recovery candidate identity mismatch" means, and it is reached without
-	// forging a snapshot — which a063 (issues I4) established is unreachable.
+	// forging a snapshot — which a069 (issues I4) established is unreachable.
 	db := openLedger(t, h)
 	if _, err := db.Exec(`UPDATE exit_states SET entry_price='69000' WHERE position_id=?`, p.ID); err != nil {
 		t.Fatal(err)
@@ -244,7 +244,7 @@ func TestANewQuarantineVersionIsAnnouncedAgain(t *testing.T) {
 	}
 	refusalsAfterFirst := h.alerts.count(obs.EventExitJudgementRefused)
 
-	// a063's release, then the same unresolved cause quarantines it again under a
+	// a069's release, then the same unresolved cause quarantines it again under a
 	// new version. The judgement-refusal latch is still set from the first round.
 	ctx := context.Background()
 	if err := h.journal.ReleaseExitSnapshotQuarantine(ctx, p.ID, p.InstanceSeq, 1,

@@ -1,6 +1,6 @@
 package console
 
-// The release preview lives in its own template source (change a063) so the
+// The release preview lives in its own template source (change a069) so the
 // position-policy set keeps saying one thing. Both are parsed into the same
 // template chain in pages.go and share "head", "foot" and the one stylesheet.
 

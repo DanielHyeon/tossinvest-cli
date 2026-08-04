@@ -1,6 +1,6 @@
 package journal
 
-// exit_quarantine_list.go is the read side of change a063: the list an operator
+// exit_quarantine_list.go is the read side of change a069: the list an operator
 // console shows before deciding whether to lift a quarantine.
 //
 // It is a new file rather than another method on account_views.go because the

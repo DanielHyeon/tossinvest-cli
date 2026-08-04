@@ -64,9 +64,9 @@
 | `a058-match-stockos-holdings-density` | STORY-TOS-a058 | archived |
 | `a059-console-finds-the-engine-it-owns` | STORY-TOS-a059 | implemented |
 | `a060-soak-restart-uses-this-profile` | STORY-TOS-a060 | implemented |
-| `a061-screens-show-what-they-already-know` | STORY-TOS-a061 | in_progress |
-| `a062-first-rung-keeps-its-judgement` | STORY-TOS-a062 | implemented |
-| `a063-operator-can-lift-a-quarantine` | STORY-TOS-a063 | in_progress |
+| `a067-screens-show-what-they-already-know` | STORY-TOS-a067 | in_progress |
+| `a068-first-rung-keeps-its-judgement` | STORY-TOS-a068 | implemented |
+| `a069-operator-can-lift-a-quarantine` | STORY-TOS-a069 | in_progress |
 | `a064-critical-events-reach-the-operator` | STORY-TOS-a064 | in_progress |
 | `a065-alerts-turn-on-with-one-button` | STORY-TOS-a065 | in_progress |
 | `a066-the-subscribe-address-is-scannable` | STORY-TOS-a066 | in_progress |
