@@ -101,7 +101,7 @@ type settingsPage struct {
 	AutostartLoadErr string
 	AutostartNote    string
 
-	// --- critical alert delivery (change a065) ---
+	// --- critical alert delivery (change a075) ---
 
 	// NotificationsWired reports the seam was injected, separately from every
 	// other seam for the reason LimitsWired gives.

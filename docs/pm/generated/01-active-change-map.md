@@ -67,9 +67,9 @@
 | `a061-show-history-instrument-names` | STORY-TOS-a061 | archived |
 | `a062-reconcile-owned-orders` | STORY-TOS-a062 | archived |
 | `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | in_progress |
-| `a064-critical-events-reach-the-operator` | STORY-TOS-a064 | in_progress |
-| `a065-alerts-turn-on-with-one-button` | STORY-TOS-a065 | in_progress |
-| `a066-the-subscribe-address-is-scannable` | STORY-TOS-a066 | in_progress |
-| `a067-screens-show-what-they-already-know` | STORY-TOS-a067 | in_progress |
-| `a068-first-rung-keeps-its-judgement` | STORY-TOS-a068 | implemented |
-| `a069-operator-can-lift-a-quarantine` | STORY-TOS-a069 | in_progress |
+| `a074-critical-events-reach-the-operator` | STORY-TOS-a074 | in_progress |
+| `a075-alerts-turn-on-with-one-button` | STORY-TOS-a075 | in_progress |
+| `a076-the-subscribe-address-is-scannable` | STORY-TOS-a076 | in_progress |
+| `a077-screens-show-what-they-already-know` | STORY-TOS-a077 | in_progress |
+| `a078-first-rung-keeps-its-judgement` | STORY-TOS-a078 | implemented |
+| `a079-operator-can-lift-a-quarantine` | STORY-TOS-a079 | in_progress |

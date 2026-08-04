@@ -1,14 +1,14 @@
 package console
 
 // settings_notification_qr.go draws the subscribe address as something a phone
-// camera can read (change a066).
+// camera can read (change a076).
 //
 // # Why the card needs this and not just the link
 //
-// a065's card shows the address and links it, which is enough at the machine. It
+// a075's card shows the address and links it, which is enough at the machine. It
 // is not enough for the case critical alerts exist for: the operator is somewhere
 // else. Getting the channel onto a phone meant typing 26 random characters, which
-// is the friction a065 removed from the config file and left on the phone.
+// is the friction a075 removed from the config file and left on the phone.
 //
 // # Why the SVG is built from numbers rather than from a string
 //

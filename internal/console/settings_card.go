@@ -234,7 +234,7 @@ var settingsCardTab = map[string]string{
 	"system-update": tabTools,
 	// Alert delivery is set up once and rarely reopened, and the first thing an
 	// operator wants on reopening it is the state — which is the 도구 tab's whole
-	// contract (a065 design D6).
+	// contract (a075 design D6).
 	"notifications": tabTools,
 }
 

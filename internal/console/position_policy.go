@@ -48,7 +48,7 @@ type policyRowView struct {
 	Block      reconcileBlockView
 	Actions    []policyActionView
 	// Quarantine is the active exit-snapshot quarantine of this generation, if
-	// any (change a069). It is independent of the lifecycle actions above: a
+	// any (change a079). It is independent of the lifecycle actions above: a
 	// quarantine can land on any managed position regardless of provenance, and
 	// lifting one changes no lifecycle field.
 	Quarantine quarantineBadgeView
@@ -243,7 +243,7 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	names := c.holdingNames(c.now())
-	// Secondary read (change a069): a console talking to an engine that predates
+	// Secondary read (change a079): a console talking to an engine that predates
 	// the capability, or an engine that cannot answer right now, still draws the
 	// whole screen. Only the quarantine column goes unknown.
 	quarantines := map[string]exitquarantine.Row{}

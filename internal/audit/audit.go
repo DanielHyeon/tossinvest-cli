@@ -81,7 +81,7 @@ const (
 	// take-profit/protection profile for newly managed positions.
 	ActionExitPolicy = "exit_policy.common"
 	// ActionNotificationSetting is a change to where critical alerts are sent
-	// (change a064).
+	// (change a074).
 	//
 	// Its own action for the reason ActionAdoptionToggle is its own: it authorises
 	// a different thing. This decides whether the engine can tell a human that a

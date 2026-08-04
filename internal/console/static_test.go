@@ -307,7 +307,7 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	// The authenticated remote surface adds /login, /logout and the fixed
 	// credential-free /healthz probe.
 	//
-	// a065 adds three: /settings/notifications/on, /settings/notifications/test
+	// a075 adds three: /settings/notifications/on, /settings/notifications/test
 	// and /settings/notifications/off. The floor moves with them so this change
 	// does not widen the gap it inherited — the real table is larger than this
 	// number and has been for several changes (issues I4), which is a canary that
@@ -390,7 +390,7 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/settings/trading":   true,
 		"/settings/gate":      true,
 		"/settings/autostart": true,
-		// Alert delivery (a065). Turning alerts on writes a channel that is itself
+		// Alert delivery (a075). Turning alerts on writes a channel that is itself
 		// an access control, and turning them off stops the one path by which a
 		// stopped protection reaches a person. A forged request that did either
 		// silently is exactly what this gate is for. The test route is included for
@@ -406,7 +406,7 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/optimization/exit-protection/apply":   true,
 		"/position-management/preview":          true,
 		"/position-management/apply":            true,
-		// The quarantine release (a069). It writes released_at on a ledger row and
+		// The quarantine release (a079). It writes released_at on a ledger row and
 		// puts a position back under automated judgement, so a forged request
 		// would be an act in exactly the sense this list means — even though the
 		// act is "resume judging" rather than "stop judging".
@@ -671,7 +671,7 @@ var consoleStateChanging = []string{
 	"/settings/trading", "/settings/gate", "/settings/autostart",
 	"/settings/system-update/download",
 	"/settings/system-update/install",
-	// Alert delivery (a065). All three write or send and none touches an account:
+	// Alert delivery (a075). All three write or send and none touches an account:
 	// `on` and `off` move keys inside engine.notifications, `test` moves nothing at
 	// all and publishes one message. The spec sentence and this list moved in the
 	// same commit, which is what it requires of an extension.
@@ -992,7 +992,7 @@ var consoleCapabilities = map[string]capability{
 	"InstrumentNames": {Methods: []string{"Names"}},
 	"Settings":        {Methods: []string{"Load", "Save"}},
 	"EngineBoot":      {Methods: []string{"Load", "Save"}},
-	// Alert delivery (a065). Four methods, and the shape of Enable is the safety
+	// Alert delivery (a075). Four methods, and the shape of Enable is the safety
 	// property: it takes no parameter, so the screen supplies no value that lands
 	// in the file — not a channel name, and above all not a token. Test publishes
 	// one message through the configured transport and touches no outbox row, no

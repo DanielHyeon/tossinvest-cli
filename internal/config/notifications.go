@@ -1,7 +1,7 @@
 package config
 
 // notifications.go adds the alert transport to the engine's operating settings
-// (change a064, engine-safety "알림 전송 경로는 설정 가능하고 그 설정은 audit된다").
+// (change a074, engine-safety "알림 전송 경로는 설정 가능하고 그 설정은 audit된다").
 //
 // # What was missing
 //
@@ -38,7 +38,7 @@ import "strings"
 // Notifications configures where critical alerts are sent.
 type Notifications struct {
 	// Enabled turns the transport on. Default false, and false is the only value
-	// a pre-a064 config can produce.
+	// a pre-a074 config can produce.
 	Enabled bool `json:"enabled"`
 
 	// BaseURL is the ntfy server. Empty uses the public service, which the engine

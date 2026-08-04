@@ -1,6 +1,6 @@
 {
   "file": "internal/console/pages.go",
-  "source_sha256": "dbd1515adfb643ed355ea06467f4e90a7d6fc3c8830c95e2aaef25178ca0c5c7",
+  "source_sha256": "dbd1515adfb643ed355ea07467f4e90a7d6fc3c8830c95e2aaef25178ca0c5c7",
   "package": "console",
   "function": "handleDashboard",
   "receiver": "Console",

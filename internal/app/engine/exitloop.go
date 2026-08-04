@@ -359,7 +359,7 @@ func (o *ExitObserver) Run(ctx context.Context) error {
 	}
 }
 
-// reportCycle writes the line a failed cycle is owed (change a064).
+// reportCycle writes the line a failed cycle is owed (change a074).
 //
 // ExitCycle.Err's declaration has always said "It is reported and not returned
 // by Run". Nothing reported it: this loop discarded the whole cycle, and it is
@@ -1095,7 +1095,7 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 			// returning. Announcing here is what makes the creating cycle
 			// observable at all — the working set only sees the quarantine on the
 			// next cycle, and this is the path all three of the 2026-08-03
-			// quarantines came through (change a064).
+			// quarantines came through (change a074).
 			//
 			// The error is still returned unchanged: the judgement was not
 			// recorded, and the announcement decides nothing about that.

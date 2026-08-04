@@ -3,7 +3,7 @@ package journal
 import "time"
 
 // WithIntegrity applies only the freshness checks that do not depend on an age
-// bound (change a067).
+// bound (change a077).
 //
 // WithFreshness answers "is this reading too old", which presumes the stamp is a
 // reading. exit_states.last_observed_at is not: it is written from record() and

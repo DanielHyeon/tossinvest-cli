@@ -1,13 +1,13 @@
 package obs
 
 // topic.go makes the notification channel rather than asking for one (change
-// a065, engine-safety "알림 채널 식별자는 기계가 만든다").
+// a075, engine-safety "알림 채널 식별자는 기계가 만든다").
 //
 // # Why there is no input field anywhere for this
 //
 // ntfy.go already says it: "the topic name is the only access control ntfy.sh
 // has, and an engine publishing account events to a guessable public topic is an
-// information leak." a064 left the topic to the operator, in the config file or
+// information leak." a074 left the topic to the operator, in the config file or
 // in an environment variable, which means the access control was whatever a
 // person typed at 2am — `tossos`, the account nickname, the product name.
 //

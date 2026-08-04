@@ -1,7 +1,7 @@
 package engine
 
 // exit_quarantine_announce.go raises the alert for the moment a stored exit
-// snapshot generation is quarantined (change a064, exit-policy "판정 격리의
+// snapshot generation is quarantined (change a074, exit-policy "판정 격리의
 // 생성은 그 순간에 관측된다").
 //
 // # Why the refusal alert was not enough
@@ -24,7 +24,7 @@ package engine
 // position (o.refused), so a position already refused for some other reason
 // could be quarantined without producing a single line, ever. And it carries
 // none of the quarantine's identity, so nothing in it tells an operator that
-// this one needs a human to lift it (a069's release screen) rather than waiting
+// this one needs a human to lift it (a079's release screen) rather than waiting
 // for the next quote.
 //
 // # Why the latch is keyed on the version

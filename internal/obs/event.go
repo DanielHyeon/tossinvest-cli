@@ -145,7 +145,7 @@ const (
 	// position went unjudged.
 	EventExitJudgementRefused EventType = "exit.judgement_refused"
 	// EventExitCycleFailed is one exit observation cycle that ended on a failure
-	// (change a064). Normal, and the grade is the decision.
+	// (change a074). Normal, and the grade is the decision.
 	//
 	// ExitCycle.Err has no single meaning: a ledger write that lost a race, a
 	// break-even that could not be priced for one symbol, a judgement transaction
@@ -161,7 +161,7 @@ const (
 	// reach a human.
 	EventExitCycleFailed EventType = "exit.cycle_failed"
 	// EventExitSnapshotQuarantined is the moment a stored exit snapshot generation
-	// is quarantined (change a064). CRITICAL, by the same rule as the rest of this
+	// is quarantined (change a074). CRITICAL, by the same rule as the rest of this
 	// group: a quarantined generation is refused outright by the observation loop,
 	// so the position is not judged at all and its stop is not evaluated.
 	//

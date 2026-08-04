@@ -3,12 +3,12 @@ package operatorview
 import "strings"
 
 // staleStatusText is the short verdict beside a row whose actionable values are
-// hidden (change a067).
+// hidden (change a077).
 //
 // Every stale reason hides the same five values, but they are not the same
 // problem and the operator's next move differs: an old evaluation is waited on,
 // a stopped engine is started, and a quarantined position needs a person to look
-// at why the engine refused it. Before a067 all three read 오래된 평가, which is
+// at why the engine refused it. Before a077 all three read 오래된 평가, which is
 // actively wrong for the last two — a quarantined line is not old, it is
 // unmaintained.
 //

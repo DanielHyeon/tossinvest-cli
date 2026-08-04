@@ -111,7 +111,7 @@ func StartPositionPolicyCommandServer(engineDir string,
 		positionPolicyRequestHandler(commands.Preview)))
 	mux.HandleFunc("/v1/apply", server.auth(token,
 		positionPolicyRequestHandler(commands.Apply)))
-	// Change a069's quarantine release, discovered rather than injected: an
+	// Change a079's quarantine release, discovered rather than injected: an
 	// engine build without the capability serves exactly the route set above,
 	// and no wiring point in `engine run` has to learn about a second service.
 	if quarantines, ok := commands.(exitQuarantineCommands); ok {

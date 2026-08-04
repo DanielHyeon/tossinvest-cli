@@ -1,6 +1,6 @@
 {
   "file": "internal/console/settings_exclude_test.go",
-  "source_sha256": "9f01b1ed3cc7a066c30c92d408699bbea660a999e3a21a5ad09d2d5fd2726c01",
+  "source_sha256": "9f01b1ed3cc7a076c30c92d408699bbea660a999e3a21a5ad09d2d5fd2726c01",
   "package": "console",
   "function": "TestTheExcludeControlAsksForNoTyping",
   "signature": "TestTheExcludeControlAsksForNoTyping(params=1, results=0)",

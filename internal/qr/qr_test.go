@@ -356,7 +356,7 @@ func TestThePayloadComesBackOutOfTheSymbol(t *testing.T) {
 
 // TestTheSubscribeAddressFitsWithRoomToSpare.
 //
-// The address a065 generates is 46 bytes. This pins which version that lands on,
+// The address a075 generates is 46 bytes. This pins which version that lands on,
 // so a change that quietly grew the channel — or the prefix — shows up as a
 // bigger symbol rather than as a phone that will not focus.
 func TestTheSubscribeAddressFitsWithRoomToSpare(t *testing.T) {

@@ -55,7 +55,7 @@ type Engine struct {
 	// positions. Empty preserves the pre-change RATCHET behavior.
 	ExitPolicy ExitPolicy `json:"exit_policy"`
 	// Notifications configures where critical alerts are sent. Zero value = off,
-	// which wires no transport and is exactly what every pre-a064 config
+	// which wires no transport and is exactly what every pre-a074 config
 	// produces. See notifications.go.
 	Notifications Notifications `json:"notifications"`
 }

@@ -1,7 +1,7 @@
 package console
 
 // protection_liveness.go decides whether the protection line the console has on
-// disk may still be read as the line that is in force (change a067).
+// disk may still be read as the line that is in force (change a077).
 //
 // # The bug this file exists to correct
 //
@@ -36,7 +36,7 @@ package console
 //
 // An unwired marker is neither. The operator-console spec forbids drawing it as
 // a stopped engine, so a console that cannot see the engine keeps the judgement
-// it made before a067 rather than being told something it cannot know.
+// it made before a077 rather than being told something it cannot know.
 
 import (
 	"strings"
@@ -73,7 +73,7 @@ func exitFreshness(view journal.ExitSnapshotView, asOf time.Time, live protectio
 	case !live.Wired:
 		// This console cannot see the engine, and an unwired marker must not be
 		// drawn as a stopped one. Keep the judgement this screen made before
-		// a067: conservative, and wrong for a reason that is at least unchanged.
+		// a077: conservative, and wrong for a reason that is at least unchanged.
 		return view.WithFreshness(asOf, holdingsTTL)
 	case !live.Running:
 		view.Stale, view.StaleReason = true, "engine_not_running"
@@ -98,7 +98,7 @@ func (r positionRow) Quarantined() bool { return r.Quarantine != nil }
 //
 // It peeks rather than gets. The caller (/position-management) makes no broker
 // call today, and a screen that started spending the §0.4 rate budget for a
-// label would be a poor trade. An empty cache yields no names — the pre-a067
+// label would be a poor trade. An empty cache yields no names — the pre-a077
 // rendering — and never an invented one.
 func (c *Console) holdingNames(now time.Time) map[string]string {
 	rows := c.holdings.peek(now).Rows

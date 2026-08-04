@@ -416,7 +416,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	status := newAutomationStatus(gate, paths, opts.protectionReadiness())
 
 	// The alert transport, resolved here because this is where cfg is and because
-	// the settings have to reach the same audit call the gate's do (change a064,
+	// the settings have to reach the same audit call the gate's do (change a074,
 	// design D6). resolveNotificationPublisher returns no error on purpose: a
 	// notification setting nobody can make sense of must not stop an engine whose
 	// stop evaluation would stop with it. An injected publisher wins, so a package

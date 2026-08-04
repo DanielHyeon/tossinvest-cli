@@ -1,6 +1,6 @@
 package engine
 
-// exit_quarantine_command.go is the engine-owned command side of change a069:
+// exit_quarantine_command.go is the engine-owned command side of change a079:
 // lifting an exit snapshot quarantine.
 //
 // # Why it lives on the position policy service
@@ -53,7 +53,7 @@ const (
 // exitQuarantineRepository is the narrow ledger capability a release needs: read
 // the active rows, and close exactly one of them. It cannot write an exit state,
 // a position, or a policy lifecycle, and that is the point — the whole safety
-// claim of a069 is that a release moves one column.
+// claim of a079 is that a release moves one column.
 type exitQuarantineRepository interface {
 	ActiveExitSnapshotQuarantines(context.Context) ([]exitquarantine.Row, error)
 	ReleaseExitSnapshotQuarantine(ctx context.Context, positionID string,
@@ -74,7 +74,7 @@ type exitQuarantineCapability struct {
 // quarantineRepo reports the ledger capability, or that this build has none.
 //
 // ErrUnwired rather than a panic or a nil dereference: a console talking to an
-// engine that predates a069 must get a screen that says the control plane does
+// engine that predates a079 must get a screen that says the control plane does
 // not offer this, not a 500.
 func (s *PositionPolicyCommandService) quarantineRepo() (exitQuarantineRepository, error) {
 	repo, ok := s.j.(exitQuarantineRepository)

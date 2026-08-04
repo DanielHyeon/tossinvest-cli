@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/soakproc.go",
-  "source_sha256": "1b05cdf555c79bd2b65ad9f747af6dc1d258dabd4d809a1f21970a0642b6f4e3",
+  "source_sha256": "1b05cdf555c79bd2b65ad9f747af6dc1d258dabd4d809a1f21970a0742b6f4e3",
   "package": "main",
   "function": "restartSoak",
   "signature": "restartSoak(params=2, results=2)",

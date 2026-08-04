@@ -713,7 +713,7 @@ func recordGateSettings(log *audit.Log, gate config.AutomationGate,
 		adoptionDetail = "the configured block was refused and adoption stays off: " + adoption.Rejected
 	}
 	// The notification settings record whether a channel and a credential exist,
-	// never what they are (change a064, design D5). §0.5 asks what this engine was
+	// never what they are (change a074, design D5). §0.5 asks what this engine was
 	// configured with and when that changed; §0.8 forbids the values, and on
 	// ntfy.sh the topic name is a bearer secret exactly like the token. The base
 	// URL is kept: a host address is not a secret and "which server were we

@@ -1,6 +1,6 @@
 {
   "file": "internal/console/optimization_view.go",
-  "source_sha256": "bbd7089082aaffc1af5dd3702731d9dcd6ffa0680de8815b3acbc60563525d23",
+  "source_sha256": "bbd7089082aaffc1af5dd3702731d9dcd6ffa0780de8815b3acbc60563525d23",
   "package": "console",
   "function": "writeOptimizationApplyError",
   "receiver": "Console",

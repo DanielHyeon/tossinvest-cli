@@ -1,7 +1,7 @@
 package config
 
 // notifications_io.go is the console's fifth config write surface: where critical
-// alerts are sent (change a065).
+// alerts are sent (change a075).
 //
 // # Two savers, two closed member lists, and the reason there are two
 //

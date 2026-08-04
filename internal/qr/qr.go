@@ -1,13 +1,13 @@
 package qr
 
 // qr.go is a QR encoder: byte mode, error-correction level M, versions 1 to 10
-// (change a066).
+// (change a076).
 //
 // # Why this exists in a trading repository
 //
-// a065 made turning critical alerts on a single button press, and then handed the
+// a075 made turning critical alerts on a single button press, and then handed the
 // operator a 26-character random address to type into a phone. The address is
-// random because it is the access control; typing it is the friction a065 exists
+// random because it is the access control; typing it is the friction a075 exists
 // to remove; and a phone is exactly where an alert about a position that stopped
 // being protected needs to arrive.
 //

@@ -1,11 +1,11 @@
 package console
 
 // settings_notifications.go is the button that turns critical alerts on (change
-// a065).
+// a075).
 //
 // # What this card exists to delete
 //
-// a064 gave the engine a configurable transport and stopped there, so turning
+// a074 gave the engine a configurable transport and stopped there, so turning
 // alerts on meant hand-editing `engine.notifications` into config.json and
 // inventing a topic name. Nothing on any screen said what a good topic was, and
 // the one place that knew — a source comment — said the topic name is the only

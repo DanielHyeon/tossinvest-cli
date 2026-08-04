@@ -1,7 +1,7 @@
 package engine
 
 // notifications.go joins the notification settings an operator writes in the
-// config file with the secret they must not (change a064, engine-safety "알림
+// config file with the secret they must not (change a074, engine-safety "알림
 // 전송 경로는 설정 가능하고 그 설정은 audit된다").
 //
 // # Why this seam exists at all

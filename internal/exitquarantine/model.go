@@ -11,7 +11,7 @@
 // lifecycle status, nor the desired policy, nor the adoption generation, nor the
 // lifecycle version. Folding it into that CAS pipeline would mean a
 // compare-and-swap whose version never moves, handled by a special branch in the
-// ledger transaction that commits policy changes. Change a069 design D1.
+// ledger transaction that commits policy changes. Change a079 design D1.
 //
 // # What a release actually is
 //
@@ -44,7 +44,7 @@ var (
 	ErrCapabilityExpired    = errors.New("exit quarantine: release capability expired")
 	ErrConfirmationRequired = errors.New("exit quarantine: release requires the danger acknowledgement")
 	// ErrUnwired means this build reached a control plane that does not offer the
-	// quarantine capability at all — an engine older than a069, or a console with
+	// quarantine capability at all — an engine older than a079, or a console with
 	// no command seam. It is not a refusal of the request; nothing was attempted.
 	ErrUnwired = errors.New("exit quarantine: the engine control plane does not offer quarantine release")
 )

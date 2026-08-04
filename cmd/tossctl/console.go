@@ -426,7 +426,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Gate:          consoleGateSwitchSeam(root),
 		EngineBoot:    engineBoot,
 
-		// Where critical alerts go (change a065). Its Enable takes no argument, so
+		// Where critical alerts go (change a075). Its Enable takes no argument, so
 		// the screen supplies no value: the channel is 128 bits of crypto/rand made
 		// here, and the transport's token is never asked for on any form.
 		Notifications: consoleNotificationSeam(root),
@@ -637,7 +637,7 @@ func consoleGateSwitchSeam(root *rootOptions) console.GateSwitch {
 	return nil
 }
 
-// consoleNotificationSeam adapts the alert-delivery editor (a065). Same
+// consoleNotificationSeam adapts the alert-delivery editor (a075). Same
 // nil-on-the-concrete-pointer care as the seams above: a typed nil inside the
 // interface would render the card as wired and fail on the first press.
 func consoleNotificationSeam(root *rootOptions) console.NotificationSettings {

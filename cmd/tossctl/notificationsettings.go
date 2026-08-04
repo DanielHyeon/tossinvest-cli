@@ -1,11 +1,11 @@
 package main
 
-// notificationsettings.go is the console's alert-delivery seam (change a065).
+// notificationsettings.go is the console's alert-delivery seam (change a075).
 //
 // # Everything the screen cannot do lives here
 //
 // `internal/console` names no config service, no random source, no transport and
-// no audit log — three static guards in that package say so, and a065 keeps all
+// no audit log — three static guards in that package say so, and a075 keeps all
 // three true by giving the screen a seam whose Enable takes no argument. The
 // values it writes are decided here:
 //
@@ -13,12 +13,12 @@ package main
 //	server    obs.DefaultNtfyBaseURL, written explicitly so the file says where
 //	          alerts go rather than relying on an empty-means-public default
 //	token     not written anywhere. Read from the engine's own environment by
-//	          resolveNotificationPublisher (a064), and used HERE only to make the
+//	          resolveNotificationPublisher (a074), and used HERE only to make the
 //	          console's test message reach a self-hosted instance behind one.
 //
 // # The audit line carries no secret
 //
-// a064 fixed the contract for what an alert-settings audit entry may hold: the
+// a074 fixed the contract for what an alert-settings audit entry may hold: the
 // server address, and whether a channel and a credential exist. Not their values.
 // The channel identifier is the access control on a public ntfy topic, so writing
 // it to an append-only operations log would be writing the credential to the log.
@@ -34,7 +34,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 )
 
-// envNtfyToken is the same variable the engine's assembly reads (a064). It is
+// envNtfyToken is the same variable the engine's assembly reads (a074). It is
 // spelled again rather than exported from internal/app/engine: the two readers
 // want the same name for different processes, and exporting it would make one
 // package's private wiring another's API.
@@ -167,8 +167,8 @@ func publishNotificationTest(ctx context.Context, block config.Notifications, to
 // asking "when did alerts start going somewhere" should find that sentence rather
 // than a diff they have to compute.
 //
-// `topic_configured` is a boolean and never the value. That is a064's contract and
-// it is load-bearing here for the first time: before a065 nothing but a hand-edit
+// `topic_configured` is a boolean and never the value. That is a074's contract and
+// it is load-bearing here for the first time: before a075 nothing but a hand-edit
 // could set a channel, and now a button does it several times a session.
 func recordNotificationChange(before, after config.Notifications, created bool) {
 	log := openAuditLog()

@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/adoptionsettings_stop_percent_test.go",
-  "source_sha256": "6d2fe7ca86aac1971530ed512287a6409c2a39a0652cdbdee3e67cb49e90d97b",
+  "source_sha256": "6d2fe7ca86aac1971530ed512287a6409c2a39a0752cdbdee3e67cb49e90d97b",
   "package": "main",
   "function": "TestAdoptionSettingsRoundTripsStopWidth",
   "signature": "TestAdoptionSettingsRoundTripsStopWidth(params=1, results=0)",
