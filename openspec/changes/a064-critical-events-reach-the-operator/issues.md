@@ -97,3 +97,22 @@ would be two definitions of 'exit observation is down' that could disagree."
 a064는 그 결정을 바꾸지 않았다. 다만 이제 사이클 실패가 **로그에는** 남으므로, 두절
 계약이 잡지 못하는 종류의 반복 실패(판정 기록 실패 등)를 사람이 셀 수 있다. 그것을
 자동 임계로 만들지 여부는 별개의 판단이며 후속 change 후보다.
+
+## 배포 후 관측 (2026-08-04T04:27Z, task 11.1은 아직 미측정)
+
+병합 빌드 기동 4초 뒤 사이클에서 알림 배관이 실제로 도는 것을 관측했다.
+
+```
+exit.judgement_refused  severity=critical  symbol=042660 466100 475150 IONQ TSLA
+engine.alert_undelivered  alert_id=4,5,6,7,8
+  error="no notification publisher is configured"
+```
+
+critical 이벤트가 발행되고, outbox에 행이 남고, 전송이 시도되고, publisher가 없어
+실패한 사실까지 기록된다 — a064가 만들려던 경로 그대로다. 그리고 이것이 a065가
+없애려는 상태이기도 하다: 사람에게 닿는 경로가 설정되지 않아 critical 알림 다섯 건이
+쌓여 있다.
+
+**task 11.1은 이것으로 닫지 않는다.** 11.1이 요구하는 것은 *격리 생성* 이벤트이고,
+위 다섯 건은 배포 이전에 이미 격리된 포지션에 대한 판정 거부 이벤트다. 새 격리가
+생기기 전에는 측정할 수 없다.
