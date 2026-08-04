@@ -1,0 +1,118 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "ee876ece631fd06ab2582b99a1ea0d3cc5ac74fb004edade696f223d7dae5692",
+  "package": "engine",
+  "function": "Run",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.Run(params=1, results=1)",
+  "start": {
+    "line": 350,
+    "column": 1
+  },
+  "end": {
+    "line": 360,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 351,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 352,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 356,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 353,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 357,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 13
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 3
+      },
+      "text": "o.reportCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 17
+      },
+      "text": "o.ObserveOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 356,
+        "column": 13
+      },
+      "text": "o.clk.Sleep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 356,
+        "column": 30
+      },
+      "text": "o.Interval"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 352,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 356,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

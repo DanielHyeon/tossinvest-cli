@@ -415,11 +415,23 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 	gate := cfg.Engine.AutomationGate
 	status := newAutomationStatus(gate, paths, opts.protectionReadiness())
 
+	// The alert transport, resolved here because this is where cfg is and because
+	// the settings have to reach the same audit call the gate's do (change a064,
+	// design D6). resolveNotificationPublisher returns no error on purpose: a
+	// notification setting nobody can make sense of must not stop an engine whose
+	// stop evaluation would stop with it. An injected publisher wins, so a package
+	// test is never a function of the process environment.
+	publisher, notifications := resolveNotificationPublisher(cfg.Engine.Notifications, opts.Getenv)
+	if opts.Publisher != nil {
+		publisher = opts.Publisher
+	}
+
 	// The audit trail is written before anything can refuse: an operator's
 	// settings change is worth recording whether or not the engine then agrees to
 	// start on it, and the refusal record that may follow is what ties the two
 	// together (§0.5).
-	if err := recordGateSettings(auditLog, gate, cfg.Engine.Adoption, status.AttestationFile); err != nil {
+	if err := recordGateSettings(auditLog, gate, cfg.Engine.Adoption, notifications,
+		status.AttestationFile); err != nil {
 		// A settings change we cannot record is a settings change nobody can
 		// audit. Refusing here is the conservative direction: the engine does not
 		// start, and no order is placed off the record.
@@ -462,7 +474,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		accountRef: accountRef,
 		clock:      clk,
 		logger:     opts.Logger,
-		publisher:  opts.Publisher,
+		publisher:  publisher,
 
 		protectionOverride: opts.protectionOverride,
 	})

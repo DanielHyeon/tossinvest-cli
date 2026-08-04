@@ -707,10 +707,24 @@ func resolveAccountRef(ctx context.Context, reads *official.Client) (string, err
 // wrote a 0.5 % stop and found adoption off has to be able to find out from the
 // audit trail that the number was refused rather than ignored.
 func recordGateSettings(log *audit.Log, gate config.AutomationGate,
-	adoption config.Adoption, attestationFile string) error {
+	adoption config.Adoption, notifications notificationResolution, attestationFile string) error {
 	adoptionDetail := ""
 	if adoption.Rejected != "" {
 		adoptionDetail = "the configured block was refused and adoption stays off: " + adoption.Rejected
+	}
+	// The notification settings record whether a channel and a credential exist,
+	// never what they are (change a064, design D5). §0.5 asks what this engine was
+	// configured with and when that changed; §0.8 forbids the values, and on
+	// ntfy.sh the topic name is a bearer secret exactly like the token. The base
+	// URL is kept: a host address is not a secret and "which server were we
+	// sending to" is a question incident review asks.
+	notificationDetail := ""
+	if notifications.Refused != "" {
+		notificationDetail = "the configured block was refused and alerts stay undelivered: " +
+			notifications.Refused
+	} else if notifications.PublicService && notifications.TopicConfigured {
+		notificationDetail = "this targets the public ntfy service, where the topic name is the only " +
+			"access control"
 	}
 	changes := []struct {
 		action  string
@@ -738,6 +752,16 @@ func recordGateSettings(log *audit.Log, gate config.AutomationGate,
 		{audit.ActionLimitChange, "engine.automation_gate.max_daily_loss_ratio", limitString(gate.MaxDailyLossRatio), ""},
 		{audit.ActionLimitChange, "engine.automation_gate.limit_currency",
 			strings.ToUpper(strings.TrimSpace(gate.LimitCurrency)), ""},
+		// Appended, never interleaved: the landed order above is what lets two
+		// startups be read side by side.
+		{audit.ActionNotificationSetting, "engine.notifications.enabled",
+			strconv.FormatBool(notifications.Enabled), notificationDetail},
+		{audit.ActionNotificationSetting, "engine.notifications.base_url",
+			notifications.BaseURL, ""},
+		{audit.ActionNotificationSetting, "engine.notifications.topic_configured",
+			strconv.FormatBool(notifications.TopicConfigured), ""},
+		{audit.ActionNotificationSetting, "engine.notifications.token_configured",
+			strconv.FormatBool(notifications.TokenConfigured), ""},
 	}
 	for _, c := range changes {
 		if _, err := log.RecordChange(c.action, c.setting, c.value, c.detail); err != nil {

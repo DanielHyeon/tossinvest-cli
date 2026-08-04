@@ -238,6 +238,12 @@ type ExitObserver struct {
 	unmanaged map[string]bool
 	// refused latches the refusal-to-judge alert per position.
 	refused map[string]bool
+	// quarantineAnnounced latches the quarantine-creation alert per quarantine
+	// row — position, generation and version — so a release followed by a
+	// re-quarantine announces again. See exit_quarantine_announce.go. It is
+	// initialised lazily on first use; a nil map already reads as "nothing
+	// announced", which is the correct starting state.
+	quarantineAnnounced map[string]bool
 	// delayedSince is when a symbol's liquidation first found the symbol busy.
 	delayedSince map[string]time.Time
 	// delayAlerted stops that alert repeating within one delay.
@@ -346,11 +352,35 @@ func (o *ExitObserver) Run(ctx context.Context) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		_ = o.ObserveOnce(ctx)
+		o.reportCycle(o.ObserveOnce(ctx))
 		if err := o.clk.Sleep(ctx, o.Interval()); err != nil {
 			return err
 		}
 	}
+}
+
+// reportCycle writes the line a failed cycle is owed (change a064).
+//
+// ExitCycle.Err's declaration has always said "It is reported and not returned
+// by Run". Nothing reported it: this loop discarded the whole cycle, and it is
+// registered in the runtime with no Health, so the supervisor's degradation
+// ladder could not count cycle failures either. The failure that made this
+// visible was a quarantine — the judgement transaction created one, returned its
+// sentinel, and the creating cycle left no trace anywhere.
+//
+// A log line and not an alert. See obs.EventExitCycleFailed for why: a cycle
+// failure has no single meaning, and grading it critical would let a transient
+// ledger error stop a live account. The conditions that mean a position is
+// actually unprotected raise their own critical events from where they happen.
+//
+// Successful cycles say nothing. One line every five seconds forever is not
+// observability.
+func (o *ExitObserver) reportCycle(cycle ExitCycle) {
+	if cycle.Err == nil {
+		return
+	}
+	o.logErr(obs.EventExitCycleFailed, cycle.Err,
+		"the exit observation cycle did not complete; the loop retries on the next interval")
 }
 
 // ExitCycle is what one observation did, for tests and for the status surface.
@@ -501,6 +531,7 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			}
 			refused = append(refused, managed{position: p, state: state,
 				identityErr: fmt.Errorf("%w (quarantine version %d)", result.Corruption, q.Version)})
+			o.announceQuarantine(ctx, p, q)
 			continue
 		}
 		if q, active, qerr := o.opts.Journal.ActiveExitSnapshotQuarantine(ctx, p.ID, p.InstanceSeq); qerr != nil {
@@ -525,6 +556,7 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			}
 			refused = append(refused, managed{position: p, state: state,
 				identityErr: fmt.Errorf("%w (quarantine version %d)", identityErr, q.Version)})
+			o.announceQuarantine(ctx, p, q)
 			continue
 		}
 		out = append(out, managed{
@@ -1057,6 +1089,17 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 			// the normal path; reaching here means the row moved under the read,
 			// and holding is the conservative answer.
 			return nil
+		}
+		if errors.Is(err, journal.ErrExitSnapshotQuarantined) {
+			// The transaction quarantined this generation and committed before
+			// returning. Announcing here is what makes the creating cycle
+			// observable at all — the working set only sees the quarantine on the
+			// next cycle, and this is the path all three of the 2026-08-03
+			// quarantines came through (change a064).
+			//
+			// The error is still returned unchanged: the judgement was not
+			// recorded, and the announcement decides nothing about that.
+			o.announceQuarantineFromLedger(ctx, m.position)
 		}
 		return fmt.Errorf("engine: recording the exit judgement of %s: %w", m.position.ID, err)
 	}

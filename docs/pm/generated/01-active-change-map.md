@@ -67,3 +67,4 @@
 | `a061-screens-show-what-they-already-know` | STORY-TOS-a061 | in_progress |
 | `a062-first-rung-keeps-its-judgement` | STORY-TOS-a062 | implemented |
 | `a063-operator-can-lift-a-quarantine` | STORY-TOS-a063 | in_progress |
+| `a064-critical-events-reach-the-operator` | STORY-TOS-a064 | in_progress |

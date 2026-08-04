@@ -144,6 +144,37 @@ const (
 	// (exitpolicy.ErrRefused). CRITICAL, and distinct from "nothing to do": the
 	// position went unjudged.
 	EventExitJudgementRefused EventType = "exit.judgement_refused"
+	// EventExitCycleFailed is one exit observation cycle that ended on a failure
+	// (change a064). Normal, and the grade is the decision.
+	//
+	// ExitCycle.Err has no single meaning: a ledger write that lost a race, a
+	// break-even that could not be priced for one symbol, a judgement transaction
+	// that quarantined a generation. Grading that critical would send a transient
+	// SQLite error to the durable outbox, and an outbox entry that cannot be
+	// delivered latches the entry gate and escalates the account to ENTRY_BLOCKED.
+	// A blip must not be able to stop a live account trading.
+	//
+	// So this is the counting channel, and it is complete: every failed cycle
+	// produces one line. The conditions that genuinely mean a position is
+	// unprotected have their own critical events — observation outage, judgement
+	// refused, snapshot quarantined, liquidation delayed — and those are what
+	// reach a human.
+	EventExitCycleFailed EventType = "exit.cycle_failed"
+	// EventExitSnapshotQuarantined is the moment a stored exit snapshot generation
+	// is quarantined (change a064). CRITICAL, by the same rule as the rest of this
+	// group: a quarantined generation is refused outright by the observation loop,
+	// so the position is not judged at all and its stop is not evaluated.
+	//
+	// It is deliberately separate from EventExitJudgementRefused, which reports the
+	// *consequence* on every later cycle. Three things made the consequence alone
+	// insufficient. It arrives one cycle late, because the quarantine is written
+	// inside the judgement transaction and only the next working set sees it. It
+	// carries none of the quarantine's identity — version, reason, evidence — so
+	// nothing in it distinguishes "unreadable price" from "this generation is
+	// permanently out of the judgement set until a human lifts it". And it is
+	// latched per position, so a position already refused for another reason could
+	// be quarantined without producing a single line.
+	EventExitSnapshotQuarantined EventType = "exit.snapshot_quarantined"
 	// EventExitProposalRefused is a liquidation or take-profit the Guardian or the
 	// gateway declined to submit. CRITICAL — the protection the policy asked for
 	// did not happen.
@@ -260,10 +291,11 @@ var criticalEvents = map[EventType]bool{
 	EventEngineLoopFailed:   true,
 	EventEngineLoopDegraded: true,
 
-	EventExitObservationOutage:  true,
-	EventExitJudgementRefused:   true,
-	EventExitProposalRefused:    true,
-	EventExitLiquidationDelayed: true,
+	EventExitObservationOutage:   true,
+	EventExitJudgementRefused:    true,
+	EventExitSnapshotQuarantined: true,
+	EventExitProposalRefused:     true,
+	EventExitLiquidationDelayed:  true,
 }
 
 // SeverityOf grades an event.

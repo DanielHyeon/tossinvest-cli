@@ -80,6 +80,19 @@ const (
 	// ActionExitPolicy is an operator selecting the immutable common
 	// take-profit/protection profile for newly managed positions.
 	ActionExitPolicy = "exit_policy.common"
+	// ActionNotificationSetting is a change to where critical alerts are sent
+	// (change a064).
+	//
+	// Its own action for the reason ActionAdoptionToggle is its own: it authorises
+	// a different thing. This decides whether the engine can tell a human that a
+	// position is unprotected — and an engine that cannot is one whose critical
+	// alerts pile up undelivered, which latches the entry gate. An operator asking
+	// "when did my alerts stop arriving" must not have to read that out of a gate
+	// line.
+	//
+	// The values it records are deliberately not the channel: see
+	// engine.recordGateSettings and §0.8.
+	ActionNotificationSetting = "notifications.setting"
 	// Remote console authentication events are separate from setting changes.
 	ActionRemoteLogin       = "console.remote.login"
 	ActionRemoteLoginFailed = "console.remote.login_failed"

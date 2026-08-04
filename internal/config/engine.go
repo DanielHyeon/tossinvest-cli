@@ -54,6 +54,10 @@ type Engine struct {
 	// ExitPolicy selects the immutable common profile for newly managed
 	// positions. Empty preserves the pre-change RATCHET behavior.
 	ExitPolicy ExitPolicy `json:"exit_policy"`
+	// Notifications configures where critical alerts are sent. Zero value = off,
+	// which wires no transport and is exactly what every pre-a064 config
+	// produces. See notifications.go.
+	Notifications Notifications `json:"notifications"`
 }
 
 type ExitPolicy struct {
@@ -247,6 +251,7 @@ type rawEngine struct {
 	AutomationGate *rawAutomationGate `json:"automation_gate"`
 	Adoption       *rawAdoption       `json:"adoption"`
 	ExitPolicy     *rawExitPolicy     `json:"exit_policy"`
+	Notifications  *rawNotifications  `json:"notifications"`
 }
 
 type rawExitPolicy struct {
@@ -314,6 +319,11 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 		next.Rejected = next.validate()
 		cfg.ExitPolicy = next
 	}
+	// Before the automation-gate early return below, not after: an engine with the
+	// gate off still runs a console and still has critical alerts to deliver, and
+	// a notification block silently ignored because the file has no
+	// `automation_gate` key would be the worst kind of quiet.
+	mergeNotifications(cfg, raw.Notifications)
 	if raw.AutomationGate == nil {
 		return
 	}
