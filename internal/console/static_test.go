@@ -306,7 +306,13 @@ func TestEveryRouteGoesThroughTheSessionGate(t *testing.T) {
 	// first half go on passing.
 	// The authenticated remote surface adds /login, /logout and the fixed
 	// credential-free /healthz probe.
-	if len(routes) < 27 {
+	//
+	// a065 adds three: /settings/notifications/on, /settings/notifications/test
+	// and /settings/notifications/off. The floor moves with them so this change
+	// does not widen the gap it inherited — the real table is larger than this
+	// number and has been for several changes (issues I4), which is a canary that
+	// still fires on a stopped parser but no longer on a dropped route.
+	if len(routes) < 30 {
 		t.Errorf("only %d route(s) were read; the guard is not seeing the whole table", len(routes))
 	}
 }
@@ -384,6 +390,15 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		"/settings/trading":                     true,
 		"/settings/gate":                        true,
 		"/settings/autostart":                   true,
+		// Alert delivery (a065). Turning alerts on writes a channel that is itself
+		// an access control, and turning them off stops the one path by which a
+		// stopped protection reaches a person. A forged request that did either
+		// silently is exactly what this gate is for. The test route is included for
+		// the same reason /restart is: it sends nothing to an account, but a page
+		// that could make this console publish on demand is a page with a megaphone.
+		"/settings/notifications/on":            true,
+		"/settings/notifications/test":          true,
+		"/settings/notifications/off":           true,
 		"/settings/system-update/download":      true,
 		"/settings/system-update/install":       true,
 		"/optimization/exit-policy":             true,
@@ -656,6 +671,13 @@ var consoleStateChanging = []string{
 	"/settings/trading", "/settings/gate", "/settings/autostart",
 	"/settings/system-update/download",
 	"/settings/system-update/install",
+	// Alert delivery (a065). All three write or send and none touches an account:
+	// `on` and `off` move keys inside engine.notifications, `test` moves nothing at
+	// all and publishes one message. The spec sentence and this list moved in the
+	// same commit, which is what it requires of an extension.
+	"/settings/notifications/on",
+	"/settings/notifications/test",
+	"/settings/notifications/off",
 	"/openapi/login/save",
 }
 
@@ -969,6 +991,12 @@ var consoleCapabilities = map[string]capability{
 	"Holdings":   {Methods: []string{"Holdings"}},
 	"Settings":   {Methods: []string{"Load", "Save"}},
 	"EngineBoot": {Methods: []string{"Load", "Save"}},
+	// Alert delivery (a065). Four methods, and the shape of Enable is the safety
+	// property: it takes no parameter, so the screen supplies no value that lands
+	// in the file — not a channel name, and above all not a token. Test publishes
+	// one message through the configured transport and touches no outbox row, no
+	// entry gate and no operating mode.
+	"Notifications": {Methods: []string{"Load", "Enable", "Disable", "Test"}},
 	// The scheduler screen receives display data only. Read has no parameter
 	// carrying a symbol, time, holiday override, or operating command.
 	"MarketSchedule": {Methods: []string{"Read"}},

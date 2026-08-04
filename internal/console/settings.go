@@ -101,6 +101,19 @@ type settingsPage struct {
 	AutostartLoadErr string
 	AutostartNote    string
 
+	// --- critical alert delivery (change a065) ---
+
+	// NotificationsWired reports the seam was injected, separately from every
+	// other seam for the reason LimitsWired gives.
+	NotificationsWired bool
+	// Notifications is the block as the file spells it. The card renders the
+	// channel from here — never from a notice — because a redirect's query string
+	// lives in browser history and proxy logs (design D5).
+	Notifications config.Notifications
+	// NotificationsLoadErr is an unreadable config on the alert side, isolated
+	// from the other sections so it cannot take them down.
+	NotificationsLoadErr string
+
 	// --- staged system update (change console-system-update) ---
 	UpdateWired          bool
 	ReleaseDownloadWired bool
@@ -200,6 +213,14 @@ func (c *Console) settingsView(r *http.Request) settingsPage {
 			page.AutostartLoadErr = err.Error()
 		}
 		page.Autostart = on
+	}
+	if c.opts.Notifications != nil {
+		page.NotificationsWired = true
+		block, err := c.opts.Notifications.Load()
+		if err != nil {
+			page.NotificationsLoadErr = err.Error()
+		}
+		page.Notifications = block
 	}
 	page.AutostartNote, _ = c.engineNoteNow()
 	if c.opts.SystemUpdater != nil {

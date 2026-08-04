@@ -1,0 +1,206 @@
+{
+  "file": "internal/console/settings_cadence_test.go",
+  "source_sha256": "b697789a28ef026f9a4624c0225c50b4af9ed81493ca55556ab8db2bb1b1a05f",
+  "package": "console",
+  "function": "fullSettingsHarness",
+  "signature": "fullSettingsHarness(params=2, results=1)",
+  "start": {
+    "line": 31,
+    "column": 1
+  },
+  "end": {
+    "line": 49,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 44,
+        "column": 56
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 45,
+        "column": 48
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 46,
+        "column": 34
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 38
+      },
+      "text": "validUpdateView"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 32
+      },
+      "text": "fullLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 41
+      },
+      "text": "fullPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 57
+      },
+      "text": "validSignedRelease"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 9
+      },
+      "text": "newHarness"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 35,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 38,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 39,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 41,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 42,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 45,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

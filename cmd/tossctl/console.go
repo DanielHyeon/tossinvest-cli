@@ -419,6 +419,11 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Gate:          consoleGateSwitchSeam(root),
 		EngineBoot:    engineBoot,
 
+		// Where critical alerts go (change a065). Its Enable takes no argument, so
+		// the screen supplies no value: the channel is 128 bits of crypto/rand made
+		// here, and the transport's token is never asked for on any form.
+		Notifications: consoleNotificationSeam(root),
+
 		// The discovery screen's read (change add-candidate-discovery, task 5.5).
 		// It opens internal/candidate's store, runs its assessment and hands over
 		// values — no source is called, so an open /signals tab spends none of the
@@ -620,6 +625,16 @@ func consoleTradingPolicySeam(root *rootOptions) console.TradingPolicySettings {
 
 func consoleGateSwitchSeam(root *rootOptions) console.GateSwitch {
 	if s := newGateSwitchSeam(root); s != nil {
+		return s
+	}
+	return nil
+}
+
+// consoleNotificationSeam adapts the alert-delivery editor (a065). Same
+// nil-on-the-concrete-pointer care as the seams above: a typed nil inside the
+// interface would render the card as wired and fail on the first press.
+func consoleNotificationSeam(root *rootOptions) console.NotificationSettings {
+	if s := newNotificationSeam(root); s != nil {
 		return s
 	}
 	return nil

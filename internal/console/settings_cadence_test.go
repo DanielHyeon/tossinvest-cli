@@ -37,6 +37,7 @@ func fullSettingsHarness(t *testing.T, tweak ...func(*Options)) *harness {
 		o.TradingPolicy = &fakeTrading{block: fullPolicy()}
 		o.Gate = &fakeGate{}
 		o.EngineBoot = &fakeAutostart{}
+		o.Notifications = &fakeNotifications{}
 		o.SystemUpdater = updater
 		o.ReleaseDownloader = &fakeReleaseDownloader{release: validSignedRelease()}
 		o.ReleaseCandidateStager = updater

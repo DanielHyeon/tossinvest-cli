@@ -388,6 +388,72 @@ const settingsTemplates = `
   {{template "settingsentries" .}}
 </section>
 
+<section id="notifications" data-settings-card="notifications">
+  <h2>알림</h2>
+  <p>critical 알림 — 보호가 멈춘 포지션, 전달되지 않은 경고, 운영 모드 강등 — 이
+  이 기계 밖으로 나가는 경로다. <strong>꺼져 있으면 outbox에 쌓이기만 한다.</strong></p>
+
+  {{with $.NoticeFor "notifications"}}<p class="notice" data-save-result="notifications">{{.}}</p>{{end}}
+  {{if .NotificationsLoadErr}}
+  <p class="danger">알림 설정을 읽을 수 없다: <code>{{.NotificationsLoadErr}}</code></p>{{end}}
+
+  <div class="table-scroll" role="region" aria-label="알림 현재 상태" tabindex="0"><table>
+    <tr><th>지금</th><td>{{if .NotificationOn}}<strong>켜짐</strong>{{else}}<strong>꺼짐</strong>{{end}}</td></tr>
+    <tr><th>서버</th><td>{{if .NotificationServer}}<code>{{.NotificationServer}}</code>{{else}}없음{{end}}</td></tr>
+    <tr><th>채널</th><td>{{if .NotificationChannel}}설정됨{{else}}없음{{end}}</td></tr>
+  </table></div>
+
+  {{if .NotificationSubscribeURL}}
+  <p class="notice" data-notification-subscribe>
+    <strong>구독 주소</strong> — 이 주소를 열면 알림을 받는다.<br>
+    <a href="{{.NotificationSubscribeURL}}" target="_blank" rel="noreferrer noopener"><code>{{.NotificationSubscribeURL}}</code></a><br>
+    폰으로 받으려면 ntfy 앱을 설치하고 <strong>+</strong> 에서 이 주소를 그대로 넣는다.
+    이 주소를 아는 것이 곧 이 알림을 받을 자격이므로 공유하지 않는다.
+  </p>
+  {{end}}
+
+  {{if .NotificationGuard.Blocked}}{{template "cardblocked" .NotificationGuard}}
+  {{else}}
+  {{if .NotificationOn}}
+  <form method="post" action="/settings/notifications/test">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <dl class="card-preview" aria-label="테스트 발송 적용 후">
+      <dt>적용 후</dt><dd>바뀌는 설정 없음 — 지금 이 주소로 한 통 보낸다</dd>
+      <dt>실패하면</dt><dd>사유만 표시된다. outbox·진입 게이트·운영 모드는 건드리지 않는다</dd>
+    </dl>
+    <p><button type="submit">테스트 한 통 더</button></p>
+  </form>
+  <form method="post" action="/settings/notifications/off">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <dl class="card-preview" aria-label="알림 끄기 적용 후">
+      <dt>적용 후</dt><dd><code>enabled</code> 한 키만 false가 된다 — 구독 주소는 지우지 않는다</dd>
+      <dt>그 다음</dt><dd>critical 알림은 다시 outbox에 쌓이기만 한다</dd>
+    </dl>
+    <p><button type="submit">알림 끄기</button></p>
+  </form>
+  {{else}}
+  <form method="post" action="/settings/notifications/on">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <dl class="card-preview" aria-label="알림 켜기 적용 후">
+      <dt>적용 후</dt><dd>{{if .NotificationChannel}}기존 구독 주소를 그대로 쓰고 <code>enabled</code>가 true가 된다{{else}}추측할 수 없는 구독 주소를 하나 만들고 <code>engine.notifications</code>의 세 키를 기록한다{{end}}</dd>
+      <dt>즉시 일어나는 것</dt><dd>그 주소로 테스트 알림 한 통 — 엔진 재시작을 기다리지 않는다</dd>
+      <dt>입력할 것</dt><dd>없다. 채널 이름도 토큰도 묻지 않는다</dd>
+    </dl>
+    <p><button type="submit">알림 켜기</button></p>
+  </form>
+  {{end}}
+  {{end}}
+  {{template "cardcautions" .NotificationGuard}}
+
+  <p class="muted">토큰을 요구하지 않는 이유 — 공개 ntfy 서비스에서는 <strong>주소 자체가
+  접근 제어</strong>이고, 이 주소는 기계가 만든 128비트다. 자체 호스팅 ntfy를 토큰 뒤에
+  두고 쓰는 경우에는 엔진 프로세스의 환경에 <code>TOSSCTL_NTFY_TOKEN</code>을 넣는다 —
+  이 화면은 토큰을 받지 않고, 받을 입력란도 두지 않는다.</p>
+  <p class="notice" data-effect-timing="notifications">반영 시점 — {{.EffectNotice}}
+  테스트 발송은 콘솔이 직접 보내므로 지금 확인할 수 있고, 엔진이 보내는 실제 알림은
+  다음 엔진 기동부터다.</p>
+</section>
+
 <section id="system-update" data-settings-card="system-update">
   <h2>시스템 업데이트</h2>
   <p>서버가 고정한 공식 저장소·현재 플랫폼의 최신 stable archive만 확인한다.

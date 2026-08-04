@@ -54,6 +54,7 @@
     - STORY-TOS-a058 — Match StockOS holdings density and column alignment [archived] → `a058-match-stockos-holdings-density`
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [implemented] → `a060-soak-restart-uses-this-profile`
     - STORY-TOS-a061 — Make the trading screens show the protection line and the stock name they already hold [in_progress] → `a061-screens-show-what-they-already-know`
+    - STORY-TOS-a065 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [in_progress] → `a065-alerts-turn-on-with-one-button`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`

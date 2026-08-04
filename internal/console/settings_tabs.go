@@ -187,6 +187,9 @@ var settingsOrigins = map[string]settingsOrigin{
 	"/settings/trading":                {pathSettingsDaily, "trading"},
 	"/settings/system-update/download": {pathSettingsTools, "system-update"},
 	"/settings/system-update/install":  {pathSettingsTools, "system-update"},
+	"/settings/notifications/on":       {pathSettingsTools, "notifications"},
+	"/settings/notifications/test":     {pathSettingsTools, "notifications"},
+	"/settings/notifications/off":      {pathSettingsTools, "notifications"},
 }
 
 // settingsOriginFor is the tab and card a POST returns to.

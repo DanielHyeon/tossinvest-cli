@@ -232,6 +232,10 @@ var settingsCardTab = map[string]string{
 	"limits":        tabDaily,
 	"trading":       tabDaily,
 	"system-update": tabTools,
+	// Alert delivery is set up once and rarely reopened, and the first thing an
+	// operator wants on reopening it is the state — which is the 도구 tab's whole
+	// contract (a065 design D6).
+	"notifications": tabTools,
 }
 
 // --- ② the preview, for the one card where the server knows both sides -------------
