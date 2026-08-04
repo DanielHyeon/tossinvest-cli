@@ -28,6 +28,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/spf13/cobra"
 )
 
@@ -142,6 +143,20 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 		return err
 	}
 	defer resources.Close()
+	var strategyRuntime httpapi.StrategyRuntimeReader
+	if dir, dirErr := engineJournalDir(root); dirErr == nil {
+		descriptor := strategyprojectionrpc.DescriptorPath(dir)
+		if _, statErr := os.Stat(descriptor); statErr == nil {
+			client, dialErr := strategyprojectionrpc.Dial(ctx, descriptor)
+			if dialErr != nil {
+				return fmt.Errorf("httpapi: strategy runtime projection unavailable: %w", dialErr)
+			}
+			strategyRuntime = client
+		} else if !errors.Is(statErr, os.ErrNotExist) {
+			return fmt.Errorf("httpapi: inspect strategy runtime projection: %w", statErr)
+		}
+	}
+	resources.reader.strategyRuntime = strategyRuntime
 
 	snapshots, err := newHTTPAPISnapshotCache(resources.reader)
 	if err != nil {
@@ -157,7 +172,7 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 		return err
 	}
 	router, err := httpapi.NewRouter(httpapi.Options{
-		Reader: resources.reader, Stream: stream, MutationRoutes: mutationRoutes, Now: time.Now,
+		Reader: resources.reader, StrategyRuntime: strategyRuntime, Stream: stream, MutationRoutes: mutationRoutes, Now: time.Now,
 	})
 	if err != nil {
 		return err

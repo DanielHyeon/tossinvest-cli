@@ -1,0 +1,37 @@
+# Function Logic Map: `TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun`
+
+- Source: `cmd/tossctl/soak_test.go`
+- AST evidence: `ast.json`
+- Risk scan: `risk-pattern-report.md`
+
+## Inputs and invariants
+
+| Input/state | Valid range | Source of truth | Failure behavior |
+|---|---|---|---|
+| fake WTS soak plus supervised mutation evidence | complete legacy evidence, no official OAuth FX runner | isolated fixtures | exact exchange endpoint remains missing; no other gap allowed |
+
+## Branches and early returns
+
+| Branch | Condition | Mutation/side effect | Return/error | Required test |
+|---|---|---|---|---|
+| B1 | soak attest command errors | isolated files only | fatal | focused CLI test |
+| B2 | attestation load errors | none | fatal | focused CLI test |
+| B3 | missing set is not exact official exchange endpoint | none | fatal | focused CLI test |
+| B4 | supervised evidence count differs | none | fatal | focused CLI test |
+| B5 | supervised proof source is empty | none | test error | focused CLI test |
+| B6 | generated evidence claims official exchange without OAuth runner | none | test error | focused CLI test |
+
+## Calls and live bindings
+
+| Callee | Why called | Error/timeout/retry contract | Evidence |
+|---|---|---|---|
+| `runCLI`, `attest.Load`, `MissingEndpoints` | generate/read fake evidence and compare exact gap | no real network; fail test on drift | CodeGraph + AST |
+
+## State mutations and fallbacks
+
+- Writes isolated fake records only. It cannot produce OAuth exchange evidence or enable LIVE automation.
+
+## Safety conclusion
+
+- Safe edit boundary: preserve mutation proof checks while pinning the new fail-closed read gap.
+- High-risk impact: **no** — test-only but startup-safety relevant.

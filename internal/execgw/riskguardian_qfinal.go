@@ -51,6 +51,8 @@ type QFinalEntryIssuance struct {
 	ExpectedLimitsDigest  string
 	testFXAuthority       riskbucket.FXEvidence
 	testFXAuthoritySet    bool
+	testAccountBaseFX     risk.AccountBaseFX
+	testAccountBaseFXSet  bool
 }
 
 // QFinalEntryPrecheck is opaque. Callers can inspect the result but cannot
@@ -62,6 +64,7 @@ type QFinalEntryPrecheck struct {
 	admission   journal.RiskBucketAdmissionPlan
 	decision    riskbucket.AdmissionDecision
 	existingCap uint64
+	accountFX   risk.AccountBaseFX
 }
 
 func (p QFinalEntryPrecheck) QCandidate() uint64 { return p.decision.QCandidate }
@@ -97,12 +100,6 @@ func (g *RiskGuardian) PrecheckQFinalEntry(request QFinalEntryIssuance) (QFinalE
 		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalZeroQuantity, "q_candidate", "lane proposed zero", nil)
 	}
 	limitCurrency := g.policy.LimitCurrency()
-	if limitCurrency != exactCurrency {
-		// The existing Guardian chain does not convert its quantity/notional/cash
-		// caps. Letting the monetary layer convert while that chain compares raw
-		// USD prices to KRW amounts would fabricate headroom.
-		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "guardian_limit_currency", "existing Guardian limits are not in the market quote currency", nil)
-	}
 	// Seal every caller-owned slice before calculating authority. The opaque
 	// precheck must remain a value snapshot even when its source DTO is reused or
 	// mutated by another goroutine after this method returns.
@@ -125,7 +122,21 @@ func (g *RiskGuardian) PrecheckQFinalEntry(request QFinalEntryIssuance) (QFinalE
 		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "official_fx", "sealed current FX authority is unresolved", err)
 	}
 	admission.Admission.Policy = policy
-	guardianCapRaw, err := risk.StrategyEntryQuantity(g.policy, request.EntryPrice, request.StopPrice)
+	accountFX, err := qFinalAccountBaseFXAt(request, g.clk.Now().UTC(), market, g.policy)
+	legacyTestIdentity := err != nil && request.testFXAuthoritySet && market == costs.MarketKR && limitCurrency == exactCurrency
+	if err != nil && !legacyTestIdentity {
+		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "guardian_account_base_fx", "sealed current account-base FX authority is unresolved", err)
+	}
+	if !legacyTestIdentity && !sameQFinalFXAuthority(accountFX, policy) {
+		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "guardian_account_base_fx",
+			"Guardian and monetary reservations do not use the same frozen FX authority", nil)
+	}
+	var guardianCapRaw string
+	if legacyTestIdentity {
+		guardianCapRaw, err = risk.StrategyEntryQuantity(g.policy, request.EntryPrice, request.StopPrice)
+	} else {
+		guardianCapRaw, err = risk.AccountBaseStrategyEntryQuantity(g.policy, market, request.EntryPrice, request.StopPrice, accountFX)
+	}
 	if err != nil {
 		return QFinalEntryPrecheck{}, qFinalRefusal(riskbucket.RefusalExistingGuardianCap, "q_existing_guardian", err.Error(), err)
 	}
@@ -143,7 +154,7 @@ func (g *RiskGuardian) PrecheckQFinalEntry(request QFinalEntryIssuance) (QFinalE
 		Quantity: strconv.FormatUint(decision.QFinal, 10), LimitPrice: request.EntryPrice,
 		StopPrice: request.StopPrice, TargetPrice: request.TargetPrice,
 	}
-	in := risk.Input{Now: g.clk.Now().UTC(), Intent: intent, Account: request.Account, Policy: g.policy, Costs: g.costs}
+	in := risk.Input{Now: g.clk.Now().UTC(), Intent: intent, Account: request.Account, Policy: g.policy, Costs: g.costs, AccountBaseFX: accountFX}
 	if verdict := evaluateChain(in); !verdict.Allowed {
 		return QFinalEntryPrecheck{}, chainRefusal(verdict)
 	}
@@ -152,7 +163,7 @@ func (g *RiskGuardian) PrecheckQFinalEntry(request QFinalEntryIssuance) (QFinalE
 	}
 	request.Market, request.Currency, request.Symbol = marketName, currency, symbol
 	request.Admission = admission
-	return QFinalEntryPrecheck{request: request, market: market, intent: intent, admission: admission, decision: decision, existingCap: guardianCap}, nil
+	return QFinalEntryPrecheck{request: request, market: market, intent: intent, admission: admission, decision: decision, existingCap: guardianCap, accountFX: accountFX}, nil
 }
 
 func cloneRiskBucketAdmissionPlan(plan journal.RiskBucketAdmissionPlan) journal.RiskBucketAdmissionPlan {
@@ -168,9 +179,21 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 		return Issued{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid, "precheck", "complete sealed precheck required", nil)
 	}
 	now := g.clk.Now().UTC()
+	accountFX, err := qFinalAccountBaseFXAt(precheck.request, now, precheck.market, g.policy)
+	legacyTestIdentity := err != nil && precheck.request.testFXAuthoritySet && precheck.market == costs.MarketKR && precheck.accountFX.Digest() == ""
+	if (err != nil && !legacyTestIdentity) || (!legacyTestIdentity && !sameAccountBaseFX(precheck.accountFX, accountFX)) {
+		return Issued{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "guardian_account_base_fx", "sealed account-base FX authority expired or changed", err)
+	}
 	policyVersion, err := journal.QFinalPolicyVersion(g.policyVersion, precheck.admission.TransactionID)
 	if err != nil {
 		return Issued{}, err
+	}
+	limitsJSON := g.limitsJSON
+	if !legacyTestIdentity {
+		limitsJSON, err = encodeQFinalLimits(g.limits, accountFX)
+		if err != nil {
+			return Issued{}, qFinalRefusal(riskbucket.RefusalRiskCalculationInvalid, "decision_fx_envelope", "account-base FX decision envelope is invalid", err)
+		}
 	}
 	decision := journal.DecisionRequest{
 		ID: g.newID(), AccountRef: g.accountRef, Generation: 0,
@@ -180,7 +203,7 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 			Side: string(risk.SideBuy), Quantity: precheck.intent.Quantity, EntryPrice: precheck.intent.LimitPrice,
 			StopPrice: precheck.intent.StopPrice, TargetPrice: precheck.intent.TargetPrice, PolicyVersion: policyVersion,
 		},
-		LimitsJSON: g.limitsJSON, Nonce: g.newID(), IssuedAt: now, ExpiresAt: now.Add(g.ttl),
+		LimitsJSON: limitsJSON, Nonce: g.newID(), IssuedAt: now, ExpiresAt: now.Add(g.ttl),
 	}
 	reservationID := "res-" + decision.ID
 	admission := precheck.admission
@@ -193,6 +216,10 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 	if err != nil {
 		return Issued{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "official_fx", "sealed current FX authority expired or changed", err)
 	}
+	if !legacyTestIdentity && !sameQFinalFXAuthority(accountFX, policy) {
+		return Issued{}, qFinalRefusal(riskbucket.RefusalCurrencyUnresolved, "guardian_account_base_fx",
+			"Guardian and monetary reservations no longer share one frozen FX authority", nil)
+	}
 	admission.Admission.Policy = policy
 	admission.DecisionID = decision.ID
 	admission.ExistingReservationID = reservationID
@@ -203,7 +230,7 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 		if err != nil {
 			return journal.QFinalIssueRequest{}, err
 		}
-		exposure, verdict := risk.EntryExposureValue(risk.Input{Now: now, Intent: precheck.intent, Account: precheck.request.Account, Policy: g.policy, Costs: g.costs})
+		exposure, verdict := risk.EntryExposureValue(risk.Input{Now: now, Intent: precheck.intent, Account: precheck.request.Account, Policy: g.policy, Costs: g.costs, AccountBaseFX: accountFX})
 		if !verdict.Allowed {
 			return journal.QFinalIssueRequest{}, chainRefusal(verdict)
 		}
@@ -229,6 +256,39 @@ func (g *RiskGuardian) IssuePrecheckedQFinalEntry(ctx context.Context, precheck 
 		ExpiresAt: out.Issue.Decision.ExpiresAt, Reservations: out.Issue.Reservations,
 		Version: out.Issue.Version, RiskBucketReceipt: out.Admission,
 	}, nil
+}
+
+func qFinalAccountBaseFXAt(request QFinalEntryIssuance, at time.Time, market costs.Market, policy risk.Policy) (risk.AccountBaseFX, error) {
+	if request.testAccountBaseFXSet {
+		fx := request.testAccountBaseFX
+		if !fx.EvaluatedAt().Equal(at) {
+			return risk.AccountBaseFX{}, risk.ErrAccountBaseFXUnavailable
+		}
+		return fx, nil
+	}
+	return risk.BindAccountBaseFX(at, market, policy, request.FXAuthority)
+}
+
+func sameAccountBaseFX(left, right risk.AccountBaseFX) bool {
+	return left.QuoteCurrency() == right.QuoteCurrency() && left.AccountCurrency() == right.AccountCurrency() &&
+		left.Source() == right.Source() && left.Version() == right.Version() && left.Digest() == right.Digest()
+}
+
+func sameQFinalFXAuthority(accountFX risk.AccountBaseFX, policy riskbucket.ReservePolicy) bool {
+	evidence := policy.FX.Evidence
+	return accountFX.QuoteCurrency() == policy.QuoteCurrency && accountFX.AccountCurrency() == policy.AccountCurrency &&
+		accountFX.Source() == evidence.Source && accountFX.Version() == evidence.Version && accountFX.Digest() == evidence.Digest
+}
+
+func encodeQFinalLimits(limits Limits, fx risk.AccountBaseFX) (string, error) {
+	if fx.Digest() == "" || fx.Source() == "" || fx.Version() == "" || fx.QuoteCurrency() == "" || fx.AccountCurrency() == "" || fx.EvaluatedAt().IsZero() {
+		return "", risk.ErrAccountBaseFXUnavailable
+	}
+	limits.AccountBaseFX = &AccountBaseFXBinding{
+		SchemaVersion: "account-base-fx:v1", QuoteCurrency: fx.QuoteCurrency(), AccountCurrency: fx.AccountCurrency(),
+		Source: fx.Source(), Version: fx.Version(), EvidenceDigest: fx.Digest(), EvaluatedAt: fx.EvaluatedAt().UTC(),
+	}
+	return EncodeLimits(limits)
 }
 
 func qFinalPolicyAt(request QFinalEntryIssuance, at time.Time, policy riskbucket.ReservePolicy) (riskbucket.ReservePolicy, error) {

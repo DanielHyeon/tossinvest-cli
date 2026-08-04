@@ -62,6 +62,14 @@ var eligibilitySpellers = map[string]string{
 	"internal/journal/strategy_evidence.go": "the dormant evidence read boundary selects " +
 		"entry_decision_identity only as the immutable strategy decision key; it never reads a Position or " +
 		"decides whether exit management is allowed",
+	"internal/journal/risk_bucket_owner.go": "the risk owner binding reads position entry provenance only to " +
+		"cross-bind a confirmed order/campaign generation; it does not decide exit eligibility",
+	"internal/journal/strategy_dispatch_refusal.go": "the pre-transport refusal proves the immutable strategy " +
+		"entry_decision_identity binding before releasing authority; it never reads position provenance",
+	"internal/journal/strategy_dispatch_runtime.go": "the strategy dispatch transaction joins immutable " +
+		"entry_decision_identity lineage to its first-leg binding; it never decides position exit eligibility",
+	"internal/journal/strategy_first_leg_atomic.go": "the first-leg admission transaction stores and replays " +
+		"entry_decision_identity as strategy lineage, before any Position exists",
 	"internal/reconcile/external.go": "the fold guard, deliberately narrowed to an explicit " +
 		"entry_decision_id comparison (adopt-external-positions design A1): a fold landing on an " +
 		"adopted position is the ordinary re-reconciliation path and must not be refused",

@@ -360,6 +360,28 @@ const optimizationTemplates = `
 {{else}}
 <p class="notice">고정 조회 범위에 complete lineage 거래가 없다. 빈 결과는 성과 0이 아닙니다.</p>
 {{end}}
+
+<section aria-labelledby="performance-attribution-title">
+  <h2 id="performance-attribution-title">Market · campaign attribution</h2>
+  <p class="muted">파생 DB에 저장된 exact identifier chain만 표시한다. 누락값은 symbol/time으로 추정하지 않는다.</p>
+  {{if .AttributionErr}}<p class="notice">Attribution generation을 읽지 못했다. aggregate를 0으로 바꾸지 않는다: <code>{{.AttributionErr}}</code></p>
+  {{else if .Attributions}}
+  <div class="table-scroll" role="region" aria-label="Market · campaign attribution" tabindex="0"><table class="data-table">
+    <thead><tr><th scope="col">계좌</th><th scope="col">시장·종목</th><th scope="col">Lane</th><th scope="col">Campaign·leg</th><th scope="col">상태</th><th scope="col">수량</th><th scope="col">원통화 PnL</th><th scope="col">보고통화 PnL·FX</th><th scope="col">누락 근거</th></tr></thead>
+    <tbody>{{range .Attributions}}<tr>
+      <td data-label="계좌"><code>{{.AccountLabel}}</code></td>
+      <td data-label="시장·종목"><code>{{.Row.Key.Market}}</code> · <code>{{.Row.Key.Ticker}}</code></td>
+      <td data-label="Lane"><code>{{.Row.Key.LaneID}}@{{.Row.Key.LaneVersion}}</code></td>
+      <td data-label="Campaign·leg"><code>{{.Row.Key.CampaignID}}</code> · <code>{{.Row.Key.LegID}}</code></td>
+      <td data-label="상태"><code>{{.Row.LineageStatus}}</code>{{if .Row.FullyClosed}} · closed{{else}} · residual open{{end}}</td>
+      <td data-label="수량">acquired <code>{{.Row.AcquiredQuantity}}</code> / closed <code>{{.Row.ClosedQuantity}}</code> / residual <code>{{.Row.ResidualQuantity}}</code></td>
+      <td data-label="원통화 PnL"><code>{{.Row.Source.NetPnL.Status}}</code> · {{.Row.Source.NetPnL.Value}} {{.Row.Source.Currency}}</td>
+      <td data-label="보고통화 PnL·FX"><code>{{.Row.Reporting.NetPnL.Status}}</code> · {{.Row.Reporting.NetPnL.Value}} {{.Row.Reporting.Currency}} · FX <code>{{.Row.Reporting.FXSource}}@{{.Row.Reporting.FXSourceVersion}}</code></td>
+      <td data-label="누락 근거">lineage {{range .Row.MissingLineage}}<code>{{.}}</code> {{end}} measurement {{range .Row.MissingMeasurements}}<code>{{.}}</code> {{end}}</td>
+    </tr>{{end}}</tbody>
+  </table></div>
+  {{else}}<p class="notice">저장된 attribution generation에 표시할 row가 없다. 이는 손익 0이 아니다.</p>{{end}}
+</section>
 {{end}}
 {{template "foot" .}}
 {{end}}

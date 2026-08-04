@@ -1,0 +1,186 @@
+{
+  "file": "internal/strategyrouter/dependency_test.go",
+  "source_sha256": "0c3266ba5deff44032f36104a2f5371bc1d3a1c77e3755f9cc4b2a10f494af91",
+  "package": "strategyrouter",
+  "function": "TestDescriptorsShipKRAndUSTogetherDefaultOFF",
+  "signature": "TestDescriptorsShipKRAndUSTogetherDefaultOFF(params=1, results=0)",
+  "start": {
+    "line": 47,
+    "column": 1
+  },
+  "end": {
+    "line": 70,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 17
+      },
+      "text": "Descriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 43
+      },
+      "text": "ValidateDescriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 20
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 6
+      },
+      "text": "ValidateDescriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

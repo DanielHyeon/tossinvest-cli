@@ -1,5 +1,5 @@
-# Branch Test Map: `WithAccountSeq`
+# Branch Test Map: WithAccountSeq
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | retained pointer cannot replay account selection after seal | TestClientConfigurationCannotBeMutatedByRetainedOptionPointer | yes (account changed to 99) | yes |
+| B1 | if at line 89 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

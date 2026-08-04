@@ -19,12 +19,11 @@ package config
 // distinct here and in limits_test.go so that "this number is not in
 // risk_profiles.py" reads as a recorded fact rather than as drift.
 //
-// TossOS spells currency where StockOS spells market. StockOS pins KRX→KRW and
-// NASD/NYSE/AMEX→USD in its own MarketMeta registry and its US tiers are
-// identical across the three US venues, so the currency axis carries every
-// distinction the market axis carried. The automation gate has one currency
-// (config.AutomationGate.LimitCurrency), so this is also the axis the gate can
-// actually express.
+// TossOS retains the original tier currencies as account-base policy units.
+// StockOS pins KRX→KRW and NASD/NYSE/AMEX→USD in its own MarketMeta registry,
+// but a072 no longer interprets the gate's one currency as selecting a single
+// market. KR and US share that one account-wide unit through frozen official
+// quote-to-base authority.
 //
 // # What is NOT ported
 //
@@ -107,7 +106,7 @@ var guardianTiers = []GuardianTier{
 	},
 	{
 		ID:    "us-smoke",
-		Label: "미국 스모크 — 국내 자동 진입은 통화 불일치로 닫힌다",
+		Label: "미국 스모크 — USD 계좌 기준 한도",
 		// StockOS risk_profiles.py _US_SMOKE ($100 / $300 / $10, 1%).
 		Limits: GuardianLimits{
 			MaxOrderQuantity:   guardianOrderQuantityCap,
@@ -120,7 +119,7 @@ var guardianTiers = []GuardianTier{
 	},
 	{
 		ID:    "us-small-live",
-		Label: "미국 소액 실거래 — 국내 자동 진입은 통화 불일치로 닫힌다",
+		Label: "미국 소액 실거래 — USD 계좌 기준 한도",
 		// StockOS risk_profiles.py _US_SMALL_LIVE ($300 / $1,000 / $50, 1%).
 		Limits: GuardianLimits{
 			MaxOrderQuantity:   guardianOrderQuantityCap,
@@ -137,7 +136,7 @@ var guardianTiers = []GuardianTier{
 		// promise this tier does not keep — a $500 order ceiling does not reach
 		// one share of every US large cap — and the card prints the five numbers
 		// beside the label, so the bound is already visible where it is true.
-		Label: "미국 단일 종목 실거래 — 국내 자동 진입은 통화 불일치로 닫힌다",
+		Label: "미국 단일 종목 실거래 — USD 계좌 기준 한도",
 		// NOT a StockOS transcription. This is TossOS's own row (change
 		// size-us-guardian-tier, design D1) and it is the only tier here whose
 		// numbers an audit will not find in risk_profiles.py.

@@ -1,0 +1,389 @@
+{
+  "file": "internal/performance/crash_linux_test.go",
+  "source_sha256": "b0f0fb2b5e5fa3bd65be02affb271c77eff0bdb3a062679d889ff916603dbb28",
+  "package": "performance",
+  "function": "TestPerformanceMigrationAndAppendSurviveSIGKILL",
+  "signature": "TestPerformanceMigrationAndAppendSurviveSIGKILL(params=1, results=0)",
+  "start": {
+    "line": 132,
+    "column": 1
+  },
+  "end": {
+    "line": 167,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 152,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 147,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 13
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 17
+      },
+      "text": "Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 13
+      },
+      "text": "store.AppendObservations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 38
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 8
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 17
+      },
+      "text": "os.FindProcess"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 32
+      },
+      "text": "os.Getpid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 7
+      },
+      "text": "process.Kill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 24
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 9
+      },
+      "text": "exec.Command"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 19
+      },
+      "text": "os.Environ"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 12
+      },
+      "text": "cmd.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 16
+      },
+      "text": "Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 8
+      },
+      "text": "store.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 12
+      },
+      "text": "store.db.QueryRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 21
+      },
+      "text": "store.SchemaVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 41
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 133,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 134,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 146,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 152,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 161,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 159,
+        "column": 2
+      },
+      "text": "store.Close"
+    }
+  ]
+}

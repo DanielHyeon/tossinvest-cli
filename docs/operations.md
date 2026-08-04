@@ -117,6 +117,71 @@ Compose의 host publish는
 배포·업데이트 절차는 `engine.autostart`를 임의로 켜지 않는다. ON은 trusted-network
 브라우저의 CSRF 설정 폼에서 운영자가 직접 저장하고 audit에 남긴다.
 
+### KR/US 전략 후보 권한 파일 — 읽기 전용 계약
+
+전략 런타임은 KR과 US를 같은 시작 웨이브에서 읽지만, 시장별 권한은 합치지 않는다. 각 시장은
+config 디렉터리의 정확한 파일 세 개를 소비한다.
+
+- `candidate-thresholds-KR.json`, `candidate-threshold-evidence-KR.bin`,
+  `candidate-threshold-activation-KR.json`
+- `candidate-thresholds-US.json`, `candidate-threshold-evidence-US.bin`,
+  `candidate-threshold-activation-US.json`
+
+모든 파일은 현재 service UID 소유의 regular file, exact mode `0400`이어야 하며 symlink는
+거부된다. 사람 승인 파일의 exact SHA-256은 각각
+`TOSSOS_CANDIDATE_THRESHOLD_KR_ACTIVATION_SHA256`과
+`TOSSOS_CANDIDATE_THRESHOLD_US_ACTIVATION_SHA256`에 canonical
+`sha256:<64 lowercase hex>`로 외부에서 pin한다. 승인 레코드는 set/evidence digest,
+market/session, version, actor와 승인 시각을 묶는다. 런타임에는 승인 생성·수정·서명·토글 API가
+없다.
+
+스케줄 또는 activation이 OFF/미승인이면 해당 시장은 이 파일과 discovery DB를 읽지 않는다.
+파일이 존재하고 검증돼도 이는 후보 평가를 허용하는 읽기 권한일 뿐 LIVE 주문 승인이나 worker
+activation이 아니다. Risk snapshot, lane input, first-leg admission과 official Gateway cycle이
+전부 결합되기 전에는 KR/US worker 모두 OFF다.
+
+### KR/US account-base FX 권한 — 같은 웨이브, 독립 결과
+
+후보 권한까지 준비된 시장만 account-base FX를 읽는다. KR은 official account identity를 다시
+확인한 뒤 same-currency identity evidence를 만들고, US는 official 환율과 별도의 사람 승인 haircut
+policy를 결합한다. 두 read는 동시에 시작하지만 한쪽 실패가 peer를 취소하지 않는다.
+
+US policy는 config 디렉터리의 owner-only `fx-risk-policy-manifest.json`과 다음 trust pin을 쓴다.
+
+- `TOSSOS_FX_RISK_POLICY_MANIFEST_SHA256`
+- `TOSSOS_FX_RISK_POLICY_KEY_ID`
+- `TOSSOS_FX_RISK_POLICY_PUBLIC_KEY_BASE64`
+
+런타임은 rate, haircut, freshness나 evidence digest를 환경변수에서 받지 않는다. Manifest의 signed
+값과 official Open API 응답에서만 opaque evidence를 만들며, monotonic generation/time anchor는
+rollback을 거부하기 위한 내부 상태일 뿐 시장 activation이나 주문 승인이 아니다. 공개 상태에는
+통화 pair와 evidence digest만 보이고 실제 FX evidence는 engine package 밖으로 나오지 않는다.
+
+### KR/US 5차원 위험 정책·현재 사용량 — 읽기 전용 계약
+
+전략 lane이 봉인된 첫 leg 결과를 만든 시장만 5차원 위험 권한을 읽는다. KR/US는 같은 웨이브에서
+각각 `risk-bucket-policy-KR.json`, `risk-bucket-policy-US.json`을 소비하며 한쪽 실패가 peer read를
+취소하지 않는다. 두 파일은 service UID 소유 regular file, exact mode `0400`, non-symlink여야 한다.
+
+신뢰 핀은 다음 네 값이다.
+
+- `TOSSOS_RISK_BUCKET_KR_MANIFEST_SHA256`
+- `TOSSOS_RISK_BUCKET_US_MANIFEST_SHA256`
+- `TOSSOS_RISK_BUCKET_POLICY_KEY_ID`
+- `TOSSOS_RISK_BUCKET_POLICY_PUBLIC_KEY_BASE64`
+
+서명 본문은 exact account/market/base·quote currency, 유효기간, 사람 approver, 수수료 정책,
+SHORT/MEDIUM·market 한도, lane/version→server risk ID/version 매핑, symbol→sector 및 두 한도를
+묶는다. TossOS에는 이 파일의 writer나 signer가 없다. 한도 완화·generation 교체·키 교체는 별도
+사람 승인 절차에서 새 파일과 digest pin을 배포해야 한다.
+
+현재 사용량은 기존 `journal.db`를 `mode=ro`, `query_only(true)`로 열고 schema v26에서 같은
+dimension/value의 모든 historical policy reservation을 읽어 exact `filled + HELD`로 합산한다.
+malformed amount, broken policy/snapshot join, `RISK_OVERAGE`, `UNKNOWN_ACTUAL_RISK` 또는 scope latch는
+해당 시장 신규 entry만 fail-closed한다. stop, emergency exit, reconciliation과 fill detection은 이
+read를 기다리지 않는다. 정책 파일과 journal이 모두 유효해도 이는 q_final 계산 입력일 뿐 worker
+activation이나 LIVE 주문 승인으로 승격되지 않는다.
+
 ### 교체·회수·복구
 
 - TLS 인증서는 같은 public host SAN을 유지해 교체하고 container를 재생성한다.
@@ -241,6 +306,27 @@ group 개방은 이 명세 밖이며 금지한다. 다중 사용자가 필요하
 | `pending-orders` | `GET /api/v1/trading/orders/histories/all/pending` | `orders list` |
 
 각 probe 는 status 200 + 핵심 JSON 경로 존재 + 타입을 검사합니다. Toss 가 새 필드를 추가하는 변경은 통과시키고, 핵심 필드가 사라지거나 빈 응답을 받으면 실패합니다.
+
+#### Official Open API FX contract probe
+
+KR·US 전략 런타임의 account-base 계산은 다음 읽기 계약도 요구합니다.
+
+| 이름 | Source | Endpoint | 실행 예산 | 상태 |
+| --- | --- | --- | --- | --- |
+| `official-exchange-rate` | `official-open-api` | `GET /api/v1/exchange-rate?baseCurrency=USD&quoteCurrency=KRW` | 한 실행당 최대 1회, 자동 재시도 없음 | schema contract만 등록; live runner 비활성 |
+
+이 probe는 status 200과 `result.baseCurrency`, `quoteCurrency`, `rate`, `midRate`,
+`validFrom`, `validUntil`의 string 타입을 fail-closed로 검사합니다. 다만 기존 `monitor api`의
+`monitor.Run`은 WTS 세션 쿠키 전용이고 official Open API OAuth transport를 소유하지 않습니다.
+따라서 `OfficialReadContractProbes()`는 `Probes()`와 의도적으로 분리되어 있으며 현재
+`tossctl monitor api`나 cron에서 실행되지 않습니다. 별도 OAuth runner가 설계·검증되기 전
+WTS runner에 이 URL을 섞으면 모든 실행이 인증 실패하거나 잘못된 credential domain을
+사용하므로 금지합니다.
+
+엔진 capability attestation은 `GET /api/v1/exchange-rate`를 필수 endpoint로 요구합니다. 이전
+attestation이나 WTS soak만으로는 이 요구를 충족할 수 없으며, 별도 official OAuth evidence가
+없으면 자동화는 fail-closed 상태를 유지합니다. 운영자가 schema checker를 실행된 soak
+evidence로 간주해서는 안 됩니다.
 
 ### Cron + 알림 합성
 

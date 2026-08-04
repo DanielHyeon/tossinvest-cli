@@ -1,6 +1,6 @@
 # Isolated protection lifecycle — Function Logic and Branch Test Map
 
-Date: 2026-08-04  
+Date: 2026-08-04
 Scope: new dormant `internal/protectionlifecycle` package only
 
 ## Hard evidence and edit boundary

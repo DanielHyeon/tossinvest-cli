@@ -1,0 +1,169 @@
+{
+  "file": "internal/risk/chain.go",
+  "source_sha256": "43b2ef76b276cc56f96071de62bea02df21bc509ea0cfc08db82a3f3729216fc",
+  "package": "risk",
+  "function": "EntryExposureValue",
+  "signature": "EntryExposureValue(params=1, results=2)",
+  "start": {
+    "line": 614,
+    "column": 1
+  },
+  "end": {
+    "line": 631,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 615,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 618,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 623,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 627,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 616,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 619,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 624,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 628,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 630,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 615,
+        "column": 10
+      },
+      "text": "preflight"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 619,
+        "column": 28
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 622,
+        "column": 14
+      },
+      "text": "entryNotionalWithCosts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 626,
+        "column": 16
+      },
+      "text": "accountBaseMoney"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 28
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 59
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 630,
+        "column": 16
+      },
+      "text": "allow"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 615,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 622,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 626,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

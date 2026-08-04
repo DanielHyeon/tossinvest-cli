@@ -45,10 +45,68 @@ type OptimizationRead struct {
 }
 
 type PerformanceResource struct {
-	Query          PerformanceQuery       `json:"query"`
-	NewestSourceAt *time.Time             `json:"newestSourceAt"`
-	Aggregates     []PerformanceAggregate `json:"aggregates"`
-	States         PerformanceStates      `json:"states"`
+	Query          PerformanceQuery         `json:"query"`
+	NewestSourceAt *time.Time               `json:"newestSourceAt"`
+	Aggregates     []PerformanceAggregate   `json:"aggregates"`
+	States         PerformanceStates        `json:"states"`
+	Attributions   []PerformanceAttribution `json:"attributions"`
+}
+
+type PerformanceAttribution struct {
+	Market              string                  `json:"market"`
+	Ticker              string                  `json:"ticker"`
+	LaneID              string                  `json:"laneId"`
+	LaneVersion         string                  `json:"laneVersion"`
+	CampaignID          string                  `json:"campaignId"`
+	LegID               string                  `json:"legId"`
+	PositionID          string                  `json:"positionId"`
+	PolicyID            string                  `json:"policyId"`
+	PolicyVersion       string                  `json:"policyVersion"`
+	LineageStatus       performance.Status      `json:"lineageStatus"`
+	MissingLineage      []string                `json:"missingLineage"`
+	MissingMeasurements []string                `json:"missingMeasurements"`
+	AcquiredQuantity    string                  `json:"acquiredQuantity"`
+	ClosedQuantity      string                  `json:"closedQuantity"`
+	ResidualQuantity    string                  `json:"residualQuantity"`
+	FullyClosed         bool                    `json:"fullyClosed"`
+	TotalEntryBasis     string                  `json:"totalEntryBasis"`
+	AllocatedEntryBasis string                  `json:"allocatedEntryBasis"`
+	ResidualEntryBasis  string                  `json:"residualEntryBasis"`
+	Source              PerformancePnLBreakdown `json:"source"`
+	Reporting           PerformancePnLBreakdown `json:"reporting"`
+	CloseLegs           []PerformanceCloseLeg   `json:"closeLegs"`
+}
+
+type PerformanceAmountMetric struct {
+	Status   performance.Status `json:"status"`
+	Value    string             `json:"value"`
+	Currency string             `json:"currency"`
+}
+
+type PerformancePnLBreakdown struct {
+	Currency         string                  `json:"currency"`
+	GrossPnL         PerformanceAmountMetric `json:"grossPnl"`
+	EntryFees        PerformanceAmountMetric `json:"entryFees"`
+	ExitFees         PerformanceAmountMetric `json:"exitFees"`
+	Taxes            PerformanceAmountMetric `json:"taxes"`
+	FXCost           PerformanceAmountMetric `json:"fxCost"`
+	NetPnL           PerformanceAmountMetric `json:"netPnl"`
+	RoundingResidual PerformanceAmountMetric `json:"roundingResidual"`
+	FXSource         string                  `json:"fxSource"`
+	FXSourceVersion  string                  `json:"fxSourceVersion"`
+	FXAsOf           *time.Time              `json:"fxAsOf"`
+	RoundingVersion  string                  `json:"roundingVersion"`
+}
+
+type PerformanceCloseLeg struct {
+	CloseID      string                  `json:"closeId"`
+	CloseLegID   string                  `json:"closeLegId"`
+	FillID       string                  `json:"fillId"`
+	Quantity     string                  `json:"quantity"`
+	EntryBasis   string                  `json:"entryBasis"`
+	ExitProceeds string                  `json:"exitProceeds"`
+	Source       PerformancePnLBreakdown `json:"source"`
+	Reporting    PerformancePnLBreakdown `json:"reporting"`
 }
 
 type PerformanceQuery struct {
@@ -109,7 +167,8 @@ func PerformanceFrom(view performance.DashboardView) PerformanceResource {
 			MinimumSample: view.Query.MinimumSample},
 		States: PerformanceStates{Complete: view.States.Complete, LinkMissing: view.States.LinkMissing,
 			NotMeasured: view.States.NotMeasured, InsufficientSample: view.States.InsufficientSample},
-		Aggregates: make([]PerformanceAggregate, 0, len(view.Aggregates)),
+		Aggregates:   make([]PerformanceAggregate, 0, len(view.Aggregates)),
+		Attributions: make([]PerformanceAttribution, 0, len(view.Attributions)),
 	}
 	if !view.NewestSourceAt.IsZero() {
 		at := view.NewestSourceAt.UTC()
@@ -134,7 +193,42 @@ func PerformanceFrom(view performance.DashboardView) PerformanceResource {
 		}
 		out.Aggregates = append(out.Aggregates, projected)
 	}
+	for _, row := range view.Attributions {
+		projected := PerformanceAttribution{
+			Market: row.Key.Market, Ticker: row.Key.Ticker, LaneID: row.Key.LaneID, LaneVersion: row.Key.LaneVersion,
+			CampaignID: row.Key.CampaignID, LegID: row.Key.LegID, PositionID: row.Key.PositionID,
+			PolicyID: row.Key.PolicyID, PolicyVersion: row.Key.PolicyVersion, LineageStatus: row.LineageStatus,
+			MissingLineage: append([]string(nil), row.MissingLineage...), MissingMeasurements: append([]string(nil), row.MissingMeasurements...),
+			AcquiredQuantity: row.AcquiredQuantity, ClosedQuantity: row.ClosedQuantity, ResidualQuantity: row.ResidualQuantity,
+			FullyClosed: row.FullyClosed, TotalEntryBasis: row.TotalEntryBasis, AllocatedEntryBasis: row.AllocatedEntryBasis,
+			ResidualEntryBasis: row.ResidualEntryBasis, Source: performancePnLFrom(row.Source), Reporting: performancePnLFrom(row.Reporting),
+			CloseLegs: make([]PerformanceCloseLeg, 0, len(row.CloseLegs)),
+		}
+		for _, leg := range row.CloseLegs {
+			projected.CloseLegs = append(projected.CloseLegs, PerformanceCloseLeg{CloseID: leg.CloseID, CloseLegID: leg.CloseLegID,
+				FillID: leg.FillID, Quantity: leg.Quantity, EntryBasis: leg.EntryBasis, ExitProceeds: leg.ExitProceeds,
+				Source: performancePnLFrom(leg.Source), Reporting: performancePnLFrom(leg.Reporting)})
+		}
+		out.Attributions = append(out.Attributions, projected)
+	}
 	return out
+}
+
+func performancePnLFrom(value performance.PnLBreakdown) PerformancePnLBreakdown {
+	out := PerformancePnLBreakdown{Currency: value.Currency, GrossPnL: performanceAmountFrom(value.GrossPnL),
+		EntryFees: performanceAmountFrom(value.EntryFees), ExitFees: performanceAmountFrom(value.ExitFees),
+		Taxes: performanceAmountFrom(value.Taxes), FXCost: performanceAmountFrom(value.FXCost),
+		NetPnL: performanceAmountFrom(value.NetPnL), RoundingResidual: performanceAmountFrom(value.RoundingResidual),
+		FXSource: value.FXSource, FXSourceVersion: value.FXSourceVersion, RoundingVersion: value.RoundingVersion}
+	if !value.FXAsOf.IsZero() {
+		at := value.FXAsOf.UTC()
+		out.FXAsOf = &at
+	}
+	return out
+}
+
+func performanceAmountFrom(value performance.AmountMetric) PerformanceAmountMetric {
+	return PerformanceAmountMetric{Status: value.Status, Value: value.Value, Currency: value.Currency}
 }
 
 type OptimizationResource struct {

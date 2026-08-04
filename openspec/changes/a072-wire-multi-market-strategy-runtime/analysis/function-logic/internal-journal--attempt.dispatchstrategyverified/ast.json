@@ -1,0 +1,514 @@
+{
+  "file": "internal/journal/strategy_dispatch_runtime.go",
+  "source_sha256": "8e877783fb1d067e74d7639d8f32f6498ec7f296e6cc1a1e259951a60010ba06",
+  "package": "journal",
+  "function": "DispatchStrategyVerified",
+  "receiver": "Attempt",
+  "signature": "Attempt.DispatchStrategyVerified(params=4, results=2)",
+  "start": {
+    "line": 673,
+    "column": 1
+  },
+  "end": {
+    "line": 736,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 676,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 683,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 694,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 695,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 698,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 701,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 702,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 707,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 711,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 720,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "case",
+      "at": {
+        "line": 723,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 729,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 677,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 684,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 708,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 730,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 735,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 677,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 679,
+        "column": 2
+      },
+      "text": "a.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 680,
+        "column": 8
+      },
+      "text": "a.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 682,
+        "column": 16
+      },
+      "text": "a.beginStrategyDispatchTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 688,
+        "column": 13
+      },
+      "text": "dispatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 690,
+        "column": 27
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 690,
+        "column": 47
+      },
+      "text": "context.WithoutCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 691,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 697,
+        "column": 20
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 700,
+        "column": 20
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 702,
+        "column": 6
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 707,
+        "column": 13
+      },
+      "text": "a.strategyTransitionOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 711,
+        "column": 19
+      },
+      "text": "verify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 713,
+        "column": 17
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 719,
+        "column": 20
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 722,
+        "column": 20
+      },
+      "text": "firstNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 725,
+        "column": 16
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 728,
+        "column": 19
+      },
+      "text": "a.settleStrategyDispatchTx"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 681,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 682,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 686,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 688,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 689,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 690,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 696,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 697,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 699,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 700,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 703,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 704,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 707,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 710,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 711,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 712,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 713,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 715,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 718,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 719,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 721,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 722,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 724,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 725,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 728,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 732,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 733,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 734,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 680,
+        "column": 2
+      },
+      "text": "a.mu.Unlock"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 691,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "file": "internal/execgw/symbolgate.go",
+  "source_sha256": "c508877c35ea979dfdf40e540cd7fb08174311cf2e67bf7cd8c63e3de958f430",
+  "package": "execgw",
+  "function": "CheckEntryFor",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.CheckEntryFor(params=2, results=1)",
+  "start": {
+    "line": 229,
+    "column": 1
+  },
+  "end": {
+    "line": 251,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 235,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 242,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 245,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 13
+      },
+      "text": "refresh"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 70
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 17
+      },
+      "text": "g.checkAccountEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 8
+      },
+      "text": "g.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 9
+      },
+      "text": "g.checkSymbolEntryLocked"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 231,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 234,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 249,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    }
+  ]
+}

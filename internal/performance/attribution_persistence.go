@@ -20,6 +20,8 @@ const (
 	AttributionSemantics         = "lane-attribution/v1"
 )
 
+var ErrAttributionUnavailable = errors.New("performance: attribution generation is unavailable")
+
 // AttributionEvidenceWindow is the exact journal window used to rebuild one
 // account's replaceable derived attribution generation.
 type AttributionEvidenceWindow struct {
@@ -508,6 +510,9 @@ func validateAttributionGeneration(ctx context.Context, db attributionQueryer, a
 		source_digest,source_json,row_count FROM attribution_rebuilds WHERE account_ref=?`, accountRef).
 		Scan(&head.AccountRef, &head.RebuildID, &head.CalculatedAt, &head.SemanticsVersion,
 			&head.SourceDigest, &head.SourceJSON, &head.RowCount); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return attributionHead{}, ErrAttributionUnavailable
+		}
 		return attributionHead{}, fmt.Errorf("performance: reading attribution rebuild head: %w", err)
 	}
 	if head.AccountRef != accountRef || head.SemanticsVersion != AttributionSemantics ||

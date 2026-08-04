@@ -75,6 +75,7 @@ type Lineage struct {
 	CandidateEvidenceDigest string
 	RouterEvidenceDigest    string
 	LaneEvidenceDigest      string
+	RouterID                string
 	RouterRelease           string
 	Horizon                 strategyrouter.Horizon
 	LaneID                  string
@@ -100,6 +101,75 @@ type Result struct {
 	GuardianCalls           uint64
 	BrokerCalls             uint64
 	Mutations               uint64
+	proposalSeal            [32]byte
+}
+
+// ValidProposal proves that the result came from the cap-free production
+// proposal composition and that none of its quantity, lineage, execution
+// terms, or authority counters changed afterwards.
+func (result Result) ValidProposal() bool {
+	return result.proposalSeal != ([32]byte{}) && result.proposalSeal == proposalResultSeal(result) &&
+		result.Code == RefusalNone && result.Quantity > 0 && result.CommonSafetyIndependent && result.GuardianCalls == 0 &&
+		result.BrokerCalls == 0 && result.Mutations == 0 && result.Lineage.Complete && result.Lineage.Valid() &&
+		result.ExecutionTerms.Valid() && result.ExecutionTerms.Quantity() == result.Quantity &&
+		result.ExecutionTerms.LineageIdentity() == result.Lineage.Identity
+}
+
+func sealProposalResult(result Result) Result {
+	result.proposalSeal = [32]byte{}
+	if result.Code != RefusalNone || result.Quantity == 0 || !result.Lineage.Complete || !result.Lineage.Valid() ||
+		!result.ExecutionTerms.Valid() || result.ExecutionTerms.Quantity() != result.Quantity ||
+		result.ExecutionTerms.LineageIdentity() != result.Lineage.Identity || !result.CommonSafetyIndependent ||
+		result.GuardianCalls != 0 || result.BrokerCalls != 0 || result.Mutations != 0 {
+		return result
+	}
+	result.proposalSeal = proposalResultSeal(result)
+	return result
+}
+
+func proposalResultSeal(result Result) [32]byte {
+	h := sha256.New()
+	writeLineageString(h, "strategyflow-q-candidate-proposal:v1")
+	writeLineageString(h, string(result.Code))
+	writeLineageString(h, result.NativeCode)
+	writeLineageUint64(h, result.Quantity)
+	writeLineageString(h, result.Lineage.Identity)
+	writeLineageString(h, result.ExecutionTerms.Identity())
+	if result.CommonSafetyIndependent {
+		writeLineageString(h, "1")
+	} else {
+		writeLineageString(h, "0")
+	}
+	writeLineageUint64(h, result.GuardianCalls)
+	writeLineageUint64(h, result.BrokerCalls)
+	writeLineageUint64(h, result.Mutations)
+	var seal [32]byte
+	copy(seal[:], h.Sum(nil))
+	return seal
+}
+
+// FinalizeProposalQuantity creates the quantity projection used after a066 has
+// independently issued q_final. It cannot increase q_candidate and preserves
+// the exact proposal lineage and non-quantity execution terms.
+func FinalizeProposalQuantity(proposal Result, qFinal uint64) (Result, bool) {
+	if !proposal.ValidProposal() || qFinal == 0 || qFinal > proposal.Quantity {
+		return Result{}, false
+	}
+	final := proposal
+	final.Quantity = qFinal
+	final.proposalSeal = [32]byte{}
+	terms := final.ExecutionTerms
+	terms.quantity = qFinal
+	terms.identity = ""
+	if !validExecutionTermsFields(terms) {
+		return Result{}, false
+	}
+	terms.identity = executionTermsIdentity(terms)
+	if !terms.Valid() {
+		return Result{}, false
+	}
+	final.ExecutionTerms = terms
+	return final, true
 }
 
 type PriceProvenance struct {
@@ -115,6 +185,29 @@ func (p PriceProvenance) AsOf() string        { return p.asOf }
 func (p PriceProvenance) Currency() string    { return p.currency }
 func (p PriceProvenance) MinorScale() int     { return p.minorScale }
 func (p PriceProvenance) UnitVersion() string { return p.unitVersion }
+
+// MajorDecimal projects authenticated quote-minor evidence into the canonical
+// decimal representation consumed by Guardian and official order intents. It
+// never uses floating point and does not mutate or reseal the provenance.
+func (p PriceProvenance) MajorDecimal() (string, bool) {
+	minor, ok := canonicalExecutionMinor(p.priceMinor)
+	if !ok || p.unitVersion != "minor-v1" || p.minorScale < 0 || p.minorScale > 18 {
+		return "", false
+	}
+	if p.minorScale == 0 {
+		return minor.String(), true
+	}
+	digits := minor.String()
+	if len(digits) <= p.minorScale {
+		digits = strings.Repeat("0", p.minorScale-len(digits)+1) + digits
+	}
+	point := len(digits) - p.minorScale
+	integer, fractional := digits[:point], strings.TrimRight(digits[point:], "0")
+	if fractional == "" {
+		return integer, true
+	}
+	return integer + "." + fractional, true
+}
 
 type ExecutionPolicy struct {
 	stagedTargetMinor, fairValueMinor, entryCostsMinor, exitCostsMinor string
@@ -303,6 +396,7 @@ func lineageIdentity(lineage Lineage) string {
 	writeLineageString(h, lineage.CandidateEvidenceDigest)
 	writeLineageString(h, lineage.RouterEvidenceDigest)
 	writeLineageString(h, lineage.LaneEvidenceDigest)
+	writeLineageString(h, lineage.RouterID)
 	writeLineageString(h, lineage.RouterRelease)
 	writeLineageString(h, string(lineage.Horizon))
 	writeLineageString(h, lineage.LaneID)

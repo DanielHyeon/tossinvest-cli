@@ -1,5 +1,5 @@
-# Branch Test Map: `AuthorityOrigin.Valid`
+# Branch Test Map: AuthorityOrigin.Valid
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | zero token invalid; constructor-issued token valid | TestAuthorityOriginRejectsConfiguredTransport | yes (token absent) | yes |
+| B1 | Branchless happy path preserves the documented invariant | Package happy-path test | existing behavior inspected | yes |

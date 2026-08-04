@@ -1,0 +1,29 @@
+{
+  "file": "internal/strategyrouter/registry.go",
+  "source_sha256": "d1b927d003933e903290b0cb7b227a4792d52fd1b118f12e89c29048ada5af62",
+  "package": "strategyrouter",
+  "function": "Descriptors",
+  "signature": "Descriptors(params=0, results=1)",
+  "start": {
+    "line": 19,
+    "column": 1
+  },
+  "end": {
+    "line": 24,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 20,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

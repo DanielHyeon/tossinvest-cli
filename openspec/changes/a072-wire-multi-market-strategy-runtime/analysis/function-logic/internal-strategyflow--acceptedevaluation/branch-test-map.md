@@ -1,5 +1,5 @@
-# Branch Test Map: `acceptedEvaluation`
+# Branch Test Map: acceptedEvaluation
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | accepted fixture includes complete terms | `TestEvaluateSealsExactExecutionTerms` | yes | yes |
+| B1 | Branchless happy path preserves the documented invariant | Package happy-path test | existing behavior inspected | yes |

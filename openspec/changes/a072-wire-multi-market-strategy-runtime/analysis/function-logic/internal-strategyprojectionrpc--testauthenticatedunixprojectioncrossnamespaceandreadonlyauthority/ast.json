@@ -1,0 +1,319 @@
+{
+  "file": "internal/strategyprojectionrpc/transport_unix_test.go",
+  "source_sha256": "bd19eabc8eb6ee1cff518f8e530f55622e21f80e84306a2e18a7e578e31c12b1",
+  "package": "strategyprojectionrpc",
+  "function": "TestAuthenticatedUnixProjectionCrossNamespaceAndReadOnlyAuthority",
+  "signature": "TestAuthenticatedUnixProjectionCrossNamespaceAndReadOnlyAuthority(params=1, results=0)",
+  "start": {
+    "line": 25,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 9
+      },
+      "text": "shortRuntimeDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 14
+      },
+      "text": "strategyprojection.DormantSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 49
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 17
+      },
+      "text": "Start"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 25
+      },
+      "text": "server.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 20
+      },
+      "text": "DescriptorPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 15
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 19
+      },
+      "text": "Perm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 19
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 17
+      },
+      "text": "Dial"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 22
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 14
+      },
+      "text": "client.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 26
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 20
+      },
+      "text": "reflect.DeepEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 14
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 19
+      },
+      "text": "typeName.MethodByName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 32,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

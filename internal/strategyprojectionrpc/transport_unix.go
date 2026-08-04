@@ -42,7 +42,15 @@ func Start(engineDir string, reader strategyprojection.Reader) (*Server, error) 
 	}
 	controlDir := ControlDirectory(root)
 	if err := os.Mkdir(controlDir, 0o700); err != nil {
-		return nil, fmt.Errorf("strategy projection runtime: create control directory: %w", err)
+		if !errors.Is(err, os.ErrExist) {
+			return nil, fmt.Errorf("strategy projection runtime: create control directory: %w", err)
+		}
+		if err := reclaimStaleControlDirectory(root); err != nil {
+			return nil, err
+		}
+		if err := os.Mkdir(controlDir, 0o700); err != nil {
+			return nil, fmt.Errorf("strategy projection runtime: recreate control directory: %w", err)
+		}
 	}
 	cleanupDir := func() { _ = os.Remove(controlDir) }
 	socketPath := SocketPath(root)
@@ -105,6 +113,65 @@ func Start(engineDir string, reader strategyprojection.Reader) (*Server, error) 
 	}
 	go func() { _ = server.server.Serve(listener) }()
 	return server, nil
+}
+
+func reclaimStaleControlDirectory(engineDir string) error {
+	controlDir := ControlDirectory(engineDir)
+	info, err := os.Lstat(controlDir)
+	if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 || info.Mode().Perm() != 0o700 {
+		return errors.New("strategy projection runtime: existing control directory is unsafe")
+	}
+	var directoryStat unix.Stat_t
+	if err := unix.Lstat(controlDir, &directoryStat); err != nil || directoryStat.Uid != uint32(os.Geteuid()) {
+		return errors.New("strategy projection runtime: existing control directory ownership is unsafe")
+	}
+	entries, err := os.ReadDir(controlDir)
+	if err != nil {
+		return err
+	}
+	seen := make(map[string]bool, len(entries))
+	for _, entry := range entries {
+		if entry.Name() != DescriptorFileName && entry.Name() != SocketFileName {
+			return errors.New("strategy projection runtime: stale control directory has unexpected entries")
+		}
+		seen[entry.Name()] = true
+	}
+	if !seen[DescriptorFileName] || !seen[SocketFileName] {
+		return errors.New("strategy projection runtime: stale endpoint is incomplete")
+	}
+	descriptor, err := readDescriptor(DescriptorPath(engineDir))
+	if err != nil {
+		return fmt.Errorf("strategy projection runtime: stale descriptor is unsafe: %w", err)
+	}
+	if processAlive(descriptor.PID) {
+		return errors.New("strategy projection runtime: projection owner is still alive")
+	}
+	socketPath := SocketPath(engineDir)
+	socketInfo, err := os.Lstat(socketPath)
+	if err != nil || socketInfo.Mode()&os.ModeSocket == 0 || socketInfo.Mode()&os.ModeSymlink != 0 || socketInfo.Mode().Perm() != 0o600 {
+		return errors.New("strategy projection runtime: stale socket is unsafe")
+	}
+	var socketStat unix.Stat_t
+	if err := unix.Lstat(socketPath, &socketStat); err != nil || socketStat.Uid != uint32(os.Geteuid()) || socketStat.Nlink != 1 {
+		return errors.New("strategy projection runtime: stale socket ownership is unsafe")
+	}
+	for _, path := range []string{DescriptorPath(engineDir), socketPath} {
+		if err := os.Remove(path); err != nil {
+			return fmt.Errorf("strategy projection runtime: remove stale endpoint: %w", err)
+		}
+	}
+	if err := os.Remove(controlDir); err != nil {
+		return fmt.Errorf("strategy projection runtime: remove stale control directory: %w", err)
+	}
+	return nil
+}
+
+func processAlive(pid int) bool {
+	if pid <= 0 {
+		return false
+	}
+	err := unix.Kill(pid, 0)
+	return err == nil || errors.Is(err, unix.EPERM)
 }
 
 func Dial(_ context.Context, descriptorPath string) (*Client, error) {

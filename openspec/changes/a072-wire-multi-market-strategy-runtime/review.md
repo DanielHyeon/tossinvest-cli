@@ -89,6 +89,29 @@
   stop. Both continuation and weekly value now choose the saved stop directly from private sealed authority;
   public scalar deletion, lowering or substitution cannot weaken it, and scalar-without-authority fails
   closed. Final independent re-review is CLEAN.
+- The paired KR/US first-leg checkpoint adds one journal-owned v26 transaction and immutable companion for
+  q_final, aggregate plus five monetary holds, strategy attempt, campaign/claim, risk owner and leg 1. The
+  journal mints the prospective token; exact replay is verify-only and partial authority is never repaired.
+  Independent review is CLEAN after adding live manifest/client-order joins, all-column v25 preservation,
+  migration rollback coverage and fail-closed row-count errors.
+- The first 3.4a review BLOCKed transport-free claim on three P1 gaps: release disposition lacked an exact
+  final-state proof, operation/router lineage was not durable, and three attempt/strategy/client joins were
+  not repeated at claim time. Remediation binds the fixed production RouterID/RouterRelease through
+  strategyflow, first-leg request/binding and future lease, requires `operation_id == client_order_id`,
+  repeats every live join, and proves one aggregate plus five distinct monetary holds are RELEASED/zero.
+  Already-released rows normalize idempotently; missing/cross-scope rows roll the whole transaction back.
+- A follow-up provenance review found that a fresh caller could name a different well-formed router pair.
+  `RecordQFinalCampaignFirstLeg` now accepts only the exact sealed production RouterID/RouterRelease before
+  opening a transaction, and paired KR/US fresh-forgery tests prove zero writes. Final re-review is CLEAN.
+  Task 3.4a is complete; 3.4b (`CLAIMED→SUBMITTING` immediate pre-Gateway fence) remains pending.
+- Engine Task 3.7 initially BLOCKed on a duration-based restart handoff race. The supervisor now publishes
+  one absolute `RestartNotBefore` and recomputes the remaining interval at sleep time. KR/US × error/panic
+  race regressions pass; failed entry stays OFF-latched while peer evaluation and all five safety loops
+  continue. Independent re-review is CLEAN.
+- Currency architecture review rejects per-market Guardians because they could each consume the full
+  account-wide cap. Production integration will retain one account-base-currency Guardian and bind the same
+  request-scoped frozen official FX evidence through sizing, aggregate/five-bucket reservation and Gateway.
+  This decision grants no current authority; the production FX/policy/account snapshot loaders remain absent.
 
 ## Verification
 
@@ -115,10 +138,51 @@
   execgw: PASS. No journal, broker, activation or LIVE mutation was added.
 - Six-lane execution-term normal/tagged/race/tagged-race tests and vet: PASS. Saved-stop adversarial
   regressions and final independent review: PASS/CLEAN.
+- Final integrated `go test ./internal/journal -count=1`: PASS (221.186s).
+- Final focused journal tests for first-leg, v26 migration and claim: PASS; paired claim/first-leg race tests:
+  PASS (65.554s); `go vet ./internal/journal`: PASS.
+- `go test -race ./internal/strategyrouter ./internal/strategyflow -count=1`: PASS; tagged production
+  strategyflow test: PASS; affected-package vet: PASS.
+- Task 3.7 full engine tests/vet and independent re-review: PASS/CLEAN; deterministic paired handoff-race
+  suites passed at repeated race counts.
+- Paired composite settlement focused tests: PASS. KR and US cover byte-exact ACK identity, caller-field
+  non-authority, cross-attempt refusal, ACK/fill ordering in both directions, late-link rollback, blank ACK,
+  unknown outcome class and duplicate zero-resend. Focused race and `go vet ./internal/journal`: PASS.
+- Strategy Gateway paired integration: normal and `tossos_testseams` race tests PASS. Stale or cross-market
+  account-base FX reaches the exact pre-transport refusal handoff once, reaches neither SUBMITTING nor the
+  broker, and the journal refusal matrix proves aggregate/five-bucket terminal normalization.
+- A subsequent independent review found four P1 gaps: nil official verifier confirmation, terminal
+  ACK-window residual holds, split prepared-refusal commits and missing production Campaign hook. Paired KR/US
+  RED regressions now pass for all four. Core+claim+six-hold refusal rollback preserves the exact preimage;
+  terminal zero/partial fill releases only the remainder while retaining fill evidence. Full engine, normal
+  Gateway and `tossos_testseams` Gateway package suites pass. The independent re-review is CLEAN with
+  P0/P1/P2 = 0/0/0; focused normal/race/vet checks passed and the reviewer changed no files.
+- Claimed-crash recovery is now a no-send terminalizer rather than a dormant stub. A newer current owner can
+  recover only exact `CLAIMED + RESERVED` rows with no durable transport-start marker. KR and US tests prove
+  stale-owner fencing, `SUBMITTING` refusal, exact replay non-revival, optional prepared-core closure and
+  injected late-write rollback of core, lease and all six holds. Focused tests passed (29.748s), the paired
+  recovery race suite passed (24.176s), and journal vet plus diff checks passed. No retry/resubmit or official
+  outcome authority was added.
+- Full untagged repository verification with an explicit 30-minute package timeout passed. The earlier default
+  run reached Go's 10-minute package timeout while journal was in SQLite migration fsync, with no assertion
+  failure; journal then passed alone in 404.183s and the integrated run passed with journal 386.779s,
+  engine 120.065s and execgw 108.331s.
+
+## Final transport-boundary red-team review
+
+- Verdict: CLEAN; CRITICAL/P1/high findings: 0.
+- The final journal transport proof is performed inside the entry-gate critical section immediately before
+  the official send and repeats the exact dispatch owner, lease, revision, state and expiry.
+- `TestStrategyGatewayFinalGateWaitCannotUseExpiredReplacedOwnerKRUS` proves both markets fail closed when an
+  owner expires or is replaced while waiting for the gate. Normal and race executions pass.
+- Market-local final scheduler revalidation, monotonic entry-gate revision binding, SUBMITTING owner takeover
+  grace and immutable lease-update guards were re-reviewed together; no remaining high-severity gap exists.
 
 ## Verdict
 
-Isolated core approved for the next production-integration review checkpoint. Production snapshot/FX loaders,
-prospective-owner atomic admission, current account exposure, official Gateway lease CAS and protection
-assembly remain pending. KR and US remain independently OFF until human activation and every current lease
-authority are valid. The completed core grants no lane, automation, toggle or LIVE approval authority.
+The paired first-leg transaction, transport-free claim CAS, claimed no-send crash recovery, strategy-only
+atomic Gateway settlement and market-isolated engine recovery are approved for the next production-integration
+checkpoint. Production activation/calendar/bucket/account/exposure assembly, SUBMITTING exact-outcome recovery
+and a071 protection assembly remain pending.
+KR and US remain independently OFF until human activation and every current lease authority are valid. The
+completed work grants no lane, automation, toggle or LIVE approval authority.

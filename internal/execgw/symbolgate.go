@@ -85,13 +85,18 @@ func (g *EntryGate) BlockSymbol(market, symbol string, reason ReasonCode, detail
 		Detail: detail,
 		Since:  g.clk.Now(),
 	}
+	g.revision++
 }
 
 // ClearSymbol releases one symbol block.
 func (g *EntryGate) ClearSymbol(market, symbol string, reason ReasonCode) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	delete(g.symbolLatches, symbolKey(market, symbol, reason))
+	key := symbolKey(market, symbol, reason)
+	if _, exists := g.symbolLatches[key]; exists {
+		delete(g.symbolLatches, key)
+		g.revision++
+	}
 }
 
 // ClearSymbolReason releases every symbol block carrying a reason, whatever
@@ -104,6 +109,7 @@ func (g *EntryGate) ClearSymbolReason(reason ReasonCode) {
 	for key, block := range g.symbolLatches {
 		if block.Reason == reason {
 			delete(g.symbolLatches, key)
+			g.revision++
 		}
 	}
 }
@@ -179,12 +185,16 @@ func (g *EntryGate) RebuildReconcileProjection(states []journal.ReconcileState) 
 
 	g.mu.Lock()
 	for _, reason := range family {
-		delete(g.latches, reason)
+		if _, exists := g.latches[reason]; exists {
+			delete(g.latches, reason)
+			g.revision++
+		}
 	}
 	for key, block := range g.symbolLatches {
 		for _, reason := range family {
 			if block.Reason == reason {
 				delete(g.symbolLatches, key)
+				g.revision++
 			}
 		}
 	}
@@ -237,6 +247,10 @@ func (g *EntryGate) CheckEntryFor(market, symbol string) *RejectedError {
 
 	g.mu.Lock()
 	defer g.mu.Unlock()
+	return g.checkSymbolEntryLocked(market, symbol)
+}
+
+func (g *EntryGate) checkSymbolEntryLocked(market, symbol string) *RejectedError {
 	// latchOrder gives a deterministic reason when several symbol blocks apply,
 	// for the same reason it does for account latches: an operator chasing a
 	// reason code that changes between polls stops trusting it.

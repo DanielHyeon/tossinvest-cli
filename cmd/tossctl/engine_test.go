@@ -59,7 +59,7 @@ func stubAssembly(t *testing.T, ectx *engine.Context, err error) func() bool {
 func stubRuntime(t *testing.T, build func(*engine.Context) (*engine.Runtime, error)) {
 	t.Helper()
 	previous := engineRuntimeFactory
-	engineRuntimeFactory = func(ectx *engine.Context, _ clock.Clock, _ *obs.Logger) (*engine.Runtime, error) {
+	engineRuntimeFactory = func(_ context.Context, ectx *engine.Context, _ clock.Clock, _ *obs.Logger) (*engine.Runtime, error) {
 		return build(ectx)
 	}
 	t.Cleanup(func() { engineRuntimeFactory = previous })

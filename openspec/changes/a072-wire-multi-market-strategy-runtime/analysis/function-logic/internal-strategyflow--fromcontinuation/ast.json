@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyflow/adapters.go",
-  "source_sha256": "9b69cc5801b0399183d700baabb9164d2db7d4e7c2ebe04dc841e945f4c806a3",
+  "source_sha256": "5fa16d5a0d6e2286f965c396e726fb3bf8cba48b32e4ec110359ff533def69d1",
   "package": "strategyflow",
   "function": "fromContinuation",
   "signature": "fromContinuation(params=1, results=1)",
   "start": {
-    "line": 32,
+    "line": 51,
     "column": 1
   },
   "end": {
-    "line": 43,
+    "line": 62,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 34,
+        "line": 53,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 35,
+        "line": 54,
         "column": 15
       },
       "text": "string"
@@ -34,7 +34,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 35,
+        "line": 54,
         "column": 72
       },
       "text": "continuationPrice"
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 35,
+        "line": 54,
         "column": 122
       },
       "text": "continuationPrice"
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 36,
+        "line": 55,
         "column": 11
       },
       "text": "continuationPrice"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 37,
+        "line": 56,
         "column": 44
       },
       "text": "strategyrouter.Market"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 38,
+        "line": 57,
         "column": 24
       },
       "text": "uint64"
@@ -76,7 +76,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 33,
+        "line": 52,
         "column": 2
       }
     }

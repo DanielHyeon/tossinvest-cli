@@ -46,6 +46,59 @@ journal에 영속해야 하며 (SHALL), lane 또는 worker가 broker mutator를 
 - **WHEN** campaign/leg 또는 lane version을 durable lineage에 결합할 수 없다
 - **THEN** runtime은 exposure-raising dispatch를 거부하고 symbol/time 추정으로 누락 식별자를 채우지 않는다
 
+### Requirement: first-leg admission은 KR과 US에 동일한 원자 authority binding을 사용한다
+Runtime journal은 KR/KRW와 US/USD first-leg admission을 같은 market-parameterized transaction 계약으로 제공해야 한다 (SHALL). 각 transaction은 고정 router identity/release가 포함된 request digest, q_final decision과 aggregate/five HELD
+reservation, immutable strategy decision/attempt, PositionCampaign/prospective claim, exact risk owner,
+campaign leg 1과 journal-minted prospective token을 원자 commit해야 한다 (SHALL). KR-only 또는
+US-only 구현을 완료로 간주하거나 한 시장 안정화를 peer 시장 설계·구현의 선행조건으로 사용해서는
+안 된다 (MUST NOT).
+
+Released v20-v25 schema와 historical row를 변경하지 않고 additive v26 companion에 위 authority
+관계를 영속해야 한다 (SHALL). Dispatch lease는 q_final, aggregate reservation, campaign, leg plan,
+strategy attempt, 실제 client order operation identity, risk owner/token, router/lane과 market scope가 companion과 정확히 일치할 때만 insert될 수
+있어야 한다 (SHALL). First-leg admission 자체는 dispatch lease, Gateway, broker, activation 또는
+LIVE approval을 만들 수 없어야 한다 (MUST NOT).
+
+#### Scenario: KR과 US 동시 first-leg admission
+- **WHEN** 같은 base-currency account의 독립된 valid KR/KRW와 US/USD first-leg request가 동시에 시작되고 account-wide CAS loser가 bounded fresh recollection을 수행한다
+- **THEN** commit 순서와 무관하게 두 시장 모두 자기 q_final/campaign/leg/owner/token binding을 얻고 peer authority를 소비하지 않는다
+
+#### Scenario: 한 시장만 구현된 build
+- **WHEN** KR 또는 US first-leg 테스트와 production adapter 중 하나만 연결되어 있다
+- **THEN** paired-delivery gate는 a072를 미완료로 유지하고 peer 시장 구현 시작을 기다리는 순차 milestone을 허용하지 않는다
+
+#### Scenario: binding 없는 dispatch lease
+- **WHEN** raw lease가 exact v26 first-leg binding 없이, 다른 campaign/leg/router로, 또는 `operation_id`가 bound attempt의 실제 `client_order_id`와 다르게 insert된다
+- **THEN** journal trigger는 insert를 거부하고 Gateway와 broker request는 0건이다
+
+### Requirement: KR과 US production admission은 같은 account-base currency wave다
+
+Runtime은 계좌별 단일 account-base Guardian을 사용해야 한다 (SHALL). 단일 account-wide capacity와
+KR identity FX 및 US official quote-to-base FX를 같은 implementation wave에서 조립해야 한다. KR
+운영 안정화를 US 설계·RED·구현·Gateway 검증의 선행조건으로 두거나 그 반대로 두어서는 안 된다
+(MUST NOT). 어느 한 시장의 Guardian adapter, limits envelope 또는 Gateway fence만 연결된 build는
+paired production assembly 완료로 표시해서는 안 된다 (MUST NOT).
+
+Frozen FX authority는 Guardian sizing, aggregate와 다섯 bucket reservation, durable decision
+envelope, dispatch lease와 immediate pre-Gateway validation에 동일한 digest/pair/freshness로 결합되어야
+한다 (SHALL). Market별 FX 장애는 해당 market의 exposure-raising entry만 거부하고 peer evaluation과
+양 시장 protection/fill/reconciliation/reduce-only exit를 취소해서는 안 된다 (MUST NOT).
+
+#### Scenario: KR과 US paired production wave
+
+- **WHEN** KR identity adapter가 GREEN이지만 US official conversion adapter 또는 그 Gateway mismatch suite가 아직 미완료다
+- **THEN** production assembly는 미완료이며 KR 결과를 US 구현 시작 전 운영 안정화 milestone으로 승격하지 않는다
+
+#### Scenario: 동시 account-wide capacity 경쟁
+
+- **WHEN** KR과 US first-leg가 같은 account-base residual capacity를 동시에 소비하려 한다
+- **THEN** commit 순서와 무관하게 합산 base reservation은 cap 안에 머물고 loser는 fresh recollection 또는 atomic refusal이며 peer 통화 숫자를 직접 비교하지 않는다
+
+#### Scenario: 한 시장 FX 장애 격리
+
+- **WHEN** US official FX가 stale이고 KR identity FX는 current다
+- **THEN** US 신규 entry만 broker 0건으로 거부되고 KR eligible evaluation과 양 시장 safety lifecycle은 계속된다
+
 ### Requirement: exposure-raising dispatch는 fenced 비가역 durable lease를 요구한다
 Runtime은 모든 exposure-raising dispatch에 fenced 비가역 durable lease를 요구해야 한다 (SHALL). Exposure-raising attempt마다 account/market/symbol, candidate/evidence digest,
 router/lane/version, campaign/leg, activation manifest와 generation, calendar generation,
@@ -115,6 +168,51 @@ duplicate-submit idempotency를 모두 증명할 때만 허용해야 한다 (SHA
 - **WHEN** broker가 operation identity에 결합된 definitive rejection과 no-accept/no-fill을 반환한다
 - **THEN** broker outcome/evidence와 lease `REFUSED`, reservation `RELEASED`가 한 transaction에 기록되고 `AMBIGUOUS` 또는 retry는 0건이다
 
+### Requirement: KR과 US strategy dispatch는 core·lease·lineage·fill을 원자 정산한다
+Runtime은 KR/KRW와 US/USD exposure-raising strategy dispatch에 같은 strategy 전용 verified-dispatch 계약을 사용해야 한다 (SHALL).
+이 계약은 last pre-send transaction에서 exact core attempt와
+`CLAIMED` lease를 함께 `DISPATCH_STARTED + SUBMITTING`으로 만들고, broker ACK는 opaque order ID를
+byte-exact `ACKED`로 보존한 뒤 official round-trip을 수행해야 한다 (SHALL). Official verifier가
+없으면 core/lease/transport를 변경하기 전에 거부해야 하며 (SHALL), ACK 자체를 confirmation
+authority로 재사용해서는 안 된다 (MUST NOT). 일반
+`DispatchVerified`의 공개 동작은 변경해서는 안 된다 (MUST NOT).
+
+Confirmed settlement는 core `CONFIRMED`, lease `SUBMITTED + TRANSFERRED`, exact five-bucket order
+mapping, campaign order watermark/leg/campaign transition, strategy execution lineage, 그리고 mapping 전
+commit된 exact scoped fill의 누락 apply/backfill을 하나의 `BEGIN IMMEDIATE` transaction으로 commit해야
+한다 (SHALL). 어느 하나라도 실패하면 전체 정산을 rollback해야 한다 (SHALL). Caller가 outcome class,
+broker order ID, digest 또는 observed time을 제공해 durable attempt보다 강한 결과를 만들 수 없어야
+한다 (MUST NOT). Broker order ID는 blank 여부 검사 외에는 trim/normalize해서는 안 된다 (MUST NOT).
+
+ACK window에 terminal zero-fill 또는 terminal partial-fill이 먼저 commit된 경우 같은 confirmed
+settlement transaction은 aggregate reservation 잔여분과 exact five-bucket order reservation 잔여분을
+모두 `RELEASED`로 바꾸어야 한다 (SHALL). Filled capacity와 immutable fill evidence는 보존해야 하며
+(SHALL), terminal remainder를 새 entry authority로 간주해서는 안 된다 (MUST NOT).
+
+Broker 전송 뒤 정산은 caller cancellation과 분리된 bounded context로 끝내되 broker transport를
+재시도해서는 안 된다 (MUST NOT). Crash recovery는 no-resend이며 sealed official exact attestation만
+사용할 수 있고 임의 caller 주장으로 outcome을 확정해서는 안 된다 (MUST NOT).
+
+#### Scenario: KR과 US mapping 전 fill 경합
+- **WHEN** KR 또는 US broker ACK 뒤 composite settlement 전에 exact scoped cumulative fill이 먼저 commit된다
+- **THEN** settlement transaction은 durable snapshot을 읽어 risk bucket, campaign 및 position apply를 정확히 한 번 backfill하고 `SUBMITTED + TRANSFERRED`와 모든 lineage를 함께 commit한다
+
+#### Scenario: official verifier가 없다
+- **WHEN** KR 또는 US strategy Gateway가 exact official order existence verifier 없이 dispatch를 시도한다
+- **THEN** core는 `RECORDED`, lease는 `CLAIMED + RESERVED`, broker request는 0건으로 유지되고 typed invalid request를 반환한다
+
+#### Scenario: mapping 전 terminal zero 또는 partial fill
+- **WHEN** official round-trip 중 exact terminal snapshot이 cumulative fill 0 또는 q_final 미만으로 먼저 commit된다
+- **THEN** confirmed composite transaction은 fill/campaign/position을 정확히 한 번 backfill하고 aggregate와 five-bucket 미체결 잔여분을 함께 release한다
+
+#### Scenario: caller가 confirmed를 위조한다
+- **WHEN** caller가 다른 attempt 또는 caller-derived class/order ID/digest로 `SUBMITTING` lease를 confirmed 처리하려 한다
+- **THEN** journal은 exact durable attempt/intent/decision/client-order/account/market/symbol binding을 재조회해 거부하고 lease, holds, mappings와 lineage를 변경하지 않는다
+
+#### Scenario: opaque broker order ID
+- **WHEN** official broker ACK가 앞뒤 공백을 포함하지만 blank는 아닌 opaque order ID를 반환한다
+- **THEN** core attempt, risk order mapping, campaign watermark, strategy lineage와 immutable outcome은 그 값을 byte-exact로 보존한다
+
 #### Scenario: SUBMITTING crash 뒤 authoritative not-submitted
 - **WHEN** restart recovery의 attested exact query가 operation이 accepted되지 않았고 fill도 없음을 authoritative하게 증명한다
 - **THEN** exact query evidence와 `REFUSED + RELEASED`를 원자 기록하고 같은 lease를 재제출하지 않는다
@@ -131,7 +229,11 @@ Reservation disposition 변경은 terminal lease state를 되돌리거나 lease�
 
 #### Scenario: broker 전 refusal
 - **WHEN** current authority validation이 broker transport 전에 실패한다
-- **THEN** lease는 terminal `REFUSED`이고 같은 transaction에서 exact risk/campaign reservation만 `RELEASED`된다
+- **THEN** prepared core attempt는 `NOT_DISPATCHED`, lease는 terminal `REFUSED`이고 같은 transaction에서 exact aggregate와 five-bucket reservation이 `RELEASED`된다
+
+#### Scenario: prepared refusal transaction 중 failure
+- **WHEN** core transition 뒤 lease 또는 reservation terminalization write가 실패한다
+- **THEN** core `RECORDED`, lease `CLAIMED + RESERVED`, aggregate/five buckets `HELD`인 전체 preimage가 rollback되고 split terminal state는 남지 않는다
 
 #### Scenario: broker 뒤 definitive no-accept
 - **WHEN** exact broker outcome이 요청을 거부했고 accepted order와 fill이 없음을 증명한다

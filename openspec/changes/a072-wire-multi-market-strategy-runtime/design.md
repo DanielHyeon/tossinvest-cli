@@ -152,6 +152,47 @@ LIVE approval은 미승인이다. Runtime은 existing human-approved per-market 
 소비하며 승인 생성 API를 제공하지 않는다. 테스트는 fake clock, fixed evidence와 isolated
 official broker를 사용하며 live mutation을 구조적으로 차단한다.
 
+### 7. First-leg authority는 additive v26 companion으로 원자 결합한다
+
+기존 q_final, strategy lineage, PositionCampaign과 risk owner API를 순서대로 호출하면 prospective
+token과 decision/campaign 선행조건이 순환하고 중간 crash window가 생긴다. Journal이 prospective
+token을 직접 mint하고 q_final decision/aggregate와 정확히 다섯 bucket HELD, strategy
+decision/attempt, campaign/claim, risk owner, leg 1을 한 transaction에서 commit한다. 이 API는
+dispatch lease나 execution lineage `DISPATCH_START`를 만들지 않으므로 제출 권한이 아니다.
+
+Released v20-v25 schema는 수정하지 않는다. v26은 immutable
+`strategy_first_leg_bindings` companion을 추가해 q_final decision, aggregate reservation,
+strategy decision/attempt, campaign/prospective claim, risk owner/token과 first leg sequence/plan을
+exact scope 및 request digest에 포함된 고정 `router_id`/`router_version`으로 묶는다. BEFORE INSERT trigger는 모든 referenced row의 account/market/symbol,
+lane, decision, token과 quantity가 일치하는지 검증한다. 별도 additive lease trigger는 future
+dispatch lease의 Guardian decision, aggregate reservation, campaign, `leg_id`(first-leg plan id),
+lane/router와 scope가 이 binding과 일치하지 않거나 `operation_id`가 bound strategy attempt의 실제
+`client_order_id`가 아니면 거부한다. Historical row는 backfill하지 않으며,
+binding이 없는 legacy authority는 신규 exposure-raising lease를 만들 수 없다.
+
+KR/KRW와 US/USD는 같은 request/transaction 구현과 paired RED/GREEN suite를 공유한다. 한 시장
+구현의 안정화를 다른 시장 시작 조건으로 두지 않으며 두 시장이 모두 통과하기 전에는 이 slice를
+완료로 표시하지 않는다.
+
+### 8. KR과 US는 하나의 account-base Guardian과 frozen FX authority를 공유한다
+
+계좌마다 하나의 `RiskGuardian`과 하나의 account-wide exposure/daily-loss cap만 둔다. 기존
+`limit_currency`는 시장 선택 통화가 아니라 account base currency로 정의한다. KR과 US별
+quote-currency Guardian을 두면 각 Guardian이 같은 account-wide cap을 전부 소비할 수 있으므로
+배제한다.
+
+KR은 same-currency라도 봉인된 identity FX authority를 사용하고, US는 request-scoped official
+quote-to-base FX와 conservative haircut을 사용한다. 그 하나의 authority가 Guardian sizing,
+aggregate와 정확히 다섯 bucket reservation, versioned decision limits envelope,
+`CLAIMED→SUBMITTING` fence와 Gateway validation까지 바뀌지 않고 전달된다. Cash와 broker order
+cost는 quote 통화로 비교하고 exposure, loss, equity, policy limits는 base 통화로 비교한다.
+Base reservation은 ceil, admissible quantity는 floor한다.
+
+이 결정도 paired-delivery gate의 일부다. KR identity와 US conversion의 RED/GREEN, production
+adapter, Gateway mismatch와 failure-isolation 검증을 같은 wave에서 완료하지 않으면 구현은
+미완료다. FX 장애는 해당 시장의 exposure-raising entry만 닫고 protection, fill,
+reconciliation과 reduce-only exit를 닫지 않는다.
+
 ## Risks / Trade-offs
 
 - [두 market worker가 account-wide risk를 경합] → fenced central dispatch owner와 한 journal
@@ -164,17 +205,25 @@ official broker를 사용하며 live mutation을 구조적으로 차단한다.
   same-key recovery, 없으면 `AMBIGUOUS` no-resubmit과 reservation `HELD`다.
 - [Central integrity fault로 process 종료] → external fenced safety-only fallback을 최대 60초
   RTO 안에 기동하고 entry capability는 계속 제거한다.
+- [시장별 Guardian이 account cap을 중복 소비] → 계좌당 하나의 base-currency Guardian과 하나의
+  base reservation domain만 사용한다.
+- [FX TOCTOU·역방향·단위 혼합] → official evidence에서 mint한 frozen authority 하나를 sizing부터
+  Gateway까지 결합하고 stale/pair/digest mismatch는 transport 전에 거부한다.
 
 ## Migration Plan
 
-1. Runtime graph와 market worker를 fake inputs에서 구성하고 Gateway를 닫은 채 검증한다.
-2. Durable lease state machine, owner epoch/fence와 single dispatch owner를 journal/Gateway에
+1. Runtime graph와 KR/US market worker를 같은 wave의 fake inputs에서 구성하고 Gateway를 닫은 채 검증한다.
+2. Additive v26 first-leg binding과 router/client-order lease authority 및 KR/US atomic admission을 함께 적용하고 v25 preservation,
+   migration rollback과 old-build refusal을 검증한다.
+3. KR identity와 US official conversion을 같은 wave에서 account-base Guardian, aggregate/five
+   reservation과 versioned decision envelope에 연결한다.
+4. Durable lease state machine, owner epoch/fence와 single dispatch owner를 journal/Gateway에
    연결한다.
-3. Existing safety loops, market worker isolation과 external safety-fallback supervisor를 fault
+5. Existing safety loops, market worker isolation과 external safety-fallback supervisor를 fault
    injection으로 통합 테스트한다.
-4. OFF/미승인 defaults와 60초 이하 safety fallback RTO manifest로 binary/services를 배포한다.
+6. OFF/미승인 defaults와 60초 이하 safety fallback RTO manifest로 binary/services를 배포한다.
    배포 자체는 engine entry를 시작하지 않는다.
-5. Rollback은 entry worker를 제거하거나 OFF로 유지하되 existing safety loops와 journal
+7. Rollback은 entry worker를 제거하거나 OFF로 유지하되 existing safety loops와 journal
    lineage를 계속 읽고 `AMBIGUOUS` attempt는 capability-attested reconciliation으로만 해소한다.
 
 ## Open Questions

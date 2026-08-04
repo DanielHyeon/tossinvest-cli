@@ -10,9 +10,52 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
+
+func TestQFinalAccountBaseFXRefusalMatrixKRUS(t *testing.T) {
+	for _, market := range []string{"KR", "US"} {
+		for _, failure := range []string{"missing", "stale", "wrong-pair", "cross-market-owner"} {
+			t.Run(market+"/"+failure, func(t *testing.T) {
+				decisionID := "qfinal-account-base-refused-" + strings.ToLower(market) + "-" + failure
+				rig := newGuardian(t, func(options *execgw.RiskGuardianOptions) {
+					options.NewID = fixedIDs(decisionID, decisionID+"-nonce")
+				})
+				request := qFinalAccountBaseRequest(t, rig, "refused-"+strings.ToLower(market)+"-"+failure, market)
+				switch failure {
+				case "missing":
+					request.ClearFXAuthorityForTest()
+				case "stale":
+					request.Admission.Admission.Policy.FX.Evidence.FreshUntil = fixedNow.Add(-time.Nanosecond)
+					request.SetFXAuthorityForTest(request.Admission.Admission.Policy.FX)
+				case "wrong-pair":
+					request.Admission.Admission.Policy.AccountCurrency = request.Currency
+					if market == "KR" {
+						request.Admission.Admission.Policy.QuoteCurrency = "USD"
+					}
+				case "cross-market-owner":
+					if market == "KR" {
+						request.Admission.Owner.Key.Market = riskbucket.MarketUS
+					} else {
+						request.Admission.Owner.Key.Market = riskbucket.MarketKR
+					}
+				}
+				if _, err := rig.guardian.PrecheckQFinalEntry(request); err == nil {
+					t.Fatalf("%s %s minted a precheck", market, failure)
+				}
+				if rig.collections != 0 {
+					t.Fatalf("%s %s recollected %d times before refusal", market, failure, rig.collections)
+				}
+				if _, err := rig.journal.LookupDecision(context.Background(), decisionID); !errors.Is(err, journal.ErrDecisionNotFound) {
+					t.Fatalf("%s %s left decision authority: %v", market, failure, err)
+				}
+			})
+		}
+	}
+}
 
 func TestQFinalPrecheckCapsKRByGuardianAndAllMonetaryBucketsBeforeAtomicIssuance(t *testing.T) {
 	rig := newGuardian(t, func(options *execgw.RiskGuardianOptions) {
@@ -300,6 +343,86 @@ func qFinalKRRequest(t *testing.T, rig *guardianRig, suffix string, candidate ui
 		},
 		ExpectedPolicyVersion: rig.guardian.PolicyVersion(), ExpectedLimitsDigest: rig.guardian.LimitsDigest(),
 	}
+	request.SetFXAuthorityForTest(policy.FX)
+	return request
+}
+
+func qFinalAccountBaseRequest(t *testing.T, rig *guardianRig, suffix, market string) execgw.QFinalEntryIssuance {
+	t.Helper()
+	request := qFinalKRRequest(t, rig, suffix, 20)
+	if market == "KR" {
+		return request
+	}
+	if market != "US" {
+		t.Fatalf("unsupported account-base test market %q", market)
+	}
+
+	now := fixedNow
+	request.Market, request.Currency, request.Symbol = "US", "USD", "AAPL"
+	request.EntryPrice, request.StopPrice, request.TargetPrice = "50", "45", "60"
+	request.Account = risk.AccountState{
+		Mode: risk.ModeNormal, AllowedSymbols: []string{"AAPL"},
+		CashAvailable:     riskcalc.Money{Amount: "1000", Currency: "USD"},
+		OpenExposure:      riskcalc.Money{Amount: "0", Currency: "KRW"},
+		DailyRealizedLoss: riskcalc.Money{Amount: "0", Currency: "KRW"},
+		AccountEquity:     riskcalc.Money{Amount: "10000000", Currency: "KRW"},
+	}
+	policy := riskbucket.ReservePolicy{
+		AccountCurrency: "KRW", QuoteCurrency: "USD", EvaluatedAt: now,
+		Price: riskbucket.PriceEvidence{WorstExecutableQuote: "50", Evidence: riskbucket.Evidence{
+			Source: "official-order-contract", Version: "price-v1", Digest: "price-" + suffix,
+			Official: true, Frozen: true, ObservedAt: now.Add(-time.Second), FreshUntil: now.Add(time.Minute),
+		}},
+		FX: riskbucket.FXEvidence{RateQuoteToBase: "1400", Haircut: "1", Evidence: riskbucket.Evidence{
+			Source: "official-fx", Version: "fx-v1", Digest: "fx-" + suffix,
+			Official: true, Frozen: true, ObservedAt: now.Add(-time.Second), FreshUntil: now.Add(time.Minute),
+		}},
+		Fee: riskbucket.FeePolicy{FixedBaseMinor: "0", PerUnitBaseMinor: "0", MinimumBaseMinor: "0", Version: "fee-v1", Digest: "fee-" + suffix},
+	}
+	values := map[riskbucket.Dimension]string{
+		riskbucket.DimensionHorizon: "SHORT", riskbucket.DimensionMarket: "US", riskbucket.DimensionStrategy: "strategy-alpha",
+		riskbucket.DimensionSector: "sector-tech", riskbucket.DimensionSymbol: "AAPL",
+	}
+	buckets := make([]riskbucket.BucketSnapshot, 0, len(riskbucket.RequiredDimensionOrder()))
+	references := make([]journal.RiskBucketSnapshotReference, 0, len(riskbucket.RequiredDimensionOrder()))
+	for _, dimension := range riskbucket.RequiredDimensionOrder() {
+		key := riskbucket.BucketKey{Dimension: dimension, Value: values[dimension], PolicyVersion: "policy-v1"}
+		policyEvidence := riskbucket.Evidence{
+			Source: riskbucket.RiskPolicyAuthoritySource, Version: key.PolicyVersion,
+			Digest: "policy-" + suffix + "-" + string(dimension), Official: true, Frozen: true,
+			ObservedAt: now.Add(-time.Second), FreshUntil: now.Add(time.Minute),
+		}
+		policyProvenance, err := riskbucket.NewPolicyProvenance(key, policyEvidence)
+		if err != nil {
+			t.Fatal(err)
+		}
+		binding := riskbucket.BucketSnapshotBinding{
+			Key: key, LimitMinor: "700000", FilledMinor: "0", HeldMinor: "0", SnapshotVersion: "snapshot-v1",
+		}
+		snapshotEvidence := riskbucket.Evidence{
+			Source: riskbucket.RiskSnapshotAuthoritySource, Version: binding.SnapshotVersion,
+			Digest: "snapshot-" + suffix + "-" + string(dimension), Official: true, Frozen: true,
+			ObservedAt: now.Add(-time.Second), FreshUntil: now.Add(time.Minute),
+		}
+		snapshotProvenance, err := riskbucket.NewSnapshotProvenance(binding, snapshotEvidence)
+		if err != nil {
+			t.Fatal(err)
+		}
+		buckets = append(buckets, riskbucket.BucketSnapshot{
+			Key: key, LimitMinor: binding.LimitMinor, FilledMinor: binding.FilledMinor, HeldMinor: binding.HeldMinor,
+			SnapshotVersion: binding.SnapshotVersion, PolicyProvenance: policyProvenance, SnapshotProvenance: snapshotProvenance,
+		})
+		references = append(references, journal.RiskBucketSnapshotReference{
+			Key: key, SnapshotID: "snapshot-" + suffix + "-" + string(dimension), SnapshotDigest: snapshotEvidence.Digest,
+			SnapshotVersion: binding.SnapshotVersion, PolicyDigest: policyEvidence.Digest,
+			ObservedAt: snapshotEvidence.ObservedAt, FreshUntil: snapshotEvidence.FreshUntil,
+		})
+	}
+	request.Admission.Admission.Policy = policy
+	request.Admission.Admission.Buckets = buckets
+	request.Admission.Owner.Key.Market = riskbucket.MarketUS
+	request.Admission.Owner.Key.Symbol = "AAPL"
+	request.Admission.Snapshots = references
 	request.SetFXAuthorityForTest(policy.FX)
 	return request
 }

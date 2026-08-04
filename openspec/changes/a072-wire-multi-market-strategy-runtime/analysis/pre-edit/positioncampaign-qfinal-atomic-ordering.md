@@ -1,5 +1,4 @@
 # a065 campaign / a066 q_final atomic ordering
-
 ## Decision scope
 
 This document freezes the missing production ordering contract for both KR and US. It adds no Go
@@ -81,4 +80,3 @@ Guardian currency authority or dispatch lease.
 - scale-in reuses only the exact current campaign/owner token and advances one leg/version;
 - a committed plan without a dispatch lease produces zero Gateway/broker calls across restart;
 - KR/US token, campaign, bucket, currency and authority cross-substitution always fails closed.
-

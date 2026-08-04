@@ -28,13 +28,29 @@ var (
 // values were supplied to the pure admission calculation. The duplicated key,
 // version, digest and time range are checked before any row is written.
 type RiskBucketSnapshotReference struct {
-	Key             riskbucket.BucketKey
-	SnapshotID      string
-	SnapshotDigest  string
-	SnapshotVersion string
-	PolicyDigest    string
-	ObservedAt      time.Time
-	FreshUntil      time.Time
+	Key                                    riskbucket.BucketKey
+	SnapshotID                             string
+	SnapshotDigest                         string
+	SnapshotVersion                        string
+	PolicyDigest                           string
+	ObservedAt                             time.Time
+	FreshUntil                             time.Time
+	PolicyObservedAt, PolicyFreshUntil     time.Time
+	SnapshotObservedAt, SnapshotFreshUntil time.Time
+}
+
+func (r RiskBucketSnapshotReference) policyWindow() (time.Time, time.Time) {
+	if !r.PolicyObservedAt.IsZero() || !r.PolicyFreshUntil.IsZero() {
+		return r.PolicyObservedAt, r.PolicyFreshUntil
+	}
+	return r.ObservedAt, r.FreshUntil
+}
+
+func (r RiskBucketSnapshotReference) snapshotWindow() (time.Time, time.Time) {
+	if !r.SnapshotObservedAt.IsZero() || !r.SnapshotFreshUntil.IsZero() {
+		return r.SnapshotObservedAt, r.SnapshotFreshUntil
+	}
+	return r.ObservedAt, r.FreshUntil
 }
 
 // RiskBucketAdmissionPlan is the one transaction boundary between the existing
@@ -209,7 +225,8 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 		if err != nil {
 			return RiskBucketAdmissionReceipt{}, err
 		}
-		_, err = tx.ExecContext(ctx, `INSERT OR IGNORE INTO risk_bucket_snapshots(snapshot_id,snapshot_digest,snapshot_source,record_digest,bucket_dimension,bucket_value,policy_version,limit_minor,filled_minor,held_minor,snapshot_version,policy_digest,observed_at,fresh_until,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ref.SnapshotID, ref.SnapshotDigest, bound.SnapshotEvidence.Source, snapshotRecordDigest, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, bucket.LimitMinor, bucket.FilledMinor, bucket.HeldMinor, ref.SnapshotVersion, ref.PolicyDigest, canonicalRiskTime(ref.ObservedAt), canonicalRiskTime(ref.FreshUntil), canonicalRiskTime(plan.CreatedAt))
+		snapshotObserved, snapshotFresh := ref.snapshotWindow()
+		_, err = tx.ExecContext(ctx, `INSERT OR IGNORE INTO risk_bucket_snapshots(snapshot_id,snapshot_digest,snapshot_source,record_digest,bucket_dimension,bucket_value,policy_version,limit_minor,filled_minor,held_minor,snapshot_version,policy_digest,observed_at,fresh_until,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ref.SnapshotID, ref.SnapshotDigest, bound.SnapshotEvidence.Source, snapshotRecordDigest, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, bucket.LimitMinor, bucket.FilledMinor, bucket.HeldMinor, ref.SnapshotVersion, ref.PolicyDigest, canonicalRiskTime(snapshotObserved), canonicalRiskTime(snapshotFresh), canonicalRiskTime(plan.CreatedAt))
 		if err != nil {
 			return RiskBucketAdmissionReceipt{}, err
 		}
@@ -281,10 +298,12 @@ func validateRiskBucketAdmission(plan RiskBucketAdmissionPlan, decision riskbuck
 		bucket := plan.Admission.Buckets[i]
 		bound := bucket.BoundEvidence()
 		policyEvidence, snapshotEvidence := bound.PolicyEvidence, bound.SnapshotEvidence
+		policyObserved, policyFresh := ref.policyWindow()
+		snapshotObserved, snapshotFresh := ref.snapshotWindow()
 		if cap.Key.Dimension != order[i] || ref.Key != cap.Key || bucket.Key != cap.Key || bound.Key != cap.Key || bound.Snapshot.Key != cap.Key || ref.SnapshotID == "" ||
 			ref.SnapshotVersion != cap.SnapshotVersion || ref.SnapshotVersion != bucket.SnapshotVersion || ref.SnapshotVersion != bound.Snapshot.SnapshotVersion ||
-			policyEvidence.Source != riskbucket.RiskPolicyAuthoritySource || policyEvidence.Version != cap.Key.PolicyVersion || policyEvidence.Digest != ref.PolicyDigest || !policyEvidence.Official || !policyEvidence.Frozen || !policyEvidence.ObservedAt.Equal(ref.ObservedAt) || !policyEvidence.FreshUntil.Equal(ref.FreshUntil) ||
-			snapshotEvidence.Source != riskbucket.RiskSnapshotAuthoritySource || snapshotEvidence.Version != ref.SnapshotVersion || snapshotEvidence.Digest != ref.SnapshotDigest || !snapshotEvidence.Official || !snapshotEvidence.Frozen || !snapshotEvidence.ObservedAt.Equal(ref.ObservedAt) || !snapshotEvidence.FreshUntil.Equal(ref.FreshUntil) ||
+			policyEvidence.Source != riskbucket.RiskPolicyAuthoritySource || policyEvidence.Version != cap.Key.PolicyVersion || policyEvidence.Digest != ref.PolicyDigest || !policyEvidence.Official || !policyEvidence.Frozen || !policyEvidence.ObservedAt.Equal(policyObserved) || !policyEvidence.FreshUntil.Equal(policyFresh) ||
+			snapshotEvidence.Source != riskbucket.RiskSnapshotAuthoritySource || snapshotEvidence.Version != ref.SnapshotVersion || snapshotEvidence.Digest != ref.SnapshotDigest || !snapshotEvidence.Official || !snapshotEvidence.Frozen || !snapshotEvidence.ObservedAt.Equal(snapshotObserved) || !snapshotEvidence.FreshUntil.Equal(snapshotFresh) ||
 			bound.Snapshot.LimitMinor != bucket.LimitMinor || bound.Snapshot.FilledMinor != bucket.FilledMinor || bound.Snapshot.HeldMinor != bucket.HeldMinor {
 			return fmt.Errorf("%w: %s", ErrRiskBucketSnapshotMismatch, cap.Key.Dimension)
 		}

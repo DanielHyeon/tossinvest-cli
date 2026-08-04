@@ -36,8 +36,9 @@ type RiskBucketActualFillPlan struct {
 type RiskBucketOrderReleaseReason string
 
 const (
-	RiskBucketReleaseCancel RiskBucketOrderReleaseReason = "CANCEL"
-	RiskBucketReleaseExpiry RiskBucketOrderReleaseReason = "EXPIRY"
+	RiskBucketReleaseCancel         RiskBucketOrderReleaseReason = "CANCEL"
+	RiskBucketReleaseExpiry         RiskBucketOrderReleaseReason = "EXPIRY"
+	RiskBucketReleaseBrokerTerminal RiskBucketOrderReleaseReason = "BROKER_TERMINAL"
 )
 
 type RiskBucketOrderRelease struct {
@@ -246,6 +247,44 @@ func (j *Journal) applyRiskBucketFillInTx(ctx context.Context, tx *sql.Tx, fill 
 	return j.recordRiskBucketStateTx(ctx, tx, key, "FILL_APPLIED", event.FillID, eventDigest, fill.CommittedAt)
 }
 
+// releaseTerminalRiskBucketOrderInTx releases the unfilled portion of a
+// locally-owned BUY after brokerstate derived a terminal lifecycle. It shares
+// RecordFill's or strategy settlement's transaction; semantic damage latches
+// the scope instead of rejecting broker evidence.
+func (j *Journal) releaseTerminalRiskBucketOrderInTx(ctx context.Context, tx *sql.Tx, fill AppliedFill) error {
+	if !fill.Terminal || strings.ToUpper(strings.TrimSpace(fill.Side)) != "BUY" {
+		return nil
+	}
+	order, found, err := riskBucketOrderForFill(ctx, tx, fill)
+	if err != nil {
+		if errors.Is(err, ErrRiskBucketReplayMismatch) {
+			return latchRiskBucketFillFailureForScope(ctx, tx, fill, err.Error())
+		}
+		return err
+	}
+	if !found {
+		return nil
+	}
+	if err := verifyRiskBucketStateDigest(ctx, tx, order.ownerKey()); err != nil {
+		if isRiskBucketSemanticError(err) {
+			return latchRiskBucketFillFailure(ctx, tx, order.ownerKey(), fill, "REPLAY_MISMATCH", err.Error())
+		}
+		return err
+	}
+	if order.state == "RELEASED" {
+		return nil
+	}
+	if order.state == "REPLACED" {
+		return latchRiskBucketFillFailure(ctx, tx, order.ownerKey(), fill, "REPLAY_MISMATCH",
+			"terminal predecessor reservation belongs to its successor")
+	}
+	_, err = j.recordReleasedRiskBucketOrderInTx(ctx, tx, order, RiskBucketReleaseBrokerTerminal, fill.CommittedAt)
+	if errors.Is(err, ErrRiskBucketReplayMismatch) {
+		return latchRiskBucketFillFailure(ctx, tx, order.ownerKey(), fill, "REPLAY_MISMATCH", err.Error())
+	}
+	return err
+}
+
 func isRiskBucketSemanticError(err error) bool {
 	return errors.Is(err, ErrRiskBucketReplayMismatch) || errors.Is(err, ErrRiskBucketSnapshotMismatch) || errors.Is(err, ErrRiskBucketStateUnknown) || strings.Contains(err.Error(), "sql: Scan error")
 }
@@ -334,12 +373,22 @@ func (j *Journal) releaseRiskBucketOrder(ctx context.Context, req RiskBucketOrde
 	if err := verifyRiskBucketStateDigest(ctx, tx, order.ownerKey()); err != nil {
 		return RiskBucketOrderReleaseResult{}, err
 	}
+	result, err := j.recordReleasedRiskBucketOrderInTx(ctx, tx, order, req.Reason, canonicalRiskTime(req.ReleasedAt))
+	if err != nil {
+		return RiskBucketOrderReleaseResult{}, err
+	}
+	if err := tx.Commit(); err != nil {
+		return RiskBucketOrderReleaseResult{}, err
+	}
+	return result, nil
+}
+
+func releaseRiskBucketOrderInTx(ctx context.Context, tx *sql.Tx, order riskBucketOrderRecord,
+	reason RiskBucketOrderReleaseReason, releasedAt string,
+) (RiskBucketOrderReleaseResult, error) {
 	if order.state == "RELEASED" {
-		if order.releaseReason != string(req.Reason) {
+		if order.releaseReason != string(reason) {
 			return RiskBucketOrderReleaseResult{}, fmt.Errorf("%w: release reason", ErrRiskBucketReplayMismatch)
-		}
-		if err := tx.Commit(); err != nil {
-			return RiskBucketOrderReleaseResult{}, err
 		}
 		return RiskBucketOrderReleaseResult{AlreadyReleased: true}, nil
 	}
@@ -363,20 +412,27 @@ func (j *Journal) releaseRiskBucketOrder(ctx context.Context, req RiskBucketOrde
 		if err != nil {
 			return RiskBucketOrderReleaseResult{}, err
 		}
-		if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_reservations SET held_minor=?,state=CASE WHEN ?='0' THEN 'RELEASED' ELSE state END,updated_at=? WHERE reservation_id=?`, next, next, canonicalRiskTime(req.ReleasedAt), reservationID); err != nil {
+		if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_reservations SET held_minor=?,state=CASE WHEN ?='0' THEN 'RELEASED' ELSE state END,updated_at=? WHERE reservation_id=?`, next, next, releasedAt, reservationID); err != nil {
 			return RiskBucketOrderReleaseResult{}, err
 		}
 	}
-	if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_orders SET state='RELEASED',release_reason=?,released_at=?,updated_at=? WHERE order_key=?`, string(req.Reason), canonicalRiskTime(req.ReleasedAt), canonicalRiskTime(req.ReleasedAt), order.orderKey); err != nil {
-		return RiskBucketOrderReleaseResult{}, err
-	}
-	if err := j.recordRiskBucketStateTx(ctx, tx, order.ownerKey(), "ORDER_RELEASED", order.orderKey, string(req.Reason), canonicalRiskTime(req.ReleasedAt)); err != nil {
-		return RiskBucketOrderReleaseResult{}, err
-	}
-	if err := tx.Commit(); err != nil {
+	if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_orders SET state='RELEASED',release_reason=?,released_at=?,updated_at=? WHERE order_key=?`, string(reason), releasedAt, releasedAt, order.orderKey); err != nil {
 		return RiskBucketOrderReleaseResult{}, err
 	}
 	return RiskBucketOrderReleaseResult{Released: true}, nil
+}
+
+func (j *Journal) recordReleasedRiskBucketOrderInTx(ctx context.Context, tx *sql.Tx,
+	order riskBucketOrderRecord, reason RiskBucketOrderReleaseReason, releasedAt string,
+) (RiskBucketOrderReleaseResult, error) {
+	result, err := releaseRiskBucketOrderInTx(ctx, tx, order, reason, releasedAt)
+	if err != nil || result.AlreadyReleased {
+		return result, err
+	}
+	if err := j.recordRiskBucketStateTx(ctx, tx, order.ownerKey(), "ORDER_RELEASED", order.orderKey, string(reason), releasedAt); err != nil {
+		return RiskBucketOrderReleaseResult{}, err
+	}
+	return result, nil
 }
 
 type riskBucketOrderRecord struct {

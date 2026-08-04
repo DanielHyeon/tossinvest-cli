@@ -13,6 +13,17 @@ func Evaluate(request Request) Result {
 	return evaluateWith(request, strategyrouter.Route, defaultRegistry())
 }
 
+// Propose is the fixed cap-free production composition. Its accepted result is
+// sealed as q_candidate authority and can be consumed by a066, but it is not a
+// Guardian decision, reservation, dispatch lease, or executable order.
+func Propose(request Request) Result {
+	result := evaluateWith(request, strategyrouter.Route, proposalRegistry())
+	if result.Code == RefusalNone {
+		result = sealProposalResult(result)
+	}
+	return result
+}
+
 func evaluateWith(request Request, route func(strategyrouter.RouteRequest) strategyrouter.RouteResult, lanes registry) Result {
 	result := Result{CommonSafetyIndependent: true}
 	if !validApproved(request.Approved) {
@@ -45,6 +56,7 @@ func evaluateWith(request Request, route func(strategyrouter.RouteRequest) strat
 		result.Lineage = sealLineage(lineage)
 		return result
 	}
+	lineage.RouterID = strategyrouter.RouterID
 	lineage.RouterRelease = strategyrouter.RouterRelease
 	lineage.Horizon = descriptor.Horizon
 	lineage.LaneID = descriptor.LaneID

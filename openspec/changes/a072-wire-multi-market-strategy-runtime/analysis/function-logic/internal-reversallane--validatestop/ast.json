@@ -1,15 +1,15 @@
 {
   "file": "internal/reversallane/evaluate.go",
-  "source_sha256": "37becdf61365356e4d3bd1f386d299dbc5bfc6ed6bf2c1e09cac1fea3cfb392f",
+  "source_sha256": "525db732e564b987d6cf8d1d5ab29a2f54a18e8ed63d0600abf76c9dac692e58",
   "package": "reversallane",
   "function": "validateStop",
   "signature": "validateStop(params=4, results=1)",
   "start": {
-    "line": 84,
+    "line": 152,
     "column": 1
   },
   "end": {
-    "line": 100,
+    "line": 168,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 85,
+        "line": 153,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 89,
+        "line": 157,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 92,
+        "line": 160,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 96,
+        "line": 164,
         "column": 2
       }
     }
@@ -50,35 +50,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 86,
+        "line": 154,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 90,
+        "line": 158,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 93,
+        "line": 161,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 97,
+        "line": 165,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 99,
+        "line": 167,
         "column": 2
       }
     }
@@ -87,7 +87,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 85,
+        "line": 153,
         "column": 6
       },
       "text": "candidate.valid"
@@ -95,7 +95,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 88,
+        "line": 156,
         "column": 33
       },
       "text": "parseMinor"
@@ -103,7 +103,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 95,
+        "line": 163,
         "column": 25
       },
       "text": "parseMinor"
@@ -111,7 +111,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 96,
+        "line": 164,
         "column": 17
       },
       "text": "candidateMinor.Cmp"
@@ -121,14 +121,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 88,
+        "line": 156,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 95,
+        "line": 163,
         "column": 2
       }
     }

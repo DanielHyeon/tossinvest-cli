@@ -1,0 +1,211 @@
+{
+  "file": "internal/protectionreadiness/attestation_test.go",
+  "source_sha256": "2fa5888a4648fb4546bddf1970c4f8f22f7ab68b6953e7ed687a4c10fcc2fb48",
+  "package": "protectionreadiness",
+  "function": "marketInputForBody",
+  "receiver": "readinessFixture",
+  "signature": "readinessFixture.marketInputForBody(params=3, results=1)",
+  "start": {
+    "line": 273,
+    "column": 1
+  },
+  "end": {
+    "line": 296,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 276,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 292,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 295,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 20
+      },
+      "text": "canonicalAttestationBody"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 68
+      },
+      "text": "base64.StdEncoding.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 102
+      },
+      "text": "ed25519.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 15
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 284,
+        "column": 15
+      },
+      "text": "newObservedFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 21
+      },
+      "text": "newSupervisorBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 188
+      },
+      "text": "digestOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 213
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 275,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

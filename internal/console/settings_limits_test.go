@@ -251,22 +251,29 @@ func TestTheScreenNamesTheMatchingTier(t *testing.T) {
 	}
 }
 
-// TestTheApplyAnswerNamesTheMarketTheCurrencyCloses (design D8).
-func TestTheApplyAnswerNamesTheMarketTheCurrencyCloses(t *testing.T) {
-	for _, tc := range []struct{ tier, closed string }{
-		{"us-small-live", "국내"},
-		{"kr-small-live", "미국"},
+// TestTheApplyAnswerNamesPairedAccountBaseFXRequirements (a072 paired delivery).
+func TestTheApplyAnswerNamesPairedAccountBaseFXRequirements(t *testing.T) {
+	for _, tc := range []struct {
+		tier string
+		want []string
+	}{
+		{"us-small-live", []string{"계좌 기준 통화", "US", "identity FX", "KR", "KRW→USD", "같은 구현 웨이브"}},
+		{"kr-small-live", []string{"계좌 기준 통화", "KR", "identity FX", "US", "USD→KRW", "같은 구현 웨이브"}},
 	} {
 		seam := &fakeLimits{}
 		h := limitsHarness(t, seam)
 		h.authenticate(t)
 		page := body(t, h.post(t, "/settings/limits/preset",
 			url.Values{"csrf": {h.csrf}, "tier": {tc.tier}}))
-		if !strings.Contains(page, tc.closed) {
-			t.Errorf("%s: the answer does not say %s 자동 진입이 닫힌다", tc.tier, tc.closed)
+		for _, want := range tc.want {
+			if !strings.Contains(page, want) {
+				t.Errorf("%s: paired account-base explanation does not contain %q", tc.tier, want)
+			}
 		}
-		if !strings.Contains(page, "통화") {
-			t.Errorf("%s: the answer does not mention the limit currency", tc.tier)
+		for _, stale := range []string{"통화 불일치로 닫힌다", "운영 안정 후"} {
+			if strings.Contains(page, stale) {
+				t.Errorf("%s: stale sequential/single-market consequence remains: %q", tc.tier, stale)
+			}
 		}
 	}
 }

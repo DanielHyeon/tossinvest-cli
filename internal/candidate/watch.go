@@ -339,7 +339,7 @@ func Assess(ctx context.Context, store *Store, opts AssessOptions) ([]Verdict, e
 		window = DefaultAccelerationWindow
 	}
 
-	summaries, err := store.Summaries(ctx, opts.At)
+	summaries, err := store.summariesForMarket(ctx, opts.At, market)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +354,7 @@ func Assess(ctx context.Context, store *Store, opts AssessOptions) ([]Verdict, e
 
 	var out []Verdict
 	for _, summary := range summaries {
-		if summary.Market != market || summary.State == StateExpired {
+		if summary.State == StateExpired {
 			continue
 		}
 		out = append(out, assessOne(summary, bySymbol[summary.Symbol], opts.At,

@@ -188,6 +188,10 @@ func newRootCmd() *cobra.Command {
 		// retention and the free-space floor. It places nothing — the package behind
 		// it cannot see an order path at all — and nothing existing changes.
 		newCandidateCmd(opts),
+		// performance projection is a separate derived-data lane. It reads the
+		// trading journal through journal.ReadOnly and writes only performance.db;
+		// console/httpapi retain their read-only capability boundary.
+		newPerformanceCmd(opts),
 	)
 
 	return cmd

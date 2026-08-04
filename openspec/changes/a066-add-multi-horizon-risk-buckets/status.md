@@ -15,9 +15,9 @@
 - The source interface and material constructors are package-private, returned entries are value
   copies, and the bundle has a canonical SHA-256 seal. Caller-provided authority strings cannot mint
   a production source.
-- No production loader exists yet, so the public constructor returns
-  `ErrRiskSnapshotAuthorityUnavailable`. This checkpoint performs no journal, broker, activation or
-  runtime mutation and does not enable live entry.
+- The original zero-argument constructor still fails closed, while the new package-owned production
+  loader consumes exact signed per-market policy, sealed strategy/FX authority and schema-v26 journal
+  usage. It has no writer, signer, activation or execution capability and does not enable live entry.
 
 ## Sealed KR/US FX-authority checkpoint
 

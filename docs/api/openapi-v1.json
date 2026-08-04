@@ -2305,6 +2305,79 @@
           }
         }
       },
+      "PerformanceAmountMetric": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "value", "currency"],
+        "properties": {
+          "status": {"type": "string", "enum": ["complete", "link_missing", "not_measured", "insufficient_sample"]},
+          "value": {"type": "string"},
+          "currency": {"type": "string"}
+        }
+      },
+      "PerformancePnLBreakdown": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["currency", "grossPnl", "entryFees", "exitFees", "taxes", "fxCost", "netPnl", "roundingResidual", "fxSource", "fxSourceVersion", "fxAsOf", "roundingVersion"],
+        "properties": {
+          "currency": {"type": "string"},
+          "grossPnl": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "entryFees": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "exitFees": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "taxes": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "fxCost": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "netPnl": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "roundingResidual": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "fxSource": {"type": "string"},
+          "fxSourceVersion": {"type": "string"},
+          "fxAsOf": {"type": ["string", "null"], "format": "date-time"},
+          "roundingVersion": {"type": "string"}
+        }
+      },
+      "PerformanceCloseLeg": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["closeId", "closeLegId", "fillId", "quantity", "entryBasis", "exitProceeds", "source", "reporting"],
+        "properties": {
+          "closeId": {"type": "string"},
+          "closeLegId": {"type": "string"},
+          "fillId": {"type": "string"},
+          "quantity": {"type": "string"},
+          "entryBasis": {"type": "string"},
+          "exitProceeds": {"type": "string"},
+          "source": {"$ref": "#/components/schemas/PerformancePnLBreakdown"},
+          "reporting": {"$ref": "#/components/schemas/PerformancePnLBreakdown"}
+        }
+      },
+      "PerformanceAttribution": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["market", "ticker", "laneId", "laneVersion", "campaignId", "legId", "positionId", "policyId", "policyVersion", "lineageStatus", "missingLineage", "missingMeasurements", "acquiredQuantity", "closedQuantity", "residualQuantity", "fullyClosed", "totalEntryBasis", "allocatedEntryBasis", "residualEntryBasis", "source", "reporting", "closeLegs"],
+        "properties": {
+          "market": {"type": "string", "enum": ["KR", "US"]},
+          "ticker": {"type": "string"},
+          "laneId": {"type": "string"},
+          "laneVersion": {"type": "string"},
+          "campaignId": {"type": "string"},
+          "legId": {"type": "string"},
+          "positionId": {"type": "string"},
+          "policyId": {"type": "string"},
+          "policyVersion": {"type": "string"},
+          "lineageStatus": {"type": "string", "enum": ["complete", "link_missing"]},
+          "missingLineage": {"type": "array", "items": {"type": "string"}},
+          "missingMeasurements": {"type": "array", "items": {"type": "string"}},
+          "acquiredQuantity": {"type": "string"},
+          "closedQuantity": {"type": "string"},
+          "residualQuantity": {"type": "string"},
+          "fullyClosed": {"type": "boolean"},
+          "totalEntryBasis": {"type": "string"},
+          "allocatedEntryBasis": {"type": "string"},
+          "residualEntryBasis": {"type": "string"},
+          "source": {"$ref": "#/components/schemas/PerformancePnLBreakdown"},
+          "reporting": {"$ref": "#/components/schemas/PerformancePnLBreakdown"},
+          "closeLegs": {"type": "array", "items": {"$ref": "#/components/schemas/PerformanceCloseLeg"}}
+        }
+      },
       "Performance": {
         "type": "object",
         "description": "Fixed-query performance result, bounded aggregates, and completeness counts.",
@@ -2313,7 +2386,8 @@
           "query",
           "newestSourceAt",
           "aggregates",
-          "states"
+          "states",
+          "attributions"
         ],
         "properties": {
           "query": {
@@ -2332,6 +2406,11 @@
             "items": {
               "$ref": "#/components/schemas/PerformanceAggregate"
             }
+          },
+          "attributions": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {"$ref": "#/components/schemas/PerformanceAttribution"}
           },
           "states": {
             "type": "object",
@@ -2531,9 +2610,21 @@
         "additionalProperties": false,
         "required": ["KR", "US"],
         "properties": {
-          "KR": {"$ref": "#/components/schemas/StrategyRuntimeMarket"},
-          "US": {"$ref": "#/components/schemas/StrategyRuntimeMarket"}
+          "KR": {"$ref": "#/components/schemas/StrategyRuntimeMarketKR"},
+          "US": {"$ref": "#/components/schemas/StrategyRuntimeMarketUS"}
         }
+      },
+      "StrategyRuntimeMarketKR": {
+        "allOf": [
+          {"$ref": "#/components/schemas/StrategyRuntimeMarket"},
+          {"type": "object", "properties": {"market": {"const": "KR"}}}
+        ]
+      },
+      "StrategyRuntimeMarketUS": {
+        "allOf": [
+          {"$ref": "#/components/schemas/StrategyRuntimeMarket"},
+          {"type": "object", "properties": {"market": {"const": "US"}}}
+        ]
       },
       "StrategyRuntimeMarket": {
         "type": "object",

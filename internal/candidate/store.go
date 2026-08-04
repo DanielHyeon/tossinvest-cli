@@ -1689,14 +1689,26 @@ type Summary struct {
 // than swept, so a candidate that cooled before a restart reads as expired
 // afterwards without anything having run in between.
 func (s *Store) Summaries(ctx context.Context, at time.Time) ([]Summary, error) {
+	return s.querySummaries(ctx, at, "", nil)
+}
+
+func (s *Store) summariesForMarket(ctx context.Context, at time.Time, market string) ([]Summary, error) {
+	market = strings.TrimSpace(market)
+	if market == "" {
+		return []Summary{}, nil
+	}
+	return s.querySummaries(ctx, at, " WHERE market=?", []any{market})
+}
+
+func (s *Store) querySummaries(ctx context.Context, at time.Time, where string, args []any) ([]Summary, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT market, symbol, first_seen_at, last_seen_at, cooled_at,
 		       sources, sources_attempted, sources_responded, degraded,
 		       first_price, first_price_at, first_price_source,
 		       first_rank, first_rank_total, first_rank_at, first_rank_source,
 		       first_rank_newly_listed, first_rank_requested
-		  FROM candidates
-		 ORDER BY market, symbol`)
+		  FROM candidates`+where+`
+		 ORDER BY market, symbol`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("candidate: reading candidate summaries: %w", err)
 	}

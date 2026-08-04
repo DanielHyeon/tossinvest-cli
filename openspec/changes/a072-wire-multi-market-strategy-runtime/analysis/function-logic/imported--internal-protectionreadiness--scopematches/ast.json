@@ -1,0 +1,29 @@
+{
+  "file": "internal/protectionreadiness/attestation.go",
+  "source_sha256": "130e1174f65d407f68b78273c6e3f8c5cc1c373e6fd33274aa9b93e9d118e502",
+  "package": "protectionreadiness",
+  "function": "scopeMatches",
+  "signature": "scopeMatches(params=2, results=1)",
+  "start": {
+    "line": 126,
+    "column": 1
+  },
+  "end": {
+    "line": 131,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

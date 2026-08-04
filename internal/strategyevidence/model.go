@@ -28,9 +28,10 @@ const (
 type SourceAuthority string
 
 const (
-	AuthorityOpenDART SourceAuthority = "opendart"
-	AuthorityKRX      SourceAuthority = "krx"
-	AuthoritySEC      SourceAuthority = "sec_edgar"
+	AuthorityOpenDART    SourceAuthority = "opendart"
+	AuthorityKRX         SourceAuthority = "krx"
+	AuthoritySEC         SourceAuthority = "sec_edgar"
+	AuthorityTossOpenAPI SourceAuthority = "toss_open_api"
 )
 
 type Availability string
@@ -193,7 +194,7 @@ func normalizeHeader(in Header) (Header, error) {
 
 func authorityValid(authority SourceAuthority) bool {
 	switch authority {
-	case AuthorityOpenDART, AuthorityKRX, AuthoritySEC:
+	case AuthorityOpenDART, AuthorityKRX, AuthoritySEC, AuthorityTossOpenAPI:
 		return true
 	default:
 		return false
@@ -206,6 +207,8 @@ func authoritySupportsMarket(authority SourceAuthority, market marketclock.Marke
 		return market == marketclock.MarketKR
 	case AuthoritySEC:
 		return market == marketclock.MarketUS
+	case AuthorityTossOpenAPI:
+		return market == marketclock.MarketKR || market == marketclock.MarketUS
 	default:
 		return false
 	}

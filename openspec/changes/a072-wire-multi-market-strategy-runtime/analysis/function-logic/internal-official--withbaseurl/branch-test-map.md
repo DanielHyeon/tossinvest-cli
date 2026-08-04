@@ -1,5 +1,5 @@
-# Branch Test Map: `WithBaseURL`
+# Branch Test Map: WithBaseURL
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | post-construction base option replay is locked and ignored | `TestClientConfigurationCannotBeMutatedByRetainedOptionPointer` | yes (base changed to attacker origin) | yes |
+| B1 | if at line 60 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

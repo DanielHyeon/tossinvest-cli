@@ -109,15 +109,40 @@ func EvaluateUS(request EvaluationRequest) Outcome {
 	return evaluate(request, MarketUS, SourceEDGAR, EvaluateUSEvidence)
 }
 
+// ProposeKR evaluates the KR weekly lane without a066 cap authority. A
+// successful Quantity is q_candidate only and the durable weekly reservation
+// is still mandatory.
+func ProposeKR(request EvaluationRequest) Outcome {
+	return evaluateStage(request, MarketKR, SourceOpenDART, EvaluateKREvidence, evaluationProposal)
+}
+
+// ProposeUS is the paired US weekly q_candidate proposal path.
+func ProposeUS(request EvaluationRequest) Outcome {
+	return evaluateStage(request, MarketUS, SourceEDGAR, EvaluateUSEvidence, evaluationProposal)
+}
+
+type evaluationStage uint8
+
+const (
+	evaluationAdmitted evaluationStage = iota
+	evaluationProposal
+)
+
 func evaluate(request EvaluationRequest, market Market, source DisclosureSource, evidenceEvaluator func(DisclosureEvidence, DisclosureConfig) EvidenceResult) Outcome {
+	return evaluateStage(request, market, source, evidenceEvaluator, evaluationAdmitted)
+}
+
+func evaluateStage(request EvaluationRequest, market Market, source DisclosureSource, evidenceEvaluator func(DisclosureEvidence, DisclosureConfig) EvidenceResult, stage evaluationStage) Outcome {
 	lineage := ResultLineage{Market: market, Source: source, LaneID: request.Plan.laneID, LaneVersion: request.Plan.laneVersion, CampaignID: request.Plan.campaignID,
 		CandidateID: request.CandidateID, Symbol: request.Plan.symbol, FilingID: request.Evidence.FilingID, RevisionID: request.Evidence.RevisionID,
 		SupersededRevisionID: request.Evidence.SupersededRevisionID, RevisionSequence: request.Evidence.RevisionSequence,
 		ModelID: request.Evidence.ModelID, ModelVersion: request.Evidence.ModelVersion, ConfigDigest: request.Evidence.ModelConfigDigest,
 		EvidenceDigest: request.Evidence.EvidenceDigest, CalendarGeneration: request.MarketWeek.CalendarGeneration, CalendarDigest: request.MarketWeek.CalendarDigest,
 		SessionDate: request.MarketWeek.SessionDate, StableWeek: request.MarketWeek.StableIdentity, ReservationID: request.ReservationID, PlanDigest: request.Plan.digest,
-		PositionGeneration: request.Plan.positionGeneration, RiskBudgetMinor: request.Plan.riskBudgetMinor, PlannedLegOrdinal: request.Leg.Ordinal,
-		CapSnapshotID: request.Cap.snapshotID, CapReservationMinor: request.Cap.reservationMinor, CapReservationQuantity: request.Cap.reservationQuantity}
+		PositionGeneration: request.Plan.positionGeneration, RiskBudgetMinor: request.Plan.riskBudgetMinor, PlannedLegOrdinal: request.Leg.Ordinal}
+	if stage == evaluationAdmitted {
+		lineage.CapSnapshotID, lineage.CapReservationMinor, lineage.CapReservationQuantity = request.Cap.snapshotID, request.Cap.reservationMinor, request.Cap.reservationQuantity
+	}
 	if request.Leg.Ordinal >= 1 && request.Leg.Ordinal <= len(request.Plan.legCeilings) {
 		lineage.PlannedLegCeiling = request.Plan.legCeilings[request.Leg.Ordinal-1]
 	}
@@ -184,11 +209,18 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	if request.Reservations.PositiveLegCount(request.Plan.campaignID, market) >= 7 {
 		return refuse(RefusalPlanExhausted)
 	}
-	quantity := PlannedLegQuantity(request.Plan, request.Leg, request.Cap.qFinal)
+	ceilings := request.Plan.LegCeilings()
+	if request.Leg.FilledQuantity >= ceilings[request.Leg.Ordinal-1] {
+		return refuse(RefusalPlanExhausted)
+	}
+	quantity := ceilings[request.Leg.Ordinal-1] - request.Leg.FilledQuantity
+	if stage == evaluationAdmitted {
+		quantity = PlannedLegQuantity(request.Plan, request.Leg, request.Cap.qFinal)
+	}
 	if quantity == 0 {
 		return refuse(RefusalPlanExhausted)
 	}
-	if !request.Cap.validAt(request.Plan, request.Evidence.EvaluatedAt, quantity) {
+	if stage == evaluationAdmitted && !request.Cap.validAt(request.Plan, request.Evidence.EvaluatedAt, quantity) {
 		return refuse(RefusalCapInvalid)
 	}
 	savedStopMinor, savedStopOK := request.savedStopAuthority.effectivePrice(request.Plan, request.Evidence, request.SavedEffectiveStopMinor)
@@ -211,13 +243,18 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	}
 	entryPrice, entryOK := parseUnsigned(request.EntryPriceMinor)
 	stopPrice, stopOK := parseUnsigned(effectiveStop)
-	maxDistance, maxOK := parseUnsigned(request.Cap.maxStopDistanceMinor)
-	if !entryOK || !stopOK || !maxOK || entryPrice.Cmp(stopPrice) <= 0 {
+	if !entryOK || !stopOK || entryPrice.Cmp(stopPrice) <= 0 {
 		return refuse(RefusalStopInvalid)
 	}
-	distance := new(big.Int).Sub(entryPrice, stopPrice)
-	if distance.Cmp(maxDistance) > 0 {
-		return refuse(RefusalStructuralStopCap)
+	if stage == evaluationAdmitted {
+		maxDistance, maxOK := parseUnsigned(request.Cap.maxStopDistanceMinor)
+		if !maxOK {
+			return refuse(RefusalStopInvalid)
+		}
+		distance := new(big.Int).Sub(entryPrice, stopPrice)
+		if distance.Cmp(maxDistance) > 0 {
+			return refuse(RefusalStructuralStopCap)
+		}
 	}
 	rr := CalculateRR(RRInput{EntryPriceMinor: request.EntryPriceMinor, StagedTargetMinor: request.StagedTargetMinor, FairValueMinor: evidenceResult.FairValueMinor,
 		EffectiveStopMinor: effectiveStop, Quantity: quantity, EntryCostsMinor: request.EntryCostsMinor, EstimatedExitCostsLeviesMinor: request.EstimatedExitCostsLeviesMinor,
@@ -232,7 +269,11 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	if !entryTermsOK || !stopTermsOK || !targetTermsOK || stopPrice.Cmp(entryPrice) >= 0 || entryPrice.Cmp(targetPrice) >= 0 {
 		return refuse(RefusalExecutionTermsInvalid)
 	}
-	if code := AdmitRisk(request.Plan, request.Risk, request.Cap); code != "" {
+	if stage == evaluationAdmitted {
+		if code := AdmitRisk(request.Plan, request.Risk, request.Cap); code != "" {
+			return refuse(code)
+		}
+	} else if code := admitExistingRisk(request.Plan, request.Risk); code != "" {
 		return refuse(code)
 	}
 	policy := executionPolicy(request.executionTerms, lineage)
@@ -249,6 +290,28 @@ func evaluate(request EvaluationRequest, market Market, source DisclosureSource,
 	targetProvenance := PriceProvenance{targetPrice.String(), "weekly-rr-capped-target", "rr-policy-v1", policy.Identity, request.Evidence.EvaluatedAt.UTC().Format(time.RFC3339Nano), request.Plan.quoteCurrency, "minor-v1", scale}
 	return Outcome{Kind: OutcomeDecision, Quantity: quantity, EntryPriceMinor: entryPrice.String(), EffectiveStopMinor: stopPrice.String(), TargetPriceMinor: targetPrice.String(),
 		EntryProvenance: entryProvenance, StopProvenance: stopProvenance, TargetProvenance: targetProvenance, ExecutionPolicy: policy, Lineage: lineage, CommonExitIndependent: true}
+}
+
+func admitExistingRisk(plan CampaignPlan, state RiskState) RefusalCode {
+	if !plan.valid() || !validRiskState(state) || state.planDigest != plan.digest {
+		return RefusalRiskLatched
+	}
+	for _, latched := range state.latches {
+		if latched {
+			return RefusalRiskLatched
+		}
+	}
+	filled, filledOK := parseUnsigned(state.filledMinor)
+	held, heldOK := parseUnsigned(state.heldMinor)
+	budget, budgetOK := parseUnsigned(plan.riskBudgetMinor)
+	if !filledOK || !heldOK || !budgetOK {
+		return RefusalRiskLatched
+	}
+	used, ok := checkedAdd(filled, held)
+	if !ok || used.Cmp(budget) > 0 {
+		return RefusalRiskBudgetExceeded
+	}
+	return ""
 }
 
 func canonicalPositiveMinor(raw string) (*big.Int, bool) {

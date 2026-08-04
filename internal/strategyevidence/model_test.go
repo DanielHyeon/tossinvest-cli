@@ -106,3 +106,30 @@ func validHeader(market marketclock.Market, kind EvidenceKind, id, revision stri
 		Confidence:           ConfidenceVerified,
 	}
 }
+
+func TestOfficialAuthorityMarketMatrix(t *testing.T) {
+	tests := []struct {
+		authority SourceAuthority
+		valid     bool
+		kr, us    bool
+	}{
+		{AuthorityOpenDART, true, true, false},
+		{AuthorityKRX, true, true, false},
+		{AuthoritySEC, true, false, true},
+		{AuthorityTossOpenAPI, true, true, true},
+		{"wts", false, false, false},
+		{"kis", false, false, false},
+		{"", false, false, false},
+	}
+	for _, test := range tests {
+		if got := authorityValid(test.authority); got != test.valid {
+			t.Errorf("authority=%q valid=%v want=%v", test.authority, got, test.valid)
+		}
+		if got := authoritySupportsMarket(test.authority, marketclock.MarketKR); got != test.kr {
+			t.Errorf("authority=%q KR=%v want=%v", test.authority, got, test.kr)
+		}
+		if got := authoritySupportsMarket(test.authority, marketclock.MarketUS); got != test.us {
+			t.Errorf("authority=%q US=%v want=%v", test.authority, got, test.us)
+		}
+	}
+}

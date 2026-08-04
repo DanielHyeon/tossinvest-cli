@@ -92,7 +92,7 @@ func TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators(t *testing.
 					t.Fatalf("weekly full RR preimage lost: %+v", policy)
 				}
 			}
-			if result.Lineage.Market != test.market || result.Lineage.RouterRelease != strategyrouter.RouterRelease ||
+			if result.Lineage.Market != test.market || result.Lineage.RouterID != strategyrouter.RouterID || result.Lineage.RouterRelease != strategyrouter.RouterRelease ||
 				result.Lineage.Horizon != test.horizon || result.Lineage.LaneID != test.laneID || result.Lineage.LaneVersion != test.laneVersion ||
 				result.Lineage.LaneRelease != test.laneRelease ||
 				result.Lineage.RouterEvidenceDigest != laneEvidence || result.Lineage.LaneEvidenceDigest != laneEvidence ||
@@ -102,6 +102,31 @@ func TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators(t *testing.
 			}
 			if result.GuardianCalls != 0 || result.BrokerCalls != 0 || result.Mutations != 0 {
 				t.Fatalf("production pure flow acquired authority: %+v", result)
+			}
+			if result.ValidProposal() {
+				t.Fatal("legacy admitted evaluation was accepted as q_candidate proposal")
+			}
+			proposal := Propose(Request{Approved: approved, Router: routerRequest, Lane: laneInput})
+			if proposal.Code != RefusalNone || !proposal.ValidProposal() || proposal.Quantity == 0 ||
+				proposal.ExecutionTerms.Quantity() != proposal.Quantity || proposal.Lineage.AccountRef != result.Lineage.AccountRef ||
+				proposal.Lineage.Market != result.Lineage.Market || proposal.Lineage.Symbol != result.Lineage.Symbol ||
+				proposal.Lineage.LaneID != result.Lineage.LaneID || proposal.Lineage.CampaignID != result.Lineage.CampaignID {
+				t.Fatalf("sealed production proposal mismatch: %+v", proposal)
+			}
+			if test.horizon == strategyrouter.HorizonWeekly && proposal.ExecutionTerms.Policy().CapSnapshotID() != "" {
+				t.Fatalf("weekly proposal leaked downstream cap identity: %+v", proposal.ExecutionTerms.Policy())
+			}
+			tampered := proposal
+			tampered.Quantity--
+			if tampered.ValidProposal() {
+				t.Fatal("mutated q_candidate retained proposal authority")
+			}
+			final, ok := FinalizeProposalQuantity(proposal, proposal.Quantity-1)
+			if !ok || final.Quantity != proposal.Quantity-1 || final.ValidProposal() || !final.ExecutionTerms.Valid() ||
+				final.ExecutionTerms.Quantity() != final.Quantity || final.Lineage != proposal.Lineage ||
+				final.ExecutionTerms.Entry() != proposal.ExecutionTerms.Entry() || final.ExecutionTerms.EffectiveStop() != proposal.ExecutionTerms.EffectiveStop() ||
+				final.ExecutionTerms.Target() != proposal.ExecutionTerms.Target() || final.ExecutionTerms.Policy() != proposal.ExecutionTerms.Policy() {
+				t.Fatalf("q_final projection changed proposal authority: proposal=%+v final=%+v ok=%v", proposal, final, ok)
 			}
 			descriptor := descriptorByID(t, test.laneID)
 			if descriptor.Release != test.laneRelease {

@@ -443,6 +443,10 @@ type EntryGate struct {
 	// symbolLatches are the narrower, per-symbol blocks (symbolgate.go, task
 	// 4.2). Lazily created, so NewEntryGate is unchanged.
 	symbolLatches map[string]SymbolBlock
+	// revision seals short-lived strategy admission authority. It starts at one
+	// so zero remains the unavailable sentinel and advances on every effective
+	// gate-state mutation, preventing allowed/blocked/allowed ABA reuse.
+	revision uint64
 }
 
 // SetAuthorityRefresh binds the durable RECONCILE recheck used by the sealed
@@ -473,6 +477,7 @@ func NewEntryGate(clk clock.Clock, thresholds map[RequiredQuery]time.Duration) *
 		thresholds: copied,
 		lastOK:     make(map[RequiredQuery]time.Time, len(copied)),
 		latches:    make(map[ReasonCode]string),
+		revision:   1,
 	}
 }
 
@@ -480,7 +485,13 @@ func NewEntryGate(clk clock.Clock, thresholds map[RequiredQuery]time.Duration) *
 func (g *EntryGate) RecordSuccess(kind RequiredQuery) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	g.lastOK[kind] = g.clk.Now()
+	now := g.clk.Now()
+	threshold, required := g.thresholds[kind]
+	prior, exists := g.lastOK[kind]
+	if required && (!exists || now.Sub(prior) > threshold) {
+		g.revision++
+	}
+	g.lastOK[kind] = now
 }
 
 // Block latches the gate shut with a reason.
@@ -489,6 +500,7 @@ func (g *EntryGate) Block(reason ReasonCode, detail string) {
 	defer g.mu.Unlock()
 	if _, exists := g.latches[reason]; !exists {
 		g.latches[reason] = detail
+		g.revision++
 	}
 }
 
@@ -497,7 +509,10 @@ func (g *EntryGate) Block(reason ReasonCode, detail string) {
 func (g *EntryGate) Clear(reason ReasonCode) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	delete(g.latches, reason)
+	if _, exists := g.latches[reason]; exists {
+		delete(g.latches, reason)
+		g.revision++
+	}
 }
 
 // CheckEntry reports why new exposure is refused anywhere on the account, or nil
@@ -516,6 +531,10 @@ func (g *EntryGate) CheckEntry() *RejectedError {
 func (g *EntryGate) checkAccountEntry() *RejectedError {
 	g.mu.Lock()
 	defer g.mu.Unlock()
+	return g.checkAccountEntryLocked()
+}
+
+func (g *EntryGate) checkAccountEntryLocked() *RejectedError {
 
 	// Latches first: they are the deliberate, operator-visible stops.
 	for _, reason := range latchOrder {

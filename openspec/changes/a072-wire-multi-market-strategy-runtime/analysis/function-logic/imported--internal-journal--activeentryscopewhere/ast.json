@@ -1,0 +1,54 @@
+{
+  "file": "internal/journal/reconcile_states.go",
+  "source_sha256": "0943dee4398405230663c0f931e72f41eabe9c7957b7d5cc9775697cae79cde4",
+  "package": "journal",
+  "function": "activeEntryScopeWhere",
+  "signature": "activeEntryScopeWhere(params=2, results=1)",
+  "start": {
+    "line": 482,
+    "column": 1
+  },
+  "end": {
+    "line": 487,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 483,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 484,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 486,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 484,
+        "column": 10
+      },
+      "text": "activeScopeWhere"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

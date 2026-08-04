@@ -1,4 +1,5 @@
-# Branch Test Map: `sealExecutionTerms`
-| Branch | Scenario | Test |
-|---|---|---|
-| B1 | incomplete or invalid preimage | missing terms tests |
+# Branch Test Map: sealExecutionTerms
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | if at line 266 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

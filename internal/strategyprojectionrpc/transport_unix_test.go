@@ -5,6 +5,7 @@ package strategyprojectionrpc
 import (
 	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -50,6 +51,59 @@ func TestAuthenticatedUnixProjectionCrossNamespaceAndReadOnlyAuthority(t *testin
 		if _, exists := typeName.MethodByName(forbidden); exists {
 			t.Fatalf("runtime read client exposes %s", forbidden)
 		}
+	}
+}
+
+func TestStartReclaimsExactDeadProjectionEndpoint(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	if err := os.Mkdir(ControlDirectory(dir), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	listener, err := net.Listen("unix", SocketPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	listener.(*net.UnixListener).SetUnlinkOnClose(false)
+	if err := os.Chmod(SocketPath(dir), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := listener.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeDescriptor(DescriptorPath(dir), Descriptor{SchemaVersion: descriptorSchema, Socket: SocketFileName,
+		Token: strings.Repeat("x", 43), PID: 1 << 30}); err != nil {
+		t.Fatal(err)
+	}
+	server, err := Start(dir, projectionReaderStub{snapshot: strategyprojection.DormantSnapshot(time.Now().UTC())})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = server.Close() })
+	client, err := Dial(context.Background(), DescriptorPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.Read(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestStartRefusesLiveProjectionOwnerWithoutRemovingIt(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	first, err := Start(dir, projectionReaderStub{snapshot: strategyprojection.DormantSnapshot(time.Now().UTC())})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = first.Close() })
+	if _, err := Start(dir, projectionReaderStub{snapshot: strategyprojection.DormantSnapshot(time.Now().UTC())}); err == nil {
+		t.Fatal("second live projection owner was accepted")
+	}
+	client, err := Dial(context.Background(), DescriptorPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.Read(context.Background()); err != nil {
+		t.Fatalf("live owner was damaged: %v", err)
 	}
 }
 

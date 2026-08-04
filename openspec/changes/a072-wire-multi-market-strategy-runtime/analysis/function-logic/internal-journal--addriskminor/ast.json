@@ -1,0 +1,203 @@
+{
+  "file": "internal/journal/risk_bucket.go",
+  "source_sha256": "b4b49984b1e977914629f139fd0d7b4b19434cec0fbd01bf8dc7321734e35bd0",
+  "package": "journal",
+  "function": "addRiskMinor",
+  "signature": "addRiskMinor(params=2, results=2)",
+  "start": {
+    "line": 462,
+    "column": 1
+  },
+  "end": {
+    "line": 479,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 467,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 468,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 472,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 476,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 478,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 466,
+        "column": 11
+      },
+      "text": "SetString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 466,
+        "column": 11
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 12
+      },
+      "text": "a.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 11
+      },
+      "text": "SetString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 11
+      },
+      "text": "new"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 12
+      },
+      "text": "b.Sign"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 2
+      },
+      "text": "a.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 5
+      },
+      "text": "a.BitLen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 9
+      },
+      "text": "a.String"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 464,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 466,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 470,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

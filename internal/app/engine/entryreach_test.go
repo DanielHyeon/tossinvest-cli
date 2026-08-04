@@ -61,8 +61,9 @@ func TestTheRuntimeCannotReachEntryIssuance(t *testing.T) {
 	}
 }
 
-// TestTheEngineSpellsExactlyOneBuy pins the other half: the package contains one
-// buy-side intent literal, in the island.
+// TestTheEngineSpellsExactlyOneBuy is the historical test name; its current
+// contract pins the reviewed BUY paths: the package
+// contains the legacy unreachable tracer plus the claimed-lease strategy path.
 //
 // A second one appearing anywhere is the same notice as above, caught even if the
 // new caller reaches execgw directly instead of going through the tracer.
@@ -86,8 +87,14 @@ func TestTheEngineSpellsExactlyOneBuy(t *testing.T) {
 			}
 		}
 	}
-	if len(found) != 1 || !strings.Contains(found[0], "tracer.go") {
-		t.Errorf("buy-side intents = %v, want exactly one and it in tracer.go", found)
+	want := []string{"strategy_dispatch_cycle.go", "tracer.go"}
+	if len(found) != len(want) {
+		t.Fatalf("buy-side intents = %v, want exactly reviewed paths %v", found, want)
+	}
+	for i, file := range want {
+		if !strings.Contains(found[i], file) {
+			t.Errorf("buy-side intents = %v, want index %d in %s", found, i, file)
+		}
 	}
 }
 

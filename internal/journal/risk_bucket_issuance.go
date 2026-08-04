@@ -535,7 +535,8 @@ func insertFreshRiskBucketReservations(ctx context.Context, tx *sql.Tx, plan Ris
 		if err != nil {
 			return err
 		}
-		if _, err = tx.ExecContext(ctx, `INSERT OR IGNORE INTO risk_bucket_snapshots(snapshot_id,snapshot_digest,snapshot_source,record_digest,bucket_dimension,bucket_value,policy_version,limit_minor,filled_minor,held_minor,snapshot_version,policy_digest,observed_at,fresh_until,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ref.SnapshotID, ref.SnapshotDigest, bound.SnapshotEvidence.Source, snapshotRecordDigest, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, bucket.LimitMinor, bucket.FilledMinor, bucket.HeldMinor, ref.SnapshotVersion, ref.PolicyDigest, canonicalRiskTime(ref.ObservedAt), canonicalRiskTime(ref.FreshUntil), canonicalRiskTime(plan.CreatedAt)); err != nil {
+		snapshotObserved, snapshotFresh := ref.snapshotWindow()
+		if _, err = tx.ExecContext(ctx, `INSERT OR IGNORE INTO risk_bucket_snapshots(snapshot_id,snapshot_digest,snapshot_source,record_digest,bucket_dimension,bucket_value,policy_version,limit_minor,filled_minor,held_minor,snapshot_version,policy_digest,observed_at,fresh_until,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ref.SnapshotID, ref.SnapshotDigest, bound.SnapshotEvidence.Source, snapshotRecordDigest, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, bucket.LimitMinor, bucket.FilledMinor, bucket.HeldMinor, ref.SnapshotVersion, ref.PolicyDigest, canonicalRiskTime(snapshotObserved), canonicalRiskTime(snapshotFresh), canonicalRiskTime(plan.CreatedAt)); err != nil {
 			return err
 		}
 		var storedSnapshotDigest string

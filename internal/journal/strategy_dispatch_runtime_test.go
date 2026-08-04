@@ -37,22 +37,21 @@ func TestStrategyDispatchOwnerEpochFencesPredecessorAndDormantAPIsMintNothing(t 
 	plan := StrategyDispatchLeasePlan{LeaseID: "lease-dormant", OwnerEpoch: second.Epoch, FencingToken: second.FencingToken}
 	for name, err := range map[string]error{
 		"issue": func() error { _, issueErr := j.IssueStrategyDispatchLease(ctx, plan); return issueErr }(),
-		"claim": func() error {
-			_, claimErr := j.ClaimStrategyDispatchLease(ctx, StrategyDispatchLeaseCAS{})
-			return claimErr
-		}(),
-		"submit": func() error {
-			_, submitErr := j.BeginStrategyDispatchSubmitting(ctx, StrategyDispatchLeaseCAS{})
-			return submitErr
-		}(),
 		"recover": func() error {
 			_, recoverErr := j.RecoverClaimedStrategyDispatchLease(ctx, StrategyDispatchLeaseCAS{})
 			return recoverErr
 		}(),
 	} {
-		if !errors.Is(err, ErrStrategyDispatchDormant) {
-			t.Errorf("%s error=%v", name, err)
+		want := ErrStrategyDispatchDormant
+		if name == "recover" {
+			want = ErrInvalidRequest
 		}
+		if !errors.Is(err, want) {
+			t.Errorf("%s error=%v want=%v", name, err, want)
+		}
+	}
+	if _, err := j.BeginStrategyDispatchSubmitting(ctx, StrategyDispatchLeaseCAS{}); !errors.Is(err, ErrInvalidRequest) {
+		t.Fatalf("invalid submitting CAS error=%v", err)
 	}
 	for _, table := range []string{"strategy_dispatch_market_authorities", "strategy_dispatch_leases", "strategy_dispatch_outcomes"} {
 		var count int
@@ -64,7 +63,7 @@ func TestStrategyDispatchOwnerEpochFencesPredecessorAndDormantAPIsMintNothing(t 
 
 func TestStrategyDispatchLeaseSchemaRequiresExactQFinalAuthorityAndHolds(t *testing.T) {
 	t.Run("valid-sealed-row", func(t *testing.T) {
-		j := openTestJournal(t)
+		j := openStrategyDispatchV25Journal(t)
 		owner, _ := j.AcquireStrategyDispatchOwner(context.Background(), "schema-valid")
 		plan := prepareStrategyDispatchLease(t, j, "schema-valid", owner, StrategyDispatchMarketKR, "005930")
 		if err := insertStrategyDispatchLease(j, plan, StrategyDispatchLeaseIssued, ""); err != nil {
@@ -73,7 +72,7 @@ func TestStrategyDispatchLeaseSchemaRequiresExactQFinalAuthorityAndHolds(t *test
 	})
 
 	t.Run("fabricated-guardian", func(t *testing.T) {
-		j := openTestJournal(t)
+		j := openStrategyDispatchV25Journal(t)
 		owner, _ := j.AcquireStrategyDispatchOwner(context.Background(), "schema-forged")
 		plan := prepareStrategyDispatchLease(t, j, "schema-forged", owner, StrategyDispatchMarketKR, "005930")
 		plan.GuardianDecisionID = "fabricated-guardian-decision"
@@ -83,7 +82,7 @@ func TestStrategyDispatchLeaseSchemaRequiresExactQFinalAuthorityAndHolds(t *test
 	})
 
 	t.Run("one-monetary-hold-released", func(t *testing.T) {
-		j := openTestJournal(t)
+		j := openStrategyDispatchV25Journal(t)
 		owner, _ := j.AcquireStrategyDispatchOwner(context.Background(), "schema-released")
 		plan := prepareStrategyDispatchLease(t, j, "schema-released", owner, StrategyDispatchMarketKR, "005930")
 		if _, err := j.db.Exec(`UPDATE risk_bucket_reservations SET state='RELEASED',held_minor='0',updated_at='2026-03-30T00:30:02Z' WHERE decision_id=? AND bucket_dimension='symbol'`, plan.GuardianDecisionID); err != nil {
@@ -95,7 +94,7 @@ func TestStrategyDispatchLeaseSchemaRequiresExactQFinalAuthorityAndHolds(t *test
 	})
 
 	t.Run("authority-digest-substitution", func(t *testing.T) {
-		j := openTestJournal(t)
+		j := openStrategyDispatchV25Journal(t)
 		owner, _ := j.AcquireStrategyDispatchOwner(context.Background(), "schema-authority")
 		plan := prepareStrategyDispatchLease(t, j, "schema-authority", owner, StrategyDispatchMarketKR, "005930")
 		plan.AuthorityDigest = "substituted-authority-digest"
@@ -106,7 +105,7 @@ func TestStrategyDispatchLeaseSchemaRequiresExactQFinalAuthorityAndHolds(t *test
 }
 
 func TestStrategyDispatchBrokerOrderIDCannotCrossKRUSWithinAccount(t *testing.T) {
-	j := openTestJournal(t)
+	j := openStrategyDispatchV25Journal(t)
 	ctx := context.Background()
 	owner, err := j.AcquireStrategyDispatchOwner(ctx, "cross-market-owner")
 	if err != nil {
@@ -150,6 +149,9 @@ func TestStrategyDispatchColdRestartDiscoversOldIssuedClaimedAndSubmitting(t *te
 
 			after := openStrategyDispatchTestJournal(t, path)
 			defer after.Close()
+			if tc.state == StrategyDispatchLeaseSubmitting {
+				after.clk.(*clock.Fake).Set(plan.ExpiresAt.Add(strategyDispatchOwnerTakeoverGrace))
+			}
 			newOwner, err := after.AcquireStrategyDispatchOwner(ctx, "after-crash-"+strings.ToLower(string(tc.state)))
 			if err != nil {
 				t.Fatal(err)
@@ -256,10 +258,16 @@ func openStrategyDispatchTestJournal(t *testing.T, path string) *Journal {
 	t.Helper()
 	j, err := Open(context.Background(), Options{
 		Path: path, Clock: clock.NewFake(migrationTestInstant),
-		FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt}),
+		FSProber:          FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt}),
+		migrationOverride: &migrationPlan{steps: migrationsThrough(25), target: 25},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	return j
+}
+
+func openStrategyDispatchV25Journal(t *testing.T) *Journal {
+	t.Helper()
+	return openStrategyDispatchTestJournal(t, filepath.Join(t.TempDir(), "journal.db"))
 }

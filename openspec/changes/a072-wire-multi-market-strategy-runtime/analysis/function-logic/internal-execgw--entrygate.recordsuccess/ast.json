@@ -1,0 +1,109 @@
+{
+  "file": "internal/execgw/retry.go",
+  "source_sha256": "44d102adfb140e460b892417733d18af99ebdb8e41c5c7a77d7fc0ed4c08b29e",
+  "package": "execgw",
+  "function": "RecordSuccess",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.RecordSuccess(params=1, results=0)",
+  "start": {
+    "line": 485,
+    "column": 1
+  },
+  "end": {
+    "line": 495,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 8
+      },
+      "text": "g.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 9
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 29
+      },
+      "text": "now.Sub"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 488,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 489,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 492,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 487,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    }
+  ]
+}

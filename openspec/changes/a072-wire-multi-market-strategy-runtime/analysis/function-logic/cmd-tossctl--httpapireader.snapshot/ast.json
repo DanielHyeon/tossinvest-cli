@@ -1,0 +1,336 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "ddca43732a111d16d7a8530c9c3112b13b585d251fd3585b38c80540a180ea31",
+  "package": "main",
+  "function": "Snapshot",
+  "receiver": "httpAPIReader",
+  "signature": "httpAPIReader.Snapshot(params=1, results=2)",
+  "start": {
+    "line": 450,
+    "column": 1
+  },
+  "end": {
+    "line": 499,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 452,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 456,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 464,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 476,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 480,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 482,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 453,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 457,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 461,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 465,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 469,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 473,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 477,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 483,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 486,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 17
+      },
+      "text": "r.Engine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 20
+      },
+      "text": "r.Positions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 17
+      },
+      "text": "r.Orders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 21
+      },
+      "text": "r.Candidates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 26
+      },
+      "text": "r.Performance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 19
+      },
+      "text": "r.Settings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 27
+      },
+      "text": "r.Optimization"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 21
+      },
+      "text": "strategyprojection.DormantSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 56
+      },
+      "text": "r.clockNow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 26
+      },
+      "text": "r.strategyRuntime.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 9
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 27
+      },
+      "text": "r.clockNow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 3
+      },
+      "text": "httpapi.PerformanceFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 55
+      },
+      "text": "httpapi.OptimizationFrom"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 451,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 455,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 459,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 467,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 479,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 481,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

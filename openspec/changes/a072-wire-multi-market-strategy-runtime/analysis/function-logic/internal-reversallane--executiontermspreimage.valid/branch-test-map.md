@@ -1,4 +1,5 @@
-# Branch Test Map: `ExecutionTermsPreimage.valid`
-| Branch | Scenario | Test |
-|---|---|---|
-| B1 | valid sealed happy path | reversal exact terms tests |
+# Branch Test Map: ExecutionTermsPreimage.valid
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | Branchless happy path preserves the documented invariant | Package happy-path test | existing behavior inspected | yes |

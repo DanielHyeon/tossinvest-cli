@@ -1,5 +1,6 @@
-# Branch Test Map: `TestScaleInStopNeverRetreatsAndInvalidStopRefuses`
-| Branch | Scenario | Test |
-|---|---|---|
-| B1 | tighter saved stop | this test |
-| B2 | invalid stop | this test |
+# Branch Test Map: TestScaleInStopNeverRetreatsAndInvalidStopRefuses
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | if at line 74 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B2 | if at line 78 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

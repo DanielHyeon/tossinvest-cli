@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyflow/production_integration_test.go",
-  "source_sha256": "74dbe9fdff5f234445c9d8b96918bb05a2ecf5f47c5e7e895bc19d4a0eccd288",
+  "source_sha256": "2f59dde328c3d720012c0c3dc1a259431d9b08deebc4c1106c9e1d35e323a282",
   "package": "strategyflow",
   "function": "TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators",
   "signature": "TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 112,
+    "line": 137,
     "column": 2
   },
   "branches": [
@@ -121,7 +121,47 @@
       "id": "B14",
       "kind": "if",
       "at": {
-        "line": 107,
+        "line": 106,
+        "column": 4
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 4
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 116,
+        "column": 4
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 121,
+        "column": 4
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 125,
+        "column": 4
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "if",
+      "at": {
+        "line": 132,
         "column": 4
       }
     }
@@ -687,6 +727,206 @@
       "kind": "call",
       "at": {
         "line": 106,
+        "column": 7
+      },
+      "text": "result.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 16
+      },
+      "text": "Propose"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 40
+      },
+      "text": "proposal.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 5
+      },
+      "text": "proposal.ExecutionTerms.Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 55
+      },
+      "text": "CapSnapshotID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 55
+      },
+      "text": "proposal.ExecutionTerms.Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 69
+      },
+      "text": "proposal.ExecutionTerms.Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 7
+      },
+      "text": "tampered.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 17
+      },
+      "text": "FinalizeProposalQuantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 55
+      },
+      "text": "final.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 81
+      },
+      "text": "final.ExecutionTerms.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 5
+      },
+      "text": "final.ExecutionTerms.Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 5
+      },
+      "text": "final.ExecutionTerms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 37
+      },
+      "text": "proposal.ExecutionTerms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 72
+      },
+      "text": "final.ExecutionTerms.EffectiveStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 112
+      },
+      "text": "proposal.ExecutionTerms.EffectiveStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 5
+      },
+      "text": "final.ExecutionTerms.Target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 38
+      },
+      "text": "proposal.ExecutionTerms.Target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 74
+      },
+      "text": "final.ExecutionTerms.Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 107
+      },
+      "text": "proposal.ExecutionTerms.Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
         "column": 18
       },
       "text": "descriptorByID"
@@ -694,7 +934,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 108,
+        "line": 133,
         "column": 5
       },
       "text": "t.Fatalf"
@@ -809,7 +1049,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 106,
+        "line": 109,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 4
+      }
+    },
+    {
+      "kind": "--",
+      "at": {
+        "line": 120,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 131,
         "column": 4
       }
     }

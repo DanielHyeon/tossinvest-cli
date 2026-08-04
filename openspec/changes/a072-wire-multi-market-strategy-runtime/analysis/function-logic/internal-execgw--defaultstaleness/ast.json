@@ -1,0 +1,29 @@
+{
+  "file": "internal/execgw/retry.go",
+  "source_sha256": "44d102adfb140e460b892417733d18af99ebdb8e41c5c7a77d7fc0ed4c08b29e",
+  "package": "execgw",
+  "function": "DefaultStaleness",
+  "signature": "DefaultStaleness(params=0, results=1)",
+  "start": {
+    "line": 168,
+    "column": 1
+  },
+  "end": {
+    "line": 175,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -10,7 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
 )
 
 // Guardian is the risk authority that authorises a mutation before the gateway
@@ -84,6 +86,24 @@ type Limits struct {
 	MaxDailyLossRatio Limit `json:"max_daily_loss_ratio"`
 	// Currency is the currency the money bounds are expressed in.
 	Currency string `json:"currency"`
+	// AccountBaseFX is present only on a q_final exposure-raising decision. It
+	// binds the opaque request-scoped conversion used by Guardian sizing and
+	// reservations without persisting caller-reusable rate or haircut scalars.
+	AccountBaseFX *AccountBaseFXBinding `json:"account_base_fx,omitempty"`
+}
+
+// AccountBaseFXBinding is the auditable identity of one opaque frozen FX
+// authority. Rate and haircut are deliberately absent: the Gateway must retain
+// and revalidate officialfx.Evidence rather than reconstruct authority from the
+// decision JSON.
+type AccountBaseFXBinding struct {
+	SchemaVersion   string    `json:"schema_version"`
+	QuoteCurrency   string    `json:"quote_currency"`
+	AccountCurrency string    `json:"account_currency"`
+	Source          string    `json:"source"`
+	Version         string    `json:"version"`
+	EvidenceDigest  string    `json:"evidence_digest"`
+	EvaluatedAt     time.Time `json:"evaluated_at"`
 }
 
 // Validate reports why a snapshot is not one an entry may be authorised by.
@@ -288,7 +308,7 @@ func (g *Gateway) checkDecision(dec journal.Decision, ref GuardianDecision,
 	}
 
 	// --- the limit snapshot -------------------------------------------------
-	return checkLimits(dec, plan)
+	return checkLimits(dec, plan, now)
 }
 
 // checkPreimage compares the persisted risk data with the order about to be sent.
@@ -404,7 +424,7 @@ func checkIdempotencyKey(dec journal.Decision, plan mutationPlan) *RejectedError
 // point of the class check above: "a cancel is exempt" was a literal on the
 // mutation verb, and it could say nothing about a reduce-only sell — which is
 // also an exit, is also not something a limit may refuse (§0.3), and is a place.
-func checkLimits(dec journal.Decision, plan mutationPlan) *RejectedError {
+func checkLimits(dec journal.Decision, plan mutationPlan, now time.Time) *RejectedError {
 	if dec.SafetyClass == journal.SafetyClassRiskReducing {
 		// An exit carries no snapshot at all. One that does is a row nobody in
 		// this build could have written.
@@ -437,6 +457,13 @@ func checkLimits(dec journal.Decision, plan mutationPlan) *RejectedError {
 			"quantity %s exceeds the authorised maximum %s",
 			decimalString(plan.quantity), decimalString(limits.MaxQuantity.Value))
 	}
+	if limits.AccountBaseFX != nil {
+		return checkAccountBaseLimits(limits, plan, now)
+	}
+	if plan.strategy != nil {
+		return reject(ReasonAccountBaseFXMismatch,
+			"strategy first-leg decision %s carries no account-base FX envelope", short(dec.ID))
+	}
 	if notional := plan.notional(); notional > limits.MaxNotional.Value {
 		return reject(ReasonGuardianLimitExceeded,
 			"notional %s exceeds the authorised maximum %s",
@@ -447,6 +474,54 @@ func checkLimits(dec journal.Decision, plan mutationPlan) *RejectedError {
 	if plan.currency != "" && !strings.EqualFold(limits.Currency, plan.currency) {
 		return reject(ReasonGuardianLimitExceeded,
 			"the limit snapshot is in %s but the order is in %s", limits.Currency, plan.currency)
+	}
+	return nil
+}
+
+func checkAccountBaseLimits(limits Limits, plan mutationPlan, now time.Time) *RejectedError {
+	binding := limits.AccountBaseFX
+	if plan.strategy == nil {
+		return reject(ReasonStrategyDispatchAuthorityMissing,
+			"q_final first-leg entry requires opaque FX evidence and an exact claimed dispatch lease")
+	}
+	if binding == nil || binding.SchemaVersion != "account-base-fx:v1" || binding.EvaluatedAt.IsZero() || binding.EvaluatedAt.After(now) ||
+		!strings.EqualFold(binding.QuoteCurrency, plan.currency) || !strings.EqualFold(binding.AccountCurrency, limits.Currency) ||
+		binding.Source == "" || binding.Version == "" || binding.EvidenceDigest == "" {
+		return reject(ReasonAccountBaseFXMismatch, "account-base FX decision envelope is incomplete or outside the order scope")
+	}
+	market := costs.Market(strings.ToLower(strings.TrimSpace(plan.market)))
+	var fx risk.AccountBaseFX
+	var err error
+	if plan.strategy.testAccountBaseFXSet {
+		fx = plan.strategy.testAccountBaseFX
+	} else {
+		fx, err = risk.BindAccountBaseFXPair(now, market, limits.Currency, plan.strategy.fxAuthority)
+	}
+	if err != nil || fx.QuoteCurrency() != binding.QuoteCurrency || fx.AccountCurrency() != binding.AccountCurrency ||
+		fx.Source() != binding.Source || fx.Version() != binding.Version || fx.Digest() != binding.EvidenceDigest {
+		return reject(ReasonAccountBaseFXMismatch, "opaque FX evidence is stale, wrong-pair, forged, or differs from the decision envelope")
+	}
+	var baseNotionalAmount string
+	if plan.amount > 0 {
+		value, conversionErr := risk.AccountBaseOrderNotional(now, market, decimalString(plan.amount), fx)
+		if conversionErr != nil || value.Currency != limits.Currency {
+			return reject(ReasonAccountBaseFXMismatch, "account-base amount conversion failed closed: %v", conversionErr)
+		}
+		baseNotionalAmount = value.Amount
+	} else {
+		value, conversionErr := risk.AccountBaseOrderValue(now, market, decimalString(plan.quantity), priceString(plan.price), fx)
+		if conversionErr != nil || value.Currency != limits.Currency {
+			return reject(ReasonAccountBaseFXMismatch, "account-base order conversion failed closed: %v", conversionErr)
+		}
+		baseNotionalAmount = value.Amount
+	}
+	ok, err := decimalAtMost(baseNotionalAmount, decimalString(limits.MaxNotional.Value))
+	if err != nil {
+		return reject(ReasonGuardianDecisionTampered, "account-base notional bound is unreadable: %v", err)
+	}
+	if !ok {
+		return reject(ReasonGuardianLimitExceeded, "account-base notional %s exceeds the authorised maximum %s %s",
+			baseNotionalAmount, decimalString(limits.MaxNotional.Value), limits.Currency)
 	}
 	return nil
 }

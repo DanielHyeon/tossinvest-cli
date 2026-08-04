@@ -21,12 +21,31 @@ func defaultRegistry() registry {
 	})
 }
 
+func proposalRegistry() registry {
+	return newRegistry([]binding{
+		{descriptor: pairedDescriptors[0], evaluate: proposeContinuationKR},
+		{descriptor: pairedDescriptors[1], evaluate: proposeContinuationUS},
+		{descriptor: pairedDescriptors[2], evaluate: proposeReversalKR},
+		{descriptor: pairedDescriptors[3], evaluate: proposeReversalUS},
+		{descriptor: pairedDescriptors[4], evaluate: proposeWeeklyKR},
+		{descriptor: pairedDescriptors[5], evaluate: proposeWeeklyUS},
+	})
+}
+
 func evaluateContinuationKR(input LaneInput) laneEvaluation {
 	return fromContinuation(continuationlane.EvaluateKR(input.continuationKR))
 }
 
 func evaluateContinuationUS(input LaneInput) laneEvaluation {
 	return fromContinuation(continuationlane.EvaluateUS(input.continuationUS))
+}
+
+func proposeContinuationKR(input LaneInput) laneEvaluation {
+	return fromContinuation(continuationlane.ProposeKR(input.continuationKR))
+}
+
+func proposeContinuationUS(input LaneInput) laneEvaluation {
+	return fromContinuation(continuationlane.ProposeUS(input.continuationUS))
 }
 
 func fromContinuation(outcome continuationlane.Outcome) laneEvaluation {
@@ -52,6 +71,16 @@ func evaluateReversalUS(input LaneInput) laneEvaluation {
 	return fromReversal(outcome, input.reversalUS.Evidence.CommonEnvelope)
 }
 
+func proposeReversalKR(input LaneInput) laneEvaluation {
+	outcome := reversallane.ProposeKR(input.reversalKR)
+	return fromReversal(outcome, input.reversalKR.Evidence.CommonEnvelope)
+}
+
+func proposeReversalUS(input LaneInput) laneEvaluation {
+	outcome := reversallane.ProposeUS(input.reversalUS)
+	return fromReversal(outcome, input.reversalUS.Evidence.CommonEnvelope)
+}
+
 func fromReversal(outcome reversallane.EvaluationResult, envelope reversallane.CommonEnvelope) laneEvaluation {
 	lineage := outcome.Lineage
 	return laneEvaluation{accepted: outcome.Kind == reversallane.OutcomeDecision && outcome.Code == "",
@@ -71,6 +100,14 @@ func evaluateWeeklyKR(input LaneInput) laneEvaluation {
 
 func evaluateWeeklyUS(input LaneInput) laneEvaluation {
 	return fromWeekly(weeklyvaluelane.EvaluateUS(input.weeklyUS), input.weeklyUS)
+}
+
+func proposeWeeklyKR(input LaneInput) laneEvaluation {
+	return fromWeekly(weeklyvaluelane.ProposeKR(input.weeklyKR), input.weeklyKR)
+}
+
+func proposeWeeklyUS(input LaneInput) laneEvaluation {
+	return fromWeekly(weeklyvaluelane.ProposeUS(input.weeklyUS), input.weeklyUS)
 }
 
 func fromWeekly(outcome weeklyvaluelane.Outcome, request weeklyvaluelane.EvaluationRequest) laneEvaluation {

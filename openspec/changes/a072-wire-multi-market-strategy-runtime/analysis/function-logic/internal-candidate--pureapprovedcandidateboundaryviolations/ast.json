@@ -1,0 +1,62 @@
+{
+  "file": "internal/candidate/approved_consumer_guard_test.go",
+  "source_sha256": "eb23d866a4d54388f1442cfd38a41d7cc00e83cd7fad0f0b89f0d8b75e497f28",
+  "package": "candidate",
+  "function": "pureApprovedCandidateBoundaryViolations",
+  "signature": "pureApprovedCandidateBoundaryViolations(params=4, results=1)",
+  "start": {
+    "line": 170,
+    "column": 1
+  },
+  "end": {
+    "line": 175,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 172,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 174,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 10
+      },
+      "text": "productionCandidateSanitizerViolations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 9
+      },
+      "text": "typeCheckPureApprovedCandidateBoundary"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

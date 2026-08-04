@@ -442,14 +442,19 @@ func TestOpenReadOnlyRejectsDamagedV20CampaignSchema(t *testing.T) {
 	}
 }
 
-func TestCampaignCoreHasNoProductionBrokerOrToggleWiring(t *testing.T) {
+func TestCampaignCoreProductionWiringHasNoBrokerOrToggleAuthority(t *testing.T) {
 	production, err := os.ReadFile(filepath.Join("..", "app", "engine", "gateway.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	text := string(production)
-	if strings.Contains(text, "Campaign: ApplyPositionCampaignFill") || strings.Contains(text, "ApplyPositionCampaignFill,") {
-		t.Fatal("a065 campaign hook is wired into the production gateway")
+	if !strings.Contains(text, "Campaign: journal.ApplyPositionCampaignFill") {
+		t.Fatal("a072 production fill transaction does not bind the campaign applier")
+	}
+	for _, forbidden := range []string{"order place", "SetLaneEnabled", "AutomationEnabled"} {
+		if strings.Contains(text, forbidden) {
+			t.Fatalf("campaign apply wiring contains authority %q", forbidden)
+		}
 	}
 	core, err := os.ReadFile("position_campaign.go")
 	if err != nil {

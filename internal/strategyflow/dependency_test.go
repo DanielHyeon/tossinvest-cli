@@ -26,7 +26,7 @@ func TestPureFlowAndLaneDependencyClosureHasNoMutationAuthority(t *testing.T) {
 		}
 		seen++
 		for _, forbidden := range []string{"/internal/journal", "/internal/execgw", "/internal/trading", "/internal/official", "/internal/config", "/internal/app/engine", "/internal/console", "/internal/httpapi"} {
-			if strings.Contains(entry.ImportPath, forbidden) {
+			if strings.HasSuffix(entry.ImportPath, forbidden) || strings.Contains(entry.ImportPath, forbidden+"/") {
 				t.Fatalf("pure strategyflow dependency reached mutation/operating authority: %s", entry.ImportPath)
 			}
 		}

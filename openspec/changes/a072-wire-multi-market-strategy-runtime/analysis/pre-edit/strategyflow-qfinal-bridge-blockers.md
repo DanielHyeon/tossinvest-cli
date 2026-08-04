@@ -80,7 +80,7 @@ price, snapshot, policy, owner, currency, account or exposure authority must pro
 The bridge cannot recover discarded terms from lineage digests. A digest proves identity; it is not
 the price preimage and must not be reverse-inferred or looked up by symbol/time.
 
-## KR/US currency blocker
+## KR/US currency decision (resolved contract, implementation pending)
 
 Production engine wiring constructs one `RiskGuardian` from one automation-gate `LimitCurrency`.
 `PrecheckQFinalEntry` refuses when that currency differs from the exact market quote currency, before
@@ -94,10 +94,12 @@ risk-bucket admission:
   converted bucket reserve while comparing raw USD prices to KRW Guardian limits would create false
   headroom, which the code correctly refuses.
 
-Before a US production bridge exists, the design must choose and specify one sealed model: separate
-market-currency Guardians whose account-wide limits are themselves authoritative, or an account-base
-Guardian whose quantity/cash/notional calculations consume frozen official FX. The current API
-implements neither model for concurrent KR+US.
+The design chooses exactly one account-base Guardian per account. Separate market-currency Guardians
+are forbidden because they can each grant the whole account-wide cap. KR uses sealed identity FX and
+US uses sealed official quote-to-base FX plus conservative haircut; the same frozen authority must
+bind sizing, aggregate/five-bucket reservation, decision envelope and Gateway. The current API still
+does not implement that model, so both KR and US production entry remain closed until the paired
+implementation wave passes.
 
 ## Prospective-token sequencing blocker
 
@@ -138,13 +140,14 @@ owner authority remain unresolved.
    for US, freeze the specified official conversion and haircut policy.
 5. Implement authoritative account state and retryable `CollectExposure` from current account and
    reservation-ledger reads; never substitute tracer flat-account zeroes.
-6. Resolve the account-base versus per-market Guardian model, then expose a sealed market-compatible
-   Guardian cap that QFinal can intersect without unit mismatch.
+6. Implement the chosen single account-base Guardian with sealed KR identity and US official
+   quote-to-base authority in one paired wave. Cash stays quote-denominated; exposure/loss/limits are
+   base-denominated; base reservation rounds up and quantity rounds down.
 7. Only after 1-6, add the narrow bridge that consumes a valid complete `strategyflow.Result` and the
    opaque authorities above, calls QFinal precheck, and returns no broker capability.
 8. Connect that precheck to the still-missing fenced central dispatch owner and v25 non-revivable
    lease transaction. KR and US evaluation remain concurrent; only mutation ownership is serialized.
 
-Steps 1-6 can be developed as independent KR/US authority adapters where their sources are truly
-independent. Step 7 is the first point at which an authority-complete QFinal request can exist. Step 8
-must not activate either market; activation and LIVE approval remain separate human authority.
+Steps 1-6 may isolate market-specific failure domains, but their KR and US cases are delivered and
+verified together. Step 7 is the first point at which an authority-complete QFinal request can exist.
+Step 8 must not activate either market; activation and LIVE approval remain separate human authority.

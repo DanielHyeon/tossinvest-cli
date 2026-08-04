@@ -1,5 +1,5 @@
-# Branch Test Map: `CampaignPlan.AccountRef`
+# Branch Test Map: CampaignPlan.AccountRef
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | branch-free accessor returns constructor-bound account unchanged | plan identity and strategy-flow tests | covered | covered |
+| B1 | Branchless happy path preserves the documented invariant | Package happy-path test | existing behavior inspected | yes |

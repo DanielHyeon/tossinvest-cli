@@ -140,6 +140,10 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		"PositionCampaign":            true,
 		"PositionCampaignLineage":     true,
 		"ReconstructPositionCampaign": true,
+		// a072's weekly KR/US proposal authority reads the exact durable market
+		// reservation through the same query-only connection. Reservation creation
+		// remains available only on the engine-owned Journal writer.
+		"WeeklyMarketReservation": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {

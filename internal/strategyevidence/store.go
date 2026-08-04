@@ -289,6 +289,26 @@ type Snapshot struct {
 	Items                []Envelope
 }
 
+// Valid proves the snapshot and every immutable envelope still match the
+// deterministic point-in-time digest. It performs no I/O.
+func (snapshot Snapshot) Valid() bool {
+	if !validSnapshotReference(SnapshotReference{ID: snapshot.ID, Digest: snapshot.Digest}) ||
+		(snapshot.Market != marketclock.MarketKR && snapshot.Market != marketclock.MarketUS) ||
+		snapshot.Symbol == "" || snapshot.IssuerIdentity == "" || snapshot.IssuerMappingVersion == "" ||
+		snapshot.EvaluationAt.IsZero() || snapshot.IngestionCutoff.IsZero() {
+		return false
+	}
+	for _, item := range snapshot.Items {
+		rebuilt, err := NewEnvelope(item.Header(), item.CanonicalPayload())
+		if err != nil || rebuilt.PayloadDigest() != item.PayloadDigest() || !snapshotItemMatchesQuery(snapshot, item) {
+			return false
+		}
+	}
+	query := SnapshotQuery{Market: snapshot.Market, Symbol: snapshot.Symbol, IssuerIdentity: snapshot.IssuerIdentity,
+		IssuerMappingVersion: snapshot.IssuerMappingVersion, EvaluationAt: snapshot.EvaluationAt, IngestionCutoff: snapshot.IngestionCutoff}
+	return snapshot.Digest == snapshotDigest(query, snapshot.Items)
+}
+
 func (s *Store) SealSnapshot(ctx context.Context, query SnapshotQuery) (Snapshot, error) {
 	query.Symbol = strings.ToUpper(strings.TrimSpace(query.Symbol))
 	query.IssuerIdentity = strings.TrimSpace(query.IssuerIdentity)

@@ -1,16 +1,16 @@
 {
   "file": "internal/execgw/riskguardian_qfinal.go",
-  "source_sha256": "a511d1fe79e51762df5ae83bed646fa0183daa2c300b89bdf268ad92564b785f",
+  "source_sha256": "3e5cc7b86303b4587e18375547e194b9bedbf7c84dd0e6e005a5d856d492b586",
   "package": "execgw",
   "function": "IssuePrecheckedQFinalEntry",
   "receiver": "RiskGuardian",
   "signature": "RiskGuardian.IssuePrecheckedQFinalEntry(params=2, results=2)",
   "start": {
-    "line": 166,
+    "line": 177,
     "column": 1
   },
   "end": {
-    "line": 232,
+    "line": 259,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 167,
+        "line": 178,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 172,
+        "line": 184,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 193,
+        "line": 188,
         "column": 2
       }
     },
@@ -42,15 +42,15 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 203,
-        "column": 3
+        "line": 192,
+        "column": 2
       }
     },
     {
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 207,
+        "line": 194,
         "column": 3
       }
     },
@@ -58,15 +58,47 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 211,
-        "column": 3
+        "line": 216,
+        "column": 2
       }
     },
     {
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 224,
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 230,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 251,
         "column": 2
       }
     }
@@ -75,63 +107,84 @@
     {
       "kind": "return",
       "at": {
-        "line": 168,
+        "line": 179,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 173,
+        "line": 185,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 194,
+        "line": 189,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 204,
+        "line": 195,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 208,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 212,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 214,
+        "line": 217,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 225,
+        "line": 220,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 227,
+        "line": 231,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 235,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 239,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 241,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 254,
         "column": 2
       }
     }
@@ -140,7 +193,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 179,
         "column": 20
       },
       "text": "qFinalRefusal"
@@ -148,7 +201,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 170,
+        "line": 181,
         "column": 9
       },
       "text": "UTC"
@@ -156,7 +209,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 170,
+        "line": 181,
         "column": 9
       },
       "text": "g.clk.Now"
@@ -164,63 +217,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 171,
-        "column": 24
+        "line": 182,
+        "column": 20
       },
-      "text": "journal.QFinalPolicyVersion"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 176,
-        "column": 7
-      },
-      "text": "g.newID"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 179,
-        "column": 38
-      },
-      "text": "string"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 180,
-        "column": 10
-      },
-      "text": "string"
+      "text": "qFinalAccountBaseFXAt"
     },
     {
       "kind": "call",
       "at": {
         "line": 183,
-        "column": 36
+        "column": 114
       },
-      "text": "g.newID"
+      "text": "precheck.accountFX.Digest"
     },
     {
       "kind": "call",
       "at": {
-        "line": 183,
-        "column": 73
+        "line": 184,
+        "column": 69
       },
-      "text": "now.Add"
+      "text": "sameAccountBaseFX"
     },
     {
       "kind": "call",
       "at": {
-        "line": 192,
-        "column": 17
-      },
-      "text": "qFinalPolicyAt"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 194,
+        "line": 185,
         "column": 20
       },
       "text": "qFinalRefusal"
@@ -228,7 +249,103 @@
     {
       "kind": "call",
       "at": {
+        "line": 187,
+        "column": 24
+      },
+      "text": "journal.QFinalPolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 21
+      },
+      "text": "encodeQFinalLimits"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 21
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 7
+      },
+      "text": "g.newID"
+    },
+    {
+      "kind": "call",
+      "at": {
         "line": 202,
+        "column": 38
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 34
+      },
+      "text": "g.newID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 71
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 17
+      },
+      "text": "qFinalPolicyAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 20
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 29
+      },
+      "text": "sameQFinalFXAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 20
+      },
+      "text": "qFinalRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
         "column": 20
       },
       "text": "precheck.request.Collect"
@@ -236,7 +353,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 233,
         "column": 24
       },
       "text": "risk.EntryExposureValue"
@@ -244,7 +361,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 235,
         "column": 41
       },
       "text": "chainRefusal"
@@ -252,7 +369,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 237,
         "column": 17
       },
       "text": "exposureUsage"
@@ -260,7 +377,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 250,
         "column": 14
       },
       "text": "g.journal.RecordQFinalDecisionAndReserveWithRecollection"
@@ -268,7 +385,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 225,
+        "line": 252,
         "column": 20
       },
       "text": "issuanceRefusal"
@@ -278,112 +395,140 @@
     {
       "kind": ":=",
       "at": {
-        "line": 170,
+        "line": 181,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 171,
+        "line": 182,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 175,
+        "line": 183,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 185,
+        "line": 187,
         "column": 2
       }
     },
     {
       "kind": ":=",
-      "at": {
-        "line": 186,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
       "at": {
         "line": 191,
         "column": 2
       }
     },
     {
+      "kind": "=",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    },
+    {
       "kind": ":=",
-      "at": {
-        "line": 192,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 196,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 197,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
       "at": {
         "line": 198,
         "column": 2
       }
     },
     {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    },
+    {
       "kind": "=",
       "at": {
-        "line": 199,
+        "line": 214,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 201,
+        "line": 215,
         "column": 2
       }
     },
     {
-      "kind": ":=",
-      "at": {
-        "line": 202,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 206,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 210,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
+      "kind": "=",
       "at": {
         "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 233,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 237,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
         "column": 2
       }
     }

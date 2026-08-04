@@ -554,7 +554,12 @@ func (j *Journal) PendingStrategyPlans(ctx context.Context, accountRef string) (
 	if j == nil || j.db == nil || accountRef == "" {
 		return nil, errors.New("journal strategy recovery: account required")
 	}
-	rows, err := j.db.QueryContext(ctx, `SELECT a.attempt_id,a.account_ref,a.entry_decision_identity,a.risk_intent_id,a.client_order_id,d.quantity,a.revision,a.state FROM strategy_attempt_lineage a JOIN strategy_decision_lineage d ON d.entry_decision_identity=a.entry_decision_identity WHERE a.account_ref=? AND a.state IN('PLANNED','IN_DOUBT') ORDER BY a.created_at,a.attempt_id`, accountRef)
+	rows, err := j.db.QueryContext(ctx, `SELECT a.attempt_id,a.account_ref,a.entry_decision_identity,a.risk_intent_id,a.client_order_id,d.quantity,a.revision,a.state
+		FROM strategy_attempt_lineage a
+		JOIN strategy_decision_lineage d ON d.entry_decision_identity=a.entry_decision_identity
+		WHERE a.account_ref=? AND a.state IN('PLANNED','IN_DOUBT')
+		  AND NOT EXISTS (SELECT 1 FROM strategy_first_leg_bindings b WHERE b.attempt_id=a.attempt_id)
+		ORDER BY a.created_at,a.attempt_id`, accountRef)
 	if err != nil {
 		return nil, err
 	}
@@ -751,6 +756,43 @@ func verifyStrategyRiskBinding(decision Decision, lineage StrategyDecisionLineag
 	if !ok {
 		return errors.New("journal strategy issuance: preimage is not RiskIntent")
 	}
+	schema, versioned, err := strategyDecisionPayloadSchema(lineage.DecisionPayload)
+	if err != nil {
+		return err
+	}
+	if versioned {
+		if schema != strategyflowRiskBindingSchemaVersionV2 && schema != strategyflowRiskBindingSchemaVersion {
+			return errors.New("journal strategy issuance: decision payload schema unsupported")
+		}
+		if riskRecord.AccountRef != decision.AccountRef {
+			return errors.New("journal strategy issuance: strategyflow decision account mismatch")
+		}
+		return verifyStrategyflowRiskBinding(riskRecord, lineage)
+	}
+	return verifyLegacyStrategyRiskBinding(riskRecord, lineage)
+}
+
+func strategyDecisionPayloadSchema(payload string) (string, bool, error) {
+	decoder := json.NewDecoder(strings.NewReader(payload))
+	var envelope map[string]json.RawMessage
+	if err := decoder.Decode(&envelope); err != nil {
+		return "", false, nil
+	}
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		return "", false, nil
+	}
+	raw, ok := envelope["schema_version"]
+	if !ok {
+		return "", false, nil
+	}
+	var schema string
+	if err := json.Unmarshal(raw, &schema); err != nil || strings.TrimSpace(schema) == "" {
+		return "", true, errors.New("journal strategy issuance: decision payload schema invalid")
+	}
+	return schema, true, nil
+}
+
+func verifyLegacyStrategyRiskBinding(riskRecord RiskIntent, lineage StrategyDecisionLineage) error {
 	decoder := json.NewDecoder(strings.NewReader(lineage.DecisionPayload))
 	decoder.DisallowUnknownFields()
 	var signalRecord strategyDecisionPayload

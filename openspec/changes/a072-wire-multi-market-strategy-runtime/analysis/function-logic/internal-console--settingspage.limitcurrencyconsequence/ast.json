@@ -1,0 +1,71 @@
+{
+  "file": "internal/console/settings_card.go",
+  "source_sha256": "212b147ece5c3e6697d50ae527be763dee4de9df5eb70bd5564ff598b9a7d0b9",
+  "package": "console",
+  "function": "LimitCurrencyConsequence",
+  "receiver": "settingsPage",
+  "signature": "settingsPage.LimitCurrencyConsequence(params=0, results=1)",
+  "start": {
+    "line": 392,
+    "column": 1
+  },
+  "end": {
+    "line": 397,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 394,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 396,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 10
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 394,
+        "column": 10
+      },
+      "text": "currencyConsequence"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 393,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

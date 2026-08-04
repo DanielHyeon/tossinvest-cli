@@ -1,4 +1,5 @@
-# Branch Test Map: `executionTermsIdentity`
-| Branch | Scenario | Test |
-|---|---|---|
-| B1 | iterate entry/stop/target provenance | mutation and six-lane tests |
+# Branch Test Map: executionTermsIdentity
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | range at line 304 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

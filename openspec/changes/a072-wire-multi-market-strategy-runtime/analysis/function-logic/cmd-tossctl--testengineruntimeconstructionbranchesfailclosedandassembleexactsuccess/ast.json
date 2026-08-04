@@ -1,0 +1,238 @@
+{
+  "file": "cmd/tossctl/engine_runtime_branch_test.go",
+  "source_sha256": "8b2621d67d5b01457bf07b3a1f12546bca58dccba530570973a44aeff5b0c702",
+  "package": "main",
+  "function": "TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess",
+  "signature": "TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess(params=1, results=0)",
+  "start": {
+    "line": 49,
+    "column": 1
+  },
+  "end": {
+    "line": 100,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 13
+      },
+      "text": "runtimeBranchContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 4
+      },
+      "text": "tc.mutate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 20
+      },
+      "text": "engineRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 34
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 26
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 11
+      },
+      "text": "runtimeBranchContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 18
+      },
+      "text": "engineRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 16
+      },
+      "text": "value.Entry.CheckEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 59,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 66,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 73,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 80,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 82,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

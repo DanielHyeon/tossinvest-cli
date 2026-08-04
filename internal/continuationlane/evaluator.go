@@ -192,7 +192,31 @@ func EvaluateUS(request USEvaluationRequest) Outcome {
 	return evaluate(request.Context, request.Evidence.Envelope, EvaluateUSParticipation(request.Evidence, request.Config))
 }
 
+// ProposeKR evaluates the KR lane without consuming or fabricating a066
+// authority. A successful quantity is q_candidate: exact current-leg planned
+// remaining, not an admitted or executable quantity.
+func ProposeKR(request KREvaluationRequest) Outcome {
+	return evaluateStage(request.Context, request.Evidence.Envelope, EvaluateKRFlow(request.Evidence, request.Config), evaluationProposal)
+}
+
+// ProposeUS is the paired US proposal path. It has the same fail-closed
+// branches as ProposeKR and deliberately ignores any caller cap value.
+func ProposeUS(request USEvaluationRequest) Outcome {
+	return evaluateStage(request.Context, request.Evidence.Envelope, EvaluateUSParticipation(request.Evidence, request.Config), evaluationProposal)
+}
+
+type evaluationStage uint8
+
+const (
+	evaluationAdmitted evaluationStage = iota
+	evaluationProposal
+)
+
 func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal SignalResult) Outcome {
+	return evaluateStage(context, envelope, signal, evaluationAdmitted)
+}
+
+func evaluateStage(context EvaluationContext, envelope EvidenceEnvelope, signal SignalResult, stage evaluationStage) Outcome {
 	outcome := Outcome{Kind: OutcomeRefusal, CommonExitIndependent: true, Lineage: lineageFor(context, envelope)}
 	if !validatePlan(context.Plan) {
 		outcome.Code = RefusalPlanInvalid
@@ -211,7 +235,8 @@ func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal Signa
 		outcome.Code = RefusalLaneOff
 		return outcome
 	}
-	if envelope.Market != context.Plan.Market || envelope.Symbol != context.Plan.Symbol || context.Cap.Market != context.Plan.Market {
+	if envelope.Market != context.Plan.Market || envelope.Symbol != context.Plan.Symbol ||
+		(stage == evaluationAdmitted && context.Cap.Market != context.Plan.Market) {
 		outcome.Code = RefusalMarketMismatch
 		return outcome
 	}
@@ -245,14 +270,21 @@ func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal Signa
 		outcome.Code = RefusalPlanInvalid
 		return outcome
 	}
-	quantity := PlannedLegQuantity(context.Plan, context.Leg, context.Cap.QFinal)
+	quantity := PlannedLegQuantity(context.Plan, context.Leg, context.Plan.LegCeilings[context.Leg.Ordinal-1])
 	if quantity == 0 {
 		outcome.Code = RefusalQuantityUnavailable
 		return outcome
 	}
-	if !validCap(context.Cap, envelope.EvaluatedAt, context.Plan, quantity) {
-		outcome.Code = RefusalCapInvalid
-		return outcome
+	if stage == evaluationAdmitted {
+		quantity = PlannedLegQuantity(context.Plan, context.Leg, context.Cap.QFinal)
+		if quantity == 0 {
+			outcome.Code = RefusalQuantityUnavailable
+			return outcome
+		}
+		if !validCap(context.Cap, envelope.EvaluatedAt, context.Plan, quantity) {
+			outcome.Code = RefusalCapInvalid
+			return outcome
+		}
 	}
 	filled, err := parseUnsigned(context.Risk.FilledMinor)
 	if err != nil {
@@ -264,15 +296,22 @@ func evaluate(context EvaluationContext, envelope EvidenceEnvelope, signal Signa
 		outcome.Code = codeForArithmetic(err)
 		return outcome
 	}
-	proposed, err := parseUnsigned(context.Cap.ReservationMinor)
+	used, err := checkedAdd(filled, held)
 	if err != nil {
 		outcome.Code = codeForArithmetic(err)
 		return outcome
 	}
-	used, err := checkedAdd(filled, held, proposed)
-	if err != nil {
-		outcome.Code = codeForArithmetic(err)
-		return outcome
+	if stage == evaluationAdmitted {
+		proposed, proposedErr := parseUnsigned(context.Cap.ReservationMinor)
+		if proposedErr != nil {
+			outcome.Code = codeForArithmetic(proposedErr)
+			return outcome
+		}
+		used, err = checkedAdd(used, proposed)
+		if err != nil {
+			outcome.Code = codeForArithmetic(err)
+			return outcome
+		}
 	}
 	budget, err := parseUnsigned(context.Plan.RiskBudgetMinor)
 	if err != nil {

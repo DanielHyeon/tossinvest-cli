@@ -1,5 +1,5 @@
-# Branch Test Map: `fromContinuation`
+# Branch Test Map: fromContinuation
 
-| Branch | Scenario | Required test |
-|---|---|---|
-| B1 | branchless accepted/refused mapping | KR/US adapter exact terms and zero terms on refusal |
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | Branchless happy path preserves the documented invariant | Package happy-path test | existing behavior inspected | yes |

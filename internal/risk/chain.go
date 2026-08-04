@@ -76,6 +76,11 @@ type Input struct {
 	// model whose every rate is zero, which is not a measurement anybody made,
 	// so callers pass costs.DefaultModel() or a configured one.
 	Costs costs.Model
+	// AccountBaseFX is the opaque, request-scoped quote-to-account conversion
+	// consumed by every account-base sizing and exposure calculation. Cross-
+	// currency entries require it. Same-currency legacy callers may omit it;
+	// the production multi-market bridge binds identity evidence explicitly.
+	AccountBaseFX AccountBaseFX
 }
 
 // step is one named rung of the chain.
@@ -321,21 +326,11 @@ func checkOrderSize(in Input) Decision {
 			"quantity %q is not a positive whole number", in.Intent.Quantity))
 	}
 
-	currency, err := currencyOf(in.Intent.Market)
+	_, err = currencyOf(in.Intent.Market)
 	if err != nil {
 		return refuse(ReasonInputUnavailable, err.Error())
 	}
-	if limit := in.Policy.LimitCurrency(); limit != currency {
-		// a090's mixed-currency guard: a KRW budget divided by a USD stop width
-		// is a quantity in no currency at all. Normalisation belongs to
-		// riskcalc, with its FX staleness bound.
-		return refuse(ReasonInputUnavailable, fmt.Sprintf(
-			"the intent is priced in %s and the configured limits are in %s; "+
-				"a cross-currency size is refused rather than computed at an implicit rate",
-			currency, limit))
-	}
-
-	sized, err := RiskBasedQuantity(in.Policy.RiskBudget.Amount, in.Intent.LimitPrice, in.Intent.StopPrice)
+	sized, err := accountBaseRiskQuantity(in.Policy, in.Intent.Market, in.Intent.LimitPrice, in.Intent.StopPrice, in.AccountBaseFX, in.Now)
 	if err != nil {
 		return refuse(ReasonInputUnavailable, err.Error())
 	}
@@ -346,12 +341,12 @@ func checkOrderSize(in Input) Decision {
 	if capacity.Sign() <= 0 {
 		return refuse(ReasonInvalidOrderSize, fmt.Sprintf(
 			"a risk budget of %s %s cannot cover one unit of risk between entry %s and stop %s",
-			in.Policy.RiskBudget.Amount, currency, in.Intent.LimitPrice, in.Intent.StopPrice))
+			in.Policy.RiskBudget.Amount, in.Policy.LimitCurrency(), in.Intent.LimitPrice, in.Intent.StopPrice))
 	}
 	if quantity.Cmp(capacity) > 0 {
 		return refuse(ReasonInvalidOrderSize, fmt.Sprintf(
 			"quantity %s is above the %s units a risk budget of %s %s allows over a stop %s wide",
-			in.Intent.Quantity, sized, in.Policy.RiskBudget.Amount, currency,
+			in.Intent.Quantity, sized, in.Policy.RiskBudget.Amount, in.Policy.LimitCurrency(),
 			widthOf(in.Intent.LimitPrice, in.Intent.StopPrice)))
 	}
 
@@ -368,6 +363,10 @@ func checkOrderSize(in Input) Decision {
 	notional, d := entryNotional(in, "0")
 	if !d.Allowed {
 		return d
+	}
+	notional, err = accountBaseMoney(in.Now, in.Intent.Market, in.Policy, in.AccountBaseFX, notional)
+	if err != nil {
+		return refuse(ReasonInputUnavailable, err.Error())
 	}
 	over, d := exceedsInclusiveLimit(notional, in.Policy.MaxOrderNotional)
 	if !d.Allowed {
@@ -482,6 +481,11 @@ func checkOpenExposure(in Input) Decision {
 	if !d.Allowed {
 		return d
 	}
+	var err error
+	entry, err = accountBaseMoney(in.Now, in.Intent.Market, in.Policy, in.AccountBaseFX, entry)
+	if err != nil {
+		return refuse(ReasonInputUnavailable, err.Error())
+	}
 	existing, err := magnitudeIn("open exposure", in.Account.OpenExposure, entry.Currency)
 	if err != nil {
 		return refuse(ReasonInputUnavailable, err.Error())
@@ -512,10 +516,7 @@ func checkOpenExposure(in Input) Decision {
 // outright (계좌자본 0 이하이면 즉시 차단). Then the absolute ceiling, then the
 // ratio — both with the aggregate's ≥ boundary.
 func checkDailyLoss(in Input) Decision {
-	currency, err := currencyOf(in.Intent.Market)
-	if err != nil {
-		return refuse(ReasonInputUnavailable, err.Error())
-	}
+	currency := in.Policy.LimitCurrency()
 	equityAmount, err := moneyIn("account equity", in.Account.AccountEquity, currency)
 	if err != nil {
 		return refuse(ReasonInputUnavailable, err.Error())
@@ -618,7 +619,15 @@ func EntryExposureValue(in Input) (riskcalc.Money, Decision) {
 		return riskcalc.Money{}, refuse(ReasonInputUnavailable,
 			"only an entry adds open exposure; a reduction lowers it")
 	}
-	return entryNotionalWithCosts(in)
+	entry, d := entryNotionalWithCosts(in)
+	if !d.Allowed {
+		return riskcalc.Money{}, d
+	}
+	entry, err := accountBaseMoney(in.Now, in.Intent.Market, in.Policy, in.AccountBaseFX, entry)
+	if err != nil {
+		return riskcalc.Money{}, refuse(ReasonInputUnavailable, err.Error())
+	}
+	return entry, allow()
 }
 
 // entryNotionalWithCosts values the intent including the cost model's estimate

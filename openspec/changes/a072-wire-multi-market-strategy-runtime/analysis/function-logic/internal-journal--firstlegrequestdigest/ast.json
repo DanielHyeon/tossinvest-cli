@@ -1,0 +1,108 @@
+{
+  "file": "internal/journal/strategy_first_leg_atomic.go",
+  "source_sha256": "b2992b7969a80ed12df004af8db945c9885884c0e7e626fedeb4dfe8d71fa581",
+  "package": "journal",
+  "function": "firstLegRequestDigest",
+  "signature": "firstLegRequestDigest(params=6, results=2)",
+  "start": {
+    "line": 351,
+    "column": 1
+  },
+  "end": {
+    "line": 372,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 367,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 368,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 371,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 18
+      },
+      "text": "formatJournalTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 88
+      },
+      "text": "cloneWeeklyFirstLegBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 366,
+        "column": 14
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 370,
+        "column": 9
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 371,
+        "column": 9
+      },
+      "text": "hex.EncodeToString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 352,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 366,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 370,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

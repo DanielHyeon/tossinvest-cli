@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "c71a918570e494e0d22faa0fd15363b24beb6eb88509dd388cb6bd0e42a3ff83",
+  "source_sha256": "7c9063202ea2d40851a24c0f9106f06f21752019e23fdbfe6ee54660c3e59812",
   "package": "main",
   "function": "engineRuntime",
-  "signature": "engineRuntime(params=3, results=2)",
+  "signature": "engineRuntime(params=4, results=2)",
   "start": {
-    "line": 325,
+    "line": 331,
     "column": 1
   },
   "end": {
-    "line": 395,
+    "line": 401,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 327,
+        "line": 333,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 336,
+        "line": 342,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 347,
+        "line": 353,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 352,
+        "line": 358,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 356,
+        "line": 362,
         "column": 2
       }
     }
@@ -58,49 +58,49 @@
     {
       "kind": "return",
       "at": {
-        "line": 328,
+        "line": 334,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 337,
+        "line": 343,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 348,
+        "line": 354,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 353,
+        "line": 359,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 357,
+        "line": 363,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 360,
+        "line": 366,
         "column": 2
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 369,
+        "line": 375,
         "column": 4
       }
     }
@@ -109,7 +109,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 326,
+        "line": 332,
         "column": 19
       },
       "text": "engineFillDetector"
@@ -117,7 +117,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 331,
+        "line": 337,
         "column": 17
       },
       "text": "ectx.ReconcileDriver"
@@ -125,7 +125,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 332,
+        "line": 338,
         "column": 18
       },
       "text": "ectx.SnapshotCollector"
@@ -133,7 +133,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 340,
+        "line": 346,
         "column": 19
       },
       "text": "ectx.ExitObserver"
@@ -141,7 +141,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 342,
+        "line": 348,
         "column": 14
       },
       "text": "costs.DefaultModel"
@@ -149,7 +149,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 351,
+        "line": 357,
         "column": 19
       },
       "text": "ectx.Recovery"
@@ -157,15 +157,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 355,
+        "line": 361,
         "column": 24
       },
-      "text": "engineDormantStrategyEntry"
+      "text": "ectx.NewRefreshingPairedStrategyEntrySupervisor"
     },
     {
       "kind": "call",
       "at": {
-        "line": 360,
+        "line": 366,
         "column": 9
       },
       "text": "engine.NewRuntime"
@@ -173,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 368,
+        "line": 374,
         "column": 15
       },
       "text": "recovery.Run"
@@ -181,7 +181,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 392,
+        "line": 398,
         "column": 4
       },
       "text": "strategyEntry.SupervisedLoop"
@@ -191,42 +191,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 326,
+        "line": 332,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 331,
+        "line": 337,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 340,
+        "line": 346,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 351,
+        "line": 357,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 355,
+        "line": 361,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 368,
+        "line": 374,
         "column": 4
       }
     }

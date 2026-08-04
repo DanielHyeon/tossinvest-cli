@@ -1,0 +1,212 @@
+{
+  "file": "internal/performancejournal/adapter_test.go",
+  "source_sha256": "1d05849dd9b50cbaecf06fe6978d713cdbbf25ef5a0571e3f5c8948794da3c8f",
+  "package": "performancejournal",
+  "function": "TestAdapterCapabilitySurfaceIsExactlyOneSelectMethod",
+  "signature": "TestAdapterCapabilitySurfaceIsExactlyOneSelectMethod(params=1, results=0)",
+  "start": {
+    "line": 101,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 9
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 5
+      },
+      "text": "typ.NumMethod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 29
+      },
+      "text": "typ.Method"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 75
+      },
+      "text": "typ.Method"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 67
+      },
+      "text": "typ.NumMethod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 11
+      },
+      "text": "typ.Elem"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 5
+      },
+      "text": "value.NumField"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 30
+      },
+      "text": "value.Field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 65
+      },
+      "text": "value.Field"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 16
+      },
+      "text": "Elem"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 16
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 31
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 5
+      },
+      "text": "sourceType.NumMethod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 36
+      },
+      "text": "sourceType.Method"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 35
+      },
+      "text": "sourceType.NumMethod"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

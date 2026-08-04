@@ -1,0 +1,53 @@
+{
+  "file": "internal/console/performance_history_test.go",
+  "source_sha256": "be614b19f48d255ea8f6e103941815371d889ab91cfbf56e44376f965e8905db",
+  "package": "console",
+  "function": "Dashboard",
+  "receiver": "fakePerformanceReader",
+  "signature": "fakePerformanceReader.Dashboard(params=2, results=2)",
+  "start": {
+    "line": 18,
+    "column": 1
+  },
+  "end": {
+    "line": 23,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "++",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 20,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

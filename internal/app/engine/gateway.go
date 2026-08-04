@@ -148,8 +148,9 @@ var ErrExitApplierUnbound = errors.New(
 // write a baseline, a watermark or a level at all.
 func bindApplyHooks(j *journal.Journal) error {
 	if err := j.SetApplyHooks(journal.ApplyHooks{
-		Project: journal.ProjectPosition,
-		Exit:    journal.ApplyExitFill,
+		Project:  journal.ProjectPosition,
+		Campaign: journal.ApplyPositionCampaignFill,
+		Exit:     journal.ApplyExitFill,
 		// Task 8.1 extended the same literal again, for the same reason: the
 		// frozen trade outcome is priced with the shared cost model, and the
 		// journal must not own the operator's numbers. The default set is the

@@ -1,15 +1,15 @@
 {
   "file": "internal/officialfx/evidence.go",
-  "source_sha256": "a93bb052294ee8dd0db70d33f73c5775770324c159b617235601477e9baa310d",
+  "source_sha256": "72a151e9ba7be546286b8f9c3f619ab4cdb1999d2e91b45fddca96ff6450b700",
   "package": "officialfx",
   "function": "ReadOfficial",
   "signature": "ReadOfficial(params=5, results=2)",
   "start": {
-    "line": 126,
+    "line": 132,
     "column": 1
   },
   "end": {
-    "line": 140,
+    "line": 143,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 127,
+        "line": 133,
         "column": 2
       }
     },
@@ -25,16 +25,8 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 133,
+        "line": 139,
         "column": 2
-      }
-    },
-    {
-      "id": "B3",
-      "kind": "if",
-      "at": {
-        "line": 134,
-        "column": 3
       }
     }
   ],
@@ -42,28 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 130,
+        "line": 136,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 135,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 137,
+        "line": 140,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 139,
+        "line": 142,
         "column": 2
       }
     }
@@ -72,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 127,
+        "line": 133,
         "column": 37
       },
       "text": "canonicalCurrency"
@@ -80,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 128,
+        "line": 134,
         "column": 4
       },
       "text": "canonicalCurrency"
@@ -88,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 129,
+        "line": 135,
         "column": 18
       },
       "text": "haircutPolicySeal"
@@ -96,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 130,
+        "line": 136,
         "column": 22
       },
       "text": "fmt.Errorf"
@@ -104,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 132,
+        "line": 138,
         "column": 15
       },
       "text": "client.AuthoritativeExchangeRate"
@@ -112,23 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 134,
-        "column": 6
-      },
-      "text": "errors.Is"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 135,
-        "column": 23
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 137,
+        "line": 140,
         "column": 22
       },
       "text": "fmt.Errorf"
@@ -136,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 139,
+        "line": 142,
         "column": 9
       },
       "text": "sealOfficial"
@@ -146,7 +115,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 132,
+        "line": 138,
         "column": 2
       }
     }

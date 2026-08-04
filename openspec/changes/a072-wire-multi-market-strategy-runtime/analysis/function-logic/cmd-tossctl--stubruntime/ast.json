@@ -1,0 +1,76 @@
+{
+  "file": "cmd/tossctl/engine_test.go",
+  "source_sha256": "2a13e8295f3f5f09785f846612c0858b8530521ae22758c66e058589b4de19bd",
+  "package": "main",
+  "function": "stubRuntime",
+  "signature": "stubRuntime(params=2, results=0)",
+  "start": {
+    "line": 59,
+    "column": 1
+  },
+  "end": {
+    "line": 66,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 63,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 10
+      },
+      "text": "build"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 65,
+        "column": 21
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

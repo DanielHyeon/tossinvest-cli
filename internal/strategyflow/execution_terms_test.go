@@ -33,6 +33,36 @@ func TestEvaluateSealsExactExecutionTerms(t *testing.T) {
 	}
 }
 
+func TestPriceProvenanceMajorDecimalPairedKRUS(t *testing.T) {
+	tests := []struct {
+		name, minor string
+		scale       int
+		want        string
+	}{
+		{name: "KR identity", minor: "50000", scale: 0, want: "50000"},
+		{name: "US whole dollars", minor: "5000", scale: 2, want: "50"},
+		{name: "US fractional dollars", minor: "5050", scale: 2, want: "50.5"},
+		{name: "US sub-dollar", minor: "5", scale: 2, want: "0.05"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, ok := (PriceProvenance{priceMinor: test.minor, minorScale: test.scale, unitVersion: "minor-v1"}).MajorDecimal()
+			if !ok || got != test.want {
+				t.Fatalf("MajorDecimal()=(%q,%t), want (%q,true)", got, ok, test.want)
+			}
+		})
+	}
+	for _, invalid := range []PriceProvenance{
+		{priceMinor: "05", minorScale: 2, unitVersion: "minor-v1"},
+		{priceMinor: "5", minorScale: -1, unitVersion: "minor-v1"},
+		{priceMinor: "5", minorScale: 2, unitVersion: "forged"},
+	} {
+		if got, ok := invalid.MajorDecimal(); ok || got != "" {
+			t.Fatalf("invalid provenance projected as (%q,%t)", got, ok)
+		}
+	}
+}
+
 func TestEvaluateRejectsAcceptedLaneWithoutExactExecutionTerms(t *testing.T) {
 	descriptor := descriptorByID(t, "us_short_participation_continuation_v1")
 	approved := approvedFixture(t, strategyrouter.MarketUS)

@@ -5,6 +5,24 @@ Status: Proposal freeze approved — implementation may start with RED tasks
 Feature: FEAT-TOS-013
 Scope: KR and US strategy evidence, campaign/leg state, risk buckets, six market-specific lanes, horizon routing, protection readiness, runtime wiring, and operations
 
+## Binding Schedule Correction
+
+`KR 운영 안정 후 US 전용 레인 설계·구현`은 이 계획의 단계가 아니며 금지된 순차
+의존성이다. 올바른 일정 계약은 모든 전략군과 production slice에서 `KR + US`를 한 쌍의
+산출물로 동시에 설계·구현·검증하는 것이다.
+
+- 각 slice는 `KR RED + US RED → KR GREEN + US GREEN → paired integration/race/rollback`
+  순서로 진행한다. 화살표는 테스트 단계의 선후만 뜻하며 시장 간 선후를 뜻하지 않는다.
+- 한 시장 경로가 먼저 GREEN이 되어도 그 slice는 완료가 아니며, 그 결과를 peer 시장 착수나
+  운영 안정화의 gate로 사용할 수 없다.
+- 한 시장의 외부 evidence 또는 credential이 일시적으로 없더라도 peer 시장 구현은 계속할 수
+  있지만, paired production assembly와 검증 checkpoint는 두 시장이 모두 충족될 때까지
+  미완료로 남는다.
+- 아래 5번 VERIFY/review gate도 KR과 US를 같은 matrix와 같은 release candidate에서 동시에
+  검증한다. KR 검증 완료 뒤 US 검증을 시작하는 별도 milestone은 만들지 않는다.
+- 배포 artifact도 KR/US 경로를 함께 포함하되 둘 다 dormant/OFF로 배포한다. 실제 활성화는
+  구현 일정과 별개이며 시장별 사람 승인을 요구한다.
+
 ## Objective
 
 `strategy-runtime`을 실제 전략 실행 경로에 연결하되 한국 시장을 먼저 운영한 뒤 미국 시장을 시작하는 직렬 계획으로 만들지 않는다. 공통 계약을 먼저 고정하고, 각 전략군에서 KR·US 전용 레인을 같은 개발 웨이브로 구현·검증한다. 운영 활성화는 구현 순서와 분리하며 시장별로 독립적인 사람 승인을 요구한다.
@@ -40,12 +58,38 @@ Wave 2: KR/US 전략군과 라우터 (동시)
   a067 KR+US continuation || a068 KR+US reversal
   a069 KR+US weekly value || a070 multi-market horizon router
                           |
-Wave 3: 실행 안전성과 런타임 (계약 병렬, 통합 순차)
+Wave 3: 실행 안전성과 런타임 (KR/US 동시, 컴포넌트 의존 순서만 적용)
   a071 KR+US protection readiness || a072 KR+US runtime wiring
                           |
 Wave 4: 운영 표면
   a073 console/API/Compose dormant deployment
 ```
+
+## Overall Implementation Order
+
+1. **SDD 계약과 안전 불변식 동결** — StockOS gap, 첨부 레인 정의, OpenSpec,
+   Function Logic Map, Branch Test Map과 KR/US paired acceptance matrix를 먼저 고정한다.
+2. **공통 기반을 병렬 구축** — evidence, campaign/leg, risk bucket을 병렬로 구현하고
+   authoritative journal integration에서 합친다. 데이터와 위험 권한은 시장별로 격리하되
+   account-base Guardian은 계좌당 하나만 둔다.
+3. **세 전략군의 KR/US 전용 레인을 같은 wave에서 구현** — continuation 8:4:2,
+   reversal 2:4:8, weekly-value를 각각 `KR RED + US RED → KR GREEN + US GREEN`으로
+   진행한다. 한 시장 GREEN은 그 전략군 완료가 아니다.
+4. **KR/US production 실행 조립을 같은 wave에서 구현** — 시장별 calendar/activation/
+   evidence/budget worker를 동시에 연결하고, 공통 fenced owner에서
+   `strategyflow → q_final/campaign first-leg → dispatch lease → official Gateway`를 조립한다.
+   보호 준비, OFF upstream, 계좌 전체 한도와 FX authority가 하나라도 불완전하면 해당 시장의
+   신규 진입만 fail closed 한다.
+5. **KR/US 검증을 동시 진행** — 같은 release candidate와 paired scenario matrix에서 E2E,
+   race, crash/restart, unknown broker outcome, fault isolation, rollback, safety-loop continuity,
+   SDD/OpenSpec/make gate와 독립 리뷰를 함께 수행한다. `KR 운영 안정 후 US 검증` 또는 그
+   반대 순서는 두지 않는다.
+6. **하나의 dormant artifact로 빌드·머지·배포** — KR/US 코드를 모두 포함한 immutable
+   image를 만들고 로컬/원격 merge·push 후 둘 다 OFF 상태로 배포한다. 실제 시장별 activation과
+   LIVE 주문 승인은 이 구현 순서 밖의 별도 사람 승인이다.
+
+이 번호는 컴포넌트 의존 순서다. 어느 번호도 KR을 먼저 구현하거나 운영 안정화한 뒤 US를
+착수한다는 시장 간 순서를 만들지 않는다.
 
 Wave 1의 병렬 범위는 계약, RED fixture, adapter/pure calculator다. a064는 별도
 `evidence.db`를 사용하고 trading journal에는 소비된 snapshot ID/digest만 기록한다. a065와
@@ -53,6 +97,10 @@ a066의 authoritative journal migration version은 구현 전에 연속 번호�
 통합 transaction은 a064 snapshot contract와 a065 campaign identity가 들어온 뒤 연결한다.
 
 Wave 2의 각 변경은 하나의 시장을 완료한 뒤 다른 시장으로 넘어가지 않는다. 예를 들어 a067에서는 KR continuation과 US continuation을 나란히 RED/GREEN/REFACTOR/VERIFY하며, 두 시장 계약과 테스트가 모두 충족되어야 변경이 완료된다.
+
+Wave 3와 Wave 4에도 같은 규칙을 적용한다. 여기서 "의존 순서"는 journal → Guardian →
+Gateway → dormant assembly 같은 컴포넌트 간 선후관계만 뜻한다. 어떤 컴포넌트에서도 KR을
+GREEN/운영 안정화한 뒤 US를 시작하거나 그 반대로 진행하지 않는다.
 
 ## Change Sequence
 

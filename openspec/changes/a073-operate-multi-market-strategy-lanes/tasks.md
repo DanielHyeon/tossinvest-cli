@@ -1,7 +1,7 @@
 ## 1. Contract and pre-edit logic maps
 
-- [ ] 1.1 Capture the implementation base, refresh CodeGraph evidence, and map the existing strategy-runtime console handler, shared descriptor, HTTP read model/SSE, runtime-only Unix transport, lane-performance projector and Compose health/deploy paths
-- [ ] 1.2 Create pre-edit Function Logic Maps and Branch Test Maps for `handleStrategyRuntime`, runtime-reading validation/projection, HTTP runtime mapping/router handlers, performance attribution and every other existing function that implementation will change
+- [x] 1.1 Capture the implementation base, refresh CodeGraph evidence, and map the existing strategy-runtime console handler, shared descriptor, HTTP read model/SSE, runtime-only Unix transport, lane-performance projector and Compose health/deploy paths
+- [x] 1.2 Create pre-edit Function Logic Maps and Branch Test Maps for `handleStrategyRuntime`, runtime-reading validation/projection, HTTP runtime mapping/router handlers, performance attribution and every other existing function that implementation will change
 - [x] 1.3 Freeze a console/API golden field matrix and branch scenarios for exact `WIRED`/`UNWIRED` readiness plus typed refusal, KR/US partial availability, dormant OFF truth, deterministic campaign lineage, partial-fill/staged-close conservation, activation drift, schema compatibility and bounded partial rollback
 
 ## 2. RED console and API contract tests
@@ -31,8 +31,8 @@
 
 ## 5. VERIFY and release gates
 
-- [ ] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker
-- [ ] 5.2 Run targeted console/httpapi/runtime-transport/performance tests, affected-package race tests, OpenAPI and responsive/static route guards, full tests and vet, and strict OpenSpec/PM validation
+- [x] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker
+- [x] 5.2 Run targeted console/httpapi/runtime-transport/performance tests, affected-package race tests, OpenAPI and responsive/static route guards, full tests and vet, and strict OpenSpec/PM validation
 - [ ] 5.3 Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a073-operate-multi-market-strategy-lanes`, then complete independent implementation review before release
 - [ ] 5.4 Verify `docker compose config`, exact image digests, schema read/write compatibility and the frozen OFF-state/config/volume preimage before replacing any running service
 

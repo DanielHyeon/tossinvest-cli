@@ -198,23 +198,24 @@ func limitSummary(l config.GuardianLimits) string {
 		" (자본비 " + limitRatioText(l.MaxDailyLossRatio) + ")"
 }
 
-// currencyConsequence states what the limit currency costs.
+// currencyConsequence explains the account-base unit and the paired FX
+// authorities it requires.
 //
-// It is said on EVERY apply, not only when the currency changes. The gate has
-// one currency and risk's chain refuses an intent priced in another
-// ("a090's mixed-currency guard"), so choosing a currency closes a market —
-// and the moment that most needs saying is the first time the operator sets
-// one, which a change-detecting branch would pass over in silence.
+// It is said on EVERY apply, not only when the currency changes. The gate still
+// has one unit, but a072 defines it as account base: KR and US share one
+// account-wide cap while each market supplies its own frozen quote-to-base FX.
+// Neither market's operational stability is a prerequisite for implementing
+// or validating the peer path.
 func currencyConsequence(currency string) string {
 	switch strings.ToUpper(strings.TrimSpace(currency)) {
 	case "KRW":
-		return "한도 통화는 KRW다 — Guardian 체인은 한도 통화와 다른 통화의 진입을 거부하므로 " +
-			"미국 시장의 자동 진입은 닫힌다."
+		return "계좌 기준 통화는 KRW다 — KR은 identity FX, US는 공식 USD→KRW FX가 각각 current일 때 " +
+			"같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다."
 	case "USD":
-		return "한도 통화는 USD다 — Guardian 체인은 한도 통화와 다른 통화의 진입을 거부하므로 " +
-			"국내 시장의 자동 진입은 닫힌다."
+		return "계좌 기준 통화는 USD다 — US는 identity FX, KR은 공식 KRW→USD FX가 각각 current일 때 " +
+			"같은 account-wide Guardian 한도를 사용한다. KR과 US는 같은 구현 웨이브이며 어느 시장도 peer 운영 안정화를 기다리지 않는다."
 	}
-	return "한도 통화는 " + currency + "다 — Guardian 체인은 한도 통화와 다른 통화의 진입을 거부한다."
+	return "계좌 기준 통화 " + currency + "는 KR/US official FX authority가 지원되지 않아 신규 자동 진입 권위를 만들지 않는다."
 }
 
 // handleSettingsLimitPreset applies one registered tier in a single click.

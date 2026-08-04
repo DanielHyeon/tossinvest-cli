@@ -1,5 +1,5 @@
-# Branch Test Map: `SetChainForTest`
+# Branch Test Map: SetChainForTest
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | swap and restore the chain test seam | existing execgw chain tests | yes (authority compile RED) | yes |
+| B1 | Base-revision branchless happy path | Historical regression test | base behavior captured | preserved |

@@ -1,0 +1,396 @@
+{
+  "file": "internal/journal/strategyflow_projection.go",
+  "source_sha256": "df0184443b01be3b1a2c95858772133be09ed0f6b5137a7e9e1ec60cefc2f226",
+  "package": "journal",
+  "function": "verifyProjectionRiskIntent",
+  "signature": "verifyProjectionRiskIntent(params=3, results=1)",
+  "start": {
+    "line": 92,
+    "column": 1
+  },
+  "end": {
+    "line": 118,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "else",
+      "at": {
+        "line": 111,
+        "column": 9
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 9
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 112,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 115,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 20
+      },
+      "text": "projection.Lineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 42
+      },
+      "text": "projection.ExecutionTerms"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 25
+      },
+      "text": "NormalizeDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 25
+      },
+      "text": "strconv.ParseUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 18
+      },
+      "text": "splitQFinalPolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 94
+      },
+      "text": "terms.Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 63
+      },
+      "text": "terms.AccountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 4
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 35
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 63
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 94
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 101
+      },
+      "text": "terms.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 169
+      },
+      "text": "terms.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 25
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 25
+      },
+      "text": "terms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 53
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 53
+      },
+      "text": "terms.EffectiveStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 89
+      },
+      "text": "PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 89
+      },
+      "text": "terms.Target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 20
+      },
+      "text": "MajorDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 20
+      },
+      "text": "terms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 18
+      },
+      "text": "MajorDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 18
+      },
+      "text": "terms.EffectiveStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 22
+      },
+      "text": "MajorDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 22
+      },
+      "text": "terms.Target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 11
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 10
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 105,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

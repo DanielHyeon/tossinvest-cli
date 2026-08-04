@@ -1,26 +1,26 @@
-# Branch Test Map: `TestMigrationV24AddsOfficialZeroAuthorityAndReleaseReceiptsWithoutRewritingV23`
+# Branch Test Map: TestMigrationV24AddsOfficialZeroAuthorityAndReleaseReceiptsWithoutRewritingV23
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | seed legacy released row | same test | existing | pending |
-| B2 | seed legacy active row | same test | existing | pending |
-| B3 | close v23 | same test | existing | pending |
-| B4 | open exact v24 | same test | existing | pending |
-| B5 | version check | same test | existing | pending |
-| B6 | table loop | same test | existing | pending |
-| B7 | table assertion | same test | existing | pending |
-| B8 | column loop | same test | existing | pending |
-| B9 | column assertion | same test | existing | pending |
-| B10 | legacy authority read | same test | existing | pending |
-| B11 | no invented authority | same test | existing | pending |
-| B12 | legacy scope read | same test | existing | pending |
-| B13 | no invented market | same test | existing | pending |
-| B14 | index loop | same test | existing | pending |
-| B15 | index assertion | same test | existing | pending |
-| B16 | active global scope | same test | existing | pending |
-| B17 | overlap refusal | same test | existing | pending |
-| B18 | exact market loop | same test | existing | pending |
-| B19 | exact insert | same test | existing | pending |
-| B20 | reverse overlap refusal | same test | existing | pending |
-| B21 | trigger checks | same test | existing | pending |
-| B22 | legacy row remains mutable | same test | existing | pending |
+| B1 | if at line 57 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B2 | if at line 62 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B3 | if at line 67 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B4 | if at line 76 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B5 | if at line 80 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B6 | range at line 83 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B7 | if at line 85 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B8 | range at line 89 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B9 | if at line 91 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B10 | if at line 96 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B11 | if at line 99 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B12 | if at line 103 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B13 | range at line 106 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B14 | if at line 113 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B15 | if at line 117 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B16 | if at line 120 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B17 | range at line 124 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B18 | if at line 125 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B19 | if at line 131 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B20 | if at line 136 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B21 | if at line 142 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B22 | if at line 146 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

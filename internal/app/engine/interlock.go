@@ -212,6 +212,9 @@ type idempotencyKeyCarrier interface {
 // describe the engine. The soak already proves it (soak.EndpointPrices) and the
 // retry matrix already bounds it (execgw.QueryPrice), so the only thing that was
 // missing was this line — and cmd/tossctl's coverage test is what says so.
+// The exchange-rate read joined in a072. It is an official Open API OAuth read,
+// not a WTS-session probe; older soak attestations therefore fail closed until a
+// separately authenticated official runner has executed and attested it.
 func RequiredEndpoints() []string {
 	return []string{
 		"GET /api/v1/accounts",
@@ -220,6 +223,7 @@ func RequiredEndpoints() []string {
 		"GET /api/v1/buying-power",
 		"GET /api/v1/holdings",
 		"GET /api/v1/prices",
+		"GET /api/v1/exchange-rate",
 		"POST /api/v1/orders",
 		"POST /api/v1/orders/{id}/cancel",
 	}

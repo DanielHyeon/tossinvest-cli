@@ -1,0 +1,45 @@
+{
+  "file": "internal/protectionreadiness/types.go",
+  "source_sha256": "782c26b8096f87efae82b074c4721281ff00ec938156678618fa5ea7f542ab1d",
+  "package": "protectionreadiness",
+  "function": "boolString",
+  "signature": "boolString(params=1, results=1)",
+  "start": {
+    "line": 131,
+    "column": 1
+  },
+  "end": {
+    "line": 136,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 133,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,7 +1,6 @@
 {
   "file": "internal/weeklyvaluelane/plan.go",
   "source_sha256": "8b6918579e9144f6be2e209e6dc8ad55989010ff980c09bc683908b7ae5004d6",
-  "revision": "base",
   "package": "weeklyvaluelane",
   "function": "Market",
   "receiver": "CampaignPlan",
@@ -27,5 +26,6 @@
   "calls": null,
   "assignments": null,
   "go_statements": null,
-  "defers": null
+  "defers": null,
+  "revision": "base"
 }

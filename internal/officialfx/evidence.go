@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
 const (
@@ -121,9 +120,16 @@ type Evidence struct {
 	seal                           [32]byte
 }
 
+// AuthoritativeExchangeRateReader is the exact pure-boundary read capability
+// needed to mint cross-currency evidence. The concrete official client satisfies
+// it, while lane packages importing Evidence do not inherit that client package.
+type AuthoritativeExchangeRateReader interface {
+	AuthoritativeExchangeRate(context.Context, string, string) (domain.ExchangeRate, error)
+}
+
 // ReadOfficial is the only cross-currency mint. Configured endpoint or HTTP
 // clients may perform ordinary reads but cannot mint official authority.
-func ReadOfficial(ctx context.Context, client *official.Client, quoteCurrency, accountCurrency string, policy HaircutPolicy) (Evidence, error) {
+func ReadOfficial(ctx context.Context, client AuthoritativeExchangeRateReader, quoteCurrency, accountCurrency string, policy HaircutPolicy) (Evidence, error) {
 	if ctx == nil || client == nil || !canonicalCurrency(quoteCurrency) ||
 		!canonicalCurrency(accountCurrency) || quoteCurrency == accountCurrency || policy.seal == ([32]byte{}) ||
 		policy.seal != haircutPolicySeal(policy) {
@@ -131,10 +137,7 @@ func ReadOfficial(ctx context.Context, client *official.Client, quoteCurrency, a
 	}
 	rate, err := client.AuthoritativeExchangeRate(ctx, quoteCurrency, accountCurrency)
 	if err != nil {
-		if errors.Is(err, official.ErrAuthorityOrigin) {
-			return Evidence{}, fmt.Errorf("%w: official origin", ErrInvalidEvidence)
-		}
-		return Evidence{}, fmt.Errorf("officialfx: reading official exchange rate: %w", err)
+		return Evidence{}, fmt.Errorf("%w: official exchange-rate read: %v", ErrInvalidEvidence, err)
 	}
 	return sealOfficial(rate, quoteCurrency, accountCurrency, policy)
 }

@@ -1,0 +1,179 @@
+{
+  "file": "internal/journal/reconcile_states_test.go",
+  "source_sha256": "962f59b970a4a016b19521a1cd125423da06276560fa3ba2549145d025cc0e60",
+  "package": "journal",
+  "function": "TestAtomicMarketReleaseDoesNotCrossIntoPeerMarket",
+  "signature": "TestAtomicMarketReleaseDoesNotCrossIntoPeerMarket(params=1, results=0)",
+  "start": {
+    "line": 189,
+    "column": 1
+  },
+  "end": {
+    "line": 212,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 10
+      },
+      "text": "openReservationJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 19
+      },
+      "text": "j.EnterReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 12
+      },
+      "text": "j.ReleaseReconciles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 20
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 37
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 17
+      },
+      "text": "j.ActiveReconcileStates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

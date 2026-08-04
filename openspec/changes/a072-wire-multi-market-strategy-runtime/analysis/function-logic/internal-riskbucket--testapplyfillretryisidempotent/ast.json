@@ -1,0 +1,148 @@
+{
+  "file": "internal/riskbucket/fill_test.go",
+  "source_sha256": "0781a800b5680485e738404408e4ec3e1d63c9c304338fa1b4b0a2d4da8483ff",
+  "package": "riskbucket",
+  "function": "TestApplyFillRetryIsIdempotent",
+  "signature": "TestApplyFillRetryIsIdempotent(params=1, results=0)",
+  "start": {
+    "line": 32,
+    "column": 1
+  },
+  "end": {
+    "line": 47,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 18
+      },
+      "text": "fillFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 17
+      },
+      "text": "actualEvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 19
+      },
+      "text": "ApplyFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 25
+      },
+      "text": "ApplyFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 27
+      },
+      "text": "reflect.DeepEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

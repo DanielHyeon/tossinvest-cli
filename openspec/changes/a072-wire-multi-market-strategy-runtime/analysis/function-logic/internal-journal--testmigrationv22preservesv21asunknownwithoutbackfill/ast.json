@@ -1,0 +1,283 @@
+{
+  "file": "internal/journal/risk_bucket_migration_test.go",
+  "source_sha256": "40a49416c7c30bc06bf277ef59c484392d0cbf4524177a0192399b7fb50d7a62",
+  "package": "journal",
+  "function": "TestMigrationV22PreservesV21AsUnknownWithoutBackfill",
+  "signature": "TestMigrationV22PreservesV21AsUnknownWithoutBackfill(params=1, results=0)",
+  "start": {
+    "line": 211,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 225,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 24
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 9
+      },
+      "text": "openJournalAtSchema"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 2
+      },
+      "text": "seedExistingRiskReservation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 12
+      },
+      "text": "old.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 18
+      },
+      "text": "Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 23
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 72
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 119
+      },
+      "text": "FixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 214
+      },
+      "text": "migrationsThrough"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 8
+      },
+      "text": "current.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 13
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 13
+      },
+      "text": "current.db.QueryRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 15
+      },
+      "text": "current.ReadRiskBucketState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 43
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 65
+      },
+      "text": "riskBucketOwnerKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 112
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 222,
+        "column": 2
+      },
+      "text": "current.Close"
+    }
+  ]
+}

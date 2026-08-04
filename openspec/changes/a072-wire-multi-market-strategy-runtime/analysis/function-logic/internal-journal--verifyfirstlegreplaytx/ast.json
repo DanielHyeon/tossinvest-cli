@@ -1,0 +1,117 @@
+{
+  "file": "internal/journal/strategy_first_leg_atomic.go",
+  "source_sha256": "b2992b7969a80ed12df004af8db945c9885884c0e7e626fedeb4dfe8d71fa581",
+  "package": "journal",
+  "function": "verifyFirstLegReplayTx",
+  "signature": "verifyFirstLegReplayTx(params=4, results=1)",
+  "start": {
+    "line": 474,
+    "column": 1
+  },
+  "end": {
+    "line": 504,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 500,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 501,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 503,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 9
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 9
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 33
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 3
+      },
+      "text": "strconv.FormatUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 3
+      },
+      "text": "strconv.FormatUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 503,
+        "column": 9
+      },
+      "text": "verifyWeeklyFirstLegReplayTx"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

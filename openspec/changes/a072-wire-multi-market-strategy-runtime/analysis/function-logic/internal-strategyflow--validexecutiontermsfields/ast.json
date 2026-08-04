@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyflow/types.go",
-  "source_sha256": "2d0fa4471aea708b80663feece1f92235e70b5d7fb99d287c5bbe99d3d0691e8",
+  "source_sha256": "5551326fe8dc242aa1ca562f9c4a223a26d36aa5286bff8d11e1d6f5297f7478",
   "package": "strategyflow",
   "function": "validExecutionTermsFields",
   "signature": "validExecutionTermsFields(params=1, results=1)",
   "start": {
-    "line": 180,
+    "line": 273,
     "column": 1
   },
   "end": {
-    "line": 189,
+    "line": 282,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 184,
+        "line": 277,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 181,
+        "line": 274,
         "column": 20
       },
       "text": "canonicalExecutionMinor"
@@ -34,7 +34,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 182,
+        "line": 275,
         "column": 18
       },
       "text": "canonicalExecutionMinor"
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 183,
+        "line": 276,
         "column": 22
       },
       "text": "canonicalExecutionMinor"
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 185,
+        "line": 278,
         "column": 41
       },
       "text": "strings.ToUpper"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 185,
+        "line": 278,
         "column": 57
       },
       "text": "strings.TrimSpace"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 186,
+        "line": 279,
         "column": 111
       },
       "text": "validPriceProvenance"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 187,
+        "line": 280,
         "column": 3
       },
       "text": "validPriceProvenance"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 187,
+        "line": 280,
         "column": 39
       },
       "text": "validPriceProvenance"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 281,
         "column": 3
       },
       "text": "stop.Cmp"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 281,
         "column": 26
       },
       "text": "entry.Cmp"
@@ -108,21 +108,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 181,
+        "line": 274,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 182,
+        "line": 275,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 183,
+        "line": 276,
         "column": 2
       }
     }

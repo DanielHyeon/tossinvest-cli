@@ -7,6 +7,10 @@ KR 운영 안정화를 US 구현의 선행조건으로 두면 한 시장의 일�
 activation/calendar scope로 연결하되, durable dispatch 직전에는 모든 안전 근거를 다시
 검증하는 runtime 계약이 필요하다.
 
+일정상 `KR 운영 안정 후 US 전용 레인 설계·구현` 단계는 존재하지 않는다. 각 production
+slice의 설계, RED, GREEN, integration, race/rollback 및 VERIFY 산출물은 KR과 US를 한 쌍으로
+제공해야 하며, 한 시장 결과만으로 peer 시장의 착수 여부를 결정해서는 안 된다.
+
 ## What Changes
 
 - approved candidate를 evidence snapshot, market scheduler, horizon router, selected lane,

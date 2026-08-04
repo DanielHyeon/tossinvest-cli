@@ -1,16 +1,16 @@
 {
   "file": "internal/strategyflow/types.go",
-  "source_sha256": "2d0fa4471aea708b80663feece1f92235e70b5d7fb99d287c5bbe99d3d0691e8",
+  "source_sha256": "5551326fe8dc242aa1ca562f9c4a223a26d36aa5286bff8d11e1d6f5297f7478",
   "package": "strategyflow",
   "function": "Valid",
   "receiver": "ExecutionTerms",
   "signature": "ExecutionTerms.Valid(params=0, results=1)",
   "start": {
-    "line": 160,
+    "line": 253,
     "column": 1
   },
   "end": {
-    "line": 167,
+    "line": 260,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 161,
+        "line": 254,
         "column": 2
       }
     }
@@ -27,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 162,
+        "line": 255,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 166,
+        "line": 259,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 161,
+        "line": 254,
         "column": 30
       },
       "text": "validExecutionTermsFields"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 166,
+        "line": 259,
         "column": 17
       },
       "text": "executionTermsIdentity"
@@ -61,14 +61,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 164,
+        "line": 257,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 165,
+        "line": 258,
         "column": 2
       }
     }

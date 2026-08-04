@@ -148,6 +148,12 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"strategy_dispatch_owner_current",
 		"strategy_dispatch_owner_epochs",
 		"strategy_execution_lineage",
+		"strategy_first_leg_bindings",
+		"strategy_weekly_first_leg_bindings",
+		"strategy_weekly_market_reservations",
+		"strategy_weekly_reservation_lifecycle_receipts",
+		"strategy_weekly_reservation_receipts",
+		"strategy_weekly_reservation_scopes",
 		"trade_outcomes",
 	}
 	rows, err := j.db.QueryContext(ctx,
@@ -333,6 +339,12 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"broker_order_id", "expected_revision", "from_disposition", "from_state", "lease_id", "next_revision",
 			"observed_at", "operation_identity", "outcome_id", "query_digest", "record_digest", "to_disposition",
 			"to_state", "transition_code",
+		},
+		"strategy_first_leg_bindings": {
+			"account_ref", "aggregate_reservation_id", "attempt_id", "campaign_id", "candidate_id",
+			"created_at", "decision_id", "entry_decision_identity", "evidence_digest", "lane_id",
+			"lane_version", "leg_plan_id", "leg_sequence", "market", "prospective_token", "q_final",
+			"record_digest", "request_digest", "router_id", "router_version", "symbol",
 		},
 		"execution_corrections": {
 			"account_ref", "cumulative_qty", "id", "new_avg_price",

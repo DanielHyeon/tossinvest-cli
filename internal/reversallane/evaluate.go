@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"time"
 )
 
@@ -17,8 +18,32 @@ func EvaluateUS(request USEvaluationRequest) EvaluationResult {
 	return evaluate(request.Context, request.Evidence.CommonEnvelope, request.Config.StructuralWindow, request.Structure, metric, USReversalLaneID)
 }
 
+// ProposeKR returns the cap-free q_candidate for the KR lane. It cannot issue
+// risk, journal, dispatch, or broker authority.
+func ProposeKR(request KREvaluationRequest) EvaluationResult {
+	metric := EvaluateKRMetric(request.Evidence, request.Config)
+	return evaluateStage(request.Context, request.Evidence.CommonEnvelope, request.Config.StructuralWindow, request.Structure, metric, KRReversalLaneID, evaluationProposal)
+}
+
+// ProposeUS is the paired US q_candidate proposal path.
+func ProposeUS(request USEvaluationRequest) EvaluationResult {
+	metric := EvaluateUSMetric(request.Evidence, request.Config)
+	return evaluateStage(request.Context, request.Evidence.CommonEnvelope, request.Config.StructuralWindow, request.Structure, metric, USReversalLaneID, evaluationProposal)
+}
+
+type evaluationStage uint8
+
+const (
+	evaluationAdmitted evaluationStage = iota
+	evaluationProposal
+)
+
 func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Duration, structure StructuralConfirmation, metric MetricResult, laneID string) EvaluationResult {
-	lineage := decisionLineage(context, envelope, structure, laneID)
+	return evaluateStage(context, envelope, window, structure, metric, laneID, evaluationAdmitted)
+}
+
+func evaluateStage(context EvaluationContext, envelope CommonEnvelope, window time.Duration, structure StructuralConfirmation, metric MetricResult, laneID string, stage evaluationStage) EvaluationResult {
+	lineage := decisionLineageForStage(context, envelope, structure, laneID, stage)
 	refuse := func(code RefusalCode) EvaluationResult {
 		return EvaluationResult{Kind: OutcomeRefusal, Code: code, Lineage: lineage, CommonExitIndependent: true}
 	}
@@ -49,7 +74,7 @@ func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Du
 	if context.Leg.Ordinal < 1 || context.Leg.Ordinal > 3 || context.Leg.Cancelled || context.Leg.Expired {
 		return refuse(RefusalLegTerminal)
 	}
-	if !context.Cap.validAt(context.Plan, envelope.EvaluatedAt) {
+	if stage == evaluationAdmitted && !context.Cap.validAt(context.Plan, envelope.EvaluatedAt) {
 		return refuse(RefusalCapInvalid)
 	}
 	if context.Leg.Ordinal == 3 {
@@ -57,21 +82,32 @@ func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Du
 			return refuse(structuralRefusal)
 		}
 	}
-	quantity := PlannedLegQuantity(context.Plan, context.Leg, context.Cap)
+	ceilings := context.Plan.LegCeilings()
+	if context.Leg.FilledQuantity >= ceilings[context.Leg.Ordinal-1] {
+		return refuse(RefusalLegTerminal)
+	}
+	quantity := ceilings[context.Leg.Ordinal-1] - context.Leg.FilledQuantity
+	if stage == evaluationAdmitted {
+		quantity = PlannedLegQuantity(context.Plan, context.Leg, context.Cap)
+	}
 	if quantity == 0 {
 		return refuse(RefusalLegTerminal)
 	}
-	if context.Cap.ReservationQuantity != quantity {
-		return refuse(RefusalCapInvalid)
-	}
-	if riskRefusal := AdmitRisk(context.Plan, context.Risk, context.Cap); riskRefusal != "" {
+	if stage == evaluationAdmitted {
+		if context.Cap.ReservationQuantity != quantity {
+			return refuse(RefusalCapInvalid)
+		}
+		if riskRefusal := AdmitRisk(context.Plan, context.Risk, context.Cap); riskRefusal != "" {
+			return refuse(riskRefusal)
+		}
+	} else if riskRefusal := admitExistingRisk(context.Plan, context.Risk); riskRefusal != "" {
 		return refuse(riskRefusal)
 	}
 	entryAuthority, stopAuthority, targetAuthority, policyDigest, termsOK := validatedExecutionTerms(context.Plan, envelope, context.ExecutionTerms, context.StopCandidate)
 	if !termsOK {
 		return refuse(RefusalExecutionTermsInvalid)
 	}
-	lineage = decisionLineage(context, envelope, structure, laneID)
+	lineage = decisionLineageForStage(context, envelope, structure, laneID, stage)
 	action := "ADD"
 	if context.Leg.Ordinal == 1 {
 		action = "ENTRY"
@@ -79,6 +115,38 @@ func evaluate(context EvaluationContext, envelope CommonEnvelope, window time.Du
 	return EvaluationResult{Kind: OutcomeDecision, Action: action, Quantity: quantity, EntryPriceMinor: entryAuthority.PriceMinor, EffectiveStopMinor: stopAuthority.PriceMinor,
 		TargetPriceMinor: targetAuthority.PriceMinor, EntryProvenance: entryAuthority, StopProvenance: stopAuthority, TargetProvenance: targetAuthority,
 		ExecutionPolicyDigest: policyDigest, Lineage: lineage, CommonExitIndependent: true}
+}
+
+func admitExistingRisk(plan CampaignPlan, state RiskState) RefusalCode {
+	if !plan.valid() || state.PlanDigest != plan.Digest() {
+		return RefusalPlanInvalid
+	}
+	if state.Latches[LatchCampaignRiskOverage] || state.Latches[LatchUnknownActualRisk] {
+		return RefusalRiskLatched
+	}
+	filled, filledOK := parseMinor(state.FilledMinor)
+	held, heldOK := parseMinor(state.HeldMinor)
+	budget, budgetOK := parseMinor(plan.request.RiskBudgetMinor)
+	if !filledOK || !heldOK || !budgetOK {
+		return RefusalArithmeticInvalid
+	}
+	used := new(big.Int).Add(filled, held)
+	if used.BitLen() > maxRiskBits {
+		return RefusalArithmeticInvalid
+	}
+	if used.Cmp(budget) > 0 {
+		return RefusalRiskBudgetExceeded
+	}
+	return ""
+}
+
+func decisionLineageForStage(context EvaluationContext, envelope CommonEnvelope, structure StructuralConfirmation, laneID string, stage evaluationStage) DecisionLineage {
+	lineage := decisionLineage(context, envelope, structure, laneID)
+	if stage == evaluationProposal {
+		lineage.CapSnapshotID = ""
+		lineage.CapPolicyDigest = ""
+	}
+	return lineage
 }
 
 func validateStop(plan CampaignPlan, envelope CommonEnvelope, saved string, candidate StopCandidate) RefusalCode {

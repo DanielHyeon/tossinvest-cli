@@ -1,7 +1,6 @@
-# Branch Test Map: `stopProvenance`
+# Branch Test Map: stopProvenance
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | candidate stop selected, candidate provenance retained | continuation accepted exact-terms tests | covered | covered |
-| B2 | unsupported quote scale refuses provenance | continuation unsupported-currency tests | covered | covered |
-| fallthrough | saved stop selected with forged/zero seal | `TestCallerForgedSavedStopProvenanceFailsClosed` | yes | yes |
+| B1 | if at line 72 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B2 | if at line 74 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

@@ -1,0 +1,80 @@
+{
+  "file": "internal/execgw/retry.go",
+  "source_sha256": "44d102adfb140e460b892417733d18af99ebdb8e41c5c7a77d7fc0ed4c08b29e",
+  "package": "execgw",
+  "function": "Clear",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.Clear(params=1, results=0)",
+  "start": {
+    "line": 509,
+    "column": 1
+  },
+  "end": {
+    "line": 516,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 512,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 510,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 511,
+        "column": 8
+      },
+      "text": "g.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 513,
+        "column": 3
+      },
+      "text": "delete"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 512,
+        "column": 5
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 514,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 511,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    }
+  ]
+}

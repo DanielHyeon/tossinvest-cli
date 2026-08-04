@@ -1,6 +1,6 @@
-# Branch Test Map: `Client.AuthoritativeExchangeRate`
+# Branch Test Map: Client.AuthoritativeExchangeRate
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | nil client refuses without transport | ReadOfficial nil-client test | yes (atomic authority API absent) | yes |
-| B2 | configured client refuses before token/data HTTP; sealed client holds boundary during replay | TestAuthoritativeExchangeRateRejectsConfiguredClientBeforeHTTP / TestAuthoritativeExchangeRateKeepsOriginAndReadInOneBoundary | yes (option replay changed transport and raced) | yes |
+| B1 | if at line 71 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B2 | if at line 76 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

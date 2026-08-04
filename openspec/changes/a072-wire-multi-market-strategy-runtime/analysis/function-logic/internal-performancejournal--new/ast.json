@@ -1,0 +1,30 @@
+{
+  "file": "internal/performancejournal/adapter.go",
+  "source_sha256": "ba1b1dcd211b4b2089daf707b0e3132f57ae4bd04ee60c9e22c3801ee3927d8c",
+  "package": "performancejournal",
+  "function": "New",
+  "signature": "New(params=1, results=1)",
+  "start": {
+    "line": 23,
+    "column": 1
+  },
+  "end": {
+    "line": 23,
+    "column": 78
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 23,
+        "column": 46
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

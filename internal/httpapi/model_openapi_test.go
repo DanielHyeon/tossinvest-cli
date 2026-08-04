@@ -89,6 +89,16 @@ func TestOpenAPIStrategyRuntimeIsStrictPairedReadOnlyProjection(t *testing.T) {
 			t.Errorf("paired market schema lacks %s", market)
 		}
 	}
+	for market, schemaName := range map[string]string{"KR": "StrategyRuntimeMarketKR", "US": "StrategyRuntimeMarketUS"} {
+		property := markets.Properties[market]
+		if !bytes.Contains(property, []byte(`"$ref":"#/components/schemas/`+schemaName+`"`)) &&
+			!bytes.Contains(property, []byte(`"$ref": "#/components/schemas/`+schemaName+`"`)) {
+			t.Errorf("paired market %s does not use exact identity schema %s: %s", market, schemaName, property)
+		}
+		if rawSchema, ok := document.Components.Schemas[schemaName]; !ok || !bytes.Contains(raw, []byte(`"const": "`+market+`"`)) {
+			t.Errorf("exact market schema %s missing const %s: %+v", schemaName, market, rawSchema)
+		}
+	}
 	projection := document.Components.Schemas["StrategyRuntimeProjection"]
 	for _, field := range []string{"schemaVersion", "generatedAt", "markets"} {
 		if _, ok := projection.Properties[field]; !ok {

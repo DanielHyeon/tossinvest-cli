@@ -61,9 +61,10 @@ type riskSnapshotAuthorityMaterialEntry struct {
 }
 
 type riskSnapshotAuthorityMaterial struct {
-	Scope   RiskSnapshotScope
-	Policy  ReservePolicy
-	Entries []riskSnapshotAuthorityMaterialEntry
+	Scope      RiskSnapshotScope
+	Policy     ReservePolicy
+	Generation uint64
+	Entries    []riskSnapshotAuthorityMaterialEntry
 }
 
 // riskSnapshotAuthoritySource is deliberately package-private. A production
@@ -77,9 +78,10 @@ type RiskSnapshotAuthorityService struct {
 	source riskSnapshotAuthoritySource
 }
 
-// NewRiskSnapshotAuthorityService fails closed until a package-owned
-// production loader is implemented. It performs no journal, broker, activation
-// or other mutation.
+// NewRiskSnapshotAuthorityService remains a deliberately unusable zero-input
+// constructor: production must call LoadProductionRiskSnapshotAuthority with
+// exact signed policy, journal, strategy and FX inputs. It performs no journal,
+// broker, activation or other mutation.
 func NewRiskSnapshotAuthorityService() (*RiskSnapshotAuthorityService, error) {
 	return nil, ErrRiskSnapshotAuthorityUnavailable
 }
@@ -112,10 +114,11 @@ func (s *RiskSnapshotAuthorityService) Load(ctx context.Context, scope RiskSnaps
 // authority snapshot. All fields remain private so callers can only obtain
 // value copies.
 type RiskSnapshotAuthorityBundle struct {
-	scope   RiskSnapshotScope
-	policy  ReservePolicy
-	entries [5]riskSnapshotAuthorityMaterialEntry
-	digest  string
+	scope      RiskSnapshotScope
+	policy     ReservePolicy
+	generation uint64
+	entries    [5]riskSnapshotAuthorityMaterialEntry
+	digest     string
 }
 
 func (b RiskSnapshotAuthorityBundle) Scope() RiskSnapshotScope { return b.scope }
@@ -123,6 +126,8 @@ func (b RiskSnapshotAuthorityBundle) Scope() RiskSnapshotScope { return b.scope 
 func (b RiskSnapshotAuthorityBundle) Policy() ReservePolicy { return b.policy }
 
 func (b RiskSnapshotAuthorityBundle) Digest() string { return b.digest }
+
+func (b RiskSnapshotAuthorityBundle) Generation() uint64 { return b.generation }
 
 func (b RiskSnapshotAuthorityBundle) Entries() []RiskSnapshotAuthorityEntry {
 	out := make([]RiskSnapshotAuthorityEntry, len(b.entries))
@@ -140,8 +145,7 @@ func (b RiskSnapshotAuthorityBundle) Validate(scope RiskSnapshotScope) error {
 		return ErrRiskSnapshotScopeMismatch
 	}
 	material := riskSnapshotAuthorityMaterial{
-		Scope:   b.scope,
-		Policy:  b.policy,
+		Scope: b.scope, Policy: b.policy, Generation: b.generation,
 		Entries: append([]riskSnapshotAuthorityMaterialEntry(nil), b.entries[:]...),
 	}
 	ordered, err := validateRiskSnapshotAuthorityMaterial(scope, material)
@@ -167,7 +171,7 @@ func sealRiskSnapshotAuthorityBundle(scope RiskSnapshotScope, material riskSnaps
 	if err != nil {
 		return RiskSnapshotAuthorityBundle{}, err
 	}
-	bundle := RiskSnapshotAuthorityBundle{scope: scope, policy: material.Policy, digest: digest}
+	bundle := RiskSnapshotAuthorityBundle{scope: scope, policy: material.Policy, generation: material.Generation, digest: digest}
 	copy(bundle.entries[:], ordered)
 	return bundle, nil
 }

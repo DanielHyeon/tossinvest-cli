@@ -1,5 +1,5 @@
-# Branch Test Map: `fromWeekly`
+# Branch Test Map: fromWeekly
 
-| Branch | Scenario | Required test |
-|---|---|---|
-| B1 | branchless accepted/refused mapping | KR/US exact capped-target mapping |
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | Branchless happy path preserves the documented invariant | Package happy-path test | existing behavior inspected | yes |

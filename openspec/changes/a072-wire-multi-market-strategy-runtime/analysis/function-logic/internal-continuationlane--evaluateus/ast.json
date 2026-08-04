@@ -1,0 +1,47 @@
+{
+  "file": "internal/continuationlane/evaluator.go",
+  "source_sha256": "f72455b6b02c4c781036d2167d6b2d704277605dc47efab6aaec62bd34146269",
+  "package": "continuationlane",
+  "function": "EvaluateUS",
+  "signature": "EvaluateUS(params=1, results=1)",
+  "start": {
+    "line": 183,
+    "column": 1
+  },
+  "end": {
+    "line": 185,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 9
+      },
+      "text": "evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 62
+      },
+      "text": "EvaluateUSParticipation"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

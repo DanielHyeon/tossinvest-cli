@@ -1,0 +1,165 @@
+{
+  "file": "internal/performance/store_test.go",
+  "source_sha256": "285205da50b8b8bd6b44c90c933304a4f21143f3aed4e5bea8e8d6b3fbc2f01c",
+  "package": "performance",
+  "function": "TestStoreSchemaIsSeparateAppendOnlyAndVersioned",
+  "signature": "TestStoreSchemaIsSeparateAppendOnlyAndVersioned(params=1, results=0)",
+  "start": {
+    "line": 29,
+    "column": 1
+  },
+  "end": {
+    "line": 43,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 11
+      },
+      "text": "openTestStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 17
+      },
+      "text": "store.SchemaVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 37
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 13
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 13
+      },
+      "text": "store.db.QueryRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 5
+      },
+      "text": "filepath.Base"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 19
+      },
+      "text": "store.Path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 25
+      },
+      "text": "store.Path"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

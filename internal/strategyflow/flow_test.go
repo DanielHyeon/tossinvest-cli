@@ -70,7 +70,7 @@ func TestApprovedCandidatesRouteAndEvaluateAllPairedBindingsWithCompleteLineage(
 				t.Fatalf("calls router/lane=%d/%d", routerCalls, laneCalls)
 			}
 			if result.Lineage.Market != descriptor.Market || result.Lineage.CandidateLifeID != approved.CandidateLifeID() ||
-				result.Lineage.RouterRelease != strategyrouter.RouterRelease || result.Lineage.LaneID != descriptor.LaneID ||
+				result.Lineage.RouterID != strategyrouter.RouterID || result.Lineage.RouterRelease != strategyrouter.RouterRelease || result.Lineage.LaneID != descriptor.LaneID ||
 				result.Lineage.LaneVersion != descriptor.LaneVersion || result.Lineage.LaneRelease != descriptor.Release || result.Lineage.CampaignID == "" || result.Lineage.LegOrdinal == 0 ||
 				result.Lineage.CandidateEvidenceDigest == "" || result.Lineage.RouterEvidenceDigest == "" || result.Lineage.LaneEvidenceDigest == "" ||
 				result.Lineage.RiskBudgetDigest == "" || result.Lineage.Identity == "" {

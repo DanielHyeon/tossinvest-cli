@@ -123,6 +123,7 @@ def changed_existing_functions(
             )
         try:
             old_functions = go_functions(temporary, root)
+            old_qualified = {qualified(function) for function in old_functions}
             for function in old_functions:
                 start = int(function["start"]["line"])
                 end = int(function["end"]["line"])
@@ -136,6 +137,14 @@ def changed_existing_functions(
             current = root / new_source if new_source else None
             if current and current.exists():
                 for function in go_functions(current, root):
+                    # Function Logic Maps are required for functions that existed
+                    # at the frozen comparison base and whose logic changed. A
+                    # newly added function in an existing file has no base logic
+                    # to map; treating it as "modified existing" contradicts the
+                    # workflow contract and makes added test helpers look like
+                    # high-risk edits.
+                    if qualified(function) not in old_qualified:
+                        continue
                     start = int(function["start"]["line"])
                     end = int(function["end"]["line"])
                     if any(
@@ -299,12 +308,28 @@ def validate_target(target: Path, root: Path) -> tuple[list[str], tuple[str, str
 def check(change: str, root: Path = ROOT) -> list[str]:
     change_dir = root / "openspec" / "changes" / change
     analysis = change_dir / "analysis" / "function-logic"
+    reference_file = change_dir / "analysis" / "function-logic-reference.txt"
     review = change_dir / "review.md"
     review_text = review.read_text(encoding="utf-8") if review.exists() else ""
     try:
-        required = changed_existing_functions(root, resolve_base(change_dir, root))
+        base = resolve_base(change_dir, root)
+        required = changed_existing_functions(root, base)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return [f"cannot derive modified Go functions: {exc}"]
+    if reference_file.exists():
+        if analysis.exists() and any(path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()):
+            return ["function-logic reference cannot coexist with local function-logic evidence"]
+        referenced_change = reference_file.read_text(encoding="utf-8").strip()
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", referenced_change) or referenced_change == change:
+            return ["function-logic reference names an invalid or recursive change"]
+        referenced_dir = root / "openspec" / "changes" / referenced_change
+        try:
+            referenced_base = resolve_base(referenced_dir, root)
+        except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
+            return [f"function-logic reference base is invalid: {exc}"]
+        if referenced_base != base:
+            return ["function-logic reference must share the exact comparison base"]
+        analysis = referenced_dir / "analysis" / "function-logic"
     if not analysis.exists():
         if required:
             names = ", ".join(f"{source}:{function}" for source, function in required)

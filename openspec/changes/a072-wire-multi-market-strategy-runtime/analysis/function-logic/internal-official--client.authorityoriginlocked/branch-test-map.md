@@ -1,5 +1,5 @@
-# Branch Test Map: `Client.authorityOriginLocked`
+# Branch Test Map: Client.authorityOriginLocked
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | only sealed constructor-owned origin is accepted | TestAuthorityOriginRejectsConfiguredTransport | yes (separate check/read allowed TOCTOU) | yes |
+| B1 | Branchless happy path preserves the documented invariant | Package happy-path test | existing behavior inspected | yes |

@@ -20,7 +20,7 @@ func TestMigrationV25AddsOnlyDurableStrategyDispatchStateAndPreservesV24(t *test
 	if err := old.Close(); err != nil {
 		t.Fatal(err)
 	}
-	current, err := Open(context.Background(), Options{Path: path, Clock: clock.NewFake(migrationTestInstant), FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt})})
+	current, err := Open(context.Background(), Options{Path: path, Clock: clock.NewFake(migrationTestInstant), FSProber: FixedFSProber(FSInfo{Name: "ext4", Magic: MagicExt}), migrationOverride: &migrationPlan{steps: migrationsThrough(25), target: 25}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestMigrationV25FailureRollsBackEveryDispatchTableAndVersion(t *testing.T) 
 
 func TestReleasedV24BuildRefusesV25Journal(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "journal.db")
-	current := openTestJournalAt(t, path)
+	current := openJournalAtSchema(t, path, 25)
 	if err := current.Close(); err != nil {
 		t.Fatal(err)
 	}

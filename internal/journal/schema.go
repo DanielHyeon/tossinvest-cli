@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 25
+const SchemaVersion = 29
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -136,6 +136,17 @@ var migrations = []migration{
 	// central-owner fence, independent KR/US authority snapshots and irreversible
 	// lease/outcome CAS journal. Released v24 rows are not rewritten.
 	{Version: 25, SQL: schemaV25},
+	// schemaV26 lives in strategy_first_leg_v26.sql. It adds one immutable
+	// cross-family first-leg authority companion and an additional lease guard.
+	// Released v20-v25 schema and historical rows remain untouched.
+	{Version: 26, SQL: schemaV26},
+	// schemaV27 lives in strategy_weekly_reservation_v27.sql. It adds paired
+	// KR/US durable market-week uniqueness without changing v26 authority rows.
+	{Version: 27, SQL: schemaV27},
+	// schemaV28 closes the v25 UPDATE rebind gap without rewriting any lease.
+	{Version: 28, SQL: schemaV28},
+	// schemaV29 adds immutable receipts for ACTIVE→CONSUMED/RELEASED weekly lifecycle transitions.
+	{Version: 29, SQL: schemaV29},
 }
 
 // schemaV1 is the initial schema.

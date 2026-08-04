@@ -249,9 +249,9 @@ const overviewTemplates = `
   편집할 수 없다. 게이트가 열려 있는지는 여기서 판정하지 않는다: 그 판정은 엔진 프로세스가 자신의
   기동 인터록으로 내리고, 콘솔은 그 프로세스가 출력한 사유를 위 엔진 패널에 그대로 옮길 뿐이다.</p>
   {{if .Read}}
-  <p class="muted">한도 통화 {{if .Currency}}<strong>{{.Currency}}</strong>{{else}}<span class="muted">(미지정)</span>{{end}}.</p>
+  <p class="muted">계좌 기준 통화 {{if .Currency}}<strong>{{.Currency}}</strong>{{else}}<span class="muted">(미지정)</span>{{end}}.</p>
   {{else if .Wired}}
-  <p class="muted">한도 통화 <span class="muted">미측정</span> <code>config_unreadable</code> —
+  <p class="muted">계좌 기준 통화 <span class="muted">미측정</span> <code>config_unreadable</code> —
   설정을 읽지 못했으므로 통화도 읽지 못했다. <strong>미지정과는 다르다</strong>: 미지정은 파일이
   말하는 바이고, 이것은 파일을 아무도 읽지 못했다는 뜻이다.</p>
   {{end}}

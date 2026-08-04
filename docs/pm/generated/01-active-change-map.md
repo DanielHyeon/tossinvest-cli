@@ -72,8 +72,8 @@
 | `a066-add-multi-horizon-risk-buckets` | STORY-TOS-a066 | in_progress |
 | `a067-add-kr-us-continuation-lanes` | STORY-TOS-a067 | in_progress |
 | `a068-add-kr-us-reversal-lanes` | STORY-TOS-a068 | in_progress |
-| `a069-add-kr-us-weekly-value-lanes` | STORY-TOS-a069 | in_progress |
+| `a069-add-kr-us-weekly-value-lanes` | STORY-TOS-a069 | implemented |
 | `a070-add-multi-market-horizon-router` | STORY-TOS-a070 | in_progress |
 | `a071-wire-kr-us-protection-readiness` | STORY-TOS-a071 | in_progress |
-| `a072-wire-multi-market-strategy-runtime` | STORY-TOS-a072 | in_progress |
+| `a072-wire-multi-market-strategy-runtime` | STORY-TOS-a072 | implemented |
 | `a073-operate-multi-market-strategy-lanes` | STORY-TOS-a073 | in_progress |

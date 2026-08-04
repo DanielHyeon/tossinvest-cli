@@ -125,6 +125,9 @@ python3 tools/logic-map/check_analysis.py --change <change-id>
 Map에는 입력·불변식, 모든 분기/early return, 호출과 error/timeout/retry 계약, mutation,
 fallback, live config binding, branch별 테스트를 기록한다. 구현 후 AST와 Map을 다시 최신화한다.
 새 leaf 함수, 문서, 단순 설정만 바꾸는 경우 `not-applicable` 사유를 review/완료 보고에 남길 수 있다.
+기존 파일에 새 함수가 추가되었더라도 frozen base에 같은 qualified function이 없으면
+`modified existing function`으로 분류하지 않는다. 삭제·교체된 base 함수는 `revision=base` 증거를
+계속 요구한다.
 면제 문구는 gate가 검사하는 `Function Logic Map: not-applicable` 형식을 사용한다. gate는
 `HEAD`(CI에서는 `SDD_BASE_REF`) 대비 수정된 기존 Go 함수를 직접 계산하고, 각 함수의 source
 SHA-256·함수명·분기 수와 묶인 산출물이 없으면 면제를 거절한다.

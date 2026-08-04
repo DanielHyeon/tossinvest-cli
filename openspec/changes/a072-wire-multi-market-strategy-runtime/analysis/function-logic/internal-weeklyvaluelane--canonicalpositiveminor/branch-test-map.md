@@ -1,6 +1,5 @@
-# Branch Test Map: `canonicalPositiveMinor`
+# Branch Test Map: canonicalPositiveMinor
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | absent or padded decimal | `TestWeeklyMissingExplicitTargetFailsClosed` | yes | yes |
-| B2 | parse/sign/canonical rejection | weekly exact terms tests | covered | covered |
+| B1 | if at line 318 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

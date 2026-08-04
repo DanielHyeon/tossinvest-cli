@@ -1,9 +1,11 @@
 ## 1. Contract and pre-edit logic maps
 
-- [ ] 1.1 Capture the implementation base, refresh CodeGraph evidence, and map the dormant descriptor, scheduler, horizon router, strategy dispatch, Guardian/Gateway and engine supervisor call paths without starting the engine or changing activation
-- [ ] 1.2 Create pre-edit Function Logic Maps and Branch Test Maps for `runEngineRun`, `engineRuntime`, engine runtime supervision, scheduler decision/restore, `strategydispatch.Dispatch`, `strategyengine.DormantRuntimeDescriptor`, and every other existing function that implementation will change
-- [ ] 1.3 Freeze a branch-to-scenario matrix covering KR/US concurrent progress, independent calendar/activation/budget/refusal, complete lineage, irreversible lease states and A→B→A drift, owner epoch/fencing, attested broker idempotency, restart ambiguity, worker failure isolation, central integrity fallback and safety-loop continuity
+- [x] 1.1 Capture the implementation base, refresh CodeGraph evidence, and map the dormant descriptor, scheduler, horizon router, strategy dispatch, Guardian/Gateway and engine supervisor call paths without starting the engine or changing activation
+- [x] 1.2 Create pre-edit Function Logic Maps and Branch Test Maps for `runEngineRun`, `engineRuntime`, engine runtime supervision, scheduler decision/restore, `strategydispatch.Dispatch`, `strategyengine.DormantRuntimeDescriptor`, and every other existing function that implementation will change
+- [x] 1.3 Freeze a branch-to-scenario matrix covering KR/US concurrent progress, independent calendar/activation/budget/refusal, complete lineage, irreversible lease states and A→B→A drift, owner epoch/fencing, attested broker idempotency, restart ambiguity, worker failure isolation, central integrity fallback and safety-loop continuity
 - [x] 1.4 Record the new isolated-core Function Logic and Branch Test Map in `analysis/function-logic/isolated-core.md`; existing runtime functions remain unchanged in this wave
+- [x] 1.5 Enforce the paired-delivery gate: every remaining contract, RED test, implementation slice, production assembly and verification artifact MUST cover KR and US in the same wave; a KR-only or US-only result is incomplete and MUST NOT be used as the prerequisite for starting the peer market
+- [x] 1.6 Freeze the paired two-stage lane contract before production edits: all six KR/US lanes produce a sealed cap-free `q_candidate` proposal first, then the account-base Guardian/five-bucket transaction derives `q_final`; fabricated unlimited caps and `q_final` feedback into lane proposal are forbidden
 
 ## 2. RED concurrent runtime and lease tests
 
@@ -18,33 +20,64 @@
 - [x] 2.9 Add isolated-core static guards proving no broker/live transport, journal/runtime writer, WTS/paper/shadow/canary path, toggle or approval capability is imported
 - [x] 2.10 Add adversarial-review RED tests for `AMBIGUOUS+HELD`-only resubmit with exact current authority/owner, out-of-order nonterminal consumption, authoritative non-contradictory outcome proof and issue-time floor
 - [x] 2.11 Add adversarial-review RED tests for exact worker latch/OFF state, immutable first typed refusal, saturating restart arithmetic and canonical bounded journal/adapter identities that remain invalid after resealing
+- [x] 2.12 Add one paired RED journal suite for the approved first-leg atomic-admission contract: KR/US concurrent success in either commit order, one-winner scope conflict, journal-minted prospective token, exact replay/divergent replay, cross-market substitution, entropy failure, statement rollback and zero dispatch/Gateway authority; neither market's GREEN result may be reported separately
+- [x] 2.13 Add RED v26 migration/authority tests proving v25 KR/US rows are preserved, a failed migration rolls back to v25, a v25 build refuses v26, mismatched raw companion rows fail, and a dispatch lease without the exact bound campaign/leg plan/lineage fails before transport
+- [x] 2.14 Add paired KR/US RED composite-settlement tests proving caller outcome fields cannot strengthen durable authority, cross-attempt bindings fail closed, opaque broker IDs remain byte-exact, mapping-before/after fill races backfill exactly once, and every late link/backfill failure rolls back core, lease, risk, campaign and strategy lineage together
+- [x] 2.15 Add paired KR/US independent-review regressions for mandatory official verification, terminal ACK-window zero/partial remainder release, one-transaction prepared refusal with rollback, and production campaign fill-hook binding
 
 ## 3. Concurrent runtime implementation
 
 - [x] 3.1 Implement a pure supervised coordinator state with independent KR/US calendar/activation/evidence/budget bindings, bounded restart latch and typed first refusal
 - [x] 3.2 Connect approved candidates through the market/horizon router and pure lane evaluation, preserving market, candidate/evidence, router/lane/version and campaign/leg lineage before any Guardian or broker capability is available
 - [x] 3.3 Implement the irreversible durable dispatch lease state machine and outcome/disposition transaction that binds every safety generation, owner epoch/fencing token, risk reservation and attempt lineage; every pre-transport validation failure is exact `REFUSED + RELEASED`, and A→B→A cannot revive a lease
-- [ ] 3.4 Implement one fenced central dispatch owner that reloads current durable authority immediately before the official Gateway call and rejects missing, changed, expired, replayed, stale-owner or cross-market leases before broker transport
+- [x] 3.4a Implement the transport-free fenced central `ISSUED→CLAIMED|REFUSED` claim CAS: repeat exact current market/first-leg/attempt/client-order/router authority, terminally normalize the exact aggregate plus five buckets on refusal, and keep KR/US paired with zero Gateway/broker capability
+- [x] 3.4b Implement fenced current-authority revalidation at `CLAIMED→SUBMITTING` immediately before the official Gateway call, including durable transport-start authority and restart recovery; keep dormant until the Gateway/Guardian production bridge is explicitly authorized
 - [x] 3.5 Implement isolated `SUBMITTING` recovery classification with exact broker identity/query: definitive rejection/no-accept/no-fill atomically becomes `REFUSED + RELEASED`, acceptance becomes `SUBMITTED + TRANSFERRED`, only durable uncertainty becomes `AMBIGUOUS + HELD`, and same-operation-key retry requires current attested idempotency/dedup capability
 - [x] 3.6 Implement the separate durable reservation disposition and atomic release/transfer/hold pure-result rules; exact reconciliation may change disposition but must never revive or rewrite a terminal lease
-- [ ] 3.7 Extend engine supervision so cycle and abnormal worker failures latch/restart only that market while peer market and safety-class loops continue; reserve process fail-closed for central integrity faults
+- [x] 3.7 Extend engine supervision so cycle and abnormal worker failures latch/restart only that market while peer market and safety-class loops continue; reserve process fail-closed for central integrity faults
 - [x] 3.8 Implement the external heartbeat supervisor contract as a sealed pure plan with fenced safety-only fallback, versioned RTO ≤60 seconds, no entry-lease capability, and explicit fallback-unavailable alert state
 - [x] 3.9 Publish immutable market-keyed isolated runtime state for later read-only integration without adding activation, order, protection or operating-setting mutation capability
 - [x] 3.10 Harden isolated recovery and adapter boundaries from independent HIGH review: zero-authority stale resubmit, exact outcome proof, terminal out-of-order consumption, saturating worker restart and post-mint canonical identity invariants
+- [x] 3.11 Implement one market-parameterized journal-owned first-leg transaction that atomically binds q_final decision, aggregate/five reservations, immutable strategy lineage, campaign/prospective claim, risk owner and leg 1; deliver KR/KRW and US/USD support together without creating a dispatch lease or broker capability
+- [x] 3.12 Append schema v26 with an immutable first-leg authority companion and an additive lease-insert guard; leave released v20-v25 bytes and historical rows unchanged
+- [x] 3.13 Implement one account-base Guardian and one frozen official FX authority path for paired KR identity and US quote-to-base conversion; keep quote cash separate, use conservative base ceil/quantity floor, and prove combined-cap races without waiting for either market to stabilize first
+- [x] 3.14 Persist and verify one versioned base-limit/FX envelope through aggregate plus five-bucket admission and the immediate pre-Gateway fence; stale, forged, reversed or cross-market authority must produce zero journal authority and zero broker calls while safety paths continue
+- [x] 3.15 Add the paired KR/US strategy-only verified-dispatch path: atomically bind core `DISPATCH_STARTED` with lease `SUBMITTING`, preserve durable byte-exact ACK evidence, and commit core outcome, lease disposition, five risk-order mappings, campaign watermark, strategy execution lineage and any durable missed-fill backfill in one bounded cancellation-detached `BEGIN IMMEDIATE` settlement; preserve normal `DispatchVerified`, add no resend/recovery authority, and derive every outcome from durable state rather than caller class/order/digest/time
+- [x] 3.16 Close the paired KR/US independent-review P1 gaps: require an official verifier before any strategy mutation, release terminal aggregate/five-bucket remainders in the authoritative transaction, atomically close prepared core+claim+six holds before transport, and bind the production Campaign fill hook while entry remains dormant
+- [x] 3.17 Add the paired read-only production scheduler activation verifier: consume exact owner-only, digest-pinned, Ed25519-signed KR and US manifests concurrently from one frozen clock, preserve market-local refusal, expose no activation constructor/writer, and leave both production workers dormant until the remaining calendar/evidence/risk/protection assembly is complete
+- [x] 3.18 Connect the paired production schedule loader to `engine run`: freeze one clock, load KR/US desired state and official calendars concurrently, verify market-scoped signed activation independently, return only scalar observations across the command boundary, and keep both workers dormant until candidate/risk/protection cycle completeness is proven
+- [x] 3.19 Connect the paired read-only production candidate authority: consume exact owner-only, activation-digest-pinned KR/US threshold, evidence and approval files concurrently at the scheduler's frozen observation; assess the shared discovery store without market starvation, return only immutable value snapshots/scalar observations, and keep both workers dormant until risk/lane/admission/Gateway completeness is proven
+- [x] 3.20 Connect the paired production official FX loader: use the same frozen observation for KR account-base identity and US signed-policy official conversion, preserve independent market outcomes and opaque evidence, expose scalar observations only, and keep both workers dormant until risk/lane/admission/Gateway completeness is proven
+- [x] 3.21 Connect the paired production five-bucket snapshot authority: consume exact owner-only, digest-pinned, Ed25519-signed KR/US risk policies, sealed lane results, opaque official FX and schema-v26 journal `filled + HELD` usage concurrently; preserve market-local refusal, expose scalar observations only, and keep both workers dormant until production lane-input and first-leg cycle completeness is proven
+- [x] 3.22 Break the lane/a066 ordering cycle for all six bindings in one wave: continuation, reversal and weekly-value KR/US expose cap-free sealed `q_candidate` proposals, five-bucket production loading accepts only that proposal seal, and a separate non-increasing projection applies `q_final` without changing lineage or non-quantity execution terms
+- [x] 3.23 Connect the paired read-only production router authority: verify exact signed three-lane KR/US manifests, rebuild owner snapshots from schema-v26 journal history, bind the separately verified scheduler activation/calendar, preserve market-local failure and expose no owner/market-record constructor or writer
+- [x] 3.24 Connect the paired production lane-proposal authority: replay exact immutable KR/US evidence.db snapshots read-only, evaluate the router-selected continuation/reversal/weekly lane with the same official FX, enforce durable weekly market-key uniqueness, and expose only sealed cap-free q_candidate results with market-local failure
 
 ## 4. Production assembly integration
 
-- [ ] 4.1 Wire evidence, scheduler, router, lane, campaign/risk, Guardian, dispatch lease and official Gateway into the production engine profile after existing recovery/interlock prerequisites
-- [ ] 4.2 Integrate KR and US workers with fake clocks/calendars and bounded queues so one market's slow API or unavailable evidence cannot starve the other market or any safety-class loop
-- [ ] 4.3 Prove end-to-end isolated KR and US decisions progress concurrently through the fenced central dispatch owner with deterministic lineage, non-revivable leases and no duplicate submission across restart/unknown outcome
-- [ ] 4.4 Prove lane, scheduler, autostart or automation OFF yields zero new entries/legs/scale-ins while existing protection, exit, reconciliation, fill detection and emergency reduction continue
-- [ ] 4.5 Preserve current production baseline defaults: runtime may be deployed but lane/autostart/entry remain OFF, activation remains absent, ProtectionReady remains evidence-gated, and no LIVE approval is synthesized
-- [ ] 4.6 Fault-inject abnormal market workers and central integrity loss to prove the former isolates one market and the latter reaches fenced safety-only fallback within the frozen RTO while protection/exit/reconciliation remain continuous
+Paired completion rule: tasks 4.1 through 4.6 remain pending until their KR and US paths both pass in
+the same implementation wave. KR operational stability is not a prerequisite for US design or
+implementation, and the inverse is also forbidden.
+
+Execution order inside this section is component-based, not market-based: each numbered item runs
+`KR RED + US RED`, then `KR GREEN + US GREEN`, then one paired integration checkpoint. A result from
+only one market cannot advance the next item or be labelled an operational-stability milestone.
+
+- [x] 4.1 Wire evidence, scheduler, router, lane, campaign/risk, the single account-base Guardian, paired KR/US FX authority, dispatch lease and official Gateway into the production engine profile after existing recovery/interlock prerequisites
+- [x] 4.2 Integrate KR and US workers with fake clocks/calendars and bounded queues so one market's slow API or unavailable evidence cannot starve the other market or any safety-class loop
+- [x] 4.3 Prove end-to-end isolated KR and US decisions progress concurrently through the fenced central dispatch owner with deterministic lineage, non-revivable leases and no duplicate submission across restart/unknown outcome
+- [x] 4.4 Prove lane, scheduler, autostart or automation OFF yields zero new entries/legs/scale-ins while existing protection, exit, reconciliation, fill detection and emergency reduction continue
+- [x] 4.5 Preserve current production baseline defaults: runtime may be deployed but lane/autostart/entry remain OFF, activation remains absent, ProtectionReady remains evidence-gated, and no LIVE approval is synthesized
+- [x] 4.6 Fault-inject abnormal market workers and central integrity loss to prove the former isolates one market and the latter reaches fenced safety-only fallback within the frozen RTO while protection/exit/reconciliation remain continuous
 
 ## 5. VERIFY and review gates
 
-- [ ] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker
-- [ ] 5.2 Run targeted strategy/runtime/scheduler/risk/execgw/engine tests, affected-package race tests, lease crash/restart suites, official-only mutation guards, full tests and vet, and strict OpenSpec/PM validation
-- [ ] 5.3 Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a072-wire-multi-market-strategy-runtime`, then complete adversarial independent review before marking the high-risk change complete
-- [ ] 5.4 Verify with read-only assertions that KR/US activation and LIVE approval did not change, no live broker mutation occurred, and OFF still preserves protection, exit, reconciliation and fill continuity
+Paired verification rule: items 5.1 through 5.4 run against one KR/US release candidate and one
+paired scenario matrix. A KR-only pass does not start, unblock or waive US verification, and a US-only
+pass has the same restriction. Neither market has an operational-stability milestone inside this phase.
+
+- [x] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker
+- [x] 5.2 Run targeted strategy/runtime/scheduler/risk/execgw/engine tests, affected-package race tests, lease crash/restart suites, official-only mutation guards, full tests and vet, and strict OpenSpec/PM validation
+- [x] 5.3 Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a072-wire-multi-market-strategy-runtime`, then complete adversarial independent review before marking the high-risk change complete
+- [x] 5.4 Verify with read-only assertions that KR/US activation and LIVE approval did not change, no live broker mutation occurred, and OFF still preserves protection, exit, reconciliation and fill continuity
 - [x] 5.5 Run isolated-core unit, race, vet, fuzz, coverage, static dependency and strict OpenSpec validation; preserve all existing-file production integration gates above as pending

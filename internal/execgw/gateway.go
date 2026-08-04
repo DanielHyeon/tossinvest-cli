@@ -132,6 +132,11 @@ type Gateway struct {
 	protectionReadiness          *protection.ReadinessAdapter
 	forceReadinessAdapterForTest bool
 	protectionCheckForTest       func(context.Context, string, protectionCheckpoint) (protectionCheckpoint, *RejectedError)
+	loadStrategyDispatchLease    func(context.Context, string) (journal.StrategyDispatchLease, error)
+	dispatchStrategyVerified     func(context.Context, *journal.Attempt, journal.StrategyDispatchLeaseCAS, journal.DispatchFunc, journal.ExistenceCheck) (journal.Result, error)
+	refuseStrategyPreTransport   func(context.Context, journal.StrategyDispatchPreTransportRefusalRequest) (journal.StrategyDispatchLease, error)
+	requireStrategyTransport     func(context.Context, journal.StrategyDispatchLeaseCAS) error
+	skipStrategyEntryABAForTest  bool
 
 	// inflight holds the in-process claim on a symbol for the duration of a
 	// mutation, so two goroutines cannot both pass the journal's in-flight check.
@@ -344,10 +349,17 @@ type mutationPlan struct {
 	// the replay procedure can resend those bytes instead of rebuilding them
 	// (design D2). nil for mutations with no key and therefore no replay.
 	wireBody func(key string) (string, error)
+	// strategy is present only for the paired KR/US first-leg path. Ordinary
+	// Place, Cancel and Amend cannot populate this private capability.
+	strategy *strategyDispatchCapability
 }
 
 // Place submits a new order through the full gateway sequence.
 func (g *Gateway) Place(ctx context.Context, req PlaceRequest) (Outcome, error) {
+	return g.place(ctx, req, nil)
+}
+
+func (g *Gateway) place(ctx context.Context, req PlaceRequest, strategy *strategyDispatchCapability) (Outcome, error) {
 	intent := req.Intent
 	plan := mutationPlan{
 		kind:      journal.KindPlace,
@@ -365,6 +377,7 @@ func (g *Gateway) Place(ctx context.Context, req PlaceRequest) (Outcome, error) 
 		raisesExposure: strings.EqualFold(intent.Side, "buy"),
 		baseline:       req.Baseline,
 		intentID:       strings.TrimSpace(req.IntentID),
+		strategy:       strategy,
 	}
 	if g.preflight != nil {
 		plan.preflight = func(ctx context.Context) *RejectedError {
@@ -450,14 +463,46 @@ func (g *Gateway) executeOpts(token string) trading.ExecuteOptions {
 }
 
 // submit runs the ordering documented at the top of this file.
-func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDecision) (Outcome, error) {
+func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDecision) (returned Outcome, returnedErr error) {
+	var preTransportClaim *strategyPreTransportClaim
+	var decision journal.Decision
+	var loadRejected *RejectedError
+	var prep journal.PrepareRequest
+	preTransportClaimAttempted := false
+	preTransportClaimFinalizationAttempted := false
+	strategyCrossedTransport := false
+	defer func() {
+		if strategyCrossedTransport || returnedErr == nil || preTransportClaimFinalizationAttempted {
+			return
+		}
+		if preTransportClaim == nil && plan.strategy != nil && !preTransportClaimAttempted &&
+			decision.ID != "" && prep.ClientOrderID != "" {
+			preTransportClaimAttempted = true
+			lease, claimRejected := g.loadClaimedStrategyLeaseBinding(ctx, decision, prep.ClientOrderID, plan)
+			if claimRejected != nil {
+				returnedErr = errors.Join(returnedErr, claimRejected)
+				return
+			}
+			preTransportClaim = &strategyPreTransportClaim{lease: lease}
+		}
+		if preTransportClaim == nil {
+			return
+		}
+		var rejected *RejectedError
+		if !errors.As(returnedErr, &rejected) {
+			rejected = reject(ReasonStrategyDispatchFenced, "%v", returnedErr)
+		}
+		returnedErr = joinStrategyPreTransportRefusal(returnedErr,
+			g.refuseClaimedStrategyPreTransport(ctx, *preTransportClaim, rejected))
+	}()
 	// The decision is *read* before the attempt is recorded, because the record
 	// has to carry the binding (which decision, which class, which key, which
 	// bytes) at RECORDED. It is *verified* after, so a refusal is journalled
 	// rather than invisible — the two are separate steps on purpose.
-	decision, loadRejected := g.loadDecision(ctx, ref)
+	decision, loadRejected = g.loadDecision(ctx, ref)
 
-	prep, err := g.prepareRequest(plan, decision)
+	var err error
+	prep, err = g.prepareRequest(plan, decision)
 	if err != nil {
 		return Outcome{Reason: ReasonInvalidRequest, Detail: err.Error()}, err
 	}
@@ -503,6 +548,27 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	}
 
 	out := Outcome{IntentID: prep.Intent.ID, AttemptID: attempt.ID()}
+	refusePrepared := func(rejected *RejectedError) (Outcome, error) {
+		if plan.strategy != nil && preTransportClaim == nil && !preTransportClaimAttempted {
+			preTransportClaimAttempted = true
+			lease, claimRejected := g.loadClaimedStrategyLeaseBinding(ctx, decision, prep.ClientOrderID, plan)
+			if claimRejected != nil {
+				refused, refusalErr := g.refuseWithStrategySettlement(ctx, attempt, out, rejected, true)
+				return refused, errors.Join(refusalErr, claimRejected)
+			}
+			preTransportClaim = &strategyPreTransportClaim{lease: lease}
+		}
+		if plan.strategy != nil && preTransportClaim != nil {
+			preTransportClaimFinalizationAttempted = true
+			out.Reason, out.Detail, out.State = rejected.Reason, rejected.Detail, journal.StateNotDispatched
+			if err := g.refusePreparedClaimedStrategyPreTransport(ctx, attempt, *preTransportClaim, rejected); err != nil {
+				return out, errors.Join(rejected,
+					fmt.Errorf("execgw: atomically closing prepared strategy refusal: %w", err))
+			}
+			return out, rejected
+		}
+		return g.refuseWithStrategySettlement(ctx, attempt, out, rejected, plan.strategy != nil)
+	}
 
 	// 2. Refusals, in order of cost. Both are recorded against the attempt rather
 	//    than raised before it, so "why did the engine not trade" is answerable
@@ -515,19 +581,19 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	//        different setting.
 	protectionCheckpoint, rejected := g.checkProtection(ctx, plan, protectionCheckpoint{})
 	if rejected != nil {
-		return g.refuse(ctx, attempt, out, rejected)
+		return refusePrepared(rejected)
 	}
 	//    2b. The entry gate, for mutations that add exposure. Exits are never
 	//        gated (§0.3).
 	if rejected := g.checkEntry(plan); rejected != nil {
-		return g.refuse(ctx, attempt, out, rejected)
+		return refusePrepared(rejected)
 	}
 	//    2b. The fail-closed branches: an order shape the path cannot express, a
 	//        balance that cannot cover the buy, a conversion the engine must not
 	//        trigger. None of these become true by being sent.
 	if plan.preflight != nil {
 		if rejected := plan.preflight(ctx); rejected != nil {
-			return g.refuse(ctx, attempt, out, rejected)
+			return refusePrepared(rejected)
 		}
 	}
 	//    2c. The Guardian decision, before the dispatch is even recorded, so an
@@ -536,17 +602,28 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	//        refused here for the same reason: the refusal belongs in the
 	//        journal next to the attempt it refused.
 	if loadRejected != nil {
-		return g.refuse(ctx, attempt, out, loadRejected)
+		return refusePrepared(loadRejected)
 	}
 	if rejected := g.checkDecision(decision, ref, plan, g.clk.Now()); rejected != nil {
-		return g.refuse(ctx, attempt, out, rejected)
+		return refusePrepared(rejected)
+	}
+	if plan.strategy != nil {
+		preTransportClaimAttempted = true
+		lease, rejected := g.loadClaimedStrategyLeaseBinding(ctx, decision, prep.ClientOrderID, plan)
+		if rejected != nil {
+			return refusePrepared(rejected)
+		}
+		preTransportClaim = &strategyPreTransportClaim{lease: lease}
+		if rejected := g.checkClaimedStrategyLease(ctx, decision, prep.ClientOrderID, plan); rejected != nil {
+			return refusePrepared(rejected)
+		}
 	}
 	//    2d. The reservation, for the entries that need one. It comes after the
 	//        decision check because the *verified* class is what decides whether
 	//        one is required — a class the caller merely asserted could exempt
 	//        itself from the aggregate limits by claiming to be an exit.
 	if rejected := g.checkReservation(ctx, decision); rejected != nil {
-		return g.refuse(ctx, attempt, out, rejected)
+		return refusePrepared(rejected)
 	}
 
 	// 3-5. Dispatch exactly once, confirm a created order id exists, and settle
@@ -555,7 +632,12 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	//      window where an unconfirmable id can still become IN_DOUBT instead of
 	//      CONFIRMED.
 	var result domain.MutationResult
-	res, err := attempt.DispatchVerified(ctx, func(dctx context.Context, _ *journal.Attempt) journal.DispatchOutcome {
+	dispatch := func(dctx context.Context, _ *journal.Attempt) journal.DispatchOutcome {
+		if plan.strategy != nil {
+			// DispatchStrategyVerified invokes this callback only after its atomic
+			// core DISPATCH_STARTED + lease SUBMITTING commit.
+			strategyCrossedTransport = true
+		}
 		// Re-read and re-verified immediately before the call. Re-*read*,
 		// not merely re-checked: "제출 직전 journal에서 읽은 preimage로 재검증"
 		// means the row itself is the thing consulted at the last moment, so a
@@ -576,28 +658,91 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 		if _, rejected := g.checkProtection(dctx, plan, protectionCheckpoint); rejected != nil {
 			return notSent(rejected)
 		}
+		// Entry authority can narrow after the earlier validation while the
+		// attempt and strategy lease are being prepared. Re-read durable latches
+		// at the last no-byte-sent boundary so reconciliation, authentication and
+		// SLO failures cannot race an already-running automatic order.
+		if rejected := g.checkEntry(plan); rejected != nil {
+			return notSent(rejected)
+		}
 		// q_final authority is mutable only toward safety (reservation release,
 		// owner release or integrity failure). Re-read it at the last possible
 		// point, after the fresh decision/protection checks and before any send
 		// tracker or broker call exists.
-		if rejected := g.checkReservation(dctx, fresh); rejected != nil {
-			return notSent(rejected)
+		if plan.strategy == nil {
+			if rejected := g.checkReservation(dctx, fresh); rejected != nil {
+				return notSent(rejected)
+			}
 		}
 		// The tracker is what separates "provably never sent" from "may have
 		// executed"; without it a connection error would have to be treated as
-		// ambiguous every time.
-		tctx, tracker := journal.WithSendTracker(dctx)
+		// ambiguous every time. Strategy entry holds the exact EntryGate revision
+		// stable across every final durable proof and the broker call, so waiting
+		// for the gate cannot age a previously checked lease into stale transport.
+		var tracker *journal.SendTracker
 		var callErr error
-		result, callErr = plan.call(tctx, fresh.ClientOrderID)
+		call := func() error {
+			if err := dctx.Err(); err != nil {
+				return err
+			}
+			if plan.strategy != nil {
+				if plan.strategy.finalAuthorityCheck == nil {
+					return errors.New("strategy scheduler authority has no final source-backed revalidator")
+				}
+				if err := plan.strategy.finalAuthorityCheck(dctx); err != nil {
+					return fmt.Errorf("strategy scheduler authority changed before transport: %w", err)
+				}
+				if rejected := g.checkReservation(dctx, fresh); rejected != nil {
+					return rejected
+				}
+				requireTransport := g.requireStrategyTransport
+				if requireTransport == nil {
+					requireTransport = g.journal.RequireCurrentStrategyDispatchTransportAuthority
+				}
+				if err := requireTransport(dctx, plan.strategy.lease); err != nil {
+					return fmt.Errorf("strategy owner or submitting lease changed before transport: %w", err)
+				}
+			}
+			var tctx context.Context
+			tctx, tracker = journal.WithSendTracker(dctx)
+			result, callErr = plan.call(tctx, fresh.ClientOrderID)
+			return nil
+		}
+		if plan.strategy != nil && !g.skipStrategyEntryABAForTest {
+			if err := g.withStrategyEntryGateAuthority(dctx, plan.strategy.entryGateAuthority,
+				plan.market, plan.symbol, call); err != nil {
+				return notSent(reject(ReasonStrategyDispatchFenced,
+					"strategy final authority changed before transport: %v", err))
+			}
+		} else {
+			if err := call(); err != nil {
+				return notSent(reject(ReasonStrategyDispatchFenced,
+					"strategy final authority changed before transport: %v", err))
+			}
+		}
+		if tracker == nil {
+			return notSent(reject(ReasonStrategyDispatchFenced, "strategy send tracker was not created"))
+		}
 		return classifyMutation(tracker.State(), result, callErr)
-	}, g.roundTripFor(plan))
+	}
+	var res journal.Result
+	if plan.strategy == nil {
+		res, err = attempt.DispatchVerified(ctx, dispatch, g.roundTripFor(plan))
+	} else if g.dispatchStrategyVerified != nil {
+		res, err = g.dispatchStrategyVerified(ctx, attempt, plan.strategy.lease, dispatch, g.roundTripFor(plan))
+	} else {
+		res, err = attempt.DispatchStrategyVerified(ctx, plan.strategy.lease, dispatch, g.roundTripFor(plan))
+	}
 	if err != nil {
 		// The nonce is spent inside the transaction that records the dispatch, so
 		// a reuse surfaces here rather than as a refusal from the closure. The
 		// attempt is still RECORDED and nothing was sent: close it as such.
 		if errors.Is(err, journal.ErrNonceSpent) {
-			return g.refuse(ctx, attempt, out, reject(ReasonGuardianNonceReused,
+			return refusePrepared(reject(ReasonGuardianNonceReused,
 				"the decision for %s was already spent", plan.symbol))
+		}
+		if plan.strategy != nil && !strategyCrossedTransport {
+			return refusePrepared(strategySubmittingRefusal(err))
 		}
 		return out, fmt.Errorf("execgw: settling the %s of %s: %w", plan.kind, plan.symbol, err)
 	}
@@ -608,7 +753,6 @@ func (g *Gateway) submit(ctx context.Context, plan mutationPlan, ref GuardianDec
 	out.Reason = ReasonCode(res.ReasonCode)
 	out.Detail = res.Detail
 	out.Result = result
-
 	if res.Final == journal.StateConfirmed {
 		return out, nil
 	}
@@ -783,6 +927,17 @@ func (g *Gateway) refuse(ctx context.Context, attempt *journal.Attempt, out Outc
 		return out, fmt.Errorf("execgw: closing a refused attempt: %w", err)
 	}
 	return out, rejected
+}
+
+func (g *Gateway) refuseWithStrategySettlement(ctx context.Context, attempt *journal.Attempt, out Outcome,
+	rejected *RejectedError, strategy bool,
+) (Outcome, error) {
+	if !strategy {
+		return g.refuse(ctx, attempt, out, rejected)
+	}
+	settlementCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), strategyPreTransportSettlementTimeout)
+	defer cancel()
+	return g.refuse(settlementCtx, attempt, out, rejected)
 }
 
 // notSent turns a gateway refusal into a dispatch outcome that settles the attempt

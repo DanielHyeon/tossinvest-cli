@@ -46,7 +46,8 @@ func TestPackageHasNoMutationAuthorityOrRuntimeDependency(t *testing.T) {
 
 func TestDescriptorsShipKRAndUSTogetherDefaultOFF(t *testing.T) {
 	descriptors := Descriptors()
-	if len(descriptors) != 2 || descriptors[0].Release != RouterRelease || descriptors[1].Release != RouterRelease {
+	if len(descriptors) != 2 || descriptors[0].RouterID != RouterID || descriptors[1].RouterID != RouterID ||
+		descriptors[0].Release != RouterRelease || descriptors[1].Release != RouterRelease {
 		t.Fatalf("paired release missing=%+v", descriptors)
 	}
 	seen := map[Market]bool{}
@@ -58,5 +59,12 @@ func TestDescriptorsShipKRAndUSTogetherDefaultOFF(t *testing.T) {
 	}
 	if !seen[MarketKR] || !seen[MarketUS] || ValidateDescriptors(descriptors[:1]) == nil {
 		t.Fatalf("one-market build passed paired conformance=%+v", descriptors)
+	}
+	for _, routerID := range []string{"", "other-router"} {
+		forged := append([]Descriptor(nil), descriptors...)
+		forged[0].RouterID = routerID
+		if ValidateDescriptors(forged) == nil {
+			t.Fatalf("forged router id %q passed paired conformance", routerID)
+		}
 	}
 }

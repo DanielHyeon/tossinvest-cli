@@ -1,8 +1,7 @@
-# Branch Test Map: `strategyflowContext`
+# Branch Test Map: strategyflowContext
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | plan construction failure | tagged integration fixtures | covered | covered |
-| B2 | cap construction failure | tagged integration fixtures | covered | covered |
-| B3 | stop construction failure | tagged integration fixtures | covered | covered |
-| B4 | explicit terms construction failure | tagged integration fixtures | covered | covered |
+| B1 | if at line 59 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B2 | if at line 65 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B3 | if at line 70 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

@@ -169,8 +169,9 @@ type ApplyHooks struct {
 	Project ApplyFunc
 	// Campaign advances the strategy-neutral campaign/leg/order watermark and
 	// binds a prospective token to the Position generation Project just created.
-	// It runs second. The production engine intentionally leaves it unbound until
-	// the later lane-integration change activates campaign-aware entry callers.
+	// It runs second. The a072 production engine binds it while strategy entry
+	// workers remain dormant, so a later human-approved activation cannot create
+	// a confirmed fill whose campaign lineage is silently skipped.
 	Campaign ApplyFunc
 	// Exit updates the exit state — resolving the pending proposal a fill
 	// answered, moving taken_ratio_total when a partial take-profit fills. It

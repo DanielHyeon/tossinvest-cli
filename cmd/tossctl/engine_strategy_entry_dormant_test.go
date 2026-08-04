@@ -13,9 +13,9 @@ import (
 )
 
 func TestProductionStrategyEntryAssemblyIsPairedDormantAndInert(t *testing.T) {
-	supervisor, err := engineDormantStrategyEntry()
+	supervisor, err := engine.NewPairedStrategyEntryProductionAssembly(engine.StrategyEntryProductionSnapshot{Clock: clock.NewFake(runtimeBranchNow)})
 	if err != nil {
-		t.Fatalf("engineDormantStrategyEntry: %v", err)
+		t.Fatalf("NewPairedStrategyEntryProductionAssembly: %v", err)
 	}
 	for _, market := range []engine.StrategyMarket{engine.StrategyMarketKR, engine.StrategyMarketUS} {
 		snapshot, ok := supervisor.Snapshot(market)
@@ -48,7 +48,7 @@ func TestProductionStrategyEntryAssemblyIsPairedDormantAndInert(t *testing.T) {
 }
 
 func TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop(t *testing.T) {
-	runtime, err := engineRuntime(runtimeBranchContext(), clock.NewFake(runtimeBranchNow), nil)
+	runtime, err := engineRuntime(context.Background(), runtimeBranchContext(), clock.NewFake(runtimeBranchNow), nil)
 	if err != nil {
 		t.Fatalf("engineRuntime: %v", err)
 	}
@@ -58,25 +58,60 @@ func TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop(t *testing.T)
 	}
 }
 
-func TestDormantProductionHelperHasNoAuthorityOrMutationInput(t *testing.T) {
-	if typ := reflect.TypeOf(engineDormantStrategyEntry); typ.NumIn() != 0 {
-		t.Fatalf("dormant production helper accepts %d inputs", typ.NumIn())
-	}
+func TestProductionRuntimeUsesNonBlockingContextOwnedPairedRefreshSupervisor(t *testing.T) {
 	source := readSource(t, "engine.go")
-	start := strings.Index(source, "func engineDormantStrategyEntry()")
-	if start < 0 {
-		t.Fatal("dormant strategy-entry helper is missing")
+	if !strings.Contains(source, "ectx.NewRefreshingPairedStrategyEntrySupervisor(clk)") {
+		t.Fatal("engineRuntime does not delegate the same-wave KR/US refresh bootstrap to the engine context")
 	}
-	body := source[start:]
-	if end := strings.Index(body, "\n}"); end >= 0 {
-		body = body[:end+2]
+	if strings.Contains(source, "ectx.NewPairedStrategyEntryProductionAssembly(ctx, clk)") {
+		t.Fatal("engineRuntime still blocks safety-loop construction on paired authority collection")
 	}
-	if !strings.Contains(body, "engine.NewDormantStrategyEntrySupervisor()") {
-		t.Fatalf("dormant helper body=%q", body)
+}
+
+func TestProductionStrategyEntrySnapshotHasNoAuthorityOrMutationCapability(t *testing.T) {
+	typ := reflect.TypeOf(engine.StrategyEntryProductionSnapshot{})
+	if typ.NumField() != 5 {
+		t.Fatalf("production snapshot fields=%d, want exact five read-only observations", typ.NumField())
 	}
-	for _, forbidden := range []string{"Gateway", "Journal", "Activation", "Trigger", "Cycle", "Live", "LIVE", "Enabled", "Automation"} {
-		if strings.Contains(body, forbidden) {
-			t.Fatalf("dormant helper gained forbidden authority %q: %s", forbidden, body)
+	for index := 0; index < typ.NumField(); index++ {
+		field := typ.Field(index)
+		identity := field.Name + " " + field.Type.String()
+		for _, forbidden := range []string{"Gateway", "Journal", "Activation", "Trigger", "Cycle", "Broker", "Trading", "Guardian", "Writer", "Order"} {
+			if strings.Contains(identity, forbidden) {
+				t.Fatalf("production snapshot gained forbidden capability %q in %s", forbidden, identity)
+			}
+		}
+	}
+}
+
+func TestProductionStrategyEntryAssemblyResultHasNoAuthorityOrMutationCapability(t *testing.T) {
+	typ := reflect.TypeOf(engine.StrategyEntryProductionAssembly{})
+	routeField, ok := typ.FieldByName("Route")
+	if !ok || routeField.Type != reflect.TypeOf(engine.PairedStrategyRouteSnapshot{}) {
+		t.Fatalf("production assembly route field=%+v ok=%v", routeField, ok)
+	}
+	for index := 0; index < typ.NumField(); index++ {
+		field := typ.Field(index)
+		identity := field.Type.String()
+		for _, forbidden := range []string{"scheduler.Activation", "scheduler.CalendarSnapshot", "Gateway", "Journal", "Guardian", "Broker", "Order"} {
+			if strings.Contains(identity, forbidden) {
+				t.Fatalf("production assembly result gained forbidden authority %q in %s", forbidden, identity)
+			}
+		}
+	}
+}
+
+func TestProductionStrategyEntryAssemblyCannotPromoteFromAutomationFacts(t *testing.T) {
+	supervisor, err := engine.NewPairedStrategyEntryProductionAssembly(engine.StrategyEntryProductionSnapshot{
+		Clock: clock.NewFake(runtimeBranchNow), AutomationVerified: true, EntryPermitted: true, ProtectionWired: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, market := range []engine.StrategyMarket{engine.StrategyMarketKR, engine.StrategyMarketUS} {
+		snapshot, ok := supervisor.Snapshot(market)
+		if !ok || snapshot.Effective || snapshot.AuthorityGeneration != 0 || snapshot.EvidenceDigest != "" || snapshot.LatchRevision != 0 {
+			t.Fatalf("market=%s automation facts promoted dormant worker: %+v ok=%v", market, snapshot, ok)
 		}
 	}
 }

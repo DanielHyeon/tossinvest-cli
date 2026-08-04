@@ -1,5 +1,5 @@
-# Branch Test Map: `fromReversal`
+# Branch Test Map: fromReversal
 
-| Branch | Scenario | Required test |
-|---|---|---|
-| B1 | branchless accepted/refused mapping | KR/US exact entry/stop/target mapping |
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | Branchless happy path preserves the documented invariant | Package happy-path test | existing behavior inspected | yes |

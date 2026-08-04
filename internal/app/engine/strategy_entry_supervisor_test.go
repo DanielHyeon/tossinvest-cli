@@ -165,6 +165,219 @@ func TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority(t *testing.T) {
 	}
 }
 
+func TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive(t *testing.T) {
+	for _, failedMarket := range []engine.StrategyMarket{engine.StrategyMarketKR, engine.StrategyMarketUS} {
+		failedMarket := failedMarket
+		for _, abnormal := range []bool{false, true} {
+			abnormal := abnormal
+			name := string(failedMarket) + "/cycle-error"
+			expectedRefusal := engine.StrategyWorkerRefusalFailure
+			if abnormal {
+				name = string(failedMarket) + "/panic"
+				expectedRefusal = engine.StrategyWorkerRefusalAbnormal
+			}
+			t.Run(name, func(t *testing.T) {
+				base := time.Date(2026, 8, 4, 1, 2, 3, 0, time.UTC)
+				fakeClock := clock.NewFake(base)
+				peerMarket := engine.StrategyMarketUS
+				if failedMarket == engine.StrategyMarketUS {
+					peerMarket = engine.StrategyMarketKR
+				}
+				peerCycles := make(chan struct{}, 2)
+				cycle := func(market engine.StrategyMarket) engine.StrategyCycle {
+					return func(context.Context) error {
+						if market == failedMarket {
+							if abnormal {
+								panic(string(market) + " worker returned abnormally")
+							}
+							return errors.New(string(market) + " worker returned abnormally")
+						}
+						peerCycles <- struct{}{}
+						return nil
+					}
+				}
+				supervisor := mustStrategySupervisor(t, engine.StrategyEntrySupervisorOptions{
+					Clock: fakeClock,
+					Workers: []engine.StrategyMarketWorker{
+						activeStrategyWorker(engine.StrategyMarketKR, cycle(engine.StrategyMarketKR)),
+						activeStrategyWorker(engine.StrategyMarketUS, cycle(engine.StrategyMarketUS)),
+					},
+				})
+
+				safetyNames := []string{"fill-detection", "reconcile", "protection", "exit-observer", "emergency-reduction"}
+				safetyStarted := make(chan string, len(safetyNames))
+				safetyStopped := make(chan string, len(safetyNames))
+				loops := []engine.SupervisedLoop{supervisor.SupervisedLoop()}
+				for _, name := range safetyNames {
+					name := name
+					loops = append(loops, engine.SupervisedLoop{Name: name, Run: func(ctx context.Context) error {
+						safetyStarted <- name
+						<-ctx.Done()
+						safetyStopped <- name
+						return ctx.Err()
+					}})
+				}
+				runtime, err := engine.NewRuntime(engine.RuntimeOptions{Loops: loops})
+				if err != nil {
+					t.Fatalf("NewRuntime: %v", err)
+				}
+				ctx, cancel := context.WithCancel(context.Background())
+				done := make(chan error, 1)
+				go func() { done <- runtime.Run(ctx) }()
+				waitClosed(t, supervisor.Ready(), "paired supervisor readiness")
+				started := map[string]bool{}
+				for len(started) < len(safetyNames) {
+					select {
+					case name := <-safetyStarted:
+						started[name] = true
+					case <-time.After(time.Second):
+						t.Fatalf("safety loops did not all start: %v", started)
+					}
+				}
+				if supervisor.Trigger(failedMarket) != engine.StrategyTriggerEnqueued || supervisor.Trigger(peerMarket) != engine.StrategyTriggerEnqueued {
+					t.Fatal("paired market triggers were not accepted")
+				}
+				select {
+				case <-peerCycles:
+				case <-time.After(time.Second):
+					t.Fatalf("%s peer cycle stopped by %s abnormal return", peerMarket, failedMarket)
+				}
+				fault := waitStrategyFault(t, supervisor)
+				if fault.Market != failedMarket || fault.FirstRefusal != expectedRefusal || fault.Abnormal != abnormal || fault.RestartAttempt != 1 ||
+					!fault.RestartNotBefore.Equal(base.Add(engine.DefaultStrategyRestartStep)) {
+					t.Fatalf("market-local fault/restart=%+v", fault)
+				}
+				failed, _ := supervisor.Snapshot(failedMarket)
+				peer, _ := supervisor.Snapshot(peerMarket)
+				if !failed.Latched || failed.Effective || failed.FirstRefusal != expectedRefusal || failed.FirstAbnormal != abnormal || failed.RestartAttempt != 1 ||
+					!failed.RestartNotBefore.Equal(base.Add(engine.DefaultStrategyRestartStep)) {
+					t.Fatalf("failed market snapshot=%+v", failed)
+				}
+				if peer.Latched || !peer.Effective || peer.FirstRefusal != engine.StrategyWorkerRefusalNone || peer.RestartAttempt != 0 || !peer.RestartNotBefore.IsZero() {
+					t.Fatalf("peer market contaminated=%+v", peer)
+				}
+				select {
+				case err := <-done:
+					t.Fatalf("market-local failure stopped runtime: %v", err)
+				case stopped := <-safetyStopped:
+					t.Fatalf("market-local failure stopped safety loop %s", stopped)
+				default:
+				}
+				if supervisor.Trigger(failedMarket) != engine.StrategyTriggerDisabled {
+					t.Fatal("bounded child restart restored entry without durable authority")
+				}
+				if supervisor.Trigger(peerMarket) != engine.StrategyTriggerEnqueued {
+					t.Fatal("peer market stopped during local restart wait")
+				}
+				select {
+				case <-peerCycles:
+				case <-time.After(time.Second):
+					t.Fatal("peer market did not continue during local restart wait")
+				}
+				cancel()
+				if err := <-done; err != nil {
+					t.Fatalf("graceful stop=%v", err)
+				}
+			})
+		}
+	}
+}
+
+func TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace(t *testing.T) {
+	for _, failedMarket := range []engine.StrategyMarket{engine.StrategyMarketKR, engine.StrategyMarketUS} {
+		failedMarket := failedMarket
+		for _, abnormal := range []bool{false, true} {
+			abnormal := abnormal
+			name := string(failedMarket) + "/cycle-error"
+			if abnormal {
+				name = string(failedMarket) + "/panic"
+			}
+			t.Run(name, func(t *testing.T) {
+				base := time.Date(2026, 8, 4, 1, 2, 3, 0, time.UTC)
+				raceClock := newRestartHandoffRaceClock(base, engine.DefaultStrategyRestartStep)
+				cycle := func(context.Context) error {
+					if abnormal {
+						panic(string(failedMarket) + " restart handoff race")
+					}
+					return errors.New(string(failedMarket) + " restart handoff race")
+				}
+				workers := []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR}, {Market: engine.StrategyMarketUS}}
+				if failedMarket == engine.StrategyMarketKR {
+					workers[0] = activeStrategyWorker(failedMarket, cycle)
+				} else {
+					workers[1] = activeStrategyWorker(failedMarket, cycle)
+				}
+				supervisor := mustStrategySupervisor(t, engine.StrategyEntrySupervisorOptions{Clock: raceClock, Workers: workers})
+				ctx, cancel := context.WithCancel(context.Background())
+				done := make(chan error, 1)
+				go func() { done <- supervisor.Run(ctx) }()
+				waitClosed(t, supervisor.Ready(), "strategy supervisor readiness")
+				if supervisor.Trigger(failedMarket) != engine.StrategyTriggerEnqueued {
+					t.Fatalf("%s trigger refused", failedMarket)
+				}
+				fault := waitStrategyFault(t, supervisor)
+				if !fault.RestartNotBefore.Equal(base.Add(engine.DefaultStrategyRestartStep)) {
+					t.Fatalf("published restart deadline=%s", fault.RestartNotBefore)
+				}
+				waitClosed(t, raceClock.advanced, "clock advance between fault handoff and restart wait")
+				eventually(t, func() bool { return raceClock.fake.Sleepers() == 0 }, "absolute restart deadline completion")
+				if supervisor.Trigger(failedMarket) != engine.StrategyTriggerDisabled {
+					t.Fatal("elapsed restart deadline restored entry without durable authority")
+				}
+				select {
+				case err := <-done:
+					t.Fatalf("market-local restart race stopped supervisor: %v", err)
+				default:
+				}
+				cancel()
+				if err := <-done; !errors.Is(err, context.Canceled) {
+					t.Fatalf("Run=%v", err)
+				}
+			})
+		}
+	}
+}
+
+func TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal(t *testing.T) {
+	base := time.Date(9999, 12, 31, 23, 59, 58, 500000000, time.UTC)
+	fakeClock := clock.NewFake(base)
+	kr := activeStrategyWorker(engine.StrategyMarketKR, func(context.Context) error { panic("later abnormal return") })
+	kr.AuthorityExpiresAt = time.Date(9999, 12, 31, 23, 59, 59, 999999999, time.UTC)
+	kr.FirstRefusal = engine.StrategyWorkerRefusalFailure
+	kr.RestartAttempt = ^uint64(0)
+	kr.RestartNotBefore = base
+	us := activeStrategyWorker(engine.StrategyMarketUS, func(context.Context) error { return nil })
+	us.AuthorityExpiresAt = kr.AuthorityExpiresAt
+	supervisor := mustStrategySupervisor(t, engine.StrategyEntrySupervisorOptions{Clock: fakeClock, Workers: []engine.StrategyMarketWorker{
+		kr, us,
+	}})
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- supervisor.Run(ctx) }()
+	waitClosed(t, supervisor.Ready(), "strategy supervisor readiness")
+	if supervisor.Trigger(engine.StrategyMarketKR) != engine.StrategyTriggerEnqueued {
+		t.Fatal("KR trigger refused")
+	}
+	fault := waitStrategyFault(t, supervisor)
+	if fault.FirstRefusal != engine.StrategyWorkerRefusalFailure || fault.RestartAttempt != ^uint64(0) ||
+		fault.RestartNotBefore.Before(base) || fault.RestartNotBefore.Sub(base) > engine.MaximumStrategyRestartBackoff {
+		t.Fatalf("saturated fault=%+v", fault)
+	}
+	krSnapshot, _ := supervisor.Snapshot(engine.StrategyMarketKR)
+	usSnapshot, _ := supervisor.Snapshot(engine.StrategyMarketUS)
+	if krSnapshot.FirstRefusal != engine.StrategyWorkerRefusalFailure || krSnapshot.RestartAttempt != ^uint64(0) ||
+		krSnapshot.RestartNotBefore.Before(base) || krSnapshot.RestartNotBefore.Sub(base) > engine.MaximumStrategyRestartBackoff {
+		t.Fatalf("saturated snapshot=%+v", krSnapshot)
+	}
+	if usSnapshot.Latched || !usSnapshot.Effective || usSnapshot.RestartAttempt != 0 {
+		t.Fatalf("saturated KR restart contaminated US=%+v", usSnapshot)
+	}
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Fatalf("Run=%v", err)
+	}
+}
+
 func TestMarketQueueSaturationDoesNotConsumePeerQueue(t *testing.T) {
 	started := make(chan struct{})
 	release := make(chan struct{})
@@ -375,7 +588,9 @@ func TestStrategySupervisorRejectsInvalidAssemblies(t *testing.T) {
 		"active nil cycle":            {Workers: []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR, Effective: true, AuthorityGeneration: 7, AuthorityExpiresAt: time.Now().Add(time.Hour), EvidenceDigest: strategyEvidenceDigest, LatchRevision: 11}, {Market: engine.StrategyMarketUS}}},
 		"active incomplete authority": {Workers: []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR, Effective: true, Cycle: cycle}, {Market: engine.StrategyMarketUS}}},
 		"active expired authority":    {Workers: []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR, Effective: true, Cycle: cycle, AuthorityGeneration: 7, AuthorityExpiresAt: time.Unix(1, 0), EvidenceDigest: strategyEvidenceDigest, LatchRevision: 11}, {Market: engine.StrategyMarketUS}}},
+		"active malformed restart":    {Workers: []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR, Effective: true, Cycle: cycle, AuthorityGeneration: 7, AuthorityExpiresAt: time.Now().Add(time.Hour), EvidenceDigest: strategyEvidenceDigest, LatchRevision: 11, RestartAttempt: 1}, {Market: engine.StrategyMarketUS}}},
 		"dormant carries authority":   {Workers: []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR, AuthorityGeneration: 7}, {Market: engine.StrategyMarketUS}}},
+		"dormant carries restart":     {Workers: []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR, RestartAttempt: 1, FirstRefusal: engine.StrategyWorkerRefusalFailure, RestartNotBefore: time.Now()}, {Market: engine.StrategyMarketUS}}},
 		"queue too large":             {Workers: []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR}, {Market: engine.StrategyMarketUS}}, QueueDepth: engine.MaximumStrategyQueueDepth + 1},
 		"cycle limit too large":       {Workers: []engine.StrategyMarketWorker{{Market: engine.StrategyMarketKR}, {Market: engine.StrategyMarketUS}}, CycleLimit: engine.MaximumStrategyCycleLimit + time.Nanosecond},
 	}
@@ -406,6 +621,41 @@ func TestSupervisorHasNoBooleanRecoveryOrDurableMutationCallbackSurface(t *testi
 func activeStrategyWorker(market engine.StrategyMarket, cycle engine.StrategyCycle) engine.StrategyMarketWorker {
 	return engine.StrategyMarketWorker{Market: market, Effective: true, Cycle: cycle, AuthorityGeneration: 7,
 		AuthorityExpiresAt: time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC), EvidenceDigest: strategyEvidenceDigest, LatchRevision: 11}
+}
+
+// restartHandoffRaceClock deterministically advances at the wait-side Now call:
+// constructor, evaluation and latch observation consume the first three calls.
+// An implementation that sleeps the originally calculated duration never makes
+// the fourth call and therefore fails the regression instead of oversleeping.
+type restartHandoffRaceClock struct {
+	fake      *clock.Fake
+	step      time.Duration
+	mu        sync.Mutex
+	nowCalls  int
+	advanced  chan struct{}
+	advanceAt int
+}
+
+func newRestartHandoffRaceClock(now time.Time, step time.Duration) *restartHandoffRaceClock {
+	return &restartHandoffRaceClock{fake: clock.NewFake(now), step: step, advanced: make(chan struct{}), advanceAt: 4}
+}
+
+func (c *restartHandoffRaceClock) Now() time.Time {
+	c.mu.Lock()
+	c.nowCalls++
+	advance := c.nowCalls == c.advanceAt
+	c.mu.Unlock()
+	if advance {
+		c.fake.Advance(c.step)
+		close(c.advanced)
+	}
+	return c.fake.Now()
+}
+
+func (c *restartHandoffRaceClock) Since(t time.Time) time.Duration { return c.fake.Since(t) }
+
+func (c *restartHandoffRaceClock) Sleep(ctx context.Context, d time.Duration) error {
+	return c.fake.Sleep(ctx, d)
 }
 
 func mustStrategySupervisor(t *testing.T, opts engine.StrategyEntrySupervisorOptions) *engine.StrategyEntrySupervisor {

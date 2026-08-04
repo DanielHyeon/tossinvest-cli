@@ -1,7 +1,7 @@
-# Branch Test Map: `TestClientConfigurationCannotBeMutatedByRetainedOptionPointer`
+# Branch Test Map: TestClientConfigurationCannotBeMutatedByRetainedOptionPointer
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | option receives exact construction pointer | TestClientConfigurationCannotBeMutatedByRetainedOptionPointer | yes | yes |
-| B2 | all post-construction option writes are ignored | same test | yes (base/http/account changed) | yes |
-| B3 | sealed production origin remains authoritative | same test | yes (replay revoked origin) | yes |
+| B1 | if at line 102 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B2 | if at line 111 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B3 | if at line 114 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |

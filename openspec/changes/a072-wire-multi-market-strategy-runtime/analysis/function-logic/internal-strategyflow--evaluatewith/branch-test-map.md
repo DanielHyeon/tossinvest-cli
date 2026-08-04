@@ -1,18 +1,16 @@
-# Branch Test Map: `evaluateWith`
+# Branch Test Map: evaluateWith
 
-| Branch | Scenario | Required test |
-|---|---|---|
-| B1 | invalid approved candidate | existing candidate refusal |
-| B2 | candidate/router scope mismatch | existing scope refusal |
-| B3 | router typed refusal | existing router refusal |
-| B4 | malformed route decision | lineage mismatch |
-| B5 | unsupported descriptor | unsupported binding |
-| B6 | wrong tagged lane input | unsupported binding |
-| B7 | registry binding absent | unsupported binding |
-| B8 | native lane refusal | preserve native code |
-| B9 | lane lineage mismatch | incomplete sealed lineage |
-| B10 | existing owner campaign mismatch | lineage mismatch |
-| B11 | campaign/leg/risk incomplete | lineage incomplete |
-| B12 | accepted lane has missing/malformed terms | execution terms invalid |
-
-Post-edit execution-term validation adds tests for missing, malformed, tampered and complete sealed terms across all six bindings.
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | if at line 29 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B2 | if at line 34 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B3 | if at line 41 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B4 | if at line 48 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B5 | if at line 54 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B6 | if at line 67 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B7 | if at line 73 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B8 | if at line 80 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B9 | if at line 86 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B10 | if at line 91 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B11 | if at line 103 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B12 | if at line 112 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
