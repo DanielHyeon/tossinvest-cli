@@ -94,4 +94,4 @@
     - STORY-TOS-a070 — Route candidates across markets, horizons and owning lanes [in_progress] → `a070-add-multi-market-horizon-router`
     - STORY-TOS-a071 — Wire attested broker protection for KR and US entry [in_progress] → `a071-wire-kr-us-protection-readiness`
     - STORY-TOS-a072 — Wire the supervised KR and US strategy entry runtime [implemented] → `a072-wire-multi-market-strategy-runtime`
-    - STORY-TOS-a073 — Operate and deploy the concurrent KR and US lanes [in_progress] → `a073-operate-multi-market-strategy-lanes`
+    - STORY-TOS-a073 — Operate and deploy the concurrent KR and US lanes [implemented] → `a073-operate-multi-market-strategy-lanes`

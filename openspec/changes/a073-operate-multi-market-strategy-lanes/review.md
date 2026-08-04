@@ -1,7 +1,7 @@
 # Review — a073-operate-multi-market-strategy-lanes
 
 - Date: 2026-08-04
-- Stage: shared operational projection and pure deployment-guard waves implemented; performance and actual deployment pending
+- Stage: complete exact-digest dormant deployment after reviewed fix-forward recovery
 - Voices: Manager scope review, independent operations/security/UI review, projection contract review
 
 ## Findings and disposition
@@ -61,7 +61,7 @@ typed refusal without requiring journal joins.
 - Legacy single-market console coverage was replaced by paired authority-projection, invalid/read-error
   fail-closed, authenticated GET/HEAD, no-input/no-mutation, responsive/CSP, partial-market and real Unix
   console/API/SSE convergence tests.
-- Full repository gates, real Compose preimage verification and final implementation review remain pending.
+- Full repository gates, real Compose preimage verification and final implementation review passed.
 
 ## Lane-performance verification
 
@@ -78,12 +78,15 @@ typed refusal without requiring journal joins.
 - `go test -count=1`, `go test -race -count=1`, `go test -count=25` and `go vet` for
   `./internal/deployguard`: PASS. Existing Compose/API separation static test, strict a073 OpenSpec validation
   and `git diff --check`: PASS.
-- No Docker/Compose build, pull, replace, stop, down, rollback or other runtime mutation was executed. Tasks
-  5.4 and 6 remain open until a human-authorized dormant deployment window has real immutable evidence.
+- The human-authorized dormant deployment used exact immutable images and one-service-at-a-time replacement.
+  A first engine startup failure stopped further rollout; an exact-image rollback was attempted, refused by
+  the old binary's `v19` ceiling after migration to `v29`, and correctly converted to typed fix-forward
+  recovery with entry OFF. The corrected commit then passed independent review and the a072 gate before both
+  services were replaced and verified healthy.
 
 ## Verdict
 
-The read-only operational projection, lane-performance and pure deployment-guard waves are ready for the
-remaining repository gates. This is not a release or deployment verdict: actual immutable preimage
-verification and dormant deployment tasks remain open. Market activation remains an explicit later human
-decision.
+The paired KR/US operational projection, lane performance, deployment guard and exact-digest dormant release
+are CLEAN. Existing safety loops are running and both markets remain independently OFF/NOT_CONFIGURED with
+zero strategy/protection mutation rows. No LIVE order, operating toggle, approval or market activation was
+performed. Market activation remains an explicit later human decision.

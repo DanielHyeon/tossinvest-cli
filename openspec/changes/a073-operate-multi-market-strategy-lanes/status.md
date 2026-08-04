@@ -1,8 +1,8 @@
 # Status — a073-operate-multi-market-strategy-lanes
 
 - Updated: 2026-08-04
-- Overall: IN PROGRESS
-- Current wave: shared KR/US projection, pure lane-performance attribution and immutable deployment guard GREEN
+- Overall: COMPLETE — dormant KR/US deployment verified; activation remains a separate human action
+- Current wave: exact-digest fix-forward deployment GREEN with existing engine safety loops restored
 - Runtime authority: read-only and dormant by default; no lane, activation, Guardian, Gateway, broker or operating-toggle writer
 
 ## Completed in the operational projection wave
@@ -78,12 +78,30 @@
   quote currency and authoritative rounding policy/version. Missing fee/FX evidence does not invoke a current
   rate or an implicit same-currency rate of one.
 
-## Pending
+## Dormant deployment evidence
 
-- Remaining repository-wide pre/post logic-map completion (tasks 1.1, 1.2 and 5.1); the new performance
-  leaf has its hard map and changes no existing function body.
-- Repository-wide gates and final independent implementation review (tasks 5.1–5.3).
-- Actual immutable preimage collection/verification and dormant replacement/post-deploy checks (tasks 5.4
-  and 6). No Docker or Compose mutation was run in this wave.
+- The initial `8022f578` image replacement exposed one startup regression: the strategy-only exchange-rate
+  read had entered the global startup attestation and stopped all engine loops. Replacement stopped, the
+  replaced engine service was rolled back, and the old image then correctly refused the already-migrated
+  journal (`v29` newer than its supported `v19`). Per the compatibility rule the new dormant image was kept,
+  with both markets OFF, while the correction was reviewed and gated.
+- Fix commit `171adda8` removed only that global dependency. US strategy entry still fails closed in its local
+  FX authority; no fallback rate or activation authority was added. Independent review was CLEAN and the
+  full a072 gate passed before the corrected image was built.
+- Final fix-forward preimage had both services healthy on
+  `sha256:dc2d94d9f745be412295497dd5dd57630a95e2b1cf4fcd76b835dc2e8f743fc0`, rendered
+  Compose SHA-256 `d677169959b05c0ea9a7800d9b97d98fa41f6136ed9a86f0485e59450d574440`, config SHA-256
+  `e0f6aa2dc7123a0035e5a01d0c673ca5c4d081df2be91ce68ebadb19d668af64`, active journal schema
+  `v29`, `attempt_transitions=40`, `mutation_attempts=10`, and zero strategy/protection rows. No activation,
+  lane or manifest file existed. Environment keys, mounts and volumes were frozen from the running services.
+- `httpapi` then `tossos` were individually replaced in under ten seconds each with exact image
+  `tossos@sha256:efba00b51e0d8ce55d48f4991ccd7a692cf670ec63a01c5a6193a6eebddbc6a3` from commit
+  `171adda8`. Both became healthy. The private API reports the engine `running`; KR and US independently
+  report lane/scheduler/activation OFF, `NOT_CONFIGURED`, protection `UNWIRED` and no campaign/leg.
+- Post-deploy config SHA-256 is unchanged. Journal remains `v29` with the same general mutation counts and
+  zero strategy/protection rows. The audit grew by exactly one `automation_gate.accepted` assertion with
+  `old=true,new=true`; no operating setting, order, protection or activation mutation was recorded. Mounts,
+  environment keys and activation-file absence are unchanged.
 
-No market was activated, no entry runtime was started, and no LIVE order or operating setting changed.
+No market was activated, no strategy lease reached a broker, and no LIVE order, approval or operating setting
+changed. Existing reconcile/exit/fill-detection safety loops resumed under the pre-existing autostart setting.

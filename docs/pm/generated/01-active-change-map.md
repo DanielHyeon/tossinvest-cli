@@ -76,4 +76,4 @@
 | `a070-add-multi-market-horizon-router` | STORY-TOS-a070 | in_progress |
 | `a071-wire-kr-us-protection-readiness` | STORY-TOS-a071 | in_progress |
 | `a072-wire-multi-market-strategy-runtime` | STORY-TOS-a072 | implemented |
-| `a073-operate-multi-market-strategy-lanes` | STORY-TOS-a073 | in_progress |
+| `a073-operate-multi-market-strategy-lanes` | STORY-TOS-a073 | implemented |

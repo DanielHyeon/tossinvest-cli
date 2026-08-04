@@ -33,12 +33,12 @@
 
 - [x] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker
 - [x] 5.2 Run targeted console/httpapi/runtime-transport/performance tests, affected-package race tests, OpenAPI and responsive/static route guards, full tests and vet, and strict OpenSpec/PM validation
-- [ ] 5.3 Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a073-operate-multi-market-strategy-lanes`, then complete independent implementation review before release
-- [ ] 5.4 Verify `docker compose config`, exact image digests, schema read/write compatibility and the frozen OFF-state/config/volume preimage before replacing any running service
+- [x] 5.3 Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a073-operate-multi-market-strategy-lanes`, then complete independent implementation review before release
+- [x] 5.4 Verify `docker compose config`, exact image digests, schema read/write compatibility and the frozen OFF-state/config/volume preimage before replacing any running service
 
 ## 6. Dormant deploy and post-deploy checks
 
-- [ ] 6.1 Record the complete immutable deployment preimage with exact service image digests, rendered Compose/config/activation/lane/autostart/automation/LIVE/protection digests, environment keys, volumes/mounts, schema compatibility and baseline health using read-only commands; abort if any field or OFF/unapproved baseline is not provable
-- [ ] 6.2 Replace Compose services one at a time in frozen order within the ≤5 minute per-service bound, preserving persistent volumes and without starting entry runtime, changing a toggle/approval or issuing a live order
-- [ ] 6.3 Run post-deploy console/API/Unix health and KR/US dormant projection checks, compare pre/post state digests, and prove no order, protection mutation, activation or operating-setting audit event was created
-- [ ] 6.4 If health or state preservation fails, stop further replacement and roll back only the replaced subset in reverse order to exact preimage digests; leave config/approval/journal/volumes and broker-resident protection untouched, and if schema compatibility forbids rollback keep the new service with entry OFF/safety continuity and typed recovery
+- [x] 6.1 Record the complete immutable deployment preimage with exact service image digests, rendered Compose/config/activation/lane/autostart/automation/LIVE/protection digests, environment keys, volumes/mounts, schema compatibility and baseline health using read-only commands; abort if any field or OFF/unapproved baseline is not provable
+- [x] 6.2 Replace Compose services one at a time in frozen order within the ≤5 minute per-service bound, preserving persistent volumes and without starting entry runtime, changing a toggle/approval or issuing a live order
+- [x] 6.3 Run post-deploy console/API/Unix health and KR/US dormant projection checks, compare pre/post state digests, and prove no order, protection mutation, activation or operating-setting audit event was created
+- [x] 6.4 If health or state preservation fails, stop further replacement and roll back only the replaced subset in reverse order to exact preimage digests; leave config/approval/journal/volumes and broker-resident protection untouched, and if schema compatibility forbids rollback keep the new service with entry OFF/safety continuity and typed recovery
