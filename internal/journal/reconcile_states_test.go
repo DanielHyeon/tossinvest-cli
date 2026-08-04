@@ -289,3 +289,37 @@ func TestReleasingNothingIsNotAnError(t *testing.T) {
 		t.Fatal("nothing was active, so nothing was released")
 	}
 }
+
+func TestAtomicReconcileReleaseRollsBackEveryScopeWhenOneCauseDoesNotMatch(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	for _, req := range []EnterReconcileRequest{
+		{AccountRef: "acct-1", Cause: ReconcileCauseQuantityMismatch, Evidence: "permanent account guard"},
+		{AccountRef: "acct-1", Symbol: "005930", Cause: ReconcileCauseIdentifierConflict, Evidence: "symbol identity conflict"},
+	} {
+		if _, _, err := j.EnterReconcile(ctx, req); err != nil {
+			t.Fatalf("EnterReconcile(%q): %v", req.Symbol, err)
+		}
+	}
+
+	_, err := j.ReleaseReconciles(ctx, []ReleaseReconcileRequest{
+		{AccountRef: "acct-1", Cause: ReconcileReleaseOperator, Evidence: "operator verified", ExpectCause: ReconcileCauseQuantityMismatch},
+		// Deliberately wrong: the second scope is owned by IDENTIFIER_CONFLICT.
+		{AccountRef: "acct-1", Symbol: "005930", Cause: ReconcileReleaseOperator, Evidence: "operator verified", ExpectCause: ReconcileCauseQuantityMismatch},
+	})
+	if err == nil || !strings.Contains(err.Error(), "owned by") {
+		t.Fatalf("ReleaseReconciles error = %v, want exact-cause refusal", err)
+	}
+	active, err := j.ActiveReconcileStates(ctx)
+	if err != nil {
+		t.Fatalf("ActiveReconcileStates: %v", err)
+	}
+	if len(active) != 2 {
+		t.Fatalf("atomic refusal released part of the guard set: %+v", active)
+	}
+	for _, state := range active {
+		if !state.ReleasedAt.IsZero() {
+			t.Fatalf("state %s was partially released: %+v", state.ID, state)
+		}
+	}
+}

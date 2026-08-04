@@ -2,8 +2,8 @@
 
 package main
 
-// detachProcess puts the spawned survey in its own session, which is what
-// soak-autostart.sh gets from `setsid`.
+// detachProcess puts the spawned survey in its own session, preserving the
+// behavior the retired soak-autostart.sh obtained from `setsid`.
 //
 // Without it the child keeps the console's controlling terminal, and the Ctrl-C
 // that stops the console — or the hangup when its terminal closes — takes the

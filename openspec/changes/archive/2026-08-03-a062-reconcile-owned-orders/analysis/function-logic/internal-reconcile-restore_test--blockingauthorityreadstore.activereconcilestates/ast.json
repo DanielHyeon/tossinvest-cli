@@ -1,0 +1,56 @@
+{
+  "file": "internal/reconcile/restore_test.go",
+  "source_sha256": "06075e0e4501b78ee04e55e617309bf70a7b1a025c31d7a496cd9396161bc2ab",
+  "package": "reconcile_test",
+  "function": "ActiveReconcileStates",
+  "receiver": "blockingAuthorityReadStore",
+  "signature": "blockingAuthorityReadStore.ActiveReconcileStates(params=1, results=2)",
+  "start": {
+    "line": 51,
+    "column": 1
+  },
+  "end": {
+    "line": 56,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 17
+      },
+      "text": "s.ReconcileStore.ActiveReconcileStates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 2
+      },
+      "text": "close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

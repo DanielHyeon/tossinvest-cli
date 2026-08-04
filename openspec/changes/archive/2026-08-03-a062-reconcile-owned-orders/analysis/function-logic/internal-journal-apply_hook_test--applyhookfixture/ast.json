@@ -1,0 +1,79 @@
+{
+  "file": "internal/journal/apply_hook_test.go",
+  "source_sha256": "26d73b9371960a62335c0be0eef4750f398ad5099dca7b88222de4a126e09ccd",
+  "package": "journal",
+  "function": "applyHookFixture",
+  "signature": "applyHookFixture(params=1, results=1)",
+  "start": {
+    "line": 29,
+    "column": 1
+  },
+  "end": {
+    "line": 36,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 7
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 2
+      },
+      "text": "recordConfirmedFillOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 2
+      },
+      "text": "insertPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 2
+      },
+      "text": "insertExitState"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

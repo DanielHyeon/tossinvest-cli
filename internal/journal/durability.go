@@ -572,6 +572,39 @@ func (a *Attempt) transition(ctx context.Context, to AttemptState, o transitionO
 			return err
 		}
 	}
+	if to == StateConfirmed && (a.kind == KindPlace || a.kind == KindAmend) {
+		orderID := o.brokerOrderID
+		if orderID == "" {
+			if err := tx.QueryRowContext(ctx,
+				"SELECT broker_order_id FROM mutation_attempts WHERE id = ?", a.id).Scan(&orderID); err != nil {
+				return fmt.Errorf("journal: reading confirmed order id for %s: %w", a.id, err)
+			}
+		}
+		var latestEvidence sql.NullString
+		if err := tx.QueryRowContext(ctx, `
+			SELECT MAX(committed_at) FROM (
+				SELECT f.committed_at
+				  FROM scoped_fill_snapshots f JOIN intents i ON i.id = ?
+				 WHERE f.order_id = ? AND f.account_ref = TRIM(i.account_ref)
+				   AND f.market = LOWER(TRIM(i.market)) AND f.trading_day = TRIM(i.trading_day)
+				   AND f.symbol = UPPER(TRIM(i.symbol)) AND f.side = UPPER(TRIM(i.side))
+				UNION ALL
+				SELECT f.committed_at
+				  FROM fill_snapshots f JOIN intents i ON i.id = ?
+				 WHERE f.order_id = ? AND TRIM(f.account_ref) = TRIM(i.account_ref)
+				   AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
+				   AND TRIM(f.trading_day) = TRIM(i.trading_day)
+				   AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
+				   AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side)))`,
+			a.intentID, orderID, a.intentID, orderID).Scan(&latestEvidence); err != nil {
+			return fmt.Errorf("journal: reading prior evidence for confirmed order %s: %w", orderID, err)
+		}
+		var orderErr error
+		now, orderErr = journalTimeStrictlyAfter(now, latestEvidence.String)
+		if orderErr != nil {
+			return fmt.Errorf("journal: ordering confirmed ownership of %s: %w", orderID, orderErr)
+		}
+	}
 
 	set := []string{"state = ?"}
 	args := []any{string(to)}

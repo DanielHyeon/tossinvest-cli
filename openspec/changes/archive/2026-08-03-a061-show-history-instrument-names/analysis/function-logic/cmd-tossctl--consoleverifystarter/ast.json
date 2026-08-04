@@ -1,0 +1,461 @@
+{
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "24bb4847a5dd78a341d3299efbb8c4bd284f484022f9fb0408fee5d8b0a5dc97",
+  "package": "main",
+  "function": "consoleVerifyStarter",
+  "signature": "consoleVerifyStarter(params=1, results=1)",
+  "start": {
+    "line": 1130,
+    "column": 1
+  },
+  "end": {
+    "line": 1211,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1141,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1152,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1156,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1160,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1165,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1170,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1175,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 1197,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 1204,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1131,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1142,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1153,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1157,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1161,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1166,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1171,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1176,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1198,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1209,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1140,
+        "column": 25
+      },
+      "text": "acquireVerifyExecutionLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1144,
+        "column": 9
+      },
+      "text": "executionLock.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1145,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1146,
+        "column": 4
+      },
+      "text": "executionLock.Path"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1148,
+        "column": 12
+      },
+      "text": "verifylive.NormalizeMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1151,
+        "column": 22
+      },
+      "text": "resolveVerifyRecordFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1155,
+        "column": 17
+      },
+      "text": "verifylive.LoadEntries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1159,
+        "column": 25
+      },
+      "text": "holdVerifyRateBudgetIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1163,
+        "column": 9
+      },
+      "text": "releaseIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1164,
+        "column": 23
+      },
+      "text": "acquireVerifyRateBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1168,
+        "column": 9
+      },
+      "text": "budgetLease.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1169,
+        "column": 30
+      },
+      "text": "verifyBrokerFactory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1174,
+        "column": 20
+      },
+      "text": "verifylive.OpenRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1178,
+        "column": 9
+      },
+      "text": "recorder.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1180,
+        "column": 18
+      },
+      "text": "verifylive.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1183,
+        "column": 21
+      },
+      "text": "consoleMutationConfirmer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1189,
+        "column": 21
+      },
+      "text": "consoleProbeSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1190,
+        "column": 21
+      },
+      "text": "firstUsableHoldingIn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1201,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1203,
+        "column": 22
+      },
+      "text": "runner.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1204,
+        "column": 24
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1204,
+        "column": 63
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1209,
+        "column": 19
+      },
+      "text": "runner.Entries"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1140,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1148,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1151,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1155,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1159,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1164,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1169,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1174,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1180,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1207,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1144,
+        "column": 3
+      },
+      "text": "executionLock.Release"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1163,
+        "column": 3
+      },
+      "text": "releaseIntent"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1168,
+        "column": 3
+      },
+      "text": "budgetLease.Release"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1178,
+        "column": 3
+      },
+      "text": "recorder.Close"
+    }
+  ]
+}

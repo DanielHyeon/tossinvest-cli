@@ -1,0 +1,209 @@
+{
+  "file": "internal/journal/exit_state.go",
+  "source_sha256": "f3895fb41abc09f4de2aad1eceeeff1b39ab17ed658b2dc74e02bf7727b46f86",
+  "package": "journal",
+  "function": "exitContextForFill",
+  "signature": "exitContextForFill(params=3, results=3)",
+  "start": {
+    "line": 873,
+    "column": 1
+  },
+  "end": {
+    "line": 903,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 875,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 878,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 890,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 895,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 898,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 876,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 879,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 891,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 896,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 899,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 902,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 874,
+        "column": 24
+      },
+      "text": "resolveFillOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 886,
+        "column": 19
+      },
+      "text": "tx.Query"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 891,
+        "column": 36
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 894,
+        "column": 8
+      },
+      "text": "instance.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 895,
+        "column": 6
+      },
+      "text": "instance.Next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 896,
+        "column": 36
+      },
+      "text": "instance.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 898,
+        "column": 12
+      },
+      "text": "instance.Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 899,
+        "column": 36
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 874,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 881,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 886,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 898,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 894,
+        "column": 2
+      },
+      "text": "instance.Close"
+    }
+  ],
+  "revision": "current"
+}

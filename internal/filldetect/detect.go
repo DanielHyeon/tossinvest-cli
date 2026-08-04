@@ -78,9 +78,12 @@ type BuyingPowerReader interface {
 // TrackedOrder is an order the detector must keep reading even after it has left
 // the open list.
 type TrackedOrder struct {
-	OrderID string
-	Symbol  string
-	Market  string
+	OrderID    string
+	AccountRef string
+	Symbol     string
+	Market     string
+	TradingDay string
+	Side       string
 	// Lineage is what the journal knows about this order's replacement chain. It
 	// is what stops an amended order being reported as cancelled.
 	Lineage brokerstate.Lineage
@@ -89,6 +92,10 @@ type TrackedOrder struct {
 // TrackedSource names those orders. The journal-backed implementation is
 // journal.Journal.TrackedFillOrders (task 3.2).
 type TrackedSource interface {
+	// SelectedAccountRef is the detector instance's account scope. The official
+	// order payload does not repeat it, so it has to enter the canonical identity
+	// from the adapter that selected the account.
+	SelectedAccountRef() string
 	TrackedOrders(ctx context.Context) ([]TrackedOrder, error)
 }
 
@@ -185,9 +192,12 @@ type Detector struct {
 // There is no per-fill identifier in this API (design D4), so a "fill" is never an
 // event we receive — it is the difference between two of these.
 type Snapshot struct {
-	OrderID string
-	Symbol  string
-	Market  string
+	OrderID    string
+	AccountRef string
+	Symbol     string
+	Market     string
+	TradingDay string
+	Side       string
 	// Derived is the priority-table verdict on the payload.
 	Derived brokerstate.Derived
 	// RawStatus, Canceled and CanceledAt are the derivation's inputs, kept on the
@@ -357,20 +367,34 @@ func (d *Detector) collect(ctx context.Context, cfg Config, started time.Time, c
 	}
 	cycle.OpenOrders = len(raws)
 
-	fallback := d.brokerVisibleFallback(started)
-	seen := make(map[string]bool, len(raws))
-	snaps := make([]Snapshot, 0, len(raws))
-
 	tracked, err := d.Tracked.TrackedOrders(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("filldetect: listing the tracked orders: %w", err)
 	}
-	lineage := make(map[string]brokerstate.Lineage, len(tracked))
-	market := make(map[string]string, len(tracked))
-	for _, t := range tracked {
-		lineage[t.OrderID] = t.Lineage
-		market[t.OrderID] = t.Market
+	accountRef := strings.TrimSpace(d.Tracked.SelectedAccountRef())
+	if accountRef == "" {
+		return nil, errors.New("filldetect: the tracked-order source has no selected account")
 	}
+
+	trackedByKey := make(map[canonicalOrderKey]TrackedOrder, len(tracked))
+	trackedByID := make(map[string][]canonicalOrderKey, len(tracked))
+	trackedKeys := make([]canonicalOrderKey, 0, len(tracked))
+	for _, order := range tracked {
+		key, keyErr := trackedOrderKey(order, accountRef)
+		if keyErr != nil {
+			return nil, keyErr
+		}
+		if _, duplicate := trackedByKey[key]; duplicate {
+			return nil, fmt.Errorf("filldetect: duplicate tracked order in canonical scope %s", key)
+		}
+		trackedByKey[key] = order
+		trackedByID[key.OrderID] = append(trackedByID[key.OrderID], key)
+		trackedKeys = append(trackedKeys, key)
+	}
+
+	fallback := d.brokerVisibleFallback(started)
+	seen := make(map[canonicalOrderKey]bool, len(raws))
+	snaps := make([]Snapshot, 0, len(raws)+len(tracked))
 
 	for _, raw := range raws {
 		snap, err := parseSnapshot(raw, started, fallback)
@@ -379,41 +403,108 @@ func (d *Detector) collect(ctx context.Context, cfg Config, started time.Time, c
 			// list as complete without it would be a lie about a live account.
 			return nil, fmt.Errorf("filldetect: reading an order from the open list: %w", err)
 		}
-		snap.Derived = brokerstate.Derive(viewOf(snap, lineage[snap.OrderID]))
-		if m := market[snap.OrderID]; m != "" {
-			snap.Market = m
+		snap.AccountRef = accountRef
+		key, complete := snapshotOrderKey(snap)
+		lineage := brokerstate.Lineage{}
+		if complete {
+			if order, locallyTracked := trackedByKey[key]; locallyTracked {
+				lineage = order.Lineage
+				seen[key] = true
+			}
+		} else if len(trackedByID[snap.OrderID]) > 0 {
+			return nil, fmt.Errorf(
+				"filldetect: open order %q has incomplete canonical scope and could match a locally tracked order",
+				snap.OrderID)
 		}
-		seen[snap.OrderID] = true
+		snap.Derived = brokerstate.Derive(viewOf(snap, lineage))
 		snaps = append(snaps, snap)
 	}
 
-	for _, t := range tracked {
-		if seen[t.OrderID] {
+	for _, key := range trackedKeys {
+		if seen[key] {
 			continue
 		}
-		raw, err := d.Order.OrderRaw(ctx, t.OrderID)
+		order := trackedByKey[key]
+		raw, err := d.Order.OrderRaw(ctx, order.OrderID)
 		if err != nil {
-			return nil, fmt.Errorf("filldetect: reading order %s: %w", t.OrderID, err)
+			return nil, fmt.Errorf("filldetect: reading order %s: %w", order.OrderID, err)
 		}
 		cycle.TrackedReads++
 		snap, err := parseSnapshot(raw, started, fallback)
 		if err != nil {
-			return nil, fmt.Errorf("filldetect: reading order %s: %w", t.OrderID, err)
+			return nil, fmt.Errorf("filldetect: reading order %s: %w", order.OrderID, err)
 		}
 		// Trimmed only to judge emptiness: the payload's identifier is kept
 		// verbatim when there is one, and the tracked id fills in when there is
 		// not (order-execution "브로커 식별자의 opaque 취급").
 		if strings.TrimSpace(snap.OrderID) == "" {
-			snap.OrderID = t.OrderID
+			snap.OrderID = order.OrderID
 		}
-		if snap.Symbol == "" {
-			snap.Symbol = t.Symbol
+		snap.AccountRef = accountRef
+		actual, complete := snapshotOrderKey(snap)
+		if !complete {
+			return nil, fmt.Errorf(
+				"filldetect: tracked order %q response has incomplete canonical scope", order.OrderID)
 		}
-		snap.Market = t.Market
-		snap.Derived = brokerstate.Derive(viewOf(snap, t.Lineage))
+		if actual != key {
+			return nil, fmt.Errorf(
+				"filldetect: tracked order %q response scope %s does not match requested scope %s",
+				order.OrderID, actual, key)
+		}
+		snap.Derived = brokerstate.Derive(viewOf(snap, order.Lineage))
 		snaps = append(snaps, snap)
 	}
 	return snaps, nil
+}
+
+type canonicalOrderKey struct {
+	AccountRef string
+	Market     string
+	TradingDay string
+	Symbol     string
+	Side       string
+	OrderID    string
+}
+
+func (k canonicalOrderKey) String() string {
+	return fmt.Sprintf("account=%q market=%q day=%q symbol=%q side=%q order=%q",
+		k.AccountRef, k.Market, k.TradingDay, k.Symbol, k.Side, k.OrderID)
+}
+
+func trackedOrderKey(order TrackedOrder, selectedAccount string) (canonicalOrderKey, error) {
+	key := canonicalOrderKey{
+		AccountRef: strings.TrimSpace(order.AccountRef),
+		Market:     strings.ToLower(strings.TrimSpace(order.Market)),
+		TradingDay: strings.TrimSpace(order.TradingDay),
+		Symbol:     strings.ToUpper(strings.TrimSpace(order.Symbol)),
+		Side:       strings.ToUpper(strings.TrimSpace(order.Side)),
+		OrderID:    order.OrderID,
+	}
+	if strings.TrimSpace(key.OrderID) == "" || key.AccountRef == "" || key.Market == "" ||
+		key.TradingDay == "" || key.Symbol == "" || key.Side == "" {
+		return canonicalOrderKey{}, fmt.Errorf(
+			"filldetect: tracked order %q has incomplete canonical scope", order.OrderID)
+	}
+	if key.AccountRef != selectedAccount {
+		return canonicalOrderKey{}, fmt.Errorf(
+			"filldetect: tracked order %q belongs to account %q, selected account is %q",
+			order.OrderID, key.AccountRef, selectedAccount)
+	}
+	return key, nil
+}
+
+func snapshotOrderKey(snap Snapshot) (canonicalOrderKey, bool) {
+	key := canonicalOrderKey{
+		AccountRef: strings.TrimSpace(snap.AccountRef),
+		Market:     strings.ToLower(strings.TrimSpace(snap.Market)),
+		TradingDay: strings.TrimSpace(snap.TradingDay),
+		Symbol:     strings.ToUpper(strings.TrimSpace(snap.Symbol)),
+		Side:       strings.ToUpper(strings.TrimSpace(snap.Side)),
+		OrderID:    snap.OrderID,
+	}
+	complete := strings.TrimSpace(key.OrderID) != "" && key.AccountRef != "" && key.Market != "" &&
+		key.TradingDay != "" && key.Symbol != "" && key.Side != ""
+	return key, complete
 }
 
 // Run polls until ctx is done.

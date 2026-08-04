@@ -150,7 +150,7 @@ func publishNotificationTest(ctx context.Context, block config.Notifications, to
 	}
 	ntfy := &obs.Ntfy{BaseURL: strings.TrimSpace(block.BaseURL), Topic: topic, Token: token}
 	return ntfy.Publish(ctx, obs.Notification{
-		Type:     obs.EventType("console.notification_test"),
+		Type: obs.EventType("console.notification_test"),
 		// Normal, not critical. Priority 5 bypasses a phone's do-not-disturb, and
 		// a test message that did that would teach the operator to distrust the
 		// one grade that means a live account is unprotected.

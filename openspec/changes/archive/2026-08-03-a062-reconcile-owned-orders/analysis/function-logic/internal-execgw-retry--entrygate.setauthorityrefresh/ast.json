@@ -1,0 +1,48 @@
+{
+  "file": "internal/execgw/retry.go",
+  "source_sha256": "a549135ef2864ab05eb8168cfac899cad5052457189307c4ed3e3bee42e102d3",
+  "package": "execgw",
+  "function": "SetAuthorityRefresh",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.SetAuthorityRefresh(params=1, results=0)",
+  "start": {
+    "line": 451,
+    "column": 1
+  },
+  "end": {
+    "line": 455,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 453,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

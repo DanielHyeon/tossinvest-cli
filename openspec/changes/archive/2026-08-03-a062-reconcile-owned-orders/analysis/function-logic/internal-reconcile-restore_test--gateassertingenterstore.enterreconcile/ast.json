@@ -1,0 +1,72 @@
+{
+  "file": "internal/reconcile/restore_test.go",
+  "source_sha256": "06075e0e4501b78ee04e55e617309bf70a7b1a025c31d7a496cd9396161bc2ab",
+  "package": "reconcile_test",
+  "function": "EnterReconcile",
+  "receiver": "gateAssertingEnterStore",
+  "signature": "gateAssertingEnterStore.EnterReconcile(params=2, results=3)",
+  "start": {
+    "line": 73,
+    "column": 1
+  },
+  "end": {
+    "line": 79,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 5
+      },
+      "text": "s.gate.CheckEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 43
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 9
+      },
+      "text": "s.ReconcileStore.EnterReconcile"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

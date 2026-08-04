@@ -217,6 +217,17 @@ func (g *EntryGate) RebuildReconcileProjection(states []journal.ReconcileState) 
 // An empty symbol asks the account-wide question only — that is what CheckEntry
 // does, and it is why an existing caller's answer is unchanged.
 func (g *EntryGate) CheckEntryFor(market, symbol string) *RejectedError {
+	g.mu.Lock()
+	refresh := g.authorityRefresh
+	g.mu.Unlock()
+	if refresh != nil {
+		if err := refresh(); err != nil {
+			return &RejectedError{
+				Reason: ReasonReconcileMismatch,
+				Detail: "durable RECONCILE authority could not be refreshed: " + err.Error(),
+			}
+		}
+	}
 	if rejected := g.checkAccountEntry(); rejected != nil {
 		return rejected
 	}

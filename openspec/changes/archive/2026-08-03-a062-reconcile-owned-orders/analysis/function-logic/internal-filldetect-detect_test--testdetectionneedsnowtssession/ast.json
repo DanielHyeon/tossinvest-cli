@@ -1,0 +1,157 @@
+{
+  "file": "internal/filldetect/detect_test.go",
+  "source_sha256": "7fe5825a894d212e278325c39d6b369d975ef46f006b913627daa8c7264e2e26",
+  "package": "filldetect_test",
+  "function": "TestDetectionNeedsNoWTSSession",
+  "signature": "TestDetectionNeedsNoWTSSession(params=1, results=0)",
+  "start": {
+    "line": 843,
+    "column": 1
+  },
+  "end": {
+    "line": 864,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 858,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 861,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 844,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 846,
+        "column": 13
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 846,
+        "column": 13
+      },
+      "text": "pollStart.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 848,
+        "column": 14
+      },
+      "text": "newPager"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 848,
+        "column": 23
+      },
+      "text": "page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 849,
+        "column": 73
+      },
+      "text": "filled.json"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 854,
+        "column": 11
+      },
+      "text": "newLedger"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 857,
+        "column": 16
+      },
+      "text": "d.PollOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 857,
+        "column": 27
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 859,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 862,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 844,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 845,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 847,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 857,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

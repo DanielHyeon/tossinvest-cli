@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a063",
+  "title": "Renew capability attestation from the console profile",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a063-align-attestation-renewal-profile",
+    "path": "openspec/changes/a063-align-attestation-renewal-profile"
+  },
+  "acceptance": [
+    "The unattended attestation renewal reads the capability-soak record from the same config profile used by the operator console",
+    "The renewed attestation is written where the engine interlock for that profile reads it",
+    "A failed renewal is visible before the current attestation expires on 2026-08-29",
+    "At least three consecutive qualifying survey days are collected and a fresh attestation is verified before expiry",
+    "No trading, Guardian, lane, kill-switch, adoption or automation-gate setting is changed by the implementation"
+  ]
+}

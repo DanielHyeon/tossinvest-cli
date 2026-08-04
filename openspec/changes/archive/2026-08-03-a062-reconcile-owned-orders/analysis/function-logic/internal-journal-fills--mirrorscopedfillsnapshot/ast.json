@@ -1,0 +1,79 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "000918b94c8c3f776b611421c412e4604086fc4cbee2fd0e7c21fe0dd46454c0",
+  "package": "journal",
+  "function": "mirrorScopedFillSnapshot",
+  "signature": "mirrorScopedFillSnapshot(params=8, results=1)",
+  "start": {
+    "line": 754,
+    "column": 1
+  },
+  "end": {
+    "line": 781,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 780,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 756,
+        "column": 12
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 14
+      },
+      "text": "boolToInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 39
+      },
+      "text": "boolToInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 62
+      },
+      "text": "orZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 3
+      },
+      "text": "orZero"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 756,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

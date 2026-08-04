@@ -1,0 +1,296 @@
+{
+  "file": "internal/reconcile/snapshot.go",
+  "source_sha256": "827f148d49ae878bd1acb64327dbd5545cebe9a576e130305255e06861e1b8e3",
+  "package": "reconcile",
+  "function": "Digest",
+  "receiver": "Snapshot",
+  "signature": "Snapshot.Digest(params=0, results=1)",
+  "start": {
+    "line": 161,
+    "column": 1
+  },
+  "end": {
+    "line": 191,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 167,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 45
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 186,
+        "column": 45
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 2
+      },
+      "text": "b.WriteString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 19
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 2
+      },
+      "text": "sort.Slice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 10
+      },
+      "text": "less"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 10
+      },
+      "text": "brokerOrderIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 60
+      },
+      "text": "brokerOrderIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 15
+      },
+      "text": "brokerOrderIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 4
+      },
+      "text": "canonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 34
+      },
+      "text": "canonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 4
+      },
+      "text": "canonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 21
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 2
+      },
+      "text": "sort.Slice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 14
+      },
+      "text": "canonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 44
+      },
+      "text": "canonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 21
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "sort.Slice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 3
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 54
+      },
+      "text": "canonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 9
+      },
+      "text": "b.String"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

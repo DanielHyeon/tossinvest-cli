@@ -1,0 +1,266 @@
+{
+  "file": "internal/journal/reservation_sweep_test.go",
+  "source_sha256": "dcfcc7de8f1e832e67d19949578ce40bf3d79d549ad6f99de6f5a714cfcd011e",
+  "package": "journal",
+  "function": "TestOrphanSweepDoesNotReleaseReservationBoundToAnotherDecision",
+  "signature": "TestOrphanSweepDoesNotReleaseReservationBoundToAnotherDecision(params=1, results=0)",
+  "start": {
+    "line": 406,
+    "column": 1
+  },
+  "end": {
+    "line": 439,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 414,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 422,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 430,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 433,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 436,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 10
+      },
+      "text": "openReservationJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 411,
+        "column": 22
+      },
+      "text": "recordEntryDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 14
+      },
+      "text": "j.Reserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 29
+      },
+      "text": "exposureReserve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 24
+      },
+      "text": "mustVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 19
+      },
+      "text": "recordEntryDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 418,
+        "column": 2
+      },
+      "text": "confirmAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 422,
+        "column": 15
+      },
+      "text": "j.db.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 2
+      },
+      "text": "insertTerminalFillSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 16
+      },
+      "text": "j.SweepReservations"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 431,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 6
+      },
+      "text": "Held"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 6
+      },
+      "text": "reservationState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 411,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 412,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 417,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 422,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

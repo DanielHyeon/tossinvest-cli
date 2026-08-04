@@ -223,3 +223,15 @@ protection/high-water 비교는 같은 policy digest 안에서만 허용하고 (
 #### Scenario: 같은 symbol이 KR/US candidate에 동시에 있다
 - **WHEN** 동일 symbol이 KR과 US의 미편입 candidate로 동시에 존재하고 quote transport가 symbol-only다
 - **THEN** market identity가 모호하므로 두 candidate 모두 편입되지 않는다
+
+### Requirement: Automatic adoption obeys every authoritative RECONCILE state
+
+Before pricing or adopting a holding, the engine SHALL use active journal RECONCILE states for the account as the authority and SHALL block every candidate covered by an account- or symbol-scoped state, regardless of which producer created the state. The runtime management projection SHALL expose the same covering states. Failure to read or update that authority MUST stop the cycle before adoption.
+
+#### Scenario: Non-quantity reconcile cause covers a candidate
+- **WHEN** an included or globally enabled holding is covered by `SNAPSHOT_UNAVAILABLE`, `SNAPSHOT_STALE`, `IDENTIFIER_CONFLICT`, or `ATTRIBUTION_FAILED`
+- **THEN** the engine performs no adoption and no price read, while `/positions` reports the authoritative reconcile block rather than ordinary adoption pending
+
+#### Scenario: Tracker persistence fails before adoption
+- **WHEN** the reconciliation comparison cannot durably enter or release its block state
+- **THEN** the cycle returns an error before candidate pricing and the holding remains unadopted

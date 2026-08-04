@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate"
@@ -23,7 +24,12 @@ import (
 
 // JournalLedger is the durable Ledger.
 type JournalLedger struct {
-	Journal *journal.Journal
+	Journal    *journal.Journal
+	AccountRef string
+	// Refresh republishes journal RECONCILE authority after the fill transaction
+	// commits. Production wires Tracker.Refresh; nil is allowed for isolated
+	// ledger tests.
+	Refresh func(context.Context) error
 }
 
 // Apply records one cumulative snapshot.
@@ -31,11 +37,26 @@ func (l JournalLedger) Apply(ctx context.Context, snap Snapshot) (Applied, error
 	if l.Journal == nil {
 		return Applied{}, fmt.Errorf("filldetect: the ledger has no journal")
 	}
+	selectedAccount := strings.TrimSpace(l.AccountRef)
+	observedAccount := strings.TrimSpace(snap.AccountRef)
+	if selectedAccount == "" {
+		return Applied{}, fmt.Errorf("filldetect: the ledger has no selected account")
+	}
+	if observedAccount == "" {
+		return Applied{}, fmt.Errorf("filldetect: snapshot %q has no account scope", snap.OrderID)
+	}
+	if observedAccount != selectedAccount {
+		return Applied{}, fmt.Errorf(
+			"filldetect: snapshot %q belongs to account %q, ledger account is %q",
+			snap.OrderID, observedAccount, selectedAccount)
+	}
 
 	obs := journal.FillObservation{
 		OrderID:        snap.OrderID,
 		Symbol:         snap.Symbol,
 		Market:         snap.Market,
+		TradingDay:     snap.TradingDay,
+		Side:           snap.Side,
 		State:          string(snap.Derived.State),
 		Terminal:       snap.Derived.Terminal,
 		FailClosed:     snap.Derived.FailClosed,
@@ -45,6 +66,7 @@ func (l JournalLedger) Apply(ctx context.Context, snap Snapshot) (Applied, error
 		FilledQuantity: decimalString(snap.FilledQuantity),
 		AveragePrice:   snap.AveragePrice,
 		FilledAmount:   snap.FilledAmount,
+		AccountRef:     observedAccount,
 		ObservedAt:     journal.RFC3339(snap.ObservedAt),
 	}
 	// Only a timestamp the *broker* supplied is passed through. The detector's
@@ -58,6 +80,11 @@ func (l JournalLedger) Apply(ctx context.Context, snap Snapshot) (Applied, error
 	res, err := l.Journal.RecordFill(ctx, obs)
 	if err != nil {
 		return Applied{}, err
+	}
+	if l.Refresh != nil {
+		if err := l.Refresh(ctx); err != nil {
+			return Applied{}, fmt.Errorf("filldetect: refreshing RECONCILE authority after the fill: %w", err)
+		}
 	}
 
 	applied := Applied{
@@ -85,25 +112,37 @@ func (l JournalLedger) Apply(ctx context.Context, snap Snapshot) (Applied, error
 // JournalTracked is the durable TrackedSource: the orders that are not terminal,
 // plus the ones a confirmed attempt named and no poll has seen yet.
 type JournalTracked struct {
-	Journal *journal.Journal
+	Journal    *journal.Journal
+	AccountRef string
 }
+
+// SelectedAccountRef returns the account this adapter asks the journal to
+// project. The broker's order JSON carries no account field, so the detector
+// uses this value as that part of every canonical order identity.
+func (t JournalTracked) SelectedAccountRef() string { return strings.TrimSpace(t.AccountRef) }
 
 // TrackedOrders lists what the next cycle must read by id.
 func (t JournalTracked) TrackedOrders(ctx context.Context) ([]TrackedOrder, error) {
 	if t.Journal == nil {
 		return nil, fmt.Errorf("filldetect: the tracked-order source has no journal")
 	}
-	rows, err := t.Journal.TrackedFillOrders(ctx)
+	if strings.TrimSpace(t.AccountRef) == "" {
+		return nil, fmt.Errorf("filldetect: the tracked-order source has no selected account")
+	}
+	rows, err := t.Journal.TrackedFillOrders(ctx, t.AccountRef)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]TrackedOrder, 0, len(rows))
 	for _, row := range rows {
 		out = append(out, TrackedOrder{
-			OrderID: row.OrderID,
-			Symbol:  row.Symbol,
-			Market:  row.Market,
-			Lineage: brokerstate.Lineage{SuccessorOrderID: row.SuccessorOrderID},
+			OrderID:    row.OrderID,
+			AccountRef: row.AccountRef,
+			Symbol:     row.Symbol,
+			Market:     row.Market,
+			TradingDay: row.TradingDay,
+			Side:       row.Side,
+			Lineage:    brokerstate.Lineage{SuccessorOrderID: row.SuccessorOrderID},
 		})
 	}
 	return out, nil

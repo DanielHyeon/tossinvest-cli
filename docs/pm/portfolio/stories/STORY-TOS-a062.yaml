@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a062",
+  "title": "Keep external orders out of engine-owned reconciliation",
+  "feature": "FEAT-TOS-005",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a062-reconcile-owned-orders",
+    "path": "openspec/changes/archive/2026-08-03-a062-reconcile-owned-orders"
+  },
+  "acceptance": [
+    "A broker order with no confirmed local mutation attempt or lineage is never treated as an engine-owned open order",
+    "An external order disappearing from the broker open list cannot create a missing-engine-order mismatch or promote an account-wide permanent block",
+    "Confirmed engine orders remain tracked through fills, cancellation and amendment lineage",
+    "The existing false permanent reconcile block is released only after a fresh authoritative comparison is clean and the release is audit recorded",
+    "Automatic KR and US adoption resumes without changing trading, Guardian, lane, kill-switch or adoption toggle configuration"
+  ]
+}

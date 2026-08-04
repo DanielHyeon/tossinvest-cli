@@ -387,9 +387,9 @@ func TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(t *testing.T) {
 		// validation and no audit line — the console path is the one that has all
 		// three. A forged request that turned the gate on would be exactly the act
 		// this list exists to keep behind the token.
-		"/settings/trading":                     true,
-		"/settings/gate":                        true,
-		"/settings/autostart":                   true,
+		"/settings/trading":   true,
+		"/settings/gate":      true,
+		"/settings/autostart": true,
 		// Alert delivery (a065). Turning alerts on writes a channel that is itself
 		// an access control, and turning them off stops the one path by which a
 		// stopped protection reaches a person. A forged request that did either
@@ -987,10 +987,11 @@ var consoleCapabilities = map[string]capability{
 	"Out": {},
 
 	// Interface seams: exactly these methods each, and no embedding.
-	"Handoff":    {Methods: []string{"Mint", "Consume"}},
-	"Holdings":   {Methods: []string{"Holdings"}},
-	"Settings":   {Methods: []string{"Load", "Save"}},
-	"EngineBoot": {Methods: []string{"Load", "Save"}},
+	"Handoff":         {Methods: []string{"Mint", "Consume"}},
+	"Holdings":        {Methods: []string{"Holdings"}},
+	"InstrumentNames": {Methods: []string{"Names"}},
+	"Settings":        {Methods: []string{"Load", "Save"}},
+	"EngineBoot":      {Methods: []string{"Load", "Save"}},
 	// Alert delivery (a065). Four methods, and the shape of Enable is the safety
 	// property: it takes no parameter, so the screen supplies no value that lands
 	// in the file — not a channel name, and above all not a token. Test publishes

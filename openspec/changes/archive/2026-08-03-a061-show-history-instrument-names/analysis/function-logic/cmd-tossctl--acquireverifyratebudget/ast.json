@@ -1,0 +1,116 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "33703e43b853e964a56226cf877bbaa33e21cb37c4891ef8f2b88694d62dec82",
+  "package": "main",
+  "function": "acquireVerifyRateBudget",
+  "signature": "acquireVerifyRateBudget(params=3, results=2)",
+  "start": {
+    "line": 748,
+    "column": 1
+  },
+  "end": {
+    "line": 759,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 750,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 754,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 751,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 755,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 758,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 749,
+        "column": 15
+      },
+      "text": "verifyRateBudgetPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 753,
+        "column": 16
+      },
+      "text": "ratebudget.Acquire"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 755,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 757,
+        "column": 92
+      },
+      "text": "lease.Path"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 749,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 753,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

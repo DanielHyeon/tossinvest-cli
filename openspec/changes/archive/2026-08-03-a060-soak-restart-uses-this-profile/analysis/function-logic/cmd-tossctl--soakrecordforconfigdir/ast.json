@@ -1,0 +1,62 @@
+{
+  "file": "cmd/tossctl/soakproc.go",
+  "source_sha256": "f19676003e6169c3081d66b2d2050a8c20a7b35d444844b7bc61468c266cc0bd",
+  "package": "main",
+  "function": "soakRecordForConfigDir",
+  "signature": "soakRecordForConfigDir(params=1, results=1)",
+  "start": {
+    "line": 129,
+    "column": 1
+  },
+  "end": {
+    "line": 135,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 132,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 134,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 15
+      },
+      "text": "resolveSoakRecord"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

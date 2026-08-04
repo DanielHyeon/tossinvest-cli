@@ -141,13 +141,17 @@ func releaseReservationsForAttempt(ctx context.Context, tx *sql.Tx, attemptID, r
 // The identifier is compared byte-for-byte: `orderId` is an opaque token
 // (openapi contracts no shape for it), so the join is on what the broker sent
 // and nothing is trimmed or folded on the way in.
-func releaseReservationsForOrder(ctx context.Context, tx *sql.Tx, orderID, reason, detail, now string) ([]ReservationRelease, error) {
-	if orderID == "" {
+func releaseReservationsForOrder(ctx context.Context, tx *sql.Tx, orderID, intentID, reason, detail,
+	now string,
+) ([]ReservationRelease, error) {
+	if orderID == "" || strings.TrimSpace(intentID) == "" {
 		return nil, nil
 	}
 	return releaseWhere(ctx, tx, reason, detail, now,
-		`state = ? AND attempt_id IN (SELECT id FROM mutation_attempts WHERE broker_order_id = ?)`,
-		ReservationHeld, orderID)
+		`state = ? AND attempt_id IN (
+			SELECT id FROM mutation_attempts WHERE broker_order_id = ? AND intent_id = ?
+		)`,
+		ReservationHeld, orderID, strings.TrimSpace(intentID))
 }
 
 // releaseWhere is the single UPDATE every automatic release goes through. It
@@ -212,15 +216,37 @@ func validReleaseReason(reason string) bool {
 // alertsForOrder reports the holds an order's fail-closed observation left
 // standing, so the caller can raise the operator alert at the moment the
 // ambiguity was observed rather than on the next sweep.
-func alertsForOrder(ctx context.Context, tx *sql.Tx, orderID, cause, detail string) ([]ReservationAlert, error) {
-	if orderID == "" {
+func alertsForOrder(ctx context.Context, tx *sql.Tx, scope FillSnapshotScope,
+	evidenceAt, cause, detail string) ([]ReservationAlert, error) {
+	scope = canonicalFillSnapshotScope(scope)
+	if !scope.complete() {
 		return nil, nil
 	}
-	rows, err := tx.QueryContext(ctx, reservationSelect+
-		` WHERE state = ? AND attempt_id IN (SELECT id FROM mutation_attempts WHERE broker_order_id = ?)`,
-		ReservationHeld, orderID)
+	rows, err := tx.QueryContext(ctx, `
+		SELECT r.id, r.decision_id, r.attempt_id, r.account_ref, r.kind, r.amount,
+		       r.currency, r.trading_day, r.snapshot_as_of, r.state, r.released_at, r.release_reason
+		  FROM risk_reservations r
+		  JOIN mutation_attempts a ON a.id = r.attempt_id
+		  JOIN intents i ON i.id = a.intent_id
+		 WHERE r.state = ? AND r.decision_id = a.decision_id
+		   AND a.state = ? AND a.kind IN ('PLACE','AMEND') AND a.settled_at < ?
+		   AND a.broker_order_id = ?
+		   AND TRIM(i.account_ref) = ? AND LOWER(TRIM(i.market)) = ?
+		   AND TRIM(i.trading_day) = ? AND UPPER(TRIM(i.symbol)) = ? AND UPPER(TRIM(i.side)) = ?
+		   AND 1 = (SELECT COUNT(DISTINCT owner.intent_id)
+			  FROM mutation_attempts owner JOIN intents owned ON owned.id = owner.intent_id
+			 WHERE owner.state = ? AND owner.kind IN ('PLACE','AMEND')
+			   AND owner.settled_at < ? AND owner.broker_order_id = ?
+			   AND TRIM(owned.account_ref) = ? AND LOWER(TRIM(owned.market)) = ?
+			   AND TRIM(owned.trading_day) = ? AND UPPER(TRIM(owned.symbol)) = ?
+			   AND UPPER(TRIM(owned.side)) = ?)`,
+		ReservationHeld, string(StateConfirmed), evidenceAt,
+		scope.OrderID, scope.AccountRef, scope.Market,
+		scope.TradingDay, scope.Symbol, scope.Side,
+		string(StateConfirmed), evidenceAt, scope.OrderID, scope.AccountRef, scope.Market,
+		scope.TradingDay, scope.Symbol, scope.Side)
 	if err != nil {
-		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", orderID, err)
+		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", scope.OrderID, err)
 	}
 	defer rows.Close()
 
@@ -238,7 +264,7 @@ func alertsForOrder(ctx context.Context, tx *sql.Tx, orderID, cause, detail stri
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", orderID, err)
+		return nil, fmt.Errorf("journal: finding the reservations held by order %s: %w", scope.OrderID, err)
 	}
 	return out, nil
 }
@@ -500,8 +526,12 @@ func (j *Journal) SweepReservations(ctx context.Context) (ReservationSweep, erro
 // "Already over" is read from the same two sources the live path uses and from
 // nothing else: an attempt state that releases (NOT_DISPATCHED,
 // FAILED_CONFIRMED), or a fill snapshot the caller derived as terminal without
-// failing closed. A snapshot that failed closed is not terminal, which is what
-// keeps the assumed-expiry case out of this sweep as well.
+// failing closed. A terminal snapshot releases only the reservation whose
+// confirmed attempt and intent match its complete canonical scope, and only
+// when that scope has one intent owner. Missing scope or ambiguous ownership
+// stays held; ambiguity also enters the existing IDENTIFIER_CONFLICT contract.
+// A snapshot that failed closed is not terminal, which is what keeps the
+// assumed-expiry case out of this sweep as well.
 func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]ReservationRelease, error) {
 	byAttemptState, err := releaseWhere(ctx, tx, ReleaseReasonBrokerTerminal,
 		"recovered at startup: the attempt was already in a terminal state that releases", nowText,
@@ -511,15 +541,87 @@ func sweepOrphanedTerminals(ctx context.Context, tx *sql.Tx, nowText string) ([]
 		return nil, err
 	}
 
-	byOrderState, err := releaseWhere(ctx, tx, ReleaseReasonBrokerTerminal,
-		"recovered at startup: the order was already observed in a derived terminal state", nowText,
-		`state = ? AND attempt_id IN (
-		   SELECT a.id FROM mutation_attempts a
-		   JOIN fill_snapshots f ON f.order_id = a.broker_order_id
-		   WHERE f.terminal = 1 AND f.fail_closed = 0)`,
-		ReservationHeld)
+	type terminalCandidate struct {
+		reservationID string
+		accountRef    string
+		orderID       string
+		market        string
+		tradingDay    string
+		symbol        string
+		side          string
+		intentOwners  int
+	}
+	rows, err := tx.QueryContext(ctx, allFillSnapshotsCTE+`
+		SELECT r.id, i.account_ref, f.order_id, i.market, i.trading_day, i.symbol, i.side,
+		       (SELECT count(DISTINCT owner_intent.id)
+		          FROM mutation_attempts owner_attempt
+		          JOIN intents owner_intent ON owner_intent.id = owner_attempt.intent_id
+		         WHERE owner_attempt.state = ? AND owner_attempt.kind IN ('PLACE','AMEND')
+		           AND owner_attempt.settled_at < f.committed_at
+		           AND owner_attempt.broker_order_id = f.order_id
+		           AND TRIM(owner_intent.account_ref) = TRIM(f.account_ref)
+		           AND LOWER(TRIM(owner_intent.market)) = LOWER(TRIM(f.market))
+		           AND TRIM(owner_intent.trading_day) = TRIM(f.trading_day)
+		           AND UPPER(TRIM(owner_intent.symbol)) = UPPER(TRIM(f.symbol))
+		           AND UPPER(TRIM(owner_intent.side)) = UPPER(TRIM(f.side)))
+		  FROM risk_reservations r
+		  JOIN mutation_attempts a ON a.id = r.attempt_id
+		  JOIN intents i ON i.id = a.intent_id
+		  JOIN all_fill_snapshots f ON f.order_id = a.broker_order_id
+		 WHERE r.state = ? AND a.state = ? AND a.kind IN ('PLACE','AMEND')
+		   AND a.settled_at < f.committed_at
+		   AND f.terminal = 1 AND f.fail_closed = 0
+		   AND r.decision_id = a.decision_id
+		   AND TRIM(r.account_ref) = TRIM(i.account_ref)
+		   AND TRIM(f.account_ref) = TRIM(i.account_ref)
+		   AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
+		   AND TRIM(f.trading_day) = TRIM(i.trading_day)
+		   AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
+		   AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side))
+		 ORDER BY r.id`,
+		string(StateConfirmed), ReservationHeld, string(StateConfirmed))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("journal: finding exactly scoped terminal reservations: %w", err)
+	}
+	var candidates []terminalCandidate
+	for rows.Next() {
+		var candidate terminalCandidate
+		if err := rows.Scan(&candidate.reservationID, &candidate.accountRef, &candidate.orderID,
+			&candidate.market, &candidate.tradingDay, &candidate.symbol, &candidate.side,
+			&candidate.intentOwners); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("journal: finding exactly scoped terminal reservations: %w", err)
+		}
+		candidates = append(candidates, candidate)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, fmt.Errorf("journal: finding exactly scoped terminal reservations: %w", err)
+	}
+	rows.Close()
+
+	var byOrderState []ReservationRelease
+	applyTx := &ApplyTx{tx: tx, now: nowText}
+	defer applyTx.invalidate()
+	for _, candidate := range candidates {
+		if candidate.intentOwners != 1 {
+			evidence := fmt.Sprintf(
+				"startup reservation sweep found order %s owned by %d intents in canonical scope %s/%s/%s/%s/%s; reservations remain held",
+				candidate.orderID, candidate.intentOwners, candidate.accountRef, candidate.market,
+				candidate.tradingDay, candidate.symbol, candidate.side)
+			if err := enterReconcileScopeInTx(ctx, applyTx, candidate.accountRef, "",
+				ReconcileCauseIdentifierConflict, evidence, nowText); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		released, err := releaseWhere(ctx, tx, ReleaseReasonBrokerTerminal,
+			"recovered at startup: the order was already observed in a derived terminal state",
+			nowText, "id = ? AND state = ?", candidate.reservationID, ReservationHeld)
+		if err != nil {
+			return nil, err
+		}
+		byOrderState = append(byOrderState, released...)
 	}
 	return append(byAttemptState, byOrderState...), nil
 }
@@ -641,13 +743,33 @@ func (j *Journal) OperatorReleaseReservation(ctx context.Context, req OperatorRe
 //     case the derivation refuses to read as an expiry).
 func (j *Journal) ReservationsAwaitingOperator(ctx context.Context) ([]ReservationAlert, error) {
 	rows, err := j.db.QueryContext(ctx,
-		`SELECT r.id, r.decision_id, r.attempt_id, r.account_ref, r.kind, r.amount,
+		allFillSnapshotsCTE+` SELECT r.id, r.decision_id, r.attempt_id, r.account_ref, r.kind, r.amount,
 		        r.currency, r.trading_day, r.snapshot_as_of, r.state, r.released_at,
 		        r.release_reason, a.state, f.fail_closed, f.reason_code, f.detail
 		 FROM risk_reservations r
 		 JOIN mutation_attempts a ON a.id = r.attempt_id
-		 LEFT JOIN fill_snapshots f ON f.order_id = a.broker_order_id
+		 JOIN intents i ON i.id = a.intent_id
+		 LEFT JOIN all_fill_snapshots f
+		   ON f.order_id = a.broker_order_id
+			  AND a.state = 'CONFIRMED' AND a.kind IN ('PLACE','AMEND')
+			  AND a.settled_at < f.committed_at
+		  AND TRIM(f.account_ref) = TRIM(i.account_ref)
+		  AND LOWER(TRIM(f.market)) = LOWER(TRIM(i.market))
+		  AND TRIM(f.trading_day) = TRIM(i.trading_day)
+		  AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(i.symbol))
+		  AND UPPER(TRIM(f.side)) = UPPER(TRIM(i.side))
+		  AND 1 = (SELECT COUNT(DISTINCT owner.intent_id)
+		             FROM mutation_attempts owner JOIN intents owned ON owned.id = owner.intent_id
+			            WHERE owner.state = 'CONFIRMED' AND owner.kind IN ('PLACE','AMEND')
+			              AND owner.settled_at < f.committed_at
+		              AND owner.broker_order_id = f.order_id
+		              AND TRIM(owned.account_ref) = TRIM(f.account_ref)
+		              AND LOWER(TRIM(owned.market)) = LOWER(TRIM(f.market))
+		              AND TRIM(owned.trading_day) = TRIM(f.trading_day)
+		              AND UPPER(TRIM(owned.symbol)) = UPPER(TRIM(f.symbol))
+		              AND UPPER(TRIM(owned.side)) = UPPER(TRIM(f.side)))
 		 WHERE r.state = ? AND (a.state = ? OR f.fail_closed = 1)
+		   AND r.decision_id = a.decision_id
 		 ORDER BY r.rowid`,
 		ReservationHeld, string(StateUnresolvedInDoubt))
 	if err != nil {

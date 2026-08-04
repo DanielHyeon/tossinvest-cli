@@ -1,0 +1,146 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "33703e43b853e964a56226cf877bbaa33e21cb37c4891ef8f2b88694d62dec82",
+  "package": "main",
+  "function": "holdVerifyRateBudgetIntent",
+  "signature": "holdVerifyRateBudgetIntent(params=3, results=2)",
+  "start": {
+    "line": 765,
+    "column": 1
+  },
+  "end": {
+    "line": 778,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 767,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 773,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 768,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 774,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 777,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 766,
+        "column": 21
+      },
+      "text": "verifyRateBudgetPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 19
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 33
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 771,
+        "column": 10
+      },
+      "text": "verifyRunLockPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 18
+      },
+      "text": "runlock.Hold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 774,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 776,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 766,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 770,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 771,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 772,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

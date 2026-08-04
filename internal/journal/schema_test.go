@@ -96,6 +96,7 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"flatten_sagas",
 		"flatten_steps",
 		"intents",
+		"legacy_fill_event_bindings",
 		"lineage_edges",
 		"mutation_attempts",
 		"operating_modes",
@@ -109,6 +110,9 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"reconcile_states",
 		"risk_reservations",
 		"schema_meta",
+		"scoped_execution_corrections",
+		"scoped_fill_snapshots",
+		"scoped_lineage_edges",
 		"spent_nonces",
 		"strategy_attempt_lineage",
 		"strategy_attempt_refusals",
@@ -161,17 +165,34 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"parent_filled_quantity", "parent_order_id", "relation",
 			"requested_quantity",
 		},
+		"scoped_lineage_edges": {
+			"account_ref", "attempt_id", "child_order_id", "created_at", "id", "intent_id",
+			"market", "parent_filled_quantity", "parent_order_id", "relation",
+			"requested_quantity", "side", "symbol", "trading_day",
+		},
 		// Schema v2 (task 3.2): the cumulative-snapshot fill ledger.
 		// filled_amount is v5: without a previous amount, an amount-only
 		// execution correction cannot be detected.
 		"fill_snapshots": {
-			"average_price", "broker_visible_at", "committed_at", "detail",
+			"account_ref", "average_price", "broker_visible_at", "committed_at", "detail",
 			"fail_closed", "filled_amount", "filled_quantity", "market", "observed_at",
-			"order_id", "quantity", "reason_code", "state", "symbol", "terminal",
+			"order_id", "quantity", "reason_code", "side", "state", "symbol", "terminal",
+			"trading_day",
+		},
+		"scoped_fill_snapshots": {
+			"account_ref", "average_price", "broker_visible_at", "committed_at", "detail",
+			"fail_closed", "filled_amount", "filled_quantity", "market", "observed_at",
+			"order_id", "quantity", "reason_code", "side", "state", "symbol", "terminal",
+			"trading_day",
 		},
 		"fill_events": {
-			"average_price", "broker_visible_at", "committed_at", "cumulative_quantity",
-			"delta_quantity", "id", "market", "order_id", "symbol",
+			"account_ref", "average_price", "broker_visible_at", "committed_at",
+			"cumulative_quantity", "delta_quantity", "id", "market", "order_id", "side",
+			"symbol", "trading_day",
+		},
+		"legacy_fill_event_bindings": {
+			"account_ref", "fill_event_id", "market", "order_id", "side", "symbol",
+			"trading_day",
 		},
 		// Schema v4 (task 4.4): the flatten saga's durable plan.
 		"flatten_sagas": {
@@ -214,6 +235,11 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"account_ref", "cumulative_qty", "id", "new_avg_price",
 			"new_filled_amount", "observed_at", "order_id", "prev_avg_price",
 			"prev_filled_amount",
+		},
+		"scoped_execution_corrections": {
+			"account_ref", "cumulative_qty", "id", "market", "new_avg_price",
+			"new_filled_amount", "observed_at", "order_id", "prev_avg_price",
+			"prev_filled_amount", "side", "symbol", "trading_day",
 		},
 		// Schema v7 (adopt-external-positions design A1): the adoption record and
 		// the one nullable column that points at it. `adoption_id` is listed here
@@ -522,10 +548,18 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_transitions_attempt",
 		"idx_lineage_child",
 		"idx_lineage_parent",
+		"idx_scoped_lineage_child",
+		"idx_scoped_lineage_parent",
 		"idx_fill_snapshots_symbol",
 		"idx_fill_snapshots_terminal",
+		"idx_fill_snapshots_scope",
+		"idx_scoped_fill_snapshots_order",
+		"idx_scoped_fill_snapshots_symbol",
 		"idx_fill_events_order",
+		"idx_fill_events_scope",
 		"idx_fill_events_symbol",
+		"idx_legacy_fill_event_bindings_order",
+		"idx_scoped_corrections_order",
 		// Schema v5: the decision contract's lookup paths — expiry sweeps,
 		// per-account reservation sums, the restart sweep for orphaned holds and
 		// the correction history of one order.

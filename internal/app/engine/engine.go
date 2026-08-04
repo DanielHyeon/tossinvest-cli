@@ -577,8 +577,9 @@ func (c *Context) Close() error {
 // let a decision outlive the record of its own consumption.
 const spentNonceRetention = 30 * 24 * time.Hour
 
-// openEngineJournal opens the journal the engine records against and sweeps the
-// consumption records once (task 7.2, design D8 step 2).
+// openEngineJournal opens the journal the engine records against, recovers
+// durable reservation state, and sweeps consumption records once (task 7.2,
+// design D8 step 2).
 //
 // # What this makes a startup condition
 //
@@ -608,6 +609,15 @@ func openEngineJournal(ctx context.Context, opts Options, clk clock.Clock) (*jou
 	})
 	if err != nil {
 		return nil, fmt.Errorf("engine: opening the journal: %w", err)
+	}
+
+	// Reservation recovery must run before nonce retention. An expired held
+	// reservation whose nonce was spent is evidence that a request may have left
+	// the process; pruning that evidence first could make the recovery path call
+	// it unconsumed and release risk headroom in the unsafe direction.
+	if _, err := j.SweepReservations(ctx); err != nil {
+		_ = j.Close()
+		return nil, fmt.Errorf("engine: sweeping risk reservations: %w", err)
 	}
 
 	// The retention sweep. A restart is the one moment the engine is provably not

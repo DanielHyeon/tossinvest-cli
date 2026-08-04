@@ -1,0 +1,119 @@
+{
+  "file": "internal/journal/reservation_sweep_test.go",
+  "source_sha256": "dcfcc7de8f1e832e67d19949578ce40bf3d79d549ad6f99de6f5a714cfcd011e",
+  "package": "journal",
+  "function": "TestPreOwnerFailClosedEvidenceCannotAlertAFutureReservation",
+  "signature": "TestPreOwnerFailClosedEvidenceCannotAlertAFutureReservation(params=1, results=0)",
+  "start": {
+    "line": 260,
+    "column": 1
+  },
+  "end": {
+    "line": 275,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 10
+      },
+      "text": "openReservationJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 2
+      },
+      "text": "insertScopedFillSnapshotAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 2
+      },
+      "text": "reserveConfirmedSweepOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 17
+      },
+      "text": "j.ReservationsAwaitingOperator"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 48
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -111,11 +111,25 @@ include/exclude 설정만 멱등 갱신하며 편입 실행, 기존 보호선 �
 - **THEN** 렌더 결과 전체에 `on[a-z]+=` inline handler, `<script>`, `javascript:` URL이 없고 응답 CSP의 `default-src 'none'`과 `form-action 'self'`가 유지된다
 
 ### Requirement: 거래 이력 가시성
-콘솔은 완결된 왕복 거래(trade_outcomes)와 exit 이벤트(exit_events)를 시간순으로 표시해야 한다(SHALL). 표시는 journal에 동결된 값과 명시 조인(positions의 심볼, exit_states의 진입가)만 사용하며 fills 재계산을 하지 않는다(SHALL NOT). 스키마에 없는 값(청산가 등)은 표시하지 않고(SHALL NOT), nullable 필드(보유 시간 등)의 NULL은 "—"로 렌더한다(SHALL). 성과 행이 생기지 않는 종결(외부 매도로 닫힌 포지션 — adopt-external-positions design A7)은 이 화면의 한계로 명시하고 exit_events 표시가 그 공백을 보완한다(SHALL 명시).
+콘솔은 완결된 왕복 거래(trade_outcomes)와 exit 이벤트(exit_events)를 시간순으로 표시해야 한다(SHALL). 각 행의 종목은 journal의 market+symbol을 공식 종목 메타데이터와 batch로 보강해 `심볼 · 종목명`을 함께 표시해야 한다(SHALL). 종목명 조회가 실패하거나 해당 심볼의 메타데이터가 없으면 journal 행과 심볼은 그대로 표시하고 종목명을 만들지 않아야 한다(SHALL NOT). 표시는 journal에 동결된 값과 명시 조인(positions의 심볼, exit_states의 진입가)만 사용하며 종목명 보강을 포함해 fills 재계산을 하지 않는다(SHALL NOT). 스키마에 없는 값(청산가 등)은 표시하지 않고(SHALL NOT), nullable 필드(보유 시간 등)의 NULL은 "—"로 렌더한다(SHALL). 성과 행이 생기지 않는 종결(외부 매도로 닫힌 포지션 — adopt-external-positions design A7)은 이 화면의 한계로 명시하고 exit_events 표시가 그 공백을 보완한다(SHALL 명시).
 
-#### Scenario: 동결된 왕복 결과 표시
-- **WHEN** trade_outcomes에 행이 있는 상태에서 이력 화면을 열면
-- **THEN** 각 왕복의 심볼(positions 조인)·비용 차감 실현손익·실현 R·초기 수량·보유 시간(NULL은 "—")·도달 exit 단계·청산 시각이 동결 값 그대로 표시된다
+종목명 조회는 `(market, symbol)`을 정규화해 중복 제거하고 한 logical lookup당 400개로 제한해야 하며(SHALL), 첫 live-data 화면에서 계좌를 한 번 확인해 생성한 공식 client와 OAuth token manager를 history 및 다른 account read 화면이 공유해야 한다(SHALL). 공식 endpoint의 200-symbol 한도에 맞춰 chunk하고 client 생성부터 모든 chunk까지 하나의 10초 total timeout을 적용해야 한다(SHALL). 결과는 24시간 TTL·최대 2048개 bounded cache에 저장하고 같은 키의 동시 요청은 single-flight로 직렬화해야 한다(SHALL). 실패하거나 일부 key가 누락된 lookup은 1분 동안 다시 시도하지 않아 공식 API 장애·429 때 새로고침이 rate budget을 증폭하지 않아야 하며(SHALL NOT), 일부 응답에서는 검증된 이름만 장기 cache하고 누락 key는 backoff 뒤 다시 요청해야 한다(SHALL). 실계좌 검증 중에는 새 메타데이터 요청을 보내지 않고 cached name 또는 symbol-only로 표시해야 한다(SHALL NOT). 이를 위해 metadata는 active profile journal directory의 cross-process rate-budget lease를 non-blocking으로 얻어야 하고(SHALL), CLI verify run·console verify·verify abort는 기존 execution exclusion을 얻고 profile run-intent marker를 게시한 뒤 broker 생성 전에 같은 lease를 얻어 작업 종료까지 보유해야 한다(SHALL). active verifier가 있으면 verify abort는 즉시 거부되어 같은 marker를 공동 소유해서는 안 되며(SHALL NOT), 배타 admission 뒤 evidence record를 다시 읽어 최신 취소 대상만 사용해야 한다(SHALL). `--record` override가 profile rate-budget lease 위치를 바꾸어서는 안 된다(SHALL NOT). 원격 name은 길이·control/bidi 문자를 검증한 plain string으로 `html/template`의 escaping을 거쳐야 하며(SHALL), 모호하거나 상충하는 결과를 다른 market/symbol에 붙여서는 안 된다(SHALL NOT). `/history`는 GET/HEAD만 허용하고 다른 method는 메타데이터 요청 전에 405로 거부해야 한다(SHALL).
+
+#### Scenario: 동결된 왕복 결과와 종목명 표시
+- **WHEN** KR 또는 US trade_outcomes 행이 있고 공식 종목 메타데이터 조회가 성공한 상태에서 이력 화면을 열면
+- **THEN** 각 왕복은 `심볼 · 종목명`과 비용 차감 실현손익·실현 R·초기 수량·보유 시간(NULL은 "—")·도달 exit 단계·청산 시각을 표시하며 동결 성과 값은 바뀌지 않는다
+
+#### Scenario: exit 이벤트의 동일한 종목 라벨
+- **WHEN** KR 또는 US exit_events 행의 종목명이 조회되면
+- **THEN** exit 이벤트 표도 완결 왕복 표와 같은 `심볼 · 종목명` 형식으로 표시한다
+
+#### Scenario: 종목명 조회 실패
+- **WHEN** 공식 종목 메타데이터 조회가 실패하거나 특정 심볼의 이름이 비어 있으면
+- **THEN** 해당 journal 행과 심볼은 계속 표시되고 화면은 조회 실패를 이름 부재로 위장하거나 종목명을 추측하지 않는다
+
+#### Scenario: 검증 중 또는 잘못된 method
+- **WHEN** 실계좌 검증이 진행 중이거나 인증된 사용자가 `/history`에 POST를 보내면
+- **THEN** 공식 종목 메타데이터 요청은 0건이고 각각 symbol-only 안내 또는 405 응답을 반환한다
 
 ### Requirement: read-only 불변식
 대시보드는 계좌·원장에 대한 어떤 mutation도 수행해서는 안 된다(SHALL NOT): journal은 `OpenReadOnly`로만 연다 — DB 파일·디렉터리를 생성하지 않고, 마이그레이션을 실행하지 않으며, DB에 쓰지 않는다(SHALL — `mode=ro`; WAL 공유 인덱스(`-shm`/`-wal`) 접근은 SQLite WAL 읽기의 전제로서 명시된 예외다). 쓰기 연결 부재를 가드 테스트로 고정한다(SHALL). 콘솔이 주입받는 브로커 인터페이스는 **조회 메서드만 선언**하고(SHALL — holdings 계열), mutation 메서드가 없음을 정적 테스트로 고정한다(SHALL — verifylive.Broker 같은 광폭 인터페이스 주입 금지). **config에 대한** 콘솔의 유일한 쓰기 표면은 주입된 편입 설정 seam이며(SHALL — 대상은 config 파일의 `engine.adoption` 블록만; 검증 증거 기록·핸드오프 토큰 파일 등 기존 주입 writer의 계약은 무변경), 이 seam은 다른 config 키를 유실하지 않고(SHALL — 구조체 왕복이 아니라 해당 블록만 교체·블록 밖 바이트 보존) 유일 임시파일과 잠금 아래 원자적으로 기록한다(SHALL — 동시 기록의 lost-update 금지). seam의 Load는 파일의 `engine.adoption` 블록 **원문**을 반환하고 검증 판정을 별도로 병기한다(SHALL — 거부된 블록의 목록이 화면 왕복으로 유실되어서는 안 된다). 파싱할 수 없는 config 파일에 대한 저장은 거부된다(SHALL — 골격 생성은 파일 부재에 한정). seam은 Load·Save 두 메서드만 선언하며(SHALL — 정적 검사) internal/console은 config 서비스 타입을 직접 명명하지 않는다(SHALL NOT — 정적 검사). seam이 배선되지 않은 빌드에서 설정 화면은 저장 불가를 안내하고 나머지 화면은 영향받지 않는다(SHALL). Save 성공은 audit 로그에 저장 시점 엔트리를 남긴다(SHALL — §0.5; 엔진 기동 시 diff 기록과 이중이며, 기동 없는 flip도 기록에 남는다). 기존 콘솔의 게이트·주문 라우트 부재 가드는 새 라우트 표에서도 유지된다(SHALL).
@@ -873,4 +887,36 @@ Guardian 한도 변경은 방향을 구분해 표시해야 한다(SHALL): 한도
 #### Scenario: 문체 일관성
 - **WHEN** 콘솔 전 화면의 설명문을 검사하면
 - **THEN** 종결어미 문체가 하나로 통일돼 있다
+
+### Requirement: 콘솔이 띄우는 프로세스는 콘솔의 프로필로 뜬다
+
+콘솔이 spawn하는 자식 프로세스는 콘솔 자신이 실행 중인 프로필(`--config-dir`·`--session-file`)을 물려받아야 한다(SHALL — 콘솔은 그 프로필로 자격증명·기록·로그 경로를 계산해 화면에 그리므로, 자식이 다른 프로필로 뜨면 운영자가 보고 있는 것과 자식이 만지는 것이 다른 파일이 된다). 이 규칙은 엔진과 조회 전용 서베이 양쪽에 같이 적용된다(SHALL).
+
+콘솔이 화면에 표시하는 산출물 경로와 그 화면의 버튼이 만들어 내는 산출물 경로는 같아야 한다(SHALL — 다르면 버튼은 조용히 실패하거나 운영자가 볼 수 없는 곳에 쓴다).
+
+프로세스를 찾는 패턴은 콘솔이 실제로 spawn하는 명령줄에 일치해야 하며(SHALL), 다른 하위 명령의 명령줄에 일치해서는 안 된다(SHALL NOT — 서베이를 찾는 패턴이 엔진을 잡으면 정지 시그널이 엔진에 간다).
+
+발견된 프로세스에 시그널을 보내기 전에 그것이 이 콘솔이 소유한 인스턴스인지 판정해야 한다(SHALL). 소유의 기준은 그 프로세스가 쓰는 산출물이다(SHALL — 엔진은 journal 디렉터리, 서베이는 기록 경로). 판정은 콘솔 자신이 그 경로를 구할 때와 같은 해석 함수를 거쳐야 하며(SHALL — 기본 경로를 명시한 콘솔과 생략한 autostart는 같은 인스턴스다), 소유를 증명할 수 없는 프로세스에는 시그널을 보내서는 안 된다(SHALL NOT).
+
+이 요구사항은 서베이의 조회 전용 성질·판정 기준·주기를 바꾸지 않으며 새 상태변경 라우트를 만들지 않는다(SHALL NOT).
+
+#### Scenario: 격리 프로필 콘솔이 서베이를 재시작한다
+- **WHEN** `--config-dir`를 지정해 실행 중인 콘솔에서 서베이 재시작을 요청하면
+- **THEN** spawn된 서베이가 그 프로필의 자격증명을 읽고 그 프로필의 기록에 append한다
+
+#### Scenario: 화면이 가리키는 기록과 버튼이 만드는 기록이 같다
+- **WHEN** 콘솔이 "아직 기록이 없다"며 기록 경로를 표시한 상태에서 재시작 버튼을 누르면
+- **THEN** 그 경로에 기록이 생긴다
+
+#### Scenario: 서베이 패턴은 엔진을 잡지 않는다
+- **WHEN** 엔진 명령줄을 서베이 패턴으로 검사하면
+- **THEN** 일치하지 않는다
+
+#### Scenario: 다른 기록의 서베이는 건드리지 않는다
+- **WHEN** 다른 기록 경로로 실행 중인 서베이가 함께 관측되는 상태에서 재시작을 요청하면
+- **THEN** 그 프로세스에는 시그널이 가지 않는다
+
+#### Scenario: 열거 실패는 부재가 아니다
+- **WHEN** 프로세스 열거가 오류를 반환하면
+- **THEN** 부재로 단정하지 않는다
 

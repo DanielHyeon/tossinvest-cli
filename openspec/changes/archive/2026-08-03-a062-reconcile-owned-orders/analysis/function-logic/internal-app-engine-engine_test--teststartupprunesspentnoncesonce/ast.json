@@ -1,0 +1,240 @@
+{
+  "file": "internal/app/engine/engine_test.go",
+  "source_sha256": "dec52090cdbaa17f2a868d8e204c1755d88ec127a3f5158efc858405f41b83b7",
+  "package": "engine_test",
+  "function": "TestStartupPrunesSpentNoncesOnce",
+  "signature": "TestStartupPrunesSpentNoncesOnce(params=1, results=0)",
+  "start": {
+    "line": 440,
+    "column": 1
+  },
+  "end": {
+    "line": 464,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 451,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 456,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 9
+      },
+      "text": "isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 2
+      },
+      "text": "writeEngineConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 2
+      },
+      "text": "writeCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 12
+      },
+      "text": "engineStub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 9
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 11
+      },
+      "text": "seedSpentNonce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 43
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 12
+      },
+      "text": "seedSpentNonce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 45
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 450,
+        "column": 14
+      },
+      "text": "startEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 456,
+        "column": 19
+      },
+      "text": "eng.Journal.NonceSpent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 19
+      },
+      "text": "eng.Journal.NonceSpent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 446,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 447,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 448,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 450,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 455,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 456,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 460,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

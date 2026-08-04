@@ -1,0 +1,56 @@
+{
+  "file": "internal/filldetect/payload_test.go",
+  "source_sha256": "2a3179003b761f34a7ba63d94ba7f3c439689cc48bb00c04a23837a23f97fa9a",
+  "package": "filldetect_test",
+  "function": "TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset",
+  "signature": "TestUSSnapshotTradingDayUsesNewYorkRatherThanBrokerTimestampOffset(params=1, results=0)",
+  "start": {
+    "line": 64,
+    "column": 1
+  },
+  "end": {
+    "line": 71,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 10
+      },
+      "text": "pollOne"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

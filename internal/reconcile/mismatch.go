@@ -201,18 +201,35 @@ type Block struct {
 	Account string
 	Market  string
 	Symbol  string
-	Reason  execgw.ReasonCode
-	Detail  string
-	Since   time.Time
+	// Cause is the exact journal RECONCILE cause that owns this block. Reason is
+	// the coarser execution-gate category; Cause preserves producer authority so
+	// a quantity comparison cannot release another producer's state.
+	Cause  string
+	Reason execgw.ReasonCode
+	Detail string
+	Since  time.Time
 	// Release is the state table's automatic release condition.
 	Release Release
 	// Permanent reports that no automatic path clears this block.
 	Permanent bool
+	// pending reports that the block is conservative in-memory evidence whose
+	// durable EnterReconcile write has not committed yet. It stays enforced and
+	// is retried on every matching observation until the journal confirms it.
+	pending bool
 }
 
 // Key identifies a block for deduplication.
 func (b Block) Key() string {
-	return string(b.Scope) + "|" + b.Market + "|" + b.Symbol + "|" + string(b.Reason)
+	switch b.Scope {
+	case ScopeAccount:
+		return string(b.Scope) + "|" + b.Account
+	case ScopeMarket:
+		return string(b.Scope) + "|" + b.Account + "|" + strings.ToLower(strings.TrimSpace(b.Market))
+	case ScopeSymbol:
+		return string(b.Scope) + "|" + b.Account + "|" + strings.ToUpper(strings.TrimSpace(b.Symbol))
+	default:
+		return string(b.Scope) + "|" + b.Account + "|" + b.Market + "|" + b.Symbol
+	}
 }
 
 // Covers reports whether this block stops a new entry in a market and symbol.
@@ -244,6 +261,7 @@ const DefaultMaxFailures = 3
 type ReconcileStore interface {
 	EnterReconcile(ctx context.Context, req journal.EnterReconcileRequest) (journal.ReconcileState, bool, error)
 	ReleaseReconcile(ctx context.Context, req journal.ReleaseReconcileRequest) (journal.ReconcileState, bool, error)
+	ReleaseReconciles(ctx context.Context, reqs []journal.ReleaseReconcileRequest) ([]journal.ReconcileState, error)
 	ActiveReconcileStates(ctx context.Context) ([]journal.ReconcileState, error)
 }
 
@@ -359,11 +377,12 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 		// the reconciliation *process* is doing, the block is about whether the
 		// engine knows its exposure, and only the second one needs a cause.
 		t.failures = 0
-		for key, block := range t.blocks {
-			if block.Permanent {
-				// 영구 불일치의 해제는 운영자 확인뿐이다(SHALL). An adjustment does
-				// not change that: three failures already established that looking
-				// again is not what settles this one.
+		for _, block := range t.blocks {
+			if block.Cause != journal.ReconcileCauseQuantityMismatch ||
+				block.Release != ReleaseOnAdjustedReconcile {
+				// The quantity comparer owns only QUANTITY_MISMATCH. Snapshot and
+				// attribution producers may use the same coarse gate reason, but an
+				// agreeing quantity read is not evidence that their state is over.
 				continue
 			}
 			if !t.adjusted[strings.ToUpper(strings.TrimSpace(block.Symbol))] {
@@ -372,22 +391,22 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
 				continue
 			}
-			delete(t.blocks, key)
 			out.Cleared = append(out.Cleared, block)
 		}
 	} else {
 		t.failures++
 		for _, block := range blocksFor(diff, t.AccountRef, now) {
 			if _, exists := t.blocks[block.Key()]; !exists {
+				block.pending = true
 				t.blocks[block.Key()] = block
 				out.Added = append(out.Added, block)
 			}
 		}
 		if t.failures >= maxFailures && !t.permanent {
-			t.permanent = true
 			permanent := Block{
 				Scope:     ScopeAccount,
 				Account:   t.AccountRef,
+				Cause:     journal.ReconcileCauseQuantityMismatch,
 				Reason:    execgw.ReasonReconcilePermanent,
 				Since:     now,
 				Release:   ReleaseOperatorOnly,
@@ -396,29 +415,79 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 					"reconciliation disagreed %d times in a row; looking again has been shown not to resolve it",
 					t.failures),
 			}
-			t.blocks[permanent.Key()] = permanent
-			out.Added = append(out.Added, permanent)
+			if _, exists := t.blocks[permanent.Key()]; !exists {
+				permanent.pending = true
+				t.permanent = true
+				t.blocks[permanent.Key()] = permanent
+				out.Added = append(out.Added, permanent)
+			}
 		}
 	}
 
-	// The adjustment credits are spent by this observation, whichever way it
-	// went. "The re-read after the adjustment" is one re-read: if it still
-	// disagreed, the adjustment did not settle it, and leaving the credit
-	// standing would let a later coincidence spend it.
-	t.adjusted = nil
+	sortBlocks(out.Added)
+	sortBlocks(out.Cleared)
+	sortBlocks(out.AwaitingAdjustment)
+
+	// Additions are already exposed conservatively in memory. A failed enter is
+	// kept pending and retried here on the next matching observation. Releases
+	// are only published after the journal confirms each exact-cause closure.
+	// Mirror the conservative pre-persist set first: a slow or failed journal
+	// write must never leave the execution gateway open after the mismatch is
+	// already known.
+	t.syncGate(t.snapshotBlocks())
+	toPersist := out
+	added := make(map[string]bool, len(out.Added))
+	for _, block := range out.Added {
+		added[block.Key()] = true
+	}
+	for _, block := range t.blocks {
+		if block.pending && !added[block.Key()] {
+			toPersist.Added = append(toPersist.Added, block)
+		}
+	}
+	persisted, persistErr := t.persist(ctx, toPersist)
+	for _, block := range persisted.durable {
+		block.pending = false
+		t.blocks[block.Key()] = block
+	}
+	for _, block := range persisted.authoritative {
+		t.blocks[block.Key()] = block
+	}
+	for _, block := range persisted.released {
+		delete(t.blocks, block.Key())
+	}
+	out.Cleared = persisted.released
+	t.permanent = hasPermanentQuantityAccountBlock(t.blocks)
+
+	if persistErr != nil && !diff.BlocksEntry() {
+		// The adjustment caused a valid clean comparison, but storage did not
+		// commit every proposed release. Retain credit only for the blocks still
+		// active so a fresh comparison can retry the durable transition.
+		remaining := map[string]bool{}
+		for _, block := range t.blocks {
+			if block.Cause == journal.ReconcileCauseQuantityMismatch &&
+				block.Release == ReleaseOnAdjustedReconcile &&
+				t.adjusted[strings.ToUpper(strings.TrimSpace(block.Symbol))] {
+				remaining[strings.ToUpper(strings.TrimSpace(block.Symbol))] = true
+			}
+		}
+		t.adjusted = remaining
+	} else {
+		// A completed observation spends its credits. If it still disagreed, the
+		// adjustment did not settle it; if releases committed, their work is done.
+		t.adjusted = nil
+	}
 
 	out.Failures = t.failures
 	out.Permanent = t.permanent
 	out.Blocked = len(t.blocks) > 0
 	out.NextDueAt = now.Add(interval)
 	active := t.snapshotBlocks()
+	t.syncGate(active)
 	t.mu.Unlock()
 
-	sortBlocks(out.Added)
 	sortBlocks(out.Cleared)
-	sortBlocks(out.AwaitingAdjustment)
-	t.syncGate(active)
-	return out, t.persist(ctx, out)
+	return out, persistErr
 }
 
 // persist writes this observation's promotions and releases through to the
@@ -435,34 +504,64 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 // tracker did not enter need: the frozen projections task 6.1 records
 // (position_projection.go) are QUANTITY_MISMATCH rows, and the adjustment that
 // unfreezes one is what earns their release too.
-func (t *Tracker) persist(ctx context.Context, out Outcome) error {
+type persistResult struct {
+	released      []Block
+	authoritative []Block
+	durable       []Block
+}
+
+func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, error) {
 	if t.Journal == nil {
-		return nil
+		return persistResult{
+			released: append([]Block(nil), out.Cleared...),
+			durable:  append([]Block(nil), out.Added...),
+		}, nil
+	}
+	result := persistResult{
+		durable:  make([]Block, 0, len(out.Added)),
+		released: make([]Block, 0, len(out.Cleared)),
 	}
 	for _, block := range out.Added {
-		if _, _, err := t.Journal.EnterReconcile(ctx, journal.EnterReconcileRequest{
+		expectedCause := firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch)
+		state, entered, err := t.Journal.EnterReconcile(ctx, journal.EnterReconcileRequest{
 			AccountRef: firstNonEmpty(block.Account, t.AccountRef),
 			Symbol:     block.Symbol,
-			Cause:      journal.ReconcileCauseQuantityMismatch,
+			Cause:      expectedCause,
 			Evidence:   block.Detail,
-		}); err != nil {
-			return fmt.Errorf("reconcile: persisting the %s block on %s: %w",
+		})
+		if err != nil {
+			return result, fmt.Errorf("reconcile: persisting the %s block on %s: %w",
 				block.Reason, scopeLabel(block), err)
 		}
+		if !entered && state.Cause != expectedCause {
+			authoritative := blockFromReconcileState(state)
+			result.authoritative = append(result.authoritative, authoritative)
+			return result, fmt.Errorf(
+				"reconcile: persisting the %s block on %s: durable scope is already owned by cause %s",
+				block.Reason, scopeLabel(block), firstNonEmpty(state.Cause, "UNKNOWN"))
+		}
+		result.durable = append(result.durable, block)
 	}
 	for _, block := range out.Cleared {
-		if _, _, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
+		_, ok, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
 			AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
 			Symbol:      block.Symbol,
 			Cause:       journal.ReconcileReleaseAdjustmentApplied,
 			Evidence:    "an adjustment converged the projection and the reconciliation after it agreed",
-			ExpectCause: journal.ReconcileCauseQuantityMismatch,
-		}); err != nil {
-			return fmt.Errorf("reconcile: releasing the %s block on %s: %w",
+			ExpectCause: firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch),
+		})
+		if err != nil {
+			return result, fmt.Errorf("reconcile: releasing the %s block on %s: %w",
 				block.Reason, scopeLabel(block), err)
 		}
+		if !ok {
+			return result, fmt.Errorf(
+				"reconcile: releasing the %s block on %s: the journal did not confirm the exact-cause release",
+				block.Reason, scopeLabel(block))
+		}
+		result.released = append(result.released, block)
 	}
-	return nil
+	return result, nil
 }
 
 // Restore rebuilds the tracker and the entry gate from the journal.
@@ -485,31 +584,16 @@ func (t *Tracker) Restore(ctx context.Context) error {
 	}
 
 	blocks := map[string]Block{}
+	accountStates := make([]journal.ReconcileState, 0, len(states))
 	permanent := false
 	for _, state := range states {
-		if state.Cause != journal.ReconcileCauseQuantityMismatch {
-			continue
-		}
 		if t.AccountRef != "" && state.AccountRef != t.AccountRef {
 			continue
 		}
-		block := Block{
-			Scope:   ScopeSymbol,
-			Account: state.AccountRef,
-			Symbol:  state.Symbol,
-			Reason:  execgw.ReasonReconcileMismatch,
-			Detail:  state.Evidence,
-			Since:   state.EnteredAt,
-			Release: ReleaseOnAdjustedReconcile,
-		}
-		if state.AccountWide() {
-			block.Scope = ScopeAccount
-			block.Symbol = ""
-			block.Reason = execgw.ReasonReconcilePermanent
-			block.Release = ReleaseOperatorOnly
-			block.Permanent = true
-			permanent = true
-		}
+		accountStates = append(accountStates, state)
+		block := blockFromReconcileState(state)
+		permanent = permanent || (block.Scope == ScopeAccount &&
+			block.Cause == journal.ReconcileCauseQuantityMismatch && block.Permanent)
 		blocks[block.Key()] = block
 	}
 
@@ -523,11 +607,53 @@ func (t *Tracker) Restore(ctx context.Context) error {
 	if permanent && t.failures < t.maxFailures() {
 		t.failures = t.maxFailures()
 	}
-	t.mu.Unlock()
-
 	if t.Gate != nil {
-		t.Gate.RebuildReconcileProjection(states)
+		t.Gate.RebuildReconcileProjection(accountStates)
 	}
+	t.mu.Unlock()
+	return nil
+}
+
+// Refresh replaces the durable part of the runtime projection without losing
+// pending fail-closed blocks, failure counters, or adjustment credits. Runtime
+// writers outside this tracker (notably the fill projection hook) call it after
+// committing a journal change, and the reconciliation driver calls it before
+// adoption judgement.
+func (t *Tracker) Refresh(ctx context.Context) error {
+	if t.Journal == nil {
+		return nil
+	}
+	// Serialize the authority read with Observe's journal write-through. Taking
+	// this lock after the read would let an older empty snapshot overwrite a
+	// block Observe had just committed and reopen the gate.
+	t.mu.Lock()
+	states, err := t.Journal.ActiveReconcileStates(ctx)
+	if err != nil {
+		t.mu.Unlock()
+		return fmt.Errorf("reconcile: refreshing the active RECONCILE states: %w", err)
+	}
+
+	blocks := map[string]Block{}
+	for key, block := range t.blocks {
+		if block.pending {
+			blocks[key] = block
+		}
+	}
+	for _, state := range states {
+		if t.AccountRef != "" && state.AccountRef != t.AccountRef {
+			continue
+		}
+		block := blockFromReconcileState(state)
+		blocks[block.Key()] = block
+	}
+	t.blocks = blocks
+	t.permanent = hasPermanentQuantityAccountBlock(blocks)
+	if t.permanent && t.failures < t.maxFailures() {
+		t.failures = t.maxFailures()
+	}
+	active := t.snapshotBlocks()
+	t.syncGate(active)
+	t.mu.Unlock()
 	return nil
 }
 
@@ -636,17 +762,19 @@ func (t *Tracker) Resolve(ctx context.Context, operator, note string) error {
 	}
 
 	if t.Journal != nil {
-		for _, block := range t.Blocks() {
-			if _, _, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
+		blocks := t.Blocks()
+		requests := make([]journal.ReleaseReconcileRequest, 0, len(blocks))
+		for _, block := range blocks {
+			requests = append(requests, journal.ReleaseReconcileRequest{
 				AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
 				Symbol:      block.Symbol,
 				Cause:       journal.ReconcileReleaseOperator,
 				Evidence:    "operator " + strings.TrimSpace(operator) + ": " + strings.TrimSpace(note),
-				ExpectCause: journal.ReconcileCauseQuantityMismatch,
-			}); err != nil {
-				return fmt.Errorf("reconcile: recording the operator release of %s: %w",
-					scopeLabel(block), err)
-			}
+				ExpectCause: firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch),
+			})
+		}
+		if _, err := t.Journal.ReleaseReconciles(ctx, requests); err != nil {
+			return fmt.Errorf("reconcile: recording the atomic operator release: %w", err)
 		}
 	}
 
@@ -655,14 +783,47 @@ func (t *Tracker) Resolve(ctx context.Context, operator, note string) error {
 	t.failures = 0
 	t.blocks = map[string]Block{}
 	t.adjusted = nil
+	t.syncGate(nil)
 	t.mu.Unlock()
-
-	if t.Gate != nil {
-		t.Gate.Clear(execgw.ReasonReconcilePermanent)
-		t.Gate.Clear(execgw.ReasonReconcileMismatch)
-		t.Gate.ClearSymbolReason(execgw.ReasonReconcileMismatch)
-	}
 	return nil
+}
+
+func blockFromReconcileState(state journal.ReconcileState) Block {
+	reason := execgw.ReconcileReasonFor(state.Cause)
+	block := Block{
+		Scope:     ScopeSymbol,
+		Account:   state.AccountRef,
+		Symbol:    state.Symbol,
+		Cause:     state.Cause,
+		Reason:    reason,
+		Detail:    state.Evidence,
+		Since:     state.EnteredAt,
+		Release:   ReleaseOperatorOnly,
+		Permanent: reason == execgw.ReasonReconcilePermanent,
+	}
+	if state.Cause == journal.ReconcileCauseQuantityMismatch {
+		block.Release = ReleaseOnAdjustedReconcile
+	}
+	if state.AccountWide() {
+		block.Scope = ScopeAccount
+		block.Symbol = ""
+		if state.Cause == journal.ReconcileCauseQuantityMismatch {
+			block.Reason = execgw.ReasonReconcilePermanent
+			block.Release = ReleaseOperatorOnly
+			block.Permanent = true
+		}
+	}
+	return block
+}
+
+func hasPermanentQuantityAccountBlock(blocks map[string]Block) bool {
+	for _, block := range blocks {
+		if block.Scope == ScopeAccount && block.Cause == journal.ReconcileCauseQuantityMismatch &&
+			block.Permanent {
+			return true
+		}
+	}
+	return false
 }
 
 // --- internals --------------------------------------------------------------
@@ -675,6 +836,7 @@ func blocksFor(diff Diff, accountRef string, now time.Time) []Block {
 			Scope:   ScopeSymbol,
 			Account: accountRef,
 			Symbol:  mismatch.Symbol,
+			Cause:   journal.ReconcileCauseQuantityMismatch,
 			Reason:  execgw.ReasonReconcileMismatch,
 			Since:   now,
 			Release: ReleaseOnAdjustedReconcile,
@@ -689,6 +851,7 @@ func blocksFor(diff Diff, accountRef string, now time.Time) []Block {
 			Account: accountRef,
 			Market:  missing.Market,
 			Symbol:  missing.Symbol,
+			Cause:   journal.ReconcileCauseQuantityMismatch,
 			Reason:  execgw.ReasonReconcileMismatch,
 			Since:   now,
 			Release: ReleaseOnAdjustedReconcile,
@@ -716,19 +879,11 @@ func (t *Tracker) syncGate(active []Block) {
 	if t.Gate == nil {
 		return
 	}
-	var permanent, accountWide *Block
-	for i := range active {
-		block := &active[i]
-		switch {
-		case block.Permanent && permanent == nil:
-			permanent = block
-		case !block.Permanent && block.Scope == ScopeAccount && accountWide == nil:
-			accountWide = block
+	accountWide := map[execgw.ReasonCode]Block{}
+	for _, block := range active {
+		if block.Scope == ScopeAccount {
+			accountWide[block.Reason] = block
 		}
-	}
-
-	if permanent != nil {
-		t.Gate.Block(execgw.ReasonReconcilePermanent, permanent.Detail)
 	}
 
 	// Symbol-scoped rows: block what is still disagreeing, release what is not.
@@ -737,7 +892,7 @@ func (t *Tracker) syncGate(active []Block) {
 	// difference removed.
 	surviving := make(map[string]bool, len(active))
 	for _, block := range active {
-		if block.Permanent || block.Scope != ScopeSymbol {
+		if block.Scope != ScopeSymbol {
 			continue
 		}
 		surviving[strings.ToUpper(block.Symbol)+"|"+string(block.Reason)] = true
@@ -755,24 +910,24 @@ func (t *Tracker) syncGate(active []Block) {
 		}
 	}
 
-	if accountWide != nil {
-		t.Gate.Block(execgw.ReasonReconcileMismatch, accountWide.Detail)
-	} else {
-		t.Gate.Clear(execgw.ReasonReconcileMismatch)
+	for _, reason := range []execgw.ReasonCode{
+		execgw.ReasonReconcilePermanent,
+		execgw.ReasonReconcileMismatch,
+	} {
+		if block, ok := accountWide[reason]; ok {
+			t.Gate.Block(reason, block.Detail)
+		} else {
+			t.Gate.Clear(reason)
+		}
 	}
 }
 
 // isReconcileReason reports whether a symbol block is one syncGate may release.
 //
-// Only ReasonReconcileMismatch. blocksFor raises nothing else at symbol scope,
-// and since task 4.1 the gate can also carry a symbol block projected from a
-// journal RECONCILE state an operator has to clear (an identifier conflict, an
-// unattributable record — projected as ReasonReconcilePermanent). Releasing one
-// of those because *this* reconciliation was happy would answer a question
-// nobody asked us, which is the same reasoning that already excludes fill
-// detection's and the flatten saga's blocks.
+// Both reconcile reasons are owned by this full active-state projection. Other
+// gate families use different reason codes and are left untouched.
 func isReconcileReason(reason execgw.ReasonCode) bool {
-	return reason == execgw.ReasonReconcileMismatch
+	return reason == execgw.ReasonReconcileMismatch || reason == execgw.ReasonReconcilePermanent
 }
 
 // snapshotBlocks copies the block set. Callers must hold t.mu.

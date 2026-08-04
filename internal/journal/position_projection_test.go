@@ -28,6 +28,7 @@ type order struct {
 	symbol     string
 	market     string
 	account    string
+	tradingDay string
 	quantity   string
 }
 
@@ -47,6 +48,9 @@ func (o order) withDefaults() order {
 	if o.quantity == "" {
 		o.quantity = "10"
 	}
+	if o.tradingDay == "" {
+		o.tradingDay = "2026-03-30"
+	}
 	return o
 }
 
@@ -59,7 +63,7 @@ func place(t *testing.T, j *Journal, o order) order {
 
 	req := PrepareRequest{
 		Intent: Intent{
-			ID: o.intentID, Market: o.market, TradingDay: "2026-03-30",
+			ID: o.intentID, Market: o.market, TradingDay: o.tradingDay,
 			AccountRef: o.account, Symbol: o.symbol, Side: o.side,
 			OrderType: "LIMIT", TimeInForce: "DAY", Quantity: o.quantity,
 			Price: "70000", Currency: "KRW", Source: "engine/test",
@@ -83,13 +87,17 @@ func place(t *testing.T, j *Journal, o order) order {
 	if err := attempt.MarkAcked(ctx, o.orderID); err != nil {
 		t.Fatalf("MarkAcked(%s): %v", o.attemptID, err)
 	}
+	if err := attempt.Settle(ctx, StateConfirmed, ReasonBrokerAcknowledged, "acked"); err != nil {
+		t.Fatalf("Settle(%s): %v", o.attemptID, err)
+	}
 	return o
 }
 
 // fillOf is one cumulative snapshot of a placed order.
 func fillOf(o order, filled, avg string) FillObservation {
 	return FillObservation{
-		OrderID: o.orderID, Symbol: o.symbol, Market: o.market,
+		OrderID: o.orderID, Symbol: o.symbol, Market: o.market, AccountRef: o.account,
+		TradingDay: o.tradingDay, Side: o.side,
 		State: "OPEN_PARTIALLY_FILLED", Quantity: o.quantity,
 		FilledQuantity: filled, AveragePrice: avg,
 		ObservedAt: "2026-03-30T00:30:00Z",
@@ -161,6 +169,64 @@ func TestTheFirstFillOpensTheInstance(t *testing.T) {
 	}
 	if !p.ExitEligible() {
 		t.Error("an engine position with an entry decision is an exit-policy target")
+	}
+}
+
+func TestCollidingConfirmedOrderIdentityBlocksWithoutProjectingAPosition(t *testing.T) {
+	j := projectingJournal(t)
+	ctx := context.Background()
+	owned := place(t, j, order{
+		intentID: "owned-intent", attemptID: "owned-attempt", orderID: "account-scoped-id",
+		account: "acct-1", market: "us", symbol: "AAPL",
+	})
+	_ = place(t, j, order{
+		intentID: "other-intent", attemptID: "other-attempt", orderID: "account-scoped-id",
+		account: "acct-1", market: "us", symbol: "AAPL",
+	})
+
+	if _, err := j.RecordFill(ctx, fillOf(owned, "1", "200")); err != nil {
+		t.Fatalf("RecordFill: %v", err)
+	}
+	if _, err := j.CurrentPosition(ctx, "acct-1", "us", "AAPL"); !errors.Is(err, ErrPositionNotFound) {
+		t.Fatalf("colliding broker id projected a local position: %v", err)
+	}
+	active, err := j.ActiveReconcileStates(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(active) != 1 || active[0].AccountRef != "acct-1" ||
+		active[0].Cause != ReconcileCauseIdentifierConflict || active[0].Symbol != "" {
+		t.Fatalf("active reconcile states = %+v, want account-wide identifier conflict", active)
+	}
+}
+
+func TestReusedOrderIDIsOwnedByTheObservedTradingDay(t *testing.T) {
+	j := projectingJournal(t)
+	ctx := context.Background()
+	_ = place(t, j, order{
+		intentID: "prior-day-intent", attemptID: "prior-day-attempt", orderID: "reused-id",
+		decisionID: "prior-day-decision", account: "acct-1", market: "us", symbol: "AAPL",
+		tradingDay: "2026-03-29",
+	})
+	current := place(t, j, order{
+		intentID: "current-day-intent", attemptID: "current-day-attempt", orderID: "reused-id",
+		decisionID: "current-day-decision", account: "acct-1", market: "us", symbol: "AAPL",
+		tradingDay: "2026-03-30",
+	})
+
+	if _, err := j.RecordFill(ctx, fillOf(current, "1", "200")); err != nil {
+		t.Fatalf("RecordFill: %v", err)
+	}
+	position := currentPosition(t, j, current)
+	if position.EntryDecisionID != "current-day-decision" {
+		t.Fatalf("entry decision = %q, want current trading day ownership", position.EntryDecisionID)
+	}
+	active, err := j.ActiveReconcileStates(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(active) != 0 {
+		t.Fatalf("trading-day scoped reuse raised a false conflict: %+v", active)
 	}
 }
 
@@ -304,7 +370,7 @@ func TestAnAmendmentKeepsOneInstance(t *testing.T) {
 	}
 
 	child := order{orderID: "o-1b", symbol: parent.symbol, market: parent.market,
-		account: parent.account, quantity: "7", side: "BUY"}
+		account: parent.account, tradingDay: parent.tradingDay, quantity: "7", side: "BUY"}
 	if _, err := j.RecordFill(ctx, terminalFill(child, "7", "71000")); err != nil {
 		t.Fatal(err)
 	}
@@ -326,7 +392,7 @@ func TestAnAmendmentKeepsOneInstance(t *testing.T) {
 
 func testIntentFor(o order) Intent {
 	return Intent{
-		ID: o.intentID, Market: o.market, TradingDay: "2026-03-30",
+		ID: o.intentID, Market: o.market, TradingDay: o.tradingDay,
 		AccountRef: o.account, Symbol: o.symbol, Side: o.side,
 		OrderType: "LIMIT", TimeInForce: "DAY", Quantity: o.quantity,
 		Price: "70000", Currency: "KRW", Source: "engine/test",

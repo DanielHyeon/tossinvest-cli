@@ -52,7 +52,9 @@
     - STORY-TOS-a055 — Group settings by reversibility and cadence, not by feature name [archived] → `a055-console-settings-cadence`
     - STORY-TOS-a057 — Make holdings readable at a glance on dashboard and positions [archived] → `a057-simplify-portfolio-views`
     - STORY-TOS-a058 — Match StockOS holdings density and column alignment [archived] → `a058-match-stockos-holdings-density`
-    - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [implemented] → `a060-soak-restart-uses-this-profile`
+    - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [archived] → `a060-soak-restart-uses-this-profile`
+    - STORY-TOS-a061 — Show instrument codes and names together in trade history [archived] → `a061-show-history-instrument-names`
+    - STORY-TOS-a063 — Renew capability attestation from the console profile [in_progress] → `a063-align-attestation-renewal-profile`
     - STORY-TOS-a067 — Make the trading screens show the protection line and the stock name they already hold [in_progress] → `a067-screens-show-what-they-already-know`
     - STORY-TOS-a065 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [in_progress] → `a065-alerts-turn-on-with-one-button`
     - STORY-TOS-a066 — Move the subscribe address to a phone by scanning it instead of typing it [in_progress] → `a066-the-subscribe-address-is-scannable`
@@ -60,6 +62,7 @@
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
     - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
+    - STORY-TOS-a062 — Keep external orders out of engine-owned reconciliation [archived] → `a062-reconcile-owned-orders`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`

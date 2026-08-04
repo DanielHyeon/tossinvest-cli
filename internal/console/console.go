@@ -204,6 +204,10 @@ type Options struct {
 	// It declares one method and cmd/tossctl supplies it; nil leaves the broker
 	// half of the screen unwired and the journal half working.
 	Holdings HoldingsReader
+	// InstrumentNames is the history screen's optional batch-only descriptive
+	// metadata reader. Names are current annotations; symbols and frozen journal
+	// facts remain authoritative when this seam is nil or fails.
+	InstrumentNames InstrumentNameReader
 
 	// JournalPath is the engine's journal database, opened read-only per request
 	// with journal.OpenReadOnly. Empty means the journal half is unwired — it is
@@ -400,6 +404,9 @@ type Console struct {
 	// refresh through it is the three broker calls the orders screen's rate-budget
 	// contract allows, and orders.go is where that contract is written down.
 	ordersCache *ordersCache
+	// instrumentNames bounds and single-flights the optional official metadata
+	// read used by /history. Its zero value is ready for use.
+	instrumentNames instrumentNameCache
 
 	mu   sync.Mutex
 	addr string
@@ -737,7 +744,7 @@ func (c *Console) routes() http.Handler {
 	// submit, which is what static_test.go's two route tests assert from opposite
 	// directions.
 	mux.HandleFunc("/positions", c.session0(c.readOnly(c.handlePositions)))
-	mux.HandleFunc("/history", c.session0(c.handleHistory))
+	mux.HandleFunc("/history", c.session0(c.readOnly(c.handleHistory)))
 	// The settings screen is four sub-screens now, classified by whether a change
 	// can be undone and how often it is made (change a055). All four are GET, none
 	// is behind `mutating`, and the POST routes below are unchanged: this change

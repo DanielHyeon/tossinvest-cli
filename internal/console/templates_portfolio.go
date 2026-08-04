@@ -248,26 +248,28 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
 <p><a href="/performance-history">성과 이력 — 레인별 성과와 파라미터 version 이력</a></p>
 <p class="muted">원장에 <strong>동결된 값</strong>만 표시한다. 실현손익·실현 R·초기 수량·보유 시간·도달 exit
 단계는 청산 트랜잭션에서 얼어붙은 값 그대로이고, 심볼(positions)과 진입가(exit_states)만 조인해서 붙인다.
+종목명은 현재 공식 종목 메타데이터를 읽어 덧붙인 설명이며 동결 성과 근거가 아니다.
 청산가는 스키마에 없으므로 표시하지 않으며 체결에서 재계산하지도 않는다 — 재계산한 값은 옆에 있는 동결 R과
 어긋난다.</p>
 
 {{with .Snap}}
 {{template "journalstate" .Journal}}
+{{if .NameNotice}}<p class="notice">{{.NameNotice}}</p>{{end}}
 
 <section>
   <h2>완결 왕복 거래</h2>
   {{if .Trips}}
   <div class="table-scroll" role="region" aria-label="완결 왕복 거래" tabindex="0"><table>
-    <tr>
-      {{if .Multi}}<th>계좌</th>{{end}}
-      <th>청산 시각</th><th>심볼</th><th>진입가</th><th>실현손익(비용 차감)</th><th>실현 R</th>
-      <th>초기 수량</th><th>보유 시간</th><th>도달 exit 단계</th>
-    </tr>
+    <thead><tr>
+      {{if .Multi}}<th scope="col">계좌</th>{{end}}
+      <th scope="col">청산 시각</th><th scope="col">종목</th><th scope="col">진입가</th><th scope="col">실현손익(비용 차감)</th><th scope="col">실현 R</th>
+      <th scope="col">초기 수량</th><th scope="col">보유 시간</th><th scope="col">도달 exit 단계</th>
+    </tr></thead><tbody>
     {{range .Trips}}
     <tr>
       {{if $.Snap.Multi}}<td>{{.AccountRef}}</td>{{end}}
       <td>{{.ClosedAt}}</td>
-      <td><code>{{.Symbol}}</code></td>
+      <td><code>{{.Symbol}}</code>{{with .Name}} · {{.}}{{end}}</td>
       <td>{{.Entry}}</td>
       <td class="{{if .Win}}ok{{else}}bad{{end}}">{{.PnL}}</td>
       <td class="{{if .Win}}ok{{else}}bad{{end}}">{{.R}}</td>
@@ -276,7 +278,7 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
       <td>{{.Stage}}</td>
     </tr>
     {{end}}
-  </table></div>
+  </tbody></table></div>
   {{else if .Journal.Readable}}
   <p class="muted">완결 거래 없음 — 아직 왕복이 끝난 포지션이 없다.</p>
   {{end}}
@@ -291,18 +293,18 @@ v{{.Build}}보다 새롭다. 모르는 컬럼을 "없음"으로 읽으면 화면
   <p class="muted">엔진이 내린 exit 판정 기록이다(시간순). 성과 행이 없는 종결도 여기에는 흔적이 남는다.</p>
   {{if .Truncated}}<p class="notice">최근 기록만 표시한다 — 창을 넘는 오래된 판정은 생략되었다.</p>{{end}}
   <div class="table-scroll" role="region" aria-label="exit 이벤트" tabindex="0"><table>
-    <tr>
-      {{if .Multi}}<th>계좌</th>{{end}}
-      <th>시각</th><th>심볼</th><th>관측가</th><th>워터마크</th><th>기준선</th><th>단계</th><th>발의</th>
-    </tr>
+    <thead><tr>
+      {{if .Multi}}<th scope="col">계좌</th>{{end}}
+      <th scope="col">시각</th><th scope="col">종목</th><th scope="col">관측가</th><th scope="col">워터마크</th><th scope="col">기준선</th><th scope="col">단계</th><th scope="col">발의</th>
+    </tr></thead><tbody>
     {{range .Events}}
     <tr>
       {{if $.Snap.Multi}}<td>{{.AccountRef}}</td>{{end}}
-      <td>{{.At}}</td><td><code>{{.Symbol}}</code></td><td>{{.Observed}}</td>
+      <td>{{.At}}</td><td><code>{{.Symbol}}</code>{{with .Name}} · {{.}}{{end}}</td><td>{{.Observed}}</td>
       <td>{{.HighWater}}</td><td>{{.Baseline}}</td><td>{{.Level}}</td><td>{{.Proposal}}</td>
     </tr>
     {{end}}
-  </table></div>
+  </tbody></table></div>
   {{else if .Journal.Readable}}
   <p class="muted">exit 판정 기록 없음.</p>
   {{end}}

@@ -171,13 +171,13 @@ func runTracerWithFills(t *testing.T, s *e2eStack, tracer *engine.Tracer,
 	// window resolves to no order and produces no projection.
 	driveUntilOrders(t, s, out, 1)
 	entry := waitForJournaledOrder(t, s, out)
-	s.fill(entry, "005930", "1", "1", "70000", true)
+	s.fill(entry, "005930", "BUY", "1", "1", "70000", true)
 
 	// The price falls through the entry stop: the exit policy liquidates.
 	s.broker.quote("005930", "67900")
 	driveUntilOrders(t, s, out, 2)
 	liquidation := waitForJournaledOrder(t, s, out)
-	s.fill(liquidation, "005930", "1", "1", "67900", true)
+	s.fill(liquidation, "005930", "SELL", "1", "1", "67900", true)
 
 	// One more cycle for the run to notice the close.
 	r, ok := drive(t, s, out, func() bool { return false })

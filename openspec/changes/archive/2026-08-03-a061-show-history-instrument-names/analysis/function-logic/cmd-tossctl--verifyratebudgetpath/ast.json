@@ -1,0 +1,78 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "33703e43b853e964a56226cf877bbaa33e21cb37c4891ef8f2b88694d62dec82",
+  "package": "main",
+  "function": "verifyRateBudgetPath",
+  "signature": "verifyRateBudgetPath(params=1, results=2)",
+  "start": {
+    "line": 740,
+    "column": 1
+  },
+  "end": {
+    "line": 746,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 742,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 743,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 745,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 741,
+        "column": 14
+      },
+      "text": "engineJournalDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 743,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 745,
+        "column": 9
+      },
+      "text": "filepath.Join"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 741,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

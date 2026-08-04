@@ -437,9 +437,21 @@ type EntryGate struct {
 	thresholds map[RequiredQuery]time.Duration
 	lastOK     map[RequiredQuery]time.Time
 	latches    map[ReasonCode]string
+	// authorityRefresh re-reads the durable RECONCILE authority before every
+	// exposure-entry decision. It is nil outside the engine wiring.
+	authorityRefresh func() error
 	// symbolLatches are the narrower, per-symbol blocks (symbolgate.go, task
 	// 4.2). Lazily created, so NewEntryGate is unchanged.
 	symbolLatches map[string]SymbolBlock
+}
+
+// SetAuthorityRefresh binds the durable RECONCILE recheck used by the sealed
+// entry gate. The callback runs before the gate mutex is held so it may rebuild
+// this gate's reconcile projection without deadlocking.
+func (g *EntryGate) SetAuthorityRefresh(refresh func() error) {
+	g.mu.Lock()
+	g.authorityRefresh = refresh
+	g.mu.Unlock()
 }
 
 // NewEntryGate builds a gate. A nil threshold map uses DefaultStaleness(); an

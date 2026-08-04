@@ -871,41 +871,25 @@ type exitFillContext struct {
 // local intent claims, or a symbol the projection holds no instance of. Neither
 // is an error — an external order is a fact about the account, not a fault.
 func exitContextForFill(ctx context.Context, tx *ApplyTx, fill AppliedFill) (exitFillContext, bool, error) {
-	rows, err := tx.Query(ctx, `
-		SELECT i.id, i.side, i.account_ref, i.market, i.symbol
-		  FROM mutation_attempts a
-		  JOIN intents i ON i.id = a.intent_id
-		 WHERE a.broker_order_id = ?
-		 ORDER BY a.recorded_at DESC, a.rowid DESC
-		 LIMIT 1`, fill.OrderID)
+	origin, found, err := resolveFillOrigin(ctx, tx, fill)
 	if err != nil {
-		return exitFillContext{}, false, fmt.Errorf(
-			"journal: resolving the intent behind order %s: %w", fill.OrderID, err)
+		return exitFillContext{}, false, err
 	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return exitFillContext{}, false, rows.Err()
+	if !found {
+		return exitFillContext{}, false, nil
 	}
-	var out exitFillContext
-	var account, market, symbol string
-	if err := rows.Scan(&out.IntentID, &out.Side, &account, &market, &symbol); err != nil {
-		return exitFillContext{}, false, fmt.Errorf(
-			"journal: resolving the intent behind order %s: %w", fill.OrderID, err)
+	out := exitFillContext{
+		IntentID: origin.IntentID,
+		Side:     origin.Side,
 	}
-	rows.Close()
-
-	account = strings.TrimSpace(firstNonEmpty(account, fill.AccountRef))
-	market = normaliseMarket(firstNonEmpty(market, fill.Market))
-	symbol = normaliseSymbol(firstNonEmpty(symbol, fill.Symbol))
 
 	instance, err := tx.Query(ctx, `
 		SELECT id, quantity, state FROM positions
 		 WHERE account_ref = ? AND market = ? AND symbol = ?
-		 ORDER BY instance_seq DESC LIMIT 1`, account, market, symbol)
+		 ORDER BY instance_seq DESC LIMIT 1`, origin.AccountRef, origin.Market, origin.Symbol)
 	if err != nil {
 		return exitFillContext{}, false, fmt.Errorf(
-			"journal: reading the position of %s/%s: %w", account, symbol, err)
+			"journal: reading the position of %s/%s: %w", origin.AccountRef, origin.Symbol, err)
 	}
 	defer instance.Close()
 	if !instance.Next() {
@@ -913,7 +897,7 @@ func exitContextForFill(ctx context.Context, tx *ApplyTx, fill AppliedFill) (exi
 	}
 	if err := instance.Scan(&out.PositionID, &out.QuantityAfter, &out.PositionState); err != nil {
 		return exitFillContext{}, false, fmt.Errorf(
-			"journal: reading the position of %s/%s: %w", account, symbol, err)
+			"journal: reading the position of %s/%s: %w", origin.AccountRef, origin.Symbol, err)
 	}
 	return out, true, nil
 }

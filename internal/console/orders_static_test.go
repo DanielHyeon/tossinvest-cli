@@ -134,7 +134,7 @@ func TestTheRouteTableJudgementStillCatchesAnActingRouteThatIsNotOnTheAllowlist(
 // wrapper, or if any named account read loses it and starts serving POSTs.
 func TestTheOrdersRouteIsRegisteredReadOnlyAndNothingElseIs(t *testing.T) {
 	found := map[string]bool{
-		"/orders": false, "/positions": false, "/position-management": false,
+		"/orders": false, "/positions": false, "/history": false, "/position-management": false,
 	}
 	for _, r := range registeredRoutes(t) {
 		if _, tradingView := found[r.Path]; tradingView {
