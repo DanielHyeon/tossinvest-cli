@@ -407,9 +407,30 @@ const settingsTemplates = `
   <p class="notice" data-notification-subscribe>
     <strong>구독 주소</strong> — 이 주소를 열면 알림을 받는다.<br>
     <a href="{{.NotificationSubscribeURL}}" target="_blank" rel="noreferrer noopener"><code>{{.NotificationSubscribeURL}}</code></a><br>
-    폰으로 받으려면 ntfy 앱을 설치하고 <strong>+</strong> 에서 이 주소를 그대로 넣는다.
     이 주소를 아는 것이 곧 이 알림을 받을 자격이므로 공유하지 않는다.
   </p>
+  {{/*
+    The symbol is drawn only while alerts are ON. A muted card keeps showing the
+    address — re-enabling returns to it, and that is worth saying — but a QR
+    beside 꺼짐 invites a phone to subscribe to a channel nothing is publishing to,
+    and the operator would read silence as delivery working.
+  */}}
+  {{if .NotificationOn}}
+  {{with .NotificationQR}}
+  {{if .Rects}}
+  <figure data-notification-qr>
+    <svg viewBox="0 0 {{.Extent}} {{.Extent}}" width="240" height="240"
+         role="img" aria-label="구독 주소 QR 코드"
+         xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+      <rect x="0" y="0" width="{{.Extent}}" height="{{.Extent}}" fill="#ffffff"/>
+      {{range .Rects}}<rect x="{{.X}}" y="{{.Y}}" width="{{.W}}" height="1" fill="#000000"/>{{end}}
+    </svg>
+    <figcaption class="muted">폰 카메라로 찍으면 ntfy 앱이 이 주소를 연다.
+    앱이 없으면 먼저 ntfy를 설치한다 — 주소를 손으로 옮겨 적을 필요는 없다.</figcaption>
+  </figure>
+  {{end}}
+  {{end}}
+  {{end}}
   {{end}}
 
   {{if .NotificationGuard.Blocked}}{{template "cardblocked" .NotificationGuard}}

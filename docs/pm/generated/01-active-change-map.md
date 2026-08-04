@@ -69,3 +69,4 @@
 | `a063-operator-can-lift-a-quarantine` | STORY-TOS-a063 | in_progress |
 | `a064-critical-events-reach-the-operator` | STORY-TOS-a064 | in_progress |
 | `a065-alerts-turn-on-with-one-button` | STORY-TOS-a065 | in_progress |
+| `a066-the-subscribe-address-is-scannable` | STORY-TOS-a066 | in_progress |

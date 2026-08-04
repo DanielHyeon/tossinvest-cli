@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a066",
+  "title": "Move the subscribe address to a phone by scanning it instead of typing it",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a066-the-subscribe-address-is-scannable",
+    "path": "openspec/changes/a066-the-subscribe-address-is-scannable"
+  },
+  "acceptance": [
+    "While alert delivery is on, the subscribe address is shown in a form that can be carried to another device without transcribing the random channel by hand",
+    "The scannable form is produced inside the response body: no image route carries the channel in a URL, and no external service is asked to generate it",
+    "The drawn symbol encodes exactly the address the card displays, so a card can never invite a subscription to a different channel",
+    "The symbol keeps the four-module quiet zone the standard requires on all four sides",
+    "While delivery is off the address is still shown but the scannable form is not, so no device subscribes to a channel nothing publishes to",
+    "A symbol that cannot be produced is omitted and the rest of the screen renders, because the address is already present as text and as a link",
+    "The encoder is verified against the standard's own published values and its capacity table, not only against its own reader",
+    "No new module dependency is added and no raw-HTML template seam is introduced"
+  ]
+}
