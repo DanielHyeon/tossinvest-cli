@@ -60,3 +60,44 @@ a062는 그 전이를 양방향으로 고정한다(2.1, 2.2).
 `saved_snapshot_json`이 NULL이었다. `SelectRecoverySnapshot(nil, …)`은 비교 없이
 recomputed를 반환한다. 익절선 **아래**에서 한동안 머물며 canonical snapshot을 쌓은
 뒤 넘는 종목만 걸린다 — 즉 정상적인 보유 대부분이다.
+
+## 운영 격리 5건이 이 결함의 산물임을 확인 (2026-08-04, 읽기 전용 조사)
+
+배포 후 운영 원장을 읽어 `ambiguous_recovery` 격리 다섯 건의 원인을 a068 결함으로
+특정했다. 아무것도 해제하지 않았다.
+
+**증거 사슬**
+
+1. 다섯 건의 evidence 문자열이 전부 정확히
+   `exitpolicy: recovery candidate identity mismatch` — 접미사가 없다. 이 **맨**
+   sentinel을 반환하는 경로는 `SelectRecoverySnapshot`의 정체성 튜플 검사와,
+   a068이 지운 `compareRecoveryStage`의 한쪽-NoRung 거부 둘뿐이다. 나머지 반환은
+   전부 `%w: <상세>`로 감싸므로 문자열이 길어진다.
+2. 다섯 건 전부 `policy_id = COMMON_LADDER_HYBRID_50`(ladder)이고
+   `active_rung IS NULL`이다. `exit_state.go:637`이 NULL을 `exitpolicy.NoRung`으로
+   읽으므로 저장된 쪽은 **rung 미활성**이다. 정체성 튜플은 같은 포지션·세대·정책을
+   비교하므로 어긋날 이유가 없다 — 남는 것은 한쪽-NoRung 거부뿐이다.
+3. 결정적 정황은 high water의 위치다. HYBRID_50의 첫 rung은 `TargetPct 1.8`인데
+   다섯 건의 저장된 high water가 전부 그 **바로 아래**에 멈춰 있다.
+
+   | 포지션 | entry | high water | 상승률 |
+   |---|---|---|---|
+   | TSLA | 315 | 320.63 | 1.787% |
+   | IONQ | 37.22 | 37.88 | 1.773% |
+   | 466100 | 25700 | 26150 | 1.751% |
+   | 475150 | 53200 | 54100 | 1.692% |
+   | 042660 | 83500 | 84800 | 1.557% |
+
+   격리가 쓰기를 거부하므로 high water가 교차 직전 값에 고정된다. 다섯 개가 모두
+   1.8% 문턱 아래 좁은 띠에 몰린 것은 우연이 아니라 이 결함의 지문이다.
+
+**a068이 배포되면 어떻게 되는가.** 해제 후 재판정에서
+`compareRecoveryStage(recomputed rung 0, saved NoRung)`는 이제 `1`(전진)을 반환하고,
+protection은 initial stop → 본전(rung 0의 `StopPct 0`)으로 오르며 high water도
+단조 증가라 세 축이 모두 `>= 0` → `RecoveryRecomputed`가 선택된다. 즉 **해제가
+붙는다.**
+
+**그러나 배포만으로는 다섯 건이 풀리지 않는다.** 격리는 판정 경로 **앞단**에서
+`ErrExitSnapshotQuarantined`로 끊으므로 수정된 비교기에 도달하지 못한다. a068은
+같은 종류의 **새** 격리를 막을 뿐이고, 기존 다섯 건은 a069의 해제가 있어야 회복된다.
+해제 자체는 §0.7 사용자 판정이다.
