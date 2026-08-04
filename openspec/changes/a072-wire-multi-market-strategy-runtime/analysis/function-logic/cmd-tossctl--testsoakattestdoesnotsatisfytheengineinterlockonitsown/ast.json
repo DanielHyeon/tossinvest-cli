@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/soak_test.go",
-  "source_sha256": "91336314b1ed8b6c33c000a573bec44724ab649a4676ea11741c5f0c98daea14",
+  "source_sha256": "562e7914c5b47738c7cd03418e0ae872a56a227fd45776faffbd011e0b96200f",
   "package": "main",
   "function": "TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn",
   "signature": "TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 470,
+    "line": 462,
     "column": 2
   },
   "branches": [
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 458,
+        "line": 457,
         "column": 2
       }
     },
@@ -49,24 +49,8 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 459,
+        "line": 458,
         "column": 3
-      }
-    },
-    {
-      "id": "B6",
-      "kind": "if",
-      "at": {
-        "line": 463,
-        "column": 3
-      }
-    },
-    {
-      "id": "B7",
-      "kind": "if",
-      "at": {
-        "line": 467,
-        "column": 2
       }
     }
   ],
@@ -171,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 463,
+        "line": 458,
         "column": 6
       },
       "text": "strings.HasPrefix"
@@ -179,18 +163,10 @@
     {
       "kind": "call",
       "at": {
-        "line": 464,
+        "line": 459,
         "column": 4
       },
       "text": "t.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 468,
-        "column": 3
-      },
-      "text": "t.Fatalf"
     }
   ],
   "assignments": [
@@ -220,13 +196,6 @@
       "at": {
         "line": 452,
         "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 460,
-        "column": 4
       }
     }
   ],

@@ -6,6 +6,15 @@
 **Reviewers:** a072 manager  
 **Related contract:** a072 account-base currency wave and production FX authority service
 
+## 2026-08-04 deployment correction
+
+Production deployment proved that adding the strategy-only exchange-rate read to the global startup
+attestation invalidates the existing engine evidence and prevents every safety-class loop from starting.
+That violates FR-8 and the repository invariant that an unavailable market-entry dependency may close entry
+but must not stop reconciliation, protection, exit, fill detection or emergency reduction. The correction
+keeps the official FX contract probe, retry budget, immutable origin and market-local authority checks, but
+removes the strategy-only GET from the legacy global engine-start endpoint set.
+
 ## Context
 
 The paired FX authority service depends on two distinct read domains. KR verifies the selected
@@ -22,8 +31,9 @@ The probe remains operationally inactive until a separate OAuth runner is design
 
 ## Functional Requirements
 
-- **FR-1:** Engine `RequiredEndpoints()` MUST include exact read-only
-  `GET /api/v1/exchange-rate` in addition to `GET /api/v1/accounts`.
+- **FR-1:** Engine `RequiredEndpoints()` MUST retain `GET /api/v1/accounts` but MUST NOT include the
+  strategy-only `GET /api/v1/exchange-rate`. The exchange-rate read is authorized and refused inside the
+  US market-local strategy FX authority path so missing evidence cannot stop safety-class loops.
 - **FR-2:** Execgw MUST publish distinct `RequiredQuery` values for KR account identity and US
   exchange rate. It MUST NOT represent them as one combined KR+US query.
 - **FR-3:** The KR budget MUST bind market `KR`, evidence source `same-currency`, official Open API
@@ -59,7 +69,7 @@ The probe remains operationally inactive until a separate OAuth runner is design
 
 Given the default a072 runtime definitions  
 When engine endpoints and execgw read budgets are inspected  
-Then the official exchange endpoint is attestation-required  
+Then the official exchange endpoint is absent from the global startup attestation set
 And KR identity and US FX have distinct exact source, endpoint, freshness, retry, and soak budgets.
 
 ### AC-2: official schema probe is isolated (FR-6, FR-7, NFR-1, NFR-2)
@@ -83,8 +93,8 @@ And KR continues evaluating while every safety loop stays alive.
 - **EC-2:** A 401/403, permanent 4xx, canceled context, exhausted 429 budget, or transient exhaustion
   returns failure; it never mints a fresh observation.
 - **EC-3:** Mutating a caller-owned returned budget map cannot change a later catalog result.
-- **EC-4:** The inactive official contract probe cannot be mistaken for executed soak evidence or
-  satisfy engine attestation.
+- **EC-4:** The inactive official contract probe cannot be mistaken for executed soak evidence. Its absence
+  closes US strategy entry locally and cannot refuse engine startup or stop safety-class loops.
 
 ## API Contracts
 
@@ -128,4 +138,3 @@ func OfficialReadContractProbes() []monitor.Probe
 - Editing `internal/official`, `internal/officialfx`, journal, broker, activation, config, or toggles.
 - Executing a soak, monitor command, cron job, network request, LIVE order, or deployment.
 - Adding China or any currency pair other than the current USD/KRW production profile.
-

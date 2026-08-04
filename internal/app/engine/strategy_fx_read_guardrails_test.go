@@ -11,7 +11,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 )
 
-func TestTheEngineRequiresPairedKRUSFXAuthorityReads(t *testing.T) {
+func TestStrategyOnlyFXReadIsNotAGlobalEngineStartupDependency(t *testing.T) {
 	want := map[string]int{
 		"GET /api/v1/accounts":      0,
 		"GET /api/v1/exchange-rate": 0,
@@ -21,10 +21,11 @@ func TestTheEngineRequiresPairedKRUSFXAuthorityReads(t *testing.T) {
 			want[endpoint]++
 		}
 	}
-	for endpoint, count := range want {
-		if count != 1 {
-			t.Errorf("RequiredEndpoints contains %q %d times, want exactly once: %v", endpoint, count, engine.RequiredEndpoints())
-		}
+	if want["GET /api/v1/accounts"] != 1 {
+		t.Errorf("global RequiredEndpoints account count=%d, want 1: %v", want["GET /api/v1/accounts"], engine.RequiredEndpoints())
+	}
+	if want["GET /api/v1/exchange-rate"] != 0 {
+		t.Errorf("strategy-only exchange rate escaped into the global startup interlock: %v", engine.RequiredEndpoints())
 	}
 }
 

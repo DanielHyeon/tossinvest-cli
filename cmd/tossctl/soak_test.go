@@ -435,8 +435,8 @@ func TestSoakAttestWritesAVerifiableAttestation(t *testing.T) {
 
 // TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn. This is the property
 // the change depends on: a read-only WTS soak cannot open the automation gate.
-// Mutations have to come from the supervised live check (task 2.2), while a072's
-// official exchange read needs a separate OAuth runner that is still inactive.
+// Mutations have to come from the supervised live check (task 2.2). The a072
+// official exchange read is strategy-local and must not widen this startup set.
 func TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn(t *testing.T) {
 	configDir := testenv.Isolate(t)
 	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
@@ -454,25 +454,17 @@ func TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn(t *testing.T) {
 		t.Fatal("a soak-only attestation satisfied the engine's full endpoint set; the mutation " +
 			"endpoints must still be outstanding")
 	}
-	var missingOfficialFX bool
 	for _, e := range missing {
-		if e == "GET /api/v1/exchange-rate" {
-			missingOfficialFX = true
-			continue
-		}
 		if strings.HasPrefix(e, "GET ") {
 			t.Errorf("%s is a read and the soak should have proven it", e)
 		}
 	}
-	if !missingOfficialFX {
-		t.Fatalf("soak-only evidence claimed the inactive official OAuth FX read: missing=%v", missing)
-	}
 }
 
 // TestSoakAndLiveEndpointsCoverTheEngineInterlock keeps the two lists from
-// drifting apart: every WTS read/mutation the engine requires is accounted for,
-// and the sole deliberately uncovered dependency is the inactive official OAuth
-// exchange-rate runner.
+// drifting apart: every WTS read/mutation the engine requires is accounted for.
+// The strategy-only official OAuth exchange-rate read is deliberately outside
+// this global startup catalog so its absence cannot stop safety-class loops.
 func TestSoakAndLiveEndpointsCoverTheEngineInterlock(t *testing.T) {
 	covered := map[string]bool{}
 	for _, e := range append(soak.RequiredEndpoints(), soak.LiveOnlyEndpoints()...) {
@@ -480,11 +472,13 @@ func TestSoakAndLiveEndpointsCoverTheEngineInterlock(t *testing.T) {
 	}
 	for _, want := range engine.RequiredEndpoints() {
 		if !covered[want] {
-			if want == "GET /api/v1/exchange-rate" {
-				continue
-			}
 			t.Errorf("the engine requires %q and neither soak.RequiredEndpoints nor "+
 				"soak.LiveOnlyEndpoints accounts for it", want)
+		}
+	}
+	for _, endpoint := range engine.RequiredEndpoints() {
+		if endpoint == "GET /api/v1/exchange-rate" {
+			t.Fatal("strategy-only official FX read entered the global startup catalog")
 		}
 	}
 	if covered["GET /api/v1/exchange-rate"] {
@@ -634,9 +628,8 @@ func seedSupervisedRecord(t *testing.T, path, accountRef string, at time.Time) {
 
 // TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun.
 //
-// With WTS soak and supervised mutation evidence present, only the official OAuth
-// exchange-rate read remains outstanding. The gate therefore stays fail-closed;
-// a schema contract fixture is not executed attestation evidence.
+// With WTS soak and supervised mutation evidence present, the legacy engine
+// startup catalog is complete. Strategy-only FX remains independently fail-closed.
 func TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun(t *testing.T) {
 	configDir := testenv.Isolate(t)
 	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
@@ -651,9 +644,8 @@ func TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun(t *testing.T) 
 		t.Fatalf("attest.Load: %v", err)
 	}
 
-	missing := a.MissingEndpoints(engine.RequiredEndpoints())
-	if len(missing) != 1 || missing[0] != "GET /api/v1/exchange-rate" {
-		t.Fatalf("combined WTS evidence lacks %v, want only inactive official OAuth exchange read", missing)
+	if missing := a.MissingEndpoints(engine.RequiredEndpoints()); len(missing) != 0 {
+		t.Fatalf("combined WTS evidence lacks global startup endpoints: %v", missing)
 	}
 	if len(a.SupervisedBy) != len(soak.LiveOnlyEndpoints()) {
 		t.Fatalf("SupervisedBy = %+v, want one entry per mutation so an auditor can see what proved it",

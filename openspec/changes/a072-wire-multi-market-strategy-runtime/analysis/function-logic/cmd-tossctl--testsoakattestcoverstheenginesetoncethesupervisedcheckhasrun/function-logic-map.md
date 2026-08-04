@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| fake WTS soak plus supervised mutation evidence | complete legacy evidence, no official OAuth FX runner | isolated fixtures | exact exchange endpoint remains missing; no other gap allowed |
+| fake WTS soak plus supervised mutation evidence | complete shared engine-start evidence | isolated fixtures | no global endpoint gap allowed; official FX remains strategy-local |
 
 ## Branches and early returns
 
@@ -16,7 +16,7 @@
 |---|---|---|---|---|
 | B1 | soak attest command errors | isolated files only | fatal | focused CLI test |
 | B2 | attestation load errors | none | fatal | focused CLI test |
-| B3 | missing set is not exact official exchange endpoint | none | fatal | focused CLI test |
+| B3 | any shared startup endpoint remains missing | none | fatal | focused CLI test |
 | B4 | supervised evidence count differs | none | fatal | focused CLI test |
 | B5 | supervised proof source is empty | none | test error | focused CLI test |
 | B6 | generated evidence claims official exchange without OAuth runner | none | test error | focused CLI test |
@@ -33,5 +33,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: preserve mutation proof checks while pinning the new fail-closed read gap.
+- Safe edit boundary: preserve mutation proof checks while keeping strategy-only FX out of startup evidence.
 - High-risk impact: **no** — test-only but startup-safety relevant.

@@ -2,10 +2,8 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at line 444 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B2 | if at line 448 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B3 | if at line 453 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B4 | range at line 458 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B5 | if at line 459 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B6 | if at line 463 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B7 | if at line 467 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B1 | isolated soak attestation command fails | this test | deployment regression converted to RED | yes |
+| B2 | generated attestation cannot load | this test | deployment regression converted to RED | yes |
+| B3 | soak alone unexpectedly covers mutation endpoints | this test | deployment regression converted to RED | yes |
+| B4 | enumerate remaining mutation gaps | this test | deployment regression converted to RED | yes |
+| B5 | any shared GET remains missing | this test | RED failed on global exchange-rate GET | yes |

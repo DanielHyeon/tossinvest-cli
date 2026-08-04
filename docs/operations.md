@@ -323,10 +323,11 @@ KR·US 전략 런타임의 account-base 계산은 다음 읽기 계약도 요구
 WTS runner에 이 URL을 섞으면 모든 실행이 인증 실패하거나 잘못된 credential domain을
 사용하므로 금지합니다.
 
-엔진 capability attestation은 `GET /api/v1/exchange-rate`를 필수 endpoint로 요구합니다. 이전
-attestation이나 WTS soak만으로는 이 요구를 충족할 수 없으며, 별도 official OAuth evidence가
-없으면 자동화는 fail-closed 상태를 유지합니다. 운영자가 schema checker를 실행된 soak
-evidence로 간주해서는 안 됩니다.
+`GET /api/v1/exchange-rate`는 US 전략 진입 전용 의존성이므로 전역 엔진 기동 capability
+attestation에는 포함하지 않습니다. 별도 official OAuth evidence가 없으면 US 전략 레인만
+`FX_AUTHORITY_UNAVAILABLE`로 fail-closed 되고, reconcile·protection·exit·fill 안전 루프와 KR
+시장은 계속 동작해야 합니다. 운영자가 schema checker를 실행된 soak evidence로 간주해서는
+안 됩니다.
 
 ### Cron + 알림 합성
 

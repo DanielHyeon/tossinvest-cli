@@ -2,11 +2,11 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at line 646 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B2 | if at line 650 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B3 | if at line 655 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B4 | if at line 658 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B5 | range at line 662 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B6 | if at line 663 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B7 | range at line 667 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
-| B8 | if at line 668 follows the fail-closed source branch | Package tests and paired KR/US regression suite | prior gap inspected | yes |
+| B1 | soak attestation command fails | this test | deployment regression converted to RED | yes |
+| B2 | attestation cannot load | this test | deployment regression converted to RED | yes |
+| B3 | combined evidence still misses a shared endpoint | this test | RED failed on exchange-rate GET | yes |
+| B4 | supervised proof count drifts | this test | prior mutation guard retained | yes |
+| B5 | inspect supervised proofs | this test | prior mutation guard retained | yes |
+| B6 | supervised source is empty | this test | prior mutation guard retained | yes |
+| B7 | inspect issued endpoint evidence | this test | prior authority guard retained | yes |
+| B8 | WTS evidence claims official OAuth FX | this test | prior authority guard retained | yes |

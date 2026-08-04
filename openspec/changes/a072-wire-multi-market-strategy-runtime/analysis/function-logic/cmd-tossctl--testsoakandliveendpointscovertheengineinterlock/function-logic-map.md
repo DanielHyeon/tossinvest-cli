@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| soak plus supervised endpoint definitions | all WTS reads and mutations | soak/verifylive catalogs | only exact inactive official OAuth exchange read may remain uncovered |
+| soak plus supervised endpoint definitions | all shared reads and mutations | soak/verifylive catalogs | every global startup dependency must be covered; strategy-only FX must be absent |
 
 ## Branches and early returns
 
@@ -16,7 +16,9 @@
 |---|---|---|---|---|
 | B1 | collect existing soak/live coverage | test-local map mutation | complete WTS coverage map | focused CLI test |
 | B2 | engine endpoint is covered | none | continue | focused CLI test |
-| B3 | endpoint is exact exchange read or unexpected gap | none | accept exchange-only gap; error otherwise | focused CLI test |
+| B3 | global endpoint is uncovered | none | test error | focused CLI test |
+| B4 | inspect global endpoint catalog | none | reject strategy-only exchange GET | focused CLI test |
+| B5 | WTS catalog claims official exchange GET | none | test error | focused CLI test |
 
 ## Calls and live bindings
 
@@ -30,5 +32,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: require the one explicitly documented OAuth gap and reject every other drift.
+- Safe edit boundary: require full legacy coverage and reject cross-domain strategy FX catalog drift.
 - High-risk impact: **no** — test-only operational coverage assertion.

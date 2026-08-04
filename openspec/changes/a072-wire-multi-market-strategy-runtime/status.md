@@ -169,3 +169,11 @@
   Function Logic analysis, strict OpenSpec validation and whitespace checks pass in the same checkpoint.
 
 No market was activated, no lease reached a broker, and no live order or operating setting changed.
+
+## 2026-08-04 dormant deployment correction
+
+- A first replacement attempt proved that a strategy-only exchange-rate read in the global startup
+  attestation could stop the pre-existing safety loops. The endpoint is now market-local: missing FX keeps US
+  strategy entry closed while KR identity and all existing safety-loop budgets remain available.
+- Focused normal/race/vet checks, the full repository Go suite, Function Logic Map validation and independent
+  review pass. No lane, automation, LIVE approval or operating setting was changed and no order was issued.

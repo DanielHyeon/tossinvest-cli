@@ -1,11 +1,11 @@
 {
   "file": "internal/app/engine/interlock.go",
-  "source_sha256": "4d5be9f1af3bad5c6e9b3ac8d383717055a5894d9ae6218fa4bfdfcedff4c94e",
+  "source_sha256": "a6f6ade0dbb147ede55c475c47ba5f439aa9faa0ede1bd7447b148251951cdbd",
   "package": "engine",
   "function": "RequiredEndpoints",
   "signature": "RequiredEndpoints(params=0, results=1)",
   "start": {
-    "line": 218,
+    "line": 219,
     "column": 1
   },
   "end": {
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 219,
+        "line": 220,
         "column": 2
       }
     }

@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| fake qualifying WTS soak record | complete existing read set, no official OAuth FX evidence | test fixture + engine required endpoints | generated attestation MUST still miss mutations and official exchange read |
+| fake qualifying WTS soak record | complete shared read set, no supervised mutations | test fixture + engine required endpoints | generated attestation MUST still miss mutations but no shared GET |
 
 ## Branches and early returns
 
@@ -17,8 +17,8 @@
 | B1 | soak attest command errors | test files only | fatal | focused CLI test |
 | B2 | attestation load errors | none | fatal | focused CLI test |
 | B3 | no endpoint is missing | none | fatal because soak alone must not enable automation | focused CLI test |
-| B4 | missing endpoint is the official exchange read | none | accept explicit dormant OAuth gap | focused CLI test |
-| B5 | another read is missing | none | test error | focused CLI test |
+| B4 | inspect each missing endpoint | none | continue through mutation gaps | focused CLI test |
+| B5 | any shared GET is missing | none | test error | focused CLI test |
 
 ## Calls and live bindings
 
@@ -32,5 +32,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: narrow the expected read gap to exact official OAuth exchange evidence.
+- Safe edit boundary: prove soak covers every shared read while supervised mutations remain outstanding.
 - High-risk impact: **no** — test-only, but guards fail-closed startup evidence.

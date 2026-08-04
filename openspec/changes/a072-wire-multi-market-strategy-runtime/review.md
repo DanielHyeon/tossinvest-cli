@@ -178,6 +178,18 @@
 - Market-local final scheduler revalidation, monotonic entry-gate revision binding, SUBMITTING owner takeover
   grace and immutable lease-update guards were re-reviewed together; no remaining high-severity gap exists.
 
+## Dormant deployment startup-interlock correction
+
+- The first dormant image replacement exposed a production regression: the strategy-only official
+  `GET /api/v1/exchange-rate` read had been added to the global engine startup attestation, so a missing
+  supervised FX probe stopped every existing engine loop even though the KR/US strategy workers remained OFF.
+- The exchange-rate read is now excluded from the global startup dependency set. US strategy entry still
+  fails closed inside its market-local FX authority and dispatch path; this correction grants no fallback FX,
+  lane activation, toggle, approval or broker mutation authority.
+- RED regressions cover the global endpoint set and the existing KR-preservation/US-FX-failure behavior.
+  Targeted normal/race/vet checks, the full Go suite, diff/logic-map checks and an independent review all pass.
+  The independent verdict is CLEAN with no high-severity finding.
+
 ## Verdict
 
 The paired first-leg transaction, transport-free claim CAS, claimed no-send crash recovery, strategy-only
