@@ -63,6 +63,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/version"
 	"github.com/spf13/cobra"
@@ -349,6 +350,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	// engine owns the server and its already-open journal; this process cannot
 	// create, migrate, or directly write that journal through this seam.
 	var positionPolicyCommander console.PositionPolicyCommander
+	var strategyRuntime console.MultiMarketStrategyRuntimeReader
 	if engineDir != "" {
 		descriptorPath := positionpolicyrpc.DescriptorPath(engineDir)
 		if _, statErr := os.Stat(descriptorPath); statErr == nil {
@@ -365,6 +367,17 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 			}
 		} else if !errors.Is(statErr, os.ErrNotExist) {
 			fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 endpoint를 확인할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", statErr)
+		}
+		strategyDescriptor := strategyprojectionrpc.DescriptorPath(engineDir)
+		if _, statErr := os.Stat(strategyDescriptor); statErr == nil {
+			client, dialErr := strategyprojectionrpc.Dial(ctx, strategyDescriptor)
+			if dialErr != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "엔진 전략 runtime projection에 연결할 수 없다 (%v). 전략 화면은 dormant로 뜬다.\n", dialErr)
+			} else {
+				strategyRuntime = client
+			}
+		} else if !errors.Is(statErr, os.ErrNotExist) {
+			fmt.Fprintf(cmd.ErrOrStderr(), "엔진 전략 runtime endpoint를 확인할 수 없다 (%v). 전략 화면은 dormant로 뜬다.\n", statErr)
 		}
 	}
 
@@ -401,6 +414,7 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		ExitPolicies:     consoleExitPolicySettingsSeam(root),
 		Optimization:     optimizationCommander,
 		PositionPolicies: positionPolicyCommander,
+		StrategyRuntime:  strategyRuntime,
 		Performance:      performanceCapabilities.Performance,
 
 		// The market schedule is a read-only projection. Keep it in its own

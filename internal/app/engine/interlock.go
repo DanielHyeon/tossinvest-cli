@@ -212,6 +212,10 @@ type idempotencyKeyCarrier interface {
 // describe the engine. The soak already proves it (soak.EndpointPrices) and the
 // retry matrix already bounds it (execgw.QueryPrice), so the only thing that was
 // missing was this line — and cmd/tossctl's coverage test is what says so.
+// Strategy-only reads do not belong in this global startup catalog. In
+// particular, the a072 official exchange-rate read is verified by the US
+// market-local FX authority. Putting it here would let missing US entry evidence
+// refuse reconcile, protection, exit and fill loops for both markets.
 func RequiredEndpoints() []string {
 	return []string{
 		"GET /api/v1/accounts",

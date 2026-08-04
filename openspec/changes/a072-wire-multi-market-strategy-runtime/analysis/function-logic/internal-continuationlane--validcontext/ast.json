@@ -1,0 +1,79 @@
+{
+  "file": "internal/continuationlane/allocation_risk_test.go",
+  "source_sha256": "a61222af6ec0de94234f1172779f3fe16cc15afa05ad6535483f4bd99ab27505",
+  "package": "continuationlane",
+  "function": "validContext",
+  "signature": "validContext(params=1, results=1)",
+  "start": {
+    "line": 522,
+    "column": 1
+  },
+  "end": {
+    "line": 529,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 524,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 527,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 523,
+        "column": 15
+      },
+      "text": "newStopCandidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 525,
+        "column": 3
+      },
+      "text": "panic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 115
+      },
+      "text": "validRiskCap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 141
+      },
+      "text": "NewRiskState"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 523,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

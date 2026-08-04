@@ -1,0 +1,54 @@
+{
+  "file": "internal/official/client.go",
+  "source_sha256": "648f8eecab8415aa99d47f6607e78b30d17dad60ed978ba4330ad5358d74b117",
+  "package": "official",
+  "function": "hcTransport",
+  "receiver": "Client",
+  "signature": "Client.hcTransport(params=0, results=2)",
+  "start": {
+    "line": 163,
+    "column": 1
+  },
+  "end": {
+    "line": 169,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 165,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -92,6 +92,125 @@ func TestReEnteringAnActiveScopeKeepsTheFirstObservation(t *testing.T) {
 	}
 }
 
+func TestReconcileMarketScopeValidation(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	for _, req := range []EnterReconcileRequest{
+		{AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "CN", Cause: ReconcileCauseQuantityMismatch, Evidence: "observed"},
+		{AccountRef: "acct-1", ScopeMarket: "US", Cause: ReconcileCauseSnapshotUnavailable, Evidence: "holdings unreadable"},
+	} {
+		if _, _, err := j.EnterReconcile(ctx, req); !errors.Is(err, ErrInvalidRequest) {
+			t.Errorf("EnterReconcile(%+v) error=%v, want ErrInvalidRequest", req, err)
+		}
+	}
+	if _, _, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{
+		AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "CN",
+		Cause: ReconcileReleaseOperator, Evidence: "operator checked",
+	}); !errors.Is(err, ErrInvalidRequest) {
+		t.Fatalf("invalid market release error=%v, want ErrInvalidRequest", err)
+	}
+}
+
+func TestMarketScopedReconcilesEnterReadAndReleaseIndependently(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	kr, entered, err := j.EnterReconcile(ctx, EnterReconcileRequest{
+		AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "kr",
+		Cause: ReconcileCauseQuantityMismatch, Evidence: "KR differs",
+	})
+	if err != nil || !entered || kr.ScopeMarket != "KR" {
+		t.Fatalf("KR enter state=%+v entered=%v err=%v", kr, entered, err)
+	}
+	us, entered, err := j.EnterReconcile(ctx, EnterReconcileRequest{
+		AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "us",
+		Cause: ReconcileCauseSnapshotStale, Evidence: "US stale",
+	})
+	if err != nil || !entered || us.ScopeMarket != "US" || us.ID == kr.ID {
+		t.Fatalf("US enter state=%+v entered=%v err=%v KR=%+v", us, entered, err, kr)
+	}
+	if again, entered, err := j.EnterReconcile(ctx, EnterReconcileRequest{
+		AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "KR",
+		Cause: ReconcileCauseIdentifierConflict, Evidence: "later KR observation",
+	}); err != nil || entered || again.ID != kr.ID {
+		t.Fatalf("same-market re-entry state=%+v entered=%v err=%v", again, entered, err)
+	}
+
+	// A KR release must not select the US row. Releasing KR leaves US active.
+	released, ok, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{
+		AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "KR",
+		Cause: ReconcileReleaseOperator, Evidence: "KR verified",
+	})
+	if err != nil || !ok || released.ID != kr.ID || released.ScopeMarket != "KR" {
+		t.Fatalf("KR release state=%+v released=%v err=%v", released, ok, err)
+	}
+	active, err := j.ActiveReconcileStates(ctx)
+	if err != nil || len(active) != 1 || active[0].ID != us.ID || active[0].ScopeMarket != "US" {
+		t.Fatalf("active after KR release=%+v err=%v", active, err)
+	}
+	if _, ok, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{
+		AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "KR",
+		Cause: ReconcileReleaseOperator, Evidence: "KR verified again",
+	}); err != nil || ok {
+		t.Fatalf("absent KR release crossed into US released=%v err=%v", ok, err)
+	}
+}
+
+func TestGlobalReconcileScopeBlocksMarketEntryWithoutBeingReleasedByIt(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	global, entered, err := j.EnterReconcile(ctx, EnterReconcileRequest{
+		AccountRef: "acct-1", Symbol: "AAPL",
+		Cause: ReconcileCauseQuantityMismatch, Evidence: "legacy/global mismatch",
+	})
+	if err != nil || !entered || global.ScopeMarket != "" {
+		t.Fatalf("global enter state=%+v entered=%v err=%v", global, entered, err)
+	}
+	for _, market := range []string{"KR", "US"} {
+		existing, entered, err := j.EnterReconcile(ctx, EnterReconcileRequest{
+			AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: market,
+			Cause: ReconcileCauseSnapshotStale, Evidence: market + " observation",
+		})
+		if err != nil || entered || existing.ID != global.ID {
+			t.Fatalf("%s entry did not observe global block state=%+v entered=%v err=%v", market, existing, entered, err)
+		}
+		if _, released, err := j.ReleaseReconcile(ctx, ReleaseReconcileRequest{
+			AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: market,
+			Cause: ReconcileReleaseOperator, Evidence: market + " checked",
+		}); err != nil || released {
+			t.Fatalf("%s release cleared global state released=%v err=%v", market, released, err)
+		}
+	}
+	active, err := j.ActiveReconcileStates(ctx)
+	if err != nil || len(active) != 1 || active[0].ID != global.ID {
+		t.Fatalf("global state lost active=%+v err=%v", active, err)
+	}
+}
+
+func TestAtomicMarketReleaseDoesNotCrossIntoPeerMarket(t *testing.T) {
+	j, _ := openReservationJournal(t)
+	ctx := context.Background()
+	for _, req := range []EnterReconcileRequest{
+		{AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "KR", Cause: ReconcileCauseQuantityMismatch, Evidence: "KR AAPL"},
+		{AccountRef: "acct-1", Symbol: "MSFT", ScopeMarket: "US", Cause: ReconcileCauseQuantityMismatch, Evidence: "US MSFT"},
+	} {
+		if _, _, err := j.EnterReconcile(ctx, req); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_, err := j.ReleaseReconciles(ctx, []ReleaseReconcileRequest{
+		{AccountRef: "acct-1", Symbol: "AAPL", ScopeMarket: "KR", Cause: ReconcileReleaseOperator, Evidence: "KR checked", ExpectCause: ReconcileCauseQuantityMismatch},
+		// MSFT exists only in US. A KR batch request must not select or release it.
+		{AccountRef: "acct-1", Symbol: "MSFT", ScopeMarket: "KR", Cause: ReconcileReleaseOperator, Evidence: "KR checked", ExpectCause: ReconcileCauseQuantityMismatch},
+	})
+	if err == nil || !strings.Contains(err.Error(), "is not active") {
+		t.Fatalf("cross-market atomic release error=%v, want missing exact scope", err)
+	}
+	active, err := j.ActiveReconcileStates(ctx)
+	if err != nil || len(active) != 2 {
+		t.Fatalf("cross-market atomic refusal changed guards active=%+v err=%v", active, err)
+	}
+}
+
 func TestAccountWideAndSymbolScopesAreSeparate(t *testing.T) {
 	j, _ := openReservationJournal(t)
 	ctx := context.Background()

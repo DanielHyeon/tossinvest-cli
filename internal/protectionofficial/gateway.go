@@ -1,7 +1,7 @@
 // Package protectionofficial is the only broker adapter for resident protection.
 // It depends exclusively on internal/official and has no WTS or hybrid fallback.
-// No app or command package constructs it in this change, so runtime activation
-// remains OFF/UNWIRED.
+// Production engine assembly does not construct it while the committed-fill
+// lifecycle is absent. Commands and Context callers never receive this mutator.
 package protectionofficial
 
 import (

@@ -227,6 +227,19 @@ const (
 	// would otherwise be reserving against, and a limit that could refuse a
 	// liquidation is a trap (§0.3).
 	ReasonGuardianReservationMissing ReasonCode = "guardian_reservation_missing"
+	// ReasonGuardianRiskBucketMismatch: a q_final-marked entry no longer has the
+	// exact owner, aggregate HELD reservation and five monetary HELD
+	// reservations committed with its GuardianDecision.
+	ReasonGuardianRiskBucketMismatch ReasonCode = "guardian_risk_bucket_mismatch"
+	// ReasonStrategyDispatchAuthorityMissing: a q_final first-leg decision was
+	// presented through ordinary Place or without its opaque FX/claimed lease.
+	ReasonStrategyDispatchAuthorityMissing ReasonCode = "strategy_dispatch_authority_missing"
+	// ReasonStrategyDispatchFenced: the exact claimed lease could not make the
+	// final atomic transition to SUBMITTING under the current owner fence.
+	ReasonStrategyDispatchFenced ReasonCode = "strategy_dispatch_fenced"
+	// ReasonAccountBaseFXMismatch: opaque evidence is missing, stale, scoped to
+	// another market/pair, or differs from the persisted decision envelope.
+	ReasonAccountBaseFXMismatch ReasonCode = "account_base_fx_mismatch"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was

@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	apppaths "github.com/JungHoonGhae/tossinvest-cli/internal/app/paths"
@@ -37,6 +38,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
@@ -261,6 +263,17 @@ type Context struct {
 	// journal — `tossctl flatten-all` — builds its order path with NewOrderPath
 	// instead of taking one out of an engine it did not assemble.
 	tradingService *trading.Service
+
+	// strategyDispatchOwner is the one lazy central fence shared by fresh KR/US
+	// authority recollections. It owns no broker capability.
+	strategyDispatchOwner *strategyDispatchOwnerCoordinator
+
+	strategyProjectionMu sync.RWMutex
+	strategyProjection   *strategyprojection.Store
+	strategySupervisor   *StrategyEntrySupervisor
+	strategyRefreshMu    sync.Mutex
+	strategyRefreshAt    time.Time
+	strategyRefresh      *StrategyEntryProductionAssembly
 }
 
 // ConditionalMutator is the conditional-order write surface. It is an alias of
@@ -468,13 +481,15 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 
 	// --- 3. the gateway -----------------------------------------------------
 	wiring, err := buildGateway(ctx, gatewayInputs{
-		journal:    jrn,
-		trading:    path.Trading,
-		official:   off,
-		accountRef: accountRef,
-		clock:      clk,
-		logger:     opts.Logger,
-		publisher:  publisher,
+		journal:     jrn,
+		trading:     path.Trading,
+		official:    off,
+		accountRef:  accountRef,
+		clock:       clk,
+		configDir:   paths.ConfigDir,
+		manifestPin: protectionManifestPin(opts),
+		logger:      opts.Logger,
+		publisher:   publisher,
 
 		protectionOverride: opts.protectionOverride,
 	})
@@ -529,43 +544,53 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		guardian = nil
 	}
 
+	projection, err := strategyprojection.NewStore(strategyprojection.DormantSnapshot(clk.Now().UTC()))
+	if err != nil {
+		_ = jrn.Close()
+		return nil, fmt.Errorf("engine: initialize strategy runtime projection: %w", err)
+	}
 	return &Context{
-		Paths:          paths,
-		Config:         cfg,
-		TokenFile:      tokenFile,
-		Official:       off,
-		AccountRef:     accountRef,
-		Journal:        jrn,
-		Gateway:        wiring.gateway,
-		Entry:          wiring.entry,
-		Resolver:       wiring.resolver,
-		Reconcile:      wiring.reconcile,
-		Retrier:        wiring.retrier,
-		Notifier:       wiring.notifier,
-		Ingest:         wiring.ingest,
-		Converge:       wiring.converge,
-		exitFloor:      wiring.floor,
-		Automation:     automation,
-		Guardian:       guardian,
-		Audit:          auditLog,
-		Log:            opts.Logger,
-		clk:            clk,
-		official:       off,
-		broker:         path.broker,
-		conditional:    path.conditional,
-		tradingService: path.Trading,
+		Paths:                 paths,
+		Config:                cfg,
+		TokenFile:             tokenFile,
+		Official:              off,
+		AccountRef:            accountRef,
+		Journal:               jrn,
+		Gateway:               wiring.gateway,
+		Entry:                 wiring.entry,
+		Resolver:              wiring.resolver,
+		Reconcile:             wiring.reconcile,
+		Retrier:               wiring.retrier,
+		Notifier:              wiring.notifier,
+		Ingest:                wiring.ingest,
+		Converge:              wiring.converge,
+		exitFloor:             wiring.floor,
+		Automation:            automation,
+		Guardian:              guardian,
+		Audit:                 auditLog,
+		Log:                   opts.Logger,
+		clk:                   clk,
+		official:              off,
+		broker:                path.broker,
+		conditional:           path.conditional,
+		tradingService:        path.Trading,
+		strategyDispatchOwner: &strategyDispatchOwnerCoordinator{},
+		strategyProjection:    projection,
 	}, nil
 }
 
 // Close releases what the engine profile owns. It is safe on a nil context and
 // safe to call twice.
 func (c *Context) Close() error {
-	if c == nil || c.Journal == nil {
+	if c == nil {
 		return nil
 	}
 	j := c.Journal
 	c.Journal = nil
-	return j.Close()
+	if j != nil {
+		return j.Close()
+	}
+	return nil
 }
 
 // spentNonceRetention is how long a nonce consumption record is kept.

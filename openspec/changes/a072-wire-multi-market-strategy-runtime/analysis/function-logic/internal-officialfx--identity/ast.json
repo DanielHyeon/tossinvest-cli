@@ -1,0 +1,116 @@
+{
+  "file": "internal/officialfx/evidence.go",
+  "source_sha256": "72a151e9ba7be546286b8f9c3f619ab4cdb1999d2e91b45fddca96ff6450b700",
+  "package": "officialfx",
+  "function": "Identity",
+  "signature": "Identity(params=1, results=2)",
+  "start": {
+    "line": 147,
+    "column": 1
+  },
+  "end": {
+    "line": 162,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 148,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 149,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 6
+      },
+      "text": "snapshot.valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 17
+      },
+      "text": "snapshot.observedAt.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 78
+      },
+      "text": "snapshot.freshUntil.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 20
+      },
+      "text": "digestFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 18
+      },
+      "text": "sealFor"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

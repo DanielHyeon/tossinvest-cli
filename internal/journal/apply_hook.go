@@ -22,7 +22,7 @@ package journal
 //
 // # The public API
 //
-//	journal.ApplyHooks{Project, Exit}   the two injected functions
+//	journal.ApplyHooks{Project, Campaign, Exit}   the injected functions
 //	(*Journal).SetApplyHooks            bound once, at wiring time
 //	journal.ApplyFunc                   func(ctx, *ApplyTx, AppliedFill) error
 //	journal.AppliedFill                 what the transaction just recorded
@@ -30,9 +30,11 @@ package journal
 //
 // Contract, in order:
 //
-//  1. Both functions run inside the fill's BEGIN IMMEDIATE, after the snapshot
+//  1. All functions run inside the fill's BEGIN IMMEDIATE, after the snapshot
 //     has advanced and after any terminal release, and before the commit.
-//     Project runs first, so Exit sees the projection this fill produced.
+//     Project runs first, Campaign second, and Exit last. Campaign therefore
+//     binds the actual Position generation Project produced, while Exit sees
+//     both projections this fill produced.
 //  2. Returning an error from either aborts the whole transaction. The fill
 //     snapshot does not advance, no fill event is appended, no reservation is
 //     released, and RecordFill returns the error. There is no partial state to
@@ -159,15 +161,21 @@ type AppliedFill struct {
 // transaction; returning an error rolls the whole thing back.
 type ApplyFunc func(ctx context.Context, tx *ApplyTx, fill AppliedFill) error
 
-// ApplyHooks are the domain's two apply functions. Either may be nil, which is
+// ApplyHooks are the domain apply functions. Any may be nil, which is
 // the state the journal ships in: a journal with no hooks records fills exactly
 // as it did before this change.
 type ApplyHooks struct {
 	// Project updates the position projection from the fill. It runs first.
 	Project ApplyFunc
+	// Campaign advances the strategy-neutral campaign/leg/order watermark and
+	// binds a prospective token to the Position generation Project just created.
+	// It runs second. The a072 production engine binds it while strategy entry
+	// workers remain dormant, so a later human-approved activation cannot create
+	// a confirmed fill whose campaign lineage is silently skipped.
+	Campaign ApplyFunc
 	// Exit updates the exit state — resolving the pending proposal a fill
 	// answered, moving taken_ratio_total when a partial take-profit fills. It
-	// runs second, so it sees the projection this fill produced.
+	// runs last, so it sees the projection and campaign lineage this fill produced.
 	Exit ApplyFunc
 	// Costs is the shared cost model the frozen trade outcome is priced with
 	// (task 8.1). It is here rather than on the journal because it is the same
@@ -188,13 +196,13 @@ type ApplyHooks struct {
 // the same fill stream is not a configuration, it is a bug, and the second
 // binding would silently become the truth from an arbitrary fill onwards.
 func (j *Journal) SetApplyHooks(hooks ApplyHooks) error {
-	if hooks.Project == nil && hooks.Exit == nil {
+	if hooks.Project == nil && hooks.Campaign == nil && hooks.Exit == nil {
 		return fmt.Errorf("%w: SetApplyHooks was given no apply function; "+
 			"leave the hooks unbound instead of binding nothing", ErrInvalidRequest)
 	}
 	j.applyMu.Lock()
 	defer j.applyMu.Unlock()
-	if j.applyHooks.Project != nil || j.applyHooks.Exit != nil {
+	if j.applyHooks.Project != nil || j.applyHooks.Campaign != nil || j.applyHooks.Exit != nil {
 		return fmt.Errorf("%w: the fill apply hooks are already bound; "+
 			"a second projection of the same fill stream is not a configuration", ErrInvalidRequest)
 	}
@@ -239,6 +247,15 @@ func (j *Journal) ExitApplierBound() bool {
 	return j.applyHooks.Exit != nil
 }
 
+// CampaignApplierBound reports whether the dormant PositionCampaign fill hook
+// has been explicitly wired. a065 ships it false in production; a later lane
+// integration change owns changing that wiring decision.
+func (j *Journal) CampaignApplierBound() bool {
+	j.applyMu.RLock()
+	defer j.applyMu.RUnlock()
+	return j.applyHooks.Campaign != nil
+}
+
 // runApplyHooks calls the injected functions inside the caller's transaction.
 //
 // The handle it builds is invalidated when this returns, which is what makes
@@ -248,7 +265,7 @@ func (j *Journal) runApplyHooks(ctx context.Context, tx *sql.Tx, fill AppliedFil
 	j.applyMu.RLock()
 	hooks := j.applyHooks
 	j.applyMu.RUnlock()
-	if hooks.Project == nil && hooks.Exit == nil {
+	if hooks.Project == nil && hooks.Campaign == nil && hooks.Exit == nil {
 		return nil
 	}
 
@@ -258,6 +275,15 @@ func (j *Journal) runApplyHooks(ctx context.Context, tx *sql.Tx, fill AppliedFil
 	if hooks.Project != nil {
 		if err := hooks.Project(ctx, handle, fill); err != nil {
 			return fmt.Errorf("journal: projecting the fill of %s: %w", fill.OrderID, err)
+		}
+	}
+	if hooks.Campaign != nil {
+		if err := hooks.Campaign(ctx, handle, fill); err != nil {
+			return fmt.Errorf("journal: applying the campaign lineage for the fill of %s: %w",
+				fill.OrderID, err)
+		}
+		if err := j.applyRiskBucketOwnerBindingInTx(ctx, tx, fill); err != nil {
+			return fmt.Errorf("journal: binding the risk owner for the fill of %s: %w", fill.OrderID, err)
 		}
 	}
 	if hooks.Exit != nil {

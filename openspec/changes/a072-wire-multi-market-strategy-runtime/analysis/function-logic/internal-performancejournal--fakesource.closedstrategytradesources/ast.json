@@ -1,0 +1,55 @@
+{
+  "file": "internal/performancejournal/adapter_test.go",
+  "source_sha256": "0fea99930a82b20c83a9244a411acfb6863f85588ca2b6b74714ba99c607ce2f",
+  "package": "performancejournal",
+  "function": "ClosedStrategyTradeSources",
+  "receiver": "fakeSource",
+  "signature": "fakeSource.ClosedStrategyTradeSources(params=4, results=2)",
+  "start": {
+    "line": 21,
+    "column": 1
+  },
+  "end": {
+    "line": 26,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 16
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

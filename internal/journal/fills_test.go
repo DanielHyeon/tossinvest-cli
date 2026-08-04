@@ -103,19 +103,24 @@ func TestFillEventsScopedRequiresPreexistingUniqueConfirmedOwner(t *testing.T) {
 }
 
 func recordConfirmedFillOrder(t *testing.T, j *Journal, intentID, attemptID, orderID string) {
-	recordConfirmedFillOrderScope(t, j, intentID, attemptID, orderID, FillSnapshotScope{
+	recordConfirmedFillOrderScopeQuantity(t, j, intentID, attemptID, orderID, FillSnapshotScope{
 		AccountRef: "acct-1", Market: "us", TradingDay: "2026-03-30", Symbol: "AAPL", Side: "BUY",
-	})
+	}, "10")
 }
 
 func recordConfirmedFillOrderScope(t *testing.T, j *Journal, intentID, attemptID, orderID string,
 	scope FillSnapshotScope) {
+	recordConfirmedFillOrderScopeQuantity(t, j, intentID, attemptID, orderID, scope, "10")
+}
+
+func recordConfirmedFillOrderScopeQuantity(t *testing.T, j *Journal, intentID, attemptID, orderID string,
+	scope FillSnapshotScope, quantity string) {
 	t.Helper()
 	ctx := context.Background()
 	attempt, err := j.Prepare(ctx, PrepareRequest{
 		Intent: Intent{
 			ID: intentID, Market: scope.Market, TradingDay: scope.TradingDay, AccountRef: scope.AccountRef,
-			Symbol: scope.Symbol, Side: scope.Side, OrderType: "LIMIT", Quantity: "10",
+			Symbol: scope.Symbol, Side: scope.Side, OrderType: "LIMIT", Quantity: quantity,
 			Price: "200", Currency: "USD", Source: "engine", Fingerprint: "fp-" + intentID,
 		},
 		Kind: KindPlace, AttemptID: attemptID,

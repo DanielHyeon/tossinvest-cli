@@ -1,0 +1,85 @@
+{
+  "file": "internal/strategyflow/types.go",
+  "source_sha256": "5551326fe8dc242aa1ca562f9c4a223a26d36aa5286bff8d11e1d6f5297f7478",
+  "package": "strategyflow",
+  "function": "sealExecutionTerms",
+  "signature": "sealExecutionTerms(params=2, results=2)",
+  "start": {
+    "line": 262,
+    "column": 1
+  },
+  "end": {
+    "line": 271,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 27
+      },
+      "text": "lineage.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 47
+      },
+      "text": "validExecutionTermsFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 19
+      },
+      "text": "executionTermsIdentity"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

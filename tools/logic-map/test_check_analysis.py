@@ -239,6 +239,55 @@ evidence
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "bad")
 
+    def test_new_function_in_existing_file_is_not_reported_as_modified_existing(self) -> None:
+        diff = subprocess.CompletedProcess(
+            [],
+            0,
+            "\n".join(
+                (
+                    "diff --git a/internal/x.go b/internal/x.go",
+                    "--- a/internal/x.go",
+                    "+++ b/internal/x.go",
+                    "@@ -8,0 +9,3 @@",
+                )
+            ),
+            "",
+        )
+        old_functions = [
+            {
+                "function": "Existing",
+                "start": {"line": 2},
+                "end": {"line": 5},
+                "source_sha256": "old-file",
+            }
+        ]
+        current_functions = old_functions + [
+            {
+                "function": "Added",
+                "start": {"line": 9},
+                "end": {"line": 11},
+                "source_sha256": "current-file",
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp, tempfile.NamedTemporaryFile(suffix=".go") as base_source:
+            root = Path(tmp)
+            current = root / "internal" / "x.go"
+            current.parent.mkdir(parents=True)
+            current.write_text("package x\n", encoding="utf-8")
+            with mock.patch(
+                "check_analysis.subprocess.run",
+                return_value=diff,
+            ), mock.patch(
+                "check_analysis.base_file",
+                return_value=Path(base_source.name),
+            ), mock.patch(
+                "check_analysis.go_functions",
+                side_effect=(old_functions, current_functions),
+            ):
+                required = check_analysis.changed_existing_functions(root, "base")
+
+        self.assertNotIn(("internal/x.go", "Added"), required)
+
     def test_base_file_load_failure_is_not_treated_as_new_file(self) -> None:
         diff = subprocess.CompletedProcess(
             [],

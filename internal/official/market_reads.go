@@ -63,6 +63,22 @@ func (c *Client) ExchangeRate(ctx context.Context, base, quote string) (domain.E
 	return adaptExchangeRate(raw), nil
 }
 
+// AuthoritativeExchangeRate validates the immutable production origin and
+// performs the HTTP read under one configuration boundary. It is the only FX
+// read suitable for minting monetary authority; configured clients fail before
+// token or data transport is invoked.
+func (c *Client) AuthoritativeExchangeRate(ctx context.Context, base, quote string) (domain.ExchangeRate, error) {
+	if c == nil {
+		return domain.ExchangeRate{}, ErrAuthorityOrigin
+	}
+	c.configMu.RLock()
+	defer c.configMu.RUnlock()
+	if !c.authorityOriginLocked() {
+		return domain.ExchangeRate{}, ErrAuthorityOrigin
+	}
+	return c.ExchangeRate(ctx, base, quote)
+}
+
 // adaptExchangeRate converts official ExchangeRateResponse to domain.ExchangeRate.
 //
 // Mapping rationale (cross-referenced with WTS exchange-rate feed):
@@ -81,13 +97,23 @@ func (c *Client) ExchangeRate(ctx context.Context, base, quote string) (domain.E
 //
 //   - Name: not provided by /exchange-rate; left empty.
 //
-//   - basisPoint, rateChangeType, validFrom, validUntil: informational only;
-//     not mapped to domain (no corresponding domain fields).
+//   - baseCurrency, quoteCurrency, rate, midRate, validFrom and validUntil are
+//     also preserved byte-for-byte in the domain read value. The float fields
+//     remain display compatibility only; monetary authority consumes the raw
+//     decimal and validity fields through a separate fail-closed adapter.
+//
+//   - basisPoint and rateChangeType: informational only; not mapped to domain.
 func adaptExchangeRate(raw apiExchangeRate) domain.ExchangeRate {
 	return domain.ExchangeRate{
-		Code:  raw.BaseCurrency + "/" + raw.QuoteCurrency,
-		Base:  parseDecimal(raw.MidRate), // midRate → reference / previous base
-		Close: parseDecimal(raw.Rate),    // rate (buying) → current close
+		Code:          raw.BaseCurrency + "/" + raw.QuoteCurrency,
+		Base:          parseDecimal(raw.MidRate), // midRate → reference / previous base
+		Close:         parseDecimal(raw.Rate),    // rate (buying) → current close
+		BaseCurrency:  raw.BaseCurrency,
+		QuoteCurrency: raw.QuoteCurrency,
+		RateRaw:       raw.Rate,
+		MidRateRaw:    raw.MidRate,
+		ValidFromRaw:  raw.ValidFrom,
+		ValidUntilRaw: raw.ValidUntil,
 		// Name — not available from /exchange-rate endpoint
 	}
 }

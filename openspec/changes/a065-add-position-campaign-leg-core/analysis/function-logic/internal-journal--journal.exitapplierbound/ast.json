@@ -1,0 +1,57 @@
+{
+  "file": "internal/journal/apply_hook.go",
+  "source_sha256": "8d096983d114cc9e4a1bfc1b30e76195a83de9cf6f2440fd30218027b0cfb7c3",
+  "revision": "base",
+  "package": "journal",
+  "function": "ExitApplierBound",
+  "receiver": "Journal",
+  "signature": "Journal.ExitApplierBound(params=0, results=1)",
+  "start": {
+    "line": 243,
+    "column": 1
+  },
+  "end": {
+    "line": 247,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 2
+      },
+      "text": "j.applyMu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 8
+      },
+      "text": "j.applyMu.RUnlock"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 245,
+        "column": 2
+      },
+      "text": "j.applyMu.RUnlock"
+    }
+  ]
+}

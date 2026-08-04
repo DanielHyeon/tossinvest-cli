@@ -1,0 +1,38 @@
+{
+  "file": "internal/weeklyvaluelane/evaluate.go",
+  "source_sha256": "678e87a72f784bd0e924b1bc2a256ea6c31a3c7ae857d9d2a93b154a5ece17ed",
+  "package": "weeklyvaluelane",
+  "function": "evaluate",
+  "signature": "evaluate(params=4, results=1)",
+  "start": {
+    "line": 131,
+    "column": 1
+  },
+  "end": {
+    "line": 133,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 9
+      },
+      "text": "evaluateStage"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

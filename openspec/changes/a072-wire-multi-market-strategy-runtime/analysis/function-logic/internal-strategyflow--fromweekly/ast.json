@@ -1,0 +1,102 @@
+{
+  "file": "internal/strategyflow/adapters.go",
+  "source_sha256": "5fa16d5a0d6e2286f965c396e726fb3bf8cba48b32e4ec110359ff533def69d1",
+  "package": "strategyflow",
+  "function": "fromWeekly",
+  "signature": "fromWeekly(params=2, results=1)",
+  "start": {
+    "line": 113,
+    "column": 1
+  },
+  "end": {
+    "line": 124,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 15
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 72
+      },
+      "text": "weeklyPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 116
+      },
+      "text": "weeklyPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 11
+      },
+      "text": "weeklyPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 58
+      },
+      "text": "weeklyPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 16
+      },
+      "text": "request.Plan.AccountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 51
+      },
+      "text": "strategyrouter.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 22
+      },
+      "text": "weeklyRiskBudgetDigest"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

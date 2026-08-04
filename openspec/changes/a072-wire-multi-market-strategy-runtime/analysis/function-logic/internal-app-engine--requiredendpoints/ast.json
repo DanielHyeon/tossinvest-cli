@@ -1,0 +1,29 @@
+{
+  "file": "internal/app/engine/interlock.go",
+  "source_sha256": "a6f6ade0dbb147ede55c475c47ba5f439aa9faa0ede1bd7447b148251951cdbd",
+  "package": "engine",
+  "function": "RequiredEndpoints",
+  "signature": "RequiredEndpoints(params=0, results=1)",
+  "start": {
+    "line": 219,
+    "column": 1
+  },
+  "end": {
+    "line": 230,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 220,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

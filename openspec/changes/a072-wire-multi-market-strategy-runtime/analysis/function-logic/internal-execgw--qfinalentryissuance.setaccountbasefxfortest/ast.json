@@ -1,0 +1,37 @@
+{
+  "file": "internal/execgw/export_test.go",
+  "source_sha256": "8f000c06b15e6bb1abbb2ec799149790dd77198c74b420f61095db3b2f3a1306",
+  "package": "execgw",
+  "function": "SetAccountBaseFXForTest",
+  "receiver": "QFinalEntryIssuance",
+  "signature": "QFinalEntryIssuance.SetAccountBaseFXForTest(params=1, results=0)",
+  "start": {
+    "line": 48,
+    "column": 1
+  },
+  "end": {
+    "line": 51,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

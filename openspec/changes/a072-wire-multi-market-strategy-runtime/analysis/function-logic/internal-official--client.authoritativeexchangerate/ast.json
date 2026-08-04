@@ -1,0 +1,103 @@
+{
+  "file": "internal/official/market_reads.go",
+  "source_sha256": "b356524b48df5dc550c07d74c00f6f7c695e6364c78036e04df8df94ef2ce1ea",
+  "package": "official",
+  "function": "AuthoritativeExchangeRate",
+  "receiver": "Client",
+  "signature": "Client.AuthoritativeExchangeRate(params=3, results=2)",
+  "start": {
+    "line": 70,
+    "column": 1
+  },
+  "end": {
+    "line": 80,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 77,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 2
+      },
+      "text": "c.configMu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 8
+      },
+      "text": "c.configMu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 6
+      },
+      "text": "c.authorityOriginLocked"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 9
+      },
+      "text": "c.ExchangeRate"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 75,
+        "column": 2
+      },
+      "text": "c.configMu.RUnlock"
+    }
+  ]
+}

@@ -1,0 +1,475 @@
+{
+  "file": "internal/execgw/guardian.go",
+  "source_sha256": "8f9073c05d4b3b7b5a55db9d8d3df9769832679c20b653ebd0984753a229126b",
+  "package": "execgw",
+  "function": "checkDecision",
+  "receiver": "Gateway",
+  "signature": "Gateway.checkDecision(params=4, results=1)",
+  "start": {
+    "line": 235,
+    "column": 1
+  },
+  "end": {
+    "line": 312,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 253,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "switch",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 272,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 278,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "case",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 295,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 240,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 246,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 254,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 273,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 279,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 284,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 291,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 296,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 300,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 5
+      },
+      "text": "journal.HashPreimage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 4
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 19
+      },
+      "text": "journal.ParsePreimage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 4
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 4
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 4
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 11
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 5
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 11
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 5
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 284,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 4
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 17
+      },
+      "text": "checkPreimage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 5
+      },
+      "text": "dec.ExpiresAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 37
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 6
+      },
+      "text": "now.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 10
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 4
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 4
+      },
+      "text": "dec.ExpiresAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 46
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 46
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 17
+      },
+      "text": "checkIdempotencyKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 9
+      },
+      "text": "checkLimits"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 306,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

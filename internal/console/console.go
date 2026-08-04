@@ -241,10 +241,10 @@ type Options struct {
 	// query method and exposes no collector, pruning, journal, broker, config, or
 	// operating-control capability.
 	Performance PerformanceReader
-	// StrategyRuntime is the a047 read-only dormant lane projection. It carries
-	// display booleans/enums only and cannot edit a lane, start the engine, mint
-	// an activation, or reach an account.
-	StrategyRuntime StrategyRuntimeReader
+	// StrategyRuntime is the market-keyed read-only KR/US projection. Its only
+	// method returns plain data and cannot edit a lane, start the engine, mint an
+	// activation, weaken protection, or reach an account/broker.
+	StrategyRuntime MultiMarketStrategyRuntimeReader
 
 	// Orders is the read-only view of the account's order record the orders
 	// screen reads (orders.go). It declares one method, behind which the caller

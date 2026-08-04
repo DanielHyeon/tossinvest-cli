@@ -1,0 +1,206 @@
+{
+  "file": "internal/reversallane/review_regression_test.go",
+  "source_sha256": "64b919d8dabdd93a5164d98759ba4d1865127d0b66beda3604dfda735822ec06",
+  "package": "reversallane",
+  "function": "TestFirstEntryEstablishesStopAndLaterScaleInCannotRetreat",
+  "signature": "TestFirstEntryEstablishesStopAndLaterScaleInCannotRetreat(params=1, results=0)",
+  "start": {
+    "line": 72,
+    "column": 1
+  },
+  "end": {
+    "line": 89,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 10
+      },
+      "text": "mustPlan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 14
+      },
+      "text": "mustKREvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 42
+      },
+      "text": "validContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 93
+      },
+      "text": "validKRConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 12
+      },
+      "text": "EvaluateKR"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 45
+      },
+      "text": "evidence.EvaluatedAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 12
+      },
+      "text": "EvaluateKR"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 12
+      },
+      "text": "EvaluateKR"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 80,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

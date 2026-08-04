@@ -28,10 +28,10 @@ func openTestStore(t *testing.T) *Store {
 
 func TestStoreSchemaIsSeparateAppendOnlyAndVersioned(t *testing.T) {
 	store := openTestStore(t)
-	if got, err := store.SchemaVersion(context.Background()); err != nil || got != 1 {
+	if got, err := store.SchemaVersion(context.Background()); err != nil || got != SchemaVersion {
 		t.Fatalf("schema version = %d err=%v", got, err)
 	}
-	for _, table := range []string{"performance_trades", "price_observations", "measurement_snapshots", "maintenance_state"} {
+	for _, table := range []string{"performance_trades", "price_observations", "measurement_snapshots", "maintenance_state", "attribution_rebuilds", "attribution_rows"} {
 		var count int
 		if err := store.db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&count); err != nil || count != 1 {
 			t.Fatalf("table %s count=%d err=%v", table, count, err)

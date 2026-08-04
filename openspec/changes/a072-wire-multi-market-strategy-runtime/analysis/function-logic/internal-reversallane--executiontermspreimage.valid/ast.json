@@ -1,0 +1,71 @@
+{
+  "file": "internal/reversallane/execution_terms.go",
+  "source_sha256": "934faf86d9d9dec1bb91cc2f59f518d8ada24301265dc3069208f3c8ae9f426d",
+  "package": "reversallane",
+  "function": "valid",
+  "receiver": "ExecutionTermsPreimage",
+  "signature": "ExecutionTermsPreimage.valid(params=2, results=1)",
+  "start": {
+    "line": 44,
+    "column": 1
+  },
+  "end": {
+    "line": 46,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 9
+      },
+      "text": "plan.valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 41
+      },
+      "text": "plan.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 165
+      },
+      "text": "plan.ConfigDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 224
+      },
+      "text": "reversalExecutionTermsSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 271
+      },
+      "text": "reversalProvenanceIdentity"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

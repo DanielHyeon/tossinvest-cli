@@ -1,0 +1,131 @@
+{
+  "file": "internal/protectionreadiness/dispatch_test.go",
+  "source_sha256": "4be237f9eb604ce721dc4122fd58310780bc6d58d11c70bbe2cc56c581a7cd55",
+  "package": "protectionreadiness",
+  "function": "TestDispatchRejectsCorruptAndFutureIssuedSnapshots",
+  "signature": "TestDispatchRejectsCorruptAndFutureIssuedSnapshots(params=1, results=0)",
+  "start": {
+    "line": 35,
+    "column": 1
+  },
+  "end": {
+    "line": 45,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 13
+      },
+      "text": "newReadinessFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 14
+      },
+      "text": "Assess"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 21
+      },
+      "text": "fixture.input"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 13
+      },
+      "text": "fixture.validMarketInput"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 11
+      },
+      "text": "exactDispatchScope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 37
+      },
+      "text": "snapshot.kr.Provenance.ExpiresAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 12
+      },
+      "text": "snapshot.Dispatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

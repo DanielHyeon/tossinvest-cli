@@ -83,6 +83,10 @@ type DashboardView struct {
 	NewestSourceAt time.Time
 	Aggregates     []Aggregate
 	States         StateCounts
+	// Attributions is populated by account-bound transport adapters from the
+	// separately persisted attribution generation. Dashboard aggregation itself
+	// remains account-agnostic and leaves this slice empty.
+	Attributions []Attribution
 }
 
 func (d DashboardView) Explanation(status Status) string {

@@ -79,7 +79,10 @@ var verdictReaders = map[string]string{
 	"internal/console/signals_newlylisted_test.go": "asserts the new-entrant marker",
 	"internal/console/tally_alarm_test.go":         "asserts the tally alarm on the page",
 	"internal/strategy/approved.go":                "a047 value-only handoff into a pure lane; it has no order authority",
+	"internal/strategycandidate/sanitize.go":       "a072 repeats exact measured approval and seals it into an opaque immutable-by-copy batch",
+	"internal/strategycandidate/sanitize_test.go":  "asserts paired KR/US sanitizer acceptance and refusal without execution authority",
 	"internal/strategyengine/lane_test.go":         "asserts a synthetic approved-candidate lane contract without production authority",
+	"internal/strategyflow/flow_test.go":           "asserts the paired pure-flow candidate refusal and accepted opaque result contract",
 }
 
 // orderVerbs are the package selectors that can submit, amend, cancel or liquidate,

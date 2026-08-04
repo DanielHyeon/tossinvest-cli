@@ -16,6 +16,8 @@ type fakeSource struct {
 	err                   error
 	account               string
 	closedAfter, closedTo time.Time
+	campaignLineage       journal.PositionCampaignLineageRead
+	campaign              journal.PositionCampaignRecord
 }
 
 func (f *fakeSource) ClosedStrategyTradeSources(
@@ -23,6 +25,14 @@ func (f *fakeSource) ClosedStrategyTradeSources(
 ) ([]journal.ClosedStrategyTradeSource, error) {
 	f.account, f.closedAfter, f.closedTo = account, after, to
 	return append([]journal.ClosedStrategyTradeSource(nil), f.rows...), f.err
+}
+
+func (f *fakeSource) PositionCampaignLineage(_ context.Context, _ string) (journal.PositionCampaignLineageRead, error) {
+	return f.campaignLineage, f.err
+}
+
+func (f *fakeSource) PositionCampaign(_ context.Context, _ string) (journal.PositionCampaignRecord, error) {
+	return f.campaign, f.err
 }
 
 func TestAdapterMapsEveryAuthorityIdentifierAndNullableCostExactly(t *testing.T) {
@@ -90,8 +100,8 @@ func TestAdapterRequiresReadOnlySourceAndPropagatesErrors(t *testing.T) {
 
 func TestAdapterCapabilitySurfaceIsExactlyOneSelectMethod(t *testing.T) {
 	typ := reflect.TypeOf(&Reader{})
-	if typ.NumMethod() != 1 || typ.Method(0).Name != "ClosedStrategyTrades" {
-		t.Fatalf("adapter methods = %v, want one SELECT-only handoff", typ.NumMethod())
+	if typ.NumMethod() != 2 || typ.Method(0).Name != "AttributionRebuild" || typ.Method(1).Name != "ClosedStrategyTrades" {
+		t.Fatalf("adapter methods = %v, want two SELECT-only handoffs", typ.NumMethod())
 	}
 	value := typ.Elem()
 	if value.NumField() != 1 || value.Field(0).Name != "source" || value.Field(0).PkgPath == "" {
@@ -101,4 +111,92 @@ func TestAdapterCapabilitySurfaceIsExactlyOneSelectMethod(t *testing.T) {
 	if sourceType.NumMethod() != 1 || sourceType.Method(0).Name != "ClosedStrategyTradeSources" {
 		t.Fatalf("source methods = %d", sourceType.NumMethod())
 	}
+}
+
+func TestAttributionAdapterEnrichesOnlyExactCampaignFactsAndPreservesMissingEvidence(t *testing.T) {
+	now := time.Date(2026, 8, 4, 0, 0, 0, 0, time.UTC)
+	exact := &journal.ClosedStrategyLineage{
+		CandidateLifeID: "candidate-1", LaneID: "lane", LaneVersion: "lane/v1",
+		StrategyDecisionIdentity: "decision-1", StrategyAttemptID: "attempt-1",
+		BrokerOrderID: "order-1", FillID: "fill-1", PositionID: "position-1", CloseOutcomeID: "position-1",
+	}
+	source := &fakeSource{
+		rows: []journal.ClosedStrategyTradeSource{{TradeID: "position-1", PositionID: "position-1", CloseID: "position-1",
+			Market: "us", Quantity: "2", RealizedPnLAfterCosts: "10", ClosedAt: now, PolicyID: "policy", PolicyVersion: "policy/v1", Lineage: exact}},
+		campaignLineage: journal.PositionCampaignLineageRead{PositionID: "position-1", AccountRef: "acct-1", Market: "US", Symbol: "AAPL", PositionGeneration: 7, CampaignID: "campaign-1",
+			Status: journal.PositionCampaignLineageKnown},
+		campaign: journal.PositionCampaignRecord{ID: "campaign-1", AccountRef: "acct-1", Market: "US", Symbol: "AAPL", LaneID: "lane",
+			LaneVersion: "lane/v1", DecisionID: "decision-1", ActualPositionGeneration: 7},
+	}
+	got, err := (&Reader{source: source}).AttributionRebuild(context.Background(), performance.AttributionEvidenceWindow{
+		AccountRef: "acct-1", ClosedAfter: now.Add(-time.Hour), ClosedAtOrBefore: now,
+	}, "build-1", now.Add(time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Positions) != 0 || len(got.FillDeltas) != 0 || len(got.Unavailable) != 1 {
+		t.Fatalf("adapter invented reconstructable fill evidence: %+v", got)
+	}
+	row := got.Unavailable[0]
+	if row.Key.Market != "US" || row.Key.Ticker != "AAPL" || row.Key.CampaignID != "campaign-1" ||
+		row.Key.LegID != "" || row.LineageStatus != performance.StatusLinkMissing {
+		t.Fatalf("available lineage mapping=%+v", row)
+	}
+	if row.Source.NetPnL.Value != "" || row.Reporting.NetPnL.Value != "" ||
+		row.Source.NetPnL.Status != performance.StatusNotMeasured || row.Reporting.NetPnL.Status != performance.StatusNotMeasured {
+		t.Fatalf("missing cost/FX was invented: source=%+v reporting=%+v", row.Source, row.Reporting)
+	}
+	for _, want := range []string{"leg_id", "close_leg_id"} {
+		if !containsString(row.MissingLineage, want) {
+			t.Fatalf("missing lineage=%v, want %s", row.MissingLineage, want)
+		}
+	}
+	for _, want := range []string{"entry_fill_deltas", "close_fill_deltas", "fees", "taxes", "fx"} {
+		if !containsString(row.MissingMeasurements, want) {
+			t.Fatalf("missing measurements=%v, want %s", row.MissingMeasurements, want)
+		}
+	}
+}
+
+func TestAttributionAdapterRejectsKnownCampaignGenerationMismatch(t *testing.T) {
+	now := time.Date(2026, 8, 4, 0, 0, 0, 0, time.UTC)
+	source := &fakeSource{
+		rows: []journal.ClosedStrategyTradeSource{{PositionID: "position-1", CloseID: "position-1", Market: "US", ClosedAt: now}},
+		campaignLineage: journal.PositionCampaignLineageRead{PositionID: "position-1", AccountRef: "acct-1", Market: "US", Symbol: "AAPL",
+			PositionGeneration: 8, CampaignID: "campaign-1", Status: journal.PositionCampaignLineageKnown},
+		campaign: journal.PositionCampaignRecord{ID: "campaign-1", AccountRef: "acct-1", Market: "US", Symbol: "AAPL",
+			ActualPositionGeneration: 7},
+	}
+	_, err := (&Reader{source: source}).AttributionRebuild(context.Background(), performance.AttributionEvidenceWindow{
+		AccountRef: "acct-1", ClosedAfter: now.Add(-time.Hour), ClosedAtOrBefore: now,
+	}, "build-1", now.Add(time.Minute))
+	if !errors.Is(err, ErrCampaignLineageConflict) {
+		t.Fatalf("generation mismatch err=%v", err)
+	}
+}
+
+func TestAttributionAdapterNeverInventsCampaignForLegacyPosition(t *testing.T) {
+	now := time.Date(2026, 8, 4, 0, 0, 0, 0, time.UTC)
+	source := &fakeSource{rows: []journal.ClosedStrategyTradeSource{{TradeID: "legacy", PositionID: "legacy", CloseID: "legacy",
+		Market: "kr", ClosedAt: now}}, campaignLineage: journal.PositionCampaignLineageRead{PositionID: "legacy",
+		Status: journal.PositionCampaignLineageLegacyUnknown}}
+	got, err := (&Reader{source: source}).AttributionRebuild(context.Background(), performance.AttributionEvidenceWindow{
+		AccountRef: "acct-1", ClosedAfter: now.Add(-time.Hour), ClosedAtOrBefore: now,
+	}, "build-1", now.Add(time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Unavailable) != 1 || got.Unavailable[0].Key.CampaignID != "" ||
+		!containsString(got.Unavailable[0].MissingLineage, "campaign_id") {
+		t.Fatalf("legacy campaign was inferred: %+v", got.Unavailable)
+	}
+}
+
+func containsString(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+	return false
 }

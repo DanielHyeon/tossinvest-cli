@@ -1,0 +1,150 @@
+{
+  "file": "cmd/tossctl/soak_test.go",
+  "source_sha256": "562e7914c5b47738c7cd03418e0ae872a56a227fd45776faffbd011e0b96200f",
+  "package": "main",
+  "function": "TestSoakAndLiveEndpointsCoverTheEngineInterlock",
+  "signature": "TestSoakAndLiveEndpointsCoverTheEngineInterlock(params=1, results=0)",
+  "start": {
+    "line": 468,
+    "column": 1
+  },
+  "end": {
+    "line": 487,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 470,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 473,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 474,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 479,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 480,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 484,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 20
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 27
+      },
+      "text": "soak.RequiredEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 53
+      },
+      "text": "soak.LiveOnlyEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 23
+      },
+      "text": "engine.RequiredEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 27
+      },
+      "text": "engine.RequiredEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 485,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 471,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

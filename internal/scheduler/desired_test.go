@@ -17,17 +17,21 @@ type testManifestClaim struct {
 	revokedAt time.Time
 }
 
-func (m testManifestClaim) verifyActivation(_ context.Context, binding ActivationBinding, now time.Time) error {
+func (m testManifestClaim) verifyActivation(_ context.Context, binding ActivationBinding, now time.Time) (ActivationEvidence, error) {
 	if !m.revokedAt.IsZero() {
-		return ErrManifestRevoked
+		return ActivationEvidence{}, ErrManifestRevoked
 	}
 	if m.expiresAt.IsZero() || !now.Before(m.expiresAt) {
-		return ErrManifestExpired
+		return ActivationEvidence{}, ErrManifestExpired
 	}
 	if m.binding != binding {
-		return ErrManifestMismatch
+		return ActivationEvidence{}, ErrManifestMismatch
 	}
-	return nil
+	generation := binding.DesiredRevision
+	if generation == 0 {
+		generation = 1
+	}
+	return ActivationEvidence{Generation: generation, ExpiresAt: m.expiresAt}, nil
 }
 
 func approvedDesired() DesiredState {

@@ -1,0 +1,102 @@
+{
+  "file": "internal/reversallane/allocation_risk_test.go",
+  "source_sha256": "2a0dd0ee9f6701c74e6b60a2a2161218048b688c64428982966c7d172083ee91",
+  "package": "reversallane",
+  "function": "testEnvelopeForPlan",
+  "signature": "testEnvelopeForPlan(params=2, results=1)",
+  "start": {
+    "line": 232,
+    "column": 1
+  },
+  "end": {
+    "line": 240,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 237,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 5
+      },
+      "text": "plan.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 55
+      },
+      "text": "plan.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 23
+      },
+      "text": "plan.PositionGeneration"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 109
+      },
+      "text": "evaluated.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 15
+      },
+      "text": "evaluated.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 60
+      },
+      "text": "evaluated.Add"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 235,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

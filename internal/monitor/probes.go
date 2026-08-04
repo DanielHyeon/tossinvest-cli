@@ -23,11 +23,14 @@ import (
 
 // Probe describes one endpoint to validate.
 type Probe struct {
-	Name   string
-	Method string
-	URL    string
-	Body   string
-	Check  func(status int, body []byte) error
+	Name              string
+	Method            string
+	URL               string
+	Body              string
+	Source            string
+	ContractOnly      bool
+	MaxRequestsPerRun int
+	Check             func(status int, body []byte) error
 }
 
 // Result of one probe execution.

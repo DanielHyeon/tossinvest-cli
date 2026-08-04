@@ -1,0 +1,55 @@
+{
+  "file": "internal/continuationlane/execution_terms.go",
+  "source_sha256": "9d983ce871b874e854dbda8ca8913b077f8b86c5ba5cc8147c9a3bd1ca3157bc",
+  "package": "continuationlane",
+  "function": "valid",
+  "receiver": "ExecutionTermsPreimage",
+  "signature": "ExecutionTermsPreimage.valid(params=2, results=1)",
+  "start": {
+    "line": 52,
+    "column": 1
+  },
+  "end": {
+    "line": 56,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 9
+      },
+      "text": "validatePlan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 47
+      },
+      "text": "continuationExecutionTermsSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 106
+      },
+      "text": "provenanceIdentity"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

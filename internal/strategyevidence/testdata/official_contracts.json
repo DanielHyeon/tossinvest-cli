@@ -1,0 +1,24 @@
+{
+  "frozen_at": "2026-08-03",
+  "sec_edgar": {
+    "contract_id": "sec-submissions-2025-04-08",
+    "documentation": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+    "fair_access": "https://www.sec.gov/about/webmaster-frequently-asked-questions",
+    "endpoint": "https://data.sec.gov/submissions/CIK##########.json",
+    "schema": "sec-submissions-v1",
+    "maximum_requests_per_second": 10,
+    "declared_user_agent_required": true
+  },
+  "opendart": {
+    "contract_id": "opendart-disclosure-list-2019001",
+    "documentation": "https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019001",
+    "endpoint": "https://opendart.fss.or.kr/api/list.json",
+    "schema": "opendart-list-json-v1",
+    "credential_parameter": "crtfc_key",
+    "maximum_page_count": 100
+  },
+  "krx": {
+    "contract_id": "unavailable",
+    "official_programmatic_contract_frozen": false
+  }
+}

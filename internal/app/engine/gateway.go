@@ -48,6 +48,8 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/protection"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
@@ -70,23 +72,20 @@ const replayTimeout = 15 * time.Second
 // gatewayInputs are what the gateway is built from. Everything here already
 // exists by the time it is called: the account is resolved, the journal is open.
 type gatewayInputs struct {
-	journal    *journal.Journal
-	trading    *trading.Service
-	official   *official.Client
-	accountRef string
-	clock      clock.Clock
+	journal     *journal.Journal
+	trading     *trading.Service
+	official    *official.Client
+	accountRef  string
+	clock       clock.Clock
+	configDir   string
+	manifestPin string
 	// logger and publisher are the alert path's two halves. Both may be nil; see
 	// newNotifier for what a nil publisher costs.
 	logger    *obs.Logger
 	publisher obs.Publisher
-	// protectionOverride is Options.protectionOverride, forwarded so the gateway
-	// this builds judges by the same readiness the interlock reported. Without
-	// the forward, a test that satisfies the clause on the engine would get an
-	// engine claiming EntryPermitted and a gateway that refuses every buy.
-	//
-	// Nil in every shipped binary — Options has no exported setter for it, and
-	// internal/execgw's protection_test.go proves nothing produces the wired
-	// value outside test files.
+	// protectionOverride is retained only for the engine startup-status test
+	// seam. It is never forwarded to the execution gateway: scalar status cannot
+	// authorize an exposure-raising mutation.
 	protectionOverride *ProtectionReadiness
 }
 
@@ -149,8 +148,9 @@ var ErrExitApplierUnbound = errors.New(
 // write a baseline, a watermark or a level at all.
 func bindApplyHooks(j *journal.Journal) error {
 	if err := j.SetApplyHooks(journal.ApplyHooks{
-		Project: journal.ProjectPosition,
-		Exit:    journal.ApplyExitFill,
+		Project:  journal.ProjectPosition,
+		Campaign: journal.ApplyPositionCampaignFill,
+		Exit:     journal.ApplyExitFill,
 		// Task 8.1 extended the same literal again, for the same reason: the
 		// frozen trade outcome is priced with the shared cost model, and the
 		// journal must not own the operator's numbers. The default set is the
@@ -236,6 +236,17 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		Gate:    entry,
 	}
 
+	buildDigest, toolDigest := productionProtectionDigests()
+	assemblies := productionProtectionAssemblies(buildDigest)
+	provider := protectionreadiness.NewProductionProvider(protectionreadiness.ProductionConfig{
+		ConfigDir: in.configDir, AccountID: in.accountRef, ProfileID: "production",
+		BuildDigest: buildDigest, ToolDigest: toolDigest, ManifestDigest: in.manifestPin,
+		Now: in.clock.Now, SupervisorAssemblies: assemblies,
+	})
+	readiness, err := protection.NewPairedReadinessAdapter(provider, in.accountRef, "production", provider.RuntimeContracts())
+	if err != nil {
+		return engineWiring{}, fmt.Errorf("engine: constructing the paired read-only protection readiness adapter: %w", err)
+	}
 	gateway, err := execgw.New(execgw.Options{
 		Journal:    in.journal,
 		Trading:    in.trading,
@@ -244,9 +255,9 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		Source:     engineSource,
 		Entry:      entry,
 
-		ProtectionOverrideForTest: in.protectionOverride,
-		Preflight:                 &execgw.Preflight{Account: account, Clock: in.clock},
-		Orders:                    orders,
+		ProtectionReadiness: readiness,
+		Preflight:           &execgw.Preflight{Account: account, Clock: in.clock},
+		Orders:              orders,
 		Replay: execgw.HTTPReplay{
 			BaseURL: in.official.BaseURL(),
 			HTTP:    &http.Client{Timeout: replayTimeout},

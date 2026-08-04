@@ -1,0 +1,16 @@
+{
+  "id": "STORY-TOS-a072",
+  "title": "Wire the supervised KR and US strategy entry runtime",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a072-wire-multi-market-strategy-runtime",
+    "path": "openspec/changes/a072-wire-multi-market-strategy-runtime"
+  },
+  "acceptance": [
+    "A supervised production loop connects approved candidates through evidence, scheduler, router, lane, risk, Guardian, dispatch and the official gateway",
+    "KR and US evaluation run concurrently and one market's closed or refused state does not pause the other market",
+    "Every exposure-raising mutation requires fresh lane, activation, protection, reconciliation and Guardian evidence at the dispatch lease",
+    "Turning a lane or automation OFF stops new entry and scale-in while every exit, protection, reconciliation and fill loop continues"
+  ]
+}

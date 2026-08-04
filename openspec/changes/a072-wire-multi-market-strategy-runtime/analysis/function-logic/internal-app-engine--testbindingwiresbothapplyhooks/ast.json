@@ -1,0 +1,173 @@
+{
+  "file": "internal/app/engine/exit_wiring_internal_test.go",
+  "source_sha256": "f2ad1e91f12d9e788154797836e39f1c869e90205f40d4a5d5f747fb913ca96a",
+  "package": "engine",
+  "function": "TestBindingWiresBothApplyHooks",
+  "signature": "TestBindingWiresBothApplyHooks(params=1, results=0)",
+  "start": {
+    "line": 23,
+    "column": 1
+  },
+  "end": {
+    "line": 40,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 7
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 12
+      },
+      "text": "bindApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 6
+      },
+      "text": "j.ProjectionBound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 6
+      },
+      "text": "j.ExitApplierBound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 6
+      },
+      "text": "j.CampaignApplierBound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 12
+      },
+      "text": "checkProjectionWired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -67,6 +67,16 @@
 | STORY-TOS-a061 | 5 |
 | STORY-TOS-a062 | 5 |
 | STORY-TOS-a063 | 5 |
+| STORY-TOS-a064 | 5 |
+| STORY-TOS-a065 | 7 |
+| STORY-TOS-a066 | 6 |
+| STORY-TOS-a067 | 6 |
+| STORY-TOS-a068 | 5 |
+| STORY-TOS-a069 | 6 |
+| STORY-TOS-a070 | 5 |
+| STORY-TOS-a071 | 4 |
+| STORY-TOS-a072 | 4 |
+| STORY-TOS-a073 | 4 |
 | STORY-TOS-a074 | 8 |
 | STORY-TOS-a075 | 9 |
 | STORY-TOS-a076 | 8 |

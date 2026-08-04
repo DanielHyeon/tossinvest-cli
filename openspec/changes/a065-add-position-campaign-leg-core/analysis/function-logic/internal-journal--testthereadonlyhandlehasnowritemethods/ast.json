@@ -1,0 +1,107 @@
+{
+  "file": "internal/journal/readonly_test.go",
+  "source_sha256": "8f9688e29162ac6d92066eccdd9959bcddbb00692d0c1fe0cc70414444455014",
+  "package": "journal",
+  "function": "TestTheReadOnlyHandleHasNoWriteMethods",
+  "signature": "TestTheReadOnlyHandleHasNoWriteMethods(params=1, results=0)",
+  "start": {
+    "line": 116,
+    "column": 1
+  },
+  "end": {
+    "line": 152,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 9
+      },
+      "text": "reflect.TypeOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 18
+      },
+      "text": "typ.NumMethod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 11
+      },
+      "text": "typ.Method"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 145,
+        "column": 35
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 146,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

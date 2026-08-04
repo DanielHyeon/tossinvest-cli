@@ -25,7 +25,7 @@ func TestPerformanceMigrationAndAppendSIGKILLPhasesAreAllOrNone(t *testing.T) {
 				_ = process.Kill()
 			}
 		}
-		if mode == "migration" {
+		if mode == "migration" || mode == "migration-v2" {
 			_, _ = Open(path)
 			return
 		}
@@ -53,6 +53,7 @@ func TestPerformanceMigrationAndAppendSIGKILLPhasesAreAllOrNone(t *testing.T) {
 		phases []string
 	}{
 		{mode: "migration", phases: []string{"migration_after_schema", "migration_after_version"}},
+		{mode: "migration-v2", phases: []string{"migration_v2_after_schema", "migration_v2_after_version"}},
 		{mode: "append", phases: []string{"collect_after_trade", "collect_after_observations", "collect_after_snapshot"}},
 	} {
 		for _, phase := range test.phases {
@@ -60,6 +61,14 @@ func TestPerformanceMigrationAndAppendSIGKILLPhasesAreAllOrNone(t *testing.T) {
 				path := filepath.Join(t.TempDir(), "performance.db")
 				if test.mode == "append" {
 					store, err := Open(path)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if err := store.Close(); err != nil {
+						t.Fatal(err)
+					}
+				} else if test.mode == "migration-v2" {
+					store, err := openWithSchema(path, schemaV1, 1)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -87,6 +96,17 @@ func TestPerformanceMigrationAndAppendSIGKILLPhasesAreAllOrNone(t *testing.T) {
 					}
 					if version != 0 || tables != 0 {
 						t.Fatalf("partial migration version=%d tables=%d", version, tables)
+					}
+				} else if test.mode == "migration-v2" {
+					var version, tables int
+					if err := raw.QueryRow("PRAGMA user_version").Scan(&version); err != nil {
+						t.Fatal(err)
+					}
+					if err := raw.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('attribution_rebuilds','attribution_rows')`).Scan(&tables); err != nil {
+						t.Fatal(err)
+					}
+					if version != 1 || tables != 0 {
+						t.Fatalf("partial v2 migration version=%d tables=%d", version, tables)
 					}
 				} else {
 					for _, table := range []string{"performance_trades", "price_observations", "measurement_snapshots", "metric_observations"} {
@@ -141,7 +161,7 @@ func TestPerformanceMigrationAndAppendSurviveSIGKILL(t *testing.T) {
 	if err := store.db.QueryRow(`SELECT count(*) FROM price_observations WHERE id='crash-observation'`).Scan(&count); err != nil || count != 1 {
 		t.Fatalf("crash row count=%d err=%v", count, err)
 	}
-	if version, err := store.SchemaVersion(context.Background()); err != nil || version != 1 {
+	if version, err := store.SchemaVersion(context.Background()); err != nil || version != SchemaVersion {
 		t.Fatalf("schema version=%d err=%v", version, err)
 	}
 }

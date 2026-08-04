@@ -410,6 +410,64 @@
         }
       }
     },
+    "/api/v1/strategy-runtime": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Read paired KR and US strategy runtime status",
+        "description": "Returns one server-owned, read-only KR+US operational projection. Unknown or unavailable facts remain explicit and one market failure never substitutes or erases the peer market. Request bodies and query parameters are rejected.",
+        "operationId": "getStrategyRuntime",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Current paired strategy runtime projection, including honest dormant or per-market unavailable state",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/NoStore"
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/NoSniff"
+              },
+              "Referrer-Policy": {
+                "$ref": "#/components/headers/NoReferrer"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeBase"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/StrategyRuntimeProjection"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "A body or query parameter was supplied to this fixed read."
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed",
+            "description": "Only GET and HEAD are accepted by the runtime; the documented operation is GET."
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable",
+            "description": "The projection reader failed before a valid paired snapshot could be produced."
+          }
+        }
+      }
+    },
     "/api/v1/optimization": {
       "get": {
         "tags": [
@@ -2247,6 +2305,79 @@
           }
         }
       },
+      "PerformanceAmountMetric": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "value", "currency"],
+        "properties": {
+          "status": {"type": "string", "enum": ["complete", "link_missing", "not_measured", "insufficient_sample"]},
+          "value": {"type": "string"},
+          "currency": {"type": "string"}
+        }
+      },
+      "PerformancePnLBreakdown": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["currency", "grossPnl", "entryFees", "exitFees", "taxes", "fxCost", "netPnl", "roundingResidual", "fxSource", "fxSourceVersion", "fxAsOf", "roundingVersion"],
+        "properties": {
+          "currency": {"type": "string"},
+          "grossPnl": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "entryFees": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "exitFees": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "taxes": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "fxCost": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "netPnl": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "roundingResidual": {"$ref": "#/components/schemas/PerformanceAmountMetric"},
+          "fxSource": {"type": "string"},
+          "fxSourceVersion": {"type": "string"},
+          "fxAsOf": {"type": ["string", "null"], "format": "date-time"},
+          "roundingVersion": {"type": "string"}
+        }
+      },
+      "PerformanceCloseLeg": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["closeId", "closeLegId", "fillId", "quantity", "entryBasis", "exitProceeds", "source", "reporting"],
+        "properties": {
+          "closeId": {"type": "string"},
+          "closeLegId": {"type": "string"},
+          "fillId": {"type": "string"},
+          "quantity": {"type": "string"},
+          "entryBasis": {"type": "string"},
+          "exitProceeds": {"type": "string"},
+          "source": {"$ref": "#/components/schemas/PerformancePnLBreakdown"},
+          "reporting": {"$ref": "#/components/schemas/PerformancePnLBreakdown"}
+        }
+      },
+      "PerformanceAttribution": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["market", "ticker", "laneId", "laneVersion", "campaignId", "legId", "positionId", "policyId", "policyVersion", "lineageStatus", "missingLineage", "missingMeasurements", "acquiredQuantity", "closedQuantity", "residualQuantity", "fullyClosed", "totalEntryBasis", "allocatedEntryBasis", "residualEntryBasis", "source", "reporting", "closeLegs"],
+        "properties": {
+          "market": {"type": "string", "enum": ["KR", "US"]},
+          "ticker": {"type": "string"},
+          "laneId": {"type": "string"},
+          "laneVersion": {"type": "string"},
+          "campaignId": {"type": "string"},
+          "legId": {"type": "string"},
+          "positionId": {"type": "string"},
+          "policyId": {"type": "string"},
+          "policyVersion": {"type": "string"},
+          "lineageStatus": {"type": "string", "enum": ["complete", "link_missing"]},
+          "missingLineage": {"type": "array", "items": {"type": "string"}},
+          "missingMeasurements": {"type": "array", "items": {"type": "string"}},
+          "acquiredQuantity": {"type": "string"},
+          "closedQuantity": {"type": "string"},
+          "residualQuantity": {"type": "string"},
+          "fullyClosed": {"type": "boolean"},
+          "totalEntryBasis": {"type": "string"},
+          "allocatedEntryBasis": {"type": "string"},
+          "residualEntryBasis": {"type": "string"},
+          "source": {"$ref": "#/components/schemas/PerformancePnLBreakdown"},
+          "reporting": {"$ref": "#/components/schemas/PerformancePnLBreakdown"},
+          "closeLegs": {"type": "array", "items": {"$ref": "#/components/schemas/PerformanceCloseLeg"}}
+        }
+      },
       "Performance": {
         "type": "object",
         "description": "Fixed-query performance result, bounded aggregates, and completeness counts.",
@@ -2255,7 +2386,8 @@
           "query",
           "newestSourceAt",
           "aggregates",
-          "states"
+          "states",
+          "attributions"
         ],
         "properties": {
           "query": {
@@ -2274,6 +2406,11 @@
             "items": {
               "$ref": "#/components/schemas/PerformanceAggregate"
             }
+          },
+          "attributions": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {"$ref": "#/components/schemas/PerformanceAttribution"}
           },
           "states": {
             "type": "object",
@@ -2447,6 +2584,174 @@
             }
           }
         }
+      },
+      "StrategyRuntimeProjection": {
+        "type": "object",
+        "description": "Single server-owned paired KR and US operational truth shared by REST, SSE, console and the private Unix read transport.",
+        "additionalProperties": false,
+        "required": ["schemaVersion", "generatedAt", "markets"],
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "const": "tossos.strategy-runtime-projection/v1"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "markets": {
+            "$ref": "#/components/schemas/StrategyRuntimeMarkets"
+          }
+        }
+      },
+      "StrategyRuntimeMarkets": {
+        "type": "object",
+        "description": "Exact paired market set. Both keys are always present.",
+        "additionalProperties": false,
+        "required": ["KR", "US"],
+        "properties": {
+          "KR": {"$ref": "#/components/schemas/StrategyRuntimeMarketKR"},
+          "US": {"$ref": "#/components/schemas/StrategyRuntimeMarketUS"}
+        }
+      },
+      "StrategyRuntimeMarketKR": {
+        "allOf": [
+          {"$ref": "#/components/schemas/StrategyRuntimeMarket"},
+          {"type": "object", "properties": {"market": {"const": "KR"}}}
+        ]
+      },
+      "StrategyRuntimeMarketUS": {
+        "allOf": [
+          {"$ref": "#/components/schemas/StrategyRuntimeMarket"},
+          {"type": "object", "properties": {"market": {"const": "US"}}}
+        ]
+      },
+      "StrategyRuntimeMarket": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["market", "status", "error", "lane", "evidence", "campaign", "horizonRisk", "scheduler", "activation", "protection", "reconciliation", "firstRefusal", "observedAt"],
+        "properties": {
+          "market": {"type": "string", "enum": ["KR", "US"]},
+          "status": {"type": "string", "enum": ["CURRENT", "UNKNOWN"]},
+          "error": {
+            "anyOf": [
+              {"$ref": "#/components/schemas/StrategyRuntimeMarketError"},
+              {"type": "null"}
+            ]
+          },
+          "lane": {"$ref": "#/components/schemas/StrategyRuntimeLane"},
+          "evidence": {"$ref": "#/components/schemas/StrategyRuntimeEvidence"},
+          "campaign": {"$ref": "#/components/schemas/StrategyRuntimeCampaign"},
+          "horizonRisk": {"$ref": "#/components/schemas/StrategyRuntimeHorizonRisk"},
+          "scheduler": {"$ref": "#/components/schemas/StrategyRuntimeScheduler"},
+          "activation": {"$ref": "#/components/schemas/StrategyRuntimeActivation"},
+          "protection": {"$ref": "#/components/schemas/StrategyRuntimeProtection"},
+          "reconciliation": {"$ref": "#/components/schemas/StrategyRuntimeReconciliation"},
+          "firstRefusal": {"$ref": "#/components/schemas/StrategyRuntimeRefusalCode"},
+          "observedAt": {"type": ["string", "null"], "format": "date-time"}
+        }
+      },
+      "StrategyRuntimeMarketError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "observedAt"],
+        "properties": {
+          "code": {"$ref": "#/components/schemas/StrategyRuntimeRefusalCode"},
+          "observedAt": {"type": "string", "format": "date-time"}
+        }
+      },
+      "StrategyRuntimeLane": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version", "desired", "effective"],
+        "properties": {
+          "id": {"type": ["string", "null"], "maxLength": 256},
+          "version": {"type": ["string", "null"], "maxLength": 256},
+          "desired": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+          "effective": {"$ref": "#/components/schemas/StrategyRuntimeState"}
+        }
+      },
+      "StrategyRuntimeEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "digest", "freshness"],
+        "properties": {
+          "id": {"type": ["string", "null"], "maxLength": 256},
+          "digest": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+          "freshness": {"$ref": "#/components/schemas/StrategyRuntimeFreshness"}
+        }
+      },
+      "StrategyRuntimeCampaign": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "legId"],
+        "properties": {
+          "id": {"type": ["string", "null"], "maxLength": 256},
+          "legId": {"type": ["string", "null"], "maxLength": 256}
+        }
+      },
+      "StrategyRuntimeHorizonRisk": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bucket", "policyVersion", "status"],
+        "properties": {
+          "bucket": {"type": ["string", "null"], "maxLength": 256},
+          "policyVersion": {"type": ["string", "null"], "maxLength": 256},
+          "status": {"type": "string", "enum": ["CURRENT", "UNKNOWN"]}
+        }
+      },
+      "StrategyRuntimeScheduler": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["desired", "effective", "calendarSource", "calendarVersion", "calendarFreshness"],
+        "properties": {
+          "desired": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+          "effective": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+          "calendarSource": {"type": ["string", "null"], "maxLength": 256},
+          "calendarVersion": {"type": ["string", "null"], "maxLength": 256},
+          "calendarFreshness": {"$ref": "#/components/schemas/StrategyRuntimeFreshness"}
+        }
+      },
+      "StrategyRuntimeActivation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["desired", "effective", "digest", "status"],
+        "properties": {
+          "desired": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+          "effective": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+          "digest": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+          "status": {"type": "string", "enum": ["CONFIGURED", "NOT_CONFIGURED", "UNKNOWN"]}
+        }
+      },
+      "StrategyRuntimeProtection": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["readiness", "refusal"],
+        "properties": {
+          "readiness": {"type": "string", "enum": ["WIRED", "UNWIRED"]},
+          "refusal": {"$ref": "#/components/schemas/StrategyRuntimeRefusalCode"}
+        }
+      },
+      "StrategyRuntimeReconciliation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "refusal"],
+        "properties": {
+          "status": {"type": "string", "enum": ["HEALTHY", "UNHEALTHY", "UNKNOWN"]},
+          "refusal": {"$ref": "#/components/schemas/StrategyRuntimeRefusalCode"}
+        }
+      },
+      "StrategyRuntimeState": {
+        "type": "string",
+        "enum": ["OFF", "ON"]
+      },
+      "StrategyRuntimeFreshness": {
+        "type": "string",
+        "enum": ["UNOBSERVED", "CURRENT", "STALE", "UNKNOWN"]
+      },
+      "StrategyRuntimeRefusalCode": {
+        "type": "string",
+        "enum": ["NONE", "NOT_CONFIGURED", "RUNTIME_UNAVAILABLE", "EVIDENCE_STALE", "SCHEDULER_BLOCKED", "ACTIVATION_ABSENT", "PROTECTION_UNWIRED", "RECONCILIATION_UNAVAILABLE"]
       },
       "OptimizationCategory": {
         "type": "object",

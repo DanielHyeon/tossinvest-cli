@@ -1,0 +1,362 @@
+{
+  "file": "internal/app/engine/gateway.go",
+  "source_sha256": "b25fe6f0192eebd5eea92fe9036bd22ee5cc5d32117cf2e4898363bd938a925c",
+  "package": "engine",
+  "function": "buildGateway",
+  "signature": "buildGateway(params=2, results=2)",
+  "start": {
+    "line": 196,
+    "column": 1
+  },
+  "end": {
+    "line": 307,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 224,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 227,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 248,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 272,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 293,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 12
+      },
+      "text": "checkProjectionWired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 11
+      },
+      "text": "execgw.NewEntryGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 12
+      },
+      "text": "tracker.Restore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 2
+      },
+      "text": "entry.SetAuthorityRefresh"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 10
+      },
+      "text": "tracker.Refresh"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 26
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 29
+      },
+      "text": "productionProtectionDigests"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 16
+      },
+      "text": "productionProtectionAssemblies"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 14
+      },
+      "text": "protectionreadiness.NewProductionProvider"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 20
+      },
+      "text": "protection.NewPairedReadinessAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 96
+      },
+      "text": "provider.RuntimeContracts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 18
+      },
+      "text": "execgw.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 13
+      },
+      "text": "in.official.BaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 14
+      },
+      "text": "newNotifier"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 13
+      },
+      "text": "newRetrier"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 201,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 286,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 289,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

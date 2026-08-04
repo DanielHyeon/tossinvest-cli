@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -60,6 +61,10 @@ type Options struct {
 	// it. A hook can terminate the test process at an exact transaction boundary
 	// without changing migration SQL or introducing a runtime code path.
 	migrationHook func(stage string, version int)
+
+	// firstLegEntropy is a same-package failure-injection seam. Production leaves
+	// it nil and RecordQFinalCampaignFirstLeg uses crypto/rand.Reader.
+	firstLegEntropy io.Reader
 }
 
 // Journal is an open journal database.
@@ -90,6 +95,8 @@ type Journal struct {
 	// migrationHook is copied from Options only for same-package crash tests.
 	// It is nil/no-op in production and is unrelated to order/fill/close paths.
 	migrationHook func(stage string, version int)
+
+	firstLegEntropy io.Reader
 }
 
 // Open resolves the path, verifies the filesystem, creates the data directory if
@@ -150,7 +157,7 @@ func Open(ctx context.Context, opts Options) (*Journal, error) {
 		return nil, fmt.Errorf("journal: connecting to %s: %w", path, err)
 	}
 
-	j := &Journal{db: db, path: path, clk: clk, fs: fs, migrationHook: opts.migrationHook}
+	j := &Journal{db: db, path: path, clk: clk, fs: fs, migrationHook: opts.migrationHook, firstLegEntropy: opts.firstLegEntropy}
 	// Corruption is checked before the schema is touched: a migration against a
 	// damaged file would write on top of the damage. A corrupt journal means we
 	// cannot say what the engine did last, so startup is refused rather than

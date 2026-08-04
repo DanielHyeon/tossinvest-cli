@@ -10,9 +10,10 @@ import (
 )
 
 type fakePerformanceReader struct {
-	view  performance.DashboardView
-	query performance.Query
-	calls int
+	view         performance.DashboardView
+	query        performance.Query
+	calls        int
+	attributions []performance.Attribution
 }
 
 func (f *fakePerformanceReader) Dashboard(_ context.Context, query performance.Query) (performance.DashboardView, error) {
@@ -20,6 +21,16 @@ func (f *fakePerformanceReader) Dashboard(_ context.Context, query performance.Q
 	f.query = query
 	f.view.Query = query
 	return f.view, nil
+}
+
+func (f *fakePerformanceReader) AttributionRows(_ context.Context, _ string, query performance.AttributionQuery, _ int) ([]performance.Attribution, error) {
+	out := make([]performance.Attribution, 0)
+	for _, row := range f.attributions {
+		if row.Key.Market == query.Market {
+			out = append(out, row)
+		}
+	}
+	return out, nil
 }
 
 func TestPerformanceHistoryUsesOnlyServerFixedFiltersAndExplainsEveryMetric(t *testing.T) {

@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a069",
+  "title": "Add concurrent KR and US weekly value repricing lanes",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a069-add-kr-us-weekly-value-lanes",
+    "path": "openspec/changes/a069-add-kr-us-weekly-value-lanes"
+  },
+  "acceptance": [
+    "OpenDART and SEC EDGAR point-in-time value evidence feed separate KR and US weekly lanes in the same delivery wave",
+    "Official exchange calendars and IANA zones provide an atomically reserved market week where positive fill consumes the allowance, zero-fill cancel or expiry releases it, retry is idempotent and at most seven positive-fill planned legs count",
+    "Immutable planned ceilings never reallocate upward, stay within a066 and monetary campaign risk caps, and latch actual-fill price, fee or FX overage",
+    "Strict filing and model schemas preserve revision, point-in-time, currency, units, diluted shares, dilution, model/config digest and exact fair value arithmetic",
+    "A scale-in cannot lower the effective stop and a required structural stop wider than the approved cap blocks entry",
+    "Target is min(staged target, fair value), minimum RR failure refuses entry, and the common exit engine remains the sole exit authority"
+  ]
+}

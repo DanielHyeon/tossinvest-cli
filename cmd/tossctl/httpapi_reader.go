@@ -20,6 +20,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/performance"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 )
 
 const httpAPIPositionFreshness = 30 * time.Second
@@ -53,6 +54,7 @@ type httpAPIReader struct {
 	optimization      *optimization.Store
 	adoptionDesired   httpAPIAdoptionSettingsRead
 	managementRuntime httpAPIManagementRuntimeReader
+	strategyRuntime   httpapi.StrategyRuntimeReader
 	positionsCache    httpAPITimedReadCache[httpapi.PositionsResource]
 	ordersCache       httpAPITimedReadCache[httpapi.OrdersResource]
 }
@@ -372,7 +374,29 @@ func (r *httpAPIReader) Performance(ctx context.Context) (performance.DashboardV
 		}
 		return performance.DashboardView{}, errors.New("httpapi: performance read is unavailable")
 	}
-	return r.performance.Dashboard(ctx, performance.DefaultQuery(r.clockNow()))
+	view, err := r.performance.Dashboard(ctx, performance.DefaultQuery(r.clockNow()))
+	if err != nil {
+		return performance.DashboardView{}, err
+	}
+	if r.accountRef == nil {
+		return view, nil
+	}
+	accountRef, err := r.accountRef()
+	if err != nil {
+		return performance.DashboardView{}, err
+	}
+	for _, market := range []string{"KR", "US"} {
+		rows, readErr := r.performance.AttributionRows(ctx, accountRef,
+			performance.AttributionQuery{Market: market, IncludeLinkMissing: true}, performance.MaxAttributionQueryRows/2)
+		if errors.Is(readErr, performance.ErrAttributionUnavailable) {
+			continue
+		}
+		if readErr != nil {
+			return performance.DashboardView{}, readErr
+		}
+		view.Attributions = append(view.Attributions, rows...)
+	}
+	return view, nil
 }
 
 func (r *httpAPIReader) Settings(ctx context.Context) (httpapi.SettingsResource, error) {
@@ -452,18 +476,26 @@ func (r *httpAPIReader) Snapshot(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	strategyRuntime := strategyprojection.DormantSnapshot(r.clockNow())
+	if r.strategyRuntime != nil {
+		strategyRuntime, err = r.strategyRuntime.Read(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return json.Marshal(struct {
-		SchemaVersion string                       `json:"schemaVersion"`
-		GeneratedAt   time.Time                    `json:"generatedAt"`
-		Engine        httpapi.EngineResource       `json:"engine"`
-		Positions     httpapi.PositionsResource    `json:"positions"`
-		Orders        httpapi.OrdersResource       `json:"orders"`
-		Candidates    httpapi.CandidatesResource   `json:"candidates"`
-		Performance   httpapi.PerformanceResource  `json:"performance"`
-		Settings      httpapi.SettingsResource     `json:"settings"`
-		Optimization  httpapi.OptimizationResource `json:"optimization"`
+		SchemaVersion   string                       `json:"schemaVersion"`
+		GeneratedAt     time.Time                    `json:"generatedAt"`
+		Engine          httpapi.EngineResource       `json:"engine"`
+		Positions       httpapi.PositionsResource    `json:"positions"`
+		Orders          httpapi.OrdersResource       `json:"orders"`
+		Candidates      httpapi.CandidatesResource   `json:"candidates"`
+		Performance     httpapi.PerformanceResource  `json:"performance"`
+		Settings        httpapi.SettingsResource     `json:"settings"`
+		Optimization    httpapi.OptimizationResource `json:"optimization"`
+		StrategyRuntime strategyprojection.Snapshot  `json:"strategyRuntime"`
 	}{httpapi.SchemaVersion, r.clockNow(), engine, positions, orders, candidates,
-		httpapi.PerformanceFrom(performanceView), settings, httpapi.OptimizationFrom(optimizationView)})
+		httpapi.PerformanceFrom(performanceView), settings, httpapi.OptimizationFrom(optimizationView), strategyRuntime})
 }
 
 func (r *httpAPIReader) clockNow() time.Time {

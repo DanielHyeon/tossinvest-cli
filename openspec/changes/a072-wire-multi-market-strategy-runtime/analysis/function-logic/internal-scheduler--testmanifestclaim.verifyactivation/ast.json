@@ -1,0 +1,124 @@
+{
+  "file": "internal/scheduler/desired_test.go",
+  "source_sha256": "a4d795082c7966a9860200041e6058639eb239e1fb73d38b3687021f9a4a74e7",
+  "package": "scheduler",
+  "function": "verifyActivation",
+  "receiver": "testManifestClaim",
+  "signature": "testManifestClaim.verifyActivation(params=3, results=2)",
+  "start": {
+    "line": 20,
+    "column": 1
+  },
+  "end": {
+    "line": 35,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 28,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 6
+      },
+      "text": "m.revokedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 5
+      },
+      "text": "m.expiresAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 30
+      },
+      "text": "now.Before"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,125 @@
+{
+  "file": "internal/officialfx/evidence.go",
+  "source_sha256": "72a151e9ba7be546286b8f9c3f619ab4cdb1999d2e91b45fddca96ff6450b700",
+  "package": "officialfx",
+  "function": "ReadOfficial",
+  "signature": "ReadOfficial(params=5, results=2)",
+  "start": {
+    "line": 132,
+    "column": 1
+  },
+  "end": {
+    "line": 143,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 136,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 37
+      },
+      "text": "canonicalCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 4
+      },
+      "text": "canonicalCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 18
+      },
+      "text": "haircutPolicySeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 15
+      },
+      "text": "client.AuthoritativeExchangeRate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 9
+      },
+      "text": "sealOfficial"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -94,6 +94,33 @@ var readOnlyColumns = []struct {
 	{table: "trade_outcomes", column: "cost_total"},
 }
 
+var positionCampaignReadOnlyTables = []string{
+	"position_campaigns", "campaign_legs", "campaign_order_watermarks", "campaign_commands",
+	"campaign_events", "position_campaign_claims", "position_projection_versions",
+}
+
+var positionCampaignReadOnlyColumns = []struct {
+	table  string
+	column string
+}{
+	{table: "position_campaigns", column: "decision_id"},
+	{table: "position_campaigns", column: "entry_blocked"},
+	{table: "campaign_legs", column: "residual_quantity"},
+	{table: "campaign_order_watermarks", column: "account_ref"},
+	{table: "campaign_order_watermarks", column: "trading_day"},
+	{table: "campaign_order_watermarks", column: "side"},
+	{table: "campaign_order_watermarks", column: "decision_id"},
+	{table: "campaign_order_watermarks", column: "remaining_quantity"},
+	{table: "campaign_commands", column: "result_version"},
+	{table: "campaign_commands", column: "result_error"},
+	{table: "campaign_events", column: "entry_blocked"},
+	{table: "campaign_events", column: "projection_digest"},
+	{table: "campaign_events", column: "leg_requested_quantity"},
+	{table: "campaign_events", column: "order_remaining_quantity"},
+	{table: "position_campaign_claims", column: "position_version"},
+	{table: "position_projection_versions", column: "version"},
+}
+
 // ReadOnlyOptions configures OpenReadOnly.
 type ReadOnlyOptions struct {
 	// Path is the SQLite file. Empty resolves DefaultPath(), the same way Open
@@ -240,6 +267,54 @@ func (r *ReadOnly) checkSchema(ctx context.Context) error {
 	if len(missing) > 0 {
 		return fmt.Errorf("%w: version %d has no %s — start the engine once so it migrates",
 			ErrSchemaTooOld, r.version, strings.Join(missing, ", "))
+	}
+	// Keep released v8/v9/v14 diagnostics above authoritative. Campaign
+	// prerequisites only exist at v20, so checking them earlier would mask the
+	// older, more specific missing-column contract.
+	if r.version >= 20 {
+		for _, table := range positionCampaignReadOnlyTables {
+			var name string
+			err := r.db.QueryRowContext(ctx,
+				`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`, table).Scan(&name)
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				missing = append(missing, table)
+			case err != nil:
+				return fmt.Errorf("journal: inspecting the schema of %s: %w", r.path, err)
+			}
+		}
+		for _, required := range positionCampaignReadOnlyColumns {
+			var name string
+			err := r.db.QueryRowContext(ctx,
+				`SELECT name FROM pragma_table_info(?) WHERE name = ?`, required.table, required.column).Scan(&name)
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				missing = append(missing, required.table+"."+required.column)
+			case err != nil:
+				return fmt.Errorf("journal: inspecting the schema of %s: %w", r.path, err)
+			}
+		}
+		if len(missing) > 0 {
+			return fmt.Errorf("%w: version %d has no %s — start the engine once so it migrates",
+				ErrSchemaTooOld, r.version, strings.Join(missing, ", "))
+		}
+	}
+	if r.version >= 21 {
+		for _, required := range strategyEvidenceReadOnlyColumns {
+			var name string
+			err := r.db.QueryRowContext(ctx,
+				`SELECT name FROM pragma_table_info(?) WHERE name = ?`, required.table, required.column).Scan(&name)
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				missing = append(missing, required.table+"."+required.column)
+			case err != nil:
+				return fmt.Errorf("journal: inspecting the schema of %s: %w", r.path, err)
+			}
+		}
+		if len(missing) > 0 {
+			return fmt.Errorf("%w: version %d has no %s — start the engine once so it migrates",
+				ErrSchemaTooOld, r.version, strings.Join(missing, ", "))
+		}
 	}
 	return nil
 }

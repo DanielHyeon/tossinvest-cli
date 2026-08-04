@@ -23,6 +23,7 @@ type consolePerformanceCapabilities struct {
 
 type performanceDashboardReader interface {
 	Dashboard(context.Context, performance.Query) (performance.DashboardView, error)
+	AttributionRows(context.Context, string, performance.AttributionQuery, int) ([]performance.Attribution, error)
 }
 
 func openConsolePerformanceCapabilities(dataDir string, now func() time.Time) (consolePerformanceCapabilities, error) {

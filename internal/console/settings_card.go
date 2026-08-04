@@ -390,14 +390,14 @@ func (p settingsPage) OperatingState() []stateChip {
 // CurrentTab is the record for this render, for the header.
 func (p settingsPage) CurrentTab() settingsTab { return settingsTabByKey(p.Tab) }
 
-// LimitCurrencyConsequence is what the currently recorded currency costs. It is
-// reason ⑦ of the never-folded list, so it renders as a notice and not as muted
-// prose.
+// LimitCurrencyConsequence is the currently recorded account-base/paired-FX
+// contract. It is reason ⑦ of the never-folded list, so it renders as a notice
+// and not as muted prose.
 func (p settingsPage) LimitCurrencyConsequence() string {
 	if c := strings.TrimSpace(p.Gate.LimitCurrency); c != "" {
 		return currencyConsequence(c)
 	}
-	return "한도 통화가 아직 없다 — 통화를 기록하면 Guardian 체인은 다른 통화의 자동 진입을 거부한다."
+	return "계좌 기준 통화가 아직 없다 — KR/US account-wide Guardian 한도와 FX authority는 미설정이며 신규 자동 진입 권위는 없다."
 }
 
 // EffectNotice is when a save on this screen takes hold.

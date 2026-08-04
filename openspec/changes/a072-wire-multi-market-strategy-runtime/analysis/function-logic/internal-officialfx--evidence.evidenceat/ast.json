@@ -1,0 +1,275 @@
+{
+  "file": "internal/officialfx/evidence.go",
+  "source_sha256": "72a151e9ba7be546286b8f9c3f619ab4cdb1999d2e91b45fddca96ff6450b700",
+  "package": "officialfx",
+  "function": "EvidenceAt",
+  "receiver": "Evidence",
+  "signature": "Evidence.EvidenceAt(params=3, results=2)",
+  "start": {
+    "line": 222,
+    "column": 1
+  },
+  "end": {
+    "line": 245,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "else",
+      "at": {
+        "line": 235,
+        "column": 9
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 231,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 235,
+        "column": 9
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "else",
+      "at": {
+        "line": 240,
+        "column": 9
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 236,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 225,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 228,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 233,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 238,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 241,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 41
+      },
+      "text": "sealFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 4
+      },
+      "text": "canonicalCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 41
+      },
+      "text": "canonicalCurrency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 80
+      },
+      "text": "canonicalDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 5
+      },
+      "text": "at.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 20
+      },
+      "text": "at.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 47
+      },
+      "text": "at.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 7
+      },
+      "text": "boundedIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 46
+      },
+      "text": "boundedIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 90
+      },
+      "text": "canonicalDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 4
+      },
+      "text": "at.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 38
+      },
+      "text": "at.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 5
+      },
+      "text": "boundedIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 47
+      },
+      "text": "canonicalDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 22
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 21
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

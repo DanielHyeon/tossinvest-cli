@@ -135,6 +135,15 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		// a049's exact, account-scoped SELECT over frozen outcomes and a047
 		// lineage. Missing lineage remains nullable; this method has no writer.
 		"ClosedStrategyTradeSources": true,
+		// a065's offline campaign reconstruction. Both methods are SELECT-only;
+		// replay is pure and cannot submit, repair, or change a runtime toggle.
+		"PositionCampaign":            true,
+		"PositionCampaignLineage":     true,
+		"ReconstructPositionCampaign": true,
+		// a072's weekly KR/US proposal authority reads the exact durable market
+		// reservation through the same query-only connection. Reservation creation
+		// remains available only on the engine-owned Journal writer.
+		"WeeklyMarketReservation": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {

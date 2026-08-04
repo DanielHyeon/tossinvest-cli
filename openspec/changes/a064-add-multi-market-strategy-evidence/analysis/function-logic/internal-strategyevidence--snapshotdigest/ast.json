@@ -1,0 +1,33 @@
+{
+  "file": "internal/strategyevidence/store.go",
+  "source_sha256": "e5fbe1186b9b6f6f7b0796662fde40c8e6e5a41ea0bf82294b920953357aa96a",
+  "package": "strategyevidence",
+  "function": "snapshotDigest",
+  "signature": "snapshotDigest(params=2, results=1)",
+  "start": {"line": 361, "column": 1},
+  "end": {"line": 382, "column": 2},
+  "branches": [
+    {"id": "B1", "kind": "range", "at": {"line": 363, "column": 2}},
+    {"id": "B2", "kind": "range", "at": {"line": 368, "column": 2}},
+    {"id": "B3", "kind": "range", "at": {"line": 370, "column": 3}}
+  ],
+  "returns": [
+    {"kind": "return", "at": {"line": 367, "column": 44}},
+    {"kind": "return", "at": {"line": 381, "column": 2}}
+  ],
+  "calls": [
+    {"kind": "call", "at": {"line": 362, "column": 10}, "text": "sha256.New"},
+    {"kind": "call", "at": {"line": 364, "column": 3}, "text": "writeSnapshotDigestField"},
+    {"kind": "call", "at": {"line": 366, "column": 13}, "text": "cloneEnvelopes"},
+    {"kind": "call", "at": {"line": 367, "column": 2}, "text": "sort.Slice"},
+    {"kind": "call", "at": {"line": 378, "column": 4}, "text": "writeSnapshotDigestField"},
+    {"kind": "call", "at": {"line": 381, "column": 9}, "text": "hex.EncodeToString"}
+  ],
+  "assignments": [
+    {"kind": ":=", "at": {"line": 362, "column": 2}},
+    {"kind": ":=", "at": {"line": 366, "column": 2}},
+    {"kind": ":=", "at": {"line": 369, "column": 3}}
+  ],
+  "go_statements": null,
+  "defers": null
+}

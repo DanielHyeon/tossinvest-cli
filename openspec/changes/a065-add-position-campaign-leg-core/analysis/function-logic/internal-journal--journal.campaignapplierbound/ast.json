@@ -1,0 +1,56 @@
+{
+  "file": "internal/journal/apply_hook.go",
+  "source_sha256": "9ca0ed1a9e0817fe74c4a933c167cbedd946b5e7670590d2bef695a02c3f6d27",
+  "package": "journal",
+  "function": "CampaignApplierBound",
+  "receiver": "Journal",
+  "signature": "Journal.CampaignApplierBound(params=0, results=1)",
+  "start": {
+    "line": 252,
+    "column": 1
+  },
+  "end": {
+    "line": 256,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 2
+      },
+      "text": "j.applyMu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 8
+      },
+      "text": "j.applyMu.RUnlock"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 254,
+        "column": 2
+      },
+      "text": "j.applyMu.RUnlock"
+    }
+  ]
+}

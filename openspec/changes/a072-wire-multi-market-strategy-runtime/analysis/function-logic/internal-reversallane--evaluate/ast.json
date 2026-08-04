@@ -1,0 +1,38 @@
+{
+  "file": "internal/reversallane/evaluate.go",
+  "source_sha256": "525db732e564b987d6cf8d1d5ab29a2f54a18e8ed63d0600abf76c9dac692e58",
+  "package": "reversallane",
+  "function": "evaluate",
+  "signature": "evaluate(params=6, results=1)",
+  "start": {
+    "line": 41,
+    "column": 1
+  },
+  "end": {
+    "line": 43,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 9
+      },
+      "text": "evaluateStage"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

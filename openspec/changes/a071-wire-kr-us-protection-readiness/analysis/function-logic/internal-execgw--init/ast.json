@@ -1,0 +1,1 @@
+{"file":"internal/execgw/export_test.go","source_sha256":"8b5509d88647b868f9b8a2c747dbeb76d6de0a68c6d7594a0a2ec5b6b141557c","package":"execgw","function":"init","signature":"init(params=0, results=0)","start":{"line":37,"column":1},"end":{"line":41,"column":2},"branches":null}

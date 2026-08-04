@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -414,126 +413,28 @@ func (b *stubBroker) GetOrderAvailableActions(context.Context, string) (map[stri
 	return map[string]any{}, nil
 }
 
-// TestGatewayRefusesNewOrdersUntilRecoveryCompletes is the spec's "복구 완료 전
-// 주문 시도" scenario, driven through the real gateway: the request is refused,
-// the reason says why, and nothing reaches the broker.
-func TestGatewayRefusesNewOrdersUntilRecoveryCompletes(t *testing.T) {
+// TestEntryGateRefusesEntriesUntilRecoveryCompletes isolates the recovery latch.
+// Gateway protection readiness is a separate boundary with no scalar test forge.
+func TestEntryGateRefusesEntriesUntilRecoveryCompletes(t *testing.T) {
 	j := openJournal(t)
 	clk := clock.NewFake(asOf)
 	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
-	broker := &stubBroker{}
-
-	gw, err := execgw.New(execgw.Options{
-		Journal: j,
-		Trading: trading.NewService(config.Trading{
-			Place: true, Sell: true, Cancel: true, Amend: true, AllowLiveOrderActions: true,
-		}, broker),
-		Clock:      clk,
-		AccountRef: "acct-7",
-		Source:     "test",
-		Entry:      gate,
-		// This suite drives buys to exercise the entry gate; interlock clause 6 is
-		// not what it is about (change interlock-gates-entry-not-exit).
-		ProtectionOverrideForTest: execgw.WiredProtectionForTest,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	r, err := reconcile.New(recoveryOptions(j, gate, recoveryCollector(nil, nil)))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	intent := orderintent.PlaceIntent{
-		Symbol: "AAPL", Market: "us", Side: "buy", OrderType: "limit",
-		Quantity: 1, Price: 200, CurrencyMode: "USD",
-	}
-	issuer := &execgw.Issuer{Journal: j, Clock: clk, AccountRef: "acct-7", TTL: time.Minute}
-	entry := func() execgw.GuardianDecision {
-		t.Helper()
-		d, err := issuer.IssueEntry(context.Background(), execgw.EntryRequest{
-			Market: "us", Symbol: "AAPL", Side: "buy", Quantity: 1, EntryPrice: 200,
-			StopPrice: 180, PolicyVersion: "test/v1",
-			Limits: execgw.Limits{
-				MaxQuantity:        execgw.Bound(10),
-				MaxNotional:        execgw.Bound(100000),
-				MaxTotalExposure:   execgw.Bound(500000),
-				MaxDailyLossAmount: execgw.Bound(20000),
-				MaxDailyLossRatio:  execgw.Bound(0.02),
-				Currency:           "USD",
-			},
-		})
-		if err != nil {
-			t.Fatalf("issuing the entry decision: %v", err)
-		}
-		// The entry's open-exposure hold. An EXPOSURE_RAISING decision that holds
-		// none is refused at submission since add-core-domain task 5.1 — the
-		// aggregate limits are enforced by the reservation ledger, so an entry
-		// that never took its headroom is not an authorised one. The production
-		// path takes both rows in one transaction (journal.RecordDecisionAndReserve);
-		// here the decision already exists and this only makes the ledger agree.
-		version, err := j.ReservationVersion(context.Background(), "acct-7")
-		if err != nil {
-			t.Fatalf("ReservationVersion: %v", err)
-		}
-		if _, err := j.Reserve(context.Background(), journal.ReserveRequest{
-			DecisionID:      d.ID,
-			AccountRef:      "acct-7",
-			SnapshotAsOf:    clk.Now(),
-			ObservedVersion: version,
-			SnapshotUsage: []journal.AggregateAmount{
-				{Kind: journal.ReservationKindOpenExposure, Amount: "0", Currency: "USD"},
-			},
-			Limits: []journal.AggregateAmount{
-				{Kind: journal.ReservationKindOpenExposure, Amount: "500000", Currency: "USD"},
-			},
-			Reservations: []journal.ReservationRequest{
-				{
-					ID:       "hold-" + d.ID,
-					Kind:     journal.ReservationKindOpenExposure,
-					Amount:   "200",
-					Currency: "USD",
-				},
-			},
-		}); err != nil {
-			t.Fatalf("holding the entry's exposure: %v", err)
-		}
-		return d
+	if rejected := gate.CheckEntry(); rejected == nil || rejected.Reason != execgw.ReasonRecoveryIncomplete {
+		t.Fatalf("entry gate before recovery = %v, want %q", rejected, execgw.ReasonRecoveryIncomplete)
 	}
 
-	out, err := gw.Place(context.Background(), execgw.PlaceRequest{
-		Intent: intent, Decision: entry(),
-	})
-	if err == nil {
-		t.Fatal("a place before recovery completes must be refused")
-	}
-	if out.Reason != execgw.ReasonRecoveryIncomplete {
-		t.Fatalf("reason = %q, want %q", out.Reason, execgw.ReasonRecoveryIncomplete)
-	}
-	if !strings.Contains(out.Detail, "recovery") {
-		t.Fatalf("detail = %q, want it to say why", out.Detail)
-	}
-	if broker.places != 0 {
-		t.Fatalf("broker places = %d, want 0 — nothing may reach the broker", broker.places)
-	}
-	if out.State != journal.StateNotDispatched {
-		t.Fatalf("attempt state = %s, want NOT_DISPATCHED", out.State)
-	}
-
-	// After recovery, the same request is allowed through.
+	// Recovery owns this latch. Protection readiness is a separate gateway
+	// boundary and cannot be forged by this cross-package test.
 	if _, err := r.Run(context.Background()); err != nil {
 		t.Fatalf("Run: %v", err)
 	}
-	// A fresh decision: the first one is spent, and a spent decision authorises
-	// nothing however the recovery went.
-	if _, err := gw.Place(context.Background(), execgw.PlaceRequest{
-		Intent: intent, Decision: entry(),
-	}); err != nil {
-		t.Fatalf("after recovery the place should succeed: %v", err)
-	}
-	if broker.places != 1 {
-		t.Fatalf("broker places = %d, want 1", broker.places)
+	if rejected := gate.CheckEntry(); rejected != nil {
+		t.Fatalf("entry gate after recovery = %v, want open", rejected)
 	}
 }
 
@@ -551,9 +452,6 @@ func TestExitsStayOpenWhileRecoveryIsIncomplete(t *testing.T) {
 			Place: true, Sell: true, Cancel: true, Amend: true, AllowLiveOrderActions: true,
 		}, broker),
 		Clock: clk, AccountRef: "acct-7", Source: "test", Entry: gate,
-		// These suites drive buys to exercise the entry gate; interlock clause 6 is
-		// not what they are about (change interlock-gates-entry-not-exit).
-		ProtectionOverrideForTest: execgw.WiredProtectionForTest,
 	})
 	if err != nil {
 		t.Fatal(err)

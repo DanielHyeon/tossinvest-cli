@@ -1,0 +1,64 @@
+{
+  "file": "internal/execgw/retry.go",
+  "source_sha256": "44d102adfb140e460b892417733d18af99ebdb8e41c5c7a77d7fc0ed4c08b29e",
+  "package": "execgw",
+  "function": "checkAccountEntry",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.checkAccountEntry(params=0, results=1)",
+  "start": {
+    "line": 531,
+    "column": 1
+  },
+  "end": {
+    "line": 535,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 534,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 532,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 533,
+        "column": 8
+      },
+      "text": "g.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 534,
+        "column": 9
+      },
+      "text": "g.checkAccountEntryLocked"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 533,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    }
+  ]
+}

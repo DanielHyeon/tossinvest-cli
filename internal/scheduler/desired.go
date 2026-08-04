@@ -216,7 +216,12 @@ type CurrentBinding struct {
 }
 
 type ActivationVerifier interface {
-	verifyActivation(context.Context, ActivationBinding, time.Time) error
+	verifyActivation(context.Context, ActivationBinding, time.Time) (ActivationEvidence, error)
+}
+
+type ActivationEvidence struct {
+	Generation uint64
+	ExpiresAt  time.Time
 }
 
 var (
@@ -229,7 +234,24 @@ var (
 
 // Activation is an opaque capability issued only after an exact manifest
 // verification. Callers cannot forge it with a bool or public struct literal.
-type Activation struct{ binding ActivationBinding }
+type Activation struct {
+	binding  ActivationBinding
+	evidence ActivationEvidence
+}
+
+func (a *Activation) Generation() uint64 {
+	if a == nil {
+		return 0
+	}
+	return a.evidence.Generation
+}
+
+func (a *Activation) ExpiresAt() time.Time {
+	if a == nil {
+		return time.Time{}
+	}
+	return a.evidence.ExpiresAt.UTC()
+}
 
 type ResumeReason string
 
@@ -274,12 +296,15 @@ func Restore(ctx context.Context, desired DesiredState, current CurrentBinding, 
 		return RestoreResult{Reason: ResumeManifestUnavailable, Err: ErrManifestUnavailable}
 	}
 	binding := desired.ActivationBinding(current.BuildDigest)
-	err := verifier.verifyActivation(ctx, binding, now)
+	evidence, err := verifier.verifyActivation(ctx, binding, now)
 	if ctxErr := ctx.Err(); ctxErr != nil {
 		return RestoreResult{Reason: ResumeVerificationFailed, Err: ctxErr}
 	}
 	if err == nil {
-		return RestoreResult{Restored: true, Reason: ResumeExactManifest, Activation: &Activation{binding: binding}}
+		if evidence.Generation == 0 || evidence.ExpiresAt.IsZero() || !now.Before(evidence.ExpiresAt) {
+			return RestoreResult{Reason: ResumeManifestMismatch, Err: ErrManifestMismatch}
+		}
+		return RestoreResult{Restored: true, Reason: ResumeExactManifest, Activation: &Activation{binding: binding, evidence: evidence}}
 	}
 	switch {
 	case errors.Is(err, ErrManifestExpired):

@@ -1,0 +1,71 @@
+{
+  "file": "internal/strategyevidence/model_test.go",
+  "source_sha256": "c426061430c81d5b58ddc08b60f0eacbf343660db84236fd4b2ca3f7a84a9cea",
+  "package": "strategyevidence",
+  "function": "validHeader",
+  "signature": "validHeader(params=4, results=1)",
+  "start": {
+    "line": 85,
+    "column": 1
+  },
+  "end": {
+    "line": 108,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 21
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 25
+      },
+      "text": "sourceAvailable.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 25
+      },
+      "text": "sourceAvailable.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 25
+      },
+      "text": "sourceAvailable.Add"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

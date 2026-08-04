@@ -82,6 +82,10 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 	wantTables := []string{
 		"alert_outbox",
 		"attempt_transitions",
+		"campaign_commands",
+		"campaign_events",
+		"campaign_legs",
+		"campaign_order_watermarks",
 		"decisions",
 		// Schema v8 (add-net-rr-measurement, design D1): the entry verdict
 		// observation. Analysis-only and self-contained — it is in this list
@@ -102,12 +106,33 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"operating_modes",
 		"position_adjustments",
 		"position_adoptions",
+		"position_campaign_claims",
+		"position_campaigns",
 		"position_policy_events",
 		"position_policy_lifecycles",
+		"position_projection_versions",
 		"positions",
 		"protection_mutation_attempts",
 		"protection_sagas",
 		"reconcile_states",
+		"risk_bucket_broker_zero_observations",
+		"risk_bucket_events",
+		"risk_bucket_fill_actual_evidence",
+		"risk_bucket_fill_allocations",
+		"risk_bucket_fill_allocations_v22",
+		"risk_bucket_fills",
+		"risk_bucket_fills_v22",
+		"risk_bucket_final_decisions",
+		"risk_bucket_order_reservations",
+		"risk_bucket_orders",
+		"risk_bucket_orders_v22",
+		"risk_bucket_owner_release_receipts",
+		"risk_bucket_owners",
+		"risk_bucket_policies",
+		"risk_bucket_reservations",
+		"risk_bucket_scope_latches",
+		"risk_bucket_snapshots",
+		"risk_bucket_state_snapshots",
 		"risk_reservations",
 		"schema_meta",
 		"scoped_execution_corrections",
@@ -117,7 +142,18 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"strategy_attempt_lineage",
 		"strategy_attempt_refusals",
 		"strategy_decision_lineage",
+		"strategy_dispatch_leases",
+		"strategy_dispatch_market_authorities",
+		"strategy_dispatch_outcomes",
+		"strategy_dispatch_owner_current",
+		"strategy_dispatch_owner_epochs",
 		"strategy_execution_lineage",
+		"strategy_first_leg_bindings",
+		"strategy_weekly_first_leg_bindings",
+		"strategy_weekly_market_reservations",
+		"strategy_weekly_reservation_lifecycle_receipts",
+		"strategy_weekly_reservation_receipts",
+		"strategy_weekly_reservation_scopes",
 		"trade_outcomes",
 	}
 	rows, err := j.db.QueryContext(ctx,
@@ -142,6 +178,43 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 	}
 
 	wantColumns := map[string][]string{
+		"position_campaigns": {
+			"account_ref", "actual_position_generation", "created_at", "decision_id",
+			"effective_stop", "entry_blocked", "evidence_digest", "expected_position_generation",
+			"expected_position_version", "id", "lane_id", "lane_version", "market",
+			"prospective_token", "state", "stop_candidate", "stop_candidate_observed_at",
+			"stop_candidate_policy", "stop_candidate_source", "stop_candidate_valid", "stop_observed_at",
+			"stop_policy", "stop_selected_from", "stop_source", "symbol", "updated_at", "version",
+		},
+		"position_campaign_claims": {
+			"account_ref", "actual_position_generation", "campaign_id", "created_at", "market",
+			"position_generation", "position_version", "prospective_token", "symbol", "updated_at", "version",
+		},
+		"position_projection_versions": {
+			"account_ref", "generation", "market", "position_id", "state", "symbol", "updated_at", "version",
+		},
+		"campaign_legs": {
+			"campaign_id", "created_at", "filled_quantity", "intent_id", "plan_id", "requested_quantity",
+			"residual_quantity", "sequence", "state", "updated_at", "version",
+		},
+		"campaign_order_watermarks": {
+			"account_ref", "attempt_id", "campaign_id", "carry_baseline", "created_at", "cumulative_filled", "decision_id",
+			"intent_id", "last_observation_id", "leg_sequence", "lineage_ambiguous", "market", "order_id",
+			"predecessor_order_id", "remaining_quantity", "requested_cap", "side", "symbol", "terminal", "trading_day", "updated_at",
+		},
+		"campaign_commands": {
+			"campaign_id", "command_key", "command_kind", "recorded_at", "request_digest",
+			"result_error", "result_sequence", "result_version",
+		},
+		"campaign_events": {
+			"attempt_id", "campaign_id", "campaign_state", "campaign_version", "carry_baseline",
+			"command_key", "command_kind", "cumulative_quantity", "delta_quantity", "effective_stop",
+			"entry_blocked", "event_kind", "expected_position_generation", "intent_id", "leg_filled_quantity",
+			"leg_requested_quantity", "leg_residual_quantity", "leg_sequence", "leg_state", "order_id",
+			"order_lineage_ambiguous", "order_remaining_quantity", "order_terminal", "plan_id", "position_generation", "predecessor_order_id", "projection_digest", "prospective_token",
+			"recorded_at", "request_digest", "requested_cap", "sequence", "stop_observed_at",
+			"stop_policy", "stop_source",
+		},
 		"intents": {
 			"account_ref", "created_at", "currency", "fingerprint", "id", "market",
 			"notes", "order_type", "price", "quantity", "side", "source", "symbol",
@@ -228,8 +301,50 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"consumed_at", "decision_id", "nonce",
 		},
 		"reconcile_states": {
-			"account_ref", "cause", "entered_at", "evidence", "id", "release_cause",
-			"released_at", "symbol",
+			"account_ref", "broker_zero_observation_digest", "broker_zero_observation_id", "cause",
+			"entered_at", "evidence", "id", "release_cause", "released_at", "scope_market", "symbol",
+		},
+		"risk_bucket_broker_zero_observations": {
+			"account_ref", "actual_position_generation", "broker_as_of", "broker_quantity", "build_version",
+			"capability_version", "market", "observation_id", "official_source", "payload_digest",
+			"position_adjustment_digest", "position_adjustment_id", "position_id", "position_version",
+			"reconcile_state_id", "record_digest", "recorded_at", "source_version", "symbol",
+		},
+		"risk_bucket_owner_release_receipts": {
+			"account_ref", "actual_generation", "campaign_id", "campaign_version", "market", "observation_digest",
+			"observation_id", "position_id", "position_version", "predecessor_event_sequence",
+			"predecessor_state_digest", "prospective_generation", "reconcile_state_id", "release_digest",
+			"release_event_id", "release_payload", "released_at", "symbol",
+		},
+		"strategy_dispatch_owner_epochs": {
+			"acquired_at", "fencing_token", "owner_epoch", "owner_instance",
+		},
+		"strategy_dispatch_owner_current": {
+			"acquired_at", "fencing_token", "owner_epoch", "owner_instance", "owner_key", "revision",
+		},
+		"strategy_dispatch_market_authorities": {
+			"account_ref", "activation_digest", "activation_generation", "authority_id", "build_digest",
+			"calendar_generation", "guardian_digest", "guardian_generation", "market", "protection_digest",
+			"protection_generation", "protection_serial", "reconciliation_generation", "record_digest", "revision",
+			"risk_policy_digest", "risk_policy_generation", "symbol", "updated_at",
+		},
+		"strategy_dispatch_leases": {
+			"account_ref", "authority_digest", "authority_revision", "broker_order_id", "campaign_id", "candidate_id",
+			"created_at", "disposition", "evidence_digest", "expires_at", "fencing_token", "guardian_decision_id",
+			"issued_at", "lane_id", "lane_version", "lease_digest", "lease_id", "leg_id", "market", "operation_id",
+			"outcome_code", "outcome_observed_at", "owner_epoch", "query_digest", "refusal_code", "revision",
+			"risk_reservation_id", "router_id", "router_version", "state", "symbol", "transport_started_at", "updated_at",
+		},
+		"strategy_dispatch_outcomes": {
+			"broker_order_id", "expected_revision", "from_disposition", "from_state", "lease_id", "next_revision",
+			"observed_at", "operation_identity", "outcome_id", "query_digest", "record_digest", "to_disposition",
+			"to_state", "transition_code",
+		},
+		"strategy_first_leg_bindings": {
+			"account_ref", "aggregate_reservation_id", "attempt_id", "campaign_id", "candidate_id",
+			"created_at", "decision_id", "entry_decision_identity", "evidence_digest", "lane_id",
+			"lane_version", "leg_plan_id", "leg_sequence", "market", "prospective_token", "q_final",
+			"record_digest", "request_digest", "router_id", "router_version", "symbol",
 		},
 		"execution_corrections": {
 			"account_ref", "cumulative_qty", "id", "new_avg_price",
@@ -522,7 +637,7 @@ func TestLineageEdgeUniqueness(t *testing.T) {
 func TestSchemaIndexes(t *testing.T) {
 	j := openTestJournal(t)
 	rows, err := j.db.QueryContext(context.Background(),
-		`SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%' ORDER BY name`)
+		`SELECT name FROM sqlite_master WHERE type='index' AND (name LIKE 'idx_%' OR name LIKE 'uq_%') ORDER BY name`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -539,6 +654,11 @@ func TestSchemaIndexes(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
+		"idx_campaign_order_identity",
+		"idx_campaign_order_one_successor",
+		"idx_campaign_order_scope_identity",
+		"idx_position_campaign_active_scope",
+		"idx_position_campaign_scope",
 		"idx_intents_fingerprint",
 		"idx_intents_symbol_day",
 		"idx_attempts_state",
@@ -570,7 +690,16 @@ func TestSchemaIndexes(t *testing.T) {
 		"idx_reservations_held",
 		"idx_spent_nonces_consumed",
 		"idx_reconcile_account",
+		"idx_reconcile_active_account_wide",
+		"idx_reconcile_active_legacy_symbol",
+		"idx_reconcile_active_market_symbol",
 		"idx_corrections_order",
+		"idx_strategy_dispatch_authority_market",
+		"idx_strategy_dispatch_lease_market_state",
+		"idx_strategy_dispatch_lease_owner",
+		"idx_strategy_dispatch_lease_recovery",
+		"idx_strategy_dispatch_outcome_lease",
+		"uq_strategy_dispatch_account_broker_order",
 	} {
 		if !got[want] {
 			t.Errorf("missing index %s (have %v)", want, keysOf(got))

@@ -1,0 +1,38 @@
+{
+  "file": "internal/journal/reconcile_states.go",
+  "source_sha256": "0943dee4398405230663c0f931e72f41eabe9c7957b7d5cc9775697cae79cde4",
+  "package": "journal",
+  "function": "entryScopeArgs",
+  "signature": "entryScopeArgs(params=3, results=1)",
+  "start": {
+    "line": 489,
+    "column": 1
+  },
+  "end": {
+    "line": 491,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 9
+      },
+      "text": "scopeArgs"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

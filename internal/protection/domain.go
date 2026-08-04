@@ -1,7 +1,7 @@
-// Package protection contains the dormant, broker-neutral domain contract for
-// resident protection orders. It has no official client adapter and is not
-// imported by the engine. In particular, this package cannot make a broker
-// request or change execgw.ProfileProtection from UNWIRED.
+// Package protection contains the broker-neutral domain contract for resident
+// protection orders. Production controller assembly remains dormant until an
+// exact committed-fill lifecycle is implemented; this package itself has no
+// broker transport and cannot change execgw.ProfileProtection from UNWIRED.
 package protection
 
 import (

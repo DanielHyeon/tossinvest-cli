@@ -1,0 +1,61 @@
+{
+  "file": "internal/strategyevidence/model.go",
+  "source_sha256": "c49652afe47c01d16963b359d59d9ed4745656509a9336a2157ebeaa4e7bb368",
+  "package": "strategyevidence",
+  "function": "authorityValid",
+  "signature": "authorityValid(params=1, results=1)",
+  "start": {
+    "line": 195,
+    "column": 1
+  },
+  "end": {
+    "line": 202,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 3
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

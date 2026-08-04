@@ -29,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 )
 
 // The settings paths. Registered as literals in console.go — registeredRoutes
@@ -288,15 +289,15 @@ func (c *Console) positionPolicySummary(r *http.Request) string {
 // desired and effective, produced by the same projection that screen renders.
 func (c *Console) strategyRuntimeSummary(r *http.Request) string {
 	if c.opts.StrategyRuntime == nil {
-		return "미배선 — 이 빌드는 전략 lane 상태를 읽지 못한다"
+		return "KR OFF/UNKNOWN · US OFF/UNKNOWN — dormant 미배선"
 	}
-	reading, err := c.opts.StrategyRuntime.Read(r.Context())
-	if err != nil || !validStrategyRuntimeReading(reading) {
+	snapshot, err := c.opts.StrategyRuntime.Read(r.Context())
+	if err != nil || strategyprojection.Validate(snapshot) != nil {
 		return "읽지 못함 — 전략 lane 판독이 유효하지 않다"
 	}
-	var page strategyRuntimePage
-	page.project(reading)
-	return "진입 능력 desired " + page.EntryDesired.Value + " → effective " + page.EntryEffective.Value
+	markets := strategyprojection.OrderedMarkets(snapshot)
+	return "KR " + string(markets[0].Lane.Desired) + "→" + string(markets[0].Lane.Effective) + " (" + string(markets[0].FirstRefusal) + ") · " +
+		"US " + string(markets[1].Lane.Desired) + "→" + string(markets[1].Lane.Effective) + " (" + string(markets[1].FirstRefusal) + ")"
 }
 
 // toolEntries are the diagnostic screens. All three read one snapshot, which is

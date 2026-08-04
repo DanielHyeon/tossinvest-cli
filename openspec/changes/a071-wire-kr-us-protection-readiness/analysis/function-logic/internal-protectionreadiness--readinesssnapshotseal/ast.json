@@ -1,0 +1,317 @@
+{
+  "file": "internal/protectionreadiness/readiness.go",
+  "source_sha256": "d95f486a1cef853f912c9ab6330896f930cdc6b73f2efdce5aa138bd0510337c",
+  "package": "protectionreadiness",
+  "function": "readinessSnapshotSeal",
+  "signature": "readinessSnapshotSeal(params=1, results=1)",
+  "start": {
+    "line": 58,
+    "column": 1
+  },
+  "end": {
+    "line": 89,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 10
+      },
+      "text": "sha256.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 2
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 9
+      },
+      "text": "hash.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 9
+      },
+      "text": "hash.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 21
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 21
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 21
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 3
+      },
+      "text": "writeUint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 3
+      },
+      "text": "writeUint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 3
+      },
+      "text": "writeUint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 21
+      },
+      "text": "formatTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 21
+      },
+      "text": "formatTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 2
+      },
+      "text": "copy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 18
+      },
+      "text": "hash.Sum"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

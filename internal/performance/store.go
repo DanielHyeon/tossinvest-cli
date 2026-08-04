@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	SchemaVersion         = 1
+	SchemaVersion         = 2
 	RawRetention          = 90 * 24 * time.Hour
 	PruneCadence          = 24 * time.Hour
 	MaxPruneRows          = 500
@@ -35,10 +35,55 @@ type Store struct {
 }
 
 func Open(path string) (*Store, error) {
-	return openWithSchema(path, schemaV1, SchemaVersion)
+	store, err := openDatabase(path)
+	if err != nil {
+		return nil, err
+	}
+	version, err := store.SchemaVersion(context.Background())
+	if err != nil {
+		store.Close()
+		return nil, err
+	}
+	if version > SchemaVersion {
+		store.Close()
+		return nil, fmt.Errorf("%w: found %d, understand %d", ErrSchemaTooNew, version, SchemaVersion)
+	}
+	if version < 1 {
+		if err := store.migrate(context.Background(), schemaV1, 1); err != nil {
+			store.Close()
+			return nil, err
+		}
+	}
+	if version < SchemaVersion {
+		if err := store.migrateAttributionV2(context.Background(), schemaV2); err != nil {
+			store.Close()
+			return nil, err
+		}
+	}
+	if err := securePerformanceFiles(store.path); err != nil {
+		store.Close()
+		return nil, err
+	}
+	return store, nil
 }
 
 func openWithSchema(path, schema string, targetVersion int) (*Store, error) {
+	store, err := openDatabase(path)
+	if err != nil {
+		return nil, err
+	}
+	if err := store.migrate(context.Background(), schema, targetVersion); err != nil {
+		store.Close()
+		return nil, err
+	}
+	if err := securePerformanceFiles(store.path); err != nil {
+		store.Close()
+		return nil, err
+	}
+	return store, nil
+}
+
+func openDatabase(path string) (*Store, error) {
 	path = filepath.Clean(path)
 	if strings.TrimSpace(path) == "" || path == "." {
 		return nil, errors.New("performance: database path is required")
@@ -64,22 +109,20 @@ func openWithSchema(path, schema string, targetVersion int) (*Store, error) {
 		db.Close()
 		return nil, fmt.Errorf("performance: connecting database: %w", err)
 	}
-	if err := store.migrate(context.Background(), schema, targetVersion); err != nil {
-		db.Close()
-		return nil, err
-	}
+	return store, nil
+}
+
+func securePerformanceFiles(path string) error {
 	for _, name := range []string{path, path + "-wal", path + "-shm"} {
 		if _, err := os.Stat(name); err == nil {
 			if err := os.Chmod(name, 0o600); err != nil {
-				db.Close()
-				return nil, fmt.Errorf("performance: securing %s: %w", filepath.Base(name), err)
+				return fmt.Errorf("performance: securing %s: %w", filepath.Base(name), err)
 			}
 		} else if !errors.Is(err, os.ErrNotExist) {
-			db.Close()
-			return nil, fmt.Errorf("performance: checking %s: %w", filepath.Base(name), err)
+			return fmt.Errorf("performance: checking %s: %w", filepath.Base(name), err)
 		}
 	}
-	return store, nil
+	return nil
 }
 
 func (s *Store) Close() error {

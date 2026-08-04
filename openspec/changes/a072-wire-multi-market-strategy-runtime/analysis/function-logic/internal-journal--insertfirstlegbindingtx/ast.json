@@ -1,0 +1,93 @@
+{
+  "file": "internal/journal/strategy_first_leg_atomic.go",
+  "source_sha256": "b2992b7969a80ed12df004af8db945c9885884c0e7e626fedeb4dfe8d71fa581",
+  "package": "journal",
+  "function": "insertFirstLegBindingTx",
+  "signature": "insertFirstLegBindingTx(params=5, results=1)",
+  "start": {
+    "line": 455,
+    "column": 1
+  },
+  "end": {
+    "line": 472,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 469,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 12
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 3
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 469,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 9
+      },
+      "text": "insertWeeklyFirstLegBindingTx"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 456,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 457,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a067",
+  "title": "Add concurrent KR and US short continuation lanes",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a067-add-kr-us-continuation-lanes",
+    "path": "openspec/changes/a067-add-kr-us-continuation-lanes"
+  },
+  "acceptance": [
+    "KR flow continuation and US participation continuation are separate versioned lanes implemented in the same delivery wave",
+    "Both lanes emit pure decisions or typed refusals and cannot call a broker, journal writer or operating toggle",
+    "The immutable 8:4:2 weights/14 plan uses floor plus final remainder, never reallocates unused fills upward, stays within a066 and monetary campaign risk caps, and latches actual-fill overage",
+    "Strict versioned KR flow and US participation schemas fix units, timestamps, freshness, thresholds, config digests and exact integer arithmetic",
+    "Lanes emit typed invalidation or refusal only; the common exit engine independently owns every risk-reducing decision",
+    "KR and US results retain independent lane lineage and performance attribution"
+  ]
+}

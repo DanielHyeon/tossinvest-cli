@@ -1,0 +1,261 @@
+{
+  "file": "internal/protectionreadiness/attestation_test.go",
+  "source_sha256": "2fa5888a4648fb4546bddf1970c4f8f22f7ab68b6953e7ed687a4c10fcc2fb48",
+  "package": "protectionreadiness",
+  "function": "TestExactScopeMatrixFailsClosed",
+  "signature": "TestExactScopeMatrixFailsClosed(params=1, results=0)",
+  "start": {
+    "line": 42,
+    "column": 1
+  },
+  "end": {
+    "line": 74,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 13
+      },
+      "text": "newReadinessFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 66
+      },
+      "text": "digestOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 68
+      },
+      "text": "digestOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 74
+      },
+      "text": "digestOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 19
+      },
+      "text": "fixture.validMarketInput"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 4
+      },
+      "text": "test.edit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 11
+      },
+      "text": "Snapshot.Verdict"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 11
+      },
+      "text": "Assess"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 18
+      },
+      "text": "fixture.input"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 48,
+        "column": 43
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 49,
+        "column": 43
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 50,
+        "column": 42
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 51,
+        "column": 46
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 52,
+        "column": 43
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 53,
+        "column": 48
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 54,
+        "column": 48
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 55,
+        "column": 43
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 56,
+        "column": 43
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 57,
+        "column": 47
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 58,
+        "column": 48
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 59,
+        "column": 51
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 60,
+        "column": 48
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 61,
+        "column": 50
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 62,
+        "column": 50
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 68,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

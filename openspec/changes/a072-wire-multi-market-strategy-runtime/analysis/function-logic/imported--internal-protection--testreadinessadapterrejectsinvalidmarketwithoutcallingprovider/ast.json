@@ -1,0 +1,133 @@
+{
+  "file": "internal/protection/readiness_adapter_test.go",
+  "source_sha256": "5bb01c42670517355a9684e7be85225d6ec96b46e94a337293707383513df5c5",
+  "package": "protection",
+  "function": "TestReadinessAdapterRejectsInvalidMarketWithoutCallingProvider",
+  "signature": "TestReadinessAdapterRejectsInvalidMarketWithoutCallingProvider(params=1, results=0)",
+  "start": {
+    "line": 47,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 47
+      },
+      "text": "protectionreadiness.DefaultSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 18
+      },
+      "text": "NewReadinessAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 19
+      },
+      "text": "adapter.Check"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 33
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 120
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 53,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

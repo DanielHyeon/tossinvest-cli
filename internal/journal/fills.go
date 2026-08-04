@@ -519,6 +519,25 @@ func (j *Journal) RecordFill(ctx context.Context, obs FillObservation) (FillResu
 		res.ReleasedReservations = released
 	}
 
+	// a066 authoritative risk-bucket sidecar. Registered exposure-raising orders
+	// move HELD/FILLED accounting inside this same transaction. Semantic evidence
+	// failures latch later entry and return nil; they never reject this broker fill.
+	// SELL/risk-reducing observations are an explicit no-op in the sidecar.
+	if locallyOwned {
+		if err := j.applyRiskBucketFillInTx(ctx, tx, applied); err != nil {
+			return res, fmt.Errorf("journal: applying risk buckets for fill %s: %w", orderID, err)
+		}
+		if err := j.releaseTerminalRiskBucketOrderInTx(ctx, tx, applied); err != nil {
+			return res, fmt.Errorf("journal: releasing terminal risk buckets for fill %s: %w", orderID, err)
+		}
+		if err := applyWeeklyReservationLifecycleInTx(ctx, tx, applied); err != nil {
+			return res, fmt.Errorf("journal: applying weekly reservation lifecycle for fill %s: %w", orderID, err)
+		}
+	} else if err := latchRiskBucketFillFailureForScope(ctx, tx, applied,
+		"confirmed fill ownership is ambiguous for a registered risk order"); err != nil {
+		return res, fmt.Errorf("journal: latching ambiguous risk ownership for fill %s: %w", orderID, err)
+	}
+
 	// 6. The atomic apply point (apply_hook.go, design D7). The injected
 	//    projection and exit functions run here, inside this transaction, so the
 	//    snapshot, the position and the exit state commit together or not at all.

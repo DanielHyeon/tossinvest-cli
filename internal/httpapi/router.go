@@ -10,20 +10,24 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 )
 
 type Options struct {
-	Reader         Reader
-	Stream         http.Handler
-	MutationRoutes map[string]http.Handler
-	Now            func() time.Time
+	Reader          Reader
+	StrategyRuntime StrategyRuntimeReader
+	Stream          http.Handler
+	MutationRoutes  map[string]http.Handler
+	Now             func() time.Time
 }
 
 type router struct {
-	reader         Reader
-	stream         http.Handler
-	mutationRoutes map[string]http.Handler
-	now            func() time.Time
+	reader          Reader
+	strategyRuntime StrategyRuntimeReader
+	stream          http.Handler
+	mutationRoutes  map[string]http.Handler
+	now             func() time.Time
 }
 
 var allowedMutationRoutes = map[string]struct{}{
@@ -45,7 +49,7 @@ func NewRouter(options Options) (http.Handler, error) {
 		}
 		routes[path] = handler
 	}
-	return &router{reader: options.Reader, stream: options.Stream, mutationRoutes: routes, now: options.Now}, nil
+	return &router{reader: options.Reader, strategyRuntime: options.StrategyRuntime, stream: options.Stream, mutationRoutes: routes, now: options.Now}, nil
 }
 
 func (r *router) ServeHTTP(w http.ResponseWriter, request *http.Request) {
@@ -146,6 +150,18 @@ func (r *router) read(request *http.Request, resource string) (any, error) {
 	case "optimization":
 		value, err := r.reader.Optimization(ctx)
 		return OptimizationFrom(value), err
+	case "strategy-runtime":
+		if r.strategyRuntime == nil {
+			return strategyprojection.DormantSnapshot(r.now().UTC()), nil
+		}
+		value, err := r.strategyRuntime.Read(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if err := strategyprojection.Validate(value); err != nil {
+			return nil, err
+		}
+		return strategyprojection.Clone(value), nil
 	default:
 		return nil, errors.New("httpapi: unknown read resource")
 	}

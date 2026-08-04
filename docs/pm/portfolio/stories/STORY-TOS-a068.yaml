@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a068",
+  "title": "Add concurrent KR and US short reversal lanes",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a068-add-kr-us-reversal-lanes",
+    "path": "openspec/changes/a068-add-kr-us-reversal-lanes"
+  },
+  "acceptance": [
+    "KR absorption reversal and US dislocation reversal are separate versioned lanes implemented in the same delivery wave",
+    "The immutable 2:4:8 weights/14 plan never reallocates upward, stays within a066 and monetary campaign risk caps, and requires causal bounded sweep, market-structure break and reclaim evidence for the final leg",
+    "Strict versioned KR absorption and US dislocation schemas fix units, timestamps, freshness, thresholds, config digests and exact integer arithmetic",
+    "Structural invalidation emits a typed refusal and suppresses scale-in while the common exit engine independently owns exit decisions",
+    "KR and US results retain independent lane lineage and performance attribution"
+  ]
+}

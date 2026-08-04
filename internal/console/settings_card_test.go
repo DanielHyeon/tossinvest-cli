@@ -221,10 +221,9 @@ func TestTighteningAndLooseningAreMarkedDifferently(t *testing.T) {
 // TestACurrencyChangeIsNeitherTighteningNorLoosening (task 4.5b).
 //
 // KRW 500,000 → USD 3,000 is a smaller number and the opposite of a tightening:
-// the gate has one currency, risk's chain refuses an intent priced in another,
-// so what actually happened is that one market's automatic entry closed and the
-// other's opened. Reading the numbers as a direction would be false in exactly
-// the direction that matters.
+// the gate's currency is the account base, and both market quote currencies are
+// normalized by their own frozen FX authority. Reading the numbers as a
+// direction would still be false because the unit itself changed.
 func TestACurrencyChangeIsNeitherTighteningNorLoosening(t *testing.T) {
 	krw := config.GuardianLimits{
 		Currency: "KRW", MaxOrderQuantity: 10, MaxOrderNotional: 500_000,
@@ -246,9 +245,10 @@ func TestACurrencyChangeIsNeitherTighteningNorLoosening(t *testing.T) {
 				"same scale", row.Label, row.Axis)
 		}
 	}
-	if !strings.Contains(preview.Consequence, "국내") {
-		t.Errorf("a USD limit does not say which market's automatic entry closes: %q",
-			preview.Consequence)
+	for _, want := range []string{"계좌 기준 통화", "US", "identity FX", "KR", "KRW→USD", "같은 구현 웨이브"} {
+		if !strings.Contains(preview.Consequence, want) {
+			t.Errorf("a USD base does not explain paired FX requirement %q: %q", want, preview.Consequence)
+		}
 	}
 
 	// And the first setting of a currency is neither direction either.
@@ -275,8 +275,29 @@ func TestTheCurrencyConsequenceIsRenderedAndNotFolded(t *testing.T) {
 	if !strings.Contains(page[max(0, i-60):i], `class="notice"`) {
 		t.Error("the currency consequence is muted prose; it is on the never-folded list")
 	}
-	if !strings.Contains(page, "자동 진입") {
-		t.Error("the consequence does not name what closes")
+	for _, want := range []string{"계좌 기준 통화", "KR", "US", "FX", "같은 구현 웨이브"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the consequence does not name paired readiness %q", want)
+		}
+	}
+}
+
+func TestMissingAccountBaseCurrencyKeepsBothEntriesUnready(t *testing.T) {
+	page := settingsPage{Gate: config.AutomationGate{}}
+	got := page.LimitCurrencyConsequence()
+	for _, want := range []string{"계좌 기준 통화가 아직 없다", "KR/US", "신규 자동 진입 권위는 없다"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("missing account base consequence %q lacks %q", got, want)
+		}
+	}
+}
+
+func TestUnknownAccountBaseCurrencyRemainsUnsupported(t *testing.T) {
+	got := currencyConsequence("EUR")
+	for _, want := range []string{"계좌 기준 통화 EUR", "KR/US", "지원되지 않아", "권위를 만들지 않는다"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("unknown account base consequence %q lacks %q", got, want)
+		}
 	}
 }
 

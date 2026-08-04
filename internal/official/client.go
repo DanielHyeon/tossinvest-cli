@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,6 +25,16 @@ type Client struct {
 	base string
 	hc   *http.Client
 	tm   *tokenManager
+	// configMu protects construction-time options. New seals configuration before
+	// returning so a custom Option that retained *Client cannot replay a standard
+	// option between authority verification and the authoritative HTTP read.
+	configMu            sync.RWMutex
+	configurationSealed bool
+	// authorityOrigin remains true only for the constructor-owned production
+	// endpoint and HTTP transport. Options may customize ordinary API reads, but
+	// an overridden transport can never attest official monetary authority.
+	authorityOrigin    bool
+	authorityTransport *http.Transport
 	// mu serializes unresolved account discovery and validates later public
 	// discovery against an implicit selection. accountsLocked requires it and
 	// may perform the /accounts HTTP request while held.
@@ -44,14 +55,26 @@ type Option func(*Client)
 // WithBaseURL overrides the default API base URL (used in tests with httptest).
 func WithBaseURL(u string) Option {
 	return func(c *Client) {
+		c.configMu.Lock()
+		defer c.configMu.Unlock()
+		if c.configurationSealed {
+			return
+		}
 		c.base = strings.TrimRight(u, "/")
+		c.authorityOrigin = false
 	}
 }
 
 // WithHTTPClient overrides the HTTP client (used in tests to share httptest transport).
 func WithHTTPClient(hc *http.Client) Option {
 	return func(c *Client) {
+		c.configMu.Lock()
+		defer c.configMu.Unlock()
+		if c.configurationSealed {
+			return
+		}
 		c.hc = hc
+		c.authorityOrigin = false
 	}
 }
 
@@ -61,6 +84,11 @@ func WithHTTPClient(hc *http.Client) Option {
 // or header emission.
 func WithAccountSeq(seq int) Option {
 	return func(c *Client) {
+		c.configMu.Lock()
+		defer c.configMu.Unlock()
+		if c.configurationSealed {
+			return
+		}
 		c.accountSeq.Store(int64(seq))
 		c.accountSeqExplicit = seq > 0
 	}
@@ -69,21 +97,81 @@ func WithAccountSeq(seq int) Option {
 // New constructs a Client. cacheFile is the path for the on-disk token cache.
 // Options are applied after defaults, so WithBaseURL/WithHTTPClient override them.
 func New(creds Credentials, cacheFile string, opts ...Option) *Client {
+	hc := newOfficialHTTPClient()
+	transport := hc.Transport.(*http.Transport)
 	c := &Client{
-		base: defaultBaseURL,
-		hc:   &http.Client{Timeout: defaultTimeout},
+		base:               defaultBaseURL,
+		hc:                 hc,
+		authorityOrigin:    true,
+		authorityTransport: transport,
 	}
 	for _, o := range opts {
 		o(c)
 	}
-	// tokenManager shares the same http.Client so httptest servers handle both
-	// /oauth2/token and data paths without TLS cert mismatches.
+	// Seal the endpoint, transport and account option state in the same critical
+	// section that binds token acquisition to those values. Replayed public Option
+	// closures become harmless no-ops after this point.
+	c.configMu.Lock()
 	c.tm = newTokenManager(creds, c.base, cacheFile, c.hc)
+	c.configurationSealed = true
+	c.configMu.Unlock()
 	return c
+}
+
+func newOfficialHTTPClient() *http.Client {
+	transport := &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: time.Second,
+	}
+	return &http.Client{Timeout: defaultTimeout, Transport: transport}
+}
+
+// AuthorityOrigin is an opaque proof that a Client retained the constructor-
+// owned production endpoint and transport. Its fields are private so callers
+// cannot promote a configured test/proxy client into monetary authority.
+type AuthorityOrigin struct {
+	production bool
+}
+
+func (o AuthorityOrigin) Valid() bool { return o.production }
+
+// AuthorityOrigin returns no capability after any endpoint or HTTP-client
+// override, even when the configured value happens to resemble the default.
+func (c *Client) AuthorityOrigin() (AuthorityOrigin, bool) {
+	if c == nil {
+		return AuthorityOrigin{}, false
+	}
+	c.configMu.RLock()
+	defer c.configMu.RUnlock()
+	if !c.authorityOriginLocked() {
+		return AuthorityOrigin{}, false
+	}
+	return AuthorityOrigin{production: true}, true
+}
+
+func (c *Client) authorityOriginLocked() bool {
+	transport, transportOK := c.hcTransport()
+	return c.configurationSealed && c.authorityOrigin && c.base == defaultBaseURL &&
+		transportOK && c.authorityTransport != nil && transport == c.authorityTransport
+}
+
+func (c *Client) hcTransport() (*http.Transport, bool) {
+	if c.hc == nil {
+		return nil, false
+	}
+	transport, ok := c.hc.Transport.(*http.Transport)
+	return transport, ok
 }
 
 // BaseURL returns the base URL this client targets.
 func (c *Client) BaseURL() string {
+	c.configMu.RLock()
+	defer c.configMu.RUnlock()
 	return c.base
 }
 

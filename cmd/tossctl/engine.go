@@ -67,6 +67,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/spf13/cobra"
 )
 
@@ -243,7 +244,7 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	}
 
 	// --- 7. the loops --------------------------------------------------------
-	rt, err := engineRuntimeFactory(ectx, clk, logger)
+	rt, err := engineRuntimeFactory(ctx, ectx, clk, logger)
 	if err != nil {
 		return err
 	}
@@ -261,6 +262,11 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 		return err
 	}
 	defer policyRuntime.Close()
+	strategyRuntime, err := strategyprojectionrpc.Start(dir, ectx.StrategyRuntimeProjection())
+	if err != nil {
+		return err
+	}
+	defer strategyRuntime.Close()
 	fmt.Fprintf(out, "account          %s\nloops            %s\n",
 		ectx.Automation.MaskedAccount(), strings.Join(rt.LoopNames(), ", "))
 	fmt.Fprintf(out, "stop             SIGINT/SIGTERM — 루프 완주 후 journal 정합 close. 두 번째 시그널은 즉시 종료\n\n")
@@ -300,7 +306,8 @@ func engineVerifyLockPath(root *rootOptions) (string, error) {
 
 // --- the loop set ------------------------------------------------------------------
 
-// engineRuntime assembles the three loops and the supervisor over them.
+// engineRuntime assembles the three safety loops, one inert strategy-entry
+// outer loop, and the existing all-or-nothing supervisor over them.
 //
 // # Why the fill detector is built here and not in internal/app/engine
 //
@@ -321,7 +328,7 @@ func engineVerifyLockPath(root *rootOptions) (string, error) {
 // no detector to defer to.
 var engineRuntimeFactory = engineRuntime
 
-func engineRuntime(ectx *engine.Context, clk clock.Clock, logger *obs.Logger) (*engine.Runtime, error) {
+func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, logger *obs.Logger) (*engine.Runtime, error) {
 	detector, err := engineFillDetector(ectx, clk, nil)
 	if err != nil {
 		return nil, err
@@ -348,6 +355,10 @@ func engineRuntime(ectx *engine.Context, clk clock.Clock, logger *obs.Logger) (*
 	}
 
 	recovery, err := ectx.Recovery(reconcile.Options{Clock: clk})
+	if err != nil {
+		return nil, err
+	}
+	strategyEntry, err := ectx.NewRefreshingPairedStrategyEntrySupervisor(clk)
 	if err != nil {
 		return nil, err
 	}
@@ -384,6 +395,7 @@ func engineRuntime(ectx *engine.Context, clk clock.Clock, logger *obs.Logger) (*
 				Health:  detectorHealth{detector: detector},
 				Trigger: journal.ModeTriggerFillDetectionFailure,
 			},
+			strategyEntry.SupervisedLoop(),
 		},
 	})
 }

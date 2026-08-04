@@ -1,0 +1,30 @@
+{
+  "file": "internal/app/engine/export_test.go",
+  "source_sha256": "62739eb840b4e75533064134cf00ce6d02dd581e50cf46cf47c0495f225d9a81",
+  "package": "engine",
+  "function": "OfficialClientForTest",
+  "receiver": "Context",
+  "signature": "Context.OfficialClientForTest(params=0, results=1)",
+  "start": {
+    "line": 26,
+    "column": 1
+  },
+  "end": {
+    "line": 26,
+    "column": 81
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 26,
+        "column": 62
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

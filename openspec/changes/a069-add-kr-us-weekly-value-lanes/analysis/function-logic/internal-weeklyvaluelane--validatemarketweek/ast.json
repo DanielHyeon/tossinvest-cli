@@ -1,0 +1,284 @@
+{
+  "file": "internal/weeklyvaluelane/reservation.go",
+  "source_sha256": "ea4652bf6763b8816b8c0477869caff0e4ab6b49e075126ea07c44ab66a77861",
+  "package": "weeklyvaluelane",
+  "function": "ValidateMarketWeek",
+  "signature": "ValidateMarketWeek(params=2, results=1)",
+  "start": {
+    "line": 21,
+    "column": 1
+  },
+  "end": {
+    "line": 53,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 26,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 29,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 33,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 38,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 42,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 7
+      },
+      "text": "validBoundedIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 85
+      },
+      "text": "week.ObservedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 113
+      },
+      "text": "week.FreshUntil.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 141
+      },
+      "text": "evaluatedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 3
+      },
+      "text": "evaluatedAt.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 42
+      },
+      "text": "evaluatedAt.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 40,
+        "column": 19
+      },
+      "text": "time.LoadLocation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 18
+      },
+      "text": "time.ParseInLocation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 19
+      },
+      "text": "session.Weekday"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 19
+      },
+      "text": "session.ISOWeek"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 28
+      },
+      "text": "stableMarketWeekIdentity"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 27,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

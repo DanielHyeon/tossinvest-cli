@@ -1,0 +1,410 @@
+{
+  "file": "internal/protectionreadiness/dispatch.go",
+  "source_sha256": "246de6db4db431e80be57e878820374db9633e32f6d34d37913f8119183ed999",
+  "package": "protectionreadiness",
+  "function": "Dispatch",
+  "receiver": "ReadinessSnapshot",
+  "signature": "ReadinessSnapshot.Dispatch(params=2, results=1)",
+  "start": {
+    "line": 37,
+    "column": 1
+  },
+  "end": {
+    "line": 90,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 43,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 41,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 45,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 59,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 64,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 81,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 85,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 56
+      },
+      "text": "validMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 85
+      },
+      "text": "now.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 25
+      },
+      "text": "marketVerdictSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 25
+      },
+      "text": "marketVerdictSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 4
+      },
+      "text": "validDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 55
+      },
+      "text": "validDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 4
+      },
+      "text": "validDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 43
+      },
+      "text": "validDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 83
+      },
+      "text": "validDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 126
+      },
+      "text": "validDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 8
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 5
+      },
+      "text": "provenance.IssuedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 37
+      },
+      "text": "provenance.ExpiresAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 70
+      },
+      "text": "now.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 6
+      },
+      "text": "now.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 24
+      },
+      "text": "marketSnapshotID"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 52,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 56,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 58,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 80,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1004,7 +1004,7 @@ var consoleCapabilities = map[string]capability{
 	// Derived lane-performance data only. Dashboard takes a fixed typed query and
 	// returns plain values; no Store, collector, journal, broker, config, or
 	// operating-control handle crosses this seam.
-	"Performance": {Methods: []string{"Dashboard"}},
+	"Performance": {Methods: []string{"AttributionRows", "Dashboard"}},
 	// Dormant strategy runtime display data only. Read accepts no operating
 	// command and cannot mint lane activation or account authority.
 	"StrategyRuntime": {Methods: []string{"Read"}},

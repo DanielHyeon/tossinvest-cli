@@ -67,6 +67,16 @@
 | `a061-show-history-instrument-names` | STORY-TOS-a061 | archived |
 | `a062-reconcile-owned-orders` | STORY-TOS-a062 | archived |
 | `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | in_progress |
+| `a064-add-multi-market-strategy-evidence` | STORY-TOS-a064 | in_progress |
+| `a065-add-position-campaign-leg-core` | STORY-TOS-a065 | in_progress |
+| `a066-add-multi-horizon-risk-buckets` | STORY-TOS-a066 | in_progress |
+| `a067-add-kr-us-continuation-lanes` | STORY-TOS-a067 | in_progress |
+| `a068-add-kr-us-reversal-lanes` | STORY-TOS-a068 | in_progress |
+| `a069-add-kr-us-weekly-value-lanes` | STORY-TOS-a069 | implemented |
+| `a070-add-multi-market-horizon-router` | STORY-TOS-a070 | in_progress |
+| `a071-wire-kr-us-protection-readiness` | STORY-TOS-a071 | in_progress |
+| `a072-wire-multi-market-strategy-runtime` | STORY-TOS-a072 | implemented |
+| `a073-operate-multi-market-strategy-lanes` | STORY-TOS-a073 | implemented |
 | `a074-critical-events-reach-the-operator` | STORY-TOS-a074 | in_progress |
 | `a075-alerts-turn-on-with-one-button` | STORY-TOS-a075 | in_progress |
 | `a076-the-subscribe-address-is-scannable` | STORY-TOS-a076 | in_progress |

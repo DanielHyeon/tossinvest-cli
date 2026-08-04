@@ -1,0 +1,55 @@
+{
+  "file": "internal/reversallane/evaluate.go",
+  "source_sha256": "efba87285b101307111b9792804df64eef71e5361586191e0512627f6453ef46",
+  "package": "reversallane",
+  "function": "EvaluateUS",
+  "signature": "EvaluateUS(params=1, results=1)",
+  "start": {
+    "line": 15,
+    "column": 1
+  },
+  "end": {
+    "line": 18,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 12
+      },
+      "text": "EvaluateUSMetric"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 9
+      },
+      "text": "evaluate"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 16,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

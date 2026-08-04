@@ -1,0 +1,39 @@
+{
+  "file": "internal/candidate/store.go",
+  "source_sha256": "1622bb2352f1359e83b95d94e7ba46cc2746dcee5210fc2e63aa59b0b795a52c",
+  "package": "candidate",
+  "function": "Summaries",
+  "receiver": "Store",
+  "signature": "Store.Summaries(params=2, results=2)",
+  "start": {
+    "line": 1691,
+    "column": 1
+  },
+  "end": {
+    "line": 1693,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1692,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1692,
+        "column": 9
+      },
+      "text": "s.querySummaries"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,39 @@
+{
+  "file": "internal/execgw/gateway.go",
+  "source_sha256": "9601d6562e363a2a5c70f69eccd02e24b5c8d5e216412b8fb9ea6d213ef36832",
+  "package": "execgw",
+  "function": "Place",
+  "receiver": "Gateway",
+  "signature": "Gateway.Place(params=2, results=2)",
+  "start": {
+    "line": 358,
+    "column": 1
+  },
+  "end": {
+    "line": 360,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 359,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 359,
+        "column": 9
+      },
+      "text": "g.place"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

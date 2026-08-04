@@ -10,6 +10,7 @@ package candidate
 import (
 	"fmt"
 	"go/ast"
+	"go/build"
 	"go/parser"
 	"go/token"
 	"os"
@@ -39,14 +40,55 @@ var approvedCandidateAccessors = map[string]bool{
 // a047 must add its pure strategy package and a non-empty reason in the same diff
 // that adds the first reader. Stale permissions fail below.
 var approvedCandidateBoundaries = map[string]string{
-	"internal/strategy": "a047 value-only immutable handoff; no authority, clock, callback, or mutable input",
+	"internal/strategy":          "a047 value-only immutable handoff; no authority, clock, callback, or mutable input",
+	"internal/strategycandidate": "a072 exact read-only measured-verdict sanitizer; output is only strategy.ApprovedSnapshot",
 }
 
-// strategyengine is the audited sanitizing boundary: it accepts the sealed
-// ApprovedSnapshot and emits an opaque Decision whose fields cannot be minted
-// by downstream packages. The engine itself remains tainted and is audited;
-// imports of its opaque result do not inherit candidate authority.
-var approvedCandidateSanitizers = map[string]bool{"internal/strategyengine": true}
+// strategyengine and strategyflow are the audited sanitizing boundaries. They
+// accept the sealed ApprovedSnapshot and emit opaque decisions/results whose
+// execution terms cannot be minted by downstream packages. The sanitizers
+// remain pure and are separately guarded from journal, Gateway, trading,
+// configuration and operating-writer dependencies; importing their opaque
+// output does not inherit candidate authority.
+var approvedCandidateSanitizers = map[string]bool{
+	"internal/strategyengine":    true,
+	"internal/strategyflow":      true,
+	"internal/strategycandidate": true,
+}
+
+func opaqueApprovedSnapshotBoundary(packageRel string, files []*ast.File) bool {
+	if packageRel != "internal/strategy" {
+		return false
+	}
+	foundOpaqueType, foundSeal := false, false
+	for _, file := range files {
+		ast.Inspect(file, func(node ast.Node) bool {
+			switch value := node.(type) {
+			case *ast.TypeSpec:
+				structure, ok := value.Type.(*ast.StructType)
+				if !ok || value.Name.Name != "ApprovedSnapshot" {
+					return true
+				}
+				opaque := true
+				for _, field := range structure.Fields.List {
+					for _, name := range field.Names {
+						if name.IsExported() {
+							opaque = false
+						}
+					}
+				}
+				foundOpaqueType = opaque
+			case *ast.FuncDecl:
+				if value.Recv == nil && value.Name.Name == "SealApproved" && value.Type.Params != nil && len(value.Type.Params.List) == 1 &&
+					value.Type.Results != nil && len(value.Type.Results.List) == 1 {
+					foundSeal = true
+				}
+			}
+			return true
+		})
+	}
+	return foundOpaqueType && foundSeal
+}
 
 // a046 intentionally defines no authority-bridge exemption. If a047 introduces
 // a typed Guardian/decision bridge, it must replace the unconditional rejection
@@ -126,7 +168,91 @@ func transitiveAuthorityDependency(graph map[string][]string, start string) ([]s
 }
 
 func pureApprovedCandidateBoundaryViolations(packageRel, module string, fset *token.FileSet, files []*ast.File) []string {
+	if packageRel == "internal/strategycandidate" {
+		return productionCandidateSanitizerViolations(packageRel, module, files)
+	}
 	return typeCheckPureApprovedCandidateBoundary(packageRel, module, fset, files)
+}
+
+func productionCandidateSanitizerViolations(packageRel, module string, files []*ast.File) []string {
+	allowedImports := map[string]bool{
+		"time":                         true,
+		module + "/internal/candidate": true,
+		module + "/internal/strategy":  true,
+	}
+	allowedCalls := map[string]bool{
+		"candidate.AssessApprovedCandidate": true,
+		"strategy.SealApproved":             true,
+		"ThresholdSet":                      true,
+		"VetoThresholds":                    true,
+		"Seal":                              true,
+		"append":                            true,
+		"len":                               true,
+	}
+	var findings []string
+	for _, file := range files {
+		aliases := make(map[string]string)
+		for _, spec := range file.Imports {
+			path := strings.Trim(spec.Path.Value, `"`)
+			if !allowedImports[path] {
+				findings = append(findings, packageRel+" production sanitizer imports forbidden package "+path)
+			}
+			name := filepath.Base(path)
+			if spec.Name != nil {
+				name = spec.Name.Name
+			}
+			aliases[name] = path
+		}
+		parents := boundaryParents(file)
+		ast.Inspect(file, func(node ast.Node) bool {
+			switch value := node.(type) {
+			case *ast.GenDecl:
+				if value.Tok == token.VAR && parents[value] != nil {
+					if _, topLevel := parents[value].(*ast.File); topLevel {
+						findings = append(findings, packageRel+" production sanitizer forbids package variables")
+					}
+				}
+			case *ast.TypeSpec:
+				if value.Name.Name != "ApprovedBatch" {
+					findings = append(findings, packageRel+" production sanitizer forbids local type declaration "+value.Name.Name)
+				}
+			case *ast.FuncDecl:
+				allowedFunctions := map[string]bool{"Seal": true, "Append": true, "Len": true, "At": true}
+				if !allowedFunctions[value.Name.Name] || (value.Recv != nil && value.Name.Name != "Len" && value.Name.Name != "At") {
+					findings = append(findings, packageRel+" production sanitizer forbids function "+value.Name.Name)
+				}
+			case *ast.CallExpr:
+				selector, ok := value.Fun.(*ast.SelectorExpr)
+				if !ok {
+					if id, ok := value.Fun.(*ast.Ident); !ok || !allowedCalls[id.Name] {
+						findings = append(findings, packageRel+" production sanitizer forbids free or injected calls")
+					}
+					break
+				}
+				callName := selector.Sel.Name
+				if id, ok := selector.X.(*ast.Ident); ok {
+					if _, imported := aliases[id.Name]; imported {
+						callName = id.Name + "." + selector.Sel.Name
+					}
+				}
+				if !allowedCalls[callName] {
+					findings = append(findings, packageRel+" production sanitizer forbids call "+callName)
+				}
+			case *ast.GoStmt, *ast.DeferStmt, *ast.SendStmt, *ast.FuncLit:
+				findings = append(findings, packageRel+" production sanitizer forbids executable callback or concurrency capability")
+			case *ast.AssignStmt:
+				for _, left := range value.Lhs {
+					if kind := forbiddenAssignmentKind(left); kind != "" {
+						findings = append(findings, packageRel+" production sanitizer forbids "+kind)
+					}
+				}
+			case *ast.IncDecStmt:
+				findings = append(findings, packageRel+" production sanitizer forbids increment/decrement mutation")
+			}
+			return true
+		})
+	}
+	return findings
 }
 
 var authorityMethodNames = map[string]bool{
@@ -173,6 +299,51 @@ type Reader interface { ReadSymbolState() error }`, parser.SkipObjectResolution)
 	}
 }
 
+func TestProductionCandidateSanitizerGuardRejectsAuthorityAndMutation(t *testing.T) {
+	module := "example.test/repo"
+	parse := func(source string) []*ast.File {
+		t.Helper()
+		parsed, err := parser.ParseFile(token.NewFileSet(), "fixture.go", source, parser.SkipObjectResolution)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return []*ast.File{parsed}
+	}
+	valid := `package strategycandidate
+import (
+  "time"
+  "example.test/repo/internal/candidate"
+  "example.test/repo/internal/strategy"
+)
+func Seal(v candidate.Verdict, a candidate.ProductionThresholdAuthority, at time.Time) (strategy.ApprovedSnapshot, error) {
+  approved, err := candidate.AssessApprovedCandidate(candidate.VetoInputs{}, a.ThresholdSet())
+  if err != nil { return strategy.ApprovedSnapshot{}, err }
+  return strategy.SealApproved(approved), nil
+}`
+	if findings := productionCandidateSanitizerViolations("internal/strategycandidate", module, parse(valid)); len(findings) != 0 {
+		t.Fatalf("valid sanitizer findings = %v", findings)
+	}
+	for _, tc := range []struct {
+		name, source, want string
+	}{
+		{"execution import", `package strategycandidate
+import "example.test/repo/internal/execgw"
+func Seal(){ execgw.Dispatch() }`, "forbidden package"},
+		{"store mutation", `package strategycandidate
+import "example.test/repo/internal/candidate"
+func Seal(s *candidate.Store){ s.Promote() }`, "forbids call Promote"},
+		{"callback", `package strategycandidate
+func Seal(){ go func(){}() }`, "callback or concurrency"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			findings := productionCandidateSanitizerViolations("internal/strategycandidate", module, parse(tc.source))
+			if !findingContains(findings, tc.want) {
+				t.Fatalf("findings = %v, want containing %q", findings, tc.want)
+			}
+		})
+	}
+}
+
 func auditApprovedCandidateBoundaries(root, module string, files []string) ([]string, error) {
 	type productionFile struct {
 		rel, packageRel string
@@ -187,6 +358,13 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 	fset := token.NewFileSet()
 	for _, rel := range files {
 		if strings.HasSuffix(rel, "_test.go") {
+			continue
+		}
+		matched, err := build.Default.MatchFile(filepath.Dir(filepath.Join(root, rel)), filepath.Base(rel))
+		if err != nil {
+			return nil, fmt.Errorf("matching production build constraints for %s: %w", rel, err)
+		}
+		if !matched {
 			continue
 		}
 		parsed, err := parser.ParseFile(fset, filepath.Join(root, rel), nil,
@@ -230,7 +408,8 @@ func auditApprovedCandidateBoundaries(root, module string, files []string) ([]st
 		path, reachesReader := transitiveDependencyWithStop(imports, packageRel, func(dependency string) bool {
 			return directReaders[dependency]
 		}, func(dependency string) bool {
-			return dependency != packageRel && approvedCandidateSanitizers[dependency]
+			return dependency != packageRel && (approvedCandidateSanitizers[dependency] ||
+				opaqueApprovedSnapshotBoundary(dependency, filesByPackage[dependency]))
 		})
 		if reachesReader {
 			tainted[packageRel] = true
@@ -289,11 +468,11 @@ func transitiveDependencyWithStop(graph map[string][]string, start string, match
 			continue
 		}
 		seen[current.name] = true
+		if current.name != start && stop(current.name) {
+			continue
+		}
 		if matches(current.name) {
 			return current.path, true
-		}
-		if stop(current.name) {
-			continue
 		}
 		for _, dependency := range graph[current.name] {
 			path := append(append([]string(nil), current.path...), dependency)
@@ -301,6 +480,22 @@ func transitiveDependencyWithStop(graph map[string][]string, start string, match
 		}
 	}
 	return nil, false
+}
+
+func TestApprovedCandidateDirectSanitizerStopsOnlyForItsCallers(t *testing.T) {
+	graph := map[string][]string{
+		"internal/engine":            {"internal/strategycandidate"},
+		"internal/strategycandidate": {"internal/strategy"},
+	}
+	matches := func(name string) bool { return name == "internal/strategycandidate" || name == "internal/strategy" }
+	stop := func(name string) bool { return name == "internal/strategycandidate" }
+	if path, found := transitiveDependencyWithStop(graph, "internal/engine", matches, stop); found {
+		t.Fatalf("sanitized caller remained reverse-tainted through %v", path)
+	}
+	path, found := transitiveDependencyWithStop(graph, "internal/strategycandidate", matches, stop)
+	if !found || strings.Join(path, " -> ") != "internal/strategycandidate" {
+		t.Fatalf("sanitizer escaped its own direct-reader audit: path=%v found=%t", path, found)
+	}
 }
 
 func TestApprovedCandidateGuardRejectsAliasedErrNilOrderConsumer(t *testing.T) {

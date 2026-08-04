@@ -1,0 +1,21 @@
+{
+  "schema_version": "kr-absorption-v1",
+  "market": "KR",
+  "account_ref": "acct",
+  "symbol": "005930",
+  "position_generation": 1,
+  "source_record_id": "kr-record-1",
+  "source_digest": "kr-source-digest",
+  "units": {"notional": "KRW_MINOR", "price": "", "volume": ""},
+  "effective_at": "2026-08-04T00:00:00Z",
+  "observed_at": "2026-08-04T00:00:01Z",
+  "ingested_at": "2026-08-04T00:00:02Z",
+  "evaluated_at": "2026-08-04T00:00:03Z",
+  "fresh_until": "2026-08-04T00:00:03Z",
+  "threshold_set": "kr-reversal-thresholds-v1",
+  "structural_window_ns": 60000000000,
+  "config_digest": "kr-config-digest",
+  "absorbed_notional_minor": 1,
+  "aggressive_sell_notional_minor": 4,
+  "absorption_ppm": 250000
+}

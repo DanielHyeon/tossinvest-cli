@@ -1,0 +1,95 @@
+{
+  "file": "internal/official/client.go",
+  "source_sha256": "648f8eecab8415aa99d47f6607e78b30d17dad60ed978ba4330ad5358d74b117",
+  "package": "official",
+  "function": "AuthorityOrigin",
+  "receiver": "Client",
+  "signature": "Client.AuthorityOrigin(params=0, results=2)",
+  "start": {
+    "line": 145,
+    "column": 1
+  },
+  "end": {
+    "line": 155,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 147,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 152,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 2
+      },
+      "text": "c.configMu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 8
+      },
+      "text": "c.configMu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 6
+      },
+      "text": "c.authorityOriginLocked"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 150,
+        "column": 2
+      },
+      "text": "c.configMu.RUnlock"
+    }
+  ]
+}

@@ -505,9 +505,6 @@ func TestGatewayKeepsExitsOpenUnderAMismatch(t *testing.T) {
 			Place: true, Sell: true, Cancel: true, Amend: true, AllowLiveOrderActions: true,
 		}, broker),
 		Clock: clk, AccountRef: "acct-7", Source: "test", Entry: gate,
-		// These suites drive buys to exercise the entry gate; interlock clause 6 is
-		// not what they are about (change interlock-gates-entry-not-exit).
-		ProtectionOverrideForTest: execgw.WiredProtectionForTest,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -515,40 +512,9 @@ func TestGatewayKeepsExitsOpenUnderAMismatch(t *testing.T) {
 
 	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
 
-	buy := orderintent.PlaceIntent{
-		Symbol: "AAPL", Market: "us", Side: "buy", OrderType: "limit",
-		Quantity: 1, Price: 200, CurrencyMode: "USD",
-	}
-	// The issuer records each decision before the gateway is called; the gateway
-	// verifies against the row, never against these values.
 	issuer := &execgw.Issuer{Journal: j, Clock: clk, AccountRef: "acct-7", TTL: time.Minute}
-	buyDecision, err := issuer.IssueEntry(context.Background(), execgw.EntryRequest{
-		Market: "us", Symbol: "AAPL", Side: "buy", Quantity: 1, EntryPrice: 200,
-		StopPrice: 180, PolicyVersion: "test/v1",
-		Limits: execgw.Limits{
-			MaxQuantity:        execgw.Bound(10),
-			MaxNotional:        execgw.Bound(100000),
-			MaxTotalExposure:   execgw.Bound(500000),
-			MaxDailyLossAmount: execgw.Bound(20000),
-			MaxDailyLossRatio:  execgw.Bound(0.02),
-			Currency:           "USD",
-		},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	out, err := gw.Place(context.Background(), execgw.PlaceRequest{
-		Intent:   buy,
-		Decision: buyDecision,
-	})
-	if err == nil {
-		t.Fatal("a buy under a mismatch must be refused")
-	}
-	if out.Reason != execgw.ReasonReconcileMismatch {
-		t.Fatalf("reason = %q, want reconciliation_mismatch", out.Reason)
-	}
-	if broker.places != 0 {
-		t.Fatalf("broker places = %d, want 0", broker.places)
+	if rejected := gate.CheckEntryFor("us", "AAPL"); rejected == nil || rejected.Reason != execgw.ReasonReconcileMismatch {
+		t.Fatalf("entry gate under mismatch = %v, want %q", rejected, execgw.ReasonReconcileMismatch)
 	}
 
 	// The exit is not gated: liquidation is how the disagreement gets smaller.

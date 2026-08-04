@@ -1,0 +1,102 @@
+{
+  "file": "internal/protectionreadiness/dispatch.go",
+  "source_sha256": "246de6db4db431e80be57e878820374db9633e32f6d34d37913f8119183ed999",
+  "package": "protectionreadiness",
+  "function": "marketVerdictSeal",
+  "signature": "marketVerdictSeal(params=2, results=1)",
+  "start": {
+    "line": 97,
+    "column": 1
+  },
+  "end": {
+    "line": 108,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 9
+      },
+      "text": "hashStrings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 30
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 54
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 77
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 3
+      },
+      "text": "stringUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 47
+      },
+      "text": "stringUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 3
+      },
+      "text": "stringUint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 3
+      },
+      "text": "formatTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 44
+      },
+      "text": "formatTime"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

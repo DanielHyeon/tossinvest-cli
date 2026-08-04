@@ -1,0 +1,78 @@
+{
+  "file": "internal/strategyflow/adapters.go",
+  "source_sha256": "5fa16d5a0d6e2286f965c396e726fb3bf8cba48b32e4ec110359ff533def69d1",
+  "package": "strategyflow",
+  "function": "fromReversal",
+  "signature": "fromReversal(params=2, results=1)",
+  "start": {
+    "line": 84,
+    "column": 1
+  },
+  "end": {
+    "line": 95,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 15
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 72
+      },
+      "text": "reversalPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 118
+      },
+      "text": "reversalPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 11
+      },
+      "text": "reversalPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 45
+      },
+      "text": "strategyrouter.Market"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,5 +1,13 @@
 package execgw
 
+import (
+	"context"
+	"strconv"
+	"strings"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/protection"
+)
+
 // protection.go is interlock clause 6, at the place that can enforce it
 // (engine-safety "자동화 게이트 기동 인터록"; change interlock-gates-entry-not-exit,
 // design D2 and D3).
@@ -34,21 +42,13 @@ package execgw
 //
 // # Why the marker is a constant
 //
-// Unchanged from 5.2, and load-bearing. A config key, an exported Options field
-// or a setter would each be a way for a build to claim protective execution it
-// does not have, and this clause exists to refuse that claim. The change that
-// wires broker-resident protective orders flips the identifier below as the last
-// step of its own work — that is the whole interface.
-//
-// The unexported override beneath it is the same seam the engine's interlock has
-// carried since 5.2 (`Options.protectionOverride`, reachable only from
-// export_test.go). Without it the tests about *accepted* raising mutations —
-// idempotency, IN_DOUBT resolution, reservations, round trips — would all become
-// tests about this refusal, and the paths they cover would go untested until the
-// protective-order change lands.
+// ProfileProtection remains a compatibility/reporting marker and stays
+// UNWIRED. It is never execution authority. A mutation is admitted only by an
+// immutable, market-scoped snapshot obtained through the sealed adapter below;
+// no config key, exported scalar Options field, or setter can claim WIRED.
 
-// ProtectionReadiness is whether broker-resident protective execution is wired
-// into this build.
+// ProtectionReadiness is the compatibility status reported for this build. The
+// gateway never consumes this scalar as authorization.
 type ProtectionReadiness string
 
 const (
@@ -67,47 +67,11 @@ const (
 // and constant so that reporting it is the only thing anybody can do with it.
 const ProfileProtection = ProtectionUnwired
 
-// WiredProtectionForTest is the value a test assigns to
-// Options.ProtectionOverrideForTest.
-//
-// It exists so that a cross-package test does not have to take the address of a
-// local: `opts.ProtectionOverrideForTest = execgw.WiredProtectionForTest` reads
-// as what it is, and greps as one string. Non-test code has no reason to name it,
-// and protection_test.go proves none does.
-var WiredProtectionForTest = &wiredForTest
-
-var wiredForTest = ProtectionWired
-
-// defaultProtection is what a gateway judges by when its Options carry no
-// override. It is the build's constant, and no shipped file assigns it —
-// protection_test.go proves that over the AST.
-//
-// A variable rather than a direct read of the constant for one reason: this
-// package's own suites drive buys in almost every file, because a buy is the
-// mutation with the most machinery behind it (idempotency, reservations,
-// IN_DOUBT resolution, the round trip). Making each of them say so at its
-// construction site would be nineteen edits that mean nothing, so export_test.go
-// flips this default once for the test binary and the two tests that are about
-// clause 6 opt back out per gateway. The same trick as evaluateChain next door.
-var defaultProtection = ProfileProtection
-
-// protection reports the readiness this gateway judges against.
-func (g *Gateway) protection() ProtectionReadiness {
-	if g.protectionOverride != nil {
-		return *g.protectionOverride
-	}
-	return defaultProtection
-}
-
-// UnwiredProtectionForTest is the value a test assigns to
-// Options.ProtectionOverrideForTest to get the shipped behaviour back.
-//
-// It exists because this package's test binary defaults to WIRED (see
-// defaultProtection): a test that wants to observe the refusal has to ask for
-// the build's own answer explicitly.
-var UnwiredProtectionForTest = &unwiredForTest
-
-var unwiredForTest = ProtectionUnwired
+// defaultProtectionCheckForTest has no production setter and is nil in every
+// shipped binary. export_test.go assigns it while building this package's test
+// binary so legacy gateway tests can reach behavior unrelated to readiness.
+// Production authorization always comes from the sealed market adapter.
+var defaultProtectionCheckForTest func(context.Context, string, protectionCheckpoint) (protectionCheckpoint, *RejectedError)
 
 // checkProtection refuses a mutation that raises exposure while no protective
 // order can be left at the broker.
@@ -117,13 +81,43 @@ var unwiredForTest = ProtectionUnwired
 // does not happen leaves the position that was already there. Refusing the second
 // to prevent the first is how the clause used to be read, and it kept the account
 // in the state the clause is about.
-func (g *Gateway) checkProtection(plan mutationPlan) *RejectedError {
-	if !plan.raisesExposure || g.protection() == ProtectionWired {
-		return nil
+type protectionCheckpoint struct {
+	adapter      protection.Checkpoint
+	testIdentity string
+}
+
+func (g *Gateway) checkProtection(ctx context.Context, plan mutationPlan, previous protectionCheckpoint) (protectionCheckpoint, *RejectedError) {
+	if !plan.raisesExposure {
+		return protectionCheckpoint{}, nil
 	}
-	return reject(ReasonProtectionNotWired,
-		"this build has no broker-resident protective order execution, so a stop is a local "+
-			"judgement that does not survive the process — %s of %s raises exposure and is refused "+
-			"until the protective-order change wires it. Reductions are unaffected",
-		plan.kind, plan.symbol)
+	if g.protectionCheckForTest != nil {
+		return g.protectionCheckForTest(ctx, plan.market, previous)
+	}
+	if g.protectionReadiness == nil {
+		return protectionCheckpoint{}, protectionNotWired(plan, "market readiness provider is missing")
+	}
+	quantity, ok := canonicalProtectionQuantity(plan.quantity)
+	if !ok {
+		return protectionCheckpoint{}, protectionNotWired(plan, "protection readiness requires a canonical positive integral quantity")
+	}
+	checkpoint, refusal := g.protectionReadiness.Check(ctx, protection.ReadinessRequest{
+		Market: plan.market, OrderType: plan.orderType, Quantity: quantity,
+	}, g.clk.Now(), previous.adapter)
+	if refusal != nil {
+		return protectionCheckpoint{}, protectionNotWired(plan, refusal.Error())
+	}
+	return protectionCheckpoint{adapter: checkpoint}, nil
+}
+
+func canonicalProtectionQuantity(value float64) (uint64, bool) {
+	const maximumExactlyRepresentableInteger = uint64(1<<53 - 1)
+	canonical := decimalString(value)
+	if canonical == "" || strings.ContainsAny(canonical, ".eE-+") {
+		return 0, false
+	}
+	quantity, err := strconv.ParseUint(canonical, 10, 64)
+	if err != nil || quantity == 0 || quantity > maximumExactlyRepresentableInteger || float64(quantity) != value {
+		return 0, false
+	}
+	return quantity, true
 }

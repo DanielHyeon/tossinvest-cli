@@ -31,6 +31,9 @@ func TestBindingWiresBothApplyHooks(t *testing.T) {
 	if !j.ExitApplierBound() {
 		t.Error("the exit applier is not bound; nothing would resolve a pending proposal")
 	}
+	if !j.CampaignApplierBound() {
+		t.Error("the campaign applier is not bound; strategy fills would not advance campaign lineage")
+	}
 	if err := checkProjectionWired(j); err != nil {
 		t.Errorf("a fully bound journal must pass the guard: %v", err)
 	}

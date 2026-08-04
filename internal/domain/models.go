@@ -136,10 +136,16 @@ type StockWarnings struct {
 
 // ExchangeRate is one FX/index quote (e.g. USD/KRW, DXY).
 type ExchangeRate struct {
-	Code  string  `json:"code"`
-	Name  string  `json:"name"`
-	Base  float64 `json:"base,omitempty"`
-	Close float64 `json:"close"`
+	Code          string  `json:"code"`
+	Name          string  `json:"name"`
+	Base          float64 `json:"base,omitempty"`
+	Close         float64 `json:"close"`
+	BaseCurrency  string  `json:"base_currency,omitempty"`
+	QuoteCurrency string  `json:"quote_currency,omitempty"`
+	RateRaw       string  `json:"rate_raw,omitempty"`
+	MidRateRaw    string  `json:"mid_rate_raw,omitempty"`
+	ValidFromRaw  string  `json:"valid_from_raw,omitempty"`
+	ValidUntilRaw string  `json:"valid_until_raw,omitempty"`
 }
 
 type ExchangeRates struct {

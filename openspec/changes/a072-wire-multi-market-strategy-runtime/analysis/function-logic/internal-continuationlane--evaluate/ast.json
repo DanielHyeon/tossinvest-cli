@@ -1,0 +1,38 @@
+{
+  "file": "internal/continuationlane/evaluator.go",
+  "source_sha256": "7f309e45426d1cb740f2a76925d210ae74c88e2df4e05ce99fe9de5ad52d8b9b",
+  "package": "continuationlane",
+  "function": "evaluate",
+  "signature": "evaluate(params=3, results=1)",
+  "start": {
+    "line": 215,
+    "column": 1
+  },
+  "end": {
+    "line": 217,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 9
+      },
+      "text": "evaluateStage"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

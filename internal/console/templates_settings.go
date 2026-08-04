@@ -247,7 +247,7 @@ const settingsTemplates = `
     <tr><th>한도</th><th>설정값</th></tr>
     {{range .LimitRows}}<tr><td>{{.Label}}</td><td>{{.Value}}{{if .Unit}} {{.Unit}}{{end}}</td></tr>
     {{end}}
-    <tr><td>한도 통화</td><td>{{.LimitCurrencyText}}</td></tr>
+    <tr><td>계좌 기준 통화</td><td>{{.LimitCurrencyText}}</td></tr>
   </table></div>
 
   {{if not .LimitsUnset}}{{if not .LimitsPartlyConfigured}}
@@ -322,7 +322,7 @@ const settingsTemplates = `
       <input type="text" name="max_daily_loss_amount" value="{{.FieldDailyLoss}}"></label></p>
       <p><label>일일 손실 한도(비율 — 0.01 = 1%)<br>
       <input type="text" name="max_daily_loss_ratio" value="{{.FieldRatio}}"></label></p>
-      <p><label>한도 통화 (KRW 또는 USD)<br>
+      <p><label>계좌 기준 통화 (KRW 또는 USD)<br>
       <input type="text" name="limit_currency" value="{{.FieldCurrency}}"></label></p>
       <p><button type="submit">한도 저장</button></p>
     </form>

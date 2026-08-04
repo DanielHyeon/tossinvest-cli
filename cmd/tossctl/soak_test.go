@@ -434,8 +434,9 @@ func TestSoakAttestWritesAVerifiableAttestation(t *testing.T) {
 }
 
 // TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn. This is the property
-// the change depends on: a read-only soak cannot open the automation gate. The
-// mutation endpoints have to come from the supervised live check (task 2.2).
+// the change depends on: a read-only WTS soak cannot open the automation gate.
+// Mutations have to come from the supervised live check (task 2.2). The a072
+// official exchange read is strategy-local and must not widen this startup set.
 func TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn(t *testing.T) {
 	configDir := testenv.Isolate(t)
 	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
@@ -461,8 +462,9 @@ func TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn(t *testing.T) {
 }
 
 // TestSoakAndLiveEndpointsCoverTheEngineInterlock keeps the two lists from
-// drifting apart: everything the engine requires is either something the soak
-// proves or something it explicitly hands to the live check.
+// drifting apart: every WTS read/mutation the engine requires is accounted for.
+// The strategy-only official OAuth exchange-rate read is deliberately outside
+// this global startup catalog so its absence cannot stop safety-class loops.
 func TestSoakAndLiveEndpointsCoverTheEngineInterlock(t *testing.T) {
 	covered := map[string]bool{}
 	for _, e := range append(soak.RequiredEndpoints(), soak.LiveOnlyEndpoints()...) {
@@ -473,6 +475,14 @@ func TestSoakAndLiveEndpointsCoverTheEngineInterlock(t *testing.T) {
 			t.Errorf("the engine requires %q and neither soak.RequiredEndpoints nor "+
 				"soak.LiveOnlyEndpoints accounts for it", want)
 		}
+	}
+	for _, endpoint := range engine.RequiredEndpoints() {
+		if endpoint == "GET /api/v1/exchange-rate" {
+			t.Fatal("strategy-only official FX read entered the global startup catalog")
+		}
+	}
+	if covered["GET /api/v1/exchange-rate"] {
+		t.Fatal("WTS soak/live catalogs claim the official OAuth exchange read without its runner")
 	}
 }
 
@@ -618,10 +628,8 @@ func seedSupervisedRecord(t *testing.T, path, accountRef string, at time.Time) {
 
 // TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun.
 //
-// With both evidence sources present the attestation satisfies every endpoint the
-// interlock names. The gate still does not come up — clause 9 is a compile-time
-// constant and TestTheGateRefusesWithoutBrokerSideProtection pins that — but the
-// endpoint clause is now satisfiable, which it was not.
+// With WTS soak and supervised mutation evidence present, the legacy engine
+// startup catalog is complete. Strategy-only FX remains independently fail-closed.
 func TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun(t *testing.T) {
 	configDir := testenv.Isolate(t)
 	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
@@ -637,7 +645,7 @@ func TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun(t *testing.T) 
 	}
 
 	if missing := a.MissingEndpoints(engine.RequiredEndpoints()); len(missing) != 0 {
-		t.Fatalf("the engine still lacks %v after a supervised check proved the mutations", missing)
+		t.Fatalf("combined WTS evidence lacks global startup endpoints: %v", missing)
 	}
 	if len(a.SupervisedBy) != len(soak.LiveOnlyEndpoints()) {
 		t.Fatalf("SupervisedBy = %+v, want one entry per mutation so an auditor can see what proved it",
@@ -646,6 +654,11 @@ func TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun(t *testing.T) 
 	for _, p := range a.SupervisedBy {
 		if p.Source == "" {
 			t.Errorf("%s carries no source; the evidence cannot be gone and looked at", p.Endpoint)
+		}
+	}
+	for _, endpoint := range a.Endpoints {
+		if endpoint == "GET /api/v1/exchange-rate" {
+			t.Fatal("fake WTS attestation claimed official OAuth FX evidence")
 		}
 	}
 }

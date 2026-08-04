@@ -213,8 +213,10 @@ type AutomationGate struct {
 	// (0, 1]. 0.02 is two percent.
 	MaxDailyLossRatio float64 `json:"max_daily_loss_ratio,omitempty"`
 
-	// LimitCurrency is the currency the money ceilings are expressed in
-	// ("KRW"/"USD").
+	// LimitCurrency is the account base currency in which all account-wide money
+	// ceilings are expressed ("KRW"/"USD"). Market quote cash remains in its
+	// quote currency and exposure-raising KR/US paths require frozen official
+	// quote-to-base authority.
 	LimitCurrency string `json:"limit_currency,omitempty"`
 }
 

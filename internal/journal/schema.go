@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 19
+const SchemaVersion = 29
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -109,6 +109,44 @@ var migrations = []migration{
 	// before the observation; append-only fill rows remain unchanged. Runtime
 	// readers no longer guess that blank evidence belongs to a later reused id.
 	{Version: 19, SQL: schemaV19},
+	// schemaV20 lives in position_campaign.go. It adds strategy-neutral campaign,
+	// ordered leg, per-order watermark and prospective-generation CAS records.
+	// Existing Position rows remain campaign-unknown and are never backfilled.
+	{Version: 20, SQL: schemaV20},
+	// schemaV21 lives in strategy_evidence.go. It adds only the nullable ID and
+	// digest of an immutable evidence.db snapshot consumed by a strategy decision.
+	// Historical decisions remain evidence-snapshot-unknown and are never backfilled.
+	{Version: 21, SQL: schemaV21},
+	// schemaV22 lives in risk_bucket.go. It is an additive, authoritative
+	// journal for multi-horizon bucket admission and fill reconciliation. Legacy
+	// reservations deliberately remain bucket-state-unknown; this migration does
+	// not invent policy, snapshot, ownership, or valuation provenance.
+	{Version: 22, SQL: schemaV22},
+	// schemaV23 preserves the released v22 order/fill tables under explicit
+	// legacy names and creates the scoped authoritative Wave 1C companions.
+	// This is the explicit compatibility-rebuild exception to rule 3: no legacy
+	// table or row is dropped, and the old shape remains queryable and immutable.
+	// Older binaries refuse user_version 23 instead of reading the new shapes.
+	{Version: 23, SQL: schemaV23},
+	// schemaV24 lives in risk_bucket_owner.go. Released v23 remains unchanged;
+	// this additive step records structured official broker-zero observations,
+	// binds reconcile releases to them and seals owner-release replay receipts.
+	{Version: 24, SQL: schemaV24},
+	// schemaV25 lives in strategy_dispatch_runtime_v25.sql. It adds the dormant
+	// central-owner fence, independent KR/US authority snapshots and irreversible
+	// lease/outcome CAS journal. Released v24 rows are not rewritten.
+	{Version: 25, SQL: schemaV25},
+	// schemaV26 lives in strategy_first_leg_v26.sql. It adds one immutable
+	// cross-family first-leg authority companion and an additional lease guard.
+	// Released v20-v25 schema and historical rows remain untouched.
+	{Version: 26, SQL: schemaV26},
+	// schemaV27 lives in strategy_weekly_reservation_v27.sql. It adds paired
+	// KR/US durable market-week uniqueness without changing v26 authority rows.
+	{Version: 27, SQL: schemaV27},
+	// schemaV28 closes the v25 UPDATE rebind gap without rewriting any lease.
+	{Version: 28, SQL: schemaV28},
+	// schemaV29 adds immutable receipts for ACTIVE→CONSUMED/RELEASED weekly lifecycle transitions.
+	{Version: 29, SQL: schemaV29},
 }
 
 // schemaV1 is the initial schema.

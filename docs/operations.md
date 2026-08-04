@@ -117,17 +117,155 @@ Compose의 host publish는
 배포·업데이트 절차는 `engine.autostart`를 임의로 켜지 않는다. ON은 trusted-network
 브라우저의 CSRF 설정 폼에서 운영자가 직접 저장하고 audit에 남긴다.
 
+### KR/US 전략 후보 권한 파일 — 읽기 전용 계약
+
+전략 런타임은 KR과 US를 같은 시작 웨이브에서 읽지만, 시장별 권한은 합치지 않는다. 각 시장은
+config 디렉터리의 정확한 파일 세 개를 소비한다.
+
+- `candidate-thresholds-KR.json`, `candidate-threshold-evidence-KR.bin`,
+  `candidate-threshold-activation-KR.json`
+- `candidate-thresholds-US.json`, `candidate-threshold-evidence-US.bin`,
+  `candidate-threshold-activation-US.json`
+
+모든 파일은 현재 service UID 소유의 regular file, exact mode `0400`이어야 하며 symlink는
+거부된다. 사람 승인 파일의 exact SHA-256은 각각
+`TOSSOS_CANDIDATE_THRESHOLD_KR_ACTIVATION_SHA256`과
+`TOSSOS_CANDIDATE_THRESHOLD_US_ACTIVATION_SHA256`에 canonical
+`sha256:<64 lowercase hex>`로 외부에서 pin한다. 승인 레코드는 set/evidence digest,
+market/session, version, actor와 승인 시각을 묶는다. 런타임에는 승인 생성·수정·서명·토글 API가
+없다.
+
+스케줄 또는 activation이 OFF/미승인이면 해당 시장은 이 파일과 discovery DB를 읽지 않는다.
+파일이 존재하고 검증돼도 이는 후보 평가를 허용하는 읽기 권한일 뿐 LIVE 주문 승인이나 worker
+activation이 아니다. Risk snapshot, lane input, first-leg admission과 official Gateway cycle이
+전부 결합되기 전에는 KR/US worker 모두 OFF다.
+
+### KR/US account-base FX 권한 — 같은 웨이브, 독립 결과
+
+후보 권한까지 준비된 시장만 account-base FX를 읽는다. KR은 official account identity를 다시
+확인한 뒤 same-currency identity evidence를 만들고, US는 official 환율과 별도의 사람 승인 haircut
+policy를 결합한다. 두 read는 동시에 시작하지만 한쪽 실패가 peer를 취소하지 않는다.
+
+US policy는 config 디렉터리의 owner-only `fx-risk-policy-manifest.json`과 다음 trust pin을 쓴다.
+
+- `TOSSOS_FX_RISK_POLICY_MANIFEST_SHA256`
+- `TOSSOS_FX_RISK_POLICY_KEY_ID`
+- `TOSSOS_FX_RISK_POLICY_PUBLIC_KEY_BASE64`
+
+런타임은 rate, haircut, freshness나 evidence digest를 환경변수에서 받지 않는다. Manifest의 signed
+값과 official Open API 응답에서만 opaque evidence를 만들며, monotonic generation/time anchor는
+rollback을 거부하기 위한 내부 상태일 뿐 시장 activation이나 주문 승인이 아니다. 공개 상태에는
+통화 pair와 evidence digest만 보이고 실제 FX evidence는 engine package 밖으로 나오지 않는다.
+
+### KR/US 5차원 위험 정책·현재 사용량 — 읽기 전용 계약
+
+전략 lane이 봉인된 첫 leg 결과를 만든 시장만 5차원 위험 권한을 읽는다. KR/US는 같은 웨이브에서
+각각 `risk-bucket-policy-KR.json`, `risk-bucket-policy-US.json`을 소비하며 한쪽 실패가 peer read를
+취소하지 않는다. 두 파일은 service UID 소유 regular file, exact mode `0400`, non-symlink여야 한다.
+
+신뢰 핀은 다음 네 값이다.
+
+- `TOSSOS_RISK_BUCKET_KR_MANIFEST_SHA256`
+- `TOSSOS_RISK_BUCKET_US_MANIFEST_SHA256`
+- `TOSSOS_RISK_BUCKET_POLICY_KEY_ID`
+- `TOSSOS_RISK_BUCKET_POLICY_PUBLIC_KEY_BASE64`
+
+서명 본문은 exact account/market/base·quote currency, 유효기간, 사람 approver, 수수료 정책,
+SHORT/MEDIUM·market 한도, lane/version→server risk ID/version 매핑, symbol→sector 및 두 한도를
+묶는다. TossOS에는 이 파일의 writer나 signer가 없다. 한도 완화·generation 교체·키 교체는 별도
+사람 승인 절차에서 새 파일과 digest pin을 배포해야 한다.
+
+현재 사용량은 기존 `journal.db`를 `mode=ro`, `query_only(true)`로 열고 schema v26에서 같은
+dimension/value의 모든 historical policy reservation을 읽어 exact `filled + HELD`로 합산한다.
+malformed amount, broken policy/snapshot join, `RISK_OVERAGE`, `UNKNOWN_ACTUAL_RISK` 또는 scope latch는
+해당 시장 신규 entry만 fail-closed한다. stop, emergency exit, reconciliation과 fill detection은 이
+read를 기다리지 않는다. 정책 파일과 journal이 모두 유효해도 이는 q_final 계산 입력일 뿐 worker
+activation이나 LIVE 주문 승인으로 승격되지 않는다.
+
 ### 교체·회수·복구
 
 - TLS 인증서는 같은 public host SAN을 유지해 교체하고 container를 재생성한다.
 - broker session secret은 host에서 `tossctl auth login`으로 사람이 갱신한 뒤
   container를 재생성한다. container 안에서 QR 인증을 자동화하지 않는다.
 - container에서는 콘솔의 self-update를 운영 절차로 사용하지 않는다.
-  `docker compose build` 또는 서명·검증된 image pull 후
-  `docker compose up -d`로 교체한다.
-- rollback은 이전 image tag로 `docker compose up -d`하거나 remote flag를 제거한
-  native loopback 실행으로 돌아간다. rollback도 automation gate를 켜거나 engine을
-  시작하지 않는다.
+  `tossos:local` 같은 tag는 개발 build에만 사용하며 deployment identity로 기록하지 않는다.
+- release 교체는 아래 dormant preflight가 만든 exact digest plan을 사람이 별도로 승인한 뒤에만
+  수행한다. 이 저장소의 guard는 계획 값만 만들며 Docker 명령을 실행하지 않는다.
+- rollback도 automation gate를 켜거나 engine을 시작하지 않으며, mutable 이전 tag나 blanket
+  Compose down/up을 사용하지 않는다.
+
+### Dormant digest-pinned deployment preflight
+
+이 절차는 activation과 분리된 read-only 증거 수집이다. 현재 구현인 `internal/deployguard`는
+plain evidence를 검증하고 다음 한 단계의 action **값**만 반환한다. Docker/process 실행기,
+engine control, config/journal/protection writer와 broker capability를 갖지 않는다. 따라서 이
+preflight를 통과해도 실제 교체 승인이나 시장 activation 권한은 생기지 않는다.
+
+첫 service를 건드리기 전에 한 preimage에 아래 항목을 모두 동결한다.
+
+- service별 current/target image는 `sha256:<64 lowercase hex>` exact digest여야 한다. 실제
+  release override의 `image`도 `registry/repository@sha256:<64 lowercase hex>` 형식이어야 하며
+  `tossos:local`, `:latest`, 버전 tag만 있는 값은 거부한다.
+- `docker compose config`로 render한 결과의 SHA-256, config, activation, KR/US lane,
+  autostart, automation, LIVE approval, protection과 journal read snapshot의 SHA-256을 각각
+  기록한다. 시크릿 **값**은 해시 입력이나 preimage에 넣지 않고 environment key set만 정렬해
+  기록한다.
+- service별 environment key set, bind/volume source·target·`ro|rw` mode와 filesystem/volume
+  identity digest를 기록한다. config/data/journal volume을 새로 만들거나 바꿔 끼우지 않는다.
+- current data/journal schema version, target image readable/writable range, 예상 post-replace
+  version, rollback image readable/writable range를 기록한다. target이 current를 읽지 못하거나
+  post version을 쓰지 못하거나 rollback image가 post version을 읽고 쓴다는 증거가 없으면
+  첫 replace action은 0개다.
+- console/API/인증 Unix projection을 포함한 service별 baseline health evidence digest와 UTC
+  관측 시각을 기록한다. baseline은 healthy이고 preimage capture 5분 이내여야 한다. KR과 US는
+  lane/activation/entry `OFF`, autostart/automation `OFF`, LIVE `UNAPPROVED`, first refusal
+  `NOT_CONFIGURED`여야 한다.
+
+증거 수집에 사용할 수 있는 read-only 명령 예시는 다음과 같다. 출력에는 host 경로와 환경
+구성이 포함될 수 있으므로 repository 밖의 `0700` 운영 디렉터리에 저장하고 커밋하지 않는다.
+
+```bash
+docker compose config --format json
+docker compose images --format json
+docker image inspect --format '{{json .RepoDigests}}' <current-or-target-image>
+sha256sum <rendered-compose> <sanitized-config-snapshot> <activation-snapshot> <protection-snapshot>
+```
+
+`docker compose build`, `pull`, `up`, `stop`, `down`은 read-only preflight가 아니므로 위 단계에
+포함하지 않는다. 현재 `compose.yaml`의 `tossos:local`은 개발 기본값이고 immutable release
+preflight가 의도적으로 거부한다.
+
+교체 순서는 release-pinned `httpapi` → `tossos`이고 한 번에 service 하나만 처리한다. 각
+replace, compatibility read와 rollback health bound는 양수이며 최대 5분이다. 한 단계가 exact
+running image digest, schema, health evidence, config/activation/lane/autostart/automation/LIVE/
+protection/journal digest, environment keys와 mounts를 모두 재증명해야 다음 service action이
+나온다. action에는 UTC issued-at과 `issued-at + timeout`인 deadline이 함께 봉인된다. 관측은
+그 시간창 안에 있어야 하고 trusted receipt time이 deadline을 지난 경우 typed timeout 결과가
+아니면 거부한다. 값 하나라도 drift하면 healthy로 판정하지 않는다.
+
+각 관측의 evidence digest는 임의 식별자가 아니다. action ID/kind/window, service, exact running
+image, replace outcome/timeout, health와 observed-at, schema, 보존 state digest 전체, environment
+keys와 mount identity의 canonical encoding을 SHA-256으로 다시 계산해 일치해야 한다. 다른 action
+증거를 재사용하거나 digest 계산 뒤 필드를 바꾼 결과는 상태 머신을 전진시키지 않는다.
+Recovery의 entry 값도 가드가 의도한 `OFF`가 아니라 관측 사실이다. KR/US entry가 모두 완전하고
+같을 때만 그 `ON|OFF`를 기록하며, 시장 또는 보존 증거가 누락되거나 서로 다르면 `UNKNOWN`을
+기록한다. 가드는 recovery를 만들기 위해 entry를 변경하지 않는다.
+
+Replace 결과는 `NOT_APPLIED`와 `APPLIED`를 구분한다. `APPLIED` 뒤 health/schema/state 검사가
+실패하면 현재 service를 포함해 실제 교체된 subset 전체를 역순으로 compatibility-read한 뒤
+exact current image digest로 rollback한다. `NOT_APPLIED`면 그 service는 subset에 넣지 않는다.
+아직 교체하지 않은 service에는 action이 나오지 않는다.
+
+각 rollback 직전 실제 running image digest와 current schema를 다시 읽는다. rollback image가
+그 schema를 읽고 쓸 수 없으면 해당 service에는 destructive rollback action을 내지 않고 새
+image를 유지한다. 결과는 typed `ROLLBACK_INCOMPATIBLE`, entry effective `OFF`, retained exact
+target digest로 기록한다. 여기서 `OFF`는 가드가 만든 값이 아니라 완전한 보존 증거에서 관측되고
+preimage와 일치한 값이다. 이후 나머지 이전 subset만 계속 역순 검토한다. compatibility read가
+unhealthy, timeout 또는 보존 증거 불일치이면 그 관측은 schema authority가 아니므로
+`ROLLBACK_COMPATIBILITY_FAILED`로 남기고 해당 service의 destructive rollback action을 내지
+않는다. rollback 자체가 timeout이면 `ROLLBACK_FAILED` recovery로 중단한다. 어떤 recovery도 autostart,
+automation, lane, LIVE approval, protection, journal 또는 volume을 수정해 OFF를 만드는 방식이
+아니다. preimage의 기존 OFF/미승인 상태를 그대로 보존하고 증명하는 것이다.
 
 인터넷 router port-forward, `0.0.0.0:37085` host publish, public cloud security
 group 개방은 이 명세 밖이며 금지한다. 다중 사용자가 필요하면 trusted-network
@@ -168,6 +306,28 @@ group 개방은 이 명세 밖이며 금지한다. 다중 사용자가 필요하
 | `pending-orders` | `GET /api/v1/trading/orders/histories/all/pending` | `orders list` |
 
 각 probe 는 status 200 + 핵심 JSON 경로 존재 + 타입을 검사합니다. Toss 가 새 필드를 추가하는 변경은 통과시키고, 핵심 필드가 사라지거나 빈 응답을 받으면 실패합니다.
+
+#### Official Open API FX contract probe
+
+KR·US 전략 런타임의 account-base 계산은 다음 읽기 계약도 요구합니다.
+
+| 이름 | Source | Endpoint | 실행 예산 | 상태 |
+| --- | --- | --- | --- | --- |
+| `official-exchange-rate` | `official-open-api` | `GET /api/v1/exchange-rate?baseCurrency=USD&quoteCurrency=KRW` | 한 실행당 최대 1회, 자동 재시도 없음 | schema contract만 등록; live runner 비활성 |
+
+이 probe는 status 200과 `result.baseCurrency`, `quoteCurrency`, `rate`, `midRate`,
+`validFrom`, `validUntil`의 string 타입을 fail-closed로 검사합니다. 다만 기존 `monitor api`의
+`monitor.Run`은 WTS 세션 쿠키 전용이고 official Open API OAuth transport를 소유하지 않습니다.
+따라서 `OfficialReadContractProbes()`는 `Probes()`와 의도적으로 분리되어 있으며 현재
+`tossctl monitor api`나 cron에서 실행되지 않습니다. 별도 OAuth runner가 설계·검증되기 전
+WTS runner에 이 URL을 섞으면 모든 실행이 인증 실패하거나 잘못된 credential domain을
+사용하므로 금지합니다.
+
+`GET /api/v1/exchange-rate`는 US 전략 진입 전용 의존성이므로 전역 엔진 기동 capability
+attestation에는 포함하지 않습니다. 별도 official OAuth evidence가 없으면 US 전략 레인만
+`FX_AUTHORITY_UNAVAILABLE`로 fail-closed 되고, reconcile·protection·exit·fill 안전 루프와 KR
+시장은 계속 동작해야 합니다. 운영자가 schema checker를 실행된 soak evidence로 간주해서는
+안 됩니다.
 
 ### Cron + 알림 합성
 

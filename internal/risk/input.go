@@ -154,17 +154,19 @@ type AccountState struct {
 	// HeldQuantity is this symbol's holding in the broker snapshot. It bounds a
 	// reduction; an empty value is unknown, not zero.
 	HeldQuantity string
-	// CashAvailable is the account's spendable cash.
+	// CashAvailable is spendable cash in the intent market's quote currency.
+	// Broker affordability is deliberately not account-base converted.
 	CashAvailable riskcalc.Money
 	// OpenExposure is riskcalc.GrossLongExposure's result for the account,
-	// excluding this intent. A magnitude: negative is refused, not compared.
+	// excluding this intent, in the policy's account-base currency. A magnitude:
+	// negative is refused, not compared.
 	OpenExposure riskcalc.Money
 	// DailyRealizedLoss is riskcalc.DailyLoss's result: a non-negative
-	// magnitude, after costs. Signed P&L here would read a losing day as an
+	// account-base magnitude, after costs. Signed P&L here would read a losing day as an
 	// unused limit, so the chain refuses a negative value rather than comparing
 	// it (chain.go magnitudeIn).
 	DailyRealizedLoss riskcalc.Money
-	// AccountEquity is the capital the daily-loss ratio is measured against.
+	// AccountEquity is account-base capital the daily-loss ratio is measured against.
 	AccountEquity riskcalc.Money
 	// SameDayEntryCount is how many entries this symbol already had today.
 	SameDayEntryCount int
@@ -189,9 +191,9 @@ type ReentryPolicy struct {
 
 // Policy is the configured limit set.
 //
-// All money fields share one currency; the chain refuses to compare across
-// currencies rather than converting, because conversion needs a rate with a
-// staleness bound and that lives in riskcalc.
+// All money fields share one account-base currency. Market prices and cash stay
+// in quote currency; account_base.go consumes one opaque request-scoped
+// officialfx binding to convert sizing, notional and exposure into this base.
 type Policy struct {
 	// MaxOrderQuantity is the per-order unit ceiling, inclusive.
 	MaxOrderQuantity string
@@ -330,8 +332,8 @@ func requirePositiveMoney(label string, m riskcalc.Money, want string) (string, 
 //
 // It is a two-row table rather than a configuration value: a KR order priced in
 // anything but KRW, or a US order in anything but USD, is not a thing the broker
-// can accept. Task 4.x still has to convert between them for a cross-currency
-// limit, and riskcalc — with its FX staleness bound — is where that happens.
+// can accept. Cross-currency account limits are converted only through
+// AccountBaseFX; this table provides the exact quote side of that binding.
 func currencyOf(market costs.Market) (string, error) {
 	switch market {
 	case costs.MarketKR:

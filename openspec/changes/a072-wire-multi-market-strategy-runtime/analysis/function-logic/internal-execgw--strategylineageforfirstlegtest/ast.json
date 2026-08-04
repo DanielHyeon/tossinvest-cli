@@ -1,0 +1,38 @@
+{
+  "file": "internal/execgw/export_test.go",
+  "source_sha256": "8f000c06b15e6bb1abbb2ec799149790dd77198c74b420f61095db3b2f3a1306",
+  "package": "execgw",
+  "function": "StrategyLineageForFirstLegTest",
+  "signature": "StrategyLineageForFirstLegTest(params=5, results=2)",
+  "start": {
+    "line": 123,
+    "column": 1
+  },
+  "end": {
+    "line": 125,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 9
+      },
+      "text": "strategyDecisionLineage"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

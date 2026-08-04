@@ -1,0 +1,86 @@
+{
+  "file": "internal/strategyflow/adapters.go",
+  "source_sha256": "5fa16d5a0d6e2286f965c396e726fb3bf8cba48b32e4ec110359ff533def69d1",
+  "package": "strategyflow",
+  "function": "fromContinuation",
+  "signature": "fromContinuation(params=1, results=1)",
+  "start": {
+    "line": 51,
+    "column": 1
+  },
+  "end": {
+    "line": 62,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 15
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 72
+      },
+      "text": "continuationPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 122
+      },
+      "text": "continuationPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 11
+      },
+      "text": "continuationPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 44
+      },
+      "text": "strategyrouter.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 24
+      },
+      "text": "uint64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

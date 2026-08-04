@@ -1,0 +1,332 @@
+{
+  "file": "internal/official/client_test.go",
+  "source_sha256": "111ea159628061f8caf8e7309184652bd69b74e74a955a95d91a674afa7c1909",
+  "package": "official",
+  "function": "TestClientConfigurationOptionReplayIsRaceFreeAndFailClosed",
+  "signature": "TestClientConfigurationOptionReplayIsRaceFreeAndFailClosed(params=1, results=0)",
+  "start": {
+    "line": 119,
+    "column": 1
+  },
+  "end": {
+    "line": 149,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 12
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 31
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 45
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 73
+      },
+      "text": "Option"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 3
+      },
+      "text": "wg.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 10
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 4
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 4
+      },
+      "text": "WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 16
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 4
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 4
+      },
+      "text": "WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 10
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 11
+      },
+      "text": "client.AuthorityOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 8
+      },
+      "text": "client.BaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 2
+      },
+      "text": "wg.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 5
+      },
+      "text": "client.BaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 64
+      },
+      "text": "client.BaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 19
+      },
+      "text": "client.AuthorityOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 53
+      },
+      "text": "origin.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 126,
+        "column": 22
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 137,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 138,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 146,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "kind": "go",
+      "at": {
+        "line": 134,
+        "column": 3
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 129,
+        "column": 4
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 135,
+        "column": 4
+      },
+      "text": "wg.Done"
+    }
+  ]
+}

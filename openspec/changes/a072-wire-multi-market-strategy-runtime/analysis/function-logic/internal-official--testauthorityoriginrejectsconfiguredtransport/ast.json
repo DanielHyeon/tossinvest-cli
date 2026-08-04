@@ -1,0 +1,205 @@
+{
+  "file": "internal/official/client_test.go",
+  "source_sha256": "111ea159628061f8caf8e7309184652bd69b74e74a955a95d91a674afa7c1909",
+  "package": "official",
+  "function": "TestAuthorityOriginRejectsConfiguredTransport",
+  "signature": "TestAuthorityOriginRejectsConfiguredTransport(params=1, results=0)",
+  "start": {
+    "line": 82,
+    "column": 1
+  },
+  "end": {
+    "line": 95,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 11
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 57
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 71
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 19
+      },
+      "text": "plain.AuthorityOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 52
+      },
+      "text": "origin.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 3
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 49
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 63
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 90
+      },
+      "text": "WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 3
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 49
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 63
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 90
+      },
+      "text": "WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 20
+      },
+      "text": "configured.AuthorityOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 56
+      },
+      "text": "origin.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 84,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

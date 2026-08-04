@@ -124,7 +124,10 @@ type ReconcileState struct {
 	AccountRef string
 	// Symbol is empty for an account-wide state.
 	Symbol string
-	Cause  string
+	// ScopeMarket is empty for a legacy/global scope. KR and US identify
+	// independent symbol guards; a global guard blocks entry in both markets.
+	ScopeMarket string
+	Cause       string
 	// Evidence is what was observed, for the operator who has to act on it.
 	Evidence     string
 	EnteredAt    time.Time
@@ -147,6 +150,8 @@ type EnterReconcileRequest struct {
 	AccountRef string
 	// Symbol empty means account-wide.
 	Symbol string
+	// ScopeMarket empty means legacy/global. KR or US is valid only with Symbol.
+	ScopeMarket string
 	// Cause must be one of the ReconcileCause* constants.
 	Cause string
 	// Evidence is required: a state an operator cannot act on is a state that
@@ -165,12 +170,15 @@ type EnterReconcileRequest struct {
 func (j *Journal) EnterReconcile(ctx context.Context, req EnterReconcileRequest) (ReconcileState, bool, error) {
 	account := strings.TrimSpace(req.AccountRef)
 	symbol := strings.ToUpper(strings.TrimSpace(req.Symbol))
+	market, marketErr := normalizeReconcileMarket(symbol, req.ScopeMarket)
 	cause := strings.TrimSpace(req.Cause)
 	evidence := strings.TrimSpace(req.Evidence)
 	switch {
 	case account == "":
 		return ReconcileState{}, false, fmt.Errorf(
 			"%w: a RECONCILE state is scoped to an account; none was named", ErrInvalidRequest)
+	case marketErr != nil:
+		return ReconcileState{}, false, marketErr
 	case !ValidReconcileCause(cause):
 		return ReconcileState{}, false, fmt.Errorf(
 			"%w: RECONCILE cause %q is not one this build writes; an unenumerated cause has no release procedure",
@@ -190,7 +198,7 @@ func (j *Journal) EnterReconcile(ctx context.Context, req EnterReconcileRequest)
 	defer tx.Rollback()
 
 	existing, err := scanReconcileState(tx.QueryRowContext(ctx,
-		reconcileSelect+activeScopeWhere(symbol), scopeArgs(account, symbol)...))
+		reconcileSelect+activeEntryScopeWhere(symbol, market), entryScopeArgs(account, symbol, market)...))
 	switch {
 	case err == nil:
 		return existing, false, nil
@@ -201,13 +209,13 @@ func (j *Journal) EnterReconcile(ctx context.Context, req EnterReconcileRequest)
 
 	id := strings.TrimSpace(req.ID)
 	if id == "" {
-		id = reconcileStateID(account, symbol, cause, nowText)
+		id = reconcileStateID(account, symbol, cause, nowText, market)
 	}
 	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO reconcile_states
-		   (id, account_ref, symbol, cause, evidence, entered_at, released_at, release_cause)
-		 VALUES (?,?,?,?,?,?,NULL,NULL)`,
-		id, account, nullableString(symbol), cause, evidence, nowText); err != nil {
+		   (id, account_ref, symbol, cause, evidence, entered_at, released_at, release_cause, scope_market)
+		 VALUES (?,?,?,?,?,?,NULL,NULL,?)`,
+		id, account, nullableString(symbol), cause, evidence, nowText, nullableString(market)); err != nil {
 		return ReconcileState{}, false, fmt.Errorf(
 			"journal: entering RECONCILE for %s/%s: %w", account, symbolLabel(symbol), err)
 	}
@@ -216,7 +224,7 @@ func (j *Journal) EnterReconcile(ctx context.Context, req EnterReconcileRequest)
 			"journal: committing the RECONCILE state for %s/%s: %w", account, symbolLabel(symbol), err)
 	}
 	return ReconcileState{
-		ID: id, AccountRef: account, Symbol: symbol, Cause: cause,
+		ID: id, AccountRef: account, Symbol: symbol, ScopeMarket: market, Cause: cause,
 		Evidence: evidence, EnteredAt: now,
 	}, true, nil
 }
@@ -226,6 +234,9 @@ type ReleaseReconcileRequest struct {
 	AccountRef string
 	// Symbol empty means the account-wide state.
 	Symbol string
+	// ScopeMarket empty means the legacy/global scope. KR or US selects only
+	// that exact market and can never release the peer or global row.
+	ScopeMarket string
 	// Cause is why it is over: RECHECK_MATCHED or OPERATOR.
 	Cause string
 	// Evidence is what established that. Required — "해제는 재조회 일치와 원인
@@ -246,12 +257,15 @@ type ReleaseReconcileRequest struct {
 func (j *Journal) ReleaseReconcile(ctx context.Context, req ReleaseReconcileRequest) (ReconcileState, bool, error) {
 	account := strings.TrimSpace(req.AccountRef)
 	symbol := strings.ToUpper(strings.TrimSpace(req.Symbol))
+	market, marketErr := normalizeReconcileMarket(symbol, req.ScopeMarket)
 	cause := strings.TrimSpace(req.Cause)
 	evidence := strings.TrimSpace(req.Evidence)
 	switch {
 	case account == "":
 		return ReconcileState{}, false, fmt.Errorf(
 			"%w: a RECONCILE release is scoped to an account; none was named", ErrInvalidRequest)
+	case marketErr != nil:
+		return ReconcileState{}, false, marketErr
 	case !ValidReconcileReleaseCause(cause):
 		return ReconcileState{}, false, fmt.Errorf(
 			"%w: RECONCILE release cause %q is not one this build writes", ErrInvalidRequest, req.Cause)
@@ -270,7 +284,7 @@ func (j *Journal) ReleaseReconcile(ctx context.Context, req ReleaseReconcileRequ
 	defer tx.Rollback()
 
 	active, err := scanReconcileState(tx.QueryRowContext(ctx,
-		reconcileSelect+activeScopeWhere(symbol), scopeArgs(account, symbol)...))
+		reconcileSelect+activeScopeWhere(symbol, market), scopeArgs(account, symbol, market)...))
 	if errors.Is(err, ErrReconcileStateNotFound) {
 		return ReconcileState{}, false, nil
 	}
@@ -312,6 +326,7 @@ func (j *Journal) ReleaseReconciles(ctx context.Context,
 	type normalizedRelease struct {
 		account  string
 		symbol   string
+		market   string
 		cause    string
 		evidence string
 		expect   string
@@ -326,9 +341,13 @@ func (j *Journal) ReleaseReconciles(ctx context.Context,
 			evidence: strings.TrimSpace(req.Evidence),
 			expect:   strings.TrimSpace(req.ExpectCause),
 		}
+		var marketErr error
+		item.market, marketErr = normalizeReconcileMarket(item.symbol, req.ScopeMarket)
 		switch {
 		case item.account == "":
 			return nil, fmt.Errorf("%w: a RECONCILE release is scoped to an account; none was named", ErrInvalidRequest)
+		case marketErr != nil:
+			return nil, marketErr
 		case !ValidReconcileReleaseCause(item.cause):
 			return nil, fmt.Errorf("%w: RECONCILE release cause %q is not one this build writes", ErrInvalidRequest, req.Cause)
 		case item.evidence == "":
@@ -336,7 +355,7 @@ func (j *Journal) ReleaseReconciles(ctx context.Context,
 		case item.expect == "" || !ValidReconcileCause(item.expect):
 			return nil, fmt.Errorf("%w: an atomic RECONCILE release requires a valid expected cause", ErrInvalidRequest)
 		}
-		key := item.account + "\x00" + item.symbol
+		key := item.account + "\x00" + item.symbol + "\x00" + item.market
 		if _, duplicate := seen[key]; duplicate {
 			return nil, fmt.Errorf("%w: duplicate RECONCILE release scope %s/%s", ErrInvalidRequest, item.account, symbolLabel(item.symbol))
 		}
@@ -353,7 +372,7 @@ func (j *Journal) ReleaseReconciles(ctx context.Context,
 	released := make([]ReconcileState, 0, len(normalized))
 	for _, req := range normalized {
 		active, err := scanReconcileState(tx.QueryRowContext(ctx,
-			reconcileSelect+activeScopeWhere(req.symbol), scopeArgs(req.account, req.symbol)...))
+			reconcileSelect+activeScopeWhere(req.symbol, req.market), scopeArgs(req.account, req.symbol, req.market)...))
 		if errors.Is(err, ErrReconcileStateNotFound) {
 			return nil, fmt.Errorf("journal: atomic RECONCILE release scope %s/%s is not active",
 				req.account, symbolLabel(req.symbol))
@@ -431,24 +450,55 @@ func (j *Journal) queryReconcileStates(ctx context.Context, query string, args .
 	return out, nil
 }
 
-const reconcileSelect = `SELECT id, account_ref, symbol, cause, evidence, entered_at,
+const reconcileSelect = `SELECT id, account_ref, symbol, scope_market, cause, evidence, entered_at,
 	released_at, release_cause FROM reconcile_states`
 
 // activeScopeWhere selects the active row for one scope. The account-wide scope
 // needs `symbol IS NULL` rather than `symbol = ”`: SQLite's NULL is what the
 // partial UNIQUE indexes are written against.
-func activeScopeWhere(symbol string) string {
+func activeScopeWhere(symbol, market string) string {
 	if symbol == "" {
-		return " WHERE account_ref = ? AND symbol IS NULL AND released_at IS NULL"
+		return " WHERE account_ref = ? AND symbol IS NULL AND scope_market IS NULL AND released_at IS NULL"
 	}
-	return " WHERE account_ref = ? AND symbol = ? AND released_at IS NULL"
+	if market == "" {
+		return " WHERE account_ref = ? AND symbol = ? AND scope_market IS NULL AND released_at IS NULL"
+	}
+	return " WHERE account_ref = ? AND symbol = ? AND scope_market = ? AND released_at IS NULL"
 }
 
-func scopeArgs(account, symbol string) []any {
+func scopeArgs(account, symbol, market string) []any {
 	if symbol == "" {
 		return []any{account}
 	}
-	return []any{account, symbol}
+	if market == "" {
+		return []any{account, symbol}
+	}
+	return []any{account, symbol, market}
+}
+
+// activeEntryScopeWhere widens an exact-market entry lookup to the legacy
+// global row, because NULL is an authority that blocks both markets. Release
+// uses activeScopeWhere instead and is deliberately exact.
+func activeEntryScopeWhere(symbol, market string) string {
+	if symbol == "" || market == "" {
+		return activeScopeWhere(symbol, market)
+	}
+	return " WHERE account_ref = ? AND symbol = ? AND (scope_market IS NULL OR scope_market = ?) AND released_at IS NULL"
+}
+
+func entryScopeArgs(account, symbol, market string) []any {
+	return scopeArgs(account, symbol, market)
+}
+
+func normalizeReconcileMarket(symbol, market string) (string, error) {
+	market = strings.ToUpper(strings.TrimSpace(market))
+	if market != "" && market != "KR" && market != "US" {
+		return "", fmt.Errorf("%w: RECONCILE scope market %q is not KR or US", ErrInvalidRequest, market)
+	}
+	if symbol == "" && market != "" {
+		return "", fmt.Errorf("%w: an account-wide RECONCILE state cannot name scope market %s", ErrInvalidRequest, market)
+	}
+	return market, nil
 }
 
 func symbolLabel(symbol string) string {
@@ -460,12 +510,12 @@ func symbolLabel(symbol string) string {
 
 func scanReconcileState(row rowScanner) (ReconcileState, error) {
 	var (
-		state                    ReconcileState
-		symbol, evidence         sql.NullString
-		releasedAt, releaseCause sql.NullString
-		enteredAt                string
+		state                         ReconcileState
+		symbol, scopeMarket, evidence sql.NullString
+		releasedAt, releaseCause      sql.NullString
+		enteredAt                     string
 	)
-	err := row.Scan(&state.ID, &state.AccountRef, &symbol, &state.Cause, &evidence,
+	err := row.Scan(&state.ID, &state.AccountRef, &symbol, &scopeMarket, &state.Cause, &evidence,
 		&enteredAt, &releasedAt, &releaseCause)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ReconcileState{}, ErrReconcileStateNotFound
@@ -474,6 +524,7 @@ func scanReconcileState(row rowScanner) (ReconcileState, error) {
 		return ReconcileState{}, fmt.Errorf("journal: reading a RECONCILE state: %w", err)
 	}
 	state.Symbol = symbol.String
+	state.ScopeMarket = scopeMarket.String
 	state.Evidence = evidence.String
 	state.ReleaseCause = releaseCause.String
 	if state.EnteredAt, err = parseJournalTime(enteredAt); err != nil {
@@ -490,9 +541,13 @@ func scanReconcileState(row rowScanner) (ReconcileState, error) {
 // reconcileStateID derives an id for a producer that has none, the same way
 // correctionID does: a length-prefixed hash, so ("ab","c") and ("a","bc") are
 // different keys.
-func reconcileStateID(account, symbol, cause, enteredAt string) string {
+func reconcileStateID(account, symbol, cause, enteredAt string, scopeMarkets ...string) string {
+	market := ""
+	if len(scopeMarkets) != 0 {
+		market = scopeMarkets[0]
+	}
 	h := sha256.New()
-	for _, part := range []string{account, symbol, cause, enteredAt} {
+	for _, part := range []string{account, symbol, market, cause, enteredAt} {
 		fmt.Fprintf(h, "%d:%s|", len(part), part)
 	}
 	return "rec-" + hex.EncodeToString(h.Sum(nil))[:24]

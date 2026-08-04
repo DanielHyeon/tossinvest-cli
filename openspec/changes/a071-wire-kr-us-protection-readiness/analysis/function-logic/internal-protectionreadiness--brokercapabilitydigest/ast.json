@@ -1,0 +1,94 @@
+{
+  "file": "internal/protectionreadiness/types.go",
+  "source_sha256": "782c26b8096f87efae82b074c4721281ff00ec938156678618fa5ea7f542ab1d",
+  "package": "protectionreadiness",
+  "function": "brokerCapabilityDigest",
+  "signature": "brokerCapabilityDigest(params=1, results=1)",
+  "start": {
+    "line": 117,
+    "column": 1
+  },
+  "end": {
+    "line": 129,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 12
+      },
+      "text": "hashStrings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 3
+      },
+      "text": "boolString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 3
+      },
+      "text": "boolString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 3
+      },
+      "text": "boolString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 3
+      },
+      "text": "boolString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 3
+      },
+      "text": "boolString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 9
+      },
+      "text": "hexBytes"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
