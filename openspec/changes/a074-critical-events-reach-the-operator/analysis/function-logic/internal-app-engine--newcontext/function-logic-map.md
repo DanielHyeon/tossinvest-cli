@@ -22,11 +22,12 @@ gateway → 인터록. "Each step is a precondition for the next, and the interl
 precisely so that it can verify what the earlier steps produced instead of taking their
 success on trust."
 
-**불변식 2 (유지)**: audit는 **어떤 거부보다 먼저** 기록된다(B4). 그 실패는 기동 거부다.
+**불변식 2 (유지)**: audit는 **어떤 거부보다 먼저** 기록된다(B5). 그 실패는 기동 거부다.
 
-**불변식 3 (유지)**: 실패 경로마다 `jrn.Close()`가 호출된다(B6 이후). 새 코드가 원장을
+**불변식 3 (유지)**: 실패 경로마다 `jrn.Close()`가 호출된다(B8 이후). 새 코드가 원장을
 연 뒤에 실패할 수 있으면 그 경로에도 Close가 필요하다 — **a074의 새 코드는 원장을 열기
-전(B4 근처)에만 실행되므로 이 부담이 없다.**
+전(B4 근처)에만 실행되므로 이 부담이 없다.** 이후 a072의 projection 조립 실패(B15)도
+원장을 닫고 반환한다.
 
 **현재의 결함**: `opts.Publisher`는 프로덕션에서 항상 nil이다.
 `cmd/tossctl/engine_assembly.go`가 그것을 의도적으로 비워 두고 이유를 적어 두었다 —
@@ -40,28 +41,31 @@ change of its own." 그 결과 운영 원장의 critical 알림 6건이 `attempt
 
 해석 로직은 **새 파일의 함수**가 갖는다. 이 함수에는 호출만 남는다.
 
-**a074가 바꾸지 않는 것**: 13개 분기의 조건·순서·반환, `jrn.Close()` 위치, 인터록,
-Guardian 생성, 반환 구조체.
+**a074가 바꾸지 않는 것**: 당시 존재한 분기의 조건·순서·반환, `jrn.Close()` 위치,
+인터록, Guardian 생성, 반환 구조체. 현재의 B15와 strategy projection 필드는 이후 a072에서
+추가됐으며 이 재기준화에서 그대로 보존한다.
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (400) | `NewOrderPath` 실패 | 없음 | `nil, err` | 기존 |
-| B2 (407) | `openAuditLog` 실패 | 없음 | `nil, err` | 기존 |
-| B3 (411) | `opts.Clock == nil` | `clk = clock.System()` | — | 기존 |
-| **B4 (422)** | `recordGateSettings` 실패 | 없음 | `nil, err` — 기동 거부 | **6.1–6.3** |
-| B5 (436) | 계좌 해석 실패 | audit refusal | `nil, err` | 기존 |
-| B6 (443) | 원장 open 실패 | audit refusal | `nil, err` | 기존 |
-| B7 (452) | apply hook 바인딩 실패 | `jrn.Close()` | `nil, err` | 기존 |
-| **B8 (469)** | `buildGateway` 실패 | `jrn.Close()` | `nil, err` | **5.1–5.2** |
-| B9 (484) | 게이트 ON + Guardian 없음 | Guardian 생성 | — | 기존 |
-| B10 (486) | factory nil | 기본 factory | — | 기존 |
-| B11 (492) | Guardian 생성 실패 | `jrn.Close()` | `nil, err` | 기존 |
-| B12 (512) | 인터록 실패 | `jrn.Close()` | `nil, err` | 기존 |
-| B13 (516) | 미검증 | `guardian = nil` | — | 기존 |
+| B1 (413) | `NewOrderPath` 실패 | 없음 | `nil, err` | 기존 |
+| B2 (420) | `openAuditLog` 실패 | 없음 | `nil, err` | 기존 |
+| B3 (424) | `opts.Clock == nil` | `clk = clock.System()` | — | 기존 |
+| **B4 (438)** | `opts.Publisher != nil` | 해석된 publisher를 주입값으로 교체 | — | `TestAnInjectedPublisherWins` |
+| **B5 (446)** | `recordGateSettings` 실패 | 없음 | `nil, err` — 기동 거부 | **6.1–6.3** |
+| B6 (461) | 계좌 해석 실패 | audit refusal | `nil, err` | 기존 |
+| B7 (468) | 원장 open 실패 | audit refusal | `nil, err` | 기존 |
+| B8 (477) | apply hook 바인딩 실패 | `jrn.Close()` | `nil, err` | 기존 |
+| **B9 (496)** | `buildGateway` 실패 | `jrn.Close()` | `nil, err` | **5.1–5.2** |
+| B10 (511) | 게이트 ON + Guardian 없음 | Guardian 생성 | — | 기존 |
+| B11 (513) | factory nil | 기본 factory | — | 기존 |
+| B12 (519) | Guardian 생성 실패 | `jrn.Close()` | `nil, err` | 기존 |
+| B13 (539) | 인터록 실패 | `jrn.Close()` | `nil, err` | 기존 |
+| B14 (543) | 미검증 | `guardian = nil` | — | 기존 |
+| B15 (548) | dormant strategy projection 생성 실패 | `jrn.Close()` | `nil, err` | `TestDormantSnapshotContainsExactPairedHonestMarkets` |
 
-편집은 B4의 **인자**와 B8 직전 `gatewayInputs` 리터럴의 **필드 값** 두 곳이다. 어떤
+편집은 B5의 **인자**와 B9 직전 `gatewayInputs` 리터럴의 **필드 값** 두 곳이다. 어떤
 분기 조건도, 어떤 `jrn.Close()`도, 어떤 반환도 바뀌지 않는다.
 
 ## Calls and live bindings

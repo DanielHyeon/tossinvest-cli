@@ -1,9 +1,9 @@
 # Branch Test Map: `runConsole`
 
 편집은 분기를 추가하지 않았다. 구조체 리터럴에 필드 한 줄을 더한 것이고, 필드 대입은
-조건이 아니다. 36개 분기 전부가 편집 전과 같은 조건·같은 순서로 남아 있으며, 아래
-전수 표는 그것을 보이기 위한 것이다 — 이 함수를 지나는 어떤 경로도 a075 때문에
-달라지지 않는다.
+조건이 아니다. a075 당시의 36개 분기는 같은 조건·같은 순서로 남아 있다. 통합된 현재
+함수의 B37–B41은 이후 a072가 추가한 strategy runtime projection endpoint 탐색이며
+a075의 알림 seam과 독립적이다.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
@@ -43,6 +43,11 @@
 | B34 | dial 실패 | 기존 제어 평면 테스트 | no | pass |
 | B35 | dial 성공 → commander 주입 | 기존 제어 평면 테스트 | no | pass |
 | B36 | stat 오류(같은 절) | 기존 제어 평면 테스트 | no | pass |
+| B37 | strategy projection descriptor 있음 → dial | strategy runtime integration 테스트 | no | pass |
+| B38 | strategy descriptor stat 오류 분기 | strategy runtime integration 테스트 | no | pass |
+| B39 | strategy projection dial 실패 → dormant 유지 | strategy runtime integration 테스트 | no | pass |
+| B40 | strategy projection dial 성공 → reader 주입 | strategy runtime integration 테스트 | no | pass |
+| B41 | strategy descriptor stat 오류가 NotExist가 아님 → 사유 기록 | strategy runtime integration 테스트 | no | pass |
 
 ## 추가 시나리오 (분기 밖의 계약)
 

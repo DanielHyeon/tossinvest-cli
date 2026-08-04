@@ -1,15 +1,15 @@
 {
   "file": "internal/config/engine.go",
-  "source_sha256": "7de18f349e411976f5c4500a1175cc77a1c8b84a79f9394ebf47d1e3ce233705",
+  "source_sha256": "9d3ab3d2a37da7770a666fa7b1c1079e576ea6100b71569a63155f12d4c890c1",
   "package": "config",
   "function": "mergeEngine",
   "signature": "mergeEngine(params=2, results=0)",
   "start": {
-    "line": 309,
+    "line": 311,
     "column": 1
   },
   "end": {
-    "line": 341,
+    "line": 343,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 310,
+        "line": 312,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 313,
+        "line": 315,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 317,
+        "line": 319,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 327,
+        "line": 329,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 331,
+        "line": 333,
         "column": 2
       }
     }
@@ -58,14 +58,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 311,
+        "line": 313,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 328,
+        "line": 330,
         "column": 3
       }
     }
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 316,
+        "line": 318,
         "column": 2
       },
       "text": "mergeAdoption"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 318,
+        "line": 320,
         "column": 36
       },
       "text": "strings.TrimSpace"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 319,
+        "line": 321,
         "column": 19
       },
       "text": "next.validate"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 326,
+        "line": 328,
         "column": 2
       },
       "text": "mergeNotifications"
@@ -108,57 +108,43 @@
     {
       "kind": "=",
       "at": {
-        "line": 314,
+        "line": 316,
         "column": 3
       }
     },
     {
       "kind": ":=",
-      "at": {
-        "line": 318,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 319,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
       "at": {
         "line": 320,
         "column": 3
       }
     },
     {
-      "kind": ":=",
-      "at": {
-        "line": 330,
-        "column": 2
-      }
-    },
-    {
       "kind": "=",
       "at": {
-        "line": 332,
+        "line": 321,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 334,
+        "line": 322,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 332,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 335,
-        "column": 2
+        "line": 334,
+        "column": 3
       }
     },
     {
@@ -193,6 +179,20 @@
       "kind": "=",
       "at": {
         "line": 340,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 341,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 342,
         "column": 2
       }
     }

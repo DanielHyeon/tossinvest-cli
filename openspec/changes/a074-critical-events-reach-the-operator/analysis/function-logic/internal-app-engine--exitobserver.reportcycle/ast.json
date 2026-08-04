@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "ee876ece631fd06ab2582b99a1ea0d3cc5ac74fb004edade696f223d7dae5692",
+  "source_sha256": "736a583f6476c7fdf28e3a787bf89cc8df46aad888e559a1067921eeae6242c2",
   "package": "engine",
   "function": "reportCycle",
   "receiver": "ExitObserver",

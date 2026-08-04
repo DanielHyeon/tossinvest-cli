@@ -1,6 +1,6 @@
 {
   "file": "internal/console/portfolio_pages.go",
-  "source_sha256": "16975cd71904f2871baab9a0769b549e0b1959650e161408879519f0e7b7b52a",
+  "source_sha256": "16975cd71904f2871baab9a0669b549e0b1959650e161408879519f0e7b7b52a",
   "package": "console",
   "function": "decoratePositionRows",
   "receiver": "Console",

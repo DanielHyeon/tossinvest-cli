@@ -1,7 +1,9 @@
 # Branch Test Map: `NewContext`
 
-편집 후 분기는 13개에서 14개가 되었다. 새 분기는 B4 — 주입된 publisher가 설정보다
-우선한다 — 이며, 나머지 13개의 조건·순서·`jrn.Close()` 위치는 그대로다.
+통합된 현재 함수에는 15개 분기가 있다. a074가 추가한 분기는 B4 — 주입된 publisher가
+설정보다 우선한다 — 이다. B15는 이후 a072에서 추가된 dormant strategy projection
+조립 실패 경로이며, a074의 알림 해석과 독립적이다. 기존 실패 경로의 조건·순서와
+`jrn.Close()` 위치는 그대로다.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
@@ -19,6 +21,7 @@
 | B12 | Guardian 생성 실패 → Close + 거부 | 기존 engine 테스트 | no | pass |
 | B13 | 인터록 실패 → Close + 거부 | 기존 engine 테스트 | no | pass |
 | B14 | 미검증이면 Guardian을 버린다 | 기존 engine 테스트 | no | pass |
+| B15 | dormant strategy projection 조립 실패 → Close + 거부 | `TestDormantSnapshotContainsExactPairedHonestMarkets` | no | pass |
 
 ## 추가 시나리오 (분기 밖의 계약)
 

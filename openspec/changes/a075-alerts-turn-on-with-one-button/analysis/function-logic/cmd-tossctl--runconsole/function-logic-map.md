@@ -28,12 +28,13 @@ typed nil은 화면에 배선된 것처럼 보이고 첫 클릭에서 실패한�
 **a075가 바꾸는 것**: `console.Options` 리터럴에 `Notifications:
 consoleNotificationSeam(root)` **한 줄**. 조건도, 반환도, 순서도 바뀌지 않는다.
 
-**a075가 바꾸지 않는 것**: 36개 분기 전부. 이 함수의 제어 흐름은 편집 전후 동일하다.
+**a075가 바꾸지 않는 것**: 당시의 36개 분기 전부. 현재의 B37–B41은 이후 a072가
+추가한 strategy projection endpoint 탐색이며 이 재기준화에서 그대로 보존한다.
 
 ## Branches and early returns
 
-36개 분기 중 어느 것도 편집되지 않았다. 아래는 편집이 그 어느 것에도 닿지 않았음을
-보이기 위한 전수 표다.
+현재 41개 분기 중 a075가 편집한 것은 없다. 아래는 a075 당시 36개와 이후 통합된
+strategy projection 5개가 서로 독립임을 보이기 위한 전수 표다.
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
@@ -73,8 +74,14 @@ consoleNotificationSeam(root)` **한 줄**. 조건도, 반환도, 순서도 바�
 | B34 (350) | dial 실패 | 사유 기록 | — | 기존 |
 | B35 (352) | 그 외 | commander 주입 | — | 기존 |
 | B36 (360) | stat 오류 | 사유 기록 | — | 기존 |
+| B37 (372) | strategy descriptor 파일 있음 | projection endpoint dial | — | strategy runtime integration 테스트 |
+| B38 (379) | strategy descriptor stat 오류 분기 | — | — | strategy runtime integration 테스트 |
+| B39 (374) | projection endpoint dial 실패 | dormant 사유 기록 | — | strategy runtime integration 테스트 |
+| B40 (376) | 그 외 | strategy runtime reader 주입 | — | strategy runtime integration 테스트 |
+| B41 (379) | stat이 NotExist가 아님 | dormant 사유 기록 | — | strategy runtime integration 테스트 |
 
-**새 분기 없음.** 편집은 구조체 리터럴의 필드 하나이며, 필드 대입은 조건이 아니다.
+**a075가 추가한 분기는 없음.** 편집은 구조체 리터럴의 필드 하나이며, 필드 대입은
+조건이 아니다. B37–B41은 a072의 후속 통합분이다.
 `consoleNotificationSeam`이 내부에서 nil을 판단하지만 그것은 **그 함수의** 분기이고
 새 파일에 있다.
 

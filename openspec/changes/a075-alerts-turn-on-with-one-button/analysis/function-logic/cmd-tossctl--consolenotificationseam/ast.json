@@ -1,15 +1,15 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/cmd/tossctl/console.go",
-  "source_sha256": "d01dc2aef5f88cd45c45de4b5f793231615b5deded6d0882fd6869d99bca838a",
+  "file": "cmd/tossctl/console.go",
+  "source_sha256": "301ddbc20a70208a450038ff4a25648f5b212bee86136ea586a54834fcceadd6",
   "package": "main",
   "function": "consoleNotificationSeam",
   "signature": "consoleNotificationSeam(params=1, results=1)",
   "start": {
-    "line": 643,
+    "line": 657,
     "column": 1
   },
   "end": {
-    "line": 648,
+    "line": 662,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 644,
+        "line": 658,
         "column": 2
       }
     }
@@ -26,14 +26,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 645,
+        "line": 659,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 647,
+        "line": 661,
         "column": 2
       }
     }
@@ -42,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 644,
+        "line": 658,
         "column": 10
       },
       "text": "newNotificationSeam"
@@ -52,7 +52,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 644,
+        "line": 658,
         "column": 5
       }
     }

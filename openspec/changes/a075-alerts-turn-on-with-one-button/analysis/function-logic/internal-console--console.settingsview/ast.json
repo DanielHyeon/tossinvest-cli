@@ -1,6 +1,6 @@
 {
   "file": "internal/console/settings.go",
-  "source_sha256": "0dc00baae5415ef654d40a99cb1ae00cbac963c360d032e7d5480ee406925253",
+  "source_sha256": "f326a5647a5ffcd6223495e1d5e6882c18107185ca0f826ca3a5d5b64ee3d4da",
   "package": "console",
   "function": "settingsView",
   "receiver": "Console",

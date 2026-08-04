@@ -1,5 +1,5 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/portfolio.go",
+  "file": "internal/console/portfolio.go",
   "source_sha256": "ed6b0779d47090845d87dc4c51581d9916895b6119e33a0337023a25a0484ca4",
   "package": "console",
   "function": "joinPositions",

@@ -1,6 +1,6 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/static_test.go",
-  "source_sha256": "c12f15344031cde3f02fe96c0c02b16e886b27b350502d114c175782f88b92e3",
+  "file": "internal/console/static_test.go",
+  "source_sha256": "cc4c6ebe83a19c988de68ab3cce00892ab53b25ee66ea9c9e0f88ace15027a82",
   "package": "console",
   "function": "TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate",
   "signature": "TestEveryStateChangingRouteAlsoGoesThroughTheCSRFGate(params=1, results=0)",

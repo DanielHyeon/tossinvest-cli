@@ -1,6 +1,6 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/position_policy.go",
-  "source_sha256": "082ef571b73cb53e5e881e1c3159a8feaf2b3ef06da04c23e302c47188f6e6c3",
+  "file": "internal/console/position_policy.go",
+  "source_sha256": "2fd0870bbfe8bd8eeec7f4d148462b8848996c55a73bee7f910e495cd718e087",
   "package": "console",
   "function": "handlePositionManagement",
   "receiver": "Console",

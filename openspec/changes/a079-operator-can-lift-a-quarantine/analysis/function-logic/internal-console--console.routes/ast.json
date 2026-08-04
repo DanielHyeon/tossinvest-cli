@@ -1,6 +1,6 @@
 {
-  "file": "/mnt/D/project/axipient/TossOS/internal/console/console.go",
-  "source_sha256": "7845576bb042cc73fdf563af08e713ca582a342a563969f20410036f3b6969e3",
+  "file": "internal/console/console.go",
+  "source_sha256": "53c566d3dd358272a773b9eb02209bbe85b29d895659743561ab67bc4bab360d",
   "package": "console",
   "function": "routes",
   "receiver": "Console",
