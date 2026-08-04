@@ -171,3 +171,43 @@ a067 변경이 지워졌다.** 즉시 복구하고 변이 검증을 백업 파�
   단독으로 하지 않는다.
 - CodeGraphContext advisory 인덱스는 `make sdd-sync`에서 300초 timeout으로 갱신되지
   않았다. hard gate가 아니며 CodeGraph는 갱신됐다.
+
+## 병합 후 재기준화 (2026-08-04)
+
+이 change는 `main`과 동기화되지 않은 브랜치 위에서 작성됐다. `main`은 그동안
+journal schema를 15에서 19로 올렸고, 그 브랜치로 빌드한 이미지는 콘솔만 뜨고
+엔진이 journal 열기를 거부했다. 배포하려면 병합이 선행 조건이었다.
+
+병합은 Function Logic Map 검사의 의미를 바꾼다. `check_analysis.py`는
+`base-commit.txt`부터 작업 트리까지를 diff하므로, 병합 이후에는 `main`이 고친
+함수까지 이 change가 고친 것으로 집계된다.
+
+| 항목 | 값 |
+|---|---|
+| 원래 base | `321cf78e8b63ef36c5ff94df97547c1006d8aa06` |
+| 재기준화된 base | `6b47be2ff8ebd21a59dec682183e015cec8584da` (병합 커밋) |
+
+**재기준화 전에 원래 base로 검사를 다시 돌렸다.** `321cf78e8b63` 커밋을 detached
+worktree에 체크아웃하고 `check_analysis.py --change`를 실행해
+`evidence complete or diff-proven exempt`를 확인했다. 즉 이 change가 실제로 고친
+함수의 증거는 완전했고, 병합이 그것을 지운 것이 아니다.
+
+`main`이 고친 함수들의 logic map은 저장소 안에 그대로 있다 —
+`openspec/changes/archive/2026-08-03-a061-show-history-instrument-names/`와
+`.../2026-08-03-a062-reconcile-owned-orders/`의 analysis가 그것이다.
+
+`revision: current`로 고정된 AST 증거는 병합된 파일 내용으로 다시 추출했다.
+분기 ID 집합이 달라진 타깃은 자동으로 덮어쓰지 않고 따로 처리했다.
+
+**게이트 결과의 의미는 좁아졌다.** 재기준화 이후 이 change의 logic-map 단계는
+"병합 시점 이후로 이 change가 더 고친 함수가 없다"를 확인하는 것이고, "이 change가
+고친 함수에 증거가 있다"는 위의 원래 base 재검사가 확인한다. 한 명령으로 둘 다
+재도출되지는 않는다.
+
+`internal-console--console.handlepositionmanagement` 타깃은 제거했다. a069가 같은
+함수를 나중에 고쳐 분기가 16개에서 20개로 늘었고, 20개 전부를 현재 트리에 묶어
+RED/GREEN까지 관측한 증거가
+`openspec/changes/a069-operator-can-lift-a-quarantine/analysis/function-logic/internal-console--console.handlepositionmanagement/`에
+있다. a069의 표를 여기로 복사하면 a069가 관측한 RED를 a067의 관측인 것처럼 만드는
+것이므로 하지 않았다. a067 시점의 16분기 증거는
+`321cf78e8b63` 커밋에 그대로 남아 있다.

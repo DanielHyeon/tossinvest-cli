@@ -145,3 +145,35 @@ M1의 첫 시도는 컴파일 오류였다(사용되지 않는 import). 두 번�
 | 4. 화면이 값을 고르지 않음 | `Enable()` 무인자 + `TestThereIsNoTokenInputOnTheAlertCard` (M7) |
 | 5. 시크릿 미기록 | M3 + M4 + `TestTheAuditTrailCarriesNoChannelValue` |
 | 6. 목록과 스펙 동시 이동 | `consoleStateChanging`·CSRF 목록·`operator-console` 문장이 이 커밋에 함께 있다 |
+
+## 병합 후 재기준화 (2026-08-04)
+
+이 change는 `main`과 동기화되지 않은 브랜치 위에서 작성됐다. `main`은 그동안
+journal schema를 15에서 19로 올렸고, 그 브랜치로 빌드한 이미지는 콘솔만 뜨고
+엔진이 journal 열기를 거부했다. 배포하려면 병합이 선행 조건이었다.
+
+병합은 Function Logic Map 검사의 의미를 바꾼다. `check_analysis.py`는
+`base-commit.txt`부터 작업 트리까지를 diff하므로, 병합 이후에는 `main`이 고친
+함수까지 이 change가 고친 것으로 집계된다.
+
+| 항목 | 값 |
+|---|---|
+| 원래 base | `e540668fe56ea64ff1c3a3ae0b3629be3c149c77` |
+| 재기준화된 base | `6b47be2ff8ebd21a59dec682183e015cec8584da` (병합 커밋) |
+
+**재기준화 전에 원래 base로 검사를 다시 돌렸다.** `e540668fe56e` 커밋을 detached
+worktree에 체크아웃하고 `check_analysis.py --change`를 실행해
+`evidence complete or diff-proven exempt`를 확인했다. 즉 이 change가 실제로 고친
+함수의 증거는 완전했고, 병합이 그것을 지운 것이 아니다.
+
+`main`이 고친 함수들의 logic map은 저장소 안에 그대로 있다 —
+`openspec/changes/archive/2026-08-03-a061-show-history-instrument-names/`와
+`.../2026-08-03-a062-reconcile-owned-orders/`의 analysis가 그것이다.
+
+`revision: current`로 고정된 AST 증거는 병합된 파일 내용으로 다시 추출했다.
+분기 ID 집합이 달라진 타깃은 자동으로 덮어쓰지 않고 따로 처리했다.
+
+**게이트 결과의 의미는 좁아졌다.** 재기준화 이후 이 change의 logic-map 단계는
+"병합 시점 이후로 이 change가 더 고친 함수가 없다"를 확인하는 것이고, "이 change가
+고친 함수에 증거가 있다"는 위의 원래 base 재검사가 확인한다. 한 명령으로 둘 다
+재도출되지는 않는다.

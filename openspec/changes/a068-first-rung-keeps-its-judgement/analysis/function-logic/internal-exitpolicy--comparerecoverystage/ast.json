@@ -1,6 +1,6 @@
 {
-  "file": "internal/exitpolicy/recovery.go",
-  "source_sha256": "845b3cb0cefedd773b47082756427c753b8b09688221419408f1f032ec88080e",
+  "file": "/mnt/D/project/axipient/TossOS/internal/exitpolicy/recovery.go",
+  "source_sha256": "bd6586ddb746b7a54c5c731b7fd2ec198f1f19ff88916e93ccad16b33bdb0ef7",
   "package": "exitpolicy",
   "function": "compareRecoveryStage",
   "signature": "compareRecoveryStage(params=2, results=2)",

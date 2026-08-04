@@ -1,6 +1,6 @@
 {
-  "file": "internal/app/engine/position_policy_transport.go",
-  "source_sha256": "86ce7506b54a3f292f56a4106dc3200328594515aa9e490187c04a7a73eb02e6",
+  "file": "/mnt/D/project/axipient/TossOS/internal/app/engine/position_policy_transport.go",
+  "source_sha256": "bff4d7e46a492b5f894a56ee642e412c95771d9b54dfdd48184d0ce4e74e630d",
   "package": "engine",
   "function": "StartPositionPolicyCommandServer",
   "signature": "StartPositionPolicyCommandServer(params=2, results=2)",
