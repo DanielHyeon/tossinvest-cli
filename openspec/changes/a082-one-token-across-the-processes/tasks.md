@@ -78,9 +78,15 @@
       네 변이 전부 RED 확인.
 - [x] 6.5 `make test`, `make vet`, `make validate`, `make sdd-sync`, `make sdd-check`.
 - [x] 6.6 `make gate CHANGE=a082-one-token-across-the-processes`.
-- [ ] 6.7 사람 승인 후 배포 → 컨테이너 실측: `openapi-token.json`의 mtime이
-      관측 창 안에 **0회** 바뀌는지 (지금 1분 7회). 그리고 `reconcile.mismatch`가
-      더 나오는지.
+- [x] 6.7 사람 승인 후 배포 → 컨테이너 실측 (2026-08-05, image `56f478e3e572`).
+      **예측한 0회는 나오지 않았다.** 실측은 아래와 같고, 남은 것은 I12다.
+      - 배포 전 기준선: 180초 / 179 샘플 → mtime 변경 **19회** (1분 6.3회).
+      - 배포 후 간섭 없는 창: 900초 / 898 샘플 → mtime 변경 **18회** (1분 1.2회).
+        앞 11분은 61.5초 간격으로 정확히 1회씩, 마지막 3분은 사이클당 2회.
+      - `reconcile.mismatch` 23 → **23**, `authentication failed` 11 → **11**.
+        배포 후 새로 나온 것은 없다. 이 change가 겨눈 증상은 사라졌다.
+      - 쓰기 1회는 매번 진짜 새 토큰이다 — `expires_at`이 mtime + 24시간이다
+        (토큰 값은 읽지 않고 만료 필드만 확인했다).
 
 ## 7. 리뷰와 기록
 

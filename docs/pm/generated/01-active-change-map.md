@@ -85,4 +85,4 @@
 | `a079-operator-can-lift-a-quarantine` | STORY-TOS-a079 | in_progress |
 | `a080-line-refreshes-on-engine-cadence` | STORY-TOS-a080 | archived |
 | `a081-screens-share-one-engine-reading` | STORY-TOS-a081 | archived |
-| `a082-one-token-across-the-processes` | STORY-TOS-a082 | in_progress |
+| `a082-one-token-across-the-processes` | STORY-TOS-a082 | implemented |
