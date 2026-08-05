@@ -476,6 +476,13 @@ type managed struct {
 	// runs; the order side of it does not. See the suppression in record and
 	// a084 개정 2 D9 for why a cancel that precedes a refusal is a protection loss.
 	reJudge bool
+	// reJudgeVersion is the quarantine row the retry will be spent on, stamped by
+	// judge once a price is in hand. Stamping in workingSet spent it before the
+	// price read, so a venue that did not answer for one symbol — a halt, a
+	// suspension, a transport failure — burned the position's only re-judgement
+	// with nothing judged and left its stop unevaluated until a human or a new
+	// binary revision (개정 2, D8).
+	reJudgeVersion int64
 }
 
 // workingSet reconciles the held positions with the exit states, opening the
@@ -511,6 +518,7 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 		result, ok := byPosition[p.ID]
 		state := result.State
 		reJudging := false
+		reJudgeVersion := int64(0)
 		if !ok {
 			opened, err := o.openState(ctx, p)
 			if err != nil {
@@ -558,23 +566,13 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			// included.
 			//
 			// Two things make letting it through safe, and both are code, not comment:
-			// the retry is spent here rather than wherever the judgement happens to
-			// land (D8), and the pass itself arms and cancels nothing, so a refusal
-			// cannot leave the position worse protected than refusing outright (D9).
-			if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx, p.ID, p.InstanceSeq,
-				q.Version); err != nil {
-				// The row moved under the read. Refusing this cycle keeps the old
-				// behaviour, which is the quarantine standing, and the next cycle
-				// re-reads it.
-				if cycle.Err == nil {
-					cycle.Err = err
-				}
-				refused = append(refused, managed{position: p, state: state,
-					identityErr: fmt.Errorf("%w (version %d): %s",
-						journal.ErrExitSnapshotQuarantined, q.Version, q.Reason)})
-				continue
-			}
+			// the retry is spent once a price is in hand rather than wherever the
+			// judgement happens to land (D8), and the pass never cancels a working
+			// order before the transaction that may still refuse it (D9). It does
+			// still arm: a rung promotion is submitted only after the judgement
+			// commits, so a refusal cannot have placed anything.
 			reJudging = true
+			reJudgeVersion = q.Version
 			o.log(obs.EventExitSnapshotQuarantined, false,
 				obs.FieldSymbol, p.Symbol,
 				"position_id", p.ID,
@@ -601,7 +599,7 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 		}
 		out = append(out, managed{
 			position: p, state: state, policyIdentity: identity, identityErr: identityErr,
-			reJudge: reJudging,
+			reJudge: reJudging, reJudgeVersion: reJudgeVersion,
 		})
 	}
 	// Quarantined rows come last. alertRefused may synchronously retry a
@@ -811,6 +809,21 @@ func (o *ExitObserver) judge(ctx context.Context, m managed, quote observedQuote
 	if m.identityErr != nil {
 		o.alertRefused(ctx, m, m.identityErr)
 		return nil
+	}
+	if m.reJudge {
+		// Spend the retry here, with a price in hand, rather than in workingSet.
+		// workingSet runs before the price read, so stamping there handed the
+		// position's one re-judgement to any cycle that could not quote it — a
+		// halted symbol, a suspended one, a transport failure — and the row came
+		// back stamped with nothing judged, refused on every cycle afterwards with
+		// its stop unevaluated (개정 2, D8).
+		//
+		// A failure to stamp leaves the quarantine standing and NeedsReJudgement
+		// true, so the next cycle tries again: fail-closed and self-healing.
+		if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx,
+			m.position.ID, m.position.InstanceSeq, m.reJudgeVersion); err != nil {
+			return err
+		}
 	}
 	breakEven, err := o.breakEven(m)
 	if err != nil {
@@ -1115,11 +1128,12 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 			// below rather than delayed and alarmed. What is withheld here is an
 			// upside order whose loss costs nothing but upside.
 			//
-			// Treating the symbol as uncleared rather than inventing an outcome: that
-			// path already exists, already withholds only the proposal, and already
-			// carries noteDelay (a084 개정 2, D9).
-			o.noteDelay(ctx, m, "the position is being re-judged after a superseded quarantine, "+
-				"so its working orders stay on the book until the judgement commits")
+			// No noteDelay here, unlike the uncleared-working-order branch below.
+			// That clock measures a delayed *liquidation*, and by construction this
+			// branch never holds one: isProtective takes stops out of it. Starting
+			// that timer for a withheld take-profit would leave it running — this
+			// branch has no clearDelay — so a genuine clear failure days later would
+			// alarm immediately with an elapsed time of days.
 			orderable = false
 			judgement.ArmSuppressedReason = journal.ArmSuppressedReJudge
 		} else {

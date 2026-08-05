@@ -398,25 +398,30 @@ func creditStampAt(credit string) (time.Time, bool) {
 	return at, true
 }
 
-// creditAnswers reports that this credit was computed while this block already
-// stood, so the adjustment it names is an answer to *this* disagreement.
+// hasBlockFor reports that a block this credit could release still stands for
+// the symbol.
 //
-// Time, not Block.Key(): a symbol-scoped key is symbol|account|SYMBOL, which
-// cannot tell one block on a symbol from the next one (issues.md I3). Since can
-// — it is the durable reconcile_states.entered_at (개정 2, D7).
-func creditAnswers(credit string, block Block) bool {
-	at, ok := creditStampAt(credit)
-	if !ok {
-		return false
+// Presence, not order. 개정 2's first attempt compared Block.Since against the
+// credit's comparison stamp, on the theory that a block raised after the
+// comparison was not the one the adjustment answered. The comparand was wrong in
+// a way that mattered: Block.Since is reconcile_states.entered_at, written at the
+// END of the cycle, while the credit carries Diff.AsOf — the instant the snapshot
+// read BEGAN. Against a live broker the whole cycle sits between them, so the
+// ordinary converge-then-block-then-agree flow could never release, and the
+// discard below then threw the credit away. That is the a083 production defect,
+// rebuilt. The staleness it was reaching for is bounded by the one-opportunity
+// rule in Observe instead, which needs no clock comparison at all.
+func hasBlockFor(blocks map[string]Block, symbol string) bool {
+	for _, block := range blocks {
+		if block.Cause != journal.ReconcileCauseQuantityMismatch ||
+			block.Release != ReleaseOnAdjustedReconcile {
+			continue
+		}
+		if strings.ToUpper(strings.TrimSpace(block.Symbol)) == symbol {
+			return true
+		}
 	}
-	// Compare at the stamp's own resolution. A credit carries Diff.AsOf, which is
-	// RFC3339 to the second, while Block.Since comes off the journal with
-	// nanoseconds. Comparing them raw would make a block entered 40µs into the
-	// same second look newer than the comparison that covered it — and a block
-	// whose credit can never answer it is a block nothing automatic can lift,
-	// which is the a083 defect wearing a different hat. The residual one-second
-	// window is the resolution the whole credit rule already runs at (issues.md I7).
-	return !block.Since.Truncate(time.Second).After(at)
+	return false
 }
 
 // symbolsInDispute is the set of symbols this comparison still disagrees about.
@@ -447,26 +452,6 @@ func symbolsInDispute(diff Diff) map[string]bool {
 	return out
 }
 
-// answerableBlockFor reports whether any block this credit could still release
-// stands for the symbol. A credit with none has nothing left to answer: it
-// cannot release a future block (D7 forbids it), so keeping it only widens the
-// window in which it might. Discarding is what bounds t.adjusted by the number
-// of blocked symbols, with no wall-clock TTL to tune (개정 2, D9).
-func answerableBlockFor(blocks map[string]Block, symbol, credit string) bool {
-	for _, block := range blocks {
-		if block.Cause != journal.ReconcileCauseQuantityMismatch ||
-			block.Release != ReleaseOnAdjustedReconcile {
-			continue
-		}
-		if strings.ToUpper(strings.TrimSpace(block.Symbol)) != symbol {
-			continue
-		}
-		if creditAnswers(credit, block) {
-			return true
-		}
-	}
-	return false
-}
 
 // Outcome is what one observation did.
 type Outcome struct {
@@ -550,15 +535,6 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 				// comparison that does not block. It is not agreement. Releasing on it
 				// reopens entries against exposure the engine cannot account for
 				// (개정 2, D8).
-				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
-				continue
-			}
-			if !creditAnswers(t.adjusted[symbol], block) {
-				// The credit was computed before this block existed, so the adjustment
-				// it names answered some earlier disagreement — not this one. Blocks
-				// entered by another producer (an oversell the projection refused, an
-				// orphan fill) share a key with the quantity comparer's own, and
-				// nothing reconciled them (개정 2, D7).
 				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
 				continue
 			}
@@ -650,10 +626,18 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 		if !creditUsableBy(comparison, diff.AsOf) {
 			continue
 		}
-		// answerable: no block this credit could still release stands for the
-		// symbol, so there is nothing left for it to answer (개정 2, D9).
-		if disputed[symbol] || committed[symbol] ||
-			!answerableBlockFor(t.blocks, symbol, comparison) {
+		// no block: nothing left for this credit to answer. Either the release it
+		// earned committed (covered above), or the block went away by another route
+		// — an operator cleared it, another process released it. Keeping the credit
+		// then means keeping an authorization for a disagreement that no longer
+		// exists, waiting for a later one it never answered: the oversell the
+		// projection refuses hours from now, the orphan fill. That is what bounds
+		// the credit's life, and it needs no clock comparison and no TTL (D9).
+		//
+		// Not discarded when the release was attempted and the durable write failed:
+		// the block is still there, so hasBlockFor is true and the retry keeps its
+		// evidence. A storage failure must not cost a release that was earned.
+		if disputed[symbol] || committed[symbol] || !hasBlockFor(t.blocks, symbol) {
 			delete(t.adjusted, symbol)
 		}
 	}

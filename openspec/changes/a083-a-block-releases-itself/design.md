@@ -255,3 +255,34 @@ credit 폐기 ⟺ usable ∧ ( disputed ∨ committed ∨ 활성 차단 없음 )
 부분 credit이 안전한 이유: credit은 해제를 **허가**하지 않는다. D7·D8을 통과한 뒤
 엄격히 나중의 비교가 동의할 때만 해제가 일어난다. 커밋된 수렴에 credit을 주는 것은
 "이 심볼에 조정이 기록됐다"는 사실 진술이며, 그것은 참이다.
+
+### D7 정정 (2026-08-05, 개정 2의 두 번째 독립 리뷰)
+
+**최초 D7은 틀렸고 a083의 원래 결함을 되살렸다.** 리뷰어 둘이 독립적으로 실행 재현과
+함께 지적했다.
+
+비교 대상이 어긋나 있었다. `Block.Since`는 `reconcile_states.entered_at`이고 이것은
+사이클이 **끝날 때** 기록된다. credit이 든 `Diff.AsOf`는 스냅샷 읽기가 **시작된**
+시각이다(`snapshot.go`: "AsOf is when the first read started"). 그 둘 사이에는 수집
+왕복, `LocalStateFromJournal`, `Compare`, 외부 편입, 수렴 트랜잭션, `Refresh`가 통째로
+들어간다. 실계좌에서 그것이 1초 안에 끝나지 않으므로 `Since > AsOf`가 **항상** 참이고,
+따라서 정상 경로의 해제가 전부 막혔다. 그리고 D9가 그 credit을 지웠다 — 영구 차단.
+
+fake clock 테스트가 놓친 이유: `asOfAt(clk)`과 `Observe`가 같은 순간을 읽어
+`Since == AsOf` 경계에 정확히 앉는다. 드라이버를 통해 해제를 확인하는 테스트가 하나도
+없었다.
+
+**정정: 시계 비교를 버린다.** credit의 수명은 **자기가 답할 차단의 존재**로 묶는다.
+
+```
+credit 폐기 ⟺ usable ∧ ( disputed ∨ committed ∨ 그 심볼에 차단 없음 )
+```
+
+B1이 실제로 공격한 것 — 6시간 묵은 credit이 나중에 생긴 남의 차단을 푸는 것 — 은 이
+규칙으로도 닫힌다. 그 credit이 답한 차단은 첫 일치에서 해제·커밋되고 credit은 그때
+사라지므로, 나중의 oversell 차단에는 쓸 credit이 없다. 운영자가 차단을 out-of-band로
+치운 경우도 "차단 없음"으로 폐기된다.
+
+지속성 실패는 예외다: 해제를 시도했는데 durable write가 실패하면 차단이 그대로 남아
+있으므로 credit도 남고 다음 주기가 재시도한다. 저장 실패가 이미 얻은 해제를 잃게 해서는
+안 된다.

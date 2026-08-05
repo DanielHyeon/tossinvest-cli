@@ -233,3 +233,36 @@ D9는 재판정 통과에서 익절 계열 제안의 주문 측을 보류한다.
 그 주기의 제안이 사라진다). D9는 그 계약을 재사용했을 뿐 새로 만들지 않았다. 근본
 해법은 `record`가 판정 트랜잭션을 주문 측보다 **먼저** 돌리는 것이고, 그것은 High-risk
 기존 함수의 구조 변경이므로 별도 change다.
+
+## B5 — **닫힘**: 재시도가 가격 읽기보다 먼저 소진됐다
+
+개정 2의 첫 D8 구현은 `workingSet`에서 각인했다. `workingSet`은 `o.observe` **앞에서**
+돈다. 따라서 호가를 못 받은 주기 — 거래정지, 매매중단, 전송 실패 — 가 그 포지션의
+유일한 재판정을 아무것도 판정하지 않은 채 태웠고, 이후 매 주기 거부되며 **손절이
+평가되지 않는다.** 사람이 풀거나 개정 상수를 올리기 전까지.
+
+각인을 `judge` 진입부로 옮겼다. 거기서는 호가가 손에 있다. 각인 실패는 격리를 유지하고
+`NeedsReJudgement`를 참으로 두므로 다음 주기가 다시 시도한다 — fail-closed이면서 자가
+복구다.
+
+## B6 — **닫힘**: 엔진이 쓴 arm-suppression 사유를 원장 reader가 손상으로 거부했다
+
+개정 2가 write-side validator만 넓히고 read-side 두 곳을 그대로 뒀다.
+`ExitEvents`는 hard fail하고, `AccountExitEvents`는 행을 `invalid_event_evidence`로
+격하한다. D9가 남기려던 근거를 잃고, 진짜 손상을 잡아야 할 validator가 정상 행에 발화한다.
+`knownArmSuppression` 하나로 write·read 양쪽을 통일했다.
+
+## I13 — `releaseReJudgedQuarantineTx`가 사유만 보고 재판정 여부를 추론한다
+
+개정 2가 `NeedsReJudgement` 조건을 빼고 사유 게이트만 남겼다. 단일 프로세스에서는
+`workingSet`이 유일한 진입이라 정합적이지만, 프로세스가 여럿이면 A의 판정 트랜잭션이
+B가 방금 연 `ambiguous_recovery` 행을 `SELECTOR_REVISED`로 닫을 수 있다 — 일어나지 않은
+재판정이다. 정본 해법은 `managed.reJudge`를 판정 트랜잭션까지 전달해 추론 대신 사실로
+게이트하는 것이며, 별도 change다.
+
+## I14 — 재판정 통과의 부분 익절은 실제로 무장한다
+
+`workingSet` 주석이 "arms and cancels nothing"이라고 적고 있었으나 `LADDER_PARTIAL`·
+`RATCHET_PARTIAL`은 `CancelPendingFirst`도 `isFullExit`도 아니어서 보류 분기에 들어가지
+않고 정상 제출된다. 안전하다 — 제출은 판정 커밋 **뒤**이므로 거부가 주문을 남기지
+않는다 — 지만 주석이 틀렸으므로 코드가 보장하는 것으로 고쳤다.

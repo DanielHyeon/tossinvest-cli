@@ -447,13 +447,6 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 	return cycle
 }
 
-// stabilise takes the cycle's two snapshots and reports the stable one.
-//
-// Two collections, at least the stabilisation interval apart, is the whole of
-// reconciliation's "안정화는 최소 간격(기본 2초)을 둔 연속 2회 동일 스냅샷으로
-// 판정한다". An account that is still moving ends the cycle here — silently,
-// because "the owner is trading right now" is a transition state and not a
-// finding (design A4).
 // learnNames records what the account calls these instruments, from every
 // holdings read rather than only from a stabilised pair.
 //
@@ -474,6 +467,13 @@ func (d *ReconcileDriver) learnNames(snapshot reconcile.Snapshot) {
 	}
 }
 
+// stabilise takes the cycle's two snapshots and reports the stable one.
+//
+// Two collections, at least the stabilisation interval apart, is the whole of
+// reconciliation's "안정화는 최소 간격(기본 2초)을 둔 연속 2회 동일 스냅샷으로
+// 판정한다". An account that is still moving ends the cycle here — silently,
+// because "the owner is trading right now" is a transition state and not a
+// finding (design A4).
 func (d *ReconcileDriver) stabilise(ctx context.Context, cycle *ReconcileCycle) (reconcile.Snapshot, bool) {
 	interval := d.opts.StabilisationInterval
 	if interval <= 0 {

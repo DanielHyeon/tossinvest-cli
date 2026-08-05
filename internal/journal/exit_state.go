@@ -602,7 +602,8 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 		proposal := *judgement.Proposal
 		result.ArmOutcome = ExitArmArmed
 		result.ArmedProposal = &proposal
-	case judgement.ArmSuppressedReason == ArmSuppressedWorkingOrder:
+	case judgement.ArmSuppressedReason == ArmSuppressedWorkingOrder,
+		judgement.ArmSuppressedReason == ArmSuppressedReJudge:
 		result.ArmOutcome = ExitArmSuppressedWorkingOrder
 	}
 	return nil

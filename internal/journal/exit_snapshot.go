@@ -120,6 +120,17 @@ const (
 	ArmSuppressedReJudge = "re_judging_a_superseded_quarantine"
 )
 
+// knownArmSuppression is the read side of the arm-suppression allowlist.
+//
+// One function rather than a literal at each site: 개정 2 widened the write-side
+// validator for ArmSuppressedReJudge and left the two read-side comparisons
+// alone, so the engine wrote a reason its own reader then rejected as snapshot
+// corruption — losing the evidence D9 exists to record and firing a validator
+// whose job is to detect real corruption (a084 개정 2).
+func knownArmSuppression(reason string) bool {
+	return reason == ArmSuppressedWorkingOrder || reason == ArmSuppressedReJudge
+}
+
 var (
 	ErrExitSnapshotCorrupt      = errors.New("journal: exit snapshot is corrupt")
 	ErrExitSnapshotQuarantined  = errors.New("journal: exit snapshot generation is quarantined")
@@ -280,8 +291,7 @@ func validateJudgementSnapshot(positionID string, judgement ExitJudgement, store
 		return nil
 	}
 	if judgement.Proposal == nil {
-		if judgement.ArmSuppressedReason != ArmSuppressedWorkingOrder &&
-			judgement.ArmSuppressedReason != ArmSuppressedReJudge {
+		if !knownArmSuppression(judgement.ArmSuppressedReason) {
 			return errors.New("orderable snapshot without a proposal needs a typed arm-suppression reason")
 		}
 		return nil
@@ -479,7 +489,7 @@ func validateExitEventArmSuppression(event ExitEvent) error {
 		return fmt.Errorf("%w: effective event snapshot does not match recovery selection",
 			ErrExitSnapshotCorrupt)
 	}
-	if reason != "" && reason != ArmSuppressedWorkingOrder {
+	if reason != "" && !knownArmSuppression(reason) {
 		return fmt.Errorf("%w: unknown arm-suppression reason %q", ErrExitSnapshotCorrupt, reason)
 	}
 	armed := event.Action != "" || event.ProposedIntentID != ""
@@ -499,7 +509,7 @@ func validateExitEventArmSuppression(event ExitEvent) error {
 		}
 		return nil
 	}
-	if recomputed.Line.Orderable && !armed && reason != ArmSuppressedWorkingOrder {
+	if recomputed.Line.Orderable && !armed && !knownArmSuppression(reason) {
 		return fmt.Errorf("%w: orderable event without an arm needs typed suppression evidence",
 			ErrExitSnapshotCorrupt)
 	}

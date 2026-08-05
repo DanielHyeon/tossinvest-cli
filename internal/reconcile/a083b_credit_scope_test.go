@@ -111,12 +111,16 @@ func TestAReclassifiedDisagreementRefutesTheCredit(t *testing.T) {
 	}
 }
 
-// TestACreditDoesNotReleaseABlockEnteredAfterIt (D7).
+// TestACreditIsSpentByTheFirstComparisonThatCouldUseIt (D7, 개정 2 재작성).
 //
-// 재현: credit이 답한 차단이 사라지고, 몇 시간 뒤 다른 생산자(투영의 oversell 거절,
-// 고아 체결)가 같은 심볼에 새 차단을 넣는다. 옛 credit이 그것을 푼다 — 그 차단이
-// 말하는 불일치를 아무도 조정하지 않았는데.
-func TestACreditDoesNotReleaseABlockEnteredAfterIt(t *testing.T) {
+// 최초 D7은 `Block.Since`를 credit의 비교 스탬프와 비교했다. **비교 대상이 틀렸다** —
+// `Since`는 사이클 *끝*에 쓰이는 `reddconcile_states.entered_at`이고 credit은 스냅샷
+// 읽기가 *시작된* 시각을 들고 있다. 실계좌에서는 그 사이에 사이클 전체가 들어가므로
+// 정상 경로가 영원히 해제되지 않았다 — a083이 고치려던 결함 그 자체.
+//
+// 대신 credit의 수명을 **해제 기회 한 번**으로 묶는다. 시계 비교가 없고, 6시간 묵은
+// credit이 나중에 생긴 남의 차단을 푸는 경로도 같이 사라진다.
+func TestACreditIsSpentByTheFirstComparisonThatCouldUseIt(t *testing.T) {
 	clk := clock.NewFake(asOf)
 	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
 	store := &authorityStore{ReconcileStore: openJournal(t)}
@@ -126,8 +130,18 @@ func TestACreditDoesNotReleaseABlockEnteredAfterIt(t *testing.T) {
 	observe(t, tracker, comparison)
 	tracker.AdjustmentApplied(comparison.AsOf, "AAPL")
 
-	// Six hours later the fill projection refuses an oversell and enters its own
-	// QUANTITY_MISMATCH block on the same symbol. It is a different disagreement.
+	// The re-read after the adjustment agrees and releases. That is the credit's
+	// one opportunity, and it took it.
+	clk.Advance(60 * time.Second)
+	if out := observe(t, tracker, cleanDiffAt(clk)); len(out.Cleared) != 1 {
+		t.Fatalf("cleared = %+v (awaiting %+v), want the ordinary release: a credit that "+
+			"cannot spend itself on the block it converged is the a083 defect",
+			out.Cleared, out.AwaitingAdjustment)
+	}
+
+	// Six hours later another producer enters its own QUANTITY_MISMATCH block on
+	// the same symbol. Nothing reconciled it, and no credit is left to pretend
+	// otherwise.
 	clk.Advance(6 * time.Hour)
 	store.states = []journal.ReconcileState{{
 		ID: "rc-oversell", AccountRef: "acct-7", Symbol: "AAPL", ScopeMarket: "US",
@@ -141,11 +155,10 @@ func TestACreditDoesNotReleaseABlockEnteredAfterIt(t *testing.T) {
 
 	clk.Advance(60 * time.Second)
 	out := observe(t, tracker, cleanDiffAt(clk))
-
 	if len(out.Cleared) != 0 {
-		t.Fatalf("cleared = %+v, want nothing: this block was entered six hours after the "+
-			"adjustment that is being spent on it. A credit answers the disagreement it "+
-			"converged, not every later one that happens to share a symbol", out.Cleared)
+		t.Fatalf("cleared = %+v, want nothing: the credit was spent six hours ago on the "+
+			"block it actually converged. A credit answers the disagreement it settled, "+
+			"not every later one that happens to share a symbol", out.Cleared)
 	}
 	if gate.CheckEntryFor("us", "AAPL") == nil {
 		t.Fatal("entries were reopened on an oversell nobody reconciled")
