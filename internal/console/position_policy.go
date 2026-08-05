@@ -364,6 +364,11 @@ func (c *Console) handlePositionPolicyApply(w http.ResponseWriter, r *http.Reque
 		c.writePositionPolicyError(w, err)
 		return
 	}
+	// The lifecycle the trading screens draw has just moved. Drop the shared
+	// reading so the redirect below lands on the new one rather than on whatever
+	// was true up to an interval ago (change a081, position_policy_cache.go). Only
+	// a success gets here: a refused apply changed nothing.
+	c.enginePolicy.invalidate()
 	notice := fmt.Sprintf("적용됨 — %s · generation %d · version %d. engine preview에 바인딩된 변경만 1회 반영됐다.",
 		state.Symbol, state.AdoptionGeneration, state.Version)
 	http.Redirect(w, r, "/position-management?notice="+urlQueryEscape(notice), http.StatusSeeOther)

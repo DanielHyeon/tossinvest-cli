@@ -407,6 +407,13 @@ type Console struct {
 	// instrumentNames bounds and single-flights the optional official metadata
 	// read used by /history. Its zero value is ready for use.
 	instrumentNames instrumentNameCache
+	// enginePolicy is the interval'd cache in front of the two engine reads the
+	// protection-line screens make. It exists so the number of open screens and
+	// how often they redraw stop being inputs to how much of the engine's single
+	// write connection the console takes; position_policy_cache.go is where that
+	// contract is written down, including why its two halves have two intervals.
+	// Nil in an unwired build.
+	enginePolicy *positionPolicyCache
 
 	mu   sync.Mutex
 	addr string
@@ -463,6 +470,10 @@ func New(o Options) (*Console, error) {
 	c.startedWith, _ = c.opts.Binary()
 	c.holdings = newHoldingsCache(o.Holdings, holdingsTTL)
 	c.ordersCache = newOrdersCache(o.Orders, ordersTTL)
+	if o.PositionPolicies != nil {
+		c.enginePolicy = newPositionPolicyCache(o.PositionPolicies,
+			engineLifecycleInterval, engineRuntimeInterval)
+	}
 	c.handler = c.routes()
 	return c, nil
 }

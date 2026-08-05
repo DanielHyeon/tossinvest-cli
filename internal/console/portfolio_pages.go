@@ -87,13 +87,27 @@ func (c *Console) decoratePositionRows(ctx context.Context, rows []positionRow, 
 	)
 	if c.opts.PositionPolicies != nil {
 		runtimeAttempted = true
-		// A read failure intentionally leaves EffectiveKnown false. Desired config
+		// One reading of the engine, shared by both screens and by every render
+		// inside each half's interval (change a081, position_policy_cache.go).
+		// Reading here per render put the number of open screens into the interval
+		// between stop-loss judgements, because the List behind it runs on the
+		// engine's single write connection.
+		//
+		// A read failure intentionally leaves EffectiveKnown false, and a lifecycle
+		// listing the engine could not serve leaves policyByID nil. Desired config
 		// below remains useful display context, but is never substituted for the
-		// running engine snapshot.
-		runtime, _ = c.opts.PositionPolicies.Runtime(ctx)
-		if states, err := c.opts.PositionPolicies.List(ctx); err == nil {
-			policyByID = make(map[string]positionpolicy.State, len(states))
-			for _, state := range states {
+		// running engine snapshot — which is why the cache serves a failed attempt
+		// as a failure rather than reviving the success before it.
+		//
+		// The listing is also allowed to be older than the journal row it is joined
+		// against, and always was: c.positions() reads on every render. That
+		// disagreement can only withhold a verdict — an unmatched row renders
+		// 관리 여부 불명 — never invent one.
+		reading := c.enginePolicy.read(ctx, asOf)
+		runtime = reading.Runtime
+		if reading.StatesErr == nil {
+			policyByID = make(map[string]positionpolicy.State, len(reading.States))
+			for _, state := range reading.States {
 				policyByID[strings.TrimSpace(state.PositionID)] = state
 			}
 		}

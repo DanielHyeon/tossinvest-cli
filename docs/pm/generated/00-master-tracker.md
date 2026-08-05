@@ -58,6 +58,8 @@
     - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [in_progress] → `a077-screens-show-what-they-already-know`
     - STORY-TOS-a075 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [in_progress] → `a075-alerts-turn-on-with-one-button`
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [in_progress] → `a076-the-subscribe-address-is-scannable`
+    - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [in_progress] → `a080-line-refreshes-on-engine-cadence`
+    - STORY-TOS-a081 — Let the trading screens share one reading of the engine instead of asking it per render [in_progress] → `a081-screens-share-one-engine-reading`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`

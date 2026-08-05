@@ -1,0 +1,195 @@
+{
+  "file": "internal/console/exit_quarantine.go",
+  "source_sha256": "22c049b50d5e303dc2eeeb14bfc179e61d0b6127100fa3e10b3e124dae98c337",
+  "package": "console",
+  "function": "handleQuarantineReleaseApply",
+  "receiver": "Console",
+  "signature": "Console.handleQuarantineReleaseApply(params=2, results=0)",
+  "start": {
+    "line": 192,
+    "column": 1
+  },
+  "end": {
+    "line": 223,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 19
+      },
+      "text": "c.exitQuarantines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 16
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 34
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 17
+      },
+      "text": "commander.ReleaseQuarantine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 45
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 38
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 3
+      },
+      "text": "c.writeQuarantineError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 2
+      },
+      "text": "http.Redirect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 53
+      },
+      "text": "urlQueryEscape"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

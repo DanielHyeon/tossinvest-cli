@@ -209,6 +209,13 @@ func (c *Console) handleQuarantineReleaseApply(w http.ResponseWriter, r *http.Re
 		c.writeQuarantineError(w, err)
 		return
 	}
+	// Deliberately no engine-policy cache invalidation here (change a081). A
+	// release writes exit_snapshot_quarantines and nothing else; positionpolicy.State
+	// carries no quarantine field and the lifecycle SELECT does not join one. What
+	// the trading screens show for a quarantine is positionRow.Quarantine, read
+	// from the console's own journal handle on every render (portfolio.go), so it
+	// is already fresh. Dropping the reading here would buy one extra engine read
+	// and a comment claiming a data flow that does not exist.
 	notice := fmt.Sprintf("판정 격리 해제됨 — %s · generation %d · quarantine v%d. "+
 		"저장된 기준선은 그대로이고 다음 관측부터 판정이 재개된다. 원인이 남아 있으면 다시 격리된다.",
 		result.Row.Symbol, result.Row.Generation, result.Row.Version)

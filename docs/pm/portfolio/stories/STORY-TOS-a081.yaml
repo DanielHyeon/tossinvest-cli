@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a081",
+  "title": "Let the trading screens share one reading of the engine instead of asking it per render",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a081-screens-share-one-engine-reading",
+    "path": "openspec/changes/a081-screens-share-one-engine-reading"
+  },
+  "acceptance": [
+    "However often the two trading screens redraw and however many of them are open, the console reads the engine's policy state at most once per cache interval",
+    "Two screens rendering at the same moment cost one engine reading rather than two",
+    "An engine that has stopped answering is asked at most once per interval, and within that interval the screens stop reporting an effective state and stop claiming the engine is managing a position",
+    "A policy change the operator makes through the console is visible on the very next redraw rather than after the cache interval",
+    "Screens that do not reload themselves keep reading the engine directly, so an operator action is always decided on a reading taken for that action",
+    "The values the screens display are the same ones they display today when the reading is fresh",
+    "A render abandoned by its browser does not blank the protection line for other renders",
+    "A lifecycle listing older than the journal row it is joined against can withhold a management verdict but never invent one"
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "file": "internal/console/position_policy.go",
+  "source_sha256": "5dda5ebbf9b59358ad403f3ab96d97288630cfe0248ce1d33cba040541706f37",
+  "package": "console",
+  "function": "handlePositionPolicyApply",
+  "receiver": "Console",
+  "signature": "Console.handlePositionPolicyApply(params=2, results=0)",
+  "start": {
+    "line": 350,
+    "column": 1
+  },
+  "end": {
+    "line": 375,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 351,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 363,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 353,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 358,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 365,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 16
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 34
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 357,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 16
+      },
+      "text": "c.opts.PositionPolicies.Apply"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 360,
+        "column": 46
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 38
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 3
+      },
+      "text": "c.writePositionPolicyError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 371,
+        "column": 2
+      },
+      "text": "c.enginePolicy.invalidate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 2
+      },
+      "text": "http.Redirect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 53
+      },
+      "text": "urlQueryEscape"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 355,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 360,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 372,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
