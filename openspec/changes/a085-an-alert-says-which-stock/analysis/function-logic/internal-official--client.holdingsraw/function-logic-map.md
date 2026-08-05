@@ -28,11 +28,8 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 120, 'column': 3}, 'text': 'q.Set'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 123, 'column': 12}, 'text': 'c.getAcct'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 126, 'column': 31}, 'text': 'len'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 126, 'column': 9}, 'text': 'make'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 128, 'column': 9}, 'text': 'append'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `q.Set` | (120) q.Set("symbol", symbol) | 호출부 계약 유지 | AST `calls` |
+| `c.getAcct` | (123) if err := c.getAcct(ctx, "/api/v1/holdings", q, &raw); err != nil { | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

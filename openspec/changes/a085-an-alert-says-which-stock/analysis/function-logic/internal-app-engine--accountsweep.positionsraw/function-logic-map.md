@@ -27,10 +27,7 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 67, 'column': 16}, 'text': 'a.reads.HoldingsRaw'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 71, 'column': 41}, 'text': 'len'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 71, 'column': 9}, 'text': 'make'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 73, 'column': 9}, 'text': 'append'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `a.reads.HoldingsRaw` | (67) items, err := a.reads.HoldingsRaw(ctx, "") | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

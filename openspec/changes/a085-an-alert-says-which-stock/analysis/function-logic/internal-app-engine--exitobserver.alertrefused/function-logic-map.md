@@ -1,7 +1,7 @@
 # Function Logic Map: `ExitObserver.alertRefused`
 
-- Source: `internal/app/engine/exitloop.go` (lines 1427–1449)
-- AST evidence: `ast.json` (`source_sha256: b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1`)
+- Source: `internal/app/engine/exitloop.go` (lines 1516–1538)
+- AST evidence: `ast.json` (`source_sha256: 6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 알림 문구와 표시 전용 배선. 주문·손절·사이징·원장 판정 경로를 바꾸지 않는다.
 
@@ -27,11 +27,11 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 1434, 'column': 5}, 'text': 'errors.As'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1437, 'column': 2}, 'text': 'o.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1439, 'column': 10}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1440, 'column': 10}, 'text': 'o.label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1442, 'column': 75}, 'text': 'cause.Error'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `errors.As` | (1523) if errors.As(cause, &refusal) { | 호출부 계약 유지 | AST `calls` |
+| `o.alert` | (1526) o.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `o.label` | (1529) Title: o.label(m.position.Symbol) + " 판정 불가 — 손절도 평가되지 않는다", | 호출부 계약 유지 | AST `calls` |
+| `cause.Error` | (1531) "손절을 포함해 아무것도 평가되지 않는다.
+원인: " + cause.Error(), | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

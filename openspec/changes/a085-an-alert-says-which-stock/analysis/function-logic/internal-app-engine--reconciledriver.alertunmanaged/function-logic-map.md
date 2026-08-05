@@ -31,11 +31,10 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 407, 'column': 7}, 'text': 'd.opts.Adoption.Excludes'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 412, 'column': 7}, 'text': 'd.opts.Adoption.Included'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 417, 'column': 2}, 'text': 'd.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 419, 'column': 10}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 420, 'column': 10}, 'text': 'd.label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Adoption.Excludes` | (407) case d.opts.Adoption.Excludes(p.Symbol): | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Adoption.Included` | (412) case d.opts.Adoption.Included(p.Symbol): | 호출부 계약 유지 | AST `calls` |
+| `d.alert` | (417) d.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `d.label` | (420) Title: d.label(p.Symbol) + " 보유 중이지만 엔진이 관리하지 않는다", | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

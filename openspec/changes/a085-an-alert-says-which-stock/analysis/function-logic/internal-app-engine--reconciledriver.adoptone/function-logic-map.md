@@ -28,18 +28,16 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 319, 'column': 15}, 'text': 'exitpolicy.SyntheticStop'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 321, 'column': 3}, 'text': 'd.logDeferred'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 321, 'column': 73}, 'text': 'err.Error'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 325, 'column': 19}, 'text': 'd.opts.Journal.AdoptPosition'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 336, 'column': 18}, 'text': 'journal.RFC3339'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 336, 'column': 34}, 'text': 'd.clk.Now'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 340, 'column': 3}, 'text': 'd.logDeferred'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 340, 'column': 58}, 'text': 'err.Error'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 344, 'column': 15}, 'text': 'd.opts.Journal.OpenAdoptedExitState'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 349, 'column': 3}, 'text': 'd.logDeferred'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 350, 'column': 4}, 'text': 'err.Error'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 353, 'column': 2}, 'text': 'd.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `exitpolicy.SyntheticStop` | (319) stop, err := exitpolicy.SyntheticStop(observed, d.opts.Adoption.DefaultStopPct) | 호출부 계약 유지 | AST `calls` |
+| `d.logDeferred` | (321) d.logDeferred(c.position, "the synthetic stop could not be derived: "+err.Error()) | 호출부 계약 유지 | AST `calls` |
+| `err.Error` | (321) d.logDeferred(c.position, "the synthetic stop could not be derived: "+err.Error()) | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Journal.AdoptPosition` | (325) adoption, err := d.opts.Journal.AdoptPosition(ctx, journal.AdoptionRequest{ | 호출부 계약 유지 | AST `calls` |
+| `journal.RFC3339` | (336) ObservedAt:    journal.RFC3339(d.clk.Now()), | 호출부 계약 유지 | AST `calls` |
+| `d.clk.Now` | (336) ObservedAt:    journal.RFC3339(d.clk.Now()), | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Journal.OpenAdoptedExitState` | (344) if _, err := d.opts.Journal.OpenAdoptedExitState(ctx, c.position.ID); err != nil { | 호출부 계약 유지 | AST `calls` |
+| `d.alert` | (353) d.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `d.label` | (356) Title: d.label(c.position.Symbol) + " 엔진 관리로 편입됐다", | 호출부 계약 유지 | AST `calls` |
+| `delete` | (378) delete(d.unmanaged, c.position.ID) | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

@@ -90,3 +90,11 @@
       확인한다.
 - [x] 10.8 `issues.md`에 B1·B2와 I6~I9를 기록한다.
 - [ ] 10.9 gstack 독립 리뷰 재실행 + `make gate`.
+
+## 게이트 슬라이스
+
+이 change의 게이트 1~4단계는 자기 커밋 시점의 worktree에서 돈다 (a083 `8dba0173`,
+a084 `ac2bbfcc`). 스택 위쪽 change의 수정을 자기 것으로 세지 않기 위해서다.
+개정 2~4에서 이 change의 함수를 다시 고친 부분은 a085 슬라이스가 증거를 갖는다 —
+근거와 결정은 `openspec/changes/a085-an-alert-says-which-stock/tasks.md` 11장.
+5~8단계는 저장소 전체 검사라 HEAD에서 한 번만 돈다.

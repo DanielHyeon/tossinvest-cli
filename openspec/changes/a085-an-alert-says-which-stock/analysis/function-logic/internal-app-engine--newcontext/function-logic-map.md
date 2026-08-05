@@ -40,18 +40,27 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 419, 'column': 15}, 'text': 'NewOrderPath'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 426, 'column': 19}, 'text': 'openAuditLog'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 432, 'column': 9}, 'text': 'clock.System'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 436, 'column': 12}, 'text': 'newAutomationStatus'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 436, 'column': 45}, 'text': 'opts.protectionReadiness'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 444, 'column': 30}, 'text': 'resolveNotificationPublisher'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 453, 'column': 12}, 'text': 'recordGateSettings'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 458, 'column': 15}, 'text': 'fmt.Errorf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 467, 'column': 21}, 'text': 'resolveAccountRef'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 469, 'column': 15}, 'text': 'refuseStartup'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 469, 'column': 45}, 'text': 'fmt.Errorf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 474, 'column': 14}, 'text': 'openEngineJournal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `NewOrderPath` | (419) path, err := NewOrderPath(opts) | 호출부 계약 유지 | AST `calls` |
+| `openAuditLog` | (426) auditLog, err := openAuditLog(opts) | 호출부 계약 유지 | AST `calls` |
+| `clock.System` | (432) clk = clock.System() | 호출부 계약 유지 | AST `calls` |
+| `newAutomationStatus` | (436) status := newAutomationStatus(gate, paths, opts.protectionReadiness()) | 호출부 계약 유지 | AST `calls` |
+| `opts.protectionReadiness` | (436) status := newAutomationStatus(gate, paths, opts.protectionReadiness()) | 호출부 계약 유지 | AST `calls` |
+| `resolveNotificationPublisher` | (444) publisher, notifications := resolveNotificationPublisher(cfg.Engine.Notifications, opts.Getenv) | 호출부 계약 유지 | AST `calls` |
+| `recordGateSettings` | (453) if err := recordGateSettings(auditLog, gate, cfg.Engine.Adoption, notifications, | 호출부 계약 유지 | AST `calls` |
+| `fmt.Errorf` | (458) return nil, fmt.Errorf("engine: recording the automation-gate audit trail: %w", err) | 호출부 계약 유지 | AST `calls` |
+| `resolveAccountRef` | (467) accountRef, err := resolveAccountRef(ctx, off) | 호출부 계약 유지 | AST `calls` |
+| `refuseStartup` | (469) return nil, refuseStartup(auditLog, gate, fmt.Errorf("%w: %w", ErrAccountUnresolved, err)) | 호출부 계약 유지 | AST `calls` |
+| `openEngineJournal` | (474) jrn, err := openEngineJournal(ctx, opts, clk) | 호출부 계약 유지 | AST `calls` |
+| `bindApplyHooks` | (484) if err := bindApplyHooks(jrn); err != nil { | 호출부 계약 유지 | AST `calls` |
+| `jrn.Close` | (485) _ = jrn.Close() | 호출부 계약 유지 | AST `calls` |
+| `buildGateway` | (490) wiring, err := buildGateway(ctx, gatewayInputs{ | 호출부 계약 유지 | AST `calls` |
+| `protectionManifestPin` | (497) manifestPin: protectionManifestPin(opts), | 호출부 계약 유지 | AST `calls` |
+| `factory` | (523) guardian, err = factory( | 호출부 계약 유지 | AST `calls` |
+| `runInterlock` | (539) automation, err := runInterlock(status, gate, auditLog, opts.Logger, gateFacts{ | 호출부 계약 유지 | AST `calls` |
+| `clk.Now` | (544) now:       clk.Now(), | 호출부 계약 유지 | AST `calls` |
+| `strategyprojection.NewStore` | (554) projection, err := strategyprojection.NewStore(strategyprojection.DormantSnapshot(clk.Now().UTC())) | 호출부 계약 유지 | AST `calls` |
+| `strategyprojection.DormantSnapshot` | (554) projection, err := strategyprojection.NewStore(strategyprojection.DormantSnapshot(clk.Now().UTC())) | 호출부 계약 유지 | AST `calls` |
+| `UTC` | (554) projection, err := strategyprojection.NewStore(strategyprojection.DormantSnapshot(clk.Now().UTC())) | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

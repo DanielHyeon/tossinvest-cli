@@ -203,7 +203,7 @@ func TestAJudgementThatIsNotAReJudgementReleasesNothing(t *testing.T) {
 		t.Fatalf("precondition: the row must carry the running selector, got %d", q.SelectorRevision)
 	}
 
-	if err := releaseReJudgedQuarantineTxForTest(ctx, j, false, position.ID, position.InstanceSeq); err != nil {
+	if err := releaseReJudgedQuarantineTxForTest(ctx, j, 0, position.ID, position.InstanceSeq); err != nil {
 		t.Fatalf("release helper: %v", err)
 	}
 
@@ -216,7 +216,7 @@ func TestAJudgementThatIsNotAReJudgementReleasesNothing(t *testing.T) {
 	}
 
 	// And the genuine re-judgement still releases.
-	if err := releaseReJudgedQuarantineTxForTest(ctx, j, true, position.ID, position.InstanceSeq); err != nil {
+	if err := releaseReJudgedQuarantineTxForTest(ctx, j, q.Version, position.ID, position.InstanceSeq); err != nil {
 		t.Fatalf("release helper: %v", err)
 	}
 	if _, active, err := j.ActiveExitSnapshotQuarantine(ctx, position.ID, position.InstanceSeq); err != nil {
@@ -226,17 +226,97 @@ func TestAJudgementThatIsNotAReJudgementReleasesNothing(t *testing.T) {
 	}
 }
 
+// TestAReJudgementReleasesOnlyTheRowThatEarnedIt (개정 4).
+//
+// 네 번째 독립 리뷰가 실행 재현으로 잡았다. judge()의 각인과 이 트랜잭션 사이에서
+// 운영자가 각인된 행을 풀고 병행 관측이 새 행을 열 수 있다. 버전을 보지 않는 해제는
+// 그 새 행 — 지금 도는 선택기가 스스로 쓴 행 — 을 SELECTOR_REVISED로 닫는다.
+// 개정 3이 없앤 것과 같은 종류의 거짓 근거이고, 한 버전만큼 좁아졌을 뿐이다.
+func TestAReJudgementReleasesOnlyTheRowThatEarnedIt(t *testing.T) {
+	j := exitFixture(t)
+	ctx := context.Background()
+	o, _ := openedPosition(t, j, "10")
+	position := currentPosition(t, j, o)
+
+	earned, err := j.QuarantineExitSnapshot(ctx, position.ID, position.InstanceSeq,
+		QuarantineReasonAmbiguousRecovery, "exitpolicy: recovery candidate identity mismatch")
+	if err != nil {
+		t.Fatalf("QuarantineExitSnapshot: %v", err)
+	}
+	// The operator lifts the row the re-judgement was earned against, and another
+	// observer's failed selection opens a replacement — both inside the window
+	// between the stamp and the judgement's commit.
+	if err := j.ReleaseExitSnapshotQuarantine(ctx, position.ID, position.InstanceSeq, earned.Version,
+		QuarantineReleaseHumanRepair, "operator repaired the stored snapshot by hand"); err != nil {
+		t.Fatalf("operator release: %v", err)
+	}
+	replacement, err := j.QuarantineExitSnapshot(ctx, position.ID, position.InstanceSeq,
+		QuarantineReasonAmbiguousRecovery, "exitpolicy: recovery candidate identity mismatch, again")
+	if err != nil {
+		t.Fatalf("QuarantineExitSnapshot: %v", err)
+	}
+	if replacement.Version == earned.Version {
+		t.Fatalf("precondition: the replacement must be a new version, got %d", replacement.Version)
+	}
+
+	if err := releaseReJudgedQuarantineTxForTest(ctx, j, earned.Version, position.ID, position.InstanceSeq); err != nil {
+		t.Fatalf("release helper: %v", err)
+	}
+
+	if _, active, err := j.ActiveExitSnapshotQuarantine(ctx, position.ID, position.InstanceSeq); err != nil {
+		t.Fatal(err)
+	} else if !active {
+		t.Fatal("a re-judgement earned against an older quarantine closed the row that replaced " +
+			"it. The selector running now wrote that replacement, so SELECTOR_REVISED describes " +
+			"a comparison nobody ran, and the generation this selector just refused is judgeable again")
+	}
+}
+
 // releaseReJudgedQuarantineTxForTest reaches the transaction-scoped helper the
 // judgement path uses, which has no exported entry point by design.
-func releaseReJudgedQuarantineTxForTest(ctx context.Context, j *Journal, reJudging bool,
+func releaseReJudgedQuarantineTxForTest(ctx context.Context, j *Journal, reJudgingVersion int64,
 	id string, generation int64) error {
 	tx, err := j.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	if err := releaseReJudgedQuarantineTx(ctx, tx, reJudging, id, generation, j.nowString()); err != nil {
+	if err := releaseReJudgedQuarantineTx(ctx, tx, reJudgingVersion, id, generation, j.nowString()); err != nil {
 		return err
 	}
 	return tx.Commit()
+}
+
+// TestAnOperatorOnlyQuarantineSurvivesAGenuineReJudgement (개정 4).
+//
+// 다섯 번째 독립 리뷰가 커버리지로 잡았다. `active.Reason != ambiguous_recovery` 가드는
+// map의 안전 결론이 근거로 삼는 조건인데 어떤 테스트도 그 줄을 실행하지 않았다.
+//
+// 이 가드는 선택기에 관한 사실이 선택기가 만들지 않은 행에 적용되지 않게 한다.
+// stored_snapshot_corrupt는 선택기가 상의되기 전에 결정되므로, 선택기 개정은 그것에
+// 대해 아무 말도 하지 않는다. 재판정 버전이 정확히 맞아도 이 경로는 풀 수 없다.
+func TestAnOperatorOnlyQuarantineSurvivesAGenuineReJudgement(t *testing.T) {
+	j := exitFixture(t)
+	ctx := context.Background()
+	o, _ := openedPosition(t, j, "10")
+	position := currentPosition(t, j, o)
+
+	q, err := j.QuarantineExitSnapshot(ctx, position.ID, position.InstanceSeq,
+		"stored_snapshot_corrupt", "journal: the stored exit snapshot did not decode")
+	if err != nil {
+		t.Fatalf("QuarantineExitSnapshot: %v", err)
+	}
+
+	// The exact version, so only the reason can refuse.
+	if err := releaseReJudgedQuarantineTxForTest(ctx, j, q.Version, position.ID, position.InstanceSeq); err != nil {
+		t.Fatalf("release helper: %v", err)
+	}
+
+	if _, active, err := j.ActiveExitSnapshotQuarantine(ctx, position.ID, position.InstanceSeq); err != nil {
+		t.Fatal(err)
+	} else if !active {
+		t.Fatal("a re-judgement closed a quarantine the recovery selector never decided. " +
+			"SELECTOR_REVISED describes a comparison that was never consulted for this row, " +
+			"and a row only an operator could lift was lifted by a machine")
+	}
 }

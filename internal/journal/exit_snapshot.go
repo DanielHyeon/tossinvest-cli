@@ -860,9 +860,9 @@ func releaseExitSnapshotQuarantineTx(ctx context.Context, tx *sql.Tx,
 // It is a no-op when there is no active row, and when the active row was written
 // by the selector running now: that generation was never re-judged, so nothing
 // about it has been re-decided and releasing it would be a release nobody earned.
-func releaseReJudgedQuarantineTx(ctx context.Context, tx *sql.Tx, reJudging bool, id string,
+func releaseReJudgedQuarantineTx(ctx context.Context, tx *sql.Tx, reJudgingVersion int64, id string,
 	generation int64, now string) error {
-	if !reJudging {
+	if reJudgingVersion <= 0 {
 		// This judgement is not a re-judgement, so it has re-decided nothing and
 		// may not close anything. Inferring the fact from the row's reason — which
 		// 개정 2 did — released a quarantine the selector running now had written
@@ -876,6 +876,14 @@ func releaseReJudgedQuarantineTx(ctx context.Context, tx *sql.Tx, reJudging bool
 	// the recovery selector never decided is still not this path's to lift.
 	if err != nil || !ok || active.Reason != QuarantineReasonAmbiguousRecovery {
 		return err
+	}
+	// The row that earned the re-judgement, not merely a row. An operator release
+	// plus a concurrent observer failure can swap the active row between judge()'s
+	// stamp and this transaction, and closing the replacement would record
+	// SELECTOR_REVISED against a row the running selector wrote itself — the same
+	// class of false evidence 개정 3 removed, one version narrower (개정 4).
+	if active.Version != reJudgingVersion {
+		return nil
 	}
 	return releaseExitSnapshotQuarantineTx(ctx, tx, active, QuarantineReleaseSelectorRevised,
 		"the recovery selector changed since this quarantine was written; the re-judgement chose "+

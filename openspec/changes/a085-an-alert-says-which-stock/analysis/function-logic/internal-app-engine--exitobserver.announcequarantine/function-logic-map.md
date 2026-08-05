@@ -27,10 +27,9 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 66, 'column': 9}, 'text': 'quarantineAnnouncementKey'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 71, 'column': 2}, 'text': 'o.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 73, 'column': 10}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 74, 'column': 10}, 'text': 'o.label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `quarantineAnnouncementKey` | (66) key := quarantineAnnouncementKey(p.ID, q.PositionGeneration, q.Version) | 호출부 계약 유지 | AST `calls` |
+| `o.alert` | (71) o.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `o.label` | (74) Title: o.label(p.Symbol) + " 판정 격리 — 이제 손절도 평가되지 않는다", | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

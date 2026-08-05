@@ -1,0 +1,263 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00",
+  "package": "engine",
+  "function": "judgeRatchet",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.judgeRatchet(params=6, results=1)",
+  "start": {
+    "line": 861,
+    "column": 1
+  },
+  "end": {
+    "line": 914,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 864,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 865,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 875,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 895,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 903,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 872,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 877,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 897,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 908,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 911,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 863,
+        "column": 25
+      },
+      "text": "exitpolicy.RatchetPolicyIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 864,
+        "column": 20
+      },
+      "text": "samePolicyIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 866,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 871,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 874,
+        "column": 26
+      },
+      "text": "o.snapshotContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 876,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 889,
+        "column": 21
+      },
+      "text": "exitpolicy.Level"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 890,
+        "column": 21
+      },
+      "text": "exitpolicy.Action"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 894,
+        "column": 19
+      },
+      "text": "exitpolicy.EvaluateRatchetSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 896,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 899,
+        "column": 2
+      },
+      "text": "o.clearRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 901,
+        "column": 13
+      },
+      "text": "snapshot.ChangedFromState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 902,
+        "column": 3
+      },
+      "text": "exitpolicy.Level"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 911,
+        "column": 9
+      },
+      "text": "o.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 912,
+        "column": 3
+      },
+      "text": "exitpolicy.NewRatchetRecoveryPolicy"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 863,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 866,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 874,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 879,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 894,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 901,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

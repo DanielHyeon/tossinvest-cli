@@ -1,7 +1,7 @@
 # Function Logic Map: `ReconcileDriver.RunOnce`
 
-- Source: `internal/app/engine/reconcileloop.go` (lines 397–457)
-- AST evidence: `ast.json` (`source_sha256: 821dc7a7c1b58e8756f7cc423f527d01c76593a623c2b86db0e3fc08a8a01364`)
+- Source: `internal/app/engine/reconcileloop.go` (lines 404–456)
+- AST evidence: `ast.json` (`source_sha256: 50a2c0f0b133fc0a6761fd8eee1950286c73fa6beca6d27da66dab16ecb42606`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 알림 문구와 표시 전용 배선. 주문·손절·사이징·원장 판정 경로를 바꾸지 않는다.
 
@@ -35,18 +35,18 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 398, 'column': 17}, 'text': 'd.note'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 398, 'column': 8}}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 400, 'column': 18}, 'text': 'd.stabilise'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 411, 'column': 4}, 'text': 'd.opts.Names.Learn'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 415, 'column': 16}, 'text': 'reconcile.LocalStateFromJournal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 417, 'column': 15}, 'text': 'fmt.Errorf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 420, 'column': 10}, 'text': 'Compare'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 426, 'column': 17}, 'text': 'd.ingest.IngestExternalPositions'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 430, 'column': 17}, 'text': 'len'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 432, 'column': 20}, 'text': 'd.opts.Converge.ConvergeQuantities'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 436, 'column': 20}, 'text': 'len'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 439, 'column': 12}, 'text': 'd.opts.Tracker.Refresh'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `` | (405) defer func() { d.note(cycle) }() | 호출부 계약 유지 | AST `calls` |
+| `d.note` | (405) defer func() { d.note(cycle) }() | 호출부 계약 유지 | AST `calls` |
+| `d.stabilise` | (407) snapshot, ok := d.stabilise(ctx, &cycle) | 호출부 계약 유지 | AST `calls` |
+| `reconcile.LocalStateFromJournal` | (413) local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef) | 호출부 계약 유지 | AST `calls` |
+| `fmt.Errorf` | (415) cycle.Err = fmt.Errorf("engine: reading the local state for reconciliation: %w", err) | 호출부 계약 유지 | AST `calls` |
+| `Compare` | (418) diff := reconcile.Comparer{}.Compare(snapshot, local) | 호출부 계약 유지 | AST `calls` |
+| `d.ingest.IngestExternalPositions` | (424) folded, err := d.ingest.IngestExternalPositions(ctx, diff) | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Converge.ConvergeQuantities` | (430) converged, err := d.opts.Converge.ConvergeQuantities(ctx, diff) | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Tracker.Refresh` | (437) if err := d.opts.Tracker.Refresh(ctx); err != nil { | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Tracker.Observe` | (443) outcome, err := d.opts.Tracker.Observe(ctx, diff) | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Tracker.Blocks` | (444) cycle.Blocked = len(d.opts.Tracker.Blocks()) | 호출부 계약 유지 | AST `calls` |
+| `d.judgeHoldings` | (454) d.judgeHoldings(ctx, snapshot, &cycle) | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

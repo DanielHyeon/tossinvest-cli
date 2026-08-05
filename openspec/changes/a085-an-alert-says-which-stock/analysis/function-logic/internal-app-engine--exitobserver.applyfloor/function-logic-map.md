@@ -1,7 +1,7 @@
 # Function Logic Map: `ExitObserver.applyFloor`
 
-- Source: `internal/app/engine/exitloop.go` (lines 1314–1358)
-- AST evidence: `ast.json` (`source_sha256: b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1`)
+- Source: `internal/app/engine/exitloop.go` (lines 1403–1447)
+- AST evidence: `ast.json` (`source_sha256: 6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 알림 문구와 표시 전용 배선. 주문·손절·사이징·원장 판정 경로를 바꾸지 않는다.
 
@@ -31,16 +31,14 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 1318, 'column': 25}, 'text': 'o.opts.Floor.ConfirmedFloor'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1323, 'column': 3}, 'text': 'o.logErr'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1330, 'column': 14}, 'text': 'riskcalc.CompareDecimal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1332, 'column': 21}, 'text': 'fmt.Errorf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1337, 'column': 20}, 'text': 'riskcalc.SubDecimal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1339, 'column': 21}, 'text': 'fmt.Errorf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1341, 'column': 2}, 'text': 'o.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1343, 'column': 10}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1344, 'column': 10}, 'text': 'o.label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1345, 'column': 9}, 'text': 'fmt.Sprintf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `o.opts.Floor.ConfirmedFloor` | (1407) floor, applies, err := o.opts.Floor.ConfirmedFloor(ctx, m.position.Market, m.position.Symbol) | 호출부 계약 유지 | AST `calls` |
+| `o.logErr` | (1412) o.logErr(obs.EventExitProposalCapped, err, | 호출부 계약 유지 | AST `calls` |
+| `riskcalc.CompareDecimal` | (1419) cmp, err := riskcalc.CompareDecimal(floor.Quantity, quantity) | 호출부 계약 유지 | AST `calls` |
+| `fmt.Errorf` | (1421) return "", false, fmt.Errorf("engine: comparing the confirmed floor of %s: %w", m.position.Symbol, err) | 호출부 계약 유지 | AST `calls` |
+| `riskcalc.SubDecimal` | (1426) remainder, err := riskcalc.SubDecimal(quantity, floor.Quantity) | 호출부 계약 유지 | AST `calls` |
+| `o.alert` | (1430) o.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `o.label` | (1433) Title: o.label(m.position.Symbol) + " 청산이 확정 하한에 걸려 일부만 나갔다", | 호출부 계약 유지 | AST `calls` |
+| `fmt.Sprintf` | (1434) Body: fmt.Sprintf( | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

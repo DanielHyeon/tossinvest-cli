@@ -1,0 +1,179 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00",
+  "package": "engine",
+  "function": "judge",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.judge(params=5, results=1)",
+  "start": {
+    "line": 807,
+    "column": 1
+  },
+  "end": {
+    "line": 840,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 809,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 813,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 823,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 829,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "switch",
+      "at": {
+        "line": 834,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 835,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 837,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 811,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 825,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 831,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 836,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 838,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 810,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 823,
+        "column": 13
+      },
+      "text": "o.opts.Journal.StampExitSnapshotQuarantineSelector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 828,
+        "column": 20
+      },
+      "text": "o.breakEven"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 830,
+        "column": 3
+      },
+      "text": "o.alertRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 836,
+        "column": 10
+      },
+      "text": "o.judgeLadder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 838,
+        "column": 10
+      },
+      "text": "o.judgeRatchet"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 823,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 828,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

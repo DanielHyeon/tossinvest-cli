@@ -28,11 +28,10 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 445, 'column': 19}, 'text': 'd.opts.Journal.AdoptionOf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 449, 'column': 14}, 'text': 'riskcalc.CompareDecimal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 455, 'column': 2}, 'text': 'd.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 457, 'column': 10}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 458, 'column': 10}, 'text': 'd.label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Journal.AdoptionOf` | (445) adoption, err := d.opts.Journal.AdoptionOf(ctx, p.ID) | 호출부 계약 유지 | AST `calls` |
+| `riskcalc.CompareDecimal` | (449) cmp, err := riskcalc.CompareDecimal(p.Quantity, adoption.Quantity) | 호출부 계약 유지 | AST `calls` |
+| `d.alert` | (455) d.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `d.label` | (458) Title: d.label(p.Symbol) + " 편입 후 수량이 늘었고 고정된 t0가 증가분을 덮지 않는다", | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

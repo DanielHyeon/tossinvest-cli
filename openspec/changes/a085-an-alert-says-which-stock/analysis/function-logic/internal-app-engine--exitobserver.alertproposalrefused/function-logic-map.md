@@ -1,7 +1,7 @@
 # Function Logic Map: `ExitObserver.alertProposalRefused`
 
-- Source: `internal/app/engine/exitloop.go` (lines 1459–1476)
-- AST evidence: `ast.json` (`source_sha256: b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1`)
+- Source: `internal/app/engine/exitloop.go` (lines 1548–1565)
+- AST evidence: `ast.json` (`source_sha256: 6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 알림 문구와 표시 전용 배선. 주문·손절·사이징·원장 판정 경로를 바꾸지 않는다.
 
@@ -26,12 +26,10 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 1461, 'column': 2}, 'text': 'o.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1463, 'column': 8}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1464, 'column': 4}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1465, 'column': 10}, 'text': 'o.label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1466, 'column': 9}, 'text': 'fmt.Sprintf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1471, 'column': 21}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `o.alert` | (1550) o.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `o.label` | (1554) Title: o.label(m.position.Symbol) + " 청산 주문이 제출되지 않았다", | 호출부 계약 유지 | AST `calls` |
+| `fmt.Sprintf` | (1555) Body: fmt.Sprintf("%s (단계 %s)가 브로커에 닿기 전에 거부됐다.
+원인: %s", | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

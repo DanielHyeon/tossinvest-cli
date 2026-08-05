@@ -27,10 +27,9 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 141, 'column': 9}, 'text': 'a.notifier.Notify'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 143, 'column': 8}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 144, 'column': 4}, 'text': 'strings.TrimSpace'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 145, 'column': 10}, 'text': 'a.names.Label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `a.notifier.Notify` | (141) return a.notifier.Notify(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `strings.TrimSpace` | (144) strings.TrimSpace(alert.PositionID), | 호출부 계약 유지 | AST `calls` |
+| `a.names.Label` | (145) Title: a.names.Label(alert.Symbol) + " 엔진 관리 중에 외부에서 청산됐다", | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

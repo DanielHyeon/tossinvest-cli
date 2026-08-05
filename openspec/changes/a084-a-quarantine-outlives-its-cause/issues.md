@@ -291,3 +291,40 @@ B가 방금 연 `ambiguous_recovery` 행을 `SELECTOR_REVISED`로 닫을 수 있
 `logCycle`은 그것을 찍지 않았다. 리뷰어가 지적한 대로, 이 숫자가 보였다면 a083 I1
 (missing-order 차단에 crediter가 없다)이 원장에서 바로 드러났을 것이다.
 `ReconcileCycle.Awaiting`으로 세고 로그에 넣었다.
+
+## B8 — 해제가 *어떤* 행이든 닫았다 (개정 4, 네 번째 독립 리뷰)
+
+개정 3은 재판정이라는 **사실**을 전달해 "재판정 아닌 판정은 아무것도 안 닫는다"를
+얻었다. 네 번째 리뷰가 그 사실이 아직 부족함을 실행으로 증명했다.
+
+`releaseReJudgedQuarantineTx`는 `(position, generation)`의 활성 행을 읽을 뿐,
+재시도가 실제로 소비된 `m.reJudgeVersion`과 대조하지 않았다. `judge`의 각인과 이
+트랜잭션 사이에 두 가지가 끼어들 수 있다 — 운영자가 각인된 행을 `HUMAN_REPAIR`로 풀고,
+병행 관측의 실패한 선택이 새 행을 연다. 그러면 커밋되는 판정이 **그 새 행**을
+`SELECTOR_REVISED`로 닫는다. 새 행을 쓴 것은 지금 도는 선택기 자신이므로, 개정 3이
+없앤 것과 정확히 같은 종류의 거짓 근거다 — 한 버전만큼 좁아졌을 뿐이다.
+
+"재판정이 있었다"와 "*이* 행이 재판정되었다"는 다른 주장이고, 해제를 정당화하는 것은
+두 번째뿐이다. 그래서 bool을 버리고 `ExitJudgement.ReJudgingVersion int64`로 바꿨다 —
+0이 "재판정 아님"이고, 그 외는 재시도를 소비한 행의 버전이다. 두 필드가 어긋날 여지를
+없애는 것이 부수 효과가 아니라 목적이다: `m.reJudge`와 `m.reJudgeVersion`은
+`workingSet`의 같은 분기에서 함께 설정되므로 값 하나로 접을 수 있다.
+`TestAReJudgementReleasesOnlyTheRowThatEarnedIt`.
+
+## I16 — 각인 뒤 판정 실패는 격리를 좌초시킨다 (기존, 이 change가 만들지 않음)
+
+`judge`가 각인한 뒤 `record`에 닿기 전에 실패하면 — `breakEven`, 정책 동일성 충돌,
+`snapshotContext`, 평가기 오류, `ladderFor`/`checkLadderPolicyStillFits` — 행은 활성인 채
+더는 자격이 없다. `workingSet`은 이후 모든 사이클에서 그 포지션을 거절하므로 **손절이
+다시 평가되지 않는다.** 운영자 해제나 다음 선택기 개정까지.
+
+의도된 보수 방향이고(`exit_snapshot.go`의 "Spending the retry on the attempt rather than
+the outcome") 개정 4가 건드리지 않았다. 여기 적는 이유는 격리된 포지션에 **자동 손절
+평가가 전혀 없다**는 사실이 별도 change로 다뤄져야 하기 때문이다. 주문에는 fail-closed,
+보호에는 fail-open이다.
+
+## I17 — `ExitArmOutcome`이 재판정 억제를 working-order 억제로 보고한다 (기존)
+
+`exit_state.go`가 `ArmSuppressedReJudge`를 `ExitArmOutcome = "suppressed_working_order"`로
+매핑한다. 타입된 `ArmSuppressedReason` 열이 진실을 담고 있으므로 관측성 문제이고 판정에
+영향이 없다. 개정 4 이전부터 있었다.

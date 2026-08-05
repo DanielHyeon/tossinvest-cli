@@ -1,7 +1,7 @@
 # Function Logic Map: `ExitObserver.noteDelay`
 
-- Source: `internal/app/engine/exitloop.go` (lines 1480–1504)
-- AST evidence: `ast.json` (`source_sha256: b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1`)
+- Source: `internal/app/engine/exitloop.go` (lines 1569–1593)
+- AST evidence: `ast.json` (`source_sha256: 6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 알림 문구와 표시 전용 배선. 주문·손절·사이징·원장 판정 경로를 바꾸지 않는다.
 
@@ -27,18 +27,15 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 1481, 'column': 9}, 'text': 'o.clk.Now'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1487, 'column': 22}, 'text': 'o.delayBound'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1487, 'column': 5}, 'text': 'now.Sub'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1491, 'column': 2}, 'text': 'o.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1493, 'column': 10}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1494, 'column': 10}, 'text': 'o.label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1495, 'column': 9}, 'text': 'fmt.Sprintf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1496, 'column': 46}, 'text': 'Round'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1496, 'column': 46}, 'text': 'now.Sub'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1500, 'column': 21}, 'text': 'int'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1500, 'column': 25}, 'text': 'Seconds'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 1500, 'column': 25}, 'text': 'now.Sub'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `o.clk.Now` | (1570) now := o.clk.Now() | 호출부 계약 유지 | AST `calls` |
+| `now.Sub` | (1576) if now.Sub(since) < o.delayBound() \|\| o.delayAlerted[m.position.ID] { | 호출부 계약 유지 | AST `calls` |
+| `o.delayBound` | (1576) if now.Sub(since) < o.delayBound() \|\| o.delayAlerted[m.position.ID] { | 호출부 계약 유지 | AST `calls` |
+| `o.alert` | (1580) o.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `o.label` | (1583) Title: o.label(m.position.Symbol) + " 청산이 허용 지연을 넘겼다", | 호출부 계약 유지 | AST `calls` |
+| `fmt.Sprintf` | (1584) Body: fmt.Sprintf("%s · 경과 %s. 브로커에 상주하는 손절이 생기기 전까지 이 지연은 "+ | 호출부 계약 유지 | AST `calls` |
+| `Round` | (1585) "보호되지 않는 노출이다.", why, now.Sub(since).Round(time.Second)), | 호출부 계약 유지 | AST `calls` |
+| `int` | (1589) "delay_seconds": int(now.Sub(since).Seconds()), | 호출부 계약 유지 | AST `calls` |
+| `Seconds` | (1589) "delay_seconds": int(now.Sub(since).Seconds()), | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

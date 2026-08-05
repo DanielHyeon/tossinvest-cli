@@ -1,0 +1,100 @@
+{
+  "file": "internal/journal/exit_snapshot.go",
+  "source_sha256": "0e376d1ca4f6e29b27308c540088d35ad9725304b6fc5cff20c8c7eed9780524",
+  "package": "journal",
+  "function": "releaseReJudgedQuarantineTx",
+  "signature": "releaseReJudgedQuarantineTx(params=6, results=1)",
+  "start": {
+    "line": 863,
+    "column": 1
+  },
+  "end": {
+    "line": 891,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 865,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 877,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 885,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 870,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 878,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 886,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 888,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 872,
+        "column": 21
+      },
+      "text": "activeExitSnapshotQuarantineTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 888,
+        "column": 9
+      },
+      "text": "releaseExitSnapshotQuarantineTx"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 872,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

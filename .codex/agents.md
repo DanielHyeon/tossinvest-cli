@@ -4,7 +4,6 @@
 상세 개발 절차의 단일 정본은 `docs/WORKFLOW.md`이며 개발 작업 전에 반드시 읽는다.
 
 <!-- SDD_SHARED_START -->
-
 ## 최소 안전 부트스트랩
 
 TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 모든 도구·skill·기억보다 우선한다.
@@ -27,13 +26,12 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
 ## 필수 진입과 완료 조건
 
 1. `docs/WORKFLOW.md`, 관련 OpenSpec change/spec, 현재 코드·테스트를 읽는다.
-2. 에이전트 실행 순서
+2. memory recall → OpenSpec → CodeGraph hard evidence → CodeGraphContext 보조 문맥 →
+   Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY 순서를 따른다.
 3. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
    High-risk 기존 함수는 면제할 수 없다.
 4. `make sdd-sync`, `make sdd-check`, `make gate CHANGE=<change-id>`와 독립 리뷰가
    끝나기 전에는 완료라고 보고하지 않는다.
-
-- 에이전트 실행 순서
 
 ## 에이전트 실행 순서
 
@@ -49,5 +47,4 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
 9. PM/archive 동기화 + 검증된 memory retain
 10. 완료 보고 (금지 조건 확인 후)
 ```
-
 <!-- SDD_SHARED_END -->

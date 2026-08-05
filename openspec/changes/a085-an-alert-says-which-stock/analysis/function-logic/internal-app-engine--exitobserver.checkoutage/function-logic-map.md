@@ -1,7 +1,7 @@
 # Function Logic Map: `ExitObserver.checkOutage`
 
-- Source: `internal/app/engine/exitloop.go` (lines 746–783)
-- AST evidence: `ast.json` (`source_sha256: b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1`)
+- Source: `internal/app/engine/exitloop.go` (lines 767–804)
+- AST evidence: `ast.json` (`source_sha256: 6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 알림 문구와 표시 전용 배선. 주문·손절·사이징·원장 판정 경로를 바꾸지 않는다.
 
@@ -30,18 +30,20 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 748, 'column': 5}, 'text': 'since.IsZero'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 751, 'column': 30}, 'text': 'o.outageAfter'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 751, 'column': 5}, 'text': 'Sub'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 751, 'column': 5}, 'text': 'o.clk.Now'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 759, 'column': 2}, 'text': 'o.alert'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 761, 'column': 10}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 762, 'column': 32}, 'text': 'Round'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 762, 'column': 32}, 'text': 'String'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 762, 'column': 32}, 'text': 'Sub'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 762, 'column': 32}, 'text': 'o.clk.Now'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 763, 'column': 9}, 'text': 'Format'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 763, 'column': 9}, 'text': 'since.UTC'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `since.IsZero` | (769) if since.IsZero() { | 호출부 계약 유지 | AST `calls` |
+| `Sub` | (772) if o.clk.Now().Sub(since) < o.outageAfter() { | 호출부 계약 유지 | AST `calls` |
+| `o.clk.Now` | (772) if o.clk.Now().Sub(since) < o.outageAfter() { | 호출부 계약 유지 | AST `calls` |
+| `o.outageAfter` | (772) if o.clk.Now().Sub(since) < o.outageAfter() { | 호출부 계약 유지 | AST `calls` |
+| `o.alert` | (780) o.alert(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `String` | (783) Title: "청산 관측이 " + o.clk.Now().Sub(since).Round(time.Second).String() + " 동안 끊겼다", | 호출부 계약 유지 | AST `calls` |
+| `Round` | (783) Title: "청산 관측이 " + o.clk.Now().Sub(since).Round(time.Second).String() + " 동안 끊겼다", | 호출부 계약 유지 | AST `calls` |
+| `Format` | (784) Body: since.UTC().Format(time.RFC3339) + " 이후 보유 종목의 가격이 한 번도 관측되지 않았다. " + | 호출부 계약 유지 | AST `calls` |
+| `since.UTC` | (784) Body: since.UTC().Format(time.RFC3339) + " 이후 보유 종목의 가격이 한 번도 관측되지 않았다. " + | 호출부 계약 유지 | AST `calls` |
+| `int` | (789) "outage_seconds": int(o.clk.Now().Sub(since).Seconds()), | 호출부 계약 유지 | AST `calls` |
+| `Seconds` | (789) "outage_seconds": int(o.clk.Now().Sub(since).Seconds()), | 호출부 계약 유지 | AST `calls` |
+| `strings.TrimSpace` | (793) if o.opts.Escalate == nil \|\| strings.TrimSpace(o.opts.AccountRef) == "" { | 호출부 계약 유지 | AST `calls` |
+| `o.opts.Escalate.EscalateOperatingMode` | (796) _, changed, err := o.opts.Escalate.EscalateOperatingMode(ctx, o.opts.AccountRef, | 호출부 계약 유지 | AST `calls` |
+| `o.logErr` | (799) o.logErr(obs.EventOperatingMode, err, | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

@@ -107,3 +107,53 @@ nil일 때만 채운다. 한쪽 규칙으로 통일한다.
 
 의도적 범위 결정인지 누락인지 diff와 a085 문서 어디에도 없다. 종목을 가리키지 않는
 루프 생명주기 알림이라 영어로 둔다면 그 경계를 한 줄로 적는다.
+
+## B3 — 생성한 Function Logic Map이 관측하지 않은 것을 관측했다고 적었다 (개정 4)
+
+11장의 슬라이스 증거를 스크립트로 찍어내면서, 각 target의 테스트 목록을 **모든 분기 행에
+그대로 복사**하고 `RED observed: yes / GREEN observed: yes`를 일괄로 넣었다. 네 번째 독립
+리뷰가 `go test -covermode=count`로 재어 22개가량의 행이 **한 번도 실행되지 않는 분기**를
+관측했다고 주장하고 있음을 보였다. 예: `ExitObserver.record` 14개 분기 중 7개(B2는 하네스가
+`FetchedAt`을 설정하지 않아 구조적으로 도달 불가), `validateExitEventArmSuppression` 20개 중 9개,
+`ExitObserver.judge` 7개 중 3개(B7 `default:` ratchet 분기는 세 테스트가 전부 ladder를 심어
+도달 불가).
+
+안전 증거에서 이것은 없느니만 못하다. 사람이 그 표를 믿고 "이 분기는 테스트가 있다"고
+읽기 때문이다.
+
+고친 방식은 문구가 아니라 **출처**를 바꾸는 것이다. Branch Test Map의 테스트 열과 판정 열을
+주장이 아니라 커버리지 프로파일에서 측정해 렌더한다. 덮이지 않은 분기는 "어떤 테스트도 이
+줄을 실행하지 않는다"로 표시되고, 이 change의 테스트가 못 닿지만 패키지 suite가 덮는 경우는
+그렇게 구분된다. 표가 구조적으로 거짓말을 할 수 없다.
+
+## B4 — 복사한 map이 *수정 전* 코드를 현재 동작으로 서술했다 (개정 4)
+
+같은 리뷰가 두 건을 잡았다.
+
+- `Tracker.Observe`: a083 복사본이 "`t.adjusted = nil` — 결함의 지점 — credit을 무조건 전부
+  버린다"를 현재 동작으로 적고 있었다. HEAD에는 그 문장이 없다 — 개정 3이 심볼 단위 3분기
+  정산으로 바꿨다. 헤더의 줄 범위와 해시도 a083 것이었다. HEAD에서 다시 썼다.
+- `Journal.recordExitJudgementTx`: a084 복사본이 `releaseReJudgedQuarantineTx(ctx, tx, id,`
+  라는 **개정 3 이전 시그니처**를 인용하고, 불변식 행에 "현재 개정이면 해제하지 않는다"는
+  개정 3이 폐기한 각인 추론 규칙을 적고 있었다. 같은 디렉터리의 형제 map이 그 규칙을 결함이라
+  부르고 있어 디렉터리가 자기모순이었다. HEAD에서 고쳤다.
+
+46개 map 중 19개의 헤더(줄 범위·`source_sha256`)가 stale이었던 것도 같은 뿌리다 — prose를
+복사하면서 재유도하지 않았다. 헤더는 이제 `ast.json`에서 기계적으로 생성한다.
+
+## I9 — `reJudgingVersion`에는 Function Logic Map이 없다 (의도)
+
+다섯 번째 리뷰가 일관성 문제로 지적했다: 같은 파일의 비슷한 크기 helper인 `isFullExit`는
+증거 디렉터리를 가졌는데 새 helper `reJudgingVersion`은 없다.
+
+규칙대로다. `docs/WORKFLOW.md`: "기존 파일에 새 함수가 추가되었더라도 frozen base에 같은
+qualified function이 없으면 `modified existing function`으로 분류하지 않는다." `isFullExit`은
+frozen base에 존재하고 base 쪽 hunk가 그 줄 범위에 닿아서 `revision: base` 증거를 요구받았을
+뿐, 본문은 바뀌지 않았다. `reJudgingVersion`은 base에 없다.
+
+## I10 — 버전 불일치로 건너뛴 해제는 로그를 남기지 않는다
+
+`releaseReJudgedQuarantineTx`가 버전 가드에서 조용히 no-op한다. 대체 행은 서 있고 다음
+사이클의 `EventExitJudgementRefused`가 운영자에게 알리므로 관측 공백은 아니지만, "시도했고
+버렸다"는 사실 자체는 원장에 없다. 이 경로에 닿으려면 운영자 해제와 병행 관측 실패가
+각인과 커밋 사이에 겹쳐야 한다 — 별도 change 후보.

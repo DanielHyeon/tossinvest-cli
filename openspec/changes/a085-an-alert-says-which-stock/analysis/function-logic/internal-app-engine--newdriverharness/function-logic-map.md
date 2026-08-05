@@ -1,7 +1,7 @@
 # Function Logic Map: `newDriverHarness`
 
 - Source: `internal/app/engine/reconcileloop_test.go` (lines 121–186)
-- AST evidence: `ast.json` (`source_sha256: d53e58de88a1444c84d97750f68023fe8878894fc04eb5bc2026ade205132eae`)
+- AST evidence: `ast.json` (`source_sha256: 2456d7022ac6ce4a6de30e65d7c57d0b10b7a67ded5c6c404c38faa40e550106`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 테스트 코드.
 
@@ -29,18 +29,20 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 122, 'column': 2}, 'text': 't.Helper'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 123, 'column': 9}, 'text': 'clock.NewFake'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 124, 'column': 12}, 'text': 'journal.Open'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 124, 'column': 25}, 'text': 'context.Background'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 125, 'column': 13}, 'text': 'filepath.Join'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 125, 'column': 27}, 'text': 't.TempDir'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 127, 'column': 13}, 'text': 'journal.FixedFSProber'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 130, 'column': 3}, 'text': 't.Fatalf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 132, 'column': 25}, 'text': 'j.Close'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 132, 'column': 2}, 'text': 't.Cleanup'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 133, 'column': 12}, 'text': 'j.SetApplyHooks'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 136, 'column': 3}, 'text': 't.Fatalf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `t.Helper` | (122) t.Helper() | 호출부 계약 유지 | AST `calls` |
+| `clock.NewFake` | (123) clk := clock.NewFake(reconcileLoopNow) | 호출부 계약 유지 | AST `calls` |
+| `journal.Open` | (124) j, err := journal.Open(context.Background(), journal.Options{ | 호출부 계약 유지 | AST `calls` |
+| `context.Background` | (124) j, err := journal.Open(context.Background(), journal.Options{ | 호출부 계약 유지 | AST `calls` |
+| `filepath.Join` | (125) Path:     filepath.Join(t.TempDir(), "journal.db"), | 호출부 계약 유지 | AST `calls` |
+| `t.TempDir` | (125) Path:     filepath.Join(t.TempDir(), "journal.db"), | 호출부 계약 유지 | AST `calls` |
+| `journal.FixedFSProber` | (127) FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}), | 호출부 계약 유지 | AST `calls` |
+| `t.Fatalf` | (130) t.Fatalf("journal.Open: %v", err) | 호출부 계약 유지 | AST `calls` |
+| `t.Cleanup` | (132) t.Cleanup(func() { _ = j.Close() }) | 호출부 계약 유지 | AST `calls` |
+| `j.Close` | (132) t.Cleanup(func() { _ = j.Close() }) | 호출부 계약 유지 | AST `calls` |
+| `j.SetApplyHooks` | (133) if err := j.SetApplyHooks(journal.ApplyHooks{ | 호출부 계약 유지 | AST `calls` |
+| `execgw.NewEntryGate` | (139) gate := execgw.NewEntryGate(clk, nil) | 호출부 계약 유지 | AST `calls` |
+| `mutate` | (178) mutate(&opts) | 호출부 계약 유지 | AST `calls` |
+| `engine.NewReconcileDriver` | (180) driver, err := engine.NewReconcileDriver(opts) | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

@@ -259,12 +259,21 @@ type ExitJudgement struct {
 	// Provenance binds this write to the one immutable evaluator snapshot.
 	// It is a typed a041 seam; a042 persists the corresponding columns.
 	Provenance ExitDecisionProvenance
-	// ReJudging says this judgement is the one pass a superseded quarantine
-	// earned. It is a fact the caller knows and the transaction cannot infer:
-	// 개정 2 inferred it from the active row's reason, which auto-released a
-	// quarantine the current selector had itself written moments earlier, on
-	// evidence claiming a re-judgement that never ran (개정 3).
-	ReJudging bool
+	// ReJudgingVersion names the exact quarantine row whose one re-judgement
+	// this judgement is spending, and 0 says this is not a re-judgement at all.
+	//
+	// It is a fact the caller knows and the transaction cannot infer: 개정 2
+	// inferred it from the active row's reason, which auto-released a quarantine
+	// the current selector had itself written moments earlier, on evidence
+	// claiming a re-judgement that never ran (개정 3).
+	//
+	// The version rather than a bare bool, because "a re-judgement happened" and
+	// "*this* row was re-judged" are different claims and only the second one
+	// licenses a release. Between the stamp in judge() and this transaction an
+	// operator can lift the stamped row and a concurrent observer can open a new
+	// one, and a version-blind release closes that new row — written by the
+	// selector running now — as SELECTOR_REVISED (개정 4).
+	ReJudgingVersion int64
 	// ObservedPrice is the price judged, empty when the judgement had none.
 	ObservedPrice string
 	// HighWater and Baseline are the state after this judgement. Neither may be
@@ -515,7 +524,7 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 		// quarantined, that row is what stopped it being judged at all, and it is
 		// closed here — in the same transaction as the judgement it earned, so the
 		// two cannot come apart (a084).
-		if err := releaseReJudgedQuarantineTx(ctx, tx, judgement.ReJudging, id,
+		if err := releaseReJudgedQuarantineTx(ctx, tx, judgement.ReJudgingVersion, id,
 			recomputed.Line.PositionGeneration, now); err != nil {
 			return err
 		}

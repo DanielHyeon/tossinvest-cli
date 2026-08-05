@@ -26,10 +26,9 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 103, 'column': 9}, 'text': 'a.notifier.Notify'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 105, 'column': 8}, 'text': 'string'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 106, 'column': 4}, 'text': 'strings.TrimSpace'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 107, 'column': 10}, 'text': 'a.names.Label'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `a.notifier.Notify` | (103) return a.notifier.Notify(ctx, obs.Event{ | 호출부 계약 유지 | AST `calls` |
+| `strings.TrimSpace` | (106) strings.TrimSpace(alert.PositionID), | 호출부 계약 유지 | AST `calls` |
+| `a.names.Label` | (107) Title: a.names.Label(alert.Symbol) + " 계좌에서 편입됐지만 관리 대상은 아니다", | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

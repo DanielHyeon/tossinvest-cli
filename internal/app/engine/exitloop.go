@@ -1082,8 +1082,8 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 	orderable := snapshot.Orderable && !proposal.Zero()
 	judgement := journal.ExitJudgement{
 		Snapshot: snapshot, RecoveryPolicy: recoveryPolicy,
-		ReJudging:  m.reJudge,
-		PositionID: m.position.ID, LifecycleGeneration: m.state.LifecycleGeneration,
+		ReJudgingVersion: reJudgingVersion(m),
+		PositionID:       m.position.ID, LifecycleGeneration: m.state.LifecycleGeneration,
 		ObservedPrice: snapshot.ObservedPrice,
 		HighWater:     snapshot.HighWater, Baseline: snapshot.CurrentProtection,
 		RatchetLevel: string(snapshot.RatchetLevel), ActiveRung: snapshot.ActiveRung,
@@ -1216,6 +1216,21 @@ func isFullExit(p exitpolicy.Proposal) bool {
 // line moves again (a084 개정 2, D9).
 func isProtective(p exitpolicy.Proposal) bool {
 	return p.Action == exitpolicy.ActionBaselineBreach || p.Action == exitpolicy.ActionLadderStop
+}
+
+// reJudgingVersion names the quarantine row this judgement is spending its one
+// re-judgement on, and 0 when the judgement is an ordinary one.
+//
+// Naming the row rather than asserting the fact is what keeps the release from
+// landing on the wrong row: judge() stamps before the journal transaction opens,
+// and in that window an operator can lift the stamped row while a concurrent
+// observer opens a new one. A version-blind release closes that new row — the
+// one the selector running now just wrote — as SELECTOR_REVISED (개정 4).
+func reJudgingVersion(m managed) int64 {
+	if !m.reJudge {
+		return 0
+	}
+	return m.reJudgeVersion
 }
 
 // submit takes an armed proposal to the broker.

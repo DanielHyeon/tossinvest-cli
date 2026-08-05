@@ -29,18 +29,22 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 204, 'column': 12}, 'text': 'checkProjectionWired'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 214, 'column': 11}, 'text': 'execgw.NewEntryGate'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 226, 'column': 12}, 'text': 'tracker.Restore'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 227, 'column': 26}, 'text': 'fmt.Errorf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 229, 'column': 2}, 'text': 'entry.SetAuthorityRefresh'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 230, 'column': 10}, 'text': 'tracker.Refresh'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 230, 'column': 26}, 'text': 'context.Background'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 242, 'column': 29}, 'text': 'productionProtectionDigests'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 243, 'column': 16}, 'text': 'productionProtectionAssemblies'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 244, 'column': 14}, 'text': 'protectionreadiness.NewProductionProvider'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 249, 'column': 20}, 'text': 'protection.NewPairedReadinessAdapter'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 249, 'column': 96}, 'text': 'provider.RuntimeContracts'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `checkProjectionWired` | (204) if err := checkProjectionWired(in.journal); err != nil { | 호출부 계약 유지 | AST `calls` |
+| `execgw.NewEntryGate` | (214) entry := execgw.NewEntryGate(in.clock, nil) | 호출부 계약 유지 | AST `calls` |
+| `tracker.Restore` | (226) if err := tracker.Restore(ctx); err != nil { | 호출부 계약 유지 | AST `calls` |
+| `fmt.Errorf` | (227) return engineWiring{}, fmt.Errorf("engine: restoring the RECONCILE projection: %w", err) | 호출부 계약 유지 | AST `calls` |
+| `entry.SetAuthorityRefresh` | (229) entry.SetAuthorityRefresh(func() error { | 호출부 계약 유지 | AST `calls` |
+| `tracker.Refresh` | (230) return tracker.Refresh(context.Background()) | 호출부 계약 유지 | AST `calls` |
+| `context.Background` | (230) return tracker.Refresh(context.Background()) | 호출부 계약 유지 | AST `calls` |
+| `productionProtectionDigests` | (242) buildDigest, toolDigest := productionProtectionDigests() | 호출부 계약 유지 | AST `calls` |
+| `productionProtectionAssemblies` | (243) assemblies := productionProtectionAssemblies(buildDigest) | 호출부 계약 유지 | AST `calls` |
+| `protectionreadiness.NewProductionProvider` | (244) provider := protectionreadiness.NewProductionProvider(protectionreadiness.ProductionConfig{ | 호출부 계약 유지 | AST `calls` |
+| `protection.NewPairedReadinessAdapter` | (249) readiness, err := protection.NewPairedReadinessAdapter(provider, in.accountRef, "production", provider.RuntimeContracts()) | 호출부 계약 유지 | AST `calls` |
+| `provider.RuntimeContracts` | (249) readiness, err := protection.NewPairedReadinessAdapter(provider, in.accountRef, "production", provider.RuntimeContracts()) | 호출부 계약 유지 | AST `calls` |
+| `execgw.New` | (253) gateway, err := execgw.New(execgw.Options{ | 호출부 계약 유지 | AST `calls` |
+| `in.official.BaseURL` | (265) BaseURL: in.official.BaseURL(), | 호출부 계약 유지 | AST `calls` |
+| `newNotifier` | (280) notifier := newNotifier(in.journal, entry, in.accountRef, in.logger, in.publisher, in.clock) | 호출부 계약 유지 | AST `calls` |
+| `newRetrier` | (281) retrier := newRetrier(in.journal, entry, in.accountRef, notifier, nil, in.clock) | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

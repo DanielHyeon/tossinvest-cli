@@ -1,0 +1,30 @@
+{
+  "file": "internal/journal/exit_snapshot.go",
+  "source_sha256": "0e376d1ca4f6e29b27308c540088d35ad9725304b6fc5cff20c8c7eed9780524",
+  "package": "journal",
+  "function": "NeedsReJudgement",
+  "receiver": "ExitSnapshotQuarantine",
+  "signature": "ExitSnapshotQuarantine.NeedsReJudgement(params=0, results=1)",
+  "start": {
+    "line": 770,
+    "column": 1
+  },
+  "end": {
+    "line": 773,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 771,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

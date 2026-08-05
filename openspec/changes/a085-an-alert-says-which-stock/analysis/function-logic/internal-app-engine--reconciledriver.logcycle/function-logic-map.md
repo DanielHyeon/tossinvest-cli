@@ -1,7 +1,7 @@
 # Function Logic Map: `ReconcileDriver.logCycle`
 
-- Source: `internal/app/engine/reconcileloop.go` (lines 504–524)
-- AST evidence: `ast.json` (`source_sha256: 821dc7a7c1b58e8756f7cc423f527d01c76593a623c2b86db0e3fc08a8a01364`)
+- Source: `internal/app/engine/reconcileloop.go` (lines 525–546)
+- AST evidence: `ast.json` (`source_sha256: 50a2c0f0b133fc0a6761fd8eee1950286c73fa6beca6d27da66dab16ecb42606`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 알림 문구와 표시 전용 배선. 주문·손절·사이징·원장 판정 경로를 바꾸지 않는다.
 
@@ -27,8 +27,8 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 509, 'column': 3}, 'text': 'd.opts.Log.Error'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 514, 'column': 2}, 'text': 'd.opts.Log.Event'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Log.Error` | (530) d.opts.Log.Error(obs.EventReconcileMismatch, cycle.Err, | 호출부 계약 유지 | AST `calls` |
+| `d.opts.Log.Event` | (535) d.opts.Log.Event(obs.EventReconcileClean, | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

@@ -1,0 +1,242 @@
+{
+  "file": "internal/app/engine/reconcileloop.go",
+  "source_sha256": "50a2c0f0b133fc0a6761fd8eee1950286c73fa6beca6d27da66dab16ecb42606",
+  "package": "engine",
+  "function": "stabilise",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.stabilise(params=2, results=2)",
+  "start": {
+    "line": 485,
+    "column": 1
+  },
+  "end": {
+    "line": 523,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 487,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 492,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 500,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 506,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 513,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 494,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 502,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 508,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 517,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 522,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 16
+      },
+      "text": "d.opts.Collector.Collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 2
+      },
+      "text": "d.learnNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 2
+      },
+      "text": "d.stabiliser.Offer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 12
+      },
+      "text": "d.clk.Sleep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 505,
+        "column": 17
+      },
+      "text": "d.opts.Collector.Collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 511,
+        "column": 2
+      },
+      "text": "d.learnNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 12
+      },
+      "text": "d.stabiliser.Offer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
+        "column": 2
+      },
+      "text": "d.stabiliser.Reset"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 486,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 488,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 493,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 500,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 501,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 505,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 507,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 510,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 512,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

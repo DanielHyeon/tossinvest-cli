@@ -30,18 +30,13 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 292, 'column': 17}, 'text': 'raw.PositionsRaw'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 296, 'column': 10}, 'text': 'make'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 296, 'column': 29}, 'text': 'len'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 298, 'column': 10}, 'text': 'append'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 299, 'column': 19}, 'text': 'strings.ToUpper'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 299, 'column': 35}, 'text': 'strings.TrimSpace'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 300, 'column': 19}, 'text': 'canonicalDecimal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 301, 'column': 19}, 'text': 'canonicalDecimal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 302, 'column': 19}, 'text': 'strings.ToLower'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 302, 'column': 35}, 'text': 'strings.TrimSpace'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 303, 'column': 19}, 'text': 'strings.TrimSpace'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 304, 'column': 19}, 'text': 'strings.TrimSpace'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `raw.PositionsRaw` | (292) items, err := raw.PositionsRaw(ctx) | 호출부 계약 유지 | AST `calls` |
+| `strings.ToUpper` | (299) Symbol:       strings.ToUpper(strings.TrimSpace(h.Symbol)), | 호출부 계약 유지 | AST `calls` |
+| `strings.TrimSpace` | (299) Symbol:       strings.ToUpper(strings.TrimSpace(h.Symbol)), | 호출부 계약 유지 | AST `calls` |
+| `canonicalDecimal` | (300) Quantity:     canonicalDecimal(h.Quantity), | 호출부 계약 유지 | AST `calls` |
+| `strings.ToLower` | (302) Market:       strings.ToLower(strings.TrimSpace(h.Market)), | 호출부 계약 유지 | AST `calls` |
+| `c.Positions.Positions` | (310) positions, err := c.Positions.Positions(ctx) | 호출부 계약 유지 | AST `calls` |
+| `decimalString` | (318) Quantity:     decimalString(p.Quantity), | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

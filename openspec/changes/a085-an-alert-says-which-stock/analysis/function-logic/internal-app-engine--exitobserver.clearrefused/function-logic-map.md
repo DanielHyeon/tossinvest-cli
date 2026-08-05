@@ -1,7 +1,7 @@
 # Function Logic Map: `ExitObserver.clearRefused`
 
-- Source: `internal/app/engine/exitloop.go` (lines 1451–1451)
-- AST evidence: `ast.json` (`source_sha256: b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1`)
+- Source: `internal/app/engine/exitloop.go` (lines 1448–1448, revision `base` (base `ac2bbfcc`))
+- AST evidence: `ast.json` (`source_sha256: 3cf97f20c5eafa4b8f4d57bdbc1bc9d9f639c1f425590e4f212b238e7d0d5c8c`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 알림 문구와 표시 전용 배선. 주문·손절·사이징·원장 판정 경로를 바꾸지 않는다.
 
@@ -26,7 +26,7 @@ refused latch 해제. a085는 이 함수 바로 아래에 `label` helper를 추�
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 1451, 'column': 58}, 'text': 'delete'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `delete` | (1448)  | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

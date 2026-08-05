@@ -31,9 +31,8 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 324, 'column': 15}, 'text': 'fmt.Errorf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 328, 'column': 15}, 'text': 'fmt.Errorf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 347, 'column': 9}, 'text': 'NewExitObserver'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `fmt.Errorf` | (324) return nil, fmt.Errorf("%w: the automation gate is not verified", ErrExitObserverUnavailable) | 호출부 계약 유지 | AST `calls` |
+| `NewExitObserver` | (347) return NewExitObserver(opts) | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 

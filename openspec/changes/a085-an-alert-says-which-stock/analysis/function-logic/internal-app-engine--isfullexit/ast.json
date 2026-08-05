@@ -1,0 +1,30 @@
+{
+ "file": "internal/app/engine/exitloop.go",
+ "source_sha256": "3cf97f20c5eafa4b8f4d57bdbc1bc9d9f639c1f425590e4f212b238e7d0d5c8c",
+ "package": "engine",
+ "function": "isFullExit",
+ "signature": "isFullExit(params=1, results=1)",
+ "start": {
+  "line": 1139,
+  "column": 1
+ },
+ "end": {
+  "line": 1142,
+  "column": 2
+ },
+ "branches": null,
+ "returns": [
+  {
+   "kind": "return",
+   "at": {
+    "line": 1140,
+    "column": 2
+   }
+  }
+ ],
+ "calls": null,
+ "assignments": null,
+ "go_statements": null,
+ "defers": null,
+ "revision": "base"
+}

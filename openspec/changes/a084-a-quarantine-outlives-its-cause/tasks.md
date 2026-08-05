@@ -103,3 +103,44 @@
 - [x] 11.5 I15: `awaiting`를 사이클 로그에 넣는다.
 - [x] 11.6 `make lint`(gofmt 포함) 복구.
 - [ ] 11.7 `make gate`.
+
+## 게이트 슬라이스
+
+이 change의 게이트 1~4단계는 자기 커밋 시점의 worktree에서 돈다 (a083 `8dba0173`,
+a084 `ac2bbfcc`). 스택 위쪽 change의 수정을 자기 것으로 세지 않기 위해서다.
+개정 2~4에서 이 change의 함수를 다시 고친 부분은 a085 슬라이스가 증거를 갖는다 —
+근거와 결정은 `openspec/changes/a085-an-alert-says-which-stock/tasks.md` 11장.
+5~8단계는 저장소 전체 검사라 HEAD에서 한 번만 돈다.
+
+## 12. 개정 4 — 네 번째 독립 리뷰 (2026-08-05)
+
+- [x] 12.1 B8: 해제를 버전으로 좁힌다. `ExitJudgement.ReJudging bool` →
+      `ReJudgingVersion int64` (0 = 재판정 아님), `releaseReJudgedQuarantineTx`가
+      `active.Version`과 대조한다. `reJudgingVersion(m)` helper가 engine 쪽에서
+      두 필드가 어긋날 여지를 없앤다.
+- [x] 12.2 `TestAReJudgementReleasesOnlyTheRowThatEarnedIt` — 운영자 해제 + 병행 관측이
+      각인과 커밋 사이에 행을 교체하는 시나리오를 재현한다.
+- [x] 12.3 I16(각인 뒤 판정 실패의 좌초)·I17(`ExitArmOutcome` 오표기)을 기존 문제로
+      기록한다. 둘 다 이 change가 만들지 않았다.
+- [x] 12.4 §0.3 재확인: 리뷰어가 `exitpolicy.Action` 7개 상수를 전수 대조해
+      `isProtective`가 손실을 막는 action을 빠짐없이 덮는 것을 증명했다.
+      `CancelPendingFirst`의 두 writer가 모두 breach 분기 안에 있어, 억제 통로에
+      들어올 수 있는 유일한 action은 `ActionLadderTakeProfit`이다.
+- [ ] 12.5 `make gate`.
+
+## 13. 개정 5 — 다섯 번째 독립 리뷰 (2026-08-05)
+
+코드 결함 없음. 다섯 공격 전부 반증됐고, 변이 테스트로 확인됐다.
+
+- [x] 13.1 `reJudgingVersion`을 `m.reJudgeVersion + 1`로 변이시키면
+      `TestASupersededQuarantineIsReJudgedAndReleased`가 죽는다 — 정상 재판정이
+      격리를 남기는 회귀는 기존 end-to-end 테스트가 잡는다.
+- [x] 13.2 버전 가드를 삭제하면 `TestAReJudgementReleasesOnlyTheRowThatEarnedIt`가
+      죽는다 — 새 테스트가 변이체를 죽인다.
+- [x] 13.3 `quarantine_version`은 INSERT 이후 불변이고 세 UPDATE 모두 WHERE에서만 쓴다.
+      해제된 행을 남기므로 `max+1`이 번호를 재사용하지 않는다.
+- [x] 13.4 커버리지가 드러낸 공백을 메운다:
+      `TestAnOperatorOnlyQuarantineSurvivesAGenuineReJudgement` —
+      `active.Reason != ambiguous_recovery` 가드는 map의 안전 결론이 근거로 삼는데
+      어떤 테스트도 그 줄을 실행하지 않았다.
+- [ ] 13.5 `make gate`.

@@ -1,7 +1,7 @@
 # Function Logic Map: `TestAnExternalIncreaseAfterAdoptionIsReported`
 
-- Source: `internal/app/engine/reconcileloop_test.go` (lines 799–839)
-- AST evidence: `ast.json` (`source_sha256: d53e58de88a1444c84d97750f68023fe8878894fc04eb5bc2026ade205132eae`)
+- Source: `internal/app/engine/reconcileloop_test.go` (lines 806–846)
+- AST evidence: `ast.json` (`source_sha256: 2456d7022ac6ce4a6de30e65d7c57d0b10b7a67ded5c6c404c38faa40e550106`)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: **Normal** — 테스트 코드.
 
@@ -34,18 +34,17 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `{'kind': 'call', 'at': {'line': 800, 'column': 7}, 'text': 'newDriverHarness'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 801, 'column': 2}, 'text': 'h.holds'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 802, 'column': 14}, 'text': 'h.cycle'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 803, 'column': 3}, 'text': 't.Fatalf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 805, 'column': 17}, 'text': 'h.journal.ExitState'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 805, 'column': 37}, 'text': 'context.Background'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 805, 'column': 59}, 'text': 'h.position'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 807, 'column': 3}, 'text': 't.Fatal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 812, 'column': 14}, 'text': 'h.cycle'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 813, 'column': 3}, 'text': 't.Fatalf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 816, 'column': 16}, 'text': 'h.journal.ExitState'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
-| `{'kind': 'call', 'at': {'line': 816, 'column': 36}, 'text': 'context.Background'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `newDriverHarness` | (807) h := newDriverHarness(t, nil) | 호출부 계약 유지 | AST `calls` |
+| `h.holds` | (808) h.holds("005930", "10", "55000", 70000) | 호출부 계약 유지 | AST `calls` |
+| `h.cycle` | (809) if cycle := h.cycle(); cycle.Adopted != 1 { | 호출부 계약 유지 | AST `calls` |
+| `t.Fatalf` | (810) t.Fatalf("adopted = %d (%v)", cycle.Adopted, cycle.Err) | 호출부 계약 유지 | AST `calls` |
+| `h.journal.ExitState` | (812) before, err := h.journal.ExitState(context.Background(), h.position("005930").ID) | 호출부 계약 유지 | AST `calls` |
+| `context.Background` | (812) before, err := h.journal.ExitState(context.Background(), h.position("005930").ID) | 호출부 계약 유지 | AST `calls` |
+| `h.position` | (812) before, err := h.journal.ExitState(context.Background(), h.position("005930").ID) | 호출부 계약 유지 | AST `calls` |
+| `t.Fatal` | (814) t.Fatal(err) | 호출부 계약 유지 | AST `calls` |
+| `t.Errorf` | (828) t.Errorf("t0 moved from %s/%s to %s/%s; the frozen denominator must not be recomputed", | 호출부 계약 유지 | AST `calls` |
+| `strings.Contains` | (836) if e.Type == obs.EventExitPositionUnmanaged && strings.Contains(e.Key, "\|grown\|") { | 호출부 계약 유지 | AST `calls` |
+| `eventTypes` | (844) t.Errorf("no alert about the external increase; events = %v", eventTypes(h.alerts.events)) | 호출부 계약 유지 | AST `calls` |
 
 ## State mutations and fallbacks
 
