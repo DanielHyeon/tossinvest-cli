@@ -452,7 +452,6 @@ func symbolsInDispute(diff Diff) map[string]bool {
 	return out
 }
 
-
 // Outcome is what one observation did.
 type Outcome struct {
 	// Failures is the consecutive-failure count after this observation.

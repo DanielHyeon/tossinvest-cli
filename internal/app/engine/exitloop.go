@@ -1082,6 +1082,7 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 	orderable := snapshot.Orderable && !proposal.Zero()
 	judgement := journal.ExitJudgement{
 		Snapshot: snapshot, RecoveryPolicy: recoveryPolicy,
+		ReJudging:  m.reJudge,
 		PositionID: m.position.ID, LifecycleGeneration: m.state.LifecycleGeneration,
 		ObservedPrice: snapshot.ObservedPrice,
 		HighWater:     snapshot.HighWater, Baseline: snapshot.CurrentProtection,

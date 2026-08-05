@@ -178,3 +178,65 @@ func TestTheOperatorReleasePathCannotStampMachineEvidence(t *testing.T) {
 			"recorded as a machine decision")
 	}
 }
+
+// TestAJudgementThatIsNotAReJudgementReleasesNothing (개정 3).
+//
+// 세 번째 독립 리뷰가 실행 재현으로 잡았다. 개정 2는 재판정 여부를 활성 행의 *사유*로
+// 추론했고, 그래서 지금 도는 선택기가 방금 쓴 격리를 다음 성공 판정이 "the recovery
+// selector changed … the re-judgement chose one verified candidate"라는 근거와 함께
+// 닫았다 — 일어나지 않은 재판정이다. 운영자만 풀 수 있어야 하는 행이 기계적으로 풀린다.
+//
+// 추론 대신 사실로 게이트한다. 각인은 판별자가 될 수 없다 — judge가 이 트랜잭션보다
+// 먼저 각인하므로 어느 쪽이든 현재 개정이 찍혀 있다.
+func TestAJudgementThatIsNotAReJudgementReleasesNothing(t *testing.T) {
+	j := exitFixture(t)
+	ctx := context.Background()
+	o, _ := openedPosition(t, j, "10")
+	position := currentPosition(t, j, o)
+
+	q, err := j.QuarantineExitSnapshot(ctx, position.ID, position.InstanceSeq,
+		QuarantineReasonAmbiguousRecovery, "exitpolicy: recovery candidate identity mismatch")
+	if err != nil {
+		t.Fatalf("QuarantineExitSnapshot: %v", err)
+	}
+	if q.SelectorRevision != exitpolicy.RecoverySelectorRevision {
+		t.Fatalf("precondition: the row must carry the running selector, got %d", q.SelectorRevision)
+	}
+
+	if err := releaseReJudgedQuarantineTxForTest(ctx, j, false, position.ID, position.InstanceSeq); err != nil {
+		t.Fatalf("release helper: %v", err)
+	}
+
+	if _, active, err := j.ActiveExitSnapshotQuarantine(ctx, position.ID, position.InstanceSeq); err != nil {
+		t.Fatal(err)
+	} else if !active {
+		t.Fatal("a judgement that was not a re-judgement closed the quarantine. It re-decided " +
+			"nothing, so the release names evidence that does not exist, and a row only an " +
+			"operator could lift was lifted by a machine")
+	}
+
+	// And the genuine re-judgement still releases.
+	if err := releaseReJudgedQuarantineTxForTest(ctx, j, true, position.ID, position.InstanceSeq); err != nil {
+		t.Fatalf("release helper: %v", err)
+	}
+	if _, active, err := j.ActiveExitSnapshotQuarantine(ctx, position.ID, position.InstanceSeq); err != nil {
+		t.Fatal(err)
+	} else if active {
+		t.Fatal("the re-judgement's own release stopped working")
+	}
+}
+
+// releaseReJudgedQuarantineTxForTest reaches the transaction-scoped helper the
+// judgement path uses, which has no exported entry point by design.
+func releaseReJudgedQuarantineTxForTest(ctx context.Context, j *Journal, reJudging bool,
+	id string, generation int64) error {
+	tx, err := j.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if err := releaseReJudgedQuarantineTx(ctx, tx, reJudging, id, generation, j.nowString()); err != nil {
+		return err
+	}
+	return tx.Commit()
+}

@@ -259,6 +259,12 @@ type ExitJudgement struct {
 	// Provenance binds this write to the one immutable evaluator snapshot.
 	// It is a typed a041 seam; a042 persists the corresponding columns.
 	Provenance ExitDecisionProvenance
+	// ReJudging says this judgement is the one pass a superseded quarantine
+	// earned. It is a fact the caller knows and the transaction cannot infer:
+	// 개정 2 inferred it from the active row's reason, which auto-released a
+	// quarantine the current selector had itself written moments earlier, on
+	// evidence claiming a re-judgement that never ran (개정 3).
+	ReJudging bool
 	// ObservedPrice is the price judged, empty when the judgement had none.
 	ObservedPrice string
 	// HighWater and Baseline are the state after this judgement. Neither may be
@@ -509,7 +515,7 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 		// quarantined, that row is what stopped it being judged at all, and it is
 		// closed here — in the same transaction as the judgement it earned, so the
 		// two cannot come apart (a084).
-		if err := releaseReJudgedQuarantineTx(ctx, tx, id,
+		if err := releaseReJudgedQuarantineTx(ctx, tx, judgement.ReJudging, id,
 			recomputed.Line.PositionGeneration, now); err != nil {
 			return err
 		}

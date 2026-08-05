@@ -266,3 +266,28 @@ B가 방금 연 `ambiguous_recovery` 행을 `SELECTOR_REVISED`로 닫을 수 있
 `RATCHET_PARTIAL`은 `CancelPendingFirst`도 `isFullExit`도 아니어서 보류 분기에 들어가지
 않고 정상 제출된다. 안전하다 — 제출은 판정 커밋 **뒤**이므로 거부가 주문을 남기지
 않는다 — 지만 주석이 틀렸으므로 코드가 보장하는 것으로 고쳤다.
+
+## B7 — **닫힘**: 재판정이 아닌 판정이 격리를 풀었다 (개정 3)
+
+세 번째 독립 리뷰가 실행 재현으로 잡았다. `releaseReJudgedQuarantineTx`가 재판정
+여부를 활성 행의 **사유**로 추론했다. 그래서 지금 도는 선택기가 방금 쓴
+`ambiguous_recovery` 격리를, 그 다음 성공 판정이
+
+> "the recovery selector changed since this quarantine was written; the
+> re-judgement chose one verified candidate and this generation is judged again"
+
+라는 근거와 함께 닫았다. **일어나지 않은 재판정이다.** 그리고 그 행은 a084 이전에
+운영자만 풀 수 있던 종류다. 같은 커밋이 `ReleaseExitSnapshotQuarantine`에서
+`SELECTOR_REVISED`를 막아 기계가 사람 해제를 위조하지 못하게 해 놓고, 판정 경로가
+그것을 뒷문으로 하고 있었다.
+
+각인은 판별자가 될 수 없다 — `judge`가 이 트랜잭션보다 **먼저** 각인하므로 어느
+쪽이든 현재 개정이 찍혀 있다. 그래서 `ExitJudgement.ReJudging`으로 **사실을 전달**한다.
+추론이 아니라 호출자가 아는 것이다. `TestAJudgementThatIsNotAReJudgementReleasesNothing`.
+
+## I15 — `awaiting`가 사이클 로그에 없었다
+
+`Outcome.AwaitingAdjustment`의 doc comment는 "운영자가 물어볼 상태"라고 적어 두었는데
+`logCycle`은 그것을 찍지 않았다. 리뷰어가 지적한 대로, 이 숫자가 보였다면 a083 I1
+(missing-order 차단에 crediter가 없다)이 원장에서 바로 드러났을 것이다.
+`ReconcileCycle.Awaiting`으로 세고 로그에 넣었다.

@@ -10,7 +10,6 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
 
-
 // TestTheCreditCarriesTheComparisonItWasComputedFrom: the tracker cannot tell a
 // re-read from the read it is answering unless the crediter says which
 // comparison it stood on, and the converger is the only production caller.

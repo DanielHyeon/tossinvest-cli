@@ -93,3 +93,13 @@
 - [x] 10.8 I10: CI가 `make test`를 돌리고 `cover` 타깃도 timeout을 받는다.
 - [x] 10.9 `issues.md`에 B1~B4와 I9~I11을 기록한다.
 - [ ] 10.10 gstack 독립 리뷰 재실행 + `make gate`.
+
+## 11. 개정 3 — 두 번째·세 번째 독립 리뷰 (2026-08-05)
+
+- [x] 11.1 B5: 재판정 각인을 `workingSet`에서 `judge` 진입부로 옮긴다 (호가가 손에 있는 지점).
+- [x] 11.2 B6: `knownArmSuppression`으로 write·read allowlist를 통일한다.
+- [x] 11.3 B7: `ExitJudgement.ReJudging`으로 재판정 사실을 전달하고, 해제가 추론하지 않게 한다.
+- [x] 11.4 I14: 보류 상수와 `workingSet` 주석을 코드가 보장하는 것으로 고친다.
+- [x] 11.5 I15: `awaiting`를 사이클 로그에 넣는다.
+- [x] 11.6 `make lint`(gofmt 포함) 복구.
+- [ ] 11.7 `make gate`.

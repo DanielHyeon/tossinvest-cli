@@ -112,11 +112,14 @@ const (
 
 	ArmSuppressedWorkingOrder = "working_order_not_cleared"
 	// ArmSuppressedReJudge — the judgement ran only because a quarantine written by
-	// an older recovery selector earned its one re-judgement. That pass resolves
-	// the quarantine and moves the watermark; it does not place or cancel anything,
-	// because the same transaction may still refuse, and a refusal that has already
-	// cancelled a working order leaves the position with no protection at all
-	// (a084 개정 2, D9).
+	// an older recovery selector earned its one re-judgement, and that pass declined
+	// to take a proposal that would have required cancelling a working order first.
+	//
+	// It does not mean the pass armed nothing. A rung promotion needs no cancel and
+	// is armed and submitted normally, safely, because submission follows the
+	// judgement commit. What the pass refuses is a cancel that would precede a
+	// transaction still able to refuse — that ordering can leave the position with
+	// no working order and no judgement (a084 개정 2, D9).
 	ArmSuppressedReJudge = "re_judging_a_superseded_quarantine"
 )
 
@@ -857,14 +860,20 @@ func releaseExitSnapshotQuarantineTx(ctx context.Context, tx *sql.Tx,
 // It is a no-op when there is no active row, and when the active row was written
 // by the selector running now: that generation was never re-judged, so nothing
 // about it has been re-decided and releasing it would be a release nobody earned.
-func releaseReJudgedQuarantineTx(ctx context.Context, tx *sql.Tx, id string,
+func releaseReJudgedQuarantineTx(ctx context.Context, tx *sql.Tx, reJudging bool, id string,
 	generation int64, now string) error {
+	if !reJudging {
+		// This judgement is not a re-judgement, so it has re-decided nothing and
+		// may not close anything. Inferring the fact from the row's reason — which
+		// 개정 2 did — released a quarantine the selector running now had written
+		// itself, with evidence describing a comparison that never happened.
+		return nil
+	}
 	active, ok, err := activeExitSnapshotQuarantineTx(ctx, tx, id, generation)
-	// Reason, not the stamp: workingSet spends the retry by stamping the row
-	// before it lets the generation through (D8), so by the time a judgement
-	// commits the row already carries this revision. What identifies it as the
-	// re-judgement's own row is that the recovery selector is what wrote it —
-	// and a quarantine the selector never decided must not be lifted here.
+	// Reason as well as the caller's fact: the stamp cannot serve as the
+	// discriminator, because judge() spends the retry before this transaction runs
+	// and the row therefore already carries this revision either way. A quarantine
+	// the recovery selector never decided is still not this path's to lift.
 	if err != nil || !ok || active.Reason != QuarantineReasonAmbiguousRecovery {
 		return err
 	}

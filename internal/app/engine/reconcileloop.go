@@ -190,6 +190,13 @@ type ReconcileCycle struct {
 	// the number durably released by this cycle.
 	Blocked  int
 	Released int
+	// Awaiting is how many blocks the account agrees about and the engine is
+	// still holding, because no adjustment has been credited for them. Counted
+	// and logged rather than left in the Outcome: "the account agrees and the
+	// engine is still blocked" is the state an operator asks about, and a
+	// release rule that is unreachable for a whole class of block looks exactly
+	// like a release rule that is working until this number is visible.
+	Awaiting int
 	// Unmanaged counts holdings confirmed to be outside exit management, and
 	// therefore alerted on. It excludes transition states.
 	Unmanaged int
@@ -436,6 +443,7 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 	outcome, err := d.opts.Tracker.Observe(ctx, diff)
 	cycle.Blocked = len(d.opts.Tracker.Blocks())
 	cycle.Released = len(outcome.Cleared)
+	cycle.Awaiting = len(outcome.AwaitingAdjustment)
 	if err != nil {
 		if cycle.Err == nil {
 			cycle.Err = err
@@ -531,6 +539,7 @@ func (d *ReconcileDriver) logCycle(cycle ReconcileCycle) {
 		"converged", cycle.Converged,
 		"blocked", cycle.Blocked,
 		"released", cycle.Released,
+		"awaiting", cycle.Awaiting,
 		"unmanaged", cycle.Unmanaged,
 		"adopted", cycle.Adopted,
 		"deferred", cycle.Deferred)
