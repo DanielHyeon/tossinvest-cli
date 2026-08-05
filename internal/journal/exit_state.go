@@ -505,6 +505,14 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 			}
 			return fmt.Errorf("%w: %v", ErrExitSnapshotQuarantined, selectErr)
 		}
+		// The selection succeeded. If a superseded selector had this generation
+		// quarantined, that row is what stopped it being judged at all, and it is
+		// closed here — in the same transaction as the judgement it earned, so the
+		// two cannot come apart (a084).
+		if err := releaseReJudgedQuarantineTx(ctx, tx, id,
+			recomputed.Line.PositionGeneration, now); err != nil {
+			return err
+		}
 		if source == exitpolicy.RecoverySavedMonotone {
 			effective = saved
 			effectiveSource = EffectiveSourceSaved

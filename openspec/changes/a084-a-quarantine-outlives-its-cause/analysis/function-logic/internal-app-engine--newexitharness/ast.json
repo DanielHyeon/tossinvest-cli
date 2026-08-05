@@ -1,0 +1,353 @@
+{
+  "file": "internal/app/engine/exitloop_test.go",
+  "source_sha256": "df13bc9e9772d9d2806fe1a9dc1393191b1382e241b78eb0b933e46dde218541",
+  "package": "engine_test",
+  "function": "newExitHarness",
+  "signature": "newExitHarness(params=2, results=1)",
+  "start": {
+    "line": 177,
+    "column": 1
+  },
+  "end": {
+    "line": 246,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 233,
+        "column": 40
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 12
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 26
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 12
+      },
+      "text": "journal.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 25
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 13
+      },
+      "text": "journal.FixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 25
+      },
+      "text": "j.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 12
+      },
+      "text": "j.SetApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 10
+      },
+      "text": "execgw.NewEntryGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 19
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 11
+      },
+      "text": "exitPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 32
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 15
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 47
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 3
+      },
+      "text": "mutate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 19
+      },
+      "text": "engine.NewExitObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 189,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 217,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 233,
+        "column": 31
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

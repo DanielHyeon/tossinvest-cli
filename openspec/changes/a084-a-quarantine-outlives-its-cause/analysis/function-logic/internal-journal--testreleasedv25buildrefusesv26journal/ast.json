@@ -1,0 +1,165 @@
+{
+ "file": "internal/journal/strategy_first_leg_v26_migration_test.go",
+ "source_sha256": "5e25694640bc272a9423e893a2a6282d3b374196222202124185dd3bdfe2f27f",
+ "package": "journal",
+ "function": "TestReleasedV25BuildRefusesV26Journal",
+ "signature": "TestReleasedV25BuildRefusesV26Journal(params=1, results=0)",
+ "start": {
+  "line": 124,
+  "column": 1
+ },
+ "end": {
+  "line": 134,
+  "column": 2
+ },
+ "branches": [
+  {
+   "id": "B1",
+   "kind": "if",
+   "at": {
+    "line": 127,
+    "column": 2
+   }
+  },
+  {
+   "id": "B2",
+   "kind": "if",
+   "at": {
+    "line": 131,
+    "column": 2
+   }
+  }
+ ],
+ "returns": null,
+ "calls": [
+  {
+   "kind": "call",
+   "at": {
+    "line": 125,
+    "column": 10
+   },
+   "text": "filepath.Join"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 125,
+    "column": 24
+   },
+   "text": "t.TempDir"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 126,
+    "column": 13
+   },
+   "text": "openTestJournalAt"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 127,
+    "column": 12
+   },
+   "text": "current.Close"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 128,
+    "column": 3
+   },
+   "text": "t.Fatal"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 130,
+    "column": 12
+   },
+   "text": "Open"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 130,
+    "column": 17
+   },
+   "text": "context.Background"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 130,
+    "column": 66
+   },
+   "text": "clock.NewFake"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 130,
+    "column": 113
+   },
+   "text": "FixedFSProber"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 130,
+    "column": 208
+   },
+   "text": "migrationsThrough"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 131,
+    "column": 6
+   },
+   "text": "errors.Is"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 132,
+    "column": 3
+   },
+   "text": "t.Fatalf"
+  }
+ ],
+ "assignments": [
+  {
+   "kind": ":=",
+   "at": {
+    "line": 125,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 126,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 127,
+    "column": 5
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 130,
+    "column": 2
+   }
+  }
+ ],
+ "go_statements": null,
+ "defers": null,
+ "revision": "base"
+}

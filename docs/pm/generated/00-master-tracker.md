@@ -78,7 +78,7 @@
     - STORY-TOS-a078 — Stop quarantining a ladder position for activating its first rung [implemented] → `a078-first-rung-keeps-its-judgement`
     - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [in_progress] → `a079-operator-can-lift-a-quarantine`
     - STORY-TOS-a074 — Make the moment protection stops visible, and let critical alerts actually leave the machine [in_progress] → `a074-critical-events-reach-the-operator`
-    - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [in_progress] → `a084-a-quarantine-outlives-its-cause`
+    - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [implemented] → `a084-a-quarantine-outlives-its-cause`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

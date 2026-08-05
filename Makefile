@@ -25,8 +25,14 @@ stage-local-update: build
 run:
 	go run -ldflags "$(LDFLAGS)" ./cmd/tossctl
 
+# -timeout 30m: internal/journal opens a migrated SQLite database per test and
+# there are ~670 of them, so the package sits in the several-minute range and each
+# new migration step adds to every one of them. It crossed Go's 600s default at
+# schema v30 (a084). The suite is slow, not hung — measured 480s at v29 and 795s
+# at v30 under parallel load — and a per-package limit that a legitimate migration
+# can trip is a limit that reports the wrong failure.
 test:
-	go test ./...
+	go test -timeout 30m ./...
 
 # vet only — `make lint` 은 gofmt 검사까지 함께 돌린다. 포맷 검사 없이 정적 분석만
 # 빠르게 돌리고 싶을 때 이 타겟을 쓴다.

@@ -1,0 +1,191 @@
+{
+  "file": "internal/journal/exit_snapshot.go",
+  "source_sha256": "b175980ad22e1eb5af7e6bef7185dcdaec7902ccdf6901ef6a1d322f8d8842ea",
+  "package": "journal",
+  "function": "quarantineExitSnapshotTx",
+  "signature": "quarantineExitSnapshotTx(params=7, results=2)",
+  "start": {
+    "line": 507,
+    "column": 1
+  },
+  "end": {
+    "line": 539,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 509,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 511,
+        "column": 9
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 511,
+        "column": 9
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 512,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 520,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 528,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 510,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 513,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 524,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 530,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 538,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 509,
+        "column": 24
+      },
+      "text": "activeExitSnapshotQuarantineTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 7
+      },
+      "text": "active.NeedsReJudgement"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 520,
+        "column": 13
+      },
+      "text": "releaseExitSnapshotQuarantineTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 528,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 528,
+        "column": 12
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 535,
+        "column": 12
+      },
+      "text": "tx.ExecContext"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 509,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 520,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 528,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 532,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 535,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -12,6 +12,48 @@ var (
 	ErrRecoveryIdentity  = errors.New("exitpolicy: recovery candidate identity mismatch")
 )
 
+// RecoverySelectorRevision is the revision of the recovery-selection semantics:
+// what SelectRecoverySnapshot, compareRecoveryStage and validateRecoverySnapshot
+// accept and what they refuse.
+//
+// # Why a quarantine carries it
+//
+// A quarantine is a judgement — "these two candidates cannot be reduced to one
+// safe line". Only two things can change that judgement: the inputs, or the
+// judge. A quarantined generation writes no new snapshot (that is what being
+// quarantined means), so its inputs are frozen and its policy identity is fixed
+// by definition. The judge is the only thing left, and the moment it changes is
+// therefore the only moment a retry can produce new information rather than
+// repeating the same arithmetic.
+//
+// Stamping the row means a build can tell its own judgement from its
+// predecessor's and re-judge exactly once per revision. Without it, a fixed
+// comparator leaves the rows its broken predecessor wrote sitting in the ledger
+// forever — a078 fixed the first-rung refusal on 2026-08-03 and three positions
+// stayed unjudged, stop included, because the quarantine cuts in ahead of the
+// comparison and the fixed code is never reached (a078 issues.md I1).
+//
+// # When to bump it
+//
+// Bump when a change alters which pairs SelectRecoverySnapshot accepts or
+// refuses. Do not bump for refactors, comments, or renames that leave the
+// decision identical: an unnecessary bump re-judges every quarantined position,
+// which is safe but noisy.
+//
+// # Both directions of getting it wrong are safe
+//
+//	forgot to bump   no automatic retry. That is today's behaviour — an operator
+//	                 lifts it from the console (a079). Nothing new breaks.
+//	bumped needlessly the retry runs the same selector, gets the same answer, and
+//	                 re-quarantines under the current revision. One extra row.
+//
+// # Why 2 and not 1
+//
+// 1 is reserved and never written. NULL is "recorded before this column existed",
+// and leaving a number between it and the first stamped revision means a reader
+// of the ledger who asks "where is 1?" finds this paragraph.
+const RecoverySelectorRevision int64 = 2
+
 type RecoverySource string
 
 const (

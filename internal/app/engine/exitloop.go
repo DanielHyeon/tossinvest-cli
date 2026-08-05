@@ -539,10 +539,25 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 				cycle.Err = qerr
 			}
 			continue
-		} else if active {
+		} else if active && !q.NeedsReJudgement() {
 			refused = append(refused, managed{position: p, state: state,
 				identityErr: fmt.Errorf("%w (version %d): %s", journal.ErrExitSnapshotQuarantined, q.Version, q.Reason)})
 			continue
+		} else if active {
+			// The selector that wrote this quarantine is not the one running now, so
+			// the comparison it refused may reach a different answer — and until it is
+			// allowed to run, this position is not judged at all, its stop included.
+			// Letting it through weakens nothing: the judgement transaction runs the
+			// very same recovery selection, and a refusal re-quarantines under the
+			// current revision without arming anything (a084).
+			o.log(obs.EventExitSnapshotQuarantined, false,
+				obs.FieldSymbol, p.Symbol,
+				"position_id", p.ID,
+				"quarantine_version", q.Version,
+				"selector_revision", q.SelectorRevision,
+				"current_selector_revision", exitpolicy.RecoverySelectorRevision,
+				obs.FieldDetail, "the recovery selector has changed since this quarantine was written; "+
+					"the generation is being re-judged once")
 		}
 		identity, identityErr := managedPolicyIdentity(state, p.Adopted())
 		if identityErr != nil {

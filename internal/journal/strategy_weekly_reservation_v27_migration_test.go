@@ -14,6 +14,7 @@ func TestMigrationV27AddsPairedWeeklyAuthorityWithoutChangingV26Rows(t *testing.
 	path := filepath.Join(t.TempDir(), "journal.db")
 	old := openJournalAtSchema(t, path, 26)
 	before := journalV25RowFingerprints(t, old, nil)
+	beforeColumns := journalTableColumns(t, old, mapKeys(before))
 	if err := old.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -28,9 +29,10 @@ func TestMigrationV27AddsPairedWeeklyAuthorityWithoutChangingV26Rows(t *testing.
 	after := journalV25RowFingerprints(t, current, mapKeys(before))
 	for table, want := range before {
 		if after[table] != want {
-			t.Fatalf("v26 table %s changed: before=%s after=%s", table, want, after[table])
+			t.Fatalf("v26 table %s rows changed: before=%s after=%s", table, want, after[table])
 		}
 	}
+	assertColumnsOnlyAppended(t, beforeColumns, journalTableColumns(t, current, mapKeys(before)))
 	for _, name := range []string{"strategy_weekly_reservation_scopes", "strategy_weekly_market_reservations", "strategy_weekly_reservation_receipts", "strategy_weekly_first_leg_bindings"} {
 		var count int
 		if err := current.db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?`, name).Scan(&count); err != nil || count != 1 {

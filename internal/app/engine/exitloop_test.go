@@ -156,7 +156,10 @@ func (f *fakeSLO) FillDetectionBehind() bool { return f.behind }
 // --- harness ------------------------------------------------------------------
 
 type exitHarness struct {
-	t        *testing.T
+	t *testing.T
+	// dbPath is the journal file, so a test that has to inspect or age a row the
+	// journal API deliberately does not expose can open it directly.
+	dbPath   string
 	journal  *journal.Journal
 	clk      *clock.Fake
 	gate     *execgw.EntryGate
@@ -174,8 +177,9 @@ type exitHarness struct {
 func newExitHarness(t *testing.T, mutate func(*engine.ExitObserverOptions)) *exitHarness {
 	t.Helper()
 	clk := clock.NewFake(exitNow)
+	dbPath := filepath.Join(t.TempDir(), "journal.db")
 	j, err := journal.Open(context.Background(), journal.Options{
-		Path:     filepath.Join(t.TempDir(), "journal.db"),
+		Path:     dbPath,
 		Clock:    clk,
 		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
 	})
@@ -203,7 +207,7 @@ func newExitHarness(t *testing.T, mutate func(*engine.ExitObserverOptions)) *exi
 	}
 
 	h := &exitHarness{
-		t: t, journal: j, clk: clk, gate: gate,
+		t: t, dbPath: dbPath, journal: j, clk: clk, gate: gate,
 		prices: &fakePrices{last: map[string]float64{}},
 		submit: &fakeSubmitter{},
 		alerts: &fakeAlerts{},

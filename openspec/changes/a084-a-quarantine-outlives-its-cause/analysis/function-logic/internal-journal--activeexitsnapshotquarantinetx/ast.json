@@ -1,0 +1,85 @@
+{
+  "file": "internal/journal/exit_snapshot.go",
+  "source_sha256": "b175980ad22e1eb5af7e6bef7185dcdaec7902ccdf6901ef6a1d322f8d8842ea",
+  "package": "journal",
+  "function": "activeExitSnapshotQuarantineTx",
+  "signature": "activeExitSnapshotQuarantineTx(params=4, results=3)",
+  "start": {
+    "line": 785,
+    "column": 1
+  },
+  "end": {
+    "line": 800,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 793,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 794,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 799,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 9
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 9
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 793,
+        "column": 5
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 790,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 798,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

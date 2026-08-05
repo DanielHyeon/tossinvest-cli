@@ -37,6 +37,7 @@ func TestMigrationV26AddsPairedFirstLegAuthorityWithoutChangingV25Rows(t *testin
 		t.Fatal(err)
 	}
 	beforeRows := journalV25RowFingerprints(t, old, nil)
+	beforeColumns := journalTableColumns(t, old, mapKeys(beforeRows))
 	if err := old.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -76,6 +77,7 @@ func TestMigrationV26AddsPairedFirstLegAuthorityWithoutChangingV25Rows(t *testin
 		t.Fatalf("preserved KR lease state=%s revision=%d err=%v", krState, krRevision, err)
 	}
 	afterRows := journalV25RowFingerprints(t, current, mapKeys(beforeRows))
+	assertColumnsOnlyAppended(t, beforeColumns, journalTableColumns(t, current, mapKeys(beforeRows)))
 	for table, want := range beforeRows {
 		if got := afterRows[table]; got != want {
 			t.Fatalf("v25 table %s rows changed across v26 migration: before=%s after=%s", table, want, got)
@@ -133,6 +135,49 @@ func TestReleasedV25BuildRefusesV26Journal(t *testing.T) {
 	}
 }
 
+// journalTableColumns reads each table's column list in declaration order.
+//
+// It is the other half of what the fingerprint used to conflate. A migration may
+// append a nullable column (rule 2); it may not drop one, rename one, or reorder
+// what is already there (rule 3). Comparing the before-list as a prefix of the
+// after-list says both at once.
+func journalTableColumns(t *testing.T, j *Journal, tables []string) map[string][]string {
+	t.Helper()
+	out := make(map[string][]string, len(tables))
+	for _, table := range tables {
+		quoted := `"` + strings.ReplaceAll(table, `"`, `""`) + `"`
+		rows, err := j.db.Query(`SELECT * FROM ` + quoted + ` LIMIT 0`)
+		if err != nil {
+			t.Fatalf("columns of %s: %v", table, err)
+		}
+		columns, err := rows.Columns()
+		rows.Close()
+		if err != nil {
+			t.Fatalf("columns of %s: %v", table, err)
+		}
+		out[table] = columns
+	}
+	return out
+}
+
+// assertColumnsOnlyAppended fails when a released column disappeared, was
+// renamed, or moved.
+func assertColumnsOnlyAppended(t *testing.T, before, after map[string][]string) {
+	t.Helper()
+	for table, want := range before {
+		got := after[table]
+		if len(got) < len(want) {
+			t.Fatalf("table %s lost columns: before=%v after=%v", table, want, got)
+		}
+		for i, column := range want {
+			if got[i] != column {
+				t.Fatalf("table %s column %d changed: before=%q after=%q (before=%v after=%v)",
+					table, i, column, got[i], want, got)
+			}
+		}
+	}
+}
+
 func journalV25RowFingerprints(t *testing.T, j *Journal, tables []string) map[string]string {
 	t.Helper()
 	if tables == nil {
@@ -171,9 +216,13 @@ func journalV25RowFingerprints(t *testing.T, j *Journal, tables []string) map[st
 			_, _ = hash.Write([]byte(kind + ":" + strconv.Itoa(len(raw)) + ":"))
 			_, _ = hash.Write(raw)
 		}
-		for _, column := range columns {
-			writeFingerprintPart("column", []byte(column))
-		}
+		// Rows only. The column list used to be hashed in here too, which froze
+		// every pre-existing table against ever gaining a column — the opposite of
+		// migration rule 2 ("New columns are nullable or carry a DEFAULT, so an
+		// older row stays valid"), which positions.adoption_id and eleven columns on
+		// mutation_attempts have already exercised. What the rule actually forbids
+		// is dropping or renaming a column and rewriting historical rows, and
+		// journalTableColumns below asserts exactly that instead.
 		for rows.Next() {
 			values := make([]any, len(columns))
 			targets := make([]any, len(columns))
