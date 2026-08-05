@@ -191,13 +191,14 @@ func TestRawReadsClassifyErrorsLikeEveryOtherRead(t *testing.T) {
 		body   string
 		check  func(error) bool
 	}{
-		// errors.Is, not ==. The retry matrix this table refers to asks errors.Is,
-		// so == was asserting something stricter than the contract — and change
-		// a082 wraps the auth sentinel to carry its status code, which == rejects
-		// and every production consumer accepts.
-		{"rate limited", http.StatusTooManyRequests, `{}`, func(err error) bool { return errors.Is(err, ErrRateLimited) }},
+		// Only the auth row needed widening. a082 wraps that sentinel to carry its
+		// status code, which == rejects and every production consumer accepts.
+		// The other two rows keep == on purpose: identity there also asserts that
+		// nothing has started attaching a response body to them, and errors.Is
+		// would admit exactly that.
+		{"rate limited", http.StatusTooManyRequests, `{}`, func(err error) bool { return err == ErrRateLimited }},
 		{"auth", http.StatusUnauthorized, `{"message":"bad key"}`, func(err error) bool { return errors.Is(err, ErrAuth) }},
-		{"server", http.StatusInternalServerError, `{}`, func(err error) bool { return errors.Is(err, ErrServer) }},
+		{"server", http.StatusInternalServerError, `{}`, func(err error) bool { return err == ErrServer }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c := rawTestClient(t, func(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,7 @@ package execgw_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -45,6 +46,11 @@ func TestClassifyQueryError(t *testing.T) {
 		{"rate limited", official.ErrRateLimited, execgw.ClassRateLimited},
 		{"auth", official.ErrAuth, execgw.ClassAuthFatal},
 		{"ip not allowed", official.ErrIPNotAllowed, execgw.ClassAuthFatal},
+		// Wrapped since a082 put the status code on the message. The classifier
+		// latches the entry gate off this verdict, so the wrapped shape has to be
+		// in the table rather than assumed to behave like the bare one.
+		{"auth carrying its status code", fmt.Errorf("%w (HTTP 401)", official.ErrAuth), execgw.ClassAuthFatal},
+		{"ip not allowed carrying its status code", fmt.Errorf("%w (HTTP 403)", official.ErrIPNotAllowed), execgw.ClassAuthFatal},
 		{"bad request", &official.APIError{Code: 400, Body: "nope"}, execgw.ClassPermanent},
 		{"not found", &official.APIError{Code: 404}, execgw.ClassPermanent},
 		{"context canceled", context.Canceled, execgw.ClassCanceled},

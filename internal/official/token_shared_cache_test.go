@@ -154,15 +154,13 @@ func TestARefusedProcessAdoptsTheTokenAnotherProcessAlreadyGot(t *testing.T) {
 	}
 }
 
-// TestARotationThatLandsMidRequestCostsNoToken is the case the file-changed
-// check cannot reach.
+// TestARotationThatLandsMidRequestCostsNoToken is the window the ten production
+// refusals came out of.
 //
-// That check runs when a token is handed out. It cannot see a rotation that
-// happens after the request is built and before the broker answers it — and that
-// in-flight window is exactly where the ten production refusals landed, because
-// it is the only way a refusal survives the retry at all. Buying a token here
-// would kill the one the rotating process just started using, which is how the
-// loop restarts after the file-changed check has already broken it once.
+// A rotation that lands after the token is handed out and before the broker
+// answers is the only way a refusal survives send()'s retry at all; anywhere else
+// the retry absorbs it. Buying a token here would kill the one the rotating
+// holder just started using, which is how the loop restarts.
 func TestARotationThatLandsMidRequestCostsNoToken(t *testing.T) {
 	broker := &lastTokenWinsServer{}
 	var cache string
@@ -248,38 +246,177 @@ func TestARefusedProcessWithNothingToAdoptStillExchanges(t *testing.T) {
 	}
 }
 
-// TestTokenPrefersTheCacheFileWhenAnotherProcessRewroteIt removes the wasted
-// round trip. Adoption alone converges, but only after eating one refusal per
-// rotation, and every refusal reopens the retry window this change exists to
-// close.
-func TestTokenPrefersTheCacheFileWhenAnotherProcessRewroteIt(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":86400,"token_type":"Bearer"}`))
-	}))
+// TestAnAdoptedTokenThatIsAlsoRefusedStillEndsOnAMintedOne.
+//
+// An adopted token is not a verified one — its liveness is inferred from its
+// expiry — and send() has one retry to spend. At a rotation boundary the holder
+// that wrote the file last need not be the one that minted last, so the file can
+// hold a token the broker has already dropped. Spending the only retry on it and
+// surfacing the refusal is not a small matter: ErrAuth reaches
+// execgw.ClassAuthFatal, which latches the entry gate and persists the latch so a
+// restart cannot lift it, and the exit-loop cycle that raised it makes no
+// stop-loss judgement.
+func TestAnAdoptedTokenThatIsAlsoRefusedStillEndsOnAMintedOne(t *testing.T) {
+	broker := &lastTokenWinsServer{}
+	srv := httptest.NewServer(broker.handler(t))
+	defer srv.Close()
+	c, _, cache := twoProcesses(t, srv)
+
+	if err := ping(t, c); err != nil {
+		t.Fatal(err)
+	}
+	// The process holds a token the broker has dropped, and the file holds a
+	// different one it has also dropped: the tempting thing to adopt is dead.
+	writeCachedToken(t, cache, "T-written-last-but-dead", time.Now().Add(24*time.Hour))
+	c.tm.mu.Lock()
+	c.tm.cache = &cachedToken{AccessToken: "T-minted-earlier", ExpiresAt: time.Now().Add(24 * time.Hour)}
+	c.tm.mu.Unlock()
+
+	if err := ping(t, c); err != nil {
+		t.Errorf("the request ended on a refusal: %v — the retry was spent on an adopted "+
+			"token that was also dead, and nothing bought a live one", err)
+	}
+}
+
+// TestASiblingGoroutineThatAlreadyReplacedTheTokenIsNotOutbought.
+//
+// The engine runs every supervised loop as its own goroutine against one client,
+// so two loops refused on the same stale token arrive at refresh together. If the
+// second one exchanges it invalidates the token the first one just obtained,
+// which is the cross-process defect happening inside a single process.
+func TestASiblingGoroutineThatAlreadyReplacedTheTokenIsNotOutbought(t *testing.T) {
+	broker := &lastTokenWinsServer{}
+	srv := httptest.NewServer(broker.handler(t))
 	defer srv.Close()
 	cache := filepath.Join(t.TempDir(), "openapi-token.json")
 	m := newTokenManager(Credentials{APIKey: "k", SecretKey: "s"}, srv.URL, cache, srv.Client())
 
-	first, err := m.token(context.Background())
-	if err != nil || first != "AT" {
-		t.Fatalf("got %q, %v", first, err)
-	}
-
-	// Another process rotates the shared file. mtime resolution is coarse on some
-	// filesystems, so move the timestamp explicitly rather than racing it.
-	writeCachedToken(t, cache, "AT-from-another-process", time.Now().Add(24*time.Hour))
-	future := time.Now().Add(2 * time.Second)
-	if err := os.Chtimes(cache, future, future); err != nil {
-		t.Fatal(err)
-	}
-
-	got, err := m.token(context.Background())
+	stale, err := m.token(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != "AT-from-another-process" {
-		t.Errorf("token() returned %q; the cache file changed underneath it and it kept "+
-			"serving its own copy until a refusal forced the issue", got)
+	// The first sibling answers the refusal and replaces the shared token.
+	if _, _, err := m.refresh(context.Background(), stale); err != nil {
+		t.Fatal(err)
+	}
+	before := broker.exchanges()
+
+	// Seven more siblings arrive holding the same stale token they were refused on.
+	const siblings = 7
+	var wg sync.WaitGroup
+	for i := 0; i < siblings; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, _, err := m.refresh(context.Background(), stale); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if got := broker.exchanges() - before; got != 0 {
+		t.Errorf("%d siblings refused on an already-replaced token bought %d more; the "+
+			"replacement was sitting in front of them", siblings, got)
+	}
+}
+
+// TestAReaderNeverSeesAHalfWrittenCacheFile.
+//
+// A plain write truncates first, and a reader landing in that window parses an
+// empty file, concludes it has no token and buys one — invalidating the token the
+// writer just obtained. That window matters more since a082, because the read
+// that adopts a token happens exactly when another holder has just written one.
+func TestAReaderNeverSeesAHalfWrittenCacheFile(t *testing.T) {
+	dir := t.TempDir()
+	cache := filepath.Join(dir, "openapi-token.json")
+	m := newTokenManager(Credentials{APIKey: "k", SecretKey: "s"}, "", cache, nil)
+	writeCachedToken(t, cache, "seed", time.Now().Add(24*time.Hour))
+
+	const rounds = 400
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < rounds; i++ {
+			ct := &cachedToken{
+				AccessToken: fmt.Sprintf("T%d-%s", i, strings.Repeat("x", 512)),
+				ExpiresAt:   time.Now().Add(24 * time.Hour),
+			}
+			if err := m.saveCache(ct); err != nil {
+				t.Errorf("save: %v", err)
+				return
+			}
+		}
+	}()
+	torn := 0
+	go func() {
+		defer wg.Done()
+		for i := 0; i < rounds; i++ {
+			ct, err := m.loadCache()
+			if err != nil || ct == nil || ct.AccessToken == "" {
+				torn++
+			}
+		}
+	}()
+	wg.Wait()
+
+	if torn != 0 {
+		t.Errorf("%d of %d reads saw a file that was missing or unparseable while it was "+
+			"being replaced; a reader in that window buys a token and invalidates the "+
+			"writer's", torn, rounds)
+	}
+}
+
+// TestAdoptionRefusesAnExpiredFileToken.
+//
+// The file is shared, so what it holds can be stale in either direction. Adopting
+// an expired token spends send()'s retry on something the broker will refuse, and
+// the second pass has to buy one anyway — the expiry check is what keeps the first
+// pass from being wasted.
+func TestAdoptionRefusesAnExpiredFileToken(t *testing.T) {
+	broker := &lastTokenWinsServer{}
+	srv := httptest.NewServer(broker.handler(t))
+	defer srv.Close()
+	cache := filepath.Join(t.TempDir(), "openapi-token.json")
+	m := newTokenManager(Credentials{APIKey: "k", SecretKey: "s"}, srv.URL, cache, srv.Client())
+
+	writeCachedToken(t, cache, "T-expired", time.Now().Add(-time.Hour))
+	tok, adopted, err := m.refresh(context.Background(), "T-refused")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if adopted || tok == "T-expired" {
+		t.Errorf("adopted=%v tok=%q; the file's token was already expired and taking it "+
+			"spends the caller's only retry on a certain refusal", adopted, tok)
+	}
+}
+
+// TestAdoptionKeysOnTheTokenItself.
+//
+// "Adopt only something different" is the whole narrowness argument, and different
+// has to mean a different token — not a different expiry, not a newer file. A file
+// holding the same token with a later expiry is the same dead token.
+func TestAdoptionKeysOnTheTokenItself(t *testing.T) {
+	broker := &lastTokenWinsServer{}
+	srv := httptest.NewServer(broker.handler(t))
+	defer srv.Close()
+	cache := filepath.Join(t.TempDir(), "openapi-token.json")
+	m := newTokenManager(Credentials{APIKey: "k", SecretKey: "s"}, srv.URL, cache, srv.Client())
+
+	// Same token as the one refused, but stamped further into the future.
+	writeCachedToken(t, cache, "T-refused", time.Now().Add(48*time.Hour))
+	before := broker.exchanges()
+	tok, adopted, err := m.refresh(context.Background(), "T-refused")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if adopted || tok == "T-refused" {
+		t.Errorf("adopted=%v tok=%q; a later expiry on the same token is still the token "+
+			"the broker just refused", adopted, tok)
+	}
+	if got := broker.exchanges() - before; got != 1 {
+		t.Errorf("bought %d token(s), want exactly 1", got)
 	}
 }
 

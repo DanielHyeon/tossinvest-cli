@@ -9,6 +9,7 @@ package official
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -29,7 +30,7 @@ func TestAnAuthRefusalCarriesItsStatusCode(t *testing.T) {
 			t.Errorf("HTTP %d %q classified as %v, want %v — this change moves the "+
 				"message, never the verdict", tc.code, tc.body, err, tc.want)
 		}
-		if code := codeIn(tc.code); !strings.Contains(err.Error(), code) {
+		if code := codeIn(t, tc.code); !strings.Contains(err.Error(), code) {
 			t.Errorf("HTTP %d reported as %q, which does not name %s; 401 and 403 have "+
 				"different causes and one message cannot stand for both",
 				tc.code, err, code)
@@ -73,12 +74,18 @@ func TestNothingDecidesAnAuthRefusalByReadingItsMessage(t *testing.T) {
 	}
 }
 
-func codeIn(code int) string {
+// codeIn renders the status a refusal must name.
+//
+// It fails loudly on anything outside the two it knows, because strings.Contains
+// against "" is always true and a default of "" would silently disarm the
+// assertion the moment a row is added to the table.
+func codeIn(t *testing.T, code int) string {
+	t.Helper()
 	switch code {
-	case 401:
-		return "401"
-	case 403:
-		return "403"
+	case 401, 403:
+		return strconv.Itoa(code)
 	}
+	t.Fatalf("codeIn has no rendering for HTTP %d; add one rather than letting the "+
+		"assertion pass on an empty needle", code)
 	return ""
 }

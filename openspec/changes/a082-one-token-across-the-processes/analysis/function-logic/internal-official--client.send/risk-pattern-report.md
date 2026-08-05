@@ -1,4 +1,4 @@
-# Risk Pattern Report: `internal/official/token.go`
+# Risk Pattern Report: `internal/official/client.go`
 
 | Rule | Location | Message |
 |---|---|---|

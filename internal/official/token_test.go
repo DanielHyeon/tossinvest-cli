@@ -46,10 +46,15 @@ func TestTokenRefresh(t *testing.T) {
 	m := newTokenManager(Credentials{APIKey: "k", SecretKey: "s"}, srv.URL, filepath.Join(t.TempDir(), "t.json"), srv.Client())
 	// First exchange
 	_, _ = m.token(context.Background())
-	// Force refresh
-	tok, err := m.refresh(context.Background())
+	// Force refresh. The refused token is the one just obtained, which is also the
+	// only one on disk, so there is nothing to adopt and this must exchange —
+	// change a082 gave refresh the refused token so it can tell those apart.
+	tok, adopted, err := m.refresh(context.Background(), "AT2")
 	if err != nil || tok != "AT2" {
 		t.Fatalf("refresh got %q,%v", tok, err)
+	}
+	if adopted {
+		t.Fatal("refresh reported an adoption; the only token available was the refused one")
 	}
 	if hits != 2 {
 		t.Fatalf("expected 2 exchanges, got %d", hits)

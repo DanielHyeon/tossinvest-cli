@@ -1,6 +1,6 @@
 {
   "file": "internal/official/orders_raw_test.go",
-  "source_sha256": "d9d79ac614b473bca08c60e0a002d680819cca2290f9efa3be141b1ef7588b7c",
+  "source_sha256": "59d6b5632724575672aa5e6091cc559866aff3d92a29184a7963697f064b51b8",
   "package": "official",
   "function": "TestRawReadsClassifyErrorsLikeEveryOtherRead",
   "signature": "TestRawReadsClassifyErrorsLikeEveryOtherRead(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 213,
+    "line": 214,
     "column": 2
   },
   "branches": [
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 208,
+        "line": 209,
         "column": 4
       }
     }
@@ -34,21 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 198,
+        "line": 199,
         "column": 77
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 199,
+        "line": 200,
         "column": 85
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 200,
+        "line": 201,
         "column": 75
       }
     }
@@ -57,15 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 198,
-        "column": 84
-      },
-      "text": "errors.Is"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 199,
+        "line": 200,
         "column": 92
       },
       "text": "errors.Is"
@@ -73,15 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
-        "column": 82
-      },
-      "text": "errors.Is"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 202,
+        "line": 203,
         "column": 3
       },
       "text": "t.Run"
@@ -89,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 203,
+        "line": 204,
         "column": 9
       },
       "text": "rawTestClient"
@@ -97,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 5
       },
       "text": "w.WriteHeader"
@@ -105,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 206,
         "column": 12
       },
       "text": "w.Write"
@@ -113,14 +97,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 206,
         "column": 20
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 207,
+        "line": 208,
         "column": 14
       },
       "text": "c.OrdersPageRaw"
@@ -128,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 207,
+        "line": 208,
         "column": 30
       },
       "text": "context.Background"
@@ -136,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 209,
         "column": 22
       },
       "text": "tc.check"
@@ -144,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
+        "line": 210,
         "column": 5
       },
       "text": "t.Errorf"
@@ -154,21 +138,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 203,
+        "line": 204,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 205,
+        "line": 206,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 207,
+        "line": 208,
         "column": 4
       }
     }

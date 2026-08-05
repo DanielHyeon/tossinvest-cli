@@ -159,3 +159,203 @@ or test output."
 `make lint`는 이 change 이전부터 red다 — `internal/httpapi/performance_attribution_test.go`의
 gofmt 드리프트이고 base `f1aae509`에서 이미 그렇다. 이 change의 파일은 전부
 gofmt clean이고 `make gate`는 lint를 돌리지 않는다.
+
+## 2026-08-05 · 독립 리뷰 1 (적대적 안전 렌즈, 별도 worktree) 과 그 반영
+
+**결과: P0 2건, P1 3건, P2 2건.** 초안 설계의 절반을 철회했다.
+
+### P0-1 — stat 실패가 요청마다 교환을 만든다 → **D2 철회**
+
+`cacheFileChanged()`가 stat 오류를 "바뀌었다"로 읽었다. 파일을 stat할 수 없으면
+(ENOSPC, 권한 드리프트, bind mount 부재로 read-only root에 떨어짐) 유효한 24시간
+토큰을 손에 쥐고도 **매 호출 교환**한다. 리뷰어 측정: 같은 조건에서 base 1회,
+초안 **10회**. 그리고 그 교환은 `m.mu`를 쥔 채 도는 네트워크 호출이다.
+
+### P0-2 — 채택한 토큰은 검증된 토큰이 아닌데 유일한 재시도를 거기 쓴다
+
+회전 경계에서 **마지막에 쓴 보유자와 마지막에 발급받은 보유자가 다를 수 있다.**
+그러면 파일에 죽은 토큰이 있고 채택이 재시도를 거기 쓴다. 리뷰어 측정: base
+`err = <nil>`, 초안 `authentication failed (HTTP 401)`.
+
+그 거부의 대가를 리뷰어가 끝까지 추적했다 — `ClassAuthFatal` → `Gate.Block` +
+`escalateCredentialFailure`(재시작이 못 푸는 영속화) → `EntryGate.Clear`는 운영자
+전용. 그리고 그것을 올린 exit 사이클은 손절 판정을 하지 않는다. **내가 코드로
+재확인했다** (`retry.go:334-338,507-509`, `exitloop.go:699-708`).
+
+### P1-3 · P1-4 · P1-5 · P2-6 · P2-7
+
+- **P1-3** 읽고 나서 stamp하면 옛 바이트에 새 mtime이 찍혀 감지기가 영구히 죽는다.
+- **P1-4** `saveCache`가 truncate 후 write라 torn read가 난다. → D6로 채택.
+- **P1-5** design D1의 "형제 goroutine" 주장이 거짓. 형제도 파일을 쓰므로 토큰이
+  같아 보여 교환한다. 엔진은 loop마다 goroutine을 띄운다(`runtime.go:277-283`).
+  → `refresh(ctx, refused)`로 추론 자체를 없앴다.
+- **P2-6** mtime 동등 비교는 같은 tick 안의 두 쓰기를 구분 못 한다.
+- **P2-7** stat이 `m.mu` 아래 hot path에 있고 취소할 수 없다. 측정 ext4 775ns,
+  FUSE **87µs**, NFS 무응답 시 mount timeout까지 블록. **락을 거부한 근거(D3)를
+  stat이 그대로 어긴다.**
+
+### 처분 — 넷을 한 번에 없앴다
+
+P0-1·P1-3·P2-6·P2-7은 **전부 mtime 확인 하나**를 가리킨다. 그것을 철회했다.
+대가는 회전마다 보유자당 401 한 번이고 `send()`의 재시도가 흡수한다 — 하루 3회.
+그 값에 위 넷을 사지 않는다.
+
+P0-2는 `refresh`가 채택/발급을 반환하고 `send`가 채택 뒤에만 한 번 더 도는 것으로
+고쳤다 (design D5). P1-4는 임시 파일 + rename (D6). P1-5는 `refused` 인자 (D1).
+
+### 형제 goroutine 전용 갈래도 뺐다
+
+P1-5 반영으로 메모리 캐시를 먼저 보는 갈래를 넣었다가, **변이 검증에서 그것을
+지워도 아무 테스트가 안 깨졌다**. `exchange`가 반환 전에 파일을 쓰므로 형제의
+토큰은 파일 갈래가 이미 찾아낸다. 근거 없는 코드는 남기지 않는다 — 뺐다.
+
+### 리뷰어가 확인해 준 것
+
+- `ErrAuth` wrap이 저장소 어디의 분류도 바꾸지 않는다. 소비자 7곳 전부
+  `errors.Is`/`errors.As`이고, `orders_raw_test.go` 수정 뒤 sentinel `==` 비교는
+  저장소에 **0건**이다. `failclosed.go:190-198`이 `err.Error()` fallback을 명시적으로
+  거부하므로 `(HTTP 401)` 접미사가 운영자 분기 분류에 닿지 않는다.
+- 본문은 안 실린다. 새 시크릿·PII 표면 없음. `saveCache`는 0600 유지.
+- 채택 경로에 nil 역참조 없음. 손상된 캐시 파일이 panic을 내지 않는다.
+- `saveCache`의 유일한 호출자, `refresh`의 유일한 production 호출자 — 둘 다 확인.
+- 단일 프로세스 의미론 보존, `-race`·`go vet` clean.
+
+### 개정 후 변이 검증 6종
+
+| 변이 | 결과 |
+|---|---|
+| M1 파일 채택 갈래 제거 | **RED** — 헤드라인 + 중간 회전 + 채택 3건 |
+| M2 형제 전용 갈래 제거 | **통과 → 그 갈래를 삭제했다** |
+| M3 상태 코드 다시 버림 | **RED** |
+| M4 채택에서 `!= refused` 제거 | **RED** — 5건, 기존 `TestTokenRefresh` 포함 |
+| M5 `send`의 상한을 2→1 | **RED** — 채택-후-거부 테스트 |
+| M6 `saveCache`를 plain write로 | **RED** — 400회 중 **244회** torn read |
+
+### 관측 (개정 후)
+
+| | |
+|---|---|
+| `internal/official` | **210 passed**, 0 failed |
+| `-race` | clean |
+| `go vet` / gofmt | clean |
+| 기존 테스트 수정 | **2건** — `orders_raw_test.go`(I5), `token_test.go`(I7) |
+| Function Logic Map | **6 target** `evidence complete` |
+
+### 운영 사고 하나 — 리뷰어 worktree가 저장소 안에 생긴다
+
+`make test`가 갑자기 7건 실패했다. 원인은 내 코드가 아니라
+`.claude/worktrees/agent-*/`였다 — 저장소를 걸어다니는 정적 가드
+(`internal/candidate/bandscale_test.go:462`)가 리뷰어 worktree 안의 `band.go`를
+저장소 파일로 셌다. **리뷰어가 도는 동안에는 `make test`와 `make gate`를 믿을 수
+없다.** a081 issues I6("리뷰어에게 각자 worktree를 줘라")의 대가가 이것이고, 다음에는
+worktree를 저장소 밖에 두어야 한다.
+
+## 2026-08-05 · 독립 리뷰 2 (테스트 렌즈, 별도 worktree) 과 그 반영
+
+**결과: P0 0건, P1 6건, P2 5건.** 리뷰어가 변이 17종을 돌려 **8종이 살아남는 것**을
+보였다. 다만 이 리뷰는 `56e85c68`(리뷰 1 반영 전)을 봤으므로, 절반은 mtime 확인과
+함께 이미 사라졌다.
+
+### 이미 사라진 것 — P1-3 (survivors 6종)
+
+N2·N3·N9·N10·N11·N15는 전부 `cacheFileChanged`/`stampCacheFile`을 겨눈다. 리뷰 1
+반영으로 그 메커니즘을 통째로 철회했으므로 **대상이 없다.** 리뷰어가 "N2/N3에서
+매 요청 `os.ReadFile`+`Unmarshal`을 한다"고 지적한 것도 같은 이유로 사라졌다.
+
+리뷰 둘이 독립적으로 같은 코드를 겨눴다는 것 자체가 신호였다.
+
+### P1-1 — 테스트가 이름값을 못 했다 → **개정으로 해소, 실측 확인**
+
+`TestARefusedProcessAdoptsTheTokenAnotherProcessAlreadyGot`가 `refresh()`를 **한
+번도 부르지 않았다**. `token()`의 디스크 갈래가 요청을 만들기도 전에 픽스처를
+덮어써서 401이 나지 않았다.
+
+개정 후 `token()`은 base 그대로(메모리 우선)라 낡은 토큰이 실제로 제시되고 401을
+받는다. `refresh` 첫 줄에 panic을 심어 확인했다.
+
+```
+TestARefusedProcessAdoptsTheTokenAnotherProcessAlreadyGot -> PROBE HIT
+TestARefusedProcessWithNothingToAdoptStillExchanges       -> PROBE HIT
+TestARotationThatLandsMidRequestCostsNoToken              -> PROBE HIT
+TestAnAdoptedTokenThatIsAlsoRefusedStillEndsOnAMintedOne  -> PROBE HIT
+```
+
+D2 철회의 부수 효과다 — 테스트가 비로소 이름대로 동작한다.
+
+### P1-4 · P1-5 — 채택 조건이 양방향으로 안 묶여 있었다 → 테스트 2건 추가
+
+- **N5** 만료된 파일 토큰을 채택한다. `send()`의 유일한 재시도를 확실한 거부에
+  쓴다. → `TestAdoptionRefusesAnExpiredFileToken`. **RED 확인.**
+- **N6** 채택 조건을 토큰 동일성이 아니라 만료 시각으로 키잉한다. "다르면 채택"이
+  좁음의 논거 전부인데 아무것도 그것을 토큰에 묶지 않았다. →
+  `TestAdoptionKeysOnTheTokenItself`(같은 토큰 + 더 먼 만료 ⇒ 교환해야 한다).
+  **RED 확인** (3건 동시).
+
+### P1-6 — 감싼 `ErrAuth`로 소비자를 시험한 곳이 없었다 → 가장 중요한 지적
+
+a082가 감싸는 근거는 "소비자 전부 `errors.Is`"였다. 그런데 **fixture는 전부 맨몸
+sentinel**이라, 소비자가 unwrap을 멈춰도 아무도 몰랐다. 리뷰어가 소비자별로
+`errors.Is`→`==` 변이를 돌려 확인했다.
+
+| 소비자 | 변이 결과 (반영 전) | 반영 후 |
+|---|---|---|
+| `execgw/retry.go:60` | KILLED (다른 테스트가 감싼 fixture를 쓴다) | 유지 |
+| `execgw/failclosed.go:210` | **SURVIVED** | `TestBrokerBranchesMapToStableReasonCodes`에 감싼 행 2개 → **KILLED** |
+| `execgw/classify.go:111` (`statusOf`) | **SURVIVED** | `TestStatusOfReadsWrappedSentinels` 신규 → **KILLED** |
+
+`failclosed.go`는 `ReasonBrokerAuthRejected`를 정하는 fail-closed 분류기이고
+`statusOf`는 "확정 거부냐 모호하냐"를 정해 **종목 차단 여부**를 가른다. 둘 다
+High-risk다.
+
+`statusOf`는 unexported라 `export_status_test.go`로 shim을 냈다. 그 파일을 새로
+만든 이유는 기존 `export_test.go`에 함수를 붙이면 바로 위 `init()`이 증거 요구
+대상으로 끌려오기 때문이다 — [[tossos-logic-map-scope-creep]]가 또 맞았다.
+
+### P2-1 — `==`→`errors.Is` 확대가 두 행에서는 **약화**였다 → 되돌렸다
+
+issues I5가 "감싸지 않은 sentinel에는 `errors.Is(x,x) == (x==x)`"라고 썼다. 고정된
+값에는 참이지만 **단정은 코드가 만드는 무엇에나 적용된다** — `errors.Is`는 sentinel을
+감싼 모든 오류를 받아들인다. 리뷰어가 429/5xx에 본문을 실어 감싸는 변이(N17)로
+보였다: 확대한 단정은 통과하고, 원래 `==`는 잡는다.
+
+**auth 행만 넓히면 됐다.** 나머지 둘은 `==`로 되돌렸다 — 거기서 동일성은 "아무도
+본문을 붙이기 시작하지 않았다"는 tripwire이기도 하고, 이 change가 401/403에 대해
+`TestAnAuthRefusalDoesNotCarryTheResponseBody`로 지키려던 것과 같은 부류다.
+
+### P2-4 — 자기를 끄는 단정
+
+`codeIn`이 기본값으로 `""`를 돌려주고 `strings.Contains(s, "")`는 항상 참이다.
+{401,403} 밖의 행을 더하는 순간 코드 단정이 조용히 통과한다. `t.Fatalf`로 바꿨다.
+
+### 해소되었거나 남긴 것
+
+- **P1-2**(branch-test-map이 근거를 못 주는 테스트를 인용) — 개정으로 맵을 다시
+  썼고, M1이 실제로 깨는 3건만 인용한다. `TestARotationThatLandsMidRequestCostsNoToken`도
+  이제 맵에 있다.
+- **P2-2**(헤드라인 테스트를 단독 변이가 못 깬다) — 개정 후 M1 **단독으로 깨진다**
+  (mtime 확인이 없어졌으므로). self-check가 느슨하다는 지적은 유효하나, 변이 증거가
+  그 자리를 대신한다.
+- **P2-3**(`token()`이 `m.cache`를 반환값과 맞춘다는 불변식이 안 묶임) — 개정으로
+  **무의미해졌다.** `refused`가 인자라 `refresh`가 더 이상 `m.cache`에 기대지 않는다.
+- **P2-5**(`make test`가 `internal/journal` 600초 타임아웃으로 붉어질 수 있다) —
+  이 change와 무관한 기존 취약성이고, 부하에 따라 갈린다. issues I10.
+
+### 리뷰어가 확인해 준 것
+
+- 초안의 변이 4종이 전부 문서대로 재현된다. M4가 손대지 않은 `TestTokenRefresh`를
+  깨는 것도 확인.
+- `TestARotationThatLandsMidRequestCostsNoToken`은 주장하는 창을 실제로 연다 —
+  회전이 핸들러 안에서, `token()`이 T1을 건넨 뒤 응답 전에 발생하고, 재시도는
+  `token()`이 아니라 `refresh()`를 지난다. self-check도 진짜다.
+- `classifyStatus`의 판정 보존: 항상 401 보고(N12), 본문 재삽입(N13) 둘 다 죽는다.
+- 저장소 어디에도 `== Err*` sentinel 비교가 남아 있지 않다.
+
+### 최종 관측
+
+| | |
+|---|---|
+| `internal/official` + `internal/execgw` | **550 passed**, 0 failed |
+| `-race` (`internal/official`) | **212 passed**, clean |
+| `go vet` (전 패키지) / gofmt | clean |
+| 기존 테스트 수정 | **5건** — 전부 이유를 issues에 (I5·I7·I11) |
+| Function Logic Map | **9 target** `evidence complete` |

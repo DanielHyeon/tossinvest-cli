@@ -37,12 +37,6 @@ type tokenManager struct {
 
 	mu    sync.Mutex
 	cache *cachedToken
-	// stamp is the cache file's modification time as of the last read or write
-	// this manager made. It is how a process notices that another one rotated the
-	// shared token: console, engine and the API daemon all run against a single
-	// config directory, so the file changes underneath a perfectly valid
-	// in-memory copy (change a082).
-	stamp time.Time
 }
 
 // newTokenManager constructs a tokenManager. base is the API base URL
@@ -69,18 +63,14 @@ func (m *tokenManager) token(ctx context.Context) (string, error) {
 
 	now := time.Now()
 
-	// 1. In-memory cache, unless another process has rewritten the shared file
-	//    since this manager last read or wrote it. Trusting memory alone means
-	//    presenting a token the broker has already replaced, and finding out only
-	//    when a request is refused (change a082).
-	if isStillValid(m.cache, now) && !m.cacheFileChanged() {
+	// 1. In-memory cache.
+	if isStillValid(m.cache, now) {
 		return m.cache.AccessToken, nil
 	}
 
 	// 2. Disk cache.
 	if ct, err := m.loadCache(); err == nil && isStillValid(ct, now) {
 		m.cache = ct
-		m.stampCacheFile()
 		return ct.AccessToken, nil
 	}
 
@@ -94,61 +84,45 @@ func isStillValid(ct *cachedToken, now time.Time) bool {
 	return ct != nil && ct.ExpiresAt.Add(-60*time.Second).After(now)
 }
 
-// refresh answers a rejected token: it adopts a newer one from the shared cache
-// file when there is one, and otherwise exchanges.
+// refresh answers a refused token: it takes a newer one that somebody else has
+// already obtained when there is one, and otherwise exchanges. The bool reports
+// which of the two happened.
 //
-// A 401 says the token this process is holding is stale. It does not say a new
+// A 401 says the token this process presented is stale. It does not say a new
 // token has to be bought, and the difference matters because the broker keeps one
-// token alive per credential. Buying invalidates whatever token another process
-// is using, that process is refused in turn and buys its own, and the three
-// processes sharing this file spend the day taking the token away from each other
-// — measured at seven exchanges a minute for a token that lives a day (a082).
+// token alive per credential. Buying invalidates whatever token another holder is
+// using, that holder is refused in turn and buys its own, and the console, the
+// engine and the API daemon spend the day taking the token away from each other —
+// measured at seven exchanges a minute for a token that lives a day (a082).
 //
-// Adopting only when the file holds a *different* token is what keeps this
-// narrow. If the file holds the same token that was just refused, or holds
-// nothing usable, there is nothing to adopt and a genuinely dead token still gets
-// replaced.
-func (m *tokenManager) refresh(ctx context.Context) (string, error) {
+// refused is the token the caller was actually refused on, not an inference from
+// m.cache. The engine runs every supervised loop as its own goroutine against one
+// client, so a sibling can replace m.cache between the request being built and the
+// refusal arriving; inferring the refused token from m.cache in that window makes
+// this exchange anyway, which is the same defect one process at a time.
+//
+// The adopted bool exists because an adopted token is not a verified one. Its
+// liveness is inferred from ExpiresAt, and send() has a single retry to spend, so
+// the caller needs to know whether that retry was spent on a guess or on a token
+// this function just minted.
+func (m *tokenManager) refresh(ctx context.Context, refused string) (string, bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if ct, err := m.loadCache(); err == nil && isStillValid(ct, time.Now()) &&
-		m.cache != nil && ct.AccessToken != m.cache.AccessToken {
+	now := time.Now()
+
+	// Adopt only a token that is not the one just refused. That comparison is what
+	// keeps a dead token from being handed back to the caller forever, and it is
+	// also what covers the sibling-goroutine case: the engine runs every supervised
+	// loop as its own goroutine against one client, so two loops refused on the
+	// same stale token arrive here together, and the second one finds the first
+	// one's token here because exchange writes the file before returning.
+	if ct, err := m.loadCache(); err == nil && isStillValid(ct, now) && ct.AccessToken != refused {
 		m.cache = ct
-		m.stampCacheFile()
-		return ct.AccessToken, nil
+		return ct.AccessToken, true, nil
 	}
-	return m.exchange(ctx)
-}
 
-// cacheFileChanged reports that the cache file has been written since this
-// manager last read or wrote it.
-//
-// A stat is a local filesystem call and this is on every authenticated request,
-// which is why it is a stat and not a read: comparing the token itself would mean
-// reading and parsing the file every time. A stat failure is reported as changed,
-// which costs one extra disk read and never serves a token that has been
-// superseded.
-//
-// Deliberately not a lock. This path carries every broker read the engine makes,
-// including the ones the exit loop judges stops on, so making one process wait on
-// another here would put that wait inside the interval between stop-loss
-// judgements (design D3).
-func (m *tokenManager) cacheFileChanged() bool {
-	info, err := os.Stat(m.cacheFile)
-	if err != nil {
-		return true
-	}
-	return !info.ModTime().Equal(m.stamp)
-}
-
-// stampCacheFile records the cache file's modification time as current.
-// Must be called with m.mu held.
-func (m *tokenManager) stampCacheFile() {
-	if info, err := os.Stat(m.cacheFile); err == nil {
-		m.stamp = info.ModTime()
-		return
-	}
-	m.stamp = time.Time{}
+	tok, err := m.exchange(ctx)
+	return tok, false, err
 }
 
 // exchange performs the actual POST /oauth2/token request.
@@ -196,7 +170,6 @@ func (m *tokenManager) exchange(ctx context.Context) (string, error) {
 	}
 	m.cache = ct
 	_ = m.saveCache(ct) // best-effort; do not fail the call if disk write fails
-	m.stampCacheFile()
 	return ct.AccessToken, nil
 }
 
@@ -221,6 +194,13 @@ func (m *tokenManager) loadCache() (*cachedToken, error) {
 }
 
 // saveCache persists ct to cacheFile with 0600 permissions.
+//
+// Temp file plus rename, the pattern this repository already uses for the config
+// file and the policy transport. A plain write truncates first, and a reader
+// arriving in that window parses an empty file, decides it has no token and buys
+// one — which invalidates the token the writer just obtained. That window matters
+// more since a082, because the read that adopts a token happens exactly when
+// another holder has just written one.
 func (m *tokenManager) saveCache(ct *cachedToken) error {
 	dir := filepath.Dir(m.cacheFile)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
@@ -230,5 +210,22 @@ func (m *tokenManager) saveCache(ct *cachedToken) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(m.cacheFile, data, 0o600)
+	temporary, err := os.CreateTemp(dir, ".openapi-token-*.tmp")
+	if err != nil {
+		return err
+	}
+	name := temporary.Name()
+	defer func() { _ = os.Remove(name) }() // no-op once the rename succeeds
+	if err := temporary.Chmod(0o600); err != nil {
+		_ = temporary.Close()
+		return err
+	}
+	if _, err := temporary.Write(data); err != nil {
+		_ = temporary.Close()
+		return err
+	}
+	if err := temporary.Close(); err != nil {
+		return err
+	}
+	return os.Rename(name, m.cacheFile)
 }

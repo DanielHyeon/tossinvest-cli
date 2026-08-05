@@ -326,9 +326,20 @@ func (c *Client) send(ctx context.Context, makeReq func(tok string) (*http.Reque
 	if err != nil {
 		return err
 	}
-	if code == http.StatusUnauthorized {
-		// Force-refresh the token and retry once.
-		tok, err = c.tm.refresh(ctx)
+	// Answer a 401 with a fresh token and retry. refresh may satisfy the first
+	// attempt by taking a token another holder already obtained rather than buying
+	// one — that is what stops the holders sharing this cache file from
+	// invalidating each other (change a082) — but an adopted token is only
+	// inferred to be live, from its expiry. If the broker refuses that one too, the
+	// retry has been spent on a guess, and the loop below buys a token and tries
+	// again so the request still ends on a minted one.
+	//
+	// The bound is two refreshes, and the second cannot adopt: refresh never
+	// returns the token it was refused on, so the guess is excluded from its own
+	// replacement and the second pass exchanges.
+	for attempt := 0; attempt < 2 && code == http.StatusUnauthorized; attempt++ {
+		var adopted bool
+		tok, adopted, err = c.tm.refresh(ctx, tok)
 		if err != nil {
 			return err
 		}
@@ -339,6 +350,9 @@ func (c *Client) send(ctx context.Context, makeReq func(tok string) (*http.Reque
 		code, body, err = c.doRequest(req)
 		if err != nil {
 			return err
+		}
+		if !adopted {
+			break
 		}
 	}
 	if code < 200 || code >= 300 {

@@ -1,16 +1,16 @@
 {
   "file": "internal/official/token.go",
-  "source_sha256": "bfa6e0eda0f07fff23c41193bdfd4a0127beee45df422aece95c90c57c6b6ea1",
+  "source_sha256": "4cadb04ff6d6691a4238bda4b917a5c700175e7a6c5c5d03cb58381066037e9d",
   "package": "official",
   "function": "refresh",
   "receiver": "tokenManager",
-  "signature": "tokenManager.refresh(params=1, results=2)",
+  "signature": "tokenManager.refresh(params=2, results=3)",
   "start": {
-    "line": 111,
+    "line": 108,
     "column": 1
   },
   "end": {
-    "line": 121,
+    "line": 126,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 114,
+        "line": 119,
         "column": 2
       }
     }
@@ -27,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 118,
+        "line": 121,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 120,
+        "line": 125,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 109,
         "column": 2
       },
       "text": "m.mu.Lock"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 113,
+        "line": 110,
         "column": 8
       },
       "text": "m.mu.Unlock"
@@ -59,7 +59,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 114,
+        "line": 111,
+        "column": 9
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
         "column": 16
       },
       "text": "m.loadCache"
@@ -67,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 114,
+        "line": 119,
         "column": 45
       },
       "text": "isStillValid"
@@ -75,24 +83,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 114,
-        "column": 62
-      },
-      "text": "time.Now"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 117,
-        "column": 3
-      },
-      "text": "m.stampCacheFile"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 120,
-        "column": 9
+        "line": 124,
+        "column": 14
       },
       "text": "m.exchange"
     }
@@ -101,15 +93,29 @@
     {
       "kind": ":=",
       "at": {
-        "line": 114,
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 116,
+        "line": 120,
         "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 2
       }
     }
   ],
@@ -118,7 +124,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 113,
+        "line": 110,
         "column": 2
       },
       "text": "m.mu.Unlock"

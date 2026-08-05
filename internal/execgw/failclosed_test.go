@@ -3,6 +3,7 @@ package execgw_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -280,6 +281,20 @@ func TestBrokerBranchesMapToStableReasonCodes(t *testing.T) {
 		{
 			name: "plain auth rejection",
 			err:  official.ErrAuth,
+			want: execgw.ReasonBrokerAuthRejected,
+		},
+		{
+			// The classifier's input is wrapped since change a082 carried the
+			// status code onto authentication refusals. Nothing here would have
+			// noticed if this stopped unwrapping, and this is the fail-closed
+			// path that decides ReasonBrokerAuthRejected.
+			name: "auth rejection carrying its status code",
+			err:  fmt.Errorf("%w (HTTP 401)", official.ErrAuth),
+			want: execgw.ReasonBrokerAuthRejected,
+		},
+		{
+			name: "address rejection carrying its status code",
+			err:  fmt.Errorf("%w (HTTP 403)", official.ErrIPNotAllowed),
 			want: execgw.ReasonBrokerAuthRejected,
 		},
 	}
