@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a081-screens-share-one-engine-reading",
-    "path": "openspec/changes/a081-screens-share-one-engine-reading"
+    "path": "openspec/changes/archive/2026-08-05-a081-screens-share-one-engine-reading"
   },
   "acceptance": [
     "However often the two trading screens redraw and however many of them are open, the console reads the engine's policy state at most once per cache interval",

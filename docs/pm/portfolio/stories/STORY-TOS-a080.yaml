@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a080-line-refreshes-on-engine-cadence",
-    "path": "openspec/changes/a080-line-refreshes-on-engine-cadence"
+    "path": "openspec/changes/archive/2026-08-05-a080-line-refreshes-on-engine-cadence"
   },
   "acceptance": [
     "The interval at which the protection line is redrawn is no longer derived from the holdings cache TTL, and the two constants can move independently",

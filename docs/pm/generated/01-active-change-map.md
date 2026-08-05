@@ -83,5 +83,5 @@
 | `a077-screens-show-what-they-already-know` | STORY-TOS-a077 | in_progress |
 | `a078-first-rung-keeps-its-judgement` | STORY-TOS-a078 | implemented |
 | `a079-operator-can-lift-a-quarantine` | STORY-TOS-a079 | in_progress |
-| `a080-line-refreshes-on-engine-cadence` | STORY-TOS-a080 | implemented |
-| `a081-screens-share-one-engine-reading` | STORY-TOS-a081 | implemented |
+| `a080-line-refreshes-on-engine-cadence` | STORY-TOS-a080 | archived |
+| `a081-screens-share-one-engine-reading` | STORY-TOS-a081 | archived |
