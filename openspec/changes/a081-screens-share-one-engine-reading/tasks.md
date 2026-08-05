@@ -4,16 +4,10 @@
 > 셋이 설계를 바꿨다 — 8장이 그 반영이다. 아래 1~7장의 체크는 당시 기록이며,
 > 8장이 뒤집은 항목은 그 자리에 표시했다.
 >
-> | 검증 | 결과 |
-> |---|---|
-> | `internal/console` | 패키지 전체 통과 (0 failed) |
-> | 변이 검증 | **7종 전부 RED** — 간격 gate·runtime 부활·lifecycle 부활·무효화 제거·간격 통합·요청 컨텍스트·늦은 stamp |
-> | 기존 테스트 수정 | 0건 |
-> | `make test` / `vet` / `validate` / `sdd-check` | 전부 exit 0 |
-> | Function Logic Map | 4 target `evidence complete` |
->
-> `make gate`는 아직 **step 2**(미완료 체크박스)에서 멈춘다. 남은 것은
-> 6.6(컨테이너 실측 — 사람 승인)과 7.5(a080 재개 — a081이 land한 뒤)다.
+> **2026-08-05 land·배포 완료.** `df4407ed`가 `main`에 있고 그 코드로 만든
+> `tossos@sha256:b083bc72…`가 두 service에 올라가 있다. 6.6 컨테이너 실측은 사람이
+> 승인한 배포 뒤에 끝냈다 — 렌더 20회 묶음에서 엔진에 닿은 렌더는 1회였고 엔진
+> `reconcile` 사이클은 62.6~63.7초로 흔들리지 않았다. 기록은 review.md 4차.
 
 ## 1. 근거 고정 (편집 전)
 
@@ -92,9 +86,10 @@ a080의 예산 테스트가 F1을 놓친 이유는 하네스가 `PositionPolicie
       되는지 확인하고 되돌린다.
 - [x] 6.3 변이 검증: 무효화를 지우면 4.1이 RED가 되는지 확인하고 되돌린다.
 - [x] 6.4 `make test`, `make vet`, `make validate`, `make sdd-sync`, `make sdd-check`.
-- [ ] 6.5 `make gate CHANGE=a081-screens-share-one-engine-reading`.
-- [ ] 6.6 사람 승인 후 컨테이너 실측 — 탭 2개를 열어 둔 상태에서 엔진 프로세스로
+- [x] 6.5 `make gate CHANGE=a081-screens-share-one-engine-reading`.
+- [x] 6.6 사람 승인 후 컨테이너 실측 — 탭 2개를 열어 둔 상태에서 엔진 프로세스로
       들어가는 읽기 횟수가 간격당 1벌인지, 엔진 사이클 시간이 나빠지지 않는지.
+      **2026-08-05 배포 후 실측 완료.** 결과는 review.md 4차.
 
 ## 7. 리뷰와 기록
 
@@ -104,8 +99,12 @@ a080의 예산 테스트가 F1을 놓친 이유는 하네스가 `PositionPolicie
 - [x] 7.3 PM story/tracker 동기화.
 - [x] 7.4 별도 컨텍스트의 독립 리뷰 3인 (WORKFLOW.md §역할 분리) — 안전·테스트·
       스펙 렌즈. **P0 0건, P1 7건.** 결과와 처분은 review.md 3차.
-- [ ] 7.5 a080 재개 판단 — a081의 예산 테스트가 F1의 경로를 실제로 실행한 것을
-      확인한 뒤 a080의 `[blocked]`를 해제하고 F2~F8을 정리한다.
+- [x] 7.5 a080 재개 판단 — a081의 예산 테스트가 F1의 경로를 실제로 실행한 것을
+      확인한 뒤 a080의 `[blocked]`를 해제하고 F2~F8을 정리한다. **해제한다.**
+      근거는 셋이다 — 예산 테스트가 `PositionPolicies`를 배선해 F1의 경로를 실제로
+      실행하고(I5), a081이 `df4407ed`로 land했으며, 배포 실측이 렌더 20회당 엔진
+      도달 1회를 보였다(6.6). 문서 지적 F3·F4·F5·F8은 `15d25f80`에서 정리했고
+      코드 지적 F2·F6·F7은 a080 8장이 코드 복원과 함께 처리한다.
 
 ## 8. 독립 리뷰 반영 (2026-08-05)
 
@@ -131,5 +130,8 @@ a080의 예산 테스트가 F1을 놓친 이유는 하네스가 `PositionPolicie
 - [x] 8.12 변이 검증을 7종으로 늘리고 전부 RED를 관측한다.
 - [x] 8.13 Function Logic Map 4건의 AST를 재생성하고 본문을 개정 내용에 맞춘다.
       `check_analysis.py` 통과.
-- [x] 8.14 `make test`(전 패키지 ok)·`vet`(clean)·`validate`(exit 0)·`sdd-sync`·
-      `sdd-check`(exit 0) 재실행.
+- [x] 8.14 `make test`(전 패키지 ok, 0 failed)·`vet`(clean)·`validate`(exit 0)·
+      `sdd-sync`·`sdd-check`(exit 0) 재실행. 배포 직전에 한 번 더 돌렸다.
+      `sdd-sync`에서 CodeGraph hard evidence는 갱신됐고 CodeGraphContext(timeout)와
+      GBrain(다른 프로세스가 점유)은 갱신되지 않았다 — 둘 다 advisory라
+      `sdd-check`는 통과한다.
