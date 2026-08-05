@@ -1,0 +1,178 @@
+{
+  "file": "internal/official/orders_raw_test.go",
+  "source_sha256": "d9d79ac614b473bca08c60e0a002d680819cca2290f9efa3be141b1ef7588b7c",
+  "package": "official",
+  "function": "TestRawReadsClassifyErrorsLikeEveryOtherRead",
+  "signature": "TestRawReadsClassifyErrorsLikeEveryOtherRead(params=1, results=0)",
+  "start": {
+    "line": 187,
+    "column": 1
+  },
+  "end": {
+    "line": 213,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 208,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 77
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 199,
+        "column": 85
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 75
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 84
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 92
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 82
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 9
+      },
+      "text": "rawTestClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 5
+      },
+      "text": "w.WriteHeader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 12
+      },
+      "text": "w.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 20
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 14
+      },
+      "text": "c.OrdersPageRaw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 30
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 22
+      },
+      "text": "tc.check"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 203,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 205,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 207,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

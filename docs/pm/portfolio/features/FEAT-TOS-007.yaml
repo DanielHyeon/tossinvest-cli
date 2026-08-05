@@ -3,5 +3,13 @@
   "title": "Secure remote access and signed releases",
   "epic": "EPIC-TOS-005",
   "intent": "active",
-  "stories": ["STORY-TOS-031", "STORY-TOS-032", "STORY-TOS-033", "STORY-TOS-035", "STORY-TOS-036", "STORY-TOS-037"]
+  "stories": [
+    "STORY-TOS-031",
+    "STORY-TOS-032",
+    "STORY-TOS-033",
+    "STORY-TOS-035",
+    "STORY-TOS-036",
+    "STORY-TOS-037",
+    "STORY-TOS-a082"
+  ]
 }

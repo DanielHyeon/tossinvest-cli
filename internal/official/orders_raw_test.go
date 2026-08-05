@@ -2,6 +2,7 @@ package official
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -190,9 +191,13 @@ func TestRawReadsClassifyErrorsLikeEveryOtherRead(t *testing.T) {
 		body   string
 		check  func(error) bool
 	}{
-		{"rate limited", http.StatusTooManyRequests, `{}`, func(err error) bool { return err == ErrRateLimited }},
-		{"auth", http.StatusUnauthorized, `{"message":"bad key"}`, func(err error) bool { return err == ErrAuth }},
-		{"server", http.StatusInternalServerError, `{}`, func(err error) bool { return err == ErrServer }},
+		// errors.Is, not ==. The retry matrix this table refers to asks errors.Is,
+		// so == was asserting something stricter than the contract — and change
+		// a082 wraps the auth sentinel to carry its status code, which == rejects
+		// and every production consumer accepts.
+		{"rate limited", http.StatusTooManyRequests, `{}`, func(err error) bool { return errors.Is(err, ErrRateLimited) }},
+		{"auth", http.StatusUnauthorized, `{"message":"bad key"}`, func(err error) bool { return errors.Is(err, ErrAuth) }},
+		{"server", http.StatusInternalServerError, `{}`, func(err error) bool { return errors.Is(err, ErrServer) }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c := rawTestClient(t, func(w http.ResponseWriter, r *http.Request) {

@@ -39,10 +39,18 @@ var reIPWord = regexp.MustCompile(`\bip\b`)
 func classifyStatus(code int, body []byte) error {
 	switch {
 	case code == 401 || code == 403:
+		// Carry the code, never the body. 401 and 403 point at different causes —
+		// a token another process rotated versus a credential or address the
+		// broker will not accept — and collapsing them into one sentinel is how
+		// change a082's token race read as "authentication failed" for three days
+		// with nothing to tell it apart from a permissions problem. The body stays
+		// out because it can carry account identifiers and this error is logged.
+		//
+		// The wrap is %w, so errors.Is keeps deciding what counts as a refusal.
 		if reIPWord.Match(bytes.ToLower(body)) {
-			return ErrIPNotAllowed
+			return fmt.Errorf("%w (HTTP %d)", ErrIPNotAllowed, code)
 		}
-		return ErrAuth
+		return fmt.Errorf("%w (HTTP %d)", ErrAuth, code)
 	case code == 429:
 		return ErrRateLimited
 	case code >= 500:

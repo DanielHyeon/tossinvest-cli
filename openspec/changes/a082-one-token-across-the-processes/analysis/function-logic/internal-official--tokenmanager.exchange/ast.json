@@ -1,0 +1,379 @@
+{
+  "file": "internal/official/token.go",
+  "source_sha256": "bfa6e0eda0f07fff23c41193bdfd4a0127beee45df422aece95c90c57c6b6ea1",
+  "package": "official",
+  "function": "exchange",
+  "receiver": "tokenManager",
+  "signature": "tokenManager.exchange(params=1, results=2)",
+  "start": {
+    "line": 156,
+    "column": 1
+  },
+  "end": {
+    "line": 201,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 166,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 172,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 182,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 190,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 14
+      },
+      "text": "strings.TrimRight"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 2
+      },
+      "text": "form.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 2
+      },
+      "text": "form.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 2
+      },
+      "text": "form.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 14
+      },
+      "text": "http.NewRequestWithContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 73
+      },
+      "text": "strings.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 91
+      },
+      "text": "form.Encode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 2
+      },
+      "text": "req.Header.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 15
+      },
+      "text": "m.hc.Do"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 8
+      },
+      "text": "resp.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 15
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 14
+      },
+      "text": "classifyStatus"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 12
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 16
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 16
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 31
+      },
+      "text": "time.Duration"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 6
+      },
+      "text": "m.saveCache"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 2
+      },
+      "text": "m.stampCacheFile"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 157,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 186,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 174,
+        "column": 2
+      },
+      "text": "resp.Body.Close"
+    }
+  ]
+}

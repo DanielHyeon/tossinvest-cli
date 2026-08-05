@@ -85,3 +85,4 @@
 | STORY-TOS-a079 | 6 |
 | STORY-TOS-a080 | 7 |
 | STORY-TOS-a081 | 8 |
+| STORY-TOS-a082 | 7 |

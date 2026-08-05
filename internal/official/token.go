@@ -37,6 +37,12 @@ type tokenManager struct {
 
 	mu    sync.Mutex
 	cache *cachedToken
+	// stamp is the cache file's modification time as of the last read or write
+	// this manager made. It is how a process notices that another one rotated the
+	// shared token: console, engine and the API daemon all run against a single
+	// config directory, so the file changes underneath a perfectly valid
+	// in-memory copy (change a082).
+	stamp time.Time
 }
 
 // newTokenManager constructs a tokenManager. base is the API base URL
@@ -63,14 +69,18 @@ func (m *tokenManager) token(ctx context.Context) (string, error) {
 
 	now := time.Now()
 
-	// 1. In-memory cache.
-	if isStillValid(m.cache, now) {
+	// 1. In-memory cache, unless another process has rewritten the shared file
+	//    since this manager last read or wrote it. Trusting memory alone means
+	//    presenting a token the broker has already replaced, and finding out only
+	//    when a request is refused (change a082).
+	if isStillValid(m.cache, now) && !m.cacheFileChanged() {
 		return m.cache.AccessToken, nil
 	}
 
 	// 2. Disk cache.
 	if ct, err := m.loadCache(); err == nil && isStillValid(ct, now) {
 		m.cache = ct
+		m.stampCacheFile()
 		return ct.AccessToken, nil
 	}
 
@@ -84,12 +94,61 @@ func isStillValid(ct *cachedToken, now time.Time) bool {
 	return ct != nil && ct.ExpiresAt.Add(-60*time.Second).After(now)
 }
 
-// refresh forces a new token exchange regardless of whether a cached token is
-// still valid. It updates both in-memory and disk caches on success.
+// refresh answers a rejected token: it adopts a newer one from the shared cache
+// file when there is one, and otherwise exchanges.
+//
+// A 401 says the token this process is holding is stale. It does not say a new
+// token has to be bought, and the difference matters because the broker keeps one
+// token alive per credential. Buying invalidates whatever token another process
+// is using, that process is refused in turn and buys its own, and the three
+// processes sharing this file spend the day taking the token away from each other
+// — measured at seven exchanges a minute for a token that lives a day (a082).
+//
+// Adopting only when the file holds a *different* token is what keeps this
+// narrow. If the file holds the same token that was just refused, or holds
+// nothing usable, there is nothing to adopt and a genuinely dead token still gets
+// replaced.
 func (m *tokenManager) refresh(ctx context.Context) (string, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if ct, err := m.loadCache(); err == nil && isStillValid(ct, time.Now()) &&
+		m.cache != nil && ct.AccessToken != m.cache.AccessToken {
+		m.cache = ct
+		m.stampCacheFile()
+		return ct.AccessToken, nil
+	}
 	return m.exchange(ctx)
+}
+
+// cacheFileChanged reports that the cache file has been written since this
+// manager last read or wrote it.
+//
+// A stat is a local filesystem call and this is on every authenticated request,
+// which is why it is a stat and not a read: comparing the token itself would mean
+// reading and parsing the file every time. A stat failure is reported as changed,
+// which costs one extra disk read and never serves a token that has been
+// superseded.
+//
+// Deliberately not a lock. This path carries every broker read the engine makes,
+// including the ones the exit loop judges stops on, so making one process wait on
+// another here would put that wait inside the interval between stop-loss
+// judgements (design D3).
+func (m *tokenManager) cacheFileChanged() bool {
+	info, err := os.Stat(m.cacheFile)
+	if err != nil {
+		return true
+	}
+	return !info.ModTime().Equal(m.stamp)
+}
+
+// stampCacheFile records the cache file's modification time as current.
+// Must be called with m.mu held.
+func (m *tokenManager) stampCacheFile() {
+	if info, err := os.Stat(m.cacheFile); err == nil {
+		m.stamp = info.ModTime()
+		return
+	}
+	m.stamp = time.Time{}
 }
 
 // exchange performs the actual POST /oauth2/token request.
@@ -137,6 +196,7 @@ func (m *tokenManager) exchange(ctx context.Context) (string, error) {
 	}
 	m.cache = ct
 	_ = m.saveCache(ct) // best-effort; do not fail the call if disk write fails
+	m.stampCacheFile()
 	return ct.AccessToken, nil
 }
 

@@ -1,0 +1,19 @@
+{
+  "id": "STORY-TOS-a082",
+  "title": "Let the console, engine and API daemon converge on one broker token instead of invalidating each other's",
+  "feature": "FEAT-TOS-007",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a082-one-token-across-the-processes",
+    "path": "openspec/changes/a082-one-token-across-the-processes"
+  },
+  "acceptance": [
+    "A process refused by the broker adopts a different valid token already in the shared cache file instead of exchanging a new one that would invalidate the process holding it",
+    "A process that has nothing to adopt still exchanges, so a genuinely expired token is renewed exactly as before",
+    "A process does not keep presenting an in-memory token after the shared cache file has changed underneath it",
+    "Token exchanges fall from several per minute to at most one per token lifetime, with no increase in any other official API call",
+    "Single-process behaviour is unchanged, and the existing token tests pass untouched",
+    "No process waits on another to obtain a token, so one slow process cannot delay another's stop-loss judgement",
+    "An authentication refusal is reported with its HTTP status code and without the response body, and what counts as an authentication refusal is unchanged"
+  ]
+}
