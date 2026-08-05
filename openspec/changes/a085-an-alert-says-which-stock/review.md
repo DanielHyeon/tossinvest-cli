@@ -76,3 +76,20 @@ blocking 항목은 전부 RED 테스트 선행 후 닫혔다. 설계는 `design.
 요구사항은 spec delta 개정 2, 작업은 `tasks.md` 10장에 있다.
 
 리뷰 과정에서 발견한 부수 사항은 `issues.md`에 기록했다.
+
+## 독립 리뷰 4·5차 (2026-08-05)
+
+4차 — 결함 2종. (1) 코드: `releaseReJudgedQuarantineTx`가 재시도를 소비한 행이 아니라
+아무 활성 행이나 닫았다. 각인과 커밋 사이의 운영자 해제 + 병행 관측이 행을 교체하면
+지금 도는 선택기가 쓴 행이 `SELECTOR_REVISED`로 닫힌다. `ReJudgingVersion int64`로 좁혔다.
+(2) 증거: 생성한 Branch Test Map이 실행되지 않는 분기를 관측했다고 주장했다 —
+테스트 목록을 모든 행에 복사하고 RED/GREEN을 일괄로 넣었기 때문이다.
+
+5차 — 코드 결함 없음. 다섯 공격 전부 반증, 변이 테스트로 확인:
+`reJudgingVersion`을 `+1`로 변이시키면 기존 end-to-end 해제 테스트가 죽고, 버전 가드를
+지우면 새 테스트가 죽는다. §0.3은 `exitpolicy.Action` 7개 전수 대조로 재확인됐다 —
+`CancelPendingFirst`의 두 writer가 모두 breach 분기 안에 있어 억제 통로에 들어올 수 있는
+action은 익절 하나뿐이다. 증거 결함 5건은 "코드 → AST → prose → 헤더 → 측정" 순서를
+어긴 데서 나왔고, 커버리지가 드러낸 미검증 가드에 테스트를 하나 더했다.
+
+게이트: 1~4단계는 각 change의 커밋 시점 슬라이스에서, 5~8단계는 HEAD에서 통과.
