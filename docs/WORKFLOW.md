@@ -196,6 +196,7 @@ OpenSpec을 먼저 만들지 않는다. PM 계층에서 Story와 번호를 예�
 
 python3 tools/pm/generate_master_tracker.py
 python3 tools/pm/generate_master_tracker.py --check
+
 ## CodeGraph·CodeGraphContext 설치와 사용
 
 StockOS와 동일하게 CodeGraph는 현재 코드 구조의 **hard evidence**이고,
@@ -217,6 +218,7 @@ codegraphcontext version
 codegraphcontext doctor
 codegraphcontext stats .
 ```
+
 `command -v`가 실패하거나 doctor/status가 실행되지 않을 때만 설치한다. 이미 정상인
 도구를 작업 도중 재설치·업그레이드하지 않는다.
 
@@ -227,17 +229,20 @@ CodeGraph의 macOS/Linux 공식 standalone installer는 자체 runtime과 CLI를
 ```bash
 curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
 ```
+
 Node.js를 이미 관리하고 있다면 공식 npm 패키지도 사용할 수 있다.
 
 ```bash
 npm install -g @colbymchenry/codegraph
 ```
+
 CodeGraphContext는 TossOS 워크스테이션에서 `uv` 격리 도구로 설치한다. `pipx`를 쓰는
 환경에서는 `pipx install codegraphcontext`도 가능하다.
 
 ```bash
 uv tool install codegraphcontext
 ```
+
 설치 후 새 셸에서 경로와 진단을 다시 확인한다.
 
 ```bash
@@ -245,6 +250,7 @@ codegraph --version
 codegraphcontext version
 codegraphcontext doctor
 ```
+
 CodeGraph의 `codegraph install`은 Codex/Claude 등의 전역 설정을 수정할 수 있다.
 TossOS는 저장소의 `.mcp.json`, `.codex/config.toml`, `.claude/settings.json`을
 동기화하여 사용하므로 에이전트가 이를 무조건 실행하지 않는다. Codex 설정 조각만
@@ -253,6 +259,7 @@ TossOS는 저장소의 `.mcp.json`, `.codex/config.toml`, `.claude/settings.json
 ```bash
 codegraph install --print-config codex
 ```
+
 ### 프로젝트 최초 초기화
 
 새 checkout에 인덱스가 없을 때 한 번 실행한다.
@@ -261,6 +268,7 @@ codegraph install --print-config codex
 codegraph init .
 codegraphcontext index .
 ```
+
 TossOS의 표준 진입점은 아래 `make sdd-sync`다. CodeGraph의 `.codegraph/`가 없으면
 초기화하고, 있으면 증분 sync하며, CodeGraphContext와 TossOS 전용 GBrain도 함께
 갱신한다.
@@ -278,6 +286,7 @@ codegraphcontext update . --quiet
 codegraphcontext report .
 codegraphcontext stats .
 ```
+
 기존 함수나 민감 경로를 수정할 때는 최소한 definition/context와 callers, impact를
 확인한다. CodeGraphContext 보고서는 후보 문맥으로만 사용하고 현재 HEAD와
 Function Logic Map으로 교차검증한다.
@@ -295,6 +304,7 @@ make sdd-sync                # CodeGraph/CodeGraphContext/GBrain 증분 갱신
 make sdd-sync-full           # 전체 재색인
 make sdd-check               # CodeGraph worktree freshness + memory/config/PM/tests/doctor
 ```
+
 `make sdd-sync`는 현재 tracked/untracked 소스 fingerprint를 로컬 상태에 기록한다.
 `make sdd-check`는 CodeGraph hard-evidence fingerprint 불일치를 차단하고,
 CodeGraphContext/GBrain 불일치는 advisory 경고만 출력한다.
@@ -328,6 +338,7 @@ pgrep -af 'gbrain serve'
 cat .sdd/gbrain-home/.gbrain/brain.pglite/.gbrain-lock/lock
 tr '\0' '\n' </proc/<pid>/environ | grep '^GBRAIN_HOME='
 ```
+
 같은 `GBRAIN_HOME`의 `gbrain serve` 중 PGLite lock JSON의 `pid`가 살아 있고
 `refreshed_at`이 steal grace(기본 600초) 안에서 갱신된 프로세스만 현재 소유자다.
 복구가 필요하면 **비소유 GBrain 자식에만** 먼저 `SIGTERM`을 보내고 종료를 확인한다.
@@ -386,6 +397,7 @@ Pre-Edit Gate:
 - 실패 테스트 선행 작성: yes/no
 - 안전 불변식 §0 위반 여부 검토: 통과/차단
 ```
+
 근거 없이 기존 함수 내부 로직을 수정하는 것은 금지된다. 확신이 없으면 "의존 있음"으로 간주하고 호출부·테스트를 먼저 확인한다.
 
 ## 완료 보고 금지 조건
@@ -403,20 +415,7 @@ agent config sync·PM check 결과
 CodeGraph/CodeGraphContext/GBrain freshness
 남은 위험·미완료 항목
 ```
-## 에이전트 실행 순서
 
-```text
-1. CLAUDE.md / AGENTS.md → .claude/CLAUDE.md → 이 문서 확인
-2. memory recall + openspec/specs/ + 진행 중 change 확인
-3. CodeGraph hard evidence + 현재 코드·기존 테스트 확인
-4. CodeGraphContext/GBrain 보조 문맥 교차검증
-5. 기존 함수 내부 편집이면 Function Logic Map 작성
-6. High-risk면 Pre-Edit 선언
-7. RED 테스트 → GREEN 최소 구현 → Refactor → Verify
-8. gstack review + make sdd-check + make gate
-9. PM/archive 동기화 + 검증된 memory retain
-10. 완료 보고 (금지 조건 확인 후)
-```
 ## 브랜치·커밋 규칙
 
 - `main`: TossOS 제품 안정 브랜치
