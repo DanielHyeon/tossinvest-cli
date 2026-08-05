@@ -66,7 +66,7 @@
 - [x] 10.3 I6: 한글 판정을 14음절 표본에서 Hangul 범위로, 이름 판정을 괄호 금지에서
       실제 레이블 비교로 바꾼다.
 - [x] 10.4 `issues.md`에 B1·B2와 I5~I8을 기록한다.
-- [ ] 10.5 gstack 독립 리뷰 재실행 + `make gate`.
+- [x] 10.5 gstack 독립 리뷰 5회 재실행 + `make gate` (HEAD 슬라이스, base ac2bbfcc).
 
 ## 11. 게이트 슬라이스 정합 (2026-08-05)
 
@@ -85,8 +85,7 @@ worktree까지를 diff하므로, 스택 위쪽 change의 게이트가 아래쪽 
 - [x] 11.5 `Tracker.Observe`의 Branch Test Map은 a083 것을 복사하지 않고 다시 만든다 —
       개정 3이 `answerableBlockFor`(시계 비교)를 `hasBlockFor`(존재 비교)로 바꾸면서
       B21의 조건 자체가 달라졌다.
-- [ ] 11.6 gate 5~8단계(`sdd-check`·`test`·`vet`·`validate`)는 change별이 아니라
-      저장소 전체 검사이므로 HEAD에서 한 번만 돈다.
+- [x] 11.6 gate 5~8단계(`sdd-check`·`test`·`vet`·`validate`)는 change별이 아니라 저장소 전체 검사이므로 HEAD에서 한 번만 돈다.
 
 ## 12. 증거 감사 (2026-08-05, 네 번째 독립 리뷰)
 
@@ -101,7 +100,7 @@ worktree까지를 diff하므로, 스택 위쪽 change의 게이트가 아래쪽 
 - [x] 12.3 46개 map 헤더(줄 범위·`source_sha256`)를 `ast.json`에서 기계 생성한다.
 - [x] 12.4 `ExitObserver.workingSet`의 callee 표에 남아 있던 원시 Python dict 출력을
       실제 호출부 표로 바꾼다.
-- [ ] 12.5 `make gate`.
+- [x] 12.5 `make gate`.
 
 ## 13. 증거 감사 2차 (2026-08-05, 다섯 번째 독립 리뷰)
 
@@ -118,4 +117,4 @@ worktree까지를 diff하므로, 스택 위쪽 change의 게이트가 아래쪽 
       테스트를 전부 후보에 넣어 다시 측정한다.
 - [x] 13.5 F5는 결함이 아니다 — `issues.md` I9. 새 함수는 `modified existing function`이
       아니다.
-- [ ] 13.6 `make gate`.
+- [x] 13.6 `make gate`.

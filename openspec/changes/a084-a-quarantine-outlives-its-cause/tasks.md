@@ -92,7 +92,7 @@
 - [x] 10.7 중복 제거: `QuarantineExitSnapshot`이 `quarantineExitSnapshotTx`를 부르게 한다.
 - [x] 10.8 I10: CI가 `make test`를 돌리고 `cover` 타깃도 timeout을 받는다.
 - [x] 10.9 `issues.md`에 B1~B4와 I9~I11을 기록한다.
-- [ ] 10.10 gstack 독립 리뷰 재실행 + `make gate`.
+- [x] 10.10 gstack 독립 리뷰 5회 재실행 + 슬라이스 게이트(1~4단계, base 8dba0173 → ac2bbfcc) 통과.
 
 ## 11. 개정 3 — 두 번째·세 번째 독립 리뷰 (2026-08-05)
 
@@ -102,7 +102,7 @@
 - [x] 11.4 I14: 보류 상수와 `workingSet` 주석을 코드가 보장하는 것으로 고친다.
 - [x] 11.5 I15: `awaiting`를 사이클 로그에 넣는다.
 - [x] 11.6 `make lint`(gofmt 포함) 복구.
-- [ ] 11.7 `make gate`.
+- [x] 11.7 `make gate` — 슬라이스 1~4단계는 자기 커밋 시점, 5~8단계는 HEAD에서.
 
 ## 게이트 슬라이스
 
@@ -126,7 +126,7 @@ a084 `ac2bbfcc`). 스택 위쪽 change의 수정을 자기 것으로 세지 않�
       `isProtective`가 손실을 막는 action을 빠짐없이 덮는 것을 증명했다.
       `CancelPendingFirst`의 두 writer가 모두 breach 분기 안에 있어, 억제 통로에
       들어올 수 있는 유일한 action은 `ActionLadderTakeProfit`이다.
-- [ ] 12.5 `make gate`.
+- [x] 12.5 `make gate` — 위와 같음.
 
 ## 13. 개정 5 — 다섯 번째 독립 리뷰 (2026-08-05)
 
@@ -143,4 +143,4 @@ a084 `ac2bbfcc`). 스택 위쪽 change의 수정을 자기 것으로 세지 않�
       `TestAnOperatorOnlyQuarantineSurvivesAGenuineReJudgement` —
       `active.Reason != ambiguous_recovery` 가드는 map의 안전 결론이 근거로 삼는데
       어떤 테스트도 그 줄을 실행하지 않았다.
-- [ ] 13.5 `make gate`.
+- [x] 13.5 `make gate` — 위와 같음.
