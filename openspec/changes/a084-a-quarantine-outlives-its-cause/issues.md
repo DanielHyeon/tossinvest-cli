@@ -76,3 +76,32 @@ v30에서 Go의 패키지당 기본 600초를 넘었고 `make test`가 timeout�
 **근본 원인은 남아 있다.** 다음 마이그레이션도 같은 곱셈을 낸다. 테스트가 스키마별
 템플릿 DB를 복사해 쓰게 하면 마이그레이션 비용이 테스트 수와 무관해지지만, 그것은
 별도 change다.
+
+## I8 — `make gate`가 병행 세션의 진행 중 편집으로 막혀 있다
+
+`make sdd-check`의 `check_agent_config_sync.py`가 drift를 보고한다.
+
+```
+ M .claude/CLAUDE.md
+ M .codex/agents.md
+```
+
+두 파일 모두 **다른 세션이 지금 편집 중**이다. 한쪽에서 "에이전트 실행 순서" 절이
+추가되고 advisory 관련 한 줄이 삭제된 상태이고, 두 파일의 SDD_SHARED 블록이 서로
+어긋나 있다.
+
+다른 세션의 진행 중 **안전 부트스트랩 편집을 덮어쓰지 않았다.** `--generate`는 그들의
+작업을 지울 수 있다.
+
+a084 자체의 증거는 전부 통과했다.
+
+```
+make test      EXIT=0 (go test -timeout 30m ./... 전 패키지 ok)
+make vet       clean
+make validate  77 passed, 0 failed
+logic-map      evidence complete (11 함수)
+openspec       valid --strict
+```
+
+**남은 조치**: 병행 세션이 두 파일을 커밋해 동기화한 뒤
+`make gate CHANGE=a084-a-quarantine-outlives-its-cause`를 다시 돌린다.
