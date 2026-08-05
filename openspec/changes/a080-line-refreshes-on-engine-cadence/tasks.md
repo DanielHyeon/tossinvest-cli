@@ -10,8 +10,13 @@
 > (`evidence complete`), 두 번째 MODIFIED의 Requirement 변경 리뷰(수용).
 > **F1~F8 전부 종결.** 기록은 review.md 4차.
 >
-> 남은 것은 6.4 gate와 6.5·6.6 컨테이너 실측이며, 실측은 이 코드가 배포된 뒤에만
-> 할 수 있으므로 a081과 같은 순서(배포 → 실측 → gate)를 따른다.
+> **배포와 실측도 끝났다** (review.md 5차). `aaa7638d`가 `main`에 있고 그 코드로
+> 만든 `tossos@sha256:fafe53a3…`가 두 service에 올라가 있다. 탭 하나를 5초 주기로
+> 3분간 열어 36회 렌더했고 **100ms를 넘은 렌더는 정확히 6회**(= 180초 ÷ 30초 TTL)
+> — 재로드 6배, 브로커 비용 무변동. 엔진 `reconcile` 간격은 62.5~62.9초로 흔들리지
+> 않았다. 개요는 10회 열어도 캐시 시각이 고정(브로커 0호출)이고 톤 임계는 30·60초로
+> 재로드 주기를 따라가지 않았다. design D4의 마지막 미검증 전제였던 스크롤 위치는
+> **사용자가 직접 확인했다**.
 >
 > 아래 blocked 기록은 그때의 판단 근거로 남긴다.
 >
@@ -114,8 +119,8 @@ change이므로 갱신 대상이며, 각 갱신은 약화가 아니라 **판정 
 - [x] 6.3 `make test`(46 packages ok, exit 0), `make vet`(clean), `make validate`(exit 0),
       `make sdd-sync`, `make sdd-check`(exit 0 — CodeGraph hard evidence fresh; codegraphcontext·
       GBrain은 advisory WARN, WORKFLOW.md가 비차단으로 규정).
-- [ ] 6.4 `make gate CHANGE=a080-line-refreshes-on-engine-cadence`.
-- [ ] 6.5 사람 승인 후 컨테이너 실측 — 워터마크가 오른 직후 `/positions`가 5초
+- [x] 6.4 `make gate CHANGE=a080-line-refreshes-on-engine-cadence`.
+- [x] 6.5 사람 승인 후 컨테이너 실측 — 워터마크가 오른 직후 `/positions`가 5초
       안에 그 값을 보이는지, **스크롤 위치가 재로드를 넘어 유지되는지**(design D4의
       유일한 미검증 전제), 열린 상세가 유지되는지, `/dashboard`의 브로커 호출이
       0인지.
@@ -124,7 +129,10 @@ change이므로 갱신 대상이며, 각 갱신은 약화가 아니라 **판정 
       시각이 `02:03:07Z`에 고정된 채 경과만 자라 **브로커 호출 0**, 열린 상세는
       URL에 있어 재로드를 넘어 유지된다. **남은 하나는 스크롤 위치**이며 브라우저
       동작이라 `curl`로 관측할 수 없다 — 사람이 `/positions`를 열어 아래로
-      스크롤하고 5초를 기다리면 끝난다. 그 확인 전에는 이 항목을 체크하지 않는다.
+      스크롤하고 5초를 기다리면 끝난다.
+      **2026-08-05 사용자가 직접 확인했다** — 이것으로 design D4의 마지막 미검증
+      전제가 닫혔고 이 항목을 완료로 표시한다. 관측자는 사용자이며 이 세션이
+      재현한 것이 아니다.
 - [x] 6.6 실측: 탭 1개를 열어 둔 상태의 journal read 지연과 엔진 사이클 시간
       (review.md R2 — 읽기 볼륨이 6배가 된다. WAL이라 쓰기 차단은 설계상 없다).
       **2026-08-05 완료.** 36회 렌더 / 180초에서 100ms를 넘은 렌더가 **정확히
