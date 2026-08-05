@@ -186,3 +186,72 @@ func (t *Tracker) AdjustmentApplied(comparison string, symbols ...string)
 ```
 
 주기 2가 현재 코드에서 **실패**해야 한다. 이것이 RED의 정본이고, 나머지는 회귀다.
+
+---
+
+## 개정 2 (2026-08-05) — 독립 리뷰가 연 blocking 두 건
+
+`issues.md` B1·B2. 최초 설계는 credit의 **수명**만 규정하고 **적용 범위**를 규정하지
+않았다. 그래서 credit이 자기가 답하지 않은 차단을 풀 수 있었다.
+
+### D7 — credit은 자신이 답한 차단만 푼다 (B1)
+
+차단은 `Block.Since`를 갖는다. 이것은 durable `reconcile_states.entered_at`이다
+(`mismatch.go:890`이 restore에서 `state.EnteredAt`을 넣는다).
+
+**규칙: credit의 비교 시각보다 나중에 생긴 차단은 그 credit으로 풀 수 없다.**
+
+```
+release(block, credit) 가능 ⟺
+    creditUsableBy(credit.comparison, diff.AsOf)      # 기존: 엄격히 나중의 재확인
+  ∧ !block.Since.After(credit.comparison)             # 신규: credit이 이 차단을 봤다
+```
+
+대안으로 `Block.Key()`를 쓰지 않은 이유: `ScopeSymbol`의 key는
+`symbol|account|SYMBOL`이라 차단 **인스턴스**를 구별하지 못한다(`issues.md` I3).
+시각은 구별한다.
+
+### D8 — 해제는 "막지 않는다"가 아니라 "그 심볼에 동의한다"를 요구한다 (B1 재현 A)
+
+`BlocksEntry()`는 `Quantities`와 `MissingOrders`만 센다. `ExternalPos` — 계좌가 들고
+있는데 엔진이 모르는 포지션 — 는 진입을 막지 않는다. 그래서 한 심볼이
+`QuantityMismatch(local 10, broker 0)`에서 `ExternalPos(broker 10, local 0)`로
+**재분류**되면 비교가 "clean"이 되고 차단이 풀린다. 불일치는 사라지지 않았다.
+방향만 뒤집혔다.
+
+**규칙: 해제하려는 심볼이 `ExternalPos`에도 없어야 한다.** 그리고 `symbolsInDispute`가
+`ExternalPos`를 포함하도록 넓혀, 그 재분류가 credit을 **반박**하게 한다.
+
+`BlocksEntry()` 자체는 바꾸지 않는다. 그것은 진입 게이트의 계약이고 a083의 범위 밖이다
+(`issues.md` I2와 같은 성격). 여기서 좁히는 것은 **해제 조건**뿐이며, 좁히는 방향은
+언제나 §0.9가 요구하는 보수 방향이다.
+
+### D9 — 답할 차단이 없는 credit은 버린다 (I6, 만료 대신)
+
+TTL 대신 **참조 무결성**으로 만료를 만든다. 관측 끝 정산에서, 쓸 수 있게 된 credit 중
+해당 심볼에 **활성 차단이 하나도 없는** 것은 버린다.
+
+```
+credit 폐기 ⟺ usable ∧ ( disputed ∨ committed ∨ 활성 차단 없음 )
+```
+
+근거: 차단이 없으면 그 credit은 답할 것이 없다. 남겨 두면 미래의 차단을 풀 수 있을
+뿐이고, D7이 이미 그것을 금지한다. 따라서 버리는 것이 항상 안전하고,
+`t.adjusted`의 크기가 **차단된 심볼 수**로 묶인다. 벽시계 TTL이 필요 없다.
+
+같은 주기의 관측은 영향받지 않는다 — `!creditUsableBy(...) { continue }`가 앞에 있어
+아직 쓸 수 없는 credit은 정산 자체를 건너뛴다. 그것이 a083의 원래 수정이다.
+
+### D10 — 커밋된 수렴은 반환 전에 credit한다 (B2)
+
+`ConvergeQuantities`는 심볼별 오류로 루프 안에서 반환하는데 crediter 호출은 루프 밖에
+있어, **이미 커밋된** 심볼이 credit 없이 남는다. 그리고 투영이 수렴했으므로 다음 비교는
+그 심볼에 동의하고 — `mismatch.go:84`가 적은 대로 — 다시 credit받을 길이 없다.
+영구 차단이며 a083이 고치려던 결함 그 자체다.
+
+**규칙: 오류로 반환하기 전에 그때까지 커밋된 심볼을 credit한다.** `report.Credited`도
+같이 채운다(현재는 비어 있어 자기 doc comment와 모순).
+
+부분 credit이 안전한 이유: credit은 해제를 **허가**하지 않는다. D7·D8을 통과한 뒤
+엄격히 나중의 비교가 동의할 때만 해제가 일어난다. 커밋된 수렴에 credit을 주는 것은
+"이 심볼에 조정이 기록됐다"는 사실 진술이며, 그것은 참이다.

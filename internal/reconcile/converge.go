@@ -139,8 +139,8 @@ type Converger struct {
 // from the same view, and applying it after that view has been shown to have
 // moved would be writing conclusions from a snapshot the ledger has already
 // rejected. What committed before it stays in the report.
-func (c *Converger) ConvergeQuantities(ctx context.Context, diff Diff) (ConvergeReport, error) {
-	report := ConvergeReport{Refused: map[string]string{}}
+func (c *Converger) ConvergeQuantities(ctx context.Context, diff Diff) (report ConvergeReport, err error) {
+	report = ConvergeReport{Refused: map[string]string{}}
 	if len(diff.Quantities) == 0 {
 		return report, nil
 	}
@@ -159,15 +159,41 @@ func (c *Converger) ConvergeQuantities(ctx context.Context, diff Diff) (Converge
 				"against the fills it competes with (account %s)", account)
 	}
 
-	instances, err := c.Journal.Positions(ctx, account)
-	if err != nil {
-		return report, err
-	}
-
 	var (
 		credited  []string
 		alertErrs []error
 	)
+	// Deferred, not appended after the loop: the loop returns from the middle on a
+	// per-symbol failure, and a symbol whose adjustment already committed can never
+	// earn another credit — the next comparison agrees about it, so nothing writes
+	// an adjustment for it again and its block is unliftable by any automatic path.
+	// That is the a083 defect itself, on the error path (개정 2, D10). A defer is
+	// what makes the guarantee hold for return statements that do not exist yet.
+	defer func() {
+		if len(credited) == 0 {
+			return
+		}
+		sort.Strings(credited)
+		report.Credited = credited
+		if c.Credit != nil {
+			// The credit carries the comparison it was computed from, so the tracker
+			// can tell a re-read from the read this adjustment is answering. The
+			// driver observes *this* diff later in the same cycle; only the next
+			// cycle's comparison is the "re-read after the adjustment" the release
+			// rule means, and the stamp is what says so (a083).
+			//
+			// A re-applied adjustment (Applied=false) is credited too: the projection
+			// is converged either way, and what the release rule requires is that
+			// something was written for this symbol before the re-read — not that
+			// this process was the one that wrote it.
+			c.Credit.AdjustmentApplied(asOf, credited...)
+		}
+	}()
+
+	instances, err := c.Journal.Positions(ctx, account)
+	if err != nil {
+		return report, err
+	}
 	for _, mismatch := range diff.Quantities {
 		symbol := strings.ToUpper(strings.TrimSpace(mismatch.Symbol))
 		market, reason := soleLiveMarket(instances, symbol)
@@ -239,23 +265,6 @@ func (c *Converger) ConvergeQuantities(ctx context.Context, diff Diff) (Converge
 		}
 	}
 
-	if len(credited) > 0 {
-		sort.Strings(credited)
-		report.Credited = credited
-		if c.Credit != nil {
-			// The credit carries the comparison it was computed from, so the tracker
-			// can tell a re-read from the read this adjustment is answering. The
-			// driver observes *this* diff later in the same cycle; only the next
-			// cycle's comparison is the "re-read after the adjustment" the release
-			// rule means, and the stamp is what says so (a083).
-			//
-			// A re-applied adjustment (Applied=false) is credited too: the projection
-			// is converged either way, and what the release rule requires is that
-			// something was written for this symbol before the re-read — not that
-			// this process was the one that wrote it.
-			c.Credit.AdjustmentApplied(asOf, credited...)
-		}
-	}
 	// The adjustments committed either way, so the report stands. An undelivered
 	// alert is still a failure — the operator does not know the engine stopped
 	// protecting a position — so it is returned once everything that could be

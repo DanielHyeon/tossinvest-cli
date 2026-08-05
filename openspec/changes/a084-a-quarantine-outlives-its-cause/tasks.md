@@ -74,3 +74,22 @@
 - [x] 9.1 적대적 Eng 리뷰를 받고 `review.md`에 기록한다.
 - [x] 9.2 `issues.md`에 남긴다 — `ambiguous_recovery`의 evidence가 접미사 없는
       sentinel이라 어느 분기에서 나왔는지 사후에 알 수 없다는 점.
+
+## 10. 개정 2 — 독립 리뷰가 연 blocking (2026-08-05)
+
+- [x] 10.1 D7 RED: 롤백한 빌드가 더 새로운 선택기의 거부를 뒤집는 것과,
+      선택기가 결정하지 않은 사유의 격리가 재판정 대상이 되는 것을 고정한다.
+      `a084b_rejudgement_eligibility_test.go`.
+- [x] 10.2 D7 GREEN: `NeedsReJudgement`를 사유(`ambiguous_recovery`)와 방향(`<`)으로
+      게이트하고, `ReleaseExitSnapshotQuarantine`의 `SELECTOR_REVISED` 확장을 되돌린다.
+- [x] 10.3 D8 RED: 가격이 움직이지 않은 재판정이 격리 행을 각인하지 않아 영구히
+      반복된다는 것을 고정한다. `a084b_rejudge_bound_test.go`.
+- [x] 10.4 D8 GREEN: `StampExitSnapshotQuarantineSelector`를 `workingSet`의 통과
+      결정 지점에서 부르고, `!snapshot.Changed` 조기 반환이 재판정을 건너뛰지 않게 한다.
+- [x] 10.5 D9 RED: 재판정 통과가 판정보다 먼저 실주문을 취소한다는 것을 고정한다.
+- [x] 10.6 D9 GREEN: 재판정 통과는 clear를 시도하지 않고 기존 arm-suppression 계약
+      (`noteDelay` + `ArmSuppressedReJudge`)을 재사용한다.
+- [x] 10.7 중복 제거: `QuarantineExitSnapshot`이 `quarantineExitSnapshotTx`를 부르게 한다.
+- [x] 10.8 I10: CI가 `make test`를 돌리고 `cover` 타깃도 timeout을 받는다.
+- [x] 10.9 `issues.md`에 B1~B4와 I9~I11을 기록한다.
+- [ ] 10.10 gstack 독립 리뷰 재실행 + `make gate`.

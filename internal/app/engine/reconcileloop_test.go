@@ -404,8 +404,15 @@ func TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead(t *testing.T) {
 func TestTrackerReleaseFailureStopsBeforePriceAndAdoption(t *testing.T) {
 	h := newDriverHarness(t, nil)
 	h.holds("005930", "10", "55000", 70000)
+	// The block is on a symbol neither side reports: the account holds none and
+	// the projection holds none, so this comparison genuinely agrees about it and
+	// the release is attempted. It used to sit on 005930, which the account holds
+	// and the engine has no instance of — an external position, which a083 개정 2
+	// D8 stopped counting as agreement. That premise made the test depend on a
+	// release this build refuses to make, not on the refused durable write it is
+	// actually about.
 	if _, _, err := h.journal.EnterReconcile(context.Background(), journal.EnterReconcileRequest{
-		AccountRef: reconcileAccount, Symbol: "005930",
+		AccountRef: reconcileAccount, Symbol: "000660",
 		Cause: journal.ReconcileCauseQuantityMismatch, Evidence: "quantity differs",
 	}); err != nil {
 		t.Fatalf("EnterReconcile: %v", err)
@@ -417,7 +424,7 @@ func TestTrackerReleaseFailureStopsBeforePriceAndAdoption(t *testing.T) {
 	// Stamped before the cycle's own comparison so the credit is genuinely
 	// spendable by it; what this test asserts is the refused durable release, not
 	// the a083 fail-closed stamp check.
-	h.tracker.AdjustmentApplied(h.clk.Now().UTC().Format(time.RFC3339), "005930")
+	h.tracker.AdjustmentApplied(h.clk.Now().UTC().Format(time.RFC3339), "000660")
 
 	cycle := h.cycle()
 	if cycle.Err == nil {

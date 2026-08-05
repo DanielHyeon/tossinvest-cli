@@ -41,7 +41,7 @@ vet:
 
 # 커버리지 프로파일 생성 + 합산(total) 한 줄 출력. coverage.out 은 .gitignore 대상.
 cover:
-	go test ./... -count=1 -coverprofile=coverage.out
+	go test -timeout 30m ./... -count=1 -coverprofile=coverage.out
 	go tool cover -func=coverage.out | tail -1
 
 # openspec 스펙/변경 검증 (SDD 게이트). openspec CLI 가 필요하다.

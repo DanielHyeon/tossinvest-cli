@@ -149,3 +149,73 @@ QuarantineReleaseSelectorRevised = "SELECTOR_REVISED"
 ```
 
 1과 3이 현재 코드에서 **실패**한다. 나머지는 회귀와 종결 조건이다.
+
+---
+
+## 개정 2 (2026-08-05) — 독립 리뷰가 연 blocking 네 건
+
+`issues.md` B1–B4. 공통 원인 하나: **재판정 자격을 "개정이 다르다"로만 정의하고,
+그 자격이 언제 소진되는지와 어느 사유에 적용되는지를 정의하지 않았다.**
+
+### D7 — 재판정 자격은 사유와 방향을 모두 본다 (B3·B4)
+
+```go
+// 개정 1 (결함)
+return q.SelectorRevision != exitpolicy.RecoverySelectorRevision
+
+// 개정 2
+return q.Reason == QuarantineReasonAmbiguousRecovery &&
+    q.SelectorRevision < exitpolicy.RecoverySelectorRevision
+```
+
+**사유(B4)**: `NeedsReJudgement`는 *복구 선택기*에 관한 사실인데 모든 격리 사유에
+적용되고 있었다. `stored_snapshot_corrupt`와 `legacy_policy_identity_unknown`은
+`SelectRecoverySnapshot`이 만들지 않는다. 그 행들이 "the generation was re-judged"라는
+근거와 함께 `SELECTOR_REVISED`로 닫히면 **원장이 일어나지 않은 일을 기록한다.**
+더 나쁜 것은 그 행들이 다음 성공 판정에 자동 해제된다는 것이다 — a084 이전에는
+운영자만 풀 수 있었다. 사유 게이트가 두 문제를 근원에서 닫는다.
+
+**방향(B3)**: `!=`는 개정이 **낮아져도** 재판정한다. 개정 3이 각인한 행을 개정 2
+바이너리가 뒤집고, 거부하면 2로 다시 쓴다. 더 새로운 선택기의 거부를 더 오래된
+선택기가 무효화하는 것은 §0.9의 반대 방향이다. 그리고 이 배포는 프로세스가 셋이므로
+개정이 섞이면 주기당 한 행씩 핑퐁하며 매번 critical 알림을 낸다. `<`가 정답이고
+NULL은 여전히 0으로 읽히므로 backfill 없는 재판정 의도는 그대로다.
+
+`ReleaseExitSnapshotQuarantine`의 validator를 `SELECTOR_REVISED`로 넓힌 것도 되돌린다.
+프로덕션 호출자가 없는 dead 확장이고, 운영자 경로가 기계 전용 근거를 찍을 수 있게
+만든다 — 그 상수의 doc comment가 금지한 바로 그 거짓말이다.
+
+### D8 — 자격은 판정의 성패가 아니라 **시도**로 소진된다 (B1)
+
+개정 1은 각인 writer를 둘 다 `recordExitJudgementTx` 안에 두었다. 그런데
+`judgeRatchet`/`judgeLadder`가 `!snapshot.Changed`에서 그 앞으로 반환한다
+(`exitloop.go:867`, `:934`). 가격이 안 움직인 재판정은 행을 안 건드리고, 다음 주기에
+전부 반복된다 — **영구히.** `exit_state.go`의 `ErrProposalPending`·
+`ErrExitLifecycleStale` 조기 반환도 같다. 즉 D6이 기대는 "개정당 1회" 경계는 존재하지
+않았고, 로그는 5초마다 "re-judged once"라는 거짓을 썼다.
+
+**규칙: `workingSet`이 통과시키기로 결정한 그 자리에서 현재 개정을 각인한다.**
+새 journal 진입점 `StampExitSnapshotQuarantineSelector`가 활성 행의
+`selector_revision`을 현재 값으로 CAS 갱신한다.
+
+각인을 판정보다 **앞에** 두는 것이 보수 방향인 이유: 각인 후 판정이 어떤 이유로든
+완료되지 않으면 그 개정의 재시도는 소진되고 격리는 **유지**된다. 유지는 fail-closed이고
+운영자 해제 경로(a079)는 그대로다. 반대로 각인을 뒤에 두면 상한이 없다 — 그것이 B1이다.
+
+### D9 — 재판정 통과는 주문을 내지도 지우지도 않는다 (B2)
+
+`workingSet`의 주석은 "a refusal re-quarantines under the current revision **without
+arming anything**"이라고 적었는데 코드는 그렇지 않다. `record`는
+`clearTheSymbol`(브로커에 실제 `Submit.Cancel`)을 `exitloop.go:1076`에서 내고,
+판정 트랜잭션은 `:1103`이다. 재판정이 전량 익절을 제안해 working 주문을 취소한 뒤
+판정이 다시 거부하면 그 포지션은 **working 주문도 없고 여전히 격리이며 여전히
+미판정**이다. a084 이전에는 `record`에 도달조차 하지 않았다. **보호가 나빠진다 —
+§0.3이 금지하는 방향이다.**
+
+**규칙: `managed`가 `reJudge`를 들고, 그 통과에서는 `orderable`을 false로 강제한다.**
+판정은 기록되고(워터마크·기준선 전진, 격리 해소) 주문 side effect만 보류된다.
+`ArmSuppressedReason = ArmSuppressedReJudge`로 원장에 그 사실을 남긴다.
+
+비용은 한 주기(5초)다. 재판정이 성공해 격리가 풀리면 다음 주기에 그 포지션은 평범한
+관리 포지션이고 정상적으로 무장된다. 몇 시간 얼어 있던 포지션에 5초를 더하는 것은
+주석이 이미 약속한 동작을 코드가 지키게 만드는 값이다.

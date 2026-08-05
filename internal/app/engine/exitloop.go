@@ -472,6 +472,10 @@ type managed struct {
 	state          journal.ExitState
 	policyIdentity exitpolicy.PolicyIdentity
 	identityErr    error
+	// reJudge marks the one pass a superseded quarantine earns. The judgement
+	// runs; the order side of it does not. See the suppression in record and
+	// a084 개정 2 D9 for why a cancel that precedes a refusal is a protection loss.
+	reJudge bool
 }
 
 // workingSet reconciles the held positions with the exit states, opening the
@@ -506,6 +510,7 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 		}
 		result, ok := byPosition[p.ID]
 		state := result.State
+		reJudging := false
 		if !ok {
 			opened, err := o.openState(ctx, p)
 			if err != nil {
@@ -547,12 +552,29 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 				identityErr: fmt.Errorf("%w (version %d): %s", journal.ErrExitSnapshotQuarantined, q.Version, q.Reason)})
 			continue
 		} else if active {
-			// The selector that wrote this quarantine is not the one running now, so
-			// the comparison it refused may reach a different answer — and until it is
-			// allowed to run, this position is not judged at all, its stop included.
-			// Letting it through weakens nothing: the judgement transaction runs the
-			// very same recovery selection, and a refusal re-quarantines under the
-			// current revision without arming anything (a084).
+			// The selector that wrote this quarantine is older than the one running
+			// now, so the comparison it refused may reach a different answer — and
+			// until it is allowed to run, this position is not judged at all, its stop
+			// included.
+			//
+			// Two things make letting it through safe, and both are code, not comment:
+			// the retry is spent here rather than wherever the judgement happens to
+			// land (D8), and the pass itself arms and cancels nothing, so a refusal
+			// cannot leave the position worse protected than refusing outright (D9).
+			if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx, p.ID, p.InstanceSeq,
+				q.Version); err != nil {
+				// The row moved under the read. Refusing this cycle keeps the old
+				// behaviour, which is the quarantine standing, and the next cycle
+				// re-reads it.
+				if cycle.Err == nil {
+					cycle.Err = err
+				}
+				refused = append(refused, managed{position: p, state: state,
+					identityErr: fmt.Errorf("%w (version %d): %s",
+						journal.ErrExitSnapshotQuarantined, q.Version, q.Reason)})
+				continue
+			}
+			reJudging = true
 			o.log(obs.EventExitSnapshotQuarantined, false,
 				obs.FieldSymbol, p.Symbol,
 				"position_id", p.ID,
@@ -579,6 +601,7 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 		}
 		out = append(out, managed{
 			position: p, state: state, policyIdentity: identity, identityErr: identityErr,
+			reJudge: reJudging,
 		})
 	}
 	// Quarantined rows come last. alertRefused may synchronously retry a
@@ -864,7 +887,7 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observ
 
 	snapshot = snapshot.ChangedFromState(m.state.HighWater, m.state.Baseline,
 		exitpolicy.Level(m.state.RatchetLevel), exitpolicy.NoRung)
-	if !snapshot.Changed {
+	if !snapshot.Changed && !m.reJudge {
 		// exit_events is append-only and the loop runs every five seconds. A
 		// judgement that moved nothing is not a judgement worth a row; the
 		// evaluator computes the condition (issues.md, task 0.1) so this does not
@@ -931,7 +954,12 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observe
 
 	snapshot = snapshot.ChangedFromState(m.state.HighWater, m.state.Baseline,
 		exitpolicy.Level(m.state.RatchetLevel), m.state.ActiveRung)
-	if !snapshot.Changed {
+	// !Changed skips a judgement that would move nothing. A re-judgement is the
+	// exception the condition does not know about: what changed is the selector,
+	// not the line, and the retry has already been spent by letting the position
+	// through (D8). Returning here would burn that retry without judging anything
+	// and leave the quarantine standing forever (a084 개정 2, D8).
+	if !snapshot.Changed && !m.reJudge {
 		return nil
 	}
 	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(evaluation),
@@ -1073,16 +1101,39 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 	// why the withholding is noticed rather than silent — noteDelay is what turns
 	// a delayed liquidation into an alert once it passes its bound.
 	if orderable && (snapshot.CancelPendingFirst || isFullExit(proposal)) {
-		cleared, err := o.clearTheSymbol(ctx, m, snapshot.CancelPendingFirst)
-		if err != nil {
-			return err
-		}
-		if !cleared {
-			o.noteDelay(ctx, m, "a working order on the symbol could not be taken off the book")
+		if m.reJudge && !isProtective(proposal) {
+			// The one pass a superseded quarantine earns, and the only pass where the
+			// judgement below can still refuse. clearTheSymbol sends real cancels to
+			// the broker before RecordExitJudgementResult runs the recovery selection,
+			// so cancel-then-refuse would leave the position with no working order,
+			// still quarantined and still unjudged.
+			//
+			// The rule is asymmetric on purpose: a re-judgement withholds profit
+			// taking, never protection. Withholding is not free — the next cycle finds
+			// the line unchanged and returns before proposing anything, so a withheld
+			// rung waits for the next one — which is exactly why a stop is excluded
+			// below rather than delayed and alarmed. What is withheld here is an
+			// upside order whose loss costs nothing but upside.
+			//
+			// Treating the symbol as uncleared rather than inventing an outcome: that
+			// path already exists, already withholds only the proposal, and already
+			// carries noteDelay (a084 개정 2, D9).
+			o.noteDelay(ctx, m, "the position is being re-judged after a superseded quarantine, "+
+				"so its working orders stay on the book until the judgement commits")
 			orderable = false
-			judgement.ArmSuppressedReason = journal.ArmSuppressedWorkingOrder
+			judgement.ArmSuppressedReason = journal.ArmSuppressedReJudge
 		} else {
-			o.clearDelay(m.position.ID)
+			cleared, err := o.clearTheSymbol(ctx, m, snapshot.CancelPendingFirst)
+			if err != nil {
+				return err
+			}
+			if !cleared {
+				o.noteDelay(ctx, m, "a working order on the symbol could not be taken off the book")
+				orderable = false
+				judgement.ArmSuppressedReason = journal.ArmSuppressedWorkingOrder
+			} else {
+				o.clearDelay(m.position.ID)
+			}
 		}
 	}
 
@@ -1142,6 +1193,14 @@ func exitIntentID(decisionID string) string {
 func isFullExit(p exitpolicy.Proposal) bool {
 	return p.Action == exitpolicy.ActionBaselineBreach || p.Action == exitpolicy.ActionLadderStop ||
 		p.Action == exitpolicy.ActionLadderTakeProfit
+}
+
+// isProtective reports a proposal that exists to stop a loss rather than to take
+// a gain. Nothing may withhold one of these: §0.3 forbids weakening or delaying
+// the immediacy of a stop, and a withheld proposal is not re-proposed until the
+// line moves again (a084 개정 2, D9).
+func isProtective(p exitpolicy.Proposal) bool {
+	return p.Action == exitpolicy.ActionBaselineBreach || p.Action == exitpolicy.ActionLadderStop
 }
 
 // submit takes an armed proposal to the broker.

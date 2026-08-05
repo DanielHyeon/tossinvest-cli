@@ -86,6 +86,13 @@ const (
 	EffectiveSourceRecomputed = "recomputed"
 	EffectiveSourceSaved      = "saved_monotone"
 
+	// QuarantineReasonAmbiguousRecovery is the one quarantine reason
+	// SelectRecoverySnapshot produces, and therefore the only one a change of
+	// recovery selector says anything about. The other reasons — a corrupt stored
+	// snapshot, an unresolvable legacy policy identity — are decided before the
+	// selector is ever consulted (a084 개정 2, D7).
+	QuarantineReasonAmbiguousRecovery = "ambiguous_recovery"
+
 	QuarantineReleaseHumanRepair            = "HUMAN_REPAIR"
 	QuarantineReleaseAuthoritativeReconcile = "AUTHORITATIVE_RECONCILE"
 	// QuarantineReleaseSelectorRevised — the recovery selector that produced the
@@ -96,9 +103,21 @@ const (
 	// trail and would be a lie here, and AUTHORITATIVE_RECONCILE names the
 	// account, which decided nothing about this. "Which evidence closed it" is the
 	// whole reason the column exists.
+	//
+	// It is written only from inside the judgement transaction and is deliberately
+	// NOT accepted by ReleaseExitSnapshotQuarantine: an externally-supplied kind
+	// that reaches it would let a release which must name a person be recorded as
+	// a machine decision (a084 개정 2, D7).
 	QuarantineReleaseSelectorRevised = "SELECTOR_REVISED"
 
 	ArmSuppressedWorkingOrder = "working_order_not_cleared"
+	// ArmSuppressedReJudge — the judgement ran only because a quarantine written by
+	// an older recovery selector earned its one re-judgement. That pass resolves
+	// the quarantine and moves the watermark; it does not place or cancel anything,
+	// because the same transaction may still refuse, and a refusal that has already
+	// cancelled a working order leaves the position with no protection at all
+	// (a084 개정 2, D9).
+	ArmSuppressedReJudge = "re_judging_a_superseded_quarantine"
 )
 
 var (
@@ -261,7 +280,8 @@ func validateJudgementSnapshot(positionID string, judgement ExitJudgement, store
 		return nil
 	}
 	if judgement.Proposal == nil {
-		if judgement.ArmSuppressedReason != ArmSuppressedWorkingOrder {
+		if judgement.ArmSuppressedReason != ArmSuppressedWorkingOrder &&
+			judgement.ArmSuppressedReason != ArmSuppressedReJudge {
 			return errors.New("orderable snapshot without a proposal needs a typed arm-suppression reason")
 		}
 		return nil
@@ -509,20 +529,15 @@ func quarantineExitSnapshotTx(ctx context.Context, tx *sql.Tx, id string, genera
 	if active, ok, err := activeExitSnapshotQuarantineTx(ctx, tx, id, generation); err != nil {
 		return ExitSnapshotQuarantine{}, err
 	} else if ok {
-		if !active.NeedsReJudgement() {
-			return active, nil
-		}
-		// A different selector wrote the active row, this build re-judged the
-		// generation, and it still cannot choose one verified candidate. Closing the
-		// old row and opening one stamped with the current revision is what keeps
-		// the retry to once per revision — leaving the old row would make every
-		// later observation re-judge the same frozen inputs forever (a084 D6).
-		if err := releaseExitSnapshotQuarantineTx(ctx, tx, active, QuarantineReleaseSelectorRevised,
-			"the recovery selector changed since this quarantine was written; the generation was "+
-				"re-judged and the cause still holds, so it is recorded again under the current selector",
-			now); err != nil {
-			return ExitSnapshotQuarantine{}, err
-		}
+		// Idempotent: the cause still holds and the row already says so.
+		//
+		// 개정 1 closed the active row on SELECTOR_REVISED evidence here and opened a
+		// replacement, to keep the retry to once per revision. That is now done by
+		// stamping the row where the decision to re-judge is made (D8), which is both
+		// earlier and unconditional — so the replacement is unreachable, and writing
+		// "the generation was re-judged" for a row the recovery selector never
+		// decided was recording a comparison that had not happened (개정 2, D7·D8).
+		return active, nil
 	}
 	var version int64
 	if err := tx.QueryRowContext(ctx, `SELECT coalesce(max(quarantine_version),0)+1 FROM exit_snapshot_quarantines
@@ -719,14 +734,29 @@ type ExitSnapshotQuarantine struct {
 	SelectorRevision int64
 }
 
-// NeedsReJudgement reports that the selector which produced this quarantine is
-// not the one running now, so the same comparison may reach a different answer.
+// NeedsReJudgement reports that the recovery selector which produced this
+// quarantine is older than the one running now, so the same comparison may reach
+// a different answer.
 //
-// Unknown counts as different. A row written before the stamp existed was, by
-// construction, judged by an older selector — the stamp was added because one of
-// them was wrong.
+// Two guards, both opened by the independent review of 개정 1 (issues.md B3·B4):
+//
+// Reason. This is a fact about SelectRecoverySnapshot, so it applies only to the
+// reason SelectRecoverySnapshot produces. A stored_snapshot_corrupt row is
+// decided before the selector is consulted; a selector revision says nothing
+// about it, re-judging it would close it on evidence describing a comparison that
+// never ran, and — worse — the next successful judgement would auto-release a row
+// that until now only an operator could lift.
+//
+// Direction. Strictly older, never merely different. Unknown still qualifies:
+// a row written before the stamp existed reads as 0, and 0 is older than any
+// revision, which is what lets the live rows earn their one re-judgement with no
+// backfill. But a row stamped by a NEWER selector must not be re-judged by this
+// build: the older selector would accept what the newer one refused, and with
+// several engine processes at mixed revisions the two would rewrite the same row
+// every cycle, each rewrite re-arming the critical alert.
 func (q ExitSnapshotQuarantine) NeedsReJudgement() bool {
-	return q.SelectorRevision != exitpolicy.RecoverySelectorRevision
+	return q.Reason == QuarantineReasonAmbiguousRecovery &&
+		q.SelectorRevision < exitpolicy.RecoverySelectorRevision
 }
 
 func (j *Journal) QuarantineExitSnapshot(ctx context.Context, positionID string, generation int64,
@@ -750,30 +780,15 @@ func (j *Journal) QuarantineExitSnapshot(ctx context.Context, positionID string,
 	if active, ok, err := activeExitSnapshotQuarantineTx(ctx, tx, id, generation); err != nil {
 		return ExitSnapshotQuarantine{}, err
 	} else if ok {
-		if !active.NeedsReJudgement() {
-			return active, nil
-		}
-		// Same rule as the judgement path: a superseded row is closed on the
-		// selector-revision evidence and replaced by one this build owns, so the
-		// retry cannot repeat at this revision (a084 D6).
-		if err := releaseExitSnapshotQuarantineTx(ctx, tx, active, QuarantineReleaseSelectorRevised,
-			"the recovery selector changed since this quarantine was written; the generation was "+
-				"re-judged and a cause still holds, so it is recorded again under the current selector",
-			j.nowString()); err != nil {
-			return ExitSnapshotQuarantine{}, err
-		}
+		// Idempotent, same rule as the judgement path (개정 2, D8).
+		return active, nil
 	}
-	var version int64
-	if err := tx.QueryRowContext(ctx, `SELECT coalesce(max(quarantine_version),0)+1 FROM exit_snapshot_quarantines WHERE position_id=? AND position_generation=?`, id, generation).Scan(&version); err != nil {
-		return ExitSnapshotQuarantine{}, err
-	}
-	q := ExitSnapshotQuarantine{PositionID: id, PositionGeneration: generation, Version: version,
-		Reason: why, Evidence: proof, QuarantinedAt: j.nowString(),
-		SelectorRevision: exitpolicy.RecoverySelectorRevision}
-	if _, err := tx.ExecContext(ctx, `INSERT INTO exit_snapshot_quarantines
-		(position_id,position_generation,quarantine_version,reason,evidence,quarantined_at,selector_revision)
-		VALUES(?,?,?,?,?,?,?)`, id, generation, version, q.Reason, q.Evidence, q.QuarantinedAt,
-		q.SelectorRevision); err != nil {
+	// One writer for the row itself: 개정 1 reproduced quarantineExitSnapshotTx's
+	// body here statement for statement, and the two had already drifted inside a
+	// single commit — one evidence string said "the cause still holds", the other
+	// "a cause still holds".
+	q, err := quarantineExitSnapshotTx(ctx, tx, id, generation, why, proof, j.nowString())
+	if err != nil {
 		return ExitSnapshotQuarantine{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -835,7 +850,12 @@ func releaseExitSnapshotQuarantineTx(ctx context.Context, tx *sql.Tx,
 func releaseReJudgedQuarantineTx(ctx context.Context, tx *sql.Tx, id string,
 	generation int64, now string) error {
 	active, ok, err := activeExitSnapshotQuarantineTx(ctx, tx, id, generation)
-	if err != nil || !ok || !active.NeedsReJudgement() {
+	// Reason, not the stamp: workingSet spends the retry by stamping the row
+	// before it lets the generation through (D8), so by the time a judgement
+	// commits the row already carries this revision. What identifies it as the
+	// re-judgement's own row is that the recovery selector is what wrote it —
+	// and a quarantine the selector never decided must not be lifted here.
+	if err != nil || !ok || active.Reason != QuarantineReasonAmbiguousRecovery {
 		return err
 	}
 	return releaseExitSnapshotQuarantineTx(ctx, tx, active, QuarantineReleaseSelectorRevised,
@@ -849,8 +869,10 @@ func (j *Journal) ReleaseExitSnapshotQuarantine(ctx context.Context, positionID 
 	if strings.TrimSpace(positionID) == "" || generation < 0 || expectedVersion <= 0 || strings.TrimSpace(evidence) == "" {
 		return fmt.Errorf("%w: release needs position, generation, positive version, and evidence", ErrInvalidRequest)
 	}
-	if kind != QuarantineReleaseHumanRepair && kind != QuarantineReleaseAuthoritativeReconcile &&
-		kind != QuarantineReleaseSelectorRevised {
+	// SELECTOR_REVISED is deliberately absent: it is written only from inside the
+	// judgement transaction, and accepting it here would let an operator-facing
+	// release be recorded as a machine decision (a084 개정 2, D7).
+	if kind != QuarantineReleaseHumanRepair && kind != QuarantineReleaseAuthoritativeReconcile {
 		return fmt.Errorf("%w: invalid quarantine release kind %q", ErrInvalidRequest, kind)
 	}
 	result, err := j.db.ExecContext(ctx, `UPDATE exit_snapshot_quarantines
@@ -865,6 +887,47 @@ func (j *Journal) ReleaseExitSnapshotQuarantine(ctx context.Context, positionID 
 		return err
 	}
 	if changed != 1 {
+		return ErrExitSnapshotReleaseStale
+	}
+	return nil
+}
+
+// StampExitSnapshotQuarantineSelector records that this build's recovery
+// selector has taken the one re-judgement the row's stamp entitles it to.
+//
+// It is called where the decision to let the generation through is made, not
+// where the judgement lands, because the judgement has several early returns —
+// an unchanged line, a pending proposal, a stale lifecycle — that reach none of
+// the writers. With the stamp deferred to those writers the bound did not exist:
+// the position was let through on every observation forever, and the log line
+// claiming "re-judged once" was written every cycle (a084 개정 2, D8).
+//
+// Spending the retry on the attempt rather than the outcome is the conservative
+// direction. If the judgement does not complete, the quarantine stands, the
+// operator release path is untouched, and the next selector revision buys
+// another attempt.
+func (j *Journal) StampExitSnapshotQuarantineSelector(ctx context.Context,
+	positionID string, generation, expectedVersion int64) error {
+	id := strings.TrimSpace(positionID)
+	if id == "" || generation < 0 || expectedVersion <= 0 {
+		return fmt.Errorf("%w: stamping a quarantine needs position, generation, and positive version",
+			ErrInvalidRequest)
+	}
+	result, err := j.db.ExecContext(ctx, `UPDATE exit_snapshot_quarantines
+		SET selector_revision=?
+		WHERE position_id=? AND position_generation=? AND quarantine_version=? AND released_at IS NULL`,
+		exitpolicy.RecoverySelectorRevision, id, generation, expectedVersion)
+	if err != nil {
+		return err
+	}
+	changed, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if changed != 1 {
+		// The row moved under the read — released, or superseded by a newer
+		// version. Either way this build's attempt is against a row that no longer
+		// exists, and re-reading is the next cycle's job.
 		return ErrExitSnapshotReleaseStale
 	}
 	return nil

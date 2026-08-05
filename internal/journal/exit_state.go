@@ -497,7 +497,7 @@ func (j *Journal) recordExitJudgementTx(ctx context.Context, judgement ExitJudge
 		selected, source, selectErr := exitpolicy.SelectRecoverySnapshot(savedLine, recomputed.Line)
 		if selectErr != nil {
 			if _, qerr := quarantineExitSnapshotTx(ctx, tx, id, recomputed.Line.PositionGeneration,
-				"ambiguous_recovery", selectErr.Error(), now); qerr != nil {
+				QuarantineReasonAmbiguousRecovery, selectErr.Error(), now); qerr != nil {
 				return qerr
 			}
 			if err := tx.Commit(); err != nil {

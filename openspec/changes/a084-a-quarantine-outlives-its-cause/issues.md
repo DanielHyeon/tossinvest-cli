@@ -218,3 +218,18 @@ I7에서 `make test`에만 `-timeout 30m`을 넣었다. `.github/workflows/ci.ym
 비용은 O(열기 × 마이그레이션)이므로 **앞으로 모든 마이그레이션이 무조건 3~5초를 더한다.**
 timeout을 올린 것은 같은 대화를 v31로 미룬 것이다. TestMain에서 템플릿 DB를 한 번
 마이그레이션하고 파일 복사로 여는 것이 실제 해법이다.
+
+## I12 — 보류된 익절 제안은 다음 rung을 기다린다 (D9의 잔여 성질)
+
+D9는 재판정 통과에서 익절 계열 제안의 주문 측을 보류한다. 보류된 제안은 재제안되지
+않는다 — 다음 주기는 라인이 안 움직였으면 `!snapshot.Changed`로 반환하고, 움직였으면
+그때의 rung을 평가한다. 즉 보류된 rung은 **다음 rung이 교차될 때까지** 실행되지 않는다.
+
+손절에는 적용되지 않는다. `isProtective`가 `ActionBaselineBreach`·`ActionLadderStop`을
+보류 대상에서 뺀다 — 보호를 미루는 것은 §0.3이 금지하는 지연이고,
+`TestAReJudgementNeverWithholdsAStop`이 그것을 고정한다.
+
+같은 성질이 기존 `ArmSuppressedWorkingOrder` 경로에도 있다(working 주문을 못 치우면
+그 주기의 제안이 사라진다). D9는 그 계약을 재사용했을 뿐 새로 만들지 않았다. 근본
+해법은 `record`가 판정 트랜잭션을 주문 측보다 **먼저** 돌리는 것이고, 그것은 High-risk
+기존 함수의 구조 변경이므로 별도 change다.

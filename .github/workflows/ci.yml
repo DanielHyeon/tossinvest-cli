@@ -24,8 +24,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      # `make test`, not a bare `go test`: the target owns the timeout, and
+      # internal/journal already runs past Go's 600s per-package default (a084).
+      # Two places that can disagree about the limit is one too many.
       - name: Run Go tests
-        run: go test ./...
+        run: make test
 
       # gofmt + go vet, same target contributors run locally.
       - name: Lint

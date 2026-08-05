@@ -125,3 +125,14 @@ whole file"이라 적혀 있는데, 드라이버와 **호출 순서가 반대**�
 **결정: 배포 보류.** blocking 항목이 닫히기 전에는 `make gate` 통과 여부와 무관하게
 a083 를 배포하지 않는다. 게이트는 테스트가 green이라고 말할 뿐, 여기서 발견된 것들은
 테스트가 없어서 green이었다.
+
+### 개정 2 반영 결과
+
+D7 credit는 자신이 답한 차단만 해제 · D8 재분류는 동의가 아니다 · D9 답할 차단 없는 credit 폐기 · D10 커밋된 수렴은 반환 전에 credit.
+
+blocking 항목은 전부 RED 테스트 선행 후 닫혔다. 설계는 `design.md` 개정 2,
+요구사항은 spec delta 개정 2, 작업은 `tasks.md` 10장에 있다.
+
+리뷰 과정에서 발견한 부수 사항 — credit 만료, 초 해상도 스탬프, 가변인자 API의
+오용 가능성, `Observe`가 `defer` 없이 journal I/O 너머로 mutex를 드는 점 — 은
+`issues.md` I6~I9에 기록했다. 전부 이 change의 범위 밖이거나 기존 성질이다.

@@ -377,15 +377,46 @@ func (t *Tracker) AdjustmentApplied(comparison string, symbols ...string) {
 // conservative direction: a block that stays costs entries, and a block that
 // lifts early costs exposure the engine cannot account for.
 func creditUsableBy(credit, observed string) bool {
-	creditAt, err := time.Parse(time.RFC3339, strings.TrimSpace(credit))
-	if err != nil {
+	at, ok := creditStampAt(credit)
+	if !ok {
 		return false
 	}
 	observedAt, err := time.Parse(time.RFC3339, strings.TrimSpace(observed))
 	if err != nil {
 		return false
 	}
-	return observedAt.After(creditAt)
+	return observedAt.After(at)
+}
+
+// creditStampAt reads a credit's comparison stamp. Not-ok means it cannot be
+// ordered against anything, and every caller treats that as "keeps the block".
+func creditStampAt(credit string) (time.Time, bool) {
+	at, err := time.Parse(time.RFC3339, strings.TrimSpace(credit))
+	if err != nil {
+		return time.Time{}, false
+	}
+	return at, true
+}
+
+// creditAnswers reports that this credit was computed while this block already
+// stood, so the adjustment it names is an answer to *this* disagreement.
+//
+// Time, not Block.Key(): a symbol-scoped key is symbol|account|SYMBOL, which
+// cannot tell one block on a symbol from the next one (issues.md I3). Since can
+// — it is the durable reconcile_states.entered_at (개정 2, D7).
+func creditAnswers(credit string, block Block) bool {
+	at, ok := creditStampAt(credit)
+	if !ok {
+		return false
+	}
+	// Compare at the stamp's own resolution. A credit carries Diff.AsOf, which is
+	// RFC3339 to the second, while Block.Since comes off the journal with
+	// nanoseconds. Comparing them raw would make a block entered 40µs into the
+	// same second look newer than the comparison that covered it — and a block
+	// whose credit can never answer it is a block nothing automatic can lift,
+	// which is the a083 defect wearing a different hat. The residual one-second
+	// window is the resolution the whole credit rule already runs at (issues.md I7).
+	return !block.Since.Truncate(time.Second).After(at)
 }
 
 // symbolsInDispute is the set of symbols this comparison still disagrees about.
@@ -396,14 +427,45 @@ func creditUsableBy(credit, observed string) bool {
 // strand a symbol that has converged and agreed with no way to earn another
 // credit — nothing writes an adjustment for a symbol the comparison agrees about.
 func symbolsInDispute(diff Diff) map[string]bool {
-	out := make(map[string]bool, len(diff.Quantities)+len(diff.MissingOrders))
+	out := make(map[string]bool,
+		len(diff.Quantities)+len(diff.MissingOrders)+len(diff.ExternalPos))
 	for _, mismatch := range diff.Quantities {
 		out[strings.ToUpper(strings.TrimSpace(mismatch.Symbol))] = true
 	}
 	for _, missing := range diff.MissingOrders {
 		out[strings.ToUpper(strings.TrimSpace(missing.Symbol))] = true
 	}
+	// External positions are in dispute even though BlocksEntry() does not count
+	// them. The entry gate's contract is one question — does this comparison stop
+	// new entries — and the release rule's is another: does this comparison agree
+	// about this symbol. A holding the engine has no instance of is not agreement,
+	// and treating it as one is what lets a reclassified disagreement release its
+	// own block (개정 2, D8).
+	for _, external := range diff.ExternalPos {
+		out[strings.ToUpper(strings.TrimSpace(external.Symbol))] = true
+	}
 	return out
+}
+
+// answerableBlockFor reports whether any block this credit could still release
+// stands for the symbol. A credit with none has nothing left to answer: it
+// cannot release a future block (D7 forbids it), so keeping it only widens the
+// window in which it might. Discarding is what bounds t.adjusted by the number
+// of blocked symbols, with no wall-clock TTL to tune (개정 2, D9).
+func answerableBlockFor(blocks map[string]Block, symbol, credit string) bool {
+	for _, block := range blocks {
+		if block.Cause != journal.ReconcileCauseQuantityMismatch ||
+			block.Release != ReleaseOnAdjustedReconcile {
+			continue
+		}
+		if strings.ToUpper(strings.TrimSpace(block.Symbol)) != symbol {
+			continue
+		}
+		if creditAnswers(credit, block) {
+			return true
+		}
+	}
+	return false
 }
 
 // Outcome is what one observation did.
@@ -449,6 +511,11 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	t.lastAt = now
 	t.observed = true
 
+	// One dispute set for both halves of the rule. A symbol this comparison
+	// disagrees about cannot be released by it and cannot leave a credit standing,
+	// and those two facts must never be computed from different sets.
+	disputed := symbolsInDispute(diff)
+
 	var out Outcome
 	if !diff.BlocksEntry() {
 		// A success resets the counter — the counter measures *consecutive*
@@ -471,6 +538,27 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 				// belongs to *this* comparison rather than to one before it. Both are
 				// agreement with nothing behind it. See the release rule at the top of
 				// the file.
+				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
+				continue
+			}
+			if disputed[symbol] {
+				// BlocksEntry() counts quantity mismatches and missing orders. It does
+				// not count an external position — the account holding something the
+				// engine has no instance of — so a disagreement that flips direction
+				// (the engine believed 10 and the account said 0; now the account says
+				// 10 and the projection, converged to 0, says nothing) reads as a
+				// comparison that does not block. It is not agreement. Releasing on it
+				// reopens entries against exposure the engine cannot account for
+				// (개정 2, D8).
+				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
+				continue
+			}
+			if !creditAnswers(t.adjusted[symbol], block) {
+				// The credit was computed before this block existed, so the adjustment
+				// it names answered some earlier disagreement — not this one. Blocks
+				// entered by another producer (an oversell the projection refused, an
+				// orphan fill) share a key with the quantity comparer's own, and
+				// nothing reconciled them (개정 2, D7).
 				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
 				continue
 			}
@@ -554,7 +642,6 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	//	           storage failure must not lose the evidence that earned the
 	//	           release, and neither must a comparison that is clean for this
 	//	           symbol while another symbol keeps the whole diff blocking.
-	disputed := symbolsInDispute(diff)
 	committed := make(map[string]bool, len(persisted.released))
 	for _, block := range persisted.released {
 		committed[strings.ToUpper(strings.TrimSpace(block.Symbol))] = true
@@ -563,7 +650,10 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 		if !creditUsableBy(comparison, diff.AsOf) {
 			continue
 		}
-		if disputed[symbol] || committed[symbol] {
+		// answerable: no block this credit could still release stands for the
+		// symbol, so there is nothing left for it to answer (개정 2, D9).
+		if disputed[symbol] || committed[symbol] ||
+			!answerableBlockFor(t.blocks, symbol, comparison) {
 			delete(t.adjusted, symbol)
 		}
 	}

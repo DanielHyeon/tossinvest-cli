@@ -403,15 +403,6 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 	}
 	cycle.Stable = true
 
-	// The stable snapshot is the one read that already knows what these holdings
-	// are called. Learning here rather than at the alert sites keeps the cost at
-	// zero requests and keeps every alert consistent with every other.
-	if d.opts.Names != nil {
-		for _, holding := range snapshot.Holdings {
-			d.opts.Names.Learn(holding.Symbol, holding.Name)
-		}
-	}
-
 	local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef)
 	if err != nil {
 		cycle.Err = fmt.Errorf("engine: reading the local state for reconciliation: %w", err)
@@ -463,6 +454,26 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 // 판정한다". An account that is still moving ends the cycle here — silently,
 // because "the owner is trading right now" is a transition state and not a
 // finding (design A4).
+// learnNames records what the account calls these instruments, from every
+// holdings read rather than only from a stabilised pair.
+//
+// 개정 1 learned from the stable snapshot, which needs two collections at least
+// StabilisationInterval apart that agree — minutes on a moving account. The exit
+// loop starts at the same moment and runs every five seconds, and its alerts
+// latch once per position per process. So the single alert a position ever gets
+// was disproportionately the one sent before any name was known, rendering as a
+// bare code: the exact defect a085 exists to fix, losing a race it did not have
+// to enter. A collection that never stabilises still knows the names
+// (a085 issues.md B1).
+func (d *ReconcileDriver) learnNames(snapshot reconcile.Snapshot) {
+	if d.opts.Names == nil {
+		return
+	}
+	for _, holding := range snapshot.Holdings {
+		d.opts.Names.Learn(holding.Symbol, holding.Name)
+	}
+}
+
 func (d *ReconcileDriver) stabilise(ctx context.Context, cycle *ReconcileCycle) (reconcile.Snapshot, bool) {
 	interval := d.opts.StabilisationInterval
 	if interval <= 0 {
@@ -475,6 +486,7 @@ func (d *ReconcileDriver) stabilise(ctx context.Context, cycle *ReconcileCycle) 
 		return reconcile.Snapshot{}, false
 	}
 	cycle.Collected++
+	d.learnNames(first)
 	d.stabiliser.Offer(first)
 
 	if err := d.clk.Sleep(ctx, interval); err != nil {
@@ -488,6 +500,7 @@ func (d *ReconcileDriver) stabilise(ctx context.Context, cycle *ReconcileCycle) 
 		return reconcile.Snapshot{}, false
 	}
 	cycle.Collected++
+	d.learnNames(second)
 	result := d.stabiliser.Offer(second)
 	if !result.Stable {
 		// Deliberately not reset: a streak that survives into the next period is

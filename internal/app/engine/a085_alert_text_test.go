@@ -12,6 +12,7 @@ package engine_test
 import (
 	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
@@ -37,7 +38,10 @@ func TestTheUnmanagedAlertNamesTheStockInKorean(t *testing.T) {
 		t.Errorf("title = %q, want 이름(코드); a person reading this on a phone has to know "+
 			"which holding stopped being protected", alert.Title)
 	}
-	if !strings.ContainsAny(alert.Title+alert.Body, "가나다라마바사아자차카타파하") {
+	// The Hangul syllable range, not a 14-syllable sample: a reword that happens
+	// to use none of the sampled syllables is plainly Korean and would fail a test
+	// about nothing it changed.
+	if !containsHangul(alert.Title + alert.Body) {
 		t.Errorf("title/body is not Korean: %q / %q", alert.Title, alert.Body)
 	}
 
@@ -55,9 +59,17 @@ func TestTheUnmanagedAlertNamesTheStockInKorean(t *testing.T) {
 		}
 	}
 
-	// §0.8: the account never rides along in an alert an operator's phone receives.
+	// The prose a085 writes carries no account reference.
+	//
+	// This is deliberately NOT labelled as the §0.8 guarantee it originally
+	// claimed. obs.Notifier appends the structured Fields to the *published*
+	// notification body, and Fields[account] carries the broker account number, so
+	// the account does reach the ntfy topic — through a path this assertion never
+	// looks at. That exposure predates a085, lives in internal/obs, and is
+	// recorded in issues.md B2 for its own change. A test that names a guarantee
+	// it does not check is worse than one that names less.
 	if strings.Contains(alert.Title+alert.Body, reconcileAccount) {
-		t.Errorf("the alert leaks the account reference: %q / %q", alert.Title, alert.Body)
+		t.Errorf("a085's own prose leaks the account reference: %q / %q", alert.Title, alert.Body)
 	}
 }
 
@@ -77,7 +89,23 @@ func TestAnUnnamedStockRendersAsItsCodeInTheAlert(t *testing.T) {
 	if !strings.Contains(alert.Title, "042660") {
 		t.Errorf("title = %q, want the code", alert.Title)
 	}
-	if strings.Contains(alert.Title, "(") {
+	// A name, not a parenthesis: forbidding every "(" in the title would fail on a
+	// market or quantity parenthetical that involves no name at all.
+	var names engine.InstrumentNames
+	if got := names.Label("042660"); strings.Contains(alert.Title, got+"(") {
 		t.Errorf("title = %q, want no invented name", alert.Title)
 	}
+	if containsHangul(strings.SplitN(alert.Title, " ", 2)[0]) {
+		t.Errorf("title = %q, want the bare code where no name is known", alert.Title)
+	}
+}
+
+// containsHangul reports a Hangul syllable anywhere in s (U+AC00–U+D7A3).
+func containsHangul(s string) bool {
+	for _, r := range s {
+		if unicode.Is(unicode.Hangul, r) {
+			return true
+		}
+	}
+	return false
 }

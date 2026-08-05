@@ -74,3 +74,19 @@
 - [x] 8.2 발견 사항을 `issues.md`에 남긴다 — missing-order 차단은 credit 발행자가
       없어 여전히 운영자 전용이라는 점, 차단 evidence 문자열이 첫 관측에 고정되어
       화면이 오래된 숫자를 보여주는 점.
+
+## 10. 개정 2 — 독립 리뷰가 연 blocking (2026-08-05)
+
+- [x] 10.1 D10 RED: 커밋된 수렴이 오류 반환 경로에서 credit되지 않음을 고정한다.
+      `a083b_partial_convergence_test.go`.
+- [x] 10.2 D10 GREEN: `ConvergeQuantities`의 crediter 호출을 `defer`로 옮겨 앞으로
+      생길 반환 경로까지 덮는다.
+- [x] 10.3 D8 RED: 재분류된 불일치(ExternalPos)가 차단을 푼다는 것을 고정한다.
+- [x] 10.4 D7 RED: credit보다 나중에 생긴 차단을 그 credit이 푼다는 것을 고정한다.
+- [x] 10.5 D9 RED: 답할 차단이 없는 credit이 살아남아 미래의 차단을 푼다는 것을 고정한다.
+- [x] 10.6 D7·D8·D9 GREEN: `creditAnswers`, `symbolsInDispute`의 ExternalPos,
+      `answerableBlockFor`.
+- [x] 10.7 회귀: 개정 1의 D2b(무관한 심볼이 credit을 버리지 않는다)가 유지되는지
+      확인한다.
+- [x] 10.8 `issues.md`에 B1·B2와 I6~I9를 기록한다.
+- [ ] 10.9 gstack 독립 리뷰 재실행 + `make gate`.
