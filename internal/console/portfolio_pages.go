@@ -9,11 +9,15 @@ package console
 // and a read route behind it fails too — a screen that only answered POSTs would
 // be a screen nobody can open.
 //
-// The positions screen reloads itself at the holdings cache TTL — no faster
-// (change refresh-positions-screen; spec "rate budget 보호"). Each reload is an
-// ordinary lazy request, so an open tab costs at most one holdings call per TTL
-// and a verification in progress still suspends the broker call entirely. The
-// history screen renders frozen values and stays manual.
+// The positions screen reloads itself on the engine's observation cadence, which
+// is faster than the holdings cache TTL (change a080; it was the TTL from
+// refresh-positions-screen until then). The budget guarantee is unchanged and now
+// rests where it always actually rested: each reload is an ordinary lazy request
+// and holdingsCache.get refreshes only once its last attempt is a TTL old, so an
+// open tab still costs at most one holdings call per TTL however often it redraws,
+// and a verification in progress still suspends the broker call entirely
+// (spec "rate budget 보호"). The history screen renders frozen values and stays
+// manual.
 
 import (
 	"context"
@@ -49,12 +53,19 @@ func (p positionsPage) BrokerState() brokerStateView {
 	return brokerStateView{holdingsSnapshot: p.Snap.Holdings, Explain: p.Explain}
 }
 
-// RefreshSeconds is the reload period: exactly the holdings cache TTL, derived
-// from it so the two cannot drift apart — a period under the TTL would be a
-// reload that costs broker calls faster than the budget the spec fixes.
+// RefreshSeconds is the reload period: the engine's observation cadence, not the
+// broker cache TTL (change a080, line_cadence.go).
+//
+// It used to be holdingsTTL, defended by the claim that a period under the TTL
+// "would be a reload that costs broker calls faster than the budget the spec
+// fixes". That claim does not hold against this cache: holdingsCache.get refreshes
+// only once its last attempt is a TTL old, so the TTL bounds the call rate however
+// often the page is reloaded. What the derivation actually did was let one
+// constant stand for two decisions — how often the broker may be asked, and how
+// late the operator may learn that a baseline moved.
 //
 // Refresh is the embedded chrome's field, set by the handler below.
-func (positionsPage) RefreshSeconds() int { return int(holdingsTTL / time.Second) }
+func (positionsPage) RefreshSeconds() int { return lineRefreshSeconds() }
 
 func (c *Console) handlePositions(w http.ResponseWriter, r *http.Request) {
 	snap := c.positions(r.Context())

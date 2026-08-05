@@ -10,13 +10,14 @@ package console
 //	               not one paragraph per holding — the repetition was the report.
 //	label per row  dedup moves the sentence, never the verdict: every unmanaged
 //	               row still carries 관리 외(미편입) (spec: 라벨은 행마다 표시).
-//	reload bounded the positions screen asks the browser to reload no faster
-//	               than the holdings cache TTL, so an open tab costs at most one
-//	               holdings call per TTL; the verification screens keep their
-//	               two-second cadence.
+//	reload bounded an open tab costs at most one holdings call per TTL. Change
+//	               a080 moved where that ceiling is enforced: the cache holds it,
+//	               so the reload period is the engine's cadence rather than the
+//	               TTL; the verification screens keep their two-second cadence.
 
 import (
 	"bytes"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -88,19 +89,25 @@ func TestTheUnknownStateNoticeAppearsOncePerPage(t *testing.T) {
 	}
 }
 
-// TestThePositionsScreenAsksTheBrowserToReloadAtTheCacheTTL.
+// TestThePositionsScreenAsksTheBrowserToReloadAtTheEngineCadence.
 //
-// Spec "rate budget 보호": the reload instruction's period must not undercut the
-// holdings cache TTL, so the meta tag carries exactly the TTL in seconds. The
-// history screen renders frozen values and keeps no reload instruction.
-func TestThePositionsScreenAsksTheBrowserToReloadAtTheCacheTTL(t *testing.T) {
+// Spec "rate budget 보호", as a080 restates it: what the budget requires is that
+// one open tab cost at most one holdings call per TTL, and that ceiling is held by
+// the cache rather than by the reload period — holdingsCache.get refreshes only
+// once its last attempt is a TTL old, so a shorter reload reaches the cache more
+// often and the broker exactly as often. The period is therefore the engine's
+// observation cadence, and the ceiling is asserted directly by
+// TestReloadingAtTheEngineCadenceKeepsTheBudgetCeiling.
+//
+// The history screen renders frozen values and keeps no reload instruction.
+func TestThePositionsScreenAsksTheBrowserToReloadAtTheEngineCadence(t *testing.T) {
 	h := newDashboardHarness(t)
 	seedJournal(t, h.journal)
 	h.authenticate(t)
 
 	if page := h.page(t, "/positions"); !strings.Contains(page,
-		`<meta http-equiv="refresh" content="30">`) {
-		t.Error("the positions screen does not ask the browser to reload at the cache TTL")
+		`<meta http-equiv="refresh" content="`+strconv.Itoa(lineRefreshSeconds())+`">`) {
+		t.Error("the positions screen does not ask the browser to reload at the engine cadence")
 	}
 	if page := h.page(t, "/history"); strings.Contains(page, `http-equiv="refresh"`) {
 		t.Error("the history screen asks the browser to reload; it renders frozen values " +

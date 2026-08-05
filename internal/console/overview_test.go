@@ -1068,11 +1068,20 @@ func TestTheEnginePanelSaysARefusalReasonIsProcessLocal(t *testing.T) {
 
 // --- the shape of the screen ----------------------------------------------------------
 
-// TestTheOverviewReloadsAtTheCacheTTL (task 4.12).
-func TestTheOverviewReloadsAtTheCacheTTL(t *testing.T) {
-	want := int(holdingsTTL / time.Second)
+// TestTheOverviewReloadsAtTheEngineCadence (task 4.12; retargeted by a080).
+//
+// It used to assert the period was derived from holdingsTTL. a080 separates the
+// two: this screen reads the cache with peek and makes no broker call at all, so
+// the TTL was never a bound on it — what should govern the redraw is the cadence
+// that moves the values, which is the engine's.
+func TestTheOverviewReloadsAtTheEngineCadence(t *testing.T) {
+	want := lineRefreshSeconds()
 	if got := (overviewPage{}).RefreshSeconds(); got != want {
-		t.Errorf("the overview reloads every %ds, want %ds derived from holdingsTTL", got, want)
+		t.Errorf("the overview reloads every %ds, want the engine's %ds", got, want)
+	}
+	if want == int(holdingsTTL/time.Second) {
+		t.Error("the reload period is indistinguishable from the holdings TTL, so this test " +
+			"cannot tell the a080 separation from the coupling it replaced")
 	}
 	// Refresh used to be a method on this type and is now a field on the embedded
 	// chrome, set by the handler (change a054). The type can no longer answer

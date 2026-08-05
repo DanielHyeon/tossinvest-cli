@@ -1,10 +1,19 @@
 # a080 · Tasks
 
-> **[해제] 2026-08-05.** 선행 change a081이 `df4407ed`로 land했고 사람이 승인한
-> 배포에서 실측까지 끝났다 — 렌더 20회 묶음에서 엔진에 닿은 렌더는 1회, 엔진
-> `reconcile` 사이클은 62.6~63.7초로 무변동. F1의 근거였던 결합이 사라졌으므로
-> 이 change를 재개한다. 남은 작업은 8장이고, 그 첫 항목이 보관해 둔 코드 patch의
-> 복원이다. 아래 blocked 기록은 그때의 판단 근거로 남긴다.
+> **[해제·8장 완료] 2026-08-05.** 선행 change a081이 `df4407ed`로 land했고 사람이
+> 승인한 배포에서 실측까지 끝났다 — 렌더 20회 묶음에서 엔진에 닿은 렌더는 1회,
+> 엔진 `reconcile` 사이클은 62.6~63.7초로 무변동. F1의 근거였던 결합이 사라졌으므로
+> 이 change를 재개했다.
+>
+> 8장을 전부 실행했다: 코드 재적용(711 passed), F2(변이 M-F2 **RED 실측**),
+> F6, F7, `base-commit.txt` → `30d8bb93`, logic-map target 4 → **5**
+> (`evidence complete`), 두 번째 MODIFIED의 Requirement 변경 리뷰(수용).
+> **F1~F8 전부 종결.** 기록은 review.md 4차.
+>
+> 남은 것은 6.4 gate와 6.5·6.6 컨테이너 실측이며, 실측은 이 코드가 배포된 뒤에만
+> 할 수 있으므로 a081과 같은 순서(배포 → 실측 → gate)를 따른다.
+>
+> 아래 blocked 기록은 그때의 판단 근거로 남긴다.
 >
 > **[blocked → 선행 대기] 2026-08-05.** 독립 리뷰 F1이 이 change의 전제를
 > 무효화했다 — `decoratePositionRows`가 렌더마다 엔진 프로세스로 무캐시 동기
@@ -136,23 +145,26 @@ change이므로 갱신 대상이며, 각 갱신은 약화가 아니라 **판정 
       철회된 스크립트 설계 서술과 없는 task 참조(3.8·3.9·3.10)를 걷어낸다.
       엔진 부하 계약(C7)을 새로 세운다.
 - [x] 8.4 F8 — `STORY-TOS-a080.yaml` 승인 기준 5·6·7을 현재 설계로 교체한다.
-- [ ] 8.5 코드 재적용 — 보관한 패치를 a081 land 후 트리에 되돌린다
+- [x] 8.5 코드 재적용 — 보관한 패치를 a081 land 후 트리에 되돌린다
       (`overview.go`, `overview_test.go`, `portfolio_pages.go`,
       `portfolio_refresh_test.go`, `status_strip_test.go`, `line_cadence.go`,
       `line_cadence_test.go`).
-- [ ] 8.6 F2 — `status_strip_test.go`의 `strings.Contains(cell, "5초마다")`가
+- [x] 8.6 F2 — `status_strip_test.go`의 `strings.Contains(cell, "5초마다")`가
       `"15초마다"`의 부분 문자열에 걸려 눈이 머는 것을 고친다. 리뷰어가 실행한
       변이(템플릿을 `15초마다` 고정으로)를 재현해 RED를 확인한다.
-- [ ] 8.7 F6 — `portfolio_pages.go`·`holdings.go` 파일 머리말 주석에서 a080이
+- [x] 8.7 F6 — `portfolio_pages.go`·`holdings.go` 파일 머리말 주석에서 a080이
       없앤 결합("reloads itself at the holdings cache TTL — no faster")을 걷어낸다.
       issues.md I1이 지목한 결함과 같은 종류다.
-- [ ] 8.8 F7 — `TestTheOverviewSpendsNothingHoweverOftenItReloads`의 장식용 clock
+- [x] 8.8 F7 — `TestTheOverviewSpendsNothingHoweverOftenItReloads`의 장식용 clock
       advance를 걷어내거나, 기존 `TestTheOverviewMakesNoBrokerCall`과 중복이면
       제거한다.
-- [ ] 8.9 `base-commit.txt`를 a081 land 후 커밋으로 재고정한다
+- [x] 8.9 `base-commit.txt`를 a081 land 후 커밋으로 재고정한다
       (`capture_change_base.py`는 덮어쓰기를 거부하므로 파일을 지우고 재실행).
-- [ ] 8.10 네 target의 AST를 재생성하고 `check_analysis.py`를 다시 통과시킨다.
-- [ ] 8.11 Requirement 변경 리뷰를 **두 번째 MODIFIED에 대해서도** 실행한다
+- [x] 8.10 네 target의 AST를 재생성하고 `check_analysis.py`를 다시 통과시킨다.
+- [x] 8.11 Requirement 변경 리뷰를 **두 번째 MODIFIED에 대해서도** 실행한다
       (WORKFLOW.md §142). 검토 대상: 표시줄이 주기를 정하지 않고 말하기만 한다는
       성질이 보존되는가, 톤 임계의 근거인 캐시 TTL이 재로드 주기와 분리되는가.
-- [ ] 8.12 `make test`·`vet`·`validate`·`sdd-sync`·`sdd-check` 재실행 후 6.4 gate.
+- [x] 8.12 `make test`·`vet`·`validate`·`sdd-sync`·`sdd-check` 재실행 후 6.4 gate.
+      재개 batch 후 실측: `internal/console` **711 passed**, `make test` 0 failed,
+      `vet` clean, `validate` exit 0, `check_analysis.py` `evidence complete`
+      (target 4 → **5**). gate는 6.4~6.6과 함께 배포 뒤에 돈다.

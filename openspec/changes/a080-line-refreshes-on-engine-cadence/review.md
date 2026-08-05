@@ -357,3 +357,122 @@ land하면 a080 코드를 재적용하면서 같은 batch에서 처리한다.
 **재개 시 반드시 할 것**: a080의 `base-commit.txt`를 a081 land 후 커밋으로 다시
 고정하고 (`capture_change_base.py`는 덮어쓰기를 거부하므로 파일을 지우고 재실행),
 네 target의 AST를 재생성한다.
+
+## 2026-08-05 · 재개 batch와 두 번째 MODIFIED의 Requirement 변경 리뷰
+
+a081이 `30d8bb93`으로 land·배포됐고 `[blocked]`를 해제했다. 이 절은 8장의 실행
+기록과, 두 번째 MODIFIED(`콘솔 공통 상태 표시줄`)에 대한 Requirement 변경 리뷰다.
+
+### 코드 재적용 (8.5)
+
+보관해 둔 패치를 되돌렸다. 새 파일 둘(`line_cadence.go`,
+`line_cadence_test.go`)과 기존 다섯 파일의 편집이며, a081이 같은 패키지를 고친
+뒤에도 충돌 없이 들어갔다 — a081은 `decoratePositionRows`를, a080은
+`RefreshSeconds`를 고치므로 같은 파일의 다른 자리다. 패키지 **711건 통과**
+(a081 시점 706 + a080의 5건).
+
+### F2 — 부분 문자열에 눈이 먼 단정 (8.6)
+
+`status_strip_test.go`가 재로드 셀을 이렇게 검사하고 있었다.
+
+```go
+if on && !strings.Contains(cell, strconv.Itoa(screen.reload)+"초마다") {
+```
+
+**`strings.Contains("15초마다", "5초마다")`는 참이다.** a080이 두 라인 화면을
+`5초마다`로 바꾼 순간, `/signals`의 `15초마다`를 그린 셀이 `screen.reload == 5`를
+만족하게 됐다. 리뷰어가 템플릿을 `15초마다`로 고정하는 변이를 돌렸고 통과했다.
+
+셀이 말하는 숫자를 읽어 비교하도록 고쳤다(`reloadPeriodIn`). 같은 변이를 재현해
+**RED를 실측**했다 — `/dashboard`·`/positions` 두 화면에서
+`the strip says 15s and the meta tag uses 5s`. 기록은
+`analysis/function-logic/internal-console--testthereloadcellandthemetatagareonefact/branch-test-map.md`.
+
+a080 이전에는 라인 화면이 `30초마다`였고 테이블의 어떤 값도 다른 값의 접미사가
+아니었다. **주기를 바꾼 것이 이 결함을 도달 가능하게 만들었다.**
+
+`reloadPeriodIn`은 `cellOf` 옆이 아니라 `line_cadence_test.go`에 뒀다. 기존 파일에
+새 함수를 넣으면 logic-map이 바로 위 함수(`cellOf`)까지 증거 대상으로 잡는데,
+`cellOf`는 이 change와 무관한 표시줄 테스트 전부가 쓰는 헬퍼다. 실제로 처음
+`status_strip_test.go`에 넣었을 때 checker가 `cellOf`를 요구했고, 옮기자 사라졌다.
+
+### F6 — 없어진 결합을 계속 말하던 주석 (8.7)
+
+`portfolio_pages.go`와 `holdings.go`의 파일 머리말이 "reloads itself at the
+holdings cache TTL — no faster"를 근거로 예산을 설명하고 있었다. a080이 그 근거를
+옮겼는데 주석은 그대로였다 — issues.md I1이 지목한 것과 같은 종류의 거짓이다.
+둘 다 "상한은 캐시가 쥐고 있고 재로드 주기는 그것을 결정하지 않는다"로 고쳤다.
+
+### F7 — 장식용 clock advance (8.8)
+
+`TestTheOverviewSpendsNothingHoweverOftenItReloads`의 `h.clock.advance`가 판정에
+기여하지 않았다. 걷어내는 대신 **하중을 받게** 만들었다: 재로드 창이 캐시 TTL보다
+길지 않으면 `t.Fatalf`(그보다 짧으면 get 기반 화면도 갱신하지 않아 peek과 구별할 수
+없다), 그리고 마지막에 get으로 읽는 `/positions`를 한 번 렌더해 **같은 카운터가
+실제로 움직이는지** 확인한다. 그 자체 검사가 없으면 아무 데도 연결되지 않은
+카운터가 0을 반환해도 통과한다.
+
+### Requirement 변경 리뷰 — `콘솔 공통 상태 표시줄` (8.11)
+
+base(`30d8bb93`) 대비 실제 수정분은 두 곳이다.
+
+1. 톤 임계 문단에 한 문장 추가 — "톤의 근거인 캐시 TTL과 그 화면의 재로드 주기는
+   별개의 값이다(SHALL — 재로드가 잦아지는 것은 캐시 도달 빈도만 바꾸고 톤 임계를
+   바꾸지 않는다)."
+2. scenario `화면별 재로드 주기 보존`의 THEN — "캐시 기반 화면은 각자의 캐시 TTL을
+   그대로 쓴다" → "나머지 화면은 각자 자기 주기의 출처를 그대로 유지한다 — 표시줄은
+   그 주기를 말할 뿐 정하지 않는다".
+
+나머지 절과 scenario 9건은 글자 그대로 보존했다.
+
+**검토 1 — 표시줄이 주기를 정하지 않고 말하기만 한다는 성질이 보존되는가.**
+보존된다. 그 SHALL은 base에 이미 있고("표시줄은 지금 걸려 있는 주기를 말할
+뿐이며") a080은 건드리지 않았다. 코드에서도 `templates.go:321`의
+`content="{{.RefreshSeconds}}"`와 표시줄 셀이 **같은 값**을 읽으며, 그것을
+`TestTheReloadCellAndTheMetaTagAreOneFact`가 고정한다 — F2 수정으로 그 테스트가
+비로소 실제로 고정한다. scenario THEN의 수정은 이 성질을 약화한 것이 아니라,
+"캐시 기반 화면 = 캐시 TTL"이라는 **더 이상 참이 아닌 등식**을 지우고 원래 성질만
+남긴 것이다.
+
+**검토 2 — 톤 임계의 근거인 캐시 TTL이 재로드 주기와 분리되는가.**
+구조적으로 분리되어 있다. `freshness.tone()`(chrome.go:150)은 `f.TTL`만 읽고
+`RefreshSeconds`에 도달하지 않는다. `f.TTL`을 채우는 곳은
+`holdingsSnapshot.freshness()`(chrome.go:268)의 `TTL: holdingsTTL` 한 곳이며 a080이
+바꾸지 않았다. 즉 추가한 SHALL은 새 제약이 아니라 **이미 참인 성질을 명문화**한
+것이고, a080이 두 값을 다르게 만든 지금이 그것을 적을 자리다.
+
+**함께 확인한 것.** scenario `표시줄이 브로커 비용을 늘리지 않는다`("TTL 안에서
+여러 번 재로드해도 holdings 1콜 상한")는 수정하지 않았다. a080 이전에는 자동
+재로드 주기가 TTL과 같아 이 scenario를 만족시키려면 사람이 손으로 새로고침해야
+했다. 이제 자동 재로드가 TTL 안에 여섯 번 들어가므로 **이 scenario가 기본 동작으로
+실행된다**. `TestReloadingAtTheEngineCadenceKeepsTheBudgetCeiling`이 그것을 직접
+단언한다.
+
+**기록해 둘 귀결 하나 (결함 아님).** 개요 화면은 peek으로 읽어 스스로 갱신하지
+않으므로, `/dashboard`만 열어 둔 운영자에게는 경과가 계속 자란다. a080 이후 그
+사실이 5초마다 갱신되어 보이고, 이전에는 최대 30초 늦게 보였다. 톤 임계는 그대로다
+— 바뀐 것은 **표시가 진실을 따라잡는 속도**이며 방향은 정직해지는 쪽이다.
+
+**판정: 수용.** 두 수정 모두 요구사항을 넓히지 않고, 하나는 이미 참인 성질의
+명문화이고 다른 하나는 더 이상 참이 아닌 등식의 제거다. 새 SHALL·SHALL NOT은
+추가되지 않았다(추가된 문장은 기존 SHALL NOT 문단 안의 부연이다).
+
+### F1~F8 최종 처리 현황
+
+| 발견 | 처리 | 근거 |
+|---|---|---|
+| F1 | **완료** | 선행 change a081이 결합을 제거하고 land·배포됨 (`30d8bb93`) |
+| F2 | **완료** | 8.6 — 단정을 값 비교로, 변이 M-F2 RED 실측 |
+| F3 | 완료 | 두 번째 MODIFIED 추가 (`15d25f80`) |
+| F4 | 완료 | 떨어진 scenario 2건 복원 (`15d25f80`) |
+| F5 | 완료 | logic-map에서 철회된 스크립트 설계 서술 제거 (`15d25f80`) |
+| F6 | **완료** | 8.7 — 두 파일 머리말 주석 |
+| F7 | **완료** | 8.8 — clock advance를 하중 받게 + 카운터 자체 검사 |
+| F8 | 완료 | STORY 승인 기준 교체 (`15d25f80`) |
+
+### 증거 재기준화
+
+`base-commit.txt`를 `840b3377` → `30d8bb93`으로 재고정했다. logic-map target은
+넷에서 **다섯**으로 늘었다 — F2 수정이
+`status_strip_test.go:TestTheReloadCellAndTheMetaTagAreOneFact`를 수정된 기존
+함수로 만들었다. `check_analysis.py` `evidence complete`.

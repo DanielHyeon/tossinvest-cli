@@ -23,10 +23,14 @@ package console
 // explicit and it is enforced by holdingsCache rather than described:
 //
 //	lazy        a refresh happens because a page was requested — by the operator,
-//	            or by the positions screen re-opening itself at the TTL (change
-//	            refresh-positions-screen). There is no server-side poller: an open
-//	            positions tab costs at most one call per TTL, a closed one costs
-//	            nothing, and a verification in progress suspends even that.
+//	            or by the positions screen re-opening itself (change a080; that was
+//	            the TTL under refresh-positions-screen and is now the engine's
+//	            observation cadence, which is shorter). There is no server-side
+//	            poller, and the reload period is not what bounds the rate: get
+//	            refreshes only once its last attempt is a TTL old, so an open
+//	            positions tab costs at most one call per TTL whatever its redraw
+//	            period, a closed one costs nothing, and a verification in progress
+//	            suspends even that.
 //	one call    a refresh is exactly one GET /api/v1/holdings. The current price
 //	            comes from that response's lastPrice; a per-symbol quote fan-out
 //	            would turn one call into one-per-holding for a number the first

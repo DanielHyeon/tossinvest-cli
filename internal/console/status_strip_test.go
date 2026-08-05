@@ -41,8 +41,12 @@ var consoleScreens = []struct {
 	reload int
 }{
 	{pathVerifyConsole, 0},
-	{"/dashboard", int(holdingsTTL / time.Second)},
-	{"/positions", int(holdingsTTL / time.Second)},
+	// The two protection-line screens reload on the engine's observation cadence
+	// and not on the holdings TTL (change a080). The periods are separate constants
+	// now because they answer separate questions — how often the broker may be
+	// asked, and how late an operator may learn that a baseline moved.
+	{"/dashboard", lineRefreshSeconds()},
+	{"/positions", lineRefreshSeconds()},
 	{"/orders", int(ordersTTL / time.Second)},
 	{"/signals", int(candidate.DefaultWatchInterval / time.Second)},
 	{"/history", 0},
@@ -200,9 +204,17 @@ func TestTheReloadCellAndTheMetaTagAreOneFact(t *testing.T) {
 		if !on && !strings.Contains(cell, "걸려 있지 않음") {
 			t.Errorf("%s: a screen with no reload does not say so: %s", screen.path, cell)
 		}
-		if on && !strings.Contains(cell, strconv.Itoa(screen.reload)+"초마다") {
-			t.Errorf("%s: the strip does not name the period the meta tag uses: %s",
-				screen.path, cell)
+		if on {
+			// Read the number out rather than asking whether the cell contains
+			// "<n>초마다". Containment is blind by suffix: once a080 made the line
+			// screens say 5초마다, a cell reading 15초마다 satisfied Contains for
+			// screen.reload == 5, and a mutation pinning the template to the
+			// signals period passed. Two of the five reloading screens differ only
+			// in that leading digit.
+			if got := reloadPeriodIn(t, screen.path, cell); got != screen.reload {
+				t.Errorf("%s: the strip says %ds and the meta tag uses %ds: %s",
+					screen.path, got, screen.reload, cell)
+			}
 		}
 	}
 }

@@ -1151,17 +1151,21 @@ type overviewPage struct {
 	Snap overviewView
 }
 
-// RefreshSeconds is the reload period: the holdings cache TTL, derived from the
-// constant rather than written again (positionsPage's precedent). Here every
-// reload costs zero broker calls, so the TTL is a freshness bound rather than a
-// budget one — but a second period to keep in step with the first is worth
-// avoiding either way.
+// RefreshSeconds is the reload period: the engine's observation cadence, shared
+// with positionsPage (change a080, line_cadence.go).
+//
+// This used to be the holdings TTL, on the reasoning that a second period to keep
+// in step with the first was worth avoiding. Here every reload costs zero broker
+// calls — the cache is read with peek — so the TTL was never a budget bound on
+// this screen at all, which left the derivation resting on nothing but symmetry.
+// a080 supplies the reason to have the second constant: the line should be redrawn
+// on the cadence that moves it, and that is not the cache's TTL on either screen.
 //
 // Refresh itself is now a field on the embedded chrome, set by the handler. It
 // used to be a method returning true, which read as a property of the type; a
 // screen cannot have both without one silently shadowing the other, and one
 // mechanism for "does this reload" is the point of the shared shell.
-func (overviewPage) RefreshSeconds() int { return int(holdingsTTL / time.Second) }
+func (overviewPage) RefreshSeconds() int { return lineRefreshSeconds() }
 
 // registerOverview puts the overview screen on the mux.
 //
