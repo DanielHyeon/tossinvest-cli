@@ -90,6 +90,12 @@ func (c *Client) Holdings(ctx context.Context, symbol string) ([]domain.Position
 // It is additive: nothing existing changes, and this reads the same endpoint.
 type RawHolding struct {
 	Symbol string
+	// Name is the broker's own display name for the instrument ("한화오션"). It is
+	// display evidence, never comparison evidence: nothing keys, matches or
+	// computes on it. The payload has carried it all along and only the float path
+	// (adaptHoldings) was reading it, which is why the engine's alerts could name a
+	// holding only by its code (a085).
+	Name string
 	// MarketCountry is the broker's own "KR"/"US".
 	MarketCountry string
 	Currency      string
@@ -121,6 +127,7 @@ func (c *Client) HoldingsRaw(ctx context.Context, symbol string) ([]RawHolding, 
 	for _, item := range raw.Items {
 		out = append(out, RawHolding{
 			Symbol:               item.Symbol,
+			Name:                 item.Name,
 			MarketCountry:        item.MarketCountry,
 			Currency:             item.Currency,
 			Quantity:             item.Quantity,

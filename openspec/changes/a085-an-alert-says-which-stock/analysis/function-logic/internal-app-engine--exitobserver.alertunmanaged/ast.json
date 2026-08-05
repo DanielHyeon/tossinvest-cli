@@ -1,0 +1,72 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1",
+  "package": "engine",
+  "function": "alertUnmanaged",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.alertUnmanaged(params=2, results=0)",
+  "start": {
+    "line": 1406,
+    "column": 1
+  },
+  "end": {
+    "line": 1423,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1407,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1408,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1411,
+        "column": 2
+      },
+      "text": "o.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1413,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1414,
+        "column": 10
+      },
+      "text": "o.label"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 1410,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

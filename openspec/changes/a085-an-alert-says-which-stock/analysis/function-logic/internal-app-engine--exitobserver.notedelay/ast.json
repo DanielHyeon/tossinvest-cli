@@ -1,0 +1,180 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1",
+  "package": "engine",
+  "function": "noteDelay",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.noteDelay(params=3, results=0)",
+  "start": {
+    "line": 1480,
+    "column": 1
+  },
+  "end": {
+    "line": 1504,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1483,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1487,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1485,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1488,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1481,
+        "column": 9
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1487,
+        "column": 5
+      },
+      "text": "now.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1487,
+        "column": 22
+      },
+      "text": "o.delayBound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1491,
+        "column": 2
+      },
+      "text": "o.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1493,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1494,
+        "column": 10
+      },
+      "text": "o.label"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1495,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1496,
+        "column": 46
+      },
+      "text": "Round"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1496,
+        "column": 46
+      },
+      "text": "now.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1500,
+        "column": 21
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1500,
+        "column": 25
+      },
+      "text": "Seconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1500,
+        "column": 25
+      },
+      "text": "now.Sub"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1481,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1482,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1484,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1490,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

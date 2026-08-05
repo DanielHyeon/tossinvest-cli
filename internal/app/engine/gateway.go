@@ -105,6 +105,9 @@ type engineWiring struct {
 	converge *reconcile.Converger
 	// ingest folds external holdings in and alerts on them.
 	ingest *reconcile.Ingestor
+	// names is the one instrument-name registry every alert surface shares, so a
+	// holding is called the same thing wherever it is reported (a085).
+	names *InstrumentNames
 	// floor is the exit loop's RECONCILE cap source.
 	floor *reconcileFloor
 }
@@ -282,7 +285,8 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 	// (Ingestor), and a quantity the account disagrees with is converged to the
 	// account's own number (Converger). Both write, which is what makes the
 	// ADJUSTMENT_APPLIED release reachable at all (issues.md, task 6.3).
-	alerter := notifierAlerter{notifier: notifier}
+	names := &InstrumentNames{}
+	alerter := notifierAlerter{notifier: notifier, names: names}
 	ingest := &reconcile.Ingestor{
 		Journal: in.journal, Alert: alerter, AccountRef: in.accountRef,
 	}
@@ -299,6 +303,7 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 		notifier:  notifier,
 		ingest:    ingest,
 		converge:  converge,
+		names:     names,
 		floor: &reconcileFloor{
 			official: in.official, tracker: tracker, journal: in.journal,
 			retrier: retrier, clk: in.clock, account: in.accountRef,

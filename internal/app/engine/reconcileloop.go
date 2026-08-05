@@ -137,6 +137,11 @@ type ReconcileDriverOptions struct {
 	// Alerts receives the operator alerts. Optional only so the loop can be unit
 	// tested; an engine without one reconciles silently.
 	Alerts ExitAlerter
+	// Names learns each stock's display name from the holdings this loop already
+	// collects, so the alert surfaces can call a holding what its owner calls it
+	// without spending a request on it (a085). Optional; nil means alerts keep
+	// using bare codes.
+	Names *InstrumentNames
 	// Log receives the structured lines. Optional.
 	Log *obs.Logger
 
@@ -344,6 +349,7 @@ func (c *Context) ReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver
 	opts.Tracker = c.Reconcile
 	opts.Ingest = c.Ingest
 	opts.Converge = c.Converge
+	opts.Names = c.Names
 	opts.Retrier = c.Retrier
 	opts.AccountRef = c.AccountRef
 	opts.Adoption = c.Config.Engine.Adoption
@@ -396,6 +402,15 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 		return cycle
 	}
 	cycle.Stable = true
+
+	// The stable snapshot is the one read that already knows what these holdings
+	// are called. Learning here rather than at the alert sites keeps the cost at
+	// zero requests and keeps every alert consistent with every other.
+	if d.opts.Names != nil {
+		for _, holding := range snapshot.Holdings {
+			d.opts.Names.Learn(holding.Symbol, holding.Name)
+		}
+	}
 
 	local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef)
 	if err != nil {
@@ -507,6 +522,10 @@ func (d *ReconcileDriver) logCycle(cycle ReconcileCycle) {
 		"adopted", cycle.Adopted,
 		"deferred", cycle.Deferred)
 }
+
+// label names a stock for a person: 이름(코드), or the bare code when the broker's
+// name has not been seen. The structured Fields keep the raw symbol (a085).
+func (d *ReconcileDriver) label(symbol string) string { return d.opts.Names.Label(symbol) }
 
 func (d *ReconcileDriver) alert(ctx context.Context, e obs.Event) {
 	if d.opts.Alerts == nil {

@@ -114,6 +114,7 @@ type driverHarness struct {
 	prices   *fakePrices
 	alerts   *fakeAlerts
 	tracker  *reconcile.Tracker
+	names    *engine.InstrumentNames
 	driver   *engine.ReconcileDriver
 }
 
@@ -137,6 +138,7 @@ func newDriverHarness(t *testing.T, mutate func(*engine.ReconcileDriverOptions))
 
 	gate := execgw.NewEntryGate(clk, nil)
 	tracker := &reconcile.Tracker{Clock: clk, Gate: gate, Journal: j, AccountRef: reconcileAccount}
+	names := &engine.InstrumentNames{}
 
 	h := &driverHarness{
 		t: t, journal: j, clk: clk,
@@ -146,6 +148,7 @@ func newDriverHarness(t *testing.T, mutate func(*engine.ReconcileDriverOptions))
 		prices:   &fakePrices{last: map[string]float64{}},
 		alerts:   &fakeAlerts{},
 		tracker:  tracker,
+		names:    names,
 	}
 
 	opts := engine.ReconcileDriverOptions{
@@ -163,6 +166,7 @@ func newDriverHarness(t *testing.T, mutate func(*engine.ReconcileDriverOptions))
 		},
 		Prices:        h.prices,
 		Alerts:        h.alerts,
+		Names:         names,
 		AccountRef:    reconcileAccount,
 		Clock:         clk,
 		DefaultMarket: "kr",
@@ -819,7 +823,10 @@ func TestAnExternalIncreaseAfterAdoptionIsReported(t *testing.T) {
 	}
 	found := false
 	for _, e := range h.alerts.events {
-		if e.Type == obs.EventExitPositionUnmanaged && strings.Contains(e.Title, "grew") {
+		// Keyed on the event identity rather than on words in the title: the title
+		// is operator prose and was translated in a085, and a test that pins prose
+		// fails on a change that alters nothing it is about.
+		if e.Type == obs.EventExitPositionUnmanaged && strings.Contains(e.Key, "|grown|") {
 			found = true
 			if e.Fields["adopted_quantity"] != "10" {
 				t.Errorf("the alert must name the quantity the adoption froze: %+v", e.Fields)

@@ -57,7 +57,9 @@ type PositionsReader interface {
 
 // RawHolding is one holding with the broker's own decimal strings preserved.
 type RawHolding struct {
-	Symbol   string
+	Symbol string
+	// Name is the broker's display name, carried for the operator surfaces only.
+	Name     string
 	Market   string
 	Quantity string
 	// AveragePrice is the broker's cost basis exactly as it arrived. Empty means
@@ -114,6 +116,16 @@ type Holding struct {
 	Quantity     string
 	AveragePrice string
 	Market       string
+	// Name is the broker's display name for the instrument, when the holdings read
+	// supplied one.
+	//
+	// Display evidence, on the same footing as CostBasisRaw below: the comparison
+	// reads Symbol, Quantity and Market and nothing else, so two holdings that
+	// differ only by Name are the same holding to Compare. It rides here rather
+	// than in a parallel structure because it arrives in the same response, and a
+	// second shape carrying the same read is a second shape that can disagree with
+	// the first (a085).
+	Name string
 	// CostBasisRaw is the broker's cost basis exactly as it arrived, when the
 	// holdings reader could supply one (RawPositionsReader). It is empty
 	// otherwise, and empty is honest: "no raw string was preserved" rather than
@@ -289,6 +301,7 @@ func (c *Collector) holdings(ctx context.Context) ([]Holding, error) {
 				AveragePrice: canonicalDecimal(h.AveragePrice),
 				Market:       strings.ToLower(strings.TrimSpace(h.Market)),
 				CostBasisRaw: strings.TrimSpace(h.AveragePrice),
+				Name:         strings.TrimSpace(h.Name),
 			})
 		}
 		return out, nil
@@ -305,6 +318,7 @@ func (c *Collector) holdings(ctx context.Context) ([]Holding, error) {
 			Quantity:     decimalString(p.Quantity),
 			AveragePrice: decimalString(p.AveragePrice),
 			Market:       strings.ToLower(strings.TrimSpace(p.MarketType)),
+			Name:         strings.TrimSpace(p.Name),
 		})
 	}
 	return out, nil

@@ -1,0 +1,132 @@
+{
+  "file": "internal/official/asset_reads.go",
+  "source_sha256": "49c29fc31a7db6621f263102105aa222157e71a08fcc0189cfa2ea4c0d0363c8",
+  "package": "official",
+  "function": "HoldingsRaw",
+  "receiver": "Client",
+  "signature": "Client.HoldingsRaw(params=2, results=2)",
+  "start": {
+    "line": 117,
+    "column": 1
+  },
+  "end": {
+    "line": 139,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 124,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 3
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 12
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 31
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

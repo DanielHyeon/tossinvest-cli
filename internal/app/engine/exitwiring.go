@@ -87,7 +87,13 @@ func newNotifier(j *journal.Journal, gate *execgw.EntryGate, accountRef string,
 // where those are chosen. Normal, not critical: a person trading their own
 // account by hand is not a malfunction, and a critical grade would make an
 // undelivered alert about it block entries (issues.md, task 6.3).
-type notifierAlerter struct{ notifier *obs.Notifier }
+type notifierAlerter struct {
+	notifier *obs.Notifier
+	// names is how these alerts call a stock. It is the engine's one registry,
+	// filled by the reconciliation loop from the holdings it already reads (a085);
+	// nil renders bare codes, which is what these alerts said before a085.
+	names *InstrumentNames
+}
 
 func (a notifierAlerter) ExternalPositionFound(ctx context.Context,
 	alert reconcile.ExternalPositionAlert) error {
@@ -98,9 +104,10 @@ func (a notifierAlerter) ExternalPositionFound(ctx context.Context,
 		Type: obs.EventExitPositionUnmanaged,
 		Key: string(obs.EventExitPositionUnmanaged) + "|" +
 			strings.TrimSpace(alert.PositionID),
-		Title: alert.Symbol + " was folded in from the account and will not be managed",
-		Body: "the account holds it and no local instance explains it, so it was recorded with no " +
-			"entry decision: there is no stop to build a baseline from and the exit policy leaves it alone",
+		Title: a.names.Label(alert.Symbol) + " 계좌에서 편입됐지만 관리 대상은 아니다",
+		Body: "계좌가 보유 중인데 이를 설명하는 로컬 인스턴스가 없어 진입 결정 없이 기록했다. " +
+			"기준선을 만들 손절이 없으므로 exit 정책은 이 포지션을 건드리지 않는다 — " +
+			"손절·익절이 자동으로 걸려 있지 않다.",
 		Fields: map[string]any{
 			obs.FieldAccount:  alert.AccountRef,
 			obs.FieldSymbol:   alert.Symbol,
@@ -135,11 +142,10 @@ func (a notifierAlerter) ManagedPositionClosedExternally(ctx context.Context,
 		Type: obs.EventExitPositionClosedExternally,
 		Key: string(obs.EventExitPositionClosedExternally) + "|" +
 			strings.TrimSpace(alert.PositionID),
-		Title: alert.Symbol + " was closed outside the engine while the exit policy was managing it",
-		Body: "the account no longer holds it and no local fill explains that, so the exit state was " +
-			"completed with an ADJUSTMENT_CLOSED event. No trade outcome was frozen: the sell happened " +
-			"where the engine cannot see it, so there is no sell leg to price and recording one would " +
-			"report the position as a total loss",
+		Title: a.names.Label(alert.Symbol) + " 엔진 관리 중에 외부에서 청산됐다",
+		Body: "계좌에 더 이상 없고 이를 설명하는 로컬 체결도 없어 exit state를 ADJUSTMENT_CLOSED로 " +
+			"종료했다.\n손익은 확정하지 않았다 — 매도가 엔진이 볼 수 없는 곳에서 일어나 가격을 매길 " +
+			"매도 leg이 없고, 억지로 기록하면 이 포지션이 전액 손실로 보고된다.",
 		Fields: map[string]any{
 			obs.FieldAccount:  alert.AccountRef,
 			obs.FieldSymbol:   alert.Symbol,
@@ -329,6 +335,9 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	opts.Submit = c.Gateway
 	opts.AccountRef = c.AccountRef
 	opts.CommonPolicy = c.Config.Engine.ExitPolicy.CommonPolicy
+	if opts.Names == nil {
+		opts.Names = c.Names
+	}
 	if opts.Alerts == nil && c.Notifier != nil {
 		opts.Alerts = c.Notifier
 	}

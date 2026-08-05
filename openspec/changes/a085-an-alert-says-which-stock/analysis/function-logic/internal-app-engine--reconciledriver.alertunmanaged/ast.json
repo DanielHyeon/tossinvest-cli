@@ -1,0 +1,163 @@
+{
+  "file": "internal/app/engine/adoption.go",
+  "source_sha256": "f121aba90cd05c31de5eeb9acad14497db9150c61314039419cbd5d9e0734edd",
+  "package": "engine",
+  "function": "alertUnmanaged",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.alertUnmanaged(params=2, results=0)",
+  "start": {
+    "line": 392,
+    "column": 1
+  },
+  "end": {
+    "line": 432,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 405,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 409,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 412,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 394,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 7
+      },
+      "text": "d.opts.Adoption.Excludes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 7
+      },
+      "text": "d.opts.Adoption.Included"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 2
+      },
+      "text": "d.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 10
+      },
+      "text": "d.label"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 396,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 406,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 408,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 410,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 413,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,269 @@
+{
+  "file": "internal/app/engine/reconcileloop_test.go",
+  "source_sha256": "d53e58de88a1444c84d97750f68023fe8878894fc04eb5bc2026ade205132eae",
+  "package": "engine_test",
+  "function": "newDriverHarness",
+  "signature": "newDriverHarness(params=2, results=1)",
+  "start": {
+    "line": 121,
+    "column": 1
+  },
+  "end": {
+    "line": 186,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 185,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 12
+      },
+      "text": "journal.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 25
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 13
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 27
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 13
+      },
+      "text": "journal.FixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 25
+      },
+      "text": "j.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 12
+      },
+      "text": "j.SetApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 10
+      },
+      "text": "execgw.NewEntryGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 3
+      },
+      "text": "mutate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 17
+      },
+      "text": "engine.NewReconcileDriver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 133,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 141,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

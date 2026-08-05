@@ -71,11 +71,11 @@ func (o *ExitObserver) announceQuarantine(ctx context.Context, p journal.Positio
 	o.alert(ctx, obs.Event{
 		Type:  obs.EventExitSnapshotQuarantined,
 		Key:   string(obs.EventExitSnapshotQuarantined) + "|" + key,
-		Title: p.Symbol + " is no longer being judged: its exit snapshot generation was quarantined",
-		Body: "the stored protection state could not be resolved into one verified candidate, so this " +
-			"generation is refused outright — the position is not evaluated at all, its stop included, " +
-			"until an operator lifts the quarantine. The stored baseline is preserved and lifting it " +
-			"does not change any of it: " + q.Reason + ": " + q.Evidence,
+		Title: o.label(p.Symbol) + " 판정 격리 — 이제 손절도 평가되지 않는다",
+		Body: "저장된 보호 상태를 검증된 후보 하나로 좁힐 수 없어 이 세대를 통째로 거부한다. " +
+			"운영자가 격리를 해제할 때까지 이 포지션은 손절을 포함해 아무것도 평가되지 않는다.\n" +
+			"저장된 기준선은 그대로 보존되며 해제해도 바뀌지 않는다.\n" +
+			"사유: " + q.Reason + " · " + q.Evidence,
 		Fields: map[string]any{
 			obs.FieldSymbol:       p.Symbol,
 			"market":              p.Market,

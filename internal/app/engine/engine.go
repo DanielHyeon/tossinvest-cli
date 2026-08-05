@@ -207,6 +207,13 @@ type Context struct {
 	Ingest   *reconcile.Ingestor
 	Converge *reconcile.Converger
 
+	// Names is how a stock is called in an alert. The reconciliation loop fills it
+	// from the holdings snapshot it already takes, so naming a holding costs no
+	// broker request (a085). A nil registry answers with bare codes, which is what
+	// every alert said before a085 — an engine assembled without a reconciliation
+	// loop alerts exactly as it used to rather than not at all.
+	Names *InstrumentNames
+
 	// Automation reports what the startup interlock decided about the automation
 	// gate. Zero value = gate off.
 	Automation AutomationStatus
@@ -564,6 +571,7 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		Notifier:              wiring.notifier,
 		Ingest:                wiring.ingest,
 		Converge:              wiring.converge,
+		Names:                 wiring.names,
 		exitFloor:             wiring.floor,
 		Automation:            automation,
 		Guardian:              guardian,

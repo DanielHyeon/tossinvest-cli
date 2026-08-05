@@ -353,12 +353,11 @@ func (d *ReconcileDriver) adoptOne(ctx context.Context, c candidate, observed st
 	d.alert(ctx, obs.Event{
 		Type:  obs.EventExitPositionAdopted,
 		Key:   string(obs.EventExitPositionAdopted) + "|" + c.position.ID,
-		Title: c.position.Symbol + " was adopted into exit management",
-		Body: "the account holds it and no entry decision explains it, so the engine recorded an " +
-			"adoption: from now on the ratchet, the partial take-profit and the stop apply to it as " +
-			"they do to a position the engine opened. The baseline is measured from the price observed " +
-			"at adoption, not from what the shares originally cost — so a long-held winner is protected " +
-			"from here forward and its historical gain is not part of the R scale",
+		Title: d.label(c.position.Symbol) + " 엔진 관리로 편입됐다",
+		Body: "계좌가 보유 중인데 이를 설명하는 진입 결정이 없어 편입 기록을 남겼다. 지금부터 보호선 승격," +
+			"중간 익절, 손절이 엔진이 직접 연 포지션과 동일하게 적용된다.\n" +
+			"기준선은 매입 원가가 아니라 **편입 시점에 관측된 가격**으로 잡는다 — 오래 들고 있던 " +
+			"수익 종목은 지금부터 보호되고, 과거 수익은 R 척도에 포함되지 않는다.",
 		Fields: map[string]any{
 			obs.FieldAccount:  d.opts.AccountRef,
 			obs.FieldSymbol:   c.position.Symbol,
@@ -418,9 +417,9 @@ func (d *ReconcileDriver) alertUnmanaged(ctx context.Context, p journal.Position
 	d.alert(ctx, obs.Event{
 		Type:  obs.EventExitPositionUnmanaged,
 		Key:   string(obs.EventExitPositionUnmanaged) + "|" + p.ID,
-		Title: p.Symbol + " is held with no record justifying a stop, so the exit policy will not manage it",
-		Body: "the position carries neither an entry decision nor an adoption record, so there is no " +
-			"stop to build a baseline out of and no initial risk to measure R against — " + why,
+		Title: d.label(p.Symbol) + " 보유 중이지만 엔진이 관리하지 않는다",
+		Body: "이 포지션에는 진입 결정도 편입 기록도 없어 기준선을 만들 손절도, R을 잴 최초 위험도 없다. " +
+			"손절·익절이 자동으로 걸려 있지 않다.\n사유: " + why,
 		Fields: map[string]any{
 			obs.FieldAccount:   d.opts.AccountRef,
 			obs.FieldSymbol:    p.Symbol,
@@ -456,11 +455,10 @@ func (d *ReconcileDriver) checkExternalIncrease(ctx context.Context, p journal.P
 	d.alert(ctx, obs.Event{
 		Type:  obs.EventExitPositionUnmanaged,
 		Key:   string(obs.EventExitPositionUnmanaged) + "|grown|" + p.ID,
-		Title: p.Symbol + " grew after it was adopted, and the frozen t0 does not cover the increase",
-		Body: "the account now holds more of this symbol than the adoption recorded. The exit state's " +
-			"entry, initial risk and initial quantity stay frozen — recomputing them would rewrite the " +
-			"denominator every R already reported for this position was measured in — so the extra " +
-			"shares are protected by a stop sized for the original quantity",
+		Title: d.label(p.Symbol) + " 편입 후 수량이 늘었고 고정된 t0가 증가분을 덮지 않는다",
+		Body: "계좌의 이 종목 수량이 편입 기록보다 많다. exit state의 진입가·최초 위험·최초 수량은 " +
+			"고정된 채로 둔다 — 다시 계산하면 이 포지션에 대해 이미 보고된 모든 R의 분모가 바뀐다.\n" +
+			"따라서 늘어난 수량은 **원래 수량 기준으로 산정된 손절**의 보호를 받는다.",
 		Fields: map[string]any{
 			obs.FieldAccount:   d.opts.AccountRef,
 			obs.FieldSymbol:    p.Symbol,

@@ -72,6 +72,7 @@ func (a AccountSweep) PositionsRaw(ctx context.Context) ([]reconcile.RawHolding,
 	for _, h := range items {
 		out = append(out, reconcile.RawHolding{
 			Symbol:       h.Symbol,
+			Name:         h.Name,
 			Market:       h.MarketCountry,
 			Quantity:     h.Quantity,
 			AveragePrice: h.AveragePurchasePrice,

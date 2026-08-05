@@ -178,6 +178,9 @@ type ExitObserverOptions struct {
 	// Alerts receives the operator alerts. Optional only so the loop can be unit
 	// tested; an engine without one judges silently.
 	Alerts ExitAlerter
+	// Names is how an alert calls a stock. Filled by the reconciliation loop from
+	// the holdings snapshot it already takes (a085). Nil renders bare codes.
+	Names *InstrumentNames
 	// Log receives the structured lines. Optional.
 	Log *obs.Logger
 	// Costs is the shared cost model, for the real break-even the BREAKEVEN
@@ -756,10 +759,10 @@ func (o *ExitObserver) checkOutage(ctx context.Context, cycle *ExitCycle) {
 	o.alert(ctx, obs.Event{
 		Type:  obs.EventExitObservationOutage,
 		Key:   string(obs.EventExitObservationOutage) + "|" + o.opts.AccountRef,
-		Title: "exit observation has been down for " + o.clk.Now().Sub(since).String(),
-		Body: "no price has been observed for the held positions since " + since.UTC().Format(time.RFC3339) +
-			"; with no broker-resident stop an unobserved position is an unprotected one, so new entries " +
-			"are blocked until observation recovers and an operator relaxes the mode",
+		Title: "청산 관측이 " + o.clk.Now().Sub(since).Round(time.Second).String() + " 동안 끊겼다",
+		Body: since.UTC().Format(time.RFC3339) + " 이후 보유 종목의 가격이 한 번도 관측되지 않았다. " +
+			"브로커에 상주하는 손절이 없는 상태에서 관측되지 않는 포지션은 보호되지 않는 포지션이므로, " +
+			"관측이 복구되고 운영자가 모드를 완화할 때까지 신규 진입을 차단한다.",
 		Fields: map[string]any{
 			obs.FieldAccount: o.opts.AccountRef,
 			"outage_seconds": int(o.clk.Now().Sub(since).Seconds()),
@@ -1338,11 +1341,11 @@ func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity strin
 	o.alert(ctx, obs.Event{
 		Type:  obs.EventExitProposalCapped,
 		Key:   string(obs.EventExitProposalCapped) + "|" + m.position.ID,
-		Title: "the liquidation of " + m.position.Symbol + " was capped by the confirmed floor",
+		Title: o.label(m.position.Symbol) + " 청산이 확정 하한에 걸려 일부만 나갔다",
 		Body: fmt.Sprintf(
-			"%s of %s was proposed, the RECONCILE confirmed floor authorises %s (%s), and %s stays "+
-				"unsold; the same level is re-proposed once the disagreement is resolved",
-			quantity, m.position.Symbol, floor.Quantity, floor.Bound, remainder),
+			"%s 제안 · RECONCILE 확정 하한이 허용하는 수량 %s (%s) · 잔여 %s는 매도되지 않는다. "+
+				"불일치가 해소되면 같은 단계를 다시 제안한다.",
+			quantity, floor.Quantity, floor.Bound, remainder),
 		Fields: map[string]any{
 			obs.FieldSymbol:   m.position.Symbol,
 			obs.FieldQuantity: floor.Quantity,
@@ -1408,9 +1411,9 @@ func (o *ExitObserver) alertUnmanaged(ctx context.Context, p journal.Position) {
 	o.alert(ctx, obs.Event{
 		Type:  obs.EventExitPositionUnmanaged,
 		Key:   string(obs.EventExitPositionUnmanaged) + "|" + p.ID,
-		Title: p.Symbol + " is held with no entry decision, so the exit policy will not manage it",
-		Body: "the position carries no entry decision, so there is no stop to build a baseline out of and " +
-			"no initial risk to measure R against; it is reported and left alone",
+		Title: o.label(p.Symbol) + " 보유 중이지만 엔진이 관리하지 않는다",
+		Body: "이 포지션에는 진입 결정이 없어 기준선을 만들 손절도, R을 잴 최초 위험도 없다. " +
+			"보고만 하고 그대로 둔다 — 손절·익절이 자동으로 걸려 있지 않다.",
 		Fields: map[string]any{
 			obs.FieldSymbol:   p.Symbol,
 			obs.FieldQuantity: p.Quantity,
@@ -1434,9 +1437,9 @@ func (o *ExitObserver) alertRefused(ctx context.Context, m managed, cause error)
 	o.alert(ctx, obs.Event{
 		Type:  obs.EventExitJudgementRefused,
 		Key:   string(obs.EventExitJudgementRefused) + "|" + m.position.ID,
-		Title: "the exit policy could not judge " + m.position.Symbol,
-		Body: "the stored protection state or the observed price is not usable, so this position is not " +
-			"being judged at all: " + cause.Error(),
+		Title: o.label(m.position.Symbol) + " 판정 불가 — 손절도 평가되지 않는다",
+		Body: "저장된 보호 상태나 관측 가격을 쓸 수 없어 이 포지션은 지금 판정 대상이 아니다. " +
+			"손절을 포함해 아무것도 평가되지 않는다.\n원인: " + cause.Error(),
 		Fields: map[string]any{
 			obs.FieldSymbol: m.position.Symbol,
 			"position_id":   m.position.ID,
@@ -1447,14 +1450,20 @@ func (o *ExitObserver) alertRefused(ctx context.Context, m managed, cause error)
 
 func (o *ExitObserver) clearRefused(positionID string) { delete(o.refused, positionID) }
 
+// label names a stock for a person: 이름(코드), or the bare code when the broker's
+// name has not been seen. The structured Fields keep the raw symbol either way —
+// the ledger is queried by code and must not depend on what a display name was on
+// the day an alert was written (a085).
+func (o *ExitObserver) label(symbol string) string { return o.opts.Names.Label(symbol) }
+
 func (o *ExitObserver) alertProposalRefused(ctx context.Context, m managed,
 	proposal exitpolicy.Proposal, detail string) {
 	o.alert(ctx, obs.Event{
 		Type: obs.EventExitProposalRefused,
 		Key: string(obs.EventExitProposalRefused) + "|" + m.position.ID + "|" +
 			string(proposal.Action) + "|" + proposal.Level,
-		Title: "the exit proposal for " + m.position.Symbol + " was not submitted",
-		Body: fmt.Sprintf("%s at level %s was refused before it reached the broker: %s",
+		Title: o.label(m.position.Symbol) + " 청산 주문이 제출되지 않았다",
+		Body: fmt.Sprintf("%s (단계 %s)가 브로커에 닿기 전에 거부됐다.\n원인: %s",
 			proposal.Action, proposal.Level, detail),
 		Fields: map[string]any{
 			obs.FieldSymbol: m.position.Symbol,
@@ -1482,9 +1491,9 @@ func (o *ExitObserver) noteDelay(ctx context.Context, m managed, why string) {
 	o.alert(ctx, obs.Event{
 		Type:  obs.EventExitLiquidationDelayed,
 		Key:   string(obs.EventExitLiquidationDelayed) + "|" + m.position.ID,
-		Title: "the liquidation of " + m.position.Symbol + " has been delayed past its bound",
-		Body: fmt.Sprintf("%s, and it has been %s: until a broker-resident stop exists this delay is "+
-			"unprotected exposure", why, now.Sub(since).Round(time.Second)),
+		Title: o.label(m.position.Symbol) + " 청산이 허용 지연을 넘겼다",
+		Body: fmt.Sprintf("%s · 경과 %s. 브로커에 상주하는 손절이 생기기 전까지 이 지연은 "+
+			"보호되지 않는 노출이다.", why, now.Sub(since).Round(time.Second)),
 		Fields: map[string]any{
 			obs.FieldSymbol: m.position.Symbol,
 			"position_id":   m.position.ID,

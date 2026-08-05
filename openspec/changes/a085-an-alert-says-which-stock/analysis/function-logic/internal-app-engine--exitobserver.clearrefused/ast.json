@@ -1,0 +1,32 @@
+{
+ "file": "internal/app/engine/exitloop.go",
+ "source_sha256": "3cf97f20c5eafa4b8f4d57bdbc1bc9d9f639c1f425590e4f212b238e7d0d5c8c",
+ "package": "engine",
+ "function": "clearRefused",
+ "receiver": "ExitObserver",
+ "signature": "ExitObserver.clearRefused(params=1, results=0)",
+ "start": {
+  "line": 1448,
+  "column": 1
+ },
+ "end": {
+  "line": 1448,
+  "column": 89
+ },
+ "branches": null,
+ "returns": null,
+ "calls": [
+  {
+   "kind": "call",
+   "at": {
+    "line": 1448,
+    "column": 58
+   },
+   "text": "delete"
+  }
+ ],
+ "assignments": null,
+ "go_statements": null,
+ "defers": null,
+ "revision": "base"
+}

@@ -1,0 +1,327 @@
+{
+  "file": "internal/reconcile/snapshot.go",
+  "source_sha256": "9d93f80e6d9cb7d5d8d3819ac3aef812474ae94c04a3ffb1f4f2c168b828b674",
+  "package": "reconcile",
+  "function": "holdings",
+  "receiver": "Collector",
+  "signature": "Collector.holdings(params=1, results=2)",
+  "start": {
+    "line": 290,
+    "column": 1
+  },
+  "end": {
+    "line": 325,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 293,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 297,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 315,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 312,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 17
+      },
+      "text": "raw.PositionsRaw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 29
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 10
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 19
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 35
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 19
+      },
+      "text": "canonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 19
+      },
+      "text": "canonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 19
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 35
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 303,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 20
+      },
+      "text": "c.Positions.Positions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 28
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 9
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
+        "column": 18
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
+        "column": 34
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 18
+      },
+      "text": "decimalString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 18
+      },
+      "text": "decimalString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 18
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 34
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 18
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 296,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 298,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 316,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

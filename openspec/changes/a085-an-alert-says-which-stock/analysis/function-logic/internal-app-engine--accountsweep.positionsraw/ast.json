@@ -1,0 +1,109 @@
+{
+  "file": "internal/app/engine/runtime_wiring.go",
+  "source_sha256": "00fa95a977db79efd6da9885cffc94e7d8291e1e025325bf2a026ccc7190ccb8",
+  "package": "engine",
+  "function": "PositionsRaw",
+  "receiver": "AccountSweep",
+  "signature": "AccountSweep.PositionsRaw(params=1, results=2)",
+  "start": {
+    "line": 66,
+    "column": 1
+  },
+  "end": {
+    "line": 82,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 16
+      },
+      "text": "a.reads.HoldingsRaw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 41
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 9
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 73,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

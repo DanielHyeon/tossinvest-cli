@@ -1,0 +1,281 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1",
+  "package": "engine",
+  "function": "checkOutage",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.checkOutage(params=2, results=0)",
+  "start": {
+    "line": 746,
+    "column": 1
+  },
+  "end": {
+    "line": 783,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 748,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 751,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 754,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 772,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 777,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 752,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 755,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 773,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 780,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 5
+      },
+      "text": "since.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 751,
+        "column": 5
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 751,
+        "column": 5
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 751,
+        "column": 30
+      },
+      "text": "o.outageAfter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 759,
+        "column": 2
+      },
+      "text": "o.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 761,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 32
+      },
+      "text": "String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 32
+      },
+      "text": "Round"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 32
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 762,
+        "column": 32
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 763,
+        "column": 9
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 763,
+        "column": 9
+      },
+      "text": "since.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 22
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 26
+      },
+      "text": "Seconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 26
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 26
+      },
+      "text": "o.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 775,
+        "column": 21
+      },
+      "text": "o.opts.Escalate.EscalateOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 778,
+        "column": 3
+      },
+      "text": "o.logErr"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 747,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 749,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 757,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 775,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 782,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

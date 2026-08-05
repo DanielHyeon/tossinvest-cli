@@ -2,7 +2,7 @@
 
 - **Feature**: `FEAT-TOS-004` — Operator console controls and visibility
 - **Story**: `STORY-TOS-a085`
-- **Spec**: `engine-safety`, `operator-console`
+- **Spec**: `engine-safety` (콘솔 절반은 a086으로 분리 — 아래 참조)
 - **위험 등급**: **Normal** (알림 문구와 화면 표시. 주문·손절·사이징·원장 판정 경로를 건드리지 않는다.)
 
 ## Why
@@ -81,7 +81,7 @@ high water 148.55, next target 148.7298가 그대로 있다. 버리는 것은 �
 - 로그의 구조화 필드(`symbol`, `position_id` 등)는 영문 키·원문 값 그대로 둔다.
   기계가 읽는 것과 사람이 읽는 것은 다른 표면이다.
 
-### 2. 격리된 포지션이 무엇을 붙들고 있는지 보여준다
+### 2. 격리된 포지션 표시 — **a086으로 분리한다**
 
 - `operatorview.BuildExitLine`이 `snapshot_quarantined`일 때, 저장된 값을 **유지 중**
   이라고 명시해 보여준다. 관리 화면이 "유지 보호선"으로 이미 하는 것과 같은 말을
@@ -109,3 +109,29 @@ high water 148.55, next target 148.7298가 그대로 있다. 버리는 것은 �
 - 종목명을 위한 별도 메타데이터 API 호출. holdings 응답으로 충분하고, 보유하지 않은
   종목의 이름은 알림에 필요하지 않다.
 - 격리 외 stale 사유의 표시 규칙 변경.
+
+## 분리 결정 (2026-08-05)
+
+**콘솔 절반은 이 change에서 빠지고 a086이 된다.** 구현해 보니 a077이 세운 승인된
+요구사항과 정면으로 충돌한다.
+
+```
+a077 TestAQuarantinedPositionIsNotDrawnAsProtected
+  "Take the age bound away without this and the screen starts asserting
+   protection for a position the engine refuses to judge at all."
+```
+
+a077은 **격리된 행에 보호선을 그리지 않는 것**을 안전 요구사항으로 만들었고, a085의
+제안은 그것을 뒤집는다. `Frozen` 표시와 "판정 대상이 아니다" 경고를 함께 두면 안전하다는
+것이 a085의 논거지만, 그 판단은 **승인된 requirement의 수정**이고 WORKFLOW는 그것에
+별도 리뷰 게이트를 요구한다.
+
+> **requirement 변경** | 이후 spec의 Requirement 수준 수정 | 수정분에 대한 gstack 리뷰 재실행
+
+ADDED로 새 요구사항을 쓰면 validator는 통과하지만 두 요구사항이 서로를 부정한다.
+정직한 형태는 `operator-console`의 a077 요구사항을 MODIFIED로 고치고 그 수정분에 대한
+리뷰를 다시 받는 것이며, 그것이 a086이다.
+
+**a083·a084가 이 문제의 대부분을 이미 해결한다.** 격리가 재판정되어 풀리면 exit line은
+`fresh`가 되고 다섯 칸이 정상적으로 채워진다. a086이 다루는 것은 **격리가 정당하게
+유지되는 동안** 무엇을 보여줄 것인가라는 좁은 문제다.

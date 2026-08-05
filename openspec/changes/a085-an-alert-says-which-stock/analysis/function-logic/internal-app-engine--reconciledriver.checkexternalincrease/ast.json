@@ -1,0 +1,132 @@
+{
+  "file": "internal/app/engine/adoption.go",
+  "source_sha256": "f121aba90cd05c31de5eeb9acad14497db9150c61314039419cbd5d9e0734edd",
+  "package": "engine",
+  "function": "checkExternalIncrease",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.checkExternalIncrease(params=2, results=0)",
+  "start": {
+    "line": 441,
+    "column": 1
+  },
+  "end": {
+    "line": 472,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 442,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 446,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 450,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 443,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 447,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 451,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 19
+      },
+      "text": "d.opts.Journal.AdoptionOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 14
+      },
+      "text": "riskcalc.CompareDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 2
+      },
+      "text": "d.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 10
+      },
+      "text": "d.label"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 449,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 453,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

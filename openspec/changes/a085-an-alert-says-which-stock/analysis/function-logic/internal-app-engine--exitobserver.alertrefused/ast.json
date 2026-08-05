@@ -1,0 +1,110 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "b8788903ccb57d2f90722fe492290688f00531b34041a980a1c3f9033317b2b1",
+  "package": "engine",
+  "function": "alertRefused",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.alertRefused(params=3, results=0)",
+  "start": {
+    "line": 1427,
+    "column": 1
+  },
+  "end": {
+    "line": 1449,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1428,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1434,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1429,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1434,
+        "column": 5
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1437,
+        "column": 2
+      },
+      "text": "o.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1439,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1440,
+        "column": 10
+      },
+      "text": "o.label"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1442,
+        "column": 75
+      },
+      "text": "cause.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 1431,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1432,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1435,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
