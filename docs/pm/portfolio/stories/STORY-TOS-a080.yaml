@@ -1,0 +1,19 @@
+{
+  "id": "STORY-TOS-a080",
+  "title": "Refresh the protection line on the engine's cadence instead of the broker cache TTL",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a080-line-refreshes-on-engine-cadence",
+    "path": "openspec/changes/a080-line-refreshes-on-engine-cadence"
+  },
+  "acceptance": [
+    "The interval at which the protection line is redrawn is no longer derived from the holdings cache TTL, and the two constants can move independently",
+    "Holding a screen open for one cache TTL makes no more official holdings calls than it does today, however short the redraw interval is",
+    "The screen that contracts not to call the broker still makes zero broker calls when its protection line refreshes",
+    "A watermark, baseline or pending proposal that the engine moved becomes visible without waiting for the broker cache TTL",
+    "Both screens still ship no client-side script and their response CSP still declares no script-src",
+    "A redraw does not close an open disclosure, because that state lives in the URL rather than in a native fold",
+    "Redrawing more often does not increase what the console costs the engine process, because the engine reads behind these screens are bounded by their own cache"
+  ]
+}
