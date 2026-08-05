@@ -77,7 +77,7 @@
       토큰이 아닌 만료로 키잉(N6), 소비자 둘의 감싼 sentinel 미검증(P1-6 E1·E2).
       네 변이 전부 RED 확인.
 - [x] 6.5 `make test`, `make vet`, `make validate`, `make sdd-sync`, `make sdd-check`.
-- [ ] 6.6 `make gate CHANGE=a082-one-token-across-the-processes`.
+- [x] 6.6 `make gate CHANGE=a082-one-token-across-the-processes`.
 - [ ] 6.7 사람 승인 후 배포 → 컨테이너 실측: `openapi-token.json`의 mtime이
       관측 창 안에 **0회** 바뀌는지 (지금 1분 7회). 그리고 `reconcile.mismatch`가
       더 나오는지.
