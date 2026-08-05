@@ -346,8 +346,9 @@ func TestRestoreProjectsStatesThisTrackerDidNotEnter(t *testing.T) {
 	if len(blocks) != 1 || blocks[0].Cause != journal.ReconcileCauseIdentifierConflict {
 		t.Fatalf("tracker projection = %+v, want the exact identifier-conflict state", blocks)
 	}
-	tracker.AdjustmentApplied("AAPL")
-	if _, err := tracker.Observe(ctx, reconcile.Diff{AccountRef: "acct-7", Matched: 1}); err != nil {
+	tracker.AdjustmentApplied(asOfAt(clk), "AAPL")
+	clk.Advance(31 * time.Second)
+	if _, err := tracker.Observe(ctx, cleanDiffAt(clk)); err != nil {
 		t.Fatalf("Observe: %v", err)
 	}
 	if blocks = tracker.Blocks(); len(blocks) != 1 || blocks[0].Cause != journal.ReconcileCauseIdentifierConflict {
@@ -449,9 +450,10 @@ func TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails(t *testing.T) {
 				ReconcileStore: j, released: tc.released, releaseErr: tc.releaseErr,
 			}
 			tracker.Journal = store
-			tracker.AdjustmentApplied("AAPL")
+			tracker.AdjustmentApplied(asOfAt(clk), "AAPL")
+			clk.Advance(31 * time.Second)
 
-			out, err := tracker.Observe(ctx, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+			out, err := tracker.Observe(ctx, cleanDiffAt(clk))
 			if err == nil {
 				t.Fatal("Observe must report an uncommitted durable release")
 			}
@@ -490,9 +492,10 @@ func TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder(t *tes
 	}
 	store := &sequencedReleaseStore{ReconcileStore: j, failAt: 2}
 	tracker.Journal = store
-	tracker.AdjustmentApplied("AAPL", "MSFT")
+	tracker.AdjustmentApplied(asOfAt(clk), "AAPL", "MSFT")
+	clk.Advance(31 * time.Second)
 
-	out, err := tracker.Observe(ctx, reconcile.Diff{AccountRef: "acct-7", Matched: 2})
+	out, err := tracker.Observe(ctx, reconcile.Diff{AsOf: asOfAt(clk), AccountRef: "acct-7", Matched: 2})
 	if err == nil {
 		t.Fatal("Observe must report the second durable release failure")
 	}
@@ -514,7 +517,8 @@ func TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder(t *tes
 	}
 
 	store.failAt = 0
-	out, err = tracker.Observe(ctx, reconcile.Diff{AccountRef: "acct-7", Matched: 2})
+	clk.Advance(31 * time.Second)
+	out, err = tracker.Observe(ctx, reconcile.Diff{AsOf: asOfAt(clk), AccountRef: "acct-7", Matched: 2})
 	if err != nil {
 		t.Fatalf("retry Observe: %v", err)
 	}
@@ -749,9 +753,9 @@ func TestWriteThroughRecordsTheStateWithItsEvidence(t *testing.T) {
 	// An adjustment and the re-read after it do close it, and the journal says
 	// which of the two was the cause. This assertion used to be on the clean pass
 	// above, with cause RECHECK_MATCHED.
-	tracker.AdjustmentApplied("AAPL")
+	tracker.AdjustmentApplied(asOfAt(clk), "AAPL")
 	clk.Advance(31 * time.Second)
-	if _, err := tracker.Observe(ctx, reconcile.Diff{AccountRef: "acct-7", Matched: 1}); err != nil {
+	if _, err := tracker.Observe(ctx, cleanDiffAt(clk)); err != nil {
 		t.Fatalf("Observe: %v", err)
 	}
 	if active, err = j.ActiveReconcileStates(ctx); err != nil {

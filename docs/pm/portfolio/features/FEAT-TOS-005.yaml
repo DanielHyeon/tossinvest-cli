@@ -3,5 +3,11 @@
   "title": "Position adoption and common exit policy",
   "epic": "EPIC-TOS-003",
   "intent": "active",
-  "stories": ["STORY-TOS-025", "STORY-TOS-026", "STORY-TOS-038", "STORY-TOS-a062"]
+  "stories": [
+    "STORY-TOS-025",
+    "STORY-TOS-026",
+    "STORY-TOS-038",
+    "STORY-TOS-a062",
+    "STORY-TOS-a083"
+  ]
 }

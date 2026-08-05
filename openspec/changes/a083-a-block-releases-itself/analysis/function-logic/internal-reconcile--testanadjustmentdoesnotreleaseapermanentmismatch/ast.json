@@ -1,0 +1,234 @@
+{
+  "file": "internal/reconcile/mismatch_test.go",
+  "source_sha256": "1bc02d9cadb88dee721e0e67b1b9ea522b5fc3b01e331d79fc48d03dc55e8c5b",
+  "package": "reconcile_test",
+  "function": "TestAnAdjustmentDoesNotReleaseAPermanentMismatch",
+  "signature": "TestAnAdjustmentDoesNotReleaseAPermanentMismatch(params=1, results=0)",
+  "start": {
+    "line": 223,
+    "column": 1
+  },
+  "end": {
+    "line": 249,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 10
+      },
+      "text": "execgw.NewEntryGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 13
+      },
+      "text": "newTracker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 3
+      },
+      "text": "observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 23
+      },
+      "text": "mismatchDiffAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 3
+      },
+      "text": "clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 6
+      },
+      "text": "tracker.Permanent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 2
+      },
+      "text": "tracker.AdjustmentApplied"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 28
+      },
+      "text": "asOfAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 2
+      },
+      "text": "clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 2
+      },
+      "text": "observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 22
+      },
+      "text": "cleanDiffAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 6
+      },
+      "text": "tracker.Permanent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 14
+      },
+      "text": "gate.CheckEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 228,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 228,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

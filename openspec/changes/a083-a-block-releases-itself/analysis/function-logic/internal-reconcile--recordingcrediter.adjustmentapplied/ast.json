@@ -1,0 +1,69 @@
+{
+  "file": "internal/reconcile/converge_test.go",
+  "source_sha256": "ca763ad418c5a277dda72275cc8f35f5f545243d04ed1163c323f1a940591264",
+  "package": "reconcile_test",
+  "function": "AdjustmentApplied",
+  "receiver": "recordingCrediter",
+  "signature": "recordingCrediter.AdjustmentApplied(params=2, results=0)",
+  "start": {
+    "line": 26,
+    "column": 1
+  },
+  "end": {
+    "line": 29,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 34
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 41
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 18
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

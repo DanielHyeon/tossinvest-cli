@@ -86,3 +86,6 @@
 | `a080-line-refreshes-on-engine-cadence` | STORY-TOS-a080 | archived |
 | `a081-screens-share-one-engine-reading` | STORY-TOS-a081 | archived |
 | `a082-one-token-across-the-processes` | STORY-TOS-a082 | implemented |
+| `a083-a-block-releases-itself` | STORY-TOS-a083 | implemented |
+| `a084-a-quarantine-outlives-its-cause` | STORY-TOS-a084 | in_progress |
+| `a085-an-alert-says-which-stock` | STORY-TOS-a085 | in_progress |

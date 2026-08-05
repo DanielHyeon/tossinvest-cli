@@ -59,11 +59,34 @@ package reconcile
 //
 // So a release needs two things: something wrote an adjustment that converged
 // the projection to the account's value (AdjustmentApplied below, called by
-// whatever applied it), and the *next* comparison agreed. The credit is per
-// symbol and is spent by the observation that follows it, because the rule is
-// "the re-read after the adjustment" and not "any re-read from now on". The
-// release is recorded with cause ADJUSTMENT_APPLIED, so the history says which
-// of the two facts closed the block.
+// whatever applied it), and a *later* comparison agreed. The release is recorded
+// with cause ADJUSTMENT_APPLIED, so the history says which of the two facts
+// closed the block.
+//
+// # Which re-read, and which symbol (a083)
+//
+// "The re-read after the adjustment" has two words the first implementation
+// could not check, and both of them cost the rule its reachability.
+//
+// *After*: a credit carries the as-of of the comparison it was computed from,
+// and only an observation of a strictly later comparison may spend it. Without
+// the stamp, "the next observation" was the approximation — and the driver's
+// cycle converges a disagreeing comparison and then observes that same
+// comparison, so the credit was spent by the read it was answering, before any
+// re-read existed. ADJUSTMENT_APPLIED was unreachable for the whole of its life:
+// the production ledger recorded zero of them against eight blocks that never
+// lifted and six an operator had to clear by hand.
+//
+// *For that symbol*: expiry is judged per symbol, not per comparison. A credit
+// dies when a later comparison still disagrees about **its** symbol. An
+// unrelated symbol's disagreement is not an answer to it, and discarding the
+// credit over one would strand a symbol that has already converged and agreed —
+// nothing writes an adjustment for a symbol the comparison agrees about, so it
+// could never earn another credit.
+//
+// Both directions fail closed. An as-of that is missing, unreadable, or out of
+// order keeps the block, because a block that stays costs entries and a block
+// that lifts early costs exposure the engine cannot account for.
 //
 // What this costs: a disagreement that resolves itself with nothing written
 // stays blocked until an operator clears it. That is deliberate and it is the
@@ -291,10 +314,12 @@ type Tracker struct {
 	observed  bool
 	blocks    map[string]Block
 	permanent bool
-	// adjusted is the set of symbols an adjustment converged since the last
-	// observation. It is what turns the next agreeing comparison from a reading
-	// into a release, and it is spent by that observation.
-	adjusted map[string]bool
+	// adjusted maps a symbol to the as-of of the *comparison the adjustment was
+	// computed from*. It is what turns an agreeing comparison from a reading into
+	// a release, and the stamp is what makes "the re-read after the adjustment"
+	// something this type can check rather than something its caller has to
+	// arrange (a083).
+	adjusted map[string]string
 }
 
 // AdjustmentApplied records that an adjustment converged the projection of a
@@ -306,24 +331,79 @@ type Tracker struct {
 // quantity disagreement — because the tracker cannot tell from a diff whether
 // anything was written.
 //
+// # comparison, and why it is not optional
+//
+// comparison is the as-of of the diff the adjustment was computed from. Without
+// it the rule "the re-read *after* the adjustment" has no way to tell a re-read
+// from the read it is answering, and the driver hands both to Observe: it
+// converges a disagreeing diff and then observes that same diff in the same
+// cycle. A credit that any following observation could spend is therefore spent
+// by the pre-adjustment comparison, before the re-read exists — which made
+// ADJUSTMENT_APPLIED unreachable in production for the whole of its life
+// (a083; the ledger recorded zero of them and eight blocks that never lifted).
+//
+// Requiring the argument means a caller cannot fail to say which comparison it
+// is standing on. An unparseable or empty one is never spendable, which keeps
+// the block — the conservative direction.
+//
 // Deliberately in-memory and deliberately not restored. A restart comes back
 // with the blocks (they are journal rows) and without the credits, so the first
 // comparison after a restart cannot release anything: the process that applied
 // the adjustment is gone, and the conservative direction is to make the next
 // convergence say so again.
-func (t *Tracker) AdjustmentApplied(symbols ...string) {
+func (t *Tracker) AdjustmentApplied(comparison string, symbols ...string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.adjusted == nil {
-		t.adjusted = map[string]bool{}
+		t.adjusted = map[string]string{}
 	}
 	for _, symbol := range symbols {
 		key := strings.ToUpper(strings.TrimSpace(symbol))
 		if key == "" {
 			continue
 		}
-		t.adjusted[key] = true
+		t.adjusted[key] = strings.TrimSpace(comparison)
 	}
+}
+
+// creditUsableBy reports whether a credit recorded against comparison `credit`
+// may be spent by an observation of comparison `observed`.
+//
+// Strictly later, and nothing else. Equal means this is the very comparison the
+// adjustment was computed from, and an observation of it is not a re-read —
+// that equality is the whole of the a083 defect. Earlier means the two cannot be
+// ordered the way the rule needs. Either side missing or unreadable means the
+// order cannot be established at all. All three keep the block, which is the
+// conservative direction: a block that stays costs entries, and a block that
+// lifts early costs exposure the engine cannot account for.
+func creditUsableBy(credit, observed string) bool {
+	creditAt, err := time.Parse(time.RFC3339, strings.TrimSpace(credit))
+	if err != nil {
+		return false
+	}
+	observedAt, err := time.Parse(time.RFC3339, strings.TrimSpace(observed))
+	if err != nil {
+		return false
+	}
+	return observedAt.After(creditAt)
+}
+
+// symbolsInDispute is the set of symbols this comparison still disagrees about.
+//
+// It is what makes credit expiry per symbol rather than per comparison. A credit
+// is answered by what the re-read says about *its* symbol; an unrelated symbol's
+// disagreement is not an answer to it, and discarding the credit over one would
+// strand a symbol that has converged and agreed with no way to earn another
+// credit — nothing writes an adjustment for a symbol the comparison agrees about.
+func symbolsInDispute(diff Diff) map[string]bool {
+	out := make(map[string]bool, len(diff.Quantities)+len(diff.MissingOrders))
+	for _, mismatch := range diff.Quantities {
+		out[strings.ToUpper(strings.TrimSpace(mismatch.Symbol))] = true
+	}
+	for _, missing := range diff.MissingOrders {
+		out[strings.ToUpper(strings.TrimSpace(missing.Symbol))] = true
+	}
+	return out
 }
 
 // Outcome is what one observation did.
@@ -385,9 +465,12 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 				// agreeing quantity read is not evidence that their state is over.
 				continue
 			}
-			if !t.adjusted[strings.ToUpper(strings.TrimSpace(block.Symbol))] {
-				// Agreement with nothing behind it. See the release rule at the top
-				// of the file.
+			symbol := strings.ToUpper(strings.TrimSpace(block.Symbol))
+			if !creditUsableBy(t.adjusted[symbol], diff.AsOf) {
+				// Either nothing was written for this symbol, or what was written
+				// belongs to *this* comparison rather than to one before it. Both are
+				// agreement with nothing behind it. See the release rule at the top of
+				// the file.
 				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
 				continue
 			}
@@ -459,23 +542,30 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	out.Cleared = persisted.released
 	t.permanent = hasPermanentQuantityAccountBlock(t.blocks)
 
-	if persistErr != nil && !diff.BlocksEntry() {
-		// The adjustment caused a valid clean comparison, but storage did not
-		// commit every proposed release. Retain credit only for the blocks still
-		// active so a fresh comparison can retry the durable transition.
-		remaining := map[string]bool{}
-		for _, block := range t.blocks {
-			if block.Cause == journal.ReconcileCauseQuantityMismatch &&
-				block.Release == ReleaseOnAdjustedReconcile &&
-				t.adjusted[strings.ToUpper(strings.TrimSpace(block.Symbol))] {
-				remaining[strings.ToUpper(strings.TrimSpace(block.Symbol))] = true
-			}
+	// Credit accounting. Three outcomes, and which one a credit gets is decided
+	// per symbol rather than per comparison (a083):
+	//
+	//	untouched  this observation is not later than the credit's comparison, so it
+	//	           is not the re-read the rule means. Nothing is decided about it.
+	//	refuted    a later comparison still disagrees about that symbol. The
+	//	           adjustment did not settle it; releasing now would need a new one.
+	//	answered   a later comparison agrees about that symbol. The credit is spent
+	//	           by the release when one commits, and kept when it does not — a
+	//	           storage failure must not lose the evidence that earned the
+	//	           release, and neither must a comparison that is clean for this
+	//	           symbol while another symbol keeps the whole diff blocking.
+	disputed := symbolsInDispute(diff)
+	committed := make(map[string]bool, len(persisted.released))
+	for _, block := range persisted.released {
+		committed[strings.ToUpper(strings.TrimSpace(block.Symbol))] = true
+	}
+	for symbol, comparison := range t.adjusted {
+		if !creditUsableBy(comparison, diff.AsOf) {
+			continue
 		}
-		t.adjusted = remaining
-	} else {
-		// A completed observation spends its credits. If it still disagreed, the
-		// adjustment did not settle it; if releases committed, their work is done.
-		t.adjusted = nil
+		if disputed[symbol] || committed[symbol] {
+			delete(t.adjusted, symbol)
+		}
 	}
 
 	out.Failures = t.failures

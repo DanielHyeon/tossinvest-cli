@@ -61,11 +61,13 @@
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [in_progress] → `a076-the-subscribe-address-is-scannable`
     - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [archived] → `a080-line-refreshes-on-engine-cadence`
     - STORY-TOS-a081 — Let the trading screens share one reading of the engine instead of asking it per render [archived] → `a081-screens-share-one-engine-reading`
+    - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [in_progress] → `a085-an-alert-says-which-stock`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
     - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
     - STORY-TOS-a062 — Keep external orders out of engine-owned reconciliation [archived] → `a062-reconcile-owned-orders`
+    - STORY-TOS-a083 — Let a reconciliation quantity block release itself after the adjustment it earned [implemented] → `a083-a-block-releases-itself`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
@@ -76,6 +78,7 @@
     - STORY-TOS-a078 — Stop quarantining a ladder position for activating its first rung [implemented] → `a078-first-rung-keeps-its-judgement`
     - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [in_progress] → `a079-operator-can-lift-a-quarantine`
     - STORY-TOS-a074 — Make the moment protection stops visible, and let critical alerts actually leave the machine [in_progress] → `a074-critical-events-reach-the-operator`
+    - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [in_progress] → `a084-a-quarantine-outlives-its-cause`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

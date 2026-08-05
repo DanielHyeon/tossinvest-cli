@@ -1,0 +1,55 @@
+# Function Logic Map: `TestRestoreProjectsStatesThisTrackerDidNotEnter`
+
+- Source: `internal/reconcile/restore_test.go` (lines 316–360)
+- AST evidence: `ast.json` (`source_sha256: 2fd89803606be1f4664a60d079030df381cc426a784a0322c030ec81c71afdc4`)
+- Risk scan: `risk-pattern-report.md`
+- 위험 등급: **Normal** — 테스트 코드. 주문·손절·원장 판정 경로가 아니다.
+
+## What it does
+
+다른 producer가 연 상태를 수량 비교가 해제하지 못한다. a083에서 credit에 as-of를 붙이고 시계를 진행시켜, 거부하는 것이 cause 소유권임을 분명히 했다.
+
+## Inputs and invariants
+
+| Input/state | Valid range | Source of truth | Failure behavior |
+|---|---|---|---|
+| 테스트 fixture | 해당 테스트가 구성한 값 | 테스트 본문 | 단언 실패로 드러난다 |
+
+## Branches and early returns
+
+| Branch | Condition | Mutation/side effect | Return/error | Required test |
+|---|---|---|---|---|
+| B1 | (321) `if` — if _, _, err := j.EnterReconcile(ctx, journal.EnterReconcileRequest | 테스트 단언 | — | 아래 Branch Test Map |
+| B2 | (331) `if` — if err := tracker.Restore(ctx); err != nil | 테스트 단언 | — | 아래 Branch Test Map |
+| B3 | (336) `if` — if rejected == nil | 테스트 단언 | — | 아래 Branch Test Map |
+| B4 | (339) `if` — if rejected.Reason != execgw.ReasonReconcilePermanent | 테스트 단언 | — | 아래 Branch Test Map |
+| B5 | (346) `if` — if len(blocks) != 1 || blocks[0].Cause != journal.ReconcileCauseIdentifierConf… | 테스트 단언 | — | 아래 Branch Test Map |
+| B6 | (351) `if` — if _, err := tracker.Observe(ctx, cleanDiffAt(clk)); err != nil | 테스트 단언 | — | 아래 Branch Test Map |
+| B7 | (354) `if` — if blocks = tracker.Blocks(); len(blocks) != 1 || blocks[0].Cause != journal.R… | 테스트 단언 | — | 아래 Branch Test Map |
+| B8 | (357) `if` — if gate.CheckEntryFor("us", "AAPL") == nil | 테스트 단언 | — | 아래 Branch Test Map |
+
+## Calls and live bindings
+
+| Callee | Why called | Error/timeout/retry contract | Evidence |
+|---|---|---|---|
+| `{'kind': 'call', 'at': {'line': 317, 'column': 9}, 'text': 'context.Background'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 318, 'column': 9}, 'text': 'clock.NewFake'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 319, 'column': 7}, 'text': 'openJournal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 321, 'column': 18}, 'text': 'j.EnterReconcile'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 326, 'column': 3}, 'text': 't.Fatalf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 329, 'column': 10}, 'text': 'noStaleGate'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 330, 'column': 13}, 'text': 'trackerOn'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 331, 'column': 12}, 'text': 'tracker.Restore'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 332, 'column': 3}, 'text': 't.Fatalf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 335, 'column': 14}, 'text': 'gate.CheckEntryFor'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 337, 'column': 3}, 'text': 't.Fatal'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+| `{'kind': 'call', 'at': {'line': 340, 'column': 3}, 'text': 't.Fatalf'}` | 본문 참조 | 호출부 계약 유지 | AST `calls` |
+
+## State mutations and fallbacks
+
+- 테스트 로컬 상태만. 프로덕션 상태를 변경하지 않는다.
+
+## Safety conclusion
+
+- Safe edit boundary: a083이 바꾼 것은 credit·diff에 비교 as-of를 붙이고 관측 사이에 시계를 진행시킨 것뿐이다. 어떤 단언도 완화하지 않았다.
+- High-risk impact: no — 테스트 함수다. 다만 이 테스트들이 검증하는 대상은 High-risk 경로이므로, 단언을 약화하지 않았다는 것이 이 map의 요점이다.

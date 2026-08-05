@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a084",
+  "title": "Re-judge a quarantine once when the recovery selector that made it has changed",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a084-a-quarantine-outlives-its-cause",
+    "path": "openspec/changes/a084-a-quarantine-outlives-its-cause"
+  },
+  "acceptance": [
+    "Every quarantine row records the recovery-selector revision that produced it, and a row written before this change reads as unknown rather than as the current revision",
+    "A position whose active quarantine carries a different or unknown revision is sent to judgement instead of being skipped, and the same recovery selection runs unchanged",
+    "A retry that selects one verified candidate releases the quarantine with a cause distinguishable from an operator repair, in the same transaction that records the judgement",
+    "A retry that still cannot choose closes the old row and opens a new one stamped with the current revision, arms nothing, and is never retried again at that revision",
+    "A quarantine stamped with the current revision behaves exactly as today: skipped, unjudged, and released only by an operator"
+  ]
+}

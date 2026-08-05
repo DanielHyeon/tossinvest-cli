@@ -150,14 +150,14 @@ func TestAnAdjustmentAndAMatchingRecheckRelease(t *testing.T) {
 	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
 	tracker := newTracker(clk, gate)
 
-	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
+	observe(t, tracker, mismatchDiffAt(clk, "AAPL", "10", "4"))
 	if gate.CheckEntryFor("us", "AAPL") == nil {
 		t.Fatal("precondition: the disagreement must block AAPL")
 	}
 
-	tracker.AdjustmentApplied("AAPL")
+	tracker.AdjustmentApplied(asOfAt(clk), "AAPL")
 	clk.Advance(30 * time.Second)
-	out := observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+	out := observe(t, tracker, cleanDiffAt(clk))
 
 	if len(out.Cleared) != 1 || out.Cleared[0].Symbol != "AAPL" {
 		t.Fatalf("cleared = %+v, want the adjusted symbol released", out.Cleared)
@@ -178,16 +178,16 @@ func TestAnAdjustmentIsSpentByTheRecheckItAnswers(t *testing.T) {
 	clk := clock.NewFake(asOf)
 	tracker := newTracker(clk, nil)
 
-	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
-	tracker.AdjustmentApplied("AAPL")
+	observe(t, tracker, mismatchDiffAt(clk, "AAPL", "10", "4"))
+	tracker.AdjustmentApplied(asOfAt(clk), "AAPL")
 
 	// The re-read after the adjustment still disagrees: the adjustment is spent
 	// and it did not answer the question.
 	clk.Advance(30 * time.Second)
-	observe(t, tracker, mismatchDiff("AAPL", "9", "4"))
+	observe(t, tracker, mismatchDiffAt(clk, "AAPL", "9", "4"))
 
 	clk.Advance(30 * time.Second)
-	out := observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+	out := observe(t, tracker, cleanDiffAt(clk))
 	if len(out.Cleared) != 0 {
 		t.Fatalf("cleared = %+v, want the spent adjustment not to release a later coincidence", out.Cleared)
 	}
@@ -203,11 +203,11 @@ func TestAnAdjustmentOnAnotherSymbolDoesNotRelease(t *testing.T) {
 	clk := clock.NewFake(asOf)
 	tracker := newTracker(clk, nil)
 
-	observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
-	tracker.AdjustmentApplied("TSLA")
+	observe(t, tracker, mismatchDiffAt(clk, "AAPL", "10", "4"))
+	tracker.AdjustmentApplied(asOfAt(clk), "TSLA")
 	clk.Advance(30 * time.Second)
 
-	out := observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+	out := observe(t, tracker, cleanDiffAt(clk))
 	if len(out.Cleared) != 0 {
 		t.Fatalf("cleared = %+v, want an unrelated symbol's adjustment to release nothing", out.Cleared)
 	}
@@ -226,15 +226,18 @@ func TestAnAdjustmentDoesNotReleaseAPermanentMismatch(t *testing.T) {
 	tracker := newTracker(clk, gate)
 
 	for i := 0; i < 3; i++ {
-		observe(t, tracker, mismatchDiff("AAPL", "10", "4"))
+		observe(t, tracker, mismatchDiffAt(clk, "AAPL", "10", "4"))
 		clk.Advance(30 * time.Second)
 	}
 	if !tracker.Permanent() {
 		t.Fatal("precondition: three consecutive failures make the mismatch permanent")
 	}
 
-	tracker.AdjustmentApplied("AAPL")
-	observe(t, tracker, reconcile.Diff{AccountRef: "acct-7", Matched: 1})
+	// The credit is genuinely spendable — stamped before the observation that
+	// follows it — so what refuses the release is the permanence, not the stamp.
+	tracker.AdjustmentApplied(asOfAt(clk), "AAPL")
+	clk.Advance(30 * time.Second)
+	observe(t, tracker, cleanDiffAt(clk))
 
 	if !tracker.Permanent() {
 		t.Fatal("an adjustment must not un-mark a permanent mismatch")

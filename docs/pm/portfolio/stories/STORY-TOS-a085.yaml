@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a085",
+  "title": "Say which stock, in Korean, in the alert and on the position screen",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a085-an-alert-says-which-stock",
+    "path": "openspec/changes/a085-an-alert-says-which-stock"
+  },
+  "acceptance": [
+    "Alert titles and bodies are Korean and name a stock as name(code), taking the name from the holdings response the engine already reads, with no added broker request",
+    "An unknown name renders the code alone and is never guessed or sourced elsewhere",
+    "Alert payloads and structured log fields keep their English keys and verbatim values, so ledger queries stay language-independent",
+    "A quarantined position shows its stored entry, initial stop, protection line and watermark on the position screen, marked as a stored value that is not being updated, with the not-being-judged warning intact",
+    "The position screen and the position-management screen report the same protection line for the same position",
+    "Stale reasons other than quarantine keep hiding their values exactly as today"
+  ]
+}

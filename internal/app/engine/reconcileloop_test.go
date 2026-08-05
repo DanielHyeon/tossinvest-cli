@@ -410,7 +410,10 @@ func TestTrackerReleaseFailureStopsBeforePriceAndAdoption(t *testing.T) {
 		t.Fatalf("Restore: %v", err)
 	}
 	h.tracker.Journal = &refusingReconcileRelease{ReconcileStore: h.journal}
-	h.tracker.AdjustmentApplied("005930")
+	// Stamped before the cycle's own comparison so the credit is genuinely
+	// spendable by it; what this test asserts is the refused durable release, not
+	// the a083 fail-closed stamp check.
+	h.tracker.AdjustmentApplied(h.clk.Now().UTC().Format(time.RFC3339), "005930")
 
 	cycle := h.cycle()
 	if cycle.Err == nil {

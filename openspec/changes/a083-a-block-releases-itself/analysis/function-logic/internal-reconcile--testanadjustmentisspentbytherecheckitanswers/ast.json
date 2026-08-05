@@ -1,0 +1,189 @@
+{
+  "file": "internal/reconcile/mismatch_test.go",
+  "source_sha256": "1bc02d9cadb88dee721e0e67b1b9ea522b5fc3b01e331d79fc48d03dc55e8c5b",
+  "package": "reconcile_test",
+  "function": "TestAnAdjustmentIsSpentByTheRecheckItAnswers",
+  "signature": "TestAnAdjustmentIsSpentByTheRecheckItAnswers(params=1, results=0)",
+  "start": {
+    "line": 177,
+    "column": 1
+  },
+  "end": {
+    "line": 197,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 13
+      },
+      "text": "newTracker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 2
+      },
+      "text": "observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 22
+      },
+      "text": "mismatchDiffAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 2
+      },
+      "text": "tracker.AdjustmentApplied"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 28
+      },
+      "text": "asOfAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 2
+      },
+      "text": "observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 22
+      },
+      "text": "mismatchDiffAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 2
+      },
+      "text": "clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 9
+      },
+      "text": "observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 29
+      },
+      "text": "cleanDiffAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 5
+      },
+      "text": "tracker.EntryAllowed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

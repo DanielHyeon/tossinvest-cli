@@ -35,6 +35,14 @@ package engine
 // the *next* cycle's re-read — which is exactly what makes an automatic release
 // evidence-based rather than coincidental.
 //
+// That ordering is no longer load-bearing for the release rule, and it should not
+// become so again. Step 6 observes the pre-adjustment comparison, so for one
+// cycle the tracker is told about a disagreement step 5 has already settled;
+// what keeps the credit alive across that observation is the comparison stamp
+// the credit carries, not the order of these two calls (a083). A future edit may
+// reorder them for its own reasons without silently deciding whether a block can
+// ever lift.
+//
 // # The rate budget (§0.4)
 //
 // Per 60-second period, in the steady state (open orders fitting one page, one

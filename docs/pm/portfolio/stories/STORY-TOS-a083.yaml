@@ -1,0 +1,17 @@
+{
+  "id": "STORY-TOS-a083",
+  "title": "Let a reconciliation quantity block release itself after the adjustment it earned",
+  "feature": "FEAT-TOS-005",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a083-a-block-releases-itself",
+    "path": "openspec/changes/a083-a-block-releases-itself"
+  },
+  "acceptance": [
+    "An adjustment credit records the as-of of the comparison it was computed from, and an observation of that same comparison neither spends nor discards it",
+    "The first observation of a strictly later comparison spends the credit: it releases the block with ADJUSTMENT_APPLIED when the comparison agrees, and discards the credit when it still disagrees",
+    "A comparison whose as-of is absent, unreadable, or earlier than the credit's never spends the credit, and the block stays",
+    "A driver cycle that converges a quantity mismatch and then observes the next cycle's agreeing comparison releases the block and reopens entries for that symbol",
+    "Nothing about the evidence requirement is relaxed: a symbol with no recorded adjustment still never auto-releases, and a permanent mismatch still requires an operator"
+  ]
+}

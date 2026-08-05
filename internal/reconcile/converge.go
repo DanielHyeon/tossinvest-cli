@@ -67,11 +67,17 @@ type ConvergeStore interface {
 	Positions(ctx context.Context, accountRef string) ([]journal.Position, error)
 }
 
-// AdjustmentCrediter is told which symbols an adjustment has just been applied
-// to, which is what makes the *next* re-read able to release their block
-// (Tracker.AdjustmentApplied). *Tracker satisfies it.
+// AdjustmentCrediter is told which comparison an adjustment was computed from
+// and which symbols it was applied to, which is what makes a *later* re-read
+// able to release their block (Tracker.AdjustmentApplied). *Tracker satisfies it.
+//
+// The comparison is not optional and not inferable. The reconciliation driver
+// converges a diff and then observes that same diff in the same cycle, so a
+// crediter that only learns "some adjustment happened" cannot tell the re-read
+// from the read it is answering — which is how the automatic release stayed
+// unreachable in production (a083).
 type AdjustmentCrediter interface {
-	AdjustmentApplied(symbols ...string)
+	AdjustmentApplied(comparison string, symbols ...string)
 }
 
 // ConvergedPosition is one mismatch this pass settled.
@@ -237,13 +243,17 @@ func (c *Converger) ConvergeQuantities(ctx context.Context, diff Diff) (Converge
 		sort.Strings(credited)
 		report.Credited = credited
 		if c.Credit != nil {
-			// The credit is spent by the *next* observation, whatever that
-			// observation finds. A re-applied adjustment (Applied=false) is
-			// credited too: the projection is converged either way, and the thing
-			// the release rule requires is that something was written for this
-			// symbol before the re-read — not that this process was the one that
-			// wrote it.
-			c.Credit.AdjustmentApplied(credited...)
+			// The credit carries the comparison it was computed from, so the tracker
+			// can tell a re-read from the read this adjustment is answering. The
+			// driver observes *this* diff later in the same cycle; only the next
+			// cycle's comparison is the "re-read after the adjustment" the release
+			// rule means, and the stamp is what says so (a083).
+			//
+			// A re-applied adjustment (Applied=false) is credited too: the projection
+			// is converged either way, and what the release rule requires is that
+			// something was written for this symbol before the re-read — not that
+			// this process was the one that wrote it.
+			c.Credit.AdjustmentApplied(asOf, credited...)
 		}
 	}
 	// The adjustments committed either way, so the report stands. An undelivered

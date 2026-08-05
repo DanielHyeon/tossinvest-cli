@@ -1,0 +1,119 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "0adce8e7229ac24e1ef08d6d8b31b6b5c6b390cfcb706a1de6ad7fd444958113",
+  "package": "reconcile",
+  "function": "AdjustmentApplied",
+  "receiver": "Tracker",
+  "signature": "Tracker.AdjustmentApplied(params=2, results=0)",
+  "start": {
+    "line": 354,
+    "column": 1
+  },
+  "end": {
+    "line": 367,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 357,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 360,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 362,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 2
+      },
+      "text": "t.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 356,
+        "column": 8
+      },
+      "text": "t.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 10
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 361,
+        "column": 26
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 365,
+        "column": 21
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 358,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 361,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 365,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 356,
+        "column": 2
+      },
+      "text": "t.mu.Unlock"
+    }
+  ]
+}

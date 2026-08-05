@@ -18,10 +18,14 @@ import (
 
 var convergeNow = time.Date(2026, 3, 30, 2, 30, 0, 0, time.UTC)
 
-type recordingCrediter struct{ credited [][]string }
+type recordingCrediter struct {
+	credited    [][]string
+	comparisons []string
+}
 
-func (c *recordingCrediter) AdjustmentApplied(symbols ...string) {
+func (c *recordingCrediter) AdjustmentApplied(comparison string, symbols ...string) {
 	c.credited = append(c.credited, append([]string(nil), symbols...))
+	c.comparisons = append(c.comparisons, comparison)
 }
 
 // heldPosition puts a filled buy in the projection.
