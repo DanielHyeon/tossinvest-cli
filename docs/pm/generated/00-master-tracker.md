@@ -9,14 +9,14 @@
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [implemented] → `enable-vpn-console-access`
-    - STORY-TOS-032 — Update TossOS from the console [implemented] → `console-system-update`
-    - STORY-TOS-033 — Require signed release system updates [implemented] → `signed-release-system-update`
+    - STORY-TOS-032 — Update TossOS from the console [archived] → `console-system-update`
+    - STORY-TOS-033 — Require signed release system updates [archived] → `signed-release-system-update`
     - STORY-TOS-035 — Accept same-host console writes when privacy headers omit request origin [archived] → `fix-console-origin-fallback`
     - STORY-TOS-036 — Preserve canonical origin on console form submissions [archived] → `fix-console-referrer-origin`
     - STORY-TOS-037 — Automate Open API onboarding for soak restart [archived] → `automate-soak-openapi-onboarding`
     - STORY-TOS-a082 — Let the console, engine and API daemon converge on one broker token instead of invalidating each other's [implemented] → `a082-one-token-across-the-processes`
   - FEAT-TOS-008 — SDD graph service reliability [active]
-    - STORY-TOS-034 — Serialize project GBrain service ownership [implemented] → `serialize-project-gbrain-serve`
+    - STORY-TOS-034 — Serialize project GBrain service ownership [archived] → `serialize-project-gbrain-serve`
 ## INIT-TOS-002 — TossOS automated trading product [active]
 - EPIC-TOS-002 — Execution verification and trading safety [active]
   - FEAT-TOS-002 — Broker execution verification and measurement [active]
@@ -34,8 +34,8 @@
     - STORY-TOS-013 — Attest supervised mutation coverage [implemented] → `attest-covers-supervised-mutations`
     - STORY-TOS-014 — Size the US Guardian risk tier [implemented] → `size-us-guardian-tier`
     - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [implemented] → `interlock-gates-entry-not-exit`
-    - STORY-TOS-016 — Wire the production risk Guardian [implemented] → `wire-production-risk-guardian`
-    - STORY-TOS-017 — Prime engine account sequence safely [implemented] → `prime-engine-account-seq`
+    - STORY-TOS-016 — Wire the production risk Guardian [archived] → `wire-production-risk-guardian`
+    - STORY-TOS-017 — Prime engine account sequence safely [archived] → `prime-engine-account-seq`
     - STORY-TOS-a045 — Add broker-resident protection orders [archived] → `a045-add-protection-orders`
     - STORY-TOS-a056 — Keep an advisory marker from refusing an engine start [implemented] → `a056-autostart-survives-container-recreate`
     - STORY-TOS-a059 — Let the console find exactly the engine it owns [implemented] → `a059-console-finds-the-engine-it-owns`
