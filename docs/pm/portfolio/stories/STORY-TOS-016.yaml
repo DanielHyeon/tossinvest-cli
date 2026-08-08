@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "wire-production-risk-guardian",
-    "path": "openspec/changes/wire-production-risk-guardian"
+    "path": "openspec/changes/archive/2026-08-08-wire-production-risk-guardian"
   },
   "acceptance": ["The wire-production-risk-guardian OpenSpec contract and tasks are satisfied"]
 }

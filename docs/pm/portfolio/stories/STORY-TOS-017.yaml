@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "prime-engine-account-seq",
-    "path": "openspec/changes/prime-engine-account-seq"
+    "path": "openspec/changes/archive/2026-08-08-prime-engine-account-seq"
   },
   "acceptance": ["The prime-engine-account-seq OpenSpec contract and tasks are satisfied"]
 }
