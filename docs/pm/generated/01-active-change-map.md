@@ -17,8 +17,8 @@
 | `attest-covers-supervised-mutations` | STORY-TOS-013 | implemented |
 | `size-us-guardian-tier` | STORY-TOS-014 | implemented |
 | `interlock-gates-entry-not-exit` | STORY-TOS-015 | implemented |
-| `wire-production-risk-guardian` | STORY-TOS-016 | implemented |
-| `prime-engine-account-seq` | STORY-TOS-017 | implemented |
+| `wire-production-risk-guardian` | STORY-TOS-016 | archived |
+| `prime-engine-account-seq` | STORY-TOS-017 | archived |
 | `console-click-approval` | STORY-TOS-018 | implemented |
 | `console-operator-overview` | STORY-TOS-019 | implemented |
 | `console-orders-screen` | STORY-TOS-020 | implemented |
@@ -33,9 +33,9 @@
 | `retire-gainers-source` | STORY-TOS-029 | implemented |
 | `refine-extended-shadow-bands` | STORY-TOS-030 | implemented |
 | `enable-vpn-console-access` | STORY-TOS-031 | implemented |
-| `console-system-update` | STORY-TOS-032 | implemented |
-| `signed-release-system-update` | STORY-TOS-033 | implemented |
-| `serialize-project-gbrain-serve` | STORY-TOS-034 | implemented |
+| `console-system-update` | STORY-TOS-032 | archived |
+| `signed-release-system-update` | STORY-TOS-033 | archived |
+| `serialize-project-gbrain-serve` | STORY-TOS-034 | archived |
 | `fix-console-origin-fallback` | STORY-TOS-035 | archived |
 | `fix-console-referrer-origin` | STORY-TOS-036 | archived |
 | `automate-soak-openapi-onboarding` | STORY-TOS-037 | archived |
