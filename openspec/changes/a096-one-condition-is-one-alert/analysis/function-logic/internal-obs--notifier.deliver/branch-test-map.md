@@ -1,8 +1,13 @@
 # Branch Test Map: `Notifier.deliver`
 
 측정: `go test -covermode=set ./internal/obs/...` — RED 84.8%, GREEN 85.4%(3판, a096b 반영).
-a096은 이 함수의 **본문을 바꾸지 않았다.** 바뀐 것은 잠금의 소유자다 — 1판까지 이 함수가
-`n.mu`를 잡았고, 2판은 호출자(`claimAndDeliver`)가 claim부터 함께 잡는다.
+a096 2판까지는 이 함수의 **본문을 바꾸지 않았다.** 바뀐 것은 잠금의 소유자였다 — 1판까지
+이 함수가 `n.mu`를 잡았고, 2판은 호출자(`claimAndDeliver`)가 claim부터 함께 잡는다.
+
+**3판(a096b)이 본문을 바꿨다.** 독립 리뷰 2라운드가 `Publish` 성공 뒤 `MarkAlertDelivered`
+실패를 성공으로 보고하는 것을 blocker로 냈다. 그 보고는 행을 PENDING으로 남기므로 다음
+관측이 다시 owed로 읽고 다시 보낸다 — a096이 죽이려던 폭풍이 **성공 경로를 통해** 복구되고,
+성공을 통보받은 호출자는 gate도 잠그지 않는다. 이제 그 경우는 미정착으로 처리한다(B6·B7).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
