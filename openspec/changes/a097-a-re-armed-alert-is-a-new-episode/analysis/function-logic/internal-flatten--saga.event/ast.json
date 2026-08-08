@@ -1,0 +1,88 @@
+{
+  "file": "internal/flatten/flatten.go",
+  "source_sha256": "1f66eed56b478d18ef5919cd2a8f988ed0a8c1483b7b5bc6825e2a3a486aaf53",
+  "package": "flatten",
+  "function": "event",
+  "receiver": "Saga",
+  "signature": "Saga.event(params=3, results=0)",
+  "start": {
+    "line": 689,
+    "column": 1
+  },
+  "end": {
+    "line": 700,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 690,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 692,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 691,
+        "column": 3
+      },
+      "text": "s.logf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 691,
+        "column": 13
+      },
+      "text": "flatten"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 694,
+        "column": 6
+      },
+      "text": "s.Notifier.Notify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 694,
+        "column": 24
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 697,
+        "column": 11
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 694,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

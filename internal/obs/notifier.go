@@ -193,6 +193,24 @@ func (n *Notifier) notifyCritical(ctx context.Context, e Event) error {
 	// is a record that does not survive the crash it is warning about.
 	sent, owed, err := n.claimAndDeliver(ctx, record, e)
 	if err != nil {
+		// The entry gate is already latched — claimAndDeliver did that under the
+		// mutex. What is missing is the half that outlives this process.
+		//
+		// a097's first draft stopped at the latch and called that the cautious
+		// choice. It was not: EntryGate keeps its latches in a map in memory, and
+		// a claim that failed leaves no outbox row either, so a restart erases
+		// the block *and* the evidence and reopens entries with nobody told. The
+		// comment on escalate names exactly this — the part that is lost is "the
+		// part that survives a restart".
+		//
+		// Escalating may itself fail, because the store that could not take the
+		// alert is the store the transition is written to. It is still attempted:
+		// escalate logs that failure at error level, and "a restart will reopen
+		// entries" on the record beats the same fact nowhere.
+		//
+		// Outside the mutex, like the escalation below it, and for the same
+		// reason: an announcer wired to this Notifier re-enters Notify.
+		n.escalate(ctx, e)
 		return fmt.Errorf("obs: recording a critical alert: %w", err)
 	}
 
@@ -225,6 +243,24 @@ func (n *Notifier) claimAndDeliver(
 
 	id, owed, err := n.Journal.ClaimAlertForDelivery(ctx, record, n.remindAfter())
 	if err != nil {
+		// Nothing was written and nothing was sent, so this is strictly worse
+		// than the failures below it: a spent retry budget at least leaves a
+		// PENDING row for a later flush to find. Here there is no row.
+		//
+		// Returning the error was the whole response until a097, and one caller
+		// discards it (internal/flatten/flatten.go:694). Latching here instead
+		// makes the outcome independent of whether a caller checks — which it
+		// has to be, because callers keep being added.
+		//
+		// Entries only. Exits are untouched: no alert failure may slow a stop.
+		detail := fmt.Sprintf(
+			"a critical %s alert could not be recorded in the outbox: %v", e.Type, err)
+		if n.Log != nil {
+			n.Log.Error(EventAlertUndelivered, err, FieldEvent, string(e.Type))
+		}
+		if n.Gate != nil {
+			n.Gate.Block(execgw.ReasonAlertUndelivered, detail)
+		}
 		return false, false, err
 	}
 	if !owed {

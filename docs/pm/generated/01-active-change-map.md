@@ -96,3 +96,4 @@
 | `a094-a-stop-clears-what-blocks-it` | STORY-TOS-a094 | in_progress |
 | `a095-a-stop-must-know-what-it-covers` | STORY-TOS-a095 | in_progress |
 | `a096-one-condition-is-one-alert` | STORY-TOS-a096 | implemented |
+| `a097-a-re-armed-alert-is-a-new-episode` | STORY-TOS-a097 | implemented |

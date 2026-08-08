@@ -196,20 +196,44 @@ func (j *Journal) ClaimAlertForDelivery(
 		owed, rearm := claimOwed(state, deliveredAt, acknowledgedAt, nowAt, remindAfter)
 		if rearm {
 			// Back to PENDING so the reminder walks the same path the original
-			// did. delivered_at stays as the record of the previous episode, and
-			// MarkAlertDelivered overwrites it when this send lands.
+			// did — and every other column with it, because re-arming is the
+			// statement that this row is now a *different episode* of the same
+			// condition.
 			//
-			// The acknowledgement does not stay. acknowledged_by exists to record
+			// The acknowledgement cannot stay. acknowledged_by exists to record
 			// that a named human saw this alert, and this is a new episode they
 			// have not seen; leaving it produces a row that reads "undelivered"
 			// and "acknowledged by daniel" at the same time. An operator triaging
 			// a backlog after an incident skips a live undelivered critical alert
 			// on the strength of their own name on it (a096 round 2).
+			//
+			// The content cannot stay either, for the same reason one step out.
+			// An event key holds the condition and not its cause —
+			// exit.proposal_refused is keyed by position, action and rung, never
+			// by the refusal — so the second episode of one key is routinely a
+			// different reason. Flush builds what it sends from this row rather
+			// than from the live event, and an operator reading the outbox after
+			// an incident reads this row (a097).
+			//
+			// attempts, last_attempt_at and delivered_at go with it. a097's first
+			// draft kept delivered_at, calling it the record that the previous
+			// episode really was delivered; that was wrong. Once the body is
+			// overwritten, a surviving delivered_at makes the row claim that *this*
+			// content was delivered then, and nothing anywhere holds the content
+			// that actually was. A row is evidence only when every column points
+			// at one event. What happened before belongs to the structured log;
+			// this table is a delivery queue.
+			//
+			// None of it is load-bearing for the decision above: latestStamp is
+			// reached only from the settled case, and this row is PENDING now.
 			if _, uerr := tx.ExecContext(ctx,
 				`UPDATE alert_outbox
-				    SET state = ?, last_error = '', acknowledged_at = NULL, acknowledged_by = ''
+				    SET state = ?, title = ?, body = ?, payload = ?,
+				        attempts = 0, last_error = '',
+				        last_attempt_at = NULL, delivered_at = NULL,
+				        acknowledged_at = NULL, acknowledged_by = ''
 				  WHERE id = ?`,
-				AlertPending, existing); uerr != nil {
+				AlertPending, a.Title, a.Body, a.Payload, existing); uerr != nil {
 				return 0, false, fmt.Errorf("journal: re-arming alert %s: %w", key, uerr)
 			}
 		}

@@ -86,6 +86,7 @@
     - STORY-TOS-a094 — A stop clears what blocks it [in_progress] → `a094-a-stop-clears-what-blocks-it`
     - STORY-TOS-a095 — A stop must know what it covers [in_progress] → `a095-a-stop-must-know-what-it-covers`
     - STORY-TOS-a096 — One condition is one alert [implemented] → `a096-one-condition-is-one-alert`
+    - STORY-TOS-a097 — A re-armed alert is a new episode [implemented] → `a097-a-re-armed-alert-is-a-new-episode`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`
