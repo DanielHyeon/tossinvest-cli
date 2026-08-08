@@ -3,8 +3,10 @@
 Base commit: `ec29dc72` (`base-commit.txt`).
 전제: 증거(§1)가 문서(§2)보다 먼저 만들어졌다 — AST 산출물의 mtime이 proposal·design보다 이르다.
 
-**2판이다.** 독립 리뷰 1라운드(Codex)가 blocker 4건으로 1판을 깼다. §3bis에 두 번의 설계
-정정을 기록한다.
+**3판이다.** 독립 리뷰 1라운드(Codex)가 blocker 4건으로 1판을 깼다. 2라운드는 두 번 돌았고
+판정이 갈렸다 — Claude Sonnet은 PASS, gstack /review(Codex + 뮤테이션 + 안전)는 P1 4건으로
+FAIL이다. **재현되는 결함이 이겨서** 3판이 그 4건을 고쳤다. §3bis에 설계 정정,
+§3ter에 3판을 기록한다.
 
 ## 1. 증거 — 완료
 
@@ -71,6 +73,36 @@ Base commit: `ec29dc72` (`base-commit.txt`).
 동시 claim의 이중 전송(B1), 영구 억제가 진입 차단을 없앰(B2), 같은 key의 다른 원인을
 영구히 가림(B3), 증거 불일치와 `covermode=set` 오독(B4). 2판은 창 + 재무장 + 배타 구간이다.
 
+### 3ter. 3판 — 2라운드 두 번째 리뷰(gstack)가 낸 P1 4건 (완료)
+
+2라운드가 두 번 돌았고 판정이 갈렸다. 재현되는 결함이 이겼다 — 상세는 review.md §9.
+
+- [x] 3ter.1 `claimOwed`: 종결 시각이 **미래**면 fail-open. `elapsed < 0`을 분리했다.
+      음수는 언제나 창보다 작으므로 그 key가 skew 전체 + 창 동안 억제됐고, 아무것도
+      publish하지 않으므로 gate 잠금도 escalation도 실행되지 않았다. 두 줄 위의 형제
+      분기(날짜를 못 읽는 행)는 같은 상황에서 이미 fail-open이었다. 분기 7 → 8.
+- [x] 3ter.2 재무장 UPDATE가 `acknowledged_at = NULL, acknowledged_by = ''`를 함께 쓴다.
+      "미전달"과 "daniel이 확인함"을 동시에 주장하는 행은, 사고 후 백로그를 훑는 운영자가
+      자기 이름을 보고 살아 있는 미전달 critical을 건너뛰게 만든다. `delivered_at`은
+      남긴다 — 이전 에피소드의 기록이고 `MarkAlertDelivered`가 덮는다.
+- [x] 3ter.3 `Notifier.deliver`: `Publish` 성공 뒤 `MarkAlertDelivered` 실패를 **미정착**으로
+      처리한다. 로그 + `Gate.Block` + `return false`. 이전에는 `return true`였고, 행은
+      PENDING으로 남으므로 다음 관측이 다시 owed로 읽고 다시 보냈다 — **a096이 죽이려던
+      폭풍이 성공 경로를 통해 복구된다.** 게다가 성공을 통보받은 `notifyCritical`은
+      `owed && !sent`가 거짓이라 gate도 안 잠갔다. 조용했다. 분기 10 → 12.
+      계약이 "나갔는가"에서 "정착됐는가"로 바뀌었고 주석에 명시했다.
+- [x] 3ter.4 RED 4건 신규 — `internal/journal/a096b_round2_test.go`,
+      `internal/obs/a096b_round2_test.go`. **기존 a096 테스트 파일에 더하지 않고 새 파일로
+      냈다** — 기존 파일 속 새 함수는 logic-map 대상을 번지게 한다.
+- [x] 3ter.5 P1-3(운영이 쓰는 창에 테스트 없음)은 RED이 나오지 않는 종류이므로
+      **뮤테이션으로 증명했다.** `remindAfter()`를 `return 0`(= 1라운드가 blocker 2로 거부한
+      영구 억제)으로 바꾸면 obs 스위트 전체가 초록이었다. 새 핀 테스트를 넣고 다시 돌려
+      **그 테스트만 잡는 것**을 확인한 뒤 프로브를 되돌렸다.
+- [x] 3ter.6 2판 obs BTM 5개가 헤더에 `GREEN 84.7%`를 적고 있었다. 3판 실측은 **85.4%**다.
+      다섯 파일 전부 정정했다 — 정정 단위는 file:line이 아니라 **값**이다.
+      `deliver` BTM의 "본문을 바꾸지 않았다"와 새 본문 분기 B6·B7의 모순도 고쳤다.
+- [x] 3ter.7 P2 6건은 **고치지 않고** review.md §9에 남긴다. 사용자가 3판 범위를 P1로 정했다.
+
 ## 4. VERIFY
 
 - [x] 4.1 `go build ./...` 통과
@@ -96,7 +128,22 @@ Base commit: `ec29dc72` (`base-commit.txt`).
 - [x] 5.3 `make gate CHANGE=a096-one-condition-is-one-alert` — code/test/vet 통과 후 a095 제안서 형식 오류를 수정하고 전체 validate 84/84 통과
 - [x] 5.4 독립 리뷰 1라운드 — **Codex, 교차 모델 충족.** 판정 FAIL, blocker 4건.
       a092부터 이어진 미충족 연쇄가 여기서 끊겼다.
-- [x] 5.5 독립 리뷰 2라운드 — Claude Sonnet, 교차 모델. PASS, blocker 0.
+- [x] 5.5 독립 리뷰 2라운드 — Claude Sonnet, 교차 모델. PASS, blocker 0. (review.md §8)
+- [x] 5.6 독립 리뷰 2라운드, 두 번째 — **gstack /review, 판정 FAIL, P1 4건.** (review.md §9)
+      같은 2판 코드에 Codex(교차 모델) + 뮤테이션 테스트 패스 + 안전 패스를 병렬로 돌렸다.
+      P1-1(미래 스탬프)은 세 패스가 독립적으로 냈다. 3건이 실패하는 RED로 재현됐고
+      1건은 뮤테이션으로 증명됐다. 5.5와 판정이 갈렸을 때 **재현되는 결함이 이긴다.**
+- [x] 5.7 3판 재검증 — `go test ./...` 90패키지 FAIL 0, `-race` obs 통과,
+      커버리지 journal 75.0% / obs 85.4%, evidence complete, AST 10개 FRESH, validate valid.
+      분기 주장을 커버리지 프로파일과 직접 대조했다.
+- [x] 5.8 `make gate CHANGE=a096-one-condition-is-one-alert` 3판 재실행 — **PASS(exit 0)**.
+      8단계 전부: tasks/review/evidence/sdd-check/test/vet/validate.
+      `[index-freshness] CodeGraph hard-evidence index matches the worktree`.
+- [x] 5.9 `make sdd-sync`는 **non-zero로 끝났다**(`codegraphcontext`가 300초 초과).
+      CodeGraph 본체는 `Already up to date`이고 GBrain은 `gbrain serve` pid 18302가 점유 중.
+      둘 다 CLAUDE.md상 advisory이며 현재 HEAD·OpenSpec·테스트를 대체하지 않는다.
+      게이트가 보는 것은 hard-evidence fingerprint이고 그것은 일치했다.
+      `not-applicable`이 아니라 **실패했고 advisory라 통과시켰다**고 적는다 — 침묵한 생략 금지.
 
 ## 6. 운영 실측 (배포 후, 사람 승인)
 

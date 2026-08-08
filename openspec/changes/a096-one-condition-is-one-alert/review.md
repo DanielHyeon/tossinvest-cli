@@ -5,8 +5,21 @@
 **1라운드: Codex (교차 모델 충족) — 2026-08-08 — 판정 FAIL.**
 blocker 4건, concern 5건. 전문은 §3, 저자 검증은 §4, 2판의 조치는 §5.
 
-**2라운드: Claude Sonnet (교차 모델) — 2026-08-09 — 판정 PASS.**
-blocker 0건, concern 2건. 상세와 저자 조치는 §8에 기록한다.
+**2라운드는 두 번 돌았고 판정이 갈렸다. 같은 2판 코드가 대상이었다.**
+
+- **Claude Sonnet (교차 모델) — 2026-08-09 — 판정 PASS.** blocker 0건, concern 2건. §8.
+- **gstack /review (Codex 교차 모델 + 뮤테이션 테스트 패스 + 안전 패스) — 2026-08-09 —
+  판정 FAIL.** P1 4건. §9.
+
+**§9가 이긴다.** P1 4건 중 3건이 §8이 검토한 바로 그 코드에 대해 **실패하는 RED 테스트**로
+재현됐고, 4번째는 뮤테이션으로 증명됐다(`remindAfter()`를 영구 억제로 되돌려도 스위트가
+전부 초록이었다). 재현되는 결함은 판정이 아니다.
+
+두 리뷰가 다른 질문을 물었다. §8은 "1라운드 blocker가 닫혔는가"를 물었고 그 답은 맞다.
+§9는 "2판이 새로 만든 결함과 지나친 결함이 있는가"를 물었다. **통과 판정 하나는 결함의
+부재가 아니다** — 이 change가 남길 기록의 핵심이다.
+
+3판(a096b)이 P1 4건을 고쳤다. P2 6건은 범위 밖으로 §9에 남겼다.
 
 a092부터 이어진 미충족 연쇄가 여기서 끊겼다 — a096이 교차 모델 리뷰를 받은 첫 change다.
 
@@ -296,3 +309,122 @@ unknown 상태도 owed+PENDING 재무장 후 완료 표시가 성공하는 것�
    다시 판단해야 하는 이미 기록된 트레이드오프이며 a096의 blocker는 아니다.
 
 최종 판정: **PASS — blocker 0**.
+
+**이 판정은 §9가 뒤집었다.** 같은 2판을 대상으로 한 두 번째 독립 리뷰가 P1 4건을 냈고,
+그중 3건은 이 시점의 코드에 대해 **실제로 실패하는 RED 테스트**로 재현됐다. 재현되는 결함은
+판정이 아니므로 §9가 이긴다. 이 절은 지우지 않고 남긴다 — 통과 판정 하나가 결함의 부재를
+뜻하지 않는다는 것이 이 change가 남길 기록의 일부다.
+
+## §9. 2라운드(두 번째) — gstack /review, 판정 FAIL
+
+§8과 **같은 2판 코드**를 대상으로 한 독립 리뷰다. 세 패스가 병렬로 돌았고 서로의 결과를
+보지 않았다.
+
+- **Codex** (`codex exec`, read-only, reasoning=high) — 교차 모델 적대 리뷰
+- **테스트 전문가** (별도 컨텍스트 subagent) — **뮤테이션 실측**을 했다. 각 훅을 실제로
+  제거하고 스위트를 다시 돌려 "이 테스트가 이 코드를 정말 붙잡고 있는가"를 측정했다
+- **보안/안전 전문가** (별도 컨텍스트 subagent) — 알림 채널을 안전 장치로 보는 관점
+
+### P1 4건 — 전부 저자가 코드에서 직접 확인했다
+
+**P1-1. 미래 시각의 종결 스탬프가 알림을 영구히 잠근다** — 세 패스 전부가 독립적으로 냈다.
+`now.Sub(settled)`가 음수면 항상 `< remindAfter`이므로 그 key는 skew 전체 + 창 동안
+`owed=false`다. 아무것도 publish하지 않으므로 `Gate.Block`도 `escalate`도 실행되지 않는다.
+엔진은 알렸다고 믿고 계속 진입한다.
+
+결정적 논거는 보안 패스가 냈다: **두 줄 위의 형제 분기가 같은 상황에서 fail-open한다.**
+날짜를 못 읽는 행은 "창이 안 지났다고 주장할 수 없다"며 보내고, 날짜가 미래인 행은 같은
+인식론적 지위인데 안 보낸다. 둘 중 하나가 틀렸고 그것은 보내는 쪽이 아니다.
+
+**P1-2. 발송 성공 + 기록 실패를 성공으로 보고한다** — Codex.
+`Publish`가 성공한 뒤 `MarkAlertDelivered`가 실패하면 로그만 남기고 `return true`였다.
+행은 PENDING으로 남으므로 다음 관측이 다시 owed로 읽고 다시 보낸다 — **a096이 죽이려던
+폭풍이 성공 경로를 통해 복구된다.** 그리고 성공을 통보받은 `notifyCritical`은
+`owed && !sent`가 거짓이라 gate도 잠그지 않는다. 조용하다.
+
+**P1-3. 운영이 실제로 쓰는 창에 테스트가 하나도 없다** — 테스트 전문가, 뮤테이션 실측.
+`rg RemindAfter -g '!*_test.go'`가 `notifier.go` 자신의 기본값 말고는 **아무 대입도 찾지
+못한다.** 즉 운영은 언제나 `DefaultRemindAfter`로 돈다. 그런데 a096 테스트는 전부
+`RemindAfter`를 명시해서 그 경로를 건드리지 않는다.
+
+`return DefaultRemindAfter`를 `return 0`으로 바꾸면 — **1라운드가 blocker 2로 거부한
+영구 억제 그 자체다** — obs 스위트 전체가 초록이었다. 저자가 이 뮤테이션을 재현했고,
+3판의 새 테스트를 넣은 뒤 다시 돌려 **새 테스트만 그것을 잡는 것**을 확인했다.
+
+**P1-4. 재무장된 행이 이전 운영자의 서명을 달고 있다** — 보안 패스.
+재무장 UPDATE가 `state`와 `last_error`만 건드리고, `acknowledged_by`는 `AcknowledgeAlert`만
+쓰며 **누구도 지우지 않는다.** 결과는 "미전달"과 "daniel이 확인함"을 동시에 주장하는 행이다.
+사고 후 백로그를 훑는 운영자가 자기 이름을 보고 살아 있는 미전달 critical을 건너뛴다.
+
+### §8과 §9가 갈린 이유
+
+§8은 1라운드 blocker 4건이 닫혔는지를 확인했고, 그 판정은 맞다. §9는 2판이 **새로 만든**
+결함과 2판이 **건드리지 않고 지나간** 결함을 찾았다. 다른 질문이므로 다른 답이 나왔다.
+
+두 판정이 충돌할 때 어느 쪽을 따를지는 취향이 아니다. §9의 P1-1·P1-2·P1-4는 §8이 검토한
+바로 그 코드에 대해 **실패하는 테스트**를 만들었다:
+
+```text
+--- FAIL: TestASettledStampInTheFutureStillOwesDelivery
+    owed = false for a settlement stamp in the future
+    state = "DELIVERED", want "PENDING"
+--- FAIL: TestReArmingClearsThePreviousAcknowledgement
+    acknowledged_by = "daniel" on a PENDING row
+    acknowledged_at = 2026-07-26 08:00:00 +0000 UTC on a PENDING row
+--- FAIL: TestASendThatCannotBeRecordedLatchesTheGate
+    the entry gate is open after a send that could not be recorded
+```
+
+### 3판(a096b)이 무엇을 바꿨나
+
+- `claimOwed`: `elapsed < 0`을 fail-open으로 분리했다. 분기 7개 → 8개.
+- `ClaimAlertForDelivery`: 재무장 UPDATE가 `acknowledged_at = NULL, acknowledged_by = ''`를
+  함께 쓴다. `delivered_at`은 남긴다 — 그것은 이전 에피소드의 기록이고
+  `MarkAlertDelivered`가 덮는다.
+- `Notifier.deliver`: 기록 실패를 **미정착**으로 처리한다. 로그 + `Gate.Block` + `return false`.
+  계약이 "나갔는가"에서 "정착됐는가"로 바뀌었고 주석에 명시했다. 분기 10개 → 12개.
+- 테스트 4건 신규(`a096b_round2_test.go` 2파일). 기존 파일에 더하지 않고 새 파일로 낸 것은
+  logic-map 대상이 번지는 것을 막기 위해서다.
+
+프로덕션 Go 변경은 여전히 `internal/journal/outbox.go`와 `internal/obs/notifier.go` 둘뿐이고
+스키마 마이그레이션은 없다.
+
+### 3판에서 조치하지 않은 것 (P2 6건)
+
+사용자가 P1만 3판 범위로 정했다. 아래는 §9가 냈고 **고치지 않은 채 남긴다.**
+
+1. 재무장이 `title`·`body`·`payload`를 갱신하지 않는다 (Codex + 보안 2소스). `Flush`가 행에서
+   본문을 만들므로 이전 원인으로 보낸다. 오늘은 `Flush`에 비테스트 호출자가 없어 잠복이다.
+2. `claimOwed`의 `default` 분기가 `remindAfter <= 0`을 무시하고 재무장한다 (Codex + 보안).
+   `EnqueueAlert` 주석과 코드가 모순이다. 이 저장소의 어떤 코드도 4번째 상태를 쓰지 않아
+   오늘은 도달 불가다.
+3. claim 트랜잭션 실패 시 gate를 잠그지 않는다. `flatten.go:694`는 그 오류를 `_ =`로 버린다.
+4. `Flush`의 뮤텍스에 테스트가 없다 — 제거해도 스위트가 초록이다 (뮤테이션 실측).
+5. `TestConcurrentObservationsOfOneConditionSendOnce`에 start barrier가 없다.
+   `GOMAXPROCS=1`에서 30회 중 6회 오통과했다 (실측).
+6. `TestAcknowledgeCannotClearTheGateMidSend`의 상호배제 증명이 50ms sleep이다
+   (Codex + 테스트 2소스). 안전한 방향으로 틀린다 — 부하가 걸리면 거짓 통과.
+
+`attempts`가 에피소드를 넘어 누적되는 것도 같이 기록한다. 재시도 예산으로 쓰이지 않으므로
+(`deliver`는 메모리의 `n.Attempts`를 쓴다) 굶기지는 않지만 증거로는 못 읽는다.
+
+### 3판 실측
+
+| | |
+|---|---|
+| `go build` · `go vet` | 통과 |
+| `go test ./...` | **90패키지, FAIL 0** |
+| `go test -race ./internal/obs/` | 통과 73.6s |
+| `go test ./internal/execgw/` | 통과 39.8s |
+| `go test ./internal/journal/` | 통과 362.0s |
+| 커버리지 (`-covermode=set`) | journal **75.0%**, obs **85.4%** |
+| `check_analysis --change a096` | evidence complete, AST 10개 FRESH |
+| `openspec validate --strict` | valid |
+
+분기 주장은 커버리지 프로파일로 직접 대조했다: `claimOwed` B6(미래 스탬프) 진입,
+B5(날짜 없음) 미진입, `deliver` B6·B7(기록 실패 → gate 차단) 진입, B1·B3·B8·B10 미진입.
+
+**정정 하나.** 2판의 obs BTM 5개가 헤더에 `GREEN 84.7%`를 적고 있었는데 3판 실측은
+**85.4%**다. 다섯 파일 전부 고쳤다 — 같은 값의 사본을 하나만 고치면 나머지가 살아남는다.
+`deliver` BTM은 "a096은 이 함수의 본문을 바꾸지 않았다"와 새 본문 분기 B6·B7을 동시에
+주장하고 있었고, 그것도 고쳤다.
