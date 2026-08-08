@@ -1,0 +1,19 @@
+{
+  "id": "STORY-TOS-a095",
+  "title": "A stop must know what it covers",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a095-a-stop-must-know-what-it-covers",
+    "path": "openspec/changes/a095-a-stop-must-know-what-it-covers"
+  },
+  "acceptance": [
+    "A held position the exit policy does not manage is graded critical rather than normal, overturning the recorded reason for the old grade with stated grounds",
+    "Protection reports the quantity it covers and the total risk that quantity carries, computed from the effective stop (baseline_price), not from the frozen initial stop",
+    "A position whose effective stop sits above entry reports negative risk as such rather than as an absolute value, because the sign is the information",
+    "Total risk that grows without bound is reported rather than silently carried",
+    "The stop price does not fall when the average cost changes; a quantity increase is covered by the stop sized for the original quantity and the entry-derived levels stay frozen",
+    "The unmanaged-position alert costs the engine its entry permission when no alert transport is configured, and that cost is disclosed rather than discovered in production",
+    "a092 lands first: the alert must not hold the observation cycle before more alerts are added to it"
+  ]
+}

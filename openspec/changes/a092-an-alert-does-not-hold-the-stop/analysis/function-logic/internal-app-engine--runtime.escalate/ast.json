@@ -1,0 +1,127 @@
+{
+  "file": "internal/app/engine/runtime.go",
+  "source_sha256": "4bcd9ee7f50f6c5051f85da95151d82dd26f7725acc804a0cefb5533ebd534a8",
+  "package": "engine",
+  "function": "escalate",
+  "receiver": "Runtime",
+  "signature": "Runtime.escalate(params=3, results=0)",
+  "start": {
+    "line": 395,
+    "column": 1
+  },
+  "end": {
+    "line": 426,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 412,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 416,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 413,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 421,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 2
+      },
+      "text": "r.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 10
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 31
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 21
+      },
+      "text": "r.opts.Escalate.EscalateOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 3
+      },
+      "text": "r.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 418,
+        "column": 40
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 2
+      },
+      "text": "r.log"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 415,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -30,8 +30,25 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
    Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY 순서를 따른다.
 3. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
    High-risk 기존 함수는 면제할 수 없다.
-4. `make sdd-sync`, `make sdd-check`, `make gate CHANGE=<change-id>`와 독립 리뷰가
+4. 함수 내부의 분기·early return·side effect를 **근거로 삼는 문서**는 그 근거를 손으로
+   읽어서 만들지 않는다. proposal·design·review가 그런 주장을 담으면 대상 함수의
+   `tools/logic-map` AST 산출물을 **먼저** 만들고 그 열거를 근거로 쓴다.
+   산출물 없이 쓴 분기 주장은 미검증이다.
+5. `make sdd-sync`, `make sdd-check`, `make gate CHANGE=<change-id>`와 독립 리뷰가
    끝나기 전에는 완료라고 보고하지 않는다.
+
+## 단계 건너뛰기 금지
+
+각 단계는 앞 단계가 만든 **산출물**을 입력으로 받는다. 산출물 없이 다음 단계로 가면
+그 단계의 근거는 증거가 아니라 기억이 된다.
+
+- CodeGraph hard evidence를 건너뛰고 proposal을 쓰면 호출 사슬이 미추적으로 남는다.
+- Function Logic Map을 구현 단계 task로 미루고 분기를 주장하면, **반증 산출물이 그것을
+  필요로 하는 문서보다 나중에 생산된다.** 이 순서 역전이 같은 오류를 반복시킨다.
+- 손으로 읽은 증거는 **볼 곳을 고르므로** 선택적이고, AST 열거는 선택적이지 않다.
+  건너뛴 단계의 결과는 "안 봤다"가 아니라 "보는 방법을 안 썼다"이다.
+
+건너뛰려면 `not-applicable` 사유를 review와 완료 보고에 남긴다. **침묵한 생략은 금지다.**
 
 ## 에이전트 실행 순서
 
@@ -40,7 +57,8 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
 2. memory recall + openspec/specs/ + 진행 중 change 확인
 3. CodeGraph hard evidence + 현재 코드·기존 테스트 확인
 4. CodeGraphContext/GBrain 보조 문맥 교차검증
-5. 기존 함수 내부 편집이면 Function Logic Map 작성
+5. 기존 함수 내부를 편집하거나 그 내부를 근거로 주장하면 Function Logic Map 작성
+   (문서가 분기를 주장하는 시점이 이미 작성 시점이다 — 구현 task로 미루지 않는다)
 6. High-risk면 Pre-Edit 선언
 7. RED 테스트 → GREEN 최소 구현 → Refactor → Verify
 8. gstack review + make sdd-check + make gate

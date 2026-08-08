@@ -1,0 +1,104 @@
+{
+  "file": "internal/app/engine/runtime.go",
+  "source_sha256": "4bcd9ee7f50f6c5051f85da95151d82dd26f7725acc804a0cefb5533ebd534a8",
+  "package": "engine",
+  "function": "CheckHealth",
+  "receiver": "Runtime",
+  "signature": "Runtime.CheckHealth(params=1, results=0)",
+  "start": {
+    "line": 368,
+    "column": 1
+  },
+  "end": {
+    "line": 388,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 369,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 370,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 374,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 375,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 383,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 18
+      },
+      "text": "loop.Health.ConsecutiveFailures"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 379,
+        "column": 5
+      },
+      "text": "r.clearLatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 7
+      },
+      "text": "r.takeLatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 3
+      },
+      "text": "r.escalate"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 373,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

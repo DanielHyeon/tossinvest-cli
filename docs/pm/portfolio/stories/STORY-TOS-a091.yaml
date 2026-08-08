@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a091",
+  "title": "A stop that sold nothing is critical",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a091-a-stop-that-sold-nothing-is-critical",
+    "path": "openspec/changes/a091-a-stop-that-sold-nothing-is-critical"
+  },
+  "acceptance": [
+    "When the confirmed floor reduces a protective exit's submitted quantity to zero, the engine reports it at critical grade so the event is written to the durable outbox and a delivery failure reaches the entry gate",
+    "The rule applies both when the floor authorises zero and when the floor cannot be computed at all, because the operator's situation is identical: no share of the stop went out; the cause is carried in the detail instead of in the grade",
+    "A partial cap that still submits a positive quantity keeps its existing grade and wording, because a reduced exposure is not an unprotected one",
+    "A take-profit reduced to zero keeps its existing grade, because a take-profit that does not go out does not raise exposure",
+    "The report never says that part of the order went out when the submitted quantity was zero",
+    "The submitted quantity and the way the confirmed floor is applied are unchanged; only the reporting changes"
+  ]
+}

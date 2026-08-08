@@ -89,3 +89,10 @@
 | `a083-a-block-releases-itself` | STORY-TOS-a083 | implemented |
 | `a084-a-quarantine-outlives-its-cause` | STORY-TOS-a084 | implemented |
 | `a085-an-alert-says-which-stock` | STORY-TOS-a085 | implemented |
+| `a087-a-protective-exit-is-a-market-order` | STORY-TOS-a087 | in_progress |
+| `a089-an-unserved-stop-is-counted` | STORY-TOS-a089 | in_progress |
+| `a091-a-stop-that-sold-nothing-is-critical` | STORY-TOS-a091 | in_progress |
+| `a092-an-alert-does-not-hold-the-stop` | STORY-TOS-a092 | in_progress |
+| `a094-a-stop-clears-what-blocks-it` | STORY-TOS-a094 | in_progress |
+| `a095-a-stop-must-know-what-it-covers` | STORY-TOS-a095 | in_progress |
+| `a096-one-condition-is-one-alert` | STORY-TOS-a096 | implemented |

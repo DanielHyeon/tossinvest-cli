@@ -1,0 +1,181 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "d5b3004c638690fb94ffbfaeb4caac4ea1300684b98e325485214b7114bae990",
+  "package": "obs",
+  "function": "notifyCritical",
+  "receiver": "Notifier",
+  "signature": "Notifier.notifyCritical(params=2, results=1)",
+  "start": {
+    "line": 153,
+    "column": 1
+  },
+  "end": {
+    "line": 190,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 158,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 164,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 179,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 4
+      },
+      "text": "n.Log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 17
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 3
+      },
+      "text": "n.publishBestEffort"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 13
+      },
+      "text": "n.eventKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 13
+      },
+      "text": "encodeFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 13
+      },
+      "text": "n.Journal.EnqueueAlert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 6
+      },
+      "text": "n.deliver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 3
+      },
+      "text": "n.escalate"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,47 @@
+{
+  "file": "internal/journal/outbox.go",
+  "source_sha256": "5faf069236e289164dc1df361bfb7e032424efcd1520a1d32afd27bc108c6c6b",
+  "package": "journal",
+  "function": "EnqueueAlert",
+  "receiver": "Journal",
+  "signature": "Journal.EnqueueAlert(params=2, results=2)",
+  "start": {
+    "line": 115,
+    "column": 1
+  },
+  "end": {
+    "line": 122,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 16
+      },
+      "text": "j.ClaimAlertForDelivery"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

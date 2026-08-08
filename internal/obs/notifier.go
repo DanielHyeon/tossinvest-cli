@@ -47,6 +47,17 @@ const DefaultCriticalAttempts = 3
 // DefaultRetryDelay is the wait between critical delivery attempts.
 const DefaultRetryDelay = 2 * time.Second
 
+// DefaultRemindAfter is how long a critical alert stays quiet after it lands
+// before the same condition is worth telling the operator about again.
+//
+// A persistent condition is re-observed on every cycle — every few seconds for
+// the exit loop — so without a bound the reminder is the pager storm it exists
+// to replace. An hour is the compromise: it holds a weekend of one stuck
+// position to a couple of dozen pushes, and it is short enough that a transport
+// that dies after a delivery is found and latched within the hour rather than
+// never (a096).
+const DefaultRemindAfter = time.Hour
+
 // Event is what a caller reports.
 type Event struct {
 	Type EventType
@@ -94,7 +105,13 @@ type Notifier struct {
 	Attempts int
 	// RetryDelay is the wait between them. Zero uses DefaultRetryDelay.
 	RetryDelay time.Duration
+	// RemindAfter is how long a delivered critical alert stays quiet before the
+	// same condition earns another send. Zero uses DefaultRemindAfter.
+	RemindAfter time.Duration
 
+	// mu serialises the whole claim-and-send, not just the send. Claiming
+	// outside it would let two observations of one condition both read a row
+	// that has not been delivered yet and both publish (a096 round 1, blocker 1).
 	mu sync.Mutex
 }
 
@@ -174,19 +191,61 @@ func (n *Notifier) notifyCritical(ctx context.Context, e Event) error {
 	}
 	// Durable first, exactly like an intent: a record that only exists in memory
 	// is a record that does not survive the crash it is warning about.
-	id, err := n.Journal.EnqueueAlert(ctx, record)
+	sent, owed, err := n.claimAndDeliver(ctx, record, e)
 	if err != nil {
 		return fmt.Errorf("obs: recording a critical alert: %w", err)
 	}
 
-	if !n.deliver(ctx, id, e) {
-		// Outside deliver, and that is not tidiness: deliver holds n.mu, the
+	if owed && !sent {
+		// Outside claimAndDeliver, and that is not tidiness: it holds n.mu, the
 		// escalation announces through a ModeAnnouncer, and an announcer wired to
 		// this Notifier would re-enter Notify and deadlock on a mutex Go does not
 		// make reentrant.
 		n.escalate(ctx, e)
 	}
 	return nil
+}
+
+// claimAndDeliver asks the outbox whether this send is owed and, if it is,
+// performs it — both under the delivery mutex.
+//
+// Both under one lock because they are one decision. Claiming outside it lets
+// two observations of the same condition read the same not-yet-delivered row,
+// each conclude the send is owed, and each publish; the second then fails to
+// mark a row that is already DELIVERED, which is exactly the `no such alert`
+// line the 2026-08-08 storm left behind (a096 round 1, blocker 1).
+//
+// It reports whether the send happened and whether it was owed at all. A send
+// that was never owed is not a delivery failure and must not escalate.
+func (n *Notifier) claimAndDeliver(
+	ctx context.Context, record journal.Alert, e Event,
+) (sent bool, owed bool, err error) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	id, owed, err := n.Journal.ClaimAlertForDelivery(ctx, record, n.remindAfter())
+	if err != nil {
+		return false, false, err
+	}
+	if !owed {
+		// The operator already has this one and the reminder window has not
+		// elapsed. Sending again would tell them nothing new and would spend the
+		// channel they need for the next distinct condition.
+		//
+		// The line for this observation was still written: logEvent runs in
+		// Notify ahead of the grading branch, so the record of how long the
+		// condition persisted does not depend on whether it was sent.
+		return false, false, nil
+	}
+	return n.deliver(ctx, id, e), true, nil
+}
+
+// remindAfter is the configured reminder window, or the default.
+func (n *Notifier) remindAfter() time.Duration {
+	if n.RemindAfter > 0 {
+		return n.RemindAfter
+	}
+	return DefaultRemindAfter
 }
 
 // escalate persists the automatic tightening that sustained critical-alert
@@ -234,13 +293,16 @@ func (n *Notifier) escalate(ctx context.Context, e Event) {
 }
 
 // deliver publishes one outbox row under the retry budget, latching the gate if
-// it cannot. It reports whether the alert went out.
+// it cannot. It reports whether the delivery is *settled* — published and
+// recorded as published — which is not the same as whether it went out. A send
+// this system cannot account for counts as unsettled (a096 round 2).
+//
+// PRECONDITION: the caller holds n.mu, and holds it across the claim that
+// produced id as well as this send. One delivery loop at a time — two
+// goroutines publishing the same backlog would double-send and race on the
+// attempt counter — and one claim-and-send at a time, or two observations of
+// the same condition each conclude the send is owed and each publish.
 func (n *Notifier) deliver(ctx context.Context, id int64, e Event) bool {
-	// One delivery loop at a time: two goroutines publishing the same backlog
-	// would double-send and race on the attempt counter.
-	n.mu.Lock()
-	defer n.mu.Unlock()
-
 	attempts := n.Attempts
 	if attempts <= 0 {
 		attempts = DefaultCriticalAttempts
@@ -255,10 +317,32 @@ func (n *Notifier) deliver(ctx context.Context, id int64, e Event) bool {
 		}
 		err := n.Publisher.Publish(ctx, msg)
 		if err == nil {
-			if markErr := n.Journal.MarkAlertDelivered(ctx, id); markErr != nil && n.Log != nil {
-				n.Log.Error(EventAlertUndelivered, markErr)
+			markErr := n.Journal.MarkAlertDelivered(ctx, id)
+			if markErr == nil {
+				return true
 			}
-			return true
+			// The push landed and the record of it did not. Reporting success
+			// here — which this did until a096 round 2 — leaves the row PENDING,
+			// so the next observation finds the send owed and sends again, and
+			// the one after that. That is the 2026-08-08 storm reached through
+			// the success path, and it is silent, because a caller told the send
+			// succeeded neither latches the gate nor escalates.
+			//
+			// "The push went out" is not "the operator is covered" when this
+			// system's own record says it is not. So an unaccountable send is an
+			// unsettled one: stop new entries, let exits through.
+			detail := fmt.Sprintf(
+				"a critical %s alert was published but could not be recorded as delivered: %v",
+				e.Type, markErr)
+			if n.Log != nil {
+				n.Log.Error(EventAlertUndelivered, markErr,
+					FieldEvent, string(e.Type),
+					"alert_id", id)
+			}
+			if n.Gate != nil {
+				n.Gate.Block(execgw.ReasonAlertUndelivered, detail)
+			}
+			return false
 		}
 		lastErr = err
 		if markErr := n.Journal.MarkAlertAttemptFailed(ctx, id, err.Error()); markErr != nil && n.Log != nil {
@@ -308,6 +392,12 @@ func (n *Notifier) Flush(ctx context.Context) (delivered int, remaining int, err
 	if n.Journal == nil {
 		return 0, 0, nil
 	}
+	// The same mutex the notify path holds. Without it a flush and an
+	// observation can publish the same row at the same moment, which is the
+	// double-send this package exists to prevent (a096 round 1, blocker 1).
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	pending, err := n.Journal.PendingAlerts(ctx, 0)
 	if err != nil {
 		return 0, 0, err
@@ -340,6 +430,13 @@ func (n *Notifier) Flush(ctx context.Context) (delivered int, remaining int, err
 // It marks the outbox rows and, only when none is left pending, clears the entry
 // gate. Delivery recovering is not enough on its own: the alert existed to make a
 // human look at something, and "the network came back" is not that human.
+//
+// It holds the delivery mutex for the same reason the notify path does. The
+// release is a read-then-decide: count what is still pending, and clear the gate
+// only if that count is zero. A send running alongside it can turn a settled row
+// back into a pending one — a096 re-arms a row whose reminder window elapsed —
+// and if that lands between the count and the clear, the gate opens while an
+// undelivered critical alert exists. Which is the one thing the gate is for.
 func (n *Notifier) Acknowledge(ctx context.Context, operator string, ids ...int64) error {
 	if strings.TrimSpace(operator) == "" {
 		return errors.New("obs: acknowledging an alert requires the operator's identity")
@@ -350,6 +447,9 @@ func (n *Notifier) Acknowledge(ctx context.Context, operator string, ids ...int6
 		}
 		return nil
 	}
+
+	n.mu.Lock()
+	defer n.mu.Unlock()
 
 	if len(ids) == 0 {
 		pending, err := n.Journal.PendingAlerts(ctx, 0)

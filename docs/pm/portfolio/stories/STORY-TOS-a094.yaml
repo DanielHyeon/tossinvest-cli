@@ -1,0 +1,19 @@
+{
+  "id": "STORY-TOS-a094",
+  "title": "A stop clears what blocks it",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a094-a-stop-clears-what-blocks-it",
+    "path": "openspec/changes/a094-a-stop-clears-what-blocks-it"
+  },
+  "acceptance": [
+    "A broker refusal whose stored body carries a definitive rejection code settles the attempt rather than leaving it IN_DOUBT, and the same reading is applied once at startup to attempts already recorded that way",
+    "The reclassification reads only what the ledger already stored; it sends nothing to the broker and invents no new evidence",
+    "An attempt that reaches a terminal state releases the exit proposal it armed, so a settled attempt cannot leave a position frozen behind a pending_action nobody will resolve",
+    "The release writes only the guarded proposal columns; no stop price moves as a result",
+    "Clearing the symbol before a protective exit sees working orders the engine did not place, using the order snapshot the fill detector already maintains rather than a new synchronous broker read",
+    "A rung rollback that accompanies a release changes only the active rung, never a stop price, and a level that cannot be parsed as a rung is released without rollback",
+    "Resolution is idempotent: resolving an already-resolved proposal is not an error and does not write twice"
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "d5b3004c638690fb94ffbfaeb4caac4ea1300684b98e325485214b7114bae990",
+  "package": "obs",
+  "function": "Notify",
+  "receiver": "Notifier",
+  "signature": "Notifier.Notify(params=2, results=1)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 116,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 14
+      },
+      "text": "SeverityOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 2
+      },
+      "text": "n.logEvent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 3
+      },
+      "text": "n.publishBestEffort"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 9
+      },
+      "text": "n.notifyCritical"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

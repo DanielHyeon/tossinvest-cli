@@ -1,0 +1,102 @@
+{
+  "file": "internal/journal/outbox.go",
+  "source_sha256": "5faf069236e289164dc1df361bfb7e032424efcd1520a1d32afd27bc108c6c6b",
+  "package": "journal",
+  "function": "MarkAlertDelivered",
+  "receiver": "Journal",
+  "signature": "Journal.MarkAlertDelivered(params=2, results=1)",
+  "start": {
+    "line": 313,
+    "column": 1
+  },
+  "end": {
+    "line": 324,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 321,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 9
+      },
+      "text": "RFC3339"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 17
+      },
+      "text": "j.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 14
+      },
+      "text": "j.db.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 9
+      },
+      "text": "requireOneRow"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 315,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

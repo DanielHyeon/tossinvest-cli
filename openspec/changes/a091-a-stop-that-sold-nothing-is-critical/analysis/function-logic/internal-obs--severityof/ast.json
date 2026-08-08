@@ -1,0 +1,45 @@
+{
+  "file": "internal/obs/event.go",
+  "source_sha256": "acf37eb4e4529612372fd402f29aea9993c87dc18ad87b747cc5497d2d53d356",
+  "package": "obs",
+  "function": "SeverityOf",
+  "signature": "SeverityOf(params=1, results=1)",
+  "start": {
+    "line": 309,
+    "column": 1
+  },
+  "end": {
+    "line": 314,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 311,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

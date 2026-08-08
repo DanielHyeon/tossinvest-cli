@@ -1,0 +1,281 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "68ca1b4993715898bf18540eed2b56f3342d0028675f472de286c5e32f2a9e2b",
+  "package": "obs",
+  "function": "Acknowledge",
+  "receiver": "Notifier",
+  "signature": "Notifier.Acknowledge(params=3, results=1)",
+  "start": {
+    "line": 440,
+    "column": 1
+  },
+  "end": {
+    "line": 478,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 445,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 454,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 456,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 459,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 463,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 464,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 474,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 442,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 448,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 457,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 466,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 472,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 4
+      },
+      "text": "n.Gate.Clear"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 2
+      },
+      "text": "n.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 8
+      },
+      "text": "n.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 19
+      },
+      "text": "n.Journal.PendingAlerts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 10
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 464,
+        "column": 13
+      },
+      "text": "n.Journal.AcknowledgeAlert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 5
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 20
+      },
+      "text": "n.Journal.UndeliveredCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 3
+      },
+      "text": "n.Gate.Clear"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 455,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 460,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 464,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 470,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 452,
+        "column": 2
+      },
+      "text": "n.mu.Unlock"
+    }
+  ]
+}

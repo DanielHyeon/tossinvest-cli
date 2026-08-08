@@ -1,0 +1,29 @@
+{
+  "file": "internal/app/engine/exitwiring.go",
+  "source_sha256": "43dcca8f37b748962f5e066706a887c40f694d189fc81f7b7697949e084cb020",
+  "package": "engine",
+  "function": "newNotifier",
+  "signature": "newNotifier(params=6, results=1)",
+  "start": {
+    "line": 71,
+    "column": 1
+  },
+  "end": {
+    "line": 81,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

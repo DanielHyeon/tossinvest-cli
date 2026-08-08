@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a092",
+  "title": "An alert does not hold the stop",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a092-an-alert-does-not-hold-the-stop",
+    "path": "openspec/changes/a092-an-alert-does-not-hold-the-stop"
+  },
+  "acceptance": [
+    "An observation cycle that raises an operator alert pays for a local durable write and nothing more: it does not wait for the remote send, its retries, or the waits between them",
+    "The rule holds for every alert the cycle raises regardless of grade, because the test is whether the send budget exceeds the observation period and the grade is not that test",
+    "A position judged later in the same cycle is not delayed by an alert raised for a position judged earlier",
+    "A critical alert is still written to the durable outbox before the cycle moves on, so the record survives the crash it warns about",
+    "Delivery failure still latches the entry gate and still escalates the operating mode; only the goroutine that waits for it changes",
+    "An ordinary alert may be dropped when the send queue is full, because best-effort already permits loss, but the loss is recorded rather than silent",
+    "Critical alerts left undelivered are retried when the transport recovers, and a successful retry does not by itself release the entry block",
+    "The judgement, the submitted quantity and the moment of submission are unchanged"
+  ]
+}

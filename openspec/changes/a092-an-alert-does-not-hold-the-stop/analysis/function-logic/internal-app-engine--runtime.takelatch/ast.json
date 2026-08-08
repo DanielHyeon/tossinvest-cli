@@ -1,0 +1,80 @@
+{
+  "file": "internal/app/engine/runtime.go",
+  "source_sha256": "4bcd9ee7f50f6c5051f85da95151d82dd26f7725acc804a0cefb5533ebd534a8",
+  "package": "engine",
+  "function": "takeLatch",
+  "receiver": "Runtime",
+  "signature": "Runtime.takeLatch(params=1, results=1)",
+  "start": {
+    "line": 428,
+    "column": 1
+  },
+  "end": {
+    "line": 436,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 431,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 432,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 435,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 2
+      },
+      "text": "r.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 8
+      },
+      "text": "r.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 434,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 430,
+        "column": 2
+      },
+      "text": "r.mu.Unlock"
+    }
+  ]
+}

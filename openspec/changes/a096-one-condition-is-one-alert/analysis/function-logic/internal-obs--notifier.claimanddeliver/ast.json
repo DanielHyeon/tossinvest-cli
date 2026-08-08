@@ -1,0 +1,119 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "68ca1b4993715898bf18540eed2b56f3342d0028675f472de286c5e32f2a9e2b",
+  "package": "obs",
+  "function": "claimAndDeliver",
+  "receiver": "Notifier",
+  "signature": "Notifier.claimAndDeliver(params=3, results=3)",
+  "start": {
+    "line": 220,
+    "column": 1
+  },
+  "end": {
+    "line": 241,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 228,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 238,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 2
+      },
+      "text": "n.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 8
+      },
+      "text": "n.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 19
+      },
+      "text": "n.Journal.ClaimAlertForDelivery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 64
+      },
+      "text": "n.remindAfter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 9
+      },
+      "text": "n.deliver"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 224,
+        "column": 2
+      },
+      "text": "n.mu.Unlock"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00",
+  "package": "engine",
+  "function": "clearDelay",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.clearDelay(params=1, results=0)",
+  "start": {
+    "line": 1595,
+    "column": 1
+  },
+  "end": {
+    "line": 1598,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1596,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1597,
+        "column": 2
+      },
+      "text": "delete"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

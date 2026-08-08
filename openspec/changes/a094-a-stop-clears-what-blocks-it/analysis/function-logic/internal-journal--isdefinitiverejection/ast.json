@@ -1,0 +1,61 @@
+{
+  "file": "internal/journal/dispatch.go",
+  "source_sha256": "42165f21f0707b4d6424907acb386e3ec6475402d975e8c09e40ddd0cd058536",
+  "package": "journal",
+  "function": "isDefinitiveRejection",
+  "signature": "isDefinitiveRejection(params=1, results=1)",
+  "start": {
+    "line": 349,
+    "column": 1
+  },
+  "end": {
+    "line": 356,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 351,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 353,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 352,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 354,
+        "column": 3
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

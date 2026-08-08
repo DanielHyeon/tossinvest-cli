@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a087",
+  "title": "A protective exit is a market order, not a limit order",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a087-a-protective-exit-is-a-market-order",
+    "path": "openspec/changes/a087-a-protective-exit-is-a-market-order"
+  },
+  "acceptance": [
+    "A stop-loss or baseline-breach exit is submitted as a market order and carries no price field, so exchange tick grid, price bands and quote staleness cannot reject it",
+    "A take-profit exit keeps its limit price unchanged, because immediacy is not its purpose and a market conversion would widen fill uncertainty against the position",
+    "The entry-side LIMIT-only rule is untouched and a buy market order is still rejected, fixed by its own test",
+    "The execution gate admits a sell market order and rejects one that carries a price, matching the official API contract that MARKET must not send price",
+    "A protective exit no longer refuses for having no price, because the market path needs none",
+    "The ledger records an empty order price and a market order type for a market exit, and never records the observed price or the baseline as a submitted price",
+    "Operator screens and alerts render a priceless exit intent as a market order rather than as a missing value",
+    "The emergency flatten path, the live verification tool and the conditional-order path are unchanged, fixed by tests"
+  ]
+}

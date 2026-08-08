@@ -1,0 +1,20 @@
+{
+  "id": "STORY-TOS-a089",
+  "title": "An unserved stop is counted, recorded and visible",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a089-an-unserved-stop-is-counted",
+    "path": "openspec/changes/a089-an-unserved-stop-is-counted"
+  },
+  "acceptance": [
+    "A protective exit proposal that ends an observation cycle without a live order increments a consecutive-unserved count for that position, whatever stopped it, so the fifth failure of the same stop is distinguishable from the first",
+    "The consecutive-unserved count and its first-unserved timestamp are reset only when a protective exit is actually accepted or the position closes, never by a proposal being armed or by the symbol's other orders being cleared",
+    "Every alert about a protective exit that did not become an order carries the consecutive-unserved count",
+    "The liquidation delay clock measures the time a position has needed a protective exit with no live protective order, and clearing the symbol's other orders does not release it",
+    "A submission whose result does not establish whether the order exists neither starts nor releases the delay clock",
+    "A critical alert whose condition recurs re-opens its outbox row as undelivered and refreshes it to the latest occurrence, so attempts accumulate and a failed re-delivery is counted as undelivered",
+    "An operator acknowledgement cannot clear the entry gate while a recurrence is still undelivered",
+    "A broker refusal's own reason code and offending field are recorded as separate queryable values with the original detail preserved, nothing is inferred when the response omits them, and no behaviour branches on what was recorded"
+  ]
+}

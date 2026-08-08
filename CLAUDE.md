@@ -21,6 +21,9 @@
 - Story/change scope가 허용하지 않으면 production trading code를 변경하지 않는다.
 - Full SDD 순서는 memory recall → OpenSpec → CodeGraph → CodeGraphContext →
   Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY → gstack/make gate → PM/archive → memory retain이다.
+- **단계를 건너뛰지 않는다.** 함수 내부의 분기·early return을 근거로 삼는 문서는
+  proposal이라도 `tools/logic-map` AST 산출물을 먼저 만든다. 손으로 읽은 증거는 볼 곳을
+  고르므로 선택적이다. 생략하려면 `not-applicable` 사유를 남긴다 — 침묵한 생략은 금지.
 - `make sdd-sync`가 기록한 CodeGraph worktree fingerprint가 stale이면 `make sdd-check`와 완료 gate를 통과할 수 없다.
 - CodeGraphContext, GBrain, SDD Control Graph는 advisory이며 현재 HEAD·OpenSpec·테스트를 대체하지 않는다.
 - 주문 실행은 공식 Open API만 사용하고 WTS는 조회 전용이다.

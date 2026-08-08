@@ -108,29 +108,114 @@ type Alert struct {
 // second row: the caller observing the same condition again is the normal case,
 // and duplicating it would turn one problem into a pager storm. The existing
 // row's id is returned so the caller can still drive its delivery.
+//
+// Use it when the alert only has to be *recorded*. A caller that is about to
+// send needs ClaimAlertForDelivery instead, because the id alone does not say
+// whether that send is still owed.
 func (j *Journal) EnqueueAlert(ctx context.Context, a Alert) (int64, error) {
+	// Zero remindAfter: this caller does not deliver, so it has no reminder
+	// policy to express and must not re-arm a settled row on somebody else's
+	// behalf. ClaimAlertForDelivery may still recover an unrecognised state to
+	// PENDING; that is fail-safe state repair, not a timed reminder.
+	id, _, err := j.ClaimAlertForDelivery(ctx, a, 0)
+	return id, err
+}
+
+// ClaimAlertForDelivery records an alert and reports whether a send is owed. It
+// deduplicates exactly as EnqueueAlert does — same row, same id.
+//
+// The second return is the point. Deduplicating the row while sending on every
+// observation is not "one condition, one alert": the row folds and the
+// condition does not, so a caller holding only an id arrives with the same id
+// every cycle and sends every time. Then the deduplication is what *sustains*
+// the storm rather than preventing it. On 2026-08-08 that was one outbox row
+// and sixty pushes, one every 5.6 seconds, for as long as the market stayed
+// shut (a096).
+//
+// # Owed
+//
+// True for a row this call inserted, and for any row still PENDING. A send that
+// failed is unfinished rather than duplicate, so it keeps its retry budget and
+// the entry block that follows a spent one.
+//
+// True again for a settled row — DELIVERED, or ACKNOWLEDGED by an operator —
+// once remindAfter has elapsed since it settled. Such a row is *re-armed* to
+// PENDING here, in this transaction, so everything downstream is the ordinary
+// first-delivery path: the retry budget, the gate latch and the operating-mode
+// escalation all apply to the reminder exactly as they applied to the original.
+//
+// Permanent suppression was the first design and it was wrong twice. It removed
+// the only thing that periodically proved the transport still worked, so an
+// engine could trade on with a dead alert channel; and because an event key
+// carries the condition and not its cause — `exit.proposal_refused` is keyed by
+// position, action and rung, never by the refusal — it silenced a later, unlike
+// occurrence on the strength of an earlier one. A window costs one push per
+// interval per condition and returns both.
+//
+// remindAfter <= 0 disables re-arming: a settled row is never owed. That is for
+// callers that record without delivering and therefore hold no reminder policy.
+//
+// # Unknown states
+//
+// A state this build does not recognise is treated as owed. The column has no
+// CHECK constraint, so an unrecognised value is a row written by something this
+// code does not understand, and the safe reading of "I do not know whether the
+// operator got this" is to send.
+//
+// The state is read inside the transaction that resolves the id, so the two are
+// one instant's answer and nothing can settle between them. Exclusion against a
+// concurrent claimer is the caller's: obs.Notifier holds its delivery mutex
+// across the claim and the send.
+func (j *Journal) ClaimAlertForDelivery(
+	ctx context.Context, a Alert, remindAfter time.Duration,
+) (int64, bool, error) {
 	key := strings.TrimSpace(a.EventKey)
 	if key == "" {
-		return 0, errors.New("journal: an alert needs an event key, or it cannot be deduplicated")
+		return 0, false, errors.New("journal: an alert needs an event key, or it cannot be deduplicated")
 	}
 	if strings.TrimSpace(a.Type) == "" {
-		return 0, errors.New("journal: an alert needs an event type")
+		return 0, false, errors.New("journal: an alert needs an event type")
 	}
-	now := RFC3339(j.clk.Now())
+	nowAt := j.clk.Now()
+	now := RFC3339(nowAt)
 
 	tx, err := j.db.BeginTx(ctx, nil)
 	if err != nil {
-		return 0, fmt.Errorf("journal: enqueueing alert %s: %w", key, err)
+		return 0, false, fmt.Errorf("journal: enqueueing alert %s: %w", key, err)
 	}
 	defer tx.Rollback()
 
 	var existing int64
-	err = tx.QueryRowContext(ctx, `SELECT id FROM alert_outbox WHERE event_key = ?`, key).Scan(&existing)
+	var state string
+	var deliveredAt, acknowledgedAt sql.NullString
+	err = tx.QueryRowContext(ctx,
+		`SELECT id, state, delivered_at, acknowledged_at FROM alert_outbox WHERE event_key = ?`,
+		key).Scan(&existing, &state, &deliveredAt, &acknowledgedAt)
 	switch {
 	case err == nil:
-		return existing, tx.Commit()
+		owed, rearm := claimOwed(state, deliveredAt, acknowledgedAt, nowAt, remindAfter)
+		if rearm {
+			// Back to PENDING so the reminder walks the same path the original
+			// did. delivered_at stays as the record of the previous episode, and
+			// MarkAlertDelivered overwrites it when this send lands.
+			//
+			// The acknowledgement does not stay. acknowledged_by exists to record
+			// that a named human saw this alert, and this is a new episode they
+			// have not seen; leaving it produces a row that reads "undelivered"
+			// and "acknowledged by daniel" at the same time. An operator triaging
+			// a backlog after an incident skips a live undelivered critical alert
+			// on the strength of their own name on it (a096 round 2).
+			if _, uerr := tx.ExecContext(ctx,
+				`UPDATE alert_outbox
+				    SET state = ?, last_error = '', acknowledged_at = NULL, acknowledged_by = ''
+				  WHERE id = ?`,
+				AlertPending, existing); uerr != nil {
+				return 0, false, fmt.Errorf("journal: re-arming alert %s: %w", key, uerr)
+			}
+		}
+		return existing, owed, tx.Commit()
 	case !errors.Is(err, sql.ErrNoRows):
-		return 0, fmt.Errorf("journal: looking up alert %s: %w", key, err)
+		return 0, false, fmt.Errorf("journal: looking up alert %s: %w", key, err)
 	}
 
 	res, err := tx.ExecContext(ctx,
@@ -138,16 +223,90 @@ func (j *Journal) EnqueueAlert(ctx context.Context, a Alert) (int64, error) {
 		 VALUES(?, ?, ?, ?, ?, ?, ?, ?)`,
 		key, a.Type, a.Severity, a.Title, a.Body, a.Payload, AlertPending, now)
 	if err != nil {
-		return 0, fmt.Errorf("journal: enqueueing alert %s: %w", key, err)
+		return 0, false, fmt.Errorf("journal: enqueueing alert %s: %w", key, err)
 	}
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, fmt.Errorf("journal: reading the id of alert %s: %w", key, err)
+		return 0, false, fmt.Errorf("journal: reading the id of alert %s: %w", key, err)
 	}
 	if err := tx.Commit(); err != nil {
-		return 0, fmt.Errorf("journal: committing alert %s: %w", key, err)
+		return 0, false, fmt.Errorf("journal: committing alert %s: %w", key, err)
 	}
-	return id, nil
+	// The INSERT above wrote AlertPending. Nothing has been sent.
+	return id, true, nil
+}
+
+// claimOwed decides whether a send is owed for an existing row, and whether the
+// row has to be re-armed to PENDING first.
+//
+// It is split out because it is the whole of a096's judgement and nothing else
+// in the transaction is: given a state and when that state was reached, is the
+// operator still owed this alert?
+func claimOwed(
+	state string,
+	deliveredAt, acknowledgedAt sql.NullString,
+	now time.Time,
+	remindAfter time.Duration,
+) (owed bool, rearm bool) {
+	switch state {
+	case AlertPending:
+		// Never sent, or sent and failed. Either way it is unfinished.
+		return true, false
+	case AlertDelivered, AlertAcknowledged:
+		if remindAfter <= 0 {
+			return false, false
+		}
+		settled, ok := latestStamp(deliveredAt, acknowledgedAt)
+		if !ok {
+			// Settled but with no timestamp to measure from. That is a row this
+			// code cannot date, so it cannot claim the window has not elapsed.
+			return true, true
+		}
+		elapsed := now.Sub(settled)
+		if elapsed < 0 {
+			// Settled in the future, which means the clock moved backwards after
+			// the delivery landed — an NTP step-back, a restored snapshot, an RTC
+			// that was ahead at boot. Suppressing here would be the worst of the
+			// two errors: every negative duration is less than the window, so the
+			// key stays silent for the whole skew *plus* the window, nothing
+			// publishes, and therefore neither the gate latch nor the escalation
+			// ever runs.
+			//
+			// This row has exactly the epistemic standing of the undateable row
+			// three lines above, and that one fails open. So does this one
+			// (a096 round 2).
+			return true, true
+		}
+		if elapsed < remindAfter {
+			return false, false
+		}
+		return true, true
+	default:
+		// See the doc comment: an unrecognised state is not evidence of delivery.
+		// Re-arm it as well as declaring the send owed. Otherwise Publish succeeds
+		// but MarkAlertDelivered cannot move the row out of its unknown state, and
+		// every later observation publishes it again.
+		return true, true
+	}
+}
+
+// latestStamp returns the most recent of the parsable timestamps.
+func latestStamp(values ...sql.NullString) (time.Time, bool) {
+	var latest time.Time
+	var found bool
+	for _, v := range values {
+		if !v.Valid || strings.TrimSpace(v.String) == "" {
+			continue
+		}
+		ts, err := time.Parse(time.RFC3339, v.String)
+		if err != nil {
+			continue
+		}
+		if !found || ts.After(latest) {
+			latest, found = ts, true
+		}
+	}
+	return latest, found
 }
 
 // MarkAlertDelivered records a successful send.

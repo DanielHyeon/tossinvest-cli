@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a096",
+  "title": "One condition is one alert",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a096-one-condition-is-one-alert",
+    "path": "openspec/changes/a096-one-condition-is-one-alert"
+  },
+  "acceptance": [
+    "A critical alert whose outbox row has already been delivered or acknowledged is not sent again when the same condition is observed inside the reminder window",
+    "After the reminder window, the same condition is re-armed onto the ordinary PENDING delivery path so transport failure still latches the entry gate",
+    "An unrecognised outbox state is treated as owed and re-armed before delivery, preventing a successful publish from failing its completion mark and repeating",
+    "A row still awaiting delivery is retried on the next observation, because a failed send is unfinished rather than duplicate",
+    "The retry budget, the entry-gate latch and the operating-mode escalation that follow a spent budget are unchanged",
+    "The structured log still records every observation, so suppressing the transport does not shorten the record of how long a condition persisted",
+    "The deduplication contract is verified by counting sends, not by counting outbox rows, because the row count is guaranteed by the UNIQUE constraint and never reaches the send path",
+    "Callers that only record an alert keep their existing signature and are not required to reason about delivery",
+    "No order, stop, take-profit or sizing path is touched"
+  ]
+}
