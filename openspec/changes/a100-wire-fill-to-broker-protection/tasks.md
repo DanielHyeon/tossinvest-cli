@@ -115,18 +115,42 @@
   `soak` 문자열이 없다) 재생성 후 살아난 것은 engine·console·httpapi뿐이다.
   ⇒ **배포할 때마다 attestation 시계가 조용히 멈춘다.** attestation은 2026-08-29에 만료되므로
   이것은 a100과 무관하게 운영 결함이다. 6.5와 같은 자리에 정리 change로 등록한다.
-- [ ] 0.10b-1 **soak를 다시 시작한다.** 콘솔의 soak restart가 지원 경로다(a060이 profile과
-  token cache 인계를 처리한다). 에이전트의 `docker exec` 시도는 차단됐고 우회하지 않았다.
-- [ ] 0.10c **배포 직후 첫 사이클에서 세 endpoint의 결과를 확인한다.** 미지수 하나가 남아 있다:
-  soak의 `--symbols` 기본값은 `005930`인데(`cmd/tossctl/soak.go:162`) 보유 목록
-  (272210·333430·IONQ·TSLA) 밖이므로 **미보유 종목에 대한 `GET /sellable-quantity`의 응답을
-  모른다.** 실패해도 막히는 것은 없다(required 목록에 없으므로 `Evaluate`·completeness·
-  credential 어느 것도 건드리지 않는다). 실패하면 soak를 보유 종목으로 재시작한다.
-- [ ] 0.12 **soak를 지금 다시 시작한다 — a100과 무관하게 필요하다.** attestation은 2026-08-29에
-  만료되고 soak는 2026-08-05 이후 돌지 않았다. 그때까지 새 기록이 없으면 automation gate를 켠
-  엔진은 **a100이 없어도** 뜨지 않는다. 0.10의 (b)와 같은 작업이므로 먼저 시작해 두면 a100의
-  임계 경로가 짧아진다. **probe 추가(0.10 (a)) 전에 시작해도 무방하다** — 기존 probe의 streak는
-  그대로 쌓이고, 조건주문 probe는 추가된 뒤부터의 window에서 증명되면 된다.
+- [x] 0.10b-1 **soak 재시작 완료 (2026-08-12 08:44:51 KST).** 사용자가 콘솔의 soak restart를
+  눌렀다. 에이전트의 `docker exec` 시도는 차단됐고 우회하지 않았다 — 지원 경로가 실제로
+  지원 경로였다. audit에 `soak.autostart` 두 줄이 남았다(`old:false→true`, 이어서
+  `old:true→true`): 버튼이 3.6초 간격으로 두 번 눌렸고, 두 번째가 첫 서베이를 정상 종료시킨 뒤
+  새로 세웠다. 그것이 버튼의 설계된 동작이다(`restartSoak`).
+- [x] 0.10c **세 endpoint 실측 완료 (cycle 2026-08-11T23:44:54Z → 23:46:00Z, `endpoints 9/9`).**
+
+  | endpoint | 결과 | 요청 | latency |
+  |---|---|---|---|
+  | `GET /api/v1/conditional-orders` | **ok** | **2** | 230ms |
+  | `GET /api/v1/conditional-orders/{id}` | **ok** | 1 | 315ms |
+  | `GET /api/v1/sellable-quantity` | **ok** | 1 | 134ms |
+
+  세 가지가 확인됐다.
+  ① **미지수가 풀렸다** — 미보유 종목 `005930`에 대해 `GET /sellable-quantity`가 **답한다.**
+  보유 종목으로 재시작할 필요가 없다.
+  ② `conditional-orders`의 **요청 2건**은 OPEN·CLOSED 두 그룹을 각각 세는 정정이 기록에
+  그대로 나타난 것이다(정정 전에는 1로 기록되어 rate budget을 절반으로 과소보고했다).
+  ③ `{id}`가 ok인 것은 **333430 고아 조건주문이 아직 살아 있다**는 뜻이다 — 그것이 이
+  endpoint를 증명 가능하게 만드는 유일한 대상이므로, M-A가 그것을 소진하기 전에 probe를
+  배포해야 한다던 판단(review.md S6)이 맞았고 그 순서를 실제로 지켰다.
+
+  **직전 사이클은 실패했다(같은 기록에 남아 있다).** 두 번째 버튼 누름이 3.6초 만에 첫 서베이를
+  끊었고, 그 서베이는 `credential rate_limited`로 사이클을 닫았다. 그 실패 기록도 세 endpoint를
+  포함하며 `{id}`의 skip 사유가 **"the conditional-order list could not be read, so no id was
+  available"**로 나온다 — 「계정에 조건주문이 없다」와 「목록을 못 읽었다」를 구분하도록 고친
+  사유 문구가 실운영에서 그대로 확인됐다.
+
+  성공 사이클 안에서도 `GET /api/v1/orders`는 429를 네 번 맞고 재시도로 통과했다(30요청·64초).
+  M8의 penalty window가 여전히 존재하며 **probe 셋을 사이클 맨 끝에 둔 판단의 근거가 그대로
+  유효하다** — 429를 맞은 것은 앞의 order walk이고 뒤의 세 probe는 전부 ok다.
+- [x] 0.12 **soak 재가동 완료 (2026-08-12 08:44 KST).** attestation은 2026-08-29에 만료되고
+  soak는 2026-08-05 이후 돌지 않았다. 그때까지 새 기록이 없으면 automation gate를 켠 엔진은
+  **a100이 없어도** 뜨지 않는다. 0.10b-1이 이것을 함께 해소했다 — 성공 사이클 하나가
+  기록됐고 15분 간격으로 계속 돈다. **다음 배포에서 자동으로 살아나는지가 a101의 남은 검증이다**
+  (a101 tasks 5.4).
 - [ ] 0.11 **raw conditional status를 도메인 타입에 실을지 결정한다(D2).** 어댑터가
   `WATCHING/PAUSED/ORDERING/ORDERED`를 같은 값으로 접으므로(`protectionofficial/gateway.go:308-310`)
   일시정지된 주문과 무장된 주문이 구별되지 않는다. 싣지 않기로 하면 M-A가 `PAUSED`의 실재와

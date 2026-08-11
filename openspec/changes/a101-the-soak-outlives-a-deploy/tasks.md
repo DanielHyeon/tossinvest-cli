@@ -68,9 +68,21 @@
   `엔진 자동 시작: 엔진을 시작했다`는 있고 **soak 줄은 없다.** 컨테이너 안에도 console(pid 7)과
   `engine run`(pid 16)뿐이고 soak 프로세스는 없다. `runConfiguredSoakAutostart`의 OFF 분기가
   빈 문자열을 반환한 것이며 `TestConfiguredSoakAutostartOffDoesNotStart`와 같은 동작이다.
-- [ ] 5.4 **ON 경로는 아직 미검증이다.** 운영자가 대시보드에서 **[soak 재시작]을 한 번**
-  눌러야 승인이 기록되고(audit `soak.autostart`), 그 **다음 배포**에서야 자동 복구가
-  관측된다. 이 change의 목적 자체는 그때 검증된다 — 지금은 절반만 확인됐다.
+- [x] 5.4 **승인 기록 확인 (2026-08-12 08:44:51 KST).** 운영자가 [soak 재시작]을 눌렀고
+  세 곳이 전부 일치한다.
+  - config: `{"soak": {"autostart": true}, "engine": {…, "autostart": true, …}}` — **splice가
+    `engine` 블록을 건드리지 않았다.** 두 키의 독립성이 실파일에서 확인됐다(1.4의 단위 테스트가
+    주장하던 것).
+  - audit: `{"action":"soak.autostart","setting":"soak.autostart","old":"false","new":"true"}`
+  - 프로세스: `tossctl --config-dir … --session-file … soak run` (pid 79) — **프로필 플래그가
+    붙어 있다.** a060이 고친 결함(플래그 없는 자식)이 재현되지 않았다.
+
+  **audit 줄이 둘이다.** 버튼이 3.6초 간격으로 두 번 눌렸고 두 번째는 `old:"true" new:"true"`다.
+  그 사이 첫 서베이는 정상 종료되고 새 서베이가 섰다 — 버튼의 설계된 동작이지만, **누를 때마다
+  승인을 다시 쓰므로 값이 바뀌지 않아도 audit 줄이 늘어난다.** 결함은 아니고 소음이다.
+- [ ] 5.6 **자동 복구는 다음 배포에서 검증된다.** 지금 확인된 것은 승인이 기록됐다는 것까지다.
+  다음 컨테이너 재생성에서 콘솔 로그에 `soak 자동 시작:` 줄이 나오고 `soak run` 프로세스가
+  서면 이 change의 목적이 검증된다. 나오지 않으면 이 change는 실패다.
 - [x] 5.5 **리뷰 수정 배포 완료** (2026-08-12 08:43:07 KST, image `14b567319e16`).
   같은 안전 창(두 시장 다 닫힘) 안에서 두 번째 재생성을 했다. 콘솔·엔진 재기동 확인,
   soak 줄은 여전히 없다(키가 없으므로 OFF — 5.2와 같은 결과).
