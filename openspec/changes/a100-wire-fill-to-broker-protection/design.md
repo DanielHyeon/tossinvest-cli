@@ -272,6 +272,64 @@ D4가 배선 지점을 「fill이 journal에 커밋된 이후」로 정했고, D
 **이 면제는 조건부로 남는다.** 구현 중 `dispatch`를 편집하거나 그 분기를 근거로 인용하게 되면
 **그 시점에 AST를 만들고 tasks 착수 전에 완성한다.**
 
+### D8. 배선 지점은 `filldetect.Ledger` 데코레이터다 — 체결 1건당 수렴 1회는 선택이 아니라 전송 형태다
+
+Open question 3의 답. 추정으로 정하지 않겠다고 했고, 정할 필요가 없었다. `internal/filldetect`의
+**타입 계약**이 이미 답을 담고 있다.
+
+**(1) 체결은 이벤트가 아니라 누적 스냅샷이다.** `Snapshot.FilledQuantity`는 "the broker's
+cumulative filled quantity"이고(`detect.go:210-211`), `Applied.Delta`는 "the newly filled quantity,
+always >= 0"이다(`:232-233`). `Cycle.Applied`는 "the ledger verdict **per snapshot**, in observation
+order"다(`:261-262`).
+
+⇒ 거래소에서 부분체결이 연속 3건 나도 **엔진에 3건이 도착하지 않는다.** 한 사이클에 주문당
+`Applied` 하나이고, 그 하나가 그 사이클이 관측한 누적 증분 전체다. **합치는 일은 이미 전송이
+하고 있다.** 여기에 엔진 쪽 배칭 window를 더하는 것은 무보호 구간을 늘릴 뿐이며 안전 불변식
+§0-3·§0-6에 걸린다.
+
+**⇒ 수렴은 「커밋된 양(+)의 delta 1건당 1회」다.** 이것은 보수적 기본값을 고른 결과가 아니라
+전송이 만들어 주는 형태를 그대로 받는 것이다.
+
+**(2) 재조회 빈도에는 이미 하한이 있다.** SSE 이벤트가 할 수 있는 일은 "exactly one thing: make
+the next poll happen sooner"이며 페이로드는 상태 근거가 될 수 없다(`hints.go:6-8`). 토픽당
+single-flight에 큐 깊이 1, 최소 간격은 `DefaultHintInterval = time.Second`(`hints.go:81`)다.
+폴링 간격은 `Config.PollInterval`이고 문서화된 기본값은 3초다(`detect.go:123-133`).
+
+> a100은 **프로덕션의 실효 폴링 간격을 주장하지 않는다.** 그 값은 `Config.withDefaults`의
+> 기본값 대입 분기에 달려 있고, a100은 그 함수를 편집하지도 그 분기를 필요로 하지도 않는다.
+> 필요 없는 분기 주장을 하지 않는 것이 AST 없이 주장하지 않는 것보다 낫다.
+
+**(3) 배선 지점.** `Ledger`는 메서드 하나짜리 인터페이스다(`detect.go:102-105`). 프로덕션은
+`cmd/tossctl/engine.go:428-430`에서 `filldetect.JournalLedger`를 꽂는다. 그러므로 a100은
+**`internal/filldetect`를 편집하지 않는다.** 같은 인터페이스를 만족하는 데코레이터를 조립 지점에서
+감싼다.
+
+```text
+Detector.PollOnce
+  └→ Ledger.Apply(snap)                    ← a100의 데코레이터
+        ├→ JournalLedger.Apply(snap)       ← journal 트랜잭션 안에서 체결이 커밋된다
+        └→ (Applied 반환 후) 보호 계획      ← D4의 "journal commit 이후"가 여기다
+```
+
+이 형태가 D4의 순서를 **구조적으로** 보장한다. 커밋은 감싸인 `Apply` 안에서 끝나고, 보호 계획은
+그것이 반환된 뒤에만 시작한다. 순서를 지키자는 약속이 아니라 순서를 어길 수 없는 배치다.
+
+**(4) 촉발 조건.** `applied.Delta > 0 && !applied.FailClosed`일 때만 수렴한다.
+`Applied.Corrected`는 "the broker restated an execution it had already reported, **with no change in
+cumulative quantity**"이므로(`:236-238`) 보호 수량이 바뀌지 않는다 — **교체를 촉발하지 않는다.**
+`FailClosed`는 이미 관측한 것과 모순되는 스냅샷이므로 보호를 건드리지 않고 latch로 간다.
+
+**(5) 실패 격리 — 이 결정에서 가장 중요한 부분.** 데코레이터는 **journal 커밋이 만들지 않은
+에러를 절대 반환하지 않는다.**
+
+`PollOnce`는 `Ledger.Apply`의 에러를 사이클 실패로 다루고 outage를 기록한 뒤 즉시 반환한다
+(`detect.go:317-322`). 보호 계획 실패를 에러로 올리면 **체결 감지 루프 자체가 멈춘다.** 그것은
+손절·비상 청산의 즉시성을 약화·지연하지 말라는 안전 불변식 §0-3 위반이다. 보호를 설치하려다
+보호를 잃는다.
+
+따라서 보호 계획 실패는 (a) 진입 coverage latch를 닫고, (b) typed reconcile reason을 기록하며,
+(c) `Applied`를 감싸인 구현이 준 그대로 반환한다. **체결 기록은 언제나 성공적으로 커밋된다.**
+
 ## Risks / Trade-offs
 
 - **[배선과 동시에 미검증 결함이 나간다]** 13개 분기 중 9개가 미실행이다. 특히 `applyFill` B3
@@ -314,32 +372,27 @@ D4가 배선 지점을 「fill이 journal에 커밋된 이후」로 정했고, D
 
 ## Open Questions
 
-`proposal.md`가 남긴 넷 중 셋이 답했다.
+`proposal.md`가 남긴 넷이 모두 답했다.
 
 | # | 질문 | 답 |
 | --- | --- | --- |
 | 1 | `Wired: true` 조건을 무엇으로 정의하는가 | D2 — 새 supervisor가 판단하고 assembly는 전달만 한다 |
 | 2 | latch OFF의 주체가 `interlock`인가 `execgw`인가 | D5 — `execgw`. `interlock`은 보고. 단 coverage latch는 entry supervisor |
+| 3 | 부분체결의 수렴 시점과 재시도 계약 | D8 — 커밋된 양(+) delta 1건당 1회. 전송이 이미 누적으로 합쳐서 준다 |
 | 4 | journal 스키마 대응이 additive-nullable로 가능한가 | D4 — 가능하며 그것만 허용한다 |
 
-남은 하나.
+3번은 "official fixture의 체결 이벤트 타이밍을 확인해야 답할 수 있다"고 남겨 뒀던 것인데,
+확인해 보니 **타이밍을 알 필요가 없는 질문이었다.** 공식 API는 per-fill 식별자를 주지 않고
+누적 수량만 주므로(`openspec/specs/fill-detection/spec.md` — "누적 스냅샷 기반 멱등 반영"),
+"체결 3건이 연달아 오면 교체를 3번 하는가"라는 질문의 전제인 **개별 체결 이벤트가 존재하지
+않는다.** 도착 간격이 얼마든 엔진이 보는 것은 사이클당 delta 하나다. D8이 근거다.
 
-**3. 부분체결에서 「보호 수량 = 보유 수량」 판정의 시점과 재시도 계약.**
+### 남아 있는 미지수 — 답이 아니라 측정 대상
 
-`protectionlifecycle.applyFill`이 매 전이마다 등식을 재평가한다는 것은 안다:
+설계로 정할 수 없고 **a100 구현 중 fixture로 측정해야** 하는 것 하나를 명시해 둔다.
 
-```go
-position.EntryOpen = position.Phase == Active && position.EntryLatch == "" &&
-    next.marketLatches[key.Market] == "" && position.Observed.Status == BrokerActive &&
-    position.Observed.Quantity+position.OtherSellClaims == position.Holdings
-```
-
-모르는 것은 **연속 부분체결 중 브로커 왕복 횟수**다. 체결 3건이 연달아 들어오면 교체를 3번
-할 것인가, 합쳐서 1번 할 것인가. 3번은 rate budget과 무보호 window를 늘리고, 1번은 마지막
-체결까지 보호 부족 상태를 연장한다.
-
-이 질문은 **실제 official API의 부분체결 이벤트 도착 간격을 모르면 답할 수 없다.** 추정으로
-정하지 않는다. tasks 착수 전에 official fixture의 체결 이벤트 타이밍 계약을 먼저 확인하고,
-그때까지는 **보수적 기본값(체결 1건당 즉시 1회 수렴)**을 전제로 설계한다. 보수적이라는 근거는
-안전 불변식 §0-6("손절·익절·사이징 변경은 명확한 근거가 있는 보수 방향만 허용한다")이며,
-무보호 window를 짧게 두는 쪽이 보수적이다.
+**보호 교체 1회의 왕복 시간이 폴링 간격보다 긴 경우의 겹침.** delta가 연속으로 들어오는데 앞선
+교체가 아직 브로커 응답을 기다리는 중이면 두 번째 수렴이 겹친다. a071이 이미 계약을 정해 뒀다 —
+같은 operation key 재제출은 attestation이 broker-side idempotency를 증명할 때만 허용하고, 아니면
+`RECONCILE_REQUIRED`로 고정한다. a100은 그 계약을 구현하고 **fixture로 겹침을 실제로 재현해서**
+두 번째 수렴이 두 번째 보호주문을 만들지 않음을 증명한다(tasks 5단계). 계약은 새로 만들지 않는다.

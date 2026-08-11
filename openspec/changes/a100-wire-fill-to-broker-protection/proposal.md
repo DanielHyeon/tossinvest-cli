@@ -1,9 +1,9 @@
 # a100 — 체결은 브로커에 손절을 남긴다
 
-> **상태: design 작성 완료.** `analysis/function-logic/`의 AST 산출물이 이 문서가 인용하는 모든
-> 분기 주장의 근거다. `python3 tools/logic-map/check_analysis.py --change a100-…` 통과.
-> `design.md`가 open question 1·2·4를 답했고 `dispatch` 면제를 확정했다(D7). 아직 없는 것은
-> spec delta와 tasks이며, open question 3은 official fixture 확인 후 답한다.
+> **상태: proposal-freeze 리뷰 대기.** `analysis/function-logic/`의 AST 산출물이 이 문서가 인용하는
+> 모든 분기 주장의 근거다. `python3 tools/logic-map/check_analysis.py --change a100-…` 통과.
+> `design.md`가 open question 4개를 모두 답했고 `dispatch` 면제를 확정했다(D7).
+> spec delta 3건과 `tasks.md`가 작성됐다. 다음은 gstack 독립 리뷰다.
 
 ## Why
 
@@ -95,7 +95,7 @@ Plan/Register lifecycle → supervisor assembly의 `Wired` 판단, 그리고 그
 | --- | --- | --- |
 | 1 | `productionProtectionAssemblies`가 `Wired: true`를 낼 조건 | **답함** — `design.md` D2 |
 | 2 | latch OFF의 주체가 `interlock`인가 `execgw`인가 | **답함** — `design.md` D5 |
-| 3 | 부분체결에서 "보호 수량 = 보유 수량" 판정 시점과 재시도 계약 | **미해결** — official fixture의 체결 이벤트 타이밍 확인이 선행. 보수적 기본값(체결 1건당 즉시 1회 수렴)을 전제로 설계 |
+| 3 | 부분체결에서 "보호 수량 = 보유 수량" 판정 시점과 재시도 계약 | **답함** — `design.md` D8 |
 | 4 | `protectionlifecycle` 상태 ↔ journal 스키마 대응 | **답함** — `design.md` D4 |
 
 `design.md`가 추가로 정한 것: 프로덕션 상태 core는 `protectionlifecycle`이며

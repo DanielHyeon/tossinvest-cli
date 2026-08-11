@@ -99,4 +99,4 @@
 | `a097-a-re-armed-alert-is-a-new-episode` | STORY-TOS-a097 | implemented |
 | `a098-nobody-sends-what-the-outbox-keeps` | STORY-TOS-a098 | in_progress |
 | `a099-a-claim-excludes-the-second-sender` | STORY-TOS-a099 | in_progress |
-| `a100-wire-fill-to-broker-protection` | STORY-TOS-a100 | designed |
+| `a100-wire-fill-to-broker-protection` | STORY-TOS-a100 | in_progress |
