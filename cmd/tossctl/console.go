@@ -346,6 +346,26 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		fmt.Fprintln(cmd.ErrOrStderr(), engineBootNote)
 	}
 
+	// The survey, on the same terms and deliberately after the engine: the two
+	// share one account's rate budget, and the engine's startup interlock is the
+	// side that reads what the survey produces.
+	//
+	// startSurvey is one function rather than two call sites because the spec
+	// requires the boot decision to go through the console's existing restart
+	// seam — profile flags and ownership judgement included — and two spellings of
+	// that are how they drift apart (a101).
+	soakBoot := newConsoleSoakBoot(root)
+	var soakBootLoad func() (bool, error)
+	if soakBoot != nil {
+		soakBootLoad = soakBoot.Load
+	}
+	startSurvey := func() (string, error) {
+		return restartSoak(root, soakRecord, openAPISeam.PrepareSpawn)
+	}
+	if note := runConfiguredSoakAutostart(soakBootLoad, startSurvey); note != "" {
+		fmt.Fprintln(cmd.ErrOrStderr(), note)
+	}
+
 	// The console receives only an authenticated loopback client. The running
 	// engine owns the server and its already-open journal; this process cannot
 	// create, migrate, or directly write that journal through this seam.
@@ -457,7 +477,15 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Relaunch: consoleRelaunch(out),
 		Handoff:  handoff.New(consoleHandoffPath(verifyRecord)),
 		RestartSoak: func() (string, error) {
-			return restartSoak(root, soakRecord, openAPISeam.PrepareSpawn)
+			// Pressing this is the operator saying "this profile runs the survey".
+			// Persisting that is what makes the next container replacement bring it
+			// back instead of silently dropping it (a101).
+			note, err := startSurvey()
+			var save func(bool) error
+			if soakBoot != nil {
+				save = soakBoot.Save
+			}
+			return rememberSoakApproval(save, note, err)
 		},
 		CheckOpenAPI: func(ctx context.Context) console.OpenAPICredentialCheck {
 			return toConsoleOpenAPICredentialCheck(openAPISeam.Check(ctx))

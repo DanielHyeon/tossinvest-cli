@@ -47,6 +47,12 @@ const (
 	// not grant order capability; it records whether console startup may attempt
 	// to start the already-gated engine.
 	ActionEngineAutostart = "engine.autostart"
+	// ActionSoakAutostart is the same kind of record for the read-only capability
+	// survey (change a101). It grants even less than the engine's: the survey
+	// cannot reach a mutation at all. What it records is that this profile is one
+	// where the survey should be running, so that a container replacement stops
+	// silently discarding that intent along with the process.
+	ActionSoakAutostart = "soak.autostart"
 	// ActionLimitChange is a Guardian limit being changed.
 	ActionLimitChange = "automation_gate.limit"
 	// ActionGateRefused is a startup the interlock refused. Recorded because a
