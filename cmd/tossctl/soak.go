@@ -14,7 +14,7 @@ package main
 // # What makes it read-only, mechanically
 //
 // The survey itself lives in internal/soak and reaches the broker through
-// soak.Reads — six methods, all GETs, no intent type anywhere in the signature.
+// soak.Reads — nine methods, all GETs, no intent type anywhere in the signature.
 // That package never imports internal/official, so it cannot call PlaceOrder even
 // if somebody later tries; internal/soak/static_test.go asserts the import graph.
 //
@@ -638,6 +638,9 @@ type soakOfficialReads interface {
 	OrdersPageRaw(ctx context.Context, filter official.OrdersFilter, cursor string) (official.RawOrderPage, error)
 	OrderByID(ctx context.Context, orderID string) (domain.Order, error)
 	Prices(ctx context.Context, symbols []string) ([]domain.Quote, error)
+	ProtectionConditionalOrdersRaw(ctx context.Context, status, symbol, cursor string, limit int) (official.RawConditionalOrderList, error)
+	ConditionalOrderRaw(ctx context.Context, id string) (official.RawConditionalOrder, error)
+	SellableQuantityRaw(ctx context.Context, symbol string) (string, time.Time, error)
 }
 
 // soakWiring is what the survey needs from this package.
@@ -705,6 +708,52 @@ func soakTokenExpiry(tokenFile string) (time.Time, bool) {
 // works, and then discarded — the record is evidence about an API, not a
 // snapshot of a portfolio.
 type soakReads struct{ api soakOfficialReads }
+
+// soakConditionalPageLimit is the page size the conditional-order list is asked
+// for. A hundred, the same as the gateway asks for
+// (protectionofficial/gateway.go:122), so the survey exercises the call the
+// engine will make rather than a smaller variant of it.
+const soakConditionalPageLimit = 100
+
+// The three resident-protection reads (a100 tasks 0.10 (a)).
+//
+// They are adapted here, in this file, rather than in one of their own. This is
+// the file static_test.go inspects for mutation calls, and an adapter for
+// conditional orders — whose client type also carries create, modify and cancel
+// — is precisely the code that guard exists to watch. Moving it out would be
+// removing it from the guard while adding the reason for the guard.
+//
+// They sit above Accounts rather than below Prices, where reading order would
+// put them, because an insertion adjacent to a function is a diff hunk inside
+// that function as far as the Function Logic Map gate is concerned: tidying
+// these three down to the end of the list would make the gate demand a logic map
+// for whichever read they landed next to, which had no logic change at all.
+//
+// Each returns identifiers or nothing at all. The list's decimal quantities, the
+// trigger prices and the sellable quantity are read by the broker call and
+// dropped here: the record is evidence about an API, not a picture of somebody's
+// resting protection.
+func (r soakReads) ConditionalOrders(ctx context.Context, status string) ([]string, error) {
+	list, err := r.api.ProtectionConditionalOrdersRaw(ctx, status, "", "", soakConditionalPageLimit)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, 0, len(list.Orders))
+	for _, o := range list.Orders {
+		ids = append(ids, o.ID)
+	}
+	return ids, nil
+}
+
+func (r soakReads) ConditionalOrder(ctx context.Context, id string) error {
+	_, err := r.api.ConditionalOrderRaw(ctx, id)
+	return err
+}
+
+func (r soakReads) SellableQuantity(ctx context.Context, symbol string) error {
+	_, _, err := r.api.SellableQuantityRaw(ctx, symbol)
+	return err
+}
 
 func (r soakReads) Accounts(ctx context.Context) ([]string, error) {
 	accounts, err := r.api.Accounts(ctx)

@@ -49,10 +49,19 @@ type stubReads struct {
 	// test can ask what half a list is worth.
 	failStatus string
 
+	// conditionalIDs is the conditional-order list's answer. Empty is the
+	// ordinary state of an account with no resting protection, and it is what
+	// makes the by-id read unprovable.
+	conditionalIDs []string
+
 	ordersRead    []string
 	statusesAsked []string
 	symbolsAsked  []string
 	pageRequests  int
+
+	conditionalStatusesAsked []string
+	conditionalsRead         []string
+	sellableAsked            []string
 }
 
 // errStatusRequired is what GET /api/v1/orders answers when `status` is absent:

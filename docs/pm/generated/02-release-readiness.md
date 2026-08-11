@@ -99,4 +99,4 @@
 | STORY-TOS-a097 | 10 |
 | STORY-TOS-a098 | 8 |
 | STORY-TOS-a099 | 11 |
-| STORY-TOS-a100 | 8 |
+| STORY-TOS-a100 | 11 |

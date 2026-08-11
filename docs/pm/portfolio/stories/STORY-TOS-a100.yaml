@@ -1,29 +1,42 @@
 {
   "id": "STORY-TOS-a100",
-  "title": "A fill leaves a stop at the broker",
+  "title": "Holdings leave a stop at the broker",
   "feature": "FEAT-TOS-003",
   "intent": "active",
   "openspec": {
     "change_id": "a100-wire-fill-to-broker-protection",
     "path": "openspec/changes/a100-wire-fill-to-broker-protection"
   },
+  "rescoped": {
+    "date": "2026-08-11",
+    "trigger": "proposal-freeze gstack review",
+    "record": "openspec/changes/a100-wire-fill-to-broker-protection/review.md",
+    "summary": "Installing a broker-resident protective SELL never consults readiness, because execgw.Gateway.checkProtection returns immediately when the mutation does not raise exposure (internal/execgw/protection.go:89-91). The supervisor / Wired / manifest / coverage-latch half of the original scope is therefore not required for the safety win and moved to a105. What stays is the half that actually leaves a stop at the broker, and its trigger widened from committed fills to every unprotected position, because all six lanes are OFF so no new fill can occur."
+  },
+  "prerequisites": [
+    "M-A: one real-account conditional order is observed to trigger and fill. Never measured in either market (verify-execution-capability/measurements.md:197). Requires its own human approval at execution time; failure stops the story.",
+    "M-B: the unprotected window from engine death to exit-observer re-arm is measured."
+  ],
   "acceptance": [
-    "A protected position survives engine process loss according to the verified broker-side contract",
-    "A journal-committed fill drives an exact journal-derived stop and expiry into a durable idempotent Plan/Register lifecycle, and the broker order id is committed back to the journal",
-    "A supervisor assembly claims Wired only for a market whose official conditional-order capability, committed-fill path and broker gateway are all present; every other case yields a market-scoped diagnosable refusal rather than an opaque Invalid",
-    "New entry stays closed while protective quantity plus other sell claims is below holdings, on that position only",
+    "Every position with an open exit state and a derived stop converges to exactly one ACTIVE broker-resident protective order, and existing holdings are not distinguished from engine-filled positions",
+    "Protection is planned only from journal-committed state, and the broker order id is committed back to the journal",
+    "Protection convergence runs outside the fill-detection and reconcile cycles: a convergence failure changes no other loop's outage, freshness SLO or gate",
+    "Per-position unprotected time is measured and an alert fires when it exceeds its bound, so a permanent failure is distinguishable from a pending one",
+    "A position never carries two live broker-side sell claims: the in-process protective sell cancels the resident order first, cancellation failure never delays the sell, and an already-flat position yields no zero-quantity protective liquidation",
+    "The resident trigger is derived only from a scalar persisted in the journal, is replaced only in the safer direction, and is reported as a disaster floor rather than as the engine's current exit line",
     "All nine never-executed refusal branches in the wiring targets are covered by tests before production assembly changes",
     "Protection state persists only through additive-nullable journal columns; a rollback keeps entry OFF and never cancels a broker-resident protective order",
-    "Of the four sealed forbidden symbols only protectionofficial.New is unsealed; protection.NewSupervisor, protection.db and GatewayFactory stay forbidden and the single-assembly-file rule is unchanged",
-    "No lane is activated, no operating toggle is flipped, and no live order is placed; verification is httptest official fixtures only"
+    "Of the four sealed forbidden symbols only protectionofficial.New is unsealed, and the import boundary widens to cover the broker transport and lifecycle packages, which the current walk does not reach",
+    "ProtectionWired is still produced by nothing: entry stays structurally closed and the two EntryPermitted failure assertions are left untouched",
+    "No lane is activated, no operating toggle is flipped, and functional verification places no live order; the only real-account action is prerequisite M-A under its own human approval"
   ],
   "supersedes": {
     "date": "2026-08-11",
     "from_story": "STORY-TOS-a071",
     "from_change": "a071-wire-kr-us-protection-readiness",
-    "scope": "openspec task 3.5 (production engine assembly of the official protection gateway and supervisor)",
-    "reason": "a071's own review named the blocker as an absent journal-committed fill lifecycle, which lies outside that change's scope. Splitting keeps the review unit accurate instead of reopening 21 approved tasks.",
+    "scope": "openspec task 3.5, gateway half only. Task 3.5 reads 'wire the official protection gateway AND supervisor'; the supervisor and Wired production half moved to a105 on 2026-08-11.",
+    "reason": "a071's own review named the blocker as an absent journal-committed fill lifecycle, which lies outside that change's scope. The proposal-freeze review then found that the gateway half needs no readiness at all, so the two halves are independently deliverable.",
     "inherits": "a071's market-scoped WIRED/UNWIRED verdict, paired snapshot, sealed supervisor binding and Gateway decision boundary are consumed unchanged, not redesigned.",
-    "reversible": "If this story is cancelled or drops production assembly, task 3.5 returns to STORY-TOS-a071."
+    "reversible": "If this story is cancelled or drops production assembly, the gateway half of task 3.5 returns to STORY-TOS-a071."
   }
 }

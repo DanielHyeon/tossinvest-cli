@@ -43,6 +43,22 @@
 2026-08-11. Task 3.5는 `a100-wire-fill-to-broker-protection`이 승계한다. 이 change에서는
 전달하지 않으며 완료 조건에서 제외한다.
 
+**분할 (2026-08-11, a100 proposal-freeze 리뷰 결과).** 3.5의 원문은 "Wire the official protection
+gateway **and supervisor** into production engine assembly"다. 리뷰가 a100의 범위를 다시 자르면서
+승계도 둘로 나뉘었다.
+
+| 3.5의 부분 | 승계자 |
+| --- | --- |
+| official protection **gateway**를 프로덕션에 배선 | **a100** |
+| **supervisor**와 `Wired` 생산 | **a105 (레인 활성화 권위)** |
+
+근거는 `internal/execgw/protection.go:89-91`이다 — `!plan.raisesExposure`면 즉시 반환하므로
+매도인 보호주문은 readiness를 조회하지 않는다. 보호 설치는 `Wired` 없이 성립하고, `Wired`의
+유일한 소비자는 진입 인터록이다. a071이 3.5를 보류하며 적은 사유("no production caller from a
+journal-committed fill into an exact journal-derived stop/expiry and durable protection
+Plan/Register lifecycle")가 가리키는 것은 gateway 쪽이며, supervisor는 그 caller가 아니다.
+자세한 기록은 `openspec/changes/a100-wire-fill-to-broker-protection/review.md`.
+
 **왜 여기서 끝내지 못했나.** 이 change의 review.md가 스스로 사유를 적어 뒀다 — "the repository
 has no production caller from a journal-committed fill into an exact journal-derived stop/expiry
 and durable protection Plan/Register lifecycle". 즉 3.5의 선행 조건은 이 change가 만든 것이
