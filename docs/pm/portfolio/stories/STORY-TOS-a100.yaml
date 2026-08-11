@@ -1,0 +1,13 @@
+{
+  "id": "STORY-TOS-a100",
+  "title": "A fill leaves a stop at the broker",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a100-wire-fill-to-broker-protection",
+    "path": "openspec/changes/a100-wire-fill-to-broker-protection"
+  },
+  "acceptance": [
+    "PLACEHOLDER - proposal-freeze 전에 logic-map 근거로 확정한다"
+  ]
+}
