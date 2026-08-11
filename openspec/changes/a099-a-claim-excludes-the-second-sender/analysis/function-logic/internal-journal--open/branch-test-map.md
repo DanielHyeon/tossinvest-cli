@@ -14,7 +14,7 @@
 | B4 | `:127` 파일시스템이 거절된다 | 기존 | no | **yes (기존)** |
 | B5 | `:131` `MkdirAll`이 실패한다 | **없음** | no | **no** |
 | B6 | `:136` `Clock`이 nil이면 `clock.System()` | 기존 — 테스트가 전부 주입한다 | no | **부분 — 기본값 쪽 미검증** |
-| B7 | `:140` `BusyTimeout`이 0이면 기본값 | `durability_test.go:902` `openTestJournalWithBusy` — **주입 쪽만** | no | **부분 — 기본값 쪽 미검증** |
+| B7 | `:140` `BusyTimeout`이 0이면 기본값 | `durability_test.go:903` `openTestJournalWithBusy`(정의) — 부르는 자리는 `:616`·`:617`뿐이고 둘 다 `100ms`를 **준다**. **주입 쪽만** | no | **부분 — 기본값 쪽 미검증** |
 | B7+ | **신설** — `AlertLease`가 0이면 `DefaultAlertLease` (§4.1b) | **a099 R20** — `DefaultAlertLease > bound(기본 설정)` | **yes — §4.1b 전에는 상수가 없어 컴파일이 안 된다** | (§4.1b 뒤) |
 | B8 | `:145` `sql.Open`이 실패한다 | **없음** | no | **no** |
 | B9 | `:155` `PingContext`가 실패한다 | **없음** | no | **no** |

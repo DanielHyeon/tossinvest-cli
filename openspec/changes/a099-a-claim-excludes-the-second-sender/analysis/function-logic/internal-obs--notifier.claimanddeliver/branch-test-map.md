@@ -12,8 +12,8 @@
 | B1 | `:245` claim이 오류를 준다 — 원장에 못 썼다 | 기존 (a097) | no | **yes (기존)** |
 | B2 | `:258` `n.Log`가 배선돼 있다 | 기존 | no | **yes (기존)** |
 | B3 | `:261` `n.Gate`가 배선돼 있다 — 진입 래치 | 기존 (a097) | no | **yes (기존)** |
-| B4 | `:266` **`!owed` — 안 보낸다** | 기존 + **a099 R2** | **planned RED — 미관측.** 2라운드 A-T2·T-e가 이 칸의 `yes`를 잡았다: 테스트가 없는데 관측했다고 적었다 | no |
-| 이탈 `:276` | **owed면 publish한다** | **a099 R2 · R3** | **planned RED — 미관측.** 1라운드 B-P8: 같은 `Notifier`로 쓰면 오늘도 통과한다 — 별도 `Journal` 핸들 둘이거나 별도 `Notifier` 둘이어야 RED다 | no |
+| B4 | `:266` **`!owed` — 안 보낸다** | 기존 + **a099 R2** — `internal/obs/a099_…_test.go:124` `TestTheSenderThatLosesTheClaimDoesNotPublish` | **관측했다 (2026-08-11)** — `publishes while one sender held the row = 2, want 1`. 오늘 `!owed`로 들어오는 발송자가 **없다.** 2라운드 A-T2·T-e가 이 칸의 `yes`를 잡았었다(테스트 없이 관측했다고 적음) — 이번엔 테스트가 있다 | no |
+| 이탈 `:276` | **owed면 publish한다** | **a099 R2 · R3** — `a099_…_test.go:124`·`:155` | **관측했다 (2026-08-11)** — 둘 다 `2, want 1`. 1라운드 B-P8이 경고한 born-GREEN은 **피했다**: `a099Pair`가 한 원장 위에 `Notifier` 둘을 세워 뮤텍스를 갈랐고, 게이트한 publisher가 겹침을 **강제**했다 | no |
 
 ## ⚠ R3은 이 함수의 분기가 아니라 **그 밖**을 관측한다
 

@@ -9,8 +9,8 @@
 | B2 | `:176` type 공백 | 기존 | no | **yes (기존)** |
 | B3 | `:183` BeginTx 실패 | 없음 — DB 오류 주입 없음 | no | **no (기존부터 없다)** |
 | B4 | `:194` SELECT 결과로 갈린다 | 기존 (두 경로 다 있다) | no | **yes (기존)** |
-| B5 | `:195` 기존 행을 찾았다 | **a099 R1** — 두 발송자가 같은 행에 온다 | **planned RED — 미관측** (오늘 둘 다 `owed=true`가 나올 것) | no |
-| B6 | `:197` **재무장 판정 — PENDING이면 거짓이고 UPDATE가 없다** | **a099 R1 · R3** | **planned RED — 미관측** (행에 아무 표시가 안 남을 것) | no |
+| B5 | `:195` 기존 행을 찾았다 | **a099 R1** — `internal/journal/a099_…_test.go:41` `TestTwoSendersReachingOnePendingRowLeaveWithOneRightToSend` | **관측했다 (2026-08-11)** — `senders granted the right to send = 2, want 1`. 예상대로 **둘 다 `owed=true`를 받았다** | no |
+| B6 | `:197` **재무장 판정 — PENDING이면 거짓이고 UPDATE가 없다** | **a099 R1 · R3** | **관측했다 (2026-08-11)** — 둘 다 `2, want 1`. PENDING이라 재무장 UPDATE가 안 돌고, **행에 발송자 표시가 하나도 안 남는다**(§3.1) | no |
 | B7 | `:229` 재무장 UPDATE 실패 | 기존 (a097) | no | **yes (기존)** |
 | B8 | `:241` SELECT가 ErrNoRows 아닌 오류 | 없음 | no | **no** |
 | B9 | `:249` INSERT 실패 | 기존 (UNIQUE 충돌) | no | **yes (기존)** |

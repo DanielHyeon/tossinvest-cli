@@ -5,10 +5,10 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:428` journal이 배선 안 됐다 | 기존 — `obs_test.go`·`a097_exclusion_is_an_event_test.go`가 `Flush`를 부르는 두 파일이다. **정확한 테스트 함수는 §2.4가 실측한다** | no | **yes (기존)** |
+| B1 | `:428` journal이 배선 안 됐다 | 기존 — `Flush`를 부르는 테스트는 **넷뿐이다**(§2.5 실측): `obs_test.go:440` `TestRecoveredDeliveryDoesNotReleaseTheGateByItself` · `obs_test.go:590` `TestCriticalAlertSurvivesAProcessRestart` · `a097_exclusion_is_an_event_test.go:109` `TestFlushCannotPublishBesideASend` · `a099_…_test.go:210` `TestFlushDoesNotPublishARowAnotherSenderHolds`(R4). **넷 다 journal을 배선한다 — B1의 참 쪽은 안 덮인다** | no | **아니오 — 거짓 쪽만 덮인다** |
 | B2 | `:438` `PendingAlerts`가 실패한다 | 없음 — DB 오류 주입 없음 | no | **no (기존부터 없다)** |
-| B3 | `:441` **밀린 행을 돈다 — 그리고 행마다 claim한다** | **a099 R4** | **planned RED — 미관측.** 오늘 claim을 아예 안 부른다. **단 1라운드 B-P8: 같은 `Notifier`로 쓰면 `n.mu` 때문에 오늘도 통과한다 — 별도 발송자로 preclaim해야 RED다** | no |
-| B4 | `:442` publisher가 배선 안 됐다 | 기존 — `a097_exclusion_is_an_event_test.go:92` `TestFlushCannotPublishBesideASend` 계열 (§2.4가 실측) | no | **yes (기존)** |
+| B3 | `:441` **밀린 행을 돈다 — 그리고 행마다 claim한다** | **a099 R4** — `a099_…_test.go:197` `TestFlushDoesNotPublishARowAnotherSenderHolds` | **관측했다 (2026-08-11)** — `publishes = 2, want 1`(§3.1). 1라운드 B-P8이 경고한 born-GREEN은 **피했다**: 발송자를 둘로 갈라 다른 뮤텍스를 쓰게 하고, 게이트한 publisher가 첫 발송을 붙잡아 `Flush`가 **반드시** 그 안에서 도착하게 했다 | no |
+| B4 | `:442` publisher가 배선 안 됐다 | 기존 — `a097_exclusion_is_an_event_test.go:92` `TestFlushCannotPublishBesideASend`(§2.5 실측: 함수 정의 `:92`, `Flush` 호출 `:109`) | no | **yes (기존)** |
 | B5 | `:451` 발송이 실패한다 — 행은 PENDING으로 남는다 | 기존 + **a099 R6** | **R6은 회귀 핀 — RED 아님** | **yes (기존)** |
 | B6 | `:455` 정산이 실패해 루프를 끊는다 | 기존 | no | **yes (기존)** |
 
