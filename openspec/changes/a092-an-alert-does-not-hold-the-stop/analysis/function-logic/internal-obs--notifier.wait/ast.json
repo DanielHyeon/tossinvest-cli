@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "d5b3004c638690fb94ffbfaeb4caac4ea1300684b98e325485214b7114bae990",
+  "source_sha256": "2e62edada6c7456220d2f6489548b6846ce57dacd317aa41f650df85da15e9f1",
   "package": "obs",
   "function": "wait",
   "receiver": "Notifier",
   "signature": "Notifier.wait(params=1, results=1)",
   "start": {
-    "line": 290,
+    "line": 410,
     "column": 1
   },
   "end": {
-    "line": 300,
+    "line": 420,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 292,
+        "line": 412,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 296,
+        "line": 416,
         "column": 2
       }
     }
@@ -35,7 +35,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 299,
+        "line": 419,
         "column": 2
       }
     }
@@ -44,7 +44,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 417,
         "column": 9
       },
       "text": "clock.System"
@@ -52,7 +52,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 299,
+        "line": 419,
         "column": 9
       },
       "text": "clk.Sleep"
@@ -62,28 +62,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 291,
+        "line": 411,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 293,
+        "line": 413,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 295,
+        "line": 415,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 297,
+        "line": 417,
         "column": 3
       }
     }

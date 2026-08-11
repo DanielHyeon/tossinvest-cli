@@ -1,0 +1,406 @@
+{
+  "file": "internal/app/engine/runtime.go",
+  "source_sha256": "4bcd9ee7f50f6c5051f85da95151d82dd26f7725acc804a0cefb5533ebd534a8",
+  "package": "engine",
+  "function": "Run",
+  "receiver": "Runtime",
+  "signature": "Runtime.Run(params=1, results=1)",
+  "start": {
+    "line": 261,
+    "column": 1
+  },
+  "end": {
+    "line": 332,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 268,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 308,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 13
+      },
+      "text": "r.opts.Recover"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 21
+      },
+      "text": "context.WithCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 27
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 3
+      },
+      "text": "wg.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 10
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 40
+      },
+      "text": "loop.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 16
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 2
+      },
+      "text": "supervisorWG.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 9
+      },
+      "text": "supervisorWG.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 3
+      },
+      "text": "r.superviseHealth"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 2
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 2
+      },
+      "text": "wg.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 2
+      },
+      "text": "supervisorWG.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 13
+      },
+      "text": "drain"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 5
+      },
+      "text": "r.gracefulStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 3
+      },
+      "text": "r.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 73
+      },
+      "text": "describe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 2
+      },
+      "text": "r.alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 10
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 22
+      },
+      "text": "describe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 22
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 35
+      },
+      "text": "namesOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 2
+      },
+      "text": "r.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 78
+      },
+      "text": "describe"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 267,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 275,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 315,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 279,
+        "column": 3
+      }
+    },
+    {
+      "kind": "go",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 273,
+        "column": 2
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 280,
+        "column": 4
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 289,
+        "column": 3
+      },
+      "text": "supervisorWG.Done"
+    }
+  ]
+}

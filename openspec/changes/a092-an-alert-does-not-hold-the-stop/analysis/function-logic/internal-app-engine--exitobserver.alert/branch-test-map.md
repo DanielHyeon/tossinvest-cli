@@ -5,7 +5,12 @@ defers 0 / go_statements 0.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:1601` `Alerts == nil` → 조용히 반환 | 간접 — `Alerts`를 안 채우는 exit 루프 단위 테스트 다수 | no | yes |
+| B1 | `:1601` `Alerts == nil` → 조용히 반환 | **없음** — harness가 항상 채운다 | no | **no** |
+
+> **18라운드 B-P7.** *"`Alerts`를 안 채우는 exit 루프 단위 테스트 다수"*는 없다.
+> `exitloop_test.go`에서 `Alerts:`가 나오는 자리는 `:226`과 `:1158` 둘이고 **둘 다
+> non-nil**이다. 같은 파일 안에서 이 표는 `Notify` 오류 테스트가 없다고 이미 적고
+> 있었으므로(B2), 한 표가 같은 성질에 대해 서로 다른 엄격도를 쓰고 있었다.
 | B2 | `:1604` `Notify`가 오류 → `logErr` 한 줄 | **없음** — `Notify`가 오류를 돌려주는 exit 루프 테스트가 없다 | no | no |
 
 ## 분기가 아니라 시간이 비어 있다

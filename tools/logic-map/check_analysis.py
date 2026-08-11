@@ -237,7 +237,149 @@ def branch_ids(text: str) -> list[str]:
     ]
 
 
-def validate_target(target: Path, root: Path) -> tuple[list[str], tuple[str, str] | None]:
+# Prose coordinates drift silently: the bundle keeps its files, its hash stays
+# current and every AST branch stays covered while the map underneath describes
+# a revision the function no longer has. Both claims below are optional in the
+# corpus — most maps cite neither — so they are checked only where stated.
+SOURCE_RANGE = re.compile(r"Source:\s*`[^`]+`\s*\((\d+)\s*[-–]\s*(\d+)\)")
+# Anchored to AST on purpose: "미테스트 분기 5개" is prose about coverage, not a
+# claim about what the extractor found, and must not be read as one.
+AST_BRANCH_COUNT = (
+    re.compile(r"AST[^\n]*?\bbranches\s+(\d+)"),
+    re.compile(r"AST[^\n]*?분기\s+(\d+)"),
+)
+
+
+# B-T1: until 19판 the checker never opened the file a row pointed at. It
+# confirmed the bundle's four files existed, that the AST hash was current and
+# that every branch ID had a row -- every one of which a fabricated test name
+# satisfies. Ten of a092's rows carried false coverage claims through eighteen
+# rounds on exactly that gap.
+CITED_TEST = re.compile(r"`(Test[A-Za-z0-9_]+)`")
+CITED_TEST_LINE = re.compile(r"`([A-Za-z0-9_./-]*_test\.go):(\d+)`")
+GO_TEST_DECL = re.compile(r"^func\s+(Test[A-Za-z0-9_]+)\s*\(")
+
+
+def test_spans(path: Path) -> dict[str, tuple[int, int]]:
+    """Map each Test function in one file to the line range of its body."""
+    spans: dict[str, tuple[int, int]] = {}
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return spans
+    for index, line in enumerate(lines):
+        declared = GO_TEST_DECL.match(line)
+        if not declared:
+            continue
+        depth = 0
+        for offset in range(index, len(lines)):
+            depth += lines[offset].count("{") - lines[offset].count("}")
+            if depth <= 0 and offset > index:
+                spans[declared.group(1)] = (index + 1, offset + 1)
+                break
+        else:
+            spans[declared.group(1)] = (index + 1, len(lines))
+    return spans
+
+
+def test_index(root: Path) -> dict[str, list[tuple[Path, int, int]]]:
+    """Every Test function in the tree, by name. Built once per check() run."""
+    index: dict[str, list[tuple[Path, int, int]]] = {}
+    for path in root.rglob("*_test.go"):
+        if ".git" in path.parts:
+            continue
+        for name, (start, end) in test_spans(path).items():
+            index.setdefault(name, []).append((path, start, end))
+    return index
+
+
+def resolve_test_file(cited: str, package_dir: Path, root: Path) -> Path | None:
+    """Resolve a cited test file: a qualified path wins, then the package, then the tree.
+
+    A citation that carries a directory means it, and honouring that is the
+    whole point -- `replay_test.go` exists in both internal/execgw and
+    internal/journal, and resolving the bare name against the package under test
+    silently answered for the wrong one. Telling an author to qualify the path
+    is useless if the qualification is then discarded.
+
+    An ambiguous bare name resolves to nothing rather than to a guess.
+    """
+    if "/" in cited:
+        qualified = root / cited
+        return qualified if qualified.is_file() else None
+    local = package_dir / cited
+    if local.is_file():
+        return local
+    matches = [path for path in root.rglob(cited) if ".git" not in path.parts]
+    return matches[0] if len(matches) == 1 else None
+
+
+def test_citation_errors(
+    target: str, text: str, package_dir: Path, root: Path, index: dict
+) -> list[str]:
+    errors: list[str] = []
+    for name in sorted(set(CITED_TEST.findall(text))):
+        if name not in index:
+            errors.append(
+                f"{target}: branch test map cites {name}, which is not a Go test "
+                f"function anywhere in the tree"
+            )
+    # What is NOT checked, and why -- because a check nobody can satisfy gets
+    # worked around, and a check that fires on true rows is worse than none.
+    #
+    # 19판 built the stronger version first: the cited line must belong to the
+    # test named beside it. It was measured against the corpus and withdrawn.
+    # Rows legitimately cite a test's doc comment (a092 cites two), the shared
+    # harness a test is built from (`obs_test.go:338` is `newNotifier`, a helper),
+    # and -- decisively -- a named test in ONE file alongside independent call
+    # sites in ANOTHER. a091's `severityof` row does exactly that and is correct:
+    #
+    #   `TestAQuarantineCreationIsCritical` `a074_quarantine_event_test.go:16`
+    #     · `exitloop_test.go:910`, `:1013`
+    #
+    # Which coordinate answers for which claim is carried by the prose, not by
+    # co-occurrence on a line. So the line check stays at what a coordinate can
+    # be wrong about on its own: pointing past the end of the file it names.
+    for line in text.splitlines():
+        for basename, raw in CITED_TEST_LINE.findall(line):
+            path = resolve_test_file(basename, package_dir, root)
+            if path is None:
+                continue
+            number = int(raw)
+            total = len(path.read_text(encoding="utf-8", errors="replace").splitlines())
+            if number > total:
+                errors.append(
+                    f"{target}: branch test map cites {basename}:{number}, "
+                    f"past the end of a {total}-line file"
+                )
+    return errors
+
+
+def coordinate_errors(target: str, texts: dict[str, str], value: dict, branches: list) -> list[str]:
+    errors: list[str] = []
+    start = (value.get("start") or {}).get("line")
+    end = (value.get("end") or {}).get("line")
+    for name in ("function-logic-map.md", "branch-test-map.md"):
+        text = texts.get(name, "")
+        cited = SOURCE_RANGE.search(text)
+        if cited and (int(cited.group(1)), int(cited.group(2))) != (start, end):
+            errors.append(
+                f"{target}: {name} cites line range "
+                f"{cited.group(1)}-{cited.group(2)} but ast.json is {start}-{end}"
+            )
+        for pattern in AST_BRANCH_COUNT:
+            for claim in pattern.finditer(text):
+                if int(claim.group(1)) != len(branches):
+                    errors.append(
+                        f"{target}: {name} claims AST branch count "
+                        f"{claim.group(1)} but ast.json has {len(branches)}"
+                    )
+    return errors
+
+
+def validate_target(
+    target: Path, root: Path, index: dict | None = None
+) -> tuple[list[str], tuple[str, str] | None]:
     errors: list[str] = []
     texts: dict[str, str] = {}
     for name in REQUIRED:
@@ -297,6 +439,25 @@ def validate_target(target: Path, root: Path) -> tuple[list[str], tuple[str, str
         errors.append(
             f"{target.name}: branch test map is missing AST branches {sorted(missing)}"
         )
+    # Covering every AST branch says nothing about rows the AST never produced.
+    # A map left over from a wider revision keeps naming branches that are gone,
+    # and each one carries a coverage claim no source line answers for.
+    unexpected = set(mapped) - (expected if branches else {"B1"})
+    if unexpected:
+        errors.append(
+            f"{target.name}: branch test map has rows for branch IDs absent "
+            f"from the AST {sorted(unexpected)}"
+        )
+    errors.extend(coordinate_errors(target.name, texts, value, branches))
+    errors.extend(
+        test_citation_errors(
+            target.name,
+            branch_map,
+            (root / relative).parent,
+            root,
+            test_index(root) if index is None else index,
+        )
+    )
     if not branches and "B1" not in mapped:
         errors.append(f"{target.name}: branchless function still needs one happy-path row")
     risk = texts.get("risk-pattern-report.md", "")
@@ -340,8 +501,11 @@ def check(change: str, root: Path = ROOT) -> list[str]:
     if not targets:
         return ["function-logic analysis directory has no targets"]
     covered: dict[tuple[str, str], Path] = {}
+    # Built once: the tree has thousands of test functions and every target
+    # would otherwise rescan them.
+    index = test_index(root)
     for target in targets:
-        target_errors, binding = validate_target(target, root)
+        target_errors, binding = validate_target(target, root, index)
         errors.extend(target_errors)
         if binding:
             if binding in covered:

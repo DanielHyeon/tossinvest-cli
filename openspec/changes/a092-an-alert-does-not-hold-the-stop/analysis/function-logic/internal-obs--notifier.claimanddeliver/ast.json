@@ -1,0 +1,174 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "2e62edada6c7456220d2f6489548b6846ce57dacd317aa41f650df85da15e9f1",
+  "package": "obs",
+  "function": "claimAndDeliver",
+  "receiver": "Notifier",
+  "signature": "Notifier.claimAndDeliver(params=3, results=3)",
+  "start": {
+    "line": 238,
+    "column": 1
+  },
+  "end": {
+    "line": 277,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 261,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 264,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 274,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 276,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 2
+      },
+      "text": "n.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 8
+      },
+      "text": "n.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 19
+      },
+      "text": "n.Journal.ClaimAlertForDelivery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 64
+      },
+      "text": "n.remindAfter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 13
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 4
+      },
+      "text": "n.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 56
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 4
+      },
+      "text": "n.Gate.Block"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 9
+      },
+      "text": "n.deliver"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 256,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 242,
+        "column": 2
+      },
+      "text": "n.mu.Unlock"
+    }
+  ]
+}

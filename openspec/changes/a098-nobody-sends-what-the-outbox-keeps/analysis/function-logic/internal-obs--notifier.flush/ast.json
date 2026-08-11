@@ -1,0 +1,232 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "2e62edada6c7456220d2f6489548b6846ce57dacd317aa41f650df85da15e9f1",
+  "package": "obs",
+  "function": "Flush",
+  "receiver": "Notifier",
+  "signature": "Notifier.Flush(params=1, results=3)",
+  "start": {
+    "line": 427,
+    "column": 1
+  },
+  "end": {
+    "line": 462,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 428,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 438,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 442,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 451,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 455,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 429,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 439,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 456,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 461,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 2
+      },
+      "text": "n.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 435,
+        "column": 8
+      },
+      "text": "n.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 18
+      },
+      "text": "n.Journal.PendingAlerts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 14
+      },
+      "text": "EventType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 14
+      },
+      "text": "n.Publisher.Publish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 8
+      },
+      "text": "n.Journal.MarkAlertAttemptFailed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 56
+      },
+      "text": "perr.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 14
+      },
+      "text": "n.Journal.MarkAlertDelivered"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 19
+      },
+      "text": "n.Journal.UndeliveredCount"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 445,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 451,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 452,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 455,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 458,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 460,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 435,
+        "column": 2
+      },
+      "text": "n.mu.Unlock"
+    }
+  ]
+}

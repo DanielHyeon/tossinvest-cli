@@ -97,3 +97,5 @@
 | `a095-a-stop-must-know-what-it-covers` | STORY-TOS-a095 | in_progress |
 | `a096-one-condition-is-one-alert` | STORY-TOS-a096 | implemented |
 | `a097-a-re-armed-alert-is-a-new-episode` | STORY-TOS-a097 | implemented |
+| `a098-nobody-sends-what-the-outbox-keeps` | STORY-TOS-a098 | in_progress |
+| `a099-a-claim-excludes-the-second-sender` | STORY-TOS-a099 | in_progress |

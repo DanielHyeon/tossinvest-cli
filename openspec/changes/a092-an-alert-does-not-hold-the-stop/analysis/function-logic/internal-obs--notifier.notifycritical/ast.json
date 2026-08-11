@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "d5b3004c638690fb94ffbfaeb4caac4ea1300684b98e325485214b7114bae990",
+  "source_sha256": "2e62edada6c7456220d2f6489548b6846ce57dacd317aa41f650df85da15e9f1",
   "package": "obs",
   "function": "notifyCritical",
   "receiver": "Notifier",
   "signature": "Notifier.notifyCritical(params=2, results=1)",
   "start": {
-    "line": 153,
+    "line": 170,
     "column": 1
   },
   "end": {
-    "line": 190,
+    "line": 225,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 154,
+        "line": 171,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 158,
+        "line": 175,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 178,
+        "line": 195,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 182,
+        "line": 217,
         "column": 2
       }
     }
@@ -51,21 +51,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 164,
+        "line": 181,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 179,
+        "line": 214,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 189,
+        "line": 224,
         "column": 2
       }
     }
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 159,
+        "line": 176,
         "column": 4
       },
       "text": "n.Log.Warn"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 160,
+        "line": 177,
         "column": 17
       },
       "text": "string"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 163,
+        "line": 180,
         "column": 3
       },
       "text": "n.publishBestEffort"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 185,
         "column": 13
       },
       "text": "n.eventKey"
@@ -106,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 169,
+        "line": 186,
         "column": 13
       },
       "text": "string"
@@ -114,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 170,
+        "line": 187,
         "column": 13
       },
       "text": "string"
@@ -122,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 173,
+        "line": 190,
         "column": 13
       },
       "text": "encodeFields"
@@ -130,15 +130,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 177,
-        "column": 13
+        "line": 194,
+        "column": 21
       },
-      "text": "n.Journal.EnqueueAlert"
+      "text": "n.claimAndDeliver"
     },
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 213,
+        "column": 3
+      },
+      "text": "n.escalate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -146,15 +154,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 182,
-        "column": 6
-      },
-      "text": "n.deliver"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 187,
+        "line": 222,
         "column": 3
       },
       "text": "n.escalate"
@@ -164,14 +164,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 167,
+        "line": 184,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 177,
+        "line": 194,
         "column": 2
       }
     }

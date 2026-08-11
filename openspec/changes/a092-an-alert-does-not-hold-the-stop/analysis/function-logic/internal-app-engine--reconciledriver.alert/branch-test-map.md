@@ -5,7 +5,12 @@ defers 0.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:553` `Alerts == nil` → 무동작 | 간접 — `Alerts` 없이 도는 대사 루프 테스트 다수 | no | yes |
+| B1 | `:553` `Alerts == nil` → 무동작 | **없음** — harness가 항상 채운다 | no | **no** |
+
+> **18라운드 B-P7.** 이 칸은 *"간접 — `Alerts` 없이 도는 대사 루프 테스트 다수"*로
+> GREEN이었다. `internal/app/engine/reconcileloop_test.go`에서 `Alerts:`가 나오는 자리는
+> **`:168`의 `Alerts: h.alerts` 하나뿐이고 항상 non-nil이다.** "없이 도는 테스트 다수"는
+> 존재하지 않는다.
 | B2 | `:556` `Notify` 오류 → `alert_undelivered` error 한 줄 | **없음** | no | no |
 
 ## 필요한 RED

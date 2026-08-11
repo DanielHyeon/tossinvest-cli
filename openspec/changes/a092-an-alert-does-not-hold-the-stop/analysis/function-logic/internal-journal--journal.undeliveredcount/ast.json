@@ -1,0 +1,79 @@
+{
+  "file": "internal/journal/outbox.go",
+  "source_sha256": "7341691c3cb6910ecceab7b428faae30d512835c050ae75a02cf13caa96f096b",
+  "package": "journal",
+  "function": "UndeliveredCount",
+  "receiver": "Journal",
+  "signature": "Journal.UndeliveredCount(params=1, results=2)",
+  "start": {
+    "line": 408,
+    "column": 1
+  },
+  "end": {
+    "line": 415,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 412,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 414,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 12
+      },
+      "text": "j.db.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 410,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

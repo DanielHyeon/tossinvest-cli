@@ -1,6 +1,6 @@
 # Function Logic Map: `Notifier.wait`
 
-- Source: `internal/obs/notifier.go` (290-300)
+- Source: `internal/obs/notifier.go` (410-420)
 - AST evidence: `ast.json` — branches 2, returns 1, calls 2, assignments 4,
   **defers 0, go_statements 0**
 - Risk scan: `risk-pattern-report.md`
@@ -12,9 +12,9 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `ctx` | `deliver`가 받은 것 그대로 | `deliver:268` | 취소되면 `Sleep`이 오류 → `false` |
-| `n.RetryDelay` | 0 허용 | `Notifier` 필드(`notifier.go:96`) | B1 `:292`가 0 이하를 `DefaultRetryDelay` **2s**(`:48`)로 대체 |
-| `n.Clock` | nil 허용 | `Notifier` 필드(`:91`) | B2 `:296`이 nil을 `clock.System()`으로 대체 |
+| `ctx` | `deliver`가 받은 것 그대로 | `deliver:388` | 취소되면 `Sleep`이 오류 → `false` |
+| `n.RetryDelay` | 0 허용 | `Notifier` 필드(`notifier.go:107`) | B1 `:412`가 0 이하를 `DefaultRetryDelay` **2s**(`:48`)로 대체 |
+| `n.Clock` | nil 허용 | `Notifier` 필드(`:102`) | B2 `:416`이 nil을 `clock.System()`으로 대체 |
 
 **프로덕션은 `RetryDelay`를 채우지 않는다** — `newNotifier`(`exitwiring.go:73-81`)의
 구조체 리터럴에 그 필드가 없다(`internal-app-engine--newnotifier/ast.json`: branches 0,
@@ -24,9 +24,9 @@ returns 1, calls 0). 그래서 실효값은 **2s**다.
 
 | Branch | Condition | Mutation/side effect | Return |
 |---|---|---|---|
-| B1 `:292` | `delay <= 0` | `delay = DefaultRetryDelay` (2s) `:293` | — |
-| B2 `:296` | `clk == nil` | `clk = clock.System()` `:297` | — |
-| — `:299` | — | `clk.Sleep(ctx, delay)` | `return ... == nil` |
+| B1 `:412` | `delay <= 0` | `delay = DefaultRetryDelay` (2s) `:413` | — |
+| B2 `:416` | `clk == nil` | `clk = clock.System()` `:417` | — |
+| — `:419` | — | `clk.Sleep(ctx, delay)` | `return ... == nil` |
 
 **이탈은 하나다.** 잠들지 않고 반환하는 경로가 없다 — ctx가 이미 취소돼 있어도
 `clock.Sleep`의 계약에 달렸다.
@@ -35,12 +35,12 @@ returns 1, calls 0). 그래서 실효값은 **2s**다.
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `clock.System` `:297` | 시계 대체 | 즉시 | AST calls |
-| `clk.Sleep` `:299` | **대기** | `delay`만큼 잔다. ctx 취소로만 단축된다 | AST calls |
+| `clock.System` `:417` | 시계 대체 | 즉시 | AST calls |
+| `clk.Sleep` `:419` | **대기** | `delay`만큼 잔다. ctx 취소로만 단축된다 | AST calls |
 
 ### `deliver`가 이 함수를 부르는 횟수
 
-`deliver` B7 `:267` `if attempt < attempts`이므로 **`attempts - 1`회**.
+`deliver` B7 `:387` `if attempt < attempts`이므로 **`attempts - 1`회**.
 `attempts` = 3(프로덕션) → **2회** → 2 × 2s = **4s**.
 
 ```text

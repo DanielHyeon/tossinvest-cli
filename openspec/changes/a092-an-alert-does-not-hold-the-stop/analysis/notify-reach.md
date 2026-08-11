@@ -1,4 +1,4 @@
-# `obs.Notifier.Notify`에 도달하는 프로덕션 경로 전수 (11판)
+# `obs.Notifier.Notify`에 도달하는 프로덕션 경로 전수 (19판)
 
 - 기준: `ec29dc72`
 - 방법: `grep -rn "\.Notify(" --include=*.go internal/ cmd/ | grep -v _test.go` 전수 +
@@ -97,7 +97,7 @@ Guardian(`guardian_wiring.go:81`) · 감독자(`cmd/tossctl/engine.go:368`·`:37
 **자기 예산 + 다른 루프의 `deliver`를 기다린 시간**이다.
 
 **a092는 이것을 고치지 않는다.** 고치는 것은 각 `deliver`가 뮤텍스를 쥐고 있는 **시간**이다
-(34s → 4.2s). 경합 배수는 그대로 남고 a093 대상이다.
+(34s → 4.2s). 경합 배수는 그대로 남고 미배정 후속 대상이다(proposal §미배정 후속 3번).
 
 그러므로 **spec은 "동기 체류의 합"을 약속하면 안 된다.** 경합이 없어도 사이클에 여러
 알림이 올라가고(위 `alertProposalRefused`), 경합이 있으면 합은 유계가 아니다.
@@ -108,4 +108,4 @@ Guardian(`guardian_wiring.go:81`) · 감독자(`cmd/tossctl/engine.go:368`·`:37
 ## `Notify`를 지나지 않는 발송 경로
 
 `Notifier.Flush`(`notifier.go:307-336`)는 `Publisher.Publish`를 직접 부른다.
-**프로덕션 호출자가 0곳**이므로 오늘은 발송이 일어나지 않는다. a093 대상.
+**프로덕션 호출자가 0곳**이므로 오늘은 발송이 일어나지 않는다. 미배정 후속 대상(proposal §미배정 후속 1번).

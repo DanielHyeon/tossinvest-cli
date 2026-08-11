@@ -4,13 +4,21 @@ AST 기준 분기 7 / 이탈 6(`return` 5 + `continue` 1). 기존 테스트는 `
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:418` 체결 감지가 밀리면 주기 전체 양보 + outage 시계 유지 | 기존 harness 경로 | no | yes |
-| B2 | `:428` `workingSet` 오류가 사이클 오류가 된다 | 기존 harness 경로 | no | yes |
+| B1 | `:418` 체결 감지가 밀리면 주기 전체 양보 + outage 시계 유지 | `TestTheCycleYieldsToFillDetection` (`exitloop_test.go:673`) — `h.slo.behind = true` (`:678`) | no | yes |
+| B2 | `:428` `workingSet` 오류가 사이클 오류가 된다 | **없음** — 아래 참조 | no | **no** |
 | B3 | `:432` 무보유 계정은 outage로 승격되지 않는다 | `TestAnAccountHoldingNothingIsNotInAnOutage` `:659` | no | yes |
 | B4 | `:444` **전 종목** 미응답이 사다리를 탄다 | `TestASustainedOutageBlocksEntriesAndAlertsOnce` `:608` · `TestAQuoteWithNoLastTradeIsNotAnObservation` `:585` | no | yes |
-| B5 | `:453` 보유 포지션마다 정확히 1회 방문 | 모든 테스트가 간접 경유 | no | yes |
+| B5 | `:453` 보유 포지션마다 정확히 1회 방문 | `TestTheLoopOpensTheExitStateOfANewlyHeldPosition` (`exitloop_test.go:447`) · `TestASuccessfulObservationStampsThePriceFreshness` (`:518`) — 둘 다 보유 1건으로 `cycle.Err == nil`을 단언한다 | no | yes |
 | B6 | `:455` **일부 종목만 미응답 → 그 종목이 조용히 빠진다** | **없음 — 이 change의 대상** | no | no |
-| B7 | `:462` 첫 `judge` 오류만 사이클에 실린다 | 기존 harness 경로 | no | yes |
+| B7 | `:462` 첫 `judge` 오류만 사이클에 실린다 | `TestAFailedObservationHoldsTheJudgement` (`exitloop_test.go:560`) — `cycle.Err == nil`이면 실패(`:570`) | no | yes |
+
+> **18라운드 B-P7이 B2를 내렸다.** *"기존 harness 경로"*로 GREEN이었다.
+> `workingSet`이 오류를 내려면 관측자 원장이 깨져 있어야 하는데,
+> `exitloop_test.go`에서 원장을 닫는 자리는 `:189`의
+> `t.Cleanup(func() { _ = j.Close() })` 하나이고 그것은 **테스트가 끝난 뒤** 돈다.
+> `ObserveOnce`가 도는 동안 원장은 항상 살아 있다.
+>
+> "harness 경로"는 함수에 도달한다는 뜻이지 그 분기를 탄다는 뜻이 아니다.
 
 ## B6가 테스트되지 않았는데 테스트된 것처럼 보이는 이유
 
