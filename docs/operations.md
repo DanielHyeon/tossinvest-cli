@@ -139,6 +139,31 @@ capability soak은 엔진 인터록이 읽는 attestation을 만드는 프로세
 
 `engine.autostart`와 독립이다. 한쪽을 저장해도 다른 쪽은 바뀌지 않는다.
 
+#### attestation 자동 발급 타이머 — `--config-dir`가 필수다
+
+증거가 쌓여도 누가 판정해 발급하지 않으면 attestation은 안 나온다. 그 일을 하는 것이
+`~/.config/systemd/user/tossos-attest.{service,timer}`(6시간 간격, `Persistent=true`)이고,
+`soak attest`는 기록만 읽으므로 **계좌 호출이 0건**이다.
+
+**이 유닛은 `--config-dir`를 반드시 넘겨야 한다.** 두 경로의 기본값이 다르기 때문이다.
+
+| 플래그 없을 때 | 해석 결과 |
+|---|---|
+| 기록 (`resolveSoakRecord`) | `journal.DataDir()` → `~/.local/share/tossos/` |
+| attestation (`resolveSoakAttestationPath`) | `DefaultPaths().ConfigDir` → `~/.config/tossctl/` |
+
+a060 이후 콘솔이 세우는 서베이는 **config dir**에 기록한다. 그래서 플래그가 없으면 타이머는
+**아무도 쓰지 않는 파일**을 판정하고, 건강한 서베이가 도는 내내 6시간마다
+`not earned yet`을 남긴다. 2026-08-12에 실제로 그 상태였고(마지막 사이클 12일 전, GET 6종
+전부 "never exercised inside the window") 플래그를 넣자 차단 사유가 9건에서 1건으로
+떨어졌다.
+
+플래그는 **읽는 기록만** 바꾼다. attestation은 그대로 `~/.config/tossctl/`에 떨어지며,
+그곳이 엔진 기동 인터록이 찾는 자리다.
+
+발급 조건(실측): 최신 사이클 ≤2일 · 무인 갱신 연속 **3일** · 토큰 만료 관측 ≥2회 ·
+GET 전체 성공. **즉 서베이 상시 가동이 요건이다** — 그래서 위의 `soak.autostart`가 있다.
+
 ### KR/US 전략 후보 권한 파일 — 읽기 전용 계약
 
 전략 런타임은 KR과 US를 같은 시작 웨이브에서 읽지만, 시장별 권한은 합치지 않는다. 각 시장은
