@@ -39,6 +39,7 @@
     - STORY-TOS-a045 — Add broker-resident protection orders [archived] → `a045-add-protection-orders`
     - STORY-TOS-a056 — Keep an advisory marker from refusing an engine start [implemented] → `a056-autostart-survives-container-recreate`
     - STORY-TOS-a059 — Let the console find exactly the engine it owns [implemented] → `a059-console-finds-the-engine-it-owns`
+    - STORY-TOS-a100 — A fill leaves a stop at the broker [designed] → `a100-wire-fill-to-broker-protection`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`

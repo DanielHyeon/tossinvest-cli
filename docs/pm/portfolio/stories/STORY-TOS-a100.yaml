@@ -8,6 +8,22 @@
     "path": "openspec/changes/a100-wire-fill-to-broker-protection"
   },
   "acceptance": [
-    "PLACEHOLDER - proposal-freeze 전에 logic-map 근거로 확정한다"
-  ]
+    "A protected position survives engine process loss according to the verified broker-side contract",
+    "A journal-committed fill drives an exact journal-derived stop and expiry into a durable idempotent Plan/Register lifecycle, and the broker order id is committed back to the journal",
+    "A supervisor assembly claims Wired only for a market whose official conditional-order capability, committed-fill path and broker gateway are all present; every other case yields a market-scoped diagnosable refusal rather than an opaque Invalid",
+    "New entry stays closed while protective quantity plus other sell claims is below holdings, on that position only",
+    "All nine never-executed refusal branches in the wiring targets are covered by tests before production assembly changes",
+    "Protection state persists only through additive-nullable journal columns; a rollback keeps entry OFF and never cancels a broker-resident protective order",
+    "Of the four sealed forbidden symbols only protectionofficial.New is unsealed; protection.NewSupervisor, protection.db and GatewayFactory stay forbidden and the single-assembly-file rule is unchanged",
+    "No lane is activated, no operating toggle is flipped, and no live order is placed; verification is httptest official fixtures only"
+  ],
+  "supersedes": {
+    "date": "2026-08-11",
+    "from_story": "STORY-TOS-a071",
+    "from_change": "a071-wire-kr-us-protection-readiness",
+    "scope": "openspec task 3.5 (production engine assembly of the official protection gateway and supervisor)",
+    "reason": "a071's own review named the blocker as an absent journal-committed fill lifecycle, which lies outside that change's scope. Splitting keeps the review unit accurate instead of reopening 21 approved tasks.",
+    "inherits": "a071's market-scoped WIRED/UNWIRED verdict, paired snapshot, sealed supervisor binding and Gateway decision boundary are consumed unchanged, not redesigned.",
+    "reversible": "If this story is cancelled or drops production assembly, task 3.5 returns to STORY-TOS-a071."
+  }
 }

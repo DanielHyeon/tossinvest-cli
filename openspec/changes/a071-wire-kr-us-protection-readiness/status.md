@@ -36,8 +36,15 @@
   marker makes later missing state corrupt, and peer serial advancement invalidates stale cache
 - Invalid manifest safety: both market contracts are constructed in local state and published atomically only
   after the full pair validates; malformed partial evidence leaves entry closed without blocking safety runtime
-- Remaining: task 3.5 requires journal-committed fill → exact journal-derived position/campaign stop+expiry → durable
-  idempotent Plan/Register lifecycle with KR/US official fixture proof; full repository gates and independent review
+- Superseded (2026-08-11): task 3.5 is transferred to `a100-wire-fill-to-broker-protection` and is no longer part of
+  this change's completion condition. Its precondition — journal-committed fill → exact journal-derived
+  position/campaign stop+expiry → durable idempotent Plan/Register lifecycle with KR/US official fixture proof —
+  lies outside this change's scope, and a100 measured that 9 of 13 branches in the wiring targets have never
+  executed their true outcome, so the work is refusal-path RED tests first, wiring second. Rationale and the
+  contracts a100 must not redesign are recorded in `tasks.md` §6. Reversible: if a100 is cancelled or drops
+  production assembly, 3.5 returns here.
+- Remaining: the change set is now frozen at task 3.4. Tasks 5.1–5.3 (post-edit maps, full test/vet/OpenSpec,
+  `make sdd-sync`/`sdd-check`/`gate` plus adversarial independent review) run against that frozen set.
 
 No market was enabled, no attestation was installed into production, no production controller can be minted, and no
 live broker request was made.
