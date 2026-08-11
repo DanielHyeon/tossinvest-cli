@@ -1,7 +1,8 @@
 # Function Logic Map: `runConsole`
 
 - Source: `cmd/tossctl/console.go`
-- AST evidence: `ast.json` (source SHA-256 `b5f9cd6435d421c2…`, 분기 44 / return 18, L211-516 — **편집 후 재생성**(편집 전 41/17))
+- AST evidence: `ast.json` (source SHA-256 `08562e7541ddf0d8…`, 분기 44 / return 21, L211-529
+  — **리뷰 수정 후 재생성.** 편집 전 41/17, 첫 편집 후 44/18 `b5f9cd6435d421c2…`)
 - Risk scan: `risk-pattern-report.md`
 - 작성 사유: a101 tasks 2.3·3.1 — 콘솔 기동에 soak autostart 호출을 넣고 `RestartSoak` seam을
   감싼다. **기존 함수의 내부를 편집하므로 편집 전에 만든다.** 산출물이 attestation을 갱신하는
@@ -44,7 +45,11 @@ a101이 추가하는 판정은 **그 규칙을 따라야 한다** — 조회 전
 a101은 **B30 블록 다음에 같은 형태의 블록을 놓았다.** 실제로 늘어난 분기는 **셋**이다 —
 seam nil 검사 둘(`soakBoot != nil`, closure 안 같은 검사)과 출력 판정 하나(`note != ""`).
 셋 다 nil 검사·출력이고, 그것들이 결정하는 내용은 전부 측정되는 함수 쪽에 있다
-(`runConfiguredSoakAutostart` 100.0%, `rememberSoakApproval` 100.0%).
+(`runConfiguredSoakAutostart` 100.0%, `bootSurvey` 100.0%, `rememberSoakApproval` 100.0%).
+
+**리뷰 수정에서도 분기는 늘지 않았다.** 리뷰가 요구한 판정("이미 돌고 있으면 두기")을
+여기 넣었으면 45번째 분기가 되고 그 분기의 커버리지는 0.0%였을 것이다. `bootSurvey`로
+빼서 44 그대로이고, 늘어난 것은 closure 안의 return 3개(18 → 21)뿐이다.
 
 ## Calls and live bindings
 
@@ -81,12 +86,21 @@ a101은 새 경로를 만들지 않고 이것을 재사용한다.
    서베이를 운영자가 다시 죽인다.**
 4. **`soakRecord`·`root`의 해석을 다시 하지 않는다.** 프로필 해석은 이미 이 함수 위쪽에서
    한 번 일어났고, autostart는 같은 값을 받아 써야 한다(a060의 프로필 격리).
+5. **부팅 경로는 버튼의 seam을 그대로 쓰지 않는다 — 리뷰가 추가한 조건이다.**
+   `restartSoak`은 같은 함수를 쓰되 두 가지가 달라야 한다.
+   (a) 이미 돌고 있는 서베이를 죽이지 않는다. `spawnDetachedSoak`의 `setsid`는 서베이가
+   콘솔보다 오래 살라고 있는 것이므로 부팅 시점의 "이미 떠 있음"은 이상 상태가 아니라
+   **설계된 상태**다. `startEngine`은 이미 이 선을 긋고 있다(떠 있으면 거절).
+   (b) `PrepareSpawn`을 넘기지 않는다. 공유 토큰 캐시를 지우는 것은 자격증명을 방금 바꾼
+   운영자를 위한 동작이고, 부팅에는 바꾼 것이 없다. 그 파일은 engine·API daemon·서베이가
+   서로 토큰을 뺏지 않게 만든 a082의 조율 지점이다.
 
 ## Safety conclusion
 
 - **Safe edit boundary**: B30 블록 **다음**에 출력 블록 추가, 그리고 재시작 closure를
   같은 시그니처로 감싸기. **편집 완료** — 기존 41개 분기 중 어느 것의 조건도 바뀌지 않았고,
-  늘어난 3개는 전부 nil 검사와 출력이다.
+  늘어난 3개는 전부 nil 검사와 출력이다. 리뷰 수정은 여기에 closure 하나를 더했을 뿐
+  분기를 더하지 않았다.
 - **High-risk impact**: **yes** — 이 배선의 산출물이 automation gate가 읽는 attestation을
   갱신하는 프로세스다. 다만 방향은 보수적이다: 이 편집이 잘못돼도 **서베이가 안 서는 것**이
   최악이고, 그것이 바로 지금의 동작이다.

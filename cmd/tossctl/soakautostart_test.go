@@ -123,6 +123,95 @@ func TestConfiguredSoakAutostartWithoutStartWiringIsVisible(t *testing.T) {
 	}
 }
 
+// --- boot is not the button --------------------------------------------------
+//
+// These were written after the a101 review. The first version of this change sent
+// the boot decision through restartSoak, the same seam the dashboard button uses,
+// and that is wrong in one specific way: the button's job is "replace whatever is
+// there" and boot's job is "make sure something is there". startEngine already
+// draws that line — it refuses when an engine is running rather than replacing it
+// (engineproc.go). The survey had the opposite rule, while spawnDetachedSoak's
+// setsid exists precisely so a survey outlives the console that started it.
+
+// TestBootSurveyLeavesARunningSurveyAlone is the finding itself. A console
+// restarting next to a healthy survey used to SIGINT it, wait up to 30s with the
+// HTTP listener not yet up, and — if it did not exit in time — start nothing at
+// all. That end state is the outage this whole change exists to prevent.
+func TestBootSurveyLeavesARunningSurveyAlone(t *testing.T) {
+	starts := 0
+	note, err := bootSurvey(
+		func() ([]int, error) { return []int{4242}, nil },
+		func() (string, error) { starts++; return "started", nil },
+	)
+	if err != nil {
+		t.Fatalf("bootSurvey: %v", err)
+	}
+	if starts != 0 {
+		t.Fatalf("starts=%d, want 0 — a healthy survey was replaced", starts)
+	}
+	if !strings.Contains(note, "4242") {
+		t.Fatalf("note=%q, want the pid that was left alone", note)
+	}
+}
+
+func TestBootSurveyStartsOneWhenNoneIsRunning(t *testing.T) {
+	starts := 0
+	note, err := bootSurvey(
+		func() ([]int, error) { return nil, nil },
+		func() (string, error) { starts++; return "새로 시작했다", nil },
+	)
+	if err != nil || starts != 1 {
+		t.Fatalf("starts=%d err=%v, want exactly one start", starts, err)
+	}
+	if !strings.Contains(note, "새로 시작했다") {
+		t.Fatalf("note=%q, want the seam's own words", note)
+	}
+}
+
+// TestBootSurveyDoesNotStartWhenItCannotTell. An unreadable process table is not
+// evidence that nothing is running, and starting on that assumption is how one
+// record ends up with two surveys appending to it.
+func TestBootSurveyDoesNotStartWhenItCannotTell(t *testing.T) {
+	starts := 0
+	_, err := bootSurvey(
+		func() ([]int, error) { return nil, errors.New("pgrep unavailable") },
+		func() (string, error) { starts++; return "", nil },
+	)
+	if err == nil {
+		t.Fatal("a failed enumeration was reported as success")
+	}
+	if starts != 0 {
+		t.Fatalf("starts=%d, want 0", starts)
+	}
+}
+
+func TestBootSurveyReportsAFailedStart(t *testing.T) {
+	_, err := bootSurvey(
+		func() ([]int, error) { return nil, nil },
+		func() (string, error) { return "", errors.New("no such binary") },
+	)
+	if err == nil {
+		t.Fatal("a failed spawn was reported as success")
+	}
+}
+
+// TestBootSurveyNamesEveryProcessItLeftAlone. Two surveys on one record is
+// already a defect; boot must not hide it by reporting only the first.
+func TestBootSurveyNamesEveryProcessItLeftAlone(t *testing.T) {
+	note, err := bootSurvey(
+		func() ([]int, error) { return []int{11, 22}, nil },
+		func() (string, error) { return "", nil },
+	)
+	if err != nil {
+		t.Fatalf("bootSurvey: %v", err)
+	}
+	for _, want := range []string{"11", "22"} {
+		if !strings.Contains(note, want) {
+			t.Errorf("note=%q, missing pid %s", note, want)
+		}
+	}
+}
+
 // --- the approval the restart button leaves behind ---------------------------
 
 // TestSoakRestartRecordsTheApproval. The operator pressing restart is the act

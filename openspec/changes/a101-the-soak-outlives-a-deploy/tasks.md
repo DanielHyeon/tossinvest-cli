@@ -46,18 +46,39 @@
 - [x] 4.3 `go test` + `-race` + `go vet` — `internal/config`, `internal/console`, `internal/audit`,
   `cmd/tossctl`.
 - [x] 4.4 `openspec validate --all --strict` — 86 passed, 0 failed
-- [ ] 4.5 `make sdd-sync` → `make sdd-check`
-- [ ] 4.6 gstack 독립 리뷰.
-- [ ] 4.7 PM 동기화(`STORY-TOS-a101`).
+- [x] 4.5 `make sdd-sync` → `make sdd-check` (**exit 0**). CodeGraph hard-evidence index가
+  worktree와 일치한다. `sdd-sync` 자체는 exit 1인데 사유는 advisory `codegraphcontext
+  update`의 300s timeout 하나뿐이고 hard evidence는 기록된다.
+- [x] 4.6 gstack 독립 리뷰 — **결함 1건을 잡았고 고쳤다**(review.md R1·R2). 서브에이전트가
+  아니라 다른 모델(codex, read-only)로 돌렸다. 같은 모델의 두 번째 통과는 독립이 아니다.
+- [x] 4.8 **리뷰 수정**(2026-08-12). 부팅 경로가 버튼의 seam을 그대로 쓰면 안 된다.
+  `bootSurvey` 신설(RED 선행, 커버리지 100.0%), 부팅에서 `PrepareSpawn` 제거,
+  `runConsole` FLM·branch-test-map·pre-edit-gate 재생성(분기 44 유지, SHA `08562e7541ddf0d8`).
+- [x] 4.7 PM 동기화(`STORY-TOS-a101`) — story 파일, `_registry.yaml`, `FEAT-TOS-004`의
+  역링크. 역링크를 빠뜨리면 `generate_master_tracker.py`가 `feature reverse link missing`으로
+  거부한다.
 
 ## 5. 배포와 운영
 
-- [ ] 5.1 **배포 자체가 이 change의 첫 검증이다.** 재빌드 + 컨테이너 재생성 후
-  서베이가 자동으로 돌아오는지 확인한다. 돌아오지 않으면 이 change는 실패다.
-- [ ] 5.2 **첫 배포에서는 아직 켜져 있지 않다.** 키가 없으므로 false이고, 운영자가 soak
-  재시작을 한 번 눌러야 승인이 기록된다. 그 다음 배포부터 자동으로 살아난다.
-- [ ] 5.3 운영 문서에 한 줄 — 재시작 버튼이 승인을 영속시킨다는 것과, 끄려면 config를
-  고친다는 것.
+- [x] 5.1 **첫 배포 완료 (2026-08-12 08:19:55 KST, image `e3cc624401ae`).**
+  ~~"서베이가 자동으로 돌아오는지 확인한다"~~ — **이 문장은 첫 배포에 적용할 수 없다.**
+  5.2가 말하는 대로 이 배포 시점에는 키가 없어 OFF이므로 돌아오지 않는 것이 정상이다.
+  원문은 5.2와 모순됐고, 여기서 고친다. 이 배포가 실제로 검증한 것은 **OFF 경로**다.
+- [x] 5.2 **첫 배포에서는 켜지지 않는다 — 실운영에서 확인했다.** 재생성 뒤 콘솔 로그에
+  `엔진 자동 시작: 엔진을 시작했다`는 있고 **soak 줄은 없다.** 컨테이너 안에도 console(pid 7)과
+  `engine run`(pid 16)뿐이고 soak 프로세스는 없다. `runConfiguredSoakAutostart`의 OFF 분기가
+  빈 문자열을 반환한 것이며 `TestConfiguredSoakAutostartOffDoesNotStart`와 같은 동작이다.
+- [ ] 5.4 **ON 경로는 아직 미검증이다.** 운영자가 대시보드에서 **[soak 재시작]을 한 번**
+  눌러야 승인이 기록되고(audit `soak.autostart`), 그 **다음 배포**에서야 자동 복구가
+  관측된다. 이 change의 목적 자체는 그때 검증된다 — 지금은 절반만 확인됐다.
+- [ ] 5.5 **리뷰 수정은 아직 배포되지 않았다.** 돌고 있는 이미지 `e3cc624401ae`에는
+  `bootSurvey`가 없다. 다만 **컨테이너 배포에서는 R1이 도달 불가능하다** — 컨테이너를
+  재생성하면 서베이도 함께 죽으므로 부팅 시점에 "이미 돌고 있는 서베이"가 존재할 수 없다.
+  R1은 콘솔만 재기동되는 host 설치에서 발동한다. 따라서 지금 버튼을 눌러 승인을 기록하는
+  것은 안전하고, 다음 배포가 곧 5.4의 검증이 된다.
+- [x] 5.3 운영 문서 — `docs/operations.md`의 「LIVE 주문과 엔진 자동 시작」 바로 뒤에
+  「capability 서베이 자동 시작」 절을 넣었다. 재시작 버튼이 승인을 영속시킨다는 것,
+  끄려면 config를 고친다는 것, 엔진 다음이라는 순서와 그 이유를 적었다.
 
 ## 범위 밖
 

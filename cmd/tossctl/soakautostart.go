@@ -116,6 +116,40 @@ func runConfiguredSoakAutostart(
 	return fmt.Sprintf("soak 자동 시작: %s", note)
 }
 
+// bootSurvey is the boot-time counterpart of the dashboard's restart button, and
+// it exists because the two are not the same act.
+//
+// The button means "replace whatever is there": the operator pressed it because
+// they want a fresh survey, and killing the old one is the point. Boot means
+// "make sure one is there". startEngine already draws exactly this line — it
+// refuses when an engine is already running rather than replacing it — and the
+// survey needs the same rule for a stronger reason: spawnDetachedSoak uses setsid
+// *so that* a survey outlives the console that started it, so "a healthy survey is
+// already running" is the designed state at boot, not an anomaly.
+//
+// Sending boot through the button's seam had three consequences, all in the wrong
+// direction (a101 review, confirmed independently by the cross-model pass):
+//
+//   - a healthy survey was interrupted and its current cycle thrown away;
+//   - the console waited up to soakStopTimeout for it, with the HTTP listener not
+//     yet up, so a slow shutdown delayed the operator's only screen;
+//   - and if it did not exit in time, restartSoak refuses to spawn — leaving *no*
+//     survey running, which is the outage this whole change exists to prevent.
+//
+// A failed enumeration is not "nothing is running". Starting on that assumption is
+// how one record ends up with two surveys appending to it, which soakproc calls
+// worse than a survey that needs a person.
+func bootSurvey(running func() ([]int, error), start func() (string, error)) (string, error) {
+	pids, err := running()
+	if err != nil {
+		return "", err
+	}
+	if len(pids) > 0 {
+		return fmt.Sprintf("이미 실행 중이다 (pid %s). 새로 시작하지 않았다", joinPIDs(pids)), nil
+	}
+	return start()
+}
+
 // rememberSoakApproval persists "this profile runs the survey" after a restart
 // that actually produced one.
 //

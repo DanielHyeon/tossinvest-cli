@@ -1,0 +1,40 @@
+{
+  "id": "STORY-TOS-a101",
+  "title": "The capability survey outlives a deploy",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a101-the-soak-outlives-a-deploy",
+    "path": "openspec/changes/a101-the-soak-outlives-a-deploy"
+  },
+  "found_by": {
+    "date": "2026-08-11",
+    "how": "Deploying a100's conditional-order probe. The documented procedure (rebuild image, recreate containers) left the capability soak dead: measured 2026-08-11 14:00Z. engine.autostart exists; soak has no counterpart and deploy/container-entrypoint.sh contains no soak. Every deploy therefore stops the attestation clock silently.",
+    "record": "openspec/changes/a100-wire-fill-to-broker-protection/tasks.md task 0.10 (b)"
+  },
+  "prior_art": {
+    "note": "a060 I3 retired the host-side soak-autostart.sh on 2026-08-03 because 'the console moved into the container, so this script's role is over'. That judgement was correct for the script — it was already expired and could spawn a flagless second survey on the default profile. But the console inherited only the manual restart, not the 'start it if it is not up' half, and nobody inherited that half.",
+    "why_not_a_reversal": "This change reuses the console's existing restartSoak seam, so the profile flags and the record-path ownership test both apply. operator-console spec:918 already requires that ownership test and already presupposes an autostart caller."
+  },
+  "acceptance": [
+    "A soak.autostart config key exists, defaults to false, and is independent of engine.autostart",
+    "When it is true the console starts the survey at boot through the existing restart seam, after engine autostart, so the two do not contend for the same account's rate budget",
+    "A survey that cannot start costs one line of stderr and never the operator console",
+    "The console's existing soak restart button persists the approval on success and records it in the audit log as soak.autostart",
+    "A failure to persist the approval never reports the restart as failed, because the survey is already running and a re-press would kill it",
+    "No new settings screen and no off switch are added: the console has no soak stop surface, and turning it off means editing config"
+  ],
+  "measured": {
+    "date": "2026-08-12",
+    "runConsole_coverage_before": "0.0% — 41 branches, none executed",
+    "why_it_mattered": "A judgement placed inside runConsole is a judgement no test can reach. All judgement therefore lives in argument-taking functions (runConfiguredSoakAutostart 100.0%, rememberSoakApproval 100.0%) and runConsole gained only calls, a print and nil checks (41 to 44 branches)."
+  },
+  "deviations": [
+    "internal/config/soak_io.go was written before its tests; RED was never observed for that package. cmd/tossctl kept the order and observed RED as a compile failure.",
+    "Pre-Edit conditions (1) 'after engine autostart' and (2) 'a start failure does not return' are not pinned by tests, because runConsole is unreachable. They exist as code-review conditions only."
+  ],
+  "limits": [
+    "The first deploy does not switch it on. The key is absent, so the value is false; an operator must press soak restart once to record the approval, and only the deploy after that restores the survey automatically.",
+    "runConsole is still 0.0%. This change worked around that fact rather than fixing it."
+  ]
+}

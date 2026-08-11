@@ -350,10 +350,17 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	// share one account's rate budget, and the engine's startup interlock is the
 	// side that reads what the survey produces.
 	//
-	// startSurvey is one function rather than two call sites because the spec
-	// requires the boot decision to go through the console's existing restart
-	// seam — profile flags and ownership judgement included — and two spellings of
-	// that are how they drift apart (a101).
+	// Both paths below go through restartSoak, which is what carries the profile
+	// flags and the record-scoped ownership judgement the spec requires. They differ
+	// in two things, and both differences are the point (a101 review):
+	//
+	//   - boot goes through bootSurvey first, so a survey that is already running
+	//     is left alone instead of interrupted. setsid exists so a survey outlives
+	//     its console, so that is the designed state here, not an anomaly.
+	//   - boot does not pass PrepareSpawn. Clearing the shared token cache is right
+	//     for the button, where the operator may have just changed credentials, and
+	//     wrong here, where nothing changed: that file is how the engine, the API
+	//     daemon and the survey stop taking the token away from each other (a082).
 	soakBoot := newConsoleSoakBoot(root)
 	var soakBootLoad func() (bool, error)
 	if soakBoot != nil {
@@ -362,7 +369,13 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	startSurvey := func() (string, error) {
 		return restartSoak(root, soakRecord, openAPISeam.PrepareSpawn)
 	}
-	if note := runConfiguredSoakAutostart(soakBootLoad, startSurvey); note != "" {
+	bootSurveyIfAbsent := func() (string, error) {
+		return bootSurvey(
+			func() ([]int, error) { return soakFindProcesses(soakRecord) },
+			func() (string, error) { return restartSoak(root, soakRecord) },
+		)
+	}
+	if note := runConfiguredSoakAutostart(soakBootLoad, bootSurveyIfAbsent); note != "" {
 		fmt.Fprintln(cmd.ErrOrStderr(), note)
 	}
 
