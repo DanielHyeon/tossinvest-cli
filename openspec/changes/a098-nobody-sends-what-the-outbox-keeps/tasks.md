@@ -1635,7 +1635,45 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       `check_agent_config_sync` 동기 · `memory_index` valid · PM tracker current ·
       `sdd-test` 통과.
 - [ ] 6.3 `make gate CHANGE=a098-nobody-sends-what-the-outbox-keeps`
-- [ ] 6.4 독립 리뷰
+- [x] 6.4 독립 리뷰 — **2026-08-13. 두 보이스 BLOCK, 뮤테이션 넷으로 정산.**
+      전문은 `review.md`.
+
+      적대적 보이스 둘을 병렬로 돌렸다(`codex exec`, read-only, high) — A 는 staff
+      engineer(불변식·잠금·소켓·종료), B 는 **한 질문만** 받은 QA(그 테스트가
+      증명하는가, 아니면 깨진 구현도 통과하는가). **둘 다 BLOCK.**
+
+      판정을 옮기지 않고 판정을 가르는 주장마다 뮤테이션을 돌렸다.
+
+      | 뮤테이션 | 무엇을 바꾸나 | 결과 |
+      |---|---|---|
+      | **M1** | 프로덕션 `Context.AlertDeliverer` 의 `OnStop` 삭제 | **네 패키지 전부 초록 ⛔** |
+      | **M1b** | `OnStop` 은 두고 본문만 비움 | **초록 ⛔** |
+      | **M3** | 배달 알림의 `Title`·`Body` 를 빈 문자열로 | **초록 ⛔** |
+      | **M4** | `Acknowledge` 가 `ids...` 를 버린다 | **초록 ⛔** |
+      | **M2** | 프로덕션 `Run` 을 무력한 대기로 | **FAIL — R4·R4b 가 죽인다** |
+
+      M1 은 High-risk fail-closed 경로다: 그 구현에서 **발송자는 죽고 진입은 열려
+      있다.** M4 는 한 건 승인이 전체 승인이 되어 감사 기록이 거짓이 된다.
+      셋 다 새 파일 하나로 닫았다 — **프로덕션 코드 0줄 변경**(증거의 결함이지
+      구현의 결함이 아니다). 재측정 **2868 passed / 5패키지 / exit 0**.
+
+      > **⛔ 첫 M1 은 `FAIL` 이었고 그것이 「테스트가 잡았다」로 보였다.**
+      > 실제로는 `gate`·`log` 미사용으로 `[build failed]` 였다. **build 실패는
+      > 테스트가 잡은 것이 아니다.** 컴파일시킨 뒤에야 진짜 답(초록)이 나왔다 —
+      > `missing-tool-reports-clean` 의 반대 방향이다.
+
+      > **⛔ 두 보이스의 headline 은 둘 다 틀렸다.** B 는 「프로덕션이 무력한 실행자를
+      > 등록해도 통과한다」고 했는데 M2 가 죽는다. A 는 무한 목록을 BLOCKER 로 올렸는데
+      > §3.2 측정으로 1만 행 ≈ 45ms 다. **밑에서 진짜였던 것은 셋뿐이고, 그 셋은
+      > 두 보이스가 headline 으로 안 고른 것이다.**
+
+      불변식 3 은 따로 기계로 확인했다 — `Gateway.checkEntry` 가 `!raisesExposure` 면
+      즉시 nil 이고 `CheckEntryFor` 는 그 한 곳에서만 불린다. **정지·청산은 진입
+      게이트를 안 지나간다.**
+
+      후속 이월 8건(F1~F8)은 `review.md §2.2` 에 이름이 적혀 있다. 전부 `cycle`·
+      `deliverOne`·`Run` 의 **내부 분기**를 바꾸므로 Function Logic Map 이 먼저다 —
+      침묵한 생략이 아니라 적어 둔 이월이다.
 - [x] 6.5 **a092의 D0.10 표와 non-goal이 a098을 가리키는지 재확인** —
       두 change가 같은 일을 청구하면 그것이 16라운드 B-8이 잡은 형태다
 
