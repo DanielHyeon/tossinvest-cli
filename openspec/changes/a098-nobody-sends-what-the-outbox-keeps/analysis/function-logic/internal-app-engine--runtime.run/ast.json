@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/runtime.go",
-  "source_sha256": "4bcd9ee7f50f6c5051f85da95151d82dd26f7725acc804a0cefb5533ebd534a8",
+  "source_sha256": "306276bd31062ceab5042373c11f9a668d39511e22a0e1b63af3d77a2d055766",
   "package": "engine",
   "function": "Run",
   "receiver": "Runtime",
   "signature": "Runtime.Run(params=1, results=1)",
   "start": {
-    "line": 261,
+    "line": 288,
     "column": 1
   },
   "end": {
-    "line": 332,
+    "line": 380,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 262,
+        "line": 289,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 267,
+        "line": 294,
         "column": 3
       }
     },
@@ -34,15 +34,23 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 277,
+        "line": 304,
         "column": 2
       }
     },
     {
       "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 322,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
       "kind": "if",
       "at": {
-        "line": 304,
+        "line": 352,
         "column": 2
       }
     }
@@ -51,21 +59,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 268,
+        "line": 295,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 308,
+        "line": 356,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 331,
+        "line": 379,
         "column": 2
       }
     }
@@ -74,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 267,
+        "line": 294,
         "column": 13
       },
       "text": "r.opts.Recover"
@@ -82,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 272,
+        "line": 299,
         "column": 21
       },
       "text": "context.WithCancel"
@@ -90,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 273,
+        "line": 300,
         "column": 8
       },
       "text": "cancel"
@@ -98,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 275,
+        "line": 302,
         "column": 11
       },
       "text": "make"
@@ -106,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 275,
+        "line": 302,
         "column": 27
       },
       "text": "len"
@@ -114,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 278,
+        "line": 305,
         "column": 3
       },
       "text": "wg.Add"
@@ -122,14 +130,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 279,
+        "line": 306,
         "column": 6
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 280,
+        "line": 307,
         "column": 10
       },
       "text": "wg.Done"
@@ -137,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 281,
+        "line": 308,
         "column": 40
       },
       "text": "loop.Run"
@@ -145,7 +153,38 @@
     {
       "kind": "call",
       "at": {
-        "line": 285,
+        "line": 323,
+        "column": 3
+      },
+      "text": "wg.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 10
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 8
+      },
+      "text": "aux.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
         "column": 16
       },
       "text": "make"
@@ -153,7 +192,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 287,
+        "line": 335,
         "column": 2
       },
       "text": "supervisorWG.Add"
@@ -161,14 +200,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 288,
+        "line": 336,
         "column": 5
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 289,
+        "line": 337,
         "column": 9
       },
       "text": "supervisorWG.Done"
@@ -176,7 +215,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 290,
+        "line": 338,
         "column": 3
       },
       "text": "r.superviseHealth"
@@ -184,7 +223,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 298,
+        "line": 346,
         "column": 2
       },
       "text": "cancel"
@@ -192,7 +231,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 299,
+        "line": 347,
         "column": 2
       },
       "text": "close"
@@ -200,7 +239,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 348,
         "column": 2
       },
       "text": "wg.Wait"
@@ -208,7 +247,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 301,
+        "line": 349,
         "column": 2
       },
       "text": "supervisorWG.Wait"
@@ -216,7 +255,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 302,
+        "line": 350,
         "column": 13
       },
       "text": "drain"
@@ -224,7 +263,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 304,
+        "line": 352,
         "column": 5
       },
       "text": "r.gracefulStop"
@@ -232,7 +271,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 305,
+        "line": 353,
         "column": 3
       },
       "text": "r.log"
@@ -240,7 +279,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 315,
+        "line": 363,
         "column": 13
       },
       "text": "fmt.Errorf"
@@ -248,7 +287,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 315,
+        "line": 363,
         "column": 73
       },
       "text": "describe"
@@ -256,7 +295,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 316,
+        "line": 364,
         "column": 2
       },
       "text": "r.alert"
@@ -264,7 +303,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 318,
+        "line": 366,
         "column": 10
       },
       "text": "string"
@@ -272,7 +311,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 326,
+        "line": 374,
         "column": 22
       },
       "text": "describe"
@@ -280,7 +319,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 375,
         "column": 22
       },
       "text": "strings.Join"
@@ -288,7 +327,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 375,
         "column": 35
       },
       "text": "namesOf"
@@ -296,7 +335,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 330,
+        "line": 378,
         "column": 2
       },
       "text": "r.log"
@@ -304,7 +343,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 330,
+        "line": 378,
         "column": 78
       },
       "text": "describe"
@@ -314,35 +353,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 267,
+        "line": 294,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 272,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 275,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 285,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 297,
+        "line": 299,
         "column": 2
       }
     },
@@ -354,9 +372,37 @@
       }
     },
     {
+      "kind": "=",
+      "at": {
+        "line": 329,
+        "column": 4
+      }
+    },
+    {
       "kind": ":=",
       "at": {
-        "line": 315,
+        "line": 333,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 345,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 363,
         "column": 2
       }
     }
@@ -365,14 +411,21 @@
     {
       "kind": "go",
       "at": {
-        "line": 279,
+        "line": 306,
         "column": 3
       }
     },
     {
       "kind": "go",
       "at": {
-        "line": 288,
+        "line": 324,
+        "column": 3
+      }
+    },
+    {
+      "kind": "go",
+      "at": {
+        "line": 336,
         "column": 2
       }
     }
@@ -381,7 +434,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 273,
+        "line": 300,
         "column": 2
       },
       "text": "cancel"
@@ -389,7 +442,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 280,
+        "line": 307,
         "column": 4
       },
       "text": "wg.Done"
@@ -397,7 +450,15 @@
     {
       "kind": "defer",
       "at": {
-        "line": 289,
+        "line": 325,
+        "column": 4
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 337,
         "column": 3
       },
       "text": "supervisorWG.Done"
