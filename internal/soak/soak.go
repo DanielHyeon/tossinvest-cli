@@ -25,7 +25,7 @@
 //
 // # Why the broker arrives as an interface
 //
-// Reads has six methods and every one of them is a GET. The type is not a
+// Reads has nine methods and every one of them is a GET. The type is not a
 // convenience — it is the mutation exclusion. A package that never imports
 // internal/official cannot call PlaceOrder no matter what a future edit does to
 // it, and the import-graph assertion in static_test.go keeps it that way. The
@@ -60,6 +60,13 @@ const (
 	EndpointOrders      = "GET /api/v1/orders"
 	EndpointOrderByID   = "GET /api/v1/orders/{id}"
 	EndpointPrices      = "GET /api/v1/prices"
+
+	// The resident-protection reads (a100 tasks 0.10 (a)). They are surveyed and
+	// attested like any other read; what they are not is required — see
+	// protection_probe.go for why the probe comes before the requirement.
+	EndpointConditionalOrders = "GET /api/v1/conditional-orders"
+	EndpointConditionalByID   = "GET /api/v1/conditional-orders/{id}"
+	EndpointSellableQuantity  = "GET /api/v1/sellable-quantity"
 )
 
 // RequiredEndpoints are the reads a completed soak has to have proven.
@@ -128,6 +135,14 @@ type Reads interface {
 	Order(ctx context.Context, id string) error
 	// Prices reads quotes for symbols and returns how many came back.
 	Prices(ctx context.Context, symbols []string) (int, error)
+	// ConditionalOrders reads one status group of the conditional-order list and
+	// returns the identifiers on it. status is "OPEN" or "CLOSED", never empty.
+	ConditionalOrders(ctx context.Context, status string) ([]string, error)
+	// ConditionalOrder reads a single conditional order by identifier.
+	ConditionalOrder(ctx context.Context, id string) error
+	// SellableQuantity reads how much of a symbol may be sold. Only the success
+	// of the read is recorded; the quantity is not.
+	SellableQuantity(ctx context.Context, symbol string) error
 }
 
 // Class is why a read failed. The distinction that matters is auth versus
@@ -529,6 +544,22 @@ func (r *Runner) RunCycle(ctx context.Context) (Cycle, error) {
 	// 4. quotes.
 	quotes, pricesResult := r.probePrices(ctx)
 	cycle.Endpoints = append(cycle.Endpoints, pricesResult)
+
+	// 5. the resident-protection reads, last on purpose.
+	//
+	//    Position here is a rate-budget decision. The order walk has opened a 429
+	//    penalty window that the read behind it fell into (measurements.md M8),
+	//    and these three are requests this account did not use to make. Placed
+	//    last, a penalty they provoke lands on them and not on an endpoint the
+	//    attestation already depends on.
+	//
+	//    None of them feeds the credential judgement above or the completeness
+	//    judgement below: a broker that refuses the conditional list must not be
+	//    able to break a credential streak or fail a read-completeness check.
+	conditionalIDs, conditionalsResult := r.probeConditionalOrders(ctx)
+	cycle.Endpoints = append(cycle.Endpoints, conditionalsResult)
+	cycle.Endpoints = append(cycle.Endpoints, r.probeConditionalByID(ctx, conditionalIDs, conditionalsResult.OK))
+	cycle.Endpoints = append(cycle.Endpoints, r.probeSellableQuantity(ctx))
 
 	cycle.Completeness = completenessOf(closedWalk, openWalk, ordersResult.OK, positions, len(r.opts.Symbols), quotes)
 	cycle.FinishedAt = r.opts.Clock.Now()

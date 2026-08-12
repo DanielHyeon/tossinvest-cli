@@ -18,6 +18,7 @@ import (
 	"context"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -190,25 +191,68 @@ func TestALaterOccurrenceOfTheSameKeyIsNotSwallowed(t *testing.T) {
 // had not been delivered yet, both conclude the send was owed, and both
 // publish. The second then failed to mark a row that was already DELIVERED —
 // the `no such alert` line the storm left behind.
+//
+// # The barrier (a097)
+//
+// Spawning eight goroutines does not make them concurrent; it makes them
+// runnable. Without a common start they can be scheduled one after another, and
+// then the test observes a serial run and reports it as exclusion. Measured
+// against the mutant that removes the claim-and-send lock, at GOMAXPROCS=1:
+// 26/30 kills before the barrier, so four runs in thirty called an unlocked
+// notifier correct.
+//
+// The barrier costs one channel and removes that: every observer is parked at
+// the same point before any of them starts, so none can finish before the rest
+// begin.
 func TestConcurrentObservationsOfOneConditionSendOnce(t *testing.T) {
-	pub := &failingPublisher{}
+	pub := newReentrantPublisher()
 	n, _, _, _ := a096Notifier(t, pub)
 	ctx := context.Background()
 
-	var wg sync.WaitGroup
-	for i := 0; i < 8; i++ {
-		wg.Add(1)
+	const observers = 8
+	var ready, done sync.WaitGroup
+	ready.Add(observers)
+	done.Add(observers)
+	start := make(chan struct{})
+
+	for i := 0; i < observers; i++ {
 		go func() {
-			defer wg.Done()
+			defer done.Done()
+			ready.Done()
+			<-start
 			if err := n.Notify(ctx, a096Event()); err != nil {
 				t.Errorf("Notify: %v", err)
 			}
 		}()
 	}
-	wg.Wait()
+	ready.Wait() // every observer exists and is parked on the barrier
+	close(start)
 
-	if got := pub.callCount(); got != 1 {
-		t.Errorf("sends = %d, want 1 — eight observations of one condition are one alert", got)
+	// Hold the first send inside Publish. While it is parked there its row is
+	// still PENDING, so an observer that is not excluded reads an undelivered
+	// row, concludes the send is owed, and publishes it too — and the publisher
+	// records that it was entered twice at once. The wait gives the other seven
+	// the opportunity; the assertion is the overlap, not the wait.
+	//
+	// Bounded, so a run in which nothing publishes fails here with a sentence
+	// instead of hanging until the package-wide timeout takes every other test
+	// down with it.
+	select {
+	case <-pub.entered:
+	case <-time.After(10 * time.Second):
+		t.Fatal("no publish began within 10s — no observation reached the transport")
+	}
+	time.Sleep(50 * time.Millisecond)
+	close(pub.release)
+	done.Wait()
+
+	calls, peak := pub.stats()
+	if peak > 1 {
+		t.Errorf("%d publishes were in flight at once — two observations of one "+
+			"condition each decided the send was owed and each sent it", peak)
+	}
+	if calls != 1 {
+		t.Errorf("sends = %d, want 1 — eight observations of one condition are one alert", calls)
 	}
 }
 
@@ -308,28 +352,80 @@ func (p *blockingPublisher) Publish(_ context.Context, _ obs.Notification) error
 // a settled row back into a pending one. If that lands between the count and
 // the clear, the gate opens while an undelivered critical alert exists.
 //
-// The two must therefore exclude each other. This test pins that: while a send
-// is inside Publish, Acknowledge must not have finished.
+// The two must therefore exclude each other.
+//
+// # What this test measures, and what it still cannot (a097)
+//
+// It used to prove exclusion with a 50ms timer: if Acknowledge had not returned
+// within the window, the mutex was declared to be working. That reads a loaded
+// machine as a correct one, and it keeps reading it that way after the mutex is
+// gone.
+//
+// This version asserts on the ledger instead. While the send is parked inside
+// Publish its row is still PENDING, so an Acknowledge that got in would have
+// found that row and stamped it — AcknowledgeAlert matches on state = PENDING.
+// A row that is still pending and still unstamped is an effect, not a duration.
+//
+// It is an improvement and not a proof. Nothing here observes the acknowledging
+// goroutine *reaching* the contested lock, so a scheduler that never runs it
+// produces the same reading as exclusion. Making that observable needs a seam in
+// production code: Notifier.Journal is a concrete *journal.Journal, so its calls
+// cannot be intercepted, and this file is an external test package, so an
+// unexported hook would be out of reach.
+//
+// a097 therefore records this lock as still unverified (tasks §8) rather than
+// counting the improvement as closure. The lock that *is* verified by
+// measurement is the one Flush shares with the send path: removing it fails
+// TestFlushCannotPublishBesideASend 20 times out of 20.
 func TestAcknowledgeCannotClearTheGateMidSend(t *testing.T) {
 	pub := &blockingPublisher{entered: make(chan struct{}), release: make(chan struct{})}
-	n, _, _, _ := a096Notifier(t, pub)
+	n, j, _, _ := a096Notifier(t, pub)
 	ctx := context.Background()
 
-	go func() { _ = n.Notify(ctx, a096Event()) }()
-	<-pub.entered // a send is in flight and holds the delivery mutex
-
-	done := make(chan error, 1)
-	go func() { done <- n.Acknowledge(ctx, "operator") }()
-
+	sendDone := make(chan error, 1)
+	go func() { sendDone <- n.Notify(ctx, a096Event()) }()
 	select {
-	case err := <-done:
-		t.Fatalf("Acknowledge finished while a send was in flight (err=%v) — "+
-			"it can clear the gate against a count taken before a re-arm", err)
-	case <-time.After(50 * time.Millisecond):
+	case <-pub.entered: // a send is in flight and holds the delivery mutex
+	case <-time.After(10 * time.Second):
+		t.Fatal("no publish began within 10s — there was no send to exclude")
 	}
 
+	var released atomic.Bool
+	ackRaced := make(chan bool, 1)
+	ackDone := make(chan error, 1)
+	go func() {
+		err := n.Acknowledge(ctx, "operator")
+		ackRaced <- !released.Load()
+		ackDone <- err
+	}()
+
+	// The opportunity for the interleave, not the assertion about it.
+	time.Sleep(50 * time.Millisecond)
+
+	pending, err := j.PendingAlerts(ctx, 0)
+	if err != nil {
+		t.Fatalf("PendingAlerts mid-send: %v", err)
+	}
+	if len(pending) != 1 {
+		t.Fatalf("pending rows mid-send = %d, want 1 — the acknowledgement settled a row "+
+			"while the send that owns it was still inside Publish", len(pending))
+	}
+	if got := pending[0].AcknowledgedBy; got != "" {
+		t.Errorf("acknowledged_by = %q on the row currently being sent — the release "+
+			"ran inside the send it must exclude", got)
+	}
+
+	released.Store(true)
 	close(pub.release)
-	if err := <-done; err != nil {
+
+	if err := <-sendDone; err != nil {
+		t.Fatalf("Notify: %v", err)
+	}
+	if raced := <-ackRaced; raced {
+		t.Error("Acknowledge returned before the send was released — it counted what was " +
+			"pending before a concurrent re-arm could change the answer")
+	}
+	if err := <-ackDone; err != nil {
 		t.Fatalf("Acknowledge after the send completed: %v", err)
 	}
 }

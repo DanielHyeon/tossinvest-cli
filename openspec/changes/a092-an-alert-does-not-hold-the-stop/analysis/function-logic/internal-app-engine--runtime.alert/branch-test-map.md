@@ -4,8 +4,14 @@ Source: `internal/app/engine/runtime.go` (444-456). AST 기준 분기 2 / 이탈
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:445` `Alerts == nil` → 무동작 | 간접 — `Alerts` 없이 도는 runtime 테스트 | no | yes |
-| B2 | `:453` `Notify` 오류 → `alert_undelivered` warn | 간접 | no | yes |
+| B1 | `:445` `Alerts == nil` → 무동작 | **없음** — harness가 항상 채운다 | no | **no** |
+| B2 | `:453` `Notify` 오류 → `alert_undelivered` warn | **없음** — 오류를 내는 스텁이 없다 | no | **no** |
+
+> **18라운드 B-P7이 두 칸을 다 내렸다.** `runtime_test.go`의 `Alerts:`는 여덟 자리
+> 전부 non-nil이고(`:139`·`:178`·`:219`·`:244`·`:284`·`:346`·`:385`·`:414`),
+> 그 값인 `recordingAlerts.Notify`는 **항상 nil을 돌려준다**(`runtime_test.go:37-42`).
+> 그러므로 nil 분기도, 오류 분기도 어떤 테스트도 지나지 않는다. `간접`이라는 말이
+> 두 칸에 붙어 있었고 두 칸 다 근거가 없었다.
 
 ## 이 change가 여기 요구하는 것: 없음
 

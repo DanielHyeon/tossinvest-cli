@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a097",
+  "title": "A re-armed alert is a new episode",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a097-a-re-armed-alert-is-a-new-episode",
+    "path": "openspec/changes/a097-a-re-armed-alert-is-a-new-episode"
+  },
+  "acceptance": [
+    "A re-armed outbox row carries the cause of the observation that re-armed it, not the cause of the episode that settled",
+    "A re-armed outbox row starts its attempt count at zero and carries no delivery or attempt timestamp from the previous episode, so every column of the row describes the same event",
+    "A critical alert whose claim transaction fails latches the entry gate instead of returning an error that a caller may discard",
+    "That latch is also attempted durably, because the in-memory latch and the missing outbox row would both vanish on restart and reopen entries with nobody notified",
+    "A durable escalation that itself fails is recorded at error level rather than skipped, so the loss of restart durability is itself on the record",
+    "The reminder-window contract for callers that only record is stated once, and the code and the doc agree that timed reminders and unknown-state repair are different rules",
+    "The delivery mutex shared by the send path and the flush path is proven by a test that fails when the mutex is removed",
+    "The single-send concurrency test starts its goroutines from a barrier, so it cannot pass by serialising them",
+    "Mutual exclusion between acknowledge and send is improved from a sleep to a ledger-effect observation, and is explicitly recorded as still unproven rather than counted as closed",
+    "No order, stop, take-profit or sizing path is touched, and no alert that is owed becomes unowed"
+  ]
+}

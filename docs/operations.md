@@ -117,6 +117,68 @@ Compose의 host publish는
 배포·업데이트 절차는 `engine.autostart`를 임의로 켜지 않는다. ON은 trusted-network
 브라우저의 CSRF 설정 폼에서 운영자가 직접 저장하고 audit에 남긴다.
 
+### capability 서베이 자동 시작 (`soak.autostart`)
+
+capability soak은 엔진 인터록이 읽는 attestation을 만드는 프로세스다. 서베이가
+멈추면 새 증거가 쌓이지 않고, attestation은 만료된다.
+
+**컨테이너를 재생성하면 서베이는 죽는다.** entrypoint가 서베이를 띄우지 않기
+때문이다. 2026-08-11 배포에서 실제로 그렇게 됐고, 그것을 고치는 것이 이 설정이다.
+
+- 이 설정에는 **화면이 없다.** 대시보드의 **[soak 재시작]** 버튼이 성공하면 그
+  자체가 승인으로 기록된다(audit `soak.autostart`). 버튼을 한 번 누르는 행위가
+  "이 프로필은 서베이를 돌린다"는 의사표시다.
+- 기본은 OFF다. 키가 없는 설정 파일은 지금까지와 똑같이 동작한다.
+- ON이면 콘솔이 기동할 때 **엔진 자동 시작 다음에** 서베이를 한 번 세운다.
+  순서가 정해져 있는 이유는 둘이 같은 계좌의 rate budget을 쓰기 때문이다.
+- 서베이가 서지 않아도 콘솔은 뜬다. 실패는 stderr 한 줄이다.
+- 승인 기록에 실패해도 재시작은 성공으로 보고한다. 그 시점에 서베이는 이미 돌고
+  있고, 실패로 보고하면 운영자가 다시 눌러 방금 선 서베이를 죽인다.
+- **끄려면 config의 `soak.autostart`를 false로 고친다.** 콘솔에는 서베이 정지
+  표면이 원래 없으므로 끄는 버튼도 없다.
+
+`engine.autostart`와 독립이다. 한쪽을 저장해도 다른 쪽은 바뀌지 않는다.
+
+#### attestation 자동 발급 타이머 — `--config-dir`가 필수다
+
+증거가 쌓여도 누가 판정해 발급하지 않으면 attestation은 안 나온다. 그 일을 하는 것이
+`~/.config/systemd/user/tossos-attest.{service,timer}`(6시간 간격, `Persistent=true`)이고,
+`soak attest`는 기록만 읽으므로 **계좌 호출이 0건**이다.
+
+**이 유닛은 `--config-dir`를 반드시 넘겨야 한다.** 두 경로의 기본값이 다르기 때문이다.
+
+| 플래그 없을 때 | 해석 결과 |
+|---|---|
+| 기록 (`resolveSoakRecord`) | `journal.DataDir()` → `~/.local/share/tossos/` |
+| attestation (`resolveSoakAttestationPath`) | `DefaultPaths().ConfigDir` → `~/.config/tossctl/` |
+
+a060 이후 콘솔이 세우는 서베이는 **config dir**에 기록한다. 그래서 플래그가 없으면 타이머는
+**아무도 쓰지 않는 파일**을 판정하고, 건강한 서베이가 도는 내내 6시간마다
+`not earned yet`을 남긴다. 2026-08-12에 실제로 그 상태였고(마지막 사이클 12일 전, GET 6종
+전부 "never exercised inside the window") 플래그를 넣자 차단 사유가 9건에서 1건으로
+떨어졌다.
+
+플래그는 **읽는 기록만** 바꾼다. attestation은 그대로 `~/.config/tossctl/`에 떨어지며,
+그곳이 엔진 기동 인터록이 찾는 자리다.
+
+발급 조건(실측): 최신 사이클 ≤2일 · 무인 갱신 연속 **3일** · 토큰 만료 관측 ≥2회 ·
+GET 전체 성공. **즉 서베이 상시 가동이 요건이다** — 그래서 위의 `soak.autostart`가 있다.
+
+#### autostart를 켠 뒤에는 [soak 재시작]을 누르지 않는다
+
+**누르면 3일 시계가 0으로 돌아간다.** 2026-08-12 실측: 09:04:54의 재시작이 만든 사이클이
+`credentials FAILED (rate_limited)`로 끝나 `credential streak 0 of 3`가 됐고, 20분 전의
+`endpoints 9/9` 성공 사이클이 window 밖으로 나가 차단 사유가 1건에서 8건으로 되돌아갔다.
+
+기전: 버튼은 공유 토큰 캐시를 지우고(`PrepareSpawn`) 토큰을 다시 교환한 뒤 곧바로 새 사이클의
+read 버스트를 낸다. 직전 order walk(30요청·64초)가 연 429 penalty window와 겹치면
+`GET /accounts`가 429를 맞고, 그 판정이 자격증명 실패이므로 streak이 끊긴다.
+
+버튼이 잘못된 것이 아니다 — "지금 것을 버리고 새로 시작하겠다"가 그 버튼의 뜻이고 진행 중
+사이클을 버리는 것이 거기 포함된다. 다만 `soak.autostart`가 켜진 뒤로는 **누를 이유가 거의
+없다**: 배포(컨테이너 재생성)와 콘솔 재시작을 autostart가 모두 덮는다(2026-08-12 양쪽 다
+실운영 확인). 서베이가 실제로 죽어 있을 때만 누른다.
+
 ### KR/US 전략 후보 권한 파일 — 읽기 전용 계약
 
 전략 런타임은 KR과 US를 같은 시작 웨이브에서 읽지만, 시장별 권한은 합치지 않는다. 각 시장은
@@ -193,6 +255,30 @@ activation이나 LIVE 주문 승인으로 승격되지 않는다.
   수행한다. 이 저장소의 guard는 계획 값만 만들며 Docker 명령을 실행하지 않는다.
 - rollback도 automation gate를 켜거나 engine을 시작하지 않으며, mutable 이전 tag나 blanket
   Compose down/up을 사용하지 않는다.
+
+### 롤백 대상은 태그가 없으면 사라진다
+
+digest pin은 **그 digest의 이미지가 아직 있을 때만** 롤백 계획이다. `docker compose build`는
+`tossos:local` 태그를 새 이미지로 옮기고 직전 이미지는 태그를 잃는다.
+
+2026-08-12에 그 결과를 실제로 확인했다. 하루 사이 배포한 이미지 두 개(`86c6e4d2`
+2026-08-11 23:00, `e3cc6244` 2026-08-12 08:19)가 **둘 다 남아 있지 않았고**, 롤백 파일이
+가리키던 `56f478e3`은 살아 있었지만 **schema 29**였다. 저널은 그사이 30으로 전진했으므로
+그 핀으로 되돌리면 29 바이너리가 30 저널을 `ErrSchemaTooNew`로 거부해 **콘솔은 healthy인데
+엔진만 죽는다** — 2026-08-05에 3분 51초 동안 실제로 겪은 형태다. 즉 롤백 파일이 롤백
+대상이 아니라 **함정**이 되어 있었다.
+
+그래서 순서에 한 단계가 더 있다.
+
+```
+docker compose build
+docker image inspect tossos:local --format '{{.Id}}'
+docker tag <그 id> tossos:<change>-<commit>      # ← 이것이 빠지면 다음 빌드에 사라진다
+# release override의 두 service를 tossos@sha256:<그 id>로 적는다
+```
+
+롤백 핀을 갱신할 때는 **그 이미지의 schema가 현재 저널을 읽을 수 있는지** 함께 적는다.
+schema가 낮은 핀은 롤백이 아니라 저널 복구 절차의 시작점이다.
 
 ### Dormant digest-pinned deployment preflight
 

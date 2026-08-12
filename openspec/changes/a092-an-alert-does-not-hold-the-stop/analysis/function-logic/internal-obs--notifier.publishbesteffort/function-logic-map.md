@@ -1,6 +1,6 @@
 # Function Logic Map: `Notifier.publishBestEffort`
 
-- Source: `internal/obs/notifier.go` (138-150)
+- Source: `internal/obs/notifier.go` (155-167)
 - AST evidence: `ast.json` — branches 2, returns 1, calls 6, assignments 1,
   **defers 0, go_statements 0**
 - Risk scan: `risk-pattern-report.md`
@@ -12,28 +12,28 @@ normal 등급의 전 경로. **"최선노력"은 발송 결과에 대한 말이�
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `n.Publisher` | nil 허용 | 조립 | B1 `:139`이 **로그 없이** 반환 — 조용한 구멍 |
-| `severity` | normal 또는 critical | `Notify:112` normal / `notifyCritical:163` critical(강등) | 메시지 우선순위에만 쓰임 |
+| `n.Publisher` | nil 허용 | 조립 | B1 `:156`이 **로그 없이** 반환 — 조용한 구멍 |
+| `severity` | normal 또는 critical | `Notify:129` normal / `notifyCritical:180` critical(강등) | 메시지 우선순위에만 쓰임 |
 | `n.Log` | nil 허용 | 조립 | B2가 nil을 흡수 |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return | 소요 |
 |---|---|---|---|---|
-| B1 `:139` | `n.Publisher == nil` | **없음 — 로그도 없다** | `return` `:140` | 0 |
-| B2 `:142` | `Publish` 오류 **and** `n.Log != nil` | `Log.Warn(EventAlertUndelivered, event/severity/error)` `:145-148` | 암묵 `:150` | — |
-| — | 성공 | 없음 | 암묵 `:150` | **최대 10s** |
+| B1 `:156` | `n.Publisher == nil` | **없음 — 로그도 없다** | `return` `:157` | 0 |
+| B2 `:159` | `Publish` 오류 **and** `n.Log != nil` | `Log.Warn(EventAlertUndelivered, event/severity/error)` `:162-165` | 암묵 `:167` | — |
+| — | 성공 | 없음 | 암묵 `:167` | **최대 10s** |
 
-**outbox 행을 만들지 않는다.** 재시도도 게이트도 없다. 주석 `:143-144`가 그것을 계약으로
+**outbox 행을 만들지 않는다.** 재시도도 게이트도 없다. 주석 `:160-161`이 그것을 계약으로
 쓴다: "treating its failure as an incident would make the grading meaningless".
 
 ## Calls and live bindings
 
 | Callee | Why called | **Error/timeout/retry contract** | Evidence |
 |---|---|---|---|
-| `notificationFor` `:142` | 메시지 조립 | 순수 | AST calls |
-| **`n.Publisher.Publish` `:142`** | **원격 발송** | **1회, 재시도 없음, 상한 10s**(`ntfy.go:96` `timeout <= 0 → 10s`) | `internal-obs--ntfy.publish/ast.json` |
-| `n.Log.Warn` `:145` | 실패 기록 | 네트워크 없음 | AST calls |
+| `notificationFor` `:159` | 메시지 조립 | 순수 | AST calls |
+| **`n.Publisher.Publish` `:159`** | **원격 발송** | **1회, 재시도 없음, 상한 10s**(`ntfy.go:96` `timeout <= 0 → 10s`) | `internal-obs--ntfy.publish/ast.json` |
+| `n.Log.Warn` `:162` | 실패 기록 | 네트워크 없음 | AST calls |
 
 **normal 알림의 동기 체류 상한은 10초다.** critical의 34초보다 작지만
 exit 관측 주기(**5초**)보다는 크다.

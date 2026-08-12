@@ -5,7 +5,13 @@ calls 0 / defers 0 / go_statements 0.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | 분기 없음 — 구조체 리터럴 1개를 돌려준다 | 간접 — `gateway.go:280`을 지나는 조립 테스트 전부 | no | yes |
+| B1 | 분기 없음 — 구조체 리터럴 1개를 돌려준다 | `exit_wiring_internal_test.go:97` · `:126` — 이 함수를 **직접** 부른다 | no | yes |
+
+> **18라운드 정정.** 이 칸은 *"간접 — `gateway.go:280`을 지나는 조립 테스트 전부"*였다.
+> GREEN 자체는 맞지만 근거의 종류가 틀렸다: `exit_wiring_internal_test.go`가
+> `newNotifier(j, gate, "acct-wiring", nil, nil, clk)`를 **직접** 부른다.
+> (`internal/obs/obs_test.go:332`의 `newNotifier`는 **다른 패키지의 동명 테스트
+> 헬퍼**이고 이 함수가 아니다 — 이름으로 근거를 찾으면 걸리는 함정이다.)
 
 ## 분기가 없으므로 빈 것은 *값*에 대한 단언이다
 

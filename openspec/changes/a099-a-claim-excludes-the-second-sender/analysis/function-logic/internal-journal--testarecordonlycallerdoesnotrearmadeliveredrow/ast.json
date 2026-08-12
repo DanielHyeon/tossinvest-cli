@@ -1,0 +1,224 @@
+{
+  "file": "internal/journal/a097_rearm_is_a_new_episode_test.go",
+  "source_sha256": "c8b6ef0062605de72501541746aa7f8e4e528d9cc8f178083744bef9c0191b48",
+  "package": "journal",
+  "function": "TestARecordOnlyCallerDoesNotReArmADeliveredRow",
+  "signature": "TestARecordOnlyCallerDoesNotReArmADeliveredRow(params=1, results=0)",
+  "start": {
+    "line": 249,
+    "column": 1
+  },
+  "end": {
+    "line": 278,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 259,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 12
+      },
+      "text": "outboxJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 11
+      },
+      "text": "a097Alert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 16
+      },
+      "text": "j.ClaimAlertForDelivery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 15
+      },
+      "text": "j.MarkAlertDelivered"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 2
+      },
+      "text": "clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 16
+      },
+      "text": "j.ClaimAlertForDelivery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 12
+      },
+      "text": "alertState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 253,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 258,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 259,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 274,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

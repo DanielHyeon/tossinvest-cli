@@ -39,6 +39,7 @@
     - STORY-TOS-a045 — Add broker-resident protection orders [archived] → `a045-add-protection-orders`
     - STORY-TOS-a056 — Keep an advisory marker from refusing an engine start [implemented] → `a056-autostart-survives-container-recreate`
     - STORY-TOS-a059 — Let the console find exactly the engine it owns [implemented] → `a059-console-finds-the-engine-it-owns`
+    - STORY-TOS-a100 — Holdings leave a stop at the broker [in_progress] → `a100-wire-fill-to-broker-protection`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
@@ -62,6 +63,7 @@
     - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [archived] → `a080-line-refreshes-on-engine-cadence`
     - STORY-TOS-a081 — Let the trading screens share one reading of the engine instead of asking it per render [archived] → `a081-screens-share-one-engine-reading`
     - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [implemented] → `a085-an-alert-says-which-stock`
+    - STORY-TOS-a101 — The capability survey outlives a deploy [implemented] → `a101-the-soak-outlives-a-deploy`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
@@ -86,6 +88,9 @@
     - STORY-TOS-a094 — A stop clears what blocks it [in_progress] → `a094-a-stop-clears-what-blocks-it`
     - STORY-TOS-a095 — A stop must know what it covers [in_progress] → `a095-a-stop-must-know-what-it-covers`
     - STORY-TOS-a096 — One condition is one alert [implemented] → `a096-one-condition-is-one-alert`
+    - STORY-TOS-a097 — A re-armed alert is a new episode [implemented] → `a097-a-re-armed-alert-is-a-new-episode`
+    - STORY-TOS-a098 — Nobody sends what the outbox keeps [in_progress] → `a098-nobody-sends-what-the-outbox-keeps`
+    - STORY-TOS-a099 — A claim excludes the second sender [in_progress] → `a099-a-claim-excludes-the-second-sender`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

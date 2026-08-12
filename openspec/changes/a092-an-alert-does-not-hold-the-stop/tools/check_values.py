@@ -71,7 +71,7 @@ FLM_ROOT = CHANGE / "analysis" / "function-logic"
 # 선언 — 사람이 고른 값. 이 파일이 유일한 선언 자리다.
 # ---------------------------------------------------------------------------
 
-DRAFT = 11  # 판 번호
+DRAFT = 19  # 판 번호
 
 # 기각된 값 — 이것도 사람의 판단이므로 선언한다.
 #
@@ -113,32 +113,95 @@ HEADING_NUMBER = re.compile(
     r"|^(\s*[-*]\s+)\d+(?:\.\d+)+(?=[\s.])"    # - 8.4 …
 )
 
+# 16라운드 B10 — **이 선언이 기각된 후보 #8이었다.** 14판이 #8(T=1.3s·3회)을
+# 기각하고 #9(T=3.5s·1회)를 채택했는데 이 블록은 따라가지 않았다. 그래서 12~16판이
+# 받은 모든 "통과"는 **다른 과녁을 잰 것**이다 — 검사기가 채택 설계가 아니라 기각
+# 설계를 검증하고 있었다. 이 파일 머리말이 "선언은 한 자리"라고 말한 그 한 자리가
+# 틀리면 전 문서가 틀린 것에 정렬된다.
+#
+# **17판이 그 한 자리를 다시 옮긴다 — 그리고 같은 실수를 반복하지 않으려고 두 자리로
+# 가른다.** 17판은 전송을 exit 관측 루프 밖으로 옮겼다(design.md D0). 그래서
+# `alertRetryDelay`·`alertTransportBudget`·`alertOverheadReserve`는 **채택 상수가
+# 아니게 됐다** — 셋 다 "전송이 관측 예산 안에 있다"에서 유도된 값이고, D0.7이
+# 그 유도를 무효로 적는다.
+#
+# 무효가 된 값을 **지우지는 않는다.** D2·D3의 표와 산문이 기록으로 남고, 그 기록의
+# 내부 정합성은 계속 검사되어야 한다 — 기록이 자기 안에서 어긋나면 다음 판이 그것을
+# 근거로 읽는다. 그래서 아래처럼 가른다:
+#
+#   ADOPTED_MS     — 17판이 채택한 값. 새 산문과 spec이 인용해야 하는 유일한 집합.
+#   SUPERSEDED_MS  — 16판까지의 채택값. D2·D3의 **기록** 검사만 이것을 쓴다.
+#
+# 19판 3차가 이 집합에 대해 안 고친 것 둘을 여기 적어 둔다. 침묵한 생략 금지.
+#
+#   1. `alertFlushInterval`은 **배달 루프의 주기**이고 19판이 그 루프를 a098로
+#      옮겼다(design D0.10). a098은 그 값을 자기가 재서 정한다고 적었으므로
+#      a092가 그것을 "채택값"으로 선언하는 것은 두 change가 같은 상수를
+#      정하는 형태다 — 16라운드 B-8. **지금 빼지 않는다**: 빼면 그 값을
+#      인용하는 산문이 전부 고아로 뒤집히고, 그 실패를 끄려고 사람이 산문을
+#      지우게 된다(17판이 LEGAL_EQ_MS에서 겪은 형태). → tasks 10.4.5
+#
+#   2. 이 집합 자체가 **반증할 수 없는 맨 선언**이다. 16라운드 B-10은 이 자리가
+#      기각된 후보 #8을 선언하던 것을 잡았고 17판은 **값을 고쳤다.** D2에는
+#      채택 행이 표시된 표가 있어 도구가 유도할 수 있었지만, 17판 채택 구성에는
+#      그런 표가 없다. 그래서 다시 틀려도 부딪힐 것이 없다. → tasks 10.4.6
+#
 ADOPTED_MS = {
-    "alertPublishTimeout": 1300.0,
-    "alertRetryDelay": 150.0,
-    "alertTransportBudget": 4200.0,
-    "alertOverheadReserve": 800.0,
+    "alertFlushInterval": 2000.0,
+    "alertPublishTimeout": 3500.0,
+    "alertLoopShare": 750.0,
     "alertBudget": 5000.0,
 }
+
+# 16판까지의 채택값. **인용 대상이 아니라 기록 대상이다.**
+# D2 후보 표와 D3 유도 산문이 자기 안에서 닫히는지만 이 집합으로 검사한다.
+SUPERSEDED_MS = {
+    "alertPublishTimeout": 3500.0,
+    "alertRetryDelay": 150.0,
+    "alertTransportBudget": 3500.0,
+    "alertOverheadReserve": 1500.0,
+    "alertBudget": 5000.0,
+}
+
+# 14판이 1회로 내렸고 **17판이 3회로 되돌렸다.** 되돌린 이유는 D0.6 — 재시도가
+# 손절 루프를 붙잡지 않게 되면 줄일 근거 자체가 없고, 1회는 a096의 3회 계약
+# (`a096/proposal.md:154`)을 거짓으로 만드는 값이었다(16라운드 A-3).
 ADOPTED_ATTEMPTS = 3
+# D2·D3의 기록 검사가 쓰는 값. 그 표들은 1회 설계의 표다.
+SUPERSEDED_ATTEMPTS = 1
 
 # D2 후보 표의 "냉 여유" 열이 나누는 값 — 창 안의 유일한 냉연결 publish 측정.
 # 이것은 고른 값이 아니라 잰 값이므로 선언이 아니라 **인용**이다. main()이
 # `analysis/`의 코퍼스 안에 실제로 있는지 확인한다 — 측정이 바뀌면 이 줄도 깨진다.
 COLD_PUBLISH_S = 0.754
 
-# 등식이 합법적으로 쓸 수 있는 지속시간(ms). 채택 상수 + 정상 등급 1회(=T).
-LEGAL_EQ_MS = set(ADOPTED_MS.values())
+# 등식이 합법적으로 쓸 수 있는 지속시간(ms).
+#
+# **17판에서 이 집합이 약해진다. 약해졌다고 적는다.** 이 검사의 목적은 "채택량이라고
+# 주장하는 등식은 채택 입력만 쓸 수 있다"이다. 17판 이후 D2·D3의 등식은 주장이 아니라
+# **기록**인데(design D0.7), 이 도구는 줄 단위로 돌고 절을 모른다. 그래서 기록의 값도
+# 합법으로 넣는다 — 그러지 않으면 기록 문단 전체가 실패하고, 그 실패를 끄려고 사람이
+# 기록을 지우게 된다.
+#
+# 대가: 17판의 새 산문이 16판 값(150 · 1500 · 3500-as-transport)을 채택량으로 인용해도
+# 이 검사는 잡지 못한다. 그 구멍을 메우려면 검사가 **절을 알아야** 한다 —
+# `## D0.7`이 무효로 적은 절 안의 줄은 기록으로, 밖의 줄은 주장으로. tasks 10.4.2.
+LEGAL_EQ_MS = set(ADOPTED_MS.values()) | set(SUPERSEDED_MS.values())
 
 # 상수라서 고아 검사에서 면제되는 수치 표기(ms 아닌 초 표기 포함).
 #
 # 채택 상수만 손으로 적는다. **후보 표(D2)의 값은 적지 않는다** — 그것은 표에서
 # 유도할 수 있고, 유도할 수 있는 것을 선언하면 표가 바뀔 때 거짓이 된다
 # (이 파일 머리말의 구별). `candidate_tokens()` 가 그 일을 한다.
+#
+# 16라운드 B10의 두 번째 절반 — **ADOPTED_MS만 고치면 같은 값의 사본이 살아남는다.**
+# 이 집합은 기각된 #8의 표기(1.3 · 4.2 · 0.8 · 1300 · 4200 · 800)를 고아 검사에서
+# **면제**하고 있었다. 즉 기각된 값이 문서 어디에 나타나도 조용히 통과했고, 채택값
+# 3.5 · 1.5는 반대로 면제 없이 고아로 잡혔다. 정정의 단위는 값이다.
 CONSTANT_TOKENS = {
-    "1.3", "0.15", "4.2", "4.200", "0.8", "5.0", "5.000", "1300", "150", "800",
-    # 같은 상수의 ms 표기 — 9라운드 M-2가 오탐으로 짚었다. `4200 ms`는 고아가 아니다.
-    "4200", "5000",
+    "3.5", "3.500", "0.15", "1.5", "5.0", "5.000", "3500", "150", "1500",
+    # 같은 상수의 ms 표기 — 9라운드 M-2가 오탐으로 짚었다. `3500 ms`는 고아가 아니다.
+    "5000",
 }
 
 
@@ -348,8 +411,11 @@ def check_arithmetic(path: pathlib.Path, lines: list[str]) -> None:
                 # 시도 수는 **transport 예산**의 등식에만 걸린다. 정상 등급은
                 # 정의상 1회이고(`정상 = 1 × 1.3s = 1.3s`), 그 등식의 결과도
                 # 채택 상수라 무조건 걸면 옳은 문장이 실패한다.
-                if (int(n1) != ADOPTED_ATTEMPTS and r is not None
-                        and abs(r - ADOPTED_MS["alertTransportBudget"]) < TOL_MS):
+                # 17판: transport 예산은 **기록된** 양이다(D0.7). 그래서 이 검사는
+                # SUPERSEDED_* 를 본다 — 채택 시도 수 3을 여기에 걸면 1회 설계의
+                # 기록 등식이 전부 실패한다.
+                if (int(n1) != SUPERSEDED_ATTEMPTS and r is not None
+                        and abs(r - SUPERSEDED_MS["alertTransportBudget"]) < TOL_MS):
                     bad.append(f"시도 {n1}")
                 if bad:
                     fail(where, f"채택량('{label.strip()}')의 등식이 채택하지 않은 값을 "
@@ -388,8 +454,11 @@ def check_arithmetic(path: pathlib.Path, lines: list[str]) -> None:
                 # 시도 수는 **transport 예산**의 등식에만 걸린다. 정상 등급은
                 # 정의상 1회이고(`정상 = 1 × 1.3s = 1.3s`), 그 등식의 결과도
                 # 채택 상수라 무조건 걸면 옳은 문장이 실패한다.
-                if (int(n1) != ADOPTED_ATTEMPTS and r is not None
-                        and abs(r - ADOPTED_MS["alertTransportBudget"]) < TOL_MS):
+                # 17판: transport 예산은 **기록된** 양이다(D0.7). 그래서 이 검사는
+                # SUPERSEDED_* 를 본다 — 채택 시도 수 3을 여기에 걸면 1회 설계의
+                # 기록 등식이 전부 실패한다.
+                if (int(n1) != SUPERSEDED_ATTEMPTS and r is not None
+                        and abs(r - SUPERSEDED_MS["alertTransportBudget"]) < TOL_MS):
                     bad.append(f"시도 {n1}")
                 if bad:
                     fail(where, f"채택량('{label.strip()}')의 등식이 채택하지 않은 "
@@ -403,7 +472,9 @@ def check_arithmetic(path: pathlib.Path, lines: list[str]) -> None:
 SWEEP_ROW = re.compile(
     r"^\|\s*\*{0,2}(\d+)[^|]*\|\s*\*{0,2}(\d+)\*{0,2}\s*\|"       # #, Attempts
     r"\s*\*{0,2}(\d+(?:\.\d+)?\s*(?:ms|s|초))\*{0,2}\s*\|"        # Timeout
-    r"\s*\*{0,2}(\d+(?:\.\d+)?\s*(?:ms|s|초))\*{0,2}\s*\|"        # RetryDelay
+    # RetryDelay — 14판이 `150ms (미실행)`을 쓰면서 채택 행 둘이 검사 밖으로
+    # 나갔다(15라운드 A T2). reserve 셀과 같은 규칙을 건다: 값은 엄격히, 꼬리말은 관대히.
+    r"\s*\*{0,2}(\d+(?:\.\d+)?\s*(?:ms|s|초))\*{0,2}[^|]*\|"        # RetryDelay
     r"\s*\*{0,2}(\d+(?:\.\d+)?\s*(?:ms|s|초))\*{0,2}\s*\|"        # transport
     # reserve — **값이 먼저**, 주석은 뒤에 자유롭게. 9판은 셀 전체가 자유 텍스트라
     # 아무 수나 면제됐고(9라운드 B-7), 값만 받게 좁히자 `**0 — 채택 불가**` 행이
@@ -467,10 +538,10 @@ def check_candidate_sweep(path: pathlib.Path, lines: list[str]) -> int:
                         f"{attempts}×{timeout} + {int(attempts)-1}×{delay} = "
                         f"{want/1000:.4g}s, 표는 {tr/1000:.4g}s")
         r = as_ms(reserve.strip()) if as_ms(reserve.strip()) is not None else None
-        if r is not None and abs((ADOPTED_MS["alertBudget"] - tr) - r) > TOL_MS:
+        if r is not None and abs((SUPERSEDED_MS["alertBudget"] - tr) - r) > TOL_MS:
             fail(where, f"후보 #{idx} 행의 reserve가 budget − transport와 다르다: "
                         f"5s − {tr/1000:.4g}s = "
-                        f"{(ADOPTED_MS['alertBudget']-tr)/1000:.4g}s, 표는 {reserve.strip()}")
+                        f"{(SUPERSEDED_MS['alertBudget']-tr)/1000:.4g}s, 표는 {reserve.strip()}")
         # 냉 여유 — 7라운드 M-1(b). 이 열이 이 change의 **유일한 판단**(1회 상한을
         # 냉 측정 대비 얼마나 남길 것인가)인데 6·7판의 검사는 이 열을 안 봤다.
         want_cold = round(t / 1000.0 / COLD_PUBLISH_S, 2)
@@ -778,17 +849,38 @@ def check_orphan_measurements(path: pathlib.Path, lines: list[str],
 # 별칭은 **좁아야 한다.** `게이트`를 `진입 차단`으로, `로그 줄`을 `로그`로 넓혔더니
 # 소진의 **결과** 열거(`outbox 미전달 보존·신규 진입 차단·… 일반은 로그 한 줄`)가
 # 체류 구성으로 잡혔다. 넓은 별칭은 오탐을 만들고, 오탐은 검사를 끄게 만든다.
+# **17판이 이 열거를 줄인다 — 세 항이 루프 밖으로 나갔기 때문이다.**
+# 16판까지 exit 관측 사이클의 체류 구성은 다섯 항이었다: outbox 기록 · 시도별 실패
+# 기록 · 게이트 래치 · 승격 트랜잭션 · 로그 줄. 17판은 전송과 그 뒤에 딸린 세 항
+# (시도별 실패 기록 · 게이트 래치 · 승격 트랜잭션)을 배달 루프로 옮긴다(design D0.2).
+# 사이클에 남는 것은 **둘**이다.
+#
+# 그러므로 이 검사의 과녁이 바뀐다. 다섯을 계속 요구하면 17판의 옳은 문단이 전부
+# 불완전으로 잡히고, 그것을 끄려고 사람이 문서에 없는 항을 도로 적게 된다 —
+# 검사가 문서를 틀리게 만드는 방향이다.
 DWELL_TERMS: tuple[tuple[str, ...], ...] = (
-    ("outbox", "아웃박스", "EnqueueAlert"),
+    ("outbox", "아웃박스", "EnqueueAlert", "ClaimAlertForDelivery", "outbox 트랜잭션"),
+    # `logEvent`는 구조화 로그 줄을 쓰는 함수 이름이다. 15라운드 A T2에서 D3의
+    # 유도 주석이 **영어로** 열거를 적었더니(`logEvent's Warn`) 이 항만 0매치가 나서
+    # 완전한 열거가 불완전으로 판정됐다. 별칭은 좁게 — 식별자 하나만 더한다.
+    ("로그 줄", "구조화 로그", "structured log", "logEvent"),
+)
+
+# **배달 루프 쪽 열거는 아직 이 도구가 검사하지 않는다 — 침묵한 생략이 아니라 적힌
+# 생략이다.** 17판이 루프 밖으로 옮긴 세 항(시도별 실패 기록 · 게이트 래치 · 승격
+# 트랜잭션)도 완전해야 하는 열거이고, 그 완전성은 지금 사람 리뷰만이 본다.
+# 두 번째 열거를 검사하려면 이 아래 로직이 열거 집합을 여럿 받아야 한다. tasks 10.4.3.
+DELIVERY_TERMS_UNCHECKED: tuple[tuple[str, ...], ...] = (
     ("시도별 실패 기록", "시도별 실패", "MarkAlertAttemptFailed"),
     ("게이트 래치", "Gate.Block", "gate latch"),
     ("승격 트랜잭션", "EscalateOperatingMode"),
-    ("로그 줄", "구조화 로그", "structured log"),
 )
 # 둘로 잡으면 **결과 보존 열거**(`outbox 미전달 보존·신규 진입 차단·운영 모드 강화`)가
 # 걸린다. 그것은 체류 구성이 아니라 소진의 **결과**이고 항이 셋뿐인 다른 열거다.
 # 실측으로 셋이 두 열거를 가른다.
-DWELL_TRIGGER_MIN = 3
+# 17판: 항이 둘이므로 트리거도 둘이다. 결과 보존 열거(`outbox 미전달 보존·신규 진입
+# 차단·운영 모드 강화`)와의 구별은 여전히 선다 — 그 열거에는 "로그 줄"이 없다.
+DWELL_TRIGGER_MIN = 2
 
 # 낱말이 다 있어도 의미가 뒤집히면 열거가 아니다 — 10라운드 축 2의 '의미 반전'.
 DWELL_NEGATION = re.compile(r"제외하고|제외한|빼고|아닌 것|들지 않는다")
@@ -817,13 +909,19 @@ DWELL_REQUIRED = (
 # 그래서 자리를 **선언**한다. 아래 앵커를 담은 문단은 트리거와 무관하게 완전한
 # 열거여야 한다. 앵커를 지우면 0매치로 실패하므로 지워서 피할 수도 없다.
 # Scenario 쪽에 이미 쓰던 규칙(`DWELL_SCENARIO_TITLES`)을 요구 문단에도 건 것이다.
+# 17판이 두 spec 델타를 다시 썼으므로 그 두 닻이 바뀐다. design·proposal·
+# delivery-latency의 닻은 **기록 문단**을 가리키고, 기록은 그대로 살아 있으므로
+# 그대로 둔다 — 그 문단들이 지워지면 여전히 0매치로 소리가 난다.
 DWELL_ANCHORS: dict[str, str] = {
     "specs/engine-safety/spec.md":
-        '"자기 차례"는 전송에 쓴 시간과 같은 호출 안의 비전송 작업',
+        "루프에 남는 항은 구조화 로그 한 줄과 outbox 트랜잭션이고",
     "specs/exit-policy/spec.md":
-        "그 시간은 원격 전송에 쓴 시간만이 아니라",
+        "17판의 열거는 둘이다",
+    # 19판이 `EnqueueAlert` -> `ClaimAlertForDelivery`로 고쳤다. a097 이후
+    # `notifyCritical`은 `EnqueueAlert`를 부르지 않는다. 앵커가 0매치로 떨어졌고
+    # 도구가 그것을 잡았다 — "0매치는 통과가 아니다"가 지은 값이다.
     "design.md":
-        "`EnqueueAlert` 1회(outbox 기록) + `MarkAlertAttemptFailed`",
+        "`ClaimAlertForDelivery` 1회(outbox 기록) + `MarkAlertAttemptFailed`",
     "proposal.md":
         "같은 `Notify` 호출 안에 전송 말고도",
     "analysis/delivery-latency.md":
@@ -837,7 +935,9 @@ DWELL_ANCHORS: dict[str, str] = {
 # (0매치는 통과가 아니다). 열거를 지우든 Scenario를 지우든 이름을 바꾸든 소리가 난다.
 SCENARIO_HEAD = re.compile(r"^#{2,6}\s*Scenario:\s*(.+?)\s*$")
 DWELL_SCENARIO_TITLES: dict[str, str] = {
-    "한 알림의 체류가 exit 관측 주기를 넘지 않는다": "engine-safety",
+    # 17판이 이름을 바꿨다. 16판의 "한 알림의 체류가 exit 관측 주기를 넘지 않는다"는
+    # 예산을 상한처럼 읽게 하는 이름이었고, 그 혼동이 16라운드 A-7/B-5의 차단이었다.
+    "엔진 루프가 전송을 기다리지 않는다": "engine-safety",
     "응답하지 않는 알림 전송 중의 관측": "exit-policy",
 }
 
@@ -1099,7 +1199,14 @@ def check_named(files: list[pathlib.Path]) -> None:
 # 아예 못 읽었다. 다음 판이 10판이므로 이 검사는 **다음 커밋에서 전 문서 0매치로
 # 조용히 죽었을 것**이다. 그리고 `check_named`와 달리 0매치 가드가 없었다 —
 # 7라운드 M-1(d)가 "0매치는 통과가 아니다"라고 이름 붙인 결함이 이 검사만 비껴갔다.
-DRAFT_MARK = re.compile(r"\((\d+)판\)|\*\*(\d+)판이다\*\*")
+# 17라운드 T-4: `## D0 — 17판: ...` 형태를 안 잡았다. 괄호도 굵은 글씨도 없는
+# 제목의 판 번호를 바꾸면 검사기가 못 봤다. 세 번째 갈래로 그것을 잡는다.
+#
+# **콜론만이다.** 처음엔 `[:\s]`로 썼더니 이력 제목을 전부 잡았다 —
+# `### 7.5 8판 재측정`, `## 9. 14판 실측`, `(11판 본문 + 14판 §9)`.
+# 그것들은 과거 판을 **가리키는** 정직한 이력이고 현재 판을 **주장하지** 않는다.
+# `NN판:`은 주장이다. 검사기가 이력을 막으면 다음 사람이 이력을 지운다.
+DRAFT_MARK = re.compile(r"\((\d+)판\)|\*\*(\d+)판이다\*\*|^#{1,6} .*?(\d+)판:", re.M)
 
 
 def check_draft(files: list[pathlib.Path]) -> None:
@@ -1110,7 +1217,7 @@ def check_draft(files: list[pathlib.Path]) -> None:
             continue
         for no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             for m in DRAFT_MARK.finditer(line):
-                got = int(m.group(1) or m.group(2))
+                got = int(m.group(1) or m.group(2) or m.group(3))
                 seen += 1
                 # 이력 서술("3판은 …")은 괄호나 '판이다' 형태가 아니다.
                 if got != DRAFT:

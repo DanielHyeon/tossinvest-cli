@@ -113,3 +113,26 @@ The isolated cores and Gateway decision boundary remain available for review, bu
 gateway assembly is intentionally withdrawn pending the complete journal-committed fill lifecycle. KR and US remain
 concurrent read-only lanes and default independently to `UNWIRED`. This change creates no lane, activation,
 automation or LIVE authority and makes no official order call. Task 3.5 and final approval remain blocked.
+
+## Addendum — 2026-08-11 (scope change, not a re-review)
+
+The 2026-08-04 verdict above is unchanged and was not re-run. What changed is ownership, not the finding.
+
+Task 3.5 is superseded by `a100-wire-fill-to-broker-protection`. The blocking precondition this review named
+("no production caller from a journal-committed fill into an exact journal-derived stop/expiry and durable
+protection Plan/Register lifecycle") is now a100's subject. This change's set is frozen at task 3.4; the C1/C2/M7
+disposition — both production assemblies claim `Wired=false`, engine construction contains no official protection
+gateway, controller minter, arbitrary `GatewayFactory` or protection DB — therefore stands as the shipped state of
+this change rather than as a temporary hold.
+
+Two facts a100 measured against this change's code, recorded here because they bind whoever reviews a100:
+
+- `NewProductionProvider` (`internal/protectionreadiness/production.go:293`) refuses to configure at all unless
+  **every** supplied assembly has `Wired: true`. Today's production `UNWIRED` is therefore an unconfigured
+  provider, not a per-market verdict; `Current` returns `pairedRefusalSnapshot(RefusalInvalid)` once a manifest
+  pin is present. Flipping the assembly bool activates a configuration path that has never run in production.
+- `assembly.ComponentDigest` must equal the manifest's `supervisor_digest` (`production.go:187`), and that digest
+  is derived from the build digest, which includes VCS revision and build settings. The signed manifest is
+  therefore build-bound: a rebuild invalidates it. a100 must state how that is operated.
+
+Rescinding this addendum restores task 3.5 to this change.

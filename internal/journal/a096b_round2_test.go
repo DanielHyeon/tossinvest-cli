@@ -33,11 +33,12 @@ func TestASettledStampInTheFutureStillOwesDelivery(t *testing.T) {
 	key := "exit.proposal_refused|pos-7|LADDER_PARTIAL|1"
 	alert := Alert{EventKey: key, Type: "exit.proposal_refused", Severity: "critical"}
 
-	id, _, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind)
+	claim, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery: %v", err)
 	}
-	if err := j.MarkAlertDelivered(ctx, id); err != nil {
+	id := claim.ID
+	if _, err := j.MarkAlertDelivered(ctx, id, claim.Token); err != nil {
 		t.Fatalf("MarkAlertDelivered: %v", err)
 	}
 
@@ -49,13 +50,13 @@ func TestASettledStampInTheFutureStillOwesDelivery(t *testing.T) {
 		t.Fatalf("forcing a future settlement stamp: %v", err)
 	}
 
-	_, owed, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind)
+	skewed, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery (skewed): %v", err)
 	}
-	if !owed {
-		t.Error("owed = false for a settlement stamp in the future — " +
-			"an unusable stamp is not evidence the operator was told")
+	if skewed.Disposition != ClaimAcquired {
+		t.Errorf("disposition = %v for a settlement stamp in the future — "+
+			"an unusable stamp is not evidence the operator was told", skewed.Disposition)
 	}
 	if got := alertState(t, j, id); got != AlertPending {
 		t.Errorf("state = %q, want %q — an owed send walks the ordinary delivery path",
@@ -78,10 +79,11 @@ func TestReArmingClearsThePreviousAcknowledgement(t *testing.T) {
 	key := "order.unresolved_in_doubt|att-41"
 	alert := Alert{EventKey: key, Type: "order.unresolved_in_doubt", Severity: "critical"}
 
-	id, _, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind)
+	claim, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery: %v", err)
 	}
+	id := claim.ID
 	// AcknowledgeAlert moves PENDING to ACKNOWLEDGED, which is the state the
 	// window applies to alongside DELIVERED.
 	if err := j.AcknowledgeAlert(ctx, id, "daniel"); err != nil {
@@ -89,10 +91,10 @@ func TestReArmingClearsThePreviousAcknowledgement(t *testing.T) {
 	}
 
 	clk.Advance(claimRemind)
-	if _, owed, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind); err != nil {
+	if again, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant); err != nil {
 		t.Fatalf("ClaimAlertForDelivery (reminder): %v", err)
-	} else if !owed {
-		t.Fatal("owed = false after the window elapsed on an acknowledged row")
+	} else if again.Disposition != ClaimAcquired {
+		t.Fatalf("disposition = %v after the window elapsed on an acknowledged row", again.Disposition)
 	}
 
 	got, err := j.LookupAlert(ctx, id)

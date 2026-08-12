@@ -5,7 +5,10 @@ defers 0 / go_statements 0.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:354` 루프가 반복한다 | 간접 — `ObserveOnce`를 직접 부르는 테스트가 대부분이라 `Run` 자체를 도는 테스트는 드물다 | no | yes |
+| B1 | `:354` 루프가 반복한다 | `a074_cycle_report_test.go:60` · `:160` · `:189` · `exitloop_test.go:1192` — `h.observer.Run(ctx)`를 직접 돈다 | no | yes |
+
+> **18라운드 정정.** 이 칸은 *"`Run` 자체를 도는 테스트는 드물다"*로 GREEN이었다.
+> "드물다"는 관측이 아니라 인상이다. 실제로는 네 자리가 `Run`을 직접 돌린다.
 | B2 | `:355` `ctx` 취소 → 즉시 반환 | `exitloop_test.go`의 취소 경로 | no | yes |
 | B3 | `:359` `Sleep`이 취소 → 반환 | 같은 위 | no | yes |
 

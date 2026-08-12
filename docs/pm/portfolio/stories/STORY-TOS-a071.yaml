@@ -9,8 +9,16 @@
   },
   "acceptance": [
     "ProtectionReady becomes WIRED only for the exact KR and US broker behaviors covered by a current signed attestation",
-    "A protected position survives engine process loss according to the verified broker-side contract",
     "Registration, replacement, cancellation, restart recovery and reconciliation are idempotent and fail closed",
     "No operating toggle is flipped and no live order is used without separate human approval"
-  ]
+  ],
+  "superseded": {
+    "date": "2026-08-11",
+    "to_story": "STORY-TOS-a100",
+    "to_change": "a100-wire-fill-to-broker-protection",
+    "scope": "openspec task 3.5 (production engine assembly of the official protection gateway and supervisor)",
+    "moved_acceptance": "A protected position survives engine process loss according to the verified broker-side contract",
+    "reason": "The blocking precondition named by this change's own review — a journal-committed fill driving an exact journal-derived stop/expiry through a durable Plan/Register lifecycle — lies outside this change's scope. Splitting it keeps the review unit accurate instead of reopening 21 approved tasks.",
+    "reversible": "If a100 is cancelled or drops production assembly, task 3.5 and this acceptance criterion return here."
+  }
 }

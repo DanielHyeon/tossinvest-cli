@@ -1,0 +1,23 @@
+{
+  "id": "STORY-TOS-a099",
+  "title": "A claim excludes the second sender",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a099-a-claim-excludes-the-second-sender",
+    "path": "openspec/changes/a099-a-claim-excludes-the-second-sender"
+  },
+  "acceptance": [
+    "The outbox marks a row when it hands delivery to a sender, so a second sender that arrives at the same instant is told the send is not owed to it",
+    "That exclusion holds between senders that share no mutex, because the ledger carries it rather than a lock inside one process",
+    "No production path publishes an outbox row without first holding that row's claim, including the flush path that today claims nothing",
+    "A row being sent is still counted as undelivered and still appears in the operator's backlog, so the entry block cannot release itself while an alert is in flight",
+    "A claim is a lease on the row and not a fourth alert state, because a state would remove the in-flight row from the undelivered count the entry gate reacts to",
+    "A sender that dies holding a claim does not bury the alert: the lease expires and the row becomes claimable again, and the failure direction is re-sending rather than silence",
+    "A sender whose lease expired cannot clear the lease of the sender that replaced it",
+    "Recording a failed attempt releases the claim, so the next attempt does not wait out the lease",
+    "A re-armed row starts with no claim inherited from the episode that settled",
+    "Behaviour is unchanged with one sender: the same alerts are sent, the same predicates read state, and removing the lease columns returns exactly to today",
+    "No order, stop, take-profit or sizing path is touched, and the delivery mutex is left exactly where it is"
+  ]
+}

@@ -5,18 +5,36 @@ Source: `internal/obs/ntfy.go` (85-139). AST 기준 분기 9 / 이탈 5 / defers
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
 | B1 | `:87` topic 없음 → `ErrNtfyNotConfigured` | `TestNtfyWithoutATopicIsNotConfigured` (`obs_test.go:281`) | no | yes |
-| B2 | `:91` BaseURL 비면 기본 서버 | `TestNtfyPublicServiceIsFlagged` (`:290`) | no | yes |
+| B2 | `:91` BaseURL 비면 기본 서버 | **없음** — 아래 참조 | no | **no** |
 | B3 | `:96` **`Timeout` 0이면 10s** | **없음** | no | no |
 | B4 | `:104` 요청 생성 오류 | **없음** | no | no |
 | B5 | `:110` 제목 헤더 | `TestNtfyPublishesToTheTopic` (`:208`) | no | yes |
 | B6 | `:117` 베어러 토큰 | `TestNtfySendsTheBearerToken` (`:257`) | no | yes |
 | B7 | `:122` **`HTTPClient` nil이면 `Timeout` 부여** | **없음** — 테스트는 `httptest` client를 주입하므로 이 분기를 지나지 않는다 | no | no |
-| B8 | `:126` 전송 실패 | 간접 | no | yes |
+| B8 | `:126` 전송 실패 (`client.Do` 오류) | **없음** — 아래 참조 | no | **no** |
 | B9 | `:134` 2xx 아님 → 거부 오류 | `TestNtfyReportsARefusal` (`:269`) | no | yes |
 
-## 예산을 만드는 두 분기가 무테스트다
+> **18라운드 B-P4가 지운 두 GREEN.**
+>
+> **B2**는 `TestNtfyPublicServiceIsFlagged`(`obs_test.go:290`)를 이름 붙이고 있었다.
+> 그 테스트는 `(&obs.Ntfy{Topic: "t"}).UsesPublicService()`만 부른다(`:291`·`:294`) —
+> **`Publish`를 부르지 않는다.** `Publish`를 부르는 테스트는 전부 `ntfyServer`
+> (`obs_test.go:200`)가 만든 `BaseURL: srv.URL`을 쓰므로 BaseURL이 **비지 않는다**.
+> 저장소 전체에서 `obs.Ntfy` 리터럴은 4개이고(`obs_test.go:200`·`:291`·`:294`,
+> `a074_notification_wiring_test.go:208`), 그중 BaseURL이 빈 둘은 `Publish`를 안 부른다.
+>
+> **B8**은 `간접`으로 GREEN이 달려 있었다. `client.Do`가 오류를 돌려주는 테스트는
+> 없다 — 모든 발송 테스트가 `HTTPClient: srv.Client()`(살아 있는 transport)를 넣는다.
+> `TestNtfyReportsARefusal`(`:269`)이 만드는 것은 **비-2xx 응답**이고 그것은
+> `:134`의 **B9**다. 오류 없이 돌아온 응답의 상태 코드를 보는 분기와, 응답 자체가
+> 오지 않는 분기는 다른 분기다.
+>
+> `간접`은 관측이 아니다. 이 표에서 그 단어가 남아 있는 칸은 B11 하나이고,
+> 그것도 같은 의심을 받아야 한다.
 
-**B3과 B7이 10초를 만드는데 둘 다 테스트가 없다.** 이유는 구조적이다 — 모든 ntfy
+## 예산을 만드는 네 분기가 무테스트다
+
+**B3과 B7이 10초를 만드는데 둘 다 테스트가 없고**, 위에서 내린 B2·B8도 같다. 이유는 구조적이다 — 모든 ntfy
 테스트가 `HTTPClient`에 `httptest` client를 주입하므로 B7이 거짓이 되고, `Timeout`을
 명시하므로 B3도 거짓이 된다. **프로덕션 조립만 두 분기를 지난다**
 (`notifications.go:101`, `cmd/tossctl/notificationsettings.go:151`).

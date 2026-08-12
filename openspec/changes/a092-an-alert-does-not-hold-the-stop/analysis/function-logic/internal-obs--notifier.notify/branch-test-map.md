@@ -1,11 +1,17 @@
 # Branch Test Map: `Notifier.Notify`
 
-Source: `internal/obs/notifier.go` (107-116). AST 기준 분기 1 / 이탈 2.
+Source: `internal/obs/notifier.go` (124-133). AST 기준 분기 1 / 이탈 2.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:111` normal → `publishBestEffort`, `return nil` `:113` | `TestOrdinaryAlertsAreBestEffort` (`obs_test.go:527`) · `TestMeasurementEventsAreNeverCritical` (`measurement_test.go:31`) | no | yes |
-| — | critical → `notifyCritical`, `return` `:115` | `TestCriticalAlertIsDurableBeforeItIsSent` (`obs_test.go:353`) · `TestPersistentDeliveryFailureBlocksEntries` (`:384`) | no | yes |
+| B1 | `:128` normal → `publishBestEffort`, `return nil` `:130` | `TestOrdinaryAlertsAreBestEffort` (`obs_test.go:527`) | no | yes |
+| — | critical → `notifyCritical`, `return` `:132` | `TestCriticalAlertIsDurableBeforeItIsSent` (`obs_test.go:353`) · `TestPersistentDeliveryFailureBlocksEntries` (`:384`) | no | yes |
+
+> **18라운드 B-P2가 지운 것.** 이 표의 B1은 `TestMeasurementEventsAreNeverCritical`
+> (`measurement_test.go:31`)도 함께 이름 붙이고 있었다. 그 테스트는 `Notifier`를
+> 만들지도 `Notify`를 부르지도 않는다 — `Subject()`·`SeverityOf()`·`CriticalEvents()`만
+> 부르는 등급표 테스트다(`measurement_test.go:31-55`). 남은 `TestOrdinaryAlertsAreBestEffort`
+> 하나는 `EventFillObserved`로 실제 `n.Notify`를 타므로 유효하다.
 
 ## 무엇이 단언되지 않는가
 

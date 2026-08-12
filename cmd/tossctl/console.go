@@ -346,6 +346,39 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		fmt.Fprintln(cmd.ErrOrStderr(), engineBootNote)
 	}
 
+	// The survey, on the same terms and deliberately after the engine: the two
+	// share one account's rate budget, and the engine's startup interlock is the
+	// side that reads what the survey produces.
+	//
+	// Both paths below go through restartSoak, which is what carries the profile
+	// flags and the record-scoped ownership judgement the spec requires. They differ
+	// in two things, and both differences are the point (a101 review):
+	//
+	//   - boot goes through bootSurvey first, so a survey that is already running
+	//     is left alone instead of interrupted. setsid exists so a survey outlives
+	//     its console, so that is the designed state here, not an anomaly.
+	//   - boot does not pass PrepareSpawn. Clearing the shared token cache is right
+	//     for the button, where the operator may have just changed credentials, and
+	//     wrong here, where nothing changed: that file is how the engine, the API
+	//     daemon and the survey stop taking the token away from each other (a082).
+	soakBoot := newConsoleSoakBoot(root)
+	var soakBootLoad func() (bool, error)
+	if soakBoot != nil {
+		soakBootLoad = soakBoot.Load
+	}
+	startSurvey := func() (string, error) {
+		return restartSoak(root, soakRecord, openAPISeam.PrepareSpawn)
+	}
+	bootSurveyIfAbsent := func() (string, error) {
+		return bootSurvey(
+			func() ([]int, error) { return soakFindProcesses(soakRecord) },
+			func() (string, error) { return restartSoak(root, soakRecord) },
+		)
+	}
+	if note := runConfiguredSoakAutostart(soakBootLoad, bootSurveyIfAbsent); note != "" {
+		fmt.Fprintln(cmd.ErrOrStderr(), note)
+	}
+
 	// The console receives only an authenticated loopback client. The running
 	// engine owns the server and its already-open journal; this process cannot
 	// create, migrate, or directly write that journal through this seam.
@@ -457,7 +490,15 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		Relaunch: consoleRelaunch(out),
 		Handoff:  handoff.New(consoleHandoffPath(verifyRecord)),
 		RestartSoak: func() (string, error) {
-			return restartSoak(root, soakRecord, openAPISeam.PrepareSpawn)
+			// Pressing this is the operator saying "this profile runs the survey".
+			// Persisting that is what makes the next container replacement bring it
+			// back instead of silently dropping it (a101).
+			note, err := startSurvey()
+			var save func(bool) error
+			if soakBoot != nil {
+				save = soakBoot.Save
+			}
+			return rememberSoakApproval(save, note, err)
 		},
 		CheckOpenAPI: func(ctx context.Context) console.OpenAPICredentialCheck {
 			return toConsoleOpenAPICredentialCheck(openAPISeam.Check(ctx))

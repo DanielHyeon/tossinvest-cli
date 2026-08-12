@@ -1,0 +1,234 @@
+{
+  "file": "internal/journal/outbox_test.go",
+  "source_sha256": "465c1f989400591e9fbcc4c5cc699d68c677af813cf2f8ed842ac1db7289fec3",
+  "package": "journal",
+  "function": "TestMarkingANonPendingAlertIsRefused",
+  "signature": "TestMarkingANonPendingAlertIsRefused(params=1, results=0)",
+  "start": {
+    "line": 174,
+    "column": 1
+  },
+  "end": {
+    "line": 203,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "else",
+      "at": {
+        "line": 184,
+        "column": 9
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 184,
+        "column": 9
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 189,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 10
+      },
+      "text": "outboxJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 16
+      },
+      "text": "j.ClaimAlertForDelivery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 17
+      },
+      "text": "j.MarkAlertDelivered"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 14
+      },
+      "text": "j.MarkAlertDelivered"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 18
+      },
+      "text": "j.MarkAlertAttemptFailed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 175,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
