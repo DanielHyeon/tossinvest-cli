@@ -1,10 +1,15 @@
 # Function Logic Map: `runEngineRun`
 
-- Source: `cmd/tossctl/engine.go` (**179-292**) — 편집 전 `179-280`
+- Source: `cmd/tossctl/engine.go` (**183-296**) — 4.4b-1 직후 `179-292` · 그 편집 전 `179-280`
 - AST evidence: `ast.json` — 편집 후 branches **18** / returns **14** / calls 51
   (편집 전 **16** / **12** / 48)
 - Risk scan: `risk-pattern-report.md`
-- source SHA-256: **`301f68c6…`**
+- source SHA-256: **`f13e36b3…`** (4.4b-1 시점 `301f68c6…`)
+
+  > **⚠ 4.4b-2가 이 함수를 또 밀었다 — 본문은 안 건드리고.**
+  > 하위 명령 하나를 `newEngineCmd`에 등록했더니 이 함수 전체가 **+4줄** 내려갔다.
+  > 분기·이탈·호출은 **18·14·51 그대로**이고 그것이 「안 바뀌었다」의 증거다.
+  > 아래 인용은 전부 다시 쟀다.
 
 ## ⛔ 이 번들도 §5.2의 표에 **없던 자리**다 — 두 번째다
 
@@ -31,10 +36,10 @@ function cmd/tossctl/engine.go:runEngineRun"*). 같은 검사가 같은 파일�
 
 | Branch | 위치 | Condition | Return |
 |---|---|---|---|
-| B1~B15 | `:181`~`:261` | 기존 부팅 시퀀스 — **a098이 한 자도 안 바꾼다** | 기존 |
-| **B16 (a098 신설)** | `:266` | **`ectx.AlertOperations()` 오류** | `:267` |
-| **B17 (a098 신설)** | `:274` | **`engine.StartAlertControlServer(dir, alertOps)` 오류** | `:275` |
-| B18 | `:278` | 기존 — 편집 전 `:266`에 있던 갈래가 밀린 것 | `:279` |
+| B1~B15 | `:185`~`:265` | 기존 부팅 시퀀스 — **a098이 한 자도 안 바꾼다** | 기존 |
+| **B16 (a098 신설)** | `:270` | **`ectx.AlertOperations()` 오류** | `:271` |
+| **B17 (a098 신설)** | `:278` | **`engine.StartAlertControlServer(dir, alertOps)` 오류** | `:279` |
+| B18 | `:282` | 기존 — 4.4b-1 편집 전 `:266`에 있던 갈래가 밀린 것 | `:283` |
 
 > **⛔ 번호가 밀렸다. 옛 B16이 새 B18이다.**
 > 조건은 안 바뀌었고 **id 만 움직였다.** 4.1의 `NewRuntime` 때와 같은 함정이고
@@ -51,7 +56,7 @@ function cmd/tossctl/engine.go:runEngineRun"*). 같은 검사가 같은 파일�
 > 알림 표면 때문에 안 뜨는 것은 가벼운 대가가 아니다. 그래도 고른 이유는
 > `ValidateEngineDirectory`가 거절하는 조건(group/other writable)이 **이미
 > 다른 두 엔드포인트의 기동 조건**이기 때문이다 — `StartPositionPolicyCommandServer`
-> (`:255`)와 `StartPositionPolicyRuntimeServer`(`:260`)가 **먼저** 같은 검사로
+> (`:259`)와 `StartPositionPolicyRuntimeServer`(`:264`)가 **먼저** 같은 검사로
 > 거절한다. 즉 이 갈래가 새로 만드는 「안 뜨는 경우」는 **없다.**
 
 ## Calls and live bindings

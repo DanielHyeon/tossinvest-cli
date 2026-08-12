@@ -115,7 +115,11 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 		Use:   "engine",
 		Short: "Run the automated trading engine",
 	}
-	cmd.AddCommand(newEngineRunCmd(root), newEngineReconcileResolveCmd(root))
+	// a098 4.4b — 밀린 critical 알림의 운영자 표면. `engine` 아래에 두는 이유는
+	// 두 명령이 **엔진 디렉터리로** 대상을 정하기 때문이다: `engine run` 과 같은
+	// `engineJournalDir` 를 쓰므로, 격리 프로파일은 자기 엔진의 알림만 본다.
+	cmd.AddCommand(newEngineRunCmd(root), newEngineReconcileResolveCmd(root),
+		newEngineAlertsCmd(root))
 	return cmd
 }
 

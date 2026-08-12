@@ -491,6 +491,40 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > 통과한다"*를 먼저 단언하는데, O 아래에서 **정확히 그 줄이 걸렸다** — 그 줄이
       > 없었으면 「승인이 아예 안 된 상태」가 R17의 초록으로 보고됐다.
 
+      **진행 — R5의 CLI 절반 + R6 완료 (2026-08-13).**
+      `cmd/tossctl/a098_the_operator_command_names_a_person_test.go` · GREEN 은 **4.4b-2**
+      (`engine_alerts.go` + `engine_alerts_client{,_unix,_other}.go`).
+
+      | # | 종류 | 관측 |
+      |---|---|---|
+      | **R5**(CLI 절반) | RED — 시점 | 명령이 없어 **build failed**(`undefined: newEngineAlertsCmd`). 4.4b-2 뒤 통과 |
+      | **R6** | **회귀 핀** | 빨간 시점이 **없다**(등록부가 그렇게 적는다). 대신 **뮤테이션 U·Z**가 이 핀에 이빨이 있음을 보였다 — 아래 |
+
+      **뮤테이션 여섯을 걸었고 여섯이 다 잡혔다.**
+
+      | # | 뮤테이션 | 죽은 테스트 |
+      |---|---|---|
+      | **T** | `newEngineCmd`에서 `alerts` 등록 제거 | 여섯 — 배선 테스트가 leaf 둘을 못 찾는다 |
+      | **U** | `ack`에 필수 `--confirm` 추가 | 배선 테스트(**R6**) 외 넷 |
+      | **V** | 빈 이름을 `"operator"`로 **채워 넣는다** | **`…WithoutANameChangesNothing/공백 이름`만** — 아래 ⛔ |
+      | **W** | 목록이 bearer 토큰을 찍는다 | 유출 테스트만 (불변식 8) |
+      | **X** | 승인 결과가 남은 차단 사유를 안 말한다 | **R17의 CLI 절반**만 |
+      | **Z** | 승인이 `stdin`을 한 줄 읽는다 | 넷 — **R6**의 거부하는 reader 가 실제로 발화했다 |
+      | (원복) | 역편집 여섯 · 바이트 동일성 assert · `grep -c MUTATION` = 0 · 심볼 대조(`newEngineAlertsCmd` 1 · `MarkFlagRequired` 1 · `errors.New` 1 · `bufio` 0) | 세 패키지 **1030건** 재통과 |
+
+      > **⛔ V가 R5를 정확히 겨눈다.** R5가 이름으로 지목한 위험은 빈 actor 가 아니라
+      > **CLI 가 고정 문자열을 넣어 원장의 검사를 통과하면서 audit trail 만 죽는 것**이다.
+      > V 아래에서 승인은 **성공하고** 원장에는 `acknowledged_by="operator"` 가 남는다 —
+      > 화면만 보면 정상이다. 잡히는 곳은 **원장을 되읽는 단언** 하나뿐이었다.
+      >
+      > 그리고 V 는 **`--operator` 없음** 경우는 안 깼다. 그것은 cobra 의 필수 플래그가
+      > `RunE` 전에 막기 때문이고, **방어가 둘이라는 뜻**이다 — 하나를 뚫어도 다른 하나가
+      > 남는다. 뮤테이션이 그 둘을 갈라 보여 줬다.
+
+      > **⛔ Z 가 R6 의 측정 방식을 정당화했다.** R6 을 *"출력에 확인 문구가 없다"*로
+      > 재면 **문구 없이 한 줄을 기다리는 구현이 통과한다.** stdin 을 「읽으면 실패」로
+      > 만들어 두니 Z 가 **네 테스트에서 발화**했다 — 화면이 아니라 **행동**을 잰다.
+
 - [x] 3.2 루프 주기를 **측정해서** 정한다. a092의 값을 인용하지 않는다 (2026-08-12)
 
       **잰 것** — `internal/app/engine/a098_cycle_cost_bench_test.go`.
@@ -939,14 +973,50 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > 봐야 「0」이 측정이 된다.
       >
       > 핀은 「되살아나는 것」을 잡고, **AST 는 「되살릴 자리가 없는 것」을 잡는다.**
-- [ ] 4.4 **운영자 표면 — `tossctl` 하위 명령 둘** (사용자 결정 4, 2026-08-11 · design D7).
-      **둘로 나눠 짓는다 — 4.4a(의미) 착지, 4.4b(전송·CLI) 미완료.**
+- [x] 4.4 **운영자 표면 — `tossctl` 하위 명령 둘** (사용자 결정 4, 2026-08-11 · design D7).
+      **셋으로 나눠 지었고 셋 다 착지했다 (2026-08-13).**
 
       | | 무엇 | 상태 |
       |---|---|---|
       | **4.4a** | 엔진 안의 의미 — `PendingAlert` 투영 · `AlertOperations.Pending`·`Acknowledge` (`internal/app/engine/alertops.go`) | **완료 2026-08-12** — R9·R17·R5(엔진 절반) |
       | **4.4b-1** | 엔진 소유 Unix 소켓 (`.alert-control/` · `alerts.sock` · 라우트 둘) + `runEngineRun` 기동 | **완료 2026-08-12** |
-      | **4.4b-2** | `tossctl` 하위 명령 둘 (dial + 출력) | **미완료** — R5(CLI 절반)·R6 |
+      | **4.4b-2** | `tossctl engine alerts list`·`ack` (dial + 출력) | **완료 2026-08-13** — R5(CLI 절반)·R6 |
+
+      **4.4b-2 실측.** `cmd/tossctl/engine_alerts.go` ·
+      `engine_alerts_client{,_unix,_other}.go` · 테스트
+      `a098_the_operator_command_names_a_person_test.go` (테스트 7 · 하위 2) ·
+      기존 함수 편집은 **`newEngineCmd` 인자 하나**(번들 `cmd-tossctl--newenginecmd`,
+      분기 **0** · 이탈 1 · 호출 **3→4**).
+
+      | 명령 | 형태 | 결정한 것 |
+      |---|---|---|
+      | 목록 | `tossctl engine alerts list` | `--output json` 지원. 표는 **임차 칸**(보유자·나이·만료)을 따로 낸다 — 「막힌 것」과 「보내는 중」을 가르는 것이 이 명령의 목적이다 |
+      | 승인 | `tossctl engine alerts ack [ID...] --operator NAME` | **id 없으면 전부** — `Notifier.Acknowledge`의 기존 규약 그대로. 규약을 CLI 에서 다시 정하면 같은 동작이 두 곳에서 정의된다 |
+
+      > **⛔ `--operator` 에 기본값을 두지 않았다 — `$USER` 도 아니다.**
+      > 4.4a 가 *"기본값을 여기 두면 4.4b 가 그것을 쓰게 되고, 그때 R5 는 통과하면서
+      > 거짓이 된다"*고 적었고, 그 함정은 **CLI 쪽에도 똑같이 있다.** `$USER` 는
+      > 고정 문자열은 아니지만 **사람이 고른 값도 아니다** — 공용 계정 하나로 셋이
+      > 당직을 돌면 원장의 `acknowledged_by` 는 셋을 구분하지 못한다.
+      > 뮤테이션 **V** 가 이 경계를 실제로 넘어가 봤고, 잡히는 곳은 **원장을 되읽는
+      > 단언 하나뿐**이었다.
+
+      > **⛔ 확인 절차를 안 넣었다 (R6 · 사용자 지시 2026-07-27).**
+      > 옆의 `engine reconcile-resolve` 에는 `--confirm` 이 있고 여기에는 없다.
+      > 이유는 취향이 아니라 **방향**이다: 그쪽은 엔진이 **멈춰 있어야** 하는 감사
+      > 동작이고, 이쪽은 엔진이 **돌고 있어야** 하는 복구 동작이다. 막힌 진입을
+      > 정상으로 되돌리는 일 앞에 마찰을 두면 사람이 급할 때 우회할 것을 찾는다.
+      >
+      > 「없다」를 재려면 **조회가 동작한다는 대조군**이 필요해서, 같은 테스트가
+      > `reconcile-resolve` 에 `--confirm` 이 **있는 것**을 먼저 확인한다.
+
+      > **⚠ 새 패키지를 안 만들었다 — 계획대로.** 타입은 `internal/app/engine` 에
+      > 그대로 두고 dial 하는 client 만 `cmd/tossctl` 에 뒀다. 소비자가 하나이기
+      > 때문이고, 둘이 되면 그때 뽑는다.
+
+      > **⚠ Windows 에 대체 경로를 안 만들었다.** `engine_alerts_client_other.go` 는
+      > 거절만 한다. 원장을 직접 여는 대체 승인 경로는 **원장만 고치고 진입 게이트는
+      > 못 푼다** — design D7.1 이 없애려는 상태 그 자체라서, 없는 것이 낫다.
 
       **4.4b-1 실측.** `internal/app/engine/alert_control{,_transport_unix,_transport_other}.go` ·
       `internal/positionpolicyrpc/private_endpoint.go` · 테스트
@@ -1165,7 +1235,7 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       | `internal/risk` | **비어 있어야 한다** | — |
       | `internal/execgw` | **⛔ 비어 있지 않다** — 파일 셋 (`reason.go`·`failclosed.go`·`retry.go`) + golden 하나 | 4.3.3 (사용자 결정 8-1). **3판의 "execgw 전부 안 건드린다"는 철회했다** |
       | `internal/app/engine` | 비어 있지 않다 | 4.0·4.1·4.2·**4.6** (`gateway.go` — `buildGateway` 한 갈래 + 신설 leaf) |
-      | `cmd/tossctl` | 비어 있지 않다 | **함수 둘이다.** `engineRuntime` — 4.2의 프로덕션 등록 한 줄(+13/-0, 번들 `cmd-tossctl--engineruntime`) · `runEngineRun` — 4.4b의 소켓 기동(+12/-0, 번들 `cmd-tossctl--runenginerun`) |
+      | `cmd/tossctl` | 비어 있지 않다 | **기존 함수 셋 + 새 파일 넷이다.** `engineRuntime` — 4.2의 프로덕션 등록 한 줄(+13/-0, 번들 `cmd-tossctl--engineruntime`) · `runEngineRun` — 4.4b-1의 소켓 기동(+12/-0, 번들 `cmd-tossctl--runenginerun`) · **`newEngineCmd`** — 4.4b-2의 하위 명령 등록(**인자 하나**, 번들 `cmd-tossctl--newenginecmd`). 새 파일은 `engine_alerts.go` · `engine_alerts_client{,_unix,_other}.go` |
       | **`internal/positionpolicyrpc`** | **⛔ 비어 있지 않다 — 새 파일 하나** (`private_endpoint.go`) | 4.4b. **기존 함수 0줄** — 이름에 고정돼 있던 검사(사설 디렉터리·소켓·descriptor)의 **이름 없는 형태**를 새 함수로 더한다. 원시 helper 가 이 패키지에 unexported 로 있어서, 옮기지 않으면 **보안 경계를 복사**하게 된다 |
 
       > **⛔⛔ 이 표의 「어느 함수」 칸이 비어 있었고, 같은 검사가 같은 파일에서 두 번 잡았다.**
@@ -1173,7 +1243,8 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > | 언제 | `check_analysis` 가 말한 것 |
       > |---|---|
       > | 4.2 | *"missing evidence for modified function … `engineRuntime`"* |
-      > | 4.4b | *"missing evidence for modified function … `runEngineRun`"* · *"AST source hash is stale"* |
+      > | 4.4b-1 | *"missing evidence for modified function … `runEngineRun`"* · *"AST source hash is stale"* |
+      > | 4.4b-2 | 잡히지 **않았다** — 편집 **전에** 카운트를 재고 같은 커밋에서 번들을 만들었다 |
       >
       > 4.2 때 *"이 표가 안 적고 있었다"*고 고쳐 놓고 **패키지 이름만 적었다.**
       > 파일이 아니라 **함수**가 단위인데 칸은 패키지였다 — 그래서 두 번째가 또 걸렸다.
@@ -1183,6 +1254,12 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > stale 로 만들었다: `runEngineRun` 편집이 아래 함수를 **12줄 밀었다.**
       > 분기·이탈·호출은 6·8·11 그대로이고 그것이 「안 건드렸다」의 증거다 —
       > 인용은 전부 다시 쟀다(`:333`→`:345` … `:387`→`:399`).
+      >
+      > **세 번째는 밀림이 두 번 겹쳤다.** `newEngineCmd` 에 인자 하나를 더했더니
+      > **그 아래 두 함수가 다** +4줄 내려갔다 — `runEngineRun` `179-292`→`183-296`,
+      > `engineRuntime` `343-426`→`347-430`. 카운트는 **18·14·51** 과 **6·8·11** 그대로.
+      > 세 번 다 같은 형태이므로 이제 **규칙으로 적는다**: 한 파일 안의 함수를
+      > 편집하면 그 아래 모든 번들의 `ast.json` 과 인용을 같은 커밋에서 다시 잰다.
 
       **`internal/execgw`의 프로덕션 diff는 위 네 파일을 넘으면 안 된다.** 특히
       `checkAccountEntryLocked`(`retry.go:537`)와 `EntryGate.Block`/`Clear`

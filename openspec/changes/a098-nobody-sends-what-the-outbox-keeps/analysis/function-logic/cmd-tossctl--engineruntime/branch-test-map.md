@@ -10,13 +10,13 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:345` 체결 감지 구성 실패면 거절 | 기존 분기 테이블 | no | **yes (기존)** |
-| B2 | `:354` 대사 드라이버 구성 실패면 거절 | 같은 테스트 | no | **yes (기존)** |
-| B3 | `:365` exit 관측 구성 실패면 거절 | 같은 테스트 | no | **yes (기존)** |
-| B4 | `:370` 복구 시퀀스 구성 실패면 거절 | 같은 테스트 | no | **yes (기존)** |
-| B5 | `:374` `strategy-entry` 구성 실패면 거절 | 같은 테스트 | no | **yes (기존)** |
-| B6 | **신설** `:386` — **배달 실행자 구성 실패면 거절**(fail-closed) | — | — | **아래 ⛔ — 덮이지 않았다** |
-| 이탈 `:399` | 정상 조립 — 감독 넷 + **보조 하나** | **a098** `TestProductionRuntimeStartsExactlyOneAlertDeliverer` · `TestTheAlertDelivererIsNotASupervisedLoop` · 기존 `TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop` | **yes — 뮤테이션 L**: 실행자를 만들고 `Auxiliary`에 안 넘기면 `auxiliary names=[]`로 FAIL | **yes (2026-08-12)** |
+| B1 | `:349` 체결 감지 구성 실패면 거절 | 기존 분기 테이블 | no | **yes (기존)** |
+| B2 | `:358` 대사 드라이버 구성 실패면 거절 | 같은 테스트 | no | **yes (기존)** |
+| B3 | `:369` exit 관측 구성 실패면 거절 | 같은 테스트 | no | **yes (기존)** |
+| B4 | `:374` 복구 시퀀스 구성 실패면 거절 | 같은 테스트 | no | **yes (기존)** |
+| B5 | `:378` `strategy-entry` 구성 실패면 거절 | 같은 테스트 | no | **yes (기존)** |
+| B6 | **신설** `:390` — **배달 실행자 구성 실패면 거절**(fail-closed) | — | — | **아래 ⛔ — 덮이지 않았다** |
+| 이탈 `:403` | 정상 조립 — 감독 넷 + **보조 하나** | **a098** `TestProductionRuntimeStartsExactlyOneAlertDeliverer` · `TestTheAlertDelivererIsNotASupervisedLoop` · 기존 `TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop` | **yes — 뮤테이션 L**: 실행자를 만들고 `Auxiliary`에 안 넘기면 `auxiliary names=[]`로 FAIL | **yes (2026-08-12)** |
 
 > **⛔ B6의 거짓 쪽만 덮였다 — 참 쪽(거절)은 테스트가 없다. 숨기지 않는다.**
 >
