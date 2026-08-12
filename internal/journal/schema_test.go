@@ -278,10 +278,13 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 			"state", "symbol", "target_order_id", "updated_at",
 		},
 		// Schema v3 (task 4.3): the durable alert outbox.
+		// The four claim_* columns arrive with schema v31 (a099): the delivery
+		// lease that decides which of two senders owns a row.
 		"alert_outbox": {
-			"acknowledged_at", "acknowledged_by", "attempts", "body", "created_at",
-			"delivered_at", "event_key", "event_type", "id", "last_attempt_at",
-			"last_error", "payload", "severity", "state", "title",
+			"acknowledged_at", "acknowledged_by", "attempts", "body",
+			"claim_expires_at", "claim_token", "claimed_at", "claimed_by",
+			"created_at", "delivered_at", "event_key", "event_type", "id",
+			"last_attempt_at", "last_error", "payload", "severity", "state", "title",
 		},
 		// Schema v5 (extend-execution-contract task 0.1): the decision contract,
 		// what it reserved, what it consumed, and the two records that keep the

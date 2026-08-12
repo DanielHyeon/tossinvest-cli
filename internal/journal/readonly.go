@@ -128,7 +128,7 @@ type ReadOnlyOptions struct {
 	Path string
 
 	// BusyTimeout bounds how long a read waits behind the writer's commit. Zero
-	// uses defaultBusyTimeout. A reader in WAL mode is not normally blocked by a
+	// uses DefaultBusyTimeout. A reader in WAL mode is not normally blocked by a
 	// writer at all; this covers the checkpoint.
 	BusyTimeout time.Duration
 }
@@ -181,7 +181,7 @@ func OpenReadOnly(ctx context.Context, opts ReadOnlyOptions) (*ReadOnly, error) 
 	// built for.
 	busy := opts.BusyTimeout
 	if busy <= 0 {
-		busy = defaultBusyTimeout
+		busy = DefaultBusyTimeout
 	}
 
 	db, err := sql.Open("sqlite", readOnlyDSN(path, busy))

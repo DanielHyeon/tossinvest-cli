@@ -5,7 +5,6 @@ package journal
 
 import (
 	"context"
-	"errors"
 	"path/filepath"
 	"testing"
 	"time"
@@ -76,14 +75,24 @@ func TestFailedAttemptsAccumulateAndTheRowStaysPending(t *testing.T) {
 	j, clk := outboxJournal(t)
 	ctx := context.Background()
 
-	id, err := j.EnqueueAlert(ctx, Alert{EventKey: "k", Type: "order.in_doubt", Severity: "critical"})
+	claim, err := j.ClaimAlertForDelivery(ctx,
+		Alert{EventKey: "k", Type: "order.in_doubt", Severity: "critical"}, claimRemind, testClaimant)
 	if err != nil {
-		t.Fatalf("EnqueueAlert: %v", err)
+		t.Fatalf("ClaimAlertForDelivery: %v", err)
 	}
+	id := claim.ID
+	// One claim, three attempts under it. A sender that recorded a failure and
+	// lost the row between attempts would be handing its remaining retries to
+	// somebody else's send, so the lease is deliberately kept across all three.
 	for i := 0; i < 3; i++ {
 		clk.Advance(time.Second)
-		if err := j.MarkAlertAttemptFailed(ctx, id, "transport is down"); err != nil {
-			t.Fatalf("MarkAlertAttemptFailed: %v", err)
+		res, ferr := j.MarkAlertAttemptFailed(ctx, id, claim.Token, "transport is down")
+		if ferr != nil {
+			t.Fatalf("MarkAlertAttemptFailed: %v", ferr)
+		}
+		if res.Outcome != SettleApplied {
+			t.Fatalf("outcome = %v on attempt %d, want applied — the lease is held across the budget",
+				res.Outcome, i+1)
 		}
 	}
 
@@ -109,12 +118,19 @@ func TestDeliveryAndAcknowledgementAreDistinctStates(t *testing.T) {
 	j, _ := outboxJournal(t)
 	ctx := context.Background()
 
-	delivered, _ := j.EnqueueAlert(ctx, Alert{EventKey: "a", Type: "order.in_doubt"})
+	claim, err := j.ClaimAlertForDelivery(ctx,
+		Alert{EventKey: "a", Type: "order.in_doubt"}, claimRemind, testClaimant)
+	if err != nil {
+		t.Fatalf("ClaimAlertForDelivery: %v", err)
+	}
+	delivered := claim.ID
 	acked, _ := j.EnqueueAlert(ctx, Alert{EventKey: "b", Type: "order.in_doubt"})
 
-	if err := j.MarkAlertDelivered(ctx, delivered); err != nil {
+	if _, err := j.MarkAlertDelivered(ctx, delivered, claim.Token); err != nil {
 		t.Fatalf("MarkAlertDelivered: %v", err)
 	}
+	// Acknowledgement needs no lease and never did: the operator outranks the
+	// machine that is midway through telling them.
 	if err := j.AcknowledgeAlert(ctx, acked, "operator"); err != nil {
 		t.Fatalf("AcknowledgeAlert: %v", err)
 	}
@@ -147,19 +163,69 @@ func TestAcknowledgeRequiresAnOperator(t *testing.T) {
 	}
 }
 
+// TestMarkingANonPendingAlertIsRefused: a settlement lands once, and what
+// happens on the second one is now said rather than raised.
+//
+// It used to be one error for both cases. a099 splits them because the caller's
+// behaviour splits: a row that is no longer PENDING was settled by somebody —
+// routinely by an operator acknowledging mid-flight — and a sender that hears it
+// simply stops. A row that is not there at all is the ledger having lost
+// something a sender was holding, and that is a fault.
 func TestMarkingANonPendingAlertIsRefused(t *testing.T) {
 	j, _ := outboxJournal(t)
 	ctx := context.Background()
-	id, _ := j.EnqueueAlert(ctx, Alert{EventKey: "a", Type: "order.in_doubt"})
-	if err := j.MarkAlertDelivered(ctx, id); err != nil {
+	claim, err := j.ClaimAlertForDelivery(ctx,
+		Alert{EventKey: "a", Type: "order.in_doubt"}, claimRemind, testClaimant)
+	if err != nil {
+		t.Fatalf("ClaimAlertForDelivery: %v", err)
+	}
+	if res, err := j.MarkAlertDelivered(ctx, claim.ID, claim.Token); err != nil {
 		t.Fatalf("MarkAlertDelivered: %v", err)
+	} else if res.Outcome != SettleApplied {
+		t.Fatalf("outcome = %v on the first delivery, want applied", res.Outcome)
 	}
 
-	if err := j.MarkAlertDelivered(ctx, id); !errors.Is(err, ErrAlertNotFound) {
-		t.Errorf("double delivery = %v, want ErrAlertNotFound", err)
+	res, err := j.MarkAlertDelivered(ctx, claim.ID, claim.Token)
+	if err != nil {
+		t.Fatalf("double delivery returned an error: %v", err)
 	}
-	if err := j.MarkAlertAttemptFailed(ctx, 9999, "x"); !errors.Is(err, ErrAlertNotFound) {
-		t.Errorf("unknown id = %v, want ErrAlertNotFound", err)
+	if res.Outcome != SettleAlreadySettled {
+		t.Errorf("double delivery = %v, want already-settled", res.Outcome)
+	}
+
+	missing, err := j.MarkAlertAttemptFailed(ctx, 9999, claim.Token, "x")
+	if err != nil {
+		t.Fatalf("settling an unknown id returned an error: %v", err)
+	}
+	if missing.Outcome != SettleNotFound {
+		t.Errorf("unknown id = %v, want not-found", missing.Outcome)
+	}
+}
+
+// TestSettlingWithoutAClaimIsRefused: the token is the whole of the exclusion,
+// so a settlement that presents none is refused before it reaches the row.
+// Without this a caller could settle any row by id, which is what the ledger did
+// before a099 and what let a stalled sender overwrite the send another one was
+// making.
+func TestSettlingWithoutAClaimIsRefused(t *testing.T) {
+	j, _ := outboxJournal(t)
+	ctx := context.Background()
+	id, err := j.EnqueueAlert(ctx, Alert{EventKey: "a", Type: "order.in_doubt"})
+	if err != nil {
+		t.Fatalf("EnqueueAlert: %v", err)
+	}
+
+	if _, err := j.MarkAlertDelivered(ctx, id, ""); err == nil {
+		t.Error("marking delivered with no token succeeded — the token is the exclusion")
+	}
+	if _, err := j.MarkAlertAttemptFailed(ctx, id, "", "x"); err == nil {
+		t.Error("recording a failure with no token succeeded")
+	}
+	if _, err := j.ReleaseAlertClaim(ctx, id, ""); err == nil {
+		t.Error("releasing with no token succeeded")
+	}
+	if got := alertState(t, j, id); got != AlertPending {
+		t.Errorf("state = %q, want %q — a refused settlement must not touch the row", got, AlertPending)
 	}
 }
 

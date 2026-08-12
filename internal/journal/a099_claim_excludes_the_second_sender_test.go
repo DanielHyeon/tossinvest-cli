@@ -42,11 +42,16 @@ func TestTwoSendersReachingOnePendingRowLeaveWithOneRightToSend(t *testing.T) {
 	j, _ := outboxJournal(t)
 	ctx := context.Background()
 
-	// The row the two senders will race for: written, PENDING, never sent.
-	if _, owed, err := j.ClaimAlertForDelivery(ctx, a099Alert(), a099Remind); err != nil {
+	// The row the two senders will race for: written, PENDING, never sent, and
+	// crucially not claimed. EnqueueAlert is the record-only path and takes no
+	// lease, which is what makes it the honest arrangement here — claiming it
+	// first would leave the row held by the test itself and both racers would
+	// lose to the setup rather than to each other.
+	if _, err := j.EnqueueAlert(ctx, a099Alert()); err != nil {
 		t.Fatalf("arranging the pending row: %v", err)
-	} else if !owed {
-		t.Fatalf("owed = false on a row that was just inserted — the arrangement is wrong")
+	}
+	if got := alertState(t, j, 1); got != AlertPending {
+		t.Fatalf("state = %q, want %q — the arrangement is wrong", got, AlertPending)
 	}
 
 	const senders = 2
@@ -62,13 +67,13 @@ func TestTwoSendersReachingOnePendingRowLeaveWithOneRightToSend(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			<-start
-			_, owed, err := j.ClaimAlertForDelivery(ctx, a099Alert(), a099Remind)
+			claim, err := j.ClaimAlertForDelivery(ctx, a099Alert(), a099Remind, testClaimant)
 			mu.Lock()
 			defer mu.Unlock()
 			switch {
 			case err != nil:
 				failed = append(failed, err)
-			case owed:
+			case claim.Disposition == ClaimAcquired:
 				granted++
 			}
 		}()

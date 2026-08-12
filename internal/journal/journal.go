@@ -26,10 +26,14 @@ import (
 // absent and could take an unsafe decision from an incomplete picture.
 var ErrSchemaTooNew = errors.New("journal: database schema is newer than this build")
 
-// defaultBusyTimeout bounds how long a writer waits for another writer's
+// DefaultBusyTimeout bounds how long a writer waits for another writer's
 // transaction. The journal has a single writer by design, so hitting this is a
 // signal (a second engine instance, a stuck transaction), not routine contention.
-const defaultBusyTimeout = 5 * time.Second
+//
+// It is exported because it is one of the four inputs to the delivery bound an
+// alert lease has to outlast (alert_claim.go), and the package that derives that
+// bound must read this value rather than copy the number.
+const DefaultBusyTimeout = 5 * time.Second
 
 // Options configures Open.
 type Options struct {
@@ -47,8 +51,18 @@ type Options struct {
 	FSProber FSProber
 
 	// BusyTimeout overrides how long a blocked writer waits. Zero uses
-	// defaultBusyTimeout.
+	// DefaultBusyTimeout.
 	BusyTimeout time.Duration
+
+	// AlertLease is how long a delivery claim on an alert row stays valid. Zero
+	// uses DefaultAlertLease.
+	//
+	// It is injected rather than fixed because the value it has to exceed is the
+	// sender's whole retry budget, and that budget is configuration
+	// (alert_claim.go). It is used at exactly one place — the claiming UPDATE,
+	// which stores claimed_at + AlertLease in the row — so an instance with a
+	// shorter lease cannot reinterpret a claim somebody else issued.
+	AlertLease time.Duration
 
 	// migrationOverride replaces the forward-step list and the version this
 	// build claims to understand. Unexported, therefore test-only: the migration
@@ -73,6 +87,11 @@ type Journal struct {
 	path string
 	clk  clock.Clock
 	fs   FSInfo
+
+	// alertLease is the delivery-claim duration this instance issues. Read only
+	// by the claiming UPDATE; every judgement about an existing claim reads the
+	// expiry stored on the row instead (alert_claim.go).
+	alertLease time.Duration
 
 	// applyHooks are the domain's injected apply functions, called inside the
 	// fill transaction (apply_hook.go). Bound once at wiring time; the mutex is
@@ -138,7 +157,11 @@ func Open(ctx context.Context, opts Options) (*Journal, error) {
 	}
 	busy := opts.BusyTimeout
 	if busy <= 0 {
-		busy = defaultBusyTimeout
+		busy = DefaultBusyTimeout
+	}
+	lease := opts.AlertLease
+	if lease <= 0 {
+		lease = DefaultAlertLease
 	}
 
 	db, err := sql.Open("sqlite", dsn(path, busy))
@@ -157,7 +180,7 @@ func Open(ctx context.Context, opts Options) (*Journal, error) {
 		return nil, fmt.Errorf("journal: connecting to %s: %w", path, err)
 	}
 
-	j := &Journal{db: db, path: path, clk: clk, fs: fs, migrationHook: opts.migrationHook, firstLegEntropy: opts.firstLegEntropy}
+	j := &Journal{db: db, path: path, clk: clk, fs: fs, alertLease: lease, migrationHook: opts.migrationHook, firstLegEntropy: opts.firstLegEntropy}
 	// Corruption is checked before the schema is touched: a migration against a
 	// damaged file would write on top of the damage. A corrupt journal means we
 	// cannot say what the engine did last, so startup is refused rather than

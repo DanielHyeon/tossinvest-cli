@@ -69,7 +69,7 @@ type Ntfy struct {
 	// HTTPClient is the transport. Tests inject an httptest client. Nil uses a
 	// client with Timeout.
 	HTTPClient *http.Client
-	// Timeout bounds one publish. Zero uses 10s.
+	// Timeout bounds one publish. Zero uses DefaultPublishTimeout.
 	Timeout time.Duration
 }
 
@@ -94,7 +94,7 @@ func (n *Ntfy) Publish(ctx context.Context, msg Notification) error {
 
 	timeout := n.Timeout
 	if timeout <= 0 {
-		timeout = 10 * time.Second
+		timeout = DefaultPublishTimeout
 	}
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()

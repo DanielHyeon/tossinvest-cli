@@ -257,12 +257,53 @@ AST 산출물 **열셋**을 **proposal·design보다 먼저** 만들었다 — �
       > "트리 전체 30분"이 아니라 "패키지마다 30분"이다. 가장 큰 `internal/journal`이
       > `-race` 없이 331초이므로 예산은 약 5.4배 남는다. **`-race`를 붙이면 그 여유가
       > 사라진다** — 위 20분 초과가 그 증거다.
-- [ ] 3.2 **RED — 시점** 열하나(R7·R9·R10·R13·R14·R15·R16·R17·R18·R20·R25)는 §4를
-      진행하며 **그 시점에 실패를 관측하고** 출력을 붙인다. 시점을 못 관측하면
-      **회귀 핀으로 강등해서 그렇게 적는다** — *"오늘도 통과한다"*를 RED라고 부르지 않는다.
-      **3판이 이 강등을 다섯 번 안 해서 3라운드가 BLOCK했다**
-- [ ] 3.3 **회귀 핀** 열(R6·R8·R11·R12·R19·R21·R22·R23·R24·**R26**)은 테스트 주석에
-      *"이것은 RED가 아니다"*와 위 표의 **「배제하는 설계」 문구를 그대로** 적는다
+- [x] 3.2 **RED — 시점 열하나를 전부 관측했다 (2026-08-12). 강등 0건.**
+
+      ⚠ **먼저 정직하게 적는다 — 관측 순서가 계획과 다르다.** §4를 한 번에 구현하고
+      **그다음에** 각 시점을 재현했다. 계획은 §4를 진행하며 그 자리에서 보는 것이었다.
+      재현은 **해당 task가 더하는 것 하나만** 되돌려 그 시점의 코드를 만들고 테스트를
+      돌린 것이며, 스크립트는 `scratchpad/observe_red.py`·`observe_red_obs.py`다.
+      **이것이 「그 자리에서 본 것」과 같지 않다는 것을 리뷰가 판정해야 한다** —
+      되돌릴 자리를 내가 골랐기 때문이다. 다만 열하나 전부에서 실패가 나왔고,
+      실패 메시지는 그 시점의 결함을 그대로 말한다.
+
+      | R | 시점 (되돌린 것 하나) | 관측한 실패 |
+      |---|---|---|
+      | R9 | §4.3d — 만료 술어 | `disposition = held-elsewhere past the lease — a dead sender would hold this alert forever` |
+      | R10 | §4.3e — 역행 술어 | `disposition = held-elsewhere after the clock stepped back — the row would be locked for the whole step plus the lease` |
+      | R13 | §4.5 — 토큰 술어 | `outcome = applied, want lease-lost` · `state = "DELIVERED", want "PENDING" — the stalled sender settled somebody else's row` |
+      | R14 | 같음 | `outcome = applied, want lease-lost — the name matched and the lease did not` |
+      | R16 | §4.4b — 기록 경로가 임차를 잡는다 | `recorded row holds a lease (token=… at=…) — the recorder never settles, so nothing would release it` |
+      | R17 | §4.6 — 재무장의 네 열 초기화 | `disposition = held-elsewhere on the re-armed row — the new episode inherited the old episode's lease` |
+      | R25 | §4.10 — alertSelect 의 세 열 | `PendingAlerts: journal: scanning an alert: sql: expected 15 destination arguments in Scan, not 18` |
+      | R7 | §4.5b — 포기 시 해제 | `the abandoned row is still leased by "notifier" since … — nothing can send it until the lease expires` |
+      | R15 | §4.5 — 토큰 술어 | `publish attempts = 4, want 1 — the remaining budget belongs to whoever holds the row now` |
+      | R18 | §4.5c — 이벤트 셋 분리 | `contention was reported as engine.alert_undelivered — that line means the operator was not told, and here another sender is telling them` |
+      | R20 | §4.1b — 유도의 공개 | `internal/obs/a099_lease_events_test.go:243:15: undefined: obs.DefaultAlertDeliveryBound` (**컴파일 실패**) |
+
+      > **R25의 빨간불은 단언이 아니라 scan arity 오류다.** 열을 안 고르면 `scanAlerts`가
+      > 18개를 받으려다 15개를 만난다. 그 시점의 실패로는 참이지만 **「투영이 없다」를
+      > 단언한 것은 아니다** — 열을 고르되 투영만 빼는 구현은 이 빨간불을 안 낸다.
+      > 그 경우를 잡는 것은 같은 테스트의 `free` 행 단언이다.
+- [x] 3.3 **회귀 핀 열을 전부 썼고, 각 테스트 주석이 배제하는 설계를 이름으로 적는다.**
+
+      | R | 어디 | 배제하는 설계 |
+      |---|---|---|
+      | R6 | `journal/a099_regression_pins_test.go` `TestRecordingAFailedAttemptKeepsTheLease` | 「실패 기록이 임차를 푼다」(초안) |
+      | R8 | `obs/a099_regression_pins_test.go` `TestAPublishedButUnsettledRowKeepsItsLease` | 「`deliver:381` 이탈에서 해제한다」 |
+      | R11 | `journal/a099_lease_lifecycle_test.go` `TestAClaimJustIssuedIsNotStolenAtTheSkewBoundary` | 역행 경계를 `>=`로 쓴 구현 — **경계값 그 자체**를 잰다 |
+      | R12 | 같은 파일 `TestALeaseHolderWithAShorterLeaseCannotStealALiveClaim` | 「만료를 저장하지 않고 판정자의 lease로 유도한다」(3판 C1) |
+      | R19 | `journal/a099_regression_pins_test.go` `TestAFailedV31MigrationLeavesTheJournalAtV30` | — 일반 성질은 `migration_v5_test.go`가 이미 지고, **v31 케이스를 여기서 더한다** |
+      | R21 | 같은 파일 `TestARowBeingSentIsStillUndelivered` | D1의 안 A(`SENDING` 상태) |
+      | R22 | 같은 파일 `TestAcknowledgementIgnoresTheLease` | 승인 술어에 임차를 넣는 것 |
+      | R23 | `obs/a099_regression_pins_test.go` `TestContentionNeitherLocksNorUnlocksTheEntryGate` | 2판 D10(경합에 래치) **와** 3판 C6(경합에 유도) 둘 다 |
+      | R24 | `journal/a099_regression_pins_test.go` `TestOneSenderAloneDecidesExactlyAsBefore` | 취득 실패를 발송 안 함으로 확대해 단독 발송자의 결정까지 바꾸는 구현 — **결정표 일곱 행**을 돈다 |
+      | R26 | 같은 파일 `TestAnAcknowledgedRowRefusesTheSendersSettlement` | 토큰 술어를 더하면서 상태 술어를 느슨하게 만드는 구현 |
+
+      > **R23이 못 덮는 자리를 테스트 주석과 여기 둘 다에 적는다.** 한 호출 안에서
+      > **같은 새 reason을 `Block` 했다가 `Clear`** 하면 `Blocks()` 비교로는 안 잡힌다.
+      > `Clear`의 호출자는 `Acknowledge` 하나뿐이라 그런 모양이 이 경로에 없고,
+      > 구조적 근거는 §5.3b의 다섯 자리 빈 diff다. `revision`은 비공개라 외부 테스트가 못 읽는다.
 - [x] 3.4 **임차 기간을 유도식으로 정한다** (design C4). 상수 하나를 고르는 것이 아니다.
       `bound`는 **재시도 예산 전체 + SQLite 쓰기 대기**를 덮어야 한다 — 오늘 기본값
       유도는 `3×(10+5) + 2×2 + 5 = 54초`(design D4).
@@ -355,7 +396,10 @@ AST 산출물 **열셋**을 **proposal·design보다 먼저** 만들었다 — �
       > ⚠ `-race`는 이 패키지에서 **비용이 크다** — `internal/journal`이
       > `-race` 없이 331초인데 `-race`로는 20분을 넘겼다(§3.1). `-race` 실행에는
       > `-timeout`을 따로 넉넉히 준다.
-- [ ] 3.7 **진입 게이트의 다섯 자리가 안 바뀌었음을 R23이 고정한다**(C6의 표).
+- [x] 3.7 **진입 게이트의 다섯 자리가 안 바뀌었음을 R23이 고정한다**(C6의 표).
+      `TestContentionNeitherLocksNorUnlocksTheEntryGate`가 **양방향**으로 잰다 —
+      무관한 reason의 기존 block이 살아남는 것(해제 안 함)과 새 block이 안 생기는 것
+      (차단 안 함). 못 덮는 자리는 §3.3의 표 아래에 적었다. 구조적 근거는 §5.3b다.
       3판은 이 자리에 *"R5가 프로덕션 동작 변화를 고정한다"*를 적었다 —
       **사용자 결정 5-1로 그 동작 변화 자체가 없어졌다.**
       대신 R23이 *"경합은 게이트를 잠그지도 풀지도 않는다"*를 고정하고,
@@ -365,39 +409,39 @@ AST 산출물 **열셋**을 **proposal·design보다 먼저** 만들었다 — �
 
 **모든 값은 design D-CORE가 정본이다.** 아래 task는 그것을 가리키고 다시 적지 않는다.
 
-- [ ] 4.1 `schemaV31` — `alert_outbox`에 **열 넷**(design C1): `claim_token`·`claimed_by`·
+- [x] 4.1 `schemaV31` — `alert_outbox`에 **열 넷**(design C1): `claim_token`·`claimed_by`·
       `claimed_at`·`claim_expires_at`. `SchemaVersion` 30 → 31.
       design D6의 additive 규칙 4행 대조를 커밋 메시지에 남긴다
-- [ ] 4.1b `Options.AlertLease`를 더하고 `Open`이 비면 `DefaultAlertLease`를 채운다
+- [x] 4.1b `Options.AlertLease`를 더하고 `Open`이 비면 `DefaultAlertLease`를 채운다
       (design C4). **`obs.DefaultAlertDeliveryBound()`도 같이 만든다** — R20이
       하드코딩 없이 유도를 단언하려면 그 값이 공개여야 한다 (4라운드 B).
       **`Open`이 값을 저장했는지도 단언한다** — 상수만 맞고 배선이 빠지면 lease 0으로
       claim해 임차가 즉시 만료된다 (4라운드 A-P5). `journal.go:139-142`의 `BusyTimeout` 자리 **바로 옆**이고 같은 모양이다.
       **a099는 값을 주입하지 않는다** — 주입은 a098이다(§7.4)
-- [ ] 4.2 마이그레이션 테스트 — v30 DB를 만들고 v31로 올린 뒤 **기존 행이 claim 가능**임을
+- [x] 4.2 마이그레이션 테스트 — v30 DB를 만들고 v31로 올린 뒤 **기존 행이 claim 가능**임을
       확인한다(`claim_token=''`·`claim_expires_at IS NULL`)
-- [ ] 4.3 `ClaimAlertForDelivery(ctx, a, remindAfter, claimant)`가 임차를 **CAS로**
+- [x] 4.3 `ClaimAlertForDelivery(ctx, a, remindAfter, claimant)`가 임차를 **CAS로**
       취득하고 **`ClaimResult`를 돌려준다** (design C3).
       이 단계의 취득 조건은 **`claim_token = ''`뿐이다** — 만료·역행은 4.3d·4.3e다.
       취득 UPDATE는 **네 열을 함께 쓴다**(C1).
       **⛔ 취득 실패는 `owed=false`가 아니다** — `ClaimHeldElsewhere`다
-- [ ] 4.3d **만료 술어를 더한다** — `claim_expires_at <= :now` (design C2).
+- [x] 4.3d **만료 술어를 더한다** — `claim_expires_at <= :now` (design C2).
       `:now`는 원장이 만들고 만료는 **행에 저장된 값**을 읽는다.
       **판정자의 `AlertLease`는 이 술어에 안 들어간다** (사용자 결정 6-1).
       **R9가 이 직전에 빨갛다**
-- [ ] 4.3e **역행 술어를 더한다** — `claimed_at > :now + :skew` (design C2).
+- [x] 4.3e **역행 술어를 더한다** — `claimed_at > :now + :skew` (design C2).
       경계는 **엄격 부등호**이고 skew는 §3.4b가 정한다. **R10이 이 직전에 빨갛다**
-- [ ] 4.3b **`claimAndDeliver`가 `ClaimHeldElsewhere`를 받으면 발송을 건너뛴다**(C6).
+- [x] 4.3b **`claimAndDeliver`가 `ClaimHeldElsewhere`를 받으면 발송을 건너뛴다**(C6).
       `owed && !sent`(`notifier.go:217`)는 그것을 못 본다 — 그 조건도 같이 본다.
       **⛔ 진입 게이트를 아무 방향으로도 안 건드린다** — `Gate.Block`도 `Gate.Clear`도
       부르지 않는다 (2라운드 A-P1 · 3라운드 A-P1 · 사용자 결정 5-1).
       남기는 것은 **구조화 로그 한 줄**뿐이다(§4.5c)
-- [ ] 4.4 `ClaimAlertByID(ctx, id, claimant)` 신설 (design D7·C3).
+- [x] 4.4 `ClaimAlertByID(ctx, id, claimant)` 신설 (design D7·C3).
       **`lease`를 인자로 받지 않는다** — 임차 기간은 원장의 것이다 (C4)
-- [ ] 4.4b `recordAlert`를 비공개로 빼고 `EnqueueAlert`가 그것만 부른다 (design D13).
+- [x] 4.4b `recordAlert`를 비공개로 빼고 `EnqueueAlert`가 그것만 부른다 (design D13).
       **플래그 인자로 가르지 않는다.** 안 그러면 `replay.go:551`이 쓴 행이
       **아무도 안 푸는 임차 뒤에 갇힌다**
-- [ ] 4.5 정산 셋을 **`SettleOutcome`으로 가른다** (design C3 · D3의 ⚠⚠):
+- [x] 4.5 정산 셋을 **`SettleOutcome`으로 가른다** (design C3 · D3의 ⚠⚠):
       `MarkAlertDelivered` 성공 시 임차를 푼다 ·
       `MarkAlertAttemptFailed` **임차를 유지한다** ·
       `ReleaseAlertClaim` **신설** — 포기할 때만 푼다.
@@ -407,7 +451,7 @@ AST 산출물 **열셋**을 **proposal·design보다 먼저** 만들었다 — �
       `SettleAlreadySettled`는 **오류가 아니고**(운영자 승인이 정상 경로다)
       `SettleNotFound`는 **오류다**.
       기존 호출 넷을 고친다 — `notifier.go:356`·`:384`·`:452`·`:455`
-- [ ] 4.5b `ReleaseAlertClaim`을 **두 자리**에서 부른다
+- [x] 4.5b `ReleaseAlertClaim`을 **두 자리**에서 부른다
       (내가 셋으로 늘렸고 1라운드 B-P3이 하나를 되돌렸다):
 
       | 자리 | 상황 | 해제 |
@@ -418,39 +462,75 @@ AST 산출물 **열셋**을 **proposal·design보다 먼저** 만들었다 — �
       | `deliver` 이탈 `:358` | 성공 | `MarkAlertDelivered`가 정산과 함께 푼다 |
 
       **루프 안(B8~B10)에서 부르면 안 된다**: `:387-391`이 아직 재시도한다
-- [ ] 4.5c 「전송 실패」와 「임차 상실」과 「만료 탈취」를 **서로 다른 로그 이벤트**로
+- [x] 4.5c 「전송 실패」와 「임차 상실」과 「만료 탈취」를 **서로 다른 로그 이벤트**로
       낸다 (design D12). 오늘 `deliver:385`와 `Flush:452`가 전부 같은 자리로 흘려보낸다.
       **이벤트를 내는 것은 obs다** — `Journal`에는 sink가 없고, 그래서 원장은
       `ClaimResult.Stole*`·`SettleOutcome`으로 **사실만 돌려준다**(C3).
       **로그에 넣는 것**: 이벤트 이름 · 행 id · `claimed_by` · 임차 나이.
       **넣지 않는 것**: **토큰 원문** · 계좌 · 알림 본문 · payload (불변식 8) —
       토큰은 배제의 근거이고, 새면 그것을 읽은 프로세스가 남의 임차를 정산할 수 있다
-- [ ] 4.6 재무장 UPDATE(`outbox.go:229-236`)가 **임차 열 넷도 초기화**한다 —
+- [x] 4.6 재무장 UPDATE(`outbox.go:229-236`)가 **임차 열 넷도 초기화**한다 —
       값은 **C5의 「네 열 초기화」가 정본**이다.
       새 episode는 새 발송이고, 이전 episode의 임차를 물려받으면 안 된다.
       `:198-201`의 주석이 그 원칙을 이미 적는다 — **임차 열은 그 원칙의 예외가 아니다**
-- [ ] 4.7 `Flush`가 행마다 `ClaimAlertByID`를 부르고 `ClaimHeldElsewhere`인 행을 건너뛴다.
+- [x] 4.7 `Flush`가 행마다 `ClaimAlertByID`를 부르고 `ClaimHeldElsewhere`인 행을 건너뛴다.
       **`n.mu`의 구간은 안 건드린다** — 그것이 a092
-- [ ] 4.8 `outbox.go:165-168`의 문장을 지운다 —
+- [x] 4.8 `outbox.go:165-168`의 문장을 지운다 —
       *"Exclusion against a concurrent claimer is the caller's"*.
       **그 문장이 이 change가 반증한 것이다.** 지우고 원장이 무엇을 보증하는지,
       그리고 **무엇을 보증하지 않는지**(C7) 적는다
-- [ ] 4.9 `claimAndDeliver`의 doc `notifier.go:230-234`도 같은 이유로 고친다.
+- [x] 4.9 `claimAndDeliver`의 doc `notifier.go:230-234`도 같은 이유로 고친다.
       **뮤텍스는 그대로 두되** 무엇이 배제를 지는지는 이제 다르다
-- [ ] 4.10 `Alert`·`alertSelect`·`scanAlerts`에 **임차 상태를 투영한다** (design D12).
+- [x] 4.10 `Alert`·`alertSelect`·`scanAlerts`에 **임차 상태를 투영한다** (design D12).
       운영자의 밀린 목록이 *"누가 언제부터 언제까지 들고 있는지"*를 보여야 한다 —
       `claimed_by`·`claimed_at`·`claim_expires_at`.
       **토큰 원문은 투영하지 않는다.** **R25가 이 직전에 빨갛다**
-- [ ] 4.11 **RED 열다섯(R1~R4·R7·R9·R10·R13~R18·R20·R25)이 GREEN이고,
-      회귀 핀 아홉(R6·R8·R11·R12·R19·R21~R24)이 계속 GREEN이다**
+- [x] 4.11 **RED 열다섯이 GREEN이고 회귀 핀 열이 GREEN이다** (2026-08-12).
+      R1~R4는 `a099_claim_excludes_the_second_sender_test.go` 둘, R7·R15·R18·R20은
+      `obs/a099_lease_events_test.go`, R9·R10·R13·R14·R16·R17·R25는
+      `journal/a099_lease_lifecycle_test.go`, 회귀 핀 열은 §3.3의 표대로다.
+      **핀은 아홉이 아니라 열이다** — 4판 표가 R26을 빠뜨렸고 등록부에는 있었다.
+
+      ⚠ **기존 테스트 다섯 파일을 새 계약으로 옮겼다.** API가 바뀌었으니 불가피하고,
+      단언의 뜻은 그대로 두되 **한 곳에서 뜻이 실제로 갈라졌다.**
+      `TestClaimingAnUndeliveredAlertStillOwesDelivery`(a096)가 그것이다 — 예전에는
+      실패 뒤 재청구가 `owed=true` 하나였는데 이제 **`ClaimHeldElsewhere`**다.
+      행이 미정산인 것은 그대로이고, 그 위에 「지금 누가 들고 있다」가 더해졌다.
+      테스트 주석에 그 갈라짐을 적었고 `ClaimSettled`가 아님을 함께 단언한다.
+      옮긴 파일: `a096_claim_for_delivery_test.go` · `a096b_round2_test.go` ·
+      `a097_rearm_is_a_new_episode_test.go` · `outbox_test.go` ·
+      `a099_claim_excludes_the_second_sender_test.go`(R1의 배치를 `EnqueueAlert`로 바꿨다 —
+      claim으로 배치하면 두 경합자가 서로가 아니라 **배치에** 진다).
+
+      `outbox_test.go`의 `TestMarkingANonPendingAlertIsRefused`도 계약이 갈라진 자리다.
+      예전에는 이중 정산과 없는 id가 **같은 `ErrAlertNotFound`**였고, 이제 각각
+      `SettleAlreadySettled`(오류 아님 — 운영자 승인이 정상 경로다)와
+      `SettleNotFound`(오류다)다. C3의 표가 정본이다.
 
 ## 5. VERIFY
 
-- [ ] 5.1 `go test ./...` — upstream 회귀 없음
+- [x] 5.1 **`go test ./...` — exit 0, 실패 0건 (2026-08-12, `-timeout 30m -count=1`).**
+      `internal/journal` 515.3s · `internal/obs` 37.0s. **이것이 이 브랜치의 `make test`를
+      다시 초록으로 만든다** — `7f3cbb03` 이후 a099의 RED 넷이 트리 전체를 빨갛게 두고 있었고
+      a100·a101의 게이트도 그것 하나로 막혀 있었다 (a101 review.md 「게이트 최종 결과」).
+
+      ⚠ **트리 전체를 돌리다 기존 테스트 하나가 깨졌고 고쳤다** — `schema_test.go`의
+      `TestSchemaTablesAndColumns`가 `alert_outbox`의 열 목록을 통째로 고정한다.
+      임차 열 넷을 want에 더했다. **이 테스트는 계획 어디에도 없었다**: §4.1은 마이그레이션
+      규칙 대조만 요구했고, 「스키마에 열을 더하면 그 모양을 고정한 테스트가 깨진다」는
+      패키지 전량을 돌리기 전까지 안 보였다.
 - [ ] 5.2 `go test -race ./internal/journal/... ./internal/obs/...`
-- [ ] 5.3 **읽기 경로의 술어가 안 바뀌었음을 diff로 확인** (design D1의 표 · C5) —
-      `UndeliveredCount`·`PendingAlerts`·`AcknowledgeAlert`의 `WHERE`가 그대로
-- [ ] 5.3b **진입 게이트 다섯 자리의 diff가 비어 있음을 확인한다** (design C6의 표 1~5행):
+- [x] 5.3 **읽기 경로의 술어가 안 바뀌었다 — diff로 확인 (2026-08-12).**
+      `git diff internal/journal/outbox.go`에서 `UndeliveredCount`·`PendingAlerts`·
+      `AcknowledgeAlert`의 `WHERE`에 닿는 줄이 **0건**이다. 세 함수의 술어는
+      상태만 보고 임차를 안 본다 — 그것이 D1이 안 A(`SENDING` 상태)를 버린 이유이고
+      R21·R22가 잰다. `alertSelect`는 **투영만** 늘었고 `WHERE`는 호출자 쪽에 그대로 있다.
+- [x] 5.3b **진입 게이트 다섯 자리의 diff가 비어 있다 (2026-08-12).**
+      `git diff internal/obs/notifier.go`에서 `Gate.Block`·`Gate.Clear`·`n.Gate`에 닿는
+      줄이 **0건**이고, 현재 파일의 `n.Gate` 자리는 정확히 다섯이다(Block 셋 · Clear 둘).
+      여섯째 자리는 `internal/execgw`이고 §5.4가 그 패키지의 빈 diff로 잡는다.
+      원래 문장은 아래에 남긴다 — 자리 번호가 편집으로 밀렸으므로 줄 번호가 아니라
+      호출 자체로 셌다:
       `notifier.go:261-262`·`:378-379`·`:403-404`·`:481-482`·`:510-511`.
       **사용자 결정 5-1은 이 다섯을 하나도 안 건드린다.** 하나라도 바뀌면
       승인된 규범을 건드린 것이고 `MODIFIED` 없이는 못 나간다.
@@ -460,13 +540,17 @@ AST 산출물 **열셋**을 **proposal·design보다 먼저** 만들었다 — �
       > 그 자리는 **a098의 `internal/execgw` 편집**이다(a098 D8.2 · task 4.3.3).
       > **이 task가 재는 것은 다섯뿐이고**, 여섯째가 a099의 diff에 나타나면
       > **범위 위반**이다 — 5.4가 `internal/execgw`의 빈 diff로 그것을 잡는다
-- [ ] 5.4 `internal/app/engine`·`internal/execgw`·`cmd/`의 diff가 **비어 있음**을 확인.
-      a099는 journal과 obs만 건드린다. **살아 있는 설정 주입(C4)과 `tossctl`은 a098이다**
-- [ ] 5.5 **만료 판정이 `claim_expires_at`만 읽는지 확인한다** —
-      `rg 'AlertLease' -- internal/journal`의 결과가 **`Open`의 기본값 채우기와
-      claim UPDATE 한 자리뿐**이어야 한다. 판정 술어에 lease가 나타나면
-      3판의 결함이 살아 있는 것이다 (사용자 결정 6-1 · 3라운드 A-P5).
-      **역행 술어만 `claimed_at`을 읽는다**
+- [x] 5.4 **범위 밖 세 곳의 diff가 비어 있다 (2026-08-12).**
+      `git diff --stat -- internal/app/engine internal/execgw cmd/` → 출력 없음.
+      C6 표의 여섯째 행(배달 실행자 사망 시 `Block`)이 a099의 diff에 없다는 것도
+      이것으로 확인된다 — 그 자리는 `internal/execgw`이고 a098의 것이다.
+- [x] 5.5 **만료 판정이 `claim_expires_at`만 읽는다 (2026-08-12).**
+      `AlertLease`/`alertLease`의 비테스트 등장 자리는 넷이고 전부 배선이다 —
+      `Options.AlertLease`(선언) · `Open`의 기본값 채우기 · `Journal.alertLease`(필드) ·
+      `acquireAlertClaimTx`에 넘기는 두 호출자. 그 함수 안에서 lease는
+      **취득 UPDATE의 `claim_expires_at` 계산 한 자리에서만** 쓰인다.
+      `alertClaimable` 술어에는 `?` 둘(`:now`·`:now+skew`)뿐이고 lease가 없다.
+      역행만 `claimed_at`을 읽는다. R12가 이것을 두 인스턴스로 관측한다.
 - [ ] 5.6 편집 후 AST를 다시 뽑고 Map을 최신화한다 (WORKFLOW.md §Function Logic Map)
 - [ ] 5.7 **3.5의 지연 값을 GREEN 이후에 다시 잰다.** 3.5는 예측이고 이것이 실측이다
 

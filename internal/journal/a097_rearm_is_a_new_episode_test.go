@@ -46,20 +46,21 @@ func TestReArmingCarriesTheCauseThatReArmedIt(t *testing.T) {
 	ctx := context.Background()
 
 	first := a097Alert("order-hours-closed")
-	id, _, err := j.ClaimAlertForDelivery(ctx, first, claimRemind)
+	claim, err := j.ClaimAlertForDelivery(ctx, first, claimRemind, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery: %v", err)
 	}
-	if err := j.MarkAlertDelivered(ctx, id); err != nil {
+	id := claim.ID
+	if _, err := j.MarkAlertDelivered(ctx, id, claim.Token); err != nil {
 		t.Fatalf("MarkAlertDelivered: %v", err)
 	}
 
 	clk.Advance(claimRemind)
 	second := a097Alert("insufficient-quantity")
-	if _, owed, err := j.ClaimAlertForDelivery(ctx, second, claimRemind); err != nil {
+	if again, err := j.ClaimAlertForDelivery(ctx, second, claimRemind, testClaimant); err != nil {
 		t.Fatalf("ClaimAlertForDelivery (reminder): %v", err)
-	} else if !owed {
-		t.Fatal("owed = false after the window elapsed")
+	} else if again.Disposition != ClaimAcquired {
+		t.Fatalf("disposition = %v after the window elapsed", again.Disposition)
 	}
 
 	got, err := j.LookupAlert(ctx, id)
@@ -91,17 +92,20 @@ func TestReArmingResetsTheAttemptCount(t *testing.T) {
 	ctx := context.Background()
 
 	alert := a097Alert("order-hours-closed")
-	id, _, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind)
+	claim, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery: %v", err)
 	}
+	id := claim.ID
 	// Two failed sends and then a successful one: attempts = 3 for episode one.
+	// All three settle under the one claim the sender took, which is what a
+	// sender working through its retry budget actually does.
 	for i := 0; i < 2; i++ {
-		if err := j.MarkAlertAttemptFailed(ctx, id, "transport down"); err != nil {
+		if _, err := j.MarkAlertAttemptFailed(ctx, id, claim.Token, "transport down"); err != nil {
 			t.Fatalf("MarkAlertAttemptFailed: %v", err)
 		}
 	}
-	if err := j.MarkAlertDelivered(ctx, id); err != nil {
+	if _, err := j.MarkAlertDelivered(ctx, id, claim.Token); err != nil {
 		t.Fatalf("MarkAlertDelivered: %v", err)
 	}
 	if before, err := j.LookupAlert(ctx, id); err != nil {
@@ -111,10 +115,10 @@ func TestReArmingResetsTheAttemptCount(t *testing.T) {
 	}
 
 	clk.Advance(claimRemind)
-	if _, owed, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind); err != nil {
+	if again, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant); err != nil {
 		t.Fatalf("ClaimAlertForDelivery (reminder): %v", err)
-	} else if !owed {
-		t.Fatal("owed = false after the window elapsed")
+	} else if again.Disposition != ClaimAcquired {
+		t.Fatalf("disposition = %v after the window elapsed", again.Disposition)
 	}
 
 	got, err := j.LookupAlert(ctx, id)
@@ -148,11 +152,12 @@ func TestReArmingClearsThePreviousEpisodeTimestamps(t *testing.T) {
 	ctx := context.Background()
 
 	alert := a097Alert("order-hours-closed")
-	id, _, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind)
+	claim, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery: %v", err)
 	}
-	if err := j.MarkAlertDelivered(ctx, id); err != nil {
+	id := claim.ID
+	if _, err := j.MarkAlertDelivered(ctx, id, claim.Token); err != nil {
 		t.Fatalf("MarkAlertDelivered: %v", err)
 	}
 	if before, err := j.LookupAlert(ctx, id); err != nil {
@@ -164,11 +169,11 @@ func TestReArmingClearsThePreviousEpisodeTimestamps(t *testing.T) {
 	}
 
 	clk.Advance(claimRemind)
-	if _, owed, err := j.ClaimAlertForDelivery(ctx, a097Alert("insufficient-quantity"),
-		claimRemind); err != nil {
+	if again, err := j.ClaimAlertForDelivery(ctx, a097Alert("insufficient-quantity"),
+		claimRemind, testClaimant); err != nil {
 		t.Fatalf("ClaimAlertForDelivery (reminder): %v", err)
-	} else if !owed {
-		t.Fatal("owed = false after the window elapsed")
+	} else if again.Disposition != ClaimAcquired {
+		t.Fatalf("disposition = %v after the window elapsed", again.Disposition)
 	}
 
 	got, err := j.LookupAlert(ctx, id)
@@ -211,10 +216,11 @@ func TestRecoveringAnUnknownStateIgnoresTheReminderWindow(t *testing.T) {
 	ctx := context.Background()
 
 	alert := a097Alert("order-hours-closed")
-	id, _, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind)
+	claim, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery: %v", err)
 	}
+	id := claim.ID
 	if _, err := j.db.ExecContext(ctx,
 		`UPDATE alert_outbox SET state = 'QUARANTINED' WHERE id = ?`, id); err != nil {
 		t.Fatalf("forcing an unknown state: %v", err)
@@ -222,13 +228,13 @@ func TestRecoveringAnUnknownStateIgnoresTheReminderWindow(t *testing.T) {
 
 	// remindAfter = 0 is what EnqueueAlert passes: a caller that records without
 	// delivering and therefore holds no reminder policy.
-	_, owed, err := j.ClaimAlertForDelivery(ctx, alert, 0)
+	again, err := j.ClaimAlertForDelivery(ctx, alert, 0, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery (record-only): %v", err)
 	}
-	if !owed {
-		t.Error("owed = false for an unrecognised state under remindAfter = 0 — " +
-			"an unknown state is not evidence of delivery whatever the window is")
+	if again.Disposition != ClaimAcquired {
+		t.Errorf("disposition = %v for an unrecognised state under remindAfter = 0 — "+
+			"an unknown state is not evidence of delivery whatever the window is", again.Disposition)
 	}
 	if got := alertState(t, j, id); got != AlertPending {
 		t.Errorf("state = %q, want %q — without the repair MarkAlertDelivered "+
@@ -245,24 +251,25 @@ func TestARecordOnlyCallerDoesNotReArmADeliveredRow(t *testing.T) {
 	ctx := context.Background()
 
 	alert := a097Alert("order-hours-closed")
-	id, _, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind)
+	claim, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery: %v", err)
 	}
-	if err := j.MarkAlertDelivered(ctx, id); err != nil {
+	id := claim.ID
+	if _, err := j.MarkAlertDelivered(ctx, id, claim.Token); err != nil {
 		t.Fatalf("MarkAlertDelivered: %v", err)
 	}
 
 	// Well past any window, to show it is the zero and not the elapsed time that
 	// decides.
 	clk.Advance(24 * time.Hour)
-	_, owed, err := j.ClaimAlertForDelivery(ctx, alert, 0)
+	again, err := j.ClaimAlertForDelivery(ctx, alert, 0, testClaimant)
 	if err != nil {
 		t.Fatalf("ClaimAlertForDelivery (record-only): %v", err)
 	}
-	if owed {
-		t.Error("owed = true under remindAfter = 0 on a delivered row — " +
-			"a caller that does not deliver holds no reminder policy")
+	if again.Disposition != ClaimSettled {
+		t.Errorf("disposition = %v under remindAfter = 0 on a delivered row — "+
+			"a caller that does not deliver holds no reminder policy", again.Disposition)
 	}
 	if got := alertState(t, j, id); got != AlertDelivered {
 		t.Errorf("state = %q, want %q — recording must not restart a settled delivery",

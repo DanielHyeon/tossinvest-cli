@@ -233,15 +233,22 @@ func (n *Notifier) notifyCritical(ctx context.Context, e Event) error {
 // mark a row that is already DELIVERED, which is exactly the `no such alert`
 // line the 2026-08-08 storm left behind (a096 round 1, blocker 1).
 //
+// The mutex stays, and what it is for has changed. It excludes senders *inside
+// this Notifier* and never did anything else — a second Notifier, or a flush on
+// another one, walked straight past it. Exclusion between senders is now the
+// ledger's, held as a lease on the row itself (journal/alert_claim.go), and this
+// lock is the local half of it.
+//
 // It reports whether the send happened and whether it was owed at all. A send
-// that was never owed is not a delivery failure and must not escalate.
+// that was never owed is not a delivery failure and must not escalate — and
+// neither is a send another holder took over.
 func (n *Notifier) claimAndDeliver(
 	ctx context.Context, record journal.Alert, e Event,
 ) (sent bool, owed bool, err error) {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
-	id, owed, err := n.Journal.ClaimAlertForDelivery(ctx, record, n.remindAfter())
+	claim, err := n.Journal.ClaimAlertForDelivery(ctx, record, n.remindAfter(), n.claimant())
 	if err != nil {
 		// Nothing was written and nothing was sent, so this is strictly worse
 		// than the failures below it: a spent retry budget at least leaves a
@@ -263,7 +270,8 @@ func (n *Notifier) claimAndDeliver(
 		}
 		return false, false, err
 	}
-	if !owed {
+	switch claim.Disposition {
+	case journal.ClaimSettled:
 		// The operator already has this one and the reminder window has not
 		// elapsed. Sending again would tell them nothing new and would spend the
 		// channel they need for the next distinct condition.
@@ -272,8 +280,72 @@ func (n *Notifier) claimAndDeliver(
 		// Notify ahead of the grading branch, so the record of how long the
 		// condition persisted does not depend on whether it was sent.
 		return false, false, nil
+	case journal.ClaimHeldElsewhere:
+		// Another sender is publishing this row right now. Skipping is the
+		// exclusion doing its job, so this is not a failure and nothing is owed
+		// of *this* observation.
+		//
+		// The entry gate is not touched — not blocked, not cleared. Blocking
+		// would latch a reason that has no automatic release on an event that is
+		// entirely normal, leaving a successful delivery behind a lock nobody
+		// can open; clearing would let a routine race unlock a block a real
+		// failure put there. Contention is logged and nothing else.
+		if n.Log != nil {
+			n.Log.Event(EventAlertClaimHeld,
+				FieldEvent, string(e.Type),
+				"alert_id", claim.ID,
+				"claimed_by", claim.ClaimedBy,
+				"claim_age_ms", claimAgeMS(claim.ClaimedAt, n.now()))
+		}
+		return false, false, nil
 	}
-	return n.deliver(ctx, id, e), true, nil
+
+	if claim.Stole && n.Log != nil {
+		// Acquired, but from somebody who never came back for it.
+		n.Log.Warn(EventAlertClaimStolen,
+			FieldEvent, string(e.Type),
+			"alert_id", claim.ID,
+			"claimed_by", claim.StoleBy,
+			"claim_age_ms", claimAgeMS(claim.StoleAt, n.now()))
+	}
+	sent, lost := n.deliver(ctx, claim.ID, claim.Token, e)
+	if lost {
+		// The row moved on without us. Nothing is owed of this observation, so
+		// the caller does not escalate: the operating mode tightens on sustained
+		// *delivery* failure, and losing a race to another sender is not that.
+		return sent, false, nil
+	}
+	return sent, true, nil
+}
+
+// claimant names this sender in the lease it takes. It is for the operator and
+// the log; exclusion rests on the token, never on the name.
+func (n *Notifier) claimant() string {
+	if name := strings.TrimSpace(n.AccountRef); name != "" {
+		return "notifier:" + name
+	}
+	return "notifier"
+}
+
+// now is the notifier's clock, which the tests replace.
+func (n *Notifier) now() time.Time {
+	if n.Clock != nil {
+		return n.Clock.Now()
+	}
+	return clock.System().Now()
+}
+
+// claimAgeMS is how long the lease being reported has existed. Zero when the
+// stamp is missing, which is what an unparsable or absent claimed_at means.
+func claimAgeMS(since, now time.Time) int64 {
+	if since.IsZero() {
+		return 0
+	}
+	age := now.Sub(since)
+	if age < 0 {
+		return 0
+	}
+	return age.Milliseconds()
 }
 
 // remindAfter is the configured reminder window, or the default.
@@ -338,7 +410,16 @@ func (n *Notifier) escalate(ctx context.Context, e Event) {
 // goroutines publishing the same backlog would double-send and race on the
 // attempt counter — and one claim-and-send at a time, or two observations of
 // the same condition each conclude the send is owed and each publish.
-func (n *Notifier) deliver(ctx context.Context, id int64, e Event) bool {
+// The lease travels with id: every settlement below presents the token this
+// send was claimed under, and a settlement the ledger refuses because the token
+// no longer matches ends the send then and there. A sender that stalled past its
+// own lease has already lost the row to somebody else, and the worst thing it
+// can do at that point is keep publishing.
+//
+// The second return says the lease left this sender — through contention or an
+// operator's acknowledgement. The caller uses it to keep quiet: neither outcome
+// is this observation's delivery failure, so neither escalates.
+func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event) (sent bool, lost bool) {
 	attempts := n.Attempts
 	if attempts <= 0 {
 		attempts = DefaultCriticalAttempts
@@ -353,9 +434,29 @@ func (n *Notifier) deliver(ctx context.Context, id int64, e Event) bool {
 		}
 		err := n.Publisher.Publish(ctx, msg)
 		if err == nil {
-			markErr := n.Journal.MarkAlertDelivered(ctx, id)
+			settled, markErr := n.Journal.MarkAlertDelivered(ctx, id, token)
 			if markErr == nil {
-				return true
+				switch settled.Outcome {
+				case journal.SettleApplied:
+					return true, false
+				case journal.SettleLeaseLost, journal.SettleAlreadySettled:
+					// The push went out and the row was not ours to settle. It
+					// is out either way, so the send happened; what did not
+					// happen is our record of it, and the holder that owns the
+					// row now writes that.
+					//
+					// Not a gate event. Losing a lease is the exclusion working
+					// and an operator acknowledging mid-flight is a person doing
+					// their job; latching new entries on either would punish the
+					// normal case.
+					n.logLeaseLost(settled, id, e)
+					return true, true
+				case journal.SettleNotFound:
+					markErr = fmt.Errorf("the outbox row disappeared while it was being delivered")
+				}
+			}
+			if markErr == nil {
+				return true, false
 			}
 			// The push landed and the record of it did not. Reporting success
 			// here — which this did until a096 round 2 — leaves the row PENDING,
@@ -378,11 +479,25 @@ func (n *Notifier) deliver(ctx context.Context, id int64, e Event) bool {
 			if n.Gate != nil {
 				n.Gate.Block(execgw.ReasonAlertUndelivered, detail)
 			}
-			return false
+			// The lease is deliberately kept. It is now the only thing
+			// suppressing a re-send of an alert the operator already has, and
+			// releasing it here would hand the row straight back to the next
+			// observation — the storm, through the success path. Expiry lets go
+			// eventually; nothing else does.
+			return false, false
 		}
 		lastErr = err
-		if markErr := n.Journal.MarkAlertAttemptFailed(ctx, id, err.Error()); markErr != nil && n.Log != nil {
-			n.Log.Error(EventAlertUndelivered, markErr)
+		failed, markErr := n.Journal.MarkAlertAttemptFailed(ctx, id, token, err.Error())
+		if markErr != nil {
+			if n.Log != nil {
+				n.Log.Error(EventAlertUndelivered, markErr)
+			}
+		} else if failed.Outcome != journal.SettleApplied {
+			// The row stopped being ours between attempts. Stop now: the retries
+			// left in the budget belong to whoever holds it, and spending them
+			// is the double delivery again, one attempt at a time.
+			n.logLeaseLost(failed, id, e)
+			return false, true
 		}
 		if attempt < attempts {
 			if !n.wait(ctx) {
@@ -393,6 +508,19 @@ func (n *Notifier) deliver(ctx context.Context, id int64, e Event) bool {
 
 	// Out of attempts. The row stays PENDING — it is preserved, not abandoned —
 	// and new entries stop.
+	//
+	// The lease does not stay. This sender is finished with the row and is about
+	// to tell the gate so; holding the claim would leave the row locked against
+	// the flush that is supposed to pick it up when the transport comes back.
+	// This is the one place a sender lets go without settling, which is why
+	// releasing is its own verb.
+	if released, relErr := n.Journal.ReleaseAlertClaim(ctx, id, token); relErr != nil {
+		if n.Log != nil {
+			n.Log.Error(EventAlertUndelivered, relErr, FieldEvent, string(e.Type), "alert_id", id)
+		}
+	} else if released.Outcome == journal.SettleLeaseLost {
+		n.logLeaseLost(released, id, e)
+	}
 	detail := fmt.Sprintf("a critical %s alert could not be delivered after %d attempts: %v",
 		e.Type, attempts, lastErr)
 	if n.Log != nil {
@@ -403,7 +531,29 @@ func (n *Notifier) deliver(ctx context.Context, id int64, e Event) bool {
 	if n.Gate != nil {
 		n.Gate.Block(execgw.ReasonAlertUndelivered, detail)
 	}
-	return false
+	return false, false
+}
+
+// logLeaseLost records that a settlement was refused, and by whom it is held
+// now. It is the event the operator needs to tell contention from breakage; the
+// token itself never appears, because whoever can read it can settle somebody
+// else's send.
+func (n *Notifier) logLeaseLost(res journal.SettleResult, id int64, e Event) {
+	if n.Log == nil {
+		return
+	}
+	if res.Outcome == journal.SettleAlreadySettled {
+		n.Log.Event(EventAlertClaimLost,
+			FieldEvent, string(e.Type),
+			"alert_id", id,
+			FieldDetail, "the row was settled by an operator or an earlier delivery")
+		return
+	}
+	n.Log.Warn(EventAlertClaimLost,
+		FieldEvent, string(e.Type),
+		"alert_id", id,
+		"claimed_by", res.ClaimedBy,
+		"claim_age_ms", claimAgeMS(res.ClaimedAt, n.now()))
 }
 
 // wait sleeps between attempts, reporting false when the context ended.
@@ -442,6 +592,36 @@ func (n *Notifier) Flush(ctx context.Context) (delivered int, remaining int, err
 		if n.Publisher == nil {
 			break
 		}
+		// Claim per row. A flush that published straight from the listing was
+		// the one send path with no lease around it, and a lease with a bypass
+		// beside it is not a lease: every row this loop sent was a row another
+		// sender could be sending at the same moment.
+		//
+		// The list was read before any of this, so a row can settle or be taken
+		// between the read and here. That is what the claim is for.
+		claim, cerr := n.Journal.ClaimAlertByID(ctx, alert.ID, n.claimant())
+		if cerr != nil {
+			return delivered, 0, cerr
+		}
+		if claim.Disposition != journal.ClaimAcquired {
+			// Held by another sender, or no longer pending. Neither is this
+			// loop's failure and neither touches the gate.
+			if claim.Disposition == journal.ClaimHeldElsewhere && n.Log != nil {
+				n.Log.Event(EventAlertClaimHeld,
+					FieldEvent, alert.Type,
+					"alert_id", claim.ID,
+					"claimed_by", claim.ClaimedBy,
+					"claim_age_ms", claimAgeMS(claim.ClaimedAt, n.now()))
+			}
+			continue
+		}
+		if claim.Stole && n.Log != nil {
+			n.Log.Warn(EventAlertClaimStolen,
+				FieldEvent, alert.Type,
+				"alert_id", claim.ID,
+				"claimed_by", claim.StoleBy,
+				"claim_age_ms", claimAgeMS(claim.StoleAt, n.now()))
+		}
 		msg := Notification{
 			Type:     EventType(alert.Type),
 			Severity: SeverityCritical,
@@ -449,11 +629,23 @@ func (n *Notifier) Flush(ctx context.Context) (delivered int, remaining int, err
 			Body:     alert.Body,
 		}
 		if perr := n.Publisher.Publish(ctx, msg); perr != nil {
-			_ = n.Journal.MarkAlertAttemptFailed(ctx, alert.ID, perr.Error())
+			_, _ = n.Journal.MarkAlertAttemptFailed(ctx, alert.ID, claim.Token, perr.Error())
+			// This row's turn is over whether or not the attempt was recorded,
+			// so the lease goes back. Holding it until expiry would keep the row
+			// out of the next flush for no reason: unlike deliver, nothing here
+			// is mid-way through a retry budget.
+			_, _ = n.Journal.ReleaseAlertClaim(ctx, alert.ID, claim.Token)
 			continue
 		}
-		if merr := n.Journal.MarkAlertDelivered(ctx, alert.ID); merr != nil {
+		settled, merr := n.Journal.MarkAlertDelivered(ctx, alert.ID, claim.Token)
+		if merr != nil {
 			return delivered, 0, merr
+		}
+		if settled.Outcome != journal.SettleApplied {
+			// Published, but somebody else's row to settle. It is out; the
+			// holder records it.
+			n.logLeaseLost(settled, alert.ID, Event{Type: EventType(alert.Type)})
+			continue
 		}
 		delivered++
 	}

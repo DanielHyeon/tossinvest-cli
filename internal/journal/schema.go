@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 30
+const SchemaVersion = 31
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -151,6 +151,11 @@ var migrations = []migration{
 	// revision that produced it, so a build whose selector has changed can re-judge
 	// the rows an older one refused. Additive-nullable and never backfilled.
 	{Version: 30, SQL: schemaV30},
+	// schemaV31 lives in alert_claim_v31.sql. It gives alert_outbox a delivery
+	// lease — token, holder, issue time, expiry — so that exclusion between two
+	// senders is the ledger's and not one process's mutex. Additive-nullable;
+	// existing rows come out claimable, which is what they are today.
+	{Version: 31, SQL: schemaV31},
 }
 
 // schemaV1 is the initial schema.

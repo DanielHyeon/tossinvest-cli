@@ -115,6 +115,23 @@ const (
 	// EventAlertUndelivered is a critical alert that could not be delivered.
 	// CRITICAL, and the one that blocks entries by itself.
 	EventAlertUndelivered EventType = "engine.alert_undelivered"
+	// EventAlertClaimHeld is a row this sender left alone because another sender
+	// holds a live delivery lease on it. Not a failure: it is the exclusion
+	// working, and the operator sees who is sending.
+	//
+	// It is a separate event from EventAlertUndelivered on purpose. Until a099
+	// every one of these paths — nothing sent, sent by somebody else, settled by
+	// somebody else — arrived at the operator as the same "undelivered" line, and
+	// a line that means three things cannot be alerted on.
+	EventAlertClaimHeld EventType = "engine.alert_claim_held"
+	// EventAlertClaimLost is a settlement this sender was refused because the row
+	// now carries somebody else's lease. The sender stalled past its own claim;
+	// whatever it published is already out, and it must stop.
+	EventAlertClaimLost EventType = "engine.alert_claim_lost"
+	// EventAlertClaimStolen is a lease taken over from a previous holder whose
+	// claim had expired. It is the designed recovery from a dead sender, and it
+	// is never silent: something stopped holding up its end.
+	EventAlertClaimStolen EventType = "engine.alert_claim_stolen"
 	// EventEngineLoopFailed is a supervised loop that returned for a reason other
 	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
 	// CRITICAL: the landed loops do not return, so one that did has hit a state
