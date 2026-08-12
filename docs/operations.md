@@ -241,6 +241,30 @@ activation이나 LIVE 주문 승인으로 승격되지 않는다.
 - rollback도 automation gate를 켜거나 engine을 시작하지 않으며, mutable 이전 tag나 blanket
   Compose down/up을 사용하지 않는다.
 
+### 롤백 대상은 태그가 없으면 사라진다
+
+digest pin은 **그 digest의 이미지가 아직 있을 때만** 롤백 계획이다. `docker compose build`는
+`tossos:local` 태그를 새 이미지로 옮기고 직전 이미지는 태그를 잃는다.
+
+2026-08-12에 그 결과를 실제로 확인했다. 하루 사이 배포한 이미지 두 개(`86c6e4d2`
+2026-08-11 23:00, `e3cc6244` 2026-08-12 08:19)가 **둘 다 남아 있지 않았고**, 롤백 파일이
+가리키던 `56f478e3`은 살아 있었지만 **schema 29**였다. 저널은 그사이 30으로 전진했으므로
+그 핀으로 되돌리면 29 바이너리가 30 저널을 `ErrSchemaTooNew`로 거부해 **콘솔은 healthy인데
+엔진만 죽는다** — 2026-08-05에 3분 51초 동안 실제로 겪은 형태다. 즉 롤백 파일이 롤백
+대상이 아니라 **함정**이 되어 있었다.
+
+그래서 순서에 한 단계가 더 있다.
+
+```
+docker compose build
+docker image inspect tossos:local --format '{{.Id}}'
+docker tag <그 id> tossos:<change>-<commit>      # ← 이것이 빠지면 다음 빌드에 사라진다
+# release override의 두 service를 tossos@sha256:<그 id>로 적는다
+```
+
+롤백 핀을 갱신할 때는 **그 이미지의 schema가 현재 저널을 읽을 수 있는지** 함께 적는다.
+schema가 낮은 핀은 롤백이 아니라 저널 복구 절차의 시작점이다.
+
 ### Dormant digest-pinned deployment preflight
 
 이 절차는 activation과 분리된 read-only 증거 수집이다. 현재 구현인 `internal/deployguard`는
