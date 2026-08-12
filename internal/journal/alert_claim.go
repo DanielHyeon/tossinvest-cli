@@ -378,3 +378,10 @@ func (j *Journal) ReleaseAlertClaim(ctx context.Context, id int64, token string)
 		  WHERE id = ? AND state = ? AND claim_token = ?`,
 		[]any{id, AlertPending, token})
 }
+// AlertLease is the delivery-claim duration this instance issues.
+//
+// It is readable because the safety property it carries is not this package's to
+// check: the lease has to outlast the *sender's* whole retry budget, and that
+// budget lives in obs, which this package cannot import. Exposing the value lets
+// the side that knows the budget compare the two and say so when they disagree.
+func (j *Journal) AlertLease() time.Duration { return j.alertLease }

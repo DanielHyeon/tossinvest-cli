@@ -39,7 +39,7 @@ ends the send then and there."*
 
 ## Branches and early returns
 
-AST 열거 — 분기 24 · 이탈 6 · 호출 23 · defer 0.
+AST 열거 — 분기 27 · 이탈 6 · 호출 23 · defer 0.
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|

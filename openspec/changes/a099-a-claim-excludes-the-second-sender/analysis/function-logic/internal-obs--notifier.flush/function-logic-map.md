@@ -31,7 +31,7 @@
 
 ## Branches and early returns
 
-AST 열거 — 분기 11 · 이탈 5 · 호출 20 · defer 1.
+AST 열거 — 분기 19 · 이탈 5 · 호출 20 · defer 1.
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|

@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/outbox.go",
-  "source_sha256": "7341691c3cb6910ecceab7b428faae30d512835c050ae75a02cf13caa96f096b",
+  "source_sha256": "fb28da30fa8cc005d7d8dc9c8db0eb1a8c7bd18cfbebc3624465d19312145817",
   "package": "journal",
   "function": "AcknowledgeAlert",
   "receiver": "Journal",
   "signature": "Journal.AcknowledgeAlert(params=3, results=1)",
   "start": {
-    "line": 370,
+    "line": 481,
     "column": 1
   },
   "end": {
-    "line": 384,
+    "line": 504,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 371,
+        "line": 482,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 380,
+        "line": 500,
         "column": 2
       }
     }
@@ -35,21 +35,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 372,
+        "line": 483,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 381,
+        "line": 501,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 383,
+        "line": 503,
         "column": 2
       }
     }
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 371,
+        "line": 482,
         "column": 5
       },
       "text": "strings.TrimSpace"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 372,
+        "line": 483,
         "column": 10
       },
       "text": "errors.New"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 374,
+        "line": 485,
         "column": 9
       },
       "text": "RFC3339"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 374,
+        "line": 485,
         "column": 17
       },
       "text": "j.clk.Now"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 375,
+        "line": 494,
         "column": 14
       },
       "text": "j.db.ExecContext"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 379,
+        "line": 499,
         "column": 27
       },
       "text": "strings.TrimSpace"
@@ -106,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 381,
+        "line": 501,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -114,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 383,
+        "line": 503,
         "column": 9
       },
       "text": "requireOneRow"
@@ -124,19 +124,18 @@
     {
       "kind": ":=",
       "at": {
-        "line": 374,
+        "line": 485,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 375,
+        "line": 494,
         "column": 2
       }
     }
   ],
   "go_statements": null,
-  "defers": null,
-  "revision": "base"
+  "defers": null
 }

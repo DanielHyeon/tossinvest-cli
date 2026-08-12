@@ -1,7 +1,7 @@
 # Branch Test Map: `Notifier.claimAndDeliver`
 
 **GREEN 칸은 실측해서 채운다.**
-`ast.json`의 열거가 정본이다: 분기 9 · 이탈 5 · defer 1.
+`ast.json`의 열거가 정본이다: 분기 7 · 이탈 5 · defer 1.
 
 **§5.6 갱신.** proposal 시점 분기는 4였다. 3판까지 이 줄은
 *"제어 흐름을 안 바꾼다 — doc comment만 고친다"*였고 **계획과 반대였다.**
@@ -10,15 +10,13 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:252` claim이 오류를 준다 — 원장에 못 썼다 | 기존 (a097) | no | **yes (기존)** |
-| B2 | `:265` `n.Log`가 배선돼 있다 | 기존 | no | **yes (기존)** |
-| B3 | `:268` `n.Gate`가 배선돼 있다 — 진입 래치 | 기존 (a097) | no | **yes (기존)** |
-| B4 | `:273` 처분 셋으로 갈리는 `switch` | `TestContentionLossAndTakeoverAreThreeEvents` `a099_lease_events_test.go:162` | yes | **yes** |
-| B5 | `:274` **`ClaimSettled` — 보낼 것이 없다** | 기존 (a096 reminder window) | no | **yes (기존)** |
-| B6 | `:283` **`ClaimHeldElsewhere` — 다른 발송자가 쥐고 있다** | `TestContentionLossAndTakeoverAreThreeEvents` `a099_lease_events_test.go:162` · `TestContentionNeitherLocksNorUnlocksTheEntryGate` `a099_regression_pins_test.go:120` | **yes — 2026-08-11**: 구현 전 `publishes while one sender held the row = 2, want 1` | **yes** |
-| B7 | `:293` 경합을 로그로 남긴다 (`engine.alert_claim_held`) | `TestContentionLossAndTakeoverAreThreeEvents` `a099_lease_events_test.go:162` | **yes — §4.5 되돌림 관측**: 로그를 빼면 세 사건 중 하나가 안 뜬다 | **yes** |
-| B8 | `:303` **만료된 임차를 뺏었다** (`engine.alert_claim_stolen`) | `TestContentionLossAndTakeoverAreThreeEvents` `a099_lease_events_test.go:162` | **yes — §4.5 되돌림 관측** | **yes** |
-| B9 | `:312` **publish 도중 임차를 잃었다** | `TestASenderThatLosesTheLeaseStopsAtOnce` `a099_lease_events_test.go:135` | **yes — §4.9 되돌림 관측**: `lost`를 무시하면 임차를 잃은 발송자가 `owed=true`를 돌려주고 호출자가 격상한다 | **yes** |
+| B1 | `:263` `ClaimAlertForDelivery` 오류 | 기존 | no | **yes (기존)** |
+| B2 | `:276` 오류를 로그로 | 기존 | no | **yes (기존)** |
+| B3 | `:279` 오류가 게이트를 잠근다 | 기존 | no | **yes (기존)** |
+| B4 | `:284` `switch claim.Disposition` | — (아래 두 case) | — | — |
+| B5 | `:285` `ClaimSettled` — 창 안이라 안 보낸다 | 기존 a096 | no | **yes (기존)** |
+| B6 | `:294` **`ClaimHeldElsewhere` — 남이 쥐고 있다** | `TestAHeldRowIsNotWhispered` `a099_round4_test.go` · `TestContentionNeitherLocksNorUnlocksTheEntryGate` | **yes** | **yes** |
+| B7 | `:310` `lost` — 임차가 떠났다 | `TestASenderThatLosesTheLeaseStopsAtOnce` `a099_lease_events_test.go` | yes | **yes** |
 
 ## 네 이탈이 무엇을 뜻하는가
 

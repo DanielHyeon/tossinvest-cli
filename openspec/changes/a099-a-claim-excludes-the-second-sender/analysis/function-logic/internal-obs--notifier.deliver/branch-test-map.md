@@ -1,7 +1,7 @@
 # Branch Test Map: `Notifier.deliver`
 
 **GREEN 칸은 실측해서 채운다.**
-`ast.json`의 열거가 정본이다: 분기 24 · 이탈 6 · defer 0.
+`ast.json`의 열거가 정본이다: 분기 27 · 이탈 6 · defer 0.
 
 **§5.6 갱신**: proposal 시점 12에서 24로 늘었다. `else` 절과 그 안의 `if`를
 AST가 따로 세므로 **판정의 수는 24보다 적다** — B13/B15, B14/B16, B19/B21,
@@ -9,30 +9,33 @@ B20/B22가 두 개씩 짝이다.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:424` `attempts <= 0`이면 기본값 3 | 기존 | no | **yes (기존)** |
-| B2 | `:430` 재시도 루프 | `TestFailedAttemptsAccumulateAndTheRowStaysPending` `outbox_test.go:74` (원장 쪽) | no | **yes (기존)** |
-| B3 | `:431` `n.Publisher == nil` | 기존 | no | **yes (기존)** |
-| B4 | `:436` publish 성공 | 기존 | no | **yes (기존)** |
-| B5 | `:438` 정산 호출이 오류를 안 냈다 | 기존 | no | **yes (기존)** |
-| B6 | `:439` **정산 결과 `switch`** | `TestASenderThatLosesTheLeaseStopsAtOnce` `a099_lease_events_test.go:135` | **yes — §4.8 되돌림 관측** | **yes** |
-| B7 | `:440` `SettleApplied` — 정상 | 기존 | no | **yes (기존)** |
-| B8 | `:442` **`SettleLeaseLost`/`SettleAlreadySettled` — 보냈지만 남의 행** | `TestASenderThatLosesTheLeaseStopsAtOnce` `a099_lease_events_test.go:135` | **yes — §4.8** | **yes** |
-| B9 | `:454` `SettleNotFound` — 행이 사라졌다 | **없음** | no | **no — 안 덮였다** |
-| B10 | `:458` `markErr == nil` | 기존 | no | **yes (기존)** |
-| B11 | `:474` `n.Log != nil` (정산 실패) | 기존 (a096 r2) | no | **yes (기존)** |
-| B12 | `:479` `n.Gate != nil` (같음) — **게이트 래치** | `TestAPublishedButUnsettledRowKeepsItsLease` `a099_regression_pins_test.go:48` | **R8은 planned RED가 아니다 — 회귀 핀이다** | **yes** |
-| B13 | `:491` `MarkAlertAttemptFailed`가 오류 | 없음 | no | **no** |
-| B15 | `:492` `n.Log != nil` (같음) | 없음 | no | **no** |
-| B14 | `:495` B13의 `else` | `TestRecordingAFailedAttemptKeepsTheLease` `a099_regression_pins_test.go:28` (원장 쪽) | — | **yes** |
-| B16 | `:495` **`failed.Outcome != SettleApplied` — 임차 상실** | `TestASenderThatLosesTheLeaseStopsAtOnce` `a099_lease_events_test.go:135` | **yes — §4.8 되돌림 관측**: 무시하면 임차를 잃은 발송자가 예산을 계속 쓴다 | **yes** |
-| B17 | `:502` `attempt < attempts` | 기존 | no | **yes (기존)** |
-| B18 | `:503` `!n.wait(ctx)` | 기존 | no | **yes (기존)** |
-| B19 | `:517` `ReleaseAlertClaim`이 오류 | **없음** | no | **no — 안 덮였다** |
-| B21 | `:518` `n.Log != nil` (같음) | 없음 | no | **no** |
-| B20 | `:521` B19의 `else` | `TestASenderThatSpendsItsBudgetReleasesTheRow` `a099_lease_events_test.go:61` | **yes — §4.10 되돌림 관측** | **yes** |
-| B22 | `:521` 해제 시점에 이미 임차를 잃었다 | **없음** | no | **no — 안 덮였다** |
-| B23 | `:526` `n.Log != nil` (예산 소진) | 기존 | no | **yes (기존)** |
-| B24 | `:531` `n.Gate != nil` (같음) — **게이트 래치** | 기존 | no | **yes (기존)** |
+| B1 | `:422` `attempts <= 0` | 기존 | no | **yes (기존)** |
+| B2 | `:428` 재시도 루프 | 기존 | no | **yes (기존)** |
+| B3 | `:429` `Publisher == nil` | 기존 | no | **yes (기존)** |
+| B4 | `:434` 발행 성공 | 기존 | no | **yes (기존)** |
+| B5 | `:436` `MarkAlertDelivered` 가 오류를 안 냈다 | 기존 | no | **yes** |
+| B6 | `:437` `switch settled.Outcome` | — (아래 네 arm) | — | — |
+| B7 | `:438` `SettleApplied` — 배달 성립 | 기존 | no | **yes (기존)** |
+| B8 | `:440` `SettleLeaseLost`·`SettleAlreadySettled` — 나갔지만 내 행이 아니다 | `TestASenderThatLosesTheLeaseStopsAtOnce` | yes | **yes** |
+| B9 | `:452` `SettleNotFound` — 원장이 행을 잃었다 | `TestARowThatVanishedIsNotReportedAsContention` `a099_round4_test.go` | **yes (4라운드)** | **yes** |
+| B10 | `:454` **`default` — 이 빌드가 모르는 outcome (4라운드 신설)** | 없음 — 다섯째 값이 아직 없다 | no | **no — 도달 불가, 방향만 fail-safe 로 뒤집었다** |
+| B11 | `:478` 정산 실패를 로그로 | 기존 | no | **yes (기존)** |
+| B12 | `:483` 정산 실패가 게이트를 잠근다 | 기존 a096 라운드2 | no | **yes (기존)** |
+| B13 | `:495` `MarkAlertAttemptFailed` 자체가 오류 | 없음 — 원장 쓰기 실패 주입 seam 이 없다 | no | **no — `not-applicable`, review §11.6** |
+| B14 | `:499` `failed.Outcome != SettleApplied` | `TestASenderThatLosesTheLeaseStopsAtOnce` | yes | **yes** |
+| B15 | `:496` 그 오류를 로그로 | 없음 (B13 과 같은 이유) | no | **no** |
+| B16 | `:499` (B14 의 else-if 짝) | 위와 같다 | yes | **yes** |
+| B17 | `:509` **전송 실패를 먼저 남긴다 (4라운드 신설)** | `TestARowThatVanishedIsNotReportedAsContention` | **yes** | **yes** |
+| B18 | `:519` **`SettleNotFound` 는 게이트를 잠근다 (4라운드 신설)** | `TestARowThatVanishedIsNotReportedAsContention` | **yes** | **yes** |
+| B19 | `:525` 마지막 시도가 아니다 | 기존 | no | **yes (기존)** |
+| B20 | `:526` `wait` 가 false — **컨텍스트가 끝났다** | `TestACancelledSenderStillHandsTheLeaseBack` `a099_round4_test.go` | **yes (4라운드)** | **yes** |
+| B21 | `:543` `switch` — 반납 결과 (4라운드 신설) | — (아래 세 arm) | — | — |
+| B22 | `:544` 반납 자체가 오류 | 없음 | no | **no** |
+| B23 | `:545` 그 오류를 로그로 | 없음 | no | **no** |
+| B24 | `:548` `SettleApplied` — 정상 반납, 게이트로 간다 | `TestASenderThatSpendsItsBudgetReleasesTheRow` · `TestACancelledSenderStillHandsTheLeaseBack` | yes | **yes** |
+| B25 | `:551` **`default` — 반납 때 행이 남의 것이었다 (4라운드 신설)** | 없음 — `markErr != nil` 창을 테스트로 못 연다 | no | **no — `not-applicable`, review §11.6** |
+| B26 | `:565` 예산 소진을 로그로 | 기존 | no | **yes (기존)** |
+| B27 | `:570` 예산 소진이 게이트를 잠근다 | 기존 | no | **yes (기존)** |
 
 ## 여섯 이탈이 임차를 어떻게 남기는가
 

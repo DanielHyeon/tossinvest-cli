@@ -691,9 +691,121 @@ AST 산출물 **열셋**을 **proposal·design보다 먼저** 만들었다 — �
       `go test ./tools/logic-map`도 같이 통과했다.
 - [x] 6.3 **`openspec validate … --strict --no-interactive` — `Change … is valid` (2026-08-12).**
       §5.6·§7.x의 문서 편집 뒤에 다시 돌린다 — 이 실행은 그 뒤다.
+- [x] 6.9 **§6.1·§6.2 재실행 — 4라운드가 코드를 바꿨으므로 앞의 기록은 무효다 (2026-08-12).**
+
+      | 명령 | 결과 |
+      |---|---|
+      | `make sdd-sync` | **exit 2** — 앞과 같은 모양이다. CodeGraph 는 동기화됐고(`Synced 3 changed files` · `103 nodes in 1.4s`), 실패는 advisory 뿐(`codegraphcontext` 300s timeout · GBrain busy) |
+      | `make sdd-check` | **exit 0** — `CodeGraph hard-evidence index matches the worktree` |
+
+      > **exit 2 를 통과로 고쳐 적지 않는다.** 다만 게이트가 요구하는 것은 hard-evidence
+      > fingerprint 이고 그것은 맞았다. advisory 두 층(`codegraphcontext` · `gbrain`)은
+      > stale 인 채이며, a099 안에서 그 둘의 검색으로 논증한 자리는 여전히 stale 색인 위에
+      > 있을 수 있다 — §6.1 이 적은 것과 같은 유보다.
+
+      **한 번 더 돌렸다 — fingerprint 는 코드가 아니라 worktree 를 잰다 (2026-08-12).**
+      위 쌍을 돌린 뒤 §6.8 에 `-race` 줄을 적었더니 `sdd-check` 가 다시
+      `FAIL: CodeGraph hard-evidence index is missing or stale` 을 냈다. **markdown 한 줄로도
+      상한다.** 재실행 결과는 `sdd-sync` **exit 2** (CodeGraph `Already up to date`,
+      실패는 같은 advisory 둘) · `sdd-check` **exit 0**
+      (`CodeGraph hard-evidence index matches the worktree`).
+
+      > ⚠ **그러므로 이 줄 이후의 편집은 게이트 전에 또 sync 해야 한다.** 이 되풀이는
+      > 기록 자체가 마지막 편집일 때만 멈춘다 — §6.4 를 돌리는 사람이 그 자리에서 다시
+      > 확인해야 하는 것이지, 여기 적힌 exit 0 이 그때까지 유효하다는 뜻이 아니다.
+
 - [ ] 6.4 `make gate CHANGE=a099-a-claim-excludes-the-second-sender`
-- [ ] 6.5 독립 리뷰 (적대적 Eng 관점 필수 — High-risk 원장 스키마).
-      **4라운드다.** 1·2·3라운드가 각각 BLOCK했다
+- [x] 6.5 **독립 리뷰 4라운드 — ⛔ BLOCK, 지적 전부 반영 완료 (2026-08-12, gstack).**
+      기록은 `review.md` §11, 설계 반영은 `design.md` D14.
+
+      리뷰어 **7**: 구현자 pass + 특화 6(testing · maintainability · security ·
+      performance · data-migration · api-contract) + **codex 교차 모델**.
+      codex 도 독립적으로 `Block deployment` 판정을 냈다.
+
+      > **판정을 뒤집은 것은 새 기능 요구가 아니라 증명의 공백이다.**
+      > 이 change 의 제목이 주장하는 "두 발송자가 경합한다"를 R1 테스트가
+      > **경합시키지 않았다** — goroutine 둘이 핸들 하나를 공유했고
+      > `SetMaxOpenConns(1)` 이 둘을 줄 세웠다. 증명된 것은 순차 속성이다.
+      >
+      > **§5.2 의 `-race` exit 0 은 이것을 메우지 않는다.** race detector 는 Go
+      > 메모리 경합을 보지, 직렬화된 SQL 두 개가 배제되는지를 보지 않는다.
+      > 1491건 통과는 참인 채로 두되 **그것이 R1 을 덮는다는 함의는 취소한다.**
+      >
+      > 고침(`TestSeparateHandlesRaceForOnePendingRow`, 핸들을 발송자 수만큼)이
+      > 새 경로를 실제로 짚는다는 것을 **뮤테이션으로 쟀다**: `busy_timeout` 을 0 으로
+      > 낮추면 **옛 테스트는 PASS**, **새 테스트는 SQLITE_BUSY 로 FAIL** 한다.
+      > 옛 테스트가 구조적으로 도달 못 하는 실패를 새 것이 잡는다 —
+      > 커버리지 주장이 주장이 아니라 측정값이다.
+
+      교차 확인 6건(2개 이상 출처)을 전부 고쳤다: 취소된 ctx 반납 · ack 가 임차를
+      안 지움 · `SettleNotFound` 강등 · 반납 시점 상실이 게이트를 걺 · Flush 결과 폐기 ·
+      lease vs 예산 미검증. 반증한 것 넷도 §11.4 에 적었다(교착 없음 · RFC3339 정렬 정상 ·
+      PENDING 재무장 없음 · 유령 임차 노출 경로 없음).
+- [x] 6.5c **4라운드 지적을 전부 반영했다 (사용자 결정, 2026-08-12: "2번 — 표까지 전부").**
+      코드 5파일(+261/−50), 새 테스트 2파일 9건. 검증은 §6.8.
+
+      | # | 결함 | 고침 |
+      |---|---|---|
+      | 1 | R1 이 경합을 **안 시켰다** | 핸들 8개로 진짜 경합. 뮤테이션으로 유효성 **측정** (design D14.1) |
+      | 2 | 취소된 ctx 로 반납 → 종료 중 항상 실패 | `releaseCtx` = `WithoutCancel` + `DefaultBusyTimeout`, deliver·Flush 둘 다 |
+      | 3 | `ClaimHeldElsewhere` 가 info 한 줄 | `Warn` + `claim_expires_at`. **회수는 a098 0.2 로 인계** |
+      | 4 | `AcknowledgeAlert` 만 임차를 안 지움 | 넷째 경로도 `alertClaimCleared` |
+      | 5 | `SettleNotFound` 를 경합으로 강등 | `logLeaseLost` 4분기 + 게이트 |
+      | 6 | 반납 시점 상실이 게이트를 걺 | 두 발견 시점이 같은 결론 |
+      | 7 | Flush 가 결과 폐기 · 한 행 오류로 백로그 버림 | 결과를 읽고 `continue` |
+      | 8 | lease vs 예산 미검증 | `EventAlertLeaseTooShort` + `checkAlertLease` (once) |
+      | 9 | `:458` 죽은 fallthrough (fail-open) | `default` arm 으로 fail-safe |
+      | 10 | codex: v30 우회 · 단방향 스키마 | design D14.6 + `deploy-pair.txt` |
+
+- [x] 6.5d **11번째 — 리뷰가 아니라 그 리뷰의 테스트를 쓰다가 나왔다.**
+      `Logger.emit` 이 이미 `event` 에 **줄 자신의 이름**을 쓰는데(`log.go`) 호출부가
+      `FieldEvent` 로 한 번 더 넘겨 덮었다. JSON 은 같은 키가 두 번이면 뒤엣것이 이긴다 —
+      그래서 `engine.alert_claim_held` 줄이 자기를 `exit.proposal_refused` 로 보고했다.
+
+      > **a099 가 더한 이벤트 셋(held · lost · stolen)이 매칭 불가였다.**
+      > `event.go` 가 그 셋을 따로 만든 이유가 *"a line that means three things cannot
+      > be alerted on"* 인데, 정작 그 줄들이 자기 이름을 안 달고 있었다.
+
+      촉발 조건은 `trigger_event` 로 옮기고 `TestALeaseLineCarriesItsOwnName` 으로 핀을 박았다.
+      **a099 밖 셋(`publishBestEffort`·`notifyCritical`·`escalate`)은 되돌렸다** — 같은
+      결함이지만 a099 diff 밖이고, 고치면 FLM 범위가 그 함수들까지 번진다.
+      `EventAlertUndelivered` 줄도 같은 병을 앓고 있다는 사실을 **후속으로 남긴다**
+      (review §11.6).
+
+- [x] 6.8 **4라운드 반영 후 재검증 (2026-08-12).**
+
+      | 검사 | 결과 |
+      |---|---|
+      | `go build ./...` · `go vet` | 통과 |
+      | 새 테스트 9건 (journal 3 · obs 6) | **GREEN** |
+      | `go test ./...` | **8160건 통과 / 99 패키지** |
+      | `go test -race ./internal/journal/... ./internal/obs/...` | **exit 0 · 1500건 / 2 패키지** |
+      | `python3 tools/logic-map/check_analysis.py --change a099…` | `evidence complete or diff-proven exempt` |
+      | `openspec validate … --strict` | `Change … is valid` |
+
+      > **`-race`를 다시 돌린 이유는 §5.2의 기록이 무효이기 때문이다.** §5.2는
+      > 코드를 바꾸기 **전**의 실행(1491건)이고, 4라운드가 `notifier.go`·`outbox.go`·
+      > `alert_claim.go`·`event.go`·`log.go` 다섯 파일을 바꿨다. 재실행은 **1500건** —
+      > 차이 9건이 새 테스트 수와 같다. `RACE-EXIT=0`이고 §5.2에 적은 종료 코드
+      > 전달 확인(양방향)이 그대로 적용된다.
+      >
+      > ⚠ **그리고 exit 0은 여전히 이 change의 성공 조건이 아니다.** race detector는
+      > Go 메모리 경합을 보지, 직렬화된 SQL 둘이 서로를 배제하는지를 안 본다 —
+      > 그것이 §6.5가 뮤테이션으로 따로 재야 했던 이유다(§6.5·review §11.1).
+
+      FLM 분기 재열거를 반영했다: `claimAndDeliver` 9→**7**(인라인 로그가 헬퍼로 빠졌다),
+      `deliver` 24→**27**, `Flush` 11→**19**. 파일이 바뀌면 해시가 상하므로 같은 파일의
+      번들 **열다섯 개**의 `ast.json` 을 전부 다시 만들었다.
+
+      > **`Journal.AlertLease()` 를 `journal.go` 가 아니라 `alert_claim.go` 에 뒀다.**
+      > `Path()` 바로 아래 두면 체커가 `Path` 까지 "수정된 함수"로 잡아 FLM 범위가
+      > a099 밖으로 번진다. 새 코드는 새 파일에 — 같은 함정을 또 밟지 않는다.
+
+- [x] 6.5b **`not-applicable` 셋을 남긴다 — 침묵한 생략이 아니다.**
+      ① 반납 시점 상실의 `markErr != nil` 경로는 `Notifier.Journal` 이 구체 타입이라
+      테스트로 도달 불가(고침은 넣고 핀만 없음). ② `migrate` 루프 상한 없음은
+      **a099 diff 밖**이라 이 change 에서 안 고친다. ③ `claim_age_ms` 의 두 시계
+      혼용은 프로덕션에서 둘 다 System 이라 살아 있는 결함이 아니다. `review.md` §11.6.
 - [x] 6.6 **⛔ 배포 제약 — a099를 혼자 배포하지 않는다** (사용자 결정 3 · design D9).
       `Flush`의 프로덕션 호출자가 0이므로 claim 뒤 죽은 행을 **다시 집을 주체가 없다.**
       a098과 **같은 배포 단위**로 나간다. `SchemaVersion` 31이므로 콘솔과 엔진이

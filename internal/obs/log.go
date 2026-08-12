@@ -28,7 +28,19 @@ import (
 // Field names. Stable contract; append, never rename.
 const (
 	FieldEvent      = "event"
-	FieldSubject    = "subject"
+	// FieldTriggerEvent names the condition that *caused* this line, when that is
+	// a different event from the line itself — an alert-delivery line caused by an
+	// exit.proposal_refused, say.
+	//
+	// It is not FieldEvent, and that distinction is a bug fix. emit already writes
+	// FieldEvent with the line's own name (see emit), so a call site that passed
+	// FieldEvent again emitted the key twice; every JSON reader keeps the last
+	// one, so the line reported itself as the triggering condition and an
+	// operator's rule matching the line's own name could never fire. That made
+	// engine.alert_claim_held, _lost and _stolen unmatchable from the day they
+	// were added (a099 4라운드).
+	FieldTriggerEvent = "trigger_event"
+	FieldSubject      = "subject"
 	FieldSeverity   = "severity"
 	FieldAccount    = "account"
 	FieldSymbol     = "symbol"

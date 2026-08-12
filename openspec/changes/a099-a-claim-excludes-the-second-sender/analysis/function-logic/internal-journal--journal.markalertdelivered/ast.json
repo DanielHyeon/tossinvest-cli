@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/outbox.go",
-  "source_sha256": "01446b6e0639ed506410d12d00960e1c163869a4235f74e733b224496076975d",
+  "source_sha256": "fb28da30fa8cc005d7d8dc9c8db0eb1a8c7bd18cfbebc3624465d19312145817",
   "package": "journal",
   "function": "MarkAlertDelivered",
   "receiver": "Journal",

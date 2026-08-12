@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/alert_claim.go",
-  "source_sha256": "e0724af80baf84de57c95bbbfad8a61923e3d5cf4c6714c4112363838f212eb5",
+  "source_sha256": "0585d425ff2d9358dcbb6bdd5775c2341dc9d87b08ae94014312213a8dc98496",
   "package": "journal",
   "function": "acquireAlertClaimTx",
   "signature": "acquireAlertClaimTx(params=6, results=2)",

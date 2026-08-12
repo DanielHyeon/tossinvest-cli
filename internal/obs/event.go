@@ -132,6 +132,17 @@ const (
 	// claim had expired. It is the designed recovery from a dead sender, and it
 	// is never silent: something stopped holding up its end.
 	EventAlertClaimStolen EventType = "engine.alert_claim_stolen"
+	// EventAlertLeaseTooShort is a sender whose own retry budget outlasts the
+	// lease the ledger issues it. Nothing is broken yet: the sender will simply
+	// lose its row partway through a budget this code told it to spend, and a
+	// second sender will take it and publish — the double delivery a099 exists to
+	// remove, arriving through configuration rather than through a race.
+	//
+	// The inequality it reports is asserted by a test, but only for the defaults.
+	// Attempts, RetryDelay, the publisher's timeout and the issued lease are four
+	// independently settable knobs in two packages, so the invariant needs a voice
+	// at runtime as well as a pin at build time.
+	EventAlertLeaseTooShort EventType = "engine.alert_lease_too_short"
 	// EventEngineLoopFailed is a supervised loop that returned for a reason other
 	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
 	// CRITICAL: the landed loops do not return, so one that did has hit a state

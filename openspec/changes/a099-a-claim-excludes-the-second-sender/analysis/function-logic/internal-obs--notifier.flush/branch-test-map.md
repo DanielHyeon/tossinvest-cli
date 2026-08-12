@@ -1,24 +1,32 @@
 # Branch Test Map: `Notifier.Flush`
 
 **GREEN 칸은 실측해서 채운다.**
-`ast.json`의 열거가 정본이다: 분기 11 · 이탈 5 · defer 1.
+`ast.json`의 열거가 정본이다: 분기 19 · 이탈 5 · defer 1.
 
 **§5.6 갱신**: proposal 시점 6에서 11로 늘었다. 는 다섯은 전부 §4.11이
 행마다 임차를 걸면서 생긴 것이다.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:578` `n.Journal == nil` | 기존 | no | **yes (기존)** |
-| B2 | `:588` `PendingAlerts` 실패 | 없음 — DB 오류 주입 없음 | no | **no (기존부터 없다)** |
-| B3 | `:591` `range pending` | 기존 | no | **yes (기존)** |
-| B4 | `:592` `n.Publisher == nil` | 기존 | no | **yes (기존)** |
-| B5 | `:603` **`ClaimAlertByID`가 오류** | **없음** | no | **no — 안 덮였다** |
-| B6 | `:606` **`!= ClaimAcquired` — 건너뛴다** | `TestContentionNeitherLocksNorUnlocksTheEntryGate` `a099_regression_pins_test.go:120` (게이트 불변) | **yes — §4.11 되돌림 관측**: 임차 없이 목록에서 곧장 발송하면 남이 쥔 행을 또 보낸다 | **yes** |
-| B7 | `:609` 경합을 로그로 (`engine.alert_claim_held`) | `TestContentionLossAndTakeoverAreThreeEvents` `a099_lease_events_test.go:162` | yes | **yes** |
-| B8 | `:618` 탈취를 로그로 (`engine.alert_claim_stolen`) | `TestContentionLossAndTakeoverAreThreeEvents` `a099_lease_events_test.go:162` | yes | **yes** |
-| B9 | `:631` `Publish` 실패 → 기록 + **해제** | `TestASenderThatSpendsItsBudgetReleasesTheRow` `a099_lease_events_test.go:61` (같은 해제 계약을 `deliver` 쪽에서) | **§4.11의 해제는 별도 관측이 없다** | **부분** |
-| B10 | `:641` `MarkAlertDelivered` 실패 | 없음 | no | **no (기존부터 없다)** |
-| B11 | `:644` **정산이 `SettleApplied`가 아니다 — 남의 행** | **없음** | no | **no — 안 덮였다** |
+| B1 | `:728` `n.Journal == nil` | 기존 | no | **yes (기존)** |
+| B2 | `:738` `PendingAlerts` 실패 | 없음 — DB 오류 주입 없음 | no | **no (기존부터 없다)** |
+| B3 | `:741` `range pending` | 기존 | no | **yes (기존)** |
+| B4 | `:742` `n.Publisher == nil` | 기존 | no | **yes (기존)** |
+| B5 | `:753` **`ClaimAlertByID` 오류 — 이제 백로그를 안 버린다 (4라운드)** | 없음 | no | **no — 고침은 넣었고 핀이 없다** |
+| B6 | `:759` 그 오류를 로그로 (4라운드 신설) | 없음 | no | **no** |
+| B7 | `:764` `!= ClaimAcquired` — 건너뛴다 | `TestContentionNeitherLocksNorUnlocksTheEntryGate` | **yes — §4.11 되돌림 관측** | **yes** |
+| B8 | `:767` 경합을 로그로 (`engine.alert_claim_held`, 4라운드에 `Warn` 으로) | `TestContentionLossAndTakeoverAreThreeEvents` | yes | **yes** |
+| B9 | `:779` `Publish` 실패 | `TestFlushHandsTheLeaseBackWhenThePublishFails` `a099_round4_test.go` | **yes (4라운드)** | **yes** |
+| B10 | `:782` `MarkAlertAttemptFailed` 자체가 오류 (4라운드 신설) | 없음 | no | **no** |
+| B11 | `:786` **정산이 `SettleApplied` 가 아니다 (4라운드 신설)** | 없음 | no | **no** |
+| B12 | `:783` 그 오류를 로그로 (4라운드 신설) | 없음 | no | **no** |
+| B13 | `:786` (B11 의 else-if 짝) | 위와 같다 | no | **no** |
+| B14 | `:803` **반납이 오류 (4라운드 신설)** | 없음 | no | **no** |
+| B15 | `:807` **반납 결과가 `SettleApplied` 가 아니다 (4라운드 신설)** | 없음 | no | **no** |
+| B16 | `:804` 그 오류를 로그로 (4라운드 신설) | 없음 | no | **no** |
+| B17 | `:807` (B15 의 else-if 짝) | 위와 같다 | no | **no** |
+| B18 | `:813` `MarkAlertDelivered` 실패 | 없음 | no | **no (기존부터 없다)** |
+| B19 | `:816` 정산이 `SettleApplied` 가 아니다 — 남의 행 | 없음 | no | **no — 안 덮였다** |
 
 이탈 `:653`(정상)은 분기가 아니다. `PendingAlerts` → 발송 → `UndeliveredCount`.
 

@@ -483,9 +483,18 @@ func (j *Journal) AcknowledgeAlert(ctx context.Context, id int64, operator strin
 		return errors.New("journal: acknowledging an alert requires the operator's identity")
 	}
 	now := RFC3339(j.clk.Now())
+	// 임차도 같이 푼다. 승인은 PENDING 을 떠나는 네 경로 중 하나이고, 나머지 셋
+	// (배달·반납·재무장)은 전부 alertClaimCleared 를 쓴다. 이것만 빠져 있었다.
+	//
+	// 배제가 깨져서가 아니다 — 임차를 읽는 술어는 전부 state = PENDING 안에서만
+	// 돈다. 토큰 때문이다. 토큰은 이 원장을 떠나면 안 되는 유일한 열인데
+	// (alertSelect 의 주석), 정산된 행이 그것을 계속 들고 있으면 backup.go 의
+	// VACUUM INTO 가 뜨는 복사본마다 그 토큰이 따라 나간다. 승인된 행은 아무도
+	// 발송 중이 아니므로 들고 있을 이유가 없다.
 	res, err := j.db.ExecContext(ctx,
 		`UPDATE alert_outbox
-		    SET state = ?, acknowledged_at = ?, acknowledged_by = ?
+		    SET state = ?, acknowledged_at = ?, acknowledged_by = ?,
+		        `+alertClaimCleared+`
 		  WHERE id = ? AND state = ?`,
 		AlertAcknowledged, now, strings.TrimSpace(operator), id, AlertPending)
 	if err != nil {

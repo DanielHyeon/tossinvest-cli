@@ -929,3 +929,91 @@ ClaimAlertForDelivery         = recordAlert + C2의 임차 CAS      // 기록 + 
 토큰이 없고, 그 사실이 시그니처에 드러난다.
 
 §3이 관측한다 (R10): `replay.go` 경로로 만들어진 행을 **배달 루프가 즉시 집을 수 있다.**
+
+## D14 — 4라운드 리뷰가 더한 것 (2026-08-12)
+
+7 리뷰어(구현자 pass + 특화 6 + codex 교차모델)가 BLOCK 했다. 판정을 뒤집은 것은
+**증명의 공백**이지 새 기능 요구가 아니었다.
+
+### D14.1 — 제목의 주장이 자기 테스트로 증명되지 않았다
+
+R1 테스트(`TestTwoSendersReachingOnePendingRowLeaveWithOneRightToSend`)는 goroutine
+둘이 **핸들 하나**를 공유했다. `Open`이 `db.SetMaxOpenConns(1)`을 걸므로
+(`journal.go:174`, 주석이 스스로 *"serialising every statement onto one connection"*
+이라고 적는다) 두 번째 goroutine 은 첫 번째가 **커밋하고 커넥션을 반납할 때까지**
+`BeginTx`에서 막힌다. 그 테스트가 증명한 것은 순차 속성이다.
+
+`-race` exit 0 도 이것을 메우지 않는다. race detector 는 Go 메모리 경합을 보지,
+직렬화된 SQL 두 개가 배제되는지를 보지 않는다.
+
+**고침**: `TestSeparateHandlesRaceForOnePendingRow` — 발송자 수만큼 핸들을 같은
+파일에 연다. 커넥션이 달라야 `BEGIN IMMEDIATE` 둘이 진짜로 겹친다.
+
+**그 테스트가 새 경로를 실제로 짚는다는 것을 뮤테이션으로 쟀다.** `busy_timeout`을
+0으로 낮추면:
+
+| 테스트 | 결과 |
+|---|---|
+| 옛 R1 (핸들 하나) | **PASS** — Go 커넥션 풀이 줄 세우므로 SQLITE_BUSY 가 안 난다 |
+| 새 테스트 (핸들 여덟) | **FAIL** — `database is locked (5) (SQLITE_BUSY)` |
+
+옛 테스트가 **구조적으로 도달할 수 없는** 실패를 새 테스트가 잡는다. 커버리지
+주장이 주장이 아니라 측정값이다.
+
+### D14.2 — 임차를 **놓는** 경로가 일관되지 않았다
+
+| 자리 | 무엇이 틀렸나 | 고침 |
+|---|---|---|
+| `deliver` 반납 | 루프를 빠져나오는 두 길 중 하나가 ctx 취소인데, 반납을 **그 죽은 ctx**로 냈다. `BeginTx`가 즉시 실패하므로 종료 중에는 반납이 **항상** 실패했다 | `releaseCtx` = `WithoutCancel` + `DefaultBusyTimeout`. 정리는 그것을 유발한 취소를 물려받지 않는다 |
+| `Flush` 반납 | 같은 노출 + `_, _ =`로 결과 전부 폐기 | 같은 `releaseCtx`, 결과를 읽고 `logLeaseLost` |
+| `AcknowledgeAlert` | PENDING 을 떠나는 네 경로 중 **유일하게** `alertClaimCleared`를 안 썼다. 배제는 안 깨지지만(술어가 전부 `state = PENDING` 안) 토큰이 정산된 행에 무기한 남고 `backup.go`의 `VACUUM INTO`가 복사본마다 그것을 실어 나른다 | 넷째 경로도 같은 상수를 쓴다 |
+| 반납 시점의 상실 | 루프 **안**에서 알면 에스컬레이션 안 함, **반납 때** 알면 그대로 `Gate.Block` — 운영자가 승인한 직후 엔진이 진입을 다시 막는다 | 두 발견 시점이 같은 결론을 낸다 |
+
+### D14.3 — 한 사실에 두 결론
+
+`SettleNotFound`는 원장이 *"That one **is** an error"*라고 못박은 유일한 값인데,
+실패-기록 경로가 그것을 `!= SettleApplied` 한 덩어리로 삼켜 `claimed_by`가 빈
+`engine.alert_claim_lost`(= 평범한 경합)로 보고했다. 성공 경로에서는 같은 값이
+게이트를 잠그는 오류였다.
+
+`logLeaseLost`가 이제 넷을 가른다: 정산됨 / 경합(이름 있음) / **이름 없는 상실**
+(내가 이미 반납한 것 — 아무도 안 가져갔다) / 소실(오류·게이트).
+
+`deliver`의 `if markErr == nil { return true, false }`는 오늘 도달 불가였지만 방향이
+fail-open 이었다 — 다섯째 outcome 이 생기면 조용히 "배달 성공"이 된다. `default` arm 이
+그것을 fail-safe 로 뒤집는다.
+
+### D14.4 — `ClaimHeldElsewhere`는 오늘 배선에서 「배제가 도는 중」이 아니다
+
+D10 이 이 분기를 *"경합은 이미 전달됨이 아니다"*로 세운 것은 옳다. 4라운드가 더한 것은
+**오늘 그 분기에 닿는 원인이 하나뿐**이라는 사실이다: 프로덕션 Notifier 는
+`exitwiring.go:73` 하나이고 `Notifier.Flush`는 프로덕션 호출자가 0이다. 그러므로 이
+분기의 실제 유일한 원인은 **죽은 발송자가 남긴 임차**이고, 그때 info 한 줄은 틀린 답이다.
+
+고침은 등급과 정보량까지다 — `Warn` + `claim_expires_at`. **회수는 여전히 a098 이다**
+(D9). a099 는 그 상태를 *만들지 않는 것*(D14.2)과 *보이게 하는 것*까지 진다.
+
+### D14.5 — lease > 예산은 기본값에서만 참이었다
+
+`Notifier.Attempts`·`RetryDelay`·`Ntfy.Timeout`·`Options.AlertLease`는 두 패키지에
+흩어진 **독립 설정 넷**인데 둘을 비교하는 코드가 없었다. 예산이 임차보다 길면 발송자는
+이 코드가 쓰라고 시킨 예산을 쓰는 도중 행을 잃고 두 번째 발송자가 발행한다 —
+**아무 데도 잘못된 것이 없는 채로**, 그래서 아무도 못 찾는다.
+
+`Journal.AlertLease()` + `Notifier.checkAlertLease()`(`sync.Once`)가 첫 claim 전에
+`EventAlertLeaseTooShort`를 한 번 낸다. 배선의 성질이므로 알림마다 반복하지 않는다.
+
+### D14.6 — 배포 제약 둘 (코드로 못 막는다)
+
+**(a) 이미 열려 있는 v30 프로세스는 임차를 통째로 우회한다.** 마이그레이션이
+additive 라 옛 바이너리의 outbox SQL 이 그대로 돈다 — 그 빌드는 claim 열을 읽지도
+쓰지도 않으므로 v31 발송자가 쥔 행을 그냥 발행한다. `ErrSchemaTooNew`는 **그 뒤에
+여는** 프로세스만 막지, **이미 열려 있는** 엔진을 fence 하지 못한다.
+⇒ 롤링 교체 금지. 옛 컨테이너가 **완전히 내려간 뒤** 새 것을 올린다.
+
+**(b) 스키마 31 은 저널 단위로 단방향이다.** 첫 a099 바이너리가 운영자의 저널을
+31 로 올리는 순간 현재 main 빌드(30)는 `ErrSchemaTooNew`로 그 파일을 거부한다.
+거부는 안전한 방향이지만(옛 코드가 새 모양을 오독하지 않는다) **이 제품에서
+"엔진이 못 뜬다"는 손절이 없다는 뜻이다.** 바이너리만 되돌리는 것은 롤백이 아니라
+장애다. 복구는 `backup.go`의 절차이고 v30 사본 경로는
+`schema_meta.pre_migration_backup_path`(`journal.db.v30-pre-v31.<stamp>.bak`)에 있다.
