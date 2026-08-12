@@ -352,7 +352,27 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > `openspec/specs/…`·`a092/…` 접두가 붙은 인용은 **다른 파일이라 안 밀렸다** — 문맥으로 갈랐다.
       > **교훈: 내용을 고치는 편집은 줄 수를 바꾸고, 줄 수는 남의 문서에 박혀 있다.**
 
-- [ ] 3.1 **R1~R23 + R4b — R10은 빈 번호 (스물셋)** 을 RED로 작성하고 **실패를 실제로 관측한다.**
+- [x] 3.1 **R1~R23 + R4b — R10은 빈 번호 (스물셋)** 을 RED로 작성하고 **실패를 실제로 관측한다.**
+      — **스물셋 전부 착지 (2026-08-13).** 아래 「진행」 블록들이 각 R의 관측·뮤테이션 기록이다.
+
+      | 어디 | 무엇 |
+      |---|---|
+      | `internal/execgw/a098_sender_down_reason_test.go` | R16 |
+      | `internal/app/engine/a098_the_outbox_gets_emptied_test.go` | R1 |
+      | `internal/app/engine/a098_restart_does_not_release_the_gate_test.go` | R8 |
+      | `internal/app/engine/a098_the_runtime_starts_what_it_does_not_supervise_test.go` | R2 (+대조군) |
+      | `internal/app/engine/a098_the_sender_dying_locks_the_gate_test.go` | R3 · R13 ①② · R15 · R18 |
+      | `internal/app/engine/a098_the_operator_reads_and_acknowledges_test.go` · `cmd/tossctl/a098_the_operator_command_names_a_person_test.go` | R9 · R17 · R5 · R6 |
+      | `internal/app/engine/a098_one_cycle_takes_a_batch_test.go` | R20 · R22 · R23 |
+      | `internal/app/engine/a098_two_senders_one_row_test.go` | R11 · R19 · R21 |
+      | `internal/app/engine/a098_the_engine_drains_the_deliverer_test.go` | R7 |
+      | `internal/app/engine/a098_the_ledger_closes_after_the_executor_test.go` | R14 |
+      | `cmd/tossctl/engine_strategy_entry_dormant_test.go:50` (기존 핀) | R12 |
+      | `internal/app/engine/a098_the_backlog_does_not_delay_protection_test.go` | §5.3 · R4 · R4b |
+
+      > **⛔ 이 표는 「스물셋을 셌다」이지 「스물셋이 다 뾰족하다」가 아니다.**
+      > 각 R이 실제로 무엇을 잡는지는 그 R의 「진행」 블록에 적힌 **뮤테이션**이 지고,
+      > 이 표는 그 블록을 찾는 색인일 뿐이다.
       실패 출력을 여기 붙인다. **종류 칸이 요구하는 시점에서 관측한다.**
 
       | 종류 | 관측 규율 |
@@ -645,6 +665,59 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > MM은 가상의 실수가 아니라 **결정 9-2를 안 지킨 구현 그 자체**이고, 핀은 그것을
       > 이름 하나로 잡는다. **`TestTheLoopSetIsTheSpecifiedThree`는 여기서도 통과한다** —
       > 소스 문자열 포함만 보므로(5라운드 B-T3). 근거로 쓰지 않는 이유가 이것이다.
+
+      **진행 — §5.3·R4·R4b 완료 (2026-08-13). 프로덕션 편집 0줄.**
+      `internal/app/engine/a098_the_backlog_does_not_delay_protection_test.go` 신설.
+      §5.3은 R4의 상한을 만드는 **입력**이므로 같은 테스트 안에서 잰다 — 다른 실행에서 잰
+      기준선은 다른 저울이다. `check_analysis` exit 0 (프로덕션 diff 0이므로 새 번들 요구
+      없음 — **not-applicable이 아니라 편집이 없다**).
+
+      | 무엇 | 실측 (i9-12900H) |
+      |---|---:|
+      | **§5.3 기준선** — 실행자 **없는** exit 사이클(critical 알림 1건 포함) | **6.11 ms** |
+      | R4 — 발송자가 transport 에 **갇힌 채**일 때 같은 사이클 | **6.34 ms** |
+      | R4b — 밀린 행 **10**개 · 실행자가 도는 동안 동기 정지 알림 | **6.17 ms** |
+      | R4b — 밀린 행 **1000**개 · 같은 측정 | **5.53 ms** |
+
+      상한은 **잰 값이 아니라 잰 값 + 고정 상수**다 — *"잰다"*만으로는 나쁜 유한 지연이
+      통과한다(B-P4). exit 사이클 `기준선 + 250 ms`, 정지 알림 절대 `500 ms`,
+      N-독립성 `250 ms`.
+
+      **뮤테이션 하나가 셋을 다 잡았고, 그 하나가 design D1.1이 물리친 설계 그 자체다.**
+
+      | # | 뮤테이션 | 죽은 단언 |
+      |---|---|---|
+      | **NN** | `Context.AlertDeliverer`를 **`Notifier.Flush` 기반**으로 바꾼다 = 안 B (`notifier.go:734-735`가 `n.mu`를 쥔 채 `PendingAlerts(ctx, 0)`로 **전부**를 돈다) | R4 — *"exit 사이클이 15초 안에 안 끝났다"* · R4b 절대 — *"1000개 뒤에서 11.145 s; 상한 500ms"* · R4b N-독립 — *"10 → 1000 에서 11.035 s 움직였다"* |
+      | (원복) | 역편집 · 바이트 동일성 assert · `grep -c MUTATION` = 0 · `Run:  deliverer.Run` 1 · `git status` 무변화 | 재통과 (`-count=3` 6/6) |
+
+      > **⛔ N-독립성이 절대 상한과 별개로 필요하다는 것을 NN이 실측으로 보였다.**
+      > NN 아래에서 **N=10은 110.5 ms** 로 **절대 상한 500 ms를 통과한다.** 그 구현을
+      > 잡은 것은 N=1000과의 차이뿐이다. 반대로 N-독립성만 보면 **모든 N에서 똑같이
+      > 나쁜** 지연이 통과한다. 둘 다 안 걸면 안 B가 반은 살아 나간다.
+
+      > **⛔ 계측기가 알림 종류로 갈리는 이유 — 안 갈랐으면 기준선도 같이 멈춘다.**
+      > *"전송 수단이 죽는다"*를 **모두에게** 죽은 transport 로 흉내 내면 동기 경로도
+      > 같은 transport 를 쓰므로 §5.3이 영원히 안 끝난다. 그러면 이 측정은 a098이 무엇을
+      > 더했는지가 아니라 **a092의 주제**를 재게 된다. 그래서 계측기는 **실행자가 보내는
+      > 행에서만** 멈추고(`a098BacklogEvent`), 격리한 변수는 하나다 —
+      > **「발송자가 transport 안에 갇혀 있다」**, 곧 a098이 새로 들여온 상태.
+
+      > **⛔ 알림을 내는 사이클을 고른 것이 R4의 전부다.**
+      > 조용한 사이클은 `Notifier`를 안 지나가고, 안 지나가면 **안 B의 뮤텍스가 이 측정에
+      > 보이지 않는다** — 공허하게 통과한다. 그래서 재해석된 ladder 상태로 **판정 거부**를
+      > 만들어 critical 알림을 한 건 내게 하고, 잰 뒤에 *"그 알림이 정말 나갔는가"*를
+      > 되짚는다(`other != 1`이면 측정을 버린다).
+
+      > **⛔ 안 쓴 뮤테이션과 그 이유 — 침묵하지 않는다.**
+      > 배치를 `all`로 바꾸는 뮤테이션은 **일부러 안 썼다.** 안 C 아래에서는 그래도 R4b가
+      > **안 깨진다** — 실행자가 publish 를 건너 아무것도 안 쥐므로, 배치는 *주기 길이*를
+      > 묶지 *정지 알림*을 묶지 않는다. 안 깨지는 뮤테이션을 표에 적으면 그 표가 거짓말이 된다.
+      >
+      > 같은 이유로 **뮤테이션이 하나뿐인 것도 결함이 아니다.** 안 C 에서 사이클을 늘릴 수
+      > 있는 결함 모양은 **「쥔 채 네트워크를 기다린다」 하나**이고 NN이 그 하나다.
+      > **다만 R4의 「기준선 + 고정 여유」를 단독으로 죽이는 뮤테이션은 없다** — NN 아래에서는
+      > 사이클이 아예 안 끝나 15초 마감이 먼저 걸린다. 여유 비교가 지는 것은
+      > *"유한"이 아니라 **수**로 못 박았다*는 것뿐이고, 그 이상을 주장하지 않는다.
 
 - [x] 3.2 루프 주기를 **측정해서** 정한다. a092의 값을 인용하지 않는다 (2026-08-12)
 
@@ -1335,7 +1408,11 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       **되살릴 조건을 적어 둔다** — 위 네 입력 중 **하나라도 운영 설정에 노출되는 순간**
       이 task 가 다시 산다. 그때 필요한 것은 주입이 아니라 **`checkAlertLease`가 실제로
       울리는지**이고, 그 경보는 이미 있다.
-- [ ] 4.8 R1~R23 + R4b — R10 제외 (**스물셋**)이 GREEN
+- [x] 4.8 R1~R23 + R4b — R10 제외 (**스물셋**)이 GREEN — **2026-08-13**
+
+      `go test ./internal/app/engine/ ./cmd/tossctl/ -count=1` → **1024 통과.**
+      색인은 §3.1의 표. 전체 트리(`./...`)는 §5.1이 따로 진다 —
+      **여기서 통과한 두 패키지가 트리 전체가 아니다.**
 
 ## 5. VERIFY
 
@@ -1424,7 +1501,16 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **핀의 이빨은 이미 확인했다** — §3.1의 R14·R12 블록, 뮤테이션 **MM**
       > (배달 실행자를 `Loops`로 옮기면 핀이 `alert-delivery`를 이름으로 잡는다).
       > 여기서는 **HEAD에서 한 번 더** 잰다 — 그 사이의 커밋이 등록을 옮겼을 수 있다
-- [ ] 5.3 exit 사이클 체류 무변화 실측 (R4의 GREEN 값)
+- [x] 5.3 exit 사이클 체류 무변화 실측 (R4의 GREEN 값) — **2026-08-13**
+
+      **기준선 6.11 ms · 갇힌 발송자 옆 6.34 ms** (i9-12900H).
+      `TestTheExitCycleDoesNotLengthenWhileTheSenderIsStuckInTheTransport`가
+      **두 값을 한 실행에서** 잰다 — 다른 실행에서 잰 기준선은 다른 저울이고,
+      그 차를 여유와 비교하는 것은 비교가 아니다. 전체 기록과 뮤테이션 NN은 §3.1.
+
+      > **⛔ 이 수가 증명하지 않는 것.** 이것은 **테스트 하네스의** exit 사이클이다 —
+      > 포지션 하나, 가짜 시세, 가짜 제출자. 운영 계좌의 사이클 길이가 아니다.
+      > 이 측정이 지는 것은 **차이**(실행자를 붙이면 늘어나는가)이지 절대 길이가 아니다.
 
 ## 6. Gate
 
