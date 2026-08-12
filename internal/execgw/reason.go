@@ -132,6 +132,24 @@ const (
 	// not be delivered blocks new entries. Declared here so the enum is stable
 	// before the alerting path exists.
 	ReasonAlertUndelivered ReasonCode = "critical_alert_undelivered"
+	// ReasonAlertSenderDown: the process that delivers critical alerts has
+	// stopped. Nothing is trying to send, so nothing will fail to send.
+	//
+	// It is a separate code from ReasonAlertUndelivered because the two are
+	// cleared by different facts. Every other alert block means "we tried and it
+	// did not arrive", and an operator who acknowledges the backlog has answered
+	// that: Notifier.Acknowledge releases the undelivered latch once no row is
+	// pending. This one means "nobody is trying", which acknowledging a backlog
+	// does not change — sharing the code would let the operator's acknowledgement
+	// open entry while the sender is still dead.
+	//
+	// Nothing clears it. A dead executor does not come back inside the process
+	// that lost it, so recovery is a restart, and the new process starts with a
+	// live one. That is also why it is only ever a memory latch: EntryGate.Block
+	// does not touch the ledger, so the restart that fixes the cause also drops
+	// the block. What must survive a restart is the undelivered *rows*, and
+	// those are in the ledger where startup recovery reads them.
+	ReasonAlertSenderDown ReasonCode = "critical_alert_sender_down"
 
 	// --- fail-closed branches (task 2.10) -----------------------------------
 

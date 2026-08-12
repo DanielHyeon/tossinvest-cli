@@ -367,6 +367,38 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **R22만 빨개지고 기존 열일곱 호출은 그대로 통과하는 것**을 본다.
       > 못 만들면 R22는 아직 증거가 아니라 문장이다.
 
+      **진행 — R16 완료 (2026-08-12).** `internal/execgw/a098_sender_down_reason_test.go`
+
+      | 단계 | 관측 |
+      |---|---|
+      | **RED** | `go test ./internal/execgw/ -run TestTheSenderDown` → **exit 1 · build failed** · `undefined: execgw.ReasonAlertSenderDown` (6자리) |
+      | **GREEN** | 4.3.3의 네 자리를 채운 뒤 `go test ./internal/execgw/` → **exit 0 · 341건 통과** |
+
+      **그리고 통과만으로 끝내지 않았다 — 뮤테이션 둘을 실제로 걸었다.**
+
+      | 뮤테이션 | 기존 골든 테스트 | **새 테스트** |
+      |---|---|---|
+      | **A** `latchOrder`에서만 뺀다 (열거·골든은 그대로) | — | **FAIL** — `round 3: CheckEntry reported "guardian_decision_missing"` |
+      | **B** 열거에서 빼고 **골든을 재생성한다** (= 상수만 선언한 상태) | **PASS (exit 0)** | **FAIL** — 길이 29≠30 · membership 없음 |
+
+      > **B가 이 테스트의 존재 이유를 실측으로 보여 준다.** 상수를 `reason.go`에만
+      > 선언하고 열거에 안 넣으면 `TestReasonCodeEnumIsStable`은 **통과한다** —
+      > 열거와 골든이 **둘 다** 그 코드를 모르기 때문이다. `failclosed.go:283-288`이
+      > 적는 그 일이 실제로 재현됐다.
+      >
+      > **A는 「빠뜨려도 차단은 걸린다」의 반대편을 잰다.** `latchOrder`에 없어도
+      > 래치는 걸리고(`retry.go:545-547`의 폴백), **보고되는 사유만 map 순회 순서**가 된다.
+      > 그래서 관측을 *"래치가 걸린다"*로 쓰면 못 잡는다 — **latchOrder에도 없는 코드와
+      > 짝지어 200회 반복**해야 잡힌다.
+
+      > **⛔ 이 뮤테이션 중에 나를 한 번 물었다 — 적어 둔다.**
+      > 원복을 `git checkout <file>`로 했는데 **GREEN 편집이 아직 커밋 전이었다.**
+      > 그래서 checkout 이 뮤테이션과 **함께 GREEN 편집까지** HEAD 로 되돌렸고,
+      > `git diff --quiet`는 **초록을 냈다** — 그 검사가 재는 것은
+      > *"HEAD 와 같은가"*이지 *"뮤테이션 전과 같은가"*가 아니기 때문이다.
+      > **원복 검사가 확인해 준 것이 확인하려던 것이 아니었다.**
+      > 세 파일을 세어서 잡았다(`reason.go` 2 · `failclosed.go` **0** · `retry.go` **0**).
+
 - [x] 3.2 루프 주기를 **측정해서** 정한다. a092의 값을 인용하지 않는다 (2026-08-12)
 
       **잰 것** — `internal/app/engine/a098_cycle_cost_bench_test.go`.
@@ -581,15 +613,35 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > 남는 잔재(집힌 채 버려진 임차)는 a099의 만료가 지운다.
 - [ ] 4.3 정지 시 `EntryGate.Block`을 **직접** 부른다.
       `EscalateOperatingMode`에 기대지 않는다 (design D2의 인용)
-- [ ] **4.3.3 그 `Block`은 자기 사유 코드를 쓴다** (4판 신설 — 사용자 결정 8-1 · design D8.2).
+- [x] **4.3.3 그 `Block`은 자기 사유 코드를 쓴다** (4판 신설 — 사용자 결정 8-1 · design D8.2).
       **오늘 없던 여섯 번째 차단 트리거이고, 그 사실을 숨기지 않는다.**
+      **넷 다 채웠다 (2026-08-12) — 문자열은 `critical_alert_sender_down`.**
 
-      | 자리 | 편집 | 왜 |
-      |---|---|---|
-      | `internal/execgw/reason.go` | 상수 하나 선언 | 오늘 다섯 자리가 전부 `ReasonAlertUndelivered` 하나를 쓴다(`notifier.go:262`·`:379`·`:404`·`:482`·`:511`) |
-      | `internal/execgw/failclosed.go` `AllReasonCodes` | 리터럴에 원소 하나 | **빠뜨려도 컴파일이 통과한다** — `failclosed.go:283-288`의 전례 |
-      | `internal/execgw/retry.go` `latchOrder` | append | 안 넣어도 차단은 걸린다(`retry.go:545-547`의 폴백). **순서만 비결정적**이 된다 |
-      | `testdata/reason_codes.golden` | `TOSSOS_UPDATE_GOLDEN=1`로 재생성 | `TestWriteReasonCodeGolden`이 **유일한 정규 경로**다 |
+      | 자리 | 편집 | 왜 | 실측 |
+      |---|---|---|---|
+      | `internal/execgw/reason.go` | 상수 하나 선언 | 오늘 다섯 자리가 전부 `ReasonAlertUndelivered` 하나를 쓴다(`notifier.go:262`·`:379`·`:404`·`:482`·`:511`) | 상수 45 → **46** |
+      | `internal/execgw/failclosed.go` `AllReasonCodes` | 리터럴에 원소 하나 | **빠뜨려도 컴파일이 통과한다** — `failclosed.go:283-288`의 전례 | 열거 29 → **30** · 분기 **0 그대로** |
+      | `internal/execgw/retry.go` `latchOrder` | append | 안 넣어도 차단은 걸린다(`retry.go:545-547`의 폴백). **순서만 비결정적**이 된다 | 뮤테이션 A가 그 비결정성을 **실제로 냈다** |
+      | `testdata/reason_codes.golden` | `TOSSOS_UPDATE_GOLDEN=1`로 재생성 | `TestWriteReasonCodeGolden`이 **유일한 정규 경로**다 | 29줄 → **30줄** |
+
+      > **⛔ `latchOrder`에 「append」라고 적혀 있는데 맨 뒤에 안 넣었다 — 이유를 적는다.**
+      > 그 목록의 마지막 원소 `ReasonOperatingModeBlocked`에는
+      > *"the operating mode reads last **on purpose** as well as by convention"*
+      > (`retry.go:596-602`)이 붙어 있다. 맨 뒤에 넣으면 **그 문장을 깬다.**
+      >
+      > **「append, never insert」 규칙이 지키는 것은 「기존 쌍의 상대 순서」다**
+      > (`retry.go:581-583`: *"the relative precedence of the original three is itself
+      > a contract"*). 운영 모드 **앞**에 넣으면 **어떤 기존 쌍도 안 움직인다** —
+      > 새로 생기는 관계는 `sender-down > mode` 하나뿐이다. 그래서 규칙의 **글자**가
+      > 아니라 **지키는 것**을 따랐고, 그 판단을 코드 주석에 남겼다.
+      >
+      > 자리의 근거: 다른 알림 사유들은 *"보내려다 실패했다"*라 더 구체적인 답이고,
+      > 이것은 *"아무도 안 보내고 있다"*이다. 그래서 알림 사유들 **뒤**, 모드 **앞**이다.
+
+      > **⚠ 이 task가 `internal/execgw`에 파일을 하나 더 만들었다 — 5.2의 표를 넘는다.**
+      > `a098_sender_down_reason_test.go`(신규 테스트)이고, **5.2가 세는 네 파일은
+      > 프로덕션 쪽**이다. 테스트가 없으면 R16이 없고 R16이 없으면 이 트리거는
+      > 아무도 안 지는 요구가 된다. **5.2의 표에 다섯째 줄로 적었다** — 침묵한 초과 금지.
 
       > **같은 코드를 쓰면 운영자의 승인이 그것을 지운다.** `Acknowledge`는 미전달 수가
       > 0이면 `ReasonAlertUndelivered` 래치를 푼다(`notifier.go:507-512`).
@@ -726,10 +778,19 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       | `internal/app/engine` | 비어 있지 않다 | 4.0·4.1·4.2 |
       | `cmd/tossctl` | 비어 있지 않다 | 4.4의 운영자 표면 (design D7) |
 
-      **`internal/execgw`의 diff는 위 네 파일을 넘으면 안 된다.** 특히
+      **`internal/execgw`의 프로덕션 diff는 위 네 파일을 넘으면 안 된다.** 특히
       `checkAccountEntryLocked`(`retry.go:537`)와 `EntryGate.Block`/`Clear`
       (`retry.go:497`·`:510`)의 본문은 **0줄**이어야 한다 — `latchOrder`는 그 함수가
-      **읽는 변수**이고 변수의 append는 함수 편집이 아니다
+      **읽는 변수**이고 변수의 append는 함수 편집이 아니다.
+
+      | 다섯째 줄 — 테스트 | 왜 표에 적는가 |
+      |---|---|
+      | `internal/execgw/a098_sender_down_reason_test.go` (신규) | **위 네 파일은 프로덕션 쪽이다.** R16이 이 패키지의 심볼 넷을 재므로 테스트도 여기 산다. 표에 안 적으면 diff 확인이 *"네 파일을 넘었다"*로 실패하고, **그때 고르는 답이 「테스트를 지운다」가 될 수 있다** |
+
+      > **⛔ 실측으로 확인할 것 — 이 다섯 파일 밖의 `internal/execgw` diff는 0이어야 한다.**
+      > 4.3.3 시점 실측: `reason.go`(+상수 1) · `failclosed.go`(+리터럴 1) ·
+      > `retry.go`(+`latchOrder` 1) · `reason_codes.golden`(+1줄) · 새 테스트 1.
+      > `checkAccountEntryLocked`·`Block`·`Clear` **본문 0줄** — `git diff`로 확인한다
 - [ ] 5.2b **`AllReasonCodes()`의 길이가 정확히 하나 늘었음을 잰다** (29 → 30).
       golden 대조만으로는 부족하다 — 상수를 `reason.go`에만 선언하고 열거에 안 넣으면
       **golden이 안 깨진다**(`internal-execgw--allreasoncodes` 번들이 그 함정을 적는다).

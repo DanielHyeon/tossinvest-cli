@@ -593,6 +593,18 @@ var latchOrder = []ReasonCode{
 	ReasonReconcileMismatch,
 	ReasonBrokerStateUnknown,
 	ReasonFillDetectionSLO,
+	// Appended, per the rule above, but ahead of the operating mode rather than
+	// after it, because "reads last" below is a stated intent and not just the
+	// end of a list. Doing so moves no existing pair relative to another: every
+	// code above keeps its precedence over every code below, and the only new
+	// relation is sender-down over the mode. It belongs on this side of that line
+	// for the reason the comment below gives — it is a specific fault an operator
+	// can go and fix (restart), not a consequence of one.
+	//
+	// It reads after every other alert condition on purpose. Those mean a send
+	// was attempted and failed, which is the more specific answer to "why can I
+	// not enter"; this one only says nothing is attempting.
+	ReasonAlertSenderDown,
 	// Appended, per the rule above. The operating mode reads last on purpose as
 	// well as by convention: every condition before it is a specific fault an
 	// operator can go and fix, while "the account is in ENTRY_BLOCKED" is often
