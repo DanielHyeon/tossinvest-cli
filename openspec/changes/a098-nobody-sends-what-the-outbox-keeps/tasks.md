@@ -945,7 +945,38 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       | | 무엇 | 상태 |
       |---|---|---|
       | **4.4a** | 엔진 안의 의미 — `PendingAlert` 투영 · `AlertOperations.Pending`·`Acknowledge` (`internal/app/engine/alertops.go`) | **완료 2026-08-12** — R9·R17·R5(엔진 절반) |
-      | **4.4b** | 엔진 소유 Unix 소켓 + `tossctl` 하위 명령 둘 | **미완료** — R5(CLI 절반)·R6 |
+      | **4.4b-1** | 엔진 소유 Unix 소켓 (`.alert-control/` · `alerts.sock` · 라우트 둘) + `runEngineRun` 기동 | **완료 2026-08-12** |
+      | **4.4b-2** | `tossctl` 하위 명령 둘 (dial + 출력) | **미완료** — R5(CLI 절반)·R6 |
+
+      **4.4b-1 실측.** `internal/app/engine/alert_control{,_transport_unix,_transport_other}.go` ·
+      `internal/positionpolicyrpc/private_endpoint.go` · 테스트
+      `a098_the_operator_socket_is_the_engines_test.go`.
+
+      | # | 뮤테이션 | 결과 |
+      |---|---|---|
+      | **Q** | 소켓의 `Chmod(0600)` 제거 — umask 에 맡긴다 | **기동 자체가 거절**됐다(umask 0002 → 0775). 네 테스트가 `StartAlertControlServer` 에서 FAIL |
+      | **R** | 승인 라우트에서 `alertControlAuth` 제거 | **⛔ 첫 판은 통과했다** — 아래 |
+      | **S** | 목록 라우트를 `"/"` catch-all 로 | 여덟 경로 전부 FAIL (`/v1/apply`·`/v1/runtime`·… 이 405를 냈다) |
+      | (원복) | 역편집 셋 · `grep -c MUTATION` = 0 · 심볼 대조(`Chmod` 1 · `alertControlAuth(token` 3 · `HandleFunc(AlertControlListPath` 1) | 세 패키지 재통과 |
+
+      > **⛔ R 이 찾은 것은 코드의 결함이 아니라 내 테스트의 구멍이다.**
+      > 인증 테스트가 **목록 라우트만** 보고 있었고, **승인 라우트의 인증을 통째로
+      > 떼어낸 판이 네 테스트를 전부 통과했다.** 필요한 정도로 따지면 순서가 반대다 —
+      > 목록은 읽고 **승인은 게이트를 푼다.** 두 라우트 × 세 토큰으로 넓혔더니
+      > 같은 뮤테이션이 `POST /v1/alerts/acknowledge = 200, want 401` 로 잡혔다.
+      >
+      > **「토큰을 검사한다」를 라우트 하나로 재면 검사가 있는 라우트만 잰다.**
+
+      > **Q 는 반대 방향으로 유익했다.** 테스트가 잡기 전에 **엔진이 먼저 거절했다** —
+      > `ValidatePrivateSocket` 이 기동 경로에 있기 때문이다. 권한이 느슨한 소켓으로
+      > 서비스를 시작하는 상태가 **존재할 수 없다**는 뜻이고, 그것은 테스트가 아니라
+      > 코드가 지는 성질이다.
+
+      > **⚠ `publishPrivateDescriptor` 는 이 ceremony 의 세 번째 사본이다** —
+      > `writePositionPolicyDescriptor`·`writePositionPolicyRuntimeDescriptor` 가 이미
+      > 둘이다(실측). 셋을 하나로 접는 것이 옳은 정리이고 **a098 것이 아니다**:
+      > 나머지 둘은 position-policy 통제면의 기존 함수이고 고치면 그 표면을 편집하게 된다.
+      > 새로 쓴 것은 **이름에 안 묶이게** 써서 접을 자리를 만들어 뒀다.
 
       > **⛔ 나눈 이유는 편의가 아니다.** R5가 이름으로 지목한 위험은
       > *"CLI가 고정 문자열을 넣어 `AcknowledgeAlert`의 검사를 통과하면서 audit trail만
@@ -1134,7 +1165,24 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       | `internal/risk` | **비어 있어야 한다** | — |
       | `internal/execgw` | **⛔ 비어 있지 않다** — 파일 셋 (`reason.go`·`failclosed.go`·`retry.go`) + golden 하나 | 4.3.3 (사용자 결정 8-1). **3판의 "execgw 전부 안 건드린다"는 철회했다** |
       | `internal/app/engine` | 비어 있지 않다 | 4.0·4.1·4.2·**4.6** (`gateway.go` — `buildGateway` 한 갈래 + 신설 leaf) |
-      | `cmd/tossctl` | 비어 있지 않다 | 4.4의 운영자 표면 (design D7) · **⛔ 4.2 도 여기 온다** — `engineRuntime` 이 `RuntimeOptions` 를 만드는 유일한 자리이므로 **프로덕션 등록 한 줄**이 여기다(+13/-0). 이 표는 그것을 안 적고 있었고 `check_analysis` 가 잡았다 → 번들 `cmd-tossctl--engineruntime` |
+      | `cmd/tossctl` | 비어 있지 않다 | **함수 둘이다.** `engineRuntime` — 4.2의 프로덕션 등록 한 줄(+13/-0, 번들 `cmd-tossctl--engineruntime`) · `runEngineRun` — 4.4b의 소켓 기동(+12/-0, 번들 `cmd-tossctl--runenginerun`) |
+      | **`internal/positionpolicyrpc`** | **⛔ 비어 있지 않다 — 새 파일 하나** (`private_endpoint.go`) | 4.4b. **기존 함수 0줄** — 이름에 고정돼 있던 검사(사설 디렉터리·소켓·descriptor)의 **이름 없는 형태**를 새 함수로 더한다. 원시 helper 가 이 패키지에 unexported 로 있어서, 옮기지 않으면 **보안 경계를 복사**하게 된다 |
+
+      > **⛔⛔ 이 표의 「어느 함수」 칸이 비어 있었고, 같은 검사가 같은 파일에서 두 번 잡았다.**
+      >
+      > | 언제 | `check_analysis` 가 말한 것 |
+      > |---|---|
+      > | 4.2 | *"missing evidence for modified function … `engineRuntime`"* |
+      > | 4.4b | *"missing evidence for modified function … `runEngineRun`"* · *"AST source hash is stale"* |
+      >
+      > 4.2 때 *"이 표가 안 적고 있었다"*고 고쳐 놓고 **패키지 이름만 적었다.**
+      > 파일이 아니라 **함수**가 단위인데 칸은 패키지였다 — 그래서 두 번째가 또 걸렸다.
+      > **한 번 걸린 자리를 같은 입도로 고치면 두 번 걸린다.**
+      >
+      > 그리고 두 번째는 **`engineRuntime` 을 한 자도 안 건드렸는데** 그 번들까지
+      > stale 로 만들었다: `runEngineRun` 편집이 아래 함수를 **12줄 밀었다.**
+      > 분기·이탈·호출은 6·8·11 그대로이고 그것이 「안 건드렸다」의 증거다 —
+      > 인용은 전부 다시 쟀다(`:333`→`:345` … `:387`→`:399`).
 
       **`internal/execgw`의 프로덕션 diff는 위 네 파일을 넘으면 안 된다.** 특히
       `checkAccountEntryLocked`(`retry.go:537`)와 `EntryGate.Block`/`Clear`

@@ -267,6 +267,18 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 		return err
 	}
 	defer strategyRuntime.Close()
+	// a098 4.4 — 밀린 critical 알림의 운영자 표면. 승인은 이 프로세스 안에서
+	// 일어나야 한다: 진입 게이트는 여기 메모리에 있고, 다른 프로세스가 원장만
+	// 고치면 운영자가 승인해도 진입은 재시작까지 막힌 채다 (design D7.1).
+	alertOps, err := ectx.AlertOperations()
+	if err != nil {
+		return err
+	}
+	alertControl, err := engine.StartAlertControlServer(dir, alertOps)
+	if err != nil {
+		return err
+	}
+	defer alertControl.Close()
 	fmt.Fprintf(out, "account          %s\nloops            %s\n",
 		ectx.Automation.MaskedAccount(), strings.Join(rt.LoopNames(), ", "))
 	fmt.Fprintf(out, "stop             SIGINT/SIGTERM — 루프 완주 후 journal 정합 close. 두 번째 시그널은 즉시 종료\n\n")

@@ -1,16 +1,23 @@
 # Function Logic Map: `engineRuntime`
 
-- Source: `cmd/tossctl/engine.go` (**331-388**) — 편집 전에는 `331-401`의 같은 함수
+- Source: `cmd/tossctl/engine.go` (**343-426**) — 4.2 편집 전에는 `331-414`
+  
+  > **⛔ 줄이 두 번 밀렸고, 그 두 번이 다른 이유였다.**
+  > 4.2는 이 함수 **안**을 편집해 길이를 바꿨고(→ `331-414`),
+  > 4.4b는 이 함수 **위**의 `runEngineRun`을 편집해 통째로 밀었다(→ `343-426`).
+  > 두 번째는 **본문이 한 자도 안 바뀌었는데 인용이 전부 틀리는** 종류다 —
+  > 분기·이탈·호출은 6·8·11 그대로이고 그것이 「안 건드렸다」의 증거다.
+  > 그리고 4.2 시점의 헤더는 끝줄을 `388`로 적고 있었다(실측 `414`). 재서 고쳤다.
 - AST evidence: `ast.json` — 편집 후 branches **6** / returns **8** / calls 11 / assignments 7
   (편집 전 5 / 7 / 10 / 6)
 - Risk scan: `risk-pattern-report.md`
-- source SHA-256: **`8c668aac…`**
+- source SHA-256: **`301f68c6…`** (4.2 시점에는 `8c668aac…`)
 
 ## ⛔ 이 번들은 §5.2의 표에 **없던 자리**다 — 왜 생겼는지 먼저 적는다
 
 §5.2는 `cmd/tossctl` diff를 **4.4의 운영자 표면**으로만 적고 있었다. 그런데 배달
 실행자를 프로덕션에서 **실제로 돌게 하는** 한 줄은 여기 있다 —
-`RuntimeOptions`를 만드는 유일한 자리가 이 함수이기 때문이다(`engine.go:366`).
+`RuntimeOptions`를 만드는 유일한 자리가 이 함수이기 때문이다(`engine.go:390`).
 
 **그래서 4.2가 이 기존 함수를 편집했고, 그 순간 이 산출물이 필요해졌다.**
 `check_analysis`가 그것을 잡았다(*"missing evidence for modified function
@@ -31,13 +38,13 @@ cmd/tossctl/engine.go:engineRuntime"*) — **계획이 아니라 검사가 먼�
 
 | Branch | 위치 | Condition | Return |
 |---|---|---|---|
-| B1 | `:333` | `engineFillDetector` 오류 | `:334` |
-| B2 | `:342` | `ReconcileDriver` 오류 | `:343` |
-| B3 | `:353` | `ExitObserver` 오류 | `:354` |
-| B4 | `:358` | `Recovery` 오류 | `:359` |
-| B5 | `:362` | `NewRefreshingPairedStrategyEntrySupervisor` 오류 | `:363` |
-| **B6 (a098 신설)** | `:374` | **`ectx.AlertDeliverer(clk)` 오류** | `:375` |
-| (분기 아님) | `:378`·`:387` | `NewRuntime(...)` 반환 | — |
+| B1 | `:345` | `engineFillDetector` 오류 | `:346` |
+| B2 | `:354` | `ReconcileDriver` 오류 | `:355` |
+| B3 | `:365` | `ExitObserver` 오류 | `:366` |
+| B4 | `:370` | `Recovery` 오류 | `:371` |
+| B5 | `:374` | `NewRefreshingPairedStrategyEntrySupervisor` 오류 | `:375` |
+| **B6 (a098 신설)** | `:386` | **`ectx.AlertDeliverer(clk)` 오류** | `:387` |
+| (분기 아님) | `:390`·`:399` | `NewRuntime(...)` 반환 | — |
 
 **여섯 갈래가 전부 같은 모양이다** — `x, err := 만든다; if err != nil { return nil, err }`.
 신설 갈래도 그 모양을 따랐고, **다른 선택지가 있었다**: 배달 실행자를 못 만들면
