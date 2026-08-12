@@ -399,6 +399,39 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **원복 검사가 확인해 준 것이 확인하려던 것이 아니었다.**
       > 세 파일을 세어서 잡았다(`reason.go` 2 · `failclosed.go` **0** · `retry.go` **0**).
 
+      **진행 — R1 완료 (2026-08-12).**
+      `internal/app/engine/a098_the_outbox_gets_emptied_test.go` · GREEN 은 4.0.
+
+      | 단계 | 관측 |
+      |---|---|
+      | **RED** | **build failed** — `undefined: alertDeliverer` · `alertDeliveryInterval` · `alertDeliveryBatch` |
+      | **GREEN** | `alertdelivery.go` 신설 뒤 **4건 통과**, engine 패키지 전체 **exit 0** |
+
+      **상한을 「유한 시간」으로 안 썼다** (B-P4). 가짜 시계에서 **주기 × 2** 안이고,
+      매 `Advance` 전에 `WaitForSleepers` 로 sleeper 를 기다린다 — 안 기다리고 전진시키면
+      루프가 몇 주기를 지났는지 알 수 없어 상한이 상한이 아니게 된다.
+
+      **뮤테이션 넷을 걸었고, 그중 둘이 나를 고쳤다.**
+
+      | # | 뮤테이션 | 결과 |
+      |---|---|---|
+      | C | 주기 대기를 `time.Sleep` 으로 (유한·취소 불가) | FAIL — **다만 `WaitForSleepers` 에서 걸렸다.** 주장한 이유가 아니다 |
+      | **D** | `Clock.Sleep(context.Background(), …)` — **sleeper 로 등록은 되고 취소만 무시** | **FAIL — 주장한 그 자리에서**: *"Run did not return within 2s of cancellation"* |
+      | E | 정산(`MarkAlertDelivered`)을 통째로 건너뛴다 | `HoldsNoLease…` **FAIL** · `NeverPublishesTwice…` **통과** |
+      | (원복) | 넷 다 역편집으로 원복, `grep -c 'MUTATION'` = **0** | 4건 재통과 |
+
+      > **C 와 D 를 함께 적는 이유.** C 만 걸었으면 *"취소 가능성을 잰다"* 로 적었을 텐데,
+      > C 가 잡은 것은 **가짜 시계에 등록조차 안 되는 구현**이다. B-P4 가 경고한 형태는
+      > 그것이 아니라 **등록은 되고 취소만 무시하는 것**이고, 그것이 D 다.
+      > **뮤테이션 하나로는 「무엇을 잡는지」가 안 갈린다.**
+      >
+      > **E 가 내 주석을 고쳤다.** `NeverPublishesTwice…` 의 첫 주석은
+      > *"정산을 안 알아채면 다시 보낸다"* 였는데, 정산을 건너뛰어도 **통과했다.**
+      > 두 번째 발송을 막은 것은 정산이 아니라 **살아 있는 임차**다 — 주기 2s · 임차 81s
+      > 이므로 다음 주기의 claim 이 같은 claimant 여도 `HeldElsewhere` 로 물러난다
+      > (a099 의 `alertClaimable` 은 청구자 자신을 특별대우하지 않는다).
+      > 주석을 실측에 맞췄고, **「정산이 실제로 일어났다」는 `HoldsNoLease…` 가 진다.**
+
       **진행 — R8 완료 (2026-08-12).**
       `internal/app/engine/a098_restart_does_not_release_the_gate_test.go` · GREEN 은 4.6.
 
@@ -495,7 +528,20 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
 
 ## 4. GREEN — 최소 구현
 
-- [ ] 4.0 **배달 경로를 `internal/app/engine`에 신설한다** (2판 · design D1.2).
+- [x] 4.0 **배달 경로를 `internal/app/engine`에 신설한다** (2판 · design D1.2).
+      **구현 완료 2026-08-12** — `internal/app/engine/alertdelivery.go`
+      (`alertDeliverer`: `Run` · `cycle` · `deliverOne` · `release`).
+
+      > ## ⛔⛔ 「신설했다」는 「배달된다」가 **아니다** — 프로덕션 구성자가 아직 0이다
+      >
+      > 이 실행자를 **만드는 코드가 어디에도 없다.** 조립부(`buildGateway`)도
+      > `RuntimeOptions`도 아직 이것을 모른다 — 그것이 **4.1**이다.
+      >
+      > **즉 지금 상태는 a098 이 `Flush` 에 대해 적은 결함과 정확히 같은 모양이다**:
+      > 함수는 있고 프로덕션 호출자가 0이라 런타임에서 도달하지 않는다(§1.4).
+      > 4.1·4.1b 가 끝나기 전에는 **밀린 알림은 여전히 아무도 안 보낸다.**
+      > 4.0 의 체크는 「경로가 존재한다」까지만 뜻한다.
+
       한 주기의 형태는 행마다 다음이고, **어떤 뮤텍스도 publish 위에서 안 쥔다**:
 
       ```text
