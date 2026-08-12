@@ -100,4 +100,4 @@
 | `a098-nobody-sends-what-the-outbox-keeps` | STORY-TOS-a098 | in_progress |
 | `a099-a-claim-excludes-the-second-sender` | STORY-TOS-a099 | in_progress |
 | `a100-wire-fill-to-broker-protection` | STORY-TOS-a100 | in_progress |
-| `a101-the-soak-outlives-a-deploy` | STORY-TOS-a101 | in_progress |
+| `a101-the-soak-outlives-a-deploy` | STORY-TOS-a101 | implemented |

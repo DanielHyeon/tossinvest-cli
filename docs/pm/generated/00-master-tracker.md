@@ -63,7 +63,7 @@
     - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [archived] → `a080-line-refreshes-on-engine-cadence`
     - STORY-TOS-a081 — Let the trading screens share one reading of the engine instead of asking it per render [archived] → `a081-screens-share-one-engine-reading`
     - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [implemented] → `a085-an-alert-says-which-stock`
-    - STORY-TOS-a101 — The capability survey outlives a deploy [in_progress] → `a101-the-soak-outlives-a-deploy`
+    - STORY-TOS-a101 — The capability survey outlives a deploy [implemented] → `a101-the-soak-outlives-a-deploy`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
